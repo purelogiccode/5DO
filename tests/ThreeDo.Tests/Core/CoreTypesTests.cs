@@ -12,8 +12,17 @@ public sealed class CoreTypesTests
 
         Assert.Equal(12_500_000, tuning.ArmClock);
         Assert.Equal(FixMode.None, tuning.FixMode);
+        Assert.Equal(CpuBackendKind.Interpreter, tuning.CpuBackend);
         Assert.False(tuning.HighResolution);
         tuning.Validate();
+    }
+
+    [Fact]
+    public void EmulatorTuning_JitBackend_IsRejectedUntilImplemented()
+    {
+        var tuning = new EmulatorTuning { CpuBackend = CpuBackendKind.Jit };
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => tuning.Validate());
     }
 
     [Fact]

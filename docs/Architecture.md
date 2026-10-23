@@ -68,7 +68,7 @@
 
 | Project | Responsibility | Key types | References |
 |---|---|---|---|
-| `ThreeDo.Core` | Contracts, shared value types, constants, compatibility flags, logging abstraction, state reader/writer interfaces | `IAddressBus`, `IRam`, `IInterruptSink`, `IFrameSink`, `IAudioSink`, `IPbusSource`, `IDiscSource`, `IXbusDevice`, `IVdlp`, `IMadamBus`, `VdlFrame`, `VdlLine`, `FrameBuffer`, `FixMode`, `EmulatorTuning`, `IStateReader/Writer` | none |
+| `ThreeDo.Core` | Contracts, shared value types, constants, compatibility flags, logging abstraction, state reader/writer interfaces | `IAddressBus`, `IRam`, `ICpuBackend`, `IPcAdjustSource`, `IInterruptSink`, `IFrameSink`, `IAudioSink`, `IPbusSource`, `IDiscSource`, `IXbusDevice`, `IVdlp`, `IMadamBus`, `VdlFrame`, `VdlLine`, `FrameBuffer`, `FixMode`, `EmulatorTuning`, `IStateReader/Writer` | none |
 | `ThreeDo.Cpu` | ARM60 interpreter, condition codes, banked registers, cycle accounting, disassembler | `Arm60`, `Arm60State`, `ArmDecoder`, `ArmAlu`, `ArmBarrelShifter`, `ArmDisassembler` | Core |
 | `ThreeDo.Memory` | Physical RAM/ROM/NVRAM, word-swapped representation, mirrors, byte/halfword/word helpers | `ThreeDoMemory`, `Ram`, `RomBank`, `Nvram`, `MemoryAccess` | Core |
 | `ThreeDo.Madam` | MADAM registers, CEL engine, pixel decoder/processor/projector, matrix engine, pixel bus, DMA | `Madam`, `MadamRegisters`, `CelEngine`, `CelBitReader`, `PixelDecoder`, `PixelProcessor`, `Projector`, `CelRasterizer`, `MatrixEngine` | Core |

@@ -220,6 +220,19 @@ Port them as instance fields:
 - `mreadw`/`mwritew` are the bus. Preserve the decode order and sentinel `0xBADACCE5`.
 - `MAS_Access_Exept` is mostly disabled in FreeDO. Keep a `DataAbortPending` flag for future accuracy, but do not raise a C# exception on unmapped access.
 
+#### 8.2.1 Implementation notes for the C# ARM60
+
+- `Arm60State` keeps the reference's `USER`/`CASH`/`SVC`/`ABT`/`FIQ`/`IRQ`/`UND` arrays. `SetCpsr`, `SetMode`, and the six `Rest*RONS` helpers are direct ports. Do not replace them with a conventional per-mode register file.
+- `Arm60` owns the bus, the optional `IInterruptSink`, and a shared `CompatibilityState`. `ICpuBackend` is the backend contract; `IStateSection` writes the CPU section with explicit little-endian fields.
+- `IPcAdjustSource` carries the CLIO `_clio_Poke` return value. `Arm60.WriteWord` consumes it immediately and adds four to PC, matching `mwritew`.
+- FIQ entry checks `IInterruptSink.NeedFiq` after the instruction and also honours `Arm60.FiqPending` for deterministic tests. The reference's `gFIQ` flag is not used as a condition; do not start using it as one.
+- The immediate data-processing path does **not** update `carry_out` in FreeDO. The port keeps a persistent `_carryOut` field, so an immediate `MOVS`/logical instruction with S set can observe the carry from an earlier shifter operation. This is a reference quirk; do not "fix" it without a compatibility test.
+- A register-specified shift in a single data transfer (bit 4 set) matches `ARM_UND_MASK`/`ARM_UND_SIGN` and therefore enters the undefined vector before the SDT class. The port preserves that decode order; the register-shift code in the SDT method is kept for structural fidelity but is normally unreachable.
+- For malformed encodings where FreeDOCore would loop forever between the `Undefine` label and the SDT class (for example a high-nibble 4/5 instruction with bit 4 set), the port raises the undefined vector instead of hanging. This is the only deliberate behavioural deviation in the CPU decode path and is covered by a test.
+- `_arm_Reset` also reset CLIO and MADAM in C++. In the port, `Arm60.Reset` only resets CPU state; `ThreeDoMachine` owns the reset order so each chip can be tested independently.
+- `_arm_Init`/`_arm_Destroy` NVRAM callbacks are host responsibilities (`ThreeDoMemory`/`EmulatorSession`), not CPU responsibilities.
+- The CnB LDM heuristic uses three file-scope C++ globals (`addrr`, `vall`, `inuse`). They are private `Arm60` fields and are included in the CPU save-state section.
+
 ### 8.3 `Clio.cpp`
 
 - `cregs[65536]` is a 256 KB register file. Keep it as `uint[65536]`.

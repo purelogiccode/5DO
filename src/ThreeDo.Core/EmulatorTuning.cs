@@ -19,6 +19,9 @@ public sealed record EmulatorTuning
     /// <summary>Gets the per-game compatibility fixes.</summary>
     public FixMode FixMode { get; init; } = FixMode.None;
 
+    /// <summary>Gets the guest CPU backend. The interpreter is the default and the reference implementation.</summary>
+    public CpuBackendKind CpuBackend { get; init; } = CpuBackendKind.Interpreter;
+
     /// <summary>Gets a value indicating whether the future high-resolution CEL mode is enabled.</summary>
     /// <remarks>High-resolution rendering is not implemented in v1; the flag is reserved for M11.</remarks>
     public bool HighResolution { get; init; }
@@ -30,6 +33,11 @@ public sealed record EmulatorTuning
         if (ArmClock <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(ArmClock), ArmClock, "The ARM clock must be positive.");
+        }
+
+        if (CpuBackend != CpuBackendKind.Interpreter)
+        {
+            throw new ArgumentOutOfRangeException(nameof(CpuBackend), CpuBackend, "The managed IL JIT backend is not implemented until M12.");
         }
     }
 }

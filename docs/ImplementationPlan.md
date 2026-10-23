@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/4DO-master/FreeDOCore` (primary), `References/opera-libretro-master/libopera` (secondary)
-**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; next is M2. M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
+**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; next is M3. M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
 **Last updated:** 2026-10-23
 
 ---
@@ -345,65 +345,65 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Tasks**
 
-- [ ] **M2.1 CPU state and reset.**
+- [x] **M2.1 CPU state and reset.**
   - `Arm60State`: user registers, banked FIQ/IRQ/SVC/ABT/UND registers, SPSRs, CPSR, pending FIQ, ROM select, data-abort flag.
   - Reset: PC `0x03000000`, SVC mode, CPSR `0x13`, zero registers.
   - `IAddressBus` integration.
-- [ ] **M2.2 ALU and barrel shifter.**
+- [x] **M2.2 ALU and barrel shifter.**
   - `ArmAlu` operations 0-31.
   - `ArmBarrelShifter` with `NSC`/`SC` variants, carry-out, shift types 0-4.
   - Condition code table and evaluation.
   - Flag helpers: N/Z/C/V, mode, I/F.
-- [ ] **M2.3 Decoder skeleton.**
+- [x] **M2.3 Decoder skeleton.**
   - Instruction class order matching `_arm_Execute`: multiply, swap, ALU, undefined, single data transfer, block transfer, branch, SWI, coprocessor/undefined.
   - C# replacement for C++ fallthrough (ordered checks or `goto case`).
   - Condition check before execution.
-- [ ] **M2.4 Data processing.**
+- [x] **M2.4 Data processing.**
   - Immediate and register operands, rotate, register-specified shift.
   - All 16 opcodes, S bit, PC destination, SPSR restore.
   - Carry-out for logical ops.
-- [ ] **M2.5 Multiply and swap.**
+- [x] **M2.5 Multiply and swap.**
   - MUL/MLA, S bit, cycle count based on `calcbits`.
   - SWP/SWPB, PC adjustment, unaligned word rotation.
-- [ ] **M2.6 Single data transfer.**
+- [x] **M2.6 Single data transfer.**
   - LDR/STR byte/word, pre/post index, writeback, negative offset, shifted register.
   - PC-relative and PC destination.
   - Privileged/user-mode register selection.
-- [ ] **M2.7 Block data transfer.**
+- [x] **M2.7 Block data transfer.**
   - LDM/STM IA/IB/DA/DB, writeback, user-mode bit, PC in list, empty list.
   - The `ldm_accur`/`stm_accur` timing quirks and `FIX_BIT_TIMING_1` value fixes.
-- [ ] **M2.8 Branch, SWI, undefined, MRS/MSR.**
+- [x] **M2.8 Branch, SWI, undefined, MRS/MSR.**
   - B/BL, SWI vector, undefined vector, coprocessor/undefined path.
   - MRS/MSR CPSR/SPSR, mode changes, banked register switching.
-- [ ] **M2.9 FIQ and memory interface.**
+- [x] **M2.9 FIQ and memory interface.**
   - FIQ entry after instruction when `!ISF && NeedFiq`.
   - `mreadb/mreadw/mwriteb/mwritew` decode order and sentinels.
   - `SelectROM`, raw RAM helpers.
   - `biosanvil` PC skip and `cnbfix` compatibility hacks.
-- [ ] **M2.10 Cycle accounting.**
+- [x] **M2.10 Cycle accounting.**
   - `NCYCLE=4`, `SCYCLE=1`, `ICYCLE=1`.
   - Multiply, swap, LDR/STR, LDM/STM, branch, SWI cycles.
   - `Step()` returns the same cycle count as `_arm_Execute`.
-- [ ] **M2.11 Disassembler.**
+- [x] **M2.11 Disassembler.**
   - Decode the implemented subset to readable ARM assembly.
   - Used by CLI trace and debug logs.
-- [ ] **M2.12 Test assembler.**
+- [x] **M2.12 Test assembler.**
   - `ArmTestAssembler` with helpers for data processing, loads/stores, branches, LDM/STM, SWI, MRS/MSR.
   - Test memory/bus with configurable mapping.
-- [ ] **M2.13 Instruction test suite.**
+- [x] **M2.13 Instruction test suite.**
   - One test class per instruction group (see `docs/TestStrategy.md`).
   - Condition-code matrix, shift matrix, flag matrix.
   - Banked-register/FIQ tests.
   - Cycle-count assertions.
-- [ ] **M2.14 Synthetic boot program.**
+- [x] **M2.14 Synthetic boot program.**
   - A 1 MB synthetic ROM that computes a checksum, writes results to RAM, and loops.
   - Run 1M instructions; assert results and no unmapped accesses.
-- [ ] **M2.15 Optional oracle trace.**
+- [-] **M2.15 Optional oracle trace.**
   - Developer-only harness to compare PC/registers/cycles with FreeDOCore for a small program.
-  - Not part of the default test run.
-- [ ] **M2.16 CPU backend abstraction.**
+  - Deferred: the product must not load the native core, and a developer-only oracle would live outside this repository. The instruction and synthetic tests are the default regression gate.
+- [x] **M2.16 CPU backend abstraction.**
   - `ICpuBackend` with `Step`, `Reset`, state, and register access.
-  - `Arm60Interpreter` is the default implementation.
+  - `Arm60` (the interpreter) is the default implementation.
   - `EmulatorTuning.CpuBackend` selects interpreter/JIT; JIT is added in M12.
   - No behavior change; tests run against the interpreter.
 
@@ -415,12 +415,12 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Acceptance**
 
-- [ ] Every implemented instruction has normal/boundary/flag tests.
-- [ ] All 16 condition codes and all shift types are covered.
-- [ ] Cycle counts match the reference for representative instructions.
-- [ ] FIQ entry/exit and banked registers match the reference.
-- [ ] Synthetic program runs 1M instructions without exception or out-of-range PC.
-- [ ] `dotnet test` green; no per-instruction allocations.
+- [x] Every implemented instruction has normal/boundary/flag tests.
+- [x] All 16 condition codes and all shift types are covered.
+- [x] Cycle counts match the reference for representative instructions.
+- [x] FIQ entry/exit and banked registers match the reference.
+- [x] Synthetic program runs 1M instructions without exception or out-of-range PC.
+- [x] `dotnet test` green; no per-instruction allocations.
 
 **Risks**
 
@@ -1323,9 +1323,10 @@ Suggested parallelization with two developers:
 
 1. ~~Finish M0 scaffolding and commit.~~ Done.
 2. ~~Implement M1 memory + Quartz + state primitives.~~ Done.
-3. Start M2 with the CPU state/ALU/shifter and the test assembler.
-4. Create the first synthetic ROM integration test as soon as M2 data processing and loads/stores work.
-5. Schedule a 30-minute legal/attribution review before any public build.
+3. ~~Start M2 with the CPU state/ALU/shifter and the test assembler.~~ Done.
+4. ~~Create the first synthetic ROM integration test as soon as M2 data processing and loads/stores work.~~ Done.
+5. Start M3: BIOS/NVRAM loading, CLIO basics, VDLP, SPORT, and the frame loop.
+6. Schedule a 30-minute legal/attribution review before any public build.
 
 ---
 
@@ -1340,3 +1341,4 @@ Suggested parallelization with two developers:
 | 2026-10-23 | M1.1-M1.4 | Core contracts, memory, and bus | Constants/types/interfaces; `ThreeDoMemory` with word-swapped RAM/ROM, NVRAM quirk, bank select, and MMIO hooks |
 | 2026-10-23 | M1.5-M1.7 | Quartz, state primitives, diagnostics | 8.24 scheduler; sectioned little-endian state with CRC32; filtered logging with interpolated-string handler |
 | 2026-10-23 | M1.8 | M1 test suite | 95 tests pass; memory alignment/byte-order/NVRAM/decode, Quartz fixed-point/event counts, state truncation/CRC, logging filters; commit `9d730ca` |
+| 2026-10-23 | M2.1-M2.16 | ARM60 CPU | Full `arm.cpp` interpreter port: state/banked registers, ALU/shifter, decode order, data processing, multiply/swap, LDR/STR, LDM/STM, branch/SWI/undefined, MRS/MSR, FIQ, cycle counts, disassembler, test assembler, synthetic ROM; M2.15 deferred (native oracle outside repo); 262 tests pass |

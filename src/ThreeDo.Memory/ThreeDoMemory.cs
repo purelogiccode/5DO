@@ -18,7 +18,7 @@ namespace ThreeDo.Memory;
 /// high-resolution mode. Only the first 3 MB are CPU-visible in v1.
 /// </para>
 /// </remarks>
-public sealed class ThreeDoMemory : IAddressBus, IRam
+public sealed class ThreeDoMemory : IAddressBus, IRam, IPcAdjustSource
 {
     private readonly uint[] _ram = new uint[EmulatorConstants.RamAllocationSize / sizeof(uint)];
     private readonly uint[] _rom = new uint[EmulatorConstants.RomSize / sizeof(uint)];

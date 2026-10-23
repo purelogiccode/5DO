@@ -115,13 +115,16 @@ Instruction groups:
 CPU test harness:
 
 ```csharp
-var memory = new TestMemory(64 * 1024);
-var cpu = new Arm60(memory.Bus, EmulatorTuning.Default);
-memory.LoadWords(0x1000, assembler.MovR0(1), assembler.BxLr());
-cpu.SetPc(0x1000);
+var memory = new ThreeDoMemory();
+var cpu = new Arm60(memory.Bus, tuning: EmulatorTuning.Default);
+memory.Ram.Write32(0x1000, ArmTestAssembler.Mov(0, 1));
+memory.Ram.Write32(0x1004, ArmTestAssembler.Nop());
+cpu.ProgramCounter = 0x1000;
 cpu.Step();
-Assert.Equal(1u, cpu.Registers[0]);
+Assert.Equal(1u, cpu.ReadRegister(0));
 ```
+
+Implemented CPU suites: `Arm60StateTests`, `ArmBarrelShifterTests`, `ArmConditionTests`, `ArmDataProcessingTests`, `ArmMultiplySwapTests`, `ArmMemoryTests`, `ArmBlockTransferTests`, `ArmControlFlowTests`, `ArmModeBankTests`, `ArmCycleTests`, `ArmDisassemblerTests`, and `ArmSyntheticBootTests`. The synthetic boot test builds a 1 MB ROM, runs one million instructions, and checks the computed checksum in RAM.
 
 For each instruction, assert registers, flags, memory, and cycles. Where possible, also assert the disassembler text.
 
