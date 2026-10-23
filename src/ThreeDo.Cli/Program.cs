@@ -104,6 +104,7 @@ internal static class Program
         var frameOut = options.Get("--frame-out");
         var cdTrace = options.Get("--cd-trace");
         var clioTrace = options.Get("--clio-trace");
+        var fiqTrace = options.Get("--fiq-trace");
         var kprintPath = options.Get("--kprint");
         var kprintPcPath = options.Get("--kprint-pc");
         var discPath = options.Positional;
@@ -130,6 +131,22 @@ internal static class Program
 
         machine.Reset();
         machine.AudioSink = audio;
+
+        StreamWriter? fiqTraceWriter = null;
+        if (fiqTrace is not null)
+        {
+            var directory = Path.GetDirectoryName(Path.GetFullPath(fiqTrace));
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            fiqTraceWriter = new StreamWriter(fiqTrace);
+            machine.Clio.FiqObserver = (reason1, reason2) =>
+                fiqTraceWriter.WriteLine(
+                    $"f={machine.FramesExecuted} pc={machine.Cpu.ProgramCounter:x8} "
+                    + $"reason1={reason1:x8} reason2={reason2:x8}");
+        }
 
         StreamWriter? clioTraceWriter = null;
         if (clioTrace is not null)
@@ -221,6 +238,7 @@ internal static class Program
         }
 
         machine.RunFrames(frames);
+        fiqTraceWriter?.Dispose();
         clioTraceWriter?.Dispose();
         cdTraceWriter?.Dispose();
         kprintWriter?.Dispose();
@@ -821,7 +839,7 @@ internal static class Program
         Console.WriteLine("Commands:");
         Console.WriteLine("  run [disc] [--bios path] [--frames N] [--state-in path] [--state-out path]");
         Console.WriteLine("             [--frame-out path] [--audio null|wav] [--wav-out path] [--cd-trace path]");
-        Console.WriteLine("             [--clio-trace path] [--kprint path] [--kprint-pc path] [--json]");
+        Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path] [--json]");
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path]");

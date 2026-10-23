@@ -85,6 +85,9 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     /// <summary>Gets or sets an optional diagnostic writer for timer register traffic.</summary>
     public System.IO.TextWriter? TraceWriter { get; set; }
 
+    /// <summary>Gets or sets an optional observer for generated FIQ reason masks (diagnostics only).</summary>
+    public Action<uint, uint>? FiqObserver { get; set; }
+
     /// <summary>Gets the timer-dependent value used by register <c>0x120</c>. FreeDO: <c>TIMER_VAL</c>.</summary>
     public int TimerValue => _timerValue;
 
@@ -428,6 +431,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     /// <param name="reason2">High interrupt mask.</param>
     public void GenerateFiq(uint reason1, uint reason2)
     {
+        FiqObserver?.Invoke(reason1, reason2);
         _registers[0x40] |= reason1;
         _registers[0x60] |= reason2;
         if (_registers[0x60] != 0)

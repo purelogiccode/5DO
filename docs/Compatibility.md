@@ -193,6 +193,14 @@ padding to pass; Road Rash, Space Ace, and Wolfenstein did not, and were
 misidentified as non-3DO discs. Reporting the real end fixed all three. The
 remaining audio and runaway-CPU failures are tracked below.
 
+Space Ace's runaway was narrowed with `--fiq-trace`: at frame ~681 the CPU takes a
+FIQ while at `PC 0x0007D120` (the player's palette loop), and the FIQ vector at
+`0x1C` contains zero. The stack at that point is filled with `0x11111111`, so the
+low-memory vector table appears to have been overwritten. The next fetched word is
+`0xBADACCE5` filler and the CPU walks through it. This points at low-memory
+corruption from the ReadySoft player's DMA or a missing 3DO memory fence rather
+than a video or CPU bug; it is not fixed yet.
+
 Local corpus (user-provided, not distributed; see [`TestCorpus.md`](TestCorpus.md)):
 
 - BIOS-only boot and menu navigation: `panafz1.bin`.
