@@ -163,12 +163,19 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _discState.DiscId = 0;
         SetTocEntry(1, CdCtlDataTrack, track: 1, minute: 0, second: 2, frame: 0);
 
-        var fileSize = (uint)(_disc?.SectorCount ?? 0) + 150;
-        _discState.TempLba = (int)fileSize;
+        // FreeDO's InitCD adds 150 to the sector count before LBA2MSF, but LBA2MSF
+        // already adds the 150-frame lead-in. The double-add makes the reported
+        // disc end 150 frames larger than the actual sector count. The CD DIPIR
+        // rejects a disc when the reported end exceeds the volume block count by
+        // more than 512 frames, which is why discs with less than ~360 blocks of
+        // padding (for example Road Rash) were treated as invalid. Report the real
+        // end instead: TotalFrames = SectorCount, i.e. MSF = SectorCount + 150.
+        var sectorCount = (uint)(_disc?.SectorCount ?? 0);
+        _discState.TempLba = (int)sectorCount;
         LbaToMsf();
         CopyMsf(_discState.TotalMsf, _discState.TempMsf);
 
-        _discState.TempLba = (int)fileSize - 150;
+        _discState.TempLba = 0;
         LbaToMsf();
         CopyMsf(_discState.SessionMsf, _discState.TempMsf);
     }

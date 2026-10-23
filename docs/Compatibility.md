@@ -176,14 +176,22 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 | Game | Region | Disc ID | BIOS | Build | Boot | In-game | Audio | Input | Notes |
 |---|---|---|---|---|---|---|---|---|---|
 | Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | Not reached yet | DSP runs; listening check pending | Not tested | CyberIntro renders real 3D frames |
-| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | Partial | No | DSP runs | No | Kernel log matches FreeDO through 30,000 frames; shell falls into the shared InsertDisc path |
-| Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | Partial | No | DSP runs | No | Same InsertDisc path as Road Rash |
-| Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | Partial | No | DSP runs | No | Same InsertDisc path as Road Rash |
-| Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Fails early** | No | Channel 0 init fails (`-6996`) | No | Boot log stops after AudioFolio init |
+| Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass (intro)** | No | Mixer open fails (`d52bf113`) | No | Loads the ReadySoft player and renders the demo intro; CPU later runs away |
+| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Partial** | No | SAudio channel 0 init fails (`-6996`) | No | Loads the game OS (`grafmath 21.10.504`) then waits on audio |
+| Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Partial** | No | SAudio channel 0 init fails (`-6996`) | No | Loads Sherry/Operator/FS v24.225 then waits on audio |
+| Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Fails early** | No | SAudio channel 0 init fails (`-6996`) | No | Boot log stops after AudioFolio init |
 
 `Partial` means the BIOS, kernel, filesystem, and CD paths run far enough to load
-the splash and demo programs, but the title screen is not reached. `Pass` means a
-real game frame was rendered and verified visually.
+the game's own OS, but the title screen is not reached. `Pass` means a real game
+frame was rendered and verified visually.
+
+The 2026-10-23 CD fix is significant: `CdromDevice.InitCd` used FreeDO's
+double-add of the 150-frame lead-in, so the disc end reported to the CD DIPIR was
+150 frames larger than the real disc. The DIPIR rejects a disc when the reported
+end exceeds the volume block count by more than 512 frames. Lemmings had enough
+padding to pass; Road Rash, Space Ace, and Wolfenstein did not, and were
+misidentified as non-3DO discs. Reporting the real end fixed all three. The
+remaining audio and runaway-CPU failures are tracked below.
 
 Local corpus (user-provided, not distributed; see [`TestCorpus.md`](TestCorpus.md)):
 

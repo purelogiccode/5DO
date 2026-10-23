@@ -89,11 +89,13 @@ public sealed class CdromDeviceTests
         Send(cd, 0x85);
         var status = ReadStatus(cd, 8);
 
-        // Reference quirk: filesize already includes the 150-frame lead-in and LBA2MSF adds
-        // it again, so 225 sectors report 525 frames = 00:07:00.
+        // The reported end must be the real sector count plus the 150-frame lead-in.
+        // 225 sectors therefore report 375 frames = 00:05:00. The CD DIPIR rejects
+        // discs whose reported end exceeds the volume block count by more than 512
+        // frames, so the historical FreeDO double-add must not be reproduced here.
         Assert.Equal(0x85, status[0]);
         Assert.Equal(0x00, status[2]);
-        Assert.Equal(0x07, status[3]);
+        Assert.Equal(0x05, status[3]);
         Assert.Equal(0x00, status[4]);
     }
 

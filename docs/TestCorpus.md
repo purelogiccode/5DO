@@ -48,25 +48,36 @@ compatibility pass:
 |---|---|---|---|---|
 | Alone in the Dark | `0x00010520` | `286162373` | blank | Boot log stops after the audio-folio init; `SAudio channel 0 failed; error = -6996` |
 | Lemmings | `0x00128B60` | `2469164834` | **rendered** | Reaches CyberIntro; the 3D intro renders correctly |
-| Road Rash | `0x000205C8` | `286162373` | blank | Reaches the same PanaSplash -> InsertDisc -> ELDemo path as FreeDO |
-| Space Ace | `0x000205C8` | `286162373` | blank | Same PanaSplash -> InsertDisc -> ELDemo path as Road Rash |
-| Wolfenstein 3D | `0x000205C8` | `286162373` | blank | Same PanaSplash -> InsertDisc -> ELDemo path as Road Rash |
+| Road Rash | `0x00010524` | `2265977137` | blank | Loads the game OS (`grafmath 21.10.504`); waits on SAudio channel 0 (`-6996`) |
+| Space Ace | `0xB3244B20` | `1287603876` | **rendered** | ReadySoft player finds the CD-ROM and renders the demo intro; CPU later runs away |
+| Wolfenstein 3D | `0x00011990` | `286162373` | blank | Loads Sherry/Operator/FS v24.225; waits on SAudio channel 0 (`-6996`) |
 
 `PC 0x205C4`/`0x205C8` is the Portfolio **idle loop**, not a halt: VDL and timer
 interrupts continue to run and the boot log advances. Earlier baselines that
 described this address as a "halt path" were misreading the idle loop.
 
+#### CD disc-end fix (2026-10-23)
+
+`CdromDevice.InitCd` originally reproduced FreeDO's double-add of the 150-frame
+lead-in (`filesize = sectors + 150` followed by `LBA2MSF`, which adds 150 again).
+The CD DIPIR compares the reported disc end with the volume header's block count
+and rejects the disc when the end exceeds it by more than 512 frames. Lemmings
+has 302 blocks of padding and passed; Road Rash (450), Space Ace (450), and
+Wolfenstein (382) were rejected and fell into the shell's InsertDisc path. The
+device now reports `MSF = sectorCount + 150`, i.e. the real end. This is an
+intentional divergence from the FreeDO reference, which still has the bug.
+
 #### Reference comparison
 
 A local FreeDO harness (`References/freedo-master`, not committed) was built from
-the same source revision and run against an ISO dump of the same CHD. For Road
-Rash the kernel debug (`KPRINT`) stream is byte-for-byte identical through 30,000
-frames, including the expected `GetCDType:Got error d556f106` and
-`FFS-Severe-System-extended-Volume offline` lines and the subsequent
-`$panasplash/PanaSplash`, `$insertdisc/InsertDisc`, and `$eldemo/ELDemo` loads.
-FreeDO also ends on a black frame on this path, so the black screen is not a
-regression in this port; it is a shared disc-recognition limitation that needs a
-separate investigation.
+the same source revision and run against an ISO dump of the same CHD. Before the
+disc-end fix, Road Rash's kernel debug (`KPRINT`) stream was byte-for-byte
+identical to FreeDO through 30,000 frames, including
+`GetCDType:Got error d556f106`, `FFS-Severe-System-extended-Volume offline`, and
+the `$panasplash/PanaSplash`, `$insertdisc/InsertDisc`, and `$eldemo/ELDemo`
+loads. That parity confirmed the failure was in the shared CD layer rather than
+in the ARM or video port. FreeDO still has the double-add and still fails on
+these discs; the C# port now intentionally diverges.
 
 The DSP produces roughly 737 samples per frame (44.1 kHz at 60 fps) for all five
 titles, and WAV capture is non-empty. Audio content still needs a listening check.
