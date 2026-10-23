@@ -1,8 +1,10 @@
 # Performance and 4K60 Strategy
 
-**Status:** target definition and review baseline (2026-10-23). The current prototype
-does not yet meet these budgets; the gaps are listed in §9 and tracked by M9P in
-[`ImplementationPlan.md`](ImplementationPlan.md).
+**Status:** target definition and implementation baseline (2026-10-23). The desktop
+path now has a dedicated 60 Hz core thread, a two-stage palette/scale presenter,
+immutable texture storage with per-frame `TexSubImage2D`, cached uniform locations,
+and a real benchmark harness. Physical-pixel sizing, the GLES backend, and GPU 4K
+timing remain open; see §9 and M9P in [`ImplementationPlan.md`](ImplementationPlan.md).
 
 This document is the performance contract for the emulator. It defines what "4K60"
 means, the frame budget, the presentation pipeline, the supported renderer backends,
@@ -107,6 +109,13 @@ native resolution and leaves only a cheap texture-filtering pass at 4K.
 - Do not allocate delegates, strings, arrays, or LINQ iterators in the per-frame
   path. Cache the renderer callback used by the frame mailbox.
 
+Implemented in `OpenGlRenderer` (desktop GL 3.3): `TexStorage2D` for the indexed,
+CLUT, and parameter textures; `TexSubImage2D` per frame; cached uniform locations;
+separate palette and scale programs; and a native-resolution RGBA FBO for stage 1.
+`VdlFrameMailbox` copies only the visible line width, and `VdlFrameUploader` uses
+span copies instead of per-pixel loops. The GLES variant still needs its own shader
+source and binding selection.
+
 ---
 
 ## 4. Core performance strategy
@@ -138,9 +147,12 @@ which is post-v1.
 
 ## 5. Threading and frame pacing
 
-The current prototype runs one machine frame per 16 ms UI `DispatcherTimer` tick.
-That is a prototype shortcut, not the target: it couples emulation to UI stalls,
-adds jitter, and cannot guarantee 4K60.
+The desktop frontend now uses `ThreeDo.Host.CoreRunner`: a dedicated core thread
+paced at 60 Hz with a hybrid sleep/spin pacer and a low-rate (4 Hz) status sink.
+UI actions that touch the machine (reset, save/load, disc changes, screenshots)
+are marshalled through `CoreRunner.Invoke`, which pauses the loop for the duration
+of the action. The Avalonia control renders only when the mailbox sequence or the
+output size changes.
 
 Target model:
 
@@ -219,7 +231,8 @@ thread must not block on a multi-hundred-millisecond decompression during gamepl
 
 ### Microbenchmarks
 
-Use `benchmarks/ThreeDo.Benchmarks` (currently a stub) with BenchmarkDotNet:
+Use `benchmarks/ThreeDo.Benchmarks` (stopwatch harness; BenchmarkDotNet can be added
+later for microbenchmarks):
 
 - `Arm60.Step` on a mixed instruction stream (MIPS).
 - `CelEngine.HandleCel` on representative packed/literal/LR scenes (pixels/ms).
@@ -229,6 +242,32 @@ Use `benchmarks/ThreeDo.Benchmarks` (currently a stub) with BenchmarkDotNet:
 - `AudioRingBuffer` (samples/second, allocations).
 - `VdlFrameUploader`/presenter CPU path (ms/frame, allocations).
 - `OpenGlRenderer` upload/present (MB/s, CPU ms; GPU time via timer queries).
+
+### Measured baseline (2026-10-23)
+
+`benchmarks/ThreeDo.Benchmarks` now runs a synthetic machine by default and accepts
+`--bios`/`--disc` for a real title. Release build, development machine (x64):
+
+| Case | Core ms/frame | Video pack µs | Mailbox µs | Total ms/frame |
+|---|---:|---:|---:|---:|
+| Synthetic | 2.022 | 27.7 | 12.9 | 2.063 |
+| Lemmings (USA), 600 frames | 2.047 | 36.1 | 23.3 | 2.106 |
+
+The synthetic run reports ~103 MIPS; the Lemmings run reports ~27 MIPS because the
+guest spends time in the VDLP/CEL and idle paths. CPU-side headroom against the
+16.67 ms budget is ~14.6 ms. The span-copy changes cut the video pack and mailbox
+costs roughly in half compared with the first baseline. These numbers are **CPU
+only**: the 4K GPU stage and timer queries are not yet measured, and the benchmark
+is not a substitute for the p99/percentile run described below.
+
+Run it with:
+
+```powershell
+dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- --frames 600
+dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- `
+  --frames 600 --bios bios/panafz1.bin --disc "D:\Samples\3DO\Lemmings (USA).chd" `
+  --label lemmings
+```
 
 ### End-to-end benchmark
 
@@ -258,29 +297,37 @@ Profile 1080p and 4K separately to prove core cost is resolution-independent.
 
 ## 9. Current gaps (2026-10-23 review)
 
-The following are known deviations from this document and are tracked by M9P:
+Resolved in the 2026-10-23 M9P pass:
 
-1. Emulation runs on the UI thread via `DispatcherTimer`; status text is formatted
-   and updated every frame.
-2. The presenter is a single output-resolution shader; palette expansion is
-   repeated for every 4K pixel.
-3. `OpenGlRenderer.Present` calls `TexImage2D` and `GetUniformLocation` every frame.
-4. `VideoSurface` uses logical `Bounds` rather than physical pixels, so a scaled 4K
-   display renders below 4K.
-5. `RequestNextFrameRendering` is called unconditionally, which can render at the
-   monitor refresh rate rather than the emulation rate.
-6. The benchmark project is a stub; `bench` uses a synthetic machine and does not
-   report percentiles or GPU time.
-7. The renderer assumes desktop OpenGL 3.3; Avalonia's Windows ANGLE default and
-   Raspberry Pi 4 require a GLES path.
-8. `VdlFrameMailbox` copies the full 1280-pixel line buffer instead of the visible
-   width, and `Read(Action<VdlFrame>)` can allocate a delegate per frame.
-9. Real-game boot is not yet validated; the local corpus currently stops in the
-   BIOS menu/halt path for some titles (see [`TestCorpus.md`](TestCorpus.md)).
+- Dedicated 60 Hz core thread with `CoreRunner`, pause/invoke marshalling, and a
+  low-rate status sink.
+- Two-stage presenter: native-resolution palette expansion into an FBO, then a
+  scale/filter pass at output resolution.
+- `TexStorage2D` allocation plus per-frame `TexSubImage2D`; cached uniform locations.
+- Render-on-demand: the Avalonia surface renders only when the mailbox sequence or
+  the output size changes.
+- `VdlFrameMailbox` copies only the visible width; the present delegate is cached.
+- Real benchmark harness with synthetic and real-disc modes.
+
+Still open:
+
+1. `VideoSurface` uses logical `Bounds` rather than physical pixels, so a scaled 4K
+   display renders below 4K. Size the GL surface from `Bounds * RenderScaling`.
+2. The renderer assumes desktop OpenGL 3.3; Avalonia's Windows ANGLE default and
+   Raspberry Pi 4 require the GLES 3.0/3.1 shader and binding path.
+3. No GPU timer-query/4K percentile run yet; the current numbers are CPU-side.
+4. CHD prefetch on a host worker is not implemented; the core still reads
+   synchronously through the disc source.
+5. Real-game compatibility is partial: Lemmings and Space Ace render, Road Rash and
+   Wolfenstein load their own OS but stop at `SAudio channel 0` initialization, and
+   Alone in the Dark fails earlier. The audio failure is shared with the FreeDO
+   reference (see [`TestCorpus.md`](TestCorpus.md)).
+6. The benchmark harness reports averages, not p50/p95/p99, and does not assert
+   zero allocations per frame in CI.
 
 These gaps do not invalidate the architecture. They do mean performance work cannot
-be deferred to M10: the two-stage presenter, dedicated core thread, and backend
-matrix are structural changes and belong in M9P before release polish.
+be deferred to M10: the backend matrix and physical-pixel sizing are structural
+changes and belong in M9P before release polish.
 
 ---
 

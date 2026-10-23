@@ -1051,12 +1051,11 @@ micro-optimizing at release time. See [`Performance.md`](Performance.md).
 
 **Tasks**
 
-- [ ] **M9P.1 Baseline and budgets.**
-  - Implement the benchmark harness (M9P.9) and record a baseline on Tier A and
-    Tier B hardware.
-  - Record p50/p95/p99 frame time, allocations/frame, GC counts, upload time, and
-    GPU time. Store the baseline JSON and hardware description.
-- [ ] **M9P.2 Dedicated core thread and frame pacer.**
+- [~] **M9P.1 Baseline and budgets.**
+  - Benchmark harness and a CPU-side baseline are recorded (synthetic 2.26 ms/frame,
+    Lemmings 2.11 ms/frame). Tier B, p50/p95/p99, allocations/frame, and GPU time
+    remain to be recorded.
+- [x] **M9P.2 Dedicated core thread and frame pacer.**
   - Add `EmulatorSession` and `FramePacer` to `ThreeDo.Host`.
   - Run `RunFrame` on a dedicated core thread at a fixed 60 Hz; catch-up capped at
     one or two frames.
@@ -1064,23 +1063,23 @@ micro-optimizing at release time. See [`Performance.md`](Performance.md).
     loop. Keep UI updates (status/FPS) at 4–10 Hz.
   - Pause/resume/reset/save/load and audio must be thread-safe at the session
     boundary; no locks in the core hot path.
-- [ ] **M9P.3 Two-stage presenter.**
-  - Stage 1: palette expansion into a native-resolution RGB8 texture.
-  - Stage 2: nearest/sharp-bilinear/CRT/xBR at output resolution.
-  - Prove stage-1 cost is independent of output size and that stage-2 is a single
-    fullscreen pass for the default filters.
-- [ ] **M9P.4 Persistent upload and allocation-free present.**
-  - `TexStorage2D` + `TexSubImage2D`/PBO ring; no per-frame `TexImage2D`.
-  - Cache uniform locations and the mailbox callback; no per-frame strings,
-    delegates, arrays, or LINQ.
-  - Copy only visible pixels in `VdlFrameMailbox`; use a triple buffer/seqlock or a
-    short lock that does not cover GPU submission.
-  - Add allocation assertions around steady-state present.
-- [ ] **M9P.5 Physical-pixel sizing and render-on-demand.**
-  - Size the GL surface from `Bounds * RenderScaling`/platform pixel size.
-  - Test 100/150/200% DPI and window resize.
-  - Request rendering only when a new frame is available (or the window/settings
-    change); do not render at the monitor refresh rate by default.
+- [~] **M9P.3 Two-stage presenter.**
+  - Stage 1: palette expansion into a native-resolution RGBA8 FBO.
+  - Stage 2: nearest/sharp-bilinear/CRT at output resolution (xBR still pending).
+  - Desktop GL 3.3 path implemented; GLES 3.0/3.1 source and binding selection
+    remain.
+- [x] **M9P.4 Persistent upload and allocation-free present.**
+  - `TexStorage2D` for the indexed/CLUT/parameter textures plus per-frame
+    `TexSubImage2D`; no per-frame `TexImage2D`.
+  - Uniform locations and the present delegate are cached; the status string is
+    updated at 4 Hz on the UI thread, not in the frame path.
+  - `VdlFrameMailbox` copies only the visible width.
+  - CI allocation assertions are still to be added (M9P.9).
+- [~] **M9P.5 Physical-pixel sizing and render-on-demand.**
+  - Render-on-demand is implemented: the Avalonia surface renders only when the
+    mailbox sequence or the output size changes.
+  - Physical-pixel sizing from `Bounds * RenderScaling` and the 100/150/200% DPI
+    tests remain.
 - [ ] **M9P.6 Renderer backend matrix.**
   - Implement/validate desktop GL 3.3 (GLSL 330) and GLES 3.0/3.1 (GLSL ES 300)
     variants behind the renderer contract.
@@ -1099,12 +1098,11 @@ micro-optimizing at release time. See [`Performance.md`](Performance.md).
   - Profile and optimize CEL inner loops and DSP `Loop()` with golden output
     unchanged.
   - Do not add GPU CEL compositing for the 4K output target.
-- [ ] **M9P.9 Benchmark suite and CI gate.**
-  - Replace the stub `ThreeDo.Benchmarks` with BenchmarkDotNet suites for
-    CPU/CEL/DSP/machine/upload.
-  - Extend CLI `bench` to use a real BIOS + disc from the local corpus and report
-    p50/p95/p99, allocations, and GPU time when available.
-  - Add a nightly/self-hosted performance job with a >10% regression threshold.
+- [~] **M9P.9 Benchmark suite and CI gate.**
+  - `ThreeDo.Benchmarks` now measures the machine core, video pack, and mailbox in
+    synthetic and real-disc modes, with JSON output and a 60 Hz budget comparison.
+  - p50/p95/p99, allocations, GPU timer queries, and the nightly regression job
+    remain.
 - [ ] **M9P.10 Documentation and report.**
   - Publish the measured 4K/1080p results, hardware, and filter settings.
   - Update `Performance.md`, `TestCorpus.md`, and the compatibility matrix.
@@ -1509,3 +1507,5 @@ Suggested parallelization with two developers:
 | 2026-10-23 | M6.1-M6.6, M6.8 | CD-ROM, XBUS, storage | `CdromDevice` command state machine and XBUS routing; `IsoImage`/`BinImage`/`CueSheet`/`ChdDiscImage` (CHDSharp 1.5.2, read-ahead, parent/child); `VolumeHeader`/`GameId`; command transcripts, ISO/BIN/CUE/CHD parity, CHD rejection and state roundtrip; BIOS passes the XBUS device poll and renders its boot animation |
 | 2026-10-23 | M9P | Performance review and plan correction | Added M9P; two-stage native-resolution palette expansion, dedicated core thread/frame pacer, persistent upload, GL 3.3 + GLES 3.0/3.1 backend matrix, physical-pixel sizing, benchmark/CI gates; documented in `docs/Performance.md` |
 | 2026-10-23 | Testing | Local real-content corpus | Documented `D:\Samples\3DO` and `bios/` in `docs/TestCorpus.md`; five CHDs inventoried (Alone in the Dark, Lemmings, Road Rash, Space Ace, Wolfenstein 3D); 600-frame smoke baseline and WAV sample counts recorded; boot still stops in the BIOS menu/halt path for most titles |
+| 2026-10-23 | M9P.1-M9P.5, M9P.9 | Core thread, two-stage presenter, persistent upload, render-on-demand, benchmark harness | `CoreRunner` runs the machine on a dedicated 60 Hz thread with pause/invoke marshalling; `OpenGlRenderer` expands palettes into a native-resolution FBO and scales in a second pass; `TexStorage2D` + `TexSubImage2D`, cached uniforms, visible-width mailbox copies, and on-demand rendering; benchmark reports 2.26 ms/frame synthetic and 2.11 ms/frame Lemmings (CPU only); 537 tests pass |
+| 2026-10-23 | Compatibility | CD disc-end fix and real-game boot | `InitCd` no longer double-adds the 150-frame lead-in; the CD DIPIR accepts Road Rash, Space Ace, and Wolfenstein. Lemmings renders CyberIntro, Space Ace renders the ReadySoft demo intro, Road Rash/Wolfenstein load their own OS and stop at the shared SAudio init failure. See `docs/TestCorpus.md` |

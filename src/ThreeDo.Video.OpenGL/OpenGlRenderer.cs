@@ -8,14 +8,18 @@ using GlPixelFormat = Silk.NET.OpenGL.PixelFormat;
 namespace ThreeDo.Video.OpenGL;
 
 /// <summary>
-/// The required desktop presenter: uploads raw indexed VDL pixels and per-line palette data,
-/// performs palette expansion in a GLSL 330 core shader, and scales/filters to the output.
+/// The required desktop presenter: a two-stage palette/scale pipeline.
 /// </summary>
 /// <remarks>
 /// <para>
+/// Stage 1 expands the indexed VDL pixels and per-line palette into a native-resolution
+/// RGBA texture. Stage 2 samples that texture at output resolution and applies the selected
+/// filter. This keeps palette work at ~77k pixels per frame instead of ~8.3M at 4K.
+/// </para>
+/// <para>
 /// This renderer is a host service. It never writes emulated state. The CPU
 /// <see cref="FrameAssembler"/> remains the accuracy oracle; <see cref="VideoFilter.Accurate"/>
-/// uses nearest sampling and integer scaling, and the shader's palette logic mirrors
+/// uses nearest sampling and integer scaling, and the palette shader mirrors
 /// <see cref="GpuPalette"/>.
 /// </para>
 /// <para>
@@ -33,16 +37,29 @@ public sealed class OpenGlRenderer : IVideoRenderer
     private readonly float[] _vertices = [0f, 0f, 1f, 0f, 0f, 1f, 1f, 1f];
     private RendererSettings _settings = new();
 
-    private uint _program;
+    private uint _paletteProgram;
+    private uint _scaleProgram;
     private uint _vao;
     private uint _vbo;
     private uint _pixelTexture;
     private uint _clutTexture;
     private uint _paramTexture;
+    private uint _paletteFbo;
+    private uint _paletteTexture;
+    private int _paletteWidth;
+    private int _paletteHeight;
     private int _outputWidth;
     private int _outputHeight;
     private int _sourceWidth;
     private int _sourceHeight;
+    private int _uPaletteSource;
+    private int _uPaletteRect;
+    private int _uPaletteOutput;
+    private int _uScaleSource;
+    private int _uScaleRect;
+    private int _uScaleOutput;
+    private int _uScaleFilter;
+    private int _uScaleScanline;
     private RendererCapabilities _capabilities;
     private bool _initialized;
 
@@ -83,7 +100,8 @@ public sealed class OpenGlRenderer : IVideoRenderer
         _outputHeight = height;
         _capabilities = DetectCapabilities(gl);
 
-        _program = CreateProgram(gl);
+        _paletteProgram = CreateProgram(gl, Shaders.FragmentPalette);
+        _scaleProgram = CreateProgram(gl, Shaders.FragmentScale);
         _vao = gl.GenVertexArray();
         gl.BindVertexArray(_vao);
         _vbo = gl.GenBuffer();
@@ -96,11 +114,28 @@ public sealed class OpenGlRenderer : IVideoRenderer
         _pixelTexture = CreateTexture(gl);
         _clutTexture = CreateTexture(gl);
         _paramTexture = CreateTexture(gl);
+        AllocateUploadTextures(gl);
 
-        gl.UseProgram(_program);
-        gl.Uniform1(gl.GetUniformLocation(_program, "uPixels"), 0);
-        gl.Uniform1(gl.GetUniformLocation(_program, "uClut"), 1);
-        gl.Uniform1(gl.GetUniformLocation(_program, "uParams"), 2);
+        gl.UseProgram(_paletteProgram);
+        gl.Uniform1(gl.GetUniformLocation(_paletteProgram, "uPixels"), 0);
+        gl.Uniform1(gl.GetUniformLocation(_paletteProgram, "uClut"), 1);
+        gl.Uniform1(gl.GetUniformLocation(_paletteProgram, "uParams"), 2);
+        _uPaletteSource = gl.GetUniformLocation(_paletteProgram, "uSource");
+        _uPaletteRect = gl.GetUniformLocation(_paletteProgram, "uRect");
+        _uPaletteOutput = gl.GetUniformLocation(_paletteProgram, "uOutput");
+
+        gl.UseProgram(_scaleProgram);
+        gl.Uniform1(gl.GetUniformLocation(_scaleProgram, "uExpanded"), 0);
+        _uScaleSource = gl.GetUniformLocation(_scaleProgram, "uSource");
+        _uScaleRect = gl.GetUniformLocation(_scaleProgram, "uRect");
+        _uScaleOutput = gl.GetUniformLocation(_scaleProgram, "uOutput");
+        _uScaleFilter = gl.GetUniformLocation(_scaleProgram, "uFilter");
+        _uScaleScanline = gl.GetUniformLocation(_scaleProgram, "uScanline");
+
+        _paletteFbo = 0;
+        _paletteTexture = 0;
+        _paletteWidth = 0;
+        _paletteHeight = 0;
         _initialized = true;
     }
 
@@ -137,20 +172,16 @@ public sealed class OpenGlRenderer : IVideoRenderer
         }
 
         var gl = _adapter.Gl;
-        var viewport = ViewportCalculator.Compute(width, height, _outputWidth, _outputHeight, _settings);
-
-        gl.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)_adapter.Framebuffer);
-        gl.Viewport(0, 0, (uint)_outputWidth, (uint)_outputHeight);
-        gl.ClearColor(0f, 0f, 0f, 1f);
-        gl.Clear(ClearBufferMask.ColorBufferBit);
-
+        EnsurePaletteTarget(gl, width, height);
         UploadTextures(gl, width, height);
-        gl.UseProgram(_program);
-        gl.Uniform4(gl.GetUniformLocation(_program, "uRect"), viewport.X, viewport.Y, viewport.Width, viewport.Height);
-        gl.Uniform2(gl.GetUniformLocation(_program, "uOutput"), (float)_outputWidth, (float)_outputHeight);
-        gl.Uniform2(gl.GetUniformLocation(_program, "uSource"), width, height);
-        gl.Uniform1(gl.GetUniformLocation(_program, "uFilter"), FilterValue(_settings.Filter));
-        gl.Uniform1(gl.GetUniformLocation(_program, "uScanline"), _settings.ScanlineStrength);
+
+        // Stage 1: expand the indexed frame and per-line palette at native resolution.
+        gl.BindFramebuffer(FramebufferTarget.Framebuffer, _paletteFbo);
+        gl.Viewport(0, 0, (uint)width, (uint)height);
+        gl.UseProgram(_paletteProgram);
+        gl.Uniform2(_uPaletteSource, width, height);
+        gl.Uniform4(_uPaletteRect, 0f, 0f, width, height);
+        gl.Uniform2(_uPaletteOutput, width, height);
 
         gl.ActiveTexture(TextureUnit.Texture0);
         gl.BindTexture(TextureTarget.Texture2D, _pixelTexture);
@@ -158,7 +189,24 @@ public sealed class OpenGlRenderer : IVideoRenderer
         gl.BindTexture(TextureTarget.Texture2D, _clutTexture);
         gl.ActiveTexture(TextureUnit.Texture2);
         gl.BindTexture(TextureTarget.Texture2D, _paramTexture);
+        gl.BindVertexArray(_vao);
+        gl.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
 
+        // Stage 2: scale/filter the expanded texture into the output framebuffer.
+        var viewport = ViewportCalculator.Compute(width, height, _outputWidth, _outputHeight, _settings);
+        gl.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)_adapter.Framebuffer);
+        gl.Viewport(0, 0, (uint)_outputWidth, (uint)_outputHeight);
+        gl.ClearColor(0f, 0f, 0f, 1f);
+        gl.Clear(ClearBufferMask.ColorBufferBit);
+        gl.UseProgram(_scaleProgram);
+        gl.Uniform2(_uScaleSource, width, height);
+        gl.Uniform4(_uScaleRect, viewport.X, viewport.Y, viewport.Width, viewport.Height);
+        gl.Uniform2(_uScaleOutput, (float)_outputWidth, (float)_outputHeight);
+        gl.Uniform1(_uScaleFilter, FilterValue(_settings.Filter));
+        gl.Uniform1(_uScaleScanline, _settings.ScanlineStrength);
+
+        gl.ActiveTexture(TextureUnit.Texture0);
+        gl.BindTexture(TextureTarget.Texture2D, _paletteTexture);
         gl.BindVertexArray(_vao);
         gl.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
     }
@@ -194,19 +242,88 @@ public sealed class OpenGlRenderer : IVideoRenderer
         _initialized = false;
     }
 
+    private void EnsurePaletteTarget(GL gl, int width, int height)
+    {
+        if (_paletteFbo != 0 && _paletteWidth == width && _paletteHeight == height)
+        {
+            return;
+        }
+
+        if (_paletteFbo != 0)
+        {
+            gl.DeleteFramebuffer(_paletteFbo);
+            gl.DeleteTexture(_paletteTexture);
+        }
+
+        _paletteTexture = gl.GenTexture();
+        gl.BindTexture(TextureTarget.Texture2D, _paletteTexture);
+        gl.TexStorage2D(TextureTarget.Texture2D, 1, SizedInternalFormat.Rgba8, (uint)width, (uint)height);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Nearest);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Nearest);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
+
+        _paletteFbo = gl.GenFramebuffer();
+        gl.BindFramebuffer(FramebufferTarget.Framebuffer, _paletteFbo);
+        gl.FramebufferTexture2D(
+            FramebufferTarget.Framebuffer,
+            FramebufferAttachment.ColorAttachment0,
+            TextureTarget.Texture2D,
+            _paletteTexture,
+            0);
+        var status = gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+        if (status != GLEnum.FramebufferComplete)
+        {
+            throw new InvalidOperationException($"Palette framebuffer is incomplete: {status}.");
+        }
+
+        _paletteWidth = width;
+        _paletteHeight = height;
+    }
+
+    private void AllocateUploadTextures(GL gl)
+    {
+        gl.ActiveTexture(TextureUnit.Texture0);
+        gl.BindTexture(TextureTarget.Texture2D, _pixelTexture);
+        gl.TexStorage2D(
+            TextureTarget.Texture2D,
+            1,
+            SizedInternalFormat.R16ui,
+            (uint)VdlFrameUploader.MaxWidth,
+            (uint)VdlFrameUploader.MaxHeight);
+
+        gl.ActiveTexture(TextureUnit.Texture1);
+        gl.BindTexture(TextureTarget.Texture2D, _clutTexture);
+        gl.TexStorage2D(
+            TextureTarget.Texture2D,
+            1,
+            SizedInternalFormat.Rgb8,
+            (uint)VdlFrameUploader.ClutEntries,
+            (uint)VdlFrameUploader.MaxHeight);
+
+        gl.ActiveTexture(TextureUnit.Texture2);
+        gl.BindTexture(TextureTarget.Texture2D, _paramTexture);
+        gl.TexStorage2D(
+            TextureTarget.Texture2D,
+            1,
+            SizedInternalFormat.Rgba32ui,
+            1,
+            (uint)VdlFrameUploader.MaxHeight);
+    }
+
     private void UploadTextures(GL gl, int width, int height)
     {
         gl.ActiveTexture(TextureUnit.Texture0);
         gl.BindTexture(TextureTarget.Texture2D, _pixelTexture);
-        gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.R16ui, (uint)width, (uint)height, 0, GlPixelFormat.RedInteger, PixelType.UnsignedShort, _uploader.Pixels);
+        gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, (uint)width, (uint)height, GlPixelFormat.RedInteger, PixelType.UnsignedShort, _uploader.Pixels);
 
         gl.ActiveTexture(TextureUnit.Texture1);
         gl.BindTexture(TextureTarget.Texture2D, _clutTexture);
-        gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgb8, (uint)VdlFrameUploader.ClutEntries, (uint)height, 0, GlPixelFormat.Rgb, PixelType.UnsignedByte, _uploader.Clut);
+        gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, (uint)VdlFrameUploader.ClutEntries, (uint)height, GlPixelFormat.Rgb, PixelType.UnsignedByte, _uploader.Clut);
 
         gl.ActiveTexture(TextureUnit.Texture2);
         gl.BindTexture(TextureTarget.Texture2D, _paramTexture);
-        gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba32ui, 1, (uint)height, 0, GlPixelFormat.RgbaInteger, PixelType.UnsignedInt, _uploader.LineParams);
+        gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, 1, (uint)height, GlPixelFormat.RgbaInteger, PixelType.UnsignedInt, _uploader.LineParams);
     }
 
     private static uint CreateTexture(GL gl)
@@ -220,10 +337,10 @@ public sealed class OpenGlRenderer : IVideoRenderer
         return texture;
     }
 
-    private static uint CreateProgram(GL gl)
+    private static uint CreateProgram(GL gl, string fragmentSource)
     {
         var vertex = Compile(gl, ShaderType.VertexShader, Shaders.Vertex);
-        var fragment = Compile(gl, ShaderType.FragmentShader, Shaders.Fragment);
+        var fragment = Compile(gl, ShaderType.FragmentShader, fragmentSource);
         var program = gl.CreateProgram();
         gl.AttachShader(program, vertex);
         gl.AttachShader(program, fragment);
@@ -296,16 +413,22 @@ public sealed class OpenGlRenderer : IVideoRenderer
 
     private void DisposeResources()
     {
-        if (_program == 0 && _pixelTexture == 0 && _vao == 0)
+        if (_paletteProgram == 0 && _scaleProgram == 0 && _vao == 0)
         {
             return;
         }
 
         var gl = _adapter.Gl;
-        if (_program != 0)
+        if (_paletteProgram != 0)
         {
-            gl.DeleteProgram(_program);
-            _program = 0;
+            gl.DeleteProgram(_paletteProgram);
+            _paletteProgram = 0;
+        }
+
+        if (_scaleProgram != 0)
+        {
+            gl.DeleteProgram(_scaleProgram);
+            _scaleProgram = 0;
         }
 
         if (_pixelTexture != 0)
@@ -326,6 +449,18 @@ public sealed class OpenGlRenderer : IVideoRenderer
             _paramTexture = 0;
         }
 
+        if (_paletteFbo != 0)
+        {
+            gl.DeleteFramebuffer(_paletteFbo);
+            _paletteFbo = 0;
+        }
+
+        if (_paletteTexture != 0)
+        {
+            gl.DeleteTexture(_paletteTexture);
+            _paletteTexture = 0;
+        }
+
         if (_vbo != 0)
         {
             gl.DeleteBuffer(_vbo);
@@ -337,5 +472,8 @@ public sealed class OpenGlRenderer : IVideoRenderer
             gl.DeleteVertexArray(_vao);
             _vao = 0;
         }
+
+        _paletteWidth = 0;
+        _paletteHeight = 0;
     }
 }

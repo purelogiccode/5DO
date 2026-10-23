@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using ThreeDo.Core;
 
 namespace ThreeDo.Input;
@@ -14,6 +15,7 @@ public sealed class KeyboardInputMapper
 {
     private readonly PlayerProfile[] _profiles;
     private readonly ControllerState[] _states;
+    private readonly object _gate = new();
 
     /// <summary>Initializes a new instance of the <see cref="KeyboardInputMapper"/> class.</summary>
     /// <param name="profiles">Player profiles, up to six.</param>
@@ -27,10 +29,16 @@ public sealed class KeyboardInputMapper
         }
     }
 
-    /// <summary>Gets the state for a player.</summary>
+    /// <summary>Gets the state for a player. Safe to call from the emulation thread.</summary>
     /// <param name="player">Zero-based player index.</param>
     /// <returns>The controller state.</returns>
-    public ControllerState GetState(int player) => _states[player];
+    public ControllerState GetState(int player)
+    {
+        lock (_gate)
+        {
+            return _states[player];
+        }
+    }
 
     /// <summary>Applies a key event to every player profile that binds the key.</summary>
     /// <param name="key">Key name, case-insensitive.</param>
@@ -39,35 +47,44 @@ public sealed class KeyboardInputMapper
     public bool SetKey(string key, bool pressed)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
-        var matched = false;
-        for (var player = 0; player < _profiles.Length; player++)
+        lock (_gate)
         {
-            if (!_profiles[player].Keyboard.TryGetValue(key, out var button))
+            var matched = false;
+            for (var player = 0; player < _profiles.Length; player++)
             {
-                foreach (var (name, value) in _profiles[player].Keyboard)
+                if (!_profiles[player].Keyboard.TryGetValue(key, out var button))
                 {
-                    if (string.Equals(name, key, StringComparison.OrdinalIgnoreCase))
+                    foreach (var (name, value) in _profiles[player].Keyboard)
                     {
-                        button = value;
-                        break;
+                        if (string.Equals(name, key, StringComparison.OrdinalIgnoreCase))
+                        {
+                            button = value;
+                            break;
+                        }
                     }
                 }
+
+                if (button == ControllerButton.None)
+                {
+                    continue;
+                }
+
+                _states[player] = _states[player].Set(button, pressed);
+                matched = true;
             }
 
-            if (button == ControllerButton.None)
-            {
-                continue;
-            }
-
-            _states[player] = _states[player].Set(button, pressed);
-            matched = true;
+            return matched;
         }
-
-        return matched;
     }
 
     /// <summary>Releases every button.</summary>
-    public void Reset() => _states.AsSpan().Clear();
+    public void Reset()
+    {
+        lock (_gate)
+        {
+            _states.AsSpan().Clear();
+        }
+    }
 
     /// <summary>Gets a read-only view of all controller states.</summary>
     public ReadOnlySpan<ControllerState> States => _states;
@@ -137,12 +154,12 @@ public sealed class InputManager : IPbusSource
     /// <summary>Gets or sets the connected controller count.</summary>
     public int ControllerCount
     {
-        get => _controllerCount;
+        get => Volatile.Read(ref _controllerCount);
         set
         {
             ArgumentOutOfRangeException.ThrowIfLessThan(value, 1);
             ArgumentOutOfRangeException.ThrowIfGreaterThan(value, PbusEncoder.MaxControllers);
-            _controllerCount = value;
+            Volatile.Write(ref _controllerCount, value);
         }
     }
 
@@ -161,7 +178,7 @@ public sealed class InputManager : IPbusSource
     public int GetPbusData(Span<byte> destination)
     {
         Update();
-        PbusEncoder.Encode(_states.AsSpan(0, _controllerCount), destination);
+        PbusEncoder.Encode(_states.AsSpan(0, Volatile.Read(ref _controllerCount)), destination);
         return PbusEncoder.PacketSize;
     }
 }

@@ -59,14 +59,10 @@ public sealed class VdlFrameUploader
             var lineWidth = Math.Min(line.Width, width);
             var pixelDestination = y * width;
             var source = line.Pixels;
-            for (var x = 0; x < lineWidth; x++)
+            source[..lineWidth].CopyTo(_pixels.AsSpan(pixelDestination, lineWidth));
+            if (lineWidth < width)
             {
-                _pixels[pixelDestination + x] = source[x];
-            }
-
-            for (var x = lineWidth; x < width; x++)
-            {
-                _pixels[pixelDestination + x] = 0;
+                _pixels.AsSpan(pixelDestination + lineWidth, width - lineWidth).Clear();
             }
 
             var clutDestination = y * ClutEntries * 3;

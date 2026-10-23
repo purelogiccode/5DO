@@ -50,7 +50,8 @@ public sealed class VdlFrameMailbox
                 source.ClutB.CopyTo(destination.ClutB);
                 source.ClutG.CopyTo(destination.ClutG);
                 source.ClutR.CopyTo(destination.ClutR);
-                source.PixelBuffer[..VdlLine.MaxPixels].CopyTo(destination.PixelBuffer);
+                var pixels = Math.Clamp(source.Width, 0, VdlLine.MaxPixels);
+                source.PixelBuffer[..pixels].CopyTo(destination.PixelBuffer);
             }
 
             _sequence++;

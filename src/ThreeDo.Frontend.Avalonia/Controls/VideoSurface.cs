@@ -23,7 +23,11 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     private readonly VdlFrameMailbox _mailbox = new();
     private GL? _gl;
     private OpenGlRenderer? _renderer;
+    private Action<VdlFrame>? _present;
     private RendererSettings _settings = new();
+    private long _renderedSequence = -1;
+    private int _renderedWidth;
+    private int _renderedHeight;
 
     /// <summary>Gets or sets the renderer settings.</summary>
     public RendererSettings Settings
@@ -67,6 +71,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     {
         _gl = GL.GetApi(gl.GetProcAddress);
         _renderer = new OpenGlRenderer(new GlContextAdapter(_gl));
+        _present = _renderer.Present;
         _renderer.Settings = _settings;
         _renderer.Initialize(Math.Max(1, (int)Bounds.Width), Math.Max(1, (int)Bounds.Height));
     }
@@ -81,10 +86,21 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
 
         var width = Math.Max(1, (int)Bounds.Width);
         var height = Math.Max(1, (int)Bounds.Height);
+        var sequence = _mailbox.Sequence;
+        if (sequence == _renderedSequence && width == _renderedWidth && height == _renderedHeight)
+        {
+            return;
+        }
+
+        _renderedSequence = sequence;
+        _renderedWidth = width;
+        _renderedHeight = height;
         _renderer.Settings = _settings;
         _renderer.Resize(width, height);
-        _mailbox.Read(_renderer.Present);
-        RequestNextFrameRendering();
+        if (_present is not null)
+        {
+            _mailbox.Read(_present);
+        }
     }
 
     /// <inheritdoc />
@@ -92,6 +108,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     {
         _renderer?.Dispose();
         _renderer = null;
+        _present = null;
         _gl = null;
     }
 

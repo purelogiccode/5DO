@@ -24,13 +24,13 @@ namespace ThreeDo.Frontend.Avalonia.Views;
 /// </summary>
 public partial class MainWindow : Window, IDisposable
 {
-    private readonly DispatcherTimer _timer;
     private readonly NvramStore _nvramStore;
     private readonly AppSettings _settings;
     private readonly InputManager _input;
     private readonly string _statePath;
     private readonly OpenAlAudioOutput? _audio;
     private ThreeDoMachine? _machine;
+    private CoreRunner? _runner;
     private IDiscSource? _disc;
     private bool _running;
 
@@ -47,7 +47,6 @@ public partial class MainWindow : Window, IDisposable
         _input = new InputManager(_settings.Input);
         _audio = _settings.AudioEnabled ? OpenAlAudioOutput.TryCreate() : null;
         _nvramStore = new NvramStore(Path.Combine(AppSettingsStore.DefaultDirectory, "nvram.ram"));
-        _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(16), DispatcherPriority.Background, OnTick);
         Video.Settings = _settings.ToRendererSettings();
         Deactivated += (_, _) => _input.Keyboard.Reset();
         Closing += (_, _) => Shutdown();
@@ -111,10 +110,13 @@ public partial class MainWindow : Window, IDisposable
         {
             var bios = BiosImage.Load(path);
             var machine = CreateMachine();
-            machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
-            machine.Reset();
-            var nvram = _nvramStore.LoadOrCreate();
-            machine.LoadNvram(nvram.Data.Span);
+            _runner!.Invoke(() =>
+            {
+                machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
+                machine.Reset();
+                var nvram = _nvramStore.LoadOrCreate();
+                machine.LoadNvram(nvram.Data.Span);
+            });
             _settings.BiosPath = path;
             AppSettingsStore.Save(_settings);
             StatusText.Text = $"BIOS {bios.Md5[..8]} loaded{(bios.IsAnvil ? " (Anvil)" : string.Empty)}.";
@@ -130,9 +132,13 @@ public partial class MainWindow : Window, IDisposable
         try
         {
             var machine = _machine ?? CreateMachine();
-            _disc?.Dispose();
-            _disc = DiscImageFactory.Open(path);
-            machine.InsertDisc(_disc);
+            var disc = DiscImageFactory.Open(path);
+            _runner!.Invoke(() =>
+            {
+                _disc?.Dispose();
+                _disc = disc;
+                machine.InsertDisc(disc);
+            });
             _settings.DiscPath = path;
             _settings.RecentDiscs.RemoveAll(existing => string.Equals(existing, path, StringComparison.OrdinalIgnoreCase));
             _settings.RecentDiscs.Insert(0, path);
@@ -142,7 +148,7 @@ public partial class MainWindow : Window, IDisposable
             }
 
             AppSettingsStore.Save(_settings);
-            StatusText.Text = $"{Path.GetFileName(path)}: {_disc.SectorCount} sectors.";
+            StatusText.Text = $"{Path.GetFileName(path)}: {disc.SectorCount} sectors.";
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException or DiscImageException or ArgumentException)
         {
@@ -162,18 +168,18 @@ public partial class MainWindow : Window, IDisposable
         PlayButton.Content = _running ? "Pause" : "Play";
         if (_running)
         {
-            _timer.Start();
+            _runner!.Start();
         }
         else
         {
-            _timer.Stop();
+            _runner!.Pause();
             FlushNvram();
         }
     }
 
     private void OnReset(object? sender, RoutedEventArgs e)
     {
-        _machine?.Reset();
+        _runner?.Invoke(() => _machine?.Reset());
         StatusText.Text = "Reset.";
     }
 
@@ -186,8 +192,11 @@ public partial class MainWindow : Window, IDisposable
         }
 
         Directory.CreateDirectory(_settings.SaveDirectory);
-        var discHash = _disc is null ? string.Empty : GameId.Compute(_disc);
-        _machine.SaveStateToFile(_statePath, discHash);
+        _runner!.Invoke(() =>
+        {
+            var discHash = _disc is null ? string.Empty : GameId.Compute(_disc);
+            _machine.SaveStateToFile(_statePath, discHash);
+        });
         StatusText.Text = $"State saved: {_statePath}";
     }
 
@@ -199,7 +208,7 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        _machine.LoadStateFromFile(_statePath);
+        _runner!.Invoke(() => _machine.LoadStateFromFile(_statePath));
         StatusText.Text = $"State loaded: {_statePath}";
     }
 
@@ -213,38 +222,39 @@ public partial class MainWindow : Window, IDisposable
         var directory = string.IsNullOrWhiteSpace(_settings.ScreenshotDirectory)
             ? Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
             : _settings.ScreenshotDirectory;
-        var frame = new FrameBuffer(_machine.Frame.SourceWidth, _machine.Frame.SourceHeight);
-        FrameAssembler.Assemble(_machine.Frame, frame, frame.Width, frame.Height);
         var path = Path.Combine(directory, $"3do-{DateTime.Now:yyyyMMdd-HHmmss}.bmp");
-        FrameDumper.WriteBmp(frame, path);
+        _runner!.Invoke(() =>
+        {
+            var frame = new FrameBuffer(_machine.Frame.SourceWidth, _machine.Frame.SourceHeight);
+            FrameAssembler.Assemble(_machine.Frame, frame, frame.Width, frame.Height);
+            FrameDumper.WriteBmp(frame, path);
+        });
         StatusText.Text = $"Screenshot: {path}";
     }
 
-    private void OnTick(object? sender, EventArgs e)
+    private void OnCoreStatus(CoreStatus status)
     {
-        if (_machine is null)
-        {
-            return;
-        }
-
-        try
-        {
-            _machine.RunFrame();
-            Video.SubmitFrame(_machine.Frame);
-            StatusText.Text =
-                $"Frame {_machine.FramesExecuted}  PC 0x{_machine.Cpu.ProgramCounter:x8}  cycles {_machine.LastFrameCycles}";
-        }
-        catch (Exception exception) when (exception is EmulationException or InvalidOperationException)
-        {
-            _running = false;
-            _timer.Stop();
-            StatusText.Text = $"Emulation error: {exception.Message}";
-        }
+        StatusText.Text =
+            $"Frame {status.Frames}  PC 0x{status.ProgramCounter:x8}  cycles {status.Cycles}  {status.FramesPerSecond:F1} fps";
     }
 
     private ThreeDoMachine CreateMachine()
     {
-        _machine ??= new ThreeDoMachine { PbusSource = _input, AudioSink = _audio };
+        if (_machine is null)
+        {
+            _machine = new ThreeDoMachine { PbusSource = _input, AudioSink = _audio };
+            _runner = new CoreRunner(
+                _machine,
+                frame => Video.SubmitFrame(frame),
+                status => Dispatcher.UIThread.Post(() => OnCoreStatus(status)));
+            _runner.Faulted += exception => Dispatcher.UIThread.Post(() =>
+            {
+                _running = false;
+                PlayButton.Content = "Play";
+                StatusText.Text = $"Emulation error: {exception.Message}";
+            });
+        }
+
         return _machine;
     }
 
@@ -263,7 +273,8 @@ public partial class MainWindow : Window, IDisposable
 
     private void Shutdown()
     {
-        _timer.Stop();
+        _runner?.Dispose();
+        _runner = null;
         FlushNvram();
         AppSettingsStore.Save(_settings);
         _disc?.Dispose();
@@ -297,7 +308,8 @@ public partial class MainWindow : Window, IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
-        _timer.Stop();
+        _runner?.Dispose();
+        _runner = null;
         _disc?.Dispose();
         Video.Dispose();
         _nvramStore.Dispose();
