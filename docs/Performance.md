@@ -3,7 +3,7 @@
 **Status:** target definition and implementation baseline (2026-10-23). The desktop
 path now has a dedicated 60 Hz core thread, a two-stage palette/scale presenter,
 immutable texture storage with per-frame `TexSubImage2D`, cached uniform locations,
-and a real benchmark harness. Physical-pixel sizing, the GLES backend, and GPU 4K
+and a real benchmark harness. Manual DPI validation, the GLES backend, and GPU 4K
 timing remain open; see §9 and M9P in [`ImplementationPlan.md`](ImplementationPlan.md).
 
 This document is the performance contract for the emulator. It defines what "4K60"
@@ -311,10 +311,11 @@ Resolved in the 2026-10-23 M9P pass:
 
 Still open:
 
-1. `VideoSurface` uses logical `Bounds` rather than physical pixels, so a scaled 4K
-   display renders below 4K. Size the GL surface from `Bounds * RenderScaling`.
-2. The renderer assumes desktop OpenGL 3.3; Avalonia's Windows ANGLE default and
-   Raspberry Pi 4 require the GLES 3.0/3.1 shader and binding path.
+1. Physical-pixel sizing from `Bounds * RenderScaling` is implemented; manual
+   validation at 100/150/200% DPI and live resize remains.
+2. The renderer selects GLSL ES 300 sources when the context reports OpenGL ES, and
+   the Windows frontend now prefers WGL. ANGLE/Pi real-hardware validation and the
+   Silk.NET binding path under an ES context remain.
 3. No GPU timer-query/4K percentile run yet; the current numbers are CPU-side.
 4. CHD prefetch on a host worker is not implemented; the core still reads
    synchronously through the disc source.

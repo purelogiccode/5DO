@@ -1,5 +1,6 @@
 using System;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.OpenGL;
 using Avalonia.OpenGL.Controls;
 using Silk.NET.OpenGL;
@@ -73,7 +74,8 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
         _renderer = new OpenGlRenderer(new GlContextAdapter(_gl));
         _present = _renderer.Present;
         _renderer.Settings = _settings;
-        _renderer.Initialize(Math.Max(1, (int)Bounds.Width), Math.Max(1, (int)Bounds.Height));
+        var (width, height) = GetPixelSize();
+        _renderer.Initialize(width, height);
     }
 
     /// <inheritdoc />
@@ -84,8 +86,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
             return;
         }
 
-        var width = Math.Max(1, (int)Bounds.Width);
-        var height = Math.Max(1, (int)Bounds.Height);
+        var (width, height) = GetPixelSize();
         var sequence = _mailbox.Sequence;
         if (sequence == _renderedSequence && width == _renderedWidth && height == _renderedHeight)
         {
@@ -101,6 +102,14 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
         {
             _mailbox.Read(_present);
         }
+    }
+
+    private (int Width, int Height) GetPixelSize()
+    {
+        var scaling = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1.0;
+        return (
+            Math.Max(1, (int)Math.Round(Bounds.Width * scaling)),
+            Math.Max(1, (int)Math.Round(Bounds.Height * scaling)));
     }
 
     /// <inheritdoc />

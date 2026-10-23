@@ -1,6 +1,6 @@
 namespace ThreeDo.Video.OpenGL;
 
-/// <summary>GLSL 330 core shader sources for the two-stage presenter.</summary>
+/// <summary>GLSL shader sources for the two-stage presenter (desktop GL 3.3 and GLES 3.0).</summary>
 /// <remarks>
 /// Stage 1 expands the indexed pixels and per-line palette into a native-resolution RGB
 /// texture. Stage 2 samples that texture at output resolution and applies the selected
@@ -9,8 +9,27 @@ namespace ThreeDo.Video.OpenGL;
 /// </remarks>
 internal static class Shaders
 {
-    internal const string Vertex = """
-        #version 330 core
+    private const string DesktopHeader = "#version 330 core\n";
+
+    private const string EsHeader = """
+        #version 300 es
+        precision highp float;
+        precision highp int;
+        precision highp sampler2D;
+        precision highp usampler2D;
+        """;
+
+    internal static string Vertex(bool es) => Header(es) + VertexBody;
+
+    /// <summary>Stage 1: palette expansion at native resolution.</summary>
+    internal static string FragmentPalette(bool es) => Header(es) + FragmentPaletteBody;
+
+    /// <summary>Stage 2: scaling/filtering at output resolution.</summary>
+    internal static string FragmentScale(bool es) => Header(es) + FragmentScaleBody;
+
+    private static string Header(bool es) => es ? EsHeader + "\n" : DesktopHeader;
+
+    private const string VertexBody = """
         layout (location = 0) in vec2 aPosition;
         uniform vec4 uRect;      // x, y, width, height in target pixels
         uniform vec2 uOutput;    // target width, height
@@ -22,9 +41,7 @@ internal static class Shaders
         }
         """;
 
-    /// <summary>Stage 1: palette expansion at native resolution.</summary>
-    internal const string FragmentPalette = """
-        #version 330 core
+    private const string FragmentPaletteBody = """
         uniform usampler2D uPixels;  // R16UI indexed pixels
         uniform sampler2D uClut;     // RGB8, 32 entries x height
         uniform usampler2D uParams;  // RGBA32UI: background, out-control
@@ -79,9 +96,7 @@ internal static class Shaders
         }
         """;
 
-    /// <summary>Stage 2: scaling/filtering at output resolution.</summary>
-    internal const string FragmentScale = """
-        #version 330 core
+    private const string FragmentScaleBody = """
         uniform sampler2D uExpanded;  // native-resolution RGB texture
         uniform ivec2 uSource;
         uniform vec4 uRect;           // x, y, width, height in output pixels

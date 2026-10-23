@@ -1078,16 +1078,15 @@ micro-optimizing at release time. See [`Performance.md`](Performance.md).
 - [~] **M9P.5 Physical-pixel sizing and render-on-demand.**
   - Render-on-demand is implemented: the Avalonia surface renders only when the
     mailbox sequence or the output size changes.
-  - Physical-pixel sizing from `Bounds * RenderScaling` and the 100/150/200% DPI
-    tests remain.
-- [ ] **M9P.6 Renderer backend matrix.**
-  - Implement/validate desktop GL 3.3 (GLSL 330) and GLES 3.0/3.1 (GLSL ES 300)
-    variants behind the renderer contract.
-  - Windows: prefer `Wgl` with `AngleEgl` fallback, or run the GLES variant under
-    ANGLE. Do not assume GLSL 330 under Avalonia's default ANGLE context.
-  - Raspberry Pi 4/5: validate the GLES 3.1 path at 1080p.
-  - Capability detection must distinguish API type, version, integer textures, and
-    vsync support.
+  - Physical-pixel sizing from `Bounds * RenderScaling` is implemented.
+  - Manual validation at 100/150/200% DPI and live resize remains.
+- [~] **M9P.6 Renderer backend matrix.**
+  - Desktop GL 3.3 (GLSL 330) and GLES 3.0 (GLSL ES 300) shader variants are
+    selected from the reported context version.
+  - Windows now prefers `Wgl` with `AngleEgl`/software fallbacks; ANGLE and
+    Raspberry Pi 4/5 still need real-hardware validation, and the Silk.NET binding
+    path under an ES context is unverified.
+  - Capability detection distinguishes API type and version; vsync reporting remains.
 - [ ] **M9P.7 CHD/disc prefetch.**
   - Add a bounded host-side prefetch worker/cache for CHD/ISO sectors.
   - Keep emulated CD timing deterministic; no wall-clock reads in the core.

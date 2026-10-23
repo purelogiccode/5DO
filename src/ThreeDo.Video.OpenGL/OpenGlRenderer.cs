@@ -61,6 +61,7 @@ public sealed class OpenGlRenderer : IVideoRenderer
     private int _uScaleFilter;
     private int _uScaleScanline;
     private RendererCapabilities _capabilities;
+    private bool _isOpenGlEs;
     private bool _initialized;
 
     /// <summary>Initializes a new instance of the <see cref="OpenGlRenderer"/> class.</summary>
@@ -98,10 +99,12 @@ public sealed class OpenGlRenderer : IVideoRenderer
         var gl = _adapter.Gl;
         _outputWidth = width;
         _outputHeight = height;
-        _capabilities = DetectCapabilities(gl);
+        var version = gl.GetStringS(StringName.Version) ?? string.Empty;
+        _isOpenGlEs = version.Contains("OpenGL ES", StringComparison.OrdinalIgnoreCase);
+        _capabilities = DetectCapabilities(gl, version);
 
-        _paletteProgram = CreateProgram(gl, Shaders.FragmentPalette);
-        _scaleProgram = CreateProgram(gl, Shaders.FragmentScale);
+        _paletteProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentPalette(_isOpenGlEs));
+        _scaleProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentScale(_isOpenGlEs));
         _vao = gl.GenVertexArray();
         gl.BindVertexArray(_vao);
         _vbo = gl.GenBuffer();
@@ -337,9 +340,9 @@ public sealed class OpenGlRenderer : IVideoRenderer
         return texture;
     }
 
-    private static uint CreateProgram(GL gl, string fragmentSource)
+    private static uint CreateProgram(GL gl, string vertexSource, string fragmentSource)
     {
-        var vertex = Compile(gl, ShaderType.VertexShader, Shaders.Vertex);
+        var vertex = Compile(gl, ShaderType.VertexShader, vertexSource);
         var fragment = Compile(gl, ShaderType.FragmentShader, fragmentSource);
         var program = gl.CreateProgram();
         gl.AttachShader(program, vertex);
@@ -378,9 +381,8 @@ public sealed class OpenGlRenderer : IVideoRenderer
         return shader;
     }
 
-    private static RendererCapabilities DetectCapabilities(GL gl)
+    private static RendererCapabilities DetectCapabilities(GL gl, string version)
     {
-        var version = gl.GetStringS(StringName.Version) ?? string.Empty;
         var parts = version.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var major = 0;
         var minor = 0;

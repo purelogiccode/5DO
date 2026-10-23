@@ -1,5 +1,6 @@
 using System;
 using Avalonia;
+using Avalonia.Win32;
 
 namespace ThreeDo.Frontend.Avalonia;
 
@@ -16,6 +17,12 @@ sealed class Program
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
+            .With(new Win32PlatformOptions
+            {
+                // Prefer desktop WGL so the GLSL 330 presenter is used. ANGLE remains a
+                // fallback and will select the GLES shader path once it is available.
+                RenderingMode = [Win32RenderingMode.Wgl, Win32RenderingMode.AngleEgl, Win32RenderingMode.Software],
+            })
             .WithInterFont()
             .LogToTrace();
 }
