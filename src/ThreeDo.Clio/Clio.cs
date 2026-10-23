@@ -82,6 +82,9 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     /// <summary>Gets the timer delay. FreeDO: <c>_clio_GetTimerDelay</c>.</summary>
     public uint TimerDelay => _registers[0x220];
 
+    /// <summary>Gets or sets an optional diagnostic writer for timer register traffic.</summary>
+    public System.IO.TextWriter? TraceWriter { get; set; }
+
     /// <summary>Gets the timer-dependent value used by register <c>0x120</c>. FreeDO: <c>TIMER_VAL</c>.</summary>
     public int TimerValue => _timerValue;
 
@@ -207,6 +210,14 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     public bool Poke(uint offset, uint value)
     {
         var address = offset & 0xffff;
+
+        if (TraceWriter is not null
+            && (address is 0x200 or 0x204 or 0x208 or 0x20c or 0x220
+                || address is >= 0x100 and <= 0x17c
+                || address == 0x304))
+        {
+            TraceWriter.WriteLine($"clio write {address:x3}={value:x8} delay={_registers[0x220]:x}");
+        }
 
         if (_flagTime == 0)
         {

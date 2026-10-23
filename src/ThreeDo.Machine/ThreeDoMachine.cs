@@ -415,11 +415,19 @@ public sealed class ThreeDoMachine
     }
 
     /// <summary>Runs one emulated frame in single-threaded mode. FreeDO: <c>_3do_Frame</c>.</summary>
-    public void RunFrame() => RunFrame(false);
+    public void RunFrame() => RunFrame(false, null);
 
     /// <summary>Runs one emulated frame.</summary>
     /// <param name="skipFrame">When true, VDLP rendering and frame presentation are skipped (multitask mode).</param>
-    public void RunFrame(bool skipFrame)
+    public void RunFrame(bool skipFrame) => RunFrame(skipFrame, null);
+
+    /// <summary>Runs one emulated frame with an optional per-instruction diagnostic observer.</summary>
+    /// <param name="skipFrame">When true, VDLP rendering and frame presentation are skipped (multitask mode).</param>
+    /// <param name="instructionObserver">
+    /// Invoked before each CPU instruction with the program counter, CPSR, and raw instruction word.
+    /// Intended for host diagnostics only; pass <see langword="null"/> in the steady-state loop.
+    /// </param>
+    public void RunFrame(bool skipFrame, Action<uint, uint, uint>? instructionObserver)
     {
         Clio.OnFrame();
 
@@ -434,6 +442,12 @@ public sealed class ThreeDoMachine
                 Madam.HandleCel();
                 Madam.Fsm = CelFsmState.Idle;
                 continue;
+            }
+
+            if (instructionObserver is not null)
+            {
+                var pc = Cpu.ProgramCounter;
+                instructionObserver(pc, Cpu.Cpsr, Memory.Bus.Read32(pc));
             }
 
             batch += Cpu.Step();

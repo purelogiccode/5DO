@@ -127,9 +127,12 @@ public sealed class QuartzTests
 
         // FreeDO's 8.24 rounding correction intentionally over-counts slightly for
         // coarse 255-cycle batches; these are the exact reference-semantics counts.
+        // The timer count follows FreeDO quarz.cpp's default 25 MHz timer clock
+        // (25000000 / timer delay); the 12.5 MHz variant is only used by the
+        // __temporalfixes compatibility path.
         Assert.Equal(44_139, dspEvents);
         Assert.Equal(15_794, vdlEvents);
-        Assert.Equal(21_018, timerEvents);
+        Assert.Equal(25_022, timerEvents);
     }
 
     [Fact]

@@ -16,7 +16,7 @@ public static class EmulatorConstants
     public const int SoundClock = 44_100;
 
     /// <summary>Timer clock in hertz used by the quartz scheduler.</summary>
-    public const int TimerClock = 21_000_000;
+    public const int TimerClock = 25_000_000;
 
     /// <summary>Number of VDL events in one full 526-line cycle. FreeDO: <c>VDL_FS</c>.</summary>
     public const int VdlFrameLines = 526;

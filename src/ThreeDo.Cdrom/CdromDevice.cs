@@ -58,6 +58,9 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     private DiscState _discState = new();
     private int _currentSector;
 
+    /// <summary>Gets or sets an optional diagnostic writer for command and sector traces.</summary>
+    public System.IO.TextWriter? TraceWriter { get; set; }
+
     /// <summary>Initializes a new instance of the <see cref="CdromDevice"/> class.</summary>
     public CdromDevice()
     {
@@ -69,6 +72,9 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 
     /// <summary>Gets the drive status byte. FreeDO: <c>XbusStatus</c>.</summary>
     public byte DriveStatus => _xbusStatus;
+
+    /// <summary>Gets the device poll byte. FreeDO: <c>Poll</c>.</summary>
+    public byte Poll => _poll;
 
     /// <summary>Gets the save-state section identifier.</summary>
     public uint Id => StateSectionIds.Cdrom;
@@ -365,6 +371,10 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _poll &= unchecked((byte)~PollData);
         _xbusStatus &= unchecked((byte)~CdstError);
         _xbusStatus &= unchecked((byte)~CdstReady);
+
+        TraceWriter?.WriteLine(
+            $"cd cmd {_command[0]:x2} {_command[1]:x2} {_command[2]:x2} "
+            + $"{_command[3]:x2} {_command[4]:x2} {_command[5]:x2} {_command[6]:x2}");
 
         switch (_command[0])
         {
@@ -774,6 +784,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             return;
         }
 
+        TraceWriter?.WriteLine($"cd read sector {sector}");
         _disc.ReadSector(sector, _data);
     }
 

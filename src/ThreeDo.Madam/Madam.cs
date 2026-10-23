@@ -76,6 +76,12 @@ public sealed class Madam : IMadamBus, IStateSection
     /// </summary>
     public CompatibilityState Compatibility { get; set; } = new();
 
+    /// <summary>
+    /// Gets or sets a diagnostic sink for kernel debug characters written to MADAM register 0.
+    /// FreeDO: <c>EXT_KPRINT</c>. The value is the character code in the low byte.
+    /// </summary>
+    public Action<uint>? KPrint { get; set; }
+
     /// <summary>Gets the read modulo value. FreeDO: <c>RMOD</c>.</summary>
     public int ReadModulo => _readModulo;
 
@@ -174,6 +180,7 @@ public sealed class Madam : IMadamBus, IStateSection
                 _registers[address] = value;
                 return;
             case 0x000:
+                KPrint?.Invoke(value);
                 return;
             case SpriteStart:
                 if (_fsm == CelFsmState.Idle)

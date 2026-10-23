@@ -175,7 +175,15 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 
 | Game | Region | Disc ID | BIOS | Build | Boot | In-game | Audio | Input | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| | | | | | | | | | |
+| Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | Not reached yet | DSP runs; listening check pending | Not tested | CyberIntro renders real 3D frames |
+| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | Partial | No | DSP runs | No | Kernel log matches FreeDO through 30,000 frames; shell falls into the shared InsertDisc path |
+| Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | Partial | No | DSP runs | No | Same InsertDisc path as Road Rash |
+| Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | Partial | No | DSP runs | No | Same InsertDisc path as Road Rash |
+| Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Fails early** | No | Channel 0 init fails (`-6996`) | No | Boot log stops after AudioFolio init |
+
+`Partial` means the BIOS, kernel, filesystem, and CD paths run far enough to load
+the splash and demo programs, but the title screen is not reached. `Pass` means a
+real game frame was rendered and verified visually.
 
 Local corpus (user-provided, not distributed; see [`TestCorpus.md`](TestCorpus.md)):
 

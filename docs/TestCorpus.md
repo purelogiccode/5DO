@@ -38,24 +38,64 @@ All five are CHD images. They are the primary real-content corpus for:
 ISO/BIN/CUE parity testing still needs a legally obtained image in one of those
 formats, or a locally generated fixture. Do not convert and commit a retail disc.
 
-### 1.1 Current smoke baseline
+### 1.1 Current boot baseline
 
 The following results were recorded on 2026-10-23 with `panafz1.bin`, a Release
-build, and `run --frames 600` (the sample column uses `--audio wav`). They are a
-baseline for regression testing, not a compatibility pass:
+build, and `run --frames 3000`. They are a regression baseline, not a full
+compatibility pass:
 
-| Title | Final PC | Frame hash | Samples (WAV) | Observation |
+| Title | Final PC | Frame hash | Frame at 3,000 | Observation |
 |---|---|---|---|---|
-| Alone in the Dark | `0x000057C4` | `1826602437` | 442,431 | Runs; title/gameplay not yet confirmed |
-| Lemmings | `0x000205F8` | `286162373` | 444,460 | Stuck in the BIOS menu/halt path |
-| Road Rash | `0x000205C4` | `286162373` | 443,345 | Known BIOS menu/halt path (`0x205C4`) |
-| Space Ace | `0x000205C4` | `286162373` | 443,303 | Known BIOS menu/halt path (`0x205C4`) |
-| Wolfenstein 3D | `0x000205C4` | `286162373` | 443,301 | Known BIOS menu/halt path (`0x205C4`) |
+| Alone in the Dark | `0x00010520` | `286162373` | blank | Boot log stops after the audio-folio init; `SAudio channel 0 failed; error = -6996` |
+| Lemmings | `0x00128B60` | `2469164834` | **rendered** | Reaches CyberIntro; the 3D intro renders correctly |
+| Road Rash | `0x000205C8` | `286162373` | blank | Reaches the same PanaSplash -> InsertDisc -> ELDemo path as FreeDO |
+| Space Ace | `0x000205C8` | `286162373` | blank | Same PanaSplash -> InsertDisc -> ELDemo path as Road Rash |
+| Wolfenstein 3D | `0x000205C8` | `286162373` | blank | Same PanaSplash -> InsertDisc -> ELDemo path as Road Rash |
+
+`PC 0x205C4`/`0x205C8` is the Portfolio **idle loop**, not a halt: VDL and timer
+interrupts continue to run and the boot log advances. Earlier baselines that
+described this address as a "halt path" were misreading the idle loop.
+
+#### Reference comparison
+
+A local FreeDO harness (`References/freedo-master`, not committed) was built from
+the same source revision and run against an ISO dump of the same CHD. For Road
+Rash the kernel debug (`KPRINT`) stream is byte-for-byte identical through 30,000
+frames, including the expected `GetCDType:Got error d556f106` and
+`FFS-Severe-System-extended-Volume offline` lines and the subsequent
+`$panasplash/PanaSplash`, `$insertdisc/InsertDisc`, and `$eldemo/ELDemo` loads.
+FreeDO also ends on a black frame on this path, so the black screen is not a
+regression in this port; it is a shared disc-recognition limitation that needs a
+separate investigation.
 
 The DSP produces roughly 737 samples per frame (44.1 kHz at 60 fps) for all five
 titles, and WAV capture is non-empty. Audio content still needs a listening check.
-The headless core runs these 600-frame smoke tests in roughly 1.5–2.3 seconds on
-the development machine; that is **not** a 4K presentation benchmark.
+The headless core runs a 3,000-frame smoke test in roughly 4-8 seconds on the
+development machine; that is **not** a 4K presentation benchmark.
+
+#### Diagnostics used
+
+The CLI now exposes the tools used for the comparison:
+
+```powershell
+# Kernel debug output and the PC of every character (plus LR/SP/stack words)
+dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
+  --bios "$env:THREEDO_BIOS" --frames 3000 `
+  --kprint artifacts/kprint.txt --kprint-pc artifacts/kprint-pc.txt
+
+# CD command/sector trace
+dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
+  --bios "$env:THREEDO_BIOS" --frames 3000 --cd-trace artifacts/cd.log
+
+# CLIO timer/FIQ register trace
+dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
+  --bios "$env:THREEDO_BIOS" --frames 3000 --clio-trace artifacts/clio.log
+
+# Instruction ring buffer around a stop condition
+dotnet run --project src/ThreeDo.Cli -- trace "$env:THREEDO_DISC" `
+  --bios "$env:THREEDO_BIOS" --trace-frames 600 --ring 8192 `
+  --stop-kprint "Chunk XTRA" --out artifacts/trace.txt
+```
 
 ---
 

@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Text.Json;
+using CHDSharp;
+using CHDSharp.Models;
 using ThreeDo.Audio;
 using ThreeDo.Core;
+using ThreeDo.Cpu;
 using ThreeDo.Diagnostics;
 using ThreeDo.Host;
 using ThreeDo.Machine;
@@ -34,7 +38,9 @@ internal static class Program
                 "--version" or "-v" => Version(),
                 "--help" or "-h" or "help" => Help(),
                 "run" => Run(args),
+                "trace" => TraceCommand(args),
                 "info" => Info(args),
+                "disc" => DiscCommand(args),
                 "bios" => Bios(args),
                 "state" => State(args),
                 "bench" => Bench(args),
@@ -96,6 +102,10 @@ internal static class Program
         var stateIn = options.Get("--state-in");
         var stateOut = options.Get("--state-out");
         var frameOut = options.Get("--frame-out");
+        var cdTrace = options.Get("--cd-trace");
+        var clioTrace = options.Get("--clio-trace");
+        var kprintPath = options.Get("--kprint");
+        var kprintPcPath = options.Get("--kprint-pc");
         var discPath = options.Positional;
 
         if (biosPath is null && stateIn is null)
@@ -121,12 +131,100 @@ internal static class Program
         machine.Reset();
         machine.AudioSink = audio;
 
+        StreamWriter? clioTraceWriter = null;
+        if (clioTrace is not null)
+        {
+            var directory = Path.GetDirectoryName(Path.GetFullPath(clioTrace));
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            clioTraceWriter = new StreamWriter(clioTrace);
+            machine.Clio.TraceWriter = clioTraceWriter;
+        }
+
+        StreamWriter? cdTraceWriter = null;
+        if (cdTrace is not null)
+        {
+            var directory = Path.GetDirectoryName(Path.GetFullPath(cdTrace));
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            cdTraceWriter = new StreamWriter(cdTrace);
+            machine.Cdrom.TraceWriter = cdTraceWriter;
+        }
+
+        StreamWriter? kprintWriter = null;
+        StreamWriter? kprintPcWriter = null;
+        if (kprintPath is not null || kprintPcPath is not null)
+        {
+            if (kprintPath is not null)
+            {
+                var directory = Path.GetDirectoryName(Path.GetFullPath(kprintPath));
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                kprintWriter = new StreamWriter(kprintPath);
+            }
+
+            if (kprintPcPath is not null)
+            {
+                var directory = Path.GetDirectoryName(Path.GetFullPath(kprintPcPath));
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                kprintPcWriter = new StreamWriter(kprintPcPath);
+            }
+
+            machine.Madam.KPrint = value =>
+            {
+                var character = (char)(value & 0xff);
+                if (kprintPcWriter is not null)
+                {
+                    var sp = machine.Cpu.ReadRegister(13);
+                    var stack = string.Empty;
+                    for (var i = 0; i < 8; i++)
+                    {
+                        stack += $"{machine.Memory.Ram.Read32(sp + (uint)(i * 4)):x8} ";
+                    }
+
+                    kprintPcWriter.WriteLine(
+                        $"{machine.Cpu.ProgramCounter:x8} {value & 0xff:x2} "
+                        + $"lr={machine.Cpu.ReadRegister(14):x8} sp={sp:x8} {stack}");
+                }
+                if (kprintWriter is null)
+                {
+                    return;
+                }
+
+                if (character is '\r' or '\n')
+                {
+                    kprintWriter.WriteLine();
+                }
+                else if (character >= ' ')
+                {
+                    kprintWriter.Write(character);
+                }
+            };
+        }
+
         if (stateIn is not null)
         {
             machine.LoadStateFromFile(stateIn);
         }
 
         machine.RunFrames(frames);
+        clioTraceWriter?.Dispose();
+        cdTraceWriter?.Dispose();
+        kprintWriter?.Dispose();
+        kprintPcWriter?.Dispose();
 
         if (frameOut is not null)
         {
@@ -165,6 +263,156 @@ internal static class Program
         WriteRunResult(result, json);
         return 0;
     }
+
+    private static int TraceCommand(string[] args)
+    {
+        var options = Parse(args);
+        var biosPath = options.Get("--bios");
+        var stateIn = options.Get("--state-in");
+        var discPath = options.Positional;
+        var frames = options.GetInt("--frames", 0);
+        var traceFrames = options.GetInt("--trace-frames", 1);
+        var count = options.GetInt("--count", 0);
+        var ringSize = options.GetInt("--ring", 4096);
+        var stopPc = options.GetUInt32("--stop-pc", null);
+        var stopKprint = options.Get("--stop-kprint");
+        var output = options.Get("--out");
+
+        if (biosPath is null && stateIn is null)
+        {
+            throw new ArgumentException("trace needs --bios <path> unless --state-in supplies the ROM state.");
+        }
+
+        var machine = new ThreeDoMachine();
+        if (biosPath is not null)
+        {
+            var bios = BiosImage.Load(biosPath);
+            machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
+        }
+
+        IDiscSource? disc = null;
+        if (discPath is not null)
+        {
+            disc = DiscImageFactory.Open(discPath);
+            machine.InsertDisc(disc);
+        }
+
+        machine.Reset();
+        if (stateIn is not null)
+        {
+            machine.LoadStateFromFile(stateIn);
+        }
+
+        machine.RunFrames(frames);
+
+        TextWriter writer = Console.Out;
+        StreamWriter? file = null;
+        if (output is not null)
+        {
+            var directory = Path.GetDirectoryName(Path.GetFullPath(output));
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            file = new StreamWriter(output);
+            writer = file;
+        }
+
+        var ring = new Queue<(uint Pc, uint Cpsr, uint Instruction)>(Math.Max(ringSize, 1));
+        var observed = 0;
+        var stopped = false;
+
+        if (stopKprint is not null)
+        {
+            var text = new StringBuilder();
+            machine.Madam.KPrint = value =>
+            {
+                var character = (char)(value & 0xff);
+                if (character is '\r' or '\n')
+                {
+                    text.Clear();
+                }
+                else
+                {
+                    text.Append(character);
+                }
+
+                if (text.Length >= stopKprint.Length
+                    && text.ToString(text.Length - stopKprint.Length, stopKprint.Length) == stopKprint)
+                {
+                    throw new TraceStopException();
+                }
+            };
+        }
+
+        void Observe(uint pc, uint cpsr, uint instruction)
+        {
+            if (count > 0 && observed >= count)
+            {
+                throw new TraceLimitReachedException();
+            }
+
+            ring.Enqueue((pc, cpsr, instruction));
+            if (ring.Count > ringSize)
+            {
+                ring.Dequeue();
+            }
+
+            observed++;
+            if (stopPc is not null && pc == stopPc)
+            {
+                throw new TraceStopException();
+            }
+        }
+
+        try
+        {
+            for (var frame = 0; frame < traceFrames; frame++)
+            {
+                machine.RunFrame(false, Observe);
+            }
+        }
+        catch (TraceStopException)
+        {
+            stopped = true;
+        }
+        catch (TraceLimitReachedException)
+        {
+            stopped = true;
+        }
+        finally
+        {
+            if (stopped)
+            {
+                writer.WriteLine($"# stopped at 0x{machine.Cpu.ProgramCounter:x8} after {observed} instructions");
+            }
+
+            writer.WriteLine(
+                $"# pc={machine.Cpu.ProgramCounter:x8} cpsr={machine.Cpu.Cpsr:x8} "
+                + $"r0={machine.Cpu.ReadRegister(0):x8} r1={machine.Cpu.ReadRegister(1):x8} "
+                + $"r2={machine.Cpu.ReadRegister(2):x8} r3={machine.Cpu.ReadRegister(3):x8} "
+                + $"sp={machine.Cpu.ReadRegister(13):x8} lr={machine.Cpu.ReadRegister(14):x8} "
+                + $"cdStatus={machine.Cdrom.DriveStatus:x2} cdPoll={machine.Cdrom.Poll:x2} "
+                + $"disc={(machine.Cdrom.Disc is null ? "no" : "yes")}");
+
+            foreach (var entry in ring)
+            {
+                writer.WriteLine(
+                    $"{entry.Pc:x8} {entry.Cpsr:x8} {entry.Instruction:x8} "
+                    + ArmDisassembler.Disassemble(entry.Instruction, entry.Pc));
+            }
+
+            file?.Dispose();
+            disc?.Dispose();
+        }
+
+        return 0;
+    }
+
+    private sealed class TraceStopException : Exception;
+
+    private sealed class TraceLimitReachedException : Exception;
 
     private static int Info(string[] args)
     {
@@ -205,6 +453,57 @@ internal static class Program
             Console.WriteLine($"game:        {(result.known ? $"{result.name} ({result.releaseYear}, {result.publisher}, {result.regions})" : "unknown")}");
         }
 
+        return 0;
+    }
+
+    private static int DiscCommand(string[] args)
+    {
+        if (args.Length < 2)
+        {
+            throw new ArgumentException("disc needs the 'dump' or 'tracks' subcommand.");
+        }
+
+        if (string.Equals(args[1], "tracks", StringComparison.OrdinalIgnoreCase))
+        {
+            var options = Parse(args, startIndex: 2);
+            var trackPath = options.Positional ?? throw new ArgumentException("disc tracks needs a disc path.");
+            if (ChdFile.Open(trackPath, out var chd) != ChdError.Chderrnone || chd is null)
+            {
+                throw new InvalidDataException($"Cannot open CHD '{trackPath}'.");
+            }
+
+            using (chd)
+            {
+                foreach (var track in chd.Tracks ?? [])
+                {
+                    Console.WriteLine(
+                        $"track {track.TrackNumber}: type={track.TrackType} dataSize={track.DataSize} "
+                        + $"frames={track.Frames} start={track.StartFrame}");
+                }
+            }
+
+            return 0;
+        }
+
+        if (!string.Equals(args[1], "dump", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("disc needs the 'dump' or 'tracks' subcommand.");
+        }
+
+        var dumpOptions = Parse(args, startIndex: 2);
+        var path = dumpOptions.Positional ?? throw new ArgumentException("disc dump needs a disc path.");
+        var sector = dumpOptions.GetInt("--sector", 0);
+        var count = dumpOptions.GetInt("--count", 1);
+        var output = dumpOptions.Get("--out") ?? throw new ArgumentException("disc dump needs --out <path>.");
+        using var disc = DiscImageFactory.Open(path);
+        var buffer = new byte[2048 * count];
+        for (var i = 0; i < count; i++)
+        {
+            disc.ReadSector(sector + i, buffer.AsSpan(i * 2048, 2048));
+        }
+
+        File.WriteAllBytes(output, buffer);
+        Console.WriteLine($"wrote {count} sector(s) from LBA {sector} to {output}");
         return 0;
     }
 
@@ -494,8 +793,14 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine("Commands:");
         Console.WriteLine("  run [disc] [--bios path] [--frames N] [--state-in path] [--state-out path]");
-        Console.WriteLine("             [--frame-out path] [--audio null|wav] [--wav-out path] [--json]");
+        Console.WriteLine("             [--frame-out path] [--audio null|wav] [--wav-out path] [--cd-trace path]");
+        Console.WriteLine("             [--clio-trace path] [--kprint path] [--kprint-pc path] [--json]");
+        Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
+        Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--count N] [--out path]");
+        Console.WriteLine("             Runs the machine and records a diagnostic instruction ring buffer.");
         Console.WriteLine("  info <disc> [--json]                 Disc geometry, volume header, and game ID.");
+        Console.WriteLine("  disc dump <disc> --out path [--sector N] [--count N]");
+        Console.WriteLine("                                       Write raw 2048-byte sectors for diagnostics.");
         Console.WriteLine("  bios info <path> [--json]            BIOS size, MD5, and Anvil detection.");
         Console.WriteLine("  state inspect <path> [--json]        Save-state header and section table.");
         Console.WriteLine("  bench [--frames N] [--json]          Synthetic-ROM frame benchmark.");
@@ -520,6 +825,20 @@ internal static class Program
         {
             var value = Get(name);
             return value is null ? fallback : int.Parse(value, CultureInfo.InvariantCulture);
+        }
+
+        internal uint? GetUInt32(string name, uint? fallback)
+        {
+            var value = Get(name);
+            if (value is null)
+            {
+                return fallback;
+            }
+
+            var text = value.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+                ? value[2..]
+                : value;
+            return uint.Parse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
         }
     }
 }
