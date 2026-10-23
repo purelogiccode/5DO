@@ -3,8 +3,10 @@
 **Status:** target definition and implementation baseline (2026-10-23). The desktop
 path now has a dedicated 60 Hz core thread, a two-stage palette/scale presenter,
 immutable texture storage with per-frame `TexSubImage2D`, cached uniform locations,
-and a real benchmark harness. Manual DPI validation, the GLES backend, and GPU 4K
-timing remain open; see §9 and M9P in [`ImplementationPlan.md`](ImplementationPlan.md).
+and a real benchmark harness. CPU-side frame cost is ~2.1-2.3 ms, leaving ~14 ms of
+headroom at 60 Hz. Manual DPI validation, the GLES backend, and GPU 4K timing remain
+open; see §9 and M9P in [`ImplementationPlan.md`](ImplementationPlan.md). The overall
+project position is summarized in [`Status.md`](Status.md).
 
 This document is the performance contract for the emulator. It defines what "4K60"
 means, the frame budget, the presentation pipeline, the supported renderer backends,

@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/4DO-master/FreeDOCore` (primary), `References/opera-libretro-master/libopera` (secondary)
-**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); M4 MADAM graphics complete through M4.14; M4.15 renders the BIOS boot animation but the interactive menu still needs further tracing; M5 DSP/audio core and pipeline complete (real-content audio validation pending); M6 XBUS/CD-ROM/storage complete except real-disc boot validation (the local corpus in [`TestCorpus.md`](TestCorpus.md) now provides five real CHDs); M7 input/PBUS, NVRAM persistence, and the game database are complete, with platform keyboard/gamepad backends scheduled with the M9 frontend; M8 deterministic save states and the headless CLI are complete; M9 desktop shell and M9R OpenGL presenter exist as a Windows prototype; M10 packaging/CI is partially complete (CI builds/publishes CLI and frontend for six RIDs; a win-x64 CLI publish was smoke-tested). The 2026-10-23 performance review added **M9P** (runtime performance and pacing) because the prototype still runs emulation on the UI timer, uses a single output-resolution shader, reallocates textures per frame, and has a stub benchmark project. M0.8 legal/attribution review remains pending. The OpenGL/GLES renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path. See [`Performance.md`](Performance.md).
+**Status (2026-10-23):** M0-M8 are complete. The M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core thread/pacing work, and the M10 CI/publish pipeline are implemented as a working prototype. Real-content status: Lemmings and Space Ace boot and render; Road Rash and Wolfenstein load their own OS but stop at SAudio channel 0 initialization; Alone in the Dark fails earlier. The remaining audio failure is shared with the FreeDO reference. 538 tests pass, and CPU-side frame cost is ~2.1-2.3 ms. Remaining work: DSP/audio instrument initialization, real-game hardening, 4K GPU/p99/GLES validation, arm64/installers, filter polish, and the M0.8 legal/attribution review. See [`Status.md`](Status.md) for the completion estimate and next steps.
 **Last updated:** 2026-10-23
 
 ---
@@ -207,6 +207,27 @@ Key decisions:
 | M12 | Optional guest ARM JIT | Managed IL JIT behind `ICpuBackend` | Bit-identical state; benchmark win | 10-20 dd |
 
 **Total:** ~157 developer-days of focused work plus 30% contingency (~204 dd), excluding the optional M12 JIT. This is a multi-month project for one experienced developer; correctness and performance gates matter more than the estimate.
+
+### 4a. Current position vs. the plan (2026-10-23)
+
+Snapshot: 538 tests pass; CPU-side frame cost is ~2.1-2.3 ms; real-game status is in
+[`Compatibility.md`](Compatibility.md). Counting the prototype work as partial credit:
+
+| Milestone | State | Done (dd) | Remaining (dd) |
+|---|---|---:|---:|
+| M0-M8 | Complete | 90 | 0 |
+| M9 | Partial: shell/library/video/input; settings, audio, gamepad pages, polish | 10 | 6 |
+| M9R | Partial: two-stage, nearest/sharp-bilinear/CRT; xBR/HQx, GPU tests | 6 | 4 |
+| M9P | Partial: core thread, two-stage, uploads, DPI, benchmark; CHD prefetch, hot-path, p99/GPU gates | 5 | 5 |
+| M10 | Partial: CI + six-RID publish; arm64, trimming, installers, perf report | 2.5 | 3.5 |
+| M11 | Not started: real-game hardening and release | 0 | 25+ |
+| **Baseline** | | **~113.5 / 157** | **~43.5 + 30% ≈ 57** |
+
+**Estimate: roughly 70% of the v1 effort is done.** One experienced developer needs
+about **9-12 focused weeks**; two developers can overlap UI, renderer, and packaging
+for roughly **5-7 weeks**, but real-game compatibility is serial and is the main
+uncertainty. If the audio/DSP issue needs a deep microcode effort, add 2-4 weeks.
+The detailed rationale and ordered next steps are in [`Status.md`](Status.md).
 
 ---
 
@@ -1043,20 +1064,22 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
 core thread, a two-stage presenter, an allocation-free upload path, a GL/GLES backend
 matrix, and a benchmark gate that runs throughout development.
 
-**Why this exists:** the M9/M9R prototype runs emulation on a 16 ms UI
-`DispatcherTimer`, expands the palette once per output pixel, calls `TexImage2D` and
-`GetUniformLocation` every frame, sizes the GL surface in logical pixels, and has a
-stub benchmark project. Those are architectural shortcuts that cannot be fixed by
-micro-optimizing at release time. See [`Performance.md`](Performance.md).
+**Why this exists:** before M9P, the M9/M9R prototype ran emulation on a 16 ms UI
+`DispatcherTimer`, expanded the palette once per output pixel, called `TexImage2D`
+and `GetUniformLocation` every frame, sized the GL surface in logical pixels, and had
+a stub benchmark project. Those were architectural shortcuts that could not be fixed
+by micro-optimizing at release time. M9P replaced them with the core thread, the
+two-stage presenter, persistent uploads, physical-pixel sizing, and the benchmark
+harness. See [`Performance.md`](Performance.md).
 
 **Tasks**
 
 - [~] **M9P.1 Baseline and budgets.**
-  - Benchmark harness and a CPU-side baseline are recorded (synthetic 2.26 ms/frame,
-    Lemmings 2.11 ms/frame). Tier B, p50/p95/p99, allocations/frame, and GPU time
-    remain to be recorded.
+  - Benchmark harness and a CPU-side baseline are recorded (synthetic 2.27 ms/frame,
+    Lemmings 2.14 ms/frame, including the read copy). Tier B, p50/p95/p99,
+    allocations/frame, and GPU time remain to be recorded.
 - [x] **M9P.2 Dedicated core thread and frame pacer.**
-  - Add `EmulatorSession` and `FramePacer` to `ThreeDo.Host`.
+  - `ThreeDo.Host.CoreRunner` and its internal `FramePacer` are implemented.
   - Run `RunFrame` on a dedicated core thread at a fixed 60 Hz; catch-up capped at
     one or two frames.
   - The UI thread never calls `RunFrame`; replace the `DispatcherTimer` emulation
@@ -1125,8 +1148,8 @@ micro-optimizing at release time. See [`Performance.md`](Performance.md).
 - [ ] Physical-pixel sizing at 100/150/200% DPI.
 - [ ] Render-on-demand verified at 60 Hz and 144 Hz.
 - [ ] GL 3.3 and GLES 3.0/3.1 variants produce identical Accurate-mode output.
-- [ ] No `DispatcherTimer` emulation loop remains; no per-frame status strings.
-- [ ] Benchmark baseline and regression gate are in CI.
+- [x] No `DispatcherTimer` emulation loop remains; no per-frame status strings.
+- [ ] Benchmark baseline and regression gate are in CI (baseline artifact is in CI; the gate is not).
 
 **Risks**
 
@@ -1467,10 +1490,12 @@ Suggested parallelization with two developers:
 6. ~~Start M4: MADAM CEL engine, pixel pipeline, matrix engine validation, and BIOS UI rendering.~~ M4.1-M4.14 are done. M4.15 renders the boot animation; the local corpus now provides real discs for the interactive-menu tracing.
 7. ~~M5 DSP/audio and M6 XBUS/CD-ROM/storage.~~ Cores, sinks, disc containers, CHD parent/child, volume header, and command transcripts are implemented. The local corpus provides five CHDs; real-disc boot validation and audible WAV verification are the next tests.
 8. ~~M7 input/NVRAM/game database, M8 save states/CLI, M9 basic shell, M9R core OpenGL presenter, and M10 CI/CLI publish.~~ Done as a prototype; next are M9P performance/pacing, the remaining M9 pages/audio/settings UI, M9R filters/GPU tests, M10 arm64/trimming/installers, M11, and real-disc boot validation.
-9. Run the real-content smoke tests in [`TestCorpus.md`](TestCorpus.md) and record results in `docs/Compatibility.md`.
-10. Start M9P.1/M9P.2 before more UI polish: benchmark baseline, dedicated core thread, and frame pacer.
-11. Validate the renderer backend matrix (WGL desktop GL vs ANGLE GLES; Pi 4/5 GLES 3.1) and physical-pixel sizing before claiming 4K60.
-12. Schedule a 30-minute legal/attribution review before any public build.
+9. ~~Run the real-content smoke tests and record results in [`Compatibility.md`](Compatibility.md).~~ Done for boot status; gameplay/input/audio validation is still pending.
+10. ~~M9P.1/M9P.2: benchmark baseline, dedicated core thread, and frame pacer.~~ Done; continue M9P.3-M9P.9 (GLES/Pi validation, CHD prefetch, p99/GPU gates).
+11. **Fix the DSP/audio instrument initialization (`-6996`)** and Space Ace's low-memory corruption. This is the main real-game blocker.
+12. Validate the renderer backend matrix on real hardware (WGL desktop GL vs ANGLE GLES; Pi 4/5 GLES 3.1) and the 100/150/200% DPI paths before claiming 4K60.
+13. Finish M10: arm64 validation, trimming, installers/signing plan, and the final performance report.
+14. Schedule a 30-minute legal/attribution review before any public build.
 
 ---
 
@@ -1511,3 +1536,4 @@ Suggested parallelization with two developers:
 | 2026-10-23 | Testing | Local real-content corpus | Documented `D:\Samples\3DO` and `bios/` in `docs/TestCorpus.md`; five CHDs inventoried (Alone in the Dark, Lemmings, Road Rash, Space Ace, Wolfenstein 3D); 600-frame smoke baseline and WAV sample counts recorded; boot still stops in the BIOS menu/halt path for most titles |
 | 2026-10-23 | M9P.1-M9P.5, M9P.9 | Core thread, two-stage presenter, persistent upload, render-on-demand, benchmark harness | `CoreRunner` runs the machine on a dedicated 60 Hz thread with pause/invoke marshalling; `OpenGlRenderer` expands palettes into a native-resolution FBO and scales in a second pass; `TexStorage2D` + `TexSubImage2D`, cached uniforms, visible-width mailbox copies, and on-demand rendering; benchmark reports 2.26 ms/frame synthetic and 2.11 ms/frame Lemmings (CPU only); 537 tests pass |
 | 2026-10-23 | Compatibility | CD disc-end fix and real-game boot | `InitCd` no longer double-adds the 150-frame lead-in; the CD DIPIR accepts Road Rash, Space Ace, and Wolfenstein. Lemmings renders CyberIntro, Space Ace renders the ReadySoft demo intro, Road Rash/Wolfenstein load their own OS and stop at the shared SAudio init failure. See `docs/TestCorpus.md` |
+| 2026-10-23 | Documentation | Status and plan refresh | Added `docs/Status.md` with the real-game matrix, performance snapshot, ~70% completion estimate (~9-12 weeks for one developer), and ordered next steps. Updated README, this plan, Architecture, Compatibility, TestCorpus, TestStrategy, and Performance to match the implemented M9P work |

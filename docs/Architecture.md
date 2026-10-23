@@ -1,6 +1,6 @@
 # 3DOEmulator Architecture
 
-**Status:** implemented through M10 partial (M0-M8 complete; M9/M9R/M10 in progress). The 2026-10-23 performance review added the M9P workstream and [`Performance.md`](Performance.md); the architecture below reflects the target design, not every current prototype shortcut.
+**Status:** implemented through M9P desktop (M0-M8 complete; M9/M9R/M9P/M10 partial). The dedicated core thread, two-stage presenter, persistent upload, physical-pixel sizing, and render-on-demand described below are implemented. GLES/ANGLE/Pi validation and the remaining M9P items are pending. See [`Status.md`](Status.md) for the current position and completion estimate.
 **Scope:** the emulator core, host layer, CLI, Avalonia frontend, tests, and build layout.
 
 ---
@@ -268,7 +268,7 @@ VdlFrame (reused double/triple buffer)
 OpenGL/GLES renderer (required desktop path)   CPU FrameAssembler (oracle/fallback)
   stage 1: palette expansion at native res      - used by CLI/headless tests
   stage 2: upscale/filter at output res         - used when no GL context exists
-  persistent textures + PBO ring                - must match GL "Accurate" mode
+  persistent textures (TexStorage2D/SubImage2D) - must match GL "Accurate" mode
   present with vsync
         │
         ▼
@@ -509,14 +509,14 @@ Portable mode: if a `portable.flag` file exists next to the executable, use `<ex
 
 ## 12. Threading model
 
-- **Core thread:** CPU, memory, chips, scheduler, DSP, VDLP, CD. Dedicated, single-threaded, and deterministic. The UI thread must never call `RunFrame`; the current `DispatcherTimer` prototype is replaced by `EmulatorSession` + `FramePacer`.
+- **Core thread:** CPU, memory, chips, scheduler, DSP, VDLP, CD. Dedicated, single-threaded, and deterministic. Implemented as `ThreeDo.Host.CoreRunner` with a 60 Hz `FramePacer`; the UI thread never calls `RunFrame`, and machine-touching UI actions go through `CoreRunner.Invoke` (pause, action, resume).
 - **Render thread / UI thread:** Avalonia owns the GL/GLES context and presents frames. The renderer consumes the latest `VdlFrame` snapshot; it never calls into emulated state.
 - **Audio thread:** consumes the ring buffer; never calls into the core.
 - **No locks in the core hot path.** The only cross-thread state is the audio ring buffer, the latest-frame mailbox, and session lifecycle flags.
 
-A `FrameMailbox` holds the most recent completed `VdlFrame`. If the renderer is slow, old frames are dropped rather than queued, preventing latency growth. The renderer uploads the frame to a texture and applies the two-stage filter pipeline; the core does not wait for the GPU. The mailbox should copy only visible pixels and avoid delegate/string allocations in the per-frame path.
+A `VdlFrameMailbox` holds the most recent completed `VdlFrame`. If the renderer is slow, old frames are dropped rather than queued, preventing latency growth. The renderer uploads the frame to a texture and applies the two-stage filter pipeline; the core does not wait for the GPU. The mailbox copies only the visible line width, and `Read(destination, reader)` copies into a caller-owned frame before invoking the renderer so the lock is not held during GPU submission. The present delegate is cached.
 
-**Frame pacing:** fixed 60 Hz on the core thread, catch-up capped at one or two frames, render-on-demand when a new frame is available. Do not render at the monitor refresh rate when the emulator is producing 60 fps. Update FPS/status overlays at 4–10 Hz, not every frame.
+**Frame pacing:** fixed 60 Hz on the core thread, catch-up capped at one or two frames, render-on-demand when a new frame is available. Implemented in `CoreRunner`; the Avalonia surface renders only when the mailbox sequence or the output size changes. Status/FPS updates run at 4 Hz, not every frame.
 
 ---
 

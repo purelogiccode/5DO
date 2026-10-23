@@ -56,6 +56,12 @@ compatibility pass:
 interrupts continue to run and the boot log advances. Earlier baselines that
 described this address as a "halt path" were misreading the idle loop.
 
+**Where this leaves us:** two titles render real frames (Lemmings, Space Ace), two
+load their own OS and stop at audio initialization (Road Rash, Wolfenstein), and one
+fails earlier (Alone in the Dark). No title has reached gameplay; input, save
+states, audio, and CD streaming still need in-game validation. See
+[`Status.md`](Status.md) for the overall estimate and next steps.
+
 #### CD disc-end fix (2026-10-23)
 
 `CdromDevice.InitCd` originally reproduced FreeDO's double-add of the 150-frame

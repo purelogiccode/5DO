@@ -6,8 +6,24 @@ A clean-room-style, **pure C# / .NET 10** port of the FreeDO/4DO 3DO emulator co
 
 ## Status
 
-**M0 scaffold complete; M1 (core contracts, memory/bus, Quartz scheduler, state primitives, diagnostics) is complete; M2 (ARM60 CPU) is complete; M3 (boot skeleton: BIOS/NVRAM, CLIO, MADAM registers, VDLP, SPORT, frame loop) is complete; M4 (MADAM graphics) is complete through M4.14; M4.15's BIOS boot animation renders and starts the DSP; M5 (DSP and audio) is complete through the core, pipeline, and tests; M6 (XBUS, CD-ROM, ISO/BIN/CUE/CHD storage) is complete except real-disc boot validation, and the local corpus in [`docs/TestCorpus.md`](docs/TestCorpus.md) now provides five CHDs for that work; M7 (input/PBUS, input profiles, NVRAM persistence, and the 4DO game database) is complete, with the platform keyboard/gamepad backends arriving with the M9 frontend; M8 (deterministic save states, diagnostics, and the headless CLI) is complete; M9 basic Avalonia shell and the M9R OpenGL presenter exist as a Windows prototype; CI publishes the CLI and frontend for six RIDs. The 2026-10-23 performance review added M9P (dedicated core thread, two-stage 4K presenter, GL/GLES backend matrix, benchmark gates). Filter polish, settings pages, gamepad UI, arm64 validation, real-disc boot validation, and the 4K60 performance path remain.** The M3.13 OpenGL spike is deferred to M9R. The implementation plan and architecture are in:
+**Current position (2026-10-23):** M0-M8 are complete. The M9 Avalonia shell, the
+M9R two-stage OpenGL presenter, the M9P dedicated core thread/frame pacer, and the
+M10 CI/publish pipeline are implemented as a working prototype. **538 tests pass.**
 
+Real-content status with `panafz1.bin`: **Lemmings** boots to CyberIntro and renders
+the 3D intro; **Space Ace** boots the ReadySoft player and renders the demo intro;
+**Road Rash** and **Wolfenstein 3D** load their own OS but stop at SAudio channel 0
+initialization; **Alone in the Dark** fails earlier in AudioFolio initialization.
+The audio failure is shared with the FreeDO reference. CPU-side performance is
+~2.1-2.3 ms/frame, leaving ~14 ms of headroom at 60 Hz; the 4K GPU pass and p99
+gates are not measured yet.
+
+Remaining major work: DSP/audio instrument initialization, real-game compatibility
+hardening, GPU 4K/p99 validation, GLES/ANGLE/Pi validation, arm64/installers, filter
+polish, and the legal/attribution review. See [`docs/Status.md`](docs/Status.md) for
+the completion estimate and next steps. The implementation plan and architecture are in:
+
+- [`docs/Status.md`](docs/Status.md) - current position, completion estimate, and next steps.
 - [`docs/ImplementationPlan.md`](docs/ImplementationPlan.md) - milestones, tasks, acceptance criteria, risks.
 - [`docs/Architecture.md`](docs/Architecture.md) - project layout, dependency rules, runtime composition.
 - [`docs/PortingNotes.md`](docs/PortingNotes.md) - C++ to C# porting rules and FreeDOCore quirks.
@@ -55,7 +71,11 @@ The emulation core still renders CELs in software for accuracy. The GPU accelera
 - Core frame budget ≤ 8 ms p99 on Tier A, zero managed allocations per frame, and core cost independent of output resolution.
 - CRT/xBR filters are opt-in and may require faster hardware.
 
-The current prototype does not meet these budgets yet; see [`docs/Performance.md`](docs/Performance.md) for the pipeline, measurement method, and M9P work items.
+The CPU side currently runs at ~2.1-2.3 ms/frame (core + pack + mailbox + read copy),
+leaving ~14 ms of headroom at 60 Hz on the development machine. The 4K GPU pass,
+p99 frame times, allocation gates, and Tier B numbers are not measured yet; see
+[`docs/Performance.md`](docs/Performance.md) for the pipeline, measurement method,
+and the remaining M9P work items.
 
 ## Optional guest CPU JIT
 

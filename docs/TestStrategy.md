@@ -409,7 +409,10 @@ Fuzz tests are not part of the default suite if slow; run them nightly or on dem
 ## 9. Performance tests
 
 The full target, budgets, hardware tiers, and measurement method are in
-[`Performance.md`](Performance.md). Use BenchmarkDotNet for:
+[`Performance.md`](Performance.md). The stopwatch harness in
+`benchmarks/ThreeDo.Benchmarks` currently measures the machine core, video pack,
+mailbox write, and read copy for a synthetic machine or a real BIOS/disc. It reports
+JSON and a 60 Hz budget comparison. BenchmarkDotNet microbenchmarks are planned for:
 
 - `Arm60.Step` on a mixed instruction stream (MIPS).
 - `CelEngine.HandleCel` on representative CCB scenes (pixels/ms).
@@ -434,22 +437,36 @@ Targets (Tier A = mid-range x64; Tier B = Raspberry Pi 4/5 class arm64):
 | Startup | < 1 s to first frame |
 | Memory | < 150 MB resident (including GL textures) |
 
+Current CPU-side baseline (Release, development machine, 600 frames):
+
+| Case | Core | Pack | Mailbox write | Read copy | Total |
+|---|---:|---:|---:|---:|---:|
+| Synthetic | 2.177 ms | 42.8 µs | 23.4 µs | 27.2 µs | **2.270 ms/frame** |
+| Lemmings | 2.061 ms | 40.7 µs | 17.1 µs | 18.1 µs | **2.137 ms/frame** |
+
+This is ~14.4 ms of headroom at 60 Hz. GPU time, p99, allocations/frame, and Tier B
+are not measured yet.
+
 A performance change is accepted only with before/after numbers and identical golden output.
 
 ### 9.1 End-to-end harness
 
-The CLI `bench` command must run a real BIOS + disc from
-[`TestCorpus.md`](TestCorpus.md) and report p50/p95/p99 frame time, core vs
-presenter time, allocations/frame, GC counts, and GPU time when a GL context is
-available. The synthetic machine benchmark remains for CI, but it is not a
-substitute for real-content measurements.
+`benchmarks/ThreeDo.Benchmarks` accepts `--bios`/`--disc` for a real title and
+reports core, video pack, mailbox write, read copy, instructions/s, and a 60 Hz
+headroom figure. The CLI `bench` command runs the synthetic machine. p50/p95/p99
+frame time, allocations/frame, GC counts, and GPU time when a GL context is
+available are still pending. The synthetic benchmark remains for CI, but it is not
+a substitute for real-content measurements.
 
 ### 9.2 CI gate
 
-- Per-PR: allocation assertions, CPU-renderer parity, unit/integration tests.
+- Per-PR: build, unit/integration tests, format check, and a 120-frame synthetic
+  benchmark artifact. Allocation assertions and CPU-renderer parity are still
+  pending.
 - Nightly/self-hosted: BenchmarkDotNet baselines, real-content smoke, 4K GPU timing.
 - Fail on a sustained >10% regression or a missed budget after warm-up.
-- Store the baseline JSON and hardware description with each run.
+- Store the baseline JSON and hardware description with each run. The CI workflow
+  uploads the synthetic JSON as `benchmark-baseline` but does not gate on it yet.
 
 ---
 
@@ -462,6 +479,8 @@ substitute for real-content measurements.
 - **Format:** `dotnet format --verify-no-changes`.
 - **Analyzers:** warnings as errors.
 - **Artifacts:** CLI + frontend archives per RID, including shaders and native audio assets.
+- **Benchmark artifact:** Ubuntu CI runs a 120-frame synthetic benchmark and uploads
+  `benchmark-baseline` (JSON). It is a trend artifact, not a timing gate.
 - **Nightly/self-hosted:** performance baseline (p50/p95/p99, allocations, GPU time), fuzz, and real-BIOS/disc smoke on the local corpus. Performance gates are not run on noisy per-PR runners.
 
 ---

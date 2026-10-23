@@ -2,6 +2,13 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO.
 
+**Current position (2026-10-23):** 2/5 local corpus titles boot and render
+(Lemmings, Space Ace), 2/5 load their own OS and stop at SAudio channel 0
+(Road Rash, Wolfenstein 3D), and 1/5 fails earlier (Alone in the Dark). No title has
+reached gameplay yet. The 2026-10-23 CD disc-end fix is what unblocked the three
+discs that were previously rejected as non-3DO. See [`Status.md`](Status.md) for the
+overall completion estimate and next steps.
+
 ---
 
 ## 1. BIOS ROMs
