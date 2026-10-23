@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/4DO-master/FreeDOCore` (primary), `References/opera-libretro-master/libopera` (secondary)
-**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); M4 MADAM graphics in progress (M4.1-M4.13 complete; next is M4.14 golden CEL tests and M4.15 BIOS UI validation). M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
+**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); M4 MADAM graphics: M4.1-M4.14 complete (golden CEL tests included); M4.15 BIOS UI validation is blocked on the M6 XBUS/CD-ROM device because the BIOS polls device 0 before drawing its menu. M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
 **Last updated:** 2026-10-23
 
 ---
@@ -563,13 +563,13 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - `mread`/`mwrite`/`mreadh`/`mwriteh` CEL cycles.
   - `GetCELCycles` behavior.
   - Implemented in `CelMemory`; the M4.7-M4.10 rasterizers must route VRAM access through it.
-- [ ] **M4.14 Golden CEL tests.**
+- [x] **M4.14 Golden CEL tests.**
   - Hand-built CCB scenes for each bpp/path.
   - VRAM pixel hashes, CEL cycle counts.
   - A composite scene with multiple CCBs, PLUT changes, clipping, transparency.
-- [ ] **M4.15 BIOS UI validation.**
-  - Real BIOS menu renders correctly (user-provided).
-  - Compare against 4DO screenshots for layout/colors (manual).
+  - Implemented in `tests/ThreeDo.Tests/Madam` (`CelRasterizerTests`, `CelLiteralRasterizerTests`, `CelGoldenSceneTests`): every bpp index, packed/literal/LR line/scale/arbitrary paths, clip-window corners, PLUT reloads, transparent texels, and a deterministic composite-scene VRAM hash with cycle counts.
+- [!] **M4.15 BIOS UI validation.**
+  - **Blocked on M6 (XBUS/CD-ROM).** With a real BIOS (`bios/panafz1.bin`) the boot splash renders, but the BIOS then stalls in its XBUS device-0 poll loop (`PC 0x00000f98`, poll register `0x03400540` waiting for status bit `0x10`) because no CD-ROM device is attached. The interactive menu cannot render until the M6 CD device answers. `BiosUiValidationTests` keeps an opt-in stability/PNG-dump check ready for the M6 follow-up.
 - [x] **M4.16 High-res decision.**
   - Keep `RESSCALE=0` in v1. Document the later feature work in M11.
   - Decision recorded in `docs/PortingNotes.md`; M11.2 owns the `RESSCALE=1` work.
@@ -1330,7 +1330,7 @@ Suggested parallelization with two developers:
 3. ~~Start M2 with the CPU state/ALU/shifter and the test assembler.~~ Done.
 4. ~~Create the first synthetic ROM integration test as soon as M2 data processing and loads/stores work.~~ Done.
 5. ~~Start M3: BIOS/NVRAM loading, CLIO basics, VDLP, SPORT, and the frame loop.~~ Done.
-6. ~~Start M4: MADAM CEL engine, pixel pipeline, matrix engine validation, and BIOS UI rendering.~~ CEL engine and rasterizers done (M4.1-M4.13); next are M4.14 golden CEL tests and M4.15 BIOS UI validation.
+6. ~~Start M4: MADAM CEL engine, pixel pipeline, matrix engine validation, and BIOS UI rendering.~~ M4.1-M4.14 are done. M4.15 (BIOS menu validation) is blocked on M6: the BIOS boot splash renders, but the menu requires the CD-ROM device to answer XBUS polls. Proceed to M5 (DSP/audio) and M6 (XBUS/CD), then revisit M4.15.
 7. Schedule a 30-minute legal/attribution review before any public build.
 
 ---
@@ -1357,3 +1357,4 @@ Suggested parallelization with two developers:
 | 2026-10-23 | M4.11-M4.12, M4.16 | Matrix engine, PBUS DMA, high-res decision | Matrix command 0 and Nfrac coverage; multi-word and negative-length PBUS DMA coverage; `RESSCALE=0` decision recorded; 408 tests pass; commit `0b1146c` |
 | 2026-10-23 | M4.13 | CEL cycle accounting | `CelMemory` with +1/+2 halfword/word access and +4 PLUT reads, take-and-clear `GetCELCycles`; 411 tests pass; commit `e3d0eea` |
 | 2026-10-23 | M4.7-M4.10 | CEL rasterizers and texel primitives | `CelEngine` CCB walker wired into `Madam.HandleCel`; packed/literal/LR rasterizers; line/scale/arbitrary texel primitives; `FIX_BIT_TIMING_3`/`FIX_BIT_TIMING_6`/`FIX_BIT_GRAPHICS_STEP_Y` and `speedfixes`/`unknownflag11`/`sdf` heuristics; bpp matrix (1/2/4/6/8/16), multi-CCB PLUT reload, and transparency/cycle tests; 432 tests pass; real BIOS 300-frame smoke test passes; commit `ed60120` |
+| 2026-10-23 | M4.14 | Golden CEL tests | Clip-window corner tests, composite scene with three CCBs, PLUT reload, transparent texel, stable VRAM hash and CEL cycle count; optional BIOS boot-frame PNG dump (`BiosUiValidationTests`); 437 tests pass |
