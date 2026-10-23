@@ -55,6 +55,9 @@ public sealed class Madam : IMadamBus, IStateSection
     /// <summary>Gets or sets the CLIO FIFO window.</summary>
     public IClioFifo? Fifo { get; set; }
 
+    /// <summary>Gets or sets the raw RAM accessor used by PLUT loads.</summary>
+    public IRam? Ram { get; set; }
+
     /// <summary>Gets or sets the CPU bus used by PBUS DMA writes.</summary>
     public IAddressBus? Bus { get; set; }
 
@@ -211,6 +214,23 @@ public sealed class Madam : IMadamBus, IStateSection
         var count = Math.Min(data.Length, 16);
         data[..count].CopyTo(_pbusQueue);
         _pbusQueue.AsSpan(count).Fill(0xff);
+    }
+
+    /// <summary>Loads PLUT entries from VRAM. FreeDO: <c>Madam.cpp: LoadPLUT</c>.</summary>
+    /// <param name="address">PLUT byte address in VRAM.</param>
+    /// <param name="count">Entry count: 2, 4, 16, or 32 in the reference.</param>
+    public void LoadPlut(uint address, int count)
+    {
+        if (Ram is null)
+        {
+            return;
+        }
+
+        var entries = Math.Min(count, _plut.Length);
+        for (var i = 0; i < entries; i++)
+        {
+            _plut[i] = Ram.Read16((((address >> 1) + (uint)i) ^ 1) << 1);
+        }
     }
 
     /// <summary>Handles queued CEL work. FreeDO: <c>_madam_HandleCEL</c>.</summary>

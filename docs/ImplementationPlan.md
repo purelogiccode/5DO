@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/4DO-master/FreeDOCore` (primary), `References/opera-libretro-master/libopera` (secondary)
-**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); next is M4. M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
+**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); M4 MADAM graphics in progress (M4.1-M4.3 complete; next is M4.4 pixel decoder). M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
 **Last updated:** 2026-10-23
 
 ---
@@ -517,16 +517,16 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Tasks**
 
-- [ ] **M4.1 CEL bit reader.**
+- [x] **M4.1 CEL bit reader.**
   - Port `BitReaderBig` (`bitop.cpp`) exactly.
   - Tests for bit rates 1-32, positions, skip, end-of-buffer.
-- [ ] **M4.2 CCB parser.**
+- [x] **M4.2 CCB parser.**
   - `CCBFLAGS` constants, `NEXTCCB`, `PDATA`, `PLUTDATA`, `PRE0`, `PRE1`.
   - Absolute/relative pointers, `CCB_LAST`, `CCB_SKIP`, `CCB_PACKED`, `CCB_LDPLUT`, etc.
-  - FSM transitions.
-- [ ] **M4.3 PLUT.**
+  - FSM transitions (parser-level; the CEL engine consumes the parsed header in M4.6).
+- [x] **M4.3 PLUT.**
   - `LoadPLUT` address math, 2/4/16/32 entries.
-  - Palette write bit handling.
+  - Palette write bit handling (the 16-bit palette-write bit is decoded in M4.4).
 - [ ] **M4.4 Pixel decoder.**
   - 1/2/4/6/8/16 bpp.
   - Linear/uncoded vs PLUT-coded.
@@ -1346,3 +1346,4 @@ Suggested parallelization with two developers:
 | 2026-10-23 | M3.1-M3.11 | Boot skeleton | BIOS/NVRAM images, CLIO registers/timers/FIFOs/DMA, MADAM registers/FSM/matrix/PBUS, VDLP parser, SPORT, DiagPort, Quartz frame loop, CPU frame assembler, XBUS stub, DSP stub; 321 tests pass; commit `958d33c` |
 | 2026-10-23 | M3.12 | Real BIOS smoke | `bios/panafz1.bin` ran 300 frames without exception; optional test gated by `THREEDO_BIOS` |
 | 2026-10-23 | M3.13 | OpenGL spike deferred | Requires desktop GL context; scheduled with M9R.1/M9R.10 and does not block M4-M8 |
+| 2026-10-23 | M4.1-M4.3 | CEL bit reader, CCB parser, PLUT loader | `CelBitReader` (bit rates 1-32, positions, skip), `CcbControl`/`CcbHeader`/`CcbParser` (absolute/relative pointers, preamble, packed/skip/last), `Madam.LoadPlut`; 337 tests pass |

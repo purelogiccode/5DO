@@ -513,3 +513,9 @@ M1 implements the section primitive used by all later chips:
 - `BiosImage`/`NvramImage` live in `ThreeDo.Storage`. BIOS2 is zero-filled to 1 MB by the machine when shorter; NVRAM initialization writes the big-endian volume header and the initial directory words from 4DO's `EmulationHelper`.
 - `FrameAssembler` expands the 5-bit background to 8 bits and always writes an opaque alpha byte. Crop detection and HQx scaling remain presentation-layer work.
 - `M3.13` (the early OpenGL window spike) is deferred to M9R because it needs a desktop GL context; the CPU frame path and machine loop are fully testable without one.
+
+### 12.7 M4 implementation notes (in progress)
+
+- `CelBitReader` is a direct port of `BitReaderBig`: it reads through `buffer + (point ^ 3)`, treats a zero buffer as disabled, and clamps the bit rate to 1-32. Tests cover 1/3/4/8/16/32-bit reads, byte-boundary crossings, `Skip`, `SetPos`, and `GetBytePose`.
+- `CcbControl`, `CcbHeader`, and `CcbParser` split the inline CCB parsing in `Madam.cpp: _madam_HandleCEL` into a testable header parser. Absolute and relative pointers, the `NEXTCCB == 0`/out-of-range last-CEL rule, source/PLUT pointer validation, packed preambles, and CCB preambles are covered by tests. The rasterizer will consume the parsed header in M4.6.
+- `Madam.LoadPlut` preserves the reference's `_mem_read16((((pnt >> 1) + i) ^ 1) << 1)` address math. The palette-write bit is decoded by the pixel decoder in M4.4.

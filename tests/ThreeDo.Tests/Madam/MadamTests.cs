@@ -147,6 +147,24 @@ public sealed class MadamTests
     }
 
     [Fact]
+    public void LoadPlut_ReadsSwappedHalfwords()
+    {
+        var memory = new ThreeDoMemory();
+        var madam = new MadamChip { Ram = memory.Ram };
+        memory.Ram.Write16(0x1000, 0xaaaa);
+        memory.Ram.Write16(0x1002, 0xbbbb);
+        memory.Ram.Write16(0x1004, 0xcccc);
+        memory.Ram.Write16(0x1006, 0xdddd);
+
+        madam.LoadPlut(0x1000, 4);
+
+        Assert.Equal(0xbbbb, madam.Plut[0]);
+        Assert.Equal(0xaaaa, madam.Plut[1]);
+        Assert.Equal(0xdddd, madam.Plut[2]);
+        Assert.Equal(0xcccc, madam.Plut[3]);
+    }
+
+    [Fact]
     public void SaveLoad_RoundtripsRegistersAndFsm()
     {
         var madam = new MadamChip();

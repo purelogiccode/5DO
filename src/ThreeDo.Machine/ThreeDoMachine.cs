@@ -57,6 +57,7 @@ public sealed class ThreeDoMachine
             Interrupts = Clio,
             Fifo = Clio,
             Bus = Memory.Bus,
+            Ram = Memory.Ram,
         };
         Xbus = new XbusChip { Interrupts = Clio };
         Dsp = new DspStub();
