@@ -276,6 +276,7 @@ internal static class Program
         var ringSize = options.GetInt("--ring", 4096);
         var stopPc = options.GetUInt32("--stop-pc", null);
         var stopKprint = options.Get("--stop-kprint");
+        var stopCd = options.GetUInt32("--stop-cd", null);
         var output = options.Get("--out");
 
         if (biosPath is null && stateIn is null)
@@ -322,6 +323,18 @@ internal static class Program
         var ring = new Queue<(uint Pc, uint Cpsr, uint Instruction)>(Math.Max(ringSize, 1));
         var observed = 0;
         var stopped = false;
+
+        if (stopCd is not null)
+        {
+            var command = (byte)(stopCd.Value & 0xff);
+            machine.Cdrom.CommandObserver = value =>
+            {
+                if (value == command)
+                {
+                    throw new TraceStopException();
+                }
+            };
+        }
 
         if (stopKprint is not null)
         {
@@ -388,13 +401,21 @@ internal static class Program
                 writer.WriteLine($"# stopped at 0x{machine.Cpu.ProgramCounter:x8} after {observed} instructions");
             }
 
+            var sp = machine.Cpu.ReadRegister(13);
+            var stack = new StringBuilder();
+            for (var i = 0; i < 16; i++)
+            {
+                stack.Append($"{machine.Memory.Ram.Read32(sp + (uint)(i * 4)):x8} ");
+            }
+
             writer.WriteLine(
                 $"# pc={machine.Cpu.ProgramCounter:x8} cpsr={machine.Cpu.Cpsr:x8} "
                 + $"r0={machine.Cpu.ReadRegister(0):x8} r1={machine.Cpu.ReadRegister(1):x8} "
                 + $"r2={machine.Cpu.ReadRegister(2):x8} r3={machine.Cpu.ReadRegister(3):x8} "
-                + $"sp={machine.Cpu.ReadRegister(13):x8} lr={machine.Cpu.ReadRegister(14):x8} "
+                + $"sp={sp:x8} lr={machine.Cpu.ReadRegister(14):x8} "
                 + $"cdStatus={machine.Cdrom.DriveStatus:x2} cdPoll={machine.Cdrom.Poll:x2} "
                 + $"disc={(machine.Cdrom.Disc is null ? "no" : "yes")}");
+            writer.WriteLine($"# stack: {stack}");
 
             foreach (var entry in ring)
             {
@@ -796,7 +817,8 @@ internal static class Program
         Console.WriteLine("             [--frame-out path] [--audio null|wav] [--wav-out path] [--cd-trace path]");
         Console.WriteLine("             [--clio-trace path] [--kprint path] [--kprint-pc path] [--json]");
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
-        Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--count N] [--out path]");
+        Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
+        Console.WriteLine("             [--count N] [--out path]");
         Console.WriteLine("             Runs the machine and records a diagnostic instruction ring buffer.");
         Console.WriteLine("  info <disc> [--json]                 Disc geometry, volume header, and game ID.");
         Console.WriteLine("  disc dump <disc> --out path [--sector N] [--count N]");

@@ -86,6 +86,9 @@ public sealed class ThreeDoMachine
         Cpu = new Arm60(Memory.Bus, Clio, Tuning, Compatibility);
         Quartz = new Quartz(Tuning, () => Clio.TimerDelay);
 
+        Cdrom.ProgramCounterProvider = () => Cpu.ProgramCounter;
+        Cdrom.FrameProvider = () => _framesExecuted;
+
         Reset();
     }
 

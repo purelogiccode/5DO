@@ -61,6 +61,15 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <summary>Gets or sets an optional diagnostic writer for command and sector traces.</summary>
     public System.IO.TextWriter? TraceWriter { get; set; }
 
+    /// <summary>Gets or sets an optional provider for the current CPU program counter (diagnostics only).</summary>
+    public Func<uint>? ProgramCounterProvider { get; set; }
+
+    /// <summary>Gets or sets an optional provider for the current emulated frame number (diagnostics only).</summary>
+    public Func<long>? FrameProvider { get; set; }
+
+    /// <summary>Gets or sets an optional observer invoked for each executed command (diagnostics only).</summary>
+    public Action<byte>? CommandObserver { get; set; }
+
     /// <summary>Initializes a new instance of the <see cref="CdromDevice"/> class.</summary>
     public CdromDevice()
     {
@@ -373,8 +382,10 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _xbusStatus &= unchecked((byte)~CdstReady);
 
         TraceWriter?.WriteLine(
-            $"cd cmd {_command[0]:x2} {_command[1]:x2} {_command[2]:x2} "
+            $"cd f={FrameProvider?.Invoke() ?? -1} pc={ProgramCounterProvider?.Invoke() ?? 0:x8} "
+            + $"cmd {_command[0]:x2} {_command[1]:x2} {_command[2]:x2} "
             + $"{_command[3]:x2} {_command[4]:x2} {_command[5]:x2} {_command[6]:x2}");
+        CommandObserver?.Invoke(_command[0]);
 
         switch (_command[0])
         {
