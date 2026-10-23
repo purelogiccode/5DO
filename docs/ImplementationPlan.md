@@ -1100,7 +1100,9 @@ micro-optimizing at release time. See [`Performance.md`](Performance.md).
 - [~] **M9P.9 Benchmark suite and CI gate.**
   - `ThreeDo.Benchmarks` now measures the machine core, video pack, and mailbox in
     synthetic and real-disc modes, with JSON output and a 60 Hz budget comparison.
-  - p50/p95/p99, allocations, GPU timer queries, and the nightly regression job
+  - CI runs a synthetic benchmark smoke and uploads the JSON baseline as an
+    artifact.
+  - p50/p95/p99, allocations, GPU timer queries, and the >10% regression gate
     remain.
 - [ ] **M9P.10 Documentation and report.**
   - Publish the measured 4K/1080p results, hardware, and filter settings.

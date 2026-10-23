@@ -42,6 +42,20 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: dotnet format 3DOEmulator.sln --verify-no-changes --no-restore
 
+      - name: Benchmark smoke
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          mkdir -p artifacts
+          dotnet run --project benchmarks/ThreeDo.Benchmarks -c Release --no-build -- \
+            --frames 120 --label ci --json > artifacts/benchmark.json
+
+      - name: Upload benchmark baseline
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-baseline
+          path: artifacts/benchmark.json
+
   publish-cli:
     name: Publish CLI (${{ matrix.rid }})
     runs-on: ubuntu-latest

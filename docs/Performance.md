@@ -288,6 +288,8 @@ Profile 1080p and 4K separately to prove core cost is resolution-independent.
 
 - Per-PR: build, unit/integration tests, allocation assertions, CPU-renderer
   parity. Do not gate PRs on noisy GPU timings.
+- The CI workflow runs a synthetic benchmark smoke on Ubuntu and uploads the JSON
+  baseline as an artifact. It does not fail on timing yet.
 - Nightly or self-hosted: BenchmarkDotNet baselines, real-content smoke, 4K GPU
   timing. Fail on a sustained >10% regression or a missed budget after warm-up.
 - Store the baseline JSON and the hardware description with each run. A performance
