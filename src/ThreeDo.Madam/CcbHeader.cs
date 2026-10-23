@@ -6,8 +6,9 @@ namespace ThreeDo.Madam;
 /// <remarks>
 /// FreeDO parses these fields inline in <c>Madam.cpp: _madam_HandleCEL</c>. Keeping the
 /// header in a small value object makes the parser testable before the rasterizer lands.
+/// It is a value type so the per-CCB CEL path does not allocate.
 /// </remarks>
-public sealed class CcbHeader
+public struct CcbHeader
 {
     /// <summary>Gets or sets the CCB address.</summary>
     public uint Address { get; set; }

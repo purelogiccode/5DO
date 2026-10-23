@@ -32,6 +32,8 @@ public sealed class Madam : IMadamBus, IStateSection
     private readonly ushort[] _plut = new ushort[32];
     private readonly byte[] _pbusQueue = new byte[20];
 
+    private CelEngine? _cel;
+    private IRam? _celRam;
     private int _readModulo;
     private int _writeModulo;
     private CelFsmState _fsm;
@@ -67,6 +69,12 @@ public sealed class Madam : IMadamBus, IStateSection
         get => _fsm;
         set => _fsm = value;
     }
+
+    /// <summary>
+    /// Gets or sets the shared compatibility state used by the CEL timing heuristics.
+    /// FreeDO: <c>fixmode</c>, <c>speedfixes</c>, <c>unknownflag11</c>, <c>sdf</c>.
+    /// </summary>
+    public CompatibilityState Compatibility { get; set; } = new();
 
     /// <summary>Gets the read modulo value. FreeDO: <c>RMOD</c>.</summary>
     public int ReadModulo => _readModulo;
@@ -234,11 +242,22 @@ public sealed class Madam : IMadamBus, IStateSection
     }
 
     /// <summary>Handles queued CEL work. FreeDO: <c>_madam_HandleCEL</c>.</summary>
-    /// <returns>CEL cycles consumed. M3 has no rasterizer yet, so this returns zero.</returns>
+    /// <returns>CEL cycles consumed.</returns>
     public int HandleCel()
     {
-        _fsm = CelFsmState.Idle;
-        return 0;
+        if (Ram is null)
+        {
+            _fsm = CelFsmState.Idle;
+            return 0;
+        }
+
+        if (_cel is null || !ReferenceEquals(_celRam, Ram))
+        {
+            _cel = new CelEngine(this, Ram);
+            _celRam = Ram;
+        }
+
+        return _cel.HandleCel();
     }
 
     /// <summary>Writes the MADAM save-state payload. FreeDO: <c>_madam_Save</c>.</summary>
@@ -290,6 +309,22 @@ public sealed class Madam : IMadamBus, IStateSection
         _result2Temp = reader.ReadDouble();
         _result3Temp = reader.ReadDouble();
     }
+
+    /// <summary>
+    /// Reads the raw register file without the CPU-facing status overlays.
+    /// FreeDO: direct <c>mregs[]</c> access inside the CEL engine.
+    /// </summary>
+    /// <param name="offset">Register offset.</param>
+    /// <returns>The raw register value.</returns>
+    internal uint ReadRegister(uint offset) => _registers[offset & 0x7ff];
+
+    /// <summary>
+    /// Writes the raw register file without CPU-facing side effects.
+    /// FreeDO: direct <c>mregs[]</c> access inside the CEL engine.
+    /// </summary>
+    /// <param name="offset">Register offset.</param>
+    /// <param name="value">Register value.</param>
+    internal void WriteRegister(uint offset, uint value) => _registers[offset & 0x7ff] = value;
 
     private void HandleDma8()
     {

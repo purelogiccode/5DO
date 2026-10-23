@@ -400,14 +400,14 @@ Keep these in one place (`CompatibilityState` / `EmulatorTuning`) and test each:
 - [ ] Anvil BIOS detection: `bios[28] == 234`; first ARM instruction PC += 64; `isanvil` set.
 - [ ] `FIX_BIT_TIMING_1`: Crash 'n Burn LDM value/PC fixes.
 - [ ] `FIX_BIT_TIMING_2`: reserved (game database flag; not used in this FreeDOCore revision).
-- [ ] `FIX_BIT_TIMING_3`: Dinopark Tycoon scale Y * 5.
+- [x] `FIX_BIT_TIMING_3`: Dinopark Tycoon scale Y * 5.
 - [ ] `FIX_BIT_TIMING_4`: reserved.
 - [ ] `FIX_BIT_TIMING_5`: Microcosm VDL current/previous bitmap swap.
-- [ ] `FIX_BIT_TIMING_6`: Alone in the Dark literal CEL Y step.
+- [x] `FIX_BIT_TIMING_6`: Alone in the Dark literal CEL Y step.
 - [ ] `FIX_BIT_TIMING_7`: reserved.
-- [ ] `FIX_BIT_GRAPHICS_STEP_Y`: Samurai Shodown CEL Y step.
+- [x] `FIX_BIT_GRAPHICS_STEP_Y`: Samurai Shodown CEL Y step.
 - [ ] `cnbfix` one-shot PC jump at `0x94D60`.
-- [ ] `speedfixes`, `unknownflag11`, `sdf`, `sf` CEL timing state.
+- [x] `speedfixes`, `unknownflag11`, `sdf`, `sf` CEL timing state.
 - [ ] `mregs[0x00] = 0x01020000` matrix engine autodetect.
 - [ ] `mregs[0x04] = 0x29`, `mregs[0x574] = 0xFFFFFFFC`.
 - [ ] NVRAM one-byte-per-word mapping.
@@ -526,4 +526,8 @@ M1 implements the section primitive used by all later chips:
 - `CelGeometry` ports `TestInitVisual`, `Init_Line_Map`, `Init_Scale_Map`, `Init_Arbitrary_Map`, `QuardCCWTest`, and `TexelCCWTest`. It keeps the reference's 16.16 arithmetic, arithmetic shifts, half-pixel origin adjustment, and the retained `TEXTURE_WI_LIM` quirk. The `CCB_ACW`/`CCB_ACCW` flags are exposed as `CcbControl.Clockwise`/`CounterClockwise`. A 300k-case differential run against the reference matched every field.
 - `XY2OFF` is intentionally left as a small helper in the rasterizer (`((y >> 1) * modulo) + ((y & 1) << 1) + x`) rather than a public API; the address math is shared by the CEL and SPORT paths.
 - High-resolution rendering stays off in v1 (`RESSCALE = 0`). The 16 MB VRAM mirror, VDLP line duplication, SPORT copies, CEL stepping, and frame extraction needed for `RESSCALE = 1` are tracked as M11.2; the current code paths use the reference's low-resolution layout.
-- `CelMemory` ports the CEL memory-access cycle costs (`mread` +1, `mwrite` +2, `mreadh` +1, `mwriteh` +2, `readPLUTDATA` +4) and the `GetCELCycles` take-and-clear behavior. The rasterizer will route its VRAM access through this class so cycle accounting stays in one place.
+- `CelMemory` ports the CEL memory-access cycle costs (`mread` +1, `mwrite` +2, `mreadh` +1, `mwriteh` +2, `readPLUTDATA` +4) and the `GetCELCycles` take-and-clear behavior. The rasterizers route all CCB and pixel access through this class, so the cycle total reported by `Madam.HandleCel` matches the reference.
+- `CelEngine` ports `_madam_HandleCEL`: CCB walking, last-CCB handling, position/size/perspective/pixel-control loads, PLUT loading, packed/literal/LR dispatch, and the `SPRON` status bit. `CcbParser` accepts an optional `CelMemory` so header reads are charged to the CEL cycle accumulator; `CcbHeader` is a struct to keep the steady-state path allocation-free. The parsed fields live on the engine instead of file-scope globals.
+- `CelRasterizer` ports `DrawPackedCel_New`, `DrawLiteralCel_New`, `DrawLRCel_New`, and their three texel paths. The packed raster's run types (`literal`, `transparent`, `repeat`), width clipping, skipped rows, per-row data offsets, and `SPRWI` carry-over match the reference. The literal and LR paths preserve the `PRE1` width/offset fields, the LR `offset += 2` tile bias, and `SPRHI = (vcnt << 1) + 2`.
+- `TexelDraw_Line`, `TexelDraw_Scale`, and `TexelDraw_Arbitrary` preserve the reference's integer shifts, `TESTCLIP`, `XY2OFF`, cache-on-frame-pixel-change behavior, and direct (non-cycle-counted) arbitrary-path VRAM access. `FIX_BIT_TIMING_3`, `FIX_BIT_TIMING_6`, `FIX_BIT_GRAPHICS_STEP_Y`, `speedfixes`, `unknownflag11`, `sdf`, and `sf` are applied through `CompatibilityState`.
+- Deliberate deviation: `TexelDraw_Arbitrary` guards division by a zero edge length (returns a zero numerator contribution) instead of relying on undefined C++ behavior. It also initializes the second crossing-point slot to zero; the reference reads an uninitialized stack slot when a scanline has a single crossing. These changes only affect degenerate quads and keep the core deterministic.

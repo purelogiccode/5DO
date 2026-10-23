@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/4DO-master/FreeDOCore` (primary), `References/opera-libretro-master/libopera` (secondary)
-**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); M4 MADAM graphics in progress (M4.1-M4.6, M4.11-M4.13, and M4.16 complete; next is M4.7 packed CEL rasterizer). M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
+**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); M4 MADAM graphics in progress (M4.1-M4.13 complete; next is M4.14 golden CEL tests and M4.15 BIOS UI validation). M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
 **Last updated:** 2026-10-23
 
 ---
@@ -540,15 +540,15 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - `TestInitVisual`, `Init_Line_Map`, `Init_Scale_Map`, `Init_Arbitrary_Map`.
   - `QuardCCWTest`, `TexelCCWTest`.
   - `XY2OFF`.
-- [ ] **M4.7 Packed CEL rasterizer.**
+- [x] **M4.7 Packed CEL rasterizer.**
   - `DrawPackedCel_New`, all three texel paths.
   - `speedfixes`/`unknownflag11`/`sdf`/`sf` compatibility state.
-- [ ] **M4.8 Literal CEL rasterizer.**
+- [x] **M4.8 Literal CEL rasterizer.**
   - `DrawLiteralCel_New`, all three paths.
   - `FIX_BIT_TIMING_6`.
-- [ ] **M4.9 LR CEL rasterizer.**
+- [x] **M4.9 LR CEL rasterizer.**
   - `DrawLRCel_New`, all three paths.
-- [ ] **M4.10 Texel draw primitives.**
+- [x] **M4.10 Texel draw primitives.**
   - `TexelDraw_Line`, `TexelDraw_Scale`, `TexelDraw_Arbitrary`.
   - `FIX_BIT_TIMING_3`, `FIX_BIT_GRAPHICS_STEP_Y`.
 - [x] **M4.11 Matrix engine.**
@@ -1330,7 +1330,7 @@ Suggested parallelization with two developers:
 3. ~~Start M2 with the CPU state/ALU/shifter and the test assembler.~~ Done.
 4. ~~Create the first synthetic ROM integration test as soon as M2 data processing and loads/stores work.~~ Done.
 5. ~~Start M3: BIOS/NVRAM loading, CLIO basics, VDLP, SPORT, and the frame loop.~~ Done.
-6. Start M4: MADAM CEL engine, pixel pipeline, matrix engine validation, and BIOS UI rendering.
+6. ~~Start M4: MADAM CEL engine, pixel pipeline, matrix engine validation, and BIOS UI rendering.~~ CEL engine and rasterizers done (M4.1-M4.13); next are M4.14 golden CEL tests and M4.15 BIOS UI validation.
 7. Schedule a 30-minute legal/attribution review before any public build.
 
 ---
@@ -1356,3 +1356,4 @@ Suggested parallelization with two developers:
 | 2026-10-23 | M4.6 | CEL geometry and clipping | `CelGeometry` (`TestInitVisual`, line/scale/arbitrary maps, CCW tests), `TexelFunction`; 300k-case differential hash from the reference C++; 404 tests pass; commit `2f5c106` |
 | 2026-10-23 | M4.11-M4.12, M4.16 | Matrix engine, PBUS DMA, high-res decision | Matrix command 0 and Nfrac coverage; multi-word and negative-length PBUS DMA coverage; `RESSCALE=0` decision recorded; 408 tests pass; commit `0b1146c` |
 | 2026-10-23 | M4.13 | CEL cycle accounting | `CelMemory` with +1/+2 halfword/word access and +4 PLUT reads, take-and-clear `GetCELCycles`; 411 tests pass; commit `e3d0eea` |
+| 2026-10-23 | M4.7-M4.10 | CEL rasterizers and texel primitives | `CelEngine` CCB walker wired into `Madam.HandleCel`; packed/literal/LR rasterizers; line/scale/arbitrary texel primitives; `FIX_BIT_TIMING_3`/`FIX_BIT_TIMING_6`/`FIX_BIT_GRAPHICS_STEP_Y` and `speedfixes`/`unknownflag11`/`sdf` heuristics; 425 tests pass; real BIOS 300-frame smoke test passes |

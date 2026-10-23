@@ -17,14 +17,27 @@ public sealed class CcbParser
     private const uint MaximumVramAddress = 0x2fffff;
 
     private readonly IRam _ram;
+    private readonly CelMemory? _celMemory;
 
     /// <summary>Initializes a new instance of the <see cref="CcbParser"/> class.</summary>
     /// <param name="ram">Raw RAM/VRAM accessor.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="ram"/> is null.</exception>
     public CcbParser(IRam ram)
+        : this(ram, null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a parser that routes header reads through CEL cycle accounting.
+    /// FreeDO: <c>mread</c> inside <c>_madam_HandleCEL</c>.
+    /// </summary>
+    /// <param name="ram">Raw RAM/VRAM accessor.</param>
+    /// <param name="celMemory">CEL memory accumulator used for cycle counts.</param>
+    internal CcbParser(IRam ram, CelMemory? celMemory)
     {
         ArgumentNullException.ThrowIfNull(ram);
         _ram = ram;
+        _celMemory = celMemory;
     }
 
     /// <summary>Parses one CCB header.</summary>
@@ -35,12 +48,12 @@ public sealed class CcbParser
         var header = new CcbHeader
         {
             Address = address,
-            Flags = (CcbControl)_ram.Read32(address),
+            Flags = (CcbControl)ReadWord(address),
         };
 
         var current = address + 4;
 
-        header.NextCcb = _ram.Read32(current) & ~3u;
+        header.NextCcb = ReadWord(current) & ~3u;
         if ((header.Flags & CcbControl.NextPointerAbsolute) == 0)
         {
             header.NextCcb = unchecked(header.NextCcb + current + 4) & PointerMask;
@@ -49,7 +62,7 @@ public sealed class CcbParser
         header.NextIsLast = header.NextCcb == 0 || header.NextCcb > MaximumVramAddress;
         current += 4;
 
-        header.PData = _ram.Read32(current) & ~3u;
+        header.PData = ReadWord(current) & ~3u;
         if ((header.Flags & CcbControl.SourcePointerAbsolute) == 0)
         {
             header.PData = unchecked(header.PData + current + 4) & PointerMask;
@@ -60,7 +73,7 @@ public sealed class CcbParser
 
         if ((header.Flags & CcbControl.LoadPlut) != 0)
         {
-            header.PlutData = _ram.Read32(current) & ~3u;
+            header.PlutData = ReadWord(current) & ~3u;
             if ((header.Flags & CcbControl.PlutPointerAbsolute) == 0)
             {
                 header.PlutData = unchecked(header.PlutData + current + 4) & PointerMask;
@@ -73,22 +86,22 @@ public sealed class CcbParser
 
         if ((header.Flags & CcbControl.CcbPreamble) != 0)
         {
-            header.Pre0 = _ram.Read32(current);
+            header.Pre0 = ReadWord(current);
             current += 4;
             if ((header.Flags & CcbControl.Packed) == 0)
             {
-                header.Pre1 = _ram.Read32(current);
+                header.Pre1 = ReadWord(current);
                 current += 4;
             }
         }
         else if (!header.PDataInvalid)
         {
             header.PDataCursor = header.PData;
-            header.Pre0 = _ram.Read32(header.PDataCursor);
+            header.Pre0 = ReadWord(header.PDataCursor);
             header.PDataCursor += 4;
             if ((header.Flags & CcbControl.Packed) == 0)
             {
-                header.Pre1 = _ram.Read32(header.PDataCursor);
+                header.Pre1 = ReadWord(header.PDataCursor);
                 header.PDataCursor += 4;
             }
         }
@@ -96,4 +109,6 @@ public sealed class CcbParser
         header.BodyAddress = current;
         return header;
     }
+
+    private uint ReadWord(uint address) => _celMemory is null ? _ram.Read32(address) : _celMemory.ReadWord(address);
 }

@@ -232,6 +232,22 @@ public sealed class CelGeometry
         return true;
     }
 
+    /// <summary>
+    /// Consumes one skipped texture row. FreeDO: the packed rasterizer's
+    /// <c>if (TEXTURE_HI_START) { TEXTURE_HI_START--; ... }</c>.
+    /// </summary>
+    /// <returns><see langword="true"/> when a row was skipped.</returns>
+    internal bool ConsumeHeightStart()
+    {
+        if (TextureHeightStart == 0)
+        {
+            return false;
+        }
+
+        TextureHeightStart--;
+        return true;
+    }
+
     private bool InitLineMap()
     {
         TexelFunction = TexelFunction.Line;

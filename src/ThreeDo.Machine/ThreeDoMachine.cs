@@ -59,6 +59,7 @@ public sealed class ThreeDoMachine
             Bus = Memory.Bus,
             Ram = Memory.Ram,
         };
+        Madam.Compatibility = Compatibility;
         Xbus = new XbusChip { Interrupts = Clio };
         Dsp = new DspStub();
 
