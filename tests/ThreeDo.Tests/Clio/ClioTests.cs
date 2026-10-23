@@ -222,7 +222,7 @@ public sealed class ClioTests
     [Fact]
     public void DspWindows_WriteInstructionMemory()
     {
-        var dsp = new DspStub();
+        var dsp = new ThreeDo.Dsp.Dsp();
         var clio = new ClioChip { Dsp = dsp };
 
         clio.Poke(0x3000, 0x12345678);
@@ -252,3 +252,4 @@ public sealed class ClioTests
         Assert.Equal(clio.NeedFiq, copy.NeedFiq);
     }
 }
+

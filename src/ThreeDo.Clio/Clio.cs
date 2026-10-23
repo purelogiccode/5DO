@@ -17,7 +17,7 @@ namespace ThreeDo.Clio;
 /// contracts in <c>ThreeDo.Core</c>; it never references another chip project directly.
 /// </para>
 /// </remarks>
-public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IStateSection
+public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IStateSection
 {
     private const int InputFifoCount = 13;
     private const int OutputFifoCount = 4;

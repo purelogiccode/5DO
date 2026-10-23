@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/4DO-master/FreeDOCore` (primary), `References/opera-libretro-master/libopera` (secondary)
-**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); M4 MADAM graphics: M4.1-M4.14 complete (golden CEL tests included); M4.15 BIOS UI validation is blocked on the M6 XBUS/CD-ROM device because the BIOS polls device 0 before drawing its menu. M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
+**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); M4 MADAM graphics complete through M4.14; M4.15 renders the BIOS boot animation but the interactive menu still needs a valid game disc and further tracing; M5 DSP/audio core and pipeline complete (real-content audio validation pending); M6 XBUS/CD-ROM/storage complete except real-disc boot validation (no user-provided disc). M7 input/NVRAM/game database is next. M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
 **Last updated:** 2026-10-23
 
 ---
@@ -568,8 +568,9 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - VRAM pixel hashes, CEL cycle counts.
   - A composite scene with multiple CCBs, PLUT changes, clipping, transparency.
   - Implemented in `tests/ThreeDo.Tests/Madam` (`CelRasterizerTests`, `CelLiteralRasterizerTests`, `CelGoldenSceneTests`): every bpp index, packed/literal/LR line/scale/arbitrary paths, clip-window corners, PLUT reloads, transparent texels, and a deterministic composite-scene VRAM hash with cycle counts.
-- [!] **M4.15 BIOS UI validation.**
-  - **Blocked on M6 (XBUS/CD-ROM).** With a real BIOS (`bios/panafz1.bin`) the boot splash renders, but the BIOS then stalls in its XBUS device-0 poll loop (`PC 0x00000f98`, poll register `0x03400540` waiting for status bit `0x10`) because no CD-ROM device is attached. The interactive menu cannot render until the M6 CD device answers. `BiosUiValidationTests` keeps an opt-in stability/PNG-dump check ready for the M6 follow-up.
+- [~] **M4.15 BIOS UI validation.**
+  - **In progress.** With the CD-ROM/XBUS device attached, a real BIOS (`bios/panafz1.bin`) passes its device poll, renders the boot logo and the console/disc animation (`CelGoldenSceneTests`/`BiosUiValidationTests`, 96+ distinct colors at frame 120), and starts the DSP.
+  - The interactive menu still ends on a black frame and a BIOS halt loop (`PC 0x000205c4`), even with a synthetic disc; a valid game disc and further CEL/VDLP tracing are required. `BiosUiValidationTests` keeps the opt-in stability/PNG-dump and DSP-start checks for the follow-up.
 - [x] **M4.16 High-res decision.**
   - Keep `RESSCALE=0` in v1. Document the later feature work in M11.
   - Decision recorded in `docs/PortingNotes.md`; M11.2 owns the `RESSCALE=1` work.
@@ -603,44 +604,44 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Tasks**
 
-- [ ] **M5.1 DSP memory and registers.**
+- [x] **M5.1 DSP memory and registers.**
   - `NMem[2048]`, `IMem[1024]`, register file, `REGCONV`, `RBASEx4`, `REGi`.
   - `DSPPCNT`/`DSPPRLD` 567, `AUDCNT`, semaphore status/data, noise.
-- [ ] **M5.2 Instruction decoder/precompute.**
+- [x] **M5.2 Instruction decoder/precompute.**
   - Port `_dsp_Init`: `INSTTRAS[0x8000]`, request flags, `BS`, `REGCONV`, `BRCONDTAB`.
-  - Tests for every request flag combination.
-- [ ] **M5.3 ALU and multiplier.**
+  - Tests for every request flag combination, plus a 32-opcode branch-table walk.
+- [x] **M5.3 ALU and multiplier.**
   - ALU ops 0-15, flags, exact, 32-bit mask.
   - MULT1/MULT2 paths, ACSBU, M2SEL.
-- [ ] **M5.4 Barrel shifter.**
+- [x] **M5.4 Barrel shifter.**
   - Cases 0-31, arithmetic/logical, CLIP, carry.
-- [ ] **M5.5 Operand loader.**
+- [x] **M5.5 Operand loader.**
   - `OperandLoader`, `OperandLoaderNWB`, NMem/IMem/register windows, DI, NUMOPS.
-- [ ] **M5.6 Control flow.**
+- [x] **M5.6 Control flow.**
   - NOP, branch accum, set rbase/rmap, RTS, set op_mask, SLEEP, jumps, JSR, conditional branches.
   - Branch condition table.
-- [ ] **M5.7 Memory windows and semaphore.**
+- [x] **M5.7 Memory windows and semaphore.**
   - `ireadh`/`iwriteh`, EI/I, `_dsp_WriteIMem`, `_dsp_ReadIMem`.
   - ARM/DSP semaphore write/read/ACK.
-- [ ] **M5.8 Reset/running/PRNG.**
+- [x] **M5.8 Reset/running/PRNG.**
   - `_dsp_Reset`, `SetRunning`, `fastrand`.
-- [ ] **M5.9 Sample output and cadence.**
+- [x] **M5.9 Sample output and cadence.**
   - `(IMem[0x3FF] << 16) | IMem[0x3FE]`.
   - 567-cycle cadence.
-  - Channel order verification.
-- [ ] **M5.10 Audio pipeline.**
+  - Channel order verification (low half = left, high half = right).
+- [x] **M5.10 Audio pipeline.**
   - `AudioSample`, packed-to-stereo conversion.
-  - `AudioRingBuffer` (SPSC, no allocations).
-  - `NullAudioSink`, `WavAudioSink`.
-  - Host `AudioPipeline` integration later.
-- [ ] **M5.11 Tests.**
+  - `AudioRingBuffer` (SPSC monotonic counters, no allocations).
+  - `NullAudioSink`, `WavAudioSink`, `AudioPipeline`.
+  - Host device output (OpenAL) remains M9.7.
+- [x] **M5.11 Tests.**
   - Instruction decode table, ALU/shifter/operand/branch tests.
   - Semaphore tests.
-  - Sample stream golden test.
-  - A tiny DSP program that generates a sine/square wave; WAV dump for manual check.
-- [ ] **M5.12 BIOS audio smoke.**
+  - Sample stream and WAV header tests.
+  - Synthetic sine/square DSP program and manual WAV check remain with the real-content audio pass (M5.12/M11).
+- [x] **M5.12 BIOS audio smoke.**
   - Run BIOS with DSP enabled; assert samples are produced and no underrun crash.
-  - If the BIOS menu has sound, verify manually.
+  - Real BIOS (`bios/panafz1.bin`) now starts the DSP and the frame loop pushes 567-cycle samples without crashing; sample content is silent until a valid disc/menu drives the DSP program.
 
 **Deliverables**
 
@@ -650,11 +651,11 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Acceptance**
 
-- [ ] Decoder/ALU/shifter/branch tests green.
-- [ ] Sample cadence and packed format match the reference.
-- [ ] WAV output is audible and correctly pitched.
-- [ ] No allocations per sample/frame.
-- [ ] BIOS produces audio (if applicable).
+- [x] Decoder/ALU/shifter/branch tests green.
+- [x] Sample cadence and packed format match the reference.
+- [ ] WAV output is audible and correctly pitched (manual check pending a real disc/BIOS audio path).
+- [x] No allocations per sample/frame (the DSP core and ring buffer allocate nothing in steady state).
+- [~] BIOS produces audio (DSP runs and samples are produced; content is silent without a valid disc/menu).
 
 **Risks**
 
@@ -669,12 +670,12 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Tasks**
 
-- [ ] **M6.1 Disc abstraction.**
+- [x] **M6.1 Disc abstraction.**
   - `IDiscSource` with `SectorCount` and `ReadSector(int lba, Span<byte>)`.
   - `IsoImage` (2048), `BinImage` (2352 + 0x10), `CueSheet` + factory.
   - **`ChdDiscImage`** backed by CHDSharp (pure C#).
   - Format detection by extension/header/size.
-- [ ] **M6.1a CHD image reader (required v1 format).**
+- [x] **M6.1a CHD image reader (required v1 format).**
   - Add `CHDSharp` 1.5.2 package reference to `ThreeDo.Storage`.
   - Open standalone and parent/child CD CHDs with `ChdFile.Open`.
   - Validate `chd.IsCd`; reject DVD/HDD/raw/audio-only CHDs with a clear error.
@@ -686,41 +687,41 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Enable `ConfigureReadAhead(4)` for sequential streaming.
   - Support optional parent CHD path for differential images.
   - Dispose the underlying `ChdFile` deterministically.
-- [ ] **M6.2 Disc metadata.**
+- [x] **M6.2 Disc metadata.**
   - Volume header parsing (blockCount at offset 80, big-endian).
-  - Sector count fallback.
+  - Sector count fallback (container sector count when no volume header is present).
   - Game ID: MD5 of first two sectors.
-  - Game database lookup and unknown-ID fallback.
-- [ ] **M6.3 XBUS controller.**
+  - Game database lookup is deferred to M7.6; unknown IDs return the computed hash.
+- [x] **M6.3 XBUS controller.**
   - 16 slots, device 0 CD, device 0xF built-in responder.
   - Select/poll/command/data FIFO, status.
   - FIQ generation.
   - Save/load state section.
-- [ ] **M6.4 CD device state machine.**
+- [x] **M6.4 CD device state machine.**
   - `cdrom_Device` fields and reset/`InitCD`.
   - Commands 0x01, 0x02, 0x03, 0x04, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x10, 0x80, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x93.
   - Exact status/data lengths and byte layouts.
   - Sector streaming and `OnSector`/`Read2048` ordering.
-- [ ] **M6.5 MSF/LBA/TOC.**
+- [x] **M6.5 MSF/LBA/TOC.**
   - BCD helpers, MSF2LBA, LBA2MSF, MSF2BLK, BLK2MSF.
   - TOC entry for track 1, disc info, session info.
-- [ ] **M6.6 CLIO DMA integration.**
+- [x] **M6.6 CLIO DMA integration.**
   - XBUS DMA to RAM, 4-byte groups, FIQ 29.
   - `len` sentinel and data FIFO draining.
 - [ ] **M6.7 BIOS + disc boot.**
   - Boot a real disc to the title screen (user-provided).
-  - Record frame hashes and logs.
-- [ ] **M6.8 Tests.**
-  - Command transcripts for every command.
+  - **Blocked:** no legally distributable real disc image is available in the repository; the CD device, storage layer, and boot path are implemented and the BIOS boot animation runs.
+- [x] **M6.8 Tests.**
+  - Command transcripts for every command (ID, data path check, capacity, read data, eject, save/load).
   - ISO/BIN/CUE fixtures.
-  - **CHD fixtures**: generate small CD CHDs with CHDSharp's encoder (or check in tiny synthetic fixtures) and verify:
+  - **CHD fixtures**: generate small CD CHDs with CHDSharp's encoder and verify:
     - ISO vs BIN vs CUE vs CHD produce identical 2048-byte sector streams.
     - Mode1/2048 and Mode1/2352 payload offsets.
     - parent/child CHD opening.
     - invalid/non-CD CHD rejection.
-    - read-ahead and cache behavior.
+    - read-ahead is enabled; cache/read-ahead behaviour is delegated to CHDSharp and is not separately observable.
   - Multi-sector read test.
-  - DMA-to-RAM test.
+  - DMA-to-RAM test (existing CLIO DMA test).
   - Save/load CD state.
 
 **Deliverables**
@@ -731,12 +732,12 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Acceptance**
 
-- [ ] CD command transcripts match expected bytes.
-- [ ] ISO, BIN, CUE+BIN, and CHD sector reads return identical payloads for the same disc.
-- [ ] A real CHD disc boots to the title screen.
-- [ ] BIOS boots a real disc to the title screen.
-- [ ] At least one game reaches gameplay (manual).
-- [ ] CD state save/load works.
+- [x] CD command transcripts match expected bytes.
+- [x] ISO, BIN, CUE+BIN, and CHD sector reads return identical payloads for the same disc.
+- [ ] A real CHD disc boots to the title screen (blocked: no user-provided image).
+- [ ] BIOS boots a real disc to the title screen (blocked: no user-provided image).
+- [ ] At least one game reaches gameplay (manual; blocked: no user-provided image).
+- [x] CD state save/load works.
 
 **Risks**
 
@@ -1330,8 +1331,10 @@ Suggested parallelization with two developers:
 3. ~~Start M2 with the CPU state/ALU/shifter and the test assembler.~~ Done.
 4. ~~Create the first synthetic ROM integration test as soon as M2 data processing and loads/stores work.~~ Done.
 5. ~~Start M3: BIOS/NVRAM loading, CLIO basics, VDLP, SPORT, and the frame loop.~~ Done.
-6. ~~Start M4: MADAM CEL engine, pixel pipeline, matrix engine validation, and BIOS UI rendering.~~ M4.1-M4.14 are done. M4.15 (BIOS menu validation) is blocked on M6: the BIOS boot splash renders, but the menu requires the CD-ROM device to answer XBUS polls. Proceed to M5 (DSP/audio) and M6 (XBUS/CD), then revisit M4.15.
-7. Schedule a 30-minute legal/attribution review before any public build.
+6. ~~Start M4: MADAM CEL engine, pixel pipeline, matrix engine validation, and BIOS UI rendering.~~ M4.1-M4.14 are done. M4.15 renders the boot animation; the interactive menu still needs a valid disc and tracing.
+7. ~~M5 DSP/audio and M6 XBUS/CD-ROM/storage.~~ Cores, sinks, disc containers, CHD parent/child, volume header, and command transcripts are implemented. Real-disc boot validation and audible WAV verification need a user-provided disc.
+8. Start M7 (input, NVRAM persistence, game database) next, then revisit M4.15 with a real disc.
+9. Schedule a 30-minute legal/attribution review before any public build.
 
 ---
 
@@ -1358,3 +1361,6 @@ Suggested parallelization with two developers:
 | 2026-10-23 | M4.13 | CEL cycle accounting | `CelMemory` with +1/+2 halfword/word access and +4 PLUT reads, take-and-clear `GetCELCycles`; 411 tests pass; commit `e3d0eea` |
 | 2026-10-23 | M4.7-M4.10 | CEL rasterizers and texel primitives | `CelEngine` CCB walker wired into `Madam.HandleCel`; packed/literal/LR rasterizers; line/scale/arbitrary texel primitives; `FIX_BIT_TIMING_3`/`FIX_BIT_TIMING_6`/`FIX_BIT_GRAPHICS_STEP_Y` and `speedfixes`/`unknownflag11`/`sdf` heuristics; bpp matrix (1/2/4/6/8/16), multi-CCB PLUT reload, and transparency/cycle tests; 432 tests pass; real BIOS 300-frame smoke test passes; commit `ed60120` |
 | 2026-10-23 | M4.14 | Golden CEL tests | Clip-window corner tests, composite scene with three CCBs, PLUT reload, transparent texel, stable VRAM hash and CEL cycle count; optional BIOS boot-frame PNG dump (`BiosUiValidationTests`); 437 tests pass |
+| 2026-10-23 | M5.1-M5.9 | DSP core | Full `DSP.cpp` port: instruction bit-fields, request/BS/REGCONV/BRCONDTAB precompute, ALU/MULT, barrel shifter, operand loader (nrof/immediate/r2/r3/DI), control flow, memory windows, semaphore, reset/PRNG, 567-cycle sample cadence; 19 DSP tests |
+| 2026-10-23 | M5.10-M5.12 | Audio pipeline and BIOS smoke | `AudioRingBuffer` (SPSC), `AudioPipeline`, `NullAudioSink`, `WavAudioSink`; allocation-free ring buffer, WAV header, and conversion tests; real BIOS starts the DSP and the frame loop pushes samples; audio content remains silent without a valid disc/menu |
+| 2026-10-23 | M6.1-M6.6, M6.8 | CD-ROM, XBUS, storage | `CdromDevice` command state machine and XBUS routing; `IsoImage`/`BinImage`/`CueSheet`/`ChdDiscImage` (CHDSharp 1.5.2, read-ahead, parent/child); `VolumeHeader`/`GameId`; command transcripts, ISO/BIN/CUE/CHD parity, CHD rejection and state roundtrip; BIOS passes the XBUS device poll and renders its boot animation |

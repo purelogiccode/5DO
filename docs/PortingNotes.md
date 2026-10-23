@@ -508,8 +508,8 @@ M1 implements the section primitive used by all later chips:
 - `Madam` implements the register file, CEL FSM/status, VDL head hook, matrix engine, and PBUS DMA. The matrix engine latches results in temporary fields, so a following command `0` (NOP) exposes the previous computation, matching `Madam.cpp`.
 - `Vdlp` reads the display list and bitmap through the +2 MB VRAM window. `DoLine` copies from `PREVIOUSBMP` (not `CURRENTBMP`), advances both bitmap pointers with the reference's `MODULO * 4 - 2` rule, and clears `OUTCONTROLL` bit 0 after each line.
 - `Sport` adds the +2 MB VRAM window to every fill/copy address, matching `_sport_Init(Memory + 0x200000)`.
-- `Xbus` is an M3 stub: it implements the controller, device slots, poll/status/data FIFOs, and the built-in device-15 `0x83` responder. The CD device arrives in M6.
-- `DspStub` stores NMem/IMem writes, implements the reference PRNG (`69069 * seed + 1`), and returns silence. The full DSP core arrives in M5.
+- `Xbus` implements the controller, device slots, poll/status/data FIFOs, and the built-in device-15 `0x83` responder. `ThreeDoMachine` attaches the CD-ROM device to slot 0, which is the device the BIOS polls at boot.
+- `Dsp` (M5) is the full `DSP.cpp` port. The former `DspStub` was removed; CLIO talks to it through `IDsp`, and it talks to CLIO through `IDspHost` for FIFO/FIQ services.
 - `BiosImage`/`NvramImage` live in `ThreeDo.Storage`. BIOS2 is zero-filled to 1 MB by the machine when shorter; NVRAM initialization writes the big-endian volume header and the initial directory words from 4DO's `EmulationHelper`.
 - `FrameAssembler` expands the 5-bit background to 8 bits and always writes an opaque alpha byte. Crop detection and HQx scaling remain presentation-layer work.
 - `M3.13` (the early OpenGL window spike) is deferred to M9R because it needs a desktop GL context; the CPU frame path and machine loop are fully testable without one.
@@ -531,3 +531,23 @@ M1 implements the section primitive used by all later chips:
 - `CelRasterizer` ports `DrawPackedCel_New`, `DrawLiteralCel_New`, `DrawLRCel_New`, and their three texel paths. The packed raster's run types (`literal`, `transparent`, `repeat`), width clipping, skipped rows, per-row data offsets, and `SPRWI` carry-over match the reference. The literal and LR paths preserve the `PRE1` width/offset fields, the LR `offset += 2` tile bias, and `SPRHI = (vcnt << 1) + 2`.
 - `TexelDraw_Line`, `TexelDraw_Scale`, and `TexelDraw_Arbitrary` preserve the reference's integer shifts, `TESTCLIP`, `XY2OFF`, cache-on-frame-pixel-change behavior, and direct (non-cycle-counted) arbitrary-path VRAM access. `FIX_BIT_TIMING_3`, `FIX_BIT_TIMING_6`, `FIX_BIT_GRAPHICS_STEP_Y`, `speedfixes`, `unknownflag11`, `sdf`, and `sf` are applied through `CompatibilityState`.
 - Deliberate deviation: `TexelDraw_Arbitrary` guards division by a zero edge length (returns a zero numerator contribution) instead of relying on undefined C++ behavior. It also initializes the second crossing-point slot to zero; the reference reads an uninitialized stack slot when a scanline has a single crossing. These changes only affect degenerate quads and keep the core deterministic.
+
+### 12.8 M5 implementation notes
+
+- `Dsp` owns the reference's `DSPDatum` state as instance fields: NMem/IMem, REGCONV, the 0x8000-entry request/BS tables, BRCONDTAB, dregs, ALU/multiplier latches, semaphore, PRNG, and CPUSupply. No mutable statics.
+- Instruction decode is a readonly `DspInstruction` bit-field view over the raw 16-bit word. One-bit signed C fields (`DI`, `JUSTIFY`, `PAD`, `M2SEL`) are exposed as -1/0 so comparisons and copies keep the reference semantics.
+- `BRCONDTAB` is precomputed exactly as `_dsp_Init` does. The reference packs the four condition flags into the second index by multiplying the 32-bit flag word by 0x10080402; the equivalent C# packing is Zero<<4 | Nega<<3 | Carry<<2 | Over<<1 | fExact.
+- The ALU keeps the reference's `signed short` MULT1/MULT2/ALU1/ALU2 latches, ACSBU override for ALU ops 3/5, the 32-bit wrap mask, and flags computed before the barrel shifter. Shifter case 8/24 updates Carry from the pre-shift sign bit.
+- Operand loading preserves the reference's request bits, NUMOPS promotion to 4, DI indirection, immediate JUSTIFY shift (2 or 3), write-back priority (GWRITEBACK only when the pool contains more operands than requests), and the BS=8 rule that loads the shift count from an extra operand.
+- `ireadh`/`iwriteh` keep the reference's asymmetric address mapping: reads of 0x300+ wrap into the low 0x80 words, while writes of 0x300+ stay in 0x300+. This is how DSP code reads a coefficient and writes an audio sample through the same nominal address.
+- Deliberate deviations: instruction fetches mask PC to 10 bits (deterministic on malformed programs); the two `fastrand()` calls in one C expression are made left to right; debug prints from `_Arithmetic_Debug`/FIFO-direct writes are omitted.
+- `ThreeDo.Audio` adds a monotonic-counter SPSC ring buffer, a normalized-float pipeline, a null sink, and a 44.1 kHz/16-bit stereo WAV writer. The ring buffer never allocates after construction; full rings drop the newest sample rather than blocking the emulation thread.
+
+### 12.9 M6 implementation notes
+
+- `CdromDevice` ports `cdrom_Device` from `Iso.cpp`: poll/status/data FIFOs, all documented command status layouts, sector streaming, and the reference's MSF/LBA quirk (`InitCD` adds 150 frames, then `LBA2MSF` adds them again). The device is attached to XBUS slot 0 and talks to storage only through `IDiscSource`.
+- Sector reads call `ReadSectorIntoData` before advancing `_currentSector`. This matches the reference's effective host behaviour: `_3do_OnSector(curr_sector++)` selects the current sector and `_3do_Read2048` fills the FIFO from it.
+- `IsoImage` reads 2048-byte sectors; `BinImage` strips the 2352-byte sync/header at offset 16 (Mode 1) or 24 (Mode 2 Form 1); `CueSheet` supports the first MODE1/MODE2 data track (single file); `DiscImageFactory` also sniffs CHD/ISO/BIN headers.
+- `ChdDiscImage` uses CHDSharp 1.5.2, rejects non-CD images, maps the first data track's LBA space, enables 4-hunk read-ahead, and supports an optional parent CHD for differential images.
+- `VolumeHeader` parses the big-endian 132-byte record (blockCount at offset 80); `GameId` is the lowercase MD5 of sectors 0 and 1. Game database lookup is M7.6.
+- Tests generate synthetic ISO/BIN/CUE/CHD fixtures with CHDSharp's encoder and verify identical sector streams, parent/child opening, non-CD rejection, command transcripts, and CD state roundtrip.

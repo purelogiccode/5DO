@@ -1,4 +1,5 @@
 using System;
+using ThreeDo.Cdrom;
 using ThreeDo.Clio;
 using ThreeDo.Core;
 using ThreeDo.Cpu;
@@ -8,7 +9,9 @@ using ThreeDo.Memory;
 using ThreeDo.Sport;
 using ThreeDo.Video;
 using ThreeDo.Xbus;
+using CdromChip = ThreeDo.Cdrom.CdromDevice;
 using ClioChip = ThreeDo.Clio.Clio;
+using DspCore = ThreeDo.Dsp.Dsp;
 using MadamChip = ThreeDo.Madam.Madam;
 using SportChip = ThreeDo.Sport.Sport;
 using XbusChip = ThreeDo.Xbus.Xbus;
@@ -61,7 +64,9 @@ public sealed class ThreeDoMachine
         };
         Madam.Compatibility = Compatibility;
         Xbus = new XbusChip { Interrupts = Clio };
-        Dsp = new DspStub();
+        Cdrom = new CdromChip();
+        Xbus.Attach(Cdrom);
+        Dsp = new DspCore { Host = Clio };
 
         Clio.Ram = Memory.Ram;
         Clio.RomSelector = Memory;
@@ -106,6 +111,9 @@ public sealed class ThreeDoMachine
 
     /// <summary>Gets the XBUS controller.</summary>
     public XbusChip Xbus { get; }
+
+    /// <summary>Gets the CD-ROM XBUS device.</summary>
+    public CdromChip Cdrom { get; }
 
     /// <summary>Gets the DSP backend. M5 replaces the stub with the full core.</summary>
     public IDsp Dsp { get; }
@@ -161,6 +169,13 @@ public sealed class ThreeDoMachine
         Compatibility.IsAnvil = bios1[28] == 234 ? 30 : 0;
         Compatibility.BiosAnvil = Compatibility.IsAnvil == 30;
     }
+
+    /// <summary>Inserts a disc into the CD-ROM drive. The machine does not take ownership.</summary>
+    /// <param name="disc">Disc source.</param>
+    public void InsertDisc(IDiscSource disc) => Cdrom.InsertDisc(disc);
+
+    /// <summary>Ejects the disc from the CD-ROM drive.</summary>
+    public void EjectDisc() => Cdrom.EjectDisc();
 
     /// <summary>Loads a 32 KB NVRAM image.</summary>
     /// <param name="nvram">Exactly 32 KB of NVRAM data.</param>
