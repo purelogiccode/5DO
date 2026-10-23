@@ -49,6 +49,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThreeDo.Benchmarks", "benchmarks\ThreeDo.Benchmarks\ThreeDo.Benchmarks.csproj", "{9637E410-6966-4687-B51C-55FA72B698F0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThreeDo.Video.OpenGL", "src\ThreeDo.Video.OpenGL\ThreeDo.Video.OpenGL.csproj", "{A0ACDFE5-43EA-463A-BB78-54AD36169BFE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -299,6 +301,18 @@ Global
 		{9637E410-6966-4687-B51C-55FA72B698F0}.Release|x64.Build.0 = Release|Any CPU
 		{9637E410-6966-4687-B51C-55FA72B698F0}.Release|x86.ActiveCfg = Release|Any CPU
 		{9637E410-6966-4687-B51C-55FA72B698F0}.Release|x86.Build.0 = Release|Any CPU
+		{A0ACDFE5-43EA-463A-BB78-54AD36169BFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0ACDFE5-43EA-463A-BB78-54AD36169BFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0ACDFE5-43EA-463A-BB78-54AD36169BFE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A0ACDFE5-43EA-463A-BB78-54AD36169BFE}.Debug|x64.Build.0 = Debug|Any CPU
+		{A0ACDFE5-43EA-463A-BB78-54AD36169BFE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A0ACDFE5-43EA-463A-BB78-54AD36169BFE}.Debug|x86.Build.0 = Debug|Any CPU
+		{A0ACDFE5-43EA-463A-BB78-54AD36169BFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0ACDFE5-43EA-463A-BB78-54AD36169BFE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0ACDFE5-43EA-463A-BB78-54AD36169BFE}.Release|x64.ActiveCfg = Release|Any CPU
+		{A0ACDFE5-43EA-463A-BB78-54AD36169BFE}.Release|x64.Build.0 = Release|Any CPU
+		{A0ACDFE5-43EA-463A-BB78-54AD36169BFE}.Release|x86.ActiveCfg = Release|Any CPU
+		{A0ACDFE5-43EA-463A-BB78-54AD36169BFE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -324,5 +338,6 @@ Global
 		{80927702-E835-43BE-889A-1EE83D94E936} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{3E209277-0075-44A1-8A1C-78F46F07C614} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{9637E410-6966-4687-B51C-55FA72B698F0} = {66320409-64EC-F7C5-3DEF-65E7510DAAD1}
+		{A0ACDFE5-43EA-463A-BB78-54AD36169BFE} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

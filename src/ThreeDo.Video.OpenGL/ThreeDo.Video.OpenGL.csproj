@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ThreeDo.Video.OpenGL</RootNamespace>
+    <AssemblyName>ThreeDo.Video.OpenGL</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Silk.NET.OpenGL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ThreeDo.Core\ThreeDo.Core.csproj" />
+    <ProjectReference Include="..\ThreeDo.Video\ThreeDo.Video.csproj" />
+  </ItemGroup>
+
+</Project>

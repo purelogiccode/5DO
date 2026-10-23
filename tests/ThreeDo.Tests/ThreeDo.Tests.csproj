@@ -34,6 +34,7 @@
     <ProjectReference Include="..\..\src\ThreeDo.Diagnostics\ThreeDo.Diagnostics.csproj" />
     <ProjectReference Include="..\..\src\ThreeDo.Machine\ThreeDo.Machine.csproj" />
     <ProjectReference Include="..\..\src\ThreeDo.Host\ThreeDo.Host.csproj" />
+    <ProjectReference Include="..\..\src\ThreeDo.Video.OpenGL\ThreeDo.Video.OpenGL.csproj" />
   </ItemGroup>
 
 </Project>

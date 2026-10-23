@@ -23,6 +23,22 @@ A clean-room-style, **pure C# / .NET 10** port of the FreeDO/4DO 3DO emulator co
 - Be **deterministic**: same BIOS + disc + input sequence + options produces the same frames and state.
 - Keep the codebase modular: one project per console subsystem, one class per major responsibility.
 
+## Differentiator: OpenGL presentation
+
+The desktop frontend uses **Silk.NET.OpenGL** through Avalonia's OpenGL control as the **required** presentation path:
+
+- GPU palette expansion from raw 3DO indexed pixels and per-line CLUTs.
+- Pixel-accurate "Accurate" mode that matches the CPU frame assembler.
+- High-quality GPU upscaling to 1080p/1440p/4K: nearest, sharp-bilinear, CRT, and xBR/HQx-family filters.
+- Integer scaling, aspect-ratio control, fullscreen, vsync, and screenshots.
+- CPU `WriteableBitmap` fallback only when a GL 3.3 context is unavailable.
+
+The emulation core still renders CELs in software for accuracy. The GPU accelerates presentation, palette expansion, scaling, and filters; it does not change emulated state.
+
+## Optional guest CPU JIT
+
+.NET already JIT-compiles the C# core. If profiling ever shows the ARM60 interpreter is a bottleneck, a **pure managed IL JIT** for guest ARM basic blocks can be added behind `ICpuBackend`. It is optional, disabled by default, and must be bit-identical to the interpreter. At ~12.5 MHz, the 3DO CPU is not expected to require it for 60 fps.
+
 ## Non-goals for the first release
 
 - Native or JIT CPU backends. The ARM60 interpreter is the reference implementation.

@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ThreeDo.Host\ThreeDo.Host.csproj" />
+    <ProjectReference Include="..\ThreeDo.Video.OpenGL\ThreeDo.Video.OpenGL.csproj" />
   </ItemGroup>
 
 </Project>

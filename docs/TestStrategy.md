@@ -257,6 +257,34 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
 - Save-state slots, hash mismatch, corrupt file.
 - CLI argument parsing and exit codes.
 
+### 4.16 OpenGL renderer
+
+- **Palette parity:** for synthetic `VdlFrame` scenes, the GPU "Accurate" output must hash identically to the CPU `FrameAssembler` output.
+  - all bpp values (1/2/4/6/8/16)
+  - per-line CLUT changes
+  - background pixel 0
+  - fixed CLUT flag (`xOUTCONTROLL & 0x02000000`) and pixel bit 15
+  - multiple lines with different CLUTs
+- **Upload correctness:** raw `R16UI` texture contents match `VdlLine.Pixels`; palette texture matches per-line CLUT; line-param texture matches background/out-control.
+- **Filter tests:** screenshot hashes at fixed output sizes for nearest, sharp-bilinear, CRT, and xBR modes. Filters are allowed to differ from the CPU path; Accurate mode is not.
+- **Geometry:** aspect ratio, integer scaling, letterbox, fullscreen, window resize.
+- **Context lifecycle:** initialize, resize, context loss/recreate, dispose, fallback to CPU.
+- **Shader compilation:** all shader programs compile/link; log source hash and GL version.
+- **Performance:** upload/present time, GPU frame time, 1080p/1440p/4K output, no CPU per-pixel scaling.
+- **Headless CI:** run CPU-renderer tests everywhere; GPU tests run on a local/self-hosted job with a real GL context. Skip cleanly when no context is available.
+
+### 4.17 CPU backends / optional JIT
+
+- Run the full instruction suite through `ICpuBackend` and compare interpreter vs JIT:
+  - registers, CPSR, banked registers
+  - memory writes
+  - cycle counts
+  - FIQ/mode transitions
+- Block cache invalidation on self-modifying code.
+- Fallback to interpreter on unsupported instructions.
+- Determinism: same input sequence produces the same frame/state hashes.
+- Performance gate: JIT must show a measured win and no accuracy regressions; otherwise it stays disabled.
+
 ---
 
 ## 5. Integration tests without a BIOS
@@ -351,6 +379,8 @@ Use BenchmarkDotNet for:
 - `ThreeDoMachine.RunFrame` on a synthetic scene (ms/frame, allocations/frame).
 - `FrameAssembler` (MB/s).
 - `AudioRingBuffer` (samples/second, allocation count).
+- `OpenGlRenderer` upload/present (MB/s, ms/frame, GPU time).
+- Output scaling cost at 1080p/1440p/4K (CPU should stay flat; GPU scales).
 
 Targets:
 
@@ -359,9 +389,11 @@ Targets:
 | CPU interpreter | ≥ 100 MIPS on a modern x64 core; 3DO needs 12.5 MHz |
 | Frame time (synthetic CEL scene) | < 8 ms on mid-range x64, < 16 ms on Raspberry Pi 4 class arm64 |
 | DSP | < 1 ms/frame |
-| Allocations | 0 bytes/frame in steady state |
+| OpenGL present | 60 fps at 4K on mid-range x64; 1080p on Raspberry Pi 4 class arm64 |
+| GPU upload | < 1 ms/frame at 320x240 indexed |
+| Allocations | 0 bytes/frame in steady state (core and renderer) |
 | Startup | < 1 s to first frame |
-| Memory | < 100 MB resident |
+| Memory | < 150 MB resident (including GL textures) |
 
 A performance change is accepted only with before/after numbers and identical golden output.
 
@@ -371,10 +403,11 @@ A performance change is accepted only with before/after numbers and identical go
 
 - **Build:** Windows x64, Linux x64, macOS x64/arm64.
 - **Test:** `dotnet test` on Windows x64 and Linux x64; macOS if runners are available.
+- **GPU tests:** CPU-renderer parity tests run everywhere; real OpenGL context tests run on a self-hosted/local job or a dedicated GPU runner. Skip cleanly when no context is available.
 - **Publish:** `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64` (cross-publish where runners are unavailable).
 - **Format:** `dotnet format --verify-no-changes`.
 - **Analyzers:** warnings as errors.
-- **Artifacts:** CLI + frontend archives per RID.
+- **Artifacts:** CLI + frontend archives per RID, including shaders and native audio assets.
 - **Optional:** nightly fuzz/benchmark job; real-BIOS smoke on a self-hosted machine.
 
 ---
@@ -389,5 +422,7 @@ A subsystem is done when:
 - [ ] Golden/differential tests pass where applicable.
 - [ ] No per-frame allocations in the steady state.
 - [ ] No mutable static state.
+- [ ] GPU Accurate mode matches the CPU frame assembler where applicable.
+- [ ] CPU fallback works when no GL context is available.
 - [ ] XML docs and traceability comments are present.
 - [ ] The plan's acceptance criteria for that milestone are met.

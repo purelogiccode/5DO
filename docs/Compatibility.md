@@ -98,16 +98,20 @@ The game database is ported with attribution. Unknown game IDs get the first 8 h
 | Feature | v1 | Later |
 |---|---|---|
 | 320x240 NTSC | Yes | |
+| **OpenGL renderer** | **Required desktop path** | |
+| GPU palette expansion | Yes (exact CPU parity in Accurate mode) | |
 | 4:3 aspect ratio, letterbox | Yes | |
-| Nearest/bilinear scaling | Yes | |
-| Integer scaling | Yes | |
+| Nearest / integer scaling | Yes | |
+| Sharp-bilinear | Yes (default enhanced) | |
+| CRT filter | Yes (opt-in) | |
+| xBR/HQx GPU filters | Yes (opt-in) | |
+| 1080p/1440p/4K output | Yes (GPU scaling) | |
 | Fullscreen | Yes | |
 | 384/512/640/1024-wide VDLP modes | Parsed, may crop | Full presentation |
-| High-resolution (`RESSCALE`) | No | Planned as a coherent feature |
+| High-resolution CEL (`RESSCALE`) | No | Planned as a coherent feature |
 | PAL | No | Later if needed |
-| HQ2X/3X/4X | No | Optional filters |
-| Shaders/OpenGL backend | No | Optional later |
-| Screenshots | Yes (PNG/BMP via host) | |
+| CPU fallback renderer | Yes (no GL context) | |
+| Screenshots | Yes (GL readback or CPU frame) | |
 | Frame advance | Yes | |
 
 ---
@@ -143,12 +147,13 @@ The game database is ported with attribution. Unknown game IDs get the first 8 h
 - No CD-DA / Red Book audio.
 - No multi-disc swapping.
 - No PAL.
-- No high-resolution rendering.
-- No hardware-accelerated 3DO renderer; CEL rendering is software, matching FreeDO.
+- No high-resolution CEL rendering (output upscaling via OpenGL is supported).
+- No GPU CEL compositing in v1; CEL rendering is software, matching FreeDO. The OpenGL renderer accelerates presentation, palette expansion, scaling, and filters.
 - No 3DO mouse/light gun/other peripherals.
 - No 3DO modem/network emulation.
 - No cycle-exact ARM bus timing beyond FreeDOCore's approximation.
 - No guarantee of 4DO save-state compatibility.
+- OpenGL 3.3 is required for the primary renderer; systems without it use the CPU fallback.
 
 ---
 

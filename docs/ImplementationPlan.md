@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/4DO-master/FreeDOCore` (primary), `References/opera-libretro-master/libopera` (secondary)
-**Status:** M0 scaffold complete; M0.8 legal/attribution review pending; next is M1
+**Status:** M0 scaffold complete; M0.8 legal/attribution review pending; next is M1. The OpenGL renderer is now a **required** desktop component; the optional guest ARM JIT is a separate backend path.
 **Last updated:** 2026-10-23
 
 ---
@@ -39,6 +39,7 @@ Status legend:
 A 3DO Interactive Multiplayer emulator with:
 
 - A **managed C# emulation core** implementing the ARM60 CPU, memory/bus, MADAM, CLIO, DSP, SPORT, VDLP, XBUS, CD-ROM, and timing.
+- A **required OpenGL renderer** (`ThreeDo.Video.OpenGL` + Silk.NET.OpenGL) that performs GPU palette expansion, high-quality scaling/filters (nearest, sharp-bilinear, CRT, xBR-family), integer scaling, vsync presentation, and screenshots. This is the project's primary differentiator.
 - A **headless CLI** for running discs, dumping frames/states, testing, and benchmarking.
 - An **Avalonia desktop frontend** for Windows, Linux, and macOS with a game library, settings, controller mapping, save states, screenshots, and fullscreen.
 - A **unit/integration test suite** that can run without a copyrighted BIOS by using synthetic ROMs and fixtures.
@@ -49,10 +50,11 @@ A 3DO Interactive Multiplayer emulator with:
 - No C++/CLI, no native `FreeDOCore.dll`, no P/Invoke into an emulator core.
 - The emulation core, host, CLI, and frontend logic are C#.
 - Host-only services may use platform/native libraries behind interfaces:
+  - **OpenGL via Silk.NET.OpenGL** for the required desktop renderer (the OS/driver supplies the GL implementation).
   - Avalonia rendering (its own native backend).
   - Audio output (OpenAL Soft, SDL, or platform APIs).
   - Gamepad input (SDL/GameController or platform HID).
-- These host services are optional: the core, CLI headless mode, and tests must run with null audio/input backends and no native emulator code.
+- The core, CLI headless mode, and tests must run with null audio/input backends and without requiring a GL context. The CPU frame assembler remains the fallback/accuracy oracle.
 
 ### 1.3 Success criteria
 
@@ -60,6 +62,7 @@ A 3DO Interactive Multiplayer emulator with:
 
 - [ ] Boots a real 3DO BIOS to its menu.
 - [ ] Renders the BIOS UI at 320x240, 60 Hz.
+- [ ] OpenGL renderer displays the BIOS frame with pixel-accurate palette expansion.
 - [ ] Responds to keyboard input.
 - [ ] Does not crash for 10 minutes of menu navigation.
 - [ ] Synthetic-ROM integration tests pass in CI.
@@ -70,13 +73,16 @@ A 3DO Interactive Multiplayer emulator with:
 - [ ] Audio works for DSP-driven music/SFX.
 - [ ] NVRAM persists between sessions.
 - [ ] Save states roundtrip deterministically.
-- [ ] 60 fps on a mid-range x64 desktop and a Raspberry Pi 4 class arm64 device.
+- [ ] OpenGL renderer supports accurate, sharp-bilinear, and CRT modes; integer scaling; fullscreen; screenshots.
+- [ ] 60 fps on a mid-range x64 desktop and a Raspberry Pi 4 class arm64 device at native resolution.
 - [ ] Windows/Linux/macOS x64 builds; arm64 builds produced and smoke-tested.
 
 **v1.0 - Release milestone**
 
 - [ ] Compatibility matrix with documented results.
 - [ ] Full Avalonia frontend (library, settings, input mapping, save states, screenshots, logs, about).
+- [ ] OpenGL renderer is the default on all desktop platforms, with CPU fallback and context-loss recovery.
+- [ ] High-quality upscaling to 1080p/1440p/4K with no CPU-side per-pixel scaling.
 - [ ] CLI with `run`, `info`, `bench`, `state`, and `selftest` commands.
 - [ ] Reproducible self-contained packages for all six RIDs.
 - [ ] License/attribution review complete.
@@ -84,13 +90,14 @@ A 3DO Interactive Multiplayer emulator with:
 
 ### 1.4 Non-goals (v1)
 
-- Native/JIT CPU backends.
+- Native (executable-memory) CPU backends. An optional **managed IL JIT** for the guest ARM core is allowed and planned behind `ICpuBackend`.
+- GPU-accelerated CEL compositing in v1. The required OpenGL renderer accelerates presentation, palette expansion, scaling, and filters; software CEL rendering remains the accuracy path. A GPU CEL path is an optional post-v1 experiment.
 - Netplay.
 - Rewind.
 - CD-DA / Red Book audio.
 - Multi-disc swapping.
 - PAL video.
-- High-resolution rendering (planned after v0.5; see M11).
+- High-resolution CEL rendering (planned after v0.5; see M11).
 - 3DO mouse, light gun, modem, or network peripherals.
 - Bit-exact 4DO save-state compatibility.
 
@@ -103,19 +110,22 @@ The full architecture is in [`docs/Architecture.md`](docs/Architecture.md). The 
 ```text
 Frontends (Avalonia, CLI)
         │
+        ├── ThreeDo.Video.OpenGL  (required desktop renderer)
+        │     palette shader, scaling, CRT/xBR, vsync
+        │
         ▼
 ThreeDo.Host (session, BIOS/disc/NVRAM, audio, input, save states, pacing)
         │
         ▼
 ThreeDo.Machine (composition, frame loop, Quartz, state sections)
         │
-        ├── ThreeDo.Cpu       ARM60 interpreter
+        ├── ThreeDo.Cpu       ARM60 interpreter (+ optional IL JIT backend)
         ├── ThreeDo.Memory    RAM/ROM/NVRAM, bus decode
         ├── ThreeDo.Madam     CEL engine, pixel pipeline, matrix engine
         ├── ThreeDo.Clio      timers, FIFOs, DMA, interrupts, XBUS/DSP windows
         ├── ThreeDo.Dsp       audio DSP
         ├── ThreeDo.Sport     VRAM fill/copy
-        ├── ThreeDo.Video     VDLP, frame assembly, scalers
+        ├── ThreeDo.Video     VDLP, frame assembly, CPU oracle/fallback
         ├── ThreeDo.Xbus      expansion bus
         ├── ThreeDo.Cdrom     CD-ROM device
         ├── ThreeDo.Storage   ISO/BIN/CUE, BIOS, NVRAM, game DB
@@ -130,10 +140,11 @@ ThreeDo.Core (contracts, types, constants, state interfaces)
 Key decisions:
 
 - **`ThreeDo.Core` has no project references.** Chips depend only on Core. `ThreeDo.Machine` wires concrete chips through small interfaces.
-- **The core is single-threaded and deterministic.** The host owns pacing, audio, input, and UI threads.
+- **The core is single-threaded and deterministic.** The host owns pacing, audio, input, and UI/render threads.
 - **Memory preserves FreeDOCore's word-swapped representation** for v1. See `docs/PortingNotes.md` §3.
 - **Save states use a new explicit format**, not the native `memcpy` struct layout.
-- **Video is software CEL rendering**, matching FreeDO. The frontend scales the 320x240 frame.
+- **CEL rendering is software**, matching FreeDO. **Presentation is OpenGL**: GPU palette expansion, scaling, filters, and vsync. The OpenGL renderer is required for the desktop frontend and is the project's main differentiator.
+- **The guest ARM JIT is optional** and lives behind `ICpuBackend`; the interpreter is the default and the accuracy oracle.
 
 ---
 
@@ -146,6 +157,7 @@ Key decisions:
 | `Clio.cpp`, `Clio.h` | `ThreeDo.Clio` | `Clio`, `ClioRegisters`, `ClioTimers`, `ClioFifo`, `ClioDma`, `ClioInterrupts` | M3 |
 | `Madam.cpp`, `Madam.h` | `ThreeDo.Madam` | `Madam`, `MadamRegisters`, `CelEngine`, `CelBitReader`, `PixelDecoder`, `PixelProcessor`, `Projector`, `CelRasterizer`, `MatrixEngine` | M4 |
 | `vdlp.cpp`, `vdlp.h` | `ThreeDo.Video` | `Vdlp`, `VdlParser`, `VdlLine`, `VdlFrame`, `FrameAssembler` | M3/M4 |
+| `frame.cpp`, `frame.h` | `ThreeDo.Video` + `ThreeDo.Video.OpenGL` | `FrameAssembler` (CPU oracle/fallback), `OpenGlRenderer` palette shader (required desktop path) | M3/M4 + M9R |
 | `DSP.cpp`, `DSP.h` | `ThreeDo.Dsp` | `Dsp`, `DspCore`, `DspInstructionDecoder`, `DspAlu`, `DspRegisters`, `DspMemory` | M5 |
 | `SPORT.cpp`, `SPORT.h` | `ThreeDo.Sport` | `Sport` | M3 |
 | `XBUS.cpp`, `XBUS.h`, `IsoXBUS.h` | `ThreeDo.Xbus` | `Xbus`, `XbusDevice`, `XbusFifo` | M6 |
@@ -153,8 +165,7 @@ Key decisions:
 | `quarz.cpp`, `quarz.h` | `ThreeDo.Machine` | `Quartz`, `ClockDomain` | M3 |
 | `DiagPort.cpp`, `DiagPort.h` | `ThreeDo.Clio` | `DiagPort` | M3 |
 | `bitop.cpp`, `bitop.h` | `ThreeDo.Madam` | `CelBitReader` | M4 |
-| `frame.cpp`, `frame.h` | `ThreeDo.Video` | `FrameAssembler`, `FrameBufferFactory` | M3/M4 |
-| `Filters/hqx*` | `ThreeDo.Video` | `Hq2x`, `Hq3x`, `Hq4x` (optional) | M11 |
+| `Filters/hqx*` | `ThreeDo.Video.OpenGL` | GLSL xBR/HQx-style filters (GPU, required filter family) | M9R/M11 |
 | `types.h`, `freedoconfig.h`, `freedocore.h` | `ThreeDo.Core` | constants, `FixMode`, `EmulatorTuning`, `VdlFrame`, `FrameBuffer` | M1 |
 | `Worker.cpp` | - | not ported | - |
 
@@ -185,11 +196,13 @@ Key decisions:
 | M6 | XBUS + CD-ROM | Disc images and CD command state machine | Real disc boots to title screen | 10 dd |
 | M7 | Input + NVRAM + fixes | Playable controls, persistence, game DB | Playable test set; NVRAM persists | 6 dd |
 | M8 | Save states + diagnostics | Deterministic states, CLI tools, tracing | State roundtrip and CLI tests green | 10 dd |
-| M9 | Avalonia frontend | Full desktop UI | Runs on win/linux/mac x64; 60 fps; fullscreen | 18 dd |
+| M9 | Avalonia frontend | Full desktop UI | Runs on win/linux/mac x64; 60 fps; fullscreen | 16 dd |
+| M9R | **OpenGL renderer** | Required GPU presentation, palette shader, scaling/filters, vsync | Accurate mode matches CPU; 4K output; 60 fps | 10 dd |
 | M10 | Packaging + performance | Six RIDs, CI artifacts, optimization | All packages start; targets met | 6 dd |
 | M11 | Compatibility + release | Real-game hardening, high-res, release | v1 checklist complete | 25+ dd |
+| M12 | Optional guest ARM JIT | Managed IL JIT behind `ICpuBackend` | Bit-identical state; benchmark win | 10-20 dd |
 
-**Total:** ~137 developer-days of focused work plus 30% contingency (~180 dd). This is a multi-month project for one experienced developer; correctness gates matter more than the estimate.
+**Total:** ~157 developer-days of focused work plus 30% contingency (~204 dd), excluding the optional M12 JIT. This is a multi-month project for one experienced developer; correctness gates matter more than the estimate.
 
 ---
 
@@ -206,7 +219,7 @@ Key decisions:
   - `.editorconfig`, `global.json`, `Directory.Build.props`, `Directory.Packages.props`.
   - Solution `3DOEmulator.sln`.
 - [x] **M0.2 Create the production project skeleton.**
-  - `src/ThreeDo.Core`, `Cpu`, `Memory`, `Madam`, `Clio`, `Dsp`, `Sport`, `Video`, `Xbus`, `Cdrom`, `Storage`, `Audio`, `Input`, `Diagnostics`, `Machine`, `Host`, `Cli`, `Frontend.Avalonia`.
+  - `src/ThreeDo.Core`, `Cpu`, `Memory`, `Madam`, `Clio`, `Dsp`, `Sport`, `Video`, `Video.OpenGL`, `Xbus`, `Cdrom`, `Storage`, `Audio`, `Input`, `Diagnostics`, `Machine`, `Host`, `Cli`, `Frontend.Avalonia`.
   - Correct project references per `docs/Architecture.md`.
   - No placeholder public APIs that will be thrown away.
 - [x] **M0.3 Create the test and benchmark skeleton.**
@@ -232,7 +245,7 @@ Key decisions:
 
 **Deliverables**
 
-- Buildable solution with 18 production projects, one test project, one benchmark project.
+- Buildable solution with 19 production projects, one test project, one benchmark project.
 - CLI and Avalonia app launch with placeholders.
 - CI green.
 
@@ -385,6 +398,11 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 - [ ] **M2.15 Optional oracle trace.**
   - Developer-only harness to compare PC/registers/cycles with FreeDOCore for a small program.
   - Not part of the default test run.
+- [ ] **M2.16 CPU backend abstraction.**
+  - `ICpuBackend` with `Step`, `Reset`, state, and register access.
+  - `Arm60Interpreter` is the default implementation.
+  - `EmulatorTuning.CpuBackend` selects interpreter/JIT; JIT is added in M12.
+  - No behavior change; tests run against the interpreter.
 
 **Deliverables**
 
@@ -464,6 +482,10 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Run 300 frames with a user-provided BIOS.
   - Assert no exception, PC not stuck in a tight invalid loop, frame hash recorded.
   - Skip if `THREEDO_BIOS` is unset.
+- [ ] **M3.13 OpenGL integration spike (early, non-blocking).**
+  - Minimal Avalonia + Silk.NET.OpenGL window that displays a synthetic 320x240 indexed frame.
+  - Prove context creation, shader compilation, texture upload, and present on Windows/Linux/macOS.
+  - This is the first half of M9R.1/M9R.3; it does not block M4-M8.
 
 **Deliverables**
 
@@ -823,11 +845,12 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Main window, Home, Library, Settings, Logs, About.
   - Dark/light theme, Fluent, Inter.
   - Status bar: FPS, game, BIOS, audio/video state.
-- [ ] **M9.2 Video surface.**
-  - `VideoSurface` control with `WriteableBitmap` (BGRA8888).
-  - Aspect ratio, integer scaling, letterbox, nearest/bilinear.
-  - Fullscreen, borderless, cursor hide, escape handling.
+- [ ] **M9.2 OpenGL video surface host.**
+  - `VideoSurface` control based on Avalonia's `OpenGlControlBase`.
+  - Create/destroy the GL context, pass the function loader/context to `ThreeDo.Video.OpenGL`.
+  - Aspect ratio, integer scaling, letterbox, fullscreen, borderless, cursor hide, escape handling.
   - Frame mailbox: latest-frame wins; drop stale frames.
+  - CPU `WriteableBitmap` fallback when GL 3.3 is unavailable; log the reason.
   - FPS overlay toggle.
 - [ ] **M9.3 BIOS setup.**
   - First-run wizard: BIOS1 required, BIOS2 optional.
@@ -838,10 +861,10 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Game ID/name from database; recent games; cover art optional.
   - Open disc, eject, refresh.
 - [ ] **M9.5 Settings.**
-  - Video: scale/filter/fullscreen/vsync.
+  - Video: renderer (OpenGL/CPU fallback), filter (accurate/nearest/sharp-bilinear/CRT/xBR), scale, aspect, fullscreen, vsync.
   - Audio: device, buffer, volume/mute.
   - Input: keyboard/gamepad mapping per player, hotkeys.
-  - Emulation: ARM clock, fix mode, high-res (disabled in v1), save slots.
+  - Emulation: ARM clock, fix mode, high-res (disabled in v1), save slots, CPU backend (interpreter; JIT when available).
   - Paths: BIOS, saves, screenshots, library.
   - Per-game overrides.
 - [ ] **M9.6 Input UI.**
@@ -853,7 +876,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Null fallback if no device.
 - [ ] **M9.8 Save states/screenshots.**
   - Quick save/load, slot next/previous, slot manager.
-  - Screenshot to PNG with game/time name.
+  - Screenshot to PNG with game/time name; prefer GL readback, CPU frame fallback.
   - State metadata (game, BIOS, timestamp, thumbnail optional).
 - [ ] **M9.9 Logs/About.**
   - In-app log viewer with category filter.
@@ -884,6 +907,92 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 ---
 
+### M9R - OpenGL renderer (required differentiator)
+
+**Goal:** make the OpenGL renderer the default desktop presentation path, with pixel-accurate palette expansion and a high-quality, GPU-based scaling/filter pipeline.
+
+This milestone is intentionally separate from the Avalonia shell. It can start once `VdlFrame` exists (M3/M4) and must be complete before v0.5.
+
+**Tasks**
+
+- [ ] **M9R.1 Renderer contract and context adapter.**
+  - `IVideoRenderer`, `RendererSettings`, `VideoFilter`, `AspectMode`, `RendererCapabilities` in `ThreeDo.Video`.
+  - `GlContextAdapter` that wraps Avalonia's GL context/function loader without referencing Avalonia from `ThreeDo.Video.OpenGL`.
+  - `OpenGlRenderer.Initialize/Resize/Present/Dispose`.
+  - Capability detection: GL 3.3 core, `GL_R16UI`, `usampler2D`, `texelFetch`, integer textures, max texture size.
+- [ ] **M9R.2 Frame texture upload.**
+  - Upload raw 16-bit indexed pixels (`R16UI`).
+  - Upload per-line CLUT as an RGB8 texture (32 x height).
+  - Upload per-line parameters as an RGBA32UI texture (background, out-control, flags).
+  - Triple-buffered pixel/texture storage; no per-frame allocations.
+  - Handle 320x240, 384x288, 640x480, and wider VDLP modes.
+- [ ] **M9R.3 Palette-expansion shader.**
+  - Direct port of `frame.cpp: Get_Frame_Bitmap`:
+    - pixel `0` => 5-bit background B/G/R
+    - fixed CLUT when `xOUTCONTROLL & 0x02000000` and pixel bit 15
+    - otherwise per-line CLUT
+  - Exact 5-bit to 8-bit expansion matching the CPU path.
+  - Golden-image parity test against `FrameAssembler` for synthetic VDL frames.
+- [ ] **M9R.4 Scaling and filter pipeline.**
+  - **Accurate:** nearest, pixel-perfect, integer scaling.
+  - **Nearest:** nearest with arbitrary scale/letterbox.
+  - **Sharp-bilinear:** default enhanced mode.
+  - **CRT:** scanlines, aperture mask, curvature, bloom (opt-in).
+  - **xBR/HQx family:** multi-pass GPU filters (opt-in).
+  - Filter settings persisted per game/global.
+- [ ] **M9R.5 Presentation.**
+  - Aspect ratio: 4:3, integer, stretch, custom.
+  - Fullscreen/borderless, vsync, frame pacing, latest-frame mailbox.
+  - FPS/GPU-time overlay.
+  - Window resize without recreating textures.
+- [ ] **M9R.6 Screenshots.**
+  - GL readback to PNG, respecting the active filter.
+  - Optional "native frame" screenshot from the CPU path.
+- [ ] **M9R.7 Context loss and fallback.**
+  - Detect context loss/reset; recreate textures/shaders.
+  - Fall back to CPU `WriteableBitmap` if GL 3.3 is unavailable; log once.
+  - Do not crash on driver/context failure.
+- [ ] **M9R.8 Performance.**
+  - Measure upload bandwidth, shader time, present time.
+  - Target: 60 fps at 4K output on mid-range x64; 1080p on Raspberry Pi 4-class arm64.
+  - Zero CPU per-pixel scaling; palette expansion on GPU.
+- [ ] **M9R.9 Tests.**
+  - Shader compilation/link tests (skip if no GL context).
+  - CPU-vs-GPU palette parity for all bpp/CLUT/background/fixed-CLUT cases.
+  - Filter screenshot hashes at fixed sizes.
+  - Aspect/integer-scaling geometry tests.
+  - Context-loss/fallback tests.
+  - Headless CI uses the CPU renderer; GPU tests run on a self-hosted or local job.
+- [ ] **M9R.10 Renderer spike (early, M3/M4).**
+  - Before the full renderer, create a small Avalonia + Silk.NET.OpenGL window that displays a synthetic 320x240 indexed frame with the palette shader.
+  - This de-risks context creation, shader loading, and presentation on all three OSes.
+
+**Deliverables**
+
+- `ThreeDo.Video.OpenGL` with the full presentation pipeline.
+- Accurate CPU/GPU parity tests.
+- Filter/shader assets.
+- CPU fallback path.
+
+**Acceptance**
+
+- [ ] Accurate mode matches the CPU `FrameAssembler` pixel-for-pixel on synthetic frames.
+- [ ] 4K output at 60 fps on a mid-range x64 GPU; 1080p on Raspberry Pi 4-class arm64.
+- [ ] Filters are opt-in, stable, and do not affect emulated state.
+- [ ] Context loss recovers or falls back cleanly.
+- [ ] No per-frame allocations in the upload/present path.
+- [ ] Runs on Windows, Linux, and macOS.
+
+**Risks**
+
+- GL context integration differs across Avalonia backends/OSes. Mitigate with the early spike and CPU fallback.
+- Shader precision/rounding could differ from the CPU palette path. Mitigate with exact integer texture sampling and golden tests.
+- Per-line CLUT texture lookups can be slow on weak GPUs. Mitigate with a 32xheight palette texture and `texelFetch`.
+- Driver bugs with `R16UI`/integer textures. Mitigate with a fallback to `R16` normalized or CPU BGRA upload.
+- xBR/HQx multi-pass filters can be expensive at 4K. Make them opt-in and expose a quality/performance setting.
+
+---
+
 ### M10 - Packaging, CI, performance, arm64
 
 **Goal:** shippable, reproducible builds for all target platforms.
@@ -893,7 +1002,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 - [ ] **M10.1 Publish profiles.**
   - `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`.
   - Self-contained, single-file, `PublishTrimmed=false` initially.
-  - Include native audio/gamepad assets per RID.
+  - Include native audio/gamepad assets and GLSL shader resources per RID.
 - [ ] **M10.2 CI matrix.**
   - Build/test on Windows/Linux/macOS.
   - Publish all RIDs; upload artifacts.
@@ -904,9 +1013,10 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 - [ ] **M10.4 Icons/metadata.**
   - App icon, file associations (`.iso`, `.bin`, `.cue`, `.tdos`), version info.
 - [ ] **M10.5 Performance.**
-  - Benchmark CPU, CEL, DSP, frame loop.
+  - Benchmark CPU, CEL, DSP, frame loop, OpenGL upload/present.
   - Optimize hot paths: memory helpers, CEL pixel loops, DSP operand loader.
-  - Measure allocations; target zero/frame.
+  - Measure allocations; target zero/frame in core and renderer.
+  - Profile at 1080p/4K output; verify the CPU cost is independent of output resolution.
 - [ ] **M10.6 arm64 validation.**
   - Run on Windows arm64 (if available), Linux arm64 (Raspberry Pi 4/5), macOS arm64.
   - Verify audio/gamepad backends.
@@ -923,6 +1033,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 **Acceptance**
 
 - [ ] Every package starts and reaches the UI/CLI.
+- [ ] OpenGL context initializes on supported systems; CPU fallback works otherwise.
 - [ ] Tests green on CI.
 - [ ] Performance targets met or documented.
 - [ ] No native emulator code in any package.
@@ -931,7 +1042,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 ### M11 - Compatibility hardening and release
 
-**Goal:** real-game compatibility, high-res, optional filters, release.
+**Goal:** real-game compatibility, high-res, filter polish, release.
 
 **Tasks**
 
@@ -942,9 +1053,11 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 - [ ] **M11.2 High-resolution mode.**
   - `RESSCALE=1`: VRAM mirroring, VDLP line duplication, SPORT copies, CEL stepping, frame extraction.
   - Golden tests and real-game validation.
-- [ ] **M11.3 Optional HQ2X/3X/4X.**
-  - Port filters or implement shader-based scaling.
-  - Keep core accuracy path unaffected.
+  - Expose as an "Enhanced internal resolution" option, separate from output upscaling.
+- [ ] **M11.3 Filter polish (required family, optional per game).**
+  - Finalize sharp-bilinear, CRT, and xBR/HQx GLSL pipelines.
+  - Add per-game filter presets and performance warnings at 4K.
+  - Keep the accurate path pixel-identical to the CPU oracle.
 - [ ] **M11.4 CD timing/seek improvements.**
   - Only if real games require it; keep transcript tests.
 - [ ] **M11.5 Optional CHD.**
@@ -955,12 +1068,49 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Release notes.
 - [ ] **M11.7 Post-release backlog.**
   - Netplay, rewind, debugger UI, CD-DA, PAL, additional peripherals.
+- [ ] **M11.8 Optional GPU CEL compositing experiment.**
+  - Evaluate compute-shader or RTT-based CEL rendering against the software path.
+  - Keep software CEL as the accuracy path; ship only if parity and performance are proven.
 
 **Acceptance**
 
 - [ ] v1.0 checklist in §1.3 complete.
 - [ ] No known crash bugs in the supported test set.
 - [ ] Release artifacts and docs published.
+
+---
+
+### M12 - Optional guest ARM JIT (post-v1 unless profiling demands it)
+
+**Goal:** add a pure managed IL JIT for the ARM60 behind `ICpuBackend`, with bit-identical behavior and a measured performance win. This is **not** required for 60 fps; the 12.5 MHz CPU is not expected to be the bottleneck.
+
+**Tasks**
+
+- [ ] **M12.1 Profile first.**
+  - Measure interpreter cost per frame on the target devices.
+  - Only proceed if CPU interpretation is a measured top-three cost.
+- [ ] **M12.2 Block discovery and decoding.**
+  - Identify basic blocks, terminators, PC-relative literals, and self-modifying code.
+  - Invalidate blocks on RAM writes that overlap translated code.
+- [ ] **M12.3 IL emission.**
+  - `DynamicMethod`/`ILGenerator` per block, with guest registers mapped to locals/fields.
+  - Call memory helpers for loads/stores and MMIO.
+  - Preserve condition codes, mode switches, FIQ, cycle counts, and compatibility hacks.
+- [ ] **M12.4 Differential tests.**
+  - Run the full CPU instruction suite through both backends; compare registers, flags, memory, and cycles.
+  - Run synthetic programs and real BIOS/disc smoke tests.
+- [ ] **M12.5 Performance gate.**
+  - Require a measurable frame-time or CPU-time win; otherwise keep the interpreter default.
+- [ ] **M12.6 Safety.**
+  - Bounded code cache, invalidation, fallback to interpreter on unsupported instructions.
+  - No executable memory, no P/Invoke, no native code.
+
+**Acceptance**
+
+- [ ] Bit-identical architectural state and cycle counts vs the interpreter.
+- [ ] Measured win on at least one target platform.
+- [ ] No regression in save states or determinism.
+- [ ] Disabled by default until proven.
 
 ---
 
@@ -1047,11 +1197,14 @@ See [`docs/TestStrategy.md`](docs/TestStrategy.md).
 | R4 | CD command state machine mismatches | Medium | High | Transcript tests for every command; real disc boot; compare with 4DO |
 | R5 | Scheduler timing approximations cause game hangs | Medium | High | Preserve FreeDO semantics; add game-specific fixes only with evidence |
 | R6 | Cross-platform audio/gamepad dependencies | Medium | Medium | Interfaces + null fallbacks; test per RID early; choose SDL/OpenAL after spike |
-| R7 | Avalonia API churn / UI performance | Medium | Medium | Pin versions; latest-frame mailbox; CPU blit for 320x240 |
+| R7 | Avalonia API churn / UI performance | Medium | Medium | Pin versions; latest-frame mailbox; OpenGL presenter with CPU fallback |
+| R7a | OpenGL context/driver differences across Windows/Linux/macOS | High | High | Early M3.13 spike; GL 3.3 capability check; CPU fallback; context-loss recovery |
+| R7b | GPU palette shader differs from CPU frame assembler | Medium | High | Integer textures, exact 5-bit expansion, golden parity tests |
+| R7c | Optional ARM IL JIT diverges from interpreter | Medium | High | `ICpuBackend` differential suite; disabled by default; interpreter oracle |
 | R8 | Save state incompleteness | Medium | High | State hash; roundtrip tests; section-by-section ownership |
 | R9 | Licensing restrictions block distribution | Medium | High | Early legal review; non-commercial assumption; attribution |
 | R10 | No redistributable BIOS/disc for CI | High | Medium | Synthetic ROM/disc fixtures; opt-in real-content tests |
-| R11 | Scope creep (netplay, rewind, shaders) | High | Medium | Non-goals list; milestone gates; defer to M11+ |
+| R11 | Scope creep (extra filters, netplay, rewind, GPU CEL) | High | Medium | Renderer filter family is fixed in M9R; everything else deferred to M11+ |
 | R12 | Performance on arm64 | Low/Medium | Medium | Benchmark early; avoid allocations; profile CEL/DSP |
 | R13 | Floating-point differences x64/arm64 | Low | Medium | Integer timing; golden frame hashes; replace hot float math if needed |
 | R14 | Native audio/gamepad packaging complexity | Medium | Medium | Isolate per RID; ship null fallback; document optional backends |
@@ -1090,16 +1243,19 @@ These need a decision before the relevant milestone; the plan assumes the defaul
 
 1. **Final product name and namespace prefix.** Default: solution `3DOEmulator`, namespace `ThreeDo`.
 2. **Distribution license.** Default: non-commercial, source-available, pending FreeDO/4DO permission. See `docs/Licensing.md`.
-3. **Audio backend.** Default: OpenAL Soft via Silk.NET.OpenAL, with null/WAV fallbacks. Alternative: SDL2 audio.
-4. **Gamepad backend.** Default: evaluate Avalonia 12 built-in; fall back to Silk.NET.Input/SDL2.
-5. **4DO save-state compatibility.** Default: no; own versioned format. Legacy import can be added later.
-6. **CHD support.** Default: later (M11), ISO/BIN/CUE first.
-7. **PAL support.** Default: later; NTSC 60 Hz first.
-8. **High-resolution mode.** Default: later (M11); v1 renders 320x240.
-9. **Minimum OS versions.** Default: Windows 10+, macOS 12+, current Linux desktop.
-10. **UI visual direction.** Default: clean dark/light Fluent, game library + settings, no skeuomorphic 3DO shell.
-11. **Game database source/licensing.** Default: port 4DO data with attribution, pending review.
-12. **Whether to ship an optional native audio binary.** Default: yes for desktop, but the core and CLI must work without it.
+3. **Renderer.** **Decided: OpenGL via Silk.NET.OpenGL is required for the desktop frontend**, hosted by Avalonia's `OpenGlControlBase`. The CPU `WriteableBitmap` path is only a fallback/oracle.
+4. **Default filter.** Default: sharp-bilinear for enhanced mode; "Accurate" (nearest/integer) must be available and pixel-identical to the CPU assembler.
+5. **Audio backend.** Default: OpenAL Soft via Silk.NET.OpenAL, with null/WAV fallbacks. Alternative: SDL2 audio.
+6. **Gamepad backend.** Default: evaluate Avalonia 12 built-in; fall back to Silk.NET.Input/SDL2.
+7. **4DO save-state compatibility.** Default: no; own versioned format. Legacy import can be added later.
+8. **CHD support.** Default: later (M11), ISO/BIN/CUE first.
+9. **PAL support.** Default: later; NTSC 60 Hz first.
+10. **High-resolution CEL mode.** Default: later (M11); v1 renders 320x240. Output upscaling is always available via OpenGL.
+11. **Minimum OS versions.** Default: Windows 10+, macOS 12+, current Linux desktop with OpenGL 3.3.
+12. **UI visual direction.** Default: clean dark/light Fluent, game library + settings, no skeuomorphic 3DO shell.
+13. **Game database source/licensing.** Default: port 4DO data with attribution, pending review.
+14. **Guest ARM JIT.** Default: optional managed IL JIT (M12), disabled by default, only if profiling shows the interpreter is a top cost. The .NET JIT is already used for all C# code.
+15. **Whether to ship an optional native audio binary.** Default: yes for desktop, but the core and CLI must work without it.
 
 ---
 
@@ -1116,17 +1272,20 @@ These need a decision before the relevant milestone; the plan assumes the defaul
 | M6 XBUS/CD | 10 dd | M3 (parallel with M4/M5) |
 | M7 Input/NVRAM/fixes | 6 dd | M4/M6 |
 | M8 Save states/CLI | 10 dd | M4/M5/M6 |
-| M9 Avalonia | 18 dd | M8 |
-| M10 Packaging/perf | 6 dd | M9 |
+| M9 Avalonia | 16 dd | M8 |
+| M9R OpenGL renderer | 10 dd | M4/M9 (spike can start at M3) |
+| M10 Packaging/perf | 6 dd | M9/M9R |
 | M11 Compatibility/release | 25+ dd | M10 |
-| **Subtotal** | **137 dd** | |
-| Contingency (30%) | ~41 dd | |
-| **Total** | **~178 dd** | |
+| **Subtotal** | **145 dd** | |
+| Contingency (30%) | ~44 dd | |
+| **Total** | **~189 dd** | |
+| M12 optional ARM IL JIT | 10-20 dd | M2, only if profiling demands |
 
 Suggested parallelization with two developers:
 
 - Dev A: CPU, memory, CLIO, machine, save states.
 - Dev B: MADAM, VDLP, SPORT, DSP, CD.
+- Dev B (later): OpenGL renderer and shader pipeline.
 - Both: tests, frontend, compatibility.
 - Do not parallelize the same chip; keep one owner per subsystem.
 
@@ -1148,4 +1307,5 @@ Suggested parallelization with two developers:
 |---|---|---|---|
 | 2026-10-23 | M0 | Plan/architecture written | Initial docs and scaffold |
 | 2026-10-23 | M0.1-M0.7 | Scaffold complete | `dotnet build`, `dotnet test` (2 tests), and `dotnet format --verify-no-changes` pass; commit `e620ebb` |
+| 2026-10-23 | Architecture | OpenGL renderer made required; optional ARM JIT added as M12 | `ThreeDo.Video.OpenGL` project added; docs updated |
 | | | | |

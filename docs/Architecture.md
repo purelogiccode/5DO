@@ -24,8 +24,9 @@
 │                                                                     │
 │   ThreeDo.Frontend.Avalonia                 ThreeDo.Cli             │
 │   - views / viewmodels                      - headless commands     │
-│   - video surface                           - frame/state dumps     │
-│   - settings / library                      - benchmarks            │
+│   - settings / library                      - frame/state dumps     │
+│   - hosts ThreeDo.Video.OpenGL              - benchmarks            │
+│     (palette shader, scaling, CRT/xBR)                              │
 └───────────────────────────────┬─────────────────────────────────────┘
                                 │
 ┌───────────────────────────────▼─────────────────────────────────────┐
@@ -59,6 +60,8 @@
 
 **Dependency rule:** arrows point *downward only*. `ThreeDo.Core` has no project references. No chip project references another chip project; they communicate through small interfaces defined in `ThreeDo.Core` and are wired by `ThreeDo.Machine`. This avoids the circular dependencies that the original C++ code solved with globals and `extern`.
 
+**Renderer rule:** the Avalonia frontend hosts `ThreeDo.Video.OpenGL` and uses it as the primary desktop presenter. The CLI uses the CPU/null renderer. `ThreeDo.Video.OpenGL` consumes completed `VdlFrame` data and never touches emulated state.
+
 ---
 
 ## 3. Project catalog
@@ -72,7 +75,8 @@
 | `ThreeDo.Clio` | CLIO registers, timers, FIFOs, DMA, interrupts, DSP interface, XBUS register window, ROM select | `Clio`, `ClioRegisters`, `ClioTimers`, `ClioFifo`, `ClioDma`, `ClioInterrupts` | Core |
 | `ThreeDo.Dsp` | 3DO audio DSP: instruction decode/precompute, ALU, multiplier, barrel shifter, NMem/IMem, semaphore, sample output | `Dsp`, `DspCore`, `DspInstructionDecoder`, `DspAlu`, `DspRegisters`, `DspMemory` | Core |
 | `ThreeDo.Sport` | SPORT VRAM fill/copy engine | `Sport` | Core |
-| `ThreeDo.Video` | VDLP display-list parser, line/frame assembly, palette expansion, frame extraction, scalers | `Vdlp`, `VdlParser`, `FrameAssembler`, `FrameBufferFactory`, `Scalers/*` | Core |
+| `ThreeDo.Video` | VDLP display-list parser, line/frame assembly, palette expansion reference path, frame extraction, scaler contracts | `Vdlp`, `VdlParser`, `FrameAssembler`, `FrameBufferFactory`, `IVideoRenderer`, `VideoFilter` | Core |
+| `ThreeDo.Video.OpenGL` | **Required desktop renderer**: GL context integration, raw indexed-frame upload, palette shader, scaling/filter pipeline, vsync presentation, screenshots | `OpenGlRenderer`, `FrameTextureUploader`, `ShaderProgram`, `RendererSettings`, `GlContextAdapter` | Core, Video, Silk.NET.OpenGL |
 | `ThreeDo.Xbus` | XBUS controller, device selection, poll/status/data FIFOs, device interface | `Xbus`, `XbusDevice`, `XbusFifo` | Core |
 | `ThreeDo.Cdrom` | Mitsumi/MEI CD-ROM device, command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice`, `CdromCommand`, `Toc`, `Msf` | Core |
 | `ThreeDo.Storage` | Disc image readers (ISO/BIN/CUE), BIOS validation, NVRAM file format, game database, game ID | `IsoImage`, `BinImage`, `CueSheet`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `GameDatabase`, `GameId` | Core |
@@ -82,7 +86,7 @@
 | `ThreeDo.Machine` | Machine composition root, frame loop, Quartz scheduler, device wiring, state sections | `ThreeDoMachine`, `MachineOptions`, `FrameLoop`, `Quartz`, `StateSection` | Core + all chips |
 | `ThreeDo.Host` | Session lifecycle, frame pacing, BIOS/disc/NVRAM loading, audio/input backends, save states, settings | `EmulatorSession`, `FramePacer`, `AudioPipeline`, `InputManager`, `BiosLoader`, `NvramStore`, `SaveStateService` | Machine, Storage, Audio, Input, Diagnostics |
 | `ThreeDo.Cli` | Headless command-line interface | `Program`, `RunCommand`, `InfoCommand`, `BenchCommand` | Host |
-| `ThreeDo.Frontend.Avalonia` | Cross-platform desktop UI | `App`, `MainWindow`, viewmodels, views, services | Host + Avalonia |
+| `ThreeDo.Frontend.Avalonia` | Cross-platform desktop UI | `App`, `MainWindow`, viewmodels, views, services, OpenGL video surface | Host, Video.OpenGL, Avalonia |
 | `ThreeDo.Tests` | Unit/integration tests (subfolders per subsystem) | test fixtures, ARM assembler, fake sinks | production projects |
 | `ThreeDo.Benchmarks` | BenchmarkDotNet benchmarks | CPU, CEL, DSP, frame benchmarks | Cpu, Madam, Dsp, Machine |
 
@@ -220,27 +224,98 @@ VDLP parses the display list and builds one VdlLine per scanline:
         ▼
 VdlFrame (reused double/triple buffer)
         │
-        ▼
-FrameAssembler converts 3DO pixels to BGRA8888:
-  - pixel 0 => background color
-  - fixed CLUT flag (OUT control bit 25) => FIXED_CLUT
-  - otherwise per-line CLUT
+        ├──────────────────────────────────────────────┐
+        │                                              │
+        ▼                                              ▼
+OpenGL renderer (required desktop path)        CPU FrameAssembler (oracle/fallback)
+  upload raw 16-bit pixels                       - used by CLI/headless tests
+  upload per-line CLUT + line params             - used when no GL context exists
+  fragment shader palette expansion              - must match GL "Accurate" mode
+  scaling / filters / CRT / xBR
+  present with vsync
         │
         ▼
-FrameBuffer (320x240, 384x288, 640x480, ...)
-        │
-        ├── Avalonia WriteableBitmap (CPU blit, v1)
-        └── optional OpenGL/Silk.NET backend (later)
+Window / fullscreen
 ```
 
-The core never knows about Avalonia. `IFrameSink` receives a `VdlFrame`; `ThreeDo.Host` converts and publishes a `FrameBuffer` to the frontend.
+The core never knows about Avalonia or OpenGL. `IFrameSink` receives a `VdlFrame`; the host hands it to `IVideoRenderer`. The OpenGL renderer is the **primary, required** desktop renderer. The CPU `FrameAssembler` remains in the codebase as the accuracy oracle and as a fallback for headless runs or systems without a usable GL 3.3 context.
 
 ### Video rules
 
 - Base output is **320x240, 4:3**, 60 Hz NTSC.
 - Wider VDLP modes are parsed but the first playable milestone may crop to 320 pixels. The `VdlLine` capacity is 1280 pixels so 384/512/640/1024 modes can be enabled without changing the data model.
 - High-resolution (`RESSCALE`) is a later milestone. It changes VRAM mirroring, VDLP line duplication, CEL stepping, SPORT copies, and frame extraction, so it must be implemented as a coherent feature with its own tests, not as isolated conditionals.
-- HQ2X/HQ3X/HQ4X are optional post-processing filters. They are not part of the core accuracy path.
+- **OpenGL "Accurate" mode must match the CPU `FrameAssembler` pixel-for-pixel.** Enhanced filters are opt-in and never affect emulated state.
+- The renderer receives indexed 16-bit pixels and per-line palette/control data, not a pre-expanded BGRA image. Palette expansion happens on the GPU, which cuts CPU work and enables high-quality upscaling at 1080p/1440p/4K.
+
+### OpenGL renderer pipeline (required)
+
+```text
+VdlFrame
+  ├── pixel texture:  R16UI, width x height (320x240 typical)
+  ├── palette texture: RGB8, 32 x height (per-line CLUT)
+  └── line-param texture: RGBA32UI, 1 x height
+        (background, out-control, clut-dma flags)
+        │
+        ▼
+Fragment shader pass 1 - palette expansion:
+  p = texelFetch(pixelTex, xy)
+  if p == 0:              background(line)
+  else if fixedClut(line) && (p & 0x8000): fixed grayscale CLUT
+  else:                    palette(p, line)
+        │
+        ▼
+Fragment shader pass 2 - scaling/filter:
+  - Nearest (pixel-perfect integer scaling)
+  - Sharp-bilinear (default enhanced)
+  - CRT (scanlines, mask, curvature, bloom)
+  - xBRZ/HQx family (optional, multi-pass)
+        │
+        ▼
+Framebuffer -> window / fullscreen (vsync, latest-frame mailbox)
+```
+
+**Performance properties**
+
+- Raw indexed upload is ~150 KB/frame for 320x240, versus ~300 KB for BGRA; the GPU does palette expansion.
+- 4K output costs the CPU nothing beyond the same small upload; the GPU scales.
+- The core remains single-threaded and deterministic; only presentation is GPU-accelerated.
+- A `FrameMailbox` drops stale frames instead of queueing them.
+
+**Accuracy properties**
+
+- The palette-expansion shader is a direct port of `frame.cpp: Get_Frame_Bitmap`:
+  - pixel `0` => 5-bit background B/G/R
+  - `xOUTCONTROLL & 0x02000000` and pixel bit 15 => fixed grayscale CLUT
+  - otherwise per-line `xCLUTB/G/R`
+- The CPU `FrameAssembler` is the golden oracle. A GPU frame and a CPU frame must hash identically in Accurate mode.
+- Enhanced filters are presentation-only. They never feed back into VRAM, save states, or emulation decisions.
+
+**Context integration**
+
+- Avalonia supplies the GL context through `OpenGlControlBase` (or an equivalent host control).
+- `ThreeDo.Video.OpenGL` uses Silk.NET.OpenGL for the API and owns textures, shaders, VAOs, and the framebuffer.
+- The renderer project does not reference Avalonia; the frontend passes an `IGlContext`/function-loader adapter. This keeps the renderer usable by other hosts later.
+- On context loss, the frontend recreates the renderer and re-uploads the latest frame. If GL 3.3 is unavailable, the frontend falls back to the CPU `WriteableBitmap` path and logs a warning.
+
+---
+
+## 7a. CPU backends and JIT
+
+.NET already JIT-compiles the C# interpreter. When this document says "JIT", it means an **optional guest ARM dynamic recompiler**, not the normal .NET JIT.
+
+```text
+ICpuBackend
+  ├── Arm60Interpreter   (default, reference behavior)
+  └── Arm60JitBackend    (optional, later; IL/DynamicMethod block compiler)
+```
+
+- `ICpuBackend` exposes `Step()`, `Reset()`, `Save/LoadState`, and the register/state surface.
+- The interpreter is the compatibility oracle and the default backend.
+- An optional IL JIT can compile ARM basic blocks into `DynamicMethod` delegates using pure managed `System.Reflection.Emit`. This stays within the "pure C#" rule.
+- The 3DO ARM60 runs at ~12.5 MHz, so the interpreter is expected to be fast enough. The JIT is a long-term optimization, not a prerequisite for 60 fps.
+- Any JIT backend must produce bit-identical architectural state and cycle counts to the interpreter for the same program. It is enabled only after differential tests pass.
+- Native executable-memory JITs (x86/ARM code emission) are out of scope for the pure C# core.
 
 ---
 
@@ -363,11 +438,11 @@ Portable mode: if a `portable.flag` file exists next to the executable, use `<ex
 ## 12. Threading model
 
 - **Core thread:** CPU, memory, chips, scheduler, DSP, VDLP, CD. Single-threaded and deterministic.
+- **Render thread / UI thread:** Avalonia owns the GL context and presents frames. The OpenGL renderer consumes the latest `VdlFrame` snapshot; it never calls into emulated state.
 - **Audio thread:** consumes the ring buffer; never calls into the core.
-- **UI thread:** Avalonia; receives frame snapshots and status updates; never touches emulated state.
 - **No locks in the core hot path.** The only cross-thread state is the audio ring buffer, the latest-frame mailbox, and session lifecycle flags.
 
-A `FrameMailbox` holds the most recent completed `FrameBuffer`. If the UI is slow, old frames are dropped rather than queued, preventing latency growth.
+A `FrameMailbox` holds the most recent completed `VdlFrame`. If the renderer is slow, old frames are dropped rather than queued, preventing latency growth. The renderer uploads the frame to a texture and applies the filter pipeline; the core does not wait for the GPU.
 
 ---
 
@@ -385,12 +460,13 @@ A `FrameMailbox` holds the most recent completed `FrameBuffer`. If the UI is slo
 
 | Extension | Interface | Example |
 |---|---|---|
-| Video presenter | `IFrameSink` | Avalonia bitmap, OpenGL, null/hash sink |
+| Video presenter | `IFrameSink` / `IVideoRenderer` | OpenGL (required), CPU BGRA fallback, null/hash sink |
 | Audio output | `IAudioSink` / host `IAudioOutput` | null, WAV, OpenAL, platform audio |
 | Input backend | `IPbusSource` / host `IInputBackend` | keyboard, SDL gamepad, scripted replay |
 | Disc format | `IDiscSource` | ISO, BIN, CUE, CHD |
 | Save state format | `IStateReader/Writer` | v1 native format, legacy 4DO import |
-| Renderer/filter | `IFramePostProcessor` | nearest, bilinear, HQ2X/3X/4X |
+| Renderer/filter | `IVideoRenderer` / `IVideoFilter` | nearest, sharp-bilinear, CRT, xBRZ/HQx |
+| CPU backend | `ICpuBackend` | ARM60 interpreter, optional IL JIT |
 | Debugger | `ICpuTraceSink` | console, file, in-app debugger |
 
 ---
@@ -406,3 +482,5 @@ A `FrameMailbox` holds the most recent completed `FrameBuffer`. If the UI is slo
 - XML documentation on public types; ported code includes a `// FreeDO: <file>:<function>` comment.
 - Tests are named `Method_Scenario_ExpectedResult`.
 - No `unsafe` unless a measured hot path requires it; `Unsafe`/`MemoryMarshal` are acceptable.
+- Shaders live in `ThreeDo.Video.OpenGL/Shaders`, are GLSL 330 core, and are embedded as resources with a source hash logged at startup.
+- The OpenGL renderer is a required desktop component; the CPU renderer is a fallback and accuracy oracle, not the primary path.

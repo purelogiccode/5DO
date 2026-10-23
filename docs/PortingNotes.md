@@ -348,8 +348,14 @@ This is the largest and riskiest port. Split it into classes but keep the origin
   - Otherwise use per-line `xCLUTB/G/R`.
   - Optional crop detection and alpha byte.
   - Optional HQ2X/3X/4X.
-- The C# `FrameAssembler` does the same conversion into a `FrameBuffer` with a configurable pixel format. Start with BGRA8888 for Avalonia.
-- HQX filters are large generated tables. They are optional; port only if the UI exposes them. Do not block the core on them.
+- The C# `FrameAssembler` does the same conversion into a `FrameBuffer` with a configurable pixel format. It is the **accuracy oracle and CPU fallback**, not the primary desktop path.
+- The **required OpenGL renderer** ports the same palette logic into a fragment shader:
+  - raw 16-bit pixels (`R16UI`) + per-line CLUT (`RGB8`) + line-param texture (`RGBA32UI`)
+  - exact 5-bit-to-8-bit expansion
+  - fixed CLUT and background paths
+  - the CPU and GPU outputs must hash identically in "Accurate" mode.
+- HQX/xBR filters are GPU shader passes in `ThreeDo.Video.OpenGL`. They are presentation-only and must never feed back into emulated state.
+- Do not remove the CPU `FrameAssembler`; it is used by CLI/headless tests, as a fallback, and as the golden oracle for the shader.
 
 ### 8.12 `Worker.cpp`
 
@@ -385,6 +391,16 @@ Keep these in one place (`CompatibilityState` / `EmulatorTuning`) and test each:
 - [ ] VDLP startup VDL at `0xB0000 + 2 MB`.
 - [ ] PBUS device order 1,3,2,5,4,6 and `0x48`/`0x80` markers.
 - [ ] `ARM_CLOCK` default 12,500,000; `VDL_FS` 526; `SND_CLOCK` 44,100; timer clock 21,000,000.
+
+---
+
+## 9a. Renderer and JIT deviations
+
+These are deliberate additions, not part of FreeDOCore:
+
+- **OpenGL presentation** is a new host-level feature. It consumes `VdlFrame` output and must not alter emulated state. Its palette-expansion shader is verified against `frame.cpp: Get_Frame_Bitmap`.
+- **Optional guest ARM JIT** is a new CPU backend behind `ICpuBackend`. It is not part of the initial port. It must produce bit-identical state and cycle counts to the interpreter and remains disabled until proven.
+- **High-resolution CEL rendering** is a later emulation feature (M11), separate from GPU output upscaling. Do not conflate the two: output upscaling is presentation-only; high-res CEL changes emulated rendering.
 
 ---
 
