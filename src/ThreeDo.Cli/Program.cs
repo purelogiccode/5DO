@@ -277,6 +277,7 @@ internal static class Program
         var stopPc = options.GetUInt32("--stop-pc", null);
         var stopKprint = options.Get("--stop-kprint");
         var stopCd = options.GetUInt32("--stop-cd", null);
+        var stopInvalid = HasFlag(args, "--stop-invalid");
         var output = options.Get("--out");
 
         if (biosPath is null && stateIn is null)
@@ -374,6 +375,11 @@ internal static class Program
 
             observed++;
             if (stopPc is not null && pc == stopPc)
+            {
+                throw new TraceStopException();
+            }
+
+            if (stopInvalid && pc >= 0x04000000)
             {
                 throw new TraceStopException();
             }
@@ -818,7 +824,7 @@ internal static class Program
         Console.WriteLine("             [--clio-trace path] [--kprint path] [--kprint-pc path] [--json]");
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
-        Console.WriteLine("             [--count N] [--out path]");
+        Console.WriteLine("             [--stop-invalid] [--count N] [--out path]");
         Console.WriteLine("             Runs the machine and records a diagnostic instruction ring buffer.");
         Console.WriteLine("  info <disc> [--json]                 Disc geometry, volume header, and game ID.");
         Console.WriteLine("  disc dump <disc> --out path [--sector N] [--count N]");

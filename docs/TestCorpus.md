@@ -79,6 +79,13 @@ loads. That parity confirmed the failure was in the shared CD layer rather than
 in the ARM or video port. FreeDO still has the double-add and still fails on
 these discs; the C# port now intentionally diverges.
 
+After applying the same disc-size correction to the harness host (returning
+`sectorCount - 150`), FreeDO also reaches Road Rash's own OS and stops at the
+audio path with `>>>ARM TO DSP FIFO DIRECT!!!`. The C# port reaches the slightly
+later `SAudio channel 0 failed; error = -6996` message. The remaining audio
+initialization failure is therefore a shared DSP limitation, not a regression
+introduced by this port.
+
 The DSP produces roughly 737 samples per frame (44.1 kHz at 60 fps) for all five
 titles, and WAV capture is non-empty. Audio content still needs a listening check.
 The headless core runs a 3,000-frame smoke test in roughly 4-8 seconds on the
