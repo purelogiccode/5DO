@@ -126,6 +126,8 @@ Assert.Equal(1u, cpu.ReadRegister(0));
 
 Implemented CPU suites: `Arm60StateTests`, `ArmBarrelShifterTests`, `ArmConditionTests`, `ArmDataProcessingTests`, `ArmMultiplySwapTests`, `ArmMemoryTests`, `ArmBlockTransferTests`, `ArmControlFlowTests`, `ArmModeBankTests`, `ArmCycleTests`, `ArmDisassemblerTests`, and `ArmSyntheticBootTests`. The synthetic boot test builds a 1 MB ROM, runs one million instructions, and checks the computed checksum in RAM.
 
+Implemented M3 suites: `ClioTests`, `MadamTests`, `SportTests`, `VdlpTests`, `FrameAssemblerTests`, `BiosImageTests`, `NvramImageTests`, and `ThreeDoMachineTests`. The machine suite covers the synthetic VDL/SPORT program, frame determinism, the reference cycle budget, zero steady-state allocations, and an optional 300-frame real-BIOS smoke test gated by `THREEDO_BIOS`.
+
 For each instruction, assert registers, flags, memory, and cycles. Where possible, also assert the disassembler text.
 
 ### 4.4 MADAM

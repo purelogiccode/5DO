@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/4DO-master/FreeDOCore` (primary), `References/opera-libretro-master/libopera` (secondary)
-**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; next is M3. M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
+**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); next is M4. M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
 **Last updated:** 2026-10-23
 
 ---
@@ -436,59 +436,59 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Tasks**
 
-- [ ] **M3.1 BIOS/NVRAM loading and reset.**
+- [x] **M3.1 BIOS/NVRAM loading and reset.**
   - `BiosImage` (1 MB, optional 1 MB second, MD5, Anvil detection).
   - `NvramImage` (32 KB, volume header initialization).
   - `ThreeDoMachine.Reset()` order: ARM, ROM swap, VDLP, SPORT, MADAM, XBUS + CD reset, CLIO `0x40`, DSP, frame, diag, Quartz.
-- [ ] **M3.2 CLIO basic register file.**
+- [x] **M3.2 CLIO basic register file.**
   - `uint[65536]` registers.
   - Defaults: `0x28=0x40`, `0x400=0x80`, `0x220=64`.
   - Interrupt registers and `NeedFiq`.
   - ROM select `0x84`.
   - `0x00` version read `0x02020000`.
-- [ ] **M3.3 CLIO timers.**
+- [x] **M3.3 CLIO timers.**
   - 16 timers, control/reload/cascade/decrement.
   - `DoTimers`, FIQ generation for odd timers.
   - `0x120` timer-dependent write, `0x220` delay.
-- [ ] **M3.4 CLIO FIFOs and DMA skeleton.**
+- [x] **M3.4 CLIO FIFOs and DMA skeleton.**
   - 13 input/4 output FIFOs; start/next/length; status.
   - XBUS DMA path with a stub XBUS device (returns zeros).
   - FIQ 29 on DMA complete.
-- [ ] **M3.5 MADAM register file and basic pokes.**
+- [x] **M3.5 MADAM register file and basic pokes.**
   - 2048+64 registers.
   - `0x04=0x29`, `0x00=0x01020000`, `0x574=0xFFFFFFFC`.
   - CEL status/FSM.
   - VDL head write hook to VDLP.
-  - Matrix engine can be stubbed until M4; return previous results.
-- [ ] **M3.6 VDLP startup and line parser.**
+  - Matrix engine (commands 0-3) implemented early.
+- [x] **M3.6 VDLP startup and line parser.**
   - `Vdlp` state and startup VDL at `0xB0000 + 2 MB`.
   - `ProcessVdl`, `DoLine`, CLUT/background/out-control parsing.
   - `VdlFrame` line writes.
   - 320x240 output.
-- [ ] **M3.7 SPORT.**
+- [x] **M3.7 SPORT.**
   - Color/fill/copy/masked operations.
   - 512-word page operations.
-- [ ] **M3.8 DiagPort.**
+- [x] **M3.8 DiagPort.**
   - Shift registers and `_diag_Init(-1)`.
-- [ ] **M3.9 Quartz integration and frame loop.**
+- [x] **M3.9 Quartz integration and frame loop.**
   - `ThreeDoMachine.RunFrame()` and `InternalFrame`.
   - VDL line 16 trigger, V0/V1 FIQ, PBUS copy, frame swap.
-  - Single-threaded mode first; `skipFrame` path stub.
-- [ ] **M3.10 Frame assembler.**
+  - Single-threaded mode first; `skipFrame` path implemented.
+- [x] **M3.10 Frame assembler.**
   - Convert `VdlFrame` to BGRA `FrameBuffer`.
   - Background/fixed CLUT/per-line CLUT.
-  - Crop/alpha optional.
-- [ ] **M3.11 Synthetic boot integration test.**
+  - Crop/alpha optional (alpha always written; crop deferred).
+- [x] **M3.11 Synthetic boot integration test.**
   - Tiny ARM program writes a VDL, enables SPORT/VDLP, draws a background, loops.
   - Assert frame dimensions, non-black pixels, stable frame hash.
-- [ ] **M3.12 Real BIOS smoke test (optional).**
+- [x] **M3.12 Real BIOS smoke test (optional).**
   - Run 300 frames with a user-provided BIOS.
   - Assert no exception, PC not stuck in a tight invalid loop, frame hash recorded.
-  - Skip if `THREEDO_BIOS` is unset.
-- [ ] **M3.13 OpenGL integration spike (early, non-blocking).**
+  - Skip if `THREEDO_BIOS` is unset. Validated locally with `bios/panafz1.bin`.
+- [-] **M3.13 OpenGL integration spike (early, non-blocking).**
   - Minimal Avalonia + Silk.NET.OpenGL window that displays a synthetic 320x240 indexed frame.
   - Prove context creation, shader compilation, texture upload, and present on Windows/Linux/macOS.
-  - This is the first half of M9R.1/M9R.3; it does not block M4-M8.
+  - **Deferred to M9R.1/M9R.10.** It requires a desktop GL context and a host runner; the CPU frame assembler and machine loop are complete and tested without one. This does not block M4-M8.
 
 **Deliverables**
 
@@ -498,11 +498,11 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Acceptance**
 
-- [ ] Synthetic program produces the expected background/frame.
-- [ ] Real BIOS executes 300 frames without crash (if provided).
-- [ ] Timer/FIFO/DMA unit tests green.
-- [ ] Frame loop cycle count matches `12_500_000 / 60` per frame.
-- [ ] No per-frame allocations.
+- [x] Synthetic program produces the expected background frame.
+- [x] Real BIOS executes 300 frames without crash (validated locally with `bios/panafz1.bin`; test skips when `THREEDO_BIOS` is unset).
+- [x] Timer/FIFO/DMA unit tests green.
+- [x] Frame loop cycle count matches `12_500_000 / 60` per frame (within the reference's 16-cycle batching overshoot).
+- [x] No per-frame allocations (test asserts zero allocations over 60 steady-state frames).
 
 **Risks**
 
@@ -1325,8 +1325,9 @@ Suggested parallelization with two developers:
 2. ~~Implement M1 memory + Quartz + state primitives.~~ Done.
 3. ~~Start M2 with the CPU state/ALU/shifter and the test assembler.~~ Done.
 4. ~~Create the first synthetic ROM integration test as soon as M2 data processing and loads/stores work.~~ Done.
-5. Start M3: BIOS/NVRAM loading, CLIO basics, VDLP, SPORT, and the frame loop.
-6. Schedule a 30-minute legal/attribution review before any public build.
+5. ~~Start M3: BIOS/NVRAM loading, CLIO basics, VDLP, SPORT, and the frame loop.~~ Done.
+6. Start M4: MADAM CEL engine, pixel pipeline, matrix engine validation, and BIOS UI rendering.
+7. Schedule a 30-minute legal/attribution review before any public build.
 
 ---
 
@@ -1342,3 +1343,6 @@ Suggested parallelization with two developers:
 | 2026-10-23 | M1.5-M1.7 | Quartz, state primitives, diagnostics | 8.24 scheduler; sectioned little-endian state with CRC32; filtered logging with interpolated-string handler |
 | 2026-10-23 | M1.8 | M1 test suite | 95 tests pass; memory alignment/byte-order/NVRAM/decode, Quartz fixed-point/event counts, state truncation/CRC, logging filters; commit `9d730ca` |
 | 2026-10-23 | M2.1-M2.16 | ARM60 CPU | Full `arm.cpp` interpreter port: state/banked registers, ALU/shifter, decode order, data processing, multiply/swap, LDR/STR, LDM/STM, branch/SWI/undefined, MRS/MSR, FIQ, cycle counts, disassembler, test assembler, synthetic ROM; M2.15 deferred (native oracle outside repo); 262 tests pass; commit `8fd8a9b` |
+| 2026-10-23 | M3.1-M3.11 | Boot skeleton | BIOS/NVRAM images, CLIO registers/timers/FIFOs/DMA, MADAM registers/FSM/matrix/PBUS, VDLP parser, SPORT, DiagPort, Quartz frame loop, CPU frame assembler, XBUS stub, DSP stub; 321 tests pass |
+| 2026-10-23 | M3.12 | Real BIOS smoke | `bios/panafz1.bin` ran 300 frames without exception; optional test gated by `THREEDO_BIOS` |
+| 2026-10-23 | M3.13 | OpenGL spike deferred | Requires desktop GL context; scheduled with M9R.1/M9R.10 and does not block M4-M8 |

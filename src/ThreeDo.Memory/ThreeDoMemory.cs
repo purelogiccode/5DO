@@ -18,7 +18,7 @@ namespace ThreeDo.Memory;
 /// high-resolution mode. Only the first 3 MB are CPU-visible in v1.
 /// </para>
 /// </remarks>
-public sealed class ThreeDoMemory : IAddressBus, IRam, IPcAdjustSource
+public sealed class ThreeDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelector
 {
     private readonly uint[] _ram = new uint[EmulatorConstants.RamAllocationSize / sizeof(uint)];
     private readonly uint[] _rom = new uint[EmulatorConstants.RomSize / sizeof(uint)];
@@ -154,6 +154,10 @@ public sealed class ThreeDoMemory : IAddressBus, IRam, IPcAdjustSource
         _pcAdjustPending = false;
         return pending;
     }
+
+    /// <summary>Selects the active ROM bank through the bus contract. FreeDO: <c>SelectROM</c>.</summary>
+    /// <param name="bank">Zero for BIOS1, non-zero for BIOS2.</param>
+    void IRomSelector.SelectRom(int bank) => SelectRomBank(bank == 0 ? 0 : 1);
 
     /// <summary>Clears the CPU-visible RAM and the reserved mirrors.</summary>
     public void ClearRam() => _ram.AsSpan().Clear();

@@ -1,6 +1,6 @@
 # 3DOEmulator Architecture
 
-**Status:** proposed architecture, M0 baseline.
+**Status:** implemented through M3; M0 baseline architecture plus M1-M3 additions.
 **Scope:** the emulator core, host layer, CLI, Avalonia frontend, tests, and build layout.
 
 ---

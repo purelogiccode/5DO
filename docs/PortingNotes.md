@@ -362,6 +362,7 @@ This is the largest and riskiest port. Split it into classes but keep the origin
   - Optional crop detection and alpha byte.
   - Optional HQ2X/3X/4X.
 - The C# `FrameAssembler` does the same conversion into a `FrameBuffer` with a configurable pixel format. It is the **accuracy oracle and CPU fallback**, not the primary desktop path.
+  - **M3 note:** the background is expanded from 5 bits to 8 bits with `(v << 3) | (v >> 2)`; FreeDO's `frame.cpp` writes the raw 5-bit value. The expansion is the documented CPU-oracle behaviour and the GPU shader must match it. CLUT entries are already 8-bit in both paths.
 - The **required OpenGL renderer** ports the same palette logic into a fragment shader:
   - raw 16-bit pixels (`R16UI`) + per-line CLUT (`RGB8`) + line-param texture (`RGBA32UI`)
   - exact 5-bit-to-8-bit expansion
@@ -499,3 +500,16 @@ M1 implements the section primitive used by all later chips:
 - `Log` is an instance owned by the machine/host; there is no mutable static logger. `Log.Null` is a shared immutable instance.
 - The interpolated-string overload uses `LogInterpolatedStringHandler`, so disabled messages do not format or allocate.
 - `InMemoryLogSink` is bounded and thread-safe; `ConsoleLogSink` is intended for host/debug use.
+
+### 12.6 M3 implementation notes
+
+- `ThreeDoMachine` is the composition root. It owns the reset order and the FreeDOCore frame loop. `RunFrame` keeps the reference's `cnt >> 4` batching threshold; `LastFrameCycles` exposes the actual per-frame budget for tests.
+- `Clio` implements `IClioBus`, `IInterruptSink`, `IClioFifo`, and `IStateSection`. FIFO descriptor writes use the reference's `value + 4` length encoding, including the zero-length special case for input FIFOs. The DMA loop keeps the `len >= 0` and `0xFFFFFFFC` sentinel semantics.
+- `Madam` implements the register file, CEL FSM/status, VDL head hook, matrix engine, and PBUS DMA. The matrix engine latches results in temporary fields, so a following command `0` (NOP) exposes the previous computation, matching `Madam.cpp`.
+- `Vdlp` reads the display list and bitmap through the +2 MB VRAM window. `DoLine` copies from `PREVIOUSBMP` (not `CURRENTBMP`), advances both bitmap pointers with the reference's `MODULO * 4 - 2` rule, and clears `OUTCONTROLL` bit 0 after each line.
+- `Sport` adds the +2 MB VRAM window to every fill/copy address, matching `_sport_Init(Memory + 0x200000)`.
+- `Xbus` is an M3 stub: it implements the controller, device slots, poll/status/data FIFOs, and the built-in device-15 `0x83` responder. The CD device arrives in M6.
+- `DspStub` stores NMem/IMem writes, implements the reference PRNG (`69069 * seed + 1`), and returns silence. The full DSP core arrives in M5.
+- `BiosImage`/`NvramImage` live in `ThreeDo.Storage`. BIOS2 is zero-filled to 1 MB by the machine when shorter; NVRAM initialization writes the big-endian volume header and the initial directory words from 4DO's `EmulationHelper`.
+- `FrameAssembler` expands the 5-bit background to 8 bits and always writes an opaque alpha byte. Crop detection and HQx scaling remain presentation-layer work.
+- `M3.13` (the early OpenGL window spike) is deferred to M9R because it needs a desktop GL context; the CPU frame path and machine loop are fully testable without one.
