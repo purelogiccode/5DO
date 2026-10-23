@@ -1339,4 +1339,4 @@ Suggested parallelization with two developers:
 | 2026-10-23 | Storage | CHD made a required v1 format via CHDSharp | `IDiscSource` + `ChdDiscImage` added; package wired into `ThreeDo.Storage` |
 | 2026-10-23 | M1.1-M1.4 | Core contracts, memory, and bus | Constants/types/interfaces; `ThreeDoMemory` with word-swapped RAM/ROM, NVRAM quirk, bank select, and MMIO hooks |
 | 2026-10-23 | M1.5-M1.7 | Quartz, state primitives, diagnostics | 8.24 scheduler; sectioned little-endian state with CRC32; filtered logging with interpolated-string handler |
-| 2026-10-23 | M1.8 | M1 test suite | 95 tests pass; memory alignment/byte-order/NVRAM/decode, Quartz fixed-point/event counts, state truncation/CRC, logging filters; commit `2357111` |
+| 2026-10-23 | M1.8 | M1 test suite | 95 tests pass; memory alignment/byte-order/NVRAM/decode, Quartz fixed-point/event counts, state truncation/CRC, logging filters; commit `9d730ca` |
