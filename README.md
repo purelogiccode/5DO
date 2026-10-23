@@ -1,6 +1,6 @@
 # 3DOEmulator
 
-A clean-room-style, **pure C# / .NET 10** port of the FreeDO/4DO 3DO emulator core, with a cross-platform Avalonia frontend, a headless CLI, and a deterministic test harness.
+A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from FreeDO/4DO, with **Opera/libopera as the primary behavioral reference** for new compatibility work, a cross-platform Avalonia frontend, a headless CLI, and a deterministic test harness.
 
 > **Working title only.** The final product name is not decided yet. The solution is called `3DOEmulator`; source namespaces use the placeholder prefix `ThreeDo` because C# identifiers cannot begin with a digit.
 
@@ -14,19 +14,27 @@ Real-content status with `panafz1.bin`: **Lemmings** boots to CyberIntro and ren
 the 3D intro; **Space Ace** boots the ReadySoft player and renders the demo intro;
 **Road Rash** and **Wolfenstein 3D** load their own OS but stop at SAudio channel 0
 initialization; **Alone in the Dark** fails earlier in AudioFolio initialization.
-The audio failure is shared with the FreeDO reference. CPU-side performance is
-~2.1-2.3 ms/frame, leaving ~14 ms of headroom at 60 Hz; the 4K GPU pass and p99
-gates are not measured yet.
 
-Remaining major work: DSP/audio instrument initialization, real-game compatibility
-hardening, GPU 4K/p99 validation, GLES/ANGLE/Pi validation, arm64/installers, filter
-polish, and the legal/attribution review. See [`docs/Status.md`](docs/Status.md) for
-the completion estimate and next steps. The implementation plan and architecture are in:
+**Opera runs all four problem titles past those points** with the same BIOS and disc
+data, so the remaining failures are ours to fix, not a shared FreeDO limitation. The
+next session is a focused differential-debugging pass, not a UI or 4K-tuning pass.
+CPU-side performance is ~2.1-2.3 ms/frame, leaving ~14 ms of headroom at 60 Hz;
+desktop 4K60 is high confidence, while the GPU/p99 and Tier B numbers still need
+measurement.
+
+Remaining major work: differential port from Opera (CD-ROM, CLIO, MADAM, DSP/ARM),
+real-game hardening, GPU 4K/p99 validation, GLES/ANGLE/Pi validation, arm64/installers,
+filter polish, and the legal/attribution review. See
+[`docs/Status.md`](docs/Status.md) for the completion estimate and
+[`docs/NextSession.md`](docs/NextSession.md) for the next-session plan. The
+implementation plan and architecture are in:
 
 - [`docs/Status.md`](docs/Status.md) - current position, completion estimate, and next steps.
+- [`docs/NextSession.md`](docs/NextSession.md) - first task, commands, and acceptance criteria for the next session.
+- [`docs/ReferenceStrategy.md`](docs/ReferenceStrategy.md) - Opera/FreeDO reference hierarchy and differential procedure.
 - [`docs/ImplementationPlan.md`](docs/ImplementationPlan.md) - milestones, tasks, acceptance criteria, risks.
 - [`docs/Architecture.md`](docs/Architecture.md) - project layout, dependency rules, runtime composition.
-- [`docs/PortingNotes.md`](docs/PortingNotes.md) - C++ to C# porting rules and FreeDOCore quirks.
+- [`docs/PortingNotes.md`](docs/PortingNotes.md) - C++ to C# porting rules and reference quirks.
 - [`docs/TestStrategy.md`](docs/TestStrategy.md) - unit, integration, golden, differential, and performance testing.
 - [`docs/Compatibility.md`](docs/Compatibility.md) - BIOS, disc, input, and game-fix compatibility notes.
 - [`docs/TestCorpus.md`](docs/TestCorpus.md) - local BIOS/disc corpus and real-content validation commands (not committed).

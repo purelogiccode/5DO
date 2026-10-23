@@ -383,12 +383,23 @@ Record each command's status/data/poll bytes as a compact transcript. These are 
 
 ## 7. Differential / oracle testing
 
-The most efficient way to validate a 600 KB port is to compare against the original implementation.
+The most efficient way to validate a 600 KB port is to compare against a maintained
+reference implementation.
 
-- **Optional, developer-only tool** (`tools/ThreeDo.Oracle`, not shipped): load the original `FreeDOCore.dll` (Windows x64) or build the C++ reference, run a synthetic program/disc, and dump CPU/RAM/VRAM/frame hashes.
+- **Primary oracle (new work): Opera/libopera.** Run the bundled Windows
+  `OperaCore` or the libretro test harness with the same BIOS and disc data, then
+  compare KPRINT, PC, frame hash, CD transcript, audio samples, and screenshots.
+  The procedure is in [`ReferenceStrategy.md`](ReferenceStrategy.md).
+- **Historical oracle: FreeDOCore/4DO.** Keep the original C# port's golden tests and
+  use the FreeDO harness for behavior that predates the Opera migration.
+- **Optional, developer-only tool** (`tools/ThreeDo.Oracle`, not shipped): load the
+  original `FreeDOCore.dll` (Windows x64) or build the C++ reference, run a synthetic
+  program/disc, and dump CPU/RAM/VRAM/frame hashes.
 - Do not add a native dependency to the product or to the default test run.
-- If the oracle is unavailable, use hand-verified traces and real-BIOS smoke tests.
-- Opera-libretro can be used as a second reference for structure/comments, but behavior differences must be resolved in favor of FreeDOCore/4DO unless there is a documented bug fix.
+- If an oracle is unavailable, use hand-verified traces and real-BIOS smoke tests.
+- If Opera and FreeDO disagree, follow the hardware documentation when it is clear;
+  otherwise prefer Opera for game compatibility and record the divergence in
+  `docs/Compatibility.md` and `docs/PortingNotes.md`.
 
 ---
 

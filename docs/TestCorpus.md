@@ -59,8 +59,9 @@ described this address as a "halt path" were misreading the idle loop.
 **Where this leaves us:** two titles render real frames (Lemmings, Space Ace), two
 load their own OS and stop at audio initialization (Road Rash, Wolfenstein), and one
 fails earlier (Alone in the Dark). No title has reached gameplay; input, save
-states, audio, and CD streaming still need in-game validation. See
-[`Status.md`](Status.md) for the overall estimate and next steps.
+states, audio, and CD streaming still need in-game validation. **Opera runs all four
+problem titles past these points**, so the remaining failures are in our port. See
+[`Status.md`](Status.md) and [`NextSession.md`](NextSession.md).
 
 #### CD disc-end fix (2026-10-23)
 
@@ -88,9 +89,35 @@ these discs; the C# port now intentionally diverges.
 After applying the same disc-size correction to the harness host (returning
 `sectorCount - 150`), FreeDO also reaches Road Rash's own OS and stops at the
 audio path with `>>>ARM TO DSP FIFO DIRECT!!!`. The C# port reaches the slightly
-later `SAudio channel 0 failed; error = -6996` message. The remaining audio
-initialization failure is therefore a shared DSP limitation, not a regression
-introduced by this port.
+later `SAudio channel 0 failed; error = -6996` message.
+
+**This is not a shared DSP limitation.** The 2026-10-23 Opera comparison (below)
+shows Opera running the same titles past this point. The FreeDO harness result only
+describes the older FreeDO baseline; it is not the compatibility ceiling.
+
+#### Opera reference run (2026-10-23)
+
+The data track of each CHD was extracted to ISO with `3do disc dump`, then run with
+the bundled Windows OperaCore (`References/CPP_SimpleGui/Cores/OperaCore`) and the
+same `panafz1.bin` BIOS. The SimpleGui wrapper was launched with
+`--debug-messages -n <iso>`; screenshots were captured at 15/35/60 s.
+
+| Title | Opera result | Our port |
+|---|---|---|
+| Road Rash | Intro FMV rendered for 60 s | Stops at SAudio `-6996` |
+| Wolfenstein 3D | Intro rendered for 60 s | Stops at SAudio `-6996` |
+| Alone in the Dark | Intro/loading rendered for 60 s | Stops during AudioFolio init |
+| Space Ace | Demo intro for 60 s, no runaway | Demo intro, then FIQ/runaway at frame ~681 |
+
+Controls:
+
+- The same ISO fails in our port, so the CHD reader is not the cause.
+- `Arm60.Ncycle = 2` changed the execution point but did not fix SAudio or Space Ace.
+- Opera's Space Ace mixer error `d52bf113` (`AF_ERR_BADFILETYPE`) is non-fatal; our
+  runaway is a separate bug.
+
+The full method, reference hierarchy, and next-session plan are in
+[`ReferenceStrategy.md`](ReferenceStrategy.md) and [`NextSession.md`](NextSession.md).
 
 The DSP produces roughly 737 samples per frame (44.1 kHz at 60 fps) for all five
 titles, and WAV capture is non-empty. Audio content still needs a listening check.

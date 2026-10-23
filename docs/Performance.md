@@ -8,6 +8,13 @@ headroom at 60 Hz. Manual DPI validation, the GLES backend, and GPU 4K timing re
 open; see §9 and M9P in [`ImplementationPlan.md`](ImplementationPlan.md). The overall
 project position is summarized in [`Status.md`](Status.md).
 
+**Feasibility assessment:** desktop 4K60 is high confidence because the CPU has
+~14 ms of headroom and the 4K pass is one fullscreen textured quad after the
+native-resolution palette expansion. Pi 5 is likely but unmeasured; Pi 4 is more
+realistically 1080p60. The remaining risk is frame pacing, the Avalonia/WGL
+compositor, and p99 spikes, not raw GPU fill rate. 4K internal CEL rendering is not
+a v1 goal.
+
 This document is the performance contract for the emulator. It defines what "4K60"
 means, the frame budget, the presentation pipeline, the supported renderer backends,
 and how performance is measured. Accuracy remains the first requirement: an
@@ -326,8 +333,9 @@ Still open:
    synchronously through the disc source.
 5. Real-game compatibility is partial: Lemmings and Space Ace render, Road Rash and
    Wolfenstein load their own OS but stop at `SAudio channel 0` initialization, and
-   Alone in the Dark fails earlier. The audio failure is shared with the FreeDO
-   reference (see [`TestCorpus.md`](TestCorpus.md)).
+   Alone in the Dark fails earlier. **Opera passes all four problem titles**, so these
+   are our bugs, not a shared FreeDO limitation (see
+   [`ReferenceStrategy.md`](ReferenceStrategy.md) and [`TestCorpus.md`](TestCorpus.md)).
 6. The benchmark harness reports averages, not p50/p95/p99, and does not assert
    zero allocations per frame in CI.
 

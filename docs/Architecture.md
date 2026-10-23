@@ -1,6 +1,7 @@
 # 3DOEmulator Architecture
 
 **Status:** implemented through M9P desktop (M0-M8 complete; M9/M9R/M9P/M10 partial). The dedicated core thread, two-stage presenter, persistent upload, physical-pixel sizing, and render-on-demand described below are implemented. GLES/ANGLE/Pi validation and the remaining M9P items are pending. See [`Status.md`](Status.md) for the current position and completion estimate.
+**Reference:** the C# port was originally derived from FreeDOCore; since 2026-10-23, `References/opera-libretro-master/libopera` is the primary behavioral reference for new compatibility work. See [`ReferenceStrategy.md`](ReferenceStrategy.md).
 **Scope:** the emulator core, host layer, CLI, Avalonia frontend, tests, and build layout.
 
 ---

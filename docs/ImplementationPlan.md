@@ -2,8 +2,8 @@
 
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
-**Reference core:** `References/4DO-master/FreeDOCore` (primary), `References/opera-libretro-master/libopera` (secondary)
-**Status (2026-10-23):** M0-M8 are complete. The M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core thread/pacing work, and the M10 CI/publish pipeline are implemented as a working prototype. Real-content status: Lemmings and Space Ace boot and render; Road Rash and Wolfenstein load their own OS but stop at SAudio channel 0 initialization; Alone in the Dark fails earlier. The remaining audio failure is shared with the FreeDO reference. 538 tests pass, and CPU-side frame cost is ~2.1-2.3 ms. Remaining work: DSP/audio instrument initialization, real-game hardening, 4K GPU/p99/GLES validation, arm64/installers, filter polish, and the M0.8 legal/attribution review. See [`Status.md`](Status.md) for the completion estimate and next steps.
+**Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
+**Status (2026-10-23):** M0-M8 are complete. The M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core thread/pacing work, and the M10 CI/publish pipeline are implemented as a working prototype. Real-content status: Lemmings and Space Ace boot and render; Road Rash and Wolfenstein load their own OS but stop at SAudio channel 0 initialization; Alone in the Dark fails earlier. **Opera/libopera runs all four problem titles past those points**, so the audio failure is not a shared FreeDO limitation. 538 tests pass, and CPU-side frame cost is ~2.1-2.3 ms. Remaining work: differential port from Opera (CD-ROM, CLIO, MADAM, DSP/ARM), real-game hardening, 4K GPU/p99/GLES validation, arm64/installers, filter polish, and the M0.8 legal/attribution review. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and the next-session plan.
 **Last updated:** 2026-10-23
 
 ---
@@ -16,7 +16,7 @@ Rules:
 
 1. **One active milestone.** Do not start M4 while M2 is failing its exit criteria.
 2. **Acceptance test first.** Write the test or define the exact differential before implementing a task.
-3. **No silent deviations.** If the port must differ from FreeDOCore, document it in `docs/PortingNotes.md` and add a test.
+3. **No silent deviations.** If the port must differ from the reference (Opera for new work, FreeDOCore for the original baseline), document it in `docs/PortingNotes.md` and add a test.
 4. **A milestone is done only when its exit criteria pass.** "Code compiles" is not done.
 5. **Keep the core deterministic.** No wall clock, no random seeds from the environment, no unordered iteration in emulated state.
 6. **Update the plan.** When a task is completed, check it off and record the commit/PR. When a task is split, add the new tasks here.
@@ -226,8 +226,16 @@ Snapshot: 538 tests pass; CPU-side frame cost is ~2.1-2.3 ms; real-game status i
 **Estimate: roughly 70% of the v1 effort is done.** One experienced developer needs
 about **9-12 focused weeks**; two developers can overlap UI, renderer, and packaging
 for roughly **5-7 weeks**, but real-game compatibility is serial and is the main
-uncertainty. If the audio/DSP issue needs a deep microcode effort, add 2-4 weeks.
-The detailed rationale and ordered next steps are in [`Status.md`](Status.md).
+uncertainty. If the differential port reveals a deep DSP/microcode issue, add 2-4
+weeks. The detailed rationale and ordered next steps are in [`Status.md`](Status.md).
+
+**Reference migration (2026-10-23).** New compatibility work now uses
+`References/opera-libretro-master/libopera` as the primary behavioral reference; the
+existing C# port remains FreeDOCore-based. This does not add developer-days to the
+baseline, but it changes the P0 order: build a differential harness and port targeted
+fixes from Opera instead of treating SAudio as a shared limitation. Opera was verified
+to run Road Rash, Wolfenstein, Alone, and Space Ace past our current stop points. See
+[`ReferenceStrategy.md`](ReferenceStrategy.md) and [`NextSession.md`](NextSession.md).
 
 ---
 
@@ -1218,9 +1226,15 @@ harness. See [`Performance.md`](Performance.md).
 
 **Tasks**
 
+- [x] **M11.0 Adopt Opera/libopera as the primary behavioral reference.**
+  - Decision and hierarchy recorded in [`ReferenceStrategy.md`](ReferenceStrategy.md).
+  - Existing C# port remains FreeDOCore-based; new behavior is traced to Opera.
+  - Empirical comparison: Opera runs Road Rash, Wolfenstein, Alone, and Space Ace
+    past our current stop points with the same BIOS and disc data.
+  - First-session plan and acceptance criteria in [`NextSession.md`](NextSession.md).
 - [ ] **M11.1 Compatibility corpus.**
   - Test the matrix in `docs/Compatibility.md`.
-  - Triage crashes/graphics/audio bugs.
+  - Triage crashes/graphics/audio bugs with the Opera differential harness.
   - Add per-game fixes only with evidence.
 - [ ] **M11.2 High-resolution mode.**
   - `RESSCALE=1`: VRAM mirroring, VDLP line duplication, SPORT copies, CEL stepping, frame extraction.
@@ -1232,7 +1246,10 @@ harness. See [`Performance.md`](Performance.md).
   - Add per-game filter presets and performance warnings at 4K.
   - Keep the accurate path pixel-identical to the CPU oracle.
 - [ ] **M11.4 CD timing/seek improvements.**
-  - Only if real games require it; keep transcript tests.
+  - Use `libopera/opera_cdrom.c` as the behavioral reference for command/status,
+    DIPIR, tagged status, chunks, subcode, and media access.
+  - Port only the behavior the differential trace proves is wrong; keep transcript
+    tests and the existing disc-end divergence.
 - [-] **M11.5 CHD support.**
   - Moved to v1/M6: `ChdDiscImage` via CHDSharp, including parent/child and read-ahead.
 - [ ] **M11.6 Documentation/release.**
@@ -1492,10 +1509,11 @@ Suggested parallelization with two developers:
 8. ~~M7 input/NVRAM/game database, M8 save states/CLI, M9 basic shell, M9R core OpenGL presenter, and M10 CI/CLI publish.~~ Done as a prototype; next are M9P performance/pacing, the remaining M9 pages/audio/settings UI, M9R filters/GPU tests, M10 arm64/trimming/installers, M11, and real-disc boot validation.
 9. ~~Run the real-content smoke tests and record results in [`Compatibility.md`](Compatibility.md).~~ Done for boot status; gameplay/input/audio validation is still pending.
 10. ~~M9P.1/M9P.2: benchmark baseline, dedicated core thread, and frame pacer.~~ Done; continue M9P.3-M9P.9 (GLES/Pi validation, CHD prefetch, p99/GPU gates).
-11. **Fix the DSP/audio instrument initialization (`-6996`)** and Space Ace's low-memory corruption. This is the main real-game blocker.
-12. Validate the renderer backend matrix on real hardware (WGL desktop GL vs ANGLE GLES; Pi 4/5 GLES 3.1) and the 100/150/200% DPI paths before claiming 4K60.
-13. Finish M10: arm64 validation, trimming, installers/signing plan, and the final performance report.
-14. Schedule a 30-minute legal/attribution review before any public build.
+11. **Start the Opera differential port.** Follow [`NextSession.md`](NextSession.md): freeze a Road Rash/Space Ace baseline, decode SAudio `-6996`, and find the low-memory writer.
+12. **Port CD-ROM read/status semantics from `opera_cdrom.c`** only after the trace identifies the failing command or file read. Do not port the whole file speculatively.
+13. Validate the renderer backend matrix on real hardware (WGL desktop GL vs ANGLE GLES; Pi 4/5 GLES 3.1) and the 100/150/200% DPI paths before claiming 4K60.
+14. Finish M10: arm64 validation, trimming, installers/signing plan, and the final performance report.
+15. Schedule a 30-minute legal/attribution review before any public build; add Opera to the FreeDO/4DO attribution and license review.
 
 ---
 
@@ -1537,3 +1555,4 @@ Suggested parallelization with two developers:
 | 2026-10-23 | M9P.1-M9P.5, M9P.9 | Core thread, two-stage presenter, persistent upload, render-on-demand, benchmark harness | `CoreRunner` runs the machine on a dedicated 60 Hz thread with pause/invoke marshalling; `OpenGlRenderer` expands palettes into a native-resolution FBO and scales in a second pass; `TexStorage2D` + `TexSubImage2D`, cached uniforms, visible-width mailbox copies, and on-demand rendering; benchmark reports 2.26 ms/frame synthetic and 2.11 ms/frame Lemmings (CPU only); 537 tests pass |
 | 2026-10-23 | Compatibility | CD disc-end fix and real-game boot | `InitCd` no longer double-adds the 150-frame lead-in; the CD DIPIR accepts Road Rash, Space Ace, and Wolfenstein. Lemmings renders CyberIntro, Space Ace renders the ReadySoft demo intro, Road Rash/Wolfenstein load their own OS and stop at the shared SAudio init failure. See `docs/TestCorpus.md` |
 | 2026-10-23 | Documentation | Status and plan refresh | Added `docs/Status.md` with the real-game matrix, performance snapshot, ~70% completion estimate (~9-12 weeks for one developer), and ordered next steps. Updated README, this plan, Architecture, Compatibility, TestCorpus, TestStrategy, and Performance to match the implemented M9P work |
+| 2026-10-23 | M11.0 | Opera reference adoption | Adopted `References/opera-libretro-master/libopera` as the primary behavioral reference for new compatibility work; the existing C# port remains FreeDOCore-based. Verified with the bundled OperaCore + `panafz1.bin` that Road Rash, Wolfenstein, Alone, and Space Ace run past our SAudio `-6996` / Space Ace frame-681 stop points. Added `docs/ReferenceStrategy.md` and `docs/NextSession.md`; corrected the "shared FreeDO limitation" claim in the status/compatibility docs |

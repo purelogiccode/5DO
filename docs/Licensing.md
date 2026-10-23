@@ -14,6 +14,15 @@ The FreeDOCore source headers (`References/4DO-master/FreeDOCore/FreeDO/*.cpp`, 
 
 This is a restrictive license. It is not the same as "LGPL v2.1 or later" and it is not an OSI-approved license. The 4DO project may also carry GPL obligations for its own code. The repository does not contain a root LICENSE file yet because the distribution model has not been decided.
 
+### 1a. Opera/libopera
+
+`References/opera-libretro-master` is a maintained fork of 4DO/FreeDO and inherits
+the same modified GNU LGPL with the non-commercial restriction. It is now the primary
+behavioral reference for new compatibility work. That does not change the project's
+license position, but it adds Opera to the attribution and review list. If Opera code
+or knowledge is used, preserve its headers and credit the Opera/libretro
+contributors in addition to FreeDO and 4DO.
+
 ## 2. What this means for the project
 
 Until the rights holders grant different terms:
@@ -41,12 +50,15 @@ At minimum, preserve:
   Alexander Troosh, Maxim Grishin, Allen Wright, John Sammons, Felix Lazarev.
 - The FreeDO website/project attribution (`www.freedo.org`).
 - The 4DO project attribution and its contributors.
+- The Opera/libopera project attribution and its contributors, including the
+  `opera-libretro` and `opera-boot` work where applicable.
 - The original file headers in ported source files.
-- A statement that the C# port is a derivative work of FreeDO/4DO.
+- A statement that the C# port is a derivative work of FreeDO/4DO and uses Opera as a
+  behavioral reference.
 
 Suggested About text:
 
-> This emulator is a C# port of the FreeDO/4DO 3DO emulation core. FreeDO is Copyright its authors and is used under the terms in the original source headers. 4DO is Copyright its contributors. This project is not affiliated with or endorsed by Panasonic or the 3DO Company.
+> This emulator is a C# port of the FreeDO/4DO 3DO emulation core. FreeDO is Copyright its authors and is used under the terms in the original source headers. 4DO is Copyright its contributors. Opera/libopera is Copyright its contributors and is used as a behavioral reference under the same upstream terms. This project is not affiliated with or endorsed by Panasonic or the 3DO Company.
 
 ## 5. Third-party dependencies
 

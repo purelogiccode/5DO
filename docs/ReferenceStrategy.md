@@ -1,0 +1,232 @@
+# Reference Strategy: Opera/libopera as the Primary Behavioral Reference
+
+**Adopted:** 2026-10-23
+**Status:** active
+**Supersedes:** the earlier rule that `References/4DO-master/FreeDOCore` is the primary
+reference for all new behavior.
+
+---
+
+## 1. Decision
+
+The C# emulator was originally ported from FreeDOCore (the 4DO fork of FreeDO).
+That port remains the baseline for the existing code and tests. **For all new
+accuracy and compatibility work, `References/opera-libretro-master/libopera` is now
+the primary behavioral reference.**
+
+This is a reference change, not a rewrite:
+
+- The C# project layout, public APIs, deterministic scheduler, and test strategy stay.
+- Existing code keeps its FreeDOCore provenance comments unless the behavior is
+  deliberately changed.
+- New or changed behavior is traced to Opera and covered by a test.
+- FreeDO/4DO remains available as the historical baseline and as a tie-breaker for
+  behavior the current tests intentionally preserve.
+
+### Reference hierarchy
+
+| Priority | Reference | Use |
+|---|---|---|
+| 1 | `References/opera-libretro-master/libopera` | New compatibility/accuracy fixes; game behavior; ARM, CLIO, MADAM, DSP, CD-ROM, VDLP, PBUS |
+| 2 | `References/4DO-master/FreeDOCore` | Original C# port baseline; existing golden tests; FreeDO-specific quirks |
+| 3 | `References/freedo-master` | Historical/differential comparison only |
+| 4 | `References/CPP_SimpleGui/Cores/OperaCore` | Windows empirical harness for Opera (not product code) |
+| 5 | `References/Docs3/*` | Hardware truth when the software references disagree |
+
+Do not commit anything from `References/`; it is gitignored.
+
+---
+
+## 2. Why Opera is primary
+
+Opera is a fork of 4DO, which is a fork of FreeDO, but it has been actively
+maintained and contains fixes that are not in the FreeDO/4DO code we originally
+ported. Concrete examples:
+
+| Area | FreeDO/4DO baseline | Opera |
+|---|---|---|
+| ARM cycle classes | `Ncycle = 4` | `Ncycle = 2`, with references to the ARM60 datasheet and 3DO SDK |
+| CLIO timers | 25 MHz clock plus a simpler event model | 16 timer slots with explicit slack, modeled from Portfolio OS |
+| CD-ROM | `Iso.cpp` + `XBUS.cpp`, ~1.7k lines total | `opera_cdrom.c`, ~4.4k lines: command state machine, DIPIR, ODE, subcode, chunks, personas, CD audio |
+| MADAM | CEL engine and PBUS DMA | CEL busy pacing, DMA8/PBUS control-port semantics, projector/clipping fixes |
+| VDLP | one display path | multiple pixel formats, high-resolution option, CLUT DMA checks |
+| State/tests | no shared state format | versioned state chunks, deterministic PRNG, headless test harness |
+
+The practical difference is larger than the line counts suggest: Opera models
+several handshakes and timing paths that FreeDO approximated.
+
+### Empirical result (2026-10-23)
+
+The data track of each local CHD was extracted to ISO with the project CLI, then run
+with the bundled Windows OperaCore (`References/CPP_SimpleGui/Cores/OperaCore`) and
+the same `panafz1.bin` BIOS:
+
+| Title | Our C# port | Opera reference |
+|---|---|---|
+| Road Rash | Stops at SAudio channel 0 (`-6996`) | Renders the intro FMV for 60 s |
+| Wolfenstein 3D | Stops at SAudio channel 0 (`-6996`) | Renders the intro for 60 s |
+| Alone in the Dark | Stops during AudioFolio initialization (`-6996`) | Renders the intro/loading sequence for 60 s |
+| Space Ace | Renders the demo intro, then runs away at frame ~681 | Plays the demo intro for 60 s with no runaway |
+
+The same ISO still fails in our port, so the problem is not the CHD reader. This
+**disproves the earlier "shared FreeDO limitation" conclusion**: the remaining audio
+and Space Ace failures are bugs or missing behavior in our port. Opera is the better
+oracle.
+
+Caveats:
+
+- The comparison verified video/game progress, not audio output.
+- Space Ace's `d52bf113` mixer error also appears in Opera but is non-fatal; our
+  runaway is a separate issue.
+- Opera has its own HLE paths and a built-in BIOS option. We run a real BIOS, so do
+  not adopt those paths blindly.
+
+---
+
+## 3. Subsystem map
+
+| Subsystem | C# implementation | Opera reference | FreeDO origin |
+|---|---|---|---|
+| CPU | `src/ThreeDo.Cpu/Arm60.cs` | `libopera/opera_arm.c` | `FreeDO/arm.cpp` |
+| Memory/bus | `src/ThreeDo.Memory/ThreeDoMemory.cs` | `libopera/opera_mem.c` | `_3do_sys.cpp` |
+| Scheduler/clock | `src/ThreeDo.Machine/Quartz.cs` | `libopera/opera_clock.c` | `quarz.cpp` |
+| CLIO | `src/ThreeDo.Clio/Clio.cs` | `libopera/opera_clio.c` | `Clio.cpp` |
+| MADAM | `src/ThreeDo.Madam/*` | `libopera/opera_madam.c` | `Madam.cpp` |
+| VDLP | `src/ThreeDo.Video/Vdlp.cs` | `libopera/opera_vdlp.c` | `vdlp.cpp` |
+| DSP | `src/ThreeDo.Dsp/Dsp.cs` | `libopera/opera_dsp.c` | `DSP.cpp` |
+| CD-ROM | `src/ThreeDo.Cdrom/CdromDevice.cs` | `libopera/opera_cdrom.c` | `Iso.cpp` |
+| XBUS/PBUS | `src/ThreeDo.Xbus/Xbus.cs`, `Madam.cs` | `libopera/opera_xbus.c`, `opera_pbus.c` | `XBUS.cpp`, `Madam.cpp` |
+| SPORT | `src/ThreeDo.Sport/Sport.cs` | `libopera/opera_sport.c` | `SPORT.cpp` |
+| Save states | `src/ThreeDo.Core` state sections | `libopera/opera_state.c` | none |
+| PRNG | current CPU/DSP paths | `libopera/prng16.c`, `prng32.c` | `fastrand` |
+| Input/PBUS | `src/ThreeDo.Input/*` | `libopera/opera_pbus.c` | 4DO input layer |
+| Reference tests | `tests/ThreeDo.Tests` | `tools/test_harness.c`, `.agents/skills/opera-test-harness` | FreeDO harness |
+
+---
+
+## 4. Porting rules
+
+1. **Reimplement in C#.** Do not add a native dependency, P/Invoke, C++/CLI, or a
+   copied C file to the product. Opera is a behavioral reference.
+2. **One reference per change.** State whether the behavior comes from Opera,
+   FreeDOCore, or a hardware document. Use comments such as
+   `// Opera: opera_cdrom.c: cdrom_cmd_read_data`.
+3. **Tests first.** Every behavior change needs a unit, golden, or differential test.
+   If the behavior is timing-related, add a frame/state assertion.
+4. **Preserve the existing baseline.** Do not "clean up" unrelated FreeDO behavior in
+   the same change. Keep diffs small and reviewable.
+5. **Document intentional divergences.** Put them in `docs/PortingNotes.md` and
+   `docs/Compatibility.md`. The CD disc-end fix is the first example.
+6. **Do not copy code verbatim.** Reimplement the behavior. Preserve attribution for
+   FreeDO, 4DO, and Opera in source headers and release notes.
+7. **No copyrighted content.** Never commit BIOS ROMs, game images, extracted assets,
+   or Opera binaries.
+8. **Hardware wins.** If Opera and FreeDO disagree and the hardware documentation is
+   clear, follow the hardware and record why.
+
+### Licensing
+
+Opera inherits FreeDO's modified GNU LGPL with additional restrictions, including a
+prohibition on commercial use without the rights holders' approval. See
+[`Licensing.md`](Licensing.md). The reference change does not change the project's
+license position; it adds another upstream project to the attribution list.
+
+---
+
+## 5. Differential test procedure
+
+Use the same BIOS, the same disc data, and the same frame count on both sides.
+
+### 5.1 Prepare the disc
+
+```powershell
+# Get the sector count first
+dotnet run -c Release --project src/ThreeDo.Cli -- info "D:\Samples\3DO\Road Rash (USA).chd" --json
+
+# Extract the data track to ISO (example: 328130 sectors)
+dotnet run -c Release --project src/ThreeDo.Cli -- disc dump `
+  "D:\Samples\3DO\Road Rash (USA).chd" --sector 0 --count 328130 `
+  --out "$env:TEMP\roadrash.iso"
+```
+
+### 5.2 Run the Opera reference
+
+The bundled SimpleGui/OperaCore build expects a 1 MB BIOS in a `BIOS` directory next
+to `OperaCore.dll`:
+
+```powershell
+# One-time setup in the ignored References tree
+$core = "References\CPP_SimpleGui\cmake-build-release\SimpleGui\Core"
+New-Item -ItemType Directory -Force "$core\BIOS" | Out-Null
+Copy-Item bios\panafz1.bin "$core\BIOS\panafz1.bin" -Force
+
+# Run the game (disable the other cores first if the registry picks one)
+& "References\CPP_SimpleGui\cmake-build-release\SimpleGui\SimpleGui.exe" `
+  --debug-messages -n "$env:TEMP\roadrash.iso"
+```
+
+Capture the window at fixed intervals (15/35/60 s) and keep the log. The wrapper
+prints core-level messages; guest KPRINT is not enabled by default.
+
+### 5.3 Run our emulator
+
+```powershell
+dotnet run -c Release --project src/ThreeDo.Cli -- run `
+  "$env:TEMP\roadrash.iso" --bios bios\panafz1.bin --frames 3000 `
+  --kprint "$env:TEMP\rr-kprint.txt" --frame-out "$env:TEMP\rr.png"
+```
+
+### 5.4 Compare
+
+- KPRINT stream and the first differing line.
+- Final PC, frame hash, DSP sample count, CD command transcript.
+- Screenshot at the same frame.
+- Save state at a fixed frame, if the behavior is state-dependent.
+
+Record the result in [`Compatibility.md`](Compatibility.md) or
+[`TestCorpus.md`](TestCorpus.md). A differential run is evidence only if the BIOS,
+disc hash, frame count, and build are recorded.
+
+---
+
+## 6. Known findings and starting points
+
+### SAudio / `-6996`
+
+- Opera passes the point where our port stops.
+- Changing `Arm60.Ncycle` from 4 to 2 changed the execution point but did **not** fix
+  `-6996` or Space Ace. CPU timing alone is not the cause.
+- Using the extracted ISO instead of the CHD does not change the failure, so it is
+  not a CHD-reader bug.
+- Next: trace `AllocInstrument`/`LoadInsTemplate`, the instrument file read, and the
+  DSP resource tables. Compare the CD command/status stream and the file contents
+  against Opera.
+
+### Space Ace runaway
+
+- Opera plays the demo for 60 s; our port takes a FIQ at frame ~681 with the vector
+  table at `0x1C` zeroed and a stack full of `0x11111111`.
+- Next: add a low-memory write watchpoint (`0x0-0x100`) and log the writer (CPU, CEL,
+  DMA, or PBUS). Compare the MADAM/DMA8 path with Opera.
+
+### 4K60
+
+- The CPU side is ~2.1-2.3 ms/frame, leaving ~14 ms at 60 Hz.
+- 4K output is a single fullscreen quad after the native-resolution palette pass; it
+  is not 4K internal CEL rendering.
+- Desktop 4K60 is high confidence. Pi 5 is likely; Pi 4 is more realistically
+  1080p60. Measure GPU time, p99, allocations, and present-to-present before claiming
+  the target.
+
+---
+
+## 7. Definition of done for the migration
+
+- [x] Decision recorded and linked from the plan, status, porting notes, and README.
+- [x] Empirical comparison recorded for the five local titles.
+- [ ] Differential harness documented and reproducible.
+- [ ] First targeted port (CD-ROM read/status semantics) merged with tests.
+- [ ] SAudio `-6996` root cause identified and fixed.
+- [ ] Space Ace low-memory writer identified and fixed.
+- [ ] ARM cycle-class change evaluated behind a test/option.
+- [ ] 4K GPU/p99 measurements recorded on Tier A and Tier B.

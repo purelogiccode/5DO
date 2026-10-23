@@ -1,10 +1,18 @@
-# Porting Notes: FreeDOCore C++ to C#
+# Porting Notes: Reference C++ to C#
 
-This document is the working contract for porting `References/4DO-master/FreeDOCore` to managed C#. It records the representation choices, the C++ constructs that need care, and the known FreeDOCore quirks that must be preserved for compatibility.
+This document is the working contract for the managed C# port. The original code was
+ported from `References/4DO-master/FreeDOCore`; since 2026-10-23, new compatibility
+work uses `References/opera-libretro-master/libopera` as the primary behavioral
+reference. The representation choices and C++ constructs below still apply to both.
 
-**Primary reference:** `References/4DO-master/FreeDOCore/FreeDO`
-**Secondary reference:** `References/opera-libretro-master/libopera` (a cleaned-up FreeDO derivative; useful for cross-checking structure and comments, not as a source of different behavior)
+**Primary reference (new work):** `References/opera-libretro-master/libopera`
+**Historical port baseline:** `References/4DO-master/FreeDOCore/FreeDO`
+**Secondary/historical:** `References/freedo-master`
+**Windows empirical harness:** `References/CPP_SimpleGui/Cores/OperaCore` (not product code)
 **Hardware documentation:** `References/Docs3/arm60.pdf`, `References/Docs3/tc528267.pdf`, `References/Docs3/emu-tech-spec.html`, `References/Docs3/uncd-rom.zip`
+
+See [`ReferenceStrategy.md`](ReferenceStrategy.md) for the reference hierarchy,
+subsystem map, and differential test procedure.
 
 ---
 
@@ -16,7 +24,7 @@ This document is the working contract for porting `References/4DO-master/FreeDOC
 4. **No file I/O in the core.** BIOS, disc, NVRAM, and save-state bytes are supplied by the host.
 5. **No wall clock in the core.** Time is advanced only by `Quartz.PushArmCycles`.
 6. **Explicit serialization.** Never serialize a C# object with `Marshal`, `BinaryFormatter`, or field layout assumptions. Save states use explicit little-endian reads/writes.
-7. **Comment traceability.** Every ported method starts with a comment such as `// FreeDO: Madam.cpp: _madam_HandleCEL`.
+7. **Comment traceability.** Every ported method starts with a comment naming the reference and function, such as `// FreeDO: Madam.cpp: _madam_HandleCEL` or `// Opera: opera_cdrom.c: cdrom_cmd_read_data`.
 8. **One behavior per test.** Port a function, write its tests, then move on. Do not port a whole chip and test it only at the end.
 
 ---
@@ -195,6 +203,26 @@ Port them as instance fields:
 ---
 
 ## 8. Function-by-function porting notes
+
+The subsections below describe the original FreeDOCore port. For new work, use the
+Opera file in the same row as the behavioral reference; the existing C# type and test
+layout stays the same.
+
+| C# area | Original FreeDOCore file | Opera reference |
+|---|---|---|
+| CPU | `arm.cpp` | `opera_arm.c` |
+| CLIO | `Clio.cpp` | `opera_clio.c` |
+| MADAM | `Madam.cpp` | `opera_madam.c` |
+| DSP | `DSP.cpp` | `opera_dsp.c` |
+| VDLP | `vdlp.cpp` | `opera_vdlp.c` |
+| XBUS/CD | `XBUS.cpp`, `Iso.cpp` | `opera_xbus.c`, `opera_cdrom.c` |
+| Scheduler | `quarz.cpp` | `opera_clock.c` |
+| SPORT | `SPORT.cpp` | `opera_sport.c` |
+| PBUS/input | 4DO input layer | `opera_pbus.c` |
+
+Port the smallest behavior the differential trace proves is wrong. Do not rewrite a
+whole subsystem just because Opera's file is larger; Opera contains features (ODE,
+subcode, personas, high-resolution VDLP) that may not be needed for the current bug.
 
 ### 8.1 `_3do_sys.cpp`
 
@@ -452,10 +480,11 @@ A ported function is correct when:
 
 1. It has a C# counterpart with the same observable behavior.
 2. Its tests cover normal, boundary, and malformed inputs.
-3. It matches the FreeDO reference on a trace/golden test where one exists.
+3. It matches the selected reference (Opera for new behavior, FreeDOCore for the
+   original baseline) on a trace/golden test where one exists.
 4. It does not introduce a new allocation in the steady-state hot path.
 5. It does not change a global into shared mutable state.
-6. Its comments identify the original function and any deliberate deviation.
+6. Its comments identify the reference file/function and any deliberate deviation.
 
 If a deviation is required for C# safety (e.g., division-by-zero guard), document it in the test and in this file.
 

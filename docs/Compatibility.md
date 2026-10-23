@@ -1,13 +1,14 @@
 # Compatibility Notes
 
-This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO.
+This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
 **Current position (2026-10-23):** 2/5 local corpus titles boot and render
 (Lemmings, Space Ace), 2/5 load their own OS and stop at SAudio channel 0
 (Road Rash, Wolfenstein 3D), and 1/5 fails earlier (Alone in the Dark). No title has
 reached gameplay yet. The 2026-10-23 CD disc-end fix is what unblocked the three
-discs that were previously rejected as non-3DO. See [`Status.md`](Status.md) for the
-overall completion estimate and next steps.
+discs that were previously rejected as non-3DO. **Opera runs all four problem titles
+past those points**, so the remaining failures are ours to fix, not a shared FreeDO
+limitation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md).
 
 ---
 
@@ -168,7 +169,7 @@ The game database is ported with attribution. Unknown game IDs get the first 8 h
 - No GPU CEL compositing in v1; CEL rendering is software, matching FreeDO. The OpenGL renderer accelerates presentation, palette expansion, scaling, and filters.
 - No 3DO mouse/light gun/other peripherals.
 - No 3DO modem/network emulation.
-- No cycle-exact ARM bus timing beyond FreeDOCore's approximation.
+- No cycle-exact ARM bus timing yet. The interpreter preserves FreeDOCore's `Ncycle = 4`; Opera uses `Ncycle = 2` with datasheet references. The difference is under evaluation and must not be changed by default until a differential test proves the impact.
 - No guarantee of 4DO save-state compatibility.
 - The primary renderer requires desktop OpenGL 3.3 or OpenGL ES 3.0/3.1 (see `docs/Performance.md`); systems without either use the CPU fallback.
 - CHD is supported for CD/GD-ROM images; DVD/HDD/raw CHDs are not 3DO discs.
@@ -180,17 +181,19 @@ The game database is ported with attribution. Unknown game IDs get the first 8 h
 
 Use this table when testing real discs. Record the disc hash/ID, BIOS, build, and result.
 
-| Game | Region | Disc ID | BIOS | Build | Boot | In-game | Audio | Input | Notes |
-|---|---|---|---|---|---|---|---|---|---|
-| Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | Not reached yet | DSP runs; listening check pending | Not tested | CyberIntro renders real 3D frames |
-| Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass (intro)** | No | Mixer open fails (`d52bf113`) | No | Loads the ReadySoft player and renders the demo intro; CPU later runs away |
-| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Partial** | No | SAudio channel 0 init fails (`-6996`) | No | Loads the game OS (`grafmath 21.10.504`) then waits on audio |
-| Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Partial** | No | SAudio channel 0 init fails (`-6996`) | No | Loads Sherry/Operator/FS v24.225 then waits on audio |
-| Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Fails early** | No | SAudio channel 0 init fails (`-6996`) | No | Boot log stops after AudioFolio init |
+| Game | Region | Disc ID | BIOS | Build | Boot | In-game | Audio | Input | Notes | Opera reference |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | Not reached yet | DSP runs; listening check pending | Not tested | CyberIntro renders real 3D frames | Not re-tested this pass |
+| Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass (intro)** | No | Mixer open fails (`d52bf113`) | No | Loads the ReadySoft player and renders the demo intro; CPU later runs away | Demo intro 60 s, no runaway |
+| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Partial** | No | SAudio channel 0 init fails (`-6996`) | No | Loads the game OS (`grafmath 21.10.504`) then waits on audio | Intro FMV 60 s |
+| Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Partial** | No | SAudio channel 0 init fails (`-6996`) | No | Loads Sherry/Operator/FS v24.225 then waits on audio | Intro 60 s |
+| Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Fails early** | No | SAudio channel 0 init fails (`-6996`) | No | Boot log stops after AudioFolio init | Intro/loading 60 s |
 
 `Partial` means the BIOS, kernel, filesystem, and CD paths run far enough to load
 the game's own OS, but the title screen is not reached. `Pass` means a real game
-frame was rendered and verified visually.
+frame was rendered and verified visually. The Opera reference column is the bundled
+Windows OperaCore with the same BIOS and an ISO extracted from the same CHD; it
+verifies game progress, not audio output.
 
 The 2026-10-23 CD fix is significant: `CdromDevice.InitCd` used FreeDO's
 double-add of the 150-frame lead-in, so the disc end reported to the CD DIPIR was
@@ -206,7 +209,19 @@ FIQ while at `PC 0x0007D120` (the player's palette loop), and the FIQ vector at
 low-memory vector table appears to have been overwritten. The next fetched word is
 `0xBADACCE5` filler and the CPU walks through it. This points at low-memory
 corruption from the ReadySoft player's DMA or a missing 3DO memory fence rather
-than a video or CPU bug; it is not fixed yet.
+than a video or CPU bug; it is not fixed yet. **Opera plays the same demo for 60 s
+without this runaway**, so the bug is in our port, not the game or a shared FreeDO
+limitation.
+
+## 11. Reference comparison (2026-10-23)
+
+The data track of each CHD was extracted to ISO with `3do disc dump`, then run with
+the bundled Windows OperaCore (`References/CPP_SimpleGui`) and the same
+`panafz1.bin` BIOS. Opera rendered Road Rash, Wolfenstein, Alone, and Space Ace for
+60 s; our port still stops at SAudio `-6996` or the Space Ace frame-681 runaway. The
+same ISO also fails in our port, so the CHD reader is not the cause. The comparison
+method and commands are in [`ReferenceStrategy.md`](ReferenceStrategy.md); the
+next-session plan is in [`NextSession.md`](NextSession.md).
 
 Local corpus (user-provided, not distributed; see [`TestCorpus.md`](TestCorpus.md)):
 
@@ -226,7 +241,7 @@ Suggested additional coverage:
 
 ---
 
-## 11. Reporting a compatibility issue
+## 12. Reporting a compatibility issue
 
 Include:
 
