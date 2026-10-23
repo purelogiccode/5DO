@@ -6,7 +6,7 @@ A clean-room-style, **pure C# / .NET 10** port of the FreeDO/4DO 3DO emulator co
 
 ## Status
 
-**M0 scaffold complete; M1 (core contracts, memory/bus, Quartz scheduler, state primitives, diagnostics) is complete; M2 (ARM60 CPU) is complete; M3 (boot skeleton: BIOS/NVRAM, CLIO, MADAM registers, VDLP, SPORT, frame loop) is complete; M4 (MADAM graphics) is in progress (CEL bit reader, CCB parser, PLUT loader, and pixel decoder are complete; the pixel processor/projector is next).** The M3.13 OpenGL spike is deferred to M9R. The implementation plan and architecture are in:
+**M0 scaffold complete; M1 (core contracts, memory/bus, Quartz scheduler, state primitives, diagnostics) is complete; M2 (ARM60 CPU) is complete; M3 (boot skeleton: BIOS/NVRAM, CLIO, MADAM registers, VDLP, SPORT, frame loop) is complete; M4 (MADAM graphics) is in progress (CEL bit reader, CCB parser, PLUT loader, pixel decoder, and pixel processor/projector are complete; CEL geometry/clipping is next).** The M3.13 OpenGL spike is deferred to M9R. The implementation plan and architecture are in:
 
 - [`docs/ImplementationPlan.md`](docs/ImplementationPlan.md) - milestones, tasks, acceptance criteria, risks.
 - [`docs/Architecture.md`](docs/Architecture.md) - project layout, dependency rules, runtime composition.
