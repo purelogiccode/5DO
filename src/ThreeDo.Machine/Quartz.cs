@@ -19,7 +19,7 @@ namespace ThreeDo.Machine;
 /// would overflow; a debug assertion documents that contract.
 /// </para>
 /// </remarks>
-public sealed class Quartz
+public sealed class Quartz : IStateSection
 {
     private int _armClock;
     private uint _accArm;
@@ -163,6 +163,20 @@ public sealed class Quartz
 
         return false;
     }
+
+    /// <summary>Gets the save-state section identifier.</summary>
+    public uint Id => StateSectionIds.Quartz;
+
+    /// <summary>Gets the save-state section version.</summary>
+    public ushort Version => 1;
+
+    /// <summary>Writes the scheduler section.</summary>
+    /// <param name="writer">State writer.</param>
+    public void Save(IStateWriter writer) => SaveState(writer);
+
+    /// <summary>Reads the scheduler section.</summary>
+    /// <param name="reader">State reader.</param>
+    public void Load(IStateReader reader) => LoadState(reader);
 
     /// <summary>Writes the scheduler state.</summary>
     /// <param name="writer">State writer.</param>

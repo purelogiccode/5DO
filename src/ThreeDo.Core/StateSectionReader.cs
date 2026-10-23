@@ -12,6 +12,7 @@ public sealed class StateSectionReader : StateReader
     {
         Id = id;
         Version = version;
+        PayloadLength = payload.Length;
     }
 
     /// <summary>Gets the section identifier.</summary>
@@ -19,4 +20,7 @@ public sealed class StateSectionReader : StateReader
 
     /// <summary>Gets the section format version.</summary>
     public ushort Version { get; }
+
+    /// <summary>Gets the payload length in bytes.</summary>
+    public int PayloadLength { get; }
 }

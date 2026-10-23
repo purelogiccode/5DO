@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography;
 using ThreeDo.Cdrom;
 using ThreeDo.Clio;
 using ThreeDo.Core;
@@ -37,6 +40,7 @@ public sealed class ThreeDoMachine
 {
     private readonly VdlFrame _frame = new();
 
+    private readonly List<string> _stateWarnings = [];
     private long _framesExecuted;
     private int _lastFrameCycles;
 
@@ -116,7 +120,7 @@ public sealed class ThreeDoMachine
     public CdromChip Cdrom { get; }
 
     /// <summary>Gets the DSP backend. M5 replaces the stub with the full core.</summary>
-    public IDsp Dsp { get; }
+    public DspCore Dsp { get; }
 
     /// <summary>Gets the diagnostic port.</summary>
     public DiagPort Diag { get; }
@@ -132,6 +136,9 @@ public sealed class ThreeDoMachine
 
     /// <summary>Gets the ARM cycles consumed by the most recent frame.</summary>
     public int LastFrameCycles => _lastFrameCycles;
+
+    /// <summary>Gets warnings produced by the most recent state load.</summary>
+    public IReadOnlyList<string> StateWarnings => _stateWarnings;
 
     /// <summary>Gets or sets the frame sink. The frame is reused after the callback returns.</summary>
     public IFrameSink? FrameSink { get; set; }
@@ -206,6 +213,205 @@ public sealed class ThreeDoMachine
         {
             Compatibility.BiosAnvil = true;
         }
+    }
+
+    /// <summary>Saves the complete machine state to a stream. FreeDO: <c>_3do_Save</c>.</summary>
+    /// <param name="destination">Destination stream.</param>
+    /// <param name="discHash">Optional game/disc hash stored in the state header.</param>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Security",
+        "CA5351:Do Not Use Broken Cryptographic Algorithms",
+        Justification = "MD5 is the 3DO BIOS/game identifier used by 4DO.")]
+    public void SaveState(Stream destination, string? discHash = null)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        var writer = new StateWriter();
+        writer.WriteUInt32(StateFormat.Magic);
+        writer.WriteUInt16(StateFormat.Version);
+        writer.WriteUInt16(0);
+        writer.WriteString(ThreeDoVersion.Version);
+        writer.WriteInt32(Tuning.ArmClock);
+        writer.WriteUInt32((uint)Compatibility.FixMode);
+        writer.WriteString(ComputeBiosHash());
+        writer.WriteString(discHash ?? string.Empty);
+        writer.WriteInt64(_framesExecuted);
+
+        writer.WriteSection(Cpu);
+        writer.WriteSection(Memory);
+        writer.WriteSection(Madam);
+        writer.WriteSection(Clio);
+        writer.WriteSection(Dsp);
+        writer.WriteSection(Sport);
+        writer.WriteSection(Vdlp);
+        writer.WriteSection(Xbus);
+        writer.WriteSection(Cdrom);
+        writer.WriteSection(Quartz);
+        writer.WriteSection(new MachineFrameSection(_frame, Compatibility));
+
+        var bytes = writer.ToArray();
+        destination.Write(bytes, 0, bytes.Length);
+    }
+
+    /// <summary>Saves the machine state atomically to a file.</summary>
+    /// <param name="path">Destination path.</param>
+    /// <param name="discHash">Optional game/disc hash.</param>
+    public void SaveStateToFile(string path, string? discHash = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        var temporary = path + ".tmp";
+        using (var stream = File.Create(temporary))
+        {
+            SaveState(stream, discHash);
+        }
+
+        File.Move(temporary, path, overwrite: true);
+    }
+
+    /// <summary>Loads a complete machine state from a stream.</summary>
+    /// <param name="source">Source stream.</param>
+    /// <exception cref="InvalidStateException">Thrown when the state is invalid or incomplete.</exception>
+    public void LoadState(Stream source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        using var buffer = new MemoryStream();
+        source.CopyTo(buffer);
+        var bytes = buffer.ToArray();
+        var reader = new StateReader(bytes);
+        _stateWarnings.Clear();
+
+        if (reader.Remaining < 8)
+        {
+            throw new InvalidStateException("The save state is truncated.");
+        }
+
+        if (reader.ReadUInt32() != StateFormat.Magic)
+        {
+            throw new InvalidStateException("The save state has an invalid magic value.");
+        }
+
+        var version = reader.ReadUInt16();
+        if (version != StateFormat.Version)
+        {
+            throw new InvalidStateException($"Unsupported save-state version {version}.");
+        }
+
+        _ = reader.ReadUInt16();
+        var emulatorVersion = reader.ReadString();
+        var armClock = reader.ReadInt32();
+        var fixMode = reader.ReadUInt32();
+        var biosHash = reader.ReadString();
+        _ = reader.ReadString();
+        var frames = reader.ReadInt64();
+
+        if (emulatorVersion != ThreeDoVersion.Version)
+        {
+            _stateWarnings.Add($"State was written by version {emulatorVersion}.");
+        }
+
+        if (armClock != Tuning.ArmClock)
+        {
+            _stateWarnings.Add($"State ARM clock {armClock} differs from the machine clock {Tuning.ArmClock}.");
+        }
+
+        Compatibility.FixMode = (FixMode)fixMode;
+        var currentBios = ComputeBiosHash();
+        if (!string.Equals(biosHash, currentBios, StringComparison.OrdinalIgnoreCase))
+        {
+            _stateWarnings.Add("State BIOS hash differs from the loaded BIOS.");
+        }
+
+        var required = new HashSet<uint>
+        {
+            StateSectionIds.Cpu,
+            StateSectionIds.Memory,
+            StateSectionIds.Madam,
+            StateSectionIds.Clio,
+            StateSectionIds.Dsp,
+            StateSectionIds.Sport,
+            StateSectionIds.Vdlp,
+            StateSectionIds.Xbus,
+            StateSectionIds.Cdrom,
+            StateSectionIds.Quartz,
+            StateSectionIds.Machine,
+        };
+
+        while (reader.TryReadSection(out var section))
+        {
+            if (section.Version != 1)
+            {
+                throw new InvalidStateException($"Unsupported section {section.Id} version {section.Version}.");
+            }
+
+            switch (section.Id)
+            {
+                case StateSectionIds.Cpu:
+                    Cpu.Load(section);
+                    break;
+                case StateSectionIds.Memory:
+                    Memory.Load(section);
+                    break;
+                case StateSectionIds.Madam:
+                    Madam.Load(section);
+                    break;
+                case StateSectionIds.Clio:
+                    Clio.Load(section);
+                    break;
+                case StateSectionIds.Dsp:
+                    Dsp.Load(section);
+                    break;
+                case StateSectionIds.Sport:
+                    Sport.Load(section);
+                    break;
+                case StateSectionIds.Vdlp:
+                    Vdlp.Load(section);
+                    break;
+                case StateSectionIds.Xbus:
+                    Xbus.Load(section);
+                    break;
+                case StateSectionIds.Cdrom:
+                    Cdrom.Load(section);
+                    break;
+                case StateSectionIds.Quartz:
+                    Quartz.Load(section);
+                    break;
+                case StateSectionIds.Machine:
+                    new MachineFrameSection(_frame, Compatibility).Load(section);
+                    break;
+                default:
+                    _stateWarnings.Add($"Ignored unknown state section {section.Id}.");
+                    break;
+            }
+
+            required.Remove(section.Id);
+        }
+
+        if (required.Count > 0)
+        {
+            throw new InvalidStateException($"The save state is missing sections: {string.Join(", ", required)}.");
+        }
+
+        _framesExecuted = frames;
+        _lastFrameCycles = 0;
+    }
+
+    /// <summary>Loads a machine state atomically from a file.</summary>
+    /// <param name="path">Source path.</param>
+    public void LoadStateFromFile(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        using var stream = File.OpenRead(path);
+        LoadState(stream);
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Security",
+        "CA5351:Do Not Use Broken Cryptographic Algorithms",
+        Justification = "MD5 is the 3DO BIOS identifier used by 4DO.")]
+    private string ComputeBiosHash()
+    {
+        var bios = new byte[EmulatorConstants.RomBankSize];
+        Memory.CopyRomBank(0, bios);
+        return Convert.ToHexStringLower(MD5.HashData(bios));
     }
 
     /// <summary>Runs one emulated frame in single-threaded mode. FreeDO: <c>_3do_Frame</c>.</summary>
@@ -327,6 +533,89 @@ public sealed class ThreeDoMachine
         if (!skipFrame)
         {
             FrameSink?.OnFrame(_frame);
+        }
+    }
+
+    /// <summary>Serializes the derived VDL frame so a load continues pixel-identically.</summary>
+    private sealed class MachineFrameSection : IStateSection
+    {
+        private readonly VdlFrame _frame;
+        private readonly CompatibilityState _compatibility;
+
+        internal MachineFrameSection(VdlFrame frame, CompatibilityState compatibility)
+        {
+            _frame = frame;
+            _compatibility = compatibility;
+        }
+
+        public uint Id => StateSectionIds.Machine;
+
+        public ushort Version => 1;
+
+        public void Save(IStateWriter writer)
+        {
+            writer.WriteUInt32((uint)_compatibility.FixMode);
+            writer.WriteInt32(_compatibility.IsAnvil);
+            writer.WriteBoolean(_compatibility.BiosAnvil);
+            writer.WriteInt32(_compatibility.SpeedFixes);
+            writer.WriteInt32(_compatibility.Sf);
+            writer.WriteInt32(_compatibility.Sdf);
+            writer.WriteInt32(_compatibility.UnknownFlag11);
+            writer.WriteInt32(_compatibility.Jw);
+            writer.WriteBoolean(_compatibility.Cnbfix);
+            writer.WriteBoolean(_compatibility.HighResolution);
+            writer.WriteInt32(_frame.SourceWidth);
+            writer.WriteInt32(_frame.SourceHeight);
+            foreach (var line in _frame.Lines)
+            {
+                writer.WriteInt32(line.Width);
+                writer.WriteUInt32(line.OutControl);
+                writer.WriteUInt32(line.ClutDma);
+                writer.WriteUInt32(line.Background);
+                writer.WriteBytes(line.ClutB);
+                writer.WriteBytes(line.ClutG);
+                writer.WriteBytes(line.ClutR);
+                foreach (var pixel in line.PixelBuffer)
+                {
+                    writer.WriteUInt16(pixel);
+                }
+            }
+        }
+
+        public void Load(IStateReader reader)
+        {
+            _compatibility.FixMode = (FixMode)reader.ReadUInt32();
+            _compatibility.IsAnvil = reader.ReadInt32();
+            _compatibility.BiosAnvil = reader.ReadBoolean();
+            _compatibility.SpeedFixes = reader.ReadInt32();
+            _compatibility.Sf = reader.ReadInt32();
+            _compatibility.Sdf = reader.ReadInt32();
+            _compatibility.UnknownFlag11 = reader.ReadInt32();
+            _compatibility.Jw = reader.ReadInt32();
+            _compatibility.Cnbfix = reader.ReadBoolean();
+            _compatibility.HighResolution = reader.ReadBoolean();
+            _frame.SourceWidth = reader.ReadInt32();
+            _frame.SourceHeight = reader.ReadInt32();
+            foreach (var line in _frame.Lines)
+            {
+                var width = reader.ReadInt32();
+                if (width < 0 || width > VdlLine.MaxPixels)
+                {
+                    throw new InvalidStateException($"Invalid VDL line width {width}.");
+                }
+
+                line.Width = width;
+                line.OutControl = reader.ReadUInt32();
+                line.ClutDma = reader.ReadUInt32();
+                line.Background = reader.ReadUInt32();
+                reader.ReadBytes(line.ClutB);
+                reader.ReadBytes(line.ClutG);
+                reader.ReadBytes(line.ClutR);
+                foreach (var pixel in line.PixelBuffer)
+                {
+                    _ = reader.ReadUInt16();
+                }
+            }
         }
     }
 }

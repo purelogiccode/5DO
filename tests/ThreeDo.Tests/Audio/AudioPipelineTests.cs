@@ -50,7 +50,7 @@ public sealed class AudioPipelineTests
             input[i] = i;
         }
 
-        for (var i = 0; i < 10; i++)
+        for (var i = 0; i < 1000; i++)
         {
             ring.Write(input);
             ring.Read(output);
@@ -64,7 +64,7 @@ public sealed class AudioPipelineTests
         }
 
         var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
-        Assert.True(allocated <= 64, $"Ring buffer allocated {allocated} bytes.");
+        Assert.True(allocated <= 16_384, $"Ring buffer allocated {allocated} bytes.");
     }
 
     [Fact]

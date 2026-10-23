@@ -27,7 +27,7 @@ namespace ThreeDo.Dsp;
 /// matching the observed MSVC result.</item>
 /// </list>
 /// </remarks>
-public sealed class Dsp : IDsp
+public sealed class Dsp : IDsp, IStateSection
 {
     private const uint TopBit = 0x80000000u;
 
@@ -79,6 +79,12 @@ public sealed class Dsp : IDsp
         Initialize();
     }
 
+    /// <summary>Gets the save-state section identifier.</summary>
+    public uint Id => StateSectionIds.Dsp;
+
+    /// <summary>Gets the save-state section version.</summary>
+    public ushort Version => 1;
+
     /// <summary>Gets or sets the CLIO host used for FIFOs and FIQs. May be null in unit tests.</summary>
     public IDspHost? Host { get; set; }
 
@@ -102,6 +108,88 @@ public sealed class Dsp : IDsp
 
     /// <summary>Gets the audio counter.</summary>
     public short AudioCounter => _audCnt;
+
+    /// <summary>Writes the DSP save-state payload.</summary>
+    /// <param name="writer">Destination writer.</param>
+    public void Save(IStateWriter writer)
+    {
+        ArgumentNullException.ThrowIfNull(writer);
+        writer.WriteUInt32(_pc);
+        writer.WriteUInt16(_noise);
+        writer.WriteUInt16(_audioOutStatus);
+        writer.WriteUInt16(_sema4Status);
+        writer.WriteUInt16(_sema4Data);
+        writer.WriteUInt16(unchecked((ushort)_dspPcnt));
+        writer.WriteUInt16(unchecked((ushort)_dspPrld));
+        writer.WriteUInt16(unchecked((ushort)_audCnt));
+        writer.WriteUInt16(_interrupt);
+        writer.WriteUInt16(unchecked((ushort)_mult1));
+        writer.WriteUInt16(unchecked((ushort)_mult2));
+        writer.WriteUInt16(unchecked((ushort)_alu1));
+        writer.WriteUInt16(unchecked((ushort)_alu2));
+        writer.WriteInt32(_bs);
+        writer.WriteUInt16(_opMask);
+        writer.WriteUInt16(_writeback);
+        writer.WriteByte(_requests);
+        writer.WriteBoolean(_running);
+        writer.WriteBoolean(_genFiq);
+        writer.WriteUInt32(_rbaseX4);
+        writer.WriteInt32(_regi);
+        writer.WriteUInt32(_seed);
+        foreach (var supply in _cpuSupply)
+        {
+            writer.WriteBoolean(supply);
+        }
+
+        writer.WriteBytes(ToStateBytes(_nmem));
+        writer.WriteBytes(ToStateBytes(_imem));
+    }
+
+    /// <summary>Reads the DSP save-state payload.</summary>
+    /// <param name="reader">Source reader.</param>
+    public void Load(IStateReader reader)
+    {
+        ArgumentNullException.ThrowIfNull(reader);
+        _pc = reader.ReadUInt32();
+        _noise = reader.ReadUInt16();
+        _audioOutStatus = reader.ReadUInt16();
+        _sema4Status = reader.ReadUInt16();
+        _sema4Data = reader.ReadUInt16();
+        _dspPcnt = unchecked((short)reader.ReadUInt16());
+        _dspPrld = unchecked((short)reader.ReadUInt16());
+        _audCnt = unchecked((short)reader.ReadUInt16());
+        _interrupt = reader.ReadUInt16();
+        _mult1 = unchecked((short)reader.ReadUInt16());
+        _mult2 = unchecked((short)reader.ReadUInt16());
+        _alu1 = unchecked((short)reader.ReadUInt16());
+        _alu2 = unchecked((short)reader.ReadUInt16());
+        _bs = reader.ReadInt32();
+        _opMask = reader.ReadUInt16();
+        _writeback = reader.ReadUInt16();
+        _requests = reader.ReadByte();
+        _running = reader.ReadBoolean();
+        _genFiq = reader.ReadBoolean();
+        _rbaseX4 = reader.ReadUInt32();
+        _regi = reader.ReadInt32();
+        _seed = reader.ReadUInt32();
+        for (var i = 0; i < _cpuSupply.Length; i++)
+        {
+            _cpuSupply[i] = reader.ReadBoolean();
+        }
+
+        reader.ReadBytes(ToStateBytes(_nmem));
+        reader.ReadBytes(ToStateBytes(_imem));
+    }
+
+    private static Span<byte> ToStateBytes(ushort[] words)
+    {
+        if (!BitConverter.IsLittleEndian)
+        {
+            throw new PlatformNotSupportedException("Save states require a little-endian host.");
+        }
+
+        return System.Runtime.InteropServices.MemoryMarshal.AsBytes(words.AsSpan());
+    }
 
     /// <inheritdoc />
     public void Reset()

@@ -1,5 +1,6 @@
 using System;
 using System.Buffers.Binary;
+using System.Runtime.InteropServices;
 using ThreeDo.Core;
 
 namespace ThreeDo.Memory;
@@ -18,7 +19,7 @@ namespace ThreeDo.Memory;
 /// high-resolution mode. Only the first 3 MB are CPU-visible in v1.
 /// </para>
 /// </remarks>
-public sealed class ThreeDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelector
+public sealed class ThreeDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelector, IStateSection
 {
     private readonly uint[] _ram = new uint[EmulatorConstants.RamAllocationSize / sizeof(uint)];
     private readonly uint[] _rom = new uint[EmulatorConstants.RomSize / sizeof(uint)];
@@ -48,6 +49,12 @@ public sealed class ThreeDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSele
 
     /// <summary>Gets a value indicating whether a CLIO write requested a four-byte PC advance.</summary>
     public bool PcAdjustPending => _pcAdjustPending;
+
+    /// <summary>Gets the save-state section identifier.</summary>
+    public uint Id => StateSectionIds.Memory;
+
+    /// <summary>Gets the save-state section version.</summary>
+    public ushort Version => 1;
 
     /// <summary>Gets the RAM/VRAM raw accessor.</summary>
     public IRam Ram => this;
@@ -133,6 +140,54 @@ public sealed class ThreeDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSele
         _nvram.CopyTo(destination);
     }
 
+    /// <summary>Copies one ROM bank back to big-endian BIOS bytes.</summary>
+    /// <param name="bank">Bank index: 0 or 1.</param>
+    /// <param name="destination">Destination of exactly 1 MB.</param>
+    public void CopyRomBank(int bank, Span<byte> destination)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)bank, 1u);
+        if (destination.Length < EmulatorConstants.RomBankSize)
+        {
+            throw new ArgumentException($"The destination must hold {EmulatorConstants.RomBankSize} bytes.", nameof(destination));
+        }
+
+        var wordOffset = bank * (EmulatorConstants.RomBankSize / sizeof(uint));
+        for (var i = 0; i < EmulatorConstants.RomBankSize; i += sizeof(uint))
+        {
+            BinaryPrimitives.WriteUInt32BigEndian(destination.Slice(i, sizeof(uint)), _rom[wordOffset + (i / sizeof(uint))]);
+        }
+    }
+
+    /// <summary>Writes the memory save-state payload.</summary>
+    /// <param name="writer">Destination writer.</param>
+    public void Save(IStateWriter writer)
+    {
+        ArgumentNullException.ThrowIfNull(writer);
+        writer.WriteByte((byte)_romBank);
+        writer.WriteBoolean(_pcAdjustPending);
+        writer.WriteBytes(ToStateBytes(_ram));
+        writer.WriteBytes(ToStateBytes(_rom));
+        writer.WriteBytes(_nvram);
+    }
+
+    /// <summary>Reads the memory save-state payload.</summary>
+    /// <param name="reader">Source reader.</param>
+    public void Load(IStateReader reader)
+    {
+        ArgumentNullException.ThrowIfNull(reader);
+        var bank = reader.ReadByte();
+        if (bank > 1)
+        {
+            throw new InvalidStateException($"Invalid ROM bank {bank} in memory state.");
+        }
+
+        _romBank = bank;
+        _pcAdjustPending = reader.ReadBoolean();
+        reader.ReadBytes(ToStateBytes(_ram));
+        reader.ReadBytes(ToStateBytes(_rom));
+        reader.ReadBytes(_nvram);
+    }
+
     /// <summary>Selects the active ROM bank.</summary>
     /// <param name="bank">Bank index: 0 or 1.</param>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="bank"/> is not 0 or 1.</exception>
@@ -153,6 +208,11 @@ public sealed class ThreeDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSele
         var pending = _pcAdjustPending;
         _pcAdjustPending = false;
         return pending;
+    }
+
+    private static Span<byte> ToStateBytes(uint[] words)
+    {
+        return MemoryMarshal.AsBytes(words.AsSpan());
     }
 
     /// <summary>Selects the active ROM bank through the bus contract. FreeDO: <c>SelectROM</c>.</summary>

@@ -559,3 +559,12 @@ M1 implements the section primitive used by all later chips:
 - `InputProfile` stores per-player keyboard/gamepad maps and hotkeys as JSON. Default profiles bind the keyboard only for player 1 so a single key does not press the same button on all players; gamepad bindings are available for all six.
 - `NvramStore` lives in `ThreeDo.Host` because it is host I/O; the core still only accepts the 32 KB image. Writes are debounced through an injected `TimeProvider` (250 ms), use a temporary file plus atomic replace, and back up a wrong-sized file as `.bad` before creating a fresh image.
 - The 4DO `GameDatabase.xml` is an embedded resource with an attribution comment; lookups accept either case and unknown checksums return null. Per-game fix overrides remain a settings-layer concern.
+
+### 12.11 M8 implementation notes
+
+- Save states use the existing `TDO1` header plus per-section `[id][version][length][payload][crc32]` frames. Header fields are the emulator version, ARM clock, fix mode, BIOS MD5, optional disc hash, and frame count. Unknown format/section versions fail; BIOS hash mismatch is a warning.
+- `ThreeDoMemory` now implements `IStateSection` and serializes RAM, both ROM banks, NVRAM, the selected bank, and the PC-adjust latch. RAM/ROM are written as raw little-endian words because the emulated representation is word-swapped; all supported runtimes are little-endian.
+- `Dsp` serializes its architectural state and NMem/IMem; REGCONV, request/BS tables, and BRCONDTAB are immutable precomputed tables rebuilt in the constructor, so they are not duplicated in the file.
+- The machine state also stores the derived VDL frame and the mutable `CompatibilityState`. Without the latter, the CPU's runtime Anvil detection (which changes `IsAnvil`/`BiosAnvil`) made a loaded run diverge after a few frames even though the CPU registers matched at load.
+- `SaveStateToFile` writes a temporary file then atomically replaces the target. `StateInspector` reads the header and section table without constructing a machine. `FrameDumper` writes 32-bit BMPs for headless diagnostics.
+- The CLI uses a small hand-written option parser (the System.CommandLine package is reserved for a later UX pass). All commands share `--json`; errors return exit code 1, unknown commands 2. Audio output is null or a 44.1 kHz WAV sink; there is still no live device backend.
