@@ -23,6 +23,15 @@ A clean-room-style, **pure C# / .NET 10** port of the FreeDO/4DO 3DO emulator co
 - Be **deterministic**: same BIOS + disc + input sequence + options produces the same frames and state.
 - Keep the codebase modular: one project per console subsystem, one class per major responsibility.
 
+## Disc formats
+
+- ISO (2048-byte sectors)
+- BIN (2352-byte sectors)
+- CUE+BIN (single data track)
+- **CHD** via the pure C# **CHDSharp** library, including parent/child images and read-ahead decompression
+
+CHD is a first-class v1 format. The storage layer presents every container through the same `IDiscSource` 2048-byte-sector interface, so the CD-ROM emulation is identical regardless of file format.
+
 ## Differentiator: OpenGL presentation
 
 The desktop frontend uses **Silk.NET.OpenGL** through Avalonia's OpenGL control as the **required** presentation path:
@@ -51,7 +60,7 @@ The emulation core still renders CELs in software for accuracy. The GPU accelera
 
 - .NET SDK **10.0.100** or newer (`global.json` rolls forward to the latest 10.0 feature band).
 - A legally obtained 3DO BIOS ROM (1 MB, optionally a second 1 MB ROM).
-- Legally obtained 3DO disc images in ISO (2048-byte sectors), BIN (2352-byte sectors), or CUE+BIN format.
+- Legally obtained 3DO disc images in ISO (2048-byte sectors), BIN (2352-byte sectors), CUE+BIN, or CHD format. CHD support uses the pure C# CHDSharp library.
 - For the desktop app: Windows 10+, a current Linux desktop, or macOS 12+.
 
 ## Build

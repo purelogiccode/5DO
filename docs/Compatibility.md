@@ -29,11 +29,21 @@ The BIOS picker shows the file name, size, MD5, and detected Anvil flag. The sel
 | ISO, 2048-byte sectors | v1 | Most common 3DO image format |
 | BIN, 2352-byte sectors | v1 | Payload starts at offset `0x10` |
 | CUE + BIN | v1 | Single data track, MODE1/2048 or MODE1/2352 |
-| CHD | Later | Optional managed reader; not required for v1 |
+| **CHD** | **v1** | **MAME CHD via pure C# CHDSharp; CD/GD-ROM track table; parent/child supported** |
 | Multi-track / CD-DA | Not supported | 3DO games use a single data track; Red Book audio is out of scope |
 | ZIP/7z archives | Later | Prefer extracting first |
 
-Sector count is read from the 3DO volume header at sector 0 (big-endian `blockCount` at byte offset 80). If the header is invalid, fall back to `fileSize / sectorSize`.
+Sector count is read from the 3DO volume header at sector 0 (big-endian `blockCount` at byte offset 80). If the header is invalid, fall back to `fileSize / sectorSize` for ISO/BIN or the CHD data track's frame count.
+
+CHD specifics:
+
+- CHDSharp's `ReadSector(lba)` returns the first 2352 bytes of the 2448-byte CD frame. `ChdDiscImage` extracts 2048 user-data bytes based on the first data track:
+  - cooked Mode1/2048 -> offset 0
+  - raw Mode1/2352 -> offset 16
+  - raw Mode2/Form1 -> offset 24
+- Standalone and parent/child CHDs are supported; an optional parent path can be configured.
+- DVD, HDD, raw, and audio-only CHDs are rejected; 3DO software is CD-ROM based.
+- Read-ahead is enabled by default (4 hunks) for sequential streaming.
 
 Game ID is the MD5 of the first two 2048-byte sectors (4096 bytes), matching 4DO. This ID keys save states, screenshots, and optional per-game settings. It must never change, or existing save data will be orphaned.
 
@@ -154,6 +164,8 @@ The game database is ported with attribution. Unknown game IDs get the first 8 h
 - No cycle-exact ARM bus timing beyond FreeDOCore's approximation.
 - No guarantee of 4DO save-state compatibility.
 - OpenGL 3.3 is required for the primary renderer; systems without it use the CPU fallback.
+- CHD is supported for CD/GD-ROM images; DVD/HDD/raw CHDs are not 3DO discs.
+- CHD decompression is pure managed code and may be slower than ISO on low-end arm64 devices; read-ahead/cache mitigates this.
 
 ---
 

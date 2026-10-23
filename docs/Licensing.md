@@ -59,7 +59,7 @@ The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NO
 - BenchmarkDotNet (MIT)
 - Silk.NET (MIT)
 - OpenAL Soft (LGPL; native runtime, if bundled)
-- CHDSharp (check its license before use)
+- CHDSharp (MIT plus an LGPL-2.1 component; pure C#; verify the package LICENSE before release)
 - 4DO game database (derive with attribution; verify terms)
 
 ## 6. Trademarks

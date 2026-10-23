@@ -357,7 +357,23 @@ This is the largest and riskiest port. Split it into classes but keep the origin
 - HQX/xBR filters are GPU shader passes in `ThreeDo.Video.OpenGL`. They are presentation-only and must never feed back into emulated state.
 - Do not remove the CPU `FrameAssembler`; it is used by CLI/headless tests, as a fallback, and as the golden oracle for the shader.
 
-### 8.12 `Worker.cpp`
+### 8.12 CHD storage (new, no FreeDOCore equivalent)
+
+FreeDOCore only knows about a flat 2048-byte-sector image supplied by the host. CHD support is a host/storage feature:
+
+- `ThreeDo.Storage.Chd.ChdDiscImage` uses **CHDSharp** (`ChdFile`) to open MAME CHD files.
+- `ChdFile.ReadSector(lba, buffer)` returns 2352 raw bytes; `ChdDiscImage` extracts the 2048-byte user payload:
+  - cooked Mode1/2048 -> offset 0
+  - raw Mode1/2352 -> offset 16
+  - raw Mode2/Form1 -> offset 24
+- Validate `chd.IsCd`; reject DVD/HDD/raw/audio-only CHDs.
+- `SectorCount` comes from the first data track, but the 3DO volume header remains authoritative.
+- Enable `ConfigureReadAhead(4)` for sequential streaming.
+- Support parent/child CHDs via `ChdFile.Open(path, parentPath, ...)`.
+- CHDSharp is pure C#; no native dependency. Do not expose CHD types to the emulation core; the core only sees `IDiscSource`.
+- Add ISO/BIN/CUE/CHD parity tests. CHD is a required v1 format, not an optional extra.
+
+### 8.13 `Worker.cpp`
 
 Not used by the core path. Do not port unless a future multitask mode needs it; use `Task`/`Thread` in the host instead.
 

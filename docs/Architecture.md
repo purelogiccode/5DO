@@ -79,7 +79,7 @@
 | `ThreeDo.Video.OpenGL` | **Required desktop renderer**: GL context integration, raw indexed-frame upload, palette shader, scaling/filter pipeline, vsync presentation, screenshots | `OpenGlRenderer`, `FrameTextureUploader`, `ShaderProgram`, `RendererSettings`, `GlContextAdapter` | Core, Video, Silk.NET.OpenGL |
 | `ThreeDo.Xbus` | XBUS controller, device selection, poll/status/data FIFOs, device interface | `Xbus`, `XbusDevice`, `XbusFifo` | Core |
 | `ThreeDo.Cdrom` | Mitsumi/MEI CD-ROM device, command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice`, `CdromCommand`, `Toc`, `Msf` | Core |
-| `ThreeDo.Storage` | Disc image readers (ISO/BIN/CUE), BIOS validation, NVRAM file format, game database, game ID | `IsoImage`, `BinImage`, `CueSheet`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `GameDatabase`, `GameId` | Core |
+| `ThreeDo.Storage` | Disc image readers (ISO/BIN/CUE/CHD), BIOS validation, NVRAM file format, game database, game ID | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `GameDatabase`, `GameId` | Core, CHDSharp |
 | `ThreeDo.Audio` | Sample format conversion, ring buffer, null/WAV sinks, resampling helpers | `AudioRingBuffer`, `AudioSample`, `NullAudioSink`, `WavAudioSink` | Core |
 | `ThreeDo.Input` | Controller state, PBUS encoding, input profiles, keyboard/gamepad abstractions | `ThreeDoController`, `PbusEncoder`, `InputProfile`, `InputBinding` | Core |
 | `ThreeDo.Diagnostics` | Logging, tracing, disassembly helpers, profilers, memory/frame dumpers | `ILogSink`, `Log`, `CpuTracer`, `MemoryDumper`, `FrameDumper`, `PerformanceCounters` | Core |
@@ -161,6 +161,41 @@ The port preserves FreeDOCore's **word-swapped** representation for v1:
 - ROM loading converts each 4-byte big-endian BIOS word into the internal word value (`BinaryPrimitives.ReadUInt32BigEndian`), matching `_3do_Init`'s `_bswap` loop.
 
 This choice avoids auditing hundreds of XORs in MADAM/CLIO/VDLP during the first port. A later optional refactor to a clean big-endian model must be guarded by the full test suite and save-state compatibility tests.
+
+### 5a. Disc storage and CHD
+
+`ThreeDo.Storage` exposes one abstraction to the CD device:
+
+```csharp
+public interface IDiscSource : IDisposable
+{
+    int SectorCount { get; }
+    int SectorSize { get; }          // 2048 for 3DO
+    void ReadSector(int lba, Span<byte> destination);
+}
+```
+
+Supported containers:
+
+| Format | Path | Notes |
+|---|---|---|
+| ISO | `IsoImage` | 2048-byte sectors, direct LBA mapping |
+| BIN | `BinImage` | 2352-byte sectors, payload at `0x10` |
+| CUE+BIN | `CueSheet` + `BinImage` | Single data track; pregap-aware |
+| **CHD** | `ChdDiscImage` | MAME CHD via **CHDSharp** (pure C#); CD/GD-ROM track table; 2048-byte payload extracted from raw 2352-byte sectors |
+
+CHD details:
+
+- `CHDSharp` is a pure C# library (MIT + LGPL-2.1 component) with no native dependencies. It reads CHD v1-v5 and all MAME codecs.
+- `ChdFile.ReadSector(lba, ...)` returns the first 2352 bytes of the 2448-byte CD frame. `ChdDiscImage` extracts the 2048-byte user payload based on the first data track:
+  - cooked Mode 1/2048 -> offset `0`
+  - raw Mode 1/2352 -> offset `16`
+  - raw Mode 2 Form 1 -> offset `24`
+- `SectorCount` comes from the first data track's `Frames`; the 3DO volume header remains the authoritative sector count for the emulated CD device.
+- Differential parent/child CHDs are supported via an optional parent path (`ChdFile.Open(path, parentPath, ...)`). Standalone CHDs are the common case.
+- `ConfigureReadAhead(n)` is enabled by default (4 hunks) because 3DO games stream data sequentially. The core reads on one thread; the CHD reader is not shared across threads.
+- DVD, HDD, raw, and audio-only CHDs are rejected with a clear `InvalidDataException`; 3DO software is CD-ROM based.
+- CHD is a **first-class v1 format**, not a later optional add-on. The game library scans `.chd` alongside `.iso`, `.bin`, and `.cue`.
 
 ---
 

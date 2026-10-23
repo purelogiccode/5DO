@@ -40,6 +40,7 @@ A 3DO Interactive Multiplayer emulator with:
 
 - A **managed C# emulation core** implementing the ARM60 CPU, memory/bus, MADAM, CLIO, DSP, SPORT, VDLP, XBUS, CD-ROM, and timing.
 - A **required OpenGL renderer** (`ThreeDo.Video.OpenGL` + Silk.NET.OpenGL) that performs GPU palette expansion, high-quality scaling/filters (nearest, sharp-bilinear, CRT, xBR-family), integer scaling, vsync presentation, and screenshots. This is the project's primary differentiator.
+- **First-class disc support** for ISO, BIN, CUE+BIN, and **CHD via the pure C# CHDSharp library**, including parent/child CHDs and read-ahead decompression.
 - A **headless CLI** for running discs, dumping frames/states, testing, and benchmarking.
 - An **Avalonia desktop frontend** for Windows, Linux, and macOS with a game library, settings, controller mapping, save states, screenshots, and fullscreen.
 - A **unit/integration test suite** that can run without a copyrighted BIOS by using synthetic ROMs and fixtures.
@@ -69,10 +70,11 @@ A 3DO Interactive Multiplayer emulator with:
 
 **v0.5 - Playable milestone**
 
-- [ ] Boots at least 10 real discs to gameplay (user-provided test set).
+- [ ] Boots at least 10 real discs to gameplay (user-provided test set), including at least one CHD image.
 - [ ] Audio works for DSP-driven music/SFX.
 - [ ] NVRAM persists between sessions.
 - [ ] Save states roundtrip deterministically.
+- [ ] ISO, BIN, CUE+BIN, and CHD images produce identical sector streams for the same disc.
 - [ ] OpenGL renderer supports accurate, sharp-bilinear, and CRT modes; integer scaling; fullscreen; screenshots.
 - [ ] 60 fps on a mid-range x64 desktop and a Raspberry Pi 4 class arm64 device at native resolution.
 - [ ] Windows/Linux/macOS x64 builds; arm64 builds produced and smoke-tested.
@@ -174,7 +176,7 @@ Key decisions:
 | 4DO C# file | C# project | Main types |
 |---|---|---|
 | `Emulation/GameConsole.cs` | `ThreeDo.Host` | `EmulatorSession`, `FramePacer`, `AudioPipeline` |
-| `Emulation/GameSource/*` | `ThreeDo.Storage`, `ThreeDo.Host` | `DiscImageFactory`, `GameLibraryService`, `GameDatabase` |
+| `Emulation/GameSource/*` | `ThreeDo.Storage`, `ThreeDo.Host` | `DiscImageFactory`, `IsoImage`, `BinImage`, `ChdDiscImage`, `GameLibraryService`, `GameDatabase` |
 | `Emulation/States/SaveStateHelper.cs` | `ThreeDo.Machine`, `ThreeDo.Host` | state sections, `SaveStateService` |
 | `Emulation/Plugins/Input/JohnnyInput/*` | `ThreeDo.Input` | `PbusEncoder`, `ControllerState`, `InputProfile` |
 | `Emulation/GameSource/GameRegistrar.cs` | `ThreeDo.Storage` | `GameDatabase`, `GameId` |
@@ -193,7 +195,7 @@ Key decisions:
 | M3 | Boot skeleton | BIOS load, CLIO basics, VDLP, SPORT, frame loop | Real BIOS executes 300 frames; synthetic frame output | 10 dd |
 | M4 | MADAM graphics | CEL engine, pixel pipeline, matrix engine | BIOS UI renders; CEL golden tests green | 20 dd |
 | M5 | DSP + audio | DSP core and sample pipeline | DSP tests green; BIOS audio/test tone works | 12 dd |
-| M6 | XBUS + CD-ROM | Disc images and CD command state machine | Real disc boots to title screen | 10 dd |
+| M6 | XBUS + CD-ROM + CHD | Disc images, CHD, and CD command state machine | Real disc/CHD boots to title screen | 12 dd |
 | M7 | Input + NVRAM + fixes | Playable controls, persistence, game DB | Playable test set; NVRAM persists | 6 dd |
 | M8 | Save states + diagnostics | Deterministic states, CLI tools, tracing | State roundtrip and CLI tests green | 10 dd |
 | M9 | Avalonia frontend | Full desktop UI | Runs on win/linux/mac x64; 60 fps; fullscreen | 16 dd |
@@ -658,14 +660,27 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 ### M6 - XBUS, CD-ROM, and disc boot
 
-**Goal:** read real disc images through the emulated CD-ROM and boot a game.
+**Goal:** read real disc images (ISO/BIN/CUE/CHD) through the emulated CD-ROM and boot a game.
 
 **Tasks**
 
 - [ ] **M6.1 Disc abstraction.**
   - `IDiscSource` with `SectorCount` and `ReadSector(int lba, Span<byte>)`.
   - `IsoImage` (2048), `BinImage` (2352 + 0x10), `CueSheet` + factory.
-  - Format detection by extension/size.
+  - **`ChdDiscImage`** backed by CHDSharp (pure C#).
+  - Format detection by extension/header/size.
+- [ ] **M6.1a CHD image reader (required v1 format).**
+  - Add `CHDSharp` 1.5.2 package reference to `ThreeDo.Storage`.
+  - Open standalone and parent/child CD CHDs with `ChdFile.Open`.
+  - Validate `chd.IsCd`; reject DVD/HDD/raw/audio-only CHDs with a clear error.
+  - Read the first data track from `chd.Tracks`; determine payload offset:
+    - cooked Mode1/2048 -> 0
+    - raw Mode1/2352 -> 16
+    - raw Mode2/Form1 -> 24
+  - `SectorCount` from the first data track; 3DO volume header remains authoritative.
+  - Enable `ConfigureReadAhead(4)` for sequential streaming.
+  - Support optional parent CHD path for differential images.
+  - Dispose the underlying `ChdFile` deterministically.
 - [ ] **M6.2 Disc metadata.**
   - Volume header parsing (blockCount at offset 80, big-endian).
   - Sector count fallback.
@@ -693,6 +708,12 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 - [ ] **M6.8 Tests.**
   - Command transcripts for every command.
   - ISO/BIN/CUE fixtures.
+  - **CHD fixtures**: generate small CD CHDs with CHDSharp's encoder (or check in tiny synthetic fixtures) and verify:
+    - ISO vs BIN vs CUE vs CHD produce identical 2048-byte sector streams.
+    - Mode1/2048 and Mode1/2352 payload offsets.
+    - parent/child CHD opening.
+    - invalid/non-CD CHD rejection.
+    - read-ahead and cache behavior.
   - Multi-sector read test.
   - DMA-to-RAM test.
   - Save/load CD state.
@@ -700,12 +721,14 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 **Deliverables**
 
 - `ThreeDo.Xbus`, `ThreeDo.Cdrom`, `ThreeDo.Storage`.
-- Real disc boot path.
+- `IsoImage`, `BinImage`, `CueSheet`, and `ChdDiscImage`.
+- Real disc/CHD boot path.
 
 **Acceptance**
 
 - [ ] CD command transcripts match expected bytes.
-- [ ] ISO and BIN sector reads return identical payloads for the same disc.
+- [ ] ISO, BIN, CUE+BIN, and CHD sector reads return identical payloads for the same disc.
+- [ ] A real CHD disc boots to the title screen.
 - [ ] BIOS boots a real disc to the title screen.
 - [ ] At least one game reaches gameplay (manual).
 - [ ] CD state save/load works.
@@ -715,6 +738,8 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 - The CD command state machine is full of undocumented status layouts. Use the C++ as the specification and transcript tests.
 - Some games may rely on seek/spin timing. FreeDO's model is approximate; document compatibility.
 - CUE parsing edge cases (pregap, multiple files) can wait; support single-track MODE1 first.
+- CHD track layouts vary (Mode1/2048, Mode1/2352, Mode2/Form1, pregap). Validate the first data track and reject unsupported layouts instead of guessing.
+- CHDSharp is a pure C# dependency but its CHD decoder can be CPU-heavy on slow arm64 devices. Enable read-ahead and cache; benchmark CHD boot vs ISO.
 
 ---
 
@@ -857,7 +882,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - File picker, validation, MD5/Anvil display.
   - Remember path; error dialogs.
 - [ ] **M9.4 Game library.**
-  - Scan folders for `.iso`, `.bin`, `.cue`, later `.chd`.
+  - Scan folders for `.iso`, `.bin`, `.cue`, and `.chd`.
   - Game ID/name from database; recent games; cover art optional.
   - Open disc, eject, refresh.
 - [ ] **M9.5 Settings.**
@@ -1060,8 +1085,8 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - Keep the accurate path pixel-identical to the CPU oracle.
 - [ ] **M11.4 CD timing/seek improvements.**
   - Only if real games require it; keep transcript tests.
-- [ ] **M11.5 Optional CHD.**
-  - Managed CHD reader or dependency; verify license.
+- [-] **M11.5 CHD support.**
+  - Moved to v1/M6: `ChdDiscImage` via CHDSharp, including parent/child and read-ahead.
 - [ ] **M11.6 Documentation/release.**
   - User guide, compatibility list, known issues, changelog.
   - License/attribution review.
@@ -1208,6 +1233,8 @@ See [`docs/TestStrategy.md`](docs/TestStrategy.md).
 | R12 | Performance on arm64 | Low/Medium | Medium | Benchmark early; avoid allocations; profile CEL/DSP |
 | R13 | Floating-point differences x64/arm64 | Low | Medium | Integer timing; golden frame hashes; replace hot float math if needed |
 | R14 | Native audio/gamepad packaging complexity | Medium | Medium | Isolate per RID; ship null fallback; document optional backends |
+| R15 | CHD track layouts / CHDSharp integration | Medium | High | Validate first data track; support Mode1/2048, Mode1/2352, Mode2/Form1; reject unsupported layouts; ISO/BIN parity tests |
+| R16 | CHD decompression cost on slow arm64 | Medium | Medium | Read-ahead/cache; benchmark CHD vs ISO; document minimum hardware |
 
 ---
 
@@ -1248,7 +1275,7 @@ These need a decision before the relevant milestone; the plan assumes the defaul
 5. **Audio backend.** Default: OpenAL Soft via Silk.NET.OpenAL, with null/WAV fallbacks. Alternative: SDL2 audio.
 6. **Gamepad backend.** Default: evaluate Avalonia 12 built-in; fall back to Silk.NET.Input/SDL2.
 7. **4DO save-state compatibility.** Default: no; own versioned format. Legacy import can be added later.
-8. **CHD support.** Default: later (M11), ISO/BIN/CUE first.
+8. **CHD support.** **Decided: required v1 format** via the pure C# CHDSharp library (M6.1a). ISO/BIN/CUE remain supported.
 9. **PAL support.** Default: later; NTSC 60 Hz first.
 10. **High-resolution CEL mode.** Default: later (M11); v1 renders 320x240. Output upscaling is always available via OpenGL.
 11. **Minimum OS versions.** Default: Windows 10+, macOS 12+, current Linux desktop with OpenGL 3.3.
@@ -1269,16 +1296,16 @@ These need a decision before the relevant milestone; the plan assumes the defaul
 | M3 Boot skeleton | 10 dd | M2 |
 | M4 MADAM graphics | 20 dd | M3 |
 | M5 DSP/audio | 12 dd | M3 (parallel with M4 after M3) |
-| M6 XBUS/CD | 10 dd | M3 (parallel with M4/M5) |
+| M6 XBUS/CD + CHD | 12 dd | M3 (parallel with M4/M5) |
 | M7 Input/NVRAM/fixes | 6 dd | M4/M6 |
 | M8 Save states/CLI | 10 dd | M4/M5/M6 |
 | M9 Avalonia | 16 dd | M8 |
 | M9R OpenGL renderer | 10 dd | M4/M9 (spike can start at M3) |
 | M10 Packaging/perf | 6 dd | M9/M9R |
 | M11 Compatibility/release | 25+ dd | M10 |
-| **Subtotal** | **145 dd** | |
+| **Subtotal** | **147 dd** | |
 | Contingency (30%) | ~44 dd | |
-| **Total** | **~189 dd** | |
+| **Total** | **~191 dd** | |
 | M12 optional ARM IL JIT | 10-20 dd | M2, only if profiling demands |
 
 Suggested parallelization with two developers:
@@ -1308,4 +1335,5 @@ Suggested parallelization with two developers:
 | 2026-10-23 | M0 | Plan/architecture written | Initial docs and scaffold |
 | 2026-10-23 | M0.1-M0.7 | Scaffold complete | `dotnet build`, `dotnet test` (2 tests), and `dotnet format --verify-no-changes` pass; commit `e620ebb` |
 | 2026-10-23 | Architecture | OpenGL renderer made required; optional ARM JIT added as M12 | `ThreeDo.Video.OpenGL` project added; docs updated |
+| 2026-10-23 | Storage | CHD made a required v1 format via CHDSharp | `IDiscSource` + `ChdDiscImage` added; package wired into `ThreeDo.Storage` |
 | | | | |

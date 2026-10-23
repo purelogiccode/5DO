@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CHDSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ThreeDo.Core\ThreeDo.Core.csproj" />
   </ItemGroup>
 
