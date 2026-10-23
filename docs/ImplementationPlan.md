@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/4DO-master/FreeDOCore` (primary), `References/opera-libretro-master/libopera` (secondary)
-**Status:** M0 planning/scaffolding
+**Status:** M0 scaffold complete; M0.8 legal/attribution review pending; next is M1
 **Last updated:** 2026-10-23
 
 ---
@@ -201,34 +201,34 @@ Key decisions:
 
 **Tasks**
 
-- [ ] **M0.1 Initialize the repository.**
+- [x] **M0.1 Initialize the repository.**
   - `git init`, `.gitignore` for .NET/Avalonia/test artifacts.
   - `.editorconfig`, `global.json`, `Directory.Build.props`, `Directory.Packages.props`.
   - Solution `3DOEmulator.sln`.
-- [ ] **M0.2 Create the production project skeleton.**
+- [x] **M0.2 Create the production project skeleton.**
   - `src/ThreeDo.Core`, `Cpu`, `Memory`, `Madam`, `Clio`, `Dsp`, `Sport`, `Video`, `Xbus`, `Cdrom`, `Storage`, `Audio`, `Input`, `Diagnostics`, `Machine`, `Host`, `Cli`, `Frontend.Avalonia`.
   - Correct project references per `docs/Architecture.md`.
   - No placeholder public APIs that will be thrown away.
-- [ ] **M0.3 Create the test and benchmark skeleton.**
+- [x] **M0.3 Create the test and benchmark skeleton.**
   - `tests/ThreeDo.Tests` (xUnit).
   - `benchmarks/ThreeDo.Benchmarks` (BenchmarkDotNet).
-  - Test utility folder: fake clock, fake memory, fake frame/audio/input sinks.
-- [ ] **M0.4 Create the minimal CLI.**
+  - Test utility folder: fake clock, fake memory, fake frame/audio/input sinks (to be added with M1 tests).
+- [x] **M0.4 Create the minimal CLI.**
   - `ThreeDo.Cli` prints version/usage and returns non-zero on unknown commands.
-  - Wire `System.CommandLine` (or a small hand-written parser) with a `--version` command.
-- [ ] **M0.5 Create the minimal Avalonia app.**
+  - `System.CommandLine` package is reserved for M8; M0 uses a small hand-written parser.
+- [x] **M0.5 Create the minimal Avalonia app.**
   - Window with title, version, and "No game loaded" placeholder.
   - `AvaloniaUseCompiledBindingsByDefault`, Fluent theme, Inter font.
   - No emulation logic yet.
-- [ ] **M0.6 CI.**
+- [x] **M0.6 CI.**
   - GitHub Actions: build/test on Windows/Linux/macOS; `dotnet format --verify-no-changes`.
-  - Publish matrix skeleton for six RIDs (may be `--no-restore` until code exists).
-- [ ] **M0.7 Documentation.**
+  - Publish matrix skeleton for six RIDs.
+- [x] **M0.7 Documentation.**
   - `README.md`, `docs/Architecture.md`, `docs/ImplementationPlan.md`, `docs/PortingNotes.md`, `docs/TestStrategy.md`, `docs/Compatibility.md`, `docs/Licensing.md`, `THIRD-PARTY-NOTICES.md`.
 - [ ] **M0.8 Attribution and legal gate.**
-  - Preserve FreeDO/4DO headers in ported files.
-  - Decide project distribution model; record it in `docs/Licensing.md`.
-  - Add About/credits placeholder.
+  - Preserve FreeDO/4DO headers in ported files (will be added as each file is ported).
+  - Decide project distribution model; record it in `docs/Licensing.md` (pending owner decision/legal review).
+  - Add About/credits placeholder (M9).
 
 **Deliverables**
 
@@ -1147,4 +1147,5 @@ Suggested parallelization with two developers:
 | Date | Milestone | Task | Notes |
 |---|---|---|---|
 | 2026-10-23 | M0 | Plan/architecture written | Initial docs and scaffold |
+| 2026-10-23 | M0.1-M0.7 | Scaffold complete | `dotnet build`, `dotnet test` (2 tests), and `dotnet format --verify-no-changes` pass; commit `e620ebb` |
 | | | | |
