@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ThreeDo.Benchmarks</RootNamespace>
+    <AssemblyName>ThreeDo.Benchmarks</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ThreeDo.Cpu\ThreeDo.Cpu.csproj" />
+    <ProjectReference Include="..\..\src\ThreeDo.Madam\ThreeDo.Madam.csproj" />
+    <ProjectReference Include="..\..\src\ThreeDo.Dsp\ThreeDo.Dsp.csproj" />
+    <ProjectReference Include="..\..\src\ThreeDo.Machine\ThreeDo.Machine.csproj" />
+  </ItemGroup>
+
+</Project>
+

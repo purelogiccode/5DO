@@ -1,0 +1,67 @@
+# Licensing and Distribution Notes
+
+> This is an engineering note, not legal advice. Review the actual licenses and, if you intend to distribute the emulator, consult a lawyer.
+
+## 1. The FreeDO/4DO source is not under a standard OSI license
+
+The FreeDOCore source headers (`References/4DO-master/FreeDOCore/FreeDO/*.cpp`, `*.h`) contain the following notice:
+
+- The FreeDO is licensed under a **modified GNU LGPL**.
+- The owners and original authors reserve the right to develop closed-source derivative work.
+- Any **non-commercial** use of the sources or knowledge obtained from them must be accompanied by **full credits**.
+- Any **commercial** use is **strictly forbidden** without the owners' approval.
+- These notes take precedence over the GNU LGPL where they conflict.
+
+This is a restrictive license. It is not the same as "LGPL v2.1 or later" and it is not an OSI-approved license. The 4DO project may also carry GPL obligations for its own code. The repository does not contain a root LICENSE file yet because the distribution model has not been decided.
+
+## 2. What this means for the project
+
+Until the rights holders grant different terms:
+
+- Treat the project as **non-commercial**.
+- Keep **full attribution** to FreeDO and 4DO in the source, README, About box, and release notes.
+- Preserve the original copyright/license headers in ported files (adapted to C# comments).
+- Publish the corresponding source for any distributed binaries if the LGPL/GPL terms require it.
+- Do **not** sell builds, bundle them with commercial products, or use them in a commercial service without written permission.
+- Do **not** include BIOS ROMs, game discs, or other copyrighted 3DO material in the repository or release artifacts.
+
+## 3. Recommended actions before the first public release
+
+1. **Contact the FreeDO/4DO authors** (or the current maintainers) and ask for clarification of the port and distribution terms. Keep the correspondence.
+2. Decide the project's own license. It cannot be more permissive than the upstream terms allow.
+3. Add a root `LICENSE` file with the chosen terms and a `THIRD-PARTY-NOTICES.md` with the upstream notices.
+4. Add an in-app **About / Licenses** page listing FreeDO, 4DO, Avalonia, and other dependencies.
+5. Have a lawyer review the final distribution model if the project is published commercially or bundled with hardware.
+
+## 4. Attribution requirements
+
+At minimum, preserve:
+
+- The FreeDO project authors listed in the source headers:
+  Alexander Troosh, Maxim Grishin, Allen Wright, John Sammons, Felix Lazarev.
+- The FreeDO website/project attribution (`www.freedo.org`).
+- The 4DO project attribution and its contributors.
+- The original file headers in ported source files.
+- A statement that the C# port is a derivative work of FreeDO/4DO.
+
+Suggested About text:
+
+> This emulator is a C# port of the FreeDO/4DO 3DO emulation core. FreeDO is Copyright its authors and is used under the terms in the original source headers. 4DO is Copyright its contributors. This project is not affiliated with or endorsed by Panasonic or the 3DO Company.
+
+## 5. Third-party dependencies
+
+The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NOTICES.md` as they are added:
+
+- Avalonia UI (MIT)
+- CommunityToolkit.Mvvm (MIT)
+- Microsoft.Extensions.* (MIT)
+- xUnit (Apache-2.0)
+- BenchmarkDotNet (MIT)
+- Silk.NET (MIT)
+- OpenAL Soft (LGPL; native runtime, if bundled)
+- CHDSharp (check its license before use)
+- 4DO game database (derive with attribution; verify terms)
+
+## 6. Trademarks
+
+"3DO", "Panasonic", and "GoldStar" are trademarks of their respective owners. The project name is a working title and may need to change before release. Do not imply endorsement.

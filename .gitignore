@@ -1,0 +1,51 @@
+# Reference material (external, not part of this repository)
+References/
+
+# Build output
+bin/
+obj/
+artifacts/
+publish/
+*.user
+*.suo
+*.userprefs
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.DotSettings.user
+
+# Test/coverage
+TestResults/
+coverage/
+*.trx
+*.coverage
+*.coveragexml
+
+# Emulator user data (never commit)
+Data/
+Saves/
+Screenshots/
+Logs/
+*.tdos
+*.4dosav
+*.ram
+*.sav
+*.state
+
+# BIOS/disc images (never commit)
+*.bin
+*.iso
+*.cue
+*.chd
+*.img
+!tests/**/Fixtures/**/*.bin
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log

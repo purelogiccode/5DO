@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ThreeDo.Storage</RootNamespace>
+    <AssemblyName>ThreeDo.Storage</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ThreeDo.Core\ThreeDo.Core.csproj" />
+  </ItemGroup>
+
+</Project>
+

@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ThreeDo.Core</RootNamespace>
+    <AssemblyName>ThreeDo.Core</AssemblyName>
+  </PropertyGroup>
+
+</Project>
+

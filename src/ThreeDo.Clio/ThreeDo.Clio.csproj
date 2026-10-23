@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ThreeDo.Clio</RootNamespace>
+    <AssemblyName>ThreeDo.Clio</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ThreeDo.Core\ThreeDo.Core.csproj" />
+  </ItemGroup>
+
+</Project>
+

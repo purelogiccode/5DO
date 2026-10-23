@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ThreeDo.Cdrom</RootNamespace>
+    <AssemblyName>ThreeDo.Cdrom</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ThreeDo.Core\ThreeDo.Core.csproj" />
+  </ItemGroup>
+
+</Project>
+
