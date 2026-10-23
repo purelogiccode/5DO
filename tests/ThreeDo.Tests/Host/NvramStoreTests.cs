@@ -122,6 +122,7 @@ public sealed class NvramStoreTests
             Volume = 0.5f,
         };
         settings.Input.Players[0].Keyboard["Q"] = ThreeDo.Input.ControllerButton.C;
+        settings.RecentDiscs.Add("game.iso");
 
         AppSettingsStore.Save(settings, path);
         var loaded = AppSettingsStore.Load(path);
@@ -131,6 +132,7 @@ public sealed class NvramStoreTests
         Assert.Equal(ThreeDo.Video.AspectMode.Integer, loaded.Aspect);
         Assert.Equal(0.5f, loaded.Volume);
         Assert.Equal(ThreeDo.Input.ControllerButton.C, loaded.Input.Players[0].Keyboard["Q"]);
+        Assert.Equal("game.iso", Assert.Single(loaded.RecentDiscs));
         Assert.Equal(ThreeDo.Video.VideoFilter.Crt, loaded.ToRendererSettings().Filter);
         Assert.False(File.Exists(path + ".tmp"));
     }

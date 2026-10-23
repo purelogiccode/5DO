@@ -134,6 +134,13 @@ public partial class MainWindow : Window, IDisposable
             _disc = DiscImageFactory.Open(path);
             machine.InsertDisc(_disc);
             _settings.DiscPath = path;
+            _settings.RecentDiscs.RemoveAll(existing => string.Equals(existing, path, StringComparison.OrdinalIgnoreCase));
+            _settings.RecentDiscs.Insert(0, path);
+            if (_settings.RecentDiscs.Count > 10)
+            {
+                _settings.RecentDiscs.RemoveRange(10, _settings.RecentDiscs.Count - 10);
+            }
+
             AppSettingsStore.Save(_settings);
             StatusText.Text = $"{Path.GetFileName(path)}: {_disc.SectorCount} sectors.";
         }

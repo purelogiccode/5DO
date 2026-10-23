@@ -1,0 +1,154 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using ThreeDo.Storage;
+
+namespace ThreeDo.Host;
+
+/// <summary>One disc found by the library scanner.</summary>
+/// <param name="Path">Disc file path.</param>
+/// <param name="Format">Container format label.</param>
+/// <param name="SectorCount">Number of 2048-byte sectors.</param>
+/// <param name="GameId">MD5 game identifier, or empty when the image is unreadable.</param>
+/// <param name="Name">Database title, or the file name for unknown discs.</param>
+/// <param name="Known">Whether the 4DO game database recognized the disc.</param>
+/// <param name="Error">Error message when the image could not be opened.</param>
+public sealed record GameLibraryEntry(
+    string Path,
+    string Format,
+    int SectorCount,
+    string GameId,
+    string Name,
+    bool Known,
+    string Error);
+
+/// <summary>
+/// Scans folders for ISO/BIN/CUE/CHD images and resolves titles through the 4DO game database.
+/// </summary>
+public static class GameLibraryScanner
+{
+    private static readonly string[] Extensions = [".iso", ".bin", ".cue", ".chd"];
+
+    /// <summary>Scans one or more folders, recursively.</summary>
+    /// <param name="folders">Folders to scan. Missing folders are skipped.</param>
+    /// <param name="maximumDepth">Maximum recursion depth (0 scans only the top level).</param>
+    /// <returns>Entries sorted by title then path.</returns>
+    public static IReadOnlyList<GameLibraryEntry> Scan(IEnumerable<string> folders, int maximumDepth = 4)
+    {
+        ArgumentNullException.ThrowIfNull(folders);
+        ArgumentOutOfRangeException.ThrowIfNegative(maximumDepth);
+
+        var entries = new List<GameLibraryEntry>();
+        foreach (var folder in folders)
+        {
+            if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+            {
+                continue;
+            }
+
+            ScanFolder(folder, maximumDepth, entries);
+        }
+
+        entries.Sort(static (left, right) =>
+        {
+            var title = string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase);
+            return title != 0 ? title : string.Compare(left.Path, right.Path, StringComparison.OrdinalIgnoreCase);
+        });
+
+        return entries;
+    }
+
+    /// <summary>Builds a library entry for one disc, or returns null for an unsupported file.</summary>
+    /// <param name="path">Disc path.</param>
+    /// <returns>The entry, or null when the extension is not a supported disc container.</returns>
+    public static GameLibraryEntry? Inspect(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        if (!IsDiscPath(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var disc = DiscImageFactory.Open(path);
+            var gameId = disc.SectorCount >= 2 ? GameId.Compute(disc) : string.Empty;
+            var record = gameId.Length == 0 ? null : GameDatabase.Default.FindByChecksum(gameId);
+            return new GameLibraryEntry(
+                path,
+                Path.GetExtension(path).TrimStart('.').ToUpperInvariant(),
+                disc.SectorCount,
+                gameId,
+                record?.Name ?? Path.GetFileNameWithoutExtension(path),
+                record is not null,
+                string.Empty);
+        }
+        catch (Exception exception) when (exception is IOException or InvalidDataException or DiscImageException or ArgumentException)
+        {
+            return new GameLibraryEntry(
+                path,
+                Path.GetExtension(path).TrimStart('.').ToUpperInvariant(),
+                0,
+                string.Empty,
+                Path.GetFileNameWithoutExtension(path),
+                false,
+                exception.Message);
+        }
+    }
+
+    private static void ScanFolder(string folder, int depth, List<GameLibraryEntry> entries)
+    {
+        IEnumerable<string> files;
+        try
+        {
+            files = Directory.EnumerateFiles(folder);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return;
+        }
+
+        foreach (var file in files)
+        {
+            var entry = Inspect(file);
+            if (entry is not null)
+            {
+                entries.Add(entry);
+            }
+        }
+
+        if (depth == 0)
+        {
+            return;
+        }
+
+        IEnumerable<string> directories;
+        try
+        {
+            directories = Directory.EnumerateDirectories(folder);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return;
+        }
+
+        foreach (var directory in directories)
+        {
+            ScanFolder(directory, depth - 1, entries);
+        }
+    }
+
+    private static bool IsDiscPath(string path)
+    {
+        var extension = Path.GetExtension(path);
+        foreach (var candidate in Extensions)
+        {
+            if (string.Equals(candidate, extension, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}

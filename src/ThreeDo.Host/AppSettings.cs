@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -17,6 +18,9 @@ public sealed class AppSettings
 
     /// <summary>Gets or sets the last disc path.</summary>
     public string DiscPath { get; set; } = string.Empty;
+
+    /// <summary>Gets recent disc paths, newest first.</summary>
+    public List<string> RecentDiscs { get; set; } = [];
 
     /// <summary>Gets or sets the save-state directory.</summary>
     public string SaveDirectory { get; set; } = string.Empty;
