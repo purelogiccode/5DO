@@ -551,12 +551,14 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 - [ ] **M4.10 Texel draw primitives.**
   - `TexelDraw_Line`, `TexelDraw_Scale`, `TexelDraw_Arbitrary`.
   - `FIX_BIT_TIMING_3`, `FIX_BIT_GRAPHICS_STEP_Y`.
-- [ ] **M4.11 Matrix engine.**
+- [x] **M4.11 Matrix engine.**
   - Commands 0-3, 16.16 math, Nfrac, division-by-zero fallback.
   - Register defaults and result latching.
-- [ ] **M4.12 DMA/PBUS.**
+  - Implemented with the M3 register file; M4 adds command-0 and Nfrac coverage.
+- [x] **M4.12 DMA/PBUS.**
   - `HandleDMA8`, `DMAPBus`, `KeyPressed`.
   - FIQ generation.
+  - Implemented with the M3 register file; M4 adds multi-word and negative-length coverage.
 - [ ] **M4.13 CEL cycle accounting.**
   - `mread`/`mwrite`/`mreadh`/`mwriteh` CEL cycles.
   - `GetCELCycles` behavior.
@@ -567,8 +569,9 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 - [ ] **M4.15 BIOS UI validation.**
   - Real BIOS menu renders correctly (user-provided).
   - Compare against 4DO screenshots for layout/colors (manual).
-- [ ] **M4.16 High-res decision.**
+- [x] **M4.16 High-res decision.**
   - Keep `RESSCALE=0` in v1. Document the later feature work in M11.
+  - Decision recorded in `docs/PortingNotes.md`; M11.2 owns the `RESSCALE=1` work.
 
 **Deliverables**
 
@@ -1350,3 +1353,4 @@ Suggested parallelization with two developers:
 | 2026-10-23 | M4.4 | Pixel decoder | 1/2/4/6/8/16 bpp, linear/coded modes, palette-write bit, AMV tables, transparency; 346 tests pass; commit `7ce230d` |
 | 2026-10-23 | M4.5 | Pixel processor and projector | `PixelProcessor` (PSCALAR, AV, PXOR, NOBLK, signed-char clipping) and `Projector` (PLUTPOS, SWAPHV/NOSWAP, B15/B0); differential vectors and grid hashes from the reference C++; 400 tests pass; commit `84dec5d` |
 | 2026-10-23 | M4.6 | CEL geometry and clipping | `CelGeometry` (`TestInitVisual`, line/scale/arbitrary maps, CCW tests), `TexelFunction`; 300k-case differential hash from the reference C++; 404 tests pass; commit `2f5c106` |
+| 2026-10-23 | M4.11-M4.12, M4.16 | Matrix engine, PBUS DMA, high-res decision | Matrix command 0 and Nfrac coverage; multi-word and negative-length PBUS DMA coverage; `RESSCALE=0` decision recorded; 408 tests pass |
