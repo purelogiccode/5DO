@@ -112,9 +112,10 @@ native resolution and leaves only a cheap texture-filtering pass at 4K.
 Implemented in `OpenGlRenderer` (desktop GL 3.3): `TexStorage2D` for the indexed,
 CLUT, and parameter textures; `TexSubImage2D` per frame; cached uniform locations;
 separate palette and scale programs; and a native-resolution RGBA FBO for stage 1.
-`VdlFrameMailbox` copies only the visible line width, and `VdlFrameUploader` uses
-span copies instead of per-pixel loops. The GLES variant still needs its own shader
-source and binding selection.
+`VdlFrameMailbox` copies only the visible line width, and `Read` copies into a
+caller-owned frame so the mailbox lock is not held during GPU submission.
+`VdlFrameUploader` uses span copies instead of per-pixel loops. The GLES shader
+variant is selected from the context version; real-hardware validation remains.
 
 ---
 
@@ -248,17 +249,17 @@ later for microbenchmarks):
 `benchmarks/ThreeDo.Benchmarks` now runs a synthetic machine by default and accepts
 `--bios`/`--disc` for a real title. Release build, development machine (x64):
 
-| Case | Core ms/frame | Video pack µs | Mailbox µs | Total ms/frame |
-|---|---:|---:|---:|---:|
-| Synthetic | 2.022 | 27.7 | 12.9 | 2.063 |
-| Lemmings (USA), 600 frames | 2.047 | 36.1 | 23.3 | 2.106 |
+| Case | Core ms/frame | Video pack µs | Mailbox write µs | Read copy µs | Total ms/frame |
+|---|---:|---:|---:|---:|---:|
+| Synthetic | 2.177 | 42.8 | 23.4 | 27.2 | 2.270 |
+| Lemmings (USA), 600 frames | 2.061 | 40.7 | 17.1 | 18.1 | 2.137 |
 
-The synthetic run reports ~103 MIPS; the Lemmings run reports ~27 MIPS because the
+The synthetic run reports ~96 MIPS; the Lemmings run reports ~26 MIPS because the
 guest spends time in the VDLP/CEL and idle paths. CPU-side headroom against the
-16.67 ms budget is ~14.6 ms. The span-copy changes cut the video pack and mailbox
-costs roughly in half compared with the first baseline. These numbers are **CPU
-only**: the 4K GPU stage and timer queries are not yet measured, and the benchmark
-is not a substitute for the p99/percentile run described below.
+16.67 ms budget is ~14.4 ms. The read copy is deliberately performed outside the
+mailbox lock so GPU submission cannot stall the core thread. These numbers are
+**CPU only**: the 4K GPU stage and timer queries are not yet measured, and the
+benchmark is not a substitute for the p99/percentile run described below.
 
 Run it with:
 

@@ -36,25 +36,48 @@ public sealed class VdlFrameMailbox
         ArgumentNullException.ThrowIfNull(frame);
         lock (_gate)
         {
-            _snapshot.SourceWidth = frame.SourceWidth;
-            _snapshot.SourceHeight = frame.SourceHeight;
-            var height = Math.Min(frame.SourceHeight, VdlFrame.MaxLines);
-            for (var i = 0; i < height; i++)
-            {
-                var source = frame[i];
-                var destination = _snapshot[i];
-                destination.Width = source.Width;
-                destination.OutControl = source.OutControl;
-                destination.ClutDma = source.ClutDma;
-                destination.Background = source.Background;
-                source.ClutB.CopyTo(destination.ClutB);
-                source.ClutG.CopyTo(destination.ClutG);
-                source.ClutR.CopyTo(destination.ClutR);
-                var pixels = Math.Clamp(source.Width, 0, VdlLine.MaxPixels);
-                source.PixelBuffer[..pixels].CopyTo(destination.PixelBuffer);
-            }
-
+            Copy(frame, _snapshot);
             _sequence++;
+        }
+    }
+
+    /// <summary>
+    /// Copies the latest snapshot into a caller-owned frame and then invokes the reader
+    /// without holding the mailbox lock. Use this on the render thread so GPU submission
+    /// cannot stall the emulation thread.
+    /// </summary>
+    /// <param name="destination">Caller-owned scratch frame, reused across calls.</param>
+    /// <param name="reader">Action that consumes the copy; it must not retain it.</param>
+    public void Read(VdlFrame destination, Action<VdlFrame> reader)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        ArgumentNullException.ThrowIfNull(reader);
+        lock (_gate)
+        {
+            Copy(_snapshot, destination);
+        }
+
+        reader(destination);
+    }
+
+    private static void Copy(VdlFrame source, VdlFrame destination)
+    {
+        destination.SourceWidth = source.SourceWidth;
+        destination.SourceHeight = source.SourceHeight;
+        var height = Math.Min(source.SourceHeight, VdlFrame.MaxLines);
+        for (var i = 0; i < height; i++)
+        {
+            var sourceLine = source[i];
+            var destinationLine = destination[i];
+            destinationLine.Width = sourceLine.Width;
+            destinationLine.OutControl = sourceLine.OutControl;
+            destinationLine.ClutDma = sourceLine.ClutDma;
+            destinationLine.Background = sourceLine.Background;
+            sourceLine.ClutB.CopyTo(destinationLine.ClutB);
+            sourceLine.ClutG.CopyTo(destinationLine.ClutG);
+            sourceLine.ClutR.CopyTo(destinationLine.ClutR);
+            var pixels = Math.Clamp(sourceLine.Width, 0, VdlLine.MaxPixels);
+            sourceLine.PixelBuffer[..pixels].CopyTo(destinationLine.PixelBuffer);
         }
     }
 

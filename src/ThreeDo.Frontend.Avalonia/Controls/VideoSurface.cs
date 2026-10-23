@@ -22,6 +22,7 @@ namespace ThreeDo.Frontend.Avalonia.Controls;
 public sealed class VideoSurface : OpenGlControlBase, IDisposable
 {
     private readonly VdlFrameMailbox _mailbox = new();
+    private readonly VdlFrame _presentFrame = new();
     private GL? _gl;
     private OpenGlRenderer? _renderer;
     private Action<VdlFrame>? _present;
@@ -64,7 +65,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     {
         ArgumentNullException.ThrowIfNull(renderer);
         renderer.Resize(width, height);
-        _mailbox.Read(renderer.Present);
+        _mailbox.Read(_presentFrame, renderer.Present);
     }
 
     /// <inheritdoc />
@@ -100,7 +101,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
         _renderer.Resize(width, height);
         if (_present is not null)
         {
-            _mailbox.Read(_present);
+            _mailbox.Read(_presentFrame, _present);
         }
     }
 

@@ -1073,7 +1073,8 @@ micro-optimizing at release time. See [`Performance.md`](Performance.md).
     `TexSubImage2D`; no per-frame `TexImage2D`.
   - Uniform locations and the present delegate are cached; the status string is
     updated at 4 Hz on the UI thread, not in the frame path.
-  - `VdlFrameMailbox` copies only the visible width.
+  - `VdlFrameMailbox` copies only the visible width and can copy into a caller-owned
+    frame so the lock is not held during GPU submission.
   - CI allocation assertions are still to be added (M9P.9).
 - [~] **M9P.5 Physical-pixel sizing and render-on-demand.**
   - Render-on-demand is implemented: the Avalonia surface renders only when the

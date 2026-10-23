@@ -30,6 +30,34 @@ public sealed class VdlFrameMailboxTests
     }
 
     [Fact]
+    public void ReadInto_CopiesSnapshotAndLetsTheReaderMutateItsOwnFrame()
+    {
+        var frame = new VdlFrame { SourceWidth = 2, SourceHeight = 1 };
+        frame[0].Width = 2;
+        frame[0].Pixels[0] = 5;
+
+        var mailbox = new VdlFrameMailbox();
+        mailbox.Write(frame);
+        frame[0].Pixels[0] = 9;
+
+        var destination = new VdlFrame();
+        VdlFrame? observed = null;
+        mailbox.Read(destination, copy =>
+        {
+            observed = copy;
+            copy[0].Pixels[1] = 3;
+        });
+
+        Assert.Same(destination, observed);
+        Assert.Equal(5, destination[0].Pixels[0]);
+        Assert.Equal(3, destination[0].Pixels[1]);
+
+        VdlFrame? snapshot = null;
+        mailbox.Read(s => snapshot = s);
+        Assert.Equal(0, snapshot![0].Pixels[1]);
+    }
+
+    [Fact]
     public void Mailbox_ReusesSnapshotAcrossWrites()
     {
         var mailbox = new VdlFrameMailbox();

@@ -21,6 +21,7 @@ namespace ThreeDo.Benchmarks;
 internal static class Program
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+    private static readonly Action<VdlFrame> NoOp = _ => { };
 
     private static int Main(string[] args)
     {
@@ -86,6 +87,7 @@ internal static class Program
         {
             var uploader = new VdlFrameUploader();
             var mailbox = new VdlFrameMailbox();
+            var presentFrame = new VdlFrame();
 
             // Warm up JIT, the DSP tables, and the video packers.
             for (var i = 0; i < 10; i++)
@@ -98,6 +100,7 @@ internal static class Program
             var coreTicks = 0L;
             var packTicks = 0L;
             var mailboxTicks = 0L;
+            var readTicks = 0L;
             var startInstructions = machine.Cpu.InstructionsExecuted;
             var startFrames = machine.FramesExecuted;
 
@@ -110,17 +113,21 @@ internal static class Program
                 var t2 = Stopwatch.GetTimestamp();
                 mailbox.Write(machine.Frame);
                 var t3 = Stopwatch.GetTimestamp();
+                mailbox.Read(presentFrame, NoOp);
+                var t4 = Stopwatch.GetTimestamp();
 
                 coreTicks += t1 - t0;
                 packTicks += t2 - t1;
                 mailboxTicks += t3 - t2;
+                readTicks += t4 - t3;
             }
 
             var frequency = (double)Stopwatch.Frequency;
             var coreMs = coreTicks * 1000.0 / frequency;
             var packMs = packTicks * 1000.0 / frequency;
             var mailboxMs = mailboxTicks * 1000.0 / frequency;
-            var totalMs = coreMs + packMs + mailboxMs;
+            var readMs = readTicks * 1000.0 / frequency;
+            var totalMs = coreMs + packMs + mailboxMs + readMs;
             var instructions = machine.Cpu.InstructionsExecuted - startInstructions;
             var elapsedFrames = machine.FramesExecuted - startFrames;
 
@@ -146,6 +153,11 @@ internal static class Program
                 {
                     totalMs = Round(mailboxMs),
                     microsecondsPerFrame = Round(mailboxMs * 1000.0 / elapsedFrames),
+                },
+                read = new
+                {
+                    totalMs = Round(readMs),
+                    microsecondsPerFrame = Round(readMs * 1000.0 / elapsedFrames),
                 },
                 total = new
                 {
@@ -173,6 +185,7 @@ internal static class Program
                 Console.WriteLine($"core:        {result.core.msPerFrame:F3} ms/frame  ({result.core.fps:F1} fps, {result.core.millionInstructionsPerSecond:F1} MIPS)");
                 Console.WriteLine($"video pack:  {result.pack.microsecondsPerFrame:F1} us/frame");
                 Console.WriteLine($"mailbox:     {result.mailbox.microsecondsPerFrame:F1} us/frame");
+                Console.WriteLine($"read copy:   {result.read.microsecondsPerFrame:F1} us/frame");
                 Console.WriteLine($"total:       {result.total.msPerFrame:F3} ms/frame  ({result.total.fps:F1} fps)");
                 Console.WriteLine($"60 Hz budget:{result.total.headroom,8:F3} ms headroom");
                 Console.WriteLine($"frame hash:  {result.machine.frameHash:x8}");
