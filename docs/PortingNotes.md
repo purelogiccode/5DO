@@ -568,3 +568,12 @@ M1 implements the section primitive used by all later chips:
 - The machine state also stores the derived VDL frame and the mutable `CompatibilityState`. Without the latter, the CPU's runtime Anvil detection (which changes `IsAnvil`/`BiosAnvil`) made a loaded run diverge after a few frames even though the CPU registers matched at load.
 - `SaveStateToFile` writes a temporary file then atomically replaces the target. `StateInspector` reads the header and section table without constructing a machine. `FrameDumper` writes 32-bit BMPs for headless diagnostics.
 - The CLI uses a small hand-written option parser (the System.CommandLine package is reserved for a later UX pass). All commands share `--json`; errors return exit code 1, unknown commands 2. Audio output is null or a 44.1 kHz WAV sink; there is still no live device backend.
+
+### 12.12 M9/M9R implementation notes
+
+- The OpenGL presenter lives entirely in the host layer. `ThreeDo.Video` owns the backend-neutral `IVideoRenderer` contract, settings, aspect/integer viewport math, the frame uploader, and `GpuPalette` (the CPU reference for the shader). `ThreeDo.Video.OpenGL` owns Silk.NET GL resources and GLSL 330 sources.
+- `VdlFrameUploader` packs R16UI indexed pixels, an RGB8 32xheight CLUT, and an RGBA32UI per-line background/out-control texture. Buffers are reused. The shader uses `texelFetch` with nearest sampling for the accurate path.
+- `GpuPalette` exists so the palette algorithm can be tested without a GL context: tests compare it against `FrameAssembler` for a 320x240 synthetic VDL frame including background, fixed-CLUT bit 15, and per-line CLUT cases. The shader mirrors this logic.
+- `OpenGlRenderer` creates the program, VAO/VBO, and three textures, draws a fullscreen triangle strip into the supplied framebuffer, and implements `ReadPixels` with an RGBA-to-BGRA swap. `VideoSurface` calls `GL.GetApi(gl.GetProcAddress)` from Avalonia's `OpenGlControlBase` and renders a latest-frame mailbox snapshot.
+- Context loss is handled by re-running `Initialize`. The UI does not yet automatically fall back to `CpuVideoRenderer` when the context or integer textures are unavailable; that is a frontend decision for M9.2/M9R.7.
+- The desktop shell runs one machine frame per 16 ms `DispatcherTimer` tick for determinism/simplicity. A dedicated emulation thread with pacing is a later optimization; screenshots use the CPU frame dumper, and keyboard input is mapped through the default `InputProfile`.

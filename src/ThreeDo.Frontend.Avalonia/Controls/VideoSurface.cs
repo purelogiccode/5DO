@@ -1,0 +1,104 @@
+using System;
+using Avalonia;
+using Avalonia.OpenGL;
+using Avalonia.OpenGL.Controls;
+using Silk.NET.OpenGL;
+using ThreeDo.Core;
+using ThreeDo.Video;
+using ThreeDo.Video.OpenGL;
+
+namespace ThreeDo.Frontend.Avalonia.Controls;
+
+/// <summary>
+/// Avalonia OpenGL host for the required 3DO presenter.
+/// </summary>
+/// <remarks>
+/// The emulation thread calls <see cref="SubmitFrame"/>; this control reads the latest snapshot
+/// on the UI thread. A GL 3.3 context uses <see cref="OpenGlRenderer"/>; when the context or an
+/// integer-texture feature is unavailable the host should swap in <see cref="CpuVideoRenderer"/>
+/// (the control exposes <see cref="IsOpenGlAvailable"/> for that decision).
+/// </remarks>
+public sealed class VideoSurface : OpenGlControlBase, IDisposable
+{
+    private readonly VdlFrameMailbox _mailbox = new();
+    private GL? _gl;
+    private OpenGlRenderer? _renderer;
+    private RendererSettings _settings = new();
+
+    /// <summary>Gets or sets the renderer settings.</summary>
+    public RendererSettings Settings
+    {
+        get => _settings;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            value.Validate();
+            _settings = value;
+        }
+    }
+
+    /// <summary>Gets a value indicating whether an OpenGL renderer is active.</summary>
+    public bool IsOpenGlAvailable => _renderer is not null;
+
+    /// <summary>Gets the mailbox sequence number of the last submitted frame.</summary>
+    public long FrameSequence => _mailbox.Sequence;
+
+    /// <summary>Copies one machine frame into the presentation mailbox.</summary>
+    /// <param name="frame">Completed machine frame.</param>
+    public void SubmitFrame(VdlFrame frame)
+    {
+        _mailbox.Write(frame);
+        global::Avalonia.Threading.Dispatcher.UIThread.Post(RequestNextFrameRendering);
+    }
+
+    /// <summary>Renders the latest snapshot (used by the CPU fallback and tests).</summary>
+    /// <param name="renderer">Target renderer.</param>
+    /// <param name="width">Output width.</param>
+    /// <param name="height">Output height.</param>
+    public void RenderSnapshot(IVideoRenderer renderer, int width, int height)
+    {
+        ArgumentNullException.ThrowIfNull(renderer);
+        renderer.Resize(width, height);
+        _mailbox.Read(renderer.Present);
+    }
+
+    /// <inheritdoc />
+    protected override void OnOpenGlInit(GlInterface gl)
+    {
+        _gl = GL.GetApi(gl.GetProcAddress);
+        _renderer = new OpenGlRenderer(new GlContextAdapter(_gl));
+        _renderer.Settings = _settings;
+        _renderer.Initialize(Math.Max(1, (int)Bounds.Width), Math.Max(1, (int)Bounds.Height));
+    }
+
+    /// <inheritdoc />
+    protected override void OnOpenGlRender(GlInterface gl, int fb)
+    {
+        if (_renderer is null)
+        {
+            return;
+        }
+
+        var width = Math.Max(1, (int)Bounds.Width);
+        var height = Math.Max(1, (int)Bounds.Height);
+        _renderer.Settings = _settings;
+        _renderer.Resize(width, height);
+        _mailbox.Read(_renderer.Present);
+        RequestNextFrameRendering();
+    }
+
+    /// <inheritdoc />
+    protected override void OnOpenGlDeinit(GlInterface gl)
+    {
+        _renderer?.Dispose();
+        _renderer = null;
+        _gl = null;
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _renderer?.Dispose();
+        _renderer = null;
+    }
+}

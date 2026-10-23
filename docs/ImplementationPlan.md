@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/4DO-master/FreeDOCore` (primary), `References/opera-libretro-master/libopera` (secondary)
-**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); M4 MADAM graphics complete through M4.14; M4.15 renders the BIOS boot animation but the interactive menu still needs a valid game disc and further tracing; M5 DSP/audio core and pipeline complete (real-content audio validation pending); M6 XBUS/CD-ROM/storage complete except real-disc boot validation (no user-provided disc); M7 input/PBUS, NVRAM persistence, and the game database are complete, with platform keyboard/gamepad backends scheduled with the M9 frontend; M8 deterministic save states and the headless CLI are complete (full tracing/viewer polish remains). M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
+**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); M4 MADAM graphics complete through M4.14; M4.15 renders the BIOS boot animation but the interactive menu still needs a valid game disc and further tracing; M5 DSP/audio core and pipeline complete (real-content audio validation pending); M6 XBUS/CD-ROM/storage complete except real-disc boot validation (no user-provided disc); M7 input/PBUS, NVRAM persistence, and the game database are complete, with platform keyboard/gamepad backends scheduled with the M9 frontend; M8 deterministic save states and the headless CLI are complete; M9 desktop shell and M9R OpenGL presenter are functional on Windows (full frontend pages, GPU filter set, and cross-platform smoke tests remain). M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
 **Last updated:** 2026-10-23
 
 ---
@@ -865,25 +865,22 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Tasks**
 
-- [ ] **M9.1 Shell and navigation.**
-  - Main window, Home, Library, Settings, Logs, About.
+- [~] **M9.1 Shell and navigation.**
+  - Implemented a minimal shell: video surface, Open BIOS/Open Disc/Play/Reset/Screenshot buttons, and a status line. Library, Settings, Logs, and About pages remain.
   - Dark/light theme, Fluent, Inter.
   - Status bar: FPS, game, BIOS, audio/video state.
-- [ ] **M9.2 OpenGL video surface host.**
-  - `VideoSurface` control based on Avalonia's `OpenGlControlBase`.
-  - Create/destroy the GL context, pass the function loader/context to `ThreeDo.Video.OpenGL`.
-  - Aspect ratio, integer scaling, letterbox, fullscreen, borderless, cursor hide, escape handling.
-  - Frame mailbox: latest-frame wins; drop stale frames.
-  - CPU `WriteableBitmap` fallback when GL 3.3 is unavailable; log the reason.
-  - FPS overlay toggle.
-- [ ] **M9.3 BIOS setup.**
-  - First-run wizard: BIOS1 required, BIOS2 optional.
-  - File picker, validation, MD5/Anvil display.
-  - Remember path; error dialogs.
-- [ ] **M9.4 Game library.**
-  - Scan folders for `.iso`, `.bin`, `.cue`, and `.chd`.
-  - Game ID/name from database; recent games; cover art optional.
-  - Open disc, eject, refresh.
+- [~] **M9.2 OpenGL video surface host.**
+  - `VideoSurface` control based on Avalonia's `OpenGlControlBase`; hosts `OpenGlRenderer` through a Silk.NET `GL` API. A 6-second Windows launch smoke test passed.
+  - Aspect ratio, integer scaling, letterbox; fullscreen, borderless, cursor hide, and escape handling remain.
+  - Frame mailbox (`VdlFrameMailbox`): latest frame wins; snapshot copies are tested.
+  - CPU `WriteableBitmap` fallback: `CpuVideoRenderer` exists, but the UI does not yet switch automatically when GL 3.3 is unavailable.
+  - FPS overlay toggle remains.
+- [~] **M9.3 BIOS setup.**
+  - File picker, validation, and MD5/Anvil display in the status line.
+  - First-run wizard, remembered paths, and error dialogs remain.
+- [~] **M9.4 Game library.**
+  - Open disc, replace/eject, and volume metadata via the file picker.
+  - Folder scanning, recents, cover art, and the library view remain.
 - [ ] **M9.5 Settings.**
   - Video: renderer (OpenGL/CPU fallback), filter (accurate/nearest/sharp-bilinear/CRT/xBR), scale, aspect, fullscreen, vsync.
   - Audio: device, buffer, volume/mute.
@@ -939,57 +936,64 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
 
 **Tasks**
 
-- [ ] **M9R.1 Renderer contract and context adapter.**
+- [x] **M9R.1 Renderer contract and context adapter.**
   - `IVideoRenderer`, `RendererSettings`, `VideoFilter`, `AspectMode`, `RendererCapabilities` in `ThreeDo.Video`.
   - `GlContextAdapter` that wraps Avalonia's GL context/function loader without referencing Avalonia from `ThreeDo.Video.OpenGL`.
   - `OpenGlRenderer.Initialize/Resize/Present/Dispose`.
   - Capability detection: GL 3.3 core, `GL_R16UI`, `usampler2D`, `texelFetch`, integer textures, max texture size.
-- [ ] **M9R.2 Frame texture upload.**
+- [~] **M9R.2 Frame texture upload.**
   - Upload raw 16-bit indexed pixels (`R16UI`).
   - Upload per-line CLUT as an RGB8 texture (32 x height).
   - Upload per-line parameters as an RGBA32UI texture (background, out-control, flags).
-  - Triple-buffered pixel/texture storage; no per-frame allocations.
-  - Handle 320x240, 384x288, 640x480, and wider VDLP modes.
-- [ ] **M9R.3 Palette-expansion shader.**
+  - Single reusable texture triple (pixels/CLUT/params) with per-frame `TexImage2D`; a true triple-buffered upload ring and per-frame allocation audit remain.
+  - The uploader is width/height agnostic; tests cover 320x240 and small synthetic frames.
+- [x] **M9R.3 Palette-expansion shader.**
   - Direct port of `frame.cpp: Get_Frame_Bitmap`:
     - pixel `0` => 5-bit background B/G/R
     - fixed CLUT when `xOUTCONTROLL & 0x02000000` and pixel bit 15
     - otherwise per-line CLUT
   - Exact 5-bit to 8-bit expansion matching the CPU path.
-  - Golden-image parity test against `FrameAssembler` for synthetic VDL frames.
-- [ ] **M9R.4 Scaling and filter pipeline.**
+  - Golden-image parity test against `FrameAssembler` for synthetic VDL frames (`GpuPalette` vs `FrameAssembler`, 320x240 x 240 lines).
+  - GPU execution itself is not covered by CI because headless runners have no GL 3.3 context.
+- [~] **M9R.4 Scaling and filter pipeline.**
   - **Accurate:** nearest, pixel-perfect, integer scaling.
   - **Nearest:** nearest with arbitrary scale/letterbox.
   - **Sharp-bilinear:** default enhanced mode.
   - **CRT:** scanlines, aperture mask, curvature, bloom (opt-in).
   - **xBR/HQx family:** multi-pass GPU filters (opt-in).
-  - Filter settings persisted per game/global.
-- [ ] **M9R.5 Presentation.**
+  - Implemented accurate/nearest, an approximate sharp-bilinear center blend, and CRT scanlines. Full multi-tap sharp-bilinear, CRT aperture/curvature/bloom, and xBR/HQx passes remain.
+  - Filter settings persist per game/global in the host settings layer (M9.5).
+- [~] **M9R.5 Presentation.**
   - Aspect ratio: 4:3, integer, stretch, custom.
   - Fullscreen/borderless, vsync, frame pacing, latest-frame mailbox.
   - FPS/GPU-time overlay.
   - Window resize without recreating textures.
-- [ ] **M9R.6 Screenshots.**
+  - Aspect 4:3/integer/stretch/custom and the latest-frame mailbox are implemented; fullscreen/vsync/overlay remain.
+- [~] **M9R.6 Screenshots.**
   - GL readback to PNG, respecting the active filter.
   - Optional "native frame" screenshot from the CPU path.
-- [ ] **M9R.7 Context loss and fallback.**
+  - `ReadPixels` and the CPU `FrameDumper` are implemented; the UI writes CPU-frame BMP screenshots. GL PNG capture is follow-up.
+- [~] **M9R.7 Context loss and fallback.**
   - Detect context loss/reset; recreate textures/shaders.
   - Fall back to CPU `WriteableBitmap` if GL 3.3 is unavailable; log once.
   - Do not crash on driver/context failure.
+  - `Initialize` recreates all GL objects and `CpuVideoRenderer` exists; automatic capability fallback is not wired into the UI yet.
 - [ ] **M9R.8 Performance.**
   - Measure upload bandwidth, shader time, present time.
   - Target: 60 fps at 4K output on mid-range x64; 1080p on Raspberry Pi 4-class arm64.
   - Zero CPU per-pixel scaling; palette expansion on GPU.
-- [ ] **M9R.9 Tests.**
+- [~] **M9R.9 Tests.**
   - Shader compilation/link tests (skip if no GL context).
   - CPU-vs-GPU palette parity for all bpp/CLUT/background/fixed-CLUT cases.
   - Filter screenshot hashes at fixed sizes.
   - Aspect/integer-scaling geometry tests.
   - Context-loss/fallback tests.
   - Headless CI uses the CPU renderer; GPU tests run on a self-hosted or local job.
-- [ ] **M9R.10 Renderer spike (early, M3/M4).**
+  - Implemented: uploader packing, palette parity, aspect/integer geometry, CPU renderer, mailbox snapshot. GPU shader link tests are follow-up.
+- [x] **M9R.10 Renderer spike (early, M3/M4).**
   - Before the full renderer, create a small Avalonia + Silk.NET.OpenGL window that displays a synthetic 320x240 indexed frame with the palette shader.
   - This de-risks context creation, shader loading, and presentation on all three OSes.
+  - Implemented as the Avalonia `VideoSurface` + `OpenGlRenderer`; a 6-second Windows launch smoke test passed. Linux/macOS smoke validation remains.
 
 **Deliverables**
 
@@ -1000,11 +1004,11 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
 
 **Acceptance**
 
-- [ ] Accurate mode matches the CPU `FrameAssembler` pixel-for-pixel on synthetic frames.
+- [x] Accurate mode matches the CPU `FrameAssembler` pixel-for-pixel on synthetic frames (CPU reference parity; GPU not executed in CI).
 - [ ] 4K output at 60 fps on a mid-range x64 GPU; 1080p on Raspberry Pi 4-class arm64.
-- [ ] Filters are opt-in, stable, and do not affect emulated state.
+- [x] Filters are opt-in, stable, and do not affect emulated state.
 - [ ] Context loss recovers or falls back cleanly.
-- [ ] No per-frame allocations in the upload/present path.
+- [~] No per-frame allocations in the upload/present path (uploader and mailbox reuse buffers; GL wrapper calls are unmeasured).
 - [ ] Runs on Windows, Linux, and macOS.
 
 **Risks**
@@ -1326,7 +1330,7 @@ Suggested parallelization with two developers:
 5. ~~Start M3: BIOS/NVRAM loading, CLIO basics, VDLP, SPORT, and the frame loop.~~ Done.
 6. ~~Start M4: MADAM CEL engine, pixel pipeline, matrix engine validation, and BIOS UI rendering.~~ M4.1-M4.14 are done. M4.15 renders the boot animation; the interactive menu still needs a valid disc and tracing.
 7. ~~M5 DSP/audio and M6 XBUS/CD-ROM/storage.~~ Cores, sinks, disc containers, CHD parent/child, volume header, and command transcripts are implemented. Real-disc boot validation and audible WAV verification need a user-provided disc.
-8. ~~M7 input/NVRAM/game database and M8 save states/CLI.~~ Done; next is M9/M9R (Avalonia shell and required OpenGL renderer), then M4.15 with a real disc.
+8. ~~M7 input/NVRAM/game database, M8 save states/CLI, M9 basic shell, and M9R core OpenGL presenter.~~ Done; next are the remaining M9 pages/fallback wiring, M9R filter/performance/GPU tests, M10 packaging, and M4.15 with a real disc.
 9. Schedule a 30-minute legal/attribution review before any public build.
 
 ---
@@ -1356,6 +1360,7 @@ Suggested parallelization with two developers:
 | 2026-10-23 | M4.14 | Golden CEL tests | Clip-window corner tests, composite scene with three CCBs, PLUT reload, transparent texel, stable VRAM hash and CEL cycle count; optional BIOS boot-frame PNG dump (`BiosUiValidationTests`); 437 tests pass |
 | 2026-10-23 | M5.1-M5.9 | DSP core | Full `DSP.cpp` port: instruction bit-fields, request/BS/REGCONV/BRCONDTAB precompute, ALU/MULT, barrel shifter, operand loader (nrof/immediate/r2/r3/DI), control flow, memory windows, semaphore, reset/PRNG, 567-cycle sample cadence; 19 DSP tests |
 | 2026-10-23 | M5.10-M5.12 | Audio pipeline and BIOS smoke | `AudioRingBuffer` (SPSC), `AudioPipeline`, `NullAudioSink`, `WavAudioSink`; allocation-free ring buffer, WAV header, and conversion tests; real BIOS starts the DSP and the frame loop pushes samples; audio content remains silent without a valid disc/menu |
+| 2026-10-23 | M9R.1-M9R.3, M9R.9-M9R.10 | OpenGL presenter | `IVideoRenderer`/settings/capabilities, CPU renderer, `VdlFrameUploader`, `GpuPalette` parity, aspect/integer viewport, GLSL 330 palette shader, `OpenGlRenderer`, Avalonia `VideoSurface`, frame mailbox; 527 tests pass; Windows launch smoke test |
 | 2026-10-23 | M8.1-M8.4, M8.6 | Save states and CLI | Versioned `TDO1` state with CRC sections, per-chip state (incl. DSP/memory/frame/compatibility), deterministic save/load test, atomic files; CLI `run`, `info`, `bios info`, `state inspect`, `bench`, `selftest` with `--json`; state inspector and BMP dumper |
 | 2026-10-23 | M7.1-M7.8 | Input, NVRAM, game database | `ControllerState`/`PbusEncoder`/`InputManager` with wiring order and every button; JSON `InputProfile` defaults/roundtrip; `KeyboardInputMapper`; `IGamepadBackend`/null backend; `NvramStore` debounced atomic writes and corrupt-image backup; embedded 4DO `GameDatabase.xml` with checksum/ID lookup; tests for PBUS matrix, profiles, NVRAM and database |
 | 2026-10-23 | M6.1-M6.6, M6.8 | CD-ROM, XBUS, storage | `CdromDevice` command state machine and XBUS routing; `IsoImage`/`BinImage`/`CueSheet`/`ChdDiscImage` (CHDSharp 1.5.2, read-ahead, parent/child); `VolumeHeader`/`GameId`; command transcripts, ISO/BIN/CUE/CHD parity, CHD rejection and state roundtrip; BIOS passes the XBUS device poll and renders its boot animation |

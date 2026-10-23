@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:ThreeDo.Frontend.Avalonia.ViewModels"
+        xmlns:ctrl="using:ThreeDo.Frontend.Avalonia.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
@@ -10,14 +11,19 @@
         Width="1000" Height="700"
         Title="3DOEmulator">
 
-    <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainViewModel />
-    </Design.DataContext>
+    <Grid RowDefinitions="*,Auto" Background="Black">
+        <ctrl:VideoSurface x:Name="Video" Grid.Row="0" />
 
-    <TextBox Text="{Binding Greeting}"
-             HorizontalAlignment="Center"
-             VerticalAlignment="Center" />
-
+        <Border Grid.Row="1" Padding="8" Background="#202020">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,*">
+                <Button x:Name="BiosButton" Grid.Column="0" Content="Open BIOS" Click="OnOpenBios" Margin="0,0,6,0" />
+                <Button x:Name="DiscButton" Grid.Column="1" Content="Open Disc" Click="OnOpenDisc" Margin="0,0,6,0" />
+                <Button x:Name="PlayButton" Grid.Column="2" Content="Play" Click="OnPlayPause" Margin="0,0,6,0" />
+                <Button x:Name="ResetButton" Grid.Column="3" Content="Reset" Click="OnReset" Margin="0,0,6,0" />
+                <Button x:Name="ShotButton" Grid.Column="4" Content="Screenshot" Click="OnScreenshot" Margin="0,0,6,0" />
+                <TextBlock x:Name="StatusText" Grid.Column="5" VerticalAlignment="Center"
+                           Text="No BIOS loaded." HorizontalAlignment="Right" Foreground="#DDDDDD" />
+            </Grid>
+        </Border>
+    </Grid>
 </Window>
