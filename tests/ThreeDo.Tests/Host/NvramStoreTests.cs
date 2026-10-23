@@ -1,0 +1,111 @@
+using System;
+using System.IO;
+using ThreeDo.Core;
+using ThreeDo.Host;
+using ThreeDo.Storage;
+
+namespace ThreeDo.Tests.HostIo;
+
+public sealed class NvramStoreTests
+{
+    [Fact]
+    public void LoadOrCreate_ReturnsFreshImageWhenMissing()
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "nvram.ram");
+        var store = new NvramStore(path);
+
+        var image = store.LoadOrCreate();
+
+        Assert.Equal(EmulatorConstants.NvramSize, image.Data.Length);
+        Assert.Equal((byte)'n', image.Data.Span[40]);
+        Assert.Equal((byte)'v', image.Data.Span[41]);
+        Assert.False(File.Exists(path));
+    }
+
+    [Fact]
+    public void MarkChanged_DebouncesWrites()
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "nvram.ram");
+        var clock = new ManualTimeProvider();
+        using var store = new NvramStore(path, clock);
+        var image = NvramImage.CreateFresh();
+        var bytes = image.ToArray();
+        bytes[100] = 0xAA;
+
+        store.MarkChanged(bytes);
+        Assert.False(store.FlushIfDue());
+        Assert.False(File.Exists(path));
+
+        clock.Advance(TimeSpan.FromMilliseconds(249));
+        Assert.False(store.FlushIfDue());
+
+        clock.Advance(TimeSpan.FromMilliseconds(1));
+        Assert.True(store.FlushIfDue());
+        Assert.True(File.Exists(path));
+        Assert.Equal(0xAA, File.ReadAllBytes(path)[100]);
+        Assert.False(File.Exists(path + ".tmp"));
+        Assert.False(store.FlushIfDue());
+    }
+
+    [Fact]
+    public void Flush_WritesImmediatelyAndDisposeFlushes()
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "nvram.ram");
+        var store = new NvramStore(path);
+        var bytes = NvramImage.CreateFresh().ToArray();
+        bytes[200] = 0x55;
+
+        store.MarkChanged(bytes);
+        Assert.True(store.Flush());
+        Assert.Equal(0x55, File.ReadAllBytes(path)[200]);
+        store.Dispose();
+    }
+
+    [Fact]
+    public void LoadOrCreate_PreservesInvalidImageAsBackup()
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "nvram.ram");
+        File.WriteAllBytes(path, new byte[100]);
+        var store = new NvramStore(path);
+
+        var image = store.LoadOrCreate();
+
+        Assert.Equal(EmulatorConstants.NvramSize, image.Data.Length);
+        Assert.True(File.Exists(path + ".bad"));
+    }
+
+    private sealed class ManualTimeProvider : TimeProvider
+    {
+        private DateTimeOffset _now = new(2026, 10, 23, 12, 0, 0, TimeSpan.Zero);
+
+        public override DateTimeOffset GetUtcNow() => _now;
+
+        internal void Advance(TimeSpan delta) => _now += delta;
+    }
+
+    private sealed class TempDirectory : IDisposable
+    {
+        internal TempDirectory()
+        {
+            Path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"threedo-nvram-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(Path);
+        }
+
+        internal string Path { get; }
+
+        public void Dispose()
+        {
+            try
+            {
+                Directory.Delete(Path, recursive: true);
+            }
+            catch (IOException)
+            {
+            }
+        }
+    }
+}

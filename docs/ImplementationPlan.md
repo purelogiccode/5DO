@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/4DO-master/FreeDOCore` (primary), `References/opera-libretro-master/libopera` (secondary)
-**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); M4 MADAM graphics complete through M4.14; M4.15 renders the BIOS boot animation but the interactive menu still needs a valid game disc and further tracing; M5 DSP/audio core and pipeline complete (real-content audio validation pending); M6 XBUS/CD-ROM/storage complete except real-disc boot validation (no user-provided disc). M7 input/NVRAM/game database is next. M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
+**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); M4 MADAM graphics complete through M4.14; M4.15 renders the BIOS boot animation but the interactive menu still needs a valid game disc and further tracing; M5 DSP/audio core and pipeline complete (real-content audio validation pending); M6 XBUS/CD-ROM/storage complete except real-disc boot validation (no user-provided disc); M7 input/PBUS, NVRAM persistence, and the game database are complete, with platform keyboard/gamepad backends scheduled with the M9 frontend. M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
 **Last updated:** 2026-10-23
 
 ---
@@ -755,36 +755,31 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Tasks**
 
-- [ ] **M7.1 Controller state and PBUS encoder.**
+- [x] **M7.1 Controller state and PBUS encoder.**
   - `ThreeDoController` buttons: A/B/C/P/X/L/R, Up/Down/Left/Right.
   - `PbusEncoder` 16-byte packet, 1-6 controllers, device order 1,3,2,5,4,6.
   - Tests for every button and combination.
-- [ ] **M7.2 Input profiles.**
+- [x] **M7.2 Input profiles.**
   - Keyboard bindings, gamepad bindings, console hotkeys.
   - JSON serialization, defaults, conflict detection.
   - 1-6 player profiles.
-- [ ] **M7.3 Keyboard backend.**
-  - Avalonia key events -> input state.
-  - Focus handling (pause input when unfocused).
-- [ ] **M7.4 Gamepad backend.**
-  - `IGamepadBackend` abstraction.
-  - Evaluate Avalonia 12 built-in gamepad support; fall back to Silk.NET.Input/SDL2.
-  - Hot-plug, axis deadzone, D-pad/analog mapping.
-- [ ] **M7.5 NVRAM persistence.**
-  - Global `NVRAM_SaveData.ram`.
-  - Debounced atomic write (250 ms), flush on pause/stop.
-  - Fresh-image initialization.
-- [ ] **M7.6 Game database and fix modes.**
-  - Port 4DO game database with attribution.
-  - MD5 -> ID, name, fix flags.
-  - Per-game overrides in settings.
-  - Unknown-ID collision avoidance.
-- [ ] **M7.7 BIOS detection and Anvil.**
+- [~] **M7.3 Keyboard backend.**
+  - `KeyboardInputMapper`/`InputManager` translate key names to controller state without a UI dependency; tests cover binding, release, and multi-player profiles.
+  - Avalonia key-event forwarding and focus handling are wired with the M9.3 frontend shell.
+- [~] **M7.4 Gamepad backend.**
+  - `IGamepadBackend` abstraction and `NullGamepadBackend`; `InputManager` merges gamepad state with the keyboard.
+  - The Avalonia/Silk.NET platform backend arrives with M9.6/M9.4 (hot-plug, deadzone, D-pad mapping).
+- [x] **M7.5 NVRAM persistence.**
+  - `NvramStore` under `ThreeDo.Host` with the standard NVRAM path supplied by the caller.
+  - Debounced atomic write (250 ms via `TimeProvider`), flush on pause/stop/dispose, fresh-image initialization, corrupt-image backup.
+- [x] **M7.6 Game database and fix modes.**
+  - 4DO `GameDatabase.xml` ported as an embedded resource with attribution; MD5 → ID/name lookup and unknown-ID fallback.
+  - Per-game settings and fix-mode application remain in the host/settings layer (M9.5); the core fix flags already exist in `CompatibilityState`.
+- [x] **M7.7 BIOS detection and Anvil.**
   - `byte[28] == 234` -> `SetAnvilFix(30)`.
-  - Expose detected BIOS type in UI/CLI.
-- [ ] **M7.8 Tests.**
-  - PBUS bytes, NVRAM roundtrip, game DB lookup, fix-mode mapping.
-  - Input profile roundtrip.
+  - BIOS type is exposed through `BiosImage` and `ThreeDoMachine.Compatibility`; UI/CLI display arrives with M8/M9.
+- [x] **M7.8 Tests.**
+  - PBUS bytes for every button, six-controller ordering, NVRAM debounce/atomic/backup roundtrip, game DB lookup, input profile roundtrip, keyboard/gamepad merge.
 
 **Deliverables**
 
@@ -794,10 +789,10 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Acceptance**
 
-- [ ] Keyboard and gamepad control a real game.
-- [ ] NVRAM survives restart and is written atomically.
-- [ ] Known games with fix flags boot/behave correctly.
-- [ ] PBUS tests match 4DO's JohnnyInput output.
+- [ ] Keyboard and gamepad control a real game (blocked: no user-provided disc).
+- [x] NVRAM survives restart and is written atomically.
+- [~] Known games with fix flags boot/behave correctly (database and compatibility flags are in place; per-game override UI is M9.5).
+- [x] PBUS tests match 4DO's JohnnyInput output.
 
 **Risks**
 
@@ -1363,4 +1358,5 @@ Suggested parallelization with two developers:
 | 2026-10-23 | M4.14 | Golden CEL tests | Clip-window corner tests, composite scene with three CCBs, PLUT reload, transparent texel, stable VRAM hash and CEL cycle count; optional BIOS boot-frame PNG dump (`BiosUiValidationTests`); 437 tests pass |
 | 2026-10-23 | M5.1-M5.9 | DSP core | Full `DSP.cpp` port: instruction bit-fields, request/BS/REGCONV/BRCONDTAB precompute, ALU/MULT, barrel shifter, operand loader (nrof/immediate/r2/r3/DI), control flow, memory windows, semaphore, reset/PRNG, 567-cycle sample cadence; 19 DSP tests |
 | 2026-10-23 | M5.10-M5.12 | Audio pipeline and BIOS smoke | `AudioRingBuffer` (SPSC), `AudioPipeline`, `NullAudioSink`, `WavAudioSink`; allocation-free ring buffer, WAV header, and conversion tests; real BIOS starts the DSP and the frame loop pushes samples; audio content remains silent without a valid disc/menu |
+| 2026-10-23 | M7.1-M7.8 | Input, NVRAM, game database | `ControllerState`/`PbusEncoder`/`InputManager` with wiring order and every button; JSON `InputProfile` defaults/roundtrip; `KeyboardInputMapper`; `IGamepadBackend`/null backend; `NvramStore` debounced atomic writes and corrupt-image backup; embedded 4DO `GameDatabase.xml` with checksum/ID lookup; tests for PBUS matrix, profiles, NVRAM and database |
 | 2026-10-23 | M6.1-M6.6, M6.8 | CD-ROM, XBUS, storage | `CdromDevice` command state machine and XBUS routing; `IsoImage`/`BinImage`/`CueSheet`/`ChdDiscImage` (CHDSharp 1.5.2, read-ahead, parent/child); `VolumeHeader`/`GameId`; command transcripts, ISO/BIN/CUE/CHD parity, CHD rejection and state roundtrip; BIOS passes the XBUS device poll and renders its boot animation |

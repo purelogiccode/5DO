@@ -551,3 +551,11 @@ M1 implements the section primitive used by all later chips:
 - `ChdDiscImage` uses CHDSharp 1.5.2, rejects non-CD images, maps the first data track's LBA space, enables 4-hunk read-ahead, and supports an optional parent CHD for differential images.
 - `VolumeHeader` parses the big-endian 132-byte record (blockCount at offset 80); `GameId` is the lowercase MD5 of sectors 0 and 1. Game database lookup is M7.6.
 - Tests generate synthetic ISO/BIN/CUE/CHD fixtures with CHDSharp's encoder and verify identical sector streams, parent/child opening, non-CD rejection, command transcripts, and CD state roundtrip.
+
+### 12.10 M7 implementation notes
+
+- `PbusEncoder` reproduces 4DO's 16-byte PBUS packet: header 0x00/0x48, controllers in wired order 1,3,2,5,4,6 at offsets 2,4,6,8,10,14, low byte L/R/X/P/C/B, high byte A/Left/Right/Up/Down plus the connectivity bit 0x80. The packet size is fixed and encoding is allocation-free.
+- `ControllerState` is an immutable button set; `InputManager` merges the keyboard mapper with an `IGamepadBackend` and exposes `IPbusSource` for the machine. The Avalonia event plumbing is intentionally outside the core and lands with M9.3/M9.6.
+- `InputProfile` stores per-player keyboard/gamepad maps and hotkeys as JSON. Default profiles bind the keyboard only for player 1 so a single key does not press the same button on all players; gamepad bindings are available for all six.
+- `NvramStore` lives in `ThreeDo.Host` because it is host I/O; the core still only accepts the 32 KB image. Writes are debounced through an injected `TimeProvider` (250 ms), use a temporary file plus atomic replace, and back up a wrong-sized file as `.bad` before creating a fresh image.
+- The 4DO `GameDatabase.xml` is an embedded resource with an attribution comment; lookups accept either case and unknown checksums return null. Per-game fix overrides remain a settings-layer concern.
