@@ -168,6 +168,87 @@ public sealed class CelLiteralRasterizerTests
         Assert.Equal(16, cycles);
     }
 
+    [Theory]
+    [InlineData(1, 0x80)]
+    [InlineData(2, 0x40)]
+    [InlineData(3, 0x10)]
+    [InlineData(4, 0x04)]
+    [InlineData(5, 0x01)]
+    public void LiteralLine_DecodesEveryCodedBpp(int bppIndex, byte firstByte)
+    {
+        var (memory, madam) = CreateScene();
+        WriteLiteralCcb(
+            memory,
+            vcnt: 0,
+            widthMinusOne: 0,
+            pre0: (uint)bppIndex,
+            pre1: 0,
+            loadPlut: true);
+        WritePlut(memory, 0, 0x7fff);
+        WriteBytes(memory, SourceData + 8, firstByte);
+
+        var cycles = RunCel(madam);
+
+        Assert.Equal(0x7ffe, memory.Ram.Read16(FrameBuffer + 2));
+        Assert.Equal(16, cycles);
+    }
+
+    [Fact]
+    public void LiteralLine_DrawsLinear16Bpp()
+    {
+        var (memory, madam) = CreateScene();
+        WriteLiteralCcb(
+            memory,
+            vcnt: 0,
+            widthMinusOne: 0,
+            pre0: 6 | 0x10,
+            pre1: 0,
+            loadPlut: false);
+        WriteBytes(memory, SourceData + 8, 0x7f, 0xff);
+
+        var cycles = RunCel(madam);
+
+        Assert.Equal(0x7ffe, memory.Ram.Read16(FrameBuffer + 2));
+        Assert.Equal(15, cycles);
+    }
+
+    [Fact]
+    public void MultiCcb_ReloadsPlutAndDrawsBothCels()
+    {
+        var (memory, madam) = CreateScene();
+        WritePackedCcbAt(
+            memory,
+            ccb: 0x100,
+            nextCcb: 0x400,
+            last: false,
+            sourceData: 0x200,
+            plutData: 0x300,
+            xpos: 0,
+            ypos: 0);
+        WritePlutAt(memory, 0x300, 0, 0x7fff);
+        memory.Ram.Write32(0x200, 1);
+        WriteBytes(memory, 0x204, 0x00, 0x40, 0x80);
+
+        WritePackedCcbAt(
+            memory,
+            ccb: 0x400,
+            nextCcb: 0,
+            last: true,
+            sourceData: 0x500,
+            plutData: 0x600,
+            xpos: 0x10000,
+            ypos: 0);
+        WritePlutAt(memory, 0x600, 0, 0x001f);
+        memory.Ram.Write32(0x500, 1);
+        WriteBytes(memory, 0x504, 0x00, 0x40, 0x80);
+
+        var cycles = RunCel(madam);
+
+        Assert.Equal(0x7ffe, memory.Ram.Read16(FrameBuffer + 2));
+        Assert.Equal(0x001e, memory.Ram.Read16(FrameBuffer + 6));
+        Assert.Equal(30, cycles);
+    }
+
     private static (ThreeDoMemory Memory, MadamChip Madam) CreateScene()
     {
         var memory = new ThreeDoMemory();
@@ -230,6 +311,12 @@ public sealed class CelLiteralRasterizerTests
         if (loadPlut)
         {
             memory.Ram.Write32(address, PlutData);
+            address += 4;
+        }
+        else
+        {
+            // The CCB reserves a PLUT-pointer word even when CCB_LDPLUT is clear.
+            memory.Ram.Write32(address, 0);
             address += 4;
         }
 
@@ -311,6 +398,50 @@ public sealed class CelLiteralRasterizerTests
     {
         memory.Ram.Write16(PlutData, entry1);
         memory.Ram.Write16(PlutData + 2, entry0);
+    }
+
+    private static void WritePlutAt(ThreeDoMemory memory, uint address, ushort entry0, ushort entry1)
+    {
+        memory.Ram.Write16(address, entry1);
+        memory.Ram.Write16(address + 2, entry0);
+    }
+
+    private static void WritePackedCcbAt(
+        ThreeDoMemory memory,
+        uint ccb,
+        uint nextCcb,
+        bool last,
+        uint sourceData,
+        uint plutData,
+        int xpos,
+        int ypos)
+    {
+        var flags = CcbControl.NextPointerAbsolute
+            | CcbControl.SourcePointerAbsolute
+            | CcbControl.PlutPointerAbsolute
+            | CcbControl.LoadPlut
+            | CcbControl.LoadSize
+            | CcbControl.LoadPixelProcessor
+            | CcbControl.HasPosition
+            | CcbControl.Packed
+            | CcbControl.Clockwise;
+
+        if (last)
+        {
+            flags |= CcbControl.Last;
+        }
+
+        memory.Ram.Write32(ccb, (uint)flags);
+        memory.Ram.Write32(ccb + 4, nextCcb);
+        memory.Ram.Write32(ccb + 8, sourceData);
+        memory.Ram.Write32(ccb + 12, plutData);
+        memory.Ram.Write32(ccb + 16, unchecked((uint)xpos));
+        memory.Ram.Write32(ccb + 20, unchecked((uint)ypos));
+        memory.Ram.Write32(ccb + 24, 0x00100000);
+        memory.Ram.Write32(ccb + 28, 0);
+        memory.Ram.Write32(ccb + 32, 0);
+        memory.Ram.Write32(ccb + 36, 0x00010000);
+        memory.Ram.Write32(ccb + 40, 0x00001f00);
     }
 
     private static void WriteBytes(ThreeDoMemory memory, uint buffer, params byte[] bytes)
