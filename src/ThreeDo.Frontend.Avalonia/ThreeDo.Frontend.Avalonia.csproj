@@ -6,6 +6,7 @@
     <AssemblyName>ThreeDo.Frontend.Avalonia</AssemblyName>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\avalonia-logo.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

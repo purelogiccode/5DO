@@ -132,7 +132,14 @@ internal static class Program
         {
             var buffer = new FrameBuffer(machine.Frame.SourceWidth, machine.Frame.SourceHeight);
             FrameAssembler.Assemble(machine.Frame, buffer, buffer.Width, buffer.Height);
-            FrameDumper.WriteBmp(buffer, frameOut);
+            if (string.Equals(Path.GetExtension(frameOut), ".png", StringComparison.OrdinalIgnoreCase))
+            {
+                PngDumper.Write(buffer, frameOut);
+            }
+            else
+            {
+                FrameDumper.WriteBmp(buffer, frameOut);
+            }
         }
 
         var discHash = disc is null ? string.Empty : GameId.Compute(disc);

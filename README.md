@@ -72,12 +72,24 @@ dotnet test 3DOEmulator.sln
 
 ## Run
 
-The CLI and frontend are scaffolds during M0. Once the core is runnable:
+Headless CLI:
 
 ```powershell
-dotnet run --project src/ThreeDo.Cli -- run game.cue --bios panafz1.bin
+dotnet run --project src/ThreeDo.Cli -- run game.cue --bios panafz1.bin --frames 600 --frame-out frame.png
+dotnet run --project src/ThreeDo.Cli -- info game.chd --json
+dotnet run --project src/ThreeDo.Cli -- bios info panafz1.bin
+dotnet run --project src/ThreeDo.Cli -- state inspect quick.tdos
+dotnet run --project src/ThreeDo.Cli -- bench --frames 600
+dotnet run --project src/ThreeDo.Cli -- selftest
+```
+
+Desktop app:
+
+```powershell
 dotnet run --project src/ThreeDo.Frontend.Avalonia
 ```
+
+Use **Open BIOS** and **Open Disc**, then **Play**. The default keyboard bindings are the arrow keys, Z (A), X (B), C (C), A (L), S (R), Enter (P), and Backspace (X). **Save State**/**Load State** use a quick slot; **Screenshot** writes a BMP to Pictures. Settings (last paths, filter/aspect, audio, bindings) persist under the user local application data folder.
 
 ## Legal and attribution
 

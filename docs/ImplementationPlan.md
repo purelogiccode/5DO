@@ -824,7 +824,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Corrupt/truncated state rejection.
   - BIOS hash mismatch is reported as a warning, not a hard failure.
 - [~] **M8.5 Diagnostics.**
-  - Frame dumper (BMP) and state inspector are implemented; CPU counters and the disassembler are available through the machine.
+  - Frame dumpers (BMP/PNG), state inspector, CPU tracer with disassembly, and a raw memory/VRAM dumper are implemented; CPU counters are available through the machine.
   - A full CPU tracer, VRAM/memory dumpers, and allocation counters remain follow-up work; logging sinks already exist.
 - [x] **M8.6 CLI commands.**
   - `run [disc] --bios ... [--frames N] [--state-in/out] [--frame-out] [--audio null|wav] [--wav-out]`.
@@ -1363,6 +1363,7 @@ Suggested parallelization with two developers:
 | 2026-10-23 | M4.14 | Golden CEL tests | Clip-window corner tests, composite scene with three CCBs, PLUT reload, transparent texel, stable VRAM hash and CEL cycle count; optional BIOS boot-frame PNG dump (`BiosUiValidationTests`); 437 tests pass |
 | 2026-10-23 | M5.1-M5.9 | DSP core | Full `DSP.cpp` port: instruction bit-fields, request/BS/REGCONV/BRCONDTAB precompute, ALU/MULT, barrel shifter, operand loader (nrof/immediate/r2/r3/DI), control flow, memory windows, semaphore, reset/PRNG, 567-cycle sample cadence; 19 DSP tests |
 | 2026-10-23 | M5.10-M5.12 | Audio pipeline and BIOS smoke | `AudioRingBuffer` (SPSC), `AudioPipeline`, `NullAudioSink`, `WavAudioSink`; allocation-free ring buffer, WAV header, and conversion tests; real BIOS starts the DSP and the frame loop pushes samples; audio content remains silent without a valid disc/menu |
+| 2026-10-23 | M8.5, M10.4 | Diagnostics and metadata | CPU tracer/disassembler stepping, raw memory/VRAM dumper, PNG frame dumper, application icon and product metadata |
 | 2026-10-23 | M9.5, M9.7 | Settings and live audio | `AppSettings` persistence, quick Save/Load and screenshot buttons, `OpenAlAudioOutput` (OpenAL Soft, four queued buffers, null fallback) wired into the shell; Windows launch smoke tests passed |
 | 2026-10-23 | M9.1-M9.4, M9.8, M9R.10, M10.2 | Desktop shell and packaging | OpenGL `VideoSurface` hosts the renderer; file pickers, play/pause/reset, quick save/load, screenshots, keyboard input, persisted `AppSettings`; CI publishes CLI/frontend for six RIDs; win-x64 CLI publish smoke test passed; Windows app launch smoke test passed |
 | 2026-10-23 | M9R.1-M9R.3, M9R.9-M9R.10 | OpenGL presenter | `IVideoRenderer`/settings/capabilities, CPU renderer, `VdlFrameUploader`, `GpuPalette` parity, aspect/integer viewport, GLSL 330 palette shader, `OpenGlRenderer`, Avalonia `VideoSurface`, frame mailbox; 527 tests pass; Windows launch smoke test |

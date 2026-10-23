@@ -8,6 +8,9 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Deterministic>true</Deterministic>
     <NeutralLanguage>en</NeutralLanguage>
+    <Product>3DOEmulator</Product>
+    <Company>3DOEmulator contributors</Company>
+    <Version>0.0.0</Version>
     <InvariantGlobalization>true</InvariantGlobalization>
     <IsPackable>false</IsPackable>
     <EnablePackageValidation>false</EnablePackageValidation>

@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ThreeDo.Core\ThreeDo.Core.csproj" />
+    <ProjectReference Include="..\ThreeDo.Cpu\ThreeDo.Cpu.csproj" />
   </ItemGroup>
 
 </Project>

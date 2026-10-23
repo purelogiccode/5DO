@@ -76,6 +76,24 @@ public sealed class StateInspectorTests
         }
     }
 
+    [Fact]
+    public void PngDumper_WritesPngSignature()
+    {
+        var frame = new FrameBuffer(2, 2);
+        var path = Path.Combine(Path.GetTempPath(), $"threedo-frame-{Guid.NewGuid():N}.png");
+        try
+        {
+            PngDumper.Write(frame, path);
+            var bytes = File.ReadAllBytes(path);
+            Assert.Equal(new byte[] { 0x89, 0x50, 0x4e, 0x47 }, bytes[..4]);
+            Assert.Equal("IEND"u8.ToArray(), bytes[^8..^4]);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     private static ThreeDoMachine CreateMachine()
     {
         var program = new[]
