@@ -6,7 +6,7 @@ A clean-room-style, **pure C# / .NET 10** port of the FreeDO/4DO 3DO emulator co
 
 ## Status
 
-**M0 scaffold complete; M1 (core/memory/scheduler) is next.** The implementation plan and architecture are in:
+**M0 scaffold complete; M1 (core contracts, memory/bus, Quartz scheduler, state primitives, diagnostics) is complete; M2 (ARM60 CPU) is next.** The implementation plan and architecture are in:
 
 - [`docs/ImplementationPlan.md`](docs/ImplementationPlan.md) - milestones, tasks, acceptance criteria, risks.
 - [`docs/Architecture.md`](docs/Architecture.md) - project layout, dependency rules, runtime composition.

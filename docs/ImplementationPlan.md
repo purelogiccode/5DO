@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/4DO-master/FreeDOCore` (primary), `References/opera-libretro-master/libopera` (secondary)
-**Status:** M0 scaffold complete; M0.8 legal/attribution review pending; next is M1. The OpenGL renderer is now a **required** desktop component; the optional guest ARM JIT is a separate backend path.
+**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; next is M2. M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
 **Last updated:** 2026-10-23
 
 ---
@@ -278,44 +278,45 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Tasks**
 
-- [ ] **M1.1 Core primitives and constants.**
+- [x] **M1.1 Core primitives and constants.**
   - `EmulatorConstants`: clock rates, frame cycles, RAM/ROM/NVRAM sizes, address bases, sentinels.
   - `FixMode` flags, `EmulatorTuning`, `CompatibilityState`, `GameQuirks`.
   - `VdlLine`, `VdlFrame`, `FrameBuffer`, `PixelFormat`, `AudioSample`.
   - `EmulationException`, `InvalidStateException`.
-- [ ] **M1.2 Core interfaces.**
+- [x] **M1.2 Core interfaces.**
   - `IAddressBus` (byte/halfword/word read/write).
   - `IRam` (raw RAM/VRAM access used by CEL/SPORT/VDLP).
   - `IInterruptSink`, `IFrameSink`, `IAudioSink`, `IPbusSource`, `IDiscSource`, `IXbusDevice`, `IVdlp`, `IMadamBus`.
+  - `IClioBus`, `ISportBus`, `IDiagPort` for the M1 bus hooks.
   - `IStateReader`, `IStateWriter`, `IStateSection`.
   - `ILogSink`, `LogLevel`, `LogCategory`.
-- [ ] **M1.3 Memory implementation.**
-  - `ThreeDoMemory` with `uint[]` RAM (3 MB + high-res mirrors reserved), `uint[]` ROM (2 MB), `byte[]` NVRAM (32 KB).
+- [x] **M1.3 Memory implementation.**
+  - `ThreeDoMemory` with `uint[]` RAM (3 MB + 16 MB high-res mirrors reserved), `uint[]` ROM (2 MB), `byte[]` NVRAM (32 KB).
   - Byte/halfword/word helpers matching FreeDOCore's word-swapped representation.
   - Unaligned reads/writes.
   - ROM loading from big-endian BIOS bytes.
   - NVRAM one-byte-per-word quirk.
   - `0xBADACCE5` sentinel.
-- [ ] **M1.4 Bus/address decode.**
+- [x] **M1.4 Bus/address decode.**
   - RAM, ROM, NVRAM, Diag, SPORT, MADAM, CLIO ranges in the same order as FreeDOCore.
   - ROM bank select hook.
   - `IAddressBus` implementation with device hooks.
   - No device references yet; use null/stub devices until M3.
-- [ ] **M1.5 Quartz scheduler.**
+- [x] **M1.5 Quartz scheduler.**
   - `PushArmCycles`, `QueueDsp`, `QueueTimer`, `QueueVdl`, `VdCurrLine`, `VdHalfFrame`, `VdCurrOverline`.
   - 8.24 fixed-point arithmetic matching FreeDOCore.
   - Configurable `ArmClock` and constants for VDL/DSP/timer.
   - Save/load of accumulators.
-- [ ] **M1.6 State primitives.**
+- [x] **M1.6 State primitives.**
   - `StateWriter`/`StateReader` with explicit little-endian primitives, bounds checks, section table, CRC32.
   - `StateSection` IDs and version constants.
   - No chip state yet.
-- [ ] **M1.7 Diagnostics skeleton.**
+- [x] **M1.7 Diagnostics skeleton.**
   - `Log`, `ConsoleLogSink`, `InMemoryLogSink`, `NullLogSink`.
   - Category/level filtering; no allocations when disabled.
-- [ ] **M1.8 Tests.**
+- [x] **M1.8 Tests.**
   - Memory alignment/byte-order/NVRAM/decode tests.
-  - Quartz fixed-point tests: 1 cycle, 15/16/17 cycles, 208333 cycles/frame, 60 frames -> 12.5M cycles.
+  - Quartz fixed-point tests: 1 cycle, 15/16/17 cycles, 255 cycles, one-second event counts, 60 half-frames per 12.5M cycles.
   - State reader/writer roundtrip, truncation, CRC mismatch.
   - Logging filter tests.
 
@@ -326,10 +327,10 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Acceptance**
 
-- [ ] Memory tests cover all alignments and the NVRAM quirk.
-- [ ] Quartz produces exactly 60 VDL frames per 12.5M cycles (with the FreeDO event semantics).
-- [ ] State primitives reject truncated/corrupt data cleanly.
-- [ ] `dotnet test` green.
+- [x] Memory tests cover all alignments and the NVRAM quirk.
+- [x] Quartz produces exactly 60 VDL half-frames (60 presented frames) per 12.5M cycles with the FreeDO event semantics.
+- [x] State primitives reject truncated/corrupt data cleanly.
+- [x] `dotnet test` green.
 
 **Risks**
 
@@ -1320,8 +1321,8 @@ Suggested parallelization with two developers:
 
 ## 12. Immediate next actions
 
-1. Finish M0 scaffolding and commit.
-2. Implement M1 memory + Quartz + state primitives.
+1. ~~Finish M0 scaffolding and commit.~~ Done.
+2. ~~Implement M1 memory + Quartz + state primitives.~~ Done.
 3. Start M2 with the CPU state/ALU/shifter and the test assembler.
 4. Create the first synthetic ROM integration test as soon as M2 data processing and loads/stores work.
 5. Schedule a 30-minute legal/attribution review before any public build.
@@ -1336,4 +1337,6 @@ Suggested parallelization with two developers:
 | 2026-10-23 | M0.1-M0.7 | Scaffold complete | `dotnet build`, `dotnet test` (2 tests), and `dotnet format --verify-no-changes` pass; commit `e620ebb` |
 | 2026-10-23 | Architecture | OpenGL renderer made required; optional ARM JIT added as M12 | `ThreeDo.Video.OpenGL` project added; docs updated |
 | 2026-10-23 | Storage | CHD made a required v1 format via CHDSharp | `IDiscSource` + `ChdDiscImage` added; package wired into `ThreeDo.Storage` |
-| | | | |
+| 2026-10-23 | M1.1-M1.4 | Core contracts, memory, and bus | Constants/types/interfaces; `ThreeDoMemory` with word-swapped RAM/ROM, NVRAM quirk, bank select, and MMIO hooks |
+| 2026-10-23 | M1.5-M1.7 | Quartz, state primitives, diagnostics | 8.24 scheduler; sectioned little-endian state with CRC32; filtered logging with interpolated-string handler |
+| 2026-10-23 | M1.8 | M1 test suite | 95 tests pass; memory alignment/byte-order/NVRAM/decode, Quartz fixed-point/event counts, state truncation/CRC, logging filters; commit `2357111` |

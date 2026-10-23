@@ -444,3 +444,45 @@ A ported function is correct when:
 6. Its comments identify the original function and any deliberate deviation.
 
 If a deviation is required for C# safety (e.g., division-by-zero guard), document it in the test and in this file.
+
+---
+
+## 12. M1 implementation notes
+
+These notes record decisions made while implementing the core/memory/scheduler milestone. They are not deviations from observable FreeDO behavior unless stated.
+
+### 12.1 Memory allocation and lanes
+
+- `ThreeDoMemory` backs RAM/VRAM with a `uint[]` sized to `3 MB + 16 MB` (19 MB total). Only the first 3 MB are CPU-visible; the extra 1 MB planes are reserved for the future `RESSCALE` mirrors (M11). `IRam.Size` reports the full backing size; `ThreeDoMemory.VisibleSize` reports the 3 MB window.
+- Raw RAM/ROM helpers use the reference's little-endian word representation. `IRam.Read8(offset)` returns lane `offset & 3`; unaligned `Read16`/`Read32` compose lanes across words.
+- The CPU bus applies the reference XOR conventions: `Read8/Write8` use `addr ^ 3`; `Read16/Write16` use `addr ^ 2` for RAM/ROM; `Read32/Write32` align to four bytes. FreeDO has no halfword bus access, but the contract is defined consistently for future devices and tests.
+- Unmapped byte/halfword reads return the low byte/halfword of `0xBADACCE5`, matching the value callers see after the reference's usual `& 0xFF`/`& 0xFFFF` masking.
+
+### 12.2 ROM and NVRAM
+
+- `LoadRom(bank, data)` requires exactly 1 MB and converts each four-byte big-endian BIOS word with `BinaryPrimitives.ReadUInt32BigEndian`, matching the `_bswap` loop in `_3do_Init`.
+- NVRAM is a `byte[32768]` with the one-byte-per-word mapping `(index >> 2) & 32767`. Word writes store only the low byte; byte writes at all four byte addresses of a word hit the same NVRAM byte. The 32 KB wrap is preserved.
+
+### 12.3 State framing
+
+M1 implements the section primitive used by all later chips:
+
+```text
+[id:u32][version:u16][reserved:u16][length:u32][payload][crc32:u32]
+```
+
+- All primitives are explicit little-endian; no `Marshal`, `BinaryFormatter`, or field-layout assumptions.
+- The reader bounds-checks every primitive and section, rejects truncated data, and validates the CRC before exposing the section payload.
+- The outer `TDO1` header (magic, format version, BIOS/disc hashes, section table) is added in M8. M1 tests exercise the section layer directly.
+
+### 12.4 Quartz event semantics
+
+- `PushArmCycles` keeps the reference's 8.24 accumulators and its `arm++` correction. It expects small cycle batches (the reference computes `clks << 24` in 32 bits); `Debug.Assert` documents the `< 256` contract.
+- One second of ARM cycles (12.5M) produces 15,780 VDL line events, i.e. 30 full 526-line cycles and **60 half-frame presentations**. Tests assert 60 half-frame transitions.
+- The reference's coarse-batch rounding slightly over-counts DSP/VDL/timer events for a given batch size. Tests use 255-cycle batches and assert the exact reference counts (44,139 DSP samples, 15,794 VDL lines, 21,018 timer events for a 1,000-unit timer delay). Do not "fix" this rounding without golden evidence; the machine's normal batch size comes from `_3do_Frame`'s `cnt >> 4` threshold.
+
+### 12.5 Diagnostics
+
+- `Log` is an instance owned by the machine/host; there is no mutable static logger. `Log.Null` is a shared immutable instance.
+- The interpolated-string overload uses `LogInterpolatedStringHandler`, so disabled messages do not format or allocate.
+- `InMemoryLogSink` is bounded and thread-safe; `ConsoleLogSink` is intended for host/debug use.

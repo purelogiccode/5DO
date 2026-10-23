@@ -35,11 +35,13 @@ Logs/
 *.state
 
 # BIOS/disc images (never commit)
+bios/
 *.bin
 *.iso
 *.cue
 *.chd
 *.img
+*.fstree
 !tests/**/Fixtures/**/*.bin
 
 # OS
