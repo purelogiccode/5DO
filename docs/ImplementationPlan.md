@@ -1347,4 +1347,4 @@ Suggested parallelization with two developers:
 | 2026-10-23 | M3.12 | Real BIOS smoke | `bios/panafz1.bin` ran 300 frames without exception; optional test gated by `THREEDO_BIOS` |
 | 2026-10-23 | M3.13 | OpenGL spike deferred | Requires desktop GL context; scheduled with M9R.1/M9R.10 and does not block M4-M8 |
 | 2026-10-23 | M4.1-M4.3 | CEL bit reader, CCB parser, PLUT loader | `CelBitReader` (bit rates 1-32, positions, skip), `CcbControl`/`CcbHeader`/`CcbParser` (absolute/relative pointers, preamble, packed/skip/last), `Madam.LoadPlut`; 337 tests pass; commit `b600424` |
-| 2026-10-23 | M4.4 | Pixel decoder | 1/2/4/6/8/16 bpp, linear/coded modes, palette-write bit, AMV tables, transparency; 346 tests pass |
+| 2026-10-23 | M4.4 | Pixel decoder | 1/2/4/6/8/16 bpp, linear/coded modes, palette-write bit, AMV tables, transparency; 346 tests pass; commit `7ce230d` |
