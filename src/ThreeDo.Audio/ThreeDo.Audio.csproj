@@ -3,7 +3,12 @@
   <PropertyGroup>
     <RootNamespace>ThreeDo.Audio</RootNamespace>
     <AssemblyName>ThreeDo.Audio</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Silk.NET.OpenAL" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ThreeDo.Core\ThreeDo.Core.csproj" />

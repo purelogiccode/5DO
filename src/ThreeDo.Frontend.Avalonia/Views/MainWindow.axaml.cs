@@ -6,6 +6,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using ThreeDo.Audio;
 using ThreeDo.Core;
 using ThreeDo.Diagnostics;
 using ThreeDo.Host;
@@ -28,6 +29,7 @@ public partial class MainWindow : Window, IDisposable
     private readonly AppSettings _settings;
     private readonly InputManager _input;
     private readonly string _statePath;
+    private readonly OpenAlAudioOutput? _audio;
     private ThreeDoMachine? _machine;
     private IDiscSource? _disc;
     private bool _running;
@@ -43,6 +45,7 @@ public partial class MainWindow : Window, IDisposable
 
         _statePath = Path.Combine(_settings.SaveDirectory, "quick.tdos");
         _input = new InputManager(_settings.Input);
+        _audio = _settings.AudioEnabled ? OpenAlAudioOutput.TryCreate() : null;
         _nvramStore = new NvramStore(Path.Combine(AppSettingsStore.DefaultDirectory, "nvram.ram"));
         _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(16), DispatcherPriority.Background, OnTick);
         Video.Settings = _settings.ToRendererSettings();
@@ -234,7 +237,7 @@ public partial class MainWindow : Window, IDisposable
 
     private ThreeDoMachine CreateMachine()
     {
-        _machine ??= new ThreeDoMachine { PbusSource = _input };
+        _machine ??= new ThreeDoMachine { PbusSource = _input, AudioSink = _audio };
         return _machine;
     }
 
@@ -259,6 +262,7 @@ public partial class MainWindow : Window, IDisposable
         _disc?.Dispose();
         Video.Dispose();
         _nvramStore.Dispose();
+        _audio?.Dispose();
     }
 
     /// <inheritdoc />
@@ -290,6 +294,7 @@ public partial class MainWindow : Window, IDisposable
         _disc?.Dispose();
         Video.Dispose();
         _nvramStore.Dispose();
+        _audio?.Dispose();
         GC.SuppressFinalize(this);
     }
 }
