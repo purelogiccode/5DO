@@ -6,13 +6,15 @@ A clean-room-style, **pure C# / .NET 10** port of the FreeDO/4DO 3DO emulator co
 
 ## Status
 
-**M0 scaffold complete; M1 (core contracts, memory/bus, Quartz scheduler, state primitives, diagnostics) is complete; M2 (ARM60 CPU) is complete; M3 (boot skeleton: BIOS/NVRAM, CLIO, MADAM registers, VDLP, SPORT, frame loop) is complete; M4 (MADAM graphics) is complete through M4.14; M4.15's BIOS boot animation renders and starts the DSP, but the interactive menu needs a valid game disc; M5 (DSP and audio) is complete through the core, pipeline, and tests; M6 (XBUS, CD-ROM, ISO/BIN/CUE/CHD storage) is complete except real-disc boot validation, which needs a user-provided disc; M7 (input/PBUS, input profiles, NVRAM persistence, and the 4DO game database) is complete, with the platform keyboard/gamepad backends arriving with the M9 frontend; M8 (deterministic save states, diagnostics, and the headless CLI) is complete; M9 basic Avalonia shell and the M9R OpenGL presenter are functional on Windows; CI publishes the CLI and frontend for six RIDs. Filter polish, settings pages, gamepad UI, arm64 validation, and real-disc boot validation remain.** The M3.13 OpenGL spike is deferred to M9R. The implementation plan and architecture are in:
+**M0 scaffold complete; M1 (core contracts, memory/bus, Quartz scheduler, state primitives, diagnostics) is complete; M2 (ARM60 CPU) is complete; M3 (boot skeleton: BIOS/NVRAM, CLIO, MADAM registers, VDLP, SPORT, frame loop) is complete; M4 (MADAM graphics) is complete through M4.14; M4.15's BIOS boot animation renders and starts the DSP; M5 (DSP and audio) is complete through the core, pipeline, and tests; M6 (XBUS, CD-ROM, ISO/BIN/CUE/CHD storage) is complete except real-disc boot validation, and the local corpus in [`docs/TestCorpus.md`](docs/TestCorpus.md) now provides five CHDs for that work; M7 (input/PBUS, input profiles, NVRAM persistence, and the 4DO game database) is complete, with the platform keyboard/gamepad backends arriving with the M9 frontend; M8 (deterministic save states, diagnostics, and the headless CLI) is complete; M9 basic Avalonia shell and the M9R OpenGL presenter exist as a Windows prototype; CI publishes the CLI and frontend for six RIDs. The 2026-10-23 performance review added M9P (dedicated core thread, two-stage 4K presenter, GL/GLES backend matrix, benchmark gates). Filter polish, settings pages, gamepad UI, arm64 validation, real-disc boot validation, and the 4K60 performance path remain.** The M3.13 OpenGL spike is deferred to M9R. The implementation plan and architecture are in:
 
 - [`docs/ImplementationPlan.md`](docs/ImplementationPlan.md) - milestones, tasks, acceptance criteria, risks.
 - [`docs/Architecture.md`](docs/Architecture.md) - project layout, dependency rules, runtime composition.
 - [`docs/PortingNotes.md`](docs/PortingNotes.md) - C++ to C# porting rules and FreeDOCore quirks.
 - [`docs/TestStrategy.md`](docs/TestStrategy.md) - unit, integration, golden, differential, and performance testing.
 - [`docs/Compatibility.md`](docs/Compatibility.md) - BIOS, disc, input, and game-fix compatibility notes.
+- [`docs/TestCorpus.md`](docs/TestCorpus.md) - local BIOS/disc corpus and real-content validation commands (not committed).
+- [`docs/Performance.md`](docs/Performance.md) - 4K60 budgets, presentation pipeline, and measurement plan.
 
 ## Goals
 
@@ -32,17 +34,28 @@ A clean-room-style, **pure C# / .NET 10** port of the FreeDO/4DO 3DO emulator co
 
 CHD is a first-class v1 format. The storage layer presents every container through the same `IDiscSource` 2048-byte-sector interface, so the CD-ROM emulation is identical regardless of file format.
 
-## Differentiator: OpenGL presentation
+## Differentiator: OpenGL/GLES presentation
 
-The desktop frontend uses **Silk.NET.OpenGL** through Avalonia's OpenGL control as the **required** presentation path:
+The desktop frontend uses **Silk.NET.OpenGL/OpenGLES** through Avalonia's OpenGL control as the **required** presentation path:
 
-- GPU palette expansion from raw 3DO indexed pixels and per-line CLUTs.
+- Two-stage pipeline: palette expansion at native resolution (320x240), then GPU upscaling/filtering at output resolution.
 - Pixel-accurate "Accurate" mode that matches the CPU frame assembler.
 - High-quality GPU upscaling to 1080p/1440p/4K: nearest, sharp-bilinear, CRT, and xBR/HQx-family filters.
 - Integer scaling, aspect-ratio control, fullscreen, vsync, and screenshots.
-- CPU `WriteableBitmap` fallback only when a GL 3.3 context is unavailable.
+- Desktop GL 3.3 (WGL/GLX/EGL/macOS) and GLES 3.0/3.1 (ANGLE, Raspberry Pi) variants.
+- CPU `WriteableBitmap` fallback only when neither GL 3.3 nor GLES 3.0/3.1 is available.
 
 The emulation core still renders CELs in software for accuracy. The GPU accelerates presentation, palette expansion, scaling, and filters; it does not change emulated state.
+
+## Performance target
+
+- **4K (3840x2160) 60 fps output** on a mid-range x64 desktop (Tier A) with nearest or sharp-bilinear filtering.
+- **1080p 60 fps** on Raspberry Pi 4/5 class arm64 using the GLES 3.1 path.
+- Native 320x240 emulation; 4K is **output upscaling**, not 4K internal CEL rendering.
+- Core frame budget ≤ 8 ms p99 on Tier A, zero managed allocations per frame, and core cost independent of output resolution.
+- CRT/xBR filters are opt-in and may require faster hardware.
+
+The current prototype does not meet these budgets yet; see [`docs/Performance.md`](docs/Performance.md) for the pipeline, measurement method, and M9P work items.
 
 ## Optional guest CPU JIT
 
@@ -54,6 +67,7 @@ The emulation core still renders CELs in software for accuracy. The GPU accelera
 - Netplay, rewinding, or a full debugger UI.
 - CD-DA/Red Book audio, multi-track discs, or CD swapping.
 - PAL video modes and high-resolution rendering in the first playable milestone (they are planned later).
+- 4K *internal* CEL rendering; v1 targets 4K output upscaling only.
 - Shipping BIOS ROMs, game discs, or any copyrighted 3DO material.
 
 ## Requirements
@@ -66,6 +80,8 @@ The emulation core still renders CELs in software for accuracy. The GPU accelera
 ## Build
 
 ```powershell
+git clone https://github.com/purelogiccode/3DOEmulator.git
+cd 3DOEmulator
 dotnet build 3DOEmulator.sln
 dotnet test 3DOEmulator.sln
 ```

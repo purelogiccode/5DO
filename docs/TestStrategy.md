@@ -69,6 +69,22 @@ If the suite becomes slow or a subsystem needs a different runner, split it into
 - Tests that require missing data are skipped with a clear message, not failed.
 - Golden frame hashes for real BIOS/disc content are stored only if the content is redistributable; otherwise they are local developer artifacts.
 
+### 3.1 Local real-content corpus
+
+The development machine has a legally obtained corpus documented in
+[`TestCorpus.md`](TestCorpus.md):
+
+- BIOS images: `D:\Dropbox\source\repos\CSharp_3DOEmulator\bios\` (use
+  `panafz1.bin` by default; Anvil/GoldStar variants for compatibility checks).
+- Disc images: `D:\Samples\3DO\` — `Alone in the Dark (USA).chd`,
+  `Lemmings (USA).chd`, `Road Rash (USA).chd`, `Space Ace (USA).chd`, and
+  `Wolfenstein 3D (USA).chd`.
+
+The corpus is local-only and must never be committed, packaged, or uploaded. Use it
+for manual boot/gameplay/audio/input/save-state validation and for end-to-end
+performance measurements. CI continues to use synthetic fixtures and skips
+real-content tests when the environment variables are unset.
+
 ---
 
 ## 4. Unit tests by subsystem
@@ -264,8 +280,10 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
 
 ### 4.15 Host
 
-- `EmulatorSession` lifecycle: start/pause/resume/stop/reset.
-- Frame pacer with a fake clock: target 60 Hz, catch-up cap, no drift.
+- `EmulatorSession` lifecycle: start/pause/resume/stop/reset on a dedicated core thread.
+- Frame pacer with a fake clock: target 60 Hz, catch-up cap, no drift, no UI-thread `RunFrame`.
+- Latest-frame mailbox: triple-buffer/seqlock behavior, visible-pixel copy, no per-frame delegate allocation.
+- Status/FPS update throttling (4–10 Hz) and no per-frame string formatting.
 - BIOS loader errors.
 - Disc loader errors.
 - NVRAM debounce/atomic write (fake file system or temp dir).
@@ -286,7 +304,10 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
 - **Geometry:** aspect ratio, integer scaling, letterbox, fullscreen, window resize.
 - **Context lifecycle:** initialize, resize, context loss/recreate, dispose, fallback to CPU.
 - **Shader compilation:** all shader programs compile/link; log source hash and GL version.
-- **Performance:** upload/present time, GPU frame time, 1080p/1440p/4K output, no CPU per-pixel scaling.
+- **Performance:** two-stage palette expansion at native resolution, persistent upload, no per-frame `TexImage2D`/uniform lookup, upload/present CPU time, GPU frame time, 1080p/1440p/4K output, no CPU per-pixel scaling.
+- **DPI/geometry:** physical-pixel sizing at 100/150/200% scaling, resize, integer scaling, letterbox.
+- **Backends:** desktop GL 3.3 and GLES 3.0/3.1 shader variants compile and produce identical Accurate-mode output.
+- **Render-on-demand:** no continuous rendering at monitor refresh rate when the emulator is producing 60 fps.
 - **Headless CI:** run CPU-renderer tests everywhere; GPU tests run on a local/self-hosted job with a real GL context. Skip cleanly when no context is available.
 
 ### 4.17 CPU backends / optional JIT
@@ -387,7 +408,8 @@ Fuzz tests are not part of the default suite if slow; run them nightly or on dem
 
 ## 9. Performance tests
 
-Use BenchmarkDotNet for:
+The full target, budgets, hardware tiers, and measurement method are in
+[`Performance.md`](Performance.md). Use BenchmarkDotNet for:
 
 - `Arm60.Step` on a mixed instruction stream (MIPS).
 - `CelEngine.HandleCel` on representative CCB scenes (pixels/ms).
@@ -395,23 +417,39 @@ Use BenchmarkDotNet for:
 - `ThreeDoMachine.RunFrame` on a synthetic scene (ms/frame, allocations/frame).
 - `FrameAssembler` (MB/s).
 - `AudioRingBuffer` (samples/second, allocation count).
-- `OpenGlRenderer` upload/present (MB/s, ms/frame, GPU time).
+- `VdlFrameUploader`/`OpenGlRenderer` upload/present (MB/s, CPU ms, GPU time).
 - Output scaling cost at 1080p/1440p/4K (CPU should stay flat; GPU scales).
 
-Targets:
+Targets (Tier A = mid-range x64; Tier B = Raspberry Pi 4/5 class arm64):
 
 | Metric | Target |
 |---|---|
 | CPU interpreter | ≥ 100 MIPS on a modern x64 core; 3DO needs 12.5 MHz |
-| Frame time (synthetic CEL scene) | < 8 ms on mid-range x64, < 16 ms on Raspberry Pi 4 class arm64 |
+| Core frame time | ≤ 8 ms p99 on Tier A; ≤ 12 ms p99 on Tier B; independent of output resolution |
+| Presenter CPU | ≤ 2 ms p99; zero allocations/frame |
 | DSP | < 1 ms/frame |
-| OpenGL present | 60 fps at 4K on mid-range x64; 1080p on Raspberry Pi 4 class arm64 |
-| GPU upload | < 1 ms/frame at 320x240 indexed |
+| Output | 4K60 nearest/sharp-bilinear on Tier A; 1080p60 on Tier B via GLES |
+| GPU upload | < 0.5 ms CPU/frame at 320x240 indexed (~175 KB) |
 | Allocations | 0 bytes/frame in steady state (core and renderer) |
 | Startup | < 1 s to first frame |
 | Memory | < 150 MB resident (including GL textures) |
 
 A performance change is accepted only with before/after numbers and identical golden output.
+
+### 9.1 End-to-end harness
+
+The CLI `bench` command must run a real BIOS + disc from
+[`TestCorpus.md`](TestCorpus.md) and report p50/p95/p99 frame time, core vs
+presenter time, allocations/frame, GC counts, and GPU time when a GL context is
+available. The synthetic machine benchmark remains for CI, but it is not a
+substitute for real-content measurements.
+
+### 9.2 CI gate
+
+- Per-PR: allocation assertions, CPU-renderer parity, unit/integration tests.
+- Nightly/self-hosted: BenchmarkDotNet baselines, real-content smoke, 4K GPU timing.
+- Fail on a sustained >10% regression or a missed budget after warm-up.
+- Store the baseline JSON and hardware description with each run.
 
 ---
 
@@ -424,7 +462,7 @@ A performance change is accepted only with before/after numbers and identical go
 - **Format:** `dotnet format --verify-no-changes`.
 - **Analyzers:** warnings as errors.
 - **Artifacts:** CLI + frontend archives per RID, including shaders and native audio assets.
-- **Optional:** nightly fuzz/benchmark job; real-BIOS smoke on a self-hosted machine.
+- **Nightly/self-hosted:** performance baseline (p50/p95/p99, allocations, GPU time), fuzz, and real-BIOS/disc smoke on the local corpus. Performance gates are not run on noisy per-PR runners.
 
 ---
 
@@ -437,6 +475,7 @@ A subsystem is done when:
 - [ ] Save/load roundtrip is tested (if it has state).
 - [ ] Golden/differential tests pass where applicable.
 - [ ] No per-frame allocations in the steady state.
+- [ ] Performance budget met and recorded (frame time p99, allocations, hardware).
 - [ ] No mutable static state.
 - [ ] GPU Accurate mode matches the CPU frame assembler where applicable.
 - [ ] CPU fallback works when no GL context is available.

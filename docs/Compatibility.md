@@ -108,14 +108,14 @@ The game database is ported with attribution. Unknown game IDs get the first 8 h
 | Feature | v1 | Later |
 |---|---|---|
 | 320x240 NTSC | Yes | |
-| **OpenGL renderer** | **Required desktop path** | |
+| **OpenGL/GLES renderer** | **Required desktop path** | |
 | GPU palette expansion | Yes (exact CPU parity in Accurate mode) | |
 | 4:3 aspect ratio, letterbox | Yes | |
 | Nearest / integer scaling | Yes | |
 | Sharp-bilinear | Yes (default enhanced) | |
 | CRT filter | Yes (opt-in) | |
 | xBR/HQx GPU filters | Yes (opt-in) | |
-| 1080p/1440p/4K output | Yes (GPU scaling) | |
+| 1080p/1440p/4K output | Yes (GPU scaling); 4K60 on Tier A hardware | |
 | Fullscreen | Yes | |
 | 384/512/640/1024-wide VDLP modes | Parsed, may crop | Full presentation |
 | High-resolution CEL (`RESSCALE`) | No | Planned as a coherent feature |
@@ -163,7 +163,7 @@ The game database is ported with attribution. Unknown game IDs get the first 8 h
 - No 3DO modem/network emulation.
 - No cycle-exact ARM bus timing beyond FreeDOCore's approximation.
 - No guarantee of 4DO save-state compatibility.
-- OpenGL 3.3 is required for the primary renderer; systems without it use the CPU fallback.
+- The primary renderer requires desktop OpenGL 3.3 or OpenGL ES 3.0/3.1 (see `docs/Performance.md`); systems without either use the CPU fallback.
 - CHD is supported for CD/GD-ROM images; DVD/HDD/raw CHDs are not 3DO discs.
 - CHD decompression is pure managed code and may be slower than ISO on low-end arm64 devices; read-ahead/cache mitigates this.
 
@@ -177,13 +177,20 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 |---|---|---|---|---|---|---|---|---|---|
 | | | | | | | | | | |
 
-Suggested test set (user-provided, not distributed):
+Local corpus (user-provided, not distributed; see [`TestCorpus.md`](TestCorpus.md)):
 
-- BIOS-only boot and menu navigation.
-- A 2D-heavy title (CEL/packed sprites).
-- A 3D-heavy title (matrix engine, arbitrary CELs).
-- A CD-streaming title (FMV/audio).
-- A title with a known 4DO fix flag.
+- BIOS-only boot and menu navigation: `panafz1.bin`.
+- `Alone in the Dark (USA).chd` — exercises `FIX_BIT_TIMING_6` and literal CELs.
+- `Lemmings (USA).chd` — 2D-heavy CEL/packed-sprite workload.
+- `Road Rash (USA).chd` — 3D/matrix and streaming workload.
+- `Space Ace (USA).chd` — FMV/streaming workload.
+- `Wolfenstein 3D (USA).chd` — first-person 3D/matrix workload.
+- Alternate BIOS variants (`goldstar.bin`, `panafz10.bin`, Anvil) for region/fix paths.
+
+Suggested additional coverage:
+
+- A CD-streaming title with FMV/audio.
+- A title with a known 4DO fix flag not represented above.
 - A homebrew/test disc if available.
 
 ---

@@ -1,6 +1,6 @@
 # 3DOEmulator Architecture
 
-**Status:** implemented through M3; M0 baseline architecture plus M1-M3 additions.
+**Status:** implemented through M10 partial (M0-M8 complete; M9/M9R/M10 in progress). The 2026-10-23 performance review added the M9P workstream and [`Performance.md`](Performance.md); the architecture below reflects the target design, not every current prototype shortcut.
 **Scope:** the emulator core, host layer, CLI, Avalonia frontend, tests, and build layout.
 
 ---
@@ -13,6 +13,7 @@
 4. **The frontend is replaceable.** The CLI and Avalonia app both consume `ThreeDo.Host`; neither is referenced by the core.
 5. **The port is traceable.** Every ported C++ unit has a named C# counterpart and a comment pointing back to the FreeDOCore file/function.
 6. **Determinism by construction.** Fixed timestep, integer scheduler, explicit state serialization, no hidden globals, no wall-clock reads inside the core.
+7. **Performance is a first-class requirement.** The v1 target is 4K (3840x2160) 60 fps output on Tier A hardware and 1080p60 on Raspberry Pi 4/5 class devices, with core cost independent of output resolution. See [`Performance.md`](Performance.md).
 
 ---
 
@@ -76,7 +77,7 @@
 | `ThreeDo.Dsp` | 3DO audio DSP: instruction decode/precompute, ALU, multiplier, barrel shifter, NMem/IMem, semaphore, sample output | `Dsp`, `DspCore`, `DspInstructionDecoder`, `DspAlu`, `DspRegisters`, `DspMemory` | Core |
 | `ThreeDo.Sport` | SPORT VRAM fill/copy engine | `Sport` | Core |
 | `ThreeDo.Video` | VDLP display-list parser, line/frame assembly, palette expansion reference path, frame extraction, scaler contracts | `Vdlp`, `VdlParser`, `FrameAssembler`, `FrameBufferFactory`, `IVideoRenderer`, `VideoFilter` | Core |
-| `ThreeDo.Video.OpenGL` | **Required desktop renderer**: GL context integration, raw indexed-frame upload, palette shader, scaling/filter pipeline, vsync presentation, screenshots | `OpenGlRenderer`, `FrameTextureUploader`, `ShaderProgram`, `RendererSettings`, `GlContextAdapter` | Core, Video, Silk.NET.OpenGL |
+| `ThreeDo.Video.OpenGL` | **Required desktop renderer**: desktop GL 3.3 and GLES 3.0/3.1 context integration, two-stage native-resolution palette expansion + output upscaling, persistent texture upload, scaling/filter pipeline, vsync presentation, screenshots | `OpenGlRenderer`, `VdlFrameUploader`, `RendererSettings`, `GlContextAdapter`, shader variants | Core, Video, Silk.NET.OpenGL/OpenGLES |
 | `ThreeDo.Xbus` | XBUS controller, device selection, poll/status/data FIFOs, device interface | `Xbus`, `XbusDevice`, `XbusFifo` | Core |
 | `ThreeDo.Cdrom` | Mitsumi/MEI CD-ROM device, command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice`, `CdromCommand`, `Toc`, `Msf` | Core |
 | `ThreeDo.Storage` | Disc image readers (ISO/BIN/CUE/CHD), BIOS validation, NVRAM file format, game database, game ID | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `GameDatabase`, `GameId` | Core, CHDSharp |
@@ -232,6 +233,8 @@ while cycles < 12_500_000 / 60:
 
 The original code processes at most one DSP/timer/VDL event per `InternalFrame` call. The port keeps that behavior initially. A later accuracy task may drain all due events in a loop, but only with golden-frame evidence.
 
+`RunFrame` is called by the host's dedicated core thread (`EmulatorSession` + `FramePacer`), never by the Avalonia UI thread. The UI consumes completed frames from the mailbox. This is required for stable 60 fps at 4K and is tracked by M9P.2.
+
 ### Multitask mode
 
 FreeDOCore has two modes:
@@ -262,18 +265,22 @@ VdlFrame (reused double/triple buffer)
         ├──────────────────────────────────────────────┐
         │                                              │
         ▼                                              ▼
-OpenGL renderer (required desktop path)        CPU FrameAssembler (oracle/fallback)
-  upload raw 16-bit pixels                       - used by CLI/headless tests
-  upload per-line CLUT + line params             - used when no GL context exists
-  fragment shader palette expansion              - must match GL "Accurate" mode
-  scaling / filters / CRT / xBR
+OpenGL/GLES renderer (required desktop path)   CPU FrameAssembler (oracle/fallback)
+  stage 1: palette expansion at native res      - used by CLI/headless tests
+  stage 2: upscale/filter at output res         - used when no GL context exists
+  persistent textures + PBO ring                - must match GL "Accurate" mode
   present with vsync
         │
         ▼
 Window / fullscreen
 ```
 
-The core never knows about Avalonia or OpenGL. `IFrameSink` receives a `VdlFrame`; the host hands it to `IVideoRenderer`. The OpenGL renderer is the **primary, required** desktop renderer. The CPU `FrameAssembler` remains in the codebase as the accuracy oracle and as a fallback for headless runs or systems without a usable GL 3.3 context.
+**Two-stage rule:** palette expansion must run once per emulated pixel (320x240),
+not once per output pixel. At 4K, a single output-resolution palette shader performs
+~108x more palette/CLUT work than expanding the native frame into a small RGB
+texture and then upscaling it. See [`Performance.md`](Performance.md) §3.
+
+The core never knows about Avalonia or OpenGL. `IFrameSink` receives a `VdlFrame`; the host hands it to `IVideoRenderer`. The OpenGL renderer is the **primary, required** desktop renderer. The CPU `FrameAssembler` remains in the codebase as the accuracy oracle and as a fallback for headless runs or systems without a usable desktop GL 3.3 or GLES 3.0/3.1 context.
 
 ### Video rules
 
@@ -283,7 +290,7 @@ The core never knows about Avalonia or OpenGL. `IFrameSink` receives a `VdlFrame
 - **OpenGL "Accurate" mode must match the CPU `FrameAssembler` pixel-for-pixel.** Enhanced filters are opt-in and never affect emulated state.
 - The renderer receives indexed 16-bit pixels and per-line palette/control data, not a pre-expanded BGRA image. Palette expansion happens on the GPU, which cuts CPU work and enables high-quality upscaling at 1080p/1440p/4K.
 
-### OpenGL renderer pipeline (required)
+### OpenGL/GLES renderer pipeline (required)
 
 ```text
 VdlFrame
@@ -293,14 +300,15 @@ VdlFrame
         (background, out-control, clut-dma flags)
         │
         ▼
-Fragment shader pass 1 - palette expansion:
+Stage 1 - palette expansion at native resolution (320x240):
   p = texelFetch(pixelTex, xy)
   if p == 0:              background(line)
   else if fixedClut(line) && (p & 0x8000): fixed grayscale CLUT
   else:                    palette(p, line)
+  -> RGB8 native-resolution texture (reused each frame)
         │
         ▼
-Fragment shader pass 2 - scaling/filter:
+Stage 2 - scaling/filter at output resolution (up to 4K):
   - Nearest (pixel-perfect integer scaling)
   - Sharp-bilinear (default enhanced)
   - CRT (scanlines, mask, curvature, bloom)
@@ -312,10 +320,12 @@ Framebuffer -> window / fullscreen (vsync, latest-frame mailbox)
 
 **Performance properties**
 
-- Raw indexed upload is ~150 KB/frame for 320x240, versus ~300 KB for BGRA; the GPU does palette expansion.
-- 4K output costs the CPU nothing beyond the same small upload; the GPU scales.
+- Raw indexed upload is ~150 KB/frame for 320x240, plus ~23 KB of per-line CLUT and ~2 KB of line parameters.
+- Palette expansion runs at 320x240 (~77k pixels/frame), not at 4K (~8.3M pixels/frame).
+- 4K output costs the CPU nothing beyond the same small upload; the GPU performs one cheap upscale/filter pass.
+- Textures use immutable storage (`TexStorage2D`) plus `TexSubImage2D`/PBO updates; no per-frame `TexImage2D` reallocation.
 - The core remains single-threaded and deterministic; only presentation is GPU-accelerated.
-- A `FrameMailbox` drops stale frames instead of queueing them.
+- A `FrameMailbox` drops stale frames instead of queueing them; the core never waits for the GPU.
 
 **Accuracy properties**
 
@@ -331,7 +341,33 @@ Framebuffer -> window / fullscreen (vsync, latest-frame mailbox)
 - Avalonia supplies the GL context through `OpenGlControlBase` (or an equivalent host control).
 - `ThreeDo.Video.OpenGL` uses Silk.NET.OpenGL for the API and owns textures, shaders, VAOs, and the framebuffer.
 - The renderer project does not reference Avalonia; the frontend passes an `IGlContext`/function-loader adapter. This keeps the renderer usable by other hosts later.
-- On context loss, the frontend recreates the renderer and re-uploads the latest frame. If GL 3.3 is unavailable, the frontend falls back to the CPU `WriteableBitmap` path and logs a warning.
+- On context loss, the frontend recreates the renderer and re-uploads the latest frame. If neither desktop GL 3.3 nor GLES 3.0/3.1 is available, the frontend falls back to the CPU `WriteableBitmap` path and logs a warning.
+
+### 7b. Renderer backends and 4K target
+
+The renderer contract is API-neutral; the host selects a shader/API variant:
+
+| Variant | API / shader | Typical host |
+|---|---|---|
+| Desktop GL | OpenGL 3.3 core / GLSL 330 | Windows WGL, Linux GLX/EGL, macOS 4.1 core |
+| GLES | OpenGL ES 3.0/3.1 / GLSL ES 300 | Windows ANGLE (Avalonia default), Raspberry Pi 4/5 |
+
+Avalonia's Windows default is ANGLE (OpenGL ES), so a desktop-only `#version 330
+core` path is not portable. The frontend must either prefer `Win32RenderingMode.Wgl`
+with an ANGLE fallback or provide the GLES path. Raspberry Pi 4 exposes conformant
+OpenGL ES 3.1, not desktop GL 3.3, so Tier B uses the GLES variant.
+
+Frame pacing and threading are host responsibilities:
+
+- Dedicated core thread at a fixed 60 Hz; no `RunFrame` on the UI thread.
+- Render/UI thread consumes the latest mailbox frame and submits GPU work.
+- Audio thread consumes the SPSC ring buffer.
+- Physical-pixel sizing (`Bounds * RenderScaling`), render-on-demand, and no
+  per-frame UI text formatting.
+- 4K60 is output upscaling; 4K internal CEL rendering is not a v1 goal.
+
+The full budget table, measurement methodology, and current gaps are in
+[`Performance.md`](Performance.md).
 
 ---
 
@@ -347,8 +383,9 @@ ICpuBackend
 
 - `ICpuBackend` exposes `Step()`, `Reset()`, `Save/LoadState`, and the register/state surface.
 - The interpreter is the compatibility oracle and the default backend.
+- Optimize the interpreter before adding a JIT: fast RAM path, direct dispatch/decode cache, fewer interface calls per instruction, and no per-instruction allocations. Measure on the benchmark corpus first.
 - An optional IL JIT can compile ARM basic blocks into `DynamicMethod` delegates using pure managed `System.Reflection.Emit`. This stays within the "pure C#" rule.
-- The 3DO ARM60 runs at ~12.5 MHz, so the interpreter is expected to be fast enough. The JIT is a long-term optimization, not a prerequisite for 60 fps.
+- The 3DO ARM60 runs at ~12.5 MHz, so a tuned interpreter is expected to be fast enough. The JIT is a long-term optimization, not a prerequisite for 60 fps.
 - Any JIT backend must produce bit-identical architectural state and cycle counts to the interpreter for the same program. It is enabled only after differential tests pass.
 - Native executable-memory JITs (x86/ARM code emission) are out of scope for the pure C# core.
 
@@ -472,12 +509,14 @@ Portable mode: if a `portable.flag` file exists next to the executable, use `<ex
 
 ## 12. Threading model
 
-- **Core thread:** CPU, memory, chips, scheduler, DSP, VDLP, CD. Single-threaded and deterministic.
-- **Render thread / UI thread:** Avalonia owns the GL context and presents frames. The OpenGL renderer consumes the latest `VdlFrame` snapshot; it never calls into emulated state.
+- **Core thread:** CPU, memory, chips, scheduler, DSP, VDLP, CD. Dedicated, single-threaded, and deterministic. The UI thread must never call `RunFrame`; the current `DispatcherTimer` prototype is replaced by `EmulatorSession` + `FramePacer`.
+- **Render thread / UI thread:** Avalonia owns the GL/GLES context and presents frames. The renderer consumes the latest `VdlFrame` snapshot; it never calls into emulated state.
 - **Audio thread:** consumes the ring buffer; never calls into the core.
 - **No locks in the core hot path.** The only cross-thread state is the audio ring buffer, the latest-frame mailbox, and session lifecycle flags.
 
-A `FrameMailbox` holds the most recent completed `VdlFrame`. If the renderer is slow, old frames are dropped rather than queued, preventing latency growth. The renderer uploads the frame to a texture and applies the filter pipeline; the core does not wait for the GPU.
+A `FrameMailbox` holds the most recent completed `VdlFrame`. If the renderer is slow, old frames are dropped rather than queued, preventing latency growth. The renderer uploads the frame to a texture and applies the two-stage filter pipeline; the core does not wait for the GPU. The mailbox should copy only visible pixels and avoid delegate/string allocations in the per-frame path.
+
+**Frame pacing:** fixed 60 Hz on the core thread, catch-up capped at one or two frames, render-on-demand when a new frame is available. Do not render at the monitor refresh rate when the emulator is producing 60 fps. Update FPS/status overlays at 4–10 Hz, not every frame.
 
 ---
 
@@ -517,5 +556,7 @@ A `FrameMailbox` holds the most recent completed `VdlFrame`. If the renderer is 
 - XML documentation on public types; ported code includes a `// FreeDO: <file>:<function>` comment.
 - Tests are named `Method_Scenario_ExpectedResult`.
 - No `unsafe` unless a measured hot path requires it; `Unsafe`/`MemoryMarshal` are acceptable.
-- Shaders live in `ThreeDo.Video.OpenGL/Shaders`, are GLSL 330 core, and are embedded as resources with a source hash logged at startup.
-- The OpenGL renderer is a required desktop component; the CPU renderer is a fallback and accuracy oracle, not the primary path.
+- No LINQ, string formatting, delegate allocation, or other managed allocation in per-instruction or per-frame paths.
+- Prefer concrete types or generic constraints over interface dispatch in measured hot loops; keep the small Core interfaces at architectural boundaries.
+- Shaders live in `ThreeDo.Video.OpenGL/Shaders`, have desktop GLSL 330 and GLSL ES 300 variants, and are embedded as resources with a source hash logged at startup.
+- The OpenGL/GLES renderer is a required desktop component; the CPU renderer is a fallback and accuracy oracle, not the primary path.
