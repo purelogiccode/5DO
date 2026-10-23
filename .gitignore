@@ -1,5 +1,7 @@
-# Reference material (external, not part of this repository)
+# Reference material (external, not part of this repository).
+# Includes nested clones such as References/FourDO Ported/; never commit them.
 References/
+References/**
 
 # Build output
 bin/
