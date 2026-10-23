@@ -108,4 +108,42 @@ public sealed class NvramStoreTests
             }
         }
     }
+
+    [Fact]
+    public void AppSettings_RoundtripsAndDerivesRendererSettings()
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "settings.json");
+        var settings = new AppSettings
+        {
+            BiosPath = "bios.bin",
+            Filter = ThreeDo.Video.VideoFilter.Crt,
+            Aspect = ThreeDo.Video.AspectMode.Integer,
+            Volume = 0.5f,
+        };
+        settings.Input.Players[0].Keyboard["Q"] = ThreeDo.Input.ControllerButton.C;
+
+        AppSettingsStore.Save(settings, path);
+        var loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal("bios.bin", loaded.BiosPath);
+        Assert.Equal(ThreeDo.Video.VideoFilter.Crt, loaded.Filter);
+        Assert.Equal(ThreeDo.Video.AspectMode.Integer, loaded.Aspect);
+        Assert.Equal(0.5f, loaded.Volume);
+        Assert.Equal(ThreeDo.Input.ControllerButton.C, loaded.Input.Players[0].Keyboard["Q"]);
+        Assert.Equal(ThreeDo.Video.VideoFilter.Crt, loaded.ToRendererSettings().Filter);
+        Assert.False(File.Exists(path + ".tmp"));
+    }
+
+    [Fact]
+    public void AppSettings_InvalidJsonFallsBackToDefaults()
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "settings.json");
+        File.WriteAllText(path, "not json");
+
+        var loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal(ThreeDo.Video.VideoFilter.SharpBilinear, loaded.Filter);
+    }
 }

@@ -73,3 +73,34 @@ jobs:
           name: 3do-cli-${{ matrix.rid }}
           path: artifacts/cli/${{ matrix.rid }}
           if-no-files-found: error
+  publish-frontend:
+    name: Publish frontend (${{ matrix.rid }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rid: [ win-x64, win-arm64, linux-x64, linux-arm64, osx-x64, osx-arm64 ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish
+        run: >
+          dotnet publish src/ThreeDo.Frontend.Avalonia/ThreeDo.Frontend.Avalonia.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:PublishTrimmed=false
+          -o artifacts/frontend/${{ matrix.rid }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3do-frontend-${{ matrix.rid }}
+          path: artifacts/frontend/${{ matrix.rid }}
+          if-no-files-found: error

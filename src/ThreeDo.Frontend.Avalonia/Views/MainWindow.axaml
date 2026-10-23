@@ -15,13 +15,15 @@
         <ctrl:VideoSurface x:Name="Video" Grid.Row="0" />
 
         <Border Grid.Row="1" Padding="8" Background="#202020">
-            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,*">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*">
                 <Button x:Name="BiosButton" Grid.Column="0" Content="Open BIOS" Click="OnOpenBios" Margin="0,0,6,0" />
                 <Button x:Name="DiscButton" Grid.Column="1" Content="Open Disc" Click="OnOpenDisc" Margin="0,0,6,0" />
                 <Button x:Name="PlayButton" Grid.Column="2" Content="Play" Click="OnPlayPause" Margin="0,0,6,0" />
                 <Button x:Name="ResetButton" Grid.Column="3" Content="Reset" Click="OnReset" Margin="0,0,6,0" />
-                <Button x:Name="ShotButton" Grid.Column="4" Content="Screenshot" Click="OnScreenshot" Margin="0,0,6,0" />
-                <TextBlock x:Name="StatusText" Grid.Column="5" VerticalAlignment="Center"
+                <Button x:Name="SaveButton" Grid.Column="4" Content="Save State" Click="OnSaveState" Margin="0,0,6,0" />
+                <Button x:Name="LoadButton" Grid.Column="5" Content="Load State" Click="OnLoadState" Margin="0,0,6,0" />
+                <Button x:Name="ShotButton" Grid.Column="6" Content="Screenshot" Click="OnScreenshot" Margin="0,0,6,0" />
+                <TextBlock x:Name="StatusText" Grid.Column="7" VerticalAlignment="Center"
                            Text="No BIOS loaded." HorizontalAlignment="Right" Foreground="#DDDDDD" />
             </Grid>
         </Border>

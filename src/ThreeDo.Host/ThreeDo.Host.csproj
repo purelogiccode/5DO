@@ -11,6 +11,7 @@
     <ProjectReference Include="..\ThreeDo.Storage\ThreeDo.Storage.csproj" />
     <ProjectReference Include="..\ThreeDo.Audio\ThreeDo.Audio.csproj" />
     <ProjectReference Include="..\ThreeDo.Input\ThreeDo.Input.csproj" />
+    <ProjectReference Include="..\ThreeDo.Video\ThreeDo.Video.csproj" />
     <ProjectReference Include="..\ThreeDo.Diagnostics\ThreeDo.Diagnostics.csproj" />
   </ItemGroup>
 

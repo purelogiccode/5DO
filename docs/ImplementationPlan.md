@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/4DO-master/FreeDOCore` (primary), `References/opera-libretro-master/libopera` (secondary)
-**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); M4 MADAM graphics complete through M4.14; M4.15 renders the BIOS boot animation but the interactive menu still needs a valid game disc and further tracing; M5 DSP/audio core and pipeline complete (real-content audio validation pending); M6 XBUS/CD-ROM/storage complete except real-disc boot validation (no user-provided disc); M7 input/PBUS, NVRAM persistence, and the game database are complete, with platform keyboard/gamepad backends scheduled with the M9 frontend; M8 deterministic save states and the headless CLI are complete; M9 desktop shell and M9R OpenGL presenter are functional on Windows (full frontend pages, GPU filter set, and cross-platform smoke tests remain). M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
+**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); M4 MADAM graphics complete through M4.14; M4.15 renders the BIOS boot animation but the interactive menu still needs a valid game disc and further tracing; M5 DSP/audio core and pipeline complete (real-content audio validation pending); M6 XBUS/CD-ROM/storage complete except real-disc boot validation (no user-provided disc); M7 input/PBUS, NVRAM persistence, and the game database are complete, with platform keyboard/gamepad backends scheduled with the M9 frontend; M8 deterministic save states and the headless CLI are complete; M9 desktop shell and M9R OpenGL presenter are functional on Windows (full frontend pages, GPU filter set, and cross-platform smoke tests remain); M10 packaging/CI is partially complete (CI builds/publishes CLI and frontend for six RIDs; a win-x64 CLI publish was smoke-tested). M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
 **Last updated:** 2026-10-23
 
 ---
@@ -881,13 +881,13 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 - [~] **M9.4 Game library.**
   - Open disc, replace/eject, and volume metadata via the file picker.
   - Folder scanning, recents, cover art, and the library view remain.
-- [ ] **M9.5 Settings.**
+- [~] **M9.5 Settings.**
   - Video: renderer (OpenGL/CPU fallback), filter (accurate/nearest/sharp-bilinear/CRT/xBR), scale, aspect, fullscreen, vsync.
   - Audio: device, buffer, volume/mute.
   - Input: keyboard/gamepad mapping per player, hotkeys.
   - Emulation: ARM clock, fix mode, high-res (disabled in v1), save slots, CPU backend (interpreter; JIT when available).
   - Paths: BIOS, saves, screenshots, library.
-  - Per-game overrides.
+  - `AppSettings`/`AppSettingsStore` persist paths, renderer/aspect/vsync/integer scale, audio enable/volume, and input bindings; the settings UI and per-game overrides remain.
 - [ ] **M9.6 Input UI.**
   - Binding capture dialog, conflict detection, reset defaults.
   - Controller preview (optional).
@@ -895,16 +895,18 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - `OpenAlAudioOutput` via Silk.NET.OpenAL (or chosen backend).
   - Device selection, buffer sizing, underrun handling.
   - Null fallback if no device.
-- [ ] **M9.8 Save states/screenshots.**
+- [~] **M9.8 Save states/screenshots.**
   - Quick save/load, slot next/previous, slot manager.
   - Screenshot to PNG with game/time name; prefer GL readback, CPU frame fallback.
   - State metadata (game, BIOS, timestamp, thumbnail optional).
+  - Quick Save/Load buttons and BMP screenshots are wired in the shell; slot manager, PNG/GL screenshots, and metadata UI remain.
 - [ ] **M9.9 Logs/About.**
   - In-app log viewer with category filter.
   - About: version, credits, licenses, links.
-- [ ] **M9.10 ViewModel tests.**
+- [~] **M9.10 ViewModel tests.**
   - Settings roundtrip, library scanning, frame mailbox, input mapping.
   - No UI thread dependency for logic.
+  - Tests cover AppSettings roundtrip, the frame mailbox, renderer contracts, and input mapping; ViewModel-level tests remain.
 
 **Deliverables**
 
@@ -1027,20 +1029,20 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
 
 **Tasks**
 
-- [ ] **M10.1 Publish profiles.**
+- [~] **M10.1 Publish profiles.**
   - `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`.
   - Self-contained, single-file, `PublishTrimmed=false` initially.
   - Include native audio/gamepad assets and GLSL shader resources per RID.
-- [ ] **M10.2 CI matrix.**
+- [x] **M10.2 CI matrix.**
   - Build/test on Windows/Linux/macOS.
   - Publish all RIDs; upload artifacts.
   - Cache NuGet; deterministic builds.
 - [ ] **M10.3 Trimming/AOT evaluation.**
   - JSON source generation, no reflection.
   - Evaluate `PublishTrimmed`/NativeAOT per project; do not break Avalonia.
-- [ ] **M10.4 Icons/metadata.**
+- [~] **M10.4 Icons/metadata.**
   - App icon, file associations (`.iso`, `.bin`, `.cue`, `.tdos`), version info.
-- [ ] **M10.5 Performance.**
+- [~] **M10.5 Performance.**
   - Benchmark CPU, CEL, DSP, frame loop, OpenGL upload/present.
   - Optimize hot paths: memory helpers, CEL pixel loops, DSP operand loader.
   - Measure allocations; target zero/frame in core and renderer.
@@ -1330,7 +1332,7 @@ Suggested parallelization with two developers:
 5. ~~Start M3: BIOS/NVRAM loading, CLIO basics, VDLP, SPORT, and the frame loop.~~ Done.
 6. ~~Start M4: MADAM CEL engine, pixel pipeline, matrix engine validation, and BIOS UI rendering.~~ M4.1-M4.14 are done. M4.15 renders the boot animation; the interactive menu still needs a valid disc and tracing.
 7. ~~M5 DSP/audio and M6 XBUS/CD-ROM/storage.~~ Cores, sinks, disc containers, CHD parent/child, volume header, and command transcripts are implemented. Real-disc boot validation and audible WAV verification need a user-provided disc.
-8. ~~M7 input/NVRAM/game database, M8 save states/CLI, M9 basic shell, and M9R core OpenGL presenter.~~ Done; next are the remaining M9 pages/fallback wiring, M9R filter/performance/GPU tests, M10 packaging, and M4.15 with a real disc.
+8. ~~M7 input/NVRAM/game database, M8 save states/CLI, M9 basic shell, M9R core OpenGL presenter, and M10 CI/CLI publish.~~ Done; next are the remaining M9 pages/audio/settings UI, M9R filters/GPU tests, M10 arm64/trimming/installers, M11, and M4.15 with a real disc.
 9. Schedule a 30-minute legal/attribution review before any public build.
 
 ---
@@ -1360,6 +1362,7 @@ Suggested parallelization with two developers:
 | 2026-10-23 | M4.14 | Golden CEL tests | Clip-window corner tests, composite scene with three CCBs, PLUT reload, transparent texel, stable VRAM hash and CEL cycle count; optional BIOS boot-frame PNG dump (`BiosUiValidationTests`); 437 tests pass |
 | 2026-10-23 | M5.1-M5.9 | DSP core | Full `DSP.cpp` port: instruction bit-fields, request/BS/REGCONV/BRCONDTAB precompute, ALU/MULT, barrel shifter, operand loader (nrof/immediate/r2/r3/DI), control flow, memory windows, semaphore, reset/PRNG, 567-cycle sample cadence; 19 DSP tests |
 | 2026-10-23 | M5.10-M5.12 | Audio pipeline and BIOS smoke | `AudioRingBuffer` (SPSC), `AudioPipeline`, `NullAudioSink`, `WavAudioSink`; allocation-free ring buffer, WAV header, and conversion tests; real BIOS starts the DSP and the frame loop pushes samples; audio content remains silent without a valid disc/menu |
+| 2026-10-23 | M9.1-M9.4, M9.8, M9R.10, M10.2 | Desktop shell and packaging | OpenGL `VideoSurface` hosts the renderer; file pickers, play/pause/reset, quick save/load, screenshots, keyboard input, persisted `AppSettings`; CI publishes CLI/frontend for six RIDs; win-x64 CLI publish smoke test passed; Windows app launch smoke test passed |
 | 2026-10-23 | M9R.1-M9R.3, M9R.9-M9R.10 | OpenGL presenter | `IVideoRenderer`/settings/capabilities, CPU renderer, `VdlFrameUploader`, `GpuPalette` parity, aspect/integer viewport, GLSL 330 palette shader, `OpenGlRenderer`, Avalonia `VideoSurface`, frame mailbox; 527 tests pass; Windows launch smoke test |
 | 2026-10-23 | M8.1-M8.4, M8.6 | Save states and CLI | Versioned `TDO1` state with CRC sections, per-chip state (incl. DSP/memory/frame/compatibility), deterministic save/load test, atomic files; CLI `run`, `info`, `bios info`, `state inspect`, `bench`, `selftest` with `--json`; state inspector and BMP dumper |
 | 2026-10-23 | M7.1-M7.8 | Input, NVRAM, game database | `ControllerState`/`PbusEncoder`/`InputManager` with wiring order and every button; JSON `InputProfile` defaults/roundtrip; `KeyboardInputMapper`; `IGamepadBackend`/null backend; `NvramStore` debounced atomic writes and corrupt-image backup; embedded 4DO `GameDatabase.xml` with checksum/ID lookup; tests for PBUS matrix, profiles, NVRAM and database |

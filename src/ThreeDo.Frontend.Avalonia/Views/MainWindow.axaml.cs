@@ -17,15 +17,17 @@ using ThreeDo.Video;
 namespace ThreeDo.Frontend.Avalonia.Views;
 
 /// <summary>
-/// The minimal desktop shell: video surface, file loading, play/pause, reset, screenshots, and
-/// keyboard input. The emulation loop runs one frame per UI timer tick, which keeps the demo
-/// deterministic and simple; a dedicated emulation thread is a later M9 optimization.
+/// The minimal desktop shell: video surface, file loading, play/pause, reset, save/load,
+/// screenshots, and keyboard input. One machine frame runs per UI timer tick for determinism;
+/// a dedicated emulation thread is a later M9 optimization.
 /// </summary>
 public partial class MainWindow : Window, IDisposable
 {
     private readonly DispatcherTimer _timer;
-    private readonly InputManager _input = new(InputProfile.CreateDefault());
     private readonly NvramStore _nvramStore;
+    private readonly AppSettings _settings;
+    private readonly InputManager _input;
+    private readonly string _statePath;
     private ThreeDoMachine? _machine;
     private IDiscSource? _disc;
     private bool _running;
@@ -33,14 +35,35 @@ public partial class MainWindow : Window, IDisposable
     public MainWindow()
     {
         InitializeComponent();
-        _nvramStore = new NvramStore(
-            Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "3DOEmulator",
-                "nvram.ram"));
+        _settings = AppSettingsStore.Load();
+        if (string.IsNullOrWhiteSpace(_settings.SaveDirectory))
+        {
+            _settings.SaveDirectory = Path.Combine(AppSettingsStore.DefaultDirectory, "states");
+        }
+
+        _statePath = Path.Combine(_settings.SaveDirectory, "quick.tdos");
+        _input = new InputManager(_settings.Input);
+        _nvramStore = new NvramStore(Path.Combine(AppSettingsStore.DefaultDirectory, "nvram.ram"));
         _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(16), DispatcherPriority.Background, OnTick);
+        Video.Settings = _settings.ToRendererSettings();
         Deactivated += (_, _) => _input.Keyboard.Reset();
         Closing += (_, _) => Shutdown();
+        Opened += OnOpened;
+    }
+
+    private async void OnOpened(object? sender, EventArgs e)
+    {
+        if (File.Exists(_settings.BiosPath))
+        {
+            OpenBiosPath(_settings.BiosPath);
+        }
+
+        if (File.Exists(_settings.DiscPath))
+        {
+            OpenDiscPath(_settings.DiscPath);
+        }
+
+        await Task.CompletedTask;
     }
 
     private async void OnOpenBios(object? sender, RoutedEventArgs e)
@@ -52,24 +75,9 @@ public partial class MainWindow : Window, IDisposable
             FileTypeFilter = [new FilePickerFileType("BIOS ROM") { Patterns = ["*.bin", "*.rom"] }],
         });
         var path = files.Count > 0 ? files[0].TryGetLocalPath() : null;
-        if (path is null)
+        if (path is not null)
         {
-            return;
-        }
-
-        try
-        {
-            var bios = BiosImage.Load(path);
-            var machine = CreateMachine();
-            machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
-            machine.Reset();
-            var nvram = _nvramStore.LoadOrCreate();
-            machine.LoadNvram(nvram.Data.Span);
-            StatusText.Text = $"BIOS {bios.Md5[..8]} loaded{(bios.IsAnvil ? " (Anvil)" : string.Empty)}.";
-        }
-        catch (Exception exception) when (exception is IOException or InvalidDataException or ArgumentException)
-        {
-            StatusText.Text = $"BIOS error: {exception.Message}";
+            OpenBiosPath(path);
         }
     }
 
@@ -88,17 +96,42 @@ public partial class MainWindow : Window, IDisposable
             ],
         });
         var path = files.Count > 0 ? files[0].TryGetLocalPath() : null;
-        if (path is null)
+        if (path is not null)
         {
-            return;
+            OpenDiscPath(path);
         }
+    }
 
+    private void OpenBiosPath(string path)
+    {
+        try
+        {
+            var bios = BiosImage.Load(path);
+            var machine = CreateMachine();
+            machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
+            machine.Reset();
+            var nvram = _nvramStore.LoadOrCreate();
+            machine.LoadNvram(nvram.Data.Span);
+            _settings.BiosPath = path;
+            AppSettingsStore.Save(_settings);
+            StatusText.Text = $"BIOS {bios.Md5[..8]} loaded{(bios.IsAnvil ? " (Anvil)" : string.Empty)}.";
+        }
+        catch (Exception exception) when (exception is IOException or InvalidDataException or ArgumentException)
+        {
+            StatusText.Text = $"BIOS error: {exception.Message}";
+        }
+    }
+
+    private void OpenDiscPath(string path)
+    {
         try
         {
             var machine = _machine ?? CreateMachine();
             _disc?.Dispose();
             _disc = DiscImageFactory.Open(path);
             machine.InsertDisc(_disc);
+            _settings.DiscPath = path;
+            AppSettingsStore.Save(_settings);
             StatusText.Text = $"{Path.GetFileName(path)}: {_disc.SectorCount} sectors.";
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException or DiscImageException or ArgumentException)
@@ -134,6 +167,32 @@ public partial class MainWindow : Window, IDisposable
         StatusText.Text = "Reset.";
     }
 
+    private void OnSaveState(object? sender, RoutedEventArgs e)
+    {
+        if (_machine is null)
+        {
+            StatusText.Text = "Nothing to save.";
+            return;
+        }
+
+        Directory.CreateDirectory(_settings.SaveDirectory);
+        var discHash = _disc is null ? string.Empty : GameId.Compute(_disc);
+        _machine.SaveStateToFile(_statePath, discHash);
+        StatusText.Text = $"State saved: {_statePath}";
+    }
+
+    private void OnLoadState(object? sender, RoutedEventArgs e)
+    {
+        if (_machine is null || !File.Exists(_statePath))
+        {
+            StatusText.Text = "No quick state to load.";
+            return;
+        }
+
+        _machine.LoadStateFromFile(_statePath);
+        StatusText.Text = $"State loaded: {_statePath}";
+    }
+
     private void OnScreenshot(object? sender, RoutedEventArgs e)
     {
         if (_machine is null)
@@ -141,11 +200,12 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
+        var directory = string.IsNullOrWhiteSpace(_settings.ScreenshotDirectory)
+            ? Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
+            : _settings.ScreenshotDirectory;
         var frame = new FrameBuffer(_machine.Frame.SourceWidth, _machine.Frame.SourceHeight);
         FrameAssembler.Assemble(_machine.Frame, frame, frame.Width, frame.Height);
-        var path = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),
-            $"3do-{DateTime.Now:yyyyMMdd-HHmmss}.bmp");
+        var path = Path.Combine(directory, $"3do-{DateTime.Now:yyyyMMdd-HHmmss}.bmp");
         FrameDumper.WriteBmp(frame, path);
         StatusText.Text = $"Screenshot: {path}";
     }
@@ -195,6 +255,7 @@ public partial class MainWindow : Window, IDisposable
     {
         _timer.Stop();
         FlushNvram();
+        AppSettingsStore.Save(_settings);
         _disc?.Dispose();
         Video.Dispose();
         _nvramStore.Dispose();
