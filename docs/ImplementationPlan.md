@@ -153,6 +153,10 @@ Key decisions:
 
 ## 3. Reference-to-project map
 
+This table records the original FreeDOCore-to-C# mapping. For new compatibility work,
+use the Opera mapping in [`ReferenceStrategy.md`](ReferenceStrategy.md); the C#
+project/type layout is unchanged.
+
 | FreeDOCore file | C# project | Main C# types | Milestone |
 |---|---|---|---|
 | `_3do_sys.cpp` | `ThreeDo.Machine` | `ThreeDoMachine`, `FrameLoop`, `MachineOptions` | M3 |
