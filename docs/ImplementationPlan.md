@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/4DO-master/FreeDOCore` (primary), `References/opera-libretro-master/libopera` (secondary)
-**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); M4 MADAM graphics in progress (M4.1-M4.5 complete; next is M4.6 CEL geometry and clipping). M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
+**Status:** M0 scaffold complete; M1 core/memory/scheduler/state complete; M2 ARM60 CPU complete; M3 boot skeleton complete (M3.13 OpenGL spike deferred to M9R); M4 MADAM graphics in progress (M4.1-M4.6 complete; next is M4.7 packed CEL rasterizer). M0.8 legal/attribution review remains pending. The OpenGL renderer is a **required** desktop component; the optional guest ARM JIT is a separate backend path.
 **Last updated:** 2026-10-23
 
 ---
@@ -536,7 +536,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - `PPROC`: MS/MF/SF/2S/AV/2D, PXOR, NOBLK, clipping.
   - `PPROJ_OUTPUT`: PLUT position, SWAPHV, CFBDSUB (disabled), B15/B0 modes.
   - Exhaustive combination tests where feasible.
-- [ ] **M4.6 CEL geometry and clipping.**
+- [x] **M4.6 CEL geometry and clipping.**
   - `TestInitVisual`, `Init_Line_Map`, `Init_Scale_Map`, `Init_Arbitrary_Map`.
   - `QuardCCWTest`, `TexelCCWTest`.
   - `XY2OFF`.
@@ -1349,3 +1349,4 @@ Suggested parallelization with two developers:
 | 2026-10-23 | M4.1-M4.3 | CEL bit reader, CCB parser, PLUT loader | `CelBitReader` (bit rates 1-32, positions, skip), `CcbControl`/`CcbHeader`/`CcbParser` (absolute/relative pointers, preamble, packed/skip/last), `Madam.LoadPlut`; 337 tests pass; commit `b600424` |
 | 2026-10-23 | M4.4 | Pixel decoder | 1/2/4/6/8/16 bpp, linear/coded modes, palette-write bit, AMV tables, transparency; 346 tests pass; commit `7ce230d` |
 | 2026-10-23 | M4.5 | Pixel processor and projector | `PixelProcessor` (PSCALAR, AV, PXOR, NOBLK, signed-char clipping) and `Projector` (PLUTPOS, SWAPHV/NOSWAP, B15/B0); differential vectors and grid hashes from the reference C++; 400 tests pass; commit `84dec5d` |
+| 2026-10-23 | M4.6 | CEL geometry and clipping | `CelGeometry` (`TestInitVisual`, line/scale/arbitrary maps, CCW tests), `TexelFunction`; 300k-case differential hash from the reference C++; 404 tests pass |

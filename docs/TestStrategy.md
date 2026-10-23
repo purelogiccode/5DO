@@ -128,7 +128,7 @@ Implemented CPU suites: `Arm60StateTests`, `ArmBarrelShifterTests`, `ArmConditio
 
 Implemented M3 suites: `ClioTests`, `MadamTests`, `SportTests`, `VdlpTests`, `FrameAssemblerTests`, `BiosImageTests`, `NvramImageTests`, and `ThreeDoMachineTests`. The machine suite covers the synthetic VDL/SPORT program, frame determinism, the reference cycle budget, zero steady-state allocations, and an optional 300-frame real-BIOS smoke test gated by `THREEDO_BIOS`.
 
-Implemented M4 suites so far: `CelBitReaderTests`, `CcbParserTests`, `PixelDecoderTests`, `PixelProcessorTests`, `ProjectorTests`, and the PLUT-load tests in `MadamTests`.
+Implemented M4 suites so far: `CelBitReaderTests`, `CcbParserTests`, `PixelDecoderTests`, `PixelProcessorTests`, `ProjectorTests`, `CelGeometryTests`, and the PLUT-load tests in `MadamTests`.
 
 For each instruction, assert registers, flags, memory, and cycles. Where possible, also assert the disassembler text.
 

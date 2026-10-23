@@ -54,11 +54,11 @@ public enum CcbControl : uint
     /// <summary>Sub-code length is present. FreeDO: <c>CCB_ALSC</c>.</summary>
     SubCodeLength = 0x00080000,
 
-    /// <summary>Sub-code width is present. FreeDO: <c>CCB_ACW</c>.</summary>
-    SubCodeWidth = 0x00040000,
+    /// <summary>Clockwise CEL winding. FreeDO: <c>CCB_ACW</c>.</summary>
+    Clockwise = 0x00040000,
 
-    /// <summary>Sub-code color width is present. FreeDO: <c>CCB_ACCW</c>.</summary>
-    SubCodeColorWidth = 0x00020000,
+    /// <summary>Counter-clockwise CEL winding. FreeDO: <c>CCB_ACCW</c>.</summary>
+    CounterClockwise = 0x00020000,
 
     /// <summary>Two-dimensional flag. FreeDO: <c>CCB_TWD</c>.</summary>
     TwoDimensional = 0x00010000,
