@@ -450,6 +450,7 @@ internal static class Program
         var dumpDspPrefix = options.Get("--dump-dsp");
         var dspTracePath = options.Get("--dsp-trace");
         var inputScriptPath = options.Get("--input-script");
+        var nvramPath = options.Get("--nvram");
 
         if (biosPath is null && stateIn is null)
         {
@@ -474,6 +475,13 @@ internal static class Program
         if (stateIn is not null)
         {
             machine.LoadStateFromFile(stateIn);
+        }
+        else
+        {
+            var nvram = nvramPath is not null && File.Exists(nvramPath)
+                ? NvramImage.Load(nvramPath)
+                : NvramImage.CreateFresh();
+            machine.LoadNvram(nvram.Data.Span);
         }
 
         ScriptedPbusSource? scriptedInput = null;
@@ -640,6 +648,17 @@ internal static class Program
                         $"{entry.Pc:x4} {entry.Instruction:x4} "
                         + $"sema={entry.SemaphoreStatus:x4}/{entry.SemaphoreData:x4} next={entry.NextPc:x4}");
                 }
+            }
+
+            if (nvramPath is not null)
+            {
+                var directory = Path.GetDirectoryName(Path.GetFullPath(nvramPath));
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                NvramImage.FromBytes(machine.Memory.Nvram).Save(nvramPath);
             }
 
             file?.Dispose();
@@ -1128,7 +1147,7 @@ internal static class Program
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
-        Console.WriteLine("             [--dsp-trace path] [--input-script path]");
+        Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path]");
         Console.WriteLine("             Runs the machine and records a diagnostic instruction ring buffer.");
         Console.WriteLine("  info <disc> [--json]                 Disc geometry, volume header, and game ID.");
         Console.WriteLine("  disc dump <disc> --out path [--sector N] [--count N]");
