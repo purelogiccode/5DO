@@ -96,15 +96,24 @@ public sealed class VdlpTests
         var vdlp = new Vdlp(memory.Ram);
         var frame = new VdlFrame();
         const uint head = 0x3000;
-        const uint bitmap = 0x8002;
+        const uint bitmap = 0x8000;
         var header = 1u | (1u << 15) | (1u << 16) | (1u << 21) | (1u << 23);
+        var storage = bitmap + VramOffset;
 
         WriteVdl(memory, head, header, bitmap, bitmap, 0);
+        for (var i = 0; i < 384; i++)
+        {
+            memory.Ram.Write16(storage + ((uint)i * 2), (ushort)(i & 0x1f));
+        }
 
         vdlp.ProcessVdl(head);
         vdlp.DoLine(0, frame);
+        vdlp.DoLine(16, frame);
 
-        Assert.Equal(bitmap + (384u * 4) - 2, vdlp.CurrentBitmap);
+        Assert.Equal(384, frame[0].Width);
+        Assert.Equal(383 & 0x1f, frame[0].Pixels[383]);
+        Assert.Equal(0, frame[0].PixelBuffer[384]);
+        Assert.Equal(bitmap + (384u * 4), vdlp.CurrentBitmap);
     }
 
     [Fact]

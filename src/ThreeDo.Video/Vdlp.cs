@@ -171,15 +171,21 @@ public sealed class Vdlp : IVdlp, IStateSection
             var target = frame.Lines[y];
             if ((_clutDma & (1u << 21)) != 0)
             {
+                var lineWidth = (int)Math.Min(_modulo, (uint)VdlLine.MaxPixels);
+                if (lineWidth <= 0)
+                {
+                    lineWidth = EmulatorConstants.VideoWidth;
+                }
+
                 var destination = target.PixelBuffer;
                 var source = ((_previousBitmap ^ 2) & 0xfffff) + VramOffset;
-                for (var i = 0; i < 320; i++)
+                for (var i = 0; i < lineWidth; i++)
                 {
                     destination[i] = _ram.Read16(source);
                     source += 2;
                 }
 
-                target.Width = 320;
+                target.Width = lineWidth;
                 _clutB.AsSpan().CopyTo(target.ClutB);
                 _clutG.AsSpan().CopyTo(target.ClutG);
                 _clutR.AsSpan().CopyTo(target.ClutR);

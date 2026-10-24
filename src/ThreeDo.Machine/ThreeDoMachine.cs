@@ -549,6 +549,15 @@ public sealed class ThreeDoMachine
         Madam.KeyPressed(pbus[..length]);
 
         _frame.SourceWidth = EmulatorConstants.VideoWidth;
+        for (var lineIndex = 0; lineIndex < EmulatorConstants.VideoHeight; lineIndex++)
+        {
+            var width = _frame.Lines[lineIndex].Width;
+            if (width > _frame.SourceWidth)
+            {
+                _frame.SourceWidth = width;
+            }
+        }
+
         _frame.SourceHeight = EmulatorConstants.VideoHeight;
 
         if (!skipFrame)
