@@ -852,8 +852,9 @@ public sealed class Dsp : IDsp, IStateSection
             }
             else if ((inst.NrofType & 6) == 6)
             {
-                // Immediate format.
-                var shift = (~(inst.IofJustify + 1)) & 3;
+                // Immediate format. The reference shifts by the raw one-bit JUSTIFY field:
+                // 0 or 3 (the field is sign-extended to 0/-1, then masked).
+                var shift = inst.IofJustify & 3;
                 pool[operands] = unchecked((ushort)(inst.IofImmediate << shift));
                 _writeback = pool[operands++];
             }
@@ -946,7 +947,7 @@ public sealed class Dsp : IDsp, IStateSection
 
         if ((inst.NrofType & 6) == 6)
         {
-            var shift = (~(inst.IofJustify + 1)) & 3;
+            var shift = inst.IofJustify & 3;
             return inst.IofImmediate << shift;
         }
 

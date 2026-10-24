@@ -146,9 +146,24 @@ public sealed class DspTests
         program.Word(Sleep);
 
         var dsp = Run(program);
-        // Immediate 0x123 is shifted left two by the loader, placed in the high half by MUXB=2,
-        // and then shifted left another eight by BS=6.
-        Assert.Equal(0x8C00, dsp.ReadInstructionMemory(0x100));
+        // The one-bit JUSTIFY field is 0, so the loader shifts by 0. The immediate is placed in
+        // the high half by MUXB=2 and then shifted left another eight by BS=6.
+        Assert.Equal(0x2300, dsp.ReadInstructionMemory(0x100));
+    }
+
+    [Fact]
+    public void Loop_JustifyBitShiftsImmediateByThree()
+    {
+        var program = new ProgramBuilder();
+        program.Seed(0x100, 0x00);
+        program.Word(Alu(12, muxA: 1, muxB: 2, numOps: 2, bs: 6));
+        program.Word(NonRegister(0x100, writeBack: true));
+        program.Word(Immediate(0x123, justify: true));
+        program.Word(Sleep);
+
+        var dsp = Run(program);
+        // JUSTIFY is sign-extended (-1) and masked, so the immediate is shifted left three.
+        Assert.Equal(0x1800, dsp.ReadInstructionMemory(0x100));
     }
 
     [Fact]
@@ -225,7 +240,7 @@ public sealed class DspTests
         program.Word(Sleep);
 
         _ = Run(program, dsp);
-        Assert.Equal(0x00050004u, dsp.ArmReadSemaphore());
+        Assert.Equal(0x00050001u, dsp.ArmReadSemaphore());
 
         dsp.ArmWriteSemaphore(0x1234);
         Assert.Equal(0x00081234u, dsp.ArmReadSemaphore());
@@ -284,7 +299,7 @@ public sealed class DspTests
 
         Assert.Equal(1, host.OutputFifoWrites);
         Assert.Equal(0, host.LastOutputChannel);
-        Assert.Equal(0x08, host.LastOutputValue);
+        Assert.Equal(0x02, host.LastOutputValue);
     }
 
     [Fact]
@@ -396,15 +411,15 @@ public sealed class DspTests
 
         internal void Seed(int address, ushort value)
         {
-            // ALU OR: A <- [address] (zero), B <- immediate. The immediate operand is shifted
-            // left two by the operand loader and then into the high half by MUXB=2, so passing
-            // value/4 writes value through the write-back operand. Values must be multiples of 4.
+            // ALU OR: A <- [address] (zero), B <- immediate. The immediate is a signed 13-bit
+            // field, so the helper splits the value by shifting it right two and using BS=2 to
+            // restore the low bits. Values must be multiples of four.
             if ((value & 3) != 0)
             {
                 throw new ArgumentException("Seeded DSP values must be multiples of four.", nameof(value));
             }
 
-            Word(Alu(12, muxA: 1, muxB: 2, numOps: 2));
+            Word(Alu(12, muxA: 1, muxB: 2, numOps: 2, bs: 2));
             Word(NonRegister(address, writeBack: true));
             Word(Immediate(value >> 2));
         }
