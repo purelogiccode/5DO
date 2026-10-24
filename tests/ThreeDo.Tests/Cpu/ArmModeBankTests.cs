@@ -1,5 +1,3 @@
-using ThreeDo.Core;
-using ThreeDo.Cpu;
 using ThreeDo.Tests.TestUtilities;
 
 namespace ThreeDo.Tests.Cpu;

@@ -977,7 +977,6 @@ public sealed class Arm60 : ICpuBackend, IStateSection
 
         if ((number >> 1) != 0)
         {
-            number >>= 1;
             result += 2;
         }
         else if (number != 0)

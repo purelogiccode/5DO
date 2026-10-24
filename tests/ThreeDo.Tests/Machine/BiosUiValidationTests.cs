@@ -67,7 +67,7 @@ public sealed class BiosUiValidationTests
         machine.RunFrames(1200);
 
         Assert.True(sink.Samples > 0, "The DSP produced no samples.");
-        Assert.True((machine.Dsp as ThreeDo.Dsp.Dsp)?.IsRunning == true, "The BIOS did not start the DSP.");
+        Assert.True(machine.Dsp.IsRunning, "The BIOS did not start the DSP.");
 
         _output.WriteLine($"dsp samples={sink.Samples} nonzero={sink.NonZero} pc={machine.Cpu.ProgramCounter:x8}");
     }

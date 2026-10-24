@@ -21,5 +21,5 @@ public interface IDiscSource : IDisposable
     /// <summary>Reads one 2048-byte user-data sector into <paramref name="destination"/>.</summary>
     /// <param name="lba">Logical block address, zero-based.</param>
     /// <param name="destination">Destination span of at least <see cref="SectorSize"/> bytes.</param>
-    void ReadSector(int lba, System.Span<byte> destination);
+    void ReadSector(int lba, Span<byte> destination);
 }

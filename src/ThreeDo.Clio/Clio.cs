@@ -47,7 +47,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     {
         _tuning = tuning ?? EmulatorTuning.Default;
         _tuning.Validate();
-        Reset(0x40);
+        Reset();
     }
 
     /// <summary>Gets the machine tuning.</summary>

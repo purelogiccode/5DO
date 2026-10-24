@@ -2,7 +2,6 @@ using System;
 using System.Globalization;
 using Silk.NET.OpenGL;
 using ThreeDo.Core;
-using ThreeDo.Video;
 using GlPixelFormat = Silk.NET.OpenGL.PixelFormat;
 
 namespace ThreeDo.Video.OpenGL;
@@ -204,7 +203,7 @@ public sealed class OpenGlRenderer : IVideoRenderer
         gl.UseProgram(_scaleProgram);
         gl.Uniform2(_uScaleSource, width, height);
         gl.Uniform4(_uScaleRect, viewport.X, viewport.Y, viewport.Width, viewport.Height);
-        gl.Uniform2(_uScaleOutput, (float)_outputWidth, (float)_outputHeight);
+        gl.Uniform2(_uScaleOutput, _outputWidth, _outputHeight);
         gl.Uniform1(_uScaleFilter, FilterValue(_settings.Filter));
         gl.Uniform1(_uScaleScanline, _settings.ScanlineStrength);
 
@@ -292,8 +291,8 @@ public sealed class OpenGlRenderer : IVideoRenderer
             TextureTarget.Texture2D,
             1,
             SizedInternalFormat.R16ui,
-            (uint)VdlFrameUploader.MaxWidth,
-            (uint)VdlFrameUploader.MaxHeight);
+            VdlFrameUploader.MaxWidth,
+            VdlFrameUploader.MaxHeight);
 
         gl.ActiveTexture(TextureUnit.Texture1);
         gl.BindTexture(TextureTarget.Texture2D, _clutTexture);
@@ -301,8 +300,8 @@ public sealed class OpenGlRenderer : IVideoRenderer
             TextureTarget.Texture2D,
             1,
             SizedInternalFormat.Rgb8,
-            (uint)VdlFrameUploader.ClutEntries,
-            (uint)VdlFrameUploader.MaxHeight);
+            VdlFrameUploader.ClutEntries,
+            VdlFrameUploader.MaxHeight);
 
         gl.ActiveTexture(TextureUnit.Texture2);
         gl.BindTexture(TextureTarget.Texture2D, _paramTexture);
@@ -311,7 +310,7 @@ public sealed class OpenGlRenderer : IVideoRenderer
             1,
             SizedInternalFormat.Rgba32ui,
             1,
-            (uint)VdlFrameUploader.MaxHeight);
+            VdlFrameUploader.MaxHeight);
     }
 
     private void UploadTextures(GL gl, int width, int height)
@@ -322,7 +321,7 @@ public sealed class OpenGlRenderer : IVideoRenderer
 
         gl.ActiveTexture(TextureUnit.Texture1);
         gl.BindTexture(TextureTarget.Texture2D, _clutTexture);
-        gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, (uint)VdlFrameUploader.ClutEntries, (uint)height, GlPixelFormat.Rgb, PixelType.UnsignedByte, _uploader.Clut);
+        gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, VdlFrameUploader.ClutEntries, (uint)height, GlPixelFormat.Rgb, PixelType.UnsignedByte, _uploader.Clut);
 
         gl.ActiveTexture(TextureUnit.Texture2);
         gl.BindTexture(TextureTarget.Texture2D, _paramTexture);

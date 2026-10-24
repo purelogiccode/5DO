@@ -11,8 +11,6 @@ namespace ThreeDo.Clio;
 /// </remarks>
 public sealed class DiagPort : IDiagPort
 {
-    private ushort _sendFifo0;
-    private ushort _sendFifo1;
     private ushort _receiveFifo0;
     private ushort _receiveFifo1;
     private ushort _getPointer;
@@ -28,8 +26,6 @@ public sealed class DiagPort : IDiagPort
     /// <param name="testCode">Diagnostic test selector; a negative value selects no test.</param>
     public void Reset(int testCode)
     {
-        _sendFifo0 = 0;
-        _sendFifo1 = 0;
         _getPointer = 16;
         _sendPointer = 16;
 
@@ -55,12 +51,7 @@ public sealed class DiagPort : IDiagPort
         {
             _getPointer = 16;
             _sendPointer = 16;
-            _sendFifo0 = 0;
-            _sendFifo1 = 0;
         }
-
-        _sendFifo0 |= (ushort)((value & 1) << (_sendPointer - 1));
-        _sendFifo1 |= (ushort)(((value & 1) >> 1) << (_sendPointer - 1));
 
         _sendPointer--;
         if (_sendPointer == 0)

@@ -1,7 +1,6 @@
-using System;
 using ThreeDo.Input;
 
-namespace ThreeDo.Tests.InputIo;
+namespace ThreeDo.Tests.Input;
 
 public sealed class InputManagerTests
 {

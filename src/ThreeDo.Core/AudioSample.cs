@@ -13,7 +13,7 @@ namespace ThreeDo.Core;
 public readonly record struct AudioSample(short Left, short Right)
 {
     /// <summary>Gets the packed 32-bit sample.</summary>
-    public uint Packed => (uint)(ushort)Left | ((uint)(ushort)Right << 16);
+    public uint Packed => (ushort)Left | ((uint)(ushort)Right << 16);
 
     /// <summary>Creates a sample from a packed 32-bit value.</summary>
     /// <param name="packed">Packed sample value.</param>

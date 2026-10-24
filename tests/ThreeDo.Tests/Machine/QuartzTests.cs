@@ -75,7 +75,7 @@ public sealed class QuartzTests
 
         while (total < EmulatorConstants.ArmClock)
         {
-            var chunk = Math.Min(255u, (uint)EmulatorConstants.ArmClock - total);
+            var chunk = Math.Min(255u, EmulatorConstants.ArmClock - total);
             quartz.PushArmCycles(chunk);
             total += chunk;
 
@@ -105,7 +105,7 @@ public sealed class QuartzTests
 
         while (total < EmulatorConstants.ArmClock)
         {
-            var chunk = Math.Min(255u, (uint)EmulatorConstants.ArmClock - total);
+            var chunk = Math.Min(255u, EmulatorConstants.ArmClock - total);
             quartz.PushArmCycles(chunk);
             total += chunk;
 
@@ -159,7 +159,7 @@ public sealed class QuartzTests
         var total = 0u;
         while (total < EmulatorConstants.ArmClock)
         {
-            var chunk = Math.Min(255u, (uint)EmulatorConstants.ArmClock - total);
+            var chunk = Math.Min(255u, EmulatorConstants.ArmClock - total);
             quartz.PushArmCycles(chunk);
             total += chunk;
             while (quartz.QueueVdl())

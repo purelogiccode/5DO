@@ -199,9 +199,9 @@ public sealed class ThreeDoMachineTests
             ArmTestAssembler.Mov(2, 0x03200000),
             ArmTestAssembler.AddImmediate(2, 2, 0x2000),
             ArmTestAssembler.Mvn(3, 0),
-            ArmTestAssembler.StrImmediate(3, 2, 0),
+            ArmTestAssembler.StrImmediate(3, 2),
             ArmTestAssembler.AddImmediate(2, 2, 0x2000),
-            ArmTestAssembler.StrImmediate(3, 2, 0),
+            ArmTestAssembler.StrImmediate(3, 2),
             ArmTestAssembler.Branch(0x03000024, 0x03000024),
         };
 

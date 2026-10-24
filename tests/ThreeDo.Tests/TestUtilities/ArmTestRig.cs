@@ -1,4 +1,3 @@
-using System;
 using ThreeDo.Core;
 using ThreeDo.Cpu;
 using ThreeDo.Memory;
@@ -11,14 +10,11 @@ internal sealed class FakeInterruptSink : IInterruptSink
 
     public int GenerateCount { get; private set; }
 
-    public uint LastReason1 { get; private set; }
-
     public uint LastReason2 { get; private set; }
 
     public void GenerateFiq(uint reason1, uint reason2)
     {
         GenerateCount++;
-        LastReason1 = reason1;
         LastReason2 = reason2;
         NeedFiq = true;
     }

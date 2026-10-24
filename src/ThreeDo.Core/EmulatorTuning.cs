@@ -24,6 +24,10 @@ public sealed record EmulatorTuning
 
     /// <summary>Gets a value indicating whether the future high-resolution CEL mode is enabled.</summary>
     /// <remarks>High-resolution rendering is not implemented in v1; the flag is reserved for M11.</remarks>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "ReSharper",
+        "UnusedAutoPropertyAccessor.Global",
+        Justification = "Reserved public tuning flag for the future high-resolution mode.")]
     public bool HighResolution { get; init; }
 
     /// <summary>Validates the tuning values.</summary>

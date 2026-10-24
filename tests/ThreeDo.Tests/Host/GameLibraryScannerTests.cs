@@ -1,9 +1,8 @@
 using System;
 using System.IO;
-using System.Linq;
 using ThreeDo.Host;
 
-namespace ThreeDo.Tests.HostIo;
+namespace ThreeDo.Tests.Host;
 
 public sealed class GameLibraryScannerTests
 {

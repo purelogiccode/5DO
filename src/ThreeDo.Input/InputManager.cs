@@ -87,7 +87,16 @@ public sealed class KeyboardInputMapper
     }
 
     /// <summary>Gets a read-only view of all controller states.</summary>
-    public ReadOnlySpan<ControllerState> States => _states;
+    public ReadOnlySpan<ControllerState> States
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _states;
+            }
+        }
+    }
 }
 
 /// <summary>

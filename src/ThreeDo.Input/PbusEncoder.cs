@@ -58,26 +58,26 @@ public static class PbusEncoder
 
     private static byte LowByte(ControllerState state)
     {
-        byte value = 0;
-        value |= state.IsDown(ControllerButton.L) ? (byte)0x04 : (byte)0;
-        value |= state.IsDown(ControllerButton.R) ? (byte)0x08 : (byte)0;
-        value |= state.IsDown(ControllerButton.X) ? (byte)0x10 : (byte)0;
-        value |= state.IsDown(ControllerButton.P) ? (byte)0x20 : (byte)0;
-        value |= state.IsDown(ControllerButton.C) ? (byte)0x40 : (byte)0;
-        value |= state.IsDown(ControllerButton.B) ? (byte)0x80 : (byte)0;
-        return value;
+        var value = 0;
+        value |= state.IsDown(ControllerButton.L) ? 0x04 : 0;
+        value |= state.IsDown(ControllerButton.R) ? 0x08 : 0;
+        value |= state.IsDown(ControllerButton.X) ? 0x10 : 0;
+        value |= state.IsDown(ControllerButton.P) ? 0x20 : 0;
+        value |= state.IsDown(ControllerButton.C) ? 0x40 : 0;
+        value |= state.IsDown(ControllerButton.B) ? 0x80 : 0;
+        return (byte)value;
     }
 
     private static byte HighByte(ControllerState state)
     {
-        byte value = 0;
-        value |= state.IsDown(ControllerButton.A) ? (byte)0x01 : (byte)0;
-        value |= state.IsDown(ControllerButton.Left) ? (byte)0x02 : (byte)0;
-        value |= state.IsDown(ControllerButton.Right) ? (byte)0x04 : (byte)0;
-        value |= state.IsDown(ControllerButton.Up) ? (byte)0x08 : (byte)0;
-        value |= state.IsDown(ControllerButton.Down) ? (byte)0x10 : (byte)0;
+        var value = 0;
+        value |= state.IsDown(ControllerButton.A) ? 0x01 : 0;
+        value |= state.IsDown(ControllerButton.Left) ? 0x02 : 0;
+        value |= state.IsDown(ControllerButton.Right) ? 0x04 : 0;
+        value |= state.IsDown(ControllerButton.Up) ? 0x08 : 0;
+        value |= state.IsDown(ControllerButton.Down) ? 0x10 : 0;
         value |= 0x80;
-        return value;
+        return (byte)value;
     }
 }
 

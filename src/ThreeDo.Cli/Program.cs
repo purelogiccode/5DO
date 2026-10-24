@@ -97,6 +97,10 @@ internal static class Program
         return 2;
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "ReSharper",
+        "AccessToDisposedClosure",
+        Justification = "Trace writers are disposed after the run loop, when no observer can fire.")]
     private static int Run(string[] args)
     {
         var options = Parse(args);
@@ -533,6 +537,7 @@ internal static class Program
         if (stopCd is not null)
         {
             var command = (byte)(stopCd.Value & 0xff);
+            // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
             machine.Cdrom.CommandObserver = value =>
             {
                 if (value == command)

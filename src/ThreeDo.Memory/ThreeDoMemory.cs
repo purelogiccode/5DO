@@ -493,13 +493,6 @@ public sealed class ThreeDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSele
         if ((index & ~0xFFFFFu) == 0 && (index & 0x40000) == 0x40000)
         {
             _nvram[(index >> 2) & 0x7FFF] = value;
-            return;
-        }
-
-        index = address ^ (EmulatorConstants.RomBase | 3);
-        if ((index & ~0xFFFFFu) == 0)
-        {
-            return;
         }
     }
 

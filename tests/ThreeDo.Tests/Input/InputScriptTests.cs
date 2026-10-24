@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using ThreeDo.Input;
 
-namespace ThreeDo.Tests.InputIo;
+namespace ThreeDo.Tests.Input;
 
 public sealed class InputScriptTests
 {

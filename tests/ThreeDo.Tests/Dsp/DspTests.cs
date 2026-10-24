@@ -4,7 +4,7 @@ using ThreeDo.Core;
 using ThreeDo.Dsp;
 using DspCore = ThreeDo.Dsp.Dsp;
 
-namespace ThreeDo.Tests.AudioDsp;
+namespace ThreeDo.Tests.Dsp;
 
 /// <summary>
 /// Instruction-level tests for the M5 DSP core. Programs are assembled from raw 16-bit words

@@ -1,8 +1,7 @@
-using System;
 using ThreeDo.Core;
 using ThreeDo.Video;
 
-namespace ThreeDo.Tests.VideoRendering;
+namespace ThreeDo.Tests.Video;
 
 public sealed class VdlFrameMailboxTests
 {

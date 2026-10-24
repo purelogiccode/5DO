@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
 
 namespace ThreeDo.Input;
@@ -12,6 +11,10 @@ namespace ThreeDo.Input;
 public sealed class PlayerProfile
 {
     /// <summary>Gets or sets the display name.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "ReSharper",
+        "UnusedAutoPropertyAccessor.Global",
+        Justification = "Round-tripped through JSON and read by the desktop UI.")]
     public string Name { get; set; } = string.Empty;
 
     /// <summary>Gets keyboard bindings as key name (e.g. "A", "Left") to button.</summary>

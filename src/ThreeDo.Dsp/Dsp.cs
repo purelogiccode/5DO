@@ -423,7 +423,7 @@ public sealed class Dsp : IDsp, IStateSection
             _requests = _requestTable[raw];
             _bs = _bsTable[raw];
 
-            OperandLoader(inst.AifNumOps, flags);
+            OperandLoader(inst.AifNumOps);
 
             switch (inst.AifMuxA)
             {
@@ -807,7 +807,7 @@ public sealed class Dsp : IDsp, IStateSection
         }
     }
 
-    private void OperandLoader(int requests, DspFlags flags)
+    private void OperandLoader(int requests)
     {
         _writeback = 0;
 
@@ -837,7 +837,7 @@ public sealed class Dsp : IDsp, IStateSection
                 ushort address;
                 if (inst.NrofDi != 0)
                 {
-                    address = unchecked((ushort)ReadData((uint)inst.NrofOpAddr));
+                    address = ReadData((uint)inst.NrofOpAddr);
                 }
                 else
                 {
@@ -938,7 +938,7 @@ public sealed class Dsp : IDsp, IStateSection
         if (inst.NrofType == 4)
         {
             return inst.NrofDi != 0
-                ? ReadData(unchecked((ushort)ReadData((uint)inst.NrofOpAddr)))
+                ? ReadData(ReadData((uint)inst.NrofOpAddr))
                 : ReadData((uint)inst.NrofOpAddr);
         }
 
@@ -967,7 +967,7 @@ public sealed class Dsp : IDsp, IStateSection
     {
         var address = RegisterAddress(register);
         return indirect != 0
-            ? ReadData(unchecked((ushort)ReadData(address)))
+            ? ReadData(ReadData(address))
             : ReadData(address);
     }
 
@@ -1110,30 +1110,26 @@ public sealed class Dsp : IDsp, IStateSection
     {
         return ((a & b & TopBit) != 0)
             || ((a & ~result & TopBit) != 0)
-            || ((b & ~result & TopBit) != 0)
-            ? true : false;
+            || ((b & ~result & TopBit) != 0);
     }
 
     private static bool SubCFlag(uint a, uint b, uint result)
     {
         return ((a & ~b & TopBit) != 0)
             || ((a & ~result & TopBit) != 0)
-            || ((~b & ~result & TopBit) != 0)
-            ? true : false;
+            || ((~b & ~result & TopBit) != 0);
     }
 
     private static bool AddVFlag(uint a, uint b, uint result)
     {
         return ((a & b & ~result & TopBit) != 0)
-            || ((~a & ~b & result & TopBit) != 0)
-            ? true : false;
+            || ((~a & ~b & result & TopBit) != 0);
     }
 
     private static bool SubVFlag(uint a, uint b, uint result)
     {
         return ((a & ~b & ~result & TopBit) != 0)
-            || ((~a & b & result & TopBit) != 0)
-            ? true : false;
+            || ((~a & b & result & TopBit) != 0);
     }
 
     /// <summary>The four DSP condition flags plus the last ALU result state.</summary>

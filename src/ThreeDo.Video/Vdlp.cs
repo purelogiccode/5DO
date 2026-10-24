@@ -171,7 +171,7 @@ public sealed class Vdlp : IVdlp, IStateSection
             var target = frame.Lines[y];
             if ((_clutDma & (1u << 21)) != 0)
             {
-                var lineWidth = (int)Math.Min(_modulo, (uint)VdlLine.MaxPixels);
+                var lineWidth = (int)Math.Min(_modulo, VdlLine.MaxPixels);
                 if (lineWidth <= 0)
                 {
                     lineWidth = EmulatorConstants.VideoWidth;

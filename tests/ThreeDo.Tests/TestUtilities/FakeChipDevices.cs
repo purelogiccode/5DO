@@ -4,6 +4,10 @@ using ThreeDo.Core;
 
 namespace ThreeDo.Tests.TestUtilities;
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "ReSharper",
+    "UnusedAutoPropertyAccessor.Global",
+    Justification = "Test double exposes configurable inputs and captured outputs.")]
 internal sealed class FakeClioXbus : IClioXbus
 {
     private readonly Queue<uint> _data = new();
@@ -91,6 +95,10 @@ internal sealed class ZeroPbusSource : IPbusSource
     public int GetPbusData(Span<byte> destination) => 0;
 }
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "ReSharper",
+    "UnusedAutoPropertyAccessor.Global",
+    Justification = "Test double exposes configurable inputs and captured outputs.")]
 internal sealed class RecordingAudioSink : IAudioSink
 {
     public int SampleCount { get; private set; }

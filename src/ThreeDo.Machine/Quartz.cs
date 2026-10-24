@@ -114,12 +114,12 @@ public sealed class Quartz : IStateSection
         }
 
         _accDsp = unchecked(_accDsp + (arm * EmulatorConstants.SoundClock));
-        _accVdl = unchecked(_accVdl + (arm * (uint)EmulatorConstants.VdlClock));
+        _accVdl = unchecked(_accVdl + (arm * EmulatorConstants.VdlClock));
 
         var timerDelay = TimerDelayProvider?.Invoke() ?? 0;
         if (timerDelay != 0)
         {
-            _tCount = unchecked(_tCount + (arm * ((uint)EmulatorConstants.TimerClock / timerDelay)));
+            _tCount = unchecked(_tCount + (arm * (EmulatorConstants.TimerClock / timerDelay)));
         }
     }
 

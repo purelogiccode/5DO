@@ -4,7 +4,7 @@ using System.IO;
 using ThreeDo.Audio;
 using ThreeDo.Core;
 
-namespace ThreeDo.Tests.AudioIo;
+namespace ThreeDo.Tests.Audio;
 
 public sealed class AudioPipelineTests
 {

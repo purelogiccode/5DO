@@ -1,5 +1,3 @@
-using System;
-using ThreeDo.Core;
 using ThreeDo.Madam;
 using ThreeDo.Memory;
 using MadamChip = ThreeDo.Madam.Madam;

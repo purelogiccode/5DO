@@ -53,7 +53,7 @@ public sealed class LogTests
     public void InterpolatedMessage_FormatsWhenEnabled()
     {
         var sink = new InMemoryLogSink();
-        var log = new Log(sink, LogLevel.Info);
+        var log = new Log(sink);
         var value = 42;
 
         log.Write(LogLevel.Info, LogCategory.Machine, $"value={value}");

@@ -44,7 +44,7 @@ internal sealed class CelRasterizer
         var rowCount = (int)((_engine.Pre0 & 0xffc0u) >> 6);
         var bpp = BppTable[(int)(_engine.Pre0 & 0x7u)];
         var offsetLength = bpp < 8 ? 1 : 2;
-        var pixcount = 0;
+        int pixcount;
 
         geometry.SpriteHeight = rowCount + 1;
 
@@ -232,7 +232,7 @@ internal sealed class CelRasterizer
                 xvert = unchecked(xvert + geometry.Vdx1616);
                 yvert = unchecked(yvert + geometry.Vdy1616);
 
-                var remaining = 0;
+                int remaining;
                 while (!eor)
                 {
                     var type = (int)_engine.BitReader.Read(2);
@@ -334,7 +334,7 @@ internal sealed class CelRasterizer
 
                 var xdown = xvert;
                 var ydown = yvert;
-                var remaining = 0;
+                int remaining;
 
                 while (!eor)
                 {
@@ -1015,7 +1015,7 @@ internal sealed class CelRasterizer
         Span<int> updowns = stackalloc int[4];
         var currentFramePixel = 0xffffffffu;
         uint pixel = 0;
-        var maxx = 0;
+        int maxx;
 
         for (; i < maxYt; i++)
         {

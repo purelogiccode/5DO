@@ -1,4 +1,3 @@
-using System;
 using ThreeDo.Core;
 
 namespace ThreeDo.Audio;

@@ -52,6 +52,10 @@ public sealed record RendererSettings
     public double CustomAspect { get; init; } = 4.0 / 3.0;
 
     /// <summary>Gets a value indicating whether vsync presentation is requested.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "ReSharper",
+        "UnusedAutoPropertyAccessor.Global",
+        Justification = "Public renderer setting consumed by presentation backends.")]
     public bool Vsync { get; init; } = true;
 
     /// <summary>Gets a value indicating whether integer scaling is required.</summary>
@@ -86,6 +90,10 @@ public sealed record RendererSettings
 /// <param name="MaxTextureSize">Maximum texture dimension.</param>
 /// <param name="SupportsIntegerTextures">Whether R16UI/usampler2D are available.</param>
 /// <param name="SupportsVsync">Whether the context supports vsync (swap interval).</param>
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "ReSharper",
+    "NotAccessedPositionalProperty.Global",
+    Justification = "Capabilities are reported to host tooling; not every field is read yet.")]
 public readonly record struct RendererCapabilities(
     string Name,
     int MajorVersion,

@@ -7,6 +7,10 @@ using ThreeDo.Machine;
 namespace ThreeDo.Tests.Host;
 
 /// <summary>Threading and pacing tests for the dedicated core runner.</summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "ReSharper",
+    "AccessToDisposedClosure",
+    Justification = "Callbacks complete before the runner is disposed at the end of each test.")]
 public sealed class CoreRunnerTests
 {
     [Fact]

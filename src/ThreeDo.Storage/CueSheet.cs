@@ -78,7 +78,7 @@ public static class CueSheet
                     };
 
                     var trackStartFrame = FindIndex01(lines, cuePath);
-                    var startOffset = (long)trackStartFrame * sectorBytes;
+                    var startOffset = trackStartFrame * sectorBytes;
                     return sectorBytes == 2048
                         ? new IsoSegment(currentFile, startOffset)
                         : new BinImage(currentFile, startOffset, payloadOffset: payloadOffset);

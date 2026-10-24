@@ -13,6 +13,10 @@ namespace ThreeDo.Host;
 /// <param name="Name">Database title, or the file name for unknown discs.</param>
 /// <param name="Known">Whether the 4DO game database recognized the disc.</param>
 /// <param name="Error">Error message when the image could not be opened.</param>
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "ReSharper",
+    "NotAccessedPositionalProperty.Global",
+    Justification = "The game identifier is part of the scanner's public result for host tooling.")]
 public sealed record GameLibraryEntry(
     string Path,
     string Format,

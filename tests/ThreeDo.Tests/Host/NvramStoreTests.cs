@@ -4,7 +4,7 @@ using ThreeDo.Core;
 using ThreeDo.Host;
 using ThreeDo.Storage;
 
-namespace ThreeDo.Tests.HostIo;
+namespace ThreeDo.Tests.Host;
 
 public sealed class NvramStoreTests
 {

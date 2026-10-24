@@ -1,4 +1,3 @@
-using System;
 using ThreeDo.Madam;
 
 namespace ThreeDo.Tests.Madam;

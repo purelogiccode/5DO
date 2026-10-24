@@ -2,7 +2,7 @@ using System;
 using ThreeDo.Core;
 using ThreeDo.Video;
 
-namespace ThreeDo.Tests.VideoRendering;
+namespace ThreeDo.Tests.Video;
 
 public sealed class GlRendererContractTests
 {
@@ -26,12 +26,12 @@ public sealed class GlRendererContractTests
             var pixels = target.Pixels;
             for (var x = 0; x < pixels.Length; x++)
             {
-                pixels[x] = (ushort)((x + line) switch
+                pixels[x] = (x + line) switch
                 {
                     0 => 0,
                     _ when x % 17 == 0 => (ushort)(0x8000 | ((x * 3) & 0x7fff)),
                     _ => (ushort)((x * 31) & 0x7fff),
-                });
+                };
             }
         }
 

@@ -156,6 +156,10 @@ public sealed class ScriptedPbusSource : IPbusSource
     }
 
     /// <summary>Gets the most recently applied frame.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "ReSharper",
+        "UnusedAutoPropertyAccessor.Global",
+        Justification = "Public diagnostic state consumed by host tooling.")]
     public long CurrentFrame { get; private set; } = -1;
 
     /// <summary>Gets the most recently applied controller state.</summary>

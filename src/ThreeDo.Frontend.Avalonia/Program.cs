@@ -1,6 +1,5 @@
 using System;
 using Avalonia;
-using Avalonia.Win32;
 
 namespace ThreeDo.Frontend.Avalonia;
 

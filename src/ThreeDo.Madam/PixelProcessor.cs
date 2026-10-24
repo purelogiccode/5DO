@@ -1,5 +1,3 @@
-using System;
-
 namespace ThreeDo.Madam;
 
 /// <summary>
@@ -45,14 +43,14 @@ public static class PixelProcessor
         var pixelOverMode = (uint)ccbFlags & PixelOverMask;
         var orMask = pixelOverMode == PixelOverOne ? 0x8000u : 0u;
         var andMask = pixelOverMode != PixelOverZero ? 0xffffu : 0x7fffu;
-        var adjustedPixel = (uint)((pixel | orMask) & andMask);
+        var adjustedPixel = (pixel | orMask) & andMask;
 
         // FreeDO selects the high half of PIXC when the adjusted pixel has bit 15 set.
         var control = (adjustedPixel & 0x8000) != 0
             ? (ushort)(pixelControl >> 16)
             : (ushort)pixelControl;
         var decodedPixel = (ushort)adjustedPixel;
-        var dv2 = (int)(control & 1);
+        var dv2 = control & 1;
         var avField = (uint)((control >> 1) & 0x1f);
         var avRaw = ((uint)ccbFlags & (uint)CcbControl.UseAv) != 0
             ? avField
@@ -63,11 +61,11 @@ public static class PixelProcessor
         var noClip = (avRaw & 4) != 0;
         var dv3 = (int)(avRaw >> 3) & 3;
 
-        var s2 = (int)(control >> 6) & 3;
-        var dv1 = (int)(control >> 8) & 3;
-        var mxf = (int)(control >> 10) & 7;
-        var ms = (int)(control >> 13) & 3;
-        var s1 = (int)(control >> 15) & 1;
+        var s2 = (control >> 6) & 3;
+        var dv1 = (control >> 8) & 3;
+        var mxf = (control >> 10) & 7;
+        var ms = (control >> 13) & 3;
+        var s1 = (control >> 15) & 1;
 
         var input1 = s1 == 0 ? decodedPixel : framePixel;
 
@@ -164,29 +162,29 @@ public static class PixelProcessor
 
     private static uint SelectColor1(int ms, int mxf, int dv1, ushort input1, ushort pixel, ushort amv)
     {
-        var r = (int)((input1 >> 10) & 0x1f);
-        var g = (int)((input1 >> 5) & 0x1f);
-        var b = (int)(input1 & 0x1f);
+        var r = (input1 >> 10) & 0x1f;
+        var g = (input1 >> 5) & 0x1f;
+        var b = input1 & 0x1f;
 
         switch (ms)
         {
             case 0:
-                return (uint)Scale(mxf, dv1, r)
+                return Scale(mxf, dv1, r)
                     | ((uint)Scale(mxf, dv1, b) << 8)
                     | ((uint)Scale(mxf, dv1, g) << 16);
             case 1:
-                return (uint)Scale((amv >> 6) & 7, dv1, r)
+                return Scale((amv >> 6) & 7, dv1, r)
                     | ((uint)Scale(amv & 7, dv1, b) << 8)
                     | ((uint)Scale((amv >> 3) & 7, dv1, g) << 16);
             case 2:
-                var pixelR = (int)((pixel >> 10) & 0x1f);
-                var pixelG = (int)((pixel >> 5) & 0x1f);
-                var pixelB = (int)(pixel & 0x1f);
-                return (uint)Scale(pixelR >> 2, pixelR & 3, r)
+                var pixelR = (pixel >> 10) & 0x1f;
+                var pixelG = (pixel >> 5) & 0x1f;
+                var pixelB = pixel & 0x1f;
+                return Scale(pixelR >> 2, pixelR & 3, r)
                     | ((uint)Scale(pixelB >> 2, pixelB & 3, b) << 8)
                     | ((uint)Scale(pixelG >> 2, pixelG & 3, g) << 16);
             default:
-                return (uint)Scale(4, dv1, r)
+                return Scale(4, dv1, r)
                     | ((uint)Scale(4, dv1, b) << 8)
                     | ((uint)Scale(4, dv1, g) << 16);
         }

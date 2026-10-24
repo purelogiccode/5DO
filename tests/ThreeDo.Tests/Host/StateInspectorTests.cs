@@ -5,9 +5,8 @@ using ThreeDo.Diagnostics;
 using ThreeDo.Host;
 using ThreeDo.Machine;
 using ThreeDo.Tests.TestUtilities;
-using ThreeDo.Video;
 
-namespace ThreeDo.Tests.HostIo;
+namespace ThreeDo.Tests.Host;
 
 public sealed class StateInspectorTests
 {

@@ -3,7 +3,7 @@ using ThreeDo.Cdrom;
 using ThreeDo.Core;
 using XbusChip = ThreeDo.Xbus.Xbus;
 
-namespace ThreeDo.Tests.CdromIo;
+namespace ThreeDo.Tests.Cdrom;
 
 public sealed class CdromDeviceTests
 {
@@ -12,7 +12,7 @@ public sealed class CdromDeviceTests
     {
         var cd = new CdromDevice();
 
-        Assert.Equal(0xE1, (int)cd.DriveStatus);
+        Assert.Equal((byte)0xE1, cd.DriveStatus);
         Assert.Equal(0x0F, (int)cd.GetPoll());
         Assert.False(cd.FiqPending);
     }
@@ -75,7 +75,7 @@ public sealed class CdromDeviceTests
         cd.EjectDisc();
 
         // FreeDO XBP_RESET(NULL) calls Init(), which reasserts the tray/disc/spin bits.
-        Assert.Equal(0xE1, (int)cd.DriveStatus);
+        Assert.Equal((byte)0xE1, cd.DriveStatus);
         Assert.Null(cd.Disc);
     }
 
@@ -107,7 +107,7 @@ public sealed class CdromDeviceTests
         cd.InsertDisc(disc);
         Send(cd, 0x10, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02);
         _ = ReadStatus(cd, 2);
-        var first = ReadData(cd, 100);
+        _ = ReadData(cd, 100);
 
         var writer = new StateWriter();
         cd.Save(writer);

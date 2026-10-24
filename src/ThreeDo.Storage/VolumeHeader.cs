@@ -78,6 +78,10 @@ public readonly struct VolumeHeader
     public uint RootDirectoryBlockSize { get; }
 
     /// <summary>Gets the last root directory copy index.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "ReSharper",
+        "UnusedAutoPropertyAccessor.Global",
+        Justification = "Part of the parsed on-disc volume header exposed to storage consumers.")]
     public uint LastRootDirectoryCopy { get; }
 
     /// <summary>Parses a volume header from the first 132 bytes of sector 0.</summary>

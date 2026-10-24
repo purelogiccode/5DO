@@ -21,17 +21,13 @@ namespace ThreeDo.Cdrom;
 /// </remarks>
 public sealed class CdromDevice : IXbusDevice, IStateSection
 {
-    private const int StatusDelay = 100;
     private const int RequestSize = 2048;
 
     private const byte PollStatusMask = 0x01;
     private const byte PollDataMask = 0x02;
-    private const byte PollMagicMask = 0x04;
-    private const byte PollResultMask = 0x08;
     private const byte PollStatus = 0x10;
     private const byte PollData = 0x20;
     private const byte PollMagic = 0x40;
-    private const byte PollResult = 0x80;
 
     private const byte CdstTray = 0x80;
     private const byte CdstDisc = 0x40;
@@ -670,8 +666,6 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
                 _poll |= PollStatus;
                 _status[3] = _xbusStatus;
                 break;
-            default:
-                break;
         }
     }
 
@@ -829,10 +823,6 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         destination[2] = source[2];
     }
 
-    private static byte BcdToBin(byte value) => (byte)(((value >> 4) * 10) + (value & 0x0f));
-
-    private static byte BinToBcd(byte value) => (byte)(((value / 10) << 4) | (value % 10));
-
     private void LbaToMsf()
     {
         _discState.TempLba += 150;
@@ -851,6 +841,10 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         }
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "ReSharper",
+        "UnusedMember.Local",
+        Justification = "The MEI error code table is kept complete for hardware reference.")]
     private enum MeiError : byte
     {
         NoError = 0x00,

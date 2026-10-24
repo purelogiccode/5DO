@@ -1,6 +1,4 @@
-using System;
 using ThreeDo.Core;
-using ThreeDo.Dsp;
 using ThreeDo.Memory;
 using ThreeDo.Tests.TestUtilities;
 using ClioChip = ThreeDo.Clio.Clio;
