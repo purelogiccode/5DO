@@ -120,6 +120,8 @@ internal static class Program
         var inputScriptPath = options.Get("--input-script");
         var progressEvery = options.GetInt("--progress", 0);
         var celTrace = options.Get("--cel-trace");
+        var pbusTrace = options.Get("--pbus-trace");
+        var nvramPath = options.Get("--nvram");
         var discPath = options.Positional;
 
         if (biosPath is null && stateIn is null)
@@ -144,6 +146,14 @@ internal static class Program
 
         machine.Reset();
         machine.AudioSink = audio;
+
+        if (stateIn is null)
+        {
+            var nvram = nvramPath is not null && File.Exists(nvramPath)
+                ? NvramImage.Load(nvramPath)
+                : NvramImage.CreateFresh();
+            machine.LoadNvram(nvram.Data.Span);
+        }
 
         ScriptedPbusSource? scriptedInput = null;
         if (inputScriptPath is not null)
@@ -206,6 +216,18 @@ internal static class Program
 
             celTraceWriter = new StreamWriter(celTrace) { AutoFlush = true };
             machine.Madam.CelTraceWriter = celTraceWriter;
+        }
+
+        StreamWriter? pbusTraceWriter = null;
+        if (pbusTrace is not null)
+        {
+            var directory = Path.GetDirectoryName(Path.GetFullPath(pbusTrace));
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            pbusTraceWriter = new StreamWriter(pbusTrace) { AutoFlush = true };
         }
 
         StreamWriter? kprintWriter = null;
@@ -305,7 +327,7 @@ internal static class Program
             machine.LoadStateFromFile(stateIn);
         }
 
-        if (scriptedInput is null && progressEvery <= 0)
+        if (scriptedInput is null && progressEvery <= 0 && pbusTraceWriter is null)
         {
             machine.RunFrames(frames);
         }
@@ -320,6 +342,12 @@ internal static class Program
                     Console.Error.WriteLine(
                         $"frame {machine.FramesExecuted} pc={machine.Cpu.ProgramCounter:x8} "
                         + $"dsp={machine.Dsp.ProgramCounter:x4} sema={machine.Dsp.SemaphoreStatus:x4}/{machine.Dsp.SemaphoreData:x4}");
+                }
+
+                if (pbusTraceWriter is not null)
+                {
+                    pbusTraceWriter.WriteLine(
+                        $"f={machine.FramesExecuted} pbus={Convert.ToHexString(machine.Madam.PbusQueue)}");
                 }
             }
         }
@@ -346,6 +374,7 @@ internal static class Program
         clioTraceWriter?.Dispose();
         cdTraceWriter?.Dispose();
         celTraceWriter?.Dispose();
+        pbusTraceWriter?.Dispose();
         kprintWriter?.Dispose();
         kprintPcWriter?.Dispose();
         watchWriter?.Dispose();
@@ -386,6 +415,17 @@ internal static class Program
             dspSeed = machine.Dsp.Seed,
             warnings = machine.StateWarnings,
         };
+
+        if (nvramPath is not null)
+        {
+            var directory = Path.GetDirectoryName(Path.GetFullPath(nvramPath));
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            NvramImage.FromBytes(machine.Memory.Nvram).Save(nvramPath);
+        }
 
         disc?.Dispose();
         WriteRunResult(result, json);
@@ -1083,7 +1123,8 @@ internal static class Program
         Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
-        Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--progress N] [--cel-trace path] [--json]");
+        Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--progress N] [--cel-trace path] [--pbus-trace path]");
+        Console.WriteLine("             [--nvram path] [--json]");
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
