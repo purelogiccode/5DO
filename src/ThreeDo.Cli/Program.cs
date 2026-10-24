@@ -12,6 +12,7 @@ using ThreeDo.Core;
 using ThreeDo.Cpu;
 using ThreeDo.Diagnostics;
 using ThreeDo.Host;
+using ThreeDo.Input;
 using ThreeDo.Machine;
 using ThreeDo.Storage;
 using ThreeDo.Video;
@@ -116,6 +117,9 @@ internal static class Program
         var dumpRamOffset = options.GetUInt32("--dump-ram-offset", 0) ?? 0;
         var dumpRamLength = options.GetInt("--dump-ram-length", 0x1000);
         var dumpDspPrefix = options.Get("--dump-dsp");
+        var inputScriptPath = options.Get("--input-script");
+        var progressEvery = options.GetInt("--progress", 0);
+        var celTrace = options.Get("--cel-trace");
         var discPath = options.Positional;
 
         if (biosPath is null && stateIn is null)
@@ -140,6 +144,13 @@ internal static class Program
 
         machine.Reset();
         machine.AudioSink = audio;
+
+        ScriptedPbusSource? scriptedInput = null;
+        if (inputScriptPath is not null)
+        {
+            scriptedInput = new ScriptedPbusSource(InputScript.Load(inputScriptPath));
+            machine.PbusSource = scriptedInput;
+        }
 
         StreamWriter? fiqTraceWriter = null;
         if (fiqTrace is not null)
@@ -182,6 +193,19 @@ internal static class Program
 
             cdTraceWriter = new StreamWriter(cdTrace);
             machine.Cdrom.TraceWriter = cdTraceWriter;
+        }
+
+        StreamWriter? celTraceWriter = null;
+        if (celTrace is not null)
+        {
+            var directory = Path.GetDirectoryName(Path.GetFullPath(celTrace));
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            celTraceWriter = new StreamWriter(celTrace) { AutoFlush = true };
+            machine.Madam.CelTraceWriter = celTraceWriter;
         }
 
         StreamWriter? kprintWriter = null;
@@ -281,7 +305,24 @@ internal static class Program
             machine.LoadStateFromFile(stateIn);
         }
 
-        machine.RunFrames(frames);
+        if (scriptedInput is null && progressEvery <= 0)
+        {
+            machine.RunFrames(frames);
+        }
+        else
+        {
+            for (var i = 0; i < frames; i++)
+            {
+                scriptedInput?.AdvanceTo(machine.FramesExecuted);
+                machine.RunFrame();
+                if (progressEvery > 0 && machine.FramesExecuted % progressEvery == 0)
+                {
+                    Console.Error.WriteLine(
+                        $"frame {machine.FramesExecuted} pc={machine.Cpu.ProgramCounter:x8} "
+                        + $"dsp={machine.Dsp.ProgramCounter:x4} sema={machine.Dsp.SemaphoreStatus:x4}/{machine.Dsp.SemaphoreData:x4}");
+                }
+            }
+        }
 
         if (dumpRamPath is not null)
         {
@@ -304,6 +345,7 @@ internal static class Program
         fiqTraceWriter?.Dispose();
         clioTraceWriter?.Dispose();
         cdTraceWriter?.Dispose();
+        celTraceWriter?.Dispose();
         kprintWriter?.Dispose();
         kprintPcWriter?.Dispose();
         watchWriter?.Dispose();
@@ -367,6 +409,7 @@ internal static class Program
         var output = options.Get("--out");
         var dumpDspPrefix = options.Get("--dump-dsp");
         var dspTracePath = options.Get("--dsp-trace");
+        var inputScriptPath = options.Get("--input-script");
 
         if (biosPath is null && stateIn is null)
         {
@@ -391,6 +434,13 @@ internal static class Program
         if (stateIn is not null)
         {
             machine.LoadStateFromFile(stateIn);
+        }
+
+        ScriptedPbusSource? scriptedInput = null;
+        if (inputScriptPath is not null)
+        {
+            scriptedInput = new ScriptedPbusSource(InputScript.Load(inputScriptPath));
+            machine.PbusSource = scriptedInput;
         }
 
         machine.RunFrames(frames);
@@ -483,6 +533,7 @@ internal static class Program
         {
             for (var frame = 0; frame < traceFrames; frame++)
             {
+                scriptedInput?.AdvanceTo(machine.FramesExecuted);
                 machine.RunFrame(false, Observe);
             }
         }
@@ -1032,11 +1083,11 @@ internal static class Program
         Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
-        Console.WriteLine("             [--dump-dsp prefix] [--json]");
+        Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--progress N] [--cel-trace path] [--json]");
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
-        Console.WriteLine("             [--dsp-trace path]");
+        Console.WriteLine("             [--dsp-trace path] [--input-script path]");
         Console.WriteLine("             Runs the machine and records a diagnostic instruction ring buffer.");
         Console.WriteLine("  info <disc> [--json]                 Disc geometry, volume header, and game ID.");
         Console.WriteLine("  disc dump <disc> --out path [--sector N] [--count N]");
