@@ -19,7 +19,8 @@ namespace ThreeDo.Video;
 /// </remarks>
 public sealed class Vdlp : IVdlp, IStateSection
 {
-    private const int VramOffset = 2 * 1024 * 1024;
+    private const int VramOffset = EmulatorConstants.VramBase;
+    private const int VramPlaneSize = EmulatorConstants.VramSize;
     private const uint VdlControl = 0x80000000;
     private const uint VdlBackground = 0xe0000000;
     private const uint VdlRgbControlMask = 0x60000000;
@@ -168,32 +169,39 @@ public sealed class Vdlp : IVdlp, IStateSection
 
         if (y is >= 0 and < 240)
         {
-            var target = frame.Lines[y];
-            if ((_clutDma & (1u << 21)) != 0)
+            if (_compatibility.HighResolution)
             {
-                var lineWidth = (int)Math.Min(_modulo, VdlLine.MaxPixels);
-                if (lineWidth <= 0)
-                {
-                    lineWidth = EmulatorConstants.VideoWidth;
-                }
-
-                var destination = target.PixelBuffer;
-                var source = ((_previousBitmap ^ 2) & 0xfffff) + VramOffset;
-                for (var i = 0; i < lineWidth; i++)
-                {
-                    destination[i] = _ram.Read16(source);
-                    source += 2;
-                }
-
-                target.Width = lineWidth;
-                _clutB.AsSpan().CopyTo(target.ClutB);
-                _clutG.AsSpan().CopyTo(target.ClutG);
-                _clutR.AsSpan().CopyTo(target.ClutR);
+                RenderHighResolutionLine(frame, y);
             }
+            else
+            {
+                var target = frame.Lines[y];
+                if ((_clutDma & (1u << 21)) != 0)
+                {
+                    var lineWidth = (int)Math.Min(_modulo, VdlLine.MaxPixels);
+                    if (lineWidth <= 0)
+                    {
+                        lineWidth = EmulatorConstants.VideoWidth;
+                    }
 
-            target.OutControl = _outControl;
-            target.ClutDma = _clutDma;
-            target.Background = _background;
+                    var destination = target.PixelBuffer;
+                    var source = ((_previousBitmap ^ 2) & 0xfffff) + VramOffset;
+                    for (var i = 0; i < lineWidth; i++)
+                    {
+                        destination[i] = _ram.Read16(source);
+                        source += 2;
+                    }
+
+                    target.Width = lineWidth;
+                    _clutB.AsSpan().CopyTo(target.ClutB);
+                    _clutG.AsSpan().CopyTo(target.ClutG);
+                    _clutR.AsSpan().CopyTo(target.ClutR);
+                }
+
+                target.OutControl = _outControl;
+                target.ClutDma = _clutDma;
+                target.Background = _background;
+            }
         }
 
         if ((_currentBitmap & 2) != 0)
@@ -220,6 +228,60 @@ public sealed class Vdlp : IVdlp, IStateSection
 
         _lineDelay--;
         _outControl &= ~1u;
+    }
+
+    /// <summary>
+    /// Renders one low-resolution VDL line as two high-resolution lines.
+    /// FreeDO: <c>_vdl_DoLineNew</c> with <c>RESSCALE</c> set.
+    /// </summary>
+    /// <remarks>
+    /// The 3DO stores a 640x480 frame in four 1 MB VRAM planes. Each low-resolution
+    /// bitmap line supplies the even/odd columns of two adjacent high-resolution
+    /// scanlines: planes 0/1 form the even line and planes 2/3 form the odd line.
+    /// </remarks>
+    private void RenderHighResolutionLine(VdlFrame frame, int y)
+    {
+        var target0 = frame.Lines[y * 2];
+        var target1 = frame.Lines[(y * 2) + 1];
+
+        if ((_clutDma & (1u << 21)) != 0)
+        {
+            var lineWidth = (int)Math.Min(_modulo, VdlLine.MaxPixels / 2);
+            if (lineWidth <= 0)
+            {
+                lineWidth = EmulatorConstants.VideoWidth;
+            }
+
+            var destination0 = target0.PixelBuffer;
+            var destination1 = target1.PixelBuffer;
+            var source = ((_previousBitmap ^ 2) & 0xfffff) + VramOffset;
+            for (var i = 0; i < lineWidth; i++)
+            {
+                var x = i * 2;
+                destination0[x] = _ram.Read16(source);
+                destination0[x + 1] = _ram.Read16(source + VramPlaneSize);
+                destination1[x] = _ram.Read16(source + (2 * VramPlaneSize));
+                destination1[x + 1] = _ram.Read16(source + (3 * VramPlaneSize));
+                source += 2;
+            }
+
+            var width = lineWidth * 2;
+            target0.Width = width;
+            target1.Width = width;
+            _clutB.AsSpan().CopyTo(target0.ClutB);
+            _clutG.AsSpan().CopyTo(target0.ClutG);
+            _clutR.AsSpan().CopyTo(target0.ClutR);
+            _clutB.AsSpan().CopyTo(target1.ClutB);
+            _clutG.AsSpan().CopyTo(target1.ClutG);
+            _clutR.AsSpan().CopyTo(target1.ClutR);
+        }
+
+        target0.OutControl = _outControl;
+        target0.ClutDma = _clutDma;
+        target0.Background = _background;
+        target1.OutControl = _outControl;
+        target1.ClutDma = _clutDma;
+        target1.Background = _background;
     }
 
     /// <summary>Writes the VDLP save-state payload. FreeDO: <c>_vdl_Save</c>.</summary>

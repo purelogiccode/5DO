@@ -81,9 +81,24 @@ public static class EmulatorConstants
     /// <summary>Default visible frame height in lines.</summary>
     public const int VideoHeight = 240;
 
+    /// <summary>Visible width of the high-resolution (2x) display mode.</summary>
+    public const int HighResolutionWidth = VideoWidth * 2;
+
+    /// <summary>Visible height of the high-resolution (2x) display mode.</summary>
+    public const int HighResolutionHeight = VideoHeight * 2;
+
+    /// <summary>Size of the CPU-visible VRAM region in bytes. FreeDO: <c>VRAM_SIZE</c>.</summary>
+    public const int VramSize = RamSize - (2 * 1024 * 1024);
+
+    /// <summary>Base offset of VRAM within the RAM backing array. FreeDO: <c>vram</c>.</summary>
+    public const int VramBase = RamSize - VramSize;
+
+    /// <summary>Number of VRAM planes used by high-resolution rendering (4x 1 MB).</summary>
+    public const int HighResolutionVramPlanes = 4;
+
     /// <summary>Maximum pixels stored for one VDL line, including wider VDLP modes.</summary>
     public const int VdlLineMaxPixels = 1280;
 
-    /// <summary>Maximum VDL lines stored in a frame, including the future high-resolution mode.</summary>
-    public const int VdlFrameMaxLines = VideoHeight * 4;
+    /// <summary>Maximum VDL lines stored in a frame, including the high-resolution mode.</summary>
+    public const int VdlFrameMaxLines = HighResolutionHeight * 2;
 }

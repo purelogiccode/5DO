@@ -469,7 +469,7 @@ These are deliberate additions, not part of FreeDOCore:
 
 - **OpenGL presentation** is a new host-level feature. It consumes `VdlFrame` output and must not alter emulated state. Its palette-expansion shader is verified against `frame.cpp: Get_Frame_Bitmap`.
 - **Optional guest ARM JIT** is a new CPU backend behind `ICpuBackend`. It is not part of the initial port. It must produce bit-identical state and cycle counts to the interpreter and remains disabled until proven.
-- **High-resolution CEL rendering** is a later emulation feature (M11), separate from GPU output upscaling. Do not conflate the two: output upscaling is presentation-only; high-res CEL changes emulated rendering.
+- **High-resolution CEL rendering** is now opt-in (`--high-res`, `EmulatorTuning.HighResolution`), separate from GPU output upscaling. Do not conflate the two: output upscaling is presentation-only; high-res CEL changes emulated rendering and uses four 1 MB VRAM planes. Keep it off by default until the passcode-style pointer/hit-test path is validated.
 
 ---
 

@@ -141,6 +141,49 @@ gameplay milestone is a scripted race/level completion, plus the Lemmings passco
 confirm and an Alone movement/inventory script. See [`Status.md`](Status.md) and
 [`NextSession.md`](NextSession.md).
 
+### 1.3 Third pass: gameplay loop and high-resolution rendering (2026-10-24)
+
+All runs use the Release build, `panafz1.bin`, and a fresh NVRAM.
+
+**Wolfenstein 3D gameplay loop.** From `w3d-fix12k.state` (the 12,000-frame demo),
+`w3d-play.txt` opens the preview menu and starts FLOOR 1-1 at 14,000 frames. From
+that state, `w3d-walk.txt` walks, turns, and fires through 18,000 frames:
+
+```
+14,000 frames: PC 0x0007824C, hash 0x07586A88 (FLOOR 1-1, SCORE 0000000)
+18,000 frames: PC 0x00074A04, hash 0xF568EBCA (corridor, guard, pistol)
+19,200 frames: PC 0x0001186C, hash 0x74FBBF0C (after walk/turn/fire script)
+```
+
+The HUD, first-person view, guard sprite, and weapon render, and the player moves.
+The exact values should be re-read from `--json`; the stable observations are the
+FLOOR 1-1/score HUD and the visible movement.
+
+Save/load at 18,000 frames:
+
+- Live state saved at 18,000: frame hash `0xF568EBCA`.
+- Zero-frame load: `0xF568EBCA` (pixel-identical).
+- Two independent 120-frame continuations: both `PC 0x000782B8`, hash `0xF568EBCA`
+  (the level is waiting for input; the static hash is expected).
+
+Audio from the 18,000-frame gameplay state, 4,000 frames captured with
+`--audio wav`: 66.86 s, 44.1 kHz stereo, peak 32767, RMS 2980, 18 clipped samples.
+
+**Lemmings high-resolution title.** `--high-res` renders the frontend's 640x480
+high-resolution mode:
+
+```
+Low-res  (18,100 frames): 320x240, PC 0x00012B48, hash 0x5CB3039D
+High-res (18,100 frames): 640x480, PC 0x00012B48, hash 0xE79E18C5
+```
+
+The high-res capture shows all four title buttons (Play, New Game, Load, Options),
+the complete logo, and the marquee; it matches the 640x480 reference screenshot. The
+mode is opt-in because the passcode screen still clips/scrolls and its pointer
+hit-testing diverges from the low-res path. The five 3,000-frame low-res baseline
+hashes are unchanged: `0xF4BDF79B`, `0x932C7722`, `0xEB31636F`, `0xA2B49CF0`, and
+`0xC21BB6A1`.
+
 #### CD disc-end fix (2026-10-23)
 
 `CdromDevice.InitCd` originally reproduced FreeDO's double-add of the 150-frame

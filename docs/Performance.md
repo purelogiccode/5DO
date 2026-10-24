@@ -30,7 +30,8 @@ The v1 target is **3840x2160 output at 60 Hz** while emulating the 3DO at its na
 - **Output resolution:** the swapchain/control surface is 4K and the GPU performs
   the final upscale/filter.
 - **Internal resolution:** CEL rendering and VRAM remain at the emulated resolution.
-  `RESSCALE=1` (high-resolution CEL) is a separate post-v1 feature.
+  `RESSCALE=1` (high-resolution CEL) is an opt-in 640x480 feature; it is not part of
+  the default 4K target.
 - **4K internal rendering is not a v1 goal.** It would require GPU CEL compositing or
   a fundamentally different renderer and is tracked only as an experiment.
 
@@ -262,6 +263,12 @@ later for microbenchmarks):
 |---|---:|---:|---:|---:|---:|
 | Synthetic | 2.177 | 42.8 | 23.4 | 27.2 | 2.270 |
 | Lemmings (USA), 600 frames | 2.061 | 40.7 | 17.1 | 18.1 | 2.137 |
+
+High-resolution mode (opt-in, 640x480, Lemmings title screen, 600 frames) measured
+**2.94 ms/frame** against **1.66 ms/frame** for the same low-res state on the
+development machine. The extra cost is the four-plane CEL writes and the doubled
+VDLP/upload path; both remain well inside the 16.67 ms frame budget. These are
+wall-clock headless numbers including CLI startup subtraction, not GPU timings.
 
 The synthetic run reports ~96 MIPS; the Lemmings run reports ~26 MIPS because the
 guest spends time in the VDLP/CEL and idle paths. CPU-side headroom against the

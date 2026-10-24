@@ -47,12 +47,17 @@ public sealed class ThreeDoMachine
     {
         Tuning = tuning ?? EmulatorTuning.Default;
         Tuning.Validate();
-        Compatibility = compatibility ?? new CompatibilityState { FixMode = Tuning.FixMode };
+        Compatibility = compatibility ?? new CompatibilityState
+        {
+            FixMode = Tuning.FixMode,
+            HighResolution = Tuning.HighResolution,
+        };
+        Compatibility.HighResolution |= Tuning.HighResolution;
 
         Memory = new ThreeDoMemory(Tuning);
         Clio = new ClioChip(Tuning);
         Diag = new DiagPort();
-        Sport = new SportChip(Memory.Ram);
+        Sport = new SportChip(Memory.Ram, Compatibility);
         Vdlp = new Vdlp(Memory.Ram, Compatibility);
         Madam = new MadamChip
         {
@@ -389,6 +394,10 @@ public sealed class ThreeDoMachine
             throw new InvalidStateException($"The save state is missing sections: {string.Join(", ", required)}.");
         }
 
+        // A command-line/front-end override survives loads of states written before the
+        // high-resolution flag was recorded as enabled.
+        Compatibility.HighResolution |= Tuning.HighResolution;
+
         _framesExecuted = frames;
         _lastFrameCycles = 0;
     }
@@ -544,8 +553,13 @@ public sealed class ThreeDoMachine
 
         Madam.KeyPressed(pbus[..length]);
 
-        _frame.SourceWidth = EmulatorConstants.VideoWidth;
-        for (var lineIndex = 0; lineIndex < EmulatorConstants.VideoHeight; lineIndex++)
+        var visibleHeight = Compatibility.HighResolution
+            ? EmulatorConstants.HighResolutionHeight
+            : EmulatorConstants.VideoHeight;
+        _frame.SourceWidth = Compatibility.HighResolution
+            ? EmulatorConstants.HighResolutionWidth
+            : EmulatorConstants.VideoWidth;
+        for (var lineIndex = 0; lineIndex < visibleHeight; lineIndex++)
         {
             var width = _frame.Lines[lineIndex].Width;
             if (width > _frame.SourceWidth)
@@ -554,7 +568,7 @@ public sealed class ThreeDoMachine
             }
         }
 
-        _frame.SourceHeight = EmulatorConstants.VideoHeight;
+        _frame.SourceHeight = visibleHeight;
 
         if (!skipFrame)
         {

@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-24, second pass (see `git log` for the exact commit).
+**Snapshot:** 2026-10-24, third pass (see `git log` for the exact commit).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
 **Reference:** `References/opera-libretro-master/libopera` is now the primary
 behavioral reference for new compatibility work; see
@@ -24,7 +24,11 @@ This is the short, current answer to "where are we?" The detailed task list is i
 - **Video:** the desktop two-stage presenter expands palettes at native resolution
   into an FBO, then scales/filters to the output. Desktop GL 3.3 and GLSL ES 300
   sources are selected from the context version. The VDLP bitmap path now honors the
-  modulo-derived line width (320/384/512/640/1024).
+  modulo-derived line width (320/384/512/640/1024). An opt-in high-resolution mode
+  (`--high-res`, `EmulatorTuning.HighResolution`) renders CELs and bitmap lines into
+  four 1 MB VRAM planes and presents 640x480 by line-doubling the 640x240 source;
+  Lemmings' title screen now matches the 640x480 reference. The mode is off by
+  default because 320x240 titles must not be upscaled.
 - **Performance:** the machine runs on a dedicated 60 Hz core thread with a frame
   pacer; the UI renders on demand; uploads use `TexStorage2D` + `TexSubImage2D`;
   uniform locations and the present delegate are cached; physical-pixel sizing is
@@ -44,7 +48,8 @@ This is the short, current answer to "where are we?" The detailed task list is i
   `frame button[,button...]` lines for repeatable controller taps. Input has been
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene and menu), Lemmings (menu and passcode entry), and Space Ace (P/X).
-- **Tests:** 552 passing (`dotnet test -c Release`).
+- **Tests:** 554 passing (`dotnet test -c Release`), including high-resolution CEL and
+  VDLP regression coverage.
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   A win-x64 CLI publish has been smoke-tested.
 
@@ -58,10 +63,10 @@ on both sides. Opera is the bundled Windows `OperaCore` build in
 
 | Title | Our C# port | Opera reference |
 |---|---|---|
-| Lemmings (USA) | **Boots, renders, plays DSP audio**; reaches the title screen (Play/New Game) and the passcode screen; D-pad/A/X operate the passcode keyboard | Not re-tested this pass; expected to pass |
+| Lemmings (USA) | **Boots, renders, plays DSP audio**; reaches the title screen and the passcode screen; with `--high-res` the 640x480 title renders all four buttons and the full logo, matching the reference | Not re-tested this pass; expected to pass |
 | Space Ace (USA) | **Boots, renders, plays DSP audio**; ReadySoft player runs the animated demo past 12,000 frames with no runaway | **Plays the demo intro for 60 s, no runaway** |
 | Road Rash (USA) | **Boots, renders, plays DSP audio**; the 3D race renders correctly and the attract race runs past 60,000 frames with no allocator error; A/P alter the race | **Renders the intro FMV, then a race** |
-| Wolfenstein 3D (USA) | **Boots, renders, plays DSP audio**; A opens the preview menu, selecting a level starts a fresh game (FLOOR 1-1), and save/load roundtrips in-game | **Renders the intro for 60 s** |
+| Wolfenstein 3D (USA) | **Boots, renders, plays DSP audio**; A opens the preview menu, selecting a level starts a fresh game (FLOOR 1-1), the player can walk/turn/fire, and save/load roundtrips in-game | **Renders the intro for 60 s** |
 | Alone in the Dark (USA) | **Boots, renders, plays DSP audio**; reaches the in-game staircase/room with an upright character; D-pad/A change the scene and open the menu | **Renders the intro/loading for 60 s** |
 
 The CD disc-end fix on 2026-10-23 is what unblocked Road Rash, Space Ace, and
@@ -101,11 +106,12 @@ Space Ace's former frame-681 crash was a downstream consequence of the failed
 ARM vectors. It now runs past 12,000 frames.
 
 **Gameplay is now reachable and renderer-correct.** Road Rash's 3D race renders like
-the Opera reference and runs past 60,000 frames; Wolfenstein 3D starts a fresh game and
-its save states roundtrip; Alone in the Dark's in-game character is upright and its
-menu is reachable; Lemmings reaches its title menu and passcode screen; Space Ace
-plays its animated demo. The next pass should complete a scripted race/level, finish
-the Lemmings passcode/level start, and capture a WAV/state/screenshot set for each title.
+the Opera reference and runs past 60,000 frames; Wolfenstein 3D starts a fresh game,
+walks/turns/fires, and its save states roundtrip; Alone in the Dark's in-game character
+is upright and its menu is reachable; Lemmings reaches its title menu and passcode
+screen, and its 640x480 high-resolution title matches the reference; Space Ace plays
+its animated demo. The next pass should finish the Lemmings passcode confirm/high-res
+input path and capture a WAV/state/screenshot set for each title.
 
 ---
 
@@ -177,12 +183,12 @@ corpus games playable" rather than "the v1 feature set is complete", add another
 ### P0 - complete the gameplay loops
 
 1. **Complete a race/level in each title.** The renderer and input path are now
-   validated: Road Rash's race renders correctly, Wolfenstein starts a fresh game,
-   Alone's in-game character is upright, Lemmings reaches its passcode screen, and
-   Space Ace plays its demo. The remaining work is scripted play: a Road Rash
-   autopilot that finishes a race, the Lemmings passcode/level-start sequence, and
-   an Alone movement/inventory sequence. Record the exact scripts and frame numbers
-   in [`TestCorpus.md`](TestCorpus.md).
+   validated: Road Rash's race renders correctly, Wolfenstein starts a fresh game and
+   supports walk/turn/fire, Alone's in-game character is upright, Lemmings reaches
+   its passcode screen, and Space Ace plays its demo. The remaining work is scripted
+   play: a Road Rash autopilot that finishes a race, the Lemmings passcode confirm
+   and level start, and an Alone movement/inventory sequence. Record the exact
+   scripts and frame numbers in [`TestCorpus.md`](TestCorpus.md).
 2. **Save states and screenshots in-game.** Wolfenstein already roundtrips a live
    gameplay state (saved hash `0xC9989182`, two 120-frame continuations end at
    `0x370158AC`). Repeat for each title and store screenshots at known frames.
@@ -202,14 +208,18 @@ corpus games playable" rather than "the v1 feature set is complete", add another
    pixel sizing exist; they are not proven on device.
 6. **Add CHD prefetch** on a bounded host worker so Tier B does not stall on
    decompression, then benchmark CHD vs ISO.
+7. **Validate high-resolution mode.** The 640x480 renderer works for Lemmings' title,
+   but the passcode screen still scrolls/clips and its pointer hit-testing diverges
+   from the low-res path. Determine the 3DO's 640x240/interlace coordinate rules and
+   make the high-res input path match before enabling it by default for that title.
 
 ### P2 - finish v1
 
-7. **M10 packaging:** arm64 validation, trimming, installers/signing plan, and the
+8. **M10 packaging:** arm64 validation, trimming, installers/signing plan, and the
    final performance report.
-8. **Filter/UI polish:** xBR/HQx, settings/audio/gamepad pages, fullscreen/vsync.
-9. **Legal/attribution review** before any public build (M0.8); add Opera to the
-   FreeDO/4DO attribution and license review.
+9. **Filter/UI polish:** xBR/HQx, settings/audio/gamepad pages, fullscreen/vsync.
+10. **Legal/attribution review** before any public build (M0.8); add Opera to the
+    FreeDO/4DO attribution and license review.
 
 ---
 

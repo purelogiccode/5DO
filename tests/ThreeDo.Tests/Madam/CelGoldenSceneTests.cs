@@ -1,3 +1,4 @@
+using ThreeDo.Core;
 using ThreeDo.Madam;
 using ThreeDo.Memory;
 using MadamChip = ThreeDo.Madam.Madam;
@@ -46,6 +47,32 @@ public sealed class CelGoldenSceneTests
         Assert.Equal(0, ReadPixel(memory, 0, 1));
         Assert.Equal(0, ReadPixel(memory, 1, 1));
         Assert.True(cycles > 0);
+    }
+
+    [Fact]
+    public void LiteralScale_HighResolutionWritesTheFourVramPlanes()
+    {
+        var (memory, madam) = CreateScene(clipX: 319, clipY: 239);
+        madam.Compatibility.HighResolution = true;
+        WriteLiteralCcb(
+            memory,
+            Ccb3,
+            Source3,
+            position: (0, 0),
+            hdx: 0x20000,
+            vdy: 0x20000,
+            pre0: 6 | 0x10,
+            pre1: 0,
+            last: true);
+        WriteBytes(memory, Source3 + 8, 0x7f, 0xfe);
+
+        _ = RunCel(madam, Ccb3);
+
+        for (var plane = 0; plane < EmulatorConstants.HighResolutionVramPlanes; plane++)
+        {
+            var address = (FrameBuffer ^ 2) + (uint)(plane * EmulatorConstants.VramSize);
+            Assert.Equal(0x7ffe, memory.Ram.Read16(address));
+        }
     }
 
     [Fact]

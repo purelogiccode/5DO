@@ -137,7 +137,10 @@ internal static class Program
             throw new ArgumentException("run needs --bios <path> unless --state-in supplies the ROM state.");
         }
 
-        var machine = new ThreeDoMachine();
+        var machine = new ThreeDoMachine(new EmulatorTuning
+        {
+            HighResolution = HasFlag(args, "--high-res"),
+        });
         if (biosPath is not null)
         {
             var bios = BiosImage.Load(biosPath);
@@ -474,7 +477,10 @@ internal static class Program
             throw new ArgumentException("trace needs --bios <path> unless --state-in supplies the ROM state.");
         }
 
-        var machine = new ThreeDoMachine();
+        var machine = new ThreeDoMachine(new EmulatorTuning
+        {
+            HighResolution = HasFlag(args, "--high-res"),
+        });
         if (biosPath is not null)
         {
             var bios = BiosImage.Load(biosPath);
@@ -1304,11 +1310,11 @@ internal static class Program
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--progress N] [--cel-trace path] [--pbus-trace path]");
-        Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--json]");
+        Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--json]");
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
-        Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path]");
+        Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path] [--high-res]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             Runs the machine and records a diagnostic instruction ring buffer.");
         Console.WriteLine("  info <disc> [--json]                 Disc geometry, volume header, and game ID.");

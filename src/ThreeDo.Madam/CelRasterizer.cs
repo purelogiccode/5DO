@@ -15,13 +15,12 @@ namespace ThreeDo.Madam;
 /// and are applied exactly as the reference applies them.
 /// </para>
 /// <para>
-/// <c>RESSCALE</c> is zero in v1 (see M4.16); the high-resolution mirror paths are
-/// deliberately omitted until M11.2.
+/// <c>RESSCALE</c> is the runtime high-resolution mode flag (0 or 1). When it is set,
+/// the CEL engine addresses the four 1 MB VRAM planes that make up a 640x480 frame.
 /// </para>
 /// </remarks>
 internal sealed class CelRasterizer
 {
-    private const int ResScale = 0;
     private const int FixedOne = 0x10000;
     private static readonly int[] BppTable = { 1, 1, 2, 4, 6, 8, 16, 1 };
 
@@ -32,6 +31,9 @@ internal sealed class CelRasterizer
         ArgumentNullException.ThrowIfNull(engine);
         _engine = engine;
     }
+
+    /// <summary>Gets the high-resolution scale: 0 for 320x240, 1 for 640x480.</summary>
+    private int ResScale => _engine.Compatibility.HighResolution ? 1 : 0;
 
     /// <summary>Renders a packed CEL. FreeDO: <c>DrawPackedCel_New</c>.</summary>
     internal void DrawPackedCel()
@@ -812,9 +814,11 @@ internal sealed class CelRasterizer
         uint pixel = 0;
         for (var i = 0; i < count; i++, xcur = unchecked(xcur + (geometry.Hdx1616 >> 16)), ycur = unchecked(ycur + (geometry.Hdy1616 >> 16)))
         {
-            var next = _engine.Memory.ReadHalfword(Address(
-                _engine.PixelSource,
-                Xy2Off(unchecked(xcur << 2), ycur, _engine.ReadModulo)));
+            var next = ResScale != 0
+                ? ReadPixel(_engine.PixelSource, xcur, ycur, _engine.ReadModulo)
+                : _engine.Memory.ReadHalfword(Address(
+                    _engine.PixelSource,
+                    Xy2Off(unchecked(xcur << 2), ycur, _engine.ReadModulo)));
             if (next != currentFramePixel)
             {
                 currentFramePixel = next;
@@ -830,11 +834,18 @@ internal sealed class CelRasterizer
                 _engine.Pre1,
                 _engine.CelOriginVh);
 
-            _engine.Memory.WriteHalfword(
-                Address(
-                    _engine.FrameBufferTarget,
-                    Xy2Off(unchecked(xcur << 2), ycur, _engine.WriteModulo)),
-                (ushort)pixel);
+            if (ResScale != 0)
+            {
+                WritePixel(_engine.FrameBufferTarget, xcur, ycur, (ushort)pixel, _engine.WriteModulo);
+            }
+            else
+            {
+                _engine.Memory.WriteHalfword(
+                    Address(
+                        _engine.FrameBufferTarget,
+                        Xy2Off(unchecked(xcur << 2), ycur, _engine.WriteModulo)),
+                    (ushort)pixel);
+            }
         }
 
         return 0;
@@ -861,12 +872,15 @@ internal sealed class CelRasterizer
             return -1;
         }
 
-        if (geometry.Hdx1616 > 0 && deltax > _engine.ClipX && xcur > _engine.ClipX)
+        var maxX = ResScale != 0 ? ((_engine.ClipX + 1) << ResScale) - 1 : _engine.ClipX;
+        var maxY = ResScale != 0 ? ((_engine.ClipY + 1) << ResScale) - 1 : _engine.ClipY;
+
+        if (geometry.Hdx1616 > 0 && deltax > maxX && xcur > maxX)
         {
             return -1;
         }
 
-        if (geometry.Hdy1616 > 0 && deltay > _engine.ClipY && ycur > _engine.ClipY)
+        if (geometry.Hdy1616 > 0 && deltay > maxY && ycur > maxY)
         {
             return -1;
         }
@@ -885,9 +899,18 @@ internal sealed class CelRasterizer
                     continue;
                 }
 
-                var framePixel = _engine.Memory.ReadHalfword(Address(
-                    _engine.PixelSource,
-                    Xy2Off(j, i, _engine.ReadModulo)));
+                ushort framePixel;
+                if (ResScale != 0)
+                {
+                    framePixel = ReadPixel(_engine.PixelSource, j >> 2, i, _engine.ReadModulo);
+                }
+                else
+                {
+                    framePixel = _engine.Memory.ReadHalfword(Address(
+                        _engine.PixelSource,
+                        Xy2Off(j, i, _engine.ReadModulo)));
+                }
+
                 var pixel = ProcessPixel(curPix, lamv, framePixel);
                 pixel = Projector.Apply(
                     curPix,
@@ -897,11 +920,19 @@ internal sealed class CelRasterizer
                     _engine.Control0,
                     _engine.Pre1,
                     _engine.CelOriginVh);
-                _engine.Memory.WriteHalfword(
-                    Address(
-                        _engine.FrameBufferTarget,
-                        Xy2Off(j, i, _engine.WriteModulo)),
-                    pixel);
+
+                if (ResScale != 0)
+                {
+                    WritePixel(_engine.FrameBufferTarget, j >> 2, i, pixel, _engine.WriteModulo);
+                }
+                else
+                {
+                    _engine.Memory.WriteHalfword(
+                        Address(
+                            _engine.FrameBufferTarget,
+                            Xy2Off(j, i, _engine.WriteModulo)),
+                        pixel);
+                }
             }
         }
 
@@ -1252,10 +1283,22 @@ internal sealed class CelRasterizer
 
     private void DrawPixel(PixelDecodeResult decoded, int xcur, int ycur, bool doubleY)
     {
-        var y = doubleY ? unchecked((ycur >> 16) << 1) : ycur >> 16;
-        var framePixel = _engine.Memory.ReadHalfword(Address(
-            _engine.PixelSource,
-            Xy2Off(unchecked((xcur >> 16) << 2), y, _engine.ReadModulo)));
+        var x = xcur >> 16;
+        var readY = doubleY ? unchecked((ycur >> 16) << 1) : ycur >> 16;
+        var writeY = ycur >> 16;
+
+        ushort framePixel;
+        if (ResScale != 0)
+        {
+            framePixel = ReadPixel(_engine.PixelSource, x, readY, _engine.ReadModulo);
+        }
+        else
+        {
+            framePixel = _engine.Memory.ReadHalfword(Address(
+                _engine.PixelSource,
+                Xy2Off(unchecked(x << 2), readY, _engine.ReadModulo)));
+        }
+
         var pixel = ProcessPixel(decoded.Pixel, decoded.Amv, framePixel);
         pixel = Projector.Apply(
             decoded.Pixel,
@@ -1265,31 +1308,63 @@ internal sealed class CelRasterizer
             _engine.Control0,
             _engine.Pre1,
             _engine.CelOriginVh);
-        _engine.Memory.WriteHalfword(
-            Address(
-                _engine.FrameBufferTarget,
-                Xy2Off(unchecked((xcur >> 16) << 2), ycur >> 16, _engine.WriteModulo)),
-            pixel);
+
+        if (ResScale != 0)
+        {
+            WritePixel(_engine.FrameBufferTarget, x, writeY, pixel, _engine.WriteModulo);
+        }
+        else
+        {
+            _engine.Memory.WriteHalfword(
+                Address(
+                    _engine.FrameBufferTarget,
+                    Xy2Off(unchecked(x << 2), writeY, _engine.WriteModulo)),
+                pixel);
+        }
     }
 
-    private ushort ReadPixel(uint source, int x, int y)
+    private ushort ReadPixel(uint source, int x, int y) => ReadPixel(source, x, y, _engine.WriteModulo);
+
+    private ushort ReadPixel(uint source, int x, int y, int modulo)
     {
-        var offset = Xy2Off((x >> ResScale) << 2, y >> ResScale, _engine.WriteModulo);
+        var offset = Xy2Off((x >> ResScale) << 2, y, modulo);
+        if (ResScale != 0)
+        {
+            // Field 0 uses planes 0/1; the odd X column is in plane 1.
+            var address = unchecked((source + (uint)offset) ^ 2);
+            return _engine.Ram.Read16(address + (uint)((x & 1) * EmulatorConstants.VramSize));
+        }
+
         return _engine.Ram.Read16(unchecked(source + (uint)offset) ^ 2);
     }
 
-    private void WritePixel(uint target, int x, int y, ushort value)
+    private void WritePixel(uint target, int x, int y, ushort value) => WritePixel(target, x, y, value, _engine.WriteModulo);
+
+    private void WritePixel(uint target, int x, int y, ushort value, int modulo)
     {
-        var offset = Xy2Off((x >> ResScale) << 2, y >> ResScale, _engine.WriteModulo);
+        var offset = Xy2Off((x >> ResScale) << 2, y, modulo);
+        if (ResScale != 0)
+        {
+            // X is already in 640-wide space; Y is a 240-line scanline that the VDLP
+            // line-doubles. Write both interlace fields so both output lines match.
+            var plane = x & 1;
+            var address = unchecked((target + (uint)offset) ^ 2);
+            _engine.Ram.Write16(address + (uint)(plane * EmulatorConstants.VramSize), value);
+            _engine.Ram.Write16(address + (uint)((plane + 2) * EmulatorConstants.VramSize), value);
+            return;
+        }
+
         _engine.Ram.Write16(unchecked(target + (uint)offset) ^ 2, value);
     }
 
     private bool TestClip(int clipX, int clipY)
     {
+        var maxX = ResScale != 0 ? ((_engine.ClipX + 1) << ResScale) - 1 : _engine.ClipX;
+        var maxY = ResScale != 0 ? ((_engine.ClipY + 1) << ResScale) - 1 : _engine.ClipY;
         return clipX >= 0
-            && clipX <= (_engine.ClipX << 16)
+            && clipX <= (maxX << 16)
             && clipY >= 0
-            && clipY <= (_engine.ClipY << 16);
+            && clipY <= (maxY << 16);
     }
 
     private void FinalizeVisualPosition(int xcur, int ycur)

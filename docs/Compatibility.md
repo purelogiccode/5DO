@@ -2,15 +2,17 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current position (2026-10-24, after the CEL transposition and VDLP-width fixes):** all
-five local corpus titles boot, load their own OS, render real frames, and produce
-non-silent DSP audio. Road Rash's 3D race now renders correctly and the attract race
-continues past 60,000 frames with no allocator error; Wolfenstein 3D starts a fresh game
-(FLOOR 1-1) and its save states roundtrip; Alone in the Dark's in-game character renders
-upright at the staircase and its menu is reachable; Lemmings reaches its title menu and
-passcode screen; Space Ace plays its animated demo. Scripted input has been used to
-navigate the Wolfenstein and Lemmings menus, open the Alone menu, and alter Road Rash's
-race. Completing a full race/level remains the next gameplay milestone.
+**Current position (2026-10-24, third pass):** all five local corpus titles boot, load
+their own OS, render real frames, and produce non-silent DSP audio. Road Rash's 3D race
+renders correctly and the attract race continues past 60,000 frames with no allocator
+error; Wolfenstein 3D starts a fresh game (FLOOR 1-1), walks/turns/fires, and its save
+states roundtrip; Alone in the Dark's in-game character renders upright at the
+staircase and its menu is reachable; Lemmings reaches its title menu and passcode
+screen, and its 640x480 high-resolution title matches the reference; Space Ace plays
+its animated demo. Scripted input has been used to navigate the Wolfenstein and
+Lemmings menus, open the Alone menu, and alter Road Rash's race. The Wolfenstein
+fresh-game walk is the first verified full gameplay loop; completing a race/level in
+the other titles and confirming the Lemmings passcode remain next.
 
 The 2026-10-24 sessions found four root causes:
 
@@ -164,11 +166,28 @@ The game database is ported with attribution. Unknown game IDs get the first 8 h
 | 1080p/1440p/4K output | Yes (GPU scaling); 4K60 on Tier A hardware | |
 | Fullscreen | Yes | |
 | 384/512/640/1024-wide VDLP modes | Parsed, may crop | Full presentation |
-| High-resolution CEL (`RESSCALE`) | No | Planned as a coherent feature |
+| High-resolution CEL (`RESSCALE`) | Opt-in `--high-res`; 640x480 output | Enable per game after input validation |
 | PAL | No | Later if needed |
 | CPU fallback renderer | Yes (no GL context) | |
 | Screenshots | Yes (GL readback or CPU frame) | |
 | Frame advance | Yes | |
+
+### 6.1 High-resolution mode
+
+`EmulatorTuning.HighResolution` / `--high-res` is an opt-in 640x480 renderer. CEL
+pixels address the 640-wide X coordinate and the 240-line Y coordinate; the even/odd
+X column is stored in plane 0/1 (and mirrored to planes 2/3 for the second interlace
+field). The VDLP interleaves planes 0/1 and 2/3 into two 640-wide scanlines and the
+frame source becomes 640x480. The extra planes live in the reserved RAM mirrors and
+are not CPU-visible. SPORT fill/copy operations mirror the source page into the extra
+planes. Save states, frame hashes, screenshots, the CPU assembler, and the OpenGL
+uploader all carry the larger frame.
+
+Evidence: from a fresh Lemmings boot, the 640x480 title screen shows all four buttons
+and the full logo and matches the reference screenshot; the five 3,000-frame low-res
+corpus hashes are unchanged. The mode is off by default because 320x240 titles must
+not be upscaled. The Lemmings passcode screen still scrolls/clips and its pointer
+hit-testing differs from the low-res path, so enabling it per game needs more work.
 
 ---
 
@@ -190,7 +209,9 @@ The game database is ported with attribution. Unknown game IDs get the first 8 h
 
 - Native C# format, versioned, explicit little-endian, CRC-protected.
 - Includes CPU, RAM, ROM, NVRAM, MADAM, CLIO, DSP, SPORT, VDLP, XBUS, CD, Quartz.
-- Does not include disc contents, input state, or derived frame buffers.
+- Does not include disc contents or input state.
+- Includes the parsed VDL frame lines, so a zero-frame load is pixel-identical to the
+  saved frame even in high-resolution mode.
 - Stores BIOS and disc hashes; a mismatch warns and can be rejected by default.
 - 4DO `.4dosav` import/export is **not** a v1 goal. The native format is compiler/struct-layout dependent and includes precomputed DSP tables; a best-effort importer can be added later if there is demand.
 
@@ -203,7 +224,8 @@ The game database is ported with attribution. Unknown game IDs get the first 8 h
 - No CD-DA / Red Book audio.
 - No multi-disc swapping.
 - No PAL.
-- No high-resolution CEL rendering (output upscaling via OpenGL is supported).
+- High-resolution CEL rendering is opt-in (`--high-res`) and its input path is not
+  fully validated; output upscaling via OpenGL is supported separately.
 - No GPU CEL compositing in v1; CEL rendering is software, matching FreeDO. The OpenGL renderer accelerates presentation, palette expansion, scaling, and filters.
 - No 3DO mouse/light gun/other peripherals.
 - No 3DO modem/network emulation.

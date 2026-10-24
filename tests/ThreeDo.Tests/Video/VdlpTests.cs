@@ -65,6 +65,38 @@ public sealed class VdlpTests
     }
 
     [Fact]
+    public void DoLine_HighResolutionInterleavesFourPlanesIntoTwoLines()
+    {
+        var memory = new ThreeDoMemory();
+        var compatibility = new CompatibilityState { HighResolution = true };
+        var vdlp = new Vdlp(memory.Ram, compatibility);
+        var frame = new VdlFrame();
+        const uint head = 0x5000;
+        const uint bitmap = 0x8000;
+        var header = 1u | (1u << 15) | (1u << 16) | (1u << 21);
+
+        WriteVdl(memory, head, header, bitmap, bitmap, 0);
+        for (var i = 0; i < 320; i++)
+        {
+            memory.Ram.Write16(VramOffset + bitmap + ((uint)i * 2), 1);
+            memory.Ram.Write16(VramOffset + 0x100000 + bitmap + ((uint)i * 2), 2);
+            memory.Ram.Write16(VramOffset + 0x200000 + bitmap + ((uint)i * 2), 3);
+            memory.Ram.Write16(VramOffset + 0x300000 + bitmap + ((uint)i * 2), 4);
+        }
+
+        vdlp.ProcessVdl(head);
+        vdlp.DoLine(0, frame);
+        vdlp.DoLine(16, frame);
+
+        Assert.Equal(640, frame[0].Width);
+        Assert.Equal(640, frame[1].Width);
+        Assert.Equal(1, frame[0].Pixels[0]);
+        Assert.Equal(2, frame[0].Pixels[1]);
+        Assert.Equal(3, frame[1].Pixels[0]);
+        Assert.Equal(4, frame[1].Pixels[1]);
+    }
+
+    [Fact]
     public void DoLine_Line255CopiesAndLine256DoesNot()
     {
         var memory = new ThreeDoMemory();
