@@ -136,6 +136,45 @@ public sealed class DspTests
     }
 
     [Fact]
+    public void ProgramBuilder_Seed_WritesValue()
+    {
+        var program = new ProgramBuilder();
+        program.Seed(0x103, 0x2000);
+        program.Word(Sleep);
+        var dsp = Run(program);
+        Assert.Equal(0x2000, dsp.ReadInstructionMemory(0x103));
+    }
+
+    [Fact]
+    public void Loop_MultiplierBopMasksAfterMultiplying()
+    {
+        var program = new ProgramBuilder();
+        program.Seed(0x103, 0x2000);
+
+        // Y = 1 << 16.
+        program.Word(Alu(0, muxA: 1, muxB: 0, numOps: 1));
+        program.Word(Immediate(1));
+
+        // Add (0x2000 * (Y >> 15)) & ~1 twice: 0x10000 -> 0x14000 -> 0x18000.
+        program.Word(Alu(2, muxA: 0, muxB: 3, numOps: 1));
+        program.Word(Immediate(0x400, justify: true));
+        program.Word(Alu(2, muxA: 0, muxB: 3, numOps: 1));
+        program.Word(Immediate(0x400, justify: true));
+
+        // Y = (0x2000 * (Y >> 15)) & ~1 = 0x6000, then shift left 8 in two steps.
+        // Masking (Y >> 15) before the multiply would produce 0x4000 and high half 0x0040.
+        program.Word(Alu(2, muxA: 1, muxB: 3, numOps: 2, bs: 4));
+        program.Word(NonRegister(0x103)); // MULT1
+        program.Word(Immediate(0)); // ALU1
+        program.Word(Alu(0, muxA: 0, muxB: 0, numOps: 1, bs: 4));
+        program.Word(NonRegister(0x103, writeBack: true));
+        program.Word(Sleep);
+
+        var dsp = Run(program);
+        Assert.Equal(0x0060, dsp.ReadInstructionMemory(0x103));
+    }
+
+    [Fact]
     public void Loop_UsesImmediateOperandsWithJustifyShift()
     {
         var program = new ProgramBuilder();

@@ -476,7 +476,9 @@ public sealed class Dsp : IDsp, IStateSection
                     case 3:
                         if (inst.AifM2Sel == 0)
                         {
-                            bop = unchecked((uint)(_mult1 * (((int)y >> 15) & ~1)));
+                            // The reference masks the product, not the shifted accumulator:
+                            // (MULT1 * (Y >> 15)) & ~1.
+                            bop = unchecked((uint)((_mult1 * ((int)y >> 15)) & ~1));
                         }
                         else
                         {
