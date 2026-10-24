@@ -8,6 +8,8 @@ internal sealed class FakeClioXbus : IClioXbus
 {
     private readonly Queue<uint> _data = new();
 
+    public int SelectedDevice => (int)LastSelect;
+
     public uint LastSelect { get; private set; }
 
     public uint LastPoll { get; private set; }

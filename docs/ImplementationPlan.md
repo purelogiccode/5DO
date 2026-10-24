@@ -3,8 +3,8 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Status (2026-10-23):** M0-M8 are complete. The M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core thread/pacing work, and the M10 CI/publish pipeline are implemented as a working prototype. Real-content status: Lemmings and Space Ace boot and render; Road Rash and Wolfenstein load their own OS but stop at SAudio channel 0 initialization; Alone in the Dark fails earlier. **Opera/libopera runs all four problem titles past those points**, so the audio failure is not a shared FreeDO limitation. 538 tests pass, and CPU-side frame cost is ~2.1-2.3 ms. Remaining work: differential port from Opera (CD-ROM, CLIO, MADAM, DSP/ARM), real-game hardening, 4K GPU/p99/GLES validation, arm64/installers, filter polish, and the M0.8 legal/attribution review. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and the next-session plan.
-**Last updated:** 2026-10-23
+**Status (2026-10-24):** M0-M8 are complete. The M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core thread/pacing work, and the M10 CI/publish pipeline are implemented as a working prototype. Real-content status: Lemmings and Space Ace boot and render; Road Rash and Wolfenstein load their own OS but stop at SAudio channel 0 initialization; Alone in the Dark fails earlier. **Opera/libopera runs all four problem titles past those points**, so the audio failure is not a shared FreeDO limitation. 539 tests pass, and CPU-side frame cost is ~1.6-2.3 ms. The 2026-10-24 session fixed headless DSP execution and decoded SAudio `-6996` as `SAudioErrAllocInstFailed`; Space Ace's runaway is the same failed `AllocInstrument` path leaving a null audio output buffer. Remaining work: DSP/audio differential against Opera, then CD-ROM/CLIO/MADAM/ARM timing, real-game hardening, 4K GPU/p99/GLES validation, arm64/installers, filter polish, and the M0.8 legal/attribution review. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and the next-session plan.
+**Last updated:** 2026-10-24
 
 ---
 
@@ -214,7 +214,7 @@ project/type layout is unchanged.
 
 ### 4a. Current position vs. the plan (2026-10-23)
 
-Snapshot: 538 tests pass; CPU-side frame cost is ~2.1-2.3 ms; real-game status is in
+Snapshot: 539 tests pass; CPU-side frame cost is ~1.6-2.3 ms; real-game status is in
 [`Compatibility.md`](Compatibility.md). Counting the prototype work as partial credit:
 
 | Milestone | State | Done (dd) | Remaining (dd) |
@@ -1560,3 +1560,4 @@ Suggested parallelization with two developers:
 | 2026-10-23 | Compatibility | CD disc-end fix and real-game boot | `InitCd` no longer double-adds the 150-frame lead-in; the CD DIPIR accepts Road Rash, Space Ace, and Wolfenstein. Lemmings renders CyberIntro, Space Ace renders the ReadySoft demo intro, Road Rash/Wolfenstein load their own OS and stop at the shared SAudio init failure. See `docs/TestCorpus.md` |
 | 2026-10-23 | Documentation | Status and plan refresh | Added `docs/Status.md` with the real-game matrix, performance snapshot, ~70% completion estimate (~9-12 weeks for one developer), and ordered next steps. Updated README, this plan, Architecture, Compatibility, TestCorpus, TestStrategy, and Performance to match the implemented M9P work |
 | 2026-10-23 | M11.0 | Opera reference adoption | Adopted `References/opera-libretro-master/libopera` as the primary behavioral reference for new compatibility work; the existing C# port remains FreeDOCore-based. Verified with the bundled OperaCore + `panafz1.bin` that Road Rash, Wolfenstein, Alone, and Space Ace run past our SAudio `-6996` / Space Ace frame-681 stop points. Added `docs/ReferenceStrategy.md` and `docs/NextSession.md`; corrected the "shared FreeDO limitation" claim in the status/compatibility docs |
+| 2026-10-24 | M5.13, M11.1 | DSP execution and audio diagnosis | Fixed headless DSP execution: `AudioSink?.PushSample(Dsp.Loop())` skipped the DSP when no sink was attached, so `AllocInstrument` handshakes timed out. Added RAM-write watchpoints, RAM/DSP dumps, DSP instruction rings, frame-stamped CLIO traces, XBUS DMA traces, and a `disasm` command. Decoded SAudio `-6996` as `SAudioErrAllocInstFailed` from the SDK subscriber and proved Space Ace's runaway is the player's audio task copying to a null output buffer after the same failed `AllocInstrument` path. The DSP still does not ACK the ARM Sema4 command; the next session is a DSP differential against `opera_dsp.c`. 539 tests pass |

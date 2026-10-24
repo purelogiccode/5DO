@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-23, `master` (see `git log` for the exact commit).
+**Snapshot:** 2026-10-24, `master` (see `git log` for the exact commit).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
 **Reference:** `References/opera-libretro-master/libopera` is now the primary
 behavioral reference for new compatibility work; see
@@ -29,8 +29,12 @@ This is the short, current answer to "where are we?" The detailed task list is i
   uniform locations and the present delegate are cached; physical-pixel sizing is
   implemented.
 - **Tooling:** CLI `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks`,
-  plus KPRINT, CD, CLIO, FIQ, and instruction-ring diagnostics.
-- **Tests:** 538 passing (`dotnet test -c Release`).
+  `disasm`, plus KPRINT, CD, CLIO, FIQ, RAM-write watchpoints, RAM/DSP dumps,
+  DSP-instruction rings, and CPU instruction-ring diagnostics.
+- **Audio:** the DSP now executes in every run, including headless runs with no
+  host audio sink. Sample delivery is still gated on the sink, but resource
+  allocation and semaphore handshakes are no longer silently skipped.
+- **Tests:** 539 passing (`dotnet test -c Release`).
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   A win-x64 CLI publish has been smoke-tested.
 
@@ -45,10 +49,10 @@ on both sides. Opera is the bundled Windows `OperaCore` build in
 | Title | Our C# port | Opera reference |
 |---|---|---|
 | Lemmings (USA) | **Boots and renders**; reaches CyberIntro and renders the 3D intro | Not re-tested this pass; expected to pass |
-| Space Ace (USA) | **Boots and renders**; ReadySoft player renders the demo intro, then the CPU runs away at frame ~681 | **Plays the demo intro for 60 s, no runaway** |
-| Road Rash (USA) | Loads the game OS (`grafmath 21.10.504`), then stops at SAudio channel 0 (`-6996`) | **Renders the intro FMV for 60 s** |
-| Wolfenstein 3D (USA) | Loads Sherry/Operator/FS v24.225, then stops at SAudio channel 0 (`-6996`) | **Renders the intro for 60 s** |
-| Alone in the Dark (USA) | Stops during AudioFolio initialization (`-6996`) | **Renders the intro/loading sequence for 60 s** |
+| Space Ace (USA) | **Boots and renders**; ReadySoft player renders the demo intro, then the audio task copies to a null buffer at frame ~681 and the timer FIQ crashes on the wiped vectors | **Plays the demo intro for 60 s, no runaway** |
+| Road Rash (USA) | Loads the game OS (`grafmath 21.10.504`), then stops at SAudio channel 0 (`-6996` = `SAudioErrAllocInstFailed`) | **Renders the intro FMV for 60 s** |
+| Wolfenstein 3D (USA) | Loads Sherry/Operator/FS v24.225, then stops at SAudio channel 0 (`-6996` = `SAudioErrAllocInstFailed`) | **Renders the intro for 60 s** |
+| Alone in the Dark (USA) | Stops during AudioFolio initialization (`-6996` = `SAudioErrAllocInstFailed`) | **Renders the intro/loading sequence for 60 s** |
 
 The CD disc-end fix on 2026-10-23 is what unblocked Road Rash, Space Ace, and
 Wolfenstein: `InitCd` no longer double-adds the 150-frame lead-in, so the CD DIPIR
@@ -56,10 +60,20 @@ accepts discs whose volume block count is less than the physical track length.
 
 **The earlier "shared FreeDO limitation" conclusion was wrong.** Opera gets past
 SAudio `-6996` and past Space Ace frame ~681, so those failures are in our port or in
-the older FreeDO behavior we copied. The SAudio error is still undecoded; the next
-session traces the guest call site and the instrument file read rather than assuming a
-DSP limitation. Space Ace's runaway remains a separate low-memory corruption bug
-(FIQ vector at `0x1C` zeroed, stack full of `0x11111111`).
+the older FreeDO behavior we copied.
+
+The 2026-10-24 session made two concrete steps:
+
+1. **Fixed DSP execution.** `AudioSink?.PushSample(Dsp.Loop())` skipped the DSP
+   entirely when the host had no audio sink, which is the default headless path.
+   The machine now always executes the DSP; the sink only receives samples.
+2. **Decoded the failures.** SAudio `-6996` is
+   `SAudioErrAllocInstFailed`; the raw AudioFolio error is discarded by the SDK
+   subscriber. Space Ace's runaway is the player's audio task copying to a null
+   `[audioState+0x9C]` after its mixer/instrument setup failed. Both point at the
+   DSP `AllocInstrument` handshake. With the DSP now executing, the ARM command is
+   still unacknowledged (`Sema4Status=0x8`, `Sema4Data=0`), and the DSP trace shows
+   a repeating sample loop that never reads `0xED` or writes `0x3EC`.
 
 ---
 
@@ -75,6 +89,11 @@ Release build, development machine, 600 frames, CPU side only:
 This leaves ~14.4 ms of headroom against the 16.67 ms frame budget. The **4K GPU
 pass, p99 frame times, allocation assertions, and Tier B (Pi 4/5) numbers are not
 measured yet**.
+
+The 2026-10-24 synthetic bench, which now includes DSP execution, measured
+**0.977 s for 600 frames (614 fps, 1.63 ms/frame)** on the development machine. The
+detailed core/pack/mailbox breakdown above predates the DSP-execution fix and should
+be re-measured before it is quoted again.
 
 ### 4K60 feasibility
 
@@ -125,16 +144,15 @@ corpus games playable" rather than "the v1 feature set is complete", add another
 
 ### P0 - unblock real gameplay
 
-1. **Build the Opera differential harness and decode SAudio `-6996`.** This is the
-   single biggest blocker: Road Rash, Wolfenstein, and Alone all stop here. Follow
-   [`NextSession.md`](NextSession.md): freeze a reproducible baseline, find the guest
-   call site, trace `AllocInstrument`/`LoadInsTemplate`, and compare the CD
-   command/status stream and instrument file bytes with Opera. Do not assume a
-   shared DSP limitation; Opera passes this point.
-2. **Fix Space Ace's low-memory corruption.** Add a temporary watchpoint for writes
-   to `0x0-0x100`, identify the writer (CPU, CEL, DMA8/PBUS, CD/XBUS, or DSP), and
-   compare the same scene with Opera. The FIQ vector is zero by frame ~681; the
-   player renders before it crashes, so this is a good differential target.
+1. **Fix the DSP `AllocInstrument` handshake.** This is the single biggest blocker:
+   Road Rash, Wolfenstein, and Alone all stop at
+   `SAudioErrAllocInstFailed` (`-6996`), and Space Ace's null-buffer crash is the
+   same failure on a different code path. Follow [`NextSession.md`](NextSession.md):
+   capture the DSP trace at the SAudio stop, compare the head/tail program loading
+   and relocations with the 3DO SDK, and differential the interpreter against
+   `opera_dsp.c` (flags, branch table, special registers, Sema4 ACK path).
+2. **Prove Space Ace is fixed by the same change.** Re-run it to at least 3,000
+   frames and confirm there is no `memcpy` to address 0 and no FIQ at `0x1C`.
 3. **Validate gameplay** in the two games that already render: input, pause, save
    states, screenshots, CD streaming, and audio output. Record results in
    [`Compatibility.md`](Compatibility.md).
@@ -163,19 +181,20 @@ corpus games playable" rather than "the v1 feature set is complete", add another
 
 ## 6. Next session
 
-The next session is a focused debugging session, not a UI or performance pass. Start
-with [`NextSession.md`](NextSession.md):
+The next session is a focused DSP/audio debugging session, not a UI or performance
+pass. Start with [`NextSession.md`](NextSession.md):
 
-1. Freeze Road Rash and Space Ace baselines from the extracted ISO with KPRINT, CD,
-   and FIQ traces.
-2. Decode SAudio `-6996` from the guest call site; compare the instrument file read
-   and DSP resource tables with Opera.
-3. Add a low-memory write watchpoint for Space Ace and identify the writer.
-4. Make one minimal fix with a test, or stop at a written diagnosis and a minimal
-   reproducer.
+1. Capture the DSP trace, DSP memory, and Sema4 state at the Road Rash SAudio stop.
+2. Parse `head.dsp`/`tail.dsp` from the 3DO SDK and compare their load addresses,
+   relocations, and entry points with the dumped DSP memory.
+3. Differential the interpreter against `opera_dsp.c`: flags, exact/branch table,
+   special registers, operand loading, and the Sema4 ACK path.
+4. Make one minimal fix with a DSP test, then re-run the five-title corpus and prove
+   Space Ace reaches 3,000 frames without the null-buffer `memcpy`.
 
-Do not change `Arm60.Ncycle` as a default, do not port `opera_cdrom.c` wholesale, and
-do not touch the UI or 4K tuning in that session.
+Do not re-enable the null audio-sink short-circuit, do not change the XBUS DMA byte
+order (the raw `IRam` order is correct), do not port `opera_cdrom.c` wholesale, and do
+not touch the UI or 4K tuning in that session.
 
 ---
 
@@ -190,17 +209,24 @@ dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- --frames 600
 
 # Real disc baseline
 dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- `
-  --frames 600 --bios bios/panafz1.bin --disc "D:\Samples\3DO\Lemmings (USA).chd" `
+  --frames 600 --bios bios/panafz1.bin --disc "E:\Panasonic 3DO\Lemmings (USA).chd" `
   --label lemmings
 
 # Boot a disc and dump the last frame
 dotnet run -c Release --project src/ThreeDo.Cli -- run `
-  "D:\Samples\3DO\Lemmings (USA).chd" --bios bios/panafz1.bin `
+  "E:\Panasonic 3DO\Lemmings (USA).chd" --bios bios/panafz1.bin `
   --frames 3000 --frame-out artifacts/lemmings.png
+
+# SAudio stop with DSP trace and memory dumps
+dotnet run -c Release --project src/ThreeDo.Cli -- trace `
+  "E:\Panasonic 3DO\Road Rash (USA).chd" --bios bios/panafz1.bin `
+  --frames 0 --trace-frames 3000 --stop-kprint "SAudio channel" --ring 4 `
+  --dsp-trace artifacts/rr-dsp-trace.txt --dump-dsp artifacts/rr-saudio `
+  --out artifacts/rr-trace.txt
 
 # Opera reference: extract the data track to ISO, then run the bundled SimpleGui
 dotnet run -c Release --project src/ThreeDo.Cli -- disc dump `
-  "D:\Samples\3DO\Road Rash (USA).chd" --sector 0 --count 328130 `
+  "E:\Panasonic 3DO\Road Rash (USA).chd" --sector 0 --count 328130 `
   --out "$env:TEMP\roadrash.iso"
 & "References\CPP_SimpleGui\cmake-build-release\SimpleGui\SimpleGui.exe" `
   --debug-messages -n "$env:TEMP\roadrash.iso"

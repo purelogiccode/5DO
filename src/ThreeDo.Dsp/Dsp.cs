@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ThreeDo.Core;
 
 namespace ThreeDo.Dsp;
@@ -68,6 +69,8 @@ public sealed class Dsp : IDsp, IStateSection
     private byte _requests;
     private bool _running;
     private bool _genFiq;
+    private long _instructionsExecuted;
+    private readonly Queue<DspTraceEntry> _dspTrace = new();
 
     private uint _rbaseX4;
     private int _regi;
@@ -108,6 +111,34 @@ public sealed class Dsp : IDsp, IStateSection
 
     /// <summary>Gets the audio counter.</summary>
     public short AudioCounter => _audCnt;
+
+    /// <summary>Gets the number of DSP instructions executed since startup (diagnostics).</summary>
+    public long InstructionsExecuted => _instructionsExecuted;
+
+    /// <summary>Gets or sets a value indicating whether DSP instructions are recorded.</summary>
+    public bool DspTraceEnabled { get; set; }
+
+    /// <summary>Gets or sets the DSP trace ring capacity.</summary>
+    public int DspTraceCapacity { get; set; } = 4096;
+
+    /// <summary>Gets the recorded DSP instructions, oldest first.</summary>
+    public IReadOnlyCollection<DspTraceEntry> DspTrace => _dspTrace;
+
+    /// <summary>Clears the DSP trace ring.</summary>
+    public void ClearDspTrace() => _dspTrace.Clear();
+
+    /// <summary>One recorded DSP instruction.</summary>
+    /// <param name="Pc">Program counter before execution.</param>
+    /// <param name="Instruction">Raw instruction word.</param>
+    /// <param name="SemaphoreStatus">Sema4 status before execution.</param>
+    /// <param name="SemaphoreData">Sema4 data before execution.</param>
+    /// <param name="NextPc">Program counter after the instruction fetch.</param>
+    public readonly record struct DspTraceEntry(
+        uint Pc,
+        ushort Instruction,
+        ushort SemaphoreStatus,
+        ushort SemaphoreData,
+        uint NextPc);
 
     /// <summary>Writes the DSP save-state payload.</summary>
     /// <param name="writer">Destination writer.</param>
@@ -208,10 +239,18 @@ public sealed class Dsp : IDsp, IStateSection
     /// <inheritdoc />
     public void WriteMemory(int address, ushort value) => _nmem[address & 0x3ff] = value;
 
-    /// <summary>Reads one word of DSP program memory (diagnostics and tests).</summary>
-    /// <param name="address">Program-memory address; masked to 11 bits.</param>
-    /// <returns>The program word.</returns>
+    /// <summary>Reads one word of DSP data memory (diagnostics and tests).</summary>
+    /// <param name="address">Data-memory address; masked to 11 bits.</param>
+    /// <returns>The data word.</returns>
     public ushort ReadProgramMemory(int address) => _nmem[address & 0x7ff];
+
+    /// <summary>Copies the DSP instruction memory for diagnostics.</summary>
+    /// <param name="destination">Destination of at least 1024 words.</param>
+    public void CopyInstructionMemory(Span<ushort> destination) => _imem.AsSpan().CopyTo(destination);
+
+    /// <summary>Copies the DSP data memory for diagnostics.</summary>
+    /// <param name="destination">Destination of at least 2048 words.</param>
+    public void CopyDataMemory(Span<ushort> destination) => _nmem.AsSpan().CopyTo(destination);
 
     /// <inheritdoc />
     public void WriteInstructionMemory(int address, ushort value)
@@ -287,7 +326,19 @@ public sealed class Dsp : IDsp, IStateSection
         var work = true;
         do
         {
+            var pc = _pc;
             var raw = _nmem[_pc++ & 0x3ff];
+            _instructionsExecuted++;
+            if (DspTraceEnabled)
+            {
+                if (DspTraceCapacity > 0 && _dspTrace.Count >= DspTraceCapacity)
+                {
+                    _dspTrace.Dequeue();
+                }
+
+                _dspTrace.Enqueue(new DspTraceEntry(pc, raw, _sema4Status, _sema4Data, _pc));
+            }
+
             var inst = new DspInstruction(raw);
 
             if (inst.AifPad)

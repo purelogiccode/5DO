@@ -6,6 +6,9 @@ namespace ThreeDo.Core;
 /// <remarks>FreeDO: the <c>_xbus_*</c> functions called from <c>Clio.cpp</c>.</remarks>
 public interface IClioXbus
 {
+    /// <summary>Gets the currently selected device slot.</summary>
+    int SelectedDevice { get; }
+
     /// <summary>Selects a device. FreeDO: <c>_xbus_SetSEL</c>.</summary>
     /// <param name="value">Select register value.</param>
     void SetSelect(uint value);

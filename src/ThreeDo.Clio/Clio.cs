@@ -85,6 +85,9 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     /// <summary>Gets or sets an optional diagnostic writer for timer register traffic.</summary>
     public System.IO.TextWriter? TraceWriter { get; set; }
 
+    /// <summary>Gets or sets the frame provider used to stamp diagnostic trace lines.</summary>
+    public Func<long>? FrameProvider { get; set; }
+
     /// <summary>Gets or sets an optional observer for generated FIQ reason masks (diagnostics only).</summary>
     public Action<uint, uint>? FiqObserver { get; set; }
 
@@ -219,7 +222,8 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
                 || address is >= 0x100 and <= 0x17c
                 || address == 0x304))
         {
-            TraceWriter.WriteLine($"clio write {address:x3}={value:x8} delay={_registers[0x220]:x}");
+            TraceWriter.WriteLine(
+                $"clio f={FrameProvider?.Invoke() ?? -1} write {address:x3}={value:x8} delay={_registers[0x220]:x}");
         }
 
         if (_flagTime == 0)
@@ -834,8 +838,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         var length = unchecked((int)(Madam?.Peek(0x544) ?? 0));
         _registers[0x400] &= ~0x80u;
 
-        // FreeDO has two identical branches here (register 0x404 bit 0x200); keep the loop
-        // shape and the byte order, which is what is observable.
+        var traceFirst = TraceWriter is not null;
         while (length >= 0)
         {
             var b3 = Xbus?.GetDataFifo() ?? 0;
@@ -843,6 +846,17 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
             var b1 = Xbus?.GetDataFifo() ?? 0;
             var b0 = Xbus?.GetDataFifo() ?? 0;
 
+            if (traceFirst)
+            {
+                TraceWriter!.WriteLine(
+                    $"clio dma f={FrameProvider?.Invoke() ?? -1} select={Xbus?.SelectedDevice ?? -1:x} "
+                    + $"target={target:x8} len={length:x} first={b3:x2}{b2:x2}{b1:x2}{b0:x2}");
+                traceFirst = false;
+            }
+
+            // IRam is the raw word-lane accessor, so the FIFO's little-endian
+            // byte order is b0,b1,b2,b3 here. Opera's b3-first order applies to
+            // its CPU-visible opera_mem_write8 accessor.
             Ram?.Write8(target, (byte)b0);
             Ram?.Write8(target + 1, (byte)b1);
             Ram?.Write8(target + 2, (byte)b2);

@@ -6,26 +6,32 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-23):** M0-M8 are complete. The M9 Avalonia shell, the
+**Current position (2026-10-24):** M0-M8 are complete. The M9 Avalonia shell, the
 M9R two-stage OpenGL presenter, the M9P dedicated core thread/frame pacer, and the
-M10 CI/publish pipeline are implemented as a working prototype. **538 tests pass.**
+M10 CI/publish pipeline are implemented as a working prototype. **539 tests pass.**
 
 Real-content status with `panafz1.bin`: **Lemmings** boots to CyberIntro and renders
 the 3D intro; **Space Ace** boots the ReadySoft player and renders the demo intro;
 **Road Rash** and **Wolfenstein 3D** load their own OS but stop at SAudio channel 0
 initialization; **Alone in the Dark** fails earlier in AudioFolio initialization.
 
-**Opera runs all four problem titles past those points** with the same BIOS and disc
-data, so the remaining failures are ours to fix, not a shared FreeDO limitation. The
-next session is a focused differential-debugging pass, not a UI or 4K-tuning pass.
-CPU-side performance is ~2.1-2.3 ms/frame, leaving ~14 ms of headroom at 60 Hz;
+The 2026-10-24 session fixed a real DSP-execution bug (headless runs never executed
+the DSP when no audio sink was attached) and decoded the remaining blockers:
+SAudio `-6996` is `SAudioErrAllocInstFailed`, and Space Ace's frame-681 runaway is
+the player's audio task copying to a null output buffer after its mixer setup fails.
+Both point at the DSP `AllocInstrument` semaphore handshake, which the ARM still
+does not see acknowledged. **Opera runs all four problem titles past those points**
+with the same BIOS and disc data, so the remaining failures are ours to fix, not a
+shared FreeDO limitation. The next session is a focused DSP differential against
+Opera, not a UI or 4K-tuning pass. CPU-side performance is ~2.1-2.3 ms/frame
+(1.63 ms/frame on the 2026-10-24 synthetic bench), leaving ample headroom at 60 Hz;
 desktop 4K60 is high confidence, while the GPU/p99 and Tier B numbers still need
 measurement.
 
-Remaining major work: differential port from Opera (CD-ROM, CLIO, MADAM, DSP/ARM),
-real-game hardening, GPU 4K/p99 validation, GLES/ANGLE/Pi validation, arm64/installers,
-filter polish, and the legal/attribution review. See
-[`docs/Status.md`](docs/Status.md) for the completion estimate and
+Remaining major work: differential port from Opera (DSP/audio first, then CD-ROM,
+CLIO, MADAM, and ARM timing), real-game hardening, GPU 4K/p99 validation,
+GLES/ANGLE/Pi validation, arm64/installers, filter polish, and the legal/attribution
+review. See [`docs/Status.md`](docs/Status.md) for the completion estimate and
 [`docs/NextSession.md`](docs/NextSession.md) for the next-session plan. The
 implementation plan and architecture are in:
 
@@ -125,7 +131,12 @@ dotnet run --project src/ThreeDo.Cli -- bios info panafz1.bin
 dotnet run --project src/ThreeDo.Cli -- state inspect quick.tdos
 dotnet run --project src/ThreeDo.Cli -- bench --frames 600
 dotnet run --project src/ThreeDo.Cli -- selftest
+dotnet run --project src/ThreeDo.Cli -- disasm artifacts/ram.bin --offset 0x12380 --count 64
 ```
+
+Diagnostics: `run` accepts `--watch-lowmem`, `--dump-ram`, and `--dump-dsp`;
+`trace` adds `--dsp-trace` and the existing CPU ring buffer. See
+[`docs/TestCorpus.md`](docs/TestCorpus.md) for the full command set.
 
 Desktop app:
 

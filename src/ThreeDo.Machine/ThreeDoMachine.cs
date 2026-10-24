@@ -493,7 +493,11 @@ public sealed class ThreeDoMachine
 
         if (Quartz.QueueDsp())
         {
-            AudioSink?.PushSample(Dsp.Loop());
+            // The DSP must run even when the host has no audio sink. The guest
+            // uses the DSP for resource allocation and semaphore handshakes, not
+            // just for sample output.
+            var sample = Dsp.Loop();
+            AudioSink?.PushSample(sample);
         }
 
         if (Quartz.QueueTimer())

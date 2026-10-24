@@ -74,6 +74,18 @@ public sealed class ThreeDoMachineTests
     }
 
     [Fact]
+    public void RunFrame_ExecutesDspWithoutAudioSink()
+    {
+        var machine = new ThreeDoMachine();
+        machine.Dsp.SetRunning(true);
+
+        machine.RunFrame();
+
+        Assert.Null(machine.AudioSink);
+        Assert.True(machine.Dsp.InstructionsExecuted > 0);
+    }
+
+    [Fact]
     public void RunFrame_DoesNotAllocateInSteadyState()
     {
         var machine = new ThreeDoMachine();

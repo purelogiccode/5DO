@@ -320,6 +320,8 @@ This is the largest and riskiest port. Split it into classes but keep the origin
 - `fastrand` is `g_seed = 69069 * g_seed + 1; return g_seed & 0xFFFF;` with seed `0xA5A5A5A5`.
 - `DSPPCNT`/`DSPPRLD` = 567. Each `Loop` subtracts 567 and wraps; this controls sample cadence.
 - Sample output is `(IMem[0x3FF] << 16) | IMem[0x3FE]`. The host interprets the packed 16-bit stereo pair; verify channel order with the WAV sink.
+- `Dsp.Loop()` must run even when no audio sink is attached. The guest uses the DSP for `AllocInstrument` and semaphore handshakes; gating the call on the sink makes headless runs time out in AudioFolio. Keep the sink null-conditional on `PushSample`, not on `Loop`.
+- XBUS DMA writes go through `IRam`, the raw word-lane accessor, so the FIFO byte order is `b0,b1,b2,b3`. Opera's `b3,b2,b1,b0` order applies to its CPU-visible `opera_mem_write8`. Changing our order to match Opera's text breaks CD boot; the two accessors have different byte semantics.
 
 ### 8.6 `SPORT.cpp`
 

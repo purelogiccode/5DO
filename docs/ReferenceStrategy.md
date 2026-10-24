@@ -73,13 +73,34 @@ The same ISO still fails in our port, so the problem is not the CHD reader. This
 and Space Ace failures are bugs or missing behavior in our port. Opera is the better
 oracle.
 
+The 2026-10-24 pass decoded the common failure:
+
+- SAudio `-6996` is `SAudioErrAllocInstFailed`; the raw AudioFolio error is lost by
+  the SDK subscriber.
+- The DSP was not executing at all in headless runs because
+  `AudioSink?.PushSample(Dsp.Loop())` short-circuited the call. That is fixed.
+- With the DSP executing, the ARM's Sema4 command still sits at `status=0x8,
+  data=0`, and the DSP trace shows a repeating sample loop that never reads
+  `Sema4Data` or writes the ACK.
+- Space Ace's frame-681 runaway is the player's audio task copying to a null
+  `[audioState+0x9C]` after the same failed `AllocInstrument` path, not a random DMA
+  corruption.
+
+The next differential is therefore **DSP-only**: `opera_dsp.c` against `Dsp.cs`,
+starting with the special registers, flags, `exact`/branch table, operand loader,
+and the head/tail command entry. Do not touch the CD path or the ARM core until the
+DSP handshake is understood.
+
 Caveats:
 
 - The comparison verified video/game progress, not audio output.
 - Space Ace's `d52bf113` mixer error also appears in Opera but is non-fatal; our
-  runaway is a separate issue.
+  runaway is a downstream consequence of the same failed instrument allocation.
 - Opera has its own HLE paths and a built-in BIOS option. We run a real BIOS, so do
   not adopt those paths blindly.
+- The XBUS DMA byte order is correct as-is (`b0,b1,b2,b3` through the raw `IRam`
+  accessor). Opera's `b3,b2,b1,b0` applies to its CPU-visible `opera_mem_write8`.
+  A byte-order change was tried on 2026-10-24 and broke every CD-booting title.
 
 ---
 

@@ -45,6 +45,7 @@ internal static class Program
                 "state" => State(args),
                 "bench" => Bench(args),
                 "selftest" => SelfTest(args),
+                "disasm" => Disassemble(args),
                 _ => Unknown(args[0], json),
             };
         }
@@ -107,6 +108,14 @@ internal static class Program
         var fiqTrace = options.Get("--fiq-trace");
         var kprintPath = options.Get("--kprint");
         var kprintPcPath = options.Get("--kprint-pc");
+        var watchLowMem = options.Get("--watch-lowmem");
+        var watchFromFrame = options.GetInt("--watch-from-frame", 0);
+        var watchStart = options.GetUInt32("--watch-start", 0) ?? 0;
+        var watchEnd = options.GetUInt32("--watch-end", 0x100) ?? 0x100;
+        var dumpRamPath = options.Get("--dump-ram");
+        var dumpRamOffset = options.GetUInt32("--dump-ram-offset", 0) ?? 0;
+        var dumpRamLength = options.GetInt("--dump-ram-length", 0x1000);
+        var dumpDspPrefix = options.Get("--dump-dsp");
         var discPath = options.Positional;
 
         if (biosPath is null && stateIn is null)
@@ -159,6 +168,7 @@ internal static class Program
 
             clioTraceWriter = new StreamWriter(clioTrace);
             machine.Clio.TraceWriter = clioTraceWriter;
+            machine.Clio.FrameProvider = () => machine.FramesExecuted;
         }
 
         StreamWriter? cdTraceWriter = null;
@@ -232,17 +242,71 @@ internal static class Program
             };
         }
 
+        StreamWriter? watchWriter = null;
+        if (watchLowMem is not null)
+        {
+            var directory = Path.GetDirectoryName(Path.GetFullPath(watchLowMem));
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            watchWriter = new StreamWriter(watchLowMem);
+            machine.Memory.RamWriteObserver = (address, value, size) =>
+            {
+                if (address < watchStart || address >= watchEnd || machine.FramesExecuted < watchFromFrame)
+                {
+                    return;
+                }
+
+                var sp = machine.Cpu.ReadRegister(13);
+                var stack = new StringBuilder();
+                for (var i = 0; i < 6; i++)
+                {
+                    stack.Append($"{machine.Memory.Ram.Read32(sp + (uint)(i * 4)):x8} ");
+                }
+
+                watchWriter.WriteLine(
+                    $"f={machine.FramesExecuted} pc={machine.Cpu.ProgramCounter:x8} "
+                    + $"addr={address:x8} value={value:x8} size={size} "
+                    + $"r0={machine.Cpu.ReadRegister(0):x8} r1={machine.Cpu.ReadRegister(1):x8} "
+                    + $"r2={machine.Cpu.ReadRegister(2):x8} r3={machine.Cpu.ReadRegister(3):x8} "
+                    + $"sp={sp:x8} lr={machine.Cpu.ReadRegister(14):x8} stack={stack}"
+                    + $"caller={DescribeWriter()}");
+            };
+        }
+
         if (stateIn is not null)
         {
             machine.LoadStateFromFile(stateIn);
         }
 
         machine.RunFrames(frames);
+
+        if (dumpRamPath is not null)
+        {
+            var directory = Path.GetDirectoryName(Path.GetFullPath(dumpRamPath));
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            var buffer = new byte[dumpRamLength];
+            machine.Memory.CopyRam(dumpRamOffset, buffer);
+            File.WriteAllBytes(dumpRamPath, buffer);
+        }
+
+        if (dumpDspPrefix is not null)
+        {
+            DumpDsp(machine, dumpDspPrefix);
+        }
+
         fiqTraceWriter?.Dispose();
         clioTraceWriter?.Dispose();
         cdTraceWriter?.Dispose();
         kprintWriter?.Dispose();
         kprintPcWriter?.Dispose();
+        watchWriter?.Dispose();
 
         if (frameOut is not null)
         {
@@ -274,6 +338,10 @@ internal static class Program
             frameHash = FrameHash(machine),
             samples = audio?.SampleCount ?? 0,
             discHash,
+            dspRunning = machine.Dsp.IsRunning,
+            dspPc = machine.Dsp.ProgramCounter,
+            dspSema = ((uint)machine.Dsp.SemaphoreStatus << 16) | machine.Dsp.SemaphoreData,
+            dspSeed = machine.Dsp.Seed,
             warnings = machine.StateWarnings,
         };
 
@@ -297,6 +365,8 @@ internal static class Program
         var stopCd = options.GetUInt32("--stop-cd", null);
         var stopInvalid = HasFlag(args, "--stop-invalid");
         var output = options.Get("--out");
+        var dumpDspPrefix = options.Get("--dump-dsp");
+        var dspTracePath = options.Get("--dsp-trace");
 
         if (biosPath is null && stateIn is null)
         {
@@ -324,6 +394,12 @@ internal static class Program
         }
 
         machine.RunFrames(frames);
+
+        if (dspTracePath is not null)
+        {
+            machine.Dsp.ClearDspTrace();
+            machine.Dsp.DspTraceEnabled = true;
+        }
 
         TextWriter writer = Console.Out;
         StreamWriter? file = null;
@@ -439,6 +515,11 @@ internal static class Program
                 + $"sp={sp:x8} lr={machine.Cpu.ReadRegister(14):x8} "
                 + $"cdStatus={machine.Cdrom.DriveStatus:x2} cdPoll={machine.Cdrom.Poll:x2} "
                 + $"disc={(machine.Cdrom.Disc is null ? "no" : "yes")}");
+            writer.WriteLine(
+                $"# dsp running={machine.Dsp.IsRunning} pc={machine.Dsp.ProgramCounter:x4} "
+                + $"sema={machine.Dsp.SemaphoreStatus:x4}/{machine.Dsp.SemaphoreData:x4} "
+                + $"prld={machine.Dsp.PeriodReload} audcnt={machine.Dsp.AudioCounter} "
+                + $"seed={machine.Dsp.Seed:x8}");
             writer.WriteLine($"# stack: {stack}");
 
             foreach (var entry in ring)
@@ -446,6 +527,28 @@ internal static class Program
                 writer.WriteLine(
                     $"{entry.Pc:x8} {entry.Cpsr:x8} {entry.Instruction:x8} "
                     + ArmDisassembler.Disassemble(entry.Instruction, entry.Pc));
+            }
+
+            if (dumpDspPrefix is not null)
+            {
+                DumpDsp(machine, dumpDspPrefix);
+            }
+
+            if (dspTracePath is not null)
+            {
+                var directory = Path.GetDirectoryName(Path.GetFullPath(dspTracePath));
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                using var dspWriter = new StreamWriter(dspTracePath);
+                foreach (var entry in machine.Dsp.DspTrace)
+                {
+                    dspWriter.WriteLine(
+                        $"{entry.Pc:x4} {entry.Instruction:x4} "
+                        + $"sema={entry.SemaphoreStatus:x4}/{entry.SemaphoreData:x4} next={entry.NextPc:x4}");
+                }
             }
 
             file?.Dispose();
@@ -620,6 +723,30 @@ internal static class Program
         return 0;
     }
 
+    private static int Disassemble(string[] args)
+    {
+        var options = Parse(args);
+        var path = options.Positional ?? throw new ArgumentException("disasm needs a binary path.");
+        var offset = options.GetInt("--offset", 0);
+        var count = options.GetInt("--count", 32);
+        var baseAddress = options.GetUInt32("--base", 0) ?? 0;
+        var bytes = File.ReadAllBytes(path);
+        if (offset < 0 || offset >= bytes.Length)
+        {
+            throw new ArgumentException($"The offset 0x{offset:x} is outside the file.");
+        }
+
+        var words = Math.Min(count, (bytes.Length - offset) / 4);
+        for (var i = 0; i < words; i++)
+        {
+            var address = baseAddress + (uint)(offset + (i * 4));
+            var word = BitConverter.ToUInt32(bytes, offset + (i * 4));
+            Console.WriteLine($"{address:x8} {word:x8} {ArmDisassembler.Disassemble(word, address)}");
+        }
+
+        return 0;
+    }
+
     private static int Bench(string[] args)
     {
         var options = Parse(args);
@@ -756,6 +883,35 @@ internal static class Program
         return null;
     }
 
+    private static void DumpDsp(ThreeDoMachine machine, string prefix)
+    {
+        var directory = Path.GetDirectoryName(Path.GetFullPath(prefix));
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        var instruction = new ushort[1024];
+        machine.Dsp.CopyInstructionMemory(instruction);
+        var data = new ushort[2048];
+        machine.Dsp.CopyDataMemory(data);
+
+        static byte[] ToBytes(ushort[] words)
+        {
+            var bytes = new byte[words.Length * 2];
+            for (var i = 0; i < words.Length; i++)
+            {
+                System.Buffers.Binary.BinaryPrimitives.WriteUInt16LittleEndian(
+                    bytes.AsSpan(i * 2, 2), words[i]);
+            }
+
+            return bytes;
+        }
+
+        File.WriteAllBytes(prefix + ".imem.bin", ToBytes(instruction));
+        File.WriteAllBytes(prefix + ".dmem.bin", ToBytes(data));
+    }
+
     private static uint FrameHash(ThreeDoMachine machine)
     {
         var buffer = new FrameBuffer(machine.Frame.SourceWidth, machine.Frame.SourceHeight);
@@ -784,6 +940,40 @@ internal static class Program
         Console.WriteLine($"frame hash:  0x{(uint)type.GetProperty("frameHash")!.GetValue(result)!:x8}");
         Console.WriteLine($"samples:     {type.GetProperty("samples")!.GetValue(result)}");
         Console.WriteLine($"disc hash:   {type.GetProperty("discHash")!.GetValue(result)}");
+        Console.WriteLine($"dsp running: {type.GetProperty("dspRunning")!.GetValue(result)}");
+        Console.WriteLine($"dsp pc:      0x{(uint)type.GetProperty("dspPc")!.GetValue(result)!:x4}");
+        Console.WriteLine($"dsp sema:    0x{(uint)type.GetProperty("dspSema")!.GetValue(result)!:x8}");
+        Console.WriteLine($"dsp seed:    0x{(uint)type.GetProperty("dspSeed")!.GetValue(result)!:x8}");
+    }
+
+    private static string DescribeWriter()
+    {
+        var trace = new StackTrace(2, false);
+        var parts = new List<string>();
+        foreach (var frame in trace.GetFrames())
+        {
+            var method = frame.GetMethod();
+            var type = method?.DeclaringType;
+            if (method is null || type is null)
+            {
+                continue;
+            }
+
+            var typeName = type.FullName ?? type.Name;
+            if (typeName.StartsWith("ThreeDo.Memory.", StringComparison.Ordinal)
+                || typeName.StartsWith("ThreeDo.Cli.Program+", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            parts.Add($"{typeName}.{method.Name}");
+            if (parts.Count >= 3)
+            {
+                break;
+            }
+        }
+
+        return string.Join(" <- ", parts);
     }
 
     private static bool HasFlag(string[] args, string flag)
@@ -839,16 +1029,22 @@ internal static class Program
         Console.WriteLine("Commands:");
         Console.WriteLine("  run [disc] [--bios path] [--frames N] [--state-in path] [--state-out path]");
         Console.WriteLine("             [--frame-out path] [--audio null|wav] [--wav-out path] [--cd-trace path]");
-        Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path] [--json]");
+        Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
+        Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
+        Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
+        Console.WriteLine("             [--dump-dsp prefix] [--json]");
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
-        Console.WriteLine("             [--stop-invalid] [--count N] [--out path]");
+        Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
+        Console.WriteLine("             [--dsp-trace path]");
         Console.WriteLine("             Runs the machine and records a diagnostic instruction ring buffer.");
         Console.WriteLine("  info <disc> [--json]                 Disc geometry, volume header, and game ID.");
         Console.WriteLine("  disc dump <disc> --out path [--sector N] [--count N]");
         Console.WriteLine("                                       Write raw 2048-byte sectors for diagnostics.");
         Console.WriteLine("  bios info <path> [--json]            BIOS size, MD5, and Anvil detection.");
         Console.WriteLine("  state inspect <path> [--json]        Save-state header and section table.");
+        Console.WriteLine("  disasm <file> [--offset N] [--count N] [--base 0xADDR]");
+        Console.WriteLine("                                       Disassemble raw little-endian ARM words.");
         Console.WriteLine("  bench [--frames N] [--json]          Synthetic-ROM frame benchmark.");
         Console.WriteLine("  selftest [--json]                    Determinism and state roundtrip checks.");
         Console.WriteLine();
@@ -870,7 +1066,14 @@ internal static class Program
         internal int GetInt(string name, int fallback)
         {
             var value = Get(name);
-            return value is null ? fallback : int.Parse(value, CultureInfo.InvariantCulture);
+            if (value is null)
+            {
+                return fallback;
+            }
+
+            return value.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+                ? (int)uint.Parse(value[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture)
+                : int.Parse(value, CultureInfo.InvariantCulture);
         }
 
         internal uint? GetUInt32(string name, uint? fallback)

@@ -7,12 +7,13 @@ This document records the legally obtained BIOS and disc images available on the
 development machine for manual compatibility, boot, audio, input, save-state, and
 performance testing. None of these files may be committed, packaged, or uploaded.
 
-- BIOS directory: `D:\Dropbox\source\repos\CSharp_3DOEmulator\bios\`
-- Disc directory: `D:\Samples\3DO\`
+- BIOS directory: `bios/` in this repository (ignored by `.gitignore`)
+- Disc directory: `E:\Panasonic 3DO\`
 
 Both locations are outside version control. `bios/` is already ignored by
 `.gitignore`, and `*.chd`/`*.iso`/`*.bin`/`*.cue` are ignored as a second guard.
-`D:\Samples\3DO` is outside the repository entirely.
+`E:\Panasonic 3DO` is outside the repository entirely. The older `D:\Samples\3DO`
+path used by previous handoffs no longer exists.
 
 ---
 
@@ -47,10 +48,14 @@ compatibility pass:
 | Title | Final PC | Frame hash | Frame at 3,000 | Observation |
 |---|---|---|---|---|
 | Alone in the Dark | `0x00010520` | `286162373` | blank | Boot log stops after the audio-folio init; `SAudio channel 0 failed; error = -6996` |
-| Lemmings | `0x00128B60` | `2469164834` | **rendered** | Reaches CyberIntro; the 3D intro renders correctly |
-| Road Rash | `0x00010524` | `2265977137` | blank | Loads the game OS (`grafmath 21.10.504`); waits on SAudio channel 0 (`-6996`) |
-| Space Ace | `0xB3244B20` | `1287603876` | **rendered** | ReadySoft player finds the CD-ROM and renders the demo intro; CPU later runs away |
-| Wolfenstein 3D | `0x00011990` | `286162373` | blank | Loads Sherry/Operator/FS v24.225; waits on SAudio channel 0 (`-6996`) |
+| Lemmings | `0x0012B36C` | `2469164834` | **rendered** | Reaches CyberIntro; the 3D intro renders correctly |
+| Road Rash | `0x000BA124` | `2265977137` | blank | Loads the game OS (`grafmath 21.10.504`); waits on SAudio channel 0 (`-6996`) |
+| Space Ace | `0xB323EEA0` | `1287603876` | **rendered** | ReadySoft player finds the CD-ROM and renders the demo intro; the audio task later copies to a null buffer and the CPU runs away |
+| Wolfenstein 3D | `0x00077824` | `286162373` | blank | Loads Sherry/Operator/FS v24.225; waits on SAudio channel 0 (`-6996`) |
+
+The final PCs changed on 2026-10-24 when the DSP was made to execute in headless
+runs; the frame hashes did not. Use the frame hash as the stable regression key and
+record the PC alongside the commit.
 
 `PC 0x205C4`/`0x205C8` is the Portfolio **idle loop**, not a halt: VDL and timer
 interrupts continue to run and the boot log advances. Earlier baselines that
@@ -146,6 +151,28 @@ dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
 dotnet run --project src/ThreeDo.Cli -- trace "$env:THREEDO_DISC" `
   --bios "$env:THREEDO_BIOS" --trace-frames 600 --ring 8192 `
   --stop-kprint "Chunk XTRA" --out artifacts/trace.txt
+
+# Low-memory write watchpoint (writer PC, value, size, registers, caller)
+dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
+  --bios "$env:THREEDO_BIOS" --frames 700 `
+  --watch-lowmem artifacts/watch.txt --watch-from-frame 681 `
+  --watch-start 0 --watch-end 0x100
+
+# RAM and DSP memory dumps at the end of a run
+dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
+  --bios "$env:THREEDO_BIOS" --frames 3000 `
+  --dump-ram artifacts/ram.bin --dump-ram-offset 0 --dump-ram-length 0x300000 `
+  --dump-dsp artifacts/dsp
+
+# DSP instruction ring at a KPRINT stop
+dotnet run --project src/ThreeDo.Cli -- trace "$env:THREEDO_DISC" `
+  --bios "$env:THREEDO_BIOS" --frames 0 --trace-frames 3000 `
+  --stop-kprint "SAudio channel" --dsp-trace artifacts/dsp-trace.txt `
+  --dump-dsp artifacts/dsp-stop --out artifacts/trace.txt
+
+# Disassemble raw little-endian ARM words from a RAM dump
+dotnet run --project src/ThreeDo.Cli -- disasm artifacts/ram.bin `
+  --offset 0x12380 --count 100 --base 0x0
 ```
 
 ---
@@ -180,8 +207,8 @@ only when validating compatibility-specific code paths.
 Set the two environment variables used by the opt-in tests:
 
 ```powershell
-$env:THREEDO_BIOS = "D:\Dropbox\source\repos\CSharp_3DOEmulator\bios\panafz1.bin"
-$env:THREEDO_DISC = "D:\Samples\3DO\Road Rash (USA).chd"
+$env:THREEDO_BIOS = "C:\Users\HomePC\Dropbox\source\repos\CSharp_3DOEmulator\bios\panafz1.bin"
+$env:THREEDO_DISC = "E:\Panasonic 3DO\Road Rash (USA).chd"
 ```
 
 Inspect a disc without booting it:

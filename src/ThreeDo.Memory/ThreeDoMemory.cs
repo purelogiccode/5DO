@@ -74,6 +74,16 @@ public sealed class ThreeDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSele
     /// <summary>Gets or sets the diagnostic port hook.</summary>
     public IDiagPort? DiagPort { get; set; }
 
+    /// <summary>
+    /// Gets or sets a developer-only observer for RAM writes.
+    /// </summary>
+    /// <remarks>
+    /// The observer is invoked for CPU and DMA writes alike, with the physical RAM
+    /// offset, the written value, and the access size in bytes. It is null in normal
+    /// operation and must stay off the hot path unless a diagnostic is requested.
+    /// </remarks>
+    public Action<uint, uint, int>? RamWriteObserver { get; set; }
+
     /// <summary>Gets a read-only view of NVRAM.</summary>
     public ReadOnlySpan<byte> Nvram => _nvram;
 
@@ -219,6 +229,17 @@ public sealed class ThreeDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSele
     /// <param name="bank">Zero for BIOS1, non-zero for BIOS2.</param>
     void IRomSelector.SelectRom(int bank) => SelectRomBank(bank == 0 ? 0 : 1);
 
+    /// <summary>Copies CPU-visible RAM bytes for diagnostics.</summary>
+    /// <param name="offset">Byte offset in CPU-visible RAM.</param>
+    /// <param name="destination">Destination span.</param>
+    public void CopyRam(uint offset, Span<byte> destination)
+    {
+        for (var i = 0; i < destination.Length; i++)
+        {
+            destination[i] = ReadRam8(offset + (uint)i);
+        }
+    }
+
     /// <summary>Clears the CPU-visible RAM and the reserved mirrors.</summary>
     public void ClearRam() => _ram.AsSpan().Clear();
 
@@ -291,7 +312,7 @@ public sealed class ThreeDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSele
             | (ReadRam8(offset + 3) << 24));
     }
 
-    private void WriteRam8(uint offset, byte value)
+    private void WriteRam8(uint offset, byte value, bool notify = true)
     {
         var index = (int)(offset >> 2);
         if ((uint)index >= (uint)_ram.Length)
@@ -299,12 +320,17 @@ public sealed class ThreeDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSele
             return;
         }
 
+        if (notify)
+        {
+            RamWriteObserver?.Invoke(offset, value, 1);
+        }
+
         var shift = (int)((offset & 3) * 8);
         var mask = 0xFFu << shift;
         _ram[index] = (_ram[index] & ~mask) | ((uint)value << shift);
     }
 
-    private void WriteRam16(uint offset, ushort value)
+    private void WriteRam16(uint offset, ushort value, bool notify = true)
     {
         if ((offset & 1) == 0 && (offset & 3) != 3)
         {
@@ -314,22 +340,32 @@ public sealed class ThreeDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSele
                 return;
             }
 
+            if (notify)
+            {
+                RamWriteObserver?.Invoke(offset, value, 2);
+            }
+
             var shift = (int)((offset & 3) * 8);
             var mask = 0xFFFFu << shift;
             _ram[index] = (_ram[index] & ~mask) | ((uint)value << shift);
             return;
         }
 
-        WriteRam8(offset, (byte)value);
-        WriteRam8(offset + 1, (byte)(value >> 8));
+        WriteRam8(offset, (byte)value, notify);
+        WriteRam8(offset + 1, (byte)(value >> 8), notify);
     }
 
-    private void WriteRam32(uint offset, uint value)
+    private void WriteRam32(uint offset, uint value, bool notify = true)
     {
         var index = (int)(offset >> 2);
         if ((uint)index >= (uint)_ram.Length)
         {
             return;
+        }
+
+        if (notify)
+        {
+            RamWriteObserver?.Invoke(offset, value, 4);
         }
 
         if ((offset & 3) == 0)
@@ -338,10 +374,10 @@ public sealed class ThreeDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSele
             return;
         }
 
-        WriteRam8(offset, (byte)value);
-        WriteRam8(offset + 1, (byte)(value >> 8));
-        WriteRam8(offset + 2, (byte)(value >> 16));
-        WriteRam8(offset + 3, (byte)(value >> 24));
+        WriteRam8(offset, (byte)value, notify: false);
+        WriteRam8(offset + 1, (byte)(value >> 8), notify: false);
+        WriteRam8(offset + 2, (byte)(value >> 16), notify: false);
+        WriteRam8(offset + 3, (byte)(value >> 24), notify: false);
     }
 
     /// <inheritdoc />

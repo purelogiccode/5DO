@@ -2,13 +2,32 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current position (2026-10-23):** 2/5 local corpus titles boot and render
+**Current position (2026-10-24):** 2/5 local corpus titles boot and render
 (Lemmings, Space Ace), 2/5 load their own OS and stop at SAudio channel 0
 (Road Rash, Wolfenstein 3D), and 1/5 fails earlier (Alone in the Dark). No title has
 reached gameplay yet. The 2026-10-23 CD disc-end fix is what unblocked the three
 discs that were previously rejected as non-3DO. **Opera runs all four problem titles
 past those points**, so the remaining failures are ours to fix, not a shared FreeDO
-limitation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md).
+limitation.
+
+The 2026-10-24 session decoded the SAudio `-6996` error and the Space Ace runaway:
+
+- `-6996` is `SAudioErrAllocInstFailed` from the SDK's SAudio subscriber, i.e.
+  `AllocInstrument` failed inside the game OS. The raw AudioFolio error is lost.
+- The DSP was only stepped when an audio sink was attached
+  (`AudioSink?.PushSample(Dsp.Loop())`). Headless runs therefore never executed the
+  DSP, so every `AllocInstrument` semaphore handshake timed out. The machine now
+  always executes the DSP and only gates sample delivery on the sink. This is a
+  correctness fix, but the SAudio handshake still fails, so the DSP interpreter
+  itself is now the active suspect.
+- Space Ace's runaway is not a random low-memory corruption. The ReadySoft player's
+  audio task copies a decoded audio buffer to `[audioState+0x9C]`; that pointer is
+  zero because the player's mixer/instrument setup failed. A timer FIQ fires during
+  the 27 KB `memcpy` to address 0, the copy wipes the ARM exception vectors, and the
+  FIQ vectors through the now-zero table. The same `AllocInstrument` path is the
+  common cause.
+
+See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md).
 
 ---
 
@@ -184,10 +203,10 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 | Game | Region | Disc ID | BIOS | Build | Boot | In-game | Audio | Input | Notes | Opera reference |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | Not reached yet | DSP runs; listening check pending | Not tested | CyberIntro renders real 3D frames | Not re-tested this pass |
-| Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass (intro)** | No | Mixer open fails (`d52bf113`) | No | Loads the ReadySoft player and renders the demo intro; CPU later runs away | Demo intro 60 s, no runaway |
-| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Partial** | No | SAudio channel 0 init fails (`-6996`) | No | Loads the game OS (`grafmath 21.10.504`) then waits on audio | Intro FMV 60 s |
-| Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Partial** | No | SAudio channel 0 init fails (`-6996`) | No | Loads Sherry/Operator/FS v24.225 then waits on audio | Intro 60 s |
-| Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Fails early** | No | SAudio channel 0 init fails (`-6996`) | No | Boot log stops after AudioFolio init | Intro/loading 60 s |
+| Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass (intro)** | No | Mixer open fails (`d52bf113`) | No | Renders the demo intro, then the audio task copies to a null output buffer and the timer FIQ crashes on the wiped vector table | Demo intro 60 s, no runaway |
+| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Partial** | No | SAudio channel 0 init fails (`-6996` = `SAudioErrAllocInstFailed`) | No | Loads the game OS (`grafmath 21.10.504`) then waits on the DSP `AllocInstrument` handshake | Intro FMV 60 s |
+| Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Partial** | No | SAudio channel 0 init fails (`-6996` = `SAudioErrAllocInstFailed`) | No | Loads Sherry/Operator/FS v24.225 then waits on the DSP `AllocInstrument` handshake | Intro 60 s |
+| Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Fails early** | No | SAudio channel 0 init fails (`-6996` = `SAudioErrAllocInstFailed`) | No | Boot log stops after AudioFolio init | Intro/loading 60 s |
 
 `Partial` means the BIOS, kernel, filesystem, and CD paths run far enough to load
 the game's own OS, but the title screen is not reached. `Pass` means a real game
@@ -203,17 +222,24 @@ padding to pass; Road Rash, Space Ace, and Wolfenstein did not, and were
 misidentified as non-3DO discs. Reporting the real end fixed all three. The
 remaining audio and runaway-CPU failures are tracked below.
 
-Space Ace's runaway was narrowed with `--fiq-trace`: at frame ~681 the CPU takes a
-FIQ while at `PC 0x0007D120` (the player's palette loop), and the FIQ vector at
-`0x1C` contains zero. The stack at that point is filled with `0x11111111`, so the
-low-memory vector table appears to have been overwritten. The next fetched word is
-`0xBADACCE5` filler and the CPU walks through it. This points at low-memory
-corruption from the ReadySoft player's DMA or a missing 3DO memory fence rather
-than a video or CPU bug; it is not fixed yet. **Opera plays the same demo for 60 s
-without this runaway**, so the bug is in our port, not the game or a shared FreeDO
-limitation.
+Space Ace's runaway is now understood. At frame ~681 the ReadySoft player's audio
+task copies a decoded audio chunk to the pointer at `audioState+0x9C`. That pointer
+is zero because the player's mixer/instrument setup failed (`AllocInstrument`
+returns `d52bf113`). The 27,538-byte `memcpy` starts at address 0, wiping the ARM
+exception vectors. A timer FIQ then fires at `PC 0x0007D120`, the FIQ vector at
+`0x1C` is already zero, and the CPU executes the zero-filled low memory until it
+walks off to `0x40000000`. The `0x11111111` stack fill is the player's heap pattern,
+not the cause.
 
-## 11. Reference comparison (2026-10-23)
+The common failure is the DSP `AllocInstrument` handshake. With the 2026-10-24 fix
+the DSP now executes in headless runs, but the ARM's Sema4 command remains at
+`status=0x8, data=0` and is never acknowledged. The DSP trace shows a repeating
+sample loop (`PC 0x000`-`0x02D`) that never reads `Sema4Data` or writes the ACK. The
+next step is a DSP-interpreter differential against Opera, not a CD or video rewrite.
+**Opera plays the same demo for 60 s without this runaway**, so the bug is in our
+port, not the game or a shared FreeDO limitation.
+
+## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `3do disc dump`, then run with
 the bundled Windows OperaCore (`References/CPP_SimpleGui`) and the same
@@ -222,6 +248,12 @@ the bundled Windows OperaCore (`References/CPP_SimpleGui`) and the same
 same ISO also fails in our port, so the CHD reader is not the cause. The comparison
 method and commands are in [`ReferenceStrategy.md`](ReferenceStrategy.md); the
 next-session plan is in [`NextSession.md`](NextSession.md).
+
+The 2026-10-24 pass added the diagnostics needed to make the next comparison
+mechanical: `--watch-lowmem`, `--dump-ram`, `--dump-dsp`, `--dsp-trace`, the
+`disasm` command, frame-stamped CLIO traces, and DSP state in the run JSON. The
+Space Ace crash was reproduced from a clean ISO and from the CHD with identical
+results.
 
 Local corpus (user-provided, not distributed; see [`TestCorpus.md`](TestCorpus.md)):
 
