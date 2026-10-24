@@ -84,6 +84,44 @@ public sealed class CcbParser
 
         current += 4;
 
+        if ((header.Flags & CcbControl.HasPosition) != 0)
+        {
+            header.XPosition = unchecked((int)ReadWord(current));
+            current += 4;
+            header.YPosition = unchecked((int)ReadWord(current));
+            current += 4;
+        }
+        else
+        {
+            current += 8;
+        }
+
+        if ((header.Flags & CcbControl.LoadSize) != 0)
+        {
+            header.Hdx = unchecked((int)ReadWord(current)) >> 4;
+            current += 4;
+            header.Hdy = unchecked((int)ReadWord(current)) >> 4;
+            current += 4;
+            header.Vdx = unchecked((int)ReadWord(current));
+            current += 4;
+            header.Vdy = unchecked((int)ReadWord(current));
+            current += 4;
+        }
+
+        if ((header.Flags & CcbControl.LoadPerspective) != 0)
+        {
+            header.Hddx = unchecked((int)ReadWord(current)) >> 4;
+            current += 4;
+            header.Hddy = unchecked((int)ReadWord(current)) >> 4;
+            current += 4;
+        }
+
+        if ((header.Flags & CcbControl.LoadPixelProcessor) != 0)
+        {
+            header.PixelControl = ReadWord(current);
+            current += 4;
+        }
+
         if ((header.Flags & CcbControl.CcbPreamble) != 0)
         {
             header.Pre0 = ReadWord(current);

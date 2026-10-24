@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using ThreeDo.Core;
 
 namespace ThreeDo.Madam;
@@ -98,6 +99,63 @@ internal sealed class CelEngine
 
     internal int ClipY => (int)((_madam.ReadRegister(ClipRegister) >> 16) & 0x3ff);
 
+    /// <summary>Gets or sets an optional diagnostic writer for CEL commands.</summary>
+    internal TextWriter? TraceWriter { get; set; }
+
+    private long _celNumber;
+    private uint _currentCcb;
+    private int _arbitraryTraceCount;
+
+    /// <summary>Writes a CEL progress marker to the diagnostic trace, when enabled.</summary>
+    internal void TraceProgress(long texels, int row, int column)
+    {
+        TraceWriter?.WriteLine(
+            $"cel {_celNumber - 1} progress texels={texels} row={row} col={column}");
+    }
+
+    /// <summary>Writes the first few arbitrary-quad inputs of the current CEL.</summary>
+    internal void TraceArbitrary(int xA, int yA, int xB, int yB, int xC, int yC, int xD, int yD)
+    {
+        if (TraceWriter is null || _arbitraryTraceCount++ >= 8)
+        {
+            return;
+        }
+
+        TraceWriter.WriteLine(
+            $"cel {_celNumber - 1} arb A=({xA >> 16},{yA >> 16}) B=({xB >> 16},{yB >> 16}) "
+            + $"C=({xC >> 16},{yC >> 16}) D=({xD >> 16},{yD >> 16}) raw="
+            + $"({xA:x8},{yA:x8},{xB:x8},{yB:x8},{xC:x8},{yC:x8},{xD:x8},{yD:x8})");
+    }
+
+    /// <summary>Writes one CEL command to the diagnostic trace, when enabled.</summary>
+    internal void TraceCel(string kind, int width, int height, int bpp)
+    {
+        if (TraceWriter is null)
+        {
+            return;
+        }
+
+        var g = _geometry;
+        _arbitraryTraceCount = 0;
+        TraceWriter.WriteLine(
+            $"cel {_celNumber++} {kind} ccb={_currentCcb:x8} next={_nextCcb:x8} flags={(uint)_flags:x8} "
+            + $"pre0={_pre0:x8} pre1={_pre1:x8} data={_dataAddress:x8} bpp={bpp} "
+            + $"size={width}x{height} pos=({g.XPosition1616:x8},{g.YPosition1616:x8}) "
+            + $"h=({g.Hdx1616:x8},{g.Hdy1616:x8}) v=({g.Vdx1616:x8},{g.Vdy1616:x8}) "
+            + $"hd=({g.Hddx1616:x8},{g.Hddy1616:x8}) clip=({ClipX},{ClipY}) "
+            + $"src={PixelSource:x8} dst={FrameBufferTarget:x8}");
+        if ((long)width * height > 100_000)
+        {
+            var words = new System.Text.StringBuilder();
+            for (var offset = 0; offset < 64; offset += 4)
+            {
+                words.Append($"{_memory.ReadWord(unchecked(_currentCcb + (uint)offset)):x8} ");
+            }
+
+            TraceWriter.WriteLine($"cel {_celNumber - 1} ccbdata={words}");
+        }
+    }
+
     /// <summary>
     /// Runs every queued CCB until the list ends. FreeDO: <c>_madam_HandleCEL</c>.
     /// </summary>
@@ -113,6 +171,7 @@ internal sealed class CelEngine
         var stop = false;
         while (_nextCcb != 0 && !stop)
         {
+            _currentCcb = _nextCcb;
             var header = _parser.Parse(_nextCcb & 0xfffffcu);
             _flags = header.Flags;
             _nextCcb = header.NextCcb;
@@ -128,15 +187,10 @@ internal sealed class CelEngine
                 _nextCcb = 0;
             }
 
-            var current = header.BodyAddress;
             if ((_flags & CcbControl.HasPosition) != 0)
             {
-                _geometry.XPosition1616 = unchecked((int)ReadWord(ref current));
-                _geometry.YPosition1616 = unchecked((int)ReadWord(ref current));
-            }
-            else
-            {
-                current += 8;
+                _geometry.XPosition1616 = header.XPosition;
+                _geometry.YPosition1616 = header.YPosition;
             }
 
             // FreeDO: CEL_ORIGIN_VH_VALUE = (XPOS1616 & 1) | ((YPOS1616 & 1) << 15).
@@ -145,21 +199,21 @@ internal sealed class CelEngine
 
             if ((_flags & CcbControl.LoadSize) != 0)
             {
-                _geometry.Hdx1616 = unchecked((int)ReadWord(ref current)) >> 4;
-                _geometry.Hdy1616 = unchecked((int)ReadWord(ref current)) >> 4;
-                _geometry.Vdx1616 = unchecked((int)ReadWord(ref current));
-                _geometry.Vdy1616 = unchecked((int)ReadWord(ref current));
+                _geometry.Hdx1616 = header.Hdx;
+                _geometry.Hdy1616 = header.Hdy;
+                _geometry.Vdx1616 = header.Vdx;
+                _geometry.Vdy1616 = header.Vdy;
             }
 
             if ((_flags & CcbControl.LoadPerspective) != 0)
             {
-                _geometry.Hddx1616 = unchecked((int)ReadWord(ref current)) >> 4;
-                _geometry.Hddy1616 = unchecked((int)ReadWord(ref current)) >> 4;
+                _geometry.Hddx1616 = header.Hddx;
+                _geometry.Hddy1616 = header.Hddy;
             }
 
             if ((_flags & CcbControl.LoadPixelProcessor) != 0)
             {
-                _pixc = ReadWord(ref current);
+                _pixc = header.PixelControl;
             }
 
             _pre0 = header.Pre0;
@@ -196,6 +250,7 @@ internal sealed class CelEngine
             _geometry.ClipX = ClipX;
             _geometry.ClipY = ClipY;
 
+            var started = TraceWriter is null ? 0 : System.Diagnostics.Stopwatch.GetTimestamp();
             if ((_flags & CcbControl.Packed) != 0)
             {
                 _rasterizer.DrawPackedCel();
@@ -209,17 +264,17 @@ internal sealed class CelEngine
             {
                 _rasterizer.DrawLiteralCel();
             }
+
+            if (TraceWriter is not null)
+            {
+                var elapsed = System.Diagnostics.Stopwatch.GetElapsedTime(started);
+                TraceWriter.WriteLine(
+                    $"cel {_celNumber - 1} done ms={elapsed.TotalMilliseconds:F3}");
+            }
         }
 
         _madam.WriteRegister(NextCcbRegister, _nextCcb);
         _madam.Fsm = CelFsmState.Idle;
         return _memory.TakeCycles();
-    }
-
-    private uint ReadWord(ref uint address)
-    {
-        var value = _memory.ReadWord(address);
-        address += 4;
-        return value;
     }
 }

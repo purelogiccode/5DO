@@ -53,6 +53,8 @@ internal sealed class CelRasterizer
             return;
         }
 
+        _engine.TraceCel("packed", geometry.SpriteWidth, geometry.SpriteHeight, bpp);
+
         var xvert = geometry.XPosition1616;
         var yvert = geometry.YPosition1616;
         var xcur = xvert;
@@ -468,6 +470,7 @@ internal sealed class CelRasterizer
             return;
         }
 
+        _engine.TraceCel("literal", spriteWidth, geometry.SpriteHeight, bpp);
         var xvert = geometry.XPosition1616;
         var yvert = geometry.YPosition1616;
         var xcur = xvert;
@@ -568,6 +571,7 @@ internal sealed class CelRasterizer
             spriteWidth -= skipX;
             geometry.SpriteWidth = spriteWidth;
 
+            var texels = 0L;
             for (var i = 0; i < geometry.SpriteHeight; i++)
             {
                 _engine.BitReader.AttachBuffer(unchecked((uint)data));
@@ -587,6 +591,11 @@ internal sealed class CelRasterizer
 
                 for (var j = 0; j < spriteWidth; j++)
                 {
+                    if ((texels++ & 0x3ffff) == 0)
+                    {
+                        _engine.TraceProgress(texels, i, j);
+                    }
+
                     var decoded = DecodePixel(bpp);
                     if (!decoded.Transparent)
                     {
@@ -649,6 +658,7 @@ internal sealed class CelRasterizer
             return;
         }
 
+        _engine.TraceCel("lr", spriteWidth, geometry.SpriteHeight, bpp);
         var data = unchecked((int)_engine.DataAddress);
         var xvert = geometry.XPosition1616;
         var yvert = geometry.YPosition1616;
@@ -911,6 +921,7 @@ internal sealed class CelRasterizer
         int yD)
     {
         var geometry = _engine.Geometry;
+        _engine.TraceArbitrary(xA, yA, xB, yB, xC, yC, xD, yD);
         xA >>= 16 - ResScale;
         xB >>= 16 - ResScale;
         xC >>= 16 - ResScale;
@@ -1065,6 +1076,39 @@ internal sealed class CelRasterizer
                 var swapUpDown = updowns[0];
                 updowns[0] = updowns[1];
                 updowns[1] = swapUpDown;
+            }
+
+            if (cntCross > 2)
+            {
+                if (xpoints[1] > xpoints[2])
+                {
+                    (xpoints[1], xpoints[2]) = (xpoints[2], xpoints[1]);
+                    (updowns[1], updowns[2]) = (updowns[2], updowns[1]);
+
+                    if (xpoints[0] > xpoints[1])
+                    {
+                        (xpoints[0], xpoints[1]) = (xpoints[1], xpoints[0]);
+                        (updowns[0], updowns[1]) = (updowns[1], updowns[0]);
+                    }
+                }
+
+                if (xpoints[2] > xpoints[3])
+                {
+                    (xpoints[2], xpoints[3]) = (xpoints[3], xpoints[2]);
+                    (updowns[2], updowns[3]) = (updowns[3], updowns[2]);
+
+                    if (xpoints[1] > xpoints[2])
+                    {
+                        (xpoints[1], xpoints[2]) = (xpoints[2], xpoints[1]);
+                        (updowns[1], updowns[2]) = (updowns[2], updowns[1]);
+
+                        if (xpoints[0] > xpoints[1])
+                        {
+                            (xpoints[0], xpoints[1]) = (xpoints[1], xpoints[0]);
+                            (updowns[0], updowns[1]) = (updowns[1], updowns[0]);
+                        }
+                    }
+                }
             }
 
             if (cntCross > 2

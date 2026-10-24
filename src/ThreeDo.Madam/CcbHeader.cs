@@ -37,6 +37,33 @@ public struct CcbHeader
     /// <summary>Gets or sets the second preamble word. FreeDO: <c>PRE1</c>.</summary>
     public uint Pre1 { get; set; }
 
+    /// <summary>Gets or sets the CEL X origin in 16.16 fixed point. FreeDO: <c>XPOS1616</c>.</summary>
+    public int XPosition { get; set; }
+
+    /// <summary>Gets or sets the CEL Y origin in 16.16 fixed point. FreeDO: <c>YPOS1616</c>.</summary>
+    public int YPosition { get; set; }
+
+    /// <summary>Gets or sets the horizontal delta. FreeDO: <c>HDX1616</c>.</summary>
+    public int Hdx { get; set; }
+
+    /// <summary>Gets or sets the horizontal delta Y. FreeDO: <c>HDY1616</c>.</summary>
+    public int Hdy { get; set; }
+
+    /// <summary>Gets or sets the vertical delta X. FreeDO: <c>VDX1616</c>.</summary>
+    public int Vdx { get; set; }
+
+    /// <summary>Gets or sets the vertical delta Y. FreeDO: <c>VDY1616</c>.</summary>
+    public int Vdy { get; set; }
+
+    /// <summary>Gets or sets the perspective horizontal delta. FreeDO: <c>HDDX1616</c>.</summary>
+    public int Hddx { get; set; }
+
+    /// <summary>Gets or sets the perspective vertical delta. FreeDO: <c>HDDY1616</c>.</summary>
+    public int Hddy { get; set; }
+
+    /// <summary>Gets or sets the pixel-processor control word. FreeDO: <c>PIXC</c>.</summary>
+    public uint PixelControl { get; set; }
+
     /// <summary>Gets or sets a value indicating that the next pointer is out of range or zero.</summary>
     public bool NextIsLast { get; set; }
 

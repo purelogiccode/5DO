@@ -1,5 +1,6 @@
 using System;
 using System.Buffers.Binary;
+using System.IO;
 using ThreeDo.Core;
 
 namespace ThreeDo.Madam;
@@ -264,8 +265,12 @@ public sealed class Madam : IMadamBus, IStateSection
             _celRam = Ram;
         }
 
+        _cel.TraceWriter = CelTraceWriter;
         return _cel.HandleCel();
     }
+
+    /// <summary>Gets or sets an optional diagnostic writer for CEL commands.</summary>
+    public TextWriter? CelTraceWriter { get; set; }
 
     /// <summary>Writes the MADAM save-state payload. FreeDO: <c>_madam_Save</c>.</summary>
     /// <param name="writer">Destination writer.</param>
