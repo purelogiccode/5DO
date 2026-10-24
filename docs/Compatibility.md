@@ -8,7 +8,7 @@ non-silent DSP audio. Road Rash's 3D race now renders correctly and the attract 
 continues past 60,000 frames with no allocator error; Wolfenstein 3D starts a fresh game
 (FLOOR 1-1) and its save states roundtrip; Alone in the Dark's in-game character renders
 upright at the staircase and its menu is reachable; Lemmings reaches its title menu and
-account-name screen; Space Ace plays its animated demo. Scripted input has been used to
+passcode screen; Space Ace plays its animated demo. Scripted input has been used to
 navigate the Wolfenstein and Lemmings menus, open the Alone menu, and alter Road Rash's
 race. Completing a full race/level remains the next gameplay milestone.
 
@@ -221,7 +221,7 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 
 | Game | Region | Disc ID | BIOS | Build | Boot | In-game | Audio | Input | Notes | Opera reference |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | **Title menu and account-name screen** | Non-silent DSP output | **Works**: D-pad changes the selection; A/X enter text | CyberIntro renders; the title screen shows Play/New Game; New Game opens the name-entry screen | Not re-tested this pass |
+| Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | **Title screen and passcode screen** | Non-silent DSP output | **Works**: D-pad changes the selection; A/X type | CyberIntro renders; the title shows Play/New Game; New Game opens the "Enter the access code" screen | Not re-tested this pass |
 | Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass** | **Animated demo past 12,000 frames** | Non-silent DSP output | P/X change the player state | Former frame-681 null-buffer runaway is gone; the demo FMV renders | Demo intro 60 s, no runaway |
 | Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **3D race renders and runs past 60,000 frames** | Non-silent DSP output; 10 s peak 32768, RMS ~9.1k | **A/P change the race**; a full race autopilot is still open | The CEL transposition fix removed the VRAM `AllocMem` error; Opera-like road/rider render | Intro FMV, then a race |
 | Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Pass** | **Fresh game (FLOOR 1-1) and save/load roundtrip** | Non-silent DSP output; 10 s peak 30743, RMS ~5.5k | **Works**: A opens the menu, D-pad/A navigate and fire | From a 12,000-frame demo state, A opens the preview menu; selecting a level starts a fresh game | Intro 60 s |
@@ -238,10 +238,11 @@ transposition fixes are described above; input results come from `--input-script
   `Left`/`Right`/`A`/`B`/`C` produce different hashes and PCs; the D-pad/A sequence
   reached the Begin/Resume main menu. The control run walks the character through the
   room, so the in-game scene is live without input.
-- **Lemmings:** the title menu highlight moves with the D-pad and the bottom
-  description changes. `Down` + `A` on New Game opens the account-name screen; `A`/`X`
-  enter the highlighted letter. Finishing the name entry and starting a level are
-  still to be scripted.
+- **Lemmings:** the title screen shows Play/New Game, but `A`/`Left`/`Right`/`P`/`X`
+  do not leave the attract loop. `Down` + `A` opens the passcode screen ("Enter the
+  access code"). The keyboard is `A-I`, `J-R`, `S-Z <`; `A`/`X` type the highlighted
+  letter, `Down` changes the row, and `P` does not confirm. Starting a level is still
+  to be scripted.
 - **Road Rash:** the attract race renders correctly from ~17,000 frames. Holding or
   tapping `A`/`P` changes the race state and eventually triggers the WRECK FMV; a
   deterministic autopilot that completes a race is still open.

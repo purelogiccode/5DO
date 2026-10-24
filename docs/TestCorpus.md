@@ -121,8 +121,9 @@ memory; the stable observations are:
   control run walks through the room; the scripted D-pad/A run reaches the
   Begin/Resume main menu.
 - **Lemmings:** the 18,000-frame state is the title screen. `Down` + `A` opens the
-  account-name screen; `A`/`X` append the highlighted letter. The confirm action for
-  the name entry is still to be identified.
+  passcode screen ("Enter the access code"); `A`/`X` append the highlighted letter
+  and `Down` changes the row. The title's `A`/`P`/`X`/Left/Right do not leave the
+  attract loop, even over 20,000 further frames. The level-start path is still open.
 - **Space Ace:** the demo renders animated FMV frames past 12,000 frames.
 - **Wolfenstein fresh-game load (open issue):** starting a new game from the preview
   menu reaches a static level screen at 14,000 frames, but it is still there at
@@ -136,7 +137,7 @@ memory; the stable observations are:
 
 **Where this leaves us:** all five titles boot, render, and produce non-silent DSP
 audio; four of them have been driven through menus and into gameplay. The remaining
-gameplay milestone is a scripted race/level completion, plus the Lemmings name-entry
+gameplay milestone is a scripted race/level completion, plus the Lemmings passcode
 confirm and an Alone movement/inventory script. See [`Status.md`](Status.md) and
 [`NextSession.md`](NextSession.md).
 

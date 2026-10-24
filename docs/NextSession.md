@@ -4,7 +4,7 @@
 **Goal:** finish the scripted gameplay loops now that the 3D CEL renderer is correct.
 Road Rash's race renders like the Opera reference and runs past 60,000 frames;
 Wolfenstein starts a fresh game and its save states roundtrip; Alone's in-game
-character is upright; Lemmings reaches its name-entry screen; Space Ace plays its
+character is upright; Lemmings reaches its passcode screen; Space Ace plays its
 demo. The remaining work is scripted play, menu completion, screenshots/audio
 comparison, and documentation.
 
@@ -122,9 +122,18 @@ the Begin/Resume main menu.
 ### Lemmings
 
 At 18,000 frames the title screen shows Play/New Game (`PC 0x000205F8`, hash
-`0x5625A4CD`). `Down` + `A` on New Game opens the account-name screen. `A`/`X`
-append the highlighted letter; `P` does not confirm. The confirm action and the
-level start still need to be found.
+`0x5625A4CD`). The screen is an attract loop: `A`, `Left`/`Right`, `P`, and `X` at
+the title do not leave it, even over 20,000 further frames (the marquee cycles
+"SKILLS"). `Down` + `A` on New Game opens the **passcode** screen (the string is
+"Enter the access code", not an account name). The on-screen keyboard is three rows
+of nine: `A-I`, `J-R`, `S-Z <` (backspace); only part of the grid is visible at once.
+`A`/`X` append the highlighted letter, `Down` moves the row, and `P` does not
+confirm. The level-start path still needs to be found.
+
+### CLI diagnostics
+
+`run --json` now reports `sourceWidth`, `sourceHeight`, and `vdlModulo`, which makes
+VDLP mode/crop investigations mechanical.
 
 ### Space Ace
 
@@ -149,8 +158,9 @@ changing the DSP reload value.
 
 ### Step 1 - complete the menus
 
-- Lemmings: find the confirm action on the account-name screen, then start a level
-  and place a skill. Try `P`/`X`/`C` taps and the on-screen Done/OK item.
+- Lemmings: find the interactive start path on the title/attract screen, then enter a
+  valid passcode (or leave it blank) and start a level. The passcode keyboard is
+  `A-I`, `J-R`, `S-Z <`; `A`/`X` type, `Down` changes the row, `P` does not confirm.
 - Road Rash: find the start/pause path from the attract race, then build an
   autopilot that follows the road (short A taps plus D-pad corrections) and finish
   a race. Record the script.
@@ -184,8 +194,8 @@ changing the DSP reload value.
 - [x] Save/load works in-game (Wolfenstein: `0xC9989182` -> `0x370158AC` twice).
 - [x] WAV output is non-silent and stereo 44.1 kHz; clipping/cadence recorded.
 - [x] Road Rash's race renders correctly and runs past 60,000 frames.
-- [ ] Docs and baselines are updated; repository is clean and pushed.
-- [ ] `dotnet build -c Release`, `dotnet test`, and `dotnet format --verify-no-changes` pass.
+- [x] Docs and baselines are updated; repository is clean and pushed.
+- [x] `dotnet build -c Release`, `dotnet test`, and `dotnet format --verify-no-changes` pass.
 
 ---
 
@@ -252,8 +262,8 @@ The data-track extraction command is in [`TestCorpus.md`](TestCorpus.md).
 
 ## 7. Open questions
 
-1. What is the correct Lemmings name-entry confirm action, and does the game reach
-   a level select after it?
+1. What is the correct Lemmings title-screen start path, and does a valid passcode
+   (or an empty one) reach a level select after it?
 2. What is Road Rash's exact pad mapping, and can a short-tap autopilot finish a
    race without the WRECK FMV?
 3. Does the 737 vs 735 samples/frame cadence cause audible pitch drift? Compare a

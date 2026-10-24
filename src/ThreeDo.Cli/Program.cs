@@ -411,6 +411,9 @@ internal static class Program
             ok = true,
             frames = machine.FramesExecuted,
             cyclesPerFrame = machine.LastFrameCycles,
+            sourceWidth = machine.Frame.SourceWidth,
+            sourceHeight = machine.Frame.SourceHeight,
+            vdlModulo = machine.Vdlp.Modulo,
             pc = machine.Cpu.ProgramCounter,
             instructions = machine.Cpu.InstructionsExecuted,
             frameHash = FrameHash(machine),
@@ -1197,6 +1200,8 @@ internal static class Program
         var type = result.GetType();
         Console.WriteLine($"frames:      {type.GetProperty("frames")!.GetValue(result)}");
         Console.WriteLine($"cycles/frm:  {type.GetProperty("cyclesPerFrame")!.GetValue(result)}");
+        Console.WriteLine($"source:      {type.GetProperty("sourceWidth")!.GetValue(result)}x{type.GetProperty("sourceHeight")!.GetValue(result)}");
+        Console.WriteLine($"vdl modulo:  {type.GetProperty("vdlModulo")!.GetValue(result)}");
         Console.WriteLine($"pc:          0x{(uint)type.GetProperty("pc")!.GetValue(result)!:x8}");
         Console.WriteLine($"frame hash:  0x{(uint)type.GetProperty("frameHash")!.GetValue(result)!:x8}");
         Console.WriteLine($"samples:     {type.GetProperty("samples")!.GetValue(result)}");

@@ -6,32 +6,36 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-24):** M0-M8 are complete. The M9 Avalonia shell, the
-M9R two-stage OpenGL presenter, the M9P dedicated core thread/frame pacer, and the
-M10 CI/publish pipeline are implemented as a working prototype. **539 tests pass.**
+**Current position (2026-10-24, second pass):** M0-M8 are complete. The M9 Avalonia
+shell, the M9R two-stage OpenGL presenter, the M9P dedicated core thread/frame pacer,
+and the M10 CI/publish pipeline are implemented as a working prototype. **552 tests
+pass.**
 
-Real-content status with `panafz1.bin`: **Lemmings** boots to CyberIntro and renders
-the 3D intro; **Space Ace** boots the ReadySoft player and renders the demo intro;
-**Road Rash** and **Wolfenstein 3D** load their own OS but stop at SAudio channel 0
-initialization; **Alone in the Dark** fails earlier in AudioFolio initialization.
+Real-content status with `panafz1.bin`: all five local corpus titles boot, load their
+own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio.
 
-The 2026-10-24 session fixed a real DSP-execution bug (headless runs never executed
-the DSP when no audio sink was attached) and decoded the remaining blockers:
-SAudio `-6996` is `SAudioErrAllocInstFailed`, and Space Ace's frame-681 runaway is
-the player's audio task copying to a null output buffer after its mixer setup fails.
-Both point at the DSP `AllocInstrument` semaphore handshake, which the ARM still
-does not see acknowledged. **Opera runs all four problem titles past those points**
-with the same BIOS and disc data, so the remaining failures are ours to fix, not a
-shared FreeDO limitation. The next session is a focused DSP differential against
-Opera, not a UI or 4K-tuning pass. CPU-side performance is ~2.1-2.3 ms/frame
-(1.63 ms/frame on the 2026-10-24 synthetic bench), leaving ample headroom at 60 Hz;
-desktop 4K60 is high confidence, while the GPU/p99 and Tier B numbers still need
-measurement.
+- **Road Rash** renders its 3D race correctly (matching the Opera reference) and runs
+  past 60,000 frames; scripted buttons alter the race and reach the WRECK FMV.
+- **Wolfenstein 3D** starts a fresh game at FLOOR 1-1 from its preview menu, and a
+  live gameplay save state roundtrips deterministically.
+- **Alone in the Dark** reaches its in-game staircase/room with an upright character;
+  the D-pad/A change the scene and open the menu.
+- **Lemmings** reaches its title and passcode screens; the passcode keyboard accepts
+  A/X input.
+- **Space Ace** plays its animated demo past 12,000 frames with no runaway.
 
-Remaining major work: differential port from Opera (DSP/audio first, then CD-ROM,
-CLIO, MADAM, and ARM timing), real-game hardening, GPU 4K/p99 validation,
-GLES/ANGLE/Pi validation, arm64/installers, filter polish, and the legal/attribution
-review. See [`docs/Status.md`](docs/Status.md) for the completion estimate and
+The second 2026-10-24 pass fixed a **transposed arbitrary-CEL X/Y write** that had
+been corrupting Road Rash's VRAM allocator (the `AllocMem error, bad node address`
+freeze) and drawing Alone's character horizontally. It also made the VDLP bitmap
+path honor 384/512/640-wide modes and made save-state loads restore the VDL picture
+immediately. The earlier pass fixed DSP execution/immediates/rounding, the CCB field
+order, and the CLI NVRAM initialization.
+
+Remaining major work: complete scripted races/levels (Road Rash autopilot, Lemmings
+passcode/level start, Space Ace interactive), investigate Wolfenstein's long
+fresh-game CD load, GPU 4K/p99 validation, GLES/ANGLE/Pi validation,
+arm64/installers, filter polish, and the legal/attribution review. See
+[`docs/Status.md`](docs/Status.md) for the completion estimate and
 [`docs/NextSession.md`](docs/NextSession.md) for the next-session plan. The
 implementation plan and architecture are in:
 

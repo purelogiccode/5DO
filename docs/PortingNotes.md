@@ -299,6 +299,13 @@ This is the largest and riskiest port. Split it into classes but keep the origin
   - `TestInitVisual`, `Init_Line_Map`, `Init_Scale_Map`, `Init_Arbitrary_Map` set up clipping and texture stepping. The clipping math is delicate; port exactly.
   - `TexelDraw_Line`, `TexelDraw_Scale`, `TexelDraw_Arbitrary` write pixels through `PPROC`/`PPROJ_OUTPUT` and `mwriteh`.
   - `XY2OFF(a,b,c) = ((b >> 1) * c) + ((b & 1) << 1) + a` is used everywhere. Keep a named helper.
+  - **Argument order:** FreeDO's `readPIX(src, i, j)` / `writePIX(src, i, j, pix)` take the
+    **row first** (`i` = y, `j` = x). The C# helpers take `(x, y)`, so the
+    arbitrary-quad loops must call them with `(j, i)`. Passing `(i, j)` transposes every
+    asymmetric quad; Road Rash then writes into the VRAM allocator metadata at
+    `0x2FC000` (symptom: `AllocMem error, bad node address` and a frozen race) and Alone
+    draws its character horizontally. Regression test:
+    `PackedArbitrary_UsesTheColumnAsXAndTheRowAsY`.
   - `CCBFLAGS` bits and `PRE0`/`PRE1` bits are documented in the C++ source; copy them as named constants.
   - `LoadPLUT` reads 16-bit values with `_mem_read16((((pnt >> 1) + i) ^ 1) << 1)`. Port the exact XOR/scale.
   - `HandleDMA8`/`DMAPBus` copy the PBUS queue to memory and raise FIQ.
@@ -340,7 +347,7 @@ This is the largest and riskiest port. Split it into classes but keep the origin
 - `_vdl_DoLineNew`:
   - At line 0, reload `CURRENTVDL = HEADVDL` and execute.
   - When `linedelay == 0`, execute the next VDL entry.
-  - For `y = line - 16` in `[0, 240)`, if `enadma`, copy 320 pixels from `PREVIOUSBMP`/`CURRENTBMP` into the frame line (two lines in high-res), and copy CLUT/control/background words.
+  - For `y = line - 16` in `[0, 240)`, if `enadma`, copy `MODULO` pixels from `PREVIOUSBMP`/`CURRENTBMP` into the frame line (two lines in high-res), and copy CLUT/control/background words. The 2026-10-24 fix uses the parsed modulo instead of a fixed 320, so 384/512/640/1024-wide modes are no longer cropped; `ThreeDoMachine` derives the frame `SourceWidth` from the widest rendered line.
   - Advance `CURRENTBMP`/`PREVIOUSBMP` by 2 or `MODULO*4 - 2`, depending on bit 1 and `prevtick`.
   - Decrement `linedelay`, clear `OUTCONTROLL` bit 0.
 - `VRAMOffEval` and `vmreadw` use the +2 MB VRAM offset and `RESSCALE`; preserve.
