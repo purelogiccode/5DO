@@ -572,6 +572,7 @@ internal sealed class CelRasterizer
             geometry.SpriteWidth = spriteWidth;
 
             var texels = 0L;
+            var trace = _engine.TraceWriter is not null;
             for (var i = 0; i < geometry.SpriteHeight; i++)
             {
                 _engine.BitReader.AttachBuffer(unchecked((uint)data));
@@ -591,7 +592,7 @@ internal sealed class CelRasterizer
 
                 for (var j = 0; j < spriteWidth; j++)
                 {
-                    if ((texels++ & 0x3ffff) == 0)
+                    if (trace && (texels++ & 0x3ffff) == 0)
                     {
                         _engine.TraceProgress(texels, i, j);
                     }
@@ -921,7 +922,11 @@ internal sealed class CelRasterizer
         int yD)
     {
         var geometry = _engine.Geometry;
-        _engine.TraceArbitrary(xA, yA, xB, yB, xC, yC, xD, yD);
+        if (_engine.TraceWriter is not null)
+        {
+            _engine.TraceArbitrary(xA, yA, xB, yB, xC, yC, xD, yD);
+        }
+
         xA >>= 16 - ResScale;
         xB >>= 16 - ResScale;
         xC >>= 16 - ResScale;
