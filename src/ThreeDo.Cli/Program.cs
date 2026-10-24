@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using CHDSharp;
@@ -42,6 +43,7 @@ internal static class Program
                 "trace" => TraceCommand(args),
                 "info" => Info(args),
                 "disc" => DiscCommand(args),
+                "fs" => FsCommand(args),
                 "bios" => Bios(args),
                 "state" => State(args),
                 "bench" => Bench(args),
@@ -791,6 +793,115 @@ internal static class Program
         return 0;
     }
 
+    private static int FsCommand(string[] args)
+    {
+        if (args.Length < 3)
+        {
+            throw new ArgumentException(
+                "fs needs a subcommand and a disc path: fs list <disc> | fs extract <disc> --out <dir> [--filter <prefix>]");
+        }
+
+        var subcommand = args[1];
+        var discPath = args[2];
+        var options = Parse(args, startIndex: 3);
+        using var container = new VideoGameFileSystemParser.Parsers.ChdContainer(discPath);
+        if (!container.MountAndParse(VideoGameFileSystemParser.Models.ConsoleType.ThreeDo))
+        {
+            throw new InvalidDataException(
+                $"Cannot parse the 3DO file system in '{discPath}': {container.LastError}");
+        }
+
+        if (string.Equals(subcommand, "list", StringComparison.OrdinalIgnoreCase))
+        {
+            if (options.Json)
+            {
+                var entries = new List<object>(container.Entries.Count);
+                foreach (var entry in container.Entries)
+                {
+                    entries.Add(new
+                    {
+                        path = entry.FullPath,
+                        directory = entry.IsDirectory,
+                        size = entry.Size,
+                        lba = entry.Lba,
+                    });
+                }
+
+                Console.WriteLine(JsonSerializer.Serialize(new { ok = true, entries }, JsonOptions));
+                return 0;
+            }
+
+            Console.WriteLine($"volume={container.VolumeName} entries={container.Entries.Count}");
+            foreach (var entry in container.Entries)
+            {
+                var indent = new string(' ', entry.FullPath.Count(c => c is '\\' or '/') * 2);
+                var kind = entry.IsDirectory ? "[D]" : "[F]";
+                Console.WriteLine($"{indent}{kind} {entry.Name} {entry.Size} lba={entry.Lba}");
+            }
+
+            return 0;
+        }
+
+        if (!string.Equals(subcommand, "extract", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("fs needs the 'list' or 'extract' subcommand.");
+        }
+
+        var outputDirectory = options.Get("--out")
+            ?? throw new ArgumentException("fs extract needs --out <directory>.");
+        var filter = options.Get("--filter");
+        outputDirectory = Path.GetFullPath(outputDirectory);
+        Directory.CreateDirectory(outputDirectory);
+        var buffer = new byte[1 << 20];
+        var extracted = 0;
+        foreach (var entry in container.Entries)
+        {
+            if (entry.IsDirectory)
+            {
+                continue;
+            }
+
+            var relative = entry.FullPath.TrimStart('\\', '/').Replace('\\', '/');
+            if (filter is not null
+                && !relative.StartsWith(filter.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var destination = Path.GetFullPath(Path.Combine(outputDirectory, relative));
+            if (!destination.StartsWith(outputDirectory + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+                && !string.Equals(destination, outputDirectory, StringComparison.Ordinal))
+            {
+                throw new InvalidDataException($"The file entry '{entry.FullPath}' escapes the output directory.");
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+            using (var output = File.Create(destination))
+            {
+                ulong offset = 0;
+                int read;
+                while ((read = container.ReadFile(entry, offset, buffer, 0, buffer.Length)) > 0)
+                {
+                    output.Write(buffer, 0, read);
+                    offset += (ulong)read;
+                }
+            }
+
+            extracted++;
+            if (!options.Json)
+            {
+                Console.WriteLine($"{relative} {entry.Size} bytes");
+            }
+        }
+
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(new { ok = true, extracted, output = outputDirectory }, JsonOptions));
+        }
+
+        return 0;
+    }
+
     private static int Bios(string[] args)
     {
         if (args.Length < 2 || !string.Equals(args[1], "info", StringComparison.OrdinalIgnoreCase))
@@ -1193,6 +1304,9 @@ internal static class Program
         Console.WriteLine("  info <disc> [--json]                 Disc geometry, volume header, and game ID.");
         Console.WriteLine("  disc dump <disc> --out path [--sector N] [--count N]");
         Console.WriteLine("                                       Write raw 2048-byte sectors for diagnostics.");
+        Console.WriteLine("  fs list <disc> [--json]              List the 3DO (Opera FS) file tree.");
+        Console.WriteLine("  fs extract <disc> --out dir [--filter prefix]");
+        Console.WriteLine("                                       Extract files from a 3DO disc image.");
         Console.WriteLine("  bios info <path> [--json]            BIOS size, MD5, and Anvil detection.");
         Console.WriteLine("  state inspect <path> [--json]        Save-state header and section table.");
         Console.WriteLine("  disasm <file> [--offset N] [--count N] [--base 0xADDR]");

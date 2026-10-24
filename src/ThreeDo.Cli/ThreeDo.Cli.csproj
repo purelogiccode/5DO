@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.CommandLine" />
+    <PackageReference Include="VideoGameFileSystemParser" />
   </ItemGroup>
 
   <ItemGroup>

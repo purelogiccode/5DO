@@ -40,6 +40,7 @@ This file records the projects and licenses that influence or ship with 3DOEmula
 | OpenAL Soft | Native audio runtime (optional) | LGPL |
 | Silk.NET.Input / SDL2 | Gamepad input (optional) | MIT / zlib |
 | CHDSharp 1.5.2 | CHD disc images (v1) | MIT + LGPL-2.1 component; pure C#, no native dependency. Verify the package LICENSE before release. |
+| VideoGameFileSystemParser 1.4.0 | 3DO Opera FS listing/extraction in `3do fs` | MIT; depends on CHDSharp. Written by the 3DOEmulator author. |
 | 4DO game database | Game IDs and fix flags | Derived with attribution; verify |
 
 ## Assets and content

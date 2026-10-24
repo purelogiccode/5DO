@@ -318,6 +318,17 @@ Inspect a disc without booting it:
 dotnet run --project src/ThreeDo.Cli -- info "$env:THREEDO_DISC" --json
 ```
 
+List or extract the 3DO (Opera FS) file system:
+
+```powershell
+dotnet run --project src/ThreeDo.Cli -- fs list "$env:THREEDO_DISC" --json
+dotnet run --project src/ThreeDo.Cli -- fs extract "$env:THREEDO_DISC" `
+  --out "$env:TEMP\threedo-fs" --filter "Rash/"
+```
+
+`fs` uses the `VideoGameFileSystemParser` package (MIT) and currently accepts CHD
+images; `info` and `disc dump` use the emulator's own readers.
+
 Run a fixed number of frames and dump the last frame:
 
 ```powershell
