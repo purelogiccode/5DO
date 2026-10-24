@@ -92,8 +92,8 @@ dotnet run -c Release --project src/ThreeDo.Cli -- run `
 ### Lemmings
 
 - 10,000 frames with input: title menu with `LOAD NEW GAME`/`OPTIONS`.
-- D-pad changes the highlighted item; `A` activates it. The 12,000-frame run with
-  `Down`/`A` shows the `OPTIONS` panel.
+- D-pad changes the highlighted item and the bottom description; `A` is delivered.
+  Starting a level is still to be scripted.
 
 ### Alone in the Dark
 

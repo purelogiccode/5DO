@@ -84,9 +84,10 @@ described this address as a "halt path" were misreading the idle loop.
 audio. Road Rash reaches its race, Wolfenstein reaches gameplay, Alone reaches its
 in-game scene, Lemmings reaches its menu, and Space Ace plays its demo. Input is
 validated for Alone (movement/actions), Wolfenstein (movement/actions), Lemmings
-(menu navigation), Road Rash (`P` toggles pause), and Space Ace (`P`/`X`). The next
-pass should use `--input-script` to complete a level/race, validate every pad
-button, exercise save states and screenshots in-game, and check sustained CD
+(menu highlight), Road Rash (`P` toggles pause), and Space Ace (`P`/`X`). Starting a
+Lemmings level and completing a full race/level are the next gameplay milestones.
+The next pass should use `--input-script` to complete a level/race, validate every
+pad button, exercise save states and screenshots in-game, and check sustained CD
 streaming. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md).
 
 #### CD disc-end fix (2026-10-23)

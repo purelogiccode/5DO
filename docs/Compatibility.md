@@ -226,8 +226,9 @@ described above; input results come from `--input-script` runs.
 - **Alone in the Dark:** from a 10,000-frame in-game state, `Up`/`Down` and
   `Left`/`Right`/`A`/`B`/`C` produce different frame hashes and PCs, so the pad is
   reaching the game and changing its state.
-- **Lemmings:** the title menu highlight moves with the D-pad and `A` activates the
-  selected item; a 12,000-frame run shows the `OPTIONS` panel.
+- **Lemmings:** the title menu highlight moves with the D-pad and the bottom
+  description changes (e.g. `OPTIONS`); a 12,000-frame run shows the Load/Options
+  menu. Starting a level is still to be scripted.
 - **Road Rash:** `P` toggles the pause overlay at frame ~15,900. With periodic input
   the 30,000-frame run stays alive at `PC 0x00015278` (hash `0x0EBB2EDB`, pause
   overlay); without input the demo eventually exits through the OS shutdown loop.
