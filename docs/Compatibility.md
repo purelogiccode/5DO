@@ -213,8 +213,8 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 | Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | **Title menu reached** | Non-silent DSP output | **Works**: menu selection changes with D-pad | CyberIntro renders; 10,000-frame run reaches the Load/Options menu | Not re-tested this pass |
 | Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass** | **Demo plays past 10,000 frames** | Non-silent DSP output | Scripted taps supported | Former frame-681 null-buffer runaway is gone; demo video renders | Demo intro 60 s, no runaway |
 | Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **Race scene reached** | Non-silent DSP output | **Works**: P toggles the pause overlay | Loads the game OS, SAudio init succeeds, 3D race renders; 30,000-frame run reaches the race | Intro FMV 60 s |
-| Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Pass** | **Gameplay (FLOOR 1-1)** | Non-silent DSP output | **Works**: scripted taps enter gameplay | Loads Sherry/Operator/FS v24.225; 10,000-frame run with input shows the in-game HUD | Intro 60 s |
-| Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Pass** | **In-game room/inventory scene** | Non-silent DSP output | Scripted taps supported | AudioFolio init succeeds; a fresh NVRAM avoids the save-space warning and the game reaches its in-game scene | Intro/loading 60 s |
+| Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Pass** | **Gameplay (FLOOR 1-1)** | Non-silent DSP output | **Works**: movement/actions change the scene | Loads Sherry/Operator/FS v24.225; early P/A taps start the game; a 5,000-frame run shows score 100 | Intro 60 s |
+| Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Pass** | **In-game room/inventory scene** | Non-silent DSP output | **Works**: movement/actions change the scene | AudioFolio init succeeds; a fresh NVRAM avoids the save-space warning | Intro/loading 60 s |
 
 `Pass` means a real game frame was rendered and verified visually. The Opera reference
 column is the bundled Windows OperaCore with the same BIOS and an ISO extracted from
@@ -231,12 +231,12 @@ described above; input results come from `--input-script` runs.
 - **Road Rash:** `P` toggles the pause overlay at frame ~15,900. With periodic input
   the 30,000-frame run stays alive at `PC 0x00015278` (hash `0x0EBB2EDB`, pause
   overlay); without input the demo eventually exits through the OS shutdown loop.
-- **Wolfenstein 3D:** `--pbus-trace` shows the Up bit (`0x08` in the high button
-  byte) in the packet, so delivery works. The 10,000-frame attract/gameplay frame
-  did not visibly respond in the tested window; menu navigation still needs a
-  dedicated script.
-- **Space Ace:** scripted taps are delivered; starting the interactive game from
-  the demo loop is still to be validated.
+- **Wolfenstein 3D:** a 5,000-frame run with early `P`/`A` taps reaches the in-game
+  HUD with `SCORE 0000100`. From that state, `Up`/`Down`/`Left`/`Right`/`A`/`B`/`C`
+  produce different frame hashes and PCs, so movement and actions are live.
+- **Space Ace:** from a 10,000-frame state, `P` and `X` produce different hashes and
+  PCs; `A`/`B`/`C` and the D-pad do not change the demo. `P`/`X` likely open the
+  player's menu/control path; the interactive game still needs a dedicated script.
 
 The 2026-10-23 CD fix is significant: `CdromDevice.InitCd` used FreeDO's
 double-add of the 150-frame lead-in, so the disc end reported to the CD DIPIR was

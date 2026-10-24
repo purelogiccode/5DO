@@ -37,7 +37,9 @@ This is the short, current answer to "where are we?" The detailed task list is i
   the five-title corpus produces non-silent 44.1 kHz stereo WAV output (~738 samples
   per frame).
 - **Input scripting:** the CLI accepts `--input-script <path>` with
-  `frame button[,button...]` lines for repeatable controller taps.
+  `frame button[,button...]` lines for repeatable controller taps. Input has been
+  validated in Road Rash (pause), Wolfenstein (movement/actions), Alone
+  (movement/actions), Lemmings (menu), and Space Ace (P/X).
 - **Tests:** 550 passing (`dotnet test -c Release`).
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   A win-x64 CLI publish has been smoke-tested.
@@ -55,8 +57,8 @@ on both sides. Opera is the bundled Windows `OperaCore` build in
 | Lemmings (USA) | **Boots, renders, plays DSP audio**; reaches the Load/Options title menu; D-pad selection changes the highlighted item | Not re-tested this pass; expected to pass |
 | Space Ace (USA) | **Boots, renders, plays DSP audio**; ReadySoft player runs the demo past 10,000 frames with no runaway | **Plays the demo intro for 60 s, no runaway** |
 | Road Rash (USA) | **Boots, renders, plays DSP audio**; loads the game OS, SAudio init succeeds, and the 3D race scene renders by 30,000 frames; P toggles the pause overlay | **Renders the intro FMV for 60 s** |
-| Wolfenstein 3D (USA) | **Boots, renders, plays DSP audio**; with scripted input it reaches gameplay (FLOOR 1-1) and shows the in-game HUD | **Renders the intro for 60 s** |
-| Alone in the Dark (USA) | **Boots, renders, plays DSP audio**; with a fresh NVRAM it reaches the in-game room/inventory scene | **Renders the intro/loading sequence for 60 s** |
+| Wolfenstein 3D (USA) | **Boots, renders, plays DSP audio**; early P/A taps start the game; movement/actions change the scene (FLOOR 1-1, score 100) | **Renders the intro for 60 s** |
+| Alone in the Dark (USA) | **Boots, renders, plays DSP audio**; with a fresh NVRAM it reaches the in-game room/inventory scene; movement/actions change the scene | **Renders the intro/loading sequence for 60 s** |
 
 The CD disc-end fix on 2026-10-23 is what unblocked Road Rash, Space Ace, and
 Wolfenstein: `InitCd` no longer double-adds the 150-frame lead-in, so the CD DIPIR

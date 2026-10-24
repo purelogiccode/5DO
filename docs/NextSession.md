@@ -83,11 +83,10 @@ dotnet run -c Release --project src/ThreeDo.Cli -- run `
 
 ### Wolfenstein 3D
 
-- 10,000 frames with `--input-script input-taps.txt`: `PC 0x00052630`, frame hash
-  `0xA5A33C4D`, in-game HUD `FLOOR 1-1`, `SCORE 0000000`, `ITEM 00`.
-- `--pbus-trace` confirms the Up bit (`0x88` high button byte) is delivered at the
-  expected frames. The 10,000-frame frame did not visibly respond in the tested
-  window; menu navigation and starting a fresh game are the next step.
+- 5,000 frames with early `P`/`A` taps: in-game HUD with `FLOOR 1-1`,
+  `SCORE 0000100`, `ITEM 00`.
+- From a 5,000-frame state, `Up`/`Down`/`Left`/`Right`/`A`/`B`/`C` produce different
+  frame hashes and PCs, so movement and actions are live.
 - Without input the title sits on boot/idle screens.
 
 ### Lemmings
@@ -108,7 +107,10 @@ dotnet run -c Release --project src/ThreeDo.Cli -- run `
 ### Space Ace
 
 - Demo plays past 10,000 frames; no null-buffer copy and no FIQ at `0x1C`.
-- 3,000-frame hash is now `0x2A9967FA` (CCB fix).
+- From a 10,000-frame state, `P` and `X` produce different hashes and PCs; `A`/`B`/`C`
+  and the D-pad do not change the demo. `P`/`X` likely open the player's menu/control
+  path; the interactive game still needs a dedicated script.
+- 3,000-frame hash is now `0xA2B49CF0` (NVRAM/CCB fixes).
 
 ---
 
