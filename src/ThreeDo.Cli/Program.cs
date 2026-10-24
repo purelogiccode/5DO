@@ -122,6 +122,8 @@ internal static class Program
         var celTrace = options.Get("--cel-trace");
         var pbusTrace = options.Get("--pbus-trace");
         var nvramPath = options.Get("--nvram");
+        var captureDir = options.Get("--capture-dir");
+        var captureEvery = options.GetInt("--capture-every", 0);
         var discPath = options.Positional;
 
         if (biosPath is null && stateIn is null)
@@ -327,12 +329,17 @@ internal static class Program
             machine.LoadStateFromFile(stateIn);
         }
 
-        if (scriptedInput is null && progressEvery <= 0 && pbusTraceWriter is null)
+        if (scriptedInput is null && progressEvery <= 0 && pbusTraceWriter is null && captureDir is null)
         {
             machine.RunFrames(frames);
         }
         else
         {
+            if (captureDir is not null && captureEvery > 0)
+            {
+                Directory.CreateDirectory(captureDir);
+            }
+
             for (var i = 0; i < frames; i++)
             {
                 scriptedInput?.AdvanceTo(machine.FramesExecuted);
@@ -348,6 +355,13 @@ internal static class Program
                 {
                     pbusTraceWriter.WriteLine(
                         $"f={machine.FramesExecuted} pbus={Convert.ToHexString(machine.Madam.PbusQueue)}");
+                }
+
+                if (captureDir is not null
+                    && captureEvery > 0
+                    && machine.FramesExecuted % captureEvery == 0)
+                {
+                    WriteFrame(machine, Path.Combine(captureDir, $"f{machine.FramesExecuted:D6}.png"));
                 }
             }
         }
@@ -381,16 +395,7 @@ internal static class Program
 
         if (frameOut is not null)
         {
-            var buffer = new FrameBuffer(machine.Frame.SourceWidth, machine.Frame.SourceHeight);
-            FrameAssembler.Assemble(machine.Frame, buffer, buffer.Width, buffer.Height);
-            if (string.Equals(Path.GetExtension(frameOut), ".png", StringComparison.OrdinalIgnoreCase))
-            {
-                PngDumper.Write(buffer, frameOut);
-            }
-            else
-            {
-                FrameDumper.WriteBmp(buffer, frameOut);
-            }
+            WriteFrame(machine, frameOut);
         }
 
         var discHash = disc is null ? string.Empty : GameId.Compute(disc);
@@ -451,6 +456,9 @@ internal static class Program
         var dspTracePath = options.Get("--dsp-trace");
         var inputScriptPath = options.Get("--input-script");
         var nvramPath = options.Get("--nvram");
+        var dumpRamPath = options.Get("--dump-ram");
+        var dumpRamOffset = options.GetUInt32("--dump-ram-offset", 0) ?? 0;
+        var dumpRamLength = options.GetInt("--dump-ram-length", 0x1000);
 
         if (biosPath is null && stateIn is null)
         {
@@ -611,6 +619,11 @@ internal static class Program
                 $"# pc={machine.Cpu.ProgramCounter:x8} cpsr={machine.Cpu.Cpsr:x8} "
                 + $"r0={machine.Cpu.ReadRegister(0):x8} r1={machine.Cpu.ReadRegister(1):x8} "
                 + $"r2={machine.Cpu.ReadRegister(2):x8} r3={machine.Cpu.ReadRegister(3):x8} "
+                + $"r4={machine.Cpu.ReadRegister(4):x8} r5={machine.Cpu.ReadRegister(5):x8} "
+                + $"r6={machine.Cpu.ReadRegister(6):x8} r7={machine.Cpu.ReadRegister(7):x8} "
+                + $"r8={machine.Cpu.ReadRegister(8):x8} r9={machine.Cpu.ReadRegister(9):x8} "
+                + $"r10={machine.Cpu.ReadRegister(10):x8} r11={machine.Cpu.ReadRegister(11):x8} "
+                + $"r12={machine.Cpu.ReadRegister(12):x8} "
                 + $"sp={sp:x8} lr={machine.Cpu.ReadRegister(14):x8} "
                 + $"cdStatus={machine.Cdrom.DriveStatus:x2} cdPoll={machine.Cdrom.Poll:x2} "
                 + $"disc={(machine.Cdrom.Disc is null ? "no" : "yes")}");
@@ -648,6 +661,19 @@ internal static class Program
                         $"{entry.Pc:x4} {entry.Instruction:x4} "
                         + $"sema={entry.SemaphoreStatus:x4}/{entry.SemaphoreData:x4} next={entry.NextPc:x4}");
                 }
+            }
+
+            if (dumpRamPath is not null)
+            {
+                var directory = Path.GetDirectoryName(Path.GetFullPath(dumpRamPath));
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                var buffer = new byte[dumpRamLength];
+                machine.Memory.CopyRam(dumpRamOffset, buffer);
+                File.WriteAllBytes(dumpRamPath, buffer);
             }
 
             if (nvramPath is not null)
@@ -1022,6 +1048,20 @@ internal static class Program
         File.WriteAllBytes(prefix + ".dmem.bin", ToBytes(data));
     }
 
+    private static void WriteFrame(ThreeDoMachine machine, string path)
+    {
+        var buffer = new FrameBuffer(machine.Frame.SourceWidth, machine.Frame.SourceHeight);
+        FrameAssembler.Assemble(machine.Frame, buffer, buffer.Width, buffer.Height);
+        if (string.Equals(Path.GetExtension(path), ".png", StringComparison.OrdinalIgnoreCase))
+        {
+            PngDumper.Write(buffer, path);
+        }
+        else
+        {
+            FrameDumper.WriteBmp(buffer, path);
+        }
+    }
+
     private static uint FrameHash(ThreeDoMachine machine)
     {
         var buffer = new FrameBuffer(machine.Frame.SourceWidth, machine.Frame.SourceHeight);
@@ -1143,11 +1183,12 @@ internal static class Program
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--progress N] [--cel-trace path] [--pbus-trace path]");
-        Console.WriteLine("             [--nvram path] [--json]");
+        Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--json]");
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
         Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path]");
+        Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             Runs the machine and records a diagnostic instruction ring buffer.");
         Console.WriteLine("  info <disc> [--json]                 Disc geometry, volume header, and game ID.");
         Console.WriteLine("  disc dump <disc> --out path [--sector N] [--count N]");

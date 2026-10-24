@@ -150,6 +150,33 @@ public sealed class CelRasterizerTests
         Assert.Equal(14, cycles);
     }
 
+    [Fact]
+    public void PackedArbitrary_UsesTheColumnAsXAndTheRowAsY()
+    {
+        var (memory, madam) = CreateScene();
+        WritePackedCcb(
+            memory,
+            loadPlut: true,
+            hdx: 0x10000,
+            hdy: 0,
+            vdx: 0,
+            vdy: 0x20000,
+            flags: CcbControl.Clockwise,
+            includePerspective: true,
+            hddx: 0x1000,
+            hddy: 0);
+        WritePlut(memory, 0, 0x7fff);
+        WriteBytes(memory, SourceData + 4, 0x00, 0x40, 0x80);
+
+        _ = RunCel(madam);
+
+        // The quad covers (0,0)..(1,2). Both rows at x=0 are drawn; the second
+        // column is not. A transposed x/y would swap the two.
+        Assert.Equal(0x7ffe, memory.Ram.Read16(FrameBuffer + 2));
+        Assert.Equal(0x7ffe, memory.Ram.Read16(FrameBuffer));
+        Assert.Equal(0, memory.Ram.Read16(FrameBuffer + 6));
+    }
+
     private static (ThreeDoMemory Memory, MadamChip Madam) CreateScene()
     {
         var memory = new ThreeDoMemory();

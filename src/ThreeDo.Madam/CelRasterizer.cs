@@ -1134,7 +1134,7 @@ internal sealed class CelRasterizer
 
                 for (; j < maxx; j++)
                 {
-                    var next = ReadPixel(_engine.PixelSource, i, j);
+                    var next = ReadPixel(_engine.PixelSource, j, i);
                     if (next != currentFramePixel)
                     {
                         currentFramePixel = next;
@@ -1149,7 +1149,7 @@ internal sealed class CelRasterizer
                             _engine.CelOriginVh);
                     }
 
-                    WritePixel(_engine.FrameBufferTarget, i, j, (ushort)pixel);
+                    WritePixel(_engine.FrameBufferTarget, j, i, (ushort)pixel);
                 }
             }
 
@@ -1170,7 +1170,7 @@ internal sealed class CelRasterizer
 
                 for (; j < maxx; j++)
                 {
-                    var next = ReadPixel(_engine.PixelSource, i, j);
+                    var next = ReadPixel(_engine.PixelSource, j, i);
                     if (next != currentFramePixel)
                     {
                         currentFramePixel = next;
@@ -1185,7 +1185,7 @@ internal sealed class CelRasterizer
                             _engine.CelOriginVh);
                     }
 
-                    WritePixel(_engine.FrameBufferTarget, i, j, (ushort)pixel);
+                    WritePixel(_engine.FrameBufferTarget, j, i, (ushort)pixel);
                 }
             }
         }

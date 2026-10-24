@@ -632,9 +632,9 @@ public sealed class ThreeDoMachine
                 reader.ReadBytes(line.ClutB);
                 reader.ReadBytes(line.ClutG);
                 reader.ReadBytes(line.ClutR);
-                foreach (var pixel in line.PixelBuffer)
+                for (var i = 0; i < line.PixelBuffer.Length; i++)
                 {
-                    _ = reader.ReadUInt16();
+                    line.PixelBuffer[i] = reader.ReadUInt16();
                 }
             }
         }

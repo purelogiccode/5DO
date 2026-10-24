@@ -33,6 +33,44 @@ public sealed class SaveStateTests
     }
 
     [Fact]
+    public void LoadState_RestoresTheParsedFrameImmediately()
+    {
+        var machine = CreateMachine();
+        machine.RunFrames(2);
+
+        var source = machine.Frame[3];
+        source.Width = 64;
+        source.OutControl = 0x12345678;
+        source.ClutDma = 0x9ABCDEF0;
+        source.Background = 0x0BADF00D;
+        for (var i = 0; i < VdlLine.MaxPixels; i++)
+        {
+            source.PixelBuffer[i] = (ushort)((i * 7) + 3);
+        }
+
+        source.ClutB[0] = 1;
+        source.ClutG[1] = 2;
+        source.ClutR[2] = 3;
+
+        using var state = new MemoryStream();
+        machine.SaveState(state);
+
+        var loaded = CreateMachine();
+        state.Position = 0;
+        loaded.LoadState(state);
+
+        var restored = loaded.Frame[3];
+        Assert.Equal(64, restored.Width);
+        Assert.Equal(0x12345678u, restored.OutControl);
+        Assert.Equal(0x9ABCDEF0u, restored.ClutDma);
+        Assert.Equal(0x0BADF00Du, restored.Background);
+        Assert.Equal(1, restored.ClutB[0]);
+        Assert.Equal(2, restored.ClutG[1]);
+        Assert.Equal(3, restored.ClutR[2]);
+        Assert.Equal(source.PixelBuffer.ToArray(), restored.PixelBuffer.ToArray());
+    }
+
+    [Fact]
     public void LoadState_RejectsTruncatedData()
     {
         var machine = CreateMachine();
