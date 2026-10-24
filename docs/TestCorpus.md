@@ -108,10 +108,13 @@ transposition fix corrected the 3D CEL output.
 The exact hashes should be re-read from the `--json` output rather than copied from
 memory; the stable observations are:
 
-- **Road Rash:** from the 30k state, holding `A` freezes the race view while the CPU
-  keeps running, and releasing it reaches the WRECK FMV. `P` alone leaves the race
-  running. A deterministic autopilot is still open. The race is visually correct and
-  matches the Opera attract-mode road/rider composition.
+- **Road Rash:** the 3DO controls are B accelerate, A brake, D-pad left/right
+  steer, C attack, and P pause. From the live 26,000-frame state the attract race
+  auto-drives and eventually reaches the WRECK FMV; holding B starts a player race
+  from the GAME LOADING screen. A hard left around frame 31,000 clears the first
+  oncoming taxi. `--autopilot road` holds B and follows the gray road centre, but
+  it does not yet avoid traffic or recover from a wreck. The race is visually
+  correct and matches the Opera attract-mode road/rider composition.
 - **Wolfenstein:** from the 12,000-frame demo state, `A` opens the Select Previews
   menu; D-pad/A navigate to Select a Level and start a fresh game at FLOOR 1-1 with
   `SCORE 0000000`. A live 60-frame state saved after that (`0xC9989182`) roundtrips:
@@ -121,9 +124,12 @@ memory; the stable observations are:
   control run walks through the room; the scripted D-pad/A run reaches the
   Begin/Resume main menu.
 - **Lemmings:** the 18,000-frame state is the title screen. `Down` + `A` opens the
-  passcode screen ("Enter the access code"); `A`/`X` append the highlighted letter
-  and `Down` changes the row. The title's `A`/`P`/`X`/Left/Right do not leave the
-  attract loop, even over 20,000 further frames. The level-start path is still open.
+  passcode screen ("Enter the access code"). The keyboard is a 9-column grid with
+  five visible columns; `A` types the selected letter, `B` confirms early, and ten
+  letters auto-confirm. A 15-frame D-pad hold moves the selection one key. A wrong
+  code shows "Incorrect" and returns to the title. The title's `A`/`P`/`X`/Left/Right
+  do not leave the attract loop, even over 20,000 further frames. The remaining task
+  is a deterministic path to a valid code such as `IJJLDNCCCN` (Fun 2).
 - **Space Ace:** the demo renders animated FMV frames past 12,000 frames.
 - **Wolfenstein fresh-game load (open issue):** starting a new game from the preview
   menu reaches a static level screen at 14,000 frames, but it is still there at
@@ -179,10 +185,40 @@ High-res (18,100 frames): 640x480, PC 0x00012B48, hash 0xE79E18C5
 
 The high-res capture shows all four title buttons (Play, New Game, Load, Options),
 the complete logo, and the marquee; it matches the 640x480 reference screenshot. The
-mode is opt-in because the passcode screen still clips/scrolls and its pointer
-hit-testing diverges from the low-res path. The five 3,000-frame low-res baseline
-hashes are unchanged: `0xF4BDF79B`, `0x932C7722`, `0xEB31636F`, `0xA2B49CF0`, and
-`0xC21BB6A1`.
+mode is opt-in because 320x240 titles must not be upscaled. The passcode screen is a
+320-wide UI scaled 2x; its five visible keyboard columns are the game's own window,
+not a framebuffer crop. The five 3,000-frame low-res baseline hashes are unchanged:
+`0xF4BDF79B`, `0x932C7722`, `0xEB31636F`, `0xA2B49CF0`, and `0xC21BB6A1`.
+
+#### Diagnostic input and RAM patches (2026-10-24 late pass)
+
+`--poke ADDR=HEX` writes bytes into machine RAM after the state loads. It is a
+diagnostic for input/state investigations, not a game fix. Multiple patches are
+separated by `;`.
+
+```powershell
+# Patch the Lemmings passcode scratch buffer and inspect the next frame
+dotnet run -c Release --project src/ThreeDo.Cli -- run `
+  "$env:THREEDO_GAMES\Lemmings (USA).chd" --bios bios/panafz1.bin `
+  --state-in artifacts/s2/lem-pass.state --frames 3 `
+  --poke "0x96574=43414A4A4C444D424556" --frame-out artifacts/poke.png
+```
+
+`--autopilot road` is an experimental Road Rash driver. It holds B and steers
+toward the gray road centre (target screen X 230). It follows the road through the
+first section but does not avoid traffic or recover from a wreck yet.
+
+```powershell
+dotnet run -c Release --project src/ThreeDo.Cli -- run `
+  "$env:THREEDO_GAMES\Road Rash (USA).chd" --bios bios/panafz1.bin `
+  --state-in artifacts/s2/rr8-30k.state --frames 10000 `
+  --autopilot road --capture-dir artifacts/rr-auto --capture-every 1000 `
+  --progress 1000 --json
+```
+
+The autopilot/steering tests are in
+`tests/ThreeDo.Tests/Host/RoadRashAutopilotTests.cs`; the RAM-patch parser tests
+are in `tests/ThreeDo.Tests/Host/MemoryPatchTests.cs`.
 
 #### CD disc-end fix (2026-10-23)
 

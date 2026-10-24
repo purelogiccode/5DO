@@ -124,12 +124,14 @@ internal static class Program
         var dumpRamLength = options.GetInt("--dump-ram-length", 0x1000);
         var dumpDspPrefix = options.Get("--dump-dsp");
         var inputScriptPath = options.Get("--input-script");
+        var autopilotMode = options.Get("--autopilot");
         var progressEvery = options.GetInt("--progress", 0);
         var celTrace = options.Get("--cel-trace");
         var pbusTrace = options.Get("--pbus-trace");
         var nvramPath = options.Get("--nvram");
         var captureDir = options.Get("--capture-dir");
         var captureEvery = options.GetInt("--capture-every", 0);
+        var pokeSpec = options.Get("--poke");
         var discPath = options.Positional;
 
         if (biosPath is null && stateIn is null)
@@ -171,6 +173,25 @@ internal static class Program
         {
             scriptedInput = new ScriptedPbusSource(InputScript.Load(inputScriptPath));
             machine.PbusSource = scriptedInput;
+        }
+
+        RoadRashAutopilot? roadAutopilot = null;
+        PbusSource? autopilotInput = null;
+        if (autopilotMode is not null)
+        {
+            if (!string.Equals(autopilotMode, "road", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($"Unknown autopilot '{autopilotMode}'. Supported: road.");
+            }
+
+            if (scriptedInput is not null)
+            {
+                throw new ArgumentException("--autopilot and --input-script cannot be combined.");
+            }
+
+            roadAutopilot = new RoadRashAutopilot();
+            autopilotInput = new PbusSource();
+            machine.PbusSource = autopilotInput;
         }
 
         StreamWriter? fiqTraceWriter = null;
@@ -338,7 +359,17 @@ internal static class Program
             machine.LoadStateFromFile(stateIn);
         }
 
-        if (scriptedInput is null && progressEvery <= 0 && pbusTraceWriter is null && captureDir is null)
+        if (pokeSpec is not null)
+        {
+            var patched = MemoryPatch.Apply(machine, pokeSpec);
+            Console.Error.WriteLine($"patched {patched} RAM byte(s)");
+        }
+
+        if (scriptedInput is null
+            && roadAutopilot is null
+            && progressEvery <= 0
+            && pbusTraceWriter is null
+            && captureDir is null)
         {
             machine.RunFrames(frames);
         }
@@ -353,11 +384,20 @@ internal static class Program
             {
                 scriptedInput?.AdvanceTo(machine.FramesExecuted);
                 machine.RunFrame();
+                if (roadAutopilot is not null)
+                {
+                    autopilotInput![0] = roadAutopilot.Update(machine.Frame, machine.FramesExecuted);
+                }
+
                 if (progressEvery > 0 && machine.FramesExecuted % progressEvery == 0)
                 {
+                    var autopilot = roadAutopilot is null
+                        ? string.Empty
+                        : $" lineX={roadAutopilot.LineX:F1} steer={roadAutopilot.Steering}";
                     Console.Error.WriteLine(
                         $"frame {machine.FramesExecuted} pc={machine.Cpu.ProgramCounter:x8} "
-                        + $"dsp={machine.Dsp.ProgramCounter:x4} sema={machine.Dsp.SemaphoreStatus:x4}/{machine.Dsp.SemaphoreData:x4}");
+                        + $"dsp={machine.Dsp.ProgramCounter:x4} sema={machine.Dsp.SemaphoreStatus:x4}/{machine.Dsp.SemaphoreData:x4}"
+                        + autopilot);
                 }
 
                 if (pbusTraceWriter is not null)
@@ -430,6 +470,11 @@ internal static class Program
             dspPc = machine.Dsp.ProgramCounter,
             dspSema = ((uint)machine.Dsp.SemaphoreStatus << 16) | machine.Dsp.SemaphoreData,
             dspSeed = machine.Dsp.Seed,
+            autopilot = roadAutopilot is null ? null : "road",
+            autopilotLineX = roadAutopilot is null || double.IsNaN(roadAutopilot.LineX)
+                ? (double?)null
+                : roadAutopilot.LineX,
+            autopilotSteering = roadAutopilot?.Steering,
             warnings = machine.StateWarnings,
         };
 
@@ -471,6 +516,7 @@ internal static class Program
         var dumpRamPath = options.Get("--dump-ram");
         var dumpRamOffset = options.GetUInt32("--dump-ram-offset", 0) ?? 0;
         var dumpRamLength = options.GetInt("--dump-ram-length", 0x1000);
+        var pokeSpec = options.Get("--poke");
 
         if (biosPath is null && stateIn is null)
         {
@@ -505,6 +551,12 @@ internal static class Program
                 ? NvramImage.Load(nvramPath)
                 : NvramImage.CreateFresh();
             machine.LoadNvram(nvram.Data.Span);
+        }
+
+        if (pokeSpec is not null)
+        {
+            var patched = MemoryPatch.Apply(machine, pokeSpec);
+            Console.Error.WriteLine($"patched {patched} RAM byte(s)");
         }
 
         ScriptedPbusSource? scriptedInput = null;
@@ -1309,8 +1361,8 @@ internal static class Program
         Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
-        Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--progress N] [--cel-trace path] [--pbus-trace path]");
-        Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--json]");
+        Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--autopilot road] [--progress N] [--cel-trace path] [--pbus-trace path]");
+        Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--poke ADDR=HEX] [--json]");
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");

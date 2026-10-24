@@ -10,9 +10,9 @@ states roundtrip; Alone in the Dark's in-game character renders upright at the
 staircase and its menu is reachable; Lemmings reaches its title menu and passcode
 screen, and its 640x480 high-resolution title matches the reference; Space Ace plays
 its animated demo. Scripted input has been used to navigate the Wolfenstein and
-Lemmings menus, open the Alone menu, and alter Road Rash's race. The Wolfenstein
+Lemmings menus, open the Alone menu, and start Road Rash's player race. The Wolfenstein
 fresh-game walk is the first verified full gameplay loop; completing a race/level in
-the other titles and confirming the Lemmings passcode remain next.
+the other titles and typing a full Lemmings passcode remain next.
 
 The 2026-10-24 sessions found four root causes:
 
@@ -186,8 +186,9 @@ uploader all carry the larger frame.
 Evidence: from a fresh Lemmings boot, the 640x480 title screen shows all four buttons
 and the full logo and matches the reference screenshot; the five 3,000-frame low-res
 corpus hashes are unchanged. The mode is off by default because 320x240 titles must
-not be upscaled. The Lemmings passcode screen still scrolls/clips and its pointer
-hit-testing differs from the low-res path, so enabling it per game needs more work.
+not be upscaled. The Lemmings passcode screen is a 320-wide UI scaled 2x; its five
+visible keyboard columns are the game's own window, not a framebuffer crop, so it
+does not need a separate high-resolution input path.
 
 ---
 
@@ -224,8 +225,8 @@ hit-testing differs from the low-res path, so enabling it per game needs more wo
 - No CD-DA / Red Book audio.
 - No multi-disc swapping.
 - No PAL.
-- High-resolution CEL rendering is opt-in (`--high-res`) and its input path is not
-  fully validated; output upscaling via OpenGL is supported separately.
+- High-resolution CEL rendering is opt-in (`--high-res`) and validated for the
+  Lemmings title; output upscaling via OpenGL is supported separately.
 - No GPU CEL compositing in v1; CEL rendering is software, matching FreeDO. The OpenGL renderer accelerates presentation, palette expansion, scaling, and filters.
 - No 3DO mouse/light gun/other peripherals.
 - No 3DO modem/network emulation.
@@ -243,9 +244,9 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 
 | Game | Region | Disc ID | BIOS | Build | Boot | In-game | Audio | Input | Notes | Opera reference |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | **Title screen and passcode screen** | Non-silent DSP output | **Works**: D-pad changes the selection; A/X type | CyberIntro renders; the title shows Play/New Game; New Game opens the "Enter the access code" screen | Not re-tested this pass |
+| Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | **Title screen and passcode screen** | Non-silent DSP output | **Works**: A types, B confirms, ten letters auto-confirm, a 15-frame D-pad hold moves one key | CyberIntro renders; the title shows Play/New Game; New Game opens the "Enter the access code" screen; the 640x480 high-res title matches the reference | Not re-tested this pass |
 | Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass** | **Animated demo past 12,000 frames** | Non-silent DSP output | P/X change the player state | Former frame-681 null-buffer runaway is gone; the demo FMV renders | Demo intro 60 s, no runaway |
-| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **3D race renders and runs past 60,000 frames** | Non-silent DSP output; 10 s peak 32768, RMS ~9.1k | **A/P change the race**; a full race autopilot is still open | The CEL transposition fix removed the VRAM `AllocMem` error; Opera-like road/rider render | Intro FMV, then a race |
+| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **3D race renders and runs past 60,000 frames** | Non-silent DSP output; 10 s peak 32768, RMS ~9.1k | **B accelerates, A brakes, D-pad steers, C attacks, P pauses**; `--autopilot road` follows the road but does not finish a race yet | The CEL transposition fix removed the VRAM `AllocMem` error; Opera-like road/rider render | Intro FMV, then a race |
 | Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Pass** | **Fresh game (FLOOR 1-1) and save/load roundtrip** | Non-silent DSP output; 10 s peak 30743, RMS ~5.5k | **Works**: A opens the menu, D-pad/A navigate and fire | From a 12,000-frame demo state, A opens the preview menu; selecting a level starts a fresh game | Intro 60 s |
 | Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Pass** | **In-game staircase/room with an upright character** | Non-silent DSP output | **Works**: D-pad/A change the scene and open the menu | The CEL transposition fix restored the character's upright orientation | Intro/loading 60 s |
 
@@ -262,12 +263,16 @@ transposition fixes are described above; input results come from `--input-script
   room, so the in-game scene is live without input.
 - **Lemmings:** the title screen shows Play/New Game, but `A`/`Left`/`Right`/`P`/`X`
   do not leave the attract loop. `Down` + `A` opens the passcode screen ("Enter the
-  access code"). The keyboard is `A-I`, `J-R`, `S-Z <`; `A`/`X` type the highlighted
-  letter, `Down` changes the row, and `P` does not confirm. Starting a level is still
-  to be scripted.
-- **Road Rash:** the attract race renders correctly from ~17,000 frames. Holding or
-  tapping `A`/`P` changes the race state and eventually triggers the WRECK FMV; a
-  deterministic autopilot that completes a race is still open.
+  access code"). The keyboard is a 9-column grid of which five columns are visible;
+  `A` types the selected letter, `B` confirms early, and ten letters auto-confirm.
+  A 15-frame D-pad hold moves the selection one key. A wrong code shows "Incorrect"
+  and returns to the title; valid 3DO codes include `IJJLDNCCCN` (Fun 2) and
+  `CAJJLDMBEV` (Tricky 3). Level start after a correct code is still to be scripted.
+- **Road Rash:** the attract race renders correctly from ~17,000 frames. The 3DO
+  controls are B accelerate, A brake, D-pad left/right steer, C attack, and P pause.
+  Holding B starts a player race; a hard left around frame 31,000 clears the first
+  oncoming taxi. `--autopilot road` is an experimental road-centre driver that does
+  not yet avoid traffic or recover from wrecks.
 - **Wolfenstein 3D:** from the 12,000-frame demo state, `A` opens the Select Previews
   menu; D-pad/A navigate to Select a Level and start a fresh game at FLOOR 1-1 with
   `SCORE 0000000`. From a live 60-frame state, two independent 120-frame continuations

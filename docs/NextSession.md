@@ -1,13 +1,14 @@
 # Next Session Handoff
 
-**Date:** 2026-10-24 (third pass)
+**Date:** 2026-10-24 (fourth pass)
 **Goal:** finish the scripted gameplay loops now that the 3D CEL renderer is correct
 and the high-resolution frontend path exists. Road Rash's race renders like the Opera
 reference and runs past 60,000 frames; Wolfenstein starts a fresh game, walks/turns/
 fires, and its save states roundtrip; Alone's in-game character is upright; Lemmings
 renders its 640x480 high-resolution title; Space Ace plays its demo. The remaining
-work is scripted play, the Lemmings passcode confirm, screenshots/audio comparison,
-and documentation.
+work is scripted play, the Lemmings passcode entry sequence, screenshots/audio
+comparison, and documentation. This pass added RAM patches (`--poke`) and an
+experimental Road Rash road-following driver (`--autopilot road`).
 
 Read these first:
 
@@ -75,8 +76,9 @@ Evidence: from a fresh Lemmings boot with the intro-skip script, the 640x480 tit
 shows all four buttons and the complete logo and matches the reference screenshot
 (PC `0x00012B48`, hash `0xE79E18C5` at 18,100 frames). The five 3,000-frame low-res
 corpus hashes are unchanged. High-res is off by default because 320x240 titles must
-not be upscaled, and because the Lemmings passcode screen still clips/scrolls and
-its pointer hit-testing diverges from the low-res path.
+not be upscaled. The passcode screen is a 320-wide UI that the high-res mode scales
+2x; its five visible keyboard columns are the game's own scrolling window, so that
+screen does not exercise a separate 640-wide coordinate path.
 
 ### 1.6 Wolfenstein gameplay loop (new)
 
@@ -86,6 +88,15 @@ frames (`PC 0x00074A04`, hash `0xF568EBCA`), with the corridor, guard, HUD, and
 pistol rendered. The 18,000-frame state roundtrips (zero-frame hash `0xF568EBCA`,
 two 120-frame continuations both `PC 0x000782B8` / `0xF568EBCA`). A 4,000-frame WAV
 capture is 66.86 s of 44.1 kHz stereo, peak 32767, RMS 2980, 18 clipped samples.
+
+### 1.7 Diagnostic RAM patches and Road Rash driver (new)
+
+`--poke ADDR=HEX` writes bytes into RAM after a state load; multiple patches are
+separated by `;`. It is a diagnostic for input/state work, not a compatibility fix.
+`--autopilot road` is an experimental Road Rash driver that holds B and steers
+toward the gray road centre. Unit tests cover the patch parser and the steering
+direction contract. The driver follows the road but does not yet detect traffic or
+recover from a wreck, so it does not finish a race.
 
 ---
 
@@ -142,10 +153,19 @@ correctly, and the attract race/FMV loop continues past 60,000 frames.
 60,000 frames: PC 0x00095E84, hash 0xBF01DF59, DSP running
 ```
 
-From the 30,000-frame state, `P` alone leaves the race running. Holding `A` freezes
-the race view while the CPU keeps executing, and releasing it reaches the WRECK FMV.
-Tapping `A` at 16,000 frames in an older state also reaches the WRECK FMV. The exact
-control mapping and a deterministic autopilot are still open.
+From the live 26,000-frame state the attract race runs on its own and eventually
+reaches the WRECK FMV. The 3DO controls are: **B accelerates, A brakes, the D-pad
+steers left/right, C attacks, and P pauses**. Holding B starts a player race from
+the `GAME LOADING` screen; the HUD speed rises and the camera follows the road.
+Holding A or tapping any face button while the attract race is running freezes or
+advances the current presentation, which is why earlier probes concluded that `A`
+"changes the race". A hard left at about frame 31,000 clears the first oncoming
+taxi; the next obstacle still ends the run.
+
+`--autopilot road` is an experimental CLI driver that holds B and steers toward
+the gray road centre (target screen X 230). It follows the road and passes the
+first section, but it does not yet detect traffic or recover from a wreck, so it
+does not finish a race. The unit tests cover the road-centre steering contract.
 
 ### Alone in the Dark
 
@@ -162,17 +182,24 @@ buttons (Play, New Game, Load, Options) and the complete logo, matching the refe
 `Left`/`Right`, `P`, and `X` at the title do not leave it, even over 20,000 further
 frames (the marquee cycles "SKILLS"). `Down` + `A` on New Game opens the
 **passcode** screen (the string is "Enter the access code", not an account name).
-The on-screen keyboard is three rows of nine: `A-I`, `J-R`, `S-Z <` (backspace);
-only part of the grid is visible at once. In the low-res path, a 20-frame `A` tap
-types the highlighted letter twice, while a 20-frame `L` or `R` tap types it once;
-one tap of `Up`/`Down`/`Left`/`Right` moves the selection (for example, from `U` to
-`D`/`U`/`T`/`Y` respectively) and the selected letter is drawn purple. `D`+`Left`/
-`Right` reaches `C`/`E`; `T`+`Left` reaches `S`. The D-pad hold length matters: an
-8-frame `Up` selects a different key than a 20-frame `Up`, and 10-16 frame taps can
-land between keys. Typing ten letters does not visibly confirm; `B` cancels back to
-the title, and `P`/`C`/`X` do not confirm. The high-res passcode screen still
-clips/scrolls and its pointer hit-testing diverges, so the high-res title is not yet
-enabled by default.
+
+The passcode keyboard is a 9-column grid (`A-I`, `J-R`, `S-Z` plus a backspace key)
+of which five columns are visible at 320 pixels wide (`A-E`, `J-N`, `S-W`). The
+selection starts at `N`; a 15-frame D-pad hold moves it one key. The entry field
+starts with one `N` because the `A` press that opens the screen is seen by the
+keyboard. `A` types the selected letter, `B` confirms the current entry early, and
+the game **auto-confirms after the tenth letter**. A wrong entry shows "Incorrect"
+and returns to the title. The earlier observation that `B` cancels was wrong: `B`
+is the confirm key.
+
+Valid 3DO codes are ten letters (for example Fun 2 `IJJLDNCCCN`, Tricky 1
+`HCEONONPDX`, Tricky 3 `CAJJLDMBEV`). The entry field shows the typed text plus a
+blinking preview of the selected key, which is why short captures alternate between
+one and two characters. The high-resolution passcode screen is simply the 320-wide
+UI scaled 2x; its five visible columns are the game's scrolling window, not a
+framebuffer crop, so high-res pointer/hit-testing is not a separate coordinate
+contract. The remaining work is an input sequence that reaches the ten specific
+letters, not the renderer.
 
 ### CLI diagnostics
 
@@ -205,15 +232,14 @@ changing the DSP reload value. The 18,000-frame Wolfenstein gameplay capture is
 
 - Wolfenstein: done for the fresh-game loop; the existing 14,000-18,000 script and
   save/load proof are in section 2.
-- Lemmings: find the passcode confirm and level-start path, then decide whether the
-  high-res pointer/hit-test path can be made to match the low-res path. The on-screen
-  keyboard is `A-I`, `J-R`, `S-Z <`; a 20-frame `A` types the selected letter twice,
-  one D-pad tap moves the selection, and the selected letter is purple. Try the full
-  `CAJJLDMBEV` (Tricky 1) code, then different confirm keys (`A` after ten letters,
-  `<`/backspace, and any off-screen button) while watching the PC/frame hash.
-- Road Rash: find the start/pause path from the attract race, then build an
-  autopilot that follows the road (short A taps plus D-pad corrections) and finish
-  a race. Record the script.
+- Lemmings: the passcode screen is understood (A types, B confirms, ten letters
+  auto-confirm, 15-frame D-pad holds move one key). The remaining task is a
+  deterministic path to the ten letters of a valid code such as `IJJLDNCCCN`
+  (Fun 2) or `CAJJLDMBEV` (Tricky 3), plus level start and a first move.
+- Road Rash: the control map is known (B accelerate, A brake, D-pad steer, C
+  attack, P pause). Improve the experimental `--autopilot road` with obstacle
+  detection and wreck recovery, then finish the 5.5-mile city race and record the
+  script/state/hash.
 - Space Ace: start the interactive game from the demo (P/X are the current leads)
   and verify FMV/audio sync.
 
@@ -249,7 +275,6 @@ changing the DSP reload value. The 18,000-frame Wolfenstein gameplay capture is
 - [x] The high-resolution 640x480 renderer matches Lemmings' title reference.
 - [ ] The Lemmings passcode confirm and high-res pointer path are complete.
 - [x] `dotnet build -c Release`, `dotnet test`, and `dotnet format --verify-no-changes` pass.
-
 ---
 
 ## 5. Do not do
@@ -329,10 +354,10 @@ The data-track extraction command is in [`TestCorpus.md`](TestCorpus.md).
 
 ## 7. Open questions
 
-1. What is the correct Lemmings title-screen start path, and does a valid passcode
-   (or an empty one) reach a level select after it?
-2. What is Road Rash's exact pad mapping, and can a short-tap autopilot finish a
-   race without the WRECK FMV?
+1. What input sequence reaches the ten letters of a valid Lemmings passcode most
+   reliably, and does the level start immediately after confirmation?
+2. What obstacle-avoidance and wreck-recovery policy lets `--autopilot road` finish
+   the 5.5-mile city race?
 3. Does the 737 vs 735 samples/frame cadence cause audible pitch drift? Compare a
    captured WAV with Opera/hardware before changing `_dspPcnt`.
 4. Is the 191-sample Road Rash clipping in the game mix or in our DSP output path?
@@ -349,7 +374,7 @@ The data-track extraction command is in [`TestCorpus.md`](TestCorpus.md).
    status is expected, and measure CHD read time separately from guest-side pacing.
 7. What is the exact high-resolution coordinate contract? The current mode treats
    CEL X as 640-wide and Y as a 240-line field that the VDLP line-doubles; this
-   matches the Lemmings title. The passcode screen behaves like a 320-wide UI with a
-   horizontally clipped 9-column keyboard, and its pointer hit-testing does not match
-   the low-res run. Determine whether the frontend uses two coordinate spaces, whether
-   the keyboard scrolls, and what confirms a passcode.
+   matches the Lemmings title. The passcode screen is a 320-wide UI scaled 2x, so
+   its five visible keyboard columns are the game's own window, not a framebuffer
+   crop. The remaining question is whether any title uses a true 640x240
+   non-interlaced mode that the current line-double path should not upscale.
