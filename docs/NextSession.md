@@ -164,10 +164,13 @@ frames (the marquee cycles "SKILLS"). `Down` + `A` on New Game opens the
 **passcode** screen (the string is "Enter the access code", not an account name).
 The on-screen keyboard is three rows of nine: `A-I`, `J-R`, `S-Z <` (backspace);
 only part of the grid is visible at once. In the low-res path, a 20-frame `A` tap
-types the highlighted letter twice; one tap of `Up`/`Down`/`Left`/`Right` moves the
-selection (for example, from `U` to `D`/`U`/`T`/`Y` respectively) and the selected
-letter is drawn purple. Typing ten letters does not visibly confirm; `B` cancels back
-to the title, and `P`/`C`/`X` do not confirm. The high-res passcode screen still
+types the highlighted letter twice, while a 20-frame `L` or `R` tap types it once;
+one tap of `Up`/`Down`/`Left`/`Right` moves the selection (for example, from `U` to
+`D`/`U`/`T`/`Y` respectively) and the selected letter is drawn purple. `D`+`Left`/
+`Right` reaches `C`/`E`; `T`+`Left` reaches `S`. The D-pad hold length matters: an
+8-frame `Up` selects a different key than a 20-frame `Up`, and 10-16 frame taps can
+land between keys. Typing ten letters does not visibly confirm; `B` cancels back to
+the title, and `P`/`C`/`X` do not confirm. The high-res passcode screen still
 clips/scrolls and its pointer hit-testing diverges, so the high-res title is not yet
 enabled by default.
 
