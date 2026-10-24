@@ -76,7 +76,8 @@ The development machine has a legally obtained corpus documented in
 
 - BIOS images: `D:\Dropbox\source\repos\CSharp_3DOEmulator\bios\` (use
   `panafz1.bin` by default; Anvil/GoldStar variants for compatibility checks).
-- Disc images: `D:\Samples\3DO\` — `Alone in the Dark (USA).chd`,
+- Disc images: set `THREEDO_GAMES` to the corpus root (office machine
+  `D:\Samples\3DO`, home machine `E:\Panasonic 3DO`) — `Alone in the Dark (USA).chd`,
   `Lemmings (USA).chd`, `Road Rash (USA).chd`, `Space Ace (USA).chd`, and
   `Wolfenstein 3D (USA).chd`.
 

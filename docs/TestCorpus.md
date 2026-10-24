@@ -1,19 +1,23 @@
 # Local Test Corpus
 
 **Status:** local developer machine only; not part of the repository.
-**Last inventoried:** 2026-10-23
+**Last inventoried:** 2026-10-24
 
 This document records the legally obtained BIOS and disc images available on the
 development machine for manual compatibility, boot, audio, input, save-state, and
 performance testing. None of these files may be committed, packaged, or uploaded.
 
 - BIOS directory: `bios/` in this repository (ignored by `.gitignore`)
-- Disc directory: `E:\Panasonic 3DO\`
+- Disc directory: **machine-specific**, set `THREEDO_GAMES` to the root:
+  - Office machine: `D:\Samples\3DO`
+  - Home machine: `E:\Panasonic 3DO`
 
 Both locations are outside version control. `bios/` is already ignored by
 `.gitignore`, and `*.chd`/`*.iso`/`*.bin`/`*.cue` are ignored as a second guard.
-`E:\Panasonic 3DO` is outside the repository entirely. The older `D:\Samples\3DO`
-path used by previous handoffs no longer exists.
+The corpus root is never hard-coded in scripts; use `$env:THREEDO_GAMES` so the same
+commands work on both machines. The older `D:\Samples\3DO` path used by earlier
+handoffs and the `E:\Panasonic 3DO` path used by others are both aliases for the
+same corpus root depending on the machine.
 
 ---
 
@@ -54,41 +58,81 @@ They are a regression baseline, not a full compatibility pass:
 | Space Ace | `0x00076418` | `0xA2B49CF0` | **rendered** | ReadySoft player finds the CD-ROM, plays the demo, and passes the former frame-681 crash |
 | Wolfenstein 3D | `0x000699E8` | `0xC21BB6A1` | boot/logo | Loads Sherry/Operator/FS v24.225; with input it reaches gameplay (FLOOR 1-1) |
 
-At 10,000 frames with input and a fresh NVRAM:
-
+At 10,000 frames with input and a fresh NVRAM (pre-transposition-fix):
+ 
 | Title | Final PC | Frame hash | Observation |
 |---|---|---|---|
 | Alone in the Dark | `0x0004B6B4` | `0x67FD3C6F` | In-game room/inventory scene |
 | Wolfenstein 3D | `0x0001F014` | `0xA5A33C4D` | Gameplay (FLOOR 1-1) |
+ 
+These two hashes are retained for historical comparison; the current first-pass
+numbers are in section 1.2.
 
-The 30,000-frame Road Rash run after the CCB fix ends at `PC 0x00016194` with frame
-hash `0xE2D08131` and renders the race scene when run without NVRAM. With a fresh
-NVRAM and no input the demo eventually exits through the OS shutdown loop
-(`PC 0x0001965C`, hash `0x52346C14`); with periodic input the run stays alive at
-`PC 0x00015278` (hash `0x0EBB2EDB`) and shows the race with the pause overlay. The
-30,000-frame Wolfenstein run without input ends at `PC 0x00013454` with hash
-`0x110E7DC5` (boot/idle); with scripted input it reaches FLOOR 1-1 at 10,000 frames.
+The 30,000-frame Road Rash run after the CCB fix originally ended at
+`PC 0x00016194` with frame hash `0xE2D08131` and rendered the race scene when run
+without NVRAM. That result was produced before the arbitrary-CEL transposition fix;
+the transposed CELs were corrupting the OS VRAM free list, so the "frozen race" was
+actually a failed allocator. After the fix the same run reaches 60,000 frames with
+`PC 0x006940C0`-class game code, DSP running, no `AllocMem` error, and a correct race
+render. See section 1.2 for the new baselines.
 
 Use the frame hash as the stable regression key and record the PC alongside the
 commit. The pre-NVRAM 3,000-frame hashes were (`0x85EF87FF`, `0x932C7722`,
 `0xEB31636F`, `0x2A9967FA`, `0x1A940707`); the pre-CCB hashes were
 (`0x85EF87FF`, `0x932C7722`, `0xEB31636F`, `0x6AA8B441`, `0x1A940707`). The NVRAM
 fix changed Wolfenstein, Alone, and Space Ace because their save-space checks now
-see a valid volume; the CCB fix changed Space Ace's rendering.
+see a valid volume; the CCB fix changed Space Ace's rendering. The 3,000-frame
+hashes are **unchanged by the transposition and VDLP fixes** because those frames
+are all boot/FMV screens.
 
 `PC 0x205C4`/`0x205C8` is the Portfolio **idle loop**, not a halt: VDL and timer
 interrupts continue to run and the boot log advances. Earlier baselines that
 described this address as a "halt path" were misreading the idle loop.
 
+### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
+
+All runs use the Release build, `panafz1.bin`, and a fresh NVRAM. The 3,000-frame
+regression hashes are identical to section 1.1; the longer runs changed because the
+transposition fix corrected the 3D CEL output.
+
+| Title | Frames | Final PC | Frame hash | Observation |
+|---|---:|---|---|---|
+| Road Rash | 30,000 | `0x000681F0` | `0xEB0AD59C` | Race renders correctly; DSP running; no allocator error |
+| Road Rash | 60,000 | `0x00095E84` | `0xBF01DF59` | Attract race/FMV loop still alive; DSP running |
+| Road Rash (state, 1,200 frames) | 31,200 | `0x00096300` | `0x274021FE` | Control continuation of the 30k state |
+| Wolfenstein 3D | 12,000 | `0x00074B6C` | `0xC97CA7A5` | FLOOR 1-1, SCORE 2800, ITEM 01 |
+| Alone in the Dark | 16,000 | `0x0008C608` | `0x3D257B5C` | Upright character at the staircase |
+| Lemmings | 18,000 | `0x000205F8` | `0x5625A4CD` | Title menu (Play/New Game) |
+| Space Ace | 12,000 | `0x0007D114` | `0xEF99FED7` | Animated demo, no runaway |
+
+The exact hashes should be re-read from the `--json` output rather than copied from
+memory; the stable observations are:
+
+- **Road Rash:** from the 30k state, holding `A` freezes the race view while the CPU
+  keeps running, and releasing it reaches the WRECK FMV. `P` alone leaves the race
+  running. A deterministic autopilot is still open. The race is visually correct and
+  matches the Opera attract-mode road/rider composition.
+- **Wolfenstein:** from the 12,000-frame demo state, `A` opens the Select Previews
+  menu; D-pad/A navigate to Select a Level and start a fresh game at FLOOR 1-1 with
+  `SCORE 0000000`. A live 60-frame state saved after that (`0xC9989182`) roundtrips:
+  two independent 120-frame continuations both end at `0x370158AC`, and a zero-frame
+  load reproduces `0xC9989182` exactly.
+- **Alone:** the 16,000-frame state has the character upright at the staircase. The
+  control run walks through the room; the scripted D-pad/A run reaches the
+  Begin/Resume main menu.
+- **Lemmings:** the 18,000-frame state is the title screen. `Down` + `A` opens the
+  account-name screen; `A`/`X` append the highlighted letter. The confirm action for
+  the name entry is still to be identified.
+- **Space Ace:** the demo renders animated FMV frames past 12,000 frames.
+- **Audio (600 frames from the live states):** Road Rash 44.1 kHz stereo, 10.03 s,
+  peak 32768, RMS 9051/9146, 191 clipped samples; Wolfenstein 44.1 kHz stereo,
+  10.02 s, peak 30743, RMS 5620/5457, no clipping. Both are ~737 samples/frame.
+
 **Where this leaves us:** all five titles boot, render, and produce non-silent DSP
-audio. Road Rash reaches its race, Wolfenstein reaches gameplay, Alone reaches its
-in-game scene, Lemmings reaches its menu, and Space Ace plays its demo. Input is
-validated for Alone (movement/actions), Wolfenstein (movement/actions), Lemmings
-(menu highlight), Road Rash (`P` toggles pause), and Space Ace (`P`/`X`). Starting a
-Lemmings level and completing a full race/level are the next gameplay milestones.
-The next pass should use `--input-script` to complete a level/race, validate every
-pad button, exercise save states and screenshots in-game, and check sustained CD
-streaming. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md).
+audio; four of them have been driven through menus and into gameplay. The remaining
+gameplay milestone is a scripted race/level completion, plus the Lemmings name-entry
+confirm and an Alone movement/inventory script. See [`Status.md`](Status.md) and
+[`NextSession.md`](NextSession.md).
 
 #### CD disc-end fix (2026-10-23)
 
@@ -251,11 +295,15 @@ only when validating compatibility-specific code paths.
 
 ## 3. CLI commands
 
-Set the two environment variables used by the opt-in tests:
+Set the environment variables used by the opt-in tests. `THREEDO_GAMES` is the
+corpus root and is different on each machine; everything else is derived from it.
 
 ```powershell
-$env:THREEDO_BIOS = "C:\Users\HomePC\Dropbox\source\repos\CSharp_3DOEmulator\bios\panafz1.bin"
-$env:THREEDO_DISC = "E:\Panasonic 3DO\Road Rash (USA).chd"
+$env:THREEDO_BIOS  = (Resolve-Path "bios\panafz1.bin")
+$env:THREEDO_GAMES = "D:\Samples\3DO"          # office machine
+# $env:THREEDO_GAMES = "E:\Panasonic 3DO"      # home machine
+$env:THREEDO_DISC  = "$env:THREEDO_GAMES\Road Rash (USA).chd"
+Get-ChildItem $env:THREEDO_GAMES
 ```
 
 Inspect a disc without booting it:

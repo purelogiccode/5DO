@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-24, `master` (see `git log` for the exact commit).
+**Snapshot:** 2026-10-24, second pass (see `git log` for the exact commit).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
 **Reference:** `References/opera-libretro-master/libopera` is now the primary
 behavioral reference for new compatibility work; see
@@ -23,7 +23,8 @@ This is the short, current answer to "where are we?" The detailed task list is i
   reaches the shell. The earlier `PC 0x205C4` "halt" was the Portfolio idle loop.
 - **Video:** the desktop two-stage presenter expands palettes at native resolution
   into an FBO, then scales/filters to the output. Desktop GL 3.3 and GLSL ES 300
-  sources are selected from the context version.
+  sources are selected from the context version. The VDLP bitmap path now honors the
+  modulo-derived line width (320/384/512/640/1024).
 - **Performance:** the machine runs on a dedicated 60 Hz core thread with a frame
   pacer; the UI renders on demand; uploads use `TexStorage2D` + `TexSubImage2D`;
   uniform locations and the present delegate are cached; physical-pixel sizing is
@@ -31,16 +32,18 @@ This is the short, current answer to "where are we?" The detailed task list is i
 - **Tooling:** CLI `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks`,
   `disasm`, plus KPRINT, CD, CLIO, FIQ, RAM-write watchpoints, RAM/DSP dumps,
   DSP-instruction rings, CEL command/geometry traces, PBUS packet traces, CPU
-  instruction-ring diagnostics, scripted input, and NVRAM load/save.
+  instruction-ring diagnostics, scripted input, NVRAM load/save, periodic frame
+  capture (`--capture-dir`/`--capture-every`), and RAM dumps at trace stops.
 - **Audio:** the DSP executes in every run, including headless runs with no host
   audio sink. The AudioFolio semaphore handshake works, instrument programs run, and
-  the five-title corpus produces non-silent 44.1 kHz stereo WAV output (~738 samples
-  per frame).
+  the five-title corpus produces non-silent 44.1 kHz stereo WAV output (~737 samples
+  per frame). In-game captures: Road Rash peak 32768 / RMS ~9.1k (191 clipped samples
+  in 10 s), Wolfenstein peak 30743 / RMS ~5.5k / no clipping.
 - **Input scripting:** the CLI accepts `--input-script <path>` with
   `frame button[,button...]` lines for repeatable controller taps. Input has been
-  validated in Road Rash (pause), Wolfenstein (movement/actions), Alone
-  (movement/actions), Lemmings (menu), and Space Ace (P/X).
-- **Tests:** 550 passing (`dotnet test -c Release`).
+  validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
+  start), Alone (scene and menu), Lemmings (menu and name entry), and Space Ace (P/X).
+- **Tests:** 552 passing (`dotnet test -c Release`).
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   A win-x64 CLI publish has been smoke-tested.
 
@@ -54,11 +57,11 @@ on both sides. Opera is the bundled Windows `OperaCore` build in
 
 | Title | Our C# port | Opera reference |
 |---|---|---|
-| Lemmings (USA) | **Boots, renders, plays DSP audio**; reaches the Load/Options title menu; D-pad selection changes the highlighted item | Not re-tested this pass; expected to pass |
-| Space Ace (USA) | **Boots, renders, plays DSP audio**; ReadySoft player runs the demo past 10,000 frames with no runaway | **Plays the demo intro for 60 s, no runaway** |
-| Road Rash (USA) | **Boots, renders, plays DSP audio**; loads the game OS, SAudio init succeeds, and the 3D race scene renders by 30,000 frames; P toggles the pause overlay | **Renders the intro FMV for 60 s** |
-| Wolfenstein 3D (USA) | **Boots, renders, plays DSP audio**; early P/A taps start the game; movement/actions change the scene (FLOOR 1-1, score 100) | **Renders the intro for 60 s** |
-| Alone in the Dark (USA) | **Boots, renders, plays DSP audio**; with a fresh NVRAM it reaches the in-game room/inventory scene; movement/actions change the scene | **Renders the intro/loading sequence for 60 s** |
+| Lemmings (USA) | **Boots, renders, plays DSP audio**; reaches the title screen (Play/New Game) and the account-name screen; D-pad/A/X operate the menus | Not re-tested this pass; expected to pass |
+| Space Ace (USA) | **Boots, renders, plays DSP audio**; ReadySoft player runs the animated demo past 12,000 frames with no runaway | **Plays the demo intro for 60 s, no runaway** |
+| Road Rash (USA) | **Boots, renders, plays DSP audio**; the 3D race renders correctly and the attract race runs past 60,000 frames with no allocator error; A/P alter the race | **Renders the intro FMV, then a race** |
+| Wolfenstein 3D (USA) | **Boots, renders, plays DSP audio**; A opens the preview menu, selecting a level starts a fresh game (FLOOR 1-1), and save/load roundtrips in-game | **Renders the intro for 60 s** |
+| Alone in the Dark (USA) | **Boots, renders, plays DSP audio**; reaches the in-game staircase/room with an upright character; D-pad/A change the scene and open the menu | **Renders the intro/loading for 60 s** |
 
 The CD disc-end fix on 2026-10-23 is what unblocked Road Rash, Space Ace, and
 Wolfenstein: `InitCd` no longer double-adds the 150-frame lead-in, so the CD DIPIR
@@ -85,16 +88,23 @@ The 2026-10-24 session found and fixed the common blockers:
    (and `--nvram <path>` persists it). Without it, Alone in the Dark saw zero free
    save slots, displayed its save-space warning, and shut down. It now reaches the
    in-game room/inventory scene.
+6. **Arbitrary-CEL transposition.** `TexelDrawArbitrary` passed `(i, j)` to `(x, y)`
+   read/write helpers, so every asymmetric quad was written transposed. Road Rash's
+   race CELs overwrote the OS VRAM free list at `0x2FC000` (`AllocMem error, bad node
+   address`) and the race froze; Alone's character was drawn horizontally. Passing
+   `(j, i)` fixed both. The VDLP bitmap copy now uses the modulo-derived line width
+   (no 320-pixel crop), and state loads restore the VDL pixel buffers.
 
 Space Ace's former frame-681 crash was a downstream consequence of the failed
 `AllocInstrument`: the player copied a decoded buffer to a null pointer, wiping the
-ARM vectors. It now runs past 10,000 frames.
+ARM vectors. It now runs past 12,000 frames.
 
-**Gameplay is now reachable.** Road Rash renders its race scene, Wolfenstein 3D
-reaches FLOOR 1-1 with scripted input, Alone in the Dark reaches its in-game room
-and inventory, Lemmings reaches its title menu, and Space Ace plays its demo. The
-next pass should validate sustained gameplay, input across all buttons, save states,
-screenshots, and in-game CD streaming.
+**Gameplay is now reachable and renderer-correct.** Road Rash's 3D race renders like
+the Opera reference and runs past 60,000 frames; Wolfenstein 3D starts a fresh game and
+its save states roundtrip; Alone in the Dark's in-game character is upright and its
+menu is reachable; Lemmings reaches its title menu and account-name screen; Space Ace
+plays its animated demo. The next pass should complete a scripted race/level, finish
+the Lemmings name entry, and capture a WAV/state/screenshot set for each title.
 
 ---
 
@@ -163,20 +173,22 @@ corpus games playable" rather than "the v1 feature set is complete", add another
 
 ## 5. What next
 
-### P0 - validate real gameplay
+### P0 - complete the gameplay loops
 
-1. **Drive each title through a full gameplay loop.** The DSP `AllocInstrument`
-   handshake, the CCB field order, and the CLI NVRAM initialization are fixed. Road
-   Rash reaches its race, Wolfenstein reaches FLOOR 1-1, Alone reaches its in-game
-   room, Lemmings reaches its menu, and Space Ace plays its demo. Use
-   `--input-script` to start a level/race, move/fire/select, and record the exact
-   scripts and frame numbers in [`TestCorpus.md`](TestCorpus.md).
-2. **Validate save states and screenshots in-game.** Save/load at a gameplay frame,
-   compare the frame hash and PC before and after a 60-frame continuation, and
-   capture a screenshot for each title.
-3. **Validate audio in gameplay.** Capture WAV during a race/level, check for
-   clipping/DC offset, and compare the mix with Opera or hardware. Record results in
-   [`Compatibility.md`](Compatibility.md).
+1. **Complete a race/level in each title.** The renderer and input path are now
+   validated: Road Rash's race renders correctly, Wolfenstein starts a fresh game,
+   Alone's in-game character is upright, Lemmings reaches its name-entry screen, and
+   Space Ace plays its demo. The remaining work is scripted play: a Road Rash
+   autopilot that finishes a race, the Lemmings name-entry/level-start sequence, and
+   an Alone movement/inventory sequence. Record the exact scripts and frame numbers
+   in [`TestCorpus.md`](TestCorpus.md).
+2. **Save states and screenshots in-game.** Wolfenstein already roundtrips a live
+   gameplay state (saved hash `0xC9989182`, two 120-frame continuations end at
+   `0x370158AC`). Repeat for each title and store screenshots at known frames.
+3. **Audio in gameplay.** The 600-frame captures are non-silent and 44.1 kHz stereo;
+   Road Rash slightly clips (191 samples in 10 s) and both titles run at ~737
+   samples/frame. Compare the mix and cadence with Opera/hardware before changing the
+   DSP clock.
 
 ### P1 - prove the 4K60 target
 
@@ -224,35 +236,45 @@ not touch the UI or 4K tuning in that session.
 dotnet build -c Release
 dotnet test tests/ThreeDo.Tests -c Release
 
+# The corpus root is machine-specific; set it once per shell.
+$env:THREEDO_GAMES = "D:\Samples\3DO"   # office; home: E:\Panasonic 3DO
+$env:THREEDO_DISC  = "$env:THREEDO_GAMES\Road Rash (USA).chd"
+
+# Build/test/format
+dotnet build -c Release
+dotnet test tests/ThreeDo.Tests -c Release
+dotnet format --verify-no-changes
+
 # Synthetic CPU-side baseline
 dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- --frames 600
 
 # Real disc baseline
 dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- `
-  --frames 600 --bios bios/panafz1.bin --disc "E:\Panasonic 3DO\Lemmings (USA).chd" `
-  --label lemmings
+  --frames 600 --bios bios/panafz1.bin `
+  --disc "$env:THREEDO_GAMES\Lemmings (USA).chd" --label lemmings
 
 # Boot a disc and dump the last frame
 dotnet run -c Release --project src/ThreeDo.Cli -- run `
-  "E:\Panasonic 3DO\Lemmings (USA).chd" --bios bios/panafz1.bin `
+  "$env:THREEDO_GAMES\Lemmings (USA).chd" --bios bios/panafz1.bin `
   --frames 3000 --nvram artifacts/lemmings.ram --frame-out artifacts/lemmings.png
 
-# Scripted input and PBUS packet trace
+# Scripted input, frame sequence, and PBUS packet trace
 dotnet run -c Release --project src/ThreeDo.Cli -- run `
-  "E:\Panasonic 3DO\Wolfenstein 3D (USA).chd" --bios bios/panafz1.bin `
-  --frames 10000 --nvram artifacts/w3d.ram --input-script artifacts/input.txt `
-  --pbus-trace artifacts/pbus.log --frame-out artifacts/w3d.png
+  "$env:THREEDO_GAMES\Wolfenstein 3D (USA).chd" --bios bios/panafz1.bin `
+  --frames 12000 --input-script artifacts/input.txt `
+  --capture-dir artifacts/w3d-frames --capture-every 1000 `
+  --frame-out artifacts/w3d.png --state-out artifacts/w3d.state
 
-# SAudio stop with DSP trace and memory dumps
+# RAM dump at a KPRINT stop
 dotnet run -c Release --project src/ThreeDo.Cli -- trace `
-  "E:\Panasonic 3DO\Road Rash (USA).chd" --bios bios/panafz1.bin `
-  --frames 0 --trace-frames 3000 --stop-kprint "SAudio channel" --ring 4 `
-  --dsp-trace artifacts/rr-dsp-trace.txt --dump-dsp artifacts/rr-saudio `
-  --out artifacts/rr-trace.txt
+  "$env:THREEDO_DISC" --bios bios/panafz1.bin `
+  --frames 16000 --trace-frames 2200 --stop-kprint "AllocMem error" --ring 40000 `
+  --out artifacts/rr-trace.txt --dump-ram artifacts/rr-stop-ram.bin `
+  --dump-ram-offset 0 --dump-ram-length 0x300000
 
 # Opera reference: extract the data track to ISO, then run the bundled SimpleGui
 dotnet run -c Release --project src/ThreeDo.Cli -- disc dump `
-  "E:\Panasonic 3DO\Road Rash (USA).chd" --sector 0 --count 328130 `
+  "$env:THREEDO_DISC" --sector 0 --count 328130 `
   --out "$env:TEMP\roadrash.iso"
 & "References\CPP_SimpleGui\cmake-build-release\SimpleGui\SimpleGui.exe" `
   --debug-messages -n "$env:TEMP\roadrash.iso"

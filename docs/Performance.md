@@ -275,7 +275,7 @@ Run it with:
 ```powershell
 dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- --frames 600
 dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- `
-  --frames 600 --bios bios/panafz1.bin --disc "D:\Samples\3DO\Lemmings (USA).chd" `
+  --frames 600 --bios bios/panafz1.bin --disc "$env:THREEDO_GAMES\Lemmings (USA).chd" `
   --label lemmings
 ```
 

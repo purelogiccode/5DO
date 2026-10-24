@@ -2,15 +2,17 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current position (2026-10-24, after the DSP, CCB, and NVRAM fixes):** all five local
-corpus titles boot, load their own OS, render real frames, and produce non-silent DSP
-audio. Road Rash reaches its race scene, Wolfenstein 3D reaches gameplay (FLOOR 1-1),
-Alone in the Dark reaches its in-game room/inventory scene, Lemmings reaches its
-title menu, and Space Ace plays its demo. Scripted input has been used to
-pause/unpause Road Rash, navigate the Lemmings menu, and enter Wolfenstein gameplay.
-Full gameplay validation (save states, long races, level completion) is still open.
+**Current position (2026-10-24, after the CEL transposition and VDLP-width fixes):** all
+five local corpus titles boot, load their own OS, render real frames, and produce
+non-silent DSP audio. Road Rash's 3D race now renders correctly and the attract race
+continues past 60,000 frames with no allocator error; Wolfenstein 3D starts a fresh game
+(FLOOR 1-1) and its save states roundtrip; Alone in the Dark's in-game character renders
+upright at the staircase and its menu is reachable; Lemmings reaches its title menu and
+account-name screen; Space Ace plays its animated demo. Scripted input has been used to
+navigate the Wolfenstein and Lemmings menus, open the Alone menu, and alter Road Rash's
+race. Completing a full race/level remains the next gameplay milestone.
 
-The 2026-10-24 session found three root causes:
+The 2026-10-24 sessions found four root causes:
 
 - **DSP immediate operands.** The loader shifted un-justified immediates left by two
   instead of zero. The AudioFolio tail program tests `Sema4Status & 8`; the extra
@@ -28,6 +30,15 @@ The 2026-10-24 session found three root causes:
   interpreted that as zero free slots, showed its "not enough space to save" warning,
   and shut down. The CLI now loads a fresh 32 KB volume by default and accepts
   `--nvram <path>` to persist it. Alone reaches its in-game room/inventory scene.
+- **Arbitrary-CEL X/Y transposition.** The new rasterizer helpers take `(x, y)`, but
+  the arbitrary-quad fill passed `(i, j)` (row, column), following FreeDO's
+  `readPIX(src, i, j)` parameter order. Every asymmetric quad was written transposed.
+  Road Rash's race CELs wrote texels into the top of VRAM where the OS keeps its VRAM
+  free list, producing `AllocMem error, bad node address` and a frozen race; Alone in
+  the Dark drew its character horizontally. Passing `(j, i)` fixes both. The same pass
+  fixed the VDLP bitmap copy to use the modulo-derived line width instead of a fixed
+  320 pixels, so 384/512/640-wide modes are no longer cropped, and made save-state
+  loads restore the VDL pixel buffers immediately.
 
 Space Ace's former frame-681 runaway was a downstream consequence of the DSP
 failure: the ReadySoft player's audio task copied a decoded buffer to a null
@@ -210,34 +221,56 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 
 | Game | Region | Disc ID | BIOS | Build | Boot | In-game | Audio | Input | Notes | Opera reference |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | **Title menu reached** | Non-silent DSP output | **Works**: menu selection changes with D-pad | CyberIntro renders; 10,000-frame run reaches the Load/Options menu | Not re-tested this pass |
-| Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass** | **Demo plays past 10,000 frames** | Non-silent DSP output | Scripted taps supported | Former frame-681 null-buffer runaway is gone; demo video renders | Demo intro 60 s, no runaway |
-| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **Race scene reached** | Non-silent DSP output | **Works**: P toggles the pause overlay | Loads the game OS, SAudio init succeeds, 3D race renders; 30,000-frame run reaches the race | Intro FMV 60 s |
-| Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Pass** | **Gameplay (FLOOR 1-1)** | Non-silent DSP output | **Works**: movement/actions change the scene | Loads Sherry/Operator/FS v24.225; early P/A taps start the game; a 5,000-frame run shows score 100 | Intro 60 s |
-| Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Pass** | **In-game room/inventory scene** | Non-silent DSP output | **Works**: movement/actions change the scene | AudioFolio init succeeds; a fresh NVRAM avoids the save-space warning | Intro/loading 60 s |
+| Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | **Title menu and account-name screen** | Non-silent DSP output | **Works**: D-pad changes the selection; A/X enter text | CyberIntro renders; the title screen shows Play/New Game; New Game opens the name-entry screen | Not re-tested this pass |
+| Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass** | **Animated demo past 12,000 frames** | Non-silent DSP output | P/X change the player state | Former frame-681 null-buffer runaway is gone; the demo FMV renders | Demo intro 60 s, no runaway |
+| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **3D race renders and runs past 60,000 frames** | Non-silent DSP output; 10 s peak 32768, RMS ~9.1k | **A/P change the race**; a full race autopilot is still open | The CEL transposition fix removed the VRAM `AllocMem` error; Opera-like road/rider render | Intro FMV, then a race |
+| Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Pass** | **Fresh game (FLOOR 1-1) and save/load roundtrip** | Non-silent DSP output; 10 s peak 30743, RMS ~5.5k | **Works**: A opens the menu, D-pad/A navigate and fire | From a 12,000-frame demo state, A opens the preview menu; selecting a level starts a fresh game | Intro 60 s |
+| Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Pass** | **In-game staircase/room with an upright character** | Non-silent DSP output | **Works**: D-pad/A change the scene and open the menu | The CEL transposition fix restored the character's upright orientation | Intro/loading 60 s |
 
 `Pass` means a real game frame was rendered and verified visually. The Opera reference
 column is the bundled Windows OperaCore with the same BIOS and an ISO extracted from
-the same CHD; it verifies game progress, not audio output. The DSP/CCB/NVRAM fixes are
-described above; input results come from `--input-script` runs.
+the same CHD; it verifies game progress, not audio output. The DSP/CCB/NVRAM and CEL
+transposition fixes are described above; input results come from `--input-script` runs.
 
 ### 10.1 Input validation (2026-10-24)
 
-- **Alone in the Dark:** from a 10,000-frame in-game state, `Up`/`Down` and
-  `Left`/`Right`/`A`/`B`/`C` produce different frame hashes and PCs, so the pad is
-  reaching the game and changing its state.
+- **Alone in the Dark:** from the 16,000-frame in-game state, `Up`/`Down` and
+  `Left`/`Right`/`A`/`B`/`C` produce different hashes and PCs; the D-pad/A sequence
+  reached the Begin/Resume main menu. The control run walks the character through the
+  room, so the in-game scene is live without input.
 - **Lemmings:** the title menu highlight moves with the D-pad and the bottom
-  description changes (e.g. `OPTIONS`); a 12,000-frame run shows the Load/Options
-  menu. Starting a level is still to be scripted.
-- **Road Rash:** `P` toggles the pause overlay at frame ~15,900. With periodic input
-  the 30,000-frame run stays alive at `PC 0x00015278` (hash `0x0EBB2EDB`, pause
-  overlay); without input the demo eventually exits through the OS shutdown loop.
-- **Wolfenstein 3D:** a 5,000-frame run with early `P`/`A` taps reaches the in-game
-  HUD with `SCORE 0000100`. From that state, `Up`/`Down`/`Left`/`Right`/`A`/`B`/`C`
-  produce different frame hashes and PCs, so movement and actions are live.
-- **Space Ace:** from a 10,000-frame state, `P` and `X` produce different hashes and
+  description changes. `Down` + `A` on New Game opens the account-name screen; `A`/`X`
+  enter the highlighted letter. Finishing the name entry and starting a level are
+  still to be scripted.
+- **Road Rash:** the attract race renders correctly from ~17,000 frames. Holding or
+  tapping `A`/`P` changes the race state and eventually triggers the WRECK FMV; a
+  deterministic autopilot that completes a race is still open.
+- **Wolfenstein 3D:** from the 12,000-frame demo state, `A` opens the Select Previews
+  menu; D-pad/A navigate to Select a Level and start a fresh game at FLOOR 1-1 with
+  `SCORE 0000000`. From a live 60-frame state, two independent 120-frame continuations
+  both end at hash `0x370158AC`, and a zero-frame load reproduces the saved hash
+  `0xC9989182`.
+- **Space Ace:** from a 12,000-frame state, `P` and `X` produce different hashes and
   PCs; `A`/`B`/`C` and the D-pad do not change the demo. `P`/`X` likely open the
   player's menu/control path; the interactive game still needs a dedicated script.
+
+### 10.2 Renderer fixes and validation (2026-10-24)
+
+- **Arbitrary CEL transposition.** `TexelDrawArbitrary` passed `(i, j)` to the
+  `(x, y)` read/write helpers. FreeDO's `readPIX(src, i, j)` treats `i` as the row, so
+  the port's renamed helpers inverted every texel. Asymmetric quads were written
+  transposed. Road Rash's race CELs landed in the VRAM allocator's free list at
+  `0x2FC000`, producing `AllocMem error, bad node address` and a frozen frame; Alone in
+  the Dark drew its character horizontally. The fix passes `(j, i)`.
+- **VDLP line width.** The bitmap copy always read 320 pixels, so 384/512/640-wide
+  modes were cropped. It now uses the modulo parsed from the VDL control word, and
+  the machine derives `SourceWidth` from the widest rendered line. The 320-wide corpus
+  output is unchanged.
+- **Save-state pixels.** Loading a state now restores the VDL pixel buffers instead of
+  discarding them. A zero-frame load reproduces the saved frame hash exactly.
+- **Audio measurements.** 600-frame WAV captures: Road Rash 44.1 kHz stereo, 10.03 s,
+  peak 32768, RMS 9051/9146, 191 clipped samples; Wolfenstein 44.1 kHz stereo, 10.02 s,
+  peak 30743, RMS 5620/5457, no clipping. Both run at ~737 samples/frame.
 
 The 2026-10-23 CD fix is significant: `CdromDevice.InitCd` used FreeDO's
 double-add of the 150-frame lead-in, so the disc end reported to the CD DIPIR was

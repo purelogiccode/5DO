@@ -162,11 +162,11 @@ Use the same BIOS, the same disc data, and the same frame count on both sides.
 
 ```powershell
 # Get the sector count first
-dotnet run -c Release --project src/ThreeDo.Cli -- info "D:\Samples\3DO\Road Rash (USA).chd" --json
+dotnet run -c Release --project src/ThreeDo.Cli -- info "$env:THREEDO_GAMES\Road Rash (USA).chd" --json
 
 # Extract the data track to ISO (example: 328130 sectors)
 dotnet run -c Release --project src/ThreeDo.Cli -- disc dump `
-  "D:\Samples\3DO\Road Rash (USA).chd" --sector 0 --count 328130 `
+  "$env:THREEDO_GAMES\Road Rash (USA).chd" --sector 0 --count 328130 `
   --out "$env:TEMP\roadrash.iso"
 ```
 
