@@ -124,6 +124,12 @@ memory; the stable observations are:
   account-name screen; `A`/`X` append the highlighted letter. The confirm action for
   the name entry is still to be identified.
 - **Space Ace:** the demo renders animated FMV frames past 12,000 frames.
+- **Wolfenstein fresh-game load (open issue):** starting a new game from the preview
+  menu reaches a static level screen at 14,000 frames, but it is still there at
+  54,000 frames. The CD trace shows one 24-sector read every ~33 frames (~87 KB/s)
+  and revisits the 05:11-05:3b region. The attract-mode gameplay at 12,000 frames is
+  unaffected. The Opera-style read-completion status and the 2X drive status bit were
+  tried and reverted: they did not fix the load and changed the golden CD status.
 - **Audio (600 frames from the live states):** Road Rash 44.1 kHz stereo, 10.03 s,
   peak 32768, RMS 9051/9146, 191 clipped samples; Wolfenstein 44.1 kHz stereo,
   10.02 s, peak 30743, RMS 5620/5457, no clipping. Both are ~737 samples/frame.

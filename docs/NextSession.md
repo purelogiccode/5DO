@@ -261,3 +261,12 @@ The data-track extraction command is in [`TestCorpus.md`](TestCorpus.md).
 4. Is the 191-sample Road Rash clipping in the game mix or in our DSP output path?
 5. Does the VDLP width fix expose any 384/512-mode title that previously appeared
    only because of the 320-pixel crop?
+6. Why does Wolfenstein's **fresh game** stay on the static level screen for more than
+   54,000 frames? The CD trace shows one 24-sector read every ~33 frames (about
+   87 KB/s) and revisits the 05:11-05:3b region. Setting the drive 2X status bit and
+   publishing the Opera-style read-completion status were both tried and reverted:
+   they either did not change the load or broke the golden CD status (0xE1 -> 0xE3)
+   and the 3,000-frame corpus hashes. The demo gameplay at 12,000 frames is unaffected.
+   Next: compare the CD task's timing with Opera, check whether the drive speed query
+   or read-completion status is expected, and measure CHD read time separately from
+   guest-side pacing.
