@@ -37,7 +37,15 @@ bogus 1987x583 literal CEL with a 560-pixel-per-row perspective delta and appear
 to hang in `TexelDrawArbitrary`. The parser fix plus the missing `cnt_cross > 2`
 x-point sort in `TexelDrawArbitrary` make the race render at normal speed.
 
-### 1.3 New diagnostics
+### 1.3 NVRAM (fixed in the CLI)
+
+The CLI now loads a fresh 32 KB NVRAM volume by default and accepts
+`--nvram <path>` to persist it. Without a valid volume, Alone in the Dark's
+save-space check saw zero free slots, displayed its "There is only enough space on
+your 3DO system to save X games" warning, and shut down. With a fresh volume it
+reaches the in-game room/inventory scene.
+
+### 1.4 New diagnostics
 
 - `--input-script <path>`: `frame Button[,Button...]` lines. Frames are decimal or
   hex; buttons are `A,B,C,P,X,L,R,Up,Down,Left,Right`; `None` releases all. The
@@ -47,6 +55,8 @@ x-point sort in `TexelDrawArbitrary` make the race render at normal speed.
 - `--cel-trace <path>`: one line per CEL command with flags, preambles, geometry,
   clip, source/destination, plus per-draw timing and the first arbitrary-quad
   inputs. Huge CELs also dump 64 bytes of CCB data.
+- `--pbus-trace <path>`: one line per frame with the 16-byte controller packet.
+- `--nvram <path>`: load/persist the 32 KB NVRAM image.
 - `--dump-dsp`, `--dsp-trace`, `--watch-lowmem`, `--dump-ram`, `disasm` remain.
 
 ---
@@ -82,9 +92,10 @@ dotnet run -c Release --project src/ThreeDo.Cli -- run `
 
 ### Alone in the Dark
 
-- 10,000 frames with input: a warning dialog with a `Play Anyway` button.
-- `A`/`Right`/`P`/`X` taps have not advanced the dialog. The DSP reports
-  `running=False` after the dialog. This is the main open compatibility question.
+- With a fresh NVRAM (`--nvram`), 10,000 frames with input: `PC 0x0004B6B4`,
+  frame hash `0x67FD3C6F`, in-game room/inventory scene.
+- Without a valid NVRAM the game shows its "There is only enough space..." warning
+  and shuts down; that is now understood and fixed in the CLI.
 
 ### Space Ace
 
@@ -95,18 +106,7 @@ dotnet run -c Release --project src/ThreeDo.Cli -- run `
 
 ## 3. Ordered plan
 
-### Step 1 - Finish Alone in the Dark's dialog
-
-1. Save a state at the dialog (e.g., 10,000 frames with input).
-2. Trace the dialog's input polling (`--trace --stop-kprint` or a PC ring) and
-   identify which PBUS button/bit it reads.
-3. Try every button, including combinations and held states.
-4. Compare the same point with Opera; if Opera advances, differential the pad path
-   or the warning condition.
-5. Investigate why the DSP stops (`running=False`). Is the game intentionally
-   stopping audio, or did an AudioFolio call fail?
-
-### Step 2 - Complete a playable loop in each title
+### Step 1 - Complete a playable loop in each title
 
 - Lemmings: navigate to `LOAD NEW GAME`, start a level, place a skill, verify input
   and frame updates.
@@ -114,24 +114,24 @@ dotnet run -c Release --project src/ThreeDo.Cli -- run `
 - Road Rash: accelerate, steer, finish or restart a race; verify CD streaming and
   audio during the race.
 - Space Ace: start the game from the demo/attract loop and verify FMV/audio sync.
-- Alone: get past the dialog and into the house.
+- Alone: move the character, pick up an item, and verify the inventory updates.
 
 Record the exact input scripts and frame numbers in `TestCorpus.md`.
 
-### Step 3 - Save states and screenshots in-game
+### Step 2 - Save states and screenshots in-game
 
 - Save/load at a gameplay frame for each title; compare frame hash and PC before and
   after a 60-frame continuation.
 - Verify NVRAM and disc state survive the roundtrip.
 - Capture screenshots at a known frame for each title.
 
-### Step 4 - Audio quality
+### Step 3 - Audio quality
 
 - Capture WAV for a race/level and compare loudness/spectrum with Opera.
 - Check for clipping, DC offset, and the expected ~738 samples/frame.
 - Verify the DSP stops/starts cleanly when the game changes audio modes.
 
-### Step 5 - Performance
+### Step 4 - Performance
 
 - Measure 3D CEL frame time on Road Rash's race. The CCB fix removed the pathological
   CEL, but the software rasterizer is still the likely bottleneck.
@@ -141,7 +141,6 @@ Record the exact input scripts and frame numbers in `TestCorpus.md`.
 
 ## 4. Acceptance criteria
 
-- [ ] Alone's dialog advances with a documented button/sequence.
 - [ ] At least one title completes a full gameplay loop with input.
 - [ ] Save/load works in-game for at least one title.
 - [ ] WAV output is non-silent and plausibly matches the expected audio.
@@ -197,11 +196,11 @@ dotnet run -c Release --project src/ThreeDo.Cli -- run `
 
 ## 7. Open questions
 
-1. Which button/bit does Alone's `Play Anyway` dialog poll, and why does the DSP
-   stop after it?
-2. Does Wolfenstein's gameplay remain stable for 30,000+ frames with movement?
-3. Does Road Rash's race finish, and does the CD stream music/SFX correctly?
-4. Is the DSP sample cadence (567 vs Opera's 568) audible as pitch drift?
-5. Are the CCB parser's relative-pointer and preamble paths correct for packed CELs
+1. Does Wolfenstein's gameplay remain stable for 30,000+ frames with movement?
+2. Does Road Rash's race finish, and does the CD stream music/SFX correctly?
+3. Is the DSP sample cadence (567 vs Opera's 568) audible as pitch drift?
+4. Are the CCB parser's relative-pointer and preamble paths correct for packed CELs
    with `CCB_LDPLUT` clear? The reference always reserves the PLUT word; tests cover
    this, but real discs should confirm it.
+5. Does the CLI's fresh NVRAM default match the desktop frontend's persisted image,
+   and do in-game saves survive a `--nvram` roundtrip?

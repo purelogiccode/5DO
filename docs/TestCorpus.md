@@ -41,27 +41,25 @@ formats, or a locally generated fixture. Do not convert and commit a retail disc
 
 ### 1.1 Current boot baseline
 
-The following results were recorded on 2026-10-24 after the DSP handshake fix, with
-`panafz1.bin`, a Release build, and `run --frames 3000`. They are a regression
-baseline, not a full compatibility pass:
+The following results were recorded on 2026-10-24 after the DSP, CCB, and NVRAM
+fixes, with `panafz1.bin`, a Release build, and `run --frames 3000`. The CLI now
+loads a fresh 32 KB NVRAM volume by default; pass `--nvram <path>` to persist it.
+They are a regression baseline, not a full compatibility pass:
 
 | Title | Final PC | Frame hash | Frame at 3,000 | Observation |
 |---|---|---|---|---|
-| Alone in the Dark | `0x000105B0` | `0x85EF87FF` | boot/logo | AudioFolio init succeeds; with input it reaches a warning/play dialog |
-| Lemmings | `0x0012B36C` | `0x932C7722` | **rendered** | Reaches CyberIntro; at 10,000 frames with input it reaches the Load/Options title menu |
-| Road Rash | `0x000B9F50` | `0xEB31636F` | **rendered** | Loads the game OS (`grafmath 21.10.504`); SAudio init succeeds; intro FMV renders; the 30,000-frame run reaches the 3D race scene |
-| Space Ace | `0x000284EC` | `0x2A9967FA` | **rendered** | ReadySoft player finds the CD-ROM, plays the demo, and passes the former frame-681 crash; the CCB fix changed this hash from `0x6AA8B441` |
-| Wolfenstein 3D | `0x0000E1B8` | `0x1A940707` | boot/logo | Loads Sherry/Operator/FS v24.225; with input it reaches gameplay (FLOOR 1-1) |
+| Alone in the Dark | `0x000C4CB4` | `0xF4BDF79B` | boot/logo | AudioFolio init succeeds; with input and NVRAM it reaches the in-game room/inventory scene by 10,000 frames |
+| Lemmings | `0x0012B3C8` | `0x932C7722` | **rendered** | Reaches CyberIntro; at 10,000 frames with input it reaches the Load/Options title menu |
+| Road Rash | `0x000B9F84` | `0xEB31636F` | **rendered** | Loads the game OS (`grafmath 21.10.504`); SAudio init succeeds; the 30,000-frame run reaches the 3D race scene |
+| Space Ace | `0x00076418` | `0xA2B49CF0` | **rendered** | ReadySoft player finds the CD-ROM, plays the demo, and passes the former frame-681 crash |
+| Wolfenstein 3D | `0x000699E8` | `0xC21BB6A1` | boot/logo | Loads Sherry/Operator/FS v24.225; with input it reaches gameplay (FLOOR 1-1) |
 
-At 10,000 frames the same five titles produce:
+At 10,000 frames with input and a fresh NVRAM:
 
 | Title | Final PC | Frame hash | Observation |
 |---|---|---|---|
-| Alone in the Dark | `0x00051170` | `0xA2F43C8A` | Warning/play dialog with input; DSP stops after the dialog |
-| Lemmings | `0x0012DA88` | `0x651ACBF4` | Title menu with input |
-| Road Rash | `0x00020640` | `0x4B3B1505` | Idle/attract screen without input; race starts later |
-| Space Ace | `0x000284EC` | `0x28E8FE0E` | Demo |
-| Wolfenstein 3D | `0x0007539C` | `0x110E7DC5` | Boot/idle screen without input |
+| Alone in the Dark | `0x0004B6B4` | `0x67FD3C6F` | In-game room/inventory scene |
+| Wolfenstein 3D | `0x0001F014` | `0xA5A33C4D` | Gameplay (FLOOR 1-1) |
 
 The 30,000-frame Road Rash run after the CCB fix ends at `PC 0x00016194` with frame
 hash `0xE2D08131` and renders the race scene. The 30,000-frame Wolfenstein run
@@ -69,19 +67,19 @@ without input ends at `PC 0x00013454` with hash `0x110E7DC5` (boot/idle); with
 scripted input it reaches FLOOR 1-1 at 10,000 frames.
 
 Use the frame hash as the stable regression key and record the PC alongside the
-commit. The pre-CCB 3,000-frame hashes were
-(`0x0012B36C`/`2469164834`, `0x000BA124`/`2265977137`, `0x00077824`/`286162373`,
-`0x00010520`/`286162373`, `0x6AA8B441`/`1788923969`). The CCB fix changed Space
-Ace's rendering; the other four 3,000-frame hashes are unchanged because those
-titles have not reached a 3D CEL by that point.
+commit. The pre-NVRAM 3,000-frame hashes were (`0x85EF87FF`, `0x932C7722`,
+`0xEB31636F`, `0x2A9967FA`, `0x1A940707`); the pre-CCB hashes were
+(`0x85EF87FF`, `0x932C7722`, `0xEB31636F`, `0x6AA8B441`, `0x1A940707`). The NVRAM
+fix changed Wolfenstein, Alone, and Space Ace because their save-space checks now
+see a valid volume; the CCB fix changed Space Ace's rendering.
 
 `PC 0x205C4`/`0x205C8` is the Portfolio **idle loop**, not a halt: VDL and timer
 interrupts continue to run and the boot log advances. Earlier baselines that
 described this address as a "halt path" were misreading the idle loop.
 
 **Where this leaves us:** all five titles boot, render, and produce non-silent DSP
-audio. Road Rash reaches its race, Wolfenstein reaches gameplay, Lemmings reaches
-its menu, Alone reaches its warning dialog, and Space Ace plays its demo. The next
+audio. Road Rash reaches its race, Wolfenstein reaches gameplay, Alone reaches its
+in-game scene, Lemmings reaches its menu, and Space Ace plays its demo. The next
 pass should use `--input-script` to complete a level/race, validate every pad
 button, exercise save states and screenshots in-game, and check sustained CD
 streaming. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md).
@@ -257,8 +255,13 @@ Run a fixed number of frames and dump the last frame:
 dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
   --bios "$env:THREEDO_BIOS" `
   --frames 600 `
+  --nvram artifacts/nvram.ram `
   --frame-out artifacts/road-rash-600.png
 ```
+
+The CLI loads a fresh 32 KB NVRAM volume when `--nvram` is omitted. Pass `--nvram`
+to keep the same save data across runs; games that check save-space (Alone in the
+Dark) need a valid volume to get past their startup warning.
 
 Capture audio for listening:
 

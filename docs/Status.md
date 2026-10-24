@@ -55,7 +55,7 @@ on both sides. Opera is the bundled Windows `OperaCore` build in
 | Space Ace (USA) | **Boots, renders, plays DSP audio**; ReadySoft player runs the demo past 10,000 frames with no runaway | **Plays the demo intro for 60 s, no runaway** |
 | Road Rash (USA) | **Boots, renders, plays DSP audio**; loads the game OS, SAudio init succeeds, and the 3D race scene renders by 30,000 frames; P toggles the pause overlay | **Renders the intro FMV for 60 s** |
 | Wolfenstein 3D (USA) | **Boots, renders, plays DSP audio**; with scripted input it reaches gameplay (FLOOR 1-1) and shows the in-game HUD | **Renders the intro for 60 s** |
-| Alone in the Dark (USA) | **Boots, renders, plays DSP audio**; reaches a warning/play dialog; the DSP stops after the dialog and input has not yet advanced it | **Renders the intro/loading sequence for 60 s** |
+| Alone in the Dark (USA) | **Boots, renders, plays DSP audio**; with a fresh NVRAM it reaches the in-game room/inventory scene | **Renders the intro/loading sequence for 60 s** |
 
 The CD disc-end fix on 2026-10-23 is what unblocked Road Rash, Space Ace, and
 Wolfenstein: `InitCd` no longer double-adds the 150-frame lead-in, so the CD DIPIR
@@ -78,16 +78,20 @@ The 2026-10-24 session found and fixed the common blockers:
    mis-decoded every 3D CEL; Road Rash's race produced a bogus 1987x583 CEL and
    appeared to hang. The rasterizer's missing `cnt_cross > 2` x-point sort was also
    ported.
+5. **NVRAM initialization.** The CLI now loads a fresh 32 KB NVRAM volume by default
+   (and `--nvram <path>` persists it). Without it, Alone in the Dark saw zero free
+   save slots, displayed its save-space warning, and shut down. It now reaches the
+   in-game room/inventory scene.
 
 Space Ace's former frame-681 crash was a downstream consequence of the failed
 `AllocInstrument`: the player copied a decoded buffer to a null pointer, wiping the
 ARM vectors. It now runs past 10,000 frames.
 
 **Gameplay is now reachable.** Road Rash renders its race scene, Wolfenstein 3D
-reaches FLOOR 1-1 with scripted input, Lemmings reaches its title menu, and Alone in
-the Dark reaches its warning dialog. The next pass should validate sustained
-gameplay, input across all buttons, save states, screenshots, and in-game CD
-streaming.
+reaches FLOOR 1-1 with scripted input, Alone in the Dark reaches its in-game room
+and inventory, Lemmings reaches its title menu, and Space Ace plays its demo. The
+next pass should validate sustained gameplay, input across all buttons, save states,
+screenshots, and in-game CD streaming.
 
 ---
 

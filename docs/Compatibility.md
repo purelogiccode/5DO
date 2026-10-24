@@ -2,15 +2,15 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current position (2026-10-24, after the DSP and CCB fixes):** all five local corpus
-titles boot, load their own OS, render real frames, and produce non-silent DSP audio.
-Road Rash reaches its race scene, Wolfenstein 3D reaches gameplay (FLOOR 1-1),
-Lemmings reaches its title menu, Alone in the Dark reaches its warning/play dialog,
-and Space Ace plays its demo. Scripted input is now available and has been used to
+**Current position (2026-10-24, after the DSP, CCB, and NVRAM fixes):** all five local
+corpus titles boot, load their own OS, render real frames, and produce non-silent DSP
+audio. Road Rash reaches its race scene, Wolfenstein 3D reaches gameplay (FLOOR 1-1),
+Alone in the Dark reaches its in-game room/inventory scene, Lemmings reaches its
+title menu, and Space Ace plays its demo. Scripted input has been used to
 pause/unpause Road Rash, navigate the Lemmings menu, and enter Wolfenstein gameplay.
 Full gameplay validation (save states, long races, level completion) is still open.
 
-The 2026-10-24 session found two root causes:
+The 2026-10-24 session found three root causes:
 
 - **DSP immediate operands.** The loader shifted un-justified immediates left by two
   instead of zero. The AudioFolio tail program tests `Sema4Status & 8`; the extra
@@ -23,6 +23,11 @@ The 2026-10-24 session found two root causes:
   race produced a bogus 1987x583 literal CEL whose arbitrary quads took minutes to
   rasterize; with the correct order the race renders at normal speed. The fix also
   corrects the CCB fields for all 3D titles.
+- **NVRAM initialization.** The CLI never loaded an NVRAM image, so games that check
+  the NVRAM volume for save space saw a zero-filled device. Alone in the Dark
+  interpreted that as zero free slots, showed its "not enough space to save" warning,
+  and shut down. The CLI now loads a fresh 32 KB volume by default and accepts
+  `--nvram <path>` to persist it. Alone reaches its in-game room/inventory scene.
 
 Space Ace's former frame-681 runaway was a downstream consequence of the DSP
 failure: the ReadySoft player's audio task copied a decoded buffer to a null
@@ -209,7 +214,7 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 | Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass** | **Demo plays past 10,000 frames** | Non-silent DSP output | Scripted taps supported | Former frame-681 null-buffer runaway is gone; demo video renders | Demo intro 60 s, no runaway |
 | Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **Race scene reached** | Non-silent DSP output | **Works**: P toggles the pause overlay | Loads the game OS, SAudio init succeeds, 3D race renders; 30,000-frame run reaches the race | Intro FMV 60 s |
 | Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Pass** | **Gameplay (FLOOR 1-1)** | Non-silent DSP output | **Works**: scripted taps enter gameplay | Loads Sherry/Operator/FS v24.225; 10,000-frame run with input shows the in-game HUD | Intro 60 s |
-| Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Pass** | **Warning/play dialog** | DSP stops after the dialog | Scripted taps supported; dialog not yet advanced | AudioFolio init succeeds; the game shows a "Play Anyway" warning dialog | Intro/loading 60 s |
+| Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Pass** | **In-game room/inventory scene** | Non-silent DSP output | Scripted taps supported | AudioFolio init succeeds; a fresh NVRAM avoids the save-space warning and the game reaches its in-game scene | Intro/loading 60 s |
 
 `Pass` means a real game frame was rendered and verified visually. The Opera reference
 column is the bundled Windows OperaCore with the same BIOS and an ISO extracted from
@@ -250,6 +255,14 @@ per row; its arbitrary quads were pathological and the run appeared to hang.
 Parsing the fields in the reference order fixed the race and also changed Space
 Ace's 3,000-frame hash. The rasterizer's `cnt_cross > 2` x-point sort was also
 missing; it is now ported from the reference.
+
+The third root cause was the CLI's NVRAM. A zero-filled NVRAM has no valid volume
+header, so Alone in the Dark's save-space check saw zero free slots and displayed
+its "There is only enough space on your 3DO system to save X games" warning. After
+a timeout it entered its shutdown routine and spun on `VCNT`. Loading a fresh
+32 KB NVRAM volume (the same image the desktop frontend already uses) removes the
+warning and the game reaches its in-game scene. The CLI also gained `--nvram` to
+persist the image.
 
 **Opera plays the same titles past these points**, and the C# port now does too.
 The next compatibility step is input-driven gameplay validation, not another DSP or
