@@ -62,9 +62,12 @@ At 10,000 frames with input and a fresh NVRAM:
 | Wolfenstein 3D | `0x0001F014` | `0xA5A33C4D` | Gameplay (FLOOR 1-1) |
 
 The 30,000-frame Road Rash run after the CCB fix ends at `PC 0x00016194` with frame
-hash `0xE2D08131` and renders the race scene. The 30,000-frame Wolfenstein run
-without input ends at `PC 0x00013454` with hash `0x110E7DC5` (boot/idle); with
-scripted input it reaches FLOOR 1-1 at 10,000 frames.
+hash `0xE2D08131` and renders the race scene when run without NVRAM. With a fresh
+NVRAM and no input the demo eventually exits through the OS shutdown loop
+(`PC 0x0001965C`, hash `0x52346C14`); with periodic input the run stays alive at
+`PC 0x00015278` (hash `0x0EBB2EDB`) and shows the race with the pause overlay. The
+30,000-frame Wolfenstein run without input ends at `PC 0x00013454` with hash
+`0x110E7DC5` (boot/idle); with scripted input it reaches FLOOR 1-1 at 10,000 frames.
 
 Use the frame hash as the stable regression key and record the PC alongside the
 commit. The pre-NVRAM 3,000-frame hashes were (`0x85EF87FF`, `0x932C7722`,
@@ -79,10 +82,13 @@ described this address as a "halt path" were misreading the idle loop.
 
 **Where this leaves us:** all five titles boot, render, and produce non-silent DSP
 audio. Road Rash reaches its race, Wolfenstein reaches gameplay, Alone reaches its
-in-game scene, Lemmings reaches its menu, and Space Ace plays its demo. The next
-pass should use `--input-script` to complete a level/race, validate every pad
-button, exercise save states and screenshots in-game, and check sustained CD
-streaming. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md).
+in-game scene, Lemmings reaches its menu, and Space Ace plays its demo. Input is
+validated for Alone (movement/actions change the frame), Lemmings (menu navigation),
+and Road Rash (`P` toggles pause); Wolfenstein's packet is verified with
+`--pbus-trace`. The next pass should use `--input-script` to complete a level/race,
+validate every pad button, exercise save states and screenshots in-game, and check
+sustained CD streaming. See [`Status.md`](Status.md) and
+[`NextSession.md`](NextSession.md).
 
 #### CD disc-end fix (2026-10-23)
 
@@ -201,6 +207,15 @@ dotnet run --project src/ThreeDo.Cli -- trace "$env:THREEDO_DISC" `
 dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
   --bios "$env:THREEDO_BIOS" --frames 3000 `
   --input-script artifacts/input.txt --frame-out artifacts/input.png
+
+# Controller packet trace (one 16-byte PBUS packet per frame)
+dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
+  --bios "$env:THREEDO_BIOS" --frames 600 `
+  --input-script artifacts/input.txt --pbus-trace artifacts/pbus.log
+
+# CEL command/geometry trace
+dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
+  --bios "$env:THREEDO_BIOS" --frames 600 --cel-trace artifacts/cel.log
 
 # Disassemble raw little-endian ARM words from a RAM dump
 dotnet run --project src/ThreeDo.Cli -- disasm artifacts/ram.bin `

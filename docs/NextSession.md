@@ -71,17 +71,23 @@ New-Item -ItemType Directory -Force $t | Out-Null
 
 dotnet run -c Release --project src/ThreeDo.Cli -- run `
   "E:\Panasonic 3DO\Road Rash (USA).chd" --bios bios/panafz1.bin `
-  --frames 30000 --frame-out "$t\rr30k.png" --state-out "$t\rr30k.state"
+  --frames 30000 --nvram "$t\rr.ram" --frame-out "$t\rr30k.png" --state-out "$t\rr30k.state"
 ```
 
-- 30,000 frames: `PC 0x00016194`, frame hash `0xE2D08131`, race scene rendered.
-- With `P` at frame 15900 the game shows the pause overlay; `P` again unpauses.
+- 30,000 frames without input: `PC 0x0001965C`, frame hash `0x52346C14`; the demo
+  eventually exits through the OS shutdown loop (`DSP running=False`).
+- 30,000 frames with periodic input: `PC 0x00015278`, frame hash `0x0EBB2EDB`, DSP
+  running, race scene with the pause overlay.
+- `P` at frame 15,900 toggles the pause overlay; `P` again unpauses.
 - A saved state at 15,800 plus `--input-script` reproduces the race in seconds.
 
 ### Wolfenstein 3D
 
 - 10,000 frames with `--input-script input-taps.txt`: `PC 0x00052630`, frame hash
   `0xA5A33C4D`, in-game HUD `FLOOR 1-1`, `SCORE 0000000`, `ITEM 00`.
+- `--pbus-trace` confirms the Up bit (`0x88` high button byte) is delivered at the
+  expected frames. The 10,000-frame frame did not visibly respond in the tested
+  window; menu navigation and starting a fresh game are the next step.
 - Without input the title sits on boot/idle screens.
 
 ### Lemmings
@@ -94,6 +100,8 @@ dotnet run -c Release --project src/ThreeDo.Cli -- run `
 
 - With a fresh NVRAM (`--nvram`), 10,000 frames with input: `PC 0x0004B6B4`,
   frame hash `0x67FD3C6F`, in-game room/inventory scene.
+- From that state, `Up`/`Down` and `Left`/`Right`/`A`/`B`/`C` produce different
+  frame hashes and PCs, so the pad reaches the game.
 - Without a valid NVRAM the game shows its "There is only enough space..." warning
   and shuts down; that is now understood and fixed in the CLI.
 

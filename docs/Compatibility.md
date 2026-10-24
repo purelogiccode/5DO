@@ -218,8 +218,25 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 
 `Pass` means a real game frame was rendered and verified visually. The Opera reference
 column is the bundled Windows OperaCore with the same BIOS and an ISO extracted from
-the same CHD; it verifies game progress, not audio output. The DSP/CCB fixes are
+the same CHD; it verifies game progress, not audio output. The DSP/CCB/NVRAM fixes are
 described above; input results come from `--input-script` runs.
+
+### 10.1 Input validation (2026-10-24)
+
+- **Alone in the Dark:** from a 10,000-frame in-game state, `Up`/`Down` and
+  `Left`/`Right`/`A`/`B`/`C` produce different frame hashes and PCs, so the pad is
+  reaching the game and changing its state.
+- **Lemmings:** the title menu highlight moves with the D-pad and `A` activates the
+  selected item; a 12,000-frame run shows the `OPTIONS` panel.
+- **Road Rash:** `P` toggles the pause overlay at frame ~15,900. With periodic input
+  the 30,000-frame run stays alive at `PC 0x00015278` (hash `0x0EBB2EDB`, pause
+  overlay); without input the demo eventually exits through the OS shutdown loop.
+- **Wolfenstein 3D:** `--pbus-trace` shows the Up bit (`0x08` in the high button
+  byte) in the packet, so delivery works. The 10,000-frame attract/gameplay frame
+  did not visibly respond in the tested window; menu navigation still needs a
+  dedicated script.
+- **Space Ace:** scripted taps are delivered; starting the interactive game from
+  the demo loop is still to be validated.
 
 The 2026-10-23 CD fix is significant: `CdromDevice.InitCd` used FreeDO's
 double-add of the 150-frame lead-in, so the disc end reported to the CD DIPIR was

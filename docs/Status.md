@@ -30,7 +30,8 @@ This is the short, current answer to "where are we?" The detailed task list is i
   implemented.
 - **Tooling:** CLI `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks`,
   `disasm`, plus KPRINT, CD, CLIO, FIQ, RAM-write watchpoints, RAM/DSP dumps,
-  DSP-instruction rings, and CPU instruction-ring diagnostics.
+  DSP-instruction rings, CEL command/geometry traces, PBUS packet traces, CPU
+  instruction-ring diagnostics, scripted input, and NVRAM load/save.
 - **Audio:** the DSP executes in every run, including headless runs with no host
   audio sink. The AudioFolio semaphore handshake works, instrument programs run, and
   the five-title corpus produces non-silent 44.1 kHz stereo WAV output (~738 samples
@@ -160,19 +161,19 @@ corpus games playable" rather than "the v1 feature set is complete", add another
 
 ## 5. What next
 
-### P0 - unblock real gameplay
+### P0 - validate real gameplay
 
-1. **Fix the DSP `AllocInstrument` handshake.** This is the single biggest blocker:
-   Road Rash, Wolfenstein, and Alone all stop at
-   `SAudioErrAllocInstFailed` (`-6996`), and Space Ace's null-buffer crash is the
-   same failure on a different code path. Follow [`NextSession.md`](NextSession.md):
-   capture the DSP trace at the SAudio stop, compare the head/tail program loading
-   and relocations with the 3DO SDK, and differential the interpreter against
-   `opera_dsp.c` (flags, branch table, special registers, Sema4 ACK path).
-2. **Prove Space Ace is fixed by the same change.** Re-run it to at least 3,000
-   frames and confirm there is no `memcpy` to address 0 and no FIQ at `0x1C`.
-3. **Validate gameplay** in the two games that already render: input, pause, save
-   states, screenshots, CD streaming, and audio output. Record results in
+1. **Drive each title through a full gameplay loop.** The DSP `AllocInstrument`
+   handshake, the CCB field order, and the CLI NVRAM initialization are fixed. Road
+   Rash reaches its race, Wolfenstein reaches FLOOR 1-1, Alone reaches its in-game
+   room, Lemmings reaches its menu, and Space Ace plays its demo. Use
+   `--input-script` to start a level/race, move/fire/select, and record the exact
+   scripts and frame numbers in [`TestCorpus.md`](TestCorpus.md).
+2. **Validate save states and screenshots in-game.** Save/load at a gameplay frame,
+   compare the frame hash and PC before and after a 60-frame continuation, and
+   capture a screenshot for each title.
+3. **Validate audio in gameplay.** Capture WAV during a race/level, check for
+   clipping/DC offset, and compare the mix with Opera or hardware. Record results in
    [`Compatibility.md`](Compatibility.md).
 
 ### P1 - prove the 4K60 target
@@ -199,16 +200,15 @@ corpus games playable" rather than "the v1 feature set is complete", add another
 
 ## 6. Next session
 
-The next session is a focused DSP/audio debugging session, not a UI or performance
+The next session is a focused gameplay-validation session, not a UI or performance
 pass. Start with [`NextSession.md`](NextSession.md):
 
-1. Capture the DSP trace, DSP memory, and Sema4 state at the Road Rash SAudio stop.
-2. Parse `head.dsp`/`tail.dsp` from the 3DO SDK and compare their load addresses,
-   relocations, and entry points with the dumped DSP memory.
-3. Differential the interpreter against `opera_dsp.c`: flags, exact/branch table,
-   special registers, operand loading, and the Sema4 ACK path.
-4. Make one minimal fix with a DSP test, then re-run the five-title corpus and prove
-   Space Ace reaches 3,000 frames without the null-buffer `memcpy`.
+1. Use `--input-script` to start and play each title: Lemmings level, Wolfenstein
+   movement/fire, Road Rash race, Space Ace interactive demo, Alone movement.
+2. Save/load at a gameplay frame and verify the frame hash/PC roundtrip.
+3. Capture WAV during gameplay and check the audio mix.
+4. Record the exact scripts and results in [`TestCorpus.md`](TestCorpus.md) and
+   [`Compatibility.md`](Compatibility.md).
 
 Do not re-enable the null audio-sink short-circuit, do not change the XBUS DMA byte
 order (the raw `IRam` order is correct), do not port `opera_cdrom.c` wholesale, and do
@@ -233,7 +233,13 @@ dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- `
 # Boot a disc and dump the last frame
 dotnet run -c Release --project src/ThreeDo.Cli -- run `
   "E:\Panasonic 3DO\Lemmings (USA).chd" --bios bios/panafz1.bin `
-  --frames 3000 --frame-out artifacts/lemmings.png
+  --frames 3000 --nvram artifacts/lemmings.ram --frame-out artifacts/lemmings.png
+
+# Scripted input and PBUS packet trace
+dotnet run -c Release --project src/ThreeDo.Cli -- run `
+  "E:\Panasonic 3DO\Wolfenstein 3D (USA).chd" --bios bios/panafz1.bin `
+  --frames 10000 --nvram artifacts/w3d.ram --input-script artifacts/input.txt `
+  --pbus-trace artifacts/pbus.log --frame-out artifacts/w3d.png
 
 # SAudio stop with DSP trace and memory dumps
 dotnet run -c Release --project src/ThreeDo.Cli -- trace `
