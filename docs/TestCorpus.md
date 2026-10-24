@@ -41,32 +41,50 @@ formats, or a locally generated fixture. Do not convert and commit a retail disc
 
 ### 1.1 Current boot baseline
 
-The following results were recorded on 2026-10-23 with `panafz1.bin`, a Release
-build, and `run --frames 3000`. They are a regression baseline, not a full
-compatibility pass:
+The following results were recorded on 2026-10-24 after the DSP handshake fix, with
+`panafz1.bin`, a Release build, and `run --frames 3000`. They are a regression
+baseline, not a full compatibility pass:
 
 | Title | Final PC | Frame hash | Frame at 3,000 | Observation |
 |---|---|---|---|---|
-| Alone in the Dark | `0x00010520` | `286162373` | blank | Boot log stops after the audio-folio init; `SAudio channel 0 failed; error = -6996` |
-| Lemmings | `0x0012B36C` | `2469164834` | **rendered** | Reaches CyberIntro; the 3D intro renders correctly |
-| Road Rash | `0x000BA124` | `2265977137` | blank | Loads the game OS (`grafmath 21.10.504`); waits on SAudio channel 0 (`-6996`) |
-| Space Ace | `0xB323EEA0` | `1287603876` | **rendered** | ReadySoft player finds the CD-ROM and renders the demo intro; the audio task later copies to a null buffer and the CPU runs away |
-| Wolfenstein 3D | `0x00077824` | `286162373` | blank | Loads Sherry/Operator/FS v24.225; waits on SAudio channel 0 (`-6996`) |
+| Alone in the Dark | `0x000105B0` | `0x85EF87FF` | boot/logo | AudioFolio init succeeds; with input it reaches a warning/play dialog |
+| Lemmings | `0x0012B36C` | `0x932C7722` | **rendered** | Reaches CyberIntro; at 10,000 frames with input it reaches the Load/Options title menu |
+| Road Rash | `0x000B9F50` | `0xEB31636F` | **rendered** | Loads the game OS (`grafmath 21.10.504`); SAudio init succeeds; intro FMV renders; the 30,000-frame run reaches the 3D race scene |
+| Space Ace | `0x000284EC` | `0x2A9967FA` | **rendered** | ReadySoft player finds the CD-ROM, plays the demo, and passes the former frame-681 crash; the CCB fix changed this hash from `0x6AA8B441` |
+| Wolfenstein 3D | `0x0000E1B8` | `0x1A940707` | boot/logo | Loads Sherry/Operator/FS v24.225; with input it reaches gameplay (FLOOR 1-1) |
 
-The final PCs changed on 2026-10-24 when the DSP was made to execute in headless
-runs; the frame hashes did not. Use the frame hash as the stable regression key and
-record the PC alongside the commit.
+At 10,000 frames the same five titles produce:
+
+| Title | Final PC | Frame hash | Observation |
+|---|---|---|---|
+| Alone in the Dark | `0x00051170` | `0xA2F43C8A` | Warning/play dialog with input; DSP stops after the dialog |
+| Lemmings | `0x0012DA88` | `0x651ACBF4` | Title menu with input |
+| Road Rash | `0x00020640` | `0x4B3B1505` | Idle/attract screen without input; race starts later |
+| Space Ace | `0x000284EC` | `0x28E8FE0E` | Demo |
+| Wolfenstein 3D | `0x0007539C` | `0x110E7DC5` | Boot/idle screen without input |
+
+The 30,000-frame Road Rash run after the CCB fix ends at `PC 0x00016194` with frame
+hash `0xE2D08131` and renders the race scene. The 30,000-frame Wolfenstein run
+without input ends at `PC 0x00013454` with hash `0x110E7DC5` (boot/idle); with
+scripted input it reaches FLOOR 1-1 at 10,000 frames.
+
+Use the frame hash as the stable regression key and record the PC alongside the
+commit. The pre-CCB 3,000-frame hashes were
+(`0x0012B36C`/`2469164834`, `0x000BA124`/`2265977137`, `0x00077824`/`286162373`,
+`0x00010520`/`286162373`, `0x6AA8B441`/`1788923969`). The CCB fix changed Space
+Ace's rendering; the other four 3,000-frame hashes are unchanged because those
+titles have not reached a 3D CEL by that point.
 
 `PC 0x205C4`/`0x205C8` is the Portfolio **idle loop**, not a halt: VDL and timer
 interrupts continue to run and the boot log advances. Earlier baselines that
 described this address as a "halt path" were misreading the idle loop.
 
-**Where this leaves us:** two titles render real frames (Lemmings, Space Ace), two
-load their own OS and stop at audio initialization (Road Rash, Wolfenstein), and one
-fails earlier (Alone in the Dark). No title has reached gameplay; input, save
-states, audio, and CD streaming still need in-game validation. **Opera runs all four
-problem titles past these points**, so the remaining failures are in our port. See
-[`Status.md`](Status.md) and [`NextSession.md`](NextSession.md).
+**Where this leaves us:** all five titles boot, render, and produce non-silent DSP
+audio. Road Rash reaches its race, Wolfenstein reaches gameplay, Lemmings reaches
+its menu, Alone reaches its warning dialog, and Space Ace plays its demo. The next
+pass should use `--input-script` to complete a level/race, validate every pad
+button, exercise save states and screenshots in-game, and check sustained CD
+streaming. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md).
 
 #### CD disc-end fix (2026-10-23)
 
@@ -107,27 +125,29 @@ the bundled Windows OperaCore (`References/CPP_SimpleGui/Cores/OperaCore`) and t
 same `panafz1.bin` BIOS. The SimpleGui wrapper was launched with
 `--debug-messages -n <iso>`; screenshots were captured at 15/35/60 s.
 
-| Title | Opera result | Our port |
+| Title | Opera result | Our port after 2026-10-24 DSP fix |
 |---|---|---|
-| Road Rash | Intro FMV rendered for 60 s | Stops at SAudio `-6996` |
-| Wolfenstein 3D | Intro rendered for 60 s | Stops at SAudio `-6996` |
-| Alone in the Dark | Intro/loading rendered for 60 s | Stops during AudioFolio init |
-| Space Ace | Demo intro for 60 s, no runaway | Demo intro, then FIQ/runaway at frame ~681 |
+| Road Rash | Intro FMV rendered for 60 s | Intro FMV renders; DSP/audio runs; 30,000-frame run is stable |
+| Wolfenstein 3D | Intro rendered for 60 s | Boot/OS screens render; DSP/audio runs; 30,000-frame run is stable |
+| Alone in the Dark | Intro/loading rendered for 60 s | Boot/logo renders; DSP/audio runs; 10,000-frame run is stable |
+| Space Ace | Demo intro for 60 s, no runaway | Demo intro renders past 10,000 frames; no runaway |
 
 Controls:
 
-- The same ISO fails in our port, so the CHD reader is not the cause.
-- `Arm60.Ncycle = 2` changed the execution point but did not fix SAudio or Space Ace.
-- Opera's Space Ace mixer error `d52bf113` (`AF_ERR_BADFILETYPE`) is non-fatal; our
-  runaway is a separate bug.
+- The same ISO now also runs in our port, so the CHD reader is not the cause.
+- `Arm60.Ncycle = 2` changed the execution point but was not needed for the fix.
+- The DSP immediate-shift bug was the common cause of SAudio `-6996` and the Space
+  Ace null-buffer copy. See [`Compatibility.md`](Compatibility.md).
 
 The full method, reference hierarchy, and next-session plan are in
 [`ReferenceStrategy.md`](ReferenceStrategy.md) and [`NextSession.md`](NextSession.md).
 
-The DSP produces roughly 737 samples per frame (44.1 kHz at 60 fps) for all five
-titles, and WAV capture is non-empty. Audio content still needs a listening check.
-The headless core runs a 3,000-frame smoke test in roughly 4-8 seconds on the
-development machine; that is **not** a 4K presentation benchmark.
+The DSP produces roughly 738 samples per frame (44.1 kHz at 60 fps) for all five
+titles, and WAV capture is non-silent (Road Rash peaks around 8,800; Space Ace
+around 4,096 in the first 1,200 frames). Audio content still needs a listening
+check against the real hardware or Opera. The headless core runs a 3,000-frame
+smoke test in roughly 4-8 seconds on the development machine; that is **not** a
+4K presentation benchmark.
 
 #### Diagnostics used
 
@@ -169,6 +189,20 @@ dotnet run --project src/ThreeDo.Cli -- trace "$env:THREEDO_DISC" `
   --bios "$env:THREEDO_BIOS" --frames 0 --trace-frames 3000 `
   --stop-kprint "SAudio channel" --dsp-trace artifacts/dsp-trace.txt `
   --dump-dsp artifacts/dsp-stop --out artifacts/trace.txt
+
+# Scripted controller taps: frame, then a comma-separated button list.
+# Buttons are A,B,C,P,X,L,R,Up,Down,Left,Right; None releases all.
+@'
+# frame buttons
+0    None
+120  P
+130  None
+240  A
+250  None
+'@ | Set-Content artifacts/input.txt
+dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
+  --bios "$env:THREEDO_BIOS" --frames 3000 `
+  --input-script artifacts/input.txt --frame-out artifacts/input.png
 
 # Disassemble raw little-endian ARM words from a RAM dump
 dotnet run --project src/ThreeDo.Cli -- disasm artifacts/ram.bin `

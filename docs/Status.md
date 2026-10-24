@@ -31,10 +31,13 @@ This is the short, current answer to "where are we?" The detailed task list is i
 - **Tooling:** CLI `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks`,
   `disasm`, plus KPRINT, CD, CLIO, FIQ, RAM-write watchpoints, RAM/DSP dumps,
   DSP-instruction rings, and CPU instruction-ring diagnostics.
-- **Audio:** the DSP now executes in every run, including headless runs with no
-  host audio sink. Sample delivery is still gated on the sink, but resource
-  allocation and semaphore handshakes are no longer silently skipped.
-- **Tests:** 539 passing (`dotnet test -c Release`).
+- **Audio:** the DSP executes in every run, including headless runs with no host
+  audio sink. The AudioFolio semaphore handshake works, instrument programs run, and
+  the five-title corpus produces non-silent 44.1 kHz stereo WAV output (~738 samples
+  per frame).
+- **Input scripting:** the CLI accepts `--input-script <path>` with
+  `frame button[,button...]` lines for repeatable controller taps.
+- **Tests:** 550 passing (`dotnet test -c Release`).
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   A win-x64 CLI publish has been smoke-tested.
 
@@ -42,38 +45,49 @@ This is the short, current answer to "where are we?" The detailed task list is i
 
 ## 2. Real-game status (local corpus, `panafz1.bin`)
 
-The 2026-10-23 comparison used the same BIOS and an ISO extracted from the same CHD
+The 2026-10-24 comparison used the same BIOS and an ISO extracted from the same CHD
 on both sides. Opera is the bundled Windows `OperaCore` build in
 `References/CPP_SimpleGui`; it is a behavioral reference, not product code.
 
 | Title | Our C# port | Opera reference |
 |---|---|---|
-| Lemmings (USA) | **Boots and renders**; reaches CyberIntro and renders the 3D intro | Not re-tested this pass; expected to pass |
-| Space Ace (USA) | **Boots and renders**; ReadySoft player renders the demo intro, then the audio task copies to a null buffer at frame ~681 and the timer FIQ crashes on the wiped vectors | **Plays the demo intro for 60 s, no runaway** |
-| Road Rash (USA) | Loads the game OS (`grafmath 21.10.504`), then stops at SAudio channel 0 (`-6996` = `SAudioErrAllocInstFailed`) | **Renders the intro FMV for 60 s** |
-| Wolfenstein 3D (USA) | Loads Sherry/Operator/FS v24.225, then stops at SAudio channel 0 (`-6996` = `SAudioErrAllocInstFailed`) | **Renders the intro for 60 s** |
-| Alone in the Dark (USA) | Stops during AudioFolio initialization (`-6996` = `SAudioErrAllocInstFailed`) | **Renders the intro/loading sequence for 60 s** |
+| Lemmings (USA) | **Boots, renders, plays DSP audio**; reaches the Load/Options title menu; D-pad selection changes the highlighted item | Not re-tested this pass; expected to pass |
+| Space Ace (USA) | **Boots, renders, plays DSP audio**; ReadySoft player runs the demo past 10,000 frames with no runaway | **Plays the demo intro for 60 s, no runaway** |
+| Road Rash (USA) | **Boots, renders, plays DSP audio**; loads the game OS, SAudio init succeeds, and the 3D race scene renders by 30,000 frames; P toggles the pause overlay | **Renders the intro FMV for 60 s** |
+| Wolfenstein 3D (USA) | **Boots, renders, plays DSP audio**; with scripted input it reaches gameplay (FLOOR 1-1) and shows the in-game HUD | **Renders the intro for 60 s** |
+| Alone in the Dark (USA) | **Boots, renders, plays DSP audio**; reaches a warning/play dialog; the DSP stops after the dialog and input has not yet advanced it | **Renders the intro/loading sequence for 60 s** |
 
 The CD disc-end fix on 2026-10-23 is what unblocked Road Rash, Space Ace, and
 Wolfenstein: `InitCd` no longer double-adds the 150-frame lead-in, so the CD DIPIR
 accepts discs whose volume block count is less than the physical track length.
 
-**The earlier "shared FreeDO limitation" conclusion was wrong.** Opera gets past
-SAudio `-6996` and past Space Ace frame ~681, so those failures are in our port or in
-the older FreeDO behavior we copied.
+The 2026-10-24 session found and fixed the common blockers:
 
-The 2026-10-24 session made two concrete steps:
+1. **DSP execution.** `AudioSink?.PushSample(Dsp.Loop())` skipped the DSP entirely
+   when the host had no audio sink, which is the default headless path. The machine
+   now always executes the DSP; the sink only receives samples.
+2. **DSP immediate operands.** The loader shifted un-justified immediates left by
+   two instead of zero. The AudioFolio tail program's `Sema4Status & 8` test became
+   `Sema4Status & 0x20`, so the DSP always skipped the ARM command. The fix uses the
+   reference's `IMMEDIATE << (JUSTIFY & 3)`. SAudio `-6996` is gone and the DSP now
+   runs instrument code.
+3. **DSP multiplier rounding.** MUXB=3 now masks the product
+   (`(MULT1 * (Y >> 15)) & ~1`) instead of masking the shifted accumulator first.
+4. **CCB field order.** The parser now reads position, size, perspective, and
+   pixel-processor control before `PRE0`/`PRE1`, matching FreeDO. The old order
+   mis-decoded every 3D CEL; Road Rash's race produced a bogus 1987x583 CEL and
+   appeared to hang. The rasterizer's missing `cnt_cross > 2` x-point sort was also
+   ported.
 
-1. **Fixed DSP execution.** `AudioSink?.PushSample(Dsp.Loop())` skipped the DSP
-   entirely when the host had no audio sink, which is the default headless path.
-   The machine now always executes the DSP; the sink only receives samples.
-2. **Decoded the failures.** SAudio `-6996` is
-   `SAudioErrAllocInstFailed`; the raw AudioFolio error is discarded by the SDK
-   subscriber. Space Ace's runaway is the player's audio task copying to a null
-   `[audioState+0x9C]` after its mixer/instrument setup failed. Both point at the
-   DSP `AllocInstrument` handshake. With the DSP now executing, the ARM command is
-   still unacknowledged (`Sema4Status=0x8`, `Sema4Data=0`), and the DSP trace shows
-   a repeating sample loop that never reads `0xED` or writes `0x3EC`.
+Space Ace's former frame-681 crash was a downstream consequence of the failed
+`AllocInstrument`: the player copied a decoded buffer to a null pointer, wiping the
+ARM vectors. It now runs past 10,000 frames.
+
+**Gameplay is now reachable.** Road Rash renders its race scene, Wolfenstein 3D
+reaches FLOOR 1-1 with scripted input, Lemmings reaches its title menu, and Alone in
+the Dark reaches its warning dialog. The next pass should validate sustained
+gameplay, input across all buttons, save states, screenshots, and in-game CD
+streaming.
 
 ---
 
