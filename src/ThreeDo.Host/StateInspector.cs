@@ -88,4 +88,111 @@ public static class StateInspector
 
         return new StateInfo(version, emulatorVersion, armClock, fixMode, biosHash, discHash, frames, sections);
     }
+
+    /// <summary>
+    /// Reads only the header and section table without loading section payloads.
+    /// </summary>
+    /// <remarks>
+    /// This is the fast path for save-slot metadata: it seeks over the payloads and does not
+    /// validate their CRCs. Use <see cref="Read(Stream)"/> when full validation is required.
+    /// </remarks>
+    /// <param name="path">State file path.</param>
+    /// <returns>The parsed header and section table.</returns>
+    /// <exception cref="InvalidStateException">Thrown when the header or section table is invalid.</exception>
+    public static StateInfo ReadHeader(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        using var stream = File.OpenRead(path);
+        return ReadHeader(stream);
+    }
+
+    /// <summary>Reads only the header and section table from a seekable stream.</summary>
+    /// <param name="stream">Seekable state stream.</param>
+    /// <returns>The parsed header and section table.</returns>
+    /// <exception cref="InvalidStateException">Thrown when the header or section table is invalid.</exception>
+    public static StateInfo ReadHeader(Stream stream)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+        if (!stream.CanSeek)
+        {
+            return Read(stream);
+        }
+
+        using var reader = new BinaryReader(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+        if (stream.Length - stream.Position < 8)
+        {
+            throw new InvalidStateException("The save state is truncated.");
+        }
+
+        if (reader.ReadUInt32() != StateFormat.Magic)
+        {
+            throw new InvalidStateException("The save state has an invalid magic value.");
+        }
+
+        var version = reader.ReadUInt16();
+        if (version != StateFormat.Version)
+        {
+            throw new InvalidStateException($"Unsupported save-state version {version}.");
+        }
+
+        _ = reader.ReadUInt16();
+        var emulatorVersion = ReadString(reader);
+        var armClock = reader.ReadInt32();
+        var fixMode = reader.ReadUInt32();
+        var biosHash = ReadString(reader);
+        var discHash = ReadString(reader);
+        var frames = reader.ReadInt64();
+
+        var sections = new List<StateSectionInfo>();
+        while (stream.Position < stream.Length)
+        {
+            if (stream.Length - stream.Position < StateFormat.SectionHeaderSize)
+            {
+                throw new InvalidStateException("The save state is truncated in the section table.");
+            }
+
+            var id = reader.ReadUInt32();
+            var sectionVersion = reader.ReadUInt16();
+            _ = reader.ReadUInt16();
+            var length = reader.ReadUInt32();
+            if (length > int.MaxValue)
+            {
+                throw new InvalidStateException($"Section 0x{id:X8} has an invalid payload length.");
+            }
+
+            if (stream.Length - stream.Position < length + StateFormat.SectionCrcSize)
+            {
+                throw new InvalidStateException($"Section 0x{id:X8} is truncated.");
+            }
+
+            stream.Seek(length + StateFormat.SectionCrcSize, SeekOrigin.Current);
+            sections.Add(new StateSectionInfo(id, sectionVersion, (int)length));
+        }
+
+        return new StateInfo(version, emulatorVersion, armClock, fixMode, biosHash, discHash, frames, sections);
+    }
+
+    private static string ReadString(BinaryReader reader)
+    {
+        var length = reader.ReadInt32();
+        if (length < 0)
+        {
+            throw new InvalidStateException("A state string has a negative length.");
+        }
+
+        var bytes = reader.ReadBytes(length);
+        if (bytes.Length != length)
+        {
+            throw new InvalidStateException("The save state is truncated in a header string.");
+        }
+
+        try
+        {
+            return new System.Text.UTF8Encoding(false, true).GetString(bytes);
+        }
+        catch (System.Text.DecoderFallbackException exception)
+        {
+            throw new InvalidStateException("A state string is not valid UTF-8.", exception);
+        }
+    }
 }

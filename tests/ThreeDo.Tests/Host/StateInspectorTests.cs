@@ -35,6 +35,29 @@ public sealed class StateInspectorTests
     }
 
     [Fact]
+    public void ReadHeader_MatchesTheFullReader()
+    {
+        var machine = CreateMachine();
+        machine.RunFrames(3);
+        using var stream = new MemoryStream();
+        machine.SaveState(stream, "disc-hash");
+
+        stream.Position = 0;
+        var full = StateInspector.Read(stream);
+        stream.Position = 0;
+        var header = StateInspector.ReadHeader(stream);
+
+        Assert.Equal(full.Version, header.Version);
+        Assert.Equal(full.EmulatorVersion, header.EmulatorVersion);
+        Assert.Equal(full.ArmClock, header.ArmClock);
+        Assert.Equal(full.FixMode, header.FixMode);
+        Assert.Equal(full.BiosHash, header.BiosHash);
+        Assert.Equal(full.DiscHash, header.DiscHash);
+        Assert.Equal(full.FramesExecuted, header.FramesExecuted);
+        Assert.Equal(full.Sections, header.Sections);
+    }
+
+    [Fact]
     public void Inspect_RejectsInvalidFile()
     {
         var path = Path.Combine(Path.GetTempPath(), $"threedo-invalid-{Guid.NewGuid():N}.tdos");

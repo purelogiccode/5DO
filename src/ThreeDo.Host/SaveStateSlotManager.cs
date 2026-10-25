@@ -212,7 +212,7 @@ public sealed class SaveStateSlotManager
         var metadata = ReadMetadata(slot);
         try
         {
-            var state = StateInspector.Read(statePath);
+            var state = StateInspector.ReadHeader(statePath);
             return new SaveStateSlotInfo(
                 slot,
                 statePath,
