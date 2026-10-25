@@ -945,7 +945,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - State metadata (game, BIOS, timestamp, thumbnail optional).
   - `SaveStateSlotManager` provides ten numbered slots with atomic state files and JSON sidecars (game name, game ID, timestamp, frames); the shell has Save/Load plus previous/next slot buttons, a Slots window that lists/saves/loads/deletes slots, and persists the current slot. Screenshots are PNG named `<game>-<timestamp>-f<frames>.png` from GL readback or the CPU frame. Thumbnails remain.
 - [~] **M9.9 Logs/About.**
-  - About dialog with version, license notice, and attribution is implemented.
+  - About dialog with version, renderer API/capabilities, current machine/disc/fix state, paths, license notice, and attribution is implemented.
   - In-app log viewer with category filter and clickable links remain.
 - [~] **M9.10 ViewModel tests.**
   - Settings roundtrip, library scanning, frame mailbox, input mapping.
