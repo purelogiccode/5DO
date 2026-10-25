@@ -67,6 +67,7 @@ public partial class MainWindow : Window, IDisposable
 
         _nvramStore = new NvramStore(Path.Combine(AppSettingsStore.DefaultDirectory, "nvram.ram"));
         HighResCheck.IsChecked = _settings.HighResolution;
+        OverlayPanel.IsVisible = _settings.ShowOverlay;
         Video.Settings = _settings.ToRendererSettings();
         Video.OpenGlReady += OnOpenGlReady;
         Video.OpenGlFailed += OnOpenGlFailed;
@@ -401,6 +402,7 @@ public partial class MainWindow : Window, IDisposable
 
         AppSettingsStore.Save(_settings);
         Video.Settings = _settings.ToRendererSettings();
+        OverlayPanel.IsVisible = _settings.ShowOverlay;
         if (_cpuVideo is not null)
         {
             _cpuVideo.Settings = _settings.ToRendererSettings();
@@ -522,6 +524,11 @@ public partial class MainWindow : Window, IDisposable
     {
         StatusText.Text =
             $"Frame {status.Frames}  PC 0x{status.ProgramCounter:x8}  cycles {status.Cycles}  {status.FramesPerSecond:F1} fps";
+        if (OverlayPanel.IsVisible)
+        {
+            OverlayText.Text =
+                $"{status.FramesPerSecond,5:F1} fps  {status.Cycles,6} cyc  PC 0x{status.ProgramCounter:x8}";
+        }
     }
 
     private void OnOpenGlReady(RendererCapabilities capabilities)

@@ -15,6 +15,10 @@
         <Grid Grid.Row="0">
             <ctrl:VideoSurface x:Name="Video" />
             <Image x:Name="CpuVideo" Stretch="Uniform" IsVisible="False" />
+            <Border x:Name="OverlayPanel" IsVisible="False" HorizontalAlignment="Left" VerticalAlignment="Top"
+                    Margin="8" Padding="6,3" Background="#A0000000" CornerRadius="3">
+                <TextBlock x:Name="OverlayText" Foreground="#E0E0E0" FontFamily="Consolas,monospace" />
+            </Border>
         </Grid>
 
         <Border Grid.Row="1" Padding="8" Background="#202020">

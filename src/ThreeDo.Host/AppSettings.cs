@@ -60,6 +60,9 @@ public sealed class AppSettings
     /// <summary>Gets or sets a value indicating whether the OpenGL renderer is preferred.</summary>
     public bool PreferOpenGl { get; set; } = true;
 
+    /// <summary>Gets or sets a value indicating whether the FPS/status overlay is shown over the video.</summary>
+    public bool ShowOverlay { get; set; }
+
     /// <summary>Gets or sets a value indicating whether the opt-in 640x480 high-resolution mode is used.</summary>
     public bool HighResolution { get; set; }
 
@@ -132,6 +135,7 @@ public sealed class AppSettings
             Aspect = Aspect,
             Vsync = Vsync,
             IntegerScale = IntegerScale,
+            ShowOverlay = ShowOverlay,
         };
         settings.Validate();
         return settings;

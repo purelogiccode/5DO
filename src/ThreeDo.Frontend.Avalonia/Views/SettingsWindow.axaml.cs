@@ -39,6 +39,7 @@ public partial class SettingsWindow : Window
         AspectCombo.SelectedItem = settings.Aspect;
         IntegerCheck.IsChecked = settings.IntegerScale;
         VsyncCheck.IsChecked = settings.Vsync;
+        OverlayCheck.IsChecked = settings.ShowOverlay;
         AudioCheck.IsChecked = settings.AudioEnabled;
         VolumeSlider.Value = settings.Volume;
         AutoFixesCheck.IsChecked = settings.AutoGameFixes;
@@ -63,6 +64,7 @@ public partial class SettingsWindow : Window
         settings.Aspect = AspectCombo.SelectedItem is AspectMode aspect ? aspect : AspectMode.FourThree;
         settings.IntegerScale = IntegerCheck.IsChecked == true;
         settings.Vsync = VsyncCheck.IsChecked == true;
+        settings.ShowOverlay = OverlayCheck.IsChecked == true;
         settings.AudioEnabled = AudioCheck.IsChecked == true;
         settings.Volume = (float)VolumeSlider.Value;
         settings.AutoGameFixes = AutoFixesCheck.IsChecked == true;
