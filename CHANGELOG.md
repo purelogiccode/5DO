@@ -65,6 +65,8 @@ still change.
 - Alone in the Dark's intro no longer stays static forever: A every 300 frames
   advances the man-at-desk cutscene to the room/mansion/title scenes. The media
   pulse alone does not advance the intro.
+- Wolfenstein's long fresh-game load advances with A every 300 frames through
+  character select to FLOOR 1-1 at 64,000 frames.
 
 ## Earlier work
 

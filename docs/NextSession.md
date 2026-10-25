@@ -308,6 +308,9 @@ missing and corrected the Road Rash diagnosis.
   polling. The media pulse alone does not advance it, but A every 300 frames moves
   the man-at-desk cutscene to the room/mansion/title scenes (29,200 frames,
   `PC 0x00020640`, hash `0x62304BCF`). A blind pulse is not yet a stable room.
+- **Wolfenstein fresh-game load.** `w3d-loadlong.state` + A every 300 frames
+  advances the static load through character select to FLOOR 1-1 at 64,000
+  (`PC 0x00069F3C`, hash `0x2F5B9864`); no input stays at `0x07586A88`.
 - **Road Rash wait state and the media-access fix.** The 42,000-frame state and the
   92,000/100,000-frame state were static, ignored every button combination, and
   showed only READ_ID polls. The CD device now sets poll bit `0x40` after two

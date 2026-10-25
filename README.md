@@ -43,7 +43,8 @@ own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio.
   wait: those screens now advance to `BUSTED`, the race-select menu, and a new race.
   The autopilot still needs start-line handling for a complete race loop.
 - **Wolfenstein 3D** starts a fresh game at FLOOR 1-1 from its preview menu, walks,
-  turns, fires, and roundtrips a live gameplay save state.
+  turns, fires, and roundtrips a live gameplay save state. A pulses every 300 frames
+  also advance the long fresh-game load through character select to FLOOR 1-1.
 - **Alone in the Dark** reaches its in-game staircase/room with an upright character;
   the D-pad/A open the Begin/Resume menu and start the intro scene. A pulses every
   300 frames leave the intro's static READ_ID-only wait and cycle the

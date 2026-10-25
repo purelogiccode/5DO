@@ -562,6 +562,10 @@ Evidence:
   a further 10,000 frames ends at 39,200 (`PC 0x0008BCA4`, hash `0xD1FABFD3`).
   A blind A pulse is enough to leave the wait but not yet enough to reach a
   stable gameplay room.
+- Wolfenstein's fresh-game load (`w3d-loadlong.state`, 54,000 frames) also stays
+  static with no input (`0x07586A88`). A every 300 frames advances to the
+  character-select screen and FLOOR 1-1 at 64,000 (`PC 0x00069F3C`, hash
+  `0x2F5B9864`). The media pulse alone does not advance it; A is required.
 
 The 91,000-frame autopilot chain now reaches a rider-run/BUSTED transition
 (`PC 0x00093AF4`, hash `0x70E1ED8E`) instead of the old frozen `0x02ABE78E`
