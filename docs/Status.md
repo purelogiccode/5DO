@@ -42,8 +42,8 @@ This is the short, current answer to "where are we?" The detailed task list is i
   An optional FPS/status overlay is available in the settings dialog.
 - **Desktop shell:** the game library scans configured folders through the 4DO
   database and opens the selected disc; the settings dialog edits video, audio,
-  emulation, and paths; player-1 keyboard bindings can be captured with automatic
-  conflict removal and reset-to-defaults; save states use ten numbered slots with
+  emulation, and paths; keyboard bindings for all six players can be captured with
+  automatic conflict removal and reset-to-defaults; save states use ten numbered slots with
   next/previous, a list/save/load/delete window, and JSON metadata; screenshots are
   PNG files named by game, time, and frame. Per-game 4DO fix flags are applied automatically when a disc opens;
   explicit masks can be set in the settings dialog.
@@ -69,7 +69,7 @@ This is the short, current answer to "where are we?" The detailed task list is i
   `frame button[,button...]` lines for repeatable controller taps. Input has been
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene and menu), Lemmings (menu and passcode entry), and Space Ace (P/X).
-- **Tests:** 637 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 638 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips, and

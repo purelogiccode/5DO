@@ -9,10 +9,10 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 **Current position (2026-10-25, seventh pass):** M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **637 tests pass.** The shell now has fullscreen, GL screenshots, an
+prototype. **638 tests pass.** The shell now has fullscreen, GL screenshots, an
 About dialog, a Hi-Res toggle, automatic CPU fallback when OpenGL init or the
 context fails, a game library browser, a settings dialog (video/audio/emulation/
-paths), player-1 keyboard binding capture, ten numbered save slots, PNG screenshots
+paths), six-player keyboard binding capture, ten numbered save slots, PNG screenshots
 named by game/frame/time, and an optional FPS/status overlay. The CLI applies the
 4DO per-game fixes automatically and accepts `--fix-mode`/`--no-game-fixes`
 overrides. The benchmark reports p50/p95/p99 and zero steady-state allocations;
@@ -158,7 +158,7 @@ Desktop app:
 dotnet run --project src/ThreeDo.Frontend.Avalonia
 ```
 
-Use **Open BIOS** and **Open Disc**, then **Play**. The default keyboard bindings are the arrow keys, Z (A), X (B), C (C), A (L), S (R), Enter (P), and Backspace (X). **Save State**/**Load State** use the selected slot; the **<**/**>** buttons change slots. **Screenshot** writes a PNG from the OpenGL output (or the CPU frame when GL is unavailable), named by game, time, and frame. **Library** scans configured folders through the 4DO database, **Settings** edits video/audio/emulation/paths, and **Input** captures player-1 keyboard bindings. **Fullscreen** toggles F11/Escape; **Hi-Res** restarts the machine in the opt-in 640x480 mode. Settings persist under the user local application data folder, including per-game fix-mode overrides.
+Use **Open BIOS** and **Open Disc**, then **Play**. The default keyboard bindings are the arrow keys, Z (A), X (B), C (C), A (L), S (R), Enter (P), and Backspace (X). **Save State**/**Load State** use the selected slot; the **<**/**>** buttons change slots. **Screenshot** writes a PNG from the OpenGL output (or the CPU frame when GL is unavailable), named by game, time, and frame. **Library** scans configured folders through the 4DO database, **Settings** edits video/audio/emulation/paths, and **Input** captures keyboard bindings for all six players. **Fullscreen** toggles F11/Escape; **Hi-Res** restarts the machine in the opt-in 640x480 mode. Settings persist under the user local application data folder, including per-game fix-mode overrides.
 
 ## Legal and attribution
 
