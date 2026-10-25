@@ -19,9 +19,10 @@ still change.
 - Alone in the Dark Begin/Resume menu and intro path; the intro is a static
   READ_ID-only wait.
 - A `ScriptedPbusSource` test covering `B+Left` as two button bytes.
-- `--autopilot road` pulses A through long-static, low-coverage, frozen-line, or
-  CD-load states and reports `autopilotMenuAdvance` in `run --json`. This gets
-  through the `BUSTED`/race-select flow to a new race.
+- `--autopilot road` pulses A/releases throttle through long-static,
+  low-coverage, CD-load, and 180-frame restart-stuck states and reports
+  `autopilotMenuAdvance` in `run --json`. This gets through `GAME LOADING`/`Get
+  ready`, starts a new race at 80k, and cycles race/wreck/menu to 100k.
 - `CdromDevice.LastReadFrame` for host load probes.
 
 - Desktop gamepad backend: Windows XInput and Linux evdev, with hot-plugging,

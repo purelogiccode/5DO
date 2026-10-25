@@ -104,6 +104,7 @@ public sealed class RoadRashAutopilot
     private int _lowCoverageFrames;
     private int _crashRestartMotionFrames;
     private long _crashRestartUntil;
+    private long _crashRestartStart;
     private long _menuAdvanceUntil;
     private long _menuModeUntil;
     private long _lastMenuAdvanceFrame = -MenuAdvanceIntervalFrames;
@@ -862,10 +863,13 @@ public sealed class RoadRashAutopilot
         }
 
         var sceneStatic = Math.Max(_menuStaticFrames, _speedStaticFrames);
+        var restartStuck = CrashRestart
+            && frameNumber - _crashRestartStart >= CrashRestartFrames;
         var menuSignal = sceneStatic >= MenuAdvanceStaticFrames
             || _loadFrames >= MenuAdvanceStaticFrames
-            || _lowCoverageFrames >= MenuAdvanceStaticFrames;
-        var menuInterval = sceneStatic >= MenuAdvanceStaticFrames
+            || _lowCoverageFrames >= MenuAdvanceStaticFrames
+            || restartStuck;
+        var menuInterval = !restartStuck && sceneStatic >= MenuAdvanceStaticFrames
             ? MenuAdvanceIntervalFrames
             : MenuAdvancePulseFrames;
         if (EnableMenuAdvance
@@ -897,6 +901,7 @@ public sealed class RoadRashAutopilot
             && _staticFrames >= StoppedTriggerFrames)
         {
             _crashRestartUntil = frameNumber + CrashRestartFrames;
+            _crashRestartStart = frameNumber;
             _staticFrames = 0;
             _crashRestartMotionFrames = 0;
             CrashRestart = true;

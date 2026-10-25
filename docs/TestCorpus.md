@@ -566,6 +566,13 @@ Evidence:
   static with no input (`0x07586A88`). A every 300 frames advances to the
   character-select screen and FLOOR 1-1 at 64,000 (`PC 0x00069F3C`, hash
   `0x2F5B9864`). The media pulse alone does not advance it; A is required.
+- **Road Rash race/menu cycling.** From `rr-fix-60k.state`, the autopilot now
+  passes the `GAME LOADING`/`Get ready` screen and is racing at 80,000
+  (`PC 0x00092FF8`, hash `0x1074EF3F`). A further 20,000 frames cycle through
+  race -> wreck/menu -> new race several times and end at 100,000
+  (`PC 0x0008214C`, hash `0x0D46CF56`) with the bike on a sidewalk, not a
+  finished race. The `restartStuck` rule (release throttle and pulse A after
+  180 restart frames) is what gets through the start-line screens.
 
 The 91,000-frame autopilot chain now reaches a rider-run/BUSTED transition
 (`PC 0x00093AF4`, hash `0x70E1ED8E`) instead of the old frozen `0x02ABE78E`

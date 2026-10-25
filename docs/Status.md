@@ -99,7 +99,7 @@ on both sides. Opera is the bundled Windows `OperaCore` build in
 |---|---|---|
 | Lemmings (USA) | **Boots, renders, plays DSP audio**; reaches the title screen and the passcode screen; with `--high-res` the 640x480 title renders all four buttons and the full logo, matching the reference. The passcode screen uses A to type, B to confirm, auto-confirms at ten letters, and a 15-frame D-pad hold moves one key. Fun 4 gameplay roundtrips; 600-frame WAV evidence in `TestCorpus.md` 1.5a | Not re-tested this pass; expected to pass |
 | Space Ace (USA) | **Boots, renders, plays DSP audio**; ReadySoft player runs the animated demo past 12,000 frames. The interactive path is now validated: X returns to the title/menu, A starts the scene; the 15,000-frame state roundtrips (`0x7E780D93` -> `PC 0x000284EC`, `0x70B16422` twice) and the gameplay WAV is non-silent | **Plays the demo intro for 60 s, no runaway** |
-| Road Rash (USA) | **Boots, renders, plays DSP audio**; the 3D race renders correctly and the attract race runs past 60,000 frames with no allocator error; B accelerates, A brakes, the D-pad steers, C attacks, and P pauses. The CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait: those screens now advance to `BUSTED`, the race-select menu, and a new race (e.g. 113,000 frames, `PC 0x0007DCBC`, hash `0x277CCED7`). The autopilot still needs start-line handling for a full race loop | **Renders the intro FMV, then a race** |
+| Road Rash (USA) | **Boots, renders, plays DSP audio**; the 3D race renders correctly and the attract race runs past 60,000 frames with no allocator error; B accelerates, A brakes, the D-pad steers, C attacks, and P pauses. The CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait: those screens advance to `BUSTED`, the race-select menu, and a new race. The autopilot now passes `GAME LOADING`/`Get ready` and cycles race -> wreck -> menu -> new race to 100k, but still does not finish a full 5.5-mile race | **Renders the intro FMV, then a race** |
 | Wolfenstein 3D (USA) | **Boots, renders, plays DSP audio**; A opens the preview menu, selecting a level starts a fresh game (FLOOR 1-1), the player can walk/turn/fire, and save/load roundtrips in-game (`0xF568EBCA` -> `PC 0x000782B8` twice); 600-frame WAV evidence captured. The fresh-game load advances with A pulses (character select -> FLOOR 1-1 at 64,000, hash `0x2F5B9864`) | **Renders the intro for 60 s** |
 | Alone in the Dark (USA) | **Boots, renders, plays DSP audio**; reaches the in-game staircase/room with an upright character; the Up/Left/A/Down sequence reaches the Begin/Resume menu, A starts the intro scene, and the state roundtrips. A pulses every 300 frames leave the intro wait and cycle the room/mansion/title scenes | **Renders the intro/loading for 60 s** |
 
@@ -161,8 +161,10 @@ The CD device now raises a media-access event (`0x40`) after two consecutive
 READ_ID polls with an idle gap; this advances those screens to `BUSTED`, race
 select, and a new race. `run --json` exposes `cdStatus`/`cdPoll`, and the autopilot
 reports `autopilotMenuAdvance` while it pulses A through the post-race flow. The
-five 3,000-frame hashes are unchanged. The remaining Road Rash work is the new
-race start/right-edge pin, not the CD wait.
+five 3,000-frame hashes are unchanged. From the 60k state the autopilot now starts
+a new race at 80k and cycles race -> wreck -> menu -> new race to 100k; the
+remaining Road Rash work is finishing a full race without wrecking, not the CD
+wait.
 
 ---
 

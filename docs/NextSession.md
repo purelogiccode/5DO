@@ -319,10 +319,13 @@ missing and corrected the Road Rash diagnosis.
   `BUSTED`, race select, and a new race. The five 3,000-frame hashes are unchanged.
   The old 91k hash `0x02ABE78E` was a frozen presentation; the current chain reaches
   a rider-run/BUSTED transition at `PC 0x00093AF4`, hash `0x70E1ED8E`.
-- **Autopilot menu advance.** `--autopilot road` now pulses A during long-static,
-  low-coverage (`<0.5`), frozen-line, or CD-load states and reports
-  `autopilotMenuAdvance` in `run --json`. This gets through the BUSTED/race-select
-  flow; the remaining problem is the new race start/right-edge pin.
+- **Autopilot menu advance.** `--autopilot road` now pulses A/releases throttle
+  during long-static, low-coverage (`<0.5`), CD-load, and 180-frame restart-stuck
+  states, and reports `autopilotMenuAdvance` in `run --json`. It passes the
+  `GAME LOADING`/`Get ready` screen and starts a new race at 80,000
+  (`PC 0x00092FF8`, hash `0x1074EF3F`), then cycles race -> wreck -> menu -> new
+  race to 100,000 (`PC 0x0008214C`, hash `0x0D46CF56`). The remaining problem is
+  finishing a full race without wrecking.
 - **Tests.** Added `ScriptedPbusSource`/`InputScript.Offset` tests, CD media-access
   tests, and an autopilot menu-advance test. 667 tests pass; format is clean.
 
@@ -488,10 +491,12 @@ changing the DSP reload value. The 18,000-frame Wolfenstein gameplay capture is
   fixes the old ~42k/~92k READ_ID wait: those screens now advance to `BUSTED`,
   race select, and a new race. The autopilot also pulses A during long-static,
   low-coverage, frozen-line, or CD-load states (`autopilotMenuAdvance`).
-  The 5.5-mile race is still not finished: the autopilot can pin at the **new
-  race start/right edge** after the race-select flow. The previous "terminal
-  wall pin ~34,000" was the `BUSTED` screen, and the old "~40,000 right-sidewalk
-  wreck" was the CD wait, now fixed. Next: start-line handling, not CD work.
+  The 5.5-mile race is still not finished: from the 60k state the autopilot
+  passes `GAME LOADING`/`Get ready` and starts a new race at 80k, then cycles
+  race -> wreck -> menu -> new race to 100k. Next: finish a full race without
+  wrecking, not CD work. The previous "terminal wall pin ~34,000" was the
+  `BUSTED` screen, and the old "~40,000 right-sidewalk wreck" was the CD wait,
+  now fixed.
 - Space Ace: **done.** `X` at 12,000 returns to the menu; `A` at 12,200 starts
   the interactive scene. The 15,000-frame state roundtrips (`0x7E780D93` -> two
   120-frame continuations at `PC 0x000284EC`, `0x70B16422`) and a gameplay WAV

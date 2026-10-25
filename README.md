@@ -41,7 +41,8 @@ own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio.
 - **Road Rash** renders its 3D race correctly (matching the Opera reference) and runs
   past 60,000 frames. A CD media-access pulse fixes the old ~42k/~92k READ_ID-only
   wait: those screens now advance to `BUSTED`, the race-select menu, and a new race.
-  The autopilot still needs start-line handling for a complete race loop.
+  The autopilot passes `GAME LOADING`/`Get ready` and cycles race -> wreck -> menu ->
+  new race to 100k, but still does not finish a full 5.5-mile race.
 - **Wolfenstein 3D** starts a fresh game at FLOOR 1-1 from its preview menu, walks,
   turns, fires, and roundtrips a live gameplay save state. A pulses every 300 frames
   also advance the long fresh-game load through character select to FLOOR 1-1.
@@ -62,12 +63,10 @@ Road Rash's VRAM allocator and drew Alone horizontally, and VDLP bitmap widths f
 384/512/640/1024-wide modes. The opt-in 640x480 high-resolution CEL/VDLP path was
 added; save-state loads restore the VDL picture immediately.
 
-Remaining major work: finish the Road Rash race loop by handling the new race
-start/right-edge pin; re-check Alone's intro and Wolfenstein's fresh-game load
-with the CD media-access fix; script a pure D-pad Lemmings passcode and an Alone
-movement/inventory sequence; validate GPU 4K/p99 and GLES/ANGLE/Pi/DPI; validate
-Tier B prefetch; xBR/HQx and UI polish; arm64/installers; and the
-legal/attribution review. Per-title save-state, PNG, and WAV evidence is recorded
+Remaining major work: finish a full Road Rash race without wrecking; script a pure
+D-pad Lemmings passcode and an Alone movement/inventory sequence; validate GPU
+4K/p99 and GLES/ANGLE/Pi/DPI; validate Tier B prefetch; xBR/HQx and UI polish;
+arm64/installers; and the legal/attribution review. Per-title save-state, PNG, and WAV evidence is recorded
 in [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. See
 [`docs/Status.md`](docs/Status.md) for the completion estimate and
 [`docs/NextSession.md`](docs/NextSession.md) for the next-session plan. The
