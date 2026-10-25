@@ -449,14 +449,14 @@ public partial class MainWindow : Window, IDisposable
 
     private async void OnInputBindings(object? sender, RoutedEventArgs e)
     {
-        var window = new InputBindingsWindow(_settings.Input.Players[0]);
-        var profile = await window.ShowDialog<PlayerProfile?>(this);
+        var window = new InputBindingsWindow(_settings.Input);
+        var profile = await window.ShowDialog<InputProfile?>(this);
         if (profile is null)
         {
             return;
         }
 
-        _settings.Input.Players[0] = profile;
+        _settings.Input = profile;
         AppSettingsStore.Save(_settings);
         _input = new InputManager(_settings.Input);
         if (_machine is not null)

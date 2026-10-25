@@ -63,6 +63,26 @@ public sealed class KeyboardBindingEditorTests
     }
 
     [Fact]
+    public void InputProfile_CloneIsDeep()
+    {
+        var profile = InputProfile.CreateDefault();
+        profile.Players[0].Keyboard["Q"] = ControllerButton.C;
+        profile.Hotkeys["SaveState"] = "F6";
+
+        var clone = profile.Clone();
+        clone.Players[0].Keyboard["Q"] = ControllerButton.A;
+        clone.Players[1].Keyboard["W"] = ControllerButton.B;
+        clone.Hotkeys["SaveState"] = "F7";
+
+        Assert.Equal(ControllerButton.C, profile.Players[0].Keyboard["Q"]);
+        Assert.False(profile.Players[1].Keyboard.ContainsKey("W"));
+        Assert.Equal("F6", profile.Hotkeys["SaveState"]);
+        Assert.Equal(ControllerButton.A, clone.Players[0].Keyboard["Q"]);
+        Assert.Equal(ControllerButton.B, clone.Players[1].Keyboard["W"]);
+        Assert.Equal("F7", clone.Hotkeys["SaveState"]);
+    }
+
+    [Fact]
     public void ControllerButtons_ContainsEveryGamepadButtonOnce()
     {
         var buttons = KeyboardBindingEditor.ControllerButtons;

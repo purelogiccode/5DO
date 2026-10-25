@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -9,28 +9,33 @@ using ThreeDo.Input;
 namespace ThreeDo.Frontend.Avalonia.Views;
 
 /// <summary>
-/// Captures keyboard bindings for player 1 and returns the edited profile.
+/// Captures keyboard bindings for the six player profiles and returns the edited profile.
 /// </summary>
 public partial class InputBindingsWindow : Window
 {
-    private readonly PlayerProfile _profile;
-    private readonly KeyboardBindingEditor _editor;
+    private readonly InputProfile _profile;
+    private KeyboardBindingEditor _editor;
+    private int _playerIndex;
     private ControllerButton? _pendingButton;
+    private bool _initializing = true;
 
-    /// <summary>Creates the dialog with the default player profile.</summary>
+    /// <summary>Creates the dialog with the default input profile.</summary>
     public InputBindingsWindow()
-        : this(PlayerProfile.CreateDefault(1))
+        : this(InputProfile.CreateDefault())
     {
     }
 
-    /// <summary>Creates the dialog for a profile.</summary>
+    /// <summary>Creates the dialog for an input profile. The profile is copied.</summary>
     /// <param name="profile">Profile to edit.</param>
-    public InputBindingsWindow(PlayerProfile profile)
+    public InputBindingsWindow(InputProfile profile)
     {
         ArgumentNullException.ThrowIfNull(profile);
         InitializeComponent();
-        _profile = profile;
-        _editor = new KeyboardBindingEditor(profile);
+        _profile = profile.Clone();
+        _editor = new KeyboardBindingEditor(_profile.Players[0]);
+        PlayerCombo.ItemsSource = Enumerable.Range(1, _profile.Players.Length).ToArray();
+        PlayerCombo.SelectedIndex = 0;
+        _initializing = false;
         RefreshRows();
     }
 
@@ -62,9 +67,24 @@ public partial class InputBindingsWindow : Window
         var key = e.Key.ToString();
         _editor.Rebind(button, key);
         _pendingButton = null;
-        StatusText.Text = $"Bound {button} to {key}.";
+        StatusText.Text = $"Bound player {_playerIndex + 1} {button} to {key}.";
         RefreshRows();
         e.Handled = true;
+    }
+
+    private void OnPlayerChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_initializing || PlayerCombo.SelectedIndex < 0)
+        {
+            return;
+        }
+
+        _editor.ApplyTo(_profile.Players[_playerIndex]);
+        _playerIndex = PlayerCombo.SelectedIndex;
+        _editor = new KeyboardBindingEditor(_profile.Players[_playerIndex]);
+        _pendingButton = null;
+        StatusText.Text = $"Editing player {_playerIndex + 1}.";
+        RefreshRows();
     }
 
     private void RefreshRows()
@@ -116,7 +136,7 @@ public partial class InputBindingsWindow : Window
         }
 
         _pendingButton = button;
-        StatusText.Text = $"Press a key for {button} (Escape cancels).";
+        StatusText.Text = $"Press a key for player {_playerIndex + 1} {button} (Escape cancels).";
         RefreshRows();
         Focus();
         e.Handled = true;
@@ -126,19 +146,14 @@ public partial class InputBindingsWindow : Window
     {
         _editor.ResetDefaults();
         _pendingButton = null;
-        StatusText.Text = "Restored the default keyboard bindings.";
+        StatusText.Text = $"Restored the default keyboard bindings for player {_playerIndex + 1}.";
         RefreshRows();
     }
 
     private void OnOk(object? sender, RoutedEventArgs e)
     {
-        var result = new PlayerProfile
-        {
-            Name = _profile.Name,
-            Gamepad = new Dictionary<string, ControllerButton>(_profile.Gamepad),
-        };
-        _editor.ApplyTo(result);
-        Close(result);
+        _editor.ApplyTo(_profile.Players[_playerIndex]);
+        Close(_profile);
     }
 
     private void OnCancel(object? sender, RoutedEventArgs e) => Close(null);

@@ -6,8 +6,12 @@
         WindowStartupLocation="CenterOwner">
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="12">
-        <TextBlock Grid.Row="0" TextWrapping="Wrap"
-                   Text="Player 1 keyboard bindings. Select Rebind, then press the new key." />
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*">
+            <TextBlock Grid.Column="0" Text="Player" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <ComboBox x:Name="PlayerCombo" Grid.Column="1" Width="120" SelectionChanged="OnPlayerChanged" />
+            <TextBlock Grid.Column="2" Margin="12,0,0,0" TextWrapping="Wrap" VerticalAlignment="Center"
+                       Text="Select Rebind, then press the new key." />
+        </Grid>
         <ScrollViewer Grid.Row="1" Margin="0,8">
             <StackPanel x:Name="RowsPanel" Spacing="4" />
         </ScrollViewer>
