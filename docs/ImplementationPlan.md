@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Status (2026-10-25, seventh pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five local corpus titles boot, load their own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio. Road Rash's 3D race renders correctly and the v10 autopilot reaches 91,000 live frames; Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room; Lemmings completes the Fun 4 passcode and its 640x480 high-resolution title matches the reference; Space Ace plays its demo. **639 tests pass.** The desktop shell now has a game library browser, a settings dialog (video/audio/emulation/paths), six-player keyboard binding capture with conflict handling, ten numbered save slots with next/previous and PNG screenshots named by game/frame/time, and an optional FPS/status overlay. The CLI applies the 4DO per-game fix flags automatically and exposes `--fix-mode`/`--no-game-fixes` overrides. The opt-in 640x480 high-resolution CEL/VDLP mode is exposed in the desktop shell. The renderer reports API/version capabilities honestly, falls back to the CPU presenter on GL failure or context loss, supports fullscreen and GL readback screenshots, and the benchmark reports p50/p95/p99 and per-stage allocations (zero steady-state). An opt-in bounded CHD/ISO prefetch worker is available via `--prefetch`. Remaining work: finish the Road Rash race and Space Ace interactive path, GPU 4K/p99/GLES/DPI validation, xBR/HQx and UI polish, arm64/installers, the M0.8 legal/attribution review, and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
+**Status (2026-10-25, eighth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five local corpus titles boot, load their own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio. Road Rash's 3D race renders correctly and the v10 autopilot reaches 91,000 live frames; Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room; Lemmings completes the Fun 4 passcode and its 640x480 high-resolution title matches the reference; Space Ace plays its demo. **659 tests pass.** The eighth pass fixed the real-content GPU palette expansion (independent R/G/B CLUT indices), added the opt-in xBR-lv2 filter, Windows XInput/Linux evdev gamepad backends with a binding UI, an in-app log viewer, save-state thumbnails, a first-run guide, and error dialogs. Remaining work: finish the Road Rash race and Space Ace interactive path, GPU 4K/p99/GLES/DPI validation, HQx/CRT bloom, arm64/installers, the M0.8 legal/attribution review, and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
 **Last updated:** 2026-10-25
 
 ---
@@ -214,22 +214,24 @@ project/type layout is unchanged.
 
 ### 4a. Current position vs. the plan (2026-10-25)
 
-Snapshot: 639 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
+Snapshot: 659 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
 and zero synthetic steady-state allocations; all five local corpus titles boot and
 render, and scripted gameplay is validated in Wolfenstein, Lemmings, Road Rash, and
 Alone. The opt-in 640x480 high-resolution mode is implemented and matches the
 Lemmings reference title. Real-game status is in
-[`Compatibility.md`](Compatibility.md). Counting the prototype work as partial credit:
+[`Compatibility.md`](Compatibility.md). The eighth pass fixed real-content GPU palette
+expansion, added xBR, gamepad backends, a log viewer, save-state thumbnails, and
+first-run/error UI. Counting the prototype work as partial credit:
 
 | Milestone | State | Done (dd) | Remaining (dd) |
 |---|---|---:|---:|
 | M0-M8 | Functionally complete; M0.8 legal review is tracked in M11.6 and minor M8 follow-ups are non-blocking | 90 | 0 |
-| M9 | Partial: shell/library/video/input/fullscreen/About/Hi-Res; settings, audio, gamepad pages, polish | 11 | 5 |
-| M9R | Partial: two-stage, sharp-bilinear/CRT, CPU fallback, screenshots; xBR/HQx, GPU tests | 7 | 3 |
+| M9 | Partial: shell/library/video/input/fullscreen/About/Hi-Res/settings/audio/gamepad/logs/first-run; polish and ViewModel tests | 13 | 3 |
+| M9R | Partial: two-stage, sharp-bilinear/CRT/xBR, CPU fallback, screenshots; HQx/bloom and GPU tests | 8 | 2 |
 | M9P | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch; hot-path and Tier B/GPU gates | 6 | 4 |
 | M10 | Partial: CI + six-RID publish; arm64, trimming, installers, perf report | 2.5 | 3.5 |
-| M11 | In progress: M11.0 done; gameplay and high-resolution validation underway | 2.5 | 22.5+ |
-| **Baseline** | | **~119 / 157** | **~38 + 30% ≈ 49** |
+| M11 | In progress: M11.0 done; gameplay, high-resolution, and release docs underway | 3 | 22+ |
+| **Baseline** | | **~122.5 / 157** | **~34.5 + 30% = ~45** |
 
 **Estimate: roughly three-quarters of the v1 effort is done.** One experienced
 developer needs about **9-11 focused weeks**; two developers can overlap UI, renderer,
@@ -804,12 +806,14 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Keyboard bindings, gamepad bindings, console hotkeys.
   - JSON serialization, defaults, conflict detection.
   - 1-6 player profiles.
-- [~] **M7.3 Keyboard backend.**
+- [x] **M7.3 Keyboard backend.**
   - `KeyboardInputMapper`/`InputManager` translate key names to controller state without a UI dependency; tests cover binding, release, and multi-player profiles.
-  - Avalonia key-event forwarding and focus handling are wired with the M9.3 frontend shell.
-- [~] **M7.4 Gamepad backend.**
-  - `IGamepadBackend` abstraction and `NullGamepadBackend`; `InputManager` merges gamepad state with the keyboard.
-  - The Avalonia/Silk.NET platform backend arrives with M9.6/M9.4 (hot-plug, deadzone, D-pad mapping).
+  - Avalonia key-event forwarding and focus handling are wired through the M9.3 frontend shell, including release on deactivation.
+- [x] **M7.4 Gamepad backend.**
+  - `IGamepadBackend`, `GamepadMapper`, and `NullGamepadBackend`; `InputManager` merges gamepad state with the keyboard.
+  - Windows uses XInput (`xinput1_4`/`xinput1_3`/`xinput9_1_0`); Linux uses evdev (`/dev/input/event*`) with hot-plug rescanning. macOS falls back to the null backend.
+  - The input editor has a Gamepad tab for all six players; analog-stick directions fall back to D-pad bindings and triggers to shoulder bindings.
+  - Unit tests cover face buttons, D-pad, sticks, triggers, dead zones, case-insensitive names, and invalid thresholds. Hardware validation is still platform-specific.
 - [x] **M7.5 NVRAM persistence.**
   - `NvramStore` under `ThreeDo.Host` with the standard NVRAM path supplied by the caller.
   - Debounced atomic write (250 ms via `TimeProvider`), flush on pause/stop/dispose, fresh-image initialization, corrupt-image backup.
@@ -918,9 +922,9 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Physical-pixel sizing and render-on-demand are implemented (M9P.5); manual DPI/live-resize validation remains.
   - The host now switches to a `WriteableBitmap`/`CpuVideoRenderer` fallback when GL init fails or the context is lost, and switches back when GL recovers.
   - GL readback screenshots are implemented; the CPU screenshot path remains the fallback.
-- [~] **M9.3 BIOS setup.**
+- [x] **M9.3 BIOS setup.**
   - File picker, validation, and MD5/Anvil display in the status line.
-  - First-run wizard, remembered paths, and error dialogs remain.
+  - First-run welcome guide, remembered paths, and error dialogs are implemented. The guide explains the user-provided BIOS/disc requirement and offers Open BIOS/Open Disc/Continue.
 - [~] **M9.4 Game library.**
   - Open disc, replace/eject, and volume metadata via the file picker.
   - `GameLibraryScanner` recursively scans ISO/BIN/CUE/CHD files and resolves titles through the 4DO database; `AppSettings.RecentDiscs` keeps the last ten paths and `AppSettings.LibraryFolders` stores scanned roots. The Library window lists recognized titles/formats/sectors/paths, adds folders, refreshes, and opens the selected disc. Cover art remains.
@@ -930,7 +934,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Input: keyboard/gamepad mapping per player, hotkeys.
   - Emulation: ARM clock, fix mode, high-res (opt-in; default off), save slots, CPU backend (interpreter; JIT when available).
   - Paths: BIOS, saves, screenshots, library.
-  - `AppSettings`/`AppSettingsStore` persist paths, renderer/aspect/vsync/integer scale, audio enable/volume, high-resolution mode, library folders, save slots, overlay, automatic fixes, per-game fix overrides, and input bindings. The Settings dialog edits video/audio/emulation/paths and validates the per-game fix mask; the gamepad mapping page and full per-game settings remain. The shell exposes a Hi-Res checkbox that restarts the machine.
+  - `AppSettings`/`AppSettingsStore` persist paths, renderer/aspect/vsync/integer scale, audio enable/volume, high-resolution mode, library folders, save slots, overlay, automatic fixes, per-game fix overrides, and input bindings. The Settings dialog edits video/audio/emulation/paths and validates the per-game fix mask; the Input dialog has keyboard and gamepad binding tabs for all six players. Full per-game settings remain. The shell exposes a Hi-Res checkbox that restarts the machine.
 - [x] **M9.6 Input UI.**
   - Binding capture dialog, conflict detection, and reset defaults are implemented for all six players (`InputBindingsWindow`/`KeyboardBindingEditor`); the player selector switches profiles, rebinding a key removes it from its previous button, and the edited `InputProfile` is saved to `AppSettings`.
   - The optional controller preview remains a nice-to-have.
@@ -943,14 +947,14 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Quick save/load, slot next/previous, slot manager.
   - Screenshot with game/time name; GL readback with CPU frame fallback.
   - State metadata (game, BIOS, timestamp, thumbnail optional).
-  - `SaveStateSlotManager` provides ten numbered slots with atomic state files and JSON sidecars (game name, game ID, timestamp, frames); the shell has Save/Load plus previous/next slot buttons, a Slots window that lists/saves/loads/deletes slots, and persists the current slot. Screenshots are PNG named `<game>-<timestamp>-f<frames>.png` from GL readback or the CPU frame. Thumbnails remain.
-- [~] **M9.9 Logs/About.**
-  - About dialog with version, renderer API/capabilities, current machine/disc/fix state, paths, license notice, and attribution is implemented.
-  - In-app log viewer with category filter and clickable links remain.
+  - `SaveStateSlotManager` provides ten numbered slots with atomic state files and JSON sidecars (game name, game ID, timestamp, frames); the shell has Save/Load plus previous/next slot buttons, a Slots window that lists/saves/loads/deletes slots, and persists the current slot. Screenshots are PNG named `<game>-<timestamp>-f<frames>.png` from GL readback or the CPU frame. Each slot also writes a PNG thumbnail shown in the Slots window; thumbnail failures never fail the state save.
+- [x] **M9.9 Logs/About.**
+  - About dialog with version, renderer API/capabilities, current machine/disc/fix state, paths, connected gamepads, license notice, and attribution.
+  - In-app log viewer with level, category, search, auto-refresh, and clear controls. Clickable links are not implemented.
 - [~] **M9.10 ViewModel tests.**
   - Settings roundtrip, library scanning, frame mailbox, input mapping.
   - No UI thread dependency for logic.
-  - Tests cover AppSettings roundtrip, the frame mailbox, renderer contracts, and input mapping; ViewModel-level tests remain.
+  - Tests cover AppSettings roundtrip, the frame mailbox, renderer contracts, input mapping, GamepadMapper, LogViewFilter, save-slot thumbnails, and shader source invariants; ViewModel-level tests remain.
 
 **Deliverables**
 
@@ -1001,6 +1005,7 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - Exact 5-bit to 8-bit expansion matching the CPU path.
   - Golden-image parity test against `FrameAssembler` for synthetic VDL frames (`GpuPalette` vs `FrameAssembler`, 320x240 x 240 lines).
   - The stage-1 target must be reused across frames; resizing the output must not resize or reallocate it.
+  - **Real-content fix (2026-10-25):** the shader originally used only the low five bits of a pixel for all three channels. It now fetches red, green, and blue independently (`pixel >> 10`, `pixel >> 5`, `pixel`), matching `FrameAssembler`/`GpuPalette`. Lemmings gameplay was captured through sharp-bilinear and xBR with correct colors.
   - GPU execution itself is not covered by CI because headless runners have no GL context; run parity on the self-hosted GPU job.
 - [~] **M9R.4 Scaling and filter pipeline.**
   - **Stage 2** samples the native-resolution expanded RGB texture at output resolution.
@@ -1008,9 +1013,14 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - **Nearest:** nearest with arbitrary scale/letterbox.
   - **Sharp-bilinear:** default enhanced mode; full Themaister/rsn8887 sharp-bilinear with hardware bilinear finishing.
   - **CRT:** scanlines, aperture mask, barrel curvature, and vignette are implemented; bloom remains (opt-in; warn at 4K).
-  - **xBR/HQx family:** multi-pass GPU filters remain (opt-in; benchmark at 4K before enabling).
-  - Implemented accurate/nearest, full sharp-bilinear, and CRT scanlines/aperture/curvature/vignette. CRT bloom and xBR/HQx passes remain.
+  - **xBR/HQx family:** xBR is implemented as an opt-in 4x pass; HQx remains optional. Benchmark at 4K before enabling by default.
+  - Implemented accurate/nearest, full sharp-bilinear, CRT scanlines/aperture/curvature/vignette, and xBR. CRT bloom and HQx remain.
   - Filter settings persist per game/global in the host settings layer (M9.5).
+- [x] **M9R.4a xBR filter.**
+  - Hyllian's xBR-lv2 edge-directed 4x expansion is implemented in `Shaders.FragmentXbr` and selected with `VideoFilter.Xbr`.
+  - The pass uses a CPU-expanded native-resolution RGBA source (`FrameAssembler`) to keep palette output pixel-identical and avoid a driver readback issue with the FBO-attached palette texture; stage 2 finishes with sharp-bilinear.
+  - Shader source invariants are tested; the filter was validated visually on Lemmings gameplay (correct colors, smoothed edges) and runs at 60 fps in a 1500x978 window.
+  - Remaining optional work: HQx, GPU timer measurement at 4K, and per-game filter presets.
 - [~] **M9R.5 Presentation.**
   - Aspect ratio: 4:3, integer, stretch, custom.
   - Fullscreen/borderless, vsync, frame pacing, latest-frame mailbox.
@@ -1028,6 +1038,7 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - The renderer does not crash on driver/context failure; the status line reports the fallback reason.
 - [ ] **M9R.8 Performance.**
   - Measure upload bandwidth, CPU present time, GPU shader time, and p50/p95/p99 frame time.
+  - Desktop GL now uses a `GL_TIME_ELAPSED` query around the palette/xBR/scale pipeline; the shell overlay reports GPU and CPU-present milliseconds. Windows GL 4.0 at 1500x978 reported gpu ≈ 0.13 ms / present ≈ 0.16 ms on a BIOS boot. The 4K and GLES measurements remain.
   - Target: 4K60 with nearest/sharp-bilinear on Tier A x64; 1080p60 on Raspberry Pi 4/5 class arm64 with the GLES path.
   - Zero CPU per-pixel scaling; palette expansion at native resolution on the GPU.
   - Prove core/presenter CPU cost is independent of output resolution (1080p vs 4K).
@@ -1040,7 +1051,7 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - Context-loss/fallback tests, including GL 3.3 unavailable -> GLES -> CPU.
   - Allocation assertions for upload/present/mailbox; render-on-demand tests.
   - Headless CI uses the CPU renderer; GPU tests run on a self-hosted or local job.
-  - Implemented: uploader packing, palette parity, aspect/integer geometry, CPU renderer, mailbox snapshot, zero-allocation uploader/mailbox tests, and OpenGL capability parsing. GPU shader link tests, GLES parity, and DPI tests are follow-up.
+  - Implemented: uploader packing, palette parity, aspect/integer geometry, CPU renderer, mailbox snapshot, zero-allocation uploader/mailbox tests, OpenGL capability parsing, and shader source invariants for the palette/scale/xBR programs. GPU shader link tests, GLES parity, and DPI tests are follow-up.
 - [x] **M9R.10 Renderer spike (early, M3/M4).**
   - Before the full renderer, create a small Avalonia + Silk.NET.OpenGL window that displays a synthetic 320x240 indexed frame with the palette shader.
   - This de-risks context creation, shader loading, and presentation on all three OSes.
@@ -1154,7 +1165,8 @@ harness. See [`Performance.md`](Performance.md).
     allocations are attributed to the core stage.
   - CI runs a synthetic benchmark smoke, enforces `allocations.bytesPerFrame == 0`,
     and uploads the JSON baseline as an artifact.
-  - GPU timer queries, Tier B baselines, and the >10% regression gate remain.
+  - Desktop GL GPU timer queries and the present-time overlay are implemented; Tier B
+    baselines and the >10% regression gate remain.
 - [ ] **M9P.10 Documentation and report.**
   - Publish the measured 4K/1080p results, hardware, and filter settings.
   - Update `Performance.md`, `TestCorpus.md`, and the compatibility matrix.
@@ -1206,9 +1218,9 @@ harness. See [`Performance.md`](Performance.md).
   - Build/test on Windows/Linux/macOS.
   - Publish all RIDs; upload artifacts.
   - Cache NuGet; deterministic builds.
-- [ ] **M10.3 Trimming/AOT evaluation.**
-  - JSON source generation, no reflection.
-  - Evaluate `PublishTrimmed`/NativeAOT per project; do not break Avalonia.
+- [~] **M10.3 Trimming/AOT evaluation.**
+  - A `win-x64` self-contained trimmed publish of the CLI was evaluated on 2026-10-25 and fails `IL2026` on the reflection-based `JsonSerializer` calls in `InputProfile`, `AppSettings`, save-slot metadata, and CLI result types. Trimming remains disabled (`PublishTrimmed=false`).
+  - Next: add JSON source generation/`JsonTypeInfo` overloads, then audit Avalonia's XAML loader before enabling trimming or NativeAOT.
 - [~] **M10.4 Icons/metadata.**
   - App icon, file associations (`.iso`, `.bin`, `.cue`, `.tdos`), version info.
 - [ ] **M10.5 Performance validation and report.**
@@ -1273,9 +1285,8 @@ harness. See [`Performance.md`](Performance.md).
   - This is not the 4K output target. 4K *internal* rendering requires GPU CEL
     compositing and is a separate post-v1 experiment.
 - [~] **M11.3 Filter polish (required family, optional per game).**
-  - Accurate/nearest, full sharp-bilinear, and CRT scanlines/aperture are implemented.
-  - CRT curvature/bloom and xBR/HQx GLSL pipelines remain.
-  - Add per-game filter presets and performance warnings at 4K.
+  - Accurate/nearest, full sharp-bilinear, CRT scanlines/aperture/curvature/vignette, and xBR-lv2 are implemented.
+  - HQx, CRT bloom, per-game filter presets, and 4K performance warnings remain.
   - Keep the accurate path pixel-identical to the CPU oracle.
 - [ ] **M11.4 CD timing/seek improvements.**
   - Use `libopera/opera_cdrom.c` as the behavioral reference for command/status,
@@ -1284,10 +1295,9 @@ harness. See [`Performance.md`](Performance.md).
     tests and the existing disc-end divergence.
 - [-] **M11.5 CHD support.**
   - Moved to v1/M6: `ChdDiscImage` via CHDSharp, including parent/child and read-ahead.
-- [ ] **M11.6 Documentation/release.**
-  - User guide, compatibility list, known issues, changelog.
-  - License/attribution review.
-  - Release notes.
+- [~] **M11.6 Documentation/release.**
+  - User guide, compatibility list, known issues, and changelog are implemented in `docs/UserGuide.md`, `docs/Compatibility.md`, `docs/KnownIssues.md`, and `CHANGELOG.md`.
+  - License/attribution review and final release notes remain.
 - [ ] **M11.7 Post-release backlog.**
   - Netplay, rewind, debugger UI, CD-DA, PAL, additional peripherals.
 - [ ] **M11.8 Optional GPU CEL compositing experiment.**
@@ -1544,9 +1554,9 @@ Suggested parallelization with two developers:
 10. ~~M9P.1/M9P.2: benchmark baseline, dedicated core thread, and frame pacer.~~ Done; continue M9P.3-M9P.9 (GLES/Pi validation, CHD prefetch, p99/GPU gates).
 11. **Finish the scripted gameplay loops.** Road Rash's ~92,000/40,000 stops, Space Ace's interactive path, and Alone's movement/inventory sequence; record the exact scripts and frame numbers in [`TestCorpus.md`](TestCorpus.md).
 12. **Capture per-title evidence.** Save-state roundtrips, screenshots, and 30-60 s WAVs; compare audio mix/cadence with Opera.
-13. **Prove the 4K60 target.** GPU timer queries, p99 frame time, allocation assertions, WGL/ANGLE/GLES/Pi validation, and 100/150/200% DPI.
-14. **Finish M9/M9R/M9P polish.** xBR/HQx, settings/audio/gamepad pages, vsync/FPS overlay, Tier B prefetch validation, and the remaining screenshot metadata work.
-15. **Finish M10/M11 release work.** arm64 validation, trimming/installers/signing plan, performance report, compatibility matrix, and release documentation.
+13. **Prove the 4K60 target.** Use the implemented desktop GPU timer query and present-time overlay; measure p99 frame time, allocations, WGL/ANGLE/GLES/Pi validation, and 100/150/200% DPI.
+14. **Finish M9/M9R/M9P polish.** HQx/CRT bloom, per-game filter presets, vsync/FPS overlay tuning, Tier B prefetch validation, and ViewModel tests. The xBR filter, settings/audio/gamepad pages, log viewer, thumbnails, and first-run UI are complete.
+15. **Finish M10/M11 release work.** arm64 validation, trimming/installers/signing plan, performance report, compatibility matrix, and final release notes. The user guide, known-issues list, and changelog are complete.
 16. **Schedule the legal/attribution review (M0.8)** before any public build; add Opera to the FreeDO/4DO attribution and license review.
 
 ---
@@ -1599,3 +1609,4 @@ Suggested parallelization with two developers:
 | 2026-10-25 | M8.7, M9R, M9P, M9, M11 | Renderer/frontend hardening and benchmark gates | Added honest GL/GLES capability parsing and `RendererApi`, CPU fallback/context-loss recovery, fullscreen/F11, GL readback screenshots, About dialog, Hi-Res shell toggle, CLI process tests, zero-allocation uploader/mailbox tests, full sharp-bilinear, CRT aperture, and an opt-in bounded disc prefetch worker. Benchmarks now report p50/p95/p99 and per-stage allocations; synthetic steady state is 0 bytes/frame (1.250 ms/frame, p99 1.638 ms). Prefetch on/off produced identical Lemmings state/hash. 604 tests pass |
 | 2026-10-25 | M11.1 | Road Rash restart motion exit | The throttle-only crash restart now ends after 10 moving-scene frames instead of holding straight for 180 frames, so a traffic stop that starts rolling resumes steering. Added a regression test; the 80k/83k -> 91,000 state and hash remain identical (`PC 0x00085F48`, `0x02ABE78E`). 605 tests pass |
 | 2026-10-25 | M7.6, M9.4-M9.6, M9.8, M9R.5-M9R.6 | Desktop shell and per-game fixes | Added `GameCompatibility` (4DO ID -> `FixMode`) with automatic application plus `--fix-mode`/`--no-game-fixes` and per-game settings overrides; `SaveStateSlotManager` with ten numbered atomic slots and JSON metadata; the game library window; the video/audio/emulation/paths settings dialog; six-player keyboard binding capture with conflict removal and reset defaults; PNG screenshots named by game/frame/time; and an optional FPS/status overlay. Added 34 tests; 639 pass. The five 3,000-frame hashes are unchanged (Alone's automatic `FIX_BIT_TIMING_6` does not alter the boot frames) |
+| 2026-10-25 | M7.4, M9.3, M9.8-M9.9, M9R.3-M9R.4a, M11.3, M11.6 | Gamepad, logs, thumbnails, xBR, GPU palette fix, release docs | Added Windows XInput and Linux evdev gamepad backends with a six-player mapping tab and analog-stick/trigger fallbacks; an in-app log viewer with level/category/search filters; save-state PNG thumbnails; first-run and error dialogs; and an opt-in xBR-lv2 4x filter. Fixed real-content GPU palette expansion to use independent R/G/B CLUT indices (the old shader made games grayscale) and fixed the `vec4`/`vec2` uniform calls that made GL screenshots black. Added a `GL_TIME_ELAPSED` GPU timer and present-time overlay (Windows GL 4.0 BIOS boot: gpu ≈ 0.13 ms, present ≈ 0.16 ms at 1500x978). Added `docs/UserGuide.md`, `docs/KnownIssues.md`, and `CHANGELOG.md`. 659 tests pass |

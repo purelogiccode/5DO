@@ -1,0 +1,34 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ThreeDo.Frontend.Avalonia.Views.WelcomeWindow"
+        Title="Welcome to 3DOEmulator"
+        Width="560" Height="360"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <Grid RowDefinitions="*,Auto" Margin="20">
+        <StackPanel Grid.Row="0" Spacing="12">
+            <TextBlock Text="Welcome to 3DOEmulator" FontSize="22" FontWeight="SemiBold" />
+            <TextBlock TextWrapping="Wrap" Opacity="0.9"
+                       Text="This is a pure C# 3DO emulator. To start, choose a legally obtained BIOS ROM and a disc image. The application does not include BIOS files or games." />
+            <TextBlock TextWrapping="Wrap" Opacity="0.75"
+                       Text="Supported discs: ISO, BIN, CUE+BIN, and CHD. You can change these paths later in Settings." />
+            <Border Background="#202020" CornerRadius="3" Padding="10">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="First steps" FontWeight="SemiBold" />
+                    <TextBlock Text="1. Open a 3DO BIOS (panafz1.bin or another compatible 1 MB ROM)." Opacity="0.85" />
+                    <TextBlock Text="2. Open a disc image." Opacity="0.85" />
+                    <TextBlock Text="3. Press Play, then use the keyboard or a gamepad." Opacity="0.85" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,18,0,0">
+            <TextBlock Grid.Column="0" Text="Choose Continue to set up later from the toolbar."
+                       VerticalAlignment="Center" Opacity="0.6" FontSize="11" />
+            <Button Grid.Column="1" Content="Continue" Click="OnContinue" Margin="0,0,8,0" />
+            <Button Grid.Column="2" Content="Open BIOS" Click="OnOpenBios" Margin="0,0,8,0" />
+            <Button Grid.Column="3" Content="Open Disc" Click="OnOpenDisc" />
+        </Grid>
+    </Grid>
+</Window>

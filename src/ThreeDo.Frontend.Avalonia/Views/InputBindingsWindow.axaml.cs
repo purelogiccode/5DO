@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -13,11 +14,28 @@ namespace ThreeDo.Frontend.Avalonia.Views;
 /// </summary>
 public partial class InputBindingsWindow : Window
 {
+    private static readonly ControllerButton[] GamepadChoices =
+    [
+        ControllerButton.None,
+        ControllerButton.A,
+        ControllerButton.B,
+        ControllerButton.C,
+        ControllerButton.P,
+        ControllerButton.X,
+        ControllerButton.L,
+        ControllerButton.R,
+        ControllerButton.Up,
+        ControllerButton.Down,
+        ControllerButton.Left,
+        ControllerButton.Right,
+    ];
+
     private readonly InputProfile _profile;
     private KeyboardBindingEditor _editor;
     private int _playerIndex;
     private ControllerButton? _pendingButton;
     private bool _initializing = true;
+    private bool _refreshingGamepad;
 
     /// <summary>Creates the dialog with the default input profile.</summary>
     public InputBindingsWindow()
@@ -126,6 +144,71 @@ public partial class InputBindingsWindow : Window
 
             RowsPanel.Children.Add(row);
         }
+
+        RefreshGamepadRows();
+    }
+
+    private void RefreshGamepadRows()
+    {
+        _refreshingGamepad = true;
+        try
+        {
+            GamepadRowsPanel.Children.Clear();
+            var profile = _profile.Players[_playerIndex];
+            foreach (var name in GamepadMapper.BindingNames)
+            {
+                var row = new Grid
+                {
+                    ColumnDefinitions = new ColumnDefinitions("150,*"),
+                    Margin = new global::Avalonia.Thickness(0, 2),
+                };
+
+                var label = new TextBlock
+                {
+                    Text = name,
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+                Grid.SetColumn(label, 0);
+                row.Children.Add(label);
+
+                var combo = new ComboBox
+                {
+                    ItemsSource = GamepadChoices,
+                    SelectedItem = profile.Gamepad.TryGetValue(name, out var button)
+                        ? button
+                        : ControllerButton.None,
+                    Tag = name,
+                };
+                combo.SelectionChanged += OnGamepadBindingChanged;
+                Grid.SetColumn(combo, 1);
+                row.Children.Add(combo);
+                GamepadRowsPanel.Children.Add(row);
+            }
+        }
+        finally
+        {
+            _refreshingGamepad = false;
+        }
+    }
+
+    private void OnGamepadBindingChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_refreshingGamepad || sender is not ComboBox { Tag: string name } combo)
+        {
+            return;
+        }
+
+        var profile = _profile.Players[_playerIndex];
+        if (combo.SelectedItem is ControllerButton button && button != ControllerButton.None)
+        {
+            profile.Gamepad[name] = button;
+            StatusText.Text = $"Bound player {_playerIndex + 1} {name} to {button}.";
+        }
+        else
+        {
+            profile.Gamepad.Remove(name);
+            StatusText.Text = $"Unbound player {_playerIndex + 1} {name}.";
+        }
     }
 
     private void OnRebind(object? sender, RoutedEventArgs e)
@@ -145,8 +228,12 @@ public partial class InputBindingsWindow : Window
     private void OnReset(object? sender, RoutedEventArgs e)
     {
         _editor.ResetDefaults();
+        var defaults = PlayerProfile.CreateDefault(_playerIndex + 1);
+        _profile.Players[_playerIndex].Gamepad = new Dictionary<string, ControllerButton>(
+            defaults.Gamepad,
+            StringComparer.OrdinalIgnoreCase);
         _pendingButton = null;
-        StatusText.Text = $"Restored the default keyboard bindings for player {_playerIndex + 1}.";
+        StatusText.Text = $"Restored the default keyboard and gamepad bindings for player {_playerIndex + 1}.";
         RefreshRows();
     }
 

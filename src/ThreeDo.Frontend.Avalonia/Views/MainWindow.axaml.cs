@@ -14,6 +14,7 @@ using Avalonia.Threading;
 using ThreeDo.Audio;
 using ThreeDo.Core;
 using ThreeDo.Diagnostics;
+using ThreeDo.Frontend.Avalonia.Input;
 using ThreeDo.Host;
 using ThreeDo.Input;
 using ThreeDo.Machine;
@@ -32,6 +33,9 @@ public partial class MainWindow : Window, IDisposable
 {
     private readonly NvramStore _nvramStore;
     private readonly AppSettings _settings;
+    private readonly InMemoryLogSink _logSink = new(4000);
+    private readonly Log _log;
+    private readonly PlatformGamepadBackend? _gamepad;
     private InputManager _input;
     private readonly SaveStateSlotManager _slots;
     private OpenAlAudioOutput? _audio;
@@ -51,6 +55,8 @@ public partial class MainWindow : Window, IDisposable
     {
         InitializeComponent();
         _settings = AppSettingsStore.Load();
+        _log = new Log(_logSink, LogLevel.Info, LogCategory.All);
+        _log.Write(LogLevel.Info, LogCategory.Host, $"Desktop shell starting ({ThreeDoVersion.Version}).");
         if (string.IsNullOrWhiteSpace(_settings.SaveDirectory))
         {
             _settings.SaveDirectory = Path.Combine(AppSettingsStore.DefaultDirectory, "states");
@@ -59,7 +65,8 @@ public partial class MainWindow : Window, IDisposable
         _settings.SaveSlotCount = Math.Clamp(_settings.SaveSlotCount, 1, 100);
         _slots = new SaveStateSlotManager(_settings.SaveDirectory, _settings.SaveSlotCount);
         _slots.Select(Math.Clamp(_settings.SaveSlot, 0, _slots.SlotCount - 1));
-        _input = new InputManager(_settings.Input);
+        _gamepad = PlatformGamepadBackend.TryCreate(_settings.Input);
+        _input = new InputManager(_settings.Input, _gamepad);
         _audio = _settings.AudioEnabled ? OpenAlAudioOutput.TryCreate() : null;
         if (_audio is not null)
         {
@@ -78,7 +85,44 @@ public partial class MainWindow : Window, IDisposable
         UpdateSlotText();
     }
 
-    private async void OnOpened(object? sender, EventArgs e)
+    private void OnOpened(object? sender, EventArgs e)
+    {
+        if (!_settings.FirstRunCompleted && string.IsNullOrWhiteSpace(_settings.BiosPath))
+        {
+            try
+            {
+                var welcome = new WelcomeWindow();
+                welcome.Closed += (_, _) =>
+                {
+                    IsEnabled = true;
+                    _settings.FirstRunCompleted = true;
+                    AppSettingsStore.Save(_settings);
+                    switch (welcome.Action)
+                    {
+                        case WelcomeAction.OpenBios:
+                            OnOpenBios(null, new RoutedEventArgs());
+                            break;
+                        case WelcomeAction.OpenDisc:
+                            OnOpenDisc(null, new RoutedEventArgs());
+                            break;
+                    }
+                };
+                IsEnabled = false;
+                welcome.Show(this);
+            }
+            catch (Exception exception)
+            {
+                StatusText.Text = $"Welcome error: {exception.Message}";
+                Console.Error.WriteLine($"Welcome error: {exception}");
+            }
+
+            return;
+        }
+
+        LoadConfiguredPaths();
+    }
+
+    private void LoadConfiguredPaths()
     {
         if (File.Exists(_settings.BiosPath))
         {
@@ -89,8 +133,6 @@ public partial class MainWindow : Window, IDisposable
         {
             OpenDiscPath(_settings.DiscPath);
         }
-
-        await Task.CompletedTask;
     }
 
     private async void OnOpenBios(object? sender, RoutedEventArgs e)
@@ -145,10 +187,16 @@ public partial class MainWindow : Window, IDisposable
             _settings.BiosPath = path;
             AppSettingsStore.Save(_settings);
             StatusText.Text = $"BIOS {bios.Md5[..8]} loaded{(bios.IsAnvil ? " (Anvil)" : string.Empty)}.";
+            _log.Write(
+                LogLevel.Info,
+                LogCategory.Storage,
+                $"BIOS loaded: {path} ({bios.Md5}, {(bios.IsAnvil ? "Anvil" : "retail")}).");
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException or ArgumentException)
         {
             StatusText.Text = $"BIOS error: {exception.Message}";
+            _log.Write(LogLevel.Error, LogCategory.Storage, $"BIOS load failed: {exception.Message}");
+            ShowError("BIOS error", exception.Message);
         }
     }
 
@@ -180,10 +228,17 @@ public partial class MainWindow : Window, IDisposable
 
             AppSettingsStore.Save(_settings);
             StatusText.Text = $"{_gameName}: {disc.SectorCount} sectors, fixes 0x{(uint)fixMode:x8}.";
+            _log.Write(
+                LogLevel.Info,
+                LogCategory.Storage,
+                $"Disc opened: {_gameName} ({gameId[..Math.Min(8, gameId.Length)]}), "
+                + $"{disc.SectorCount} sectors, fixes 0x{(uint)fixMode:x8}.");
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException or DiscImageException or ArgumentException)
         {
             StatusText.Text = $"Disc error: {exception.Message}";
+            _log.Write(LogLevel.Error, LogCategory.Storage, $"Disc open failed: {exception.Message}");
+            ShowError("Disc error", exception.Message);
         }
     }
 
@@ -200,11 +255,13 @@ public partial class MainWindow : Window, IDisposable
         if (_running)
         {
             _runner!.Start();
+            _log.Write(LogLevel.Info, LogCategory.Host, "Emulation resumed.");
         }
         else
         {
             _runner!.Pause();
             FlushNvram();
+            _log.Write(LogLevel.Info, LogCategory.Host, "Emulation paused.");
         }
     }
 
@@ -212,6 +269,7 @@ public partial class MainWindow : Window, IDisposable
     {
         _runner?.Invoke(() => _machine?.Reset());
         StatusText.Text = "Reset.";
+        _log.Write(LogLevel.Info, LogCategory.Machine, "Machine reset.");
     }
 
     private void OnSaveState(object? sender, RoutedEventArgs e)
@@ -231,6 +289,7 @@ public partial class MainWindow : Window, IDisposable
         PersistSlot();
         UpdateSlotText();
         StatusText.Text = $"State saved: slot {slot + 1} ({_gameName}).";
+        _log.Write(LogLevel.Info, LogCategory.State, $"State saved to slot {slot + 1} ({_gameName}).");
     }
 
     private void OnLoadState(object? sender, RoutedEventArgs e)
@@ -244,6 +303,7 @@ public partial class MainWindow : Window, IDisposable
 
         _runner!.Invoke(() => _slots.Load(_machine, slot));
         StatusText.Text = $"State loaded: slot {slot + 1}.";
+        _log.Write(LogLevel.Info, LogCategory.State, $"State loaded from slot {slot + 1}.");
     }
 
     private void OnPreviousSlot(object? sender, RoutedEventArgs e)
@@ -294,6 +354,7 @@ public partial class MainWindow : Window, IDisposable
                 Video.CaptureCompleted -= OnCaptured;
                 PngDumper.WriteBgra(pixels, width, height, path);
                 StatusText.Text = $"Screenshot: {path}";
+                _log.Write(LogLevel.Info, LogCategory.Host, $"Screenshot written: {path}.");
             }
 
             Video.CaptureCompleted += OnCaptured;
@@ -309,6 +370,7 @@ public partial class MainWindow : Window, IDisposable
             PngDumper.Write(frame, path);
         });
         StatusText.Text = $"Screenshot: {path}";
+        _log.Write(LogLevel.Info, LogCategory.Host, $"Screenshot written from the CPU frame: {path}.");
     }
 
     private static string SanitizeFileName(string value)
@@ -326,6 +388,37 @@ public partial class MainWindow : Window, IDisposable
         return new string(buffer).Trim();
     }
 
+    private void ShowError(string title, string message)
+    {
+        var text = new TextBlock
+        {
+            Text = message,
+            TextWrapping = global::Avalonia.Media.TextWrapping.Wrap,
+        };
+        var close = new Button
+        {
+            Content = "Close",
+            HorizontalAlignment = global::Avalonia.Layout.HorizontalAlignment.Right,
+        };
+        var panel = new StackPanel
+        {
+            Margin = new Thickness(16),
+            Spacing = 12,
+        };
+        panel.Children.Add(text);
+        panel.Children.Add(close);
+        var window = new Window
+        {
+            Title = title,
+            Width = 480,
+            Height = 220,
+            Content = panel,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+        };
+        close.Click += (_, _) => window.Close();
+        window.ShowDialog(this);
+    }
+
     private void OnFullscreen(object? sender, RoutedEventArgs e)
     {
         ToggleFullscreen();
@@ -336,6 +429,11 @@ public partial class MainWindow : Window, IDisposable
         WindowState = WindowState == WindowState.FullScreen
             ? WindowState.Normal
             : WindowState.FullScreen;
+    }
+
+    private void OnLogs(object? sender, RoutedEventArgs e)
+    {
+        new LogsWindow(_logSink).ShowDialog(this);
     }
 
     private void OnAbout(object? sender, RoutedEventArgs e)
@@ -362,6 +460,8 @@ public partial class MainWindow : Window, IDisposable
                 + $"DSP 0x{_machine.Dsp.ProgramCounter:x4}.");
         }
 
+        _gamepad?.Poll();
+
         if (!string.IsNullOrWhiteSpace(_gameName))
         {
             var id = _gameId.Length > 8 ? _gameId[..8] : _gameId;
@@ -372,6 +472,10 @@ public partial class MainWindow : Window, IDisposable
         text.AppendLine($"BIOS: {(_settings.BiosPath.Length > 0 ? _settings.BiosPath : "(not set)")}");
         text.AppendLine($"Save states: {_settings.SaveDirectory}");
         text.AppendLine($"Screenshots: {_settings.ScreenshotDirectory}");
+        text.AppendLine(
+            _gamepad is null
+                ? "Gamepads: backend unavailable."
+                : $"Gamepads: {_gamepad.ConnectedControllers} connected ({_gamepad.SourceName}).");
         text.AppendLine();
         text.AppendLine("FreeDO/4DO are not standard OSI-licensed projects. See THIRD-PARTY-NOTICES.md "
             + "and docs/Licensing.md before distributing builds.");
@@ -452,6 +556,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         StatusText.Text = "Settings saved.";
+        _log.Write(LogLevel.Info, LogCategory.Host, "Settings saved.");
     }
 
     private async void OnSaveSlots(object? sender, RoutedEventArgs e)
@@ -493,7 +598,8 @@ public partial class MainWindow : Window, IDisposable
 
         _settings.Input = profile;
         AppSettingsStore.Save(_settings);
-        _input = new InputManager(_settings.Input);
+        _gamepad?.UpdateProfile(profile);
+        _input = new InputManager(_settings.Input, _gamepad);
         if (_machine is not null)
         {
             _machine.PbusSource = _input;
@@ -503,6 +609,10 @@ public partial class MainWindow : Window, IDisposable
         StatusText.Text = conflicts.Count == 0
             ? "Input bindings saved."
             : $"Input bindings saved with {conflicts.Count} conflict(s).";
+        _log.Write(
+            LogLevel.Info,
+            LogCategory.Input,
+            $"Input bindings saved ({conflicts.Count} conflict(s)); {_gamepad?.ConnectedControllers ?? 0} gamepad(s).");
     }
 
     private void ApplyAudioSettings()
@@ -544,6 +654,10 @@ public partial class MainWindow : Window, IDisposable
 
         _settings.HighResolution = enabled;
         AppSettingsStore.Save(_settings);
+        _log.Write(
+            LogLevel.Info,
+            LogCategory.Video,
+            enabled ? "High-resolution mode enabled." : "High-resolution mode disabled.");
         if (_machine is null)
         {
             StatusText.Text = enabled
@@ -589,8 +703,12 @@ public partial class MainWindow : Window, IDisposable
             $"Frame {status.Frames}  PC 0x{status.ProgramCounter:x8}  cycles {status.Cycles}  {status.FramesPerSecond:F1} fps";
         if (OverlayPanel.IsVisible)
         {
+            var gpu = Video.GpuMilliseconds;
+            var timing = gpu is null
+                ? $"present {Video.PresentMilliseconds:F2} ms"
+                : $"gpu {gpu.Value:F2} ms  present {Video.PresentMilliseconds:F2} ms";
             OverlayText.Text =
-                $"{status.FramesPerSecond,5:F1} fps  {status.Cycles,6} cyc  PC 0x{status.ProgramCounter:x8}";
+                $"{status.FramesPerSecond,5:F1} fps  {status.Cycles,6} cyc  PC 0x{status.ProgramCounter:x8}  {timing}";
         }
     }
 
@@ -599,11 +717,17 @@ public partial class MainWindow : Window, IDisposable
         StopCpuFallback();
         StatusText.Text =
             $"{capabilities.Name} {capabilities.MajorVersion}.{capabilities.MinorVersion} renderer ready.";
+        _log.Write(
+            LogLevel.Info,
+            LogCategory.Video,
+            $"OpenGL renderer ready: {capabilities.Name} {capabilities.MajorVersion}.{capabilities.MinorVersion} "
+            + $"({capabilities.Api}), max texture {capabilities.MaxTextureSize}.");
     }
 
     private void OnOpenGlFailed(Exception exception)
     {
         Console.Error.WriteLine($"OpenGL unavailable: {exception.Message}");
+        _log.Write(LogLevel.Warning, LogCategory.Video, $"OpenGL unavailable: {exception.Message}");
         StartCpuFallback(exception);
     }
 
@@ -722,6 +846,8 @@ public partial class MainWindow : Window, IDisposable
                 _running = false;
                 PlayButton.Content = "Play";
                 StatusText.Text = $"Emulation error: {exception.Message}";
+                _log.Write(LogLevel.Error, LogCategory.Machine, $"Emulation fault: {exception}");
+                ShowError("Emulation error", exception.Message);
             });
         }
 
@@ -756,6 +882,7 @@ public partial class MainWindow : Window, IDisposable
         Video.Dispose();
         _nvramStore.Dispose();
         _audio?.Dispose();
+        _gamepad?.Dispose();
     }
 
     /// <inheritdoc />
@@ -808,6 +935,7 @@ public partial class MainWindow : Window, IDisposable
         Video.Dispose();
         _nvramStore.Dispose();
         _audio?.Dispose();
+        _gamepad?.Dispose();
         GC.SuppressFinalize(this);
     }
 }

@@ -4,7 +4,9 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ThreeDo.Core;
+using ThreeDo.Diagnostics;
 using ThreeDo.Machine;
+using ThreeDo.Video;
 
 namespace ThreeDo.Host;
 
@@ -18,6 +20,7 @@ namespace ThreeDo.Host;
 /// <param name="FramesExecuted">Recorded frame count, or -1 when the state cannot be read.</param>
 /// <param name="FileSize">State file size in bytes, or 0.</param>
 /// <param name="Error">Why the state could not be inspected, or empty.</param>
+/// <param name="ThumbnailPath">PNG thumbnail path, or empty when no thumbnail exists.</param>
 public sealed record SaveStateSlotInfo(
     int Slot,
     string StatePath,
@@ -27,7 +30,8 @@ public sealed record SaveStateSlotInfo(
     DateTimeOffset? SavedAtUtc,
     long FramesExecuted,
     long FileSize,
-    string Error)
+    string Error,
+    string ThumbnailPath = "")
 {
     /// <summary>Gets the one-based slot number used by the UI.</summary>
     public int DisplaySlot => Slot + 1;
@@ -37,6 +41,9 @@ public sealed record SaveStateSlotInfo(
 
     /// <summary>Gets the local save time, or an empty string when metadata is missing.</summary>
     public string DisplaySavedAt => SavedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty;
+
+    /// <summary>Gets a value indicating whether a screenshot thumbnail is available.</summary>
+    public bool HasThumbnail => !string.IsNullOrEmpty(ThumbnailPath);
 }
 
 /// <summary>
@@ -52,6 +59,7 @@ public sealed class SaveStateSlotManager
 {
     private const string StateExtension = ".tdos";
     private const string MetadataExtension = ".json";
+    private const string ThumbnailExtension = ".png";
 
     private static readonly JsonSerializerOptions MetadataOptions = new()
     {
@@ -99,6 +107,15 @@ public sealed class SaveStateSlotManager
         return Path.Combine(Directory, $"slot-{slot:D2}{MetadataExtension}");
     }
 
+    /// <summary>Gets the screenshot thumbnail path for a slot.</summary>
+    /// <param name="slot">Zero-based slot number.</param>
+    /// <returns>The thumbnail path.</returns>
+    public string GetThumbnailPath(int slot)
+    {
+        ValidateSlot(slot);
+        return Path.Combine(Directory, $"slot-{slot:D2}{ThumbnailExtension}");
+    }
+
     /// <summary>Checks whether a slot contains a state file.</summary>
     /// <param name="slot">Zero-based slot number.</param>
     /// <returns><see langword="true"/> when the state file exists.</returns>
@@ -142,6 +159,7 @@ public sealed class SaveStateSlotManager
         System.IO.Directory.CreateDirectory(Directory);
 
         machine.SaveStateToFile(GetStatePath(target), gameId);
+        WriteThumbnail(machine, target);
         var metadata = new SaveStateSlotMetadata(
             target,
             gameId ?? string.Empty,
@@ -184,6 +202,7 @@ public sealed class SaveStateSlotManager
         var removed = File.Exists(statePath);
         File.Delete(statePath);
         File.Delete(GetMetadataPath(slot));
+        File.Delete(GetThumbnailPath(slot));
         return removed;
     }
 
@@ -210,6 +229,7 @@ public sealed class SaveStateSlotManager
 
         var info = new FileInfo(statePath);
         var metadata = ReadMetadata(slot);
+        var thumbnailPath = File.Exists(GetThumbnailPath(slot)) ? GetThumbnailPath(slot) : string.Empty;
         try
         {
             var state = StateInspector.ReadHeader(statePath);
@@ -222,7 +242,8 @@ public sealed class SaveStateSlotManager
                 metadata?.SavedAtUtc,
                 state.FramesExecuted,
                 info.Length,
-                string.Empty);
+                string.Empty,
+                thumbnailPath);
         }
         catch (Exception exception) when (exception is InvalidStateException or IOException or UnauthorizedAccessException)
         {
@@ -235,7 +256,8 @@ public sealed class SaveStateSlotManager
                 metadata?.SavedAtUtc,
                 -1,
                 info.Length,
-                exception.Message);
+                exception.Message,
+                thumbnailPath);
         }
     }
 
@@ -258,6 +280,26 @@ public sealed class SaveStateSlotManager
         }
 
         return CurrentSlot;
+    }
+
+    private void WriteThumbnail(ThreeDoMachine machine, int slot)
+    {
+        var frame = machine.Frame;
+        if (frame.SourceWidth <= 0 || frame.SourceHeight <= 0)
+        {
+            return;
+        }
+
+        try
+        {
+            var buffer = new FrameBuffer(frame.SourceWidth, frame.SourceHeight);
+            FrameAssembler.Assemble(frame, buffer, buffer.Width, buffer.Height);
+            PngDumper.Write(buffer, GetThumbnailPath(slot));
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            // A thumbnail is optional; never fail a state save because the preview could not be written.
+        }
     }
 
     private void WriteMetadata(int slot, SaveStateSlotMetadata metadata)

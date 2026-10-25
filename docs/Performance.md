@@ -3,7 +3,8 @@
 **Status:** target definition and implementation baseline (2026-10-25). The desktop
 path now has a dedicated 60 Hz core thread, a two-stage palette/scale presenter,
 immutable texture storage with per-frame `TexSubImage2D`, cached uniform locations,
-full sharp-bilinear and CRT scanline/aperture/curvature/vignette filters, an opt-in bounded disc
+full sharp-bilinear and CRT scanline/aperture/curvature/vignette filters, an opt-in xBR
+pass, an opt-in bounded disc
 prefetch cache, and a real benchmark harness with p50/p95/p99 and per-stage
 allocations. CPU-side frame cost is ~1.25-1.6 ms, leaving ~15 ms of headroom at
 60 Hz; the synthetic steady state is allocation-free. Manual DPI validation, the
@@ -97,6 +98,9 @@ Stage 2: scaling/filter at output resolution
   - nearest / sharp-bilinear / CRT / xBR
   - samples the expanded RGB texture into the 4K framebuffer
   - ~8.3M pixels/frame at 4K
+  - xBR adds a native-resolution CPU palette expansion and a 4x offscreen pass
+    (1280x960 for 320x240 sources) before the final sharp-bilinear scale. It is
+    opt-in; benchmark it at 4K before enabling by default.
         │
         ▼
 Window / fullscreen
@@ -277,6 +281,14 @@ are host-side and attributed to the core stage; the synthetic core/pack/mailbox/
 path is allocation-free in steady state. These numbers are **CPU only**: the 4K GPU
 stage and timer queries are not yet measured, and the benchmark is not a substitute
 for a Tier B percentile run.
+
+**GPU timer query (2026-10-25).** The desktop renderer now wraps the palette/xBR/scale
+pipeline in a `GL_TIME_ELAPSED` query on desktop GL. On the Windows development machine
+(OpenGL 4.0, 1500x978 output, BIOS boot, sharp-bilinear), the overlay reported
+**gpu ≈ 0.13 ms** and **present ≈ 0.16 ms** per frame. This is a small native-resolution
+scene, not a 4K measurement; it validates that the timing path works and that the
+presenter is far below the 2 ms CPU budget at this size. The 4K and GLES timer paths
+remain open.
 
 The opt-in prefetch cache (`--prefetch`) produced identical Lemmings state/frame
 hash in a 300-frame run. On the x64 development machine it increased short-run p99

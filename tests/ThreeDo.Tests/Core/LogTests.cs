@@ -117,4 +117,54 @@ public sealed class LogTests
 
         Assert.Equal("[Warning] Clio: timer underflow" + Environment.NewLine, writer.ToString());
     }
+
+    [Fact]
+    public void InMemorySink_RecordsTimestamp()
+    {
+        var sink = new InMemoryLogSink();
+        var before = DateTimeOffset.UtcNow.AddSeconds(-1);
+        sink.Write(LogLevel.Info, LogCategory.Host, "loaded");
+        var after = DateTimeOffset.UtcNow.AddSeconds(1);
+
+        var entry = Assert.Single(sink.Entries);
+        Assert.InRange(entry.TimestampUtc, before, after);
+    }
+
+    [Fact]
+    public void LogViewFilter_AppliesLevelCategoryAndSearch()
+    {
+        LogEntry[] entries =
+        [
+            new(LogLevel.Debug, LogCategory.Cpu, "debug cpu"),
+            new(LogLevel.Info, LogCategory.Cpu, "BIOS loaded"),
+            new(LogLevel.Warning, LogCategory.Storage, "disc read retry"),
+            new(LogLevel.Error, LogCategory.Storage, "disc read failed"),
+        ];
+
+        var filter = new LogViewFilter
+        {
+            MinimumLevel = LogLevel.Info,
+            Category = LogCategory.Storage,
+            Search = "failed",
+        };
+
+        var result = filter.Apply(entries);
+        var entry = Assert.Single(result);
+        Assert.Equal(LogLevel.Error, entry.Level);
+        Assert.Equal(LogCategory.Storage, entry.Category);
+    }
+
+    [Fact]
+    public void LogViewFilter_AllCategoryShowsEveryCategory()
+    {
+        LogEntry[] entries =
+        [
+            new(LogLevel.Info, LogCategory.Cpu, "cpu"),
+            new(LogLevel.Info, LogCategory.Storage, "storage"),
+        ];
+
+        var result = new LogViewFilter { MinimumLevel = LogLevel.Trace }.Apply(entries);
+
+        Assert.Equal(2, result.Count);
+    }
 }

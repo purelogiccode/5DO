@@ -70,6 +70,9 @@ The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NO
 - xUnit (Apache-2.0)
 - BenchmarkDotNet (MIT)
 - Silk.NET (MIT)
+- xBR-lv2 shader algorithm by Hyllian (MIT; attribution preserved in the shader and
+  `THIRD-PARTY-NOTICES.md`)
+- OS XInput / Linux evdev gamepad APIs (no bundled third-party runtime)
 - OpenAL Soft (LGPL; native runtime, if bundled)
 - CHDSharp (MIT plus an LGPL-2.1 component; pure C#; verify the package LICENSE before release)
 - 4DO game database (derive with attribution; verify terms)

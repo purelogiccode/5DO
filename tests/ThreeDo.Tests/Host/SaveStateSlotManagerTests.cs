@@ -27,6 +27,8 @@ public sealed class SaveStateSlotManagerTests
         Assert.NotNull(saved.SavedAtUtc);
         Assert.True(File.Exists(manager.GetStatePath(2)));
         Assert.True(File.Exists(manager.GetMetadataPath(2)));
+        Assert.True(File.Exists(manager.GetThumbnailPath(2)));
+        Assert.True(saved.HasThumbnail);
         Assert.False(File.Exists(manager.GetStatePath(2) + ".tmp"));
         Assert.False(File.Exists(manager.GetMetadataPath(2) + ".tmp"));
         Assert.Equal(2, manager.CurrentSlot);
@@ -95,6 +97,7 @@ public sealed class SaveStateSlotManagerTests
         Assert.True(manager.Delete(0));
         Assert.False(manager.Exists(0));
         Assert.False(File.Exists(manager.GetMetadataPath(0)));
+        Assert.False(File.Exists(manager.GetThumbnailPath(0)));
         Assert.False(manager.Delete(0));
     }
 

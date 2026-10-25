@@ -1,27 +1,18 @@
 # Next Session Handoff
 
-**Date:** 2026-10-25 (seventh pass)
-**Goal:** finish the scripted gameplay loops now that the 3D CEL renderer is correct
-and the high-resolution frontend path exists. The seventh pass completed the
-desktop-shell gaps around that work: game library, settings, six-player binding
-capture, numbered save slots, PNG screenshots, the FPS overlay, and automatic
-4DO per-game fixes. 639 tests pass. Road Rash's race renders like the Opera
-reference and runs past 60,000 frames; Wolfenstein starts a fresh game, walks/turns/
-fires, and its save states roundtrip; Alone's in-game character is upright; Lemmings
-renders its 640x480 high-resolution title; Space Ace plays its demo. The remaining
-work is scripted play, the Lemmings passcode entry sequence, screenshots/audio
-comparison, and documentation. This pass added RAM patches (`--poke`) and an
-experimental Road Rash road-following driver (`--autopilot road`). The 2026-10-25
-late pass takes driver v10 to 91,000 live frames from the 80k/83k states (close
-traffic, urgent preemption, emergency steer hold, throttle-only wreck restart)
-and documents the remaining ~92,000/40,000 stops and a CD-load freeze.
+**Date:** 2026-10-25 (eighth pass)
+**Goal:** return to the real-game compatibility work now that the desktop shell and
+renderer are complete: finish the Road Rash race and Space Ace interactive path, and
+investigate the CD-load/READ_ID freeze. The eighth pass added gamepad backends, a log
+viewer, save-state thumbnails, first-run/error UI, xBR, and the real-content GPU palette
+fix; **659 tests pass**. Do not redo those features. The remaining work is scripted
+play, CD/CLIO/MADAM timing triage, GPU/Tier B validation, arm64/installers, and the
+legal/attribution review.
 
-The sixth pass added the remaining presentation plumbing around that work:
-honest GL/GLES capability reporting, CPU fallback/context-loss recovery,
-fullscreen/F11, GL readback screenshots, an About dialog, a Hi-Res shell toggle,
-CLI process tests, p50/p95/p99 and per-stage allocation reporting (zero synthetic
-steady-state allocations), and an opt-in bounded `--prefetch` disc cache. Gameplay
-validation is still the next coding priority.
+Earlier passes added the presentation plumbing (GL/GLES capability reporting, CPU
+fallback/context-loss recovery, fullscreen, screenshots, About, Hi-Res, benchmark
+gates, and prefetch) and the game-specific fixes recorded below. Read section 1.11 for
+the eighth-pass changes before starting.
 
 Read these first:
 
@@ -259,7 +250,41 @@ compatibility:
   FPS/status overlay is available in Settings.
 
 The five 3,000-frame low-res hashes are unchanged; Alone's automatic
-`FIX_BIT_TIMING_6` does not alter the boot frames. 639 tests pass.
+`FIX_BIT_TIMING_6` does not alter the boot frames. 659 tests pass.
+
+---
+
+### 1.11 Desktop completeness and renderer correctness (2026-10-25, eighth pass)
+
+The eighth pass closed the remaining non-gameplay frontend gaps and fixed a
+real-content renderer bug:
+
+- **GPU palette expansion.** The shader used `pixel & 0x1f` as one CLUT index for all
+  three channels. Real frames therefore appeared grayscale. The shader now fetches red,
+  green, and blue independently (`pixel >> 10`, `pixel >> 5`, `pixel`) and matches
+  `FrameAssembler`/`GpuPalette`. Lemmings gameplay was captured through sharp-bilinear
+  and xBR with correct colors.
+- **xBR.** Hyllian's xBR-lv2 edge-directed 4x pass is implemented as `VideoFilter.Xbr`,
+  with a CPU-expanded native source and sharp-bilinear finishing. It is selectable in
+  Settings and validated visually on Lemmings gameplay at 60 fps. HQx, CRT bloom, and
+  4K timing remain optional follow-ups.
+- **Gamepads.** `GamepadMapper` plus Windows XInput and Linux evdev backends; hot-plug
+  rescanning, six-player mapping, left-stick D-pad fallback, trigger-to-shoulder
+  fallback, and a Gamepad tab in the input editor. macOS falls back to null.
+- **Logs.** In-app log viewer with level, category, search, auto-refresh, and clear;
+  the shell records BIOS/disc loads, renderer fallback, save/load, screenshots, input
+  changes, and emulation faults.
+- **Save-state thumbnails.** Each slot writes a PNG thumbnail shown in the Slots window;
+  thumbnail failures never fail the state save.
+- **First run and errors.** A welcome guide explains the user-provided BIOS/disc
+  requirement; BIOS, disc, and emulation failures show error dialogs in addition to the
+  status line and log.
+- **Docs.** Added `docs/UserGuide.md`, `docs/KnownIssues.md`, and `CHANGELOG.md`.
+
+659 tests pass. The five 3,000-frame low-res hashes are unchanged. The next session
+should return to the real-game compatibility work: Road Rash's ~92k/40k stops, Space
+Ace's interactive path, and the CD-load/READ_ID freeze. Do not redo the palette, xBR,
+gamepad, log, thumbnail, or first-run work.
 
 ---
 
@@ -476,6 +501,9 @@ changing the DSP reload value. The 18,000-frame Wolfenstein gameplay capture is
 
 ## 5. Do not do
 
+- Do not redo the eighth-pass work: the GPU palette per-channel CLUT fix, xBR filter,
+  gamepad backends/mapping UI, log viewer, save-state thumbnails, or first-run/error
+  dialogs are complete and tested. Extend them only with new evidence.
 - Do not re-enable the `AudioSink?.PushSample(Dsp.Loop())` short-circuit.
 - Do not change the XBUS DMA byte order (`IRam` uses `b0,b1,b2,b3`).
 - Do not port `opera_cdrom.c` wholesale; the CD path is working.

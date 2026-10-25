@@ -10,6 +10,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="ThreeDo.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ThreeDo.Core\ThreeDo.Core.csproj" />
     <ProjectReference Include="..\ThreeDo.Video\ThreeDo.Video.csproj" />
   </ItemGroup>

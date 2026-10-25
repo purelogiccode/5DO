@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-25, seventh pass (see `git log` for the exact commit).
+**Snapshot:** 2026-10-25, eighth pass (see `git log` for the exact commit).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
 **Reference:** `References/opera-libretro-master/libopera` is now the primary
 behavioral reference for new compatibility work; see
@@ -24,12 +24,15 @@ This is the short, current answer to "where are we?" The detailed task list is i
 - **Video:** the desktop two-stage presenter expands palettes at native resolution
   into an FBO, then scales/filters to the output. Desktop GL 3.3 and GLSL ES 300
   sources are selected from the context version. The VDLP bitmap path now honors the
-  modulo-derived line width (320/384/512/640/1024). An opt-in high-resolution mode
-  (`--high-res`, `EmulatorTuning.HighResolution`) renders CELs and bitmap lines into
-  four 1 MB VRAM planes and presents 640x480 by line-doubling the 640x240 source;
-  Lemmings' title screen now matches the 640x480 reference. The mode is off by
-  default because 320x240 titles must not be upscaled, and the desktop shell exposes
-  it as a Hi-Res checkbox that restarts the machine.
+  modulo-derived line width (320/384/512/640/1024). The palette shader was fixed in the
+  eighth pass to use independent red, green, and blue CLUT indices; the previous shader
+  used only the low five bits and made real games grayscale. An opt-in high-resolution
+  mode (`--high-res`, `EmulatorTuning.HighResolution`) renders CELs and bitmap lines
+  into four 1 MB VRAM planes and presents 640x480 by line-doubling the 640x240 source;
+  Lemmings' title screen now matches the 640x480 reference. The mode is off by default
+  because 320x240 titles must not be upscaled, and the desktop shell exposes it as a
+  Hi-Res checkbox that restarts the machine. An opt-in xBR-lv2 4x filter is available
+  in Settings; it uses a CPU-expanded native source and sharp-bilinear finishing.
 - **Performance:** the machine runs on a dedicated 60 Hz core thread with a frame
   pacer; the UI renders on demand; uploads use `TexStorage2D` + `TexSubImage2D`;
   uniform locations and the present delegate are cached; physical-pixel sizing is
@@ -43,10 +46,13 @@ This is the short, current answer to "where are we?" The detailed task list is i
 - **Desktop shell:** the game library scans configured folders through the 4DO
   database and opens the selected disc; the settings dialog edits video, audio,
   emulation, and paths; keyboard bindings for all six players can be captured with
-  automatic conflict removal and reset-to-defaults; save states use ten numbered slots with
-  next/previous, a list/save/load/delete window, and JSON metadata; screenshots are
-  PNG files named by game, time, and frame. Per-game 4DO fix flags are applied automatically when a disc opens;
-  explicit masks can be set in the settings dialog.
+  automatic conflict removal and reset-to-defaults; gamepads are mapped through a
+  Gamepad tab (Windows XInput, Linux evdev). Save states use ten numbered slots with
+  next/previous, a list/save/load/delete window, JSON metadata, and PNG thumbnails;
+  screenshots are PNG files named by game, time, and frame. The shell has a first-run
+  guide, error dialogs, and an in-app diagnostic log viewer with level/category/search
+  filters. Per-game 4DO fix flags are applied automatically when a disc opens; explicit
+  masks can be set in the settings dialog.
 - **Per-game fixes:** `GameCompatibility` maps the 4DO game IDs to `FixMode` bits.
   The CLI exposes `--fix-mode 0xMASK` and `--no-game-fixes`, and `run --json` /
   `info` report the applied mask. Alone in the Dark's `FIX_BIT_TIMING_6` is applied
@@ -69,11 +75,12 @@ This is the short, current answer to "where are we?" The detailed task list is i
   `frame button[,button...]` lines for repeatable controller taps. Input has been
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene and menu), Lemmings (menu and passcode entry), and Space Ace (P/X).
-- **Tests:** 639 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 659 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
-  bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips, and
-  keyboard binding capture.
+  bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
+  thumbnails, keyboard/gamepad binding capture, gamepad mapping, log filtering, and
+  shader source invariants.
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   A win-x64 CLI publish has been smoke-tested.
 
@@ -96,6 +103,13 @@ on both sides. Opera is the bundled Windows `OperaCore` build in
 The CD disc-end fix on 2026-10-23 is what unblocked Road Rash, Space Ace, and
 Wolfenstein: `InitCd` no longer double-adds the 150-frame lead-in, so the CD DIPIR
 accepts discs whose volume block count is less than the physical track length.
+
+The 2026-10-25 eighth pass fixed a real-content renderer bug: the GPU palette shader
+used the low five bits of each pixel as a single CLUT index for all three channels,
+so games appeared grayscale. It now uses the red, green, and blue indices independently
+and matches the CPU frame assembler. Lemmings gameplay was captured through
+sharp-bilinear and xBR with correct colors. The xBR path uses a CPU-expanded source to
+avoid a driver readback issue with the FBO-attached palette texture.
 
 The 2026-10-24 session found and fixed the common blockers:
 
@@ -157,6 +171,11 @@ case. The **4K GPU pass, Tier B (Pi 4/5) numbers, and GLES timing are not measur
 yet**. CHD decode allocations are host-side and are attributed to the core stage;
 the synthetic core/pack/mailbox/read path is allocation-free in steady state.
 
+The desktop renderer now uses a `GL_TIME_ELAPSED` query and reports GPU/present time in
+the FPS overlay. A Windows OpenGL 4.0 BIOS boot at 1500x978 measured **gpu ≈ 0.13 ms**
+and **present ≈ 0.16 ms** per frame; this is a small native-resolution scene, not 4K,
+but it validates the timing path and shows ample presenter headroom.
+
 ### 4K60 feasibility
 
 - **Desktop (Tier A): high confidence.** The core is ~1.25-1.6 ms/frame; the 4K pass
@@ -183,12 +202,12 @@ prototype work as partial credit:
 | Milestone | State | Done (dd) | Remaining (dd) |
 |---|---|---:|---:|
 | M0-M8 core, CPU, boot, MADAM, DSP, CD, input, save states | Functionally complete; M0.8 legal review and minor M8 follow-ups are non-blocking | 90 | 0 |
-| M9 Avalonia frontend | Partial: shell, library, video, input, fullscreen, About, Hi-Res; settings/audio/gamepad pages and polish remain | 11 | 5 |
-| M9R OpenGL presenter | Partial: two-stage, sharp-bilinear/CRT, CPU fallback, screenshots; xBR/HQx and GPU tests remain | 7 | 3 |
-| M9P performance/pacing | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch; hot-path, Tier B/GPU gates remain | 6 | 4 |
+| M9 Avalonia frontend | Partial: shell, library, video, input, fullscreen, About, Hi-Res, settings/audio/gamepad/logs/first-run/thumbnails; polish and ViewModel tests | 13 | 3 |
+| M9R OpenGL presenter | Partial: two-stage, sharp-bilinear/CRT/xBR, CPU fallback, screenshots; HQx/bloom and GPU tests remain | 8 | 2 |
+| M9P performance/pacing | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch, GPU timer; hot-path, Tier B/GPU gates remain | 6 | 4 |
 | M10 packaging/validation | Partial: CI and six-RID publish; arm64, trimming, installers, perf report remain | 2.5 | 3.5 |
-| M11 compatibility/release | In progress: M11.0 done; gameplay and high-resolution validation underway | 2.5 | 22.5+ |
-| **Baseline total** | | **~119 / 157** | **~38 + 30% ≈ 49** |
+| M11 compatibility/release | In progress: M11.0 done; gameplay, high-resolution, and release docs underway | 3 | 22+ |
+| **Baseline total** | | **~122.5 / 157** | **~34.5 + 30% = ~45** |
 
 **Estimate: roughly three-quarters of the v1 effort is done.** For one experienced
 developer that is about **9-11 focused weeks**; two developers can overlap the UI,
@@ -247,7 +266,9 @@ add **2-4 weeks**. If the target is "all five corpus games playable" rather than
 
 8. **M10 packaging:** arm64 validation, trimming, installers/signing plan, and the
    final performance report.
-9. **Filter/UI polish:** xBR/HQx, settings/audio/gamepad pages, vsync/FPS overlay.
+9. **Filter/UI polish:** HQx/CRT bloom, per-game filter presets, vsync/FPS overlay
+   tuning, and ViewModel tests. The settings, audio, gamepad, logs, first-run, and
+   thumbnail pages are complete.
 10. **Legal/attribution review** before any public build (M0.8); add Opera to the
     FreeDO/4DO attribution and license review.
 

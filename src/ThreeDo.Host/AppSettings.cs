@@ -15,6 +15,9 @@ namespace ThreeDo.Host;
 /// </summary>
 public sealed class AppSettings
 {
+    /// <summary>Gets or sets a value indicating whether the first-run guide has been shown.</summary>
+    public bool FirstRunCompleted { get; set; }
+
     /// <summary>Gets or sets the last BIOS path.</summary>
     public string BiosPath { get; set; } = string.Empty;
 

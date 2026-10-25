@@ -355,6 +355,41 @@ and `fixMode` in `run --json` and `info`, and accepts `--fix-mode 0xMASK` /
 six-player binding capture, numbered save slots, PNG screenshots, and the FPS
 overlay; 639 tests pass. The Input dialog edits all six players.
 
+### 1.4b Eighth pass: renderer correctness and desktop validation (2026-10-25)
+
+The five 3,000-frame low-res regression hashes are unchanged after the eighth-pass
+renderer and desktop work:
+
+| Title | Final PC | Frame hash |
+|---|---|---|
+| Alone in the Dark | `0x000C4CB4` | `0xF4BDF79B` |
+| Lemmings | `0x0012B3C8` | `0x932C7722` |
+| Road Rash | `0x000B9F84` | `0xEB31636F` |
+| Space Ace | `0x00076418` | `0xA2B49CF0` |
+| Wolfenstein 3D | `0x000699E8` | `0xC21BB6A1` |
+
+Commands:
+
+```powershell
+dotnet run -c Release --project src/ThreeDo.Cli -- run `
+  "$env:THREEDO_GAMES\Lemmings (USA).chd" --bios bios/panafz1.bin `
+  --frames 3000 --json
+```
+
+Desktop renderer validation (Windows, OpenGL 4.0, 1500x978 output):
+
+- Loaded `artifacts/s2/lem-fun4.state` through the shell, ran at 60 fps, and captured
+  PNG screenshots through the OpenGL readback path.
+- Sharp-bilinear and xBR screenshots show the Lemmings level with correct colors;
+  before the palette fix the same frames appeared grayscale.
+- The xBR screenshot is edge-smoothed and retains the game image. It is an opt-in
+  filter and is not part of the regression hash.
+- The in-app Logs window showed the renderer-ready and shell-start events; the first-run
+  guide, save-slot thumbnail, and error-dialog paths were exercised manually.
+
+The screenshots are local artifacts and are not committed. The 659-test suite covers
+the gamepad mapper, log filter, shader source invariants, and slot thumbnails.
+
 ### 1.5 Fifth pass: Road Rash v10 reaches 91,000 live frames (2026-10-25)
 
 All runs use the Release build, `panafz1.bin`, and the local artifacts under

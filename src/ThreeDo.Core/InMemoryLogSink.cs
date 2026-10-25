@@ -9,7 +9,12 @@ namespace ThreeDo.Core;
 /// <param name="Level">Severity.</param>
 /// <param name="Category">Category.</param>
 /// <param name="Message">Formatted message.</param>
-public readonly record struct LogEntry(LogLevel Level, LogCategory Category, string Message);
+/// <param name="TimestampUtc">Capture time in UTC, or <see langword="default"/> when unavailable.</param>
+public readonly record struct LogEntry(
+    LogLevel Level,
+    LogCategory Category,
+    string Message,
+    DateTimeOffset TimestampUtc = default);
 
 /// <summary>
 /// Keeps the most recent diagnostic messages in memory for tests and the in-app log viewer.
@@ -55,7 +60,7 @@ public sealed class InMemoryLogSink : ILogSink
                 _entries.RemoveAt(0);
             }
 
-            _entries.Add(new LogEntry(level, category, message));
+            _entries.Add(new LogEntry(level, category, message, DateTimeOffset.UtcNow));
         }
     }
 

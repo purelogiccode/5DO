@@ -2,20 +2,21 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current position (2026-10-25, sixth pass):** all five local corpus titles boot, load
+**Current position (2026-10-25, eighth pass):** all five local corpus titles boot, load
 their own OS, render real frames, and produce non-silent DSP audio. Road Rash's 3D race
 renders correctly and the attract race continues past 60,000 frames with no allocator
 error; Wolfenstein 3D starts a fresh game (FLOOR 1-1), walks/turns/fires, and its save
 states roundtrip; Alone in the Dark's in-game character renders upright at the
 staircase and its menu is reachable; Lemmings reaches its title menu and passcode
-screen, and its 640x480 high-resolution title matches the reference; Space Ace plays
-its animated demo. Scripted input has been used to navigate the Wolfenstein and
-Lemmings menus, open the Alone menu, and start Road Rash's player race. The Wolfenstein
-fresh-game walk is the first verified full gameplay loop; completing a race/level in
-the other titles and typing a full Lemmings passcode remain next. The Road Rash
-autopilot's former "terminal wall pin" was identified as the race-over `BUSTED`
-screen (2026-10-25), so the open problem is keeping the race alive, not unsticking a
-wedged bike.
+screen, its 640x480 high-resolution title matches the reference, and its Fun 4 passcode
+starts gameplay with a save/load roundtrip; Space Ace plays its animated demo. The
+eighth pass fixed the GPU palette shader so real frames use independent R/G/B CLUT
+indices, added the opt-in xBR-lv2 filter, and captured Lemmings gameplay through both
+sharp-bilinear and xBR with correct colors. The Wolfenstein fresh-game walk and the
+Lemmings passcode path are verified gameplay loops; completing a race/level in the
+other titles remains next. The Road Rash autopilot's former "terminal wall pin" was
+identified as the race-over `BUSTED` screen (2026-10-25), so the open problem is keeping
+the race alive, not unsticking a wedged bike.
 
 The 2026-10-24 sessions found four root causes:
 
@@ -44,6 +45,13 @@ The 2026-10-24 sessions found four root causes:
   fixed the VDLP bitmap copy to use the modulo-derived line width instead of a fixed
   320 pixels, so 384/512/640-wide modes are no longer cropped, and made save-state
   loads restore the VDL pixel buffers immediately.
+
+The 2026-10-25 eighth pass fixed a renderer-only issue: the GPU palette shader used
+the low five bits of each pixel as one CLUT index for all three channels, so real
+content appeared grayscale even though the CPU oracle was correct. The shader now
+uses the red, green, and blue indices independently. Lemmings gameplay was captured
+through sharp-bilinear and xBR with correct colors; xBR uses a CPU-expanded source to
+avoid a driver readback issue with the FBO-attached palette texture.
 
 Space Ace's former frame-681 runaway was a downstream consequence of the DSP
 failure: the ReadySoft player's audio task copied a decoded buffer to a null

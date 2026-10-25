@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.OpenGL;
@@ -32,6 +33,13 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     private int _renderedWidth;
     private int _renderedHeight;
     private bool _captureRequested;
+    private double _presentMilliseconds;
+
+    /// <summary>Gets the CPU time spent presenting the most recent GL frame, in milliseconds.</summary>
+    public double PresentMilliseconds => _presentMilliseconds;
+
+    /// <summary>Gets the most recent GPU frame time, or <see langword="null"/> when unavailable.</summary>
+    public double? GpuMilliseconds => (_renderer as IRendererTiming)?.GpuMilliseconds;
 
     /// <summary>Gets or sets the renderer settings.</summary>
     public RendererSettings Settings
@@ -162,6 +170,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
         _renderedHeight = height;
         _renderer.Settings = _settings;
         _renderer.Resize(width, height);
+        var presentStart = Stopwatch.GetTimestamp();
         if (_present is not null)
         {
             _mailbox.Read(_presentFrame, _present);
@@ -174,6 +183,9 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
             _renderer.ReadPixels(buffer, out var captureWidth, out var captureHeight);
             CaptureCompleted?.Invoke(buffer, captureWidth, captureHeight);
         }
+
+        _presentMilliseconds =
+            (Stopwatch.GetTimestamp() - presentStart) * 1000.0 / Stopwatch.Frequency;
     }
 
     private (int Width, int Height) GetPixelSize()

@@ -4,6 +4,7 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
 using ThreeDo.Host;
 
 namespace ThreeDo.Frontend.Avalonia.Views;
@@ -11,12 +12,13 @@ namespace ThreeDo.Frontend.Avalonia.Views;
 /// <summary>
 /// Lists numbered save slots and lets the user save, load, or delete the selected slot.
 /// </summary>
-public partial class SaveSlotsWindow : Window
+public partial class SaveSlotsWindow : Window, IDisposable
 {
     private readonly SaveStateSlotManager _manager;
     private readonly Func<int, SaveStateSlotInfo?> _saveCurrent;
     private readonly Action<int> _load;
     private readonly Action<int> _delete;
+    private Bitmap? _thumbnail;
 
     /// <summary>Creates the dialog with the default slot directory.</summary>
     public SaveSlotsWindow()
@@ -52,6 +54,47 @@ public partial class SaveSlotsWindow : Window
     }
 
     private void OnRefresh(object? sender, RoutedEventArgs e) => Refresh();
+
+    private void OnSelectionChanged(object? sender, SelectionChangedEventArgs e) => UpdateThumbnail();
+
+    private void UpdateThumbnail()
+    {
+        _thumbnail?.Dispose();
+        _thumbnail = null;
+        ThumbnailImage.Source = null;
+
+        if (SlotList.SelectedItem is not SaveStateSlotInfo { HasThumbnail: true } info)
+        {
+            NoThumbnailText.IsVisible = true;
+            return;
+        }
+
+        try
+        {
+            _thumbnail = new Bitmap(info.ThumbnailPath);
+            ThumbnailImage.Source = _thumbnail;
+            NoThumbnailText.IsVisible = false;
+        }
+        catch (Exception exception) when (exception is IOException or ArgumentException or UnauthorizedAccessException)
+        {
+            NoThumbnailText.IsVisible = true;
+        }
+    }
+
+    /// <inheritdoc />
+    protected override void OnClosed(EventArgs e)
+    {
+        Dispose();
+        base.OnClosed(e);
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _thumbnail?.Dispose();
+        _thumbnail = null;
+        GC.SuppressFinalize(this);
+    }
 
     private void OnSaveCurrent(object? sender, RoutedEventArgs e)
     {
@@ -123,5 +166,7 @@ public partial class SaveSlotsWindow : Window
         {
             StatusText.Text = "No save states in this directory.";
         }
+
+        UpdateThumbnail();
     }
 }

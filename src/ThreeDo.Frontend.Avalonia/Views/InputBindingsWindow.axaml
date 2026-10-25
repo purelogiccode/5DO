@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="ThreeDo.Frontend.Avalonia.Views.InputBindingsWindow"
         Title="Input Bindings"
-        Width="500" Height="560"
+        Width="560" Height="620"
         WindowStartupLocation="CenterOwner">
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="12">
@@ -10,11 +10,26 @@
             <TextBlock Grid.Column="0" Text="Player" VerticalAlignment="Center" Margin="0,0,6,0" />
             <ComboBox x:Name="PlayerCombo" Grid.Column="1" Width="120" SelectionChanged="OnPlayerChanged" />
             <TextBlock Grid.Column="2" Margin="12,0,0,0" TextWrapping="Wrap" VerticalAlignment="Center"
-                       Text="Select Rebind, then press the new key." />
+                       Text="Keyboard: select Rebind, then press the new key. Gamepad: choose a 3DO button for each physical control." />
         </Grid>
-        <ScrollViewer Grid.Row="1" Margin="0,8">
-            <StackPanel x:Name="RowsPanel" Spacing="4" />
-        </ScrollViewer>
+
+        <TabControl Grid.Row="1" Margin="0,8">
+            <TabItem Header="Keyboard">
+                <ScrollViewer>
+                    <StackPanel x:Name="RowsPanel" Spacing="4" Margin="4" />
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="Gamepad">
+                <Grid RowDefinitions="Auto,*" Margin="4">
+                    <TextBlock Grid.Row="0" TextWrapping="Wrap" Opacity="0.8" Margin="0,0,0,6"
+                               Text="Left-stick directions fall back to the D-pad when no stick binding is set; analog triggers fall back to the matching shoulder." />
+                    <ScrollViewer Grid.Row="1">
+                        <StackPanel x:Name="GamepadRowsPanel" Spacing="4" />
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
         <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
             <TextBlock x:Name="StatusText" Grid.Column="0" VerticalAlignment="Center"
                        TextWrapping="Wrap" Foreground="#FFB060" />

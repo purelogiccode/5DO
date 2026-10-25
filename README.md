@@ -6,17 +6,26 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-25, seventh pass):** M0-M8 are functionally complete. The
+**Current position (2026-10-25, eighth pass):** M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **639 tests pass.** The shell now has fullscreen, GL screenshots, an
-About dialog, a Hi-Res toggle, automatic CPU fallback when OpenGL init or the
-context fails, a game library browser, a settings dialog (video/audio/emulation/
-paths), six-player keyboard binding capture, ten numbered save slots, PNG screenshots
-named by game/frame/time, and an optional FPS/status overlay. The CLI applies the
-4DO per-game fixes automatically and accepts `--fix-mode`/`--no-game-fixes`
-overrides. The benchmark reports p50/p95/p99 and zero steady-state allocations;
-an opt-in bounded disc prefetch cache is available via `--prefetch`.
+prototype. **659 tests pass.** The shell now has fullscreen, GL screenshots, an About
+dialog, a Hi-Res toggle, automatic CPU fallback when OpenGL init or the context fails,
+a game library browser, a settings dialog (video/audio/emulation/paths), six-player
+keyboard and gamepad binding, ten numbered save slots with PNG thumbnails, PNG
+screenshots named by game/frame/time, an optional FPS/status overlay, a first-run
+guide, error dialogs, and an in-app diagnostic log viewer. Windows XInput and Linux
+evdev gamepads are supported. The CLI applies the 4DO per-game fixes automatically and
+accepts `--fix-mode`/`--no-game-fixes` overrides. The benchmark reports p50/p95/p99 and
+zero steady-state allocations; an opt-in bounded disc prefetch cache is available via
+`--prefetch`.
+
+The renderer now has an opt-in **xBR-lv2** edge-directed 4x filter alongside accurate,
+nearest, sharp-bilinear, and CRT modes. This pass also fixed a real-content **GPU
+palette bug**: the shader used only the low five bits of each pixel for all three CLUT
+channels, so games appeared grayscale. The shader now applies the red, green, and blue
+indices independently, matching the CPU `FrameAssembler`; Lemmings gameplay was captured
+through both sharp-bilinear and xBR with correct colors.
 
 Real-content status with `panafz1.bin`: all five local corpus titles boot, load their
 own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio.
@@ -57,6 +66,9 @@ implementation plan and architecture are in:
 - [`docs/Compatibility.md`](docs/Compatibility.md) - BIOS, disc, input, and game-fix compatibility notes.
 - [`docs/TestCorpus.md`](docs/TestCorpus.md) - local BIOS/disc corpus and real-content validation commands (not committed).
 - [`docs/Performance.md`](docs/Performance.md) - 4K60 budgets, presentation pipeline, and measurement plan.
+- [`docs/UserGuide.md`](docs/UserGuide.md) - quick start, controls, display filters, save states, logs, and CLI.
+- [`docs/KnownIssues.md`](docs/KnownIssues.md) - current game/renderer/platform limitations.
+- [`CHANGELOG.md`](CHANGELOG.md) - recent user-visible changes.
 
 ## Goals
 

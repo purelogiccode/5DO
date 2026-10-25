@@ -49,10 +49,16 @@ public sealed class PlayerProfile
         profile.Gamepad["North"] = ControllerButton.C;
         profile.Gamepad["LeftShoulder"] = ControllerButton.L;
         profile.Gamepad["RightShoulder"] = ControllerButton.R;
+        profile.Gamepad["LeftTrigger"] = ControllerButton.L;
+        profile.Gamepad["RightTrigger"] = ControllerButton.R;
         profile.Gamepad["DpadUp"] = ControllerButton.Up;
         profile.Gamepad["DpadDown"] = ControllerButton.Down;
         profile.Gamepad["DpadLeft"] = ControllerButton.Left;
         profile.Gamepad["DpadRight"] = ControllerButton.Right;
+        profile.Gamepad["LeftStickUp"] = ControllerButton.Up;
+        profile.Gamepad["LeftStickDown"] = ControllerButton.Down;
+        profile.Gamepad["LeftStickLeft"] = ControllerButton.Left;
+        profile.Gamepad["LeftStickRight"] = ControllerButton.Right;
         profile.Gamepad["Start"] = ControllerButton.P;
         profile.Gamepad["Select"] = ControllerButton.X;
         return profile;

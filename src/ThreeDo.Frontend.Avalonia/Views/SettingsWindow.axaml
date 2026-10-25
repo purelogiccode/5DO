@@ -16,7 +16,7 @@
                     <CheckBox x:Name="IntegerCheck" Grid.Row="2" Grid.Column="1" Content="Integer scaling" />
                     <CheckBox x:Name="VsyncCheck" Grid.Row="3" Grid.Column="1" Content="VSync (where supported)" />
                     <CheckBox x:Name="OverlayCheck" Grid.Row="4" Grid.Column="1" Content="Show FPS/status overlay" />
-                    <TextBlock Grid.Row="5" Grid.Column="1" Text="xBR/HQx is planned; the current build falls back to sharp-bilinear."
+                    <TextBlock Grid.Row="5" Grid.Column="1" Text="xBR runs an edge-directed 4x pass before the final scale; it costs more GPU time at 4K."
                                Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0" />
                 </Grid>
             </TabItem>

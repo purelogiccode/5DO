@@ -406,8 +406,18 @@ This is the largest and riskiest port. Split it into classes but keep the origin
   - raw 16-bit pixels (`R16UI`) + per-line CLUT (`RGB8`) + line-param texture (`RGBA32UI`)
   - exact 5-bit-to-8-bit expansion
   - fixed CLUT and background paths
+  - **Per-channel CLUT indices are mandatory.** The per-line CLUT is a 32-entry
+    `(R,G,B)` table, but a 16-bit pixel uses `pixel >> 10` for red, `pixel >> 5` for
+    green, and `pixel` for blue. The shader must fetch those three indices
+    independently; using one index for `.rgb` makes real content grayscale. This bug
+    was fixed on 2026-10-25 and is covered by shader-source and real-content checks.
   - the CPU and GPU outputs must hash identically in "Accurate" mode.
-- HQX/xBR filters are GPU shader passes in `ThreeDo.Video.OpenGL`. They are presentation-only and must never feed back into emulated state.
+- **xBR** is an optional 4x edge-directed pass. It uses a CPU-expanded
+  native-resolution `FrameAssembler` output uploaded as an RGBA texture rather than
+  the FBO-attached palette texture, because the latter sampled black in the xBR
+  program on the development driver. This is presentation-only and does not affect
+  emulated state; the other filters keep GPU palette expansion.
+- HQX is not shipped; xBR is the supported filter-family member.
 - Do not remove the CPU `FrameAssembler`; it is used by CLI/headless tests, as a fallback, and as the golden oracle for the shader.
 
 ### 8.12 CHD storage (new, no FreeDOCore equivalent)
