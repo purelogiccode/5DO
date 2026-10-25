@@ -150,7 +150,7 @@ The 4DO game database also maps:
 - `0511D3D2`, `9F7D72BC`, `E843C635` -> `FIX_BIT_TIMING_6`
 - `2AABA5B9`, `BF61BB32` -> `FIX_BIT_GRAPHICS_STEP_Y`
 
-The game database is ported with attribution. Unknown game IDs get the first 8 hex characters of the MD5, with collision avoidance, matching 4DO. Users can override fixes per game in settings.
+The game database is ported with attribution. Unknown game IDs get the first 8 hex characters of the MD5, with collision avoidance, matching 4DO. `GameCompatibility` applies the mapping automatically when the CLI or desktop shell opens a disc; `--fix-mode`/`--no-game-fixes` and the per-game override in Settings provide explicit control. The 3,000-frame Alone boot hash is unchanged with `FIX_BIT_TIMING_6` applied.
 
 ---
 

@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Status (2026-10-25, sixth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five local corpus titles boot, load their own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio. Road Rash's 3D race renders correctly and the v10 autopilot reaches 91,000 live frames; Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room; Lemmings completes the Fun 4 passcode and its 640x480 high-resolution title matches the reference; Space Ace plays its demo. **605 tests pass.** The opt-in 640x480 high-resolution CEL/VDLP mode is exposed in the desktop shell. The renderer now reports API/version capabilities honestly, falls back to the CPU presenter on GL failure or context loss, supports fullscreen and GL readback screenshots, and the benchmark reports p50/p95/p99 and per-stage allocations (zero steady-state). An opt-in bounded CHD/ISO prefetch worker is available via `--prefetch`. Remaining work: finish the Road Rash race and Space Ace interactive path, GPU 4K/p99/GLES/DPI validation, xBR/HQx and UI polish, arm64/installers, the M0.8 legal/attribution review, and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
+**Status (2026-10-25, seventh pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five local corpus titles boot, load their own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio. Road Rash's 3D race renders correctly and the v10 autopilot reaches 91,000 live frames; Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room; Lemmings completes the Fun 4 passcode and its 640x480 high-resolution title matches the reference; Space Ace plays its demo. **637 tests pass.** The desktop shell now has a game library browser, a settings dialog (video/audio/emulation/paths), player-1 keyboard binding capture with conflict handling, ten numbered save slots with next/previous and PNG screenshots named by game/frame/time, and an optional FPS/status overlay. The CLI applies the 4DO per-game fix flags automatically and exposes `--fix-mode`/`--no-game-fixes` overrides. The opt-in 640x480 high-resolution CEL/VDLP mode is exposed in the desktop shell. The renderer reports API/version capabilities honestly, falls back to the CPU presenter on GL failure or context loss, supports fullscreen and GL readback screenshots, and the benchmark reports p50/p95/p99 and per-stage allocations (zero steady-state). An opt-in bounded CHD/ISO prefetch worker is available via `--prefetch`. Remaining work: finish the Road Rash race and Space Ace interactive path, GPU 4K/p99/GLES/DPI validation, xBR/HQx and UI polish, arm64/installers, the M0.8 legal/attribution review, and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
 **Last updated:** 2026-10-25
 
 ---
@@ -214,7 +214,7 @@ project/type layout is unchanged.
 
 ### 4a. Current position vs. the plan (2026-10-25)
 
-Snapshot: 605 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
+Snapshot: 637 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
 and zero synthetic steady-state allocations; all five local corpus titles boot and
 render, and scripted gameplay is validated in Wolfenstein, Lemmings, Road Rash, and
 Alone. The opt-in 640x480 high-resolution mode is implemented and matches the
@@ -815,7 +815,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Debounced atomic write (250 ms via `TimeProvider`), flush on pause/stop/dispose, fresh-image initialization, corrupt-image backup.
 - [x] **M7.6 Game database and fix modes.**
   - 4DO `GameDatabase.xml` ported as an embedded resource with attribution; MD5 → ID/name lookup and unknown-ID fallback.
-  - Per-game settings and fix-mode application remain in the host/settings layer (M9.5); the core fix flags already exist in `CompatibilityState`.
+  - `GameCompatibility` maps the 4DO IDs to `FixMode` bits and is applied automatically by the CLI and desktop shell when a disc opens. `--fix-mode`/`--no-game-fixes` and `AppSettings.FixModeOverrides` provide explicit overrides; `--json` and `info` report the applied mask.
 - [x] **M7.7 BIOS detection and Anvil.**
   - `byte[28] == 234` -> `SetAnvilFix(30)`.
   - BIOS type is exposed through `BiosImage` and `ThreeDoMachine.Compatibility`; UI/CLI display arrives with M8/M9.
@@ -923,17 +923,17 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - First-run wizard, remembered paths, and error dialogs remain.
 - [~] **M9.4 Game library.**
   - Open disc, replace/eject, and volume metadata via the file picker.
-  - `GameLibraryScanner` recursively scans ISO/BIN/CUE/CHD files and resolves titles through the 4DO database; `AppSettings.RecentDiscs` keeps the last ten paths. The library view, cover art, and refresh UI remain.
+  - `GameLibraryScanner` recursively scans ISO/BIN/CUE/CHD files and resolves titles through the 4DO database; `AppSettings.RecentDiscs` keeps the last ten paths and `AppSettings.LibraryFolders` stores scanned roots. The Library window lists recognized titles/formats/sectors/paths, adds folders, refreshes, and opens the selected disc. Cover art remains.
 - [~] **M9.5 Settings.**
   - Video: renderer (OpenGL/CPU fallback), filter (accurate/nearest/sharp-bilinear/CRT/xBR), scale, aspect, fullscreen, vsync.
   - Audio: device, buffer, volume/mute.
   - Input: keyboard/gamepad mapping per player, hotkeys.
   - Emulation: ARM clock, fix mode, high-res (opt-in; default off), save slots, CPU backend (interpreter; JIT when available).
   - Paths: BIOS, saves, screenshots, library.
-  - `AppSettings`/`AppSettingsStore` persist paths, renderer/aspect/vsync/integer scale, audio enable/volume, high-resolution mode, and input bindings; the full settings page and per-game overrides remain. The shell exposes a Hi-Res checkbox that restarts the machine.
-- [ ] **M9.6 Input UI.**
-  - Binding capture dialog, conflict detection, reset defaults.
-  - Controller preview (optional).
+  - `AppSettings`/`AppSettingsStore` persist paths, renderer/aspect/vsync/integer scale, audio enable/volume, high-resolution mode, library folders, save slots, overlay, automatic fixes, per-game fix overrides, and input bindings. The Settings dialog edits video/audio/emulation/paths and validates the per-game fix mask; the gamepad mapping page and full per-game settings remain. The shell exposes a Hi-Res checkbox that restarts the machine.
+- [~] **M9.6 Input UI.**
+  - Binding capture dialog, conflict detection, and reset defaults are implemented for player 1 (`InputBindingsWindow`/`KeyboardBindingEditor`); rebinding a key removes it from its previous button and the edited profile is saved to `AppSettings`.
+  - Player 2-6 capture and the optional controller preview remain.
 - [x] **M9.7 Audio backend.**
   - `OpenAlAudioOutput` via Silk.NET.OpenAL (or chosen backend).
   - Device selection, buffer sizing, underrun handling.
@@ -943,7 +943,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Quick save/load, slot next/previous, slot manager.
   - Screenshot with game/time name; GL readback with CPU frame fallback.
   - State metadata (game, BIOS, timestamp, thumbnail optional).
-  - Quick Save/Load buttons, GL/CPU BMP screenshots, and the fullscreen toggle are wired in the shell; slot manager, PNG output, and metadata UI remain.
+  - `SaveStateSlotManager` provides ten numbered slots with atomic state files and JSON sidecars (game name, game ID, timestamp, frames); the shell has Save/Load plus previous/next slot buttons and persists the current slot. Screenshots are PNG named `<game>-<timestamp>-f<frames>.png` from GL readback or the CPU frame. The slot list/delete UI and thumbnails remain.
 - [~] **M9.9 Logs/About.**
   - About dialog with version, license notice, and attribution is implemented.
   - In-app log viewer with category filter and clickable links remain.
@@ -1018,10 +1018,10 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - Window resize without recreating source textures.
   - Size the GL surface in **physical pixels** (`Bounds * RenderScaling`), not logical units; test 100/150/200% DPI.
   - Render only when a new frame is available (or the window/settings change); do not re-request rendering unconditionally at the end of every render.
-  - Aspect 4:3/integer/stretch/custom, the latest-frame mailbox, physical-pixel sizing, render-on-demand, and fullscreen/F11/Escape are implemented; vsync, FPS/GPU overlay, and manual DPI/live-resize validation remain.
+  - Aspect 4:3/integer/stretch/custom, the latest-frame mailbox, physical-pixel sizing, render-on-demand, fullscreen/F11/Escape, and an optional FPS/status overlay are implemented; vsync and manual DPI/live-resize validation remain.
 - [~] **M9R.6 Screenshots.**
   - GL readback respecting the active filter, plus an optional native CPU frame.
-  - `ReadPixels` and the CPU/GL `FrameDumper` paths are implemented; the UI writes BMP screenshots from either path. PNG output and metadata naming remain.
+  - `ReadPixels` and the CPU/GL paths are implemented; the UI writes PNG screenshots from either path and names them with the game title, timestamp, and frame number. An optional native CPU frame next to the filtered GL image remains.
 - [x] **M9R.7 Context loss and fallback.**
   - `OnOpenGlLost`/`Initialize` recreate all GL objects and textures.
   - GL init failure, unsupported context features, or context loss raises `OpenGlFailed`; the shell switches to a `WriteableBitmap`/`CpuVideoRenderer` and switches back when GL recovers.
@@ -1598,3 +1598,4 @@ Suggested parallelization with two developers:
 | 2026-10-25 | Documentation | Plan reconciliation | Updated the header, product checklist, milestone statuses/acceptance evidence, first-sprint history, and next actions; marked M4/M6/M7 evidence, M8 diagnostics, and M11.1/M11.2/M11.3 partial; corrected the M9/M9R/M9P capability claims. Test count verified at 578 |
 | 2026-10-25 | M8.7, M9R, M9P, M9, M11 | Renderer/frontend hardening and benchmark gates | Added honest GL/GLES capability parsing and `RendererApi`, CPU fallback/context-loss recovery, fullscreen/F11, GL readback screenshots, About dialog, Hi-Res shell toggle, CLI process tests, zero-allocation uploader/mailbox tests, full sharp-bilinear, CRT aperture, and an opt-in bounded disc prefetch worker. Benchmarks now report p50/p95/p99 and per-stage allocations; synthetic steady state is 0 bytes/frame (1.250 ms/frame, p99 1.638 ms). Prefetch on/off produced identical Lemmings state/hash. 604 tests pass |
 | 2026-10-25 | M11.1 | Road Rash restart motion exit | The throttle-only crash restart now ends after 10 moving-scene frames instead of holding straight for 180 frames, so a traffic stop that starts rolling resumes steering. Added a regression test; the 80k/83k -> 91,000 state and hash remain identical (`PC 0x00085F48`, `0x02ABE78E`). 605 tests pass |
+| 2026-10-25 | M7.6, M9.4-M9.6, M9.8, M9R.5-M9R.6 | Desktop shell and per-game fixes | Added `GameCompatibility` (4DO ID -> `FixMode`) with automatic application plus `--fix-mode`/`--no-game-fixes` and per-game settings overrides; `SaveStateSlotManager` with ten numbered atomic slots and JSON metadata; the game library window; the video/audio/emulation/paths settings dialog; player-1 keyboard binding capture with conflict removal and reset defaults; PNG screenshots named by game/frame/time; and an optional FPS/status overlay. Added 32 tests; 637 pass. The five 3,000-frame hashes are unchanged (Alone's automatic `FIX_BIT_TIMING_6` does not alter the boot frames) |

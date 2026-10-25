@@ -344,6 +344,17 @@ leaves the road and the race is lost. Roundtrip: zero-frame load reproduces
 vision/control quality (lane tracking through bends, police/traffic avoidance),
 not pin recovery.
 
+### 1.4a Seventh pass: per-game fixes and shell features (2026-10-25)
+
+`GameCompatibility` now applies the 4DO fix mapping automatically. Alone in the
+Dark (`9f7d72bccaacfc84f230c8d1a7189329`) runs with `FIX_BIT_TIMING_6` (`0x20`);
+its 3,000-frame hash remains `0xF4BDF79B`, so the fix does not change the boot
+screen. The other four corpus IDs have no 4DO fix bits. The CLI reports `gameId`
+and `fixMode` in `run --json` and `info`, and accepts `--fix-mode 0xMASK` /
+`--no-game-fixes`. The desktop shell gained the game library, settings dialog,
+player-1 binding capture, numbered save slots, PNG screenshots, and the FPS
+overlay; 637 tests pass.
+
 ### 1.5 Fifth pass: Road Rash v10 reaches 91,000 live frames (2026-10-25)
 
 All runs use the Release build, `panafz1.bin`, and the local artifacts under

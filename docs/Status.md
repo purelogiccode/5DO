@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-25, sixth pass (see `git log` for the exact commit).
+**Snapshot:** 2026-10-25, seventh pass (see `git log` for the exact commit).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
 **Reference:** `References/opera-libretro-master/libopera` is now the primary
 behavioral reference for new compatibility work; see
@@ -39,6 +39,18 @@ This is the short, current answer to "where are we?" The detailed task list is i
 - **Renderer robustness:** GL/GLES capability parsing reports the API and version,
   fullscreen/F11/Escape work, GL readback screenshots are implemented, and GL init
   failure or context loss switches the shell to the CPU `WriteableBitmap` presenter.
+  An optional FPS/status overlay is available in the settings dialog.
+- **Desktop shell:** the game library scans configured folders through the 4DO
+  database and opens the selected disc; the settings dialog edits video, audio,
+  emulation, and paths; player-1 keyboard bindings can be captured with automatic
+  conflict removal and reset-to-defaults; save states use ten numbered slots with
+  next/previous and JSON metadata; screenshots are PNG files named by game, time,
+  and frame. Per-game 4DO fix flags are applied automatically when a disc opens;
+  explicit masks can be set in the settings dialog.
+- **Per-game fixes:** `GameCompatibility` maps the 4DO game IDs to `FixMode` bits.
+  The CLI exposes `--fix-mode 0xMASK` and `--no-game-fixes`, and `run --json` /
+  `info` report the applied mask. Alone in the Dark's `FIX_BIT_TIMING_6` is applied
+  automatically; the 3,000-frame boot hash is unchanged.
 - **Tooling:** CLI `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks`,
   `fs list/extract`, `disasm`, plus KPRINT, CD, CLIO, FIQ, RAM-write watchpoints,
   RAM/DSP dumps, DSP-instruction rings, CEL command/geometry traces, PBUS packet
@@ -57,10 +69,11 @@ This is the short, current answer to "where are we?" The detailed task list is i
   `frame button[,button...]` lines for repeatable controller taps. Input has been
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene and menu), Lemmings (menu and passcode entry), and Space Ace (P/X).
-- **Tests:** 605 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 637 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
-  tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing, and
-  bounded prefetch-cache tests.
+  tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
+  bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips, and
+  keyboard binding capture.
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   A win-x64 CLI publish has been smoke-tested.
 

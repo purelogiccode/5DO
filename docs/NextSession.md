@@ -1,8 +1,11 @@
 # Next Session Handoff
 
-**Date:** 2026-10-25 (sixth pass)
+**Date:** 2026-10-25 (seventh pass)
 **Goal:** finish the scripted gameplay loops now that the 3D CEL renderer is correct
-and the high-resolution frontend path exists. Road Rash's race renders like the Opera
+and the high-resolution frontend path exists. The seventh pass completed the
+desktop-shell gaps around that work: game library, settings, player-1 binding
+capture, numbered save slots, PNG screenshots, the FPS overlay, and automatic
+4DO per-game fixes. 637 tests pass. Road Rash's race renders like the Opera
 reference and runs past 60,000 frames; Wolfenstein starts a fresh game, walks/turns/
 fires, and its save states roundtrip; Alone's in-game character is upright; Lemmings
 renders its 640x480 high-resolution title; Space Ace plays its demo. The remaining
@@ -228,6 +231,35 @@ READ_ID (`cmd 0x83`) every 60 frames. The frame hash stays identical and every
 button input is ignored. This looks like a post-race/section load waiting for a
 CD completion that our path does not deliver, and it is a candidate for the same
 CD-status investigation as Wolfenstein's fresh-game load.
+
+### 1.10 Desktop shell and per-game fixes (2026-10-25)
+
+The seventh pass filled the frontend and host gaps that do not depend on game
+compatibility:
+
+- **Game fixes.** `GameCompatibility` maps the 4DO IDs (`F3AF1B13`/`217344B0`,
+  `DBB419FA`/`07C32F10`/`5282889F`/`7340307E`, `CB8EE795`, `1A370EBA`/`B35C911D`,
+  `0511D3D2`/`9F7D72BC`/`E843C635`, `2AABA5B9`/`BF61BB32`) to the matching
+  `FixMode` bits. The CLI applies them before `Reset`, reports the mask in
+  `run --json`/`info`, and accepts `--fix-mode 0xMASK` or `--no-game-fixes`.
+  `AppSettings` stores per-game overrides and an automatic-fixes toggle.
+- **Save slots.** `SaveStateSlotManager` writes `slot-NN.tdos` plus a JSON sidecar
+  (game name, ID, timestamp, frames) atomically; the shell has Save/Load and
+  previous/next slot buttons and persists the current slot. `List()` tolerates
+  empty and corrupt slots.
+- **Library and settings.** The Library window scans configured folders through
+  `GameLibraryScanner` and opens the selected disc. The Settings dialog edits
+  filter/aspect/integer scaling/vsync, audio enable/volume, automatic fixes,
+  high-res, per-game fix mask, and save/screenshot paths.
+- **Input capture.** `KeyboardBindingEditor` and the Input dialog capture player-1
+  keys, remove a key from its previous button, detect conflicts, and reset to
+  defaults. Player 2-6 capture remains.
+- **Screenshots and overlay.** Screenshots are PNGs named
+  `<game>-<timestamp>-f<frames>.png` from GL readback or the CPU frame; an optional
+  FPS/status overlay is available in Settings.
+
+The five 3,000-frame low-res hashes are unchanged; Alone's automatic
+`FIX_BIT_TIMING_6` does not alter the boot frames. 637 tests pass.
 
 ---
 
