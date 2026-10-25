@@ -1,0 +1,33 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:host="using:ThreeDo.Host"
+        x:Class="ThreeDo.Frontend.Avalonia.Views.GameLibraryWindow"
+        Title="Game Library"
+        Width="900" Height="560"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="12">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="6">
+            <Button x:Name="AddFolderButton" Content="Add Folder" Click="OnAddFolder" />
+            <Button x:Name="RefreshButton" Content="Refresh" Click="OnRefresh" />
+            <Button x:Name="OpenButton" Content="Open Selected" Click="OnOpenSelected" />
+        </StackPanel>
+
+        <ListBox x:Name="LibraryList" Grid.Row="1" Margin="0,8" DoubleTapped="OnDoubleTapped">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="host:GameLibraryEntry">
+                    <Grid ColumnDefinitions="2*,Auto,Auto,*" Margin="4">
+                        <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="1" Text="{Binding Format}" Margin="10,0" Opacity="0.8" />
+                        <TextBlock Grid.Column="2" Text="{Binding SectorCount}" Margin="0,0,10,0" Opacity="0.8" />
+                        <TextBlock Grid.Column="3" Text="{Binding Path}" Opacity="0.65"
+                                   TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <TextBlock x:Name="StatusText" Grid.Row="2" Text="No game folders configured."
+                   Foreground="#CCCCCC" TextWrapping="Wrap" />
+    </Grid>
+</Window>

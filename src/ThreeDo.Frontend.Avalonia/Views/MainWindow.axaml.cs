@@ -32,11 +32,13 @@ public partial class MainWindow : Window, IDisposable
     private readonly NvramStore _nvramStore;
     private readonly AppSettings _settings;
     private readonly InputManager _input;
-    private readonly string _statePath;
-    private readonly OpenAlAudioOutput? _audio;
+    private readonly SaveStateSlotManager _slots;
+    private OpenAlAudioOutput? _audio;
     private ThreeDoMachine? _machine;
     private CoreRunner? _runner;
     private IDiscSource? _disc;
+    private string _gameId = string.Empty;
+    private string _gameName = string.Empty;
     private CpuVideoRenderer? _cpuVideo;
     private WriteableBitmap? _cpuBitmap;
     private DispatcherTimer? _cpuTimer;
@@ -53,9 +55,16 @@ public partial class MainWindow : Window, IDisposable
             _settings.SaveDirectory = Path.Combine(AppSettingsStore.DefaultDirectory, "states");
         }
 
-        _statePath = Path.Combine(_settings.SaveDirectory, "quick.tdos");
+        _settings.SaveSlotCount = Math.Clamp(_settings.SaveSlotCount, 1, 100);
+        _slots = new SaveStateSlotManager(_settings.SaveDirectory, _settings.SaveSlotCount);
+        _slots.Select(Math.Clamp(_settings.SaveSlot, 0, _slots.SlotCount - 1));
         _input = new InputManager(_settings.Input);
         _audio = _settings.AudioEnabled ? OpenAlAudioOutput.TryCreate() : null;
+        if (_audio is not null)
+        {
+            _audio.Volume = _settings.Volume;
+        }
+
         _nvramStore = new NvramStore(Path.Combine(AppSettingsStore.DefaultDirectory, "nvram.ram"));
         HighResCheck.IsChecked = _settings.HighResolution;
         Video.Settings = _settings.ToRendererSettings();
@@ -64,6 +73,7 @@ public partial class MainWindow : Window, IDisposable
         Deactivated += (_, _) => _input.Keyboard.Reset();
         Closing += (_, _) => Shutdown();
         Opened += OnOpened;
+        UpdateSlotText();
     }
 
     private async void OnOpened(object? sender, EventArgs e)
@@ -146,12 +156,18 @@ public partial class MainWindow : Window, IDisposable
         {
             var machine = _machine ?? CreateMachine();
             var disc = DiscImageFactory.Open(path);
+            var gameId = disc.SectorCount >= 2 ? GameId.Compute(disc) : string.Empty;
+            var record = gameId.Length == 0 ? null : GameDatabase.Default.FindByChecksum(gameId);
+            var fixMode = _settings.ResolveFixMode(gameId);
             _runner!.Invoke(() =>
             {
                 _disc?.Dispose();
                 _disc = disc;
+                machine.Compatibility.FixMode = fixMode;
                 machine.InsertDisc(disc);
             });
+            _gameId = gameId;
+            _gameName = record?.Name ?? Path.GetFileNameWithoutExtension(path);
             _settings.DiscPath = path;
             _settings.RecentDiscs.RemoveAll(existing => string.Equals(existing, path, StringComparison.OrdinalIgnoreCase));
             _settings.RecentDiscs.Insert(0, path);
@@ -161,7 +177,7 @@ public partial class MainWindow : Window, IDisposable
             }
 
             AppSettingsStore.Save(_settings);
-            StatusText.Text = $"{Path.GetFileName(path)}: {disc.SectorCount} sectors.";
+            StatusText.Text = $"{_gameName}: {disc.SectorCount} sectors, fixes 0x{(uint)fixMode:x8}.";
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException or DiscImageException or ArgumentException)
         {
@@ -204,25 +220,55 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        Directory.CreateDirectory(_settings.SaveDirectory);
+        var slot = _slots.CurrentSlot;
         _runner!.Invoke(() =>
         {
             var discHash = _disc is null ? string.Empty : GameId.Compute(_disc);
-            _machine.SaveStateToFile(_statePath, discHash);
+            _slots.Save(_machine, discHash, _gameName, slot);
         });
-        StatusText.Text = $"State saved: {_statePath}";
+        PersistSlot();
+        UpdateSlotText();
+        StatusText.Text = $"State saved: slot {slot + 1} ({_gameName}).";
     }
 
     private void OnLoadState(object? sender, RoutedEventArgs e)
     {
-        if (_machine is null || !File.Exists(_statePath))
+        var slot = _slots.CurrentSlot;
+        if (_machine is null || !_slots.Exists(slot))
         {
-            StatusText.Text = "No quick state to load.";
+            StatusText.Text = $"Slot {slot + 1} is empty.";
             return;
         }
 
-        _runner!.Invoke(() => _machine.LoadStateFromFile(_statePath));
-        StatusText.Text = $"State loaded: {_statePath}";
+        _runner!.Invoke(() => _slots.Load(_machine, slot));
+        StatusText.Text = $"State loaded: slot {slot + 1}.";
+    }
+
+    private void OnPreviousSlot(object? sender, RoutedEventArgs e)
+    {
+        _slots.Previous();
+        PersistSlot();
+        UpdateSlotText();
+        StatusText.Text = $"Selected slot {_slots.CurrentSlot + 1}.";
+    }
+
+    private void OnNextSlot(object? sender, RoutedEventArgs e)
+    {
+        _slots.Next();
+        PersistSlot();
+        UpdateSlotText();
+        StatusText.Text = $"Selected slot {_slots.CurrentSlot + 1}.";
+    }
+
+    private void PersistSlot()
+    {
+        _settings.SaveSlot = _slots.CurrentSlot;
+        AppSettingsStore.Save(_settings);
+    }
+
+    private void UpdateSlotText()
+    {
+        SlotText.Text = $"Slot {_slots.CurrentSlot + 1}/{_slots.SlotCount}";
     }
 
     private void OnScreenshot(object? sender, RoutedEventArgs e)
@@ -235,13 +281,16 @@ public partial class MainWindow : Window, IDisposable
         var directory = string.IsNullOrWhiteSpace(_settings.ScreenshotDirectory)
             ? Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
             : _settings.ScreenshotDirectory;
-        var path = Path.Combine(directory, $"3do-{DateTime.Now:yyyyMMdd-HHmmss}.bmp");
+        var name = string.IsNullOrWhiteSpace(_gameName) ? "3do" : SanitizeFileName(_gameName);
+        var path = Path.Combine(
+            directory,
+            $"{name}-{DateTime.Now:yyyyMMdd-HHmmss}-f{_machine.FramesExecuted:D6}.png");
         if (Video.IsOpenGlAvailable)
         {
             void OnCaptured(byte[] pixels, int width, int height)
             {
                 Video.CaptureCompleted -= OnCaptured;
-                FrameDumper.WriteBmp(pixels, width, height, path);
+                PngDumper.WriteBgra(pixels, width, height, path);
                 StatusText.Text = $"Screenshot: {path}";
             }
 
@@ -255,9 +304,24 @@ public partial class MainWindow : Window, IDisposable
         {
             var frame = new FrameBuffer(_machine.Frame.SourceWidth, _machine.Frame.SourceHeight);
             FrameAssembler.Assemble(_machine.Frame, frame, frame.Width, frame.Height);
-            FrameDumper.WriteBmp(frame, path);
+            PngDumper.Write(frame, path);
         });
         StatusText.Text = $"Screenshot: {path}";
+    }
+
+    private static string SanitizeFileName(string value)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        var buffer = value.ToCharArray();
+        for (var i = 0; i < buffer.Length; i++)
+        {
+            if (Array.IndexOf(invalid, buffer[i]) >= 0)
+            {
+                buffer[i] = '-';
+            }
+        }
+
+        return new string(buffer).Trim();
     }
 
     private void OnFullscreen(object? sender, RoutedEventArgs e)
@@ -305,6 +369,81 @@ public partial class MainWindow : Window, IDisposable
         };
         close.Click += (_, _) => window.Close();
         window.ShowDialog(this);
+    }
+
+    private async void OnLibrary(object? sender, RoutedEventArgs e)
+    {
+        var window = new GameLibraryWindow(_settings);
+        var path = await window.ShowDialog<string?>(this);
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            OpenDiscPath(path);
+        }
+    }
+
+    private async void OnSettings(object? sender, RoutedEventArgs e)
+    {
+        var window = new SettingsWindow(_settings, _gameId, _gameName);
+        if (!await window.ShowDialog<bool>(this))
+        {
+            return;
+        }
+
+        try
+        {
+            window.ApplyTo(_settings);
+        }
+        catch (FormatException exception)
+        {
+            StatusText.Text = $"Settings error: {exception.Message}";
+            return;
+        }
+
+        AppSettingsStore.Save(_settings);
+        Video.Settings = _settings.ToRendererSettings();
+        if (_cpuVideo is not null)
+        {
+            _cpuVideo.Settings = _settings.ToRendererSettings();
+        }
+
+        ApplyAudioSettings();
+        HighResCheck.IsChecked = _settings.HighResolution;
+        if (_machine is not null && _settings.HighResolution != _machine.Tuning.HighResolution)
+        {
+            RecreateMachine(_settings.HighResolution);
+            return;
+        }
+
+        StatusText.Text = "Settings saved.";
+    }
+
+    private void ApplyAudioSettings()
+    {
+        if (_settings.AudioEnabled)
+        {
+            if (_audio is null)
+            {
+                _audio = OpenAlAudioOutput.TryCreate();
+                if (_audio is not null && _machine is not null)
+                {
+                    _machine.AudioSink = _audio;
+                }
+            }
+
+            if (_audio is not null)
+            {
+                _audio.Volume = _settings.Volume;
+            }
+        }
+        else
+        {
+            _audio?.Dispose();
+            _audio = null;
+            if (_machine is not null)
+            {
+                _machine.AudioSink = null;
+            }
+        }
     }
 
     private void OnHighResChanged(object? sender, RoutedEventArgs e)
