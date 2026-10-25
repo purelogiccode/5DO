@@ -1048,9 +1048,41 @@ internal static class Program
 
     private static int State(string[] args)
     {
+        if (args.Length >= 2 && string.Equals(args[1], "slots", StringComparison.OrdinalIgnoreCase))
+        {
+            var slotOptions = Parse(args, startIndex: 2);
+            var directory = slotOptions.Positional ?? throw new ArgumentException("state slots needs a directory.");
+            var slotCount = slotOptions.GetInt("--count", 10);
+            var manager = new SaveStateSlotManager(directory, slotCount);
+            var slots = manager.List();
+            if (slotOptions.Json)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(slots, JsonOptions));
+            }
+            else
+            {
+                foreach (var slot in slots)
+                {
+                    if (!slot.Exists)
+                    {
+                        Console.WriteLine($"slot {slot.Slot:D2}: empty");
+                        continue;
+                    }
+
+                    var savedAt = slot.SavedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") ?? "unknown";
+                    var name = string.IsNullOrWhiteSpace(slot.GameName) ? "(unnamed)" : slot.GameName;
+                    Console.WriteLine(
+                        $"slot {slot.Slot:D2}: {name}  frames={slot.FramesExecuted}  saved={savedAt}  "
+                        + $"size={slot.FileSize}{(slot.Error.Length > 0 ? $"  error={slot.Error}" : string.Empty)}");
+                }
+            }
+
+            return 0;
+        }
+
         if (args.Length < 2 || !string.Equals(args[1], "inspect", StringComparison.OrdinalIgnoreCase))
         {
-            throw new ArgumentException("state needs the 'inspect <path>' subcommand.");
+            throw new ArgumentException("state needs the 'inspect <path>' or 'slots <dir>' subcommand.");
         }
 
         var options = Parse(args, startIndex: 2);
@@ -1451,6 +1483,8 @@ internal static class Program
         Console.WriteLine("                                       Extract files from a 3DO disc image.");
         Console.WriteLine("  bios info <path> [--json]            BIOS size, MD5, and Anvil detection.");
         Console.WriteLine("  state inspect <path> [--json]        Save-state header and section table.");
+        Console.WriteLine("  state slots <dir> [--count N] [--json]");
+        Console.WriteLine("                                       List numbered save slots and metadata.");
         Console.WriteLine("  disasm <file> [--offset N] [--count N] [--base 0xADDR]");
         Console.WriteLine("                                       Disassemble raw little-endian ARM words.");
         Console.WriteLine("  bench [--frames N] [--json]          Synthetic-ROM frame benchmark.");
