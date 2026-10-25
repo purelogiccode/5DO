@@ -32,6 +32,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
     private readonly Thread _thread;
     private readonly CancellationTokenSource _stop = new();
     private volatile bool _disposed;
+    private volatile float _volume = 1f;
 
     private OpenAlAudioOutput(
         ALContext alc,
@@ -54,6 +55,13 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         _al.SetSourceProperty(_source, SourceFloat.Gain, 1f);
         _thread = new Thread(FillLoop) { IsBackground = true, Name = "3DO audio" };
         _thread.Start();
+    }
+
+    /// <summary>Gets or sets the output gain (0-1). Safe to change while audio is running.</summary>
+    public float Volume
+    {
+        get => _volume;
+        set => _volume = Math.Clamp(value, 0f, 1f);
     }
 
     /// <summary>Gets the number of samples accepted since creation.</summary>
@@ -136,9 +144,13 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
                 while (queued < BufferCount)
                 {
                     var frames = _ring.Read(_floatFrames);
+                    var gain = _volume;
                     for (var i = 0; i < frames * 2; i++)
                     {
-                        _samples[i] = (short)Math.Clamp((int)(_floatFrames[i] * 32767f), short.MinValue, short.MaxValue);
+                        _samples[i] = (short)Math.Clamp(
+                            (int)(_floatFrames[i] * gain * 32767f),
+                            short.MinValue,
+                            short.MaxValue);
                     }
 
                     var buffer = _buffers[queued];

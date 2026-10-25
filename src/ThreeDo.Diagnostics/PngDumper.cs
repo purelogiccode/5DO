@@ -20,24 +20,45 @@ public static class PngDumper
     public static void Write(FrameBuffer frame, string path)
     {
         ArgumentNullException.ThrowIfNull(frame);
-        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        Write(frame.PixelSpan, frame.Width, frame.Height, frame.Stride, frame.Format == PixelFormat.Bgra8888, path);
+    }
 
-        var raw = new byte[((frame.Width * 3) + 1) * frame.Height];
-        var pixels = frame.PixelSpan;
+    /// <summary>Writes tightly packed 32-bit BGRA pixels as an 8-bit RGB PNG.</summary>
+    /// <param name="bgra">Pixels in BGRA order, row-major, with no padding.</param>
+    /// <param name="width">Frame width in pixels.</param>
+    /// <param name="height">Frame height in pixels.</param>
+    /// <param name="path">Destination path.</param>
+    public static void WriteBgra(ReadOnlySpan<byte> bgra, int width, int height, string path)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(width, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(height, 1);
+        Write(bgra, width, height, checked(width * 4), bgraIsFirst: true, path);
+    }
+
+    private static void Write(
+        ReadOnlySpan<byte> pixels,
+        int width,
+        int height,
+        int stride,
+        bool bgraIsFirst,
+        string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        var raw = new byte[((width * 3) + 1) * height];
         var destination = 0;
-        for (var y = 0; y < frame.Height; y++)
+        for (var y = 0; y < height; y++)
         {
             raw[destination++] = 0;
-            var line = y * frame.Stride;
-            for (var x = 0; x < frame.Width; x++)
+            var line = y * stride;
+            for (var x = 0; x < width; x++)
             {
                 var offset = line + (x * 4);
-                var b = pixels[offset];
+                var first = pixels[offset];
                 var g = pixels[offset + 1];
-                var r = pixels[offset + 2];
-                raw[destination++] = frame.Format == PixelFormat.Bgra8888 ? r : b;
+                var third = pixels[offset + 2];
+                raw[destination++] = bgraIsFirst ? third : first;
                 raw[destination++] = g;
-                raw[destination++] = frame.Format == PixelFormat.Bgra8888 ? b : r;
+                raw[destination++] = bgraIsFirst ? first : third;
             }
         }
 
@@ -50,8 +71,8 @@ public static class PngDumper
         using var output = File.Create(path);
         output.Write([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
         var header = new byte[13];
-        BinaryPrimitives.WriteInt32BigEndian(header, frame.Width);
-        BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(4), frame.Height);
+        BinaryPrimitives.WriteInt32BigEndian(header, width);
+        BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(4), height);
         header[8] = 8;
         header[9] = 2;
         WriteChunk(output, "IHDR", header);

@@ -139,9 +139,19 @@ internal static class Program
             throw new ArgumentException("run needs --bios <path> unless --state-in supplies the ROM state.");
         }
 
+        IDiscSource? disc = null;
+        string? gameId = null;
+        if (discPath is not null)
+        {
+            disc = DiscImageFactory.Open(discPath, prefetch: HasFlag(args, "--prefetch"));
+            gameId = GameId.Compute(disc);
+        }
+
+        var fixMode = ResolveFixMode(options, args, gameId);
         var machine = new ThreeDoMachine(new EmulatorTuning
         {
             HighResolution = HasFlag(args, "--high-res"),
+            FixMode = fixMode,
         });
         if (biosPath is not null)
         {
@@ -149,11 +159,9 @@ internal static class Program
             machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
         }
 
-        IDiscSource? disc = null;
         using var audio = CreateAudio(options);
-        if (discPath is not null)
+        if (disc is not null)
         {
-            disc = DiscImageFactory.Open(discPath, prefetch: HasFlag(args, "--prefetch"));
             machine.InsertDisc(disc);
         }
 
@@ -473,6 +481,8 @@ internal static class Program
             frameHash = FrameHash(machine),
             samples = audio?.SampleCount ?? 0,
             discHash,
+            gameId,
+            fixMode = (uint)machine.Compatibility.FixMode,
             dspRunning = machine.Dsp.IsRunning,
             dspPc = machine.Dsp.ProgramCounter,
             dspSema = ((uint)machine.Dsp.SemaphoreStatus << 16) | machine.Dsp.SemaphoreData,
@@ -545,9 +555,19 @@ internal static class Program
             throw new ArgumentException("trace needs --bios <path> unless --state-in supplies the ROM state.");
         }
 
+        IDiscSource? disc = null;
+        string? gameId = null;
+        if (discPath is not null)
+        {
+            disc = DiscImageFactory.Open(discPath, prefetch: HasFlag(args, "--prefetch"));
+            gameId = GameId.Compute(disc);
+        }
+
+        var fixMode = ResolveFixMode(options, args, gameId);
         var machine = new ThreeDoMachine(new EmulatorTuning
         {
             HighResolution = HasFlag(args, "--high-res"),
+            FixMode = fixMode,
         });
         if (biosPath is not null)
         {
@@ -555,10 +575,8 @@ internal static class Program
             machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
         }
 
-        IDiscSource? disc = null;
-        if (discPath is not null)
+        if (disc is not null)
         {
-            disc = DiscImageFactory.Open(discPath, prefetch: HasFlag(args, "--prefetch"));
             machine.InsertDisc(disc);
         }
 
@@ -796,6 +814,7 @@ internal static class Program
         var header = VolumeHeader.TryRead(disc);
         var gameId = GameId.Compute(disc);
         var record = GameDatabase.Default.FindByChecksum(gameId);
+        var fixMode = GameCompatibility.ForGameId(gameId).FixMode;
 
         var result = new
         {
@@ -806,6 +825,7 @@ internal static class Program
             volumeBlockCount = header?.BlockCount ?? 0,
             blockSize = header?.BlockSize ?? 0,
             gameId,
+            fixMode = (uint)fixMode,
             known = record is not null,
             name = record?.Name ?? string.Empty,
             publisher = record?.Publisher ?? string.Empty,
@@ -824,6 +844,7 @@ internal static class Program
             Console.WriteLine($"label:       {result.volumeLabel}");
             Console.WriteLine($"blocks:      {result.volumeBlockCount} x {result.blockSize}");
             Console.WriteLine($"game id:     {result.gameId}");
+            Console.WriteLine($"fix mode:    0x{result.fixMode:x8}");
             Console.WriteLine($"game:        {(result.known ? $"{result.name} ({result.releaseYear}, {result.publisher}, {result.regions})" : "unknown")}");
         }
 
@@ -1291,6 +1312,8 @@ internal static class Program
         Console.WriteLine($"frame hash:  0x{(uint)type.GetProperty("frameHash")!.GetValue(result)!:x8}");
         Console.WriteLine($"samples:     {type.GetProperty("samples")!.GetValue(result)}");
         Console.WriteLine($"disc hash:   {type.GetProperty("discHash")!.GetValue(result)}");
+        Console.WriteLine($"game id:     {type.GetProperty("gameId")!.GetValue(result)}");
+        Console.WriteLine($"fix mode:    0x{(uint)type.GetProperty("fixMode")!.GetValue(result)!:x8}");
         Console.WriteLine($"dsp running: {type.GetProperty("dspRunning")!.GetValue(result)}");
         Console.WriteLine($"dsp pc:      0x{(uint)type.GetProperty("dspPc")!.GetValue(result)!:x4}");
         Console.WriteLine($"dsp sema:    0x{(uint)type.GetProperty("dspSema")!.GetValue(result)!:x8}");
@@ -1325,6 +1348,33 @@ internal static class Program
         }
 
         return string.Join(" <- ", parts);
+    }
+
+    private static FixMode ResolveFixMode(ParsedOptions options, string[] args, string? gameId)
+    {
+        var explicitMode = options.Get("--fix-mode");
+        if (explicitMode is not null)
+        {
+            return ParseFixMode(explicitMode);
+        }
+
+        if (HasFlag(args, "--no-game-fixes"))
+        {
+            return FixMode.None;
+        }
+
+        return GameCompatibility.ForGameId(gameId).FixMode;
+    }
+
+    private static FixMode ParseFixMode(string value)
+    {
+        var text = value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? value[2..] : value;
+        if (!uint.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var bits))
+        {
+            throw new ArgumentException($"Invalid --fix-mode value '{value}'; expected hexadecimal bits such as 0x20.");
+        }
+
+        return (FixMode)bits;
     }
 
     private static bool HasFlag(string[] args, string flag)
@@ -1384,11 +1434,13 @@ internal static class Program
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--autopilot road] [--progress N] [--cel-trace path] [--pbus-trace path]");
-        Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--prefetch] [--poke ADDR=HEX] [--json]");
+        Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--prefetch]");
+        Console.WriteLine("             [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--json]");
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
         Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path] [--high-res] [--prefetch]");
+        Console.WriteLine("             [--fix-mode 0xMASK] [--no-game-fixes]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             Runs the machine and records a diagnostic instruction ring buffer.");
         Console.WriteLine("  info <disc> [--json]                 Disc geometry, volume header, and game ID.");

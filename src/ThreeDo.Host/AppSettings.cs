@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ThreeDo.Core;
 using ThreeDo.Input;
 using ThreeDo.Video;
 
@@ -27,6 +29,21 @@ public sealed class AppSettings
 
     /// <summary>Gets or sets the screenshot directory.</summary>
     public string ScreenshotDirectory { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the currently selected save slot.</summary>
+    public int SaveSlot { get; set; }
+
+    /// <summary>Gets or sets the number of save slots exposed by the shell.</summary>
+    public int SaveSlotCount { get; set; } = 10;
+
+    /// <summary>Gets folders scanned by the game library.</summary>
+    public List<string> LibraryFolders { get; set; } = [];
+
+    /// <summary>Gets or sets a value indicating whether database fixes are applied automatically.</summary>
+    public bool AutoGameFixes { get; set; } = true;
+
+    /// <summary>Gets per-game fix-mode overrides keyed by 4DO game ID.</summary>
+    public Dictionary<string, FixMode> FixModeOverrides { get; set; } = [];
 
     /// <summary>Gets or sets the presentation filter.</summary>
     public VideoFilter Filter { get; set; } = VideoFilter.SharpBilinear;
@@ -54,6 +71,56 @@ public sealed class AppSettings
 
     /// <summary>Gets or sets player input bindings.</summary>
     public InputProfile Input { get; set; } = InputProfile.CreateDefault();
+
+    /// <summary>Gets the per-game fix-mode override, if one is configured.</summary>
+    /// <param name="gameId">4DO game ID, case-insensitive.</param>
+    /// <returns>The override, or <see langword="null"/> when the game uses automatic fixes.</returns>
+    public FixMode? GetFixModeOverride(string? gameId)
+    {
+        if (string.IsNullOrWhiteSpace(gameId))
+        {
+            return null;
+        }
+
+        foreach (var (id, mode) in FixModeOverrides)
+        {
+            if (string.Equals(id, gameId, StringComparison.OrdinalIgnoreCase))
+            {
+                return mode;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Sets or removes a per-game fix-mode override.</summary>
+    /// <param name="gameId">4DO game ID, case-insensitive.</param>
+    /// <param name="mode">Fix-mode bits, or <see langword="null"/> to restore automatic fixes.</param>
+    public void SetFixModeOverride(string gameId, FixMode? mode)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(gameId);
+        foreach (var id in FixModeOverrides.Keys.ToArray())
+        {
+            if (string.Equals(id, gameId, StringComparison.OrdinalIgnoreCase))
+            {
+                FixModeOverrides.Remove(id);
+            }
+        }
+
+        if (mode is not null)
+        {
+            FixModeOverrides[gameId] = mode.Value;
+        }
+    }
+
+    /// <summary>Resolves the fix-mode bits for a game, honoring per-game overrides.</summary>
+    /// <param name="gameId">4DO game ID, or <see langword="null"/> when no disc is loaded.</param>
+    /// <returns>The override when present, the database mapping when automatic fixes are enabled, or none.</returns>
+    public FixMode ResolveFixMode(string? gameId)
+    {
+        var overrideMode = GetFixModeOverride(gameId);
+        return overrideMode ?? (AutoGameFixes ? GameCompatibility.ForGameId(gameId).FixMode : FixMode.None);
+    }
 
     /// <summary>Gets the renderer settings derived from this configuration.</summary>
     /// <returns>A validated renderer settings record.</returns>
