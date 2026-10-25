@@ -352,7 +352,7 @@ its 3,000-frame hash remains `0xF4BDF79B`, so the fix does not change the boot
 screen. The other four corpus IDs have no 4DO fix bits. The CLI reports `gameId`
 and `fixMode` in `run --json` and `info`, and accepts `--fix-mode 0xMASK` /
 `--no-game-fixes`. The desktop shell gained the game library, settings dialog,
-player-1 binding capture, numbered save slots, PNG screenshots, and the FPS
+six-player binding capture, numbered save slots, PNG screenshots, and the FPS
 overlay; 639 tests pass. The Input dialog edits all six players.
 
 ### 1.5 Fifth pass: Road Rash v10 reaches 91,000 live frames (2026-10-25)

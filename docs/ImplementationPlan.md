@@ -939,7 +939,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Device selection, buffer sizing, underrun handling.
   - Null fallback if no device.
   - `OpenAlAudioOutput` uses a dedicated thread and four queued Stereo16 buffers; `TryCreate` returns null on any device/context failure. The shell enables it when `AppSettings.AudioEnabled` is set.
-- [~] **M9.8 Save states/screenshots.**
+- [x] **M9.8 Save states/screenshots.**
   - Quick save/load, slot next/previous, slot manager.
   - Screenshot with game/time name; GL readback with CPU frame fallback.
   - State metadata (game, BIOS, timestamp, thumbnail optional).
@@ -1019,7 +1019,7 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - Size the GL surface in **physical pixels** (`Bounds * RenderScaling`), not logical units; test 100/150/200% DPI.
   - Render only when a new frame is available (or the window/settings change); do not re-request rendering unconditionally at the end of every render.
   - Aspect 4:3/integer/stretch/custom, the latest-frame mailbox, physical-pixel sizing, render-on-demand, fullscreen/F11/Escape, and an optional FPS/status overlay are implemented; vsync and manual DPI/live-resize validation remain.
-- [~] **M9R.6 Screenshots.**
+- [x] **M9R.6 Screenshots.**
   - GL readback respecting the active filter, plus an optional native CPU frame.
   - `ReadPixels` and the CPU/GL paths are implemented; the UI writes PNG screenshots from either path and names them with the game title, timestamp, and frame number. An optional native CPU frame next to the filtered GL image remains.
 - [x] **M9R.7 Context loss and fallback.**
