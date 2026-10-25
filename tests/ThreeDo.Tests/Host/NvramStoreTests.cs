@@ -121,9 +121,14 @@ public sealed class NvramStoreTests
             Aspect = ThreeDo.Video.AspectMode.Integer,
             Volume = 0.5f,
             HighResolution = true,
+            SaveSlot = 3,
+            SaveSlotCount = 12,
+            AutoGameFixes = false,
         };
         settings.Input.Players[0].Keyboard["Q"] = ThreeDo.Input.ControllerButton.C;
         settings.RecentDiscs.Add("game.iso");
+        settings.LibraryFolders.Add("games");
+        settings.FixModeOverrides["9F7D72BC"] = ThreeDo.Core.FixMode.BitTiming6;
 
         AppSettingsStore.Save(settings, path);
         var loaded = AppSettingsStore.Load(path);
@@ -133,8 +138,13 @@ public sealed class NvramStoreTests
         Assert.Equal(ThreeDo.Video.AspectMode.Integer, loaded.Aspect);
         Assert.Equal(0.5f, loaded.Volume);
         Assert.True(loaded.HighResolution);
+        Assert.Equal(3, loaded.SaveSlot);
+        Assert.Equal(12, loaded.SaveSlotCount);
+        Assert.False(loaded.AutoGameFixes);
         Assert.Equal(ThreeDo.Input.ControllerButton.C, loaded.Input.Players[0].Keyboard["Q"]);
         Assert.Equal("game.iso", Assert.Single(loaded.RecentDiscs));
+        Assert.Equal("games", Assert.Single(loaded.LibraryFolders));
+        Assert.Equal(ThreeDo.Core.FixMode.BitTiming6, loaded.GetFixModeOverride("9F7D72BC"));
         Assert.Equal(ThreeDo.Video.VideoFilter.Crt, loaded.ToRendererSettings().Filter);
         Assert.False(File.Exists(path + ".tmp"));
     }
