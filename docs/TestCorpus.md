@@ -555,8 +555,13 @@ Evidence:
   below 0.5), frozen-road-line, or CD-load states; `run --json` reports
   `autopilotMenuAdvance`. A fresh 30k run reaches the post-race cutscene and a
   new race around 70-80k, but still needs start-line handling.
-- Alone's intro uses the same wait signature; the fix should be re-checked
-  there in a later pass.
+- Alone's intro uses the same wait signature, but the media pulse alone does not
+  advance it: `alone-intro.state` + 3,000 frames with no input stays at hash
+  `0x9C607707`. A every 300 frames advances the man-at-desk cutscene to the
+  room/mansion/title scenes: 29,200 frames, `PC 0x00020640`, hash `0x62304BCF`;
+  a further 10,000 frames ends at 39,200 (`PC 0x0008BCA4`, hash `0xD1FABFD3`).
+  A blind A pulse is enough to leave the wait but not yet enough to reach a
+  stable gameplay room.
 
 The 91,000-frame autopilot chain now reaches a rider-run/BUSTED transition
 (`PC 0x00093AF4`, hash `0x70E1ED8E`) instead of the old frozen `0x02ABE78E`

@@ -10,7 +10,7 @@ prototype state. It is not a compatibility guarantee.
 | Wolfenstein 3D | Boots, starts FLOOR 1-1, walk/turn/fire, save/load roundtrip | The fresh-game level load can stay static for a long time; the same game-side wait as the other titles is suspected |
 | Lemmings | Boots, title/passcode, Fun 4 gameplay, save/load, 640x480 title | Passcode entry uses a diagnostic RAM poke; pure D-pad typing of all ten letters is not scripted |
 | Road Rash | Boots, 3D race renders, autopilot reaches the 91k transition, `BUSTED`/race-select/new-race flow works, save/load roundtrip | The full race loop is not finished; the autopilot can still pin at the new race start/right edge. The old ~42k/~92k READ_ID wait is fixed by the CD media-access pulse |
-| Alone in the Dark | Boots, in-game room, upright character, Begin/Resume menu, intro scene | The intro uses the same READ_ID wait; re-check it with the media-access fix. A full movement/inventory sequence is not scripted |
+| Alone in the Dark | Boots, in-game room, upright character, Begin/Resume menu, intro scene; A pulses leave the intro wait | The intro still needs A input; a blind pulse cycles cutscenes but a full movement/inventory sequence is not scripted |
 | Space Ace | Boots, animated demo, audio, interactive start via X->menu, A->play, save/load roundtrip | Longer scene/decision validation is still needed |
 
 ## Renderer

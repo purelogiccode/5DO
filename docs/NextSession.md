@@ -305,7 +305,9 @@ missing and corrected the Road Rash diagnosis.
   4096, RMS 1832.
 - **Alone menu/intro.** `Up, Left, A, Down` reaches the Begin/Resume menu; `A` starts
   the intro scene. The intro is a static, input-ignoring wait with only READ_ID
-  polling.
+  polling. The media pulse alone does not advance it, but A every 300 frames moves
+  the man-at-desk cutscene to the room/mansion/title scenes (29,200 frames,
+  `PC 0x00020640`, hash `0x62304BCF`). A blind pulse is not yet a stable room.
 - **Road Rash wait state and the media-access fix.** The 42,000-frame state and the
   92,000/100,000-frame state were static, ignored every button combination, and
   showed only READ_ID polls. The CD device now sets poll bit `0x40` after two

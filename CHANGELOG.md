@@ -62,6 +62,9 @@ still change.
 - The deferred CD read-status experiments were reverted because they changed the
   golden boot hashes; the media-access pulse keeps all five 3,000-frame hashes
   unchanged.
+- Alone in the Dark's intro no longer stays static forever: A every 300 frames
+  advances the man-at-desk cutscene to the room/mansion/title scenes. The media
+  pulse alone does not advance the intro.
 
 ## Earlier work
 

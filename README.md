@@ -45,8 +45,9 @@ own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio.
 - **Wolfenstein 3D** starts a fresh game at FLOOR 1-1 from its preview menu, walks,
   turns, fires, and roundtrips a live gameplay save state.
 - **Alone in the Dark** reaches its in-game staircase/room with an upright character;
-  the D-pad/A open the Begin/Resume menu and start the intro scene. The intro then
-  shows the same static READ_ID-only wait.
+  the D-pad/A open the Begin/Resume menu and start the intro scene. A pulses every
+  300 frames leave the intro's static READ_ID-only wait and cycle the
+  room/mansion/title scenes.
 - **Lemmings** reaches its title and passcode screens; the Fun 4 passcode
   (`HNLHCIOECW`) starts gameplay and roundtrips, and the 640x480 high-resolution title
   matches the reference.
