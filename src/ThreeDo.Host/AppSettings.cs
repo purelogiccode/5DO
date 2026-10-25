@@ -85,9 +85,10 @@ public sealed class AppSettings
             return null;
         }
 
+        var normalized = NormalizeGameId(gameId);
         foreach (var (id, mode) in FixModeOverrides)
         {
-            if (string.Equals(id, gameId, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(NormalizeGameId(id), normalized, StringComparison.Ordinal))
             {
                 return mode;
             }
@@ -102,9 +103,10 @@ public sealed class AppSettings
     public void SetFixModeOverride(string gameId, FixMode? mode)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(gameId);
+        var normalized = NormalizeGameId(gameId);
         foreach (var id in FixModeOverrides.Keys.ToArray())
         {
-            if (string.Equals(id, gameId, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(NormalizeGameId(id), normalized, StringComparison.Ordinal))
             {
                 FixModeOverrides.Remove(id);
             }
@@ -112,8 +114,14 @@ public sealed class AppSettings
 
         if (mode is not null)
         {
-            FixModeOverrides[gameId] = mode.Value;
+            FixModeOverrides[normalized] = mode.Value;
         }
+    }
+
+    private static string NormalizeGameId(string gameId)
+    {
+        var normalized = gameId.Trim().ToUpperInvariant();
+        return normalized.Length > 8 ? normalized[..8] : normalized;
     }
 
     /// <summary>Resolves the fix-mode bits for a game, honoring per-game overrides.</summary>
