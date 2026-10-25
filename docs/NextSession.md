@@ -245,8 +245,8 @@ compatibility:
   `AppSettings` stores per-game overrides and an automatic-fixes toggle.
 - **Save slots.** `SaveStateSlotManager` writes `slot-NN.tdos` plus a JSON sidecar
   (game name, ID, timestamp, frames) atomically; the shell has Save/Load and
-  previous/next slot buttons and persists the current slot. `List()` tolerates
-  empty and corrupt slots.
+  previous/next slot buttons and a Slots window that lists/saves/loads/deletes
+  slots, and persists the current slot. `List()` tolerates empty and corrupt slots.
 - **Library and settings.** The Library window scans configured folders through
   `GameLibraryScanner` and opens the selected disc. The Settings dialog edits
   filter/aspect/integer scaling/vsync, audio enable/volume, automatic fixes,

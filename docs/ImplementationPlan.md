@@ -943,7 +943,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Quick save/load, slot next/previous, slot manager.
   - Screenshot with game/time name; GL readback with CPU frame fallback.
   - State metadata (game, BIOS, timestamp, thumbnail optional).
-  - `SaveStateSlotManager` provides ten numbered slots with atomic state files and JSON sidecars (game name, game ID, timestamp, frames); the shell has Save/Load plus previous/next slot buttons and persists the current slot. Screenshots are PNG named `<game>-<timestamp>-f<frames>.png` from GL readback or the CPU frame. The slot list/delete UI and thumbnails remain.
+  - `SaveStateSlotManager` provides ten numbered slots with atomic state files and JSON sidecars (game name, game ID, timestamp, frames); the shell has Save/Load plus previous/next slot buttons, a Slots window that lists/saves/loads/deletes slots, and persists the current slot. Screenshots are PNG named `<game>-<timestamp>-f<frames>.png` from GL readback or the CPU frame. Thumbnails remain.
 - [~] **M9.9 Logs/About.**
   - About dialog with version, license notice, and attribution is implemented.
   - In-app log viewer with category filter and clickable links remain.

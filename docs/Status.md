@@ -44,8 +44,8 @@ This is the short, current answer to "where are we?" The detailed task list is i
   database and opens the selected disc; the settings dialog edits video, audio,
   emulation, and paths; player-1 keyboard bindings can be captured with automatic
   conflict removal and reset-to-defaults; save states use ten numbered slots with
-  next/previous and JSON metadata; screenshots are PNG files named by game, time,
-  and frame. Per-game 4DO fix flags are applied automatically when a disc opens;
+  next/previous, a list/save/load/delete window, and JSON metadata; screenshots are
+  PNG files named by game, time, and frame. Per-game 4DO fix flags are applied automatically when a disc opens;
   explicit masks can be set in the settings dialog.
 - **Per-game fixes:** `GameCompatibility` maps the 4DO game IDs to `FixMode` bits.
   The CLI exposes `--fix-mode 0xMASK` and `--no-game-fixes`, and `run --json` /
