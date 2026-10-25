@@ -8,7 +8,7 @@
     <Grid RowDefinitions="*,Auto" Margin="12">
         <TabControl Grid.Row="0">
             <TabItem Header="Video">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Filter" VerticalAlignment="Center" />
                     <ComboBox x:Name="FilterCombo" Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" />
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Aspect" VerticalAlignment="Center" />
@@ -16,6 +16,8 @@
                     <CheckBox x:Name="IntegerCheck" Grid.Row="2" Grid.Column="1" Content="Integer scaling" />
                     <CheckBox x:Name="VsyncCheck" Grid.Row="3" Grid.Column="1" Content="VSync (where supported)" />
                     <CheckBox x:Name="OverlayCheck" Grid.Row="4" Grid.Column="1" Content="Show FPS/status overlay" />
+                    <TextBlock Grid.Row="5" Grid.Column="1" Text="xBR/HQx is planned; the current build falls back to sharp-bilinear."
+                               Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0" />
                 </Grid>
             </TabItem>
 

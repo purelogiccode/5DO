@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -33,8 +34,12 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         _gameId = gameId;
 
-        FilterCombo.ItemsSource = Enum.GetValues<VideoFilter>();
-        FilterCombo.SelectedItem = settings.Filter;
+        FilterCombo.ItemsSource = Enum.GetValues<VideoFilter>()
+            .Where(filter => filter != VideoFilter.Xbr)
+            .ToArray();
+        FilterCombo.SelectedItem = settings.Filter == VideoFilter.Xbr
+            ? VideoFilter.SharpBilinear
+            : settings.Filter;
         AspectCombo.ItemsSource = Enum.GetValues<AspectMode>();
         AspectCombo.SelectedItem = settings.Aspect;
         IntegerCheck.IsChecked = settings.IntegerScale;
