@@ -70,11 +70,15 @@ public sealed class RoadRashAutopilot
     /// <summary>Frames to hold B after a stop.</summary>
     public const int CrashRestartFrames = 180;
 
+    /// <summary>Moving-scene frames that end a restart early because the bike is rolling again.</summary>
+    public const int CrashRestartMotionFrames = 10;
+
     /// <summary>Average palette-index change treated as "the scene is still".</summary>
     private const double StaticSceneThreshold = 2.0;
 
     private int[]? _sceneSignature;
     private int _staticFrames;
+    private int _crashRestartMotionFrames;
     private long _crashRestartUntil;
 
     private bool _urgentObstacle;
@@ -682,6 +686,32 @@ public sealed class RoadRashAutopilot
     private void UpdateStopTracking(VdlFrame frame, long frameNumber)
     {
         CrashRestart = frameNumber < _crashRestartUntil;
+        if (CrashRestart)
+        {
+            // A remount needs throttle-only, but a traffic stop that starts
+            // rolling must resume steering immediately. At 91,600 the bike was
+            // moving at 2 mph while the 180-frame straight restart was still
+            // active; it then drove off the road at 91,820.
+            if (_staticFrames == 0)
+            {
+                _crashRestartMotionFrames++;
+            }
+            else
+            {
+                _crashRestartMotionFrames = 0;
+            }
+
+            if (_crashRestartMotionFrames >= CrashRestartMotionFrames)
+            {
+                _crashRestartUntil = frameNumber;
+                CrashRestart = false;
+                _crashRestartMotionFrames = 0;
+            }
+        }
+        else
+        {
+            _crashRestartMotionFrames = 0;
+        }
 
         var signature = BuildSceneSignature(frame);
         if (_sceneSignature is null)
@@ -718,6 +748,7 @@ public sealed class RoadRashAutopilot
         {
             _crashRestartUntil = frameNumber + CrashRestartFrames;
             _staticFrames = 0;
+            _crashRestartMotionFrames = 0;
             CrashRestart = true;
         }
     }

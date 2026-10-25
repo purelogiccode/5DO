@@ -19,10 +19,32 @@ public static class FrameDumper
     public static void WriteBmp(FrameBuffer frame, string path)
     {
         ArgumentNullException.ThrowIfNull(frame);
-        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        WriteBmp(frame.PixelSpan, frame.Width, frame.Height, frame.Stride, path);
+    }
 
-        var rowBytes = frame.Width * 4;
-        var imageBytes = rowBytes * frame.Height;
+    /// <summary>Writes a tightly packed 32-bit BGRA frame as a bottom-up BMP.</summary>
+    /// <param name="bgra">Pixels in BGRA order, row-major, with no padding.</param>
+    /// <param name="width">Frame width in pixels.</param>
+    /// <param name="height">Frame height in pixels.</param>
+    /// <param name="path">Destination path.</param>
+    /// <exception cref="ArgumentException">The pixel span is smaller than the frame.</exception>
+    public static void WriteBmp(ReadOnlySpan<byte> bgra, int width, int height, string path)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(width, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(height, 1);
+        WriteBmp(bgra, width, height, checked(width * 4), path);
+    }
+
+    private static void WriteBmp(ReadOnlySpan<byte> pixels, int width, int height, int stride, string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        var rowBytes = checked(width * 4);
+        var imageBytes = checked(rowBytes * height);
+        if (pixels.Length < imageBytes)
+        {
+            throw new ArgumentException($"The pixel span needs {imageBytes} bytes.", nameof(pixels));
+        }
+
         var fileSize = FileHeaderSize + InfoHeaderSize + imageBytes;
         var directory = Path.GetDirectoryName(Path.GetFullPath(path));
         if (!string.IsNullOrEmpty(directory))
@@ -37,8 +59,8 @@ public static class FrameDumper
         BinaryPrimitives.WriteInt32LittleEndian(header[2..], fileSize);
         BinaryPrimitives.WriteInt32LittleEndian(header[10..], FileHeaderSize + InfoHeaderSize);
         BinaryPrimitives.WriteInt32LittleEndian(header[14..], InfoHeaderSize);
-        BinaryPrimitives.WriteInt32LittleEndian(header[18..], frame.Width);
-        BinaryPrimitives.WriteInt32LittleEndian(header[22..], frame.Height);
+        BinaryPrimitives.WriteInt32LittleEndian(header[18..], width);
+        BinaryPrimitives.WriteInt32LittleEndian(header[22..], height);
         BinaryPrimitives.WriteInt16LittleEndian(header[26..], 1);
         BinaryPrimitives.WriteInt16LittleEndian(header[28..], 32);
         BinaryPrimitives.WriteInt32LittleEndian(header[34..], imageBytes);
@@ -46,12 +68,11 @@ public static class FrameDumper
         BinaryPrimitives.WriteInt32LittleEndian(header[42..], 2835);
         stream.Write(header);
 
-        var pixels = frame.PixelSpan;
         var row = new byte[rowBytes];
-        for (var y = frame.Height - 1; y >= 0; y--)
+        for (var y = height - 1; y >= 0; y--)
         {
-            var source = y * frame.Stride;
-            for (var x = 0; x < frame.Width; x++)
+            var source = y * stride;
+            for (var x = 0; x < width; x++)
             {
                 var offset = source + (x * 4);
                 var destination = x * 4;

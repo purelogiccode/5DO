@@ -120,6 +120,7 @@ public sealed class NvramStoreTests
             Filter = ThreeDo.Video.VideoFilter.Crt,
             Aspect = ThreeDo.Video.AspectMode.Integer,
             Volume = 0.5f,
+            HighResolution = true,
         };
         settings.Input.Players[0].Keyboard["Q"] = ThreeDo.Input.ControllerButton.C;
         settings.RecentDiscs.Add("game.iso");
@@ -131,6 +132,7 @@ public sealed class NvramStoreTests
         Assert.Equal(ThreeDo.Video.VideoFilter.Crt, loaded.Filter);
         Assert.Equal(ThreeDo.Video.AspectMode.Integer, loaded.Aspect);
         Assert.Equal(0.5f, loaded.Volume);
+        Assert.True(loaded.HighResolution);
         Assert.Equal(ThreeDo.Input.ControllerButton.C, loaded.Input.Players[0].Keyboard["Q"]);
         Assert.Equal("game.iso", Assert.Single(loaded.RecentDiscs));
         Assert.Equal(ThreeDo.Video.VideoFilter.Crt, loaded.ToRendererSettings().Filter);

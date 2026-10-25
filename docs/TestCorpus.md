@@ -347,9 +347,10 @@ not pin recovery.
 ### 1.5 Fifth pass: Road Rash v10 reaches 91,000 live frames (2026-10-25)
 
 All runs use the Release build, `panafz1.bin`, and the local artifacts under
-`artifacts/s2`. Tests are at **578 passing** (572 + close-traffic, urgent
-preemption, emergency-steer-hold, stopped/wreck restart, moving-scene, and
-open-road restart cases); `dotnet format --verify-no-changes` is clean. The five
+`artifacts/s2`. Tests are at **578 passing** at the time of this pass (572 +
+close-traffic, urgent-preemption, emergency-steer-hold, stopped/wreck restart,
+moving-scene, and open-road restart cases); the current suite is 605.
+`dotnet format --verify-no-changes` is clean. The five
 3,000-frame low-res hashes are unchanged:
 
 ```
@@ -636,11 +637,16 @@ dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
   --wav-out artifacts/road-rash-600.wav
 ```
 
-Run the deterministic self-test and the synthetic benchmark:
+Run the deterministic self-test, the synthetic benchmark, and the CHD/ISO
+prefetch comparison:
 
 ```powershell
 dotnet run --project src/ThreeDo.Cli -- selftest
 dotnet run --project src/ThreeDo.Cli -- bench --frames 600
+dotnet run --project benchmarks/ThreeDo.Benchmarks -- --frames 600 `
+  --bios bios/panafz1.bin --disc "$env:THREEDO_GAMES\Lemmings (USA).chd" --json
+dotnet run --project benchmarks/ThreeDo.Benchmarks -- --frames 600 `
+  --bios bios/panafz1.bin --disc "$env:THREEDO_GAMES\Lemmings (USA).chd" --prefetch --json
 ```
 
 Desktop validation:
@@ -650,7 +656,9 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 ```
 
 Open the BIOS, open a disc, press **Play**, and check video, audio, input, pause,
-reset, quick save/load, and screenshots.
+reset, quick save/load, screenshots, fullscreen (button or F11/Escape), the Hi-Res
+restart path, and the About dialog. If OpenGL initialization fails, the status line
+should report the fallback and the CPU `WriteableBitmap` path should render.
 
 ---
 

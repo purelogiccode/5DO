@@ -49,6 +49,10 @@ jobs:
           dotnet run --project benchmarks/ThreeDo.Benchmarks -c Release --no-build -- \
             --frames 120 --label ci --json > artifacts/benchmark.json
 
+      - name: Benchmark allocation gate
+        if: matrix.os == 'ubuntu-latest'
+        run: jq -e '.allocations.bytesPerFrame == 0' artifacts/benchmark.json
+
       - name: Upload benchmark baseline
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4

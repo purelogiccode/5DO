@@ -24,7 +24,7 @@ internal static class Program
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
-    private static int Main(string[] args)
+    public static int Main(string[] args)
     {
         if (args.Length == 0)
         {
@@ -153,7 +153,7 @@ internal static class Program
         using var audio = CreateAudio(options);
         if (discPath is not null)
         {
-            disc = DiscImageFactory.Open(discPath);
+            disc = DiscImageFactory.Open(discPath, prefetch: HasFlag(args, "--prefetch"));
             machine.InsertDisc(disc);
         }
 
@@ -558,7 +558,7 @@ internal static class Program
         IDiscSource? disc = null;
         if (discPath is not null)
         {
-            disc = DiscImageFactory.Open(discPath);
+            disc = DiscImageFactory.Open(discPath, prefetch: HasFlag(args, "--prefetch"));
             machine.InsertDisc(disc);
         }
 
@@ -1384,11 +1384,11 @@ internal static class Program
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--autopilot road] [--progress N] [--cel-trace path] [--pbus-trace path]");
-        Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--poke ADDR=HEX] [--json]");
+        Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--prefetch] [--poke ADDR=HEX] [--json]");
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
-        Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path] [--high-res]");
+        Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path] [--high-res] [--prefetch]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             Runs the machine and records a diagnostic instruction ring buffer.");
         Console.WriteLine("  info <disc> [--json]                 Disc geometry, volume header, and game ID.");

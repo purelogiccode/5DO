@@ -1,15 +1,18 @@
 # Performance and 4K60 Strategy
 
-**Status:** target definition and implementation baseline (2026-10-23). The desktop
+**Status:** target definition and implementation baseline (2026-10-25). The desktop
 path now has a dedicated 60 Hz core thread, a two-stage palette/scale presenter,
 immutable texture storage with per-frame `TexSubImage2D`, cached uniform locations,
-and a real benchmark harness. CPU-side frame cost is ~2.1-2.3 ms, leaving ~14 ms of
-headroom at 60 Hz. Manual DPI validation, the GLES backend, and GPU 4K timing remain
-open; see §9 and M9P in [`ImplementationPlan.md`](ImplementationPlan.md). The overall
-project position is summarized in [`Status.md`](Status.md).
+full sharp-bilinear and CRT scanline/aperture filters, an opt-in bounded disc
+prefetch cache, and a real benchmark harness with p50/p95/p99 and per-stage
+allocations. CPU-side frame cost is ~1.25-1.6 ms, leaving ~15 ms of headroom at
+60 Hz; the synthetic steady state is allocation-free. Manual DPI validation, the
+GLES backend, and GPU 4K timing remain open; see §9 and M9P in
+[`ImplementationPlan.md`](ImplementationPlan.md). The overall project position is
+summarized in [`Status.md`](Status.md).
 
 **Feasibility assessment:** desktop 4K60 is high confidence because the CPU has
-~14 ms of headroom and the 4K pass is one fullscreen textured quad after the
+~15 ms of headroom and the 4K pass is one fullscreen textured quad after the
 native-resolution palette expansion. Pi 5 is likely but unmeasured; Pi 4 is more
 realistically 1080p60. The remaining risk is frame pacing, the Avalonia/WGL
 compositor, and p99 spikes, not raw GPU fill rate. 4K internal CEL rendering is not
@@ -229,10 +232,10 @@ CHDSharp decoding is pure managed code and can be CPU-heavy on Tier B. The core
 thread must not block on a multi-hundred-millisecond decompression during gameplay.
 
 - Keep emulated CD timing deterministic; never read wall-clock time inside the core.
-- Add a host-side prefetch worker with a bounded sector cache for CHD/ISO reads.
-  The core consumes sectors at emulated time; if a sector is not ready, the host may
-  block briefly, but the emulated state remains deterministic.
-- Benchmark CHD vs ISO boot and streaming; record p99 frame time, not just averages.
+- `PrefetchingDiscSource` provides a bounded host-side worker/cache for CHD/ISO
+  reads. It is opt-in via `--prefetch`; the core consumes sectors at emulated time,
+  and a cache miss blocks briefly without changing emulated state.
+- CHD vs ISO streaming is benchmarked on x64; record Tier B p99 frame time next.
 - Keep the existing read-ahead configuration and validate it against real discs in
   [`TestCorpus.md`](TestCorpus.md).
 
@@ -254,28 +257,31 @@ later for microbenchmarks):
 - `VdlFrameUploader`/presenter CPU path (ms/frame, allocations).
 - `OpenGlRenderer` upload/present (MB/s, CPU ms; GPU time via timer queries).
 
-### Measured baseline (2026-10-23)
+### Measured baseline (2026-10-25)
 
-`benchmarks/ThreeDo.Benchmarks` now runs a synthetic machine by default and accepts
-`--bios`/`--disc` for a real title. Release build, development machine (x64):
+`benchmarks/ThreeDo.Benchmarks` runs a synthetic machine by default and accepts
+`--bios`/`--disc` for a real title, plus `--high-res` and `--prefetch`. Release
+build, development machine (x64), 600 frames:
 
-| Case | Core ms/frame | Video pack µs | Mailbox write µs | Read copy µs | Total ms/frame |
+| Case | Total ms/frame | p50 | p95 | p99 | Allocations |
 |---|---:|---:|---:|---:|---:|
-| Synthetic | 2.177 | 42.8 | 23.4 | 27.2 | 2.270 |
-| Lemmings (USA), 600 frames | 2.061 | 40.7 | 17.1 | 18.1 | 2.137 |
+| Synthetic | **1.250** | 1.218 | 1.434 | 1.638 | **0 bytes/frame** |
+| Lemmings CHD | **1.281** | 1.088 | 2.005 | 3.398 | ~5.9 KB/frame (CHD) |
+| Lemmings CHD, high-res | **1.605** | 1.398 | 2.497 | 4.598 | ~5.8 KB/frame (CHD) |
 
-High-resolution mode (opt-in, 640x480, Lemmings title screen, 600 frames) measured
-**2.94 ms/frame** against **1.66 ms/frame** for the same low-res state on the
-development machine. The extra cost is the four-plane CEL writes and the doubled
-VDLP/upload path; both remain well inside the 16.67 ms frame budget. These are
-wall-clock headless numbers including CLI startup subtraction, not GPU timings.
+The synthetic run reports ~172 MIPS; the Lemmings run reports ~43 MIPS because the
+guest spends time in VDLP/CEL and idle paths. CPU-side headroom against the
+16.67 ms budget is ~15.4 ms. The read copy is deliberately performed outside the
+mailbox lock so GPU submission cannot stall the core thread. CHD decode allocations
+are host-side and attributed to the core stage; the synthetic core/pack/mailbox/read
+path is allocation-free in steady state. These numbers are **CPU only**: the 4K GPU
+stage and timer queries are not yet measured, and the benchmark is not a substitute
+for a Tier B percentile run.
 
-The synthetic run reports ~96 MIPS; the Lemmings run reports ~26 MIPS because the
-guest spends time in the VDLP/CEL and idle paths. CPU-side headroom against the
-16.67 ms budget is ~14.4 ms. The read copy is deliberately performed outside the
-mailbox lock so GPU submission cannot stall the core thread. These numbers are
-**CPU only**: the 4K GPU stage and timer queries are not yet measured, and the
-benchmark is not a substitute for the p99/percentile run described below.
+The opt-in prefetch cache (`--prefetch`) produced identical Lemmings state/frame
+hash in a 300-frame run. On the x64 development machine it increased short-run p99
+and allocations because the storage path is already fast; it is intended for slow
+CHD/Tier B storage and remains opt-in until measured there.
 
 Run it with:
 
@@ -336,15 +342,15 @@ Still open:
    the Windows frontend now prefers WGL. ANGLE/Pi real-hardware validation and the
    Silk.NET binding path under an ES context remain.
 3. No GPU timer-query/4K percentile run yet; the current numbers are CPU-side.
-4. CHD prefetch on a host worker is not implemented; the core still reads
-   synchronously through the disc source.
-5. Real-game compatibility is partial: Lemmings and Space Ace render, Road Rash and
-   Wolfenstein load their own OS but stop at `SAudio channel 0` initialization, and
-   Alone in the Dark fails earlier. **Opera passes all four problem titles**, so these
-   are our bugs, not a shared FreeDO limitation (see
-   [`ReferenceStrategy.md`](ReferenceStrategy.md) and [`TestCorpus.md`](TestCorpus.md)).
-6. The benchmark harness reports averages, not p50/p95/p99, and does not assert
-   zero allocations per frame in CI.
+4. `PrefetchingDiscSource` is implemented as an opt-in bounded worker/cache, but
+   Tier B timing and the default policy are not measured.
+5. Real-game compatibility is partial: all five corpus titles boot and render, and
+   Wolfenstein, Lemmings, Road Rash, and Alone have scripted gameplay evidence, but
+   the Road Rash race is not finished, Space Ace's interactive path is unproven, and a
+   CD-load/READ_ID freeze remains. See [`Compatibility.md`](Compatibility.md) and
+   [`TestCorpus.md`](TestCorpus.md).
+6. The benchmark reports p50/p95/p99 and per-stage allocations, but CI does not yet
+   enforce a regression gate or a zero-allocation assertion.
 
 These gaps do not invalidate the architecture. They do mean performance work cannot
 be deferred to M10: the backend matrix and physical-pixel sizing are structural

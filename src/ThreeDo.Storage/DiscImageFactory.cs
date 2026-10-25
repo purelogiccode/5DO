@@ -13,9 +13,17 @@ public static class DiscImageFactory
     /// <summary>Opens a disc image by path and detected container format.</summary>
     /// <param name="path">Path to an ISO, BIN, CUE, or CHD image.</param>
     /// <param name="chdParentPath">Optional parent CHD path for a differential CHD.</param>
+    /// <param name="prefetch">Whether to add a host-side read-ahead cache.</param>
+    /// <param name="prefetchAhead">Sectors to read ahead when prefetching is enabled.</param>
+    /// <param name="prefetchCapacity">Maximum cached sectors when prefetching is enabled.</param>
     /// <returns>An open disc source. The caller owns and must dispose it.</returns>
     /// <exception cref="DiscImageException">Thrown when the image cannot be opened or its format is unsupported.</exception>
-    public static IDiscSource Open(string path, string? chdParentPath = null)
+    public static IDiscSource Open(
+        string path,
+        string? chdParentPath = null,
+        bool prefetch = false,
+        int prefetchAhead = 32,
+        int prefetchCapacity = 128)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         if (!File.Exists(path))
@@ -23,7 +31,7 @@ public static class DiscImageFactory
             throw new DiscImageException($"Disc image '{path}' does not exist.");
         }
 
-        return Path.GetExtension(path).ToLowerInvariant() switch
+        var source = Path.GetExtension(path).ToLowerInvariant() switch
         {
             ".cue" => CueSheet.Open(path),
             ".chd" => ChdDiscImage.Open(path, chdParentPath),
@@ -31,6 +39,21 @@ public static class DiscImageFactory
             ".bin" => OpenBin(path),
             _ => OpenByHeader(path, chdParentPath),
         };
+
+        if (!prefetch)
+        {
+            return source;
+        }
+
+        try
+        {
+            return new PrefetchingDiscSource(source, prefetchAhead, prefetchCapacity);
+        }
+        catch
+        {
+            source.Dispose();
+            throw;
+        }
     }
 
     /// <summary>Detects whether a file looks like a raw 2352-byte-sector BIN image.</summary>

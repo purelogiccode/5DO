@@ -6,35 +6,39 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-24, second pass):** M0-M8 are complete. The M9 Avalonia
-shell, the M9R two-stage OpenGL presenter, the M9P dedicated core thread/frame pacer,
-and the M10 CI/publish pipeline are implemented as a working prototype. **552 tests
-pass.**
+**Current position (2026-10-25, sixth pass):** M0-M8 are functionally complete. The
+M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
+thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
+prototype. **605 tests pass.** The shell now has fullscreen, GL screenshots, an
+About dialog, a Hi-Res toggle, and automatic CPU fallback when OpenGL init or the
+context fails. The benchmark reports p50/p95/p99 and zero steady-state allocations;
+an opt-in bounded disc prefetch cache is available via `--prefetch`.
 
 Real-content status with `panafz1.bin`: all five local corpus titles boot, load their
 own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio.
 
 - **Road Rash** renders its 3D race correctly (matching the Opera reference) and runs
-  past 60,000 frames; scripted buttons alter the race and reach the WRECK FMV.
-- **Wolfenstein 3D** starts a fresh game at FLOOR 1-1 from its preview menu, and a
-  live gameplay save state roundtrips deterministically.
+  past 60,000 frames; the v10 `--autopilot road` driver reaches 91,000 live frames from
+  the 80k/83k states and roundtrips there, though the race is not finished yet.
+- **Wolfenstein 3D** starts a fresh game at FLOOR 1-1 from its preview menu, walks,
+  turns, fires, and roundtrips a live gameplay save state.
 - **Alone in the Dark** reaches its in-game staircase/room with an upright character;
   the D-pad/A change the scene and open the menu.
-- **Lemmings** reaches its title and passcode screens; the passcode keyboard accepts
-  A/X input.
+- **Lemmings** reaches its title and passcode screens; the Fun 4 passcode
+  (`HNLHCIOECW`) starts gameplay and roundtrips, and the 640x480 high-resolution title
+  matches the reference.
 - **Space Ace** plays its animated demo past 12,000 frames with no runaway.
 
-The second 2026-10-24 pass fixed a **transposed arbitrary-CEL X/Y write** that had
-been corrupting Road Rash's VRAM allocator (the `AllocMem error, bad node address`
-freeze) and drawing Alone's character horizontally. It also made the VDLP bitmap
-path honor 384/512/640-wide modes and made save-state loads restore the VDL picture
-immediately. The earlier pass fixed DSP execution/immediates/rounding, the CCB field
-order, and the CLI NVRAM initialization.
+The 2026-10-24/25 passes fixed DSP execution/immediates/rounding, the CCB field order,
+the CLI NVRAM initialization, a **transposed arbitrary-CEL X/Y write** that corrupted
+Road Rash's VRAM allocator and drew Alone horizontally, and VDLP bitmap widths for
+384/512/640/1024-wide modes. The opt-in 640x480 high-resolution CEL/VDLP path was
+added; save-state loads restore the VDL picture immediately.
 
-Remaining major work: complete scripted races/levels (Road Rash autopilot, Lemmings
-passcode/level start, Space Ace interactive), investigate Wolfenstein's long
-fresh-game CD load, GPU 4K/p99 validation, GLES/ANGLE/Pi validation,
-arm64/installers, filter polish, and the legal/attribution review. See
+Remaining major work: finish the Road Rash race and Space Ace interactive path,
+capture per-title save-state/screenshot/WAV evidence, investigate the remaining CD-load
+freeze, GPU 4K/p99 and GLES/ANGLE/Pi/DPI validation, Tier B prefetch validation,
+xBR/HQx and UI polish, arm64/installers, and the legal/attribution review. See
 [`docs/Status.md`](docs/Status.md) for the completion estimate and
 [`docs/NextSession.md`](docs/NextSession.md) for the next-session plan. The
 implementation plan and architecture are in:
@@ -89,9 +93,10 @@ The emulation core still renders CELs in software for accuracy. The GPU accelera
 - Core frame budget ≤ 8 ms p99 on Tier A, zero managed allocations per frame, and core cost independent of output resolution.
 - CRT/xBR filters are opt-in and may require faster hardware.
 
-The CPU side currently runs at ~2.1-2.3 ms/frame (core + pack + mailbox + read copy),
-leaving ~14 ms of headroom at 60 Hz on the development machine. The 4K GPU pass,
-p99 frame times, allocation gates, and Tier B numbers are not measured yet; see
+The CPU side currently runs at ~1.25-1.6 ms/frame (core + pack + mailbox + read copy;
+600-frame benchmark, p99 1.6-4.6 ms depending on high-res), leaving ~15 ms of headroom
+at 60 Hz on the development machine. The synthetic steady state is allocation-free.
+The 4K GPU pass, Tier B numbers, and the CI regression gate are not measured yet; see
 [`docs/Performance.md`](docs/Performance.md) for the pipeline, measurement method,
 and the remaining M9P work items.
 
@@ -104,7 +109,7 @@ and the remaining M9P work items.
 - Native or JIT CPU backends. The ARM60 interpreter is the reference implementation.
 - Netplay, rewinding, or a full debugger UI.
 - CD-DA/Red Book audio, multi-track discs, or CD swapping.
-- PAL video modes and high-resolution rendering in the first playable milestone (they are planned later).
+- PAL video modes. High-resolution CEL rendering is available as an opt-in (`--high-res`), not as the default v1 mode.
 - 4K *internal* CEL rendering; v1 targets 4K output upscaling only.
 - Shipping BIOS ROMs, game discs, or any copyrighted 3DO material.
 
@@ -130,6 +135,7 @@ Headless CLI:
 
 ```powershell
 dotnet run --project src/ThreeDo.Cli -- run game.cue --bios panafz1.bin --frames 600 --frame-out frame.png
+dotnet run --project src/ThreeDo.Cli -- run game.chd --bios panafz1.bin --frames 600 --prefetch --high-res
 dotnet run --project src/ThreeDo.Cli -- info game.chd --json
 dotnet run --project src/ThreeDo.Cli -- bios info panafz1.bin
 dotnet run --project src/ThreeDo.Cli -- state inspect quick.tdos
@@ -148,7 +154,7 @@ Desktop app:
 dotnet run --project src/ThreeDo.Frontend.Avalonia
 ```
 
-Use **Open BIOS** and **Open Disc**, then **Play**. The default keyboard bindings are the arrow keys, Z (A), X (B), C (C), A (L), S (R), Enter (P), and Backspace (X). **Save State**/**Load State** use a quick slot; **Screenshot** writes a BMP to Pictures. Settings (last paths, filter/aspect, audio, bindings) persist under the user local application data folder.
+Use **Open BIOS** and **Open Disc**, then **Play**. The default keyboard bindings are the arrow keys, Z (A), X (B), C (C), A (L), S (R), Enter (P), and Backspace (X). **Save State**/**Load State** use a quick slot; **Screenshot** writes a BMP from the OpenGL output (or the CPU frame when GL is unavailable); **Fullscreen** toggles F11/Escape; **Hi-Res** restarts the machine in the opt-in 640x480 mode. Settings (last paths, filter/aspect, audio, bindings, Hi-Res) persist under the user local application data folder.
 
 ## Legal and attribution
 

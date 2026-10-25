@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-25, fifth pass (see `git log` for the exact commit).
+**Snapshot:** 2026-10-25, sixth pass (see `git log` for the exact commit).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
 **Reference:** `References/opera-libretro-master/libopera` is now the primary
 behavioral reference for new compatibility work; see
@@ -28,20 +28,26 @@ This is the short, current answer to "where are we?" The detailed task list is i
   (`--high-res`, `EmulatorTuning.HighResolution`) renders CELs and bitmap lines into
   four 1 MB VRAM planes and presents 640x480 by line-doubling the 640x240 source;
   Lemmings' title screen now matches the 640x480 reference. The mode is off by
-  default because 320x240 titles must not be upscaled.
+  default because 320x240 titles must not be upscaled, and the desktop shell exposes
+  it as a Hi-Res checkbox that restarts the machine.
 - **Performance:** the machine runs on a dedicated 60 Hz core thread with a frame
   pacer; the UI renders on demand; uploads use `TexStorage2D` + `TexSubImage2D`;
   uniform locations and the present delegate are cached; physical-pixel sizing is
-  implemented.
+  implemented. The benchmark reports p50/p95/p99 and per-stage allocations, and the
+  synthetic steady state is 0 bytes/frame. An opt-in bounded prefetch cache is
+  available for CHD/ISO streaming.
+- **Renderer robustness:** GL/GLES capability parsing reports the API and version,
+  fullscreen/F11/Escape work, GL readback screenshots are implemented, and GL init
+  failure or context loss switches the shell to the CPU `WriteableBitmap` presenter.
 - **Tooling:** CLI `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks`,
   `fs list/extract`, `disasm`, plus KPRINT, CD, CLIO, FIQ, RAM-write watchpoints,
   RAM/DSP dumps, DSP-instruction rings, CEL command/geometry traces, PBUS packet
   traces, CPU instruction-ring diagnostics, scripted input, NVRAM load/save, periodic
   frame capture (`--capture-dir`/`--capture-every`), RAM patches at run start
   (`--poke ADDR=HEX`), an experimental Road Rash road-following driver
-  (`--autopilot road`), and RAM dumps at trace stops. `run --json` reports the source
-  size, VDL modulo, road coverage, and autopilot state for mode/crop and driver
-  investigations.
+  (`--autopilot road`), an opt-in bounded disc prefetch cache (`--prefetch`), and RAM
+  dumps at trace stops. `run --json` reports the source size, VDL modulo, road
+  coverage, and autopilot state for mode/crop and driver investigations.
 - **Audio:** the DSP executes in every run, including headless runs with no host
   audio sink. The AudioFolio semaphore handshake works, instrument programs run, and
   the five-title corpus produces non-silent 44.1 kHz stereo WAV output (~737 samples
@@ -51,11 +57,10 @@ This is the short, current answer to "where are we?" The detailed task list is i
   `frame button[,button...]` lines for repeatable controller taps. Input has been
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene and menu), Lemmings (menu and passcode entry), and Space Ace (P/X).
-- **Tests:** 578 passing (`dotnet test -c Release`), including high-resolution CEL and
-  VDLP regression coverage plus RAM-patch and Road Rash autopilot tests (road
-  steering, close traffic, urgent preemption, obstacle, emergency-brake hold,
-  closing-side, bend-brake, pacing, coast-floor, upset, stopped/wreck restart, and
-  stuck-recovery contracts).
+- **Tests:** 605 passing (`dotnet test -c Release`), including high-resolution CEL and
+  VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
+  tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing, and
+  bounded prefetch-cache tests.
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   A win-x64 CLI publish has been smoke-tested.
 
@@ -128,24 +133,21 @@ screen) and capture a WAV/state/screenshot set for each title.
 
 Release build, development machine, 600 frames, CPU side only:
 
-| Case | Core | Pack | Mailbox write | Read copy | Total |
+| Case | Total | p50 | p95 | p99 | Allocations |
 |---|---:|---:|---:|---:|---:|
-| Synthetic | 2.177 ms | 42.8 µs | 23.4 µs | 27.2 µs | **2.270 ms/frame** |
-| Lemmings | 2.061 ms | 40.7 µs | 17.1 µs | 18.1 µs | **2.137 ms/frame** |
+| Synthetic | **1.250 ms/frame** | 1.218 ms | 1.434 ms | 1.638 ms | **0 bytes/frame** |
+| Lemmings CHD | **1.281 ms/frame** | 1.088 ms | 2.005 ms | 3.398 ms | ~5.9 KB/frame (CHD decode) |
+| Lemmings CHD, high-res | **1.605 ms/frame** | 1.398 ms | 2.497 ms | 4.598 ms | ~5.8 KB/frame (CHD decode) |
 
-This leaves ~14.4 ms of headroom against the 16.67 ms frame budget. The **4K GPU
-pass, p99 frame times, allocation assertions, and Tier B (Pi 4/5) numbers are not
-measured yet**.
-
-The 2026-10-24 synthetic bench, which now includes DSP execution, measured
-**0.977 s for 600 frames (614 fps, 1.63 ms/frame)** on the development machine. The
-detailed core/pack/mailbox breakdown above predates the DSP-execution fix and should
-be re-measured before it is quoted again.
+This leaves ~15.4 ms of headroom against the 16.67 ms frame budget for the synthetic
+case. The **4K GPU pass, Tier B (Pi 4/5) numbers, and GLES timing are not measured
+yet**. CHD decode allocations are host-side and are attributed to the core stage;
+the synthetic core/pack/mailbox/read path is allocation-free in steady state.
 
 ### 4K60 feasibility
 
-- **Desktop (Tier A): high confidence.** The core is ~2.1-2.3 ms/frame; the 4K pass is
-  one fullscreen textured quad after the native-resolution palette expansion. The
+- **Desktop (Tier A): high confidence.** The core is ~1.25-1.6 ms/frame; the 4K pass
+  is one fullscreen textured quad after the native-resolution palette expansion. The
   RX 580 is far above the required fill rate. The remaining risk is frame pacing and
   the Avalonia/WGL compositor, not the emulator core.
 - **Pi 5: likely, but unmeasured.** The presenter should handle 4K60 via GLES; the
@@ -154,8 +156,8 @@ be re-measured before it is quoted again.
 - **4K internal CEL rendering is not a v1 goal.** The target is 4K output, not 4K
   internal rendering.
 
-The next performance work is measurement: GPU timer queries, p99 frame time,
-allocations/frame, and present-to-present at 1080p/1440p/4K. See
+CPU p99 and per-stage allocations are now measured. The next performance work is
+GPU timer queries, Tier B/GLES timing, and present-to-present at 1080p/1440p/4K. See
 [`Performance.md`](Performance.md).
 
 ---
@@ -167,23 +169,22 @@ prototype work as partial credit:
 
 | Milestone | State | Done (dd) | Remaining (dd) |
 |---|---|---:|---:|
-| M0-M8 core, CPU, boot, MADAM, DSP, CD, input, save states | Complete | 90 | 0 |
-| M9 Avalonia frontend | Partial: shell, library, video, input; settings/audio/gamepad pages and polish remain | 10 | 6 |
-| M9R OpenGL presenter | Partial: two-stage, nearest/sharp-bilinear/CRT; xBR/HQx and GPU tests remain | 6 | 4 |
-| M9P performance/pacing | Partial: core thread, two-stage, uploads, DPI, benchmark; CHD prefetch, hot-path, p99/GPU gates remain | 5 | 5 |
+| M0-M8 core, CPU, boot, MADAM, DSP, CD, input, save states | Functionally complete; M0.8 legal review and minor M8 follow-ups are non-blocking | 90 | 0 |
+| M9 Avalonia frontend | Partial: shell, library, video, input, fullscreen, About, Hi-Res; settings/audio/gamepad pages and polish remain | 11 | 5 |
+| M9R OpenGL presenter | Partial: two-stage, sharp-bilinear/CRT, CPU fallback, screenshots; xBR/HQx and GPU tests remain | 7 | 3 |
+| M9P performance/pacing | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch; hot-path, Tier B/GPU gates remain | 6 | 4 |
 | M10 packaging/validation | Partial: CI and six-RID publish; arm64, trimming, installers, perf report remain | 2.5 | 3.5 |
-| M11 compatibility/release | Not started: gameplay hardening, remaining games, release checklist | 0 | 25+ |
-| **Baseline total** | | **~113.5 / 157** | **~43.5 + 30% ≈ 57** |
+| M11 compatibility/release | In progress: M11.0 done; gameplay and high-resolution validation underway | 2.5 | 22.5+ |
+| **Baseline total** | | **~119 / 157** | **~38 + 30% ≈ 49** |
 
-**Estimate: roughly 70% of the v1 effort is done.** For one experienced developer
-that is about **9-12 focused weeks**; two developers can overlap the UI, renderer,
-and packaging work for roughly **5-7 weeks**, but real-game compatibility is
-serial and is the main uncertainty.
+**Estimate: roughly three-quarters of the v1 effort is done.** For one experienced
+developer that is about **9-11 focused weeks**; two developers can overlap the UI,
+renderer, and packaging work for roughly **5-7 weeks**, but real-game compatibility
+is serial and is the main uncertainty.
 
-The estimate assumes the audio/DSP issue can be fixed without a rewrite. If it
-requires a deep DSP/microcode effort, add **2-4 weeks**. If the target is "all five
-corpus games playable" rather than "the v1 feature set is complete", add another
-**2-3 weeks** for game-specific fixes.
+The estimate assumes no deep CD/timing rewrite. If the differential reveals one,
+add **2-4 weeks**. If the target is "all five corpus games playable" rather than
+"the v1 feature set is complete", add another **2-3 weeks** for game-specific fixes.
 
 ---
 
@@ -220,8 +221,9 @@ corpus games playable" rather than "the v1 feature set is complete", add another
 5. **Validate the backend matrix** on real hardware: WGL desktop GL, ANGLE GLES,
    Raspberry Pi 4/5 GLES 3.1, and 100/150/200% DPI. The shader sources and physical
    pixel sizing exist; they are not proven on device.
-6. **Add CHD prefetch** on a bounded host worker so Tier B does not stall on
-   decompression, then benchmark CHD vs ISO.
+6. **Validate CHD prefetch on Tier B.** `PrefetchingDiscSource` is implemented and
+   opt-in via `--prefetch`; x64 CHD/ISO p99 is recorded, but Pi 4/5 timing and the
+   default policy remain.
 7. **Validate high-resolution mode.** The 640x480 renderer works for Lemmings' title.
    The passcode screen is a 320-wide UI scaled 2x; its five visible keyboard columns
    are the game's own window rather than a framebuffer crop. The remaining question
@@ -232,7 +234,7 @@ corpus games playable" rather than "the v1 feature set is complete", add another
 
 8. **M10 packaging:** arm64 validation, trimming, installers/signing plan, and the
    final performance report.
-9. **Filter/UI polish:** xBR/HQx, settings/audio/gamepad pages, fullscreen/vsync.
+9. **Filter/UI polish:** xBR/HQx, settings/audio/gamepad pages, vsync/FPS overlay.
 10. **Legal/attribution review** before any public build (M0.8); add Opera to the
     FreeDO/4DO attribution and license review.
 

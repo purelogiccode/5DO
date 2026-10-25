@@ -1,9 +1,13 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using ThreeDo.Audio;
@@ -14,13 +18,14 @@ using ThreeDo.Input;
 using ThreeDo.Machine;
 using ThreeDo.Storage;
 using ThreeDo.Video;
+using AvaloniaPixelFormat = Avalonia.Platform.PixelFormat;
 
 namespace ThreeDo.Frontend.Avalonia.Views;
 
 /// <summary>
 /// The minimal desktop shell: video surface, file loading, play/pause, reset, save/load,
-/// screenshots, and keyboard input. One machine frame runs per UI timer tick for determinism;
-/// a dedicated emulation thread is a later M9 optimization.
+/// screenshots, and keyboard input. The machine runs on <see cref="CoreRunner"/>'s dedicated
+/// 60 Hz thread; the video surface renders the latest mailbox frame on the UI thread.
 /// </summary>
 public partial class MainWindow : Window, IDisposable
 {
@@ -32,7 +37,12 @@ public partial class MainWindow : Window, IDisposable
     private ThreeDoMachine? _machine;
     private CoreRunner? _runner;
     private IDiscSource? _disc;
+    private CpuVideoRenderer? _cpuVideo;
+    private WriteableBitmap? _cpuBitmap;
+    private DispatcherTimer? _cpuTimer;
+    private byte[]? _cpuPixels;
     private bool _running;
+    private bool _shuttingDown;
 
     public MainWindow()
     {
@@ -47,7 +57,10 @@ public partial class MainWindow : Window, IDisposable
         _input = new InputManager(_settings.Input);
         _audio = _settings.AudioEnabled ? OpenAlAudioOutput.TryCreate() : null;
         _nvramStore = new NvramStore(Path.Combine(AppSettingsStore.DefaultDirectory, "nvram.ram"));
+        HighResCheck.IsChecked = _settings.HighResolution;
         Video.Settings = _settings.ToRendererSettings();
+        Video.OpenGlReady += OnOpenGlReady;
+        Video.OpenGlFailed += OnOpenGlFailed;
         Deactivated += (_, _) => _input.Keyboard.Reset();
         Closing += (_, _) => Shutdown();
         Opened += OnOpened;
@@ -223,6 +236,21 @@ public partial class MainWindow : Window, IDisposable
             ? Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
             : _settings.ScreenshotDirectory;
         var path = Path.Combine(directory, $"3do-{DateTime.Now:yyyyMMdd-HHmmss}.bmp");
+        if (Video.IsOpenGlAvailable)
+        {
+            void OnCaptured(byte[] pixels, int width, int height)
+            {
+                Video.CaptureCompleted -= OnCaptured;
+                FrameDumper.WriteBmp(pixels, width, height, path);
+                StatusText.Text = $"Screenshot: {path}";
+            }
+
+            Video.CaptureCompleted += OnCaptured;
+            Video.RequestCapture();
+            StatusText.Text = "Capturing screenshot...";
+            return;
+        }
+
         _runner!.Invoke(() =>
         {
             var frame = new FrameBuffer(_machine.Frame.SourceWidth, _machine.Frame.SourceHeight);
@@ -232,17 +260,226 @@ public partial class MainWindow : Window, IDisposable
         StatusText.Text = $"Screenshot: {path}";
     }
 
+    private void OnFullscreen(object? sender, RoutedEventArgs e)
+    {
+        ToggleFullscreen();
+    }
+
+    private void ToggleFullscreen()
+    {
+        WindowState = WindowState == WindowState.FullScreen
+            ? WindowState.Normal
+            : WindowState.FullScreen;
+    }
+
+    private void OnAbout(object? sender, RoutedEventArgs e)
+    {
+        var text = new TextBlock
+        {
+            Text = $"{ThreeDoVersion.ProductName} {ThreeDoVersion.Version}\n\n"
+                + "A pure C# / .NET 3DO emulator with an Avalonia frontend and OpenGL presenter.\n\n"
+                + "FreeDO/4DO are not standard OSI-licensed projects. See THIRD-PARTY-NOTICES.md "
+                + "and docs/Licensing.md before distributing builds.\n\n"
+                + "This project does not include BIOS ROMs or game images.",
+            TextWrapping = global::Avalonia.Media.TextWrapping.Wrap,
+        };
+        var close = new Button
+        {
+            Content = "Close",
+            HorizontalAlignment = global::Avalonia.Layout.HorizontalAlignment.Right,
+        };
+        var panel = new StackPanel
+        {
+            Margin = new Thickness(16),
+            Spacing = 12,
+        };
+        panel.Children.Add(text);
+        panel.Children.Add(close);
+        var window = new Window
+        {
+            Title = "About 3DOEmulator",
+            Width = 460,
+            Height = 300,
+            Content = panel,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+        };
+        close.Click += (_, _) => window.Close();
+        window.ShowDialog(this);
+    }
+
+    private void OnHighResChanged(object? sender, RoutedEventArgs e)
+    {
+        var enabled = HighResCheck.IsChecked == true;
+        if (_settings.HighResolution == enabled)
+        {
+            return;
+        }
+
+        _settings.HighResolution = enabled;
+        AppSettingsStore.Save(_settings);
+        if (_machine is null)
+        {
+            StatusText.Text = enabled
+                ? "High-resolution mode enabled for the next game."
+                : "High-resolution mode disabled.";
+            return;
+        }
+
+        RecreateMachine(enabled);
+    }
+
+    private void RecreateMachine(bool highResolution)
+    {
+        var biosPath = _settings.BiosPath;
+        var discPath = _settings.DiscPath;
+        if (string.IsNullOrWhiteSpace(biosPath) || !File.Exists(biosPath))
+        {
+            StatusText.Text = "Reload the BIOS to apply the video mode.";
+            return;
+        }
+
+        _running = false;
+        PlayButton.Content = "Play";
+        _runner?.Dispose();
+        _runner = null;
+        _machine = null;
+        _disc?.Dispose();
+        _disc = null;
+        OpenBiosPath(biosPath);
+        if (!string.IsNullOrWhiteSpace(discPath) && File.Exists(discPath))
+        {
+            OpenDiscPath(discPath);
+        }
+
+        StatusText.Text = highResolution
+            ? "High-resolution mode enabled; machine restarted."
+            : "High-resolution mode disabled; machine restarted.";
+    }
+
     private void OnCoreStatus(CoreStatus status)
     {
         StatusText.Text =
             $"Frame {status.Frames}  PC 0x{status.ProgramCounter:x8}  cycles {status.Cycles}  {status.FramesPerSecond:F1} fps";
     }
 
+    private void OnOpenGlReady(RendererCapabilities capabilities)
+    {
+        StopCpuFallback();
+        StatusText.Text =
+            $"{capabilities.Name} {capabilities.MajorVersion}.{capabilities.MinorVersion} renderer ready.";
+    }
+
+    private void OnOpenGlFailed(Exception exception)
+    {
+        StartCpuFallback(exception);
+    }
+
+    private void StartCpuFallback(Exception exception)
+    {
+        if (_cpuVideo is not null || _shuttingDown)
+        {
+            return;
+        }
+
+        var width = _machine?.Frame.SourceWidth > 0
+            ? _machine.Frame.SourceWidth
+            : EmulatorConstants.VideoWidth;
+        var height = _machine?.Frame.SourceHeight > 0
+            ? _machine.Frame.SourceHeight
+            : EmulatorConstants.VideoHeight;
+
+        _cpuVideo = new CpuVideoRenderer { Settings = _settings.ToRendererSettings() };
+        _cpuVideo.Initialize(width, height);
+        _cpuPixels = new byte[width * height * 4];
+        _cpuBitmap = CreateBitmap(width, height);
+        CpuVideo.Source = _cpuBitmap;
+        CpuVideo.IsVisible = true;
+        Video.IsVisible = false;
+        _cpuTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+        _cpuTimer.Tick += (_, _) => RenderCpuFrame();
+        _cpuTimer.Start();
+        StatusText.Text = $"OpenGL unavailable ({exception.Message}); using the CPU renderer.";
+    }
+
+    private void StopCpuFallback()
+    {
+        _cpuTimer?.Stop();
+        _cpuTimer = null;
+        CpuVideo.IsVisible = false;
+        Video.IsVisible = true;
+        _cpuVideo?.Dispose();
+        _cpuVideo = null;
+        _cpuBitmap = null;
+        _cpuPixels = null;
+    }
+
+    private void RenderCpuFrame()
+    {
+        if (_cpuVideo is null || _cpuBitmap is null || _cpuPixels is null)
+        {
+            return;
+        }
+
+        var width = _machine?.Frame.SourceWidth ?? 0;
+        var height = _machine?.Frame.SourceHeight ?? 0;
+        if (width <= 0 || height <= 0)
+        {
+            width = EmulatorConstants.VideoWidth;
+            height = EmulatorConstants.VideoHeight;
+        }
+
+        if (_cpuVideo.Frame.Width != width || _cpuVideo.Frame.Height != height)
+        {
+            _cpuVideo.Resize(width, height);
+            _cpuPixels = new byte[width * height * 4];
+            _cpuBitmap = CreateBitmap(width, height);
+            CpuVideo.Source = _cpuBitmap;
+        }
+
+        Video.RenderSnapshot(_cpuVideo, width, height);
+        var pixels = _cpuVideo.Frame.PixelSpan;
+        if (pixels.Length != _cpuPixels.Length)
+        {
+            _cpuPixels = new byte[pixels.Length];
+        }
+
+        pixels.CopyTo(_cpuPixels);
+        using var locked = _cpuBitmap.Lock();
+        var rowBytes = width * 4;
+        if (locked.RowBytes == rowBytes)
+        {
+            Marshal.Copy(_cpuPixels, 0, locked.Address, _cpuPixels.Length);
+            return;
+        }
+
+        for (var y = 0; y < height; y++)
+        {
+            Marshal.Copy(
+                _cpuPixels,
+                y * rowBytes,
+                IntPtr.Add(locked.Address, y * locked.RowBytes),
+                rowBytes);
+        }
+    }
+
+    private static WriteableBitmap CreateBitmap(int width, int height)
+    {
+        return new WriteableBitmap(
+            new PixelSize(width, height),
+            new Vector(96, 96),
+            AvaloniaPixelFormat.Bgra8888,
+            AlphaFormat.Premul);
+    }
+
     private ThreeDoMachine CreateMachine()
     {
         if (_machine is null)
         {
-            _machine = new ThreeDoMachine { PbusSource = _input, AudioSink = _audio };
+            _machine = new ThreeDoMachine(new EmulatorTuning { HighResolution = _settings.HighResolution })
+            {
+                PbusSource = _input,
+                AudioSink = _audio,
+            };
             _runner = new CoreRunner(
                 _machine,
                 frame => Video.SubmitFrame(frame),
@@ -273,11 +510,16 @@ public partial class MainWindow : Window, IDisposable
 
     private void Shutdown()
     {
+        _shuttingDown = true;
         _runner?.Dispose();
         _runner = null;
         FlushNvram();
         AppSettingsStore.Save(_settings);
         _disc?.Dispose();
+        _cpuTimer?.Stop();
+        _cpuTimer = null;
+        _cpuVideo?.Dispose();
+        _cpuVideo = null;
         Video.Dispose();
         _nvramStore.Dispose();
         _audio?.Dispose();
@@ -286,6 +528,20 @@ public partial class MainWindow : Window, IDisposable
     /// <inheritdoc />
     protected override void OnKeyDown(KeyEventArgs e)
     {
+        if (e.Key == Key.F11)
+        {
+            ToggleFullscreen();
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Escape && WindowState == WindowState.FullScreen)
+        {
+            WindowState = WindowState.Normal;
+            e.Handled = true;
+            return;
+        }
+
         if (_input.Keyboard.SetKey(e.Key.ToString(), pressed: true))
         {
             e.Handled = true;
@@ -308,9 +564,14 @@ public partial class MainWindow : Window, IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+        _shuttingDown = true;
         _runner?.Dispose();
         _runner = null;
         _disc?.Dispose();
+        _cpuTimer?.Stop();
+        _cpuTimer = null;
+        _cpuVideo?.Dispose();
+        _cpuVideo = null;
         Video.Dispose();
         _nvramStore.Dispose();
         _audio?.Dispose();

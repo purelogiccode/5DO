@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
 using ThreeDo.Core;
+using ThreeDo.Diagnostics;
 using ThreeDo.Machine;
 using ThreeDo.Storage;
 using ThreeDo.Video;
@@ -28,6 +29,8 @@ internal static class Program
         string? biosPath = null;
         string? discPath = null;
         var json = false;
+        var prefetch = false;
+        var highResolution = false;
         var label = "synthetic";
 
         for (var i = 0; i < args.Length; i++)
@@ -46,6 +49,12 @@ internal static class Program
                     break;
                 case "--json":
                     json = true;
+                    break;
+                case "--prefetch":
+                    prefetch = true;
+                    break;
+                case "--high-res":
+                    highResolution = true;
                     break;
                 case "--label" when i + 1 < args.Length:
                     label = args[++i];
@@ -66,16 +75,16 @@ internal static class Program
         ThreeDoMachine machine;
         if (biosPath is null)
         {
-            machine = CreateSyntheticMachine();
+            machine = CreateSyntheticMachine(highResolution);
         }
         else
         {
             var bios = BiosImage.Load(biosPath);
-            machine = new ThreeDoMachine();
+            machine = new ThreeDoMachine(new EmulatorTuning { HighResolution = highResolution });
             machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
             if (discPath is not null)
             {
-                disc = DiscImageFactory.Open(discPath);
+                disc = DiscImageFactory.Open(discPath, prefetch: prefetch);
                 machine.InsertDisc(disc);
             }
 
@@ -88,47 +97,71 @@ internal static class Program
             var mailbox = new VdlFrameMailbox();
             var presentFrame = new VdlFrame();
 
-            // Warm up JIT, the DSP tables, and the video packers.
-            for (var i = 0; i < 10; i++)
+            // Warm up JIT, the DSP tables, and the video packers. A longer warm-up
+            // keeps one-time runtime allocations out of the steady-state byte count.
+            for (var i = 0; i < 60; i++)
             {
                 machine.RunFrame();
                 uploader.Update(machine.Frame);
                 mailbox.Write(machine.Frame);
+                mailbox.Read(presentFrame, NoOp);
             }
 
             var coreTicks = 0L;
             var packTicks = 0L;
             var mailboxTicks = 0L;
             var readTicks = 0L;
+            var coreAllocated = 0L;
+            var packAllocated = 0L;
+            var mailboxAllocated = 0L;
+            var readAllocated = 0L;
+            var coreFrameMs = new double[frames];
+            var totalFrameMs = new double[frames];
             var startInstructions = machine.Cpu.InstructionsExecuted;
             var startFrames = machine.FramesExecuted;
 
             for (var i = 0; i < frames; i++)
             {
+                var frameStart = Stopwatch.GetTimestamp();
+                var a0 = GC.GetAllocatedBytesForCurrentThread();
                 var t0 = Stopwatch.GetTimestamp();
                 machine.RunFrame();
                 var t1 = Stopwatch.GetTimestamp();
+                var a1 = GC.GetAllocatedBytesForCurrentThread();
                 uploader.Update(machine.Frame);
                 var t2 = Stopwatch.GetTimestamp();
+                var a2 = GC.GetAllocatedBytesForCurrentThread();
                 mailbox.Write(machine.Frame);
                 var t3 = Stopwatch.GetTimestamp();
+                var a3 = GC.GetAllocatedBytesForCurrentThread();
                 mailbox.Read(presentFrame, NoOp);
                 var t4 = Stopwatch.GetTimestamp();
+                var a4 = GC.GetAllocatedBytesForCurrentThread();
 
                 coreTicks += t1 - t0;
                 packTicks += t2 - t1;
                 mailboxTicks += t3 - t2;
                 readTicks += t4 - t3;
+                coreAllocated += a1 - a0;
+                packAllocated += a2 - a1;
+                mailboxAllocated += a3 - a2;
+                readAllocated += a4 - a3;
+                var frequency = (double)Stopwatch.Frequency;
+                coreFrameMs[i] = (t1 - t0) * 1000.0 / frequency;
+                totalFrameMs[i] = (t4 - frameStart) * 1000.0 / frequency;
             }
 
-            var frequency = (double)Stopwatch.Frequency;
-            var coreMs = coreTicks * 1000.0 / frequency;
-            var packMs = packTicks * 1000.0 / frequency;
-            var mailboxMs = mailboxTicks * 1000.0 / frequency;
-            var readMs = readTicks * 1000.0 / frequency;
+            var allocatedBytes = coreAllocated + packAllocated + mailboxAllocated + readAllocated;
+            var frequencyTotal = (double)Stopwatch.Frequency;
+            var coreMs = coreTicks * 1000.0 / frequencyTotal;
+            var packMs = packTicks * 1000.0 / frequencyTotal;
+            var mailboxMs = mailboxTicks * 1000.0 / frequencyTotal;
+            var readMs = readTicks * 1000.0 / frequencyTotal;
             var totalMs = coreMs + packMs + mailboxMs + readMs;
             var instructions = machine.Cpu.InstructionsExecuted - startInstructions;
             var elapsedFrames = machine.FramesExecuted - startFrames;
+            var coreTiming = FrameTiming.Summarize(coreFrameMs);
+            var totalTiming = FrameTiming.Summarize(totalFrameMs);
 
             var result = new
             {
@@ -139,6 +172,10 @@ internal static class Program
                 {
                     totalMs = Round(coreMs),
                     msPerFrame = Round(coreMs / elapsedFrames),
+                    p50Ms = Round(coreTiming.P50Ms),
+                    p95Ms = Round(coreTiming.P95Ms),
+                    p99Ms = Round(coreTiming.P99Ms),
+                    maxMs = Round(coreTiming.MaxMs),
                     fps = Round(elapsedFrames / (coreMs / 1000.0)),
                     millionInstructionsPerSecond = Round(instructions / (coreMs / 1000.0) / 1_000_000.0),
                     instructionsPerFrame = instructions / elapsedFrames,
@@ -161,9 +198,22 @@ internal static class Program
                 total = new
                 {
                     msPerFrame = Round(totalMs / elapsedFrames),
+                    p50Ms = Round(totalTiming.P50Ms),
+                    p95Ms = Round(totalTiming.P95Ms),
+                    p99Ms = Round(totalTiming.P99Ms),
+                    maxMs = Round(totalTiming.MaxMs),
                     fps = Round(elapsedFrames / (totalMs / 1000.0)),
                     budget60Ms = 16.667,
                     headroom = Round(16.667 - (totalMs / elapsedFrames)),
+                },
+                allocations = new
+                {
+                    totalBytes = allocatedBytes,
+                    bytesPerFrame = elapsedFrames == 0 ? 0 : allocatedBytes / elapsedFrames,
+                    coreBytesPerFrame = elapsedFrames == 0 ? 0 : coreAllocated / elapsedFrames,
+                    packBytesPerFrame = elapsedFrames == 0 ? 0 : packAllocated / elapsedFrames,
+                    mailboxBytesPerFrame = elapsedFrames == 0 ? 0 : mailboxAllocated / elapsedFrames,
+                    readBytesPerFrame = elapsedFrames == 0 ? 0 : readAllocated / elapsedFrames,
                 },
                 machine = new
                 {
@@ -182,10 +232,14 @@ internal static class Program
                 Console.WriteLine($"benchmark:   {label}");
                 Console.WriteLine($"frames:      {elapsedFrames}");
                 Console.WriteLine($"core:        {result.core.msPerFrame:F3} ms/frame  ({result.core.fps:F1} fps, {result.core.millionInstructionsPerSecond:F1} MIPS)");
+                Console.WriteLine($"  core p50/p95/p99/max: {result.core.p50Ms:F3} / {result.core.p95Ms:F3} / {result.core.p99Ms:F3} / {result.core.maxMs:F3} ms");
                 Console.WriteLine($"video pack:  {result.pack.microsecondsPerFrame:F1} us/frame");
                 Console.WriteLine($"mailbox:     {result.mailbox.microsecondsPerFrame:F1} us/frame");
                 Console.WriteLine($"read copy:   {result.read.microsecondsPerFrame:F1} us/frame");
                 Console.WriteLine($"total:       {result.total.msPerFrame:F3} ms/frame  ({result.total.fps:F1} fps)");
+                Console.WriteLine($"  total p50/p95/p99/max: {result.total.p50Ms:F3} / {result.total.p95Ms:F3} / {result.total.p99Ms:F3} / {result.total.maxMs:F3} ms");
+                Console.WriteLine($"allocations: {result.allocations.bytesPerFrame} bytes/frame ({result.allocations.totalBytes} bytes)");
+                Console.WriteLine($"  core/pack/mailbox/read: {result.allocations.coreBytesPerFrame} / {result.allocations.packBytesPerFrame} / {result.allocations.mailboxBytesPerFrame} / {result.allocations.readBytesPerFrame} bytes/frame");
                 Console.WriteLine($"60 Hz budget:{result.total.headroom,8:F3} ms headroom");
                 Console.WriteLine($"frame hash:  {result.machine.frameHash:x8}");
             }
@@ -213,7 +267,7 @@ internal static class Program
         return hash;
     }
 
-    private static ThreeDoMachine CreateSyntheticMachine()
+    private static ThreeDoMachine CreateSyntheticMachine(bool highResolution)
     {
         var program = new[]
         {
@@ -237,7 +291,7 @@ internal static class Program
             rom[(i * 4) + 3] = (byte)word;
         }
 
-        var machine = new ThreeDoMachine();
+        var machine = new ThreeDoMachine(new EmulatorTuning { HighResolution = highResolution });
         machine.LoadBios(rom);
         machine.Reset();
         return machine;

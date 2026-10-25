@@ -3,8 +3,8 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Status (2026-10-24):** M0-M8 are complete. The M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core thread/pacing work, and the M10 CI/publish pipeline are implemented as a working prototype. Real-content status: Lemmings and Space Ace boot and render; Road Rash and Wolfenstein load their own OS but stop at SAudio channel 0 initialization; Alone in the Dark fails earlier. **Opera/libopera runs all four problem titles past those points**, so the audio failure is not a shared FreeDO limitation. 539 tests pass, and CPU-side frame cost is ~1.6-2.3 ms. The 2026-10-24 session fixed headless DSP execution and decoded SAudio `-6996` as `SAudioErrAllocInstFailed`; Space Ace's runaway is the same failed `AllocInstrument` path leaving a null audio output buffer. Remaining work: DSP/audio differential against Opera, then CD-ROM/CLIO/MADAM/ARM timing, real-game hardening, 4K GPU/p99/GLES validation, arm64/installers, filter polish, and the M0.8 legal/attribution review. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and the next-session plan.
-**Last updated:** 2026-10-24
+**Status (2026-10-25, sixth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five local corpus titles boot, load their own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio. Road Rash's 3D race renders correctly and the v10 autopilot reaches 91,000 live frames; Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room; Lemmings completes the Fun 4 passcode and its 640x480 high-resolution title matches the reference; Space Ace plays its demo. **605 tests pass.** The opt-in 640x480 high-resolution CEL/VDLP mode is exposed in the desktop shell. The renderer now reports API/version capabilities honestly, falls back to the CPU presenter on GL failure or context loss, supports fullscreen and GL readback screenshots, and the benchmark reports p50/p95/p99 and per-stage allocations (zero steady-state). An opt-in bounded CHD/ISO prefetch worker is available via `--prefetch`. Remaining work: finish the Road Rash race and Space Ace interactive path, GPU 4K/p99/GLES/DPI validation, xBR/HQx and UI polish, arm64/installers, the M0.8 legal/attribution review, and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
+**Last updated:** 2026-10-25
 
 ---
 
@@ -61,32 +61,32 @@ A 3DO Interactive Multiplayer emulator with:
 
 **v0.1 - Boot milestone**
 
-- [ ] Boots a real 3DO BIOS to its menu.
-- [ ] Renders the BIOS UI at 320x240, 60 Hz.
-- [ ] OpenGL renderer displays the BIOS frame with pixel-accurate palette expansion.
-- [ ] Responds to keyboard input.
-- [ ] Does not crash for 10 minutes of menu navigation.
-- [ ] Synthetic-ROM integration tests pass in CI.
+- [x] Boots a real 3DO BIOS to its menu. (`panafz1.bin` reaches the Portfolio shell)
+- [x] Renders the BIOS UI at 320x240, 60 Hz.
+- [~] OpenGL renderer displays the BIOS frame with pixel-accurate palette expansion. (Windows launch smoke test and CPU/GPU parity tests pass; a recorded real-BIOS frame through the desktop GL path and GPU CI coverage remain)
+- [x] Responds to keyboard input. (desktop frontend and scripted CLI input)
+- [~] Does not crash for 10 minutes of menu navigation. (long corpus runs exceed 60,000 frames; a dedicated 10-minute menu soak test remains)
+- [x] Synthetic-ROM integration tests pass in CI.
 
 **v0.5 - Playable milestone**
 
-- [ ] Boots at least 10 real discs to gameplay (user-provided test set), including at least one CHD image.
-- [ ] Audio works for DSP-driven music/SFX.
-- [ ] NVRAM persists between sessions.
-- [ ] Save states roundtrip deterministically.
-- [ ] ISO, BIN, CUE+BIN, and CHD images produce identical sector streams for the same disc.
-- [ ] OpenGL renderer supports accurate, sharp-bilinear, and CRT modes; integer scaling; fullscreen; screenshots.
-- [ ] 60 fps on a mid-range x64 desktop and a Raspberry Pi 4 class arm64 device at native resolution.
-- [ ] Windows/Linux/macOS x64 builds; arm64 builds produced and smoke-tested.
+- [ ] Boots at least 10 real discs to gameplay (user-provided test set), including at least one CHD image. (five-title local corpus currently)
+- [x] Audio works for DSP-driven music/SFX. (non-silent 44.1 kHz stereo output on all five titles; mix/pitch comparison still pending)
+- [x] NVRAM persists between sessions.
+- [x] Save states roundtrip deterministically.
+- [x] ISO, BIN, CUE+BIN, and CHD images produce identical sector streams for the same disc.
+- [~] OpenGL renderer supports accurate, sharp-bilinear, and CRT modes; integer scaling; fullscreen; screenshots. (accurate/nearest, approximate sharp-bilinear, CRT scanlines, integer scaling, and CPU screenshots are implemented; fullscreen and GL screenshots remain)
+- [ ] 60 fps on a mid-range x64 desktop and a Raspberry Pi 4 class arm64 device at native resolution. (CPU-side headroom is measured; GPU/Pi validation remains)
+- [~] Windows/Linux/macOS x64 builds; arm64 builds produced and smoke-tested. (CI publishes six RIDs; only the win-x64 CLI has been smoke-tested)
 
 **v1.0 - Release milestone**
 
-- [ ] Compatibility matrix with documented results.
+- [x] Compatibility matrix with documented results.
 - [ ] Full Avalonia frontend (library, settings, input mapping, save states, screenshots, logs, about).
 - [ ] OpenGL renderer is the default on all desktop platforms, with CPU fallback and context-loss recovery.
 - [ ] 4K (3840x2160) 60 fps output on Tier A x64 hardware and 1080p60 on Raspberry Pi 4/5 class arm64, with no CPU-side per-pixel scaling. 4K *internal* CEL rendering is not a v1 goal. See [`Performance.md`](Performance.md).
-- [ ] CLI with `run`, `info`, `bench`, `state`, and `selftest` commands.
-- [ ] Reproducible self-contained packages for all six RIDs.
+- [x] CLI with `run`, `info`, `bench`, `state`, and `selftest` commands.
+- [~] Reproducible self-contained packages for all six RIDs. (CI artifacts exist; only one package has been smoke-tested)
 - [ ] License/attribution review complete.
 - [ ] No known crash bugs in the supported test set.
 
@@ -99,7 +99,7 @@ A 3DO Interactive Multiplayer emulator with:
 - CD-DA / Red Book audio.
 - Multi-disc swapping.
 - PAL video.
-- High-resolution CEL rendering (planned after v0.5; see M11). **4K internal CEL rendering is not a v1 goal**; v1's 4K target is output upscaling only.
+- High-resolution CEL rendering as a default mode. It is available as opt-in `--high-res` (M11.2) and is not part of the 4K output target. **4K internal CEL rendering is not a v1 goal**; v1's 4K target is output upscaling only.
 - 3DO mouse, light gun, modem, or network peripherals.
 - Bit-exact 4DO save-state compatibility.
 
@@ -212,34 +212,40 @@ project/type layout is unchanged.
 
 **Total:** ~157 developer-days of focused work plus 30% contingency (~204 dd), excluding the optional M12 JIT. This is a multi-month project for one experienced developer; correctness and performance gates matter more than the estimate.
 
-### 4a. Current position vs. the plan (2026-10-23)
+### 4a. Current position vs. the plan (2026-10-25)
 
-Snapshot: 539 tests pass; CPU-side frame cost is ~1.6-2.3 ms; real-game status is in
+Snapshot: 605 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
+and zero synthetic steady-state allocations; all five local corpus titles boot and
+render, and scripted gameplay is validated in Wolfenstein, Lemmings, Road Rash, and
+Alone. The opt-in 640x480 high-resolution mode is implemented and matches the
+Lemmings reference title. Real-game status is in
 [`Compatibility.md`](Compatibility.md). Counting the prototype work as partial credit:
 
 | Milestone | State | Done (dd) | Remaining (dd) |
 |---|---|---:|---:|
-| M0-M8 | Complete | 90 | 0 |
-| M9 | Partial: shell/library/video/input; settings, audio, gamepad pages, polish | 10 | 6 |
-| M9R | Partial: two-stage, nearest/sharp-bilinear/CRT; xBR/HQx, GPU tests | 6 | 4 |
-| M9P | Partial: core thread, two-stage, uploads, DPI, benchmark; CHD prefetch, hot-path, p99/GPU gates | 5 | 5 |
+| M0-M8 | Functionally complete; M0.8 legal review is tracked in M11.6 and minor M8 follow-ups are non-blocking | 90 | 0 |
+| M9 | Partial: shell/library/video/input/fullscreen/About/Hi-Res; settings, audio, gamepad pages, polish | 11 | 5 |
+| M9R | Partial: two-stage, sharp-bilinear/CRT, CPU fallback, screenshots; xBR/HQx, GPU tests | 7 | 3 |
+| M9P | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch; hot-path and Tier B/GPU gates | 6 | 4 |
 | M10 | Partial: CI + six-RID publish; arm64, trimming, installers, perf report | 2.5 | 3.5 |
-| M11 | Not started: real-game hardening and release | 0 | 25+ |
-| **Baseline** | | **~113.5 / 157** | **~43.5 + 30% ≈ 57** |
+| M11 | In progress: M11.0 done; gameplay and high-resolution validation underway | 2.5 | 22.5+ |
+| **Baseline** | | **~119 / 157** | **~38 + 30% ≈ 49** |
 
-**Estimate: roughly 70% of the v1 effort is done.** One experienced developer needs
-about **9-12 focused weeks**; two developers can overlap UI, renderer, and packaging
-for roughly **5-7 weeks**, but real-game compatibility is serial and is the main
-uncertainty. If the differential port reveals a deep DSP/microcode issue, add 2-4
+**Estimate: roughly three-quarters of the v1 effort is done.** One experienced
+developer needs about **9-11 focused weeks**; two developers can overlap UI, renderer,
+and packaging for roughly **5-7 weeks**, but real-game compatibility is serial and is
+the main uncertainty. If the CD/timing differential reveals a deeper issue, add 2-4
 weeks. The detailed rationale and ordered next steps are in [`Status.md`](Status.md).
 
-**Reference migration (2026-10-23).** New compatibility work now uses
+**Reference migration (2026-10-23).** New compatibility work uses
 `References/opera-libretro-master/libopera` as the primary behavioral reference; the
-existing C# port remains FreeDOCore-based. This does not add developer-days to the
-baseline, but it changes the P0 order: build a differential harness and port targeted
-fixes from Opera instead of treating SAudio as a shared limitation. Opera was verified
-to run Road Rash, Wolfenstein, Alone, and Space Ace past our current stop points. See
-[`ReferenceStrategy.md`](ReferenceStrategy.md) and [`NextSession.md`](NextSession.md).
+existing C# port remains FreeDOCore-based. The adoption-time comparison showed Opera
+running Road Rash, Wolfenstein, Alone, and Space Ace past our then-current stop points.
+The port has since fixed the DSP execution/immediate/rounding, CCB field-order, NVRAM,
+and arbitrary-CEL transposition blockers, and all five corpus titles now boot and
+produce audio. Opera remains the behavioral reference for the remaining CD/CLIO/MADAM/
+ARM timing work. See [`ReferenceStrategy.md`](ReferenceStrategy.md) and
+[`NextSession.md`](NextSession.md).
 
 ---
 
@@ -603,12 +609,12 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - VRAM pixel hashes, CEL cycle counts.
   - A composite scene with multiple CCBs, PLUT changes, clipping, transparency.
   - Implemented in `tests/ThreeDo.Tests/Madam` (`CelRasterizerTests`, `CelLiteralRasterizerTests`, `CelGoldenSceneTests`): every bpp index, packed/literal/LR line/scale/arbitrary paths, clip-window corners, PLUT reloads, transparent texels, and a deterministic composite-scene VRAM hash with cycle counts.
-- [~] **M4.15 BIOS UI validation.**
-  - **In progress.** With the CD-ROM/XBUS device attached, a real BIOS (`bios/panafz1.bin`) passes its device poll, renders the boot logo and the console/disc animation (`CelGoldenSceneTests`/`BiosUiValidationTests`, 96+ distinct colors at frame 120), and starts the DSP.
-  - The interactive menu still ends on a black frame and a BIOS halt loop (`PC 0x000205c4`), even with a synthetic disc; the local corpus in [`TestCorpus.md`](TestCorpus.md) now provides real CHDs and further CEL/VDLP tracing is the next step. `BiosUiValidationTests` keeps the opt-in stability/PNG-dump and DSP-start checks for the follow-up.
+- [x] **M4.15 BIOS UI validation.**
+  - With the CD-ROM/XBUS device attached, a real BIOS (`bios/panafz1.bin`) passes its device poll, renders the boot logo and the console/disc animation (`CelGoldenSceneTests`/`BiosUiValidationTests`, 96+ distinct colors at frame 120), initializes the OS, and reaches the Portfolio shell.
+  - The earlier `PC 0x000205c4` "halt" was the Portfolio idle loop, not a renderer failure. All five local corpus titles now load their own OS and render; `BiosUiValidationTests` keeps the opt-in stability/PNG-dump and DSP-start checks.
 - [x] **M4.16 High-res decision.**
-  - Keep `RESSCALE=0` in v1. Document the later feature work in M11.
-  - Decision recorded in `docs/PortingNotes.md`; M11.2 owns the `RESSCALE=1` work.
+  - The original decision kept `RESSCALE=0` for v1. It was superseded on 2026-10-24 by the opt-in 640x480 implementation in M11.2; the default remains off.
+  - Decision history is recorded in `docs/PortingNotes.md`; M11.2 owns the remaining per-title/default validation.
 
 **Deliverables**
 
@@ -619,11 +625,11 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Acceptance**
 
-- [ ] Pixel decoder/processor/projector tests match hand-computed values.
-- [ ] Packed/literal/LR scenes produce stable VRAM hashes.
-- [ ] Matrix engine tests match the reference.
-- [ ] BIOS menu renders at 320x240 with correct colors and text.
-- [ ] No per-frame allocations in CEL rendering.
+- [x] Pixel decoder/processor/projector tests match hand-computed values.
+- [x] Packed/literal/LR scenes produce stable VRAM hashes.
+- [x] Matrix engine tests match the reference (commands 0-3 and Nfrac).
+- [x] BIOS menu renders at 320x240 with correct colors and text.
+- [x] No per-frame allocations in CEL rendering (steady-state machine test).
 
 **Risks**
 
@@ -673,10 +679,10 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Instruction decode table, ALU/shifter/operand/branch tests.
   - Semaphore tests.
   - Sample stream and WAV header tests.
-  - Synthetic sine/square DSP program and manual WAV check remain with the real-content audio pass (M5.12/M11).
+  - A synthetic sine/square DSP program remains optional; real-content WAV captures now cover the audio path (M5.12/M11).
 - [x] **M5.12 BIOS audio smoke.**
   - Run BIOS with DSP enabled; assert samples are produced and no underrun crash.
-  - Real BIOS (`bios/panafz1.bin`) now starts the DSP and the frame loop pushes 567-cycle samples without crashing; sample content is silent until a valid disc/menu drives the DSP program.
+  - Real BIOS (`bios/panafz1.bin`) starts the DSP; all five corpus titles produce non-silent 44.1 kHz stereo output at ~737 samples/frame. Mix/pitch comparison with Opera remains in M11/P0.
 
 **Deliverables**
 
@@ -688,9 +694,9 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 - [x] Decoder/ALU/shifter/branch tests green.
 - [x] Sample cadence and packed format match the reference.
-- [ ] WAV output is audible and correctly pitched (manual check pending a real disc/BIOS audio path).
+- [~] WAV output is audible and correctly pitched (non-silent 44.1 kHz stereo captures exist for all five titles; pitch/cadence comparison with Opera remains).
 - [x] No allocations per sample/frame (the DSP core and ring buffer allocate nothing in steady state).
-- [~] BIOS produces audio (DSP runs and samples are produced; content is silent without a valid disc/menu).
+- [x] BIOS produces audio (all five corpus titles produce non-silent output).
 
 **Risks**
 
@@ -743,9 +749,9 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 - [x] **M6.6 CLIO DMA integration.**
   - XBUS DMA to RAM, 4-byte groups, FIQ 29.
   - `len` sentinel and data FIFO draining.
-- [~] **M6.7 BIOS + disc boot.**
+- [x] **M6.7 BIOS + disc boot.**
   - Boot a real disc to the title screen (user-provided).
-  - **Unblocked:** the local corpus in [`TestCorpus.md`](TestCorpus.md) contains five real CHDs; the CD device, storage layer, and boot path are implemented and the BIOS boot animation runs. Record results in `docs/Compatibility.md`.
+  - **Done:** the five-title local corpus in [`TestCorpus.md`](TestCorpus.md) boots, loads its own OS, and renders. Road Rash reaches its 3D race, Wolfenstein and Lemmings reach gameplay, Alone reaches its in-game room, and Space Ace plays its demo. Results are recorded in [`Compatibility.md`](Compatibility.md).
 - [x] **M6.8 Tests.**
   - Command transcripts for every command (ID, data path check, capacity, read data, eject, save/load).
   - ISO/BIN/CUE fixtures.
@@ -769,9 +775,9 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 - [x] CD command transcripts match expected bytes.
 - [x] ISO, BIN, CUE+BIN, and CHD sector reads return identical payloads for the same disc.
-- [ ] A real CHD disc boots to the title screen (local corpus available; validation pending).
-- [ ] BIOS boots a real disc to the title screen (local corpus available; validation pending).
-- [ ] At least one game reaches gameplay (manual; local corpus available; validation pending).
+- [x] A real CHD disc boots to the title screen (five-title local corpus).
+- [x] BIOS boots a real disc to the title screen (five-title local corpus).
+- [x] At least one game reaches gameplay (Wolfenstein, Lemmings, Road Rash, and Alone have scripted gameplay evidence).
 - [x] CD state save/load works.
 
 **Risks**
@@ -824,7 +830,8 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Acceptance**
 
-- [ ] Keyboard and gamepad control a real game (local corpus available; validation pending).
+- [x] Keyboard controls a real game (scripted input in Wolfenstein, Lemmings, Road Rash, Alone, and Space Ace; desktop keyboard forwarding wired).
+- [~] Gamepad controls a real game (abstraction and null backend exist; the platform backend and mapping UI are M7.4/M9.6).
 - [x] NVRAM survives restart and is written atomically.
 - [~] Known games with fix flags boot/behave correctly (database and compatibility flags are in place; per-game override UI is M9.5).
 - [x] PBUS tests match 4DO's JohnnyInput output.
@@ -849,7 +856,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Reject unknown versions; warn on hash mismatch (`ThreeDoMachine.StateWarnings`).
 - [x] **M8.2 Per-chip state sections.**
   - CPU, memory (RAM/ROM/NVRAM), MADAM, CLIO, DSP, SPORT, VDLP, XBUS, CD, Quartz.
-  - Derived tables (DSP precompute, REGCONV/BRCONDTAB) are rebuilt by the constructor; high-resolution mirrors are unused in v1.
+  - Derived tables (DSP precompute, REGCONV/BRCONDTAB) are rebuilt by the constructor; the full RAM allocation, including the high-resolution mirrors, is serialized.
   - The machine section also stores the derived VDL frame and compatibility flags so a load continues bit-identically.
 - [x] **M8.3 Machine save/load.**
   - `ThreeDoMachine.SaveState(Stream)`, `LoadState(Stream)`.
@@ -859,8 +866,8 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Corrupt/truncated state rejection.
   - BIOS hash mismatch is reported as a warning, not a hard failure.
 - [~] **M8.5 Diagnostics.**
-  - Frame dumpers (BMP/PNG), state inspector, CPU tracer with disassembly, and a raw memory/VRAM dumper are implemented; CPU counters are available through the machine.
-  - A full CPU tracer, VRAM/memory dumpers, and allocation counters remain follow-up work; logging sinks already exist.
+  - Frame dumpers (BMP/PNG), state inspector, CPU tracer with disassembly, raw memory/VRAM dumpers, RAM/DSP dumps, and core allocation assertions are implemented; CPU counters are available through the machine.
+  - Allocation counters for the full host/presenter path and a UI log viewer remain follow-up work; logging sinks already exist.
 - [x] **M8.6 CLI commands.**
   - `run [disc] --bios ... [--frames N] [--state-in/out] [--frame-out] [--audio null|wav] [--wav-out]`.
   - `info <disc>` (game ID, name, sector count, volume header).
@@ -869,9 +876,9 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - `bench`.
   - `selftest`.
   - Exit codes and machine-readable output (`--json`).
-- [~] **M8.7 CLI tests.**
-  - State inspector, frame dumper, and save/load tests run in the suite; `selftest` and `bench` were smoke-tested manually.
-  - Automated CLI process-level tests (argument errors/exit codes) remain follow-up work.
+- [x] **M8.7 CLI tests.**
+  - State inspector, frame dumper, save/load, patch parser, input-script, and autopilot tests run in the suite.
+  - In-process CLI tests now cover version/usage, unknown-command exit codes, JSON errors, missing-BIOS validation, missing state files, and `bench` output.
 
 **Deliverables**
 
@@ -906,10 +913,11 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Status bar: FPS, game, BIOS, audio/video state.
 - [~] **M9.2 OpenGL video surface host.**
   - `VideoSurface` control based on Avalonia's `OpenGlControlBase`; hosts `OpenGlRenderer` through a Silk.NET `GL` API. A 6-second Windows launch smoke test passed.
-  - Aspect ratio, integer scaling, letterbox; fullscreen, borderless, cursor hide, and escape handling remain.
+  - Aspect ratio, integer scaling, and letterbox are implemented; fullscreen/F11/Escape are implemented. Borderless, cursor hide, and FPS overlay remain.
   - Frame mailbox (`VdlFrameMailbox`): latest frame wins; snapshot copies are tested.
-  - CPU `WriteableBitmap` fallback: `CpuVideoRenderer` exists, but the UI does not yet switch automatically when GL 3.3 is unavailable.
-  - FPS overlay toggle remains.
+  - Physical-pixel sizing and render-on-demand are implemented (M9P.5); manual DPI/live-resize validation remains.
+  - The host now switches to a `WriteableBitmap`/`CpuVideoRenderer` fallback when GL init fails or the context is lost, and switches back when GL recovers.
+  - GL readback screenshots are implemented; the CPU screenshot path remains the fallback.
 - [~] **M9.3 BIOS setup.**
   - File picker, validation, and MD5/Anvil display in the status line.
   - First-run wizard, remembered paths, and error dialogs remain.
@@ -920,9 +928,9 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Video: renderer (OpenGL/CPU fallback), filter (accurate/nearest/sharp-bilinear/CRT/xBR), scale, aspect, fullscreen, vsync.
   - Audio: device, buffer, volume/mute.
   - Input: keyboard/gamepad mapping per player, hotkeys.
-  - Emulation: ARM clock, fix mode, high-res (disabled in v1), save slots, CPU backend (interpreter; JIT when available).
+  - Emulation: ARM clock, fix mode, high-res (opt-in; default off), save slots, CPU backend (interpreter; JIT when available).
   - Paths: BIOS, saves, screenshots, library.
-  - `AppSettings`/`AppSettingsStore` persist paths, renderer/aspect/vsync/integer scale, audio enable/volume, and input bindings; the settings UI and per-game overrides remain.
+  - `AppSettings`/`AppSettingsStore` persist paths, renderer/aspect/vsync/integer scale, audio enable/volume, high-resolution mode, and input bindings; the full settings page and per-game overrides remain. The shell exposes a Hi-Res checkbox that restarts the machine.
 - [ ] **M9.6 Input UI.**
   - Binding capture dialog, conflict detection, reset defaults.
   - Controller preview (optional).
@@ -933,12 +941,12 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - `OpenAlAudioOutput` uses a dedicated thread and four queued Stereo16 buffers; `TryCreate` returns null on any device/context failure. The shell enables it when `AppSettings.AudioEnabled` is set.
 - [~] **M9.8 Save states/screenshots.**
   - Quick save/load, slot next/previous, slot manager.
-  - Screenshot to PNG with game/time name; prefer GL readback, CPU frame fallback.
+  - Screenshot with game/time name; GL readback with CPU frame fallback.
   - State metadata (game, BIOS, timestamp, thumbnail optional).
-  - Quick Save/Load buttons and BMP screenshots are wired in the shell; slot manager, PNG/GL screenshots, and metadata UI remain.
-- [ ] **M9.9 Logs/About.**
-  - In-app log viewer with category filter.
-  - About: version, credits, licenses, links.
+  - Quick Save/Load buttons, GL/CPU BMP screenshots, and the fullscreen toggle are wired in the shell; slot manager, PNG output, and metadata UI remain.
+- [~] **M9.9 Logs/About.**
+  - About dialog with version, license notice, and attribution is implemented.
+  - In-app log viewer with category filter and clickable links remain.
 - [~] **M9.10 ViewModel tests.**
   - Settings roundtrip, library scanning, frame mailbox, input mapping.
   - No UI thread dependency for logic.
@@ -974,19 +982,17 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
 
 **Tasks**
 
-- [~] **M9R.1 Renderer contract and context adapter.**
-  - `IVideoRenderer`, `RendererSettings`, `VideoFilter`, `AspectMode`, `RendererCapabilities` in `ThreeDo.Video`.
-  - `GlContextAdapter` that wraps Avalonia's GL context/function loader without referencing Avalonia from `ThreeDo.Video.OpenGL`.
+- [x] **M9R.1 Renderer contract and context adapter.**
+  - `IVideoRenderer`, `RendererSettings`, `VideoFilter`, `AspectMode`, `RendererCapabilities`, and `RendererApi` in `ThreeDo.Video`.
+  - `GlContextAdapter` wraps Avalonia's GL context/function loader without referencing Avalonia from `ThreeDo.Video.OpenGL`.
   - `OpenGlRenderer.Initialize/Resize/Present/Dispose`.
-  - Capability detection: desktop GL 3.3 or GLES 3.0/3.1, `GL_R16UI`, `usampler2D`, `texelFetch`, integer textures, max texture size, and API type (GL vs GLES).
-- [~] **M9R.2 Frame texture upload.**
-  - Upload raw 16-bit indexed pixels (`R16UI`).
-  - Upload per-line CLUT as an RGB8 texture (32 x height).
-  - Upload per-line parameters as an RGBA32UI texture (background, out-control, flags).
-  - Allocate immutable storage with `TexStorage2D` at the maximum source size; update with `TexSubImage2D`/PBO ring. **No `TexImage2D` reallocation in steady state.**
-  - Cache uniform locations, sampler units, VAO, and the mailbox callback; no per-frame strings/delegates/arrays.
-  - The uploader is width/height agnostic; tests cover 320x240 and small synthetic frames, plus an allocation assertion for repeated `Update`/`Present` calls.
-- [~] **M9R.3 Palette-expansion pass at native resolution.**
+  - `OpenGlCapabilities` parses desktop GL and GLES version strings, reports the API type, and derives integer-texture support from the version. The renderer queries `GL_MAX_TEXTURE_SIZE`; vsync remains an explicit unsupported capability until the platform swap-interval path is wired.
+- [x] **M9R.2 Frame texture upload.**
+  - Uploads raw 16-bit indexed pixels (`R16UI`), per-line CLUT as RGB8 (32 x height), and per-line parameters as RGBA32UI.
+  - Immutable storage uses `TexStorage2D` at the maximum source size; per-frame updates use `TexSubImage2D`. No `TexImage2D` reallocation in steady state.
+  - Uniform locations, sampler units, VAO, and the mailbox callback are cached.
+  - The uploader is width/height agnostic; tests cover 320x240 and small synthetic frames, and `VideoAllocationTests` asserts zero allocations across repeated `Update` calls.
+- [x] **M9R.3 Palette-expansion pass at native resolution.**
   - Render the indexed frame into a **native-resolution RGB8 texture** (320x240 typical); do not expand the palette once per output pixel.
   - Direct port of `frame.cpp: Get_Frame_Bitmap`:
     - pixel `0` => 5-bit background B/G/R
@@ -1000,10 +1006,10 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - **Stage 2** samples the native-resolution expanded RGB texture at output resolution.
   - **Accurate:** nearest, pixel-perfect, integer scaling.
   - **Nearest:** nearest with arbitrary scale/letterbox.
-  - **Sharp-bilinear:** default enhanced mode; implement the full multi-tap version.
-  - **CRT:** scanlines, aperture mask, curvature, bloom (opt-in; warn at 4K).
-  - **xBR/HQx family:** multi-pass GPU filters (opt-in; benchmark at 4K before enabling).
-  - Implemented accurate/nearest, an approximate sharp-bilinear center blend, and CRT scanlines. Full multi-tap sharp-bilinear, CRT aperture/curvature/bloom, and xBR/HQx passes remain.
+  - **Sharp-bilinear:** default enhanced mode; full Themaister/rsn8887 sharp-bilinear with hardware bilinear finishing.
+  - **CRT:** scanlines and aperture mask are implemented; curvature/bloom remain (opt-in; warn at 4K).
+  - **xBR/HQx family:** multi-pass GPU filters remain (opt-in; benchmark at 4K before enabling).
+  - Implemented accurate/nearest, full sharp-bilinear, and CRT scanlines/aperture. CRT curvature/bloom and xBR/HQx passes remain.
   - Filter settings persist per game/global in the host settings layer (M9.5).
 - [~] **M9R.5 Presentation.**
   - Aspect ratio: 4:3, integer, stretch, custom.
@@ -1012,16 +1018,14 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - Window resize without recreating source textures.
   - Size the GL surface in **physical pixels** (`Bounds * RenderScaling`), not logical units; test 100/150/200% DPI.
   - Render only when a new frame is available (or the window/settings change); do not re-request rendering unconditionally at the end of every render.
-  - Aspect 4:3/integer/stretch/custom and the latest-frame mailbox are implemented; fullscreen/vsync/overlay/physical-pixel sizing/render-on-demand remain.
+  - Aspect 4:3/integer/stretch/custom, the latest-frame mailbox, physical-pixel sizing, render-on-demand, and fullscreen/F11/Escape are implemented; vsync, FPS/GPU overlay, and manual DPI/live-resize validation remain.
 - [~] **M9R.6 Screenshots.**
-  - GL readback to PNG, respecting the active filter.
-  - Optional "native frame" screenshot from the CPU path.
-  - `ReadPixels` and the CPU `FrameDumper` are implemented; the UI writes CPU-frame BMP screenshots. GL PNG capture is follow-up.
-- [~] **M9R.7 Context loss and fallback.**
-  - Detect context loss/reset; recreate textures/shaders.
-  - Fall back to CPU `WriteableBitmap` if neither desktop GL 3.3 nor GLES 3.0/3.1 is available; log once.
-  - Do not crash on driver/context failure.
-  - `Initialize` recreates all GL objects and `CpuVideoRenderer` exists; automatic capability fallback is not wired into the UI yet.
+  - GL readback respecting the active filter, plus an optional native CPU frame.
+  - `ReadPixels` and the CPU/GL `FrameDumper` paths are implemented; the UI writes BMP screenshots from either path. PNG output and metadata naming remain.
+- [x] **M9R.7 Context loss and fallback.**
+  - `OnOpenGlLost`/`Initialize` recreate all GL objects and textures.
+  - GL init failure, unsupported context features, or context loss raises `OpenGlFailed`; the shell switches to a `WriteableBitmap`/`CpuVideoRenderer` and switches back when GL recovers.
+  - The renderer does not crash on driver/context failure; the status line reports the fallback reason.
 - [ ] **M9R.8 Performance.**
   - Measure upload bandwidth, CPU present time, GPU shader time, and p50/p95/p99 frame time.
   - Target: 4K60 with nearest/sharp-bilinear on Tier A x64; 1080p60 on Raspberry Pi 4/5 class arm64 with the GLES path.
@@ -1036,7 +1040,7 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - Context-loss/fallback tests, including GL 3.3 unavailable -> GLES -> CPU.
   - Allocation assertions for upload/present/mailbox; render-on-demand tests.
   - Headless CI uses the CPU renderer; GPU tests run on a self-hosted or local job.
-  - Implemented: uploader packing, palette parity, aspect/integer geometry, CPU renderer, mailbox snapshot. GPU shader link tests, GLES parity, DPI, and allocation tests are follow-up.
+  - Implemented: uploader packing, palette parity, aspect/integer geometry, CPU renderer, mailbox snapshot, zero-allocation uploader/mailbox tests, and OpenGL capability parsing. GPU shader link tests, GLES parity, and DPI tests are follow-up.
 - [x] **M9R.10 Renderer spike (early, M3/M4).**
   - Before the full renderer, create a small Avalonia + Silk.NET.OpenGL window that displays a synthetic 320x240 indexed frame with the palette shader.
   - This de-risks context creation, shader loading, and presentation on all three OSes.
@@ -1087,9 +1091,10 @@ harness. See [`Performance.md`](Performance.md).
 **Tasks**
 
 - [~] **M9P.1 Baseline and budgets.**
-  - Benchmark harness and a CPU-side baseline are recorded (synthetic 2.27 ms/frame,
-    Lemmings 2.14 ms/frame, including the read copy). Tier B, p50/p95/p99,
-    allocations/frame, and GPU time remain to be recorded.
+  - The 2026-10-25 benchmark records p50/p95/p99, max, and per-stage allocations:
+    synthetic 1.250 ms/frame total (p99 1.638 ms, 0 bytes/frame); Lemmings 1.281
+    ms/frame (p99 3.398 ms, CHD decode ~5.9 KB/frame); Lemmings high-res 1.605
+    ms/frame (p99 4.598 ms). Tier B, GPU time, and the 4K pass remain to be measured.
 - [x] **M9P.2 Dedicated core thread and frame pacer.**
   - `ThreeDo.Host.CoreRunner` and its internal `FramePacer` are implemented.
   - Run `RunFrame` on a dedicated core thread at a fixed 60 Hz; catch-up capped at
@@ -1101,8 +1106,8 @@ harness. See [`Performance.md`](Performance.md).
 - [~] **M9P.3 Two-stage presenter.**
   - Stage 1: palette expansion into a native-resolution RGBA8 FBO.
   - Stage 2: nearest/sharp-bilinear/CRT at output resolution (xBR still pending).
-  - Desktop GL 3.3 path implemented; GLES 3.0/3.1 source and binding selection
-    remain.
+  - Desktop GL 3.3 path implemented; GLSL ES 300 sources are selected when the context
+    reports OpenGL ES, but real GLES context/binding validation remains.
 - [x] **M9P.4 Persistent upload and allocation-free present.**
   - `TexStorage2D` for the indexed/CLUT/parameter textures plus per-frame
     `TexSubImage2D`; no per-frame `TexImage2D`.
@@ -1110,23 +1115,31 @@ harness. See [`Performance.md`](Performance.md).
     updated at 4 Hz on the UI thread, not in the frame path.
   - `VdlFrameMailbox` copies only the visible width and can copy into a caller-owned
     frame so the lock is not held during GPU submission.
-  - CI allocation assertions are still to be added (M9P.9).
+  - The benchmark reports 0 managed bytes/frame for the synthetic core/pack/mailbox/read
+    path, and allocation tests cover the uploader and mailbox. CHDSharp decode
+    allocations are reported separately and are host-side.
 - [~] **M9P.5 Physical-pixel sizing and render-on-demand.**
   - Render-on-demand is implemented: the Avalonia surface renders only when the
     mailbox sequence or the output size changes.
   - Physical-pixel sizing from `Bounds * RenderScaling` is implemented.
   - Manual validation at 100/150/200% DPI and live resize remains.
 - [~] **M9P.6 Renderer backend matrix.**
-  - Desktop GL 3.3 (GLSL 330) and GLES 3.0 (GLSL ES 300) shader variants are
-    selected from the reported context version.
+  - Desktop GL 3.3 (GLSL 330) and GLES 3.0 (GLSL ES 300) shader sources are selected
+    from the reported context version.
   - Windows now prefers `Wgl` with `AngleEgl`/software fallbacks; ANGLE and
     Raspberry Pi 4/5 still need real-hardware validation, and the Silk.NET binding
     path under an ES context is unverified.
-  - Capability detection distinguishes API type and version; vsync reporting remains.
-- [ ] **M9P.7 CHD/disc prefetch.**
-  - Add a bounded host-side prefetch worker/cache for CHD/ISO sectors.
-  - Keep emulated CD timing deterministic; no wall-clock reads in the core.
-  - Benchmark CHD vs ISO p99 frame time on Tier B.
+  - `RendererCapabilities` now reports the API type, parsed version, max texture
+    size, and version-derived integer-texture support; vsync remains reported as
+    unsupported until the platform swap-interval path is wired.
+- [~] **M9P.7 CHD/disc prefetch.**
+  - `PrefetchingDiscSource` provides a bounded background read-ahead cache with
+    serialized inner reads; it is opt-in via `--prefetch` in the CLI and benchmark.
+  - Emulated state is unchanged: a 300-frame Lemmings run produced the same PC and
+    frame hash (`0x110E7DC5`) with prefetch on/off.
+  - x64 comparison (300 frames): Lemmings CHD p99 6.59 ms vs ISO p99 6.70 ms;
+    prefetch-on p99 was 14.03 ms on this fast-storage machine. Tier B validation and
+    the default policy remain.
 - [ ] **M9P.8 Hot-path optimization (measurement-driven).**
   - Optimize the ARM interpreter (fast RAM path, dispatch/decode, fewer interface
     calls) before considering M12.
@@ -1134,12 +1147,14 @@ harness. See [`Performance.md`](Performance.md).
     unchanged.
   - Do not add GPU CEL compositing for the 4K output target.
 - [~] **M9P.9 Benchmark suite and CI gate.**
-  - `ThreeDo.Benchmarks` now measures the machine core, video pack, and mailbox in
-    synthetic and real-disc modes, with JSON output and a 60 Hz budget comparison.
-  - CI runs a synthetic benchmark smoke and uploads the JSON baseline as an
-    artifact.
-  - p50/p95/p99, allocations, GPU timer queries, and the >10% regression gate
-    remain.
+  - `ThreeDo.Benchmarks` measures the machine core, video pack, mailbox, and read
+    copy in synthetic and real-disc modes, with p50/p95/p99, max, per-stage
+    allocations, JSON output, and a 60 Hz budget comparison.
+  - The steady-state synthetic path reports 0 managed bytes/frame; CHD decode
+    allocations are attributed to the core stage.
+  - CI runs a synthetic benchmark smoke, enforces `allocations.bytesPerFrame == 0`,
+    and uploads the JSON baseline as an artifact.
+  - GPU timer queries, Tier B baselines, and the >10% regression gate remain.
 - [ ] **M9P.10 Documentation and report.**
   - Publish the measured 4K/1080p results, hardware, and filter settings.
   - Update `Performance.md`, `TestCorpus.md`, and the compatibility matrix.
@@ -1233,20 +1248,33 @@ harness. See [`Performance.md`](Performance.md).
 - [x] **M11.0 Adopt Opera/libopera as the primary behavioral reference.**
   - Decision and hierarchy recorded in [`ReferenceStrategy.md`](ReferenceStrategy.md).
   - Existing C# port remains FreeDOCore-based; new behavior is traced to Opera.
-  - Empirical comparison: Opera runs Road Rash, Wolfenstein, Alone, and Space Ace
-    past our current stop points with the same BIOS and disc data.
+  - The adoption-time comparison showed Opera running Road Rash, Wolfenstein, Alone,
+    and Space Ace past our then-current stop points with the same BIOS and disc data;
+    the port has since fixed those blockers and all five titles boot.
   - First-session plan and acceptance criteria in [`NextSession.md`](NextSession.md).
-- [ ] **M11.1 Compatibility corpus.**
+- [~] **M11.1 Compatibility corpus.**
   - Test the matrix in `docs/Compatibility.md`.
-  - Triage crashes/graphics/audio bugs with the Opera differential harness.
+  - Five-title local corpus boots and produces audio; Wolfenstein, Lemmings, Road
+    Rash, and Alone have scripted gameplay evidence.
+  - Remaining: finish the Road Rash race, the Space Ace interactive path, the
+    CD-load/READ_ID freeze, and CD/CLIO/MADAM/ARM timing triage with the Opera
+    differential harness.
   - Add per-game fixes only with evidence.
-- [ ] **M11.2 High-resolution mode.**
-  - `RESSCALE=1`: VRAM mirroring, VDLP line duplication, SPORT copies, CEL stepping, frame extraction.
-  - Golden tests and real-game validation.
-  - Expose as an "Enhanced internal resolution" option, separate from output upscaling.
-  - This is not the 4K output target. 4K *internal* rendering requires GPU CEL compositing and is a separate post-v1 experiment.
-- [ ] **M11.3 Filter polish (required family, optional per game).**
-  - Finalize sharp-bilinear, CRT, and xBR/HQx GLSL pipelines.
+- [~] **M11.2 High-resolution mode.**
+  - `RESSCALE=1` is implemented as the opt-in `--high-res` 640x480 path: four VRAM
+    planes, VDLP line interleaving, SPORT mirroring, CEL stepping, larger frames,
+    uploads, screenshots, and save-state frame sections.
+  - Golden tests and the Lemmings title validation pass; the five low-res 3,000-frame
+    corpus hashes are unchanged.
+  - The desktop shell now exposes a Hi-Res checkbox that persists the setting and
+    restarts the machine; the CLI exposes `--high-res`.
+  - Remaining: per-game defaults, validation on other titles, and a decision on a
+    true 640x240 non-interlaced mode.
+  - This is not the 4K output target. 4K *internal* rendering requires GPU CEL
+    compositing and is a separate post-v1 experiment.
+- [~] **M11.3 Filter polish (required family, optional per game).**
+  - Accurate/nearest, full sharp-bilinear, and CRT scanlines/aperture are implemented.
+  - CRT curvature/bloom and xBR/HQx GLSL pipelines remain.
   - Add per-game filter presets and performance warnings at 4K.
   - Keep the accurate path pixel-identical to the CPU oracle.
 - [ ] **M11.4 CD timing/seek improvements.**
@@ -1309,40 +1337,41 @@ harness. See [`Performance.md`](Performance.md).
 
 ---
 
-## 6. First sprint (recommended order)
+## 6. Historical first sprint (completed 2026-10-23)
 
-A concrete two-week start:
+This was the original two-week bootstrap plan. It is retained as a record; every item
+was completed during M0-M2. The current next actions are in §12.
 
 **Days 1-2 - M0**
 
-- [ ] Create solution, projects, references, build props.
-- [ ] Create CLI/Avalonia placeholders.
-- [ ] Create `ThreeDo.Tests` and fake sinks.
-- [ ] CI build/test.
-- [ ] Commit the docs.
+- [x] Create solution, projects, references, build props.
+- [x] Create CLI/Avalonia placeholders.
+- [x] Create `ThreeDo.Tests` and fake sinks.
+- [x] CI build/test.
+- [x] Commit the docs.
 
 **Days 3-5 - M1**
 
-- [ ] Core constants/interfaces.
-- [ ] `ThreeDoMemory` + byte-order tests.
-- [ ] Address decode + sentinel tests.
-- [ ] `Quartz` + fixed-point tests.
-- [ ] State writer/reader + CRC tests.
+- [x] Core constants/interfaces.
+- [x] `ThreeDoMemory` + byte-order tests.
+- [x] Address decode + sentinel tests.
+- [x] `Quartz` + fixed-point tests.
+- [x] State writer/reader + CRC tests.
 
 **Days 6-10 - M2.1-M2.6**
 
-- [ ] CPU state/reset.
-- [ ] ALU/shifter/conditions.
-- [ ] Decoder skeleton.
-- [ ] Data processing instructions + tests.
-- [ ] Multiply/swap + tests.
-- [ ] Single data transfer + tests.
+- [x] CPU state/reset.
+- [x] ALU/shifter/conditions.
+- [x] Decoder skeleton.
+- [x] Data processing instructions + tests.
+- [x] Multiply/swap + tests.
+- [x] Single data transfer + tests.
 
 **End of sprint demo**
 
-- [ ] A synthetic ARM program executes data processing/loads/stores and writes a known result to RAM.
-- [ ] `dotnet test` green.
-- [ ] Plan updated with actuals.
+- [x] A synthetic ARM program executes data processing/loads/stores and writes a known result to RAM.
+- [x] `dotnet test` green.
+- [x] Plan updated with actuals.
 
 ---
 
@@ -1508,16 +1537,17 @@ Suggested parallelization with two developers:
 3. ~~Start M2 with the CPU state/ALU/shifter and the test assembler.~~ Done.
 4. ~~Create the first synthetic ROM integration test as soon as M2 data processing and loads/stores work.~~ Done.
 5. ~~Start M3: BIOS/NVRAM loading, CLIO basics, VDLP, SPORT, and the frame loop.~~ Done.
-6. ~~Start M4: MADAM CEL engine, pixel pipeline, matrix engine validation, and BIOS UI rendering.~~ M4.1-M4.14 are done. M4.15 renders the boot animation; the local corpus now provides real discs for the interactive-menu tracing.
-7. ~~M5 DSP/audio and M6 XBUS/CD-ROM/storage.~~ Cores, sinks, disc containers, CHD parent/child, volume header, and command transcripts are implemented. The local corpus provides five CHDs; real-disc boot validation and audible WAV verification are the next tests.
-8. ~~M7 input/NVRAM/game database, M8 save states/CLI, M9 basic shell, M9R core OpenGL presenter, and M10 CI/CLI publish.~~ Done as a prototype; next are M9P performance/pacing, the remaining M9 pages/audio/settings UI, M9R filters/GPU tests, M10 arm64/trimming/installers, M11, and real-disc boot validation.
-9. ~~Run the real-content smoke tests and record results in [`Compatibility.md`](Compatibility.md).~~ Done for boot status; gameplay/input/audio validation is still pending.
+6. ~~Start M4: MADAM CEL engine, pixel pipeline, matrix engine validation, and BIOS UI rendering.~~ Done. The BIOS reaches its shell and all five corpus titles render.
+7. ~~M5 DSP/audio and M6 XBUS/CD-ROM/storage.~~ Done. Cores, sinks, disc containers, CHD parent/child, volume header, command transcripts, and real-disc boot are validated; remaining CD timing/seek differential is M11.4.
+8. ~~M7 input/NVRAM/game database, M8 save states/CLI, M9 basic shell, M9R core OpenGL presenter, and M10 CI/CLI publish.~~ Done as a prototype; next are M9P performance/pacing, the remaining M9 pages/audio/settings UI, M9R filters/GPU tests, M10 arm64/trimming/installers, and M11 hardening.
+9. ~~Run the real-content smoke tests and record results in [`Compatibility.md`](Compatibility.md).~~ Done; per-title gameplay, save-state, screenshot, and WAV evidence is being completed.
 10. ~~M9P.1/M9P.2: benchmark baseline, dedicated core thread, and frame pacer.~~ Done; continue M9P.3-M9P.9 (GLES/Pi validation, CHD prefetch, p99/GPU gates).
-11. **Start the Opera differential port.** Follow [`NextSession.md`](NextSession.md): freeze a Road Rash/Space Ace baseline, decode SAudio `-6996`, and find the low-memory writer.
-12. **Port CD-ROM read/status semantics from `opera_cdrom.c`** only after the trace identifies the failing command or file read. Do not port the whole file speculatively.
-13. Validate the renderer backend matrix on real hardware (WGL desktop GL vs ANGLE GLES; Pi 4/5 GLES 3.1) and the 100/150/200% DPI paths before claiming 4K60.
-14. Finish M10: arm64 validation, trimming, installers/signing plan, and the final performance report.
-15. Schedule a 30-minute legal/attribution review before any public build; add Opera to the FreeDO/4DO attribution and license review.
+11. **Finish the scripted gameplay loops.** Road Rash's ~92,000/40,000 stops, Space Ace's interactive path, and Alone's movement/inventory sequence; record the exact scripts and frame numbers in [`TestCorpus.md`](TestCorpus.md).
+12. **Capture per-title evidence.** Save-state roundtrips, screenshots, and 30-60 s WAVs; compare audio mix/cadence with Opera.
+13. **Prove the 4K60 target.** GPU timer queries, p99 frame time, allocation assertions, WGL/ANGLE/GLES/Pi validation, and 100/150/200% DPI.
+14. **Finish M9/M9R/M9P polish.** xBR/HQx, settings/audio/gamepad pages, vsync/FPS overlay, Tier B prefetch validation, and the remaining screenshot metadata work.
+15. **Finish M10/M11 release work.** arm64 validation, trimming/installers/signing plan, performance report, compatibility matrix, and release documentation.
+16. **Schedule the legal/attribution review (M0.8)** before any public build; add Opera to the FreeDO/4DO attribution and license review.
 
 ---
 
@@ -1564,3 +1594,7 @@ Suggested parallelization with two developers:
 | 2026-10-24 | M5.13, M6, M11.1 | DSP/CCB/NVRAM gameplay unblock | Fixed the DSP immediate shift (`IMMEDIATE << (JUSTIFY & 3)`) and multiplier rounding, the CCB field order (geometry before `PRE0`/`PRE1`), and the CLI's fresh NVRAM volume. Added scripted input, CEL/PBUS traces, and progress logging. All five corpus titles boot, render, and produce non-silent DSP audio; Road Rash reaches its race, Wolfenstein reaches FLOOR 1-1 with input, and Alone reaches its in-game room. 550 tests pass |
 | 2026-10-24 | M4, M6, M8, M11 | CEL transposition and renderer-correct gameplay | Fixed the arbitrary-CEL X/Y transposition (row passed as column), which had corrupted Road Rash's VRAM allocator (`AllocMem error, bad node address`) and drawn Alone's character horizontally. The VDLP bitmap copy now honors 384/512/640/1024-wide modes, save-state loads restore the VDL picture, and the CLI gained frame-sequence capture, trace RAM dumps, extended register dumps, source-size/VDL-modulo JSON, and `fs list/extract`. Road Rash's race renders like Opera and runs past 60,000 frames; Wolfenstein's live save state roundtrips; 552 tests pass |
 | 2026-10-24 | M4, M6, M9, M11 | High-resolution rendering and gameplay loop | Added the opt-in 640x480 high-resolution CEL/VDLP path: four 1 MB VRAM planes, four-plane CEL writes, SPORT mirroring, line-doubled 640x240 output, larger frame/uploader/state support, and the `--high-res` CLI flag. Lemmings' title now matches the 640x480 reference. Verified the Wolfenstein fresh-game walk/turn/fire loop and its save/load roundtrip, plus a 66.86 s gameplay WAV. Low-res golden hashes unchanged; 554 tests pass |
+| 2026-10-25 | M11.1, M9P | Road Rash driver v9/v10 and diagnostics | Identified the former terminal pin as the race-over `BUSTED` screen; added close-traffic coast/steer, urgent close-traffic preemption, emergency-brake steer hold, and a throttle-only wreck restart. Driver v10 reaches 91,000 live frames from the 80k/83k states and roundtrips (`0x02ABE78E`); a clean 30k run still pins at ~40,000 and the 100k continuation at ~92,000. Added `--poke`, periodic capture, and trace RAM dumps. 578 tests pass |
+| 2026-10-25 | Documentation | Plan reconciliation | Updated the header, product checklist, milestone statuses/acceptance evidence, first-sprint history, and next actions; marked M4/M6/M7 evidence, M8 diagnostics, and M11.1/M11.2/M11.3 partial; corrected the M9/M9R/M9P capability claims. Test count verified at 578 |
+| 2026-10-25 | M8.7, M9R, M9P, M9, M11 | Renderer/frontend hardening and benchmark gates | Added honest GL/GLES capability parsing and `RendererApi`, CPU fallback/context-loss recovery, fullscreen/F11, GL readback screenshots, About dialog, Hi-Res shell toggle, CLI process tests, zero-allocation uploader/mailbox tests, full sharp-bilinear, CRT aperture, and an opt-in bounded disc prefetch worker. Benchmarks now report p50/p95/p99 and per-stage allocations; synthetic steady state is 0 bytes/frame (1.250 ms/frame, p99 1.638 ms). Prefetch on/off produced identical Lemmings state/hash. 604 tests pass |
+| 2026-10-25 | M11.1 | Road Rash restart motion exit | The throttle-only crash restart now ends after 10 moving-scene frames instead of holding straight for 180 frames, so a traffic stop that starts rolling resumes steering. Added a regression test; the 80k/83k -> 91,000 state and hash remain identical (`PC 0x00085F48`, `0x02ABE78E`). 605 tests pass |

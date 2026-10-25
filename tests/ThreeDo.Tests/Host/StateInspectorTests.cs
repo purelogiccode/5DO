@@ -76,6 +76,32 @@ public sealed class StateInspectorTests
     }
 
     [Fact]
+    public void FrameDumper_WritesPackedBgraSpan()
+    {
+        var pixels = new byte[4 * 2 * 4];
+        pixels[0] = 10;
+        pixels[1] = 20;
+        pixels[2] = 30;
+        pixels[3] = 255;
+        var path = Path.Combine(Path.GetTempPath(), $"threedo-frame-{Guid.NewGuid():N}.bmp");
+        try
+        {
+            FrameDumper.WriteBmp(pixels, 4, 2, path);
+            var bytes = File.ReadAllBytes(path);
+            Assert.Equal((byte)'B', bytes[0]);
+            Assert.Equal((byte)'M', bytes[1]);
+            Assert.Equal(14 + 40 + (4 * 2 * 4), bytes.Length);
+            Assert.Equal(4, BitConverter.ToInt32(bytes, 18));
+            Assert.Equal(2, BitConverter.ToInt32(bytes, 22));
+            Assert.Equal(10, bytes[54 + (4 * 4)]);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
     public void PngDumper_WritesPngSignature()
     {
         var frame = new FrameBuffer(2, 2);

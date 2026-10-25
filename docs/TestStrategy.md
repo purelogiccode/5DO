@@ -451,24 +451,25 @@ Targets (Tier A = mid-range x64; Tier B = Raspberry Pi 4/5 class arm64):
 
 Current CPU-side baseline (Release, development machine, 600 frames):
 
-| Case | Core | Pack | Mailbox write | Read copy | Total |
+| Case | Total | p50 | p95 | p99 | Allocations |
 |---|---:|---:|---:|---:|---:|
-| Synthetic | 2.177 ms | 42.8 µs | 23.4 µs | 27.2 µs | **2.270 ms/frame** |
-| Lemmings | 2.061 ms | 40.7 µs | 17.1 µs | 18.1 µs | **2.137 ms/frame** |
+| Synthetic | **1.250 ms/frame** | 1.218 ms | 1.434 ms | 1.638 ms | **0 bytes/frame** |
+| Lemmings CHD | **1.281 ms/frame** | 1.088 ms | 2.005 ms | 3.398 ms | ~5.9 KB/frame (CHD) |
+| Lemmings CHD, high-res | **1.605 ms/frame** | 1.398 ms | 2.497 ms | 4.598 ms | ~5.8 KB/frame (CHD) |
 
-This is ~14.4 ms of headroom at 60 Hz. GPU time, p99, allocations/frame, and Tier B
-are not measured yet.
+This is ~15.4 ms of headroom at 60 Hz for the synthetic case. GPU time, Tier B,
+and the 4K pass are not measured yet; CHD decode allocations are host-side.
 
 A performance change is accepted only with before/after numbers and identical golden output.
 
 ### 9.1 End-to-end harness
 
-`benchmarks/ThreeDo.Benchmarks` accepts `--bios`/`--disc` for a real title and
-reports core, video pack, mailbox write, read copy, instructions/s, and a 60 Hz
-headroom figure. The CLI `bench` command runs the synthetic machine. p50/p95/p99
-frame time, allocations/frame, GC counts, and GPU time when a GL context is
-available are still pending. The synthetic benchmark remains for CI, but it is not
-a substitute for real-content measurements.
+`benchmarks/ThreeDo.Benchmarks` accepts `--bios`/`--disc` for a real title, plus
+`--high-res` and `--prefetch`, and reports core, video pack, mailbox write, read
+copy, p50/p95/p99/max frame time, per-stage allocations, instructions/s, and a
+60 Hz headroom figure. The CLI `bench` command runs the synthetic machine. GPU time,
+Tier B, and a CI regression gate are still pending. The synthetic benchmark remains
+for CI, but it is not a substitute for real-content measurements.
 
 ### 9.2 CI gate
 

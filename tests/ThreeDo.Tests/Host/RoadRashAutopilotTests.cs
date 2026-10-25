@@ -232,6 +232,33 @@ public sealed class RoadRashAutopilotTests
     }
 
     [Fact]
+    public void Update_EndsCrashRestartWhenTheSceneMovesAgain()
+    {
+        var autopilot = new RoadRashAutopilot();
+        var frame = MakeRoadFrame(roadLeft: 40, roadRight: 200);
+        BlockLookahead(frame, x0: 120, x1: 310);
+
+        for (long f = 0; f <= RoadRashAutopilot.StoppedTriggerFrames + 5; f++)
+        {
+            autopilot.Update(frame, f);
+        }
+
+        Assert.True(autopilot.CrashRestart);
+
+        ControllerState state = default;
+        for (var f = RoadRashAutopilot.StoppedTriggerFrames + 6;
+            f <= RoadRashAutopilot.StoppedTriggerFrames + RoadRashAutopilot.CrashRestartMotionFrames + 8;
+            f++)
+        {
+            ShimmerLookahead(frame, f);
+            state = autopilot.Update(frame, f);
+        }
+
+        Assert.False(autopilot.CrashRestart);
+        Assert.True(state.IsDown(ControllerButton.B));
+    }
+
+    [Fact]
     public void Update_DoesNotRestartWhileTheSceneIsMoving()
     {
         var autopilot = new RoadRashAutopilot();

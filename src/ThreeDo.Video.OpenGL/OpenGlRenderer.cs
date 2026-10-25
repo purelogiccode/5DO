@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using Silk.NET.OpenGL;
 using ThreeDo.Core;
 using GlPixelFormat = Silk.NET.OpenGL.PixelFormat;
@@ -99,8 +98,8 @@ public sealed class OpenGlRenderer : IVideoRenderer
         _outputWidth = width;
         _outputHeight = height;
         var version = gl.GetStringS(StringName.Version) ?? string.Empty;
-        _isOpenGlEs = version.Contains("OpenGL ES", StringComparison.OrdinalIgnoreCase);
-        _capabilities = DetectCapabilities(gl, version);
+        _capabilities = OpenGlCapabilities.Detect(version, gl.GetInteger(GetPName.MaxTextureSize));
+        _isOpenGlEs = _capabilities.IsOpenGlEs;
 
         _paletteProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentPalette(_isOpenGlEs));
         _scaleProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentScale(_isOpenGlEs));
@@ -209,6 +208,10 @@ public sealed class OpenGlRenderer : IVideoRenderer
 
         gl.ActiveTexture(TextureUnit.Texture0);
         gl.BindTexture(TextureTarget.Texture2D, _paletteTexture);
+        var linearFilter = _settings.Filter is VideoFilter.SharpBilinear or VideoFilter.Crt;
+        var textureFilter = (int)(linearFilter ? GLEnum.Linear : GLEnum.Nearest);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, textureFilter);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, textureFilter);
         gl.BindVertexArray(_vao);
         gl.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
     }
@@ -378,31 +381,6 @@ public sealed class OpenGlRenderer : IVideoRenderer
         }
 
         return shader;
-    }
-
-    private static RendererCapabilities DetectCapabilities(GL gl, string version)
-    {
-        var parts = version.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        var major = 0;
-        var minor = 0;
-        if (parts.Length > 0)
-        {
-            var numbers = parts[0].Split('.');
-            if (numbers.Length >= 2)
-            {
-                _ = int.TryParse(numbers[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out major);
-                _ = int.TryParse(numbers[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out minor);
-            }
-        }
-
-        var maxTexture = gl.GetInteger(GetPName.MaxTextureSize);
-        return new RendererCapabilities(
-            OpenGlRendererInfo.BackendName,
-            major,
-            minor,
-            maxTexture,
-            major > 3 || (major == 3 && minor >= 3),
-            true);
     }
 
     private static int FilterValue(VideoFilter filter) => filter switch

@@ -12,10 +12,13 @@
         Title="3DOEmulator">
 
     <Grid RowDefinitions="*,Auto" Background="Black">
-        <ctrl:VideoSurface x:Name="Video" Grid.Row="0" />
+        <Grid Grid.Row="0">
+            <ctrl:VideoSurface x:Name="Video" />
+            <Image x:Name="CpuVideo" Stretch="Uniform" IsVisible="False" />
+        </Grid>
 
         <Border Grid.Row="1" Padding="8" Background="#202020">
-            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*">
                 <Button x:Name="BiosButton" Grid.Column="0" Content="Open BIOS" Click="OnOpenBios" Margin="0,0,6,0" />
                 <Button x:Name="DiscButton" Grid.Column="1" Content="Open Disc" Click="OnOpenDisc" Margin="0,0,6,0" />
                 <Button x:Name="PlayButton" Grid.Column="2" Content="Play" Click="OnPlayPause" Margin="0,0,6,0" />
@@ -23,7 +26,11 @@
                 <Button x:Name="SaveButton" Grid.Column="4" Content="Save State" Click="OnSaveState" Margin="0,0,6,0" />
                 <Button x:Name="LoadButton" Grid.Column="5" Content="Load State" Click="OnLoadState" Margin="0,0,6,0" />
                 <Button x:Name="ShotButton" Grid.Column="6" Content="Screenshot" Click="OnScreenshot" Margin="0,0,6,0" />
-                <TextBlock x:Name="StatusText" Grid.Column="7" VerticalAlignment="Center"
+                <Button x:Name="FullscreenButton" Grid.Column="7" Content="Fullscreen" Click="OnFullscreen" Margin="0,0,6,0" />
+                <CheckBox x:Name="HighResCheck" Grid.Column="8" Content="Hi-Res" Click="OnHighResChanged"
+                          VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#DDDDDD" />
+                <Button x:Name="AboutButton" Grid.Column="9" Content="About" Click="OnAbout" Margin="0,0,6,0" />
+                <TextBlock x:Name="StatusText" Grid.Column="10" VerticalAlignment="Center"
                            Text="No BIOS loaded." HorizontalAlignment="Right" Foreground="#DDDDDD" />
             </Grid>
         </Border>

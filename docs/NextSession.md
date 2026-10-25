@@ -1,6 +1,6 @@
 # Next Session Handoff
 
-**Date:** 2026-10-25 (fifth pass)
+**Date:** 2026-10-25 (sixth pass)
 **Goal:** finish the scripted gameplay loops now that the 3D CEL renderer is correct
 and the high-resolution frontend path exists. Road Rash's race renders like the Opera
 reference and runs past 60,000 frames; Wolfenstein starts a fresh game, walks/turns/
@@ -12,6 +12,13 @@ experimental Road Rash road-following driver (`--autopilot road`). The 2026-10-2
 late pass takes driver v10 to 91,000 live frames from the 80k/83k states (close
 traffic, urgent preemption, emergency steer hold, throttle-only wreck restart)
 and documents the remaining ~92,000/40,000 stops and a CD-load freeze.
+
+The sixth pass added the remaining presentation plumbing around that work:
+honest GL/GLES capability reporting, CPU fallback/context-loss recovery,
+fullscreen/F11, GL readback screenshots, an About dialog, a Hi-Res shell toggle,
+CLI process tests, p50/p95/p99 and per-stage allocation reporting (zero synthetic
+steady-state allocations), and an opt-in bounded `--prefetch` disc cache. Gameplay
+validation is still the next coding priority.
 
 Read these first:
 
@@ -380,14 +387,17 @@ changing the DSP reload value. The 18,000-frame Wolfenstein gameplay capture is
   sharp-bend braking, closing-side crossover, emergency brake, narrow-canyon
   coasting, urban throttle pacing, coast floor, detector-upset hold, side-based
   stuck recovery, stopped/wreck throttle-only restart, low-band centre at rows
-  190-214, road brightness <= 120; 578 tests pass). It reaches 91,000 live
+  190-214, road brightness <= 120; 605 tests pass). It reaches 91,000 live
   frames from the 80k/83k states and roundtrips there, but the 5.5-mile city
   race is still NOT finished: the 100k continuation pins at ~92,000, and a clean
   final-code run from 30,000 pins at the ~40,000 right-sidewalk wreck. The
   previous "terminal wall pin ~34,000" was the `BUSTED` screen, not a physics
-  wedge - no input resumes a lost race. Next: capture the first 50 frames of the
-  ~92,000 pin and add one side-search rule that does not regress the 80k rider
-  run; do not return to pin-recovery-only work.
+  wedge - no input resumes a lost race. The restart now ends after 10
+  moving-scene frames instead of holding straight for 180, so a traffic stop
+  that starts rolling resumes steering; the 80k/83k -> 91,000 state and hash are
+  unchanged. Next: capture the first 50 frames of the ~92,000 pin and add one
+  side-search rule that does not regress the 80k rider run; do not return to
+  pin-recovery-only work.
 - Space Ace: start the interactive game from the demo (P/X are the current leads)
   and verify FMV/audio sync.
 

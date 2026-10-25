@@ -43,6 +43,9 @@ public sealed class AppSettings
     /// <summary>Gets or sets a value indicating whether the OpenGL renderer is preferred.</summary>
     public bool PreferOpenGl { get; set; } = true;
 
+    /// <summary>Gets or sets a value indicating whether the opt-in 640x480 high-resolution mode is used.</summary>
+    public bool HighResolution { get; set; }
+
     /// <summary>Gets or sets the audio volume (0-1).</summary>
     public float Volume { get; set; } = 1f;
 

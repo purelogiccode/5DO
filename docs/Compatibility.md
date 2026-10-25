@@ -2,7 +2,7 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current position (2026-10-25, fifth pass):** all five local corpus titles boot, load
+**Current position (2026-10-25, sixth pass):** all five local corpus titles boot, load
 their own OS, render real frames, and produce non-silent DSP audio. Road Rash's 3D race
 renders correctly and the attract race continues past 60,000 frames with no allocator
 error; Wolfenstein 3D starts a fresh game (FLOOR 1-1), walks/turns/fires, and its save

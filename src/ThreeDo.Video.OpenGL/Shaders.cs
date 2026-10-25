@@ -109,18 +109,32 @@ internal static class Shaders
             vec2 uv = (gl_FragCoord.xy - uRect.xy) / uRect.zw;
             if (uFilter == 1)
             {
-                // Light center-sampling smoothing; the dedicated multi-tap sharp-bilinear
-                // pass is a later filter-polish item and does not change emulated state.
+                // Themaister/rsn8887 sharp-bilinear: prescale by the integer
+                // output/source factor, then let hardware bilinear filtering do
+                // the final sub-texel blend. This keeps integer scales crisp and
+                // removes the blur of a plain bilinear stretch.
                 vec2 texel = uv * vec2(uSource);
-                vec2 rounded = floor(texel + 0.5);
-                vec2 blend = clamp((fract(texel) - 0.5) * 0.75 + 0.5, 0.0, 1.0);
-                uv = (mix(rounded - 0.5, rounded + 0.5, blend)) / vec2(uSource);
+                vec2 texelFloored = floor(texel);
+                vec2 texelFraction = fract(texel);
+                vec2 scale = max(floor(uRect.zw / vec2(uSource)), vec2(1.0));
+                vec2 regionRange = vec2(0.5) - (vec2(0.5) / scale);
+                vec2 centerDistance = texelFraction - vec2(0.5);
+                vec2 blended = (centerDistance - clamp(centerDistance, -regionRange, regionRange))
+                    * scale + vec2(0.5);
+                uv = (texelFloored + blended) / vec2(uSource);
             }
 
             vec3 color = texture(uExpanded, clamp(uv, vec2(0.0), vec2(1.0))).rgb;
             if (uFilter == 2)
             {
                 float line = mod(floor(gl_FragCoord.y), 2.0);
+                float aperture = mod(floor(gl_FragCoord.x), 3.0);
+                vec3 mask = aperture < 1.0
+                    ? vec3(1.0, 0.82, 0.82)
+                    : aperture < 2.0
+                        ? vec3(0.82, 1.0, 0.82)
+                        : vec3(0.82, 0.82, 1.0);
+                color *= mix(vec3(1.0), mask, uScanline * 0.5);
                 color *= 1.0 - (uScanline * line);
             }
 
