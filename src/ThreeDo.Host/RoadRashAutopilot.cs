@@ -20,12 +20,62 @@ public sealed class RoadRashAutopilot
     public const int TargetRoadCenterX = 230;
 
     private const int LookAheadBottom = 214;
+
+    /// <summary>First scanline of the road-measure band.</summary>
+    /// <remarks>
+    /// The band starts low (near the bike) so building facades and windows above
+    /// the horizon cannot outvote the asphalt. Restrict to the lower rows where
+    /// the road surface dominates even in the city section.
+    /// </remarks>
+    private const int RoadMeasureTop = 190;
     private const int SteerHoldFrames = 10;
     private const int DecisionIntervalFrames = 16;
+
+    /// <summary>Frames of stable off-centre road before stuck recovery triggers.</summary>
+    /// <remarks>
+    /// Opera reference note (libopera/opera_pbus.c, opera_pbus.h): the joypad
+    /// packet carries discrete l/r/u/d/a/b/c bits, so steering here is bang-bang
+    /// with a hold window rather than proportional. Recovery therefore has to
+    /// come from earlier anticipation and throttle modulation, not finer steer.
+    /// </remarks>
+    public const int StuckTriggerFrames = 150;
+
+    /// <summary>Frames stuck recovery steers away from the wall.</summary>
+    public const int RecoveryFrames = 90;
+
+    /// <summary>Frames at the start of recovery spent braking before re-applying throttle.</summary>
+    public const int RecoveryBrakeFrames = 30;
+
+    /// <summary>Road-centre jump between decisions treated as a wall re-lock.</summary>
+    public const double RoadJumpThreshold = 12.0;
+
+    /// <summary>Throttle duty cycle in built-up sections (frames).</summary>
+    public const int PacingCycleFrames = 60;
+
+    /// <summary>Throttled frames per pacing cycle in built-up sections.</summary>
+    public const int PacingOnFrames = 40;
+
+    /// <summary>Maximum consecutive coast frames before throttle is forced back on.</summary>
+    public const int MaxCoastFrames = 20;
+
+    /// <summary>LineX jump treated as detector unreliability rather than road motion.</summary>
+    public const double UpsetJumpThreshold = 25.0;
+
+    /// <summary>Frames to hold straight and pace after a detector upset.</summary>
+    public const int UpsetHoldFrames = 30;
 
     private int _steer;
     private long _steerUntil;
     private long _nextDecision;
+    private double _decisionLineX = double.NaN;
+    private double _previousLineX = double.NaN;
+    private long _upsetUntil;
+    private int _coastStreak;
+    private double _stableLineX = double.NaN;
+    private long _stableSince;
+    private long _recoveryUntil;
+    private long _recoveryStart;
+    private int _recoverySteer;
 
     /// <summary>Gets the controller state to apply on the next frame.</summary>
     public ControllerState State { get; private set; }
@@ -36,6 +86,33 @@ public sealed class RoadRashAutopilot
     /// <summary>Gets the current steering direction (-1 left, 0 centre, +1 right).</summary>
     public int Steering => _steer;
 
+    /// <summary>Gets whether stuck recovery is currently steering away from a wall.</summary>
+    public bool RecoveryActive { get; private set; }
+
+    /// <summary>Gets the obstacle-avoidance bias (-1 left, 0 none, +1 right).</summary>
+    public int ObstacleSteer { get; private set; }
+
+    /// <summary>Gets whether the driver is emergency-braking for a blocked road.</summary>
+    public bool EmergencyBrake { get; private set; }
+
+    /// <summary>Gets whether the driver is coasting through a narrow walled section.</summary>
+    public bool Caution { get; private set; }
+
+    /// <summary>Gets the lookahead road fractions (left/centre/right), or NaN when unavailable.</summary>
+    public double LookaheadLeft { get; private set; } = double.NaN;
+
+    /// <summary>Gets the lookahead road fractions (left/centre/right), or NaN when unavailable.</summary>
+    public double LookaheadCentre { get; private set; } = double.NaN;
+
+    /// <summary>Gets the lookahead road fractions (left/centre/right), or NaN when unavailable.</summary>
+    public double LookaheadRight { get; private set; } = double.NaN;
+
+    /// <summary>Gets whether urban pacing is duty-cycling the throttle.</summary>
+    public bool UrbanPacing { get; private set; }
+
+    /// <summary>Gets whether the road detector is currently distrusted after a jump.</summary>
+    public bool DetectorUpset { get; private set; }
+
     /// <summary>Observes a completed frame and returns the next controller state.</summary>
     /// <param name="frame">The most recent video frame.</param>
     /// <param name="frameNumber">Absolute emulated frame number.</param>
@@ -43,33 +120,77 @@ public sealed class RoadRashAutopilot
     public ControllerState Update(VdlFrame frame, long frameNumber)
     {
         LineX = FindRoadCenter(frame);
+        (ObstacleSteer, EmergencyBrake, Caution) = FindObstacleState(frame, LineX);
+        (LookaheadLeft, LookaheadCentre, LookaheadRight) = FindLookaheadFractions(frame);
+        UrbanPacing = !double.IsNaN(LineX)
+            && !double.IsNaN(LookaheadCentre)
+            && LookaheadCentre > 0.3
+            && Math.Min(LookaheadLeft, LookaheadRight) < 0.6;
+        UpdateUpsetTracking(frameNumber);
+        UpdateStuckTracking(frame, frameNumber);
 
-        if (frameNumber >= _nextDecision)
+        if (RecoveryActive && frameNumber < _recoveryUntil)
         {
-            if (double.IsNaN(LineX))
+            _steer = _recoverySteer;
+            _steerUntil = frameNumber + SteerHoldFrames;
+        }
+        else if (DetectorUpset)
+        {
+            // The detector just jumped between surfaces (road/sidewalk): hold
+            // straight on the pacing duty instead of chasing a false lock
+            // off the road. Throttle is duty-cycled (not cut) so the bike
+            // keeps rolling: a stopped bike gets busted.
+            RecoveryActive = false;
+            _steer = 0;
+            _steerUntil = frameNumber + SteerHoldFrames;
+            _nextDecision = Math.Max(_nextDecision, frameNumber + 4);
+        }
+        else
+        {
+            RecoveryActive = false;
+            if (frameNumber >= _nextDecision)
             {
-                _steer = 0;
-                _nextDecision = frameNumber + 4;
-            }
-            else
-            {
-                var error = LineX - TargetRoadCenterX;
-                if (error > 8)
+                if (ObstacleSteer != 0)
                 {
-                    _steer = 1;
+                    _steer = ObstacleSteer;
                     _steerUntil = frameNumber + SteerHoldFrames;
                     _nextDecision = frameNumber + DecisionIntervalFrames;
                 }
-                else if (error < -8)
-                {
-                    _steer = -1;
-                    _steerUntil = frameNumber + SteerHoldFrames;
-                    _nextDecision = frameNumber + DecisionIntervalFrames;
-                }
-                else
+                else if (double.IsNaN(LineX))
                 {
                     _steer = 0;
                     _nextDecision = frameNumber + 4;
+                }
+                else
+                {
+                    var error = LineX - TargetRoadCenterX;
+                    var centreDir = error > 8 ? 1 : error < -8 ? -1 : 0;
+                    var sideSteer = FindSideSteer(frame, out _);
+                    var jumped = !double.IsNaN(_decisionLineX)
+                        && !double.IsNaN(LineX)
+                        && Math.Abs(LineX - _decisionLineX) > RoadJumpThreshold;
+                    if (jumped && sideSteer != 0)
+                    {
+                        // The centre estimate drifted fast since the last
+                        // decision: it is re-locking onto a wall/sidewalk, so
+                        // trust the open-road side, not the drift.
+                        _steer = sideSteer;
+                    }
+                    else if (centreDir != 0 && sideSteer != 0 && sideSteer != centreDir)
+                    {
+                        // The centre estimate disagrees with the open road: the
+                        // detector is locked onto a building or sidewalk, so steer
+                        // toward the side with visibly more road.
+                        _steer = sideSteer;
+                    }
+                    else
+                    {
+                        _steer = centreDir;
+                    }
+
+                    _decisionLineX = LineX;
+                    _steerUntil = frameNumber + SteerHoldFrames;
+                    _nextDecision = frameNumber + (centreDir == 0 && _steer == 0 ? 4 : DecisionIntervalFrames);
                 }
             }
         }
@@ -79,7 +200,41 @@ public sealed class RoadRashAutopilot
             _steer = 0;
         }
 
-        var buttons = ControllerButton.B;
+        ControllerButton buttons;
+        if (RecoveryActive && frameNumber < _recoveryUntil
+            && frameNumber - _recoveryStart < RecoveryBrakeFrames)
+        {
+            // Wedged against a wall with the throttle pinned only digs in:
+            // brake first, then re-apply throttle with the recovery steer.
+            buttons = ControllerButton.A;
+        }
+        else if (EmergencyBrake)
+        {
+            buttons = ControllerButton.A;
+        }
+        else if (IsBendLift())
+        {
+            // Steering off-centre into a narrowing bend with the target side
+            // open: lift the throttle so the bike rotates instead of
+            // understeering into the outside wall.
+            buttons = 0;
+        }
+        else if (IsPacingCoast(frameNumber))
+        {
+            // Built-up section with edges close on at least one side: cap
+            // speed with a throttle duty cycle. Wall/tree touches at full
+            // city speed end the race (BUSTED); finishing slowly beats that.
+            buttons = 0;
+        }
+        else if (Caution)
+        {
+            buttons = 0;
+        }
+        else
+        {
+            buttons = ControllerButton.B;
+        }
+
         if (_steer < 0)
         {
             buttons |= ControllerButton.Left;
@@ -87,6 +242,24 @@ public sealed class RoadRashAutopilot
         else if (_steer > 0)
         {
             buttons |= ControllerButton.Right;
+        }
+
+        // A stopped bike gets busted. Coasting (pacing, caution, bend lift) may
+        // slow the bike but must never stall it: force the throttle back on
+        // after a bounded coast streak. Deliberate braking is exempt.
+        var coasting = (buttons & (ControllerButton.B | ControllerButton.A)) == 0;
+        if (coasting && !EmergencyBrake)
+        {
+            _coastStreak++;
+            if (_coastStreak > MaxCoastFrames)
+            {
+                buttons |= ControllerButton.B;
+                _coastStreak = 0;
+            }
+        }
+        else
+        {
+            _coastStreak = 0;
         }
 
         State = new ControllerState(buttons);
@@ -98,7 +271,8 @@ public sealed class RoadRashAutopilot
         var total = 0.0;
         var rows = 0;
         var bottom = Math.Min(LookAheadBottom, frame.Lines.Length);
-        for (var y = 150; y < bottom; y += 2)
+        var top = Math.Min(RoadMeasureTop, bottom);
+        for (var y = top; y < bottom; y += 2)
         {
             var line = frame.Lines[y];
             var width = Math.Min(line.Width, line.PixelBuffer.Length);
@@ -107,15 +281,7 @@ public sealed class RoadRashAutopilot
             var runStart = -1;
             for (var x = 20; x < width; x++)
             {
-                var index = line.PixelBuffer[x] & 0x1f;
-                int r = line.ClutR[index];
-                int g = line.ClutG[index];
-                int b = line.ClutB[index];
-                var max = Math.Max(r, Math.Max(g, b));
-                var min = Math.Min(r, Math.Min(g, b));
-                var brightness = (r + g + b) / 3;
-                var road = max - min <= 40 && brightness is >= 45 and <= 150;
-                if (road)
+                if (IsRoadPixel(line, x))
                 {
                     if (runStart < 0)
                     {
@@ -153,5 +319,310 @@ public sealed class RoadRashAutopilot
         }
 
         return rows == 0 ? double.NaN : total / rows;
+    }
+
+    /// <summary>
+    /// Checks the lookahead band above the road-measure area for traffic directly
+    /// ahead. Returns the steer bias (-1/0/+1) and whether to emergency-brake.
+    /// </summary>
+    private static (int Steer, bool Brake, bool Caution) FindObstacleState(VdlFrame frame, double lineX)
+    {
+        var (leftFraction, centreFraction, rightFraction) = FindLookaheadFractions(frame);
+        if (double.IsNaN(leftFraction))
+        {
+            return (0, false, false);
+        }
+
+        // Fully blocked ahead while still on the road: brake instead of ramming it.
+        // (When LineX is NaN the game is in FMV/menus, so keep holding B to advance.)
+        if (!double.IsNaN(lineX)
+            && centreFraction < 0.2
+            && leftFraction < 0.35
+            && rightFraction < 0.35)
+        {
+            return (0, true, false);
+        }
+
+        // Narrow walled canyon with road ahead: coast instead of accelerating hard.
+        if (!double.IsNaN(lineX)
+            && centreFraction > 0.4
+            && leftFraction < 0.4
+            && rightFraction < 0.4)
+        {
+            return (0, false, true);
+        }
+
+        // Steering toward a wall while the other side is open: steer away instead.
+        // The road-centre estimate can lock onto a building facade or sidewalk, so
+        // the lookahead side fractions are the trustworthy signal here.
+        if (!double.IsNaN(lineX))
+        {
+            if (lineX < TargetRoadCenterX - 8 && leftFraction < 0.4 && rightFraction > 0.7)
+            {
+                return (1, false, false);
+            }
+
+            if (lineX > TargetRoadCenterX + 8 && rightFraction < 0.4 && leftFraction > 0.7)
+            {
+                return (-1, false, false);
+            }
+        }
+
+        // Sharp bend: the centre and one side are blocked while the other side
+        // is wide open. Steering alone at full throttle understeers into the
+        // outside wall (city pin at ~33250: lookahead 0.39/0.29/0.94 took the
+        // bend flat out and wedged). Brake while steering to the open side.
+        if (!double.IsNaN(lineX)
+            && centreFraction < 0.35
+            && Math.Max(leftFraction, rightFraction) > 0.8
+            && Math.Min(leftFraction, rightFraction) < 0.4)
+        {
+            return (leftFraction > rightFraction ? -1 : 1, true, false);
+        }
+
+        // Closing side: steering toward a partially blocked side while the
+        // other side is clearly open (tree alley at ~31800: lookahead
+        // 0.46/0.95/1.00 steered left into the roadside tree). Steer to the
+        // open side and lift while crossing over.
+        if (!double.IsNaN(lineX))
+        {
+            if (lineX < TargetRoadCenterX - 8 && leftFraction < 0.6 && rightFraction > 0.8)
+            {
+                return (1, false, true);
+            }
+
+            if (lineX > TargetRoadCenterX + 8 && rightFraction < 0.6 && leftFraction > 0.8)
+            {
+                return (-1, false, true);
+            }
+        }
+
+        if (centreFraction < 0.35
+            && Math.Max(leftFraction, rightFraction) > 0.6
+            && Math.Abs(leftFraction - rightFraction) > 0.25)
+        {
+            return (leftFraction > rightFraction ? -1 : 1, false, false);
+        }
+
+        // Earlier wall anticipation: the centre is narrowing while one side is
+        // clearly more open. Steer to the open side before the lower band locks
+        // onto the wall, even when the bike still looks centred.
+        if (centreFraction < 0.55
+            && Math.Max(leftFraction, rightFraction) > 0.6
+            && Math.Abs(leftFraction - rightFraction) > 0.3)
+        {
+            return (leftFraction > rightFraction ? -1 : 1, false, false);
+        }
+
+        return (0, false, false);
+    }
+
+    /// <summary>
+    /// Measures the road fraction in the lookahead band thirds (left 120-190,
+    /// centre 190-250, right 250-310). Returns NaNs when the band is empty.
+    /// </summary>
+    private static (double Left, double Centre, double Right) FindLookaheadFractions(VdlFrame frame)
+    {
+        var top = Math.Min(150, frame.Lines.Length);
+        var leftRoad = 0;
+        var leftTotal = 0;
+        var centreRoad = 0;
+        var centreTotal = 0;
+        var rightRoad = 0;
+        var rightTotal = 0;
+        for (var y = 120; y < top; y += 2)
+        {
+            var line = frame.Lines[y];
+            var width = Math.Min(line.Width, line.PixelBuffer.Length);
+            for (var x = 120; x < Math.Min(190, width); x++)
+            {
+                leftTotal++;
+                if (IsRoadPixel(line, x))
+                {
+                    leftRoad++;
+                }
+            }
+
+            for (var x = 190; x < Math.Min(250, width); x++)
+            {
+                centreTotal++;
+                if (IsRoadPixel(line, x))
+                {
+                    centreRoad++;
+                }
+            }
+
+            for (var x = 250; x < Math.Min(310, width); x++)
+            {
+                rightTotal++;
+                if (IsRoadPixel(line, x))
+                {
+                    rightRoad++;
+                }
+            }
+        }
+
+        if (centreTotal == 0 || leftTotal == 0 || rightTotal == 0)
+        {
+            return (double.NaN, double.NaN, double.NaN);
+        }
+
+        return ((double)leftRoad / leftTotal, (double)centreRoad / centreTotal, (double)rightRoad / rightTotal);
+    }
+
+    /// <summary>
+    /// Compares the road fraction on the left and right of the lower band.
+    /// Used by stuck recovery to steer toward open road when the centre estimate
+    /// cannot be trusted. Returns -1/0/+1.
+    /// </summary>
+    private static int FindSideSteer(VdlFrame frame, out double difference)
+    {
+        var bottom = Math.Min(LookAheadBottom, frame.Lines.Length);
+        var top = Math.Min(RoadMeasureTop, bottom);
+        var leftRoad = 0;
+        var leftTotal = 0;
+        var rightRoad = 0;
+        var rightTotal = 0;
+        for (var y = top; y < bottom; y += 2)
+        {
+            var line = frame.Lines[y];
+            var width = Math.Min(line.Width, line.PixelBuffer.Length);
+            for (var x = 20; x < Math.Min(160, width); x++)
+            {
+                leftTotal++;
+                if (IsRoadPixel(line, x))
+                {
+                    leftRoad++;
+                }
+            }
+
+            for (var x = 160; x < Math.Min(300, width); x++)
+            {
+                rightTotal++;
+                if (IsRoadPixel(line, x))
+                {
+                    rightRoad++;
+                }
+            }
+        }
+
+        if (leftTotal == 0 || rightTotal == 0)
+        {
+            difference = 0;
+            return 0;
+        }
+
+        var leftFraction = (double)leftRoad / leftTotal;
+        var rightFraction = (double)rightRoad / rightTotal;
+        difference = Math.Abs(leftFraction - rightFraction);
+        if (difference <= 0.5)
+        {
+            return 0;
+        }
+
+        return leftFraction > rightFraction ? -1 : 1;
+    }
+
+    /// <summary>
+    /// Lifts the throttle while steering off-centre into a narrowing bend whose
+    /// target side is open. Used for the throttle decision; pure steering state
+    /// is handled by the caller.
+    /// </summary>
+    private bool IsBendLift()
+    {
+        if (_steer == 0 || double.IsNaN(LineX) || Math.Abs(LineX - TargetRoadCenterX) <= 8)
+        {
+            return false;
+        }
+
+        if (double.IsNaN(LookaheadCentre))
+        {
+            return false;
+        }
+
+        var sideFraction = _steer < 0 ? LookaheadLeft : LookaheadRight;
+        return LookaheadCentre < 0.7 && sideFraction > 0.8;
+    }
+
+    /// <summary>
+    /// Duty-cycles the throttle in built-up sections (road visible ahead but
+    /// edges close on at least one side). Returns true on coast frames.
+    /// Open road, FMV/menus (NaN), and braking states are unaffected.
+    /// </summary>
+    private bool IsPacingCoast(long frameNumber)
+    {
+        return UrbanPacing && (frameNumber % PacingCycleFrames) >= PacingOnFrames;
+    }
+
+    /// <summary>
+    /// Tracks detector reliability across frames. A sudden LineX jump means the
+    /// detector re-locked onto a different gray surface (sidewalk, plaza) rather
+    /// than road motion; distrust it for a short hold instead of chasing it.
+    /// The test is frame-to-frame, so a frozen line cannot latch the hold.
+    /// </summary>
+    private void UpdateUpsetTracking(long frameNumber)
+    {
+        DetectorUpset = frameNumber < _upsetUntil;
+        if (double.IsNaN(LineX))
+        {
+            _previousLineX = double.NaN;
+            return;
+        }
+
+        if (!double.IsNaN(_previousLineX)
+            && Math.Abs(LineX - _previousLineX) > UpsetJumpThreshold)
+        {
+            _upsetUntil = frameNumber + UpsetHoldFrames;
+            DetectorUpset = true;
+        }
+
+        _previousLineX = LineX;
+    }
+
+    private void UpdateStuckTracking(VdlFrame frame, long frameNumber)
+    {
+        if (RecoveryActive)
+        {
+            return;
+        }
+
+        if (double.IsNaN(LineX) || Math.Abs(LineX - TargetRoadCenterX) <= 8)
+        {
+            _stableLineX = LineX;
+            _stableSince = frameNumber;
+            return;
+        }
+
+        if (double.IsNaN(_stableLineX) || Math.Abs(LineX - _stableLineX) >= 2)
+        {
+            _stableLineX = LineX;
+            _stableSince = frameNumber;
+            return;
+        }
+
+        if (frameNumber - _stableSince >= StuckTriggerFrames)
+        {
+            RecoveryActive = true;
+            var sideSteer = FindSideSteer(frame, out _);
+            _recoverySteer = sideSteer != 0
+                ? sideSteer
+                : LineX < TargetRoadCenterX ? 1 : -1;
+            _recoveryStart = frameNumber;
+            _recoveryUntil = frameNumber + RecoveryFrames;
+            _stableLineX = double.NaN;
+            _stableSince = frameNumber;
+        }
+    }
+
+    private static bool IsRoadPixel(VdlLine line, int x)
+    {
+        var index = line.PixelBuffer[x] & 0x1f;
+        int r = line.ClutR[index];
+        int g = line.ClutG[index];
+        int b = line.ClutB[index];
+        var max = Math.Max(r, Math.Max(g, b));
+        var min = Math.Min(r, Math.Min(g, b));
+        var brightness = (r + g + b) / 3;
+        return max - min <= 40 && brightness is >= 45 and <= 120;
     }
 }

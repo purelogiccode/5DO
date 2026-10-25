@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-24, third pass (see `git log` for the exact commit).
+**Snapshot:** 2026-10-25, fifth pass (see `git log` for the exact commit).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
 **Reference:** `References/opera-libretro-master/libopera` is now the primary
 behavioral reference for new compatibility work; see
@@ -50,8 +50,10 @@ This is the short, current answer to "where are we?" The detailed task list is i
   `frame button[,button...]` lines for repeatable controller taps. Input has been
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene and menu), Lemmings (menu and passcode entry), and Space Ace (P/X).
-- **Tests:** 560 passing (`dotnet test -c Release`), including high-resolution CEL and
-  VDLP regression coverage plus RAM-patch and Road Rash autopilot tests.
+- **Tests:** 572 passing (`dotnet test -c Release`), including high-resolution CEL and
+  VDLP regression coverage plus RAM-patch and Road Rash autopilot tests (road
+  steering, obstacle, closing-side, bend-brake, pacing, coast-floor, upset, and
+  stuck-recovery contracts).
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   A win-x64 CLI publish has been smoke-tested.
 
@@ -110,11 +112,12 @@ ARM vectors. It now runs past 12,000 frames.
 **Gameplay is now reachable and renderer-correct.** Road Rash's 3D race renders like
 the Opera reference and runs past 60,000 frames; Wolfenstein 3D starts a fresh game,
 walks/turns/fires, and its save states roundtrip; Alone in the Dark's in-game character
-is upright and its menu is reachable; Lemmings reaches its title menu and passcode
-screen, and its 640x480 high-resolution title matches the reference; Space Ace plays
-its animated demo. The next pass should type a valid Lemmings passcode end-to-end,
-complete a Road Rash race with the experimental driver, and capture a WAV/state/
-screenshot set for each title.
+is upright and its menu is reachable; Lemmings completes a Fun 4 passcode
+(`HNLHCIOECW`) end-to-end into gameplay with save/load roundtrip, and its 640x480
+high-resolution title matches the reference; Space Ace plays its animated demo. The
+next pass should keep improving the Road Rash driver (v9 reaches ~36,500 live
+frames but loses the race to `BUSTED`; the old "wall pin" was the `BUSTED` screen)
+and capture a WAV/state/screenshot set for each title.
 
 ---
 
@@ -187,11 +190,13 @@ corpus games playable" rather than "the v1 feature set is complete", add another
 
 1. **Complete a race/level in each title.** The renderer and input path are now
    validated: Road Rash's race renders correctly and its controls are mapped (B
-   accelerate, A brake, D-pad steer), Wolfenstein starts a fresh game and supports
+   accelerate, A brake, D-pad steer, `--autopilot road` v9 keeps live road
+   detection to ~36,500 frames), Wolfenstein starts a fresh game and supports
    walk/turn/fire, Alone's in-game character is upright, Lemmings reaches its
    passcode screen (A types, B confirms, ten letters auto-confirm), and Space Ace
    plays its demo. The remaining work is scripted play: a Road Rash traffic-aware
-   driver that finishes a race, a Lemmings ten-letter entry sequence, and an Alone
+   driver that finishes a race (the earlier "pin" was the `BUSTED` race-over
+   screen), a Lemmings ten-letter entry sequence, and an Alone
    movement/inventory sequence. Record the exact scripts and frame numbers in
    [`TestCorpus.md`](TestCorpus.md).
 2. **Save states and screenshots in-game.** Wolfenstein already roundtrips a live

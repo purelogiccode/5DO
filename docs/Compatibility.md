@@ -2,7 +2,7 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current position (2026-10-24, third pass):** all five local corpus titles boot, load
+**Current position (2026-10-25, fifth pass):** all five local corpus titles boot, load
 their own OS, render real frames, and produce non-silent DSP audio. Road Rash's 3D race
 renders correctly and the attract race continues past 60,000 frames with no allocator
 error; Wolfenstein 3D starts a fresh game (FLOOR 1-1), walks/turns/fires, and its save
@@ -12,7 +12,10 @@ screen, and its 640x480 high-resolution title matches the reference; Space Ace p
 its animated demo. Scripted input has been used to navigate the Wolfenstein and
 Lemmings menus, open the Alone menu, and start Road Rash's player race. The Wolfenstein
 fresh-game walk is the first verified full gameplay loop; completing a race/level in
-the other titles and typing a full Lemmings passcode remain next.
+the other titles and typing a full Lemmings passcode remain next. The Road Rash
+autopilot's former "terminal wall pin" was identified as the race-over `BUSTED`
+screen (2026-10-25), so the open problem is keeping the race alive, not unsticking a
+wedged bike.
 
 The 2026-10-24 sessions found four root causes:
 
@@ -244,9 +247,9 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 
 | Game | Region | Disc ID | BIOS | Build | Boot | In-game | Audio | Input | Notes | Opera reference |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | **Title screen and passcode screen** | Non-silent DSP output | **Works**: A types, B confirms, ten letters auto-confirm, a 15-frame D-pad hold moves one key | CyberIntro renders; the title shows Play/New Game; New Game opens the "Enter the access code" screen; the 640x480 high-res title matches the reference | Not re-tested this pass |
+| Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | **Fun 4 gameplay via passcode (`HNLHCIOECW`) with save/load roundtrip** | Non-silent DSP output | **Works**: A types, B confirms, ten letters auto-confirm, D-pad moves the selection; entry is permuted across `0x96574-7B,7E-7F` | Passcode `HNLHCIOECW` accepted (`Code for 1` / `Rating = Fun`); gameplay at 21,640 frames (`0x18F38B4D`) roundtrips; 640x480 high-res title matches the reference | Not re-tested this pass |
 | Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass** | **Animated demo past 12,000 frames** | Non-silent DSP output | P/X change the player state | Former frame-681 null-buffer runaway is gone; the demo FMV renders | Demo intro 60 s, no runaway |
-| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **3D race renders and runs past 60,000 frames** | Non-silent DSP output; 10 s peak 32768, RMS ~9.1k | **B accelerates, A brakes, D-pad steers, C attacks, P pauses**; `--autopilot road` follows the road but does not finish a race yet | The CEL transposition fix removed the VRAM `AllocMem` error; Opera-like road/rider render | Intro FMV, then a race |
+| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **3D race renders and runs past 60,000 frames** | Non-silent DSP output; 10 s peak 32768, RMS ~9.1k | **B accelerates, A brakes, D-pad steers, C attacks, P pauses**; `--autopilot road` v9 keeps live road detection to ~36,500 frames (road-brightness ceiling, detector-upset hold, closing-side steering, sharp-bend braking, urban pacing, coast floor) but does not finish a race | The CEL transposition fix removed the VRAM `AllocMem` error; the earlier "wall pin" was the race-over `BUSTED` screen, not a physics wedge | Intro FMV, then a race |
 | Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Pass** | **Fresh game (FLOOR 1-1) and save/load roundtrip** | Non-silent DSP output; 10 s peak 30743, RMS ~5.5k | **Works**: A opens the menu, D-pad/A navigate and fire | From a 12,000-frame demo state, A opens the preview menu; selecting a level starts a fresh game | Intro 60 s |
 | Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Pass** | **In-game staircase/room with an upright character** | Non-silent DSP output | **Works**: D-pad/A change the scene and open the menu | The CEL transposition fix restored the character's upright orientation | Intro/loading 60 s |
 
@@ -266,13 +269,27 @@ transposition fixes are described above; input results come from `--input-script
   access code"). The keyboard is a 9-column grid of which five columns are visible;
   `A` types the selected letter, `B` confirms early, and ten letters auto-confirm.
   A 15-frame D-pad hold moves the selection one key. A wrong code shows "Incorrect"
-  and returns to the title; valid 3DO codes include `IJJLDNCCCN` (Fun 2) and
-  `CAJJLDMBEV` (Tricky 3). Level start after a correct code is still to be scripted.
+  and returns to the title. The 10-letter entry is permuted across RAM
+  `0x96574-0x9657B` + `0x9657E-0x9657F` (display order `77,76,75,74,7B,7A,79,78,
+  7F,7E`; `0x96576` is the preview slot refreshed from the selection). From the
+  `N`-selected state, poking the other nine bytes of `HNLHCIOECW` (Fun 4) and
+  pressing `B` is accepted (`Code for 1` / `Rating = Fun`), then `A` shows the
+  briefing and `A` starts gameplay (21,640 frames, `PC 0x83FEC`, hash `0x18F38B4D`;
+  zero-frame load roundtrips, two 120-frame continuations both `0x8D628FBD`). A
+  sequential poke at `0x96574` alone renders scrambled and reports `Incorrect`.
 - **Road Rash:** the attract race renders correctly from ~17,000 frames. The 3DO
   controls are B accelerate, A brake, D-pad left/right steer, C attack, and P pause.
   Holding B starts a player race; a hard left around frame 31,000 clears the first
-  oncoming taxi. `--autopilot road` is an experimental road-centre driver that does
-  not yet avoid traffic or recover from wrecks.
+  oncoming taxi. `--autopilot road` v9 steers to the road centre measured low
+  (rows 190-214) with lookahead obstacle steering, closing-side crossover,
+  sharp-bend braking, wall avoidance, emergency braking, urban throttle pacing, a
+  coast floor, and stuck recovery. The previously reported terminal wall pin at
+  ~34,000 frames is the race-over **`BUSTED`** screen: from `rr-auto-v8.state`,
+  no-input plus a `B` proves the plainclothes-cop screen, and no input resumes a
+  lost race. v9 keeps live road detection to ~36,500 frames but does not finish
+  the 5.5-mile city race; it leaves the road and the race ends. The remaining work
+  is vision/control quality (lane tracking through bends, police/traffic
+  avoidance), not pin recovery.
 - **Wolfenstein 3D:** from the 12,000-frame demo state, `A` opens the Select Previews
   menu; D-pad/A navigate to Select a Level and start a fresh game at FLOOR 1-1 with
   `SCORE 0000000`. From a live 60-frame state, two independent 120-frame continuations

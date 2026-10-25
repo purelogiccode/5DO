@@ -220,6 +220,130 @@ The autopilot/steering tests are in
 `tests/ThreeDo.Tests/Host/RoadRashAutopilotTests.cs`; the RAM-patch parser tests
 are in `tests/ThreeDo.Tests/Host/MemoryPatchTests.cs`.
 
+### 1.4 Fourth pass: Lemmings Fun4 gameplay and a traffic-aware Road Rash driver (2026-10-24)
+
+All runs use the Release build, `panafz1.bin`, and a fresh NVRAM. Tests are at
+572 passing (563 + closing-side, sharp-bend, pacing, coast-floor, and
+detector-upset cases); `dotnet format --verify-no-changes` is clean.
+
+**Lemmings Fun4 gameplay loop.** The passcode screen is reachable from
+`lem-new-end.state` (`Down` + `A`, see `lem-pass-open.txt`); the investigation
+base `lem-pass.state` is at 21,200 frames (`PC 0x20628`, hash `0x4321A4A5`)
+with selection on `M` and one `M` already typed by the opening `A` press.
+`Right` held 10 frames moves `M` -> `N`:
+
+```
+21,200 frames: PC 0x20628, hash 0x4321A4A5 (passcode, selection M, typed M)
+21,240 frames: PC 0x230A4, hash 0x73B0DEAD (selection N, typed M, preview N)
+```
+
+`lem-toN.txt` (`21200 Right` / `21210 None`) reproduces the second line and
+saves `lem-pass-N.state`. The 10-letter entry buffer is ASCII but permuted
+across RAM: display order maps to `0x96577, 0x96576, 0x96575, 0x96574,
+0x9657B, 0x9657A, 0x96579, 0x96578, 0x9657F, 0x9657E`, with a `JC` prefix at
+`0x96572-73`. `0x96576` is the blinking preview slot and is refreshed from the
+current selection every frame, so it must already hold the code's 2nd letter
+when `B` is pressed. From the `N`-selected state, poking the other nine bytes
+of `HNLHCIOECW` (Fun 4, 3DO list) and pressing `B` is accepted:
+
+```powershell
+# From lem-pass-N.state (selection N): poke Fun4 (2nd letter N matches), confirm
+dotnet run -c Release --project src/ThreeDo.Cli -- run `
+  "$env:THREEDO_GAMES\Lemmings (USA).chd" --bios bios/panafz1.bin `
+  --state-in artifacts/s2/lem-pass-N.state --frames 400 `
+  --poke "0x96574=48;0x96575=4C;0x96577=48;0x96578=45;0x96579=4F;0x9657A=49;0x9657B=43;0x9657E=57;0x9657F=43" `
+  --input-script artifacts/s2/lem-code-HN.txt `
+  --frame-out artifacts/s2/lem-fun4-gameplay.png `
+  --state-out artifacts/s2/lem-fun4.state --json
+```
+
+`lem-code-HN.txt` presses `B` (confirm), `A` (briefing), `A` (start). The game
+shows `Code for 1` / `Rating = Fun` (21,320 frames, `PC 0x12B74`, hash
+`0xEA7E3E8D`), then the briefing (`Press Any Button`, 21,440 frames,
+`PC 0x59DD4`, hash `0x64C5DEA5`), then gameplay (21,640 frames, `PC 0x83FEC`,
+hash `0x18F38B4D`) with pillars, green ground, lemmings, and the skill HUD.
+
+Save/load at 21,640 frames:
+
+- Live state saved at 21,640: frame hash `0x18F38B4D`.
+- Zero-frame load: `0x18F38B4D` (pixel-identical).
+- Two independent 120-frame continuations: both `PC 0x83FD8`, hash `0x8D628FBD`
+  (deterministic; the level animates without input).
+
+Typing ten `M`s via `A` still auto-confirms and correctly reports `Incorrect`
+(`MMMMMMMMMM` is not a valid code), proving the confirm path works with and
+without pokes. A sequential poke at `0x96574` alone is NOT sufficient: the
+validation reads the permuted slots, so a sequential poke renders scrambled
+and reports `Incorrect`.
+
+**Road Rash driver (v8).** `--autopilot road` now holds `B`, steers to the gray
+road centre (target X 230) measured in the lower band (rows 190-214, so
+building facades cannot outvote the asphalt), and adds: lookahead obstacle
+steering (rows 120-150, steers to the clearer side when the centre is blocked),
+wall avoidance (does not steer into a walled side when the other side is open),
+emergency braking (`A`, no `B`) when the road ahead is fully blocked, coasting
+(no throttle) through narrow walled canyons, and stuck recovery (stable
+off-centre road for 300 frames steers toward the side with visibly more road
+for 90 frames). Progress lines and `run --json` report `autopilotObstacle`
+and `autopilotRecovery` alongside `autopilotLineX`/`autopilotSteering`.
+
+Best run from `rr8-30k.state` (30,000 frames) with 10,000 autopilot frames ends
+at 40,000 frames (`PC 0x12850`, hash `0x1B9CCE1D`). The driver visibly corrects
+away from the first city wall (`obst=1` at 31,000 frames) and triggers stuck
+recovery (`RECOVERY` at 33,000-34,000 and 37,000-39,000 frames), but the bike
+still pins against a city wall around 34,000 frames (speed 0, lineX frozen at
+~239, `RECOVERY` cycling without movement; sustained `B`+steer/`A` inputs from
+the pinned state all converge to the same hash, i.e. the pin is terminal and
+input has no effect once wedged). The 5.5-mile city race is therefore NOT
+finished yet; the remaining work is earlier wall anticipation (the lower band
+still locks onto sidewalks/shadows before the lookahead sees the wall) and/or a
+track-specific racing line through the 32,000-34,000-frame city section.
+
+#### Road Rash driver v9: the "pin" was the BUSTED screen (2026-10-25)
+
+The terminal pin above is the race-over `BUSTED` screen, not a physics wedge.
+From `rr-auto-v8.state` (40,000 frames), 400 frames with no input followed by
+`B` produce the plainclothes-cop `BUSTED` screen (hash `0x7D470158`); the same
+happens from `rr-v10full.state` and `rr-v17-40k.state` (`0x9F44FAA2`). No input
+resumes a lost race, so the earlier input probes could only converge.
+
+Driver v9, covered by tests (572 passing):
+
+- Road pixels are capped at brightness 120 (was 150), so bright concrete
+  sidewalks and plazas no longer count as asphalt in the lower band.
+- A frame-to-frame `lineX` jump over 25 px is treated as a detector re-lock:
+  the driver holds straight for 30 frames instead of chasing the false lock.
+  The test is frame-to-frame, so a frozen line cannot latch the hold.
+- Closing-side steering crosses away when the steering-side lookahead fraction
+  is below 0.6 while the other side is above 0.8, coasting during the crossing.
+- Sharp bends (centre below 0.35, one side above 0.8, the other below 0.4) are
+  braked into while steering to the open side.
+- Built-up sections duty-cycle the throttle 40/60 frames, but pacing, caution,
+  and bend lift may never coast more than 20 consecutive frames; the throttle
+  is forced back on because a stopped bike is caught and busted.
+- Stuck recovery triggers after 150 stable off-centre frames (was 300), brakes
+  30 frames, then re-applies throttle with the recovery steer.
+- Progress lines add `la=<left>/<centre>/<right>` plus `PACE`/`UPSET`;
+  `run --json` adds `autopilotPacing`, `autopilotUpset`, and
+  `autopilotLookahead`.
+
+```powershell
+dotnet run -c Release --project src/ThreeDo.Cli -- run `
+  "$env:THREEDO_GAMES\Road Rash (USA).chd" --bios bios\panafz1.bin `
+  --state-in artifacts\s2\rr8-30k.state --frames 10000 --autopilot road `
+  --progress 1000 --frame-out artifacts\s2\rr-v17-40k.png `
+  --state-out artifacts\s2\rr-v17-40k.state --json
+```
+
+Best v9 run: 40,000 frames, `PC 0x000125E4`, hash `0xE44B073D`. The bike keeps
+live road detection to about 36,500 frames (the v8 run lost it at ~34,000), then
+leaves the road and the race is lost. Roundtrip: zero-frame load reproduces
+`0xE44B073D`; two 120-frame autopilot continuations both end at
+`PC 0x000125E4` / `0xE44B073D`; pressing a button advances to `BUSTED`
+(`0x9F44FAA2`). The 5.5-mile city race is still NOT finished; the next work is
+vision/control quality (lane tracking through bends, police/traffic avoidance),
+not pin recovery.
+
 #### CD disc-end fix (2026-10-23)
 
 `CdromDevice.InitCd` originally reproduced FreeDO's double-add of the 150-frame

@@ -1,6 +1,6 @@
 # Next Session Handoff
 
-**Date:** 2026-10-24 (fourth pass)
+**Date:** 2026-10-25 (fifth pass)
 **Goal:** finish the scripted gameplay loops now that the 3D CEL renderer is correct
 and the high-resolution frontend path exists. Road Rash's race renders like the Opera
 reference and runs past 60,000 frames; Wolfenstein starts a fresh game, walks/turns/
@@ -98,6 +98,55 @@ toward the gray road centre. Unit tests cover the patch parser and the steering
 direction contract. The driver follows the road but does not yet detect traffic or
 recover from a wreck, so it does not finish a race.
 
+### 1.8 Road Rash driver v9 and the BUSTED discovery (2026-10-25)
+
+The previous pass described a "terminal wall pin" around frame 34,000: speed 0,
+frozen `lineX`, and all held inputs converging on one hash. That state is **the
+race-over `BUSTED` screen**, not a physics wedge. From `rr-auto-v8.state`
+(40,000 frames), 400 frames of no input followed by `B` produces the `BUSTED`
+plainclothes-cop screen (hash `0x7D470158`); the same happens from
+`rr-v10full.state` and `rr-v17-40k.state` (`0x9F44FAA2`). Once a race is lost, no
+steering/throttle input resumes it, which is why every probe converged. The
+driver's real failure is losing the race earlier by leaving the road, stalling,
+and getting caught - not a stuck bike.
+
+Driver v9 changes, all covered by tests (572 passing):
+
+- **Road brightness ceiling.** `IsRoadPixel` now caps brightness at 120 (was 150).
+  City sidewalks and plazas are brighter concrete and were being classified as
+  asphalt; the lower band locked onto them and the bike rode the sidewalk.
+- **Detector-upset hold.** A frame-to-frame `lineX` jump over 25 px means the
+  detector re-locked onto a different gray surface, not road motion. The driver
+  holds straight for 30 frames instead of chasing the false lock. The test is
+  frame-to-frame so a frozen line cannot latch the hold (the first attempt used a
+  long reference and did exactly that).
+- **Closing-side steering.** If the driver is steering toward a side whose
+  lookahead fraction is below 0.6 while the other side is above 0.8, it crosses
+  to the open side and coasts during the crossing.
+- **Sharp-bend braking.** Centre below 0.35 with one side open above 0.8 and the
+  other below 0.4 brakes while steering to the open side; this replaces taking the
+  0.39/0.29/0.94 bend flat out into the outside wall.
+- **Urban pacing.** In built-up sections (centre visible, one edge below 0.6) the
+  throttle is duty-cycled 40/60 frames instead of held flat out.
+- **Coast floor.** Pacing, caution, and bend lift may never coast more than 20
+  consecutive frames; the throttle is forced back on. A stopped bike is caught and
+  busted, which is exactly how the pacing-only build failed.
+- **Faster recovery.** Stuck recovery triggers after 150 stable off-centre frames
+  (was 300), brakes for 30 frames, then re-applies throttle with the recovery
+  steer.
+- **Telemetry.** Progress lines add `la=<left>/<centre>/<right>` and `PACE`/`UPSET`
+  markers; `run --json` adds `autopilotPacing`, `autopilotUpset`, and
+  `autopilotLookahead`.
+
+Best run: from `rr8-30k.state`, 10,000 autopilot frames end at 40,000 frames
+(`PC 0x000125E4`, hash `0xE44B073D`). The bike keeps road detection to about
+36,500 frames (the v8 run lost it at ~34,000), but then leaves the road and the
+race is lost; the final screen is the pre-bust arrest frame. Zero-frame load
+reproduces `0xE44B073D`; two 120-frame autopilot continuations both end at
+`PC 0x000125E4` / `0xE44B073D`, and any input advances to `BUSTED`
+(`0x9F44FAA2`). The 5.5-mile city race is still **not finished**, and the
+remaining work is vision/control quality, not a pin-recovery rule.
+
 ---
 
 ## 2. Current evidence
@@ -163,9 +212,13 @@ advances the current presentation, which is why earlier probes concluded that `A
 taxi; the next obstacle still ends the run.
 
 `--autopilot road` is an experimental CLI driver that holds B and steers toward
-the gray road centre (target screen X 230). It follows the road and passes the
-first section, but it does not yet detect traffic or recover from a wreck, so it
-does not finish a race. The unit tests cover the road-centre steering contract.
+the gray road centre (target screen X 230). v9 adds a road-brightness ceiling,
+detector-upset holds, closing-side steering, sharp-bend braking, urban throttle
+pacing, a coast floor, and faster recovery. It keeps live road detection to about
+36,500 frames, but it does not yet finish the race: the bike leaves the road and
+the race ends in `BUSTED`. The earlier "terminal pin" at ~34,000 frames was the
+`BUSTED` screen itself (see section 1.8). Unit tests cover the steering, obstacle,
+brake, pacing, and recovery contracts.
 
 ### Alone in the Dark
 
@@ -232,14 +285,24 @@ changing the DSP reload value. The 18,000-frame Wolfenstein gameplay capture is
 
 - Wolfenstein: done for the fresh-game loop; the existing 14,000-18,000 script and
   save/load proof are in section 2.
-- Lemmings: the passcode screen is understood (A types, B confirms, ten letters
-  auto-confirm, 15-frame D-pad holds move one key). The remaining task is a
-  deterministic path to the ten letters of a valid code such as `IJJLDNCCCN`
-  (Fun 2) or `CAJJLDMBEV` (Tricky 3), plus level start and a first move.
+- Lemmings: DONE (2026-10-24 late pass). From `lem-pass-N.state` (selection `N`),
+  the 9-byte poke for `HNLHCIOECW` (Fun 4) plus `B` is accepted, `A` shows the
+  briefing, and `A` starts gameplay at 21,640 frames (`PC 0x83FEC`, hash
+  `0x18F38B4D`; zero-frame load roundtrips, two 120-frame continuations both
+  `0x8D628FBD`). Scripts `lem-toN.txt`/`lem-code-HN.txt`, states
+  `lem-pass-N.state`/`lem-fun4.state`, hashes in `TestCorpus.md` 1.4. The entry
+  buffer is permuted (display order `77,76,75,74,7B,7A,79,78,7F,7E`; preview at
+  `76`), not sequential at `0x96574`.
 - Road Rash: the control map is known (B accelerate, A brake, D-pad steer, C
-  attack, P pause). Improve the experimental `--autopilot road` with obstacle
-  detection and wreck recovery, then finish the 5.5-mile city race and record the
-  script/state/hash.
+  attack, P pause). Driver v9 is traffic-aware (obstacle steer, wall avoidance,
+  sharp-bend braking, closing-side crossover, emergency brake, narrow-canyon
+  coasting, urban throttle pacing, coast floor, detector-upset hold, side-based
+  stuck recovery, low-band centre at rows 190-214, road brightness <= 120; 572
+  tests pass). It keeps road detection to ~36,500 frames, but the 5.5-mile city
+  race is still NOT finished: the bike leaves the road and the race ends in
+  `BUSTED`. The previous "terminal wall pin ~34,000" was the `BUSTED` screen, not
+  a physics wedge - no input resumes a lost race. Next: improve vision/control
+  (lane tracking through bends, police/traffic avoidance) rather than pin recovery.
 - Space Ace: start the interactive game from the demo (P/X are the current leads)
   and verify FMV/audio sync.
 
@@ -267,13 +330,18 @@ changing the DSP reload value. The 18,000-frame Wolfenstein gameplay capture is
 ## 4. Acceptance criteria
 
 - [x] At least one title completes a full gameplay loop with input (Wolfenstein:
-  fresh game -> walk/turn/fire -> save/load).
-- [x] Save/load works in-game (Wolfenstein: `0xC9989182` -> `0x370158AC` twice, and
-  the 18,000-frame gameplay state roundtrips).
+  fresh game -> walk/turn/fire -> save/load; Lemmings: passcode -> briefing ->
+  gameplay -> save/load).
+- [x] Save/load works in-game (Wolfenstein: `0xC9989182` -> `0x370158AC` twice;
+  Lemmings Fun 4: `0x18F38B4D` zero-frame, two 120-frame continuations both
+  `0x8D628FBD`).
 - [x] WAV output is non-silent and stereo 44.1 kHz; clipping/cadence recorded.
 - [x] Road Rash's race renders correctly and runs past 60,000 frames.
 - [x] The high-resolution 640x480 renderer matches Lemmings' title reference.
-- [ ] The Lemmings passcode confirm and high-res pointer path are complete.
+- [x] The Lemmings passcode confirm path is complete (Fun 4 gameplay + roundtrip).
+- [ ] The Road Rash city race is finished (driver avoids traffic/walls and recovers;
+  currently loses the race to `BUSTED` after ~36,500 live frames - the earlier
+  "pin" was the `BUSTED` screen) and the high-res pointer path is proven.
 - [x] `dotnet build -c Release`, `dotnet test`, and `dotnet format --verify-no-changes` pass.
 ---
 
@@ -354,10 +422,17 @@ The data-track extraction command is in [`TestCorpus.md`](TestCorpus.md).
 
 ## 7. Open questions
 
-1. What input sequence reaches the ten letters of a valid Lemmings passcode most
-   reliably, and does the level start immediately after confirmation?
+1. ~~What input sequence reaches the ten letters of a valid Lemmings passcode most
+   reliably, and does the level start immediately after confirmation?~~ Answered
+   2026-10-24: from the `N`-selected state, the 9-byte poke for `HNLHCIOECW` plus
+   `B` is accepted, `A` shows the briefing, and `A` starts gameplay (see
+   `TestCorpus.md` 1.4). Pure D-pad typing of all ten letters was not needed.
 2. What obstacle-avoidance and wreck-recovery policy lets `--autopilot road` finish
-   the 5.5-mile city race?
+   the 5.5-mile city race? Answered in part 2026-10-25: the "stuck bike" was the
+   `BUSTED` screen, so the problem is keeping the race alive (stay on the asphalt,
+   never stall) rather than recovering from a physics pin. Driver v9 keeps live
+   road detection to ~36,500 frames; the open question is lane tracking through
+   bends and police/traffic avoidance.
 3. Does the 737 vs 735 samples/frame cadence cause audible pitch drift? Compare a
    captured WAV with Opera/hardware before changing `_dspPcnt`.
 4. Is the 191-sample Road Rash clipping in the game mix or in our DSP output path?
