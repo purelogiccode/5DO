@@ -353,7 +353,7 @@ screen. The other four corpus IDs have no 4DO fix bits. The CLI reports `gameId`
 and `fixMode` in `run --json` and `info`, and accepts `--fix-mode 0xMASK` /
 `--no-game-fixes`. The desktop shell gained the game library, settings dialog,
 player-1 binding capture, numbered save slots, PNG screenshots, and the FPS
-overlay; 638 tests pass. The Input dialog edits all six players.
+overlay; 639 tests pass. The Input dialog edits all six players.
 
 ### 1.5 Fifth pass: Road Rash v10 reaches 91,000 live frames (2026-10-25)
 

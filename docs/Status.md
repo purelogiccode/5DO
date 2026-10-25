@@ -69,7 +69,7 @@ This is the short, current answer to "where are we?" The detailed task list is i
   `frame button[,button...]` lines for repeatable controller taps. Input has been
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene and menu), Lemmings (menu and passcode entry), and Space Ace (P/X).
-- **Tests:** 638 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 639 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips, and

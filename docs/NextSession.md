@@ -5,7 +5,7 @@
 and the high-resolution frontend path exists. The seventh pass completed the
 desktop-shell gaps around that work: game library, settings, six-player binding
 capture, numbered save slots, PNG screenshots, the FPS overlay, and automatic
-4DO per-game fixes. 638 tests pass. Road Rash's race renders like the Opera
+4DO per-game fixes. 639 tests pass. Road Rash's race renders like the Opera
 reference and runs past 60,000 frames; Wolfenstein starts a fresh game, walks/turns/
 fires, and its save states roundtrip; Alone's in-game character is upright; Lemmings
 renders its 640x480 high-resolution title; Space Ace plays its demo. The remaining
@@ -259,7 +259,7 @@ compatibility:
   FPS/status overlay is available in Settings.
 
 The five 3,000-frame low-res hashes are unchanged; Alone's automatic
-`FIX_BIT_TIMING_6` does not alter the boot frames. 638 tests pass.
+`FIX_BIT_TIMING_6` does not alter the boot frames. 639 tests pass.
 
 ---
 
