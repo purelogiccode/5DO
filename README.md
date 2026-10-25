@@ -32,8 +32,9 @@ The ninth pass recorded per-title save-state, PNG, and WAV evidence (zero-frame 
 [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. It also fixed the old Road Rash
 ~42,000/~92,000 READ_ID-only wait with a CD media-access pulse; the game now advances
 to `BUSTED`, race select, and a new race. Space Ace's interactive path is validated
-(`X` menu, `A` play) and roundtrips at 15,000 frames. The remaining Road Rash work is
-the new race start/right-edge pin.
+(`X` menu, `A` play) and roundtrips at 15,000 frames. The autopilot now cycles
+race -> wreck -> menu -> new race to 100k, but a full 5.5-mile race is still not
+finished.
 
 Real-content status with `panafz1.bin`: all five local corpus titles boot, load their
 own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio.

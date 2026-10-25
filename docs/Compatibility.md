@@ -16,13 +16,13 @@ independent R/G/B CLUT indices, added the opt-in xBR-lv2 filter, and captured Le
 gameplay through both sharp-bilinear and xBR with correct colors.
 
 The ninth pass captured per-title save-state, PNG, and WAV evidence (see
-`TestCorpus.md` 1.5a) and corrected the Road Rash diagnosis: the ~42,000 and ~92,000
-stops are a **static game-side wait**, not wall/rider pins or driving failures. The
-frame is identical for every button combination and the CD trace contains only
-READ_ID polls. `run --json` reports `cdStatus=0xE1` and `cdPoll=0x0C` at these stops.
-Alone's intro and Wolfenstein's fresh-game load share the signature. The Wolfenstein
-fresh-game walk and the Lemmings passcode path remain the verified gameplay loops;
-the open Road Rash work is the new race start/right edge, not the old CD wait.
+`TestCorpus.md` 1.5a) and fixed the old Road Rash ~42,000/~92,000 stops. They were a
+static game-side wait (only READ_ID polls, all input ignored), not wall/rider pins.
+A CD media-access pulse now advances those screens to `BUSTED`, race select, and a
+new race; the autopilot then cycles race -> wreck -> menu -> new race to 100k. The
+Wolfenstein fresh-game walk, Lemmings passcode, Space Ace interactive scene, and
+Alone movement loop are verified. The open Road Rash work is finishing a full race
+without wrecking, not the old CD wait.
 
 The CD wait fix is a media-access pulse: two consecutive READ_ID commands with
 no intervening command and at least 50 frames between them set poll bit `0x40`.

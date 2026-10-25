@@ -220,8 +220,10 @@ for it.
 
 A separate terminal stop was seen on one 45,500-frame path with the same
 signature: reads 109053-109071, seeks to 43877-43888, then only READ_ID polls;
-the frame hash stays identical and every button is ignored. Treat these as one
-open issue: the missing completion event after a post-race/section load.
+the frame hash stays identical and every button is ignored. **The ninth pass
+fixed this class of stop** with the CD media-access pulse (section 1.12); the
+old 91k/92k hashes are historical. The remaining Road Rash issue is finishing a
+full race without wrecking.
 
 ### 1.10 Desktop shell and per-game fixes (2026-10-25)
 
@@ -495,7 +497,7 @@ changing the DSP reload value. The 18,000-frame Wolfenstein gameplay capture is
   190-214, road brightness <= 120; 667 tests pass). The CD media-access pulse
   fixes the old ~42k/~92k READ_ID wait: those screens now advance to `BUSTED`,
   race select, and a new race. The autopilot also pulses A during long-static,
-  low-coverage, frozen-line, or CD-load states (`autopilotMenuAdvance`).
+  low-coverage, CD-load, or 180-frame restart-stuck states (`autopilotMenuAdvance`).
   The 5.5-mile race is still not finished: from the 60k state the autopilot
   passes `GAME LOADING`/`Get ready` and starts a new race at 80k, then cycles
   race -> wreck -> menu -> new race to 100k. Next: finish a full race without
@@ -547,10 +549,11 @@ save/load proof.
 - [x] The Lemmings passcode confirm path is complete (Fun 4 gameplay + roundtrip).
 - [ ] The Road Rash city race is finished. The CD media-access pulse fixes the
   old ~42k/~92k READ_ID-only wait and advances to `BUSTED`, race select, and a
-  new race. The autopilot still needs **new race start/right-edge** handling to
-  complete a full race. The old 91k hash `0x02ABE78E` was a frozen presentation;
-  the current chain reaches `PC 0x00093AF4`, hash `0x70E1ED8E`. The high-res
-  pointer path is still unproven.
+  new race; the autopilot passes `GAME LOADING`/`Get ready` and cycles
+  race/wreck/menu to 100k. It still does **not finish a full 5.5-mile race**.
+  The old 91k hash `0x02ABE78E` was a frozen presentation; the current chain
+  reaches `PC 0x00093AF4`, hash `0x70E1ED8E`. The high-res pointer path is still
+  unproven.
 - [x] Space Ace's interactive path is validated (X menu, A play, 15,000-frame
   roundtrip and WAV).
 - [x] Per-title save-state, screenshot, and WAV evidence is recorded

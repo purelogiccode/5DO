@@ -244,10 +244,12 @@ add **2-4 weeks**. If the target is "all five corpus games playable" rather than
    reaches its passcode screen (A types, B confirms, ten letters auto-confirm),
    and Space Ace starts and plays its interactive scene (X menu, A play).
    The old ~42k/~92k stops are fixed by the CD media-access pulse; those screens
-   now advance to `BUSTED`, race select, and a new race. The remaining Road Rash
-   work is the new race start/right-edge pin, not the CD wait. Then script a
-   Lemmings ten-letter entry and an Alone movement/inventory sequence. Record
-   the exact scripts and frame numbers in [`TestCorpus.md`](TestCorpus.md).
+   now advance to `BUSTED`, race select, and a new race, and the autopilot cycles
+   race/wreck/menu to 100k. The remaining Road Rash work is finishing a full race
+   without wrecking, not the CD wait. Alone now has a scripted room movement
+   loop with a save/load roundtrip; script a Lemmings ten-letter D-pad entry and
+   an Alone inventory sequence. Record the exact scripts and frame numbers in
+   [`TestCorpus.md`](TestCorpus.md).
 2. **Save states and screenshots in-game.** Wolfenstein already roundtrips a live
    gameplay state (saved hash `0xC9989182`, two 120-frame continuations end at
    `0x370158AC`). Repeat for each title and store screenshots at known frames.
