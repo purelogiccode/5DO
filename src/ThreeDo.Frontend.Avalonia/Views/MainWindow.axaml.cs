@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -339,13 +340,47 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnAbout(object? sender, RoutedEventArgs e)
     {
-        var text = new TextBlock
+        var text = new StringBuilder();
+        text.AppendLine($"{ThreeDoVersion.ProductName} {ThreeDoVersion.Version}");
+        text.AppendLine();
+        text.AppendLine("A pure C# / .NET 3DO emulator with an Avalonia frontend and OpenGL presenter.");
+        if (Video.Capabilities is { } capabilities)
         {
-            Text = $"{ThreeDoVersion.ProductName} {ThreeDoVersion.Version}\n\n"
-                + "A pure C# / .NET 3DO emulator with an Avalonia frontend and OpenGL presenter.\n\n"
-                + "FreeDO/4DO are not standard OSI-licensed projects. See THIRD-PARTY-NOTICES.md "
-                + "and docs/Licensing.md before distributing builds.\n\n"
-                + "This project does not include BIOS ROMs or game images.",
+            text.AppendLine(
+                $"Renderer: {capabilities.Name} {capabilities.MajorVersion}.{capabilities.MinorVersion} "
+                + $"({capabilities.Api}), max texture {capabilities.MaxTextureSize}.");
+        }
+        else
+        {
+            text.AppendLine("Renderer: CPU fallback (OpenGL unavailable).");
+        }
+
+        if (_machine is not null)
+        {
+            text.AppendLine(
+                $"Machine: frame {_machine.FramesExecuted}, PC 0x{_machine.Cpu.ProgramCounter:x8}, "
+                + $"DSP 0x{_machine.Dsp.ProgramCounter:x4}.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(_gameName))
+        {
+            var id = _gameId.Length > 8 ? _gameId[..8] : _gameId;
+            text.AppendLine(
+                $"Disc: {_gameName} ({id}), fixes 0x{(uint)_settings.ResolveFixMode(_gameId):x8}.");
+        }
+
+        text.AppendLine($"BIOS: {(_settings.BiosPath.Length > 0 ? _settings.BiosPath : "(not set)")}");
+        text.AppendLine($"Save states: {_settings.SaveDirectory}");
+        text.AppendLine($"Screenshots: {_settings.ScreenshotDirectory}");
+        text.AppendLine();
+        text.AppendLine("FreeDO/4DO are not standard OSI-licensed projects. See THIRD-PARTY-NOTICES.md "
+            + "and docs/Licensing.md before distributing builds.");
+        text.AppendLine();
+        text.AppendLine("This project does not include BIOS ROMs or game images.");
+
+        var textBlock = new TextBlock
+        {
+            Text = text.ToString(),
             TextWrapping = global::Avalonia.Media.TextWrapping.Wrap,
         };
         var close = new Button
@@ -358,7 +393,7 @@ public partial class MainWindow : Window, IDisposable
             Margin = new Thickness(16),
             Spacing = 12,
         };
-        panel.Children.Add(text);
+        panel.Children.Add(textBlock);
         panel.Children.Add(close);
         var window = new Window
         {
