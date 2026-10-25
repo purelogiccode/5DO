@@ -68,6 +68,9 @@ still change.
   pulse alone does not advance the intro.
 - Wolfenstein's long fresh-game load advances with A every 300 frames through
   character select to FLOOR 1-1 at 64,000 frames.
+- Alone in the Dark has a scripted room movement loop with a save/load roundtrip
+  (`0x44C7576B` -> two 120-frame continuations at `PC 0x0008BF00`,
+  `0xE490C8C7`).
 
 ## Earlier work
 

@@ -6,7 +6,7 @@ validated Space Ace's interactive path, recorded save-state/PNG/WAV evidence for
 five corpus titles, and fixed the ~42k/~92k Road Rash wait with a CD media-access
 pulse. Those screens now advance to `BUSTED`, race select, and a new race. **667 tests
 pass.** Do not redo the evidence capture or the CD media-access fix. The remaining
-work is the new race start/right-edge pin, scripted Lemmings/Alone play, GPU/Tier B
+work is finishing a full Road Rash race, scripted Lemmings play, GPU/Tier B
 validation, arm64/installers, and the legal/attribution review.
 
 Earlier passes added the presentation plumbing (GL/GLES capability reporting, CPU
@@ -308,6 +308,11 @@ missing and corrected the Road Rash diagnosis.
   polling. The media pulse alone does not advance it, but A every 300 frames moves
   the man-at-desk cutscene to the room/mansion/title scenes (29,200 frames,
   `PC 0x00020640`, hash `0x62304BCF`). A blind pulse is not yet a stable room.
+- **Alone movement loop.** From `alone-intro-A2.state` (39,200), `Up, Left, A,
+  Down, Right` moves the character around the room; at 39,800 `PC 0x0008D0EC`,
+  hash `0x44C7576B`. The state roundtrips (`0x44C7576B` -> two 120-frame
+  continuations at `PC 0x0008BF00`, `0xE490C8C7`). This is a scripted
+  movement/save-load loop; inventory interaction remains.
 - **Wolfenstein fresh-game load.** `w3d-loadlong.state` + A every 300 frames
   advances the static load through character select to FLOOR 1-1 at 64,000
   (`PC 0x00069F3C`, hash `0x2F5B9864`); no input stays at `0x07586A88`.

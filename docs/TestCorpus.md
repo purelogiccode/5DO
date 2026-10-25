@@ -562,6 +562,12 @@ Evidence:
   a further 10,000 frames ends at 39,200 (`PC 0x0008BCA4`, hash `0xD1FABFD3`).
   A blind A pulse is enough to leave the wait but not yet enough to reach a
   stable gameplay room.
+- **Alone movement loop.** From `alone-intro-A2.state` (39,200), the sequence
+  `Up, Left, A, Down, Right` moves the character around the room (the sprite
+  visibly walks between frames). At 39,800: `PC 0x0008D0EC`, hash `0x44C7576B`.
+  The state roundtrips: zero-frame load `0x44C7576B`; two independent 120-frame
+  continuations both `PC 0x0008BF00`, hash `0xE490C8C7`. This is the first
+  scripted Alone movement/save-load loop.
 - Wolfenstein's fresh-game load (`w3d-loadlong.state`, 54,000 frames) also stays
   static with no input (`0x07586A88`). A every 300 frames advances to the
   character-select screen and FLOOR 1-1 at 64,000 (`PC 0x00069F3C`, hash

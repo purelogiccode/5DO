@@ -271,7 +271,7 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 | Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass** | **Animated demo and interactive scene; X -> menu, A -> play; 15,000-frame save/load roundtrip** | Non-silent DSP output; 10 s peak 4096, RMS ~1.8k (mono duplicated) | **Works**: X returns to the title/menu, A starts the scene; P also changes state | Former frame-681 null-buffer runaway is gone; the 15,000 state roundtrips (`0x7E780D93` -> two 120-frame continuations at `PC 0x000284EC`, `0x70B16422`) | Demo intro 60 s, no runaway |
 | Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **3D race renders and runs past 60,000 frames; CD media-access pulse unblocks the old ~42k/~92k wait and reaches `BUSTED` -> race select -> new race; autopilot cycles race/wreck/menu to 100k** | Non-silent DSP output; 10 s peak 32768, RMS ~9.6k/8.8k, 378 clipped | **B accelerates, A brakes, D-pad steers, C attacks, P pauses**; `--autopilot road` adds close-traffic coast/steer, urgent preemption, emergency-brake steer hold, a throttle-only wreck/rider-run restart, and A pulses for post-race/start-line screens (`autopilotMenuAdvance`) | The CEL transposition fix removed the VRAM `AllocMem` error; the earlier "wall pin" was the race-over `BUSTED` screen. The old ~42k/~92k READ_ID-only wait is fixed; the remaining autopilot issue is finishing a full race without wrecking | Intro FMV, then a race |
 | Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Pass** | **Fresh game (FLOOR 1-1) and save/load roundtrip; A pulses pass the long fresh-game load** | Non-silent DSP output; 10 s peak 30743, RMS ~5.5k | **Works**: A opens the menu, D-pad/A navigate and fire; A every 300 frames passes character select | From a 12,000-frame demo state, A opens the preview menu; selecting a level starts a fresh game. `w3d-loadlong.state` + A reaches FLOOR 1-1 at 64,000 (hash `0x2F5B9864`) | Intro 60 s |
-| Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Pass** | **In-game staircase/room with an upright character; Begin/Resume menu and intro; A pulses leave the intro wait** | Non-silent DSP output; 10 s peak 20617, RMS ~1.9k | **Works**: D-pad/A change the scene; `Up, Left, A, Down` reaches the menu, A starts the intro; A every 300 frames advances the cutscene | The CEL transposition fix restored the character's upright orientation. The media pulse alone does not advance the intro; A input does | Intro/loading 60 s |
+| Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Pass** | **In-game staircase/room with an upright character; Begin/Resume menu and intro; A pulses leave the intro wait; scripted room movement with save/load roundtrip** | Non-silent DSP output; 10 s peak 20617, RMS ~1.9k | **Works**: D-pad/A change the scene; `Up, Left, A, Down` reaches the menu, A starts the intro; A every 300 frames advances the cutscene; `Up, Left, A, Down, Right` moves the character in the room | The CEL transposition fix restored the character's upright orientation. The media pulse alone does not advance the intro; A input does. The 39,800 movement state roundtrips (`0x44C7576B` -> `0xE490C8C7` twice) | Intro/loading 60 s |
 
 `Pass` means a real game frame was rendered and verified visually. The Opera reference
 column is the bundled Windows OperaCore with the same BIOS and an ISO extracted from
@@ -285,7 +285,11 @@ transposition fixes are described above; input results come from `--input-script
   reached the Begin/Resume main menu. The control run walks the character through the
   room, so the in-game scene is live without input. From the intro, A every 300
   frames leaves the static wait and reaches the room/mansion/title scenes (29,200
-  frames, `PC 0x00020640`, hash `0x62304BCF`).
+  frames, `PC 0x00020640`, hash `0x62304BCF`). From `alone-intro-A2.state`
+  (39,200), `Up, Left, A, Down, Right` moves the character in the room; 39,800
+  is `PC 0x0008D0EC`, hash `0x44C7576B`, and the state roundtrips
+  (`0x44C7576B` -> two 120-frame continuations at `PC 0x0008BF00`,
+  `0xE490C8C7`).
 - **Lemmings:** the title screen shows Play/New Game, but `A`/`Left`/`Right`/`P`/`X`
   do not leave the attract loop. `Down` + `A` opens the passcode screen ("Enter the
   access code"). The keyboard is a 9-column grid of which five columns are visible;
