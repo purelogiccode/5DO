@@ -124,6 +124,20 @@ internal static class Shaders
                 uv = (texelFloored + blended) / vec2(uSource);
             }
 
+            if (uFilter == 2)
+            {
+                // Mild barrel distortion for the CRT mode. The output stays black
+                // outside the curved screen instead of stretching the edge texels.
+                vec2 centered = uv * 2.0 - 1.0;
+                centered *= 1.0 + (0.055 * dot(centered, centered));
+                uv = centered * 0.5 + 0.5;
+                if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
+                {
+                    fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+                    return;
+                }
+            }
+
             vec3 color = texture(uExpanded, clamp(uv, vec2(0.0), vec2(1.0))).rgb;
             if (uFilter == 2)
             {
@@ -136,6 +150,8 @@ internal static class Shaders
                         : vec3(0.82, 0.82, 1.0);
                 color *= mix(vec3(1.0), mask, uScanline * 0.5);
                 color *= 1.0 - (uScanline * line);
+                vec2 centered = uv * 2.0 - 1.0;
+                color *= clamp(1.0 - (0.12 * dot(centered, centered)), 0.0, 1.0);
             }
 
             fragColor = vec4(color, 1.0);

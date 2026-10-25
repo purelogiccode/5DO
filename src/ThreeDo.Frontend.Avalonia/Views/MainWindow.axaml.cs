@@ -568,6 +568,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnOpenGlFailed(Exception exception)
     {
+        Console.Error.WriteLine($"OpenGL unavailable: {exception.Message}");
         StartCpuFallback(exception);
     }
 
