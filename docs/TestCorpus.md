@@ -344,6 +344,85 @@ leaves the road and the race is lost. Roundtrip: zero-frame load reproduces
 vision/control quality (lane tracking through bends, police/traffic avoidance),
 not pin recovery.
 
+### 1.5 Fifth pass: Road Rash v10 reaches 91,000 live frames (2026-10-25)
+
+All runs use the Release build, `panafz1.bin`, and the local artifacts under
+`artifacts/s2`. Tests are at **578 passing** (572 + close-traffic, urgent
+preemption, emergency-steer-hold, stopped/wreck restart, moving-scene, and
+open-road restart cases); `dotnet format --verify-no-changes` is clean. The five
+3,000-frame low-res hashes are unchanged:
+
+```
+Alone 0xF4BDF79B  Lemmings 0x932C7722  Road Rash 0xEB31636F
+Space Ace 0xA2B49CF0  Wolfenstein 0xC21BB6A1
+```
+
+**Driver v10 changes.** Dense captures at 33,800-34,000 showed the loss was close
+traffic, not a wall: another racer filled the lookahead centre (0.43/0.07/0.17)
+while every v9 escape rule required a 0.6-wide opening. v10 adds:
+
+- Close-traffic coast/steer: centre < 0.2, one side in [0.3, 0.6), side
+  difference > 0.2 -> steer into the gap and lift. No brake: a 25-frame full
+  brake from speed 43 stopped the bike and got it busted.
+- Urgent preemption only for close traffic; ordinary obstacle steering stays on
+  the 16-frame decision interval. Applying every obstacle bias immediately
+  oversteered into a taxi at ~32,000.
+- Emergency-brake steer hold: with all lookahead fractions < 0.35, keep the last
+  steer and brake instead of chasing a `LineX` jump into the tree at 33,890.
+- Stopped/wreck restart: a signature over the left scenery (rows 96-156,
+  x 20-140) and the speed readout stays still for 40 frames -> hold B with
+  straight bars for 180 frames, then retrigger. The centre is excluded because
+  the rider animation reset the first signature. Manual probes: B alone
+  remounts (34,500 and 80,000 -> 52 mph); steering keeps the rider running.
+  A cyclic right/left search was tried and drove the 83,000 run into BUSTED
+  (`0x9F44FAA2`), so it was reverted.
+
+**Best run chain** (states are local, gitignored artifacts):
+
+```
+rr8-30k.state (30,000)
+  + 6,000  -> rr-v28-36000.state (36,000)
+  + 44,000 -> rr-v34-80000.state (80,000, PC 0x00098004, hash 0xD3309E17)
+  + 3,000  -> rr-v35-83000.state (83,000, PC 0x00091A70, hash 0x442D7D3D)
+  + 8,000  -> rr-v36-91000.state (91,000, PC 0x00085F48, hash 0x02ABE78E)
+```
+
+The 30k->36k and 36k->80k segments used earlier v10 revisions (right-steer crash
+restarts); the final throttle-only code was verified on 80k->83k and 83k->91k
+and reproduces the 91,000 state exactly:
+
+```powershell
+dotnet run -c Release --project src/ThreeDo.Cli -- run `
+  "E:\Panasonic 3DO\Road Rash (USA).chd" --bios bios\panafz1.bin `
+  --state-in artifacts\s2\rr-v35-83000.state --frames 8000 --autopilot road `
+  --frame-out artifacts\s2\rr-v43-91000.png `
+  --state-out artifacts\s2\rr-v43-91000.state --json
+```
+
+**Save/load at 91,000 frames:**
+
+- Live state: `PC 0x00085F48`, hash `0x02ABE78E`, `cov=0.93`, `lineX=197.9`.
+- Zero-frame load: `0x02ABE78E` (pixel-identical).
+- Two independent 120-frame autopilot continuations: both `PC 0x000973EC`,
+  hash `0x3F27B3D6`, `lineX=197.875`.
+
+**Remaining stops.**
+
+- A 100,000-frame continuation stays live through ~91,000, then pins at ~92,000:
+  `lineX` 229 -> NaN, `cov` 0.23 -> 0.27, lookahead 0.55/0.32/0.05, `RESTART`
+  cycling without motion. Throttle-only does not free it.
+- A clean final-code run from `rr8-30k.state` pins at the ~40,000 right-sidewalk
+  wreck (`rr-v37-40000.state`, image `rr-v37-40000.png`); the 91k chain predates
+  the final throttle-only policy on that segment.
+- A separate 45,500-frame path stopped after a CD load: reads 109053-109071,
+  seeks to 43877-43888, then only READ_ID (`cmd 0x83`) every 60 frames; all
+  button inputs leave the frame hash identical. This is a candidate for the same
+  CD-completion investigation as Wolfenstein's fresh-game load.
+
+**Telemetry.** Progress lines add `cov=<lower-band road fraction>` and
+`RESTART`; `run --json` adds `autopilotRoadCoverage`,
+`autopilotCrashRestart`, and `autopilotStaticFrames` alongside the v9 fields.
+
 #### CD disc-end fix (2026-10-23)
 
 `CdromDevice.InitCd` originally reproduced FreeDO's double-add of the 150-frame

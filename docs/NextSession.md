@@ -8,7 +8,10 @@ fires, and its save states roundtrip; Alone's in-game character is upright; Lemm
 renders its 640x480 high-resolution title; Space Ace plays its demo. The remaining
 work is scripted play, the Lemmings passcode entry sequence, screenshots/audio
 comparison, and documentation. This pass added RAM patches (`--poke`) and an
-experimental Road Rash road-following driver (`--autopilot road`).
+experimental Road Rash road-following driver (`--autopilot road`). The 2026-10-25
+late pass takes driver v10 to 91,000 live frames from the 80k/83k states (close
+traffic, urgent preemption, emergency steer hold, throttle-only wreck restart)
+and documents the remaining ~92,000/40,000 stops and a CD-load freeze.
 
 Read these first:
 
@@ -147,6 +150,78 @@ reproduces `0xE44B073D`; two 120-frame autopilot continuations both end at
 (`0x9F44FAA2`). The 5.5-mile city race is still **not finished**, and the
 remaining work is vision/control quality, not a pin-recovery rule.
 
+### 1.9 Road Rash driver v10: 91,000 live frames and a new stop state (2026-10-25)
+
+The v9 driver lost the first city race at ~34,000 frames. Dense captures at
+33,800-34,000 showed the actual causes were **close traffic**, not a wall:
+another racer filled the lookahead centre (0.43/0.07/0.17) while every existing
+rule required a 0.6-wide escape, so the bike ran straight into it. A full brake
+stopped the bike dead and got it busted; a coast/steer was the correct response.
+Driver v10 adds:
+
+- **Close-traffic escape.** Centre < 0.2, one side in [0.3, 0.6), side
+  difference > 0.2: steer into the gap and lift (not brake). This runs even when
+  `LineX` is NaN, because the lower-band run disappears exactly when the
+  obstacle is close.
+- **Urgent preemption only for close traffic.** Ordinary obstacle steering
+  stays on the 16-frame decision interval. Applying every obstacle bias
+  immediately oversteered into a taxi at ~32,000 in the clean 30k run.
+- **Emergency-brake steer hold.** With the road fully blocked and no side target
+  (all lookahead fractions < 0.35), keep the last steer and brake. The old path
+  chased a `LineX` that had jumped to 240 and turned into the tree at 33,890.
+- **Stopped/wreck restart.** A scene signature over the left scenery (rows
+  96-156, x 20-140) plus the speed readout stays still for 40 frames -> hold B
+  with straight bars for 180 frames, then retrigger if still stopped. The
+  signature deliberately excludes the centre/rider: the remount animation kept
+  resetting the first version. Manual probes showed B alone remounts (34,500 and
+  80,000 -> 52 mph) while steering keeps the rider running in place.
+- **Telemetry.** Progress adds `cov=<lower-band road fraction>` and `RESTART`;
+  `run --json` adds `autopilotRoadCoverage`, `autopilotCrashRestart`, and
+  `autopilotStaticFrames`.
+
+A cyclic right/left escape search on later restart attempts was tried and
+**reverted**: it drove the 83,000-frame rider run into the BUSTED screen
+(`0x9F44FAA2`). The throttle-only policy is the proven one.
+
+Best run chain (local states; not a single command):
+
+```
+rr8-30k.state (30,000)
+  + 6,000 -> rr-v28-36000.state (36,000)
+  + 44,000 -> rr-v34-80000.state (80,000, PC 0x00098004, hash 0xD3309E17)
+  + 3,000 -> rr-v35-83000.state (83,000, PC 0x00091A70, hash 0x442D7D3D)
+  + 8,000 -> rr-v36-91000.state (91,000, PC 0x00085F48, hash 0x02ABE78E)
+```
+
+The 30k->36k and 36k->80k segments used earlier v10 revisions (right-steer
+crash restarts); the final throttle-only code was verified on the 80k->83k and
+83k->91k segments and reproduces the 91,000 state exactly. A clean final-code run
+from 30,000 currently pins at the ~40,000 right-sidewalk wreck
+(`rr-v37-40000.state`, image `rr-v37-40000.png`); that is the next thing to fix,
+not a reason to lose the 91,000 result.
+
+Roundtrip at 91,000:
+
+- Live state: `PC 0x00085F48`, hash `0x02ABE78E`,
+  `cov=0.93`, `lineX=197.9`.
+- Zero-frame load: `0x02ABE78E` (pixel-identical).
+- Two independent 120-frame autopilot continuations: both `PC 0x000973EC`,
+  hash `0x3F27B3D6`.
+
+A 100,000-frame continuation stays live through ~91,000 and then pins at
+~92,000: `lineX` 229 -> NaN, `cov` 0.23 -> 0.27, lookahead 0.55/0.32/0.05, and
+`RESTART` cycles without moving. Throttle-only does not free that pin. This is a
+real remaining stop, but it is 51,000 frames past the v9 BUSTED result, so the
+next session should capture the first 50 frames of that stop before changing
+the restart policy again.
+
+A separate terminal stop was seen on one 45,500-frame path: the game reads CD
+sectors 109053-109071, then seeks back to 43877-43888, and afterwards only polls
+READ_ID (`cmd 0x83`) every 60 frames. The frame hash stays identical and every
+button input is ignored. This looks like a post-race/section load waiting for a
+CD completion that our path does not deliver, and it is a candidate for the same
+CD-status investigation as Wolfenstein's fresh-game load.
+
 ---
 
 ## 2. Current evidence
@@ -212,13 +287,19 @@ advances the current presentation, which is why earlier probes concluded that `A
 taxi; the next obstacle still ends the run.
 
 `--autopilot road` is an experimental CLI driver that holds B and steers toward
-the gray road centre (target screen X 230). v9 adds a road-brightness ceiling,
+the gray road centre (target screen X 230). v9 added a road-brightness ceiling,
 detector-upset holds, closing-side steering, sharp-bend braking, urban throttle
-pacing, a coast floor, and faster recovery. It keeps live road detection to about
-36,500 frames, but it does not yet finish the race: the bike leaves the road and
-the race ends in `BUSTED`. The earlier "terminal pin" at ~34,000 frames was the
-`BUSTED` screen itself (see section 1.8). Unit tests cover the steering, obstacle,
-brake, pacing, and recovery contracts.
+pacing, a coast floor, and faster recovery. v10 adds close-traffic coast/steer,
+urgent close-traffic preemption, emergency-brake steer hold, and a stopped/wreck
+restart that holds B with straight bars until the scene moves. It reaches
+**91,000 live frames** from the 80k/83k states (PC `0x00085F48`, hash
+`0x02ABE78E`) and roundtrips there (zero-frame `0x02ABE78E`; two 120-frame
+continuations both `PC 0x000973EC` / `0x3F27B3D6`). It still does not finish a
+race: a 100,000-frame continuation pins at ~92,000 with lookahead
+0.55/0.32/0.05, and a clean final-code run from 30,000 pins at the ~40,000
+right-sidewalk wreck. The earlier "terminal pin" at ~34,000 frames was the
+`BUSTED` screen itself (see sections 1.8 and 1.9). Unit tests cover the steering,
+close-traffic, obstacle, brake, pacing, restart, and recovery contracts.
 
 ### Alone in the Dark
 
@@ -294,15 +375,19 @@ changing the DSP reload value. The 18,000-frame Wolfenstein gameplay capture is
   buffer is permuted (display order `77,76,75,74,7B,7A,79,78,7F,7E`; preview at
   `76`), not sequential at `0x96574`.
 - Road Rash: the control map is known (B accelerate, A brake, D-pad steer, C
-  attack, P pause). Driver v9 is traffic-aware (obstacle steer, wall avoidance,
+  attack, P pause). Driver v10 is traffic-aware (close-traffic coast/steer,
+  urgent preemption for close traffic, obstacle steer, wall avoidance,
   sharp-bend braking, closing-side crossover, emergency brake, narrow-canyon
   coasting, urban throttle pacing, coast floor, detector-upset hold, side-based
-  stuck recovery, low-band centre at rows 190-214, road brightness <= 120; 572
-  tests pass). It keeps road detection to ~36,500 frames, but the 5.5-mile city
-  race is still NOT finished: the bike leaves the road and the race ends in
-  `BUSTED`. The previous "terminal wall pin ~34,000" was the `BUSTED` screen, not
-  a physics wedge - no input resumes a lost race. Next: improve vision/control
-  (lane tracking through bends, police/traffic avoidance) rather than pin recovery.
+  stuck recovery, stopped/wreck throttle-only restart, low-band centre at rows
+  190-214, road brightness <= 120; 578 tests pass). It reaches 91,000 live
+  frames from the 80k/83k states and roundtrips there, but the 5.5-mile city
+  race is still NOT finished: the 100k continuation pins at ~92,000, and a clean
+  final-code run from 30,000 pins at the ~40,000 right-sidewalk wreck. The
+  previous "terminal wall pin ~34,000" was the `BUSTED` screen, not a physics
+  wedge - no input resumes a lost race. Next: capture the first 50 frames of the
+  ~92,000 pin and add one side-search rule that does not regress the 80k rider
+  run; do not return to pin-recovery-only work.
 - Space Ace: start the interactive game from the demo (P/X are the current leads)
   and verify FMV/audio sync.
 
@@ -339,9 +424,11 @@ changing the DSP reload value. The 18,000-frame Wolfenstein gameplay capture is
 - [x] Road Rash's race renders correctly and runs past 60,000 frames.
 - [x] The high-resolution 640x480 renderer matches Lemmings' title reference.
 - [x] The Lemmings passcode confirm path is complete (Fun 4 gameplay + roundtrip).
-- [ ] The Road Rash city race is finished (driver avoids traffic/walls and recovers;
-  currently loses the race to `BUSTED` after ~36,500 live frames - the earlier
-  "pin" was the `BUSTED` screen) and the high-res pointer path is proven.
+- [ ] The Road Rash city race is finished. Driver v10 reaches 91,000 live frames
+  from the 80k/83k states (roundtrip `0x02ABE78E`) and no longer loses at
+  ~34,000, but a 100k continuation pins at ~92,000 and a clean final-code run
+  from 30,000 pins at the ~40,000 right-sidewalk wreck. The high-res pointer
+  path is still unproven.
 - [x] `dotnet build -c Release`, `dotnet test`, and `dotnet format --verify-no-changes` pass.
 ---
 
@@ -429,10 +516,11 @@ The data-track extraction command is in [`TestCorpus.md`](TestCorpus.md).
    `TestCorpus.md` 1.4). Pure D-pad typing of all ten letters was not needed.
 2. What obstacle-avoidance and wreck-recovery policy lets `--autopilot road` finish
    the 5.5-mile city race? Answered in part 2026-10-25: the "stuck bike" was the
-   `BUSTED` screen, so the problem is keeping the race alive (stay on the asphalt,
-   never stall) rather than recovering from a physics pin. Driver v9 keeps live
-   road detection to ~36,500 frames; the open question is lane tracking through
-   bends and police/traffic avoidance.
+   `BUSTED` screen, and v10 now survives 91,000 live frames. The remaining stops
+   are the ~92,000 wall/rider pin (lookahead 0.55/0.32/0.05) and the ~40,000
+   right-sidewalk wreck in a clean final-code 30k run. The next experiment is a
+   bounded capture of the first 50 frames of the 92k stop, then one side search
+   that is gated so it cannot touch the 80k rider-run phase.
 3. Does the 737 vs 735 samples/frame cadence cause audible pitch drift? Compare a
    captured WAV with Opera/hardware before changing `_dspPcnt`.
 4. Is the 191-sample Road Rash clipping in the game mix or in our DSP output path?

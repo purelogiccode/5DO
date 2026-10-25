@@ -393,12 +393,14 @@ internal static class Program
                 {
                     var autopilot = roadAutopilot is null
                         ? string.Empty
-                        : $" lineX={roadAutopilot.LineX:F1} steer={roadAutopilot.Steering}"
+                        : $" lineX={roadAutopilot.LineX:F1} cov={roadAutopilot.RoadCoverage:F2}"
+                        + $" steer={roadAutopilot.Steering}"
                         + $" obst={roadAutopilot.ObstacleSteer}"
                         + $" la={roadAutopilot.LookaheadLeft:F2}/{roadAutopilot.LookaheadCentre:F2}/{roadAutopilot.LookaheadRight:F2}"
                         + (roadAutopilot.UrbanPacing ? " PACE" : string.Empty)
                         + (roadAutopilot.DetectorUpset ? " UPSET" : string.Empty)
-                        + (roadAutopilot.RecoveryActive ? " RECOVERY" : string.Empty);
+                        + (roadAutopilot.RecoveryActive ? " RECOVERY" : string.Empty)
+                        + (roadAutopilot.CrashRestart ? " RESTART" : string.Empty);
                     Console.Error.WriteLine(
                         $"frame {machine.FramesExecuted} pc={machine.Cpu.ProgramCounter:x8} "
                         + $"dsp={machine.Dsp.ProgramCounter:x4} sema={machine.Dsp.SemaphoreStatus:x4}/{machine.Dsp.SemaphoreData:x4}"
@@ -479,9 +481,14 @@ internal static class Program
             autopilotLineX = roadAutopilot is null || double.IsNaN(roadAutopilot.LineX)
                 ? (double?)null
                 : roadAutopilot.LineX,
+            autopilotRoadCoverage = roadAutopilot is null || double.IsNaN(roadAutopilot.RoadCoverage)
+                ? (double?)null
+                : roadAutopilot.RoadCoverage,
             autopilotSteering = roadAutopilot?.Steering,
             autopilotObstacle = roadAutopilot?.ObstacleSteer,
             autopilotRecovery = roadAutopilot?.RecoveryActive,
+            autopilotCrashRestart = roadAutopilot?.CrashRestart,
+            autopilotStaticFrames = roadAutopilot?.StaticFrames,
             autopilotPacing = roadAutopilot?.UrbanPacing,
             autopilotUpset = roadAutopilot?.DetectorUpset,
             autopilotLookahead = roadAutopilot is null ? null : new[]

@@ -64,6 +64,20 @@ public sealed class RoadRashAutopilot
     /// <summary>Frames to hold straight and pace after a detector upset.</summary>
     public const int UpsetHoldFrames = 30;
 
+    /// <summary>Static frames before a stopped/wrecked bike is restarted.</summary>
+    public const int StoppedTriggerFrames = 40;
+
+    /// <summary>Frames to hold B after a stop.</summary>
+    public const int CrashRestartFrames = 180;
+
+    /// <summary>Average palette-index change treated as "the scene is still".</summary>
+    private const double StaticSceneThreshold = 2.0;
+
+    private int[]? _sceneSignature;
+    private int _staticFrames;
+    private long _crashRestartUntil;
+
+    private bool _urgentObstacle;
     private int _steer;
     private long _steerUntil;
     private long _nextDecision;
@@ -83,11 +97,20 @@ public sealed class RoadRashAutopilot
     /// <summary>Gets the most recent road-centre X, or <see cref="double.NaN"/>.</summary>
     public double LineX { get; private set; } = double.NaN;
 
+    /// <summary>Gets the fraction of lower-band pixels classified as road.</summary>
+    public double RoadCoverage { get; private set; } = double.NaN;
+
     /// <summary>Gets the current steering direction (-1 left, 0 centre, +1 right).</summary>
     public int Steering => _steer;
 
     /// <summary>Gets whether stuck recovery is currently steering away from a wall.</summary>
     public bool RecoveryActive { get; private set; }
+
+    /// <summary>Gets whether a stopped/wrecked bike is being restarted.</summary>
+    public bool CrashRestart { get; private set; }
+
+    /// <summary>Gets the number of consecutive frames the scene has been still.</summary>
+    public int StaticFrames => _staticFrames;
 
     /// <summary>Gets the obstacle-avoidance bias (-1 left, 0 none, +1 right).</summary>
     public int ObstacleSteer { get; private set; }
@@ -119,8 +142,9 @@ public sealed class RoadRashAutopilot
     /// <returns>The controller state for the next frame.</returns>
     public ControllerState Update(VdlFrame frame, long frameNumber)
     {
-        LineX = FindRoadCenter(frame);
-        (ObstacleSteer, EmergencyBrake, Caution) = FindObstacleState(frame, LineX);
+        LineX = FindRoadCenter(frame, out var coverage);
+        RoadCoverage = coverage;
+        (ObstacleSteer, EmergencyBrake, Caution, _urgentObstacle) = FindObstacleState(frame, LineX);
         (LookaheadLeft, LookaheadCentre, LookaheadRight) = FindLookaheadFractions(frame);
         UrbanPacing = !double.IsNaN(LineX)
             && !double.IsNaN(LookaheadCentre)
@@ -128,11 +152,40 @@ public sealed class RoadRashAutopilot
             && Math.Min(LookaheadLeft, LookaheadRight) < 0.6;
         UpdateUpsetTracking(frameNumber);
         UpdateStuckTracking(frame, frameNumber);
+        UpdateStopTracking(frame, frameNumber);
 
-        if (RecoveryActive && frameNumber < _recoveryUntil)
+        if (CrashRestart)
+        {
+            // This is the wreck/remount or rider-running state, not a racing
+            // line. Hold B with straight bars: manual probes showed B alone
+            // remounts (34,500 and 80,000 -> 52 mph), while steering keeps
+            // the rider running in place or drives into the wall. A cyclic
+            // right/left search was tried and drove the 83,000 run into the
+            // BUSTED screen; throttle-only took it to 91,000 live frames.
+            RecoveryActive = false;
+            _steer = 0;
+            _steerUntil = frameNumber + SteerHoldFrames;
+            _nextDecision = frameNumber + 4;
+        }
+        else if (RecoveryActive && frameNumber < _recoveryUntil)
         {
             _steer = _recoverySteer;
             _steerUntil = frameNumber + SteerHoldFrames;
+        }
+        else if (ObstacleSteer != 0 && _urgentObstacle)
+        {
+            // Urgent close traffic: the lookahead says the centre is blocked
+            // and only a narrow side opening remains. Apply the escape
+            // immediately instead of waiting for the normal decision
+            // interval. From 33,801-33,886 the other racer kept the old
+            // interval straight for 6-16 frames at a time, so the bike still
+            // drifted into it. Keep ordinary obstacle steering on the v9
+            // interval: applying every obstacle bias immediately oversteered
+            // into a taxi at ~32,000 in the clean 30k run.
+            RecoveryActive = false;
+            _steer = ObstacleSteer;
+            _steerUntil = frameNumber + SteerHoldFrames;
+            _nextDecision = frameNumber + 4;
         }
         else if (DetectorUpset)
         {
@@ -144,6 +197,17 @@ public sealed class RoadRashAutopilot
             _steer = 0;
             _steerUntil = frameNumber + SteerHoldFrames;
             _nextDecision = Math.Max(_nextDecision, frameNumber + 4);
+        }
+        else if (EmergencyBrake && ObstacleSteer == 0)
+        {
+            // The road ahead is fully blocked and no side is open enough to
+            // aim for. Keep the last avoidance steer and brake; do not chase
+            // a LineX that has just locked onto the tree or wall that caused
+            // the block. At 33,890 LineX jumped to 240 and the old path
+            // steered right into the trunk while braking.
+            RecoveryActive = false;
+            _steerUntil = frameNumber + SteerHoldFrames;
+            _nextDecision = frameNumber + 4;
         }
         else
         {
@@ -201,7 +265,13 @@ public sealed class RoadRashAutopilot
         }
 
         ControllerButton buttons;
-        if (RecoveryActive && frameNumber < _recoveryUntil
+        if (CrashRestart)
+        {
+            // A stopped bike is caught and busted; get it rolling before
+            // resuming obstacle/pacing logic.
+            buttons = ControllerButton.B;
+        }
+        else if (RecoveryActive && frameNumber < _recoveryUntil
             && frameNumber - _recoveryStart < RecoveryBrakeFrames)
         {
             // Wedged against a wall with the throttle pinned only digs in:
@@ -266,10 +336,12 @@ public sealed class RoadRashAutopilot
         return State;
     }
 
-    private static double FindRoadCenter(VdlFrame frame)
+    private static double FindRoadCenter(VdlFrame frame, out double coverage)
     {
         var total = 0.0;
         var rows = 0;
+        var totalPixels = 0;
+        var roadPixels = 0;
         var bottom = Math.Min(LookAheadBottom, frame.Lines.Length);
         var top = Math.Min(RoadMeasureTop, bottom);
         for (var y = top; y < bottom; y += 2)
@@ -281,8 +353,10 @@ public sealed class RoadRashAutopilot
             var runStart = -1;
             for (var x = 20; x < width; x++)
             {
+                totalPixels++;
                 if (IsRoadPixel(line, x))
                 {
+                    roadPixels++;
                     if (runStart < 0)
                     {
                         runStart = x;
@@ -318,19 +392,24 @@ public sealed class RoadRashAutopilot
             }
         }
 
+        coverage = totalPixels == 0 ? double.NaN : (double)roadPixels / totalPixels;
         return rows == 0 ? double.NaN : total / rows;
     }
 
     /// <summary>
     /// Checks the lookahead band above the road-measure area for traffic directly
-    /// ahead. Returns the steer bias (-1/0/+1) and whether to emergency-brake.
+    /// ahead. Returns the steer bias (-1/0/+1), emergency-brake and caution
+    /// flags, and whether the obstacle is urgent close traffic that must
+    /// preempt the normal decision interval.
     /// </summary>
-    private static (int Steer, bool Brake, bool Caution) FindObstacleState(VdlFrame frame, double lineX)
+    private static (int Steer, bool Brake, bool Caution, bool Urgent) FindObstacleState(
+        VdlFrame frame,
+        double lineX)
     {
         var (leftFraction, centreFraction, rightFraction) = FindLookaheadFractions(frame);
         if (double.IsNaN(leftFraction))
         {
-            return (0, false, false);
+            return (0, false, false, false);
         }
 
         // Fully blocked ahead while still on the road: brake instead of ramming it.
@@ -340,7 +419,7 @@ public sealed class RoadRashAutopilot
             && leftFraction < 0.35
             && rightFraction < 0.35)
         {
-            return (0, true, false);
+            return (0, true, false, false);
         }
 
         // Narrow walled canyon with road ahead: coast instead of accelerating hard.
@@ -349,7 +428,7 @@ public sealed class RoadRashAutopilot
             && leftFraction < 0.4
             && rightFraction < 0.4)
         {
-            return (0, false, true);
+            return (0, false, true, false);
         }
 
         // Steering toward a wall while the other side is open: steer away instead.
@@ -359,12 +438,12 @@ public sealed class RoadRashAutopilot
         {
             if (lineX < TargetRoadCenterX - 8 && leftFraction < 0.4 && rightFraction > 0.7)
             {
-                return (1, false, false);
+                return (1, false, false, false);
             }
 
             if (lineX > TargetRoadCenterX + 8 && rightFraction < 0.4 && leftFraction > 0.7)
             {
-                return (-1, false, false);
+                return (-1, false, false, false);
             }
         }
 
@@ -377,7 +456,23 @@ public sealed class RoadRashAutopilot
             && Math.Max(leftFraction, rightFraction) > 0.8
             && Math.Min(leftFraction, rightFraction) < 0.4)
         {
-            return (leftFraction > rightFraction ? -1 : 1, true, false);
+            return (leftFraction > rightFraction ? -1 : 1, true, false, false);
+        }
+
+        // Close traffic/tree fills the centre and one side, leaving only a
+        // narrow opening. At 33,820-33,850 the other racer produced lookahead
+        // 0.43/0.07/0.17 and then 0.44/0.00/0.00; every rule above needed a
+        // 0.6-wide opening, so the bike ran straight into the racer. Steer
+        // into the opening and lift the throttle while the gap is narrow.
+        // Do not brake: a 25-frame full brake from speed 43 stopped the bike
+        // dead, and a stopped bike is caught and busted. This runs even when
+        // LineX is NaN: the lower-band detector loses its 100-px run exactly
+        // when the obstacle is close enough to fill the view.
+        if (centreFraction < 0.2
+            && Math.Max(leftFraction, rightFraction) is >= 0.3 and < 0.6
+            && Math.Abs(leftFraction - rightFraction) > 0.2)
+        {
+            return (leftFraction > rightFraction ? -1 : 1, false, true, true);
         }
 
         // Closing side: steering toward a partially blocked side while the
@@ -388,12 +483,12 @@ public sealed class RoadRashAutopilot
         {
             if (lineX < TargetRoadCenterX - 8 && leftFraction < 0.6 && rightFraction > 0.8)
             {
-                return (1, false, true);
+                return (1, false, true, false);
             }
 
             if (lineX > TargetRoadCenterX + 8 && rightFraction < 0.6 && leftFraction > 0.8)
             {
-                return (-1, false, true);
+                return (-1, false, true, false);
             }
         }
 
@@ -401,7 +496,7 @@ public sealed class RoadRashAutopilot
             && Math.Max(leftFraction, rightFraction) > 0.6
             && Math.Abs(leftFraction - rightFraction) > 0.25)
         {
-            return (leftFraction > rightFraction ? -1 : 1, false, false);
+            return (leftFraction > rightFraction ? -1 : 1, false, false, false);
         }
 
         // Earlier wall anticipation: the centre is narrowing while one side is
@@ -411,10 +506,10 @@ public sealed class RoadRashAutopilot
             && Math.Max(leftFraction, rightFraction) > 0.6
             && Math.Abs(leftFraction - rightFraction) > 0.3)
         {
-            return (leftFraction > rightFraction ? -1 : 1, false, false);
+            return (leftFraction > rightFraction ? -1 : 1, false, false, false);
         }
 
-        return (0, false, false);
+        return (0, false, false, false);
     }
 
     /// <summary>
@@ -579,6 +674,110 @@ public sealed class RoadRashAutopilot
         _previousLineX = LineX;
     }
 
+    /// <summary>
+    /// Detects the wreck/remount and rider-running states from a still scene.
+    /// Steering while the rider is down keeps the bike pinned or running in
+    /// place; the manual probes showed B alone remounts at 34,500 and 80,000.
+    /// </summary>
+    private void UpdateStopTracking(VdlFrame frame, long frameNumber)
+    {
+        CrashRestart = frameNumber < _crashRestartUntil;
+
+        var signature = BuildSceneSignature(frame);
+        if (_sceneSignature is null)
+        {
+            _sceneSignature = signature;
+            return;
+        }
+
+        var difference = 0L;
+        for (var i = 0; i < signature.Length; i++)
+        {
+            difference += Math.Abs(signature[i] - _sceneSignature[i]);
+        }
+
+        var average = (double)difference / signature.Length;
+        if (average <= StaticSceneThreshold)
+        {
+            _staticFrames++;
+        }
+        else
+        {
+            _staticFrames = 0;
+            _sceneSignature = signature;
+        }
+
+        // A still scene while the driver is applying throttle means the bike
+        // is stopped, whether against a wall (35,000) or in the middle of an
+        // open road after a wreck (45,500). Do not gate on the road detector:
+        // it can call a wall "open road" and it can see a clear road while
+        // the rider stands beside a stopped bike.
+        if (frameNumber >= _crashRestartUntil
+            && !RecoveryActive
+            && _staticFrames >= StoppedTriggerFrames)
+        {
+            _crashRestartUntil = frameNumber + CrashRestartFrames;
+            _staticFrames = 0;
+            CrashRestart = true;
+        }
+    }
+
+    /// <summary>
+    /// Samples the road scene on a coarse grid. Palette indices are enough:
+    /// while riding, the road texture scrolls and the samples change; while
+    /// stopped or crashed, the same cells keep the same indices.
+    /// </summary>
+    private static int[] BuildSceneSignature(VdlFrame frame)
+    {
+        const int columns = 12;
+        const int rows = 6;
+        const int speedSamples = 12;
+        var signature = new int[(columns * rows) + speedSamples];
+        var index = 0;
+        // Sample the left scenery, not the centre where the rider runs back
+        // to the bike. The first version covered x=40-270 and the rider's run
+        // animation kept resetting the still-scene counter at 34,000.
+        for (var row = 0; row < rows; row++)
+        {
+            var y = 96 + (row * 12);
+            if (y >= frame.Lines.Length)
+            {
+                index += columns;
+                continue;
+            }
+
+            var line = frame.Lines[y];
+            var width = Math.Min(line.Width, line.PixelBuffer.Length);
+            for (var column = 0; column < columns; column++)
+            {
+                var x = 20 + (column * 10);
+                signature[index++] = x < width ? line.PixelBuffer[x] : 0;
+            }
+        }
+
+        // The speed readout is the most direct "is the bike moving" signal:
+        // it changes while riding and stays at 0 through a wreck or rider run.
+        for (var row = 0; row < 2; row++)
+        {
+            var y = 212 + (row * 12);
+            if (y >= frame.Lines.Length)
+            {
+                index += 6;
+                continue;
+            }
+
+            var line = frame.Lines[y];
+            var width = Math.Min(line.Width, line.PixelBuffer.Length);
+            for (var column = 0; column < 6; column++)
+            {
+                var x = 196 + (column * 12);
+                signature[index++] = x < width ? line.PixelBuffer[x] : 0;
+            }
+        }
+
+        return signature;
+    }
+
     private void UpdateStuckTracking(VdlFrame frame, long frameNumber)
     {
         if (RecoveryActive)
@@ -623,6 +822,10 @@ public sealed class RoadRashAutopilot
         var max = Math.Max(r, Math.Max(g, b));
         var min = Math.Min(r, Math.Min(g, b));
         var brightness = (r + g + b) / 3;
+        // Note: dark grass (41,65,49) also passes this filter. Requiring
+        // blue >= green was tried on 2026-10-25 but made the road detector
+        // lose the asphalt in the city and pinned the bike at ~45,000, so
+        // the proven v9/v10 brightness+chroma test is kept.
         return max - min <= 40 && brightness is >= 45 and <= 120;
     }
 }

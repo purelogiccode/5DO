@@ -40,7 +40,8 @@ This is the short, current answer to "where are we?" The detailed task list is i
   frame capture (`--capture-dir`/`--capture-every`), RAM patches at run start
   (`--poke ADDR=HEX`), an experimental Road Rash road-following driver
   (`--autopilot road`), and RAM dumps at trace stops. `run --json` reports the source
-  size and VDL modulo for mode/crop investigations.
+  size, VDL modulo, road coverage, and autopilot state for mode/crop and driver
+  investigations.
 - **Audio:** the DSP executes in every run, including headless runs with no host
   audio sink. The AudioFolio semaphore handshake works, instrument programs run, and
   the five-title corpus produces non-silent 44.1 kHz stereo WAV output (~737 samples
@@ -50,9 +51,10 @@ This is the short, current answer to "where are we?" The detailed task list is i
   `frame button[,button...]` lines for repeatable controller taps. Input has been
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene and menu), Lemmings (menu and passcode entry), and Space Ace (P/X).
-- **Tests:** 572 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 578 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage plus RAM-patch and Road Rash autopilot tests (road
-  steering, obstacle, closing-side, bend-brake, pacing, coast-floor, upset, and
+  steering, close traffic, urgent preemption, obstacle, emergency-brake hold,
+  closing-side, bend-brake, pacing, coast-floor, upset, stopped/wreck restart, and
   stuck-recovery contracts).
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   A win-x64 CLI publish has been smoke-tested.
@@ -69,7 +71,7 @@ on both sides. Opera is the bundled Windows `OperaCore` build in
 |---|---|---|
 | Lemmings (USA) | **Boots, renders, plays DSP audio**; reaches the title screen and the passcode screen; with `--high-res` the 640x480 title renders all four buttons and the full logo, matching the reference. The passcode screen uses A to type, B to confirm, auto-confirms at ten letters, and a 15-frame D-pad hold moves one key | Not re-tested this pass; expected to pass |
 | Space Ace (USA) | **Boots, renders, plays DSP audio**; ReadySoft player runs the animated demo past 12,000 frames with no runaway | **Plays the demo intro for 60 s, no runaway** |
-| Road Rash (USA) | **Boots, renders, plays DSP audio**; the 3D race renders correctly and the attract race runs past 60,000 frames with no allocator error; B accelerates, A brakes, the D-pad steers, C attacks, and P pauses; `--autopilot road` is an experimental road-following driver | **Renders the intro FMV, then a race** |
+| Road Rash (USA) | **Boots, renders, plays DSP audio**; the 3D race renders correctly and the attract race runs past 60,000 frames with no allocator error; B accelerates, A brakes, the D-pad steers, C attacks, and P pauses; `--autopilot road` v10 reaches 91,000 live frames from the 80k/83k states (roundtrip `0x02ABE78E`) but does not yet finish the race (~92k wall/rider pin; clean 30k runs pin at ~40k) | **Renders the intro FMV, then a race** |
 | Wolfenstein 3D (USA) | **Boots, renders, plays DSP audio**; A opens the preview menu, selecting a level starts a fresh game (FLOOR 1-1), the player can walk/turn/fire, and save/load roundtrips in-game | **Renders the intro for 60 s** |
 | Alone in the Dark (USA) | **Boots, renders, plays DSP audio**; reaches the in-game staircase/room with an upright character; D-pad/A change the scene and open the menu | **Renders the intro/loading for 60 s** |
 
@@ -115,9 +117,10 @@ walks/turns/fires, and its save states roundtrip; Alone in the Dark's in-game ch
 is upright and its menu is reachable; Lemmings completes a Fun 4 passcode
 (`HNLHCIOECW`) end-to-end into gameplay with save/load roundtrip, and its 640x480
 high-resolution title matches the reference; Space Ace plays its animated demo. The
-next pass should keep improving the Road Rash driver (v9 reaches ~36,500 live
-frames but loses the race to `BUSTED`; the old "wall pin" was the `BUSTED` screen)
-and capture a WAV/state/screenshot set for each title.
+next pass should keep improving the Road Rash driver (v10 reaches 91,000 live
+frames from the 80k/83k states, but the 100k continuation pins at ~92,000 and a
+clean final-code 30k run pins at ~40,000; the old "wall pin" was the `BUSTED`
+screen) and capture a WAV/state/screenshot set for each title.
 
 ---
 
@@ -190,13 +193,14 @@ corpus games playable" rather than "the v1 feature set is complete", add another
 
 1. **Complete a race/level in each title.** The renderer and input path are now
    validated: Road Rash's race renders correctly and its controls are mapped (B
-   accelerate, A brake, D-pad steer, `--autopilot road` v9 keeps live road
-   detection to ~36,500 frames), Wolfenstein starts a fresh game and supports
+   accelerate, A brake, D-pad steer, `--autopilot road` v10 reaches 91,000 live
+   frames from the 80k/83k states), Wolfenstein starts a fresh game and supports
    walk/turn/fire, Alone's in-game character is upright, Lemmings reaches its
    passcode screen (A types, B confirms, ten letters auto-confirm), and Space Ace
    plays its demo. The remaining work is scripted play: a Road Rash traffic-aware
    driver that finishes a race (the earlier "pin" was the `BUSTED` race-over
-   screen), a Lemmings ten-letter entry sequence, and an Alone
+   screen; v10 recovers rider-run and wall stops but still pins at ~92k and in a
+   clean 30k->40k run), a Lemmings ten-letter entry sequence, and an Alone
    movement/inventory sequence. Record the exact scripts and frame numbers in
    [`TestCorpus.md`](TestCorpus.md).
 2. **Save states and screenshots in-game.** Wolfenstein already roundtrips a live

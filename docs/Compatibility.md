@@ -249,7 +249,7 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 |---|---|---|---|---|---|---|---|---|---|---|
 | Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | **Fun 4 gameplay via passcode (`HNLHCIOECW`) with save/load roundtrip** | Non-silent DSP output | **Works**: A types, B confirms, ten letters auto-confirm, D-pad moves the selection; entry is permuted across `0x96574-7B,7E-7F` | Passcode `HNLHCIOECW` accepted (`Code for 1` / `Rating = Fun`); gameplay at 21,640 frames (`0x18F38B4D`) roundtrips; 640x480 high-res title matches the reference | Not re-tested this pass |
 | Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass** | **Animated demo past 12,000 frames** | Non-silent DSP output | P/X change the player state | Former frame-681 null-buffer runaway is gone; the demo FMV renders | Demo intro 60 s, no runaway |
-| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **3D race renders and runs past 60,000 frames** | Non-silent DSP output; 10 s peak 32768, RMS ~9.1k | **B accelerates, A brakes, D-pad steers, C attacks, P pauses**; `--autopilot road` v9 keeps live road detection to ~36,500 frames (road-brightness ceiling, detector-upset hold, closing-side steering, sharp-bend braking, urban pacing, coast floor) but does not finish a race | The CEL transposition fix removed the VRAM `AllocMem` error; the earlier "wall pin" was the race-over `BUSTED` screen, not a physics wedge | Intro FMV, then a race |
+| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **3D race renders and runs past 60,000 frames; v10 autopilot reaches 91,000 live frames from the 80k/83k states and roundtrips** | Non-silent DSP output; 10 s peak 32768, RMS ~9.1k | **B accelerates, A brakes, D-pad steers, C attacks, P pauses**; `--autopilot road` v10 adds close-traffic coast/steer, urgent preemption, emergency-brake steer hold, and a throttle-only wreck/rider-run restart; still pins at ~92,000 and in a clean 30k->40k run | The CEL transposition fix removed the VRAM `AllocMem` error; the earlier "wall pin" was the race-over `BUSTED` screen, not a physics wedge. A separate 45,494-frame path stopped after a CD load and only polled READ_ID | Intro FMV, then a race |
 | Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Pass** | **Fresh game (FLOOR 1-1) and save/load roundtrip** | Non-silent DSP output; 10 s peak 30743, RMS ~5.5k | **Works**: A opens the menu, D-pad/A navigate and fire | From a 12,000-frame demo state, A opens the preview menu; selecting a level starts a fresh game | Intro 60 s |
 | Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Pass** | **In-game staircase/room with an upright character** | Non-silent DSP output | **Works**: D-pad/A change the scene and open the menu | The CEL transposition fix restored the character's upright orientation | Intro/loading 60 s |
 
@@ -280,16 +280,30 @@ transposition fixes are described above; input results come from `--input-script
 - **Road Rash:** the attract race renders correctly from ~17,000 frames. The 3DO
   controls are B accelerate, A brake, D-pad left/right steer, C attack, and P pause.
   Holding B starts a player race; a hard left around frame 31,000 clears the first
-  oncoming taxi. `--autopilot road` v9 steers to the road centre measured low
+  oncoming taxi. `--autopilot road` v9 steered to the road centre measured low
   (rows 190-214) with lookahead obstacle steering, closing-side crossover,
   sharp-bend braking, wall avoidance, emergency braking, urban throttle pacing, a
   coast floor, and stuck recovery. The previously reported terminal wall pin at
   ~34,000 frames is the race-over **`BUSTED`** screen: from `rr-auto-v8.state`,
   no-input plus a `B` proves the plainclothes-cop screen, and no input resumes a
-  lost race. v9 keeps live road detection to ~36,500 frames but does not finish
-  the 5.5-mile city race; it leaves the road and the race ends. The remaining work
-  is vision/control quality (lane tracking through bends, police/traffic
-  avoidance), not pin recovery.
+  lost race. v10 adds a close-traffic coast/steer rule (the 33,820 racer filled
+  the centre while every old rule required a 0.6-wide escape), urgent preemption
+  only for close traffic (applying every obstacle bias immediately oversteered
+  into a taxi at ~32,000), an emergency-brake steer hold (the old path chased a
+  lineX jump into the 33,890 tree), and a stopped/wreck restart that holds B with
+  straight bars for 180 frames based on a left-scenery + speed-readout signature.
+  The restart recovers the rider-running phase (34,500/80,000 -> 52 mph) and wall
+  stops, but a cyclic right/left search was tried and drove the 83,000 run into
+  `BUSTED` (`0x9F44FAA2`), so throttle-only is the proven policy. Best evidence:
+  91,000 live frames (`PC 0x00085F48`, hash `0x02ABE78E`, `cov=0.93`), zero-frame
+  `0x02ABE78E`, two 120-frame continuations both `PC 0x000973EC` / `0x3F27B3D6`.
+  The race is still not finished: a 100k continuation pins at ~92,000
+  (lookahead 0.55/0.32/0.05) and a clean final-code 30k run pins at the ~40,000
+  right-sidewalk wreck. A separate 45,500-frame path stopped after a CD load
+  (sectors 109053-109071, then 43877-43888) and only polled READ_ID (`cmd 0x83`);
+  every button input left the hash unchanged. The remaining work is a bounded
+  side-search for the ~92k/40k stops that does not regress the 80k rider run, and
+  the CD-load stop if it recurs.
 - **Wolfenstein 3D:** from the 12,000-frame demo state, `A` opens the Select Previews
   menu; D-pad/A navigate to Select a Level and start a fresh game at FLOOR 1-1 with
   `SCORE 0000000`. From a live 60-frame state, two independent 120-frame continuations

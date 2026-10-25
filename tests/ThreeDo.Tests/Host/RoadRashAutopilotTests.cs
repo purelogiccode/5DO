@@ -19,6 +19,7 @@ public sealed class RoadRashAutopilotTests
         Assert.True(state.IsDown(ControllerButton.Left));
         Assert.False(state.IsDown(ControllerButton.Right));
         Assert.Equal(160, autopilot.LineX);
+        Assert.True(autopilot.RoadCoverage > 0.5);
     }
 
     [Fact]
@@ -76,8 +77,9 @@ public sealed class RoadRashAutopilotTests
         OpenLookahead(frame);
 
         ControllerState state = default;
-        for (long f = 0; f < RoadRashAutopilot.StuckTriggerFrames + 40; f += 4)
+        for (long f = 0; f < RoadRashAutopilot.StuckTriggerFrames + 40; f++)
         {
+            ShimmerLookahead(frame, f);
             state = autopilot.Update(frame, f);
         }
 
@@ -137,6 +139,139 @@ public sealed class RoadRashAutopilotTests
     }
 
     [Fact]
+    public void Update_BrakesAndSteersIntoANarrowGapAroundCloseTraffic()
+    {
+        var autopilot = new RoadRashAutopilot();
+        // A racer fills the centre and right while only a narrow strip of the
+        // left lookahead is open (0.43/0.00/0.00): lift and aim for the gap.
+        // The old obstacle rule needed a 0.6-wide opening, so the driver ran
+        // straight into the racer at ~33,850. Braking here stopped the bike
+        // dead and got it busted, so this rule only lifts the throttle.
+        var frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
+        NarrowLookahead(frame, leftRoad: (120, 150), centreRoad: (0, 0), rightRoad: (0, 0));
+
+        var state = autopilot.Update(frame, 0);
+
+        Assert.Equal(-1, autopilot.ObstacleSteer);
+        Assert.True(autopilot.Caution);
+        Assert.False(autopilot.EmergencyBrake);
+        Assert.True(state.IsDown(ControllerButton.Left));
+        Assert.False(state.IsDown(ControllerButton.A));
+        Assert.False(state.IsDown(ControllerButton.B));
+    }
+
+    [Fact]
+    public void Update_AppliesObstacleSteeringWithoutWaitingForTheDecisionInterval()
+    {
+        var autopilot = new RoadRashAutopilot();
+        // First decision: road left of target, so the normal 16-frame
+        // decision interval is running.
+        var first = MakeRoadFrame(roadLeft: 60, roadRight: 260);
+        OpenLookahead(first);
+        autopilot.Update(first, 0);
+
+        // Four frames later an obstacle fills the left and centre while the
+        // right has a narrow opening. The old code ignored ObstacleSteer
+        // until the interval expired, which let the bike drift into the
+        // racer/tree at 33,801-33,886.
+        var second = MakeRoadFrame(roadLeft: 130, roadRight: 330);
+        NarrowLookahead(second, leftRoad: (0, 0), centreRoad: (0, 0), rightRoad: (250, 280));
+        var state = autopilot.Update(second, 4);
+
+        Assert.Equal(1, autopilot.ObstacleSteer);
+        Assert.True(state.IsDown(ControllerButton.Right));
+        Assert.False(state.IsDown(ControllerButton.Left));
+    }
+
+    [Fact]
+    public void Update_HoldsTheEscapeSteerWhileEmergencyBraking()
+    {
+        var autopilot = new RoadRashAutopilot();
+        // Narrow right-side opening with the centre blocked: escape right.
+        var first = MakeRoadFrame(roadLeft: 130, roadRight: 330);
+        NarrowLookahead(first, leftRoad: (0, 0), centreRoad: (0, 0), rightRoad: (250, 310));
+        var firstState = autopilot.Update(first, 0);
+        Assert.True(autopilot.EmergencyBrake);
+        Assert.True(firstState.IsDown(ControllerButton.Right));
+
+        // Fully blocked ahead, same lower-band road: brake and keep the last
+        // escape steer instead of chasing the lower-band centre (which is
+        // already at the target here) back to straight.
+        var second = MakeRoadFrame(roadLeft: 130, roadRight: 330);
+        BlockLookahead(second, x0: 120, x1: 310);
+        var state = autopilot.Update(second, 20);
+
+        Assert.True(autopilot.EmergencyBrake);
+        Assert.True(state.IsDown(ControllerButton.A));
+        Assert.True(state.IsDown(ControllerButton.Right));
+        Assert.False(state.IsDown(ControllerButton.Left));
+    }
+
+    [Fact]
+    public void Update_RestartsAStoppedBikeWithThrottleOnly()
+    {
+        var autopilot = new RoadRashAutopilot();
+        // Wreck/remount view: the scene is still and the road ahead is
+        // blocked. Manual probes showed B alone remounts (34,500 and 80,000
+        // -> 52 mph); steering kept the rider running in place or drove into
+        // the wall, so the restart holds B with straight bars.
+        var frame = MakeRoadFrame(roadLeft: 40, roadRight: 200);
+        BlockLookahead(frame, x0: 120, x1: 310);
+
+        ControllerState state = default;
+        for (long f = 0; f <= RoadRashAutopilot.StoppedTriggerFrames + 5; f++)
+        {
+            state = autopilot.Update(frame, f);
+        }
+
+        Assert.True(autopilot.CrashRestart);
+        Assert.True(state.IsDown(ControllerButton.B));
+        Assert.False(state.IsDown(ControllerButton.A));
+        Assert.False(state.IsDown(ControllerButton.Left));
+        Assert.False(state.IsDown(ControllerButton.Right));
+    }
+
+    [Fact]
+    public void Update_DoesNotRestartWhileTheSceneIsMoving()
+    {
+        var autopilot = new RoadRashAutopilot();
+        // A moving view with open road is a normal race: the stopped-scene
+        // detector must not override the driver just because the fixture is
+        // otherwise stable.
+        var frame = MakeRoadFrame(roadLeft: 140, roadRight: 320);
+        OpenLookahead(frame);
+
+        for (long f = 0; f <= RoadRashAutopilot.StoppedTriggerFrames + 40; f++)
+        {
+            ShimmerLookahead(frame, f);
+            autopilot.Update(frame, f);
+        }
+
+        Assert.False(autopilot.CrashRestart);
+    }
+
+    [Fact]
+    public void Update_RestartsAfterStoppingOnOpenRoad()
+    {
+        var autopilot = new RoadRashAutopilot();
+        // At 45,500 the bike stopped in the middle of the road after a
+        // wreck; the road ahead looked open (0.57/0.99/0.93) and the old
+        // gate kept the driver pacing forever. A still scene with throttle
+        // applied is enough to restart.
+        var frame = MakeRoadFrame(roadLeft: 140, roadRight: 320);
+        OpenLookahead(frame);
+
+        ControllerState state = default;
+        for (long f = 0; f <= RoadRashAutopilot.StoppedTriggerFrames + 5; f++)
+        {
+            state = autopilot.Update(frame, f);
+        }
+
+        Assert.True(autopilot.CrashRestart);
+        Assert.True(state.IsDown(ControllerButton.B));
+    }
+
+    [Fact]
     public void Update_RecoveryBrakesBeforeReapplyingThrottle()
     {
         var autopilot = new RoadRashAutopilot();
@@ -146,8 +281,9 @@ public sealed class RoadRashAutopilotTests
         OpenLookahead(frame);
 
         ControllerState state = default;
-        for (long f = 0; f <= RoadRashAutopilot.StuckTriggerFrames + 10; f += 2)
+        for (long f = 0; f <= RoadRashAutopilot.StuckTriggerFrames + 10; f++)
         {
+            ShimmerLookahead(frame, f);
             state = autopilot.Update(frame, f);
         }
 
@@ -159,8 +295,9 @@ public sealed class RoadRashAutopilotTests
 
         for (long f = RoadRashAutopilot.StuckTriggerFrames + 12;
             f <= RoadRashAutopilot.StuckTriggerFrames + RoadRashAutopilot.RecoveryBrakeFrames + 20;
-            f += 2)
+            f++)
         {
+            ShimmerLookahead(frame, f);
             state = autopilot.Update(frame, f);
         }
 
@@ -292,6 +429,11 @@ public sealed class RoadRashAutopilotTests
             line.ClutR[1] = 90;
             line.ClutG[1] = 90;
             line.ClutB[1] = 90;
+            // A second road colour used to animate a synthetic moving scene
+            // without changing the road fractions.
+            line.ClutR[10] = 90;
+            line.ClutG[10] = 90;
+            line.ClutB[10] = 90;
         }
 
         for (var y = 120; y < 220; y++)
@@ -316,6 +458,40 @@ public sealed class RoadRashAutopilotTests
             for (var x = x0; x < x1; x++)
             {
                 line.PixelBuffer[x] = 0;
+            }
+
+            line.Width = 320;
+        }
+    }
+
+    /// <summary>
+    /// Alternates the lookahead band between two road colours so the scene
+    /// signature changes as it would while riding. Both colours are road, so
+    /// the measured fractions and lower-band centre are unaffected.
+    /// </summary>
+    private static void ShimmerLookahead(VdlFrame frame, long frameNumber)
+    {
+        var index = (ushort)(frameNumber % 2 == 0 ? 1 : 10);
+        for (var y = 120; y < 150; y++)
+        {
+            var line = frame.Lines[y];
+            for (var x = 120; x < 310; x++)
+            {
+                line.PixelBuffer[x] = index;
+            }
+
+            line.Width = 320;
+        }
+
+        // The stopped-scene signature samples the left scenery (rows
+        // 96-156, x 20-140); animate that too so a moving test view never
+        // looks like a wreck.
+        for (var y = 96; y <= 156; y += 12)
+        {
+            var line = frame.Lines[y];
+            for (var x = 20; x < 140; x++)
+            {
+                line.PixelBuffer[x] = index;
             }
 
             line.Width = 320;
