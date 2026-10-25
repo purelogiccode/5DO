@@ -3,7 +3,7 @@
 **Status:** target definition and implementation baseline (2026-10-25). The desktop
 path now has a dedicated 60 Hz core thread, a two-stage palette/scale presenter,
 immutable texture storage with per-frame `TexSubImage2D`, cached uniform locations,
-full sharp-bilinear and CRT scanline/aperture filters, an opt-in bounded disc
+full sharp-bilinear and CRT scanline/aperture/curvature/vignette filters, an opt-in bounded disc
 prefetch cache, and a real benchmark harness with p50/p95/p99 and per-stage
 allocations. CPU-side frame cost is ~1.25-1.6 ms, leaving ~15 ms of headroom at
 60 Hz; the synthetic steady state is allocation-free. Manual DPI validation, the

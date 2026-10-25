@@ -1007,9 +1007,9 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - **Accurate:** nearest, pixel-perfect, integer scaling.
   - **Nearest:** nearest with arbitrary scale/letterbox.
   - **Sharp-bilinear:** default enhanced mode; full Themaister/rsn8887 sharp-bilinear with hardware bilinear finishing.
-  - **CRT:** scanlines and aperture mask are implemented; curvature/bloom remain (opt-in; warn at 4K).
+  - **CRT:** scanlines, aperture mask, barrel curvature, and vignette are implemented; bloom remains (opt-in; warn at 4K).
   - **xBR/HQx family:** multi-pass GPU filters remain (opt-in; benchmark at 4K before enabling).
-  - Implemented accurate/nearest, full sharp-bilinear, and CRT scanlines/aperture. CRT curvature/bloom and xBR/HQx passes remain.
+  - Implemented accurate/nearest, full sharp-bilinear, and CRT scanlines/aperture/curvature/vignette. CRT bloom and xBR/HQx passes remain.
   - Filter settings persist per game/global in the host settings layer (M9.5).
 - [~] **M9R.5 Presentation.**
   - Aspect ratio: 4:3, integer, stretch, custom.
