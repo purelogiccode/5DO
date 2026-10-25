@@ -419,6 +419,34 @@ public partial class MainWindow : Window, IDisposable
         StatusText.Text = "Settings saved.";
     }
 
+    private async void OnSaveSlots(object? sender, RoutedEventArgs e)
+    {
+        var window = new SaveSlotsWindow(
+            _slots,
+            slot =>
+            {
+                if (_machine is null)
+                {
+                    return null;
+                }
+
+                SaveStateSlotInfo? result = null;
+                _runner!.Invoke(() => result = _slots.Save(_machine, _gameId, _gameName, slot));
+                return result;
+            },
+            slot =>
+            {
+                if (_machine is not null)
+                {
+                    _runner!.Invoke(() => _slots.Load(_machine, slot));
+                }
+            },
+            slot => _slots.Delete(slot));
+        await window.ShowDialog(this);
+        PersistSlot();
+        UpdateSlotText();
+    }
+
     private async void OnInputBindings(object? sender, RoutedEventArgs e)
     {
         var window = new InputBindingsWindow(_settings.Input.Players[0]);

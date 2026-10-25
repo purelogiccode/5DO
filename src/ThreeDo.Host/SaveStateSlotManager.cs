@@ -27,7 +27,17 @@ public sealed record SaveStateSlotInfo(
     DateTimeOffset? SavedAtUtc,
     long FramesExecuted,
     long FileSize,
-    string Error);
+    string Error)
+{
+    /// <summary>Gets the one-based slot number used by the UI.</summary>
+    public int DisplaySlot => Slot + 1;
+
+    /// <summary>Gets the game name, or a placeholder for an unnamed state.</summary>
+    public string DisplayName => string.IsNullOrWhiteSpace(GameName) ? "(unnamed)" : GameName;
+
+    /// <summary>Gets the local save time, or an empty string when metadata is missing.</summary>
+    public string DisplaySavedAt => SavedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty;
+}
 
 /// <summary>
 /// Manages numbered quick-save slots under one directory.

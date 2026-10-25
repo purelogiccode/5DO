@@ -1,0 +1,37 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:host="using:ThreeDo.Host"
+        x:Class="ThreeDo.Frontend.Avalonia.Views.SaveSlotsWindow"
+        Title="Save Slots"
+        Width="720" Height="520"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="12">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="6">
+            <Button x:Name="SaveCurrentButton" Content="Save Current" Click="OnSaveCurrent" />
+            <Button x:Name="LoadButton" Content="Load" Click="OnLoad" />
+            <Button x:Name="DeleteButton" Content="Delete" Click="OnDelete" />
+            <Button x:Name="RefreshButton" Content="Refresh" Click="OnRefresh" />
+        </StackPanel>
+
+        <ListBox x:Name="SlotList" Grid.Row="1" Margin="0,8" DoubleTapped="OnDoubleTapped">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="host:SaveStateSlotInfo">
+                    <Grid ColumnDefinitions="70,2*,Auto,Auto,*" Margin="4">
+                        <TextBlock Grid.Column="0" Text="{Binding DisplaySlot}" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="1" Text="{Binding DisplayName}" />
+                        <TextBlock Grid.Column="2" Text="{Binding FramesExecuted}" Margin="10,0" Opacity="0.8" />
+                        <TextBlock Grid.Column="3" Text="{Binding DisplaySavedAt}" Margin="0,0,10,0" Opacity="0.8" />
+                        <TextBlock Grid.Column="4" Text="{Binding StatePath}" Opacity="0.6"
+                                   TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+            <TextBlock x:Name="StatusText" Grid.Column="0" VerticalAlignment="Center" TextWrapping="Wrap" />
+            <Button Grid.Column="1" Content="Close" Click="OnClose" />
+        </Grid>
+    </Grid>
+</Window>
