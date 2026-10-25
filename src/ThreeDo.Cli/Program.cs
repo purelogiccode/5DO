@@ -219,7 +219,12 @@ internal static class Program
                 throw new ArgumentException("--autopilot and --input-script cannot be combined.");
             }
 
-            roadAutopilot = new RoadRashAutopilot();
+            roadAutopilot = new RoadRashAutopilot
+            {
+                EnableMenuAdvance = true,
+                IsLoadActive = () => machine.Cdrom.LastReadFrame >= 0
+                    && machine.FramesExecuted - machine.Cdrom.LastReadFrame < 30,
+            };
             autopilotInput = new PbusSource();
             machine.PbusSource = autopilotInput;
         }
@@ -437,7 +442,8 @@ internal static class Program
                         + (roadAutopilot.UrbanPacing ? " PACE" : string.Empty)
                         + (roadAutopilot.DetectorUpset ? " UPSET" : string.Empty)
                         + (roadAutopilot.RecoveryActive ? " RECOVERY" : string.Empty)
-                        + (roadAutopilot.CrashRestart ? " RESTART" : string.Empty);
+                        + (roadAutopilot.CrashRestart ? " RESTART" : string.Empty)
+                        + (roadAutopilot.MenuAdvance ? " MENU" : string.Empty);
                     Console.Error.WriteLine(
                         $"frame {machine.FramesExecuted} pc={machine.Cpu.ProgramCounter:x8} "
                         + $"dsp={machine.Dsp.ProgramCounter:x4} sema={machine.Dsp.SemaphoreStatus:x4}/{machine.Dsp.SemaphoreData:x4}"
@@ -529,6 +535,7 @@ internal static class Program
             autopilotObstacle = roadAutopilot?.ObstacleSteer,
             autopilotRecovery = roadAutopilot?.RecoveryActive,
             autopilotCrashRestart = roadAutopilot?.CrashRestart,
+            autopilotMenuAdvance = roadAutopilot?.MenuAdvance,
             autopilotStaticFrames = roadAutopilot?.StaticFrames,
             autopilotPacing = roadAutopilot?.UrbanPacing,
             autopilotUpset = roadAutopilot?.DetectorUpset,

@@ -1,14 +1,13 @@
 # Next Session Handoff
 
 **Date:** 2026-10-25 (ninth pass)
-**Goal:** capture per-title evidence and identify the common game-side wait that stops
-Road Rash, Alone, and Wolfenstein. The ninth pass validated Space Ace's interactive
-path, recorded save-state/PNG/WAV evidence for all five corpus titles, and proved that
-the ~42k/~92k Road Rash stops are not driving failures: the frame is static, every
-input is ignored, and the CD trace contains only READ_ID polls. **660 tests pass.** Do
-not redo the evidence capture or re-tune the Road Rash driver for those stops. The
-remaining work is the wait-state/CD-completion investigation, scripted Lemmings/Alone
-play, GPU/Tier B validation, arm64/installers, and the legal/attribution review.
+**Goal:** unblock the post-race flow and capture per-title evidence. The ninth pass
+validated Space Ace's interactive path, recorded save-state/PNG/WAV evidence for all
+five corpus titles, and fixed the ~42k/~92k Road Rash wait with a CD media-access
+pulse. Those screens now advance to `BUSTED`, race select, and a new race. **667 tests
+pass.** Do not redo the evidence capture or the CD media-access fix. The remaining
+work is the new race start/right-edge pin, scripted Lemmings/Alone play, GPU/Tier B
+validation, arm64/installers, and the legal/attribution review.
 
 Earlier passes added the presentation plumbing (GL/GLES capability reporting, CPU
 fallback/context-loss recovery, fullscreen, screenshots, About, Hi-Res, benchmark
@@ -307,13 +306,20 @@ missing and corrected the Road Rash diagnosis.
 - **Alone menu/intro.** `Up, Left, A, Down` reaches the Begin/Resume menu; `A` starts
   the intro scene. The intro is a static, input-ignoring wait with only READ_ID
   polling.
-- **Road Rash wait state.** The 42,000-frame state and the 92,000/100,000-frame state
-  are both static, ignore every button combination, and show only READ_ID polls.
-  `run --json` now reports `cdStatus` and `cdPoll`; the wait has `cdStatus=0xE1` and
-  `cdPoll=0x0C`. The bike happens to be on a sidewalk in the 42k image, but that is a
-  symptom, not a driving failure. **Do not tune the autopilot for these stops.**
-- **Tests.** Added a `ScriptedPbusSource` test that verifies `B+Left` encodes both
-  button bytes. 662 tests pass; format is clean.
+- **Road Rash wait state and the media-access fix.** The 42,000-frame state and the
+  92,000/100,000-frame state were static, ignored every button combination, and
+  showed only READ_ID polls. The CD device now sets poll bit `0x40` after two
+  consecutive READ_ID commands with no intervening command and at least 50 frames
+  between them. That is Portfolio's media-access event; it advances the screens to
+  `BUSTED`, race select, and a new race. The five 3,000-frame hashes are unchanged.
+  The old 91k hash `0x02ABE78E` was a frozen presentation; the current chain reaches
+  a rider-run/BUSTED transition at `PC 0x00093AF4`, hash `0x70E1ED8E`.
+- **Autopilot menu advance.** `--autopilot road` now pulses A during long-static,
+  low-coverage (`<0.5`), frozen-line, or CD-load states and reports
+  `autopilotMenuAdvance` in `run --json`. This gets through the BUSTED/race-select
+  flow; the remaining problem is the new race start/right-edge pin.
+- **Tests.** Added `ScriptedPbusSource`/`InputScript.Offset` tests, CD media-access
+  tests, and an autopilot menu-advance test. 667 tests pass; format is clean.
 
 ---
 
@@ -473,14 +479,14 @@ changing the DSP reload value. The 18,000-frame Wolfenstein gameplay capture is
   sharp-bend braking, closing-side crossover, emergency brake, narrow-canyon
   coasting, urban throttle pacing, coast floor, detector-upset hold, side-based
   stuck recovery, stopped/wreck throttle-only restart, low-band centre at rows
-  190-214, road brightness <= 120; 662 tests pass). It reaches 91,000 live
-  frames from the 80k/83k states and roundtrips there. A clean final-code run
-  from 30,000 reaches 42,000 and then enters the same **game-side wait** as the
-  92k/100k stop: only READ_ID is polled and every input is ignored. **Do not
-  tune the driver or add side-search rules for these stops.** The 5.5-mile race
-  is still not finished; the next work is to find the missing completion event.
-  The previous "terminal wall pin ~34,000" was the `BUSTED` screen, and the old
-  "~40,000 right-sidewalk wreck" is this wait, not a driving failure.
+  190-214, road brightness <= 120; 667 tests pass). The CD media-access pulse
+  fixes the old ~42k/~92k READ_ID wait: those screens now advance to `BUSTED`,
+  race select, and a new race. The autopilot also pulses A during long-static,
+  low-coverage, frozen-line, or CD-load states (`autopilotMenuAdvance`).
+  The 5.5-mile race is still not finished: the autopilot can pin at the **new
+  race start/right edge** after the race-select flow. The previous "terminal
+  wall pin ~34,000" was the `BUSTED` screen, and the old "~40,000 right-sidewalk
+  wreck" was the CD wait, now fixed. Next: start-line handling, not CD work.
 - Space Ace: **done.** `X` at 12,000 returns to the menu; `A` at 12,200 starts
   the interactive scene. The 15,000-frame state roundtrips (`0x7E780D93` -> two
   120-frame continuations at `PC 0x000284EC`, `0x70B16422`) and a gameplay WAV
@@ -524,11 +530,12 @@ save/load proof.
 - [x] Road Rash's race renders correctly and runs past 60,000 frames.
 - [x] The high-resolution 640x480 renderer matches Lemmings' title reference.
 - [x] The Lemmings passcode confirm path is complete (Fun 4 gameplay + roundtrip).
-- [ ] The Road Rash city race is finished. Driver v10 reaches 91,000 live frames
-  from the 80k/83k states (roundtrip `0x02ABE78E`), and a clean 30k run reaches
-  42,000, but both then enter the same static READ_ID-only game-side wait. This
-  is not a driving or wall-pin failure; it is the open completion-event issue.
-  The high-res pointer path is still unproven.
+- [ ] The Road Rash city race is finished. The CD media-access pulse fixes the
+  old ~42k/~92k READ_ID-only wait and advances to `BUSTED`, race select, and a
+  new race. The autopilot still needs **new race start/right-edge** handling to
+  complete a full race. The old 91k hash `0x02ABE78E` was a frozen presentation;
+  the current chain reaches `PC 0x00093AF4`, hash `0x70E1ED8E`. The high-res
+  pointer path is still unproven.
 - [x] Space Ace's interactive path is validated (X menu, A play, 15,000-frame
   roundtrip and WAV).
 - [x] Per-title save-state, screenshot, and WAV evidence is recorded
@@ -551,11 +558,13 @@ save/load proof.
 - Do not enable high-resolution mode by default. Keep `--high-res` opt-in until the
   passcode pointer/hit-test path is understood; the five 3,000-frame low-res hashes
   must stay unchanged.
-- Do not tune the Road Rash driver or add side-search rules for the ~42k/~92k stops.
-  They are the static READ_ID-only game-side wait, not wall pins. Capture the CD/CLIO
-  trace and investigate the completion event instead.
-- Do not redo the ninth-pass evidence capture, Space Ace interactive start, or the
-  `cdStatus`/`cdPoll` diagnostics. Extend them with new evidence only.
+- Do not remove the CD media-access pulse (two consecutive READ_ID polls with a
+  >=50-frame gap set poll bit `0x40`). It fixes the old ~42k/~92k READ_ID-only wait
+  and keeps the five 3,000-frame hashes unchanged. The old 91k hash `0x02ABE78E` is
+  historical; do not use it as a regression key.
+- Do not redo the ninth-pass evidence capture, Space Ace interactive start,
+  `cdStatus`/`cdPoll` diagnostics, or the autopilot menu-advance plumbing. Extend
+  them with new evidence only.
 
 ---
 
@@ -628,11 +637,10 @@ The data-track extraction command is in [`TestCorpus.md`](TestCorpus.md).
    `TestCorpus.md` 1.4). Pure D-pad typing of all ten letters was not needed.
 2. What obstacle-avoidance and wreck-recovery policy lets `--autopilot road` finish
    the 5.5-mile city race? Answered in part 2026-10-25: the "stuck bike" was the
-   `BUSTED` screen, and v10 now survives 91,000 live frames. The remaining stops
-   are **not** a wall/rider pin: the ninth pass showed the frame is static, every
-   input is ignored, and only READ_ID is polled at both ~42k and ~92k. The next
-   experiment is the completion-event/CD-wait investigation, not another side
-   search.
+   `BUSTED` screen, and the CD media-access pulse fixes the old ~42k/~92k
+   READ_ID-only wait. The game now advances to `BUSTED`, race select, and a new
+   race. The remaining experiment is **start-line/right-edge handling** after the
+   race-select flow, not more CD or pre-race tuning.
 3. Does the 737 vs 735 samples/frame cadence cause audible pitch drift? Compare a
    captured WAV with Opera/hardware before changing `_dspPcnt`.
 4. Is the 191-sample Road Rash clipping in the game mix or in our DSP output path?

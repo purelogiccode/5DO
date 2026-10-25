@@ -19,6 +19,10 @@ still change.
 - Alone in the Dark Begin/Resume menu and intro path; the intro is a static
   READ_ID-only wait.
 - A `ScriptedPbusSource` test covering `B+Left` as two button bytes.
+- `--autopilot road` pulses A through long-static, low-coverage, frozen-line, or
+  CD-load states and reports `autopilotMenuAdvance` in `run --json`. This gets
+  through the `BUSTED`/race-select flow to a new race.
+- `CdromDevice.LastReadFrame` for host load probes.
 
 - Desktop gamepad backend: Windows XInput and Linux evdev, with hot-plugging,
   six-player mapping, analog-stick D-pad fallback, and trigger-to-shoulder fallback.
@@ -32,6 +36,11 @@ still change.
 
 ### Fixed
 
+- **CD media-access wait.** Road Rash's old ~42,000 and ~92,000/100,000 stops were a
+  static READ_ID-only wait, not wall pins. The CD device now raises the Portfolio
+  media-access event (`0x40`) after two consecutive READ_ID polls with an idle gap;
+  the game advances to `BUSTED`, race select, and a new race. The five 3,000-frame
+  corpus hashes are unchanged.
 - **GPU palette expansion used one CLUT index for all three channels.** Real-content
   frames appeared grayscale because the shader fetched `(R,G,B)` from the low five bits
   only. The shader now uses the red, green, and blue indices independently, matching
@@ -47,11 +56,12 @@ still change.
 - Settings expose the xBR filter again.
 - `AppSettings` records whether the first-run guide has been shown.
 - The About dialog reports connected gamepads.
-- Corrected the Road Rash diagnosis: the ~42,000 and ~92,000 stops are a static
-  game-side wait (only READ_ID polls, all input ignored), not wall/rider pins or
-  right-sidewalk wrecks. The autopilot is not the next thing to tune.
-- The ninth pass did not change emulation behavior; the deferred CD read-status
-  experiments were reverted because they changed the golden boot hashes.
+- Corrected and fixed the Road Rash diagnosis: the ~42,000 and ~92,000 stops were
+  a static READ_ID-only game-side wait, not wall/rider pins. The CD media-access
+  pulse advances them to `BUSTED`, race select, and a new race.
+- The deferred CD read-status experiments were reverted because they changed the
+  golden boot hashes; the media-access pulse keeps all five 3,000-frame hashes
+  unchanged.
 
 ## Earlier work
 

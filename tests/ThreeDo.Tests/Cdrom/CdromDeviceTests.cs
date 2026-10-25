@@ -122,6 +122,63 @@ public sealed class CdromDeviceTests
     }
 
     [Fact]
+    public void ReadData_RecordsTheFrameForLoadProbes()
+    {
+        var cd = new CdromDevice();
+        cd.InsertDisc(new MemoryDisc(4));
+        long frame = 123;
+        cd.FrameProvider = () => frame;
+
+        Send(cd, 0x10, 0x00, 0x02, 0x00, 0x00, 0x00, 0x01);
+
+        Assert.Equal(123, cd.LastReadFrame);
+    }
+
+    [Fact]
+    public void ConsecutiveReadIdPollsAfterIdleRaiseMediaAccess()
+    {
+        var cd = new CdromDevice();
+        long frame = 0;
+        cd.FrameProvider = () => frame;
+
+        Send(cd, 0x83);
+        frame = 60;
+        Send(cd, 0x83);
+
+        Assert.NotEqual(0, (int)cd.GetPoll() & 0x40);
+    }
+
+    [Fact]
+    public void ReadIdAfterAnotherCommandDoesNotRaiseMediaAccess()
+    {
+        var cd = new CdromDevice();
+        long frame = 0;
+        cd.FrameProvider = () => frame;
+
+        Send(cd, 0x83);
+        frame = 60;
+        Send(cd, 0x84);
+        frame = 120;
+        Send(cd, 0x83);
+
+        Assert.Equal(0, (int)cd.GetPoll() & 0x40);
+    }
+
+    [Fact]
+    public void ConsecutiveReadIdPollsWithShortGapDoNotRaiseMediaAccess()
+    {
+        var cd = new CdromDevice();
+        long frame = 0;
+        cd.FrameProvider = () => frame;
+
+        Send(cd, 0x83);
+        frame = 20;
+        Send(cd, 0x83);
+
+        Assert.Equal(0, (int)cd.GetPoll() & 0x40);
+    }
+
+    [Fact]
     public void Xbus_AttachSelectAndCommandRouteToCdrom()
     {
         var cd = new CdromDevice();

@@ -444,6 +444,31 @@ public sealed class RoadRashAutopilotTests
         Assert.True(state.IsDown(ControllerButton.Right));
     }
 
+    [Fact]
+    public void Update_AdvancesALongStaticMenuWithA()
+    {
+        var autopilot = new RoadRashAutopilot { EnableMenuAdvance = true };
+        var frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
+        var sawMenuAdvance = false;
+        var sawA = false;
+
+        for (long f = 0; f < RoadRashAutopilot.MenuAdvanceStaticFrames + 80; f++)
+        {
+            var state = autopilot.Update(frame, f);
+            if (!autopilot.MenuAdvance)
+            {
+                continue;
+            }
+
+            sawMenuAdvance = true;
+            Assert.False(state.IsDown(ControllerButton.B));
+            sawA |= state.IsDown(ControllerButton.A);
+        }
+
+        Assert.True(sawMenuAdvance);
+        Assert.True(sawA);
+    }
+
     private static VdlFrame MakeRoadFrame(int roadLeft, int roadRight)
     {
         var frame = new VdlFrame();

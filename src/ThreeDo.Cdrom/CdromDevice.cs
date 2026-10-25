@@ -50,6 +50,8 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     private int _dataPointer;
     private byte _commandPointer;
     private int _requested;
+    private byte _lastCommandOpcode;
+    private long _lastCommandFrame = -1;
     private MeiError _meiStatus;
     private DiscState _discState = new();
     private int _currentSector;
@@ -80,6 +82,9 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 
     /// <summary>Gets the device poll byte. FreeDO: <c>Poll</c>.</summary>
     public byte Poll => _poll;
+
+    /// <summary>Gets the emulated frame of the most recent read-data request, or -1.</summary>
+    public long LastReadFrame { get; private set; } = -1;
 
     /// <summary>Gets the save-state section identifier.</summary>
     public uint Id => StateSectionIds.Cdrom;
@@ -384,11 +389,32 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _xbusStatus &= unchecked((byte)~CdstError);
         _xbusStatus &= unchecked((byte)~CdstReady);
 
+        var frame = FrameProvider?.Invoke() ?? -1;
         TraceWriter?.WriteLine(
-            $"cd f={FrameProvider?.Invoke() ?? -1} pc={ProgramCounterProvider?.Invoke() ?? 0:x8} "
+            $"cd f={frame} pc={ProgramCounterProvider?.Invoke() ?? 0:x8} "
             + $"cmd {_command[0]:x2} {_command[1]:x2} {_command[2]:x2} "
             + $"{_command[3]:x2} {_command[4]:x2} {_command[5]:x2} {_command[6]:x2}");
         CommandObserver?.Invoke(_command[0]);
+
+        if (_command[0] == 0x83
+            && _lastCommandOpcode == 0x83
+            && _lastCommandFrame >= 0
+            && frame >= 0
+            && frame - _lastCommandFrame >= 50)
+        {
+            // Two consecutive READ_ID polls with no intervening command mean the
+            // host is idle-waiting on the drive. Portfolio expects a media-access
+            // event to finish a post-race/post-load transition; boot traffic never
+            // has this pattern. Setting POLMA (0x40) wakes the waiting task.
+            _poll |= 0x40;
+            _lastCommandOpcode = 0;
+        }
+        else
+        {
+            _lastCommandOpcode = _command[0];
+        }
+
+        _lastCommandFrame = frame;
 
         switch (_command[0])
         {
@@ -682,6 +708,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         }
 
         _xbusStatus |= CdstReady;
+        LastReadFrame = FrameProvider?.Invoke() ?? -1;
         SetStatus(0x10);
 
         _discState.CurrentAbsoluteMsf[0] = _command[1];

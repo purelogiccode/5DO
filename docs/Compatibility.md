@@ -22,7 +22,13 @@ frame is identical for every button combination and the CD trace contains only
 READ_ID polls. `run --json` reports `cdStatus=0xE1` and `cdPoll=0x0C` at these stops.
 Alone's intro and Wolfenstein's fresh-game load share the signature. The Wolfenstein
 fresh-game walk and the Lemmings passcode path remain the verified gameplay loops;
-the open work is the missing completion event, not further autopilot tuning.
+the open Road Rash work is the new race start/right edge, not the old CD wait.
+
+The CD wait fix is a media-access pulse: two consecutive READ_ID commands with
+no intervening command and at least 50 frames between them set poll bit `0x40`.
+Portfolio uses that event to finish the post-race/post-load transition. The fix
+advances Road Rash's ~42k/~92k/100k screens to `BUSTED`, race select, and a new
+race while leaving the five 3,000-frame corpus hashes unchanged.
 
 The 2026-10-24 sessions found four root causes:
 
@@ -263,7 +269,7 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 |---|---|---|---|---|---|---|---|---|---|---|
 | Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | **Fun 4 gameplay via passcode (`HNLHCIOECW`) with save/load roundtrip** | Non-silent DSP output | **Works**: A types, B confirms, ten letters auto-confirm, D-pad moves the selection; entry is permuted across `0x96574-7B,7E-7F` | Passcode `HNLHCIOECW` accepted (`Code for 1` / `Rating = Fun`); gameplay at 21,640 frames (`0x18F38B4D`) roundtrips; 640x480 high-res title matches the reference | Not re-tested this pass |
 | Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass** | **Animated demo and interactive scene; X -> menu, A -> play; 15,000-frame save/load roundtrip** | Non-silent DSP output; 10 s peak 4096, RMS ~1.8k (mono duplicated) | **Works**: X returns to the title/menu, A starts the scene; P also changes state | Former frame-681 null-buffer runaway is gone; the 15,000 state roundtrips (`0x7E780D93` -> two 120-frame continuations at `PC 0x000284EC`, `0x70B16422`) | Demo intro 60 s, no runaway |
-| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **3D race renders and runs past 60,000 frames; v10 autopilot reaches 91,000 live frames from the 80k/83k states and roundtrips** | Non-silent DSP output; 10 s peak 32768, RMS ~9.6k/8.8k, 378 clipped | **B accelerates, A brakes, D-pad steers, C attacks, P pauses**; `--autopilot road` v10 adds close-traffic coast/steer, urgent preemption, emergency-brake steer hold, and a throttle-only wreck/rider-run restart | The CEL transposition fix removed the VRAM `AllocMem` error; the earlier "wall pin" was the race-over `BUSTED` screen. The ~42k and ~92k stops are a static READ_ID-only game-side wait, not a driving failure; `run --json` shows `cdStatus=0xE1`, `cdPoll=0x0C` | Intro FMV, then a race |
+| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **3D race renders and runs past 60,000 frames; CD media-access pulse unblocks the old ~42k/~92k wait and reaches `BUSTED` -> race select -> new race** | Non-silent DSP output; 10 s peak 32768, RMS ~9.6k/8.8k, 378 clipped | **B accelerates, A brakes, D-pad steers, C attacks, P pauses**; `--autopilot road` adds close-traffic coast/steer, urgent preemption, emergency-brake steer hold, a throttle-only wreck/rider-run restart, and A pulses for post-race menus (`autopilotMenuAdvance`) | The CEL transposition fix removed the VRAM `AllocMem` error; the earlier "wall pin" was the race-over `BUSTED` screen. The old ~42k/~92k READ_ID-only wait is fixed; the remaining autopilot issue is the new race start/right edge | Intro FMV, then a race |
 | Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Pass** | **Fresh game (FLOOR 1-1) and save/load roundtrip** | Non-silent DSP output; 10 s peak 30743, RMS ~5.5k | **Works**: A opens the menu, D-pad/A navigate and fire | From a 12,000-frame demo state, A opens the preview menu; selecting a level starts a fresh game | Intro 60 s |
 | Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Pass** | **In-game staircase/room with an upright character; Begin/Resume menu and intro** | Non-silent DSP output; 10 s peak 20617, RMS ~1.9k | **Works**: D-pad/A change the scene; `Up, Left, A, Down` reaches the menu, A starts the intro | The CEL transposition fix restored the character's upright orientation. The intro then shows the common static READ_ID-only wait | Intro/loading 60 s |
 
@@ -311,15 +317,13 @@ transposition fixes are described above; input results come from `--input-script
   `BUSTED` (`0x9F44FAA2`), so throttle-only is the proven policy. Best evidence:
   91,000 live frames (`PC 0x00085F48`, hash `0x02ABE78E`, `cov=0.93`), zero-frame
   `0x02ABE78E`, two 120-frame continuations both `PC 0x000973EC` / `0x3F27B3D6`.
-  The race is still not finished, but the ninth pass corrected the stop diagnosis:
-  at ~92,000 and at ~42,000 the frame is static, every button combination leaves
-  the hash unchanged, and the CD trace contains only READ_ID (`cmd 0x83`) polls
-  every 60 frames. The ~42k run is the clean final-code 30k run; the bike happens
-  to be on a sidewalk in the image, but that is a symptom, not a driving failure.
-  A separate 45,500-frame path has the same signature after reading sectors
-  109053-109071 and 43877-43888. `run --json` exposes `cdStatus=0xE1` and
-  `cdPoll=0x0C` at these stops. The remaining work is the missing completion
-  event, not another autopilot side search.
+  The ninth pass fixed the old ~92,000/~42,000 stop: the CD device raises a
+  media-access event (`0x40`) after two consecutive READ_ID polls with an idle
+  gap. The game advances to `BUSTED`, the race-select menu, and a new race
+  (`PC 0x0007DCBC`, hash `0x277CCED7` at 113,000). The five 3,000-frame hashes
+  are unchanged. The autopilot pulses A during long-static/low-coverage/load
+  states (`autopilotMenuAdvance`). The remaining work is the new race
+  start/right-edge pin, not the old CD wait or another side search.
 - **Wolfenstein 3D:** from the 12,000-frame demo state, `A` opens the Select Previews
   menu; D-pad/A navigate to Select a Level and start a fresh game at FLOOR 1-1 with
   `SCORE 0000000`. From a live 60-frame state, two independent 120-frame continuations

@@ -453,23 +453,28 @@ dotnet run -c Release --project src/ThreeDo.Cli -- run `
 - Two independent 120-frame autopilot continuations: both `PC 0x000973EC`,
   hash `0x3F27B3D6`, `lineX=197.875`.
 
-**Remaining stops.**
+**Wait states fixed by the media-access pulse (ninth pass).**
 
-- A 100,000-frame continuation stays live through ~91,000, then pins at ~92,000.
-  The ninth-pass trace shows this is **not a wall/rider pin**: the last CD
-  commands are read-data requests for sectors 109053-109071 and 43873-43888, and
-  afterwards the CD task only polls READ_ID (`cmd 0x83`) every 60 frames. The
-  frame hash stays identical for every button combination. The same signature
-  appears in the 42,000-frame stop and in Alone in the Dark's static intro, so
-  the driver is not the cause and throttle/steer tuning cannot free it.
-- A clean final-code run from `rr8-30k.state` reaches 42,000 frames
-  (`PC 0x0001048C`, hash `0xCBDF6DDB`) and then shows the same input-ignoring
-  READ_ID-only wait. The bike is on a sidewalk in the last image, which is why
-  the earlier pass described it as a right-sidewalk wreck; the image is a
-  symptom of the wait, not a driving failure.
-- A separate 45,500-frame path stopped after a CD load with the same trace
-  signature. Treat these as one open issue: **the game-side wait that follows a
-  post-race/section load**, not as three separate driving bugs.
+- The ~42,000 and ~92,000/100,000 stops were a static, input-ignoring wait; the
+  CD trace contained only READ_ID polls. The fix is in the CD device: two
+  consecutive READ_ID commands with no intervening command and at least 50
+  frames between them set the media-access bit (`0x40`) in the poll register.
+  Portfolio uses that event to finish the post-race/post-load transition.
+- From the 42,000 state, the fix advances to the `BUSTED` screen (~43,500); with
+  A presses it reaches the race-select menu ("The City", "Sierra Nevada", "Napa
+  Valley", "The Peninsula") and starts a new race.
+- From the 100,000 state, the fix advances to `BUSTED` at ~102,000. From there,
+  A pulses at 300-frame intervals pass the cutscenes and race select and start a
+  new race at ~112,500.
+- The five 3,000-frame corpus hashes are **unchanged** by the fix. The old 91k
+  autopilot state/hash (`0x02ABE78E`) was a frozen presentation; the current
+  chain reaches a rider-run/BUSTED transition at 91,000 (`PC 0x00093AF4`, hash
+  `0x70E1ED8E`). Do not use the old hash as a regression key.
+- The autopilot now pulses A during long-static, low-road-coverage, or CD-load
+  states (`autopilotMenuAdvance` in `run --json`). This gets through the
+  BUSTED/race-select flow, but it still needs work at the **new race start**:
+  the bike can spawn at the right edge and stay there with the throttle held.
+  That is a driving/start-line problem, not the CD wait.
 
 **Telemetry.** Progress lines add `cov=<lower-band road fraction>` and
 `RESTART`; `run --json` adds `autopilotRoadCoverage`,
@@ -488,7 +493,7 @@ states are local, gitignored artifacts under `artifacts/s2` and `artifacts/`.
 | Wolfenstein 3D | `w3d_gameplay.state` (18,000) | `PC 0x00074A04`, `0xF568EBCA` | `PC 0x000782B8`, `0xF568EBCA` |
 | Lemmings | `lem-fun4.state` (21,640) | `PC 0x00083FEC`, `0x18F38B4D` | `PC 0x00083FD8`, `0x8D628FBD` |
 | Alone in the Dark | `alone-fix16k.state` (16,000) | `PC 0x0008C608`, `0x3D257B5C` | `PC 0x00095AC0`, `0x2ECCE988` |
-| Road Rash | `rr-v36-91000.state` (91,000) | `PC 0x00085F48`, `0x02ABE78E` | `PC 0x000821BC`, `0x34BAD64C` |
+| Road Rash | `rr-v36-91000.state` (91,000) | `PC 0x00085F48`, `0x02ABE78E` | `PC 0x000821E0`, `0x34BAD64C` |
 | Space Ace | `sa-fix12k.state` (12,000) | `PC 0x0007D114`, `0xEF99FED7` | `PC 0x000284EC`, `0xA76D03E4` |
 
 600-frame WAV captures from the same states:
@@ -522,10 +527,41 @@ intro then stays completely still and ignores every button, with only READ_ID
 polling in the CD trace; it has the same wait signature as the Road Rash stops.
 
 **Road Rash 42k wait.** A fresh run from `rr8-30k.state` reaches 42,000 with
-`PC 0x0001048C`, hash `0xCBDF6DDB`, `lineX=177.8`, `cov=0.90`. From that state,
-`B`, `A`, `B+Left`, `B+Right`, `A+Left`, `A+Right`, and bare D-pad inputs all
-leave the frame hash at `0xCBDF6DDB`; the CD trace contains only READ_ID. This
-is the same game-side wait as 92k/100k, not a wall pin.
+`PC 0x0001048C`, hash `0xCBDF6DDB`, `lineX=177.8`, `cov=0.90`. Before the
+media-access fix, `B`, `A`, `B+Left`, `B+Right`, `A+Left`, `A+Right`, and bare
+D-pad inputs all left the frame hash unchanged and the CD trace contained only
+READ_ID. See 1.5b: the media-access pulse now advances this screen to `BUSTED`
+and the race-select/new-race flow.
+
+### 1.5b Ninth pass: CD media-access pulse unblocks the post-race wait (2026-10-25)
+
+The wait states at Road Rash ~42k/~92k/100k and Alone's intro share a CD
+signature: the CD task polls READ_ID (`cmd 0x83`) every 60 frames with no other
+commands, the frame is static, and every input is ignored. The ninth pass found
+that Portfolio expects a **media-access event** after the drive has been idle.
+The CD device now sets poll bit `0x40` when two consecutive READ_ID commands
+arrive with no intervening command and at least 50 frames between them. Boot
+traffic never has that pattern, so the five 3,000-frame hashes are unchanged.
+
+Evidence:
+
+- Road Rash `rr-42k.state` + 3,000 frames with A: `BUSTED` by ~43,500; final
+  `PC 0x00020640`, hash `0x5B3159A9` (the BUSTED screen).
+- Road Rash `rr-100k-base.state` + 3,000 frames with A: `BUSTED` by ~102,000.
+  From there A every 300 frames passes the cutscenes and race-select menu
+  ("The City" / "Sierra Nevada" / "Napa Valley" / "The Peninsula") and reaches
+  a new race at 113,000 (`PC 0x0007DCBC`, hash `0x277CCED7`).
+- The autopilot now pulses A during long-static, low-road-coverage (coverage
+  below 0.5), frozen-road-line, or CD-load states; `run --json` reports
+  `autopilotMenuAdvance`. A fresh 30k run reaches the post-race cutscene and a
+  new race around 70-80k, but still needs start-line handling.
+- Alone's intro uses the same wait signature; the fix should be re-checked
+  there in a later pass.
+
+The 91,000-frame autopilot chain now reaches a rider-run/BUSTED transition
+(`PC 0x00093AF4`, hash `0x70E1ED8E`) instead of the old frozen `0x02ABE78E`
+frame. The old hash is historical, not a regression key. The five 3,000-frame
+corpus hashes remain the regression gate and are unchanged.
 
 #### CD disc-end fix (2026-10-23)
 

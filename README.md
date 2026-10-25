@@ -9,7 +9,7 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 **Current position (2026-10-25, ninth pass):** M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **662 tests pass.** The shell now has fullscreen, GL screenshots, an About
+prototype. **667 tests pass.** The shell now has fullscreen, GL screenshots, an About
 dialog, a Hi-Res toggle, automatic CPU fallback when OpenGL init or the context fails,
 a game library browser, a settings dialog (video/audio/emulation/paths), six-player
 keyboard and gamepad binding, ten numbered save slots with PNG thumbnails, PNG
@@ -29,18 +29,19 @@ through both sharp-bilinear and xBR with correct colors.
 
 The ninth pass recorded per-title save-state, PNG, and WAV evidence (zero-frame and
 120-frame hashes, deterministic roundtrips, 600-frame audio captures) in
-[`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. It also corrected the Road Rash
-diagnosis: the ~42,000 and ~92,000 stops are a static game-side wait (READ_ID-only CD
-polling, every input ignored), not wall/rider pins or right-sidewalk wrecks. Space Ace's
-interactive path is validated (`X` menu, `A` play) and roundtrips at 15,000 frames.
+[`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. It also fixed the old Road Rash
+~42,000/~92,000 READ_ID-only wait with a CD media-access pulse; the game now advances
+to `BUSTED`, race select, and a new race. Space Ace's interactive path is validated
+(`X` menu, `A` play) and roundtrips at 15,000 frames. The remaining Road Rash work is
+the new race start/right-edge pin.
 
 Real-content status with `panafz1.bin`: all five local corpus titles boot, load their
 own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio.
 
 - **Road Rash** renders its 3D race correctly (matching the Opera reference) and runs
-  past 60,000 frames; the v10 `--autopilot road` driver reaches 91,000 live frames from
-  the 80k/83k states and roundtrips there. The ~42k and ~92k stops are a static
-  game-side wait (READ_ID-only CD polling, all input ignored), not a wall pin.
+  past 60,000 frames. A CD media-access pulse fixes the old ~42k/~92k READ_ID-only
+  wait: those screens now advance to `BUSTED`, the race-select menu, and a new race.
+  The autopilot still needs start-line handling for a complete race loop.
 - **Wolfenstein 3D** starts a fresh game at FLOOR 1-1 from its preview menu, walks,
   turns, fires, and roundtrips a live gameplay save state.
 - **Alone in the Dark** reaches its in-game staircase/room with an upright character;
@@ -59,13 +60,13 @@ Road Rash's VRAM allocator and drew Alone horizontally, and VDLP bitmap widths f
 384/512/640/1024-wide modes. The opt-in 640x480 high-resolution CEL/VDLP path was
 added; save-state loads restore the VDL picture immediately.
 
-Remaining major work: find the missing completion event behind the static
-READ_ID-only game-side wait that stops Road Rash (~42k/~92k), Alone's intro, and
-Wolfenstein's fresh-game load; finish the Road Rash race after that; script a pure
-D-pad Lemmings passcode and an Alone movement/inventory sequence; validate GPU
-4K/p99 and GLES/ANGLE/Pi/DPI; validate Tier B prefetch; xBR/HQx and UI polish;
-arm64/installers; and the legal/attribution review. Per-title save-state, PNG, and
-WAV evidence is now recorded in [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. See
+Remaining major work: finish the Road Rash race loop by handling the new race
+start/right-edge pin; re-check Alone's intro and Wolfenstein's fresh-game load
+with the CD media-access fix; script a pure D-pad Lemmings passcode and an Alone
+movement/inventory sequence; validate GPU 4K/p99 and GLES/ANGLE/Pi/DPI; validate
+Tier B prefetch; xBR/HQx and UI polish; arm64/installers; and the
+legal/attribution review. Per-title save-state, PNG, and WAV evidence is recorded
+in [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. See
 [`docs/Status.md`](docs/Status.md) for the completion estimate and
 [`docs/NextSession.md`](docs/NextSession.md) for the next-session plan. The
 implementation plan and architecture are in:

@@ -73,13 +73,40 @@ public sealed class RoadRashAutopilot
     /// <summary>Moving-scene frames that end a restart early because the bike is rolling again.</summary>
     public const int CrashRestartMotionFrames = 10;
 
+    /// <summary>Static frames before the post-race/menu A-advance starts.</summary>
+    public const int MenuAdvanceStaticFrames = 120;
+
+    /// <summary>Frames to hold A when advancing a post-race/menu screen.</summary>
+    public const int MenuAdvanceHoldFrames = 20;
+
+    /// <summary>Frames between A presses while a menu or cutscene is still static.</summary>
+    public const int MenuAdvanceIntervalFrames = 60;
+
+    /// <summary>Frames between A pulses when the road line has been frozen for a long time.</summary>
+    public const int MenuAdvancePulseFrames = 300;
+
     /// <summary>Average palette-index change treated as "the scene is still".</summary>
     private const double StaticSceneThreshold = 2.0;
 
+    /// <summary>
+    /// Looser scene-still threshold for post-race/menu detection. Menus have a
+    /// blinking cursor or animated marquee, so the strict 2.0 threshold resets
+    /// continuously even though the bike is not racing.
+    /// </summary>
+    private const double MenuStaticThreshold = 6.0;
+
     private int[]? _sceneSignature;
+    private int[]? _speedSignature;
     private int _staticFrames;
+    private int _menuStaticFrames;
+    private int _speedStaticFrames;
+    private int _loadFrames;
+    private int _lowCoverageFrames;
     private int _crashRestartMotionFrames;
     private long _crashRestartUntil;
+    private long _menuAdvanceUntil;
+    private long _menuModeUntil;
+    private long _lastMenuAdvanceFrame = -MenuAdvanceIntervalFrames;
 
     private bool _urgentObstacle;
     private int _steer;
@@ -94,6 +121,20 @@ public sealed class RoadRashAutopilot
     private long _recoveryUntil;
     private long _recoveryStart;
     private int _recoverySteer;
+
+    /// <summary>
+    /// Gets or sets an optional probe that reports whether the CD is actively
+    /// streaming. Load screens and cutscenes need A presses even when the scene
+    /// signature keeps changing.
+    /// </summary>
+    public Func<bool>? IsLoadActive { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to advance long-static/post-race/menu screens with A.
+    /// Enabled by the CLI's road autopilot; unit tests keep it off so the
+    /// steering/recovery contracts stay focused.
+    /// </summary>
+    public bool EnableMenuAdvance { get; set; }
 
     /// <summary>Gets the controller state to apply on the next frame.</summary>
     public ControllerState State { get; private set; }
@@ -112,6 +153,9 @@ public sealed class RoadRashAutopilot
 
     /// <summary>Gets whether a stopped/wrecked bike is being restarted.</summary>
     public bool CrashRestart { get; private set; }
+
+    /// <summary>Gets whether a static post-race/menu screen is being advanced with A.</summary>
+    public bool MenuAdvance { get; private set; }
 
     /// <summary>Gets the number of consecutive frames the scene has been still.</summary>
     public int StaticFrames => _staticFrames;
@@ -158,7 +202,18 @@ public sealed class RoadRashAutopilot
         UpdateStuckTracking(frame, frameNumber);
         UpdateStopTracking(frame, frameNumber);
 
-        if (CrashRestart)
+        if (frameNumber < _menuModeUntil)
+        {
+            // A post-race/menu/cutscene stayed static/loading for two seconds.
+            // The game advances these screens with A (B does not); hold A for a
+            // short pulse, then release everything until the next pulse so the
+            // throttle does not fight the menu.
+            RecoveryActive = false;
+            _steer = 0;
+            _steerUntil = frameNumber;
+            _nextDecision = frameNumber + 4;
+        }
+        else if (CrashRestart)
         {
             // This is the wreck/remount or rider-running state, not a racing
             // line. Hold B with straight bars: manual probes showed B alone
@@ -269,7 +324,15 @@ public sealed class RoadRashAutopilot
         }
 
         ControllerButton buttons;
-        if (CrashRestart)
+        if (frameNumber < _menuAdvanceUntil)
+        {
+            buttons = ControllerButton.A;
+        }
+        else if (frameNumber < _menuModeUntil)
+        {
+            buttons = ControllerButton.None;
+        }
+        else if (CrashRestart)
         {
             // A stopped bike is caught and busted; get it rolling before
             // resuming obstacle/pacing logic.
@@ -322,7 +385,7 @@ public sealed class RoadRashAutopilot
         // slow the bike but must never stall it: force the throttle back on
         // after a bounded coast streak. Deliberate braking is exempt.
         var coasting = (buttons & (ControllerButton.B | ControllerButton.A)) == 0;
-        if (coasting && !EmergencyBrake)
+        if (coasting && !EmergencyBrake && !MenuAdvance)
         {
             _coastStreak++;
             if (_coastStreak > MaxCoastFrames)
@@ -685,6 +748,16 @@ public sealed class RoadRashAutopilot
     /// </summary>
     private void UpdateStopTracking(VdlFrame frame, long frameNumber)
     {
+        if (frameNumber < _menuModeUntil
+            && !double.IsNaN(LineX)
+            && RoadCoverage > 0.7)
+        {
+            // The race is back on screen; stop the menu pulse immediately.
+            _menuModeUntil = frameNumber;
+            _menuAdvanceUntil = frameNumber;
+        }
+
+        MenuAdvance = frameNumber < _menuModeUntil;
         CrashRestart = frameNumber < _crashRestartUntil;
         if (CrashRestart)
         {
@@ -735,6 +808,83 @@ public sealed class RoadRashAutopilot
         {
             _staticFrames = 0;
             _sceneSignature = signature;
+        }
+
+        if (average <= MenuStaticThreshold)
+        {
+            _menuStaticFrames++;
+        }
+        else
+        {
+            _menuStaticFrames = 0;
+        }
+
+        var speedSignature = BuildSpeedSignature(frame);
+        if (_speedSignature is null)
+        {
+            _speedSignature = speedSignature;
+        }
+        else
+        {
+            var speedDifference = 0;
+            for (var i = 0; i < speedSignature.Length; i++)
+            {
+                speedDifference += Math.Abs(speedSignature[i] - _speedSignature[i]);
+            }
+
+            if ((double)speedDifference / speedSignature.Length <= 1.0)
+            {
+                _speedStaticFrames++;
+            }
+            else
+            {
+                _speedStaticFrames = 0;
+                _speedSignature = speedSignature;
+            }
+        }
+
+        if (IsLoadActive?.Invoke() == true)
+        {
+            _loadFrames++;
+        }
+        else
+        {
+            _loadFrames = 0;
+        }
+
+        if (!double.IsNaN(RoadCoverage) && RoadCoverage < 0.5)
+        {
+            _lowCoverageFrames++;
+        }
+        else
+        {
+            _lowCoverageFrames = 0;
+        }
+
+        var sceneStatic = Math.Max(_menuStaticFrames, _speedStaticFrames);
+        var menuSignal = sceneStatic >= MenuAdvanceStaticFrames
+            || _loadFrames >= MenuAdvanceStaticFrames
+            || _lowCoverageFrames >= MenuAdvanceStaticFrames;
+        var menuInterval = sceneStatic >= MenuAdvanceStaticFrames
+            ? MenuAdvanceIntervalFrames
+            : MenuAdvancePulseFrames;
+        if (EnableMenuAdvance
+            && !RecoveryActive
+            && menuSignal
+            && frameNumber - _lastMenuAdvanceFrame >= menuInterval)
+        {
+            // The regular restart keeps B held and resets _staticFrames every
+            // 40 frames, so use separate long-static, frozen-line, CD-load, and
+            // low-coverage counters. A race keeps coverage high (0.8-0.93) and a
+            // scrolling road line; a load/menu/cutscene does not. A advances
+            // those screens (B does not).
+            _lastMenuAdvanceFrame = frameNumber;
+            _menuAdvanceUntil = frameNumber + MenuAdvanceHoldFrames;
+            _menuModeUntil = frameNumber + MenuAdvancePulseFrames;
+            _crashRestartUntil = frameNumber;
+            _crashRestartMotionFrames = 0;
+            CrashRestart = false;
+            MenuAdvance = true;
         }
 
         // A still scene while the driver is applying throttle means the bike
@@ -788,6 +938,35 @@ public sealed class RoadRashAutopilot
 
         // The speed readout is the most direct "is the bike moving" signal:
         // it changes while riding and stays at 0 through a wreck or rider run.
+        for (var row = 0; row < 2; row++)
+        {
+            var y = 212 + (row * 12);
+            if (y >= frame.Lines.Length)
+            {
+                index += 6;
+                continue;
+            }
+
+            var line = frame.Lines[y];
+            var width = Math.Min(line.Width, line.PixelBuffer.Length);
+            for (var column = 0; column < 6; column++)
+            {
+                var x = 196 + (column * 12);
+                signature[index++] = x < width ? line.PixelBuffer[x] : 0;
+            }
+        }
+
+        return signature;
+    }
+
+    /// <summary>
+    /// Samples only the speed readout. A stopped/menu/cutscene frame keeps the
+    /// readout constant even when scenery or a cursor elsewhere animates.
+    /// </summary>
+    private static int[] BuildSpeedSignature(VdlFrame frame)
+    {
+        var signature = new int[12];
+        var index = 0;
         for (var row = 0; row < 2; row++)
         {
             var y = 212 + (row * 12);
