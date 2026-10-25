@@ -31,7 +31,7 @@ public partial class MainWindow : Window, IDisposable
 {
     private readonly NvramStore _nvramStore;
     private readonly AppSettings _settings;
-    private readonly InputManager _input;
+    private InputManager _input;
     private readonly SaveStateSlotManager _slots;
     private OpenAlAudioOutput? _audio;
     private ThreeDoMachine? _machine;
@@ -415,6 +415,29 @@ public partial class MainWindow : Window, IDisposable
         }
 
         StatusText.Text = "Settings saved.";
+    }
+
+    private async void OnInputBindings(object? sender, RoutedEventArgs e)
+    {
+        var window = new InputBindingsWindow(_settings.Input.Players[0]);
+        var profile = await window.ShowDialog<PlayerProfile?>(this);
+        if (profile is null)
+        {
+            return;
+        }
+
+        _settings.Input.Players[0] = profile;
+        AppSettingsStore.Save(_settings);
+        _input = new InputManager(_settings.Input);
+        if (_machine is not null)
+        {
+            _machine.PbusSource = _input;
+        }
+
+        var conflicts = _settings.Input.FindConflicts();
+        StatusText.Text = conflicts.Count == 0
+            ? "Input bindings saved."
+            : $"Input bindings saved with {conflicts.Count} conflict(s).";
     }
 
     private void ApplyAudioSettings()

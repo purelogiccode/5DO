@@ -1,0 +1,24 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ThreeDo.Frontend.Avalonia.Views.InputBindingsWindow"
+        Title="Input Bindings"
+        Width="500" Height="560"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="12">
+        <TextBlock Grid.Row="0" TextWrapping="Wrap"
+                   Text="Player 1 keyboard bindings. Select Rebind, then press the new key." />
+        <ScrollViewer Grid.Row="1" Margin="0,8">
+            <StackPanel x:Name="RowsPanel" Spacing="4" />
+        </ScrollViewer>
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+            <TextBlock x:Name="StatusText" Grid.Column="0" VerticalAlignment="Center"
+                       TextWrapping="Wrap" Foreground="#FFB060" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                <Button Content="Reset Defaults" Click="OnReset" />
+                <Button Content="OK" Click="OnOk" IsDefault="True" />
+                <Button Content="Cancel" Click="OnCancel" IsCancel="True" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
