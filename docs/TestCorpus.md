@@ -455,20 +455,77 @@ dotnet run -c Release --project src/ThreeDo.Cli -- run `
 
 **Remaining stops.**
 
-- A 100,000-frame continuation stays live through ~91,000, then pins at ~92,000:
-  `lineX` 229 -> NaN, `cov` 0.23 -> 0.27, lookahead 0.55/0.32/0.05, `RESTART`
-  cycling without motion. Throttle-only does not free it.
-- A clean final-code run from `rr8-30k.state` pins at the ~40,000 right-sidewalk
-  wreck (`rr-v37-40000.state`, image `rr-v37-40000.png`); the 91k chain predates
-  the final throttle-only policy on that segment.
-- A separate 45,500-frame path stopped after a CD load: reads 109053-109071,
-  seeks to 43877-43888, then only READ_ID (`cmd 0x83`) every 60 frames; all
-  button inputs leave the frame hash identical. This is a candidate for the same
-  CD-completion investigation as Wolfenstein's fresh-game load.
+- A 100,000-frame continuation stays live through ~91,000, then pins at ~92,000.
+  The ninth-pass trace shows this is **not a wall/rider pin**: the last CD
+  commands are read-data requests for sectors 109053-109071 and 43873-43888, and
+  afterwards the CD task only polls READ_ID (`cmd 0x83`) every 60 frames. The
+  frame hash stays identical for every button combination. The same signature
+  appears in the 42,000-frame stop and in Alone in the Dark's static intro, so
+  the driver is not the cause and throttle/steer tuning cannot free it.
+- A clean final-code run from `rr8-30k.state` reaches 42,000 frames
+  (`PC 0x0001048C`, hash `0xCBDF6DDB`) and then shows the same input-ignoring
+  READ_ID-only wait. The bike is on a sidewalk in the last image, which is why
+  the earlier pass described it as a right-sidewalk wreck; the image is a
+  symptom of the wait, not a driving failure.
+- A separate 45,500-frame path stopped after a CD load with the same trace
+  signature. Treat these as one open issue: **the game-side wait that follows a
+  post-race/section load**, not as three separate driving bugs.
 
 **Telemetry.** Progress lines add `cov=<lower-band road fraction>` and
 `RESTART`; `run --json` adds `autopilotRoadCoverage`,
 `autopilotCrashRestart`, and `autopilotStaticFrames` alongside the v9 fields.
+The ninth pass also reports `cdStatus` and `cdPoll` in `run --json`; a
+READ_ID-only wait has `cdStatus=0xE1` and `cdPoll=0x0C`.
+
+### 1.5a Ninth pass: per-title save-state, screenshot, and WAV evidence (2026-10-25)
+
+All runs use `panafz1.bin` and the Release build. Each case loads a live state,
+captures the zero-frame frame hash, runs 120 frames, and captures a PNG. The
+states are local, gitignored artifacts under `artifacts/s2` and `artifacts/`.
+
+| Title | State | Zero-frame PC/hash | 120-frame PC/hash |
+|---|---|---|---|
+| Wolfenstein 3D | `w3d_gameplay.state` (18,000) | `PC 0x00074A04`, `0xF568EBCA` | `PC 0x000782B8`, `0xF568EBCA` |
+| Lemmings | `lem-fun4.state` (21,640) | `PC 0x00083FEC`, `0x18F38B4D` | `PC 0x00083FD8`, `0x8D628FBD` |
+| Alone in the Dark | `alone-fix16k.state` (16,000) | `PC 0x0008C608`, `0x3D257B5C` | `PC 0x00095AC0`, `0x2ECCE988` |
+| Road Rash | `rr-v36-91000.state` (91,000) | `PC 0x00085F48`, `0x02ABE78E` | `PC 0x000821BC`, `0x34BAD64C` |
+| Space Ace | `sa-fix12k.state` (12,000) | `PC 0x0007D114`, `0xEF99FED7` | `PC 0x000284EC`, `0xA76D03E4` |
+
+600-frame WAV captures from the same states:
+
+| Title | Duration | Rate | Peak | RMS L/R | Clipped |
+|---|---:|---|---:|---|---:|
+| Wolfenstein 3D | 10.03 s | 44.1 kHz stereo | 18100 | 2112 / 2229 | 0 |
+| Lemmings | 10.04 s | 44.1 kHz stereo | 22283 | 4510 / 4526 | 0 |
+| Alone in the Dark | 10.06 s | 44.1 kHz stereo | 20617 | 1879 / 1926 | 0 |
+| Road Rash | 10.03 s | 44.1 kHz stereo | 32768 | 9561 / 8787 | 378 |
+| Space Ace | 10.04 s | 44.1 kHz stereo | 4096 | 1832 / 1832 | 0 |
+
+Road Rash still clips in the first 10 s of the 91k state; the game mix is loud
+there. Space Ace's capture is a mono signal duplicated to both channels. The
+cadence is ~737 samples/frame for all five titles, matching the earlier
+observations.
+
+**Space Ace interactive path (new).** From `sa-fix12k.state`, `X` at 12,000
+returns to the title/menu (`PC 0x0000E12C`, hash `0x596B6A81`), and `A` at
+12,200 starts the interactive scene. 3,000 frames later the run is at 15,000
+(`PC 0x000765F0`, hash `0x7E780D93`). The 15,000 state roundtrips: zero-frame
+load `0x7E780D93`; two independent 120-frame continuations both
+`PC 0x000284EC`, hash `0x70B16422`. A 600-frame WAV from the gameplay state is
+10.04 s, peak 4096, RMS 1832.
+
+**Alone in the Dark menu/intro.** From `alone-fix16k.state`, the sequence
+`Up, Left, A, Down` reaches the `Begin a new game / Resume a saved game` menu
+at 16,380 (`PC 0x000125E4`, hash `0x22631207`). `A` at 16,600 starts the
+intro/character scene (`PC 0x00095A24` at 17,200, hash `0x9C607707`). The
+intro then stays completely still and ignores every button, with only READ_ID
+polling in the CD trace; it has the same wait signature as the Road Rash stops.
+
+**Road Rash 42k wait.** A fresh run from `rr8-30k.state` reaches 42,000 with
+`PC 0x0001048C`, hash `0xCBDF6DDB`, `lineX=177.8`, `cov=0.90`. From that state,
+`B`, `A`, `B+Left`, `B+Right`, `A+Left`, `A+Right`, and bare D-pad inputs all
+leave the frame hash at `0xCBDF6DDB`; the CD trace contains only READ_ID. This
+is the same game-side wait as 92k/100k, not a wall pin.
 
 #### CD disc-end fix (2026-10-23)
 
@@ -587,6 +644,13 @@ dotnet run --project src/ThreeDo.Cli -- trace "$env:THREEDO_DISC" `
 dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
   --bios "$env:THREEDO_BIOS" --frames 3000 `
   --input-script artifacts/input.txt --frame-out artifacts/input.png
+
+# Script frames are absolute. With --state-in, either use the state's frame
+# numbers (for example 91000) or add --script-base state to shift a script that
+# starts at 0 by the loaded state's frame count.
+dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
+  --bios "$env:THREEDO_BIOS" --state-in artifacts/live.state --frames 300 `
+  --input-script artifacts/input.txt --script-base state --json
 
 # Controller packet trace (one 16-byte PBUS packet per frame)
 dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `

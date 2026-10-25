@@ -74,6 +74,31 @@ public static class InputScript
         return Parse(File.ReadAllText(path));
     }
 
+    /// <summary>
+    /// Shifts script frame numbers by a base frame, so a script written from zero can
+    /// be applied after loading a save state.
+    /// </summary>
+    /// <param name="entries">Source entries.</param>
+    /// <param name="baseFrame">Emulated frame count at the start of the run.</param>
+    /// <returns>A new frame-ordered entry list.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="entries"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="baseFrame"/> is negative.</exception>
+    public static IReadOnlyList<InputScriptEntry> Offset(
+        IReadOnlyList<InputScriptEntry> entries,
+        long baseFrame)
+    {
+        ArgumentNullException.ThrowIfNull(entries);
+        ArgumentOutOfRangeException.ThrowIfNegative(baseFrame);
+        var result = new InputScriptEntry[entries.Count];
+        for (var i = 0; i < entries.Count; i++)
+        {
+            var frame = checked((int)(entries[i].Frame + baseFrame));
+            result[i] = new InputScriptEntry(frame, entries[i].State);
+        }
+
+        return result;
+    }
+
     private static bool TryParseFrame(string text, out int frame)
     {
         if (text.StartsWith("0x", StringComparison.OrdinalIgnoreCase))

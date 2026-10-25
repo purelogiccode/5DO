@@ -6,10 +6,10 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-25, eighth pass):** M0-M8 are functionally complete. The
+**Current position (2026-10-25, ninth pass):** M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **659 tests pass.** The shell now has fullscreen, GL screenshots, an About
+prototype. **662 tests pass.** The shell now has fullscreen, GL screenshots, an About
 dialog, a Hi-Res toggle, automatic CPU fallback when OpenGL init or the context fails,
 a game library browser, a settings dialog (video/audio/emulation/paths), six-player
 keyboard and gamepad binding, ten numbered save slots with PNG thumbnails, PNG
@@ -27,20 +27,31 @@ channels, so games appeared grayscale. The shader now applies the red, green, an
 indices independently, matching the CPU `FrameAssembler`; Lemmings gameplay was captured
 through both sharp-bilinear and xBR with correct colors.
 
+The ninth pass recorded per-title save-state, PNG, and WAV evidence (zero-frame and
+120-frame hashes, deterministic roundtrips, 600-frame audio captures) in
+[`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. It also corrected the Road Rash
+diagnosis: the ~42,000 and ~92,000 stops are a static game-side wait (READ_ID-only CD
+polling, every input ignored), not wall/rider pins or right-sidewalk wrecks. Space Ace's
+interactive path is validated (`X` menu, `A` play) and roundtrips at 15,000 frames.
+
 Real-content status with `panafz1.bin`: all five local corpus titles boot, load their
 own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio.
 
 - **Road Rash** renders its 3D race correctly (matching the Opera reference) and runs
   past 60,000 frames; the v10 `--autopilot road` driver reaches 91,000 live frames from
-  the 80k/83k states and roundtrips there, though the race is not finished yet.
+  the 80k/83k states and roundtrips there. The ~42k and ~92k stops are a static
+  game-side wait (READ_ID-only CD polling, all input ignored), not a wall pin.
 - **Wolfenstein 3D** starts a fresh game at FLOOR 1-1 from its preview menu, walks,
   turns, fires, and roundtrips a live gameplay save state.
 - **Alone in the Dark** reaches its in-game staircase/room with an upright character;
-  the D-pad/A change the scene and open the menu.
+  the D-pad/A open the Begin/Resume menu and start the intro scene. The intro then
+  shows the same static READ_ID-only wait.
 - **Lemmings** reaches its title and passcode screens; the Fun 4 passcode
   (`HNLHCIOECW`) starts gameplay and roundtrips, and the 640x480 high-resolution title
   matches the reference.
-- **Space Ace** plays its animated demo past 12,000 frames with no runaway.
+- **Space Ace** plays its animated demo and its interactive scene: `X` returns to the
+  title/menu and `A` starts the scene; the 15,000-frame state roundtrips and audio was
+  captured.
 
 The 2026-10-24/25 passes fixed DSP execution/immediates/rounding, the CCB field order,
 the CLI NVRAM initialization, a **transposed arbitrary-CEL X/Y write** that corrupted
@@ -48,10 +59,13 @@ Road Rash's VRAM allocator and drew Alone horizontally, and VDLP bitmap widths f
 384/512/640/1024-wide modes. The opt-in 640x480 high-resolution CEL/VDLP path was
 added; save-state loads restore the VDL picture immediately.
 
-Remaining major work: finish the Road Rash race and Space Ace interactive path,
-capture per-title save-state/screenshot/WAV evidence, investigate the remaining CD-load
-freeze, GPU 4K/p99 and GLES/ANGLE/Pi/DPI validation, Tier B prefetch validation,
-xBR/HQx and UI polish, arm64/installers, and the legal/attribution review. See
+Remaining major work: find the missing completion event behind the static
+READ_ID-only game-side wait that stops Road Rash (~42k/~92k), Alone's intro, and
+Wolfenstein's fresh-game load; finish the Road Rash race after that; script a pure
+D-pad Lemmings passcode and an Alone movement/inventory sequence; validate GPU
+4K/p99 and GLES/ANGLE/Pi/DPI; validate Tier B prefetch; xBR/HQx and UI polish;
+arm64/installers; and the legal/attribution review. Per-title save-state, PNG, and
+WAV evidence is now recorded in [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. See
 [`docs/Status.md`](docs/Status.md) for the completion estimate and
 [`docs/NextSession.md`](docs/NextSession.md) for the next-session plan. The
 implementation plan and architecture are in:

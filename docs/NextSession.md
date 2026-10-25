@@ -1,18 +1,19 @@
 # Next Session Handoff
 
-**Date:** 2026-10-25 (eighth pass)
-**Goal:** return to the real-game compatibility work now that the desktop shell and
-renderer are complete: finish the Road Rash race and Space Ace interactive path, and
-investigate the CD-load/READ_ID freeze. The eighth pass added gamepad backends, a log
-viewer, save-state thumbnails, first-run/error UI, xBR, and the real-content GPU palette
-fix; **659 tests pass**. Do not redo those features. The remaining work is scripted
-play, CD/CLIO/MADAM timing triage, GPU/Tier B validation, arm64/installers, and the
-legal/attribution review.
+**Date:** 2026-10-25 (ninth pass)
+**Goal:** capture per-title evidence and identify the common game-side wait that stops
+Road Rash, Alone, and Wolfenstein. The ninth pass validated Space Ace's interactive
+path, recorded save-state/PNG/WAV evidence for all five corpus titles, and proved that
+the ~42k/~92k Road Rash stops are not driving failures: the frame is static, every
+input is ignored, and the CD trace contains only READ_ID polls. **660 tests pass.** Do
+not redo the evidence capture or re-tune the Road Rash driver for those stops. The
+remaining work is the wait-state/CD-completion investigation, scripted Lemmings/Alone
+play, GPU/Tier B validation, arm64/installers, and the legal/attribution review.
 
 Earlier passes added the presentation plumbing (GL/GLES capability reporting, CPU
 fallback/context-loss recovery, fullscreen, screenshots, About, Hi-Res, benchmark
-gates, and prefetch) and the game-specific fixes recorded below. Read section 1.11 for
-the eighth-pass changes before starting.
+gates, and prefetch) and the game-specific fixes recorded below. Read section 1.12 for
+the ninth-pass changes before starting.
 
 Read these first:
 
@@ -197,9 +198,10 @@ rr8-30k.state (30,000)
 The 30k->36k and 36k->80k segments used earlier v10 revisions (right-steer
 crash restarts); the final throttle-only code was verified on the 80k->83k and
 83k->91k segments and reproduces the 91,000 state exactly. A clean final-code run
-from 30,000 currently pins at the ~40,000 right-sidewalk wreck
-(`rr-v37-40000.state`, image `rr-v37-40000.png`); that is the next thing to fix,
-not a reason to lose the 91,000 result.
+from 30,000 reaches 42,000 (`PC 0x0001048C`, hash `0xCBDF6DDB`) and then enters
+the **game-side wait** described below. The bike is on a sidewalk in the image,
+but that is a symptom; input is ignored and no amount of steering/throttle frees
+it. This is not a reason to lose the 91,000 result.
 
 Roundtrip at 91,000:
 
@@ -209,19 +211,18 @@ Roundtrip at 91,000:
 - Two independent 120-frame autopilot continuations: both `PC 0x000973EC`,
   hash `0x3F27B3D6`.
 
-A 100,000-frame continuation stays live through ~91,000 and then pins at
-~92,000: `lineX` 229 -> NaN, `cov` 0.23 -> 0.27, lookahead 0.55/0.32/0.05, and
-`RESTART` cycles without moving. Throttle-only does not free that pin. This is a
-real remaining stop, but it is 51,000 frames past the v9 BUSTED result, so the
-next session should capture the first 50 frames of that stop before changing
-the restart policy again.
+A 100,000-frame continuation stays live through ~91,000 and then stops at
+~92,000. The ninth-pass trace shows the frame is static, every input is ignored,
+and the CD trace contains only READ_ID (`cmd 0x83`) every 60 frames after the
+last read-data requests (sectors 109053-109071 and 43873-43888). `run --json`
+reports `cdStatus=0xE1`, `cdPoll=0x0C`. This is the **same game-side wait** as
+the 42,000-frame stop and Alone's static intro. Do not change the restart policy
+for it.
 
-A separate terminal stop was seen on one 45,500-frame path: the game reads CD
-sectors 109053-109071, then seeks back to 43877-43888, and afterwards only polls
-READ_ID (`cmd 0x83`) every 60 frames. The frame hash stays identical and every
-button input is ignored. This looks like a post-race/section load waiting for a
-CD completion that our path does not deliver, and it is a candidate for the same
-CD-status investigation as Wolfenstein's fresh-game load.
+A separate terminal stop was seen on one 45,500-frame path with the same
+signature: reads 109053-109071, seeks to 43877-43888, then only READ_ID polls;
+the frame hash stays identical and every button is ignored. Treat these as one
+open issue: the missing completion event after a post-race/section load.
 
 ### 1.10 Desktop shell and per-game fixes (2026-10-25)
 
@@ -285,6 +286,34 @@ real-content renderer bug:
 should return to the real-game compatibility work: Road Rash's ~92k/40k stops, Space
 Ace's interactive path, and the CD-load/READ_ID freeze. Do not redo the palette, xBR,
 gamepad, log, thumbnail, or first-run work.
+
+---
+
+### 1.12 Ninth pass: evidence, Space Ace interactive start, and the wait-state diagnosis (2026-10-25)
+
+This pass did **not** change emulation behavior. It captured the evidence that was
+missing and corrected the Road Rash diagnosis.
+
+- **Per-title evidence.** Each live state was loaded with `--frames 0`, captured to
+  PNG, then run 120 frames and captured again. The zero-frame hashes match the saved
+  frames, and every 120-frame continuation is deterministic. A 600-frame WAV was
+  captured from each gameplay state. The table and WAV stats are in
+  [`TestCorpus.md`](TestCorpus.md) 1.5a.
+- **Space Ace interactive path.** `X` at 12,000 returns to the title/menu; `A` at
+  12,200 starts the interactive scene. The run reaches 15,000 frames (hash
+  `0x7E780D93`), the state roundtrips, and two 120-frame continuations both end at
+  `PC 0x000284EC`, hash `0x70B16422`. A 600-frame gameplay WAV is 10.04 s, peak
+  4096, RMS 1832.
+- **Alone menu/intro.** `Up, Left, A, Down` reaches the Begin/Resume menu; `A` starts
+  the intro scene. The intro is a static, input-ignoring wait with only READ_ID
+  polling.
+- **Road Rash wait state.** The 42,000-frame state and the 92,000/100,000-frame state
+  are both static, ignore every button combination, and show only READ_ID polls.
+  `run --json` now reports `cdStatus` and `cdPoll`; the wait has `cdStatus=0xE1` and
+  `cdPoll=0x0C`. The bike happens to be on a sidewalk in the 42k image, but that is a
+  symptom, not a driving failure. **Do not tune the autopilot for these stops.**
+- **Tests.** Added a `ScriptedPbusSource` test that verifies `B+Left` encodes both
+  button bytes. 662 tests pass; format is clean.
 
 ---
 
@@ -444,32 +473,36 @@ changing the DSP reload value. The 18,000-frame Wolfenstein gameplay capture is
   sharp-bend braking, closing-side crossover, emergency brake, narrow-canyon
   coasting, urban throttle pacing, coast floor, detector-upset hold, side-based
   stuck recovery, stopped/wreck throttle-only restart, low-band centre at rows
-  190-214, road brightness <= 120; 605 tests pass). It reaches 91,000 live
-  frames from the 80k/83k states and roundtrips there, but the 5.5-mile city
-  race is still NOT finished: the 100k continuation pins at ~92,000, and a clean
-  final-code run from 30,000 pins at the ~40,000 right-sidewalk wreck. The
-  previous "terminal wall pin ~34,000" was the `BUSTED` screen, not a physics
-  wedge - no input resumes a lost race. The restart now ends after 10
-  moving-scene frames instead of holding straight for 180, so a traffic stop
-  that starts rolling resumes steering; the 80k/83k -> 91,000 state and hash are
-  unchanged. Next: capture the first 50 frames of the ~92,000 pin and add one
-  side-search rule that does not regress the 80k rider run; do not return to
-  pin-recovery-only work.
-- Space Ace: start the interactive game from the demo (P/X are the current leads)
-  and verify FMV/audio sync.
+  190-214, road brightness <= 120; 662 tests pass). It reaches 91,000 live
+  frames from the 80k/83k states and roundtrips there. A clean final-code run
+  from 30,000 reaches 42,000 and then enters the same **game-side wait** as the
+  92k/100k stop: only READ_ID is polled and every input is ignored. **Do not
+  tune the driver or add side-search rules for these stops.** The 5.5-mile race
+  is still not finished; the next work is to find the missing completion event.
+  The previous "terminal wall pin ~34,000" was the `BUSTED` screen, and the old
+  "~40,000 right-sidewalk wreck" is this wait, not a driving failure.
+- Space Ace: **done.** `X` at 12,000 returns to the menu; `A` at 12,200 starts
+  the interactive scene. The 15,000-frame state roundtrips (`0x7E780D93` -> two
+  120-frame continuations at `PC 0x000284EC`, `0x70B16422`) and a gameplay WAV
+  was captured. Longer scene/decision validation remains optional.
 
 ### Step 2 - save states and screenshots
 
-- Repeat the Wolfenstein save/load proof for Road Rash, Alone, Lemmings, and Space
-  Ace at gameplay frames.
-- Capture a known screenshot for each title with `--frame-out` (or
-  `--capture-dir`).
-- Verify NVRAM and disc state survive the roundtrip.
+**Done in the ninth pass.** Each title loads its live state at zero frames with the
+saved hash, runs 120 frames deterministically, and has a PNG screenshot. The table
+is in [`TestCorpus.md`](TestCorpus.md) 1.5a. NVRAM and disc state survive the
+roundtrip; the CLI loads a fresh NVRAM by default unless `--nvram` is given. Space
+Ace's interactive 15,000-frame state and Alone's Begin/Resume menu are also
+captured. The remaining evidence work is longer per-title gameplay clips, not the
+save/load proof.
 
 ### Step 3 - audio quality
 
+- The 600-frame captures are in `TestCorpus.md` 1.5a. Road Rash's 91k-state
+  capture has 378 clipped samples in 10 s (loud race mix); the other titles do
+  not clip. Space Ace's capture is mono duplicated to stereo.
 - Capture 30-60 s of a race/level and compare loudness/spectrum with Opera.
-- Check the 191-sample Road Rash clipping and the 737 vs 735 samples/frame cadence.
+- Check the 737 vs 735 samples/frame cadence (all five titles are ~737).
 - Verify the DSP stops/starts cleanly when a game changes audio modes.
 
 ### Step 4 - performance
@@ -492,10 +525,14 @@ changing the DSP reload value. The 18,000-frame Wolfenstein gameplay capture is
 - [x] The high-resolution 640x480 renderer matches Lemmings' title reference.
 - [x] The Lemmings passcode confirm path is complete (Fun 4 gameplay + roundtrip).
 - [ ] The Road Rash city race is finished. Driver v10 reaches 91,000 live frames
-  from the 80k/83k states (roundtrip `0x02ABE78E`) and no longer loses at
-  ~34,000, but a 100k continuation pins at ~92,000 and a clean final-code run
-  from 30,000 pins at the ~40,000 right-sidewalk wreck. The high-res pointer
-  path is still unproven.
+  from the 80k/83k states (roundtrip `0x02ABE78E`), and a clean 30k run reaches
+  42,000, but both then enter the same static READ_ID-only game-side wait. This
+  is not a driving or wall-pin failure; it is the open completion-event issue.
+  The high-res pointer path is still unproven.
+- [x] Space Ace's interactive path is validated (X menu, A play, 15,000-frame
+  roundtrip and WAV).
+- [x] Per-title save-state, screenshot, and WAV evidence is recorded
+  (`TestCorpus.md` 1.5a).
 - [x] `dotnet build -c Release`, `dotnet test`, and `dotnet format --verify-no-changes` pass.
 ---
 
@@ -514,6 +551,11 @@ changing the DSP reload value. The 18,000-frame Wolfenstein gameplay capture is
 - Do not enable high-resolution mode by default. Keep `--high-res` opt-in until the
   passcode pointer/hit-test path is understood; the five 3,000-frame low-res hashes
   must stay unchanged.
+- Do not tune the Road Rash driver or add side-search rules for the ~42k/~92k stops.
+  They are the static READ_ID-only game-side wait, not wall pins. Capture the CD/CLIO
+  trace and investigate the completion event instead.
+- Do not redo the ninth-pass evidence capture, Space Ace interactive start, or the
+  `cdStatus`/`cdPoll` diagnostics. Extend them with new evidence only.
 
 ---
 
@@ -587,10 +629,10 @@ The data-track extraction command is in [`TestCorpus.md`](TestCorpus.md).
 2. What obstacle-avoidance and wreck-recovery policy lets `--autopilot road` finish
    the 5.5-mile city race? Answered in part 2026-10-25: the "stuck bike" was the
    `BUSTED` screen, and v10 now survives 91,000 live frames. The remaining stops
-   are the ~92,000 wall/rider pin (lookahead 0.55/0.32/0.05) and the ~40,000
-   right-sidewalk wreck in a clean final-code 30k run. The next experiment is a
-   bounded capture of the first 50 frames of the 92k stop, then one side search
-   that is gated so it cannot touch the 80k rider-run phase.
+   are **not** a wall/rider pin: the ninth pass showed the frame is static, every
+   input is ignored, and only READ_ID is polled at both ~42k and ~92k. The next
+   experiment is the completion-event/CD-wait investigation, not another side
+   search.
 3. Does the 737 vs 735 samples/frame cadence cause audible pitch drift? Compare a
    captured WAV with Opera/hardware before changing `_dspPcnt`.
 4. Is the 191-sample Road Rash clipping in the game mix or in our DSP output path?

@@ -124,6 +124,7 @@ internal static class Program
         var dumpRamLength = options.GetInt("--dump-ram-length", 0x1000);
         var dumpDspPrefix = options.Get("--dump-dsp");
         var inputScriptPath = options.Get("--input-script");
+        var inputScriptBase = options.Get("--script-base");
         var autopilotMode = options.Get("--autopilot");
         var progressEvery = options.GetInt("--progress", 0);
         var celTrace = options.Get("--cel-trace");
@@ -177,10 +178,31 @@ internal static class Program
         }
 
         ScriptedPbusSource? scriptedInput = null;
+        IReadOnlyList<InputScriptEntry>? scriptEntries = null;
         if (inputScriptPath is not null)
         {
-            scriptedInput = new ScriptedPbusSource(InputScript.Load(inputScriptPath));
+            scriptEntries = InputScript.Load(inputScriptPath);
+            scriptedInput = new ScriptedPbusSource(scriptEntries);
             machine.PbusSource = scriptedInput;
+        }
+
+        if (inputScriptBase is not null
+            && !string.Equals(inputScriptBase, "absolute", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(inputScriptBase, "state", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                $"Unknown script base '{inputScriptBase}'. Supported: absolute, state.");
+        }
+
+        if (inputScriptBase is not null && inputScriptPath is null)
+        {
+            throw new ArgumentException("--script-base requires --input-script.");
+        }
+
+        if (string.Equals(inputScriptBase, "state", StringComparison.OrdinalIgnoreCase)
+            && stateIn is null)
+        {
+            throw new ArgumentException("--script-base state requires --state-in.");
         }
 
         RoadRashAutopilot? roadAutopilot = null;
@@ -365,6 +387,13 @@ internal static class Program
         if (stateIn is not null)
         {
             machine.LoadStateFromFile(stateIn);
+            if (scriptEntries is not null
+                && string.Equals(inputScriptBase, "state", StringComparison.OrdinalIgnoreCase))
+            {
+                var offsetEntries = InputScript.Offset(scriptEntries, machine.FramesExecuted);
+                scriptedInput = new ScriptedPbusSource(offsetEntries);
+                machine.PbusSource = scriptedInput;
+            }
         }
 
         if (pokeSpec is not null)
@@ -487,6 +516,8 @@ internal static class Program
             dspPc = machine.Dsp.ProgramCounter,
             dspSema = ((uint)machine.Dsp.SemaphoreStatus << 16) | machine.Dsp.SemaphoreData,
             dspSeed = machine.Dsp.Seed,
+            cdStatus = machine.Cdrom.DriveStatus,
+            cdPoll = machine.Cdrom.Poll,
             autopilot = roadAutopilot is null ? null : "road",
             autopilotLineX = roadAutopilot is null || double.IsNaN(roadAutopilot.LineX)
                 ? (double?)null
@@ -1465,7 +1496,7 @@ internal static class Program
         Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
-        Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--autopilot road] [--progress N] [--cel-trace path] [--pbus-trace path]");
+        Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--script-base absolute|state] [--autopilot road] [--progress N] [--cel-trace path] [--pbus-trace path]");
         Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--prefetch]");
         Console.WriteLine("             [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--json]");
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");

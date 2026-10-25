@@ -65,17 +65,20 @@ This is the short, current answer to "where are we?" The detailed task list is i
   (`--poke ADDR=HEX`), an experimental Road Rash road-following driver
   (`--autopilot road`), an opt-in bounded disc prefetch cache (`--prefetch`), and RAM
   dumps at trace stops. `run --json` reports the source size, VDL modulo, road
-  coverage, and autopilot state for mode/crop and driver investigations.
+  coverage, autopilot state, and CD status/poll for mode/crop, driver, and wait-state
+  investigations.
 - **Audio:** the DSP executes in every run, including headless runs with no host
   audio sink. The AudioFolio semaphore handshake works, instrument programs run, and
   the five-title corpus produces non-silent 44.1 kHz stereo WAV output (~737 samples
-  per frame). In-game captures: Road Rash peak 32768 / RMS ~9.1k (191 clipped samples
-  in 10 s), Wolfenstein peak 30743 / RMS ~5.5k / no clipping.
+  per frame). Ninth-pass 600-frame captures: Wolfenstein peak 18100 / RMS ~2.2k,
+  Lemmings 22283 / ~4.5k, Alone 20617 / ~1.9k, Road Rash 32768 / ~9.2k (378 clipped),
+  Space Ace 4096 / 1832 (mono duplicated); see `TestCorpus.md` 1.5a.
 - **Input scripting:** the CLI accepts `--input-script <path>` with
   `frame button[,button...]` lines for repeatable controller taps. Input has been
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
-  start), Alone (scene and menu), Lemmings (menu and passcode entry), and Space Ace (P/X).
-- **Tests:** 659 passing (`dotnet test -c Release`), including high-resolution CEL and
+  start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
+  (X menu, A play).
+- **Tests:** 662 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
@@ -94,11 +97,11 @@ on both sides. Opera is the bundled Windows `OperaCore` build in
 
 | Title | Our C# port | Opera reference |
 |---|---|---|
-| Lemmings (USA) | **Boots, renders, plays DSP audio**; reaches the title screen and the passcode screen; with `--high-res` the 640x480 title renders all four buttons and the full logo, matching the reference. The passcode screen uses A to type, B to confirm, auto-confirms at ten letters, and a 15-frame D-pad hold moves one key | Not re-tested this pass; expected to pass |
-| Space Ace (USA) | **Boots, renders, plays DSP audio**; ReadySoft player runs the animated demo past 12,000 frames with no runaway | **Plays the demo intro for 60 s, no runaway** |
-| Road Rash (USA) | **Boots, renders, plays DSP audio**; the 3D race renders correctly and the attract race runs past 60,000 frames with no allocator error; B accelerates, A brakes, the D-pad steers, C attacks, and P pauses; `--autopilot road` v10 reaches 91,000 live frames from the 80k/83k states (roundtrip `0x02ABE78E`) but does not yet finish the race (~92k wall/rider pin; clean 30k runs pin at ~40k) | **Renders the intro FMV, then a race** |
-| Wolfenstein 3D (USA) | **Boots, renders, plays DSP audio**; A opens the preview menu, selecting a level starts a fresh game (FLOOR 1-1), the player can walk/turn/fire, and save/load roundtrips in-game | **Renders the intro for 60 s** |
-| Alone in the Dark (USA) | **Boots, renders, plays DSP audio**; reaches the in-game staircase/room with an upright character; D-pad/A change the scene and open the menu | **Renders the intro/loading for 60 s** |
+| Lemmings (USA) | **Boots, renders, plays DSP audio**; reaches the title screen and the passcode screen; with `--high-res` the 640x480 title renders all four buttons and the full logo, matching the reference. The passcode screen uses A to type, B to confirm, auto-confirms at ten letters, and a 15-frame D-pad hold moves one key. Fun 4 gameplay roundtrips; 600-frame WAV evidence in `TestCorpus.md` 1.5a | Not re-tested this pass; expected to pass |
+| Space Ace (USA) | **Boots, renders, plays DSP audio**; ReadySoft player runs the animated demo past 12,000 frames. The interactive path is now validated: X returns to the title/menu, A starts the scene; the 15,000-frame state roundtrips (`0x7E780D93` -> `PC 0x000284EC`, `0x70B16422` twice) and the gameplay WAV is non-silent | **Plays the demo intro for 60 s, no runaway** |
+| Road Rash (USA) | **Boots, renders, plays DSP audio**; the 3D race renders correctly and the attract race runs past 60,000 frames with no allocator error; B accelerates, A brakes, the D-pad steers, C attacks, and P pauses; `--autopilot road` v10 reaches 91,000 live frames from the 80k/83k states (roundtrip `0x02ABE78E`). The ~42k and ~92k stops are a **game-side wait**, not a wall pin: only READ_ID is polled and every input is ignored | **Renders the intro FMV, then a race** |
+| Wolfenstein 3D (USA) | **Boots, renders, plays DSP audio**; A opens the preview menu, selecting a level starts a fresh game (FLOOR 1-1), the player can walk/turn/fire, and save/load roundtrips in-game (`0xF568EBCA` -> `PC 0x000782B8` twice); 600-frame WAV evidence captured | **Renders the intro for 60 s** |
+| Alone in the Dark (USA) | **Boots, renders, plays DSP audio**; reaches the in-game staircase/room with an upright character; the Up/Left/A/Down sequence reaches the Begin/Resume menu, A starts the intro scene, and the state roundtrips. The intro then shows the common static READ_ID-only wait | **Renders the intro/loading for 60 s** |
 
 The CD disc-end fix on 2026-10-23 is what unblocked Road Rash, Space Ace, and
 Wolfenstein: `InitCd` no longer double-adds the 150-frame lead-in, so the CD DIPIR
@@ -146,13 +149,17 @@ ARM vectors. It now runs past 12,000 frames.
 **Gameplay is now reachable and renderer-correct.** Road Rash's 3D race renders like
 the Opera reference and runs past 60,000 frames; Wolfenstein 3D starts a fresh game,
 walks/turns/fires, and its save states roundtrip; Alone in the Dark's in-game character
-is upright and its menu is reachable; Lemmings completes a Fun 4 passcode
+is upright and its Begin/Resume menu is reachable; Lemmings completes a Fun 4 passcode
 (`HNLHCIOECW`) end-to-end into gameplay with save/load roundtrip, and its 640x480
-high-resolution title matches the reference; Space Ace plays its animated demo. The
-next pass should keep improving the Road Rash driver (v10 reaches 91,000 live
-frames from the 80k/83k states, but the 100k continuation pins at ~92,000 and a
-clean final-code 30k run pins at ~40,000; the old "wall pin" was the `BUSTED`
-screen) and capture a WAV/state/screenshot set for each title.
+high-resolution title matches the reference; Space Ace starts its interactive scene
+(X -> menu, A -> play) and plays. Per-title save-state, PNG, and WAV evidence is
+recorded in `TestCorpus.md` 1.5a.
+
+The ninth pass corrected the Road Rash diagnosis: the ~42k and ~92k stops are the
+same **game-side wait**, not wall pins or driving failures. The CD trace shows only
+READ_ID polls every 60 frames, the frame is static, and every input is ignored.
+`run --json` now exposes `cdStatus`/`cdPoll` so the signature is visible without a
+trace. The driver is not the next thing to tune; the wait state is.
 
 ---
 
@@ -228,12 +235,14 @@ add **2-4 weeks**. If the target is "all five corpus games playable" rather than
    validated: Road Rash's race renders correctly and its controls are mapped (B
    accelerate, A brake, D-pad steer, `--autopilot road` v10 reaches 91,000 live
    frames from the 80k/83k states), Wolfenstein starts a fresh game and supports
-   walk/turn/fire, Alone's in-game character is upright, Lemmings reaches its
-   passcode screen (A types, B confirms, ten letters auto-confirm), and Space Ace
-   plays its demo. The remaining work is scripted play: a Road Rash traffic-aware
-   driver that finishes a race (the earlier "pin" was the `BUSTED` race-over
-   screen; v10 recovers rider-run and wall stops but still pins at ~92k and in a
-   clean 30k->40k run), a Lemmings ten-letter entry sequence, and an Alone
+   walk/turn/fire, Alone's Begin/Resume menu and intro are reachable, Lemmings
+   reaches its passcode screen (A types, B confirms, ten letters auto-confirm),
+   and Space Ace starts and plays its interactive scene (X menu, A play).
+   **Do not keep tuning the Road Rash driver for the ~42k/~92k stops**: they are
+   a game-side wait (static frame, READ_ID-only CD polling, input ignored), the
+   same signature as Alone's static intro and Wolfenstein's fresh-game load.
+   The remaining work is to find the missing completion event that unblocks that
+   wait, then script a Lemmings ten-letter entry and an Alone
    movement/inventory sequence. Record the exact scripts and frame numbers in
    [`TestCorpus.md`](TestCorpus.md).
 2. **Save states and screenshots in-game.** Wolfenstein already roundtrips a live

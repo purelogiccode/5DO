@@ -2,21 +2,27 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current position (2026-10-25, eighth pass):** all five local corpus titles boot, load
+**Current position (2026-10-25, ninth pass):** all five local corpus titles boot, load
 their own OS, render real frames, and produce non-silent DSP audio. Road Rash's 3D race
 renders correctly and the attract race continues past 60,000 frames with no allocator
 error; Wolfenstein 3D starts a fresh game (FLOOR 1-1), walks/turns/fires, and its save
 states roundtrip; Alone in the Dark's in-game character renders upright at the
-staircase and its menu is reachable; Lemmings reaches its title menu and passcode
-screen, its 640x480 high-resolution title matches the reference, and its Fun 4 passcode
-starts gameplay with a save/load roundtrip; Space Ace plays its animated demo. The
-eighth pass fixed the GPU palette shader so real frames use independent R/G/B CLUT
-indices, added the opt-in xBR-lv2 filter, and captured Lemmings gameplay through both
-sharp-bilinear and xBR with correct colors. The Wolfenstein fresh-game walk and the
-Lemmings passcode path are verified gameplay loops; completing a race/level in the
-other titles remains next. The Road Rash autopilot's former "terminal wall pin" was
-identified as the race-over `BUSTED` screen (2026-10-25), so the open problem is keeping
-the race alive, not unsticking a wedged bike.
+staircase, and its Begin/Resume menu and intro are reachable; Lemmings reaches its
+title menu and passcode screen, its 640x480 high-resolution title matches the
+reference, and its Fun 4 passcode starts gameplay with a save/load roundtrip; Space Ace
+plays its animated demo and starts its interactive scene (`X` menu, `A` play) with a
+save/load roundtrip. The eighth pass fixed the GPU palette shader so real frames use
+independent R/G/B CLUT indices, added the opt-in xBR-lv2 filter, and captured Lemmings
+gameplay through both sharp-bilinear and xBR with correct colors.
+
+The ninth pass captured per-title save-state, PNG, and WAV evidence (see
+`TestCorpus.md` 1.5a) and corrected the Road Rash diagnosis: the ~42,000 and ~92,000
+stops are a **static game-side wait**, not wall/rider pins or driving failures. The
+frame is identical for every button combination and the CD trace contains only
+READ_ID polls. `run --json` reports `cdStatus=0xE1` and `cdPoll=0x0C` at these stops.
+Alone's intro and Wolfenstein's fresh-game load share the signature. The Wolfenstein
+fresh-game walk and the Lemmings passcode path remain the verified gameplay loops;
+the open work is the missing completion event, not further autopilot tuning.
 
 The 2026-10-24 sessions found four root causes:
 
@@ -256,10 +262,10 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 | Game | Region | Disc ID | BIOS | Build | Boot | In-game | Audio | Input | Notes | Opera reference |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | **Fun 4 gameplay via passcode (`HNLHCIOECW`) with save/load roundtrip** | Non-silent DSP output | **Works**: A types, B confirms, ten letters auto-confirm, D-pad moves the selection; entry is permuted across `0x96574-7B,7E-7F` | Passcode `HNLHCIOECW` accepted (`Code for 1` / `Rating = Fun`); gameplay at 21,640 frames (`0x18F38B4D`) roundtrips; 640x480 high-res title matches the reference | Not re-tested this pass |
-| Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass** | **Animated demo past 12,000 frames** | Non-silent DSP output | P/X change the player state | Former frame-681 null-buffer runaway is gone; the demo FMV renders | Demo intro 60 s, no runaway |
-| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **3D race renders and runs past 60,000 frames; v10 autopilot reaches 91,000 live frames from the 80k/83k states and roundtrips** | Non-silent DSP output; 10 s peak 32768, RMS ~9.1k | **B accelerates, A brakes, D-pad steers, C attacks, P pauses**; `--autopilot road` v10 adds close-traffic coast/steer, urgent preemption, emergency-brake steer hold, and a throttle-only wreck/rider-run restart; still pins at ~92,000 and in a clean 30k->40k run | The CEL transposition fix removed the VRAM `AllocMem` error; the earlier "wall pin" was the race-over `BUSTED` screen, not a physics wedge. A separate 45,494-frame path stopped after a CD load and only polled READ_ID | Intro FMV, then a race |
+| Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass** | **Animated demo and interactive scene; X -> menu, A -> play; 15,000-frame save/load roundtrip** | Non-silent DSP output; 10 s peak 4096, RMS ~1.8k (mono duplicated) | **Works**: X returns to the title/menu, A starts the scene; P also changes state | Former frame-681 null-buffer runaway is gone; the 15,000 state roundtrips (`0x7E780D93` -> two 120-frame continuations at `PC 0x000284EC`, `0x70B16422`) | Demo intro 60 s, no runaway |
+| Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **3D race renders and runs past 60,000 frames; v10 autopilot reaches 91,000 live frames from the 80k/83k states and roundtrips** | Non-silent DSP output; 10 s peak 32768, RMS ~9.6k/8.8k, 378 clipped | **B accelerates, A brakes, D-pad steers, C attacks, P pauses**; `--autopilot road` v10 adds close-traffic coast/steer, urgent preemption, emergency-brake steer hold, and a throttle-only wreck/rider-run restart | The CEL transposition fix removed the VRAM `AllocMem` error; the earlier "wall pin" was the race-over `BUSTED` screen. The ~42k and ~92k stops are a static READ_ID-only game-side wait, not a driving failure; `run --json` shows `cdStatus=0xE1`, `cdPoll=0x0C` | Intro FMV, then a race |
 | Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Pass** | **Fresh game (FLOOR 1-1) and save/load roundtrip** | Non-silent DSP output; 10 s peak 30743, RMS ~5.5k | **Works**: A opens the menu, D-pad/A navigate and fire | From a 12,000-frame demo state, A opens the preview menu; selecting a level starts a fresh game | Intro 60 s |
-| Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Pass** | **In-game staircase/room with an upright character** | Non-silent DSP output | **Works**: D-pad/A change the scene and open the menu | The CEL transposition fix restored the character's upright orientation | Intro/loading 60 s |
+| Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Pass** | **In-game staircase/room with an upright character; Begin/Resume menu and intro** | Non-silent DSP output; 10 s peak 20617, RMS ~1.9k | **Works**: D-pad/A change the scene; `Up, Left, A, Down` reaches the menu, A starts the intro | The CEL transposition fix restored the character's upright orientation. The intro then shows the common static READ_ID-only wait | Intro/loading 60 s |
 
 `Pass` means a real game frame was rendered and verified visually. The Opera reference
 column is the bundled Windows OperaCore with the same BIOS and an ISO extracted from
@@ -305,21 +311,26 @@ transposition fixes are described above; input results come from `--input-script
   `BUSTED` (`0x9F44FAA2`), so throttle-only is the proven policy. Best evidence:
   91,000 live frames (`PC 0x00085F48`, hash `0x02ABE78E`, `cov=0.93`), zero-frame
   `0x02ABE78E`, two 120-frame continuations both `PC 0x000973EC` / `0x3F27B3D6`.
-  The race is still not finished: a 100k continuation pins at ~92,000
-  (lookahead 0.55/0.32/0.05) and a clean final-code 30k run pins at the ~40,000
-  right-sidewalk wreck. A separate 45,500-frame path stopped after a CD load
-  (sectors 109053-109071, then 43877-43888) and only polled READ_ID (`cmd 0x83`);
-  every button input left the hash unchanged. The remaining work is a bounded
-  side-search for the ~92k/40k stops that does not regress the 80k rider run, and
-  the CD-load stop if it recurs.
+  The race is still not finished, but the ninth pass corrected the stop diagnosis:
+  at ~92,000 and at ~42,000 the frame is static, every button combination leaves
+  the hash unchanged, and the CD trace contains only READ_ID (`cmd 0x83`) polls
+  every 60 frames. The ~42k run is the clean final-code 30k run; the bike happens
+  to be on a sidewalk in the image, but that is a symptom, not a driving failure.
+  A separate 45,500-frame path has the same signature after reading sectors
+  109053-109071 and 43877-43888. `run --json` exposes `cdStatus=0xE1` and
+  `cdPoll=0x0C` at these stops. The remaining work is the missing completion
+  event, not another autopilot side search.
 - **Wolfenstein 3D:** from the 12,000-frame demo state, `A` opens the Select Previews
   menu; D-pad/A navigate to Select a Level and start a fresh game at FLOOR 1-1 with
   `SCORE 0000000`. From a live 60-frame state, two independent 120-frame continuations
   both end at hash `0x370158AC`, and a zero-frame load reproduces the saved hash
   `0xC9989182`.
-- **Space Ace:** from a 12,000-frame state, `P` and `X` produce different hashes and
-  PCs; `A`/`B`/`C` and the D-pad do not change the demo. `P`/`X` likely open the
-  player's menu/control path; the interactive game still needs a dedicated script.
+- **Space Ace:** from a 12,000-frame state, `X` at 12,000 returns to the title/menu
+  (`PC 0x0000E12C`, hash `0x596B6A81`); `A` at 12,200 starts the interactive scene.
+  The run reaches 15,000 frames (`PC 0x000765F0`, hash `0x7E780D93`), the state
+  roundtrips, and two independent 120-frame continuations both end at
+  `PC 0x000284EC`, hash `0x70B16422`. `P` also changes state; `A`/`B`/`C` and the
+  D-pad do not change the demo by themselves.
 
 ### 10.2 Renderer fixes and validation (2026-10-24)
 

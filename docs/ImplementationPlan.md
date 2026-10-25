@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Status (2026-10-25, eighth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five local corpus titles boot, load their own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio. Road Rash's 3D race renders correctly and the v10 autopilot reaches 91,000 live frames; Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room; Lemmings completes the Fun 4 passcode and its 640x480 high-resolution title matches the reference; Space Ace plays its demo. **659 tests pass.** The eighth pass fixed the real-content GPU palette expansion (independent R/G/B CLUT indices), added the opt-in xBR-lv2 filter, Windows XInput/Linux evdev gamepad backends with a binding UI, an in-app log viewer, save-state thumbnails, a first-run guide, and error dialogs. Remaining work: finish the Road Rash race and Space Ace interactive path, GPU 4K/p99/GLES/DPI validation, HQx/CRT bloom, arm64/installers, the M0.8 legal/attribution review, and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
+**Status (2026-10-25, ninth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five local corpus titles boot, load their own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio. Road Rash's 3D race renders correctly and the v10 autopilot reaches 91,000 live frames; Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room, Begin/Resume menu, and intro; Lemmings completes the Fun 4 passcode and its 640x480 high-resolution title matches the reference; Space Ace plays its demo and starts its interactive scene (X menu, A play). **662 tests pass.** The ninth pass recorded per-title save-state/PNG/WAV evidence and corrected the Road Rash stop diagnosis: the ~42k/~92k stops are a static READ_ID-only game-side wait, not driving failures. The eighth pass fixed the real-content GPU palette expansion (independent R/G/B CLUT indices), added the opt-in xBR-lv2 filter, Windows XInput/Linux evdev gamepad backends with a binding UI, an in-app log viewer, save-state thumbnails, a first-run guide, and error dialogs. Remaining work: find the missing completion event behind the game-side wait, finish the Road Rash race, GPU 4K/p99/GLES/DPI validation, HQx/CRT bloom, arm64/installers, the M0.8 legal/attribution review, and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
 **Last updated:** 2026-10-25
 
 ---
@@ -214,12 +214,14 @@ project/type layout is unchanged.
 
 ### 4a. Current position vs. the plan (2026-10-25)
 
-Snapshot: 659 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
+Snapshot: 662 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
 and zero synthetic steady-state allocations; all five local corpus titles boot and
 render, and scripted gameplay is validated in Wolfenstein, Lemmings, Road Rash, and
 Alone. The opt-in 640x480 high-resolution mode is implemented and matches the
 Lemmings reference title. Real-game status is in
-[`Compatibility.md`](Compatibility.md). The eighth pass fixed real-content GPU palette
+[`Compatibility.md`](Compatibility.md). The ninth pass recorded save-state/PNG/WAV
+evidence and proved that the Road Rash ~42k/~92k stops are a static READ_ID-only
+game-side wait, not wall pins. The eighth pass fixed real-content GPU palette
 expansion, added xBR, gamepad backends, a log viewer, save-state thumbnails, and
 first-run/error UI. Counting the prototype work as partial credit:
 

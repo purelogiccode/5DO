@@ -100,6 +100,35 @@ public sealed class InputScriptTests
     }
 
     [Fact]
+    public void Offset_ShiftsFramesForStateRelativeScripts()
+    {
+        var entries = InputScript.Parse("0 A\n20 B\n");
+        var shifted = InputScript.Offset(entries, 91_000);
+
+        Assert.Equal(91_000, shifted[0].Frame);
+        Assert.Equal(ControllerButton.A, shifted[0].State.Buttons);
+        Assert.Equal(91_020, shifted[1].Frame);
+        Assert.Equal(ControllerButton.B, shifted[1].State.Buttons);
+    }
+
+    [Fact]
+    public void Offset_RejectsNegativeBase()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => InputScript.Offset([], -1));
+    }
+
+    [Fact]
+    public void AdvanceTo_EncodesBAndLeftTogether()
+    {
+        var source = new ScriptedPbusSource(InputScript.Parse("0 B,Left\n"));
+        source.AdvanceTo(0);
+        var packet = new byte[PbusEncoder.PacketSize];
+        _ = source.GetPbusData(packet);
+        Assert.Equal(0x80, packet[2]);
+        Assert.Equal(0x82, packet[3]);
+    }
+
+    [Fact]
     public void AdvanceTo_RejectsNegativeFrames()
     {
         var source = new ScriptedPbusSource([]);

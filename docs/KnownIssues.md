@@ -7,11 +7,11 @@ prototype state. It is not a compatibility guarantee.
 
 | Title | Status | Remaining issue |
 |---|---|---|
-| Wolfenstein 3D | Boots, starts FLOOR 1-1, walk/turn/fire, save/load roundtrip | The fresh-game level load can stay static for a long time; CD read pacing is still under investigation |
+| Wolfenstein 3D | Boots, starts FLOOR 1-1, walk/turn/fire, save/load roundtrip | The fresh-game level load can stay static for a long time; the same game-side wait as the other titles is suspected |
 | Lemmings | Boots, title/passcode, Fun 4 gameplay, save/load, 640x480 title | Passcode entry uses a diagnostic RAM poke; pure D-pad typing of all ten letters is not scripted |
-| Road Rash | Boots, 3D race renders, 91,000 live frames with `--autopilot road` v10 | The city race is not finished; ~92,000 wall/rider pin and a clean 30k->40k right-sidewalk wreck remain |
-| Alone in the Dark | Boots, in-game room, upright character, menu | A full movement/inventory sequence is not scripted |
-| Space Ace | Boots, animated demo, audio | The interactive path is not validated end-to-end |
+| Road Rash | Boots, 3D race renders, 91,000 live frames with `--autopilot road` v10 | The city race is not finished. The ~42,000 and ~92,000 stops are a game-side wait, not a wall pin: only READ_ID is polled and all input is ignored |
+| Alone in the Dark | Boots, in-game room, upright character, Begin/Resume menu, intro scene | The intro scene is a static wait that ignores input; a full movement/inventory sequence is not scripted |
+| Space Ace | Boots, animated demo, audio, interactive start via X->menu, A->play, save/load roundtrip | Longer scene/decision validation is still needed |
 
 ## Renderer
 
@@ -42,6 +42,12 @@ prototype state. It is not a compatibility guarantee.
 
 - CD command/status timing is approximate. The README/plan describe the remaining
   `libopera` differential work; do not port `opera_cdrom.c` wholesale.
+- Several stops share a game-side wait signature: the frame is static, every button
+  combination is ignored, and the CD trace contains only READ_ID (`0x83`) polls every
+  60 frames. `run --json` reports `cdStatus=0xE1` and `cdPoll=0x0C` at these stops.
+  Do not diagnose them as wall pins or driving failures. Known instances: Road Rash
+  ~42k and ~92k/100k, Alone in the Dark's intro after `Begin`, and Wolfenstein's
+  fresh-game load.
 - High-resolution mode is opt-in and validated mainly with Lemmings. A true 640x240
   non-interlaced mode has not been identified.
 - PAL video, CD-DA/Red Book audio, multi-disc swapping, netplay, rewind, and additional

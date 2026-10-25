@@ -124,6 +124,14 @@ Diagnostics: `--watch-lowmem`, `--dump-ram`, `--dump-dsp`, `--trace-frames`, `--
 `--capture-dir`, `--capture-every`, `--input-script`, and `--autopilot road`. See
 [`TestCorpus.md`](TestCorpus.md) for the full command set and script format.
 
+Input scripts use **absolute emulated frame numbers** by default. When a run starts
+from `--state-in`, the first executed frame is the state's saved frame count, so a
+script that starts at `0` applies its last entry immediately. Add
+`--script-base state` to shift the whole script by the loaded state's frame count;
+for example, `0 A` then applies on the first frame after the state loads. `run
+--json` reports `cdStatus` and `cdPoll`; a static READ_ID-only wait shows
+`cdStatus=0xE1` and `cdPoll=0x0C`.
+
 ## Troubleshooting
 
 - **"Load a BIOS first"**: open a BIOS before pressing Play.
