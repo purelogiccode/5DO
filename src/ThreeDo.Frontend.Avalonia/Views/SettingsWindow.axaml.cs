@@ -47,6 +47,7 @@ public partial class SettingsWindow : Window
         IntegerCheck.IsChecked = settings.IntegerScale;
         VsyncCheck.IsChecked = settings.Vsync;
         OverlayCheck.IsChecked = settings.ShowOverlay;
+        NativeScreenshotCheck.IsChecked = settings.SaveNativeScreenshot;
         BloomSlider.Value = settings.Bloom;
         AudioCheck.IsChecked = settings.AudioEnabled;
         VolumeSlider.Value = settings.Volume;
@@ -73,6 +74,7 @@ public partial class SettingsWindow : Window
         settings.IntegerScale = IntegerCheck.IsChecked == true;
         settings.Vsync = VsyncCheck.IsChecked == true;
         settings.ShowOverlay = OverlayCheck.IsChecked == true;
+        settings.SaveNativeScreenshot = NativeScreenshotCheck.IsChecked == true;
         settings.Bloom = (float)BloomSlider.Value;
         settings.AudioEnabled = AudioCheck.IsChecked == true;
         settings.Volume = (float)VolumeSlider.Value;

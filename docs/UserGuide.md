@@ -86,8 +86,10 @@ states. Each slot writes `slot-NN.tdos`, a JSON sidecar, and a PNG thumbnail. Wr
 atomic.
 
 **Screenshot** writes a PNG named `<game>-<timestamp>-f<frames>.png` from the OpenGL
-output (or the CPU frame when GL is unavailable). The default directory is your
-Pictures folder; change it in **Settings > Paths**.
+output (or the CPU frame when GL is unavailable). Enable **Also save the native CPU
+frame with screenshots** in **Settings > Video** to write a second `-native.png`
+image from the CPU frame assembler. The default directory is your Pictures folder;
+change it in **Settings > Paths**.
 
 ## Library and settings
 

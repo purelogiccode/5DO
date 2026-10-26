@@ -69,6 +69,9 @@ public sealed class AppSettings
     /// <summary>Gets or sets a value indicating whether the FPS/status overlay is shown over the video.</summary>
     public bool ShowOverlay { get; set; }
 
+    /// <summary>Gets or sets a value indicating whether a screenshot also saves the native CPU frame.</summary>
+    public bool SaveNativeScreenshot { get; set; }
+
     /// <summary>Gets or sets the CRT bloom strength (0-1).</summary>
     public float Bloom { get; set; } = 0.35f;
 

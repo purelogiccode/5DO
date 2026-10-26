@@ -356,15 +356,20 @@ public partial class MainWindow : Window, IDisposable
             ? Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
             : _settings.ScreenshotDirectory;
         var name = string.IsNullOrWhiteSpace(_gameName) ? "3do" : SanitizeFileName(_gameName);
-        var path = Path.Combine(
-            directory,
-            $"{name}-{DateTime.Now:yyyyMMdd-HHmmss}-f{_machine.FramesExecuted:D6}.png");
+        var stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+        var path = Path.Combine(directory, $"{name}-{stamp}-f{_machine.FramesExecuted:D6}.png");
+        var nativePath = Path.Combine(directory, $"{name}-{stamp}-f{_machine.FramesExecuted:D6}-native.png");
         if (Video.IsOpenGlAvailable)
         {
             void OnCaptured(byte[] pixels, int width, int height)
             {
                 Video.CaptureCompleted -= OnCaptured;
                 PngDumper.WriteBgra(pixels, width, height, path);
+                if (_settings.SaveNativeScreenshot)
+                {
+                    SaveNativeScreenshot(nativePath);
+                }
+
                 StatusText.Text = $"Screenshot: {path}";
                 _log.Write(LogLevel.Info, LogCategory.Host, $"Screenshot written: {path}.");
             }
@@ -375,14 +380,24 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
+        SaveNativeScreenshot(path);
+        StatusText.Text = $"Screenshot: {path}";
+        _log.Write(LogLevel.Info, LogCategory.Host, $"Screenshot written from the CPU frame: {path}.");
+    }
+
+    private void SaveNativeScreenshot(string path)
+    {
+        if (_machine is null)
+        {
+            return;
+        }
+
         _runner!.Invoke(() =>
         {
             var frame = new FrameBuffer(_machine.Frame.SourceWidth, _machine.Frame.SourceHeight);
             FrameAssembler.Assemble(_machine.Frame, frame, frame.Width, frame.Height);
             PngDumper.Write(frame, path);
         });
-        StatusText.Text = $"Screenshot: {path}";
-        _log.Write(LogLevel.Info, LogCategory.Host, $"Screenshot written from the CPU frame: {path}.");
     }
 
     private static string SanitizeFileName(string value)

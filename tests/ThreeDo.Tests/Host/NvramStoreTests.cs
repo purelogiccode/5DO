@@ -125,6 +125,7 @@ public sealed class NvramStoreTests
             SaveSlotCount = 12,
             AutoGameFixes = false,
             ShowOverlay = true,
+            SaveNativeScreenshot = true,
             Bloom = 0.7f,
             FirstRunCompleted = true,
         };
@@ -146,6 +147,7 @@ public sealed class NvramStoreTests
         Assert.Equal(12, loaded.SaveSlotCount);
         Assert.False(loaded.AutoGameFixes);
         Assert.True(loaded.ShowOverlay);
+        Assert.True(loaded.SaveNativeScreenshot);
         Assert.Equal(0.7f, loaded.Bloom);
         Assert.Equal(0.7f, loaded.ToRendererSettings().Bloom);
         Assert.True(loaded.FirstRunCompleted);
