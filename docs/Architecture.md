@@ -540,7 +540,7 @@ A `VdlFrameMailbox` holds the most recent completed `VdlFrame`. If the renderer 
 | Input backend | `IPbusSource` / host `IInputBackend` | keyboard, SDL gamepad, scripted replay |
 | Disc format | `IDiscSource` | ISO, BIN, CUE, CHD |
 | Save state format | `IStateReader/Writer` | v1 native format, legacy 4DO import |
-| Renderer/filter | `IVideoRenderer` / `IVideoFilter` | nearest, sharp-bilinear, CRT, xBRZ/HQx |
+| Renderer/filter | `IVideoRenderer` / `IVideoFilter` | nearest, sharp-bilinear, CRT, xBR, HQx 2x/3x/4x |
 | CPU backend | `ICpuBackend` | ARM60 interpreter, optional IL JIT |
 | Debugger | `ICpuTraceSink` | console, file, in-app debugger |
 
