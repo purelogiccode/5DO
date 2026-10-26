@@ -9,7 +9,7 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 **Current position (2026-10-26, tenth pass):** M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **667 tests pass.** The shell now has fullscreen, GL screenshots, an About
+prototype. **671 tests pass.** The shell now has fullscreen, GL screenshots, an About
 dialog, a Hi-Res toggle, automatic CPU fallback when OpenGL init or the context fails,
 a game library browser, a settings dialog (video/audio/emulation/paths), six-player
 keyboard and gamepad binding, ten numbered save slots with PNG thumbnails, PNG
@@ -20,8 +20,8 @@ accepts `--fix-mode`/`--no-game-fixes` overrides. The benchmark reports p50/p95/
 zero steady-state allocations; an opt-in bounded disc prefetch cache is available via
 `--prefetch`.
 
-The renderer now has an opt-in **xBR-lv2** edge-directed 4x filter and **CRT bloom**
-alongside accurate, nearest, sharp-bilinear, and CRT modes. The tenth pass committed a
+The renderer now has an opt-in **xBR-lv2** edge-directed 4x filter, an **HQx 2x**
+filter, and **CRT bloom** alongside accurate, nearest, sharp-bilinear, and CRT modes. The tenth pass committed a
 pure D-pad Lemmings Fun 4 passcode script (`docs/scripts/lem-fun4-dpad.txt`): the game
 accepts `HNLHCIOECW`, shows the Fun 4 briefing, and starts gameplay at 23,000 frames
 with a deterministic save/load roundtrip. This pass also fixed a real-content **GPU
@@ -116,7 +116,7 @@ The desktop frontend uses **Silk.NET.OpenGL/OpenGLES** through Avalonia's OpenGL
 
 - Two-stage pipeline: palette expansion at native resolution (320x240), then GPU upscaling/filtering at output resolution.
 - Pixel-accurate "Accurate" mode that matches the CPU frame assembler.
-- High-quality GPU upscaling to 1080p/1440p/4K: nearest, sharp-bilinear, CRT (scanlines, aperture mask, curvature, vignette, bloom), and xBR/HQx-family filters.
+- High-quality GPU upscaling to 1080p/1440p/4K: nearest, sharp-bilinear, CRT (scanlines, aperture mask, curvature, vignette, bloom), xBR-lv2 4x, and HQx 2x.
 - Integer scaling, aspect-ratio control, fullscreen, vsync, and screenshots.
 - Desktop GL 3.3 (WGL/GLX/EGL/macOS) and GLES 3.0/3.1 (ANGLE, Raspberry Pi) variants.
 - CPU `WriteableBitmap` fallback only when neither GL 3.3 nor GLES 3.0/3.1 is available.

@@ -764,6 +764,13 @@ Bloom is ignored by the non-CRT filters and by the CPU fallback. The shader is
 covered by source-invariant tests; hardware GPU timing for the extra samples is
 still pending.
 
+**HQx 2x.** `VideoFilter.Hqx` runs Maxim Stepin/Cameron Zemek's hq2x on the
+CPU-expanded BGRA frame, uploads the 2x result, and finishes with sharp-bilinear.
+A 32x24 deterministic reference image matches the C++ `hq2x_32_rb` byte hash
+`0xA400C421`; a uniform image is unchanged. The reference's `RGBtoYUV` table loop
+stops before the last entry, so pure white is deliberately excluded from the
+reference image. hq3x/hq4x are not shipped.
+
 ---
 
 ## 2. BIOS images

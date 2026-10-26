@@ -33,6 +33,9 @@ public enum VideoFilter
 
     /// <summary>xBR/HQx-family smoothing (opt-in).</summary>
     Xbr,
+
+    /// <summary>HQx 2x pixel-art smoothing followed by sharp-bilinear scaling (opt-in).</summary>
+    Hqx,
 }
 
 /// <summary>Output aspect-ratio policy.</summary>

@@ -34,6 +34,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
     private readonly GlContextAdapter _adapter;
     private readonly VdlFrameUploader _uploader = new();
+    private readonly HqxFilter _hqxProcessor = new();
     private readonly float[] _vertices = [0f, 0f, 1f, 0f, 0f, 1f, 1f, 1f];
     private RendererSettings _settings = new();
 
@@ -51,6 +52,9 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     private uint _xbrTexture;
     private uint _xbrSourceTexture;
     private FrameBuffer? _xbrCpuFrame;
+    private uint _hqxTexture;
+    private FrameBuffer? _hqxCpuFrame;
+    private FrameBuffer? _hqxSourceFrame;
     private uint _gpuQuery;
     private bool _queryInFlight;
     private bool _supportsGpuTiming;
@@ -61,6 +65,10 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     private int _xbrHeight;
     private int _xbrSourceWidth;
     private int _xbrSourceHeight;
+    private int _hqxWidth;
+    private int _hqxHeight;
+    private int _hqxSourceWidth;
+    private int _hqxSourceHeight;
     private int _outputWidth;
     private int _outputHeight;
     private int _sourceWidth;
@@ -181,6 +189,11 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         _xbrTexture = 0;
         _xbrWidth = 0;
         _xbrHeight = 0;
+        _hqxTexture = 0;
+        _hqxWidth = 0;
+        _hqxHeight = 0;
+        _hqxSourceWidth = 0;
+        _hqxSourceHeight = 0;
         _initialized = true;
     }
 
@@ -258,6 +271,9 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         var useXbr = _settings.Filter == VideoFilter.Xbr
             && width * 4 <= _capabilities.MaxTextureSize
             && height * 4 <= _capabilities.MaxTextureSize;
+        var useHqx = _settings.Filter == VideoFilter.Hqx
+            && width * HqxFilter.Scale <= _capabilities.MaxTextureSize
+            && height * HqxFilter.Scale <= _capabilities.MaxTextureSize;
         var filterSource = _paletteTexture;
         var filterSourceWidth = width;
         var filterSourceHeight = height;
@@ -303,6 +319,34 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             filterSourceHeight = xbrHeight;
             scaleFilter = 1;
         }
+        else if (useHqx)
+        {
+            var hqxWidth = width * HqxFilter.Scale;
+            var hqxHeight = height * HqxFilter.Scale;
+            EnsureHqxTarget(gl, hqxWidth, hqxHeight);
+            EnsureHqxSource(width, height);
+            var sourceFrame = _hqxSourceFrame!;
+            var cpuFrame = _hqxCpuFrame!;
+            FrameAssembler.Assemble(frame, sourceFrame, sourceFrame.Width, sourceFrame.Height);
+            _hqxProcessor.Expand(sourceFrame, cpuFrame);
+            gl.ActiveTexture(TextureUnit.Texture0);
+            gl.BindTexture(TextureTarget.Texture2D, _hqxTexture);
+            gl.TexSubImage2D(
+                TextureTarget.Texture2D,
+                0,
+                0,
+                0,
+                (uint)hqxWidth,
+                (uint)hqxHeight,
+                GlPixelFormat.Bgra,
+                PixelType.UnsignedByte,
+                cpuFrame.PixelSpan);
+
+            filterSource = _hqxTexture;
+            filterSourceWidth = hqxWidth;
+            filterSourceHeight = hqxHeight;
+            scaleFilter = 1;
+        }
 
         gl.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)_adapter.Framebuffer);
         gl.Viewport(0, 0, (uint)_outputWidth, (uint)_outputHeight);
@@ -324,7 +368,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
         gl.ActiveTexture(TextureUnit.Texture0);
         gl.BindTexture(TextureTarget.Texture2D, filterSource);
-        var linearFilter = useXbr || _settings.Filter is VideoFilter.SharpBilinear or VideoFilter.Crt;
+        var linearFilter = useXbr || useHqx || _settings.Filter is VideoFilter.SharpBilinear or VideoFilter.Crt;
         var textureFilter = (int)(linearFilter ? GLEnum.Linear : GLEnum.Nearest);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, textureFilter);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, textureFilter);
@@ -479,6 +523,42 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         _xbrCpuFrame = new FrameBuffer(width, height);
         _xbrSourceWidth = width;
         _xbrSourceHeight = height;
+    }
+
+    private void EnsureHqxTarget(GL gl, int width, int height)
+    {
+        if (_hqxTexture != 0 && _hqxWidth == width && _hqxHeight == height)
+        {
+            return;
+        }
+
+        if (_hqxTexture != 0)
+        {
+            gl.DeleteTexture(_hqxTexture);
+        }
+
+        _hqxTexture = gl.GenTexture();
+        gl.BindTexture(TextureTarget.Texture2D, _hqxTexture);
+        gl.TexStorage2D(TextureTarget.Texture2D, 1, SizedInternalFormat.Rgba8, (uint)width, (uint)height);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
+        _hqxWidth = width;
+        _hqxHeight = height;
+    }
+
+    private void EnsureHqxSource(int width, int height)
+    {
+        if (_hqxCpuFrame is not null && _hqxSourceWidth == width && _hqxSourceHeight == height)
+        {
+            return;
+        }
+
+        _hqxSourceFrame = new FrameBuffer(width, height);
+        _hqxCpuFrame = new FrameBuffer(width * HqxFilter.Scale, height * HqxFilter.Scale);
+        _hqxSourceWidth = width;
+        _hqxSourceHeight = height;
     }
 
     private void AllocateUploadTextures(GL gl)
@@ -672,6 +752,12 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             _xbrSourceTexture = 0;
         }
 
+        if (_hqxTexture != 0)
+        {
+            gl.DeleteTexture(_hqxTexture);
+            _hqxTexture = 0;
+        }
+
         if (_gpuQuery != 0)
         {
             gl.DeleteQuery(_gpuQuery);
@@ -694,6 +780,10 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         _paletteHeight = 0;
         _xbrWidth = 0;
         _xbrHeight = 0;
+        _hqxWidth = 0;
+        _hqxHeight = 0;
+        _hqxSourceWidth = 0;
+        _hqxSourceHeight = 0;
         _queryInFlight = false;
         _gpuMilliseconds = null;
     }

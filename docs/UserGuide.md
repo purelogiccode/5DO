@@ -60,6 +60,8 @@ GPU. Available filters:
   glow (Settings -> Video -> CRT bloom).
 - **Xbr**: Hyllian's xBR-lv2 edge-directed 4x pass, followed by a sharp-bilinear finish.
   This is an opt-in filter and costs more GPU time at 4K.
+- **Hqx**: HQx 2x pixel-art smoothing on the CPU-expanded frame, followed by a
+  sharp-bilinear finish. It is opt-in and uses CPU time per frame.
 
 Aspect, integer scaling, vsync preference, fullscreen (F11/Escape), and the FPS/status
 overlay are in **Settings**. The renderer falls back to the CPU `WriteableBitmap`

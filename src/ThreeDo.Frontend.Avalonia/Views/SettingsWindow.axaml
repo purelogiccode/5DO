@@ -19,7 +19,7 @@
                     <TextBlock Grid.Row="5" Grid.Column="0" Text="CRT bloom" VerticalAlignment="Center" />
                     <Slider x:Name="BloomSlider" Grid.Row="5" Grid.Column="1"
                             Minimum="0" Maximum="1" TickFrequency="0.05" />
-                    <TextBlock Grid.Row="6" Grid.Column="1" Text="xBR runs an edge-directed 4x pass before the final scale; CRT bloom adds a glow around bright areas. Both cost more GPU time at 4K."
+                    <TextBlock Grid.Row="6" Grid.Column="1" Text="xBR runs an edge-directed 4x pass; HQx runs a 2x pixel-art pass. CRT bloom adds a glow around bright areas. All three cost more GPU/CPU time at 4K."
                                Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0" />
                 </Grid>
             </TabItem>

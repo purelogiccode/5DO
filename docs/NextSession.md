@@ -1,14 +1,15 @@
 # Next Session Handoff
 
 **Date:** 2026-10-26 (tenth pass)
-**Goal:** close the pure D-pad Lemmings passcode item and add CRT bloom. The tenth
-pass committed `docs/scripts/lem-fun4-dpad.txt`, typed `HNLHCIOECW` with only the
-D-pad/A, started Fun 4 gameplay at 23,000 frames, and roundtripped the state. It
-also added CRT bloom to the OpenGL presenter and the settings dialog. **667 tests
-pass.** Do not redo the D-pad passcode script, CRT bloom, the ninth-pass evidence
-capture, or the CD media-access fix. The remaining work is finishing a full Road
-Rash race, scripted Lemmings level play beyond the start, GPU/Tier B validation,
-arm64/installers, and the legal/attribution review.
+**Goal:** close the pure D-pad Lemmings passcode item and add CRT bloom/HQx.
+The tenth pass committed `docs/scripts/lem-fun4-dpad.txt`, typed `HNLHCIOECW`
+with only the D-pad/A, started Fun 4 gameplay at 23,000 frames, and roundtripped
+the state. It also added CRT bloom and an HQx 2x filter to the OpenGL presenter
+and the settings dialog. **671 tests pass.** Do not redo the D-pad passcode
+script, CRT bloom, HQx, the ninth-pass evidence capture, or the CD media-access
+fix. The remaining work is finishing a full Road Rash race, scripted Lemmings
+level play beyond the start, GPU/Tier B validation, arm64/installers, and the
+legal/attribution review.
 
 Earlier passes added the presentation plumbing (GL/GLES capability reporting, CPU
 fallback/context-loss recovery, fullscreen, screenshots, About, Hi-Res, benchmark
@@ -339,7 +340,7 @@ missing and corrected the Road Rash diagnosis.
 
 ---
 
-### 1.13 Tenth pass: pure D-pad Lemmings passcode and CRT bloom (2026-10-26)
+### 1.13 Tenth pass: pure D-pad Lemmings passcode, CRT bloom, and HQx 2x (2026-10-26)
 
 - **Lemmings pure D-pad passcode.** `docs/scripts/lem-fun4-dpad.txt` types
   `HNLHCIOECW` from a passcode-screen state with an empty entry and selection on
@@ -356,7 +357,12 @@ missing and corrected the Road Rash diagnosis.
   filter. The Settings dialog exposes a CRT bloom slider. Bloom is ignored by the
   other filters and the CPU fallback. Shader-source and settings roundtrip tests
   cover the new uniforms; GPU timing is still pending.
-- **Tests.** 667 tests pass; the added assertions do not change the count.
+- **HQx 2x.** `VideoFilter.Hqx` runs hq2x on the CPU-expanded BGRA frame, uploads
+  the 2x result, and finishes with sharp-bilinear. A 32x24 reference image matches
+  the C++ `hq2x_32_rb` hash `0xA400C421`; uniform images are unchanged. The
+  reference's `RGBtoYUV` table loop skips the last entry, so pure white is excluded
+  from the reference image. hq3x/hq4x remain optional.
+- **Tests.** 671 tests pass; the four new HQx tests are the only count change.
 
 ---
 
@@ -574,6 +580,7 @@ save/load proof.
   (`docs/scripts/lem-fun4-dpad.txt`, gameplay at 23,000 frames,
   `PC 0x00083FD8`, hash `0xB7846C2D`, roundtrip `0xEDEB1B9D` twice).
 - [x] CRT bloom is implemented in the OpenGL presenter and exposed in Settings.
+- [x] HQx 2x is implemented and matches the C++ hq2x reference hash.
 - [ ] The Road Rash city race is finished. The CD media-access pulse fixes the
   old ~42k/~92k READ_ID-only wait and advances to `BUSTED`, race select, and a
   new race; the autopilot passes `GAME LOADING`/`Get ready` and cycles
@@ -611,8 +618,8 @@ save/load proof.
   `cdStatus`/`cdPoll` diagnostics, or the autopilot menu-advance plumbing. Extend
   them with new evidence only.
 - Do not redo the tenth-pass Lemmings pure D-pad passcode script
-  (`docs/scripts/lem-fun4-dpad.txt`) or CRT bloom. Extend them with new evidence
-  only.
+  (`docs/scripts/lem-fun4-dpad.txt`), CRT bloom, or HQx 2x. Extend them with new
+  evidence only.
 
 ---
 

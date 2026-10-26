@@ -14,6 +14,8 @@ still change.
 - CRT bloom in the OpenGL presenter: a 3x3 native-resolution glow around bright
   areas, controlled by `RendererSettings.Bloom`/`BloomThreshold` and a Settings
   slider.
+- HQx 2x filter (`VideoFilter.Hqx`): a port of Maxim Stepin/Cameron Zemek's hq2x
+  running on the CPU-expanded frame, with a C++ reference hash test.
 - Shader-source and settings tests for the CRT bloom uniforms.
 
 ### Changed

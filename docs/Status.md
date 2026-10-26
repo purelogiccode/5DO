@@ -31,9 +31,10 @@ This is the short, current answer to "where are we?" The detailed task list is i
   into four 1 MB VRAM planes and presents 640x480 by line-doubling the 640x240 source;
   Lemmings' title screen now matches the 640x480 reference. The mode is off by default
   because 320x240 titles must not be upscaled, and the desktop shell exposes it as a
-  Hi-Res checkbox that restarts the machine. An opt-in xBR-lv2 4x filter and CRT bloom
-  are available in Settings; xBR uses a CPU-expanded native source and sharp-bilinear
-  finishing, and CRT bloom adds a 3x3 native-resolution glow in the CRT filter.
+  Hi-Res checkbox that restarts the machine. An opt-in xBR-lv2 4x filter, an HQx 2x
+  filter, and CRT bloom are available in Settings; xBR and HQx use a CPU-expanded
+  native source and sharp-bilinear finishing, and CRT bloom adds a 3x3
+  native-resolution glow in the CRT filter.
 - **Performance:** the machine runs on a dedicated 60 Hz core thread with a frame
   pacer; the UI renders on demand; uploads use `TexStorage2D` + `TexSubImage2D`;
   uniform locations and the present delegate are cached; physical-pixel sizing is
@@ -79,7 +80,7 @@ This is the short, current answer to "where are we?" The detailed task list is i
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 667 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 671 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
@@ -281,9 +282,9 @@ add **2-4 weeks**. If the target is "all five corpus games playable" rather than
 
 8. **M10 packaging:** arm64 validation, trimming, installers/signing plan, and the
    final performance report.
-9. **Filter/UI polish:** HQx/CRT bloom, per-game filter presets, vsync/FPS overlay
-   tuning, and ViewModel tests. The settings, audio, gamepad, logs, first-run, and
-   thumbnail pages are complete.
+9. **Filter/UI polish:** hq3x/hq4x, per-game filter presets, vsync/FPS overlay
+   tuning, and ViewModel tests. xBR, HQx 2x, CRT bloom, the settings, audio,
+   gamepad, logs, first-run, and thumbnail pages are complete.
 10. **Legal/attribution review** before any public build (M0.8); add Opera to the
     FreeDO/4DO attribution and license review.
 

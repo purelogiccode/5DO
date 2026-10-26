@@ -34,6 +34,18 @@ This file records the projects and licenses that influence or ship with 3DOEmula
   native-resolution palette output and uniform layout; the copyright and permission
   notice is preserved in the shader comments.
 
+### HQx (Maxim Stepin, Cameron Zemek)
+
+- Source: `References/4DO-master/FreeDOCore/Filters/hq2x.cpp` and `hqx_common.h`.
+- Authors: Maxim Stepin (maxst@hiend3d.com), Cameron Zemek (grom@zeminvaders.net).
+- License: GNU Lesser General Public License 2.1 or later.
+- Use: the opt-in `VideoFilter.Hqx` 2x filter in
+  `ThreeDo.Video.OpenGL/HqxFilter.cs` and the generated pattern switch in
+  `HqxPatterns.cs`. The interpolation helpers and table structure are ported; the
+  original copyright and license notice is preserved in the source header. The
+  filter is opt-in and can be removed from a distribution that cannot comply with
+  the LGPL.
+
 ## Planned runtime and build dependencies
 
 | Dependency | Purpose | License (verify before release) |

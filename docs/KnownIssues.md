@@ -15,8 +15,9 @@ prototype state. It is not a compatibility guarantee.
 
 ## Renderer
 
-- xBR is a single 4x pass followed by sharp-bilinear finishing. HQx is not shipped.
-  CRT bloom is implemented as a 3x3 native-resolution glow in the CRT filter.
+- HQx 2x is implemented as an opt-in CPU expansion followed by sharp-bilinear
+  finishing. hq3x/hq4x and the GPU xBR/HQx variants are not shipped.
+- CRT bloom is implemented as a 3x3 native-resolution glow in the CRT filter.
 - The xBR path expands the palette on the CPU at native resolution before uploading the
   source texture. Other filters use GPU palette expansion. This is a deliberate
   workaround for a driver readback issue with the FBO-attached palette texture.
