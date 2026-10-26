@@ -36,9 +36,9 @@ prototype state. It is not a compatibility guarantee.
 - **CLI and frontend trimming are enabled.** Both publish with `PublishTrimmed=true`
   (`TrimMode=full`). The CLI has a Windows CI smoke test (`--version`, `selftest`,
   `bench`); the frontend has a trimmed startup smoke test (`--smoke-test`) that opens
-  the real window, renders one pass, and exits 0. The only remaining trim warning is
-  CHDSharp's vendored FLAC settings helper (`TypeDescriptor`), which is outside the
-  3DO data-track path and demoted to a visible warning. See
+  the real window, runs one UI pass (GL hidden for headless CI), and exits 0. The only
+  remaining trim warning is CHDSharp's vendored FLAC settings helper (`TypeDescriptor`),
+  which is outside the 3DO data-track path and demoted to a visible warning. See
   [`Trimming.md`](Trimming.md).
 - NativeAOT, installers, signing, and notarization are not complete. NativeAOT is not
   on the v1 critical path; the Avalonia and Silk.NET interop paths still need an AOT

@@ -107,7 +107,7 @@ dotnet publish src/ThreeDo.Frontend.Avalonia/ThreeDo.Frontend.Avalonia.csproj `
   -p:PublishSingleFile=true -m:1 `
   -o artifacts/frontend-trim
 
-# Frontend smoke test: opens the real window, renders one pass, exits 0
+# Frontend smoke test: opens the real window, runs one UI pass (GL hidden), exits 0
 $process = Start-Process `
   -FilePath artifacts/frontend-trim/ThreeDo.Frontend.Avalonia.exe `
   -ArgumentList '--smoke-test', '--smoke-output', 'artifacts/frontend-smoke.txt' `
