@@ -1,23 +1,23 @@
 # Desktop packaging
 
-The CI publish jobs produce self-contained `ThreeDo.Frontend.Avalonia` folders for
+The CI publish jobs produce self-contained `FiveDo.Frontend.Avalonia` folders for
 the six supported RIDs. This directory holds the small desktop-integration files
 that an installer or a Linux package would install alongside the executable.
 
 ## Linux file association
 
-1. Publish or copy the frontend so `ThreeDo.Frontend.Avalonia` is on `PATH`.
+1. Publish or copy the frontend so `FiveDo.Frontend.Avalonia` is on `PATH`.
 2. Install the desktop entry:
 
    ```sh
-   install -Dm644 packaging/3doemulator.desktop \
-     ~/.local/share/applications/3doemulator.desktop
+   install -Dm644 packaging/5do.desktop \
+     ~/.local/share/applications/5do.desktop
    update-desktop-database ~/.local/share/applications
    ```
 
-3. Optionally install an icon named `3doemulator` in
+3. Optionally install an icon named `5do` in
    `~/.local/share/icons/hicolor/256x256/apps/`; convert
-   `src/ThreeDo.Frontend.Avalonia/Assets/avalonia-logo.ico` to a 256x256 PNG first.
+   `src/FiveDo.Frontend.Avalonia/Assets/avalonia-logo.ico` to a 256x256 PNG first.
 
 The application accepts a positional disc path or `--disc <path>`; opening a
 `.iso`, `.bin`, `.cue`, or `.chd` file with the desktop entry loads it after the
@@ -27,15 +27,15 @@ configured BIOS.
 
 CI packages each published CLI and frontend folder with
 `packaging/package.ps1`. The archives are named
-`3doemulator-<component>-<rid>.zip` for Windows and `.tar.gz` for Linux/macOS.
+`5do-<component>-<rid>.zip` for Windows and `.tar.gz` for Linux/macOS.
 They contain the publish output, `README.md`, `THIRD-PARTY-NOTICES.md`,
 `docs/Licensing.md`, and a generated `PACKAGE.txt` with the component, RID, version,
-commit, and build time. Linux archives also include `3doemulator.desktop`.
+commit, and build time. Linux archives also include `5do.desktop`.
 
 Build one locally:
 
 ```powershell
-dotnet publish src/ThreeDo.Cli/ThreeDo.Cli.csproj -c Release -r win-x64 `
+dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r win-x64 `
   --self-contained true -p:PublishSingleFile=true -o artifacts/cli/win-x64
 pwsh -File packaging/package.ps1 -Component cli -Rid win-x64 `
   -PublishDirectory artifacts/cli/win-x64 -OutputDirectory artifacts/packages

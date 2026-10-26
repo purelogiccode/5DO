@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>FiveDo.Dsp</RootNamespace>
+    <AssemblyName>FiveDo.Dsp</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FiveDo.Core\FiveDo.Core.csproj" />
+  </ItemGroup>
+
+</Project>
+

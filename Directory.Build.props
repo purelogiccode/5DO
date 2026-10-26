@@ -8,8 +8,8 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Deterministic>true</Deterministic>
     <NeutralLanguage>en</NeutralLanguage>
-    <Product>3DOEmulator</Product>
-    <Company>3DOEmulator contributors</Company>
+    <Product>5DO</Product>
+    <Company>5DO contributors</Company>
     <Version>1.0.0-rc.1</Version>
     <InvariantGlobalization>true</InvariantGlobalization>
     <IsPackable>false</IsPackable>

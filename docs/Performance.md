@@ -167,7 +167,7 @@ which is post-v1.
 
 ## 5. Threading and frame pacing
 
-The desktop frontend now uses `ThreeDo.Host.CoreRunner`: a dedicated core thread
+The desktop frontend now uses `FiveDo.Host.CoreRunner`: a dedicated core thread
 paced at 60 Hz with a hybrid sleep/spin pacer and a low-rate (4 Hz) status sink.
 UI actions that touch the machine (reset, save/load, disc changes, screenshots)
 are marshalled through `CoreRunner.Invoke`, which pauses the loop for the duration
@@ -253,13 +253,13 @@ thread must not block on a multi-hundred-millisecond decompression during gamepl
 
 ### Microbenchmarks
 
-Use `benchmarks/ThreeDo.Benchmarks` (stopwatch harness; BenchmarkDotNet can be added
+Use `benchmarks/FiveDo.Benchmarks` (stopwatch harness; BenchmarkDotNet can be added
 later for microbenchmarks):
 
 - `Arm60.Step` on a mixed instruction stream (MIPS).
 - `CelEngine.HandleCel` on representative packed/literal/LR scenes (pixels/ms).
 - `Dsp.Loop` (samples/second).
-- `ThreeDoMachine.RunFrame` on a synthetic scene (ms/frame, allocations/frame).
+- `FiveDoMachine.RunFrame` on a synthetic scene (ms/frame, allocations/frame).
 - `FrameAssembler` (MB/s).
 - `AudioRingBuffer` (samples/second, allocations).
 - `VdlFrameUploader`/presenter CPU path (ms/frame, allocations).
@@ -267,7 +267,7 @@ later for microbenchmarks):
 
 ### Measured baseline (2026-10-25)
 
-`benchmarks/ThreeDo.Benchmarks` runs a synthetic machine by default and accepts
+`benchmarks/FiveDo.Benchmarks` runs a synthetic machine by default and accepts
 `--bios`/`--disc` for a real title, plus `--high-res` and `--prefetch`. Release
 build, development machine (x64), 600 frames:
 
@@ -300,7 +300,7 @@ so the measurement is independent of the desktop resolution, and a warm-up phase
 one-time shader/FBO allocations are excluded. Command:
 
 ```powershell
-dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- `
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
   --gl-probe artifacts/gl-probe/4k-sharp.json `
   --gl-probe-size 3840x2160 --gl-probe-frames 120 --gl-probe-warmup 30 `
   --gl-probe-filter sharp-bilinear --gl-probe-offscreen
@@ -334,7 +334,7 @@ machine, ANGLE reported `Google Inc. (NVIDIA)` / Direct3D 11, OpenGL ES 3.0,
 integer textures, and `EGL_KHR_swap_interval`:
 
 ```powershell
-dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- `
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
   --gl-backend angle `
   --gl-probe artifacts/gl-probe/angle-4k-sharp.json `
   --gl-probe-size 3840x2160 --gl-probe-frames 120 --gl-probe-warmup 30 `
@@ -362,7 +362,7 @@ frame as a PNG and, for a 1:1 Accurate capture, compares it with the CPU
 vertical flip:
 
 ```powershell
-dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- `
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
   --gl-backend wgl --gl-probe artifacts/gl-probe/parity-wgl.json `
   --gl-probe-size 320x240 --gl-probe-filter accurate --gl-probe-offscreen `
   --gl-probe-capture artifacts/gl-probe/parity-wgl.png
@@ -393,15 +393,15 @@ CHD/Tier B storage and remains opt-in until measured there.
 Run it with:
 
 ```powershell
-dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- --frames 600
-dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- `
-  --frames 600 --bios bios/panafz1.bin --disc "$env:THREEDO_GAMES\Lemmings (USA).chd" `
+dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- --frames 600
+dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- `
+  --frames 600 --bios bios/panafz1.bin --disc "$env:FIVEDO_GAMES\Lemmings (USA).chd" `
   --label lemmings
 
 # Same-machine relative regression check: record a baseline, then compare
-dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- `
+dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- `
   --frames 600 --json > baseline.json
-dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- `
+dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- `
   --frames 600 --json --baseline baseline.json --baseline-threshold 0.10
 ```
 

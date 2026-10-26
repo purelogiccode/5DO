@@ -471,7 +471,7 @@ reaches a black wait screen, which is documented in
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
-The data track of each CHD was extracted to ISO with `3do disc dump`, then run with
+The data track of each CHD was extracted to ISO with `5do disc dump`, then run with
 the bundled Windows OperaCore (`References/CPP_SimpleGui`) and the same
 `panafz1.bin` BIOS. Opera rendered Road Rash, Wolfenstein, Alone, and Space Ace for
 60 s. After the 2026-10-24 DSP fixes the C# port also renders all five titles and

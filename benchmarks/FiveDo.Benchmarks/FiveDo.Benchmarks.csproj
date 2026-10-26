@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>FiveDo.Benchmarks</RootNamespace>
+    <AssemblyName>FiveDo.Benchmarks</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\FiveDo.Cpu\FiveDo.Cpu.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Madam\FiveDo.Madam.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Dsp\FiveDo.Dsp.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Diagnostics\FiveDo.Diagnostics.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Machine\FiveDo.Machine.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Storage\FiveDo.Storage.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Video\FiveDo.Video.csproj" />
+  </ItemGroup>
+
+</Project>
+

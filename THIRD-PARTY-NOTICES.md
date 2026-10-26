@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-This file records the projects and licenses that influence or ship with 3DOEmulator. It is updated as dependencies are added.
+This file records the projects and licenses that influence or ship with 5DO. It is updated as dependencies are added.
 
 ## Emulation reference
 
@@ -32,7 +32,7 @@ This file records the projects and licenses that influence or ship with 3DOEmula
   libretro `glsl-shaders` collection.
 - License: MIT.
 - Use: the opt-in `VideoFilter.Xbr` 4x edge-directed pass in
-  `ThreeDo.Video.OpenGL/Shaders.cs`. The shader was adapted to the emulator's
+  `FiveDo.Video.OpenGL/Shaders.cs`. The shader was adapted to the emulator's
   native-resolution palette output and uniform layout; the copyright and permission
   notice is preserved in the shader comments.
 
@@ -43,7 +43,7 @@ This file records the projects and licenses that influence or ship with 3DOEmula
 - Authors: Maxim Stepin (maxst@hiend3d.com), Cameron Zemek (grom@zeminvaders.net).
 - License: GNU Lesser General Public License 2.1 or later.
 - Use: the opt-in `VideoFilter.Hqx`/`Hqx3x`/`Hqx4x` filters in
-  `ThreeDo.Video.OpenGL/HqxFilter.cs` and the generated pattern switches in
+  `FiveDo.Video.OpenGL/HqxFilter.cs` and the generated pattern switches in
   `HqxPatterns.cs`, `HqxPatterns3.cs`, and `HqxPatterns4.cs`. The interpolation
   helpers and table structure are ported; the original copyright and license notice
   is preserved in the source header. The filters are opt-in and can be removed from
@@ -67,7 +67,7 @@ This file records the projects and licenses that influence or ship with 3DOEmula
 | OpenAL Soft | Native audio runtime (optional) | LGPL |
 | OS XInput / Linux evdev | Gamepad input (optional, no bundled native library) | OS API; no third-party runtime dependency |
 | CHDSharp 1.5.2 | CHD disc images (v1) | MIT + LGPL-2.1 component; pure C#, no native dependency. Verify the package LICENSE before release. |
-| VideoGameFileSystemParser 1.4.0 | 3DO Opera FS listing/extraction in `3do fs` | MIT; depends on CHDSharp. Written by the 3DOEmulator author. |
+| VideoGameFileSystemParser 1.4.0 | 3DO Opera FS listing/extraction in `5do fs` | MIT; depends on CHDSharp. Written by the 5DO author. |
 | 4DO game database | Game IDs and fix flags | Derived with attribution; verify |
 
 ## Project license

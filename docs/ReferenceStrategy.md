@@ -108,20 +108,20 @@ Caveats:
 
 | Subsystem | C# implementation | Opera reference | FreeDO origin |
 |---|---|---|---|
-| CPU | `src/ThreeDo.Cpu/Arm60.cs` | `libopera/opera_arm.c` | `FreeDO/arm.cpp` |
-| Memory/bus | `src/ThreeDo.Memory/ThreeDoMemory.cs` | `libopera/opera_mem.c` | `_3do_sys.cpp` |
-| Scheduler/clock | `src/ThreeDo.Machine/Quartz.cs` | `libopera/opera_clock.c` | `quarz.cpp` |
-| CLIO | `src/ThreeDo.Clio/Clio.cs` | `libopera/opera_clio.c` | `Clio.cpp` |
-| MADAM | `src/ThreeDo.Madam/*` | `libopera/opera_madam.c` | `Madam.cpp` |
-| VDLP | `src/ThreeDo.Video/Vdlp.cs` | `libopera/opera_vdlp.c` | `vdlp.cpp` |
-| DSP | `src/ThreeDo.Dsp/Dsp.cs` | `libopera/opera_dsp.c` | `DSP.cpp` |
-| CD-ROM | `src/ThreeDo.Cdrom/CdromDevice.cs` | `libopera/opera_cdrom.c` | `Iso.cpp` |
-| XBUS/PBUS | `src/ThreeDo.Xbus/Xbus.cs`, `Madam.cs` | `libopera/opera_xbus.c`, `opera_pbus.c` | `XBUS.cpp`, `Madam.cpp` |
-| SPORT | `src/ThreeDo.Sport/Sport.cs` | `libopera/opera_sport.c` | `SPORT.cpp` |
-| Save states | `src/ThreeDo.Core` state sections | `libopera/opera_state.c` | none |
+| CPU | `src/FiveDo.Cpu/Arm60.cs` | `libopera/opera_arm.c` | `FreeDO/arm.cpp` |
+| Memory/bus | `src/FiveDo.Memory/FiveDoMemory.cs` | `libopera/opera_mem.c` | `_3do_sys.cpp` |
+| Scheduler/clock | `src/FiveDo.Machine/Quartz.cs` | `libopera/opera_clock.c` | `quarz.cpp` |
+| CLIO | `src/FiveDo.Clio/Clio.cs` | `libopera/opera_clio.c` | `Clio.cpp` |
+| MADAM | `src/FiveDo.Madam/*` | `libopera/opera_madam.c` | `Madam.cpp` |
+| VDLP | `src/FiveDo.Video/Vdlp.cs` | `libopera/opera_vdlp.c` | `vdlp.cpp` |
+| DSP | `src/FiveDo.Dsp/Dsp.cs` | `libopera/opera_dsp.c` | `DSP.cpp` |
+| CD-ROM | `src/FiveDo.Cdrom/CdromDevice.cs` | `libopera/opera_cdrom.c` | `Iso.cpp` |
+| XBUS/PBUS | `src/FiveDo.Xbus/Xbus.cs`, `Madam.cs` | `libopera/opera_xbus.c`, `opera_pbus.c` | `XBUS.cpp`, `Madam.cpp` |
+| SPORT | `src/FiveDo.Sport/Sport.cs` | `libopera/opera_sport.c` | `SPORT.cpp` |
+| Save states | `src/FiveDo.Core` state sections | `libopera/opera_state.c` | none |
 | PRNG | current CPU/DSP paths | `libopera/prng16.c`, `prng32.c` | `fastrand` |
-| Input/PBUS | `src/ThreeDo.Input/*` | `libopera/opera_pbus.c` | 4DO input layer |
-| Reference tests | `tests/ThreeDo.Tests` | `tools/test_harness.c`, `.agents/skills/opera-test-harness` | FreeDO harness |
+| Input/PBUS | `src/FiveDo.Input/*` | `libopera/opera_pbus.c` | 4DO input layer |
+| Reference tests | `tests/FiveDo.Tests` | `tools/test_harness.c`, `.agents/skills/opera-test-harness` | FreeDO harness |
 
 ---
 
@@ -162,11 +162,11 @@ Use the same BIOS, the same disc data, and the same frame count on both sides.
 
 ```powershell
 # Get the sector count first
-dotnet run -c Release --project src/ThreeDo.Cli -- info "$env:THREEDO_GAMES\Road Rash (USA).chd" --json
+dotnet run -c Release --project src/FiveDo.Cli -- info "$env:FIVEDO_GAMES\Road Rash (USA).chd" --json
 
 # Extract the data track to ISO (example: 328130 sectors)
-dotnet run -c Release --project src/ThreeDo.Cli -- disc dump `
-  "$env:THREEDO_GAMES\Road Rash (USA).chd" --sector 0 --count 328130 `
+dotnet run -c Release --project src/FiveDo.Cli -- disc dump `
+  "$env:FIVEDO_GAMES\Road Rash (USA).chd" --sector 0 --count 328130 `
   --out "$env:TEMP\roadrash.iso"
 ```
 
@@ -192,7 +192,7 @@ prints core-level messages; guest KPRINT is not enabled by default.
 ### 5.3 Run our emulator
 
 ```powershell
-dotnet run -c Release --project src/ThreeDo.Cli -- run `
+dotnet run -c Release --project src/FiveDo.Cli -- run `
   "$env:TEMP\roadrash.iso" --bios bios\panafz1.bin --frames 3000 `
   --kprint "$env:TEMP\rr-kprint.txt" --frame-out "$env:TEMP\rr.png"
 ```

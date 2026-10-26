@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>FiveDo.Audio</RootNamespace>
+    <AssemblyName>FiveDo.Audio</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Silk.NET.OpenAL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FiveDo.Core\FiveDo.Core.csproj" />
+  </ItemGroup>
+
+</Project>
+

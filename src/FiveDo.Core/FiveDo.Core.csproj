@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>FiveDo.Core</RootNamespace>
+    <AssemblyName>FiveDo.Core</AssemblyName>
+  </PropertyGroup>
+
+</Project>
+

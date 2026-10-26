@@ -12,7 +12,7 @@ import re
 import sys
 
 ROOT = 'References/4DO-master/FreeDOCore/Filters'
-OUT = 'src/ThreeDo.Video.OpenGL'
+OUT = 'src/FiveDo.Video.OpenGL'
 
 
 def parse_macros(source):
@@ -97,7 +97,7 @@ def generate(name, scale):
 // HQx {scale}x pattern switch derived from Maxim Stepin's hq{scale}x and Cameron
 // Zemek's C port (LGPL 2.1+). See the header of HqxFilter.cs and
 // THIRD-PARTY-NOTICES.md. Regenerate with tools/generate_hqx34.py.
-namespace ThreeDo.Video.OpenGL;
+namespace FiveDo.Video.OpenGL;
 
 public sealed partial class HqxFilter
 {{

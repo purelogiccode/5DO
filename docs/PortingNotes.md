@@ -20,7 +20,7 @@ subsystem map, and differential test procedure.
 
 1. **Preserve observable behavior first.** Do not "clean up" timing, register semantics, or pixel math during the initial port. Refactors come after differential/golden tests exist.
 2. **No native emulator code.** The product must not P/Invoke `FreeDOCore.dll`, use C++/CLI, or load a native core. The original DLL may be used only by an optional, developer-only oracle harness outside the product.
-3. **No mutable global state.** Every C++ global/static becomes a field on the owning class. One `ThreeDoMachine` instance must be independent of another (tests run in parallel).
+3. **No mutable global state.** Every C++ global/static becomes a field on the owning class. One `FiveDoMachine` instance must be independent of another (tests run in parallel).
 4. **No file I/O in the core.** BIOS, disc, NVRAM, and save-state bytes are supplied by the host.
 5. **No wall clock in the core.** Time is advanced only by `Quartz.PushArmCycles`.
 6. **Explicit serialization.** Never serialize a C# object with `Marshal`, `BinaryFormatter`, or field layout assumptions. Save states use explicit little-endian reads/writes.
@@ -230,7 +230,7 @@ subcode, personas, high-resolution VDLP) that may not be needed for the current 
 - `biosanvil`/`isanvil`: if `isanvil == 30`, set `biosanvil = 1` before ARM init. The ARM core then skips 64 bytes on the first instruction and sets `isanvil = 1`.
 - `_3do_Frame`: the `cnt >> 4` threshold and `12_500_000 / 60` loop are compatibility behavior. Do not replace with a "more accurate" scheduler without golden tests.
 - `_3do_SaveSize`/`_3do_Save`/`_3do_Load`: the native format is a 16-word offset table with magic `0x97970101`. The C# port uses a new versioned format (see `docs/ImplementationPlan.md`), not this layout.
-- `_freedo_Interface`: replace with typed methods on `ThreeDoMachine` and `EmulatorSession`; do not keep an integer-procedure API in the product.
+- `_freedo_Interface`: replace with typed methods on `FiveDoMachine` and `EmulatorSession`; do not keep an integer-procedure API in the product.
 
 ### 8.2 `arm.cpp`
 
@@ -244,7 +244,7 @@ subcode, personas, high-resolution VDLP) that may not be needed for the current 
 - Cycle counts (`NCYCLE=4`, `SCYCLE=1`, `ICYCLE=1`, multiply cycles, LDM/STM counts) feed the scheduler. Port exactly and test.
 - FIQ entry happens after the instruction when `!ISF && _clio_NeedFIQ()`. The port uses `IInterruptSink.NeedFiq` and sets `gFIQ` appropriately.
 - The `biosanvil` PC skip, `cnbfix` PC jump, and `FIX_BIT_TIMING_1` LDM value fixes are game/BIOS compatibility hacks. Keep them in `Arm60` behind named compatibility helpers, not scattered magic numbers.
-- `_mem_write8/16/32` and `_mem_read8/16/32` are raw RAM helpers, not bus accesses. Keep them on `ThreeDoMemory`.
+- `_mem_write8/16/32` and `_mem_read8/16/32` are raw RAM helpers, not bus accesses. Keep them on `FiveDoMemory`.
 - `mreadw`/`mwritew` are the bus. Preserve the decode order and sentinel `0xBADACCE5`.
 - `MAS_Access_Exept` is mostly disabled in FreeDO. Keep a `DataAbortPending` flag for future accuracy, but do not raise a C# exception on unmapped access.
 
@@ -257,8 +257,8 @@ subcode, personas, high-resolution VDLP) that may not be needed for the current 
 - The immediate data-processing path does **not** update `carry_out` in FreeDO. The port keeps a persistent `_carryOut` field, so an immediate `MOVS`/logical instruction with S set can observe the carry from an earlier shifter operation. This is a reference quirk; do not "fix" it without a compatibility test.
 - A register-specified shift in a single data transfer (bit 4 set) matches `ARM_UND_MASK`/`ARM_UND_SIGN` and therefore enters the undefined vector before the SDT class. The port preserves that decode order; the register-shift code in the SDT method is kept for structural fidelity but is normally unreachable.
 - For malformed encodings where FreeDOCore would loop forever between the `Undefine` label and the SDT class (for example a high-nibble 4/5 instruction with bit 4 set), the port raises the undefined vector instead of hanging. This is the only deliberate behavioural deviation in the CPU decode path and is covered by a test.
-- `_arm_Reset` also reset CLIO and MADAM in C++. In the port, `Arm60.Reset` only resets CPU state; `ThreeDoMachine` owns the reset order so each chip can be tested independently.
-- `_arm_Init`/`_arm_Destroy` NVRAM callbacks are host responsibilities (`ThreeDoMemory`/`EmulatorSession`), not CPU responsibilities.
+- `_arm_Reset` also reset CLIO and MADAM in C++. In the port, `Arm60.Reset` only resets CPU state; `FiveDoMachine` owns the reset order so each chip can be tested independently.
+- `_arm_Init`/`_arm_Destroy` NVRAM callbacks are host responsibilities (`FiveDoMemory`/`EmulatorSession`), not CPU responsibilities.
 - The CnB LDM heuristic uses three file-scope C++ globals (`addrr`, `vall`, `inuse`). They are private `Arm60` fields and are included in the CPU save-state section.
 
 ### 8.3 `Clio.cpp`
@@ -310,7 +310,7 @@ This is the largest and riskiest port. Split it into classes but keep the origin
   - `LoadPLUT` reads 16-bit values with `_mem_read16((((pnt >> 1) + i) ^ 1) << 1)`. Port the exact XOR/scale.
   - `HandleDMA8`/`DMAPBus` copy the PBUS queue to memory and raise FIQ.
   - `KeyPressed` copies up to 16 bytes and fills the rest with `0xFF`.
-- High-resolution (`RESSCALE`) is not part of the first port. When added, it touches `ThreeDoMemory` mirroring, VDLP line duplication, SPORT copies, CEL stepping, and frame extraction. Do it as one milestone.
+- High-resolution (`RESSCALE`) is not part of the first port. When added, it touches `FiveDoMemory` mirroring, VDLP line duplication, SPORT copies, CEL stepping, and frame extraction. Do it as one milestone.
 
 ### 8.5 `DSP.cpp`
 
@@ -347,7 +347,7 @@ This is the largest and riskiest port. Split it into classes but keep the origin
 - `_vdl_DoLineNew`:
   - At line 0, reload `CURRENTVDL = HEADVDL` and execute.
   - When `linedelay == 0`, execute the next VDL entry.
-  - For `y = line - 16` in `[0, 240)`, if `enadma`, copy `MODULO` pixels from `PREVIOUSBMP`/`CURRENTBMP` into the frame line (two lines in high-res), and copy CLUT/control/background words. The 2026-10-24 fix uses the parsed modulo instead of a fixed 320, so 384/512/640/1024-wide modes are no longer cropped; `ThreeDoMachine` derives the frame `SourceWidth` from the widest rendered line.
+  - For `y = line - 16` in `[0, 240)`, if `enadma`, copy `MODULO` pixels from `PREVIOUSBMP`/`CURRENTBMP` into the frame line (two lines in high-res), and copy CLUT/control/background words. The 2026-10-24 fix uses the parsed modulo instead of a fixed 320, so 384/512/640/1024-wide modes are no longer cropped; `FiveDoMachine` derives the frame `SourceWidth` from the widest rendered line.
   - Advance `CURRENTBMP`/`PREVIOUSBMP` by 2 or `MODULO*4 - 2`, depending on bit 1 and `prevtick`.
   - Decrement `linedelay`, clear `OUTCONTROLL` bit 0.
 - `VRAMOffEval` and `vmreadw` use the +2 MB VRAM offset and `RESSCALE`; preserve.
@@ -429,7 +429,7 @@ This is the largest and riskiest port. Split it into classes but keep the origin
 
 FreeDOCore only knows about a flat 2048-byte-sector image supplied by the host. CHD support is a host/storage feature:
 
-- `ThreeDo.Storage.Chd.ChdDiscImage` uses **CHDSharp** (`ChdFile`) to open MAME CHD files.
+- `FiveDo.Storage.Chd.ChdDiscImage` uses **CHDSharp** (`ChdFile`) to open MAME CHD files.
 - `ChdFile.ReadSector(lba, buffer)` returns 2352 raw bytes; `ChdDiscImage` extracts the 2048-byte user payload:
   - cooked Mode1/2048 -> offset 0
   - raw Mode1/2352 -> offset 16
@@ -522,7 +522,7 @@ These notes record decisions made while implementing the core/memory/scheduler m
 
 ### 12.1 Memory allocation and lanes
 
-- `ThreeDoMemory` backs RAM/VRAM with a `uint[]` sized to `3 MB + 16 MB` (19 MB total). Only the first 3 MB are CPU-visible; the extra 1 MB planes are reserved for the future `RESSCALE` mirrors (M11). `IRam.Size` reports the full backing size; `ThreeDoMemory.VisibleSize` reports the 3 MB window.
+- `FiveDoMemory` backs RAM/VRAM with a `uint[]` sized to `3 MB + 16 MB` (19 MB total). Only the first 3 MB are CPU-visible; the extra 1 MB planes are reserved for the future `RESSCALE` mirrors (M11). `IRam.Size` reports the full backing size; `FiveDoMemory.VisibleSize` reports the 3 MB window.
 - Raw RAM/ROM helpers use the reference's little-endian word representation. `IRam.Read8(offset)` returns lane `offset & 3`; unaligned `Read16`/`Read32` compose lanes across words.
 - The CPU bus applies the reference XOR conventions: `Read8/Write8` use `addr ^ 3`; `Read16/Write16` use `addr ^ 2` for RAM/ROM; `Read32/Write32` align to four bytes. FreeDO has no halfword bus access, but the contract is defined consistently for future devices and tests.
 - Unmapped byte/halfword reads return the low byte/halfword of `0xBADACCE5`, matching the value callers see after the reference's usual `& 0xFF`/`& 0xFFFF` masking.
@@ -558,14 +558,14 @@ M1 implements the section primitive used by all later chips:
 
 ### 12.6 M3 implementation notes
 
-- `ThreeDoMachine` is the composition root. It owns the reset order and the FreeDOCore frame loop. `RunFrame` keeps the reference's `cnt >> 4` batching threshold; `LastFrameCycles` exposes the actual per-frame budget for tests.
+- `FiveDoMachine` is the composition root. It owns the reset order and the FreeDOCore frame loop. `RunFrame` keeps the reference's `cnt >> 4` batching threshold; `LastFrameCycles` exposes the actual per-frame budget for tests.
 - `Clio` implements `IClioBus`, `IInterruptSink`, `IClioFifo`, and `IStateSection`. FIFO descriptor writes use the reference's `value + 4` length encoding, including the zero-length special case for input FIFOs. The DMA loop keeps the `len >= 0` and `0xFFFFFFFC` sentinel semantics.
 - `Madam` implements the register file, CEL FSM/status, VDL head hook, matrix engine, and PBUS DMA. The matrix engine latches results in temporary fields, so a following command `0` (NOP) exposes the previous computation, matching `Madam.cpp`.
 - `Vdlp` reads the display list and bitmap through the +2 MB VRAM window. `DoLine` copies from `PREVIOUSBMP` (not `CURRENTBMP`), advances both bitmap pointers with the reference's `MODULO * 4 - 2` rule, and clears `OUTCONTROLL` bit 0 after each line.
 - `Sport` adds the +2 MB VRAM window to every fill/copy address, matching `_sport_Init(Memory + 0x200000)`.
-- `Xbus` implements the controller, device slots, poll/status/data FIFOs, and the built-in device-15 `0x83` responder. `ThreeDoMachine` attaches the CD-ROM device to slot 0, which is the device the BIOS polls at boot.
+- `Xbus` implements the controller, device slots, poll/status/data FIFOs, and the built-in device-15 `0x83` responder. `FiveDoMachine` attaches the CD-ROM device to slot 0, which is the device the BIOS polls at boot.
 - `Dsp` (M5) is the full `DSP.cpp` port. The former `DspStub` was removed; CLIO talks to it through `IDsp`, and it talks to CLIO through `IDspHost` for FIFO/FIQ services.
-- `BiosImage`/`NvramImage` live in `ThreeDo.Storage`. BIOS2 is zero-filled to 1 MB by the machine when shorter; NVRAM initialization writes the big-endian volume header and the initial directory words from 4DO's `EmulationHelper`.
+- `BiosImage`/`NvramImage` live in `FiveDo.Storage`. BIOS2 is zero-filled to 1 MB by the machine when shorter; NVRAM initialization writes the big-endian volume header and the initial directory words from 4DO's `EmulationHelper`.
 - `FrameAssembler` expands the 5-bit background to 8 bits and always writes an opaque alpha byte. Crop detection and HQx scaling remain presentation-layer work.
 - `M3.13` (the early OpenGL window spike) is deferred to M9R because it needs a desktop GL context; the CPU frame path and machine loop are fully testable without one.
 
@@ -596,7 +596,7 @@ M1 implements the section primitive used by all later chips:
 - Operand loading preserves the reference's request bits, NUMOPS promotion to 4, DI indirection, immediate JUSTIFY shift (0 or 3), write-back priority (GWRITEBACK only when the pool contains more operands than requests), and the BS=8 rule that loads the shift count from an extra operand. The one-bit `JUSTIFY` field is sign-extended to 0/-1 and masked with `& 3`; it is **not** `~(JUSTIFY+1) & 3`.
 - `ireadh`/`iwriteh` keep the reference's asymmetric address mapping: reads of 0x300+ wrap into the low 0x80 words, while writes of 0x300+ stay in 0x300+. This is how DSP code reads a coefficient and writes an audio sample through the same nominal address.
 - Deliberate deviations: instruction fetches mask PC to 10 bits (deterministic on malformed programs); the two `fastrand()` calls in one C expression are made left to right; debug prints from `_Arithmetic_Debug`/FIFO-direct writes are omitted.
-- `ThreeDo.Audio` adds a monotonic-counter SPSC ring buffer, a normalized-float pipeline, a null sink, and a 44.1 kHz/16-bit stereo WAV writer. The ring buffer never allocates after construction; full rings drop the newest sample rather than blocking the emulation thread.
+- `FiveDo.Audio` adds a monotonic-counter SPSC ring buffer, a normalized-float pipeline, a null sink, and a 44.1 kHz/16-bit stereo WAV writer. The ring buffer never allocates after construction; full rings drop the newest sample rather than blocking the emulation thread.
 
 ### 12.9 M6 implementation notes
 
@@ -612,13 +612,13 @@ M1 implements the section primitive used by all later chips:
 - `PbusEncoder` reproduces 4DO's 16-byte PBUS packet: header 0x00/0x48, controllers in wired order 1,3,2,5,4,6 at offsets 2,4,6,8,10,14, low byte L/R/X/P/C/B, high byte A/Left/Right/Up/Down plus the connectivity bit 0x80. The packet size is fixed and encoding is allocation-free.
 - `ControllerState` is an immutable button set; `InputManager` merges the keyboard mapper with an `IGamepadBackend` and exposes `IPbusSource` for the machine. The Avalonia event plumbing is intentionally outside the core and lands with M9.3/M9.6.
 - `InputProfile` stores per-player keyboard/gamepad maps and hotkeys as JSON. Default profiles bind the keyboard only for player 1 so a single key does not press the same button on all players; gamepad bindings are available for all six.
-- `NvramStore` lives in `ThreeDo.Host` because it is host I/O; the core still only accepts the 32 KB image. Writes are debounced through an injected `TimeProvider` (250 ms), use a temporary file plus atomic replace, and back up a wrong-sized file as `.bad` before creating a fresh image.
+- `NvramStore` lives in `FiveDo.Host` because it is host I/O; the core still only accepts the 32 KB image. Writes are debounced through an injected `TimeProvider` (250 ms), use a temporary file plus atomic replace, and back up a wrong-sized file as `.bad` before creating a fresh image.
 - The 4DO `GameDatabase.xml` is an embedded resource with an attribution comment; lookups accept either case and unknown checksums return null. Per-game fix overrides remain a settings-layer concern.
 
 ### 12.11 M8 implementation notes
 
 - Save states use the existing `TDO1` header plus per-section `[id][version][length][payload][crc32]` frames. Header fields are the emulator version, ARM clock, fix mode, BIOS MD5, optional disc hash, and frame count. Unknown format/section versions fail; BIOS hash mismatch is a warning.
-- `ThreeDoMemory` now implements `IStateSection` and serializes RAM, both ROM banks, NVRAM, the selected bank, and the PC-adjust latch. RAM/ROM are written as raw little-endian words because the emulated representation is word-swapped; all supported runtimes are little-endian.
+- `FiveDoMemory` now implements `IStateSection` and serializes RAM, both ROM banks, NVRAM, the selected bank, and the PC-adjust latch. RAM/ROM are written as raw little-endian words because the emulated representation is word-swapped; all supported runtimes are little-endian.
 - `Dsp` serializes its architectural state and NMem/IMem; REGCONV, request/BS tables, and BRCONDTAB are immutable precomputed tables rebuilt in the constructor, so they are not duplicated in the file.
 - The machine state also stores the derived VDL frame and the mutable `CompatibilityState`. Without the latter, the CPU's runtime Anvil detection (which changes `IsAnvil`/`BiosAnvil`) made a loaded run diverge after a few frames even though the CPU registers matched at load.
 - `SaveStateToFile` writes a temporary file then atomically replaces the target. `StateInspector` reads the header and section table without constructing a machine. `FrameDumper` writes 32-bit BMPs for headless diagnostics.
@@ -626,13 +626,13 @@ M1 implements the section primitive used by all later chips:
 
 ### 12.12 M9/M9R implementation notes
 
-- The OpenGL presenter lives entirely in the host layer. `ThreeDo.Video` owns the backend-neutral `IVideoRenderer` contract, settings, aspect/integer viewport math, the frame uploader, and `GpuPalette` (the CPU reference for the shader). `ThreeDo.Video.OpenGL` owns Silk.NET GL/GLES resources and the GLSL 330 / GLSL ES 300 shader variants. The target design and current gaps are in [`Performance.md`](Performance.md).
+- The OpenGL presenter lives entirely in the host layer. `FiveDo.Video` owns the backend-neutral `IVideoRenderer` contract, settings, aspect/integer viewport math, the frame uploader, and `GpuPalette` (the CPU reference for the shader). `FiveDo.Video.OpenGL` owns Silk.NET GL/GLES resources and the GLSL 330 / GLSL ES 300 shader variants. The target design and current gaps are in [`Performance.md`](Performance.md).
 - `VdlFrameUploader` packs R16UI indexed pixels, an RGB8 32xheight CLUT, and an RGBA32UI per-line background/out-control texture. Buffers are reused. The shader uses `texelFetch` with nearest sampling for the accurate path.
 - `GpuPalette` exists so the palette algorithm can be tested without a GL context: tests compare it against `FrameAssembler` for a 320x240 synthetic VDL frame including background, fixed-CLUT bit 15, and per-line CLUT cases. The shader mirrors this logic.
 - `OpenGlRenderer` creates the programs, VAO/VBO, textures, and a native-resolution palette FBO, draws a fullscreen triangle strip into the supplied framebuffer, and implements `ReadPixels` with an RGBA-to-BGRA swap. `VideoSurface` calls `GL.GetApi(gl.GetProcAddress)` from Avalonia's `OpenGlControlBase` and renders a latest-frame mailbox snapshot. The two-stage palette/scale pipeline, `TexStorage2D`/`TexSubImage2D`, cached uniforms, and physical-pixel sizing are implemented. **Remaining deviations:** the GLES/ANGLE/Pi path is not validated on hardware, and the HQx 2x/3x/4x filters run on the CPU rather than the GPU.
 - The Windows frontend now prefers WGL with ANGLE/software fallbacks. `OpenGlRenderer` detects an OpenGL ES context from the version string and selects GLSL ES 300 shader sources with the required precision qualifiers; desktop contexts keep GLSL 330. Real-hardware ANGLE and Raspberry Pi 4/5 validation remains.
 - Context loss is handled by re-running `Initialize`. The UI does not yet automatically fall back to `CpuVideoRenderer` when the context or integer textures are unavailable; that is a frontend decision for M9.2/M9R.7.
-- The desktop shell runs the machine on `ThreeDo.Host.CoreRunner`'s dedicated 60 Hz thread. UI actions (reset, save/load, disc change, screenshot) pause the loop via `CoreRunner.Invoke`; the UI consumes the latest-frame mailbox and updates status/FPS at 4 Hz. Screenshots use the CPU frame dumper, and keyboard input is mapped through the default `InputProfile`.
+- The desktop shell runs the machine on `FiveDo.Host.CoreRunner`'s dedicated 60 Hz thread. UI actions (reset, save/load, disc change, screenshot) pause the loop via `CoreRunner.Invoke`; the UI consumes the latest-frame mailbox and updates status/FPS at 4 Hz. Screenshots use the CPU frame dumper, and keyboard input is mapped through the default `InputProfile`.
 - `AppSettings`/`AppSettingsStore` persist BIOS/disc paths, save/screenshot directories, renderer filter/aspect/vsync, audio enable/volume, and the JSON input profile. The shell auto-loads the last BIOS/disc when the files still exist and saves settings on close.
 - CI now publishes both the CLI and the Avalonia frontend for the six target RIDs; a local win-x64 CLI publish and a short Windows frontend launch were smoke-tested. The launch smoke test did not prove 4K60, GLES compatibility, or sustained frame pacing; those are M9P gates. Live audio output and arm64 validation remain.
 - `OpenAlAudioOutput` is optional host I/O: a dedicated thread fills four OpenAL Stereo16 buffers from the SPSC ring. `TryCreate` silently returns null when no device/context exists, keeping headless and CI runs silent and stable.

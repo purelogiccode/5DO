@@ -60,7 +60,7 @@ arguments are transposed and passes with the fix.
 
 The bitmap copy path read and stored exactly 320 pixels regardless of the display
 mode. It now uses the modulo parsed from the VDL control word (320/384/512/640/1024),
-sets the line width accordingly, and `ThreeDoMachine` derives `SourceWidth` from the
+sets the line width accordingly, and `FiveDoMachine` derives `SourceWidth` from the
 widest rendered line. 320-wide output is unchanged; the 3,000-frame corpus hashes are
 identical.
 
@@ -396,7 +396,7 @@ missing and corrected the Road Rash diagnosis.
   synthetic smoke before uploading the JSON baseline. The gate is budget-based;
   the same-runner relative (>10%) comparison was added in the twelfth pass (see 1.15).
 - **Desktop integration.** The frontend accepts a positional disc path or
-  `--disc <path>` for file associations, ships `packaging/3doemulator.desktop`, can
+  `--disc <path>` for file associations, ships `packaging/5do.desktop`, can
   write a native CPU-frame screenshot next to a filtered GL capture, and previews
   sibling cover art in the Library window.
 - **Tests.** 691 tests pass; the new tests cover the 3x/4x reference hashes,
@@ -410,13 +410,13 @@ missing and corrected the Road Rash diagnosis.
 - **Source-generated JSON.** `AppSettings`, `InputProfile`, save-slot metadata, and
   every CLI `--json` response now use `JsonSerializerContext` metadata instead of
   reflection. The contexts are `AppSettingsJsonContext`/`SaveStateSlotJsonContext`
-  (`ThreeDo.Host`), `InputProfileJsonContext` (`ThreeDo.Input`), and `CliJsonContext`
-  (`ThreeDo.Cli`). The CLI's anonymous response objects were replaced with named
-  records in `src/ThreeDo.Cli/CliJsonModels.cs`; the JSON field names are unchanged.
+  (`FiveDo.Host`), `InputProfileJsonContext` (`FiveDo.Input`), and `CliJsonContext`
+  (`FiveDo.Cli`). The CLI's anonymous response objects were replaced with named
+  records in `src/FiveDo.Cli/CliJsonModels.cs`; the JSON field names are unchanged.
 - **Reflection removal.** `WriteRunResult` and `selftest` read typed properties
   instead of `Type.GetProperty`; the RAM-write watchpoint formatter uses
   `DiagnosticMethodInfo.Create` instead of `StackFrame.GetMethod`.
-- **Trimmed CLI.** `ThreeDo.Cli` sets `PublishTrimmed=true` and `TrimMode=full`.
+- **Trimmed CLI.** `FiveDo.Cli` sets `PublishTrimmed=true` and `TrimMode=full`.
   CI publishes all six RIDs trimmed and adds a Windows smoke test (`--version`,
   `selftest --json`, `bench --frames 2 --json`). The win-x64 audit also covered
   `info`, `state inspect`, `state slots`, `fs list` on a generated CHD, a CHD boot,
@@ -444,7 +444,7 @@ missing and corrected the Road Rash diagnosis.
   RID, publish directory, and output directory. It stages the publish output plus
   `README.md`, `THIRD-PARTY-NOTICES.md`, `docs/Licensing.md`, and a generated
   `PACKAGE.txt` (component, RID, version, commit, UTC build time), and adds
-  `3doemulator.desktop` for Linux. Windows archives are zip; Linux/macOS archives
+  `5do.desktop` for Linux. Windows archives are zip; Linux/macOS archives
   are tar.gz. PDBs are excluded from release archives.
 - **CI.** Both six-RID publish jobs now create and upload a portable package in
   addition to the raw publish folder.
@@ -463,7 +463,7 @@ missing and corrected the Road Rash diagnosis.
   deleted. Every window is constructed explicitly, and all XAML bindings are compiled
   (`AvaloniaUseCompiledBindingsByDefault=true`; each window/`DataTemplate` declares
   `x:DataType`). This removed the only first-party frontend trim warning.
-- **Trimmed frontend.** `ThreeDo.Frontend.Avalonia` sets `PublishTrimmed=true` and
+- **Trimmed frontend.** `FiveDo.Frontend.Avalonia` sets `PublishTrimmed=true` and
   `TrimMode=full`. The six-RID CI publish job now uses `PublishTrimmed=true` instead
   of `false`. CHDSharp's vendored-FLAC `TypeDescriptor` warning is demoted to a
   visible warning with the same policy as the CLI; the data-track path does not decode
@@ -475,7 +475,7 @@ missing and corrected the Road Rash diagnosis.
   BIOS/disc flow so CI needs no BIOS, disc, or user profile. `--version` exits
   before Avalonia initializes. The startup parser (`--disc`, positional disc,
   `--smoke-test`, `--smoke-output`, `--version`) has unit tests in
-  `tests/ThreeDo.Tests/Frontend/FrontendStartupTests.cs`.
+  `tests/FiveDo.Tests/Frontend/FrontendStartupTests.cs`.
 - **CI.** The Windows `build-test` job publishes the trimmed win-x64 frontend and runs
   the smoke test with a 60-second timeout, checking the exit code and marker file.
 - **Size.** On win-x64 the single-file executable is 26.3 MB trimmed vs 91.3 MB
@@ -491,7 +491,7 @@ missing and corrected the Road Rash diagnosis.
 
 ### 1.18 Fourteenth pass: swap interval and true-4K GPU probe (2026-10-26)
 
-- **Swap interval.** `ThreeDo.Video.OpenGL.SwapInterval.TryCreate` resolves the
+- **Swap interval.** `FiveDo.Video.OpenGL.SwapInterval.TryCreate` resolves the
   platform extension in priority order: `WGL_EXT_swap_control`,
   `GLX_EXT_swap_control`, `GLX_MESA_swap_control`, `GLX_SGI_swap_control`, then
   `EGL_KHR_swap_interval`. `OpenGlRenderer` applies `RendererSettings.Vsync`
@@ -557,13 +557,13 @@ missing and corrected the Road Rash diagnosis.
   in [`TestCorpus.md`](TestCorpus.md) 1.7 and the matrix is in
   [`Compatibility.md`](Compatibility.md) §10.
 - **Capture reentrancy fix.** The opt-in GPU integration test
-  (`THREEDO_GPU_TESTS=1`) runs the built frontend probe for WGL and ANGLE, checks
+  (`FIVEDO_GPU_TESTS=1`) runs the built frontend probe for WGL and ANGLE, checks
   Accurate parity and a 4K pass, and found a real crash: the capture consumer can
   finish the probe and dispose the surface synchronously while `OnOpenGlRender` is
   still using the adapter. The render path now returns after the capture callback
   when the surface has been disposed.
-- **NativeAOT CLI/frontend audit.** `ThreeDo.Cli` publishes with NativeAOT via the
-  opt-in `-p:ThreeDoNativeAot=true` property. The win-x64 single file is 9.97 MB
+- **NativeAOT CLI/frontend audit.** `FiveDo.Cli` publishes with NativeAOT via the
+  opt-in `-p:FiveDoNativeAot=true` property. The win-x64 single file is 9.97 MB
   (trimmed IL is 26.3 MB) and passes `--version`, `selftest`, `bench`, `info`,
   `fs list` on Lemmings (482 files), and a 3,000-frame boot matching the golden
   `PC 0x0012B3C8` / hash `0x932C7722`. The frontend publishes as a 28.8 MB
@@ -872,81 +872,81 @@ save/load proof.
 ```powershell
 $o = "artifacts\s2"
 $b = Join-Path $PWD "bios\panafz1.bin"
-$g = $env:THREEDO_GAMES   # office: D:\Samples\3DO; home: E:\Panasonic 3DO
+$g = $env:FIVEDO_GAMES   # office: D:\Samples\3DO; home: E:\Panasonic 3DO
 
 # Build/test/format
 dotnet build -c Release
-dotnet test tests/ThreeDo.Tests -c Release
+dotnet test tests/FiveDo.Tests -c Release
 dotnet format --verify-no-changes
 
 # Trimmed CLI publish and smoke test (see docs/Trimming.md)
-dotnet publish src/ThreeDo.Cli/ThreeDo.Cli.csproj -c Release -r win-x64 `
+dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r win-x64 `
   --self-contained true -p:PublishSingleFile=true -m:1 -o "$o\cli-trim"
-& "$o\cli-trim\ThreeDo.Cli.exe" selftest --json
+& "$o\cli-trim\FiveDo.Cli.exe" selftest --json
 
 # Trimmed frontend publish and startup smoke test (see docs/Trimming.md)
-dotnet publish src/ThreeDo.Frontend.Avalonia/ThreeDo.Frontend.Avalonia.csproj `
+dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj `
   -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -m:1 `
   -o "$o\frontend-trim"
-$p = Start-Process -FilePath "$o\frontend-trim\ThreeDo.Frontend.Avalonia.exe" `
+$p = Start-Process -FilePath "$o\frontend-trim\FiveDo.Frontend.Avalonia.exe" `
   -ArgumentList '--smoke-test', '--smoke-output', "$o\frontend-smoke.txt" -PassThru
 $p.WaitForExit(60000)
 Get-Content "$o\frontend-smoke.txt"
 
 # GPU presentation probe (WGL, ANGLE/GLES, or software)
-dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- `
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
   --gl-backend angle `
   --gl-probe artifacts/gl-probe/angle-4k-sharp.json `
   --gl-probe-size 3840x2160 --gl-probe-frames 120 --gl-probe-warmup 30 `
   --gl-probe-filter sharp-bilinear --gl-probe-offscreen
 
 # CPU/GPU parity: capture a 1:1 Accurate frame and compare it with FrameAssembler
-dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- `
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
   --gl-backend wgl --gl-probe artifacts/gl-probe/parity-wgl.json `
   --gl-probe-size 320x240 --gl-probe-filter accurate --gl-probe-offscreen `
   --gl-probe-capture artifacts/gl-probe/parity-wgl.png
 
 # Road Rash: render the race and capture every 1,000 frames
-dotnet run -c Release --project src/ThreeDo.Cli -- run `
+dotnet run -c Release --project src/FiveDo.Cli -- run `
   "$g\Road Rash (USA).chd" --bios $b --frames 30000 `
   --capture-dir "$o\rr-race" --capture-every 1000 `
   --frame-out "$o\rr-race.png" --state-out "$o\rr30k.state" --json
 
 # Wolfenstein: start a fresh game from the 12k demo state
-dotnet run -c Release --project src/ThreeDo.Cli -- run `
+dotnet run -c Release --project src/FiveDo.Cli -- run `
   "$g\Wolfenstein 3D (USA).chd" --bios $b --state-in "$o\w3d-fix12k.state" `
   --frames 2000 --input-script "$o\w3d-play.txt" `
   --frame-out "$o\w3d-play.png" --state-out "$o\w3d-play.state" --json
 
 # Wolfenstein: walk/turn/fire from the fresh-game state
-dotnet run -c Release --project src/ThreeDo.Cli -- run `
+dotnet run -c Release --project src/FiveDo.Cli -- run `
   "$g\Wolfenstein 3D (USA).chd" --bios $b --state-in "$o\w3d-play.state" `
   --frames 4000 --input-script "$o\w3d-walk.txt" `
   --frame-out "$o\w3d-gameplay.png" --state-out "$o\w3d-gameplay.state" --json
 
 # Lemmings: full 640x480 high-resolution title (opt-in)
-dotnet run -c Release --project src/ThreeDo.Cli -- run `
+dotnet run -c Release --project src/FiveDo.Cli -- run `
   "$g\Lemmings (USA).chd" --bios $b --frames 18100 --high-res `
   --input-script "$o\lem-menu.txt" --frame-out "$o\lem-hires-title.png" --json
 
 # Lemmings: type the Fun 4 passcode with the D-pad and start the level
-dotnet run -c Release --project src/ThreeDo.Cli -- run `
+dotnet run -c Release --project src/FiveDo.Cli -- run `
   "$g\Lemmings (USA).chd" --bios $b --state-in "$o\lem_pass_fresh.state" `
   --frames 1300 --input-script docs/scripts/lem-fun4-dpad.txt --script-base state `
   --frame-out "$o\lem-dpad-gameplay.png" --state-out "$o\lem-dpad-gameplay.state" --json
 
 # Save/load roundtrip (replace the state with a live gameplay state)
-dotnet run -c Release --project src/ThreeDo.Cli -- run `
+dotnet run -c Release --project src/FiveDo.Cli -- run `
   "$g\Wolfenstein 3D (USA).chd" --bios $b --state-in "$o\w3d-live.state" `
   --frames 120 --json
 
 # Audio capture from a live state
-dotnet run -c Release --project src/ThreeDo.Cli -- run `
+dotnet run -c Release --project src/FiveDo.Cli -- run `
   "$g\Road Rash (USA).chd" --bios $b --state-in "$o\rr30k.state" `
   --frames 600 --audio wav --wav-out "$o\rr-game.wav" --json
 
 # RAM dump at a trace stop
-dotnet run -c Release --project src/ThreeDo.Cli -- trace `
+dotnet run -c Release --project src/FiveDo.Cli -- trace `
   "$g\Road Rash (USA).chd" --bios $b --frames 16000 --trace-frames 2200 `
   --stop-kprint "AllocMem error" --out "$o\stop.txt" `
   --dump-ram "$o\stop-ram.bin" --dump-ram-offset 0 --dump-ram-length 0x300000

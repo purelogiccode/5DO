@@ -21,7 +21,7 @@ $publishPath = (Resolve-Path -LiteralPath $PublishDirectory).Path
 $outputPath = [System.IO.Path]::GetFullPath($OutputDirectory)
 New-Item -ItemType Directory -Path $outputPath -Force | Out-Null
 
-$staging = Join-Path ([System.IO.Path]::GetTempPath()) ("3do-package-" + [guid]::NewGuid().ToString('N'))
+$staging = Join-Path ([System.IO.Path]::GetTempPath()) ("5do-package-" + [guid]::NewGuid().ToString('N'))
 try {
     New-Item -ItemType Directory -Path $staging -Force | Out-Null
     Get-ChildItem -LiteralPath $publishPath -Force |
@@ -55,7 +55,7 @@ try {
     }
 
     if ($Rid -like 'linux-*') {
-        Copy-Item -LiteralPath (Join-Path $repoRoot 'packaging/3doemulator.desktop') `
+        Copy-Item -LiteralPath (Join-Path $repoRoot 'packaging/5do.desktop') `
             -Destination $staging -Force
     }
 
@@ -80,7 +80,7 @@ try {
     }
 
     $manifest = @(
-        '3DOEmulator portable package'
+        '5DO portable package'
         "component: $Component"
         "rid: $Rid"
         "version: $version"
@@ -92,7 +92,7 @@ try {
     )
     Set-Content -LiteralPath (Join-Path $staging 'PACKAGE.txt') -Value $manifest -Encoding utf8NoBOM
 
-    $name = "3doemulator-$Component-$Rid"
+    $name = "5do-$Component-$Rid"
     if ($Rid -like 'win-*') {
         $archive = Join-Path $outputPath "$name.zip"
         if (Test-Path -LiteralPath $archive) {

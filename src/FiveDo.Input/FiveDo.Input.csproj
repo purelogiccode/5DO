@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>FiveDo.Input</RootNamespace>
+    <AssemblyName>FiveDo.Input</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FiveDo.Core\FiveDo.Core.csproj" />
+  </ItemGroup>
+
+</Project>
+

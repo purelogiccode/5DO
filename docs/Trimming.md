@@ -8,8 +8,8 @@ emulation feature.
 
 | Component | Trimming | NativeAOT |
 |---|---|---|
-| `ThreeDo.Cli` | **Enabled** (`PublishTrimmed=true`, `TrimMode=full`) | **Opt-in win-x64 audit passed** (`-p:ThreeDoNativeAot=true`) |
-| `ThreeDo.Frontend.Avalonia` | **Enabled** (`PublishTrimmed=true`, `TrimMode=full`) | **Opt-in win-x64 audit passed** (`-p:ThreeDoNativeAot=true`); Silk.NET loader warnings remain |
+| `FiveDo.Cli` | **Enabled** (`PublishTrimmed=true`, `TrimMode=full`) | **Opt-in win-x64 audit passed** (`-p:FiveDoNativeAot=true`) |
+| `FiveDo.Frontend.Avalonia` | **Enabled** (`PublishTrimmed=true`, `TrimMode=full`) | **Opt-in win-x64 audit passed** (`-p:FiveDoNativeAot=true`); Silk.NET loader warnings remain |
 | Core/host assemblies | Trimmed as dependencies of both | NativeAOT-compatible as dependencies of the CLI/frontend |
 
 Both executables publish as self-contained single-file builds for all six RIDs. A
@@ -21,12 +21,12 @@ executables and runs the same smoke commands.
 
 ## NativeAOT CLI audit (2026-10-26)
 
-The CLI publishes with NativeAOT when `ThreeDoNativeAot=true`:
+The CLI publishes with NativeAOT when `FiveDoNativeAot=true`:
 
 ```powershell
-dotnet publish src/ThreeDo.Cli/ThreeDo.Cli.csproj `
+dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj `
   -c Release -r win-x64 --self-contained true `
-  -p:ThreeDoNativeAot=true -p:PublishSingleFile=true -m:1 `
+  -p:FiveDoNativeAot=true -p:PublishSingleFile=true -m:1 `
   -o artifacts/cli-aot
 ```
 
@@ -47,12 +47,12 @@ opt-in property keeps the default publish matrix unchanged.
 
 ## NativeAOT frontend audit (2026-10-26)
 
-The frontend publishes with NativeAOT when `ThreeDoNativeAot=true`:
+The frontend publishes with NativeAOT when `FiveDoNativeAot=true`:
 
 ```powershell
-dotnet publish src/ThreeDo.Frontend.Avalonia/ThreeDo.Frontend.Avalonia.csproj `
+dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj `
   -c Release -r win-x64 --self-contained true `
-  -p:ThreeDoNativeAot=true -m:1 `
+  -p:FiveDoNativeAot=true -m:1 `
   -o artifacts/frontend-aot
 ```
 
@@ -80,16 +80,16 @@ Silk.NET loader dependency or install a custom native-asset resolver.
 1. **Reflection-based JSON.** Settings, input profiles, save-slot sidecars, and
    every CLI `--json` response now serialize through source-generated
    `JsonSerializerContext` metadata:
-   - `AppSettingsJsonContext` (`ThreeDo.Host`)
-   - `SaveStateSlotJsonContext` (`ThreeDo.Host`)
-   - `InputProfileJsonContext` (`ThreeDo.Input`)
-   - `CliJsonContext` (`ThreeDo.Cli`)
-   - `GlProbeJsonContext` (`ThreeDo.Frontend.Avalonia`, the developer GPU probe)
+   - `AppSettingsJsonContext` (`FiveDo.Host`)
+   - `SaveStateSlotJsonContext` (`FiveDo.Host`)
+   - `InputProfileJsonContext` (`FiveDo.Input`)
+   - `CliJsonContext` (`FiveDo.Cli`)
+   - `GlProbeJsonContext` (`FiveDo.Frontend.Avalonia`, the developer GPU probe)
 
    The contexts use camel-case naming where the historical CLI contract requires
    it and `UseStringEnumConverter` for the settings/profile files. The CLI's
    anonymous response objects were replaced with named records in
-   `src/ThreeDo.Cli/CliJsonModels.cs`.
+   `src/FiveDo.Cli/CliJsonModels.cs`.
 
 2. **Reflection over CLI result objects.** `WriteRunResult` and `selftest` no
    longer use `Type.GetProperty` to read anonymous-type properties; they use the
@@ -144,48 +144,48 @@ On win-x64 the frontend single-file executable is **26.3 MB** trimmed versus
 
 ```powershell
 # Build, tests, and formatting
-dotnet build 3DOEmulator.sln -c Release
-dotnet test tests/ThreeDo.Tests -c Release
-dotnet format 3DOEmulator.sln --verify-no-changes
+dotnet build 5DO.sln -c Release
+dotnet test tests/FiveDo.Tests -c Release
+dotnet format 5DO.sln --verify-no-changes
 
 # Trimmed CLI publish (Windows)
-dotnet publish src/ThreeDo.Cli/ThreeDo.Cli.csproj `
+dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj `
   -c Release -r win-x64 --self-contained true `
   -p:PublishSingleFile=true -m:1 `
   -o artifacts/cli-trim
 
 # Smoke tests against the trimmed CLI
-artifacts/cli-trim/ThreeDo.Cli.exe --version
-artifacts/cli-trim/ThreeDo.Cli.exe selftest --json
-artifacts/cli-trim/ThreeDo.Cli.exe bench --frames 2 --json
-artifacts/cli-trim/ThreeDo.Cli.exe info game.chd --json
-artifacts/cli-trim/ThreeDo.Cli.exe run game.iso --bios panafz1.bin --frames 120 --json
+artifacts/cli-trim/FiveDo.Cli.exe --version
+artifacts/cli-trim/FiveDo.Cli.exe selftest --json
+artifacts/cli-trim/FiveDo.Cli.exe bench --frames 2 --json
+artifacts/cli-trim/FiveDo.Cli.exe info game.chd --json
+artifacts/cli-trim/FiveDo.Cli.exe run game.iso --bios panafz1.bin --frames 120 --json
 
 # Opt-in NativeAOT CLI publish and smoke test (win-x64)
-dotnet publish src/ThreeDo.Cli/ThreeDo.Cli.csproj `
+dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj `
   -c Release -r win-x64 --self-contained true `
-  -p:ThreeDoNativeAot=true -p:PublishSingleFile=true -m:1 `
+  -p:FiveDoNativeAot=true -p:PublishSingleFile=true -m:1 `
   -o artifacts/cli-aot
-artifacts/cli-aot/ThreeDo.Cli.exe selftest --json
-artifacts/cli-aot/ThreeDo.Cli.exe bench --frames 2 --json
+artifacts/cli-aot/FiveDo.Cli.exe selftest --json
+artifacts/cli-aot/FiveDo.Cli.exe bench --frames 2 --json
 
 # Opt-in NativeAOT frontend single-file publish and smoke test (win-x64)
-dotnet publish src/ThreeDo.Frontend.Avalonia/ThreeDo.Frontend.Avalonia.csproj `
+dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj `
   -c Release -r win-x64 --self-contained true `
-  -p:ThreeDoNativeAot=true -m:1 `
+  -p:FiveDoNativeAot=true -m:1 `
   -o artifacts/frontend-aot
-artifacts/frontend-aot/ThreeDo.Frontend.Avalonia.exe --version
+artifacts/frontend-aot/FiveDo.Frontend.Avalonia.exe --version
 # --smoke-test --smoke-output <path> opens the real window and exits 0
 
 # Trimmed frontend publish (Windows)
-dotnet publish src/ThreeDo.Frontend.Avalonia/ThreeDo.Frontend.Avalonia.csproj `
+dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj `
   -c Release -r win-x64 --self-contained true `
   -p:PublishSingleFile=true -m:1 `
   -o artifacts/frontend-trim
 
 # Frontend smoke test: opens the real window, runs one UI pass (GL hidden), exits 0
 $process = Start-Process `
-  -FilePath artifacts/frontend-trim/ThreeDo.Frontend.Avalonia.exe `
+  -FilePath artifacts/frontend-trim/FiveDo.Frontend.Avalonia.exe `
   -ArgumentList '--smoke-test', '--smoke-output', 'artifacts/frontend-smoke.txt' `
   -PassThru
 $process.WaitForExit(60000)

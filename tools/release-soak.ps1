@@ -12,13 +12,13 @@ listed as "missing on this machine" rather than failing the run. If an archived
 The default 36,000 frames is 10 minutes of emulated time at 60 Hz.
 
 .PARAMETER GamesRoot
-Disc root. Defaults to $env:THREEDO_GAMES.
+Disc root. Defaults to $env:FIVEDO_GAMES.
 
 .PARAMETER Bios
 BIOS path. Defaults to bios/panafz1.bin in the repository.
 
 .PARAMETER CliPath
-Built ThreeDo.Cli.dll. Defaults to the Release build.
+Built FiveDo.Cli.dll. Defaults to the Release build.
 
 .PARAMETER StateDir
 Directory containing archived 12k states for the titles whose discs are absent.
@@ -44,9 +44,9 @@ pwsh -File tools/release-soak.ps1 -GamesRoot 'D:\Samples\3DO' -Frames 300 -Outpu
 #>
 
 param(
-    [string] $GamesRoot = $env:THREEDO_GAMES,
+    [string] $GamesRoot = $env:FIVEDO_GAMES,
     [string] $Bios = (Join-Path $PSScriptRoot '..\bios\panafz1.bin'),
-    [string] $CliPath = (Join-Path $PSScriptRoot '..\src\ThreeDo.Cli\bin\Release\net10.0\ThreeDo.Cli.dll'),
+    [string] $CliPath = (Join-Path $PSScriptRoot '..\src\FiveDo.Cli\bin\Release\net10.0\FiveDo.Cli.dll'),
     [string] $StateDir = (Join-Path $PSScriptRoot '..\artifacts\compat-new'),
     [string] $OutputDir = (Join-Path $PSScriptRoot '..\artifacts\release-soak'),
     [int] $Frames = 36000,
@@ -58,7 +58,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 if ([string]::IsNullOrWhiteSpace($GamesRoot)) {
-    throw 'Set THREEDO_GAMES or pass -GamesRoot <path>.'
+    throw 'Set FIVEDO_GAMES or pass -GamesRoot <path>.'
 }
 
 $gamesRootPath = (Resolve-Path -LiteralPath $GamesRoot).Path

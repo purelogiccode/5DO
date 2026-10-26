@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>FiveDo.Host</RootNamespace>
+    <AssemblyName>FiveDo.Host</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FiveDo.Core\FiveDo.Core.csproj" />
+    <ProjectReference Include="..\FiveDo.Machine\FiveDo.Machine.csproj" />
+    <ProjectReference Include="..\FiveDo.Storage\FiveDo.Storage.csproj" />
+    <ProjectReference Include="..\FiveDo.Audio\FiveDo.Audio.csproj" />
+    <ProjectReference Include="..\FiveDo.Input\FiveDo.Input.csproj" />
+    <ProjectReference Include="..\FiveDo.Video\FiveDo.Video.csproj" />
+    <ProjectReference Include="..\FiveDo.Diagnostics\FiveDo.Diagnostics.csproj" />
+  </ItemGroup>
+
+</Project>
+

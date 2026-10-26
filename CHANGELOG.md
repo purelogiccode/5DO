@@ -30,7 +30,7 @@ sign-off is pending; see [`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.
 - HQx 3x/4x filters (`VideoFilter.Hqx3x`/`Hqx4x`): generated from the 4DO hq3x/hq4x
   sources and verified against the C++ reference hashes. They are opt-in and cost
   more CPU time than HQx 2x.
-- Benchmark budget gate: `ThreeDo.Benchmarks --gate` and the CI job enforce
+- Benchmark budget gate: `FiveDo.Benchmarks --gate` and the CI job enforce
   0 bytes/frame, core p99 <= 8 ms, total mean <= 8 ms, and total p99 <= 16.667 ms.
 - Optional native CPU-frame screenshot (`-native.png`) alongside the filtered GL
   screenshot, controlled from Settings > Video.
@@ -44,7 +44,7 @@ sign-off is pending; see [`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.
   `--json` response now use source-generated `JsonSerializerContext` metadata.
   The CLI result types are named records (`CliJsonModels.cs`) and no longer use
   anonymous-type reflection.
-- Trimmed CLI publishes: `ThreeDo.Cli` uses `PublishTrimmed=true` (`TrimMode=full`)
+- Trimmed CLI publishes: `FiveDo.Cli` uses `PublishTrimmed=true` (`TrimMode=full`)
   for self-contained single-file builds, with a Windows CI smoke test. The win-x64
   audit covers `--version`, `selftest`, `bench`, `info`, `state inspect`,
   `state slots`, `fs list`, CHD boot/run, and a save-state roundtrip. See
@@ -55,10 +55,10 @@ sign-off is pending; see [`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.
   a same-machine relative check across core p99, total mean, and total p99 (default
   10%, exit code 4). Improvements pass; missing baseline metrics are ignored.
 - Portable release archives: `packaging/package.ps1` builds
-  `3doemulator-<component>-<rid>.zip` for Windows and `.tar.gz` for Linux/macOS,
+  `5do-<component>-<rid>.zip` for Windows and `.tar.gz` for Linux/macOS,
   including README/notices/licensing, a generated `PACKAGE.txt`, and the Linux
   desktop entry. CI publishes both raw folders and archives for all six RIDs.
-- Trimmed Avalonia frontend: `ThreeDo.Frontend.Avalonia` publishes with
+- Trimmed Avalonia frontend: `FiveDo.Frontend.Avalonia` publishes with
   `PublishTrimmed=true` (`TrimMode=full`) for all six RIDs. The reflection-based
   `ViewLocator` was removed, every window is constructed explicitly, and all XAML
   bindings are compiled. The win-x64 single-file executable is 26.3 MB trimmed vs
@@ -89,12 +89,12 @@ sign-off is pending; see [`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.
   Turbo show gameplay/attract scenes; six produce non-silent 44.1 kHz stereo audio
   (Theme Park's menu is silent). Hashes and commands are in `TestCorpus.md` 1.7 and
   the matrix in `Compatibility.md` §10.
-- Opt-in GPU integration test (`THREEDO_GPU_TESTS=1`): runs the built frontend probe
+- Opt-in GPU integration test (`FIVEDO_GPU_TESTS=1`): runs the built frontend probe
   for WGL and ANGLE, checks Accurate parity and a short 4K pass. It found a
   synchronous-dispose crash when the capture consumer finished the probe while
   `OnOpenGlRender` was still running; the render path now returns safely after the
   capture callback.
-- Opt-in NativeAOT publishes (`-p:ThreeDoNativeAot=true`): the win-x64 CLI single
+- Opt-in NativeAOT publishes (`-p:FiveDoNativeAot=true`): the win-x64 CLI single
   file is 9.97 MB and passes the CLI smoke suite, `info`, `fs list`, and a 3,000-frame
   Lemmings boot matching the golden hash. The frontend publishes as a 28.8 MB
   single-file native executable plus native Skia/HarfBuzz/ANGLE assets and passes

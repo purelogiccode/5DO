@@ -33,7 +33,7 @@ The emulator is a large, stateful port. Tests are the only way to keep a 600 KB 
 For M0 there is one test project:
 
 ```text
-tests/ThreeDo.Tests/
+tests/FiveDo.Tests/
   Core/
   Cpu/
   Memory/
@@ -54,7 +54,7 @@ tests/ThreeDo.Tests/
   TestUtilities/
 ```
 
-If the suite becomes slow or a subsystem needs a different runner, split it into `ThreeDo.<Subsystem>.Tests` projects later. The folder structure already mirrors the production projects, so the split is mechanical.
+If the suite becomes slow or a subsystem needs a different runner, split it into `FiveDo.<Subsystem>.Tests` projects later. The folder structure already mirrors the production projects, so the split is mechanical.
 
 ---
 
@@ -63,9 +63,9 @@ If the suite becomes slow or a subsystem needs a different runner, split it into
 - **No copyrighted BIOS ROMs or game discs in the repository.**
 - Checked-in fixtures are synthetic: generated ARM programs, synthetic CD sector images, generated CHD images (via CHDSharp's encoder), hand-built VDL/CCB data, generated WAV expectations.
 - Real-BIOS tests are enabled by environment variables:
-  - `THREEDO_BIOS` = path to a 1 MB BIOS ROM.
-  - `THREEDO_BIOS2` = optional second 1 MB ROM.
-  - `THREEDO_DISC` = path to a legally obtained disc image.
+  - `FIVEDO_BIOS` = path to a 1 MB BIOS ROM.
+  - `FIVEDO_BIOS2` = optional second 1 MB ROM.
+  - `FIVEDO_DISC` = path to a legally obtained disc image.
 - Tests that require missing data are skipped with a clear message, not failed.
 - Golden frame hashes for real BIOS/disc content are stored only if the content is redistributable; otherwise they are local developer artifacts.
 
@@ -76,7 +76,7 @@ The development machine has a legally obtained corpus documented in
 
 - BIOS images: `D:\Dropbox\source\repos\CSharp_3DOEmulator\bios\` (use
   `panafz1.bin` by default; Anvil/GoldStar variants for compatibility checks).
-- Disc images: set `THREEDO_GAMES` to the corpus root (office machine
+- Disc images: set `FIVEDO_GAMES` to the corpus root (office machine
   `D:\Samples\3DO`, home machine `E:\Panasonic 3DO`) — `Alone in the Dark (USA).chd`,
   `Lemmings (USA).chd`, `Road Rash (USA).chd`, `Space Ace (USA).chd`, and
   `Wolfenstein 3D (USA).chd`.
@@ -132,7 +132,7 @@ Instruction groups:
 CPU test harness:
 
 ```csharp
-var memory = new ThreeDoMemory();
+var memory = new FiveDoMemory();
 var cpu = new Arm60(memory.Bus, tuning: EmulatorTuning.Default);
 memory.Ram.Write32(0x1000, ArmTestAssembler.Mov(0, 1));
 memory.Ram.Write32(0x1004, ArmTestAssembler.Nop());
@@ -143,7 +143,7 @@ Assert.Equal(1u, cpu.ReadRegister(0));
 
 Implemented CPU suites: `Arm60StateTests`, `ArmBarrelShifterTests`, `ArmConditionTests`, `ArmDataProcessingTests`, `ArmMultiplySwapTests`, `ArmMemoryTests`, `ArmBlockTransferTests`, `ArmControlFlowTests`, `ArmModeBankTests`, `ArmCycleTests`, `ArmDisassemblerTests`, and `ArmSyntheticBootTests`. The synthetic boot test builds a 1 MB ROM, runs one million instructions, and checks the computed checksum in RAM.
 
-Implemented M3 suites: `ClioTests`, `MadamTests`, `SportTests`, `VdlpTests`, `FrameAssemblerTests`, `BiosImageTests`, `NvramImageTests`, and `ThreeDoMachineTests`. The machine suite covers the synthetic VDL/SPORT program, frame determinism, the reference cycle budget, zero steady-state allocations, and an optional 300-frame real-BIOS smoke test gated by `THREEDO_BIOS`.
+Implemented M3 suites: `ClioTests`, `MadamTests`, `SportTests`, `VdlpTests`, `FrameAssemblerTests`, `BiosImageTests`, `NvramImageTests`, and `FiveDoMachineTests`. The machine suite covers the synthetic VDL/SPORT program, frame determinism, the reference cycle budget, zero steady-state allocations, and an optional 300-frame real-BIOS smoke test gated by `FIVEDO_BIOS`.
 
 Implemented M4 suites so far: `CelBitReaderTests`, `CcbParserTests`, `PixelDecoderTests`, `PixelProcessorTests`, `ProjectorTests`, `CelGeometryTests`, `CelMemoryTests`, and the PLUT-load/matrix/PBUS tests in `MadamTests`.
 
@@ -307,7 +307,7 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
 - **Shader compilation:** all shader programs compile/link; log source hash and GL version.
 - **Performance:** two-stage palette expansion at native resolution, persistent upload, no per-frame `TexImage2D`/uniform lookup, upload/present CPU time, GPU frame time, 1080p/1440p/4K output, no CPU per-pixel scaling.
 - **DPI/geometry:** physical-pixel sizing at 100/150/200% scaling, resize, integer scaling, letterbox. `PixelSize.Compute` is unit-tested for 100/125/150/200%, fractional bounds, and invalid inputs; on-device DPI/resize validation remains.
-- **Backends:** desktop GL 3.3 and GLES 3.0/3.1 shader variants compile and produce identical Accurate-mode output. The `--gl-probe` tool validates this with `--gl-backend wgl` and `--gl-backend angle`; `--gl-probe-capture` writes the presented frame and the JSON `parity` block compares it with `FrameAssembler` (WGL and ANGLE/GLES 3.0 both report 0 different pixels on the development RTX 4070). The opt-in `GpuProbeIntegrationTests` test (`THREEDO_GPU_TESTS=1`) runs the real probe for both backends, checks parity, and runs a short 4K pass.
+- **Backends:** desktop GL 3.3 and GLES 3.0/3.1 shader variants compile and produce identical Accurate-mode output. The `--gl-probe` tool validates this with `--gl-backend wgl` and `--gl-backend angle`; `--gl-probe-capture` writes the presented frame and the JSON `parity` block compares it with `FrameAssembler` (WGL and ANGLE/GLES 3.0 both report 0 different pixels on the development RTX 4070). The opt-in `GpuProbeIntegrationTests` test (`FIVEDO_GPU_TESTS=1`) runs the real probe for both backends, checks parity, and runs a short 4K pass.
 - **Render-on-demand:** no continuous rendering at monitor refresh rate when the emulator is producing 60 fps.
 - **Headless CI:** run CPU-renderer tests everywhere; GPU tests run on a local/self-hosted job with a real GL context. Skip cleanly when no context is available.
 
@@ -393,7 +393,7 @@ reference implementation.
   The procedure is in [`ReferenceStrategy.md`](ReferenceStrategy.md).
 - **Historical oracle: FreeDOCore/4DO.** Keep the original C# port's golden tests and
   use the FreeDO harness for behavior that predates the Opera migration.
-- **Optional, developer-only tool** (`tools/ThreeDo.Oracle`, not shipped): load the
+- **Optional, developer-only tool** (`tools/FiveDo.Oracle`, not shipped): load the
   original `FreeDOCore.dll` (Windows x64) or build the C++ reference, run a synthetic
   program/disc, and dump CPU/RAM/VRAM/frame hashes.
 - Do not add a native dependency to the product or to the default test run.
@@ -422,14 +422,14 @@ Fuzz tests are not part of the default suite if slow; run them nightly or on dem
 
 The full target, budgets, hardware tiers, and measurement method are in
 [`Performance.md`](Performance.md). The stopwatch harness in
-`benchmarks/ThreeDo.Benchmarks` currently measures the machine core, video pack,
+`benchmarks/FiveDo.Benchmarks` currently measures the machine core, video pack,
 mailbox write, and read copy for a synthetic machine or a real BIOS/disc. It reports
 JSON and a 60 Hz budget comparison. BenchmarkDotNet microbenchmarks are planned for:
 
 - `Arm60.Step` on a mixed instruction stream (MIPS).
 - `CelEngine.HandleCel` on representative CCB scenes (pixels/ms).
 - `Dsp.Loop` (samples/second).
-- `ThreeDoMachine.RunFrame` on a synthetic scene (ms/frame, allocations/frame).
+- `FiveDoMachine.RunFrame` on a synthetic scene (ms/frame, allocations/frame).
 - `FrameAssembler` (MB/s).
 - `AudioRingBuffer` (samples/second, allocation count).
 - `VdlFrameUploader`/`OpenGlRenderer` upload/present (MB/s, CPU ms, GPU time).
@@ -464,7 +464,7 @@ A performance change is accepted only with before/after numbers and identical go
 
 ### 9.1 End-to-end harness
 
-`benchmarks/ThreeDo.Benchmarks` accepts `--bios`/`--disc` for a real title, plus
+`benchmarks/FiveDo.Benchmarks` accepts `--bios`/`--disc` for a real title, plus
 `--high-res` and `--prefetch`, and reports core, video pack, mailbox write, read
 copy, p50/p95/p99/max frame time, per-stage allocations, instructions/s, and a
 60 Hz headroom figure. The CLI `bench` command runs the synthetic machine. GPU time,

@@ -30,23 +30,23 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore 3DOEmulator.sln
+        run: dotnet restore 5DO.sln
 
       - name: Build
-        run: dotnet build 3DOEmulator.sln -c Release --no-restore
+        run: dotnet build 5DO.sln -c Release --no-restore
 
       - name: Test
-        run: dotnet test 3DOEmulator.sln -c Release --no-build --no-restore
+        run: dotnet test 5DO.sln -c Release --no-build --no-restore
 
       - name: Format check
         if: matrix.os == 'ubuntu-latest'
-        run: dotnet format 3DOEmulator.sln --verify-no-changes --no-restore
+        run: dotnet format 5DO.sln --verify-no-changes --no-restore
 
       - name: Benchmark smoke and budget gate
         if: matrix.os == 'ubuntu-latest'
         run: |
           mkdir -p artifacts
-          dotnet run --project benchmarks/ThreeDo.Benchmarks -c Release --no-build -- \
+          dotnet run --project benchmarks/FiveDo.Benchmarks -c Release --no-build -- \
             --frames 120 --label ci --json --gate > artifacts/benchmark.json
 
       - name: Benchmark allocation gate
@@ -56,20 +56,20 @@ jobs:
       - name: Trimmed CLI publish smoke
         if: matrix.os == 'windows-latest'
         run: |
-          dotnet publish src/ThreeDo.Cli/ThreeDo.Cli.csproj -c Release -r win-x64 `
+          dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r win-x64 `
             --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -m:1 `
             -o artifacts/cli-trim
-          artifacts/cli-trim/ThreeDo.Cli.exe --version
-          artifacts/cli-trim/ThreeDo.Cli.exe selftest --json
-          artifacts/cli-trim/ThreeDo.Cli.exe bench --frames 2 --json
+          artifacts/cli-trim/FiveDo.Cli.exe --version
+          artifacts/cli-trim/FiveDo.Cli.exe selftest --json
+          artifacts/cli-trim/FiveDo.Cli.exe bench --frames 2 --json
 
       - name: Trimmed frontend publish smoke
         if: matrix.os == 'windows-latest'
         run: |
-          dotnet publish src/ThreeDo.Frontend.Avalonia/ThreeDo.Frontend.Avalonia.csproj -c Release -r win-x64 `
+          dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj -c Release -r win-x64 `
             --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -m:1 `
             -o artifacts/frontend-trim
-          $process = Start-Process -FilePath artifacts/frontend-trim/ThreeDo.Frontend.Avalonia.exe `
+          $process = Start-Process -FilePath artifacts/frontend-trim/FiveDo.Frontend.Avalonia.exe `
             -ArgumentList '--smoke-test', '--smoke-output', 'artifacts/frontend-smoke.txt' `
             -PassThru
           if (-not $process.WaitForExit(60000)) {
@@ -104,25 +104,25 @@ jobs:
 
       - name: Publish NativeAOT
         run: >
-          dotnet publish src/ThreeDo.Cli/ThreeDo.Cli.csproj
+          dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj
           -c Release
           -r win-x64
           --self-contained true
-          -p:ThreeDoNativeAot=true
+          -p:FiveDoNativeAot=true
           -p:PublishSingleFile=true
           -m:1
           -o artifacts/cli-aot
 
       - name: NativeAOT smoke test
         run: |
-          artifacts/cli-aot/ThreeDo.Cli.exe --version
-          artifacts/cli-aot/ThreeDo.Cli.exe selftest --json
-          artifacts/cli-aot/ThreeDo.Cli.exe bench --frames 2 --json
+          artifacts/cli-aot/FiveDo.Cli.exe --version
+          artifacts/cli-aot/FiveDo.Cli.exe selftest --json
+          artifacts/cli-aot/FiveDo.Cli.exe bench --frames 2 --json
 
       - name: Upload NativeAOT artifact
         uses: actions/upload-artifact@v4
         with:
-          name: 3do-cli-aot-win-x64
+          name: 5do-cli-aot-win-x64
           path: artifacts/cli-aot
           if-no-files-found: error
 
@@ -139,17 +139,17 @@ jobs:
 
       - name: Publish NativeAOT
         run: >
-          dotnet publish src/ThreeDo.Frontend.Avalonia/ThreeDo.Frontend.Avalonia.csproj
+          dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj
           -c Release
           -r win-x64
           --self-contained true
-          -p:ThreeDoNativeAot=true
+          -p:FiveDoNativeAot=true
           -m:1
           -o artifacts/frontend-aot
 
       - name: NativeAOT frontend smoke test
         run: |
-          $process = Start-Process -FilePath artifacts/frontend-aot/ThreeDo.Frontend.Avalonia.exe `
+          $process = Start-Process -FilePath artifacts/frontend-aot/FiveDo.Frontend.Avalonia.exe `
             -ArgumentList '--smoke-test', '--smoke-output', 'artifacts/frontend-aot-smoke.txt' `
             -PassThru
           if (-not $process.WaitForExit(60000)) {
@@ -167,7 +167,7 @@ jobs:
       - name: Upload NativeAOT artifact
         uses: actions/upload-artifact@v4
         with:
-          name: 3do-frontend-aot-win-x64
+          name: 5do-frontend-aot-win-x64
           path: artifacts/frontend-aot
           if-no-files-found: error
 
@@ -188,7 +188,7 @@ jobs:
 
       - name: Publish
         run: >
-          dotnet publish src/ThreeDo.Cli/ThreeDo.Cli.csproj
+          dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj
           -c Release
           -r ${{ matrix.rid }}
           --self-contained true
@@ -208,14 +208,14 @@ jobs:
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
-          name: 3do-cli-package-${{ matrix.rid }}
+          name: 5do-cli-package-${{ matrix.rid }}
           path: artifacts/packages/*
           if-no-files-found: error
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: 3do-cli-${{ matrix.rid }}
+          name: 5do-cli-${{ matrix.rid }}
           path: artifacts/cli/${{ matrix.rid }}
           if-no-files-found: error
   publish-frontend:
@@ -235,7 +235,7 @@ jobs:
 
       - name: Publish
         run: >
-          dotnet publish src/ThreeDo.Frontend.Avalonia/ThreeDo.Frontend.Avalonia.csproj
+          dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj
           -c Release
           -r ${{ matrix.rid }}
           --self-contained true
@@ -255,13 +255,13 @@ jobs:
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
-          name: 3do-frontend-package-${{ matrix.rid }}
+          name: 5do-frontend-package-${{ matrix.rid }}
           path: artifacts/packages/*
           if-no-files-found: error
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: 3do-frontend-${{ matrix.rid }}
+          name: 5do-frontend-${{ matrix.rid }}
           path: artifacts/frontend/${{ matrix.rid }}
           if-no-files-found: error

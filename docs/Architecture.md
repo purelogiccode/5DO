@@ -1,4 +1,4 @@
-# 3DOEmulator Architecture
+# 5DO Architecture
 
 **Status:** implemented through M9P desktop (M0-M8 complete; M9/M9R/M9P/M10 partial). The dedicated core thread, two-stage presenter, persistent upload, physical-pixel sizing, and render-on-demand described below are implemented. GLES/ANGLE/Pi validation and the remaining M9P items are pending. See [`Status.md`](Status.md) for the current position and completion estimate.
 **Reference:** the C# port was originally derived from FreeDOCore; since 2026-10-23, `References/opera-libretro-master/libopera` is the primary behavioral reference for new compatibility work. See [`ReferenceStrategy.md`](ReferenceStrategy.md).
@@ -9,9 +9,9 @@
 ## 1. Design goals
 
 1. **One console subsystem per project.** The CPU, memory, MADAM, CLIO, DSP, SPORT, VDLP, XBUS, CD-ROM, storage, audio, and input each live in their own assembly.
-2. **The core is platform-neutral.** `ThreeDo.*` core projects target `net10.0`, use no UI toolkit, no file I/O, no wall clock, and no native interop.
-3. **The host owns the outside world.** BIOS files, disc images, NVRAM files, audio devices, gamepads, windows, and settings live in `ThreeDo.Host` and the frontends.
-4. **The frontend is replaceable.** The CLI and Avalonia app both consume `ThreeDo.Host`; neither is referenced by the core.
+2. **The core is platform-neutral.** `FiveDo.*` core projects target `net10.0`, use no UI toolkit, no file I/O, no wall clock, and no native interop.
+3. **The host owns the outside world.** BIOS files, disc images, NVRAM files, audio devices, gamepads, windows, and settings live in `FiveDo.Host` and the frontends.
+4. **The frontend is replaceable.** The CLI and Avalonia app both consume `FiveDo.Host`; neither is referenced by the core.
 5. **The port is traceable.** Every ported C++ unit has a named C# counterpart and a comment pointing back to the FreeDOCore file/function.
 6. **Determinism by construction.** Fixed timestep, integer scheduler, explicit state serialization, no hidden globals, no wall-clock reads inside the core.
 7. **Performance is a first-class requirement.** The v1 target is 4K (3840x2160) 60 fps output on Tier A hardware and 1080p60 on Raspberry Pi 4/5 class devices, with core cost independent of output resolution. See [`Performance.md`](Performance.md).
@@ -24,22 +24,22 @@
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         Frontends (replaceable)                     │
 │                                                                     │
-│   ThreeDo.Frontend.Avalonia                 ThreeDo.Cli             │
+│   FiveDo.Frontend.Avalonia                 FiveDo.Cli               │
 │   - views / viewmodels                      - headless commands     │
 │   - settings / library                      - frame/state dumps     │
-│   - hosts ThreeDo.Video.OpenGL              - benchmarks            │
+│   - hosts FiveDo.Video.OpenGL              - benchmarks             │
 │     (palette shader, scaling, CRT/xBR)                              │
 └───────────────────────────────┬─────────────────────────────────────┘
                                 │
 ┌───────────────────────────────▼─────────────────────────────────────┐
-│                         ThreeDo.Host                                │
+│                         FiveDo.Host                                 │
 │  EmulatorSession, FramePacer, AudioPipeline, InputManager,          │
 │  BiosLoader, NvramStore, DiscLoader, GameDatabase, SaveStateService │
 └───────────────────────────────┬─────────────────────────────────────┘
                                 │
 ┌───────────────────────────────▼─────────────────────────────────────┐
-│                        ThreeDo.Machine                              │
-│  ThreeDoMachine, FrameLoop, Quartz, machine composition,            │
+│                        FiveDo.Machine                               │
+│  FiveDoMachine, FrameLoop, Quartz, machine composition,             │
 │  state sections, device wiring                                      │
 └───────┬─────────┬─────────┬─────────┬─────────┬─────────┬───────────┘
         │         │         │         │         │         │
@@ -54,15 +54,15 @@
         └─────────┴─────────┴────┬────┴────────┴──────────┘
                                   │
                         ┌─────────▼─────────┐
-                        │   ThreeDo.Core    │
+                        │   FiveDo.Core     │
                         │ contracts, types, │
                         │ constants, state  │
                         └───────────────────┘
 ```
 
-**Dependency rule:** arrows point *downward only*. `ThreeDo.Core` has no project references. No chip project references another chip project; they communicate through small interfaces defined in `ThreeDo.Core` and are wired by `ThreeDo.Machine`. This avoids the circular dependencies that the original C++ code solved with globals and `extern`.
+**Dependency rule:** arrows point *downward only*. `FiveDo.Core` has no project references. No chip project references another chip project; they communicate through small interfaces defined in `FiveDo.Core` and are wired by `FiveDo.Machine`. This avoids the circular dependencies that the original C++ code solved with globals and `extern`.
 
-**Renderer rule:** the Avalonia frontend hosts `ThreeDo.Video.OpenGL` and uses it as the primary desktop presenter. The CLI uses the CPU/null renderer. `ThreeDo.Video.OpenGL` consumes completed `VdlFrame` data and never touches emulated state.
+**Renderer rule:** the Avalonia frontend hosts `FiveDo.Video.OpenGL` and uses it as the primary desktop presenter. The CLI uses the CPU/null renderer. `FiveDo.Video.OpenGL` consumes completed `VdlFrame` data and never touches emulated state.
 
 ---
 
@@ -70,29 +70,29 @@
 
 | Project | Responsibility | Key types | References |
 |---|---|---|---|
-| `ThreeDo.Core` | Contracts, shared value types, constants, compatibility flags, logging abstraction, state reader/writer interfaces | `IAddressBus`, `IRam`, `ICpuBackend`, `IPcAdjustSource`, `IInterruptSink`, `IFrameSink`, `IAudioSink`, `IPbusSource`, `IDiscSource`, `IXbusDevice`, `IVdlp`, `IMadamBus`, `VdlFrame`, `VdlLine`, `FrameBuffer`, `FixMode`, `EmulatorTuning`, `IStateReader/Writer` | none |
-| `ThreeDo.Cpu` | ARM60 interpreter, condition codes, banked registers, cycle accounting, disassembler | `Arm60`, `Arm60State`, `ArmDecoder`, `ArmAlu`, `ArmBarrelShifter`, `ArmDisassembler` | Core |
-| `ThreeDo.Memory` | Physical RAM/ROM/NVRAM, word-swapped representation, mirrors, byte/halfword/word helpers | `ThreeDoMemory`, `Ram`, `RomBank`, `Nvram`, `MemoryAccess` | Core |
-| `ThreeDo.Madam` | MADAM registers, CEL engine, pixel decoder/processor/projector, matrix engine, pixel bus, DMA | `Madam`, `MadamRegisters`, `CelEngine`, `CelBitReader`, `PixelDecoder`, `PixelProcessor`, `Projector`, `CelRasterizer`, `MatrixEngine` | Core |
-| `ThreeDo.Clio` | CLIO registers, timers, FIFOs, DMA, interrupts, DSP interface, XBUS register window, ROM select | `Clio`, `ClioRegisters`, `ClioTimers`, `ClioFifo`, `ClioDma`, `ClioInterrupts` | Core |
-| `ThreeDo.Dsp` | 3DO audio DSP: instruction decode/precompute, ALU, multiplier, barrel shifter, NMem/IMem, semaphore, sample output | `Dsp`, `DspCore`, `DspInstructionDecoder`, `DspAlu`, `DspRegisters`, `DspMemory` | Core |
-| `ThreeDo.Sport` | SPORT VRAM fill/copy engine | `Sport` | Core |
-| `ThreeDo.Video` | VDLP display-list parser, line/frame assembly, palette expansion reference path, frame extraction, scaler contracts, CPU fallback presenter | `Vdlp`, `VdlParser`, `FrameAssembler`, `FrameBufferFactory`, `IVideoRenderer`, `VideoFilter`, `CpuVideoRenderer` | Core |
-| `ThreeDo.Video.OpenGL` | **Required desktop renderer**: desktop GL 3.3 and GLES 3.0/3.1 context integration, two-stage native-resolution palette expansion + output upscaling, persistent texture upload, scaling/filter pipeline, vsync presentation, screenshots | `OpenGlRenderer`, `OpenGlCapabilities`, `VdlFrameUploader`, `RendererSettings`, `GlContextAdapter`, shader variants | Core, Video, Silk.NET.OpenGL/OpenGLES |
-| `ThreeDo.Xbus` | XBUS controller, device selection, poll/status/data FIFOs, device interface | `Xbus`, `XbusDevice`, `XbusFifo` | Core |
-| `ThreeDo.Cdrom` | Mitsumi/MEI CD-ROM device, command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice`, `CdromCommand`, `Toc`, `Msf` | Core |
-| `ThreeDo.Storage` | Disc image readers (ISO/BIN/CUE/CHD), bounded host prefetch, BIOS validation, NVRAM file format, game database, game ID | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `GameDatabase`, `GameId` | Core, CHDSharp |
-| `ThreeDo.Audio` | Sample format conversion, ring buffer, null/WAV sinks, resampling helpers | `AudioRingBuffer`, `AudioSample`, `NullAudioSink`, `WavAudioSink` | Core |
-| `ThreeDo.Input` | Controller state, PBUS encoding, input profiles, keyboard/gamepad abstractions | `ThreeDoController`, `PbusEncoder`, `InputProfile`, `InputBinding` | Core |
-| `ThreeDo.Diagnostics` | Logging, tracing, disassembly helpers, frame timing statistics, memory/frame dumpers | `ILogSink`, `Log`, `CpuTracer`, `MemoryDumper`, `FrameDumper`, `FrameTiming`, `PerformanceCounters` | Core |
-| `ThreeDo.Machine` | Machine composition root, frame loop, Quartz scheduler, device wiring, state sections | `ThreeDoMachine`, `MachineOptions`, `FrameLoop`, `Quartz`, `StateSection` | Core + all chips |
-| `ThreeDo.Host` | Session lifecycle, frame pacing, BIOS/disc/NVRAM loading, audio/input backends, save states, settings | `EmulatorSession`, `FramePacer`, `AudioPipeline`, `InputManager`, `BiosLoader`, `NvramStore`, `SaveStateService` | Machine, Storage, Audio, Input, Diagnostics |
-| `ThreeDo.Cli` | Headless command-line interface | `Program`, `RunCommand`, `InfoCommand`, `BenchCommand` | Host |
-| `ThreeDo.Frontend.Avalonia` | Cross-platform desktop UI | `App`, `MainWindow`, viewmodels, views, services, OpenGL video surface | Host, Video.OpenGL, Avalonia |
-| `ThreeDo.Tests` | Unit/integration tests (subfolders per subsystem) | test fixtures, ARM assembler, fake sinks | production projects |
-| `ThreeDo.Benchmarks` | BenchmarkDotNet benchmarks | CPU, CEL, DSP, frame benchmarks | Cpu, Madam, Dsp, Machine |
+| `FiveDo.Core` | Contracts, shared value types, constants, compatibility flags, logging abstraction, state reader/writer interfaces | `IAddressBus`, `IRam`, `ICpuBackend`, `IPcAdjustSource`, `IInterruptSink`, `IFrameSink`, `IAudioSink`, `IPbusSource`, `IDiscSource`, `IXbusDevice`, `IVdlp`, `IMadamBus`, `VdlFrame`, `VdlLine`, `FrameBuffer`, `FixMode`, `EmulatorTuning`, `IStateReader/Writer` | none |
+| `FiveDo.Cpu` | ARM60 interpreter, condition codes, banked registers, cycle accounting, disassembler | `Arm60`, `Arm60State`, `ArmDecoder`, `ArmAlu`, `ArmBarrelShifter`, `ArmDisassembler` | Core |
+| `FiveDo.Memory` | Physical RAM/ROM/NVRAM, word-swapped representation, mirrors, byte/halfword/word helpers | `FiveDoMemory`, `Ram`, `RomBank`, `Nvram`, `MemoryAccess` | Core |
+| `FiveDo.Madam` | MADAM registers, CEL engine, pixel decoder/processor/projector, matrix engine, pixel bus, DMA | `Madam`, `MadamRegisters`, `CelEngine`, `CelBitReader`, `PixelDecoder`, `PixelProcessor`, `Projector`, `CelRasterizer`, `MatrixEngine` | Core |
+| `FiveDo.Clio` | CLIO registers, timers, FIFOs, DMA, interrupts, DSP interface, XBUS register window, ROM select | `Clio`, `ClioRegisters`, `ClioTimers`, `ClioFifo`, `ClioDma`, `ClioInterrupts` | Core |
+| `FiveDo.Dsp` | 3DO audio DSP: instruction decode/precompute, ALU, multiplier, barrel shifter, NMem/IMem, semaphore, sample output | `Dsp`, `DspCore`, `DspInstructionDecoder`, `DspAlu`, `DspRegisters`, `DspMemory` | Core |
+| `FiveDo.Sport` | SPORT VRAM fill/copy engine | `Sport` | Core |
+| `FiveDo.Video` | VDLP display-list parser, line/frame assembly, palette expansion reference path, frame extraction, scaler contracts, CPU fallback presenter | `Vdlp`, `VdlParser`, `FrameAssembler`, `FrameBufferFactory`, `IVideoRenderer`, `VideoFilter`, `CpuVideoRenderer` | Core |
+| `FiveDo.Video.OpenGL` | **Required desktop renderer**: desktop GL 3.3 and GLES 3.0/3.1 context integration, two-stage native-resolution palette expansion + output upscaling, persistent texture upload, scaling/filter pipeline, vsync presentation, screenshots | `OpenGlRenderer`, `OpenGlCapabilities`, `VdlFrameUploader`, `RendererSettings`, `GlContextAdapter`, shader variants | Core, Video, Silk.NET.OpenGL/OpenGLES |
+| `FiveDo.Xbus` | XBUS controller, device selection, poll/status/data FIFOs, device interface | `Xbus`, `XbusDevice`, `XbusFifo` | Core |
+| `FiveDo.Cdrom` | Mitsumi/MEI CD-ROM device, command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice`, `CdromCommand`, `Toc`, `Msf` | Core |
+| `FiveDo.Storage` | Disc image readers (ISO/BIN/CUE/CHD), bounded host prefetch, BIOS validation, NVRAM file format, game database, game ID | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `GameDatabase`, `GameId` | Core, CHDSharp |
+| `FiveDo.Audio` | Sample format conversion, ring buffer, null/WAV sinks, resampling helpers | `AudioRingBuffer`, `AudioSample`, `NullAudioSink`, `WavAudioSink` | Core |
+| `FiveDo.Input` | Controller state, PBUS encoding, input profiles, keyboard/gamepad abstractions | `FiveDoController`, `PbusEncoder`, `InputProfile`, `InputBinding` | Core |
+| `FiveDo.Diagnostics` | Logging, tracing, disassembly helpers, frame timing statistics, memory/frame dumpers | `ILogSink`, `Log`, `CpuTracer`, `MemoryDumper`, `FrameDumper`, `FrameTiming`, `PerformanceCounters` | Core |
+| `FiveDo.Machine` | Machine composition root, frame loop, Quartz scheduler, device wiring, state sections | `FiveDoMachine`, `MachineOptions`, `FrameLoop`, `Quartz`, `StateSection` | Core + all chips |
+| `FiveDo.Host` | Session lifecycle, frame pacing, BIOS/disc/NVRAM loading, audio/input backends, save states, settings | `EmulatorSession`, `FramePacer`, `AudioPipeline`, `InputManager`, `BiosLoader`, `NvramStore`, `SaveStateService` | Machine, Storage, Audio, Input, Diagnostics |
+| `FiveDo.Cli` | Headless command-line interface | `Program`, `RunCommand`, `InfoCommand`, `BenchCommand` | Host |
+| `FiveDo.Frontend.Avalonia` | Cross-platform desktop UI | `App`, `MainWindow`, viewmodels, views, services, OpenGL video surface | Host, Video.OpenGL, Avalonia |
+| `FiveDo.Tests` | Unit/integration tests (subfolders per subsystem) | test fixtures, ARM assembler, fake sinks | production projects |
+| `FiveDo.Benchmarks` | BenchmarkDotNet benchmarks | CPU, CEL, DSP, frame benchmarks | Cpu, Madam, Dsp, Machine |
 
-### Why `ThreeDo.Machine` is separate from `ThreeDo.Core`
+### Why `FiveDo.Machine` is separate from `FiveDo.Core`
 
 The core contracts project must not know about concrete chips. The machine is the composition root that knows all concrete chips and wires them together. This preserves the dependency rule and makes each chip independently testable with fake collaborators.
 
@@ -100,10 +100,10 @@ The core contracts project must not know about concrete chips. The machine is th
 
 ## 4. Runtime composition
 
-`ThreeDoMachine` is constructed once per emulated console:
+`FiveDoMachine` is constructed once per emulated console:
 
 ```csharp
-var memory = new ThreeDoMemory(biosRom, nvram);
+var memory = new FiveDoMemory(biosRom, nvram);
 var cpu    = new Arm60(memory.Bus, tuning);
 var madam  = new Madam(memory.Ram, tuning);
 var clio   = new Clio(madam, tuning);
@@ -121,7 +121,7 @@ clio.Interrupts = clio;
 clio.Xbus = xbus;
 clio.Dsp = dsp;
 vdlp.FrameSink = frameSink;
-machine = new ThreeDoMachine(cpu, memory, madam, clio, dsp, sport, vdlp, xbus, cdrom, quartz, tuning);
+machine = new FiveDoMachine(cpu, memory, madam, clio, dsp, sport, vdlp, xbus, cdrom, quartz, tuning);
 ```
 
 ### Wiring rules
@@ -132,8 +132,8 @@ machine = new ThreeDoMachine(cpu, memory, madam, clio, dsp, sport, vdlp, xbus, c
 - **SPORT memory:** `Sport` receives `Ram` directly, matching the original `VRAM` pointer.
 - **XBUS devices:** `Xbus` owns up to 16 `IXbusDevice` slots; device 0 is the CD-ROM.
 - **DSP interface:** `Clio` owns the DSP register windows and calls `IDsp` methods; `Dsp` raises audio FIQ through `IInterruptSink`.
-- **Frame sink:** `Vdlp` writes into a `VdlFrame`; `ThreeDoMachine` calls `IFrameSink.OnFrame` at the VDL swap point.
-- **Input:** `ThreeDoMachine` asks `IPbusSource` for the 16-byte PBUS packet once per frame at the V1 line, exactly as FreeDOCore does.
+- **Frame sink:** `Vdlp` writes into a `VdlFrame`; `FiveDoMachine` calls `IFrameSink.OnFrame` at the VDL swap point.
+- **Input:** `FiveDoMachine` asks `IPbusSource` for the 16-byte PBUS packet once per frame at the V1 line, exactly as FreeDOCore does.
 
 ---
 
@@ -166,7 +166,7 @@ This choice avoids auditing hundreds of XORs in MADAM/CLIO/VDLP during the first
 
 ### 5a. Disc storage and CHD
 
-`ThreeDo.Storage` exposes one abstraction to the CD device:
+`FiveDo.Storage` exposes one abstraction to the CD device:
 
 ```csharp
 public interface IDiscSource : IDisposable
@@ -203,7 +203,7 @@ CHD details:
 
 ## 6. Frame execution
 
-`ThreeDoMachine.RunFrame()` mirrors `_3do_Frame`:
+`FiveDoMachine.RunFrame()` mirrors `_3do_Frame`:
 
 ```text
 cycles = 0
@@ -340,7 +340,7 @@ Framebuffer -> window / fullscreen (vsync, latest-frame mailbox)
 **Context integration**
 
 - Avalonia supplies the GL context through `OpenGlControlBase` (or an equivalent host control).
-- `ThreeDo.Video.OpenGL` uses Silk.NET.OpenGL for the API and owns textures, shaders, VAOs, and the framebuffer.
+- `FiveDo.Video.OpenGL` uses Silk.NET.OpenGL for the API and owns textures, shaders, VAOs, and the framebuffer.
 - The renderer project does not reference Avalonia; the frontend passes an `IGlContext`/function-loader adapter. This keeps the renderer usable by other hosts later.
 - On context loss, the frontend recreates the renderer and re-uploads the latest frame. If neither desktop GL 3.3 nor GLES 3.0/3.1 is available, the frontend falls back to the CPU `WriteableBitmap` path and logs a warning.
 
@@ -402,7 +402,7 @@ DSP core produces a 32-bit packed sample:
 IAudioSink.PushSample(uint)
         │
         ▼
-ThreeDo.Audio.AudioRingBuffer (lock-free SPSC)
+FiveDo.Audio.AudioRingBuffer (lock-free SPSC)
         │
         ▼
 Host backend:
@@ -425,15 +425,15 @@ Host backend:
 Keyboard / gamepad
         │
         ▼
-ThreeDo.Input.InputManager (host)
-  - maps physical inputs to ThreeDoControllerState
+FiveDo.Input.InputManager (host)
+  - maps physical inputs to FiveDoControllerState
   - supports 1-6 controllers
         │
         ▼
 PbusEncoder.Encode(controllers) -> 16 bytes
         │
         ▼
-ThreeDoMachine asks IPbusSource once per frame (V1 line)
+FiveDoMachine asks IPbusSource once per frame (V1 line)
         │
         ▼
 Madam.KeyPressed(bytes) -> PBUSQueue -> CLIO DMA -> controller hardware model
@@ -460,9 +460,9 @@ High byte bits: `0x01` A, `0x02` Left, `0x04` Right, `0x08` Up, `0x10` Down, `0x
 
 ## 10. Host layer
 
-`ThreeDo.Host` is the only layer allowed to touch the operating system:
+`FiveDo.Host` is the only layer allowed to touch the operating system:
 
-- **`EmulatorSession`** - owns a `ThreeDoMachine`, runs a dedicated core thread, exposes `Start/Pause/Resume/Stop/Reset`, `RunFrames(n)`, `SaveState/LoadState`, and frame events.
+- **`EmulatorSession`** - owns a `FiveDoMachine`, runs a dedicated core thread, exposes `Start/Pause/Resume/Stop/Reset`, `RunFrames(n)`, `SaveState/LoadState`, and frame events.
 - **`FramePacer`** - fixed 60 Hz scheduling with `Stopwatch`; optional audio-driven correction later.
 - **`BiosLoader`** - validates 1 MB BIOS1 and optional ≤1 MB BIOS2; computes MD5; detects Anvil BIOS (`byte[28] == 234`).
 - **`DiscLoader`** - opens ISO/BIN/CUE, detects 2048 vs 2352 sector size, validates sector count.
@@ -478,9 +478,9 @@ High byte bits: `0x01` A, `0x02` Left, `0x04` Right, `0x08` Up, `0x10` Down, `0x
 
 | Platform | Config | Saves | Screenshots |
 |---|---|---|---|
-| Windows | `%APPDATA%\3DOEmulator` | `%APPDATA%\3DOEmulator\Saves` | `%APPDATA%\3DOEmulator\Screenshots` |
-| Linux | `$XDG_CONFIG_HOME/3doemulator` or `~/.config/3doemulator` | same `Saves` | same `Screenshots` |
-| macOS | `~/Library/Application Support/3DOEmulator` | `.../Saves` | `.../Screenshots` |
+| Windows | `%APPDATA%\5DO` | `%APPDATA%\5DO\Saves` | `%APPDATA%\5DO\Screenshots` |
+| Linux | `$XDG_CONFIG_HOME/5do` or `~/.config/5do` | same `Saves` | same `Screenshots` |
+| macOS | `~/Library/Application Support/5DO` | `.../Saves` | `.../Screenshots` |
 
 Portable mode: if a `portable.flag` file exists next to the executable, use `<exe-dir>/Data` instead.
 
@@ -491,9 +491,9 @@ Portable mode: if a `portable.flag` file exists next to the executable, use `<ex
 | State | Owner | Included in save state? |
 |---|---|---|
 | CPU registers, CPSR, banked registers, FIQ pending | `Arm60` | yes |
-| 3 MB RAM (and high-res mirrors derived) | `ThreeDoMemory` | yes (3 MB; mirrors rebuilt) |
-| ROM banks | `ThreeDoMemory` | yes (for exact restore) |
-| NVRAM | `ThreeDoMemory` | yes |
+| 3 MB RAM (and high-res mirrors derived) | `FiveDoMemory` | yes (3 MB; mirrors rebuilt) |
+| ROM banks | `FiveDoMemory` | yes (for exact restore) |
+| NVRAM | `FiveDoMemory` | yes |
 | MADAM registers, CEL FSM, PLUT, PBUS queue, matrix results | `Madam` | yes |
 | CLIO registers, timers, FIFOs, DMA state | `Clio` | yes |
 | DSP registers, NMem, IMem, semaphore, running flag, PRNG seed | `Dsp` | yes (precomputed tables rebuilt) |
@@ -510,7 +510,7 @@ Portable mode: if a `portable.flag` file exists next to the executable, use `<ex
 
 ## 12. Threading model
 
-- **Core thread:** CPU, memory, chips, scheduler, DSP, VDLP, CD. Dedicated, single-threaded, and deterministic. Implemented as `ThreeDo.Host.CoreRunner` with a 60 Hz `FramePacer`; the UI thread never calls `RunFrame`, and machine-touching UI actions go through `CoreRunner.Invoke` (pause, action, resume).
+- **Core thread:** CPU, memory, chips, scheduler, DSP, VDLP, CD. Dedicated, single-threaded, and deterministic. Implemented as `FiveDo.Host.CoreRunner` with a 60 Hz `FramePacer`; the UI thread never calls `RunFrame`, and machine-touching UI actions go through `CoreRunner.Invoke` (pause, action, resume).
 - **Render thread / UI thread:** Avalonia owns the GL/GLES context and presents frames. The renderer consumes the latest `VdlFrame` snapshot; it never calls into emulated state.
 - **Audio thread:** consumes the ring buffer; never calls into the core.
 - **No locks in the core hot path.** The only cross-thread state is the audio ring buffer, the latest-frame mailbox, and session lifecycle flags.
@@ -559,5 +559,5 @@ A `VdlFrameMailbox` holds the most recent completed `VdlFrame`. If the renderer 
 - No `unsafe` unless a measured hot path requires it; `Unsafe`/`MemoryMarshal` are acceptable.
 - No LINQ, string formatting, delegate allocation, or other managed allocation in per-instruction or per-frame paths.
 - Prefer concrete types or generic constraints over interface dispatch in measured hot loops; keep the small Core interfaces at architectural boundaries.
-- Shaders live in `ThreeDo.Video.OpenGL/Shaders`, have desktop GLSL 330 and GLSL ES 300 variants, and are embedded as resources with a source hash logged at startup.
+- Shaders live in `FiveDo.Video.OpenGL/Shaders`, have desktop GLSL 330 and GLSL ES 300 variants, and are embedded as resources with a source hash logged at startup.
 - The OpenGL/GLES renderer is a required desktop component; the CPU renderer is a fallback and accuracy oracle, not the primary path.

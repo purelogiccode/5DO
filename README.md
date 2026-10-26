@@ -1,8 +1,8 @@
-# 3DOEmulator
+# 5DO
 
 A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from FreeDO/4DO, with **Opera/libopera as the primary behavioral reference** for new compatibility work, a cross-platform Avalonia frontend, a headless CLI, and a deterministic test harness.
 
-> **Working title only.** The final product name is not decided yet. The solution is called `3DOEmulator`; source namespaces use the placeholder prefix `ThreeDo` because C# identifiers cannot begin with a digit.
+> **Naming:** The emulator is called **5DO**. The solution is `5DO.sln`; source projects and namespaces use the `FiveDo` prefix because C# identifiers cannot begin with a digit.
 
 ## Status
 
@@ -205,8 +205,8 @@ and the remaining M9P work items.
 ```powershell
 git clone https://github.com/purelogiccode/3DOEmulator.git
 cd 3DOEmulator
-dotnet build 3DOEmulator.sln
-dotnet test 3DOEmulator.sln
+dotnet build 5DO.sln
+dotnet test 5DO.sln
 ```
 
 ## Run
@@ -214,14 +214,14 @@ dotnet test 3DOEmulator.sln
 Headless CLI:
 
 ```powershell
-dotnet run --project src/ThreeDo.Cli -- run game.cue --bios panafz1.bin --frames 600 --frame-out frame.png
-dotnet run --project src/ThreeDo.Cli -- run game.chd --bios panafz1.bin --frames 600 --prefetch --high-res
-dotnet run --project src/ThreeDo.Cli -- info game.chd --json
-dotnet run --project src/ThreeDo.Cli -- bios info panafz1.bin
-dotnet run --project src/ThreeDo.Cli -- state inspect quick.tdos
-dotnet run --project src/ThreeDo.Cli -- bench --frames 600
-dotnet run --project src/ThreeDo.Cli -- selftest
-dotnet run --project src/ThreeDo.Cli -- disasm artifacts/ram.bin --offset 0x12380 --count 64
+dotnet run --project src/FiveDo.Cli -- run game.cue --bios panafz1.bin --frames 600 --frame-out frame.png
+dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin --frames 600 --prefetch --high-res
+dotnet run --project src/FiveDo.Cli -- info game.chd --json
+dotnet run --project src/FiveDo.Cli -- bios info panafz1.bin
+dotnet run --project src/FiveDo.Cli -- state inspect quick.tdos
+dotnet run --project src/FiveDo.Cli -- bench --frames 600
+dotnet run --project src/FiveDo.Cli -- selftest
+dotnet run --project src/FiveDo.Cli -- disasm artifacts/ram.bin --offset 0x12380 --count 64
 ```
 
 Diagnostics: `run` accepts `--watch-lowmem`, `--dump-ram`, and `--dump-dsp`;
@@ -231,17 +231,17 @@ Diagnostics: `run` accepts `--watch-lowmem`, `--dump-ram`, and `--dump-dsp`;
 GPU presentation probe (developer/validation tool, requires a desktop GL context):
 
 ```powershell
-dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- `
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
   --gl-probe artifacts/gl-probe/4k-sharp.json `
   --gl-probe-size 3840x2160 --gl-probe-frames 120 --gl-probe-warmup 30 `
   --gl-probe-filter sharp-bilinear --gl-probe-offscreen
 
 # Force ANGLE/GLES 3.0, and capture a 1:1 Accurate frame for CPU/GPU parity
-dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- `
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
   --gl-backend angle --gl-probe artifacts/gl-probe/4k-angle.json `
   --gl-probe-size 3840x2160 --gl-probe-filter sharp-bilinear --gl-probe-offscreen
 
-dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- `
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
   --gl-backend angle --gl-probe artifacts/gl-probe/parity-angle.json `
   --gl-probe-size 320x240 --gl-probe-filter accurate --gl-probe-offscreen `
   --gl-probe-capture artifacts/gl-probe/parity-angle.png
@@ -256,7 +256,7 @@ Both the CLI and the Avalonia frontend publish trimmed by default
 (`PublishTrimmed=true`). Settings/input/save-slot JSON and all CLI `--json` responses
 use source-generated metadata, the frontend has no reflection-based view locator, and
 CI runs a trimmed-frontend startup smoke test. The CLI also has an opt-in NativeAOT
-publish (`-p:ThreeDoNativeAot=true`): the win-x64 AOT single file is 9.97 MB and CI
+publish (`-p:FiveDoNativeAot=true`): the win-x64 AOT single file is 9.97 MB and CI
 runs the CLI smoke commands against it. The frontend has an opt-in NativeAOT
 single-file publish (28.8 MB executable plus native Skia/HarfBuzz/ANGLE assets) that
 passes the smoke test and the WGL/ANGLE parity probes; Silk.NET loader warnings remain
@@ -264,15 +264,15 @@ and AOT audio is not yet validated. See
 [`docs/Trimming.md`](docs/Trimming.md) for the audit and the remaining AOT work.
 
 CI also packages each published CLI/frontend folder as a portable archive:
-`3doemulator-<component>-<rid>.zip` on Windows and `.tar.gz` on Linux/macOS, with
+`5do-<component>-<rid>.zip` on Windows and `.tar.gz` on Linux/macOS, with
 README/notices/licensing and a generated `PACKAGE.txt`. See
 [`packaging/README.md`](packaging/README.md).
 
 Desktop app:
 
 ```powershell
-dotnet run --project src/ThreeDo.Frontend.Avalonia
-dotnet run --project src/ThreeDo.Frontend.Avalonia -- "game.chd"
+dotnet run --project src/FiveDo.Frontend.Avalonia
+dotnet run --project src/FiveDo.Frontend.Avalonia -- "game.chd"
 ```
 
 Use **Open BIOS** and **Open Disc**, then **Play**. The default keyboard bindings are the arrow keys, Z (A), X (B), C (C), A (L), S (R), Enter (P), and Backspace (X). **Save State**/**Load State** use the selected slot; the **<**/**>** buttons change slots. **Screenshot** writes a PNG from the OpenGL output (or the CPU frame when GL is unavailable), named by game, time, and frame. **Library** scans configured folders through the 4DO database, **Settings** edits video/audio/emulation/paths, and **Input** captures keyboard bindings for all six players. **Fullscreen** toggles F11/Escape; **Hi-Res** restarts the machine in the opt-in 640x480 mode. Settings persist under the user local application data folder, including per-game fix-mode overrides.

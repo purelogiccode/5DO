@@ -8,13 +8,13 @@ development machine for manual compatibility, boot, audio, input, save-state, an
 performance testing. None of these files may be committed, packaged, or uploaded.
 
 - BIOS directory: `bios/` in this repository (ignored by `.gitignore`)
-- Disc directory: **machine-specific**, set `THREEDO_GAMES` to the root:
+- Disc directory: **machine-specific**, set `FIVEDO_GAMES` to the root:
   - Office machine: `D:\Samples\3DO`
   - Home machine: `E:\Panasonic 3DO`
 
 Both locations are outside version control. `bios/` is already ignored by
 `.gitignore`, and `*.chd`/`*.iso`/`*.bin`/`*.cue` are ignored as a second guard.
-The corpus root is never hard-coded in scripts; use `$env:THREEDO_GAMES` so the same
+The corpus root is never hard-coded in scripts; use `$env:FIVEDO_GAMES` so the same
 commands work on both machines. The older `D:\Samples\3DO` path used by earlier
 handoffs and the `E:\Panasonic 3DO` path used by others are both aliases for the
 same corpus root depending on the machine.
@@ -210,8 +210,8 @@ separated by `;`.
 
 ```powershell
 # Patch the Lemmings passcode scratch buffer and inspect the next frame
-dotnet run -c Release --project src/ThreeDo.Cli -- run `
-  "$env:THREEDO_GAMES\Lemmings (USA).chd" --bios bios/panafz1.bin `
+dotnet run -c Release --project src/FiveDo.Cli -- run `
+  "$env:FIVEDO_GAMES\Lemmings (USA).chd" --bios bios/panafz1.bin `
   --state-in artifacts/s2/lem-pass.state --frames 3 `
   --poke "0x96574=43414A4A4C444D424556" --frame-out artifacts/poke.png
 ```
@@ -221,16 +221,16 @@ toward the gray road centre (target screen X 230). It follows the road through t
 first section but does not avoid traffic or recover from a wreck yet.
 
 ```powershell
-dotnet run -c Release --project src/ThreeDo.Cli -- run `
-  "$env:THREEDO_GAMES\Road Rash (USA).chd" --bios bios/panafz1.bin `
+dotnet run -c Release --project src/FiveDo.Cli -- run `
+  "$env:FIVEDO_GAMES\Road Rash (USA).chd" --bios bios/panafz1.bin `
   --state-in artifacts/s2/rr8-30k.state --frames 10000 `
   --autopilot road --capture-dir artifacts/rr-auto --capture-every 1000 `
   --progress 1000 --json
 ```
 
 The autopilot/steering tests are in
-`tests/ThreeDo.Tests/Host/RoadRashAutopilotTests.cs`; the RAM-patch parser tests
-are in `tests/ThreeDo.Tests/Host/MemoryPatchTests.cs`.
+`tests/FiveDo.Tests/Host/RoadRashAutopilotTests.cs`; the RAM-patch parser tests
+are in `tests/FiveDo.Tests/Host/MemoryPatchTests.cs`.
 
 ### 1.4 Fourth pass: Lemmings Fun4 gameplay and a traffic-aware Road Rash driver (2026-10-24)
 
@@ -260,8 +260,8 @@ of `HNLHCIOECW` (Fun 4, 3DO list) and pressing `B` is accepted:
 
 ```powershell
 # From lem-pass-N.state (selection N): poke Fun4 (2nd letter N matches), confirm
-dotnet run -c Release --project src/ThreeDo.Cli -- run `
-  "$env:THREEDO_GAMES\Lemmings (USA).chd" --bios bios/panafz1.bin `
+dotnet run -c Release --project src/FiveDo.Cli -- run `
+  "$env:FIVEDO_GAMES\Lemmings (USA).chd" --bios bios/panafz1.bin `
   --state-in artifacts/s2/lem-pass-N.state --frames 400 `
   --poke "0x96574=48;0x96575=4C;0x96577=48;0x96578=45;0x96579=4F;0x9657A=49;0x9657B=43;0x9657E=57;0x9657F=43" `
   --input-script artifacts/s2/lem-code-HN.txt `
@@ -340,8 +340,8 @@ Driver v9, covered by tests (572 passing):
   `autopilotLookahead`.
 
 ```powershell
-dotnet run -c Release --project src/ThreeDo.Cli -- run `
-  "$env:THREEDO_GAMES\Road Rash (USA).chd" --bios bios\panafz1.bin `
+dotnet run -c Release --project src/FiveDo.Cli -- run `
+  "$env:FIVEDO_GAMES\Road Rash (USA).chd" --bios bios\panafz1.bin `
   --state-in artifacts\s2\rr8-30k.state --frames 10000 --autopilot road `
   --progress 1000 --frame-out artifacts\s2\rr-v17-40k.png `
   --state-out artifacts\s2\rr-v17-40k.state --json
@@ -383,8 +383,8 @@ renderer and desktop work:
 Commands:
 
 ```powershell
-dotnet run -c Release --project src/ThreeDo.Cli -- run `
-  "$env:THREEDO_GAMES\Lemmings (USA).chd" --bios bios/panafz1.bin `
+dotnet run -c Release --project src/FiveDo.Cli -- run `
+  "$env:FIVEDO_GAMES\Lemmings (USA).chd" --bios bios/panafz1.bin `
   --frames 3000 --json
 ```
 
@@ -451,7 +451,7 @@ restarts); the final throttle-only code was verified on 80k->83k and 83k->91k
 and reproduces the 91,000 state exactly:
 
 ```powershell
-dotnet run -c Release --project src/ThreeDo.Cli -- run `
+dotnet run -c Release --project src/FiveDo.Cli -- run `
   "E:\Panasonic 3DO\Road Rash (USA).chd" --bios bios\panafz1.bin `
   --state-in artifacts\s2\rr-v35-83000.state --frames 8000 --autopilot road `
   --frame-out artifacts\s2\rr-v43-91000.png `
@@ -631,7 +631,7 @@ describes the older FreeDO baseline; it is not the compatibility ceiling.
 
 #### Opera reference run (2026-10-23)
 
-The data track of each CHD was extracted to ISO with `3do disc dump`, then run with
+The data track of each CHD was extracted to ISO with `5do disc dump`, then run with
 the bundled Windows OperaCore (`References/CPP_SimpleGui/Cores/OperaCore`) and the
 same `panafz1.bin` BIOS. The SimpleGui wrapper was launched with
 `--debug-messages -n <iso>`; screenshots were captured at 15/35/60 s.
@@ -666,38 +666,38 @@ The CLI now exposes the tools used for the comparison:
 
 ```powershell
 # Kernel debug output and the PC of every character (plus LR/SP/stack words)
-dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
-  --bios "$env:THREEDO_BIOS" --frames 3000 `
+dotnet run --project src/FiveDo.Cli -- run "$env:FIVEDO_DISC" `
+  --bios "$env:FIVEDO_BIOS" --frames 3000 `
   --kprint artifacts/kprint.txt --kprint-pc artifacts/kprint-pc.txt
 
 # CD command/sector trace
-dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
-  --bios "$env:THREEDO_BIOS" --frames 3000 --cd-trace artifacts/cd.log
+dotnet run --project src/FiveDo.Cli -- run "$env:FIVEDO_DISC" `
+  --bios "$env:FIVEDO_BIOS" --frames 3000 --cd-trace artifacts/cd.log
 
 # CLIO timer/FIQ register trace
-dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
-  --bios "$env:THREEDO_BIOS" --frames 3000 --clio-trace artifacts/clio.log
+dotnet run --project src/FiveDo.Cli -- run "$env:FIVEDO_DISC" `
+  --bios "$env:FIVEDO_BIOS" --frames 3000 --clio-trace artifacts/clio.log
 
 # Instruction ring buffer around a stop condition
-dotnet run --project src/ThreeDo.Cli -- trace "$env:THREEDO_DISC" `
-  --bios "$env:THREEDO_BIOS" --trace-frames 600 --ring 8192 `
+dotnet run --project src/FiveDo.Cli -- trace "$env:FIVEDO_DISC" `
+  --bios "$env:FIVEDO_BIOS" --trace-frames 600 --ring 8192 `
   --stop-kprint "Chunk XTRA" --out artifacts/trace.txt
 
 # Low-memory write watchpoint (writer PC, value, size, registers, caller)
-dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
-  --bios "$env:THREEDO_BIOS" --frames 700 `
+dotnet run --project src/FiveDo.Cli -- run "$env:FIVEDO_DISC" `
+  --bios "$env:FIVEDO_BIOS" --frames 700 `
   --watch-lowmem artifacts/watch.txt --watch-from-frame 681 `
   --watch-start 0 --watch-end 0x100
 
 # RAM and DSP memory dumps at the end of a run
-dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
-  --bios "$env:THREEDO_BIOS" --frames 3000 `
+dotnet run --project src/FiveDo.Cli -- run "$env:FIVEDO_DISC" `
+  --bios "$env:FIVEDO_BIOS" --frames 3000 `
   --dump-ram artifacts/ram.bin --dump-ram-offset 0 --dump-ram-length 0x300000 `
   --dump-dsp artifacts/dsp
 
 # DSP instruction ring at a KPRINT stop
-dotnet run --project src/ThreeDo.Cli -- trace "$env:THREEDO_DISC" `
-  --bios "$env:THREEDO_BIOS" --frames 0 --trace-frames 3000 `
+dotnet run --project src/FiveDo.Cli -- trace "$env:FIVEDO_DISC" `
+  --bios "$env:FIVEDO_BIOS" --frames 0 --trace-frames 3000 `
   --stop-kprint "SAudio channel" --dsp-trace artifacts/dsp-trace.txt `
   --dump-dsp artifacts/dsp-stop --out artifacts/trace.txt
 
@@ -711,28 +711,28 @@ dotnet run --project src/ThreeDo.Cli -- trace "$env:THREEDO_DISC" `
 240  A
 250  None
 '@ | Set-Content artifacts/input.txt
-dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
-  --bios "$env:THREEDO_BIOS" --frames 3000 `
+dotnet run --project src/FiveDo.Cli -- run "$env:FIVEDO_DISC" `
+  --bios "$env:FIVEDO_BIOS" --frames 3000 `
   --input-script artifacts/input.txt --frame-out artifacts/input.png
 
 # Script frames are absolute. With --state-in, either use the state's frame
 # numbers (for example 91000) or add --script-base state to shift a script that
 # starts at 0 by the loaded state's frame count.
-dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
-  --bios "$env:THREEDO_BIOS" --state-in artifacts/live.state --frames 300 `
+dotnet run --project src/FiveDo.Cli -- run "$env:FIVEDO_DISC" `
+  --bios "$env:FIVEDO_BIOS" --state-in artifacts/live.state --frames 300 `
   --input-script artifacts/input.txt --script-base state --json
 
 # Controller packet trace (one 16-byte PBUS packet per frame)
-dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
-  --bios "$env:THREEDO_BIOS" --frames 600 `
+dotnet run --project src/FiveDo.Cli -- run "$env:FIVEDO_DISC" `
+  --bios "$env:FIVEDO_BIOS" --frames 600 `
   --input-script artifacts/input.txt --pbus-trace artifacts/pbus.log
 
 # CEL command/geometry trace
-dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
-  --bios "$env:THREEDO_BIOS" --frames 600 --cel-trace artifacts/cel.log
+dotnet run --project src/FiveDo.Cli -- run "$env:FIVEDO_DISC" `
+  --bios "$env:FIVEDO_BIOS" --frames 600 --cel-trace artifacts/cel.log
 
 # Disassemble raw little-endian ARM words from a RAM dump
-dotnet run --project src/ThreeDo.Cli -- disasm artifacts/ram.bin `
+dotnet run --project src/FiveDo.Cli -- disasm artifacts/ram.bin `
   --offset 0x12380 --count 100 --base 0x0
 ```
 
@@ -747,7 +747,7 @@ committed as [`scripts/lem-fun4-dpad.txt`](scripts/lem-fun4-dpad.txt); it uses
 actions so the CLI's frame coalescing cannot swallow the release.
 
 ```powershell
-dotnet run -c Release --project src/ThreeDo.Cli -- run artifacts/s2/lem.iso `
+dotnet run -c Release --project src/FiveDo.Cli -- run artifacts/s2/lem.iso `
   --bios bios/panafz1.bin --state-in artifacts/lem_pass_fresh.state --frames 1300 `
   --input-script docs/scripts/lem-fun4-dpad.txt --script-base state `
   --frame-out artifacts/lem-dpad-gameplay.png `
@@ -805,21 +805,21 @@ frames are not committed; the hashes below are the regression keys.
 Commands:
 
 ```powershell
-$g = $env:THREEDO_GAMES
+$g = $env:FIVEDO_GAMES
 $b = "bios\panafz1.bin"
 $t = "Gex (USA, Europe).chd"
-dotnet run -c Release --project src/ThreeDo.Cli -- run "$g\$t" --bios $b `
+dotnet run -c Release --project src/FiveDo.Cli -- run "$g\$t" --bios $b `
   --frames 12000 --frame-out artifacts\gex-12k.png `
   --state-out artifacts\gex-12k.state --json
 
 # Save-state roundtrip: zero-frame load + two 120-frame continuations
-dotnet run -c Release --project src/ThreeDo.Cli -- run "$g\$t" --bios $b `
+dotnet run -c Release --project src/FiveDo.Cli -- run "$g\$t" --bios $b `
   --state-in artifacts\gex-12k.state --frames 0 --json
-dotnet run -c Release --project src/ThreeDo.Cli -- run "$g\$t" --bios $b `
+dotnet run -c Release --project src/FiveDo.Cli -- run "$g\$t" --bios $b `
   --state-in artifacts\gex-12k.state --frames 120 --json
 
 # Audio capture from the 12,000-frame state
-dotnet run -c Release --project src/ThreeDo.Cli -- run "$g\$t" --bios $b `
+dotnet run -c Release --project src/FiveDo.Cli -- run "$g\$t" --bios $b `
   --state-in artifacts\gex-12k.state --frames 600 --audio wav `
   --wav-out artifacts\gex-12k.wav --json
 ```
@@ -870,29 +870,29 @@ only when validating compatibility-specific code paths.
 
 ## 3. CLI commands
 
-Set the environment variables used by the opt-in tests. `THREEDO_GAMES` is the
+Set the environment variables used by the opt-in tests. `FIVEDO_GAMES` is the
 corpus root and is different on each machine; everything else is derived from it.
 
 ```powershell
-$env:THREEDO_BIOS  = (Resolve-Path "bios\panafz1.bin")
-$env:THREEDO_GAMES = "D:\Samples\3DO"          # office machine
-# $env:THREEDO_GAMES = "E:\Panasonic 3DO"      # home machine
-$env:THREEDO_DISC  = "$env:THREEDO_GAMES\Road Rash (USA).chd"
-Get-ChildItem $env:THREEDO_GAMES
+$env:FIVEDO_BIOS  = (Resolve-Path "bios\panafz1.bin")
+$env:FIVEDO_GAMES = "D:\Samples\3DO"          # office machine
+# $env:FIVEDO_GAMES = "E:\Panasonic 3DO"      # home machine
+$env:FIVEDO_DISC  = "$env:FIVEDO_GAMES\Road Rash (USA).chd"
+Get-ChildItem $env:FIVEDO_GAMES
 ```
 
 Inspect a disc without booting it:
 
 ```powershell
-dotnet run --project src/ThreeDo.Cli -- info "$env:THREEDO_DISC" --json
+dotnet run --project src/FiveDo.Cli -- info "$env:FIVEDO_DISC" --json
 ```
 
 List or extract the 3DO (Opera FS) file system:
 
 ```powershell
-dotnet run --project src/ThreeDo.Cli -- fs list "$env:THREEDO_DISC" --json
-dotnet run --project src/ThreeDo.Cli -- fs extract "$env:THREEDO_DISC" `
-  --out "$env:TEMP\threedo-fs" --filter "Rash/"
+dotnet run --project src/FiveDo.Cli -- fs list "$env:FIVEDO_DISC" --json
+dotnet run --project src/FiveDo.Cli -- fs extract "$env:FIVEDO_DISC" `
+  --out "$env:TEMP\fivedo-fs" --filter "Rash/"
 ```
 
 `fs` uses the `VideoGameFileSystemParser` package (MIT) and currently accepts CHD
@@ -901,8 +901,8 @@ images; `info` and `disc dump` use the emulator's own readers.
 Run a fixed number of frames and dump the last frame:
 
 ```powershell
-dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
-  --bios "$env:THREEDO_BIOS" `
+dotnet run --project src/FiveDo.Cli -- run "$env:FIVEDO_DISC" `
+  --bios "$env:FIVEDO_BIOS" `
   --frames 600 `
   --nvram artifacts/nvram.ram `
   --frame-out artifacts/road-rash-600.png
@@ -915,8 +915,8 @@ Dark) need a valid volume to get past their startup warning.
 Capture audio for listening:
 
 ```powershell
-dotnet run --project src/ThreeDo.Cli -- run "$env:THREEDO_DISC" `
-  --bios "$env:THREEDO_BIOS" `
+dotnet run --project src/FiveDo.Cli -- run "$env:FIVEDO_DISC" `
+  --bios "$env:FIVEDO_BIOS" `
   --frames 600 `
   --audio wav `
   --wav-out artifacts/road-rash-600.wav
@@ -926,18 +926,18 @@ Run the deterministic self-test, the synthetic benchmark, and the CHD/ISO
 prefetch comparison:
 
 ```powershell
-dotnet run --project src/ThreeDo.Cli -- selftest
-dotnet run --project src/ThreeDo.Cli -- bench --frames 600
-dotnet run --project benchmarks/ThreeDo.Benchmarks -- --frames 600 `
-  --bios bios/panafz1.bin --disc "$env:THREEDO_GAMES\Lemmings (USA).chd" --json
-dotnet run --project benchmarks/ThreeDo.Benchmarks -- --frames 600 `
-  --bios bios/panafz1.bin --disc "$env:THREEDO_GAMES\Lemmings (USA).chd" --prefetch --json
+dotnet run --project src/FiveDo.Cli -- selftest
+dotnet run --project src/FiveDo.Cli -- bench --frames 600
+dotnet run --project benchmarks/FiveDo.Benchmarks -- --frames 600 `
+  --bios bios/panafz1.bin --disc "$env:FIVEDO_GAMES\Lemmings (USA).chd" --json
+dotnet run --project benchmarks/FiveDo.Benchmarks -- --frames 600 `
+  --bios bios/panafz1.bin --disc "$env:FIVEDO_GAMES\Lemmings (USA).chd" --prefetch --json
 ```
 
 Desktop validation:
 
 ```powershell
-dotnet run --project src/ThreeDo.Frontend.Avalonia
+dotnet run --project src/FiveDo.Frontend.Avalonia
 ```
 
 Open the BIOS, open a disc, press **Play**, and check video, audio, input, pause,
@@ -975,4 +975,4 @@ compatibility pass.
 - Do not add game-specific hacks without evidence; record the disc, BIOS, and
   observed behavior in `docs/Compatibility.md`.
 - Real-content tests stay opt-in. CI must continue to pass with synthetic ROMs and
-  discs when `THREEDO_BIOS`/`THREEDO_DISC` are unset.
+  discs when `FIVEDO_BIOS`/`FIVEDO_DISC` are unset.

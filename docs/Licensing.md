@@ -81,4 +81,4 @@ The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NO
 
 ## 6. Trademarks
 
-"3DO", "Panasonic", and "GoldStar" are trademarks of their respective owners. The project name is a working title and may need to change before release. Do not imply endorsement.
+"3DO", "Panasonic", and "GoldStar" are trademarks of their respective owners. The project is named 5DO. Do not imply endorsement.

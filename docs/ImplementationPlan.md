@@ -1,6 +1,6 @@
-# 3DOEmulator - Detailed Implementation Plan
+# 5DO - Detailed Implementation Plan
 
-**Working title:** 3DOEmulator
+**Product:** 5DO
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
 **Status (2026-10-26, fifteenth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five golden-corpus titles plus seven additional discs boot, load their own OS, and render real frames; six of the seven additional titles produce non-silent 44.1 kHz stereo DSP audio (Theme Park's menu is silent). Road Rash's 3D race renders correctly; a CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait and the game now advances through `BUSTED`/race select to a new race. Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room, Begin/Resume menu, and intro; Lemmings types the Fun 4 passcode entirely with the D-pad, starts gameplay at 23,000 frames, and its 640x480 high-resolution title matches the reference; Space Ace plays its demo and starts its interactive scene (X menu, A play). **775 tests pass.** The fifteenth pass added an explicit `--gl-backend` selector and validated the Windows ANGLE/GLES 3.0 path: 4K present p99 0.47 ms with zero renderer allocations, all filters compile, and a 320x240 Accurate capture is pixel-identical to the CPU oracle. It also added opt-in NativeAOT win-x64 publishes: a 9.97 MB CLI that passes the smoke suite, `info`/`fs list`, and a 3,000-frame golden boot, and a 28.8 MB frontend that passes the smoke and WGL/ANGLE parity probes. The fourteenth pass wired the platform swap interval (WGL/GLX/EGL) and added a `--gl-probe` offscreen 4K presentation probe: on the RTX 4070 development machine, sharp-bilinear 4K measures GPU p99 0.089 ms, present p99 0.208 ms, and zero renderer/mailbox allocations per frame after warm-up. The thirteenth pass enabled `PublishTrimmed` for the Avalonia frontend, removed the reflection-based `ViewLocator`, added a trimmed-frontend startup smoke test, and now publishes both executables trimmed for all six RIDs. The twelfth pass made settings, input profiles, save-slot metadata, and every CLI `--json` response source-generated and trim-safe, enabled `PublishTrimmed` for the CLI, added a trimmed-CLI CI smoke test, and added a same-machine benchmark baseline comparison; see [`Trimming.md`](Trimming.md) and [`Performance.md`](Performance.md). The eleventh pass added HQx 3x/4x and the benchmark budget gate. The tenth pass added the pure D-pad passcode script and CRT bloom. The ninth pass recorded per-title save-state/PNG/WAV evidence, fixed the CD wait, and added autopilot A pulses for post-race menus. The eighth pass fixed the real-content GPU palette expansion (independent R/G/B CLUT indices), added the opt-in xBR-lv2 filter, Windows XInput/Linux evdev gamepad backends with a binding UI, an in-app log viewer, save-state thumbnails, a first-run guide, and error dialogs. Remaining work: finish a full Road Rash race without wrecking, Raspberry Pi/GLES 3.1 and DPI validation, Tier B timing, AOT audio/installers, the M0.8 legal/attribution review, and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
@@ -39,7 +39,7 @@ Status legend:
 A 3DO Interactive Multiplayer emulator with:
 
 - A **managed C# emulation core** implementing the ARM60 CPU, memory/bus, MADAM, CLIO, DSP, SPORT, VDLP, XBUS, CD-ROM, and timing.
-- A **required OpenGL renderer** (`ThreeDo.Video.OpenGL` + Silk.NET.OpenGL) that performs GPU palette expansion, high-quality scaling/filters (nearest, sharp-bilinear, CRT, xBR-family), integer scaling, vsync presentation, and screenshots. This is the project's primary differentiator.
+- A **required OpenGL renderer** (`FiveDo.Video.OpenGL` + Silk.NET.OpenGL) that performs GPU palette expansion, high-quality scaling/filters (nearest, sharp-bilinear, CRT, xBR-family), integer scaling, vsync presentation, and screenshots. This is the project's primary differentiator.
 - **First-class disc support** for ISO, BIN, CUE+BIN, and **CHD via the pure C# CHDSharp library**, including parent/child CHDs and read-ahead decompression.
 - A **headless CLI** for running discs, dumping frames/states, testing, and benchmarking.
 - An **Avalonia desktop frontend** for Windows, Linux, and macOS with a game library, settings, controller mapping, save states, screenshots, and fullscreen.
@@ -118,36 +118,36 @@ The full architecture is in [`Architecture.md`](Architecture.md). The short vers
 ```text
 Frontends (Avalonia, CLI)
         │
-        ├── ThreeDo.Video.OpenGL  (required desktop renderer)
+        ├── FiveDo.Video.OpenGL  (required desktop renderer)
         │     palette shader, scaling, CRT/xBR, vsync
         │
         ▼
-ThreeDo.Host (session, BIOS/disc/NVRAM, audio, input, save states, pacing)
+FiveDo.Host (session, BIOS/disc/NVRAM, audio, input, save states, pacing)
         │
         ▼
-ThreeDo.Machine (composition, frame loop, Quartz, state sections)
+FiveDo.Machine (composition, frame loop, Quartz, state sections)
         │
-        ├── ThreeDo.Cpu       ARM60 interpreter (+ optional IL JIT backend)
-        ├── ThreeDo.Memory    RAM/ROM/NVRAM, bus decode
-        ├── ThreeDo.Madam     CEL engine, pixel pipeline, matrix engine
-        ├── ThreeDo.Clio      timers, FIFOs, DMA, interrupts, XBUS/DSP windows
-        ├── ThreeDo.Dsp       audio DSP
-        ├── ThreeDo.Sport     VRAM fill/copy
-        ├── ThreeDo.Video     VDLP, frame assembly, CPU oracle/fallback
-        ├── ThreeDo.Xbus      expansion bus
-        ├── ThreeDo.Cdrom     CD-ROM device
-        ├── ThreeDo.Storage   ISO/BIN/CUE, BIOS, NVRAM, game DB
-        ├── ThreeDo.Audio     ring buffer, sample conversion
-        ├── ThreeDo.Input     PBUS encoding, profiles
-        └── ThreeDo.Diagnostics logging, tracing, dumpers
+        ├── FiveDo.Cpu       ARM60 interpreter (+ optional IL JIT backend)
+        ├── FiveDo.Memory    RAM/ROM/NVRAM, bus decode
+        ├── FiveDo.Madam     CEL engine, pixel pipeline, matrix engine
+        ├── FiveDo.Clio      timers, FIFOs, DMA, interrupts, XBUS/DSP windows
+        ├── FiveDo.Dsp       audio DSP
+        ├── FiveDo.Sport     VRAM fill/copy
+        ├── FiveDo.Video     VDLP, frame assembly, CPU oracle/fallback
+        ├── FiveDo.Xbus      expansion bus
+        ├── FiveDo.Cdrom     CD-ROM device
+        ├── FiveDo.Storage   ISO/BIN/CUE, BIOS, NVRAM, game DB
+        ├── FiveDo.Audio     ring buffer, sample conversion
+        ├── FiveDo.Input     PBUS encoding, profiles
+        └── FiveDo.Diagnostics logging, tracing, dumpers
         │
         ▼
-ThreeDo.Core (contracts, types, constants, state interfaces)
+FiveDo.Core (contracts, types, constants, state interfaces)
 ```
 
 Key decisions:
 
-- **`ThreeDo.Core` has no project references.** Chips depend only on Core. `ThreeDo.Machine` wires concrete chips through small interfaces.
+- **`FiveDo.Core` has no project references.** Chips depend only on Core. `FiveDo.Machine` wires concrete chips through small interfaces.
 - **The core is single-threaded and deterministic.** The host owns pacing, audio, input, and UI/render threads.
 - **Memory preserves FreeDOCore's word-swapped representation** for v1. See `docs/PortingNotes.md` §3.
 - **Save states use a new explicit format**, not the native `memcpy` struct layout.
@@ -165,34 +165,34 @@ project/type layout is unchanged.
 
 | FreeDOCore file | C# project | Main C# types | Milestone |
 |---|---|---|---|
-| `_3do_sys.cpp` | `ThreeDo.Machine` | `ThreeDoMachine`, `FrameLoop`, `MachineOptions` | M3 |
-| `arm.cpp`, `arm.h` | `ThreeDo.Cpu` | `Arm60`, `Arm60State`, `ArmDecoder`, `ArmAlu`, `ArmBarrelShifter`, `ArmDisassembler` | M2 |
-| `Clio.cpp`, `Clio.h` | `ThreeDo.Clio` | `Clio`, `ClioRegisters`, `ClioTimers`, `ClioFifo`, `ClioDma`, `ClioInterrupts` | M3 |
-| `Madam.cpp`, `Madam.h` | `ThreeDo.Madam` | `Madam`, `MadamRegisters`, `CelEngine`, `CelBitReader`, `PixelDecoder`, `PixelProcessor`, `Projector`, `CelRasterizer`, `MatrixEngine` | M4 |
-| `vdlp.cpp`, `vdlp.h` | `ThreeDo.Video` | `Vdlp`, `VdlParser`, `VdlLine`, `VdlFrame`, `FrameAssembler` | M3/M4 |
-| `frame.cpp`, `frame.h` | `ThreeDo.Video` + `ThreeDo.Video.OpenGL` | `FrameAssembler` (CPU oracle/fallback), `OpenGlRenderer` palette shader (required desktop path) | M3/M4 + M9R |
-| `DSP.cpp`, `DSP.h` | `ThreeDo.Dsp` | `Dsp`, `DspCore`, `DspInstructionDecoder`, `DspAlu`, `DspRegisters`, `DspMemory` | M5 |
-| `SPORT.cpp`, `SPORT.h` | `ThreeDo.Sport` | `Sport` | M3 |
-| `XBUS.cpp`, `XBUS.h`, `IsoXBUS.h` | `ThreeDo.Xbus` | `Xbus`, `XbusDevice`, `XbusFifo` | M6 |
-| `Iso.cpp` | `ThreeDo.Cdrom` | `CdromDevice`, `CdromCommand`, `Toc`, `Msf` | M6 |
-| `quarz.cpp`, `quarz.h` | `ThreeDo.Machine` | `Quartz`, `ClockDomain` | M3 |
-| `DiagPort.cpp`, `DiagPort.h` | `ThreeDo.Clio` | `DiagPort` | M3 |
-| `bitop.cpp`, `bitop.h` | `ThreeDo.Madam` | `CelBitReader` | M4 |
-| `Filters/hqx*` | `ThreeDo.Video.OpenGL` | GLSL xBR/HQx-style filters (GPU, required filter family) | M9R/M11 |
-| `types.h`, `freedoconfig.h`, `freedocore.h` | `ThreeDo.Core` | constants, `FixMode`, `EmulatorTuning`, `VdlFrame`, `FrameBuffer` | M1 |
+| `_3do_sys.cpp` | `FiveDo.Machine` | `FiveDoMachine`, `FrameLoop`, `MachineOptions` | M3 |
+| `arm.cpp`, `arm.h` | `FiveDo.Cpu` | `Arm60`, `Arm60State`, `ArmDecoder`, `ArmAlu`, `ArmBarrelShifter`, `ArmDisassembler` | M2 |
+| `Clio.cpp`, `Clio.h` | `FiveDo.Clio` | `Clio`, `ClioRegisters`, `ClioTimers`, `ClioFifo`, `ClioDma`, `ClioInterrupts` | M3 |
+| `Madam.cpp`, `Madam.h` | `FiveDo.Madam` | `Madam`, `MadamRegisters`, `CelEngine`, `CelBitReader`, `PixelDecoder`, `PixelProcessor`, `Projector`, `CelRasterizer`, `MatrixEngine` | M4 |
+| `vdlp.cpp`, `vdlp.h` | `FiveDo.Video` | `Vdlp`, `VdlParser`, `VdlLine`, `VdlFrame`, `FrameAssembler` | M3/M4 |
+| `frame.cpp`, `frame.h` | `FiveDo.Video` + `FiveDo.Video.OpenGL` | `FrameAssembler` (CPU oracle/fallback), `OpenGlRenderer` palette shader (required desktop path) | M3/M4 + M9R |
+| `DSP.cpp`, `DSP.h` | `FiveDo.Dsp` | `Dsp`, `DspCore`, `DspInstructionDecoder`, `DspAlu`, `DspRegisters`, `DspMemory` | M5 |
+| `SPORT.cpp`, `SPORT.h` | `FiveDo.Sport` | `Sport` | M3 |
+| `XBUS.cpp`, `XBUS.h`, `IsoXBUS.h` | `FiveDo.Xbus` | `Xbus`, `XbusDevice`, `XbusFifo` | M6 |
+| `Iso.cpp` | `FiveDo.Cdrom` | `CdromDevice`, `CdromCommand`, `Toc`, `Msf` | M6 |
+| `quarz.cpp`, `quarz.h` | `FiveDo.Machine` | `Quartz`, `ClockDomain` | M3 |
+| `DiagPort.cpp`, `DiagPort.h` | `FiveDo.Clio` | `DiagPort` | M3 |
+| `bitop.cpp`, `bitop.h` | `FiveDo.Madam` | `CelBitReader` | M4 |
+| `Filters/hqx*` | `FiveDo.Video.OpenGL` | GLSL xBR/HQx-style filters (GPU, required filter family) | M9R/M11 |
+| `types.h`, `freedoconfig.h`, `freedocore.h` | `FiveDo.Core` | constants, `FixMode`, `EmulatorTuning`, `VdlFrame`, `FrameBuffer` | M1 |
 | `Worker.cpp` | - | not ported | - |
 
 4DO host references:
 
 | 4DO C# file | C# project | Main types |
 |---|---|---|
-| `Emulation/GameConsole.cs` | `ThreeDo.Host` | `EmulatorSession`, `FramePacer`, `AudioPipeline` |
-| `Emulation/GameSource/*` | `ThreeDo.Storage`, `ThreeDo.Host` | `DiscImageFactory`, `IsoImage`, `BinImage`, `ChdDiscImage`, `GameLibraryService`, `GameDatabase` |
-| `Emulation/States/SaveStateHelper.cs` | `ThreeDo.Machine`, `ThreeDo.Host` | state sections, `SaveStateService` |
-| `Emulation/Plugins/Input/JohnnyInput/*` | `ThreeDo.Input` | `PbusEncoder`, `ControllerState`, `InputProfile` |
-| `Emulation/GameSource/GameRegistrar.cs` | `ThreeDo.Storage` | `GameDatabase`, `GameId` |
-| `Emulation/EmulationHelper.cs` | `ThreeDo.Storage` | `NvramImage`, `VolumeHeader` |
-| `UI/SaveHelper.cs` | `ThreeDo.Host` | `SavePathService` |
+| `Emulation/GameConsole.cs` | `FiveDo.Host` | `EmulatorSession`, `FramePacer`, `AudioPipeline` |
+| `Emulation/GameSource/*` | `FiveDo.Storage`, `FiveDo.Host` | `DiscImageFactory`, `IsoImage`, `BinImage`, `ChdDiscImage`, `GameLibraryService`, `GameDatabase` |
+| `Emulation/States/SaveStateHelper.cs` | `FiveDo.Machine`, `FiveDo.Host` | state sections, `SaveStateService` |
+| `Emulation/Plugins/Input/JohnnyInput/*` | `FiveDo.Input` | `PbusEncoder`, `ControllerState`, `InputProfile` |
+| `Emulation/GameSource/GameRegistrar.cs` | `FiveDo.Storage` | `GameDatabase`, `GameId` |
+| `Emulation/EmulationHelper.cs` | `FiveDo.Storage` | `NvramImage`, `VolumeHeader` |
+| `UI/SaveHelper.cs` | `FiveDo.Host` | `SavePathService` |
 
 ---
 
@@ -289,17 +289,17 @@ ARM timing work. See [`ReferenceStrategy.md`](ReferenceStrategy.md) and
 - [x] **M0.1 Initialize the repository.**
   - `git init`, `.gitignore` for .NET/Avalonia/test artifacts.
   - `.editorconfig`, `global.json`, `Directory.Build.props`, `Directory.Packages.props`.
-  - Solution `3DOEmulator.sln`.
+  - Solution `5DO.sln`.
 - [x] **M0.2 Create the production project skeleton.**
-  - `src/ThreeDo.Core`, `Cpu`, `Memory`, `Madam`, `Clio`, `Dsp`, `Sport`, `Video`, `Video.OpenGL`, `Xbus`, `Cdrom`, `Storage`, `Audio`, `Input`, `Diagnostics`, `Machine`, `Host`, `Cli`, `Frontend.Avalonia`.
+  - `src/FiveDo.Core`, `Cpu`, `Memory`, `Madam`, `Clio`, `Dsp`, `Sport`, `Video`, `Video.OpenGL`, `Xbus`, `Cdrom`, `Storage`, `Audio`, `Input`, `Diagnostics`, `Machine`, `Host`, `Cli`, `Frontend.Avalonia`.
   - Correct project references per `docs/Architecture.md`.
   - No placeholder public APIs that will be thrown away.
 - [x] **M0.3 Create the test and benchmark skeleton.**
-  - `tests/ThreeDo.Tests` (xUnit).
-  - `benchmarks/ThreeDo.Benchmarks` (BenchmarkDotNet).
+  - `tests/FiveDo.Tests` (xUnit).
+  - `benchmarks/FiveDo.Benchmarks` (BenchmarkDotNet).
   - Test utility folder: fake clock, fake memory, fake frame/audio/input sinks (to be added with M1 tests).
 - [x] **M0.4 Create the minimal CLI.**
-  - `ThreeDo.Cli` prints version/usage and returns non-zero on unknown commands.
+  - `FiveDo.Cli` prints version/usage and returns non-zero on unknown commands.
   - `System.CommandLine` package is reserved for M8; M0 uses a small hand-written parser.
 - [x] **M0.5 Create the minimal Avalonia app.**
   - Window with title, version, and "No game loaded" placeholder.
@@ -324,11 +324,11 @@ ARM timing work. See [`ReferenceStrategy.md`](ReferenceStrategy.md) and
 **Acceptance**
 
 ```powershell
-dotnet build 3DOEmulator.sln -c Release
-dotnet test 3DOEmulator.sln -c Release
-dotnet format 3DOEmulator.sln --verify-no-changes
-dotnet run --project src/ThreeDo.Cli -- --version
-dotnet run --project src/ThreeDo.Frontend.Avalonia
+dotnet build 5DO.sln -c Release
+dotnet test 5DO.sln -c Release
+dotnet format 5DO.sln --verify-no-changes
+dotnet run --project src/FiveDo.Cli -- --version
+dotnet run --project src/FiveDo.Frontend.Avalonia
 ```
 
 - No warnings-as-errors failures.
@@ -361,7 +361,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - `IStateReader`, `IStateWriter`, `IStateSection`.
   - `ILogSink`, `LogLevel`, `LogCategory`.
 - [x] **M1.3 Memory implementation.**
-  - `ThreeDoMemory` with `uint[]` RAM (3 MB + 16 MB high-res mirrors reserved), `uint[]` ROM (2 MB), `byte[]` NVRAM (32 KB).
+  - `FiveDoMemory` with `uint[]` RAM (3 MB + 16 MB high-res mirrors reserved), `uint[]` ROM (2 MB), `byte[]` NVRAM (32 KB).
   - Byte/halfword/word helpers matching FreeDOCore's word-swapped representation.
   - Unaligned reads/writes.
   - ROM loading from big-endian BIOS bytes.
@@ -392,7 +392,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Deliverables**
 
-- `ThreeDo.Core`, `ThreeDo.Memory`, `ThreeDo.Machine` (Quartz only), `ThreeDo.Diagnostics` compile with tests.
+- `FiveDo.Core`, `FiveDo.Memory`, `FiveDo.Machine` (Quartz only), `FiveDo.Diagnostics` compile with tests.
 - A `TestMemory`/`TestBus` utility for later chip tests.
 
 **Acceptance**
@@ -479,7 +479,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Deliverables**
 
-- `ThreeDo.Cpu` with `Arm60`, state, ALU, shifter, decoder, disassembler.
+- `FiveDo.Cpu` with `Arm60`, state, ALU, shifter, decoder, disassembler.
 - Instruction test suite with hundreds of cases.
 - Synthetic boot program.
 
@@ -509,7 +509,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 - [x] **M3.1 BIOS/NVRAM loading and reset.**
   - `BiosImage` (1 MB, optional 1 MB second, MD5, Anvil detection).
   - `NvramImage` (32 KB, volume header initialization).
-  - `ThreeDoMachine.Reset()` order: ARM, ROM swap, VDLP, SPORT, MADAM, XBUS + CD reset, CLIO `0x40`, DSP, frame, diag, Quartz.
+  - `FiveDoMachine.Reset()` order: ARM, ROM swap, VDLP, SPORT, MADAM, XBUS + CD reset, CLIO `0x40`, DSP, frame, diag, Quartz.
 - [x] **M3.2 CLIO basic register file.**
   - `uint[65536]` registers.
   - Defaults: `0x28=0x40`, `0x400=0x80`, `0x220=64`.
@@ -541,7 +541,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 - [x] **M3.8 DiagPort.**
   - Shift registers and `_diag_Init(-1)`.
 - [x] **M3.9 Quartz integration and frame loop.**
-  - `ThreeDoMachine.RunFrame()` and `InternalFrame`.
+  - `FiveDoMachine.RunFrame()` and `InternalFrame`.
   - VDL line 16 trigger, V0/V1 FIQ, PBUS copy, frame swap.
   - Single-threaded mode first; `skipFrame` path implemented.
 - [x] **M3.10 Frame assembler.**
@@ -554,7 +554,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 - [x] **M3.12 Real BIOS smoke test (optional).**
   - Run 300 frames with a user-provided BIOS.
   - Assert no exception, PC not stuck in a tight invalid loop, frame hash recorded.
-  - Skip if `THREEDO_BIOS` is unset. Validated locally with `bios/panafz1.bin`.
+  - Skip if `FIVEDO_BIOS` is unset. Validated locally with `bios/panafz1.bin`.
 - [-] **M3.13 OpenGL integration spike (early, non-blocking).**
   - Minimal Avalonia + Silk.NET.OpenGL window that displays a synthetic 320x240 indexed frame.
   - Prove context creation, shader compilation, texture upload, and present on Windows/Linux/macOS.
@@ -562,14 +562,14 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Deliverables**
 
-- `ThreeDo.Machine` can construct/reset/run frames.
+- `FiveDo.Machine` can construct/reset/run frames.
 - BIOS + NVRAM + VDLP + SPORT + CLIO + basic MADAM.
 - Synthetic frame output.
 
 **Acceptance**
 
 - [x] Synthetic program produces the expected background frame.
-- [x] Real BIOS executes 300 frames without crash (validated locally with `bios/panafz1.bin`; test skips when `THREEDO_BIOS` is unset).
+- [x] Real BIOS executes 300 frames without crash (validated locally with `bios/panafz1.bin`; test skips when `FIVEDO_BIOS` is unset).
 - [x] Timer/FIFO/DMA unit tests green.
 - [x] Frame loop cycle count matches `12_500_000 / 60` per frame (within the reference's 16-cycle batching overshoot).
 - [x] No per-frame allocations (test asserts zero allocations over 60 steady-state frames).
@@ -637,7 +637,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Hand-built CCB scenes for each bpp/path.
   - VRAM pixel hashes, CEL cycle counts.
   - A composite scene with multiple CCBs, PLUT changes, clipping, transparency.
-  - Implemented in `tests/ThreeDo.Tests/Madam` (`CelRasterizerTests`, `CelLiteralRasterizerTests`, `CelGoldenSceneTests`): every bpp index, packed/literal/LR line/scale/arbitrary paths, clip-window corners, PLUT reloads, transparent texels, and a deterministic composite-scene VRAM hash with cycle counts.
+  - Implemented in `tests/FiveDo.Tests/Madam` (`CelRasterizerTests`, `CelLiteralRasterizerTests`, `CelGoldenSceneTests`): every bpp index, packed/literal/LR line/scale/arbitrary paths, clip-window corners, PLUT reloads, transparent texels, and a deterministic composite-scene VRAM hash with cycle counts.
 - [x] **M4.15 BIOS UI validation.**
   - With the CD-ROM/XBUS device attached, a real BIOS (`bios/panafz1.bin`) passes its device poll, renders the boot logo and the console/disc animation (`CelGoldenSceneTests`/`BiosUiValidationTests`, 96+ distinct colors at frame 120), initializes the OS, and reaches the Portfolio shell.
   - The earlier `PC 0x000205c4` "halt" was the Portfolio idle loop, not a renderer failure. All five local corpus titles now load their own OS and render; `BiosUiValidationTests` keeps the opt-in stability/PNG-dump and DSP-start checks.
@@ -715,8 +715,8 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Deliverables**
 
-- `ThreeDo.Dsp` with full core.
-- `ThreeDo.Audio` ring buffer and sinks.
+- `FiveDo.Dsp` with full core.
+- `FiveDo.Audio` ring buffer and sinks.
 - DSP golden tests.
 
 **Acceptance**
@@ -746,7 +746,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - **`ChdDiscImage`** backed by CHDSharp (pure C#).
   - Format detection by extension/header/size.
 - [x] **M6.1a CHD image reader (required v1 format).**
-  - Add `CHDSharp` 1.5.2 package reference to `ThreeDo.Storage`.
+  - Add `CHDSharp` 1.5.2 package reference to `FiveDo.Storage`.
   - Open standalone and parent/child CD CHDs with `ChdFile.Open`.
   - Validate `chd.IsCd`; reject DVD/HDD/raw/audio-only CHDs with a clear error.
   - Read the first data track from `chd.Tracks`; determine payload offset:
@@ -796,7 +796,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 
 **Deliverables**
 
-- `ThreeDo.Xbus`, `ThreeDo.Cdrom`, `ThreeDo.Storage`.
+- `FiveDo.Xbus`, `FiveDo.Cdrom`, `FiveDo.Storage`.
 - `IsoImage`, `BinImage`, `CueSheet`, and `ChdDiscImage`.
 - Real disc/CHD boot path.
 
@@ -826,7 +826,7 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
 **Tasks**
 
 - [x] **M7.1 Controller state and PBUS encoder.**
-  - `ThreeDoController` buttons: A/B/C/P/X/L/R, Up/Down/Left/Right.
+  - `FiveDoController` buttons: A/B/C/P/X/L/R, Up/Down/Left/Right.
   - `PbusEncoder` 16-byte packet, 1-6 controllers, device order 1,3,2,5,4,6.
   - Tests for every button and combination.
 - [x] **M7.2 Input profiles.**
@@ -842,14 +842,14 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - The input editor has a Gamepad tab for all six players; analog-stick directions fall back to D-pad bindings and triggers to shoulder bindings.
   - Unit tests cover face buttons, D-pad, sticks, triggers, dead zones, case-insensitive names, and invalid thresholds. Hardware validation is still platform-specific.
 - [x] **M7.5 NVRAM persistence.**
-  - `NvramStore` under `ThreeDo.Host` with the standard NVRAM path supplied by the caller.
+  - `NvramStore` under `FiveDo.Host` with the standard NVRAM path supplied by the caller.
   - Debounced atomic write (250 ms via `TimeProvider`), flush on pause/stop/dispose, fresh-image initialization, corrupt-image backup.
 - [x] **M7.6 Game database and fix modes.**
   - 4DO `GameDatabase.xml` ported as an embedded resource with attribution; MD5 → ID/name lookup and unknown-ID fallback.
   - `GameCompatibility` maps the 4DO IDs to `FixMode` bits and is applied automatically by the CLI and desktop shell when a disc opens. `--fix-mode`/`--no-game-fixes` and `AppSettings.FixModeOverrides` provide explicit overrides; `--json` and `info` report the applied mask.
 - [x] **M7.7 BIOS detection and Anvil.**
   - `byte[28] == 234` -> `SetAnvilFix(30)`.
-  - BIOS type is exposed through `BiosImage` and `ThreeDoMachine.Compatibility`; UI/CLI display arrives with M8/M9.
+  - BIOS type is exposed through `BiosImage` and `FiveDoMachine.Compatibility`; UI/CLI display arrives with M8/M9.
 - [x] **M7.8 Tests.**
   - PBUS bytes for every button, six-controller ordering, NVRAM debounce/atomic/backup roundtrip, game DB lookup, input profile roundtrip, keyboard/gamepad merge.
 
@@ -884,13 +884,13 @@ dotnet run --project src/ThreeDo.Frontend.Avalonia
   - Magic `TDO1`, version, header, section table, CRC32.
   - Explicit little-endian writer/reader.
   - BIOS hash, disc hash, emulator version, tuning flags.
-  - Reject unknown versions; warn on hash mismatch (`ThreeDoMachine.StateWarnings`).
+  - Reject unknown versions; warn on hash mismatch (`FiveDoMachine.StateWarnings`).
 - [x] **M8.2 Per-chip state sections.**
   - CPU, memory (RAM/ROM/NVRAM), MADAM, CLIO, DSP, SPORT, VDLP, XBUS, CD, Quartz.
   - Derived tables (DSP precompute, REGCONV/BRCONDTAB) are rebuilt by the constructor; the full RAM allocation, including the high-resolution mirrors, is serialized.
   - The machine section also stores the derived VDL frame and compatibility flags so a load continues bit-identically.
 - [x] **M8.3 Machine save/load.**
-  - `ThreeDoMachine.SaveState(Stream)`, `LoadState(Stream)`.
+  - `FiveDoMachine.SaveState(Stream)`, `LoadState(Stream)`.
   - Atomic file writes (`SaveStateToFile`/`LoadStateFromFile`); slot naming is a host/frontend concern (M9.8).
 - [x] **M8.4 State tests.**
   - Save -> run 60 frames -> load -> run 60 frames; frame hash, PC, and frame count match the control run.
@@ -1014,8 +1014,8 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
 **Tasks**
 
 - [x] **M9R.1 Renderer contract and context adapter.**
-  - `IVideoRenderer`, `RendererSettings`, `VideoFilter`, `AspectMode`, `RendererCapabilities`, and `RendererApi` in `ThreeDo.Video`.
-  - `GlContextAdapter` wraps Avalonia's GL context/function loader without referencing Avalonia from `ThreeDo.Video.OpenGL`.
+  - `IVideoRenderer`, `RendererSettings`, `VideoFilter`, `AspectMode`, `RendererCapabilities`, and `RendererApi` in `FiveDo.Video`.
+  - `GlContextAdapter` wraps Avalonia's GL context/function loader without referencing Avalonia from `FiveDo.Video.OpenGL`.
   - `OpenGlRenderer.Initialize/Resize/Present/Dispose`.
   - `OpenGlCapabilities` parses desktop GL and GLES version strings, reports the API type, and derives integer-texture support from the version. The renderer queries `GL_MAX_TEXTURE_SIZE`; `SwapInterval.TryCreate` resolves WGL/GLX/EGL swap control and `RendererCapabilities.SupportsVsync` reports whether the platform accepted the request.
 - [x] **M9R.2 Frame texture upload.**
@@ -1094,7 +1094,7 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
     produced **0 different pixels** and the same FNV-1a hash `0xD6BD89C5` for a
     320x240 synthetic frame. The probe also runs every filter (accurate, nearest,
     sharp-bilinear, CRT, xBR, HQx) under ANGLE. The opt-in
-    `GpuProbeIntegrationTests` (`THREEDO_GPU_TESTS=1`) repeats the WGL/ANGLE parity
+    `GpuProbeIntegrationTests` (`FIVEDO_GPU_TESTS=1`) repeats the WGL/ANGLE parity
     and 4K passes; it also caught and fixed a synchronous-dispose crash in the
     capture path. The `PixelSize.Compute` physical-pixel math is covered for
     100/125/150/200% scaling; on-device DPI validation remains. GPU CI remains.
@@ -1105,7 +1105,7 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
 
 **Deliverables**
 
-- `ThreeDo.Video.OpenGL` with the full presentation pipeline.
+- `FiveDo.Video.OpenGL` with the full presentation pipeline.
 - Accurate CPU/GPU parity tests.
 - Filter/shader assets.
 - CPU fallback path.
@@ -1157,7 +1157,7 @@ harness. See [`Performance.md`](Performance.md).
     allocations/frame; accurate/CRT/xBR and 1080p results are in
     [`Performance.md`](Performance.md). Tier B/GLES timing remains.
 - [x] **M9P.2 Dedicated core thread and frame pacer.**
-  - `ThreeDo.Host.CoreRunner` and its internal `FramePacer` are implemented.
+  - `FiveDo.Host.CoreRunner` and its internal `FramePacer` are implemented.
   - Run `RunFrame` on a dedicated core thread at a fixed 60 Hz; catch-up capped at
     one or two frames.
   - The UI thread never calls `RunFrame`; replace the `DispatcherTimer` emulation
@@ -1220,7 +1220,7 @@ harness. See [`Performance.md`](Performance.md).
     unchanged.
   - Do not add GPU CEL compositing for the 4K output target.
 - [~] **M9P.9 Benchmark suite and CI gate.**
-  - `ThreeDo.Benchmarks` measures the machine core, video pack, mailbox, and read
+  - `FiveDo.Benchmarks` measures the machine core, video pack, mailbox, and read
     copy in synthetic and real-disc modes, with p50/p95/p99, max, per-stage
     allocations, JSON output, and a 60 Hz budget comparison.
   - The steady-state synthetic path reports 0 managed bytes/frame; CHD decode
@@ -1283,7 +1283,7 @@ harness. See [`Performance.md`](Performance.md).
 - [~] **M10.1 Publish profiles.**
   - `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`.
   - Self-contained, single-file; both the CLI and frontend are trimmed (`PublishTrimmed=true`, `TrimMode=full`).
-  - **DONE (2026-10-26):** opt-in NativeAOT win-x64 publishes are validated for both executables (`-p:ThreeDoNativeAot=true`); the CLI is 9.97 MB, the frontend is a 28.8 MB single-file executable plus native Skia/HarfBuzz/ANGLE assets. Silk.NET.Core loader warnings remain and AOT audio is not yet validated.
+  - **DONE (2026-10-26):** opt-in NativeAOT win-x64 publishes are validated for both executables (`-p:FiveDoNativeAot=true`); the CLI is 9.97 MB, the frontend is a 28.8 MB single-file executable plus native Skia/HarfBuzz/ANGLE assets. Silk.NET.Core loader warnings remain and AOT audio is not yet validated.
   - Include native audio/gamepad assets and GLSL shader resources per RID.
 - [x] **M10.2 CI matrix.**
   - Build/test on Windows/Linux/macOS.
@@ -1292,21 +1292,21 @@ harness. See [`Performance.md`](Performance.md).
 - [x] **M10.3a CLI trimming.**
   - Settings, input profiles, save-slot metadata, and every CLI `--json` response now use source-generated `JsonSerializerContext` metadata; the CLI output path no longer uses anonymous types or reflection.
   - The RAM-write watchpoint formatter uses `DiagnosticMethodInfo` instead of `StackFrame.GetMethod`.
-  - `ThreeDo.Cli` publishes with `PublishTrimmed=true` (`TrimMode=full`) as a self-contained single file; the six-RID CI publish uses the same settings, and a Windows CI smoke test runs `--version`, `selftest --json`, and `bench --frames 2 --json` against the trimmed executable.
+  - `FiveDo.Cli` publishes with `PublishTrimmed=true` (`TrimMode=full`) as a self-contained single file; the six-RID CI publish uses the same settings, and a Windows CI smoke test runs `--version`, `selftest --json`, and `bench --frames 2 --json` against the trimmed executable.
   - The win-x64 audit also covered `info`, `state inspect`, `state slots`, `fs list` on a generated CHD, CHD boot/run, and a save-state roundtrip. The only remaining trim warning is CHDSharp's vendored FLAC settings helper (`TypeDescriptor`); it is outside the 3DO data-track path and demoted to a visible warning. See [`Trimming.md`](Trimming.md).
   - **DONE (2026-10-26):** the CLI also publishes with NativeAOT via the opt-in
-    `-p:ThreeDoNativeAot=true` property. The win-x64 single file is 9.97 MB and
+    `-p:FiveDoNativeAot=true` property. The win-x64 single file is 9.97 MB and
     passes `--version`, `selftest`, `bench`, `info`, `fs list`, and a 3,000-frame
     Lemmings boot with the golden `PC 0x0012B3C8` / hash `0x932C7722`. CI publishes
     and smoke-tests this AOT CLI on Windows; the six-RID matrix remains trimmed IL
     because cross-OS AOT needs a native toolchain per target.
 - [x] **M10.3b Frontend trimming/AOT audit.**
   - Removed `ViewLocator` and its `Application.DataTemplates` registration; every window is constructed explicitly. All XAML bindings are compiled (`AvaloniaUseCompiledBindingsByDefault=true`, `x:DataType` on every window/`DataTemplate`), so the trimmed app does not use reflection-based XAML lookup.
-  - `ThreeDo.Frontend.Avalonia` publishes with `PublishTrimmed=true` (`TrimMode=full`) as a self-contained single file for all six RIDs; CI publishes the trimmed frontend and runs `--smoke-test --smoke-output <path>`, which opens the real window, runs one UI pass (GL hidden so headless CI needs no GL context), writes a marker, and exits 0.
+  - `FiveDo.Frontend.Avalonia` publishes with `PublishTrimmed=true` (`TrimMode=full`) as a self-contained single file for all six RIDs; CI publishes the trimmed frontend and runs `--smoke-test --smoke-output <path>`, which opens the real window, runs one UI pass (GL hidden so headless CI needs no GL context), writes a marker, and exits 0.
   - The frontend startup parser (`--version`, `--disc`, positional disc, `--smoke-test`, `--smoke-output`) has unit tests. The CHDSharp vendored-FLAC warning uses the same visible-but-non-fatal policy as the CLI.
-  - win-x64 trimmed single-file is 26.3 MB vs 91.3 MB untrimmed (150.9 MB vs 215.9 MB for the full folder). **DONE (2026-10-26):** the frontend also publishes with NativeAOT via `-p:ThreeDoNativeAot=true`; the 28.8 MB native executable plus native assets passes `--smoke-test` and the WGL/ANGLE 320x240 parity probes. Silk.NET.Core's `Assembly.Location`/`DependencyContext` loader still emits `IL3000`/`IL3002`; the opt-in build keeps those warnings visible and the default six-RID publishes remain trimmed IL. See [`Trimming.md`](Trimming.md).
+  - win-x64 trimmed single-file is 26.3 MB vs 91.3 MB untrimmed (150.9 MB vs 215.9 MB for the full folder). **DONE (2026-10-26):** the frontend also publishes with NativeAOT via `-p:FiveDoNativeAot=true`; the 28.8 MB native executable plus native assets passes `--smoke-test` and the WGL/ANGLE 320x240 parity probes. Silk.NET.Core's `Assembly.Location`/`DependencyContext` loader still emits `IL3000`/`IL3002`; the opt-in build keeps those warnings visible and the default six-RID publishes remain trimmed IL. See [`Trimming.md`](Trimming.md).
 - [~] **M10.4 Icons/metadata.**
-  - App icon, version info, a Linux `.desktop` entry (`packaging/3doemulator.desktop`), and positional/`--disc` startup loading are implemented.
+  - App icon, version info, a Linux `.desktop` entry (`packaging/5do.desktop`), and positional/`--disc` startup loading are implemented.
   - Windows/macOS file associations still need the installer/app bundle (M10.7); `.tdos` state-file association remains.
 - [~] **M10.5 Performance validation and report.**
   - Consume the M9P.9 benchmark harness and baselines; do not defer structural optimization to this milestone.
@@ -1324,7 +1324,7 @@ harness. See [`Performance.md`](Performance.md).
   - Run on Windows arm64 (if available), Linux arm64 (Raspberry Pi 4/5), macOS arm64.
   - Verify audio/gamepad backends.
 - [~] **M10.7 Portable archives and installers.**
-  - `packaging/package.ps1` creates `3doemulator-<component>-<rid>.zip` for Windows and `.tar.gz` for Linux/macOS, with README/notices/licensing, a generated `PACKAGE.txt`, and the Linux desktop entry. CI publishes and uploads both the raw folders and the portable archives for all six RIDs.
+  - `packaging/package.ps1` creates `5do-<component>-<rid>.zip` for Windows and `.tar.gz` for Linux/macOS, with README/notices/licensing, a generated `PACKAGE.txt`, and the Linux desktop entry. CI publishes and uploads both the raw folders and the portable archives for all six RIDs.
   - Remaining: MSIX/dmg/AppImage packaging, signing/notarization, Windows/macOS file associations, and installer smoke tests.
 
 **Deliverables**
@@ -1460,14 +1460,14 @@ was completed during M0-M2. The current next actions are in §12.
 
 - [x] Create solution, projects, references, build props.
 - [x] Create CLI/Avalonia placeholders.
-- [x] Create `ThreeDo.Tests` and fake sinks.
+- [x] Create `FiveDo.Tests` and fake sinks.
 - [x] CI build/test.
 - [x] Commit the docs.
 
 **Days 3-5 - M1**
 
 - [x] Core constants/interfaces.
-- [x] `ThreeDoMemory` + byte-order tests.
+- [x] `FiveDoMemory` + byte-order tests.
 - [x] Address decode + sentinel tests.
 - [x] `Quartz` + fixed-point tests.
 - [x] State writer/reader + CRC tests.
@@ -1590,7 +1590,7 @@ A milestone is done only when:
 
 These need a decision before the relevant milestone; the plan assumes the default in parentheses.
 
-1. **Final product name and namespace prefix.** Default: solution `3DOEmulator`, namespace `ThreeDo`.
+1. **Final product name and namespace prefix.** **Decided:** product `5DO`, solution `5DO.sln`, namespace prefix `FiveDo`.
 2. **Distribution license.** Default: non-commercial, source-available, pending FreeDO/4DO permission. See `docs/Licensing.md`.
 3. **Renderer.** **Decided: OpenGL is required for the desktop frontend**, with two variants behind one contract: desktop GL 3.3/GLSL 330 via Silk.NET.OpenGL, and GLES 3.0/3.1/GLSL ES 300 via Silk.NET.OpenGLES. Windows uses WGL or ANGLE/GLES; Pi 4/5 uses GLES. The CPU `WriteableBitmap` path is only a fallback/oracle.
 4. **Default filter.** Default: sharp-bilinear for enhanced mode; "Accurate" (nearest/integer) must be available and pixel-identical to the CPU assembler.
@@ -1677,14 +1677,14 @@ Suggested parallelization with two developers:
 |---|---|---|---|
 | 2026-10-23 | M0 | Plan/architecture written | Initial docs and scaffold |
 | 2026-10-23 | M0.1-M0.7 | Scaffold complete | `dotnet build`, `dotnet test` (2 tests), and `dotnet format --verify-no-changes` pass; commit `e620ebb` |
-| 2026-10-23 | Architecture | OpenGL renderer made required; optional ARM JIT added as M12 | `ThreeDo.Video.OpenGL` project added; docs updated |
-| 2026-10-23 | Storage | CHD made a required v1 format via CHDSharp | `IDiscSource` + `ChdDiscImage` added; package wired into `ThreeDo.Storage` |
-| 2026-10-23 | M1.1-M1.4 | Core contracts, memory, and bus | Constants/types/interfaces; `ThreeDoMemory` with word-swapped RAM/ROM, NVRAM quirk, bank select, and MMIO hooks |
+| 2026-10-23 | Architecture | OpenGL renderer made required; optional ARM JIT added as M12 | `FiveDo.Video.OpenGL` project added; docs updated |
+| 2026-10-23 | Storage | CHD made a required v1 format via CHDSharp | `IDiscSource` + `ChdDiscImage` added; package wired into `FiveDo.Storage` |
+| 2026-10-23 | M1.1-M1.4 | Core contracts, memory, and bus | Constants/types/interfaces; `FiveDoMemory` with word-swapped RAM/ROM, NVRAM quirk, bank select, and MMIO hooks |
 | 2026-10-23 | M1.5-M1.7 | Quartz, state primitives, diagnostics | 8.24 scheduler; sectioned little-endian state with CRC32; filtered logging with interpolated-string handler |
 | 2026-10-23 | M1.8 | M1 test suite | 95 tests pass; memory alignment/byte-order/NVRAM/decode, Quartz fixed-point/event counts, state truncation/CRC, logging filters; commit `9d730ca` |
 | 2026-10-23 | M2.1-M2.16 | ARM60 CPU | Full `arm.cpp` interpreter port: state/banked registers, ALU/shifter, decode order, data processing, multiply/swap, LDR/STR, LDM/STM, branch/SWI/undefined, MRS/MSR, FIQ, cycle counts, disassembler, test assembler, synthetic ROM; M2.15 deferred (native oracle outside repo); 262 tests pass; commit `8fd8a9b` |
 | 2026-10-23 | M3.1-M3.11 | Boot skeleton | BIOS/NVRAM images, CLIO registers/timers/FIFOs/DMA, MADAM registers/FSM/matrix/PBUS, VDLP parser, SPORT, DiagPort, Quartz frame loop, CPU frame assembler, XBUS stub, DSP stub; 321 tests pass; commit `958d33c` |
-| 2026-10-23 | M3.12 | Real BIOS smoke | `bios/panafz1.bin` ran 300 frames without exception; optional test gated by `THREEDO_BIOS` |
+| 2026-10-23 | M3.12 | Real BIOS smoke | `bios/panafz1.bin` ran 300 frames without exception; optional test gated by `FIVEDO_BIOS` |
 | 2026-10-23 | M3.13 | OpenGL spike deferred | Requires desktop GL context; scheduled with M9R.1/M9R.10 and does not block M4-M8 |
 | 2026-10-23 | M4.1-M4.3 | CEL bit reader, CCB parser, PLUT loader | `CelBitReader` (bit rates 1-32, positions, skip), `CcbControl`/`CcbHeader`/`CcbParser` (absolute/relative pointers, preamble, packed/skip/last), `Madam.LoadPlut`; 337 tests pass; commit `b600424` |
 | 2026-10-23 | M4.4 | Pixel decoder | 1/2/4/6/8/16 bpp, linear/coded modes, palette-write bit, AMV tables, transparency; 346 tests pass; commit `7ce230d` |
@@ -1723,10 +1723,11 @@ Suggested parallelization with two developers:
 | 2026-10-26 | M11.1, M9R.4b, M9R.4c, M9.5 | Pure D-pad passcode, CRT bloom, HQx, per-game filters | Added `docs/scripts/lem-fun4-dpad.txt`, which types the Lemmings Fun 4 code `HNLHCIOECW` with only the D-pad/A; gameplay starts at 23,000 (`PC 0x00083FD8`, hash `0xB7846C2D`) and roundtrips (`0xEDEB1B9D` twice). Added a 3x3 native-resolution CRT bloom pass and the `Bloom`/`BloomThreshold` settings. Ported hq2x as an opt-in 2x CPU filter with a C++ reference hash test (`0xA400C421`) and a steady-state allocation test. Added per-game filter overrides in `AppSettings` and the Settings dialog. 673 tests pass |
 | 2026-10-26 | M9R.4, M9R.4c, M11.3, M9P.9, M10.4 | HQx 3x/4x, the benchmark budget gate, and Linux file associations | Generated the hq3x/hq4x pattern switches from the 4DO sources and selected them with `VideoFilter.Hqx3x`/`Hqx4x`; the same 32x24 reference image matches the C++ `hq3x_32_rb`/`hq4x_32_rb` hashes (`0x0C406F97`/`0xBB17969C`), uniform images are unchanged, and the renderer sizes its intermediate target per scale. Measured the 320x240 CPU cost at ~2.3/4.2/7.5 ms/frame on checkerboard content and ~12.1/13.4/14.8 ms on random noise. Added `BenchmarkGate` plus the CLI benchmark `--gate` flag and wired it into CI: 0 bytes/frame, core p99 <= 8 ms, total mean <= 8 ms, and total p99 <= 16.667 ms. Added positional/`--disc` startup loading, a Linux `.desktop` association file, an optional native CPU-frame screenshot, sibling cover-art previews in the Library window, and fullscreen cursor hiding. 691 tests pass |
 | 2026-10-26 | M10.3a, M9P.9, M8.6 | Trim-safe JSON, trimmed CLI publishes, and the benchmark baseline comparison | Replaced reflection-based JSON in `AppSettings`, `InputProfile`, save-slot metadata, and every CLI `--json` response with source-generated contexts and named result records; removed the CLI's anonymous-type/`GetProperty` output path and the watchpoint `StackFrame.GetMethod` call. Enabled `PublishTrimmed=true` (`TrimMode=full`) for the CLI and added a Windows CI trimmed-publish smoke test plus trimmed six-RID publishing. Verified the win-x64 single file with `--version`, `selftest`, `bench`, `info`, `state inspect`, `state slots`, `fs list`, CHD boot/run, a save-state roundtrip, and the Lemmings/Alone 3,000-frame golden hashes. Added `BenchmarkComparison` and `--baseline`/`--baseline-threshold` for the same-machine >10% regression check (exit code 4). The only remaining trim warning is CHDSharp's vendored FLAC settings helper. 704 tests pass |
-| 2026-10-26 | M10.7 | Portable release archives | Added `packaging/package.ps1` to stage a publish folder with README, third-party notices, licensing, a generated `PACKAGE.txt`, and the Linux desktop entry, then create `3doemulator-<component>-<rid>.zip` for Windows or `.tar.gz` for Linux/macOS. Both six-RID CI publish jobs now upload a portable package alongside the raw folder. Validated the win-x64 zip and linux-x64 tar.gz contents and ran the win-x64 archive. Installers/signing/file associations remain |
-| 2026-10-26 | M10.3b, M10.1, M10.2 | Trimmed frontend publishes and smoke test | Removed the reflection-based `ViewLocator` and its `DataTemplates` registration; every window is now constructed explicitly and all bindings are compiled with `x:DataType`. Enabled `PublishTrimmed=true` (`TrimMode=full`) for `ThreeDo.Frontend.Avalonia` for all six RIDs, demoted CHDSharp's vendored-FLAC warning to visible/non-fatal, and added `--smoke-test --smoke-output <path>` plus `--version` startup handling. The smoke test opens the real main window, runs one UI pass (GL hidden for headless CI), writes a `FRONTEND SMOKE OK` marker, and exits 0; CI publishes the trimmed win-x64 frontend and runs it. Added startup-argument unit tests. win-x64 single-file is 26.3 MB trimmed vs 91.3 MB untrimmed. 709 tests pass |
+| 2026-10-26 | M10.7 | Portable release archives | Added `packaging/package.ps1` to stage a publish folder with README, third-party notices, licensing, a generated `PACKAGE.txt`, and the Linux desktop entry, then create `5do-<component>-<rid>.zip` for Windows or `.tar.gz` for Linux/macOS. Both six-RID CI publish jobs now upload a portable package alongside the raw folder. Validated the win-x64 zip and linux-x64 tar.gz contents and ran the win-x64 archive. Installers/signing/file associations remain |
+| 2026-10-26 | M10.3b, M10.1, M10.2 | Trimmed frontend publishes and smoke test | Removed the reflection-based `ViewLocator` and its `DataTemplates` registration; every window is now constructed explicitly and all bindings are compiled with `x:DataType`. Enabled `PublishTrimmed=true` (`TrimMode=full`) for `FiveDo.Frontend.Avalonia` for all six RIDs, demoted CHDSharp's vendored-FLAC warning to visible/non-fatal, and added `--smoke-test --smoke-output <path>` plus `--version` startup handling. The smoke test opens the real main window, runs one UI pass (GL hidden for headless CI), writes a `FRONTEND SMOKE OK` marker, and exits 0; CI publishes the trimmed win-x64 frontend and runs it. Added startup-argument unit tests. win-x64 single-file is 26.3 MB trimmed vs 91.3 MB untrimmed. 709 tests pass |
 | 2026-10-26 | M9R.5, M9R.8, M9P.1, M9P.6, M10.5 | Swap interval and true-4K GPU probe | Added `SwapInterval.TryCreate` (WGL/GLX/EGL), wired `RendererSettings.Vsync` into `OpenGlRenderer`, and reported honest `SupportsVsync`/`VsyncActive`/backend capabilities. Added a `--gl-probe` frontend tool that presents synthetic 320x240 frames through the real Avalonia OpenGL surface, supports a true 4K offscreen FBO, warm-up frames, per-stage allocation counters, and source-generated JSON. Windows 11/Ryzen 9 7900/RTX 4070 measured 4K sharp-bilinear GPU p99 0.089 ms, present p99 0.208 ms, 0 renderer/mailbox allocations/frame after warm-up; accurate/CRT/xBR and 1080p are recorded in `Performance.md`. 741 tests pass |
-| 2026-10-26 | M9P.6, M9R.9, M9P.10, M10.5 | ANGLE/GLES backend validation and CPU/GPU parity | Added the frontend `--gl-backend auto|wgl|angle|software` option (with the `--gl-probe-backend` alias) and wired it into `Win32PlatformOptions.RenderingMode`. Added `--gl-probe-capture` plus an automatic 1:1 Accurate CPU/GPU parity check to the GPU probe, and recorded `requestedBackend`, capture path, and parity in the JSON. Windows 11/RTX 4070 ANGLE (OpenGL ES 3.0, GLSL ES 300) ran every filter; 4K sharp-bilinear present p99 0.47 ms with 0 renderer allocations, and a 320x240 Accurate capture matched the CPU `FrameAssembler` oracle pixel-for-pixel (`0xD6BD89C5`) on both WGL and ANGLE. Added an opt-in GPU integration test (`THREEDO_GPU_TESTS=1`) that runs the real probe for both backends and a 4K pass; it found and fixed a synchronous-dispose crash in the capture path. Raspberry Pi/GLES 3.1 and DPI validation remain. 775 tests pass |
-| 2026-10-26 | M10.3a, M10.3b, M10.2 | NativeAOT CLI/frontend audit and CI jobs | Added the opt-in `ThreeDoNativeAot` publish property and Windows CI jobs for the win-x64 CLI and frontend. The CLI single file is 9.97 MB and passes `--version`, `selftest`, `bench`, `info`, `fs list`, and a 3,000-frame boot matching the golden `PC 0x0012B3C8` / hash `0x932C7722`. The frontend publishes as a 28.8 MB single-file native executable plus native assets and passes `--smoke-test` plus the WGL/ANGLE 320x240 parity probes. Silk.NET.Core's loader warnings remain and AOT audio is not yet validated; the default six-RID matrix remains trimmed IL. 775 tests pass |
+| 2026-10-26 | M9P.6, M9R.9, M9P.10, M10.5 | ANGLE/GLES backend validation and CPU/GPU parity | Added the frontend `--gl-backend auto|wgl|angle|software` option (with the `--gl-probe-backend` alias) and wired it into `Win32PlatformOptions.RenderingMode`. Added `--gl-probe-capture` plus an automatic 1:1 Accurate CPU/GPU parity check to the GPU probe, and recorded `requestedBackend`, capture path, and parity in the JSON. Windows 11/RTX 4070 ANGLE (OpenGL ES 3.0, GLSL ES 300) ran every filter; 4K sharp-bilinear present p99 0.47 ms with 0 renderer allocations, and a 320x240 Accurate capture matched the CPU `FrameAssembler` oracle pixel-for-pixel (`0xD6BD89C5`) on both WGL and ANGLE. Added an opt-in GPU integration test (`FIVEDO_GPU_TESTS=1`) that runs the real probe for both backends and a 4K pass; it found and fixed a synchronous-dispose crash in the capture path. Raspberry Pi/GLES 3.1 and DPI validation remain. 775 tests pass |
+| 2026-10-26 | M10.3a, M10.3b, M10.2 | NativeAOT CLI/frontend audit and CI jobs | Added the opt-in `FiveDoNativeAot` publish property and Windows CI jobs for the win-x64 CLI and frontend. The CLI single file is 9.97 MB and passes `--version`, `selftest`, `bench`, `info`, `fs list`, and a 3,000-frame boot matching the golden `PC 0x0012B3C8` / hash `0x932C7722`. The frontend publishes as a 28.8 MB single-file native executable plus native assets and passes `--smoke-test` plus the WGL/ANGLE 320x240 parity probes. Silk.NET.Core's loader warnings remain and AOT audio is not yet validated; the default six-RID matrix remains trimmed IL. 775 tests pass |
 | 2026-10-26 | M9P.5, M9R.9 | Physical-pixel sizing tests | Extracted `PixelSize.Compute` and added tests for 100/125/150/200% scaling, fractional logical bounds, zero/negative sizes, and non-finite inputs. The on-device DPI/live-resize validation remains. 775 tests pass |
 | 2026-10-26 | Release | 1.0.0-rc.1 release candidate | Adopted the documented-compatibility release scope and added `ReleaseChecklist.md`/`ReleaseLegalReview.md`. Bumped the version to `1.0.0-rc.1`; 775/775 tests, format, and the benchmark gate pass. Six fresh 36,000-frame soaks (five local CHDs plus the Theme Park ISO) and seven archived-state 36,000-frame soaks all exit 0; showcase save/load roundtrips are deterministic; WGL and ANGLE/GLES Accurate parity is 0 different pixels. Trimmed win-x64 CLI/frontend publishes, smoke tests, portable archives, and checksums are recorded; the 3,000-frame golden hashes are unchanged. Legal/distribution sign-off remains the only release blocker. |
+| 2026-10-26 | Naming | Product name finalized as 5DO | Renamed the solution to `5DO.sln`, all projects and namespaces to the `FiveDo.*` prefix, the CLI command to `5do`, packaging archives/desktop entry to `5do`, environment gates to `FIVEDO_*`, and user-data paths to `5DO`. References to the 3DO console and its trademarks are unchanged. |

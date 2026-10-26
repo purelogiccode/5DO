@@ -1,4 +1,4 @@
-# 3DOEmulator User Guide
+# 5DO User Guide
 
 This guide covers the desktop application and the headless CLI. The emulator does not
 include a BIOS ROM or any game images; you must supply legally obtained files.
@@ -9,9 +9,9 @@ include a BIOS ROM or any game images; you must supply legally obtained files.
 2. Start the desktop app:
 
    ```powershell
-   dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia
+   dotnet run -c Release --project src/FiveDo.Frontend.Avalonia
    # or open a disc directly (also used by file associations):
-   dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- "game.chd"
+   dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- "game.chd"
    ```
 
 3. On first run, choose **Open BIOS** and select a 3DO BIOS such as `panafz1.bin`.
@@ -107,7 +107,7 @@ open it. A sibling image with the same base name (for example `game.png` beside
 
 Settings persist under the user local application data folder:
 
-- Windows: `%LOCALAPPDATA%\3DOEmulator\settings.json`
+- Windows: `%LOCALAPPDATA%\5DO\settings.json`
 - Linux/macOS: the equivalent local application data directory.
 
 Per-game fix-mode overrides, automatic 4DO fixes, audio enable/volume, high-resolution
@@ -131,13 +131,13 @@ fallback, save/load, screenshots, input changes, and emulation faults.
 Common commands:
 
 ```powershell
-dotnet run -c Release --project src/ThreeDo.Cli -- run game.chd --bios panafz1.bin --frames 600 --frame-out frame.png
-dotnet run -c Release --project src/ThreeDo.Cli -- run game.chd --bios panafz1.bin --frames 600 --prefetch --high-res
-dotnet run -c Release --project src/ThreeDo.Cli -- info game.chd --json
-dotnet run -c Release --project src/ThreeDo.Cli -- bios info panafz1.bin
-dotnet run -c Release --project src/ThreeDo.Cli -- state inspect quick.tdos
-dotnet run -c Release --project src/ThreeDo.Cli -- bench --frames 600
-dotnet run -c Release --project src/ThreeDo.Cli -- selftest
+dotnet run -c Release --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin --frames 600 --frame-out frame.png
+dotnet run -c Release --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin --frames 600 --prefetch --high-res
+dotnet run -c Release --project src/FiveDo.Cli -- info game.chd --json
+dotnet run -c Release --project src/FiveDo.Cli -- bios info panafz1.bin
+dotnet run -c Release --project src/FiveDo.Cli -- state inspect quick.tdos
+dotnet run -c Release --project src/FiveDo.Cli -- bench --frames 600
+dotnet run -c Release --project src/FiveDo.Cli -- selftest
 ```
 
 Diagnostics: `--watch-lowmem`, `--dump-ram`, `--dump-dsp`, `--trace-frames`, `--poke`,

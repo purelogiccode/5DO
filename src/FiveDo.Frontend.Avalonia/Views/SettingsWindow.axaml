@@ -1,0 +1,79 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="FiveDo.Frontend.Avalonia.Views.SettingsWindow"
+        Title="Settings"
+        Width="600" Height="520"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="*,Auto" Margin="12">
+        <TabControl Grid.Row="0">
+            <TabItem Header="Video">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Filter" VerticalAlignment="Center" />
+                    <ComboBox x:Name="FilterCombo" Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Aspect" VerticalAlignment="Center" />
+                    <ComboBox x:Name="AspectCombo" Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" />
+                    <CheckBox x:Name="IntegerCheck" Grid.Row="2" Grid.Column="1" Content="Integer scaling" />
+                    <CheckBox x:Name="VsyncCheck" Grid.Row="3" Grid.Column="1" Content="VSync (where supported)" />
+                    <CheckBox x:Name="OverlayCheck" Grid.Row="4" Grid.Column="1" Content="Show FPS/status overlay" />
+                    <CheckBox x:Name="NativeScreenshotCheck" Grid.Row="5" Grid.Column="1"
+                              Content="Also save the native CPU frame with screenshots" />
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="CRT bloom" VerticalAlignment="Center" />
+                    <Slider x:Name="BloomSlider" Grid.Row="6" Grid.Column="1"
+                            Minimum="0" Maximum="1" TickFrequency="0.05" />
+                    <TextBlock Grid.Row="7" Grid.Column="1" Text="xBR runs an edge-directed 4x pass; HQx runs a 2x/3x/4x CPU pixel-art pass. CRT bloom adds a glow around bright areas. All of them cost more CPU/GPU time at 4K; HQx 3x/4x are the most expensive."
+                               Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0" />
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Audio">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto" Margin="8">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Output" VerticalAlignment="Center" />
+                    <CheckBox x:Name="AudioCheck" Grid.Row="0" Grid.Column="1" Content="Enable OpenAL output" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume" VerticalAlignment="Center" />
+                    <Slider x:Name="VolumeSlider" Grid.Row="1" Grid.Column="1"
+                            Minimum="0" Maximum="1" TickFrequency="0.05" />
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Emulation">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                    <CheckBox x:Name="AutoFixesCheck" Grid.Row="0" Grid.Column="1"
+                              Content="Apply the 4DO per-game fixes automatically" />
+                    <CheckBox x:Name="HighResCheck" Grid.Row="1" Grid.Column="1"
+                              Content="High-resolution CEL mode (640x480, opt-in)" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Current game" VerticalAlignment="Center" Margin="0,12,0,0" />
+                    <TextBlock x:Name="GameText" Grid.Row="2" Grid.Column="1" Text="No disc loaded."
+                               TextWrapping="Wrap" Margin="0,12,0,0" />
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Fix-mode override" VerticalAlignment="Center" />
+                    <TextBox x:Name="FixModeBox" Grid.Row="3" Grid.Column="1"
+                             PlaceholderText="Automatic (hexadecimal mask, for example 0x20)" />
+                    <TextBlock Grid.Row="4" Grid.Column="1" Text="Leave blank to use the database value."
+                               Opacity="0.7" FontSize="11" />
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Filter override" VerticalAlignment="Center" Margin="0,12,0,0" />
+                    <ComboBox x:Name="FilterOverrideCombo" Grid.Row="5" Grid.Column="1" Margin="0,12,0,0" />
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Paths">
+                <Grid ColumnDefinitions="170,*,Auto" RowDefinitions="Auto,Auto" Margin="8">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Save states" VerticalAlignment="Center" />
+                    <TextBox x:Name="SaveDirectoryBox" Grid.Row="0" Grid.Column="1" Margin="0,0,6,8" />
+                    <Button Grid.Row="0" Grid.Column="2" Content="Browse" Click="OnBrowseSaveDirectory" Margin="0,0,0,8" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Screenshots" VerticalAlignment="Center" />
+                    <TextBox x:Name="ScreenshotDirectoryBox" Grid.Row="1" Grid.Column="1" Margin="0,0,6,0" />
+                    <Button Grid.Row="1" Grid.Column="2" Content="Browse" Click="OnBrowseScreenshotDirectory" />
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+            <TextBlock x:Name="ValidationText" Grid.Column="0" VerticalAlignment="Center"
+                       Foreground="#FF8080" TextWrapping="Wrap" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                <Button Content="OK" Click="OnOk" IsDefault="True" />
+                <Button Content="Cancel" Click="OnCancel" IsCancel="True" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

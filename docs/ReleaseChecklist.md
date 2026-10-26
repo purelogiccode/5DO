@@ -27,7 +27,7 @@ been validated.**
 | Disc formats | ISO, BIN, CUE+BIN, CHD | Already implemented and tested |
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
 | Packages | Portable zip/tar.gz | Installers/signing/notarization are post-1.0 |
-| Version | `v1.0.0-rc.1` for the candidate; `v1.0.0` after legal sign-off | Bump `ThreeDoVersion.Version` and `Directory.Build.props` |
+| Version | `v1.0.0-rc.1` for the candidate; `v1.0.0` after legal sign-off | Bump `FiveDoVersion.Version` and `Directory.Build.props` |
 
 ---
 
@@ -84,11 +84,11 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 
 ## 3. Build, test, and CI
 
-- [x] `dotnet build 3DOEmulator.sln -c Release` passes with 0 warnings and 0 errors
+- [x] `dotnet build 5DO.sln -c Release` passes with 0 warnings and 0 errors
       (1.0.0-rc.1).
-- [x] `dotnet test tests/ThreeDo.Tests/ThreeDo.Tests.csproj -c Release` passes:
+- [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release` passes:
       775/775 with 1.0.0-rc.1.
-- [x] `dotnet format 3DOEmulator.sln --verify-no-changes` passes.
+- [x] `dotnet format 5DO.sln --verify-no-changes` passes.
 - [ ] CI is green on the supported runners. (Local gates pass; the GitHub Actions
       workflow was not re-run in this session.)
 - [x] Synthetic benchmark `--gate` passes: 2.28 ms/frame core mean, 4.03 ms core
@@ -102,10 +102,10 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 Suggested commands:
 
 ```powershell
-dotnet build 3DOEmulator.sln -c Release
-dotnet test tests/ThreeDo.Tests/ThreeDo.Tests.csproj -c Release
-dotnet format 3DOEmulator.sln --verify-no-changes
-dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- --frames 600 --gate
+dotnet build 5DO.sln -c Release
+dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release
+dotnet format 5DO.sln --verify-no-changes
+dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- --frames 600 --gate
 ```
 
 ---
@@ -149,11 +149,11 @@ writes `summary.md`/`summary.json` for the release evidence.
 Suggested soak command:
 
 ```powershell
-$env:THREEDO_GAMES = "D:\Samples\3DO"
-$env:THREEDO_DISC  = "$env:THREEDO_GAMES\Wolfenstein 3D (USA).chd"
+$env:FIVEDO_GAMES = "D:\Samples\3DO"
+$env:FIVEDO_DISC  = "$env:FIVEDO_GAMES\Wolfenstein 3D (USA).chd"
 
-dotnet run -c Release --project src/ThreeDo.Cli -- run `
-  "$env:THREEDO_DISC" --bios bios/panafz1.bin --frames 36000 `
+dotnet run -c Release --project src/FiveDo.Cli -- run `
+  "$env:FIVEDO_DISC" --bios bios/panafz1.bin --frames 36000 `
   --nvram artifacts/soak-w3d.ram --frame-out artifacts/soak-w3d.png --json
 ```
 
@@ -181,7 +181,7 @@ A new crash, silent corruption, or save-state regression is not.
 
 ## 6. Release mechanics and sign-off
 
-- [x] Bump `ThreeDoVersion.Version` in `src/ThreeDo.Core/ThreeDoVersion.cs` to
+- [x] Bump `FiveDoVersion.Version` in `src/FiveDo.Core/FiveDoVersion.cs` to
       `1.0.0-rc.1` (and `Directory.Build.props`).
 - [x] Move the `CHANGELOG.md` `[Unreleased]` section to `1.0.0-rc.1` and date it.
 - [x] Write release notes: feature summary, supported platforms, supported titles,

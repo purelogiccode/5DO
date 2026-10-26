@@ -105,7 +105,7 @@ This is the short, current answer to "where are we?" The detailed task list is i
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   Both executables are self-contained, single-file, and trimmed (`PublishTrimmed=true`,
   `TrimMode=full`). The CLI also has an opt-in NativeAOT win-x64 publish
-  (`-p:ThreeDoNativeAot=true`): 9.97 MB, CI-smoke-tested with `--version`, `selftest`,
+  (`-p:FiveDoNativeAot=true`): 9.97 MB, CI-smoke-tested with `--version`, `selftest`,
   `bench`, `info`, `fs list`, and a golden 3,000-frame boot. The frontend has an
   opt-in NativeAOT single-file publish (28.8 MB executable plus native assets) that
   passes `--smoke-test` and the WGL/ANGLE parity probes; Silk.NET.Core loader warnings
@@ -113,7 +113,7 @@ This is the short, current answer to "where are we?" The detailed task list is i
   CLI and starts the trimmed frontend (`--smoke-test`); the win-x64 packages were
   validated with synthetic/ISO/CHD runs, state roundtrips, `fs list`, and a real
   window/render pass.
-  CI also creates portable `3doemulator-<component>-<rid>.zip`/`.tar.gz` archives
+  CI also creates portable `5do-<component>-<rid>.zip`/`.tar.gz` archives
   with README/notices/licensing and a generated `PACKAGE.txt` via
   `packaging/package.ps1`. See [`Trimming.md`](Trimming.md) and
   [`../packaging/README.md`](../packaging/README.md).
@@ -370,51 +370,51 @@ post-1.0 backlog.
 
 ```powershell
 dotnet build -c Release
-dotnet test tests/ThreeDo.Tests -c Release
+dotnet test tests/FiveDo.Tests -c Release
 
 # The corpus root is machine-specific; set it once per shell.
-$env:THREEDO_GAMES = "D:\Samples\3DO"   # office; home: E:\Panasonic 3DO
-$env:THREEDO_DISC  = "$env:THREEDO_GAMES\Road Rash (USA).chd"
+$env:FIVEDO_GAMES = "D:\Samples\3DO"   # office; home: E:\Panasonic 3DO
+$env:FIVEDO_DISC  = "$env:FIVEDO_GAMES\Road Rash (USA).chd"
 
 # Build/test/format
 dotnet build -c Release
-dotnet test tests/ThreeDo.Tests -c Release
+dotnet test tests/FiveDo.Tests -c Release
 dotnet format --verify-no-changes
 
 # Synthetic CPU-side baseline
-dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- --frames 600
+dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- --frames 600
 
 # Real disc baseline
-dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- `
+dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- `
   --frames 600 --bios bios/panafz1.bin `
-  --disc "$env:THREEDO_GAMES\Lemmings (USA).chd" --label lemmings
+  --disc "$env:FIVEDO_GAMES\Lemmings (USA).chd" --label lemmings
 
 # Boot a disc and dump the last frame
-dotnet run -c Release --project src/ThreeDo.Cli -- run `
-  "$env:THREEDO_GAMES\Lemmings (USA).chd" --bios bios/panafz1.bin `
+dotnet run -c Release --project src/FiveDo.Cli -- run `
+  "$env:FIVEDO_GAMES\Lemmings (USA).chd" --bios bios/panafz1.bin `
   --frames 3000 --nvram artifacts/lemmings.ram --frame-out artifacts/lemmings.png
 
 # Scripted input, frame sequence, and PBUS packet trace
-dotnet run -c Release --project src/ThreeDo.Cli -- run `
-  "$env:THREEDO_GAMES\Wolfenstein 3D (USA).chd" --bios bios/panafz1.bin `
+dotnet run -c Release --project src/FiveDo.Cli -- run `
+  "$env:FIVEDO_GAMES\Wolfenstein 3D (USA).chd" --bios bios/panafz1.bin `
   --frames 12000 --input-script artifacts/input.txt `
   --capture-dir artifacts/w3d-frames --capture-every 1000 `
   --frame-out artifacts/w3d.png --state-out artifacts/w3d.state
 
 # RAM dump at a KPRINT stop
-dotnet run -c Release --project src/ThreeDo.Cli -- trace `
-  "$env:THREEDO_DISC" --bios bios/panafz1.bin `
+dotnet run -c Release --project src/FiveDo.Cli -- trace `
+  "$env:FIVEDO_DISC" --bios bios/panafz1.bin `
   --frames 16000 --trace-frames 2200 --stop-kprint "AllocMem error" --ring 40000 `
   --out artifacts/rr-trace.txt --dump-ram artifacts/rr-stop-ram.bin `
   --dump-ram-offset 0 --dump-ram-length 0x300000
 
 # Opera reference: extract the data track to ISO, then run the bundled SimpleGui
-dotnet run -c Release --project src/ThreeDo.Cli -- disc dump `
-  "$env:THREEDO_DISC" --sector 0 --count 328130 `
+dotnet run -c Release --project src/FiveDo.Cli -- disc dump `
+  "$env:FIVEDO_DISC" --sector 0 --count 328130 `
   --out "$env:TEMP\roadrash.iso"
 & "References\CPP_SimpleGui\cmake-build-release\SimpleGui\SimpleGui.exe" `
   --debug-messages -n "$env:TEMP\roadrash.iso"
 ```
 
-The desktop frontend is `dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia`.
+The desktop frontend is `dotnet run -c Release --project src/FiveDo.Frontend.Avalonia`.
 See [`ReferenceStrategy.md`](ReferenceStrategy.md) for the full differential procedure.

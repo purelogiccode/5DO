@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>FiveDo.Machine</RootNamespace>
+    <AssemblyName>FiveDo.Machine</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FiveDo.Core\FiveDo.Core.csproj" />
+    <ProjectReference Include="..\FiveDo.Cpu\FiveDo.Cpu.csproj" />
+    <ProjectReference Include="..\FiveDo.Memory\FiveDo.Memory.csproj" />
+    <ProjectReference Include="..\FiveDo.Madam\FiveDo.Madam.csproj" />
+    <ProjectReference Include="..\FiveDo.Clio\FiveDo.Clio.csproj" />
+    <ProjectReference Include="..\FiveDo.Dsp\FiveDo.Dsp.csproj" />
+    <ProjectReference Include="..\FiveDo.Sport\FiveDo.Sport.csproj" />
+    <ProjectReference Include="..\FiveDo.Video\FiveDo.Video.csproj" />
+    <ProjectReference Include="..\FiveDo.Xbus\FiveDo.Xbus.csproj" />
+    <ProjectReference Include="..\FiveDo.Cdrom\FiveDo.Cdrom.csproj" />
+    <ProjectReference Include="..\FiveDo.Diagnostics\FiveDo.Diagnostics.csproj" />
+  </ItemGroup>
+
+</Project>
+

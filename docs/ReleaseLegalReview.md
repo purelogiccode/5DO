@@ -56,8 +56,7 @@ images, BIOS ROMs, extracted assets, screenshots, or WAV captures.
       HQx LGPL-2.1 filter obligations, and decide whether the HQx filters remain in a
       binary distribution that cannot comply.
 - [ ] **Trademark review.** "3DO", "Panasonic", and "GoldStar" are trademarks of their
-      respective owners; the final product name and store listing must not imply
-      endorsement.
+      respective owners; the 5DO name and store listing must not imply endorsement.
 
 ## 4. Recommendation
 

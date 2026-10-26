@@ -1,0 +1,45 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:host="using:FiveDo.Host"
+        x:Class="FiveDo.Frontend.Avalonia.Views.GameLibraryWindow"
+        Title="Game Library"
+        Width="900" Height="560"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="12">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="6">
+            <Button x:Name="AddFolderButton" Content="Add Folder" Click="OnAddFolder" />
+            <Button x:Name="RefreshButton" Content="Refresh" Click="OnRefresh" />
+            <Button x:Name="OpenButton" Content="Open Selected" Click="OnOpenSelected" />
+        </StackPanel>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,260" Margin="0,8">
+            <ListBox x:Name="LibraryList" Grid.Column="0" DoubleTapped="OnDoubleTapped"
+                     SelectionChanged="OnSelectionChanged">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="host:GameLibraryEntry">
+                        <Grid ColumnDefinitions="2*,Auto,Auto,*" Margin="4">
+                            <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="SemiBold" />
+                            <TextBlock Grid.Column="1" Text="{Binding Format}" Margin="10,0" Opacity="0.8" />
+                            <TextBlock Grid.Column="2" Text="{Binding SectorCount}" Margin="0,0,10,0" Opacity="0.8" />
+                            <TextBlock Grid.Column="3" Text="{Binding Path}" Opacity="0.65"
+                                       TextTrimming="CharacterEllipsis" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <Border Grid.Column="1" Margin="10,0,0,0" Padding="10"
+                    Background="#1A1A1A" CornerRadius="4">
+                <StackPanel>
+                    <Image x:Name="CoverImage" Width="240" Height="320" Stretch="Uniform" />
+                    <TextBlock x:Name="CoverText" Text="Select a disc to see its cover."
+                               TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,8,0,0" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <TextBlock x:Name="StatusText" Grid.Row="2" Text="No game folders configured."
+                   Foreground="#CCCCCC" TextWrapping="Wrap" />
+    </Grid>
+</Window>

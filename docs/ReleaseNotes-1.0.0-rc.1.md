@@ -1,4 +1,4 @@
-# 3DOEmulator 1.0.0-rc.1
+# 5DO 1.0.0-rc.1
 
 **Release date:** 2026-10-26
 **Status:** release candidate. The local engineering release gates pass; CI and the
@@ -73,8 +73,8 @@ BIOS ROMs and game images are **not** included.
 
 The release checklist is in [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
-- [x] `dotnet build 3DOEmulator.sln -c Release`: 0 warnings, 0 errors.
-- [x] `dotnet test tests/ThreeDo.Tests/ThreeDo.Tests.csproj -c Release`: 775/775
+- [x] `dotnet build 5DO.sln -c Release`: 0 warnings, 0 errors.
+- [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`: 775/775
       passing.
 - [x] Synthetic benchmark budget gate: 2.28 ms/frame core mean, 4.03 ms core p99,
       4.66 ms total p99, 0 managed bytes/frame.
@@ -121,8 +121,8 @@ project is not affiliated with or endorsed by them.
 
 The win-x64 release artifacts are:
 
-- `3doemulator-cli-win-x64.zip`
-- `3doemulator-frontend-win-x64.zip`
+- `5do-cli-win-x64.zip`
+- `5do-frontend-win-x64.zip`
 
 Sizes and SHA-256 checksums are recorded in `SHA256SUMS.txt` next to the packages.
 Each archive contains the executable, `README.md`, `THIRD-PARTY-NOTICES.md`,
