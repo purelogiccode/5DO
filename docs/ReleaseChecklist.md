@@ -169,8 +169,8 @@ A new crash, silent corruption, or save-state regression is not.
 - [x] No PDBs or copyrighted content in release archives.
 - [x] Extract each archive to a clean folder and run the CLI/frontend smoke test.
 - [x] SHA-256 checksums generated for every archive.
-- [ ] Archive sizes and checksums recorded in the release notes (final values after
-      the release commit and repackaging).
+- [x] Archive sizes and checksums recorded in `SHA256SUMS.txt` next to the packages
+      after the release commit and repackaging.
 
 ---
 
