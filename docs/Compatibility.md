@@ -425,6 +425,50 @@ persist the image.
 The next compatibility step is input-driven gameplay validation, not another DSP or
 CD rewrite.
 
+### 10.2 Release soak (1.0.0-rc.1, 2026-10-26)
+
+Fresh 36,000-frame runs (10 minutes of emulated time) with `panafz1.bin`, Release
+build, and no input; all exited 0 with the DSP running:
+
+| Title | PC | Frame hash |
+|---|---|---|
+| Wolfenstein 3D | `0x0007C9C4` | `0x0814F039` |
+| Lemmings | `0x0012DA2C` | `0x9939D345` |
+| Road Rash | `0x00086A84` | `0xBDC2DBEA` |
+| Space Ace | `0x00076560` | `0xFD0F5B72` |
+| Alone in the Dark | `0x00020640` | `0xBA7F2C8C` |
+| Theme Park (ISO) | `0x00048CF8` | `0x55B0AC11` |
+
+The seven additional titles' source discs are not present on this machine, so the
+release soak continued their archived 12,000-frame states to 36,000. All exited 0:
+
+| Title | PC | Frame hash |
+|---|---|---|
+| Gex | `0x0004879C` | `0xDCE31DC5` |
+| Need for Speed | `0x000189F4` | `0x0B4A8885` |
+| Super Street Fighter II Turbo | `0x00020640` | `0x110E7DC5` |
+| Total Eclipse | `0x000C5E68` | `0xC2C0E8D2` |
+| Killing Time | `0x0009967C` | `0xF23DE48C` |
+| Theme Park | `0x00048CF8` | `0x55B0AC11` |
+| Return Fire | `0x000284F4` | `0xD57E56D7` |
+
+Save/load is deterministic at the 36,000-frame states: the zero-frame load
+reproduces the live hash, and two independent 120-frame continuations match.
+Showcase examples: Wolfenstein `0x0814F039` -> `0x2853ADC5` twice,
+Lemmings `0x9939D345` -> `0xB069CA91` twice, Road Rash `0xBDC2DBEA` ->
+`0xA41DD4CD` twice, Space Ace `0xFD0F5B72` -> `0x2A9967FA` twice, and Alone
+`0xBA7F2C8C` -> `0x666EEDB7` twice. The 600-frame WAV captures are 44.1 kHz
+stereo and non-silent (Road Rash clips 74 samples in 10 s; Wolfenstein and
+Lemmings do not clip).
+
+Scripted gameplay evidence: Wolfenstein's fresh-boot path reaches FLOOR 1-1
+(`0xF568EBCA` at 36,000 after the documented input scripts), Lemmings' archived
+23,000-frame gameplay state runs to 36,000 (`0xD3961D3D`), and Road Rash's
+60,000-frame race state runs to 80,000 with `--autopilot road`. Space Ace's
+15,000-frame interactive state renders the scene; a long no-input continuation
+reaches a black wait screen, which is documented in
+[`KnownIssues.md`](KnownIssues.md).
+
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `3do disc dump`, then run with

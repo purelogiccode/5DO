@@ -6,7 +6,7 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-26, fifteenth pass):** M0-M8 are functionally complete. The
+**Current position (2026-10-26, 1.0.0-rc.1 release preparation, fifteenth code pass):** M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
 prototype. **775 tests pass.** The fifteenth pass added an explicit
@@ -95,11 +95,15 @@ Road Rash's VRAM allocator and drew Alone horizontally, and VDLP bitmap widths f
 384/512/640/1024-wide modes. The opt-in 640x480 high-resolution CEL/VDLP path was
 added; save-state loads restore the VDL picture immediately.
 
-Remaining major work: finish a full Road Rash race without wrecking; script an
-Alone inventory sequence; validate GLES 3.1/Pi/DPI and Tier B timing (Tier A 4K is
-measured for WGL and ANGLE); validate Tier B prefetch; UI polish and a relative
-benchmark baseline; AOT audio/arm64/installers; and the legal/attribution
-review. Per-title
+**Release scope (2026-10-26):** v1.0 is a **documented-compatibility release**, not a
+full-compatibility one. Windows x64 is the validated target; the 12 boot-validated
+titles are listed with honest per-title status in
+[`docs/Compatibility.md`](docs/Compatibility.md), and known limitations ship in
+[`docs/KnownIssues.md`](docs/KnownIssues.md). Remaining release work is the
+legal/attribution review, a stability soak, release notes/packaging, and optional
+Linux/macOS launch validation. Full-race completion, scripts for the other seven
+titles, Raspberry Pi/arm64 validation, installers, and the optional JIT are post-1.0.
+Work through [`docs/ReleaseChecklist.md`](docs/ReleaseChecklist.md). Per-title
 save-state, PNG, and WAV evidence is recorded
 in [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. See
 [`docs/Status.md`](docs/Status.md) for the completion estimate and
@@ -107,6 +111,8 @@ in [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. See
 implementation plan and architecture are in:
 
 - [`docs/Status.md`](docs/Status.md) - current position, completion estimate, and next steps.
+- [`docs/ReleaseChecklist.md`](docs/ReleaseChecklist.md) - v1.0 release scope, gates, and sign-off.
+- [`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.md) - attribution audit and pending distribution decisions.
 - [`docs/NextSession.md`](docs/NextSession.md) - first task, commands, and acceptance criteria for the next session.
 - [`docs/ReferenceStrategy.md`](docs/ReferenceStrategy.md) - Opera/FreeDO reference hierarchy and differential procedure.
 - [`docs/ImplementationPlan.md`](docs/ImplementationPlan.md) - milestones, tasks, acceptance criteria, risks.

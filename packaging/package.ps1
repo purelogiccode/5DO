@@ -36,11 +36,22 @@ try {
         }
     }
 
-    $licensing = Join-Path $repoRoot 'docs/Licensing.md'
-    if (Test-Path -LiteralPath $licensing) {
-        $docsStaging = Join-Path $staging 'docs'
+    $docsStaging = Join-Path $staging 'docs'
+    foreach ($docName in @('Licensing.md', 'ReleaseLegalReview.md')) {
+        $docSource = Join-Path $repoRoot "docs/$docName"
+        if (Test-Path -LiteralPath $docSource) {
+            New-Item -ItemType Directory -Path $docsStaging -Force | Out-Null
+            Copy-Item -LiteralPath $docSource -Destination $docsStaging -Force
+        }
+    }
+
+    $releaseNotes = Get-ChildItem -LiteralPath (Join-Path $repoRoot 'docs') `
+        -Filter 'ReleaseNotes-*.md' -File -ErrorAction SilentlyContinue |
+        Sort-Object Name -Descending |
+        Select-Object -First 1
+    if ($releaseNotes) {
         New-Item -ItemType Directory -Path $docsStaging -Force | Out-Null
-        Copy-Item -LiteralPath $licensing -Destination $docsStaging -Force
+        Copy-Item -LiteralPath $releaseNotes.FullName -Destination $docsStaging -Force
     }
 
     if ($Rid -like 'linux-*') {

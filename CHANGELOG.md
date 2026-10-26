@@ -3,7 +3,10 @@
 All notable changes are recorded here. The project is pre-1.0; formats and behavior may
 still change.
 
-## [Unreleased] - 2026-10-26
+## [1.0.0-rc.1] - 2026-10-26
+
+Release candidate for the documented-compatibility v1.0 scope. Legal/attribution
+sign-off is pending; see [`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.md).
 
 ### Added
 
@@ -92,6 +95,11 @@ still change.
   builds on Windows.
 
 ### Changed
+
+- Adopted a documented-compatibility v1.0 release scope: supported platforms and
+  titles are validated and documented, while full-compatibility work (Road Rash race
+  completion, extra title scripts, Pi/arm64, installers, optional JIT) moved to the
+  post-1.0 backlog. See [`docs/ReleaseChecklist.md`](docs/ReleaseChecklist.md).
 
 - Windows ANGLE/GLES 3.0 is validated on the RTX 4070: 4K sharp-bilinear presents
   in 0.14 ms mean / 0.47 ms p99, 1080p in 0.13/0.40 ms, and HQx 4x is CPU-bound at

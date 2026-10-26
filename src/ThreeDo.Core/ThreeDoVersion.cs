@@ -11,6 +11,6 @@ public static class ThreeDoVersion
     /// <summary>The placeholder namespace prefix used until the final product name is chosen.</summary>
     public const string NamespacePrefix = "ThreeDo";
 
-    /// <summary>The current pre-release version.</summary>
-    public const string Version = "0.0.0";
+    /// <summary>The current release-candidate version.</summary>
+    public const string Version = "1.0.0-rc.1";
 }

@@ -10,9 +10,15 @@ capture matched the CPU `FrameAssembler` oracle pixel-for-pixel (`0xD6BD89C5`) o
 both WGL and ANGLE. **775 tests pass.** Do not redo the trim-safe JSON work, the
 trimmed CLI/frontend publishes, the frontend smoke test, the benchmark comparison,
 the portable archives, the swap-interval/GPU-probe work, or the ANGLE/GLES parity
-work. The remaining work is finishing a full Road Rash race, scripted Lemmings
-level play beyond the start, Alone inventory, GLES 3.1/Pi/DPI validation, Tier B
-timing, AOT audio/arm64/installers, and the legal/attribution review.
+work. The remaining **release** work is the legal/attribution review, a stability
+soak, release packaging/notes, and optional Linux/macOS launch validation.
+Full-race completion, extra title scripts, GLES 3.1/Pi/DPI, Tier B timing,
+arm64/installers, and the optional JIT are post-1.0. See
+[`ReleaseChecklist.md`](ReleaseChecklist.md).
+
+> **Release-scope update (2026-10-26):** v1.0 ships a documented compatibility set,
+> not full compatibility. Start with [`ReleaseChecklist.md`](ReleaseChecklist.md);
+> the gameplay work in sections 2-3 is post-1.0 backlog.
 
 Earlier passes added the presentation plumbing (GL/GLES capability reporting, CPU
 fallback/context-loss recovery, fullscreen, screenshots, About, Hi-Res, benchmark

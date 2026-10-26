@@ -57,6 +57,12 @@ A 3DO Interactive Multiplayer emulator with:
   - Gamepad input (SDL/GameController or platform HID).
 - The core, CLI headless mode, and tests must run with null audio/input backends and without requiring a GL context. The CPU frame assembler remains the fallback/accuracy oracle.
 
+**Release definition (adopted 2026-10-26).** v1.0 ships a **documented compatibility
+set**, not full compatibility. Supported platforms and titles are validated and listed
+in `Compatibility.md`/`KnownIssues.md`; unvalidated targets and broader game support are
+post-1.0. The release gate is in
+[`ReleaseChecklist.md`](ReleaseChecklist.md).
+
 ### 1.3 Success criteria
 
 **v0.1 - Boot milestone**
@@ -70,25 +76,25 @@ A 3DO Interactive Multiplayer emulator with:
 
 **v0.5 - Playable milestone**
 
-- [ ] Boots at least 10 real discs to gameplay (user-provided test set), including at least one CHD image. (twelve local discs boot and render; eight have gameplay/attract evidence, including Gex and Super Street Fighter II Turbo)
-- [x] Audio works for DSP-driven music/SFX. (non-silent 44.1 kHz stereo output on all five titles; mix/pitch comparison still pending)
+- [x] Boots at least 10 real discs to a rendered title/menu or gameplay state (user-provided test set), including at least one CHD image. Twelve local discs boot and render; five have scripted gameplay evidence. Full playthroughs are not a release gate.
+- [x] Audio works for DSP-driven music/SFX. (non-silent 44.1 kHz stereo output on all five titles; mix/pitch comparison remains post-1.0)
 - [x] NVRAM persists between sessions.
 - [x] Save states roundtrip deterministically.
 - [x] ISO, BIN, CUE+BIN, and CHD images produce identical sector streams for the same disc.
 - [x] OpenGL renderer supports accurate, sharp-bilinear, and CRT modes; integer scaling; fullscreen; screenshots. (accurate/nearest, sharp-bilinear, CRT scanlines/bloom, integer scaling, fullscreen, and GL/CPU screenshots are implemented)
-- [ ] 60 fps on a mid-range x64 desktop and a Raspberry Pi 4 class arm64 device at native resolution. (CPU-side headroom is measured; GPU/Pi validation remains)
-- [~] Windows/Linux/macOS x64 builds; arm64 builds produced and smoke-tested. (CI publishes six RIDs; only the win-x64 CLI has been smoke-tested)
+- [x] 60 fps on a mid-range x64 desktop at native resolution. Core frame time is 1.25-1.6 ms and Tier A 4K presentation is measured; Raspberry Pi 4/5 validation is post-1.0.
+- [x] Windows x64 build and package are smoke-tested. CI also produces Linux/macOS/arm64 publishes; validating those targets is post-1.0 unless they are claimed for a release.
 
 **v1.0 - Release milestone**
 
 - [x] Compatibility matrix with documented results.
-- [ ] Full Avalonia frontend (library, settings, input mapping, save states, screenshots, logs, about).
-- [ ] OpenGL renderer is the default on all desktop platforms, with CPU fallback and context-loss recovery.
-- [ ] 4K (3840x2160) 60 fps output on Tier A x64 hardware and 1080p60 on Raspberry Pi 4/5 class arm64, with no CPU-side per-pixel scaling. 4K *internal* CEL rendering is not a v1 goal. See [`Performance.md`](Performance.md).
+- [x] Full Avalonia frontend (library, settings, input mapping, save states, screenshots, logs, about). Feature-complete; optional ViewModel tests and polish are post-1.0.
+- [x] OpenGL renderer is the default with CPU fallback and context-loss recovery. Windows WGL/ANGLE is validated; Linux/macOS launch validation is post-1.0 unless claimed.
+- [x] 4K (3840x2160) 60 fps output on Tier A x64 hardware, with no CPU-side per-pixel scaling. Tier A is measured; 1080p60 on Raspberry Pi 4/5 is post-1.0. 4K *internal* CEL rendering is not a v1 goal. See [`Performance.md`](Performance.md).
 - [x] CLI with `run`, `info`, `bench`, `state`, and `selftest` commands.
-- [~] Reproducible self-contained packages for all six RIDs. (CI artifacts exist; only one package has been smoke-tested)
+- [x] Reproducible self-contained packages for the supported RIDs. Six-RID CI outputs and portable archives exist; [`ReleaseChecklist.md`](ReleaseChecklist.md) gates which RIDs are claimed and smoke-tested.
 - [ ] License/attribution review complete.
-- [ ] No known crash bugs in the supported test set.
+- [ ] No known crash bugs in the supported test set. (The release soak in [`ReleaseChecklist.md`](ReleaseChecklist.md) owns this gate.)
 
 ### 1.4 Non-goals (v1)
 
@@ -107,7 +113,7 @@ A 3DO Interactive Multiplayer emulator with:
 
 ## 2. Architecture summary
 
-The full architecture is in [`docs/Architecture.md`](docs/Architecture.md). The short version:
+The full architecture is in [`Architecture.md`](Architecture.md). The short version:
 
 ```text
 Frontends (Avalonia, CLI)
@@ -210,7 +216,7 @@ project/type layout is unchanged.
 | M11 | Compatibility + release | Real-game hardening, high-res, release | v1 checklist complete | 25+ dd |
 | M12 | Optional guest ARM JIT | Managed IL JIT behind `ICpuBackend` | Bit-identical state; benchmark win | 10-20 dd |
 
-**Total:** ~157 developer-days of focused work plus 30% contingency (~204 dd), excluding the optional M12 JIT. This is a multi-month project for one experienced developer; correctness and performance gates matter more than the estimate.
+**Total:** ~157 developer-days of focused work plus 30% contingency (~204 dd), excluding the optional M12 JIT. This is the **full-compatibility plan**. The adopted v1 release scope (2026-10-26) ships a documented compatibility set and defers the remaining M11 hardening, Tier B/Pi, installers, and the optional JIT to post-1.0; remaining release engineering is 5-10 developer-days plus legal review. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 ### 4a. Current position vs. the plan (2026-10-26)
 
@@ -233,7 +239,8 @@ evidence and fixed the Road Rash ~42k/~92k READ_ID-only wait with a CD media-acc
 pulse; the game now reaches `BUSTED`, race select, and a new race. The eighth pass
 fixed real-content GPU palette expansion, added xBR, gamepad backends, a log viewer,
 save-state thumbnails, and first-run/error UI. Counting the prototype work as
-partial credit:
+partial credit, the table below is the **original full-compatibility baseline**; the
+adopted release-scope estimate follows it.
 
 | Milestone | State | Done (dd) | Remaining (dd) |
 |---|---|---:|---:|
@@ -243,13 +250,21 @@ partial credit:
 | M9P | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch, 4K GPU probe; hot-path and Tier B/GPU gates | 6.5 | 3.5 |
 | M10 | Partial: CI + six-RID publish + trimmed CLI/frontend + portable archives; arm64, installers, perf report | 4.5 | 1.5 |
 | M11 | In progress: M11.0 done; gameplay, high-resolution, and release docs underway | 3 | 22+ |
-| **Baseline** | | **~124 / 157** | **~33 + 30% = ~43** |
+| **Baseline (full-compatibility plan)** | | **~124 / 157** | **~33 + 30% = ~43** |
 
-**Estimate: roughly three-quarters of the v1 effort is done.** One experienced
-developer needs about **9-11 focused weeks**; two developers can overlap UI, renderer,
-and packaging for roughly **5-7 weeks**, but real-game compatibility is serial and is
-the main uncertainty. If the CD/timing differential reveals a deeper issue, add 2-4
-weeks. The detailed rationale and ordered next steps are in [`Status.md`](Status.md).
+**Full-compatibility plan:** roughly three-quarters done; one experienced developer
+needs about **9-11 focused weeks**, two developers **5-7 weeks**. If the CD/timing
+differential reveals a deeper issue, add 2-4 weeks. That estimate includes 22+ days of
+game-specific compatibility hardening and the full platform matrix.
+
+**Adopted v1 release scope (2026-10-26):** v1.0 ships a **documented compatibility
+set**, not full compatibility. Supported platforms and titles are validated and listed
+in `Compatibility.md`/`KnownIssues.md`; full-race completion, scripts for the remaining
+titles, Pi/arm64, installers, and the optional JIT are post-1.0. Under this scope the
+remaining release engineering is **5-10 developer-days plus legal review** (1-3 weeks
+to a release candidate; 2-4 weeks if Linux/macOS and installers are included). The
+project is roughly **85-90% complete** against the release scope. The release gate is
+[`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 **Reference migration (2026-10-23).** New compatibility work uses
 `References/opera-libretro-master/libopera` as the primary behavioral reference; the
@@ -1334,6 +1349,11 @@ harness. See [`Performance.md`](Performance.md).
 
 **Goal:** real-game compatibility, high-res, filter polish, release.
 
+**Release scope (2026-10-26):** v1.0 ships the documented compatibility set. Full
+gameplay completion, additional input scripts, and deeper CD timing work are post-1.0
+backlog, not release gates; the release gate is
+[`ReleaseChecklist.md`](ReleaseChecklist.md).
+
 **Tasks**
 
 - [x] **M11.0 Adopt Opera/libopera as the primary behavioral reference.**
@@ -1351,9 +1371,9 @@ harness. See [`Performance.md`](Performance.md).
     Killing Time, Theme Park, Return Fire) boot, render, and save-state-roundtrip;
     Gex, Total Eclipse, and Super Street Fighter II Turbo show gameplay/attract
     scenes. See `TestCorpus.md` 1.7.
-  - Remaining: finish the Road Rash race, script Alone inventory, add input/gameplay
-    scripts for the seven new titles, and continue CD/CLIO/MADAM/ARM timing triage
-    with the Opera differential harness.
+  - Post-1.0 backlog: finish the Road Rash race, script Alone inventory, add
+    input/gameplay scripts for the seven new titles, and continue CD/CLIO/MADAM/ARM
+    timing triage with the Opera differential harness.
   - Add per-game fixes only with evidence.
 - [~] **M11.2 High-resolution mode.**
   - `RESSCALE=1` is implemented as the opt-in `--high-res` 640x480 path: four VRAM
@@ -1371,7 +1391,8 @@ harness. See [`Performance.md`](Performance.md).
   - Accurate/nearest, full sharp-bilinear, CRT scanlines/aperture/curvature/vignette/bloom, xBR-lv2, and HQx 2x/3x/4x are implemented.
   - Per-game filter overrides are stored in `AppSettings.FilterOverrides` and edited in the Settings dialog; the settings text warns that HQx 3x/4x are the most expensive modes.
   - Keep the accurate path pixel-identical to the CPU oracle.
-- [ ] **M11.4 CD timing/seek improvements.**
+- [-] **M11.4 CD timing/seek improvements.**
+  - Post-1.0 unless a supported title proves a timing defect on the release soak.
   - Use `libopera/opera_cdrom.c` as the behavioral reference for command/status,
     DIPIR, tagged status, chunks, subcode, and media access.
   - Port only the behavior the differential trace proves is wrong; keep transcript
@@ -1380,17 +1401,17 @@ harness. See [`Performance.md`](Performance.md).
   - Moved to v1/M6: `ChdDiscImage` via CHDSharp, including parent/child and read-ahead.
 - [~] **M11.6 Documentation/release.**
   - User guide, compatibility list, known issues, and changelog are implemented in `docs/UserGuide.md`, `docs/Compatibility.md`, `docs/KnownIssues.md`, and `CHANGELOG.md`.
-  - License/attribution review and final release notes remain.
-- [ ] **M11.7 Post-release backlog.**
+  - License/attribution review, the stability soak, and final release notes remain; work through [`ReleaseChecklist.md`](ReleaseChecklist.md).
+- [-] **M11.7 Post-release backlog.**
   - Netplay, rewind, debugger UI, CD-DA, PAL, additional peripherals.
-- [ ] **M11.8 Optional GPU CEL compositing experiment.**
+- [-] **M11.8 Optional GPU CEL compositing experiment.**
   - Evaluate RTT-based or compute-shader CEL rendering against the software path.
   - Compute shaders require GL 4.3+ or Vulkan/Metal; they are outside the GL 3.3/GLES 3.1 v1 baseline.
   - Keep software CEL as the accuracy path; ship only if parity and performance are proven. This is relevant to 4K internal rendering, not the 4K output target.
 
 **Acceptance**
 
-- [ ] v1.0 checklist in §1.3 complete.
+- [ ] [`ReleaseChecklist.md`](ReleaseChecklist.md) complete.
 - [ ] No known crash bugs in the supported test set.
 - [ ] Release artifacts and docs published.
 
@@ -1479,7 +1500,7 @@ was completed during M0-M2. The current next actions are in §12.
 - Fuzz tests for CPU/CD/CEL/state parsers.
 - Benchmarks for CPU/CEL/DSP/frame loop.
 
-See [`docs/TestStrategy.md`](docs/TestStrategy.md).
+See [`TestStrategy.md`](TestStrategy.md).
 
 ### 7.2 Documentation
 
@@ -1613,6 +1634,12 @@ These need a decision before the relevant milestone; the plan assumes the defaul
 | **Total** | **~204 dd** | |
 | M12 optional ARM IL JIT | 10-20 dd | M2, only if profiling demands |
 
+The 25+ day M11 line is the full-compatibility plan. The adopted v1 scope replaces
+most of it with the release gate (soak, compatibility docs, legal review) and moves
+the remaining gameplay work, Tier B/Pi, installers, and the JIT to post-1.0. Remaining
+release engineering is 5-10 developer-days plus legal review; see
+[`ReleaseChecklist.md`](ReleaseChecklist.md).
+
 Suggested parallelization with two developers:
 
 - Dev A: CPU, memory, CLIO, machine, save states.
@@ -1635,12 +1662,12 @@ Suggested parallelization with two developers:
 8. ~~M7 input/NVRAM/game database, M8 save states/CLI, M9 basic shell, M9R core OpenGL presenter, and M10 CI/CLI/frontend publish.~~ Done as a prototype; next are M9P performance/pacing, the remaining M9 pages/audio/settings UI, M9R filters/GPU tests, M10 arm64/installers, and M11 hardening. CLI and frontend trimming are complete (M10.3a/M10.3b).
 9. ~~Run the real-content smoke tests and record results in [`Compatibility.md`](Compatibility.md).~~ Done; per-title gameplay, save-state, screenshot, and WAV evidence is being completed.
 10. ~~M9P.1/M9P.2: benchmark baseline, dedicated core thread, and frame pacer.~~ Done; continue M9P.3-M9P.9 (GLES 3.1/Pi validation, CHD prefetch, p99/GPU gates).
-11. **Finish the scripted gameplay loops.** Road Rash's ~92,000/40,000 stops, Space Ace's interactive path, and Alone's movement/inventory sequence; record the exact scripts and frame numbers in [`TestCorpus.md`](TestCorpus.md).
-12. **Capture per-title evidence.** Save-state roundtrips, screenshots, and 30-60 s WAVs; compare audio mix/cadence with Opera.
-13. **Prove the 4K60 target.** Tier A 4K render cost is measured with `--gl-probe` (WGL GPU p99 0.089 ms, present p99 0.208 ms; ANGLE/GLES 3.0 present p99 0.47 ms; zero renderer allocations). Remaining: Raspberry Pi/GLES 3.1 validation, Tier B timing, and 100/150/200% DPI.
-14. **Finish M9/M9R/M9P polish.** Vsync/FPS overlay tuning, Tier B prefetch validation, and ViewModel tests. The xBR filter, HQx 2x/3x/4x, CRT bloom, per-game filter overrides, settings/audio/gamepad pages, log viewer, thumbnails, and first-run UI are complete.
-15. **Finish M10/M11 release work.** AOT audio validation, arm64 validation, installers/signing plan, performance report, compatibility matrix, and final release notes. The CLI and frontend AOT builds are validated, and both executables are trimmed; see [`Trimming.md`](Trimming.md). The user guide, known-issues list, and changelog are complete.
-16. **Schedule the legal/attribution review (M0.8)** before any public build; add Opera to the FreeDO/4DO attribution and license review.
+11. **Decide and record the v1 release scope.** Platforms, supported titles, version, and distribution model; use [`ReleaseChecklist.md`](ReleaseChecklist.md).
+12. **Run the release soak.** Ten-minute runs on the five showcase titles and the seven boot-validated titles; record crashes, hangs, and hashes. Update [`KnownIssues.md`](KnownIssues.md) instead of chasing full compatibility.
+13. **Refresh the release docs.** Per-title status in [`Compatibility.md`](Compatibility.md), known issues, user guide, release notes, and changelog.
+14. **Cut the release.** Version tag, checksums, portable archives for the supported RIDs, and a clean build/test/format run.
+15. **Complete the legal/attribution review (M0.8/M11.6)** before any public build; add Opera to the FreeDO/4DO attribution and license review. This is the hard release blocker.
+16. **Post-1.0 backlog, not release gates:** Road Rash full race, Alone inventory, gameplay scripts for the other seven titles, CD/CLIO/MADAM/ARM timing triage, Raspberry Pi/GLES 3.1, arm64 hardware, DPI, installers/signing, AOT audio, ViewModel tests, hot-path optimization, and the optional M12 JIT.
 
 ---
 
@@ -1702,3 +1729,4 @@ Suggested parallelization with two developers:
 | 2026-10-26 | M9P.6, M9R.9, M9P.10, M10.5 | ANGLE/GLES backend validation and CPU/GPU parity | Added the frontend `--gl-backend auto|wgl|angle|software` option (with the `--gl-probe-backend` alias) and wired it into `Win32PlatformOptions.RenderingMode`. Added `--gl-probe-capture` plus an automatic 1:1 Accurate CPU/GPU parity check to the GPU probe, and recorded `requestedBackend`, capture path, and parity in the JSON. Windows 11/RTX 4070 ANGLE (OpenGL ES 3.0, GLSL ES 300) ran every filter; 4K sharp-bilinear present p99 0.47 ms with 0 renderer allocations, and a 320x240 Accurate capture matched the CPU `FrameAssembler` oracle pixel-for-pixel (`0xD6BD89C5`) on both WGL and ANGLE. Added an opt-in GPU integration test (`THREEDO_GPU_TESTS=1`) that runs the real probe for both backends and a 4K pass; it found and fixed a synchronous-dispose crash in the capture path. Raspberry Pi/GLES 3.1 and DPI validation remain. 775 tests pass |
 | 2026-10-26 | M10.3a, M10.3b, M10.2 | NativeAOT CLI/frontend audit and CI jobs | Added the opt-in `ThreeDoNativeAot` publish property and Windows CI jobs for the win-x64 CLI and frontend. The CLI single file is 9.97 MB and passes `--version`, `selftest`, `bench`, `info`, `fs list`, and a 3,000-frame boot matching the golden `PC 0x0012B3C8` / hash `0x932C7722`. The frontend publishes as a 28.8 MB single-file native executable plus native assets and passes `--smoke-test` plus the WGL/ANGLE 320x240 parity probes. Silk.NET.Core's loader warnings remain and AOT audio is not yet validated; the default six-RID matrix remains trimmed IL. 775 tests pass |
 | 2026-10-26 | M9P.5, M9R.9 | Physical-pixel sizing tests | Extracted `PixelSize.Compute` and added tests for 100/125/150/200% scaling, fractional logical bounds, zero/negative sizes, and non-finite inputs. The on-device DPI/live-resize validation remains. 775 tests pass |
+| 2026-10-26 | Release | 1.0.0-rc.1 release candidate | Adopted the documented-compatibility release scope and added `ReleaseChecklist.md`/`ReleaseLegalReview.md`. Bumped the version to `1.0.0-rc.1`; 775/775 tests, format, and the benchmark gate pass. Six fresh 36,000-frame soaks (five local CHDs plus the Theme Park ISO) and seven archived-state 36,000-frame soaks all exit 0; showcase save/load roundtrips are deterministic; WGL and ANGLE/GLES Accurate parity is 0 different pixels. Trimmed win-x64 CLI/frontend publishes, smoke tests, portable archives, and checksums are recorded; the 3,000-frame golden hashes are unchanged. Legal/distribution sign-off remains the only release blocker. |

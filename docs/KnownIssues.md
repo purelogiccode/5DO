@@ -1,7 +1,11 @@
 # Known Issues
 
-**Snapshot:** 2026-10-25. This list covers the supported local corpus and the current
+**Snapshot:** 2026-10-26. This list covers the supported local corpus and the current
 prototype state. It is not a compatibility guarantee.
+
+**Release scope:** v1.0 ships with these known issues documented; full-race completion,
+extra title scripts, Pi/arm64 validation, installers, and the optional JIT are
+post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 ## Real-game status
 
@@ -11,7 +15,7 @@ prototype state. It is not a compatibility guarantee.
 | Lemmings | Boots, title/passcode, pure D-pad Fun 4 passcode, gameplay, save/load, 640x480 title | The passcode is typed from a passcode-screen state; the title-to-passcode transition still uses the existing `Down`/`A` script |
 | Road Rash | Boots, 3D race renders, `BUSTED`/race-select/new-race flow works, autopilot cycles race -> wreck -> menu -> new race to 100k, save/load roundtrip | A full 5.5-mile race is not finished; the autopilot still wrecks or ends on a sidewalk. The old ~42k/~92k READ_ID wait is fixed by the CD media-access pulse |
 | Alone in the Dark | Boots, in-game room, upright character, Begin/Resume menu, intro, scripted room movement with save/load roundtrip | The intro needs A input; inventory interaction and a longer exploration sequence are not scripted |
-| Space Ace | Boots, animated demo, audio, interactive start via X->menu, A->play, save/load roundtrip | Longer scene/decision validation is still needed |
+| Space Ace | Boots, animated demo, audio, interactive start via X->menu, A->play, save/load roundtrip | A long no-input continuation after the 15,000-frame interactive state reaches a black wait screen; longer input-driven scene/decision validation is still needed |
 
 ## Renderer
 

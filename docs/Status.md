@@ -1,6 +1,9 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-26, fifteenth pass (see `git log` for the exact commit).
+**Snapshot:** 2026-10-26, 1.0.0-rc.1 release preparation after the fifteenth code
+pass (see `git log` for the exact commit).
+**Release definition:** documented compatibility, not full compatibility; see
+[`ReleaseChecklist.md`](ReleaseChecklist.md).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
 **Reference:** `References/opera-libretro-master/libopera` is now the primary
 behavioral reference for new compatibility work; see
@@ -9,7 +12,8 @@ behavioral reference for new compatibility work; see
 This is the short, current answer to "where are we?" The detailed task list is in
 [`ImplementationPlan.md`](ImplementationPlan.md), the performance contract in
 [`Performance.md`](Performance.md), the local game corpus in
-[`TestCorpus.md`](TestCorpus.md), and the next-session plan in
+[`TestCorpus.md`](TestCorpus.md), the release gate in
+[`ReleaseChecklist.md`](ReleaseChecklist.md), and the next-session plan in
 [`NextSession.md`](NextSession.md).
 
 ---
@@ -200,7 +204,7 @@ reports `autopilotMenuAdvance` while it pulses A through the post-race flow. The
 five 3,000-frame hashes are unchanged. From the 60k state the autopilot now starts
 a new race at 80k and cycles race -> wreck -> menu -> new race to 100k; the
 remaining Road Rash work is finishing a full race without wrecking, not the CD
-wait.
+wait. That is post-1.0 backlog; it is not a v1 release gate.
 
 ---
 
@@ -255,116 +259,110 @@ far below the 16.67 ms budget.
   internal rendering.
 
 CPU p99 and per-stage allocations are measured, and Tier A 4K GPU/present p99 is now
-recorded. The next performance work is Raspberry Pi/GLES 3.1 and DPI validation,
-Tier B timing, and the CI relative gate. See [`Performance.md`](Performance.md).
+recorded. Remaining performance work is post-1.0: Raspberry Pi/GLES 3.1 and DPI
+validation, Tier B timing, and the CI relative gate. See
+[`Performance.md`](Performance.md).
 
 ---
 
-## 4. How far from "full development"?
+## 4. How far from a release?
 
-Using the 157 developer-day baseline in `ImplementationPlan.md` and counting the
-prototype work as partial credit:
+The original 157 developer-day plan assumed full compatibility hardening and a full
+platform matrix. **v1.0 adopts a documented-compatibility release scope instead.**
+Ship the platforms and titles that are validated, publish the per-title matrix and
+known issues, and move the rest to the post-1.0 backlog. Most emulators release this
+way; full compatibility is not a v1 requirement.
 
-| Milestone | State | Done (dd) | Remaining (dd) |
-|---|---|---:|---:|
-| M0-M8 core, CPU, boot, MADAM, DSP, CD, input, save states | Functionally complete; M0.8 legal review and minor M8 follow-ups are non-blocking | 90 | 0 |
-| M9 Avalonia frontend | Partial: shell, library, video, input, fullscreen, About, Hi-Res, settings/audio/gamepad/logs/first-run/thumbnails; polish and ViewModel tests | 13 | 3 |
-| M9R OpenGL presenter | Partial: two-stage, sharp-bilinear/CRT/xBR/HQx 2x/3x/4x/bloom, CPU fallback, screenshots, swap interval, Tier A 4K timing, WGL/ANGLE parity; GLES 3.1/Pi and GPU CI remain | 10 | 0 |
-| M9P performance/pacing | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch, GPU timer, 4K probe; hot-path, Tier B/GPU gates remain | 6.5 | 3.5 |
-| M10 packaging/validation | Partial: CI + six-RID publish + trimmed CLI/frontend + portable archives; arm64, installers, perf report remain | 4.5 | 1.5 |
-| M11 compatibility/release | In progress: M11.0 done; gameplay, high-resolution, and release docs underway | 3 | 22+ |
-| **Baseline total** | | **~124 / 157** | **~33 + 30% = ~43** |
+| Release workstream | State | Remaining |
+|---|---|---:|
+| M0-M8 core, CPU, boot, MADAM, DSP, CD, input, save states | Functionally complete | 0 |
+| M9 Avalonia frontend | Feature-complete for the tested workflow | 0 (optional polish is post-1.0) |
+| M9R OpenGL presenter | Windows WGL + ANGLE validated; CPU fallback, filters, parity, 4K probe | 0 on Windows; 1-2 dd if Linux/macOS are claimed |
+| M9P performance/pacing | Tier A measured, zero-allocation steady state, CI gate | 0 (Tier B/Pi and hot-path are post-1.0) |
+| M10 packaging | Six-RID CI, trimmed/AOT builds, portable archives | 0-1 dd for release packaging |
+| M11 compatibility | 12 titles boot/render; five have scripted gameplay evidence; matrix and known issues documented | 2-3 dd soak on the supported set |
+| M11 release/legal | Attribution and distribution model not decided | Legal review + ~1 dd prep |
 
-**Estimate: roughly three-quarters of the v1 effort is done.** For one experienced
-developer that is about **9-11 focused weeks**; two developers can overlap the UI,
-renderer, and packaging work for roughly **5-7 weeks**, but real-game compatibility
-is serial and is the main uncertainty.
+**Estimate: 5-10 developer-days plus the legal review.** That is **1-3 weeks** to a
+v1.0 release candidate with Windows x64 as the validated target and portable archives.
+Adding validated Linux/macOS builds and installers makes it **2-4 weeks**. Against
+this release scope the project is roughly **85-90% done**; the earlier "three-quarters"
+figure measured the original full-compatibility plan (124/157 dd, ~43 dd remaining).
 
-The estimate assumes no deep CD/timing rewrite. If the differential reveals one,
-add **2-4 weeks**. If the target is "all five corpus games playable" rather than
-"the v1 feature set is complete", add another **2-3 weeks** for game-specific fixes.
+**Release-candidate decisions (2026-10-26):** Windows x64 is the validated target;
+the candidate version is `1.0.0-rc.1`; installers, signing, and notarization are
+deferred; the compatibility set is the 12 documented titles, with five showcase
+titles carrying scripted gameplay evidence.
+
+The only hard blocker is the distribution/attribution decision: FreeDO/4DO carry a
+modified LGPL with restrictions, including a prohibition on commercial use without
+owner approval. See [`Licensing.md`](Licensing.md),
+[`ReleaseLegalReview.md`](ReleaseLegalReview.md), and
+[`../THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md).
+
+Full-compatibility work is **post-1.0**, not a release gate: finishing Road Rash's
+5.5-mile race, scripting Alone's inventory, adding gameplay scripts for the other
+seven titles, and further CD/CLIO/MADAM/ARM timing triage.
 
 ---
 
-## 5. What next
+## 5. Release path
 
-### P0 - complete the gameplay loops
+### P0 - v1.0 release blockers
 
-1. **Complete a race/level in each title.** The renderer and input path are now
-   validated: Road Rash's race renders correctly and its controls are mapped (B
-   accelerate, A brake, D-pad steer, `--autopilot road` v10 reaches 91,000 live
-   frames from the 80k/83k states), Wolfenstein starts a fresh game and supports
-   walk/turn/fire, Alone's Begin/Resume menu and intro are reachable, Lemmings
-   reaches its passcode screen and now types the full Fun 4 code with the D-pad
-   (`docs/scripts/lem-fun4-dpad.txt`), and Space Ace starts and plays its
-   interactive scene (X menu, A play).
-   The old ~42k/~92k stops are fixed by the CD media-access pulse; those screens
-   now advance to `BUSTED`, race select, and a new race, and the autopilot cycles
-   race/wreck/menu to 100k. The remaining Road Rash work is finishing a full race
-   without wrecking, not the CD wait. Alone now has a scripted room movement
-   loop with a save/load roundtrip; an Alone inventory sequence remains. Record
-   the exact scripts and frame numbers in [`TestCorpus.md`](TestCorpus.md).
-2. **Save states and screenshots in-game.** Wolfenstein already roundtrips a live
-   gameplay state (saved hash `0xC9989182`, two 120-frame continuations end at
-   `0x370158AC`). Repeat for each title and store screenshots at known frames.
-3. **Audio in gameplay.** The 600-frame captures are non-silent and 44.1 kHz stereo;
-   Road Rash slightly clips (191 samples in 10 s) and both titles run at ~737
-   samples/frame. Compare the mix and cadence with Opera/hardware before changing the
-   DSP clock.
+1. **Decide the release scope.** Pick the supported platforms and titles and record
+   them in [`ReleaseChecklist.md`](ReleaseChecklist.md). Recommended: Windows x64 as
+   the validated target; publish Linux/macOS x64 only after the launch/render smoke
+   test passes; defer arm64 and Raspberry Pi to 1.1.
+2. **Complete the legal/attribution review.** Decide the distribution model, keep the
+   FreeDO/4DO/Opera attribution current, and confirm no BIOS/disc content is packaged.
+3. **Run the stability soak.** Ten-minute runs on the five showcase titles
+   (Wolfenstein, Lemmings, Road Rash, Alone, Space Ace) and the seven boot-validated
+   titles; no new crashes or regressions. Document known hang points rather than
+   fixing every game.
+4. **Publish the honest compatibility matrix.** Use Playable / Boots-menus / Known
+   issues columns in [`Compatibility.md`](Compatibility.md), refresh
+   [`KnownIssues.md`](KnownIssues.md), and update the user guide.
+5. **Cut the release.** Bump the version, update `CHANGELOG.md`, write release notes,
+   produce checksums and portable archives for the supported RIDs, and run the clean
+   build/test/format checks. Work through [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
-### P1 - prove the 4K60 target
+### P1 - post-1.0 backlog (not release-blocking)
 
-4. **Measure GPU time and p99** at 1080p/1440p/4K with nearest and sharp-bilinear;
-   add allocation assertions around the steady-state frame. Tier A 4K is measured
-   (`--gl-probe`: GPU p99 0.089 ms, present p99 0.208 ms, 0 renderer allocations);
-   Pi 5 is likely and Pi 4 is realistically 1080p60 until measured.
-5. **Validate the backend matrix** on real hardware: WGL desktop GL, ANGLE GLES,
-   Raspberry Pi 4/5 GLES 3.1, and 100/150/200% DPI. WGL and Windows ANGLE/GLES 3.0
-   are validated, including pixel parity; Pi and DPI are not proven on device.
-6. **Validate CHD prefetch on Tier B.** `PrefetchingDiscSource` is implemented and
-   opt-in via `--prefetch`; x64 CHD/ISO p99 is recorded, but Pi 4/5 timing and the
-   default policy remain.
-7. **Validate high-resolution mode.** The 640x480 renderer works for Lemmings' title.
-   The passcode screen is a 320-wide UI scaled 2x; its five visible keyboard columns
-   are the game's own window rather than a framebuffer crop. The remaining question
-   is whether any title uses a true 640x240 non-interlaced mode that should not be
-   line-doubled before enabling high-res by default for that title.
-
-### P2 - finish v1
-
-8. **M10 packaging:** AOT audio validation, arm64 validation, installers/signing
-   plan, and the final performance report. The CLI and frontend AOT builds are
-   validated; CLI and frontend trimming are complete; see
-   [`Trimming.md`](Trimming.md).
-9. **Filter/UI polish:** FPS overlay tuning and ViewModel tests. The platform swap
-   interval is wired; the Avalonia compositor's independent pacing remains a host
-   limitation.
-   xBR, HQx 2x/3x/4x, CRT bloom, per-game filter overrides, the settings, audio,
-   gamepad, logs, first-run, and thumbnail pages are complete.
-10. **Legal/attribution review** before any public build (M0.8); add Opera to the
-    FreeDO/4DO attribution and license review.
+6. **Gameplay depth:** finish a full Road Rash race, script Alone's inventory and a
+   longer exploration sequence, and add input scripts for Gex, Need for Speed, Super
+   Street Fighter II Turbo, Total Eclipse, Killing Time, Theme Park, and Return Fire.
+7. **Platforms:** Raspberry Pi 4/5 GLES 3.1, arm64 builds on real hardware,
+   100/150/200% DPI validation, and Linux/macOS OpenGL launch validation if not
+   claimed for v1.
+8. **Performance:** Tier B 1080p60 numbers, 3D CEL frame timing, hot-path
+   optimization, and the same-machine relative benchmark gate on stable CI hardware.
+9. **Packaging polish:** MSIX/dmg/AppImage installers, signing/notarization,
+   Windows/macOS file associations, and AOT audio validation.
+10. **Optional M12 guest ARM JIT:** profile first; not needed for v1.
 
 ---
 
 ## 6. Next session
 
-The next session is a focused gameplay-validation session, not a UI or performance
-pass. The fifteenth pass completed the Windows ANGLE/GLES backend validation and
-CPU/GPU parity work; start with [`NextSession.md`](NextSession.md):
+The next session is **release prep**, not a compatibility pass. The fifteenth code pass
+completed the Windows ANGLE/GLES backend validation and CPU/GPU parity work; start with
+[`ReleaseChecklist.md`](ReleaseChecklist.md):
 
-1. Use `--input-script` to start and play each title: Lemmings level (the passcode
-   path is mapped; type a valid 10-letter code), Wolfenstein movement/fire, Road
-   Rash race (B accelerates; improve `--autopilot road`), Space Ace interactive
-   demo, Alone movement.
-2. Save/load at a gameplay frame and verify the frame hash/PC roundtrip.
-3. Capture WAV during gameplay and check the audio mix.
-4. Record the exact scripts and results in [`TestCorpus.md`](TestCorpus.md) and
-   [`Compatibility.md`](Compatibility.md).
+1. Decide and record the v1 platforms, supported titles, version, and distribution
+   model.
+2. Run the 10-minute soak on the supported set and record crashes, hangs, and hashes.
+3. Refresh [`Compatibility.md`](Compatibility.md) and
+   [`KnownIssues.md`](KnownIssues.md) with honest per-title statuses.
+4. Cut the release: version, changelog, release notes, archives, checksums. Run the
+   legal/attribution review in parallel because it is the hard blocker.
 
 Do not re-enable the null audio-sink short-circuit, do not change the XBUS DMA byte
 order (the raw `IRam` order is correct), do not port `opera_cdrom.c` wholesale, and do
-not touch the UI or 4K tuning in that session. Do not redo the trimmed CLI or
-source-generated JSON work; see [`Trimming.md`](Trimming.md).
+not redo the trimmed CLI/frontend or source-generated JSON work; see
+[`Trimming.md`](Trimming.md). Do not treat full-race completion, scripts for the other
+seven titles, Pi/arm64 validation, or installers as v1 release gates; they are
+post-1.0 backlog.
 
 ---
 

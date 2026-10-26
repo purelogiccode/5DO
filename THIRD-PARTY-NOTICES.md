@@ -20,7 +20,9 @@ This file records the projects and licenses that influence or ship with 3DOEmula
 ### Opera (opera-libretro)
 
 - Source: `References/opera-libretro-master`
-- Used as a secondary reference for structure, comments, and hardware behavior. Primary behavior remains FreeDO/4DO.
+- Used as the primary behavioral reference for new compatibility work. The C# port
+  remains FreeDO/4DO-based; Opera is used to trace structure, comments, and hardware
+  behavior for fixes added after the initial port.
 
 ## Shader algorithms
 
@@ -67,6 +69,14 @@ This file records the projects and licenses that influence or ship with 3DOEmula
 | CHDSharp 1.5.2 | CHD disc images (v1) | MIT + LGPL-2.1 component; pure C#, no native dependency. Verify the package LICENSE before release. |
 | VideoGameFileSystemParser 1.4.0 | 3DO Opera FS listing/extraction in `3do fs` | MIT; depends on CHDSharp. Written by the 3DOEmulator author. |
 | 4DO game database | Game IDs and fix flags | Derived with attribution; verify |
+
+## Project license
+
+The project's own distribution license is not yet finalized because the FreeDO/4DO
+terms are restrictive and the distribution model is still under review. Until the
+owner/legal sign-off is recorded in [`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.md),
+treat release-candidate builds as **non-commercial, source-available** builds and keep
+the FreeDO/4DO/Opera attribution intact.
 
 ## Assets and content
 
