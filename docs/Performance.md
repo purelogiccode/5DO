@@ -290,6 +290,15 @@ scene, not a 4K measurement; it validates that the timing path works and that th
 presenter is far below the 2 ms CPU budget at this size. The 4K and GLES timer paths
 remain open.
 
+**HQx 2x CPU cost (2026-10-26).** The opt-in HQx filter runs on the CPU at native
+resolution before the final scale. On the x64 development machine, 300 iterations of
+a 320x240 source took **~2.3 ms/frame** for flat/checkerboard content and **~12.4
+ms/frame** for random-noise worst-case content (which exercises most of the 256
+patterns). Real pixel art is expected to stay near the flat/checker figure, but HQx
+is still opt-in and should be measured per title before enabling it on Tier B.
+The 640x480 high-res source measured ~49.7 ms/frame for random noise in the same
+microbenchmark; HQx is not recommended with `--high-res` on slow CPUs.
+
 The opt-in prefetch cache (`--prefetch`) produced identical Lemmings state/frame
 hash in a 300-frame run. On the x64 development machine it increased short-run p99
 and allocations because the storage path is already fast; it is intended for slow
