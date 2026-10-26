@@ -12,7 +12,7 @@ trimmed CLI/frontend publishes, the frontend smoke test, the benchmark compariso
 the portable archives, the swap-interval/GPU-probe work, or the ANGLE/GLES parity
 work. The remaining work is finishing a full Road Rash race, scripted Lemmings
 level play beyond the start, Alone inventory, GLES 3.1/Pi/DPI validation, Tier B
-timing, single-file frontend AOT/arm64/installers, and the legal/attribution review.
+timing, AOT audio/arm64/installers, and the legal/attribution review.
 
 Earlier passes added the presentation plumbing (GL/GLES capability reporting, CPU
 fallback/context-loss recovery, fullscreen, screenshots, About, Hi-Res, benchmark
@@ -560,12 +560,11 @@ missing and corrected the Road Rash diagnosis.
   opt-in `-p:ThreeDoNativeAot=true` property. The win-x64 single file is 9.97 MB
   (trimmed IL is 26.3 MB) and passes `--version`, `selftest`, `bench`, `info`,
   `fs list` on Lemmings (482 files), and a 3,000-frame boot matching the golden
-  `PC 0x0012B3C8` / hash `0x932C7722`. The frontend publishes in a folder layout
-  (27.5 MB native executable) and passes `--smoke-test` plus the WGL 320x240 parity
-  probe. Single-file frontend AOT is blocked by Silk.NET.Core's
-  `Assembly.Location`/`DependencyContext` loader (`IL3000`/`IL3002`). CI publishes
-  and smoke-tests both AOT builds on Windows. The default six-RID matrix remains
-  trimmed IL.
+  `PC 0x0012B3C8` / hash `0x932C7722`. The frontend publishes as a 28.8 MB
+  single-file native executable plus native Skia/HarfBuzz/ANGLE assets and passes
+  `--smoke-test` plus the WGL and ANGLE 320x240 parity probes. Silk.NET.Core loader
+  warnings remain and AOT audio is not yet validated. CI publishes and smoke-tests
+  both AOT builds on Windows. The default six-RID matrix remains trimmed IL.
 - **Tests.** 761 tests pass. New tests cover backend aliases/mode ordering, probe
   capture-path parsing, and the opt-in GPU integration path. The existing JSON
   contract test now includes the requested backend and parity fields.

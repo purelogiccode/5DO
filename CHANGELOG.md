@@ -85,10 +85,11 @@ still change.
   capture callback.
 - Opt-in NativeAOT publishes (`-p:ThreeDoNativeAot=true`): the win-x64 CLI single
   file is 9.97 MB and passes the CLI smoke suite, `info`, `fs list`, and a 3,000-frame
-  Lemmings boot matching the golden hash. The frontend publishes in a folder layout
-  (27.5 MB native executable) and passes `--smoke-test` plus the WGL parity probe;
-  single-file frontend AOT is blocked by Silk.NET.Core's native-asset loader. CI
-  publishes and smoke-tests both AOT builds on Windows.
+  Lemmings boot matching the golden hash. The frontend publishes as a 28.8 MB
+  single-file native executable plus native Skia/HarfBuzz/ANGLE assets and passes
+  `--smoke-test` plus the WGL and ANGLE parity probes. Silk.NET.Core loader warnings
+  remain and AOT audio is not yet validated. CI publishes and smoke-tests both AOT
+  builds on Windows.
 
 ### Changed
 

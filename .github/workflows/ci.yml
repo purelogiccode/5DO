@@ -127,7 +127,7 @@ jobs:
           if-no-files-found: error
 
   aot-frontend:
-    name: NativeAOT frontend (win-x64 folder)
+    name: NativeAOT frontend (win-x64)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4

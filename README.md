@@ -98,7 +98,7 @@ added; save-state loads restore the VDL picture immediately.
 Remaining major work: finish a full Road Rash race without wrecking; script an
 Alone inventory sequence; validate GLES 3.1/Pi/DPI and Tier B timing (Tier A 4K is
 measured for WGL and ANGLE); validate Tier B prefetch; UI polish and a relative
-benchmark baseline; single-file frontend AOT/arm64/installers; and the legal/attribution
+benchmark baseline; AOT audio/arm64/installers; and the legal/attribution
 review. Per-title
 save-state, PNG, and WAV evidence is recorded
 in [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. See
@@ -250,9 +250,10 @@ Both the CLI and the Avalonia frontend publish trimmed by default
 use source-generated metadata, the frontend has no reflection-based view locator, and
 CI runs a trimmed-frontend startup smoke test. The CLI also has an opt-in NativeAOT
 publish (`-p:ThreeDoNativeAot=true`): the win-x64 AOT single file is 9.97 MB and CI
-runs the CLI smoke commands against it. The frontend has an opt-in NativeAOT folder
-publish (27.5 MB executable) that passes the smoke test and the WGL parity probe;
-single-file frontend AOT is blocked by Silk.NET.Core's native-asset loader. See
+runs the CLI smoke commands against it. The frontend has an opt-in NativeAOT
+single-file publish (28.8 MB executable plus native Skia/HarfBuzz/ANGLE assets) that
+passes the smoke test and the WGL/ANGLE parity probes; Silk.NET loader warnings remain
+and AOT audio is not yet validated. See
 [`docs/Trimming.md`](docs/Trimming.md) for the audit and the remaining AOT work.
 
 CI also packages each published CLI/frontend folder as a portable archive:

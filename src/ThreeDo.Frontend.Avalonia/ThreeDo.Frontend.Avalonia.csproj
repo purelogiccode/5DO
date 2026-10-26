@@ -9,16 +9,17 @@
     <ApplicationIcon>Assets\avalonia-logo.ico</ApplicationIcon>
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>full</TrimMode>
-    <!-- Opt-in NativeAOT folder publish: -p:ThreeDoNativeAot=true.
-         Single-file AOT is blocked by Silk.NET.Core's native-asset loader
-         (Assembly.Location/CodeBase and DependencyContext), so AOT uses the
-         folder publish layout. The default six-RID publish remains trimmed IL. -->
+    <!-- Opt-in NativeAOT publish: -p:ThreeDoNativeAot=true.
+         Single-file AOT is validated; Silk.NET.Core's native-asset loader still
+         uses Assembly.Location/CodeBase and DependencyContext, so the AOT analyzer
+         warnings are kept visible but non-fatal. The default six-RID publish
+         remains trimmed IL. -->
     <PublishAot Condition="'$(ThreeDoNativeAot)' == 'true'">true</PublishAot>
-    <PublishSingleFile Condition="'$(ThreeDoNativeAot)' == 'true'">false</PublishSingleFile>
-    <!-- Silk.NET.Core's native-asset loader still uses Assembly.Location and
-         DependencyContext, which the AOT analyzer flags as single-file hazards.
-         Folder AOT is validated (smoke test and WGL probe); keep the warnings
-         visible in the publish log without failing the opt-in build. -->
+    <PublishSingleFile Condition="'$(ThreeDoNativeAot)' == 'true'">true</PublishSingleFile>
+    <!-- Silk.NET.Core's native-asset loader flags IL3000/IL3002 for single-file.
+         The AOT GL/WGL/ANGLE and smoke paths are validated; keep the warnings
+         visible without failing the opt-in build. Audio under single-file AOT is
+         not yet validated. -->
     <IlcTreatWarningsAsErrors Condition="'$(ThreeDoNativeAot)' == 'true'">false</IlcTreatWarningsAsErrors>
   </PropertyGroup>
 

@@ -9,7 +9,7 @@ emulation feature.
 | Component | Trimming | NativeAOT |
 |---|---|---|
 | `ThreeDo.Cli` | **Enabled** (`PublishTrimmed=true`, `TrimMode=full`) | **Opt-in win-x64 audit passed** (`-p:ThreeDoNativeAot=true`) |
-| `ThreeDo.Frontend.Avalonia` | **Enabled** (`PublishTrimmed=true`, `TrimMode=full`) | **Opt-in win-x64 folder audit passed** (`-p:ThreeDoNativeAot=true`); single-file AOT blocked |
+| `ThreeDo.Frontend.Avalonia` | **Enabled** (`PublishTrimmed=true`, `TrimMode=full`) | **Opt-in win-x64 audit passed** (`-p:ThreeDoNativeAot=true`); Silk.NET loader warnings remain |
 | Core/host assemblies | Trimmed as dependencies of both | NativeAOT-compatible as dependencies of the CLI/frontend |
 
 Both executables publish as self-contained single-file builds for all six RIDs. A
@@ -17,7 +17,7 @@ trimmed win-x64 publish of each is smoke-tested on the Windows CI runner: the CL
 with `--version`, `selftest --json`, and `bench --frames 2 --json`, and the
 frontend with `--smoke-test --smoke-output <path>` (exit code 0 plus a
 `FRONTEND SMOKE OK` marker). CI also publishes NativeAOT win-x64 builds of both
-executables (folder layout for the frontend) and runs the same smoke commands.
+executables and runs the same smoke commands.
 
 ## NativeAOT CLI audit (2026-10-26)
 
@@ -42,13 +42,12 @@ IL single file). The audit covered:
 
 The CLI AOT executable does not replace the default six-RID trimmed publishes:
 NativeAOT cross-compilation is limited (for example, osx-arm64 AOT is not produced
-from a Linux runner). The frontend has a separate opt-in folder AOT audit below. The
+from a Linux runner). The frontend has a separate opt-in AOT audit below. The
 opt-in property keeps the default publish matrix unchanged.
 
 ## NativeAOT frontend audit (2026-10-26)
 
-The frontend publishes with NativeAOT in the **folder** layout when
-`ThreeDoNativeAot=true`:
+The frontend publishes with NativeAOT when `ThreeDoNativeAot=true`:
 
 ```powershell
 dotnet publish src/ThreeDo.Frontend.Avalonia/ThreeDo.Frontend.Avalonia.csproj `
@@ -57,22 +56,24 @@ dotnet publish src/ThreeDo.Frontend.Avalonia/ThreeDo.Frontend.Avalonia.csproj `
   -o artifacts/frontend-aot
 ```
 
-The folder contains a 27.5 MB native executable plus the native Skia/HarfBuzz/ANGLE
-assets (241 MB total with PDBs/XML docs). The audit covered:
+The publish produces a **28.8 MB** native executable plus the native
+Skia/HarfBuzz/ANGLE assets in the same folder (Avalonia's native backends are not
+embedded). The audit covered:
 
 - `--version` and the real-window `--smoke-test --smoke-output` path (exit 0,
   `FRONTEND SMOKE OK`).
-- The WGL `--gl-probe` 320x240 Accurate capture: `ok: true`, parity
-  `matches: true`, `differentPixels: 0`, and the same CPU/GPU hash.
+- WGL and ANGLE `--gl-probe` 320x240 Accurate captures: `ok: true`, parity
+  `matches: true`, `differentPixels: 0`, and the same CPU/GPU hash on both backends.
+- A 1280x720 ANGLE sharp-bilinear pass with 0 renderer allocations/frame.
 
-Single-file AOT is **blocked** by Silk.NET.Core's native-asset loader:
-`DefaultPathResolver` uses `Assembly.Location`/`Assembly.CodeBase` and
-`DependencyContext.Default`, which the ILC analyzer reports as `IL3000`/`IL3002`
-single-file hazards. The opt-in frontend AOT build sets
-`PublishSingleFile=false` and demotes those ILC warnings so the folder publish is
-reproducible and visible; the default six-RID single-file publishes remain trimmed
-IL. A future single-file AOT path needs a Silk.NET-compatible native asset resolver
-(or a custom `DllImportResolver`).
+Silk.NET.Core's native-asset loader (`DefaultPathResolver`) still uses
+`Assembly.Location`/`Assembly.CodeBase` and `DependencyContext.Default`, so the ILC
+analyzer reports `IL3000`/`IL3002` for single-file. The opt-in frontend AOT build
+keeps `PublishSingleFile=true`, demotes those ILC warnings to visible warnings, and
+the resulting app starts and renders. The loader warnings primarily affect optional
+native audio discovery; **audio under single-file AOT is not yet validated**, and the
+default six-RID publishes remain trimmed IL. A future cleanup should replace the
+Silk.NET loader dependency or install a custom native-asset resolver.
 
 ## What was fixed
 
@@ -168,7 +169,7 @@ dotnet publish src/ThreeDo.Cli/ThreeDo.Cli.csproj `
 artifacts/cli-aot/ThreeDo.Cli.exe selftest --json
 artifacts/cli-aot/ThreeDo.Cli.exe bench --frames 2 --json
 
-# Opt-in NativeAOT frontend folder publish and smoke test (win-x64)
+# Opt-in NativeAOT frontend single-file publish and smoke test (win-x64)
 dotnet publish src/ThreeDo.Frontend.Avalonia/ThreeDo.Frontend.Avalonia.csproj `
   -c Release -r win-x64 --self-contained true `
   -p:ThreeDoNativeAot=true -m:1 `
@@ -205,13 +206,13 @@ publish. The CI publish steps use the same switch.
 
 ## Remaining NativeAOT work
 
-The CLI and the frontend folder layout are AOT-validated on win-x64. Remaining:
+The CLI and the frontend single-file layout are AOT-validated on win-x64. Remaining:
 
-- Single-file frontend AOT is blocked by Silk.NET.Core's
-  `Assembly.Location`/`DependencyContext` native-asset loader (`IL3000`/`IL3002`).
-  A Silk.NET-compatible resolver or a custom `DllImportResolver` is required.
+- Silk.NET.Core's `Assembly.Location`/`DependencyContext` native-asset loader still
+  emits `IL3000`/`IL3002`; audio under single-file AOT is not yet validated. A
+  Silk.NET-compatible resolver or a custom `DllImportResolver` is the cleanup.
 - Cross-OS AOT publishing needs a native toolchain per target (the current six-RID
   matrix is produced on one Linux runner and uses trimmed IL).
-- The frontend AOT smoke test covers startup and the WGL probe; a full in-app
+- The frontend AOT smoke test covers startup and the WGL/ANGLE probes; a full in-app
   BIOS/disc/audio session under AOT is not yet validated.
 - Installer packaging, signing, and notarization remain separate M10.7 work.
