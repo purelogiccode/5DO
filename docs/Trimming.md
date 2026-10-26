@@ -27,6 +27,7 @@ frontend with `--smoke-test --smoke-output <path>` (exit code 0 plus a
    - `SaveStateSlotJsonContext` (`ThreeDo.Host`)
    - `InputProfileJsonContext` (`ThreeDo.Input`)
    - `CliJsonContext` (`ThreeDo.Cli`)
+   - `GlProbeJsonContext` (`ThreeDo.Frontend.Avalonia`, the developer GPU probe)
 
    The contexts use camel-case naming where the historical CLI contract requires
    it and `UseStringEnumConverter` for the settings/profile files. The CLI's
@@ -56,7 +57,9 @@ frontend with `--smoke-test --smoke-output <path>` (exit code 0 plus a
    OpenGL context. The smoke skips the welcome dialog and the configured BIOS/disc
    flow so CI does not need a BIOS, disc, or user profile. `--version` exits before
    Avalonia initializes. The CI Windows job publishes the trimmed win-x64 frontend
-   and runs this smoke test.
+   and runs this smoke test. The trimmed win-x64 executable also runs the
+   `--gl-probe` 4K offscreen path (source-generated `GlProbeJsonContext`) and
+   reports 0 renderer/mailbox allocations per frame after warm-up.
 
 6. **CHDSharp warning.** The only remaining trim warning is in CHDSharp's
    vendored FLAC assembly:

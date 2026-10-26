@@ -23,10 +23,17 @@ prototype state. It is not a compatibility guarantee.
 - The xBR path expands the palette on the CPU at native resolution before uploading the
   source texture. Other filters use GPU palette expansion. This is a deliberate
   workaround for a driver readback issue with the FBO-attached palette texture.
-- GPU timer queries, a real 4K present-to-present measurement, GLES/ANGLE validation,
-  Raspberry Pi 4/5 validation, and 100/150/200% DPI validation are not complete.
-- Vsync is reported as a preference; the platform swap-interval path is not wired on
-  every backend.
+- Tier A 4K presentation is measured with `--gl-probe` (RTX 4070: sharp-bilinear GPU
+  p99 0.089 ms, present p99 0.208 ms, zero renderer/mailbox allocations per frame).
+  GLES/ANGLE validation, Raspberry Pi 4/5 validation, Tier B timing, and
+  100/150/200% DPI validation are not complete.
+- The platform swap interval is wired (WGL/GLX/EGL) and reports whether the extension
+  accepted the request. The Avalonia compositor paces the window independently, so a
+  requested vsync may not cap presentation at 60 Hz; the probe reports the renderer
+  cost separately.
+- The GPU probe's residual ~2.3 KB/frame allocation is outside `OpenGlRenderer.Present`
+  and comes from the Avalonia UI/compositor loop; the renderer/mailbox path itself is
+  zero-allocation after warm-up.
 - Linux/macOS OpenGL launch validation is not complete.
 
 ## Packaging and platforms

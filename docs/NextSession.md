@@ -1,19 +1,23 @@
 # Next Session Handoff
 
-**Date:** 2026-10-26 (thirteenth pass)
-**Goal:** finish the frontend trimming/AOT audit and publish the Avalonia frontend trimmed.
-The thirteenth pass enabled `PublishTrimmed` for the Avalonia frontend, removed the
-reflection-based `ViewLocator`, added a trimmed-frontend startup smoke test, and now
-publishes both executables trimmed for all six RIDs. **709 tests pass.** Do not redo
-the trim-safe JSON work, the trimmed CLI/frontend publishes, the frontend smoke test,
-the benchmark comparison, or the portable archives. The remaining work is finishing a
-full Road Rash race, scripted Lemmings level play beyond the start, GPU/Tier B
-validation, NativeAOT/arm64/installers, and the legal/attribution review.
+**Date:** 2026-10-26 (fourteenth pass)
+**Goal:** wire the platform swap interval and measure true 4K presentation on real
+hardware. The fourteenth pass added `SwapInterval.TryCreate` (WGL/GLX/EGL), wired
+`RendererSettings.Vsync` into the renderer, and added a `--gl-probe` frontend tool
+with a true 4K offscreen target, warm-up frames, per-stage allocation counters, and
+source-generated JSON. On Windows 11 / Ryzen 9 7900 / RTX 4070, 4K sharp-bilinear
+measured GPU p99 0.089 ms, present p99 0.208 ms, and zero renderer/mailbox
+allocations per frame after warm-up. **740 tests pass.** Do not redo the trim-safe
+JSON work, the trimmed CLI/frontend publishes, the frontend smoke test, the benchmark
+comparison, the portable archives, or the new swap-interval/GPU-probe work. The
+remaining work is finishing a full Road Rash race, scripted Lemmings level play beyond
+the start, GLES/ANGLE/Pi/DPI validation, Tier B timing, NativeAOT/arm64/installers,
+and the legal/attribution review.
 
 Earlier passes added the presentation plumbing (GL/GLES capability reporting, CPU
 fallback/context-loss recovery, fullscreen, screenshots, About, Hi-Res, benchmark
-gates, and prefetch) and the game-specific fixes recorded below. Read section 1.17
-for the thirteenth-pass changes before starting.
+gates, prefetch, and the 4K probe) and the game-specific fixes recorded below. Read
+section 1.18 for the fourteenth-pass changes before starting.
 
 Read these first:
 
@@ -479,6 +483,45 @@ missing and corrected the Road Rash diagnosis.
 
 ---
 
+### 1.18 Fourteenth pass: swap interval and true-4K GPU probe (2026-10-26)
+
+- **Swap interval.** `ThreeDo.Video.OpenGL.SwapInterval.TryCreate` resolves the
+  platform extension in priority order: `WGL_EXT_swap_control`,
+  `GLX_EXT_swap_control`, `GLX_MESA_swap_control`, `GLX_SGI_swap_control`, then
+  `EGL_KHR_swap_interval`. `OpenGlRenderer` applies `RendererSettings.Vsync`
+  (`1`/`0`) during `Initialize` and when the setting changes, and reports
+  `VsyncActive`/`VsyncBackend`. `RendererCapabilities.SupportsVsync` is now honest
+  instead of always false. Unit tests cover selection priority, missing extensions,
+  and the capability overload.
+- **GPU probe.** `--gl-probe <path>` opens a code-only `GlProbeWindow`, presents
+  synthetic 320x240 VDL frames through the real Avalonia `VideoSurface`, and writes
+  per-frame JSON. Options: `--gl-probe-size WxH`, `--gl-probe-frames N`,
+  `--gl-probe-warmup N`, `--gl-probe-filter`, `--gl-probe-vsync`,
+  `--gl-probe-offscreen`, and `--gl-probe-timeout`. The offscreen path renders into
+  an RGBA8 FBO (`OffscreenRenderTarget`), so a true 4K pass works on a smaller
+  desktop. The probe reports vendor/renderer/version, output size, filter, present
+  and GPU p50/p95/p99/max, total and per-stage allocations, and vsync state.
+- **Measurements.** Windows 11, Ryzen 9 7900, RTX 4070, OpenGL 4.0, 120 measured
+  frames after 30 warm-up frames. 4K sharp-bilinear: GPU mean 0.086 ms / p99
+  0.089 ms; present mean 0.080 ms / p99 0.208 ms; 0 renderer/mailbox allocations
+  per frame. 4K accurate: GPU p99 0.287 ms, present p99 0.178 ms. 4K CRT: GPU p99
+  0.193 ms, present p99 1.157 ms. 4K xBR: GPU p99 0.205 ms, present p99 1.788 ms.
+  1080p sharp: GPU p99 0.146 ms, present p99 0.335 ms. Full table in
+  [`Performance.md`](Performance.md).
+- **Vsync note.** The WGL extension is found and accepted (`vsyncActive: true`),
+  but the Avalonia compositor paces the window independently; the probe reports
+  ~64 fps throughput even with vsync requested. The renderer cost remains far
+  below the 16.67 ms budget.
+- **Allocation note.** After warm-up, `OpenGlRenderer.Present` and the mailbox
+  report **0 managed bytes/frame**. The probe's residual ~2.3 KB/frame is outside
+  the renderer and comes from the Avalonia UI/compositor loop; it is a host-side
+  follow-up.
+- **Tests.** 740 tests pass. New tests cover probe option parsing/filter aliases,
+  the JSON contract, swap-interval selection, vsync capability reporting, and
+  offscreen-target validation.
+
+---
+
 ## 2. Current evidence
 
 ### Wolfenstein 3D
@@ -758,6 +801,10 @@ save/load proof.
   compiled `x:DataType` bindings, or the `--smoke-test`/`--smoke-output` startup
   path. Do not reintroduce a reflection-based view locator or reflection-based XAML
   lookup in the frontend.
+- Do not redo the fourteenth-pass swap-interval wiring or the `--gl-probe` tool:
+  `SwapInterval.TryCreate`, `OffscreenRenderTarget`, the probe options/JSON
+  context, and the measured 4K results are complete. Extend the probe with new
+  evidence only; do not replace it with a reflection-based JSON path.
 
 ---
 

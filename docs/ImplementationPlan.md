@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Status (2026-10-26, thirteenth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five local corpus titles boot, load their own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio. Road Rash's 3D race renders correctly; a CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait and the game now advances through `BUSTED`/race select to a new race. Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room, Begin/Resume menu, and intro; Lemmings types the Fun 4 passcode entirely with the D-pad, starts gameplay at 23,000 frames, and its 640x480 high-resolution title matches the reference; Space Ace plays its demo and starts its interactive scene (X menu, A play). **709 tests pass.** The twelfth pass made settings, input profiles, save-slot metadata, and every CLI `--json` response source-generated and trim-safe, enabled `PublishTrimmed` for the CLI, added a trimmed-CLI CI smoke test, and added a same-machine benchmark baseline comparison; see [`Trimming.md`](Trimming.md) and [`Performance.md`](Performance.md). The thirteenth pass enabled `PublishTrimmed` for the Avalonia frontend, removed the reflection-based `ViewLocator`, added a trimmed-frontend startup smoke test, and now publishes both executables trimmed for all six RIDs. The eleventh pass added HQx 3x/4x and the benchmark budget gate. The tenth pass added the pure D-pad passcode script and CRT bloom. The ninth pass recorded per-title save-state/PNG/WAV evidence, fixed the CD wait, and added autopilot A pulses for post-race menus. The eighth pass fixed the real-content GPU palette expansion (independent R/G/B CLUT indices), added the opt-in xBR-lv2 filter, Windows XInput/Linux evdev gamepad backends with a binding UI, an in-app log viewer, save-state thumbnails, a first-run guide, and error dialogs. Remaining work: finish a full Road Rash race without wrecking, GPU 4K/p99/GLES/DPI validation, NativeAOT/installers, the M0.8 legal/attribution review, and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
+**Status (2026-10-26, fourteenth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five local corpus titles boot, load their own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio. Road Rash's 3D race renders correctly; a CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait and the game now advances through `BUSTED`/race select to a new race. Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room, Begin/Resume menu, and intro; Lemmings types the Fun 4 passcode entirely with the D-pad, starts gameplay at 23,000 frames, and its 640x480 high-resolution title matches the reference; Space Ace plays its demo and starts its interactive scene (X menu, A play). **740 tests pass.** The fourteenth pass wired the platform swap interval (WGL/GLX/EGL) and added a `--gl-probe` offscreen 4K presentation probe: on the RTX 4070 development machine, sharp-bilinear 4K measures GPU p99 0.089 ms, present p99 0.208 ms, and zero renderer/mailbox allocations per frame after warm-up. The thirteenth pass enabled `PublishTrimmed` for the Avalonia frontend, removed the reflection-based `ViewLocator`, added a trimmed-frontend startup smoke test, and now publishes both executables trimmed for all six RIDs. The twelfth pass made settings, input profiles, save-slot metadata, and every CLI `--json` response source-generated and trim-safe, enabled `PublishTrimmed` for the CLI, added a trimmed-CLI CI smoke test, and added a same-machine benchmark baseline comparison; see [`Trimming.md`](Trimming.md) and [`Performance.md`](Performance.md). The eleventh pass added HQx 3x/4x and the benchmark budget gate. The tenth pass added the pure D-pad passcode script and CRT bloom. The ninth pass recorded per-title save-state/PNG/WAV evidence, fixed the CD wait, and added autopilot A pulses for post-race menus. The eighth pass fixed the real-content GPU palette expansion (independent R/G/B CLUT indices), added the opt-in xBR-lv2 filter, Windows XInput/Linux evdev gamepad backends with a binding UI, an in-app log viewer, save-state thumbnails, a first-run guide, and error dialogs. Remaining work: finish a full Road Rash race without wrecking, GLES/ANGLE/Pi/DPI validation, Tier B timing, NativeAOT/installers, the M0.8 legal/attribution review, and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
 **Last updated:** 2026-10-26
 
 ---
@@ -214,29 +214,32 @@ project/type layout is unchanged.
 
 ### 4a. Current position vs. the plan (2026-10-26)
 
-Snapshot: 709 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
+Snapshot: 740 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
 and zero synthetic steady-state allocations; all five local corpus titles boot and
 render, and scripted gameplay is validated in Wolfenstein, Lemmings, Road Rash, and
 Alone. The opt-in 640x480 high-resolution mode is implemented and matches the
 Lemmings reference title. Real-game status is in
-[`Compatibility.md`](Compatibility.md). The twelfth pass made the CLI trim-safe and
-enabled trimmed single-file publishes. The eleventh pass added HQx 3x/4x and the
-benchmark budget gate. The tenth pass added the pure D-pad passcode script, CRT
-bloom, and HQx 2x. The ninth pass recorded save-state/PNG/WAV evidence and fixed the
-Road Rash ~42k/~92k READ_ID-only wait with a CD media-access pulse; the game now
-reaches `BUSTED`, race select, and a new race. The eighth pass fixed real-content GPU
-palette expansion, added xBR, gamepad backends, a log viewer, save-state thumbnails,
-and first-run/error UI. Counting the prototype work as partial credit:
+[`Compatibility.md`](Compatibility.md). The fourteenth pass wired the platform
+swap interval and added a true-4K offscreen GPU probe (RTX 4070: sharp-bilinear GPU
+p99 0.089 ms, present p99 0.208 ms, 0 renderer allocations/frame). The twelfth pass
+made the CLI trim-safe and enabled trimmed single-file publishes. The eleventh pass
+added HQx 3x/4x and the benchmark budget gate. The tenth pass added the pure D-pad
+passcode script, CRT bloom, and HQx 2x. The ninth pass recorded save-state/PNG/WAV
+evidence and fixed the Road Rash ~42k/~92k READ_ID-only wait with a CD media-access
+pulse; the game now reaches `BUSTED`, race select, and a new race. The eighth pass
+fixed real-content GPU palette expansion, added xBR, gamepad backends, a log viewer,
+save-state thumbnails, and first-run/error UI. Counting the prototype work as
+partial credit:
 
 | Milestone | State | Done (dd) | Remaining (dd) |
 |---|---|---:|---:|
 | M0-M8 | Functionally complete; M0.8 legal review is tracked in M11.6 and minor M8 follow-ups are non-blocking | 90 | 0 |
 | M9 | Partial: shell/library/video/input/fullscreen/About/Hi-Res/settings/audio/gamepad/logs/first-run; polish and ViewModel tests | 13 | 3 |
-| M9R | Partial: two-stage, sharp-bilinear/CRT/xBR/bloom/HQx 2x/3x/4x, CPU fallback, screenshots; GPU tests and 4K timing | 9.5 | 0.5 |
-| M9P | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch; hot-path and Tier B/GPU gates | 6 | 4 |
+| M9R | Partial: two-stage, sharp-bilinear/CRT/xBR/bloom/HQx 2x/3x/4x, CPU fallback, screenshots, swap interval, 4K Tier A timing; GLES and GPU CI | 10 | 0 |
+| M9P | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch, 4K GPU probe; hot-path and Tier B/GPU gates | 6.5 | 3.5 |
 | M10 | Partial: CI + six-RID publish + trimmed CLI/frontend + portable archives; arm64, installers, perf report | 4.5 | 1.5 |
 | M11 | In progress: M11.0 done; gameplay, high-resolution, and release docs underway | 3 | 22+ |
-| **Baseline** | | **~123 / 157** | **~34 + 30% = ~44** |
+| **Baseline** | | **~124 / 157** | **~33 + 30% = ~43** |
 
 **Estimate: roughly three-quarters of the v1 effort is done.** One experienced
 developer needs about **9-11 focused weeks**; two developers can overlap UI, renderer,
@@ -995,7 +998,7 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - `IVideoRenderer`, `RendererSettings`, `VideoFilter`, `AspectMode`, `RendererCapabilities`, and `RendererApi` in `ThreeDo.Video`.
   - `GlContextAdapter` wraps Avalonia's GL context/function loader without referencing Avalonia from `ThreeDo.Video.OpenGL`.
   - `OpenGlRenderer.Initialize/Resize/Present/Dispose`.
-  - `OpenGlCapabilities` parses desktop GL and GLES version strings, reports the API type, and derives integer-texture support from the version. The renderer queries `GL_MAX_TEXTURE_SIZE`; vsync remains an explicit unsupported capability until the platform swap-interval path is wired.
+  - `OpenGlCapabilities` parses desktop GL and GLES version strings, reports the API type, and derives integer-texture support from the version. The renderer queries `GL_MAX_TEXTURE_SIZE`; `SwapInterval.TryCreate` resolves WGL/GLX/EGL swap control and `RendererCapabilities.SupportsVsync` reports whether the platform accepted the request.
 - [x] **M9R.2 Frame texture upload.**
   - Uploads raw 16-bit indexed pixels (`R16UI`), per-line CLUT as RGB8 (32 x height), and per-line parameters as RGBA32UI.
   - Immutable storage uses `TexStorage2D` at the maximum source size; per-frame updates use `TexSubImage2D`. No `TexImage2D` reallocation in steady state.
@@ -1041,7 +1044,7 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - Window resize without recreating source textures.
   - Size the GL surface in **physical pixels** (`Bounds * RenderScaling`), not logical units; test 100/150/200% DPI.
   - Render only when a new frame is available (or the window/settings change); do not re-request rendering unconditionally at the end of every render.
-  - Aspect 4:3/integer/stretch/custom, the latest-frame mailbox, physical-pixel sizing, render-on-demand, fullscreen/F11/Escape with cursor hide, and an optional FPS/status overlay are implemented; vsync and manual DPI/live-resize validation remain.
+  - Aspect 4:3/integer/stretch/custom, the latest-frame mailbox, physical-pixel sizing, render-on-demand, fullscreen/F11/Escape with cursor hide, and an optional FPS/status overlay are implemented. **DONE (2026-10-26):** the platform swap interval is wired through `SwapInterval.TryCreate` (WGL/GLX/EGL) and reported in `RendererCapabilities.SupportsVsync`; manual DPI/live-resize validation remains.
 - [x] **M9R.6 Screenshots.**
   - GL readback respecting the active filter, plus an optional native CPU frame.
   - `ReadPixels` and the CPU/GL paths are implemented; the UI writes PNG screenshots from either path and names them with the game title, timestamp, and frame number. The Settings video page can also write a `-native.png` CPU frame next to a filtered GL screenshot.
@@ -1051,8 +1054,9 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - The renderer does not crash on driver/context failure; the status line reports the fallback reason.
 - [ ] **M9R.8 Performance.**
   - Measure upload bandwidth, CPU present time, GPU shader time, and p50/p95/p99 frame time.
-  - Desktop GL now uses a `GL_TIME_ELAPSED` query around the palette/xBR/scale pipeline; the shell overlay reports GPU and CPU-present milliseconds. Windows GL 4.0 at 1500x978 reported gpu ≈ 0.13 ms / present ≈ 0.16 ms on a BIOS boot. The 4K and GLES measurements remain.
-  - Target: 4K60 with nearest/sharp-bilinear on Tier A x64; 1080p60 on Raspberry Pi 4/5 class arm64 with the GLES path.
+  - Desktop GL uses a `GL_TIME_ELAPSED` query around the palette/xBR/scale pipeline; the shell overlay reports GPU and CPU-present milliseconds.
+  - **DONE (2026-10-26):** `--gl-probe` presents synthetic frames through the real Avalonia OpenGL surface and writes per-frame JSON. It supports a true 4K offscreen target, a warm-up phase, per-stage allocation counters, and both window/offscreen modes. On Windows 11 (Ryzen 9 7900, RTX 4070, GL 4.0), 4K sharp-bilinear measured GPU mean 0.086 ms / p99 0.089 ms and present mean 0.080 ms / p99 0.208 ms, with 0 renderer/mailbox allocations per frame after 30 warm-up frames. 4K accurate/CRT/xBR and 1080p results are in [`Performance.md`](Performance.md).
+  - Target: 4K60 with nearest/sharp-bilinear on Tier A x64; 1080p60 on Raspberry Pi 4/5 class arm64 with the GLES path. Tier A render cost is measured; GLES/ANGLE and Tier B remain.
   - Zero CPU per-pixel scaling; palette expansion at native resolution on the GPU.
   - Prove core/presenter CPU cost is independent of output resolution (1080p vs 4K).
   - Budgets and hardware definitions: [`Performance.md`](Performance.md).
@@ -1118,7 +1122,11 @@ harness. See [`Performance.md`](Performance.md).
   - The 2026-10-25 benchmark records p50/p95/p99, max, and per-stage allocations:
     synthetic 1.250 ms/frame total (p99 1.638 ms, 0 bytes/frame); Lemmings 1.281
     ms/frame (p99 3.398 ms, CHD decode ~5.9 KB/frame); Lemmings high-res 1.605
-    ms/frame (p99 4.598 ms). Tier B, GPU time, and the 4K pass remain to be measured.
+    ms/frame (p99 4.598 ms).
+  - **DONE (2026-10-26):** the `--gl-probe` records true 4K Tier A presentation:
+    sharp-bilinear GPU p99 0.089 ms, present p99 0.208 ms, 0 renderer/mailbox
+    allocations/frame; accurate/CRT/xBR and 1080p results are in
+    [`Performance.md`](Performance.md). Tier B/GLES timing remains.
 - [x] **M9P.2 Dedicated core thread and frame pacer.**
   - `ThreeDo.Host.CoreRunner` and its internal `FramePacer` are implemented.
   - Run `RunFrame` on a dedicated core thread at a fixed 60 Hz; catch-up capped at
@@ -1153,9 +1161,11 @@ harness. See [`Performance.md`](Performance.md).
   - Windows now prefers `Wgl` with `AngleEgl`/software fallbacks; ANGLE and
     Raspberry Pi 4/5 still need real-hardware validation, and the Silk.NET binding
     path under an ES context is unverified.
-  - `RendererCapabilities` now reports the API type, parsed version, max texture
-    size, and version-derived integer-texture support; vsync remains reported as
-    unsupported until the platform swap-interval path is wired.
+  - **DONE (2026-10-26):** `RendererCapabilities` reports the API type, parsed version,
+    max texture size, version-derived integer-texture support, and vsync support.
+    `SwapInterval.TryCreate` resolves WGL/GLX/EGL swap control; the renderer applies
+    the requested interval and reports whether the platform accepted it. GLES/ANGLE/Pi
+    context validation remains.
 - [~] **M9P.7 CHD/disc prefetch.**
   - `PrefetchingDiscSource` provides a bounded background read-ahead cache with
     serialized inner reads; it is opt-in via `--prefetch` in the CLI and benchmark.
@@ -1248,9 +1258,13 @@ harness. See [`Performance.md`](Performance.md).
 - [~] **M10.4 Icons/metadata.**
   - App icon, version info, a Linux `.desktop` entry (`packaging/3doemulator.desktop`), and positional/`--disc` startup loading are implemented.
   - Windows/macOS file associations still need the installer/app bundle (M10.7); `.tdos` state-file association remains.
-- [ ] **M10.5 Performance validation and report.**
+- [~] **M10.5 Performance validation and report.**
   - Consume the M9P.9 benchmark harness and baselines; do not defer structural optimization to this milestone.
-  - Run Tier A (4K60) and Tier B (1080p60) with the default filters, CHD vs ISO, and the local corpus.
+  - **DONE (2026-10-26): Tier A 4K60 presentation.** `--gl-probe` measures
+    sharp-bilinear GPU p99 0.089 ms, present p99 0.208 ms, and 0 renderer/mailbox
+    allocations/frame on the RTX 4070 development machine. Accurate/CRT/xBR and
+    1080p results are recorded in [`Performance.md`](Performance.md). Tier B
+    (1080p60) and the real-disc CHD-vs-ISO matrix remain.
   - Verify core/presenter CPU cost is independent of output resolution and allocations are zero/frame.
   - Publish the performance report and update [`Performance.md`](Performance.md).
 - [ ] **M10.6 arm64 validation.**
@@ -1581,7 +1595,7 @@ Suggested parallelization with two developers:
 10. ~~M9P.1/M9P.2: benchmark baseline, dedicated core thread, and frame pacer.~~ Done; continue M9P.3-M9P.9 (GLES/Pi validation, CHD prefetch, p99/GPU gates).
 11. **Finish the scripted gameplay loops.** Road Rash's ~92,000/40,000 stops, Space Ace's interactive path, and Alone's movement/inventory sequence; record the exact scripts and frame numbers in [`TestCorpus.md`](TestCorpus.md).
 12. **Capture per-title evidence.** Save-state roundtrips, screenshots, and 30-60 s WAVs; compare audio mix/cadence with Opera.
-13. **Prove the 4K60 target.** Use the implemented desktop GPU timer query and present-time overlay; measure p99 frame time, allocations, WGL/ANGLE/GLES/Pi validation, and 100/150/200% DPI.
+13. **Prove the 4K60 target.** Tier A 4K render cost is measured with `--gl-probe` (GPU p99 0.089 ms, present p99 0.208 ms, zero renderer allocations). Remaining: WGL/ANGLE/GLES/Pi validation, Tier B timing, and 100/150/200% DPI.
 14. **Finish M9/M9R/M9P polish.** Vsync/FPS overlay tuning, Tier B prefetch validation, and ViewModel tests. The xBR filter, HQx 2x/3x/4x, CRT bloom, per-game filter overrides, settings/audio/gamepad pages, log viewer, thumbnails, and first-run UI are complete.
 15. **Finish M10/M11 release work.** NativeAOT audit, arm64 validation, installers/signing plan, performance report, compatibility matrix, and final release notes. The CLI and frontend are already trimmed; see [`Trimming.md`](Trimming.md). The user guide, known-issues list, and changelog are complete.
 16. **Schedule the legal/attribution review (M0.8)** before any public build; add Opera to the FreeDO/4DO attribution and license review.
@@ -1642,3 +1656,4 @@ Suggested parallelization with two developers:
 | 2026-10-26 | M10.3a, M9P.9, M8.6 | Trim-safe JSON, trimmed CLI publishes, and the benchmark baseline comparison | Replaced reflection-based JSON in `AppSettings`, `InputProfile`, save-slot metadata, and every CLI `--json` response with source-generated contexts and named result records; removed the CLI's anonymous-type/`GetProperty` output path and the watchpoint `StackFrame.GetMethod` call. Enabled `PublishTrimmed=true` (`TrimMode=full`) for the CLI and added a Windows CI trimmed-publish smoke test plus trimmed six-RID publishing. Verified the win-x64 single file with `--version`, `selftest`, `bench`, `info`, `state inspect`, `state slots`, `fs list`, CHD boot/run, a save-state roundtrip, and the Lemmings/Alone 3,000-frame golden hashes. Added `BenchmarkComparison` and `--baseline`/`--baseline-threshold` for the same-machine >10% regression check (exit code 4). The only remaining trim warning is CHDSharp's vendored FLAC settings helper. 704 tests pass |
 | 2026-10-26 | M10.7 | Portable release archives | Added `packaging/package.ps1` to stage a publish folder with README, third-party notices, licensing, a generated `PACKAGE.txt`, and the Linux desktop entry, then create `3doemulator-<component>-<rid>.zip` for Windows or `.tar.gz` for Linux/macOS. Both six-RID CI publish jobs now upload a portable package alongside the raw folder. Validated the win-x64 zip and linux-x64 tar.gz contents and ran the win-x64 archive. Installers/signing/file associations remain |
 | 2026-10-26 | M10.3b, M10.1, M10.2 | Trimmed frontend publishes and smoke test | Removed the reflection-based `ViewLocator` and its `DataTemplates` registration; every window is now constructed explicitly and all bindings are compiled with `x:DataType`. Enabled `PublishTrimmed=true` (`TrimMode=full`) for `ThreeDo.Frontend.Avalonia` for all six RIDs, demoted CHDSharp's vendored-FLAC warning to visible/non-fatal, and added `--smoke-test --smoke-output <path>` plus `--version` startup handling. The smoke test opens the real main window, runs one UI pass (GL hidden for headless CI), writes a `FRONTEND SMOKE OK` marker, and exits 0; CI publishes the trimmed win-x64 frontend and runs it. Added startup-argument unit tests. win-x64 single-file is 26.3 MB trimmed vs 91.3 MB untrimmed. 709 tests pass |
+| 2026-10-26 | M9R.5, M9R.8, M9P.1, M9P.6, M10.5 | Swap interval and true-4K GPU probe | Added `SwapInterval.TryCreate` (WGL/GLX/EGL), wired `RendererSettings.Vsync` into `OpenGlRenderer`, and reported honest `SupportsVsync`/`VsyncActive`/backend capabilities. Added a `--gl-probe` frontend tool that presents synthetic 320x240 frames through the real Avalonia OpenGL surface, supports a true 4K offscreen FBO, warm-up frames, per-stage allocation counters, and source-generated JSON. Windows 11/Ryzen 9 7900/RTX 4070 measured 4K sharp-bilinear GPU p99 0.089 ms, present p99 0.208 ms, 0 renderer/mailbox allocations/frame after warm-up; accurate/CRT/xBR and 1080p are recorded in `Performance.md`. 740 tests pass |

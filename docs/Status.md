@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-26, thirteenth pass (see `git log` for the exact commit).
+**Snapshot:** 2026-10-26, fourteenth pass (see `git log` for the exact commit).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
 **Reference:** `References/opera-libretro-master/libopera` is now the primary
 behavioral reference for new compatibility work; see
@@ -83,7 +83,7 @@ This is the short, current answer to "where are we?" The detailed task list is i
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 709 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 740 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
@@ -197,31 +197,44 @@ case. CI now runs the synthetic benchmark with `--gate`: it fails on any steady-
 allocation, core p99 > 8 ms, total mean > 8 ms, or total p99 > 16.667 ms, and uploads
 the JSON result as the baseline artifact. The benchmark's `--baseline` option also
 implements the same-machine >10% relative comparison (core p99, total mean, total
-p99; exit code 4); wiring it to CI awaits a stable/self-hosted runner. The **4K GPU
-pass, Tier B (Pi 4/5) numbers, and GLES timing are not measured yet**. CHD decode
-allocations are host-side and are attributed to the core stage;
-the synthetic core/pack/mailbox/read path is allocation-free in steady state.
+p99; exit code 4); wiring it to CI awaits a stable/self-hosted runner. **Tier B
+(Pi 4/5) numbers and GLES timing are not measured yet.** CHD decode allocations are
+host-side and are attributed to the core stage; the synthetic
+core/pack/mailbox/read path is allocation-free in steady state.
 
-The desktop renderer now uses a `GL_TIME_ELAPSED` query and reports GPU/present time in
-the FPS overlay. A Windows OpenGL 4.0 BIOS boot at 1500x978 measured **gpu ≈ 0.13 ms**
-and **present ≈ 0.16 ms** per frame; this is a small native-resolution scene, not 4K,
-but it validates the timing path and shows ample presenter headroom.
+The desktop renderer uses a `GL_TIME_ELAPSED` query and reports GPU/present time in
+the FPS overlay. The fourteenth pass added a true-4K offscreen `--gl-probe` and
+measured the presentation path on Windows 11 (Ryzen 9 7900, RTX 4070, OpenGL 4.0):
+
+| 4K case (3840x2160) | Present mean | Present p99 | GPU mean | GPU p99 | Renderer alloc |
+|---|---:|---:|---:|---:|---:|
+| Sharp-bilinear | **0.080 ms** | **0.208 ms** | **0.086 ms** | **0.089 ms** | **0 B/frame** |
+| Accurate | 0.082 ms | 0.178 ms | 0.091 ms | 0.287 ms | 0 B/frame |
+| CRT | 0.147 ms | 1.157 ms | 0.191 ms | 0.193 ms | 0 B/frame |
+| xBR 4x | 0.425 ms | 1.788 ms | 0.203 ms | 0.205 ms | 0 B/frame |
+
+The platform swap interval is wired through `SwapInterval.TryCreate` (WGL/GLX/EGL);
+the Windows WGL path resolves `WGL_EXT_swap_control` and reports `vsyncActive: true`
+when requested. The Avalonia compositor paces the window independently, so the probe
+reports ~64 fps throughput even when vsync is requested; the renderer cost itself is
+far below the 16.67 ms budget.
 
 ### 4K60 feasibility
 
-- **Desktop (Tier A): high confidence.** The core is ~1.25-1.6 ms/frame; the 4K pass
-  is one fullscreen textured quad after the native-resolution palette expansion. The
-  RX 580 is far above the required fill rate. The remaining risk is frame pacing and
-  the Avalonia/WGL compositor, not the emulator core.
+- **Desktop (Tier A): measured.** The core is ~1.25-1.6 ms/frame; the 4K presentation
+  pass is one fullscreen textured quad after native-resolution palette expansion.
+  The RTX 4070 measured GPU p99 0.089 ms and present p99 0.208 ms for sharp-bilinear,
+  leaving ample headroom for 60 Hz. The remaining risk is the Avalonia/WGL compositor
+  and frame pacing, not the emulator core.
 - **Pi 5: likely, but unmeasured.** The presenter should handle 4K60 via GLES; the
   ARM CPU core may be the limiting factor in complex scenes.
 - **Pi 4: 1080p60 is the realistic target.** 4K60 output is not assumed.
 - **4K internal CEL rendering is not a v1 goal.** The target is 4K output, not 4K
   internal rendering.
 
-CPU p99 and per-stage allocations are now measured. The next performance work is
-GPU timer queries, Tier B/GLES timing, and present-to-present at 1080p/1440p/4K. See
-[`Performance.md`](Performance.md).
+CPU p99 and per-stage allocations are measured, and Tier A 4K GPU/present p99 is now
+recorded. The next performance work is GLES/ANGLE/Pi validation, Tier B timing, and
+100/150/200% DPI. See [`Performance.md`](Performance.md).
 
 ---
 
@@ -234,8 +247,8 @@ prototype work as partial credit:
 |---|---|---:|---:|
 | M0-M8 core, CPU, boot, MADAM, DSP, CD, input, save states | Functionally complete; M0.8 legal review and minor M8 follow-ups are non-blocking | 90 | 0 |
 | M9 Avalonia frontend | Partial: shell, library, video, input, fullscreen, About, Hi-Res, settings/audio/gamepad/logs/first-run/thumbnails; polish and ViewModel tests | 13 | 3 |
-| M9R OpenGL presenter | Partial: two-stage, sharp-bilinear/CRT/xBR/HQx 2x/3x/4x/bloom, CPU fallback, screenshots; GPU tests and 4K timing remain | 9.5 | 0.5 |
-| M9P performance/pacing | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch, GPU timer; hot-path, Tier B/GPU gates remain | 6 | 4 |
+| M9R OpenGL presenter | Partial: two-stage, sharp-bilinear/CRT/xBR/HQx 2x/3x/4x/bloom, CPU fallback, screenshots, swap interval, Tier A 4K timing; GLES and GPU CI remain | 10 | 0 |
+| M9P performance/pacing | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch, GPU timer, 4K probe; hot-path, Tier B/GPU gates remain | 6.5 | 3.5 |
 | M10 packaging/validation | Partial: CI + six-RID publish + trimmed CLI/frontend + portable archives; arm64, installers, perf report remain | 4.5 | 1.5 |
 | M11 compatibility/release | In progress: M11.0 done; gameplay, high-resolution, and release docs underway | 3 | 22+ |
 | **Baseline total** | | **~124 / 157** | **~33 + 30% = ~43** |
@@ -280,12 +293,13 @@ add **2-4 weeks**. If the target is "all five corpus games playable" rather than
 ### P1 - prove the 4K60 target
 
 4. **Measure GPU time and p99** at 1080p/1440p/4K with nearest and sharp-bilinear;
-   add allocation assertions around the steady-state frame. The CPU side already has
-   ~14 ms of headroom, so desktop 4K60 is high confidence; Pi 5 is likely and Pi 4 is
-   realistically 1080p60 until measured.
+   add allocation assertions around the steady-state frame. Tier A 4K is measured
+   (`--gl-probe`: GPU p99 0.089 ms, present p99 0.208 ms, 0 renderer allocations);
+   Pi 5 is likely and Pi 4 is realistically 1080p60 until measured.
 5. **Validate the backend matrix** on real hardware: WGL desktop GL, ANGLE GLES,
-   Raspberry Pi 4/5 GLES 3.1, and 100/150/200% DPI. The shader sources and physical
-   pixel sizing exist; they are not proven on device.
+   Raspberry Pi 4/5 GLES 3.1, and 100/150/200% DPI. The shader sources, physical
+   pixel sizing, and WGL swap-interval path exist; GLES/Pi/DPI are not proven on
+   device.
 6. **Validate CHD prefetch on Tier B.** `PrefetchingDiscSource` is implemented and
    opt-in via `--prefetch`; x64 CHD/ISO p99 is recorded, but Pi 4/5 timing and the
    default policy remain.
@@ -300,7 +314,9 @@ add **2-4 weeks**. If the target is "all five corpus games playable" rather than
 8. **M10 packaging:** NativeAOT audit, arm64 validation, installers/signing plan, and
    the final performance report. CLI and frontend trimming are complete; see
    [`Trimming.md`](Trimming.md).
-9. **Filter/UI polish:** vsync/FPS overlay tuning and ViewModel tests.
+9. **Filter/UI polish:** FPS overlay tuning and ViewModel tests. The platform swap
+   interval is wired; the Avalonia compositor's independent pacing remains a host
+   limitation.
    xBR, HQx 2x/3x/4x, CRT bloom, per-game filter overrides, the settings, audio,
    gamepad, logs, first-run, and thumbnail pages are complete.
 10. **Legal/attribution review** before any public build (M0.8); add Opera to the
@@ -311,8 +327,8 @@ add **2-4 weeks**. If the target is "all five corpus games playable" rather than
 ## 6. Next session
 
 The next session is a focused gameplay-validation session, not a UI or performance
-pass. The thirteenth pass completed the frontend trimming work; start with
-[`NextSession.md`](NextSession.md):
+pass. The fourteenth pass completed the swap-interval and Tier A 4K presentation
+work; start with [`NextSession.md`](NextSession.md):
 
 1. Use `--input-script` to start and play each title: Lemmings level (the passcode
    path is mapped; type a valid 10-letter code), Wolfenstein movement/fire, Road

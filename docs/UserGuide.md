@@ -70,10 +70,11 @@ The Settings dialog's **Emulation** page can override the filter for the current
 game. **Automatic** uses the global filter; an explicit choice is stored by game ID
 in `settings.json`.
 
-Aspect, integer scaling, vsync preference, fullscreen (F11/Escape; the cursor is hidden
-while fullscreen), and the FPS/status overlay are in **Settings**. The renderer falls back to the CPU `WriteableBitmap`
-presenter when OpenGL initialization or context recovery fails; the status line and
-**Logs** report the reason.
+Aspect, integer scaling, vsync preference (applied through WGL/GLX/EGL where the
+platform exposes a swap-interval extension), fullscreen (F11/Escape; the cursor is
+hidden while fullscreen), and the FPS/status overlay are in **Settings**. The renderer
+falls back to the CPU `WriteableBitmap` presenter when OpenGL initialization or context
+recovery fails; the status line and **Logs** report the reason.
 
 The opt-in **Hi-Res** mode renders 640x480 CELs and restarts the machine when toggled.
 It is off by default because 320x240 titles must not be upscaled.

@@ -56,6 +56,15 @@ still change.
   main window, runs one UI pass (GL hidden for headless CI), writes a
   `FRONTEND SMOKE OK` marker, and exits 0. `--version` exits before Avalonia
   initializes. CI runs the trimmed win-x64 frontend smoke test on Windows.
+- Platform swap-interval support: `SwapInterval.TryCreate` resolves
+  `WGL_EXT_swap_control`, GLX EXT/MESA/SGI, or `EGL_KHR_swap_interval`, and the
+  renderer applies `RendererSettings.Vsync` with honest `SupportsVsync`/
+  `VsyncActive`/backend reporting.
+- `--gl-probe` GPU presentation probe: presents synthetic 320x240 frames through the
+  real Avalonia OpenGL surface, supports a true 4K offscreen FBO, warm-up frames,
+  per-stage allocation counters, and source-generated JSON. On Windows 11 with an
+  RTX 4070, 4K sharp-bilinear measures GPU p99 0.089 ms and present p99 0.208 ms
+  with zero renderer/mailbox allocations per frame after warm-up.
 
 ### Changed
 

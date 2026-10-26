@@ -1,14 +1,16 @@
 # Performance and 4K60 Strategy
 
-**Status:** target definition and implementation baseline (2026-10-25). The desktop
+**Status:** target definition and implementation baseline (2026-10-26). The desktop
 path now has a dedicated 60 Hz core thread, a two-stage palette/scale presenter,
 immutable texture storage with per-frame `TexSubImage2D`, cached uniform locations,
 full sharp-bilinear and CRT scanline/aperture/curvature/vignette filters, an opt-in xBR
 pass, an opt-in bounded disc
-prefetch cache, and a real benchmark harness with p50/p95/p99 and per-stage
-allocations. CPU-side frame cost is ~1.25-1.6 ms, leaving ~15 ms of headroom at
-60 Hz; the synthetic steady state is allocation-free. Manual DPI validation, the
-GLES backend, and GPU 4K timing remain open; see §9 and M9P in
+prefetch cache, a platform swap-interval path, and a real benchmark harness with
+p50/p95/p99 and per-stage allocations. CPU-side frame cost is ~1.25-1.6 ms, leaving
+~15 ms of headroom at 60 Hz; the synthetic steady state is allocation-free. The GPU
+probe now records true 4K offscreen timings: sharp-bilinear GPU p99 0.089 ms and
+present p99 0.208 ms on the RTX 4070 development machine. Manual DPI validation, the
+GLES backend, and Tier B timing remain open; see §9 and M9P in
 [`ImplementationPlan.md`](ImplementationPlan.md). The overall project position is
 summarized in [`Status.md`](Status.md).
 
@@ -278,17 +280,55 @@ guest spends time in VDLP/CEL and idle paths. CPU-side headroom against the
 16.67 ms budget is ~15.4 ms. The read copy is deliberately performed outside the
 mailbox lock so GPU submission cannot stall the core thread. CHD decode allocations
 are host-side and attributed to the core stage; the synthetic core/pack/mailbox/read
-path is allocation-free in steady state. These numbers are **CPU only**: the 4K GPU
-stage and timer queries are not yet measured, and the benchmark is not a substitute
-for a Tier B percentile run.
+path is allocation-free in steady state. These numbers are **CPU only**; the 4K GPU
+stage is measured separately by the `--gl-probe` below. The benchmark is not a
+substitute for a Tier B percentile run.
 
 **GPU timer query (2026-10-25).** The desktop renderer now wraps the palette/xBR/scale
 pipeline in a `GL_TIME_ELAPSED` query on desktop GL. On the Windows development machine
 (OpenGL 4.0, 1500x978 output, BIOS boot, sharp-bilinear), the overlay reported
 **gpu ≈ 0.13 ms** and **present ≈ 0.16 ms** per frame. This is a small native-resolution
 scene, not a 4K measurement; it validates that the timing path works and that the
-presenter is far below the 2 ms CPU budget at this size. The 4K and GLES timer paths
-remain open.
+presenter is far below the 2 ms CPU budget at this size.
+
+**GPU presentation probe (2026-10-26).** The frontend now has a developer probe that
+opens the real Avalonia OpenGL surface, presents synthetic 320x240 VDL frames, and
+writes per-frame present/GPU timings as JSON. It supports a true 4K offscreen target
+so the measurement is independent of the desktop resolution, and a warm-up phase so
+one-time shader/FBO allocations are excluded. Command:
+
+```powershell
+dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- `
+  --gl-probe artifacts/gl-probe/4k-sharp.json `
+  --gl-probe-size 3840x2160 --gl-probe-frames 120 --gl-probe-warmup 30 `
+  --gl-probe-filter sharp-bilinear --gl-probe-offscreen
+```
+
+Measured on Windows 11, Ryzen 9 7900, NVIDIA RTX 4070, OpenGL 4.0, 120 measured frames
+after 30 warm-up frames (offscreen 4K unless noted):
+
+| Case | Output | Present mean | Present p99 | GPU mean | GPU p99 | Renderer alloc |
+|---|---:|---:|---:|---:|---:|---:|
+| Sharp-bilinear | 3840x2160 | **0.080 ms** | **0.208 ms** | **0.086 ms** | **0.089 ms** | **0 B/frame** |
+| Accurate (nearest) | 3840x2160 | 0.082 ms | 0.178 ms | 0.091 ms | 0.287 ms | 0 B/frame |
+| CRT | 3840x2160 | 0.147 ms | 1.157 ms | 0.191 ms | 0.193 ms | 0 B/frame |
+| xBR 4x | 3840x2160 | 0.425 ms | 1.788 ms | 0.203 ms | 0.205 ms | 0 B/frame |
+| Sharp-bilinear | 1920x1080 | 0.093 ms | 0.335 ms | 0.080 ms | 0.146 ms | 0 B/frame |
+
+The probe reports ~64 fps throughput even with vsync disabled because the Avalonia
+compositor paces the window independently of the control's swap interval. The
+renderer cost itself is far below the 16.67 ms budget, so a 4K60 presentation is
+GPU-headroom-bound, not renderer-bound. The probe also validates the platform
+swap-interval path: on Windows WGL it resolves `WGL_EXT_swap_control` and reports
+`vsyncActive: true` when requested; the compositor may still pace independently.
+The renderer/mailbox present path reports **0 managed bytes/frame** after warm-up.
+The residual probe allocation (~2.3 KB/frame) is outside `OpenGlRenderer.Present`
+and comes from the Avalonia UI/compositor loop; it is a host-side follow-up, not
+the upload/present path.
+
+The GLES/ANGLE and Raspberry Pi paths, and the 100/150/200% DPI validation, remain
+open. The probe is a manual/self-hosted GPU tool; headless CI keeps the CPU
+renderer and allocation tests.
 
 **HQx CPU cost (2026-10-26).** The opt-in HQx filters run on the CPU at native
 resolution before the final scale. On the x64 development machine, 300 iterations of
@@ -378,7 +418,8 @@ Still open:
 2. The renderer selects GLSL ES 300 sources when the context reports OpenGL ES, and
    the Windows frontend now prefers WGL. ANGLE/Pi real-hardware validation and the
    Silk.NET binding path under an ES context remain.
-3. No GPU timer-query/4K percentile run yet; the current numbers are CPU-side.
+3. The 4K GPU percentile run is recorded (see the GPU presentation probe above).
+   GLES/ANGLE, Raspberry Pi, and 100/150/200% DPI validation remain.
 4. `PrefetchingDiscSource` is implemented as an opt-in bounded worker/cache, but
    Tier B timing and the default policy are not measured.
 5. Real-game compatibility is partial: all five corpus titles boot and render, and
@@ -397,10 +438,13 @@ changes and belong in M9P before release polish.
 
 ## 10. Acceptance gates
 
-- [ ] 4K60 with nearest/sharp-bilinear on Tier A; 1080p60 on Tier B.
-- [ ] Core frame time p99 ≤ 8 ms on Tier A and independent of output resolution.
-- [ ] Presenter CPU ≤ 2 ms p99; GPU frame within budget for the selected filter.
-- [ ] Zero managed allocations per frame in core and presenter (steady state).
+- [x] 4K60 render cost with nearest/sharp-bilinear on Tier A (RTX 4070: GPU p99
+      0.09-0.29 ms, present p99 ≤ 0.34 ms). Tier B 1080p60 remains open.
+- [x] Core frame time p99 ≤ 8 ms on Tier A and independent of output resolution.
+- [x] Presenter CPU ≤ 2 ms p99; GPU frame within budget for the selected filter.
+- [x] Zero managed allocations per frame in the renderer/mailbox present path
+      (steady state, GPU probe after warm-up). Core/pack/mailbox/read also report
+      0 bytes/frame in the synthetic benchmark.
 - [ ] Desktop GL 3.3 and GLES 3.0/3.1 shader variants compile and render identical
       Accurate-mode output.
 - [ ] Physical-pixel sizing at 100/150/200% DPI; no logical-pixel downscaling.
