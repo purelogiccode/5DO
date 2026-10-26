@@ -23,5 +23,26 @@ The application accepts a positional disc path or `--disc <path>`; opening a
 `.iso`, `.bin`, `.cue`, or `.chd` file with the desktop entry loads it after the
 configured BIOS.
 
+## Portable archives
+
+CI packages each published CLI and frontend folder with
+`packaging/package.ps1`. The archives are named
+`3doemulator-<component>-<rid>.zip` for Windows and `.tar.gz` for Linux/macOS.
+They contain the publish output, `README.md`, `THIRD-PARTY-NOTICES.md`,
+`Licensing.md`, and a generated `PACKAGE.txt` with the component, RID, version,
+commit, and build time. Linux archives also include `3doemulator.desktop`.
+
+Build one locally:
+
+```powershell
+dotnet publish src/ThreeDo.Cli/ThreeDo.Cli.csproj -c Release -r win-x64 `
+  --self-contained true -p:PublishSingleFile=true -o artifacts/cli/win-x64
+pwsh -File packaging/package.ps1 -Component cli -Rid win-x64 `
+  -PublishDirectory artifacts/cli/win-x64 -OutputDirectory artifacts/packages
+```
+
+The archives are portable folders, not installers. MSIX/dmg/AppImage packaging,
+signing, and notarization remain release work.
+
 Windows file associations are registered by the installer (M10.7), and macOS
 associations come from the app bundle's `Info.plist`. Both remain release work.

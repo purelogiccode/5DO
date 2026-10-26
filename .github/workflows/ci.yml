@@ -96,6 +96,21 @@ jobs:
           -m:1
           -o artifacts/cli/${{ matrix.rid }}
 
+      - name: Package
+        run: >
+          pwsh -NoProfile -File packaging/package.ps1
+          -Component cli
+          -Rid ${{ matrix.rid }}
+          -PublishDirectory artifacts/cli/${{ matrix.rid }}
+          -OutputDirectory artifacts/packages
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3do-cli-package-${{ matrix.rid }}
+          path: artifacts/packages/*
+          if-no-files-found: error
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -125,7 +140,23 @@ jobs:
           --self-contained true
           -p:PublishSingleFile=true
           -p:PublishTrimmed=false
+          -m:1
           -o artifacts/frontend/${{ matrix.rid }}
+
+      - name: Package
+        run: >
+          pwsh -NoProfile -File packaging/package.ps1
+          -Component frontend
+          -Rid ${{ matrix.rid }}
+          -PublishDirectory artifacts/frontend/${{ matrix.rid }}
+          -OutputDirectory artifacts/packages
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3do-frontend-package-${{ matrix.rid }}
+          path: artifacts/packages/*
+          if-no-files-found: error
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

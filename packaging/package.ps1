@@ -1,0 +1,101 @@
+param(
+    [Parameter(Mandatory = $true)]
+    [ValidateSet('cli', 'frontend')]
+    [string] $Component,
+
+    [Parameter(Mandatory = $true)]
+    [string] $Rid,
+
+    [Parameter(Mandatory = $true)]
+    [string] $PublishDirectory,
+
+    [Parameter(Mandatory = $true)]
+    [string] $OutputDirectory
+)
+
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$publishPath = (Resolve-Path -LiteralPath $PublishDirectory).Path
+$outputPath = [System.IO.Path]::GetFullPath($OutputDirectory)
+New-Item -ItemType Directory -Path $outputPath -Force | Out-Null
+
+$staging = Join-Path ([System.IO.Path]::GetTempPath()) ("3do-package-" + [guid]::NewGuid().ToString('N'))
+try {
+    New-Item -ItemType Directory -Path $staging -Force | Out-Null
+    Get-ChildItem -LiteralPath $publishPath -Force |
+        Copy-Item -Destination $staging -Recurse -Force
+    Get-ChildItem -LiteralPath $staging -Recurse -Force -Filter '*.pdb' |
+        Remove-Item -Force
+
+    foreach ($file in @('README.md', 'THIRD-PARTY-NOTICES.md', 'docs/Licensing.md')) {
+        $source = Join-Path $repoRoot $file
+        if (Test-Path -LiteralPath $source) {
+            Copy-Item -LiteralPath $source -Destination $staging -Force
+        }
+    }
+
+    if ($Rid -like 'linux-*') {
+        Copy-Item -LiteralPath (Join-Path $repoRoot 'packaging/3doemulator.desktop') `
+            -Destination $staging -Force
+    }
+
+    $version = '0.0.0'
+    $props = Join-Path $repoRoot 'Directory.Build.props'
+    if (Test-Path -LiteralPath $props) {
+        $match = Select-String -LiteralPath $props -Pattern '<Version>([^<]+)</Version>'
+        if ($match -and $match.Matches.Count -gt 0) {
+            $version = $match.Matches[0].Groups[1].Value
+        }
+    }
+
+    $commit = 'unknown'
+    try {
+        $commit = (& git -C $repoRoot rev-parse --short HEAD 2>$null)
+        if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($commit)) {
+            $commit = 'unknown'
+        }
+    }
+    catch {
+        $commit = 'unknown'
+    }
+
+    $manifest = @(
+        '3DOEmulator portable package'
+        "component: $Component"
+        "rid: $Rid"
+        "version: $version"
+        "commit: $commit"
+        "built: $([DateTimeOffset]::UtcNow.ToString('u'))"
+        ''
+        'BIOS ROMs and game images are not included.'
+        'See README.md, THIRD-PARTY-NOTICES.md, and Licensing.md.'
+    )
+    Set-Content -LiteralPath (Join-Path $staging 'PACKAGE.txt') -Value $manifest -Encoding utf8NoBOM
+
+    $name = "3doemulator-$Component-$Rid"
+    if ($Rid -like 'win-*') {
+        $archive = Join-Path $outputPath "$name.zip"
+        if (Test-Path -LiteralPath $archive) {
+            Remove-Item -LiteralPath $archive -Force
+        }
+
+        $items = Get-ChildItem -LiteralPath $staging -Force | Select-Object -ExpandProperty FullName
+        Compress-Archive -LiteralPath $items -DestinationPath $archive -Force
+    }
+    else {
+        $archive = Join-Path $outputPath "$name.tar.gz"
+        & tar -czf $archive -C $staging .
+        if ($LASTEXITCODE -ne 0) {
+            throw "tar failed with exit code $LASTEXITCODE."
+        }
+    }
+
+    Write-Output $archive
+}
+finally {
+    if (Test-Path -LiteralPath $staging) {
+        Remove-Item -LiteralPath $staging -Recurse -Force
+    }
+}

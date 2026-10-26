@@ -234,7 +234,7 @@ and first-run/error UI. Counting the prototype work as partial credit:
 | M9 | Partial: shell/library/video/input/fullscreen/About/Hi-Res/settings/audio/gamepad/logs/first-run; polish and ViewModel tests | 13 | 3 |
 | M9R | Partial: two-stage, sharp-bilinear/CRT/xBR/bloom/HQx 2x/3x/4x, CPU fallback, screenshots; GPU tests and 4K timing | 9.5 | 0.5 |
 | M9P | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch; hot-path and Tier B/GPU gates | 6 | 4 |
-| M10 | Partial: CI + six-RID publish + trimmed CLI; frontend trimming, arm64, installers, perf report | 3 | 3 |
+| M10 | Partial: CI + six-RID publish + trimmed CLI + portable archives; frontend trimming, arm64, installers, perf report | 3.5 | 2.5 |
 | M11 | In progress: M11.0 done; gameplay, high-resolution, and release docs underway | 3 | 22+ |
 | **Baseline** | | **~123 / 157** | **~34 + 30% = ~44** |
 
@@ -1254,13 +1254,13 @@ harness. See [`Performance.md`](Performance.md).
 - [ ] **M10.6 arm64 validation.**
   - Run on Windows arm64 (if available), Linux arm64 (Raspberry Pi 4/5), macOS arm64.
   - Verify audio/gamepad backends.
-- [ ] **M10.7 Installers (optional).**
-  - Windows MSIX/zip, macOS dmg/zip, Linux tar.gz/AppImage.
-  - Signing/notarization plan.
+- [~] **M10.7 Portable archives and installers.**
+  - `packaging/package.ps1` creates `3doemulator-<component>-<rid>.zip` for Windows and `.tar.gz` for Linux/macOS, with README/notices/licensing, a generated `PACKAGE.txt`, and the Linux desktop entry. CI publishes and uploads both the raw folders and the portable archives for all six RIDs.
+  - Remaining: MSIX/dmg/AppImage packaging, signing/notarization, Windows/macOS file associations, and installer smoke tests.
 
 **Deliverables**
 
-- Six RID packages.
+- Six RID packages (raw publish folders plus portable zip/tar.gz archives).
 - CI artifacts.
 - Performance report.
 
@@ -1268,6 +1268,7 @@ harness. See [`Performance.md`](Performance.md).
 
 - [ ] Every package starts and reaches the UI/CLI.
 - [x] The trimmed CLI package starts and passes `selftest`/`bench` on win-x64.
+- [x] Portable CLI archives build for win-x64 (zip) and linux-x64 (tar.gz) and contain the executable, notices, licensing, and `PACKAGE.txt`.
 - [ ] OpenGL context initializes on supported systems; CPU fallback works otherwise.
 - [ ] Tests green on CI.
 - [ ] Performance targets met or documented.
@@ -1637,3 +1638,4 @@ Suggested parallelization with two developers:
 | 2026-10-26 | M11.1, M9R.4b, M9R.4c, M9.5 | Pure D-pad passcode, CRT bloom, HQx, per-game filters | Added `docs/scripts/lem-fun4-dpad.txt`, which types the Lemmings Fun 4 code `HNLHCIOECW` with only the D-pad/A; gameplay starts at 23,000 (`PC 0x00083FD8`, hash `0xB7846C2D`) and roundtrips (`0xEDEB1B9D` twice). Added a 3x3 native-resolution CRT bloom pass and the `Bloom`/`BloomThreshold` settings. Ported hq2x as an opt-in 2x CPU filter with a C++ reference hash test (`0xA400C421`) and a steady-state allocation test. Added per-game filter overrides in `AppSettings` and the Settings dialog. 673 tests pass |
 | 2026-10-26 | M9R.4, M9R.4c, M11.3, M9P.9, M10.4 | HQx 3x/4x, the benchmark budget gate, and Linux file associations | Generated the hq3x/hq4x pattern switches from the 4DO sources and selected them with `VideoFilter.Hqx3x`/`Hqx4x`; the same 32x24 reference image matches the C++ `hq3x_32_rb`/`hq4x_32_rb` hashes (`0x0C406F97`/`0xBB17969C`), uniform images are unchanged, and the renderer sizes its intermediate target per scale. Measured the 320x240 CPU cost at ~2.3/4.2/7.5 ms/frame on checkerboard content and ~12.1/13.4/14.8 ms on random noise. Added `BenchmarkGate` plus the CLI benchmark `--gate` flag and wired it into CI: 0 bytes/frame, core p99 <= 8 ms, total mean <= 8 ms, and total p99 <= 16.667 ms. Added positional/`--disc` startup loading, a Linux `.desktop` association file, an optional native CPU-frame screenshot, sibling cover-art previews in the Library window, and fullscreen cursor hiding. 691 tests pass |
 | 2026-10-26 | M10.3a, M9P.9, M8.6 | Trim-safe JSON, trimmed CLI publishes, and the benchmark baseline comparison | Replaced reflection-based JSON in `AppSettings`, `InputProfile`, save-slot metadata, and every CLI `--json` response with source-generated contexts and named result records; removed the CLI's anonymous-type/`GetProperty` output path and the watchpoint `StackFrame.GetMethod` call. Enabled `PublishTrimmed=true` (`TrimMode=full`) for the CLI and added a Windows CI trimmed-publish smoke test plus trimmed six-RID publishing. Verified the win-x64 single file with `--version`, `selftest`, `bench`, `info`, `state inspect`, `state slots`, `fs list`, CHD boot/run, a save-state roundtrip, and the Lemmings/Alone 3,000-frame golden hashes. Added `BenchmarkComparison` and `--baseline`/`--baseline-threshold` for the same-machine >10% regression check (exit code 4). The only remaining trim warning is CHDSharp's vendored FLAC settings helper. 704 tests pass |
+| 2026-10-26 | M10.7 | Portable release archives | Added `packaging/package.ps1` to stage a publish folder with README, third-party notices, licensing, a generated `PACKAGE.txt`, and the Linux desktop entry, then create `3doemulator-<component>-<rid>.zip` for Windows or `.tar.gz` for Linux/macOS. Both six-RID CI publish jobs now upload a portable package alongside the raw folder. Validated the win-x64 zip and linux-x64 tar.gz contents and ran the win-x64 archive. Installers/signing/file associations remain |

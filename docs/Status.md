@@ -93,8 +93,11 @@ This is the short, current answer to "where are we?" The detailed task list is i
   CLI publishes are self-contained, single-file, and trimmed (`PublishTrimmed=true`,
   `TrimMode=full`); a Windows CI smoke test runs the trimmed CLI, and the win-x64
   package was validated with synthetic/ISO/CHD runs, state roundtrips, and `fs list`.
-  Frontend trimming remains disabled pending the Avalonia XAML/`ViewLocator` audit.
-  See [`Trimming.md`](Trimming.md).
+  CI also creates portable `3doemulator-<component>-<rid>.zip`/`.tar.gz` archives
+  with README/notices/licensing and a generated `PACKAGE.txt` via
+  `packaging/package.ps1`. Frontend trimming remains disabled pending the Avalonia
+  XAML/`ViewLocator` audit. See [`Trimming.md`](Trimming.md) and
+  [`../packaging/README.md`](../packaging/README.md).
 
 ---
 
@@ -231,7 +234,7 @@ prototype work as partial credit:
 | M9 Avalonia frontend | Partial: shell, library, video, input, fullscreen, About, Hi-Res, settings/audio/gamepad/logs/first-run/thumbnails; polish and ViewModel tests | 13 | 3 |
 | M9R OpenGL presenter | Partial: two-stage, sharp-bilinear/CRT/xBR/HQx 2x/3x/4x/bloom, CPU fallback, screenshots; GPU tests and 4K timing remain | 9.5 | 0.5 |
 | M9P performance/pacing | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch, GPU timer; hot-path, Tier B/GPU gates remain | 6 | 4 |
-| M10 packaging/validation | Partial: CI + six-RID publish + trimmed CLI; frontend trimming, arm64, installers, perf report remain | 3 | 3 |
+| M10 packaging/validation | Partial: CI + six-RID publish + trimmed CLI + portable archives; frontend trimming, arm64, installers, perf report remain | 3.5 | 2.5 |
 | M11 compatibility/release | In progress: M11.0 done; gameplay, high-resolution, and release docs underway | 3 | 22+ |
 | **Baseline total** | | **~123 / 157** | **~34 + 30% = ~44** |
 

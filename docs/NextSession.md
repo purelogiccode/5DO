@@ -4,11 +4,13 @@
 **Goal:** make the CLI trim-safe and publish trimmed single-file builds.
 The twelfth pass added source-generated JSON contexts for settings, input profiles,
 save-slot metadata, and every CLI `--json` response, removed the CLI's reflection
-paths, enabled `PublishTrimmed` for the CLI, and added a trimmed-CLI CI smoke test.
-**704 tests pass.** Do not redo the trim-safe JSON work, the trimmed CLI publish, or
-the `DiagnosticMethodInfo` watchpoint change. The remaining work is finishing a full
-Road Rash race, scripted Lemmings level play beyond the start, GPU/Tier B validation,
-frontend trimming/AOT, arm64/installers, and the legal/attribution review.
+paths, enabled `PublishTrimmed` for the CLI, added a trimmed-CLI CI smoke test,
+added a same-machine benchmark baseline comparison, and added portable release
+archives. **704 tests pass.** Do not redo the trim-safe JSON work, the trimmed CLI
+publish, the benchmark comparison, or the portable archives. The remaining work is
+finishing a full Road Rash race, scripted Lemmings level play beyond the start,
+GPU/Tier B validation, frontend trimming/AOT, arm64/installers, and the
+legal/attribution review.
 
 Earlier passes added the presentation plumbing (GL/GLES capability reporting, CPU
 fallback/context-loss recovery, fullscreen, screenshots, About, Hi-Res, benchmark
@@ -428,6 +430,24 @@ missing and corrected the Road Rash diagnosis.
 
 ---
 
+### 1.16 Twelfth pass: portable release archives (2026-10-26)
+
+- **Packaging script.** `packaging/package.ps1` takes a component (`cli`/`frontend`),
+  RID, publish directory, and output directory. It stages the publish output plus
+  `README.md`, `THIRD-PARTY-NOTICES.md`, `Licensing.md`, and a generated
+  `PACKAGE.txt` (component, RID, version, commit, UTC build time), and adds
+  `3doemulator.desktop` for Linux. Windows archives are zip; Linux/macOS archives
+  are tar.gz.
+- **CI.** Both six-RID publish jobs now create and upload a portable package in
+  addition to the raw publish folder.
+- **Local validation.** The win-x64 zip and linux-x64 tar.gz were built and
+  inspected; both contain the executable, notices, licensing, and manifest. The
+  win-x64 archive starts and passes `selftest`/`bench`.
+- **Remaining.** MSIX/dmg/AppImage installers, signing/notarization, and
+  Windows/macOS file associations (M10.7).
+
+---
+
 ## 2. Current evidence
 
 ### Wolfenstein 3D
@@ -650,6 +670,8 @@ save/load proof.
   source-generated; the trimmed win-x64 CLI passes `--version`, `selftest`,
   `bench`, `info`, `state inspect`, `state slots`, `fs list`, CHD boot/run, and a
   save-state roundtrip.
+- [x] Portable CLI archives build for win-x64 (zip) and linux-x64 (tar.gz) and
+  contain the executable, notices, licensing, and `PACKAGE.txt`.
 - [ ] The Road Rash city race is finished. The CD media-access pulse fixes the
   old ~42k/~92k READ_ID-only wait and advances to `BUSTED`, race select, and a
   new race; the autopilot passes `GAME LOADING`/`Get ready` and cycles
@@ -693,9 +715,10 @@ save/load proof.
   `HqxPatterns4.cs`) or the benchmark budget gate. Extend them with new evidence
   only.
 - Do not redo the twelfth-pass trim-safe JSON contexts, named CLI result records,
-  `DiagnosticMethodInfo` watchpoint formatter, or trimmed CLI publish. Do not
-  reintroduce reflection-based `JsonSerializer` calls in settings, input, save-slot,
-  or CLI output code; use the existing `JsonSerializerContext` metadata.
+  `DiagnosticMethodInfo` watchpoint formatter, trimmed CLI publish, benchmark
+  baseline comparison, or portable packaging script. Do not reintroduce
+  reflection-based `JsonSerializer` calls in settings, input, save-slot, or CLI
+  output code; use the existing `JsonSerializerContext` metadata.
 
 ---
 

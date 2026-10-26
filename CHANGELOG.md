@@ -43,6 +43,10 @@ still change.
 - `BenchmarkComparison` and benchmark `--baseline`/`--baseline-threshold` options:
   a same-machine relative check across core p99, total mean, and total p99 (default
   10%, exit code 4). Improvements pass; missing baseline metrics are ignored.
+- Portable release archives: `packaging/package.ps1` builds
+  `3doemulator-<component>-<rid>.zip` for Windows and `.tar.gz` for Linux/macOS,
+  including README/notices/licensing, a generated `PACKAGE.txt`, and the Linux
+  desktop entry. CI publishes both raw folders and archives for all six RIDs.
 
 ### Changed
 

@@ -201,6 +201,11 @@ settings/input/save-slot JSON and all `--json` responses use source-generated
 metadata. See [`docs/Trimming.md`](docs/Trimming.md) for the audit and the remaining
 Avalonia frontend work.
 
+CI also packages each published CLI/frontend folder as a portable archive:
+`3doemulator-<component>-<rid>.zip` on Windows and `.tar.gz` on Linux/macOS, with
+README/notices/licensing and a generated `PACKAGE.txt`. See
+[`packaging/README.md`](packaging/README.md).
+
 Desktop app:
 
 ```powershell
