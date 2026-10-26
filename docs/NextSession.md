@@ -12,7 +12,7 @@ trimmed CLI/frontend publishes, the frontend smoke test, the benchmark compariso
 the portable archives, the swap-interval/GPU-probe work, or the ANGLE/GLES parity
 work. The remaining work is finishing a full Road Rash race, scripted Lemmings
 level play beyond the start, Alone inventory, GLES 3.1/Pi/DPI validation, Tier B
-timing, NativeAOT/arm64/installers, and the legal/attribution review.
+timing, single-file frontend AOT/arm64/installers, and the legal/attribution review.
 
 Earlier passes added the presentation plumbing (GL/GLES capability reporting, CPU
 fallback/context-loss recovery, fullscreen, screenshots, About, Hi-Res, benchmark
@@ -556,13 +556,16 @@ missing and corrected the Road Rash diagnosis.
   finish the probe and dispose the surface synchronously while `OnOpenGlRender` is
   still using the adapter. The render path now returns after the capture callback
   when the surface has been disposed.
-- **NativeAOT CLI audit.** `ThreeDo.Cli` publishes with NativeAOT via the opt-in
-  `-p:ThreeDoNativeAot=true` property. The win-x64 single file is 9.97 MB (trimmed IL
-  is 26.3 MB) and passes `--version`, `selftest`, `bench`, `info`, `fs list` on
-  Lemmings (482 files), and a 3,000-frame boot matching the golden
-  `PC 0x0012B3C8` / hash `0x932C7722`. CI publishes and smoke-tests it on Windows.
-  The only warning is CHDSharp's vendored-FLAC `TypeDescriptor` helper. Frontend AOT
-  and cross-OS AOT toolchains remain.
+- **NativeAOT CLI/frontend audit.** `ThreeDo.Cli` publishes with NativeAOT via the
+  opt-in `-p:ThreeDoNativeAot=true` property. The win-x64 single file is 9.97 MB
+  (trimmed IL is 26.3 MB) and passes `--version`, `selftest`, `bench`, `info`,
+  `fs list` on Lemmings (482 files), and a 3,000-frame boot matching the golden
+  `PC 0x0012B3C8` / hash `0x932C7722`. The frontend publishes in a folder layout
+  (27.5 MB native executable) and passes `--smoke-test` plus the WGL 320x240 parity
+  probe. Single-file frontend AOT is blocked by Silk.NET.Core's
+  `Assembly.Location`/`DependencyContext` loader (`IL3000`/`IL3002`). CI publishes
+  and smoke-tests both AOT builds on Windows. The default six-RID matrix remains
+  trimmed IL.
 - **Tests.** 761 tests pass. New tests cover backend aliases/mode ordering, probe
   capture-path parsing, and the opt-in GPU integration path. The existing JSON
   contract test now includes the requested backend and parity fields.

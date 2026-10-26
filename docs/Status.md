@@ -101,14 +101,16 @@ This is the short, current answer to "where are we?" The detailed task list is i
   Both executables are self-contained, single-file, and trimmed (`PublishTrimmed=true`,
   `TrimMode=full`). The CLI also has an opt-in NativeAOT win-x64 publish
   (`-p:ThreeDoNativeAot=true`): 9.97 MB, CI-smoke-tested with `--version`, `selftest`,
-  `bench`, `info`, `fs list`, and a golden 3,000-frame boot. A Windows CI smoke test
-  runs the trimmed CLI and starts the trimmed frontend (`--smoke-test`); the win-x64
-  packages were validated with synthetic/ISO/CHD runs, state roundtrips, `fs list`,
-  and a real window/render pass.
+  `bench`, `info`, `fs list`, and a golden 3,000-frame boot. The frontend has an
+  opt-in NativeAOT folder publish (27.5 MB executable) that passes `--smoke-test` and
+  the WGL parity probe; single-file frontend AOT is blocked by Silk.NET.Core's
+  native-asset loader. A Windows CI smoke test runs the trimmed CLI and starts the
+  trimmed frontend (`--smoke-test`); the win-x64 packages were validated with
+  synthetic/ISO/CHD runs, state roundtrips, `fs list`, and a real window/render pass.
   CI also creates portable `3doemulator-<component>-<rid>.zip`/`.tar.gz` archives
   with README/notices/licensing and a generated `PACKAGE.txt` via
-  `packaging/package.ps1`. NativeAOT remains unproven and is not on the v1 critical
-  path. See [`Trimming.md`](Trimming.md) and
+  `packaging/package.ps1`. Single-file frontend NativeAOT remains unproven and is not
+  on the v1 critical path; the CLI and frontend folder AOT builds are validated. See [`Trimming.md`](Trimming.md) and
   [`../packaging/README.md`](../packaging/README.md).
 
 ---
@@ -329,8 +331,9 @@ add **2-4 weeks**. If the target is "all five corpus games playable" rather than
 
 ### P2 - finish v1
 
-8. **M10 packaging:** NativeAOT audit, arm64 validation, installers/signing plan, and
-   the final performance report. CLI and frontend trimming are complete; see
+8. **M10 packaging:** single-file frontend AOT, arm64 validation, installers/signing
+   plan, and the final performance report. The CLI and frontend folder AOT builds are
+   validated; CLI and frontend trimming are complete; see
    [`Trimming.md`](Trimming.md).
 9. **Filter/UI polish:** FPS overlay tuning and ViewModel tests. The platform swap
    interval is wired; the Avalonia compositor's independent pacing remains a host

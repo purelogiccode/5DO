@@ -126,6 +126,51 @@ jobs:
           path: artifacts/cli-aot
           if-no-files-found: error
 
+  aot-frontend:
+    name: NativeAOT frontend (win-x64 folder)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish NativeAOT
+        run: >
+          dotnet publish src/ThreeDo.Frontend.Avalonia/ThreeDo.Frontend.Avalonia.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:ThreeDoNativeAot=true
+          -m:1
+          -o artifacts/frontend-aot
+
+      - name: NativeAOT frontend smoke test
+        run: |
+          $process = Start-Process -FilePath artifacts/frontend-aot/ThreeDo.Frontend.Avalonia.exe `
+            -ArgumentList '--smoke-test', '--smoke-output', 'artifacts/frontend-aot-smoke.txt' `
+            -PassThru
+          if (-not $process.WaitForExit(60000)) {
+            $process.Kill()
+            throw 'NativeAOT frontend smoke test timed out.'
+          }
+          if ($process.ExitCode -ne 0) {
+            throw "NativeAOT frontend smoke test failed with exit code $($process.ExitCode)."
+          }
+          Get-Content artifacts/frontend-aot-smoke.txt
+          if (-not (Select-String -Path artifacts/frontend-aot-smoke.txt -Pattern 'FRONTEND SMOKE OK' -Quiet)) {
+            throw 'NativeAOT frontend smoke marker is missing.'
+          }
+
+      - name: Upload NativeAOT artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3do-frontend-aot-win-x64
+          path: artifacts/frontend-aot
+          if-no-files-found: error
+
   publish-cli:
     name: Publish CLI (${{ matrix.rid }})
     runs-on: ubuntu-latest
