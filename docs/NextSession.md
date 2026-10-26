@@ -1,18 +1,18 @@
 # Next Session Handoff
 
-**Date:** 2026-10-26 (fourteenth pass)
-**Goal:** wire the platform swap interval and measure true 4K presentation on real
-hardware. The fourteenth pass added `SwapInterval.TryCreate` (WGL/GLX/EGL), wired
-`RendererSettings.Vsync` into the renderer, and added a `--gl-probe` frontend tool
-with a true 4K offscreen target, warm-up frames, per-stage allocation counters, and
-source-generated JSON. On Windows 11 / Ryzen 9 7900 / RTX 4070, 4K sharp-bilinear
-measured GPU p99 0.089 ms, present p99 0.208 ms, and zero renderer/mailbox
-allocations per frame after warm-up. **741 tests pass.** Do not redo the trim-safe
-JSON work, the trimmed CLI/frontend publishes, the frontend smoke test, the benchmark
-comparison, the portable archives, or the new swap-interval/GPU-probe work. The
-remaining work is finishing a full Road Rash race, scripted Lemmings level play beyond
-the start, GLES/ANGLE/Pi/DPI validation, Tier B timing, NativeAOT/arm64/installers,
-and the legal/attribution review.
+**Date:** 2026-10-26 (fifteenth pass)
+**Goal:** validate the Windows ANGLE/GLES backend and CPU/GPU pixel parity. The
+fifteenth pass added `--gl-backend auto|wgl|angle|software`, `--gl-probe-capture`,
+and a CPU/GPU parity check to the GPU probe. On Windows 11 / RTX 4070, ANGLE
+(OpenGL ES 3.0, GLSL ES 300) ran every filter; 4K sharp-bilinear presented in
+0.14 ms mean / 0.47 ms p99 with zero renderer allocations, and a 320x240 Accurate
+capture matched the CPU `FrameAssembler` oracle pixel-for-pixel (`0xD6BD89C5`) on
+both WGL and ANGLE. **760 tests pass.** Do not redo the trim-safe JSON work, the
+trimmed CLI/frontend publishes, the frontend smoke test, the benchmark comparison,
+the portable archives, the swap-interval/GPU-probe work, or the ANGLE/GLES parity
+work. The remaining work is finishing a full Road Rash race, scripted Lemmings
+level play beyond the start, Alone inventory, GLES 3.1/Pi/DPI validation, Tier B
+timing, NativeAOT/arm64/installers, and the legal/attribution review.
 
 Earlier passes added the presentation plumbing (GL/GLES capability reporting, CPU
 fallback/context-loss recovery, fullscreen, screenshots, About, Hi-Res, benchmark
@@ -497,7 +497,8 @@ missing and corrected the Road Rash diagnosis.
   synthetic 320x240 VDL frames through the real Avalonia `VideoSurface`, and writes
   per-frame JSON. Options: `--gl-probe-size WxH`, `--gl-probe-frames N`,
   `--gl-probe-warmup N`, `--gl-probe-filter`, `--gl-probe-vsync`,
-  `--gl-probe-offscreen`, and `--gl-probe-timeout`. The offscreen path renders into
+  `--gl-probe-offscreen`, `--gl-probe-timeout`, `--gl-probe-capture`, and
+  `--gl-backend`/`--gl-probe-backend`. The offscreen path renders into
   an RGBA8 FBO (`OffscreenRenderTarget`), so a true 4K pass works on a smaller
   desktop. The probe reports vendor/renderer/version, output size, filter, present
   and GPU p50/p95/p99/max, total and per-stage allocations, and vsync state.
@@ -519,6 +520,32 @@ missing and corrected the Road Rash diagnosis.
 - **Tests.** 741 tests pass. New tests cover probe option parsing/filter aliases,
   the JSON contract, swap-interval selection, vsync capability reporting, and
   offscreen-target validation.
+
+---
+
+### 1.19 Fifteenth pass: ANGLE/GLES validation and CPU/GPU parity (2026-10-26)
+
+- **Backend selection.** The frontend accepts `--gl-backend auto|wgl|angle|software`
+  (alias `--gl-probe-backend`) and maps it to `Win32PlatformOptions.RenderingMode`.
+  `auto` preserves the previous WGL -> ANGLE -> software order. The probe report
+  records `requestedBackend`.
+- **Probe capture/parity.** `--gl-probe-capture <path>` writes the presented frame as
+  a PNG. For a 320x240 Accurate capture, the probe compares the GPU pixels with
+  `FrameAssembler` and records `parity` (`matches`, `differentPixels`, `cpuHash`,
+  `gpuHash`, `verticalFlip`). Measurement allocations are snapshotted before the
+  capture so the readback buffer does not distort the steady-state allocation result.
+- **ANGLE results.** On Windows 11 / Ryzen 9 7900 / RTX 4070, ANGLE reported
+  OpenGL ES 3.0 via Direct3D 11, integer textures, and `EGL_KHR_swap_interval`.
+  4K sharp-bilinear: present mean 0.14 ms, p99 0.47 ms; accurate 0.15/0.48; CRT
+  0.14/0.43; xBR 0.37/0.83; 1080p sharp 0.13/0.40; windowed 720p sharp 0.13/0.49;
+  all with 0 renderer/mailbox bytes per frame. HQx 4x is CPU-bound at 10.44/14.22 ms.
+  ANGLE has no `GL_TIME_ELAPSED`, so GPU timing is `null`; present timing is valid.
+- **Parity.** WGL (OpenGL 4.0/GLSL 330) and ANGLE (OpenGL ES 3.0/GLSL ES 300) both
+  matched the CPU oracle exactly: 0 different pixels, FNV-1a hash `0xD6BD89C5`
+  (`3602745797`), no vertical flip.
+- **Tests.** 760 tests pass. New tests cover backend aliases/mode ordering and probe
+  capture-path parsing; the existing JSON contract test now includes the requested
+  backend and parity fields.
 
 ---
 
@@ -805,6 +832,9 @@ save/load proof.
   `SwapInterval.TryCreate`, `OffscreenRenderTarget`, the probe options/JSON
   context, and the measured 4K results are complete. Extend the probe with new
   evidence only; do not replace it with a reflection-based JSON path.
+- Do not redo the fifteenth-pass `--gl-backend` selection, `--gl-probe-capture`
+  parity path, or the measured WGL/ANGLE/GLES 3.0 results. Extend them with
+  GLES 3.1/Pi/DPI evidence only.
 
 ---
 
@@ -833,6 +863,19 @@ $p = Start-Process -FilePath "$o\frontend-trim\ThreeDo.Frontend.Avalonia.exe" `
   -ArgumentList '--smoke-test', '--smoke-output', "$o\frontend-smoke.txt" -PassThru
 $p.WaitForExit(60000)
 Get-Content "$o\frontend-smoke.txt"
+
+# GPU presentation probe (WGL, ANGLE/GLES, or software)
+dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- `
+  --gl-backend angle `
+  --gl-probe artifacts/gl-probe/angle-4k-sharp.json `
+  --gl-probe-size 3840x2160 --gl-probe-frames 120 --gl-probe-warmup 30 `
+  --gl-probe-filter sharp-bilinear --gl-probe-offscreen
+
+# CPU/GPU parity: capture a 1:1 Accurate frame and compare it with FrameAssembler
+dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- `
+  --gl-backend wgl --gl-probe artifacts/gl-probe/parity-wgl.json `
+  --gl-probe-size 320x240 --gl-probe-filter accurate --gl-probe-offscreen `
+  --gl-probe-capture artifacts/gl-probe/parity-wgl.png
 
 # Road Rash: render the race and capture every 1,000 frames
 dotnet run -c Release --project src/ThreeDo.Cli -- run `

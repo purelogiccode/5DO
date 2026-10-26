@@ -76,6 +76,12 @@ hidden while fullscreen), and the FPS/status overlay are in **Settings**. The re
 falls back to the CPU `WriteableBitmap` presenter when OpenGL initialization or context
 recovery fails; the status line and **Logs** report the reason.
 
+On Windows, the frontend accepts `--gl-backend auto|wgl|angle|software` to force a
+renderer backend for troubleshooting or validation. `auto` is the default (desktop
+WGL, then ANGLE/GLES, then software). The developer `--gl-probe` tool uses the same
+option and can capture a 1:1 Accurate frame for CPU/GPU parity; see
+[`Performance.md`](Performance.md).
+
 The opt-in **Hi-Res** mode renders 640x480 CELs and restarts the machine when toggled.
 It is off by default because 320x240 titles must not be upscaled.
 

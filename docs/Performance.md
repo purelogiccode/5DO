@@ -209,8 +209,8 @@ The renderer must support two shader/API variants behind one contract:
 
 | Backend | API / shader | Platforms | Notes |
 |---|---|---|---|
-| Desktop GL | OpenGL 3.3 core, GLSL 330 | Windows via WGL, Linux GLX/EGL, macOS 4.1 core | Primary desktop path; integer textures and `texelFetch` |
-| GLES | OpenGL ES 3.0/3.1, GLSL ES 300 | Windows ANGLE, Raspberry Pi 4/5, other GLES devices | Same two-stage pipeline; `R16UI` + `usampler2D` |
+| Desktop GL | OpenGL 3.3 core, GLSL 330 | Windows via WGL, Linux GLX/EGL, macOS 4.1 core | Primary desktop path; integer textures and `texelFetch`. Validated on Windows 11 / RTX 4070 (OpenGL 4.0) with `--gl-backend wgl`. |
+| GLES | OpenGL ES 3.0/3.1, GLSL ES 300 | Windows ANGLE, Raspberry Pi 4/5, other GLES devices | Same two-stage pipeline; `R16UI` + `usampler2D`. Validated on Windows 11 / RTX 4070 via ANGLE (OpenGL ES 3.0) with `--gl-backend angle`; Pi remains open. |
 
 Implementation requirements:
 
@@ -219,7 +219,9 @@ Implementation requirements:
   (`Silk.NET.OpenGL` vs `Silk.NET.OpenGLES`); keep the renderer logic shared.
 - On Windows, either configure `Win32PlatformOptions.RenderingMode` to prefer
   `Wgl` with `AngleEgl` fallback, or implement the GLES path. Do not assume the
-  default ANGLE context accepts GLSL 330.
+  default ANGLE context accepts GLSL 330. The frontend's `--gl-backend
+  auto|wgl|angle|software` option forces a backend for validation; the default
+  remains `auto` (WGL, then ANGLE, then software).
 - Keep `RendererCapabilities` honest: `SupportsIntegerTextures` and
   `SupportsOpenGl33` are not the same thing. The GLES path should report the actual
   API/version and fall back to CPU only when integer textures/`texelFetch` are
@@ -326,9 +328,52 @@ The residual probe allocation (~2.3 KB/frame) is outside `OpenGlRenderer.Present
 and comes from the Avalonia UI/compositor loop; it is a host-side follow-up, not
 the upload/present path.
 
-The GLES/ANGLE and Raspberry Pi paths, and the 100/150/200% DPI validation, remain
-open. The probe is a manual/self-hosted GPU tool; headless CI keeps the CPU
-renderer and allocation tests.
+**ANGLE/GLES validation (2026-10-26).** The same probe can force the ANGLE/EGL
+backend and select the GLSL ES 300 shader variant. On the same Windows 11 / RTX 4070
+machine, ANGLE reported `Google Inc. (NVIDIA)` / Direct3D 11, OpenGL ES 3.0,
+integer textures, and `EGL_KHR_swap_interval`:
+
+```powershell
+dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- `
+  --gl-backend angle `
+  --gl-probe artifacts/gl-probe/angle-4k-sharp.json `
+  --gl-probe-size 3840x2160 --gl-probe-frames 120 --gl-probe-warmup 30 `
+  --gl-probe-filter sharp-bilinear --gl-probe-offscreen
+```
+
+| ANGLE case | Output | Present mean | Present p99 | Renderer alloc |
+|---|---:|---:|---:|---:|
+| Sharp-bilinear | 3840x2160 | **0.14 ms** | **0.47 ms** | **0 B/frame** |
+| Accurate (nearest) | 3840x2160 | 0.15 ms | 0.48 ms | 0 B/frame |
+| CRT | 3840x2160 | 0.14 ms | 0.43 ms | 0 B/frame |
+| xBR 4x | 3840x2160 | 0.37 ms | 0.83 ms | 0 B/frame |
+| HQx 4x (CPU filter) | 3840x2160 | 10.44 ms | 14.22 ms | 0 B/frame |
+| Sharp-bilinear | 1920x1080 | 0.13 ms | 0.40 ms | 0 B/frame |
+| Sharp-bilinear, windowed | 1280x720 | 0.13 ms | 0.49 ms | 0 B/frame |
+
+ANGLE does not expose `GL_TIME_ELAPSED`, so the GPU timing column is `null`; the
+CPU present times and the pixel-parity result below are still measured. The
+renderer/mailbox path remains allocation-free after warm-up.
+
+**CPU/GPU parity (2026-10-26).** `--gl-probe-capture <path>` writes the presented
+frame as a PNG and, for a 1:1 Accurate capture, compares it with the CPU
+`FrameAssembler` oracle. A 320x240 capture through both backends produced
+**0 different pixels**, CPU/GPU FNV-1a hash `0xD6BD89C5` (`3602745797`), with no
+vertical flip:
+
+```powershell
+dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- `
+  --gl-backend wgl --gl-probe artifacts/gl-probe/parity-wgl.json `
+  --gl-probe-size 320x240 --gl-probe-filter accurate --gl-probe-offscreen `
+  --gl-probe-capture artifacts/gl-probe/parity-wgl.png
+```
+
+Repeat with `--gl-backend angle` for the GLES variant. Both runs report
+`"parity": { "matches": true, "differentPixels": 0 }`. This is the first real GL
+and GLES parity evidence; the probe is still a manual/self-hosted GPU tool.
+
+The Raspberry Pi and 100/150/200% DPI validation remain open. Headless CI keeps the
+CPU renderer and allocation tests.
 
 **HQx CPU cost (2026-10-26).** The opt-in HQx filters run on the CPU at native
 resolution before the final scale. On the x64 development machine, 300 iterations of
@@ -415,11 +460,12 @@ Still open:
 
 1. Physical-pixel sizing from `Bounds * RenderScaling` is implemented; manual
    validation at 100/150/200% DPI and live resize remains.
-2. The renderer selects GLSL ES 300 sources when the context reports OpenGL ES, and
-   the Windows frontend now prefers WGL. ANGLE/Pi real-hardware validation and the
-   Silk.NET binding path under an ES context remain.
-3. The 4K GPU percentile run is recorded (see the GPU presentation probe above).
-   GLES/ANGLE, Raspberry Pi, and 100/150/200% DPI validation remain.
+2. The renderer selects GLSL ES 300 sources when the context reports OpenGL ES.
+   The Windows frontend now prefers WGL and can force WGL/ANGLE/software with
+   `--gl-backend`. ANGLE/GLES 3.0 is validated on Windows, including pixel parity;
+   Raspberry Pi 4/5 (GLES 3.1) remains open.
+3. The 4K GPU percentile run is recorded for WGL and ANGLE/GLES (see the GPU
+   presentation probe above). Raspberry Pi and 100/150/200% DPI validation remain.
 4. `PrefetchingDiscSource` is implemented as an opt-in bounded worker/cache, but
    Tier B timing and the default policy are not measured.
 5. Real-game compatibility is partial: all five corpus titles boot and render, and
@@ -445,8 +491,11 @@ changes and belong in M9P before release polish.
 - [x] Zero managed allocations per frame in the renderer/mailbox present path
       (steady state, GPU probe after warm-up). Core/pack/mailbox/read also report
       0 bytes/frame in the synthetic benchmark.
-- [ ] Desktop GL 3.3 and GLES 3.0/3.1 shader variants compile and render identical
-      Accurate-mode output.
+- [x] Desktop GL 3.3 and GLES 3.0 shader variants compile and render identical
+      Accurate-mode output. Validated with `--gl-backend wgl` (OpenGL 4.0/GLSL 330)
+      and `--gl-backend angle` (OpenGL ES 3.0/GLSL ES 300): 320x240 Accurate
+      captures match the CPU oracle pixel-for-pixel (`0xD6BD89C5`). GLES 3.1/Pi
+      hardware remains open.
 - [ ] Physical-pixel sizing at 100/150/200% DPI; no logical-pixel downscaling.
 - [ ] Render-on-demand and frame pacing verified with a 60 Hz and a 144 Hz display.
 - [ ] Real-content smoke and performance results recorded with BIOS, disc, commit,

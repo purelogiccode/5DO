@@ -38,7 +38,9 @@ internal sealed class GlProbeWindow : Window, IDisposable
     private readonly Stopwatch _elapsed = new();
     private DispatcherTimer? _timeout;
     private RendererCapabilities? _capabilities;
+    private GlProbeParity? _parity;
     private long _startAllocatedBytes;
+    private long? _measuredAllocatedBytes;
     private int _submitted;
     private int _presented;
     private int _measured;
@@ -86,6 +88,7 @@ internal sealed class GlProbeWindow : Window, IDisposable
         _video.OpenGlReady += OnOpenGlReady;
         _video.OpenGlFailed += OnOpenGlFailed;
         _video.FramePresented += OnFramePresented;
+        _video.CaptureCompleted += OnCaptureCompleted;
         Opened += OnOpened;
         Closed += OnClosed;
     }
@@ -197,12 +200,122 @@ internal sealed class GlProbeWindow : Window, IDisposable
         _measured++;
         if (_measured >= _options.Frames)
         {
-            Finish(true, null);
+            BeginCaptureOrFinish();
             return;
         }
 
         SubmitNext();
     }
+
+    private void BeginCaptureOrFinish()
+    {
+        _measuredAllocatedBytes = GC.GetAllocatedBytesForCurrentThread() - _startAllocatedBytes;
+        if (_options.CapturePath is null)
+        {
+            Finish(true, null);
+            return;
+        }
+
+        _video.RequestCapture();
+    }
+
+    private void OnCaptureCompleted(byte[] pixels, int width, int height)
+    {
+        if (_finished)
+        {
+            return;
+        }
+
+        try
+        {
+            PngDumper.WriteBgra(pixels, width, height, _options.CapturePath!);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            Finish(false, $"The probe capture failed: {exception.Message}");
+            return;
+        }
+
+        _parity = ComputeParity(pixels, width, height);
+        Finish(true, null);
+    }
+
+    private GlProbeParity? ComputeParity(byte[] gpuPixels, int width, int height)
+    {
+        // The parity oracle is only meaningful for a 1:1 Accurate presentation;
+        // upscaled/filtered outputs are compared visually, not byte-for-byte.
+        if (width != SourceWidth || height != SourceHeight || _options.Filter != VideoFilter.Accurate)
+        {
+            return null;
+        }
+
+        var cpu = new FrameBuffer(width, height);
+        FrameAssembler.Assemble(_frame, cpu, width, height);
+        var expected = cpu.PixelSpan;
+        var direct = CountDifferentPixels(gpuPixels, expected, width, height, flipVertically: false);
+        var flipped = CountDifferentPixels(gpuPixels, expected, width, height, flipVertically: true);
+        var useFlip = flipped < direct;
+        var different = Math.Min(direct, flipped);
+        var gpuHash = HashGpuPixels(gpuPixels, width, height, useFlip);
+        var cpuHash = HashPixels(expected, width, height, flipVertically: false);
+        return new GlProbeParity(
+            Compared: true,
+            Matches: different == 0,
+            DifferentPixels: different,
+            CpuHash: cpuHash,
+            GpuHash: gpuHash,
+            VerticalFlip: useFlip);
+    }
+
+    private static int CountDifferentPixels(
+        ReadOnlySpan<byte> gpuPixels,
+        ReadOnlySpan<byte> cpuPixels,
+        int width,
+        int height,
+        bool flipVertically)
+    {
+        var different = 0;
+        for (var y = 0; y < height; y++)
+        {
+            var sourceRow = (flipVertically ? height - 1 - y : y) * width * 4;
+            var targetRow = y * width * 4;
+            for (var x = 0; x < width; x++)
+            {
+                var source = sourceRow + (x * 4);
+                var target = targetRow + (x * 4);
+                if (gpuPixels[source] != cpuPixels[target]
+                    || gpuPixels[source + 1] != cpuPixels[target + 1]
+                    || gpuPixels[source + 2] != cpuPixels[target + 2])
+                {
+                    different++;
+                }
+            }
+        }
+
+        return different;
+    }
+
+    private static uint HashPixels(
+        ReadOnlySpan<byte> pixels,
+        int width,
+        int height,
+        bool flipVertically)
+    {
+        var hash = 2166136261u;
+        for (var y = 0; y < height; y++)
+        {
+            var row = (flipVertically ? height - 1 - y : y) * width * 4;
+            for (var x = 0; x < width * 4; x++)
+            {
+                hash = (hash ^ pixels[row + x]) * 16777619u;
+            }
+        }
+
+        return hash;
+    }
+
+    private static uint HashGpuPixels(byte[] pixels, int width, int height, bool flipVertically)
+        => HashPixels(pixels, width, height, flipVertically);
 
     private void InitializeSyntheticFrame()
     {
@@ -274,13 +387,15 @@ internal sealed class GlProbeWindow : Window, IDisposable
 
     private GlProbeReport BuildReport(bool success, string? error)
     {
-        var allocated = Math.Max(0, GC.GetAllocatedBytesForCurrentThread() - _startAllocatedBytes);
+        var allocated = _measuredAllocatedBytes
+            ?? Math.Max(0, GC.GetAllocatedBytesForCurrentThread() - _startAllocatedBytes);
         var frames = Math.Max(1, _measured);
         var elapsedSeconds = _elapsed.Elapsed.TotalSeconds;
         var capabilities = _capabilities;
         return new GlProbeReport(
             Ok: success,
             Error: error,
+            RequestedBackend: Program.RequestedGlBackend.ToString(),
             Backend: capabilities?.Name,
             Vendor: _video.GlVendor,
             Renderer: _video.GlRenderer,
@@ -299,6 +414,8 @@ internal sealed class GlProbeWindow : Window, IDisposable
             OutputHeight: _video.RenderedHeight,
             Filter: _options.Filter.ToString(),
             Offscreen: _options.Offscreen,
+            CapturePath: _options.CapturePath,
+            Parity: _parity,
             Frames: _measured,
             WarmupFrames: _options.WarmupFrames,
             ElapsedSeconds: Round(elapsedSeconds),
@@ -351,6 +468,7 @@ internal sealed class GlProbeWindow : Window, IDisposable
         _video.OpenGlReady -= OnOpenGlReady;
         _video.OpenGlFailed -= OnOpenGlFailed;
         _video.FramePresented -= OnFramePresented;
+        _video.CaptureCompleted -= OnCaptureCompleted;
         _video.Dispose();
     }
 }
@@ -368,9 +486,25 @@ public readonly record struct GlProbeTiming(
     double P99Ms,
     double MaxMs);
 
+/// <summary>CPU/GPU palette parity for a 1:1 Accurate probe capture.</summary>
+/// <param name="Compared">Whether a parity comparison was performed.</param>
+/// <param name="Matches">Whether every RGB pixel matched the CPU oracle.</param>
+/// <param name="DifferentPixels">Number of RGB pixels that differ.</param>
+/// <param name="CpuHash">FNV-1a hash of the CPU oracle pixels.</param>
+/// <param name="GpuHash">FNV-1a hash of the captured GPU pixels in the matched orientation.</param>
+/// <param name="VerticalFlip">Whether the captured rows had to be flipped to match.</param>
+public readonly record struct GlProbeParity(
+    bool Compared,
+    bool Matches,
+    int DifferentPixels,
+    uint CpuHash,
+    uint GpuHash,
+    bool VerticalFlip);
+
 /// <summary>The JSON result written by <see cref="GlProbeWindow"/>.</summary>
 /// <param name="Ok">Whether the probe completed.</param>
 /// <param name="Error">Failure message, if any.</param>
+/// <param name="RequestedBackend">Renderer backend requested on the command line.</param>
 /// <param name="Backend">Renderer backend name.</param>
 /// <param name="Vendor">GL vendor string.</param>
 /// <param name="Renderer">GL renderer string.</param>
@@ -389,6 +523,8 @@ public readonly record struct GlProbeTiming(
 /// <param name="OutputHeight">Measured physical output height.</param>
 /// <param name="Filter">Selected filter.</param>
 /// <param name="Offscreen">Whether the measured pass rendered to an offscreen target.</param>
+/// <param name="CapturePath">Optional PNG capture path.</param>
+/// <param name="Parity">CPU/GPU parity result when the capture is a 1:1 Accurate frame.</param>
 /// <param name="Frames">Measured frames presented.</param>
 /// <param name="WarmupFrames">Unmeasured warm-up frames.</param>
 /// <param name="ElapsedSeconds">Elapsed wall-clock seconds.</param>
@@ -409,6 +545,7 @@ public readonly record struct GlProbeTiming(
 public sealed record GlProbeReport(
     bool Ok,
     string? Error,
+    string? RequestedBackend,
     string? Backend,
     string? Vendor,
     string? Renderer,
@@ -427,6 +564,8 @@ public sealed record GlProbeReport(
     int OutputHeight,
     string Filter,
     bool Offscreen,
+    string? CapturePath,
+    GlProbeParity? Parity,
     int Frames,
     int WarmupFrames,
     double ElapsedSeconds,

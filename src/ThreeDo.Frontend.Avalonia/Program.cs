@@ -32,6 +32,12 @@ sealed class Program
     /// </summary>
     public static GlProbeOptions? GlProbe { get; private set; }
 
+    /// <summary>
+    /// Gets the renderer backend requested with <c>--gl-backend</c> (or the probe alias
+    /// <c>--gl-probe-backend</c>). The default is <see cref="GlBackend.Auto"/>.
+    /// </summary>
+    public static GlBackend RequestedGlBackend { get; private set; } = GlBackend.Auto;
+
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
@@ -44,6 +50,18 @@ sealed class Program
             return;
         }
 
+        var backendText = FindOptionValue(args, "--gl-backend")
+            ?? FindOptionValue(args, "--gl-probe-backend");
+        if (!GlBackendOption.TryParse(backendText, out var backend))
+        {
+            Console.Error.WriteLine(
+                $"--gl-backend does not recognize '{backendText}'. Use auto, wgl, angle, or software.");
+            Environment.ExitCode = 1;
+            return;
+        }
+
+        RequestedGlBackend = backend;
+
         SmokeTest = HasFlag(args, "--smoke-test");
         SmokeOutputPath = FindOptionValue(args, "--smoke-output");
         if (HasFlag(args, "--gl-probe"))
@@ -51,6 +69,7 @@ sealed class Program
             if (!GlProbeOptions.TryParse(args, out var probe, out var probeError))
             {
                 Console.Error.WriteLine(probeError);
+                Environment.ExitCode = 1;
                 return;
             }
 
@@ -155,7 +174,10 @@ sealed class Program
         var previous = args[index - 1];
         return string.Equals(previous, "--disc", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--smoke-output", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--gl-backend", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--gl-probe", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--gl-probe-backend", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--gl-probe-capture", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--gl-probe-size", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--gl-probe-frames", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--gl-probe-warmup", StringComparison.OrdinalIgnoreCase)
@@ -169,9 +191,9 @@ sealed class Program
             .UsePlatformDetect()
             .With(new Win32PlatformOptions
             {
-                // Prefer desktop WGL so the GLSL 330 presenter is used. ANGLE remains a
-                // fallback and will select the GLES shader path once it is available.
-                RenderingMode = [Win32RenderingMode.Wgl, Win32RenderingMode.AngleEgl, Win32RenderingMode.Software],
+                // Desktop WGL is the primary path; ANGLE is the GLES fallback. The
+                // --gl-backend option forces a single backend for validation.
+                RenderingMode = GlBackendOption.ToRenderingModes(RequestedGlBackend),
             })
             .WithInterFont()
             .LogToTrace();

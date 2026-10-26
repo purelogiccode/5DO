@@ -48,6 +48,9 @@ public class FrontendStartupTests
         Assert.Null(Program.FindDiscPath(["--gl-probe", report, "--gl-probe-warmup", "30"]));
         Assert.Null(Program.FindDiscPath(["--gl-probe", report, "--gl-probe-filter", "sharp-bilinear"]));
         Assert.Null(Program.FindDiscPath(["--gl-probe", report, "--gl-probe-timeout", "5"]));
+        Assert.Null(Program.FindDiscPath(["--gl-probe", report, "--gl-probe-capture", "frame.png"]));
+        Assert.Null(Program.FindDiscPath(["--gl-backend", "angle"]));
+        Assert.Null(Program.FindDiscPath(["--gl-probe", report, "--gl-probe-backend", "wgl"]));
     }
 
     [Fact]

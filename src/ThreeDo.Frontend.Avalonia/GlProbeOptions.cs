@@ -15,6 +15,7 @@ namespace ThreeDo.Frontend.Avalonia;
 /// </remarks>
 internal sealed record GlProbeOptions(
     string OutputPath,
+    string? CapturePath,
     int Width,
     int Height,
     int Frames,
@@ -65,6 +66,21 @@ internal sealed record GlProbeOptions(
         {
             error = $"--gl-probe output path is invalid: {exception.Message}";
             return false;
+        }
+
+        string? capturePath = null;
+        var capture = Program.FindOptionValue(args, "--gl-probe-capture");
+        if (capture is not null)
+        {
+            try
+            {
+                capturePath = Path.GetFullPath(capture);
+            }
+            catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
+            {
+                error = $"--gl-probe-capture path is invalid: {exception.Message}";
+                return false;
+            }
         }
 
         var width = DefaultWidth;
@@ -128,6 +144,7 @@ internal sealed record GlProbeOptions(
 
         options = new GlProbeOptions(
             outputPath,
+            capturePath,
             width,
             height,
             frames,

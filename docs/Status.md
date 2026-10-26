@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-26, fourteenth pass (see `git log` for the exact commit).
+**Snapshot:** 2026-10-26, fifteenth pass (see `git log` for the exact commit).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
 **Reference:** `References/opera-libretro-master/libopera` is now the primary
 behavioral reference for new compatibility work; see
@@ -23,7 +23,10 @@ This is the short, current answer to "where are we?" The detailed task list is i
   reaches the shell. The earlier `PC 0x205C4` "halt" was the Portfolio idle loop.
 - **Video:** the desktop two-stage presenter expands palettes at native resolution
   into an FBO, then scales/filters to the output. Desktop GL 3.3 and GLSL ES 300
-  sources are selected from the context version. The VDLP bitmap path now honors the
+  sources are selected from the context version; the frontend can force the backend
+  with `--gl-backend auto|wgl|angle|software`. Windows ANGLE/EGL OpenGL ES 3.0 is
+  validated on the development RTX 4070: all filters compile and a 320x240 Accurate
+  capture matches the CPU oracle pixel-for-pixel. The VDLP bitmap path now honors the
   modulo-derived line width (320/384/512/640/1024). The palette shader was fixed in the
   eighth pass to use independent red, green, and blue CLUT indices; the previous shader
   used only the low five bits and made real games grayscale. An opt-in high-resolution
@@ -41,7 +44,10 @@ This is the short, current answer to "where are we?" The detailed task list is i
   uniform locations and the present delegate are cached; physical-pixel sizing is
   implemented. The benchmark reports p50/p95/p99 and per-stage allocations, and the
   synthetic steady state is 0 bytes/frame. An opt-in bounded prefetch cache is
-  available for CHD/ISO streaming.
+  available for CHD/ISO streaming. The `--gl-probe` validates both WGL and
+  ANGLE/GLES: 4K sharp-bilinear presents in 0.14 ms mean / 0.47 ms p99 with 0
+  renderer allocations/frame on the RTX 4070; a 320x240 Accurate capture matches
+  the CPU oracle on both backends.
 - **Renderer robustness:** GL/GLES capability parsing reports the API and version,
   fullscreen/F11/Escape work, GL readback screenshots are implemented, and GL init
   failure or context loss switches the shell to the CPU `WriteableBitmap` presenter.
@@ -83,13 +89,14 @@ This is the short, current answer to "where are we?" The detailed task list is i
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 741 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 760 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
   thumbnails, keyboard/gamepad binding capture, gamepad mapping, log filtering,
-  source-generated CLI JSON contracts, frontend startup-argument parsing, and shader
-  source invariants.
+  source-generated CLI JSON contracts, frontend startup-argument parsing, renderer
+  backend selection, GPU-probe capture/parity contracts, and shader source
+  invariants.
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   Both executables are self-contained, single-file, and trimmed (`PublishTrimmed=true`,
   `TrimMode=full`). A Windows CI smoke test runs the trimmed CLI and starts the trimmed
@@ -233,8 +240,8 @@ far below the 16.67 ms budget.
   internal rendering.
 
 CPU p99 and per-stage allocations are measured, and Tier A 4K GPU/present p99 is now
-recorded. The next performance work is GLES/ANGLE/Pi validation, Tier B timing, and
-100/150/200% DPI. See [`Performance.md`](Performance.md).
+recorded. The next performance work is Raspberry Pi/GLES 3.1 and DPI validation,
+Tier B timing, and the CI relative gate. See [`Performance.md`](Performance.md).
 
 ---
 
@@ -247,7 +254,7 @@ prototype work as partial credit:
 |---|---|---:|---:|
 | M0-M8 core, CPU, boot, MADAM, DSP, CD, input, save states | Functionally complete; M0.8 legal review and minor M8 follow-ups are non-blocking | 90 | 0 |
 | M9 Avalonia frontend | Partial: shell, library, video, input, fullscreen, About, Hi-Res, settings/audio/gamepad/logs/first-run/thumbnails; polish and ViewModel tests | 13 | 3 |
-| M9R OpenGL presenter | Partial: two-stage, sharp-bilinear/CRT/xBR/HQx 2x/3x/4x/bloom, CPU fallback, screenshots, swap interval, Tier A 4K timing; GLES and GPU CI remain | 10 | 0 |
+| M9R OpenGL presenter | Partial: two-stage, sharp-bilinear/CRT/xBR/HQx 2x/3x/4x/bloom, CPU fallback, screenshots, swap interval, Tier A 4K timing, WGL/ANGLE parity; GLES 3.1/Pi and GPU CI remain | 10 | 0 |
 | M9P performance/pacing | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch, GPU timer, 4K probe; hot-path, Tier B/GPU gates remain | 6.5 | 3.5 |
 | M10 packaging/validation | Partial: CI + six-RID publish + trimmed CLI/frontend + portable archives; arm64, installers, perf report remain | 4.5 | 1.5 |
 | M11 compatibility/release | In progress: M11.0 done; gameplay, high-resolution, and release docs underway | 3 | 22+ |
@@ -297,9 +304,8 @@ add **2-4 weeks**. If the target is "all five corpus games playable" rather than
    (`--gl-probe`: GPU p99 0.089 ms, present p99 0.208 ms, 0 renderer allocations);
    Pi 5 is likely and Pi 4 is realistically 1080p60 until measured.
 5. **Validate the backend matrix** on real hardware: WGL desktop GL, ANGLE GLES,
-   Raspberry Pi 4/5 GLES 3.1, and 100/150/200% DPI. The shader sources, physical
-   pixel sizing, and WGL swap-interval path exist; GLES/Pi/DPI are not proven on
-   device.
+   Raspberry Pi 4/5 GLES 3.1, and 100/150/200% DPI. WGL and Windows ANGLE/GLES 3.0
+   are validated, including pixel parity; Pi and DPI are not proven on device.
 6. **Validate CHD prefetch on Tier B.** `PrefetchingDiscSource` is implemented and
    opt-in via `--prefetch`; x64 CHD/ISO p99 is recorded, but Pi 4/5 timing and the
    default policy remain.
@@ -327,8 +333,8 @@ add **2-4 weeks**. If the target is "all five corpus games playable" rather than
 ## 6. Next session
 
 The next session is a focused gameplay-validation session, not a UI or performance
-pass. The fourteenth pass completed the swap-interval and Tier A 4K presentation
-work; start with [`NextSession.md`](NextSession.md):
+pass. The fifteenth pass completed the Windows ANGLE/GLES backend validation and
+CPU/GPU parity work; start with [`NextSession.md`](NextSession.md):
 
 1. Use `--input-script` to start and play each title: Lemmings level (the passcode
    path is mapped; type a valid 10-letter code), Wolfenstein movement/fire, Road

@@ -6,10 +6,14 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-26, fourteenth pass):** M0-M8 are functionally complete. The
+**Current position (2026-10-26, fifteenth pass):** M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **741 tests pass.** The fourteenth pass wired the platform swap interval
+prototype. **760 tests pass.** The fifteenth pass added an explicit
+`--gl-backend auto|wgl|angle|software` selector and validated the Windows
+ANGLE/GLES 3.0 path: all filters compile, 4K sharp-bilinear presents in 0.14 ms
+mean / 0.47 ms p99 with zero renderer allocations, and a 320x240 Accurate capture
+matches the CPU oracle pixel-for-pixel on both WGL and ANGLE. The fourteenth pass wired the platform swap interval
 (WGL/GLX/EGL) and added a true-4K `--gl-probe`; on the RTX 4070 development machine,
 4K sharp-bilinear measures GPU p99 0.089 ms and present p99 0.208 ms with zero
 renderer/mailbox allocations per frame after warm-up. The shell now has fullscreen,
@@ -86,10 +90,10 @@ Road Rash's VRAM allocator and drew Alone horizontally, and VDLP bitmap widths f
 added; save-state loads restore the VDL picture immediately.
 
 Remaining major work: finish a full Road Rash race without wrecking; script an
-Alone inventory sequence; validate GLES/ANGLE/Pi/DPI and Tier B timing (Tier A 4K is
-measured); validate Tier B prefetch; UI polish and a relative benchmark baseline;
-arm64/installers; and the legal/attribution review. Per-title save-state, PNG, and WAV
-evidence is recorded
+Alone inventory sequence; validate GLES 3.1/Pi/DPI and Tier B timing (Tier A 4K is
+measured for WGL and ANGLE); validate Tier B prefetch; UI polish and a relative
+benchmark baseline; arm64/installers; and the legal/attribution review. Per-title
+save-state, PNG, and WAV evidence is recorded
 in [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. See
 [`docs/Status.md`](docs/Status.md) for the completion estimate and
 [`docs/NextSession.md`](docs/NextSession.md) for the next-session plan. The
@@ -154,8 +158,11 @@ The CPU side currently runs at ~1.25-1.6 ms/frame (core + pack + mailbox + read 
 at 60 Hz on the development machine. The synthetic steady state is allocation-free.
 The new `--gl-probe` measures the real Avalonia/OpenGL presentation path: on Windows
 11 with an RTX 4070, 4K sharp-bilinear is GPU p99 0.089 ms and present p99 0.208 ms,
-with zero renderer/mailbox allocations per frame after warm-up. Tier B numbers,
-GLES/ANGLE/Pi validation, and the CI relative gate are not measured yet; see
+with zero renderer/mailbox allocations per frame after warm-up. The same probe forces
+ANGLE/GLES 3.0 (`--gl-backend angle`): 4K sharp-bilinear presents in 0.14 ms mean /
+0.47 ms p99 with zero renderer allocations, and a 320x240 Accurate capture matches
+the CPU oracle on both WGL and ANGLE. Tier B numbers, Raspberry Pi/GLES 3.1, DPI,
+and the CI relative gate are not measured yet; see
 [`docs/Performance.md`](docs/Performance.md) for the pipeline, measurement method,
 and the remaining M9P work items.
 
@@ -214,10 +221,22 @@ dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- `
   --gl-probe artifacts/gl-probe/4k-sharp.json `
   --gl-probe-size 3840x2160 --gl-probe-frames 120 --gl-probe-warmup 30 `
   --gl-probe-filter sharp-bilinear --gl-probe-offscreen
+
+# Force ANGLE/GLES 3.0, and capture a 1:1 Accurate frame for CPU/GPU parity
+dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- `
+  --gl-backend angle --gl-probe artifacts/gl-probe/4k-angle.json `
+  --gl-probe-size 3840x2160 --gl-probe-filter sharp-bilinear --gl-probe-offscreen
+
+dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- `
+  --gl-backend angle --gl-probe artifacts/gl-probe/parity-angle.json `
+  --gl-probe-size 320x240 --gl-probe-filter accurate --gl-probe-offscreen `
+  --gl-probe-capture artifacts/gl-probe/parity-angle.png
 ```
 
-The probe writes per-frame present/GPU percentiles, capabilities, and allocations as
-JSON. See [`docs/Performance.md`](docs/Performance.md) for the measured 4K results.
+The probe writes per-frame present/GPU percentiles, capabilities, allocations, and
+optional CPU/GPU parity as JSON. `--gl-backend auto|wgl|angle|software` also works
+for a normal desktop launch. See [`docs/Performance.md`](docs/Performance.md) for
+the measured WGL and ANGLE results.
 
 Both the CLI and the Avalonia frontend publish trimmed by default
 (`PublishTrimmed=true`). Settings/input/save-slot JSON and all CLI `--json` responses

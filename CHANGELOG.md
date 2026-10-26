@@ -65,8 +65,19 @@ still change.
   per-stage allocation counters, and source-generated JSON. On Windows 11 with an
   RTX 4070, 4K sharp-bilinear measures GPU p99 0.089 ms and present p99 0.208 ms
   with zero renderer/mailbox allocations per frame after warm-up.
+- `--gl-backend auto|wgl|angle|software` (alias `--gl-probe-backend`) selects the
+  Windows renderer backend. `auto` keeps the previous WGL -> ANGLE -> software order.
+- GPU-probe capture and parity: `--gl-probe-capture <path>` writes the presented
+  frame as a PNG, and a 320x240 Accurate capture is compared with the CPU
+  `FrameAssembler` oracle. WGL (OpenGL 4.0/GLSL 330) and ANGLE (OpenGL ES 3.0/
+  GLSL ES 300) both match pixel-for-pixel (`0xD6BD89C5`), and ANGLE runs every
+  filter with zero renderer allocations per frame.
 
 ### Changed
+
+- Windows ANGLE/GLES 3.0 is validated on the RTX 4070: 4K sharp-bilinear presents
+  in 0.14 ms mean / 0.47 ms p99, 1080p in 0.13/0.40 ms, and HQx 4x is CPU-bound at
+  10.44/14.22 ms. Raspberry Pi/GLES 3.1 and DPI validation remain.
 
 - The CLI and the Avalonia frontend are both published trimmed for all six RIDs.
 - CI runs a trimmed-CLI smoke test and a trimmed-frontend startup smoke test on

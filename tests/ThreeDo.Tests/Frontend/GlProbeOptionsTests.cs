@@ -23,6 +23,7 @@ public sealed class GlProbeOptionsTests
         Assert.Equal(VideoFilter.SharpBilinear, options.Filter);
         Assert.False(options.Vsync);
         Assert.False(options.Offscreen);
+        Assert.Null(options.CapturePath);
         Assert.Equal(30, options.TimeoutSeconds);
     }
 
@@ -77,6 +78,19 @@ public sealed class GlProbeOptionsTests
         Assert.Equal(expected, options.Filter);
     }
 
+    [Fact]
+    public void TryParse_AcceptsACapturePath()
+    {
+        Assert.True(GlProbeOptions.TryParse(
+            ["--gl-probe", "probe.json", "--gl-probe-capture", "frame.png"],
+            out var options,
+            out var error));
+
+        Assert.Null(error);
+        Assert.NotNull(options);
+        Assert.Equal(Path.GetFullPath("frame.png"), options.CapturePath);
+    }
+
     [Theory]
     [InlineData("--gl-probe-size", "3840")]
     [InlineData("--gl-probe-size", "3840x0")]
@@ -119,6 +133,7 @@ public sealed class GlProbeOptionsTests
         var report = new GlProbeReport(
             Ok: true,
             Error: null,
+            RequestedBackend: "Angle",
             Backend: "OpenGL",
             Vendor: "Test Vendor",
             Renderer: "Test Renderer",
@@ -137,6 +152,8 @@ public sealed class GlProbeOptionsTests
             OutputHeight: 2160,
             Filter: "SharpBilinear",
             Offscreen: true,
+            CapturePath: null,
+            Parity: null,
             Frames: 120,
             WarmupFrames: 30,
             ElapsedSeconds: 2.5,
@@ -158,9 +175,64 @@ public sealed class GlProbeOptionsTests
         var json = JsonSerializer.Serialize(report, GlProbeJsonContext.Default.GlProbeReport);
 
         Assert.Contains("\"ok\": true", json);
+        Assert.Contains("\"requestedBackend\": \"Angle\"", json);
         Assert.Contains("\"outputWidth\": 3840", json);
         Assert.Contains("\"vsyncBackend\": \"WGL_EXT_swap_control\"", json);
         Assert.Contains("\"p99Ms\": 0.4", json);
         Assert.Contains("\"gpu\": null", json);
+    }
+
+    [Fact]
+    public void ReportContext_SerializesCaptureAndParity()
+    {
+        var report = new GlProbeReport(
+            Ok: true,
+            Error: null,
+            RequestedBackend: "Angle",
+            Backend: "OpenGL ES",
+            Vendor: "Test Vendor",
+            Renderer: "Test Renderer",
+            Api: "OpenGlEs",
+            MajorVersion: 3,
+            MinorVersion: 0,
+            MaxTextureSize: 16384,
+            SupportsIntegerTextures: true,
+            SupportsVsync: true,
+            VsyncRequested: false,
+            VsyncActive: false,
+            VsyncBackend: "EGL_KHR_swap_interval",
+            SourceWidth: 320,
+            SourceHeight: 240,
+            OutputWidth: 320,
+            OutputHeight: 240,
+            Filter: "Accurate",
+            Offscreen: true,
+            CapturePath: "parity.png",
+            Parity: new GlProbeParity(true, true, 0, 0xD6BD89C5, 0xD6BD89C5, false),
+            Frames: 20,
+            WarmupFrames: 5,
+            ElapsedSeconds: 0.2,
+            Fps: 100,
+            AllocatedBytes: 0,
+            AllocatedBytesPerFrame: 0,
+            RendererAllocatedBytes: 0,
+            RendererAllocatedBytesPerFrame: 0,
+            RendererOnlyAllocatedBytes: 0,
+            RendererOnlyAllocatedBytesPerFrame: 0,
+            RendererMeasureAllocations: true,
+            RendererPresentAllocatedBytes: 0,
+            UploadAllocatedBytes: 0,
+            PaletteAllocatedBytes: 0,
+            ScaleAllocatedBytes: 0,
+            Present: null,
+            Gpu: null);
+
+        var json = JsonSerializer.Serialize(report, GlProbeJsonContext.Default.GlProbeReport);
+
+        Assert.Contains("\"capturePath\": \"parity.png\"", json);
+        Assert.Contains("\"matches\": true", json);
+        Assert.Contains("\"differentPixels\": 0", json);
+        Assert.Contains("\"cpuHash\": 3602745797", json);
+        Assert.Contains("\"verticalFlip\": false", json);
     }
 }
