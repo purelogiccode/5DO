@@ -3,7 +3,7 @@
 **Date:** 2026-10-26 (eleventh pass)
 **Goal:** finish the HQx filter family and make the benchmark gate enforceable.
 The eleventh pass added HQx 3x/4x (reference hashes `0x0C406F97`/`0xBB17969C`)
-and the `BenchmarkGate`/`--gate` budget check that CI now runs. **689 tests pass.**
+and the `BenchmarkGate`/`--gate` budget check that CI now runs. **691 tests pass.**
 Do not redo HQx 2x/3x/4x, CRT bloom, the D-pad passcode script, the ninth-pass
 evidence capture, or the CD media-access fix. The remaining work is finishing a
 full Road Rash race, scripted Lemmings level play beyond the start, GPU/Tier B
@@ -384,9 +384,13 @@ missing and corrected the Road Rash diagnosis.
   The benchmark exposes `--gate` (exit code 3 on failure), and CI runs it for the
   synthetic smoke before uploading the JSON baseline. The gate is budget-based;
   a same-runner relative (>10%) comparison remains.
-- **Tests.** 689 tests pass; the new tests cover the 3x/4x reference hashes,
-  uniform-image preservation, unsupported scales, `ScaleFor`, and every gate
-  failure mode.
+- **Desktop integration.** The frontend accepts a positional disc path or
+  `--disc <path>` for file associations, ships `packaging/3doemulator.desktop`, can
+  write a native CPU-frame screenshot next to a filtered GL capture, and previews
+  sibling cover art in the Library window.
+- **Tests.** 691 tests pass; the new tests cover the 3x/4x reference hashes,
+  uniform-image preservation, unsupported scales, `ScaleFor`, cover-art discovery,
+  and every gate failure mode.
 
 ---
 

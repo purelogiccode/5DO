@@ -9,9 +9,9 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 **Current position (2026-10-26, eleventh pass):** M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **689 tests pass.** The shell now has fullscreen, GL screenshots, an About
+prototype. **691 tests pass.** The shell now has fullscreen, GL screenshots, an About
 dialog, a Hi-Res toggle, automatic CPU fallback when OpenGL init or the context fails,
-a game library browser, a settings dialog (video/audio/emulation/paths), six-player
+a game library browser with cover art, a settings dialog (video/audio/emulation/paths), six-player
 keyboard and gamepad binding, ten numbered save slots with PNG thumbnails, PNG
 screenshots named by game/frame/time, an optional FPS/status overlay, a first-run
 guide, error dialogs, and an in-app diagnostic log viewer. The app also accepts a

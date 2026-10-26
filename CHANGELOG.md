@@ -23,6 +23,9 @@ still change.
   0 bytes/frame, core p99 <= 8 ms, total mean <= 8 ms, and total p99 <= 16.667 ms.
 - Optional native CPU-frame screenshot (`-native.png`) alongside the filtered GL
   screenshot, controlled from Settings > Video.
+- Game-library cover art: a sibling image with the same base name as a disc
+  (`game.png`/`.jpg`/`.jpeg`/`.webp` beside `game.iso`) is previewed in the
+  Library window.
 - Per-game filter overrides in `AppSettings.FilterOverrides`, edited on the Settings
   dialog's Emulation page and applied when a disc opens.
 - Shader-source and settings tests for the CRT bloom uniforms.

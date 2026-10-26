@@ -4,6 +4,7 @@ using System.IO;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using ThreeDo.Host;
 
@@ -67,6 +68,36 @@ public partial class GameLibraryWindow : Window
 
     private void OnDoubleTapped(object? sender, TappedEventArgs e) => OpenSelected();
 
+    private void OnSelectionChanged(object? sender, SelectionChangedEventArgs e) => UpdateCover();
+
+    private void UpdateCover()
+    {
+        if (LibraryList.SelectedItem is not GameLibraryEntry entry)
+        {
+            CoverImage.Source = null;
+            CoverText.Text = "Select a disc to see its cover.";
+            return;
+        }
+
+        if (string.IsNullOrEmpty(entry.CoverPath))
+        {
+            CoverImage.Source = null;
+            CoverText.Text = "No cover art. Add a PNG/JPG with the same name next to the disc.";
+            return;
+        }
+
+        try
+        {
+            CoverImage.Source = new Bitmap(entry.CoverPath);
+            CoverText.Text = Path.GetFileName(entry.CoverPath);
+        }
+        catch (Exception exception) when (exception is IOException or ArgumentException or UnauthorizedAccessException)
+        {
+            CoverImage.Source = null;
+            CoverText.Text = $"Cover art could not be loaded: {exception.Message}";
+        }
+    }
+
     private void OpenSelected()
     {
         if (LibraryList.SelectedItem is GameLibraryEntry entry)
@@ -88,6 +119,7 @@ public partial class GameLibraryWindow : Window
             ? []
             : GameLibraryScanner.Scan(folders);
         LibraryList.ItemsSource = entries;
+        UpdateCover();
         if (entries.Count == 0)
         {
             StatusText.Text = folders.Count == 0

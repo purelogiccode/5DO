@@ -43,6 +43,34 @@ public sealed class GameLibraryScannerTests
         Assert.Null(GameLibraryScanner.Inspect(Path.Combine(Path.GetTempPath(), "not-a-disc.txt")));
     }
 
+    [Fact]
+    public void Scan_FindsCoverArtNextToADisc()
+    {
+        using var directory = new TempDirectory();
+        var isoPath = Path.Combine(directory.Path, "game.iso");
+        using (var file = File.Create(isoPath))
+        {
+            file.Write(new byte[2048 * 3]);
+        }
+
+        var coverPath = Path.Combine(directory.Path, "game.png");
+        File.WriteAllBytes(coverPath, [0x89, 0x50, 0x4E, 0x47]);
+
+        var entry = Assert.Single(GameLibraryScanner.Scan([directory.Path]));
+
+        Assert.Equal(coverPath, entry.CoverPath);
+    }
+
+    [Fact]
+    public void FindCover_ReturnsEmptyWhenThereIsNoSiblingImage()
+    {
+        using var directory = new TempDirectory();
+        var isoPath = Path.Combine(directory.Path, "game.iso");
+        File.WriteAllBytes(isoPath, new byte[2048]);
+
+        Assert.Equal(string.Empty, GameLibraryScanner.FindCover(isoPath));
+    }
+
     private sealed class TempDirectory : IDisposable
     {
         internal TempDirectory()

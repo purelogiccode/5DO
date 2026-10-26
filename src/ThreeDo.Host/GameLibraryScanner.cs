@@ -13,6 +13,7 @@ namespace ThreeDo.Host;
 /// <param name="Name">Database title, or the file name for unknown discs.</param>
 /// <param name="Known">Whether the 4DO game database recognized the disc.</param>
 /// <param name="Error">Error message when the image could not be opened.</param>
+/// <param name="CoverPath">Cover-art image path, or empty when none was found.</param>
 [System.Diagnostics.CodeAnalysis.SuppressMessage(
     "ReSharper",
     "NotAccessedPositionalProperty.Global",
@@ -24,7 +25,8 @@ public sealed record GameLibraryEntry(
     string GameId,
     string Name,
     bool Known,
-    string Error);
+    string Error,
+    string CoverPath = "");
 
 /// <summary>
 /// Scans folders for ISO/BIN/CUE/CHD images and resolves titles through the 4DO game database.
@@ -32,6 +34,8 @@ public sealed record GameLibraryEntry(
 public static class GameLibraryScanner
 {
     private static readonly string[] Extensions = [".iso", ".bin", ".cue", ".chd"];
+
+    private static readonly string[] CoverExtensions = [".png", ".jpg", ".jpeg", ".webp"];
 
     /// <summary>Scans one or more folders, recursively.</summary>
     /// <param name="folders">Folders to scan. Missing folders are skipped.</param>
@@ -73,6 +77,7 @@ public static class GameLibraryScanner
             return null;
         }
 
+        var coverPath = FindCover(path);
         try
         {
             using var disc = DiscImageFactory.Open(path);
@@ -85,7 +90,8 @@ public static class GameLibraryScanner
                 gameId,
                 record?.Name ?? Path.GetFileNameWithoutExtension(path),
                 record is not null,
-                string.Empty);
+                string.Empty,
+                coverPath);
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException or DiscImageException or ArgumentException)
         {
@@ -96,8 +102,37 @@ public static class GameLibraryScanner
                 string.Empty,
                 Path.GetFileNameWithoutExtension(path),
                 false,
-                exception.Message);
+                exception.Message,
+                coverPath);
         }
+    }
+
+    /// <summary>
+    /// Finds cover art next to a disc: a sibling image with the same base name
+    /// (for example <c>game.png</c> beside <c>game.iso</c>).
+    /// </summary>
+    /// <param name="discPath">Disc path.</param>
+    /// <returns>The cover path, or an empty string when none exists.</returns>
+    public static string FindCover(string discPath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(discPath);
+        var directory = Path.GetDirectoryName(Path.GetFullPath(discPath));
+        if (string.IsNullOrEmpty(directory))
+        {
+            return string.Empty;
+        }
+
+        var baseName = Path.GetFileNameWithoutExtension(discPath);
+        foreach (var extension in CoverExtensions)
+        {
+            var candidate = Path.Combine(directory, baseName + extension);
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return string.Empty;
     }
 
     private static void ScanFolder(string folder, int depth, List<GameLibraryEntry> entries)

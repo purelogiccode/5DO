@@ -95,7 +95,8 @@ change it in **Settings > Paths**.
 
 **Library** scans the folders configured in **Settings > Paths** for ISO/BIN/CUE/CHD
 files and resolves titles through the embedded 4DO game database. Select a title to
-open it.
+open it. A sibling image with the same base name (for example `game.png` beside
+`game.chd`) is shown as cover art.
 
 Settings persist under the user local application data folder:
 

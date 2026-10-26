@@ -47,7 +47,7 @@ This is the short, current answer to "where are we?" The detailed task list is i
   failure or context loss switches the shell to the CPU `WriteableBitmap` presenter.
   An optional FPS/status overlay is available in the settings dialog.
 - **Desktop shell:** the game library scans configured folders through the 4DO
-  database and opens the selected disc; the settings dialog edits video, audio,
+  database, previews sibling cover art, and opens the selected disc; the settings dialog edits video, audio,
   emulation, and paths; keyboard bindings for all six players can be captured with
   automatic conflict removal and reset-to-defaults; gamepads are mapped through a
   Gamepad tab (Windows XInput, Linux evdev). Save states use ten numbered slots with
@@ -83,7 +83,7 @@ This is the short, current answer to "where are we?" The detailed task list is i
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 689 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 691 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
