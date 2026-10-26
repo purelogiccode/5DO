@@ -66,6 +66,9 @@ public sealed class AppSettings
     /// <summary>Gets or sets a value indicating whether the FPS/status overlay is shown over the video.</summary>
     public bool ShowOverlay { get; set; }
 
+    /// <summary>Gets or sets the CRT bloom strength (0-1).</summary>
+    public float Bloom { get; set; } = 0.35f;
+
     /// <summary>Gets or sets a value indicating whether the opt-in 640x480 high-resolution mode is used.</summary>
     public bool HighResolution { get; set; }
 
@@ -147,6 +150,7 @@ public sealed class AppSettings
             Vsync = Vsync,
             IntegerScale = IntegerScale,
             ShowOverlay = ShowOverlay,
+            Bloom = Bloom,
         };
         settings.Validate();
         return settings;

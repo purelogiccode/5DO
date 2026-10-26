@@ -112,6 +112,8 @@ internal static class Shaders
         uniform vec4 uRect;           // x, y, width, height in output pixels
         uniform int uFilter;          // 0 nearest, 1 sharp-bilinear, 2 CRT
         uniform float uScanline;
+        uniform float uBloom;
+        uniform float uBloomThreshold;
         out vec4 fragColor;
 
         void main()
@@ -162,6 +164,29 @@ internal static class Shaders
                 color *= 1.0 - (uScanline * line);
                 vec2 centered = uv * 2.0 - 1.0;
                 color *= clamp(1.0 - (0.12 * dot(centered, centered)), 0.0, 1.0);
+
+                // A small native-resolution glow around bright areas. Sampling the
+                // source (not the output) keeps the bloom soft and resolution
+                // independent; the 3x3 kernel is cheap enough for the opt-in CRT mode.
+                if (uBloom > 0.0)
+                {
+                    vec2 texel = 2.0 / vec2(uSource);
+                    vec3 bloom = vec3(0.0);
+                    float weightSum = 0.0;
+                    for (int y = -1; y <= 1; y++)
+                    {
+                        for (int x = -1; x <= 1; x++)
+                        {
+                            float weight = (x == 0 ? 2.0 : 1.0) * (y == 0 ? 2.0 : 1.0);
+                            vec2 offset = vec2(float(x), float(y)) * texel;
+                            vec3 sampleColor = texture(uExpanded, clamp(uv + offset, vec2(0.0), vec2(1.0))).rgb;
+                            bloom += max(sampleColor - vec3(uBloomThreshold), vec3(0.0)) * weight;
+                            weightSum += weight;
+                        }
+                    }
+
+                    color += (bloom / weightSum) * uBloom;
+                }
             }
 
             fragColor = vec4(color, 1.0);

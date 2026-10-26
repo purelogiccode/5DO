@@ -125,6 +125,7 @@ public sealed class NvramStoreTests
             SaveSlotCount = 12,
             AutoGameFixes = false,
             ShowOverlay = true,
+            Bloom = 0.7f,
             FirstRunCompleted = true,
         };
         settings.Input.Players[0].Keyboard["Q"] = ThreeDo.Input.ControllerButton.C;
@@ -144,6 +145,8 @@ public sealed class NvramStoreTests
         Assert.Equal(12, loaded.SaveSlotCount);
         Assert.False(loaded.AutoGameFixes);
         Assert.True(loaded.ShowOverlay);
+        Assert.Equal(0.7f, loaded.Bloom);
+        Assert.Equal(0.7f, loaded.ToRendererSettings().Bloom);
         Assert.True(loaded.FirstRunCompleted);
         Assert.Equal(ThreeDo.Input.ControllerButton.C, loaded.Input.Players[0].Keyboard["Q"]);
         Assert.Equal("game.iso", Assert.Single(loaded.RecentDiscs));

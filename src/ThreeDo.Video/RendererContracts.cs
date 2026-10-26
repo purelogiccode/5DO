@@ -80,6 +80,12 @@ public sealed record RendererSettings
     /// <summary>Gets the CRT scanline strength (0-1).</summary>
     public float ScanlineStrength { get; init; } = 0.25f;
 
+    /// <summary>Gets the CRT bloom strength (0-1). Zero disables bloom.</summary>
+    public float Bloom { get; init; } = 0.35f;
+
+    /// <summary>Gets the brightness threshold used by the CRT bloom pass (0-1).</summary>
+    public float BloomThreshold { get; init; } = 0.6f;
+
     /// <summary>Validates the settings.</summary>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when a value is out of range.</exception>
     public void Validate()
@@ -92,6 +98,16 @@ public sealed record RendererSettings
         if (ScanlineStrength is < 0f or > 1f)
         {
             throw new ArgumentOutOfRangeException(nameof(ScanlineStrength), ScanlineStrength, "The scanline strength must be between 0 and 1.");
+        }
+
+        if (Bloom is < 0f or > 1f)
+        {
+            throw new ArgumentOutOfRangeException(nameof(Bloom), Bloom, "The bloom strength must be between 0 and 1.");
+        }
+
+        if (BloomThreshold is < 0f or > 1f)
+        {
+            throw new ArgumentOutOfRangeException(nameof(BloomThreshold), BloomThreshold, "The bloom threshold must be between 0 and 1.");
         }
     }
 }

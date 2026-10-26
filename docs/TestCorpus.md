@@ -724,6 +724,46 @@ dotnet run --project src/ThreeDo.Cli -- disasm artifacts/ram.bin `
   --offset 0x12380 --count 100 --base 0x0
 ```
 
+### 1.6 Tenth pass: Lemmings pure D-pad passcode and CRT bloom (2026-10-26)
+
+**Lemmings Fun 4 passcode typed with the D-pad.** The ninth-pass path used a
+diagnostic RAM poke for the passcode. The tenth pass types `HNLHCIOECW` entirely
+with the controller from a passcode-screen state with an empty entry and the
+selection on `V` (`artifacts/lem_pass_fresh.state`, 21,700 frames). The script is
+committed as [`scripts/lem-fun4-dpad.txt`](scripts/lem-fun4-dpad.txt); it uses
+15-frame direction holds and 5-frame `A` taps, with one release frame between
+actions so the CLI's frame coalescing cannot swallow the release.
+
+```powershell
+dotnet run -c Release --project src/ThreeDo.Cli -- run artifacts/s2/lem.iso `
+  --bios bios/panafz1.bin --state-in artifacts/lem_pass_fresh.state --frames 1300 `
+  --input-script docs/scripts/lem-fun4-dpad.txt --script-base state `
+  --frame-out artifacts/lem-dpad-gameplay.png `
+  --state-out artifacts/lem-dpad-gameplay.state --json
+```
+
+The game shows the `Fun 4 / Level 1 / Save the Lemmings` briefing at 22,600
+(`PC 0x00020628`, hash `0xC1DF57C5`) and starts gameplay after the `A` tap at
+22,650. At 23,000 the run is in the level (`PC 0x00083FD8`, hash `0xB7846C2D`)
+with the HUD and lemmings visible. Roundtrip:
+
+- Zero-frame load of `lem-dpad-gameplay.state`: `PC 0x00083FD8`, hash
+  `0xB7846C2D` (pixel-identical).
+- Two independent 120-frame continuations: both `PC 0x000230A4`, hash
+  `0xEDEB1B9D`.
+
+This closes the "pure D-pad typing of all ten letters is not scripted" item in
+[`KnownIssues.md`](KnownIssues.md). The script starts at the passcode screen, not
+at boot; the title-to-passcode transition is still the existing
+`lem-pass-open.txt` (`Down`, `A`) path.
+
+**CRT bloom.** `RendererSettings.Bloom` (0-1, default 0.35) and
+`BloomThreshold` (0-1, default 0.6) add a 3x3 native-resolution glow around
+bright areas in the CRT filter. The settings dialog exposes a CRT bloom slider.
+Bloom is ignored by the non-CRT filters and by the CPU fallback. The shader is
+covered by source-invariant tests; hardware GPU timing for the extra samples is
+still pending.
+
 ---
 
 ## 2. BIOS images

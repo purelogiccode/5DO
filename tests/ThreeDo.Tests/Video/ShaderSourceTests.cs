@@ -39,6 +39,9 @@ public sealed class ShaderSourceTests
         Assert.Contains("uFilter == 1", source, StringComparison.Ordinal);
         Assert.Contains("uFilter == 2", source, StringComparison.Ordinal);
         Assert.Contains("uScanline", source, StringComparison.Ordinal);
+        Assert.Contains("uBloom", source, StringComparison.Ordinal);
+        Assert.Contains("uBloomThreshold", source, StringComparison.Ordinal);
+        Assert.Contains("max(sampleColor - vec3(uBloomThreshold)", source, StringComparison.Ordinal);
     }
 
     [Fact]

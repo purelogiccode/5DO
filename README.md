@@ -6,7 +6,7 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-25, ninth pass):** M0-M8 are functionally complete. The
+**Current position (2026-10-26, tenth pass):** M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
 prototype. **667 tests pass.** The shell now has fullscreen, GL screenshots, an About
@@ -20,12 +20,14 @@ accepts `--fix-mode`/`--no-game-fixes` overrides. The benchmark reports p50/p95/
 zero steady-state allocations; an opt-in bounded disc prefetch cache is available via
 `--prefetch`.
 
-The renderer now has an opt-in **xBR-lv2** edge-directed 4x filter alongside accurate,
-nearest, sharp-bilinear, and CRT modes. This pass also fixed a real-content **GPU
-palette bug**: the shader used only the low five bits of each pixel for all three CLUT
-channels, so games appeared grayscale. The shader now applies the red, green, and blue
-indices independently, matching the CPU `FrameAssembler`; Lemmings gameplay was captured
-through both sharp-bilinear and xBR with correct colors.
+The renderer now has an opt-in **xBR-lv2** edge-directed 4x filter and **CRT bloom**
+alongside accurate, nearest, sharp-bilinear, and CRT modes. The tenth pass committed a
+pure D-pad Lemmings Fun 4 passcode script (`docs/scripts/lem-fun4-dpad.txt`): the game
+accepts `HNLHCIOECW`, shows the Fun 4 briefing, and starts gameplay at 23,000 frames
+with a deterministic save/load roundtrip. This pass also fixed a real-content **GPU
+palette bug** in the previous session: the shader now applies the red, green, and blue
+CLUT indices independently, matching the CPU `FrameAssembler`; Lemmings gameplay was
+captured through both sharp-bilinear and xBR with correct colors.
 
 The ninth pass recorded per-title save-state, PNG, and WAV evidence (zero-frame and
 120-frame hashes, deterministic roundtrips, 600-frame audio captures) in
@@ -53,8 +55,10 @@ own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio.
   Up/Left/A/Down/Right sequence moves the character around the room with a
   save/load roundtrip.
 - **Lemmings** reaches its title and passcode screens; the Fun 4 passcode
-  (`HNLHCIOECW`) starts gameplay and roundtrips, and the 640x480 high-resolution title
-  matches the reference.
+  (`HNLHCIOECW`) is now typed entirely with the D-pad/A by
+  `docs/scripts/lem-fun4-dpad.txt`, starting gameplay at 23,000 frames with a
+  deterministic roundtrip, and the 640x480 high-resolution title matches the
+  reference.
 - **Space Ace** plays its animated demo and its interactive scene: `X` returns to the
   title/menu and `A` starts the scene; the 15,000-frame state roundtrips and audio was
   captured.
@@ -65,10 +69,10 @@ Road Rash's VRAM allocator and drew Alone horizontally, and VDLP bitmap widths f
 384/512/640/1024-wide modes. The opt-in 640x480 high-resolution CEL/VDLP path was
 added; save-state loads restore the VDL picture immediately.
 
-Remaining major work: finish a full Road Rash race without wrecking; script a pure
-D-pad Lemmings passcode and an Alone movement/inventory sequence; validate GPU
-4K/p99 and GLES/ANGLE/Pi/DPI; validate Tier B prefetch; xBR/HQx and UI polish;
-arm64/installers; and the legal/attribution review. Per-title save-state, PNG, and WAV evidence is recorded
+Remaining major work: finish a full Road Rash race without wrecking; script an
+Alone inventory sequence; validate GPU 4K/p99 and GLES/ANGLE/Pi/DPI; validate
+Tier B prefetch; HQx and UI polish; arm64/installers; and the legal/attribution
+review. Per-title save-state, PNG, and WAV evidence is recorded
 in [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. See
 [`docs/Status.md`](docs/Status.md) for the completion estimate and
 [`docs/NextSession.md`](docs/NextSession.md) for the next-session plan. The
@@ -112,7 +116,7 @@ The desktop frontend uses **Silk.NET.OpenGL/OpenGLES** through Avalonia's OpenGL
 
 - Two-stage pipeline: palette expansion at native resolution (320x240), then GPU upscaling/filtering at output resolution.
 - Pixel-accurate "Accurate" mode that matches the CPU frame assembler.
-- High-quality GPU upscaling to 1080p/1440p/4K: nearest, sharp-bilinear, CRT, and xBR/HQx-family filters.
+- High-quality GPU upscaling to 1080p/1440p/4K: nearest, sharp-bilinear, CRT (scanlines, aperture mask, curvature, vignette, bloom), and xBR/HQx-family filters.
 - Integer scaling, aspect-ratio control, fullscreen, vsync, and screenshots.
 - Desktop GL 3.3 (WGL/GLX/EGL/macOS) and GLES 3.0/3.1 (ANGLE, Raspberry Pi) variants.
 - CPU `WriteableBitmap` fallback only when neither GL 3.3 nor GLES 3.0/3.1 is available.

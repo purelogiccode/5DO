@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-25, eighth pass (see `git log` for the exact commit).
+**Snapshot:** 2026-10-26, tenth pass (see `git log` for the exact commit).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
 **Reference:** `References/opera-libretro-master/libopera` is now the primary
 behavioral reference for new compatibility work; see
@@ -31,8 +31,9 @@ This is the short, current answer to "where are we?" The detailed task list is i
   into four 1 MB VRAM planes and presents 640x480 by line-doubling the 640x240 source;
   Lemmings' title screen now matches the 640x480 reference. The mode is off by default
   because 320x240 titles must not be upscaled, and the desktop shell exposes it as a
-  Hi-Res checkbox that restarts the machine. An opt-in xBR-lv2 4x filter is available
-  in Settings; it uses a CPU-expanded native source and sharp-bilinear finishing.
+  Hi-Res checkbox that restarts the machine. An opt-in xBR-lv2 4x filter and CRT bloom
+  are available in Settings; xBR uses a CPU-expanded native source and sharp-bilinear
+  finishing, and CRT bloom adds a 3x3 native-resolution glow in the CRT filter.
 - **Performance:** the machine runs on a dedicated 60 Hz core thread with a frame
   pacer; the UI renders on demand; uploads use `TexStorage2D` + `TexSubImage2D`;
   uniform locations and the present delegate are cached; physical-pixel sizing is
@@ -97,7 +98,7 @@ on both sides. Opera is the bundled Windows `OperaCore` build in
 
 | Title | Our C# port | Opera reference |
 |---|---|---|
-| Lemmings (USA) | **Boots, renders, plays DSP audio**; reaches the title screen and the passcode screen; with `--high-res` the 640x480 title renders all four buttons and the full logo, matching the reference. The passcode screen uses A to type, B to confirm, auto-confirms at ten letters, and a 15-frame D-pad hold moves one key. Fun 4 gameplay roundtrips; 600-frame WAV evidence in `TestCorpus.md` 1.5a | Not re-tested this pass; expected to pass |
+| Lemmings (USA) | **Boots, renders, plays DSP audio**; reaches the title screen and the passcode screen; with `--high-res` the 640x480 title renders all four buttons and the full logo, matching the reference. The Fun 4 code `HNLHCIOECW` is now typed entirely with the D-pad (`docs/scripts/lem-fun4-dpad.txt`); gameplay starts at 23,000 frames (`PC 0x00083FD8`, hash `0xB7846C2D`) and roundtrips (`0xEDEB1B9D` twice). 600-frame WAV evidence in `TestCorpus.md` 1.5a | Not re-tested this pass; expected to pass |
 | Space Ace (USA) | **Boots, renders, plays DSP audio**; ReadySoft player runs the animated demo past 12,000 frames. The interactive path is now validated: X returns to the title/menu, A starts the scene; the 15,000-frame state roundtrips (`0x7E780D93` -> `PC 0x000284EC`, `0x70B16422` twice) and the gameplay WAV is non-silent | **Plays the demo intro for 60 s, no runaway** |
 | Road Rash (USA) | **Boots, renders, plays DSP audio**; the 3D race renders correctly and the attract race runs past 60,000 frames with no allocator error; B accelerates, A brakes, the D-pad steers, C attacks, and P pauses. The CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait: those screens advance to `BUSTED`, the race-select menu, and a new race. The autopilot now passes `GAME LOADING`/`Get ready` and cycles race -> wreck -> menu -> new race to 100k, but still does not finish a full 5.5-mile race | **Renders the intro FMV, then a race** |
 | Wolfenstein 3D (USA) | **Boots, renders, plays DSP audio**; A opens the preview menu, selecting a level starts a fresh game (FLOOR 1-1), the player can walk/turn/fire, and save/load roundtrips in-game (`0xF568EBCA` -> `PC 0x000782B8` twice); 600-frame WAV evidence captured. The fresh-game load advances with A pulses (character select -> FLOOR 1-1 at 64,000, hash `0x2F5B9864`) | **Renders the intro for 60 s** |
@@ -241,15 +242,15 @@ add **2-4 weeks**. If the target is "all five corpus games playable" rather than
    accelerate, A brake, D-pad steer, `--autopilot road` v10 reaches 91,000 live
    frames from the 80k/83k states), Wolfenstein starts a fresh game and supports
    walk/turn/fire, Alone's Begin/Resume menu and intro are reachable, Lemmings
-   reaches its passcode screen (A types, B confirms, ten letters auto-confirm),
-   and Space Ace starts and plays its interactive scene (X menu, A play).
+   reaches its passcode screen and now types the full Fun 4 code with the D-pad
+   (`docs/scripts/lem-fun4-dpad.txt`), and Space Ace starts and plays its
+   interactive scene (X menu, A play).
    The old ~42k/~92k stops are fixed by the CD media-access pulse; those screens
    now advance to `BUSTED`, race select, and a new race, and the autopilot cycles
    race/wreck/menu to 100k. The remaining Road Rash work is finishing a full race
    without wrecking, not the CD wait. Alone now has a scripted room movement
-   loop with a save/load roundtrip; script a Lemmings ten-letter D-pad entry and
-   an Alone inventory sequence. Record the exact scripts and frame numbers in
-   [`TestCorpus.md`](TestCorpus.md).
+   loop with a save/load roundtrip; an Alone inventory sequence remains. Record
+   the exact scripts and frame numbers in [`TestCorpus.md`](TestCorpus.md).
 2. **Save states and screenshots in-game.** Wolfenstein already roundtrips a live
    gameplay state (saved hash `0xC9989182`, two 120-frame continuations end at
    `0x370158AC`). Repeat for each title and store screenshots at known frames.

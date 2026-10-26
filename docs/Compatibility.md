@@ -2,18 +2,19 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current position (2026-10-25, ninth pass):** all five local corpus titles boot, load
+**Current position (2026-10-26, tenth pass):** all five local corpus titles boot, load
 their own OS, render real frames, and produce non-silent DSP audio. Road Rash's 3D race
 renders correctly and the attract race continues past 60,000 frames with no allocator
 error; Wolfenstein 3D starts a fresh game (FLOOR 1-1), walks/turns/fires, and its save
 states roundtrip; Alone in the Dark's in-game character renders upright at the
 staircase, and its Begin/Resume menu and intro are reachable; Lemmings reaches its
 title menu and passcode screen, its 640x480 high-resolution title matches the
-reference, and its Fun 4 passcode starts gameplay with a save/load roundtrip; Space Ace
-plays its animated demo and starts its interactive scene (`X` menu, `A` play) with a
-save/load roundtrip. The eighth pass fixed the GPU palette shader so real frames use
-independent R/G/B CLUT indices, added the opt-in xBR-lv2 filter, and captured Lemmings
-gameplay through both sharp-bilinear and xBR with correct colors.
+reference, and its Fun 4 passcode now starts gameplay with a save/load roundtrip after
+being typed entirely with the D-pad; Space Ace plays its animated demo and starts its
+interactive scene (`X` menu, `A` play) with a save/load roundtrip. The tenth pass also
+added CRT bloom and committed the D-pad passcode script. The eighth pass fixed the GPU
+palette shader so real frames use independent R/G/B CLUT indices and added the opt-in
+xBR-lv2 filter.
 
 The ninth pass captured per-title save-state, PNG, and WAV evidence (see
 `TestCorpus.md` 1.5a) and fixed the old Road Rash ~42,000/~92,000 stops. They were a
@@ -267,7 +268,7 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 
 | Game | Region | Disc ID | BIOS | Build | Boot | In-game | Audio | Input | Notes | Opera reference |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | **Fun 4 gameplay via passcode (`HNLHCIOECW`) with save/load roundtrip** | Non-silent DSP output | **Works**: A types, B confirms, ten letters auto-confirm, D-pad moves the selection; entry is permuted across `0x96574-7B,7E-7F` | Passcode `HNLHCIOECW` accepted (`Code for 1` / `Rating = Fun`); gameplay at 21,640 frames (`0x18F38B4D`) roundtrips; 640x480 high-res title matches the reference | Not re-tested this pass |
+| Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | **Fun 4 gameplay via pure D-pad passcode (`HNLHCIOECW`) with save/load roundtrip** | Non-silent DSP output | **Works**: A types, B confirms, ten letters auto-confirm, D-pad moves the selection; entry is permuted across `0x96574-7B,7E-7F`; `docs/scripts/lem-fun4-dpad.txt` types the full code with only D-pad/A | Passcode `HNLHCIOECW` accepted (`Fun 4 / Level 1 / Save the Lemmings`); gameplay at 23,000 frames (`PC 0x00083FD8`, `0xB7846C2D`) roundtrips (`0xEDEB1B9D` twice); 640x480 high-res title matches the reference | Not re-tested this pass |
 | Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass** | **Animated demo and interactive scene; X -> menu, A -> play; 15,000-frame save/load roundtrip** | Non-silent DSP output; 10 s peak 4096, RMS ~1.8k (mono duplicated) | **Works**: X returns to the title/menu, A starts the scene; P also changes state | Former frame-681 null-buffer runaway is gone; the 15,000 state roundtrips (`0x7E780D93` -> two 120-frame continuations at `PC 0x000284EC`, `0x70B16422`) | Demo intro 60 s, no runaway |
 | Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **3D race renders and runs past 60,000 frames; CD media-access pulse unblocks the old ~42k/~92k wait and reaches `BUSTED` -> race select -> new race; autopilot cycles race/wreck/menu to 100k** | Non-silent DSP output; 10 s peak 32768, RMS ~9.6k/8.8k, 378 clipped | **B accelerates, A brakes, D-pad steers, C attacks, P pauses**; `--autopilot road` adds close-traffic coast/steer, urgent preemption, emergency-brake steer hold, a throttle-only wreck/rider-run restart, and A pulses for post-race/start-line screens (`autopilotMenuAdvance`) | The CEL transposition fix removed the VRAM `AllocMem` error; the earlier "wall pin" was the race-over `BUSTED` screen. The old ~42k/~92k READ_ID-only wait is fixed; the remaining autopilot issue is finishing a full race without wrecking | Intro FMV, then a race |
 | Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Pass** | **Fresh game (FLOOR 1-1) and save/load roundtrip; A pulses pass the long fresh-game load** | Non-silent DSP output; 10 s peak 30743, RMS ~5.5k | **Works**: A opens the menu, D-pad/A navigate and fire; A every 300 frames passes character select | From a 12,000-frame demo state, A opens the preview menu; selecting a level starts a fresh game. `w3d-loadlong.state` + A reaches FLOOR 1-1 at 64,000 (hash `0x2F5B9864`) | Intro 60 s |

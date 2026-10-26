@@ -56,7 +56,8 @@ GPU. Available filters:
 - **Accurate**: nearest-neighbor, pixel-perfect; the reference for the CPU assembler.
 - **Nearest**: nearest-neighbor with arbitrary scale/letterboxing.
 - **SharpBilinear**: the default enhanced mode.
-- **CRT**: scanlines, aperture mask, curvature, and vignette.
+- **CRT**: scanlines, aperture mask, curvature, vignette, and a configurable bloom
+  glow (Settings -> Video -> CRT bloom).
 - **Xbr**: Hyllian's xBR-lv2 edge-directed 4x pass, followed by a sharp-bilinear finish.
   This is an opt-in filter and costs more GPU time at 4K.
 

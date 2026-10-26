@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Status (2026-10-25, ninth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five local corpus titles boot, load their own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio. Road Rash's 3D race renders correctly; a CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait and the game now advances through `BUSTED`/race select to a new race. Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room, Begin/Resume menu, and intro; Lemmings completes the Fun 4 passcode and its 640x480 high-resolution title matches the reference; Space Ace plays its demo and starts its interactive scene (X menu, A play). **667 tests pass.** The ninth pass recorded per-title save-state/PNG/WAV evidence, fixed the CD wait, and added autopilot A pulses for post-race menus. The eighth pass fixed the real-content GPU palette expansion (independent R/G/B CLUT indices), added the opt-in xBR-lv2 filter, Windows XInput/Linux evdev gamepad backends with a binding UI, an in-app log viewer, save-state thumbnails, a first-run guide, and error dialogs. Remaining work: finish a full Road Rash race without wrecking, GPU 4K/p99/GLES/DPI validation, HQx/CRT bloom, arm64/installers, the M0.8 legal/attribution review, and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
+**Status (2026-10-26, tenth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five local corpus titles boot, load their own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio. Road Rash's 3D race renders correctly; a CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait and the game now advances through `BUSTED`/race select to a new race. Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room, Begin/Resume menu, and intro; Lemmings types the Fun 4 passcode entirely with the D-pad, starts gameplay at 23,000 frames, and its 640x480 high-resolution title matches the reference; Space Ace plays its demo and starts its interactive scene (X menu, A play). **667 tests pass.** The tenth pass added the pure D-pad passcode script and CRT bloom. The ninth pass recorded per-title save-state/PNG/WAV evidence, fixed the CD wait, and added autopilot A pulses for post-race menus. The eighth pass fixed the real-content GPU palette expansion (independent R/G/B CLUT indices), added the opt-in xBR-lv2 filter, Windows XInput/Linux evdev gamepad backends with a binding UI, an in-app log viewer, save-state thumbnails, a first-run guide, and error dialogs. Remaining work: finish a full Road Rash race without wrecking, GPU 4K/p99/GLES/DPI validation, HQx, arm64/installers, the M0.8 legal/attribution review, and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
 **Last updated:** 2026-10-25
 
 ---
@@ -230,7 +230,7 @@ credit:
 |---|---|---:|---:|
 | M0-M8 | Functionally complete; M0.8 legal review is tracked in M11.6 and minor M8 follow-ups are non-blocking | 90 | 0 |
 | M9 | Partial: shell/library/video/input/fullscreen/About/Hi-Res/settings/audio/gamepad/logs/first-run; polish and ViewModel tests | 13 | 3 |
-| M9R | Partial: two-stage, sharp-bilinear/CRT/xBR, CPU fallback, screenshots; HQx/bloom and GPU tests | 8 | 2 |
+| M9R | Partial: two-stage, sharp-bilinear/CRT/xBR/bloom, CPU fallback, screenshots; HQx and GPU tests | 8.5 | 1.5 |
 | M9P | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch; hot-path and Tier B/GPU gates | 6 | 4 |
 | M10 | Partial: CI + six-RID publish; arm64, trimming, installers, perf report | 2.5 | 3.5 |
 | M11 | In progress: M11.0 done; gameplay, high-resolution, and release docs underway | 3 | 22+ |
@@ -1015,9 +1015,9 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - **Accurate:** nearest, pixel-perfect, integer scaling.
   - **Nearest:** nearest with arbitrary scale/letterbox.
   - **Sharp-bilinear:** default enhanced mode; full Themaister/rsn8887 sharp-bilinear with hardware bilinear finishing.
-  - **CRT:** scanlines, aperture mask, barrel curvature, and vignette are implemented; bloom remains (opt-in; warn at 4K).
+  - **CRT:** scanlines, aperture mask, barrel curvature, vignette, and a 3x3 native-resolution bloom are implemented (opt-in; warn at 4K).
   - **xBR/HQx family:** xBR is implemented as an opt-in 4x pass; HQx remains optional. Benchmark at 4K before enabling by default.
-  - Implemented accurate/nearest, full sharp-bilinear, CRT scanlines/aperture/curvature/vignette, and xBR. CRT bloom and HQx remain.
+  - Implemented accurate/nearest, full sharp-bilinear, CRT scanlines/aperture/curvature/vignette/bloom, and xBR. HQx remains.
   - Filter settings persist per game/global in the host settings layer (M9.5).
 - [x] **M9R.4a xBR filter.**
   - Hyllian's xBR-lv2 edge-directed 4x expansion is implemented in `Shaders.FragmentXbr` and selected with `VideoFilter.Xbr`.
@@ -1288,8 +1288,8 @@ harness. See [`Performance.md`](Performance.md).
   - This is not the 4K output target. 4K *internal* rendering requires GPU CEL
     compositing and is a separate post-v1 experiment.
 - [~] **M11.3 Filter polish (required family, optional per game).**
-  - Accurate/nearest, full sharp-bilinear, CRT scanlines/aperture/curvature/vignette, and xBR-lv2 are implemented.
-  - HQx, CRT bloom, per-game filter presets, and 4K performance warnings remain.
+  - Accurate/nearest, full sharp-bilinear, CRT scanlines/aperture/curvature/vignette/bloom, and xBR-lv2 are implemented.
+  - HQx, per-game filter presets, and 4K performance warnings remain.
   - Keep the accurate path pixel-identical to the CPU oracle.
 - [ ] **M11.4 CD timing/seek improvements.**
   - Use `libopera/opera_cdrom.c` as the behavioral reference for command/status,
@@ -1558,7 +1558,7 @@ Suggested parallelization with two developers:
 11. **Finish the scripted gameplay loops.** Road Rash's ~92,000/40,000 stops, Space Ace's interactive path, and Alone's movement/inventory sequence; record the exact scripts and frame numbers in [`TestCorpus.md`](TestCorpus.md).
 12. **Capture per-title evidence.** Save-state roundtrips, screenshots, and 30-60 s WAVs; compare audio mix/cadence with Opera.
 13. **Prove the 4K60 target.** Use the implemented desktop GPU timer query and present-time overlay; measure p99 frame time, allocations, WGL/ANGLE/GLES/Pi validation, and 100/150/200% DPI.
-14. **Finish M9/M9R/M9P polish.** HQx/CRT bloom, per-game filter presets, vsync/FPS overlay tuning, Tier B prefetch validation, and ViewModel tests. The xBR filter, settings/audio/gamepad pages, log viewer, thumbnails, and first-run UI are complete.
+14. **Finish M9/M9R/M9P polish.** HQx, per-game filter presets, vsync/FPS overlay tuning, Tier B prefetch validation, and ViewModel tests. The xBR filter, CRT bloom, settings/audio/gamepad pages, log viewer, thumbnails, and first-run UI are complete.
 15. **Finish M10/M11 release work.** arm64 validation, trimming/installers/signing plan, performance report, compatibility matrix, and final release notes. The user guide, known-issues list, and changelog are complete.
 16. **Schedule the legal/attribution review (M0.8)** before any public build; add Opera to the FreeDO/4DO attribution and license review.
 

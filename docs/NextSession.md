@@ -1,18 +1,19 @@
 # Next Session Handoff
 
-**Date:** 2026-10-25 (ninth pass)
-**Goal:** unblock the post-race flow and capture per-title evidence. The ninth pass
-validated Space Ace's interactive path, recorded save-state/PNG/WAV evidence for all
-five corpus titles, and fixed the ~42k/~92k Road Rash wait with a CD media-access
-pulse. Those screens now advance to `BUSTED`, race select, and a new race. **667 tests
-pass.** Do not redo the evidence capture or the CD media-access fix. The remaining
-work is finishing a full Road Rash race, scripted Lemmings play, GPU/Tier B
-validation, arm64/installers, and the legal/attribution review.
+**Date:** 2026-10-26 (tenth pass)
+**Goal:** close the pure D-pad Lemmings passcode item and add CRT bloom. The tenth
+pass committed `docs/scripts/lem-fun4-dpad.txt`, typed `HNLHCIOECW` with only the
+D-pad/A, started Fun 4 gameplay at 23,000 frames, and roundtripped the state. It
+also added CRT bloom to the OpenGL presenter and the settings dialog. **667 tests
+pass.** Do not redo the D-pad passcode script, CRT bloom, the ninth-pass evidence
+capture, or the CD media-access fix. The remaining work is finishing a full Road
+Rash race, scripted Lemmings level play beyond the start, GPU/Tier B validation,
+arm64/installers, and the legal/attribution review.
 
 Earlier passes added the presentation plumbing (GL/GLES capability reporting, CPU
 fallback/context-loss recovery, fullscreen, screenshots, About, Hi-Res, benchmark
-gates, and prefetch) and the game-specific fixes recorded below. Read section 1.12 for
-the ninth-pass changes before starting.
+gates, and prefetch) and the game-specific fixes recorded below. Read section 1.13
+for the tenth-pass changes before starting.
 
 Read these first:
 
@@ -338,6 +339,27 @@ missing and corrected the Road Rash diagnosis.
 
 ---
 
+### 1.13 Tenth pass: pure D-pad Lemmings passcode and CRT bloom (2026-10-26)
+
+- **Lemmings pure D-pad passcode.** `docs/scripts/lem-fun4-dpad.txt` types
+  `HNLHCIOECW` from a passcode-screen state with an empty entry and selection on
+  `V` (`artifacts/lem_pass_fresh.state`, 21,700 frames). The script uses 15-frame
+  direction holds and 5-frame A taps with a release frame between actions, so the
+  CLI's duplicate-frame coalescing cannot swallow a release. The game shows the
+  `Fun 4 / Level 1 / Save the Lemmings` briefing at 22,600 (`PC 0x00020628`, hash
+  `0xC1DF57C5`) and starts gameplay at 23,000 (`PC 0x00083FD8`, hash `0xB7846C2D`).
+  The zero-frame load is pixel-identical and two 120-frame continuations both end
+  at `PC 0x000230A4`, hash `0xEDEB1B9D`. This closes the pure-D-pad entry item; the
+  title-to-passcode transition is still the existing `Down`/`A` script.
+- **CRT bloom.** `RendererSettings.Bloom` (default 0.35) and `BloomThreshold`
+  (default 0.6) add a 3x3 native-resolution glow around bright pixels in the CRT
+  filter. The Settings dialog exposes a CRT bloom slider. Bloom is ignored by the
+  other filters and the CPU fallback. Shader-source and settings roundtrip tests
+  cover the new uniforms; GPU timing is still pending.
+- **Tests.** 667 tests pass; the added assertions do not change the count.
+
+---
+
 ## 2. Current evidence
 
 ### Wolfenstein 3D
@@ -480,14 +502,15 @@ changing the DSP reload value. The 18,000-frame Wolfenstein gameplay capture is
 
 - Wolfenstein: done for the fresh-game loop; the existing 14,000-18,000 script and
   save/load proof are in section 2.
-- Lemmings: DONE (2026-10-24 late pass). From `lem-pass-N.state` (selection `N`),
-  the 9-byte poke for `HNLHCIOECW` (Fun 4) plus `B` is accepted, `A` shows the
-  briefing, and `A` starts gameplay at 21,640 frames (`PC 0x83FEC`, hash
-  `0x18F38B4D`; zero-frame load roundtrips, two 120-frame continuations both
-  `0x8D628FBD`). Scripts `lem-toN.txt`/`lem-code-HN.txt`, states
-  `lem-pass-N.state`/`lem-fun4.state`, hashes in `TestCorpus.md` 1.4. The entry
-  buffer is permuted (display order `77,76,75,74,7B,7A,79,78,7F,7E`; preview at
-  `76`), not sequential at `0x96574`.
+- Lemmings: DONE (2026-10-24 late pass, pure D-pad on 2026-10-26). The Fun 4
+  passcode `HNLHCIOECW` is now typed entirely with the D-pad/A by
+  `docs/scripts/lem-fun4-dpad.txt` from a passcode-screen state; the game shows
+  the Fun 4 briefing at 22,600 and starts gameplay at 23,000 (`PC 0x00083FD8`,
+  hash `0xB7846C2D`; zero-frame load roundtrips, two 120-frame continuations both
+  `0xEDEB1B9D`). The earlier poke path (`lem-pass-N.state` + 9-byte poke + `B`)
+  remains valid and reaches 21,640 (`PC 0x83FEC`, hash `0x18F38B4D`). The entry
+  buffer is permuted (display order `77,76,75,74,7B,7A,79,78,7F,7E`; the preview
+  is the next untyped slot), not sequential at `0x96574`.
 - Road Rash: the control map is known (B accelerate, A brake, D-pad steer, C
   attack, P pause). Driver v10 is traffic-aware (close-traffic coast/steer,
   urgent preemption for close traffic, obstacle steer, wall avoidance,
@@ -547,6 +570,10 @@ save/load proof.
 - [x] Road Rash's race renders correctly and runs past 60,000 frames.
 - [x] The high-resolution 640x480 renderer matches Lemmings' title reference.
 - [x] The Lemmings passcode confirm path is complete (Fun 4 gameplay + roundtrip).
+- [x] The Lemmings passcode is typed entirely with the D-pad
+  (`docs/scripts/lem-fun4-dpad.txt`, gameplay at 23,000 frames,
+  `PC 0x00083FD8`, hash `0xB7846C2D`, roundtrip `0xEDEB1B9D` twice).
+- [x] CRT bloom is implemented in the OpenGL presenter and exposed in Settings.
 - [ ] The Road Rash city race is finished. The CD media-access pulse fixes the
   old ~42k/~92k READ_ID-only wait and advances to `BUSTED`, race select, and a
   new race; the autopilot passes `GAME LOADING`/`Get ready` and cycles
@@ -583,6 +610,9 @@ save/load proof.
 - Do not redo the ninth-pass evidence capture, Space Ace interactive start,
   `cdStatus`/`cdPoll` diagnostics, or the autopilot menu-advance plumbing. Extend
   them with new evidence only.
+- Do not redo the tenth-pass Lemmings pure D-pad passcode script
+  (`docs/scripts/lem-fun4-dpad.txt`) or CRT bloom. Extend them with new evidence
+  only.
 
 ---
 
@@ -620,6 +650,12 @@ dotnet run -c Release --project src/ThreeDo.Cli -- run `
 dotnet run -c Release --project src/ThreeDo.Cli -- run `
   "$g\Lemmings (USA).chd" --bios $b --frames 18100 --high-res `
   --input-script "$o\lem-menu.txt" --frame-out "$o\lem-hires-title.png" --json
+
+# Lemmings: type the Fun 4 passcode with the D-pad and start the level
+dotnet run -c Release --project src/ThreeDo.Cli -- run `
+  "$g\Lemmings (USA).chd" --bios $b --state-in "$o\lem_pass_fresh.state" `
+  --frames 1300 --input-script docs/scripts/lem-fun4-dpad.txt --script-base state `
+  --frame-out "$o\lem-dpad-gameplay.png" --state-out "$o\lem-dpad-gameplay.state" --json
 
 # Save/load roundtrip (replace the state with a live gameplay state)
 dotnet run -c Release --project src/ThreeDo.Cli -- run `

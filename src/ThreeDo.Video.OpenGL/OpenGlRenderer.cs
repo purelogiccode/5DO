@@ -73,6 +73,8 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     private int _uScaleOutput;
     private int _uScaleFilter;
     private int _uScaleScanline;
+    private int _uScaleBloom;
+    private int _uScaleBloomThreshold;
     private int _uXbrSource;
     private int _uXbrOutput;
     private int _uXbrRect;
@@ -160,6 +162,8 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         _uScaleOutput = gl.GetUniformLocation(_scaleProgram, "uOutput");
         _uScaleFilter = gl.GetUniformLocation(_scaleProgram, "uFilter");
         _uScaleScanline = gl.GetUniformLocation(_scaleProgram, "uScanline");
+        _uScaleBloom = gl.GetUniformLocation(_scaleProgram, "uBloom");
+        _uScaleBloomThreshold = gl.GetUniformLocation(_scaleProgram, "uBloomThreshold");
 
         gl.UseProgram(_xbrProgram);
         _uXbrPalette = gl.GetUniformLocation(_xbrProgram, "uPalette");
@@ -315,6 +319,8 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         gl.Uniform2(_uScaleOutput, (float)_outputWidth, (float)_outputHeight);
         gl.Uniform1(_uScaleFilter, scaleFilter);
         gl.Uniform1(_uScaleScanline, _settings.ScanlineStrength);
+        gl.Uniform1(_uScaleBloom, _settings.Filter == VideoFilter.Crt ? _settings.Bloom : 0f);
+        gl.Uniform1(_uScaleBloomThreshold, _settings.BloomThreshold);
 
         gl.ActiveTexture(TextureUnit.Texture0);
         gl.BindTexture(TextureTarget.Texture2D, filterSource);

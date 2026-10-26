@@ -3,6 +3,24 @@
 All notable changes are recorded here. The project is pre-1.0; formats and behavior may
 still change.
 
+## [Unreleased] - 2026-10-26
+
+### Added
+
+- Lemmings Fun 4 passcode `HNLHCIOECW` is now typed entirely with the D-pad/A
+  (`docs/scripts/lem-fun4-dpad.txt`). The game shows the Fun 4 briefing at 22,600
+  and starts gameplay at 23,000 (`PC 0x00083FD8`, hash `0xB7846C2D`); the state
+  roundtrips (`0xEDEB1B9D` twice).
+- CRT bloom in the OpenGL presenter: a 3x3 native-resolution glow around bright
+  areas, controlled by `RendererSettings.Bloom`/`BloomThreshold` and a Settings
+  slider.
+- Shader-source and settings tests for the CRT bloom uniforms.
+
+### Changed
+
+- The Settings video page now exposes a CRT bloom slider.
+- Docs record the tenth-pass Lemmings evidence and the remaining work.
+
 ## [Unreleased] - 2026-10-25
 
 ### Added
