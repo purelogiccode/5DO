@@ -29,7 +29,7 @@ CI packages each published CLI and frontend folder with
 `packaging/package.ps1`. The archives are named
 `3doemulator-<component>-<rid>.zip` for Windows and `.tar.gz` for Linux/macOS.
 They contain the publish output, `README.md`, `THIRD-PARTY-NOTICES.md`,
-`Licensing.md`, and a generated `PACKAGE.txt` with the component, RID, version,
+`docs/Licensing.md`, and a generated `PACKAGE.txt` with the component, RID, version,
 commit, and build time. Linux archives also include `3doemulator.desktop`.
 
 Build one locally:

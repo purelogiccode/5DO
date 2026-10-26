@@ -434,10 +434,10 @@ missing and corrected the Road Rash diagnosis.
 
 - **Packaging script.** `packaging/package.ps1` takes a component (`cli`/`frontend`),
   RID, publish directory, and output directory. It stages the publish output plus
-  `README.md`, `THIRD-PARTY-NOTICES.md`, `Licensing.md`, and a generated
+  `README.md`, `THIRD-PARTY-NOTICES.md`, `docs/Licensing.md`, and a generated
   `PACKAGE.txt` (component, RID, version, commit, UTC build time), and adds
   `3doemulator.desktop` for Linux. Windows archives are zip; Linux/macOS archives
-  are tar.gz.
+  are tar.gz. PDBs are excluded from release archives.
 - **CI.** Both six-RID publish jobs now create and upload a portable package in
   addition to the raw publish folder.
 - **Local validation.** The win-x64 zip and linux-x64 tar.gz were built and

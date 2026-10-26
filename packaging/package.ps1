@@ -29,11 +29,18 @@ try {
     Get-ChildItem -LiteralPath $staging -Recurse -Force -Filter '*.pdb' |
         Remove-Item -Force
 
-    foreach ($file in @('README.md', 'THIRD-PARTY-NOTICES.md', 'docs/Licensing.md')) {
+    foreach ($file in @('README.md', 'THIRD-PARTY-NOTICES.md')) {
         $source = Join-Path $repoRoot $file
         if (Test-Path -LiteralPath $source) {
             Copy-Item -LiteralPath $source -Destination $staging -Force
         }
+    }
+
+    $licensing = Join-Path $repoRoot 'docs/Licensing.md'
+    if (Test-Path -LiteralPath $licensing) {
+        $docsStaging = Join-Path $staging 'docs'
+        New-Item -ItemType Directory -Path $docsStaging -Force | Out-Null
+        Copy-Item -LiteralPath $licensing -Destination $docsStaging -Force
     }
 
     if ($Rid -like 'linux-*') {
@@ -70,7 +77,7 @@ try {
         "built: $([DateTimeOffset]::UtcNow.ToString('u'))"
         ''
         'BIOS ROMs and game images are not included.'
-        'See README.md, THIRD-PARTY-NOTICES.md, and Licensing.md.'
+        'See README.md, THIRD-PARTY-NOTICES.md, and docs/Licensing.md.'
     )
     Set-Content -LiteralPath (Join-Path $staging 'PACKAGE.txt') -Value $manifest -Encoding utf8NoBOM
 
