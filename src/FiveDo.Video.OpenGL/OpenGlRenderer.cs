@@ -460,12 +460,23 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         gl.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)_adapter.Framebuffer);
         var rgba = new byte[required];
         gl.ReadPixels(0, 0, (uint)width, (uint)height, GlPixelFormat.Rgba, PixelType.UnsignedByte, rgba.AsSpan());
-        for (var i = 0; i < required; i += 4)
+
+        // glReadPixels returns the framebuffer bottom-up; callers (screenshots and the
+        // GPU parity probe) expect the same top-down BGRA layout as FrameBuffer.
+        var rowBytes = checked(width * 4);
+        for (var y = 0; y < height; y++)
         {
-            destination[i] = rgba[i + 2];
-            destination[i + 1] = rgba[i + 1];
-            destination[i + 2] = rgba[i];
-            destination[i + 3] = 0xff;
+            var sourceRow = (height - 1 - y) * rowBytes;
+            var targetRow = y * rowBytes;
+            for (var x = 0; x < rowBytes; x += 4)
+            {
+                var source = sourceRow + x;
+                var target = targetRow + x;
+                destination[target] = rgba[source + 2];
+                destination[target + 1] = rgba[source + 1];
+                destination[target + 2] = rgba[source];
+                destination[target + 3] = 0xff;
+            }
         }
     }
 

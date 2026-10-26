@@ -57,6 +57,7 @@ public sealed class GpuProbeIntegrationTests
                 Assert.True(report.Parity!.Value.Compared);
                 Assert.True(report.Parity.Value.Matches, $"{backend} parity mismatch.");
                 Assert.Equal(0, report.Parity.Value.DifferentPixels);
+                Assert.False(report.Parity.Value.VerticalFlip, $"{backend} output was vertically flipped.");
                 Assert.Equal(320, report.OutputWidth);
                 Assert.Equal(240, report.OutputHeight);
                 Assert.Equal(0, report.RendererAllocatedBytesPerFrame);

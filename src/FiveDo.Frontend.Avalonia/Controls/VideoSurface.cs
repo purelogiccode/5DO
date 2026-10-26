@@ -353,9 +353,11 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     /// <inheritdoc />
     protected override void OnOpenGlLost()
     {
-        _offscreen?.Dispose();
+        // The context is already gone here, so calling GL deletion functions would
+        // try to resolve entry points from a dead context and can crash the process.
+        // Avalonia calls OnOpenGlDeinit with a current context for normal teardown;
+        // after a context loss the driver owns the abandoned objects.
         _offscreen = null;
-        _renderer?.Dispose();
         _renderer = null;
         _adapter = null;
         _present = null;
@@ -378,10 +380,15 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
-        _offscreen?.Dispose();
+        // Avalonia invokes OnOpenGlDeinit with the context current during visual-tree
+        // teardown; that is where the GL programs and textures are released. This method
+        // must stay GL-free because callers (window close/probe shutdown) can run after
+        // the context has already gone away.
         _offscreen = null;
-        _renderer?.Dispose();
         _renderer = null;
         _adapter = null;
+        _present = null;
+        _gl = null;
+        GC.SuppressFinalize(this);
     }
 }

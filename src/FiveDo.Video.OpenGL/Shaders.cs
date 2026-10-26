@@ -119,6 +119,10 @@ internal static class Shaders
         void main()
         {
             vec2 uv = (gl_FragCoord.xy - uRect.xy) / uRect.zw;
+            // The expanded source texture keeps row 0 (the frame's top line) at the
+            // bottom of GL texture space. Flip the sampled V coordinate here so the
+            // window shows the frame top-up instead of mirrored vertically.
+            uv.y = 1.0 - uv.y;
             if (uFilter == 1)
             {
                 // Themaister/rsn8887 sharp-bilinear: prescale by the integer

@@ -1,0 +1,65 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- RPCS3-inspired dark palette. -->
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#17181B" />
+    <SolidColorBrush x:Key="MenuBarBrush" Color="#1B1D20" />
+    <SolidColorBrush x:Key="ToolbarBrush" Color="#202226" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#1E2024" />
+    <SolidColorBrush x:Key="SurfaceAltBrush" Color="#25282D" />
+    <SolidColorBrush x:Key="StatusBarBrush" Color="#181A1D" />
+    <SolidColorBrush x:Key="FieldBrush" Color="#141518" />
+    <SolidColorBrush x:Key="CardBrush" Color="#23262B" />
+    <SolidColorBrush x:Key="HoverBrush" Color="#2C3036" />
+    <SolidColorBrush x:Key="PressedBrush" Color="#22252A" />
+    <SolidColorBrush x:Key="BorderBrush" Color="#32353B" />
+    <SolidColorBrush x:Key="BorderStrongBrush" Color="#3E4249" />
+    <SolidColorBrush x:Key="TextBrush" Color="#E7E9EC" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#9AA0A8" />
+    <SolidColorBrush x:Key="TextDimBrush" Color="#6E747D" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#3DAEE9" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#5BBFF0" />
+    <SolidColorBrush x:Key="AccentPressedBrush" Color="#2A8FC2" />
+    <SolidColorBrush x:Key="AccentTextBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="SelectionBrush" Color="#263F52" />
+    <SolidColorBrush x:Key="SelectionBorderBrush" Color="#3DAEE9" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#57C878" />
+    <SolidColorBrush x:Key="WarningBrush" Color="#E0B050" />
+    <SolidColorBrush x:Key="ErrorBrush" Color="#E06C6C" />
+
+    <!-- Keep the Fluent theme's accent in step with the RPCS3 blue. -->
+    <Color x:Key="SystemAccentColor">#3DAEE9</Color>
+    <Color x:Key="SystemAccentColorLight1">#5BBFF0</Color>
+    <Color x:Key="SystemAccentColorLight2">#7ACCF5</Color>
+    <Color x:Key="SystemAccentColorLight3">#A3DDFA</Color>
+    <Color x:Key="SystemAccentColorDark1">#2A8FC2</Color>
+    <Color x:Key="SystemAccentColorDark2">#1F749F</Color>
+    <Color x:Key="SystemAccentColorDark3">#155A7D</Color>
+
+    <x:Double x:Key="LibraryCardWidth">176</x:Double>
+    <x:Double x:Key="LibraryCardImageHeight">176</x:Double>
+
+    <!-- Toolbar / game-list icons. -->
+    <StreamGeometry x:Key="IconOpen">M10 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z</StreamGeometry>
+    <StreamGeometry x:Key="IconBios">M9 3v2H7C5.9 5 5 5.9 5 7v2H3v2h2v2H3v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h2v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2V9h-2V7c0-1.1-.9-2-2-2h-2V3h-2v2h-2V3H9zm0 6h6v6H9V9z</StreamGeometry>
+    <StreamGeometry x:Key="IconRefresh">M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z</StreamGeometry>
+    <StreamGeometry x:Key="IconFullscreen">M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z</StreamGeometry>
+    <StreamGeometry x:Key="IconStop">M6 6h12v12H6z</StreamGeometry>
+    <StreamGeometry x:Key="IconPlay">M8 5v14l11-7z</StreamGeometry>
+    <StreamGeometry x:Key="IconPause">M6 5h4v14H6zM14 5h4v14h-4z</StreamGeometry>
+    <StreamGeometry x:Key="IconSettings">M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z</StreamGeometry>
+    <StreamGeometry x:Key="IconGamepad">M21.58 16.09l-1.09-7.66C20.21 6.46 18.52 5 16.53 5H7.47C5.48 5 3.79 6.46 3.51 8.43l-1.09 7.66C2.2 17.63 3.39 19 4.94 19c.68 0 1.32-.27 1.8-.75L9 16h6l2.25 2.25c.48.48 1.13.75 1.8.75 1.56 0 2.75-1.37 2.53-2.91zM11 11H9v2H8v-2H6v-1h2V8h1v2h2v1zm4-1c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm2 3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z</StreamGeometry>
+    <StreamGeometry x:Key="IconSave">M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zm-5 16a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm3-10H5V5h10v4z</StreamGeometry>
+    <StreamGeometry x:Key="IconLoad">M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18z</StreamGeometry>
+    <StreamGeometry x:Key="IconScreenshot">M9 3l-1.83 2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.17L15 3H9zm3 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-2a3 3 0 1 0 0-6 3 3 0 0 0 0 6z</StreamGeometry>
+    <StreamGeometry x:Key="IconLogs">M4 4h16v2H4V4zm0 5h16v2H4V9zm0 5h10v2H4v-2zm0 5h10v2H4v-2z</StreamGeometry>
+    <StreamGeometry x:Key="IconList">M3 5h2v2H3V5zm4 0h14v2H7V5zM3 11h2v2H3v-2zm4 0h14v2H7v-2zM3 17h2v2H3v-2zm4 0h14v2H7v-2z</StreamGeometry>
+    <StreamGeometry x:Key="IconGrid">M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z</StreamGeometry>
+    <StreamGeometry x:Key="IconSearch">M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z</StreamGeometry>
+    <StreamGeometry x:Key="IconSlots">M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1z</StreamGeometry>
+    <StreamGeometry x:Key="IconLibrary">M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z</StreamGeometry>
+    <StreamGeometry x:Key="IconInfo">M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z</StreamGeometry>
+    <StreamGeometry x:Key="IconFolderPlus">M20 6h-8l-2-2H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-1 8h-2v2h-2v-2h-2v-2h2v-2h2v2h2v2z</StreamGeometry>
+    <StreamGeometry x:Key="IconClose">M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z</StreamGeometry>
+    <StreamGeometry x:Key="IconController">M7.97 6h8.06A4.97 4.97 0 0 1 21 10.97v2.06A4.97 4.97 0 0 1 16.03 18H7.97A4.97 4.97 0 0 1 3 13.03v-2.06A4.97 4.97 0 0 1 7.97 6zM8 9v2H6v2h2v2h2v-2h2v-2h-2V9H8zm8.5 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm2 2.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z</StreamGeometry>
+</ResourceDictionary>

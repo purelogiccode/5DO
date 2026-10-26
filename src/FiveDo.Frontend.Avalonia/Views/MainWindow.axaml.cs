@@ -1,12 +1,17 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
@@ -15,6 +20,7 @@ using FiveDo.Audio;
 using FiveDo.Core;
 using FiveDo.Diagnostics;
 using FiveDo.Frontend.Avalonia.Input;
+using FiveDo.Frontend.Avalonia.ViewModels;
 using FiveDo.Host;
 using FiveDo.Input;
 using FiveDo.Machine;
@@ -25,9 +31,10 @@ using AvaloniaPixelFormat = Avalonia.Platform.PixelFormat;
 namespace FiveDo.Frontend.Avalonia.Views;
 
 /// <summary>
-/// The minimal desktop shell: video surface, file loading, play/pause, reset, save/load,
-/// screenshots, and keyboard input. The machine runs on <see cref="CoreRunner"/>'s dedicated
-/// 60 Hz thread; the video surface renders the latest mailbox frame on the UI thread.
+/// The desktop shell: an RPCS3-style game library with a menu bar, icon toolbar, searchable
+/// grid/list views, log dock, and status bar. Booting a disc switches the central area to the
+/// video surface, where the machine runs on <see cref="CoreRunner"/>'s dedicated 60 Hz thread
+/// and the presenter renders the latest mailbox frame on the UI thread.
 /// </summary>
 public partial class MainWindow : Window, IDisposable
 {
@@ -36,6 +43,9 @@ public partial class MainWindow : Window, IDisposable
     private readonly InMemoryLogSink _logSink = new(4000);
     private readonly Log _log;
     private readonly PlatformGamepadBackend? _gamepad;
+    private readonly ObservableCollection<LibraryItem> _visibleGames = [];
+    private readonly List<LibraryItem> _allGames = [];
+    private readonly DispatcherTimer _logTimer;
     private InputManager _input;
     private readonly SaveStateSlotManager _slots;
     private OpenAlAudioOutput? _audio;
@@ -50,6 +60,12 @@ public partial class MainWindow : Window, IDisposable
     private byte[]? _cpuPixels;
     private bool _running;
     private bool _shuttingDown;
+    private bool _biosLoaded;
+    private bool _gridMode = true;
+    private bool _syncingSelection;
+    private bool _logDockVisible;
+    private int _lastLogEntryCount = -1;
+    private int _scanGeneration;
 
     public MainWindow()
     {
@@ -74,7 +90,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         _nvramStore = new NvramStore(Path.Combine(AppSettingsStore.DefaultDirectory, "nvram.ram"));
-        HighResCheck.IsChecked = _settings.HighResolution;
+        HighResMenuItem.IsChecked = _settings.HighResolution;
         OverlayPanel.IsVisible = _settings.ShowOverlay;
         Video.Settings = _settings.ToRendererSettings(_gameId);
         if (Program.SmokeTest)
@@ -84,6 +100,22 @@ public partial class MainWindow : Window, IDisposable
             // presentation is covered by the renderer tests and manual runs.
             Video.IsVisible = false;
         }
+
+        GridLibraryList.ItemsSource = _visibleGames;
+        ListLibraryList.ItemsSource = _visibleGames;
+        _logTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _logTimer.Tick += (_, _) =>
+        {
+            if (LogPanel.IsVisible)
+            {
+                RefreshLogDock(force: false);
+            }
+        };
+        _logTimer.Start();
+        SetLogDockVisible(false);
+        SetLibraryMode(grid: true);
+        ApplyLibraryFilter();
+        UpdateRecentMenu();
 
         Video.OpenGlReady += OnOpenGlReady;
         Video.OpenGlFailed += OnOpenGlFailed;
@@ -104,43 +136,57 @@ public partial class MainWindow : Window, IDisposable
 
         if (!_settings.FirstRunCompleted && string.IsNullOrWhiteSpace(_settings.BiosPath))
         {
-            try
-            {
-                var welcome = new WelcomeWindow();
-                welcome.Closed += (_, _) =>
-                {
-                    IsEnabled = true;
-                    _settings.FirstRunCompleted = true;
-                    AppSettingsStore.Save(_settings);
-                    switch (welcome.Action)
-                    {
-                        case WelcomeAction.OpenBios:
-                            OnOpenBios(null, new RoutedEventArgs());
-                            break;
-                        case WelcomeAction.OpenDisc:
-                            OnOpenDisc(null, new RoutedEventArgs());
-                            break;
-                    }
-
-                    if (Program.StartupDiscPath is not null && _disc is null)
-                    {
-                        LoadConfiguredPaths();
-                    }
-                };
-                IsEnabled = false;
-                welcome.Show(this);
-            }
-            catch (Exception exception)
-            {
-                StatusText.Text = $"Welcome error: {exception.Message}";
-                Console.Error.WriteLine($"Welcome error: {exception}");
-            }
-
+            ShowWelcome(firstRun: true);
             return;
         }
 
         LoadConfiguredPaths();
+        RefreshLibrary();
     }
+
+    private void ShowWelcome(bool firstRun)
+    {
+        try
+        {
+            var welcome = new WelcomeWindow();
+            welcome.Closed += (_, _) =>
+            {
+                IsEnabled = true;
+                if (firstRun)
+                {
+                    _settings.FirstRunCompleted = true;
+                    AppSettingsStore.Save(_settings);
+                }
+
+                switch (welcome.Action)
+                {
+                    case WelcomeAction.OpenBios:
+                        OnOpenBios(null, new RoutedEventArgs());
+                        break;
+                    case WelcomeAction.OpenDisc:
+                        OnOpenDisc(null, new RoutedEventArgs());
+                        break;
+                }
+
+                if (Program.StartupDiscPath is not null && _disc is null)
+                {
+                    LoadConfiguredPaths();
+                }
+
+                RefreshLibrary();
+            };
+            IsEnabled = false;
+            welcome.Show(this);
+        }
+        catch (Exception exception)
+        {
+            IsEnabled = true;
+            StatusText.Text = $"Welcome error: {exception.Message}";
+            Console.Error.WriteLine($"Welcome error: {exception}");
+        }
+    }
+
+    private void OnWelcome(object? sender, RoutedEventArgs e) => ShowWelcome(firstRun: false);
 
     private void LoadConfiguredPaths()
     {
@@ -149,10 +195,11 @@ public partial class MainWindow : Window, IDisposable
             OpenBiosPath(_settings.BiosPath);
         }
 
-        var discPath = Program.StartupDiscPath ?? _settings.DiscPath;
+        var startupDisc = Program.StartupDiscPath;
+        var discPath = startupDisc ?? _settings.DiscPath;
         if (File.Exists(discPath))
         {
-            OpenDiscPath(discPath);
+            OpenDiscPath(discPath, autoStart: startupDisc is not null);
         }
     }
 
@@ -188,12 +235,17 @@ public partial class MainWindow : Window, IDisposable
         var path = files.Count > 0 ? files[0].TryGetLocalPath() : null;
         if (path is not null)
         {
-            OpenDiscPath(path);
+            OpenDiscPath(path, autoStart: true);
         }
     }
 
     private void OpenBiosPath(string path)
     {
+        if (_running)
+        {
+            PauseEmulation(showLibrary: false);
+        }
+
         try
         {
             var bios = BiosImage.Load(path);
@@ -205,6 +257,7 @@ public partial class MainWindow : Window, IDisposable
                 var nvram = _nvramStore.LoadOrCreate();
                 machine.LoadNvram(nvram.Data.Span);
             });
+            _biosLoaded = true;
             _settings.BiosPath = path;
             AppSettingsStore.Save(_settings);
             StatusText.Text = $"BIOS {bios.Md5[..8]} loaded{(bios.IsAnvil ? " (Anvil)" : string.Empty)}.";
@@ -221,8 +274,13 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OpenDiscPath(string path)
+    private void OpenDiscPath(string path, bool autoStart = false)
     {
+        if (autoStart && _running)
+        {
+            PauseEmulation(showLibrary: false);
+        }
+
         try
         {
             var machine = _machine ?? CreateMachine();
@@ -236,6 +294,10 @@ public partial class MainWindow : Window, IDisposable
                 _disc = disc;
                 machine.Compatibility.FixMode = fixMode;
                 machine.InsertDisc(disc);
+                if (autoStart)
+                {
+                    machine.Reset();
+                }
             });
             _gameId = gameId;
             _gameName = record?.Name ?? Path.GetFileNameWithoutExtension(path);
@@ -254,12 +316,19 @@ public partial class MainWindow : Window, IDisposable
             }
 
             AppSettingsStore.Save(_settings);
+            UpdateRecentMenu();
+            UpdateEmulationHeader();
             StatusText.Text = $"{_gameName}: {disc.SectorCount} sectors, fixes 0x{(uint)fixMode:x8}.";
             _log.Write(
                 LogLevel.Info,
                 LogCategory.Storage,
                 $"Disc opened: {_gameName} ({gameId[..Math.Min(8, gameId.Length)]}), "
                 + $"{disc.SectorCount} sectors, fixes 0x{(uint)fixMode:x8}.");
+
+            if (autoStart)
+            {
+                StartEmulation(showGameView: true);
+            }
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException or DiscImageException or ArgumentException)
         {
@@ -271,24 +340,83 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnPlayPause(object? sender, RoutedEventArgs e)
     {
-        if (_machine is null)
-        {
-            StatusText.Text = "Load a BIOS first.";
-            return;
-        }
-
-        _running = !_running;
-        PlayButton.Content = _running ? "Pause" : "Play";
         if (_running)
         {
-            _runner!.Start();
-            _log.Write(LogLevel.Info, LogCategory.Host, "Emulation resumed.");
+            PauseEmulation(showLibrary: false);
         }
         else
         {
-            _runner!.Pause();
+            StartEmulation(showGameView: true);
+        }
+    }
+
+    private void StartEmulation(bool showGameView)
+    {
+        if (!_biosLoaded || _machine is null || _runner is null)
+        {
+            StatusText.Text = "Open a 3DO BIOS before starting emulation.";
+            return;
+        }
+
+        if (!_running)
+        {
+            _running = true;
+            if (_runner.IsRunning)
+            {
+                _runner.Resume();
+            }
+            else
+            {
+                _runner.Start();
+            }
+
+            _log.Write(LogLevel.Info, LogCategory.Host, "Emulation started.");
+        }
+
+        SetPlayState(running: true);
+        if (showGameView)
+        {
+            ShowEmulationView();
+        }
+
+        StatusText.Text = string.IsNullOrWhiteSpace(_gameName)
+            ? "Emulation running."
+            : $"Running {_gameName}.";
+    }
+
+    private void PauseEmulation(bool showLibrary)
+    {
+        if (_running)
+        {
+            _running = false;
+            _runner?.Pause();
             FlushNvram();
             _log.Write(LogLevel.Info, LogCategory.Host, "Emulation paused.");
+        }
+
+        SetPlayState(running: false);
+        if (showLibrary)
+        {
+            ShowLibraryView();
+            StatusText.Text = "Emulation stopped.";
+        }
+        else
+        {
+            StatusText.Text = "Emulation paused.";
+        }
+    }
+
+    private void OnStop(object? sender, RoutedEventArgs e) => PauseEmulation(showLibrary: true);
+
+    private void SetPlayState(bool running)
+    {
+        PlayPauseText.Text = running ? "Pause" : "Start";
+        PlayPauseMenuItem.Header = running ? "Pause" : "Start";
+        HeaderPlayPauseText.Text = running ? "Pause" : "Start";
+        if (this.FindResource(running ? "IconPause" : "IconPlay") is Geometry icon)
+        {
+            PlayPauseIcon.Data = icon;
+            HeaderPlayPauseIcon.Data = icon;
         }
     }
 
@@ -468,9 +596,78 @@ public partial class MainWindow : Window, IDisposable
 
     private void ToggleFullscreen()
     {
-        var fullscreen = WindowState != WindowState.FullScreen;
-        WindowState = fullscreen ? WindowState.FullScreen : WindowState.Normal;
-        Cursor = fullscreen ? new Cursor(StandardCursorType.None) : null;
+        if (WindowState == WindowState.FullScreen)
+        {
+            WindowState = WindowState.Normal;
+            Cursor = null;
+            SetChromeVisible(visible: true);
+            return;
+        }
+
+        if (!EmulationView.IsVisible)
+        {
+            if (_machine is null || !_biosLoaded)
+            {
+                StatusText.Text = "Start a game to use fullscreen.";
+                return;
+            }
+
+            ShowEmulationView();
+        }
+
+        WindowState = WindowState.FullScreen;
+        Cursor = new Cursor(StandardCursorType.None);
+        SetChromeVisible(visible: false);
+    }
+
+    private void SetChromeVisible(bool visible)
+    {
+        MainMenu.IsVisible = visible;
+        ToolbarBorder.IsVisible = visible;
+        StatusBarBorder.IsVisible = visible;
+        EmulationHeader.IsVisible = visible;
+        LogPanel.IsVisible = visible && _logDockVisible;
+    }
+
+    private void OnShowLibrary(object? sender, RoutedEventArgs e) => ShowLibraryView();
+
+    private void ShowLibraryView()
+    {
+        if (WindowState == WindowState.FullScreen)
+        {
+            WindowState = WindowState.Normal;
+            Cursor = null;
+            SetChromeVisible(visible: true);
+        }
+
+        Title = "5DO";
+        EmulationView.IsVisible = false;
+        LibraryView.IsVisible = true;
+        _input.Keyboard.Reset();
+        ApplyLibraryFilter();
+    }
+
+    private void ShowEmulationView()
+    {
+        if (_machine is null)
+        {
+            StatusText.Text = "Boot a disc first.";
+            return;
+        }
+
+        Title = string.IsNullOrWhiteSpace(_gameName) ? "5DO" : $"{_gameName} — 5DO";
+        UpdateEmulationHeader();
+        LibraryView.IsVisible = false;
+        EmulationView.IsVisible = true;
+    }
+
+    private void UpdateEmulationHeader()
+    {
+        EmulationTitleText.Text = string.IsNullOrWhiteSpace(_gameName) ? "No disc loaded" : _gameName;
+        var id = _gameId.Length >= 8 ? _gameId[..8].ToUpperInvariant() : _gameId.ToUpperInvariant();
+        EmulationSubtitleText.Text = id.Length == 0
+            ? "Open a disc to begin"
+            : $"{id} · fixes 0x{(uint)_settings.ResolveFixMode(_gameId):x8}";
     }
 
     private void OnLogs(object? sender, RoutedEventArgs e)
@@ -553,13 +750,375 @@ public partial class MainWindow : Window, IDisposable
         window.ShowDialog(this);
     }
 
-    private async void OnLibrary(object? sender, RoutedEventArgs e)
+    private async void OnAddFolder(object? sender, RoutedEventArgs e)
     {
-        var window = new GameLibraryWindow(_settings);
-        var path = await window.ShowDialog<string?>(this);
-        if (!string.IsNullOrWhiteSpace(path))
+        var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
-            OpenDiscPath(path);
+            Title = "Add a game folder",
+            AllowMultiple = true,
+        });
+
+        var added = false;
+        foreach (var folder in folders)
+        {
+            var path = folder.TryGetLocalPath();
+            if (path is null || _settings.LibraryFolders.Exists(existing =>
+                    string.Equals(existing, path, StringComparison.OrdinalIgnoreCase)))
+            {
+                continue;
+            }
+
+            _settings.LibraryFolders.Add(path);
+            added = true;
+        }
+
+        if (added)
+        {
+            AppSettingsStore.Save(_settings);
+            RefreshLibrary();
+        }
+        else if (folders.Count > 0)
+        {
+            StatusText.Text = "That folder is already in the game library.";
+        }
+    }
+
+    private void OnRefresh(object? sender, RoutedEventArgs e) => RefreshLibrary();
+
+    private void OnExit(object? sender, RoutedEventArgs e) => Close();
+
+    private void OnSearchChanged(object? sender, TextChangedEventArgs e) => ApplyLibraryFilter();
+
+    private void OnIconSizeChanged(object? sender, RangeBaseValueChangedEventArgs e)
+    {
+        var width = Math.Round(e.NewValue);
+        Resources["LibraryCardWidth"] = width;
+        Resources["LibraryCardImageHeight"] = Math.Max(80, width - 14);
+    }
+
+    private void OnGridView(object? sender, RoutedEventArgs e) => SetLibraryMode(grid: true);
+
+    private void OnListView(object? sender, RoutedEventArgs e) => SetLibraryMode(grid: false);
+
+    private void SetLibraryMode(bool grid)
+    {
+        _gridMode = grid;
+        GridLibraryList.IsVisible = grid;
+        ListLibraryList.IsVisible = !grid;
+        GridModeMenuItem.IsChecked = grid;
+        ListModeMenuItem.IsChecked = !grid;
+        GridViewButton.Classes.Set("active", grid);
+        ListViewButton.Classes.Set("active", !grid);
+        if ((GridLibraryList.SelectedItem as LibraryItem) is { } selected)
+        {
+            SelectLibraryItem(selected);
+        }
+    }
+
+    private void OnGridSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_syncingSelection || GridLibraryList.SelectedItem is not LibraryItem item)
+        {
+            return;
+        }
+
+        _syncingSelection = true;
+        ListLibraryList.SelectedItem = item;
+        _syncingSelection = false;
+        UpdateSelectedStatus(item);
+    }
+
+    private void OnListSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_syncingSelection || ListLibraryList.SelectedItem is not LibraryItem item)
+        {
+            return;
+        }
+
+        _syncingSelection = true;
+        GridLibraryList.SelectedItem = item;
+        _syncingSelection = false;
+        UpdateSelectedStatus(item);
+    }
+
+    private void OnGridDoubleTapped(object? sender, TappedEventArgs e) =>
+        BootLibrarySelection(GridLibraryList.SelectedItem as LibraryItem);
+
+    private void OnListDoubleTapped(object? sender, TappedEventArgs e) =>
+        BootLibrarySelection(ListLibraryList.SelectedItem as LibraryItem);
+
+    private void OnLibraryKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            var item = sender == ListLibraryList
+                ? ListLibraryList.SelectedItem as LibraryItem
+                : GridLibraryList.SelectedItem as LibraryItem;
+            BootLibrarySelection(item);
+            e.Handled = true;
+        }
+    }
+
+    private void BootLibrarySelection(LibraryItem? item)
+    {
+        if (item is null)
+        {
+            StatusText.Text = "Select a game first.";
+            return;
+        }
+
+        OpenDiscPath(item.Path, autoStart: true);
+    }
+
+    private LibraryItem? SelectedLibraryItem()
+    {
+        var item = _gridMode
+            ? GridLibraryList.SelectedItem as LibraryItem
+            : ListLibraryList.SelectedItem as LibraryItem;
+        return item
+            ?? GridLibraryList.SelectedItem as LibraryItem
+            ?? ListLibraryList.SelectedItem as LibraryItem;
+    }
+
+    private void SelectLibraryItem(LibraryItem item)
+    {
+        _syncingSelection = true;
+        GridLibraryList.SelectedItem = item;
+        ListLibraryList.SelectedItem = item;
+        _syncingSelection = false;
+        UpdateSelectedStatus(item);
+    }
+
+    private void UpdateSelectedStatus(LibraryItem item)
+    {
+        StatusText.Text = string.IsNullOrWhiteSpace(item.Entry.Error)
+            ? $"{item.Name} · {item.Format} · {item.SectorText}"
+            : $"{item.Name} · {item.Entry.Error}";
+    }
+
+    private void ApplyLibraryFilter()
+    {
+        var query = SearchBox.Text?.Trim() ?? string.Empty;
+        var selected = SelectedLibraryItem();
+        _visibleGames.Clear();
+        foreach (var item in _allGames)
+        {
+            if (query.Length == 0
+                || item.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || item.Path.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || item.GameIdText.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || item.Format.Contains(query, StringComparison.OrdinalIgnoreCase))
+            {
+                _visibleGames.Add(item);
+            }
+        }
+
+        _syncingSelection = true;
+        if (selected is not null && _visibleGames.Contains(selected))
+        {
+            GridLibraryList.SelectedItem = selected;
+            ListLibraryList.SelectedItem = selected;
+        }
+        else
+        {
+            GridLibraryList.SelectedItem = null;
+            ListLibraryList.SelectedItem = null;
+        }
+
+        _syncingSelection = false;
+
+        var hasGames = _allGames.Count > 0;
+        var hasVisible = _visibleGames.Count > 0;
+        EmptyLibraryPanel.IsVisible = !hasVisible;
+        if (!hasGames)
+        {
+            EmptyLibraryTitle.Text = "No games found";
+            EmptyLibraryText.Text = _settings.LibraryFolders.Count == 0
+                ? "Add a folder that contains ISO, BIN, CUE, or CHD images."
+                : "No supported disc images were found in the configured folders.";
+        }
+        else if (!hasVisible)
+        {
+            EmptyLibraryTitle.Text = "No matching games";
+            EmptyLibraryText.Text = $"No game matches \"{query}\".";
+        }
+
+        LibraryCountText.Text = !hasGames
+            ? "0 games"
+            : query.Length == 0
+                ? CountLabel(_allGames.Count)
+                : $"{_visibleGames.Count} of {CountLabel(_allGames.Count)}";
+    }
+
+    private static string CountLabel(int count) => count == 1 ? "1 game" : $"{count} games";
+
+    private async void RefreshLibrary()
+    {
+        if (Program.SmokeTest)
+        {
+            return;
+        }
+
+        var generation = ++_scanGeneration;
+        var folders = _settings.LibraryFolders.Count > 0
+            ? _settings.LibraryFolders.ToList()
+            : RecentFolders();
+        StatusText.Text = folders.Count == 0
+            ? "No game folders configured. Use File > Add Game Folder."
+            : "Scanning game folders...";
+
+        IReadOnlyList<GameLibraryEntry> entries = [];
+        try
+        {
+            if (folders.Count > 0)
+            {
+                entries = await Task.Run(() => GameLibraryScanner.Scan(folders));
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            StatusText.Text = $"Library scan failed: {exception.Message}";
+            _log.Write(LogLevel.Error, LogCategory.Storage, $"Library scan failed: {exception.Message}");
+            return;
+        }
+
+        if (_shuttingDown)
+        {
+            return;
+        }
+
+        if (generation != _scanGeneration)
+        {
+            return;
+        }
+
+        var selectedPath = SelectedLibraryItem()?.Path;
+        ClearLibraryItems();
+        foreach (var entry in entries)
+        {
+            _allGames.Add(new LibraryItem(entry));
+        }
+
+        ApplyLibraryFilter();
+        if (!string.IsNullOrWhiteSpace(selectedPath))
+        {
+            var reselect = _visibleGames.FirstOrDefault(item =>
+                string.Equals(item.Path, selectedPath, StringComparison.OrdinalIgnoreCase));
+            if (reselect is not null)
+            {
+                SelectLibraryItem(reselect);
+            }
+        }
+
+        StatusText.Text = entries.Count == 0
+            ? "No discs found. Add a game folder from the File menu."
+            : $"{CountLabel(entries.Count)} in the library.";
+    }
+
+    private void ClearLibraryItems()
+    {
+        _syncingSelection = true;
+        GridLibraryList.SelectedItem = null;
+        ListLibraryList.SelectedItem = null;
+        _syncingSelection = false;
+        _visibleGames.Clear();
+        foreach (var item in _allGames)
+        {
+            item.Dispose();
+        }
+
+        _allGames.Clear();
+    }
+
+    private List<string> RecentFolders()
+    {
+        var folders = new List<string>();
+        foreach (var disc in _settings.RecentDiscs)
+        {
+            var folder = Path.GetDirectoryName(disc);
+            if (folder is not null && !folders.Exists(existing =>
+                    string.Equals(existing, folder, StringComparison.OrdinalIgnoreCase)))
+            {
+                folders.Add(folder);
+            }
+        }
+
+        return folders;
+    }
+
+    private void UpdateRecentMenu()
+    {
+        RecentMenu.Items.Clear();
+        if (_settings.RecentDiscs.Count == 0)
+        {
+            RecentMenu.Items.Add(new MenuItem { Header = "No recent discs", IsEnabled = false });
+            return;
+        }
+
+        foreach (var path in _settings.RecentDiscs.Take(10))
+        {
+            var item = new MenuItem { Header = Path.GetFileName(path) };
+            ToolTip.SetTip(item, path);
+            item.Click += (_, _) => OpenDiscPath(path, autoStart: true);
+            RecentMenu.Items.Add(item);
+        }
+
+        RecentMenu.Items.Add(new Separator());
+        var clear = new MenuItem { Header = "Clear Recent" };
+        clear.Click += (_, _) =>
+        {
+            _settings.RecentDiscs.Clear();
+            AppSettingsStore.Save(_settings);
+            UpdateRecentMenu();
+        };
+        RecentMenu.Items.Add(clear);
+    }
+
+    private void OnToggleLog(object? sender, RoutedEventArgs e) => SetLogDockVisible(!_logDockVisible);
+
+    private void SetLogDockVisible(bool visible)
+    {
+        _logDockVisible = visible;
+        LogPanel.IsVisible = visible && WindowState != WindowState.FullScreen;
+        ShowLogMenuItem.IsChecked = visible;
+        LogsButton.Classes.Set("active", visible);
+        if (visible)
+        {
+            RefreshLogDock(force: true);
+        }
+    }
+
+    private void OnClearLog(object? sender, RoutedEventArgs e)
+    {
+        _logSink.Clear();
+        RefreshLogDock(force: true);
+    }
+
+    private void RefreshLogDock(bool force)
+    {
+        var entries = _logSink.Entries;
+        if (!force && entries.Count == _lastLogEntryCount)
+        {
+            return;
+        }
+
+        _lastLogEntryCount = entries.Count;
+        var start = Math.Max(0, entries.Count - 250);
+        var lines = new List<string>(entries.Count - start);
+        for (var i = start; i < entries.Count; i++)
+        {
+            var entry = entries[i];
+            var time = entry.TimestampUtc == default
+                ? string.Empty
+                : entry.TimestampUtc.ToLocalTime().ToString("HH:mm:ss") + " ";
+            lines.Add($"{time}[{entry.Level,-8}] {entry.Category,-12} {entry.Message}");
+        }
+
+        LogList.ItemsSource = lines;
+        LogSummaryText.Text = entries.Count == 1 ? "1 entry" : $"{entries.Count} entries";
+        if (lines.Count > 0)
+        {
+            LogList.ScrollIntoView(lines[^1]);
         }
     }
 
@@ -590,7 +1149,8 @@ public partial class MainWindow : Window, IDisposable
         }
 
         ApplyAudioSettings();
-        HighResCheck.IsChecked = _settings.HighResolution;
+        HighResMenuItem.IsChecked = _settings.HighResolution;
+        UpdateEmulationHeader();
         if (_machine is not null && _settings.HighResolution != _machine.Tuning.HighResolution)
         {
             RecreateMachine(_settings.HighResolution);
@@ -688,7 +1248,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnHighResChanged(object? sender, RoutedEventArgs e)
     {
-        var enabled = HighResCheck.IsChecked == true;
+        var enabled = HighResMenuItem.IsChecked;
         if (_settings.HighResolution == enabled)
         {
             return;
@@ -722,18 +1282,20 @@ public partial class MainWindow : Window, IDisposable
         }
 
         _running = false;
-        PlayButton.Content = "Play";
+        SetPlayState(running: false);
         _runner?.Dispose();
         _runner = null;
         _machine = null;
         _disc?.Dispose();
         _disc = null;
+        _biosLoaded = false;
         OpenBiosPath(biosPath);
         if (!string.IsNullOrWhiteSpace(discPath) && File.Exists(discPath))
         {
             OpenDiscPath(discPath);
         }
 
+        ShowLibraryView();
         StatusText.Text = highResolution
             ? "High-resolution mode enabled; machine restarted."
             : "High-resolution mode disabled; machine restarted.";
@@ -741,8 +1303,9 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnCoreStatus(CoreStatus status)
     {
-        StatusText.Text =
-            $"Frame {status.Frames}  PC 0x{status.ProgramCounter:x8}  cycles {status.Cycles}  {status.FramesPerSecond:F1} fps";
+        StatsText.Text =
+            $"frame {status.Frames} · PC 0x{status.ProgramCounter:x8} · {status.Cycles} cyc";
+        FpsText.Text = $"{status.FramesPerSecond,5:F1} fps";
         if (OverlayPanel.IsVisible)
         {
             var gpu = Video.GpuMilliseconds;
@@ -757,6 +1320,7 @@ public partial class MainWindow : Window, IDisposable
     private void OnOpenGlReady(RendererCapabilities capabilities)
     {
         StopCpuFallback();
+        RendererText.Text = $"{capabilities.Name} {capabilities.MajorVersion}.{capabilities.MinorVersion}";
         StatusText.Text =
             $"{capabilities.Name} {capabilities.MajorVersion}.{capabilities.MinorVersion} renderer ready.";
         _log.Write(
@@ -797,6 +1361,7 @@ public partial class MainWindow : Window, IDisposable
         _cpuTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
         _cpuTimer.Tick += (_, _) => RenderCpuFrame();
         _cpuTimer.Start();
+        RendererText.Text = "CPU fallback";
         StatusText.Text = $"OpenGL unavailable ({exception.Message}); using the CPU renderer.";
     }
 
@@ -886,9 +1451,10 @@ public partial class MainWindow : Window, IDisposable
             _runner.Faulted += exception => Dispatcher.UIThread.Post(() =>
             {
                 _running = false;
-                PlayButton.Content = "Play";
+                SetPlayState(running: false);
                 StatusText.Text = $"Emulation error: {exception.Message}";
                 _log.Write(LogLevel.Error, LogCategory.Machine, $"Emulation fault: {exception}");
+                ShowLibraryView();
                 ShowError("Emulation error", exception.Message);
             });
         }
@@ -911,7 +1477,13 @@ public partial class MainWindow : Window, IDisposable
 
     private void Shutdown()
     {
+        if (_shuttingDown)
+        {
+            return;
+        }
+
         _shuttingDown = true;
+        _logTimer.Stop();
         _runner?.Dispose();
         _runner = null;
         FlushNvram();
@@ -921,10 +1493,12 @@ public partial class MainWindow : Window, IDisposable
         _cpuTimer = null;
         _cpuVideo?.Dispose();
         _cpuVideo = null;
-        Video.Dispose();
+        // VideoSurface owns GL resources until Avalonia detaches it. Disposing it from
+        // Closing runs before the GL context is current and crashes in Silk.NET.
         _nvramStore.Dispose();
         _audio?.Dispose();
         _gamepad?.Dispose();
+        ClearLibraryItems();
     }
 
     /// <inheritdoc />
@@ -939,8 +1513,15 @@ public partial class MainWindow : Window, IDisposable
 
         if (e.Key == Key.Escape && WindowState == WindowState.FullScreen)
         {
-            WindowState = WindowState.Normal;
+            ToggleFullscreen();
             e.Handled = true;
+            return;
+        }
+
+        // Do not feed browser keystrokes to the emulated pad.
+        if (LibraryView.IsVisible || FocusManager?.GetFocusedElement() is TextBox)
+        {
+            base.OnKeyDown(e);
             return;
         }
 
@@ -955,6 +1536,12 @@ public partial class MainWindow : Window, IDisposable
     /// <inheritdoc />
     protected override void OnKeyUp(KeyEventArgs e)
     {
+        if (LibraryView.IsVisible || FocusManager?.GetFocusedElement() is TextBox)
+        {
+            base.OnKeyUp(e);
+            return;
+        }
+
         if (_input.Keyboard.SetKey(e.Key.ToString(), pressed: false))
         {
             e.Handled = true;
@@ -966,7 +1553,13 @@ public partial class MainWindow : Window, IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+        if (_shuttingDown)
+        {
+            return;
+        }
+
         _shuttingDown = true;
+        _logTimer.Stop();
         _runner?.Dispose();
         _runner = null;
         _disc?.Dispose();
@@ -974,10 +1567,10 @@ public partial class MainWindow : Window, IDisposable
         _cpuTimer = null;
         _cpuVideo?.Dispose();
         _cpuVideo = null;
-        Video.Dispose();
         _nvramStore.Dispose();
         _audio?.Dispose();
         _gamepad?.Dispose();
+        ClearLibraryItems();
         GC.SuppressFinalize(this);
     }
 }

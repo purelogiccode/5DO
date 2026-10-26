@@ -4,47 +4,461 @@
         xmlns:ctrl="using:FiveDo.Frontend.Avalonia.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+        mc:Ignorable="d" d:DesignWidth="1120" d:DesignHeight="720"
         x:Class="FiveDo.Frontend.Avalonia.Views.MainWindow"
-        x:DataType="vm:MainViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Width="1000" Height="700"
+        Icon="/Assets/fivedo.ico"
+        Width="1060" Height="620"
+        MinWidth="900" MinHeight="520"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource AppBackgroundBrush}"
         Title="5DO">
 
-    <Grid RowDefinitions="*,Auto" Background="Black">
-        <Grid Grid.Row="0">
-            <ctrl:VideoSurface x:Name="Video" />
-            <Image x:Name="CpuVideo" Stretch="Uniform" IsVisible="False" />
-            <Border x:Name="OverlayPanel" IsVisible="False" HorizontalAlignment="Left" VerticalAlignment="Top"
-                    Margin="8" Padding="6,3" Background="#A0000000" CornerRadius="3">
-                <TextBlock x:Name="OverlayText" Foreground="#E0E0E0" FontFamily="Consolas,monospace" />
+    <Grid RowDefinitions="Auto,Auto,*,Auto,Auto">
+
+        <!-- Menu bar -->
+        <Menu Grid.Row="0" x:Name="MainMenu">
+            <MenuItem Header="File">
+                <MenuItem Header="Open BIOS..." Click="OnOpenBios" />
+                <MenuItem Header="Boot Disc..." Click="OnOpenDisc" />
+                <MenuItem Header="Add Game Folder..." Click="OnAddFolder" />
+                <MenuItem x:Name="RecentMenu" Header="Boot Recent" />
+                <Separator />
+                <MenuItem Header="Exit" Click="OnExit" />
+            </MenuItem>
+
+            <MenuItem Header="Emulation">
+                <MenuItem x:Name="PlayPauseMenuItem" Header="Start" Click="OnPlayPause" />
+                <MenuItem x:Name="StopMenuItem" Header="Stop" Click="OnStop" />
+                <MenuItem Header="Reset" Click="OnReset" />
+                <Separator />
+                <MenuItem Header="Save State" Click="OnSaveState" />
+                <MenuItem Header="Load State" Click="OnLoadState" />
+                <MenuItem Header="Previous Slot" Click="OnPreviousSlot" />
+                <MenuItem Header="Next Slot" Click="OnNextSlot" />
+                <MenuItem Header="Save Slots..." Click="OnSaveSlots" />
+                <Separator />
+                <MenuItem Header="Screenshot" Click="OnScreenshot" />
+                <Separator />
+                <MenuItem Header="Fullscreen" Click="OnFullscreen" />
+            </MenuItem>
+
+            <MenuItem Header="Configuration">
+                <MenuItem Header="Settings..." Click="OnSettings" />
+                <MenuItem Header="Input Bindings..." Click="OnInputBindings" />
+                <Separator />
+                <MenuItem x:Name="HighResMenuItem" Header="High-Resolution Mode (640x480)"
+                          ToggleType="CheckBox" Click="OnHighResChanged" />
+            </MenuItem>
+
+            <MenuItem Header="View">
+                <MenuItem Header="Game List" Click="OnShowLibrary" />
+                <Separator />
+                <MenuItem x:Name="GridModeMenuItem" Header="Grid Mode" ToggleType="CheckBox"
+                          IsChecked="True" Click="OnGridView" />
+                <MenuItem x:Name="ListModeMenuItem" Header="List Mode" ToggleType="CheckBox"
+                          Click="OnListView" />
+                <Separator />
+                <MenuItem x:Name="ShowLogMenuItem" Header="Show Log" ToggleType="CheckBox"
+                          Click="OnToggleLog" />
+                <MenuItem Header="Log Viewer..." Click="OnLogs" />
+                <Separator />
+                <MenuItem Header="Fullscreen" Click="OnFullscreen" />
+            </MenuItem>
+
+            <MenuItem Header="Help">
+                <MenuItem Header="Welcome..." Click="OnWelcome" />
+                <MenuItem Header="About 5DO" Click="OnAbout" />
+            </MenuItem>
+        </Menu>
+
+        <!-- Toolbar -->
+        <Border Grid.Row="1" x:Name="ToolbarBorder" Padding="10,5"
+                Background="{DynamicResource ToolbarBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Classes="toolbar" Click="OnOpenDisc" ToolTip.Tip="Boot a disc image">
+                        <StackPanel Spacing="2">
+                            <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
+                                      Data="{StaticResource IconOpen}" />
+                            <TextBlock Text="Open" FontSize="10.5" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="toolbar" Click="OnOpenBios" ToolTip.Tip="Open a 3DO BIOS ROM">
+                        <StackPanel Spacing="2">
+                            <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
+                                      Data="{StaticResource IconBios}" />
+                            <TextBlock Text="BIOS" FontSize="10.5" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="toolbar" Click="OnRefresh" ToolTip.Tip="Refresh the game list">
+                        <StackPanel Spacing="2">
+                            <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
+                                      Data="{StaticResource IconRefresh}" />
+                            <TextBlock Text="Refresh" FontSize="10.5" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Border Width="1" Margin="7,6" Background="{DynamicResource BorderBrush}" />
+
+                    <Button Classes="toolbar" Click="OnFullscreen" ToolTip.Tip="Toggle fullscreen">
+                        <StackPanel Spacing="2">
+                            <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
+                                      Data="{StaticResource IconFullscreen}" />
+                            <TextBlock Text="FullScr" FontSize="10.5" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="StopButton" Classes="toolbar" Click="OnStop"
+                            ToolTip.Tip="Stop emulation and return to the game list">
+                        <StackPanel Spacing="2">
+                            <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
+                                      Data="{StaticResource IconStop}" />
+                            <TextBlock Text="Stop" FontSize="10.5" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="PlayPauseButton" Classes="toolbar" Click="OnPlayPause"
+                            ToolTip.Tip="Start emulation">
+                        <StackPanel Spacing="2">
+                            <PathIcon x:Name="PlayPauseIcon" Width="22" Height="22"
+                                      HorizontalAlignment="Center" Data="{StaticResource IconPlay}" />
+                            <TextBlock x:Name="PlayPauseText" Text="Start" FontSize="10.5"
+                                       HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Border Width="1" Margin="7,6" Background="{DynamicResource BorderBrush}" />
+
+                    <Button Classes="toolbar" Click="OnSettings" ToolTip.Tip="Configure the emulator">
+                        <StackPanel Spacing="2">
+                            <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
+                                      Data="{StaticResource IconSettings}" />
+                            <TextBlock Text="Config" FontSize="10.5" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="toolbar" Click="OnInputBindings" ToolTip.Tip="Configure keyboard and gamepad input">
+                        <StackPanel Spacing="2">
+                            <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
+                                      Data="{StaticResource IconGamepad}" />
+                            <TextBlock Text="Pads" FontSize="10.5" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Border Width="1" Margin="7,6" Background="{DynamicResource BorderBrush}" />
+
+                    <Button Classes="toolbar" Click="OnSaveState" ToolTip.Tip="Save a state to the current slot">
+                        <StackPanel Spacing="2">
+                            <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
+                                      Data="{StaticResource IconSave}" />
+                            <TextBlock Text="Save" FontSize="10.5" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="toolbar" Click="OnLoadState" ToolTip.Tip="Load the current save slot">
+                        <StackPanel Spacing="2">
+                            <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
+                                      Data="{StaticResource IconLoad}" />
+                            <TextBlock Text="Load" FontSize="10.5" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="toolbar" Click="OnSaveSlots" ToolTip.Tip="Manage save slots">
+                        <StackPanel Spacing="2">
+                            <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
+                                      Data="{StaticResource IconSlots}" />
+                            <TextBlock Text="Slots" FontSize="10.5" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="LogsButton" Classes="toolbar" Click="OnToggleLog" ToolTip.Tip="Show or hide the log dock">
+                        <StackPanel Spacing="2">
+                            <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
+                                      Data="{StaticResource IconLogs}" />
+                            <TextBlock Text="Logs" FontSize="10.5" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="2">
+                    <Button x:Name="ListViewButton" Classes="toolbar" Click="OnListView"
+                            ToolTip.Tip="Switch the game list to list mode">
+                        <StackPanel Spacing="2">
+                            <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
+                                      Data="{StaticResource IconList}" />
+                            <TextBlock Text="List" FontSize="10.5" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="GridViewButton" Classes="toolbar active" Click="OnGridView"
+                            ToolTip.Tip="Switch the game list to grid mode">
+                        <StackPanel Spacing="2">
+                            <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
+                                      Data="{StaticResource IconGrid}" />
+                            <TextBlock Text="Grid" FontSize="10.5" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Game library -->
+        <Grid Grid.Row="2" x:Name="LibraryView" RowDefinitions="Auto,*">
+            <Border Grid.Row="0" Padding="14,8"
+                    Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <TextBlock Classes="sectionTitle" Text="Game List" />
+                        <Border Classes="badge" VerticalAlignment="Center">
+                            <TextBlock x:Name="LibraryCountText" Text="0 games" />
+                        </Border>
+                    </StackPanel>
+
+                    <Grid Grid.Column="1" MaxWidth="420" Margin="24,0" VerticalAlignment="Center">
+                        <PathIcon Width="14" Height="14" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                  Margin="8,0,0,0" IsHitTestVisible="False"
+                                  Foreground="{DynamicResource TextMutedBrush}"
+                                  Data="{StaticResource IconSearch}" />
+                        <TextBox x:Name="SearchBox" Classes="search" PlaceholderText="Search games..."
+                                 TextChanged="OnSearchChanged" />
+                    </Grid>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <TextBlock Text="Icon size" Classes="caption" VerticalAlignment="Center" />
+                        <Slider x:Name="IconSizeSlider" Width="110" Minimum="128" Maximum="240"
+                                Value="176" TickFrequency="8" IsSnapToTickEnabled="True"
+                                ValueChanged="OnIconSizeChanged" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
             </Border>
+
+            <ListBox x:Name="GridLibraryList" Grid.Row="1" Classes="library libraryGrid"
+                     SelectionChanged="OnGridSelectionChanged"
+                     DoubleTapped="OnGridDoubleTapped"
+                     KeyDown="OnLibraryKeyDown"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:LibraryItem">
+                        <Border Classes="card" Width="{DynamicResource LibraryCardWidth}"
+                                ToolTip.Tip="{Binding Tip}">
+                            <StackPanel>
+                                <Border Classes="coverFrame" Height="{DynamicResource LibraryCardImageHeight}">
+                                    <Panel>
+                                        <TextBlock Text="5DO" FontSize="26" FontWeight="Bold" Opacity="0.12"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        <Image Source="{Binding Cover}" Stretch="Uniform" />
+                                    </Panel>
+                                </Border>
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12.5"
+                                           Margin="2,8,2,3" Height="34" TextWrapping="Wrap" MaxLines="2"
+                                           TextTrimming="CharacterEllipsis" />
+                                <Grid ColumnDefinitions="*,Auto" Margin="2,0,2,1">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Format}" Classes="caption" />
+                                        <TextBlock Text="{Binding GameIdText}" Classes="caption" />
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Classes="badge known" IsVisible="{Binding Known}">
+                                        <TextBlock Text="4DO DB" />
+                                    </Border>
+                                    <Border Grid.Column="1" Classes="badge" IsVisible="{Binding IsUnknown}">
+                                        <TextBlock Text="Unknown" />
+                                    </Border>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <ListBox x:Name="ListLibraryList" Grid.Row="1" Classes="library libraryList"
+                     IsVisible="False"
+                     SelectionChanged="OnListSelectionChanged"
+                     DoubleTapped="OnListDoubleTapped"
+                     KeyDown="OnLibraryKeyDown">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:LibraryItem">
+                        <Border Classes="card" Padding="4" ToolTip.Tip="{Binding Tip}">
+                            <Grid ColumnDefinitions="54,*,80,110,76">
+                                <Border Classes="coverFrame" Width="48" Height="48">
+                                    <Panel>
+                                        <TextBlock Text="5DO" FontSize="9" FontWeight="Bold" Opacity="0.15"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        <Image Source="{Binding Cover}" Stretch="Uniform" />
+                                    </Panel>
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="9,0,8,0">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12.5"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Path}" Classes="caption"
+                                               TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="{Binding Format}" Classes="caption"
+                                           VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="3" Text="{Binding SectorText}" Classes="caption"
+                                           VerticalAlignment="Center" HorizontalAlignment="Right"
+                                           Margin="0,0,12,0" />
+                                <Border Grid.Column="4" Classes="badge known" IsVisible="{Binding Known}"
+                                        VerticalAlignment="Center" HorizontalAlignment="Right">
+                                    <TextBlock Text="4DO DB" />
+                                </Border>
+                                <Border Grid.Column="4" Classes="badge" IsVisible="{Binding IsUnknown}"
+                                        VerticalAlignment="Center" HorizontalAlignment="Right">
+                                    <TextBlock Text="Unknown" />
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <StackPanel x:Name="EmptyLibraryPanel" Grid.Row="1" IsVisible="False"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        MaxWidth="420" Spacing="10">
+                <PathIcon Width="52" Height="52" HorizontalAlignment="Center"
+                          Foreground="{DynamicResource TextDimBrush}"
+                          Data="{StaticResource IconLibrary}" />
+                <TextBlock x:Name="EmptyLibraryTitle" Classes="sectionTitle" Text="No games found"
+                           HorizontalAlignment="Center" />
+                <TextBlock x:Name="EmptyLibraryText" Classes="muted" TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Text="Add a folder that contains ISO, BIN, CUE, or CHD images." />
+                <Button Classes="accent" Content="Add Game Folder" Click="OnAddFolder"
+                        HorizontalAlignment="Center" />
+            </StackPanel>
         </Grid>
 
-        <Border Grid.Row="1" Padding="8" Background="#202020">
-            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*">
-                <Button x:Name="BiosButton" Grid.Column="0" Content="Open BIOS" Click="OnOpenBios" Margin="0,0,6,0" />
-                <Button x:Name="DiscButton" Grid.Column="1" Content="Open Disc" Click="OnOpenDisc" Margin="0,0,6,0" />
-                <Button x:Name="PlayButton" Grid.Column="2" Content="Play" Click="OnPlayPause" Margin="0,0,6,0" />
-                <Button x:Name="ResetButton" Grid.Column="3" Content="Reset" Click="OnReset" Margin="0,0,6,0" />
-                <Button x:Name="SaveButton" Grid.Column="4" Content="Save State" Click="OnSaveState" Margin="0,0,6,0" />
-                <Button x:Name="LoadButton" Grid.Column="5" Content="Load State" Click="OnLoadState" Margin="0,0,6,0" />
-                <Button x:Name="PreviousSlotButton" Grid.Column="6" Content="&lt;" Click="OnPreviousSlot" Margin="0,0,2,0" />
-                <TextBlock x:Name="SlotText" Grid.Column="7" VerticalAlignment="Center" Margin="2,0"
-                           Text="Slot 1/10" Foreground="#DDDDDD" />
-                <Button x:Name="NextSlotButton" Grid.Column="8" Content="&gt;" Click="OnNextSlot" Margin="2,0,6,0" />
-                <Button x:Name="ShotButton" Grid.Column="9" Content="Screenshot" Click="OnScreenshot" Margin="0,0,6,0" />
-                <Button x:Name="FullscreenButton" Grid.Column="10" Content="Fullscreen" Click="OnFullscreen" Margin="0,0,6,0" />
-                <CheckBox x:Name="HighResCheck" Grid.Column="11" Content="Hi-Res" Click="OnHighResChanged"
-                          VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#DDDDDD" />
-                <Button x:Name="AboutButton" Grid.Column="12" Content="About" Click="OnAbout" Margin="0,0,6,0" />
-                <Button x:Name="LibraryButton" Grid.Column="13" Content="Library" Click="OnLibrary" Margin="0,0,6,0" />
-                <Button x:Name="SettingsButton" Grid.Column="14" Content="Settings" Click="OnSettings" Margin="0,0,6,0" />
-                <Button x:Name="InputButton" Grid.Column="15" Content="Input" Click="OnInputBindings" Margin="0,0,6,0" />
-                <Button x:Name="SlotsButton" Grid.Column="16" Content="Slots" Click="OnSaveSlots" Margin="0,0,6,0" />
-                <Button x:Name="LogsButton" Grid.Column="17" Content="Logs" Click="OnLogs" Margin="0,0,6,0" />
-                <TextBlock x:Name="StatusText" Grid.Column="18" VerticalAlignment="Center"
-                           Text="No BIOS loaded." HorizontalAlignment="Right" Foreground="#DDDDDD" />
+        <!-- Emulation view (shown while a game is booted) -->
+        <Grid Grid.Row="2" x:Name="EmulationView" RowDefinitions="Auto,*"
+              IsVisible="False" Background="Black">
+            <Border Grid.Row="0" x:Name="EmulationHeader" Padding="8,5"
+                    Background="{DynamicResource ToolbarBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Button Classes="chrome" Click="OnShowLibrary"
+                            ToolTip.Tip="Return to the game list">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Width="14" Height="14" Data="{StaticResource IconLibrary}" />
+                            <TextBlock Text="Game List" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock x:Name="EmulationTitleText" Text="No disc loaded"
+                                   FontWeight="SemiBold" FontSize="12.5" HorizontalAlignment="Center"
+                                   MaxWidth="320" TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="EmulationSubtitleText" Classes="caption"
+                                   HorizontalAlignment="Center" MaxWidth="360"
+                                   TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                        <Button Classes="chrome" Click="OnPlayPause"
+                                ToolTip.Tip="Start or pause emulation">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <PathIcon x:Name="HeaderPlayPauseIcon" Width="13" Height="13"
+                                          Data="{StaticResource IconPause}" />
+                                <TextBlock x:Name="HeaderPlayPauseText" Text="Pause" FontSize="12" />
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="chrome" Click="OnStop" ToolTip.Tip="Stop and return to the game list">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <PathIcon Width="13" Height="13" Data="{StaticResource IconStop}" />
+                                <TextBlock Text="Stop" FontSize="12" />
+                            </StackPanel>
+                        </Button>
+
+                        <Border Width="1" Margin="4,3" Background="{DynamicResource BorderBrush}" />
+
+                        <Button Classes="chrome" Click="OnSaveState" ToolTip.Tip="Save state">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <PathIcon Width="13" Height="13" Data="{StaticResource IconSave}" />
+                                <TextBlock Text="Save" FontSize="12" />
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="chrome" Click="OnLoadState" ToolTip.Tip="Load state">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <PathIcon Width="13" Height="13" Data="{StaticResource IconLoad}" />
+                                <TextBlock Text="Load" FontSize="12" />
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="chrome" Padding="5,4" Click="OnPreviousSlot" ToolTip.Tip="Previous slot">
+                            <TextBlock Text="&lt;" FontSize="13" />
+                        </Button>
+                        <TextBlock x:Name="SlotText" Text="Slot 1/10" FontSize="11"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   VerticalAlignment="Center" Margin="2,0" />
+                        <Button Classes="chrome" Padding="5,4" Click="OnNextSlot" ToolTip.Tip="Next slot">
+                            <TextBlock Text="&gt;" FontSize="13" />
+                        </Button>
+                        <Button Classes="chrome" Click="OnScreenshot" ToolTip.Tip="Save a screenshot">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <PathIcon Width="13" Height="13" Data="{StaticResource IconScreenshot}" />
+                                <TextBlock Text="Shot" FontSize="12" />
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="chrome" Padding="6,4" Click="OnFullscreen"
+                                ToolTip.Tip="Toggle fullscreen">
+                            <PathIcon Width="13" Height="13" Data="{StaticResource IconFullscreen}" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1">
+                <ctrl:VideoSurface x:Name="Video" HorizontalAlignment="Stretch"
+                                   VerticalAlignment="Stretch" />
+                <Image x:Name="CpuVideo" Stretch="Uniform" IsVisible="False" />
+                <Border x:Name="OverlayPanel" IsVisible="False" HorizontalAlignment="Left"
+                        VerticalAlignment="Top" Margin="8" Padding="6,3"
+                        Background="#A0000000" CornerRadius="3">
+                    <TextBlock x:Name="OverlayText" Foreground="#E0E0E0"
+                               FontFamily="Cascadia Mono, Consolas, monospace" />
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- Log dock -->
+        <Border Grid.Row="3" x:Name="LogPanel" IsVisible="False" Height="180"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
+            <Grid RowDefinitions="Auto,*">
+                <Border Grid.Row="0" Padding="10,3" Background="{DynamicResource SurfaceAltBrush}">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <PathIcon Width="12" Height="12" Data="{StaticResource IconLogs}"
+                                      Foreground="{DynamicResource TextMutedBrush}" />
+                            <TextBlock Text="Log" FontSize="11" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <TextBlock x:Name="LogSummaryText" Grid.Column="1" Classes="caption"
+                                   Margin="12,0" VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
+                            <Button Classes="chrome" Content="Clear" Click="OnClearLog" />
+                            <Button Classes="chrome" Content="Log Viewer" Click="OnLogs" />
+                            <Button Classes="chrome" Padding="6,4" Click="OnToggleLog"
+                                    ToolTip.Tip="Hide the log dock">
+                                <PathIcon Width="11" Height="11" Data="{StaticResource IconClose}" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <ListBox x:Name="LogList" Grid.Row="1" Classes="log"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto" />
+            </Grid>
+        </Border>
+
+        <!-- Status bar -->
+        <Border Grid.Row="4" x:Name="StatusBarBorder" Padding="10,4"
+                Background="{DynamicResource StatusBarBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                <Ellipse Width="6" Height="6" Margin="0,0,7,0" VerticalAlignment="Center"
+                         Fill="{DynamicResource AccentBrush}" />
+                <TextBlock x:Name="StatusText" Grid.Column="1" Classes="status"
+                           Text="Ready." TextTrimming="CharacterEllipsis" />
+                <TextBlock x:Name="StatsText" Grid.Column="2" Classes="status" Margin="12,0" />
+                <TextBlock x:Name="RendererText" Grid.Column="3" Classes="status" Margin="12,0" />
+                <TextBlock x:Name="FpsText" Grid.Column="4" Classes="statusStrong"
+                           MinWidth="60" TextAlignment="Right" />
             </Grid>
         </Border>
     </Grid>

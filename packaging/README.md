@@ -17,7 +17,7 @@ that an installer or a Linux package would install alongside the executable.
 
 3. Optionally install an icon named `5do` in
    `~/.local/share/icons/hicolor/256x256/apps/`; convert
-   `src/FiveDo.Frontend.Avalonia/Assets/avalonia-logo.ico` to a 256x256 PNG first.
+   `src/FiveDo.Frontend.Avalonia/Assets/fivedo.ico` to a 256x256 PNG first.
 
 The application accepts a positional disc path or `--disc <path>`; opening a
 `.iso`, `.bin`, `.cue`, or `.chd` file with the desktop entry loads it after the
