@@ -1,6 +1,7 @@
 using System;
 using ThreeDo.Core;
 using ThreeDo.Video;
+using ThreeDo.Video.OpenGL;
 
 namespace ThreeDo.Tests.Video;
 
@@ -62,6 +63,31 @@ public sealed class VideoAllocationTests
         {
             mailbox.Write(frame);
             mailbox.Read(destination, reader);
+        }
+
+        Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - before);
+    }
+
+    [Fact]
+    public void Hqx_DoesNotAllocateInSteadyState()
+    {
+        var source = new FrameBuffer(320, 240);
+        var destination = new FrameBuffer(640, 480);
+        var filter = new HqxFilter();
+        for (var i = 0; i < 200; i++)
+        {
+            filter.Expand(source, destination);
+        }
+
+        for (var i = 0; i < 60; i++)
+        {
+            filter.Expand(source, destination);
+        }
+
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < 60; i++)
+        {
+            filter.Expand(source, destination);
         }
 
         Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - before);

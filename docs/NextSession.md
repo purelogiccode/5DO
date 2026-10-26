@@ -5,7 +5,7 @@
 The tenth pass committed `docs/scripts/lem-fun4-dpad.txt`, typed `HNLHCIOECW`
 with only the D-pad/A, started Fun 4 gameplay at 23,000 frames, and roundtripped
 the state. It also added CRT bloom and an HQx 2x filter to the OpenGL presenter
-and the settings dialog. **672 tests pass.** Do not redo the D-pad passcode
+and the settings dialog. **673 tests pass.** Do not redo the D-pad passcode
 script, CRT bloom, HQx, the ninth-pass evidence capture, or the CD media-access
 fix. The remaining work is finishing a full Road Rash race, scripted Lemmings
 level play beyond the start, GPU/Tier B validation, arm64/installers, and the
@@ -366,8 +366,8 @@ missing and corrected the Road Rash diagnosis.
   game ID, `ResolveFilter`/`SetFilterOverride` handle case-insensitive lookup and
   clearing, and the Settings dialog's Emulation page exposes an Automatic/filter
   combo. The shell passes the current game ID to `ToRendererSettings`.
-- **Tests.** 672 tests pass; the four HQx tests and the filter-override tests are
-  the only count change.
+- **Tests.** 673 tests pass; the four HQx tests, the filter-override tests, and the
+  steady-state allocation test are the only count change.
 
 ---
 
