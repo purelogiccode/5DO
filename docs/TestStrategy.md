@@ -307,7 +307,7 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
 - **Shader compilation:** all shader programs compile/link; log source hash and GL version.
 - **Performance:** two-stage palette expansion at native resolution, persistent upload, no per-frame `TexImage2D`/uniform lookup, upload/present CPU time, GPU frame time, 1080p/1440p/4K output, no CPU per-pixel scaling.
 - **DPI/geometry:** physical-pixel sizing at 100/150/200% scaling, resize, integer scaling, letterbox.
-- **Backends:** desktop GL 3.3 and GLES 3.0/3.1 shader variants compile and produce identical Accurate-mode output. The `--gl-probe` tool validates this with `--gl-backend wgl` and `--gl-backend angle`; `--gl-probe-capture` writes the presented frame and the JSON `parity` block compares it with `FrameAssembler` (WGL and ANGLE/GLES 3.0 both report 0 different pixels on the development RTX 4070).
+- **Backends:** desktop GL 3.3 and GLES 3.0/3.1 shader variants compile and produce identical Accurate-mode output. The `--gl-probe` tool validates this with `--gl-backend wgl` and `--gl-backend angle`; `--gl-probe-capture` writes the presented frame and the JSON `parity` block compares it with `FrameAssembler` (WGL and ANGLE/GLES 3.0 both report 0 different pixels on the development RTX 4070). The opt-in `GpuProbeIntegrationTests` test (`THREEDO_GPU_TESTS=1`) runs the real probe for both backends, checks parity, and runs a short 4K pass.
 - **Render-on-demand:** no continuous rendering at monitor refresh rate when the emulator is producing 60 fps.
 - **Headless CI:** run CPU-renderer tests everywhere; GPU tests run on a local/self-hosted job with a real GL context. Skip cleanly when no context is available.
 

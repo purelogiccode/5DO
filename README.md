@@ -9,7 +9,7 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 **Current position (2026-10-26, fifteenth pass):** M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **760 tests pass.** The fifteenth pass added an explicit
+prototype. **761 tests pass.** The fifteenth pass added an explicit
 `--gl-backend auto|wgl|angle|software` selector and validated the Windows
 ANGLE/GLES 3.0 path: all filters compile, 4K sharp-bilinear presents in 0.14 ms
 mean / 0.47 ms p99 with zero renderer allocations, and a 320x240 Accurate capture

@@ -7,7 +7,7 @@ and a CPU/GPU parity check to the GPU probe. On Windows 11 / RTX 4070, ANGLE
 (OpenGL ES 3.0, GLSL ES 300) ran every filter; 4K sharp-bilinear presented in
 0.14 ms mean / 0.47 ms p99 with zero renderer allocations, and a 320x240 Accurate
 capture matched the CPU `FrameAssembler` oracle pixel-for-pixel (`0xD6BD89C5`) on
-both WGL and ANGLE. **760 tests pass.** Do not redo the trim-safe JSON work, the
+both WGL and ANGLE. **761 tests pass.** Do not redo the trim-safe JSON work, the
 trimmed CLI/frontend publishes, the frontend smoke test, the benchmark comparison,
 the portable archives, the swap-interval/GPU-probe work, or the ANGLE/GLES parity
 work. The remaining work is finishing a full Road Rash race, scripted Lemmings
@@ -550,9 +550,15 @@ missing and corrected the Road Rash diagnosis.
   stereo audio (Theme Park's menu is silent). The hashes, WAV stats, and commands are
   in [`TestCorpus.md`](TestCorpus.md) 1.7 and the matrix is in
   [`Compatibility.md`](Compatibility.md) §10.
-- **Tests.** 760 tests pass. New tests cover backend aliases/mode ordering and probe
-  capture-path parsing; the existing JSON contract test now includes the requested
-  backend and parity fields.
+- **Capture reentrancy fix.** The opt-in GPU integration test
+  (`THREEDO_GPU_TESTS=1`) runs the built frontend probe for WGL and ANGLE, checks
+  Accurate parity and a 4K pass, and found a real crash: the capture consumer can
+  finish the probe and dispose the surface synchronously while `OnOpenGlRender` is
+  still using the adapter. The render path now returns after the capture callback
+  when the surface has been disposed.
+- **Tests.** 761 tests pass. New tests cover backend aliases/mode ordering, probe
+  capture-path parsing, and the opt-in GPU integration path. The existing JSON
+  contract test now includes the requested backend and parity fields.
 
 ---
 

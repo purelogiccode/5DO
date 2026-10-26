@@ -78,6 +78,11 @@ still change.
   Turbo show gameplay/attract scenes; six produce non-silent 44.1 kHz stereo audio
   (Theme Park's menu is silent). Hashes and commands are in `TestCorpus.md` 1.7 and
   the matrix in `Compatibility.md` §10.
+- Opt-in GPU integration test (`THREEDO_GPU_TESTS=1`): runs the built frontend probe
+  for WGL and ANGLE, checks Accurate parity and a short 4K pass. It found a
+  synchronous-dispose crash when the capture consumer finished the probe while
+  `OnOpenGlRender` was still running; the render path now returns safely after the
+  capture callback.
 
 ### Changed
 

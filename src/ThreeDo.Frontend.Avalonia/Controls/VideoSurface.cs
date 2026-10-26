@@ -323,6 +323,14 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
             var buffer = new byte[checked(width * height * 4)];
             _renderer!.ReadPixels(buffer, out var captureWidth, out var captureHeight);
             CaptureCompleted?.Invoke(buffer, captureWidth, captureHeight);
+
+            // A capture consumer (the GPU probe) may finish the session and dispose
+            // the surface synchronously. Do not touch the adapter/renderer after
+            // that callback.
+            if (_adapter is null || _renderer is null)
+            {
+                return;
+            }
         }
 
         if (UseOffscreenProbe)
