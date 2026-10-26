@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -35,6 +36,12 @@ public partial class SettingsWindow : Window
 
         FilterCombo.ItemsSource = Enum.GetValues<VideoFilter>();
         FilterCombo.SelectedItem = settings.Filter;
+        FilterOverrideCombo.ItemsSource = new object[] { "Automatic" }
+            .Concat(Enum.GetValues<VideoFilter>().Cast<object>())
+            .ToArray();
+        FilterOverrideCombo.SelectedItem = settings.GetFilterOverride(gameId) is { } gameFilter
+            ? gameFilter
+            : "Automatic";
         AspectCombo.ItemsSource = Enum.GetValues<AspectMode>();
         AspectCombo.SelectedItem = settings.Aspect;
         IntegerCheck.IsChecked = settings.IntegerScale;
@@ -76,6 +83,10 @@ public partial class SettingsWindow : Window
 
         if (!string.IsNullOrWhiteSpace(_gameId))
         {
+            settings.SetFilterOverride(
+                _gameId,
+                FilterOverrideCombo.SelectedItem is VideoFilter filterOverride ? filterOverride : null);
+
             var text = FixModeBox.Text?.Trim();
             if (string.IsNullOrEmpty(text))
             {

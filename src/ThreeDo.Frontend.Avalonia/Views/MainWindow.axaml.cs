@@ -76,7 +76,7 @@ public partial class MainWindow : Window, IDisposable
         _nvramStore = new NvramStore(Path.Combine(AppSettingsStore.DefaultDirectory, "nvram.ram"));
         HighResCheck.IsChecked = _settings.HighResolution;
         OverlayPanel.IsVisible = _settings.ShowOverlay;
-        Video.Settings = _settings.ToRendererSettings();
+        Video.Settings = _settings.ToRendererSettings(_gameId);
         Video.OpenGlReady += OnOpenGlReady;
         Video.OpenGlFailed += OnOpenGlFailed;
         Deactivated += (_, _) => _input.Keyboard.Reset();
@@ -218,6 +218,12 @@ public partial class MainWindow : Window, IDisposable
             });
             _gameId = gameId;
             _gameName = record?.Name ?? Path.GetFileNameWithoutExtension(path);
+            Video.Settings = _settings.ToRendererSettings(_gameId);
+            if (_cpuVideo is not null)
+            {
+                _cpuVideo.Settings = _settings.ToRendererSettings(_gameId);
+            }
+
             _settings.DiscPath = path;
             _settings.RecentDiscs.RemoveAll(existing => string.Equals(existing, path, StringComparison.OrdinalIgnoreCase));
             _settings.RecentDiscs.Insert(0, path);
@@ -540,11 +546,11 @@ public partial class MainWindow : Window, IDisposable
         }
 
         AppSettingsStore.Save(_settings);
-        Video.Settings = _settings.ToRendererSettings();
+        Video.Settings = _settings.ToRendererSettings(_gameId);
         OverlayPanel.IsVisible = _settings.ShowOverlay;
         if (_cpuVideo is not null)
         {
-            _cpuVideo.Settings = _settings.ToRendererSettings();
+            _cpuVideo.Settings = _settings.ToRendererSettings(_gameId);
         }
 
         ApplyAudioSettings();
@@ -745,7 +751,7 @@ public partial class MainWindow : Window, IDisposable
             ? _machine.Frame.SourceHeight
             : EmulatorConstants.VideoHeight;
 
-        _cpuVideo = new CpuVideoRenderer { Settings = _settings.ToRendererSettings() };
+        _cpuVideo = new CpuVideoRenderer { Settings = _settings.ToRendererSettings(_gameId) };
         _cpuVideo.Initialize(width, height);
         _cpuPixels = new byte[width * height * 4];
         _cpuBitmap = CreateBitmap(width, height);

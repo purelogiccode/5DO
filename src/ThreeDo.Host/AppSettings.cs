@@ -48,6 +48,9 @@ public sealed class AppSettings
     /// <summary>Gets per-game fix-mode overrides keyed by 4DO game ID.</summary>
     public Dictionary<string, FixMode> FixModeOverrides { get; set; } = [];
 
+    /// <summary>Gets per-game filter overrides keyed by 4DO game ID.</summary>
+    public Dictionary<string, VideoFilter> FilterOverrides { get; set; } = [];
+
     /// <summary>Gets or sets the presentation filter.</summary>
     public VideoFilter Filter { get; set; } = VideoFilter.SharpBilinear;
 
@@ -130,6 +133,54 @@ public sealed class AppSettings
         return normalized.Length > 8 ? normalized[..8] : normalized;
     }
 
+    /// <summary>Gets the per-game filter override, if one is configured.</summary>
+    /// <param name="gameId">4DO game ID, case-insensitive.</param>
+    /// <returns>The override, or <see langword="null"/> when the game uses the global filter.</returns>
+    public VideoFilter? GetFilterOverride(string? gameId)
+    {
+        if (string.IsNullOrWhiteSpace(gameId))
+        {
+            return null;
+        }
+
+        var normalized = NormalizeGameId(gameId);
+        foreach (var (id, filter) in FilterOverrides)
+        {
+            if (string.Equals(NormalizeGameId(id), normalized, StringComparison.Ordinal))
+            {
+                return filter;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Sets or removes a per-game filter override.</summary>
+    /// <param name="gameId">4DO game ID, case-insensitive.</param>
+    /// <param name="filter">Filter, or <see langword="null"/> to restore the global filter.</param>
+    public void SetFilterOverride(string gameId, VideoFilter? filter)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(gameId);
+        var normalized = NormalizeGameId(gameId);
+        foreach (var id in FilterOverrides.Keys.ToArray())
+        {
+            if (string.Equals(NormalizeGameId(id), normalized, StringComparison.Ordinal))
+            {
+                FilterOverrides.Remove(id);
+            }
+        }
+
+        if (filter is not null)
+        {
+            FilterOverrides[normalized] = filter.Value;
+        }
+    }
+
+    /// <summary>Resolves the presentation filter for a game, honoring per-game overrides.</summary>
+    /// <param name="gameId">4DO game ID, or <see langword="null"/> when no disc is loaded.</param>
+    /// <returns>The override when present, otherwise the global filter.</returns>
+    public VideoFilter ResolveFilter(string? gameId) => GetFilterOverride(gameId) ?? Filter;
+
     /// <summary>Resolves the fix-mode bits for a game, honoring per-game overrides.</summary>
     /// <param name="gameId">4DO game ID, or <see langword="null"/> when no disc is loaded.</param>
     /// <returns>The override when present, the database mapping when automatic fixes are enabled, or none.</returns>
@@ -140,12 +191,13 @@ public sealed class AppSettings
     }
 
     /// <summary>Gets the renderer settings derived from this configuration.</summary>
+    /// <param name="gameId">Current disc game ID, or <see langword="null"/> to use the global filter.</param>
     /// <returns>A validated renderer settings record.</returns>
-    public RendererSettings ToRendererSettings()
+    public RendererSettings ToRendererSettings(string? gameId = null)
     {
         var settings = new RendererSettings
         {
-            Filter = Filter,
+            Filter = ResolveFilter(gameId),
             Aspect = Aspect,
             Vsync = Vsync,
             IntegerScale = IntegerScale,

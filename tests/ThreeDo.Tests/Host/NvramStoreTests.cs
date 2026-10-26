@@ -132,6 +132,7 @@ public sealed class NvramStoreTests
         settings.RecentDiscs.Add("game.iso");
         settings.LibraryFolders.Add("games");
         settings.FixModeOverrides["9F7D72BC"] = ThreeDo.Core.FixMode.BitTiming6;
+        settings.SetFilterOverride("9F7D72BC", ThreeDo.Video.VideoFilter.Hqx);
 
         AppSettingsStore.Save(settings, path);
         var loaded = AppSettingsStore.Load(path);
@@ -152,6 +153,10 @@ public sealed class NvramStoreTests
         Assert.Equal("game.iso", Assert.Single(loaded.RecentDiscs));
         Assert.Equal("games", Assert.Single(loaded.LibraryFolders));
         Assert.Equal(ThreeDo.Core.FixMode.BitTiming6, loaded.GetFixModeOverride("9F7D72BC"));
+        Assert.Equal(ThreeDo.Video.VideoFilter.Crt, loaded.Filter);
+        Assert.Equal(ThreeDo.Video.VideoFilter.Hqx, loaded.ResolveFilter("9F7D72BC"));
+        Assert.Equal(ThreeDo.Video.VideoFilter.Crt, loaded.ResolveFilter("UNKNOWN"));
+        Assert.Equal(ThreeDo.Video.VideoFilter.Hqx, loaded.ToRendererSettings("9F7D72BC").Filter);
         Assert.Equal(ThreeDo.Video.VideoFilter.Crt, loaded.ToRendererSettings().Filter);
         Assert.False(File.Exists(path + ".tmp"));
     }

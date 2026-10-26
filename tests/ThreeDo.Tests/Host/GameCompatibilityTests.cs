@@ -76,4 +76,20 @@ public sealed class GameCompatibilityTests
         settings.AutoGameFixes = false;
         Assert.Equal(FixMode.None, settings.ResolveFixMode("2AABA5B9"));
     }
+
+    [Fact]
+    public void AppSettings_ResolvesAndClearsPerGameFilterOverrides()
+    {
+        var settings = new AppSettings { Filter = ThreeDo.Video.VideoFilter.SharpBilinear };
+        Assert.Equal(ThreeDo.Video.VideoFilter.SharpBilinear, settings.ResolveFilter("9F7D72BC"));
+        Assert.Equal(ThreeDo.Video.VideoFilter.SharpBilinear, settings.ResolveFilter(null));
+
+        settings.SetFilterOverride("9f7d72bc", ThreeDo.Video.VideoFilter.Hqx);
+        Assert.Equal(ThreeDo.Video.VideoFilter.Hqx, settings.ResolveFilter("9F7D72BC"));
+        Assert.Equal(ThreeDo.Video.VideoFilter.Hqx, settings.GetFilterOverride("9F7D72BC"));
+
+        settings.SetFilterOverride("9F7D72BC", null);
+        Assert.Null(settings.GetFilterOverride("9F7D72BC"));
+        Assert.Equal(ThreeDo.Video.VideoFilter.SharpBilinear, settings.ResolveFilter("9F7D72BC"));
+    }
 }

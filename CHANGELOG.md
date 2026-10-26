@@ -16,6 +16,8 @@ still change.
   slider.
 - HQx 2x filter (`VideoFilter.Hqx`): a port of Maxim Stepin/Cameron Zemek's hq2x
   running on the CPU-expanded frame, with a C++ reference hash test.
+- Per-game filter overrides in `AppSettings.FilterOverrides`, edited on the Settings
+  dialog's Emulation page and applied when a disc opens.
 - Shader-source and settings tests for the CRT bloom uniforms.
 
 ### Changed

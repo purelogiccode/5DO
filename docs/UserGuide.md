@@ -63,6 +63,10 @@ GPU. Available filters:
 - **Hqx**: HQx 2x pixel-art smoothing on the CPU-expanded frame, followed by a
   sharp-bilinear finish. It is opt-in and uses CPU time per frame.
 
+The Settings dialog's **Emulation** page can override the filter for the current
+game. **Automatic** uses the global filter; an explicit choice is stored by game ID
+in `settings.json`.
+
 Aspect, integer scaling, vsync preference, fullscreen (F11/Escape), and the FPS/status
 overlay are in **Settings**. The renderer falls back to the CPU `WriteableBitmap`
 presenter when OpenGL initialization or context recovery fails; the status line and

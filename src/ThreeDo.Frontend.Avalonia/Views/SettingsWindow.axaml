@@ -35,7 +35,7 @@
             </TabItem>
 
             <TabItem Header="Emulation">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <CheckBox x:Name="AutoFixesCheck" Grid.Row="0" Grid.Column="1"
                               Content="Apply the 4DO per-game fixes automatically" />
                     <CheckBox x:Name="HighResCheck" Grid.Row="1" Grid.Column="1"
@@ -48,6 +48,8 @@
                              PlaceholderText="Automatic (hexadecimal mask, for example 0x20)" />
                     <TextBlock Grid.Row="4" Grid.Column="1" Text="Leave blank to use the database value."
                                Opacity="0.7" FontSize="11" />
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Filter override" VerticalAlignment="Center" Margin="0,12,0,0" />
+                    <ComboBox x:Name="FilterOverrideCombo" Grid.Row="5" Grid.Column="1" Margin="0,12,0,0" />
                 </Grid>
             </TabItem>
 
