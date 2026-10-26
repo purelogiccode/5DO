@@ -36,6 +36,21 @@ public class FrontendStartupTests
     }
 
     [Fact]
+    public void FindDiscPath_IgnoresGlProbeOptionValues()
+    {
+        using var directory = new TempDirectory();
+        var report = Path.Combine(directory.Path, "probe.json");
+        File.WriteAllText(report, "{}");
+
+        Assert.Null(Program.FindDiscPath(["--gl-probe", report]));
+        Assert.Null(Program.FindDiscPath(["--gl-probe", report, "--gl-probe-size", "3840x2160"]));
+        Assert.Null(Program.FindDiscPath(["--gl-probe", report, "--gl-probe-frames", "120"]));
+        Assert.Null(Program.FindDiscPath(["--gl-probe", report, "--gl-probe-warmup", "30"]));
+        Assert.Null(Program.FindDiscPath(["--gl-probe", report, "--gl-probe-filter", "sharp-bilinear"]));
+        Assert.Null(Program.FindDiscPath(["--gl-probe", report, "--gl-probe-timeout", "5"]));
+    }
+
+    [Fact]
     public void FindDiscPath_ReturnsTheDiscOptionAndPositionalPaths()
     {
         using var directory = new TempDirectory();

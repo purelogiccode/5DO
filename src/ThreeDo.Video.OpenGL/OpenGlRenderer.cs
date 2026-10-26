@@ -33,6 +33,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     private const int PositionLocation = 0;
 
     private readonly GlContextAdapter _adapter;
+    private readonly ISwapIntervalBackend? _swapInterval;
     private readonly VdlFrameUploader _uploader = new();
     private readonly HqxFilter _hqxProcessor = new();
     private readonly float[] _vertices = [0f, 0f, 1f, 0f, 0f, 1f, 1f, 1f];
@@ -92,13 +93,24 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     private RendererCapabilities _capabilities;
     private bool _isOpenGlEs;
     private bool _initialized;
+    private bool _vsyncActive;
+    private bool? _vsyncApplied;
+    private long _lastPresentAllocatedBytes;
+    private long _lastUploadAllocatedBytes;
+    private long _lastPaletteAllocatedBytes;
+    private long _lastScaleAllocatedBytes;
 
     /// <summary>Initializes a new instance of the <see cref="OpenGlRenderer"/> class.</summary>
     /// <param name="adapter">OpenGL context adapter.</param>
-    public OpenGlRenderer(GlContextAdapter adapter)
+    /// <param name="swapInterval">
+    /// Optional platform swap-interval backend. When null, vsync is reported as unsupported
+    /// and the platform keeps its default presentation behaviour.
+    /// </param>
+    public OpenGlRenderer(GlContextAdapter adapter, ISwapIntervalBackend? swapInterval = null)
     {
         ArgumentNullException.ThrowIfNull(adapter);
         _adapter = adapter;
+        _swapInterval = swapInterval;
     }
 
     /// <inheritdoc />
@@ -122,6 +134,30 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     /// <inheritdoc />
     public double? GpuMilliseconds => _gpuMilliseconds;
 
+    /// <summary>Gets a value indicating whether the platform accepted the requested vsync state.</summary>
+    public bool VsyncActive => _vsyncActive;
+
+    /// <summary>Gets the selected platform swap-interval extension, if any.</summary>
+    public string? VsyncBackend => _swapInterval?.Name;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether <see cref="Present"/> records managed
+    /// allocations per stage. Intended for profiling tools; disabled by default.
+    /// </summary>
+    public bool MeasureAllocations { get; set; }
+
+    /// <summary>Gets managed bytes allocated by the entire last present call.</summary>
+    public long LastPresentAllocatedBytes => _lastPresentAllocatedBytes;
+
+    /// <summary>Gets managed bytes allocated by the upload stage of the last present.</summary>
+    public long LastUploadAllocatedBytes => _lastUploadAllocatedBytes;
+
+    /// <summary>Gets managed bytes allocated by the palette stage of the last present.</summary>
+    public long LastPaletteAllocatedBytes => _lastPaletteAllocatedBytes;
+
+    /// <summary>Gets managed bytes allocated by the scale/filter stage of the last present.</summary>
+    public long LastScaleAllocatedBytes => _lastScaleAllocatedBytes;
+
     /// <inheritdoc />
     public void Initialize(int width, int height)
     {
@@ -132,8 +168,13 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         _outputWidth = width;
         _outputHeight = height;
         var version = gl.GetStringS(StringName.Version) ?? string.Empty;
-        _capabilities = OpenGlCapabilities.Detect(version, gl.GetInteger(GetPName.MaxTextureSize));
+        _capabilities = OpenGlCapabilities.Detect(
+            version,
+            gl.GetInteger(GetPName.MaxTextureSize),
+            supportsVsync: _swapInterval is not null);
         _isOpenGlEs = _capabilities.IsOpenGlEs;
+        _vsyncApplied = null;
+        ApplyVsync();
         _supportsGpuTiming = !_isOpenGlEs;
         _gpuMilliseconds = null;
         _queryInFlight = false;
@@ -211,16 +252,25 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     public void Present(VdlFrame frame)
     {
         ArgumentNullException.ThrowIfNull(frame);
+        var measureAlloc = MeasureAllocations;
+        var allocationStart = measureAlloc ? GC.GetAllocatedBytesForCurrentThread() : 0;
         if (!_initialized)
         {
             Initialize(EmulatorConstants.VideoWidth, EmulatorConstants.VideoHeight);
         }
 
+        ApplyVsync();
+        var allocation0 = measureAlloc ? GC.GetAllocatedBytesForCurrentThread() : 0;
         _uploader.Update(frame);
         var width = _uploader.Width;
         var height = _uploader.Height;
         if (width <= 0 || height <= 0)
         {
+            if (measureAlloc)
+            {
+                _lastPresentAllocatedBytes = GC.GetAllocatedBytesForCurrentThread() - allocationStart;
+            }
+
             return;
         }
 
@@ -248,6 +298,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
         EnsurePaletteTarget(gl, width, height);
         UploadTextures(gl, width, height);
+        var allocation2 = measureAlloc ? GC.GetAllocatedBytesForCurrentThread() : 0;
 
         // Stage 1: expand the indexed frame and per-line palette at native resolution.
         gl.BindFramebuffer(FramebufferTarget.Framebuffer, _paletteFbo);
@@ -265,6 +316,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         gl.BindTexture(TextureTarget.Texture2D, _paramTexture);
         gl.BindVertexArray(_vao);
         gl.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
+        var allocation3 = measureAlloc ? GC.GetAllocatedBytesForCurrentThread() : 0;
 
         // Stage 2: optionally run the edge-directed xBR pass at 4x source resolution,
         // then scale/filter into the output framebuffer.
@@ -382,6 +434,15 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             gl.EndQuery(QueryTarget.TimeElapsed);
             _queryInFlight = true;
         }
+
+        if (measureAlloc)
+        {
+            var allocation4 = GC.GetAllocatedBytesForCurrentThread();
+            _lastUploadAllocatedBytes = allocation2 - allocation0;
+            _lastPaletteAllocatedBytes = allocation3 - allocation2;
+            _lastScaleAllocatedBytes = allocation4 - allocation3;
+            _lastPresentAllocatedBytes = allocation4 - allocationStart;
+        }
     }
 
     /// <inheritdoc />
@@ -413,6 +474,27 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     {
         DisposeResources();
         _initialized = false;
+        _vsyncApplied = null;
+        _vsyncActive = false;
+    }
+
+    private void ApplyVsync()
+    {
+        if (_swapInterval is null)
+        {
+            _vsyncActive = false;
+            return;
+        }
+
+        var requested = _settings.Vsync;
+        if (_vsyncApplied == requested)
+        {
+            return;
+        }
+
+        var applied = _swapInterval.Apply(requested ? 1 : 0);
+        _vsyncActive = requested && applied;
+        _vsyncApplied = requested;
     }
 
     private void EnsurePaletteTarget(GL gl, int width, int height)

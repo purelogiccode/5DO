@@ -22,8 +22,11 @@ public static class OpenGlCapabilities
     /// <summary>Detects capabilities from a GL version string and maximum texture size.</summary>
     /// <param name="version">The string returned by <c>GL_VERSION</c>, or null/empty.</param>
     /// <param name="maxTextureSize">The value returned by <c>GL_MAX_TEXTURE_SIZE</c>.</param>
+    /// <param name="supportsVsync">
+    /// Whether the host resolved a platform swap-interval extension for this context.
+    /// </param>
     /// <returns>Capabilities for the reported API and version.</returns>
-    public static RendererCapabilities Detect(string? version, int maxTextureSize)
+    public static RendererCapabilities Detect(string? version, int maxTextureSize, bool supportsVsync = false)
     {
         var text = version ?? string.Empty;
         var isOpenGlEs = text.Contains("OpenGL ES", StringComparison.OrdinalIgnoreCase);
@@ -47,7 +50,7 @@ public static class OpenGlCapabilities
             minor,
             maxTextureSize,
             supportsIntegerTextures,
-            SupportsVsync: false,
-            Api: api);
+            supportsVsync,
+            api);
     }
 }

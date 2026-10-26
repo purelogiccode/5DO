@@ -1,0 +1,158 @@
+using System;
+using System.IO;
+using System.Text.Json;
+using ThreeDo.Frontend.Avalonia;
+using ThreeDo.Video;
+
+namespace ThreeDo.Tests.Frontend;
+
+public sealed class GlProbeOptionsTests
+{
+    [Fact]
+    public void TryParse_UsesThe4KDefaults()
+    {
+        Assert.True(GlProbeOptions.TryParse(["--gl-probe", "probe.json"], out var options, out var error));
+
+        Assert.Null(error);
+        Assert.NotNull(options);
+        Assert.Equal(Path.GetFullPath("probe.json"), options.OutputPath);
+        Assert.Equal(3840, options.Width);
+        Assert.Equal(2160, options.Height);
+        Assert.Equal(120, options.Frames);
+        Assert.Equal(30, options.WarmupFrames);
+        Assert.Equal(VideoFilter.SharpBilinear, options.Filter);
+        Assert.False(options.Vsync);
+        Assert.False(options.Offscreen);
+        Assert.Equal(30, options.TimeoutSeconds);
+    }
+
+    [Fact]
+    public void TryParse_AcceptsSizeFramesFilterAndVsync()
+    {
+        var parsed = GlProbeOptions.TryParse(
+            [
+                "--gl-probe", "probe.json",
+                "--gl-probe-size", "1920x1080",
+                "--gl-probe-frames", "42",
+                "--gl-probe-warmup", "7",
+                "--gl-probe-filter", "sharp-bilinear",
+                "--gl-probe-timeout", "5",
+                "--gl-probe-vsync",
+                "--gl-probe-offscreen",
+            ],
+            out var options,
+            out var error);
+
+        Assert.True(parsed, error);
+        Assert.Null(error);
+        Assert.NotNull(options);
+        Assert.Equal(1920, options.Width);
+        Assert.Equal(1080, options.Height);
+        Assert.Equal(42, options.Frames);
+        Assert.Equal(7, options.WarmupFrames);
+        Assert.Equal(VideoFilter.SharpBilinear, options.Filter);
+        Assert.True(options.Vsync);
+        Assert.True(options.Offscreen);
+        Assert.Equal(5, options.TimeoutSeconds);
+    }
+
+    [Theory]
+    [InlineData("accurate", VideoFilter.Accurate)]
+    [InlineData("nearest", VideoFilter.Nearest)]
+    [InlineData("sharp", VideoFilter.SharpBilinear)]
+    [InlineData("crt", VideoFilter.Crt)]
+    [InlineData("xbr", VideoFilter.Xbr)]
+    [InlineData("hq2x", VideoFilter.Hqx)]
+    [InlineData("hq3x", VideoFilter.Hqx3x)]
+    [InlineData("hq4x", VideoFilter.Hqx4x)]
+    public void TryParse_AcceptsFilterAliases(string text, VideoFilter expected)
+    {
+        Assert.True(GlProbeOptions.TryParse(
+            ["--gl-probe", "probe.json", "--gl-probe-filter", text],
+            out var options,
+            out var error));
+
+        Assert.Null(error);
+        Assert.NotNull(options);
+        Assert.Equal(expected, options.Filter);
+    }
+
+    [Theory]
+    [InlineData("--gl-probe-size", "3840")]
+    [InlineData("--gl-probe-size", "3840x0")]
+    [InlineData("--gl-probe-size", "3840x2160x1")]
+    [InlineData("--gl-probe-frames", "0")]
+    [InlineData("--gl-probe-frames", "many")]
+    [InlineData("--gl-probe-warmup", "10001")]
+    [InlineData("--gl-probe-timeout", "0")]
+    [InlineData("--gl-probe-filter", "unknown")]
+    public void TryParse_RejectsInvalidValues(string option, string value)
+    {
+        Assert.False(GlProbeOptions.TryParse(
+            ["--gl-probe", "probe.json", option, value],
+            out var options,
+            out var error));
+
+        Assert.Null(options);
+        Assert.False(string.IsNullOrWhiteSpace(error));
+    }
+
+    [Fact]
+    public void TryParse_RequiresAnOutputPath()
+    {
+        Assert.False(GlProbeOptions.TryParse(["--gl-probe"], out var options, out var error));
+        Assert.Null(options);
+        Assert.Contains("output JSON path", error);
+    }
+
+    [Fact]
+    public void ReportContext_SerializesTheCamelCaseContract()
+    {
+        var report = new GlProbeReport(
+            Ok: true,
+            Error: null,
+            Backend: "OpenGL",
+            Vendor: "Test Vendor",
+            Renderer: "Test Renderer",
+            Api: "OpenGl",
+            MajorVersion: 4,
+            MinorVersion: 6,
+            MaxTextureSize: 32768,
+            SupportsIntegerTextures: true,
+            SupportsVsync: true,
+            VsyncRequested: false,
+            VsyncActive: false,
+            VsyncBackend: "WGL_EXT_swap_control",
+            SourceWidth: 320,
+            SourceHeight: 240,
+            OutputWidth: 3840,
+            OutputHeight: 2160,
+            Filter: "SharpBilinear",
+            Offscreen: true,
+            Frames: 120,
+            WarmupFrames: 30,
+            ElapsedSeconds: 2.5,
+            Fps: 48,
+            AllocatedBytes: 0,
+            AllocatedBytesPerFrame: 0,
+            RendererAllocatedBytes: 0,
+            RendererAllocatedBytesPerFrame: 0,
+            RendererOnlyAllocatedBytes: 0,
+            RendererOnlyAllocatedBytesPerFrame: 0,
+            RendererMeasureAllocations: true,
+            RendererPresentAllocatedBytes: 0,
+            UploadAllocatedBytes: 0,
+            PaletteAllocatedBytes: 0,
+            ScaleAllocatedBytes: 0,
+            Present: new GlProbeTiming(0.2, 0.19, 0.3, 0.4, 0.5),
+            Gpu: null);
+
+        var json = JsonSerializer.Serialize(report, GlProbeJsonContext.Default.GlProbeReport);
+
+        Assert.Contains("\"ok\": true", json);
+        Assert.Contains("\"outputWidth\": 3840", json);
+        Assert.Contains("\"vsyncBackend\": \"WGL_EXT_swap_control\"", json);
+        Assert.Contains("\"p99Ms\": 0.4", json);
+        Assert.Contains("\"gpu\": null", json);
+    }
+}

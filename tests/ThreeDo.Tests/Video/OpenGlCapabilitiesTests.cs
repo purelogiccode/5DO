@@ -22,6 +22,13 @@ public sealed class OpenGlCapabilitiesTests
     }
 
     [Fact]
+    public void Detect_ReportsVsyncOnlyWhenTheHostResolvedASwapIntervalBackend()
+    {
+        Assert.False(OpenGlCapabilities.Detect("4.6.0", 32768).SupportsVsync);
+        Assert.True(OpenGlCapabilities.Detect("4.6.0", 32768, supportsVsync: true).SupportsVsync);
+    }
+
+    [Fact]
     public void Detect_OpenGlEsVersionParsesAfterTheApiName()
     {
         var capabilities = OpenGlCapabilities.Detect("OpenGL ES 3.2 (ANGLE 2.1.0)", 16384);

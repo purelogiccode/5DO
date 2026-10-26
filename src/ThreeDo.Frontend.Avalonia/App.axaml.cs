@@ -19,6 +19,14 @@ public class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            if (Program.GlProbe is not null)
+            {
+                var probe = new GlProbeWindow(Program.GlProbe, desktop.Shutdown);
+                desktop.MainWindow = probe;
+                base.OnFrameworkInitializationCompleted();
+                return;
+            }
+
             var window = new MainWindow
             {
                 DataContext = new MainViewModel(),

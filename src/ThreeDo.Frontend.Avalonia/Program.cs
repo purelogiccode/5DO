@@ -25,6 +25,13 @@ sealed class Program
     /// </summary>
     public static string? SmokeOutputPath { get; private set; }
 
+    /// <summary>
+    /// Gets the GPU presentation probe request, or <see langword="null"/> during normal
+    /// startup. The probe opens the real OpenGL surface, presents synthetic frames, and
+    /// writes timing JSON without loading a BIOS or disc.
+    /// </summary>
+    public static GlProbeOptions? GlProbe { get; private set; }
+
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
@@ -39,6 +46,17 @@ sealed class Program
 
         SmokeTest = HasFlag(args, "--smoke-test");
         SmokeOutputPath = FindOptionValue(args, "--smoke-output");
+        if (HasFlag(args, "--gl-probe"))
+        {
+            if (!GlProbeOptions.TryParse(args, out var probe, out var probeError))
+            {
+                Console.Error.WriteLine(probeError);
+                return;
+            }
+
+            GlProbe = probe;
+        }
+
         StartupDiscPath = FindDiscPath(args);
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
@@ -136,7 +154,13 @@ sealed class Program
 
         var previous = args[index - 1];
         return string.Equals(previous, "--disc", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(previous, "--smoke-output", StringComparison.OrdinalIgnoreCase);
+            || string.Equals(previous, "--smoke-output", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--gl-probe", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--gl-probe-size", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--gl-probe-frames", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--gl-probe-warmup", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--gl-probe-filter", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--gl-probe-timeout", StringComparison.OrdinalIgnoreCase);
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.
