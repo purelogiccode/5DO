@@ -83,6 +83,10 @@ still change.
   synchronous-dispose crash when the capture consumer finished the probe while
   `OnOpenGlRender` was still running; the render path now returns safely after the
   capture callback.
+- Opt-in NativeAOT CLI publish (`-p:ThreeDoNativeAot=true`): the win-x64 single file
+  is 9.97 MB and passes the CLI smoke suite, `info`, `fs list`, and a 3,000-frame
+  Lemmings boot matching the golden hash. CI publishes and smoke-tests it on Windows;
+  frontend AOT and cross-OS AOT toolchains remain.
 
 ### Changed
 

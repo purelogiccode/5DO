@@ -91,6 +91,41 @@ jobs:
           name: benchmark-baseline
           path: artifacts/benchmark.json
 
+  aot-cli:
+    name: NativeAOT CLI (win-x64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish NativeAOT
+        run: >
+          dotnet publish src/ThreeDo.Cli/ThreeDo.Cli.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:ThreeDoNativeAot=true
+          -p:PublishSingleFile=true
+          -m:1
+          -o artifacts/cli-aot
+
+      - name: NativeAOT smoke test
+        run: |
+          artifacts/cli-aot/ThreeDo.Cli.exe --version
+          artifacts/cli-aot/ThreeDo.Cli.exe selftest --json
+          artifacts/cli-aot/ThreeDo.Cli.exe bench --frames 2 --json
+
+      - name: Upload NativeAOT artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3do-cli-aot-win-x64
+          path: artifacts/cli-aot
+          if-no-files-found: error
+
   publish-cli:
     name: Publish CLI (${{ matrix.rid }})
     runs-on: ubuntu-latest

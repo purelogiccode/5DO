@@ -247,8 +247,10 @@ the measured WGL and ANGLE results.
 Both the CLI and the Avalonia frontend publish trimmed by default
 (`PublishTrimmed=true`). Settings/input/save-slot JSON and all CLI `--json` responses
 use source-generated metadata, the frontend has no reflection-based view locator, and
-CI runs a trimmed-frontend startup smoke test. See [`docs/Trimming.md`](docs/Trimming.md)
-for the audit and the remaining NativeAOT work.
+CI runs a trimmed-frontend startup smoke test. The CLI also has an opt-in NativeAOT
+publish (`-p:ThreeDoNativeAot=true`): the win-x64 AOT single file is 9.97 MB and CI
+runs the CLI smoke commands against it. See [`docs/Trimming.md`](docs/Trimming.md)
+for the audit and the remaining frontend NativeAOT work.
 
 CI also packages each published CLI/frontend folder as a portable archive:
 `3doemulator-<component>-<rid>.zip` on Windows and `.tar.gz` on Linux/macOS, with

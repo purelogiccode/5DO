@@ -556,6 +556,13 @@ missing and corrected the Road Rash diagnosis.
   finish the probe and dispose the surface synchronously while `OnOpenGlRender` is
   still using the adapter. The render path now returns after the capture callback
   when the surface has been disposed.
+- **NativeAOT CLI audit.** `ThreeDo.Cli` publishes with NativeAOT via the opt-in
+  `-p:ThreeDoNativeAot=true` property. The win-x64 single file is 9.97 MB (trimmed IL
+  is 26.3 MB) and passes `--version`, `selftest`, `bench`, `info`, `fs list` on
+  Lemmings (482 files), and a 3,000-frame boot matching the golden
+  `PC 0x0012B3C8` / hash `0x932C7722`. CI publishes and smoke-tests it on Windows.
+  The only warning is CHDSharp's vendored-FLAC `TypeDescriptor` helper. Frontend AOT
+  and cross-OS AOT toolchains remain.
 - **Tests.** 761 tests pass. New tests cover backend aliases/mode ordering, probe
   capture-path parsing, and the opt-in GPU integration path. The existing JSON
   contract test now includes the requested backend and parity fields.

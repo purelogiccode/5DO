@@ -99,9 +99,12 @@ This is the short, current answer to "where are we?" The detailed task list is i
   invariants.
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   Both executables are self-contained, single-file, and trimmed (`PublishTrimmed=true`,
-  `TrimMode=full`). A Windows CI smoke test runs the trimmed CLI and starts the trimmed
-  frontend (`--smoke-test`); the win-x64 packages were validated with
-  synthetic/ISO/CHD runs, state roundtrips, `fs list`, and a real window/render pass.
+  `TrimMode=full`). The CLI also has an opt-in NativeAOT win-x64 publish
+  (`-p:ThreeDoNativeAot=true`): 9.97 MB, CI-smoke-tested with `--version`, `selftest`,
+  `bench`, `info`, `fs list`, and a golden 3,000-frame boot. A Windows CI smoke test
+  runs the trimmed CLI and starts the trimmed frontend (`--smoke-test`); the win-x64
+  packages were validated with synthetic/ISO/CHD runs, state roundtrips, `fs list`,
+  and a real window/render pass.
   CI also creates portable `3doemulator-<component>-<rid>.zip`/`.tar.gz` archives
   with README/notices/licensing and a generated `PACKAGE.txt` via
   `packaging/package.ps1`. NativeAOT remains unproven and is not on the v1 critical

@@ -6,6 +6,9 @@
     <AssemblyName>ThreeDo.Cli</AssemblyName>
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>full</TrimMode>
+    <!-- Opt-in NativeAOT publish: -p:ThreeDoNativeAot=true. The default CI
+         publish remains trimmed IL so all six RIDs can be produced on one OS. -->
+    <PublishAot Condition="'$(ThreeDoNativeAot)' == 'true'">true</PublishAot>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(PublishTrimmed)' == 'true'">
