@@ -87,6 +87,13 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnOpened(object? sender, EventArgs e)
     {
+        if (Program.SmokeTest)
+        {
+            // The packaged smoke test validates XAML/window construction and exits;
+            // it must not touch the user's configured BIOS/disc or first-run state.
+            return;
+        }
+
         if (!_settings.FirstRunCompleted && string.IsNullOrWhiteSpace(_settings.BiosPath))
         {
             try

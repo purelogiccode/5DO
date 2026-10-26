@@ -63,6 +63,27 @@ jobs:
           artifacts/cli-trim/ThreeDo.Cli.exe selftest --json
           artifacts/cli-trim/ThreeDo.Cli.exe bench --frames 2 --json
 
+      - name: Trimmed frontend publish smoke
+        if: matrix.os == 'windows-latest'
+        run: |
+          dotnet publish src/ThreeDo.Frontend.Avalonia/ThreeDo.Frontend.Avalonia.csproj -c Release -r win-x64 `
+            --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -m:1 `
+            -o artifacts/frontend-trim
+          $process = Start-Process -FilePath artifacts/frontend-trim/ThreeDo.Frontend.Avalonia.exe `
+            -ArgumentList '--smoke-test', '--smoke-output', 'artifacts/frontend-smoke.txt' `
+            -PassThru
+          if (-not $process.WaitForExit(60000)) {
+            $process.Kill()
+            throw 'Trimmed frontend smoke test timed out.'
+          }
+          if ($process.ExitCode -ne 0) {
+            throw "Trimmed frontend smoke test failed with exit code $($process.ExitCode)."
+          }
+          Get-Content artifacts/frontend-smoke.txt
+          if (-not (Select-String -Path artifacts/frontend-smoke.txt -Pattern 'FRONTEND SMOKE OK' -Quiet)) {
+            throw 'Trimmed frontend smoke marker is missing.'
+          }
+
       - name: Upload benchmark baseline
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
@@ -139,7 +160,7 @@ jobs:
           -r ${{ matrix.rid }}
           --self-contained true
           -p:PublishSingleFile=true
-          -p:PublishTrimmed=false
+          -p:PublishTrimmed=true
           -m:1
           -o artifacts/frontend/${{ matrix.rid }}
 

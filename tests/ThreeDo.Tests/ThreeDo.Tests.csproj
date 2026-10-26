@@ -36,6 +36,7 @@
     <ProjectReference Include="..\..\src\ThreeDo.Host\ThreeDo.Host.csproj" />
     <ProjectReference Include="..\..\src\ThreeDo.Video.OpenGL\ThreeDo.Video.OpenGL.csproj" />
     <ProjectReference Include="..\..\src\ThreeDo.Cli\ThreeDo.Cli.csproj" />
+    <ProjectReference Include="..\..\src\ThreeDo.Frontend.Avalonia\ThreeDo.Frontend.Avalonia.csproj" />
   </ItemGroup>
 
 </Project>
