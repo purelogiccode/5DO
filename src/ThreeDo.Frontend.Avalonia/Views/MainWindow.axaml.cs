@@ -453,9 +453,9 @@ public partial class MainWindow : Window, IDisposable
 
     private void ToggleFullscreen()
     {
-        WindowState = WindowState == WindowState.FullScreen
-            ? WindowState.Normal
-            : WindowState.FullScreen;
+        var fullscreen = WindowState != WindowState.FullScreen;
+        WindowState = fullscreen ? WindowState.FullScreen : WindowState.Normal;
+        Cursor = fullscreen ? new Cursor(StandardCursorType.None) : null;
     }
 
     private void OnLogs(object? sender, RoutedEventArgs e)
