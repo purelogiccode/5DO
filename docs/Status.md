@@ -124,6 +124,15 @@ on both sides. Opera is the bundled Windows `OperaCore` build in
 | Wolfenstein 3D (USA) | **Boots, renders, plays DSP audio**; A opens the preview menu, selecting a level starts a fresh game (FLOOR 1-1), the player can walk/turn/fire, and save/load roundtrips in-game (`0xF568EBCA` -> `PC 0x000782B8` twice); 600-frame WAV evidence captured. The fresh-game load advances with A pulses (character select -> FLOOR 1-1 at 64,000, hash `0x2F5B9864`) | **Renders the intro for 60 s** |
 | Alone in the Dark (USA) | **Boots, renders, plays DSP audio**; reaches the in-game staircase/room with an upright character; the Up/Left/A/Down sequence reaches the Begin/Resume menu, A starts the intro scene, A pulses pass the intro, and a scripted room movement sequence roundtrips (`0x44C7576B` -> two 120-frame continuations at `PC 0x0008BF00`, `0xE490C8C7`) | **Renders the intro/loading for 60 s** |
 
+**Additional corpus (2026-10-26).** Seven more titles were booted, rendered, and
+save-state-roundtripped with `panafz1.bin`: Gex, Need for Speed, Super Street
+Fighter II Turbo, Total Eclipse, Killing Time, Theme Park, and Return Fire. Gex,
+Total Eclipse, and Super Street Fighter II Turbo show gameplay/attract scenes;
+Need for Speed, Killing Time, Theme Park, and Return Fire render menus. Six produce
+non-silent 44.1 kHz stereo audio; Theme Park's captured menu is silent. Hashes and
+commands are in [`TestCorpus.md`](TestCorpus.md) 1.7 and the matrix in
+[`Compatibility.md`](Compatibility.md) §10.
+
 The CD disc-end fix on 2026-10-23 is what unblocked Road Rash, Space Ace, and
 Wolfenstein: `InitCd` no longer double-adds the 150-frame lead-in, so the CD DIPIR
 accepts discs whose volume block count is less than the physical track length.

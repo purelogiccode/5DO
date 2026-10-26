@@ -40,6 +40,10 @@ All five are CHD images. They are the primary real-content corpus for:
 - In-game save-state roundtrips.
 - End-to-end performance and frame-pacing measurements.
 
+Seven additional CHD titles (Gex, Need for Speed, Super Street Fighter II Turbo,
+Total Eclipse, Killing Time, Theme Park, and Return Fire) were validated for boot,
+render, save-state, and audio in section 1.7.
+
 ISO/BIN/CUE parity testing still needs a legally obtained image in one of those
 formats, or a locally generated fixture. Do not convert and commit a retail disc.
 
@@ -773,6 +777,61 @@ loop stops before the last entry, so pure white is deliberately excluded from th
 reference image. A 320x240 synthetic benchmark measures about 2.3/4.2/7.5 ms per
 frame for 2x/3x/4x on checkerboard content and about 12/13/15 ms on random noise,
 so 3x/4x are opt-in and not recommended with high-res on slow CPUs.
+
+### 1.7 Fifteenth pass: additional boot/render/audio corpus (2026-10-26)
+
+Seven additional titles were booted with `panafz1.bin`, a fresh NVRAM, and 12,000
+frames. Each rendered a real frame and produced a deterministic save state. The
+frames are not committed; the hashes below are the regression keys.
+
+| Title | File | Frames | Final PC | Frame hash | Observation | Audio (600 frames) |
+|---|---|---:|---|---|---|---|
+| Gex | `Gex (USA, Europe).chd` | 12,000 | `0x000876E8` | `0x6B8760C9` | 3D platform level with HUD | 10.03 s, peak 29733, RMS 3029/3145, 0 clipped |
+| Need for Speed | `Road & Track Presents - The Need for Speed (USA, Europe).chd` | 12,000 | `0x0001055C` | `0x95730015` | Car FMV and menu | 10.02 s, peak 29951, RMS 5309/5022, 0 clipped |
+| Super Street Fighter II Turbo | `Super Street Fighter II Turbo (USA).chd` | 12,000 | `0x00010548` | `0x110E7DC5` | Attract demo (title, character intro, CPU fight, ending) at 2,000-10,000; black transition at 12,000 | 10.10 s, peak 21248, RMS 1569/1502, 0 clipped |
+| Total Eclipse | `Total Eclipse (USA).chd` | 12,000 | `0x000106A4` | `0x280E8346` | Spaceship intro/gameplay over terrain | 10.06 s, peak 16382, RMS 2760/2760 (mono duplicated), 0 clipped |
+| Killing Time | `Killing Time (USA) (RE1).chd` | 12,000 | `0x000A4128` | `0xF23DE48C` | Title menu (`START`/`OPTIONS`/`LOAD GAME`) | 10.08 s, peak 32333, RMS 5609/6357, 0 clipped |
+| Theme Park | `Theme Park (USA).chd` | 12,000 | `0x0002063C` | `0x55B0AC11` | Title/menu screen | 10.11 s, silent at this menu (peak 0), DSP running |
+| Return Fire | `Return Fire (USA).chd` | 12,000 | `0x000284F4` | `0xD57E56D7` | Menu screen (controller/map panels) | 10.12 s, peak 29765, RMS 2600/2600 (mono duplicated), 0 clipped |
+
+Commands:
+
+```powershell
+$g = $env:THREEDO_GAMES
+$b = "bios\panafz1.bin"
+$t = "Gex (USA, Europe).chd"
+dotnet run -c Release --project src/ThreeDo.Cli -- run "$g\$t" --bios $b `
+  --frames 12000 --frame-out artifacts\gex-12k.png `
+  --state-out artifacts\gex-12k.state --json
+
+# Save-state roundtrip: zero-frame load + two 120-frame continuations
+dotnet run -c Release --project src/ThreeDo.Cli -- run "$g\$t" --bios $b `
+  --state-in artifacts\gex-12k.state --frames 0 --json
+dotnet run -c Release --project src/ThreeDo.Cli -- run "$g\$t" --bios $b `
+  --state-in artifacts\gex-12k.state --frames 120 --json
+
+# Audio capture from the 12,000-frame state
+dotnet run -c Release --project src/ThreeDo.Cli -- run "$g\$t" --bios $b `
+  --state-in artifacts\gex-12k.state --frames 600 --audio wav `
+  --wav-out artifacts\gex-12k.wav --json
+```
+
+Roundtrips (zero-frame load matches the saved hash; two independent 120-frame
+continuations match each other):
+
+| Title | Zero-frame hash | 120-frame PC / hash (twice) |
+|---|---|---|
+| Gex | `0x6B8760C9` | `PC 0x00079414`, `0xC682B436` |
+| Need for Speed | `0x95730015` | `PC 0x0001281C`, `0xB1FB873D` |
+| Super Street Fighter II Turbo | `0x110E7DC5` | `PC 0x00020648`, `0x110E7DC5` |
+| Total Eclipse | `0x280E8346` | `PC 0x000205F4`, `0xDD148BD5` |
+| Killing Time | `0xF23DE48C` | `PC 0x000284EC`, `0xF23DE48C` |
+| Theme Park | `0x55B0AC11` | `PC 0x00019080`, `0x55B0AC11` |
+| Return Fire | `0xD57E56D7` | `PC 0x0002E21C`, `0xD57E56D7` |
+
+The 4DO game database applies fix mask `0x2` to Super Street Fighter II Turbo; the
+other six titles use mask `0`. Theme Park's menu is silent; this is recorded as an
+open audio question, not a pass for title music.
 
 ---
 

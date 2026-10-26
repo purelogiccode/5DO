@@ -72,6 +72,12 @@ still change.
   `FrameAssembler` oracle. WGL (OpenGL 4.0/GLSL 330) and ANGLE (OpenGL ES 3.0/
   GLSL ES 300) both match pixel-for-pixel (`0xD6BD89C5`), and ANGLE runs every
   filter with zero renderer allocations per frame.
+- Seven additional real discs were validated for boot/render/save-state/audio:
+  Gex, Need for Speed, Super Street Fighter II Turbo, Total Eclipse, Killing Time,
+  Theme Park, and Return Fire. Gex, Total Eclipse, and Super Street Fighter II
+  Turbo show gameplay/attract scenes; six produce non-silent 44.1 kHz stereo audio
+  (Theme Park's menu is silent). Hashes and commands are in `TestCorpus.md` 1.7 and
+  the matrix in `Compatibility.md` §10.
 
 ### Changed
 

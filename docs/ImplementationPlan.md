@@ -70,7 +70,7 @@ A 3DO Interactive Multiplayer emulator with:
 
 **v0.5 - Playable milestone**
 
-- [ ] Boots at least 10 real discs to gameplay (user-provided test set), including at least one CHD image. (five-title local corpus currently)
+- [ ] Boots at least 10 real discs to gameplay (user-provided test set), including at least one CHD image. (twelve local discs boot and render; eight have gameplay/attract evidence, including Gex and Super Street Fighter II Turbo)
 - [x] Audio works for DSP-driven music/SFX. (non-silent 44.1 kHz stereo output on all five titles; mix/pitch comparison still pending)
 - [x] NVRAM persists between sessions.
 - [x] Save states roundtrip deterministically.
@@ -1329,11 +1329,15 @@ harness. See [`Performance.md`](Performance.md).
   - First-session plan and acceptance criteria in [`NextSession.md`](NextSession.md).
 - [~] **M11.1 Compatibility corpus.**
   - Test the matrix in `docs/Compatibility.md`.
-  - Five-title local corpus boots and produces audio; Wolfenstein, Lemmings, Road
-    Rash, and Alone have scripted gameplay evidence.
-  - Remaining: finish the Road Rash race, the Space Ace interactive path, the
-    CD-load/READ_ID freeze, and CD/CLIO/MADAM/ARM timing triage with the Opera
-    differential harness.
+  - Five-title golden corpus boots and produces audio; Wolfenstein, Lemmings, Road
+    Rash, Alone, and Space Ace have scripted gameplay evidence. Seven additional
+    titles (Gex, Need for Speed, Super Street Fighter II Turbo, Total Eclipse,
+    Killing Time, Theme Park, Return Fire) boot, render, and save-state-roundtrip;
+    Gex, Total Eclipse, and Super Street Fighter II Turbo show gameplay/attract
+    scenes. See `TestCorpus.md` 1.7.
+  - Remaining: finish the Road Rash race, script Alone inventory, add input/gameplay
+    scripts for the seven new titles, and continue CD/CLIO/MADAM/ARM timing triage
+    with the Opera differential harness.
   - Add per-game fixes only with evidence.
 - [~] **M11.2 High-resolution mode.**
   - `RESSCALE=1` is implemented as the opt-in `--high-res` 640x480 path: four VRAM

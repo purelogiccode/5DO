@@ -58,8 +58,14 @@ to `BUSTED`, race select, and a new race. Space Ace's interactive path is valida
 race -> wreck -> menu -> new race to 100k, but a full 5.5-mile race is still not
 finished.
 
-Real-content status with `panafz1.bin`: all five local corpus titles boot, load their
-own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio.
+Real-content status with `panafz1.bin`: the five golden-corpus titles boot, load their
+own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio. Seven
+additional titles (Gex, Need for Speed, Super Street Fighter II Turbo, Total Eclipse,
+Killing Time, Theme Park, and Return Fire) were also booted, rendered, and
+save-state-roundtripped on 2026-10-26. Gex, Total Eclipse, and Super Street Fighter II
+Turbo show gameplay/attract scenes; the others render menus. Six produce non-silent
+44.1 kHz stereo audio; Theme Park's captured menu is silent. Hashes and commands are
+in [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.7.
 
 - **Road Rash** renders its 3D race correctly (matching the Opera reference) and runs
   past 60,000 frames. A CD media-access pulse fixes the old ~42k/~92k READ_ID-only

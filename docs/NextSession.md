@@ -543,6 +543,13 @@ missing and corrected the Road Rash diagnosis.
 - **Parity.** WGL (OpenGL 4.0/GLSL 330) and ANGLE (OpenGL ES 3.0/GLSL ES 300) both
   matched the CPU oracle exactly: 0 different pixels, FNV-1a hash `0xD6BD89C5`
   (`3602745797`), no vertical flip.
+- **Additional corpus.** Seven more discs booted, rendered, and save-state-roundtripped
+  at 12,000 frames: Gex, Need for Speed, Super Street Fighter II Turbo, Total Eclipse,
+  Killing Time, Theme Park, and Return Fire. Gex, Total Eclipse, and Super Street
+  Fighter II Turbo show gameplay/attract scenes; six produce non-silent 44.1 kHz
+  stereo audio (Theme Park's menu is silent). The hashes, WAV stats, and commands are
+  in [`TestCorpus.md`](TestCorpus.md) 1.7 and the matrix is in
+  [`Compatibility.md`](Compatibility.md) §10.
 - **Tests.** 760 tests pass. New tests cover backend aliases/mode ordering and probe
   capture-path parsing; the existing JSON contract test now includes the requested
   backend and parity fields.

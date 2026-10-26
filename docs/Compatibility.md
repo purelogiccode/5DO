@@ -2,8 +2,12 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current position (2026-10-26, tenth pass):** all five local corpus titles boot, load
-their own OS, render real frames, and produce non-silent DSP audio. Road Rash's 3D race
+**Current position (2026-10-26, fifteenth pass):** all five golden-corpus titles boot,
+load their own OS, render real frames, and produce non-silent DSP audio. Seven
+additional titles were validated on 2026-10-26 (Gex, Need for Speed, Super Street
+Fighter II Turbo, Total Eclipse, Killing Time, Theme Park, and Return Fire): each
+boots, renders, and save-state roundtrips deterministically; six produce non-silent
+44.1 kHz stereo audio, while Theme Park's captured menu is silent. Road Rash's 3D race
 renders correctly and the attract race continues past 60,000 frames with no allocator
 error; Wolfenstein 3D starts a fresh game (FLOOR 1-1), walks/turns/fires, and its save
 states roundtrip; Alone in the Dark's in-game character renders upright at the
@@ -11,10 +15,11 @@ staircase, and its Begin/Resume menu and intro are reachable; Lemmings reaches i
 title menu and passcode screen, its 640x480 high-resolution title matches the
 reference, and its Fun 4 passcode now starts gameplay with a save/load roundtrip after
 being typed entirely with the D-pad; Space Ace plays its animated demo and starts its
-interactive scene (`X` menu, `A` play) with a save/load roundtrip. The tenth pass also
-added CRT bloom and committed the D-pad passcode script. The eighth pass fixed the GPU
-palette shader so real frames use independent R/G/B CLUT indices and added the opt-in
-xBR-lv2 filter.
+interactive scene (`X` menu, `A` play) with a save/load roundtrip. The fifteenth pass
+also added the `--gl-backend` selector and validated Windows ANGLE/GLES 3.0 with
+pixel-identical CPU/GPU output. The tenth pass added CRT bloom and committed the D-pad
+passcode script. The eighth pass fixed the GPU palette shader so real frames use
+independent R/G/B CLUT indices and added the opt-in xBR-lv2 filter.
 
 The ninth pass captured per-title save-state, PNG, and WAV evidence (see
 `TestCorpus.md` 1.5a) and fixed the old Road Rash ~42,000/~92,000 stops. They were a
@@ -273,6 +278,13 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 | Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **3D race renders and runs past 60,000 frames; CD media-access pulse unblocks the old ~42k/~92k wait and reaches `BUSTED` -> race select -> new race; autopilot cycles race/wreck/menu to 100k** | Non-silent DSP output; 10 s peak 32768, RMS ~9.6k/8.8k, 378 clipped | **B accelerates, A brakes, D-pad steers, C attacks, P pauses**; `--autopilot road` adds close-traffic coast/steer, urgent preemption, emergency-brake steer hold, a throttle-only wreck/rider-run restart, and A pulses for post-race/start-line screens (`autopilotMenuAdvance`) | The CEL transposition fix removed the VRAM `AllocMem` error; the earlier "wall pin" was the race-over `BUSTED` screen. The old ~42k/~92k READ_ID-only wait is fixed; the remaining autopilot issue is finishing a full race without wrecking | Intro FMV, then a race |
 | Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Pass** | **Fresh game (FLOOR 1-1) and save/load roundtrip; A pulses pass the long fresh-game load** | Non-silent DSP output; 10 s peak 30743, RMS ~5.5k | **Works**: A opens the menu, D-pad/A navigate and fire; A every 300 frames passes character select | From a 12,000-frame demo state, A opens the preview menu; selecting a level starts a fresh game. `w3d-loadlong.state` + A reaches FLOOR 1-1 at 64,000 (hash `0x2F5B9864`) | Intro 60 s |
 | Alone in the Dark | USA | `9f7d72bc` | `panafz1` | 0.0.0 | **Pass** | **In-game staircase/room with an upright character; Begin/Resume menu and intro; A pulses leave the intro wait; scripted room movement with save/load roundtrip** | Non-silent DSP output; 10 s peak 20617, RMS ~1.9k | **Works**: D-pad/A change the scene; `Up, Left, A, Down` reaches the menu, A starts the intro; A every 300 frames advances the cutscene; `Up, Left, A, Down, Right` moves the character in the room | The CEL transposition fix restored the character's upright orientation. The media pulse alone does not advance the intro; A input does. The 39,800 movement state roundtrips (`0x44C7576B` -> `0xE490C8C7` twice) | Intro/loading 60 s |
+| Gex | USA/EU | `f73f7d08` | `panafz1` | 0.0.0 | **Pass** | **Attract/level renders at 12,000 frames (3D platform scene with HUD)** | Non-silent DSP output; 10 s peak 29733, RMS ~3.0k/3.1k, 0 clipped | Not yet scripted | 12,000-frame hash `0x6B8760C9`, `PC 0x000876E8`; 0/120-frame save-state roundtrips are deterministic | Not tested |
+| Need for Speed | USA/EU | `9ec810c5` | `panafz1` | 0.0.0 | **Pass** | **Attract/menu renders at 12,000 frames (car FMV and menu)** | Non-silent DSP output; 10 s peak 29951, RMS ~5.3k/5.0k, 0 clipped | Not yet scripted | 12,000-frame hash `0x95730015`, `PC 0x0001055C`; roundtrips deterministic | Not tested |
+| Super Street Fighter II Turbo | USA | `07c32f10` | `panafz1` | 0.0.0 | **Pass** | **Attract demo plays a CPU match (title, character intro, fight, ending) at 2,000-10,000 frames** | Non-silent DSP output; 10 s peak 21248, RMS ~1.6k/1.5k, 0 clipped | Not yet scripted | 12,000-frame transition hash `0x110E7DC5`, `PC 0x00010548`; the 4DO fix mask is `0x2`; roundtrips deterministic | Not tested |
+| Total Eclipse | USA | `09c0efb1` | `panafz1` | 0.0.0 | **Pass** | **Intro/gameplay renders at 12,000 frames (spaceship over terrain)** | Non-silent DSP output; 10 s peak 16382, RMS ~2.8k (mono duplicated), 0 clipped | Not yet scripted | 12,000-frame hash `0x280E8346`, `PC 0x000106A4`; roundtrips deterministic | Not tested |
+| Killing Time | USA (RE1) | `2ddbb4aa` | `panafz1` | 0.0.0 | **Pass** | **Title menu (START/OPTIONS/LOAD GAME) renders at 12,000 frames** | Non-silent DSP output; 10 s peak 32333, RMS ~5.6k/6.4k, 0 clipped | Not yet scripted | 12,000-frame hash `0xF23DE48C`, `PC 0x000A4128`; static menu; roundtrips deterministic | Not tested |
+| Theme Park | USA | `33e5afe4` | `panafz1` | 0.0.0 | **Pass** | **Title/menu screen renders at 12,000 frames** | DSP runs, but the captured 10 s menu is silent (peak 0) | Not yet scripted | 12,000-frame hash `0x55B0AC11`, `PC 0x0002063C`; static menu; roundtrips deterministic | Not tested |
+| Return Fire | USA | `076c742f` | `panafz1` | 0.0.0 | **Pass** | **Menu screen (controller/map panels) renders at 12,000 frames** | Non-silent DSP output; 10 s peak 29765, RMS ~2.6k (mono duplicated), 0 clipped | Not yet scripted | 12,000-frame hash `0xD57E56D7`, `PC 0x000284F4`; static menu; roundtrips deterministic | Not tested |
 
 `Pass` means a real game frame was rendered and verified visually. The Opera reference
 column is the bundled Windows OperaCore with the same BIOS and an ISO extracted from
