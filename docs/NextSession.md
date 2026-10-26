@@ -5,7 +5,7 @@
 The twelfth pass added source-generated JSON contexts for settings, input profiles,
 save-slot metadata, and every CLI `--json` response, removed the CLI's reflection
 paths, enabled `PublishTrimmed` for the CLI, and added a trimmed-CLI CI smoke test.
-**694 tests pass.** Do not redo the trim-safe JSON work, the trimmed CLI publish, or
+**704 tests pass.** Do not redo the trim-safe JSON work, the trimmed CLI publish, or
 the `DiagnosticMethodInfo` watchpoint change. The remaining work is finishing a full
 Road Rash race, scripted Lemmings level play beyond the start, GPU/Tier B validation,
 frontend trimming/AOT, arm64/installers, and the legal/attribution review.
@@ -384,7 +384,7 @@ missing and corrected the Road Rash diagnosis.
   bytes/frame, core p99 <= 8 ms, total mean <= 8 ms, and total p99 <= 16.667 ms.
   The benchmark exposes `--gate` (exit code 3 on failure), and CI runs it for the
   synthetic smoke before uploading the JSON baseline. The gate is budget-based;
-  a same-runner relative (>10%) comparison remains.
+  the same-runner relative (>10%) comparison was added in the twelfth pass (see 1.15).
 - **Desktop integration.** The frontend accepts a positional disc path or
   `--disc <path>` for file associations, ships `packaging/3doemulator.desktop`, can
   write a native CPU-frame screenshot next to a filtered GL capture, and previews
@@ -416,8 +416,15 @@ missing and corrected the Road Rash diagnosis.
 - **Frontend.** Trimming remains disabled; the Avalonia XAML loader, `ViewLocator`
   reflection, and Silk.NET audio/gamepad/OpenGL bindings are the remaining audit
   items (M10.3b).
-- **Tests.** 694 tests pass; the new tests cover the camel-case CLI JSON contract and
-  source-generated self-test roundtrip.
+- **Benchmark baseline comparison.** `BenchmarkComparison` and the benchmark
+  `--baseline <json>`/`--baseline-threshold <fraction>` options compare core p99,
+  total mean, and total p99 with a same-machine baseline; a >10% regression exits
+  with code 4 and improvements pass. CI still uses the absolute `--gate` budgets;
+  the relative check is intended for stable/self-hosted runs. See
+  [`Performance.md`](Performance.md) §8.
+- **Tests.** 704 tests pass; the new tests cover the camel-case CLI JSON contract,
+  source-generated self-test/host-record roundtrips, and every benchmark-comparison
+  failure mode.
 
 ---
 

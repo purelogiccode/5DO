@@ -40,6 +40,9 @@ still change.
   [`docs/Trimming.md`](docs/Trimming.md).
 - `DiagnosticMethodInfo`-based RAM-write watchpoint descriptions (replaces
   `StackFrame.GetMethod`, which is trim-unsafe).
+- `BenchmarkComparison` and benchmark `--baseline`/`--baseline-threshold` options:
+  a same-machine relative check across core p99, total mean, and total p99 (default
+  10%, exit code 4). Improvements pass; missing baseline metrics are ignored.
 
 ### Changed
 

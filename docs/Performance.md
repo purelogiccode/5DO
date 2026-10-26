@@ -312,7 +312,18 @@ dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- --frames 600
 dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- `
   --frames 600 --bios bios/panafz1.bin --disc "$env:THREEDO_GAMES\Lemmings (USA).chd" `
   --label lemmings
+
+# Same-machine relative regression check: record a baseline, then compare
+dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- `
+  --frames 600 --json > baseline.json
+dotnet run -c Release --project benchmarks/ThreeDo.Benchmarks -- `
+  --frames 600 --json --baseline baseline.json --baseline-threshold 0.10
 ```
+
+`--baseline` compares core p99, total mean, and total p99 against the recorded JSON.
+A metric more than `--baseline-threshold` (default 10%) slower fails with exit code 4;
+improvements never fail. Use the same machine, power profile, and filter settings for
+both runs. The absolute `--gate` budgets still run independently in CI.
 
 ### End-to-end benchmark
 
@@ -333,8 +344,12 @@ Profile 1080p and 4K separately to prove core cost is resolution-independent.
 
 - Per-PR: build, unit/integration tests, allocation assertions, CPU-renderer
   parity. Do not gate PRs on noisy GPU timings.
-- The CI workflow runs a synthetic benchmark smoke on Ubuntu and uploads the JSON
-  baseline as an artifact. It does not fail on timing yet.
+- The CI workflow runs a synthetic benchmark smoke on Ubuntu with `--gate` (0
+  bytes/frame, core p99 <= 8 ms, total mean <= 8 ms, total p99 <= 16.667 ms) and
+  uploads the JSON baseline as an artifact.
+- The same-machine relative check (`--baseline`, default 10%) is available for
+  nightly/self-hosted runs where hardware and power state are stable. It is not
+  wired to the ephemeral GitHub-hosted runner yet.
 - Nightly or self-hosted: BenchmarkDotNet baselines, real-content smoke, 4K GPU
   timing. Fail on a sustained >10% regression or a missed budget after warm-up.
 - Store the baseline JSON and the hardware description with each run. A performance
@@ -367,12 +382,12 @@ Still open:
 4. `PrefetchingDiscSource` is implemented as an opt-in bounded worker/cache, but
    Tier B timing and the default policy are not measured.
 5. Real-game compatibility is partial: all five corpus titles boot and render, and
-   Wolfenstein, Lemmings, Road Rash, and Alone have scripted gameplay evidence, but
-   the Road Rash race is not finished, Space Ace's interactive path is unproven, and a
-   CD-load/READ_ID freeze remains. See [`Compatibility.md`](Compatibility.md) and
-   [`TestCorpus.md`](TestCorpus.md).
-6. The benchmark reports p50/p95/p99 and per-stage allocations, but CI does not yet
-   enforce a regression gate or a zero-allocation assertion.
+   Wolfenstein, Lemmings, Road Rash, Alone, and Space Ace have scripted gameplay
+   evidence, but the Road Rash race is not finished. See
+   [`Compatibility.md`](Compatibility.md) and [`TestCorpus.md`](TestCorpus.md).
+6. The benchmark reports p50/p95/p99 and per-stage allocations, and CI enforces the
+   absolute budget gate plus the zero-allocation assertion. The same-machine
+   relative check exists (`--baseline`) but is not yet wired to a stable runner.
 
 These gaps do not invalidate the architecture. They do mean performance work cannot
 be deferred to M10: the backend matrix and physical-pixel sizing are structural

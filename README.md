@@ -9,7 +9,7 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 **Current position (2026-10-26, twelfth pass):** M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **694 tests pass.** The shell now has fullscreen, GL screenshots, an About
+prototype. **704 tests pass.** The shell now has fullscreen, GL screenshots, an About
 dialog, a Hi-Res toggle, automatic CPU fallback when OpenGL init or the context fails,
 a game library browser with cover art, a settings dialog (video/audio/emulation/paths), six-player
 keyboard and gamepad binding, ten numbered save slots with PNG thumbnails, PNG
@@ -26,8 +26,9 @@ The renderer now has an opt-in **xBR-lv2** edge-directed 4x filter, **HQx 2x/3x/
 filters, and **CRT bloom** alongside accurate, nearest, sharp-bilinear, and CRT modes.
 The HQx 3x/4x patterns match the C++ `hq3x_32_rb`/`hq4x_32_rb` reference hashes. The
 twelfth pass made settings, input profiles, save-slot metadata, and every CLI `--json`
-response source-generated and trim-safe, enabled `PublishTrimmed` for the CLI, and
-added a trimmed-CLI CI smoke test; see [`docs/Trimming.md`](docs/Trimming.md). The
+response source-generated and trim-safe, enabled `PublishTrimmed` for the CLI,
+added a trimmed-CLI CI smoke test, and added a same-machine benchmark baseline
+comparison; see [`docs/Trimming.md`](docs/Trimming.md). The
 eleventh pass made the benchmark a CI gate (0 bytes/frame, core p99 <= 8 ms,
 total mean <= 8 ms, total p99 <= 16.667 ms). The tenth pass committed a pure D-pad
 Lemmings Fun 4 passcode script (`docs/scripts/lem-fun4-dpad.txt`): the game accepts

@@ -83,7 +83,7 @@ This is the short, current answer to "where are we?" The detailed task list is i
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 694 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 704 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
@@ -190,8 +190,11 @@ Release build, development machine, 600 frames, CPU side only:
 This leaves ~15.4 ms of headroom against the 16.67 ms frame budget for the synthetic
 case. CI now runs the synthetic benchmark with `--gate`: it fails on any steady-state
 allocation, core p99 > 8 ms, total mean > 8 ms, or total p99 > 16.667 ms, and uploads
-the JSON result as the baseline artifact. The **4K GPU pass, Tier B (Pi 4/5) numbers,
-and GLES timing are not measured yet**. CHD decode allocations are host-side and are attributed to the core stage;
+the JSON result as the baseline artifact. The benchmark's `--baseline` option also
+implements the same-machine >10% relative comparison (core p99, total mean, total
+p99; exit code 4); wiring it to CI awaits a stable/self-hosted runner. The **4K GPU
+pass, Tier B (Pi 4/5) numbers, and GLES timing are not measured yet**. CHD decode
+allocations are host-side and are attributed to the core stage;
 the synthetic core/pack/mailbox/read path is allocation-free in steady state.
 
 The desktop renderer now uses a `GL_TIME_ELAPSED` query and reports GPU/present time in

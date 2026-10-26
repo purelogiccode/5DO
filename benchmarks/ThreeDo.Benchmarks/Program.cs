@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Text.Json;
 using ThreeDo.Core;
 using ThreeDo.Diagnostics;
@@ -33,6 +34,8 @@ internal static class Program
         var prefetch = false;
         var highResolution = false;
         var label = "synthetic";
+        string? baselinePath = null;
+        var baselineThreshold = BenchmarkComparison.DefaultThreshold;
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -47,6 +50,12 @@ internal static class Program
                     break;
                 case "--disc" when i + 1 < args.Length:
                     discPath = args[++i];
+                    break;
+                case "--baseline" when i + 1 < args.Length:
+                    baselinePath = args[++i];
+                    break;
+                case "--baseline-threshold" when i + 1 < args.Length:
+                    baselineThreshold = double.Parse(args[++i], CultureInfo.InvariantCulture);
                     break;
                 case "--json":
                     json = true;
@@ -72,6 +81,12 @@ internal static class Program
         if (frames < 1)
         {
             Console.Error.WriteLine("--frames must be at least 1.");
+            return 2;
+        }
+
+        if (baselineThreshold <= 0)
+        {
+            Console.Error.WriteLine("--baseline-threshold must be positive.");
             return 2;
         }
 
@@ -269,10 +284,72 @@ internal static class Program
 
                 Console.Error.WriteLine($"benchmark gate: pass ({BenchmarkGate.Description})");
             }
+
+            if (baselinePath is not null)
+            {
+                BenchmarkBaseline baseline;
+                try
+                {
+                    baseline = ReadBaseline(baselinePath);
+                }
+                catch (Exception exception) when (exception is IOException or JsonException or InvalidDataException)
+                {
+                    Console.Error.WriteLine($"benchmark comparison: cannot read '{baselinePath}': {exception.Message}");
+                    return 2;
+                }
+
+                var failures = BenchmarkComparison.Evaluate(
+                    coreTiming.P99Ms,
+                    totalMs / elapsedFrames,
+                    totalTiming.P99Ms,
+                    baseline.CoreP99Ms,
+                    baseline.TotalMeanMs,
+                    baseline.TotalP99Ms,
+                    baselineThreshold);
+                if (failures.Count != 0)
+                {
+                    foreach (var failure in failures)
+                    {
+                        Console.Error.WriteLine($"benchmark comparison: {failure}");
+                    }
+
+                    return 4;
+                }
+
+                Console.Error.WriteLine($"benchmark comparison: pass ({BenchmarkComparison.Description})");
+            }
         }
 
         return 0;
     }
+
+    private static BenchmarkBaseline ReadBaseline(string path)
+    {
+        using var document = JsonDocument.Parse(File.ReadAllText(path));
+        var root = document.RootElement;
+        return new BenchmarkBaseline(
+            ReadNumber(root, "core", "p99Ms"),
+            ReadNumber(root, "total", "msPerFrame"),
+            ReadNumber(root, "total", "p99Ms"));
+    }
+
+    private static double ReadNumber(JsonElement root, string sectionName, string propertyName)
+    {
+        if (!root.TryGetProperty(sectionName, out var section)
+            || section.ValueKind != JsonValueKind.Object
+            || !section.TryGetProperty(propertyName, out var value)
+            || value.ValueKind != JsonValueKind.Number)
+        {
+            return 0;
+        }
+
+        return value.GetDouble();
+    }
+
+    private readonly record struct BenchmarkBaseline(
+        double CoreP99Ms,
+        double TotalMeanMs,
+        double TotalP99Ms);
 
     private static double Round(double value) => Math.Round(value, 3, MidpointRounding.AwayFromZero);
 
