@@ -72,7 +72,7 @@ added; save-state loads restore the VDL picture immediately.
 
 Remaining major work: finish a full Road Rash race without wrecking; script an
 Alone inventory sequence; validate GPU 4K/p99 and GLES/ANGLE/Pi/DPI; validate
-Tier B prefetch; HQx and UI polish; arm64/installers; and the legal/attribution
+Tier B prefetch; hq3x/hq4x and UI polish; arm64/installers; and the legal/attribution
 review. Per-title save-state, PNG, and WAV evidence is recorded
 in [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. See
 [`docs/Status.md`](docs/Status.md) for the completion estimate and

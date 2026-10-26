@@ -186,7 +186,7 @@ The game database is ported with attribution. Unknown game IDs get the first 8 h
 | Nearest / integer scaling | Yes | |
 | Sharp-bilinear | Yes (default enhanced) | |
 | CRT filter | Yes (opt-in) | |
-| xBR/HQx GPU filters | Yes (opt-in) | |
+| xBR 4x / HQx 2x filters | Yes (opt-in) | |
 | 1080p/1440p/4K output | Yes (GPU scaling); 4K60 on Tier A hardware | |
 | Fullscreen | Yes | |
 | 384/512/640/1024-wide VDLP modes | Parsed, may crop | Full presentation |

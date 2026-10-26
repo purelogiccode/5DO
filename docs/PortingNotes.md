@@ -417,7 +417,10 @@ This is the largest and riskiest port. Split it into classes but keep the origin
   the FBO-attached palette texture, because the latter sampled black in the xBR
   program on the development driver. This is presentation-only and does not affect
   emulated state; the other filters keep GPU palette expansion.
-- HQX is not shipped; xBR is the supported filter-family member.
+- **HQx 2x** is an optional CPU expansion of the same `FrameAssembler` output,
+  followed by the sharp-bilinear scale. The pattern switch is derived from the
+  4DO hq2x sources (LGPL-2.1+); see `THIRD-PARTY-NOTICES.md`. hq3x/hq4x are not
+  shipped. xBR and HQx are the supported filter-family members.
 - Do not remove the CPU `FrameAssembler`; it is used by CLI/headless tests, as a fallback, and as the golden oracle for the shader.
 
 ### 8.12 CHD storage (new, no FreeDOCore equivalent)

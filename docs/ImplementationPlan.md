@@ -1023,7 +1023,7 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - Hyllian's xBR-lv2 edge-directed 4x expansion is implemented in `Shaders.FragmentXbr` and selected with `VideoFilter.Xbr`.
   - The pass uses a CPU-expanded native-resolution RGBA source (`FrameAssembler`) to keep palette output pixel-identical and avoid a driver readback issue with the FBO-attached palette texture; stage 2 finishes with sharp-bilinear.
   - Shader source invariants are tested; the filter was validated visually on Lemmings gameplay (correct colors, smoothed edges) and runs at 60 fps in a 1500x978 window.
-  - Remaining optional work: HQx, GPU timer measurement at 4K, and per-game filter presets.
+  - Remaining optional work: hq3x/hq4x and GPU timer measurement at 4K.
 - [x] **M9R.4b HQx 2x filter.**
   - Maxim Stepin/Cameron Zemek hq2x is ported as a table/switch-driven CPU expansion in `HqxFilter`, selected with `VideoFilter.Hqx`.
   - It consumes the CPU-expanded BGRA frame, uploads the 2x result, and finishes with sharp-bilinear.

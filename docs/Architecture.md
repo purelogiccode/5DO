@@ -313,7 +313,7 @@ Stage 2 - scaling/filter at output resolution (up to 4K):
   - Nearest (pixel-perfect integer scaling)
   - Sharp-bilinear (default enhanced)
   - CRT (scanlines, mask, curvature, bloom)
-  - xBRZ/HQx family (optional, multi-pass)
+  - xBR 4x / HQx 2x (optional)
         │
         ▼
 Framebuffer -> window / fullscreen (vsync, latest-frame mailbox)
