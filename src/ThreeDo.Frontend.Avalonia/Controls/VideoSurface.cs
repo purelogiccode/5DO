@@ -347,9 +347,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     private (int Width, int Height) GetPixelSize()
     {
         var scaling = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1.0;
-        return (
-            Math.Max(1, (int)Math.Round(Bounds.Width * scaling)),
-            Math.Max(1, (int)Math.Round(Bounds.Height * scaling)));
+        return PixelSize.Compute(Bounds.Width, Bounds.Height, scaling);
     }
 
     /// <inheritdoc />

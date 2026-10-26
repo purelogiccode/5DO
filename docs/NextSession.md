@@ -7,7 +7,7 @@ and a CPU/GPU parity check to the GPU probe. On Windows 11 / RTX 4070, ANGLE
 (OpenGL ES 3.0, GLSL ES 300) ran every filter; 4K sharp-bilinear presented in
 0.14 ms mean / 0.47 ms p99 with zero renderer allocations, and a 320x240 Accurate
 capture matched the CPU `FrameAssembler` oracle pixel-for-pixel (`0xD6BD89C5`) on
-both WGL and ANGLE. **761 tests pass.** Do not redo the trim-safe JSON work, the
+both WGL and ANGLE. **775 tests pass.** Do not redo the trim-safe JSON work, the
 trimmed CLI/frontend publishes, the frontend smoke test, the benchmark comparison,
 the portable archives, the swap-interval/GPU-probe work, or the ANGLE/GLES parity
 work. The remaining work is finishing a full Road Rash race, scripted Lemmings
@@ -565,9 +565,10 @@ missing and corrected the Road Rash diagnosis.
   `--smoke-test` plus the WGL and ANGLE 320x240 parity probes. Silk.NET.Core loader
   warnings remain and AOT audio is not yet validated. CI publishes and smoke-tests
   both AOT builds on Windows. The default six-RID matrix remains trimmed IL.
-- **Tests.** 761 tests pass. New tests cover backend aliases/mode ordering, probe
-  capture-path parsing, and the opt-in GPU integration path. The existing JSON
-  contract test now includes the requested backend and parity fields.
+- **Tests.** 775 tests pass. New tests cover backend aliases/mode ordering, probe
+  capture-path parsing, the opt-in GPU integration path, and the physical-pixel
+  sizing math (100/125/150/200%, fractional bounds, invalid inputs). The existing
+  JSON contract test now includes the requested backend and parity fields.
 
 ---
 
