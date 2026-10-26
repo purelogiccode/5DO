@@ -1,21 +1,19 @@
 # Next Session Handoff
 
-**Date:** 2026-10-26 (twelfth pass)
-**Goal:** make the CLI trim-safe and publish trimmed single-file builds.
-The twelfth pass added source-generated JSON contexts for settings, input profiles,
-save-slot metadata, and every CLI `--json` response, removed the CLI's reflection
-paths, enabled `PublishTrimmed` for the CLI, added a trimmed-CLI CI smoke test,
-added a same-machine benchmark baseline comparison, and added portable release
-archives. **704 tests pass.** Do not redo the trim-safe JSON work, the trimmed CLI
-publish, the benchmark comparison, or the portable archives. The remaining work is
-finishing a full Road Rash race, scripted Lemmings level play beyond the start,
-GPU/Tier B validation, frontend trimming/AOT, arm64/installers, and the
-legal/attribution review.
+**Date:** 2026-10-26 (thirteenth pass)
+**Goal:** finish the frontend trimming/AOT audit and publish the Avalonia frontend trimmed.
+The thirteenth pass enabled `PublishTrimmed` for the Avalonia frontend, removed the
+reflection-based `ViewLocator`, added a trimmed-frontend startup smoke test, and now
+publishes both executables trimmed for all six RIDs. **709 tests pass.** Do not redo
+the trim-safe JSON work, the trimmed CLI/frontend publishes, the frontend smoke test,
+the benchmark comparison, or the portable archives. The remaining work is finishing a
+full Road Rash race, scripted Lemmings level play beyond the start, GPU/Tier B
+validation, NativeAOT/arm64/installers, and the legal/attribution review.
 
 Earlier passes added the presentation plumbing (GL/GLES capability reporting, CPU
 fallback/context-loss recovery, fullscreen, screenshots, About, Hi-Res, benchmark
-gates, and prefetch) and the game-specific fixes recorded below. Read section 1.15
-for the twelfth-pass changes before starting.
+gates, and prefetch) and the game-specific fixes recorded below. Read section 1.17
+for the thirteenth-pass changes before starting.
 
 Read these first:
 
@@ -415,9 +413,9 @@ missing and corrected the Road Rash diagnosis.
   and a save-state roundtrip. The only remaining trim warning is CHDSharp's vendored
   FLAC settings helper (`TypeDescriptor`); it is outside the 3DO data-track path and
   is demoted to a visible warning. See [`Trimming.md`](Trimming.md).
-- **Frontend.** Trimming remains disabled; the Avalonia XAML loader, `ViewLocator`
-  reflection, and Silk.NET audio/gamepad/OpenGL bindings are the remaining audit
-  items (M10.3b).
+- **Frontend.** Trimming was still disabled in this pass; it was completed in the
+  thirteenth pass (section 1.17), which removed `ViewLocator` and added the trimmed
+  startup smoke test.
 - **Benchmark baseline comparison.** `BenchmarkComparison` and the benchmark
   `--baseline <json>`/`--baseline-threshold <fraction>` options compare core p99,
   total mean, and total p99 with a same-machine baseline; a >10% regression exits
@@ -445,6 +443,38 @@ missing and corrected the Road Rash diagnosis.
   win-x64 archive starts and passes `selftest`/`bench`.
 - **Remaining.** MSIX/dmg/AppImage installers, signing/notarization, and
   Windows/macOS file associations (M10.7).
+
+---
+
+### 1.17 Thirteenth pass: trimmed frontend publishes and startup smoke test (2026-10-26)
+
+- **ViewLocator removed.** The template `ViewLocator` (`Type.GetType` +
+  `Activator.CreateInstance`) and its `Application.DataTemplates` registration were
+  deleted. Every window is constructed explicitly, and all XAML bindings are compiled
+  (`AvaloniaUseCompiledBindingsByDefault=true`; each window/`DataTemplate` declares
+  `x:DataType`). This removed the only first-party frontend trim warning.
+- **Trimmed frontend.** `ThreeDo.Frontend.Avalonia` sets `PublishTrimmed=true` and
+  `TrimMode=full`. The six-RID CI publish job now uses `PublishTrimmed=true` instead
+  of `false`. CHDSharp's vendored-FLAC `TypeDescriptor` warning is demoted to a
+  visible warning with the same policy as the CLI; the data-track path does not decode
+  CD-DA/FLAC.
+- **Frontend smoke test.** `--smoke-test --smoke-output <path>` opens the real
+  `MainWindow`, lets the first render pass run, writes
+  `FRONTEND SMOKE OK <version>`, and exits with code 0. It skips the welcome dialog
+  and configured BIOS/disc flow so CI needs no BIOS, disc, or user profile.
+  `--version` exits before Avalonia initializes. The startup parser (`--disc`,
+  positional disc, `--smoke-test`, `--smoke-output`, `--version`) has unit tests in
+  `tests/ThreeDo.Tests/Frontend/FrontendStartupTests.cs`.
+- **CI.** The Windows `build-test` job publishes the trimmed win-x64 frontend and runs
+  the smoke test with a 60-second timeout, checking the exit code and marker file.
+- **Size.** On win-x64 the single-file executable is 26.3 MB trimmed vs 91.3 MB
+  untrimmed; the complete publish folder is 150.9 MB vs 215.9 MB because native
+  Skia/HarfBuzz/ANGLE assets are unchanged. All six trimmed frontend RIDs were
+  published and inspected locally.
+- **Tests.** 709 tests pass; the five new tests cover flag/option parsing and disc-path
+  detection (including ignoring the smoke-output value).
+- **Remaining.** NativeAOT is still not attempted and is documented as post-v1 work;
+  installers/signing/notarization remain M10.7. See [`Trimming.md`](Trimming.md).
 
 ---
 
@@ -672,6 +702,9 @@ save/load proof.
   save-state roundtrip.
 - [x] Portable CLI archives build for win-x64 (zip) and linux-x64 (tar.gz) and
   contain the executable, notices, licensing, and `PACKAGE.txt`.
+- [x] The Avalonia frontend publishes trimmed for all six RIDs; a trimmed win-x64
+  build opens the real window and passes the `--smoke-test` marker/exit-code check.
+  `ViewLocator` reflection is gone and all bindings are compiled.
 - [ ] The Road Rash city race is finished. The CD media-access pulse fixes the
   old ~42k/~92k READ_ID-only wait and advances to `BUSTED`, race select, and a
   new race; the autopilot passes `GAME LOADING`/`Get ready` and cycles
@@ -719,6 +752,11 @@ save/load proof.
   baseline comparison, or portable packaging script. Do not reintroduce
   reflection-based `JsonSerializer` calls in settings, input, save-slot, or CLI
   output code; use the existing `JsonSerializerContext` metadata.
+- Do not redo the thirteenth-pass frontend trimming: `PublishTrimmed=true`/
+  `TrimMode=full`, the removed `ViewLocator`, the explicit window construction, the
+  compiled `x:DataType` bindings, or the `--smoke-test`/`--smoke-output` startup
+  path. Do not reintroduce a reflection-based view locator or reflection-based XAML
+  lookup in the frontend.
 
 ---
 
@@ -738,6 +776,15 @@ dotnet format --verify-no-changes
 dotnet publish src/ThreeDo.Cli/ThreeDo.Cli.csproj -c Release -r win-x64 `
   --self-contained true -p:PublishSingleFile=true -m:1 -o "$o\cli-trim"
 & "$o\cli-trim\ThreeDo.Cli.exe" selftest --json
+
+# Trimmed frontend publish and startup smoke test (see docs/Trimming.md)
+dotnet publish src/ThreeDo.Frontend.Avalonia/ThreeDo.Frontend.Avalonia.csproj `
+  -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -m:1 `
+  -o "$o\frontend-trim"
+$p = Start-Process -FilePath "$o\frontend-trim\ThreeDo.Frontend.Avalonia.exe" `
+  -ArgumentList '--smoke-test', '--smoke-output', "$o\frontend-smoke.txt" -PassThru
+$p.WaitForExit(60000)
+Get-Content "$o\frontend-smoke.txt"
 
 # Road Rash: render the race and capture every 1,000 frames
 dotnet run -c Release --project src/ThreeDo.Cli -- run `

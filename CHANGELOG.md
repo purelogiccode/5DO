@@ -47,12 +47,21 @@ still change.
   `3doemulator-<component>-<rid>.zip` for Windows and `.tar.gz` for Linux/macOS,
   including README/notices/licensing, a generated `PACKAGE.txt`, and the Linux
   desktop entry. CI publishes both raw folders and archives for all six RIDs.
+- Trimmed Avalonia frontend: `ThreeDo.Frontend.Avalonia` publishes with
+  `PublishTrimmed=true` (`TrimMode=full`) for all six RIDs. The reflection-based
+  `ViewLocator` was removed, every window is constructed explicitly, and all XAML
+  bindings are compiled. The win-x64 single-file executable is 26.3 MB trimmed vs
+  91.3 MB untrimmed.
+- Frontend startup smoke test: `--smoke-test --smoke-output <path>` opens the real
+  main window, renders one pass, writes a `FRONTEND SMOKE OK` marker, and exits 0.
+  `--version` exits before Avalonia initializes. CI runs the trimmed win-x64
+  frontend smoke test on Windows.
 
 ### Changed
 
-- The CLI is published trimmed for all six RIDs; the Avalonia frontend remains
-  untrimmed pending its XAML/`ViewLocator` audit.
-- CI runs a trimmed-CLI smoke test on Windows in addition to the benchmark gate.
+- The CLI and the Avalonia frontend are both published trimmed for all six RIDs.
+- CI runs a trimmed-CLI smoke test and a trimmed-frontend startup smoke test on
+  Windows in addition to the benchmark gate.
 - The Settings video page now exposes a CRT bloom slider and lists the HQx
   2x/3x/4x filter modes.
 - CI runs the benchmark budget gate instead of only checking allocations.

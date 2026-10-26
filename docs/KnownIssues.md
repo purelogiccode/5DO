@@ -33,14 +33,16 @@ prototype state. It is not a compatibility guarantee.
 
 - CI publishes six RIDs, but only the win-x64 CLI and desktop app have been smoke-tested.
 - arm64 (Windows/Linux/macOS) is not hardware-validated.
-- **CLI trimming is enabled; frontend trimming is not.** `ThreeDo.Cli` publishes with
-  `PublishTrimmed=true` (`TrimMode=full`) and a Windows CI smoke test covers
-  `--version`, `selftest`, and `bench`. The only remaining trim warning is CHDSharp's
-  vendored FLAC settings helper (`TypeDescriptor`), which is outside the 3DO data-track
-  path. The Avalonia frontend remains untrimmed: its XAML loader, `ViewLocator`
-  reflection, and Silk.NET bindings still need the M10.3b audit. See
+- **CLI and frontend trimming are enabled.** Both publish with `PublishTrimmed=true`
+  (`TrimMode=full`). The CLI has a Windows CI smoke test (`--version`, `selftest`,
+  `bench`); the frontend has a trimmed startup smoke test (`--smoke-test`) that opens
+  the real window, renders one pass, and exits 0. The only remaining trim warning is
+  CHDSharp's vendored FLAC settings helper (`TypeDescriptor`), which is outside the
+  3DO data-track path and demoted to a visible warning. See
   [`Trimming.md`](Trimming.md).
-- Frontend trimming/NativeAOT, installers, signing, and notarization are not complete.
+- NativeAOT, installers, signing, and notarization are not complete. NativeAOT is not
+  on the v1 critical path; the Avalonia and Silk.NET interop paths still need an AOT
+  audit.
 - The macOS gamepad backend is not implemented.
 
 ## Emulation

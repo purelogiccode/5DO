@@ -6,10 +6,10 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-26, twelfth pass):** M0-M8 are functionally complete. The
+**Current position (2026-10-26, thirteenth pass):** M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **704 tests pass.** The shell now has fullscreen, GL screenshots, an About
+prototype. **709 tests pass.** The shell now has fullscreen, GL screenshots, an About
 dialog, a Hi-Res toggle, automatic CPU fallback when OpenGL init or the context fails,
 a game library browser with cover art, a settings dialog (video/audio/emulation/paths), six-player
 keyboard and gamepad binding, ten numbered save slots with PNG thumbnails, PNG
@@ -28,7 +28,10 @@ The HQx 3x/4x patterns match the C++ `hq3x_32_rb`/`hq4x_32_rb` reference hashes.
 twelfth pass made settings, input profiles, save-slot metadata, and every CLI `--json`
 response source-generated and trim-safe, enabled `PublishTrimmed` for the CLI,
 added a trimmed-CLI CI smoke test, and added a same-machine benchmark baseline
-comparison; see [`docs/Trimming.md`](docs/Trimming.md). The
+comparison; see [`docs/Trimming.md`](docs/Trimming.md). The thirteenth pass enabled
+`PublishTrimmed` for the Avalonia frontend, removed the reflection-based
+`ViewLocator`, and added a trimmed-frontend CI smoke test (`--smoke-test`); both
+executables now publish trimmed for all six RIDs. The
 eleventh pass made the benchmark a CI gate (0 bytes/frame, core p99 <= 8 ms,
 total mean <= 8 ms, total p99 <= 16.667 ms). The tenth pass committed a pure D-pad
 Lemmings Fun 4 passcode script (`docs/scripts/lem-fun4-dpad.txt`): the game accepts
@@ -97,7 +100,7 @@ implementation plan and architecture are in:
 - [`docs/Compatibility.md`](docs/Compatibility.md) - BIOS, disc, input, and game-fix compatibility notes.
 - [`docs/TestCorpus.md`](docs/TestCorpus.md) - local BIOS/disc corpus and real-content validation commands (not committed).
 - [`docs/Performance.md`](docs/Performance.md) - 4K60 budgets, presentation pipeline, and measurement plan.
-- [`docs/Trimming.md`](docs/Trimming.md) - trim-safe JSON, trimmed CLI publishes, and the frontend/AOT audit.
+- [`docs/Trimming.md`](docs/Trimming.md) - trim-safe JSON, trimmed CLI/frontend publishes, smoke tests, and the NativeAOT audit.
 - [`docs/UserGuide.md`](docs/UserGuide.md) - quick start, controls, display filters, save states, logs, and CLI.
 - [`docs/KnownIssues.md`](docs/KnownIssues.md) - current game/renderer/platform limitations.
 - [`CHANGELOG.md`](CHANGELOG.md) - recent user-visible changes.
@@ -196,10 +199,11 @@ Diagnostics: `run` accepts `--watch-lowmem`, `--dump-ram`, and `--dump-dsp`;
 `trace` adds `--dsp-trace` and the existing CPU ring buffer. See
 [`docs/TestCorpus.md`](docs/TestCorpus.md) for the full command set.
 
-CLI `dotnet publish` builds are trimmed by default (`PublishTrimmed=true`); the
-settings/input/save-slot JSON and all `--json` responses use source-generated
-metadata. See [`docs/Trimming.md`](docs/Trimming.md) for the audit and the remaining
-Avalonia frontend work.
+Both the CLI and the Avalonia frontend publish trimmed by default
+(`PublishTrimmed=true`). Settings/input/save-slot JSON and all CLI `--json` responses
+use source-generated metadata, the frontend has no reflection-based view locator, and
+CI runs a trimmed-frontend startup smoke test. See [`docs/Trimming.md`](docs/Trimming.md)
+for the audit and the remaining NativeAOT work.
 
 CI also packages each published CLI/frontend folder as a portable archive:
 `3doemulator-<component>-<rid>.zip` on Windows and `.tar.gz` on Linux/macOS, with
