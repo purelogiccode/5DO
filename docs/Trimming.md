@@ -51,11 +51,12 @@ frontend with `--smoke-test --smoke-output <path>` (exit code 0 plus a
    the trimmed app does not depend on reflection-based XAML lookup.
 
 5. **Frontend smoke test.** `--smoke-test --smoke-output <path>` opens the real
-   `MainWindow`, lets the first render pass run, writes a version marker, and exits
-   with code 0. It skips the welcome dialog and the configured BIOS/disc flow so CI
-   does not need a BIOS, disc, or user profile. `--version` exits before Avalonia
-   initializes. The CI Windows job publishes the trimmed win-x64 frontend and runs
-   this smoke test.
+   `MainWindow`, runs one UI pass, writes a version marker, and exits with code 0.
+   The GL surface is hidden during the smoke so headless CI does not need a desktop
+   OpenGL context. The smoke skips the welcome dialog and the configured BIOS/disc
+   flow so CI does not need a BIOS, disc, or user profile. `--version` exits before
+   Avalonia initializes. The CI Windows job publishes the trimmed win-x64 frontend
+   and runs this smoke test.
 
 6. **CHDSharp warning.** The only remaining trim warning is in CHDSharp's
    vendored FLAC assembly:

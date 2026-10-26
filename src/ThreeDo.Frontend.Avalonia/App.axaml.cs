@@ -29,8 +29,8 @@ public class App : Application
             {
                 window.Opened += (_, _) =>
                 {
-                    // Let the first render pass run so a trimmed publish exercises the
-                    // XAML, video-surface, and settings paths before shutting down.
+                    // Let one UI pass run so a trimmed publish exercises the XAML,
+                    // video-surface construction, and settings paths before shutting down.
                     DispatcherTimer.RunOnce(
                         () =>
                         {

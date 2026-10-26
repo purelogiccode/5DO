@@ -77,6 +77,14 @@ public partial class MainWindow : Window, IDisposable
         HighResCheck.IsChecked = _settings.HighResolution;
         OverlayPanel.IsVisible = _settings.ShowOverlay;
         Video.Settings = _settings.ToRendererSettings(_gameId);
+        if (Program.SmokeTest)
+        {
+            // CI runners may not expose a desktop GL context. The smoke test
+            // validates XAML, trimming, settings, and window startup; GPU
+            // presentation is covered by the renderer tests and manual runs.
+            Video.IsVisible = false;
+        }
+
         Video.OpenGlReady += OnOpenGlReady;
         Video.OpenGlFailed += OnOpenGlFailed;
         Deactivated += (_, _) => _input.Keyboard.Reset();

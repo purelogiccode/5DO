@@ -53,9 +53,9 @@ still change.
   bindings are compiled. The win-x64 single-file executable is 26.3 MB trimmed vs
   91.3 MB untrimmed.
 - Frontend startup smoke test: `--smoke-test --smoke-output <path>` opens the real
-  main window, renders one pass, writes a `FRONTEND SMOKE OK` marker, and exits 0.
-  `--version` exits before Avalonia initializes. CI runs the trimmed win-x64
-  frontend smoke test on Windows.
+  main window, runs one UI pass (GL hidden for headless CI), writes a
+  `FRONTEND SMOKE OK` marker, and exits 0. `--version` exits before Avalonia
+  initializes. CI runs the trimmed win-x64 frontend smoke test on Windows.
 
 ### Changed
 

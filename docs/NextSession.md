@@ -459,11 +459,12 @@ missing and corrected the Road Rash diagnosis.
   visible warning with the same policy as the CLI; the data-track path does not decode
   CD-DA/FLAC.
 - **Frontend smoke test.** `--smoke-test --smoke-output <path>` opens the real
-  `MainWindow`, lets the first render pass run, writes
-  `FRONTEND SMOKE OK <version>`, and exits with code 0. It skips the welcome dialog
-  and configured BIOS/disc flow so CI needs no BIOS, disc, or user profile.
-  `--version` exits before Avalonia initializes. The startup parser (`--disc`,
-  positional disc, `--smoke-test`, `--smoke-output`, `--version`) has unit tests in
+  `MainWindow`, runs one UI pass, writes `FRONTEND SMOKE OK <version>`, and exits
+  with code 0. The GL surface is hidden during the smoke so headless CI does not
+  need a desktop OpenGL context. It skips the welcome dialog and configured
+  BIOS/disc flow so CI needs no BIOS, disc, or user profile. `--version` exits
+  before Avalonia initializes. The startup parser (`--disc`, positional disc,
+  `--smoke-test`, `--smoke-output`, `--version`) has unit tests in
   `tests/ThreeDo.Tests/Frontend/FrontendStartupTests.cs`.
 - **CI.** The Windows `build-test` job publishes the trimmed win-x64 frontend and runs
   the smoke test with a 60-second timeout, checking the exit code and marker file.
