@@ -7,7 +7,7 @@ hardware. The fourteenth pass added `SwapInterval.TryCreate` (WGL/GLX/EGL), wire
 with a true 4K offscreen target, warm-up frames, per-stage allocation counters, and
 source-generated JSON. On Windows 11 / Ryzen 9 7900 / RTX 4070, 4K sharp-bilinear
 measured GPU p99 0.089 ms, present p99 0.208 ms, and zero renderer/mailbox
-allocations per frame after warm-up. **740 tests pass.** Do not redo the trim-safe
+allocations per frame after warm-up. **741 tests pass.** Do not redo the trim-safe
 JSON work, the trimmed CLI/frontend publishes, the frontend smoke test, the benchmark
 comparison, the portable archives, or the new swap-interval/GPU-probe work. The
 remaining work is finishing a full Road Rash race, scripted Lemmings level play beyond
@@ -516,7 +516,7 @@ missing and corrected the Road Rash diagnosis.
   report **0 managed bytes/frame**. The probe's residual ~2.3 KB/frame is outside
   the renderer and comes from the Avalonia UI/compositor loop; it is a host-side
   follow-up.
-- **Tests.** 740 tests pass. New tests cover probe option parsing/filter aliases,
+- **Tests.** 741 tests pass. New tests cover probe option parsing/filter aliases,
   the JSON contract, swap-interval selection, vsync capability reporting, and
   offscreen-target validation.
 

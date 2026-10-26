@@ -106,6 +106,14 @@ public sealed class GlProbeOptionsTests
     }
 
     [Fact]
+    public void TryParse_RejectsAnInvalidOutputPath()
+    {
+        Assert.False(GlProbeOptions.TryParse(["--gl-probe", "\0"], out var options, out var error));
+        Assert.Null(options);
+        Assert.Contains("output path is invalid", error);
+    }
+
+    [Fact]
     public void ReportContext_SerializesTheCamelCaseContract()
     {
         var report = new GlProbeReport(

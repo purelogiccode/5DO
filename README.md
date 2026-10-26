@@ -9,7 +9,7 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 **Current position (2026-10-26, fourteenth pass):** M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **740 tests pass.** The fourteenth pass wired the platform swap interval
+prototype. **741 tests pass.** The fourteenth pass wired the platform swap interval
 (WGL/GLX/EGL) and added a true-4K `--gl-probe`; on the RTX 4070 development machine,
 4K sharp-bilinear measures GPU p99 0.089 ms and present p99 0.208 ms with zero
 renderer/mailbox allocations per frame after warm-up. The shell now has fullscreen,

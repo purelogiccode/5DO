@@ -56,6 +56,17 @@ internal sealed record GlProbeOptions(
             return false;
         }
 
+        string outputPath;
+        try
+        {
+            outputPath = Path.GetFullPath(output);
+        }
+        catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            error = $"--gl-probe output path is invalid: {exception.Message}";
+            return false;
+        }
+
         var width = DefaultWidth;
         var height = DefaultHeight;
         var size = Program.FindOptionValue(args, "--gl-probe-size");
@@ -116,7 +127,7 @@ internal sealed record GlProbeOptions(
         }
 
         options = new GlProbeOptions(
-            Path.GetFullPath(output),
+            outputPath,
             width,
             height,
             frames,
