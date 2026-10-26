@@ -53,6 +53,16 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: jq -e '.allocations.bytesPerFrame == 0' artifacts/benchmark.json
 
+      - name: Trimmed CLI publish smoke
+        if: matrix.os == 'windows-latest'
+        run: |
+          dotnet publish src/ThreeDo.Cli/ThreeDo.Cli.csproj -c Release -r win-x64 `
+            --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -m:1 `
+            -o artifacts/cli-trim
+          artifacts/cli-trim/ThreeDo.Cli.exe --version
+          artifacts/cli-trim/ThreeDo.Cli.exe selftest --json
+          artifacts/cli-trim/ThreeDo.Cli.exe bench --frames 2 --json
+
       - name: Upload benchmark baseline
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
@@ -82,7 +92,8 @@ jobs:
           -r ${{ matrix.rid }}
           --self-contained true
           -p:PublishSingleFile=true
-          -p:PublishTrimmed=false
+          -p:PublishTrimmed=true
+          -m:1
           -o artifacts/cli/${{ matrix.rid }}
 
       - name: Upload artifact

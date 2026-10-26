@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using ThreeDo.Core;
 using ThreeDo.Input;
 using ThreeDo.Video;
@@ -217,13 +216,6 @@ public sealed class AppSettings
 /// </summary>
 public static class AppSettingsStore
 {
-    private static readonly JsonSerializerOptions Options = new()
-    {
-        WriteIndented = true,
-        PropertyNameCaseInsensitive = true,
-        Converters = { new JsonStringEnumConverter() },
-    };
-
     /// <summary>Gets the default settings directory under the user's local application data.</summary>
     public static string DefaultDirectory => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -245,7 +237,8 @@ public static class AppSettingsStore
 
         try
         {
-            return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(resolved), Options) ?? new AppSettings();
+            return JsonSerializer.Deserialize(File.ReadAllText(resolved), AppSettingsJsonContext.Default.AppSettings)
+                ?? new AppSettings();
         }
         catch (JsonException)
         {
@@ -267,7 +260,7 @@ public static class AppSettingsStore
         }
 
         var temporary = resolved + ".tmp";
-        File.WriteAllText(temporary, JsonSerializer.Serialize(settings, Options));
+        File.WriteAllText(temporary, JsonSerializer.Serialize(settings, AppSettingsJsonContext.Default.AppSettings));
         File.Move(temporary, resolved, overwrite: true);
     }
 }

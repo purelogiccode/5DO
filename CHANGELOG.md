@@ -29,9 +29,23 @@ still change.
 - Per-game filter overrides in `AppSettings.FilterOverrides`, edited on the Settings
   dialog's Emulation page and applied when a disc opens.
 - Shader-source and settings tests for the CRT bloom uniforms.
+- Trim-safe JSON: `AppSettings`, `InputProfile`, save-slot metadata, and every CLI
+  `--json` response now use source-generated `JsonSerializerContext` metadata.
+  The CLI result types are named records (`CliJsonModels.cs`) and no longer use
+  anonymous-type reflection.
+- Trimmed CLI publishes: `ThreeDo.Cli` uses `PublishTrimmed=true` (`TrimMode=full`)
+  for self-contained single-file builds, with a Windows CI smoke test. The win-x64
+  audit covers `--version`, `selftest`, `bench`, `info`, `state inspect`,
+  `state slots`, `fs list`, CHD boot/run, and a save-state roundtrip. See
+  [`docs/Trimming.md`](docs/Trimming.md).
+- `DiagnosticMethodInfo`-based RAM-write watchpoint descriptions (replaces
+  `StackFrame.GetMethod`, which is trim-unsafe).
 
 ### Changed
 
+- The CLI is published trimmed for all six RIDs; the Avalonia frontend remains
+  untrimmed pending its XAML/`ViewLocator` audit.
+- CI runs a trimmed-CLI smoke test on Windows in addition to the benchmark gate.
 - The Settings video page now exposes a CRT bloom slider and lists the HQx
   2x/3x/4x filter modes.
 - CI runs the benchmark budget gate instead of only checking allocations.

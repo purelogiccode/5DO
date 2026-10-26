@@ -189,13 +189,6 @@ public sealed class InputProfile
 /// </summary>
 public static class InputProfileStore
 {
-    private static readonly JsonSerializerOptions Options = new()
-    {
-        WriteIndented = true,
-        PropertyNameCaseInsensitive = true,
-        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() },
-    };
-
     /// <summary>Loads a profile file, creating and saving defaults when it does not exist.</summary>
     /// <param name="path">Profile path.</param>
     /// <returns>The loaded or default profile.</returns>
@@ -212,7 +205,7 @@ public static class InputProfileStore
 
         try
         {
-            var profile = JsonSerializer.Deserialize<InputProfile>(File.ReadAllText(path), Options);
+            var profile = JsonSerializer.Deserialize(File.ReadAllText(path), InputProfileJsonContext.Default.InputProfile);
             return profile ?? throw new InvalidDataException($"Input profile '{path}' is empty.");
         }
         catch (JsonException exception)
@@ -236,7 +229,7 @@ public static class InputProfileStore
         }
 
         var temporary = path + ".tmp";
-        File.WriteAllText(temporary, JsonSerializer.Serialize(profile, Options));
+        File.WriteAllText(temporary, JsonSerializer.Serialize(profile, InputProfileJsonContext.Default.InputProfile));
         File.Move(temporary, path, overwrite: true);
     }
 }

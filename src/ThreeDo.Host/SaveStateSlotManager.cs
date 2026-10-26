@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using ThreeDo.Core;
 using ThreeDo.Diagnostics;
 using ThreeDo.Machine;
@@ -60,12 +59,6 @@ public sealed class SaveStateSlotManager
     private const string StateExtension = ".tdos";
     private const string MetadataExtension = ".json";
     private const string ThumbnailExtension = ".png";
-
-    private static readonly JsonSerializerOptions MetadataOptions = new()
-    {
-        WriteIndented = true,
-        Converters = { new JsonStringEnumConverter() },
-    };
 
     /// <summary>Initializes a new instance of the <see cref="SaveStateSlotManager"/> class.</summary>
     /// <param name="directory">Directory that holds the slot files.</param>
@@ -306,7 +299,7 @@ public sealed class SaveStateSlotManager
     {
         var path = GetMetadataPath(slot);
         var temporary = path + ".tmp";
-        File.WriteAllText(temporary, JsonSerializer.Serialize(metadata, MetadataOptions));
+        File.WriteAllText(temporary, JsonSerializer.Serialize(metadata, SaveStateSlotJsonContext.Default.SaveStateSlotMetadata));
         File.Move(temporary, path, overwrite: true);
     }
 
@@ -320,7 +313,9 @@ public sealed class SaveStateSlotManager
 
         try
         {
-            return JsonSerializer.Deserialize<SaveStateSlotMetadata>(File.ReadAllText(path), MetadataOptions);
+            return JsonSerializer.Deserialize(
+                File.ReadAllText(path),
+                SaveStateSlotJsonContext.Default.SaveStateSlotMetadata);
         }
         catch (Exception exception) when (exception is JsonException or IOException or UnauthorizedAccessException)
         {
@@ -335,11 +330,4 @@ public sealed class SaveStateSlotManager
             throw new ArgumentOutOfRangeException(nameof(slot), slot, $"The slot must be between 0 and {SlotCount - 1}.");
         }
     }
-
-    private sealed record SaveStateSlotMetadata(
-        int Slot,
-        string GameId,
-        string GameName,
-        DateTimeOffset SavedAtUtc,
-        long FramesExecuted);
 }

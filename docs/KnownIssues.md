@@ -33,12 +33,14 @@ prototype state. It is not a compatibility guarantee.
 
 - CI publishes six RIDs, but only the win-x64 CLI and desktop app have been smoke-tested.
 - arm64 (Windows/Linux/macOS) is not hardware-validated.
-- **Trimming is not enabled.** A `win-x64` self-contained trimmed publish of the CLI
-  fails the `IL2026` analyzer on `JsonSerializer.Serialize/Deserialize` in
-  `InputProfile` (and the same pattern exists in `AppSettings`, save-slot metadata, and
-  CLI result types). JSON source generation or `JsonTypeInfo` overloads are required
-  before enabling trimming; Avalonia's XAML loader also needs a trim/AOT audit.
-- Trimming/NativeAOT evaluation, installers, signing, and notarization are not complete.
+- **CLI trimming is enabled; frontend trimming is not.** `ThreeDo.Cli` publishes with
+  `PublishTrimmed=true` (`TrimMode=full`) and a Windows CI smoke test covers
+  `--version`, `selftest`, and `bench`. The only remaining trim warning is CHDSharp's
+  vendored FLAC settings helper (`TypeDescriptor`), which is outside the 3DO data-track
+  path. The Avalonia frontend remains untrimmed: its XAML loader, `ViewLocator`
+  reflection, and Silk.NET bindings still need the M10.3b audit. See
+  [`Trimming.md`](Trimming.md).
+- Frontend trimming/NativeAOT, installers, signing, and notarization are not complete.
 - The macOS gamepad backend is not implemented.
 
 ## Emulation

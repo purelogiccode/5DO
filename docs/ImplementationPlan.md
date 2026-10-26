@@ -3,7 +3,7 @@
 **Working title:** 3DOEmulator
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Status (2026-10-26, eleventh pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five local corpus titles boot, load their own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio. Road Rash's 3D race renders correctly; a CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait and the game now advances through `BUSTED`/race select to a new race. Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room, Begin/Resume menu, and intro; Lemmings types the Fun 4 passcode entirely with the D-pad, starts gameplay at 23,000 frames, and its 640x480 high-resolution title matches the reference; Space Ace plays its demo and starts its interactive scene (X menu, A play). **691 tests pass.** The eleventh pass added HQx 3x/4x and the benchmark budget gate. The tenth pass added the pure D-pad passcode script and CRT bloom. The ninth pass recorded per-title save-state/PNG/WAV evidence, fixed the CD wait, and added autopilot A pulses for post-race menus. The eighth pass fixed the real-content GPU palette expansion (independent R/G/B CLUT indices), added the opt-in xBR-lv2 filter, Windows XInput/Linux evdev gamepad backends with a binding UI, an in-app log viewer, save-state thumbnails, a first-run guide, and error dialogs. Remaining work: finish a full Road Rash race without wrecking, GPU 4K/p99/GLES/DPI validation, arm64/installers, the M0.8 legal/attribution review, and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
+**Status (2026-10-26, twelfth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five local corpus titles boot, load their own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio. Road Rash's 3D race renders correctly; a CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait and the game now advances through `BUSTED`/race select to a new race. Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room, Begin/Resume menu, and intro; Lemmings types the Fun 4 passcode entirely with the D-pad, starts gameplay at 23,000 frames, and its 640x480 high-resolution title matches the reference; Space Ace plays its demo and starts its interactive scene (X menu, A play). **694 tests pass.** The twelfth pass made settings, input profiles, save-slot metadata, and every CLI `--json` response source-generated and trim-safe, enabled `PublishTrimmed` for the CLI, and added a trimmed-CLI CI smoke test; see [`Trimming.md`](Trimming.md). The eleventh pass added HQx 3x/4x and the benchmark budget gate. The tenth pass added the pure D-pad passcode script and CRT bloom. The ninth pass recorded per-title save-state/PNG/WAV evidence, fixed the CD wait, and added autopilot A pulses for post-race menus. The eighth pass fixed the real-content GPU palette expansion (independent R/G/B CLUT indices), added the opt-in xBR-lv2 filter, Windows XInput/Linux evdev gamepad backends with a binding UI, an in-app log viewer, save-state thumbnails, a first-run guide, and error dialogs. Remaining work: finish a full Road Rash race without wrecking, GPU 4K/p99/GLES/DPI validation, frontend trimming/AOT, arm64/installers, the M0.8 legal/attribution review, and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
 **Last updated:** 2026-10-26
 
 ---
@@ -214,12 +214,13 @@ project/type layout is unchanged.
 
 ### 4a. Current position vs. the plan (2026-10-26)
 
-Snapshot: 691 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
+Snapshot: 694 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
 and zero synthetic steady-state allocations; all five local corpus titles boot and
 render, and scripted gameplay is validated in Wolfenstein, Lemmings, Road Rash, and
 Alone. The opt-in 640x480 high-resolution mode is implemented and matches the
 Lemmings reference title. Real-game status is in
-[`Compatibility.md`](Compatibility.md). The eleventh pass added HQx 3x/4x and the
+[`Compatibility.md`](Compatibility.md). The twelfth pass made the CLI trim-safe and
+enabled trimmed single-file publishes. The eleventh pass added HQx 3x/4x and the
 benchmark budget gate. The tenth pass added the pure D-pad passcode script, CRT
 bloom, and HQx 2x. The ninth pass recorded save-state/PNG/WAV evidence and fixed the
 Road Rash ~42k/~92k READ_ID-only wait with a CD media-access pulse; the game now
@@ -233,7 +234,7 @@ and first-run/error UI. Counting the prototype work as partial credit:
 | M9 | Partial: shell/library/video/input/fullscreen/About/Hi-Res/settings/audio/gamepad/logs/first-run; polish and ViewModel tests | 13 | 3 |
 | M9R | Partial: two-stage, sharp-bilinear/CRT/xBR/bloom/HQx 2x/3x/4x, CPU fallback, screenshots; GPU tests and 4K timing | 9.5 | 0.5 |
 | M9P | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch; hot-path and Tier B/GPU gates | 6 | 4 |
-| M10 | Partial: CI + six-RID publish; arm64, trimming, installers, perf report | 2.5 | 3.5 |
+| M10 | Partial: CI + six-RID publish + trimmed CLI; frontend trimming, arm64, installers, perf report | 3 | 3 |
 | M11 | In progress: M11.0 done; gameplay, high-resolution, and release docs underway | 3 | 22+ |
 | **Baseline** | | **~123 / 157** | **~34 + 30% = ~44** |
 
@@ -1225,15 +1226,20 @@ harness. See [`Performance.md`](Performance.md).
 
 - [~] **M10.1 Publish profiles.**
   - `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`.
-  - Self-contained, single-file, `PublishTrimmed=false` initially.
+  - Self-contained, single-file; the CLI is trimmed (`PublishTrimmed=true`), the frontend remains untrimmed until M10.3b.
   - Include native audio/gamepad assets and GLSL shader resources per RID.
 - [x] **M10.2 CI matrix.**
   - Build/test on Windows/Linux/macOS.
   - Publish all RIDs; upload artifacts.
   - Cache NuGet; deterministic builds.
-- [~] **M10.3 Trimming/AOT evaluation.**
-  - A `win-x64` self-contained trimmed publish of the CLI was evaluated on 2026-10-25 and fails `IL2026` on the reflection-based `JsonSerializer` calls in `InputProfile`, `AppSettings`, save-slot metadata, and CLI result types. Trimming remains disabled (`PublishTrimmed=false`).
-  - Next: add JSON source generation/`JsonTypeInfo` overloads, then audit Avalonia's XAML loader before enabling trimming or NativeAOT.
+- [x] **M10.3a CLI trimming.**
+  - Settings, input profiles, save-slot metadata, and every CLI `--json` response now use source-generated `JsonSerializerContext` metadata; the CLI output path no longer uses anonymous types or reflection.
+  - The RAM-write watchpoint formatter uses `DiagnosticMethodInfo` instead of `StackFrame.GetMethod`.
+  - `ThreeDo.Cli` publishes with `PublishTrimmed=true` (`TrimMode=full`) as a self-contained single file; the six-RID CI publish uses the same settings, and a Windows CI smoke test runs `--version`, `selftest --json`, and `bench --frames 2 --json` against the trimmed executable.
+  - The win-x64 audit also covered `info`, `state inspect`, `state slots`, `fs list` on a generated CHD, CHD boot/run, and a save-state roundtrip. The only remaining trim warning is CHDSharp's vendored FLAC settings helper (`TypeDescriptor`); it is outside the 3DO data-track path and demoted to a visible warning. See [`Trimming.md`](Trimming.md).
+- [~] **M10.3b Frontend trimming/AOT audit.**
+  - The Avalonia frontend is still published with `PublishTrimmed=false`.
+  - Audit the XAML loader and compiled bindings, remove or replace `ViewLocator`'s `Type.GetType`/`Activator.CreateInstance`, and audit the Silk.NET audio/gamepad/OpenGL bindings before enabling trimming or NativeAOT.
 - [~] **M10.4 Icons/metadata.**
   - App icon, version info, a Linux `.desktop` entry (`packaging/3doemulator.desktop`), and positional/`--disc` startup loading are implemented.
   - Windows/macOS file associations still need the installer/app bundle (M10.7); `.tdos` state-file association remains.
@@ -1258,6 +1264,7 @@ harness. See [`Performance.md`](Performance.md).
 **Acceptance**
 
 - [ ] Every package starts and reaches the UI/CLI.
+- [x] The trimmed CLI package starts and passes `selftest`/`bench` on win-x64.
 - [ ] OpenGL context initializes on supported systems; CPU fallback works otherwise.
 - [ ] Tests green on CI.
 - [ ] Performance targets met or documented.
@@ -1563,14 +1570,14 @@ Suggested parallelization with two developers:
 5. ~~Start M3: BIOS/NVRAM loading, CLIO basics, VDLP, SPORT, and the frame loop.~~ Done.
 6. ~~Start M4: MADAM CEL engine, pixel pipeline, matrix engine validation, and BIOS UI rendering.~~ Done. The BIOS reaches its shell and all five corpus titles render.
 7. ~~M5 DSP/audio and M6 XBUS/CD-ROM/storage.~~ Done. Cores, sinks, disc containers, CHD parent/child, volume header, command transcripts, and real-disc boot are validated; remaining CD timing/seek differential is M11.4.
-8. ~~M7 input/NVRAM/game database, M8 save states/CLI, M9 basic shell, M9R core OpenGL presenter, and M10 CI/CLI publish.~~ Done as a prototype; next are M9P performance/pacing, the remaining M9 pages/audio/settings UI, M9R filters/GPU tests, M10 arm64/trimming/installers, and M11 hardening.
+8. ~~M7 input/NVRAM/game database, M8 save states/CLI, M9 basic shell, M9R core OpenGL presenter, and M10 CI/CLI publish.~~ Done as a prototype; next are M9P performance/pacing, the remaining M9 pages/audio/settings UI, M9R filters/GPU tests, M10 frontend trimming/arm64/installers, and M11 hardening. CLI trimming is complete (M10.3a).
 9. ~~Run the real-content smoke tests and record results in [`Compatibility.md`](Compatibility.md).~~ Done; per-title gameplay, save-state, screenshot, and WAV evidence is being completed.
 10. ~~M9P.1/M9P.2: benchmark baseline, dedicated core thread, and frame pacer.~~ Done; continue M9P.3-M9P.9 (GLES/Pi validation, CHD prefetch, p99/GPU gates).
 11. **Finish the scripted gameplay loops.** Road Rash's ~92,000/40,000 stops, Space Ace's interactive path, and Alone's movement/inventory sequence; record the exact scripts and frame numbers in [`TestCorpus.md`](TestCorpus.md).
 12. **Capture per-title evidence.** Save-state roundtrips, screenshots, and 30-60 s WAVs; compare audio mix/cadence with Opera.
 13. **Prove the 4K60 target.** Use the implemented desktop GPU timer query and present-time overlay; measure p99 frame time, allocations, WGL/ANGLE/GLES/Pi validation, and 100/150/200% DPI.
 14. **Finish M9/M9R/M9P polish.** Vsync/FPS overlay tuning, Tier B prefetch validation, and ViewModel tests. The xBR filter, HQx 2x/3x/4x, CRT bloom, per-game filter overrides, settings/audio/gamepad pages, log viewer, thumbnails, and first-run UI are complete.
-15. **Finish M10/M11 release work.** arm64 validation, trimming/installers/signing plan, performance report, compatibility matrix, and final release notes. The user guide, known-issues list, and changelog are complete.
+15. **Finish M10/M11 release work.** Frontend trimming/AOT audit, arm64 validation, installers/signing plan, performance report, compatibility matrix, and final release notes. The CLI is already trimmed; see [`Trimming.md`](Trimming.md). The user guide, known-issues list, and changelog are complete.
 16. **Schedule the legal/attribution review (M0.8)** before any public build; add Opera to the FreeDO/4DO attribution and license review.
 
 ---
@@ -1626,3 +1633,4 @@ Suggested parallelization with two developers:
 | 2026-10-25 | M7.4, M9.3, M9.8-M9.9, M9R.3-M9R.4a, M11.3, M11.6 | Gamepad, logs, thumbnails, xBR, GPU palette fix, release docs | Added Windows XInput and Linux evdev gamepad backends with a six-player mapping tab and analog-stick/trigger fallbacks; an in-app log viewer with level/category/search filters; save-state PNG thumbnails; first-run and error dialogs; and an opt-in xBR-lv2 4x filter. Fixed real-content GPU palette expansion to use independent R/G/B CLUT indices (the old shader made games grayscale) and fixed the `vec4`/`vec2` uniform calls that made GL screenshots black. Added a `GL_TIME_ELAPSED` GPU timer and present-time overlay (Windows GL 4.0 BIOS boot: gpu ≈ 0.13 ms, present ≈ 0.16 ms at 1500x978). Added `docs/UserGuide.md`, `docs/KnownIssues.md`, and `CHANGELOG.md`. 659 tests pass; commit `04a66a7` |
 | 2026-10-26 | M11.1, M9R.4b, M9R.4c, M9.5 | Pure D-pad passcode, CRT bloom, HQx, per-game filters | Added `docs/scripts/lem-fun4-dpad.txt`, which types the Lemmings Fun 4 code `HNLHCIOECW` with only the D-pad/A; gameplay starts at 23,000 (`PC 0x00083FD8`, hash `0xB7846C2D`) and roundtrips (`0xEDEB1B9D` twice). Added a 3x3 native-resolution CRT bloom pass and the `Bloom`/`BloomThreshold` settings. Ported hq2x as an opt-in 2x CPU filter with a C++ reference hash test (`0xA400C421`) and a steady-state allocation test. Added per-game filter overrides in `AppSettings` and the Settings dialog. 673 tests pass |
 | 2026-10-26 | M9R.4, M9R.4c, M11.3, M9P.9, M10.4 | HQx 3x/4x, the benchmark budget gate, and Linux file associations | Generated the hq3x/hq4x pattern switches from the 4DO sources and selected them with `VideoFilter.Hqx3x`/`Hqx4x`; the same 32x24 reference image matches the C++ `hq3x_32_rb`/`hq4x_32_rb` hashes (`0x0C406F97`/`0xBB17969C`), uniform images are unchanged, and the renderer sizes its intermediate target per scale. Measured the 320x240 CPU cost at ~2.3/4.2/7.5 ms/frame on checkerboard content and ~12.1/13.4/14.8 ms on random noise. Added `BenchmarkGate` plus the CLI benchmark `--gate` flag and wired it into CI: 0 bytes/frame, core p99 <= 8 ms, total mean <= 8 ms, and total p99 <= 16.667 ms. Added positional/`--disc` startup loading, a Linux `.desktop` association file, an optional native CPU-frame screenshot, sibling cover-art previews in the Library window, and fullscreen cursor hiding. 691 tests pass |
+| 2026-10-26 | M10.3a, M8.6 | Trim-safe JSON and trimmed CLI publishes | Replaced reflection-based JSON in `AppSettings`, `InputProfile`, save-slot metadata, and every CLI `--json` response with source-generated contexts and named result records; removed the CLI's anonymous-type/`GetProperty` output path and the watchpoint `StackFrame.GetMethod` call. Enabled `PublishTrimmed=true` (`TrimMode=full`) for the CLI and added a Windows CI trimmed-publish smoke test plus trimmed six-RID publishing. Verified the win-x64 single file with `--version`, `selftest`, `bench`, `info`, `state inspect`, `state slots`, `fs list`, CHD boot/run, and a save-state roundtrip. The only remaining warning is CHDSharp's vendored FLAC settings helper. 694 tests pass |

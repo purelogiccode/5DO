@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-26, eleventh pass (see `git log` for the exact commit).
+**Snapshot:** 2026-10-26, twelfth pass (see `git log` for the exact commit).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
 **Reference:** `References/opera-libretro-master/libopera` is now the primary
 behavioral reference for new compatibility work; see
@@ -83,14 +83,18 @@ This is the short, current answer to "where are we?" The detailed task list is i
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 691 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 694 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
-  thumbnails, keyboard/gamepad binding capture, gamepad mapping, log filtering, and
-  shader source invariants.
+  thumbnails, keyboard/gamepad binding capture, gamepad mapping, log filtering,
+  source-generated CLI JSON contracts, and shader source invariants.
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
-  A win-x64 CLI publish has been smoke-tested.
+  CLI publishes are self-contained, single-file, and trimmed (`PublishTrimmed=true`,
+  `TrimMode=full`); a Windows CI smoke test runs the trimmed CLI, and the win-x64
+  package was validated with synthetic/ISO/CHD runs, state roundtrips, and `fs list`.
+  Frontend trimming remains disabled pending the Avalonia XAML/`ViewLocator` audit.
+  See [`Trimming.md`](Trimming.md).
 
 ---
 
@@ -224,7 +228,7 @@ prototype work as partial credit:
 | M9 Avalonia frontend | Partial: shell, library, video, input, fullscreen, About, Hi-Res, settings/audio/gamepad/logs/first-run/thumbnails; polish and ViewModel tests | 13 | 3 |
 | M9R OpenGL presenter | Partial: two-stage, sharp-bilinear/CRT/xBR/HQx 2x/3x/4x/bloom, CPU fallback, screenshots; GPU tests and 4K timing remain | 9.5 | 0.5 |
 | M9P performance/pacing | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch, GPU timer; hot-path, Tier B/GPU gates remain | 6 | 4 |
-| M10 packaging/validation | Partial: CI and six-RID publish; arm64, trimming, installers, perf report remain | 2.5 | 3.5 |
+| M10 packaging/validation | Partial: CI + six-RID publish + trimmed CLI; frontend trimming, arm64, installers, perf report remain | 3 | 3 |
 | M11 compatibility/release | In progress: M11.0 done; gameplay, high-resolution, and release docs underway | 3 | 22+ |
 | **Baseline total** | | **~123 / 157** | **~34 + 30% = ~44** |
 
@@ -285,8 +289,9 @@ add **2-4 weeks**. If the target is "all five corpus games playable" rather than
 
 ### P2 - finish v1
 
-8. **M10 packaging:** arm64 validation, trimming, installers/signing plan, and the
-   final performance report.
+8. **M10 packaging:** frontend trimming/AOT audit, arm64 validation, installers/signing
+   plan, and the final performance report. CLI trimming is complete; see
+   [`Trimming.md`](Trimming.md).
 9. **Filter/UI polish:** vsync/FPS overlay tuning and ViewModel tests.
    xBR, HQx 2x/3x/4x, CRT bloom, per-game filter overrides, the settings, audio,
    gamepad, logs, first-run, and thumbnail pages are complete.
@@ -298,7 +303,8 @@ add **2-4 weeks**. If the target is "all five corpus games playable" rather than
 ## 6. Next session
 
 The next session is a focused gameplay-validation session, not a UI or performance
-pass. Start with [`NextSession.md`](NextSession.md):
+pass. The twelfth pass completed the CLI trimming work; start with
+[`NextSession.md`](NextSession.md):
 
 1. Use `--input-script` to start and play each title: Lemmings level (the passcode
    path is mapped; type a valid 10-letter code), Wolfenstein movement/fire, Road
@@ -311,7 +317,8 @@ pass. Start with [`NextSession.md`](NextSession.md):
 
 Do not re-enable the null audio-sink short-circuit, do not change the XBUS DMA byte
 order (the raw `IRam` order is correct), do not port `opera_cdrom.c` wholesale, and do
-not touch the UI or 4K tuning in that session.
+not touch the UI or 4K tuning in that session. Do not redo the trimmed CLI or
+source-generated JSON work; see [`Trimming.md`](Trimming.md).
 
 ---
 

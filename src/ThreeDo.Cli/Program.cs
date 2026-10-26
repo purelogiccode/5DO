@@ -22,8 +22,6 @@ namespace ThreeDo.Cli;
 
 internal static class Program
 {
-    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
-
     public static int Main(string[] args)
     {
         if (args.Length == 0)
@@ -60,7 +58,9 @@ internal static class Program
         {
             if (json)
             {
-                Console.WriteLine(JsonSerializer.Serialize(new { ok = false, error = exception.Message }, JsonOptions));
+                Console.WriteLine(JsonSerializer.Serialize(
+                    new CliErrorResult(false, exception.Message),
+                    CliJsonContext.Default.CliErrorResult));
             }
             else
             {
@@ -87,7 +87,9 @@ internal static class Program
     {
         if (json)
         {
-            Console.WriteLine(JsonSerializer.Serialize(new { ok = false, error = $"Unknown command: {command}" }, JsonOptions));
+            Console.WriteLine(JsonSerializer.Serialize(
+                new CliErrorResult(false, $"Unknown command: {command}"),
+                CliJsonContext.Default.CliErrorResult));
         }
         else
         {
@@ -503,50 +505,50 @@ internal static class Program
             machine.SaveStateToFile(stateOut, discHash);
         }
 
-        var result = new
-        {
-            ok = true,
-            frames = machine.FramesExecuted,
-            cyclesPerFrame = machine.LastFrameCycles,
-            sourceWidth = machine.Frame.SourceWidth,
-            sourceHeight = machine.Frame.SourceHeight,
-            vdlModulo = machine.Vdlp.Modulo,
-            pc = machine.Cpu.ProgramCounter,
-            instructions = machine.Cpu.InstructionsExecuted,
-            frameHash = FrameHash(machine),
-            samples = audio?.SampleCount ?? 0,
-            discHash,
-            gameId,
-            fixMode = (uint)machine.Compatibility.FixMode,
-            dspRunning = machine.Dsp.IsRunning,
-            dspPc = machine.Dsp.ProgramCounter,
-            dspSema = ((uint)machine.Dsp.SemaphoreStatus << 16) | machine.Dsp.SemaphoreData,
-            dspSeed = machine.Dsp.Seed,
-            cdStatus = machine.Cdrom.DriveStatus,
-            cdPoll = machine.Cdrom.Poll,
-            autopilot = roadAutopilot is null ? null : "road",
-            autopilotLineX = roadAutopilot is null || double.IsNaN(roadAutopilot.LineX)
-                ? (double?)null
+        var result = new CliRunResult(
+            Ok: true,
+            Frames: machine.FramesExecuted,
+            CyclesPerFrame: machine.LastFrameCycles,
+            SourceWidth: machine.Frame.SourceWidth,
+            SourceHeight: machine.Frame.SourceHeight,
+            VdlModulo: machine.Vdlp.Modulo,
+            Pc: machine.Cpu.ProgramCounter,
+            Instructions: machine.Cpu.InstructionsExecuted,
+            FrameHash: FrameHash(machine),
+            Samples: audio?.SampleCount ?? 0,
+            DiscHash: discHash,
+            GameId: gameId,
+            FixMode: (uint)machine.Compatibility.FixMode,
+            DspRunning: machine.Dsp.IsRunning,
+            DspPc: machine.Dsp.ProgramCounter,
+            DspSema: ((uint)machine.Dsp.SemaphoreStatus << 16) | machine.Dsp.SemaphoreData,
+            DspSeed: machine.Dsp.Seed,
+            CdStatus: machine.Cdrom.DriveStatus,
+            CdPoll: machine.Cdrom.Poll,
+            Autopilot: roadAutopilot is null ? null : "road",
+            AutopilotLineX: roadAutopilot is null || double.IsNaN(roadAutopilot.LineX)
+                ? null
                 : roadAutopilot.LineX,
-            autopilotRoadCoverage = roadAutopilot is null || double.IsNaN(roadAutopilot.RoadCoverage)
-                ? (double?)null
+            AutopilotRoadCoverage: roadAutopilot is null || double.IsNaN(roadAutopilot.RoadCoverage)
+                ? null
                 : roadAutopilot.RoadCoverage,
-            autopilotSteering = roadAutopilot?.Steering,
-            autopilotObstacle = roadAutopilot?.ObstacleSteer,
-            autopilotRecovery = roadAutopilot?.RecoveryActive,
-            autopilotCrashRestart = roadAutopilot?.CrashRestart,
-            autopilotMenuAdvance = roadAutopilot?.MenuAdvance,
-            autopilotStaticFrames = roadAutopilot?.StaticFrames,
-            autopilotPacing = roadAutopilot?.UrbanPacing,
-            autopilotUpset = roadAutopilot?.DetectorUpset,
-            autopilotLookahead = roadAutopilot is null ? null : new[]
-            {
-                roadAutopilot.LookaheadLeft,
-                roadAutopilot.LookaheadCentre,
-                roadAutopilot.LookaheadRight,
-            },
-            warnings = machine.StateWarnings,
-        };
+            AutopilotSteering: roadAutopilot?.Steering,
+            AutopilotObstacle: roadAutopilot?.ObstacleSteer,
+            AutopilotRecovery: roadAutopilot?.RecoveryActive,
+            AutopilotCrashRestart: roadAutopilot?.CrashRestart,
+            AutopilotMenuAdvance: roadAutopilot?.MenuAdvance,
+            AutopilotStaticFrames: roadAutopilot?.StaticFrames,
+            AutopilotPacing: roadAutopilot?.UrbanPacing,
+            AutopilotUpset: roadAutopilot?.DetectorUpset,
+            AutopilotLookahead: roadAutopilot is null
+                ? null
+                :
+                [
+                    roadAutopilot.LookaheadLeft,
+                    roadAutopilot.LookaheadCentre,
+                    roadAutopilot.LookaheadRight,
+                ],
+            Warnings: machine.StateWarnings);
 
         if (nvramPath is not null)
         {
@@ -854,36 +856,34 @@ internal static class Program
         var record = GameDatabase.Default.FindByChecksum(gameId);
         var fixMode = GameCompatibility.ForGameId(gameId).FixMode;
 
-        var result = new
-        {
-            ok = true,
-            path,
-            sectorCount = disc.SectorCount,
-            volumeLabel = header?.Label ?? string.Empty,
-            volumeBlockCount = header?.BlockCount ?? 0,
-            blockSize = header?.BlockSize ?? 0,
-            gameId,
-            fixMode = (uint)fixMode,
-            known = record is not null,
-            name = record?.Name ?? string.Empty,
-            publisher = record?.Publisher ?? string.Empty,
-            releaseYear = record?.ReleaseYear ?? string.Empty,
-            regions = record?.Regions ?? string.Empty,
-        };
+        var result = new CliInfoResult(
+            Ok: true,
+            Path: path,
+            SectorCount: disc.SectorCount,
+            VolumeLabel: header?.Label ?? string.Empty,
+            VolumeBlockCount: header?.BlockCount ?? 0,
+            BlockSize: header?.BlockSize ?? 0,
+            GameId: gameId,
+            FixMode: (uint)fixMode,
+            Known: record is not null,
+            Name: record?.Name ?? string.Empty,
+            Publisher: record?.Publisher ?? string.Empty,
+            ReleaseYear: record?.ReleaseYear ?? string.Empty,
+            Regions: record?.Regions ?? string.Empty);
 
         if (options.Json)
         {
-            Console.WriteLine(JsonSerializer.Serialize(result, JsonOptions));
+            Console.WriteLine(JsonSerializer.Serialize(result, CliJsonContext.Default.CliInfoResult));
         }
         else
         {
-            Console.WriteLine($"path:        {result.path}");
-            Console.WriteLine($"sectors:     {result.sectorCount}");
-            Console.WriteLine($"label:       {result.volumeLabel}");
-            Console.WriteLine($"blocks:      {result.volumeBlockCount} x {result.blockSize}");
-            Console.WriteLine($"game id:     {result.gameId}");
-            Console.WriteLine($"fix mode:    0x{result.fixMode:x8}");
-            Console.WriteLine($"game:        {(result.known ? $"{result.name} ({result.releaseYear}, {result.publisher}, {result.regions})" : "unknown")}");
+            Console.WriteLine($"path:        {result.Path}");
+            Console.WriteLine($"sectors:     {result.SectorCount}");
+            Console.WriteLine($"label:       {result.VolumeLabel}");
+            Console.WriteLine($"blocks:      {result.VolumeBlockCount} x {result.BlockSize}");
+            Console.WriteLine($"game id:     {result.GameId}");
+            Console.WriteLine($"fix mode:    0x{result.FixMode:x8}");
+            Console.WriteLine($"game:        {(result.Known ? $"{result.Name} ({result.ReleaseYear}, {result.Publisher}, {result.Regions})" : "unknown")}");
         }
 
         return 0;
@@ -962,19 +962,19 @@ internal static class Program
         {
             if (options.Json)
             {
-                var entries = new List<object>(container.Entries.Count);
+                var entries = new List<CliFsListEntry>(container.Entries.Count);
                 foreach (var entry in container.Entries)
                 {
-                    entries.Add(new
-                    {
-                        path = entry.FullPath,
-                        directory = entry.IsDirectory,
-                        size = entry.Size,
-                        lba = entry.Lba,
-                    });
+                    entries.Add(new CliFsListEntry(
+                        Path: entry.FullPath,
+                        Directory: entry.IsDirectory,
+                        Size: entry.Size,
+                        Lba: entry.Lba));
                 }
 
-                Console.WriteLine(JsonSerializer.Serialize(new { ok = true, entries }, JsonOptions));
+                Console.WriteLine(JsonSerializer.Serialize(
+                    new CliFsListResult(true, entries),
+                    CliJsonContext.Default.CliFsListResult));
                 return 0;
             }
 
@@ -1043,7 +1043,9 @@ internal static class Program
 
         if (options.Json)
         {
-            Console.WriteLine(JsonSerializer.Serialize(new { ok = true, extracted, output = outputDirectory }, JsonOptions));
+            Console.WriteLine(JsonSerializer.Serialize(
+                new CliFsExtractResult(true, extracted, outputDirectory),
+                CliJsonContext.Default.CliFsExtractResult));
         }
 
         return 0;
@@ -1059,26 +1061,24 @@ internal static class Program
         var options = Parse(args, startIndex: 2);
         var path = options.Positional ?? throw new ArgumentException("bios info needs a path.");
         var bios = BiosImage.Load(path);
-        var result = new
-        {
-            ok = true,
-            path,
-            size = bios.Bios1.Length,
-            md5 = bios.Md5,
-            anvil = bios.IsAnvil,
-            anvilKind = bios.AnvilKind,
-        };
+        var result = new CliBiosInfoResult(
+            Ok: true,
+            Path: path,
+            Size: bios.Bios1.Length,
+            Md5: bios.Md5,
+            Anvil: bios.IsAnvil,
+            AnvilKind: bios.AnvilKind);
 
         if (options.Json)
         {
-            Console.WriteLine(JsonSerializer.Serialize(result, JsonOptions));
+            Console.WriteLine(JsonSerializer.Serialize(result, CliJsonContext.Default.CliBiosInfoResult));
         }
         else
         {
-            Console.WriteLine($"path:  {path}");
-            Console.WriteLine($"size:  {result.size}");
-            Console.WriteLine($"md5:   {result.md5}");
-            Console.WriteLine($"anvil: {result.anvil} (kind {result.anvilKind})");
+            Console.WriteLine($"path:  {result.Path}");
+            Console.WriteLine($"size:  {result.Size}");
+            Console.WriteLine($"md5:   {result.Md5}");
+            Console.WriteLine($"anvil: {result.Anvil} (kind {result.AnvilKind})");
         }
 
         return 0;
@@ -1095,7 +1095,10 @@ internal static class Program
             var slots = manager.List();
             if (slotOptions.Json)
             {
-                Console.WriteLine(JsonSerializer.Serialize(slots, JsonOptions));
+                Console.WriteLine(JsonSerializer.Serialize(
+                    slots,
+                    typeof(IReadOnlyList<SaveStateSlotInfo>),
+                    CliHostJsonContext.Default));
             }
             else
             {
@@ -1129,7 +1132,7 @@ internal static class Program
 
         if (options.Json)
         {
-            Console.WriteLine(JsonSerializer.Serialize(info, JsonOptions));
+            Console.WriteLine(JsonSerializer.Serialize(info, CliHostJsonContext.Default.StateInfo));
         }
         else
         {
@@ -1185,28 +1188,26 @@ internal static class Program
         stopwatch.Stop();
 
         var seconds = stopwatch.Elapsed.TotalSeconds;
-        var result = new
-        {
-            ok = true,
-            frames,
-            seconds,
-            framesPerSecond = seconds > 0 ? frames / seconds : 0,
-            cyclesPerFrame = machine.LastFrameCycles,
-            instructions = machine.Cpu.InstructionsExecuted,
-            frameHash = FrameHash(machine),
-        };
+        var result = new CliBenchResult(
+            Ok: true,
+            Frames: frames,
+            Seconds: seconds,
+            FramesPerSecond: seconds > 0 ? frames / seconds : 0,
+            CyclesPerFrame: machine.LastFrameCycles,
+            Instructions: machine.Cpu.InstructionsExecuted,
+            FrameHash: FrameHash(machine));
 
         if (options.Json)
         {
-            Console.WriteLine(JsonSerializer.Serialize(result, JsonOptions));
+            Console.WriteLine(JsonSerializer.Serialize(result, CliJsonContext.Default.CliBenchResult));
         }
         else
         {
-            Console.WriteLine($"frames:      {result.frames}");
-            Console.WriteLine($"time:        {result.seconds:F3}s");
-            Console.WriteLine($"fps:         {result.framesPerSecond:F1}");
-            Console.WriteLine($"cycles/frm:  {result.cyclesPerFrame}");
-            Console.WriteLine($"frame hash:  {result.frameHash:x8}");
+            Console.WriteLine($"frames:      {result.Frames}");
+            Console.WriteLine($"time:        {result.Seconds:F3}s");
+            Console.WriteLine($"fps:         {result.FramesPerSecond:F1}");
+            Console.WriteLine($"cycles/frm:  {result.CyclesPerFrame}");
+            Console.WriteLine($"frame hash:  {result.FrameHash:x8}");
         }
 
         return 0;
@@ -1230,26 +1231,26 @@ internal static class Program
         loaded.LoadState(state);
         loaded.RunFrames(30);
 
-        var checks = new List<object>
+        var checks = new List<CliSelfTestCheck>
         {
-            new { name = "deterministic frame", ok = hash1 == hash2 },
-            new { name = "frame non-empty", ok = hash1 != 0 },
-            new { name = "state roundtrip", ok = FrameHash(loaded) == FrameHash(RunThirtyMore(first)) },
-            new { name = "state warnings empty", ok = loaded.StateWarnings.Count == 0 },
+            new("deterministic frame", hash1 == hash2),
+            new("frame non-empty", hash1 != 0),
+            new("state roundtrip", FrameHash(loaded) == FrameHash(RunThirtyMore(first))),
+            new("state warnings empty", loaded.StateWarnings.Count == 0),
         };
 
-        var ok = checks.TrueForAll(check => (bool)check.GetType().GetProperty("ok")!.GetValue(check)!);
+        var ok = checks.TrueForAll(check => check.Ok);
         if (options.Json)
         {
-            Console.WriteLine(JsonSerializer.Serialize(new { ok, checks }, JsonOptions));
+            Console.WriteLine(JsonSerializer.Serialize(
+                new CliSelfTestResult(ok, checks),
+                CliJsonContext.Default.CliSelfTestResult));
         }
         else
         {
             foreach (var check in checks)
             {
-                var name = (string)check.GetType().GetProperty("name")!.GetValue(check)!;
-                var passed = (bool)check.GetType().GetProperty("ok")!.GetValue(check)!;
-                Console.WriteLine($"{(passed ? "PASS" : "FAIL")}  {name}");
+                Console.WriteLine($"{(check.Ok ? "PASS" : "FAIL")}  {check.Name}");
             }
         }
 
@@ -1365,29 +1366,28 @@ internal static class Program
         return hash;
     }
 
-    private static void WriteRunResult(object result, bool json)
+    private static void WriteRunResult(CliRunResult result, bool json)
     {
         if (json)
         {
-            Console.WriteLine(JsonSerializer.Serialize(result, JsonOptions));
+            Console.WriteLine(JsonSerializer.Serialize(result, CliJsonContext.Default.CliRunResult));
             return;
         }
 
-        var type = result.GetType();
-        Console.WriteLine($"frames:      {type.GetProperty("frames")!.GetValue(result)}");
-        Console.WriteLine($"cycles/frm:  {type.GetProperty("cyclesPerFrame")!.GetValue(result)}");
-        Console.WriteLine($"source:      {type.GetProperty("sourceWidth")!.GetValue(result)}x{type.GetProperty("sourceHeight")!.GetValue(result)}");
-        Console.WriteLine($"vdl modulo:  {type.GetProperty("vdlModulo")!.GetValue(result)}");
-        Console.WriteLine($"pc:          0x{(uint)type.GetProperty("pc")!.GetValue(result)!:x8}");
-        Console.WriteLine($"frame hash:  0x{(uint)type.GetProperty("frameHash")!.GetValue(result)!:x8}");
-        Console.WriteLine($"samples:     {type.GetProperty("samples")!.GetValue(result)}");
-        Console.WriteLine($"disc hash:   {type.GetProperty("discHash")!.GetValue(result)}");
-        Console.WriteLine($"game id:     {type.GetProperty("gameId")!.GetValue(result)}");
-        Console.WriteLine($"fix mode:    0x{(uint)type.GetProperty("fixMode")!.GetValue(result)!:x8}");
-        Console.WriteLine($"dsp running: {type.GetProperty("dspRunning")!.GetValue(result)}");
-        Console.WriteLine($"dsp pc:      0x{(uint)type.GetProperty("dspPc")!.GetValue(result)!:x4}");
-        Console.WriteLine($"dsp sema:    0x{(uint)type.GetProperty("dspSema")!.GetValue(result)!:x8}");
-        Console.WriteLine($"dsp seed:    0x{(uint)type.GetProperty("dspSeed")!.GetValue(result)!:x8}");
+        Console.WriteLine($"frames:      {result.Frames}");
+        Console.WriteLine($"cycles/frm:  {result.CyclesPerFrame}");
+        Console.WriteLine($"source:      {result.SourceWidth}x{result.SourceHeight}");
+        Console.WriteLine($"vdl modulo:  {result.VdlModulo}");
+        Console.WriteLine($"pc:          0x{result.Pc:x8}");
+        Console.WriteLine($"frame hash:  0x{result.FrameHash:x8}");
+        Console.WriteLine($"samples:     {result.Samples}");
+        Console.WriteLine($"disc hash:   {result.DiscHash}");
+        Console.WriteLine($"game id:     {result.GameId}");
+        Console.WriteLine($"fix mode:    0x{result.FixMode:x8}");
+        Console.WriteLine($"dsp running: {result.DspRunning}");
+        Console.WriteLine($"dsp pc:      0x{result.DspPc:x4}");
+        Console.WriteLine($"dsp sema:    0x{result.DspSema:x8}");
+        Console.WriteLine($"dsp seed:    0x{result.DspSeed:x8}");
     }
 
     private static string DescribeWriter()
@@ -1396,14 +1396,13 @@ internal static class Program
         var parts = new List<string>();
         foreach (var frame in trace.GetFrames())
         {
-            var method = frame.GetMethod();
-            var type = method?.DeclaringType;
-            if (method is null || type is null)
+            var method = DiagnosticMethodInfo.Create(frame);
+            if (method is null)
             {
                 continue;
             }
 
-            var typeName = type.FullName ?? type.Name;
+            var typeName = method.DeclaringTypeName ?? string.Empty;
             if (typeName.StartsWith("ThreeDo.Memory.", StringComparison.Ordinal)
                 || typeName.StartsWith("ThreeDo.Cli.Program+", StringComparison.Ordinal))
             {

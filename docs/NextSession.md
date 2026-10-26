@@ -1,18 +1,19 @@
 # Next Session Handoff
 
-**Date:** 2026-10-26 (eleventh pass)
-**Goal:** finish the HQx filter family and make the benchmark gate enforceable.
-The eleventh pass added HQx 3x/4x (reference hashes `0x0C406F97`/`0xBB17969C`)
-and the `BenchmarkGate`/`--gate` budget check that CI now runs. **691 tests pass.**
-Do not redo HQx 2x/3x/4x, CRT bloom, the D-pad passcode script, the ninth-pass
-evidence capture, or the CD media-access fix. The remaining work is finishing a
-full Road Rash race, scripted Lemmings level play beyond the start, GPU/Tier B
-validation, arm64/installers, and the legal/attribution review.
+**Date:** 2026-10-26 (twelfth pass)
+**Goal:** make the CLI trim-safe and publish trimmed single-file builds.
+The twelfth pass added source-generated JSON contexts for settings, input profiles,
+save-slot metadata, and every CLI `--json` response, removed the CLI's reflection
+paths, enabled `PublishTrimmed` for the CLI, and added a trimmed-CLI CI smoke test.
+**694 tests pass.** Do not redo the trim-safe JSON work, the trimmed CLI publish, or
+the `DiagnosticMethodInfo` watchpoint change. The remaining work is finishing a full
+Road Rash race, scripted Lemmings level play beyond the start, GPU/Tier B validation,
+frontend trimming/AOT, arm64/installers, and the legal/attribution review.
 
 Earlier passes added the presentation plumbing (GL/GLES capability reporting, CPU
 fallback/context-loss recovery, fullscreen, screenshots, About, Hi-Res, benchmark
-gates, and prefetch) and the game-specific fixes recorded below. Read section 1.14
-for the eleventh-pass changes before starting.
+gates, and prefetch) and the game-specific fixes recorded below. Read section 1.15
+for the twelfth-pass changes before starting.
 
 Read these first:
 
@@ -394,6 +395,32 @@ missing and corrected the Road Rash diagnosis.
 
 ---
 
+### 1.15 Twelfth pass: trim-safe JSON and trimmed CLI publishes (2026-10-26)
+
+- **Source-generated JSON.** `AppSettings`, `InputProfile`, save-slot metadata, and
+  every CLI `--json` response now use `JsonSerializerContext` metadata instead of
+  reflection. The contexts are `AppSettingsJsonContext`/`SaveStateSlotJsonContext`
+  (`ThreeDo.Host`), `InputProfileJsonContext` (`ThreeDo.Input`), and `CliJsonContext`
+  (`ThreeDo.Cli`). The CLI's anonymous response objects were replaced with named
+  records in `src/ThreeDo.Cli/CliJsonModels.cs`; the JSON field names are unchanged.
+- **Reflection removal.** `WriteRunResult` and `selftest` read typed properties
+  instead of `Type.GetProperty`; the RAM-write watchpoint formatter uses
+  `DiagnosticMethodInfo.Create` instead of `StackFrame.GetMethod`.
+- **Trimmed CLI.** `ThreeDo.Cli` sets `PublishTrimmed=true` and `TrimMode=full`.
+  CI publishes all six RIDs trimmed and adds a Windows smoke test (`--version`,
+  `selftest --json`, `bench --frames 2 --json`). The win-x64 audit also covered
+  `info`, `state inspect`, `state slots`, `fs list` on a generated CHD, a CHD boot,
+  and a save-state roundtrip. The only remaining trim warning is CHDSharp's vendored
+  FLAC settings helper (`TypeDescriptor`); it is outside the 3DO data-track path and
+  is demoted to a visible warning. See [`Trimming.md`](Trimming.md).
+- **Frontend.** Trimming remains disabled; the Avalonia XAML loader, `ViewLocator`
+  reflection, and Silk.NET audio/gamepad/OpenGL bindings are the remaining audit
+  items (M10.3b).
+- **Tests.** 694 tests pass; the new tests cover the camel-case CLI JSON contract and
+  source-generated self-test roundtrip.
+
+---
+
 ## 2. Current evidence
 
 ### Wolfenstein 3D
@@ -612,6 +639,10 @@ save/load proof.
   hashes.
 - [x] The benchmark budget gate runs in CI (0 bytes/frame, core p99 <= 8 ms,
   total mean <= 8 ms, total p99 <= 16.667 ms).
+- [x] CLI settings/input/save-slot JSON and every `--json` response are
+  source-generated; the trimmed win-x64 CLI passes `--version`, `selftest`,
+  `bench`, `info`, `state inspect`, `state slots`, `fs list`, CHD boot/run, and a
+  save-state roundtrip.
 - [ ] The Road Rash city race is finished. The CD media-access pulse fixes the
   old ~42k/~92k READ_ID-only wait and advances to `BUSTED`, race select, and a
   new race; the autopilot passes `GAME LOADING`/`Get ready` and cycles
@@ -654,6 +685,10 @@ save/load proof.
 - Do not redo the eleventh-pass HQx 3x/4x patterns (`HqxPatterns3.cs`,
   `HqxPatterns4.cs`) or the benchmark budget gate. Extend them with new evidence
   only.
+- Do not redo the twelfth-pass trim-safe JSON contexts, named CLI result records,
+  `DiagnosticMethodInfo` watchpoint formatter, or trimmed CLI publish. Do not
+  reintroduce reflection-based `JsonSerializer` calls in settings, input, save-slot,
+  or CLI output code; use the existing `JsonSerializerContext` metadata.
 
 ---
 
@@ -668,6 +703,11 @@ $g = $env:THREEDO_GAMES   # office: D:\Samples\3DO; home: E:\Panasonic 3DO
 dotnet build -c Release
 dotnet test tests/ThreeDo.Tests -c Release
 dotnet format --verify-no-changes
+
+# Trimmed CLI publish and smoke test (see docs/Trimming.md)
+dotnet publish src/ThreeDo.Cli/ThreeDo.Cli.csproj -c Release -r win-x64 `
+  --self-contained true -p:PublishSingleFile=true -m:1 -o "$o\cli-trim"
+& "$o\cli-trim\ThreeDo.Cli.exe" selftest --json
 
 # Road Rash: render the race and capture every 1,000 frames
 dotnet run -c Release --project src/ThreeDo.Cli -- run `
