@@ -69,6 +69,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     private int _hqxHeight;
     private int _hqxSourceWidth;
     private int _hqxSourceHeight;
+    private int _hqxScale;
     private int _outputWidth;
     private int _outputHeight;
     private int _sourceWidth;
@@ -271,9 +272,10 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         var useXbr = _settings.Filter == VideoFilter.Xbr
             && width * 4 <= _capabilities.MaxTextureSize
             && height * 4 <= _capabilities.MaxTextureSize;
-        var useHqx = _settings.Filter == VideoFilter.Hqx
-            && width * HqxFilter.Scale <= _capabilities.MaxTextureSize
-            && height * HqxFilter.Scale <= _capabilities.MaxTextureSize;
+        var hqxScale = HqxFilter.ScaleFor(_settings.Filter);
+        var useHqx = (_settings.Filter is VideoFilter.Hqx or VideoFilter.Hqx3x or VideoFilter.Hqx4x)
+            && width * hqxScale <= _capabilities.MaxTextureSize
+            && height * hqxScale <= _capabilities.MaxTextureSize;
         var filterSource = _paletteTexture;
         var filterSourceWidth = width;
         var filterSourceHeight = height;
@@ -321,10 +323,10 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         }
         else if (useHqx)
         {
-            var hqxWidth = width * HqxFilter.Scale;
-            var hqxHeight = height * HqxFilter.Scale;
+            var hqxWidth = width * hqxScale;
+            var hqxHeight = height * hqxScale;
             EnsureHqxTarget(gl, hqxWidth, hqxHeight);
-            EnsureHqxSource(width, height);
+            EnsureHqxSource(width, height, hqxScale);
             var sourceFrame = _hqxSourceFrame!;
             var cpuFrame = _hqxCpuFrame!;
             FrameAssembler.Assemble(frame, sourceFrame, sourceFrame.Width, sourceFrame.Height);
@@ -548,17 +550,21 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         _hqxHeight = height;
     }
 
-    private void EnsureHqxSource(int width, int height)
+    private void EnsureHqxSource(int width, int height, int scale)
     {
-        if (_hqxCpuFrame is not null && _hqxSourceWidth == width && _hqxSourceHeight == height)
+        if (_hqxCpuFrame is not null
+            && _hqxSourceWidth == width
+            && _hqxSourceHeight == height
+            && _hqxScale == scale)
         {
             return;
         }
 
         _hqxSourceFrame = new FrameBuffer(width, height);
-        _hqxCpuFrame = new FrameBuffer(width * HqxFilter.Scale, height * HqxFilter.Scale);
+        _hqxCpuFrame = new FrameBuffer(width * scale, height * scale);
         _hqxSourceWidth = width;
         _hqxSourceHeight = height;
+        _hqxScale = scale;
     }
 
     private void AllocateUploadTextures(GL gl)

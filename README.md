@@ -6,28 +6,32 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-26, tenth pass):** M0-M8 are functionally complete. The
+**Current position (2026-10-26, eleventh pass):** M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **673 tests pass.** The shell now has fullscreen, GL screenshots, an About
+prototype. **689 tests pass.** The shell now has fullscreen, GL screenshots, an About
 dialog, a Hi-Res toggle, automatic CPU fallback when OpenGL init or the context fails,
 a game library browser, a settings dialog (video/audio/emulation/paths), six-player
 keyboard and gamepad binding, ten numbered save slots with PNG thumbnails, PNG
 screenshots named by game/frame/time, an optional FPS/status overlay, a first-run
-guide, error dialogs, and an in-app diagnostic log viewer. Settings include per-game
-fix-mode and filter overrides. Windows XInput and Linux
+guide, error dialogs, and an in-app diagnostic log viewer. The app also accepts a
+positional disc path or `--disc <path>` (a Linux `.desktop` association file is in
+`packaging/`). Settings include per-game fix-mode and filter overrides. Windows XInput and Linux
 evdev gamepads are supported. The CLI applies the 4DO per-game fixes automatically and
 accepts `--fix-mode`/`--no-game-fixes` overrides. The benchmark reports p50/p95/p99 and
-zero steady-state allocations; an opt-in bounded disc prefetch cache is available via
-`--prefetch`.
+zero steady-state allocations, and `--gate` enforces the CPU-side budgets in CI; an
+opt-in bounded disc prefetch cache is available via `--prefetch`.
 
-The renderer now has an opt-in **xBR-lv2** edge-directed 4x filter, an **HQx 2x**
-filter, and **CRT bloom** alongside accurate, nearest, sharp-bilinear, and CRT modes. The tenth pass committed a
-pure D-pad Lemmings Fun 4 passcode script (`docs/scripts/lem-fun4-dpad.txt`): the game
-accepts `HNLHCIOECW`, shows the Fun 4 briefing, and starts gameplay at 23,000 frames
-with a deterministic save/load roundtrip. This pass also fixed a real-content **GPU
-palette bug** in the previous session: the shader now applies the red, green, and blue
-CLUT indices independently, matching the CPU `FrameAssembler`; Lemmings gameplay was
+The renderer now has an opt-in **xBR-lv2** edge-directed 4x filter, **HQx 2x/3x/4x**
+filters, and **CRT bloom** alongside accurate, nearest, sharp-bilinear, and CRT modes.
+The HQx 3x/4x patterns match the C++ `hq3x_32_rb`/`hq4x_32_rb` reference hashes. The
+eleventh pass also made the benchmark a CI gate (0 bytes/frame, core p99 <= 8 ms,
+total mean <= 8 ms, total p99 <= 16.667 ms). The tenth pass committed a pure D-pad
+Lemmings Fun 4 passcode script (`docs/scripts/lem-fun4-dpad.txt`): the game accepts
+`HNLHCIOECW`, shows the Fun 4 briefing, and starts gameplay at 23,000 frames with a
+deterministic save/load roundtrip. The eighth pass fixed a real-content **GPU palette
+bug** from the previous session: the shader now applies the red, green, and blue CLUT
+indices independently, matching the CPU `FrameAssembler`; Lemmings gameplay was
 captured through both sharp-bilinear and xBR with correct colors.
 
 The ninth pass recorded per-title save-state, PNG, and WAV evidence (zero-frame and
@@ -72,8 +76,8 @@ added; save-state loads restore the VDL picture immediately.
 
 Remaining major work: finish a full Road Rash race without wrecking; script an
 Alone inventory sequence; validate GPU 4K/p99 and GLES/ANGLE/Pi/DPI; validate
-Tier B prefetch; hq3x/hq4x and UI polish; arm64/installers; and the legal/attribution
-review. Per-title save-state, PNG, and WAV evidence is recorded
+Tier B prefetch; UI polish and a relative benchmark baseline; arm64/installers; and
+the legal/attribution review. Per-title save-state, PNG, and WAV evidence is recorded
 in [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. See
 [`docs/Status.md`](docs/Status.md) for the completion estimate and
 [`docs/NextSession.md`](docs/NextSession.md) for the next-session plan. The
@@ -117,7 +121,7 @@ The desktop frontend uses **Silk.NET.OpenGL/OpenGLES** through Avalonia's OpenGL
 
 - Two-stage pipeline: palette expansion at native resolution (320x240), then GPU upscaling/filtering at output resolution.
 - Pixel-accurate "Accurate" mode that matches the CPU frame assembler.
-- High-quality GPU upscaling to 1080p/1440p/4K: nearest, sharp-bilinear, CRT (scanlines, aperture mask, curvature, vignette, bloom), xBR-lv2 4x, and HQx 2x.
+- High-quality GPU upscaling to 1080p/1440p/4K: nearest, sharp-bilinear, CRT (scanlines, aperture mask, curvature, vignette, bloom), xBR-lv2 4x, and HQx 2x/3x/4x.
 - Integer scaling, aspect-ratio control, fullscreen, vsync, and screenshots.
 - Desktop GL 3.3 (WGL/GLX/EGL/macOS) and GLES 3.0/3.1 (ANGLE, Raspberry Pi) variants.
 - CPU `WriteableBitmap` fallback only when neither GL 3.3 nor GLES 3.0/3.1 is available.
@@ -191,6 +195,7 @@ Desktop app:
 
 ```powershell
 dotnet run --project src/ThreeDo.Frontend.Avalonia
+dotnet run --project src/ThreeDo.Frontend.Avalonia -- "game.chd"
 ```
 
 Use **Open BIOS** and **Open Disc**, then **Play**. The default keyboard bindings are the arrow keys, Z (A), X (B), C (C), A (L), S (R), Enter (P), and Backspace (X). **Save State**/**Load State** use the selected slot; the **<**/**>** buttons change slots. **Screenshot** writes a PNG from the OpenGL output (or the CPU frame when GL is unavailable), named by game, time, and frame. **Library** scans configured folders through the 4DO database, **Settings** edits video/audio/emulation/paths, and **Input** captures keyboard bindings for all six players. **Fullscreen** toggles F11/Escape; **Hi-Res** restarts the machine in the opt-in 640x480 mode. Settings persist under the user local application data folder, including per-game fix-mode overrides.

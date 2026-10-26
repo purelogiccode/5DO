@@ -10,6 +10,8 @@ include a BIOS ROM or any game images; you must supply legally obtained files.
 
    ```powershell
    dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia
+   # or open a disc directly (also used by file associations):
+   dotnet run -c Release --project src/ThreeDo.Frontend.Avalonia -- "game.chd"
    ```
 
 3. On first run, choose **Open BIOS** and select a 3DO BIOS such as `panafz1.bin`.
@@ -60,8 +62,9 @@ GPU. Available filters:
   glow (Settings -> Video -> CRT bloom).
 - **Xbr**: Hyllian's xBR-lv2 edge-directed 4x pass, followed by a sharp-bilinear finish.
   This is an opt-in filter and costs more GPU time at 4K.
-- **Hqx**: HQx 2x pixel-art smoothing on the CPU-expanded frame, followed by a
-  sharp-bilinear finish. It is opt-in and uses CPU time per frame.
+- **Hqx / Hqx3x / Hqx4x**: HQx 2x/3x/4x pixel-art smoothing on the CPU-expanded
+  frame, followed by a sharp-bilinear finish. They are opt-in and use CPU time per
+  frame; 3x/4x cost roughly twice/three times the 2x filter.
 
 The Settings dialog's **Emulation** page can override the filter for the current
 game. **Automatic** uses the global filter; an explicit choice is stored by game ID

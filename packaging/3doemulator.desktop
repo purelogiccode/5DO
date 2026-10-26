@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=3DOEmulator
+GenericName=3DO Emulator
+Comment=3DO Interactive Multiplayer emulator
+Exec=ThreeDo.Frontend.Avalonia %f
+Icon=3doemulator
+Terminal=false
+Categories=Game;Emulator;
+MimeType=application/x-cd-image;application/x-iso9660-image;application/x-raw-disk-image;

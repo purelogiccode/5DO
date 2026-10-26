@@ -16,14 +16,22 @@ still change.
   slider.
 - HQx 2x filter (`VideoFilter.Hqx`): a port of Maxim Stepin/Cameron Zemek's hq2x
   running on the CPU-expanded frame, with a C++ reference hash test.
+- HQx 3x/4x filters (`VideoFilter.Hqx3x`/`Hqx4x`): generated from the 4DO hq3x/hq4x
+  sources and verified against the C++ reference hashes. They are opt-in and cost
+  more CPU time than HQx 2x.
+- Benchmark budget gate: `ThreeDo.Benchmarks --gate` and the CI job enforce
+  0 bytes/frame, core p99 <= 8 ms, total mean <= 8 ms, and total p99 <= 16.667 ms.
 - Per-game filter overrides in `AppSettings.FilterOverrides`, edited on the Settings
   dialog's Emulation page and applied when a disc opens.
 - Shader-source and settings tests for the CRT bloom uniforms.
 
 ### Changed
 
-- The Settings video page now exposes a CRT bloom slider.
-- Docs record the tenth-pass Lemmings evidence and the remaining work.
+- The Settings video page now exposes a CRT bloom slider and lists the HQx
+  2x/3x/4x filter modes.
+- CI runs the benchmark budget gate instead of only checking allocations.
+- Docs record the tenth-pass Lemmings evidence, the HQx 3x/4x hashes, and the
+  remaining work.
 
 ## [Unreleased] - 2026-10-25
 

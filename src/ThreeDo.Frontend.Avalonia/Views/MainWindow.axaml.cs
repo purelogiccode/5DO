@@ -106,6 +106,11 @@ public partial class MainWindow : Window, IDisposable
                             OnOpenDisc(null, new RoutedEventArgs());
                             break;
                     }
+
+                    if (Program.StartupDiscPath is not null && _disc is null)
+                    {
+                        LoadConfiguredPaths();
+                    }
                 };
                 IsEnabled = false;
                 welcome.Show(this);
@@ -129,9 +134,10 @@ public partial class MainWindow : Window, IDisposable
             OpenBiosPath(_settings.BiosPath);
         }
 
-        if (File.Exists(_settings.DiscPath))
+        var discPath = Program.StartupDiscPath ?? _settings.DiscPath;
+        if (File.Exists(discPath))
         {
-            OpenDiscPath(_settings.DiscPath);
+            OpenDiscPath(discPath);
         }
     }
 

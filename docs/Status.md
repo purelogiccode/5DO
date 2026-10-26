@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-26, tenth pass (see `git log` for the exact commit).
+**Snapshot:** 2026-10-26, eleventh pass (see `git log` for the exact commit).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
 **Reference:** `References/opera-libretro-master/libopera` is now the primary
 behavioral reference for new compatibility work; see
@@ -31,10 +31,11 @@ This is the short, current answer to "where are we?" The detailed task list is i
   into four 1 MB VRAM planes and presents 640x480 by line-doubling the 640x240 source;
   Lemmings' title screen now matches the 640x480 reference. The mode is off by default
   because 320x240 titles must not be upscaled, and the desktop shell exposes it as a
-  Hi-Res checkbox that restarts the machine. An opt-in xBR-lv2 4x filter, an HQx 2x
-  filter, and CRT bloom are available in Settings; xBR and HQx use a CPU-expanded
-  native source and sharp-bilinear finishing, and CRT bloom adds a 3x3
-  native-resolution glow in the CRT filter.
+  Hi-Res checkbox that restarts the machine. An opt-in xBR-lv2 4x filter, HQx
+  2x/3x/4x filters, and CRT bloom are available in Settings; xBR and HQx use a
+  CPU-expanded native source and sharp-bilinear finishing, and CRT bloom adds a 3x3
+  native-resolution glow in the CRT filter. The HQx 3x/4x switches match the C++
+  reference hashes and are the most expensive opt-in modes.
 - **Performance:** the machine runs on a dedicated 60 Hz core thread with a frame
   pacer; the UI renders on demand; uploads use `TexStorage2D` + `TexSubImage2D`;
   uniform locations and the present delegate are cached; physical-pixel sizing is
@@ -53,8 +54,10 @@ This is the short, current answer to "where are we?" The detailed task list is i
   next/previous, a list/save/load/delete window, JSON metadata, and PNG thumbnails;
   screenshots are PNG files named by game, time, and frame. The shell has a first-run
   guide, error dialogs, and an in-app diagnostic log viewer with level/category/search
-  filters. Per-game 4DO fix flags are applied automatically when a disc opens; explicit
-  masks can be set in the settings dialog.
+  filters. The app accepts a positional disc path or `--disc <path>` and ships a Linux
+  `.desktop` entry; Windows/macOS associations remain installer work. Per-game 4DO fix
+  flags are applied automatically when a disc opens; explicit masks can be set in the
+  settings dialog.
 - **Per-game fixes:** `GameCompatibility` maps the 4DO game IDs to `FixMode` bits.
   The CLI exposes `--fix-mode 0xMASK` and `--no-game-fixes`, and `run --json` /
   `info` report the applied mask. Alone in the Dark's `FIX_BIT_TIMING_6` is applied
@@ -80,7 +83,7 @@ This is the short, current answer to "where are we?" The detailed task list is i
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 673 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 689 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
@@ -181,8 +184,10 @@ Release build, development machine, 600 frames, CPU side only:
 | Lemmings CHD, high-res | **1.605 ms/frame** | 1.398 ms | 2.497 ms | 4.598 ms | ~5.8 KB/frame (CHD decode) |
 
 This leaves ~15.4 ms of headroom against the 16.67 ms frame budget for the synthetic
-case. The **4K GPU pass, Tier B (Pi 4/5) numbers, and GLES timing are not measured
-yet**. CHD decode allocations are host-side and are attributed to the core stage;
+case. CI now runs the synthetic benchmark with `--gate`: it fails on any steady-state
+allocation, core p99 > 8 ms, total mean > 8 ms, or total p99 > 16.667 ms, and uploads
+the JSON result as the baseline artifact. The **4K GPU pass, Tier B (Pi 4/5) numbers,
+and GLES timing are not measured yet**. CHD decode allocations are host-side and are attributed to the core stage;
 the synthetic core/pack/mailbox/read path is allocation-free in steady state.
 
 The desktop renderer now uses a `GL_TIME_ELAPSED` query and reports GPU/present time in
@@ -217,7 +222,7 @@ prototype work as partial credit:
 |---|---|---:|---:|
 | M0-M8 core, CPU, boot, MADAM, DSP, CD, input, save states | Functionally complete; M0.8 legal review and minor M8 follow-ups are non-blocking | 90 | 0 |
 | M9 Avalonia frontend | Partial: shell, library, video, input, fullscreen, About, Hi-Res, settings/audio/gamepad/logs/first-run/thumbnails; polish and ViewModel tests | 13 | 3 |
-| M9R OpenGL presenter | Partial: two-stage, sharp-bilinear/CRT/xBR/HQx/bloom, CPU fallback, screenshots; hq3x/hq4x and GPU tests remain | 9 | 1 |
+| M9R OpenGL presenter | Partial: two-stage, sharp-bilinear/CRT/xBR/HQx 2x/3x/4x/bloom, CPU fallback, screenshots; GPU tests and 4K timing remain | 9.5 | 0.5 |
 | M9P performance/pacing | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch, GPU timer; hot-path, Tier B/GPU gates remain | 6 | 4 |
 | M10 packaging/validation | Partial: CI and six-RID publish; arm64, trimming, installers, perf report remain | 2.5 | 3.5 |
 | M11 compatibility/release | In progress: M11.0 done; gameplay, high-resolution, and release docs underway | 3 | 22+ |
@@ -282,9 +287,9 @@ add **2-4 weeks**. If the target is "all five corpus games playable" rather than
 
 8. **M10 packaging:** arm64 validation, trimming, installers/signing plan, and the
    final performance report.
-9. **Filter/UI polish:** hq3x/hq4x, vsync/FPS overlay tuning, and ViewModel tests.
-   xBR, HQx 2x, CRT bloom, per-game filter overrides, the settings, audio, gamepad,
-   logs, first-run, and thumbnail pages are complete.
+9. **Filter/UI polish:** vsync/FPS overlay tuning and ViewModel tests.
+   xBR, HQx 2x/3x/4x, CRT bloom, per-game filter overrides, the settings, audio,
+   gamepad, logs, first-run, and thumbnail pages are complete.
 10. **Legal/attribution review** before any public build (M0.8); add Opera to the
     FreeDO/4DO attribution and license review.
 

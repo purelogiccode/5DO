@@ -72,8 +72,8 @@ The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NO
 - Silk.NET (MIT)
 - xBR-lv2 shader algorithm by Hyllian (MIT; attribution preserved in the shader and
   `THIRD-PARTY-NOTICES.md`)
-- HQx 2x filter by Maxim Stepin and Cameron Zemek (LGPL-2.1+; attribution preserved
-  in `HqxFilter.cs` and `THIRD-PARTY-NOTICES.md`)
+- HQx 2x/3x/4x filters by Maxim Stepin and Cameron Zemek (LGPL-2.1+; attribution
+  preserved in `HqxFilter.cs` and `THIRD-PARTY-NOTICES.md`)
 - OS XInput / Linux evdev gamepad APIs (no bundled third-party runtime)
 - OpenAL Soft (LGPL; native runtime, if bundled)
 - CHDSharp (MIT plus an LGPL-2.1 component; pure C#; verify the package LICENSE before release)

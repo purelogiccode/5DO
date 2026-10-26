@@ -4,45 +4,70 @@ using ThreeDo.Core;
 namespace ThreeDo.Video.OpenGL;
 
 /// <summary>
-/// A CPU implementation of the HQx 2x pixel-art filter, used as an optional
-/// presentation filter before the final sharp-bilinear scale.
+/// A CPU implementation of the HQx 2x/3x/4x pixel-art filters, used as an
+/// optional presentation filter before the final sharp-bilinear scale.
 /// </summary>
 /// <remarks>
 /// <para>
-/// The pattern switch is derived from Maxim Stepin's hq2x (Copyright (C) 2003
-/// Maxim Stepin, maxst@hiend3d.com) and Cameron Zemek's C port (Copyright (C)
-/// 2010 Cameron Zemek, grom@zeminvaders.net), both distributed under the GNU
-/// Lesser General Public License 2.1 or later. The interpolation and edge
-/// handling are implemented here; the generated switch is data-like code.
+/// The pattern switches are derived from Maxim Stepin's hq2x/hq3x/hq4x
+/// (Copyright (C) 2003 Maxim Stepin, maxst@hiend3d.com) and Cameron Zemek's C
+/// port (Copyright (C) 2010 Cameron Zemek, grom@zeminvaders.net), both
+/// distributed under the GNU Lesser General Public License 2.1 or later. The
+/// interpolation and edge handling are implemented here; the generated switches
+/// are data-like code.
 /// </para>
 /// <para>
 /// The filter consumes the CPU-expanded BGRA frame, so palette expansion remains
 /// pixel-identical to <see cref="FrameAssembler"/>. It is opt-in and runs only
-/// when <see cref="VideoFilter.Hqx"/> is selected.
+/// when one of the HQx filters is selected.
 /// </para>
 /// </remarks>
 public sealed partial class HqxFilter
 {
+    /// <summary>The smallest HQx scale factor.</summary>
+    public const int MinScale = 2;
+
+    /// <summary>The largest HQx scale factor.</summary>
+    public const int MaxScale = 4;
+
     private uint[] _source = [];
     private uint[] _destination = [];
     private readonly uint[] _window = new uint[10];
+    private readonly uint[] _patternOutput = new uint[MaxScale * MaxScale];
 
-    /// <summary>Gets the integer scale factor of this filter.</summary>
-    public const int Scale = 2;
+    /// <summary>Gets the scale factor used by a video filter, or 2 for non-HQx filters.</summary>
+    /// <param name="filter">Video filter.</param>
+    /// <returns>The HQx scale factor.</returns>
+    public static int ScaleFor(VideoFilter filter) => filter switch
+    {
+        VideoFilter.Hqx3x => 3,
+        VideoFilter.Hqx4x => 4,
+        _ => 2,
+    };
 
-    /// <summary>Expands a BGRA frame by 2x.</summary>
+    /// <summary>Expands a BGRA frame by 2x, 3x, or 4x.</summary>
     /// <param name="source">Source frame.</param>
-    /// <param name="destination">Destination frame, which must be twice the source size.</param>
+    /// <param name="destination">Destination frame, which must be an integer multiple of the source size.</param>
     /// <exception cref="ArgumentNullException">Thrown when a frame is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when the destination size is not exactly 2x.</exception>
+    /// <exception cref="ArgumentException">Thrown when the destination size is not an HQx scale.</exception>
     public void Expand(FrameBuffer source, FrameBuffer destination)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(destination);
-        if (destination.Width != source.Width * Scale || destination.Height != source.Height * Scale)
+        if (source.Width <= 0 || source.Height <= 0
+            || destination.Width % source.Width != 0)
         {
             throw new ArgumentException(
-                $"The HQx destination must be {source.Width * Scale}x{source.Height * Scale}.",
+                $"The HQx destination must be {MinScale}x-{MaxScale}x the source size.",
+                nameof(destination));
+        }
+
+        var scale = destination.Width / source.Width;
+        if (scale is < MinScale or > MaxScale
+            || destination.Height != source.Height * scale)
+        {
+            throw new ArgumentException(
+                $"The HQx destination must be {MinScale}x-{MaxScale}x the source size.",
                 nameof(destination));
         }
 
@@ -52,13 +77,14 @@ public sealed partial class HqxFilter
         if (_source.Length < pixelCount)
         {
             _source = new uint[pixelCount];
-            _destination = new uint[checked(pixelCount * Scale * Scale)];
+            _destination = new uint[checked(pixelCount * MaxScale * MaxScale)];
         }
 
         ToArgb(source.PixelSpan, pixelCount, _source);
         var sourcePixels = _source;
         var destinationPixels = _destination;
         var w = _window;
+        var output = _patternOutput;
         for (var y = 0; y < height; y++)
         {
             var previous = y > 0 ? -width : 0;
@@ -96,16 +122,41 @@ public sealed partial class HqxFilter
                 }
 
                 var pattern = ComputePattern(w);
-                ApplyPattern(pattern, w, out var p00, out var p01, out var p10, out var p11);
-                var destinationOffset = ((y * Scale) * width * Scale) + (x * Scale);
-                destinationPixels[destinationOffset] = p00;
-                destinationPixels[destinationOffset + 1] = p01;
-                destinationPixels[destinationOffset + width * Scale] = p10;
-                destinationPixels[destinationOffset + width * Scale + 1] = p11;
+                var destinationRow = y * scale;
+                var destinationColumn = x * scale;
+                if (scale == 2)
+                {
+                    ApplyPattern(pattern, w, out var p00, out var p01, out var p10, out var p11);
+                    var destinationOffset = ((destinationRow * width * scale) + destinationColumn);
+                    destinationPixels[destinationOffset] = p00;
+                    destinationPixels[destinationOffset + 1] = p01;
+                    destinationPixels[destinationOffset + width * scale] = p10;
+                    destinationPixels[destinationOffset + width * scale + 1] = p11;
+                }
+                else
+                {
+                    if (scale == 3)
+                    {
+                        ApplyPattern3(pattern, w);
+                    }
+                    else
+                    {
+                        ApplyPattern4(pattern, w);
+                    }
+
+                    for (var row = 0; row < scale; row++)
+                    {
+                        var destinationOffset = ((destinationRow + row) * width * scale) + destinationColumn;
+                        for (var column = 0; column < scale; column++)
+                        {
+                            destinationPixels[destinationOffset + column] = output[(row * scale) + column];
+                        }
+                    }
+                }
             }
         }
 
-        ToBgra(destinationPixels, destination.PixelSpan, pixelCount * Scale * Scale);
+        ToBgra(destinationPixels, destination.PixelSpan, pixelCount * scale * scale);
     }
 
     private static int ComputePattern(uint[] w)

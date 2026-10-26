@@ -42,12 +42,12 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: dotnet format 3DOEmulator.sln --verify-no-changes --no-restore
 
-      - name: Benchmark smoke
+      - name: Benchmark smoke and budget gate
         if: matrix.os == 'ubuntu-latest'
         run: |
           mkdir -p artifacts
           dotnet run --project benchmarks/ThreeDo.Benchmarks -c Release --no-build -- \
-            --frames 120 --label ci --json > artifacts/benchmark.json
+            --frames 120 --label ci --json --gate > artifacts/benchmark.json
 
       - name: Benchmark allocation gate
         if: matrix.os == 'ubuntu-latest'

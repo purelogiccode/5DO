@@ -162,6 +162,20 @@ public sealed class NvramStoreTests
     }
 
     [Fact]
+    public void AppSettings_RoundtripsTheHqx4xFilterName()
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "settings.json");
+        var settings = new AppSettings { Filter = ThreeDo.Video.VideoFilter.Hqx4x };
+
+        AppSettingsStore.Save(settings, path);
+        var loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal(ThreeDo.Video.VideoFilter.Hqx4x, loaded.Filter);
+        Assert.Contains("\"Hqx4x\"", File.ReadAllText(path), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void AppSettings_InvalidJsonFallsBackToDefaults()
     {
         using var directory = new TempDirectory();

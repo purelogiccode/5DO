@@ -29,6 +29,7 @@ internal static class Program
         string? biosPath = null;
         string? discPath = null;
         var json = false;
+        var gate = false;
         var prefetch = false;
         var highResolution = false;
         var label = "synthetic";
@@ -49,6 +50,9 @@ internal static class Program
                     break;
                 case "--json":
                     json = true;
+                    break;
+                case "--gate":
+                    gate = true;
                     break;
                 case "--prefetch":
                     prefetch = true;
@@ -242,6 +246,28 @@ internal static class Program
                 Console.WriteLine($"  core/pack/mailbox/read: {result.allocations.coreBytesPerFrame} / {result.allocations.packBytesPerFrame} / {result.allocations.mailboxBytesPerFrame} / {result.allocations.readBytesPerFrame} bytes/frame");
                 Console.WriteLine($"60 Hz budget:{result.total.headroom,8:F3} ms headroom");
                 Console.WriteLine($"frame hash:  {result.machine.frameHash:x8}");
+            }
+
+            if (gate)
+            {
+                var bytesPerFrame = elapsedFrames == 0 ? 0 : allocatedBytes / elapsedFrames;
+                var totalPerFrame = totalMs / elapsedFrames;
+                var failures = BenchmarkGate.Evaluate(
+                    bytesPerFrame,
+                    coreTiming.P99Ms,
+                    totalPerFrame,
+                    totalTiming.P99Ms);
+                if (failures.Count != 0)
+                {
+                    foreach (var failure in failures)
+                    {
+                        Console.Error.WriteLine($"benchmark gate: {failure}");
+                    }
+
+                    return 3;
+                }
+
+                Console.Error.WriteLine($"benchmark gate: pass ({BenchmarkGate.Description})");
             }
         }
 

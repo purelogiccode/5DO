@@ -1,5 +1,6 @@
 using System;
 using ThreeDo.Core;
+using ThreeDo.Video;
 using ThreeDo.Video.OpenGL;
 
 namespace ThreeDo.Tests.Video;
@@ -27,7 +28,36 @@ public sealed class HqxFilterTests
     }
 
     [Fact]
-    public void Expand_LeavesAUniformImageUnchanged()
+    public void Expand_MatchesTheReferenceHq3xHash()
+    {
+        var source = CreateReferenceSource(32, 24);
+        var destination = new FrameBuffer(96, 72);
+
+        new HqxFilter().Expand(source, destination);
+
+        // Generated with hq3x_32_rb from the 4DO reference sources and the same
+        // 32x24 image.
+        Assert.Equal(0x0C406F97u, Hash(destination));
+    }
+
+    [Fact]
+    public void Expand_MatchesTheReferenceHq4xHash()
+    {
+        var source = CreateReferenceSource(32, 24);
+        var destination = new FrameBuffer(128, 96);
+
+        new HqxFilter().Expand(source, destination);
+
+        // Generated with hq4x_32_rb from the 4DO reference sources and the same
+        // 32x24 image.
+        Assert.Equal(0xBB17969Cu, Hash(destination));
+    }
+
+    [Theory]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    public void Expand_LeavesAUniformImageUnchanged(int scale)
     {
         var source = new FrameBuffer(4, 4);
         for (var i = 0; i < source.PixelSpan.Length; i += 4)
@@ -38,7 +68,7 @@ public sealed class HqxFilterTests
             source.PixelSpan[i + 3] = 0xFF;
         }
 
-        var destination = new FrameBuffer(8, 8);
+        var destination = new FrameBuffer(4 * scale, 4 * scale);
         new HqxFilter().Expand(source, destination);
 
         for (var i = 0; i < destination.PixelSpan.Length; i += 4)
@@ -60,9 +90,33 @@ public sealed class HqxFilterTests
     }
 
     [Fact]
-    public void Scale_IsTwo()
+    public void Expand_RejectsAnUnsupportedScale()
     {
-        Assert.Equal(2, HqxFilter.Scale);
+        var source = new FrameBuffer(4, 4);
+        var destination = new FrameBuffer(20, 20);
+
+        Assert.Throws<ArgumentException>(() => new HqxFilter().Expand(source, destination));
+    }
+
+    [Theory]
+    [InlineData(VideoFilter.Hqx, 2)]
+    [InlineData(VideoFilter.Hqx3x, 3)]
+    [InlineData(VideoFilter.Hqx4x, 4)]
+    [InlineData(VideoFilter.SharpBilinear, 2)]
+    public void ScaleFor_MapsHqxFilters(VideoFilter filter, int expected)
+    {
+        Assert.Equal(expected, HqxFilter.ScaleFor(filter));
+    }
+
+    private static uint Hash(FrameBuffer frame)
+    {
+        var hash = 2166136261u;
+        foreach (var value in frame.PixelSpan)
+        {
+            hash = (hash ^ value) * 16777619u;
+        }
+
+        return hash;
     }
 
     private static FrameBuffer CreateReferenceSource(int width, int height)

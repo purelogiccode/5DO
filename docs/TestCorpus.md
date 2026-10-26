@@ -764,12 +764,15 @@ Bloom is ignored by the non-CRT filters and by the CPU fallback. The shader is
 covered by source-invariant tests; hardware GPU timing for the extra samples is
 still pending.
 
-**HQx 2x.** `VideoFilter.Hqx` runs Maxim Stepin/Cameron Zemek's hq2x on the
-CPU-expanded BGRA frame, uploads the 2x result, and finishes with sharp-bilinear.
-A 32x24 deterministic reference image matches the C++ `hq2x_32_rb` byte hash
-`0xA400C421`; a uniform image is unchanged. The reference's `RGBtoYUV` table loop
-stops before the last entry, so pure white is deliberately excluded from the
-reference image. hq3x/hq4x are not shipped.
+**HQx 2x/3x/4x.** `VideoFilter.Hqx`, `Hqx3x`, and `Hqx4x` run Maxim
+Stepin/Cameron Zemek's hq2x/hq3x/hq4x on the CPU-expanded BGRA frame, upload the
+scaled result, and finish with sharp-bilinear. A 32x24 deterministic reference
+image matches the C++ byte hashes `0xA400C421` (2x), `0x0C406F97` (3x), and
+`0xBB17969C` (4x); a uniform image is unchanged. The reference's `RGBtoYUV` table
+loop stops before the last entry, so pure white is deliberately excluded from the
+reference image. A 320x240 synthetic benchmark measures about 2.3/4.2/7.5 ms per
+frame for 2x/3x/4x on checkerboard content and about 12/13/15 ms on random noise,
+so 3x/4x are opt-in and not recommended with high-res on slow CPUs.
 
 ---
 

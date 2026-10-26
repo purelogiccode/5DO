@@ -15,8 +15,10 @@ prototype state. It is not a compatibility guarantee.
 
 ## Renderer
 
-- HQx 2x is implemented as an opt-in CPU expansion followed by sharp-bilinear
-  finishing. hq3x/hq4x and the GPU xBR/HQx variants are not shipped.
+- HQx 2x/3x/4x are implemented as opt-in CPU expansions followed by sharp-bilinear
+  finishing; the GPU xBR/HQx variants are not shipped. HQx 4x costs about 7.5 ms/frame
+  on synthetic checkerboard content and about 15 ms/frame on random noise at 320x240,
+  so it is not recommended with `--high-res` on slow CPUs.
 - CRT bloom is implemented as a 3x3 native-resolution glow in the CRT filter.
 - The xBR path expands the palette on the CPU at native resolution before uploading the
   source texture. Other filters use GPU palette expansion. This is a deliberate

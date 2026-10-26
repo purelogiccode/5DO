@@ -1,20 +1,18 @@
 # Next Session Handoff
 
-**Date:** 2026-10-26 (tenth pass)
-**Goal:** close the pure D-pad Lemmings passcode item and add CRT bloom/HQx.
-The tenth pass committed `docs/scripts/lem-fun4-dpad.txt`, typed `HNLHCIOECW`
-with only the D-pad/A, started Fun 4 gameplay at 23,000 frames, and roundtripped
-the state. It also added CRT bloom and an HQx 2x filter to the OpenGL presenter
-and the settings dialog. **673 tests pass.** Do not redo the D-pad passcode
-script, CRT bloom, HQx, the ninth-pass evidence capture, or the CD media-access
-fix. The remaining work is finishing a full Road Rash race, scripted Lemmings
-level play beyond the start, GPU/Tier B validation, arm64/installers, and the
-legal/attribution review.
+**Date:** 2026-10-26 (eleventh pass)
+**Goal:** finish the HQx filter family and make the benchmark gate enforceable.
+The eleventh pass added HQx 3x/4x (reference hashes `0x0C406F97`/`0xBB17969C`)
+and the `BenchmarkGate`/`--gate` budget check that CI now runs. **689 tests pass.**
+Do not redo HQx 2x/3x/4x, CRT bloom, the D-pad passcode script, the ninth-pass
+evidence capture, or the CD media-access fix. The remaining work is finishing a
+full Road Rash race, scripted Lemmings level play beyond the start, GPU/Tier B
+validation, arm64/installers, and the legal/attribution review.
 
 Earlier passes added the presentation plumbing (GL/GLES capability reporting, CPU
 fallback/context-loss recovery, fullscreen, screenshots, About, Hi-Res, benchmark
-gates, and prefetch) and the game-specific fixes recorded below. Read section 1.13
-for the tenth-pass changes before starting.
+gates, and prefetch) and the game-specific fixes recorded below. Read section 1.14
+for the eleventh-pass changes before starting.
 
 Read these first:
 
@@ -361,13 +359,34 @@ missing and corrected the Road Rash diagnosis.
   the 2x result, and finishes with sharp-bilinear. A 32x24 reference image matches
   the C++ `hq2x_32_rb` hash `0xA400C421`; uniform images are unchanged. The
   reference's `RGBtoYUV` table loop skips the last entry, so pure white is excluded
-  from the reference image. hq3x/hq4x remain optional.
+  from the reference image. (hq3x/hq4x were added in the eleventh pass; see 1.14.)
 - **Per-game filter overrides.** `AppSettings.FilterOverrides` stores a filter by
   game ID, `ResolveFilter`/`SetFilterOverride` handle case-insensitive lookup and
   clearing, and the Settings dialog's Emulation page exposes an Automatic/filter
   combo. The shell passes the current game ID to `ToRendererSettings`.
 - **Tests.** 673 tests pass; the four HQx tests, the filter-override tests, and the
   steady-state allocation test are the only count change.
+
+---
+
+### 1.14 Eleventh pass: HQx 3x/4x and the benchmark budget gate (2026-10-26)
+
+- **HQx 3x/4x.** `VideoFilter.Hqx3x` and `VideoFilter.Hqx4x` run generated
+  hq3x/hq4x switches on the CPU-expanded BGRA frame. The same 32x24 reference image
+  matches the C++ `hq3x_32_rb`/`hq4x_32_rb` hashes (`0x0C406F97`/`0xBB17969C`);
+  uniform images are unchanged and destination-size validation accepts only 2x-4x.
+  The renderer sizes its intermediate target from `HqxFilter.ScaleFor`, and the
+  Settings dialog lists all three HQx modes. Measured 320x240 cost is
+  ~2.3/4.2/7.5 ms/frame on checkerboard content and ~12.1/13.4/14.8 ms on random
+  noise for 2x/3x/4x; 3x/4x stay opt-in.
+- **Benchmark budget gate.** `BenchmarkGate.Evaluate` enforces 0 managed
+  bytes/frame, core p99 <= 8 ms, total mean <= 8 ms, and total p99 <= 16.667 ms.
+  The benchmark exposes `--gate` (exit code 3 on failure), and CI runs it for the
+  synthetic smoke before uploading the JSON baseline. The gate is budget-based;
+  a same-runner relative (>10%) comparison remains.
+- **Tests.** 689 tests pass; the new tests cover the 3x/4x reference hashes,
+  uniform-image preservation, unsupported scales, `ScaleFor`, and every gate
+  failure mode.
 
 ---
 
@@ -585,7 +604,10 @@ save/load proof.
   (`docs/scripts/lem-fun4-dpad.txt`, gameplay at 23,000 frames,
   `PC 0x00083FD8`, hash `0xB7846C2D`, roundtrip `0xEDEB1B9D` twice).
 - [x] CRT bloom is implemented in the OpenGL presenter and exposed in Settings.
-- [x] HQx 2x is implemented and matches the C++ hq2x reference hash.
+- [x] HQx 2x/3x/4x are implemented and match the C++ hq2x/hq3x/hq4x reference
+  hashes.
+- [x] The benchmark budget gate runs in CI (0 bytes/frame, core p99 <= 8 ms,
+  total mean <= 8 ms, total p99 <= 16.667 ms).
 - [ ] The Road Rash city race is finished. The CD media-access pulse fixes the
   old ~42k/~92k READ_ID-only wait and advances to `BUSTED`, race select, and a
   new race; the autopilot passes `GAME LOADING`/`Get ready` and cycles
@@ -625,6 +647,9 @@ save/load proof.
 - Do not redo the tenth-pass Lemmings pure D-pad passcode script
   (`docs/scripts/lem-fun4-dpad.txt`), CRT bloom, or HQx 2x. Extend them with new
   evidence only.
+- Do not redo the eleventh-pass HQx 3x/4x patterns (`HqxPatterns3.cs`,
+  `HqxPatterns4.cs`) or the benchmark budget gate. Extend them with new evidence
+  only.
 
 ---
 
