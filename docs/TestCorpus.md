@@ -19,6 +19,14 @@ commands work on both machines. The older `D:\Samples\3DO` path used by earlier
 handoffs and the `E:\Panasonic 3DO` path used by others are both aliases for the
 same corpus root depending on the machine.
 
+**The corpus contents differ between machines.** Do not treat a title that is
+missing on one machine as unavailable in the project. Use
+`tools/release-soak.ps1` to discover the local discs, run the 36,000-frame release
+soak for the titles that are present, and record absent titles as
+`Missing on this machine`. If an archived 12k state is available for an absent
+disc, the script can continue it to the target frame count; that is continuation
+evidence, not a fresh-boot check.
+
 ---
 
 ## 1. Disc images

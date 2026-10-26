@@ -121,6 +121,7 @@ implementation plan and architecture are in:
 - [`docs/TestStrategy.md`](docs/TestStrategy.md) - unit, integration, golden, differential, and performance testing.
 - [`docs/Compatibility.md`](docs/Compatibility.md) - BIOS, disc, input, and game-fix compatibility notes.
 - [`docs/TestCorpus.md`](docs/TestCorpus.md) - local BIOS/disc corpus and real-content validation commands (not committed).
+- [`tools/release-soak.ps1`](tools/release-soak.ps1) - per-machine release soak: discovers present discs, reports missing titles, and records summaries.
 - [`docs/Performance.md`](docs/Performance.md) - 4K60 budgets, presentation pipeline, and measurement plan.
 - [`docs/Trimming.md`](docs/Trimming.md) - trim-safe JSON, trimmed CLI/frontend publishes, smoke tests, and the NativeAOT audit.
 - [`docs/UserGuide.md`](docs/UserGuide.md) - quick start, controls, display filters, save states, logs, and CLI.

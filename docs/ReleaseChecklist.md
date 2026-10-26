@@ -116,6 +116,11 @@ Run a **10-minute soak** (36,000 frames at 60 Hz) on each showcase title, and at
 a boot/menu soak on the remaining supported titles. Record final PC and frame hash;
 compare against `docs/TestCorpus.md` where a baseline exists.
 
+Use `tools/release-soak.ps1` for the per-machine run. The corpus differs between the
+two development machines, so a `Missing on this machine` row is expected and is not a
+failure. The script uses archived 12k states for absent discs when available and
+writes `summary.md`/`summary.json` for the release evidence.
+
 - [x] Wolfenstein 3D soak: 36,000 frames, exit 0; `0x0814F039`.
 - [x] Lemmings soak: 36,000 frames, exit 0; `0x9939D345`.
 - [x] Road Rash soak: 36,000 frames, exit 0; `0xBDC2DBEA`.

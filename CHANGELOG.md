@@ -3,6 +3,14 @@
 All notable changes are recorded here. The project is pre-1.0; formats and behavior may
 still change.
 
+## [Unreleased]
+
+### Added
+
+- `tools/release-soak.ps1`: discovers the discs present on the current machine, runs
+  the 36,000-frame release soak, reports absent titles as missing instead of failing,
+  and can continue archived 12k states for machine-specific corpus gaps.
+
 ## [1.0.0-rc.1] - 2026-10-26
 
 Release candidate for the documented-compatibility v1.0 scope. Legal/attribution
