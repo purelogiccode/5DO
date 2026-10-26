@@ -217,11 +217,11 @@ prototype work as partial credit:
 |---|---|---:|---:|
 | M0-M8 core, CPU, boot, MADAM, DSP, CD, input, save states | Functionally complete; M0.8 legal review and minor M8 follow-ups are non-blocking | 90 | 0 |
 | M9 Avalonia frontend | Partial: shell, library, video, input, fullscreen, About, Hi-Res, settings/audio/gamepad/logs/first-run/thumbnails; polish and ViewModel tests | 13 | 3 |
-| M9R OpenGL presenter | Partial: two-stage, sharp-bilinear/CRT/xBR, CPU fallback, screenshots; HQx/bloom and GPU tests remain | 8 | 2 |
+| M9R OpenGL presenter | Partial: two-stage, sharp-bilinear/CRT/xBR/HQx/bloom, CPU fallback, screenshots; hq3x/hq4x and GPU tests remain | 9 | 1 |
 | M9P performance/pacing | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch, GPU timer; hot-path, Tier B/GPU gates remain | 6 | 4 |
 | M10 packaging/validation | Partial: CI and six-RID publish; arm64, trimming, installers, perf report remain | 2.5 | 3.5 |
 | M11 compatibility/release | In progress: M11.0 done; gameplay, high-resolution, and release docs underway | 3 | 22+ |
-| **Baseline total** | | **~122.5 / 157** | **~34.5 + 30% = ~45** |
+| **Baseline total** | | **~123 / 157** | **~34 + 30% = ~44** |
 
 **Estimate: roughly three-quarters of the v1 effort is done.** For one experienced
 developer that is about **9-11 focused weeks**; two developers can overlap the UI,

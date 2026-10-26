@@ -230,11 +230,11 @@ credit:
 |---|---|---:|---:|
 | M0-M8 | Functionally complete; M0.8 legal review is tracked in M11.6 and minor M8 follow-ups are non-blocking | 90 | 0 |
 | M9 | Partial: shell/library/video/input/fullscreen/About/Hi-Res/settings/audio/gamepad/logs/first-run; polish and ViewModel tests | 13 | 3 |
-| M9R | Partial: two-stage, sharp-bilinear/CRT/xBR/bloom, CPU fallback, screenshots; HQx and GPU tests | 8.5 | 1.5 |
+| M9R | Partial: two-stage, sharp-bilinear/CRT/xBR/bloom/HQx, CPU fallback, screenshots; hq3x/hq4x and GPU tests | 9 | 1 |
 | M9P | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch; hot-path and Tier B/GPU gates | 6 | 4 |
 | M10 | Partial: CI + six-RID publish; arm64, trimming, installers, perf report | 2.5 | 3.5 |
 | M11 | In progress: M11.0 done; gameplay, high-resolution, and release docs underway | 3 | 22+ |
-| **Baseline** | | **~122.5 / 157** | **~34.5 + 30% = ~45** |
+| **Baseline** | | **~123 / 157** | **~34 + 30% = ~44** |
 
 **Estimate: roughly three-quarters of the v1 effort is done.** One experienced
 developer needs about **9-11 focused weeks**; two developers can overlap UI, renderer,
