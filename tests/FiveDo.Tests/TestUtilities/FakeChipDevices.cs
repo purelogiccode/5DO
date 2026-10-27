@@ -103,6 +103,8 @@ internal sealed class RecordingAudioSink : IAudioSink
 {
     public int SampleCount { get; private set; }
 
+    public int ResetCount { get; private set; }
+
     public uint LastSample { get; private set; }
 
     public void PushSample(uint packedSample)
@@ -110,4 +112,6 @@ internal sealed class RecordingAudioSink : IAudioSink
         SampleCount++;
         LastSample = packedSample;
     }
+
+    public void Reset() => ResetCount++;
 }

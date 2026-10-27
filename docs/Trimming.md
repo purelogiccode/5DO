@@ -38,7 +38,9 @@ file) plus the bundled `OpenAL32.dll`. The audit covered:
 - A 3,000-frame Lemmings boot; the audio-clock keys are in
   [`TestCorpus.md`](TestCorpus.md) 1.1.
 - **Live OpenAL audio** with `--audio openal` (validated with the OpenAL null
-  backend because the test machine has no playback endpoint at audit time).
+  backend because the test machine has no playback endpoint at audit time). The
+  linux-x64 trimmed CLI was also run under WSL with the published `libopenal.so`
+  and the null backend.
 - Silk.NET.Core loader warnings (`IL3000`/`IL3002`) are visible but non-fatal; the
   loader falls back to `AppContext.BaseDirectory`, where `OpenAL32.dll` is copied.
   CHDSharp's vendored-FLAC `TypeDescriptor` helper (`IL2104`) remains outside the

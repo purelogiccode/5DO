@@ -40,6 +40,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
     private readonly Thread _thread;
     private readonly CancellationTokenSource _stop = new();
     private volatile bool _disposed;
+    private volatile bool _flushRequested;
     private volatile float _volume = 1f;
     private long _samplesPushed;
     private long _samplesDropped;
@@ -182,6 +183,9 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         }
     }
 
+    /// <summary>Drops buffered and queued samples after a machine reset or state load.</summary>
+    public void Reset() => _flushRequested = true;
+
     /// <inheritdoc />
     public void PushSample(uint packedSample)
     {
@@ -217,6 +221,25 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
 
             while (!_stop.IsCancellationRequested)
             {
+                if (_flushRequested)
+                {
+                    _flushRequested = false;
+                    _al.SourceStop(_source);
+                    if (queued > 0)
+                    {
+                        fixed (uint* names = _unqueue)
+                        {
+                            _al.SourceUnqueueBuffers(_source, queued, names);
+                        }
+
+                        queued = 0;
+                        Interlocked.Exchange(ref _queuedBuffers, 0);
+                    }
+
+                    _ring.Clear();
+                    started = false;
+                }
+
                 _al.GetSourceProperty(_source, GetSourceInteger.BuffersProcessed, out var processed);
                 if (processed > 0)
                 {

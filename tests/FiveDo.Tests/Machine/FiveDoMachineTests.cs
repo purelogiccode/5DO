@@ -74,6 +74,18 @@ public sealed class FiveDoMachineTests
     }
 
     [Fact]
+    public void Reset_FlushesTheAudioSink()
+    {
+        var machine = new FiveDoMachine();
+        var sink = new RecordingAudioSink();
+        machine.AudioSink = sink;
+
+        machine.Reset();
+
+        Assert.Equal(1, sink.ResetCount);
+    }
+
+    [Fact]
     public void RunFrames_ProduceOneSecondOfExactDspSamples()
     {
         var machine = new FiveDoMachine();

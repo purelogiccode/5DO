@@ -77,7 +77,7 @@ BIOS ROMs and game images are **not** included.
 The release checklist is in [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 - [x] `dotnet build 5DO.sln -c Release`: 0 warnings, 0 errors.
-- [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`: 796/796
+- [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`: 798/798
       passing (after the audio pass).
 - [x] Synthetic benchmark budget gate: 2.28 ms/frame core mean, 4.03 ms core p99,
       4.66 ms total p99, 0 managed bytes/frame.

@@ -491,7 +491,7 @@ internal static class Program
                             + (roadAutopilot.MenuAdvance ? " MENU" : string.Empty);
                         Console.Error.WriteLine(
                             $"frame {machine.FramesExecuted} pc={machine.Cpu.ProgramCounter:x8} "
-                            + $"dsp={machine.Dsp.ProgramCounter:x4} sema={machine.Dsp.SemaphoreStatus:x4}/{machine.Dsp.SemaphoreData:x4} "
+                            + $"dsp={machine.Dsp.ProgramCounter:x4} run={machine.Dsp.IsRunning} sema={machine.Dsp.SemaphoreStatus:x4}/{machine.Dsp.SemaphoreData:x4} "
                             + $"audio={machine.AudioSamplesProduced}"
                             + autopilot);
                     }

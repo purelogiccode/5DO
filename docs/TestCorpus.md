@@ -599,14 +599,22 @@ Road Rash's race mix still reaches full scale and clips; that is the game's mix,
 not the output path. Theme Park's captured menu is silent. `audio analyze <wav>
 --json` prints the same peak/RMS/clipping/DC-offset statistics for any capture.
 
+**DSP start/stop.** Road Rash starts the DSP between 500 and 1,000 frames and keeps
+it running through 6,000; Lemmings runs it from boot through 25,000. No title in the
+current corpus was observed stopping the DSP mid-run. Resets and state loads call
+`IAudioSink.Reset`, which drops the live ring/queue so a loaded timeline does not
+replay old samples.
+
 **Live audio.** `OpenAlAudioOutput.TryCreate` now brings the OpenAL context current
 on the audio thread and the build/publish copies the bundled OpenAL Soft 1.23.1
 runtime (`OpenAL32.dll` on Windows). A 300-frame real-time run with the OpenAL null
 backend completed in 5.000 s with 220,510 samples (735.03/frame), 529 dropped
 samples, 14 padded buffers, and ~89 ms output latency; the frame pacer followed the
-44.1 kHz clock. The trimmed single-file CLI and the opt-in NativeAOT CLI both open
-the same backend. The opt-in `FIVEDO_AUDIO_TESTS=1` xUnit test plays 1 s of a 440 Hz
-tone through the real device.
+44.1 kHz clock. The trimmed single-file CLI (win-x64 and linux-x64) and the opt-in
+NativeAOT CLI both open the same backend; the Linux check used the published
+`libopenal.so` and `ALSOFT_DRIVERS=null` under WSL. The opt-in
+`FIVEDO_AUDIO_TESTS=1` xUnit test plays 1 s of a 440 Hz tone through the real
+device.
 
 ### 1.5b Ninth pass: CD media-access pulse unblocks the post-race wait (2026-10-25)
 

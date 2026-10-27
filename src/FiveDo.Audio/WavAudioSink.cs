@@ -66,6 +66,11 @@ public sealed class WavAudioSink : IAudioSink, IDisposable
         }
     }
 
+    /// <summary>Continues the capture; WAV files intentionally span resets and state loads.</summary>
+    public void Reset()
+    {
+    }
+
     /// <inheritdoc />
     public void Dispose()
     {

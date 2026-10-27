@@ -98,14 +98,14 @@ This is the short, current answer to "where are we?" The detailed task list is i
   [--realtime]`, and `audio analyze <wav> --json` reports peak/RMS/clipping/DC
   statistics. Exact-clock 600-frame captures: Wolfenstein 18,100 / 2,168,
   Lemmings 8,192 / 1,661, Gex 12,964 / 2,089, Road Rash 32,768 / 11,012 (2,036
-  clipped), Theme Park silent; see `TestCorpus.md` 1.5a2. The opt-in NativeAOT
-  CLI opens the same backend.
+  clipped), Theme Park silent; see `TestCorpus.md` 1.5a2. The trimmed win-x64 and
+  linux-x64 CLI and the opt-in NativeAOT CLI open the same backend.
 - **Input scripting:** the CLI accepts `--input-script <path>` with
   `frame button[,button...]` lines for repeatable controller taps. Input has been
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 796 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 798 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and

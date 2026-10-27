@@ -11,7 +11,7 @@ is made current on the audio thread, underruns are padded/counted, and the CLI h
 `--audio openal`, `--volume`, `--realtime`, and `audio analyze <wav> --json`. Core
 frames are paced by `AudioFramePacer` (audio clock with a 60 Hz fallback), WAV writes
 are buffered with streaming peak/RMS/clipping statistics, and the NativeAOT CLI now
-opens the live backend. **796 tests pass.** Do not redo the trim-safe JSON work, the
+opens the live backend. **798 tests pass.** Do not redo the trim-safe JSON work, the
 trimmed CLI/frontend publishes, the frontend smoke test, the benchmark comparison,
 the portable archives, the swap-interval/GPU-probe work, the ANGLE/GLES parity work,
 or this audio pass. The remaining **release** work is the legal/attribution review
@@ -618,10 +618,11 @@ missing and corrected the Road Rash diagnosis.
   RMS, clipping, silence, and DC offset. `AudioAnalyzer` validates/analyzes PCM WAV
   files; `audio analyze <wav> --json` prints the report. `run --json` includes the
   stats and OpenAL queue counters; `--elapsedSeconds` was added for pacing checks.
-- **Tests.** 796 pass. New coverage: exact 44,100-sample count across batch patterns,
+- **Tests.** 798 pass. New coverage: exact 44,100-sample count across batch patterns,
   Quartz v1 conversion/v2 validation, audio statistics and WAV analyzer roundtrips
   (including mono/odd chunk/truncation), buffered sink flushing, frame-pacer behavior,
-  CoreRunner target-rate reporting, CLI audio JSON, and the opt-in OpenAL tone.
+  CoreRunner target-rate reporting, reset/state-load audio flushing, CLI audio
+  JSON, and the opt-in OpenAL tone.
 
 Do not revert the exact clock to the FreeDO 8.24 DSP accumulator. It is the
 difference between 44.1 kHz and ~44.4 kHz audio. Do not remove the bundled OpenAL

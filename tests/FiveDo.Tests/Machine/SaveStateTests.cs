@@ -33,6 +33,24 @@ public sealed class SaveStateTests
     }
 
     [Fact]
+    public void LoadState_FlushesQueuedAudio()
+    {
+        FiveDoMachine source = CreateMachine();
+        source.RunFrames(2);
+        using var state = new MemoryStream();
+        source.SaveState(state, "disc");
+
+        FiveDoMachine loaded = CreateMachine();
+        var sink = new RecordingAudioSink();
+        loaded.AudioSink = sink;
+        state.Position = 0;
+
+        loaded.LoadState(state);
+
+        Assert.Equal(1, sink.ResetCount);
+    }
+
+    [Fact]
     public void LoadState_RestoresTheParsedFrameImmediately()
     {
         FiveDoMachine machine = CreateMachine();

@@ -10,7 +10,7 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 pass):** M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **796 tests pass.** The sixteenth pass corrected the DSP sample clock to
+prototype. **798 tests pass.** The sixteenth pass corrected the DSP sample clock to
 an exact 44,100 samples per emulated second (the FreeDO 8.24 scheduler ran ~0.7%
 fast), fixed live OpenAL output by bundling OpenAL Soft 1.23.1 and making the
 context current on the audio thread, added audio-driven frame pacing, and added

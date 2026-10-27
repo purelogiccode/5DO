@@ -417,7 +417,7 @@ AudioAnalyzer (offline WAV peak/RMS/clipping/DC report)
 
 - Sample rate is **44,100 Hz**, stereo, signed 16-bit, from an exact rational DSP clock: 44,100 samples per ARM second. It is independent of the VDL/timer 8.24 accumulators.
 - The DSP runs on the core thread; the audio backend runs on its own thread and only consumes the ring buffer. The OpenAL context is made current on that thread because OpenAL's current context is thread-local.
-- The ring drops the newest sample when full and reports it. The OpenAL backend pads short buffers with silence, counts underruns, and keeps a stable three-buffer queue of 512-frame buffers plus a 4096-frame ring.
+- The ring drops the newest sample when full and reports it. The OpenAL backend pads short buffers with silence, counts underruns, and keeps a stable three-buffer queue of 512-frame buffers plus a 4096-frame ring. `IAudioSink.Reset` drops queued audio on machine reset/state load so the new timeline does not replay the old one.
 - No allocations in the steady-state audio path.
 - Audio-driven frame pacing: `CoreRunner` feeds the samples produced by each frame into `AudioFramePacer`, which sets the next frame period to `samples / 44100`. A 30-frame rolling average absorbs jitter, implausible deltas reset the window, and the period is clamped to 50-70 fps with a 60 Hz fallback.
 - The CLI exposes the same clock with `--realtime`, and `audio analyze <wav> --json` reports capture statistics.

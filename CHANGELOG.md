@@ -24,7 +24,10 @@ still change.
   executables and included in portable archives.
 - Audio regression tests: exact 44,100-sample clock across batch patterns, Quartz
   state-v1 conversion, audio statistics/WAV analyzer roundtrips, frame-pacer
-  behavior, CLI JSON contracts, and an opt-in `FIVEDO_AUDIO_TESTS=1` OpenAL tone.
+  behavior, reset/state-load audio flushing, CLI JSON contracts, and an opt-in
+  `FIVEDO_AUDIO_TESTS=1` OpenAL tone.
+- `IAudioSink.Reset`: live backends drop their ring/queue on machine reset or state
+  load so the next timeline does not replay up to ~180 ms of the old one.
 
 ### Fixed
 

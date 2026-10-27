@@ -221,6 +221,7 @@ public sealed class FiveDoMachine
         _frame.Clear();
         _framesExecuted = 0;
         _audioSamplesProduced = 0;
+        AudioSink?.Reset();
 
         if (Compatibility.IsAnvil == 30)
         {
@@ -411,6 +412,7 @@ public sealed class FiveDoMachine
 
         _framesExecuted = frames;
         _lastFrameCycles = 0;
+        AudioSink?.Reset();
     }
 
     /// <summary>Loads a machine state atomically from a file.</summary>

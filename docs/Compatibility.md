@@ -232,7 +232,7 @@ does not need a separate high-resolution input path.
 | 44.1 kHz stereo | Yes; exact rational sample clock (44,100 samples per ARM second) | |
 | Null/WAV sink | Yes; streaming peak/RMS/clipping/DC statistics | |
 | Desktop audio backend | OpenAL Soft 1.23.1 via Silk.NET, bundled for all six RIDs | Platform-specific backends possible |
-| Live CLI audio | `--audio openal --volume`, `--realtime` pacing | |
+| Live CLI audio | `--audio openal --volume`, `--realtime` pacing; trimmed win-x64 and linux-x64 validated with the null backend | |
 | Volume/mute | Yes | |
 | Audio-driven frame pacing | Yes (audio clock with a 60 Hz fallback) | |
 | Audio analysis | `audio analyze <wav> --json` | Spectrum/loudness comparison with Opera remains a manual check |
