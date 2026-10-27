@@ -111,6 +111,11 @@ public partial class MainWindow : Window, IDisposable
             // validates XAML, trimming, settings, and window startup; GPU
             // presentation is covered by the renderer tests and manual runs.
             Video.IsVisible = false;
+
+            // Construct the settings dialog so its XAML and named controls are also
+            // validated by the trimmed smoke test. Do not close it: closing a window
+            // before the main loop starts can shut down the dispatcher.
+            _ = new SettingsWindow(_settings, _gameId, _gameName);
         }
 
         GridLibraryList.ItemsSource = _visibleGames;

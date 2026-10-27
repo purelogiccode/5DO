@@ -67,7 +67,8 @@ Skia/HarfBuzz/ANGLE assets in the same folder (Avalonia's native backends are no
 embedded). The audit covered:
 
 - `--version` and the real-window `--smoke-test --smoke-output` path (exit 0,
-  `FRONTEND SMOKE OK`).
+  `FRONTEND SMOKE OK`). The smoke also constructs the settings dialog so its XAML
+  and the audio test-tone controls are validated.
 - WGL and ANGLE `--gl-probe` 320x240 Accurate captures: `ok: true`, parity
   `matches: true`, `differentPixels: 0`, and the same CPU/GPU hash on both backends.
 - A 1280x720 ANGLE sharp-bilinear pass with 0 renderer allocations/frame.
@@ -117,7 +118,8 @@ custom native-asset resolver for the frontend.
    the trimmed app does not depend on reflection-based XAML lookup.
 
 5. **Frontend smoke test.** `--smoke-test --smoke-output <path>` opens the real
-   `MainWindow`, runs one UI pass, writes a version marker, and exits with code 0.
+   `MainWindow`, constructs the settings dialog, runs one UI pass, writes a version
+   marker, and exits with code 0.
    The GL surface is hidden during the smoke so headless CI does not need a desktop
    OpenGL context. The smoke skips the welcome dialog and the configured BIOS/disc
    flow so CI does not need a BIOS, disc, or user profile. `--version` exits before

@@ -113,8 +113,8 @@ sign-off is pending; see [`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.
   bindings are compiled. The win-x64 single-file executable is 26.3 MB trimmed vs
   91.3 MB untrimmed.
 - Frontend startup smoke test: `--smoke-test --smoke-output <path>` opens the real
-  main window, runs one UI pass (GL hidden for headless CI), writes a
-  `FRONTEND SMOKE OK` marker, and exits 0. `--version` exits before Avalonia
+  main window, constructs the settings dialog, runs one UI pass (GL hidden for
+  headless CI), writes a `FRONTEND SMOKE OK` marker, and exits 0. `--version` exits before Avalonia
   initializes. CI runs the trimmed win-x64 frontend smoke test on Windows.
 - Platform swap-interval support: `SwapInterval.TryCreate` resolves
   `WGL_EXT_swap_control`, GLX EXT/MESA/SGI, or `EGL_KHR_swap_interval`, and the
