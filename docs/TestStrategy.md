@@ -258,7 +258,15 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
 
 - Ring buffer: write/read, wrap, underrun, overrun, single producer/single consumer.
 - Sample conversion: packed uint -> left/right shorts; channel order.
-- WAV sink: header, sample count, byte order.
+- Exact DSP clock: 44,100 samples per ARM second across batch patterns; Quartz
+  state-v1 conversion and v2 validation.
+- WAV sink: header, sample count, byte order, buffered flushing, peak/RMS/clipping/
+  silence/DC statistics.
+- WAV analyzer: PCM mono/stereo, odd-sized chunk padding, truncation rejection.
+- Live OpenAL: opt-in `FIVEDO_AUDIO_TESTS=1` 1 s tone test; reset/state-load flushes
+  the ring and source queue.
+- Frame pacing: `AudioFramePacer` 735/740/zero/implausible deltas, rolling average,
+  and `CoreRunner` target-rate reporting.
 - Null sink: no allocations, no exceptions.
 
 ### 4.13 Input
