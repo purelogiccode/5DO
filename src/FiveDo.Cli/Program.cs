@@ -1589,6 +1589,14 @@ internal static class Program
                 + $"silent {result.AudioSilentFrames}");
         }
 
+        if (result.AudioDroppedSamples is { } droppedSamples)
+        {
+            Console.WriteLine(
+                $"openal:      dropped {droppedSamples}, underruns {result.AudioUnderrunBuffers}, "
+                + $"queued {result.AudioQueuedBuffers}, buffered {result.AudioBufferedFrames}, "
+                + $"latency {result.AudioLatencyMilliseconds:F1} ms");
+        }
+
         Console.WriteLine($"disc hash:   {result.DiscHash}");
         Console.WriteLine($"game id:     {result.GameId}");
         Console.WriteLine($"fix mode:    0x{result.FixMode:x8}");
