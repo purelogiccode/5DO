@@ -35,8 +35,8 @@ accepts `--fix-mode`/`--no-game-fixes` overrides. The benchmark reports p50/p95/
 zero steady-state allocations, and `--gate` enforces the CPU-side budgets in CI; an
 opt-in bounded disc prefetch cache is available via `--prefetch`.
 
-**Audio (2026-10-27):** the corpus now produces exactly 735 samples per 60 Hz
-frame (441,015-441,020 samples per 600 frames = 10.000 s), matching Opera's 44.1 kHz
+**Audio (2026-10-27):** the DSP now produces exactly 44,100 samples per emulated
+second (441,015-441,020 samples per 600 frames = 10.000 s), matching Opera's 44.1 kHz
 reference within the 59.94/60 Hz field-rate difference. Live playback uses the
 bundled OpenAL Soft 1.23.1 runtime (no system OpenAL install required), the core
 thread paces frames against the audio clock with a 60 Hz fallback, and the CLI
