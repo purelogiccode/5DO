@@ -598,6 +598,11 @@ audio clock changed the frame/FMV timing.
 Road Rash's race mix still reaches full scale and clips; that is the game's mix,
 not the output path. Theme Park's captured menu is silent. `audio analyze <wav>
 --json` prints the same peak/RMS/clipping/DC-offset statistics for any capture.
+A 36,000-frame capture from `rr-t198-92k.state` produced 26,461,238 samples
+(600.028 s at 44.1 kHz), only 0.005% above the nominal 36,000 x 735 samples; the
+exact clock does not drift over ten minutes. That continuation reaches long static
+wait sections (97.9% silent frames), so it is a cadence check rather than a
+gameplay-audio sample.
 
 **DSP start/stop.** Road Rash starts the DSP between 500 and 1,000 frames and keeps
 it running through 6,000; Lemmings runs it from boot through 25,000. No title in the

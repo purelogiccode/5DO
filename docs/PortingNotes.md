@@ -605,7 +605,8 @@ M1 implements the section primitive used by all later chips:
 - Operand loading preserves the reference's request bits, NUMOPS promotion to 4, DI indirection, immediate JUSTIFY shift (0 or 3), write-back priority (GWRITEBACK only when the pool contains more operands than requests), and the BS=8 rule that loads the shift count from an extra operand. The one-bit `JUSTIFY` field is sign-extended to 0/-1 and masked with `& 3`; it is **not** `~(JUSTIFY+1) & 3`.
 - `ireadh`/`iwriteh` keep the reference's asymmetric address mapping: reads of 0x300+ wrap into the low 0x80 words, while writes of 0x300+ stay in 0x300+. This is how DSP code reads a coefficient and writes an audio sample through the same nominal address.
 - Deliberate deviations: instruction fetches mask PC to 10 bits (deterministic on malformed programs); the two `fastrand()` calls in one C expression are made left to right; debug prints from `_Arithmetic_Debug`/FIFO-direct writes are omitted.
-- `FiveDo.Audio` adds a monotonic-counter SPSC ring buffer, a normalized-float pipeline, a null sink, and a 44.1 kHz/16-bit stereo WAV writer. The ring buffer never allocates after construction; full rings drop the newest sample rather than blocking the emulation thread.
+- `FiveDo.Audio` adds a monotonic-counter SPSC ring buffer, a normalized-float pipeline, a null sink, a buffered 44.1 kHz/16-bit stereo WAV writer with streaming statistics, a WAV analyzer, and the OpenAL live sink. The ring buffer never allocates after construction; full rings drop the newest sample rather than blocking the emulation thread.
+- `FiveDoMachine.Reset` and `LoadState` call `IAudioSink.Reset`. Live sinks clear their ring and source queue so a reset/load does not replay up to ~180 ms of the previous timeline; WAV captures intentionally continue.
 
 ### 12.9 M6 implementation notes
 
