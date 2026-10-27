@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using FiveDo.Audio;
 using FiveDo.Core;
 using FiveDo.Host;
 using FiveDo.Video;
@@ -62,6 +65,48 @@ public partial class SettingsWindow : Window
 
         FixMode? overrideMode = settings.GetFixModeOverride(gameId);
         FixModeBox.Text = overrideMode is null ? string.Empty : $"0x{(uint)overrideMode.Value:x}";
+    }
+
+    private async void OnTestAudioClick(object? sender, RoutedEventArgs e)
+    {
+        TestAudioButton.IsEnabled = false;
+        TestAudioText.Text = "Playing a 1 s 440 Hz tone...";
+        OpenAlAudioOutput? output = OpenAlAudioOutput.TryCreate(2048, out var error);
+        if (output is null)
+        {
+            TestAudioText.Text = $"OpenAL is unavailable: {error ?? "unknown error"}.";
+            TestAudioButton.IsEnabled = true;
+            return;
+        }
+
+        try
+        {
+            output.Volume = (float)Math.Clamp(VolumeSlider.Value, 0, 1);
+            await Task.Run(() =>
+            {
+                for (var frame = 0; frame < 60; frame++)
+                {
+                    for (var i = 0; i < 735; i++)
+                    {
+                        var phase = (frame * 735 + i) * 2.0 * Math.PI * 440.0 / 44_100.0;
+                        var value = (short)(Math.Sin(phase) * 6000.0);
+                        output.PushSample(new AudioSample(value, value).Packed);
+                    }
+
+                    Thread.Sleep(16);
+                }
+            }).ConfigureAwait(false);
+            TestAudioText.Text = "Test tone finished.";
+        }
+        catch (Exception exception)
+        {
+            TestAudioText.Text = $"Test tone failed: {exception.Message}";
+        }
+        finally
+        {
+            output.Dispose();
+            TestAudioButton.IsEnabled = true;
+        }
     }
 
     /// <summary>Copies the edited values into a settings object.</summary>

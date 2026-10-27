@@ -27,12 +27,18 @@
             </TabItem>
 
             <TabItem Header="Audio">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="8">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Output" VerticalAlignment="Center" />
                     <CheckBox x:Name="AudioCheck" Grid.Row="0" Grid.Column="1" Content="Enable OpenAL output" />
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume" VerticalAlignment="Center" />
                     <Slider x:Name="VolumeSlider" Grid.Row="1" Grid.Column="1"
                             Minimum="0" Maximum="1" TickFrequency="0.05" />
+                    <Button x:Name="TestAudioButton" Grid.Row="2" Grid.Column="1"
+                            Content="Play 440 Hz test tone" Click="OnTestAudioClick"
+                            HorizontalAlignment="Left" Margin="0,12,0,0" />
+                    <TextBlock x:Name="TestAudioText" Grid.Row="3" Grid.ColumnSpan="2"
+                               Text="OpenAL Soft 1.23.1 · 44.1 kHz stereo"
+                               Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0" />
                 </Grid>
             </TabItem>
 

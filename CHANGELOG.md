@@ -16,6 +16,8 @@ still change.
   estimated latency for `--audio openal`.
 - Live audio from the CLI: `--audio openal` and `--volume 0..1`. `--realtime`
   paces a `run` against the audio clock for listening and glitch tests.
+- Settings > Audio has a 1 s 440 Hz OpenAL test tone and reports the device error
+  when no playback endpoint is available.
 - Audio-driven frame pacing in `CoreRunner`: the frame period follows the DSP
   sample count (44.1 kHz), with a rolling average, clamping, and a 60 Hz fallback.
   The status overlay shows measured/target fps.
