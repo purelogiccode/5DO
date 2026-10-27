@@ -47,6 +47,14 @@
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Avalonia.Fonts.Inter" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Meziantou.Analyzer">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Roslynator.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>

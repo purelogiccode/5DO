@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using FiveDo.Core;
 using FiveDo.Host;
@@ -14,10 +15,10 @@ public sealed class SaveStateSlotManagerTests
     {
         using var directory = new TempDirectory();
         var manager = new SaveStateSlotManager(directory.Path, slotCount: 4);
-        var machine = CreateMachine();
+        FiveDoMachine machine = CreateMachine();
         machine.RunFrames(3);
 
-        var saved = manager.Save(machine, "9F7D72BC", "Alone in the Dark", slot: 2);
+        SaveStateSlotInfo saved = manager.Save(machine, "9F7D72BC", "Alone in the Dark", slot: 2);
 
         Assert.Equal(2, saved.Slot);
         Assert.True(saved.Exists);
@@ -36,7 +37,7 @@ public sealed class SaveStateSlotManagerTests
         var expectedPc = machine.Cpu.ProgramCounter;
         machine.RunFrames(10);
 
-        var loaded = manager.Load(machine, slot: 2);
+        SaveStateSlotInfo loaded = manager.Load(machine, slot: 2);
         Assert.Equal(3, loaded.FramesExecuted);
         Assert.Equal(expectedPc, machine.Cpu.ProgramCounter);
         Assert.Equal(3, machine.FramesExecuted);
@@ -47,11 +48,11 @@ public sealed class SaveStateSlotManagerTests
     {
         using var directory = new TempDirectory();
         var manager = new SaveStateSlotManager(directory.Path, slotCount: 3);
-        var machine = CreateMachine();
+        FiveDoMachine machine = CreateMachine();
         manager.Save(machine, "d7672550", "Road Rash", slot: 1);
         File.WriteAllBytes(manager.GetStatePath(0), [1, 2, 3, 4]);
 
-        var slots = manager.List();
+        IReadOnlyList<SaveStateSlotInfo> slots = manager.List();
 
         Assert.Equal(3, slots.Count);
         Assert.False(slots[2].Exists);
@@ -68,7 +69,7 @@ public sealed class SaveStateSlotManagerTests
     {
         using var directory = new TempDirectory();
         var manager = new SaveStateSlotManager(directory.Path, slotCount: 4);
-        var machine = CreateMachine();
+        FiveDoMachine machine = CreateMachine();
         manager.Save(machine, gameId: "a", gameName: "A", slot: 1);
         manager.Save(machine, gameId: "b", gameName: "B", slot: 3);
 
@@ -91,7 +92,7 @@ public sealed class SaveStateSlotManagerTests
     {
         using var directory = new TempDirectory();
         var manager = new SaveStateSlotManager(directory.Path, slotCount: 2);
-        var machine = CreateMachine();
+        FiveDoMachine machine = CreateMachine();
         manager.Save(machine, slot: 0);
 
         Assert.True(manager.Delete(0));
@@ -106,7 +107,7 @@ public sealed class SaveStateSlotManagerTests
     {
         using var directory = new TempDirectory();
         var manager = new SaveStateSlotManager(directory.Path, slotCount: 2);
-        var machine = CreateMachine();
+        FiveDoMachine machine = CreateMachine();
 
         Assert.Throws<FileNotFoundException>(() => manager.Load(machine, slot: 1));
     }

@@ -19,7 +19,7 @@ public sealed class PrefetchingDiscSourceTests
         Assert.Equal(5, destination[0]);
 
         Assert.True(
-            SpinWait.SpinUntil(() => source.CachedSectorCount >= 3, TimeSpan.FromSeconds(2)),
+            WaitForCache(source, minimum: 3, TimeSpan.FromSeconds(2)),
             "The prefetch worker did not cache the next sectors.");
     }
 
@@ -32,7 +32,7 @@ public sealed class PrefetchingDiscSourceTests
         var destination = new byte[2048];
         source.ReadSector(5, destination);
         Assert.True(
-            SpinWait.SpinUntil(() => source.CachedSectorCount > 0, TimeSpan.FromSeconds(2)),
+            WaitForCache(source, minimum: 1, TimeSpan.FromSeconds(2)),
             "The prefetch worker did not cache a sector.");
 
         source.ReadSector(5, destination);
@@ -49,7 +49,7 @@ public sealed class PrefetchingDiscSourceTests
         source.ReadSector(0, destination);
 
         Assert.True(
-            SpinWait.SpinUntil(() => source.CachedSectorCount >= 4, TimeSpan.FromSeconds(2)),
+            WaitForCache(source, minimum: 4, TimeSpan.FromSeconds(2)),
             "The prefetch worker did not fill the cache.");
 
         Thread.Sleep(100);
@@ -74,7 +74,7 @@ public sealed class PrefetchingDiscSourceTests
         try
         {
             File.WriteAllBytes(path, new byte[2048 * 4]);
-            using var source = DiscImageFactory.Open(path, prefetch: true, prefetchAhead: 2, prefetchCapacity: 4);
+            using IDiscSource source = DiscImageFactory.Open(path, prefetch: true, prefetchAhead: 2, prefetchCapacity: 4);
             var destination = new byte[2048];
             source.ReadSector(0, destination);
             Assert.Equal(4, source.SectorCount);
@@ -83,6 +83,22 @@ public sealed class PrefetchingDiscSourceTests
         {
             File.Delete(path);
         }
+    }
+
+    private static bool WaitForCache(PrefetchingDiscSource source, int minimum, TimeSpan timeout)
+    {
+        DateTime deadline = DateTime.UtcNow + timeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            if (source.CachedSectorCount >= minimum)
+            {
+                return true;
+            }
+
+            Thread.Sleep(5);
+        }
+
+        return source.CachedSectorCount >= minimum;
     }
 
     private sealed class FakeDiscSource : IDiscSource

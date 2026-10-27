@@ -141,7 +141,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
     /// <returns>The ARM clock cycles consumed by the instruction.</returns>
     public int Step()
     {
-        var state = _state;
+        Arm60State state = _state;
         if (_compatibility.BiosAnvil)
         {
             state.ProgramCounter += 64;
@@ -153,7 +153,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
             state.User[0] == 0x113000 &&
             state.User[1] == 0x113000 &&
             !_compatibility.Cnbfix &&
-            (_compatibility.FixMode & FixMode.BitTiming1) != 0)
+            (_compatibility.FixMode & FixMode.BitTiming1) != FixMode.None)
         {
             state.ProgramCounter = 0x9E9CC;
             _compatibility.Cnbfix = true;
@@ -350,7 +350,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
             return false;
         }
 
-        var state = _state;
+        Arm60State state = _state;
         var cycles = ((CalcBits(state.User[(int)((instruction >> 8) & 0xf)]) + 5) >> 1) - 1;
         _cycles -= cycles > 16 ? 16 : (int)cycles;
 
@@ -400,7 +400,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
             return false;
         }
 
-        var state = _state;
+        Arm60State state = _state;
         state.ProgramCounter += 4;
         var address = state.User[(int)((instruction >> 16) & 0xf)];
         state.ProgramCounter += 4;
@@ -431,7 +431,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
 
     private void ExecuteDataProcessing(uint instruction)
     {
-        var state = _state;
+        Arm60State state = _state;
         var programCounter = state.ProgramCounter;
         state.ProgramCounter += 4;
 
@@ -511,7 +511,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
 
     private void ExecuteSingleDataTransfer(uint instruction)
     {
-        var state = _state;
+        Arm60State state = _state;
         var programCounter = state.ProgramCounter;
         state.ProgramCounter += 4;
 
@@ -647,7 +647,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
 
     private void ExecuteBlockTransfer(uint instruction)
     {
-        var state = _state;
+        Arm60State state = _state;
         var register = (int)((instruction >> 16) & 0xf);
         var baseAddress = register == 15 ? state.User[15] + 8 : state.User[register];
 
@@ -668,7 +668,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
 
     private void LoadMultiple(uint instruction, uint baseAddress, int register)
     {
-        var state = _state;
+        Arm60State state = _state;
         var list = instruction & 0xffff;
         var count = CountBits(list);
         uint basePointer;
@@ -730,7 +730,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
                         index == 1 &&
                         state.User[2] != 0xF0000 &&
                         !_compatibility.Cnbfix &&
-                        (_compatibility.FixMode & FixMode.BitTiming1) != 0)
+                        (_compatibility.FixMode & FixMode.BitTiming1) != FixMode.None)
                     {
                         value += 0x1000;
                     }
@@ -746,7 +746,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
                             value == 0xEFE54 &&
                             index == 4 &&
                             !_compatibility.Cnbfix &&
-                            (_compatibility.FixMode & FixMode.BitTiming1) != 0)
+                            (_compatibility.FixMode & FixMode.BitTiming1) != FixMode.None)
                         {
                             value -= 0xF;
                         }
@@ -775,7 +775,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
 
     private void StoreMultiple(uint instruction, uint baseAddress, int register)
     {
-        var state = _state;
+        Arm60State state = _state;
         var count = CountBits(instruction & 0xffff);
         var list = instruction & 0x7fff;
         uint basePointer;
@@ -869,7 +869,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
 
     private void ExecuteBranch(uint instruction)
     {
-        var state = _state;
+        Arm60State state = _state;
         if ((instruction & (1u << 24)) != 0)
         {
             state.Load(14, state.ProgramCounter);
@@ -882,7 +882,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
 
     private void EnterSwi()
     {
-        var state = _state;
+        Arm60State state = _state;
         state.Spsr[ArmModes.Table[0x13]] = state.Cpsr;
         state.SetI(true);
         state.SetMode(0x13);
@@ -893,7 +893,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
 
     private void EnterUndefined()
     {
-        var state = _state;
+        Arm60State state = _state;
         state.Spsr[ArmModes.Table[0x1b]] = state.Cpsr;
         state.SetI(true);
         state.SetMode(0x1b);
@@ -904,7 +904,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
 
     private void EnterFiq()
     {
-        var state = _state;
+        Arm60State state = _state;
         state.FiqPending = false;
         state.Spsr[ArmModes.Table[0x11]] = state.Cpsr;
         state.SetF(true);

@@ -8,7 +8,7 @@ public sealed class CoreTypesTests
     [Fact]
     public void EmulatorTuning_DefaultsMatchReference()
     {
-        var tuning = EmulatorTuning.Default;
+        EmulatorTuning tuning = EmulatorTuning.Default;
 
         Assert.Equal(12_500_000, tuning.ArmClock);
         Assert.Equal(FixMode.None, tuning.FixMode);
@@ -36,7 +36,7 @@ public sealed class CoreTypesTests
     [Fact]
     public void FixMode_ComposesFlags()
     {
-        var mode = FixMode.BitTiming1 | FixMode.GraphicsStepY;
+        FixMode mode = FixMode.BitTiming1 | FixMode.GraphicsStepY;
 
         Assert.True(mode.HasFlag(FixMode.BitTiming1));
         Assert.True(mode.HasFlag(FixMode.GraphicsStepY));
@@ -46,7 +46,7 @@ public sealed class CoreTypesTests
     [Fact]
     public void GameQuirks_NoneHasNoFlags()
     {
-        var quirks = GameQuirks.None;
+        GameQuirks quirks = GameQuirks.None;
 
         Assert.Equal(FixMode.None, quirks.FixMode);
         Assert.False(quirks.SpeedFixes);

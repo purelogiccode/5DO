@@ -21,7 +21,7 @@ public sealed class GlBackendOptionTests
     [InlineData("cpu", GlBackend.Software)]
     public void TryParse_AcceptsAliases(string? text, GlBackend expected)
     {
-        Assert.True(GlBackendOption.TryParse(text, out var backend));
+        Assert.True(GlBackendOption.TryParse(text, out GlBackend backend));
         Assert.Equal(expected, backend);
     }
 

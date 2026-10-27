@@ -8,7 +8,7 @@ public sealed class OpenGlCapabilitiesTests
     [Fact]
     public void Detect_DesktopVersionParsesMajorAndMinor()
     {
-        var capabilities = OpenGlCapabilities.Detect("4.6.0 NVIDIA 552.22", 32768);
+        RendererCapabilities capabilities = OpenGlCapabilities.Detect("4.6.0 NVIDIA 552.22", 32768);
 
         Assert.Equal(RendererApi.OpenGl, capabilities.Api);
         Assert.Equal("OpenGL", capabilities.Name);
@@ -31,7 +31,7 @@ public sealed class OpenGlCapabilitiesTests
     [Fact]
     public void Detect_OpenGlEsVersionParsesAfterTheApiName()
     {
-        var capabilities = OpenGlCapabilities.Detect("OpenGL ES 3.2 (ANGLE 2.1.0)", 16384);
+        RendererCapabilities capabilities = OpenGlCapabilities.Detect("OpenGL ES 3.2 (ANGLE 2.1.0)", 16384);
 
         Assert.Equal(RendererApi.OpenGlEs, capabilities.Api);
         Assert.Equal("OpenGL ES", capabilities.Name);
@@ -45,7 +45,7 @@ public sealed class OpenGlCapabilitiesTests
     [Fact]
     public void Detect_OldDesktopContextDoesNotSupportIntegerTextures()
     {
-        var capabilities = OpenGlCapabilities.Detect("2.1 Mesa 8.0", 8192);
+        RendererCapabilities capabilities = OpenGlCapabilities.Detect("2.1 Mesa 8.0", 8192);
 
         Assert.Equal(2, capabilities.MajorVersion);
         Assert.Equal(1, capabilities.MinorVersion);
@@ -56,7 +56,7 @@ public sealed class OpenGlCapabilitiesTests
     [Fact]
     public void Detect_OldOpenGlEsContextDoesNotSupportIntegerTextures()
     {
-        var capabilities = OpenGlCapabilities.Detect("OpenGL ES 2.0", 4096);
+        RendererCapabilities capabilities = OpenGlCapabilities.Detect("OpenGL ES 2.0", 4096);
 
         Assert.Equal(RendererApi.OpenGlEs, capabilities.Api);
         Assert.False(capabilities.SupportsIntegerTextures);
@@ -66,7 +66,7 @@ public sealed class OpenGlCapabilitiesTests
     [Fact]
     public void Detect_UnparseableVersionReportsUnknownVersion()
     {
-        var capabilities = OpenGlCapabilities.Detect("unknown", 0);
+        RendererCapabilities capabilities = OpenGlCapabilities.Detect("unknown", 0);
 
         Assert.Equal(RendererApi.OpenGl, capabilities.Api);
         Assert.Equal(0, capabilities.MajorVersion);

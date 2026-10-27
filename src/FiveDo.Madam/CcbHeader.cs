@@ -74,20 +74,20 @@ public struct CcbHeader
     public bool PlutDataInvalid { get; set; }
 
     /// <summary>Gets a value indicating whether this CEL is last in the list.</summary>
-    public bool IsLast => (Flags & CcbControl.Last) != 0 || NextIsLast;
+    public readonly bool IsLast => (Flags & CcbControl.Last) != CcbControl.None || NextIsLast;
 
     /// <summary>Gets a value indicating whether the CEL is skipped.</summary>
-    public bool IsSkipped => (Flags & CcbControl.Skip) != 0;
+    public readonly bool IsSkipped => (Flags & CcbControl.Skip) != CcbControl.None;
 
     /// <summary>Gets a value indicating whether the source data is packed.</summary>
-    public bool IsPacked => (Flags & CcbControl.Packed) != 0;
+    public readonly bool IsPacked => (Flags & CcbControl.Packed) != CcbControl.None;
 
     /// <summary>Gets a value indicating whether the CCB loads a PLUT.</summary>
-    public bool LoadsPlut => (Flags & CcbControl.LoadPlut) != 0;
+    public readonly bool LoadsPlut => (Flags & CcbControl.LoadPlut) != CcbControl.None;
 
     /// <summary>Gets the pixel-over mode bits. FreeDO: <c>CcbControl &amp; CCB_POVER_MASK</c>.</summary>
-    public uint PixelOverMode => (uint)Flags & (uint)CcbControl.PixelOverMask;
+    public readonly uint PixelOverMode => (uint)Flags & (uint)CcbControl.PixelOverMask;
 
     /// <summary>Gets the PLUT offset bits. FreeDO: <c>CcbControl &amp; CCB_PLUTA_MASK</c>.</summary>
-    public uint PlutOffset => (uint)Flags & (uint)CcbControl.PlutOffsetMask;
+    public readonly uint PlutOffset => (uint)Flags & (uint)CcbControl.PlutOffsetMask;
 }

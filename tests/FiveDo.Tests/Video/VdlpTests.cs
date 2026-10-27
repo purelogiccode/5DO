@@ -44,7 +44,7 @@ public sealed class VdlpTests
         WriteVdl(memory, head + 16, 0x01112233, 0xe0010203, 0xc001002c);
         for (var i = 0; i < 320; i++)
         {
-            memory.Ram.Write16(VramOffset + bitmap + ((uint)i * 2), (ushort)(i % 32));
+            memory.Ram.Write16(VramOffset + bitmap + ((uint)i * 4), (ushort)(i % 32));
         }
 
         vdlp.ProcessVdl(head);
@@ -78,10 +78,10 @@ public sealed class VdlpTests
         WriteVdl(memory, head, header, bitmap, bitmap, 0);
         for (var i = 0; i < 320; i++)
         {
-            memory.Ram.Write16(VramOffset + bitmap + ((uint)i * 2), 1);
-            memory.Ram.Write16(VramOffset + 0x100000 + bitmap + ((uint)i * 2), 2);
-            memory.Ram.Write16(VramOffset + 0x200000 + bitmap + ((uint)i * 2), 3);
-            memory.Ram.Write16(VramOffset + 0x300000 + bitmap + ((uint)i * 2), 4);
+            memory.Ram.Write16(VramOffset + bitmap + ((uint)i * 4), 1);
+            memory.Ram.Write16(VramOffset + 0x100000 + bitmap + ((uint)i * 4), 2);
+            memory.Ram.Write16(VramOffset + 0x200000 + bitmap + ((uint)i * 4), 3);
+            memory.Ram.Write16(VramOffset + 0x300000 + bitmap + ((uint)i * 4), 4);
         }
 
         vdlp.ProcessVdl(head);
@@ -109,7 +109,7 @@ public sealed class VdlpTests
         WriteVdl(memory, head, header, bitmap, bitmap, 0);
         for (var i = 0; i < 320; i++)
         {
-            memory.Ram.Write16(VramOffset + bitmap + ((uint)i * 2), 7);
+            memory.Ram.Write16(VramOffset + bitmap + ((uint)i * 4), 7);
         }
 
         vdlp.ProcessVdl(head);
@@ -135,7 +135,7 @@ public sealed class VdlpTests
         WriteVdl(memory, head, header, bitmap, bitmap, 0);
         for (var i = 0; i < 384; i++)
         {
-            memory.Ram.Write16(storage + ((uint)i * 2), (ushort)(i & 0x1f));
+            memory.Ram.Write16(storage + ((uint)i * 4), (ushort)(i & 0x1f));
         }
 
         vdlp.ProcessVdl(head);

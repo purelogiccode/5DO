@@ -30,7 +30,7 @@ public sealed class CelGeometryTests
 
         foreach (var (input, output) in cases)
         {
-            var geometry = Create(input);
+            CelGeometry geometry = Create(input);
             var visible = geometry.TryInitVisual(input[1] != 0);
             var actual = new[]
             {
@@ -103,7 +103,7 @@ public sealed class CelGeometryTests
         // Differential hash generated from the FreeDO TestInitVisual/Init_*_Map code.
         var deltas = new[] { -0x20000, -0x10000, -0x8000, -1, 0, 1, 0x8000, 0x10000, 0x20000 };
         var origins = new[] { -0x20000, -0x10000, -0x8000, -1, 0, 1, 0x8000, 0x10000, 0x100000, 0x13f0000 };
-        var flagSets = new[] { CcbControl.None, CcbControl.Clockwise, CcbControl.CounterClockwise, CcbControl.Clockwise | CcbControl.CounterClockwise };
+        CcbControl[] flagSets = new[] { CcbControl.None, CcbControl.Clockwise, CcbControl.CounterClockwise, CcbControl.Clockwise | CcbControl.CounterClockwise };
         var sizes = new[] { 1, 2, 8, 16, 320 };
         var clips = new[] { 0, 1, 319, 239 };
 
@@ -114,7 +114,7 @@ public sealed class CelGeometryTests
             seed = unchecked((seed * 1664525u) + 1013904223u);
             var r = seed;
 
-            var flags = flagSets[r & 3];
+            CcbControl flags = flagSets[r & 3];
             r >>= 2;
             var hdx = deltas[r % 9];
             r /= 9;

@@ -79,7 +79,7 @@ public static class GameCompatibility
     public static FixMode ApplyTo(FiveDoMachine machine, string? gameId, FixMode? overrideMode = null)
     {
         ArgumentNullException.ThrowIfNull(machine);
-        var mode = overrideMode ?? ForGameId(gameId).FixMode;
+        FixMode mode = overrideMode ?? ForGameId(gameId).FixMode;
         machine.Compatibility.FixMode = mode;
         return mode;
     }

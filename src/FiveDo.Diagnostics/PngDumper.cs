@@ -68,7 +68,7 @@ public static class PngDumper
             Directory.CreateDirectory(directory);
         }
 
-        using var output = File.Create(path);
+        using FileStream output = File.Create(path);
         output.Write([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
         var header = new byte[13];
         BinaryPrimitives.WriteInt32BigEndian(header, width);

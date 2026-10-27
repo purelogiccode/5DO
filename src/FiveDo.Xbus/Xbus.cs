@@ -112,7 +112,7 @@ public sealed class Xbus : IClioXbus, IStateSection
             _poll = (byte)((_poll & 0xf0) | (int)(value & 0xf));
         }
 
-        var device = GetSelectedDevice();
+        IXbusDevice? device = GetSelectedDevice();
         if (device is null)
         {
             return;
@@ -128,7 +128,7 @@ public sealed class Xbus : IClioXbus, IStateSection
     /// <inheritdoc />
     public void SetCommandFifo(uint value)
     {
-        var device = GetSelectedDevice();
+        IXbusDevice? device = GetSelectedDevice();
         if (device is not null)
         {
             device.SetCommand((byte)value);
@@ -177,7 +177,7 @@ public sealed class Xbus : IClioXbus, IStateSection
         }
         else
         {
-            var device = GetSelectedDevice();
+            IXbusDevice? device = GetSelectedDevice();
             result = device?.GetPoll() ?? 0x30;
         }
 
@@ -192,7 +192,7 @@ public sealed class Xbus : IClioXbus, IStateSection
     /// <inheritdoc />
     public uint GetStatusFifo()
     {
-        var device = GetSelectedDevice();
+        IXbusDevice? device = GetSelectedDevice();
         if (device is not null)
         {
             return device.GetStatus();

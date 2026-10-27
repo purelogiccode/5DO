@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using FiveDo.Core;
 
@@ -15,7 +16,7 @@ public sealed class LogTests
         log.Write(LogLevel.Debug, LogCategory.Cpu, "hidden");
         log.Write(LogLevel.Warning, LogCategory.Cpu, "shown");
 
-        var entries = sink.Entries;
+        IReadOnlyList<LogEntry> entries = sink.Entries;
         Assert.Single(entries);
         Assert.Equal("shown", entries[0].Message);
         Assert.Equal(LogLevel.Warning, entries[0].Level);
@@ -31,7 +32,7 @@ public sealed class LogTests
         log.Write(LogLevel.Info, LogCategory.Madam, "hidden");
         log.Write(LogLevel.Info, LogCategory.Cpu, "shown");
 
-        var entries = sink.Entries;
+        IReadOnlyList<LogEntry> entries = sink.Entries;
         Assert.Single(entries);
         Assert.Equal("shown", entries[0].Message);
     }
@@ -83,7 +84,7 @@ public sealed class LogTests
         sink.Write(LogLevel.Info, LogCategory.Machine, "3");
         sink.Write(LogLevel.Info, LogCategory.Machine, "4");
 
-        var entries = sink.Entries;
+        IReadOnlyList<LogEntry> entries = sink.Entries;
         Assert.Equal(3, entries.Count);
         Assert.Equal("2", entries[0].Message);
         Assert.Equal("4", entries[2].Message);
@@ -122,11 +123,11 @@ public sealed class LogTests
     public void InMemorySink_RecordsTimestamp()
     {
         var sink = new InMemoryLogSink();
-        var before = DateTimeOffset.UtcNow.AddSeconds(-1);
+        DateTimeOffset before = DateTimeOffset.UtcNow.AddSeconds(-1);
         sink.Write(LogLevel.Info, LogCategory.Host, "loaded");
-        var after = DateTimeOffset.UtcNow.AddSeconds(1);
+        DateTimeOffset after = DateTimeOffset.UtcNow.AddSeconds(1);
 
-        var entry = Assert.Single(sink.Entries);
+        LogEntry entry = Assert.Single(sink.Entries);
         Assert.InRange(entry.TimestampUtc, before, after);
     }
 
@@ -148,8 +149,8 @@ public sealed class LogTests
             Search = "failed",
         };
 
-        var result = filter.Apply(entries);
-        var entry = Assert.Single(result);
+        IReadOnlyList<LogEntry> result = filter.Apply(entries);
+        LogEntry entry = Assert.Single(result);
         Assert.Equal(LogLevel.Error, entry.Level);
         Assert.Equal(LogCategory.Storage, entry.Category);
     }
@@ -163,7 +164,7 @@ public sealed class LogTests
             new(LogLevel.Info, LogCategory.Storage, "storage"),
         ];
 
-        var result = new LogViewFilter { MinimumLevel = LogLevel.Trace }.Apply(entries);
+        IReadOnlyList<LogEntry> result = new LogViewFilter { MinimumLevel = LogLevel.Trace }.Apply(entries);
 
         Assert.Equal(2, result.Count);
     }

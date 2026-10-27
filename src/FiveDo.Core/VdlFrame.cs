@@ -46,7 +46,7 @@ public sealed class VdlFrame
     /// <summary>Clears every line and restores the default source dimensions.</summary>
     public void Clear()
     {
-        foreach (var line in _lines)
+        foreach (VdlLine line in _lines)
         {
             line.Clear();
         }

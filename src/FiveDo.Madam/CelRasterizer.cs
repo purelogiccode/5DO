@@ -38,10 +38,10 @@ internal sealed class CelRasterizer
     /// <summary>Renders a packed CEL. FreeDO: <c>DrawPackedCel_New</c>.</summary>
     internal void DrawPackedCel()
     {
-        var compatibility = _engine.Compatibility;
+        CompatibilityState compatibility = _engine.Compatibility;
         compatibility.Sf = 100_000;
 
-        var geometry = _engine.Geometry;
+        CelGeometry geometry = _engine.Geometry;
         var start = unchecked((int)_engine.DataAddress);
         var rowCount = (int)((_engine.Pre0 & 0xffc0u) >> 6);
         var bpp = BppTable[(int)(_engine.Pre0 & 0x7u)];
@@ -159,7 +159,7 @@ internal sealed class CelRasterizer
                         case 1:
                             for (var pix = 0; pix < pixcount; pix++)
                             {
-                                var decoded = DecodePixel(bpp);
+                                PixelDecodeResult decoded = DecodePixel(bpp);
                                 if (!decoded.Transparent)
                                 {
                                     DrawPixel(decoded, xcur, ycur, false);
@@ -183,7 +183,7 @@ internal sealed class CelRasterizer
 
                             break;
                         case 3:
-                            var repeat = DecodePixel(bpp);
+                            PixelDecodeResult repeat = DecodePixel(bpp);
                             ApplyPackedRepeatSpeedFix(repeat.Pixel);
                             if (!repeat.Transparent)
                             {
@@ -217,7 +217,7 @@ internal sealed class CelRasterizer
             compatibility.UnknownFlag11 = 100_000;
 
             var drawHeight = geometry.Vdy1616;
-            if ((_engine.Flags & CcbControl.Maria) != 0 && drawHeight > FixedOne)
+            if ((_engine.Flags & CcbControl.Maria) != CcbControl.None && drawHeight > FixedOne)
             {
                 drawHeight = FixedOne;
             }
@@ -254,7 +254,7 @@ internal sealed class CelRasterizer
                             while (remaining != 0)
                             {
                                 remaining--;
-                                var decoded = DecodePixel(bpp);
+                                PixelDecodeResult decoded = DecodePixel(bpp);
                                 if (!decoded.Transparent)
                                 {
                                     if (TexelDrawScale(
@@ -280,7 +280,7 @@ internal sealed class CelRasterizer
                             remaining = 0;
                             break;
                         case 3:
-                            var repeat = DecodePixel(bpp);
+                            PixelDecodeResult repeat = DecodePixel(bpp);
                             if (!repeat.Transparent)
                             {
                                 if (TexelDrawScale(
@@ -356,7 +356,7 @@ internal sealed class CelRasterizer
                         case 1:
                             while (remaining != 0)
                             {
-                                var decoded = DecodePixel(bpp);
+                                PixelDecodeResult decoded = DecodePixel(bpp);
                                 remaining--;
                                 if (!decoded.Transparent)
                                 {
@@ -396,7 +396,7 @@ internal sealed class CelRasterizer
                             remaining = 0;
                             break;
                         case 3:
-                            var repeat = DecodePixel(bpp);
+                            PixelDecodeResult repeat = DecodePixel(bpp);
                             ApplyArbitraryRepeatSpeedFix(repeat.Pixel);
                             if (!repeat.Transparent)
                             {
@@ -453,10 +453,10 @@ internal sealed class CelRasterizer
     /// <summary>Renders a literal CEL. FreeDO: <c>DrawLiteralCel_New</c>.</summary>
     internal void DrawLiteralCel()
     {
-        var compatibility = _engine.Compatibility;
+        CompatibilityState compatibility = _engine.Compatibility;
         compatibility.Sf = 100_000;
 
-        var geometry = _engine.Geometry;
+        CelGeometry geometry = _engine.Geometry;
         var bpp = BppTable[(int)(_engine.Pre0 & 0x7u)];
         var offsetLength = bpp < 8 ? 1 : 2;
         var offset = offsetLength == 1
@@ -511,10 +511,10 @@ internal sealed class CelRasterizer
 
                 for (var j = geometry.TextureWidthStart; j < spriteWidth; j++)
                 {
-                    var decoded = DecodePixel(bpp);
+                    PixelDecodeResult decoded = DecodePixel(bpp);
                     if (!decoded.Transparent)
                     {
-                        DrawPixel(decoded, xcur, ycur, (compatibility.FixMode & FixMode.BitTiming6) != 0);
+                        DrawPixel(decoded, xcur, ycur, (compatibility.FixMode & FixMode.BitTiming6) != FixMode.None);
                     }
 
                     xcur = unchecked(xcur + geometry.Hdx1616);
@@ -530,7 +530,7 @@ internal sealed class CelRasterizer
             geometry.SpriteWidth = spriteWidth;
 
             var drawHeight = geometry.Vdy1616;
-            if ((_engine.Flags & CcbControl.Maria) != 0 && drawHeight > FixedOne)
+            if ((_engine.Flags & CcbControl.Maria) != CcbControl.None && drawHeight > FixedOne)
             {
                 drawHeight = FixedOne;
             }
@@ -546,7 +546,7 @@ internal sealed class CelRasterizer
 
                 for (var j = 0; j < spriteWidth; j++)
                 {
-                    var decoded = DecodePixel(bpp);
+                    PixelDecodeResult decoded = DecodePixel(bpp);
                     if (!decoded.Transparent)
                     {
                         if (TexelDrawScale(
@@ -599,7 +599,7 @@ internal sealed class CelRasterizer
                         _engine.TraceProgress(texels, i, j);
                     }
 
-                    var decoded = DecodePixel(bpp);
+                    PixelDecodeResult decoded = DecodePixel(bpp);
                     if (!decoded.Transparent)
                     {
                         if (TexelDrawArbitrary(
@@ -642,10 +642,10 @@ internal sealed class CelRasterizer
     /// <summary>Renders a 16-bit LR-form CEL. FreeDO: <c>DrawLRCel_New</c>.</summary>
     internal void DrawLrCel()
     {
-        var compatibility = _engine.Compatibility;
+        CompatibilityState compatibility = _engine.Compatibility;
         compatibility.Sf = 100_000;
 
-        var geometry = _engine.Geometry;
+        CelGeometry geometry = _engine.Geometry;
         var bpp = BppTable[(int)(_engine.Pre0 & 0x7u)];
         var offset = bpp < 8
             ? (int)((_engine.Pre1 & 0xff000000u) >> 24)
@@ -690,7 +690,7 @@ internal sealed class CelRasterizer
                     var raw = _engine.Memory.ReadHalfword(Address(
                         unchecked((uint)data),
                         Xy2Off(j << 2, i, offset << 2)));
-                    var decoded = _engine.Decoder.Decode(
+                    PixelDecodeResult decoded = _engine.Decoder.Decode(
                         raw,
                         _engine.Pre0,
                         (uint)_engine.Flags,
@@ -708,7 +708,7 @@ internal sealed class CelRasterizer
         else if (geometry.TexelFunction == TexelFunction.Scale)
         {
             var drawHeight = geometry.Vdy1616;
-            if ((_engine.Flags & CcbControl.Maria) != 0 && drawHeight > FixedOne)
+            if ((_engine.Flags & CcbControl.Maria) != CcbControl.None && drawHeight > FixedOne)
             {
                 drawHeight = FixedOne;
             }
@@ -725,7 +725,7 @@ internal sealed class CelRasterizer
                     var raw = _engine.Memory.ReadHalfword(Address(
                         unchecked((uint)data),
                         Xy2Off(j << 2, i, offset << 2)));
-                    var decoded = _engine.Decoder.Decode(
+                    PixelDecodeResult decoded = _engine.Decoder.Decode(
                         raw,
                         _engine.Pre0,
                         (uint)_engine.Flags,
@@ -769,7 +769,7 @@ internal sealed class CelRasterizer
                     var raw = _engine.Memory.ReadHalfword(Address(
                         unchecked((uint)data),
                         Xy2Off(j << 2, i, offset << 2)));
-                    var decoded = _engine.Decoder.Decode(
+                    PixelDecodeResult decoded = _engine.Decoder.Decode(
                         raw,
                         _engine.Pre0,
                         (uint)_engine.Flags,
@@ -806,7 +806,7 @@ internal sealed class CelRasterizer
     /// <summary>Draws one texel row segment. FreeDO: <c>TexelDraw_Line</c>.</summary>
     internal int TexelDrawLine(ushort curPix, ushort lamv, int xcur, int ycur, int count)
     {
-        var geometry = _engine.Geometry;
+        CelGeometry geometry = _engine.Geometry;
         xcur >>= 16;
         ycur >>= 16;
 
@@ -854,9 +854,9 @@ internal sealed class CelRasterizer
     /// <summary>Draws a scaled texel rectangle. FreeDO: <c>TexelDraw_Scale</c>.</summary>
     internal int TexelDrawScale(ushort curPix, ushort lamv, int xcur, int ycur, int deltax, int deltay)
     {
-        var geometry = _engine.Geometry;
+        CelGeometry geometry = _engine.Geometry;
 
-        if ((_engine.Compatibility.FixMode & FixMode.BitTiming3) != 0)
+        if ((_engine.Compatibility.FixMode & FixMode.BitTiming3) != FixMode.None)
         {
             deltay *= 5;
             ycur *= 5;
@@ -952,7 +952,7 @@ internal sealed class CelRasterizer
         int xD,
         int yD)
     {
-        var geometry = _engine.Geometry;
+        CelGeometry geometry = _engine.Geometry;
         if (_engine.TraceWriter is not null)
         {
             _engine.TraceArbitrary(xA, yA, xB, yB, xC, yC, xD, yD);
@@ -1148,8 +1148,8 @@ internal sealed class CelRasterizer
             }
 
             if (cntCross > 2
-                && (((_engine.Flags & CcbControl.Clockwise) != 0 && updowns[2] == 0)
-                    || ((_engine.Flags & CcbControl.CounterClockwise) != 0 && updowns[2] == 1)))
+                && (((_engine.Flags & CcbControl.Clockwise) != CcbControl.None && updowns[2] == 0)
+                    || ((_engine.Flags & CcbControl.CounterClockwise) != CcbControl.None && updowns[2] == 1)))
             {
                 var j = xpoints[2];
                 if (j < 0)
@@ -1184,8 +1184,8 @@ internal sealed class CelRasterizer
                 }
             }
 
-            if (((_engine.Flags & CcbControl.Clockwise) != 0 && updowns[0] == 0)
-                || ((_engine.Flags & CcbControl.CounterClockwise) != 0 && updowns[0] == 1))
+            if (((_engine.Flags & CcbControl.Clockwise) != CcbControl.None && updowns[0] == 0)
+                || ((_engine.Flags & CcbControl.CounterClockwise) != CcbControl.None && updowns[0] == 1))
             {
                 var j = xpoints[0];
                 if (j < 0)
@@ -1226,7 +1226,7 @@ internal sealed class CelRasterizer
 
     private void ApplyPackedRepeatSpeedFix(ushort curPix)
     {
-        var compatibility = _engine.Compatibility;
+        CompatibilityState compatibility = _engine.Compatibility;
         if (curPix > 32300 && curPix < 33500 && (curPix > 32760 || curPix < 32750))
         {
             if (compatibility.SpeedFixes >= 0 && compatibility.Sdf == 0
@@ -1245,7 +1245,7 @@ internal sealed class CelRasterizer
 
     private void ApplyArbitraryRepeatSpeedFix(ushort curPix)
     {
-        var compatibility = _engine.Compatibility;
+        CompatibilityState compatibility = _engine.Compatibility;
         if (compatibility.SpeedFixes >= 0
             && compatibility.SpeedFixes < 200_001
             && curPix > 10000
@@ -1258,7 +1258,7 @@ internal sealed class CelRasterizer
 
     private bool PrepareGeometry(bool packed)
     {
-        var geometry = _engine.Geometry;
+        CelGeometry geometry = _engine.Geometry;
         geometry.Flags = _engine.Flags;
         geometry.ClipX = _engine.ClipX;
         geometry.ClipY = _engine.ClipY;
@@ -1369,8 +1369,8 @@ internal sealed class CelRasterizer
 
     private void FinalizeVisualPosition(int xcur, int ycur)
     {
-        var geometry = _engine.Geometry;
-        if ((_engine.Compatibility.FixMode & FixMode.GraphicsStepY) != 0)
+        CelGeometry geometry = _engine.Geometry;
+        if ((_engine.Compatibility.FixMode & FixMode.GraphicsStepY) != FixMode.None)
         {
             geometry.YPosition1616 = ycur;
         }

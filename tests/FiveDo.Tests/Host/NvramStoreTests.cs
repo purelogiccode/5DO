@@ -15,7 +15,7 @@ public sealed class NvramStoreTests
         var path = Path.Combine(directory.Path, "nvram.ram");
         var store = new NvramStore(path);
 
-        var image = store.LoadOrCreate();
+        NvramImage image = store.LoadOrCreate();
 
         Assert.Equal(EmulatorConstants.NvramSize, image.Data.Length);
         Assert.Equal((byte)'n', image.Data.Span[40]);
@@ -72,7 +72,7 @@ public sealed class NvramStoreTests
         File.WriteAllBytes(path, new byte[100]);
         var store = new NvramStore(path);
 
-        var image = store.LoadOrCreate();
+        NvramImage image = store.LoadOrCreate();
 
         Assert.Equal(EmulatorConstants.NvramSize, image.Data.Length);
         Assert.True(File.Exists(path + ".bad"));
@@ -132,11 +132,11 @@ public sealed class NvramStoreTests
         settings.Input.Players[0].Keyboard["Q"] = FiveDo.Input.ControllerButton.C;
         settings.RecentDiscs.Add("game.iso");
         settings.LibraryFolders.Add("games");
-        settings.FixModeOverrides["9F7D72BC"] = FiveDo.Core.FixMode.BitTiming6;
+        settings.FixModeOverrides["9F7D72BC"] = FixMode.BitTiming6;
         settings.SetFilterOverride("9F7D72BC", FiveDo.Video.VideoFilter.Hqx);
 
         AppSettingsStore.Save(settings, path);
-        var loaded = AppSettingsStore.Load(path);
+        AppSettings loaded = AppSettingsStore.Load(path);
 
         Assert.Equal("bios.bin", loaded.BiosPath);
         Assert.Equal(FiveDo.Video.VideoFilter.Crt, loaded.Filter);
@@ -154,7 +154,7 @@ public sealed class NvramStoreTests
         Assert.Equal(FiveDo.Input.ControllerButton.C, loaded.Input.Players[0].Keyboard["Q"]);
         Assert.Equal("game.iso", Assert.Single(loaded.RecentDiscs));
         Assert.Equal("games", Assert.Single(loaded.LibraryFolders));
-        Assert.Equal(FiveDo.Core.FixMode.BitTiming6, loaded.GetFixModeOverride("9F7D72BC"));
+        Assert.Equal(FixMode.BitTiming6, loaded.GetFixModeOverride("9F7D72BC"));
         Assert.Equal(FiveDo.Video.VideoFilter.Crt, loaded.Filter);
         Assert.Equal(FiveDo.Video.VideoFilter.Hqx, loaded.ResolveFilter("9F7D72BC"));
         Assert.Equal(FiveDo.Video.VideoFilter.Crt, loaded.ResolveFilter("UNKNOWN"));
@@ -171,7 +171,7 @@ public sealed class NvramStoreTests
         var settings = new AppSettings { Filter = FiveDo.Video.VideoFilter.Hqx4x };
 
         AppSettingsStore.Save(settings, path);
-        var loaded = AppSettingsStore.Load(path);
+        AppSettings loaded = AppSettingsStore.Load(path);
 
         Assert.Equal(FiveDo.Video.VideoFilter.Hqx4x, loaded.Filter);
         Assert.Contains("\"Hqx4x\"", File.ReadAllText(path), StringComparison.Ordinal);
@@ -184,7 +184,7 @@ public sealed class NvramStoreTests
         var path = Path.Combine(directory.Path, "settings.json");
         File.WriteAllText(path, "not json");
 
-        var loaded = AppSettingsStore.Load(path);
+        AppSettings loaded = AppSettingsStore.Load(path);
 
         Assert.Equal(FiveDo.Video.VideoFilter.SharpBilinear, loaded.Filter);
     }

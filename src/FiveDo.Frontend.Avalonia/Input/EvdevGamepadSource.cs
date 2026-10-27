@@ -92,7 +92,7 @@ internal sealed class EvdevGamepadSource : IRawGamepadSource
     public void Dispose()
     {
         _disposed = true;
-        foreach (var device in _devices)
+        foreach (Device device in _devices)
         {
             device.Dispose();
         }
@@ -103,7 +103,7 @@ internal sealed class EvdevGamepadSource : IRawGamepadSource
     private void Rescan()
     {
         var known = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var device in _devices)
+        foreach (Device device in _devices)
         {
             known.Add(device.Path);
         }
@@ -126,7 +126,7 @@ internal sealed class EvdevGamepadSource : IRawGamepadSource
                 continue;
             }
 
-            var device = TryOpen(path);
+            Device? device = TryOpen(path);
             if (device is not null)
             {
                 _devices.Add(device);
@@ -216,7 +216,7 @@ internal sealed class EvdevGamepadSource : IRawGamepadSource
             var length = (int)count;
             for (var offset = 0; offset + EventSize <= length; offset += EventSize)
             {
-                var inputEvent = MemoryMarshal.Read<InputEvent>(_eventBuffer.AsSpan(offset, EventSize));
+                InputEvent inputEvent = MemoryMarshal.Read<InputEvent>(_eventBuffer.AsSpan(offset, EventSize));
                 if (inputEvent.Type == EventKey)
                 {
                     device.SetButton(inputEvent.Code, inputEvent.Value != 0);
@@ -237,7 +237,7 @@ internal sealed class EvdevGamepadSource : IRawGamepadSource
 
     private static nuint EventIoctl(int number, int length)
     {
-        return (2u << 30) | ((uint)length << 16) | ((uint)number << 8) | (uint)'E';
+        return (2u << 30) | ((uint)length << 16) | ((uint)number << 8) | 'E';
     }
 
     private static nuint AbsIoctl(int axis)
@@ -280,13 +280,13 @@ internal sealed class EvdevGamepadSource : IRawGamepadSource
 
         internal bool[] HasAxis { get; } = new bool[AxisMax];
 
-        internal GamepadButtons Buttons { get; private set; }
+        private GamepadButtons Buttons { get; set; }
 
         internal GamepadState State { get; private set; }
 
         internal void SetButton(int code, bool pressed)
         {
-            var button = code switch
+            GamepadButtons button = code switch
             {
                 0x120 or 0x130 => GamepadButtons.South,
                 0x121 or 0x131 => GamepadButtons.East,
@@ -321,7 +321,7 @@ internal sealed class EvdevGamepadSource : IRawGamepadSource
 
         internal void Refresh()
         {
-            var buttons = Buttons;
+            GamepadButtons buttons = Buttons;
             var hatX = AxisValue(0x10);
             var hatY = AxisValue(0x11);
             if (hatX < 0)
@@ -366,7 +366,7 @@ internal sealed class EvdevGamepadSource : IRawGamepadSource
 
         private float Normalize(int axis)
         {
-            var info = Absolute[axis];
+            InputAbsInfo info = Absolute[axis];
             if (!HasAxis[axis] || info.Maximum <= info.Minimum)
             {
                 return 0f;
@@ -381,7 +381,7 @@ internal sealed class EvdevGamepadSource : IRawGamepadSource
 
         private float TriggerValue(int axis)
         {
-            var info = Absolute[axis];
+            InputAbsInfo info = Absolute[axis];
             if (!HasAxis[axis] || info.Maximum <= info.Minimum)
             {
                 return 0f;

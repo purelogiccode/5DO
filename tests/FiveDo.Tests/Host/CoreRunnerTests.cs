@@ -16,10 +16,10 @@ public sealed class CoreRunnerTests
     [Fact]
     public void Start_RunsFramesAndPauseStopsAdvancing()
     {
-        var machine = CreateMachine();
+        FiveDoMachine machine = CreateMachine();
         using var runner = new CoreRunner(machine);
         var faults = 0;
-        runner.Faulted += _ => Interlocked.Increment(ref faults);
+        runner.Faulted += (_, _) => Interlocked.Increment(ref faults);
 
         runner.Start();
         Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(2)));
@@ -39,7 +39,7 @@ public sealed class CoreRunnerTests
     [Fact]
     public void Invoke_PausesTheLoopWhileTheActionRuns()
     {
-        var machine = CreateMachine();
+        FiveDoMachine machine = CreateMachine();
         using var runner = new CoreRunner(machine);
         runner.Start();
         Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(2)));
@@ -61,7 +61,7 @@ public sealed class CoreRunnerTests
     [Fact]
     public void PauseAndResume_PreserveThePauseStateAcrossInvoke()
     {
-        var machine = CreateMachine();
+        FiveDoMachine machine = CreateMachine();
         using var runner = new CoreRunner(machine);
         runner.Start();
         Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(2)));

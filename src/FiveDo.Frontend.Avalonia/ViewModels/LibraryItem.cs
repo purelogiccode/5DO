@@ -25,7 +25,7 @@ public sealed class LibraryItem : IDisposable
         {
             try
             {
-                using var stream = File.OpenRead(entry.CoverPath);
+                using FileStream stream = File.OpenRead(entry.CoverPath);
                 Cover = Bitmap.DecodeToWidth(stream, CoverDecodeWidth);
             }
             catch (Exception exception) when (exception is IOException or ArgumentException or UnauthorizedAccessException)
@@ -85,9 +85,5 @@ public sealed class LibraryItem : IDisposable
     }
 
     /// <inheritdoc />
-    public void Dispose()
-    {
-        Cover?.Dispose();
-        GC.SuppressFinalize(this);
-    }
+    public void Dispose() => Cover?.Dispose();
 }

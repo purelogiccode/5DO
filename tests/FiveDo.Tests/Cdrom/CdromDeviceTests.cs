@@ -126,8 +126,8 @@ public sealed class CdromDeviceTests
     {
         var cd = new CdromDevice();
         cd.InsertDisc(new MemoryDisc(4));
-        long frame = 123;
-        cd.FrameProvider = () => frame;
+        var frame = new FrameClock { Value = 123 };
+        cd.FrameProvider = () => frame.Value;
 
         Send(cd, 0x10, 0x00, 0x02, 0x00, 0x00, 0x00, 0x01);
 
@@ -138,11 +138,11 @@ public sealed class CdromDeviceTests
     public void ConsecutiveReadIdPollsAfterIdleRaiseMediaAccess()
     {
         var cd = new CdromDevice();
-        long frame = 0;
-        cd.FrameProvider = () => frame;
+        var frame = new FrameClock();
+        cd.FrameProvider = () => frame.Value;
 
         Send(cd, 0x83);
-        frame = 60;
+        frame.Value = 60;
         Send(cd, 0x83);
 
         Assert.NotEqual(0, (int)cd.GetPoll() & 0x40);
@@ -152,13 +152,13 @@ public sealed class CdromDeviceTests
     public void ReadIdAfterAnotherCommandDoesNotRaiseMediaAccess()
     {
         var cd = new CdromDevice();
-        long frame = 0;
-        cd.FrameProvider = () => frame;
+        var frame = new FrameClock();
+        cd.FrameProvider = () => frame.Value;
 
         Send(cd, 0x83);
-        frame = 60;
+        frame.Value = 60;
         Send(cd, 0x84);
-        frame = 120;
+        frame.Value = 120;
         Send(cd, 0x83);
 
         Assert.Equal(0, (int)cd.GetPoll() & 0x40);
@@ -168,11 +168,11 @@ public sealed class CdromDeviceTests
     public void ConsecutiveReadIdPollsWithShortGapDoNotRaiseMediaAccess()
     {
         var cd = new CdromDevice();
-        long frame = 0;
-        cd.FrameProvider = () => frame;
+        var frame = new FrameClock();
+        cd.FrameProvider = () => frame.Value;
 
         Send(cd, 0x83);
-        frame = 20;
+        frame.Value = 20;
         Send(cd, 0x83);
 
         Assert.Equal(0, (int)cd.GetPoll() & 0x40);
@@ -234,6 +234,11 @@ public sealed class CdromDeviceTests
         }
 
         return data;
+    }
+
+    private sealed class FrameClock
+    {
+        public long Value { get; set; }
     }
 
     private sealed class MemoryDisc : IDiscSource

@@ -17,6 +17,7 @@ using FiveDo.Input;
 using FiveDo.Machine;
 using FiveDo.Storage;
 using FiveDo.Video;
+using VideoGameFileSystemParser.Models;
 
 namespace FiveDo.Cli;
 
@@ -105,7 +106,7 @@ internal static class Program
         Justification = "Trace writers are disposed after the run loop, when no observer can fire.")]
     private static int Run(string[] args)
     {
-        var options = Parse(args);
+        ParsedOptions options = Parse(args);
         var json = options.Json;
         var frames = options.GetInt("--frames", 600);
         var biosPath = options.Get("--bios");
@@ -139,7 +140,7 @@ internal static class Program
 
         if (biosPath is null && stateIn is null)
         {
-            throw new ArgumentException("run needs --bios <path> unless --state-in supplies the ROM state.");
+            throw new ArgumentException("run needs --bios <path> unless --state-in supplies the ROM state.", nameof(args));
         }
 
         IDiscSource? disc = null;
@@ -150,7 +151,7 @@ internal static class Program
             gameId = GameId.Compute(disc);
         }
 
-        var fixMode = ResolveFixMode(options, args, gameId);
+        FixMode fixMode = ResolveFixMode(options, args, gameId);
         var machine = new FiveDoMachine(new EmulatorTuning
         {
             HighResolution = HasFlag(args, "--high-res"),
@@ -162,7 +163,7 @@ internal static class Program
             machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
         }
 
-        using var audio = CreateAudio(options);
+        using WavAudioSink? audio = CreateAudio(options);
         if (disc is not null)
         {
             machine.InsertDisc(disc);
@@ -173,7 +174,7 @@ internal static class Program
 
         if (stateIn is null)
         {
-            var nvram = nvramPath is not null && File.Exists(nvramPath)
+            NvramImage nvram = nvramPath is not null && File.Exists(nvramPath)
                 ? NvramImage.Load(nvramPath)
                 : NvramImage.CreateFresh();
             machine.LoadNvram(nvram.Data.Span);
@@ -193,18 +194,18 @@ internal static class Program
             && !string.Equals(inputScriptBase, "state", StringComparison.OrdinalIgnoreCase))
         {
             throw new ArgumentException(
-                $"Unknown script base '{inputScriptBase}'. Supported: absolute, state.");
+                $"Unknown script base '{inputScriptBase}'. Supported: absolute, state.", nameof(args));
         }
 
         if (inputScriptBase is not null && inputScriptPath is null)
         {
-            throw new ArgumentException("--script-base requires --input-script.");
+            throw new ArgumentException("--script-base requires --input-script.", nameof(args));
         }
 
         if (string.Equals(inputScriptBase, "state", StringComparison.OrdinalIgnoreCase)
             && stateIn is null)
         {
-            throw new ArgumentException("--script-base state requires --state-in.");
+            throw new ArgumentException("--script-base state requires --state-in.", nameof(args));
         }
 
         RoadRashAutopilot? roadAutopilot = null;
@@ -213,12 +214,12 @@ internal static class Program
         {
             if (!string.Equals(autopilotMode, "road", StringComparison.OrdinalIgnoreCase))
             {
-                throw new ArgumentException($"Unknown autopilot '{autopilotMode}'. Supported: road.");
+                throw new ArgumentException($"Unknown autopilot '{autopilotMode}'. Supported: road.", nameof(args));
             }
 
             if (scriptedInput is not null)
             {
-                throw new ArgumentException("--autopilot and --input-script cannot be combined.");
+                throw new ArgumentException("--autopilot and --input-script cannot be combined.", nameof(args));
             }
 
             roadAutopilot = new RoadRashAutopilot
@@ -397,7 +398,7 @@ internal static class Program
             if (scriptEntries is not null
                 && string.Equals(inputScriptBase, "state", StringComparison.OrdinalIgnoreCase))
             {
-                var offsetEntries = InputScript.Offset(scriptEntries, machine.FramesExecuted);
+                IReadOnlyList<InputScriptEntry> offsetEntries = InputScript.Offset(scriptEntries, machine.FramesExecuted);
                 scriptedInput = new ScriptedPbusSource(offsetEntries);
                 machine.PbusSource = scriptedInput;
             }
@@ -568,7 +569,7 @@ internal static class Program
 
     private static int TraceCommand(string[] args)
     {
-        var options = Parse(args);
+        ParsedOptions options = Parse(args);
         var biosPath = options.Get("--bios");
         var stateIn = options.Get("--state-in");
         var discPath = options.Positional;
@@ -592,7 +593,7 @@ internal static class Program
 
         if (biosPath is null && stateIn is null)
         {
-            throw new ArgumentException("trace needs --bios <path> unless --state-in supplies the ROM state.");
+            throw new ArgumentException("trace needs --bios <path> unless --state-in supplies the ROM state.", nameof(args));
         }
 
         IDiscSource? disc = null;
@@ -603,7 +604,7 @@ internal static class Program
             gameId = GameId.Compute(disc);
         }
 
-        var fixMode = ResolveFixMode(options, args, gameId);
+        FixMode fixMode = ResolveFixMode(options, args, gameId);
         var machine = new FiveDoMachine(new EmulatorTuning
         {
             HighResolution = HasFlag(args, "--high-res"),
@@ -627,7 +628,7 @@ internal static class Program
         }
         else
         {
-            var nvram = nvramPath is not null && File.Exists(nvramPath)
+            NvramImage nvram = nvramPath is not null && File.Exists(nvramPath)
                 ? NvramImage.Load(nvramPath)
                 : NvramImage.CreateFresh();
             machine.LoadNvram(nvram.Data.Span);
@@ -701,36 +702,11 @@ internal static class Program
                 }
 
                 if (text.Length >= stopKprint.Length
-                    && text.ToString(text.Length - stopKprint.Length, stopKprint.Length) == stopKprint)
+                    && string.Equals(text.ToString(text.Length - stopKprint.Length, stopKprint.Length), stopKprint, StringComparison.Ordinal))
                 {
                     throw new TraceStopException();
                 }
             };
-        }
-
-        void Observe(uint pc, uint cpsr, uint instruction)
-        {
-            if (count > 0 && observed >= count)
-            {
-                throw new TraceLimitReachedException();
-            }
-
-            ring.Enqueue((pc, cpsr, instruction));
-            if (ring.Count > ringSize)
-            {
-                ring.Dequeue();
-            }
-
-            observed++;
-            if (stopPc is not null && pc == stopPc)
-            {
-                throw new TraceStopException();
-            }
-
-            if (stopInvalid && pc >= 0x04000000)
-            {
-                throw new TraceStopException();
-            }
         }
 
         try
@@ -782,7 +758,7 @@ internal static class Program
                 + $"seed={machine.Dsp.Seed:x8}");
             writer.WriteLine($"# stack: {stack}");
 
-            foreach (var entry in ring)
+            foreach ((uint Pc, uint Cpsr, uint Instruction) entry in ring)
             {
                 writer.WriteLine(
                     $"{entry.Pc:x8} {entry.Cpsr:x8} {entry.Instruction:x8} "
@@ -803,7 +779,7 @@ internal static class Program
                 }
 
                 using var dspWriter = new StreamWriter(dspTracePath);
-                foreach (var entry in machine.Dsp.DspTrace)
+                foreach (Dsp.Dsp.DspTraceEntry entry in machine.Dsp.DspTrace)
                 {
                     dspWriter.WriteLine(
                         $"{entry.Pc:x4} {entry.Instruction:x4} "
@@ -840,21 +816,76 @@ internal static class Program
         }
 
         return 0;
+
+        void Observe(uint pc, uint cpsr, uint instruction)
+        {
+            if (count > 0 && observed >= count)
+            {
+                throw new TraceLimitReachedException();
+            }
+
+            ring.Enqueue((pc, cpsr, instruction));
+            if (ring.Count > ringSize)
+            {
+                ring.Dequeue();
+            }
+
+            observed++;
+            if (stopPc is not null && pc == stopPc)
+            {
+                throw new TraceStopException();
+            }
+
+            if (stopInvalid && pc >= 0x04000000)
+            {
+                throw new TraceStopException();
+            }
+        }
     }
 
-    private sealed class TraceStopException : Exception;
+    private sealed class TraceStopException : Exception
+    {
+        public TraceStopException()
+        {
+        }
 
-    private sealed class TraceLimitReachedException : Exception;
+        public TraceStopException(string message)
+            : base(message)
+        {
+        }
+
+        public TraceStopException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+        }
+    }
+
+    private sealed class TraceLimitReachedException : Exception
+    {
+        public TraceLimitReachedException()
+        {
+        }
+
+        public TraceLimitReachedException(string message)
+            : base(message)
+        {
+        }
+
+        public TraceLimitReachedException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+        }
+    }
 
     private static int Info(string[] args)
     {
-        var options = Parse(args);
-        var path = options.Positional ?? throw new ArgumentException("info needs a disc path.");
-        using var disc = DiscImageFactory.Open(path);
-        var header = VolumeHeader.TryRead(disc);
+        ParsedOptions options = Parse(args);
+        var path = options.Positional ?? throw new ArgumentException("info needs a disc path.", nameof(args));
+        using IDiscSource disc = DiscImageFactory.Open(path);
+        VolumeHeader? header = VolumeHeader.TryRead(disc);
         var gameId = GameId.Compute(disc);
-        var record = GameDatabase.Default.FindByChecksum(gameId);
-        var fixMode = GameCompatibility.ForGameId(gameId).FixMode;
+        GameRecord? record = GameDatabase.Default.FindByChecksum(gameId);
+        FixMode fixMode = GameCompatibility.ForGameId(gameId).FixMode;
 
         var result = new CliInfoResult(
             Ok: true,
@@ -893,21 +924,21 @@ internal static class Program
     {
         if (args.Length < 2)
         {
-            throw new ArgumentException("disc needs the 'dump' or 'tracks' subcommand.");
+            throw new ArgumentException("disc needs the 'dump' or 'tracks' subcommand.", nameof(args));
         }
 
         if (string.Equals(args[1], "tracks", StringComparison.OrdinalIgnoreCase))
         {
-            var options = Parse(args, startIndex: 2);
-            var trackPath = options.Positional ?? throw new ArgumentException("disc tracks needs a disc path.");
-            if (ChdFile.Open(trackPath, out var chd) != ChdError.Chderrnone || chd is null)
+            ParsedOptions options = Parse(args, startIndex: 2);
+            var trackPath = options.Positional ?? throw new ArgumentException("disc tracks needs a disc path.", nameof(args));
+            if (ChdFile.Open(trackPath, out ChdFile? chd) != ChdError.Chderrnone || chd is null)
             {
                 throw new InvalidDataException($"Cannot open CHD '{trackPath}'.");
             }
 
             using (chd)
             {
-                foreach (var track in chd.Tracks ?? [])
+                foreach (ChdTrackInfo track in chd.Tracks ?? [])
                 {
                     Console.WriteLine(
                         $"track {track.TrackNumber}: type={track.TrackType} dataSize={track.DataSize} "
@@ -920,15 +951,15 @@ internal static class Program
 
         if (!string.Equals(args[1], "dump", StringComparison.OrdinalIgnoreCase))
         {
-            throw new ArgumentException("disc needs the 'dump' or 'tracks' subcommand.");
+            throw new ArgumentException("disc needs the 'dump' or 'tracks' subcommand.", nameof(args));
         }
 
-        var dumpOptions = Parse(args, startIndex: 2);
-        var path = dumpOptions.Positional ?? throw new ArgumentException("disc dump needs a disc path.");
+        ParsedOptions dumpOptions = Parse(args, startIndex: 2);
+        var path = dumpOptions.Positional ?? throw new ArgumentException("disc dump needs a disc path.", nameof(args));
         var sector = dumpOptions.GetInt("--sector", 0);
         var count = dumpOptions.GetInt("--count", 1);
-        var output = dumpOptions.Get("--out") ?? throw new ArgumentException("disc dump needs --out <path>.");
-        using var disc = DiscImageFactory.Open(path);
+        var output = dumpOptions.Get("--out") ?? throw new ArgumentException("disc dump needs --out <path>.", nameof(args));
+        using IDiscSource disc = DiscImageFactory.Open(path);
         var buffer = new byte[2048 * count];
         for (var i = 0; i < count; i++)
         {
@@ -945,14 +976,14 @@ internal static class Program
         if (args.Length < 3)
         {
             throw new ArgumentException(
-                "fs needs a subcommand and a disc path: fs list <disc> | fs extract <disc> --out <dir> [--filter <prefix>]");
+                "fs needs a subcommand and a disc path: fs list <disc> | fs extract <disc> --out <dir> [--filter <prefix>]", nameof(args));
         }
 
         var subcommand = args[1];
         var discPath = args[2];
-        var options = Parse(args, startIndex: 3);
+        ParsedOptions options = Parse(args, startIndex: 3);
         using var container = new VideoGameFileSystemParser.Parsers.ChdContainer(discPath);
-        if (!container.MountAndParse(VideoGameFileSystemParser.Models.ConsoleType.ThreeDo))
+        if (!container.MountAndParse(ConsoleType.ThreeDo))
         {
             throw new InvalidDataException(
                 $"Cannot parse the 3DO file system in '{discPath}': {container.LastError}");
@@ -963,7 +994,7 @@ internal static class Program
             if (options.Json)
             {
                 var entries = new List<CliFsListEntry>(container.Entries.Count);
-                foreach (var entry in container.Entries)
+                foreach (FileEntry entry in container.Entries)
                 {
                     entries.Add(new CliFsListEntry(
                         Path: entry.FullPath,
@@ -979,7 +1010,7 @@ internal static class Program
             }
 
             Console.WriteLine($"volume={container.VolumeName} entries={container.Entries.Count}");
-            foreach (var entry in container.Entries)
+            foreach (FileEntry entry in container.Entries)
             {
                 var indent = new string(' ', entry.FullPath.Count(c => c is '\\' or '/') * 2);
                 var kind = entry.IsDirectory ? "[D]" : "[F]";
@@ -991,17 +1022,17 @@ internal static class Program
 
         if (!string.Equals(subcommand, "extract", StringComparison.OrdinalIgnoreCase))
         {
-            throw new ArgumentException("fs needs the 'list' or 'extract' subcommand.");
+            throw new ArgumentException("fs needs the 'list' or 'extract' subcommand.", nameof(args));
         }
 
         var outputDirectory = options.Get("--out")
-            ?? throw new ArgumentException("fs extract needs --out <directory>.");
+            ?? throw new ArgumentException("fs extract needs --out <directory>.", nameof(args));
         var filter = options.Get("--filter");
         outputDirectory = Path.GetFullPath(outputDirectory);
         Directory.CreateDirectory(outputDirectory);
         var buffer = new byte[1 << 20];
         var extracted = 0;
-        foreach (var entry in container.Entries)
+        foreach (FileEntry entry in container.Entries)
         {
             if (entry.IsDirectory)
             {
@@ -1023,7 +1054,7 @@ internal static class Program
             }
 
             Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-            using (var output = File.Create(destination))
+            using (FileStream output = File.Create(destination))
             {
                 ulong offset = 0;
                 int read;
@@ -1055,11 +1086,11 @@ internal static class Program
     {
         if (args.Length < 2 || !string.Equals(args[1], "info", StringComparison.OrdinalIgnoreCase))
         {
-            throw new ArgumentException("bios needs the 'info <path>' subcommand.");
+            throw new ArgumentException("bios needs the 'info <path>' subcommand.", nameof(args));
         }
 
-        var options = Parse(args, startIndex: 2);
-        var path = options.Positional ?? throw new ArgumentException("bios info needs a path.");
+        ParsedOptions options = Parse(args, startIndex: 2);
+        var path = options.Positional ?? throw new ArgumentException("bios info needs a path.", nameof(args));
         var bios = BiosImage.Load(path);
         var result = new CliBiosInfoResult(
             Ok: true,
@@ -1088,11 +1119,11 @@ internal static class Program
     {
         if (args.Length >= 2 && string.Equals(args[1], "slots", StringComparison.OrdinalIgnoreCase))
         {
-            var slotOptions = Parse(args, startIndex: 2);
-            var directory = slotOptions.Positional ?? throw new ArgumentException("state slots needs a directory.");
+            ParsedOptions slotOptions = Parse(args, startIndex: 2);
+            var directory = slotOptions.Positional ?? throw new ArgumentException("state slots needs a directory.", nameof(args));
             var slotCount = slotOptions.GetInt("--count", 10);
             var manager = new SaveStateSlotManager(directory, slotCount);
-            var slots = manager.List();
+            IReadOnlyList<SaveStateSlotInfo> slots = manager.List();
             if (slotOptions.Json)
             {
                 Console.WriteLine(JsonSerializer.Serialize(
@@ -1102,7 +1133,7 @@ internal static class Program
             }
             else
             {
-                foreach (var slot in slots)
+                foreach (SaveStateSlotInfo slot in slots)
                 {
                     if (!slot.Exists)
                     {
@@ -1110,7 +1141,7 @@ internal static class Program
                         continue;
                     }
 
-                    var savedAt = slot.SavedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") ?? "unknown";
+                    var savedAt = slot.SavedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) ?? "unknown";
                     var name = string.IsNullOrWhiteSpace(slot.GameName) ? "(unnamed)" : slot.GameName;
                     Console.WriteLine(
                         $"slot {slot.Slot:D2}: {name}  frames={slot.FramesExecuted}  saved={savedAt}  "
@@ -1123,12 +1154,12 @@ internal static class Program
 
         if (args.Length < 2 || !string.Equals(args[1], "inspect", StringComparison.OrdinalIgnoreCase))
         {
-            throw new ArgumentException("state needs the 'inspect <path>' or 'slots <dir>' subcommand.");
+            throw new ArgumentException("state needs the 'inspect <path>' or 'slots <dir>' subcommand.", nameof(args));
         }
 
-        var options = Parse(args, startIndex: 2);
-        var path = options.Positional ?? throw new ArgumentException("state inspect needs a path.");
-        var info = StateInspector.Read(path);
+        ParsedOptions options = Parse(args, startIndex: 2);
+        var path = options.Positional ?? throw new ArgumentException("state inspect needs a path.", nameof(args));
+        StateInfo info = StateInspector.Read(path);
 
         if (options.Json)
         {
@@ -1143,7 +1174,7 @@ internal static class Program
             Console.WriteLine($"bios md5:    {info.BiosHash}");
             Console.WriteLine($"disc hash:   {info.DiscHash}");
             Console.WriteLine($"frames:      {info.FramesExecuted}");
-            foreach (var section in info.Sections)
+            foreach (StateSectionInfo section in info.Sections)
             {
                 Console.WriteLine($"section {section.Id}: v{section.Version}, {section.PayloadLength} bytes");
             }
@@ -1154,15 +1185,15 @@ internal static class Program
 
     private static int Disassemble(string[] args)
     {
-        var options = Parse(args);
-        var path = options.Positional ?? throw new ArgumentException("disasm needs a binary path.");
+        ParsedOptions options = Parse(args);
+        var path = options.Positional ?? throw new ArgumentException("disasm needs a binary path.", nameof(args));
         var offset = options.GetInt("--offset", 0);
         var count = options.GetInt("--count", 32);
         var baseAddress = options.GetUInt32("--base", 0) ?? 0;
         var bytes = File.ReadAllBytes(path);
         if (offset < 0 || offset >= bytes.Length)
         {
-            throw new ArgumentException($"The offset 0x{offset:x} is outside the file.");
+            throw new ArgumentException($"The offset 0x{offset:x} is outside the file.", nameof(args));
         }
 
         var words = Math.Min(count, (bytes.Length - offset) / 4);
@@ -1178,9 +1209,9 @@ internal static class Program
 
     private static int Bench(string[] args)
     {
-        var options = Parse(args);
+        ParsedOptions options = Parse(args);
         var frames = options.GetInt("--frames", 600);
-        var machine = CreateSyntheticMachine();
+        FiveDoMachine machine = CreateSyntheticMachine();
         machine.RunFrames(10);
 
         var stopwatch = Stopwatch.StartNew();
@@ -1215,18 +1246,18 @@ internal static class Program
 
     private static int SelfTest(string[] args)
     {
-        var options = Parse(args);
-        var first = CreateSyntheticMachine();
+        ParsedOptions options = Parse(args);
+        FiveDoMachine first = CreateSyntheticMachine();
         first.RunFrames(30);
         var hash1 = FrameHash(first);
 
-        var second = CreateSyntheticMachine();
+        FiveDoMachine second = CreateSyntheticMachine();
         second.RunFrames(30);
         var hash2 = FrameHash(second);
 
         using var state = new MemoryStream();
         first.SaveState(state);
-        var loaded = CreateSyntheticMachine();
+        FiveDoMachine loaded = CreateSyntheticMachine();
         state.Position = 0;
         loaded.LoadState(state);
         loaded.RunFrames(30);
@@ -1248,7 +1279,7 @@ internal static class Program
         }
         else
         {
-            foreach (var check in checks)
+            foreach (CliSelfTestCheck check in checks)
             {
                 Console.WriteLine($"{(check.Ok ? "PASS" : "FAIL")}  {check.Name}");
             }
@@ -1304,7 +1335,7 @@ internal static class Program
 
         if (!string.Equals(mode, "null", StringComparison.OrdinalIgnoreCase))
         {
-            throw new ArgumentException($"Unknown audio backend '{mode}'.");
+            throw new ArgumentException($"Unknown audio backend '{mode}'.", nameof(options));
         }
 
         return null;
@@ -1323,6 +1354,10 @@ internal static class Program
         var data = new ushort[2048];
         machine.Dsp.CopyDataMemory(data);
 
+        File.WriteAllBytes(prefix + ".imem.bin", ToBytes(instruction));
+        File.WriteAllBytes(prefix + ".dmem.bin", ToBytes(data));
+        return;
+
         static byte[] ToBytes(ushort[] words)
         {
             var bytes = new byte[words.Length * 2];
@@ -1334,9 +1369,6 @@ internal static class Program
 
             return bytes;
         }
-
-        File.WriteAllBytes(prefix + ".imem.bin", ToBytes(instruction));
-        File.WriteAllBytes(prefix + ".dmem.bin", ToBytes(data));
     }
 
     private static void WriteFrame(FiveDoMachine machine, string path)
@@ -1394,7 +1426,7 @@ internal static class Program
     {
         var trace = new StackTrace(2, false);
         var parts = new List<string>();
-        foreach (var frame in trace.GetFrames())
+        foreach (StackFrame frame in trace.GetFrames())
         {
             var method = DiagnosticMethodInfo.Create(frame);
             if (method is null)
@@ -1402,7 +1434,7 @@ internal static class Program
                 continue;
             }
 
-            var typeName = method.DeclaringTypeName ?? string.Empty;
+            var typeName = method.DeclaringTypeName;
             if (typeName.StartsWith("FiveDo.Memory.", StringComparison.Ordinal)
                 || typeName.StartsWith("FiveDo.Cli.Program+", StringComparison.Ordinal))
             {
@@ -1440,7 +1472,7 @@ internal static class Program
         var text = value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? value[2..] : value;
         if (!uint.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var bits))
         {
-            throw new ArgumentException($"Invalid --fix-mode value '{value}'; expected hexadecimal bits such as 0x20.");
+            throw new ArgumentException($"Invalid --fix-mode value '{value}'; expected hexadecimal bits such as 0x20.", nameof(value));
         }
 
         return (FixMode)bits;
@@ -1608,7 +1640,7 @@ internal static class Arm
             }
         }
 
-        throw new ArgumentException($"The value 0x{value:x8} cannot be encoded as an ARM immediate.");
+        throw new ArgumentException($"The value 0x{value:x8} cannot be encoded as an ARM immediate.", nameof(value));
     }
 
     private static uint RotateLeft(uint value, int count)

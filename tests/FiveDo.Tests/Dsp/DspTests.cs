@@ -39,7 +39,7 @@ public sealed class DspTests
         program.Word(NonRegister(0x101));
         program.Word(Sleep);
 
-        var dsp = Run(program);
+        DspCore dsp = Run(program);
         Assert.Equal(0x14, dsp.ReadInstructionMemory(0x100));
     }
 
@@ -54,7 +54,7 @@ public sealed class DspTests
         program.Word(NonRegister(0x101));
         program.Word(Sleep);
 
-        var dsp = Run(program);
+        DspCore dsp = Run(program);
         Assert.Equal(0x04, dsp.ReadInstructionMemory(0x100));
     }
 
@@ -69,7 +69,7 @@ public sealed class DspTests
         program.Word(NonRegister(0x101));
         program.Word(Sleep);
 
-        var dsp = Run(program);
+        DspCore dsp = Run(program);
         Assert.Equal(0x04, dsp.ReadInstructionMemory(0x100));
     }
 
@@ -82,7 +82,7 @@ public sealed class DspTests
         program.Word(NonRegister(0x100, writeBack: true));
         program.Word(Sleep);
 
-        var dsp = Run(program);
+        DspCore dsp = Run(program);
         Assert.Equal(0x20, dsp.ReadInstructionMemory(0x100));
     }
 
@@ -95,7 +95,7 @@ public sealed class DspTests
         program.Word(NonRegister(0x100, writeBack: true));
         program.Word(Sleep);
 
-        var dsp = Run(program);
+        DspCore dsp = Run(program);
         Assert.Equal(0xFFFF, dsp.ReadInstructionMemory(0x100));
     }
 
@@ -110,7 +110,7 @@ public sealed class DspTests
         program.Word(NonRegister(0x120));
         program.Word(Sleep);
 
-        var dsp = Run(program);
+        DspCore dsp = Run(program);
         // The shifted-out sign bit is inserted at bit 16, so the high halfword becomes 0x0001.
         Assert.Equal(0x0001, dsp.ReadInstructionMemory(0x100));
     }
@@ -130,7 +130,7 @@ public sealed class DspTests
         program.Word(NonRegister(0x111));
         program.Word(Sleep);
 
-        var dsp = Run(program);
+        DspCore dsp = Run(program);
         // 0x7FF8 + 8 overflows to 0x80000000; CLIP saturates to 0x7FFFF000.
         Assert.Equal(0x7FFF, dsp.ReadInstructionMemory(0x100));
     }
@@ -141,7 +141,7 @@ public sealed class DspTests
         var program = new ProgramBuilder();
         program.Seed(0x103, 0x2000);
         program.Word(Sleep);
-        var dsp = Run(program);
+        DspCore dsp = Run(program);
         Assert.Equal(0x2000, dsp.ReadInstructionMemory(0x103));
     }
 
@@ -170,7 +170,7 @@ public sealed class DspTests
         program.Word(NonRegister(0x103, writeBack: true));
         program.Word(Sleep);
 
-        var dsp = Run(program);
+        DspCore dsp = Run(program);
         Assert.Equal(0x0060, dsp.ReadInstructionMemory(0x103));
     }
 
@@ -184,7 +184,7 @@ public sealed class DspTests
         program.Word(Immediate(0x123));
         program.Word(Sleep);
 
-        var dsp = Run(program);
+        DspCore dsp = Run(program);
         // The one-bit JUSTIFY field is 0, so the loader shifts by 0. The immediate is placed in
         // the high half by MUXB=2 and then shifted left another eight by BS=6.
         Assert.Equal(0x2300, dsp.ReadInstructionMemory(0x100));
@@ -200,7 +200,7 @@ public sealed class DspTests
         program.Word(Immediate(0x123, justify: true));
         program.Word(Sleep);
 
-        var dsp = Run(program);
+        DspCore dsp = Run(program);
         // JUSTIFY is sign-extended (-1) and masked, so the immediate is shifted left three.
         Assert.Equal(0x1800, dsp.ReadInstructionMemory(0x100));
     }
@@ -217,7 +217,7 @@ public sealed class DspTests
         program.Word(R3Operand(r1: 4, r2: 5, r3: 6));
         program.Word(Sleep);
 
-        var dsp = Run(program);
+        DspCore dsp = Run(program);
         // R1 is the write-back register; R3 xor R2 = 0x10 xor 0x08 = 0x18.
         Assert.Equal(0x18, dsp.ReadInstructionMemory(0x104));
     }
@@ -233,17 +233,17 @@ public sealed class DspTests
         program.Word(R2Operand(r1: 4, r2: 5, writeBack: true));
         program.Word(Sleep);
 
-        var dsp = Run(program);
+        DspCore dsp = Run(program);
         Assert.Equal(0x04, dsp.ReadInstructionMemory(0x104));
     }
 
     [Fact]
     public void Loop_BranchTakenWhenZeroAndExact()
     {
-        var taken = RunBranchProgram(operand: 0x00);
+        DspCore taken = RunBranchProgram(operand: 0x00);
         Assert.Equal(0x00, taken.ReadInstructionMemory(0x101));
 
-        var notTaken = RunBranchProgram(operand: 0x04);
+        DspCore notTaken = RunBranchProgram(operand: 0x04);
         Assert.Equal(0x28, notTaken.ReadInstructionMemory(0x101));
     }
 

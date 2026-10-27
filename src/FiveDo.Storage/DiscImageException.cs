@@ -8,6 +8,11 @@ namespace FiveDo.Storage;
 public sealed class DiscImageException : Exception
 {
     /// <summary>Initializes a new instance of the <see cref="DiscImageException"/> class.</summary>
+    public DiscImageException()
+    {
+    }
+
+    /// <summary>Initializes a new instance of the <see cref="DiscImageException"/> class.</summary>
     /// <param name="message">Error message.</param>
     public DiscImageException(string message)
         : base(message)

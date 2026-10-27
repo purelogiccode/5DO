@@ -24,7 +24,7 @@ public sealed class AppSettings
     public string DiscPath { get; set; } = string.Empty;
 
     /// <summary>Gets recent disc paths, newest first.</summary>
-    public List<string> RecentDiscs { get; set; } = [];
+    public IList<string> RecentDiscs { get; set; } = new List<string>();
 
     /// <summary>Gets or sets the save-state directory.</summary>
     public string SaveDirectory { get; set; } = string.Empty;
@@ -39,16 +39,16 @@ public sealed class AppSettings
     public int SaveSlotCount { get; set; } = 10;
 
     /// <summary>Gets folders scanned by the game library.</summary>
-    public List<string> LibraryFolders { get; set; } = [];
+    public IList<string> LibraryFolders { get; set; } = new List<string>();
 
     /// <summary>Gets or sets a value indicating whether database fixes are applied automatically.</summary>
     public bool AutoGameFixes { get; set; } = true;
 
     /// <summary>Gets per-game fix-mode overrides keyed by 4DO game ID.</summary>
-    public Dictionary<string, FixMode> FixModeOverrides { get; set; } = [];
+    public IDictionary<string, FixMode> FixModeOverrides { get; set; } = new Dictionary<string, FixMode>(StringComparer.Ordinal);
 
     /// <summary>Gets per-game filter overrides keyed by 4DO game ID.</summary>
-    public Dictionary<string, VideoFilter> FilterOverrides { get; set; } = [];
+    public IDictionary<string, VideoFilter> FilterOverrides { get; set; } = new Dictionary<string, VideoFilter>(StringComparer.Ordinal);
 
     /// <summary>Gets or sets the presentation filter.</summary>
     public VideoFilter Filter { get; set; } = VideoFilter.SharpBilinear;
@@ -97,7 +97,7 @@ public sealed class AppSettings
         }
 
         var normalized = NormalizeGameId(gameId);
-        foreach (var (id, mode) in FixModeOverrides)
+        foreach ((var id, FixMode mode) in FixModeOverrides)
         {
             if (string.Equals(NormalizeGameId(id), normalized, StringComparison.Ordinal))
             {
@@ -146,7 +146,7 @@ public sealed class AppSettings
         }
 
         var normalized = NormalizeGameId(gameId);
-        foreach (var (id, filter) in FilterOverrides)
+        foreach ((var id, VideoFilter filter) in FilterOverrides)
         {
             if (string.Equals(NormalizeGameId(id), normalized, StringComparison.Ordinal))
             {
@@ -188,7 +188,7 @@ public sealed class AppSettings
     /// <returns>The override when present, the database mapping when automatic fixes are enabled, or none.</returns>
     public FixMode ResolveFixMode(string? gameId)
     {
-        var overrideMode = GetFixModeOverride(gameId);
+        FixMode? overrideMode = GetFixModeOverride(gameId);
         return overrideMode ?? (AutoGameFixes ? GameCompatibility.ForGameId(gameId).FixMode : FixMode.None);
     }
 
@@ -203,7 +203,6 @@ public sealed class AppSettings
             Aspect = Aspect,
             Vsync = Vsync,
             IntegerScale = IntegerScale,
-            ShowOverlay = ShowOverlay,
             Bloom = Bloom,
         };
         settings.Validate();

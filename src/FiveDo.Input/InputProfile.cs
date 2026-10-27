@@ -18,10 +18,10 @@ public sealed class PlayerProfile
     public string Name { get; set; } = string.Empty;
 
     /// <summary>Gets keyboard bindings as key name (e.g. "A", "Left") to button.</summary>
-    public Dictionary<string, ControllerButton> Keyboard { get; set; } = [];
+    public IDictionary<string, ControllerButton> Keyboard { get; set; } = new Dictionary<string, ControllerButton>(StringComparer.Ordinal);
 
     /// <summary>Gets gamepad bindings as button name (e.g. "South") to button.</summary>
-    public Dictionary<string, ControllerButton> Gamepad { get; set; } = [];
+    public IDictionary<string, ControllerButton> Gamepad { get; set; } = new Dictionary<string, ControllerButton>(StringComparer.Ordinal);
 
     /// <summary>Creates the default player profile.</summary>
     /// <param name="player">One-based player number.</param>
@@ -84,14 +84,14 @@ public sealed class PlayerProfile
     }
 
     private static void FindConflicts(
-        IReadOnlyDictionary<string, ControllerButton> bindings,
+        IEnumerable<KeyValuePair<string, ControllerButton>> bindings,
         string kind,
         List<string> conflicts)
     {
         var seen = new Dictionary<string, ControllerButton>(StringComparer.OrdinalIgnoreCase);
-        foreach (var (name, button) in bindings)
+        foreach ((var name, ControllerButton button) in bindings)
         {
-            if (seen.TryGetValue(name, out var existing) && existing != button)
+            if (seen.TryGetValue(name, out ControllerButton existing) && existing != button)
             {
                 conflicts.Add($"{kind} input '{name}' is bound to both {existing} and {button}.");
             }
@@ -112,7 +112,7 @@ public sealed class InputProfile
     public PlayerProfile[] Players { get; set; } = CreateDefaultPlayers();
 
     /// <summary>Gets console hotkeys (action name to key name).</summary>
-    public Dictionary<string, string> Hotkeys { get; set; } = new()
+    public IDictionary<string, string> Hotkeys { get; set; } = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["SaveState"] = "F5",
         ["LoadState"] = "F8",
@@ -205,7 +205,7 @@ public static class InputProfileStore
 
         try
         {
-            var profile = JsonSerializer.Deserialize(File.ReadAllText(path), InputProfileJsonContext.Default.InputProfile);
+            InputProfile? profile = JsonSerializer.Deserialize(File.ReadAllText(path), InputProfileJsonContext.Default.InputProfile);
             return profile ?? throw new InvalidDataException($"Input profile '{path}' is empty.");
         }
         catch (JsonException exception)

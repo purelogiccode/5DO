@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using FiveDo.Core;
 
 namespace FiveDo.Video;
@@ -14,7 +15,7 @@ namespace FiveDo.Video;
 public sealed class VdlFrameMailbox
 {
     private readonly VdlFrame _snapshot = new();
-    private readonly object _gate = new();
+    private readonly Lock _gate = new();
     private long _sequence;
 
     /// <summary>Gets the number of completed frames written.</summary>
@@ -67,8 +68,8 @@ public sealed class VdlFrameMailbox
         var height = Math.Min(source.SourceHeight, VdlFrame.MaxLines);
         for (var i = 0; i < height; i++)
         {
-            var sourceLine = source[i];
-            var destinationLine = destination[i];
+            VdlLine sourceLine = source[i];
+            VdlLine destinationLine = destination[i];
             destinationLine.Width = sourceLine.Width;
             destinationLine.OutControl = sourceLine.OutControl;
             destinationLine.ClutDma = sourceLine.ClutDma;

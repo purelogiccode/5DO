@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using FiveDo.Core;
 using FiveDo.Storage;
 
@@ -21,7 +22,7 @@ public sealed class NvramStore : IDisposable
 
     private readonly string _path;
     private readonly TimeProvider _timeProvider;
-    private readonly object _gate = new();
+    private readonly Lock _gate = new();
     private readonly byte[] _pending = new byte[EmulatorConstants.NvramSize];
 
     private bool _dirty;

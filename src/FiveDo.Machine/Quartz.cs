@@ -33,7 +33,7 @@ public sealed class Quartz : IStateSection
     /// <param name="timerDelayProvider">Supplies the CLIO timer delay. May be null before CLIO is initialized.</param>
     public Quartz(EmulatorTuning? tuning = null, Func<uint>? timerDelayProvider = null)
     {
-        var effectiveTuning = tuning ?? EmulatorTuning.Default;
+        EmulatorTuning effectiveTuning = tuning ?? EmulatorTuning.Default;
         effectiveTuning.Validate();
         _armClock = effectiveTuning.ArmClock;
         TimerDelayProvider = timerDelayProvider;

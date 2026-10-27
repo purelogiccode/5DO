@@ -1,5 +1,3 @@
-using System;
-
 namespace FiveDo.Madam;
 
 /// <summary>
@@ -8,8 +6,9 @@ namespace FiveDo.Madam;
 /// <remarks>
 /// This word is loaded from MADAM register <c>0x110</c> and is not part of the CCB
 /// header itself. Values are persisted in guest memory and must not be renumbered.
+/// The word is a packed bitfield rather than a set of independent flags, so it is not
+/// marked with <see cref="System.FlagsAttribute"/>.
 /// </remarks>
-[Flags]
 public enum CcbControl0 : uint
 {
     /// <summary>No flags.</summary>

@@ -1,7 +1,6 @@
 using System;
 using FiveDo.Core;
 using FiveDo.Input;
-using FiveDo.Video;
 
 namespace FiveDo.Host;
 
@@ -289,7 +288,7 @@ public sealed class RoadRashAutopilot
                 {
                     var error = LineX - TargetRoadCenterX;
                     var centreDir = error > 8 ? 1 : error < -8 ? -1 : 0;
-                    var sideSteer = FindSideSteer(frame, out _);
+                    var sideSteer = FindSideSteer(frame);
                     var jumped = !double.IsNaN(_decisionLineX)
                         && !double.IsNaN(LineX)
                         && Math.Abs(LineX - _decisionLineX) > RoadJumpThreshold;
@@ -355,18 +354,18 @@ public sealed class RoadRashAutopilot
             // Steering off-centre into a narrowing bend with the target side
             // open: lift the throttle so the bike rotates instead of
             // understeering into the outside wall.
-            buttons = 0;
+            buttons = ControllerButton.None;
         }
         else if (IsPacingCoast(frameNumber))
         {
             // Built-up section with edges close on at least one side: cap
             // speed with a throttle duty cycle. Wall/tree touches at full
             // city speed end the race (BUSTED); finishing slowly beats that.
-            buttons = 0;
+            buttons = ControllerButton.None;
         }
         else if (Caution)
         {
-            buttons = 0;
+            buttons = ControllerButton.None;
         }
         else
         {
@@ -385,7 +384,7 @@ public sealed class RoadRashAutopilot
         // A stopped bike gets busted. Coasting (pacing, caution, bend lift) may
         // slow the bike but must never stall it: force the throttle back on
         // after a bounded coast streak. Deliberate braking is exempt.
-        var coasting = (buttons & (ControllerButton.B | ControllerButton.A)) == 0;
+        var coasting = (buttons & (ControllerButton.B | ControllerButton.A)) == ControllerButton.None;
         if (coasting && !EmergencyBrake && !MenuAdvance)
         {
             _coastStreak++;
@@ -414,7 +413,7 @@ public sealed class RoadRashAutopilot
         var top = Math.Min(RoadMeasureTop, bottom);
         for (var y = top; y < bottom; y += 2)
         {
-            var line = frame.Lines[y];
+            VdlLine line = frame.Lines[y];
             var width = Math.Min(line.Width, line.PixelBuffer.Length);
             var bestStart = 0;
             var bestLength = 0;
@@ -595,7 +594,7 @@ public sealed class RoadRashAutopilot
         var rightTotal = 0;
         for (var y = 120; y < top; y += 2)
         {
-            var line = frame.Lines[y];
+            VdlLine line = frame.Lines[y];
             var width = Math.Min(line.Width, line.PixelBuffer.Length);
             for (var x = 120; x < Math.Min(190, width); x++)
             {
@@ -638,7 +637,7 @@ public sealed class RoadRashAutopilot
     /// Used by stuck recovery to steer toward open road when the centre estimate
     /// cannot be trusted. Returns -1/0/+1.
     /// </summary>
-    private static int FindSideSteer(VdlFrame frame, out double difference)
+    private static int FindSideSteer(VdlFrame frame)
     {
         var bottom = Math.Min(LookAheadBottom, frame.Lines.Length);
         var top = Math.Min(RoadMeasureTop, bottom);
@@ -648,7 +647,7 @@ public sealed class RoadRashAutopilot
         var rightTotal = 0;
         for (var y = top; y < bottom; y += 2)
         {
-            var line = frame.Lines[y];
+            VdlLine line = frame.Lines[y];
             var width = Math.Min(line.Width, line.PixelBuffer.Length);
             for (var x = 20; x < Math.Min(160, width); x++)
             {
@@ -671,14 +670,12 @@ public sealed class RoadRashAutopilot
 
         if (leftTotal == 0 || rightTotal == 0)
         {
-            difference = 0;
             return 0;
         }
 
         var leftFraction = (double)leftRoad / leftTotal;
         var rightFraction = (double)rightRoad / rightTotal;
-        difference = Math.Abs(leftFraction - rightFraction);
-        if (difference <= 0.5)
+        if (Math.Abs(leftFraction - rightFraction) <= 0.5)
         {
             return 0;
         }
@@ -932,7 +929,7 @@ public sealed class RoadRashAutopilot
                 continue;
             }
 
-            var line = frame.Lines[y];
+            VdlLine line = frame.Lines[y];
             var width = Math.Min(line.Width, line.PixelBuffer.Length);
             for (var column = 0; column < columns; column++)
             {
@@ -952,7 +949,7 @@ public sealed class RoadRashAutopilot
                 continue;
             }
 
-            var line = frame.Lines[y];
+            VdlLine line = frame.Lines[y];
             var width = Math.Min(line.Width, line.PixelBuffer.Length);
             for (var column = 0; column < 6; column++)
             {
@@ -981,7 +978,7 @@ public sealed class RoadRashAutopilot
                 continue;
             }
 
-            var line = frame.Lines[y];
+            VdlLine line = frame.Lines[y];
             var width = Math.Min(line.Width, line.PixelBuffer.Length);
             for (var column = 0; column < 6; column++)
             {
@@ -1017,7 +1014,7 @@ public sealed class RoadRashAutopilot
         if (frameNumber - _stableSince >= StuckTriggerFrames)
         {
             RecoveryActive = true;
-            var sideSteer = FindSideSteer(frame, out _);
+            var sideSteer = FindSideSteer(frame);
             _recoverySteer = sideSteer != 0
                 ? sideSteer
                 : LineX < TargetRoadCenterX ? 1 : -1;

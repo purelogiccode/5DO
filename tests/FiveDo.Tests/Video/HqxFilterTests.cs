@@ -10,7 +10,7 @@ public sealed class HqxFilterTests
     [Fact]
     public void Expand_MatchesTheReferenceHq2xHash()
     {
-        var source = CreateReferenceSource(32, 24);
+        FrameBuffer source = CreateReferenceSource(32, 24);
         var destination = new FrameBuffer(64, 48);
 
         new HqxFilter().Expand(source, destination);
@@ -30,7 +30,7 @@ public sealed class HqxFilterTests
     [Fact]
     public void Expand_MatchesTheReferenceHq3xHash()
     {
-        var source = CreateReferenceSource(32, 24);
+        FrameBuffer source = CreateReferenceSource(32, 24);
         var destination = new FrameBuffer(96, 72);
 
         new HqxFilter().Expand(source, destination);
@@ -43,7 +43,7 @@ public sealed class HqxFilterTests
     [Fact]
     public void Expand_MatchesTheReferenceHq4xHash()
     {
-        var source = CreateReferenceSource(32, 24);
+        FrameBuffer source = CreateReferenceSource(32, 24);
         var destination = new FrameBuffer(128, 96);
 
         new HqxFilter().Expand(source, destination);

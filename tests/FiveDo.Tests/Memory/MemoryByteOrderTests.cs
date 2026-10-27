@@ -11,7 +11,7 @@ public sealed class MemoryByteOrderTests
     public void Ram_Write32_ExposesBytesInLittleEndianLanes()
     {
         var memory = new FiveDoMemory();
-        var ram = memory.Ram;
+        IRam ram = memory.Ram;
 
         ram.Write32(0, 0x11223344);
 

@@ -83,9 +83,6 @@ public sealed record RendererSettings
     /// <summary>Gets a value indicating whether integer scaling is required.</summary>
     public bool IntegerScale { get; init; } = true;
 
-    /// <summary>Gets a value indicating whether the FPS/GPU overlay is shown.</summary>
-    public bool ShowOverlay { get; init; }
-
     /// <summary>Gets the CRT scanline strength (0-1).</summary>
     public float ScanlineStrength { get; init; } = 0.25f;
 
@@ -97,6 +94,10 @@ public sealed record RendererSettings
 
     /// <summary>Validates the settings.</summary>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when a value is out of range.</exception>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Meziantou.Analyzer",
+        "MA0015",
+        Justification = "Validate reports the offending property name; it has no parameters of its own.")]
     public void Validate()
     {
         if (!double.IsFinite(CustomAspect) || CustomAspect <= 0)

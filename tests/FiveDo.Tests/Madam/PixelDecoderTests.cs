@@ -12,8 +12,8 @@ public sealed class PixelDecoderTests
         plut[0] = 0x1234;
         plut[1] = 0x5678;
 
-        var first = decoder.Decode(0, 1, 0, plut);
-        var second = decoder.Decode(1, 1, 0, plut);
+        PixelDecodeResult first = decoder.Decode(0, 1, 0, plut);
+        PixelDecodeResult second = decoder.Decode(1, 1, 0, plut);
 
         Assert.Equal(0x1234, first.Pixel);
         Assert.Equal(0x49, first.Amv);
@@ -40,7 +40,7 @@ public sealed class PixelDecoderTests
         var plut = CreatePlut();
         plut[5] = 0x1234;
 
-        var result = decoder.Decode(5 | (1u << 5), 4, 0, plut);
+        PixelDecodeResult result = decoder.Decode(5 | (1u << 5), 4, 0, plut);
 
         Assert.Equal(0x9234, result.Pixel);
         Assert.Equal(0x49, result.Amv);
@@ -51,7 +51,7 @@ public sealed class PixelDecoderTests
     {
         var decoder = new PixelDecoder();
 
-        var result = decoder.Decode(0x12, 5 | 0x10, 0, CreatePlut());
+        PixelDecodeResult result = decoder.Decode(0x12, 5 | 0x10, 0, CreatePlut());
 
         Assert.Equal(0x255, result.Pixel);
         Assert.Equal(0x49, result.Amv);
@@ -64,7 +64,7 @@ public sealed class PixelDecoderTests
         var plut = CreatePlut();
         plut[0] = 0x2222;
 
-        var result = decoder.Decode(0x60, 5, 0, plut);
+        PixelDecodeResult result = decoder.Decode(0x60, 5, 0, plut);
 
         Assert.Equal(0x2222, result.Pixel);
         Assert.Equal(219, result.Amv);
@@ -75,7 +75,7 @@ public sealed class PixelDecoderTests
     {
         var decoder = new PixelDecoder();
 
-        var result = decoder.Decode(0xabcd, 6 | 0x10, 0, CreatePlut());
+        PixelDecodeResult result = decoder.Decode(0xabcd, 6 | 0x10, 0, CreatePlut());
 
         Assert.Equal(0xabcd, result.Pixel);
         Assert.Equal(0x49, result.Amv);
@@ -89,7 +89,7 @@ public sealed class PixelDecoderTests
         plut[5] = 0x1234;
         var pixel = 0x8000u | (1u << 5) | (2u << 8) | (3u << 11) | 5u;
 
-        var result = decoder.Decode(pixel, 6, 0, plut);
+        PixelDecodeResult result = decoder.Decode(pixel, 6, 0, plut);
 
         Assert.Equal(0x9234, result.Pixel);
         Assert.Equal(209, result.Amv);

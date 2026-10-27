@@ -65,22 +65,15 @@ public sealed class CliJsonTests
             ]);
 
         var json = JsonSerializer.Serialize(result, CliJsonContext.Default.CliSelfTestResult);
-        var loaded = JsonSerializer.Deserialize(json, CliJsonContext.Default.CliSelfTestResult);
+        CliSelfTestResult? loaded = JsonSerializer.Deserialize(json, CliJsonContext.Default.CliSelfTestResult);
 
         Assert.NotNull(loaded);
         Assert.True(loaded.Ok);
-        Assert.Collection(
-            loaded.Checks,
-            check =>
-            {
-                Assert.Equal("deterministic frame", check.Name);
-                Assert.True(check.Ok);
-            },
-            check =>
-            {
-                Assert.Equal("state roundtrip", check.Name);
-                Assert.False(check.Ok);
-            });
+        Assert.Equal(2, loaded.Checks.Count);
+        Assert.Equal("deterministic frame", loaded.Checks[0].Name);
+        Assert.True(loaded.Checks[0].Ok);
+        Assert.Equal("state roundtrip", loaded.Checks[1].Name);
+        Assert.False(loaded.Checks[1].Ok);
     }
 
     [Fact]

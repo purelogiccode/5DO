@@ -47,7 +47,7 @@ public sealed record LogViewFilter
         var result = new List<LogEntry>(entries.Count);
         for (var i = 0; i < entries.Count; i++)
         {
-            var entry = entries[i];
+            LogEntry entry = entries[i];
             if (Matches(entry))
             {
                 result.Add(entry);

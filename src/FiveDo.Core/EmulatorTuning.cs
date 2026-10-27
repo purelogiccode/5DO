@@ -34,14 +34,26 @@ public sealed record EmulatorTuning
     /// <exception cref="ArgumentOutOfRangeException">Thrown when a clock or size is invalid.</exception>
     public void Validate()
     {
-        if (ArmClock <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(ArmClock), ArmClock, "The ARM clock must be positive.");
-        }
+        ValidateArmClock(ArmClock);
+        ValidateCpuBackend(CpuBackend);
+    }
 
-        if (CpuBackend != CpuBackendKind.Interpreter)
+    private static void ValidateArmClock(int armClock)
+    {
+        if (armClock <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(CpuBackend), CpuBackend, "The managed IL JIT backend is not implemented until M12.");
+            throw new ArgumentOutOfRangeException(nameof(armClock), armClock, "The ARM clock must be positive.");
+        }
+    }
+
+    private static void ValidateCpuBackend(CpuBackendKind cpuBackend)
+    {
+        if (cpuBackend != CpuBackendKind.Interpreter)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(cpuBackend),
+                cpuBackend,
+                "The managed IL JIT backend is not implemented until M12.");
         }
     }
 }

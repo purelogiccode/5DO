@@ -26,7 +26,7 @@ public readonly record struct ControllerState(ControllerButton Buttons)
     /// <summary>Tests whether a button is pressed.</summary>
     /// <param name="button">Button to test.</param>
     /// <returns><see langword="true"/> when pressed.</returns>
-    public bool IsDown(ControllerButton button) => (Buttons & button) != 0;
+    public bool IsDown(ControllerButton button) => (Buttons & button) != ControllerButton.None;
 
     /// <summary>Applies a pressed/released transition.</summary>
     /// <param name="button">Button to change.</param>

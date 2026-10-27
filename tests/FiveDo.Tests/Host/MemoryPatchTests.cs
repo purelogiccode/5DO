@@ -1,5 +1,5 @@
 using System;
-using System.IO;
+using System.Collections.Generic;
 using FiveDo.Host;
 using FiveDo.Machine;
 
@@ -10,7 +10,7 @@ public sealed class MemoryPatchTests
     [Fact]
     public void Parse_ReadsHexAddressesAndByteLists()
     {
-        var entries = MemoryPatch.Parse("0x96574=4e 4c,4b;0x1000=00ff");
+        IReadOnlyList<MemoryPatchEntry> entries = MemoryPatch.Parse("0x96574=4e 4c,4b;0x1000=00ff");
 
         Assert.Equal(2, entries.Count);
         Assert.Equal(0x96574u, entries[0].Address);

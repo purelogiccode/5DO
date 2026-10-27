@@ -60,5 +60,5 @@ public enum LogCategory
     Diagnostics = 1 << 15,
 
     /// <summary>All categories.</summary>
-    All = int.MaxValue,
+    All = Cpu | Memory | Madam | Clio | Dsp | Sport | Video | Xbus | Cdrom | Storage | Audio | Input | Machine | Host | State | Diagnostics,
 }

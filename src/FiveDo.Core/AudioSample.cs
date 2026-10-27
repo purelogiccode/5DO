@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace FiveDo.Core;
 
 /// <summary>
@@ -10,6 +12,7 @@ namespace FiveDo.Core;
 /// </remarks>
 /// <param name="Left">Left channel, signed 16-bit.</param>
 /// <param name="Right">Right channel, signed 16-bit.</param>
+[StructLayout(LayoutKind.Sequential)]
 public readonly record struct AudioSample(short Left, short Right)
 {
     /// <summary>Gets the packed 32-bit sample.</summary>

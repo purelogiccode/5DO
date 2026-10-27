@@ -2,14 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
 using FiveDo.Core;
 using FiveDo.Diagnostics;
+using FiveDo.Frontend.Avalonia.Controls;
 using FiveDo.Video;
 
 namespace FiveDo.Frontend.Avalonia;
@@ -19,7 +20,7 @@ namespace FiveDo.Frontend.Avalonia;
 /// </summary>
 /// <remarks>
 /// The probe is intentionally independent of the emulator session, settings, BIOS,
-/// and disc. It creates the same <see cref="Controls.VideoSurface"/> used by the
+/// and disc. It creates the same <see cref="FiveDo.Frontend.Avalonia.Controls.VideoSurface"/> used by the
 /// desktop shell, submits synthetic 320x240 VDL frames, and records the per-frame
 /// present and GPU times. It is used to validate the 4K output budget and the
 /// platform swap-interval path on real hardware.
@@ -31,7 +32,7 @@ internal sealed class GlProbeWindow : Window, IDisposable
 
     private readonly GlProbeOptions _options;
     private readonly Action<int> _exit;
-    private readonly Controls.VideoSurface _video = new();
+    private readonly VideoSurface _video = new();
     private readonly VdlFrame _frame = new();
     private readonly List<double> _presentSamples;
     private readonly List<double> _gpuSamples;
@@ -81,7 +82,6 @@ internal sealed class GlProbeWindow : Window, IDisposable
             Aspect = AspectMode.Stretch,
             Vsync = options.Vsync,
             IntegerScale = false,
-            ShowOverlay = false,
         };
 
         InitializeSyntheticFrame();
@@ -126,14 +126,14 @@ internal sealed class GlProbeWindow : Window, IDisposable
         DispatcherTimer.RunOnce(StartProbe, TimeSpan.FromMilliseconds(400));
     }
 
-    private void OnOpenGlReady(RendererCapabilities capabilities)
+    private void OnOpenGlReady(object? sender, OpenGlReadyEventArgs e)
     {
-        _capabilities = capabilities;
+        _capabilities = e.Capabilities;
     }
 
-    private void OnOpenGlFailed(Exception exception)
+    private void OnOpenGlFailed(object? sender, OpenGlFailedEventArgs e)
     {
-        Finish(false, exception.Message);
+        Finish(false, e.Exception.Message);
     }
 
     private void StartProbe()
@@ -167,8 +167,10 @@ internal sealed class GlProbeWindow : Window, IDisposable
         _video.SubmitFrame(_frame);
     }
 
-    private void OnFramePresented(double presentMilliseconds, double? gpuMilliseconds)
+    private void OnFramePresented(object? sender, FramePresentedEventArgs e)
     {
+        var presentMilliseconds = e.PresentMilliseconds;
+        var gpuMilliseconds = e.GpuMilliseconds;
         if (_finished || !_started)
         {
             return;
@@ -219,8 +221,11 @@ internal sealed class GlProbeWindow : Window, IDisposable
         _video.RequestCapture();
     }
 
-    private void OnCaptureCompleted(byte[] pixels, int width, int height)
+    private void OnCaptureCompleted(object? sender, CaptureCompletedEventArgs e)
     {
+        var pixels = e.Pixels;
+        var width = e.Width;
+        var height = e.Height;
         if (_finished)
         {
             return;
@@ -251,7 +256,7 @@ internal sealed class GlProbeWindow : Window, IDisposable
 
         var cpu = new FrameBuffer(width, height);
         FrameAssembler.Assemble(_frame, cpu, width, height);
-        var expected = cpu.PixelSpan;
+        Span<byte> expected = cpu.PixelSpan;
         var direct = CountDifferentPixels(gpuPixels, expected, width, height, flipVertically: false);
         var flipped = CountDifferentPixels(gpuPixels, expected, width, height, flipVertically: true);
         var useFlip = flipped < direct;
@@ -323,7 +328,7 @@ internal sealed class GlProbeWindow : Window, IDisposable
         _frame.SourceHeight = SourceHeight;
         for (var y = 0; y < SourceHeight; y++)
         {
-            var line = _frame[y];
+            VdlLine line = _frame[y];
             line.Width = SourceWidth;
             line.OutControl = 0;
             line.Background = 0;
@@ -340,7 +345,7 @@ internal sealed class GlProbeWindow : Window, IDisposable
     {
         for (var y = 0; y < SourceHeight; y++)
         {
-            var pixels = _frame[y].Pixels;
+            Span<ushort> pixels = _frame[y].Pixels;
             var row = (y + phase) & 0x1f;
             for (var x = 0; x < SourceWidth; x++)
             {
@@ -362,7 +367,7 @@ internal sealed class GlProbeWindow : Window, IDisposable
         _elapsed.Stop();
         _timeout?.Stop();
 
-        var report = BuildReport(success, error);
+        GlProbeReport report = BuildReport(success, error);
         try
         {
             var directory = Path.GetDirectoryName(_options.OutputPath);
@@ -391,7 +396,7 @@ internal sealed class GlProbeWindow : Window, IDisposable
             ?? Math.Max(0, GC.GetAllocatedBytesForCurrentThread() - _startAllocatedBytes);
         var frames = Math.Max(1, _measured);
         var elapsedSeconds = _elapsed.Elapsed.TotalSeconds;
-        var capabilities = _capabilities;
+        RendererCapabilities? capabilities = _capabilities;
         return new GlProbeReport(
             Ok: success,
             Error: error,
@@ -442,7 +447,7 @@ internal sealed class GlProbeWindow : Window, IDisposable
             return null;
         }
 
-        var summary = FrameTiming.Summarize(samples.ToArray());
+        FrameTimingSummary summary = FrameTiming.Summarize(samples.ToArray());
         return new GlProbeTiming(
             Round(summary.MeanMs),
             Round(summary.P50Ms),
@@ -479,6 +484,7 @@ internal sealed class GlProbeWindow : Window, IDisposable
 /// <param name="P95Ms">95th percentile.</param>
 /// <param name="P99Ms">99th percentile.</param>
 /// <param name="MaxMs">Maximum milliseconds.</param>
+[StructLayout(LayoutKind.Sequential)]
 public readonly record struct GlProbeTiming(
     double MeanMs,
     double P50Ms,
@@ -589,6 +595,4 @@ public sealed record GlProbeReport(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     WriteIndented = true)]
 [JsonSerializable(typeof(GlProbeReport))]
-internal sealed partial class GlProbeJsonContext : JsonSerializerContext
-{
-}
+internal sealed partial class GlProbeJsonContext : JsonSerializerContext;

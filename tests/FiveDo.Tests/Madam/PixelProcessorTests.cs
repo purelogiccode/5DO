@@ -74,7 +74,7 @@ public sealed class PixelProcessorTests
     {
         // PIXC high half is zero; the low half selects the AV colour source.
         const uint pixelControl = 0x0000_0050;
-        var flags = CcbControl.UseAv | (CcbControl)0x100;
+        CcbControl flags = CcbControl.UseAv | (CcbControl)0x100;
 
         var normal = PixelProcessor.Process(0x8000, 0, 0x49, pixelControl, CcbControl.UseAv);
         var overZero = PixelProcessor.Process(0x8000, 0, 0x49, pixelControl, flags);
@@ -87,7 +87,7 @@ public sealed class PixelProcessorTests
     public void Process_PixelOverOneSetsBit15BeforeControlSelection()
     {
         const uint pixelControl = 0x0050_0000;
-        var flags = CcbControl.UseAv | (CcbControl)0x180;
+        CcbControl flags = CcbControl.UseAv | (CcbControl)0x180;
 
         var normal = PixelProcessor.Process(0x0000, 0, 0x49, pixelControl, CcbControl.UseAv);
         var overOne = PixelProcessor.Process(0x0000, 0, 0x49, pixelControl, flags);

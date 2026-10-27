@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -37,17 +38,17 @@ public partial class GameLibraryWindow : Window
 
     private async void OnAddFolder(object? sender, RoutedEventArgs e)
     {
-        var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        IReadOnlyList<IStorageFolder> folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
             Title = "Add a game folder",
             AllowMultiple = true,
-        });
+        }).ConfigureAwait(true);
 
         var added = false;
-        foreach (var folder in folders)
+        foreach (IStorageFolder folder in folders)
         {
             var path = folder.TryGetLocalPath();
-            if (path is null || _settings.LibraryFolders.Exists(existing =>
+            if (path is null || _settings.LibraryFolders.Any(existing =>
                     string.Equals(existing, path, StringComparison.OrdinalIgnoreCase)))
             {
                 continue;
@@ -112,7 +113,7 @@ public partial class GameLibraryWindow : Window
 
     private void Refresh()
     {
-        var folders = _settings.LibraryFolders.Count > 0
+        IList<string> folders = _settings.LibraryFolders.Count > 0
             ? _settings.LibraryFolders
             : RecentFolders();
         IReadOnlyList<GameLibraryEntry> entries = folders.Count == 0
@@ -129,7 +130,7 @@ public partial class GameLibraryWindow : Window
         }
 
         var known = 0;
-        foreach (var entry in entries)
+        foreach (GameLibraryEntry entry in entries)
         {
             if (entry.Known)
             {

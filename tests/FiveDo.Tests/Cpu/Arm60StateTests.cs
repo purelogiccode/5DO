@@ -74,7 +74,7 @@ public sealed class Arm60StateTests
         var writer = new StateWriter();
         writer.WriteSection(rig.Cpu);
         var reader = new StateReader(writer.ToArray());
-        Assert.True(reader.TryReadSection(out var section));
+        Assert.True(reader.TryReadSection(out StateSectionReader? section));
         Assert.NotNull(section);
         Assert.Equal(StateSectionIds.Cpu, section.Id);
 

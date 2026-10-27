@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
+using System.Threading.Tasks;
 using FiveDo.Frontend.Avalonia;
 
 namespace FiveDo.Tests.Frontend;
@@ -51,7 +52,7 @@ public sealed class GpuProbeIntegrationTests
                     warmup: 5,
                     filter: "accurate");
 
-                var report = ReadReport(reportPath);
+                GlProbeReport report = ReadReport(reportPath);
                 Assert.True(report.Ok, $"{backend} probe failed: {report.Error}");
                 Assert.NotNull(report.Parity);
                 Assert.True(report.Parity!.Value.Compared);
@@ -78,7 +79,7 @@ public sealed class GpuProbeIntegrationTests
                     warmup: 5,
                     filter: "sharp-bilinear");
 
-                var report = ReadReport(reportPath);
+                GlProbeReport report = ReadReport(reportPath);
                 Assert.True(report.Ok, $"{backend} 4K probe failed: {report.Error}");
                 Assert.Equal(3840, report.OutputWidth);
                 Assert.Equal(2160, report.OutputHeight);
@@ -137,10 +138,10 @@ public sealed class GpuProbeIntegrationTests
             start.ArgumentList.Add(capturePath);
         }
 
-        using var process = Process.Start(start)
-            ?? throw new InvalidOperationException("The frontend probe process could not be started.");
-        var stdout = process.StandardOutput.ReadToEndAsync();
-        var stderr = process.StandardError.ReadToEndAsync();
+        using Process process = Process.Start(start)
+                                ?? throw new InvalidOperationException("The frontend probe process could not be started.");
+        Task<string> stdout = process.StandardOutput.ReadToEndAsync();
+        Task<string> stderr = process.StandardError.ReadToEndAsync();
         if (!process.WaitForExit(180_000))
         {
             process.Kill(entireProcessTree: true);

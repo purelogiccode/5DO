@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using FiveDo.Input;
 
@@ -9,7 +10,7 @@ public sealed class InputScriptTests
     [Fact]
     public void Parse_ReadsFramesButtonsCommentsAndHex()
     {
-        var entries = InputScript.Parse(
+        IReadOnlyList<InputScriptEntry> entries = InputScript.Parse(
             """
             # frame  buttons
             0        None
@@ -34,7 +35,7 @@ public sealed class InputScriptTests
     [Fact]
     public void Parse_SortsAndKeepsTheLastDuplicateFrame()
     {
-        var entries = InputScript.Parse("10 A\n5 B\n10 C\n");
+        IReadOnlyList<InputScriptEntry> entries = InputScript.Parse("10 A\n5 B\n10 C\n");
 
         Assert.Equal(2, entries.Count);
         Assert.Equal(5, entries[0].Frame);
@@ -46,7 +47,7 @@ public sealed class InputScriptTests
     [Fact]
     public void Parse_RejectsUnknownButtons()
     {
-        var exception = Assert.Throws<FormatException>(() => InputScript.Parse("0 Start\n"));
+        FormatException exception = Assert.Throws<FormatException>(() => InputScript.Parse("0 Start\n"));
         Assert.Contains("unknown button", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -64,7 +65,7 @@ public sealed class InputScriptTests
         try
         {
             File.WriteAllText(path, "0 None\n30 P\n");
-            var entries = InputScript.Load(path);
+            IReadOnlyList<InputScriptEntry> entries = InputScript.Load(path);
             Assert.Equal(2, entries.Count);
             Assert.Equal(ControllerButton.P, entries[1].State.Buttons);
         }
@@ -102,8 +103,8 @@ public sealed class InputScriptTests
     [Fact]
     public void Offset_ShiftsFramesForStateRelativeScripts()
     {
-        var entries = InputScript.Parse("0 A\n20 B\n");
-        var shifted = InputScript.Offset(entries, 91_000);
+        IReadOnlyList<InputScriptEntry> entries = InputScript.Parse("0 A\n20 B\n");
+        IReadOnlyList<InputScriptEntry> shifted = InputScript.Offset(entries, 91_000);
 
         Assert.Equal(91_000, shifted[0].Frame);
         Assert.Equal(ControllerButton.A, shifted[0].State.Buttons);

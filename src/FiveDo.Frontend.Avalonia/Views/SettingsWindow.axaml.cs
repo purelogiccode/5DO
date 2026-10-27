@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Avalonia.Controls;
@@ -59,7 +60,7 @@ public partial class SettingsWindow : Window
             ? "No disc loaded."
             : $"{gameName ?? "Unknown"} ({gameId[..Math.Min(8, gameId.Length)]})";
 
-        var overrideMode = settings.GetFixModeOverride(gameId);
+        FixMode? overrideMode = settings.GetFixModeOverride(gameId);
         FixModeBox.Text = overrideMode is null ? string.Empty : $"0x{(uint)overrideMode.Value:x}";
     }
 
@@ -94,7 +95,7 @@ public partial class SettingsWindow : Window
             {
                 settings.SetFixModeOverride(_gameId, null);
             }
-            else if (TryParseFixMode(text, out var mode))
+            else if (TryParseFixMode(text, out FixMode mode))
             {
                 settings.SetFixModeOverride(_gameId, mode);
             }
@@ -124,7 +125,7 @@ public partial class SettingsWindow : Window
 
     private async void OnBrowseSaveDirectory(object? sender, RoutedEventArgs e)
     {
-        var path = await PickFolder("Select the save-state directory", SaveDirectoryBox.Text);
+        var path = await PickFolder("Select the save-state directory", SaveDirectoryBox.Text).ConfigureAwait(true);
         if (path is not null)
         {
             SaveDirectoryBox.Text = path;
@@ -133,7 +134,7 @@ public partial class SettingsWindow : Window
 
     private async void OnBrowseScreenshotDirectory(object? sender, RoutedEventArgs e)
     {
-        var path = await PickFolder("Select the screenshot directory", ScreenshotDirectoryBox.Text);
+        var path = await PickFolder("Select the screenshot directory", ScreenshotDirectoryBox.Text).ConfigureAwait(true);
         if (path is not null)
         {
             ScreenshotDirectoryBox.Text = path;
@@ -149,14 +150,14 @@ public partial class SettingsWindow : Window
         };
         if (!string.IsNullOrWhiteSpace(current) && System.IO.Directory.Exists(current))
         {
-            var start = await StorageProvider.TryGetFolderFromPathAsync(current);
+            IStorageFolder? start = await StorageProvider.TryGetFolderFromPathAsync(current).ConfigureAwait(true);
             if (start is not null)
             {
                 options.SuggestedStartLocation = start;
             }
         }
 
-        var folders = await StorageProvider.OpenFolderPickerAsync(options);
+        IReadOnlyList<IStorageFolder> folders = await StorageProvider.OpenFolderPickerAsync(options).ConfigureAwait(true);
         return folders.Count > 0 ? folders[0].TryGetLocalPath() : null;
     }
 

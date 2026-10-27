@@ -1,7 +1,6 @@
 using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
-using FiveDo.Video;
 
 namespace FiveDo.Video.OpenGL;
 
@@ -16,8 +15,9 @@ namespace FiveDo.Video.OpenGL;
 public static class OpenGlCapabilities
 {
     private static readonly Regex VersionPattern = new(
-        @"(\d+)\.(\d+)",
-        RegexOptions.CultureInvariant | RegexOptions.Compiled);
+        @"(?<major>\d+)\.(?<minor>\d+)",
+        RegexOptions.CultureInvariant | RegexOptions.Compiled,
+        TimeSpan.FromSeconds(1));
 
     /// <summary>Detects capabilities from a GL version string and maximum texture size.</summary>
     /// <param name="version">The string returned by <c>GL_VERSION</c>, or null/empty.</param>
@@ -30,15 +30,15 @@ public static class OpenGlCapabilities
     {
         var text = version ?? string.Empty;
         var isOpenGlEs = text.Contains("OpenGL ES", StringComparison.OrdinalIgnoreCase);
-        var api = isOpenGlEs ? RendererApi.OpenGlEs : RendererApi.OpenGl;
+        RendererApi api = isOpenGlEs ? RendererApi.OpenGlEs : RendererApi.OpenGl;
 
         var major = 0;
         var minor = 0;
-        var match = VersionPattern.Match(text);
+        Match match = VersionPattern.Match(text);
         if (match.Success)
         {
-            _ = int.TryParse(match.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out major);
-            _ = int.TryParse(match.Groups[2].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out minor);
+            _ = int.TryParse(match.Groups["major"].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out major);
+            _ = int.TryParse(match.Groups["minor"].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out minor);
         }
 
         // R16UI, usampler2D, and texelFetch are core in desktop GL 3.0 and GLES 3.0.

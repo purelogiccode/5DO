@@ -84,8 +84,14 @@ public enum CcbControl : uint
     /// <summary>Packed CEL data. FreeDO: <c>CCB_PACKED</c>.</summary>
     Packed = 0x00000200,
 
+    /// <summary>Pixel-over mode bit 7. FreeDO: part of <c>CCB_POVER_MASK</c>.</summary>
+    PixelOverBit0 = 0x00000080,
+
+    /// <summary>Pixel-over mode bit 8. FreeDO: part of <c>CCB_POVER_MASK</c>.</summary>
+    PixelOverBit1 = 0x00000100,
+
     /// <summary>Pixel-over mode mask. FreeDO: <c>CCB_POVER_MASK</c>.</summary>
-    PixelOverMask = 0x00000180,
+    PixelOverMask = PixelOverBit0 | PixelOverBit1,
 
     /// <summary>PLUT position. FreeDO: <c>CCB_PLUTPOS</c>.</summary>
     PlutPosition = 0x00000040,
@@ -96,6 +102,18 @@ public enum CcbControl : uint
     /// <summary>No-blocking flag. FreeDO: <c>CCB_NOBLK</c>.</summary>
     NoBlock = 0x00000010,
 
+    /// <summary>PLUT offset bit 0. FreeDO: part of <c>CCB_PLUTA_MASK</c>.</summary>
+    PlutOffsetBit0 = 0x00000001,
+
+    /// <summary>PLUT offset bit 1. FreeDO: part of <c>CCB_PLUTA_MASK</c>.</summary>
+    PlutOffsetBit1 = 0x00000002,
+
+    /// <summary>PLUT offset bit 2. FreeDO: part of <c>CCB_PLUTA_MASK</c>.</summary>
+    PlutOffsetBit2 = 0x00000004,
+
+    /// <summary>PLUT offset bit 3. FreeDO: part of <c>CCB_PLUTA_MASK</c>.</summary>
+    PlutOffsetBit3 = 0x00000008,
+
     /// <summary>PLUT offset mask. FreeDO: <c>CCB_PLUTA_MASK</c>.</summary>
-    PlutOffsetMask = 0x0000000f,
+    PlutOffsetMask = PlutOffsetBit0 | PlutOffsetBit1 | PlutOffsetBit2 | PlutOffsetBit3,
 }

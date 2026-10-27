@@ -35,6 +35,15 @@ dotnet_naming_symbols.interfaces.applicable_kinds = interface
 dotnet_naming_style.interface_style.capitalization = pascal_case
 dotnet_naming_style.interface_style.required_prefix = I
 
+
+# Chip classes intentionally match their subsystem namespace (Xbus, Sport, Dsp, Madam, Clio).
+dotnet_diagnostic.MA0049.severity = none
+
+dotnet_diagnostic.MA0051.severity = none
+
+
+dotnet_diagnostic.MA0048.severity = none
+
 [*.{xml,csproj,props,targets,axaml,xaml,json,yml,yaml,md}]
 indent_size = 2
 

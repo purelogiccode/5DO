@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace FiveDo.Diagnostics;
 
@@ -8,6 +9,7 @@ namespace FiveDo.Diagnostics;
 /// <param name="P95Ms">95th percentile.</param>
 /// <param name="P99Ms">99th percentile.</param>
 /// <param name="MaxMs">Largest sample.</param>
+[StructLayout(LayoutKind.Sequential)]
 public readonly record struct FrameTimingSummary(
     double MeanMs,
     double P50Ms,

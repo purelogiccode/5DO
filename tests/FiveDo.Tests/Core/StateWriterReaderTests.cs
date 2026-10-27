@@ -73,7 +73,7 @@ public sealed class StateWriterReaderTests
         writer.WriteSection(section);
 
         var reader = new StateReader(writer.ToArray());
-        Assert.True(reader.TryReadSection(out var sectionReader));
+        Assert.True(reader.TryReadSection(out StateSectionReader? sectionReader));
         Assert.NotNull(sectionReader);
         Assert.Equal(TestStateSection.SectionId, sectionReader.Id);
         Assert.Equal(TestStateSection.SectionVersion, sectionReader.Version);
@@ -95,12 +95,12 @@ public sealed class StateWriterReaderTests
 
         var reader = new StateReader(writer.ToArray());
 
-        Assert.True(reader.TryReadSection(out var first));
+        Assert.True(reader.TryReadSection(out StateSectionReader? first));
         var firstSection = new TestStateSection();
         firstSection.Load(first);
         Assert.Equal(1, firstSection.Value);
 
-        Assert.True(reader.TryReadSection(out var second));
+        Assert.True(reader.TryReadSection(out StateSectionReader? second));
         var secondSection = new TestStateSection();
         secondSection.Load(second);
         Assert.Equal(2, secondSection.Value);

@@ -15,7 +15,7 @@ public sealed class KeyboardInputMapper
 {
     private readonly PlayerProfile[] _profiles;
     private readonly ControllerState[] _states;
-    private readonly object _gate = new();
+    private readonly Lock _gate = new();
 
     /// <summary>Initializes a new instance of the <see cref="KeyboardInputMapper"/> class.</summary>
     /// <param name="profiles">Player profiles, up to six.</param>
@@ -52,9 +52,9 @@ public sealed class KeyboardInputMapper
             var matched = false;
             for (var player = 0; player < _profiles.Length; player++)
             {
-                if (!_profiles[player].Keyboard.TryGetValue(key, out var button))
+                if (!_profiles[player].Keyboard.TryGetValue(key, out ControllerButton button))
                 {
-                    foreach (var (name, value) in _profiles[player].Keyboard)
+                    foreach ((var name, ControllerButton value) in _profiles[player].Keyboard)
                     {
                         if (string.Equals(name, key, StringComparison.OrdinalIgnoreCase))
                         {
@@ -178,7 +178,7 @@ public sealed class InputManager : IPbusSource
         _gamepad.Poll();
         for (var player = 0; player < _states.Length; player++)
         {
-            var pad = player < _gamepad.ControllerCount ? _gamepad.GetState(player) : ControllerState.Empty;
+            ControllerState pad = player < _gamepad.ControllerCount ? _gamepad.GetState(player) : ControllerState.Empty;
             _states[player] = new ControllerState(_keyboard.GetState(player).Buttons | pad.Buttons);
         }
     }

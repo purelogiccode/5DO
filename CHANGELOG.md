@@ -11,6 +11,14 @@ still change.
   the 36,000-frame release soak, reports absent titles as missing instead of failing,
   and can continue archived 12k states for machine-specific corpus gaps.
 
+### Fixed
+
+- VDLP bitmap copies now advance four bytes per pixel, matching FreeDOCore's
+  `unsigned int*` source increment. The 16-bit pixel occupies one halfword of a
+  32-bit VRAM word and the two halves belong to adjacent scanlines; reading
+  consecutive halfwords mixed two lines, halved the horizontal resolution, and
+  shifted the picture right (Alone in the Dark's intro and menu were cut off).
+
 ## [1.0.0-rc.1] - 2026-10-26
 
 Release candidate for the documented-compatibility v1.0 scope. Legal/attribution

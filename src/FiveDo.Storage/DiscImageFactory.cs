@@ -31,7 +31,7 @@ public static class DiscImageFactory
             throw new DiscImageException($"Disc image '{path}' does not exist.");
         }
 
-        var source = Path.GetExtension(path).ToLowerInvariant() switch
+        IDiscSource source = Path.GetExtension(path).ToLowerInvariant() switch
         {
             ".cue" => CueSheet.Open(path),
             ".chd" => ChdDiscImage.Open(path, chdParentPath),
@@ -62,7 +62,7 @@ public static class DiscImageFactory
     public static bool HasCdSyncHeader(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        using var stream = File.OpenRead(path);
+        using FileStream stream = File.OpenRead(path);
         Span<byte> header = stackalloc byte[16];
         if (stream.Read(header) < header.Length)
         {
@@ -104,7 +104,7 @@ public static class DiscImageFactory
     private static IDiscSource OpenByHeader(string path, string? chdParentPath)
     {
         Span<byte> signature = stackalloc byte[8];
-        using (var stream = File.OpenRead(path))
+        using (FileStream stream = File.OpenRead(path))
         {
             if (stream.Read(signature) < signature.Length)
             {
@@ -133,7 +133,7 @@ public static class DiscImageFactory
 
     private static int ReadModeByte(string path)
     {
-        using var stream = File.OpenRead(path);
+        using FileStream stream = File.OpenRead(path);
         Span<byte> header = stackalloc byte[16];
         if (stream.Read(header) < header.Length)
         {

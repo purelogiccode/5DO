@@ -34,7 +34,7 @@ public partial class InputBindingsWindow : Window
     private KeyboardBindingEditor _editor;
     private int _playerIndex;
     private ControllerButton? _pendingButton;
-    private bool _initializing = true;
+    private bool _initializing;
     private bool _refreshingGamepad;
 
     /// <summary>Creates the dialog with the default input profile.</summary>
@@ -48,6 +48,7 @@ public partial class InputBindingsWindow : Window
     public InputBindingsWindow(InputProfile profile)
     {
         ArgumentNullException.ThrowIfNull(profile);
+        _initializing = true;
         InitializeComponent();
         _profile = profile.Clone();
         _editor = new KeyboardBindingEditor(_profile.Players[0]);
@@ -81,7 +82,7 @@ public partial class InputBindingsWindow : Window
             return;
         }
 
-        var button = _pendingButton.Value;
+        ControllerButton button = _pendingButton.Value;
         var key = e.Key.ToString();
         _editor.Rebind(button, key);
         _pendingButton = null;
@@ -108,7 +109,7 @@ public partial class InputBindingsWindow : Window
     private void RefreshRows()
     {
         RowsPanel.Children.Clear();
-        foreach (var button in KeyboardBindingEditor.ControllerButtons)
+        foreach (ControllerButton button in KeyboardBindingEditor.ControllerButtons)
         {
             var row = new Grid
             {
@@ -154,7 +155,7 @@ public partial class InputBindingsWindow : Window
         try
         {
             GamepadRowsPanel.Children.Clear();
-            var profile = _profile.Players[_playerIndex];
+            PlayerProfile profile = _profile.Players[_playerIndex];
             foreach (var name in GamepadMapper.BindingNames)
             {
                 var row = new Grid
@@ -174,7 +175,7 @@ public partial class InputBindingsWindow : Window
                 var combo = new ComboBox
                 {
                     ItemsSource = GamepadChoices,
-                    SelectedItem = profile.Gamepad.TryGetValue(name, out var button)
+                    SelectedItem = profile.Gamepad.TryGetValue(name, out ControllerButton button)
                         ? button
                         : ControllerButton.None,
                     Tag = name,
@@ -198,7 +199,7 @@ public partial class InputBindingsWindow : Window
             return;
         }
 
-        var profile = _profile.Players[_playerIndex];
+        PlayerProfile profile = _profile.Players[_playerIndex];
         if (combo.SelectedItem is ControllerButton button && button != ControllerButton.None)
         {
             profile.Gamepad[name] = button;

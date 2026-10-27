@@ -12,19 +12,19 @@ public sealed class SaveStateTests
     [Fact]
     public void SaveLoad_RunAheadMatchesControlRun()
     {
-        var first = CreateMachine();
+        FiveDoMachine first = CreateMachine();
         first.RunFrames(5);
 
         using var state = new MemoryStream();
         first.SaveState(state, "disc");
         first.RunFrames(60);
-        var expected = Snapshot(first);
+        (uint Hash, uint ProgramCounter, long FramesExecuted) expected = Snapshot(first);
 
-        var loaded = CreateMachine();
+        FiveDoMachine loaded = CreateMachine();
         state.Position = 0;
         loaded.LoadState(state);
         loaded.RunFrames(60);
-        var actual = Snapshot(loaded);
+        (uint Hash, uint ProgramCounter, long FramesExecuted) actual = Snapshot(loaded);
 
         Assert.Equal(expected.Hash, actual.Hash);
         Assert.Equal(expected.ProgramCounter, actual.ProgramCounter);
@@ -35,10 +35,10 @@ public sealed class SaveStateTests
     [Fact]
     public void LoadState_RestoresTheParsedFrameImmediately()
     {
-        var machine = CreateMachine();
+        FiveDoMachine machine = CreateMachine();
         machine.RunFrames(2);
 
-        var source = machine.Frame[3];
+        VdlLine source = machine.Frame[3];
         source.Width = 64;
         source.OutControl = 0x12345678;
         source.ClutDma = 0x9ABCDEF0;
@@ -55,11 +55,11 @@ public sealed class SaveStateTests
         using var state = new MemoryStream();
         machine.SaveState(state);
 
-        var loaded = CreateMachine();
+        FiveDoMachine loaded = CreateMachine();
         state.Position = 0;
         loaded.LoadState(state);
 
-        var restored = loaded.Frame[3];
+        VdlLine restored = loaded.Frame[3];
         Assert.Equal(64, restored.Width);
         Assert.Equal(0x12345678u, restored.OutControl);
         Assert.Equal(0x9ABCDEF0u, restored.ClutDma);
@@ -73,7 +73,7 @@ public sealed class SaveStateTests
     [Fact]
     public void LoadState_RejectsTruncatedData()
     {
-        var machine = CreateMachine();
+        FiveDoMachine machine = CreateMachine();
         machine.RunFrames(2);
         using var state = new MemoryStream();
         machine.SaveState(state);
@@ -86,7 +86,7 @@ public sealed class SaveStateTests
     [Fact]
     public void LoadState_RejectsInvalidMagic()
     {
-        var machine = CreateMachine();
+        FiveDoMachine machine = CreateMachine();
         using var stream = new MemoryStream(new byte[64]);
         Assert.Throws<InvalidStateException>(() => machine.LoadState(stream));
     }
@@ -94,14 +94,14 @@ public sealed class SaveStateTests
     [Fact]
     public void LoadState_WarnsOnBiosHashMismatch()
     {
-        var writer = CreateMachine();
+        FiveDoMachine writer = CreateMachine();
         writer.RunFrames(2);
         using var state = new MemoryStream();
         writer.SaveState(state);
 
         var otherBios = new byte[EmulatorConstants.RomBankSize];
         otherBios[0] = 1;
-        var reader = CreateMachine(otherBios);
+        FiveDoMachine reader = CreateMachine(otherBios);
         state.Position = 0;
         reader.LoadState(state);
 
@@ -114,13 +114,13 @@ public sealed class SaveStateTests
         var path = Path.Combine(Path.GetTempPath(), $"fivedo-state-{Guid.NewGuid():N}.tdos");
         try
         {
-            var machine = CreateMachine();
+            FiveDoMachine machine = CreateMachine();
             machine.RunFrames(3);
             machine.SaveStateToFile(path);
 
             Assert.True(File.Exists(path));
             Assert.False(File.Exists(path + ".tmp"));
-            var loaded = CreateMachine();
+            FiveDoMachine loaded = CreateMachine();
             loaded.LoadStateFromFile(path);
             Assert.Equal(machine.Cpu.ProgramCounter, loaded.Cpu.ProgramCounter);
         }

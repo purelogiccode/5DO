@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using FiveDo.Core;
 using FiveDo.Diagnostics;
@@ -179,8 +181,8 @@ internal static class Program
             var totalMs = coreMs + packMs + mailboxMs + readMs;
             var instructions = machine.Cpu.InstructionsExecuted - startInstructions;
             var elapsedFrames = machine.FramesExecuted - startFrames;
-            var coreTiming = FrameTiming.Summarize(coreFrameMs);
-            var totalTiming = FrameTiming.Summarize(totalFrameMs);
+            FrameTimingSummary coreTiming = FrameTiming.Summarize(coreFrameMs);
+            FrameTimingSummary totalTiming = FrameTiming.Summarize(totalFrameMs);
 
             var result = new
             {
@@ -228,11 +230,11 @@ internal static class Program
                 allocations = new
                 {
                     totalBytes = allocatedBytes,
-                    bytesPerFrame = elapsedFrames == 0 ? 0 : allocatedBytes / elapsedFrames,
-                    coreBytesPerFrame = elapsedFrames == 0 ? 0 : coreAllocated / elapsedFrames,
-                    packBytesPerFrame = elapsedFrames == 0 ? 0 : packAllocated / elapsedFrames,
-                    mailboxBytesPerFrame = elapsedFrames == 0 ? 0 : mailboxAllocated / elapsedFrames,
-                    readBytesPerFrame = elapsedFrames == 0 ? 0 : readAllocated / elapsedFrames,
+                    bytesPerFrame = allocatedBytes / elapsedFrames,
+                    coreBytesPerFrame = coreAllocated / elapsedFrames,
+                    packBytesPerFrame = packAllocated / elapsedFrames,
+                    mailboxBytesPerFrame = mailboxAllocated / elapsedFrames,
+                    readBytesPerFrame = readAllocated / elapsedFrames,
                 },
                 machine = new
                 {
@@ -265,9 +267,9 @@ internal static class Program
 
             if (gate)
             {
-                var bytesPerFrame = elapsedFrames == 0 ? 0 : allocatedBytes / elapsedFrames;
+                var bytesPerFrame = allocatedBytes / elapsedFrames;
                 var totalPerFrame = totalMs / elapsedFrames;
-                var failures = BenchmarkGate.Evaluate(
+                IReadOnlyList<string> failures = BenchmarkGate.Evaluate(
                     bytesPerFrame,
                     coreTiming.P99Ms,
                     totalPerFrame,
@@ -298,7 +300,7 @@ internal static class Program
                     return 2;
                 }
 
-                var failures = BenchmarkComparison.Evaluate(
+                IReadOnlyList<string> failures = BenchmarkComparison.Evaluate(
                     coreTiming.P99Ms,
                     totalMs / elapsedFrames,
                     totalTiming.P99Ms,
@@ -326,7 +328,7 @@ internal static class Program
     private static BenchmarkBaseline ReadBaseline(string path)
     {
         using var document = JsonDocument.Parse(File.ReadAllText(path));
-        var root = document.RootElement;
+        JsonElement root = document.RootElement;
         return new BenchmarkBaseline(
             ReadNumber(root, "core", "p99Ms"),
             ReadNumber(root, "total", "msPerFrame"),
@@ -335,9 +337,9 @@ internal static class Program
 
     private static double ReadNumber(JsonElement root, string sectionName, string propertyName)
     {
-        if (!root.TryGetProperty(sectionName, out var section)
+        if (!root.TryGetProperty(sectionName, out JsonElement section)
             || section.ValueKind != JsonValueKind.Object
-            || !section.TryGetProperty(propertyName, out var value)
+            || !section.TryGetProperty(propertyName, out JsonElement value)
             || value.ValueKind != JsonValueKind.Number)
         {
             return 0;
@@ -346,6 +348,7 @@ internal static class Program
         return value.GetDouble();
     }
 
+    [StructLayout(LayoutKind.Sequential)]
     private readonly record struct BenchmarkBaseline(
         double CoreP99Ms,
         double TotalMeanMs,
@@ -356,11 +359,11 @@ internal static class Program
     private static uint FrameHash(FiveDoMachine machine)
     {
         var hash = 2166136261u;
-        var frame = machine.Frame;
+        VdlFrame frame = machine.Frame;
         for (var y = 0; y < frame.SourceHeight; y++)
         {
-            var line = frame[y];
-            var pixels = line.Pixels;
+            VdlLine line = frame[y];
+            Span<ushort> pixels = line.Pixels;
             for (var x = 0; x < line.Width; x++)
             {
                 hash = (hash ^ pixels[x]) * 16777619u;
@@ -439,7 +442,7 @@ internal static class Arm
             }
         }
 
-        throw new ArgumentException($"The value 0x{value:x8} cannot be encoded as an ARM immediate.");
+        throw new ArgumentException($"The value 0x{value:x8} cannot be encoded as an ARM immediate.", nameof(value));
     }
 
     private static uint RotateLeft(uint value, int count)

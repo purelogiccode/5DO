@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using FiveDo.Core;
 
 namespace FiveDo.Dsp;
@@ -133,6 +134,7 @@ public sealed class Dsp : IDsp, IStateSection
     /// <param name="SemaphoreStatus">Sema4 status before execution.</param>
     /// <param name="SemaphoreData">Sema4 data before execution.</param>
     /// <param name="NextPc">Program counter after the instruction fetch.</param>
+    [StructLayout(LayoutKind.Sequential)]
     public readonly record struct DspTraceEntry(
         uint Pc,
         ushort Instruction,
@@ -219,7 +221,7 @@ public sealed class Dsp : IDsp, IStateSection
             throw new PlatformNotSupportedException("Save states require a little-endian host.");
         }
 
-        return System.Runtime.InteropServices.MemoryMarshal.AsBytes(words.AsSpan());
+        return MemoryMarshal.AsBytes(words.AsSpan());
     }
 
     /// <inheritdoc />

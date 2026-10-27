@@ -6,9 +6,7 @@ using FiveDo.Video.OpenGL;
 namespace FiveDo.Tests.Video;
 
 [CollectionDefinition("Allocation", DisableParallelization = true)]
-public sealed class AllocationGroup
-{
-}
+public sealed class AllocationGroup;
 
 [Collection("Allocation")]
 public sealed class VideoAllocationTests
@@ -16,7 +14,7 @@ public sealed class VideoAllocationTests
     [Fact]
     public void Uploader_DoesNotAllocateInSteadyState()
     {
-        var frame = MakeFrame();
+        VdlFrame frame = MakeFrame();
         var uploader = new VdlFrameUploader();
         for (var i = 0; i < 200; i++)
         {
@@ -42,7 +40,7 @@ public sealed class VideoAllocationTests
     [Fact]
     public void Mailbox_DoesNotAllocateInSteadyState()
     {
-        var frame = MakeFrame();
+        VdlFrame frame = MakeFrame();
         var mailbox = new VdlFrameMailbox();
         var destination = new VdlFrame();
         Action<VdlFrame> reader = _ => { };
@@ -98,7 +96,7 @@ public sealed class VideoAllocationTests
         var frame = new VdlFrame { SourceWidth = 320, SourceHeight = 240 };
         for (var y = 0; y < 240; y++)
         {
-            var line = frame[y];
+            VdlLine line = frame[y];
             line.Width = 320;
             line.Background = (uint)y;
             line.OutControl = (uint)y << 16;

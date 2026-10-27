@@ -12,7 +12,7 @@ public sealed class GlRendererContractTests
         var frame = new VdlFrame { SourceWidth = 320, SourceHeight = 240 };
         for (var line = 0; line < 240; line++)
         {
-            var target = frame[line];
+            VdlLine target = frame[line];
             target.Width = 320;
             target.Background = (uint)(((line % 32) << 10) | ((line % 32) << 5) | (line % 32));
             target.OutControl = line % 2 == 0 ? 0x02000000u : 0u;
@@ -23,7 +23,7 @@ public sealed class GlRendererContractTests
                 target.ClutB[i] = (byte)(i * 3);
             }
 
-            var pixels = target.Pixels;
+            Span<ushort> pixels = target.Pixels;
             for (var x = 0; x < pixels.Length; x++)
             {
                 pixels[x] = (x + line) switch
@@ -40,10 +40,10 @@ public sealed class GlRendererContractTests
 
         for (var line = 0; line < 240; line++)
         {
-            var source = frame[line];
+            VdlLine source = frame[line];
             for (var x = 0; x < 320; x++)
             {
-                var expected = GpuPalette.Expand(source, source.Pixels[x]);
+                (byte R, byte G, byte B) expected = GpuPalette.Expand(source, source.Pixels[x]);
                 var offset = (line * buffer.Stride) + (x * 4);
                 Assert.Equal(expected.B, buffer.PixelSpan[offset]);
                 Assert.Equal(expected.G, buffer.PixelSpan[offset + 1]);
@@ -56,7 +56,7 @@ public sealed class GlRendererContractTests
     public void Uploader_PacksPixelsClutAndControlWords()
     {
         var frame = new VdlFrame { SourceWidth = 4, SourceHeight = 2 };
-        var line0 = frame[0];
+        VdlLine line0 = frame[0];
         line0.Width = 4;
         line0.Pixels[0] = 1;
         line0.Pixels[1] = 2;
@@ -67,7 +67,7 @@ public sealed class GlRendererContractTests
         line0.ClutR[0] = 10;
         line0.ClutG[0] = 20;
         line0.ClutB[0] = 30;
-        var line1 = frame[1];
+        VdlLine line1 = frame[1];
         line1.Width = 4;
         line1.Pixels[0] = 5;
         line1.Background = 0x5678;
@@ -92,7 +92,7 @@ public sealed class GlRendererContractTests
     public void Viewport_IntegerScalingCentersImage()
     {
         var settings = new RendererSettings { Aspect = AspectMode.Integer };
-        var rect = ViewportCalculator.Compute(320, 240, 1920, 1080, settings);
+        ViewportRect rect = ViewportCalculator.Compute(320, 240, 1920, 1080, settings);
 
         Assert.Equal(new ViewportRect(320, 60, 1280, 960), rect);
     }
@@ -108,7 +108,7 @@ public sealed class GlRendererContractTests
     public void Viewport_CustomAspectLetterboxes()
     {
         var settings = new RendererSettings { Aspect = AspectMode.Custom, CustomAspect = 16.0 / 9.0 };
-        var rect = ViewportCalculator.Compute(320, 240, 1920, 1080, settings);
+        ViewportRect rect = ViewportCalculator.Compute(320, 240, 1920, 1080, settings);
 
         Assert.Equal(0, rect.X);
         Assert.Equal(0, rect.Y);
@@ -133,7 +133,7 @@ public sealed class GlRendererContractTests
         var frame = new VdlFrame { SourceWidth = 8, SourceHeight = 4 };
         for (var line = 0; line < 4; line++)
         {
-            var target = frame[line];
+            VdlLine target = frame[line];
             target.Width = 8;
             target.Background = (uint)(line * 3);
             for (var x = 0; x < 8; x++)

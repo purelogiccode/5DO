@@ -43,7 +43,7 @@ public class App : Application
                         () =>
                         {
                             Program.CompleteSmokeTest();
-                            desktop.Shutdown(0);
+                            desktop.Shutdown();
                         },
                         TimeSpan.FromMilliseconds(750));
                 };

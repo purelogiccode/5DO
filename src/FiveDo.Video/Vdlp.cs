@@ -175,7 +175,7 @@ public sealed class Vdlp : IVdlp, IStateSection
             }
             else
             {
-                var target = frame.Lines[y];
+                VdlLine target = frame.Lines[y];
                 if ((_clutDma & (1u << 21)) != 0)
                 {
                     var lineWidth = (int)Math.Min(_modulo, VdlLine.MaxPixels);
@@ -184,12 +184,17 @@ public sealed class Vdlp : IVdlp, IStateSection
                         lineWidth = EmulatorConstants.VideoWidth;
                     }
 
-                    var destination = target.PixelBuffer;
+                    Span<ushort> destination = target.PixelBuffer;
                     var source = ((_previousBitmap ^ 2) & 0xfffff) + VramOffset;
+
+                    // A 3DO scanline stores one 16-bit pixel in each 32-bit VRAM word.
+                    // The two halves of a word belong to an adjacent-line pair, so the
+                    // source advances four bytes per pixel. Reading halfwords back to
+                    // back mixes two scanlines and halves the horizontal resolution.
                     for (var i = 0; i < lineWidth; i++)
                     {
                         destination[i] = _ram.Read16(source);
-                        source += 2;
+                        source += 4;
                     }
 
                     target.Width = lineWidth;
@@ -241,8 +246,8 @@ public sealed class Vdlp : IVdlp, IStateSection
     /// </remarks>
     private void RenderHighResolutionLine(VdlFrame frame, int y)
     {
-        var target0 = frame.Lines[y * 2];
-        var target1 = frame.Lines[(y * 2) + 1];
+        VdlLine target0 = frame.Lines[y * 2];
+        VdlLine target1 = frame.Lines[(y * 2) + 1];
 
         if ((_clutDma & (1u << 21)) != 0)
         {
@@ -252,8 +257,8 @@ public sealed class Vdlp : IVdlp, IStateSection
                 lineWidth = EmulatorConstants.VideoWidth;
             }
 
-            var destination0 = target0.PixelBuffer;
-            var destination1 = target1.PixelBuffer;
+            Span<ushort> destination0 = target0.PixelBuffer;
+            Span<ushort> destination1 = target1.PixelBuffer;
             var source = ((_previousBitmap ^ 2) & 0xfffff) + VramOffset;
             for (var i = 0; i < lineWidth; i++)
             {
@@ -262,7 +267,7 @@ public sealed class Vdlp : IVdlp, IStateSection
                 destination0[x + 1] = _ram.Read16(source + VramPlaneSize);
                 destination1[x] = _ram.Read16(source + (2 * VramPlaneSize));
                 destination1[x + 1] = _ram.Read16(source + (3 * VramPlaneSize));
-                source += 2;
+                source += 4;
             }
 
             var width = lineWidth * 2;
@@ -337,12 +342,12 @@ public sealed class Vdlp : IVdlp, IStateSection
 
         if ((entry & (1u << 16)) != 0)
         {
-            _currentBitmap = ReadVram(_currentVdl + ((_compatibility.FixMode & FixMode.BitTiming5) != 0 ? 8u : 4u));
+            _currentBitmap = ReadVram(_currentVdl + ((_compatibility.FixMode & FixMode.BitTiming5) != FixMode.None ? 8u : 4u));
         }
 
         if ((entry & (1u << 15)) != 0)
         {
-            _previousBitmap = ReadVram(_currentVdl + ((_compatibility.FixMode & FixMode.BitTiming5) != 0 ? 4u : 8u));
+            _previousBitmap = ReadVram(_currentVdl + ((_compatibility.FixMode & FixMode.BitTiming5) != FixMode.None ? 4u : 8u));
         }
 
         uint nextVdl;

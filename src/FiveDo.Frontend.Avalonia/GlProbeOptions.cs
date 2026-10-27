@@ -128,7 +128,7 @@ internal sealed record GlProbeOptions(
             return false;
         }
 
-        var filter = VideoFilter.SharpBilinear;
+        VideoFilter filter = VideoFilter.SharpBilinear;
         var filterText = Program.FindOptionValue(args, "--gl-probe-filter");
         if (filterText is not null && !TryParseFilter(filterText, out filter))
         {

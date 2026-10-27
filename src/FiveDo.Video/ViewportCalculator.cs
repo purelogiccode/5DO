@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace FiveDo.Video;
 
@@ -7,6 +8,7 @@ namespace FiveDo.Video;
 /// <param name="Y">Top edge.</param>
 /// <param name="Width">Rectangle width.</param>
 /// <param name="Height">Rectangle height.</param>
+[StructLayout(LayoutKind.Sequential)]
 public readonly record struct ViewportRect(int X, int Y, int Width, int Height)
 {
     /// <summary>Gets a value indicating whether the rectangle has a non-zero area.</summary>

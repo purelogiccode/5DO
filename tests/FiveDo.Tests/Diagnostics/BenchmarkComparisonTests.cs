@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using FiveDo.Diagnostics;
 
 namespace FiveDo.Tests.Diagnostics;
@@ -8,7 +9,7 @@ public sealed class BenchmarkComparisonTests
     [Fact]
     public void Evaluate_AcceptsAResultInsideTheThreshold()
     {
-        var failures = BenchmarkComparison.Evaluate(
+        IReadOnlyList<string> failures = BenchmarkComparison.Evaluate(
             currentCoreP99Ms: 1.5,
             currentTotalMeanMs: 1.8,
             currentTotalP99Ms: 4.0,
@@ -22,7 +23,7 @@ public sealed class BenchmarkComparisonTests
     [Fact]
     public void Evaluate_AcceptsAnImprovement()
     {
-        var failures = BenchmarkComparison.Evaluate(
+        IReadOnlyList<string> failures = BenchmarkComparison.Evaluate(
             currentCoreP99Ms: 1.0,
             currentTotalMeanMs: 1.1,
             currentTotalP99Ms: 2.0,
@@ -36,7 +37,7 @@ public sealed class BenchmarkComparisonTests
     [Fact]
     public void Evaluate_RejectsACoreRegression()
     {
-        var failures = BenchmarkComparison.Evaluate(
+        IReadOnlyList<string> failures = BenchmarkComparison.Evaluate(
             currentCoreP99Ms: 1.7,
             currentTotalMeanMs: 1.8,
             currentTotalP99Ms: 4.0,
@@ -52,7 +53,7 @@ public sealed class BenchmarkComparisonTests
     [Fact]
     public void Evaluate_RejectsATotalMeanRegression()
     {
-        var failures = BenchmarkComparison.Evaluate(
+        IReadOnlyList<string> failures = BenchmarkComparison.Evaluate(
             currentCoreP99Ms: 1.5,
             currentTotalMeanMs: 2.1,
             currentTotalP99Ms: 4.0,
@@ -67,7 +68,7 @@ public sealed class BenchmarkComparisonTests
     [Fact]
     public void Evaluate_RejectsATotalP99Regression()
     {
-        var failures = BenchmarkComparison.Evaluate(
+        IReadOnlyList<string> failures = BenchmarkComparison.Evaluate(
             currentCoreP99Ms: 1.5,
             currentTotalMeanMs: 1.8,
             currentTotalP99Ms: 5.0,
@@ -82,7 +83,7 @@ public sealed class BenchmarkComparisonTests
     [Fact]
     public void Evaluate_ReportsEveryRegressionAtOnce()
     {
-        var failures = BenchmarkComparison.Evaluate(
+        IReadOnlyList<string> failures = BenchmarkComparison.Evaluate(
             currentCoreP99Ms: 3.0,
             currentTotalMeanMs: 3.0,
             currentTotalP99Ms: 6.0,
@@ -96,7 +97,7 @@ public sealed class BenchmarkComparisonTests
     [Fact]
     public void Evaluate_IgnoresMissingBaselineMetrics()
     {
-        var failures = BenchmarkComparison.Evaluate(
+        IReadOnlyList<string> failures = BenchmarkComparison.Evaluate(
             currentCoreP99Ms: 3.0,
             currentTotalMeanMs: 3.0,
             currentTotalP99Ms: 6.0,
@@ -110,7 +111,7 @@ public sealed class BenchmarkComparisonTests
     [Fact]
     public void Evaluate_HonorsACustomThreshold()
     {
-        var failures = BenchmarkComparison.Evaluate(
+        IReadOnlyList<string> failures = BenchmarkComparison.Evaluate(
             currentCoreP99Ms: 2.15,
             currentTotalMeanMs: 1.0,
             currentTotalP99Ms: 1.0,

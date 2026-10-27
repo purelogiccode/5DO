@@ -15,7 +15,7 @@ public partial class LogsWindow : Window
 {
     private readonly InMemoryLogSink _sink;
     private readonly DispatcherTimer _timer;
-    private bool _initializing = true;
+    private bool _initializing;
 
     /// <summary>Creates the dialog with an empty log.</summary>
     public LogsWindow()
@@ -29,6 +29,7 @@ public partial class LogsWindow : Window
     {
         ArgumentNullException.ThrowIfNull(sink);
         _sink = sink;
+        _initializing = true;
         InitializeComponent();
 
         LevelCombo.ItemsSource = Enum.GetValues<LogLevel>()
@@ -97,14 +98,14 @@ public partial class LogsWindow : Window
             Search = SearchBox.Text?.Trim() ?? string.Empty,
         };
 
-        var entries = _sink.Entries;
-        var filtered = filter.Apply(entries);
+        IReadOnlyList<LogEntry> entries = _sink.Entries;
+        IReadOnlyList<LogEntry> filtered = filter.Apply(entries);
         var lines = new List<string>(filtered.Count);
-        foreach (var entry in filtered)
+        foreach (LogEntry entry in filtered)
         {
             var time = entry.TimestampUtc == default
                 ? string.Empty
-                : entry.TimestampUtc.ToLocalTime().ToString("HH:mm:ss.fff") + " ";
+                : entry.TimestampUtc.ToLocalTime().ToString("HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture) + " ";
             lines.Add($"{time}[{entry.Level,-8}] {entry.Category,-12} {entry.Message}");
         }
 

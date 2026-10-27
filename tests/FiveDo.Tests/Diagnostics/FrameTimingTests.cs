@@ -14,7 +14,7 @@ public sealed class FrameTimingTests
             samples[i] = i + 1;
         }
 
-        var summary = FrameTiming.Summarize(samples);
+        FrameTimingSummary summary = FrameTiming.Summarize(samples);
 
         Assert.Equal(50.5, summary.MeanMs, 6);
         Assert.Equal(50, summary.P50Ms);
@@ -28,7 +28,7 @@ public sealed class FrameTimingTests
     {
         var samples = new[] { 4.0, 1.0, 3.0, 2.0 };
 
-        var summary = FrameTiming.Summarize(samples);
+        FrameTimingSummary summary = FrameTiming.Summarize(samples);
 
         Assert.Equal(2.5, summary.MeanMs, 6);
         Assert.Equal(2, summary.P50Ms);

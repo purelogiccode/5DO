@@ -42,7 +42,7 @@ public static class StateInspector
     public static StateInfo Read(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        using var stream = File.OpenRead(path);
+        using FileStream stream = File.OpenRead(path);
         return Read(stream);
     }
 
@@ -81,7 +81,7 @@ public static class StateInspector
         var frames = reader.ReadInt64();
 
         var sections = new List<StateSectionInfo>();
-        while (reader.TryReadSection(out var section))
+        while (reader.TryReadSection(out StateSectionReader? section))
         {
             sections.Add(new StateSectionInfo(section.Id, section.Version, section.PayloadLength));
         }
@@ -102,7 +102,7 @@ public static class StateInspector
     public static StateInfo ReadHeader(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        using var stream = File.OpenRead(path);
+        using FileStream stream = File.OpenRead(path);
         return ReadHeader(stream);
     }
 

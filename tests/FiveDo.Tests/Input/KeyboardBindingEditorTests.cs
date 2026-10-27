@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using FiveDo.Input;
 
@@ -69,7 +70,7 @@ public sealed class KeyboardBindingEditorTests
         profile.Players[0].Keyboard["Q"] = ControllerButton.C;
         profile.Hotkeys["SaveState"] = "F6";
 
-        var clone = profile.Clone();
+        InputProfile clone = profile.Clone();
         clone.Players[0].Keyboard["Q"] = ControllerButton.A;
         clone.Players[1].Keyboard["W"] = ControllerButton.B;
         clone.Hotkeys["SaveState"] = "F7";
@@ -85,7 +86,7 @@ public sealed class KeyboardBindingEditorTests
     [Fact]
     public void ControllerButtons_ContainsEveryGamepadButtonOnce()
     {
-        var buttons = KeyboardBindingEditor.ControllerButtons;
+        IReadOnlyList<ControllerButton> buttons = KeyboardBindingEditor.ControllerButtons;
         Assert.Equal(11, buttons.Count);
         Assert.Equal(buttons.Count, buttons.Distinct().Count());
         Assert.DoesNotContain(ControllerButton.None, buttons);

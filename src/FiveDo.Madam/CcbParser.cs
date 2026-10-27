@@ -54,7 +54,7 @@ public sealed class CcbParser
         var current = address + 4;
 
         header.NextCcb = ReadWord(current) & ~3u;
-        if ((header.Flags & CcbControl.NextPointerAbsolute) == 0)
+        if ((header.Flags & CcbControl.NextPointerAbsolute) == CcbControl.None)
         {
             header.NextCcb = unchecked(header.NextCcb + current + 4) & PointerMask;
         }
@@ -63,7 +63,7 @@ public sealed class CcbParser
         current += 4;
 
         header.PData = ReadWord(current) & ~3u;
-        if ((header.Flags & CcbControl.SourcePointerAbsolute) == 0)
+        if ((header.Flags & CcbControl.SourcePointerAbsolute) == CcbControl.None)
         {
             header.PData = unchecked(header.PData + current + 4) & PointerMask;
         }
@@ -71,10 +71,10 @@ public sealed class CcbParser
         header.PDataInvalid = header.PData > MaximumVramAddress;
         current += 4;
 
-        if ((header.Flags & CcbControl.LoadPlut) != 0)
+        if ((header.Flags & CcbControl.LoadPlut) != CcbControl.None)
         {
             header.PlutData = ReadWord(current) & ~3u;
-            if ((header.Flags & CcbControl.PlutPointerAbsolute) == 0)
+            if ((header.Flags & CcbControl.PlutPointerAbsolute) == CcbControl.None)
             {
                 header.PlutData = unchecked(header.PlutData + current + 4) & PointerMask;
             }
@@ -84,7 +84,7 @@ public sealed class CcbParser
 
         current += 4;
 
-        if ((header.Flags & CcbControl.HasPosition) != 0)
+        if ((header.Flags & CcbControl.HasPosition) != CcbControl.None)
         {
             header.XPosition = unchecked((int)ReadWord(current));
             current += 4;
@@ -96,7 +96,7 @@ public sealed class CcbParser
             current += 8;
         }
 
-        if ((header.Flags & CcbControl.LoadSize) != 0)
+        if ((header.Flags & CcbControl.LoadSize) != CcbControl.None)
         {
             header.Hdx = unchecked((int)ReadWord(current)) >> 4;
             current += 4;
@@ -108,7 +108,7 @@ public sealed class CcbParser
             current += 4;
         }
 
-        if ((header.Flags & CcbControl.LoadPerspective) != 0)
+        if ((header.Flags & CcbControl.LoadPerspective) != CcbControl.None)
         {
             header.Hddx = unchecked((int)ReadWord(current)) >> 4;
             current += 4;
@@ -116,17 +116,17 @@ public sealed class CcbParser
             current += 4;
         }
 
-        if ((header.Flags & CcbControl.LoadPixelProcessor) != 0)
+        if ((header.Flags & CcbControl.LoadPixelProcessor) != CcbControl.None)
         {
             header.PixelControl = ReadWord(current);
             current += 4;
         }
 
-        if ((header.Flags & CcbControl.CcbPreamble) != 0)
+        if ((header.Flags & CcbControl.CcbPreamble) != CcbControl.None)
         {
             header.Pre0 = ReadWord(current);
             current += 4;
-            if ((header.Flags & CcbControl.Packed) == 0)
+            if ((header.Flags & CcbControl.Packed) == CcbControl.None)
             {
                 header.Pre1 = ReadWord(current);
                 current += 4;
@@ -137,7 +137,7 @@ public sealed class CcbParser
             header.PDataCursor = header.PData;
             header.Pre0 = ReadWord(header.PDataCursor);
             header.PDataCursor += 4;
-            if ((header.Flags & CcbControl.Packed) == 0)
+            if ((header.Flags & CcbControl.Packed) == CcbControl.None)
             {
                 header.Pre1 = ReadWord(header.PDataCursor);
                 header.PDataCursor += 4;

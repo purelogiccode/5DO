@@ -32,7 +32,7 @@ public static class CpuTracer
 
         for (var i = 0; i < count; i++)
         {
-            var entry = Step(cpu, bus);
+            CpuTraceEntry entry = Step(cpu, bus);
             writer.WriteLine(
                 $"{entry.Pc:x8} {entry.Cpsr:x8} {entry.Instruction:x8} {entry.Disassembly}");
         }

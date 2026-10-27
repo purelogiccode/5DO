@@ -40,7 +40,7 @@ public static class PbusEncoder
         var count = Math.Min(controllers.Length, MaxControllers);
         for (var slot = 0; slot < count; slot++)
         {
-            var state = controllers[slot];
+            ControllerState state = controllers[slot];
             var offset = slot switch
             {
                 0 => 2,

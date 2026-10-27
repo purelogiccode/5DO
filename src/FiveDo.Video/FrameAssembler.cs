@@ -42,12 +42,12 @@ public sealed class FrameAssembler
 
         var width = Math.Min(Math.Min(copyWidth, destination.Width), EmulatorConstants.VdlLineMaxPixels);
         var height = Math.Min(Math.Min(copyHeight, destination.Height), VdlFrame.MaxLines);
-        var pixels = destination.PixelSpan;
+        Span<byte> pixels = destination.PixelSpan;
 
         for (var line = 0; line < height; line++)
         {
-            var sourceLine = source.Lines[line];
-            var sourcePixels = sourceLine.PixelBuffer;
+            VdlLine sourceLine = source.Lines[line];
+            Span<ushort> sourcePixels = sourceLine.PixelBuffer;
             var lineStart = line * destination.Stride;
             var allowFixedClut = (sourceLine.OutControl & FixedClutEnable) != 0;
 

@@ -1,5 +1,3 @@
-using System;
-
 namespace FiveDo.Frontend.Avalonia;
 
 /// <summary>

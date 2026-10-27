@@ -135,7 +135,7 @@ internal sealed class CelEngine
             return;
         }
 
-        var g = _geometry;
+        CelGeometry g = _geometry;
         _arbitraryTraceCount = 0;
         TraceWriter.WriteLine(
             $"cel {_celNumber++} {kind} ccb={_currentCcb:x8} next={_nextCcb:x8} flags={(uint)_flags:x8} "
@@ -172,7 +172,7 @@ internal sealed class CelEngine
         while (_nextCcb != 0 && !stop)
         {
             _currentCcb = _nextCcb;
-            var header = _parser.Parse(_nextCcb & 0xfffffcu);
+            CcbHeader header = _parser.Parse(_nextCcb & 0xfffffcu);
             _flags = header.Flags;
             _nextCcb = header.NextCcb;
 
@@ -181,13 +181,13 @@ internal sealed class CelEngine
                 _flags |= CcbControl.Last;
             }
 
-            if ((_flags & CcbControl.Last) != 0)
+            if ((_flags & CcbControl.Last) != CcbControl.None)
             {
                 stop = true;
                 _nextCcb = 0;
             }
 
-            if ((_flags & CcbControl.HasPosition) != 0)
+            if ((_flags & CcbControl.HasPosition) != CcbControl.None)
             {
                 _geometry.XPosition1616 = header.XPosition;
                 _geometry.YPosition1616 = header.YPosition;
@@ -197,7 +197,7 @@ internal sealed class CelEngine
             _celOriginVh = ((uint)_geometry.XPosition1616 & 1u)
                 | (((uint)_geometry.YPosition1616 & 1u) << 15);
 
-            if ((_flags & CcbControl.LoadSize) != 0)
+            if ((_flags & CcbControl.LoadSize) != CcbControl.None)
             {
                 _geometry.Hdx1616 = header.Hdx;
                 _geometry.Hdy1616 = header.Hdy;
@@ -205,13 +205,13 @@ internal sealed class CelEngine
                 _geometry.Vdy1616 = header.Vdy;
             }
 
-            if ((_flags & CcbControl.LoadPerspective) != 0)
+            if ((_flags & CcbControl.LoadPerspective) != CcbControl.None)
             {
                 _geometry.Hddx1616 = header.Hddx;
                 _geometry.Hddy1616 = header.Hddy;
             }
 
-            if ((_flags & CcbControl.LoadPixelProcessor) != 0)
+            if ((_flags & CcbControl.LoadPixelProcessor) != CcbControl.None)
             {
                 _pixc = header.PixelControl;
             }
@@ -225,7 +225,7 @@ internal sealed class CelEngine
                 continue;
             }
 
-            if ((_flags & CcbControl.LoadPlut) != 0 && !header.PlutDataInvalid)
+            if ((_flags & CcbControl.LoadPlut) != CcbControl.None && !header.PlutDataInvalid)
             {
                 var count = bppIndex switch
                 {
@@ -237,12 +237,12 @@ internal sealed class CelEngine
                 _madam.LoadPlut(header.PlutData, count);
             }
 
-            if ((_flags & CcbControl.Skip) != 0 || header.PDataInvalid)
+            if ((_flags & CcbControl.Skip) != CcbControl.None || header.PDataInvalid)
             {
                 continue;
             }
 
-            _dataAddress = (_flags & CcbControl.CcbPreamble) != 0
+            _dataAddress = (_flags & CcbControl.CcbPreamble) != CcbControl.None
                 ? header.PData
                 : header.PDataCursor;
 
@@ -251,7 +251,7 @@ internal sealed class CelEngine
             _geometry.ClipY = ClipY;
 
             var started = TraceWriter is null ? 0 : System.Diagnostics.Stopwatch.GetTimestamp();
-            if ((_flags & CcbControl.Packed) != 0)
+            if ((_flags & CcbControl.Packed) != CcbControl.None)
             {
                 _rasterizer.DrawPackedCel();
             }
@@ -267,7 +267,7 @@ internal sealed class CelEngine
 
             if (TraceWriter is not null)
             {
-                var elapsed = System.Diagnostics.Stopwatch.GetElapsedTime(started);
+                TimeSpan elapsed = System.Diagnostics.Stopwatch.GetElapsedTime(started);
                 TraceWriter.WriteLine(
                     $"cel {_celNumber - 1} done ms={elapsed.TotalMilliseconds:F3}");
             }

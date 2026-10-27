@@ -47,7 +47,7 @@ internal sealed class XInputGamepadSource : IRawGamepadSource
                 continue;
             }
 
-            var getState = Marshal.GetDelegateForFunctionPointer<XInputGetStateDelegate>(export);
+            XInputGetStateDelegate getState = Marshal.GetDelegateForFunctionPointer<XInputGetStateDelegate>(export);
             return new XInputGamepadSource(library, getState);
         }
 
@@ -95,9 +95,9 @@ internal sealed class XInputGamepadSource : IRawGamepadSource
         }
     }
 
-    private static GamepadState Translate(in XInputGamepad gamepad)
+    private static GamepadState Translate(XInputGamepad gamepad)
     {
-        var buttons = GamepadButtons.None;
+        GamepadButtons buttons = GamepadButtons.None;
         if ((gamepad.Buttons & 0x1000) != 0)
         {
             buttons |= GamepadButtons.South;

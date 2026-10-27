@@ -71,7 +71,7 @@ public partial class MainWindow : Window, IDisposable
     {
         InitializeComponent();
         _settings = AppSettingsStore.Load();
-        _log = new Log(_logSink, LogLevel.Info, LogCategory.All);
+        _log = new Log(_logSink);
         _log.Write(LogLevel.Info, LogCategory.Host, $"Desktop shell starting ({FiveDoVersion.Version}).");
         if (string.IsNullOrWhiteSpace(_settings.SaveDirectory))
         {
@@ -210,7 +210,7 @@ public partial class MainWindow : Window, IDisposable
             Title = "Open 3DO BIOS",
             AllowMultiple = false,
             FileTypeFilter = [new FilePickerFileType("BIOS ROM") { Patterns = ["*.bin", "*.rom"] }],
-        });
+        }).ConfigureAwait(true);
         var path = files.Count > 0 ? files[0].TryGetLocalPath() : null;
         if (path is not null)
         {
@@ -231,7 +231,7 @@ public partial class MainWindow : Window, IDisposable
                     Patterns = ["*.iso", "*.bin", "*.cue", "*.chd"],
                 },
             ],
-        });
+        }).ConfigureAwait(true);
         var path = files.Count > 0 ? files[0].TryGetLocalPath() : null;
         if (path is not null)
         {
@@ -308,11 +308,18 @@ public partial class MainWindow : Window, IDisposable
             }
 
             _settings.DiscPath = path;
-            _settings.RecentDiscs.RemoveAll(existing => string.Equals(existing, path, StringComparison.OrdinalIgnoreCase));
-            _settings.RecentDiscs.Insert(0, path);
-            if (_settings.RecentDiscs.Count > 10)
+            for (var i = _settings.RecentDiscs.Count - 1; i >= 0; i--)
             {
-                _settings.RecentDiscs.RemoveRange(10, _settings.RecentDiscs.Count - 10);
+                if (string.Equals(_settings.RecentDiscs[i], path, StringComparison.OrdinalIgnoreCase))
+                {
+                    _settings.RecentDiscs.RemoveAt(i);
+                }
+            }
+
+            _settings.RecentDiscs.Insert(0, path);
+            while (_settings.RecentDiscs.Count > 10)
+            {
+                _settings.RecentDiscs.RemoveAt(_settings.RecentDiscs.Count - 1);
             }
 
             AppSettingsStore.Save(_settings);
@@ -499,15 +506,20 @@ public partial class MainWindow : Window, IDisposable
             ? Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
             : _settings.ScreenshotDirectory;
         var name = string.IsNullOrWhiteSpace(_gameName) ? "5do" : SanitizeFileName(_gameName);
-        var stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+        var stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss", System.Globalization.CultureInfo.InvariantCulture);
         var path = Path.Combine(directory, $"{name}-{stamp}-f{_machine.FramesExecuted:D6}.png");
         var nativePath = Path.Combine(directory, $"{name}-{stamp}-f{_machine.FramesExecuted:D6}-native.png");
         if (Video.IsOpenGlAvailable)
         {
-            void OnCaptured(byte[] pixels, int width, int height)
+            Video.CaptureCompleted += OnCaptured;
+            Video.RequestCapture();
+            StatusText.Text = "Capturing screenshot...";
+            return;
+
+            void OnCaptured(object? sender, Controls.CaptureCompletedEventArgs e)
             {
                 Video.CaptureCompleted -= OnCaptured;
-                PngDumper.WriteBgra(pixels, width, height, path);
+                PngDumper.WriteBgra(e.Pixels, e.Width, e.Height, path);
                 if (_settings.SaveNativeScreenshot)
                 {
                     SaveNativeScreenshot(nativePath);
@@ -516,11 +528,6 @@ public partial class MainWindow : Window, IDisposable
                 StatusText.Text = $"Screenshot: {path}";
                 _log.Write(LogLevel.Info, LogCategory.Host, $"Screenshot written: {path}.");
             }
-
-            Video.CaptureCompleted += OnCaptured;
-            Video.RequestCapture();
-            StatusText.Text = "Capturing screenshot...";
-            return;
         }
 
         SaveNativeScreenshot(path);
@@ -563,7 +570,7 @@ public partial class MainWindow : Window, IDisposable
         var text = new TextBlock
         {
             Text = message,
-            TextWrapping = global::Avalonia.Media.TextWrapping.Wrap,
+            TextWrapping = TextWrapping.Wrap,
         };
         var close = new Button
         {
@@ -586,7 +593,7 @@ public partial class MainWindow : Window, IDisposable
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
         };
         close.Click += (_, _) => window.Close();
-        window.ShowDialog(this);
+        _ = window.ShowDialog(this);
     }
 
     private void OnFullscreen(object? sender, RoutedEventArgs e)
@@ -672,7 +679,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnLogs(object? sender, RoutedEventArgs e)
     {
-        new LogsWindow(_logSink).ShowDialog(this);
+        _ = new LogsWindow(_logSink).ShowDialog(this);
     }
 
     private void OnAbout(object? sender, RoutedEventArgs e)
@@ -684,6 +691,7 @@ public partial class MainWindow : Window, IDisposable
         if (Video.Capabilities is { } capabilities)
         {
             text.AppendLine(
+                System.Globalization.CultureInfo.InvariantCulture,
                 $"Renderer: {capabilities.Name} {capabilities.MajorVersion}.{capabilities.MinorVersion} "
                 + $"({capabilities.Api}), max texture {capabilities.MaxTextureSize}.");
         }
@@ -695,6 +703,7 @@ public partial class MainWindow : Window, IDisposable
         if (_machine is not null)
         {
             text.AppendLine(
+                System.Globalization.CultureInfo.InvariantCulture,
                 $"Machine: frame {_machine.FramesExecuted}, PC 0x{_machine.Cpu.ProgramCounter:x8}, "
                 + $"DSP 0x{_machine.Dsp.ProgramCounter:x4}.");
         }
@@ -724,7 +733,7 @@ public partial class MainWindow : Window, IDisposable
         var textBlock = new TextBlock
         {
             Text = text.ToString(),
-            TextWrapping = global::Avalonia.Media.TextWrapping.Wrap,
+            TextWrapping = TextWrapping.Wrap,
         };
         var close = new Button
         {
@@ -747,7 +756,7 @@ public partial class MainWindow : Window, IDisposable
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
         };
         close.Click += (_, _) => window.Close();
-        window.ShowDialog(this);
+        _ = window.ShowDialog(this);
     }
 
     private async void OnAddFolder(object? sender, RoutedEventArgs e)
@@ -756,13 +765,13 @@ public partial class MainWindow : Window, IDisposable
         {
             Title = "Add a game folder",
             AllowMultiple = true,
-        });
+        }).ConfigureAwait(true);
 
         var added = false;
         foreach (var folder in folders)
         {
             var path = folder.TryGetLocalPath();
-            if (path is null || _settings.LibraryFolders.Exists(existing =>
+            if (path is null || _settings.LibraryFolders.Any(existing =>
                     string.Equals(existing, path, StringComparison.OrdinalIgnoreCase)))
             {
                 continue;
@@ -851,7 +860,7 @@ public partial class MainWindow : Window, IDisposable
     {
         if (e.Key == Key.Enter)
         {
-            var item = sender == ListLibraryList
+            var item = ReferenceEquals(sender, ListLibraryList)
                 ? ListLibraryList.SelectedItem as LibraryItem
                 : GridLibraryList.SelectedItem as LibraryItem;
             BootLibrarySelection(item);
@@ -972,7 +981,7 @@ public partial class MainWindow : Window, IDisposable
         {
             if (folders.Count > 0)
             {
-                entries = await Task.Run(() => GameLibraryScanner.Scan(folders));
+                entries = await Task.Run(() => GameLibraryScanner.Scan(folders)).ConfigureAwait(true);
             }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
@@ -1110,7 +1119,7 @@ public partial class MainWindow : Window, IDisposable
             var entry = entries[i];
             var time = entry.TimestampUtc == default
                 ? string.Empty
-                : entry.TimestampUtc.ToLocalTime().ToString("HH:mm:ss") + " ";
+                : entry.TimestampUtc.ToLocalTime().ToString("HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture) + " ";
             lines.Add($"{time}[{entry.Level,-8}] {entry.Category,-12} {entry.Message}");
         }
 
@@ -1125,7 +1134,7 @@ public partial class MainWindow : Window, IDisposable
     private async void OnSettings(object? sender, RoutedEventArgs e)
     {
         var window = new SettingsWindow(_settings, _gameId, _gameName);
-        if (!await window.ShowDialog<bool>(this))
+        if (!await window.ShowDialog<bool>(this).ConfigureAwait(true))
         {
             return;
         }
@@ -1184,7 +1193,7 @@ public partial class MainWindow : Window, IDisposable
                 }
             },
             slot => _slots.Delete(slot));
-        await window.ShowDialog(this);
+        await window.ShowDialog(this).ConfigureAwait(true);
         PersistSlot();
         UpdateSlotText();
     }
@@ -1192,7 +1201,7 @@ public partial class MainWindow : Window, IDisposable
     private async void OnInputBindings(object? sender, RoutedEventArgs e)
     {
         var window = new InputBindingsWindow(_settings.Input);
-        var profile = await window.ShowDialog<InputProfile?>(this);
+        var profile = await window.ShowDialog<InputProfile?>(this).ConfigureAwait(true);
         if (profile is null)
         {
             return;
@@ -1317,8 +1326,9 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OnOpenGlReady(RendererCapabilities capabilities)
+    private void OnOpenGlReady(object? sender, Controls.OpenGlReadyEventArgs e)
     {
+        var capabilities = e.Capabilities;
         StopCpuFallback();
         RendererText.Text = $"{capabilities.Name} {capabilities.MajorVersion}.{capabilities.MinorVersion}";
         StatusText.Text =
@@ -1330,8 +1340,9 @@ public partial class MainWindow : Window, IDisposable
             + $"({capabilities.Api}), max texture {capabilities.MaxTextureSize}.");
     }
 
-    private void OnOpenGlFailed(Exception exception)
+    private void OnOpenGlFailed(object? sender, Controls.OpenGlFailedEventArgs e)
     {
+        var exception = e.Exception;
         Console.Error.WriteLine($"OpenGL unavailable: {exception.Message}");
         _log.Write(LogLevel.Warning, LogCategory.Video, $"OpenGL unavailable: {exception.Message}");
         StartCpuFallback(exception);
@@ -1448,8 +1459,9 @@ public partial class MainWindow : Window, IDisposable
                 _machine,
                 frame => Video.SubmitFrame(frame),
                 status => Dispatcher.UIThread.Post(() => OnCoreStatus(status)));
-            _runner.Faulted += exception => Dispatcher.UIThread.Post(() =>
+            _runner.Faulted += (_, args) => Dispatcher.UIThread.Post(() =>
             {
+                var exception = args.Exception;
                 _running = false;
                 SetPlayState(running: false);
                 StatusText.Text = $"Emulation error: {exception.Message}";
@@ -1519,7 +1531,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         // Do not feed browser keystrokes to the emulated pad.
-        if (LibraryView.IsVisible || FocusManager?.GetFocusedElement() is TextBox)
+        if (LibraryView.IsVisible || FocusManager.GetFocusedElement() is TextBox)
         {
             base.OnKeyDown(e);
             return;
@@ -1536,7 +1548,7 @@ public partial class MainWindow : Window, IDisposable
     /// <inheritdoc />
     protected override void OnKeyUp(KeyEventArgs e)
     {
-        if (LibraryView.IsVisible || FocusManager?.GetFocusedElement() is TextBox)
+        if (LibraryView.IsVisible || FocusManager.GetFocusedElement() is TextBox)
         {
             base.OnKeyUp(e);
             return;

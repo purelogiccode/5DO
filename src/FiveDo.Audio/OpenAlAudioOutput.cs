@@ -79,7 +79,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         {
             var alc = ALContext.GetApi();
             var al = AL.GetApi();
-            var device = alc.OpenDevice(string.Empty);
+            Device* device = alc.OpenDevice(string.Empty);
             if (device is null)
             {
                 al.Dispose();
@@ -87,7 +87,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
                 return null;
             }
 
-            var context = alc.CreateContext(device, null);
+            Context* context = alc.CreateContext(device, null);
             if (context is null)
             {
                 alc.CloseDevice(device);
@@ -175,9 +175,10 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
                 Thread.Sleep(5);
             }
         }
-        catch (Exception)
+        catch (Exception exception)
         {
             // A lost device or driver failure must not crash emulation.
+            System.Diagnostics.Debug.WriteLine(exception);
         }
     }
 

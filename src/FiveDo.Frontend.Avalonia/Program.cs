@@ -5,7 +5,7 @@ using FiveDo.Core;
 
 namespace FiveDo.Frontend.Avalonia;
 
-sealed class Program
+internal static class Program
 {
     /// <summary>
     /// Gets the disc path passed on the command line, if any. File associations use
@@ -52,7 +52,7 @@ sealed class Program
 
         var backendText = FindOptionValue(args, "--gl-backend")
             ?? FindOptionValue(args, "--gl-probe-backend");
-        if (!GlBackendOption.TryParse(backendText, out var backend))
+        if (!GlBackendOption.TryParse(backendText, out GlBackend backend))
         {
             Console.Error.WriteLine(
                 $"--gl-backend does not recognize '{backendText}'. Use auto, wgl, angle, or software.");
@@ -66,7 +66,7 @@ sealed class Program
         SmokeOutputPath = FindOptionValue(args, "--smoke-output");
         if (HasFlag(args, "--gl-probe"))
         {
-            if (!GlProbeOptions.TryParse(args, out var probe, out var probeError))
+            if (!GlProbeOptions.TryParse(args, out GlProbeOptions? probe, out var probeError))
             {
                 Console.Error.WriteLine(probeError);
                 Environment.ExitCode = 1;

@@ -263,7 +263,7 @@ public sealed class FiveDoMachine
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         var temporary = path + ".tmp";
-        using (var stream = File.Create(temporary))
+        using (FileStream stream = File.Create(temporary))
         {
             SaveState(stream, discHash);
         }
@@ -307,7 +307,7 @@ public sealed class FiveDoMachine
         _ = reader.ReadString();
         var frames = reader.ReadInt64();
 
-        if (emulatorVersion != FiveDoVersion.Version)
+        if (!string.Equals(emulatorVersion, FiveDoVersion.Version, StringComparison.Ordinal))
         {
             _stateWarnings.Add($"State was written by version {emulatorVersion}.");
         }
@@ -339,7 +339,7 @@ public sealed class FiveDoMachine
             StateSectionIds.Machine,
         };
 
-        while (reader.TryReadSection(out var section))
+        while (reader.TryReadSection(out StateSectionReader? section))
         {
             if (section.Version != 1)
             {
@@ -407,7 +407,7 @@ public sealed class FiveDoMachine
     public void LoadStateFromFile(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        using var stream = File.OpenRead(path);
+        using FileStream stream = File.OpenRead(path);
         LoadState(stream);
     }
 
@@ -606,7 +606,7 @@ public sealed class FiveDoMachine
             writer.WriteBoolean(_compatibility.HighResolution);
             writer.WriteInt32(_frame.SourceWidth);
             writer.WriteInt32(_frame.SourceHeight);
-            foreach (var line in _frame.Lines)
+            foreach (VdlLine line in _frame.Lines)
             {
                 writer.WriteInt32(line.Width);
                 writer.WriteUInt32(line.OutControl);
@@ -636,7 +636,7 @@ public sealed class FiveDoMachine
             _compatibility.HighResolution = reader.ReadBoolean();
             _frame.SourceWidth = reader.ReadInt32();
             _frame.SourceHeight = reader.ReadInt32();
-            foreach (var line in _frame.Lines)
+            foreach (VdlLine line in _frame.Lines)
             {
                 var width = reader.ReadInt32();
                 if (width < 0 || width > VdlLine.MaxPixels)

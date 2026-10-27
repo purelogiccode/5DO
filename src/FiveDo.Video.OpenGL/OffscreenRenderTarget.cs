@@ -76,7 +76,7 @@ public sealed class OffscreenRenderTarget : IDisposable
             TextureTarget.Texture2D,
             texture,
             0);
-        var status = gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+        GLEnum status = gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
         gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         if (status != GLEnum.FramebufferComplete)
         {

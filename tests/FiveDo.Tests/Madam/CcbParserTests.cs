@@ -9,8 +9,8 @@ public sealed class CcbParserTests
     public void Parse_AbsolutePointersAndCcbPreamble()
     {
         var memory = new FiveDoMemory();
-        var flags = CcbControl.Last | CcbControl.NextPointerAbsolute | CcbControl.SourcePointerAbsolute |
-            CcbControl.PlutPointerAbsolute | CcbControl.LoadPlut | CcbControl.CcbPreamble;
+        CcbControl flags = CcbControl.Last | CcbControl.NextPointerAbsolute | CcbControl.SourcePointerAbsolute |
+                           CcbControl.PlutPointerAbsolute | CcbControl.LoadPlut | CcbControl.CcbPreamble;
         memory.Ram.Write32(0x1000, (uint)flags);
         memory.Ram.Write32(0x1004, 0x2000);
         memory.Ram.Write32(0x1008, 0x3000);
@@ -18,7 +18,7 @@ public sealed class CcbParserTests
         memory.Ram.Write32(0x1018, 0x11111111);
         memory.Ram.Write32(0x101c, 0x22222222);
 
-        var header = new CcbParser(memory.Ram).Parse(0x1000);
+        CcbHeader header = new CcbParser(memory.Ram).Parse(0x1000);
 
         Assert.Equal(0x1000u, header.Address);
         Assert.Equal(flags, header.Flags);
@@ -36,7 +36,7 @@ public sealed class CcbParserTests
     public void Parse_RelativePointers()
     {
         var memory = new FiveDoMemory();
-        var flags = CcbControl.LoadPlut | CcbControl.CcbPreamble;
+        CcbControl flags = CcbControl.LoadPlut | CcbControl.CcbPreamble;
         memory.Ram.Write32(0x1000, (uint)flags);
         memory.Ram.Write32(0x1004, 0x10);
         memory.Ram.Write32(0x1008, 0x20);
@@ -44,7 +44,7 @@ public sealed class CcbParserTests
         memory.Ram.Write32(0x1018, 0x11111111);
         memory.Ram.Write32(0x101c, 0x22222222);
 
-        var header = new CcbParser(memory.Ram).Parse(0x1000);
+        CcbHeader header = new CcbParser(memory.Ram).Parse(0x1000);
 
         Assert.Equal(0x1018u, header.NextCcb);
         Assert.Equal(0x102cu, header.PData);
@@ -61,7 +61,7 @@ public sealed class CcbParserTests
         memory.Ram.Write32(0x1004, 0x300000);
         memory.Ram.Write32(0x1008, 0x400000);
 
-        var header = new CcbParser(memory.Ram).Parse(0x1000);
+        CcbHeader header = new CcbParser(memory.Ram).Parse(0x1000);
 
         Assert.True(header.NextIsLast);
         Assert.True(header.IsLast);
@@ -73,13 +73,13 @@ public sealed class CcbParserTests
     public void Parse_PackedCcbPreambleReadsOneWord()
     {
         var memory = new FiveDoMemory();
-        var flags = CcbControl.CcbPreamble | CcbControl.Packed;
+        CcbControl flags = CcbControl.CcbPreamble | CcbControl.Packed;
         memory.Ram.Write32(0x1000, (uint)flags);
         memory.Ram.Write32(0x1004, 0);
         memory.Ram.Write32(0x1008, 0);
         memory.Ram.Write32(0x1018, 0x12345678);
 
-        var header = new CcbParser(memory.Ram).Parse(0x1000);
+        CcbHeader header = new CcbParser(memory.Ram).Parse(0x1000);
 
         Assert.Equal(0x12345678u, header.Pre0);
         Assert.Equal(0u, header.Pre1);
@@ -91,14 +91,14 @@ public sealed class CcbParserTests
     public void Parse_SourcePreambleReadsFromPData()
     {
         var memory = new FiveDoMemory();
-        var flags = CcbControl.SourcePointerAbsolute;
+        CcbControl flags = CcbControl.SourcePointerAbsolute;
         memory.Ram.Write32(0x1000, (uint)flags);
         memory.Ram.Write32(0x1004, 0);
         memory.Ram.Write32(0x1008, 0x2000);
         memory.Ram.Write32(0x2000, 0xaaaaaaaa);
         memory.Ram.Write32(0x2004, 0xbbbbbbbb);
 
-        var header = new CcbParser(memory.Ram).Parse(0x1000);
+        CcbHeader header = new CcbParser(memory.Ram).Parse(0x1000);
 
         Assert.Equal(0xaaaaaaaau, header.Pre0);
         Assert.Equal(0xbbbbbbbbu, header.Pre1);
@@ -110,8 +110,8 @@ public sealed class CcbParserTests
     public void Parse_ReadsPositionSizePerspectiveAndPixelControlBeforePreamble()
     {
         var memory = new FiveDoMemory();
-        var flags = CcbControl.HasPosition | CcbControl.LoadSize | CcbControl.LoadPerspective |
-            CcbControl.LoadPixelProcessor | CcbControl.CcbPreamble;
+        CcbControl flags = CcbControl.HasPosition | CcbControl.LoadSize | CcbControl.LoadPerspective |
+                           CcbControl.LoadPixelProcessor | CcbControl.CcbPreamble;
         memory.Ram.Write32(0x1000, (uint)flags);
         memory.Ram.Write32(0x1004, 0);
         memory.Ram.Write32(0x1008, 0);
@@ -128,7 +128,7 @@ public sealed class CcbParserTests
         memory.Ram.Write32(0x1034, 0xaabbccdd);
         memory.Ram.Write32(0x1038, 0xeeff0011);
 
-        var header = new CcbParser(memory.Ram).Parse(0x1000);
+        CcbHeader header = new CcbParser(memory.Ram).Parse(0x1000);
 
         Assert.Equal(0x11110000, header.XPosition);
         Assert.Equal(0x22220000, header.YPosition);

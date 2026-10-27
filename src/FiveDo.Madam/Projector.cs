@@ -37,7 +37,7 @@ public static class Projector
         // signature parity with PPROJ_OUTPUT without changing the result.
         _ = framePixel;
 
-        var vhOutput = (ccbFlags & CcbControl.PlutPosition) != 0
+        var vhOutput = (ccbFlags & CcbControl.PlutPosition) != CcbControl.None
             ? (uint)(decoderOutput & 0x8001)
             : celOriginVh;
 

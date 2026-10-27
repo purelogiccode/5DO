@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
 using FiveDo.Core;
 
 namespace FiveDo.Input;
@@ -9,6 +10,7 @@ namespace FiveDo.Input;
 /// <summary>One state change in a scripted controller sequence.</summary>
 /// <param name="Frame">First frame on which the state applies.</param>
 /// <param name="State">Controller state from that frame onward.</param>
+[StructLayout(LayoutKind.Sequential)]
 public readonly record struct InputScriptEntry(int Frame, ControllerState State);
 
 /// <summary>
@@ -117,7 +119,7 @@ public static class InputScript
             return default;
         }
 
-        var buttons = ControllerButton.None;
+        ControllerButton buttons = ControllerButton.None;
         foreach (var part in text.Split([',', '+', '|'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
             if (string.Equals(part, "None", StringComparison.OrdinalIgnoreCase))
@@ -125,7 +127,7 @@ public static class InputScript
                 continue;
             }
 
-            if (!Enum.TryParse<ControllerButton>(part, ignoreCase: true, out var button)
+            if (!Enum.TryParse(part, ignoreCase: true, out ControllerButton button)
                 || !Enum.IsDefined(button))
             {
                 throw new FormatException($"Line {lineNumber}: unknown button '{part}'.");
@@ -145,7 +147,7 @@ public static class InputScript
         }
 
         var result = new List<InputScriptEntry>(entries.Count);
-        foreach (var entry in entries)
+        foreach (InputScriptEntry entry in entries)
         {
             if (result.Count > 0 && result[^1].Frame == entry.Frame)
             {

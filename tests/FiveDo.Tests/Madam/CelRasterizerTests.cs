@@ -15,7 +15,7 @@ public sealed class CelRasterizerTests
     [Fact]
     public void PackedLine_LiteralRunWritesDecodedPixelAndCountsCycles()
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         WritePackedCcb(
             memory,
             loadPlut: true,
@@ -36,7 +36,7 @@ public sealed class CelRasterizerTests
     [Fact]
     public void PackedLine_TransparentPixelDoesNotWrite()
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         WritePackedCcb(
             memory,
             loadPlut: true,
@@ -57,7 +57,7 @@ public sealed class CelRasterizerTests
     [Fact]
     public void PackedLine_RepeatRunDrawsEveryTexel()
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         WritePackedCcb(
             memory,
             loadPlut: true,
@@ -81,7 +81,7 @@ public sealed class CelRasterizerTests
     [Fact]
     public void PackedScale_LiteralRunFillsScaledRectangle()
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         WritePackedCcb(
             memory,
             loadPlut: true,
@@ -106,7 +106,7 @@ public sealed class CelRasterizerTests
     [Fact]
     public void PackedScale_BitTiming3ExpandsVerticalDelta()
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         madam.Compatibility.FixMode = FixMode.BitTiming3;
         WritePackedCcb(
             memory,
@@ -129,7 +129,7 @@ public sealed class CelRasterizerTests
     [Fact]
     public void PackedArbitrary_LiteralRunFillsQuadWithoutCycleCharge()
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         WritePackedCcb(
             memory,
             loadPlut: true,
@@ -153,7 +153,7 @@ public sealed class CelRasterizerTests
     [Fact]
     public void PackedArbitrary_UsesTheColumnAsXAndTheRowAsY()
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         WritePackedCcb(
             memory,
             loadPlut: true,
@@ -206,14 +206,14 @@ public sealed class CelRasterizerTests
         int hddx = 0,
         int hddy = 0)
     {
-        var ccbFlags = CcbControl.Last
-            | CcbControl.NextPointerAbsolute
-            | CcbControl.SourcePointerAbsolute
-            | CcbControl.LoadSize
-            | CcbControl.LoadPixelProcessor
-            | CcbControl.HasPosition
-            | CcbControl.Packed
-            | flags;
+        CcbControl ccbFlags = CcbControl.Last
+                              | CcbControl.NextPointerAbsolute
+                              | CcbControl.SourcePointerAbsolute
+                              | CcbControl.LoadSize
+                              | CcbControl.LoadPixelProcessor
+                              | CcbControl.HasPosition
+                              | CcbControl.Packed
+                              | flags;
 
         if (loadPlut)
         {

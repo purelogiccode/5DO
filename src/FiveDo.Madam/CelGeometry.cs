@@ -89,7 +89,7 @@ public sealed class CelGeometry
     /// <returns><see langword="true"/> when the CEL is visible; <see langword="false"/> when culled.</returns>
     public bool TryInitVisual(bool packed)
     {
-        if ((Flags & (CcbControl.Clockwise | CcbControl.CounterClockwise)) == 0)
+        if ((Flags & (CcbControl.Clockwise | CcbControl.CounterClockwise)) == CcbControl.None)
         {
             return false;
         }
@@ -159,7 +159,7 @@ public sealed class CelGeometry
             {
                 if ((Hdy1616 < 0 && Vdx1616 > 0) || (Hdy1616 > 0 && Vdx1616 < 0))
                 {
-                    if ((Flags & CcbControl.Clockwise) != 0)
+                    if ((Flags & CcbControl.Clockwise) != CcbControl.None)
                     {
                         if (Abs(Hdy1616) == FixedOne
                             && Abs(Vdx1616) == FixedOne
@@ -172,7 +172,7 @@ public sealed class CelGeometry
                         return true;
                     }
                 }
-                else if ((Flags & CcbControl.CounterClockwise) != 0)
+                else if ((Flags & CcbControl.CounterClockwise) != CcbControl.None)
                 {
                     if (Abs(Hdy1616) == FixedOne
                         && Abs(Vdx1616) == FixedOne
@@ -192,7 +192,7 @@ public sealed class CelGeometry
             {
                 if ((Hdx1616 < 0 && Vdy1616 > 0) || (Hdx1616 > 0 && Vdy1616 < 0))
                 {
-                    if ((Flags & CcbControl.CounterClockwise) != 0)
+                    if ((Flags & CcbControl.CounterClockwise) != CcbControl.None)
                     {
                         if (Abs(Hdx1616) == FixedOne
                             && Abs(Vdy1616) == FixedOne
@@ -205,7 +205,7 @@ public sealed class CelGeometry
                         return true;
                     }
                 }
-                else if ((Flags & CcbControl.Clockwise) != 0)
+                else if ((Flags & CcbControl.Clockwise) != CcbControl.None)
                 {
                     if (Abs(Hdx1616) == FixedOne
                         && Abs(Vdy1616) == FixedOne
@@ -470,7 +470,7 @@ public sealed class CelGeometry
             return false;
         }
 
-        var tmp = TexelCcwTest(Hdx, Hdy, Vdx, Vdy);
+        CcbControl tmp = TexelCcwTest(Hdx, Hdy, Vdx, Vdy);
         if (tmp != TexelCcwTest(Hdx, Hdy, Vdx + (Hddx * width), Vdy + (Hddy * width)))
         {
             return false;

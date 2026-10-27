@@ -2,6 +2,7 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using CHDSharp.Encoder;
+using FiveDo.Core;
 using FiveDo.Storage;
 
 namespace FiveDo.Tests.Storage;
@@ -43,7 +44,7 @@ public sealed class DiscImageTests
     public void CueSheet_OpensMode1BinTrack()
     {
         using var fixture = new DiscFixture(sectorCount: 16);
-        using var image = CueSheet.Open(fixture.CuePath);
+        using IDiscSource image = CueSheet.Open(fixture.CuePath);
 
         Assert.Equal(16, image.SectorCount);
         var sector = new byte[2048];
@@ -56,17 +57,17 @@ public sealed class DiscImageTests
     {
         using var fixture = new DiscFixture(sectorCount: 8);
 
-        using (var iso = DiscImageFactory.Open(fixture.IsoPath))
+        using (IDiscSource iso = DiscImageFactory.Open(fixture.IsoPath))
         {
             Assert.IsType<IsoImage>(iso);
         }
 
-        using (var bin = DiscImageFactory.Open(fixture.BinPath))
+        using (IDiscSource bin = DiscImageFactory.Open(fixture.BinPath))
         {
             Assert.IsType<BinImage>(bin);
         }
 
-        using (var cue = DiscImageFactory.Open(fixture.CuePath))
+        using (IDiscSource cue = DiscImageFactory.Open(fixture.CuePath))
         {
             Assert.IsType<BinImage>(cue);
         }
@@ -94,7 +95,7 @@ public sealed class DiscImageTests
         using var fixture = new DiscFixture(sectorCount: 4);
         ChdEncoder.CreateBlank(fixture.HddPath, 1024 * 1024);
 
-        var exception = Assert.Throws<InvalidDataException>(() => FiveDo.Storage.Chd.ChdDiscImage.Open(fixture.HddPath));
+        InvalidDataException exception = Assert.Throws<InvalidDataException>(() => FiveDo.Storage.Chd.ChdDiscImage.Open(fixture.HddPath));
         Assert.Contains("not a CD", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -112,7 +113,7 @@ public sealed class DiscImageTests
             ChdPath = Path.Combine(_directory, "disc.chd");
             HddPath = Path.Combine(_directory, "hdd.chd");
 
-            using (var iso = File.Create(IsoPath))
+            using (FileStream iso = File.Create(IsoPath))
             {
                 for (var lba = 0; lba < sectorCount; lba++)
                 {
@@ -120,7 +121,7 @@ public sealed class DiscImageTests
                 }
             }
 
-            using (var bin = File.Create(BinPath))
+            using (FileStream bin = File.Create(BinPath))
             {
                 for (var lba = 0; lba < sectorCount; lba++)
                 {

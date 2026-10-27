@@ -13,7 +13,7 @@ public sealed class GamepadMapperTests
             GamepadButtons.South | GamepadButtons.West | GamepadButtons.North
             | GamepadButtons.Start | GamepadButtons.DpadUp | GamepadButtons.DpadRight);
 
-        var mapped = GamepadMapper.Map(profile, state);
+        ControllerState mapped = GamepadMapper.Map(profile, state);
 
         Assert.True(mapped.IsDown(ControllerButton.A));
         Assert.True(mapped.IsDown(ControllerButton.B));
@@ -32,7 +32,7 @@ public sealed class GamepadMapperTests
         profile.Gamepad["DpadUp"] = ControllerButton.Up;
         profile.Gamepad["DpadLeft"] = ControllerButton.Left;
 
-        var mapped = GamepadMapper.Map(profile, new GamepadState(GamepadButtons.None, LeftStickX: -0.9f, LeftStickY: 0.9f));
+        ControllerState mapped = GamepadMapper.Map(profile, new GamepadState(GamepadButtons.None, LeftStickX: -0.9f, LeftStickY: 0.9f));
 
         Assert.True(mapped.IsDown(ControllerButton.Up));
         Assert.True(mapped.IsDown(ControllerButton.Left));
@@ -47,7 +47,7 @@ public sealed class GamepadMapperTests
         profile.Gamepad["DpadUp"] = ControllerButton.Up;
         profile.Gamepad["LeftStickUp"] = ControllerButton.C;
 
-        var mapped = GamepadMapper.Map(profile, new GamepadState(GamepadButtons.None, LeftStickY: 0.9f));
+        ControllerState mapped = GamepadMapper.Map(profile, new GamepadState(GamepadButtons.None, LeftStickY: 0.9f));
 
         Assert.True(mapped.IsDown(ControllerButton.C));
         Assert.False(mapped.IsDown(ControllerButton.Up));
@@ -59,7 +59,7 @@ public sealed class GamepadMapperTests
         var profile = new PlayerProfile();
         profile.Gamepad["LeftShoulder"] = ControllerButton.L;
 
-        var mapped = GamepadMapper.Map(profile, new GamepadState(GamepadButtons.None, LeftTrigger: 0.8f));
+        ControllerState mapped = GamepadMapper.Map(profile, new GamepadState(GamepadButtons.None, LeftTrigger: 0.8f));
 
         Assert.True(mapped.IsDown(ControllerButton.L));
     }
@@ -71,7 +71,7 @@ public sealed class GamepadMapperTests
         profile.Gamepad["LeftShoulder"] = ControllerButton.L;
         profile.Gamepad["LeftTrigger"] = ControllerButton.C;
 
-        var mapped = GamepadMapper.Map(profile, new GamepadState(GamepadButtons.None, LeftTrigger: 0.8f));
+        ControllerState mapped = GamepadMapper.Map(profile, new GamepadState(GamepadButtons.None, LeftTrigger: 0.8f));
 
         Assert.True(mapped.IsDown(ControllerButton.C));
         Assert.False(mapped.IsDown(ControllerButton.L));
@@ -86,7 +86,7 @@ public sealed class GamepadMapperTests
         var profile = new PlayerProfile();
         profile.Gamepad["LeftStickRight"] = ControllerButton.Right;
 
-        var mapped = GamepadMapper.Map(profile, new GamepadState(GamepadButtons.None, LeftStickX: axis));
+        ControllerState mapped = GamepadMapper.Map(profile, new GamepadState(GamepadButtons.None, LeftStickX: axis));
 
         Assert.Equal(pressed, mapped.IsDown(ControllerButton.Right));
     }
@@ -97,7 +97,7 @@ public sealed class GamepadMapperTests
         var profile = new PlayerProfile();
         profile.Gamepad["south"] = ControllerButton.A;
 
-        var mapped = GamepadMapper.Map(profile, new GamepadState(GamepadButtons.South));
+        ControllerState mapped = GamepadMapper.Map(profile, new GamepadState(GamepadButtons.South));
 
         Assert.True(mapped.IsDown(ControllerButton.A));
     }
@@ -109,7 +109,7 @@ public sealed class GamepadMapperTests
         profile.Gamepad["RightStickUp"] = ControllerButton.C;
         profile.Gamepad["RightStickDown"] = ControllerButton.B;
 
-        var mapped = GamepadMapper.Map(profile, new GamepadState(GamepadButtons.None, RightStickY: -0.8f));
+        ControllerState mapped = GamepadMapper.Map(profile, new GamepadState(GamepadButtons.None, RightStickY: -0.8f));
 
         Assert.True(mapped.IsDown(ControllerButton.B));
         Assert.False(mapped.IsDown(ControllerButton.C));

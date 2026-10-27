@@ -27,7 +27,7 @@ public sealed class CelGoldenSceneTests
     [Fact]
     public void LiteralScale_ClipsAtTopLeftCorner()
     {
-        var (memory, madam) = CreateScene(clipX: 0, clipY: 0);
+        (FiveDoMemory memory, MadamChip madam) = CreateScene(clipX: 0, clipY: 0);
         WriteLiteralCcb(
             memory,
             Ccb3,
@@ -52,7 +52,7 @@ public sealed class CelGoldenSceneTests
     [Fact]
     public void LiteralScale_HighResolutionWritesTheFourVramPlanes()
     {
-        var (memory, madam) = CreateScene(clipX: 319, clipY: 239);
+        (FiveDoMemory memory, MadamChip madam) = CreateScene(clipX: 319, clipY: 239);
         madam.Compatibility.HighResolution = true;
         WriteLiteralCcb(
             memory,
@@ -78,7 +78,7 @@ public sealed class CelGoldenSceneTests
     [Fact]
     public void LiteralScale_ClipsAtBottomRightCorner()
     {
-        var (memory, madam) = CreateScene(clipX: 7, clipY: 7);
+        (FiveDoMemory memory, MadamChip madam) = CreateScene(clipX: 7, clipY: 7);
         WriteLiteralCcb(
             memory,
             Ccb3,
@@ -105,7 +105,7 @@ public sealed class CelGoldenSceneTests
     [Fact]
     public void CompositeScene_DrawsCelsInListOrderWithPlutReloads()
     {
-        var (memory, madam) = CreateScene(clipX: 7, clipY: 7);
+        (FiveDoMemory memory, MadamChip madam) = CreateScene(clipX: 7, clipY: 7);
 
         // First CEL: packed one-texel run at (0,0), palette A.
         WritePackedCcb(memory, Ccb1, nextCcb: Ccb2, last: false, position: (0, 0), source: Source1, plut: Plut1);
@@ -152,7 +152,7 @@ public sealed class CelGoldenSceneTests
         Assert.Equal(54, cycles);
 
         // The scene is deterministic across repeated runs.
-        var (memory2, madam2) = CreateScene(clipX: 7, clipY: 7);
+        (FiveDoMemory memory2, MadamChip madam2) = CreateScene(clipX: 7, clipY: 7);
         WriteComposite(memory2);
         _ = RunCel(madam2, Ccb1);
         Assert.Equal(0xfdd5a065u, HashRegion(memory2, 16, 16));
@@ -161,7 +161,7 @@ public sealed class CelGoldenSceneTests
     [Fact]
     public void CompositeScene_TransparentTexelKeepsUnderlyingPixel()
     {
-        var (memory, madam) = CreateScene(clipX: 7, clipY: 7);
+        (FiveDoMemory memory, MadamChip madam) = CreateScene(clipX: 7, clipY: 7);
 
         // Opaque 16-bit linear CEL scaled to 2x2 at the origin.
         WriteLiteralCcb(
@@ -273,15 +273,15 @@ public sealed class CelGoldenSceneTests
         uint source,
         uint plut)
     {
-        var flags = CcbControl.NextPointerAbsolute
-            | CcbControl.SourcePointerAbsolute
-            | CcbControl.PlutPointerAbsolute
-            | CcbControl.LoadPlut
-            | CcbControl.LoadSize
-            | CcbControl.LoadPixelProcessor
-            | CcbControl.HasPosition
-            | CcbControl.Packed
-            | CcbControl.Clockwise;
+        CcbControl flags = CcbControl.NextPointerAbsolute
+                           | CcbControl.SourcePointerAbsolute
+                           | CcbControl.PlutPointerAbsolute
+                           | CcbControl.LoadPlut
+                           | CcbControl.LoadSize
+                           | CcbControl.LoadPixelProcessor
+                           | CcbControl.HasPosition
+                           | CcbControl.Packed
+                           | CcbControl.Clockwise;
 
         if (last)
         {
@@ -315,12 +315,12 @@ public sealed class CelGoldenSceneTests
         bool loadPlut = false,
         uint plut = 0)
     {
-        var flags = CcbControl.NextPointerAbsolute
-            | CcbControl.SourcePointerAbsolute
-            | CcbControl.LoadSize
-            | CcbControl.LoadPixelProcessor
-            | CcbControl.HasPosition
-            | CcbControl.Clockwise;
+        CcbControl flags = CcbControl.NextPointerAbsolute
+                           | CcbControl.SourcePointerAbsolute
+                           | CcbControl.LoadSize
+                           | CcbControl.LoadPixelProcessor
+                           | CcbControl.HasPosition
+                           | CcbControl.Clockwise;
 
         if (last)
         {

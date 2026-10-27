@@ -76,7 +76,7 @@ public static class PixelProcessor
         // FreeDO: AOP.raw = color1.raw & PXOR1; color1.raw &= PXOR2.
         uint aop;
         uint color1Raw;
-        if ((ccbFlags & CcbControl.PixelXor) != 0)
+        if ((ccbFlags & CcbControl.PixelXor) != CcbControl.None)
         {
             aop = 0;
             color1Raw = color1 & 0x1f1f1f1f;
@@ -122,7 +122,7 @@ public static class PixelProcessor
             | ((uint)(outR & 0x1f) << 10);
 
         // FreeDO: if (!(CCBFLAGS & CCB_NOBLK) && out.raw == 0) out.raw = 1 << 10;
-        if ((ccbFlags & CcbControl.NoBlock) == 0 && output == 0)
+        if ((ccbFlags & CcbControl.NoBlock) == CcbControl.None && output == 0)
         {
             output = 1u << 10;
         }

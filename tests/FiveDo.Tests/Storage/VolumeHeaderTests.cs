@@ -57,7 +57,7 @@ public sealed class VolumeHeaderTests
             var parentPath = Path.Combine(directory, "parent.chd");
             var childPath = Path.Combine(directory, "child.chd");
 
-            using (var bin = File.Create(binPath))
+            using (FileStream bin = File.Create(binPath))
             {
                 for (var lba = 0; lba < 32; lba++)
                 {

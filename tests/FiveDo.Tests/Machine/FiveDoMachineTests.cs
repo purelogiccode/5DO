@@ -121,8 +121,8 @@ public sealed class FiveDoMachineTests
     public void SyntheticProgram_WritesSportAndProducesStableFrame()
     {
         var rom = BuildSyntheticRom();
-        var first = RunSynthetic(rom);
-        var second = RunSynthetic(rom);
+        SyntheticResult first = RunSynthetic(rom);
+        SyntheticResult second = RunSynthetic(rom);
 
         Assert.Equal(0xffffffffu, first.Machine.Memory.Ram.Read32(2 * 1024 * 1024));
         Assert.Equal(320, first.Machine.Frame.SourceWidth);

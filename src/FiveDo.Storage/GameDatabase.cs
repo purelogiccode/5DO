@@ -55,7 +55,7 @@ public sealed class GameDatabase
     public GameRecord? FindByChecksum(string checksum)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(checksum);
-        return _byChecksum.TryGetValue(checksum.ToUpperInvariant(), out var record) ? record : null;
+        return _byChecksum.GetValueOrDefault(checksum.ToUpperInvariant());
     }
 
     /// <summary>Looks up a game by its 4DO ID.</summary>
@@ -64,7 +64,7 @@ public sealed class GameDatabase
     public GameRecord? FindById(string id)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
-        return _byId.TryGetValue(id.ToUpperInvariant(), out var record) ? record : null;
+        return _byId.GetValueOrDefault(id.ToUpperInvariant());
     }
 
     /// <summary>Loads a database from XML.</summary>
@@ -87,9 +87,9 @@ public sealed class GameDatabase
 
         var byChecksum = new Dictionary<string, GameRecord>(StringComparer.OrdinalIgnoreCase);
         var byId = new Dictionary<string, GameRecord>(StringComparer.OrdinalIgnoreCase);
-        var root = document.Root ?? throw new InvalidDataException("The game database has no root element.");
+        XElement root = document.Root ?? throw new InvalidDataException("The game database has no root element.");
 
-        foreach (var node in root.Elements("game"))
+        foreach (XElement node in root.Elements("game"))
         {
             var record = new GameRecord(
                 (string?)node.Element("id") ?? string.Empty,
@@ -114,8 +114,8 @@ public sealed class GameDatabase
     private static GameDatabase LoadEmbedded()
     {
         var assembly = Assembly.GetExecutingAssembly();
-        using var stream = assembly.GetManifestResourceStream(ResourceName)
-            ?? throw new InvalidOperationException($"Embedded game database '{ResourceName}' is missing.");
+        using Stream stream = assembly.GetManifestResourceStream(ResourceName)
+                              ?? throw new InvalidOperationException($"Embedded game database '{ResourceName}' is missing.");
         return Load(stream);
     }
 }

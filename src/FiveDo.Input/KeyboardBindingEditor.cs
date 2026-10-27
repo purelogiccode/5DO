@@ -63,7 +63,7 @@ public sealed class KeyboardBindingEditor
             return;
         }
 
-        foreach (var existing in new List<ControllerButton>(_bindings.Keys))
+        foreach (ControllerButton existing in new List<ControllerButton>(_bindings.Keys))
         {
             if (existing != button && string.Equals(_bindings[existing], key, StringComparison.OrdinalIgnoreCase))
             {
@@ -87,9 +87,9 @@ public sealed class KeyboardBindingEditor
     {
         var conflicts = new List<string>();
         var keys = new Dictionary<string, ControllerButton>(StringComparer.OrdinalIgnoreCase);
-        foreach (var (button, key) in _bindings)
+        foreach ((ControllerButton button, var key) in _bindings)
         {
-            if (keys.TryGetValue(key, out var existing) && existing != button)
+            if (keys.TryGetValue(key, out ControllerButton existing) && existing != button)
             {
                 conflicts.Add($"Key '{key}' is bound to both {existing} and {button}.");
             }
@@ -108,7 +108,7 @@ public sealed class KeyboardBindingEditor
     {
         ArgumentNullException.ThrowIfNull(profile);
         profile.Keyboard.Clear();
-        foreach (var (button, key) in _bindings)
+        foreach ((ControllerButton button, var key) in _bindings)
         {
             profile.Keyboard[key] = button;
         }
@@ -117,7 +117,7 @@ public sealed class KeyboardBindingEditor
     private void Load(PlayerProfile profile)
     {
         _bindings.Clear();
-        foreach (var (key, button) in profile.Keyboard)
+        foreach ((var key, ControllerButton button) in profile.Keyboard)
         {
             if (button != ControllerButton.None && !string.IsNullOrWhiteSpace(key))
             {

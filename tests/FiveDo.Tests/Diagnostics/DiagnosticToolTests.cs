@@ -13,8 +13,8 @@ public sealed class DiagnosticToolTests
         var rig = new ArmTestRig();
         rig.LoadProgram(ArmTestAssembler.Mov(0, 1), ArmTestAssembler.Mov(1, 2));
 
-        var first = CpuTracer.Step(rig.Cpu, rig.Memory.Bus);
-        var second = CpuTracer.Step(rig.Cpu, rig.Memory.Bus);
+        CpuTraceEntry first = CpuTracer.Step(rig.Cpu, rig.Memory.Bus);
+        CpuTraceEntry second = CpuTracer.Step(rig.Cpu, rig.Memory.Bus);
 
         Assert.Equal(0x1000u, first.Pc);
         Assert.StartsWith("mov", first.Disassembly, StringComparison.OrdinalIgnoreCase);

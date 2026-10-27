@@ -155,7 +155,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     /// <param name="destination">Destination of exactly 1 MB.</param>
     public void CopyRomBank(int bank, Span<byte> destination)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)bank, 1u);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)bank, 1u, nameof(bank));
         if (destination.Length < EmulatorConstants.RomBankSize)
         {
             throw new ArgumentException($"The destination must hold {EmulatorConstants.RomBankSize} bytes.", nameof(destination));

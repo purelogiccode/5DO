@@ -90,7 +90,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     public long LastRendererScaleAllocatedBytes => _renderer?.LastScaleAllocatedBytes ?? 0;
 
     /// <summary>Gets the most recent GPU frame time, or <see langword="null"/> when unavailable.</summary>
-    public double? GpuMilliseconds => (_renderer as IRendererTiming)?.GpuMilliseconds;
+    public double? GpuMilliseconds => _renderer?.GpuMilliseconds;
 
     /// <summary>Gets a value indicating whether the platform accepted the requested vsync state.</summary>
     public bool VsyncActive => _renderer?.VsyncActive ?? false;
@@ -114,7 +114,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     /// Raised on the UI thread after a frame is presented. The first value is the CPU
     /// present time in milliseconds; the second is the latest GPU time when available.
     /// </summary>
-    public event Action<double, double?>? FramePresented;
+    public event EventHandler<FramePresentedEventArgs>? FramePresented;
 
     /// <summary>
     /// Gets or sets a value indicating whether rendering goes to an offscreen target
@@ -142,13 +142,13 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     }
 
     /// <summary>Raised on the UI thread when the GL renderer is ready.</summary>
-    public event Action<RendererCapabilities>? OpenGlReady;
+    public event EventHandler<OpenGlReadyEventArgs>? OpenGlReady;
 
     /// <summary>Raised on the UI thread when GL initialization or shader setup fails.</summary>
-    public event Action<Exception>? OpenGlFailed;
+    public event EventHandler<OpenGlFailedEventArgs>? OpenGlFailed;
 
     /// <summary>Raised on the UI thread after a requested GL frame capture completes.</summary>
-    public event Action<byte[], int, int>? CaptureCompleted;
+    public event EventHandler<CaptureCompletedEventArgs>? CaptureCompleted;
 
     /// <summary>Gets a value indicating whether an OpenGL renderer is active.</summary>
     public bool IsOpenGlAvailable => _renderer is not null;
@@ -213,13 +213,13 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
             _glVendor = gl.Vendor;
             _glRenderer = gl.Renderer;
             _adapter = new GlContextAdapter(_gl);
-            var swapInterval = SwapInterval.TryCreate(gl.GetProcAddress);
+            ISwapIntervalBackend? swapInterval = SwapInterval.TryCreate(gl.GetProcAddress);
             _renderer = new OpenGlRenderer(_adapter, swapInterval);
             _present = _renderer.Present;
             _renderer.Settings = _settings;
             var (width, height) = GetPixelSize();
             _renderer.Initialize(width, height);
-            var capabilities = _renderer.Capabilities;
+            RendererCapabilities capabilities = _renderer.Capabilities;
             if (!capabilities.SupportsIntegerTextures
                 || (!capabilities.SupportsOpenGl33 && !capabilities.IsOpenGlEs))
             {
@@ -228,7 +228,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
                     + "desktop OpenGL 3.3 or OpenGL ES 3.0 with integer textures is required.");
             }
 
-            OpenGlReady?.Invoke(capabilities);
+            OpenGlReady?.Invoke(this, new OpenGlReadyEventArgs(capabilities));
         }
         catch (Exception exception)
         {
@@ -236,7 +236,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
             _renderer = null;
             _present = null;
             _gl = null;
-            OpenGlFailed?.Invoke(exception);
+            OpenGlFailed?.Invoke(this, new OpenGlFailedEventArgs(exception));
         }
     }
 
@@ -289,7 +289,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
             _renderer.Dispose();
             _renderer = null;
             _present = null;
-            OpenGlFailed?.Invoke(exception);
+            OpenGlFailed?.Invoke(this, new OpenGlFailedEventArgs(exception));
             return;
         }
 
@@ -322,7 +322,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
             _captureRequested = false;
             var buffer = new byte[checked(width * height * 4)];
             _renderer!.ReadPixels(buffer, out var captureWidth, out var captureHeight);
-            CaptureCompleted?.Invoke(buffer, captureWidth, captureHeight);
+            CaptureCompleted?.Invoke(this, new CaptureCompletedEventArgs(buffer, captureWidth, captureHeight));
 
             // A capture consumer (the GPU probe) may finish the session and dispose
             // the surface synchronously. Do not touch the adapter/renderer after
@@ -341,7 +341,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
 
         _presentMilliseconds =
             (Stopwatch.GetTimestamp() - presentStart) * 1000.0 / Stopwatch.Frequency;
-        FramePresented?.Invoke(_presentMilliseconds, GpuMilliseconds);
+        FramePresented?.Invoke(this, new FramePresentedEventArgs(_presentMilliseconds, GpuMilliseconds));
     }
 
     private (int Width, int Height) GetPixelSize()
@@ -362,7 +362,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
         _adapter = null;
         _present = null;
         _gl = null;
-        OpenGlFailed?.Invoke(new InvalidOperationException("The OpenGL context was lost."));
+        OpenGlFailed?.Invoke(this, new OpenGlFailedEventArgs(new InvalidOperationException("The OpenGL context was lost.")));
     }
 
     /// <inheritdoc />
@@ -389,6 +389,76 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
         _adapter = null;
         _present = null;
         _gl = null;
-        GC.SuppressFinalize(this);
     }
+}
+
+/// <summary>Event data for <see cref="VideoSurface.FramePresented"/>.</summary>
+public sealed class FramePresentedEventArgs : EventArgs
+{
+    /// <summary>Initializes a new instance of the <see cref="FramePresentedEventArgs"/> class.</summary>
+    /// <param name="presentMilliseconds">CPU present time in milliseconds.</param>
+    /// <param name="gpuMilliseconds">Latest GPU frame time, or <see langword="null"/> when unavailable.</param>
+    public FramePresentedEventArgs(double presentMilliseconds, double? gpuMilliseconds)
+    {
+        PresentMilliseconds = presentMilliseconds;
+        GpuMilliseconds = gpuMilliseconds;
+    }
+
+    /// <summary>Gets the CPU present time in milliseconds.</summary>
+    public double PresentMilliseconds { get; }
+
+    /// <summary>Gets the latest GPU frame time, or <see langword="null"/> when unavailable.</summary>
+    public double? GpuMilliseconds { get; }
+}
+
+/// <summary>Event data for <see cref="VideoSurface.OpenGlReady"/>.</summary>
+public sealed class OpenGlReadyEventArgs : EventArgs
+{
+    /// <summary>Initializes a new instance of the <see cref="OpenGlReadyEventArgs"/> class.</summary>
+    /// <param name="capabilities">Capabilities reported by the active renderer.</param>
+    public OpenGlReadyEventArgs(RendererCapabilities capabilities)
+    {
+        Capabilities = capabilities;
+    }
+
+    /// <summary>Gets the capabilities reported by the active renderer.</summary>
+    public RendererCapabilities Capabilities { get; }
+}
+
+/// <summary>Event data for <see cref="VideoSurface.OpenGlFailed"/>.</summary>
+public sealed class OpenGlFailedEventArgs : EventArgs
+{
+    /// <summary>Initializes a new instance of the <see cref="OpenGlFailedEventArgs"/> class.</summary>
+    /// <param name="exception">The exception that describes the failure.</param>
+    public OpenGlFailedEventArgs(Exception exception)
+    {
+        Exception = exception;
+    }
+
+    /// <summary>Gets the exception that describes the failure.</summary>
+    public Exception Exception { get; }
+}
+
+/// <summary>Event data for <see cref="VideoSurface.CaptureCompleted"/>.</summary>
+public sealed class CaptureCompletedEventArgs : EventArgs
+{
+    /// <summary>Initializes a new instance of the <see cref="CaptureCompletedEventArgs"/> class.</summary>
+    /// <param name="pixels">Captured BGRA pixels.</param>
+    /// <param name="width">Capture width in pixels.</param>
+    /// <param name="height">Capture height in pixels.</param>
+    public CaptureCompletedEventArgs(byte[] pixels, int width, int height)
+    {
+        Pixels = pixels;
+        Width = width;
+        Height = height;
+    }
+
+    /// <summary>Gets the captured BGRA pixels.</summary>
+    public byte[] Pixels { get; }
+
+    /// <summary>Gets the capture width in pixels.</summary>
+    public int Width { get; }
+
+    /// <summary>Gets the capture height in pixels.</summary>
+    public int Height { get; }
 }

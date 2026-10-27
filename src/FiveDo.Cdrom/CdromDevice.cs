@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using FiveDo.Core;
 
 namespace FiveDo.Cdrom;
@@ -317,7 +318,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         writer.WriteBytes(_discState.SessionMsf);
         for (var i = 0; i < _discState.Toc.Length; i++)
         {
-            var entry = _discState.Toc[i];
+            TocEntry entry = _discState.Toc[i];
             writer.WriteByte(entry.Reserved0);
             writer.WriteByte(entry.Control);
             writer.WriteByte(entry.TrackNumber);
@@ -626,7 +627,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
                 _status[0] = 0x8C;
                 if ((_xbusStatus & (CdstTray | CdstDisc | CdstSpin)) != 0)
                 {
-                    var entry = _discState.Toc[_command[2]];
+                    TocEntry entry = _discState.Toc[_command[2]];
                     _status[1] = entry.Reserved0;
                     _status[2] = entry.Control;
                     _status[3] = entry.TrackNumber;
@@ -900,6 +901,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         IllegalRequest = 0x17,
     }
 
+    [StructLayout(LayoutKind.Sequential)]
     private struct TocEntry
     {
         internal byte Reserved0;

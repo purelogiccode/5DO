@@ -52,7 +52,7 @@ public static class FrameDumper
             Directory.CreateDirectory(directory);
         }
 
-        using var stream = File.Create(path);
+        using FileStream stream = File.Create(path);
         Span<byte> header = stackalloc byte[FileHeaderSize + InfoHeaderSize];
         header[0] = (byte)'B';
         header[1] = (byte)'M';

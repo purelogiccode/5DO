@@ -15,7 +15,7 @@ public sealed class CelLiteralRasterizerTests
     [Fact]
     public void LiteralLine_DrawsOnePixelAndCountsCycles()
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         WriteLiteralCcb(memory, vcnt: 0, widthMinusOne: 0, pre0: 1, pre1: 0, loadPlut: true);
         WritePlut(memory, 0, 0x7fff);
         WriteBytes(memory, SourceData + 8, 0x80);
@@ -29,7 +29,7 @@ public sealed class CelLiteralRasterizerTests
     [Fact]
     public void LiteralLine_HonorsBackgroundFlagForZeroPixel()
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         WriteLiteralCcb(
             memory,
             vcnt: 0,
@@ -50,7 +50,7 @@ public sealed class CelLiteralRasterizerTests
     [Fact]
     public void LiteralScale_DrawsScaledRectangle()
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         WriteLiteralCcb(
             memory,
             vcnt: 0,
@@ -77,7 +77,7 @@ public sealed class CelLiteralRasterizerTests
     [Fact]
     public void LrLine_DrawsTwoRowsAndCountsHalfwordReads()
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         WriteLrCcb(memory);
         memory.Ram.Write16(0x208, 0x7fff);
         memory.Ram.Write16(0x20a, 0x7fff);
@@ -92,7 +92,7 @@ public sealed class CelLiteralRasterizerTests
     [Fact]
     public void LiteralArbitrary_FillsQuad()
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         WriteLiteralCcb(
             memory,
             vcnt: 0,
@@ -114,7 +114,7 @@ public sealed class CelLiteralRasterizerTests
     [Fact]
     public void LiteralLine_BitTiming6UsesDoubledY()
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         madam.Compatibility.FixMode = FixMode.BitTiming6;
         WriteLiteralCcb(
             memory,
@@ -136,7 +136,7 @@ public sealed class CelLiteralRasterizerTests
     [Fact]
     public void LrScale_DrawsScaledRows()
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         WriteLrCcb(memory, hdx: 0x20000, hdy: 0, vdx: 0, vdy: 0x20000);
         memory.Ram.Write16(0x208, 0x7fff);
         memory.Ram.Write16(0x20a, 0x7fff);
@@ -150,7 +150,7 @@ public sealed class CelLiteralRasterizerTests
     [Fact]
     public void LrArbitrary_FillsQuad()
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         WriteLrCcb(
             memory,
             hdx: 0x10000,
@@ -176,7 +176,7 @@ public sealed class CelLiteralRasterizerTests
     [InlineData(5, 0x01)]
     public void LiteralLine_DecodesEveryCodedBpp(int bppIndex, byte firstByte)
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         WriteLiteralCcb(
             memory,
             vcnt: 0,
@@ -196,7 +196,7 @@ public sealed class CelLiteralRasterizerTests
     [Fact]
     public void LiteralLine_DrawsLinear16Bpp()
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         WriteLiteralCcb(
             memory,
             vcnt: 0,
@@ -215,7 +215,7 @@ public sealed class CelLiteralRasterizerTests
     [Fact]
     public void MultiCcb_ReloadsPlutAndDrawsBothCels()
     {
-        var (memory, madam) = CreateScene();
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
         WritePackedCcbAt(
             memory,
             ccb: 0x100,
@@ -284,14 +284,14 @@ public sealed class CelLiteralRasterizerTests
         int hddx = 0,
         int hddy = 0)
     {
-        var flags = CcbControl.Last
-            | CcbControl.NextPointerAbsolute
-            | CcbControl.SourcePointerAbsolute
-            | CcbControl.LoadSize
-            | CcbControl.LoadPixelProcessor
-            | CcbControl.HasPosition
-            | CcbControl.Clockwise
-            | extraFlags;
+        CcbControl flags = CcbControl.Last
+                           | CcbControl.NextPointerAbsolute
+                           | CcbControl.SourcePointerAbsolute
+                           | CcbControl.LoadSize
+                           | CcbControl.LoadPixelProcessor
+                           | CcbControl.HasPosition
+                           | CcbControl.Clockwise
+                           | extraFlags;
 
         if (loadPlut)
         {
@@ -355,13 +355,13 @@ public sealed class CelLiteralRasterizerTests
         int hddx = 0,
         int hddy = 0)
     {
-        var flags = CcbControl.Last
-            | CcbControl.NextPointerAbsolute
-            | CcbControl.SourcePointerAbsolute
-            | CcbControl.LoadSize
-            | CcbControl.LoadPixelProcessor
-            | CcbControl.HasPosition
-            | CcbControl.Clockwise;
+        CcbControl flags = CcbControl.Last
+                           | CcbControl.NextPointerAbsolute
+                           | CcbControl.SourcePointerAbsolute
+                           | CcbControl.LoadSize
+                           | CcbControl.LoadPixelProcessor
+                           | CcbControl.HasPosition
+                           | CcbControl.Clockwise;
 
         if (includePerspective)
         {
@@ -416,15 +416,15 @@ public sealed class CelLiteralRasterizerTests
         int xpos,
         int ypos)
     {
-        var flags = CcbControl.NextPointerAbsolute
-            | CcbControl.SourcePointerAbsolute
-            | CcbControl.PlutPointerAbsolute
-            | CcbControl.LoadPlut
-            | CcbControl.LoadSize
-            | CcbControl.LoadPixelProcessor
-            | CcbControl.HasPosition
-            | CcbControl.Packed
-            | CcbControl.Clockwise;
+        CcbControl flags = CcbControl.NextPointerAbsolute
+                           | CcbControl.SourcePointerAbsolute
+                           | CcbControl.PlutPointerAbsolute
+                           | CcbControl.LoadPlut
+                           | CcbControl.LoadSize
+                           | CcbControl.LoadPixelProcessor
+                           | CcbControl.HasPosition
+                           | CcbControl.Packed
+                           | CcbControl.Clockwise;
 
         if (last)
         {

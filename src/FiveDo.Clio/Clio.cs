@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using FiveDo.Core;
 
 namespace FiveDo.Clio;
@@ -512,7 +513,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
                 return;
             }
 
-            ref var fifo = ref _inputFifos[index];
+            ref FifoDescriptor fifo = ref _inputFifos[index];
             switch (field)
             {
                 case 0:
@@ -539,7 +540,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
             return;
         }
 
-        ref var output = ref _outputFifos[index];
+        ref FifoDescriptor output = ref _outputFifos[index];
         switch (field)
         {
             case 0:
@@ -572,7 +573,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
                 return 0;
             }
 
-            ref var fifo = ref _inputFifos[index];
+            ref FifoDescriptor fifo = ref _inputFifos[index];
             return field switch
             {
                 0 => unchecked(fifo.StartAddress + (uint)_inputPointers[index]),
@@ -588,7 +589,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
             return 0;
         }
 
-        ref var output = ref _outputFifos[index];
+        ref FifoDescriptor output = ref _outputFifos[index];
         return field switch
         {
             0 => unchecked(output.StartAddress + (uint)_outputPointers[index]),
@@ -609,7 +610,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
             return 0;
         }
 
-        ref var fifo = ref _inputFifos[channel];
+        ref FifoDescriptor fifo = ref _inputFifos[channel];
         if (fifo.StartAddress == 0)
         {
             return 0;
@@ -652,7 +653,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
             return 0;
         }
 
-        ref var fifo = ref _inputFifos[channel];
+        ref FifoDescriptor fifo = ref _inputFifos[channel];
         return Ram?.Read16((fifo.StartAddress + (uint)_inputPointers[channel]) ^ 2) ?? 0;
     }
 
@@ -666,7 +667,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
             return;
         }
 
-        ref var fifo = ref _outputFifos[channel];
+        ref FifoDescriptor fifo = ref _outputFifos[channel];
         if (fifo.StartAddress == 0)
         {
             return;
@@ -871,6 +872,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         GenerateFiq(1u << 29, 0);
     }
 
+    [StructLayout(LayoutKind.Sequential)]
     private struct FifoDescriptor
     {
         public uint StartAddress;

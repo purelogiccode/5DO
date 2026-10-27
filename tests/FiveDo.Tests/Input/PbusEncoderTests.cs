@@ -21,10 +21,10 @@ public sealed class PbusEncoderTests
     [Fact]
     public void AllButtons_MapToTheReferenceLowAndHighBytes()
     {
-        var all = ControllerButton.A | ControllerButton.B | ControllerButton.C
-            | ControllerButton.P | ControllerButton.X | ControllerButton.L
-            | ControllerButton.R | ControllerButton.Up | ControllerButton.Down
-            | ControllerButton.Left | ControllerButton.Right;
+        ControllerButton all = ControllerButton.A | ControllerButton.B | ControllerButton.C
+                               | ControllerButton.P | ControllerButton.X | ControllerButton.L
+                               | ControllerButton.R | ControllerButton.Up | ControllerButton.Down
+                               | ControllerButton.Left | ControllerButton.Right;
         var packet = new byte[PbusEncoder.PacketSize];
         PbusEncoder.Encode([new ControllerState(all)], packet);
 

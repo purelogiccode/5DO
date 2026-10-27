@@ -55,10 +55,10 @@ public sealed class VdlFrameUploader
 
         for (var y = 0; y < height; y++)
         {
-            var line = frame[y];
+            VdlLine line = frame[y];
             var lineWidth = Math.Min(line.Width, width);
             var pixelDestination = y * width;
-            var source = line.Pixels;
+            Span<ushort> source = line.Pixels;
             source[..lineWidth].CopyTo(_pixels.AsSpan(pixelDestination, lineWidth));
             if (lineWidth < width)
             {

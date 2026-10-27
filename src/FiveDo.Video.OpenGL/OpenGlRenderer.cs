@@ -164,7 +164,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         ArgumentOutOfRangeException.ThrowIfLessThan(width, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(height, 1);
         DisposeResources();
-        var gl = _adapter.Gl;
+        GL gl = _adapter.Gl;
         _outputWidth = width;
         _outputHeight = height;
         var version = gl.GetStringS(StringName.Version) ?? string.Empty;
@@ -280,7 +280,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             _sourceHeight = height;
         }
 
-        var gl = _adapter.Gl;
+        GL gl = _adapter.Gl;
         var measureGpu = false;
         if (_supportsGpuTiming)
         {
@@ -306,7 +306,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         gl.UseProgram(_paletteProgram);
         gl.Uniform2(_uPaletteSource, width, height);
         gl.Uniform4(_uPaletteRect, 0f, 0f, width, height);
-        gl.Uniform2(_uPaletteOutput, (float)width, (float)height);
+        gl.Uniform2(_uPaletteOutput, width, height);
 
         gl.ActiveTexture(TextureUnit.Texture0);
         gl.BindTexture(TextureTarget.Texture2D, _pixelTexture);
@@ -320,7 +320,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
         // Stage 2: optionally run the edge-directed xBR pass at 4x source resolution,
         // then scale/filter into the output framebuffer.
-        var viewport = ViewportCalculator.Compute(width, height, _outputWidth, _outputHeight, _settings);
+        ViewportRect viewport = ViewportCalculator.Compute(width, height, _outputWidth, _outputHeight, _settings);
         var useXbr = _settings.Filter == VideoFilter.Xbr
             && width * 4 <= _capabilities.MaxTextureSize
             && height * 4 <= _capabilities.MaxTextureSize;
@@ -339,7 +339,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             var xbrHeight = height * 4;
             EnsureXbrTarget(gl, xbrWidth, xbrHeight);
             EnsureXbrSource(gl, width, height);
-            var cpuFrame = _xbrCpuFrame!;
+            FrameBuffer cpuFrame = _xbrCpuFrame!;
             FrameAssembler.Assemble(frame, cpuFrame, cpuFrame.Width, cpuFrame.Height);
             gl.ActiveTexture(TextureUnit.Texture0);
             gl.BindTexture(TextureTarget.Texture2D, _xbrSourceTexture);
@@ -356,8 +356,8 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             gl.BindFramebuffer(FramebufferTarget.Framebuffer, _xbrFbo);
             gl.Viewport(0, 0, (uint)xbrWidth, (uint)xbrHeight);
             gl.UseProgram(_xbrProgram);
-            gl.Uniform4(_uXbrRect, 0f, 0f, (float)xbrWidth, (float)xbrHeight);
-            gl.Uniform2(_uXbrVertexOutput, (float)xbrWidth, (float)xbrHeight);
+            gl.Uniform4(_uXbrRect, 0f, 0f, xbrWidth, xbrHeight);
+            gl.Uniform2(_uXbrVertexOutput, xbrWidth, xbrHeight);
             gl.Uniform2(_uXbrSource, width, height);
             gl.Uniform2(_uXbrOutput, xbrWidth, xbrHeight);
             gl.ActiveTexture(TextureUnit.Texture0);
@@ -379,8 +379,8 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             var hqxHeight = height * hqxScale;
             EnsureHqxTarget(gl, hqxWidth, hqxHeight);
             EnsureHqxSource(width, height, hqxScale);
-            var sourceFrame = _hqxSourceFrame!;
-            var cpuFrame = _hqxCpuFrame!;
+            FrameBuffer sourceFrame = _hqxSourceFrame!;
+            FrameBuffer cpuFrame = _hqxCpuFrame!;
             FrameAssembler.Assemble(frame, sourceFrame, sourceFrame.Width, sourceFrame.Height);
             _hqxProcessor.Expand(sourceFrame, cpuFrame);
             gl.ActiveTexture(TextureUnit.Texture0);
@@ -410,11 +410,11 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         gl.Uniform2(_uScaleSource, filterSourceWidth, filterSourceHeight);
         gl.Uniform4(
             _uScaleRect,
-            (float)viewport.X,
-            (float)viewport.Y,
-            (float)viewport.Width,
-            (float)viewport.Height);
-        gl.Uniform2(_uScaleOutput, (float)_outputWidth, (float)_outputHeight);
+            viewport.X,
+            viewport.Y,
+            viewport.Width,
+            viewport.Height);
+        gl.Uniform2(_uScaleOutput, _outputWidth, _outputHeight);
         gl.Uniform1(_uScaleFilter, scaleFilter);
         gl.Uniform1(_uScaleScanline, _settings.ScanlineStrength);
         gl.Uniform1(_uScaleBloom, _settings.Filter == VideoFilter.Crt ? _settings.Bloom : 0f);
@@ -456,7 +456,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             throw new ArgumentException($"The destination needs {required} bytes.", nameof(destination));
         }
 
-        var gl = _adapter.Gl;
+        GL gl = _adapter.Gl;
         gl.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)_adapter.Framebuffer);
         var rgba = new byte[required];
         gl.ReadPixels(0, 0, (uint)width, (uint)height, GlPixelFormat.Rgba, PixelType.UnsignedByte, rgba.AsSpan());
@@ -547,7 +547,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             TextureTarget.Texture2D,
             _paletteTexture,
             0);
-        var status = gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+        GLEnum status = gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
         if (status != GLEnum.FramebufferComplete)
         {
             throw new InvalidOperationException($"Palette framebuffer is incomplete: {status}.");
@@ -586,7 +586,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             TextureTarget.Texture2D,
             _xbrTexture,
             0);
-        var status = gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+        GLEnum status = gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
         if (status != GLEnum.FramebufferComplete)
         {
             throw new InvalidOperationException($"xBR framebuffer is incomplete: {status}.");
@@ -784,7 +784,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             return;
         }
 
-        var gl = _adapter.Gl;
+        GL gl = _adapter.Gl;
         if (_paletteProgram != 0)
         {
             gl.DeleteProgram(_paletteProgram);

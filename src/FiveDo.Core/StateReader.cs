@@ -54,7 +54,7 @@ public class StateReader : IStateReader
             throw new InvalidStateException($"Section 0x{id:X8} is truncated.");
         }
 
-        var payload = _data.Slice(_position, payloadLength);
+        ReadOnlyMemory<byte> payload = _data.Slice(_position, payloadLength);
         _position += payloadLength;
         var expectedCrc = ReadUInt32();
         var actualCrc = StateCrc32.Compute(payload.Span);
@@ -72,7 +72,7 @@ public class StateReader : IStateReader
     /// <exception cref="InvalidStateException">Thrown when no section remains or the section is invalid.</exception>
     public StateSectionReader ReadSection()
     {
-        if (!TryReadSection(out var section))
+        if (!TryReadSection(out StateSectionReader? section))
         {
             throw new InvalidStateException("The state ended before the expected section.");
         }
@@ -156,7 +156,7 @@ public class StateReader : IStateReader
         }
 
         EnsureAvailable(byteCount, "string");
-        var bytes = _data.Span.Slice(_position, byteCount);
+        ReadOnlySpan<byte> bytes = _data.Span.Slice(_position, byteCount);
         _position += byteCount;
 
         try

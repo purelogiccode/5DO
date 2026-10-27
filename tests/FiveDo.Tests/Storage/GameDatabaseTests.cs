@@ -10,10 +10,10 @@ public sealed class GameDatabaseTests
     [Fact]
     public void DefaultDatabase_ContainsKnownRecords()
     {
-        var database = GameDatabase.Default;
+        GameDatabase database = GameDatabase.Default;
 
         Assert.True(database.Count > 100);
-        var record = database.FindByChecksum("00256A21C9476CAADBBE49BDA7FE2050");
+        GameRecord? record = database.FindByChecksum("00256A21C9476CAADBBE49BDA7FE2050");
         Assert.NotNull(record);
         Assert.Equal("Out of this World", record.Name);
         Assert.Equal("00256A21", record.Id);
@@ -75,7 +75,7 @@ public sealed class InputProfileTests
             profile.Players[0].Keyboard["Q"] = ControllerButton.C;
 
             InputProfileStore.Save(path, profile);
-            var loaded = InputProfileStore.Load(path);
+            InputProfile loaded = InputProfileStore.Load(path);
 
             Assert.Equal(ControllerButton.C, loaded.Players[0].Keyboard["Q"]);
             Assert.Equal(profile.Hotkeys["SaveState"], loaded.Hotkeys["SaveState"]);
@@ -99,7 +99,7 @@ public sealed class InputProfileTests
     public void Load_CreatesDefaultsWhenMissing()
     {
         var path = Path.Combine(Path.GetTempPath(), $"fivedo-profile-{Guid.NewGuid():N}", "input.json");
-        var profile = InputProfileStore.Load(path);
+        InputProfile profile = InputProfileStore.Load(path);
 
         Assert.Equal(6, profile.Players.Length);
         Assert.True(File.Exists(path));

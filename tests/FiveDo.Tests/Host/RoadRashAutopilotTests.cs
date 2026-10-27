@@ -1,4 +1,3 @@
-using System;
 using FiveDo.Core;
 using FiveDo.Host;
 using FiveDo.Input;
@@ -11,9 +10,9 @@ public sealed class RoadRashAutopilotTests
     public void Update_SteersTowardTheRoadCentreAndHoldsAccelerate()
     {
         var autopilot = new RoadRashAutopilot();
-        var frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
 
-        var state = autopilot.Update(frame, 0);
+        ControllerState state = autopilot.Update(frame, 0);
 
         Assert.True(state.IsDown(ControllerButton.B));
         Assert.True(state.IsDown(ControllerButton.Left));
@@ -26,10 +25,10 @@ public sealed class RoadRashAutopilotTests
     public void Update_SteersRightWhenTheRoadCentreIsRightOfTarget()
     {
         var autopilot = new RoadRashAutopilot();
-        var frame = MakeRoadFrame(roadLeft: 220, roadRight: 320);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 220, roadRight: 320);
         OpenLookahead(frame);
 
-        var state = autopilot.Update(frame, 0);
+        ControllerState state = autopilot.Update(frame, 0);
 
         Assert.True(state.IsDown(ControllerButton.B));
         Assert.True(state.IsDown(ControllerButton.Right));
@@ -41,9 +40,9 @@ public sealed class RoadRashAutopilotTests
     public void Update_ReleasesSteeringWhenTheRoadIsNearTheTarget()
     {
         var autopilot = new RoadRashAutopilot();
-        var frame = MakeRoadFrame(roadLeft: 140, roadRight: 320);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 140, roadRight: 320);
 
-        var state = autopilot.Update(frame, 0);
+        ControllerState state = autopilot.Update(frame, 0);
 
         Assert.True(state.IsDown(ControllerButton.B));
         Assert.False(state.IsDown(ControllerButton.Left));
@@ -56,10 +55,10 @@ public sealed class RoadRashAutopilotTests
         var autopilot = new RoadRashAutopilot();
         // Road centred near the target, but the centre/left lookahead band is
         // blocked while the right side stays clear.
-        var frame = MakeRoadFrame(roadLeft: 130, roadRight: 330);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 130, roadRight: 330);
         BlockLookahead(frame, x0: 160, x1: 250);
 
-        var state = autopilot.Update(frame, 0);
+        ControllerState state = autopilot.Update(frame, 0);
 
         Assert.Equal(1, autopilot.ObstacleSteer);
         Assert.True(state.IsDown(ControllerButton.B));
@@ -73,7 +72,7 @@ public sealed class RoadRashAutopilotTests
         var autopilot = new RoadRashAutopilot();
         // Road centre well left of target; the same view never changes.
         // (Road 60-260 keeps the lookahead open so no brake rule fires.)
-        var frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
         OpenLookahead(frame);
 
         ControllerState state = default;
@@ -93,10 +92,10 @@ public sealed class RoadRashAutopilotTests
     public void Update_BrakesWhenTheRoadAheadIsFullyBlocked()
     {
         var autopilot = new RoadRashAutopilot();
-        var frame = MakeRoadFrame(roadLeft: 60, roadRight: 320);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 60, roadRight: 320);
         BlockLookahead(frame, x0: 120, x1: 310);
 
-        var state = autopilot.Update(frame, 0);
+        ControllerState state = autopilot.Update(frame, 0);
 
         Assert.True(autopilot.EmergencyBrake);
         Assert.True(state.IsDown(ControllerButton.A));
@@ -109,10 +108,10 @@ public sealed class RoadRashAutopilotTests
         var autopilot = new RoadRashAutopilot();
         // Lower band centred on target, but the lookahead centre is narrowing
         // while the right side stays open: steer right early.
-        var frame = MakeRoadFrame(roadLeft: 130, roadRight: 330);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 130, roadRight: 330);
         NarrowLookahead(frame, leftRoad: (120, 130), centreRoad: (190, 220), rightRoad: (250, 310));
 
-        var state = autopilot.Update(frame, 0);
+        ControllerState state = autopilot.Update(frame, 0);
 
         Assert.Equal(1, autopilot.ObstacleSteer);
         Assert.True(state.IsDown(ControllerButton.Right));
@@ -126,10 +125,10 @@ public sealed class RoadRashAutopilotTests
         // Lower band on the road, but the lookahead centre and left are
         // blocked while the right is wide open: brake into the bend instead
         // of taking it at full throttle.
-        var frame = MakeRoadFrame(roadLeft: 130, roadRight: 330);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 130, roadRight: 330);
         NarrowLookahead(frame, leftRoad: (120, 130), centreRoad: (190, 200), rightRoad: (250, 310));
 
-        var state = autopilot.Update(frame, 0);
+        ControllerState state = autopilot.Update(frame, 0);
 
         Assert.Equal(1, autopilot.ObstacleSteer);
         Assert.True(autopilot.EmergencyBrake);
@@ -147,10 +146,10 @@ public sealed class RoadRashAutopilotTests
         // The old obstacle rule needed a 0.6-wide opening, so the driver ran
         // straight into the racer at ~33,850. Braking here stopped the bike
         // dead and got it busted, so this rule only lifts the throttle.
-        var frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
         NarrowLookahead(frame, leftRoad: (120, 150), centreRoad: (0, 0), rightRoad: (0, 0));
 
-        var state = autopilot.Update(frame, 0);
+        ControllerState state = autopilot.Update(frame, 0);
 
         Assert.Equal(-1, autopilot.ObstacleSteer);
         Assert.True(autopilot.Caution);
@@ -166,7 +165,7 @@ public sealed class RoadRashAutopilotTests
         var autopilot = new RoadRashAutopilot();
         // First decision: road left of target, so the normal 16-frame
         // decision interval is running.
-        var first = MakeRoadFrame(roadLeft: 60, roadRight: 260);
+        VdlFrame first = MakeRoadFrame(roadLeft: 60, roadRight: 260);
         OpenLookahead(first);
         autopilot.Update(first, 0);
 
@@ -174,9 +173,9 @@ public sealed class RoadRashAutopilotTests
         // right has a narrow opening. The old code ignored ObstacleSteer
         // until the interval expired, which let the bike drift into the
         // racer/tree at 33,801-33,886.
-        var second = MakeRoadFrame(roadLeft: 130, roadRight: 330);
+        VdlFrame second = MakeRoadFrame(roadLeft: 130, roadRight: 330);
         NarrowLookahead(second, leftRoad: (0, 0), centreRoad: (0, 0), rightRoad: (250, 280));
-        var state = autopilot.Update(second, 4);
+        ControllerState state = autopilot.Update(second, 4);
 
         Assert.Equal(1, autopilot.ObstacleSteer);
         Assert.True(state.IsDown(ControllerButton.Right));
@@ -188,18 +187,18 @@ public sealed class RoadRashAutopilotTests
     {
         var autopilot = new RoadRashAutopilot();
         // Narrow right-side opening with the centre blocked: escape right.
-        var first = MakeRoadFrame(roadLeft: 130, roadRight: 330);
+        VdlFrame first = MakeRoadFrame(roadLeft: 130, roadRight: 330);
         NarrowLookahead(first, leftRoad: (0, 0), centreRoad: (0, 0), rightRoad: (250, 310));
-        var firstState = autopilot.Update(first, 0);
+        ControllerState firstState = autopilot.Update(first, 0);
         Assert.True(autopilot.EmergencyBrake);
         Assert.True(firstState.IsDown(ControllerButton.Right));
 
         // Fully blocked ahead, same lower-band road: brake and keep the last
         // escape steer instead of chasing the lower-band centre (which is
         // already at the target here) back to straight.
-        var second = MakeRoadFrame(roadLeft: 130, roadRight: 330);
+        VdlFrame second = MakeRoadFrame(roadLeft: 130, roadRight: 330);
         BlockLookahead(second, x0: 120, x1: 310);
-        var state = autopilot.Update(second, 20);
+        ControllerState state = autopilot.Update(second, 20);
 
         Assert.True(autopilot.EmergencyBrake);
         Assert.True(state.IsDown(ControllerButton.A));
@@ -215,7 +214,7 @@ public sealed class RoadRashAutopilotTests
         // blocked. Manual probes showed B alone remounts (34,500 and 80,000
         // -> 52 mph); steering kept the rider running in place or drove into
         // the wall, so the restart holds B with straight bars.
-        var frame = MakeRoadFrame(roadLeft: 40, roadRight: 200);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 40, roadRight: 200);
         BlockLookahead(frame, x0: 120, x1: 310);
 
         ControllerState state = default;
@@ -235,7 +234,7 @@ public sealed class RoadRashAutopilotTests
     public void Update_EndsCrashRestartWhenTheSceneMovesAgain()
     {
         var autopilot = new RoadRashAutopilot();
-        var frame = MakeRoadFrame(roadLeft: 40, roadRight: 200);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 40, roadRight: 200);
         BlockLookahead(frame, x0: 120, x1: 310);
 
         for (long f = 0; f <= RoadRashAutopilot.StoppedTriggerFrames + 5; f++)
@@ -265,7 +264,7 @@ public sealed class RoadRashAutopilotTests
         // A moving view with open road is a normal race: the stopped-scene
         // detector must not override the driver just because the fixture is
         // otherwise stable.
-        var frame = MakeRoadFrame(roadLeft: 140, roadRight: 320);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 140, roadRight: 320);
         OpenLookahead(frame);
 
         for (long f = 0; f <= RoadRashAutopilot.StoppedTriggerFrames + 40; f++)
@@ -285,7 +284,7 @@ public sealed class RoadRashAutopilotTests
         // wreck; the road ahead looked open (0.57/0.99/0.93) and the old
         // gate kept the driver pacing forever. A still scene with throttle
         // applied is enough to restart.
-        var frame = MakeRoadFrame(roadLeft: 140, roadRight: 320);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 140, roadRight: 320);
         OpenLookahead(frame);
 
         ControllerState state = default;
@@ -304,7 +303,7 @@ public sealed class RoadRashAutopilotTests
         var autopilot = new RoadRashAutopilot();
         // Road centre well left of target; the same view never changes.
         // (Road 60-260 keeps the lookahead open so no brake rule fires.)
-        var frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
         OpenLookahead(frame);
 
         ControllerState state = default;
@@ -340,10 +339,10 @@ public sealed class RoadRashAutopilotTests
         // Off-centre road steering left while the lookahead centre narrows
         // with the left side open: coast so the bike rotates instead of
         // understeering into the outside wall.
-        var frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
         NarrowLookahead(frame, leftRoad: (120, 190), centreRoad: (190, 230), rightRoad: (250, 260));
 
-        var state = autopilot.Update(frame, 0);
+        ControllerState state = autopilot.Update(frame, 0);
 
         Assert.True(state.IsDown(ControllerButton.Left));
         Assert.False(state.IsDown(ControllerButton.A));
@@ -356,10 +355,10 @@ public sealed class RoadRashAutopilotTests
         var autopilot = new RoadRashAutopilot();
         // Left of target with the left lookahead partially blocked and the
         // right wide open: cross to the open side and lift while doing so.
-        var frame = MakeRoadFrame(roadLeft: 100, roadRight: 200);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 100, roadRight: 200);
         NarrowLookahead(frame, leftRoad: (120, 160), centreRoad: (190, 250), rightRoad: (250, 310));
 
-        var state = autopilot.Update(frame, 0);
+        ControllerState state = autopilot.Update(frame, 0);
 
         Assert.Equal(1, autopilot.ObstacleSteer);
         Assert.True(autopilot.Caution);
@@ -374,13 +373,13 @@ public sealed class RoadRashAutopilotTests
         var autopilot = new RoadRashAutopilot();
         // Road visible ahead but the right edge is close: duty-cycle the
         // throttle instead of holding it flat out.
-        var frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
 
-        var onPhase = autopilot.Update(frame, 0);
+        ControllerState onPhase = autopilot.Update(frame, 0);
         Assert.True(autopilot.UrbanPacing);
         Assert.True(onPhase.IsDown(ControllerButton.B));
 
-        var offPhase = autopilot.Update(frame, RoadRashAutopilot.PacingOnFrames + 10);
+        ControllerState offPhase = autopilot.Update(frame, RoadRashAutopilot.PacingOnFrames + 10);
         Assert.True(autopilot.UrbanPacing);
         Assert.False(offPhase.IsDown(ControllerButton.B));
         Assert.False(offPhase.IsDown(ControllerButton.A));
@@ -393,12 +392,12 @@ public sealed class RoadRashAutopilotTests
         // Road centred, then the detector re-locks 160px away (sidewalk):
         // hold straight instead of chasing the false lock off-road, keeping
         // the pacing duty so the bike keeps rolling.
-        var first = MakeRoadFrame(roadLeft: 140, roadRight: 320);
+        VdlFrame first = MakeRoadFrame(roadLeft: 140, roadRight: 320);
         autopilot.Update(first, 0);
 
-        var second = MakeRoadFrame(roadLeft: 20, roadRight: 120);
+        VdlFrame second = MakeRoadFrame(roadLeft: 20, roadRight: 120);
         OpenLookahead(second);
-        var state = autopilot.Update(second, 4);
+        ControllerState state = autopilot.Update(second, 4);
 
         Assert.True(autopilot.DetectorUpset);
         Assert.False(state.IsDown(ControllerButton.Left));
@@ -414,14 +413,13 @@ public sealed class RoadRashAutopilotTests
         // Same narrow-canyon view every frame: Caution would coast forever,
         // but a long coast stalls the bike and gets it busted, so the floor
         // forces the throttle back on.
-        var frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
         NarrowLookahead(frame, leftRoad: (120, 130), centreRoad: (190, 250), rightRoad: (250, 260));
 
         var forced = false;
-        ControllerState state = default;
         for (long f = 0; f <= RoadRashAutopilot.MaxCoastFrames + 4; f++)
         {
-            state = autopilot.Update(frame, f);
+            ControllerState state = autopilot.Update(frame, f);
             forced |= state.IsDown(ControllerButton.B);
         }
 
@@ -433,13 +431,13 @@ public sealed class RoadRashAutopilotTests
     {
         var autopilot = new RoadRashAutopilot();
         // First decision: road left of target with the right side open.
-        var first = MakeRoadFrame(roadLeft: 116, roadRight: 316);
+        VdlFrame first = MakeRoadFrame(roadLeft: 116, roadRight: 316);
         autopilot.Update(first, 0);
 
         // The centre drifts 14px to the target while the lower band stays
         // strongly right-sided: treat it as a wall re-lock, not convergence.
-        var second = MakeRoadFrame(roadLeft: 140, roadRight: 320);
-        var state = autopilot.Update(second, 16);
+        VdlFrame second = MakeRoadFrame(roadLeft: 140, roadRight: 320);
+        ControllerState state = autopilot.Update(second, 16);
 
         Assert.True(state.IsDown(ControllerButton.Right));
     }
@@ -448,13 +446,13 @@ public sealed class RoadRashAutopilotTests
     public void Update_AdvancesALongStaticMenuWithA()
     {
         var autopilot = new RoadRashAutopilot { EnableMenuAdvance = true };
-        var frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
+        VdlFrame frame = MakeRoadFrame(roadLeft: 60, roadRight: 260);
         var sawMenuAdvance = false;
         var sawA = false;
 
         for (long f = 0; f < RoadRashAutopilot.MenuAdvanceStaticFrames + 80; f++)
         {
-            var state = autopilot.Update(frame, f);
+            ControllerState state = autopilot.Update(frame, f);
             if (!autopilot.MenuAdvance)
             {
                 continue;
@@ -472,7 +470,7 @@ public sealed class RoadRashAutopilotTests
     private static VdlFrame MakeRoadFrame(int roadLeft, int roadRight)
     {
         var frame = new VdlFrame();
-        foreach (var line in frame.Lines)
+        foreach (VdlLine line in frame.Lines)
         {
             line.Clear();
             line.ClutR[0] = 0;
@@ -490,7 +488,7 @@ public sealed class RoadRashAutopilotTests
 
         for (var y = 120; y < 220; y++)
         {
-            var line = frame.Lines[y];
+            VdlLine line = frame.Lines[y];
             for (var x = 0; x < 320; x++)
             {
                 line.PixelBuffer[x] = (ushort)(x >= roadLeft && x < roadRight ? 1 : 0);
@@ -506,7 +504,7 @@ public sealed class RoadRashAutopilotTests
     {
         for (var y = 120; y < 150; y++)
         {
-            var line = frame.Lines[y];
+            VdlLine line = frame.Lines[y];
             for (var x = x0; x < x1; x++)
             {
                 line.PixelBuffer[x] = 0;
@@ -526,7 +524,7 @@ public sealed class RoadRashAutopilotTests
         var index = (ushort)(frameNumber % 2 == 0 ? 1 : 10);
         for (var y = 120; y < 150; y++)
         {
-            var line = frame.Lines[y];
+            VdlLine line = frame.Lines[y];
             for (var x = 120; x < 310; x++)
             {
                 line.PixelBuffer[x] = index;
@@ -540,7 +538,7 @@ public sealed class RoadRashAutopilotTests
         // looks like a wreck.
         for (var y = 96; y <= 156; y += 12)
         {
-            var line = frame.Lines[y];
+            VdlLine line = frame.Lines[y];
             for (var x = 20; x < 140; x++)
             {
                 line.PixelBuffer[x] = index;
@@ -554,7 +552,7 @@ public sealed class RoadRashAutopilotTests
     {
         for (var y = 120; y < 150; y++)
         {
-            var line = frame.Lines[y];
+            VdlLine line = frame.Lines[y];
             for (var x = 120; x < 310; x++)
             {
                 line.PixelBuffer[x] = 1;
@@ -572,7 +570,7 @@ public sealed class RoadRashAutopilotTests
     {
         for (var y = 120; y < 150; y++)
         {
-            var line = frame.Lines[y];
+            VdlLine line = frame.Lines[y];
             for (var x = 120; x < 310; x++)
             {
                 var road = (x >= leftRoad.Left && x < leftRoad.Right)

@@ -4,9 +4,7 @@ using System.IO;
 namespace FiveDo.Tests.Cli;
 
 [CollectionDefinition("Console", DisableParallelization = true)]
-public sealed class CliConsoleGroup
-{
-}
+public sealed class CliConsoleGroup;
 
 [Collection("Console")]
 public sealed class CliProcessTests
@@ -14,7 +12,7 @@ public sealed class CliProcessTests
     [Fact]
     public void Version_ReturnsZeroAndPrintsProductName()
     {
-        var result = Invoke("--version");
+        CliResult result = Invoke("--version");
 
         Assert.Equal(0, result.Code);
         Assert.Contains("5DO", result.Output, StringComparison.Ordinal);
@@ -23,7 +21,7 @@ public sealed class CliProcessTests
     [Fact]
     public void NoArguments_PrintsUsage()
     {
-        var result = Invoke();
+        CliResult result = Invoke();
 
         Assert.Equal(0, result.Code);
         Assert.Contains("Usage: 5do", result.Output, StringComparison.Ordinal);
@@ -32,7 +30,7 @@ public sealed class CliProcessTests
     [Fact]
     public void UnknownCommand_ReturnsTwo()
     {
-        var result = Invoke("not-a-command");
+        CliResult result = Invoke("not-a-command");
 
         Assert.Equal(2, result.Code);
         Assert.Contains("Unknown command", result.Error, StringComparison.Ordinal);
@@ -41,7 +39,7 @@ public sealed class CliProcessTests
     [Fact]
     public void UnknownCommand_JsonReturnsStructuredError()
     {
-        var result = Invoke("not-a-command", "--json");
+        CliResult result = Invoke("not-a-command", "--json");
 
         Assert.Equal(2, result.Code);
         Assert.Contains("\"ok\": false", result.Output, StringComparison.Ordinal);
@@ -51,7 +49,7 @@ public sealed class CliProcessTests
     [Fact]
     public void RunWithoutBios_ReturnsOne()
     {
-        var result = Invoke("run");
+        CliResult result = Invoke("run");
 
         Assert.Equal(1, result.Code);
         Assert.Contains("--bios", result.Error, StringComparison.Ordinal);
@@ -60,7 +58,7 @@ public sealed class CliProcessTests
     [Fact]
     public void StateInspectMissingFile_ReturnsOne()
     {
-        var result = Invoke("state", "inspect", Path.Combine(Path.GetTempPath(), "missing-fivedo-state.tdos"));
+        CliResult result = Invoke("state", "inspect", Path.Combine(Path.GetTempPath(), "missing-fivedo-state.tdos"));
 
         Assert.Equal(1, result.Code);
         Assert.Contains("error:", result.Error, StringComparison.Ordinal);
@@ -69,7 +67,7 @@ public sealed class CliProcessTests
     [Fact]
     public void Bench_ReturnsZero()
     {
-        var result = Invoke("bench", "--frames", "2");
+        CliResult result = Invoke("bench", "--frames", "2");
 
         Assert.Equal(0, result.Code);
         Assert.Contains("frames:", result.Output, StringComparison.Ordinal);
@@ -78,8 +76,8 @@ public sealed class CliProcessTests
 
     private static CliResult Invoke(params string[] args)
     {
-        var previousOut = Console.Out;
-        var previousError = Console.Error;
+        TextWriter previousOut = Console.Out;
+        TextWriter previousError = Console.Error;
         using var output = new StringWriter();
         using var error = new StringWriter();
         try

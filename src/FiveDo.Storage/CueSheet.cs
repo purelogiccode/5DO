@@ -36,7 +36,7 @@ public static class CueSheet
                 continue;
             }
 
-            var tokens = Tokenize(line);
+            List<string> tokens = Tokenize(line);
             if (tokens.Count == 0)
             {
                 continue;

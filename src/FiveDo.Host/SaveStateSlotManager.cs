@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using FiveDo.Core;
@@ -39,7 +40,7 @@ public sealed record SaveStateSlotInfo(
     public string DisplayName => string.IsNullOrWhiteSpace(GameName) ? "(unnamed)" : GameName;
 
     /// <summary>Gets the local save time, or an empty string when metadata is missing.</summary>
-    public string DisplaySavedAt => SavedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty;
+    public string DisplaySavedAt => SavedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) ?? string.Empty;
 
     /// <summary>Gets a value indicating whether a screenshot thumbnail is available.</summary>
     public bool HasThumbnail => !string.IsNullOrEmpty(ThumbnailPath);
@@ -221,11 +222,11 @@ public sealed class SaveStateSlotManager
         }
 
         var info = new FileInfo(statePath);
-        var metadata = ReadMetadata(slot);
+        SaveStateSlotMetadata? metadata = ReadMetadata(slot);
         var thumbnailPath = File.Exists(GetThumbnailPath(slot)) ? GetThumbnailPath(slot) : string.Empty;
         try
         {
-            var state = StateInspector.ReadHeader(statePath);
+            StateInfo state = StateInspector.ReadHeader(statePath);
             return new SaveStateSlotInfo(
                 slot,
                 statePath,
@@ -277,7 +278,7 @@ public sealed class SaveStateSlotManager
 
     private void WriteThumbnail(FiveDoMachine machine, int slot)
     {
-        var frame = machine.Frame;
+        VdlFrame frame = machine.Frame;
         if (frame.SourceWidth <= 0 || frame.SourceHeight <= 0)
         {
             return;

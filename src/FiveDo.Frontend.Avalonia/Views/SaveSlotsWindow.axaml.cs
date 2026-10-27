@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Avalonia.Controls;
@@ -99,7 +100,7 @@ public partial class SaveSlotsWindow : Window, IDisposable
     private void OnSaveCurrent(object? sender, RoutedEventArgs e)
     {
         var slot = SelectedSlot();
-        var info = _saveCurrent(slot);
+        SaveStateSlotInfo? info = _saveCurrent(slot);
         if (info is null)
         {
             StatusText.Text = "Load a BIOS and disc before saving.";
@@ -159,7 +160,7 @@ public partial class SaveSlotsWindow : Window, IDisposable
 
     private void Refresh()
     {
-        var slots = _manager.List();
+        IReadOnlyList<SaveStateSlotInfo> slots = _manager.List();
         SlotList.ItemsSource = slots;
         SlotList.SelectedItem = slots.FirstOrDefault(slot => slot.Slot == _manager.CurrentSlot) ?? slots[0];
         if (slots.All(slot => !slot.Exists))

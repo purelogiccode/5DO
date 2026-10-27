@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Threading;
 using FiveDo.Core;
 
@@ -26,8 +25,8 @@ public sealed class PrefetchingDiscSource : IDiscSource
 {
     private readonly IDiscSource _inner;
     private readonly int _capacity;
-    private readonly object _gate = new();
-    private readonly object _innerGate = new();
+    private readonly Lock _gate = new();
+    private readonly Lock _innerGate = new();
     private readonly Dictionary<int, byte[]> _cache = new();
     private readonly Queue<int> _cacheOrder = new();
     private readonly AutoResetEvent _wake = new(false);
@@ -72,10 +71,28 @@ public sealed class PrefetchingDiscSource : IDiscSource
     }
 
     /// <inheritdoc />
-    public int SectorCount => _inner.SectorCount;
+    public int SectorCount
+    {
+        get
+        {
+            lock (_innerGate)
+            {
+                return _inner.SectorCount;
+            }
+        }
+    }
 
     /// <inheritdoc />
-    public int SectorSize => _inner.SectorSize;
+    public int SectorSize
+    {
+        get
+        {
+            lock (_innerGate)
+            {
+                return _inner.SectorSize;
+            }
+        }
+    }
 
     /// <inheritdoc />
     public void ReadSector(int lba, Span<byte> destination)

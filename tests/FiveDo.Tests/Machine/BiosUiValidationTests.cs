@@ -33,8 +33,8 @@ public sealed class BiosUiValidationTests
             return;
         }
 
-        var first = RunBios(path);
-        var second = RunBios(path);
+        BiosFrame first = RunBios(path);
+        BiosFrame second = RunBios(path);
 
         Assert.True(first.NonBlackPixels > 0, "The BIOS produced an empty frame.");
         Assert.Equal(first.Hash, second.Hash);

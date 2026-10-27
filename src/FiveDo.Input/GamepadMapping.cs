@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace FiveDo.Input;
 
@@ -74,6 +75,7 @@ public enum GamepadButtons
 /// <param name="RightStickY">Right stick vertical axis, -1 down to +1 up.</param>
 /// <param name="LeftTrigger">Left analog trigger, 0 released to 1 fully pressed.</param>
 /// <param name="RightTrigger">Right analog trigger, 0 released to 1 fully pressed.</param>
+[StructLayout(LayoutKind.Sequential)]
 public readonly record struct GamepadState(
     GamepadButtons Buttons,
     float LeftStickX = 0f,
@@ -177,13 +179,13 @@ public static class GamepadMapper
                 "The trigger threshold must be between 0 and 1.");
         }
 
-        var result = ControllerState.Empty;
-        if (profile.Gamepad is null)
+        ControllerState result = ControllerState.Empty;
+        if (profile.Gamepad is not { Count: > 0 })
         {
             return result;
         }
 
-        foreach (var (name, button) in profile.Gamepad)
+        foreach ((var name, ControllerButton button) in profile.Gamepad)
         {
             if (button == ControllerButton.None)
             {
@@ -382,7 +384,7 @@ public static class GamepadMapper
 
     private static void AddBinding(PlayerProfile profile, string name, ref ControllerState result)
     {
-        if (TryGetBinding(profile, name, out var button) && button != ControllerButton.None)
+        if (TryGetBinding(profile, name, out ControllerButton button) && button != ControllerButton.None)
         {
             result = result.With(button);
         }
@@ -390,12 +392,12 @@ public static class GamepadMapper
 
     private static bool HasBinding(PlayerProfile profile, string name)
     {
-        return TryGetBinding(profile, name, out var button) && button != ControllerButton.None;
+        return TryGetBinding(profile, name, out ControllerButton button) && button != ControllerButton.None;
     }
 
     private static bool TryGetBinding(PlayerProfile profile, string name, out ControllerButton button)
     {
-        if (profile.Gamepad is null)
+        if (profile.Gamepad is not { Count: > 0 })
         {
             button = ControllerButton.None;
             return false;
@@ -406,7 +408,7 @@ public static class GamepadMapper
             return true;
         }
 
-        foreach (var (candidate, value) in profile.Gamepad)
+        foreach ((var candidate, ControllerButton value) in profile.Gamepad)
         {
             if (string.Equals(candidate, name, StringComparison.OrdinalIgnoreCase))
             {
@@ -419,5 +421,5 @@ public static class GamepadMapper
         return false;
     }
 
-    private static bool Has(GamepadButtons value, GamepadButtons flag) => (value & flag) != 0;
+    private static bool Has(GamepadButtons value, GamepadButtons flag) => (value & flag) != GamepadButtons.None;
 }

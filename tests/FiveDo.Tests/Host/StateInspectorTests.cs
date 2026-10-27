@@ -13,13 +13,13 @@ public sealed class StateInspectorTests
     [Fact]
     public void Inspect_ReadsHeaderAndSections()
     {
-        var machine = CreateMachine();
+        FiveDoMachine machine = CreateMachine();
         machine.RunFrames(3);
         using var stream = new MemoryStream();
         machine.SaveState(stream, "disc-hash");
 
         stream.Position = 0;
-        var info = StateInspector.Read(stream);
+        StateInfo info = StateInspector.Read(stream);
 
         Assert.Equal(StateFormat.Version, info.Version);
         Assert.Equal(FiveDoVersion.Version, info.EmulatorVersion);
@@ -37,15 +37,15 @@ public sealed class StateInspectorTests
     [Fact]
     public void ReadHeader_MatchesTheFullReader()
     {
-        var machine = CreateMachine();
+        FiveDoMachine machine = CreateMachine();
         machine.RunFrames(3);
         using var stream = new MemoryStream();
         machine.SaveState(stream, "disc-hash");
 
         stream.Position = 0;
-        var full = StateInspector.Read(stream);
+        StateInfo full = StateInspector.Read(stream);
         stream.Position = 0;
-        var header = StateInspector.ReadHeader(stream);
+        StateInfo header = StateInspector.ReadHeader(stream);
 
         Assert.Equal(full.Version, header.Version);
         Assert.Equal(full.EmulatorVersion, header.EmulatorVersion);

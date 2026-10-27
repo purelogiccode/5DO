@@ -57,7 +57,7 @@ public sealed class BiosImageTests
         var image = BiosImage.FromBytes(new byte[EmulatorConstants.RomBankSize], bios2);
 
         Assert.Equal(512, image.Bios2.Length);
-        Assert.NotEqual(string.Empty, image.Md5Bios2);
+        Assert.False(string.IsNullOrEmpty(image.Md5Bios2));
     }
 }
 

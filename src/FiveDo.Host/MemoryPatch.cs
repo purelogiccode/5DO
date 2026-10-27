@@ -78,9 +78,9 @@ public static class MemoryPatch
     public static int Apply(FiveDoMachine machine, string specification)
     {
         ArgumentNullException.ThrowIfNull(machine);
-        var entries = Parse(specification);
+        IReadOnlyList<MemoryPatchEntry> entries = Parse(specification);
         var written = 0;
-        foreach (var entry in entries)
+        foreach (MemoryPatchEntry entry in entries)
         {
             for (var i = 0; i < entry.Bytes.Length; i++)
             {

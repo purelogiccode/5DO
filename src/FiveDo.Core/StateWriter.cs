@@ -26,7 +26,7 @@ public sealed class StateWriter : IStateWriter
     /// <inheritdoc />
     public void WriteByte(byte value)
     {
-        var span = _buffer.GetSpan(1);
+        Span<byte> span = _buffer.GetSpan(1);
         span[0] = value;
         _buffer.Advance(1);
     }
@@ -80,7 +80,7 @@ public sealed class StateWriter : IStateWriter
         ArgumentNullException.ThrowIfNull(value);
         var byteCount = Encoding.UTF8.GetByteCount(value);
         WriteInt32(byteCount);
-        var span = _buffer.GetSpan(byteCount);
+        Span<byte> span = _buffer.GetSpan(byteCount);
         Encoding.UTF8.GetBytes(value, span);
         _buffer.Advance(byteCount);
     }
@@ -99,7 +99,7 @@ public sealed class StateWriter : IStateWriter
 
         var payloadWriter = new StateWriter();
         section.Save(payloadWriter);
-        var payload = payloadWriter.WrittenSpan;
+        ReadOnlySpan<byte> payload = payloadWriter.WrittenSpan;
 
         WriteUInt32(section.Id);
         WriteUInt16(section.Version);

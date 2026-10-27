@@ -80,7 +80,7 @@ public sealed class PlatformGamepadBackend : IGamepadBackend, IDisposable
     public void Poll()
     {
         _source.Poll();
-        var profile = Volatile.Read(ref _profile);
+        InputProfile profile = Volatile.Read(ref _profile);
         var available = Math.Min(_source.Count, _states.Length);
         for (var player = 0; player < _states.Length; player++)
         {

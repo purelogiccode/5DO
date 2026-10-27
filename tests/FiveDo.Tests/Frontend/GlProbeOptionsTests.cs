@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Text.Json;
 using FiveDo.Frontend.Avalonia;
@@ -11,7 +10,7 @@ public sealed class GlProbeOptionsTests
     [Fact]
     public void TryParse_UsesThe4KDefaults()
     {
-        Assert.True(GlProbeOptions.TryParse(["--gl-probe", "probe.json"], out var options, out var error));
+        Assert.True(GlProbeOptions.TryParse(["--gl-probe", "probe.json"], out GlProbeOptions? options, out var error));
 
         Assert.Null(error);
         Assert.NotNull(options);
@@ -41,7 +40,7 @@ public sealed class GlProbeOptionsTests
                 "--gl-probe-vsync",
                 "--gl-probe-offscreen",
             ],
-            out var options,
+            out GlProbeOptions? options,
             out var error);
 
         Assert.True(parsed, error);
@@ -70,7 +69,7 @@ public sealed class GlProbeOptionsTests
     {
         Assert.True(GlProbeOptions.TryParse(
             ["--gl-probe", "probe.json", "--gl-probe-filter", text],
-            out var options,
+            out GlProbeOptions? options,
             out var error));
 
         Assert.Null(error);
@@ -83,7 +82,7 @@ public sealed class GlProbeOptionsTests
     {
         Assert.True(GlProbeOptions.TryParse(
             ["--gl-probe", "probe.json", "--gl-probe-capture", "frame.png"],
-            out var options,
+            out GlProbeOptions? options,
             out var error));
 
         Assert.Null(error);
@@ -104,7 +103,7 @@ public sealed class GlProbeOptionsTests
     {
         Assert.False(GlProbeOptions.TryParse(
             ["--gl-probe", "probe.json", option, value],
-            out var options,
+            out GlProbeOptions? options,
             out var error));
 
         Assert.Null(options);
@@ -114,7 +113,7 @@ public sealed class GlProbeOptionsTests
     [Fact]
     public void TryParse_RequiresAnOutputPath()
     {
-        Assert.False(GlProbeOptions.TryParse(["--gl-probe"], out var options, out var error));
+        Assert.False(GlProbeOptions.TryParse(["--gl-probe"], out GlProbeOptions? options, out var error));
         Assert.Null(options);
         Assert.Contains("output JSON path", error);
     }
@@ -122,7 +121,7 @@ public sealed class GlProbeOptionsTests
     [Fact]
     public void TryParse_RejectsAnInvalidOutputPath()
     {
-        Assert.False(GlProbeOptions.TryParse(["--gl-probe", "\0"], out var options, out var error));
+        Assert.False(GlProbeOptions.TryParse(["--gl-probe", "\0"], out GlProbeOptions? options, out var error));
         Assert.Null(options);
         Assert.Contains("output path is invalid", error);
     }

@@ -348,6 +348,7 @@ This is the largest and riskiest port. Split it into classes but keep the origin
   - At line 0, reload `CURRENTVDL = HEADVDL` and execute.
   - When `linedelay == 0`, execute the next VDL entry.
   - For `y = line - 16` in `[0, 240)`, if `enadma`, copy `MODULO` pixels from `PREVIOUSBMP`/`CURRENTBMP` into the frame line (two lines in high-res), and copy CLUT/control/background words. The 2026-10-24 fix uses the parsed modulo instead of a fixed 320, so 384/512/640/1024-wide modes are no longer cropped; `FiveDoMachine` derives the frame `SourceWidth` from the widest rendered line.
+  - Each 16-bit pixel occupies the low or high halfword of a 32-bit VRAM word; the two halves of a word belong to adjacent scanlines. Advance the source by **four bytes per pixel** while copying (the reference's `unsigned int*` increment). Reading consecutive halfwords instead mixes two scanlines, halves the horizontal resolution, and shifts the image.
   - Advance `CURRENTBMP`/`PREVIOUSBMP` by 2 or `MODULO*4 - 2`, depending on bit 1 and `prevtick`.
   - Decrement `linedelay`, clear `OUTCONTROLL` bit 0.
 - `VRAMOffEval` and `vmreadw` use the +2 MB VRAM offset and `RESSCALE`; preserve.
@@ -561,7 +562,7 @@ M1 implements the section primitive used by all later chips:
 - `FiveDoMachine` is the composition root. It owns the reset order and the FreeDOCore frame loop. `RunFrame` keeps the reference's `cnt >> 4` batching threshold; `LastFrameCycles` exposes the actual per-frame budget for tests.
 - `Clio` implements `IClioBus`, `IInterruptSink`, `IClioFifo`, and `IStateSection`. FIFO descriptor writes use the reference's `value + 4` length encoding, including the zero-length special case for input FIFOs. The DMA loop keeps the `len >= 0` and `0xFFFFFFFC` sentinel semantics.
 - `Madam` implements the register file, CEL FSM/status, VDL head hook, matrix engine, and PBUS DMA. The matrix engine latches results in temporary fields, so a following command `0` (NOP) exposes the previous computation, matching `Madam.cpp`.
-- `Vdlp` reads the display list and bitmap through the +2 MB VRAM window. `DoLine` copies from `PREVIOUSBMP` (not `CURRENTBMP`), advances both bitmap pointers with the reference's `MODULO * 4 - 2` rule, and clears `OUTCONTROLL` bit 0 after each line.
+- `Vdlp` reads the display list and bitmap through the +2 MB VRAM window. `DoLine` copies from `PREVIOUSBMP` (not `CURRENTBMP`) using the reference's four-byte pixel stride, advances both bitmap pointers with the reference's `MODULO * 4 - 2` rule, and clears `OUTCONTROLL` bit 0 after each line.
 - `Sport` adds the +2 MB VRAM window to every fill/copy address, matching `_sport_Init(Memory + 0x200000)`.
 - `Xbus` implements the controller, device slots, poll/status/data FIFOs, and the built-in device-15 `0x83` responder. `FiveDoMachine` attaches the CD-ROM device to slot 0, which is the device the BIOS polls at boot.
 - `Dsp` (M5) is the full `DSP.cpp` port. The former `DspStub` was removed; CLIO talks to it through `IDsp`, and it talks to CLIO through `IDspHost` for FIFO/FIQ services.

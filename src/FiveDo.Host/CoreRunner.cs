@@ -13,7 +13,23 @@ namespace FiveDo.Host;
 /// <param name="ProgramCounter">Current ARM program counter.</param>
 /// <param name="Cycles">ARM cycles consumed by the most recent frame.</param>
 /// <param name="FramesPerSecond">Measured frame rate over the status interval.</param>
+[StructLayout(LayoutKind.Sequential)]
 public readonly record struct CoreStatus(long Frames, uint ProgramCounter, int Cycles, double FramesPerSecond);
+
+/// <summary>Describes a fault raised by the emulation core thread.</summary>
+public sealed class CoreFaultedEventArgs : EventArgs
+{
+    /// <summary>Initializes a new instance of the <see cref="CoreFaultedEventArgs"/> class.</summary>
+    /// <param name="exception">The exception that stopped the core thread.</param>
+    public CoreFaultedEventArgs(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        Exception = exception;
+    }
+
+    /// <summary>Gets the exception that stopped the core thread.</summary>
+    public Exception Exception { get; }
+}
 
 /// <summary>
 /// Runs the emulated machine on a dedicated thread with a 60 Hz frame pacer.
@@ -36,7 +52,7 @@ public sealed class CoreRunner : IDisposable
     private readonly Action<CoreStatus>? _statusSink;
     private readonly ManualResetEventSlim _paused = new(false);
     private readonly ManualResetEventSlim _wake = new(false);
-    private readonly object _invokeGate = new();
+    private readonly Lock _invokeGate = new();
     private Thread? _thread;
     private volatile bool _stop;
     private volatile bool _pauseRequested;
@@ -56,7 +72,7 @@ public sealed class CoreRunner : IDisposable
     }
 
     /// <summary>Raised on the core thread when the emulation loop faults.</summary>
-    public event Action<Exception>? Faulted;
+    public event EventHandler<CoreFaultedEventArgs>? Faulted;
 
     /// <summary>Gets a value indicating whether the core thread is running.</summary>
     public bool IsRunning => _thread is { IsAlive: true };
@@ -112,7 +128,7 @@ public sealed class CoreRunner : IDisposable
     {
         _stop = true;
         _wake.Set();
-        var thread = _thread;
+        Thread? thread = _thread;
         _thread = null;
         if (thread is not null && thread.IsAlive && thread != Thread.CurrentThread)
         {
@@ -175,7 +191,7 @@ public sealed class CoreRunner : IDisposable
             var pacer = new FramePacer(60.0);
             var statusClock = Stopwatch.StartNew();
             var statusFrames = 0L;
-            var statusStart = statusClock.Elapsed;
+            TimeSpan statusStart = statusClock.Elapsed;
 
             while (!_stop)
             {
@@ -197,7 +213,7 @@ public sealed class CoreRunner : IDisposable
                 _frameSink?.Invoke(_machine.Frame);
                 statusFrames++;
 
-                var elapsed = statusClock.Elapsed;
+                TimeSpan elapsed = statusClock.Elapsed;
                 if (elapsed - statusStart >= TimeSpan.FromMilliseconds(250))
                 {
                     var seconds = (elapsed - statusStart).TotalSeconds;
@@ -216,7 +232,7 @@ public sealed class CoreRunner : IDisposable
         catch (Exception exception)
         {
             _statusSink?.Invoke(new CoreStatus(Frames, _machine.Cpu.ProgramCounter, _machine.LastFrameCycles, 0));
-            Faulted?.Invoke(exception);
+            Faulted?.Invoke(this, new CoreFaultedEventArgs(exception));
             Console.Error.WriteLine($"Core thread stopped: {exception}");
         }
         finally

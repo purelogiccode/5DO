@@ -28,7 +28,7 @@ internal static class PngWriter
 
         var bytesPerPixel = 4;
         var raw = new byte[((frame.Width * 3) + 1) * frame.Height];
-        var pixels = frame.PixelSpan;
+        Span<byte> pixels = frame.PixelSpan;
         var destination = 0;
 
         for (var y = 0; y < frame.Height; y++)
@@ -48,7 +48,7 @@ internal static class PngWriter
             }
         }
 
-        using var output = File.Create(path);
+        using FileStream output = File.Create(path);
         output.Write([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
         var header = new byte[13];

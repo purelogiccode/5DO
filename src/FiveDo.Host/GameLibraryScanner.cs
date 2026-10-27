@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using FiveDo.Core;
 using FiveDo.Storage;
 
 namespace FiveDo.Host;
@@ -80,9 +81,9 @@ public static class GameLibraryScanner
         var coverPath = FindCover(path);
         try
         {
-            using var disc = DiscImageFactory.Open(path);
+            using IDiscSource disc = DiscImageFactory.Open(path);
             var gameId = disc.SectorCount >= 2 ? GameId.Compute(disc) : string.Empty;
-            var record = gameId.Length == 0 ? null : GameDatabase.Default.FindByChecksum(gameId);
+            GameRecord? record = gameId.Length == 0 ? null : GameDatabase.Default.FindByChecksum(gameId);
             return new GameLibraryEntry(
                 path,
                 Path.GetExtension(path).TrimStart('.').ToUpperInvariant(),
@@ -149,7 +150,7 @@ public static class GameLibraryScanner
 
         foreach (var file in files)
         {
-            var entry = Inspect(file);
+            GameLibraryEntry? entry = Inspect(file);
             if (entry is not null)
             {
                 entries.Add(entry);
