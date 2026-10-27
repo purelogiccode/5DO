@@ -13,8 +13,14 @@ namespace FiveDo.Host;
 /// <param name="ProgramCounter">Current ARM program counter.</param>
 /// <param name="Cycles">ARM cycles consumed by the most recent frame.</param>
 /// <param name="FramesPerSecond">Measured frame rate over the status interval.</param>
+/// <param name="TargetFramesPerSecond">Audio-derived target frame rate, or 0 before measurement.</param>
 [StructLayout(LayoutKind.Sequential)]
-public readonly record struct CoreStatus(long Frames, uint ProgramCounter, int Cycles, double FramesPerSecond);
+public readonly record struct CoreStatus(
+    long Frames,
+    uint ProgramCounter,
+    int Cycles,
+    double FramesPerSecond,
+    double TargetFramesPerSecond);
 
 /// <summary>Describes a fault raised by the emulation core thread.</summary>
 public sealed class CoreFaultedEventArgs : EventArgs
@@ -189,6 +195,7 @@ public sealed class CoreRunner : IDisposable
         try
         {
             var pacer = new FramePacer(60.0);
+            var audioPacer = new AudioFramePacer(60.0);
             var statusClock = Stopwatch.StartNew();
             var statusFrames = 0L;
             TimeSpan statusStart = statusClock.Elapsed;
@@ -202,6 +209,7 @@ public sealed class CoreRunner : IDisposable
                     _wake.Reset();
                     _paused.Reset();
                     pacer.Resync();
+                    audioPacer.Resync(_machine.AudioSamplesProduced);
                     statusClock.Restart();
                     statusStart = TimeSpan.Zero;
                     statusFrames = 0;
@@ -211,6 +219,8 @@ public sealed class CoreRunner : IDisposable
                 _machine.RunFrame();
                 Interlocked.Increment(ref _frames);
                 _frameSink?.Invoke(_machine.Frame);
+                audioPacer.FrameCompleted(_machine.AudioSamplesProduced);
+                pacer.SetPeriod(audioPacer.FramePeriodTicks);
                 statusFrames++;
 
                 TimeSpan elapsed = statusClock.Elapsed;
@@ -221,7 +231,8 @@ public sealed class CoreRunner : IDisposable
                         Frames,
                         _machine.Cpu.ProgramCounter,
                         _machine.LastFrameCycles,
-                        seconds > 0 ? statusFrames / seconds : 0));
+                        seconds > 0 ? statusFrames / seconds : 0,
+                        audioPacer.FramesPerSecond));
                     statusStart = elapsed;
                     statusFrames = 0;
                 }
@@ -231,7 +242,12 @@ public sealed class CoreRunner : IDisposable
         }
         catch (Exception exception)
         {
-            _statusSink?.Invoke(new CoreStatus(Frames, _machine.Cpu.ProgramCounter, _machine.LastFrameCycles, 0));
+            _statusSink?.Invoke(new CoreStatus(
+                Frames,
+                _machine.Cpu.ProgramCounter,
+                _machine.LastFrameCycles,
+                0,
+                0));
             Faulted?.Invoke(this, new CoreFaultedEventArgs(exception));
             Console.Error.WriteLine($"Core thread stopped: {exception}");
         }
@@ -248,13 +264,21 @@ public sealed class CoreRunner : IDisposable
     private sealed class FramePacer
     {
         private readonly Stopwatch _clock = Stopwatch.StartNew();
-        private readonly double _periodTicks;
+        private double _periodTicks;
         private double _next;
 
         internal FramePacer(double framesPerSecond)
         {
             _periodTicks = Stopwatch.Frequency / framesPerSecond;
             _next = _clock.ElapsedTicks;
+        }
+
+        internal void SetPeriod(double periodTicks)
+        {
+            if (periodTicks > 0 && !double.IsNaN(periodTicks) && !double.IsInfinity(periodTicks))
+            {
+                _periodTicks = periodTicks;
+            }
         }
 
         internal void Resync() => _next = _clock.ElapsedTicks;

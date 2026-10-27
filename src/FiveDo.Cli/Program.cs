@@ -4,8 +4,10 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using CHDSharp;
 using CHDSharp.Models;
 using FiveDo.Audio;
@@ -44,6 +46,7 @@ internal static class Program
                 "disc" => DiscCommand(args),
                 "fs" => FsCommand(args),
                 "bios" => Bios(args),
+                "audio" => AudioCommand(args),
                 "state" => State(args),
                 "bench" => Bench(args),
                 "selftest" => SelfTest(args),
@@ -136,6 +139,7 @@ internal static class Program
         var captureDir = options.Get("--capture-dir");
         var captureEvery = options.GetInt("--capture-every", 0);
         var pokeSpec = options.Get("--poke");
+        var realtime = HasFlag(args, "--realtime");
         var discPath = options.Positional;
 
         if (biosPath is null && stateIn is null)
@@ -163,14 +167,14 @@ internal static class Program
             machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
         }
 
-        using WavAudioSink? audio = CreateAudio(options);
+        using AudioOutput audio = CreateAudio(options);
         if (disc is not null)
         {
             machine.InsertDisc(disc);
         }
 
         machine.Reset();
-        machine.AudioSink = audio;
+        machine.AudioSink = audio.Sink;
 
         if (stateIn is null)
         {
@@ -410,61 +414,109 @@ internal static class Program
             Console.Error.WriteLine($"patched {patched} RAM byte(s)");
         }
 
-        if (scriptedInput is null
-            && roadAutopilot is null
-            && progressEvery <= 0
-            && pbusTraceWriter is null
-            && captureDir is null)
+        AudioFramePacer? realtimePacer = realtime ? new AudioFramePacer() : null;
+        var realtimeClock = realtime ? Stopwatch.StartNew() : null;
+        var realtimeNext = realtimeClock?.ElapsedTicks ?? 0.0;
+        if (realtimePacer is not null)
         {
-            machine.RunFrames(frames);
+            RealtimeTimer.Begin();
         }
-        else
+
+        var runClock = Stopwatch.StartNew();
+        try
         {
-            if (captureDir is not null && captureEvery > 0)
+            if (scriptedInput is null
+                && roadAutopilot is null
+                && progressEvery <= 0
+                && pbusTraceWriter is null
+                && captureDir is null
+                && !realtime)
             {
-                Directory.CreateDirectory(captureDir);
+                machine.RunFrames(frames);
             }
-
-            for (var i = 0; i < frames; i++)
+            else
             {
-                scriptedInput?.AdvanceTo(machine.FramesExecuted);
-                machine.RunFrame();
-                if (roadAutopilot is not null)
+                if (captureDir is not null && captureEvery > 0)
                 {
-                    autopilotInput![0] = roadAutopilot.Update(machine.Frame, machine.FramesExecuted);
+                    Directory.CreateDirectory(captureDir);
                 }
 
-                if (progressEvery > 0 && machine.FramesExecuted % progressEvery == 0)
+                for (var i = 0; i < frames; i++)
                 {
-                    var autopilot = roadAutopilot is null
-                        ? string.Empty
-                        : $" lineX={roadAutopilot.LineX:F1} cov={roadAutopilot.RoadCoverage:F2}"
-                        + $" steer={roadAutopilot.Steering}"
-                        + $" obst={roadAutopilot.ObstacleSteer}"
-                        + $" la={roadAutopilot.LookaheadLeft:F2}/{roadAutopilot.LookaheadCentre:F2}/{roadAutopilot.LookaheadRight:F2}"
-                        + (roadAutopilot.UrbanPacing ? " PACE" : string.Empty)
-                        + (roadAutopilot.DetectorUpset ? " UPSET" : string.Empty)
-                        + (roadAutopilot.RecoveryActive ? " RECOVERY" : string.Empty)
-                        + (roadAutopilot.CrashRestart ? " RESTART" : string.Empty)
-                        + (roadAutopilot.MenuAdvance ? " MENU" : string.Empty);
-                    Console.Error.WriteLine(
-                        $"frame {machine.FramesExecuted} pc={machine.Cpu.ProgramCounter:x8} "
-                        + $"dsp={machine.Dsp.ProgramCounter:x4} sema={machine.Dsp.SemaphoreStatus:x4}/{machine.Dsp.SemaphoreData:x4}"
-                        + autopilot);
-                }
+                    scriptedInput?.AdvanceTo(machine.FramesExecuted);
+                    machine.RunFrame();
+                    if (realtimePacer is not null && realtimeClock is not null)
+                    {
+                        realtimePacer.FrameCompleted(machine.AudioSamplesProduced);
+                        realtimeNext += realtimePacer.FramePeriodTicks;
+                        var spinTicks = Stopwatch.Frequency / 1000.0;
+                        var remaining = realtimeNext - realtimeClock.ElapsedTicks;
+                        if (remaining > spinTicks * 2)
+                        {
+                            var sleepMs = (int)((remaining - spinTicks) * 1000.0 / Stopwatch.Frequency);
+                            if (sleepMs > 0)
+                            {
+                                Thread.Sleep(sleepMs);
+                            }
+                        }
 
-                if (pbusTraceWriter is not null)
-                {
-                    pbusTraceWriter.WriteLine(
-                        $"f={machine.FramesExecuted} pbus={Convert.ToHexString(machine.Madam.PbusQueue)}");
-                }
+                        while (realtimeClock.ElapsedTicks < realtimeNext)
+                        {
+                            Thread.SpinWait(64);
+                        }
 
-                if (captureDir is not null
-                    && captureEvery > 0
-                    && machine.FramesExecuted % captureEvery == 0)
-                {
-                    WriteFrame(machine, Path.Combine(captureDir, $"f{machine.FramesExecuted:D6}.png"));
+                        if (realtimeClock.ElapsedTicks - realtimeNext > Stopwatch.Frequency / 10.0)
+                        {
+                            realtimeNext = realtimeClock.ElapsedTicks;
+                        }
+                    }
+
+                    if (roadAutopilot is not null)
+                    {
+                        autopilotInput![0] = roadAutopilot.Update(machine.Frame, machine.FramesExecuted);
+                    }
+
+                    if (progressEvery > 0 && machine.FramesExecuted % progressEvery == 0)
+                    {
+                        var autopilot = roadAutopilot is null
+                            ? string.Empty
+                            : $" lineX={roadAutopilot.LineX:F1} cov={roadAutopilot.RoadCoverage:F2}"
+                            + $" steer={roadAutopilot.Steering}"
+                            + $" obst={roadAutopilot.ObstacleSteer}"
+                            + $" la={roadAutopilot.LookaheadLeft:F2}/{roadAutopilot.LookaheadCentre:F2}/{roadAutopilot.LookaheadRight:F2}"
+                            + (roadAutopilot.UrbanPacing ? " PACE" : string.Empty)
+                            + (roadAutopilot.DetectorUpset ? " UPSET" : string.Empty)
+                            + (roadAutopilot.RecoveryActive ? " RECOVERY" : string.Empty)
+                            + (roadAutopilot.CrashRestart ? " RESTART" : string.Empty)
+                            + (roadAutopilot.MenuAdvance ? " MENU" : string.Empty);
+                        Console.Error.WriteLine(
+                            $"frame {machine.FramesExecuted} pc={machine.Cpu.ProgramCounter:x8} "
+                            + $"dsp={machine.Dsp.ProgramCounter:x4} sema={machine.Dsp.SemaphoreStatus:x4}/{machine.Dsp.SemaphoreData:x4} "
+                            + $"audio={machine.AudioSamplesProduced}"
+                            + autopilot);
+                    }
+
+                    if (pbusTraceWriter is not null)
+                    {
+                        pbusTraceWriter.WriteLine(
+                            $"f={machine.FramesExecuted} pbus={Convert.ToHexString(machine.Madam.PbusQueue)}");
+                    }
+
+                    if (captureDir is not null
+                        && captureEvery > 0
+                        && machine.FramesExecuted % captureEvery == 0)
+                    {
+                        WriteFrame(machine, Path.Combine(captureDir, $"f{machine.FramesExecuted:D6}.png"));
+                    }
                 }
+            }
+        }
+        finally
+        {
+            runClock.Stop();
+            if (realtimePacer is not null)
+            {
+                RealtimeTimer.End();
             }
         }
 
@@ -509,6 +561,7 @@ internal static class Program
         var result = new CliRunResult(
             Ok: true,
             Frames: machine.FramesExecuted,
+            ElapsedSeconds: runClock.Elapsed.TotalSeconds,
             CyclesPerFrame: machine.LastFrameCycles,
             SourceWidth: machine.Frame.SourceWidth,
             SourceHeight: machine.Frame.SourceHeight,
@@ -516,7 +569,7 @@ internal static class Program
             Pc: machine.Cpu.ProgramCounter,
             Instructions: machine.Cpu.InstructionsExecuted,
             FrameHash: FrameHash(machine),
-            Samples: audio?.SampleCount ?? 0,
+            Samples: audio.SampleCount,
             DiscHash: discHash,
             GameId: gameId,
             FixMode: (uint)machine.Compatibility.FixMode,
@@ -549,6 +602,18 @@ internal static class Program
                     roadAutopilot.LookaheadCentre,
                     roadAutopilot.LookaheadRight,
                 ],
+            AudioDurationSeconds: audio.Statistics?.DurationSeconds,
+            AudioPeak: audio.Statistics?.Peak,
+            AudioRms: audio.Statistics?.Rms,
+            AudioClippedFrames: audio.Statistics?.ClippedFrames,
+            AudioSilentFrames: audio.Statistics?.SilentFrames,
+            AudioDcOffsetLeft: audio.Statistics?.DcOffsetLeft,
+            AudioDcOffsetRight: audio.Statistics?.DcOffsetRight,
+            AudioDroppedSamples: audio.OpenAl?.SamplesDropped,
+            AudioUnderrunBuffers: audio.OpenAl?.UnderrunBuffers,
+            AudioQueuedBuffers: audio.OpenAl?.QueuedBuffers,
+            AudioBufferedFrames: audio.OpenAl?.BufferedFrames,
+            AudioLatencyMilliseconds: audio.OpenAl?.LatencyMilliseconds,
             Warnings: machine.StateWarnings);
 
         if (nvramPath is not null)
@@ -1183,6 +1248,52 @@ internal static class Program
         return 0;
     }
 
+    private static int AudioCommand(string[] args)
+    {
+        if (args.Length < 2 || !string.Equals(args[1], "analyze", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("audio needs the 'analyze <wav>' subcommand.", nameof(args));
+        }
+
+        ParsedOptions options = Parse(args, startIndex: 2);
+        var path = options.Positional ?? throw new ArgumentException("audio analyze needs a WAV path.", nameof(args));
+        AudioAnalysis analysis = AudioAnalyzer.Analyze(path);
+        var result = new CliAudioResult(
+            Ok: true,
+            Path: analysis.File.Path,
+            SampleRate: analysis.File.SampleRate,
+            Channels: analysis.File.Channels,
+            BitsPerSample: analysis.File.BitsPerSample,
+            Frames: analysis.File.Frames,
+            DurationSeconds: analysis.File.DurationSeconds,
+            DataBytes: analysis.File.DataBytes,
+            Peak: analysis.Statistics.Peak,
+            Rms: analysis.Statistics.Rms,
+            ClippedFrames: analysis.Statistics.ClippedFrames,
+            SilentFrames: analysis.Statistics.SilentFrames,
+            DcOffsetLeft: analysis.Statistics.DcOffsetLeft,
+            DcOffsetRight: analysis.Statistics.DcOffsetRight);
+
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(result, CliJsonContext.Default.CliAudioResult));
+        }
+        else
+        {
+            Console.WriteLine($"path:        {result.Path}");
+            Console.WriteLine($"format:      {result.SampleRate} Hz, {result.BitsPerSample}-bit, {result.Channels} channel(s)");
+            Console.WriteLine($"frames:      {result.Frames}");
+            Console.WriteLine($"duration:    {result.DurationSeconds:F3} s");
+            Console.WriteLine($"peak:        {result.Peak}");
+            Console.WriteLine($"rms:         {result.Rms:F1}");
+            Console.WriteLine($"clipped:     {result.ClippedFrames}");
+            Console.WriteLine($"silent:      {result.SilentFrames}");
+            Console.WriteLine($"dc offset:   L {result.DcOffsetLeft:F2}, R {result.DcOffsetRight:F2}");
+        }
+
+        return 0;
+    }
+
     private static int Disassemble(string[] args)
     {
         ParsedOptions options = Parse(args);
@@ -1324,13 +1435,41 @@ internal static class Program
         return machine;
     }
 
-    private static WavAudioSink? CreateAudio(ParsedOptions options)
+    private static AudioOutput CreateAudio(ParsedOptions options)
     {
         var mode = options.Get("--audio") ?? "null";
         if (string.Equals(mode, "wav", StringComparison.OrdinalIgnoreCase))
         {
             var path = options.Get("--wav-out") ?? "audio.wav";
-            return new WavAudioSink(path);
+            return new AudioOutput(new WavAudioSink(path), null);
+        }
+
+        if (string.Equals(mode, "openal", StringComparison.OrdinalIgnoreCase))
+        {
+            var output = OpenAlAudioOutput.TryCreate(4096, out var openAlError);
+            if (output is null)
+            {
+                if (!options.Json)
+                {
+                    Console.Error.WriteLine(
+                        $"warning: OpenAL is unavailable; audio is silent ({openAlError ?? "unknown error"}).");
+                }
+
+                return new AudioOutput(null, null);
+            }
+
+            if (options.Get("--volume") is { } volumeText)
+            {
+                if (!float.TryParse(volumeText, NumberStyles.Float, CultureInfo.InvariantCulture, out var volume))
+                {
+                    output.Dispose();
+                    throw new ArgumentException($"Invalid audio volume '{volumeText}'.", nameof(options));
+                }
+
+                output.Volume = volume;
+            }
+
+            return new AudioOutput(null, output);
         }
 
         if (!string.Equals(mode, "null", StringComparison.OrdinalIgnoreCase))
@@ -1338,7 +1477,35 @@ internal static class Program
             throw new ArgumentException($"Unknown audio backend '{mode}'.", nameof(options));
         }
 
-        return null;
+        return new AudioOutput(null, null);
+    }
+
+    /// <summary>Owns the CLI's optional WAV/OpenAL audio backend.</summary>
+    private sealed class AudioOutput : IDisposable
+    {
+        private readonly WavAudioSink? _wav;
+        private readonly OpenAlAudioOutput? _openAl;
+
+        internal AudioOutput(WavAudioSink? wav, OpenAlAudioOutput? openAl)
+        {
+            _wav = wav;
+            _openAl = openAl;
+        }
+
+        internal IAudioSink? Sink => (IAudioSink?)_wav ?? _openAl;
+
+        internal long SampleCount => _wav?.SampleCount
+            ?? ((_openAl?.SamplesPushed ?? 0) + (_openAl?.SamplesDropped ?? 0));
+
+        internal AudioStatistics? Statistics => _wav?.Statistics;
+
+        internal OpenAlAudioOutput? OpenAl => _openAl;
+
+        public void Dispose()
+        {
+            _wav?.Dispose();
+            _openAl?.Dispose();
+        }
     }
 
     private static void DumpDsp(FiveDoMachine machine, string prefix)
@@ -1407,12 +1574,21 @@ internal static class Program
         }
 
         Console.WriteLine($"frames:      {result.Frames}");
+        Console.WriteLine($"elapsed:     {result.ElapsedSeconds:F3} s");
         Console.WriteLine($"cycles/frm:  {result.CyclesPerFrame}");
         Console.WriteLine($"source:      {result.SourceWidth}x{result.SourceHeight}");
         Console.WriteLine($"vdl modulo:  {result.VdlModulo}");
         Console.WriteLine($"pc:          0x{result.Pc:x8}");
         Console.WriteLine($"frame hash:  0x{result.FrameHash:x8}");
         Console.WriteLine($"samples:     {result.Samples}");
+        if (result.AudioDurationSeconds is { } audioSeconds)
+        {
+            Console.WriteLine(
+                $"audio:       {audioSeconds:F3} s, peak {result.AudioPeak}, "
+                + $"RMS {result.AudioRms:F1}, clipped {result.AudioClippedFrames}, "
+                + $"silent {result.AudioSilentFrames}");
+        }
+
         Console.WriteLine($"disc hash:   {result.DiscHash}");
         Console.WriteLine($"game id:     {result.GameId}");
         Console.WriteLine($"fix mode:    0x{result.FixMode:x8}");
@@ -1530,13 +1706,13 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine("Commands:");
         Console.WriteLine("  run [disc] [--bios path] [--frames N] [--state-in path] [--state-out path]");
-        Console.WriteLine("             [--frame-out path] [--audio null|wav] [--wav-out path] [--cd-trace path]");
+        Console.WriteLine("             [--frame-out path] [--audio null|wav|openal] [--wav-out path] [--volume 0..1] [--cd-trace path]");
         Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--script-base absolute|state] [--autopilot road] [--progress N] [--cel-trace path] [--pbus-trace path]");
         Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--prefetch]");
-        Console.WriteLine("             [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--json]");
+        Console.WriteLine("             [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--realtime] [--json]");
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
@@ -1551,6 +1727,7 @@ internal static class Program
         Console.WriteLine("  fs extract <disc> --out dir [--filter prefix]");
         Console.WriteLine("                                       Extract files from a 3DO disc image.");
         Console.WriteLine("  bios info <path> [--json]            BIOS size, MD5, and Anvil detection.");
+        Console.WriteLine("  audio analyze <wav> [--json]         WAV format, peak, RMS, clipping, and DC offset.");
         Console.WriteLine("  state inspect <path> [--json]        Save-state header and section table.");
         Console.WriteLine("  state slots <dir> [--count N] [--json]");
         Console.WriteLine("                                       List numbered save slots and metadata.");
@@ -1562,6 +1739,44 @@ internal static class Program
         Console.WriteLine("Options:");
         Console.WriteLine("  -v, --version  Show version");
         Console.WriteLine("  -h, --help     Show help");
+    }
+
+    /// <summary>Requests 1 ms timer resolution while a real-time CLI run is active.</summary>
+    private static class RealtimeTimer
+    {
+        private static int _depth;
+
+        internal static void Begin()
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                return;
+            }
+
+            if (Interlocked.Increment(ref _depth) == 1)
+            {
+                _ = timeBeginPeriod(1);
+            }
+        }
+
+        internal static void End()
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                return;
+            }
+
+            if (Interlocked.Decrement(ref _depth) == 0)
+            {
+                _ = timeEndPeriod(1);
+            }
+        }
+
+        [DllImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
+        private static extern uint timeBeginPeriod(uint period);
+
+        [DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
+        private static extern uint timeEndPeriod(uint period);
     }
 
     private sealed class ParsedOptions

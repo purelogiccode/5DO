@@ -9,6 +9,10 @@
     <!-- Opt-in NativeAOT publish: -p:FiveDoNativeAot=true. The default CI
          publish remains trimmed IL so all six RIDs can be produced on one OS. -->
     <PublishAot Condition="'$(FiveDoNativeAot)' == 'true'">true</PublishAot>
+    <!-- Silk.NET.Core's native-asset loader flags IL3000/IL3002 for single-file.
+         The loader falls back to AppContext.BaseDirectory, where the OpenAL Soft
+         runtime is copied; keep the warnings visible without failing the build. -->
+    <IlcTreatWarningsAsErrors Condition="'$(FiveDoNativeAot)' == 'true'">false</IlcTreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(PublishTrimmed)' == 'true'">
@@ -35,6 +39,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FiveDo.Host\FiveDo.Host.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(FiveDoOpenAlNativeRid)' == 'win-x64' or '$(FiveDoOpenAlNativeRid)' == 'win-arm64' or '$(FiveDoOpenAlNativeRid)' == 'win-x86'">
+    <Content Include="$(NuGetPackageRoot)silk.net.openal.soft.native/$(FiveDoOpenAlSoftVersion)/runtimes/$(FiveDoOpenAlNativeRid)/native/soft_oal.dll"
+             Link="OpenAL32.dll"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest"
+             Visible="false" />
   </ItemGroup>
 
 </Project>

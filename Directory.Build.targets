@@ -1,0 +1,37 @@
+<Project>
+
+  <!--
+    Silk.NET.OpenAL loads "OpenAL32" on Windows, while the OpenAL Soft native package
+    ships soft_oal.dll. Copy the Windows runtime under the loader's expected name for
+    the audio library, the two executables, and the test host. Linux and macOS use the
+    package's libopenal.so/libopenal.dylib names without a rename.
+
+    This is an explicit copy target instead of a Content item because Directory.Build.targets
+    is imported after the SDK's copy-item target has been defined.
+  -->
+  <PropertyGroup>
+    <_FiveDoOpenAlRid Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</_FiveDoOpenAlRid>
+    <_FiveDoOpenAlRid Condition="'$(_FiveDoOpenAlRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</_FiveDoOpenAlRid>
+    <_FiveDoNeedsOpenAlNative
+      Condition="'$(MSBuildProjectName)' == 'FiveDo.Audio'
+                 or '$(MSBuildProjectName)' == 'FiveDo.Cli'
+                 or '$(MSBuildProjectName)' == 'FiveDo.Frontend.Avalonia'
+                 or '$(MSBuildProjectName)' == 'FiveDo.Tests'">true</_FiveDoNeedsOpenAlNative>
+    <_FiveDoOpenAlSoftSource>$(NuGetPackageRoot)silk.net.openal.soft.native/$(FiveDoOpenAlSoftVersion)/runtimes/$(_FiveDoOpenAlRid)/native/soft_oal.dll</_FiveDoOpenAlSoftSource>
+    <_FiveDoNeedsOpenAlWindowsNative
+      Condition="'$(_FiveDoNeedsOpenAlNative)' == 'true' and ('$(_FiveDoOpenAlRid)' == 'win-x64' or '$(_FiveDoOpenAlRid)' == 'win-arm64' or '$(_FiveDoOpenAlRid)' == 'win-x86')">true</_FiveDoNeedsOpenAlWindowsNative>
+  </PropertyGroup>
+
+  <Target Name="FiveDoCopyOpenAlSoft" AfterTargets="Build" Condition="'$(_FiveDoNeedsOpenAlWindowsNative)' == 'true'">
+    <Copy SourceFiles="$(_FiveDoOpenAlSoftSource)"
+          DestinationFiles="$(TargetDir)OpenAL32.dll"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="FiveDoPublishOpenAlSoft" AfterTargets="Publish" Condition="'$(_FiveDoNeedsOpenAlWindowsNative)' == 'true'">
+    <Copy SourceFiles="$(_FiveDoOpenAlSoftSource)"
+          DestinationFolder="$(PublishDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

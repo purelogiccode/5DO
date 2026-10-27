@@ -1,6 +1,6 @@
 # Known Issues
 
-**Snapshot:** 2026-10-26. This list covers the supported local corpus and the current
+**Snapshot:** 2026-10-27. This list covers the supported local corpus and the current
 prototype state. It is not a compatibility guarantee.
 
 **Release scope:** v1.0 ships with these known issues documented; full-race completion,
@@ -52,10 +52,29 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
   remaining trim warning is CHDSharp's vendored FLAC settings helper (`TypeDescriptor`),
   which is outside the 3DO data-track path and demoted to a visible warning. See
   [`Trimming.md`](Trimming.md).
-- NativeAOT, installers, signing, and notarization are not complete. NativeAOT is not
-  on the v1 critical path; the Avalonia and Silk.NET interop paths still need an AOT
-  audit.
+- NativeAOT, installers, signing, and notarization are not complete. The opt-in
+  win-x64 CLI AOT build is validated, including live OpenAL; the frontend AOT build
+  starts/renders but its audio path is not yet validated.
 - The macOS gamepad backend is not implemented.
+- The bundled OpenAL Soft 1.23.1 runtime adds an LGPL-2.0-or-later binary
+  distribution obligation to the release; see [`Licensing.md`](Licensing.md) and
+  [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
+
+## Audio
+
+- The DSP sample clock was corrected on 2026-10-27 to exactly 44,100 samples per
+  emulated second. The old FreeDO 8.24 clock ran ~0.7% fast; audio content is the
+  same, but the 3,000-frame boot keys and some FMV-timed frames changed. See
+  [`TestCorpus.md`](TestCorpus.md) 1.1/1.5a2.
+- Live OpenAL output requires a playback device. If none is present the app logs a
+  warning and runs silently; the DSP still executes. The CI/automated audio smoke
+  test uses OpenAL's null backend (`ALSOFT_DRIVERS=null`).
+- Road Rash's loud race mix reaches full scale and clips (2,036 frames in a 10 s
+  92k-state capture). This is the game mix, not the output path; an optional limiter
+  would be non-authentic.
+- A 30-60 s loudness/spectrum comparison against Opera and a manual DSP mode-change
+  (stop/start) listening check remain.
+- Frontend NativeAOT audio is not validated; the trimmed IL and CLI AOT paths are.
 
 ## Emulation
 
@@ -65,9 +84,9 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
   pulse: two consecutive READ_ID polls with at least 50 frames between them set poll
   bit `0x40`, which Portfolio uses to finish a post-race/post-load transition. This
   advances Road Rash's ~42k/~92k/100k screens to `BUSTED`, race select, and a new
-  race. The five 3,000-frame corpus hashes are unchanged. Alone's intro and
-  Wolfenstein's fresh-game load share the old signature and should be re-checked
-  with this fix.
+  race. Alone's intro and Wolfenstein's fresh-game load share the old signature and
+  should be re-checked with this fix. The current 3,000-frame audio-clock keys are in
+  [`TestCorpus.md`](TestCorpus.md) 1.1.
 - High-resolution mode is opt-in and validated mainly with Lemmings. A true 640x240
   non-interlaced mode has not been identified.
 - PAL video, CD-DA/Red Book audio, multi-disc swapping, netplay, rewind, and additional

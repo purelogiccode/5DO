@@ -10,14 +10,50 @@ still change.
 - `tools/release-soak.ps1`: discovers the discs present on the current machine, runs
   the 36,000-frame release soak, reports absent titles as missing instead of failing,
   and can continue archived 12k states for machine-specific corpus gaps.
+- Audio diagnostics: `audio analyze <wav> --json` reports format, duration, peak,
+  RMS, clipping, silent frames, and DC offset. `run --json` includes the same
+  statistics for `--audio wav`, plus dropped/underrun/queued/buffered counters and
+  estimated latency for `--audio openal`.
+- Live audio from the CLI: `--audio openal` and `--volume 0..1`. `--realtime`
+  paces a `run` against the audio clock for listening and glitch tests.
+- Audio-driven frame pacing in `CoreRunner`: the frame period follows the DSP
+  sample count (44.1 kHz), with a rolling average, clamping, and a 60 Hz fallback.
+  The status overlay shows measured/target fps.
+- Bundled OpenAL Soft 1.23.1 native runtime (`Silk.NET.OpenAL.Soft.Native`) for
+  all six RIDs, copied as `OpenAL32.dll` on Windows beside the CLI/frontend
+  executables and included in portable archives.
+- Audio regression tests: exact 44,100-sample clock across batch patterns, Quartz
+  state-v1 conversion, audio statistics/WAV analyzer roundtrips, frame-pacer
+  behavior, CLI JSON contracts, and an opt-in `FIVEDO_AUDIO_TESTS=1` OpenAL tone.
 
 ### Fixed
 
+- **DSP sample cadence.** The FreeDO 8.24 scheduler over-produced samples by
+  ~0.7% (444,097 instead of 441,015 for a 600-frame Lemmings boot), making audio
+  sharp and constantly overfilling the live ring. `Quartz` now uses an exact
+  rational DSP clock (44,100 samples per ARM second) while keeping the reference
+  VDL/timer accumulators. The 600-frame captures are now 10.000 s; Opera's
+  reference is 10.010 s at 59.94 Hz and the spectral peaks are unchanged.
+- **Live OpenAL output.** The OpenAL context is now made current on the audio
+  thread (OpenAL's current context is thread-local) and the native runtime is
+  shipped. Previously `TryCreate` returned null on Windows without a system
+  OpenAL installation, so the desktop shell was silent even when audio was
+  enabled.
+- The WAV sink buffers PCM writes instead of one file write per stereo frame,
+  and it records peak/RMS/clipping during capture.
 - VDLP bitmap copies now advance four bytes per pixel, matching FreeDOCore's
   `unsigned int*` source increment. The 16-bit pixel occupies one halfword of a
   32-bit VRAM word and the two halves belong to adjacent scanlines; reading
   consecutive halfwords mixed two lines, halved the horizontal resolution, and
   shifted the picture right (Alone in the Dark's intro and menu were cut off).
+
+### Changed
+
+- Quartz save-state sections are version 2 (exact DSP cycle remainder). Version 1
+  sections are still accepted and convert the legacy 8.24 sample fraction.
+- The 3,000-frame boot hashes changed where the FMV/loading timing depends on the
+  audio clock; the current keys and comparisons are in
+  [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.1 and 1.5a2.
 
 ## [1.0.0-rc.1] - 2026-10-26
 

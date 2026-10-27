@@ -13,6 +13,7 @@ public sealed class CliJsonTests
         var result = new CliRunResult(
             Ok: true,
             Frames: 120,
+            ElapsedSeconds: 2.0,
             CyclesPerFrame: 208345,
             SourceWidth: 320,
             SourceHeight: 240,
@@ -42,6 +43,18 @@ public sealed class CliJsonTests
             AutopilotPacing: null,
             AutopilotUpset: null,
             AutopilotLookahead: null,
+            AudioDurationSeconds: 10.0,
+            AudioPeak: 12345,
+            AudioRms: 1234.5,
+            AudioClippedFrames: 0,
+            AudioSilentFrames: 0,
+            AudioDcOffsetLeft: 0.1,
+            AudioDcOffsetRight: -0.1,
+            AudioDroppedSamples: null,
+            AudioUnderrunBuffers: null,
+            AudioQueuedBuffers: null,
+            AudioBufferedFrames: null,
+            AudioLatencyMilliseconds: null,
             Warnings: []);
 
         var json = JsonSerializer.Serialize(result, CliJsonContext.Default.CliRunResult);
@@ -51,6 +64,9 @@ public sealed class CliJsonTests
         Assert.Contains("\"vdlModulo\": 320", json, StringComparison.Ordinal);
         Assert.Contains("\"dspSema\": 524289", json, StringComparison.Ordinal);
         Assert.Contains("\"autopilotLookahead\": null", json, StringComparison.Ordinal);
+        Assert.Contains("\"audioDurationSeconds\": 10", json, StringComparison.Ordinal);
+        Assert.Contains("\"audioPeak\": 12345", json, StringComparison.Ordinal);
+        Assert.Contains("\"audioRms\": 1234.5", json, StringComparison.Ordinal);
         Assert.Contains("\"warnings\": []", json, StringComparison.Ordinal);
     }
 

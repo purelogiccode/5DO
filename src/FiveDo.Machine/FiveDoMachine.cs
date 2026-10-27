@@ -38,6 +38,7 @@ public sealed class FiveDoMachine
 
     private readonly List<string> _stateWarnings = [];
     private long _framesExecuted;
+    private long _audioSamplesProduced;
     private int _lastFrameCycles;
 
     /// <summary>Initializes a new instance of the <see cref="FiveDoMachine"/> class.</summary>
@@ -141,6 +142,13 @@ public sealed class FiveDoMachine
     /// <summary>Gets the ARM cycles consumed by the most recent frame.</summary>
     public int LastFrameCycles => _lastFrameCycles;
 
+    /// <summary>Gets the number of DSP samples produced since the last reset.</summary>
+    /// <remarks>
+    /// The count advances even when no <see cref="AudioSink"/> is attached. The host uses its
+    /// delta to pace frames against the 44.1 kHz audio clock.
+    /// </remarks>
+    public long AudioSamplesProduced => _audioSamplesProduced;
+
     /// <summary>Gets warnings produced by the most recent state load.</summary>
     public IReadOnlyList<string> StateWarnings => _stateWarnings;
 
@@ -212,6 +220,7 @@ public sealed class FiveDoMachine
         Quartz.Reset();
         _frame.Clear();
         _framesExecuted = 0;
+        _audioSamplesProduced = 0;
 
         if (Compatibility.IsAnvil == 30)
         {
@@ -341,7 +350,9 @@ public sealed class FiveDoMachine
 
         while (reader.TryReadSection(out StateSectionReader? section))
         {
-            if (section.Version != 1)
+            var supportedVersion = section.Version == 1
+                || (section.Id == StateSectionIds.Quartz && section.Version == 2);
+            if (!supportedVersion)
             {
                 throw new InvalidStateException($"Unsupported section {section.Id} version {section.Version}.");
             }
@@ -502,6 +513,7 @@ public sealed class FiveDoMachine
             // uses the DSP for resource allocation and semaphore handshakes, not
             // just for sample output.
             var sample = Dsp.Loop();
+            _audioSamplesProduced++;
             AudioSink?.PushSample(sample);
         }
 

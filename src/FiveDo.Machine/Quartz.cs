@@ -23,10 +23,16 @@ public sealed class Quartz : IStateSection
 {
     private int _armClock;
     private uint _accArm;
-    private uint _accDsp;
     private uint _accVdl;
     private uint _tCount;
     private uint _vdlLine;
+
+    // The DSP sample accumulator counts ARM cycles toward the next 44.1 kHz sample. The
+    // FreeDO 8.24 scheme quantizes every batch to 1/2^24 second and over-produced samples by
+    // up to ~0.7% for the 16-32 cycle batches this emulator uses (audibly sharp pitch and a
+    // constantly overfilled audio ring). The sample clock is independent of the VDL and timer
+    // accumulators so this correction cannot move video or timer events.
+    private uint _dspCycleRemainder;
 
     /// <summary>Initializes a new instance of the <see cref="Quartz"/> class.</summary>
     /// <param name="tuning">Machine tuning. Defaults to <see cref="EmulatorTuning.Default"/>.</param>
@@ -70,8 +76,8 @@ public sealed class Quartz : IStateSection
     /// <summary>Gets the raw ARM accumulator. Exposed for tests and diagnostics.</summary>
     public uint ArmAccumulator => _accArm;
 
-    /// <summary>Gets the raw DSP accumulator. Exposed for tests and diagnostics.</summary>
-    public uint DspAccumulator => _accDsp;
+    /// <summary>Gets the ARM cycles accumulated toward the next DSP sample. Exposed for tests and diagnostics.</summary>
+    public uint DspAccumulator => _dspCycleRemainder;
 
     /// <summary>Gets the raw VDL accumulator. Exposed for tests and diagnostics.</summary>
     public uint VdlAccumulator => _accVdl;
@@ -92,7 +98,7 @@ public sealed class Quartz : IStateSection
     public void Reset()
     {
         _accArm = 0;
-        _accDsp = 0;
+        _dspCycleRemainder = 0;
         _accVdl = 0;
         _tCount = 0;
         _vdlLine = 0;
@@ -113,7 +119,9 @@ public sealed class Quartz : IStateSection
             _accArm &= 0xFFFFFF;
         }
 
-        _accDsp = unchecked(_accDsp + (arm * EmulatorConstants.SoundClock));
+        // Exact rational sample clock: 44100 samples per ARM second. Both factors fit in a
+        // uint for the normal 16-256 cycle batches; the remainder is always below _armClock.
+        _dspCycleRemainder = unchecked(_dspCycleRemainder + (cycles * EmulatorConstants.SoundClock));
         _accVdl = unchecked(_accVdl + (arm * EmulatorConstants.VdlClock));
 
         var timerDelay = TimerDelayProvider?.Invoke() ?? 0;
@@ -127,9 +135,9 @@ public sealed class Quartz : IStateSection
     /// <returns><see langword="true"/> when a sample is due.</returns>
     public bool QueueDsp()
     {
-        if ((_accDsp >> 24) != 0)
+        if (_dspCycleRemainder >= (uint)_armClock)
         {
-            _accDsp = unchecked(_accDsp - 0x1000000);
+            _dspCycleRemainder -= (uint)_armClock;
             return true;
         }
 
@@ -168,7 +176,11 @@ public sealed class Quartz : IStateSection
     public uint Id => StateSectionIds.Quartz;
 
     /// <summary>Gets the save-state section version.</summary>
-    public ushort Version => 1;
+    /// <remarks>
+    /// Version 2 stores the exact DSP cycle remainder instead of FreeDO's 8.24 sample
+    /// accumulator. A version-1 section is still accepted and converted on load.
+    /// </remarks>
+    public ushort Version => 2;
 
     /// <summary>Writes the scheduler section.</summary>
     /// <param name="writer">State writer.</param>
@@ -183,7 +195,7 @@ public sealed class Quartz : IStateSection
     public void SaveState(IStateWriter writer)
     {
         writer.WriteUInt32(_accArm);
-        writer.WriteUInt32(_accDsp);
+        writer.WriteUInt32(_dspCycleRemainder);
         writer.WriteUInt32(_accVdl);
         writer.WriteUInt32(_tCount);
         writer.WriteUInt32(_vdlLine);
@@ -195,13 +207,31 @@ public sealed class Quartz : IStateSection
     public void LoadState(IStateReader reader)
     {
         _accArm = reader.ReadUInt32();
-        _accDsp = reader.ReadUInt32();
+        var dspClock = reader.ReadUInt32();
         _accVdl = reader.ReadUInt32();
         _tCount = reader.ReadUInt32();
         var line = reader.ReadUInt32();
         if (line >= EmulatorConstants.VdlFrameLines)
         {
             throw new InvalidStateException($"Invalid quartz VDL line {line}.");
+        }
+
+        if (reader is StateSectionReader { Version: 1 })
+        {
+            // FreeDO's 8.24 sample accumulator: the high byte is the completed-sample count
+            // and the low 24 bits are the fractional sample position. Convert that fraction
+            // to ARM cycles toward the next exact-clock sample.
+            var fraction = dspClock & 0xFFFFFFu;
+            _dspCycleRemainder = (uint)(((ulong)fraction * (uint)_armClock) >> 24);
+        }
+        else
+        {
+            if (dspClock >= (uint)_armClock)
+            {
+                throw new InvalidStateException($"Invalid quartz DSP remainder {dspClock}.");
+            }
+
+            _dspCycleRemainder = dspClock;
         }
 
         _vdlLine = line;

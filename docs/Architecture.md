@@ -82,11 +82,11 @@
 | `FiveDo.Xbus` | XBUS controller, device selection, poll/status/data FIFOs, device interface | `Xbus`, `XbusDevice`, `XbusFifo` | Core |
 | `FiveDo.Cdrom` | Mitsumi/MEI CD-ROM device, command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice`, `CdromCommand`, `Toc`, `Msf` | Core |
 | `FiveDo.Storage` | Disc image readers (ISO/BIN/CUE/CHD), bounded host prefetch, BIOS validation, NVRAM file format, game database, game ID | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `GameDatabase`, `GameId` | Core, CHDSharp |
-| `FiveDo.Audio` | Sample format conversion, ring buffer, null/WAV sinks, resampling helpers | `AudioRingBuffer`, `AudioSample`, `NullAudioSink`, `WavAudioSink` | Core |
+| `FiveDo.Audio` | Sample format conversion, ring buffer, null/WAV/live sinks, statistics, WAV analysis | `AudioRingBuffer`, `AudioSample`, `NullAudioSink`, `WavAudioSink`, `AudioStatistics`, `AudioAnalyzer`, `OpenAlAudioOutput` | Core |
 | `FiveDo.Input` | Controller state, PBUS encoding, input profiles, keyboard/gamepad abstractions | `FiveDoController`, `PbusEncoder`, `InputProfile`, `InputBinding` | Core |
 | `FiveDo.Diagnostics` | Logging, tracing, disassembly helpers, frame timing statistics, memory/frame dumpers | `ILogSink`, `Log`, `CpuTracer`, `MemoryDumper`, `FrameDumper`, `FrameTiming`, `PerformanceCounters` | Core |
 | `FiveDo.Machine` | Machine composition root, frame loop, Quartz scheduler, device wiring, state sections | `FiveDoMachine`, `MachineOptions`, `FrameLoop`, `Quartz`, `StateSection` | Core + all chips |
-| `FiveDo.Host` | Session lifecycle, frame pacing, BIOS/disc/NVRAM loading, audio/input backends, save states, settings | `EmulatorSession`, `FramePacer`, `AudioPipeline`, `InputManager`, `BiosLoader`, `NvramStore`, `SaveStateService` | Machine, Storage, Audio, Input, Diagnostics |
+| `FiveDo.Host` | Session lifecycle, audio-derived frame pacing, BIOS/disc/NVRAM loading, audio/input backends, save states, settings | `EmulatorSession`, `FramePacer`, `AudioFramePacer`, `AudioPipeline`, `InputManager`, `BiosLoader`, `NvramStore`, `SaveStateService` | Machine, Storage, Audio, Input, Diagnostics |
 | `FiveDo.Cli` | Headless command-line interface | `Program`, `RunCommand`, `InfoCommand`, `BenchCommand` | Host |
 | `FiveDo.Frontend.Avalonia` | Cross-platform desktop UI | `App`, `MainWindow`, viewmodels, views, services, OpenGL video surface | Host, Video.OpenGL, Avalonia |
 | `FiveDo.Tests` | Unit/integration tests (subfolders per subsystem) | test fixtures, ARM assembler, fake sinks | production projects |
@@ -360,7 +360,7 @@ OpenGL ES 3.1, not desktop GL 3.3, so Tier B uses the GLES variant.
 
 Frame pacing and threading are host responsibilities:
 
-- Dedicated core thread at a fixed 60 Hz; no `RunFrame` on the UI thread.
+- Dedicated core thread paced by the 44.1 kHz audio clock (60 Hz fallback); no `RunFrame` on the UI thread.
 - Render/UI thread consumes the latest mailbox frame and submits GPU work.
 - Audio thread consumes the SPSC ring buffer.
 - Physical-pixel sizing (`Bounds * RenderScaling`), render-on-demand, and no
@@ -396,7 +396,7 @@ ICpuBackend
 
 ```text
 DSP core produces a 32-bit packed sample:
-  IMem[0x3FE] << 16 | IMem[0x3FF]
+  IMem[0x3FF] << 16 | IMem[0x3FE]
         │
         ▼
 IAudioSink.PushSample(uint)
@@ -407,15 +407,20 @@ FiveDo.Audio.AudioRingBuffer (lock-free SPSC)
         ▼
 Host backend:
   - NullAudioSink (tests/CLI)
-  - WavAudioSink (debug/replay)
-  - OpenAL Soft via Silk.NET.OpenAL (desktop, v1)
+  - WavAudioSink (debug/replay; buffered; AudioStatistics)
+  - OpenAlAudioOutput (desktop/CLI; OpenAL Soft 1.23.1 is bundled)
   - platform-specific backend (optional later)
+        │
+        ▼
+AudioAnalyzer (offline WAV peak/RMS/clipping/DC report)
 ```
 
-- Sample rate is **44,100 Hz**, stereo, signed 16-bit.
-- The DSP runs on the core thread; the audio backend runs on its own thread and only consumes the ring buffer.
+- Sample rate is **44,100 Hz**, stereo, signed 16-bit, from an exact rational DSP clock: 44,100 samples per ARM second. It is independent of the VDL/timer 8.24 accumulators.
+- The DSP runs on the core thread; the audio backend runs on its own thread and only consumes the ring buffer. The OpenAL context is made current on that thread because OpenAL's current context is thread-local.
+- The ring drops the newest sample when full and reports it. The OpenAL backend pads short buffers with silence, counts underruns, and keeps a stable three-buffer queue of 512-frame buffers plus a 4096-frame ring.
 - No allocations in the steady-state audio path.
-- Audio-driven frame pacing is a later refinement. v1 uses a fixed 60 Hz pacer with ring-buffer underrun/overrun handling.
+- Audio-driven frame pacing: `CoreRunner` feeds the samples produced by each frame into `AudioFramePacer`, which sets the next frame period to `samples / 44100`. A 30-frame rolling average absorbs jitter, implausible deltas reset the window, and the period is clamped to 50-70 fps with a 60 Hz fallback.
+- The CLI exposes the same clock with `--realtime`, and `audio analyze <wav> --json` reports capture statistics.
 
 ---
 
@@ -463,7 +468,7 @@ High byte bits: `0x01` A, `0x02` Left, `0x04` Right, `0x08` Up, `0x10` Down, `0x
 `FiveDo.Host` is the only layer allowed to touch the operating system:
 
 - **`EmulatorSession`** - owns a `FiveDoMachine`, runs a dedicated core thread, exposes `Start/Pause/Resume/Stop/Reset`, `RunFrames(n)`, `SaveState/LoadState`, and frame events.
-- **`FramePacer`** - fixed 60 Hz scheduling with `Stopwatch`; optional audio-driven correction later.
+- **`FramePacer`** - `Stopwatch` deadlines with a settable period; **`AudioFramePacer`** derives the period from DSP samples and falls back to 60 Hz.
 - **`BiosLoader`** - validates 1 MB BIOS1 and optional ≤1 MB BIOS2; computes MD5; detects Anvil BIOS (`byte[28] == 234`).
 - **`DiscLoader`** - opens ISO/BIN/CUE, detects 2048 vs 2352 sector size, validates sector count.
 - **`NvramStore`** - 32 KB NVRAM file, atomic write, debounce (ported from 4DO's 250 ms timer).
@@ -510,14 +515,14 @@ Portable mode: if a `portable.flag` file exists next to the executable, use `<ex
 
 ## 12. Threading model
 
-- **Core thread:** CPU, memory, chips, scheduler, DSP, VDLP, CD. Dedicated, single-threaded, and deterministic. Implemented as `FiveDo.Host.CoreRunner` with a 60 Hz `FramePacer`; the UI thread never calls `RunFrame`, and machine-touching UI actions go through `CoreRunner.Invoke` (pause, action, resume).
+- **Core thread:** CPU, memory, chips, scheduler, DSP, VDLP, CD. Dedicated, single-threaded, and deterministic. Implemented as `FiveDo.Host.CoreRunner` with an audio-derived `FramePacer` (60 Hz fallback); the UI thread never calls `RunFrame`, and machine-touching UI actions go through `CoreRunner.Invoke` (pause, action, resume).
 - **Render thread / UI thread:** Avalonia owns the GL/GLES context and presents frames. The renderer consumes the latest `VdlFrame` snapshot; it never calls into emulated state.
-- **Audio thread:** consumes the ring buffer; never calls into the core.
+- **Audio thread:** consumes the ring buffer and drives the OpenAL source; it never calls into the core. It makes the OpenAL context current on its own thread.
 - **No locks in the core hot path.** The only cross-thread state is the audio ring buffer, the latest-frame mailbox, and session lifecycle flags.
 
 A `VdlFrameMailbox` holds the most recent completed `VdlFrame`. If the renderer is slow, old frames are dropped rather than queued, preventing latency growth. The renderer uploads the frame to a texture and applies the two-stage filter pipeline; the core does not wait for the GPU. The mailbox copies only the visible line width, and `Read(destination, reader)` copies into a caller-owned frame before invoking the renderer so the lock is not held during GPU submission. The present delegate is cached.
 
-**Frame pacing:** fixed 60 Hz on the core thread, catch-up capped at one or two frames, render-on-demand when a new frame is available. Implemented in `CoreRunner`; the Avalonia surface renders only when the mailbox sequence or the output size changes. Status/FPS updates run at 4 Hz, not every frame.
+**Frame pacing:** audio-derived on the core thread (60 Hz fallback), catch-up capped at one or two frames, render-on-demand when a new frame is available. Implemented in `CoreRunner`; the Avalonia surface renders only when the mailbox sequence or the output size changes. Status/FPS updates run at 4 Hz, not every frame.
 
 ---
 

@@ -21,12 +21,12 @@ public sealed class QuartzTests
     }
 
     [Theory]
-    [InlineData(1u, 2u, 8_222_784u, 88_200u, 31_560u)]
-    [InlineData(15u, 21u, 10_841_760u, 926_100u, 331_380u)]
-    [InlineData(16u, 22u, 6_564_544u, 970_200u, 347_160u)]
-    [InlineData(17u, 23u, 2_287_328u, 1_014_300u, 362_940u)]
-    [InlineData(255u, 343u, 9_309_920u, 15_126_300u, 5_412_540u)]
-    public void PushArmCycles_MatchesFreeDoFixedPoint(
+    [InlineData(1u, 2u, 8_222_784u, 44_100u, 31_560u)]
+    [InlineData(15u, 21u, 10_841_760u, 661_500u, 331_380u)]
+    [InlineData(16u, 22u, 6_564_544u, 705_600u, 347_160u)]
+    [InlineData(17u, 23u, 2_287_328u, 749_700u, 362_940u)]
+    [InlineData(255u, 343u, 9_309_920u, 11_245_500u, 5_412_540u)]
+    public void PushArmCycles_UsesTheFreeDoArmClockAndExactDspSampleClock(
         uint cycles,
         uint expectedArm,
         uint expectedArmAccumulator,
@@ -41,8 +41,10 @@ public sealed class QuartzTests
         Assert.Equal(expectedDspAccumulator, quartz.DspAccumulator);
         Assert.Equal(expectedVdlAccumulator, quartz.VdlAccumulator);
 
-        // The arm value is not stored directly; verify it through the DSP accumulator.
-        Assert.Equal(expectedArm * EmulatorConstants.SoundClock, expectedDspAccumulator);
+        // The DSP sample clock accumulates ARM cycles directly instead of the FreeDO 8.24
+        // rounding value, so it is exactly 44100 samples per emulated second.
+        Assert.Equal(cycles * EmulatorConstants.SoundClock, expectedDspAccumulator);
+        Assert.InRange(expectedArm, 1u, 1_000u);
     }
 
     [Fact]
@@ -95,7 +97,7 @@ public sealed class QuartzTests
     }
 
     [Fact]
-    public void PushArmCycles_OneSecond_ProducesReferenceEventCounts()
+    public void PushArmCycles_OneSecond_ProducesExactDspAndReferenceVideoTimerCounts()
     {
         var quartz = new Quartz(timerDelayProvider: () => 1000u);
         var dspEvents = 0;
@@ -125,14 +127,38 @@ public sealed class QuartzTests
             }
         }
 
-        // FreeDO's 8.24 rounding correction intentionally over-counts slightly for
-        // coarse 255-cycle batches; these are the exact reference-semantics counts.
-        // The timer count follows FreeDO quarz.cpp's default 25 MHz timer clock
-        // (25000000 / timer delay); the 12.5 MHz variant is only used by the
-        // __temporalfixes compatibility path.
-        Assert.Equal(44_139, dspEvents);
+        // The DSP sample clock is an exact rational accumulator and must produce 44,100
+        // samples in one ARM second regardless of batching. The VDL and timer clocks keep
+        // the FreeDO 8.24 reference semantics (they are not part of this audio correction);
+        // the timer count follows FreeDO quarz.cpp's default 25 MHz timer clock.
+        Assert.Equal(44_100, dspEvents);
         Assert.Equal(15_794, vdlEvents);
         Assert.Equal(25_022, timerEvents);
+    }
+
+    [Fact]
+    public void QueueDsp_DoesNotDriftAcrossSixteenCycleBatches()
+    {
+        var quartz = new Quartz();
+        var events = 0;
+
+        for (var i = 0; i < 600; i++)
+        {
+            var total = 0u;
+            while (total < EmulatorConstants.FrameCycles)
+            {
+                quartz.PushArmCycles(16);
+                total += 16;
+                if (quartz.QueueDsp())
+                {
+                    events++;
+                }
+            }
+        }
+
+        // Each 208,333-cycle frame is rounded up to a whole 16-cycle batch, so 600 frames
+        // consume 125,001,600 cycles and produce 441,005 samples instead of exactly 441,000.
+        Assert.InRange(events, 441_000, 441_008);
     }
 
     [Fact]
@@ -203,6 +229,54 @@ public sealed class QuartzTests
     }
 
     [Fact]
+    public void LoadState_Version1_ConvertsTheLegacyFreeDoDspFraction()
+    {
+        const uint legacyFraction = 0x40_0000;
+        var section = new TestSection(
+            StateSectionIds.Quartz,
+            version: 1,
+            writer =>
+            {
+                writer.WriteUInt32(0);
+                writer.WriteUInt32(legacyFraction);
+                writer.WriteUInt32(0);
+                writer.WriteUInt32(0);
+                writer.WriteUInt32(0);
+            });
+        var outer = new StateWriter();
+        outer.WriteSection(section);
+        StateSectionReader sectionReader = new StateReader(outer.ToArray()).ReadSection();
+
+        var quartz = new Quartz();
+        quartz.LoadState(sectionReader);
+
+        var expected = (uint)(((ulong)legacyFraction * (uint)EmulatorConstants.ArmClock) >> 24);
+        Assert.Equal(expected, quartz.DspAccumulator);
+    }
+
+    [Fact]
+    public void LoadState_Version2_RejectsAnOutOfRangeDspRemainder()
+    {
+        var section = new TestSection(
+            StateSectionIds.Quartz,
+            version: 2,
+            writer =>
+            {
+                writer.WriteUInt32(0);
+                writer.WriteUInt32((uint)EmulatorConstants.ArmClock);
+                writer.WriteUInt32(0);
+                writer.WriteUInt32(0);
+                writer.WriteUInt32(0);
+            });
+        var outer = new StateWriter();
+        outer.WriteSection(section);
+        StateSectionReader sectionReader = new StateReader(outer.ToArray()).ReadSection();
+
+        var quartz = new Quartz();
+        Assert.Throws<InvalidStateException>(() => quartz.LoadState(sectionReader));
+    }
+
+    [Fact]
     public void LoadState_InvalidLine_Throws()
     {
         var writer = new StateWriter();
@@ -234,5 +308,27 @@ public sealed class QuartzTests
         Assert.Equal(0u, quartz.VdlAccumulator);
         Assert.Equal(0u, quartz.TimerAccumulator);
         Assert.Equal(0, quartz.VdCurrOverline);
+    }
+
+    private sealed class TestSection : IStateSection
+    {
+        private readonly Action<IStateWriter> _save;
+
+        internal TestSection(uint id, ushort version, Action<IStateWriter> save)
+        {
+            Id = id;
+            Version = version;
+            _save = save;
+        }
+
+        public uint Id { get; }
+
+        public ushort Version { get; }
+
+        public void Save(IStateWriter writer) => _save(writer);
+
+        public void Load(IStateReader reader)
+        {
+        }
     }
 }

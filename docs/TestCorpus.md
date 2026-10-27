@@ -27,6 +27,14 @@ soak for the titles that are present, and record absent titles as
 disc, the script can continue it to the target frame count; that is continuation
 evidence, not a fresh-boot check.
 
+> **2026-10-27 audio-clock rebaseline.** The DSP sample clock now produces exactly
+> 44,100 samples per emulated ARM second (see
+> [`PortingNotes.md`](PortingNotes.md) 12.4). Hashes recorded before this date were
+> produced by FreeDO's 8.24 sample accumulator, which ran ~0.7% fast. Audio content
+> and spectral peaks are unchanged, but FMV/loading frames can be one or more frames
+> apart. The current 3,000-frame keys are in section 1.1; longer-run hashes in this
+> document are historical unless they are explicitly marked as post-audio-clock.
+
 ---
 
 ## 1. Disc images
@@ -57,18 +65,27 @@ formats, or a locally generated fixture. Do not convert and commit a retail disc
 
 ### 1.1 Current boot baseline
 
-The following results were recorded on 2026-10-24 after the DSP, CCB, and NVRAM
-fixes, with `panafz1.bin`, a Release build, and `run --frames 3000`. The CLI now
-loads a fresh 32 KB NVRAM volume by default; pass `--nvram <path>` to persist it.
-They are a regression baseline, not a full compatibility pass:
+The following results were re-recorded on 2026-10-27 after the exact DSP sample
+clock and the CCB/NVRAM fixes, with `panafz1.bin`, a Release build, and
+`run --frames 3000 --audio null`. The CLI loads a fresh 32 KB NVRAM volume by
+default; pass `--nvram <path>` to persist it. They are the current regression
+baseline, not a full compatibility pass:
 
 | Title | Final PC | Frame hash | Frame at 3,000 | Observation |
 |---|---|---|---|---|
-| Alone in the Dark | `0x000C4CB4` | `0xF4BDF79B` | boot/logo | AudioFolio init succeeds; with input and NVRAM it reaches the in-game room/inventory scene by 10,000 frames |
-| Lemmings | `0x0012B3C8` | `0x932C7722` | **rendered** | Reaches CyberIntro; at 10,000 frames with input it reaches the Load/Options title menu |
-| Road Rash | `0x000B9F84` | `0xEB31636F` | **rendered** | Loads the game OS (`grafmath 21.10.504`); SAudio init succeeds; the 30,000-frame run reaches the 3D race scene |
-| Space Ace | `0x00076418` | `0xA2B49CF0` | **rendered** | ReadySoft player finds the CD-ROM, plays the demo, and passes the former frame-681 crash |
-| Wolfenstein 3D | `0x000699E8` | `0xC21BB6A1` | boot/logo | Loads Sherry/Operator/FS v24.225; with input it reaches gameplay (FLOOR 1-1) |
+| Alone in the Dark | `0x000C4C94` | `0x4EC2E1A7` | boot/logo | AudioFolio init succeeds; the frame is pixel-identical to the pre-clock baseline; with input and NVRAM it reaches the in-game room/inventory scene by 10,000 frames |
+| Lemmings | `0x0012B36C` | `0x6CCA83F5` | **rendered** | Reaches CyberIntro; the frame is pixel-identical to the pre-clock baseline; at 10,000 frames with input it reaches the Load/Options title menu |
+| Road Rash | `0x000B9C94` | `0xCE90FA5A` | **rendered** | Loads the game OS (`grafmath 21.10.504`); SAudio init succeeds; the 3,000-frame capture is the adjacent intro-FMV frame; the 30,000-frame run reaches the 3D race scene |
+| Space Ace | `0x000764F4` | `0xF349263B` | **rendered** | ReadySoft player finds the CD-ROM, plays the demo, and passes the former frame-681 crash; the 3,000-frame capture is the adjacent demo frame |
+| Wolfenstein 3D | `0x0001C0F8` | `0x9A3B5131` | boot/logo | Loads Sherry/Operator/FS v24.225; differs from the pre-clock frame only in the star-field sparkle; with input it reaches gameplay (FLOOR 1-1) |
+
+The 2026-10-24 keys were (`0xF4BDF79B`, `0x932C7722`, `0xEB31636F`,
+`0xA2B49CF0`, `0xC21BB6A1`); the immediate pre-clock build at commit `46785b2`
+already produced `0x4EC2E1A7`/`0x6CCA83F5` for Alone/Lemmings because the VDLP
+pixel-stride fix, so do not use the older keys as the audio comparison. The
+pre/post audio-clock screenshot comparison found Alone and Lemmings pixel-identical;
+Road Rash and Space Ace showed adjacent FMV frames; Wolfenstein differed only in
+the star field. Do not use the old keys after this date.
 
 At 10,000 frames with input and a fresh NVRAM (pre-transposition-fix):
  
@@ -520,8 +537,8 @@ states are local, gitignored artifacts under `artifacts/s2` and `artifacts/`.
 
 Road Rash still clips in the first 10 s of the 91k state; the game mix is loud
 there. Space Ace's capture is a mono signal duplicated to both channels. The
-cadence is ~737 samples/frame for all five titles, matching the earlier
-observations.
+~737 samples/frame cadence in this table is the historical FreeDO 8.24 sample
+clock; see 1.5a2 for the exact 44.1 kHz clock and new captures.
 
 **Space Ace interactive path (new).** From `sa-fix12k.state`, `X` at 12,000
 returns to the title/menu (`PC 0x0000E12C`, hash `0x596B6A81`), and `A` at
@@ -544,6 +561,52 @@ media-access fix, `B`, `A`, `B+Left`, `B+Right`, `A+Left`, `A+Right`, and bare
 D-pad inputs all left the frame hash unchanged and the CD trace contained only
 READ_ID. See 1.5b: the media-access pulse now advances this screen to `BUSTED`
 and the race-select/new-race flow.
+
+### 1.5a2 Exact DSP sample clock and live-audio validation (2026-10-27)
+
+The DSP sample clock now accumulates the actual ARM cycle delta, producing exactly
+44,100 samples per emulated second. This removes the FreeDO 8.24 over-count that
+made audio ~0.7% sharp and kept the live ring overfilled.
+
+| Check | Before | After | Reference |
+|---|---:|---:|---|
+| Lemmings, 600-frame boot samples | 444,097 | 441,015 | Opera 441,441 at 59.94 Hz |
+| Lemmings, 600-frame boot duration | 10.070 s | 10.000 s | Opera 10.010 s |
+| Road Rash, 6,000-frame WAV samples | 4,429,529 | 4,410,188 | 100.0 s at 44.1 kHz |
+| Road Rash, spectral peak in 10-20 s | 442.1 Hz | 442.1 Hz | Opera 442.1 Hz |
+
+The old and new Road Rash WAVs have the same peak (29,951), RMS within 0.2%, and
+identical spectral peaks; only the sample count/timebase changed. Alone and
+Lemmings 3,000-frame screenshots are pixel-identical before/after; Road Rash and
+Space Ace show adjacent FMV frames; Wolfenstein differs only in the star field.
+
+The Lemmings Fun 4 D-pad script still reaches gameplay at 23,000 frames with the
+exact clock (`PC 0x00083FE8`, hash `0x63C02DED`, TIME 4:57); the old pre-clock key
+`0xB7846C2D` is historical. The in-game timer differs by a few seconds because the
+audio clock changed the frame/FMV timing.
+
+600-frame WAV captures from live states with the exact clock:
+
+| Title | State | Duration | Samples | Peak | RMS | Clipped | Silent |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Wolfenstein 3D | `w3d_gameplay.state` (18,000) | 10.000 s | 441,020 | 18,100 | 2,168 | 0 | 8 |
+| Lemmings | `lem-dpad-gameplay.state` (23,000) | 10.000 s | 441,020 | 8,192 | 1,661 | 0 | 27,903 |
+| Gex | `gex-gameplay.state` (15,000) | 10.000 s | 441,019 | 12,964 | 2,089 | 0 | 6,923 |
+| Theme Park | `tp-buttons.state` (15,000) | 10.000 s | 441,018 | 0 | 0 | 0 | 441,018 |
+| Road Rash | `rr-t198-92k.state` (92,000) | 10.000 s | 441,019 | 32,768 | 11,012 | 2,036 | 0 |
+
+Road Rash's race mix still reaches full scale and clips; that is the game's mix,
+not the output path. Theme Park's captured menu is silent. `audio analyze <wav>
+--json` prints the same peak/RMS/clipping/DC-offset statistics for any capture.
+
+**Live audio.** `OpenAlAudioOutput.TryCreate` now brings the OpenAL context current
+on the audio thread and the build/publish copies the bundled OpenAL Soft 1.23.1
+runtime (`OpenAL32.dll` on Windows). A 300-frame real-time run with the OpenAL null
+backend completed in 5.000 s with 220,510 samples (735.03/frame), 529 dropped
+samples, 14 padded buffers, and ~89 ms output latency; the frame pacer followed the
+44.1 kHz clock. The trimmed single-file CLI and the opt-in NativeAOT CLI both open
+the same backend. The opt-in `FIVEDO_AUDIO_TESTS=1` xUnit test plays 1 s of a 440 Hz
+tone through the real device.
 
 ### 1.5b Ninth pass: CD media-access pulse unblocks the post-race wait (2026-10-25)
 

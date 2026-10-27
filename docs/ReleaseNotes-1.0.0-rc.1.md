@@ -1,6 +1,6 @@
 # 5DO 1.0.0-rc.1
 
-**Release date:** 2026-10-26
+**Release date:** 2026-10-27
 **Status:** release candidate. The local engineering release gates pass; CI and the
 distribution/attribution sign-off are still pending. See
 [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
@@ -22,8 +22,11 @@ Full compatibility with the 3DO library is not claimed and is not a v1 gate.
   ten save slots, screenshots, fullscreen, logs, and first-run guide.
 - OpenGL/GLES two-stage presenter with accurate, nearest, sharp-bilinear, CRT, xBR,
   and HQx filters, CPU fallback, and 4K output support.
+- 44.1 kHz stereo DSP audio with an exact sample clock, bundled OpenAL Soft live
+  output, audio-driven frame pacing, and WAV capture/analysis
+  (`audio analyze <wav> --json`).
 - Headless CLI with `run`, `trace`, `bench`, `selftest`, `info`, `disc`, `fs`,
-  `disasm`, `bios`, `state`, and JSON output.
+  `audio`, `disasm`, `bios`, `state`, and JSON output.
 - ISO, BIN, CUE+BIN, and CHD disc images, including parent/child CHDs.
 
 ## Supported platforms
@@ -74,8 +77,8 @@ BIOS ROMs and game images are **not** included.
 The release checklist is in [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 - [x] `dotnet build 5DO.sln -c Release`: 0 warnings, 0 errors.
-- [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`: 775/775
-      passing.
+- [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`: 796/796
+      passing (after the audio pass).
 - [x] Synthetic benchmark budget gate: 2.28 ms/frame core mean, 4.03 ms core p99,
       4.66 ms total p99, 0 managed bytes/frame.
 - [x] Trimmed win-x64 CLI and frontend smoke tests (`selftest`, `bench`, `info`,

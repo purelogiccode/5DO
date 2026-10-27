@@ -1,7 +1,7 @@
 # Performance and 4K60 Strategy
 
 **Status:** target definition and implementation baseline (2026-10-26). The desktop
-path now has a dedicated 60 Hz core thread, a two-stage palette/scale presenter,
+path now has a dedicated audio-paced core thread (60 Hz fallback), a two-stage palette/scale presenter,
 immutable texture storage with per-frame `TexSubImage2D`, cached uniform locations,
 full sharp-bilinear and CRT scanline/aperture/curvature/vignette filters, an opt-in xBR
 pass, an opt-in bounded disc
@@ -75,7 +75,7 @@ stated otherwise:
 | Allocations | 0 bytes/frame | Core and presenter, steady state |
 | Managed heap | < 150 MB resident | Including GL textures and caches |
 | Startup to first frame | < 1 s | After BIOS/disc validation |
-| Audio latency | ≤ 50 ms | No underruns in normal play |
+| Audio latency | ≤ 100 ms typical | 4096-frame ring + three 512-frame OpenAL buffers; measured ~89 ms |
 
 The core cost must not grow with output resolution. A 4K window must cost the same
 CPU time as a 1080p window apart from the presenter's final draw call.
@@ -168,23 +168,29 @@ which is post-v1.
 ## 5. Threading and frame pacing
 
 The desktop frontend now uses `FiveDo.Host.CoreRunner`: a dedicated core thread
-paced at 60 Hz with a hybrid sleep/spin pacer and a low-rate (4 Hz) status sink.
-UI actions that touch the machine (reset, save/load, disc changes, screenshots)
-are marshalled through `CoreRunner.Invoke`, which pauses the loop for the duration
-of the action. The Avalonia control renders only when the mailbox sequence or the
-output size changes.
+paced by the audio clock with a hybrid sleep/spin pacer and a low-rate (4 Hz)
+status sink. `AudioFramePacer` averages 30 frames of `AudioSamplesProduced` deltas
+and sets the period to `samples / 44100` seconds; it falls back to 60 Hz when the
+delta is zero or implausible. With the exact DSP clock the nominal period remains
+16.67 ms. UI actions that touch the machine (reset, save/load, disc changes,
+screenshots) are marshalled through `CoreRunner.Invoke`, which pauses the loop for
+the duration of the action. The Avalonia control renders only when the mailbox
+sequence or the output size changes.
 
 Target model:
 
-- **Core thread:** dedicated `EmulatorSession` thread runs `RunFrame` at a fixed
-  60 Hz using `FramePacer` and a high-resolution timer. No wall-clock reads inside
-  emulated state.
+- **Core thread:** dedicated `EmulatorSession` thread runs `RunFrame` using
+  `FramePacer` and a high-resolution timer; the period comes from `AudioFramePacer`
+  and falls back to 60 Hz. No wall-clock reads inside emulated state.
 - **Render/UI thread:** consumes the latest completed frame from a lock-free or
   triple-buffered mailbox and submits GPU work. It never calls `RunFrame`.
-- **Audio thread:** consumes the SPSC ring buffer; never calls into the core.
-- **Frame pacing:** fixed 60 Hz, catch-up capped at one or two frames; skip
-  presentation (not emulation) if the renderer is late. Optional audio-driven
-  correction later.
+- **Audio thread:** consumes the SPSC ring buffer; never calls into the core. It
+  makes the OpenAL context current on its own thread.
+- **Frame pacing:** audio-derived (44.1 kHz) with a 60 Hz fallback; catch-up capped
+  at one or two frames; skip presentation (not emulation) if the renderer is late.
+  A real-time CLI validation of 300 frames completed in 5.000 s with 529 dropped
+  samples, 14 padded buffers, and ~89 ms output latency through the OpenAL null
+  backend.
 - **Mailbox:** latest frame wins. Do not queue frames. Avoid holding a lock while
   submitting GPU work; use a seqlock/triple buffer or copy only the visible pixels.
 - **Render on demand:** request a new render only when a new frame is available (or
@@ -446,7 +452,7 @@ Profile 1080p and 4K separately to prove core cost is resolution-independent.
 
 Resolved in the 2026-10-23 M9P pass:
 
-- Dedicated 60 Hz core thread with `CoreRunner`, pause/invoke marshalling, and a
+- Dedicated audio-paced core thread with `CoreRunner`, pause/invoke marshalling, and a
   low-rate status sink.
 - Two-stage presenter: native-resolution palette expansion into an FBO, then a
   scale/filter pass at output resolution.

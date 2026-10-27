@@ -327,8 +327,8 @@ This is the largest and riskiest port. Split it into classes but keep the origin
 - The AudioFolio tail program detects an ARM command with `Sema4Status & 8`. This depends on immediate operands being shifted by `JUSTIFY & 3` (0 or 3). An incorrect shift turns the mask into `0x20` and silently skips every command.
 - MUXB=3 computes `(MULT1 * (Y >> 15)) & ~1`; the mask is applied after the multiply. MUXA=3 masks `(Y >> 15)` before the multiply. The two paths are intentionally asymmetric in FreeDO and Opera.
 - `fastrand` is `g_seed = 69069 * g_seed + 1; return g_seed & 0xFFFF;` with seed `0xA5A5A5A5`.
-- `DSPPCNT`/`DSPPRLD` = 567. Each `Loop` subtracts 567 and wraps; this controls sample cadence.
-- Sample output is `(IMem[0x3FF] << 16) | IMem[0x3FE]`. The host interprets the packed 16-bit stereo pair; verify channel order with the WAV sink.
+- `DSPPCNT`/`DSPPRLD` = 567. Each `Loop` subtracts 567 and wraps; this preserves FreeDO's DSPPCNT register behavior. The **host sample cadence** is controlled by the Quartz DSP clock, not by this reload value.
+- Sample output is `(IMem[0x3FF] << 16) | IMem[0x3FE]`. The host interprets the packed 16-bit stereo pair as left in the low word and right in the high word; the WAV sink and CPU/GPU audio tests use that order.
 - `Dsp.Loop()` must run even when no audio sink is attached. The guest uses the DSP for `AllocInstrument` and semaphore handshakes; gating the call on the sink makes headless runs time out in AudioFolio. Keep the sink null-conditional on `PushSample`, not on `Loop`.
 - XBUS DMA writes go through `IRam`, the raw word-lane accessor, so the FIFO byte order is `b0,b1,b2,b3`. Opera's `b3,b2,b1,b0` order applies to its CPU-visible `opera_mem_write8`. Changing our order to match Opera's text breaks CD boot; the two accessors have different byte semantics.
 
@@ -374,17 +374,22 @@ This is the largest and riskiest port. Split it into classes but keep the origin
 
 - `QDatum`: `qrz_AccARM`, `qrz_AccDSP`, `qrz_AccVDL`, `qrz_TCount`, `VDL_CLOCK`, `qrz_vdlline`, `VDL_HS`, `VDL_FS`.
 - `VDL_FS = 526`, `VDL_CLOCK = VDL_FS * 30 = 15780`, `VDL_HS = VDL_FS / 2 = 263`.
-- `PushARMCycles` uses 8.24 fixed point:
+- The ARM and VDL accumulators keep FreeDO's 8.24 fixed point, including the `arm++` correction:
   ```cpp
   arm = (clks << 24) / ARM_CLOCK;
   qrz_AccARM += arm * ARM_CLOCK;
   if ((qrz_AccARM >> 24) != clks) { arm++; qrz_AccARM += ARM_CLOCK; qrz_AccARM &= 0xFFFFFF; }
-  qrz_AccDSP += arm * SND_CLOCK;
   qrz_AccVDL += arm * VDL_CLOCK;
   if (_clio_GetTimerDelay()) qrz_TCount += arm * (21000000 / _clio_GetTimerDelay());
   ```
+- **Deliberate deviation: exact DSP sample clock.** FreeDO also updates `qrz_AccDSP` with `arm * SND_CLOCK`, so its 8.24 rounding over-produces samples for the 16-32 cycle batches this emulator uses. The C# `Quartz` instead accumulates the actual ARM cycle delta toward the next sample:
+  ```csharp
+  _dspCycleRemainder += cycles * SoundClock;      // 44,100 samples per ARM second
+  if (_dspCycleRemainder >= armClock) { subtract; return true; }
+  ```
+  This matches Opera's `CYCLES_PER_SND` clock and produces exactly 44,100 samples per emulated second. The VDL and timer accumulators intentionally keep the FreeDO semantics so video/timer event timing is unchanged. See 12.4 for the evidence.
 - `clks << 24` is a 32-bit operation in C++; use `uint` and document the expected range. Add a debug assert that `clks < 256`; if a caller exceeds it, investigate before changing the math.
-- `QueueVDL/QueueDSP/QueueTimer` each consume one `0x1000000` unit and return true at most once per call.
+- `QueueVDL/QueueDSP/QueueTimer` each consume one `0x1000000` unit (or one exact DSP cycle threshold) and return true at most once per call.
 
 ### 8.10 `DiagPort.cpp`
 
@@ -547,9 +552,12 @@ M1 implements the section primitive used by all later chips:
 
 ### 12.4 Quartz event semantics
 
-- `PushArmCycles` keeps the reference's 8.24 accumulators and its `arm++` correction. It expects small cycle batches (the reference computes `clks << 24` in 32 bits); `Debug.Assert` documents the `< 256` contract.
+- `PushArmCycles` keeps the reference's ARM/VDL 8.24 accumulators and its `arm++` correction. It expects small cycle batches (the reference computes `clks << 24` in 32 bits); `Debug.Assert` documents the `< 256` contract.
 - One second of ARM cycles (12.5M) produces 15,780 VDL line events, i.e. 30 full 526-line cycles and **60 half-frame presentations**. Tests assert 60 half-frame transitions.
-- The reference's coarse-batch rounding slightly over-counts DSP/VDL/timer events for a given batch size. Tests use 255-cycle batches and assert the exact reference counts (44,139 DSP samples, 15,794 VDL lines, 21,018 timer events for a 1,000-unit timer delay). Do not "fix" this rounding without golden evidence; the machine's normal batch size comes from `_3do_Frame`'s `cnt >> 4` threshold.
+- The DSP sample clock is exact: one ARM second produces **44,100** samples regardless of the batch size. The FreeDO 8.24 path produced 44,139 samples for 255-cycle batches, and real 16-32 cycle boot batches produced ~740-744 samples per 60 Hz frame (~44.4 kHz). That made audio ~0.7% sharp and constantly overfilled the live ring.
+- Evidence (2026-10-27): a 600-frame Lemmings boot changed from 444,097 to 441,015 samples and 10.070 s to 10.000 s; Opera's 600-frame capture is 441,441 samples at its 59.94 Hz field rate. A 6,000-frame Road Rash capture has identical spectral peaks (442.1 Hz etc.) before and after, with the new 4,410,188 samples matching 100.0 s at 44.1 kHz. The audio content is unchanged; only the timebase was corrected.
+- The 3,000-frame boot hashes changed for titles whose FMV/loading animation is audio-timed: Alone in the Dark and Lemmings remained pixel-identical, Road Rash and Space Ace show adjacent FMV frames, and Wolfenstein 3D differs only in the star-field sparkle. The Lemmings Fun 4 D-pad script still reaches gameplay at 23,000 frames. Re-baseline with the new hashes in [`TestCorpus.md`](TestCorpus.md) 1.2.
+- VDL (15,794) and timer (25,022 for a 1,000-unit delay) reference counts are unchanged by the DSP correction.
 
 ### 12.5 Diagnostics
 
@@ -636,4 +644,4 @@ M1 implements the section primitive used by all later chips:
 - The desktop shell runs the machine on `FiveDo.Host.CoreRunner`'s dedicated 60 Hz thread. UI actions (reset, save/load, disc change, screenshot) pause the loop via `CoreRunner.Invoke`; the UI consumes the latest-frame mailbox and updates status/FPS at 4 Hz. Screenshots use the CPU frame dumper, and keyboard input is mapped through the default `InputProfile`.
 - `AppSettings`/`AppSettingsStore` persist BIOS/disc paths, save/screenshot directories, renderer filter/aspect/vsync, audio enable/volume, and the JSON input profile. The shell auto-loads the last BIOS/disc when the files still exist and saves settings on close.
 - CI now publishes both the CLI and the Avalonia frontend for the six target RIDs; a local win-x64 CLI publish and a short Windows frontend launch were smoke-tested. The launch smoke test did not prove 4K60, GLES compatibility, or sustained frame pacing; those are M9P gates. Live audio output and arm64 validation remain.
-- `OpenAlAudioOutput` is optional host I/O: a dedicated thread fills four OpenAL Stereo16 buffers from the SPSC ring. `TryCreate` silently returns null when no device/context exists, keeping headless and CI runs silent and stable.
+- `OpenAlAudioOutput` is host I/O: a dedicated thread fills three 512-frame OpenAL Stereo16 buffers from a 4096-frame SPSC ring. The OpenAL context is made current **on the audio thread** (the current context is thread-local); failing to do this leaves all fill calls on a thread with no context and produces silence. Underruns are padded with silence and counted. `TryCreate` returns null with a diagnostic when no device/context exists, keeping headless and CI runs silent and stable. The OpenAL Soft 1.23.1 native runtime is bundled (`Silk.NET.OpenAL.Soft.Native`); Windows copies `soft_oal.dll` as `OpenAL32.dll`.

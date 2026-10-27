@@ -1,19 +1,24 @@
 # Next Session Handoff
 
-**Date:** 2026-10-26 (fifteenth pass)
-**Goal:** validate the Windows ANGLE/GLES backend and CPU/GPU pixel parity. The
-fifteenth pass added `--gl-backend auto|wgl|angle|software`, `--gl-probe-capture`,
-and a CPU/GPU parity check to the GPU probe. On Windows 11 / RTX 4070, ANGLE
-(OpenGL ES 3.0, GLSL ES 300) ran every filter; 4K sharp-bilinear presented in
-0.14 ms mean / 0.47 ms p99 with zero renderer allocations, and a 320x240 Accurate
-capture matched the CPU `FrameAssembler` oracle pixel-for-pixel (`0xD6BD89C5`) on
-both WGL and ANGLE. **775 tests pass.** Do not redo the trim-safe JSON work, the
+**Date:** 2026-10-27 (sixteenth, audio pass)
+**Goal:** make the audio path correct and testable. The sixteenth pass replaced the
+FreeDO 8.24 DSP sample accumulator with an exact 44,100-samples-per-ARM-second clock
+(600 frames now produce 441,015-441,020 samples / 10.000 s instead of 444,097 /
+10.070 s), preserved VDL/timer reference timing, bumped the Quartz state section to
+version 2 with v1 conversion, and re-baselined the 3,000-frame boot keys. It also
+fixed live OpenAL output: the runtime is bundled (OpenAL Soft 1.23.1), the context
+is made current on the audio thread, underruns are padded/counted, and the CLI has
+`--audio openal`, `--volume`, `--realtime`, and `audio analyze <wav> --json`. Core
+frames are paced by `AudioFramePacer` (audio clock with a 60 Hz fallback), WAV writes
+are buffered with streaming peak/RMS/clipping statistics, and the NativeAOT CLI now
+opens the live backend. **796 tests pass.** Do not redo the trim-safe JSON work, the
 trimmed CLI/frontend publishes, the frontend smoke test, the benchmark comparison,
-the portable archives, the swap-interval/GPU-probe work, or the ANGLE/GLES parity
-work. The remaining **release** work is the legal/attribution review, a stability
-soak, release packaging/notes, and optional Linux/macOS launch validation.
-Full-race completion, extra title scripts, GLES 3.1/Pi/DPI, Tier B timing,
-arm64/installers, and the optional JIT are post-1.0. See
+the portable archives, the swap-interval/GPU-probe work, the ANGLE/GLES parity work,
+or this audio pass. The remaining **release** work is the legal/attribution review
+(now including OpenAL Soft's LGPL runtime), a stability soak, release
+packaging/notes, and optional Linux/macOS launch validation. Full-race completion,
+extra title scripts, GLES 3.1/Pi/DPI, Tier B timing, arm64/installers, frontend AOT
+audio, and the optional JIT are post-1.0. See
 [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 > **Release-scope update (2026-10-26):** v1.0 ships a documented compatibility set,
@@ -578,6 +583,52 @@ missing and corrected the Road Rash diagnosis.
 
 ---
 
+### 1.20 Sixteenth pass: exact DSP clock, live OpenAL, and audio analysis (2026-10-27)
+
+- **Exact DSP sample clock.** `Quartz` now accumulates actual ARM cycles toward the
+  next 44.1 kHz sample (`_dspCycleRemainder += cycles * 44100`, threshold
+  `ArmClock`) instead of FreeDO's `arm * SND_CLOCK` 8.24 rounding. The ARM/VDL/timer
+  accumulators are unchanged. One ARM second is exactly 44,100 samples; a 600-frame
+  Lemmings boot is 441,015-441,020 samples (10.000 s) instead of 444,097 (10.070 s).
+  Opera's 600-frame capture is 441,441 samples / 10.010 s at its 59.94 Hz field
+  rate. The old/new 6,000-frame Road Rash WAVs have the same peak (29,951), RMS
+  within 0.2%, and the same spectral peaks (442.1 Hz); only the timebase changed.
+- **Quartz state v2.** The exact cycle remainder is serialized; version-1 sections
+  are accepted and convert the legacy 8.24 fraction. Existing archived states still
+  load (`lem_pass_fresh.state`, `w3d_gameplay.state`, Road Rash states).
+- **3,000-frame re-baseline.** Alone `0x4EC2E1A7`, Lemmings `0x6CCA83F5`, Road Rash
+  `0xCE90FA5A`, Space Ace `0xF349263B`, Wolfenstein `0x9A3B5131`. Alone/Lemmings
+  screenshots are pixel-identical before/after; Road Rash/Space Ace are adjacent FMV
+  frames; Wolfenstein differs only in the star field. The Lemmings Fun 4 D-pad script
+  still reaches gameplay at 23,000 frames.
+- **Live OpenAL fixed.** `OpenAlAudioOutput` makes the context current on the fill
+  thread (OpenAL context state is thread-local), bundles OpenAL Soft 1.23.1 via
+  `Silk.NET.OpenAL.Soft.Native`, copies `soft_oal.dll` as `OpenAL32.dll` on Windows,
+  pre-fills two buffers, pads/counts underruns, and retries a stopped source. The
+  trimmed single-file CLI and the opt-in NativeAOT CLI both open the backend; the
+  opt-in `FIVEDO_AUDIO_TESTS=1` test plays a real 440 Hz tone.
+- **Audio-driven pacing.** `FiveDo.Host.AudioFramePacer` averages 30 frames of
+  `FiveDoMachine.AudioSamplesProduced`, sets the period to `samples / 44100`, clamps
+  to 50-70 fps, and falls back to 60 Hz. `CoreRunner` uses it for the core thread and
+  reports the target rate in `CoreStatus`; the overlay shows measured/target fps.
+  `run --realtime` applies the same idea in the CLI (300 frames = 5.000 s with the
+  OpenAL null backend; 220,510 samples, 529 dropped, 14 padded buffers, ~89 ms
+  output latency).
+- **WAV and diagnostics.** `WavAudioSink` buffers PCM writes and tracks frames, peak,
+  RMS, clipping, silence, and DC offset. `AudioAnalyzer` validates/analyzes PCM WAV
+  files; `audio analyze <wav> --json` prints the report. `run --json` includes the
+  stats and OpenAL queue counters; `--elapsedSeconds` was added for pacing checks.
+- **Tests.** 796 pass. New coverage: exact 44,100-sample count across batch patterns,
+  Quartz v1 conversion/v2 validation, audio statistics and WAV analyzer roundtrips
+  (including mono/odd chunk/truncation), buffered sink flushing, frame-pacer behavior,
+  CoreRunner target-rate reporting, CLI audio JSON, and the opt-in OpenAL tone.
+
+Do not revert the exact clock to the FreeDO 8.24 DSP accumulator. It is the
+difference between 44.1 kHz and ~44.4 kHz audio. Do not remove the bundled OpenAL
+runtime or move the context-current call back to the UI thread.
+
+---
+
 ## 2. Current evidence
 
 ### Wolfenstein 3D
@@ -700,17 +751,13 @@ VDLP mode/crop investigations mechanical.
 
 ### Audio
 
-600 frames captured with `--audio wav`:
-
-| Title | Duration | Peak | RMS L/R | Clipping |
-|---|---:|---:|---|---:|
-| Road Rash | 10.03 s | 32768 | 9051 / 9146 | 191 samples |
-| Wolfenstein | 10.02 s | 30743 | 5620 / 5457 | 0 |
-
-Both are 44.1 kHz stereo at ~737 samples/frame. The nominal rate is 735/frame;
-the +0.27% cadence is small but should be checked against Opera/hardware before
-changing the DSP reload value. The 18,000-frame Wolfenstein gameplay capture is
-66.86 s, peak 32767, RMS 2980, with 18 clipped samples.
+The 2026-10-25 captures above are historical; they used the FreeDO 8.24 sample
+clock (~737 samples/frame). The 2026-10-27 captures use the exact clock and are
+10.000 s per 600 frames (441,018-441,020 samples): Wolfenstein 18,100 peak / 2,168
+RMS, Lemmings 8,192 / 1,661, Gex 12,964 / 2,089, Road Rash 32,768 / 11,012 (2,036
+clipped frames), Theme Park silent. `audio analyze <wav> --json` prints the report;
+see [`TestCorpus.md`](TestCorpus.md) 1.5a2. The 18,000-frame Wolfenstein gameplay
+capture from the older clock was 66.86 s, peak 32767, RMS 2980, 18 clipped.
 
 ---
 
@@ -723,9 +770,9 @@ changing the DSP reload value. The 18,000-frame Wolfenstein gameplay capture is
 - Lemmings: DONE (2026-10-24 late pass, pure D-pad on 2026-10-26). The Fun 4
   passcode `HNLHCIOECW` is now typed entirely with the D-pad/A by
   `docs/scripts/lem-fun4-dpad.txt` from a passcode-screen state; the game shows
-  the Fun 4 briefing at 22,600 and starts gameplay at 23,000 (`PC 0x00083FD8`,
-  hash `0xB7846C2D`; zero-frame load roundtrips, two 120-frame continuations both
-  `0xEDEB1B9D`). The earlier poke path (`lem-pass-N.state` + 9-byte poke + `B`)
+  the Fun 4 briefing at 22,600 and starts gameplay at 23,000 (`PC 0x00083FE8`,
+  hash `0x63C02DED`; zero-frame load roundtrips, two 120-frame continuations both
+  `PC 0x000230A4`, hash `0x4CA339CD`). The earlier poke path (`lem-pass-N.state` + 9-byte poke + `B`)
   remains valid and reaches 21,640 (`PC 0x83FEC`, hash `0x18F38B4D`). The entry
   buffer is permuted (display order `77,76,75,74,7B,7A,79,78,7F,7E`; the preview
   is the next untyped slot), not sequential at `0x96574`.
@@ -762,12 +809,20 @@ save/load proof.
 
 ### Step 3 - audio quality
 
-- The 600-frame captures are in `TestCorpus.md` 1.5a. Road Rash's 91k-state
-  capture has 378 clipped samples in 10 s (loud race mix); the other titles do
-  not clip. Space Ace's capture is mono duplicated to stereo.
-- Capture 30-60 s of a race/level and compare loudness/spectrum with Opera.
-- Check the 737 vs 735 samples/frame cadence (all five titles are ~737).
-- Verify the DSP stops/starts cleanly when a game changes audio modes.
+**Done in the sixteenth pass (2026-10-27).**
+
+- The exact 44.1 kHz clock fixed the 737-vs-735 cadence; 600 frames are 10.000 s.
+  Old/new Road Rash captures have identical spectral peaks and peak/RMS; the
+  content did not change.
+- Live OpenAL output works in the trimmed and NativeAOT CLI; underruns are padded
+  and counted. Audio-driven frame pacing is implemented in `CoreRunner` and the
+  CLI `--realtime` path.
+- WAV captures are buffered and instrumented, and `audio analyze` reports
+  peak/RMS/clipping/silence/DC. Captures are in `TestCorpus.md` 1.5a2.
+- Remaining: a 30-60 s road/level loudness/spectrum comparison against Opera, and
+  a manual check that a game changing DSP modes stops/starts without a click.
+  Road Rash's clipping is the game's loud race mix (2,036 frames in a 10 s 92k-state
+  capture), not the output path.
 
 ### Step 4 - performance
 
@@ -790,7 +845,8 @@ save/load proof.
 - [x] The Lemmings passcode confirm path is complete (Fun 4 gameplay + roundtrip).
 - [x] The Lemmings passcode is typed entirely with the D-pad
   (`docs/scripts/lem-fun4-dpad.txt`, gameplay at 23,000 frames,
-  `PC 0x00083FD8`, hash `0xB7846C2D`, roundtrip `0xEDEB1B9D` twice).
+  `PC 0x00083FE8`, hash `0x63C02DED`, roundtrip `PC 0x000230A4` / `0x4CA339CD`
+  twice with the exact audio clock).
 - [x] CRT bloom is implemented in the OpenGL presenter and exposed in Settings.
 - [x] HQx 2x/3x/4x are implemented and match the C++ hq2x/hq3x/hq4x reference
   hashes.
@@ -825,6 +881,16 @@ save/load proof.
   gamepad backends/mapping UI, log viewer, save-state thumbnails, or first-run/error
   dialogs are complete and tested. Extend them only with new evidence.
 - Do not re-enable the `AudioSink?.PushSample(Dsp.Loop())` short-circuit.
+- Do not revert the exact DSP sample clock to FreeDO's 8.24 `qrz_AccDSP` path. It is
+  the difference between 44.1 kHz and ~44.4 kHz audio. Keep VDL/timer on the FreeDO
+  accumulators; only the DSP clock is exact.
+- Do not remove the bundled OpenAL Soft runtime, the `OpenAL32.dll` copy targets, or
+  the audio-thread `alcMakeContextCurrent` call. They fix silent live audio on
+  machines without a system OpenAL install.
+- Do not remove audio-driven pacing or its 60 Hz fallback. The exact clock makes the
+  nominal period 16.67 ms; the fallback protects reset/state-load frame deltas.
+- Do not make the WAV sink write one file write per sample again; the buffered sink
+  is required for long captures.
 - Do not change the XBUS DMA byte order (`IRam` uses `b0,b1,b2,b3`).
 - Do not port `opera_cdrom.c` wholesale; the CD path is working.
 - Do not commit BIOS ROMs, game images, extracted assets, or WAV captures.
@@ -973,8 +1039,10 @@ The data-track extraction command is in [`TestCorpus.md`](TestCorpus.md).
    READ_ID-only wait. The game now advances to `BUSTED`, race select, and a new
    race. The remaining experiment is **start-line/right-edge handling** after the
    race-select flow, not more CD or pre-race tuning.
-3. Does the 737 vs 735 samples/frame cadence cause audible pitch drift? Compare a
-   captured WAV with Opera/hardware before changing `_dspPcnt`.
+3. ~~Does the 737 vs 735 samples/frame cadence cause audible pitch drift?~~
+   **Answered 2026-10-27:** yes, the FreeDO 8.24 scheduler over-produced samples
+   by ~0.7%. The exact DSP clock now matches Opera's 44.1 kHz rate; `_dspPcnt` was
+   not the cause and was left at 567.
 4. Is the 191-sample Road Rash clipping in the game mix or in our DSP output path?
 5. Does the VDLP width fix expose any 384/512-mode title that previously appeared
    only because of the 320-pixel crop?

@@ -77,6 +77,31 @@ public sealed class CoreRunnerTests
         runner.Stop();
     }
 
+    [Fact]
+    public void Status_ReportsTheAudioDerivedTargetFrameRate()
+    {
+        FiveDoMachine machine = CreateMachine();
+        CoreStatus? last = null;
+        using var signal = new ManualResetEventSlim();
+        using var runner = new CoreRunner(
+            machine,
+            statusSink: status =>
+            {
+                last = status;
+                if (status.TargetFramesPerSecond > 0)
+                {
+                    signal.Set();
+                }
+            });
+
+        runner.Start();
+        Assert.True(signal.Wait(TimeSpan.FromSeconds(3)));
+        runner.Stop();
+
+        Assert.NotNull(last);
+        Assert.InRange(last.Value.TargetFramesPerSecond, 59.5, 60.5);
+    }
+
     private static FiveDoMachine CreateMachine()
     {
         var machine = new FiveDoMachine();

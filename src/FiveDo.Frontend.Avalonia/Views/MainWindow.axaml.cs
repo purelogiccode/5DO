@@ -83,10 +83,22 @@ public partial class MainWindow : Window, IDisposable
         _slots.Select(Math.Clamp(_settings.SaveSlot, 0, _slots.SlotCount - 1));
         _gamepad = PlatformGamepadBackend.TryCreate(_settings.Input);
         _input = new InputManager(_settings.Input, _gamepad);
-        _audio = _settings.AudioEnabled ? OpenAlAudioOutput.TryCreate() : null;
+        string? audioError = null;
+        _audio = _settings.AudioEnabled ? OpenAlAudioOutput.TryCreate(4096, out audioError) : null;
         if (_audio is not null)
         {
             _audio.Volume = _settings.Volume;
+            _log.Write(
+                LogLevel.Info,
+                LogCategory.Audio,
+                $"OpenAL audio ready ({OpenAlAudioOutput.OutputSampleRate} Hz stereo).");
+        }
+        else if (_settings.AudioEnabled)
+        {
+            _log.Write(
+                LogLevel.Warning,
+                LogCategory.Audio,
+                $"OpenAL audio is unavailable; emulation continues silently ({audioError ?? "unknown error"}).");
         }
 
         _nvramStore = new NvramStore(Path.Combine(AppSettingsStore.DefaultDirectory, "nvram.ram"));
@@ -1232,11 +1244,18 @@ public partial class MainWindow : Window, IDisposable
         {
             if (_audio is null)
             {
-                _audio = OpenAlAudioOutput.TryCreate();
+                _audio = OpenAlAudioOutput.TryCreate(4096, out var audioError);
                 if (_audio is not null && _machine is not null)
                 {
                     _machine.AudioSink = _audio;
                 }
+
+                _log.Write(
+                    _audio is null ? LogLevel.Warning : LogLevel.Info,
+                    LogCategory.Audio,
+                    _audio is null
+                        ? $"OpenAL audio is unavailable; emulation continues silently ({audioError ?? "unknown error"})."
+                        : $"OpenAL audio ready ({OpenAlAudioOutput.OutputSampleRate} Hz stereo).");
             }
 
             if (_audio is not null)
@@ -1322,7 +1341,8 @@ public partial class MainWindow : Window, IDisposable
                 ? $"present {Video.PresentMilliseconds:F2} ms"
                 : $"gpu {gpu.Value:F2} ms  present {Video.PresentMilliseconds:F2} ms";
             OverlayText.Text =
-                $"{status.FramesPerSecond,5:F1} fps  {status.Cycles,6} cyc  PC 0x{status.ProgramCounter:x8}  {timing}";
+                $"{status.FramesPerSecond,5:F1}/{status.TargetFramesPerSecond:F2} fps  "
+                + $"{status.Cycles,6} cyc  PC 0x{status.ProgramCounter:x8}  {timing}";
         }
     }
 

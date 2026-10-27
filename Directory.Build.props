@@ -12,6 +12,9 @@
     <Company>5DO contributors</Company>
     <Version>1.0.0-rc.1</Version>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <FiveDoOpenAlSoftVersion>1.23.1</FiveDoOpenAlSoftVersion>
+    <FiveDoOpenAlNativeRid Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</FiveDoOpenAlNativeRid>
+    <FiveDoOpenAlNativeRid Condition="'$(FiveDoOpenAlNativeRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</FiveDoOpenAlNativeRid>
     <IsPackable>false</IsPackable>
     <EnablePackageValidation>false</EnablePackageValidation>
 

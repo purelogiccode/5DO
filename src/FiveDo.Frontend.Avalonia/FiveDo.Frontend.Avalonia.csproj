@@ -62,4 +62,12 @@
     <ProjectReference Include="..\FiveDo.Video.OpenGL\FiveDo.Video.OpenGL.csproj" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(FiveDoOpenAlNativeRid)' == 'win-x64' or '$(FiveDoOpenAlNativeRid)' == 'win-arm64' or '$(FiveDoOpenAlNativeRid)' == 'win-x86'">
+    <Content Include="$(NuGetPackageRoot)silk.net.openal.soft.native/$(FiveDoOpenAlSoftVersion)/runtimes/$(FiveDoOpenAlNativeRid)/native/soft_oal.dll"
+             Link="OpenAL32.dll"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest"
+             Visible="false" />
+  </ItemGroup>
+
 </Project>

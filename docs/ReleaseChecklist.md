@@ -68,8 +68,11 @@ Recommended title statuses:
 
 - [ ] Distribution/license decision recorded in `docs/Licensing.md`.
 - [x] `THIRD-PARTY-NOTICES.md` covers FreeDO/4DO, Opera/libopera, CHDSharp, Avalonia,
-      Silk.NET, and other NuGet dependencies. See
-      [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
+      Silk.NET, the bundled OpenAL Soft 1.23.1 runtime, and other NuGet
+      dependencies. See [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
+- [ ] OpenAL Soft LGPL-2.0-or-later obligations (notice, corresponding source
+      offer, relinking rights) are included in the release decision. The runtime is
+      now bundled for all six RIDs.
 - [x] About dialog and CLI `--version`/license output are current.
 - [x] No BIOS ROM, disc image, extracted asset, WAV capture, or copyrighted game
       content is tracked in the repository; packaging uses only publish output plus
@@ -87,7 +90,7 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - [x] `dotnet build 5DO.sln -c Release` passes with 0 warnings and 0 errors
       (1.0.0-rc.1).
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release` passes:
-      775/775 with 1.0.0-rc.1.
+      796/796 with 1.0.0-rc.1 (after the 2026-10-27 audio pass).
 - [x] `dotnet format 5DO.sln --verify-no-changes` passes.
 - [ ] CI is green on the supported runners. (Local gates pass; the GitHub Actions
       workflow was not re-run in this session.)
@@ -132,9 +135,12 @@ writes `summary.md`/`summary.json` for the release evidence.
       this machine, so this is a continuation soak, not a fresh boot.
 - [x] Save/load roundtrip on each showcase title: zero-frame hash matches and two
       120-frame continuations are identical (see `Compatibility.md` §10.2).
-- [x] Audio is non-silent 44.1 kHz stereo on the showcase titles; Road Rash clips
-      74 samples in 10 s, and the 36k Lemmings gameplay state happened to be silent
-      while its 23k gameplay state is non-silent. Both are documented.
+- [x] Audio is non-silent 44.1 kHz stereo on the showcase titles and uses the exact
+      44,100-sample clock (10.000 s per 600 frames). Road Rash's race mix clips
+      (2,036 frames in a 92k-state capture), the 36k Lemmings gameplay state happened
+      to be silent while its 23k state is non-silent, and Theme Park's menu is silent;
+      all are documented in `TestCorpus.md` 1.5a2. Live OpenAL output, audio-driven
+      pacing, WAV analysis, and AOT CLI audio are validated.
 - [x] Keyboard input works on the showcase titles through the scripted runs; gamepad
       mapping and merge behavior are covered by unit tests, with hardware validation
       still platform-specific.
@@ -211,8 +217,8 @@ A new crash, silent corruption, or save-state regression is not.
   launch validation if not claimed for v1.
 - Tier B 1080p60 timing, 3D CEL profiling, hot-path optimization, and the
   same-machine relative benchmark gate on stable CI hardware.
-- MSIX/dmg/AppImage installers, signing/notarization, file associations, and AOT
-  audio validation.
+- MSIX/dmg/AppImage installers, signing/notarization, and file associations.
+  Frontend NativeAOT audio remains unvalidated; the CLI AOT path is validated.
 - ViewModel tests and UI polish.
 - Optional M12 managed ARM JIT (profile first; not needed for v1).
 

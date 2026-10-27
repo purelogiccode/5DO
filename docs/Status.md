@@ -1,7 +1,7 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-26, 1.0.0-rc.1 release preparation after the fifteenth code
-pass (see `git log` for the exact commit).
+**Snapshot:** 2026-10-27, 1.0.0-rc.1 release preparation after the sixteenth
+(audio) code pass (see `git log` for the exact commit).
 **Release definition:** documented compatibility, not full compatibility; see
 [`ReleaseChecklist.md`](ReleaseChecklist.md).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
@@ -43,8 +43,8 @@ This is the short, current answer to "where are we?" The detailed task list is i
   CPU-expanded native source and sharp-bilinear finishing, and CRT bloom adds a 3x3
   native-resolution glow in the CRT filter. The HQx 3x/4x switches match the C++
   reference hashes and are the most expensive opt-in modes.
-- **Performance:** the machine runs on a dedicated 60 Hz core thread with a frame
-  pacer; the UI renders on demand; uploads use `TexStorage2D` + `TexSubImage2D`;
+- **Performance:** the machine runs on a dedicated core thread paced by the 44.1 kHz
+  audio clock (60 Hz fallback) with a frame pacer; the UI renders on demand; uploads use `TexStorage2D` + `TexSubImage2D`;
   uniform locations and the present delegate are cached; physical-pixel sizing is
   implemented and unit-tested at 100/125/150/200% scaling. The benchmark reports
   p50/p95/p99 and per-stage allocations, and the
@@ -72,7 +72,8 @@ This is the short, current answer to "where are we?" The detailed task list is i
 - **Per-game fixes:** `GameCompatibility` maps the 4DO game IDs to `FixMode` bits.
   The CLI exposes `--fix-mode 0xMASK` and `--no-game-fixes`, and `run --json` /
   `info` report the applied mask. Alone in the Dark's `FIX_BIT_TIMING_6` is applied
-  automatically; the 3,000-frame boot hash is unchanged.
+  automatically; the current 3,000-frame boot keys are in
+  [`TestCorpus.md`](TestCorpus.md) 1.1 after the audio-clock rebaseline.
 - **Tooling:** CLI `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks`,
   `fs list/extract`, `disasm`, plus KPRINT, CD, CLIO, FIQ, RAM-write watchpoints,
   RAM/DSP dumps, DSP-instruction rings, CEL command/geometry traces, PBUS packet
@@ -85,16 +86,26 @@ This is the short, current answer to "where are we?" The detailed task list is i
   for mode/crop, driver, and wait-state investigations.
 - **Audio:** the DSP executes in every run, including headless runs with no host
   audio sink. The AudioFolio semaphore handshake works, instrument programs run, and
-  the five-title corpus produces non-silent 44.1 kHz stereo WAV output (~737 samples
-  per frame). Ninth-pass 600-frame captures: Wolfenstein peak 18100 / RMS ~2.2k,
-  Lemmings 22283 / ~4.5k, Alone 20617 / ~1.9k, Road Rash 32768 / ~9.2k (378 clipped),
-  Space Ace 4096 / 1832 (mono duplicated); see `TestCorpus.md` 1.5a.
+  the corpus produces non-silent 44.1 kHz stereo WAV output. The DSP sample clock is
+  now exact: 44,100 samples per emulated second (600 frames = 441,015-441,020
+  samples, 10.000 s), replacing FreeDO's 8.24 accumulator that ran ~0.7% fast
+  (444,097 samples / 10.070 s). Road Rash's 6,000-frame capture has the same peak,
+  RMS, and spectral peaks as before; only the timebase changed. Live output uses
+  a bundled OpenAL Soft 1.23.1 runtime (no system OpenAL install required), makes
+  the context current on the audio thread, pads underruns, and reports
+  dropped/underrun/queued counters. `CoreRunner` paces frames against the audio
+  clock (with a 60 Hz fallback), the CLI can play live with `--audio openal
+  [--realtime]`, and `audio analyze <wav> --json` reports peak/RMS/clipping/DC
+  statistics. Exact-clock 600-frame captures: Wolfenstein 18,100 / 2,168,
+  Lemmings 8,192 / 1,661, Gex 12,964 / 2,089, Road Rash 32,768 / 11,012 (2,036
+  clipped), Theme Park silent; see `TestCorpus.md` 1.5a2. The opt-in NativeAOT
+  CLI opens the same backend.
 - **Input scripting:** the CLI accepts `--input-script <path>` with
   `frame button[,button...]` lines for repeatable controller taps. Input has been
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 775 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 796 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
@@ -105,11 +116,11 @@ This is the short, current answer to "where are we?" The detailed task list is i
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   Both executables are self-contained, single-file, and trimmed (`PublishTrimmed=true`,
   `TrimMode=full`). The CLI also has an opt-in NativeAOT win-x64 publish
-  (`-p:FiveDoNativeAot=true`): 9.97 MB, CI-smoke-tested with `--version`, `selftest`,
-  `bench`, `info`, `fs list`, and a golden 3,000-frame boot. The frontend has an
-  opt-in NativeAOT single-file publish (28.8 MB executable plus native assets) that
-  passes `--smoke-test` and the WGL/ANGLE parity probes; Silk.NET.Core loader warnings
-  remain and AOT audio is not yet validated. A Windows CI smoke test runs the trimmed
+  (`-p:FiveDoNativeAot=true`): 10.54 MB, CI-smoke-tested with `--version`, `selftest`,
+  `bench`, `info`, `fs list`, a golden 3,000-frame boot, and live OpenAL audio. The
+  frontend has an opt-in NativeAOT single-file publish (28.8 MB executable plus native
+  assets) that passes `--smoke-test` and the WGL/ANGLE parity probes; Silk.NET.Core
+  loader warnings remain and frontend AOT audio is not yet validated. A Windows CI smoke test runs the trimmed
   CLI and starts the trimmed frontend (`--smoke-test`); the win-x64 packages were
   validated with synthetic/ISO/CHD runs, state roundtrips, `fs list`, and a real
   window/render pass.
@@ -128,7 +139,7 @@ on both sides. Opera is the bundled Windows `OperaCore` build in
 
 | Title | Our C# port | Opera reference |
 |---|---|---|
-| Lemmings (USA) | **Boots, renders, plays DSP audio**; reaches the title screen and the passcode screen; with `--high-res` the 640x480 title renders all four buttons and the full logo, matching the reference. The Fun 4 code `HNLHCIOECW` is now typed entirely with the D-pad (`docs/scripts/lem-fun4-dpad.txt`); gameplay starts at 23,000 frames (`PC 0x00083FD8`, hash `0xB7846C2D`) and roundtrips (`0xEDEB1B9D` twice). 600-frame WAV evidence in `TestCorpus.md` 1.5a | Not re-tested this pass; expected to pass |
+| Lemmings (USA) | **Boots, renders, plays DSP audio**; reaches the title screen and the passcode screen; with `--high-res` the 640x480 title renders all four buttons and the full logo, matching the reference. The Fun 4 code `HNLHCIOECW` is now typed entirely with the D-pad (`docs/scripts/lem-fun4-dpad.txt`); gameplay starts at 23,000 frames (`PC 0x00083FE8`, hash `0x63C02DED`) and roundtrips (`PC 0x000230A4`, `0x4CA339CD` twice). 600-frame WAV evidence in `TestCorpus.md` 1.5a | Not re-tested this pass; expected to pass |
 | Space Ace (USA) | **Boots, renders, plays DSP audio**; ReadySoft player runs the animated demo past 12,000 frames. The interactive path is now validated: X returns to the title/menu, A starts the scene; the 15,000-frame state roundtrips (`0x7E780D93` -> `PC 0x000284EC`, `0x70B16422` twice) and the gameplay WAV is non-silent | **Plays the demo intro for 60 s, no runaway** |
 | Road Rash (USA) | **Boots, renders, plays DSP audio**; the 3D race renders correctly and the attract race runs past 60,000 frames with no allocator error; B accelerates, A brakes, the D-pad steers, C attacks, and P pauses. The CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait: those screens advance to `BUSTED`, the race-select menu, and a new race. The autopilot now passes `GAME LOADING`/`Get ready` and cycles race -> wreck -> menu -> new race to 100k, but still does not finish a full 5.5-mile race | **Renders the intro FMV, then a race** |
 | Wolfenstein 3D (USA) | **Boots, renders, plays DSP audio**; A opens the preview menu, selecting a level starts a fresh game (FLOOR 1-1), the player can walk/turn/fire, and save/load roundtrips in-game (`0xF568EBCA` -> `PC 0x000782B8` twice); 600-frame WAV evidence captured. The fresh-game load advances with A pulses (character select -> FLOOR 1-1 at 64,000, hash `0x2F5B9864`) | **Renders the intro for 60 s** |
@@ -201,7 +212,8 @@ The CD device now raises a media-access event (`0x40`) after two consecutive
 READ_ID polls with an idle gap; this advances those screens to `BUSTED`, race
 select, and a new race. `run --json` exposes `cdStatus`/`cdPoll`, and the autopilot
 reports `autopilotMenuAdvance` while it pulses A through the post-race flow. The
-five 3,000-frame hashes are unchanged. From the 60k state the autopilot now starts
+3,000-frame keys were later re-baselined by the exact audio clock; see
+[`TestCorpus.md`](TestCorpus.md) 1.1. From the 60k state the autopilot now starts
 a new race at 80k and cycles race -> wreck -> menu -> new race to 100k; the
 remaining Road Rash work is finishing a full race without wrecking, not the CD
 wait. That is post-1.0 backlog; it is not a v1 release gate.
@@ -338,7 +350,7 @@ seven titles, and further CD/CLIO/MADAM/ARM timing triage.
 8. **Performance:** Tier B 1080p60 numbers, 3D CEL frame timing, hot-path
    optimization, and the same-machine relative benchmark gate on stable CI hardware.
 9. **Packaging polish:** MSIX/dmg/AppImage installers, signing/notarization,
-   Windows/macOS file associations, and AOT audio validation.
+   Windows/macOS file associations, and frontend AOT audio validation.
 10. **Optional M12 guest ARM JIT:** profile first; not needed for v1.
 
 ---

@@ -18,6 +18,7 @@ internal sealed record CliErrorResult(bool Ok, string Error);
 internal sealed record CliRunResult(
     bool Ok,
     long Frames,
+    double ElapsedSeconds,
     int CyclesPerFrame,
     int SourceWidth,
     int SourceHeight,
@@ -47,7 +48,35 @@ internal sealed record CliRunResult(
     bool? AutopilotPacing,
     bool? AutopilotUpset,
     double[]? AutopilotLookahead,
+    double? AudioDurationSeconds,
+    int? AudioPeak,
+    double? AudioRms,
+    long? AudioClippedFrames,
+    long? AudioSilentFrames,
+    double? AudioDcOffsetLeft,
+    double? AudioDcOffsetRight,
+    long? AudioDroppedSamples,
+    long? AudioUnderrunBuffers,
+    long? AudioQueuedBuffers,
+    int? AudioBufferedFrames,
+    double? AudioLatencyMilliseconds,
     IReadOnlyList<string> Warnings);
+
+internal sealed record CliAudioResult(
+    bool Ok,
+    string Path,
+    int SampleRate,
+    int Channels,
+    int BitsPerSample,
+    long Frames,
+    double DurationSeconds,
+    long DataBytes,
+    int Peak,
+    double Rms,
+    long ClippedFrames,
+    long SilentFrames,
+    double DcOffsetLeft,
+    double DcOffsetRight);
 
 internal sealed record CliInfoResult(
     bool Ok,
@@ -102,6 +131,7 @@ internal sealed record CliFsExtractResult(bool Ok, int Extracted, string Output)
 [JsonSerializable(typeof(CliRunResult))]
 [JsonSerializable(typeof(CliInfoResult))]
 [JsonSerializable(typeof(CliBiosInfoResult))]
+[JsonSerializable(typeof(CliAudioResult))]
 [JsonSerializable(typeof(CliBenchResult))]
 [JsonSerializable(typeof(CliSelfTestResult))]
 [JsonSerializable(typeof(CliFsListResult))]

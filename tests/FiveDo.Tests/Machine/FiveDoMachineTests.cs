@@ -74,6 +74,16 @@ public sealed class FiveDoMachineTests
     }
 
     [Fact]
+    public void RunFrames_ProduceOneSecondOfExactDspSamples()
+    {
+        var machine = new FiveDoMachine();
+
+        machine.RunFrames(60);
+
+        Assert.InRange(machine.AudioSamplesProduced, 44_100, 44_110);
+    }
+
+    [Fact]
     public void RunFrame_ExecutesDspWithoutAudioSink()
     {
         var machine = new FiveDoMachine();

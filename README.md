@@ -6,10 +6,15 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-26, 1.0.0-rc.1 release preparation, fifteenth code pass):** M0-M8 are functionally complete. The
+**Current position (2026-10-27, 1.0.0-rc.1 release preparation, sixteenth audio
+pass):** M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **775 tests pass.** The fifteenth pass added an explicit
+prototype. **796 tests pass.** The sixteenth pass corrected the DSP sample clock to
+an exact 44,100 samples per emulated second (the FreeDO 8.24 scheduler ran ~0.7%
+fast), fixed live OpenAL output by bundling OpenAL Soft 1.23.1 and making the
+context current on the audio thread, added audio-driven frame pacing, and added
+WAV/audio statistics plus `audio analyze`. The fifteenth pass added an explicit
 `--gl-backend auto|wgl|angle|software` selector and validated the Windows
 ANGLE/GLES 3.0 path: all filters compile, 4K sharp-bilinear presents in 0.14 ms
 mean / 0.47 ms p99 with zero renderer allocations, and a 320x240 Accurate capture
@@ -29,6 +34,17 @@ evdev gamepads are supported. The CLI applies the 4DO per-game fixes automatical
 accepts `--fix-mode`/`--no-game-fixes` overrides. The benchmark reports p50/p95/p99 and
 zero steady-state allocations, and `--gate` enforces the CPU-side budgets in CI; an
 opt-in bounded disc prefetch cache is available via `--prefetch`.
+
+**Audio (2026-10-27):** the corpus now produces exactly 735 samples per 60 Hz
+frame (441,015-441,020 samples per 600 frames = 10.000 s), matching Opera's 44.1 kHz
+reference within the 59.94/60 Hz field-rate difference. Live playback uses the
+bundled OpenAL Soft 1.23.1 runtime (no system OpenAL install required), the core
+thread paces frames against the audio clock with a 60 Hz fallback, and the CLI
+supports `--audio openal [--volume 0..1] [--realtime]` plus
+`audio analyze <wav> --json` for peak/RMS/clipping/DC reports. The opt-in
+NativeAOT CLI also opens the live backend. Audio content is unchanged: a
+6,000-frame Road Rash capture has the same spectral peaks before/after; only the
+timebase was corrected.
 
 The renderer now has an opt-in **xBR-lv2** edge-directed 4x filter, **HQx 2x/3x/4x**
 filters, and **CRT bloom** alongside accurate, nearest, sharp-bilinear, and CRT modes.
@@ -199,6 +215,8 @@ and the remaining M9P work items.
 - A legally obtained 3DO BIOS ROM (1 MB, optionally a second 1 MB ROM).
 - Legally obtained 3DO disc images in ISO (2048-byte sectors), BIN (2352-byte sectors), CUE+BIN, or CHD format. CHD support uses the pure C# CHDSharp library.
 - For the desktop app: Windows 10+, a current Linux desktop, or macOS 12+.
+- Desktop audio uses the OpenAL Soft 1.23.1 runtime bundled by the build; no system
+  OpenAL installation is required.
 
 ## Build
 
@@ -215,8 +233,11 @@ Headless CLI:
 
 ```powershell
 dotnet run --project src/FiveDo.Cli -- run game.cue --bios panafz1.bin --frames 600 --frame-out frame.png
+dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin --frames 600 --audio wav --wav-out capture.wav
+dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin --frames 600 --audio openal --volume 0.5 --realtime
 dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin --frames 600 --prefetch --high-res
 dotnet run --project src/FiveDo.Cli -- info game.chd --json
+dotnet run --project src/FiveDo.Cli -- audio analyze capture.wav --json
 dotnet run --project src/FiveDo.Cli -- bios info panafz1.bin
 dotnet run --project src/FiveDo.Cli -- state inspect quick.tdos
 dotnet run --project src/FiveDo.Cli -- bench --frames 600
@@ -260,7 +281,8 @@ publish (`-p:FiveDoNativeAot=true`): the win-x64 AOT single file is 9.97 MB and 
 runs the CLI smoke commands against it. The frontend has an opt-in NativeAOT
 single-file publish (28.8 MB executable plus native Skia/HarfBuzz/ANGLE assets) that
 passes the smoke test and the WGL/ANGLE parity probes; Silk.NET loader warnings remain
-and AOT audio is not yet validated. See
+and frontend AOT audio is not yet validated. The CLI AOT path opens the bundled
+OpenAL backend. See
 [`docs/Trimming.md`](docs/Trimming.md) for the audit and the remaining AOT work.
 
 CI also packages each published CLI/frontend folder as a portable archive:

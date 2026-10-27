@@ -116,9 +116,29 @@ NVRAM is stored as `nvram.ram` in the same directory.
 
 ## Audio
 
-OpenAL Soft output is used when available. Audio can be disabled in Settings; the
-emulated DSP still runs so games do not stall. The CLI can write WAV files with
-`--audio wav --wav-out <path>`.
+The desktop app ships the OpenAL Soft 1.23.1 runtime, so live stereo output works
+without a system OpenAL installation. Use Settings > Audio to enable/disable audio
+and set the volume. If no playback device is available, the app logs a warning and
+continues silently; the emulated DSP still runs so games do not stall.
+
+The core produces exactly 44,100 stereo samples per emulated second, and the
+dedicated core thread paces frames against that clock (falling back to 60 Hz when
+no samples are available). The optional FPS overlay shows measured/target fps.
+
+The CLI can write WAV files with `--audio wav --wav-out <path>` or play live with
+`--audio openal --volume 0.5`. Add `--realtime` to pace a CLI run at the audio
+clock; without it, the CLI runs as fast as possible and live audio is a short
+burst.
+
+To inspect a capture:
+
+```powershell
+dotnet run --project src/FiveDo.Cli -- audio analyze capture.wav --json
+```
+
+The report includes sample rate, channels, duration, peak, RMS, clipped/silent
+frames, and DC offset. `run --json` includes the same statistics for WAV captures
+and OpenAL dropped/underrun/queued/buffered counters plus estimated latency.
 
 ## Logs
 
@@ -140,6 +160,7 @@ dotnet run -c Release --project src/FiveDo.Cli -- bench --frames 600
 dotnet run -c Release --project src/FiveDo.Cli -- selftest
 ```
 
+Audio backends: `--audio null|wav|openal`, `--wav-out`, `--volume`, `--realtime`.
 Diagnostics: `--watch-lowmem`, `--dump-ram`, `--dump-dsp`, `--trace-frames`, `--poke`,
 `--capture-dir`, `--capture-every`, `--input-script`, and `--autopilot road`. See
 [`TestCorpus.md`](TestCorpus.md) for the full command set and script format.

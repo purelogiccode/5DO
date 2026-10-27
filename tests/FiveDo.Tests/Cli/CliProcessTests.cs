@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using FiveDo.Audio;
+using FiveDo.Core;
 
 namespace FiveDo.Tests.Cli;
 
@@ -62,6 +64,31 @@ public sealed class CliProcessTests
 
         Assert.Equal(1, result.Code);
         Assert.Contains("error:", result.Error, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AudioAnalyze_ReportsPcmStatistics()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fivedo-cli-audio-{Guid.NewGuid():N}.wav");
+        try
+        {
+            using (var sink = new WavAudioSink(path))
+            {
+                sink.PushSample(new AudioSample(100, -100).Packed);
+                sink.PushSample(new AudioSample(0, 0).Packed);
+            }
+
+            CliResult result = Invoke("audio", "analyze", path, "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"frames\": 2", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"peak\": 100", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"silentFrames\": 1", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact]

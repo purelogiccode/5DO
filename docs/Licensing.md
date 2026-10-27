@@ -75,7 +75,10 @@ The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NO
 - HQx 2x/3x/4x filters by Maxim Stepin and Cameron Zemek (LGPL-2.1+; attribution
   preserved in `HqxFilter.cs` and `THIRD-PARTY-NOTICES.md`)
 - OS XInput / Linux evdev gamepad APIs (no bundled third-party runtime)
-- OpenAL Soft (LGPL; native runtime, if bundled)
+- OpenAL Soft 1.23.1 (LGPL-2.0-or-later; now bundled for all six RIDs through
+  `Silk.NET.OpenAL.Soft.Native`, including Windows `OpenAL32.dll`). The LGPL
+  notice/source offer must ship with the archives; track it in
+  [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - CHDSharp (MIT plus an LGPL-2.1 component; pure C#; verify the package LICENSE before release)
 - 4DO game database (derive with attribution; verify terms)
 

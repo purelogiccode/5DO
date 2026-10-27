@@ -19,7 +19,7 @@ frontend with `--smoke-test --smoke-output <path>` (exit code 0 plus a
 `FRONTEND SMOKE OK` marker). CI also publishes NativeAOT win-x64 builds of both
 executables and runs the same smoke commands.
 
-## NativeAOT CLI audit (2026-10-26)
+## NativeAOT CLI audit (2026-10-27)
 
 The CLI publishes with NativeAOT when `FiveDoNativeAot=true`:
 
@@ -30,15 +30,19 @@ dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj `
   -o artifacts/cli-aot
 ```
 
-The win-x64 single-file executable is **9.97 MB** (versus 26.3 MB for the trimmed
-IL single file). The audit covered:
+The win-x64 single-file executable is **10.54 MB** (versus the trimmed IL single
+file) plus the bundled `OpenAL32.dll`. The audit covered:
 
 - `--version`, `selftest --json`, and `bench --frames 2 --json`.
 - `info` and `fs list` on `Lemmings (USA).chd` (482 files).
-- A 3,000-frame Lemmings boot reproducing the golden `PC 0x0012B3C8` /
-  hash `0x932C7722`.
-- The only remaining warning is CHDSharp's vendored-FLAC `TypeDescriptor` helper
-  (`IL2104`), outside the 3DO data-track path.
+- A 3,000-frame Lemmings boot; the audio-clock keys are in
+  [`TestCorpus.md`](TestCorpus.md) 1.1.
+- **Live OpenAL audio** with `--audio openal` (validated with the OpenAL null
+  backend because the test machine has no playback endpoint at audit time).
+- Silk.NET.Core loader warnings (`IL3000`/`IL3002`) are visible but non-fatal; the
+  loader falls back to `AppContext.BaseDirectory`, where `OpenAL32.dll` is copied.
+  CHDSharp's vendored-FLAC `TypeDescriptor` helper (`IL2104`) remains outside the
+  3DO data-track path.
 
 The CLI AOT executable does not replace the default six-RID trimmed publishes:
 NativeAOT cross-compilation is limited (for example, osx-arm64 AOT is not produced
@@ -71,9 +75,11 @@ Silk.NET.Core's native-asset loader (`DefaultPathResolver`) still uses
 analyzer reports `IL3000`/`IL3002` for single-file. The opt-in frontend AOT build
 keeps `PublishSingleFile=true`, demotes those ILC warnings to visible warnings, and
 the resulting app starts and renders. The loader warnings primarily affect optional
-native audio discovery; **audio under single-file AOT is not yet validated**, and the
-default six-RID publishes remain trimmed IL. A future cleanup should replace the
-Silk.NET loader dependency or install a custom native-asset resolver.
+native audio discovery; the **CLI** single-file AOT path now opens the bundled
+OpenAL runtime, but **frontend** AOT audio is not yet validated because the
+frontend's native-asset set is larger. The default six-RID publishes remain trimmed
+IL. A future cleanup should replace the Silk.NET loader dependency or install a
+custom native-asset resolver for the frontend.
 
 ## What was fixed
 
@@ -195,10 +201,11 @@ Get-Content artifacts/frontend-smoke.txt
 
 The CLI audit also covered `state inspect`, `state slots`, `fs list` on a
 generated CHD, a CHD boot/run, and a save-state roundtrip through the trimmed
-executable. The trimmed win-x64 CLI reproduces the 3,000-frame golden results for
-Lemmings (`PC 0x0012B3C8`, hash `0x932C7722`) and Alone in the Dark
-(`PC 0x000C4CB4`, hash `0xF4BDF79B`) from `artifacts/regression/`; the frame
-hashes, PCs, cycle counts, disc IDs, and fix modes match.
+executable. The trimmed win-x64 CLI reproduces the current 3,000-frame golden
+results for Lemmings (`PC 0x0012B36C`, hash `0x6CCA83F5`) and Alone in the Dark
+(`PC 0x000C4C94`, hash `0x4EC2E1A7`) from `artifacts/regression/`; the frame
+hashes, PCs, cycle counts, disc IDs, and fix modes match. These keys postdate the
+exact DSP audio clock; see [`TestCorpus.md`](TestCorpus.md) 1.1.
 
 `-m:1` avoids a .NET SDK 10.0.301 `GenerateDepsFile` race seen when several
 project references generate dependency files in parallel during a trimmed
@@ -209,8 +216,9 @@ publish. The CI publish steps use the same switch.
 The CLI and the frontend single-file layout are AOT-validated on win-x64. Remaining:
 
 - Silk.NET.Core's `Assembly.Location`/`DependencyContext` native-asset loader still
-  emits `IL3000`/`IL3002`; audio under single-file AOT is not yet validated. A
-  Silk.NET-compatible resolver or a custom `DllImportResolver` is the cleanup.
+  emits `IL3000`/`IL3002`; the CLI's single-file AOT audio path is validated, but
+  the frontend's is not. A Silk.NET-compatible resolver or a custom
+  `DllImportResolver` is the cleanup.
 - Cross-OS AOT publishing needs a native toolchain per target (the current six-RID
   matrix is produced on one Linux runner and uses trimmed IL).
 - The frontend AOT smoke test covers startup and the WGL/ANGLE probes; a full in-app

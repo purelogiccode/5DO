@@ -34,7 +34,9 @@ The CD wait fix is a media-access pulse: two consecutive READ_ID commands with
 no intervening command and at least 50 frames between them set poll bit `0x40`.
 Portfolio uses that event to finish the post-race/post-load transition. The fix
 advances Road Rash's ~42k/~92k/100k screens to `BUSTED`, race select, and a new
-race while leaving the five 3,000-frame corpus hashes unchanged.
+race. The five 3,000-frame corpus hashes were unchanged by that fix at the time;
+the exact DSP audio clock later re-baselined them (current keys in
+[`TestCorpus.md`](TestCorpus.md) 1.1).
 
 The 2026-10-24 sessions found four root causes:
 
@@ -214,7 +216,8 @@ uploader all carry the larger frame.
 
 Evidence: from a fresh Lemmings boot, the 640x480 title screen shows all four buttons
 and the full logo and matches the reference screenshot; the five 3,000-frame low-res
-corpus hashes are unchanged. The mode is off by default because 320x240 titles must
+corpus hashes were unchanged by high-res mode (the current keys are in
+[`TestCorpus.md`](TestCorpus.md) 1.1). The mode is off by default because 320x240 titles must
 not be upscaled. The Lemmings passcode screen is a 320-wide UI scaled 2x; its five
 visible keyboard columns are the game's own window, not a framebuffer crop, so it
 does not need a separate high-resolution input path.
@@ -226,11 +229,14 @@ does not need a separate high-resolution input path.
 | Feature | v1 | Later |
 |---|---|---|
 | DSP emulation | Yes | |
-| 44.1 kHz stereo | Yes | |
-| Null/WAV sink | Yes | |
-| Desktop audio backend | OpenAL Soft via Silk.NET (v1 target) | Platform-specific backends possible |
+| 44.1 kHz stereo | Yes; exact rational sample clock (44,100 samples per ARM second) | |
+| Null/WAV sink | Yes; streaming peak/RMS/clipping/DC statistics | |
+| Desktop audio backend | OpenAL Soft 1.23.1 via Silk.NET, bundled for all six RIDs | Platform-specific backends possible |
+| Live CLI audio | `--audio openal --volume`, `--realtime` pacing | |
 | Volume/mute | Yes | |
-| Audio-driven frame pacing | No (fixed 60 Hz) | Later refinement |
+| Audio-driven frame pacing | Yes (audio clock with a 60 Hz fallback) | |
+| Audio analysis | `audio analyze <wav> --json` | Spectrum/loudness comparison with Opera remains a manual check |
+| AOT live audio | Validated for the win-x64 NativeAOT CLI with the bundled runtime | Frontend AOT audio remains unvalidated |
 | CD-DA | No | Out of scope |
 
 ---
@@ -273,7 +279,7 @@ Use this table when testing real discs. Record the disc hash/ID, BIOS, build, an
 
 | Game | Region | Disc ID | BIOS | Build | Boot | In-game | Audio | Input | Notes | Opera reference |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | **Fun 4 gameplay via pure D-pad passcode (`HNLHCIOECW`) with save/load roundtrip** | Non-silent DSP output | **Works**: A types, B confirms, ten letters auto-confirm, D-pad moves the selection; entry is permuted across `0x96574-7B,7E-7F`; `docs/scripts/lem-fun4-dpad.txt` types the full code with only D-pad/A | Passcode `HNLHCIOECW` accepted (`Fun 4 / Level 1 / Save the Lemmings`); gameplay at 23,000 frames (`PC 0x00083FD8`, `0xB7846C2D`) roundtrips (`0xEDEB1B9D` twice); 640x480 high-res title matches the reference | Not re-tested this pass |
+| Lemmings | USA | `0be38b22` | `panafz1` | 0.0.0 | **Pass** | **Fun 4 gameplay via pure D-pad passcode (`HNLHCIOECW`) with save/load roundtrip** | Non-silent DSP output | **Works**: A types, B confirms, ten letters auto-confirm, D-pad moves the selection; entry is permuted across `0x96574-7B,7E-7F`; `docs/scripts/lem-fun4-dpad.txt` types the full code with only D-pad/A | Passcode `HNLHCIOECW` accepted (`Fun 4 / Level 1 / Save the Lemmings`); with the exact audio clock, gameplay at 23,000 frames is `PC 0x00083FE8`, hash `0x63C02DED`, and roundtrips (`PC 0x000230A4`, `0x4CA339CD` twice); 640x480 high-res title matches the reference | Not re-tested this pass |
 | Space Ace | USA | `112b53d0` | `panafz1` | 0.0.0 | **Pass** | **Animated demo and interactive scene; X -> menu, A -> play; 15,000-frame save/load roundtrip** | Non-silent DSP output; 10 s peak 4096, RMS ~1.8k (mono duplicated) | **Works**: X returns to the title/menu, A starts the scene; P also changes state | Former frame-681 null-buffer runaway is gone; the 15,000 state roundtrips (`0x7E780D93` -> two 120-frame continuations at `PC 0x000284EC`, `0x70B16422`) | Demo intro 60 s, no runaway |
 | Road Rash | EU-US | `d7672550` | `panafz1` | 0.0.0 | **Pass** | **3D race renders and runs past 60,000 frames; CD media-access pulse unblocks the old ~42k/~92k wait and reaches `BUSTED` -> race select -> new race; autopilot cycles race/wreck/menu to 100k** | Non-silent DSP output; 10 s peak 32768, RMS ~9.6k/8.8k, 378 clipped | **B accelerates, A brakes, D-pad steers, C attacks, P pauses**; `--autopilot road` adds close-traffic coast/steer, urgent preemption, emergency-brake steer hold, a throttle-only wreck/rider-run restart, and A pulses for post-race/start-line screens (`autopilotMenuAdvance`) | The CEL transposition fix removed the VRAM `AllocMem` error; the earlier "wall pin" was the race-over `BUSTED` screen. The old ~42k/~92k READ_ID-only wait is fixed; the remaining autopilot issue is finishing a full race without wrecking | Intro FMV, then a race |
 | Wolfenstein 3D | USA | `3dfcdbbf` | `panafz1` | 0.0.0 | **Pass** | **Fresh game (FLOOR 1-1) and save/load roundtrip; A pulses pass the long fresh-game load** | Non-silent DSP output; 10 s peak 30743, RMS ~5.5k | **Works**: A opens the menu, D-pad/A navigate and fire; A every 300 frames passes character select | From a 12,000-frame demo state, A opens the preview menu; selecting a level starts a fresh game. `w3d-loadlong.state` + A reaches FLOOR 1-1 at 64,000 (hash `0x2F5B9864`) | Intro 60 s |
@@ -339,8 +345,9 @@ transposition fixes are described above; input results come from `--input-script
   The ninth pass fixed the old ~92,000/~42,000 stop: the CD device raises a
   media-access event (`0x40`) after two consecutive READ_ID polls with an idle
   gap. The game advances to `BUSTED`, the race-select menu, and a new race
-  (`PC 0x0007DCBC`, hash `0x277CCED7` at 113,000). The five 3,000-frame hashes
-  are unchanged. The autopilot pulses A/releases throttle during long-static,
+  (`PC 0x0007DCBC`, hash `0x277CCED7` at 113,000). The five 3,000-frame keys
+  were later re-baselined by the exact DSP clock; see
+  [`TestCorpus.md`](TestCorpus.md) 1.1. The autopilot pulses A/releases throttle during long-static,
   low-coverage, CD-load, and 180-frame restart-stuck states
   (`autopilotMenuAdvance`). From the 60k state it starts a new race at 80,000
   (`PC 0x00092FF8`, hash `0x1074EF3F`) and cycles race/wreck/menu to 100,000

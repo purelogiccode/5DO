@@ -86,6 +86,26 @@ The 2026-10-24 pass decoded the common failure:
   `[audioState+0x9C]` after the same failed `AllocInstrument` path, not a random DMA
   corruption.
 
+**Audio clock differential (2026-10-27).** The Opera test harness
+(`tools/test_harness.c` + `make harness`) was built in WSL and run against
+`panafz1.bin` and the local CHDs. A 600-frame Lemmings capture produced 441,441
+samples / 10.010 s at Opera's 59.94 Hz field rate, i.e. exactly 44.1 kHz. Our
+FreeDO-based scheduler produced 444,097 samples / 10.070 s (~44.4 kHz); the exact
+DSP clock now produces 441,015-441,020 samples / 10.000 s. Road Rash 6,000-frame
+captures have identical peak (29,951), RMS within 0.2%, and spectral peaks
+(442.1 Hz) before/after, confirming the content did not change. The harness is a
+developer reference only; see `TestCorpus.md` 1.5a2 for the stats. Reproduce it in
+WSL from `References/opera-libretro-master`:
+
+```bash
+make -j8
+make harness
+./opera-test-harness --core ./opera_libretro.so \
+  --bios /path/to/panafz1.bin --title "/mnt/e/Panasonic 3DO/Lemmings (USA).chd" \
+  --frames 600 --audio /tmp/lem-opera.wav --metrics /tmp/lem-opera.json \
+  --wall-timeout 120
+```
+
 The next differential is therefore **DSP-only**: `opera_dsp.c` against `Dsp.cs`,
 starting with the special registers, flags, `exact`/branch table, operand loader,
 and the head/tail command entry. Do not touch the CD path or the ARM core until the

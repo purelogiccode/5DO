@@ -1,6 +1,6 @@
 # Release Legal and Attribution Review
 
-**Date:** 2026-10-26
+**Date:** 2026-10-27 (OpenAL Soft bundle added)
 **Status:** engineering audit complete; **owner/legal sign-off pending**
 **Release candidate:** 1.0.0-rc.1 (documented-compatibility scope)
 
@@ -33,7 +33,10 @@ images, BIOS ROMs, extracted assets, screenshots, or WAV captures.
 - [x] `THIRD-PARTY-NOTICES.md` covers FreeDO, 4DO, Opera/libopera, xBR-lv2, HQx,
       CHDSharp, VideoGameFileSystemParser, Avalonia, CommunityToolkit.Mvvm,
       Microsoft.Extensions.*, System.CommandLine, Silk.NET/OpenAL, xUnit,
-      BenchmarkDotNet, and the optional OpenAL Soft runtime.
+      BenchmarkDotNet, and the now-bundled OpenAL Soft 1.23.1 runtime.
+- [x] The OpenAL Soft native runtime is now included for all six RIDs through
+      `Silk.NET.OpenAL.Soft.Native`; Windows copies `soft_oal.dll` as `OpenAL32.dll`.
+      This adds an LGPL-2.0-or-later binary-distribution obligation to the release.
 - [x] The desktop About dialog reports the version, renderer state, and the
       FreeDO/4DO licensing warning, and states that no BIOS ROMs or game images are
       included.
@@ -52,9 +55,10 @@ images, BIOS ROMs, extracted assets, screenshots, or WAV captures.
       products without written permission.
 - [ ] **Source availability.** Confirm how corresponding source will be offered for
       distributed binaries, as required by the LGPL/GPL terms.
-- [ ] **Third-party license review.** Confirm the CHDSharp LGPL-2.1 component and the
-      HQx LGPL-2.1 filter obligations, and decide whether the HQx filters remain in a
-      binary distribution that cannot comply.
+- [ ] **Third-party license review.** Confirm the CHDSharp LGPL-2.1 component, the
+      HQx LGPL-2.1 filter obligations, and the OpenAL Soft LGPL-2.0-or-later native
+      runtime obligation (notice, source offer, and relinking rights). Decide whether
+      any of these remain in a binary distribution that cannot comply.
 - [ ] **Trademark review.** "3DO", "Panasonic", and "GoldStar" are trademarks of their
       respective owners; the 5DO name and store listing must not imply endorsement.
 
