@@ -8,7 +8,7 @@
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="12">
         <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="6">
-            <Button x:Name="AddFolderButton" Content="Add Folder" Click="OnAddFolder"
+            <Button x:Name="AddFolderButton" Content="Add Folder" Click="OnAddFolderAsync"
                     ToolTip.Tip="Add a folder that contains ISO, BIN, CUE, or CHD images." />
             <Button x:Name="RefreshButton" Content="Refresh" Click="OnRefresh"
                     ToolTip.Tip="Rescan the configured game folders." />

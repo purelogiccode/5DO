@@ -200,7 +200,7 @@ public sealed class LogTests
     }
 
     [Fact]
-    public async Task BugReportSink_PostsWarningToTheConfiguredEndpoint()
+    public async Task BugReportSink_PostsWarningToTheConfiguredEndpointAsync()
     {
         var handler = new RecordingHandler();
         using var http = new HttpClient(handler);

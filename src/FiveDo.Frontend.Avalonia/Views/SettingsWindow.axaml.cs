@@ -68,7 +68,7 @@ public partial class SettingsWindow : Window
         FixModeBox.Text = overrideMode is null ? string.Empty : $"0x{(uint)overrideMode.Value:x}";
     }
 
-    private async void OnTestAudioClick(object? sender, RoutedEventArgs e)
+    private async void OnTestAudioClickAsync(object? sender, RoutedEventArgs e)
     {
         TestAudioButton.IsEnabled = false;
         TestAudioText.Text = "Playing a 1 s 440 Hz tone...";
@@ -172,25 +172,25 @@ public partial class SettingsWindow : Window
 
     private void OnCancel(object? sender, RoutedEventArgs e) => Close(false);
 
-    private async void OnBrowseSaveDirectory(object? sender, RoutedEventArgs e)
+    private async void OnBrowseSaveDirectoryAsync(object? sender, RoutedEventArgs e)
     {
-        var path = await PickFolder("Select the save-state directory", SaveDirectoryBox.Text).ConfigureAwait(true);
+        var path = await PickFolderAsync("Select the save-state directory", SaveDirectoryBox.Text).ConfigureAwait(true);
         if (path is not null)
         {
             SaveDirectoryBox.Text = path;
         }
     }
 
-    private async void OnBrowseScreenshotDirectory(object? sender, RoutedEventArgs e)
+    private async void OnBrowseScreenshotDirectoryAsync(object? sender, RoutedEventArgs e)
     {
-        var path = await PickFolder("Select the screenshot directory", ScreenshotDirectoryBox.Text).ConfigureAwait(true);
+        var path = await PickFolderAsync("Select the screenshot directory", ScreenshotDirectoryBox.Text).ConfigureAwait(true);
         if (path is not null)
         {
             ScreenshotDirectoryBox.Text = path;
         }
     }
 
-    private async System.Threading.Tasks.Task<string?> PickFolder(string title, string? current)
+    private async System.Threading.Tasks.Task<string?> PickFolderAsync(string title, string? current)
     {
         var options = new FolderPickerOpenOptions
         {

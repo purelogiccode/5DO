@@ -171,7 +171,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         LoadConfiguredPaths();
-        RefreshLibrary();
+        RefreshLibraryAsync();
     }
 
     private void ShowWelcome(bool firstRun)
@@ -191,10 +191,10 @@ public partial class MainWindow : Window, IDisposable
                 switch (welcome.Action)
                 {
                     case WelcomeAction.OpenBios:
-                        OnOpenBios(null, new RoutedEventArgs());
+                        OnOpenBiosAsync(null, new RoutedEventArgs());
                         break;
                     case WelcomeAction.OpenDisc:
-                        OnOpenDisc(null, new RoutedEventArgs());
+                        OnOpenDiscAsync(null, new RoutedEventArgs());
                         break;
                 }
 
@@ -203,7 +203,7 @@ public partial class MainWindow : Window, IDisposable
                     LoadConfiguredPaths();
                 }
 
-                RefreshLibrary();
+                RefreshLibraryAsync();
             };
             IsEnabled = false;
             welcome.Show(this);
@@ -233,7 +233,7 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private async void OnOpenBios(object? sender, RoutedEventArgs e)
+    private async void OnOpenBiosAsync(object? sender, RoutedEventArgs e)
     {
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
@@ -248,7 +248,7 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private async void OnOpenDisc(object? sender, RoutedEventArgs e)
+    private async void OnOpenDiscAsync(object? sender, RoutedEventArgs e)
     {
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
@@ -798,7 +798,7 @@ public partial class MainWindow : Window, IDisposable
         _ = window.ShowDialog(this);
     }
 
-    private async void OnAddFolder(object? sender, RoutedEventArgs e)
+    private async void OnAddFolderAsync(object? sender, RoutedEventArgs e)
     {
         var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
@@ -823,7 +823,7 @@ public partial class MainWindow : Window, IDisposable
         if (added)
         {
             AppSettingsStore.Save(_settings);
-            RefreshLibrary();
+            RefreshLibraryAsync();
         }
         else if (folders.Count > 0)
         {
@@ -831,7 +831,7 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OnRefresh(object? sender, RoutedEventArgs e) => RefreshLibrary();
+    private void OnRefresh(object? sender, RoutedEventArgs e) => RefreshLibraryAsync();
 
     private void OnExit(object? sender, RoutedEventArgs e) => Close();
 
@@ -1000,7 +1000,7 @@ public partial class MainWindow : Window, IDisposable
 
     private static string CountLabel(int count) => count == 1 ? "1 game" : $"{count} games";
 
-    private async void RefreshLibrary()
+    private async void RefreshLibraryAsync()
     {
         if (Program.SmokeTest)
         {
@@ -1173,7 +1173,7 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private async void OnSettings(object? sender, RoutedEventArgs e)
+    private async void OnSettingsAsync(object? sender, RoutedEventArgs e)
     {
         var window = new SettingsWindow(_settings, _gameId, _gameName);
         if (!await window.ShowDialog<bool>(this).ConfigureAwait(true))
@@ -1213,7 +1213,7 @@ public partial class MainWindow : Window, IDisposable
         _logger.ForCategory(LogCategory.Host).Information("Settings saved.");
     }
 
-    private async void OnSaveSlots(object? sender, RoutedEventArgs e)
+    private async void OnSaveSlotsAsync(object? sender, RoutedEventArgs e)
     {
         var window = new SaveSlotsWindow(
             _slots,
@@ -1241,7 +1241,7 @@ public partial class MainWindow : Window, IDisposable
         UpdateSlotText();
     }
 
-    private async void OnInputBindings(object? sender, RoutedEventArgs e)
+    private async void OnInputBindingsAsync(object? sender, RoutedEventArgs e)
     {
         var window = new InputBindingsWindow(_settings.Input);
         var profile = await window.ShowDialog<InputProfile?>(this).ConfigureAwait(true);

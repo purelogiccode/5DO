@@ -54,7 +54,7 @@
                             Minimum="0" Maximum="1" TickFrequency="0.05"
                             ToolTip.Tip="Output volume from 0 (muted) to 1 (full)." />
                     <Button x:Name="TestAudioButton" Grid.Row="2" Grid.Column="1"
-                            Content="Play 440 Hz test tone" Click="OnTestAudioClick"
+                            Content="Play 440 Hz test tone" Click="OnTestAudioClickAsync"
                             HorizontalAlignment="Left" Margin="0,12,0,0"
                             ToolTip.Tip="Play a one-second 440 Hz tone to verify the output device." />
                     <TextBlock x:Name="TestAudioText" Grid.Row="3" Grid.ColumnSpan="2"
@@ -98,13 +98,13 @@
                                ToolTip.Tip="Folder used for numbered save slots and thumbnails." />
                     <TextBox x:Name="SaveDirectoryBox" Grid.Row="0" Grid.Column="1" Margin="0,0,6,8"
                              ToolTip.Tip="Path to the save-state folder." />
-                    <Button Grid.Row="0" Grid.Column="2" Content="Browse" Click="OnBrowseSaveDirectory" Margin="0,0,0,8"
+                    <Button Grid.Row="0" Grid.Column="2" Content="Browse" Click="OnBrowseSaveDirectoryAsync" Margin="0,0,0,8"
                             ToolTip.Tip="Choose the save-state folder." />
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Screenshots" VerticalAlignment="Center"
                                ToolTip.Tip="Folder used for PNG screenshots." />
                     <TextBox x:Name="ScreenshotDirectoryBox" Grid.Row="1" Grid.Column="1" Margin="0,0,6,0"
                              ToolTip.Tip="Path to the screenshot folder." />
-                    <Button Grid.Row="1" Grid.Column="2" Content="Browse" Click="OnBrowseScreenshotDirectory"
+                    <Button Grid.Row="1" Grid.Column="2" Content="Browse" Click="OnBrowseScreenshotDirectoryAsync"
                             ToolTip.Tip="Choose the screenshot folder." />
                 </Grid>
             </TabItem>

@@ -18,11 +18,11 @@
         <!-- Menu bar -->
         <Menu Grid.Row="0" x:Name="MainMenu" ToolTip.Tip="Open discs, control emulation, configure the app, and view logs.">
             <MenuItem Header="File" ToolTip.Tip="Open a BIOS or disc, add game folders, boot recent discs, or exit.">
-                <MenuItem Header="Open BIOS..." Click="OnOpenBios"
+                <MenuItem Header="Open BIOS..." Click="OnOpenBiosAsync"
                           ToolTip.Tip="Choose a 3DO BIOS ROM (for example panafz1.bin)." />
-                <MenuItem Header="Boot Disc..." Click="OnOpenDisc"
+                <MenuItem Header="Boot Disc..." Click="OnOpenDiscAsync"
                           ToolTip.Tip="Choose an ISO, BIN, CUE, or CHD disc image and boot it." />
-                <MenuItem Header="Add Game Folder..." Click="OnAddFolder"
+                <MenuItem Header="Add Game Folder..." Click="OnAddFolderAsync"
                           ToolTip.Tip="Add a folder that the library scans for disc images." />
                 <MenuItem x:Name="RecentMenu" Header="Boot Recent"
                           ToolTip.Tip="Boot a disc that was opened recently." />
@@ -47,7 +47,7 @@
                           ToolTip.Tip="Select the previous save slot." />
                 <MenuItem Header="Next Slot" Click="OnNextSlot"
                           ToolTip.Tip="Select the next save slot." />
-                <MenuItem Header="Save Slots..." Click="OnSaveSlots"
+                <MenuItem Header="Save Slots..." Click="OnSaveSlotsAsync"
                           ToolTip.Tip="Open the save-slot manager with previews." />
                 <Separator />
                 <MenuItem Header="Screenshot" Click="OnScreenshot"
@@ -58,9 +58,9 @@
             </MenuItem>
 
             <MenuItem Header="Configuration" ToolTip.Tip="Video, audio, emulation, path, and input settings.">
-                <MenuItem Header="Settings..." Click="OnSettings"
+                <MenuItem Header="Settings..." Click="OnSettingsAsync"
                           ToolTip.Tip="Open video, audio, emulation, and path settings." />
-                <MenuItem Header="Input Bindings..." Click="OnInputBindings"
+                <MenuItem Header="Input Bindings..." Click="OnInputBindingsAsync"
                           ToolTip.Tip="Configure keyboard and gamepad bindings for all six players." />
                 <Separator />
                 <MenuItem x:Name="HighResMenuItem" Header="High-Resolution Mode (640x480)"
@@ -103,14 +103,14 @@
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
             <Grid ColumnDefinitions="Auto,*,Auto">
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Classes="toolbar" Click="OnOpenDisc" ToolTip.Tip="Boot a disc image">
+                    <Button Classes="toolbar" Click="OnOpenDiscAsync" ToolTip.Tip="Boot a disc image">
                         <StackPanel Spacing="2">
                             <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
                                       Data="{StaticResource IconOpen}" />
                             <TextBlock Text="Open" FontSize="10.5" HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button Classes="toolbar" Click="OnOpenBios" ToolTip.Tip="Open a 3DO BIOS ROM">
+                    <Button Classes="toolbar" Click="OnOpenBiosAsync" ToolTip.Tip="Open a 3DO BIOS ROM">
                         <StackPanel Spacing="2">
                             <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
                                       Data="{StaticResource IconBios}" />
@@ -154,14 +154,14 @@
 
                     <Border Width="1" Margin="7,6" Background="{DynamicResource BorderBrush}" />
 
-                    <Button Classes="toolbar" Click="OnSettings" ToolTip.Tip="Configure the emulator">
+                    <Button Classes="toolbar" Click="OnSettingsAsync" ToolTip.Tip="Configure the emulator">
                         <StackPanel Spacing="2">
                             <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
                                       Data="{StaticResource IconSettings}" />
                             <TextBlock Text="Config" FontSize="10.5" HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button Classes="toolbar" Click="OnInputBindings" ToolTip.Tip="Configure keyboard and gamepad input">
+                    <Button Classes="toolbar" Click="OnInputBindingsAsync" ToolTip.Tip="Configure keyboard and gamepad input">
                         <StackPanel Spacing="2">
                             <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
                                       Data="{StaticResource IconGamepad}" />
@@ -185,7 +185,7 @@
                             <TextBlock Text="Load" FontSize="10.5" HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button Classes="toolbar" Click="OnSaveSlots" ToolTip.Tip="Manage save slots">
+                    <Button Classes="toolbar" Click="OnSaveSlotsAsync" ToolTip.Tip="Manage save slots">
                         <StackPanel Spacing="2">
                             <PathIcon Width="22" Height="22" HorizontalAlignment="Center"
                                       Data="{StaticResource IconSlots}" />
@@ -356,7 +356,7 @@
                            TextWrapping="Wrap"
                            Text="Add a folder that contains ISO, BIN, CUE, or CHD images."
                            ToolTip.Tip="Add a folder so the library can discover disc images." />
-                <Button Classes="accent" Content="Add Game Folder" Click="OnAddFolder"
+                <Button Classes="accent" Content="Add Game Folder" Click="OnAddFolderAsync"
                         HorizontalAlignment="Center"
                         ToolTip.Tip="Add a folder that contains ISO, BIN, CUE, or CHD images." />
             </StackPanel>

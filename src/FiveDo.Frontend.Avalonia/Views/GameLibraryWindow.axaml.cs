@@ -36,7 +36,7 @@ public partial class GameLibraryWindow : Window
 
     private void OnRefresh(object? sender, RoutedEventArgs e) => Refresh();
 
-    private async void OnAddFolder(object? sender, RoutedEventArgs e)
+    private async void OnAddFolderAsync(object? sender, RoutedEventArgs e)
     {
         IReadOnlyList<IStorageFolder> folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {

@@ -81,6 +81,8 @@ still change.
 
 ### Changed
 
+- Renamed every `async`/`Task`-returning method to the `Async` suffix, including
+  Avalonia event handlers and their XAML bindings, for consistent async naming.
 - Replaced the custom `Log`/`ILogSink`/`ConsoleLogSink`/`InMemoryLogSink`/`NullLogSink`
   facade with Serilog. `LogCategory` remains as the structured category property,
   and the desktop log viewer is fed by `InMemorySerilogSink`. Host entry points and
