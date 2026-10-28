@@ -122,6 +122,7 @@ public partial class InputBindingsWindow : Window
                 Text = button.ToString(),
                 VerticalAlignment = VerticalAlignment.Center,
             };
+            ToolTip.SetTip(label, $"The 3DO {button} button.");
             Grid.SetColumn(label, 0);
             row.Children.Add(label);
 
@@ -131,6 +132,7 @@ public partial class InputBindingsWindow : Window
                 IsReadOnly = true,
                 Margin = new global::Avalonia.Thickness(0, 0, 6, 0),
             };
+            ToolTip.SetTip(key, $"Current keyboard binding for {button}. Select Rebind to change it.");
             Grid.SetColumn(key, 1);
             row.Children.Add(key);
 
@@ -139,6 +141,11 @@ public partial class InputBindingsWindow : Window
                 Content = _pendingButton == button ? "Press a key..." : "Rebind",
                 Tag = button,
             };
+            ToolTip.SetTip(
+                rebind,
+                _pendingButton == button
+                    ? $"Press the new key for {button}, or Escape to cancel."
+                    : $"Bind {button} to a new keyboard key.");
             rebind.Click += OnRebind;
             Grid.SetColumn(rebind, 2);
             row.Children.Add(rebind);
@@ -169,6 +176,7 @@ public partial class InputBindingsWindow : Window
                     Text = name,
                     VerticalAlignment = VerticalAlignment.Center,
                 };
+                ToolTip.SetTip(label, $"Physical gamepad control: {name}.");
                 Grid.SetColumn(label, 0);
                 row.Children.Add(label);
 
@@ -180,6 +188,7 @@ public partial class InputBindingsWindow : Window
                         : ControllerButton.None,
                     Tag = name,
                 };
+                ToolTip.SetTip(combo, $"Choose the 3DO button mapped to {name}.");
                 combo.SelectionChanged += OnGamepadBindingChanged;
                 Grid.SetColumn(combo, 1);
                 row.Children.Add(combo);

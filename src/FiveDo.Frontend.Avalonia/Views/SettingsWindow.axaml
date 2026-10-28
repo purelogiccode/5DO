@@ -6,82 +6,119 @@
         WindowStartupLocation="CenterOwner">
 
     <Grid RowDefinitions="*,Auto" Margin="12">
-        <TabControl Grid.Row="0">
-            <TabItem Header="Video">
+        <TabControl Grid.Row="0" ToolTip.Tip="Video, audio, emulation, and path settings.">
+            <TabItem Header="Video" ToolTip.Tip="Filter, aspect ratio, scaling, overlay, bloom, and FSR options.">
                 <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Filter" VerticalAlignment="Center" />
-                    <ComboBox x:Name="FilterCombo" Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" />
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Aspect" VerticalAlignment="Center" />
-                    <ComboBox x:Name="AspectCombo" Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" />
-                    <CheckBox x:Name="IntegerCheck" Grid.Row="2" Grid.Column="1" Content="Integer scaling" />
-                    <CheckBox x:Name="VsyncCheck" Grid.Row="3" Grid.Column="1" Content="VSync (where supported)" />
-                    <CheckBox x:Name="OverlayCheck" Grid.Row="4" Grid.Column="1" Content="Show FPS/status overlay" />
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Filter" VerticalAlignment="Center"
+                               ToolTip.Tip="Choose the output filter applied by the OpenGL presenter." />
+                    <ComboBox x:Name="FilterCombo" Grid.Row="0" Grid.Column="1" Margin="0,0,0,8"
+                              ToolTip.Tip="Nearest, sharp-bilinear, CRT, xBR, HQx, or AMD FSR 1.0." />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Aspect" VerticalAlignment="Center"
+                               ToolTip.Tip="Choose how the 4:3 source is fitted to the window." />
+                    <ComboBox x:Name="AspectCombo" Grid.Row="1" Grid.Column="1" Margin="0,0,0,8"
+                              ToolTip.Tip="Auto, 4:3, 16:9, or stretch." />
+                    <CheckBox x:Name="IntegerCheck" Grid.Row="2" Grid.Column="1" Content="Integer scaling"
+                              ToolTip.Tip="Restrict scaling to whole-number multiples for uniform pixels." />
+                    <CheckBox x:Name="VsyncCheck" Grid.Row="3" Grid.Column="1" Content="VSync (where supported)"
+                              ToolTip.Tip="Request vertical sync from the platform where the backend supports it." />
+                    <CheckBox x:Name="OverlayCheck" Grid.Row="4" Grid.Column="1" Content="Show FPS/status overlay"
+                              ToolTip.Tip="Show frame rate, renderer timing, and audio queue counters over the game." />
                     <CheckBox x:Name="NativeScreenshotCheck" Grid.Row="5" Grid.Column="1"
-                              Content="Also save the native CPU frame with screenshots" />
-                    <TextBlock Grid.Row="6" Grid.Column="0" Text="CRT bloom" VerticalAlignment="Center" />
+                              Content="Also save the native CPU frame with screenshots"
+                              ToolTip.Tip="Write a second, unfiltered PNG of the 320x240 CPU frame beside the filtered capture." />
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="CRT bloom" VerticalAlignment="Center"
+                               ToolTip.Tip="Adjust the glow around bright areas in the CRT filter." />
                     <Slider x:Name="BloomSlider" Grid.Row="6" Grid.Column="1"
-                            Minimum="0" Maximum="1" TickFrequency="0.05" />
-                    <TextBlock Grid.Row="7" Grid.Column="0" Text="FSR sharpness" VerticalAlignment="Center" />
+                            Minimum="0" Maximum="1" TickFrequency="0.05"
+                            ToolTip.Tip="CRT bloom strength from 0 (off) to 1 (strongest)." />
+                    <TextBlock Grid.Row="7" Grid.Column="0" Text="FSR sharpness" VerticalAlignment="Center"
+                               ToolTip.Tip="Adjust RCAS sharpening when the FSR filter is selected." />
                     <Slider x:Name="FsrSharpnessSlider" Grid.Row="7" Grid.Column="1"
-                            Minimum="0" Maximum="1" TickFrequency="0.05" />
+                            Minimum="0" Maximum="1" TickFrequency="0.05"
+                            ToolTip.Tip="FSR RCAS sharpness from 0 (soft) to 1 (maximum)." />
                     <TextBlock Grid.Row="8" Grid.Column="1" Text="xBR runs an edge-directed 4x pass; HQx runs a 2x/3x/4x CPU pixel-art pass; FSR runs AMD FidelityFX Super Resolution 1.0 (EASU + RCAS) at the output. CRT bloom adds a glow around bright areas. All of them cost more CPU/GPU time at 4K; HQx 3x/4x are the most expensive."
-                               Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0" />
+                               Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"
+                               ToolTip.Tip="Filter notes: xBR and HQx are CPU-heavy; FSR and CRT bloom run on the GPU." />
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Audio">
+            <TabItem Header="Audio" ToolTip.Tip="OpenAL output, volume, and test-tone settings.">
                 <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="8">
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Output" VerticalAlignment="Center" />
-                    <CheckBox x:Name="AudioCheck" Grid.Row="0" Grid.Column="1" Content="Enable OpenAL output" />
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume" VerticalAlignment="Center" />
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Output" VerticalAlignment="Center"
+                               ToolTip.Tip="Enable or disable live OpenAL playback." />
+                    <CheckBox x:Name="AudioCheck" Grid.Row="0" Grid.Column="1" Content="Enable OpenAL output"
+                              ToolTip.Tip="Play the emulated DSP through the bundled OpenAL Soft runtime." />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume" VerticalAlignment="Center"
+                               ToolTip.Tip="Set the live output volume." />
                     <Slider x:Name="VolumeSlider" Grid.Row="1" Grid.Column="1"
-                            Minimum="0" Maximum="1" TickFrequency="0.05" />
+                            Minimum="0" Maximum="1" TickFrequency="0.05"
+                            ToolTip.Tip="Output volume from 0 (muted) to 1 (full)." />
                     <Button x:Name="TestAudioButton" Grid.Row="2" Grid.Column="1"
                             Content="Play 440 Hz test tone" Click="OnTestAudioClick"
-                            HorizontalAlignment="Left" Margin="0,12,0,0" />
+                            HorizontalAlignment="Left" Margin="0,12,0,0"
+                            ToolTip.Tip="Play a one-second 440 Hz tone to verify the output device." />
                     <TextBlock x:Name="TestAudioText" Grid.Row="3" Grid.ColumnSpan="2"
                                Text="OpenAL Soft 1.23.1 · 44.1 kHz stereo"
-                               Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0" />
+                               Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
+                               ToolTip.Tip="Audio backend status and test-tone result." />
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Emulation">
+            <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, high-resolution mode, and overrides.">
                 <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <CheckBox x:Name="AutoFixesCheck" Grid.Row="0" Grid.Column="1"
-                              Content="Apply the 4DO per-game fixes automatically" />
+                              Content="Apply the 4DO per-game fixes automatically"
+                              ToolTip.Tip="Apply the compatibility fix mask from the built-in game database when a disc opens." />
                     <CheckBox x:Name="HighResCheck" Grid.Row="1" Grid.Column="1"
-                              Content="High-resolution CEL mode (640x480, opt-in)" />
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Current game" VerticalAlignment="Center" Margin="0,12,0,0" />
+                              Content="High-resolution CEL mode (640x480, opt-in)"
+                              ToolTip.Tip="Render CELs and bitmap lines at 640x480. Only enable for titles that support it." />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Current game" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="The disc whose per-game overrides are being edited." />
                     <TextBlock x:Name="GameText" Grid.Row="2" Grid.Column="1" Text="No disc loaded."
-                               TextWrapping="Wrap" Margin="0,12,0,0" />
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Fix-mode override" VerticalAlignment="Center" />
+                               TextWrapping="Wrap" Margin="0,12,0,0"
+                               ToolTip.Tip="The currently loaded game and its database entry." />
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Fix-mode override" VerticalAlignment="Center"
+                               ToolTip.Tip="Override the automatic 4DO compatibility fix mask." />
                     <TextBox x:Name="FixModeBox" Grid.Row="3" Grid.Column="1"
-                             PlaceholderText="Automatic (hexadecimal mask, for example 0x20)" />
+                             PlaceholderText="Automatic (hexadecimal mask, for example 0x20)"
+                             ToolTip.Tip="Enter a hexadecimal fix mask, or leave blank to use the database value." />
                     <TextBlock Grid.Row="4" Grid.Column="1" Text="Leave blank to use the database value."
-                               Opacity="0.7" FontSize="11" />
-                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Filter override" VerticalAlignment="Center" Margin="0,12,0,0" />
-                    <ComboBox x:Name="FilterOverrideCombo" Grid.Row="5" Grid.Column="1" Margin="0,12,0,0" />
+                               Opacity="0.7" FontSize="11"
+                               ToolTip.Tip="A blank override keeps the automatic per-game fix mask." />
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Filter override" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Override the output filter for this game." />
+                    <ComboBox x:Name="FilterOverrideCombo" Grid.Row="5" Grid.Column="1" Margin="0,12,0,0"
+                              ToolTip.Tip="Automatic or a per-game filter override." />
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Paths">
+            <TabItem Header="Paths" ToolTip.Tip="Save-state and screenshot folder settings.">
                 <Grid ColumnDefinitions="170,*,Auto" RowDefinitions="Auto,Auto" Margin="8">
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Save states" VerticalAlignment="Center" />
-                    <TextBox x:Name="SaveDirectoryBox" Grid.Row="0" Grid.Column="1" Margin="0,0,6,8" />
-                    <Button Grid.Row="0" Grid.Column="2" Content="Browse" Click="OnBrowseSaveDirectory" Margin="0,0,0,8" />
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Screenshots" VerticalAlignment="Center" />
-                    <TextBox x:Name="ScreenshotDirectoryBox" Grid.Row="1" Grid.Column="1" Margin="0,0,6,0" />
-                    <Button Grid.Row="1" Grid.Column="2" Content="Browse" Click="OnBrowseScreenshotDirectory" />
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Save states" VerticalAlignment="Center"
+                               ToolTip.Tip="Folder used for numbered save slots and thumbnails." />
+                    <TextBox x:Name="SaveDirectoryBox" Grid.Row="0" Grid.Column="1" Margin="0,0,6,8"
+                             ToolTip.Tip="Path to the save-state folder." />
+                    <Button Grid.Row="0" Grid.Column="2" Content="Browse" Click="OnBrowseSaveDirectory" Margin="0,0,0,8"
+                            ToolTip.Tip="Choose the save-state folder." />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Screenshots" VerticalAlignment="Center"
+                               ToolTip.Tip="Folder used for PNG screenshots." />
+                    <TextBox x:Name="ScreenshotDirectoryBox" Grid.Row="1" Grid.Column="1" Margin="0,0,6,0"
+                             ToolTip.Tip="Path to the screenshot folder." />
+                    <Button Grid.Row="1" Grid.Column="2" Content="Browse" Click="OnBrowseScreenshotDirectory"
+                            ToolTip.Tip="Choose the screenshot folder." />
                 </Grid>
             </TabItem>
         </TabControl>
 
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
             <TextBlock x:Name="ValidationText" Grid.Column="0" VerticalAlignment="Center"
-                       Foreground="#FF8080" TextWrapping="Wrap" />
+                       Foreground="#FF8080" TextWrapping="Wrap"
+                       ToolTip.Tip="Validation messages for the current settings." />
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                <Button Content="OK" Click="OnOk" IsDefault="True" />
-                <Button Content="Cancel" Click="OnCancel" IsCancel="True" />
+                <Button Content="OK" Click="OnOk" IsDefault="True"
+                        ToolTip.Tip="Validate and apply these settings." />
+                <Button Content="Cancel" Click="OnCancel" IsCancel="True"
+                        ToolTip.Tip="Discard changes and close this dialog." />
             </StackPanel>
         </Grid>
     </Grid>

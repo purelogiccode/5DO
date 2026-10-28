@@ -8,27 +8,39 @@
 
     <Grid RowDefinitions="*,Auto" Margin="20">
         <StackPanel Grid.Row="0" Spacing="12">
-            <TextBlock Text="Welcome to 5DO" FontSize="22" FontWeight="SemiBold" />
+            <TextBlock Text="Welcome to 5DO" FontSize="22" FontWeight="SemiBold"
+                       ToolTip.Tip="First-run setup guide for the emulator." />
             <TextBlock TextWrapping="Wrap" Opacity="0.9"
-                       Text="This is a pure C# 3DO emulator. To start, choose a legally obtained BIOS ROM and a disc image. The application does not include BIOS files or games." />
+                       Text="This is a pure C# 3DO emulator. To start, choose a legally obtained BIOS ROM and a disc image. The application does not include BIOS files or games."
+                       ToolTip.Tip="5DO does not ship BIOS ROMs or game images; you must provide your own." />
             <TextBlock TextWrapping="Wrap" Opacity="0.75"
-                       Text="Supported discs: ISO, BIN, CUE+BIN, and CHD. You can change these paths later in Settings." />
-            <Border Background="#202020" CornerRadius="3" Padding="10">
+                       Text="Supported discs: ISO, BIN, CUE+BIN, and CHD. You can change these paths later in Settings."
+                       ToolTip.Tip="Supported disc containers. Paths can be changed later in Settings." />
+            <Border Background="#202020" CornerRadius="3" Padding="10"
+                    ToolTip.Tip="Three steps to start a game.">
                 <StackPanel Spacing="4">
-                    <TextBlock Text="First steps" FontWeight="SemiBold" />
-                    <TextBlock Text="1. Open a 3DO BIOS (panafz1.bin or another compatible 1 MB ROM)." Opacity="0.85" />
-                    <TextBlock Text="2. Open a disc image." Opacity="0.85" />
-                    <TextBlock Text="3. Press Play, then use the keyboard or a gamepad." Opacity="0.85" />
+                    <TextBlock Text="First steps" FontWeight="SemiBold"
+                               ToolTip.Tip="Quick-start checklist." />
+                    <TextBlock Text="1. Open a 3DO BIOS (panafz1.bin or another compatible 1 MB ROM)." Opacity="0.85"
+                               ToolTip.Tip="Load a 1 MB 3DO BIOS ROM, such as panafz1.bin." />
+                    <TextBlock Text="2. Open a disc image." Opacity="0.85"
+                               ToolTip.Tip="Choose an ISO, BIN, CUE, or CHD image." />
+                    <TextBlock Text="3. Press Play, then use the keyboard or a gamepad." Opacity="0.85"
+                               ToolTip.Tip="Start emulation and use the configured input bindings." />
                 </StackPanel>
             </Border>
         </StackPanel>
 
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,18,0,0">
             <TextBlock Grid.Column="0" Text="Choose Continue to set up later from the toolbar."
-                       VerticalAlignment="Center" Opacity="0.6" FontSize="11" />
-            <Button Grid.Column="1" Content="Continue" Click="OnContinue" Margin="0,0,8,0" />
-            <Button Grid.Column="2" Content="Open BIOS" Click="OnOpenBios" Margin="0,0,8,0" />
-            <Button Grid.Column="3" Content="Open Disc" Click="OnOpenDisc" />
+                       VerticalAlignment="Center" Opacity="0.6" FontSize="11"
+                       ToolTip.Tip="You can open the BIOS and disc later from the toolbar or File menu." />
+            <Button Grid.Column="1" Content="Continue" Click="OnContinue" Margin="0,0,8,0"
+                    ToolTip.Tip="Close the guide without loading a BIOS or disc." />
+            <Button Grid.Column="2" Content="Open BIOS" Click="OnOpenBios" Margin="0,0,8,0"
+                    ToolTip.Tip="Choose a 3DO BIOS ROM." />
+            <Button Grid.Column="3" Content="Open Disc" Click="OnOpenDisc"
+                    ToolTip.Tip="Choose a disc image to boot." />
         </Grid>
     </Grid>
 </Window>

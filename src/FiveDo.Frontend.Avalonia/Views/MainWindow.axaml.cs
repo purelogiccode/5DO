@@ -607,11 +607,13 @@ public partial class MainWindow : Window, IDisposable
             Text = message,
             TextWrapping = TextWrapping.Wrap,
         };
+        ToolTip.SetTip(text, "Error details.");
         var close = new Button
         {
             Content = "Close",
             HorizontalAlignment = global::Avalonia.Layout.HorizontalAlignment.Right,
         };
+        ToolTip.SetTip(close, "Close this dialog.");
         var panel = new StackPanel
         {
             Margin = new Thickness(16),
@@ -770,11 +772,13 @@ public partial class MainWindow : Window, IDisposable
             Text = text.ToString(),
             TextWrapping = TextWrapping.Wrap,
         };
+        ToolTip.SetTip(textBlock, "Version, renderer, audio, input, and license information.");
         var close = new Button
         {
             Content = "Close",
             HorizontalAlignment = global::Avalonia.Layout.HorizontalAlignment.Right,
         };
+        ToolTip.SetTip(close, "Close this dialog.");
         var panel = new StackPanel
         {
             Margin = new Thickness(16),
@@ -1095,7 +1099,9 @@ public partial class MainWindow : Window, IDisposable
         RecentMenu.Items.Clear();
         if (_settings.RecentDiscs.Count == 0)
         {
-            RecentMenu.Items.Add(new MenuItem { Header = "No recent discs", IsEnabled = false });
+            var empty = new MenuItem { Header = "No recent discs", IsEnabled = false };
+            ToolTip.SetTip(empty, "No discs have been opened recently.");
+            RecentMenu.Items.Add(empty);
             return;
         }
 
@@ -1109,6 +1115,7 @@ public partial class MainWindow : Window, IDisposable
 
         RecentMenu.Items.Add(new Separator());
         var clear = new MenuItem { Header = "Clear Recent" };
+        ToolTip.SetTip(clear, "Clear the recent-discs list.");
         clear.Click += (_, _) =>
         {
             _settings.RecentDiscs.Clear();

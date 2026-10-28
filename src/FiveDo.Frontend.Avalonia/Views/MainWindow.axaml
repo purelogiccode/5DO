@@ -16,58 +16,84 @@
     <Grid RowDefinitions="Auto,Auto,*,Auto,Auto">
 
         <!-- Menu bar -->
-        <Menu Grid.Row="0" x:Name="MainMenu">
-            <MenuItem Header="File">
-                <MenuItem Header="Open BIOS..." Click="OnOpenBios" />
-                <MenuItem Header="Boot Disc..." Click="OnOpenDisc" />
-                <MenuItem Header="Add Game Folder..." Click="OnAddFolder" />
-                <MenuItem x:Name="RecentMenu" Header="Boot Recent" />
+        <Menu Grid.Row="0" x:Name="MainMenu" ToolTip.Tip="Open discs, control emulation, configure the app, and view logs.">
+            <MenuItem Header="File" ToolTip.Tip="Open a BIOS or disc, add game folders, boot recent discs, or exit.">
+                <MenuItem Header="Open BIOS..." Click="OnOpenBios"
+                          ToolTip.Tip="Choose a 3DO BIOS ROM (for example panafz1.bin)." />
+                <MenuItem Header="Boot Disc..." Click="OnOpenDisc"
+                          ToolTip.Tip="Choose an ISO, BIN, CUE, or CHD disc image and boot it." />
+                <MenuItem Header="Add Game Folder..." Click="OnAddFolder"
+                          ToolTip.Tip="Add a folder that the library scans for disc images." />
+                <MenuItem x:Name="RecentMenu" Header="Boot Recent"
+                          ToolTip.Tip="Boot a disc that was opened recently." />
                 <Separator />
-                <MenuItem Header="Exit" Click="OnExit" />
+                <MenuItem Header="Exit" Click="OnExit"
+                          ToolTip.Tip="Close 5DO and return to the desktop." />
             </MenuItem>
 
-            <MenuItem Header="Emulation">
-                <MenuItem x:Name="PlayPauseMenuItem" Header="Start" Click="OnPlayPause" />
-                <MenuItem x:Name="StopMenuItem" Header="Stop" Click="OnStop" />
-                <MenuItem Header="Reset" Click="OnReset" />
+            <MenuItem Header="Emulation" ToolTip.Tip="Start, pause, reset, save/load, capture screenshots, and toggle fullscreen.">
+                <MenuItem x:Name="PlayPauseMenuItem" Header="Start" Click="OnPlayPause"
+                          ToolTip.Tip="Start or pause the emulated console." />
+                <MenuItem x:Name="StopMenuItem" Header="Stop" Click="OnStop"
+                          ToolTip.Tip="Stop emulation and return to the game list." />
+                <MenuItem Header="Reset" Click="OnReset"
+                          ToolTip.Tip="Reset the emulated console and reload the current disc." />
                 <Separator />
-                <MenuItem Header="Save State" Click="OnSaveState" />
-                <MenuItem Header="Load State" Click="OnLoadState" />
-                <MenuItem Header="Previous Slot" Click="OnPreviousSlot" />
-                <MenuItem Header="Next Slot" Click="OnNextSlot" />
-                <MenuItem Header="Save Slots..." Click="OnSaveSlots" />
+                <MenuItem Header="Save State" Click="OnSaveState"
+                          ToolTip.Tip="Save the current state to the selected slot." />
+                <MenuItem Header="Load State" Click="OnLoadState"
+                          ToolTip.Tip="Load the selected save slot." />
+                <MenuItem Header="Previous Slot" Click="OnPreviousSlot"
+                          ToolTip.Tip="Select the previous save slot." />
+                <MenuItem Header="Next Slot" Click="OnNextSlot"
+                          ToolTip.Tip="Select the next save slot." />
+                <MenuItem Header="Save Slots..." Click="OnSaveSlots"
+                          ToolTip.Tip="Open the save-slot manager with previews." />
                 <Separator />
-                <MenuItem Header="Screenshot" Click="OnScreenshot" />
+                <MenuItem Header="Screenshot" Click="OnScreenshot"
+                          ToolTip.Tip="Save a PNG screenshot of the current frame." />
                 <Separator />
-                <MenuItem Header="Fullscreen" Click="OnFullscreen" />
+                <MenuItem Header="Fullscreen" Click="OnFullscreen"
+                          ToolTip.Tip="Toggle fullscreen presentation." />
             </MenuItem>
 
-            <MenuItem Header="Configuration">
-                <MenuItem Header="Settings..." Click="OnSettings" />
-                <MenuItem Header="Input Bindings..." Click="OnInputBindings" />
+            <MenuItem Header="Configuration" ToolTip.Tip="Video, audio, emulation, path, and input settings.">
+                <MenuItem Header="Settings..." Click="OnSettings"
+                          ToolTip.Tip="Open video, audio, emulation, and path settings." />
+                <MenuItem Header="Input Bindings..." Click="OnInputBindings"
+                          ToolTip.Tip="Configure keyboard and gamepad bindings for all six players." />
                 <Separator />
                 <MenuItem x:Name="HighResMenuItem" Header="High-Resolution Mode (640x480)"
-                          ToggleType="CheckBox" Click="OnHighResChanged" />
+                          ToggleType="CheckBox" Click="OnHighResChanged"
+                          ToolTip.Tip="Enable the opt-in 640x480 CEL/VDLP mode. Only use it for supported titles." />
             </MenuItem>
 
-            <MenuItem Header="View">
-                <MenuItem Header="Game List" Click="OnShowLibrary" />
+            <MenuItem Header="View" ToolTip.Tip="Switch the library layout, toggle the log dock, or go fullscreen.">
+                <MenuItem Header="Game List" Click="OnShowLibrary"
+                          ToolTip.Tip="Return to the game library." />
                 <Separator />
                 <MenuItem x:Name="GridModeMenuItem" Header="Grid Mode" ToggleType="CheckBox"
-                          IsChecked="True" Click="OnGridView" />
+                          IsChecked="True" Click="OnGridView"
+                          ToolTip.Tip="Show games as cover-art cards." />
                 <MenuItem x:Name="ListModeMenuItem" Header="List Mode" ToggleType="CheckBox"
-                          Click="OnListView" />
+                          Click="OnListView"
+                          ToolTip.Tip="Show games as a compact list." />
                 <Separator />
                 <MenuItem x:Name="ShowLogMenuItem" Header="Show Log" ToggleType="CheckBox"
-                          Click="OnToggleLog" />
-                <MenuItem Header="Log Viewer..." Click="OnLogs" />
+                          Click="OnToggleLog"
+                          ToolTip.Tip="Show or hide the log dock at the bottom of the window." />
+                <MenuItem Header="Log Viewer..." Click="OnLogs"
+                          ToolTip.Tip="Open the full diagnostic log viewer with filters." />
                 <Separator />
-                <MenuItem Header="Fullscreen" Click="OnFullscreen" />
+                <MenuItem Header="Fullscreen" Click="OnFullscreen"
+                          ToolTip.Tip="Toggle fullscreen presentation." />
             </MenuItem>
 
-            <MenuItem Header="Help">
-                <MenuItem Header="Welcome..." Click="OnWelcome" />
-                <MenuItem Header="About 5DO" Click="OnAbout" />
+            <MenuItem Header="Help" ToolTip.Tip="Open the welcome guide or application information.">
+                <MenuItem Header="Welcome..." Click="OnWelcome"
+                          ToolTip.Tip="Open the first-run guide for BIOS and disc setup." />
+                <MenuItem Header="About 5DO" Click="OnAbout"
+                          ToolTip.Tip="Show version, renderer, audio, and license information." />
             </MenuItem>
         </Menu>
 
@@ -204,7 +230,8 @@
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                         <TextBlock Classes="sectionTitle" Text="Game List" />
-                        <Border Classes="badge" VerticalAlignment="Center">
+                        <Border Classes="badge" VerticalAlignment="Center"
+                                ToolTip.Tip="Number of games found in the configured folders.">
                             <TextBlock x:Name="LibraryCountText" Text="0 games" />
                         </Border>
                     </StackPanel>
@@ -215,14 +242,16 @@
                                   Foreground="{DynamicResource TextMutedBrush}"
                                   Data="{StaticResource IconSearch}" />
                         <TextBox x:Name="SearchBox" Classes="search" PlaceholderText="Search games..."
-                                 TextChanged="OnSearchChanged" />
+                                 TextChanged="OnSearchChanged"
+                                 ToolTip.Tip="Filter the game list by name, game ID, or path." />
                     </Grid>
 
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                         <TextBlock Text="Icon size" Classes="caption" VerticalAlignment="Center" />
                         <Slider x:Name="IconSizeSlider" Width="110" Minimum="128" Maximum="240"
                                 Value="176" TickFrequency="8" IsSnapToTickEnabled="True"
-                                ValueChanged="OnIconSizeChanged" VerticalAlignment="Center" />
+                                ValueChanged="OnIconSizeChanged" VerticalAlignment="Center"
+                                ToolTip.Tip="Adjust the size of game cards in the grid view." />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -231,7 +260,8 @@
                      SelectionChanged="OnGridSelectionChanged"
                      DoubleTapped="OnGridDoubleTapped"
                      KeyDown="OnLibraryKeyDown"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ToolTip.Tip="Select a game. Double-click or press Enter to boot it.">
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
                         <WrapPanel Orientation="Horizontal" />
@@ -274,7 +304,8 @@
                      IsVisible="False"
                      SelectionChanged="OnListSelectionChanged"
                      DoubleTapped="OnListDoubleTapped"
-                     KeyDown="OnLibraryKeyDown">
+                     KeyDown="OnLibraryKeyDown"
+                     ToolTip.Tip="Select a game. Double-click or press Enter to boot it.">
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="vm:LibraryItem">
                         <Border Classes="card" Padding="4" ToolTip.Tip="{Binding Tip}">
@@ -313,17 +344,21 @@
 
             <StackPanel x:Name="EmptyLibraryPanel" Grid.Row="1" IsVisible="False"
                         HorizontalAlignment="Center" VerticalAlignment="Center"
-                        MaxWidth="420" Spacing="10">
+                        MaxWidth="420" Spacing="10"
+                        ToolTip.Tip="No games were found. Add a folder that contains disc images.">
                 <PathIcon Width="52" Height="52" HorizontalAlignment="Center"
                           Foreground="{DynamicResource TextDimBrush}"
                           Data="{StaticResource IconLibrary}" />
                 <TextBlock x:Name="EmptyLibraryTitle" Classes="sectionTitle" Text="No games found"
-                           HorizontalAlignment="Center" />
+                           HorizontalAlignment="Center"
+                           ToolTip.Tip="The library is empty." />
                 <TextBlock x:Name="EmptyLibraryText" Classes="muted" TextAlignment="Center"
                            TextWrapping="Wrap"
-                           Text="Add a folder that contains ISO, BIN, CUE, or CHD images." />
+                           Text="Add a folder that contains ISO, BIN, CUE, or CHD images."
+                           ToolTip.Tip="Add a folder so the library can discover disc images." />
                 <Button Classes="accent" Content="Add Game Folder" Click="OnAddFolder"
-                        HorizontalAlignment="Center" />
+                        HorizontalAlignment="Center"
+                        ToolTip.Tip="Add a folder that contains ISO, BIN, CUE, or CHD images." />
             </StackPanel>
         </Grid>
 
@@ -345,10 +380,12 @@
                     <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
                         <TextBlock x:Name="EmulationTitleText" Text="No disc loaded"
                                    FontWeight="SemiBold" FontSize="12.5" HorizontalAlignment="Center"
-                                   MaxWidth="320" TextTrimming="CharacterEllipsis" />
+                                   MaxWidth="320" TextTrimming="CharacterEllipsis"
+                                   ToolTip.Tip="The game currently booted in the emulation view." />
                         <TextBlock x:Name="EmulationSubtitleText" Classes="caption"
                                    HorizontalAlignment="Center" MaxWidth="360"
-                                   TextTrimming="CharacterEllipsis" />
+                                   TextTrimming="CharacterEllipsis"
+                                   ToolTip.Tip="Disc format, game ID, and compatibility-fix information." />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
@@ -386,7 +423,8 @@
                         </Button>
                         <TextBlock x:Name="SlotText" Text="Slot 1/10" FontSize="11"
                                    Foreground="{DynamicResource TextMutedBrush}"
-                                   VerticalAlignment="Center" Margin="2,0" />
+                                   VerticalAlignment="Center" Margin="2,0"
+                                   ToolTip.Tip="Current save slot. Use the arrows to change it." />
                         <Button Classes="chrome" Padding="5,4" Click="OnNextSlot" ToolTip.Tip="Next slot">
                             <TextBlock Text="&gt;" FontSize="13" />
                         </Button>
@@ -406,13 +444,16 @@
 
             <Grid Grid.Row="1">
                 <ctrl:VideoSurface x:Name="Video" HorizontalAlignment="Stretch"
-                                   VerticalAlignment="Stretch" />
-                <Image x:Name="CpuVideo" Stretch="Uniform" IsVisible="False" />
+                                   VerticalAlignment="Stretch"
+                                   ToolTip.Tip="Emulated 3DO video output rendered by OpenGL." />
+                <Image x:Name="CpuVideo" Stretch="Uniform" IsVisible="False"
+                       ToolTip.Tip="CPU fallback frame shown when OpenGL is unavailable." />
                 <Border x:Name="OverlayPanel" IsVisible="False" HorizontalAlignment="Left"
                         VerticalAlignment="Top" Margin="8" Padding="6,3"
                         Background="#A0000000" CornerRadius="3">
                     <TextBlock x:Name="OverlayText" Foreground="#E0E0E0"
-                               FontFamily="Cascadia Mono, Consolas, monospace" />
+                               FontFamily="Cascadia Mono, Consolas, monospace"
+                               ToolTip.Tip="Live frame, PC, renderer, and audio diagnostics." />
                 </Border>
             </Grid>
         </Grid>
@@ -430,10 +471,13 @@
                             <TextBlock Text="Log" FontSize="11" FontWeight="SemiBold" />
                         </StackPanel>
                         <TextBlock x:Name="LogSummaryText" Grid.Column="1" Classes="caption"
-                                   Margin="12,0" VerticalAlignment="Center" />
+                                   Margin="12,0" VerticalAlignment="Center"
+                                   ToolTip.Tip="Number of retained log entries." />
                         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
-                            <Button Classes="chrome" Content="Clear" Click="OnClearLog" />
-                            <Button Classes="chrome" Content="Log Viewer" Click="OnLogs" />
+                            <Button Classes="chrome" Content="Clear" Click="OnClearLog"
+                                    ToolTip.Tip="Remove every entry from the in-memory log." />
+                            <Button Classes="chrome" Content="Log Viewer" Click="OnLogs"
+                                    ToolTip.Tip="Open the full log viewer with level, category, and text filters." />
                             <Button Classes="chrome" Padding="6,4" Click="OnToggleLog"
                                     ToolTip.Tip="Hide the log dock">
                                 <PathIcon Width="11" Height="11" Data="{StaticResource IconClose}" />
@@ -442,7 +486,8 @@
                     </Grid>
                 </Border>
                 <ListBox x:Name="LogList" Grid.Row="1" Classes="log"
-                         ScrollViewer.HorizontalScrollBarVisibility="Auto" />
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                         ToolTip.Tip="Recent diagnostic messages. Open the Log Viewer for filtering." />
             </Grid>
         </Border>
 
@@ -454,11 +499,15 @@
                 <Ellipse Width="6" Height="6" Margin="0,0,7,0" VerticalAlignment="Center"
                          Fill="{DynamicResource AccentBrush}" />
                 <TextBlock x:Name="StatusText" Grid.Column="1" Classes="status"
-                           Text="Ready." TextTrimming="CharacterEllipsis" />
-                <TextBlock x:Name="StatsText" Grid.Column="2" Classes="status" Margin="12,0" />
-                <TextBlock x:Name="RendererText" Grid.Column="3" Classes="status" Margin="12,0" />
+                           Text="Ready." TextTrimming="CharacterEllipsis"
+                           ToolTip.Tip="Current status message." />
+                <TextBlock x:Name="StatsText" Grid.Column="2" Classes="status" Margin="12,0"
+                           ToolTip.Tip="Frame count, program counter, and cycle counters." />
+                <TextBlock x:Name="RendererText" Grid.Column="3" Classes="status" Margin="12,0"
+                           ToolTip.Tip="Active graphics renderer and version." />
                 <TextBlock x:Name="FpsText" Grid.Column="4" Classes="statusStrong"
-                           MinWidth="60" TextAlignment="Right" />
+                           MinWidth="60" TextAlignment="Right"
+                           ToolTip.Tip="Measured and target frame rate." />
             </Grid>
         </Border>
     </Grid>

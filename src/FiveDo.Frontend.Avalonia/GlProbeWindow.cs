@@ -72,6 +72,9 @@ internal sealed class GlProbeWindow : Window, IDisposable
 
         _video.HorizontalAlignment = global::Avalonia.Layout.HorizontalAlignment.Stretch;
         _video.VerticalAlignment = global::Avalonia.Layout.VerticalAlignment.Stretch;
+        ToolTip.SetTip(
+            _video,
+            "Synthetic GPU probe output used to measure presentation timing and CPU/GPU parity.");
         _video.UseOffscreenProbe = options.Offscreen;
         _video.OffscreenProbeWidth = options.Width;
         _video.OffscreenProbeHeight = options.Height;

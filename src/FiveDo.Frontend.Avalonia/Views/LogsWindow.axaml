@@ -7,26 +7,37 @@
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="12">
         <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto,Auto" Margin="0,0,0,8">
-            <TextBlock Grid.Column="0" Text="Level" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <TextBlock Grid.Column="0" Text="Level" VerticalAlignment="Center" Margin="0,0,6,0"
+                       ToolTip.Tip="Minimum Serilog severity to display." />
             <ComboBox x:Name="LevelCombo" Grid.Column="1" Width="120" Margin="0,0,12,0"
-                      SelectionChanged="OnFilterChanged" />
-            <TextBlock Grid.Column="2" Text="Category" VerticalAlignment="Center" Margin="0,0,6,0" />
+                      SelectionChanged="OnFilterChanged"
+                      ToolTip.Tip="Show events at or above this severity." />
+            <TextBlock Grid.Column="2" Text="Category" VerticalAlignment="Center" Margin="0,0,6,0"
+                       ToolTip.Tip="Filter by emulator subsystem." />
             <ComboBox x:Name="CategoryCombo" Grid.Column="3" Width="150"
-                      Margin="0,0,12,0" SelectionChanged="OnFilterChanged" />
+                      Margin="0,0,12,0" SelectionChanged="OnFilterChanged"
+                      ToolTip.Tip="Show CPU, video, audio, storage, host, or all categories." />
             <TextBox x:Name="SearchBox" Grid.Column="4" Margin="0,0,12,0"
-                     PlaceholderText="Search messages" TextChanged="OnSearchChanged" />
+                     PlaceholderText="Search messages" TextChanged="OnSearchChanged"
+                     ToolTip.Tip="Case-insensitive text filter over the rendered message." />
             <CheckBox x:Name="AutoRefreshCheck" Grid.Column="5" Content="Auto refresh"
-                      IsChecked="True" VerticalAlignment="Center" Margin="0,0,12,0" />
-            <Button Grid.Column="6" Content="Refresh" Click="OnRefresh" Margin="0,0,6,0" />
-            <Button Grid.Column="7" Content="Clear" Click="OnClear" />
+                      IsChecked="True" VerticalAlignment="Center" Margin="0,0,12,0"
+                      ToolTip.Tip="Refresh the visible list once per second." />
+            <Button Grid.Column="6" Content="Refresh" Click="OnRefresh" Margin="0,0,6,0"
+                    ToolTip.Tip="Refresh the list now." />
+            <Button Grid.Column="7" Content="Clear" Click="OnClear"
+                    ToolTip.Tip="Remove every entry from the in-memory log." />
         </Grid>
 
         <ListBox x:Name="LogList" Grid.Row="1" FontFamily="Consolas,monospace" FontSize="12"
-                 ScrollViewer.HorizontalScrollBarVisibility="Auto" />
+                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                 ToolTip.Tip="Captured Serilog events. Select a line to copy it." />
 
         <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
-            <TextBlock x:Name="StatusText" Grid.Column="0" VerticalAlignment="Center" Opacity="0.8" />
-            <Button Grid.Column="1" Content="Close" Click="OnClose" />
+            <TextBlock x:Name="StatusText" Grid.Column="0" VerticalAlignment="Center" Opacity="0.8"
+                       ToolTip.Tip="Number of visible and retained log entries." />
+            <Button Grid.Column="1" Content="Close" Click="OnClose"
+                    ToolTip.Tip="Close the diagnostic log viewer." />
         </Grid>
     </Grid>
 </Window>

@@ -8,23 +8,34 @@
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="12">
         <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="6">
-            <Button x:Name="SaveCurrentButton" Content="Save Current" Click="OnSaveCurrent" />
-            <Button x:Name="LoadButton" Content="Load" Click="OnLoad" />
-            <Button x:Name="DeleteButton" Content="Delete" Click="OnDelete" />
-            <Button x:Name="RefreshButton" Content="Refresh" Click="OnRefresh" />
+            <Button x:Name="SaveCurrentButton" Content="Save Current" Click="OnSaveCurrent"
+                    ToolTip.Tip="Save the running game to the selected slot." />
+            <Button x:Name="LoadButton" Content="Load" Click="OnLoad"
+                    ToolTip.Tip="Load the selected save slot into the running game." />
+            <Button x:Name="DeleteButton" Content="Delete" Click="OnDelete"
+                    ToolTip.Tip="Delete the selected save slot and its metadata." />
+            <Button x:Name="RefreshButton" Content="Refresh" Click="OnRefresh"
+                    ToolTip.Tip="Rescan the save-slot folder." />
         </StackPanel>
 
         <Grid Grid.Row="1" ColumnDefinitions="*,220" Margin="0,8">
-            <ListBox x:Name="SlotList" Grid.Column="0" DoubleTapped="OnDoubleTapped" SelectionChanged="OnSelectionChanged">
+            <ListBox x:Name="SlotList" Grid.Column="0" DoubleTapped="OnDoubleTapped" SelectionChanged="OnSelectionChanged"
+                     ToolTip.Tip="Select a save slot. Double-click to load it.">
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="host:SaveStateSlotInfo">
-                        <Grid ColumnDefinitions="70,2*,Auto,Auto,*" Margin="4">
-                            <TextBlock Grid.Column="0" Text="{Binding DisplaySlot}" FontWeight="SemiBold" />
-                            <TextBlock Grid.Column="1" Text="{Binding DisplayName}" />
-                            <TextBlock Grid.Column="2" Text="{Binding FramesExecuted}" Margin="10,0" Opacity="0.8" />
-                            <TextBlock Grid.Column="3" Text="{Binding DisplaySavedAt}" Margin="0,0,10,0" Opacity="0.8" />
+                        <Grid ColumnDefinitions="70,2*,Auto,Auto,*" Margin="4"
+                              ToolTip.Tip="{Binding StatePath}">
+                            <TextBlock Grid.Column="0" Text="{Binding DisplaySlot}" FontWeight="SemiBold"
+                                       ToolTip.Tip="Slot number." />
+                            <TextBlock Grid.Column="1" Text="{Binding DisplayName}"
+                                       ToolTip.Tip="Game name recorded when the slot was saved." />
+                            <TextBlock Grid.Column="2" Text="{Binding FramesExecuted}" Margin="10,0" Opacity="0.8"
+                                       ToolTip.Tip="Emulated frame count at the save point." />
+                            <TextBlock Grid.Column="3" Text="{Binding DisplaySavedAt}" Margin="0,0,10,0" Opacity="0.8"
+                                       ToolTip.Tip="Local date and time when the slot was saved." />
                             <TextBlock Grid.Column="4" Text="{Binding StatePath}" Opacity="0.6"
-                                       TextTrimming="CharacterEllipsis" />
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip.Tip="Full path to the save-state file." />
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
@@ -33,16 +44,20 @@
             <Border Grid.Column="1" Background="#181818" CornerRadius="3" Margin="8,0,0,0"
                     BorderBrush="#333333" BorderThickness="1">
                 <Grid>
-                    <Image x:Name="ThumbnailImage" Stretch="Uniform" Margin="6" />
+                    <Image x:Name="ThumbnailImage" Stretch="Uniform" Margin="6"
+                           ToolTip.Tip="Preview image captured when the slot was saved." />
                     <TextBlock x:Name="NoThumbnailText" Text="No preview" HorizontalAlignment="Center"
-                               VerticalAlignment="Center" Opacity="0.5" />
+                               VerticalAlignment="Center" Opacity="0.5"
+                               ToolTip.Tip="This slot has no preview image." />
                 </Grid>
             </Border>
         </Grid>
 
         <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
-            <TextBlock x:Name="StatusText" Grid.Column="0" VerticalAlignment="Center" TextWrapping="Wrap" />
-            <Button Grid.Column="1" Content="Close" Click="OnClose" />
+            <TextBlock x:Name="StatusText" Grid.Column="0" VerticalAlignment="Center" TextWrapping="Wrap"
+                       ToolTip.Tip="Result of the most recent slot operation." />
+            <Button Grid.Column="1" Content="Close" Click="OnClose"
+                    ToolTip.Tip="Close the save-slot manager." />
         </Grid>
     </Grid>
 </Window>

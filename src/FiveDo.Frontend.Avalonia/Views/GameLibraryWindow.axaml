@@ -8,22 +8,31 @@
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="12">
         <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="6">
-            <Button x:Name="AddFolderButton" Content="Add Folder" Click="OnAddFolder" />
-            <Button x:Name="RefreshButton" Content="Refresh" Click="OnRefresh" />
-            <Button x:Name="OpenButton" Content="Open Selected" Click="OnOpenSelected" />
+            <Button x:Name="AddFolderButton" Content="Add Folder" Click="OnAddFolder"
+                    ToolTip.Tip="Add a folder that contains ISO, BIN, CUE, or CHD images." />
+            <Button x:Name="RefreshButton" Content="Refresh" Click="OnRefresh"
+                    ToolTip.Tip="Rescan the configured game folders." />
+            <Button x:Name="OpenButton" Content="Open Selected" Click="OnOpenSelected"
+                    ToolTip.Tip="Boot the selected disc in the main window." />
         </StackPanel>
 
         <Grid Grid.Row="1" ColumnDefinitions="*,260" Margin="0,8">
             <ListBox x:Name="LibraryList" Grid.Column="0" DoubleTapped="OnDoubleTapped"
-                     SelectionChanged="OnSelectionChanged">
+                     SelectionChanged="OnSelectionChanged"
+                     ToolTip.Tip="Select a disc. Double-click to boot it.">
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="host:GameLibraryEntry">
-                        <Grid ColumnDefinitions="2*,Auto,Auto,*" Margin="4">
-                            <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="SemiBold" />
-                            <TextBlock Grid.Column="1" Text="{Binding Format}" Margin="10,0" Opacity="0.8" />
-                            <TextBlock Grid.Column="2" Text="{Binding SectorCount}" Margin="0,0,10,0" Opacity="0.8" />
+                        <Grid ColumnDefinitions="2*,Auto,Auto,*" Margin="4"
+                              ToolTip.Tip="{Binding Path}">
+                            <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="SemiBold"
+                                       ToolTip.Tip="Game name from the disc or database." />
+                            <TextBlock Grid.Column="1" Text="{Binding Format}" Margin="10,0" Opacity="0.8"
+                                       ToolTip.Tip="Disc image format." />
+                            <TextBlock Grid.Column="2" Text="{Binding SectorCount}" Margin="0,0,10,0" Opacity="0.8"
+                                       ToolTip.Tip="Number of 2048-byte sectors on the data track." />
                             <TextBlock Grid.Column="3" Text="{Binding Path}" Opacity="0.65"
-                                       TextTrimming="CharacterEllipsis" />
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip.Tip="Full path to the disc image." />
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
@@ -32,14 +41,17 @@
             <Border Grid.Column="1" Margin="10,0,0,0" Padding="10"
                     Background="#1A1A1A" CornerRadius="4">
                 <StackPanel>
-                    <Image x:Name="CoverImage" Width="240" Height="320" Stretch="Uniform" />
+                    <Image x:Name="CoverImage" Width="240" Height="320" Stretch="Uniform"
+                           ToolTip.Tip="Cover art discovered beside the selected disc image." />
                     <TextBlock x:Name="CoverText" Text="Select a disc to see its cover."
-                               TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,8,0,0" />
+                               TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,8,0,0"
+                               ToolTip.Tip="Cover-art status for the selected disc." />
                 </StackPanel>
             </Border>
         </Grid>
 
         <TextBlock x:Name="StatusText" Grid.Row="2" Text="No game folders configured."
-                   Foreground="#CCCCCC" TextWrapping="Wrap" />
+                   Foreground="#CCCCCC" TextWrapping="Wrap"
+                   ToolTip.Tip="Library scan status and the number of discovered games." />
     </Grid>
 </Window>
