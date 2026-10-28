@@ -621,6 +621,29 @@ NativeAOT CLI both open the same backend; the Linux check used the published
 `FIVEDO_AUDIO_TESTS=1` xUnit test plays 1 s of a 440 Hz tone through the real
 device.
 
+**90-second Opera comparison (2026-10-28).** A 90 s Road Rash boot capture from
+the exact-clock DSP (`artifacts/rr-90s-machine.wav`) was compared with a 95 s
+WASAPI loopback of the Opera reference (`artifacts/loopback-opera-90.wav`). Both
+are 44.1 kHz stereo and cover the same boot/attract sequence:
+
+| Metric | 5DO DSP raw | Opera host |
+|---|---:|---:|
+| Duration | 90.0 s | 95.0 s |
+| Peak | 0.914 | 0.914 |
+| RMS | 0.0615 | 0.0644 |
+| 20-200 Hz band | 52.7% | 50.4% |
+| 200-2k Hz band | 30.4% | 33.4% |
+| 2k-8k Hz band | 16.6% | 15.9% |
+| 8k-20k Hz band | 0.3% | 0.3% |
+| 400-500 Hz tone | 441.4 Hz | 441.4 Hz |
+
+The log-power spectra are 0.9994 cosine-similar over 20 Hz-20 kHz. The 10 s RMS
+envelopes correlate at r = 0.9685 after excluding the first window (the captures
+start a few seconds apart in boot), and the per-window levels match from window 2
+onward. This closes the loudness/spectrum comparison. The only remaining audio
+check is a manual listen for clicks when a game stops/starts the DSP; no current
+corpus title was observed stopping it mid-run.
+
 ### 1.5b Ninth pass: CD media-access pulse unblocks the post-race wait (2026-10-25)
 
 The wait states at Road Rash ~42k/~92k/100k and Alone's intro share a CD

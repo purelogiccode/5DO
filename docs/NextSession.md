@@ -850,10 +850,14 @@ save/load proof.
   CLI `--realtime` path.
 - WAV captures are buffered and instrumented, and `audio analyze` reports
   peak/RMS/clipping/silence/DC. Captures are in `TestCorpus.md` 1.5a2.
-- Remaining: a 30-60 s road/level loudness/spectrum comparison against Opera, and
-  a manual check that a game changing DSP modes stops/starts without a click.
-  Road Rash's clipping is the game's loud race mix (2,036 frames in a 10 s 92k-state
-  capture), not the output path.
+- The 90 s Road Rash boot capture matches Opera's loopback: identical 0.914 peak,
+  RMS within 4.7%, spectral cosine 0.9994 over 20 Hz-20 kHz, the same 441.4 Hz
+  tone, and a 10 s-envelope correlation of 0.9685 after the capture-offset window.
+  See `TestCorpus.md` 1.5a2.
+- Remaining: a manual check that a game changing DSP modes stops/starts without a
+  click. No current corpus title was observed stopping the DSP mid-run.
+- Road Rash's clipping is the game's loud race mix (2,036 frames in a 10 s 92k-state
+  capture), not the output path; live output applies a soft peak limiter.
 
 ### Step 4 - performance
 

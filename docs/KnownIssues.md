@@ -75,8 +75,10 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
   not hard-clip. The 2026-10-28 pass fixed the remaining live-output crackle
   (buffer ownership), and `FIVEDO_AUDIO_TAP=<prefix>` records the exact queued PCM
   plus a per-buffer timing log for future diagnosis.
-- A 30-60 s loudness/spectrum comparison against Opera and a manual DSP mode-change
-  (stop/start) listening check remain.
+- The 90 s Road Rash capture matches Opera's spectrum and RMS envelope (spectral
+  cosine 0.9994, 441.4 Hz tone identical). The only remaining audio check is a
+  manual DSP mode-change listen, and no current title was observed stopping the DSP
+  mid-run.
 - Frontend NativeAOT audio is not validated; the trimmed IL and CLI AOT paths are.
 
 ## Emulation
