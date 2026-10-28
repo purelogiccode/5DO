@@ -29,13 +29,16 @@ internal static class Program
     private static int Main(string[] args)
     {
         var frames = 600;
+        var warmupFrames = 60;
         string? biosPath = null;
         string? discPath = null;
+        string? statePath = null;
         var json = false;
         var gate = false;
         var prefetch = false;
         var highResolution = false;
         var label = "synthetic";
+        var labelSet = false;
         string? baselinePath = null;
         var baselineThreshold = BenchmarkComparison.DefaultThreshold;
 
@@ -46,9 +49,24 @@ internal static class Program
                 case "--frames" when i + 1 < args.Length:
                     frames = int.Parse(args[++i], CultureInfo.InvariantCulture);
                     break;
+                case "--warmup" when i + 1 < args.Length:
+                    warmupFrames = int.Parse(args[++i], CultureInfo.InvariantCulture);
+                    break;
+                case "--state-in" when i + 1 < args.Length:
+                    statePath = args[++i];
+                    if (!labelSet)
+                    {
+                        label = "state";
+                    }
+
+                    break;
                 case "--bios" when i + 1 < args.Length:
                     biosPath = args[++i];
-                    label = "disc";
+                    if (!labelSet && statePath is null)
+                    {
+                        label = "disc";
+                    }
+
                     break;
                 case "--disc" when i + 1 < args.Length:
                     discPath = args[++i];
@@ -73,6 +91,7 @@ internal static class Program
                     break;
                 case "--label" when i + 1 < args.Length:
                     label = args[++i];
+                    labelSet = true;
                     break;
                 default:
                     Console.Error.WriteLine($"Unknown argument: {args[i]}");
@@ -86,6 +105,12 @@ internal static class Program
             return 2;
         }
 
+        if (warmupFrames < 0)
+        {
+            Console.Error.WriteLine("--warmup must be zero or greater.");
+            return 2;
+        }
+
         if (baselineThreshold <= 0)
         {
             Console.Error.WriteLine("--baseline-threshold must be positive.");
@@ -94,7 +119,25 @@ internal static class Program
 
         IDiscSource? disc = null;
         FiveDoMachine machine;
-        if (biosPath is null)
+        if (statePath is not null)
+        {
+            machine = new FiveDoMachine(new EmulatorTuning { HighResolution = highResolution });
+            if (biosPath is not null)
+            {
+                var bios = BiosImage.Load(biosPath);
+                machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
+            }
+
+            if (discPath is not null)
+            {
+                disc = DiscImageFactory.Open(discPath, prefetch: prefetch);
+                machine.InsertDisc(disc);
+            }
+
+            machine.Reset();
+            machine.LoadStateFromFile(statePath);
+        }
+        else if (biosPath is null)
         {
             machine = CreateSyntheticMachine(highResolution);
         }
@@ -120,7 +163,9 @@ internal static class Program
 
             // Warm up JIT, the DSP tables, and the video packers. A longer warm-up
             // keeps one-time runtime allocations out of the steady-state byte count.
-            for (var i = 0; i < 60; i++)
+            // With --state-in the warm-up also advances a loaded gameplay state into
+            // the scene under test (for example a Road Rash race).
+            for (var i = 0; i < warmupFrames; i++)
             {
                 machine.RunFrame();
                 uploader.Update(machine.Frame);
@@ -189,6 +234,8 @@ internal static class Program
                 ok = true,
                 label,
                 frames = elapsedFrames,
+                warmupFrames,
+                stateWarnings = machine.StateWarnings,
                 core = new
                 {
                     totalMs = Round(coreMs),
@@ -251,7 +298,14 @@ internal static class Program
             else
             {
                 Console.WriteLine($"benchmark:   {label}");
-                Console.WriteLine($"frames:      {elapsedFrames}");
+                Console.WriteLine($"frames:      {elapsedFrames} (warm-up {warmupFrames})");
+                if (machine.StateWarnings.Count != 0)
+                {
+                    foreach (var warning in machine.StateWarnings)
+                    {
+                        Console.WriteLine($"state:       {warning}");
+                    }
+                }
                 Console.WriteLine($"core:        {result.core.msPerFrame:F3} ms/frame  ({result.core.fps:F1} fps, {result.core.millionInstructionsPerSecond:F1} MIPS)");
                 Console.WriteLine($"  core p50/p95/p99/max: {result.core.p50Ms:F3} / {result.core.p95Ms:F3} / {result.core.p99Ms:F3} / {result.core.maxMs:F3} ms");
                 Console.WriteLine($"video pack:  {result.pack.microsecondsPerFrame:F1} us/frame");

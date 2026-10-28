@@ -23,5 +23,9 @@
     <ProjectReference Include="..\FiveDo.Core\FiveDo.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="FiveDo.Tests" />
+  </ItemGroup>
+
 </Project>
 

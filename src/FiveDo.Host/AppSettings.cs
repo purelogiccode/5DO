@@ -74,6 +74,9 @@ public sealed class AppSettings
     /// <summary>Gets or sets the CRT bloom strength (0-1).</summary>
     public float Bloom { get; set; } = 0.35f;
 
+    /// <summary>Gets or sets the FSR 1.0 RCAS sharpness (0 = soft, 1 = maximum).</summary>
+    public float FsrSharpness { get; set; } = 0.8f;
+
     /// <summary>Gets or sets a value indicating whether the opt-in 640x480 high-resolution mode is used.</summary>
     public bool HighResolution { get; set; }
 
@@ -204,6 +207,7 @@ public sealed class AppSettings
             Vsync = Vsync,
             IntegerScale = IntegerScale,
             Bloom = Bloom,
+            FsrSharpness = FsrSharpness,
         };
         settings.Validate();
         return settings;

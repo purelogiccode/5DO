@@ -53,6 +53,7 @@ public partial class SettingsWindow : Window
         OverlayCheck.IsChecked = settings.ShowOverlay;
         NativeScreenshotCheck.IsChecked = settings.SaveNativeScreenshot;
         BloomSlider.Value = settings.Bloom;
+        FsrSharpnessSlider.Value = settings.FsrSharpness;
         AudioCheck.IsChecked = settings.AudioEnabled;
         VolumeSlider.Value = settings.Volume;
         AutoFixesCheck.IsChecked = settings.AutoGameFixes;
@@ -122,6 +123,7 @@ public partial class SettingsWindow : Window
         settings.ShowOverlay = OverlayCheck.IsChecked == true;
         settings.SaveNativeScreenshot = NativeScreenshotCheck.IsChecked == true;
         settings.Bloom = (float)BloomSlider.Value;
+        settings.FsrSharpness = (float)FsrSharpnessSlider.Value;
         settings.AudioEnabled = AudioCheck.IsChecked == true;
         settings.Volume = (float)VolumeSlider.Value;
         settings.AutoGameFixes = AutoFixesCheck.IsChecked == true;

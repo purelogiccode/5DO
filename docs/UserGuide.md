@@ -141,6 +141,23 @@ The report includes sample rate, channels, duration, peak, RMS, clipped/silent
 frames, and DC offset. `run --json` includes the same statistics for WAV captures
 and OpenAL dropped/underrun/queued/buffered counters plus estimated latency.
 
+### Audio diagnostics tap
+
+Set `FIVEDO_AUDIO_TAP` to a path prefix before launching the CLI or desktop app to
+record the exact PCM handed to OpenAL and a per-buffer timing log:
+
+```powershell
+$env:FIVEDO_AUDIO_TAP = "$PWD\artifacts\tap"
+dotnet run --project src/FiveDo.Frontend.Avalonia
+```
+
+This writes `tap.wav` (the signal the emulator queued, before the driver and any
+Bluetooth link) and `tap.csv` (elapsed time, buffer size, ring/queue depth,
+underrun flag, peak, and OpenAL error per buffer). Comparing `tap.wav` with a
+loopback recording of the output device separates emulator defects from driver,
+Bluetooth, and speaker problems. The status overlay also shows a live peak meter
+and the ring/queue/underrun/drop counters.
+
 ## Logs
 
 **Logs** shows the in-memory diagnostic log with level, category, search, auto-refresh,

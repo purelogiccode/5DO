@@ -49,6 +49,7 @@ public partial class MainWindow : Window, IDisposable
     private InputManager _input;
     private readonly SaveStateSlotManager _slots;
     private OpenAlAudioOutput? _audio;
+    private float _meterPeak;
     private FiveDoMachine? _machine;
     private CoreRunner? _runner;
     private IDiscSource? _disc;
@@ -84,7 +85,7 @@ public partial class MainWindow : Window, IDisposable
         _gamepad = PlatformGamepadBackend.TryCreate(_settings.Input);
         _input = new InputManager(_settings.Input, _gamepad);
         string? audioError = null;
-        _audio = _settings.AudioEnabled ? OpenAlAudioOutput.TryCreate(4096, out audioError) : null;
+        _audio = _settings.AudioEnabled ? OpenAlAudioOutput.TryCreate(8192, out audioError) : null;
         if (_audio is not null)
         {
             _audio.Volume = _settings.Volume;
@@ -1249,7 +1250,7 @@ public partial class MainWindow : Window, IDisposable
         {
             if (_audio is null)
             {
-                _audio = OpenAlAudioOutput.TryCreate(4096, out var audioError);
+                _audio = OpenAlAudioOutput.TryCreate(8192, out var audioError);
                 if (_audio is not null && _machine is not null)
                 {
                     _machine.AudioSink = _audio;
@@ -1345,10 +1346,23 @@ public partial class MainWindow : Window, IDisposable
             var timing = gpu is null
                 ? $"present {Video.PresentMilliseconds:F2} ms"
                 : $"gpu {gpu.Value:F2} ms  present {Video.PresentMilliseconds:F2} ms";
+            var audio = _audio is null
+                ? string.Empty
+                : $"  audio {_audio.BufferedFrames}f q{_audio.QueuedBuffers} u{_audio.UnderrunBuffers} "
+                    + $"d{_audio.SamplesDropped} {FormatAudioMeter(_audio.TakePeakLevel())}";
             OverlayText.Text =
                 $"{status.FramesPerSecond,5:F1}/{status.TargetFramesPerSecond:F2} fps  "
-                + $"{status.Cycles,6} cyc  PC 0x{status.ProgramCounter:x8}  {timing}";
+                + $"{status.Cycles,6} cyc  PC 0x{status.ProgramCounter:x8}  {timing}{audio}";
         }
+    }
+
+    private string FormatAudioMeter(float level)
+    {
+        // Decay the displayed peak so the bar follows the music instead of flickering
+        // with the buffer boundaries.
+        _meterPeak = Math.Max(level, _meterPeak * 0.85f);
+        var filled = Math.Clamp((int)MathF.Round(_meterPeak * 10f), 0, 10);
+        return $"{new string('█', filled)}{new string('░', 10 - filled)} {_meterPeak:F2}";
     }
 
     private void OnOpenGlReady(object? sender, Controls.OpenGlReadyEventArgs e)
@@ -1525,6 +1539,20 @@ public partial class MainWindow : Window, IDisposable
         _runner = null;
         FlushNvram();
         AppSettingsStore.Save(_settings);
+        if (_audio is not null)
+        {
+            _log.Write(
+                LogLevel.Info,
+                LogCategory.Audio,
+                $"OpenAL statistics: pushed {_audio.SamplesPushed}, dropped {_audio.SamplesDropped}, "
+                + $"underruns {_audio.UnderrunBuffers}, buffered {_audio.BufferedFrames} frames, "
+                + $"queued {_audio.QueuedFrames} frames, OpenAL errors {_audio.AlErrors}"
+                + (_audio.LastAlError is null ? string.Empty : $" ({_audio.LastAlError})")
+                + $", tap {(_audio.TapEnabled ? _audio.TapPath : "off")}"
+                + (_audio.TapError is null ? string.Empty : $" ({_audio.TapError})")
+                + ".");
+        }
+
         _disc?.Dispose();
         _cpuTimer?.Stop();
         _cpuTimer = null;

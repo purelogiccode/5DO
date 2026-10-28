@@ -231,6 +231,11 @@ internal sealed record GlProbeOptions(
             case "XBRLV2":
                 filter = VideoFilter.Xbr;
                 return true;
+            case "FSR":
+            case "FSR1":
+            case "FSR10":
+                filter = VideoFilter.Fsr;
+                return true;
             case "HQX":
             case "HQX2X":
             case "HQ2X":

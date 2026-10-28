@@ -42,6 +42,9 @@ public enum VideoFilter
 
     /// <summary>HQx 4x pixel-art smoothing followed by sharp-bilinear scaling (opt-in).</summary>
     Hqx4x,
+
+    /// <summary>AMD FSR 1.0 EASU upscale plus RCAS sharpening (opt-in spatial post-process).</summary>
+    Fsr,
 }
 
 /// <summary>Output aspect-ratio policy.</summary>
@@ -92,6 +95,9 @@ public sealed record RendererSettings
     /// <summary>Gets the brightness threshold used by the CRT bloom pass (0-1).</summary>
     public float BloomThreshold { get; init; } = 0.6f;
 
+    /// <summary>Gets the FSR 1.0 RCAS sharpness (0 = soft, 1 = maximum).</summary>
+    public float FsrSharpness { get; init; } = 0.8f;
+
     /// <summary>Validates the settings.</summary>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when a value is out of range.</exception>
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -118,6 +124,11 @@ public sealed record RendererSettings
         if (BloomThreshold is < 0f or > 1f)
         {
             throw new ArgumentOutOfRangeException(nameof(BloomThreshold), BloomThreshold, "The bloom threshold must be between 0 and 1.");
+        }
+
+        if (FsrSharpness is < 0f or > 1f)
+        {
+            throw new ArgumentOutOfRangeException(nameof(FsrSharpness), FsrSharpness, "The FSR sharpness must be between 0 and 1.");
         }
     }
 }

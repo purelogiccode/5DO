@@ -124,6 +124,8 @@ public sealed class GlRendererContractTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new RendererSettings { Bloom = -0.1f }.Validate());
         Assert.Throws<ArgumentOutOfRangeException>(() => new RendererSettings { Bloom = 1.1f }.Validate());
         Assert.Throws<ArgumentOutOfRangeException>(() => new RendererSettings { BloomThreshold = 2f }.Validate());
+        Assert.Throws<ArgumentOutOfRangeException>(() => new RendererSettings { FsrSharpness = -0.1f }.Validate());
+        Assert.Throws<ArgumentOutOfRangeException>(() => new RendererSettings { FsrSharpness = 1.1f }.Validate());
         new RendererSettings().Validate();
     }
 

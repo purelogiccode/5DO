@@ -42,6 +42,8 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     private uint _paletteProgram;
     private uint _scaleProgram;
     private uint _xbrProgram;
+    private uint _fsrEasuProgram;
+    private uint _fsrRcasProgram;
     private uint _vao;
     private uint _vbo;
     private uint _pixelTexture;
@@ -53,6 +55,10 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     private uint _xbrTexture;
     private uint _xbrSourceTexture;
     private FrameBuffer? _xbrCpuFrame;
+    private uint _fsrFbo;
+    private uint _fsrTexture;
+    private int _fsrWidth;
+    private int _fsrHeight;
     private uint _hqxTexture;
     private FrameBuffer? _hqxCpuFrame;
     private FrameBuffer? _hqxSourceFrame;
@@ -90,6 +96,16 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     private int _uXbrRect;
     private int _uXbrVertexOutput;
     private int _uXbrPalette;
+    private int _uFsrEasuSource;
+    private int _uFsrEasuOutput;
+    private int _uFsrEasuRect;
+    private int _uFsrEasuVertexOutput;
+    private int _uFsrEasuTexture;
+    private int _uFsrRcasTexture;
+    private int _uFsrRcasSize;
+    private int _uFsrRcasRect;
+    private int _uFsrRcasOutput;
+    private int _uFsrRcasSharpness;
     private RendererCapabilities _capabilities;
     private bool _isOpenGlEs;
     private bool _initialized;
@@ -183,6 +199,8 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         _paletteProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentPalette(_isOpenGlEs));
         _scaleProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentScale(_isOpenGlEs));
         _xbrProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentXbr(_isOpenGlEs));
+        _fsrEasuProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentFsrEasu(_isOpenGlEs));
+        _fsrRcasProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentFsrRcas(_isOpenGlEs));
         _vao = gl.GenVertexArray();
         gl.BindVertexArray(_vao);
         _vbo = gl.GenBuffer();
@@ -223,6 +241,22 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         _uXbrRect = gl.GetUniformLocation(_xbrProgram, "uRect");
         _uXbrVertexOutput = gl.GetUniformLocation(_xbrProgram, "uOutput");
 
+        gl.UseProgram(_fsrEasuProgram);
+        _uFsrEasuTexture = gl.GetUniformLocation(_fsrEasuProgram, "uExpanded");
+        gl.Uniform1(_uFsrEasuTexture, 0);
+        _uFsrEasuSource = gl.GetUniformLocation(_fsrEasuProgram, "uSource");
+        _uFsrEasuOutput = gl.GetUniformLocation(_fsrEasuProgram, "uFsrOutput");
+        _uFsrEasuRect = gl.GetUniformLocation(_fsrEasuProgram, "uRect");
+        _uFsrEasuVertexOutput = gl.GetUniformLocation(_fsrEasuProgram, "uOutput");
+
+        gl.UseProgram(_fsrRcasProgram);
+        _uFsrRcasTexture = gl.GetUniformLocation(_fsrRcasProgram, "uFsr");
+        gl.Uniform1(_uFsrRcasTexture, 0);
+        _uFsrRcasSize = gl.GetUniformLocation(_fsrRcasProgram, "uFsrSize");
+        _uFsrRcasRect = gl.GetUniformLocation(_fsrRcasProgram, "uRect");
+        _uFsrRcasOutput = gl.GetUniformLocation(_fsrRcasProgram, "uOutput");
+        _uFsrRcasSharpness = gl.GetUniformLocation(_fsrRcasProgram, "uSharpness");
+
         _paletteFbo = 0;
         _paletteTexture = 0;
         _paletteWidth = 0;
@@ -231,6 +265,10 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         _xbrTexture = 0;
         _xbrWidth = 0;
         _xbrHeight = 0;
+        _fsrFbo = 0;
+        _fsrTexture = 0;
+        _fsrWidth = 0;
+        _fsrHeight = 0;
         _hqxTexture = 0;
         _hqxWidth = 0;
         _hqxHeight = 0;
@@ -306,7 +344,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         gl.UseProgram(_paletteProgram);
         gl.Uniform2(_uPaletteSource, width, height);
         gl.Uniform4(_uPaletteRect, 0f, 0f, width, height);
-        gl.Uniform2(_uPaletteOutput, width, height);
+        gl.Uniform2(_uPaletteOutput, (float)width, (float)height);
 
         gl.ActiveTexture(TextureUnit.Texture0);
         gl.BindTexture(TextureTarget.Texture2D, _pixelTexture);
@@ -332,102 +370,146 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         var filterSourceWidth = width;
         var filterSourceHeight = height;
         var scaleFilter = FilterValue(_settings.Filter);
+        var useFsr = _settings.Filter == VideoFilter.Fsr;
 
-        if (useXbr)
+        if (useFsr)
         {
-            var xbrWidth = width * 4;
-            var xbrHeight = height * 4;
-            EnsureXbrTarget(gl, xbrWidth, xbrHeight);
-            EnsureXbrSource(gl, width, height);
-            FrameBuffer cpuFrame = _xbrCpuFrame!;
-            FrameAssembler.Assemble(frame, cpuFrame, cpuFrame.Width, cpuFrame.Height);
+            // FSR 1.0 runs as two spatial passes: EASU upscales the native frame into a
+            // viewport-sized target, then RCAS sharpens that result into the output.
+            EnsureFsrTarget(gl, viewport.Width, viewport.Height);
+            gl.BindFramebuffer(FramebufferTarget.Framebuffer, _fsrFbo);
+            gl.Viewport(0, 0, (uint)viewport.Width, (uint)viewport.Height);
+            gl.UseProgram(_fsrEasuProgram);
+            gl.Uniform4(_uFsrEasuRect, 0f, 0f, (float)viewport.Width, (float)viewport.Height);
+            gl.Uniform2(_uFsrEasuVertexOutput, (float)viewport.Width, (float)viewport.Height);
+            gl.Uniform2(_uFsrEasuOutput, viewport.Width, viewport.Height);
+            gl.Uniform2(_uFsrEasuSource, width, height);
             gl.ActiveTexture(TextureUnit.Texture0);
-            gl.BindTexture(TextureTarget.Texture2D, _xbrSourceTexture);
-            gl.TexSubImage2D(
-                TextureTarget.Texture2D,
-                0,
-                0,
-                0,
-                (uint)width,
-                (uint)height,
-                GlPixelFormat.Bgra,
-                PixelType.UnsignedByte,
-                cpuFrame.PixelSpan);
-            gl.BindFramebuffer(FramebufferTarget.Framebuffer, _xbrFbo);
-            gl.Viewport(0, 0, (uint)xbrWidth, (uint)xbrHeight);
-            gl.UseProgram(_xbrProgram);
-            gl.Uniform4(_uXbrRect, 0f, 0f, xbrWidth, xbrHeight);
-            gl.Uniform2(_uXbrVertexOutput, xbrWidth, xbrHeight);
-            gl.Uniform2(_uXbrSource, width, height);
-            gl.Uniform2(_uXbrOutput, xbrWidth, xbrHeight);
-            gl.ActiveTexture(TextureUnit.Texture0);
-            gl.BindTexture(TextureTarget.Texture2D, _xbrSourceTexture);
-            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
-            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
-            gl.Uniform1(_uXbrPalette, 0);
+            gl.BindTexture(TextureTarget.Texture2D, _paletteTexture);
+            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Nearest);
+            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Nearest);
             gl.BindVertexArray(_vao);
             gl.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
 
-            filterSource = _xbrTexture;
-            filterSourceWidth = xbrWidth;
-            filterSourceHeight = xbrHeight;
-            scaleFilter = 1;
-        }
-        else if (useHqx)
-        {
-            var hqxWidth = width * hqxScale;
-            var hqxHeight = height * hqxScale;
-            EnsureHqxTarget(gl, hqxWidth, hqxHeight);
-            EnsureHqxSource(width, height, hqxScale);
-            FrameBuffer sourceFrame = _hqxSourceFrame!;
-            FrameBuffer cpuFrame = _hqxCpuFrame!;
-            FrameAssembler.Assemble(frame, sourceFrame, sourceFrame.Width, sourceFrame.Height);
-            _hqxProcessor.Expand(sourceFrame, cpuFrame);
+            gl.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)_adapter.Framebuffer);
+            gl.Viewport(0, 0, (uint)_outputWidth, (uint)_outputHeight);
+            gl.ClearColor(0f, 0f, 0f, 1f);
+            gl.Clear(ClearBufferMask.ColorBufferBit);
+            gl.UseProgram(_fsrRcasProgram);
+            gl.Uniform4(
+                _uFsrRcasRect,
+                (float)viewport.X,
+                (float)viewport.Y,
+                (float)viewport.Width,
+                (float)viewport.Height);
+            gl.Uniform2(_uFsrRcasOutput, (float)_outputWidth, (float)_outputHeight);
+            gl.Uniform2(_uFsrRcasSize, viewport.Width, viewport.Height);
+            gl.Uniform1(_uFsrRcasSharpness, (1f - _settings.FsrSharpness) * 2f);
             gl.ActiveTexture(TextureUnit.Texture0);
-            gl.BindTexture(TextureTarget.Texture2D, _hqxTexture);
-            gl.TexSubImage2D(
-                TextureTarget.Texture2D,
-                0,
-                0,
-                0,
-                (uint)hqxWidth,
-                (uint)hqxHeight,
-                GlPixelFormat.Bgra,
-                PixelType.UnsignedByte,
-                cpuFrame.PixelSpan);
-
-            filterSource = _hqxTexture;
-            filterSourceWidth = hqxWidth;
-            filterSourceHeight = hqxHeight;
-            scaleFilter = 1;
+            gl.BindTexture(TextureTarget.Texture2D, _fsrTexture);
+            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Nearest);
+            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Nearest);
+            gl.BindVertexArray(_vao);
+            gl.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
         }
+        else
+        {
+            if (useXbr)
+            {
+                var xbrWidth = width * 4;
+                var xbrHeight = height * 4;
+                EnsureXbrTarget(gl, xbrWidth, xbrHeight);
+                EnsureXbrSource(gl, width, height);
+                FrameBuffer cpuFrame = _xbrCpuFrame!;
+                FrameAssembler.Assemble(frame, cpuFrame, cpuFrame.Width, cpuFrame.Height);
+                gl.ActiveTexture(TextureUnit.Texture0);
+                gl.BindTexture(TextureTarget.Texture2D, _xbrSourceTexture);
+                gl.TexSubImage2D(
+                    TextureTarget.Texture2D,
+                    0,
+                    0,
+                    0,
+                    (uint)width,
+                    (uint)height,
+                    GlPixelFormat.Bgra,
+                    PixelType.UnsignedByte,
+                    cpuFrame.PixelSpan);
+                gl.BindFramebuffer(FramebufferTarget.Framebuffer, _xbrFbo);
+                gl.Viewport(0, 0, (uint)xbrWidth, (uint)xbrHeight);
+                gl.UseProgram(_xbrProgram);
+                gl.Uniform4(_uXbrRect, 0f, 0f, xbrWidth, xbrHeight);
+                gl.Uniform2(_uXbrVertexOutput, (float)xbrWidth, (float)xbrHeight);
+                gl.Uniform2(_uXbrSource, width, height);
+                gl.Uniform2(_uXbrOutput, xbrWidth, xbrHeight);
+                gl.ActiveTexture(TextureUnit.Texture0);
+                gl.BindTexture(TextureTarget.Texture2D, _xbrSourceTexture);
+                gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
+                gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
+                gl.Uniform1(_uXbrPalette, 0);
+                gl.BindVertexArray(_vao);
+                gl.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
 
-        gl.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)_adapter.Framebuffer);
-        gl.Viewport(0, 0, (uint)_outputWidth, (uint)_outputHeight);
-        gl.ClearColor(0f, 0f, 0f, 1f);
-        gl.Clear(ClearBufferMask.ColorBufferBit);
-        gl.UseProgram(_scaleProgram);
-        gl.Uniform2(_uScaleSource, filterSourceWidth, filterSourceHeight);
-        gl.Uniform4(
-            _uScaleRect,
-            viewport.X,
-            viewport.Y,
-            viewport.Width,
-            viewport.Height);
-        gl.Uniform2(_uScaleOutput, _outputWidth, _outputHeight);
-        gl.Uniform1(_uScaleFilter, scaleFilter);
-        gl.Uniform1(_uScaleScanline, _settings.ScanlineStrength);
-        gl.Uniform1(_uScaleBloom, _settings.Filter == VideoFilter.Crt ? _settings.Bloom : 0f);
-        gl.Uniform1(_uScaleBloomThreshold, _settings.BloomThreshold);
+                filterSource = _xbrTexture;
+                filterSourceWidth = xbrWidth;
+                filterSourceHeight = xbrHeight;
+                scaleFilter = 1;
+            }
+            else if (useHqx)
+            {
+                var hqxWidth = width * hqxScale;
+                var hqxHeight = height * hqxScale;
+                EnsureHqxTarget(gl, hqxWidth, hqxHeight);
+                EnsureHqxSource(width, height, hqxScale);
+                FrameBuffer sourceFrame = _hqxSourceFrame!;
+                FrameBuffer cpuFrame = _hqxCpuFrame!;
+                FrameAssembler.Assemble(frame, sourceFrame, sourceFrame.Width, sourceFrame.Height);
+                _hqxProcessor.Expand(sourceFrame, cpuFrame);
+                gl.ActiveTexture(TextureUnit.Texture0);
+                gl.BindTexture(TextureTarget.Texture2D, _hqxTexture);
+                gl.TexSubImage2D(
+                    TextureTarget.Texture2D,
+                    0,
+                    0,
+                    0,
+                    (uint)hqxWidth,
+                    (uint)hqxHeight,
+                    GlPixelFormat.Bgra,
+                    PixelType.UnsignedByte,
+                    cpuFrame.PixelSpan);
 
-        gl.ActiveTexture(TextureUnit.Texture0);
-        gl.BindTexture(TextureTarget.Texture2D, filterSource);
-        var linearFilter = useXbr || useHqx || _settings.Filter is VideoFilter.SharpBilinear or VideoFilter.Crt;
-        var textureFilter = (int)(linearFilter ? GLEnum.Linear : GLEnum.Nearest);
-        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, textureFilter);
-        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, textureFilter);
-        gl.BindVertexArray(_vao);
-        gl.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
+                filterSource = _hqxTexture;
+                filterSourceWidth = hqxWidth;
+                filterSourceHeight = hqxHeight;
+                scaleFilter = 1;
+            }
+
+            gl.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)_adapter.Framebuffer);
+            gl.Viewport(0, 0, (uint)_outputWidth, (uint)_outputHeight);
+            gl.ClearColor(0f, 0f, 0f, 1f);
+            gl.Clear(ClearBufferMask.ColorBufferBit);
+            gl.UseProgram(_scaleProgram);
+            gl.Uniform2(_uScaleSource, filterSourceWidth, filterSourceHeight);
+            gl.Uniform4(
+                _uScaleRect,
+                (float)viewport.X,
+                (float)viewport.Y,
+                (float)viewport.Width,
+                (float)viewport.Height);
+            gl.Uniform2(_uScaleOutput, (float)_outputWidth, (float)_outputHeight);
+            gl.Uniform1(_uScaleFilter, scaleFilter);
+            gl.Uniform1(_uScaleScanline, _settings.ScanlineStrength);
+            gl.Uniform1(_uScaleBloom, _settings.Filter == VideoFilter.Crt ? _settings.Bloom : 0f);
+            gl.Uniform1(_uScaleBloomThreshold, _settings.BloomThreshold);
+
+            gl.ActiveTexture(TextureUnit.Texture0);
+            gl.BindTexture(TextureTarget.Texture2D, filterSource);
+            var linearFilter = useXbr || useHqx || _settings.Filter is VideoFilter.SharpBilinear or VideoFilter.Crt;
+            var textureFilter = (int)(linearFilter ? GLEnum.Linear : GLEnum.Nearest);
+            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, textureFilter);
+            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, textureFilter);
+            gl.BindVertexArray(_vao);
+            gl.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
+        }
 
         if (measureGpu)
         {
@@ -555,6 +637,45 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
         _paletteWidth = width;
         _paletteHeight = height;
+    }
+
+    private void EnsureFsrTarget(GL gl, int width, int height)
+    {
+        if (_fsrFbo != 0 && _fsrWidth == width && _fsrHeight == height)
+        {
+            return;
+        }
+
+        if (_fsrFbo != 0)
+        {
+            gl.DeleteFramebuffer(_fsrFbo);
+            gl.DeleteTexture(_fsrTexture);
+        }
+
+        _fsrTexture = gl.GenTexture();
+        gl.BindTexture(TextureTarget.Texture2D, _fsrTexture);
+        gl.TexStorage2D(TextureTarget.Texture2D, 1, SizedInternalFormat.Rgba8, (uint)width, (uint)height);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Nearest);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Nearest);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
+
+        _fsrFbo = gl.GenFramebuffer();
+        gl.BindFramebuffer(FramebufferTarget.Framebuffer, _fsrFbo);
+        gl.FramebufferTexture2D(
+            FramebufferTarget.Framebuffer,
+            FramebufferAttachment.ColorAttachment0,
+            TextureTarget.Texture2D,
+            _fsrTexture,
+            0);
+        GLEnum status = gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+        if (status != GLEnum.FramebufferComplete)
+        {
+            throw new InvalidOperationException($"FSR framebuffer is incomplete: {status}.");
+        }
+
+        _fsrWidth = width;
+        _fsrHeight = height;
     }
 
     private void EnsureXbrTarget(GL gl, int width, int height)
@@ -803,6 +924,18 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             _xbrProgram = 0;
         }
 
+        if (_fsrEasuProgram != 0)
+        {
+            gl.DeleteProgram(_fsrEasuProgram);
+            _fsrEasuProgram = 0;
+        }
+
+        if (_fsrRcasProgram != 0)
+        {
+            gl.DeleteProgram(_fsrRcasProgram);
+            _fsrRcasProgram = 0;
+        }
+
         if (_pixelTexture != 0)
         {
             gl.DeleteTexture(_pixelTexture);
@@ -851,6 +984,18 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             _xbrSourceTexture = 0;
         }
 
+        if (_fsrFbo != 0)
+        {
+            gl.DeleteFramebuffer(_fsrFbo);
+            _fsrFbo = 0;
+        }
+
+        if (_fsrTexture != 0)
+        {
+            gl.DeleteTexture(_fsrTexture);
+            _fsrTexture = 0;
+        }
+
         if (_hqxTexture != 0)
         {
             gl.DeleteTexture(_hqxTexture);
@@ -879,6 +1024,8 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         _paletteHeight = 0;
         _xbrWidth = 0;
         _xbrHeight = 0;
+        _fsrWidth = 0;
+        _fsrHeight = 0;
         _hqxWidth = 0;
         _hqxHeight = 0;
         _hqxSourceWidth = 0;

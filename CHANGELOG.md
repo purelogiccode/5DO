@@ -7,6 +7,13 @@ still change.
 
 ### Added
 
+- Audio tap diagnostics: set `FIVEDO_AUDIO_TAP=<prefix>` to record the exact PCM
+  queued to OpenAL (`<prefix>.wav`) plus a per-buffer CSV (`<prefix>.csv`) with
+  elapsed time, frames, ring/queue depth, underruns, peak, and OpenAL errors. The
+  status overlay now shows a live peak meter beside the audio counters.
+- AMD FSR 1.0 (`VideoFilter.Fsr`): opt-in EASU upscaling plus RCAS sharpening in
+  the OpenGL presenter, with a Settings > Video sharpness slider and MIT
+  attribution in `THIRD-PARTY-NOTICES.md`.
 - `tools/release-soak.ps1`: discovers the discs present on the current machine, runs
   the 36,000-frame release soak, reports absent titles as missing instead of failing,
   and can continue archived 12k states for machine-specific corpus gaps.
@@ -33,6 +40,17 @@ still change.
 
 ### Fixed
 
+- **Live OpenAL crackle.** The fill loop chose the next buffer with
+  `_buffers[queued]`. After OpenAL unqueues the oldest buffers, that index pointed
+  at buffers still attached to the playing source; rewriting them corrupted audio
+  that was about to play, which was heard as constant cracking even though the
+  underrun and dropped-sample counters stayed at zero. The loop now rents only
+  released buffers from a free-buffer pool, tracks queued frames exactly, checks
+  `alGetError` after every queue, and queues variable-size blocks instead of
+  padding to fixed 512-frame buffers.
+- **Black game canvas.** Restoring the `(float)` casts on the `glUniform2/4`
+  calls prevents Silk.NET from selecting the integer overloads, which left the
+  presenter's float uniforms at zero and collapsed the quad to black.
 - **DSP sample cadence.** The FreeDO 8.24 scheduler over-produced samples by
   ~0.7% (444,097 instead of 441,015 for a 600-frame Lemmings boot), making audio
   sharp and constantly overfilling the live ring. `Quartz` now uses an exact
@@ -54,6 +72,9 @@ still change.
 
 ### Changed
 
+- The Windows audio fill thread is registered as a "Pro Audio" multimedia thread
+  (`AvSetMmThreadCharacteristics`) and runs above normal priority so UI and
+  rendering work cannot starve it.
 - Quartz save-state sections are version 2 (exact DSP cycle remainder). Version 1
   sections are still accepted and convert the legacy 8.24 sample fraction.
 - The 3,000-frame boot hashes changed where the FMV/loading timing depends on the

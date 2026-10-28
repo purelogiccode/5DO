@@ -36,6 +36,19 @@ This file records the projects and licenses that influence or ship with 5DO. It 
   native-resolution palette output and uniform layout; the copyright and permission
   notice is preserved in the shader comments.
 
+### FidelityFX Super Resolution 1.0 (AMD)
+
+- Source algorithm: Advanced Micro Devices, Inc., FidelityFX FSR 1.0 (`ffx_fsr1.h`,
+  v1.20210629).
+- License: MIT.
+- Use: the opt-in `VideoFilter.Fsr` presenter path in `FiveDo.Video.OpenGL/Shaders.cs`.
+  The EASU and RCAS passes are adapted to the emulator's two-stage presenter (GLSL
+  3.30 / ES 3.00) and use integer `texelFetch` taps. The AMD copyright and MIT
+  permission notice is preserved in the shader comments. FSR 2/3 and DLSS are not
+  used because they require motion vectors and engine integration that a 3DO
+  framebuffer does not provide.
+- FSR 1.0 is a spatial post-process only; it does not change emulated output.
+
 ### HQx (Maxim Stepin, Cameron Zemek)
 
 - Source: `References/4DO-master/FreeDOCore/Filters/hq2x.cpp`, `hq3x.cpp`,
