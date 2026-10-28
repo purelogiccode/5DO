@@ -78,6 +78,7 @@ public partial class SaveSlotsWindow : Window, IDisposable
         }
         catch (Exception exception) when (exception is IOException or ArgumentException or UnauthorizedAccessException)
         {
+            Serilog.Log.Debug(exception, "Save-slot thumbnail could not be loaded for {Path}.", info.ThumbnailPath);
             NoThumbnailText.IsVisible = true;
         }
     }

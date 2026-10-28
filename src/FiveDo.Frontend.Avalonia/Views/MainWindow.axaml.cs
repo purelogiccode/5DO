@@ -19,6 +19,7 @@ using Avalonia.Threading;
 using FiveDo.Audio;
 using FiveDo.Core;
 using FiveDo.Diagnostics;
+using FiveDo.Diagnostics.Logging;
 using FiveDo.Frontend.Avalonia.Input;
 using FiveDo.Frontend.Avalonia.ViewModels;
 using FiveDo.Host;
@@ -40,8 +41,8 @@ public partial class MainWindow : Window, IDisposable
 {
     private readonly NvramStore _nvramStore;
     private readonly AppSettings _settings;
-    private readonly InMemoryLogSink _logSink = new(4000);
-    private readonly Log _log;
+    private readonly InMemorySerilogSink _logSink;
+    private readonly Serilog.ILogger _logger;
     private readonly PlatformGamepadBackend? _gamepad;
     private readonly ObservableCollection<LibraryItem> _visibleGames = [];
     private readonly List<LibraryItem> _allGames = [];
@@ -72,8 +73,11 @@ public partial class MainWindow : Window, IDisposable
     {
         InitializeComponent();
         _settings = AppSettingsStore.Load();
-        _log = new Log(_logSink);
-        _log.Write(LogLevel.Info, LogCategory.Host, $"Desktop shell starting ({FiveDoVersion.Version}).");
+        _logSink = AppLogging.InMemorySink ?? new InMemorySerilogSink(4000);
+        _logger = Serilog.Log.ForContext<MainWindow>();
+        _logger.ForCategory(LogCategory.Host).Information(
+            "Desktop shell starting ({Version}).",
+            FiveDoVersion.Version);
         if (string.IsNullOrWhiteSpace(_settings.SaveDirectory))
         {
             _settings.SaveDirectory = Path.Combine(AppSettingsStore.DefaultDirectory, "states");
@@ -89,17 +93,15 @@ public partial class MainWindow : Window, IDisposable
         if (_audio is not null)
         {
             _audio.Volume = _settings.Volume;
-            _log.Write(
-                LogLevel.Info,
-                LogCategory.Audio,
-                $"OpenAL audio ready ({OpenAlAudioOutput.OutputSampleRate} Hz stereo).");
+            _logger.ForCategory(LogCategory.Audio).Information(
+                "OpenAL audio ready ({SampleRate} Hz stereo).",
+                OpenAlAudioOutput.OutputSampleRate);
         }
         else if (_settings.AudioEnabled)
         {
-            _log.Write(
-                LogLevel.Warning,
-                LogCategory.Audio,
-                $"OpenAL audio is unavailable; emulation continues silently ({audioError ?? "unknown error"}).");
+            _logger.ForCategory(LogCategory.Audio).Warning(
+                "OpenAL audio is unavailable; emulation continues silently ({Error}).",
+                audioError ?? "unknown error");
         }
 
         _nvramStore = new NvramStore(Path.Combine(AppSettingsStore.DefaultDirectory, "nvram.ram"));
@@ -138,7 +140,17 @@ public partial class MainWindow : Window, IDisposable
         Video.OpenGlReady += OnOpenGlReady;
         Video.OpenGlFailed += OnOpenGlFailed;
         Deactivated += (_, _) => _input.Keyboard.Reset();
-        Closing += (_, _) => Shutdown();
+        Closing += (_, _) =>
+        {
+            try
+            {
+                Shutdown();
+            }
+            catch (Exception exception)
+            {
+                _logger.ForCategory(LogCategory.Host).Error(exception, "Desktop shell shutdown failed.");
+            }
+        };
         Opened += OnOpened;
         UpdateSlotText();
     }
@@ -200,7 +212,7 @@ public partial class MainWindow : Window, IDisposable
         {
             IsEnabled = true;
             StatusText.Text = $"Welcome error: {exception.Message}";
-            Console.Error.WriteLine($"Welcome error: {exception}");
+            _logger.ForCategory(LogCategory.Host).Error(exception, "Welcome dialog failed.");
         }
     }
 
@@ -279,15 +291,16 @@ public partial class MainWindow : Window, IDisposable
             _settings.BiosPath = path;
             AppSettingsStore.Save(_settings);
             StatusText.Text = $"BIOS {bios.Md5[..8]} loaded{(bios.IsAnvil ? " (Anvil)" : string.Empty)}.";
-            _log.Write(
-                LogLevel.Info,
-                LogCategory.Storage,
-                $"BIOS loaded: {path} ({bios.Md5}, {(bios.IsAnvil ? "Anvil" : "retail")}).");
+            _logger.ForCategory(LogCategory.Storage).Information(
+                "BIOS loaded: {Path} ({Md5}, {Kind}).",
+                path,
+                bios.Md5,
+                bios.IsAnvil ? "Anvil" : "retail");
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException or ArgumentException)
         {
             StatusText.Text = $"BIOS error: {exception.Message}";
-            _log.Write(LogLevel.Error, LogCategory.Storage, $"BIOS load failed: {exception.Message}");
+            _logger.ForCategory(LogCategory.Storage).Error(exception, "BIOS load failed.");
             ShowError("BIOS error", exception.Message);
         }
     }
@@ -344,11 +357,12 @@ public partial class MainWindow : Window, IDisposable
             UpdateRecentMenu();
             UpdateEmulationHeader();
             StatusText.Text = $"{_gameName}: {disc.SectorCount} sectors, fixes 0x{(uint)fixMode:x8}.";
-            _log.Write(
-                LogLevel.Info,
-                LogCategory.Storage,
-                $"Disc opened: {_gameName} ({gameId[..Math.Min(8, gameId.Length)]}), "
-                + $"{disc.SectorCount} sectors, fixes 0x{(uint)fixMode:x8}.");
+            _logger.ForCategory(LogCategory.Storage).Information(
+                "Disc opened: {Game} ({GameId}), {Sectors} sectors, fixes 0x{FixMode:x8}.",
+                _gameName,
+                gameId[..Math.Min(8, gameId.Length)],
+                disc.SectorCount,
+                (uint)fixMode);
 
             if (autoStart)
             {
@@ -358,7 +372,7 @@ public partial class MainWindow : Window, IDisposable
         catch (Exception exception) when (exception is IOException or InvalidDataException or DiscImageException or ArgumentException)
         {
             StatusText.Text = $"Disc error: {exception.Message}";
-            _log.Write(LogLevel.Error, LogCategory.Storage, $"Disc open failed: {exception.Message}");
+            _logger.ForCategory(LogCategory.Storage).Error(exception, "Disc open failed.");
             ShowError("Disc error", exception.Message);
         }
     }
@@ -395,7 +409,7 @@ public partial class MainWindow : Window, IDisposable
                 _runner.Start();
             }
 
-            _log.Write(LogLevel.Info, LogCategory.Host, "Emulation started.");
+            _logger.ForCategory(LogCategory.Host).Information("Emulation started.");
         }
 
         SetPlayState(running: true);
@@ -416,7 +430,7 @@ public partial class MainWindow : Window, IDisposable
             _running = false;
             _runner?.Pause();
             FlushNvram();
-            _log.Write(LogLevel.Info, LogCategory.Host, "Emulation paused.");
+            _logger.ForCategory(LogCategory.Host).Information("Emulation paused.");
         }
 
         SetPlayState(running: false);
@@ -449,7 +463,7 @@ public partial class MainWindow : Window, IDisposable
     {
         _runner?.Invoke(() => _machine?.Reset());
         StatusText.Text = "Reset.";
-        _log.Write(LogLevel.Info, LogCategory.Machine, "Machine reset.");
+        _logger.ForCategory(LogCategory.Machine).Information("Machine reset.");
     }
 
     private void OnSaveState(object? sender, RoutedEventArgs e)
@@ -469,7 +483,10 @@ public partial class MainWindow : Window, IDisposable
         PersistSlot();
         UpdateSlotText();
         StatusText.Text = $"State saved: slot {slot + 1} ({_gameName}).";
-        _log.Write(LogLevel.Info, LogCategory.State, $"State saved to slot {slot + 1} ({_gameName}).");
+        _logger.ForCategory(LogCategory.State).Information(
+            "State saved to slot {Slot} ({Game}).",
+            slot + 1,
+            _gameName);
     }
 
     private void OnLoadState(object? sender, RoutedEventArgs e)
@@ -483,7 +500,7 @@ public partial class MainWindow : Window, IDisposable
 
         _runner!.Invoke(() => _slots.Load(_machine, slot));
         StatusText.Text = $"State loaded: slot {slot + 1}.";
-        _log.Write(LogLevel.Info, LogCategory.State, $"State loaded from slot {slot + 1}.");
+        _logger.ForCategory(LogCategory.State).Information("State loaded from slot {Slot}.", slot + 1);
     }
 
     private void OnPreviousSlot(object? sender, RoutedEventArgs e)
@@ -544,13 +561,13 @@ public partial class MainWindow : Window, IDisposable
                 }
 
                 StatusText.Text = $"Screenshot: {path}";
-                _log.Write(LogLevel.Info, LogCategory.Host, $"Screenshot written: {path}.");
+                _logger.ForCategory(LogCategory.Host).Information("Screenshot written: {Path}.", path);
             }
         }
 
         SaveNativeScreenshot(path);
         StatusText.Text = $"Screenshot: {path}";
-        _log.Write(LogLevel.Info, LogCategory.Host, $"Screenshot written from the CPU frame: {path}.");
+        _logger.ForCategory(LogCategory.Host).Information("Screenshot written from the CPU frame: {Path}.", path);
     }
 
     private void SaveNativeScreenshot(string path)
@@ -1005,7 +1022,7 @@ public partial class MainWindow : Window, IDisposable
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
         {
             StatusText.Text = $"Library scan failed: {exception.Message}";
-            _log.Write(LogLevel.Error, LogCategory.Storage, $"Library scan failed: {exception.Message}");
+            _logger.ForCategory(LogCategory.Storage).Error(exception, "Library scan failed.");
             return;
         }
 
@@ -1138,7 +1155,7 @@ public partial class MainWindow : Window, IDisposable
             var time = entry.TimestampUtc == default
                 ? string.Empty
                 : entry.TimestampUtc.ToLocalTime().ToString("HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture) + " ";
-            lines.Add($"{time}[{entry.Level,-8}] {entry.Category,-12} {entry.Message}");
+            lines.Add($"{time}[{entry.Level,-11}] {entry.Category,-12} {entry.Message}");
         }
 
         LogList.ItemsSource = lines;
@@ -1164,6 +1181,7 @@ public partial class MainWindow : Window, IDisposable
         catch (FormatException exception)
         {
             StatusText.Text = $"Settings error: {exception.Message}";
+            _logger.ForCategory(LogCategory.Host).Warning(exception, "Settings dialog returned invalid values.");
             return;
         }
 
@@ -1185,7 +1203,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         StatusText.Text = "Settings saved.";
-        _log.Write(LogLevel.Info, LogCategory.Host, "Settings saved.");
+        _logger.ForCategory(LogCategory.Host).Information("Settings saved.");
     }
 
     private async void OnSaveSlots(object? sender, RoutedEventArgs e)
@@ -1238,10 +1256,10 @@ public partial class MainWindow : Window, IDisposable
         StatusText.Text = conflicts.Count == 0
             ? "Input bindings saved."
             : $"Input bindings saved with {conflicts.Count} conflict(s).";
-        _log.Write(
-            LogLevel.Info,
-            LogCategory.Input,
-            $"Input bindings saved ({conflicts.Count} conflict(s)); {_gamepad?.ConnectedControllers ?? 0} gamepad(s).");
+        _logger.ForCategory(LogCategory.Input).Information(
+            "Input bindings saved ({Conflicts} conflict(s)); {Gamepads} gamepad(s).",
+            conflicts.Count,
+            _gamepad?.ConnectedControllers ?? 0);
     }
 
     private void ApplyAudioSettings()
@@ -1256,12 +1274,18 @@ public partial class MainWindow : Window, IDisposable
                     _machine.AudioSink = _audio;
                 }
 
-                _log.Write(
-                    _audio is null ? LogLevel.Warning : LogLevel.Info,
-                    LogCategory.Audio,
-                    _audio is null
-                        ? $"OpenAL audio is unavailable; emulation continues silently ({audioError ?? "unknown error"})."
-                        : $"OpenAL audio ready ({OpenAlAudioOutput.OutputSampleRate} Hz stereo).");
+                if (_audio is null)
+                {
+                    _logger.ForCategory(LogCategory.Audio).Warning(
+                        "OpenAL audio is unavailable; emulation continues silently ({Error}).",
+                        audioError ?? "unknown error");
+                }
+                else
+                {
+                    _logger.ForCategory(LogCategory.Audio).Information(
+                        "OpenAL audio ready ({SampleRate} Hz stereo).",
+                        OpenAlAudioOutput.OutputSampleRate);
+                }
             }
 
             if (_audio is not null)
@@ -1290,10 +1314,14 @@ public partial class MainWindow : Window, IDisposable
 
         _settings.HighResolution = enabled;
         AppSettingsStore.Save(_settings);
-        _log.Write(
-            LogLevel.Info,
-            LogCategory.Video,
-            enabled ? "High-resolution mode enabled." : "High-resolution mode disabled.");
+        if (enabled)
+        {
+            _logger.ForCategory(LogCategory.Video).Information("High-resolution mode enabled.");
+        }
+        else
+        {
+            _logger.ForCategory(LogCategory.Video).Information("High-resolution mode disabled.");
+        }
         if (_machine is null)
         {
             StatusText.Text = enabled
@@ -1372,18 +1400,21 @@ public partial class MainWindow : Window, IDisposable
         RendererText.Text = $"{capabilities.Name} {capabilities.MajorVersion}.{capabilities.MinorVersion}";
         StatusText.Text =
             $"{capabilities.Name} {capabilities.MajorVersion}.{capabilities.MinorVersion} renderer ready.";
-        _log.Write(
-            LogLevel.Info,
-            LogCategory.Video,
-            $"OpenGL renderer ready: {capabilities.Name} {capabilities.MajorVersion}.{capabilities.MinorVersion} "
-            + $"({capabilities.Api}), max texture {capabilities.MaxTextureSize}.");
+        _logger.ForCategory(LogCategory.Video).Information(
+            "OpenGL renderer ready: {Name} {Major}.{Minor} ({Api}), max texture {MaxTextureSize}.",
+            capabilities.Name,
+            capabilities.MajorVersion,
+            capabilities.MinorVersion,
+            capabilities.Api,
+            capabilities.MaxTextureSize);
     }
 
     private void OnOpenGlFailed(object? sender, Controls.OpenGlFailedEventArgs e)
     {
         var exception = e.Exception;
-        Console.Error.WriteLine($"OpenGL unavailable: {exception.Message}");
-        _log.Write(LogLevel.Warning, LogCategory.Video, $"OpenGL unavailable: {exception.Message}");
+        _logger.ForCategory(LogCategory.Video).Warning(
+            exception,
+            "OpenGL unavailable; falling back to the CPU presenter.");
         StartCpuFallback(exception);
     }
 
@@ -1504,7 +1535,7 @@ public partial class MainWindow : Window, IDisposable
                 _running = false;
                 SetPlayState(running: false);
                 StatusText.Text = $"Emulation error: {exception.Message}";
-                _log.Write(LogLevel.Error, LogCategory.Machine, $"Emulation fault: {exception}");
+                _logger.ForCategory(LogCategory.Machine).Error(exception, "Emulation fault.");
                 ShowLibraryView();
                 ShowError("Emulation error", exception.Message);
             });
@@ -1541,16 +1572,19 @@ public partial class MainWindow : Window, IDisposable
         AppSettingsStore.Save(_settings);
         if (_audio is not null)
         {
-            _log.Write(
-                LogLevel.Info,
-                LogCategory.Audio,
-                $"OpenAL statistics: pushed {_audio.SamplesPushed}, dropped {_audio.SamplesDropped}, "
-                + $"underruns {_audio.UnderrunBuffers}, buffered {_audio.BufferedFrames} frames, "
-                + $"queued {_audio.QueuedFrames} frames, OpenAL errors {_audio.AlErrors}"
-                + (_audio.LastAlError is null ? string.Empty : $" ({_audio.LastAlError})")
-                + $", tap {(_audio.TapEnabled ? _audio.TapPath : "off")}"
-                + (_audio.TapError is null ? string.Empty : $" ({_audio.TapError})")
-                + ".");
+            _logger.ForCategory(LogCategory.Audio).Information(
+                "OpenAL statistics: pushed {Pushed}, dropped {Dropped}, underruns {Underruns}, "
+                + "buffered {Buffered} frames, queued {Queued} frames, OpenAL errors {Errors} ({LastError}), "
+                + "tap {Tap} ({TapError}).",
+                _audio.SamplesPushed,
+                _audio.SamplesDropped,
+                _audio.UnderrunBuffers,
+                _audio.BufferedFrames,
+                _audio.QueuedFrames,
+                _audio.AlErrors,
+                _audio.LastAlError ?? "none",
+                _audio.TapEnabled ? _audio.TapPath : "off",
+                _audio.TapError ?? "none");
         }
 
         _disc?.Dispose();
@@ -1564,6 +1598,7 @@ public partial class MainWindow : Window, IDisposable
         _audio?.Dispose();
         _gamepad?.Dispose();
         ClearLibraryItems();
+        _logger.ForCategory(LogCategory.Host).Information("Desktop shell shut down.");
     }
 
     /// <inheritdoc />
@@ -1624,18 +1659,28 @@ public partial class MainWindow : Window, IDisposable
         }
 
         _shuttingDown = true;
-        _logTimer.Stop();
-        _runner?.Dispose();
-        _runner = null;
-        _disc?.Dispose();
-        _cpuTimer?.Stop();
-        _cpuTimer = null;
-        _cpuVideo?.Dispose();
-        _cpuVideo = null;
-        _nvramStore.Dispose();
-        _audio?.Dispose();
-        _gamepad?.Dispose();
-        ClearLibraryItems();
-        GC.SuppressFinalize(this);
+        try
+        {
+            _logTimer.Stop();
+            _runner?.Dispose();
+            _runner = null;
+            _disc?.Dispose();
+            _cpuTimer?.Stop();
+            _cpuTimer = null;
+            _cpuVideo?.Dispose();
+            _cpuVideo = null;
+            _nvramStore.Dispose();
+            _audio?.Dispose();
+            _gamepad?.Dispose();
+            ClearLibraryItems();
+        }
+        catch (Exception exception)
+        {
+            _logger.ForCategory(LogCategory.Host).Error(exception, "Desktop shell dispose failed.");
+        }
+        finally
+        {
+            GC.SuppressFinalize(this);
+        }
     }
 }

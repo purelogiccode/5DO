@@ -17,39 +17,47 @@ public class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        try
         {
-            if (Program.GlProbe is not null)
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                var probe = new GlProbeWindow(Program.GlProbe, desktop.Shutdown);
-                desktop.MainWindow = probe;
-                base.OnFrameworkInitializationCompleted();
-                return;
-            }
-
-            var window = new MainWindow
-            {
-                DataContext = new MainViewModel(),
-            };
-            desktop.MainWindow = window;
-
-            if (Program.SmokeTest)
-            {
-                window.Opened += (_, _) =>
+                if (Program.GlProbe is not null)
                 {
-                    // Let one UI pass run so a trimmed publish exercises the XAML,
-                    // video-surface construction, and settings paths before shutting down.
-                    DispatcherTimer.RunOnce(
-                        () =>
-                        {
-                            Program.CompleteSmokeTest();
-                            desktop.Shutdown();
-                        },
-                        TimeSpan.FromMilliseconds(750));
-                };
-            }
-        }
+                    var probe = new GlProbeWindow(Program.GlProbe, desktop.Shutdown);
+                    desktop.MainWindow = probe;
+                    base.OnFrameworkInitializationCompleted();
+                    return;
+                }
 
-        base.OnFrameworkInitializationCompleted();
+                var window = new MainWindow
+                {
+                    DataContext = new MainViewModel(),
+                };
+                desktop.MainWindow = window;
+
+                if (Program.SmokeTest)
+                {
+                    window.Opened += (_, _) =>
+                    {
+                        // Let one UI pass run so a trimmed publish exercises the XAML,
+                        // video-surface construction, and settings paths before shutting down.
+                        DispatcherTimer.RunOnce(
+                            () =>
+                            {
+                                Program.CompleteSmokeTest();
+                                desktop.Shutdown();
+                            },
+                            TimeSpan.FromMilliseconds(750));
+                    };
+                }
+            }
+
+            base.OnFrameworkInitializationCompleted();
+        }
+        catch (Exception exception)
+        {
+            Serilog.Log.Fatal(exception, "Desktop shell initialization failed.");
+            throw;
+        }
     }
 }

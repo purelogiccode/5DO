@@ -85,7 +85,7 @@
 | `FiveDo.Storage` | Disc image readers (ISO/BIN/CUE/CHD), bounded host prefetch, BIOS validation, NVRAM file format, game database, game ID | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `VolumeHeader`, `GameDatabase`, `GameId` | Core, CHDSharp |
 | `FiveDo.Audio` | Sample format conversion, ring buffer, null/WAV/live sinks, soft limiter, PCM tap, statistics, WAV analysis | `AudioRingBuffer`, `AudioPipeline`, `NullAudioSink`, `WavAudioSink`, `AudioSoftLimiter`, `AudioTap`, `AudioStatistics`, `AudioAnalyzer`, `OpenAlAudioOutput` | Core, Silk.NET.OpenAL |
 | `FiveDo.Input` | Controller state, PBUS encoding, input profiles, keyboard/gamepad abstractions, scripts | `ControllerState`, `ControllerButton`, `PbusEncoder`, `PbusSource`, `InputProfile`, `PlayerProfile`, `KeyboardInputMapper`, `InputManager`, `GamepadMapper`, `InputScript` | Core |
-| `FiveDo.Diagnostics` | Logging, tracing, disassembly helpers, frame timing statistics, memory/frame dumpers, benchmark gates | `ILogSink`, `Log`, `CpuTracer`, `MemoryDumper`, `FrameDumper`, `PngDumper`, `FrameTiming`, `BenchmarkGate`, `BenchmarkComparison` | Core |
+| `FiveDo.Diagnostics` | Serilog configuration, in-memory log viewer sink, bug reporting, tracing, disassembly helpers, frame timing statistics, memory/frame dumpers, benchmark gates | `LoggingSetup`, `AppLogging`, `InMemorySerilogSink`, `BugReportSink`, `BugReportFormatter`, `CpuTracer`, `MemoryDumper`, `FrameDumper`, `PngDumper`, `FrameTiming`, `BenchmarkGate`, `BenchmarkComparison` | Core, Serilog |
 | `FiveDo.Machine` | Machine composition root, frame loop, Quartz scheduler, device wiring, state sections | `FiveDoMachine`, `Quartz` | Core + all chips + Diagnostics |
 | `FiveDo.Host` | Core thread lifecycle, audio-derived frame pacing, BIOS/disc/NVRAM loading, audio/input backends, save slots, settings, library, fixes, autopilot | `CoreRunner`, `AudioFramePacer`, `AppSettings`, `AppSettingsStore`, `NvramStore`, `SaveStateSlotManager`, `StateInspector`, `GameLibraryScanner`, `GameCompatibility`, `MemoryPatch`, `RoadRashAutopilot` | Machine, Storage, Audio, Input, Video, Diagnostics |
 | `FiveDo.Cli` | Headless command-line interface, JSON contracts | `Program`, `CliJsonModels` | Host |
@@ -541,8 +541,8 @@ A `VdlFrameMailbox` holds the most recent completed `VdlFrame`. If the renderer 
 
 - **Fatal configuration errors** (missing BIOS, invalid disc, unsupported state version) throw host/storage exceptions (`InvalidDataException`, `DiscImageException`, `InvalidStateException`, `ArgumentException`); the CLI catches these and exits 1. `EmulationException` is the base type for fatal emulator errors.
 - **Non-fatal emulation anomalies** (unmapped MMIO read, unknown CD command, malformed CEL) are logged at `Warning`/`Debug` and the core continues with the same sentinel behavior as FreeDOCore (`0xBADACCE5`, zero, etc.).
-- **No exceptions in the hot path.** Device methods return values; diagnostics use `ILogSink.IsEnabled` guards.
-- **Deterministic logging:** log categories and levels, no timestamps in core logs; host sinks may add timestamps.
+- **No exceptions in the hot path.** Device methods return values; diagnostics use Serilog level guards.
+- **Structured logging:** Serilog levels and `Category` properties; hosts configure the rolling file, console, in-memory viewer, and bug-report sinks.
 - **Debug builds** can enable `CpuTracer`, `MemoryDumper`, `FrameDumper`, and the CLI trace/dump options.
 
 ---
@@ -558,7 +558,7 @@ A `VdlFrameMailbox` holds the most recent completed `VdlFrame`. If the renderer 
 | Save state format | `IStateReader/Writer`, `IStateSection` | native `.tdos` sections (no 4DO import in this release) |
 | Renderer/filter | `IVideoRenderer` / shader variants | nearest, sharp-bilinear, CRT, xBR, HQx 2x/3x/4x, FSR |
 | CPU backend | `ICpuBackend` | ARM60 interpreter; optional IL JIT (not implemented) |
-| Diagnostics | `ILogSink`, `CpuTracer`, `FrameDumper` | console, in-memory, file traces, CLI `trace` |
+| Diagnostics | `Serilog.ILogger`, `CpuTracer`, `FrameDumper` | rolling file, in-memory viewer, bug-report API, CLI `trace` |
 
 ---
 

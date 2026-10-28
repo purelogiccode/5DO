@@ -94,6 +94,7 @@ public partial class GameLibraryWindow : Window
         }
         catch (Exception exception) when (exception is IOException or ArgumentException or UnauthorizedAccessException)
         {
+            Serilog.Log.Debug(exception, "Cover art could not be loaded for {Path}.", entry.CoverPath);
             CoverImage.Source = null;
             CoverText.Text = $"Cover art could not be loaded: {exception.Message}";
         }

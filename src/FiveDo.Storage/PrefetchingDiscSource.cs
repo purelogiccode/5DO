@@ -191,8 +191,9 @@ public sealed class PrefetchingDiscSource : IDiscSource
                         _inner.ReadSector(lba, buffer);
                     }
                 }
-                catch (Exception)
+                catch (Exception exception)
                 {
+                    Serilog.Log.Debug(exception, "Prefetch read failed for LBA {Lba}.", lba);
                     continue;
                 }
 

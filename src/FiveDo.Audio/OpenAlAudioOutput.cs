@@ -105,6 +105,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
             catch (Exception exception)
             {
                 _tapError = exception.Message;
+                Serilog.Log.Warning(exception, "Audio tap could not be created; continuing without it.");
             }
         }
 
@@ -227,6 +228,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         catch (Exception exception)
         {
             error = exception.Message;
+            Serilog.Log.Warning(exception, "OpenAL audio output could not be created.");
             return null;
         }
         finally
@@ -484,7 +486,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         {
             // A lost device or driver failure must not crash emulation.
             _deviceFailed = true;
-            System.Diagnostics.Debug.WriteLine(exception);
+            Serilog.Log.Error(exception, "OpenAL audio fill loop stopped; the device failed.");
         }
         finally
         {

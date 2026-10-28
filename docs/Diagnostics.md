@@ -23,29 +23,41 @@ and the symptom checklist in [`Troubleshooting.md`](Troubleshooting.md).
 | Is the GPU presenter correct/fast? | `--gl-probe`, `--gl-probe-capture`, parity |
 | Is the CPU frame budget healthy? | `benchmarks/FiveDo.Benchmarks --gate` |
 | Is the save state consistent? | `state inspect`, `run --state-in`, roundtrip hashes |
-| What did the app log? | in-app **Logs** / **Log Viewer** |
+| What did the app log? | in-app **Logs** / **Log Viewer** or the rolling file |
 
 ---
 
 ## 2. Logs
 
-The core logs through `ILogSink` (`Log` static facade) with:
+Both hosts configure Serilog through `FiveDo.Diagnostics.Logging.LoggingSetup`:
 
-- Levels: `Trace`, `Debug`, `Info`, `Warning`, `Error`, `Critical`, `None`.
+- Levels: Serilog `Verbose`, `Debug`, `Information`, `Warning`, `Error`, `Fatal`.
 - Categories: `Cpu`, `Memory`, `Madam`, `Clio`, `Dsp`, `Sport`, `Video`, `Xbus`,
   `Cdrom`, `Storage`, `Audio`, `Input`, `Machine`, `Host`, `State`, `Diagnostics`,
-  `All`.
+  `All`. The category is attached as the `Category` property.
+- Sinks: rolling file, stderr console (desktop), in-memory viewer, and the
+  bug-report API for `Warning` and above.
 
-The desktop shell uses `InMemoryLogSink` (capacity 1000) and exposes **Logs** in the
-main window plus a separate **Log Viewer** with level/category/search/auto-refresh and
-clear controls. The log records BIOS/disc loads, renderer initialization/fallback,
-save/load, screenshots, input changes, and emulation faults.
+Log files are written to `%LOCALAPPDATA%\5DO\logs\5do-YYYYMMDD.log` on Windows,
+`~/Library/Logs/5DO/` on macOS, and `$XDG_STATE_HOME/5DO/logs` (or
+`~/.local/state/5DO/logs`) on Linux. Seven daily files are retained.
 
-The core does not include wall-clock timestamps; the host sink adds them. The CLI
-prints warnings/errors to stderr; `--json` errors are structured.
+The desktop shell feeds **Logs** and the separate **Log Viewer** from the same
+Serilog pipeline (capacity 4000) with level/category/search/auto-refresh and clear
+controls. The log records BIOS/disc loads, renderer initialization/fallback,
+save/load, screenshots, input changes, and emulation faults. The CLI keeps its
+stdout/stderr contract (JSON and concise errors) and writes diagnostics to the file
+and bug-report sinks.
+
+Warning-or-higher events are submitted asynchronously to the bug-report API with
+the required environment, error, and exception blocks. Submissions are deduplicated
+for five minutes and capped at ten per minute. Set `FIVEDO_BUG_REPORTS=0` to
+disable submission, `FIVEDO_LOG_DIR` to redirect log files, or
+`FIVEDO_BUGREPORT_API_KEY` to override the API key. CI and test runs disable
+submission automatically.
 
 To capture a desktop log for a bug report, reproduce the issue, open **Log Viewer**,
-and copy the relevant lines. For CLI issues, redirect both streams:
+or attach the rolling log file. For CLI issues, redirect both streams:
 
 ```powershell
 dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin `

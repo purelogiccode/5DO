@@ -1,8 +1,9 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-28, 1.0.0-rc.1 release preparation after the seventeenth
-pass (OpenAL crackle fix, PCM tap, FSR 1.0, Road Rash race profile; see `git log`
-for the exact commit).
+**Snapshot:** 2026-10-28, 1.0.0-rc.1 release preparation after the eighteenth
+pass (Serilog logging and bug reporting; the seventeenth pass added the OpenAL
+crackle fix, PCM tap, FSR 1.0, and the Road Rash race profile; see `git log` for
+the exact commits).
 **Release definition:** documented compatibility, not full compatibility; see
 [`ReleaseChecklist.md`](ReleaseChecklist.md).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
@@ -71,6 +72,13 @@ This is the short, current answer to "where are we?" The documentation index is
   `.desktop` entry; Windows/macOS associations remain installer work. Per-game 4DO fix
   flags are applied automatically when a disc opens; explicit masks can be set in the
   settings dialog.
+- **Logging and bug reports:** Serilog is configured once by each host through
+  `FiveDo.Diagnostics.Logging`. The pipeline writes rolling daily files, stderr
+  (desktop), the in-memory **Log Viewer**, and an asynchronous bug-report sink for
+  `Warning`-or-higher events. Reports include the required environment, error, and
+  exception blocks; submission is deduplicated for five minutes, capped at ten per
+  minute, and disabled in CI/test runs. `FIVEDO_BUG_REPORTS=0` disables it and
+  `FIVEDO_LOG_DIR` redirects the files.
 - **Per-game fixes:** `GameCompatibility` maps the 4DO game IDs to `FixMode` bits.
   The CLI exposes `--fix-mode 0xMASK` and `--no-game-fixes`, and `run --json` /
   `info` report the applied mask. Alone in the Dark's `FIX_BIT_TIMING_6` is applied

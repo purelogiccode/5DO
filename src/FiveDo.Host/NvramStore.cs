@@ -55,9 +55,10 @@ public sealed class NvramStore : IDisposable
         {
             return NvramImage.Load(_path);
         }
-        catch (InvalidDataException)
+        catch (InvalidDataException exception)
         {
             // Preserve the bad image for diagnosis and start from a fresh volume.
+            Serilog.Log.Warning(exception, "NVRAM image {Path} is invalid; starting a fresh volume.", _path);
             File.Move(_path, _path + ".bad", overwrite: true);
             return NvramImage.CreateFresh();
         }

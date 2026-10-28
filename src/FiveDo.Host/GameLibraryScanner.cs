@@ -96,6 +96,7 @@ public static class GameLibraryScanner
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException or DiscImageException or ArgumentException)
         {
+            Serilog.Log.Debug(exception, "Skipped unreadable library entry {Path}.", path);
             return new GameLibraryEntry(
                 path,
                 Path.GetExtension(path).TrimStart('.').ToUpperInvariant(),
@@ -145,6 +146,7 @@ public static class GameLibraryScanner
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
+            Serilog.Log.Debug(exception, "Could not enumerate files in {Folder}.", folder);
             return;
         }
 
@@ -169,6 +171,7 @@ public static class GameLibraryScanner
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
+            Serilog.Log.Debug(exception, "Could not enumerate subdirectories in {Folder}.", folder);
             return;
         }
 

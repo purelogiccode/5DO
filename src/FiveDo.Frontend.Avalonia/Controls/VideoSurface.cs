@@ -232,6 +232,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
         }
         catch (Exception exception)
         {
+            Serilog.Log.Debug(exception, "OpenGL initialization failed inside the video surface.");
             _renderer?.Dispose();
             _renderer = null;
             _present = null;
@@ -286,6 +287,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
         }
         catch (Exception exception)
         {
+            Serilog.Log.Debug(exception, "OpenGL present failed inside the video surface.");
             _renderer.Dispose();
             _renderer = null;
             _present = null;

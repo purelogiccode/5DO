@@ -69,6 +69,7 @@ The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NO
 - CommunityToolkit.Mvvm (MIT)
 - Microsoft.Extensions.* (MIT)
 - xUnit (Apache-2.0)
+- Serilog, Serilog.Sinks.Console, Serilog.Sinks.File (Apache-2.0)
 - BenchmarkDotNet (MIT)
 - Silk.NET (MIT)
 - xBR-lv2 shader algorithm by Hyllian (MIT; attribution preserved in the shader and

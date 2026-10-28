@@ -502,7 +502,7 @@ These are deliberate additions, not part of FreeDOCore:
 - `__declspec(dllexport/dllimport)`.
 - `#pragma pack` save-state structs. Replace with explicit state sections.
 - `malloc/new` ownership patterns. Use managed arrays and classes.
-- Windows-only logging (`OutputDebugString`, `sprintf` buffers). Use `ILogSink`.
+- Windows-only logging (`OutputDebugString`, `sprintf` buffers). Use Serilog through `FiveDo.Diagnostics.Logging`.
 
 ---
 
@@ -561,9 +561,9 @@ M1 implements the section primitive used by all later chips:
 
 ### 12.5 Diagnostics
 
-- `Log` is an instance owned by the machine/host; there is no mutable static logger. `Log.Null` is a shared immutable instance.
-- The interpolated-string overload uses `LogInterpolatedStringHandler`, so disabled messages do not format or allocate.
-- `InMemoryLogSink` is bounded and thread-safe; `ConsoleLogSink` is intended for host/debug use.
+- The hosts configure Serilog once at startup through `LoggingSetup`/`AppLogging`; libraries use the `Serilog.Log` facade or an injected `ILogger`.
+- `InMemorySerilogSink` is bounded and thread-safe and feeds the desktop log viewer; the rolling file, console, and bug-report sinks share the same event stream.
+- Warning-or-higher events are submitted asynchronously by `BugReportSink` with environment, error, and exception blocks; CI/test runs disable submission.
 
 ### 12.6 M3 implementation notes
 

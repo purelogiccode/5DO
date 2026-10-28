@@ -30,6 +30,7 @@ public sealed class LibraryItem : IDisposable
             }
             catch (Exception exception) when (exception is IOException or ArgumentException or UnauthorizedAccessException)
             {
+                Serilog.Log.Debug(exception, "Cover art could not be decoded for {Path}.", entry.CoverPath);
                 Cover = null;
             }
         }

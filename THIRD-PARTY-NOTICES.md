@@ -49,6 +49,15 @@ This file records the projects and licenses that influence or ship with 5DO. It 
   framebuffer does not provide.
 - FSR 1.0 is a spatial post-process only; it does not change emulated output.
 
+### Serilog
+
+- Packages: `Serilog` 4.4.0, `Serilog.Sinks.Console` 6.1.1, and
+  `Serilog.Sinks.File` 7.0.0.
+- License: Apache-2.0.
+- Use: structured logging in `FiveDo.Diagnostics.Logging`. The rolling file,
+  stderr console, in-memory viewer, and asynchronous bug-report sinks all consume
+  the same Serilog event stream. No Serilog source is modified.
+
 ### HQx (Maxim Stepin, Cameron Zemek)
 
 - Source: `References/4DO-master/FreeDOCore/Filters/hq2x.cpp`, `hq3x.cpp`,
@@ -72,6 +81,7 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 | CommunityToolkit.Mvvm | ViewModels | MIT |
 | Microsoft.Extensions.DependencyInjection | Frontend composition | MIT |
 | System.CommandLine | CLI parsing | MIT |
+| Serilog / Serilog.Sinks.Console / Serilog.Sinks.File | Structured logging, console, and rolling-file sinks | Apache-2.0 |
 | xUnit | Tests | Apache-2.0 |
 | Microsoft.NET.Test.Sdk | Tests | MIT |
 | coverlet.collector | Coverage | MIT |

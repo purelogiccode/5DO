@@ -1,100 +1,73 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using FiveDo.Core;
+using FiveDo.Diagnostics.Logging;
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 
 namespace FiveDo.Tests.Core;
 
 public sealed class LogTests
 {
     [Fact]
-    public void DisabledLevel_DoesNotWrite()
+    public void InMemorySink_CapturesCategoryLevelAndMessage()
     {
-        var sink = new InMemoryLogSink();
-        var log = new Log(sink, LogLevel.Warning);
+        var sink = new InMemorySerilogSink();
+        using Logger logger = CreateLogger(sink);
 
-        log.Write(LogLevel.Debug, LogCategory.Cpu, "hidden");
-        log.Write(LogLevel.Warning, LogCategory.Cpu, "shown");
+        logger.ForCategory(LogCategory.Cpu).Warning("timer {Value}", 42);
 
-        IReadOnlyList<LogEntry> entries = sink.Entries;
-        Assert.Single(entries);
-        Assert.Equal("shown", entries[0].Message);
-        Assert.Equal(LogLevel.Warning, entries[0].Level);
-        Assert.Equal(LogCategory.Cpu, entries[0].Category);
+        LogEntry entry = Assert.Single(sink.Entries);
+        Assert.Equal(LogEventLevel.Warning, entry.Level);
+        Assert.Equal(LogCategory.Cpu, entry.Category);
+        Assert.Equal("timer 42", entry.Message);
     }
 
     [Fact]
-    public void DisabledCategory_DoesNotWrite()
+    public void ForCategory_OverridesTheDefaultCategory()
     {
-        var sink = new InMemoryLogSink();
-        var log = new Log(sink, LogLevel.Trace, LogCategory.Cpu);
+        var sink = new InMemorySerilogSink();
+        using Logger logger = new LoggerConfiguration()
+            .MinimumLevel.Verbose()
+            .Enrich.WithProperty("Category", LogCategory.Host)
+            .WriteTo.Sink(sink)
+            .CreateLogger();
 
-        log.Write(LogLevel.Info, LogCategory.Madam, "hidden");
-        log.Write(LogLevel.Info, LogCategory.Cpu, "shown");
+        logger.ForCategory(LogCategory.Audio).Information("ready");
 
-        IReadOnlyList<LogEntry> entries = sink.Entries;
-        Assert.Single(entries);
-        Assert.Equal("shown", entries[0].Message);
-    }
-
-    [Fact]
-    public void NullLog_IsDisabled()
-    {
-        Assert.False(Log.Null.IsEnabled(LogLevel.Critical, LogCategory.All));
-        Log.Null.Write(LogLevel.Critical, LogCategory.All, "ignored");
-    }
-
-    [Fact]
-    public void NullSink_DoesNotThrow()
-    {
-        NullLogSink.Instance.Write(LogLevel.Critical, LogCategory.All, "ignored");
-    }
-
-    [Fact]
-    public void InterpolatedMessage_FormatsWhenEnabled()
-    {
-        var sink = new InMemoryLogSink();
-        var log = new Log(sink);
-        var value = 42;
-
-        log.Write(LogLevel.Info, LogCategory.Machine, $"value={value}");
-
-        Assert.Equal("value=42", sink.Entries[0].Message);
-    }
-
-    [Fact]
-    public void InterpolatedMessage_DoesNotFormatWhenDisabled()
-    {
-        var sink = new InMemoryLogSink();
-        var log = new Log(sink, LogLevel.Error);
-        var value = 42;
-
-        log.Write(LogLevel.Debug, LogCategory.Machine, $"value={value}");
-
-        Assert.Empty(sink.Entries);
+        LogEntry entry = Assert.Single(sink.Entries);
+        Assert.Equal(LogCategory.Audio, entry.Category);
     }
 
     [Fact]
     public void InMemorySink_RetainsOnlyCapacity()
     {
-        var sink = new InMemoryLogSink(3);
+        var sink = new InMemorySerilogSink(3);
+        using Logger logger = CreateLogger(sink);
 
-        sink.Write(LogLevel.Info, LogCategory.Machine, "1");
-        sink.Write(LogLevel.Info, LogCategory.Machine, "2");
-        sink.Write(LogLevel.Info, LogCategory.Machine, "3");
-        sink.Write(LogLevel.Info, LogCategory.Machine, "4");
+        for (var i = 1; i <= 4; i++)
+        {
+            logger.Information("entry {Index}", i);
+        }
 
         IReadOnlyList<LogEntry> entries = sink.Entries;
         Assert.Equal(3, entries.Count);
-        Assert.Equal("2", entries[0].Message);
-        Assert.Equal("4", entries[2].Message);
+        Assert.Equal("entry 2", entries[0].Message);
+        Assert.Equal("entry 4", entries[2].Message);
     }
 
     [Fact]
     public void InMemorySink_Clear_RemovesEntries()
     {
-        var sink = new InMemoryLogSink();
-        sink.Write(LogLevel.Info, LogCategory.Machine, "1");
+        var sink = new InMemorySerilogSink();
+        using Logger logger = CreateLogger(sink);
+        logger.Information("one");
 
         sink.Clear();
 
@@ -104,31 +77,43 @@ public sealed class LogTests
     [Fact]
     public void InMemorySink_InvalidCapacity_Throws()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new InMemoryLogSink(0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new InMemoryLogSink(-1));
-    }
-
-    [Fact]
-    public void ConsoleSink_WritesFormattedLine()
-    {
-        using var writer = new StringWriter();
-        var sink = new ConsoleLogSink(writer);
-
-        sink.Write(LogLevel.Warning, LogCategory.Clio, "timer underflow");
-
-        Assert.Equal("[Warning] Clio: timer underflow" + Environment.NewLine, writer.ToString());
+        Assert.Throws<ArgumentOutOfRangeException>(() => new InMemorySerilogSink(0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new InMemorySerilogSink(-1));
     }
 
     [Fact]
     public void InMemorySink_RecordsTimestamp()
     {
-        var sink = new InMemoryLogSink();
+        var sink = new InMemorySerilogSink();
+        using Logger logger = CreateLogger(sink);
         DateTimeOffset before = DateTimeOffset.UtcNow.AddSeconds(-1);
-        sink.Write(LogLevel.Info, LogCategory.Host, "loaded");
-        DateTimeOffset after = DateTimeOffset.UtcNow.AddSeconds(1);
 
+        logger.Information("loaded");
+
+        DateTimeOffset after = DateTimeOffset.UtcNow.AddSeconds(1);
         LogEntry entry = Assert.Single(sink.Entries);
         Assert.InRange(entry.TimestampUtc, before, after);
+    }
+
+    [Fact]
+    public void LoggingSetup_WiresTheInMemorySink()
+    {
+        var options = new LoggingOptions
+        {
+            ApplicationMode = "Test",
+            WriteToConsole = false,
+            WriteToFile = false,
+            EnableInMemory = true,
+            EnableBugReports = false,
+            MinimumLevel = LogEventLevel.Debug,
+        };
+
+        using Logger logger = LoggingSetup.CreateLogger(options, out InMemorySerilogSink sink);
+        logger.ForCategory(LogCategory.Host).Information("hello");
+
+        LogEntry entry = Assert.Single(sink.Entries);
+        Assert.Equal("hello", entry.Message);
+        Assert.Equal(LogCategory.Host, entry.Category);
     }
 
     [Fact]
@@ -136,22 +121,22 @@ public sealed class LogTests
     {
         LogEntry[] entries =
         [
-            new(LogLevel.Debug, LogCategory.Cpu, "debug cpu"),
-            new(LogLevel.Info, LogCategory.Cpu, "BIOS loaded"),
-            new(LogLevel.Warning, LogCategory.Storage, "disc read retry"),
-            new(LogLevel.Error, LogCategory.Storage, "disc read failed"),
+            new(LogEventLevel.Debug, LogCategory.Cpu, "debug cpu"),
+            new(LogEventLevel.Information, LogCategory.Cpu, "BIOS loaded"),
+            new(LogEventLevel.Warning, LogCategory.Storage, "disc read retry"),
+            new(LogEventLevel.Error, LogCategory.Storage, "disc read failed"),
         ];
 
         var filter = new LogViewFilter
         {
-            MinimumLevel = LogLevel.Info,
+            MinimumLevel = LogEventLevel.Information,
             Category = LogCategory.Storage,
             Search = "failed",
         };
 
         IReadOnlyList<LogEntry> result = filter.Apply(entries);
         LogEntry entry = Assert.Single(result);
-        Assert.Equal(LogLevel.Error, entry.Level);
+        Assert.Equal(LogEventLevel.Error, entry.Level);
         Assert.Equal(LogCategory.Storage, entry.Category);
     }
 
@@ -160,12 +145,161 @@ public sealed class LogTests
     {
         LogEntry[] entries =
         [
-            new(LogLevel.Info, LogCategory.Cpu, "cpu"),
-            new(LogLevel.Info, LogCategory.Storage, "storage"),
+            new(LogEventLevel.Information, LogCategory.Cpu, "cpu"),
+            new(LogEventLevel.Information, LogCategory.Storage, "storage"),
         ];
 
-        IReadOnlyList<LogEntry> result = new LogViewFilter { MinimumLevel = LogLevel.Trace }.Apply(entries);
+        IReadOnlyList<LogEntry> result = new LogViewFilter
+        {
+            MinimumLevel = LogEventLevel.Verbose,
+        }.Apply(entries);
 
         Assert.Equal(2, result.Count);
+    }
+
+    [Fact]
+    public void BugReportFormatter_IncludesEveryRequiredBlock()
+    {
+        var exception = new InvalidOperationException("boom");
+        LogEvent logEvent = CreateEvent(LogEventLevel.Error, exception, "Failed load");
+
+        BugReportPayload payload = BugReportFormatter.Create(logEvent, "CLI");
+
+        Assert.Equal("5DO", payload.ApplicationName);
+        Assert.Equal("1.0.0-rc.1", payload.Version);
+        Assert.Contains(" / CLI", payload.Environment, StringComparison.Ordinal);
+        Assert.Contains("=== Environment Details ===", payload.Message, StringComparison.Ordinal);
+        Assert.Contains("Date:", payload.Message, StringComparison.Ordinal);
+        Assert.Contains("Application Name: 5DO", payload.Message, StringComparison.Ordinal);
+        Assert.Contains("Application Version:", payload.Message, StringComparison.Ordinal);
+        Assert.Contains("OS Version:", payload.Message, StringComparison.Ordinal);
+        Assert.Contains("Architecture:", payload.Message, StringComparison.Ordinal);
+        Assert.Contains("Bitness:", payload.Message, StringComparison.Ordinal);
+        Assert.Contains("Processor Count:", payload.Message, StringComparison.Ordinal);
+        Assert.Contains("Base Directory:", payload.Message, StringComparison.Ordinal);
+        Assert.Contains("Temp Path:", payload.Message, StringComparison.Ordinal);
+        Assert.Contains("=== Error Details ===", payload.Message, StringComparison.Ordinal);
+        Assert.Contains("Failed load", payload.Message, StringComparison.Ordinal);
+        Assert.NotNull(payload.StackTrace);
+        Assert.Contains("=== Exception Details ===", payload.StackTrace, StringComparison.Ordinal);
+        Assert.Contains("Type: System.InvalidOperationException", payload.StackTrace, StringComparison.Ordinal);
+        Assert.Contains("Message: boom", payload.StackTrace, StringComparison.Ordinal);
+        Assert.Contains("Source:", payload.StackTrace, StringComparison.Ordinal);
+        Assert.Contains("StackTrace:", payload.StackTrace, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BugReportFormatter_WithoutException_ReportsNone()
+    {
+        LogEvent logEvent = CreateEvent(LogEventLevel.Warning, exception: null, "disk nearly full");
+
+        BugReportPayload payload = BugReportFormatter.Create(logEvent, "Desktop");
+
+        Assert.Contains("=== Error Details ===", payload.Message, StringComparison.Ordinal);
+        Assert.Equal("=== Exception Details ===" + Environment.NewLine + "None", payload.StackTrace);
+    }
+
+    [Fact]
+    public async Task BugReportSink_PostsWarningToTheConfiguredEndpoint()
+    {
+        var handler = new RecordingHandler();
+        using var http = new HttpClient(handler);
+        using var sink = new BugReportSink(
+            new BugReportOptions
+            {
+                Endpoint = "https://example.test/bug",
+                ApiKey = "test-key",
+                ApplicationMode = "CLI",
+            },
+            http);
+        LogEvent logEvent = CreateEvent(LogEventLevel.Warning, exception: null, "disk nearly full");
+
+        sink.Emit(logEvent);
+
+        string body = await handler.Body.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal("test-key", handler.ApiKey);
+        Assert.Contains("\"applicationName\":\"5DO\"", body, StringComparison.Ordinal);
+        Assert.Contains("\"environment\":\"", body, StringComparison.Ordinal);
+        Assert.Contains("=== Environment Details ===", body, StringComparison.Ordinal);
+        Assert.Contains("=== Error Details ===", body, StringComparison.Ordinal);
+        Assert.Contains("disk nearly full", body, StringComparison.Ordinal);
+        Assert.Contains("=== Exception Details ===", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BugReportSink_IgnoresInformationAndBelow()
+    {
+        var handler = new RecordingHandler();
+        using var http = new HttpClient(handler);
+        using var sink = new BugReportSink(
+            new BugReportOptions { Endpoint = "https://example.test/bug", ApiKey = "test-key" },
+            http);
+
+        sink.Emit(CreateEvent(LogEventLevel.Information, exception: null, "ordinary event"));
+
+        Assert.False(handler.Body.IsCompleted);
+    }
+
+    private static Logger CreateLogger(InMemorySerilogSink sink)
+        => new LoggerConfiguration()
+            .MinimumLevel.Verbose()
+            .WriteTo.Sink(sink)
+            .CreateLogger();
+
+    private static LogEvent CreateEvent(LogEventLevel level, Exception? exception, string message)
+    {
+        var sink = new CapturingSink();
+        using Logger logger = new LoggerConfiguration()
+            .MinimumLevel.Verbose()
+            .WriteTo.Sink(sink)
+            .CreateLogger();
+        switch (level)
+        {
+            case LogEventLevel.Warning:
+                logger.Warning(exception, "{Message}", message);
+                break;
+            case LogEventLevel.Error:
+                logger.Error(exception, "{Message}", message);
+                break;
+            case LogEventLevel.Information:
+                logger.Information("{Message}", message);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(level), level, "Unsupported test level.");
+        }
+
+        return sink.Last ?? throw new InvalidOperationException("No log event was captured.");
+    }
+
+    private sealed class CapturingSink : ILogEventSink
+    {
+        public LogEvent? Last { get; private set; }
+
+        public void Emit(LogEvent logEvent) => Last = logEvent;
+    }
+
+    private sealed class RecordingHandler : HttpMessageHandler
+    {
+        private readonly TaskCompletionSource<string> _body =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Task<string> Body => _body.Task;
+
+        public string? ApiKey { get; private set; }
+
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(request);
+            ApiKey = request.Headers.TryGetValues("X-API-KEY", out IEnumerable<string>? values)
+                ? values.FirstOrDefault()
+                : null;
+            var body = request.Content is null
+                ? string.Empty
+                : await request.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            _body.TrySetResult(body);
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        }
     }
 }

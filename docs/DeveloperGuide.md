@@ -419,13 +419,15 @@ last millisecond; a >100 ms stall resyncs rather than chasing the past.
   log at Warning/Debug and continue with the reference sentinel behavior
   (`0xBADACCE5`, zero, etc.).
 - **No exceptions in the hot path.** Device methods return values; diagnostics use
-  `ILogSink.IsEnabled` guards.
-- **Logging:** `Log` with levels/categories; the core has no timestamps; the host sink
-  adds them. The desktop uses `InMemoryLogSink` (1000 entries).
+  Serilog level guards.
+- **Logging:** Serilog with levels/categories. `LoggingSetup` configures rolling
+  files, the in-memory viewer, stderr (desktop), and the bug-report sink. The
+  desktop uses `InMemorySerilogSink` (4000 entries). The CLI keeps stdout/stderr
+  for its JSON/product contract and writes diagnostics to the file/API.
 - **State warnings:** `FiveDoMachine.StateWarnings` reports version/BIOS/unknown-section
   warnings; the CLI includes them in `run --json` and the UI logs them.
 - **Core faults:** `CoreRunner.Faulted` reports the exception; the thread stops and
-  logs to stderr.
+  logs through Serilog.
 
 ---
 
@@ -441,7 +443,7 @@ last millisecond; a >100 ms stall resyncs rather than chasing the past.
 | CPU backend | `ICpuBackend` | ARM60 interpreter; optional IL JIT (not implemented) |
 | XBUS device | `IXbusDevice` | CD-ROM; future peripherals |
 | Renderer/filter | `IVideoRenderer`, shader variants | nearest, sharp-bilinear, CRT, xBR, HQx, FSR |
-| Logging | `ILogSink` | console, in-memory, null |
+| Logging | `Serilog.ILogger`, `ILogEventSink` | file, stderr, in-memory viewer, bug-report API |
 | Benchmark policy | `BenchmarkGate`, `BenchmarkComparison` | CI gate, same-machine baseline |
 
 ### Adding a renderer filter

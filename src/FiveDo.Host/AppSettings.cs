@@ -243,8 +243,9 @@ public static class AppSettingsStore
             return JsonSerializer.Deserialize(File.ReadAllText(resolved), AppSettingsJsonContext.Default.AppSettings)
                 ?? new AppSettings();
         }
-        catch (JsonException)
+        catch (JsonException exception)
         {
+            Serilog.Log.Warning(exception, "Settings file {Path} is invalid; using defaults.", resolved);
             return new AppSettings();
         }
     }

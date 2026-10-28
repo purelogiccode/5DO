@@ -249,7 +249,7 @@ public sealed class CoreRunner : IDisposable
                 0,
                 0));
             Faulted?.Invoke(this, new CoreFaultedEventArgs(exception));
-            Console.Error.WriteLine($"Core thread stopped: {exception}");
+            Serilog.Log.Error(exception, "Core thread stopped.");
         }
         finally
         {

@@ -118,6 +118,19 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
 - PAL video, CD-DA/Red Book audio, multi-disc swapping, netplay, rewind, and additional
   peripherals are out of scope for v1.
 
+## Logging and bug reports
+
+- Serilog writes rolling daily files under the per-user log directory and keeps
+  seven days. The desktop Logs dock/viewer is fed by the same pipeline.
+- `Warning`-or-higher events are submitted asynchronously to the configured
+  bug-report API with the required environment, error, and exception details.
+  Submission is deduplicated for five minutes, capped at ten per minute, and
+  disabled when `FIVEDO_BUG_REPORTS=0` or in CI/test runs. If the endpoint is
+  unreachable, the local file remains the source of truth and the submission is
+  dropped after the HTTP timeout.
+- The submit API key is embedded per the service's client instructions; override
+  it with `FIVEDO_BUGREPORT_API_KEY` for a different deployment.
+
 ## Legal
 
 - The project is licensed under the FreeDO modified GNU LGPL (see the root `LICENSE`).

@@ -241,6 +241,7 @@ public sealed class SaveStateSlotManager
         }
         catch (Exception exception) when (exception is InvalidStateException or IOException or UnauthorizedAccessException)
         {
+            Serilog.Log.Debug(exception, "Save slot {Slot} could not be inspected.", slot);
             return new SaveStateSlotInfo(
                 slot,
                 statePath,
@@ -293,6 +294,7 @@ public sealed class SaveStateSlotManager
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
             // A thumbnail is optional; never fail a state save because the preview could not be written.
+            Serilog.Log.Debug(exception, "Save-slot thumbnail could not be written for slot {Slot}.", slot);
         }
     }
 
@@ -320,6 +322,7 @@ public sealed class SaveStateSlotManager
         }
         catch (Exception exception) when (exception is JsonException or IOException or UnauthorizedAccessException)
         {
+            Serilog.Log.Debug(exception, "Save-slot metadata could not be read for slot {Slot}.", slot);
             return null;
         }
     }

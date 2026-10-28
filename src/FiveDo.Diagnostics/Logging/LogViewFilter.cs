@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using FiveDo.Core;
+using Serilog.Events;
 
-namespace FiveDo.Core;
+namespace FiveDo.Diagnostics.Logging;
 
 /// <summary>
 /// A client-side filter for captured <see cref="LogEntry"/> records. Used by the in-app
@@ -10,7 +12,7 @@ namespace FiveDo.Core;
 public sealed record LogViewFilter
 {
     /// <summary>Gets the minimum severity to show.</summary>
-    public LogLevel MinimumLevel { get; init; } = LogLevel.Info;
+    public LogEventLevel MinimumLevel { get; init; } = LogEventLevel.Information;
 
     /// <summary>Gets the category mask to show. <see cref="LogCategory.All"/> shows every category.</summary>
     public LogCategory Category { get; init; } = LogCategory.All;

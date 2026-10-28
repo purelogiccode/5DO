@@ -10,6 +10,12 @@ still change.
 - Root `LICENSE`: the project is now distributed under the FreeDO modified GNU LGPL,
   with the FreeDO notice reproduced verbatim, the GNU LGPL 2.1 text, and the additional
   non-commercial/attribution terms. `LICENSE` is included in portable archives.
+- Serilog logging across the CLI and desktop hosts: rolling daily files, stderr
+  console output (desktop), the in-memory **Log Viewer**, and an asynchronous
+  bug-report sink that forwards `Warning`-or-higher events with environment,
+  error, and exception details. Submissions are deduplicated for five minutes and
+  capped at ten per minute. `FIVEDO_BUG_REPORTS=0` disables submission,
+  `FIVEDO_LOG_DIR` redirects log files, and CI/test runs disable submission.
 - Audio tap diagnostics: set `FIVEDO_AUDIO_TAP=<prefix>` to record the exact PCM
   queued to OpenAL (`<prefix>.wav`) plus a per-buffer CSV (`<prefix>.csv`) with
   elapsed time, frames, ring/queue depth, underruns, peak, and OpenAL errors. The
@@ -75,6 +81,11 @@ still change.
 
 ### Changed
 
+- Replaced the custom `Log`/`ILogSink`/`ConsoleLogSink`/`InMemoryLogSink`/`NullLogSink`
+  facade with Serilog. `LogCategory` remains as the structured category property,
+  and the desktop log viewer is fed by `InMemorySerilogSink`. Host entry points and
+  existing catch blocks now log through Serilog; the CLI keeps JSON on stdout and
+  concise errors on stderr while diagnostics go to the file and bug-report sinks.
 - The Windows audio fill thread is registered as a "Pro Audio" multimedia thread
   (`AvSetMmThreadCharacteristics`) and runs above normal priority so UI and
   rendering work cannot starve it.

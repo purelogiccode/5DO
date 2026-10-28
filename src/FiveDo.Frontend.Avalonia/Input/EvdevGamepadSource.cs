@@ -115,6 +115,7 @@ internal sealed class EvdevGamepadSource : IRawGamepadSource
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
+            Serilog.Log.Debug(exception, "evdev input scan failed.");
             return;
         }
 
@@ -192,6 +193,7 @@ internal sealed class EvdevGamepadSource : IRawGamepadSource
         }
         catch (Exception exception) when (exception is DllNotFoundException or EntryPointNotFoundException)
         {
+            Serilog.Log.Debug(exception, "evdev device open failed.");
             _ = CloseDevice(fd);
             return null;
         }

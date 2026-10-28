@@ -237,6 +237,7 @@ internal sealed class GlProbeWindow : Window, IDisposable
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
         {
+            Serilog.Log.Error(exception, "GPU probe capture failed.");
             Finish(false, $"The probe capture failed: {exception.Message}");
             return;
         }
@@ -382,7 +383,7 @@ internal sealed class GlProbeWindow : Window, IDisposable
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            Console.Error.WriteLine($"GPU probe report failed: {exception.Message}");
+            Serilog.Log.Error(exception, "GPU probe report failed.");
             _exit(2);
             return;
         }

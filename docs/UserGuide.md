@@ -186,9 +186,21 @@ and the ring/queue/underrun/drop counters.
 
 ## Logs
 
-**Logs** shows the in-memory diagnostic log with level, category, search, auto-refresh,
+**Logs** shows the in-memory Serilog log with level, category, search, auto-refresh,
 and clear controls. The log records BIOS/disc loads, renderer initialization and
 fallback, save/load, screenshots, input changes, and emulation faults.
+
+Both apps also write rolling daily files (seven retained):
+
+- Windows: `%LOCALAPPDATA%\5DO\logs\5do-YYYYMMDD.log`
+- macOS: `~/Library/Logs/5DO/`
+- Linux: `$XDG_STATE_HOME/5DO/logs` or `~/.local/state/5DO/logs`
+
+Set `FIVEDO_LOG_DIR` to redirect the files. Warning-or-higher events are also sent
+asynchronously to the bug-report service with environment, error, and exception
+details; submissions are deduplicated for five minutes and capped at ten per minute.
+Set `FIVEDO_BUG_REPORTS=0` to disable submission. CI and test runs disable it
+automatically, and the CLI keeps JSON on stdout with concise errors on stderr.
 
 ## CLI
 

@@ -5,6 +5,8 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using FiveDo.Core;
+using FiveDo.Diagnostics.Logging;
+using Serilog.Events;
 
 namespace FiveDo.Frontend.Avalonia.Views;
 
@@ -13,29 +15,27 @@ namespace FiveDo.Frontend.Avalonia.Views;
 /// </summary>
 public partial class LogsWindow : Window
 {
-    private readonly InMemoryLogSink _sink;
+    private readonly InMemorySerilogSink _sink;
     private readonly DispatcherTimer _timer;
     private bool _initializing;
 
     /// <summary>Creates the dialog with an empty log.</summary>
     public LogsWindow()
-        : this(new InMemoryLogSink())
+        : this(new InMemorySerilogSink())
     {
     }
 
     /// <summary>Creates the dialog.</summary>
     /// <param name="sink">Log sink owned by the shell.</param>
-    public LogsWindow(InMemoryLogSink sink)
+    public LogsWindow(InMemorySerilogSink sink)
     {
         ArgumentNullException.ThrowIfNull(sink);
         _sink = sink;
         _initializing = true;
         InitializeComponent();
 
-        LevelCombo.ItemsSource = Enum.GetValues<LogLevel>()
-            .Where(level => level != LogLevel.None)
-            .ToArray();
-        LevelCombo.SelectedItem = LogLevel.Info;
+        LevelCombo.ItemsSource = Enum.GetValues<LogEventLevel>();
+        LevelCombo.SelectedItem = LogEventLevel.Information;
         CategoryCombo.ItemsSource = Enum.GetValues<LogCategory>()
             .Where(category => category != LogCategory.None)
             .ToArray();
@@ -93,7 +93,7 @@ public partial class LogsWindow : Window
     {
         var filter = new LogViewFilter
         {
-            MinimumLevel = LevelCombo.SelectedItem is LogLevel level ? level : LogLevel.Info,
+            MinimumLevel = LevelCombo.SelectedItem is LogEventLevel level ? level : LogEventLevel.Information,
             Category = CategoryCombo.SelectedItem is LogCategory category ? category : LogCategory.All,
             Search = SearchBox.Text?.Trim() ?? string.Empty,
         };
@@ -106,7 +106,7 @@ public partial class LogsWindow : Window
             var time = entry.TimestampUtc == default
                 ? string.Empty
                 : entry.TimestampUtc.ToLocalTime().ToString("HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture) + " ";
-            lines.Add($"{time}[{entry.Level,-8}] {entry.Category,-12} {entry.Message}");
+            lines.Add($"{time}[{entry.Level,-11}] {entry.Category,-12} {entry.Message}");
         }
 
         LogList.ItemsSource = lines;

@@ -32,7 +32,8 @@ dialog, a Hi-Res toggle, automatic CPU fallback when OpenGL init or the context 
 a game library browser with cover art, a settings dialog (video/audio/emulation/paths), six-player
 keyboard and gamepad binding, ten numbered save slots with PNG thumbnails, PNG
 screenshots named by game/frame/time, an optional FPS/status overlay, a first-run
-guide, error dialogs, and an in-app diagnostic log viewer. The app also accepts a
+guide, error dialogs, and a Serilog-backed in-app diagnostic log viewer with rolling
+daily files and asynchronous bug reporting. The app also accepts a
 positional disc path or `--disc <path>` (a Linux `.desktop` association file is in
 `packaging/`). Settings include per-game fix-mode and filter overrides. Windows XInput and Linux
 evdev gamepads are supported. The CLI applies the 4DO per-game fixes automatically and

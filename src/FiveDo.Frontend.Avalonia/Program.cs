@@ -1,7 +1,9 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Avalonia;
 using FiveDo.Core;
+using FiveDo.Diagnostics.Logging;
 
 namespace FiveDo.Frontend.Avalonia;
 
@@ -44,40 +46,93 @@ internal static class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        if (HasFlag(args, "--version"))
+        try
         {
-            Console.WriteLine(FiveDoVersion.Version);
-            return;
-        }
-
-        var backendText = FindOptionValue(args, "--gl-backend")
-            ?? FindOptionValue(args, "--gl-probe-backend");
-        if (!GlBackendOption.TryParse(backendText, out GlBackend backend))
-        {
-            Console.Error.WriteLine(
-                $"--gl-backend does not recognize '{backendText}'. Use auto, wgl, angle, or software.");
-            Environment.ExitCode = 1;
-            return;
-        }
-
-        RequestedGlBackend = backend;
-
-        SmokeTest = HasFlag(args, "--smoke-test");
-        SmokeOutputPath = FindOptionValue(args, "--smoke-output");
-        if (HasFlag(args, "--gl-probe"))
-        {
-            if (!GlProbeOptions.TryParse(args, out GlProbeOptions? probe, out var probeError))
+            AppLogging.Initialize(new LoggingOptions
             {
-                Console.Error.WriteLine(probeError);
+                ApplicationMode = "Desktop",
+                WriteToConsole = true,
+                WriteToFile = true,
+                EnableBugReports = true,
+            });
+        }
+        catch (Exception exception)
+        {
+            // Logging must never prevent the application from starting.
+            Console.Error.WriteLine($"Logging initialization failed: {exception.Message}");
+        }
+
+        AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
+        {
+            if (eventArgs.ExceptionObject is Exception exception)
+            {
+                Serilog.Log.Fatal(exception, "Unhandled application exception.");
+            }
+            else
+            {
+                Serilog.Log.Fatal(
+                    "Unhandled application exception: {ExceptionObject}.",
+                    eventArgs.ExceptionObject);
+            }
+        };
+        TaskScheduler.UnobservedTaskException += (_, eventArgs) =>
+        {
+            Serilog.Log.Error(eventArgs.Exception, "Unobserved task exception.");
+            eventArgs.SetObserved();
+        };
+
+        try
+        {
+            Serilog.Log.Information(
+                "Desktop frontend starting ({Version}); {ArgumentCount} argument(s).",
+                FiveDoVersion.Version,
+                args.Length);
+
+            if (HasFlag(args, "--version"))
+            {
+                Console.WriteLine(FiveDoVersion.Version);
+                return;
+            }
+
+            var backendText = FindOptionValue(args, "--gl-backend")
+                ?? FindOptionValue(args, "--gl-probe-backend");
+            if (!GlBackendOption.TryParse(backendText, out GlBackend backend))
+            {
+                Serilog.Log.Warning(
+                    "Unrecognized --gl-backend value {Backend}; use auto, wgl, angle, or software.",
+                    backendText);
                 Environment.ExitCode = 1;
                 return;
             }
 
-            GlProbe = probe;
-        }
+            RequestedGlBackend = backend;
 
-        StartupDiscPath = FindDiscPath(args);
-        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+            SmokeTest = HasFlag(args, "--smoke-test");
+            SmokeOutputPath = FindOptionValue(args, "--smoke-output");
+            if (HasFlag(args, "--gl-probe"))
+            {
+                if (!GlProbeOptions.TryParse(args, out GlProbeOptions? probe, out var probeError))
+                {
+                    Serilog.Log.Warning("Invalid GPU probe options: {Error}.", probeError);
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                GlProbe = probe;
+            }
+
+            StartupDiscPath = FindDiscPath(args);
+            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        }
+        catch (Exception exception)
+        {
+            Serilog.Log.Fatal(exception, "Desktop frontend terminated unexpectedly.");
+            Environment.ExitCode = 1;
+        }
+        finally
+        {
+            AppLogging.Shutdown();
+        }
     }
 
     /// <summary>
@@ -107,7 +162,7 @@ internal static class Program
         {
             // A failed marker write must not turn a successful window launch into a
             // crash; the process exit code remains the authoritative smoke result.
-            Console.Error.WriteLine($"Smoke marker failed: {exception.Message}");
+            Serilog.Log.Error(exception, "Smoke marker write failed.");
         }
     }
 

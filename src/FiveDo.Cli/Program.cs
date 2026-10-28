@@ -14,6 +14,7 @@ using FiveDo.Audio;
 using FiveDo.Core;
 using FiveDo.Cpu;
 using FiveDo.Diagnostics;
+using FiveDo.Diagnostics.Logging;
 using FiveDo.Host;
 using FiveDo.Input;
 using FiveDo.Machine;
@@ -27,51 +28,95 @@ internal static class Program
 {
     public static int Main(string[] args)
     {
-        if (args.Length == 0)
-        {
-            PrintUsage();
-            return 0;
-        }
-
-        var json = HasFlag(args, "--json");
         try
         {
-            return args[0] switch
+            AppLogging.Initialize(new LoggingOptions
             {
-                "--version" or "-v" => Version(),
-                "--help" or "-h" or "help" => Help(),
-                "run" => Run(args),
-                "trace" => TraceCommand(args),
-                "info" => Info(args),
-                "disc" => DiscCommand(args),
-                "fs" => FsCommand(args),
-                "bios" => Bios(args),
-                "audio" => AudioCommand(args),
-                "state" => State(args),
-                "bench" => Bench(args),
-                "selftest" => SelfTest(args),
-                "disasm" => Disassemble(args),
-                _ => Unknown(args[0], json),
-            };
+                ApplicationMode = "CLI",
+                // The CLI owns its stdout/stderr contract (JSON and concise errors);
+                // diagnostics go to the rolling file and the bug-report sink.
+                WriteToConsole = false,
+                WriteToFile = true,
+                EnableBugReports = true,
+            });
         }
-        catch (Exception exception) when (exception is IOException
-            or InvalidDataException
-            or InvalidStateException
-            or ArgumentException
-            or NotSupportedException)
+        catch (Exception exception)
         {
-            if (json)
+            // Logging must never prevent the CLI from running.
+            Console.Error.WriteLine($"Logging initialization failed: {exception.Message}");
+        }
+
+        try
+        {
+            if (args.Length == 0)
             {
-                Console.WriteLine(JsonSerializer.Serialize(
-                    new CliErrorResult(false, exception.Message),
-                    CliJsonContext.Default.CliErrorResult));
-            }
-            else
-            {
-                Console.Error.WriteLine($"error: {exception.Message}");
+                PrintUsage();
+                return 0;
             }
 
-            return 1;
+            var json = HasFlag(args, "--json");
+            var logger = Serilog.Log.ForContext("SourceContext", "FiveDo.Cli.Program");
+            logger.Information("CLI command {Command} starting.", args[0]);
+            try
+            {
+                return args[0] switch
+                {
+                    "--version" or "-v" => Version(),
+                    "--help" or "-h" or "help" => Help(),
+                    "run" => Run(args),
+                    "trace" => TraceCommand(args),
+                    "info" => Info(args),
+                    "disc" => DiscCommand(args),
+                    "fs" => FsCommand(args),
+                    "bios" => Bios(args),
+                    "audio" => AudioCommand(args),
+                    "state" => State(args),
+                    "bench" => Bench(args),
+                    "selftest" => SelfTest(args),
+                    "disasm" => Disassemble(args),
+                    _ => Unknown(args[0], json),
+                };
+            }
+            catch (Exception exception) when (exception is IOException
+                or InvalidDataException
+                or InvalidStateException
+                or ArgumentException
+                or NotSupportedException)
+            {
+                logger.Warning(exception, "CLI command {Command} failed.", args[0]);
+                if (json)
+                {
+                    Console.WriteLine(JsonSerializer.Serialize(
+                        new CliErrorResult(false, exception.Message),
+                        CliJsonContext.Default.CliErrorResult));
+                }
+                else
+                {
+                    Console.Error.WriteLine($"error: {exception.Message}");
+                }
+
+                return 1;
+            }
+            catch (Exception exception)
+            {
+                logger.Fatal(exception, "CLI command {Command} terminated unexpectedly.", args[0]);
+                if (json)
+                {
+                    Console.WriteLine(JsonSerializer.Serialize(
+                        new CliErrorResult(false, exception.Message),
+                        CliJsonContext.Default.CliErrorResult));
+                }
+                else
+                {
+                    Console.Error.WriteLine($"fatal: {exception.Message}");
+                }
+
+                return 1;
+            }
+        }
+        finally
+        {
+            AppLogging.Shutdown();
         }
     }
 
@@ -1450,11 +1495,11 @@ internal static class Program
             var output = OpenAlAudioOutput.TryCreate(4096, out var openAlError);
             if (output is null)
             {
-                if (!options.Json)
-                {
-                    Console.Error.WriteLine(
-                        $"warning: OpenAL is unavailable; audio is silent ({openAlError ?? "unknown error"}).");
-                }
+                Serilog.Log
+                    .ForContext("SourceContext", "FiveDo.Cli.Program.Audio")
+                    .Warning(
+                        "OpenAL is unavailable; audio is silent ({Error}).",
+                        openAlError ?? "unknown error");
 
                 return new AudioOutput(null, null);
             }

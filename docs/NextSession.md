@@ -1,6 +1,7 @@
 # Next Session Handoff
 
-**Date:** 2026-10-28 (seventeenth pass: OpenAL crackle fix, PCM tap, race profile)
+**Date:** 2026-10-28 (eighteenth pass: Serilog logging and bug reporting; the
+seventeenth pass added the OpenAL crackle fix, PCM tap, and race profile)
 **Goal:** make the audio path correct and testable. The sixteenth pass replaced the
 FreeDO 8.24 DSP sample accumulator with an exact 44,100-samples-per-ARM-second clock
 (600 frames now produce 441,015-441,020 samples / 10.000 s instead of 444,097 /
@@ -11,10 +12,11 @@ is made current on the audio thread, underruns are padded/counted, and the CLI h
 `--audio openal`, `--volume`, `--realtime`, and `audio analyze <wav> --json`. Core
 frames are paced by `AudioFramePacer` (audio clock with a 60 Hz fallback), WAV writes
 are buffered with streaming peak/RMS/clipping statistics, and the NativeAOT CLI now
-opens the live backend. **818 tests pass.** The seventeenth pass fixed live OpenAL
+opens the live backend. **818 tests pass.** The eighteenth pass replaced the custom
+logger with Serilog and added the asynchronous bug-report sink. The seventeenth pass fixed live OpenAL
 crackle by giving the fill loop real buffer ownership, added the `FIVEDO_AUDIO_TAP`
 PCM/timing recorder and overlay peak meter, added the FSR 1.0 filter, and recorded
-the Road Rash 3D-race profile. Do not redo the trim-safe JSON work, the
+the Road Rash 3D-race profile. Do not redo the Serilog/bug-report work, the trim-safe JSON work, the
 trimmed CLI/frontend publishes, the frontend smoke test, the benchmark comparison,
 the portable archives, the swap-interval/GPU-probe work, the ANGLE/GLES parity work,
 or this audio pass. The remaining **release** work is the legal/attribution review
@@ -657,6 +659,32 @@ runtime or move the context-current call back to the UI thread.
   recorded in [`Performance.md`](Performance.md).
 - **Tests.** 818 pass (was 798). New coverage: buffer-pool ownership/rotation,
   PCM tap WAV/CSV, and the soft peak limiter.
+
+### 1.22 Eighteenth pass: Serilog logging and bug reporting (2026-10-28)
+
+- **Serilog pipeline.** `FiveDo.Diagnostics.Logging.LoggingSetup` configures the
+  rolling daily file, stderr console (desktop), in-memory viewer, and bug-report
+  sinks. `AppLogging` owns the process-wide logger and flushes it on exit. The
+  custom `Log`, `ILogSink`, `ConsoleLogSink`, `InMemoryLogSink`, `NullLogSink`,
+  `LogLevel`, and interpolated-string handler were removed; `LogCategory` remains
+  as the structured `Category` property.
+- **Log viewer.** `InMemorySerilogSink` (capacity 4000) feeds the desktop **Logs**
+  dock and **Log Viewer**; levels use Serilog's `LogEventLevel`.
+- **Bug reports.** `BugReportSink` forwards `Warning`-or-higher events
+  asynchronously to the configured endpoint with the required environment, error,
+  and exception blocks. Submissions are deduplicated for five minutes, capped at
+  ten per minute, and disabled when `FIVEDO_BUG_REPORTS=0` or in CI/test runs.
+  `FIVEDO_LOG_DIR` redirects files and `FIVEDO_BUGREPORT_API_KEY` overrides the
+  key. The CLI keeps JSON on stdout and concise errors on stderr; diagnostics go
+  to the file/API.
+- **Catch coverage.** Host entry points (`Program.Main`, Avalonia startup,
+  `MainWindow` shutdown/dispose), the core thread, the OpenAL fill loop, video
+  surface, GPU probe, settings/NVRAM/save-slot/library scanners, and prefetch/gamepad
+  boundaries now log through Serilog. Expected CLI user errors are logged at
+  `Warning`; unexpected exceptions are logged at `Fatal` before exit.
+- **Tests.** 818 pass. Coverage includes the in-memory sink, category/level/search
+  filter, the required bug-report blocks, and an HTTP handler test proving the
+  warning payload reaches the configured endpoint with the `X-API-KEY` header.
 
 ---
 

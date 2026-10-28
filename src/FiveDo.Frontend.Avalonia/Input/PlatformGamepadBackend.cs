@@ -55,6 +55,7 @@ public sealed class PlatformGamepadBackend : IGamepadBackend, IDisposable
             or InvalidOperationException
             or PlatformNotSupportedException)
         {
+            Serilog.Log.Debug(exception, "No platform gamepad backend is available.");
             return null;
         }
     }

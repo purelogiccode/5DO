@@ -101,6 +101,7 @@ public partial class SettingsWindow : Window
         }
         catch (Exception exception)
         {
+            Serilog.Log.Warning(exception, "Audio test tone failed.");
             TestAudioText.Text = $"Test tone failed: {exception.Message}";
         }
         finally
@@ -161,6 +162,7 @@ public partial class SettingsWindow : Window
         }
         catch (FormatException exception)
         {
+            Serilog.Log.Debug(exception, "Settings validation failed.");
             ValidationText.Text = exception.Message;
             return;
         }
