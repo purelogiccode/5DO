@@ -1,6 +1,6 @@
 # Next Session Handoff
 
-**Date:** 2026-10-27 (sixteenth, audio pass)
+**Date:** 2026-10-28 (seventeenth pass: OpenAL crackle fix, PCM tap, race profile)
 **Goal:** make the audio path correct and testable. The sixteenth pass replaced the
 FreeDO 8.24 DSP sample accumulator with an exact 44,100-samples-per-ARM-second clock
 (600 frames now produce 441,015-441,020 samples / 10.000 s instead of 444,097 /
@@ -11,7 +11,10 @@ is made current on the audio thread, underruns are padded/counted, and the CLI h
 `--audio openal`, `--volume`, `--realtime`, and `audio analyze <wav> --json`. Core
 frames are paced by `AudioFramePacer` (audio clock with a 60 Hz fallback), WAV writes
 are buffered with streaming peak/RMS/clipping statistics, and the NativeAOT CLI now
-opens the live backend. **798 tests pass.** Do not redo the trim-safe JSON work, the
+opens the live backend. **818 tests pass.** The seventeenth pass fixed live OpenAL
+crackle by giving the fill loop real buffer ownership, added the `FIVEDO_AUDIO_TAP`
+PCM/timing recorder and overlay peak meter, added the FSR 1.0 filter, and recorded
+the Road Rash 3D-race profile. Do not redo the trim-safe JSON work, the
 trimmed CLI/frontend publishes, the frontend smoke test, the benchmark comparison,
 the portable archives, the swap-interval/GPU-probe work, the ANGLE/GLES parity work,
 or this audio pass. The remaining **release** work is the legal/attribution review
@@ -628,6 +631,33 @@ Do not revert the exact clock to the FreeDO 8.24 DSP accumulator. It is the
 difference between 44.1 kHz and ~44.4 kHz audio. Do not remove the bundled OpenAL
 runtime or move the context-current call back to the UI thread.
 
+### 1.21 Seventeenth pass: OpenAL crackle root cause, PCM tap, and race profile (2026-10-28)
+
+- **Crackle root cause.** The OpenAL fill loop selected the next buffer with
+  `_buffers[queued]`. OpenAL unqueues the oldest buffers first, so that index
+  named buffers still attached to the playing source; `BufferData` and
+  `SourceQueueBuffers` then rewrote audio that was about to play, producing
+  constant clicks while the underrun and dropped counters stayed at zero.
+  Buffers now come from an `AudioBufferPool` free list, variable-size blocks are
+  queued, queued frames are tracked exactly, and `alGetError` is checked after
+  every queue.
+- **Threading.** The fill thread is registered with
+  `AvSetMmThreadCharacteristics("Pro Audio")` and runs at above-normal priority.
+- **Diagnostics.** `FIVEDO_AUDIO_TAP=<prefix>` records the exact queued PCM
+  (`<prefix>.wav`) and a per-buffer CSV (elapsed time, frames, ring/queue depth,
+  underrun, peak, OpenAL error). The status overlay shows a live peak meter.
+  Tap validation: 0 OpenAL errors, 0 underruns, and 0 discontinuities across
+  2,345 buffer boundaries; the tap crack metric is 4.5/s versus the DSP baseline
+  15.6/s and the pre-fix frontend 320.7/s.
+- **Video.** Restored the `(float)` casts on `glUniform2/4` so Silk.NET selects
+  the float overloads (the integer overloads left the presenter uniforms at zero
+  and collapsed the canvas to black). Added the opt-in AMD FSR 1.0 EASU/RCAS
+  filter with a sharpness setting and MIT attribution.
+- **Benchmark.** Added `--warmup` and `--state-in`; the Road Rash race profile is
+  recorded in [`Performance.md`](Performance.md).
+- **Tests.** 818 pass (was 798). New coverage: buffer-pool ownership/rotation,
+  PCM tap WAV/CSV, and the soft peak limiter.
+
 ---
 
 ## 2. Current evidence
@@ -827,8 +857,15 @@ save/load proof.
 
 ### Step 4 - performance
 
-- Measure the 3D CEL frame time on Road Rash's race (the renderer is now correct).
-- Record p50/p95/p99 and allocations/frame; see [`Performance.md`](Performance.md).
+**Done in the seventeenth pass (2026-10-28).**
+
+- Road Rash's 3D race was measured from `artifacts/rr-race2-100k.state` with the
+  BIOS and disc inserted: 600 frames after 120 warm-up frames, **5.46 ms/frame
+  total (p50 2.91, p95 10.60, p99 13.14), 0 bytes/frame, 183 fps**. Core-only is
+  5.39 ms mean / 13.01 ms p99; pack/mailbox/read add ~25/21/21 µs. This is inside
+  the 16.67 ms budget at p99 with ~3.5 ms headroom. See
+  [`Performance.md`](Performance.md) and the `--state-in`/`--warmup` benchmark
+  options.
 
 ---
 

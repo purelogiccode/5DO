@@ -90,7 +90,7 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - [x] `dotnet build 5DO.sln -c Release` passes with 0 warnings and 0 errors
       (1.0.0-rc.1).
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release` passes:
-      798/798 with 1.0.0-rc.1 (after the 2026-10-27 audio pass).
+      818/818 with 1.0.0-rc.1 (after the 2026-10-28 OpenAL crackle fix).
 - [x] `dotnet format 5DO.sln --verify-no-changes` passes.
 - [ ] CI is green on the supported runners. (Local gates pass; the GitHub Actions
       workflow was not re-run in this session.)
@@ -140,7 +140,10 @@ writes `summary.md`/`summary.json` for the release evidence.
       (2,036 frames in a 92k-state capture), the 36k Lemmings gameplay state happened
       to be silent while its 23k state is non-silent, and Theme Park's menu is silent;
       all are documented in `TestCorpus.md` 1.5a2. Live OpenAL output, audio-driven
-      pacing, WAV analysis, and AOT CLI audio are validated.
+      pacing, WAV analysis, and AOT CLI audio are validated. The 2026-10-28 pass
+      fixed the remaining live-output crackle (buffer ownership) and validated it
+      with the PCM tap: 0 OpenAL errors, 0 underruns, and 0 discontinuities across
+      2,345 buffer boundaries.
 - [x] Keyboard input works on the showcase titles through the scripted runs; gamepad
       mapping and merge behavior are covered by unit tests, with hardware validation
       still platform-specific.

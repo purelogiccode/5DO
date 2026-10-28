@@ -75,7 +75,7 @@ stated otherwise:
 | Allocations | 0 bytes/frame | Core and presenter, steady state |
 | Managed heap | < 150 MB resident | Including GL textures and caches |
 | Startup to first frame | < 1 s | After BIOS/disc validation |
-| Audio latency | ≤ 100 ms typical | 4096-frame ring + three 512-frame OpenAL buffers; measured ~89 ms |
+| Audio latency | ≤ 100 ms typical | 8192-frame ring + eight 512-frame OpenAL buffers with a 3072-frame prefill; current steady state is ~113 ms (the crack-free margin), the old 3-buffer/4096-ring config was ~89 ms |
 
 The core cost must not grow with output resolution. A 4K window must cost the same
 CPU time as a 1080p window apart from the presenter's final draw call.
@@ -291,6 +291,29 @@ are host-side and attributed to the core stage; the synthetic core/pack/mailbox/
 path is allocation-free in steady state. These numbers are **CPU only**; the 4K GPU
 stage is measured separately by the `--gl-probe` below. The benchmark is not a
 substitute for a Tier B percentile run.
+
+**Road Rash 3D race (2026-10-28).** The state-driven benchmark loads the archived
+100k-frame race state, warms up 120 frames, then measures 600 frames of the actual
+3D race with the BIOS and disc inserted. Command:
+
+```powershell
+dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- `
+  --frames 600 --warmup 120 --bios bios/panafz1.bin `
+  --disc "E:\Panasonic 3DO\Road Rash (USA).chd" `
+  --state-in artifacts/rr-race2-100k.state --label road-rash-race --json
+```
+
+| Case | Total ms/frame | p50 | p95 | p99 | Allocations |
+|---|---:|---:|---:|---:|---:|
+| Road Rash 3D race | **5.46** | 2.91 | 10.60 | 13.14 | **0 bytes/frame** |
+
+Core-only: 5.39 ms mean, p50 2.85, p95 10.53, p99 13.01, max 14.82; 183 fps
+total, 10.7 MIPS, 57,693 instructions/frame, 208,344 cycles/frame. The
+pack/mailbox/read stages cost ~25/21/21 µs/frame. This is the heaviest
+real-content scene measured so far and remains inside the 16.67 ms frame budget
+at p99 with ~3.5 ms of headroom. The spread comes from CEL/VDLP scene complexity,
+not allocations. The synthetic `--gate` remains the CI budget check; this race
+profile is a reference measurement, not a gate input.
 
 **GPU timer query (2026-10-25).** The desktop renderer now wraps the palette/xBR/scale
 pipeline in a `GL_TIME_ELAPSED` query on desktop GL. On the Windows development machine

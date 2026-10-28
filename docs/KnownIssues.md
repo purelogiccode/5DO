@@ -1,6 +1,6 @@
 # Known Issues
 
-**Snapshot:** 2026-10-27. This list covers the supported local corpus and the current
+**Snapshot:** 2026-10-28. This list covers the supported local corpus and the current
 prototype state. It is not a compatibility guarantee.
 
 **Release scope:** v1.0 ships with these known issues documented; full-race completion,
@@ -69,9 +69,12 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
 - Live OpenAL output requires a playback device. If none is present the app logs a
   warning and runs silently; the DSP still executes. The CI/automated audio smoke
   test uses OpenAL's null backend (`ALSOFT_DRIVERS=null`).
-- Road Rash's loud race mix reaches full scale and clips (2,036 frames in a 10 s
-  92k-state capture). This is the game mix, not the output path; an optional limiter
-  would be non-authentic.
+- Road Rash's loud race mix reaches full scale (2,036 clipped frames in a 10 s
+  92k-state capture). WAV captures keep the raw DSP output; live OpenAL playback
+  applies a soft peak limiter (0.8 threshold / 0.9 ceiling) so the resampler does
+  not hard-clip. The 2026-10-28 pass fixed the remaining live-output crackle
+  (buffer ownership), and `FIVEDO_AUDIO_TAP=<prefix>` records the exact queued PCM
+  plus a per-buffer timing log for future diagnosis.
 - A 30-60 s loudness/spectrum comparison against Opera and a manual DSP mode-change
   (stop/start) listening check remain.
 - Frontend NativeAOT audio is not validated; the trimmed IL and CLI AOT paths are.

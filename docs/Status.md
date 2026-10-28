@@ -1,7 +1,8 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-27, 1.0.0-rc.1 release preparation after the sixteenth
-(audio) code pass (see `git log` for the exact commit).
+**Snapshot:** 2026-10-28, 1.0.0-rc.1 release preparation after the seventeenth
+pass (OpenAL crackle fix, PCM tap, FSR 1.0, Road Rash race profile; see `git log`
+for the exact commit).
 **Release definition:** documented compatibility, not full compatibility; see
 [`ReleaseChecklist.md`](ReleaseChecklist.md).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
@@ -93,7 +94,10 @@ This is the short, current answer to "where are we?" The detailed task list is i
   RMS, and spectral peaks as before; only the timebase changed. Live output uses
   a bundled OpenAL Soft 1.23.1 runtime (no system OpenAL install required), makes
   the context current on the audio thread, pads underruns, and reports
-  dropped/underrun/queued counters. `CoreRunner` paces frames against the audio
+  dropped/underrun/queued counters. The fill loop now rents only buffers OpenAL
+  has released (the old queued-count index rewrote buffers still attached to the
+  playing source and caused constant crackle), and `FIVEDO_AUDIO_TAP=<prefix>`
+  records the exact queued PCM plus a per-buffer timing log. `CoreRunner` paces frames against the audio
   clock (with a 60 Hz fallback), the CLI can play live with `--audio openal
   [--realtime]`, and `audio analyze <wav> --json` reports peak/RMS/clipping/DC
   statistics. Exact-clock 600-frame captures: Wolfenstein 18,100 / 2,168,
@@ -105,7 +109,7 @@ This is the short, current answer to "where are we?" The detailed task list is i
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 798 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 818 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
@@ -229,6 +233,7 @@ Release build, development machine, 600 frames, CPU side only:
 | Synthetic | **1.250 ms/frame** | 1.218 ms | 1.434 ms | 1.638 ms | **0 bytes/frame** |
 | Lemmings CHD | **1.281 ms/frame** | 1.088 ms | 2.005 ms | 3.398 ms | ~5.9 KB/frame (CHD decode) |
 | Lemmings CHD, high-res | **1.605 ms/frame** | 1.398 ms | 2.497 ms | 4.598 ms | ~5.8 KB/frame (CHD decode) |
+| Road Rash 3D race (100k state) | **5.46 ms/frame** | 2.91 ms | 10.60 ms | 13.14 ms | **0 bytes/frame** |
 
 This leaves ~15.4 ms of headroom against the 16.67 ms frame budget for the synthetic
 case. CI now runs the synthetic benchmark with `--gate`: it fails on any steady-state
