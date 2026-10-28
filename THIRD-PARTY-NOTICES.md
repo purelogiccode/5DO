@@ -81,15 +81,19 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 | OS XInput / Linux evdev | Gamepad input (optional, no bundled native library) | OS API; no third-party runtime dependency |
 | CHDSharp 1.5.2 | CHD disc images (v1) | MIT + LGPL-2.1 component; pure C#, no native dependency. Verify the package LICENSE before release. |
 | VideoGameFileSystemParser 1.4.0 | 3DO Opera FS listing/extraction in `5do fs` | MIT; depends on CHDSharp. Written by the 5DO author. |
-| 4DO game database | Game IDs and fix flags | Derived with attribution; verify |
+| 4DO game database | Game IDs and fix flags | Ported with attribution from `References/4DO-master`. The 4DO tree has no LICENSE file or source headers; permission or replacement is required before release. |
 
 ## Project license
 
-The project's own distribution license is not yet finalized because the FreeDO/4DO
-terms are restrictive and the distribution model is still under review. Until the
-owner/legal sign-off is recorded in [`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.md),
-treat release-candidate builds as **non-commercial, source-available** builds and keep
-the FreeDO/4DO/Opera attribution intact.
+5DO is distributed under the FreeDO modified GNU LGPL. The root [`LICENSE`](LICENSE)
+reproduces the FreeDO notice verbatim, includes the GNU LGPL 2.1 text, and records the
+additional project terms. The FreeDO additional terms take precedence where they
+conflict with the LGPL.
+
+Release builds remain **non-commercial, source-available** builds. Commercial use
+requires prior written approval from the FreeDO rights holders; the owner/legal
+sign-off is tracked in [`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.md).
+Keep the FreeDO/4DO/Opera attribution intact.
 
 ## Assets and content
 

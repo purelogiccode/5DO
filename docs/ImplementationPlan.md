@@ -11,7 +11,7 @@ fix, audio-driven `CoreRunner` pacing with a 60 Hz fallback, buffered/instrument
 WAV capture, `audio analyze <wav> --json`, CLI `--audio openal`/`--volume`/
 `--realtime`, and validated CLI NativeAOT audio. The 3,000-frame boot keys were
 re-baselined; see [`TestCorpus.md`](TestCorpus.md) 1.1/1.5a2 and
-[`PortingNotes.md`](PortingNotes.md) 12.4. **798 tests pass.**
+[`PortingNotes.md`](PortingNotes.md) 12.4. **818 tests pass.**
 
 **Last updated:** 2026-10-27
 
@@ -229,7 +229,7 @@ project/type layout is unchanged.
 
 ### 4a. Current position vs. the plan (2026-10-26)
 
-Snapshot: 798 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
+Snapshot: 818 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
 and zero synthetic steady-state allocations; all five local corpus titles boot and
 render, and scripted gameplay is validated in Wolfenstein, Lemmings, Road Rash, and
 Alone. The opt-in 640x480 high-resolution mode is implemented and matches the
@@ -321,7 +321,7 @@ ARM timing work. See [`ReferenceStrategy.md`](ReferenceStrategy.md) and
   - `README.md`, `docs/Architecture.md`, `docs/ImplementationPlan.md`, `docs/PortingNotes.md`, `docs/TestStrategy.md`, `docs/Compatibility.md`, `docs/Licensing.md`, `THIRD-PARTY-NOTICES.md`.
 - [ ] **M0.8 Attribution and legal gate.**
   - Preserve FreeDO/4DO headers in ported files (will be added as each file is ported).
-  - Decide project distribution model; record it in `docs/Licensing.md` (pending owner decision/legal review).
+  - **Decided:** distribute under the FreeDO modified GNU LGPL, non-commercial and source-available; recorded in the root `LICENSE` and `docs/Licensing.md`.
   - Add About/credits placeholder (M9).
 
 **Deliverables**
@@ -1601,7 +1601,7 @@ A milestone is done only when:
 These need a decision before the relevant milestone; the plan assumes the default in parentheses.
 
 1. **Final product name and namespace prefix.** **Decided:** product `5DO`, solution `5DO.sln`, namespace prefix `FiveDo`.
-2. **Distribution license.** Default: non-commercial, source-available, pending FreeDO/4DO permission. See `docs/Licensing.md`.
+2. **Distribution license.** **Decided: FreeDO modified GNU LGPL**, non-commercial and source-available. Recorded in the root `LICENSE`; see `docs/Licensing.md`.
 3. **Renderer.** **Decided: OpenGL is required for the desktop frontend**, with two variants behind one contract: desktop GL 3.3/GLSL 330 via Silk.NET.OpenGL, and GLES 3.0/3.1/GLSL ES 300 via Silk.NET.OpenGLES. Windows uses WGL or ANGLE/GLES; Pi 4/5 uses GLES. The CPU `WriteableBitmap` path is only a fallback/oracle.
 4. **Default filter.** Default: sharp-bilinear for enhanced mode; "Accurate" (nearest/integer) must be available and pixel-identical to the CPU assembler.
 5. **Audio backend.** Default: OpenAL Soft via Silk.NET.OpenAL, with null/WAV fallbacks. Alternative: SDL2 audio.

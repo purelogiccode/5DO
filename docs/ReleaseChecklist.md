@@ -41,7 +41,9 @@ been validated.**
       showcase titles with scripted gameplay evidence).
 - [x] Confirm the release version: **1.0.0-rc.1** for this candidate; 1.0.0 after
       legal/distribution sign-off.
-- [ ] Confirm the distribution model and license in `docs/Licensing.md`.
+- [x] Confirm the distribution model and license in `docs/Licensing.md`:
+      FreeDO modified GNU LGPL, non-commercial/source-available, recorded in the root
+      `LICENSE`.
 - [x] Confirm installers/signing/notarization are **out of scope** for 1.0.0-rc.1.
 - [x] Record the decisions in this file and in `docs/Status.md`.
 
@@ -66,7 +68,8 @@ Recommended title statuses:
 
 ## 2. Legal and attribution (hard gate)
 
-- [ ] Distribution/license decision recorded in `docs/Licensing.md`.
+- [x] Distribution/license decision recorded in `docs/Licensing.md` and the root
+      `LICENSE`.
 - [x] `THIRD-PARTY-NOTICES.md` covers FreeDO/4DO, Opera/libopera, CHDSharp, Avalonia,
       Silk.NET, the bundled OpenAL Soft 1.23.1 runtime, and other NuGet
       dependencies. See [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
@@ -175,9 +178,9 @@ A new crash, silent corruption, or save-state regression is not.
 
 - [x] Publish each supported RID with the release version (win-x64 validated).
 - [x] Build portable archives with `packaging/package.ps1`.
-- [x] Each archive contains the executable, `README.md`, `THIRD-PARTY-NOTICES.md`,
-      `docs/Licensing.md`, `docs/ReleaseLegalReview.md`, the release notes, and
-      `PACKAGE.txt`.
+- [x] Each archive contains the executable, `README.md`, `LICENSE`,
+      `THIRD-PARTY-NOTICES.md`, `docs/Licensing.md`, `docs/ReleaseLegalReview.md`, the
+      release notes, and `PACKAGE.txt`.
 - [x] `PACKAGE.txt` records component, RID, version, commit, and UTC build time
       (repackaged after the release commit so the commit field is final).
 - [x] No PDBs or copyrighted content in release archives.

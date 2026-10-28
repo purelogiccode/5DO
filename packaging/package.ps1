@@ -29,7 +29,7 @@ try {
     Get-ChildItem -LiteralPath $staging -Recurse -Force -Filter '*.pdb' |
         Remove-Item -Force
 
-    foreach ($file in @('README.md', 'THIRD-PARTY-NOTICES.md')) {
+    foreach ($file in @('README.md', 'LICENSE', 'THIRD-PARTY-NOTICES.md')) {
         $source = Join-Path $repoRoot $file
         if (Test-Path -LiteralPath $source) {
             Copy-Item -LiteralPath $source -Destination $staging -Force
@@ -88,7 +88,7 @@ try {
         "built: $([DateTimeOffset]::UtcNow.ToString('u'))"
         ''
         'BIOS ROMs and game images are not included.'
-        'See README.md, THIRD-PARTY-NOTICES.md, and docs/Licensing.md.'
+        'See README.md, LICENSE, THIRD-PARTY-NOTICES.md, and docs/Licensing.md.'
     )
     Set-Content -LiteralPath (Join-Path $staging 'PACKAGE.txt') -Value $manifest -Encoding utf8NoBOM
 

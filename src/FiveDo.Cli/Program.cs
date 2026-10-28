@@ -78,6 +78,7 @@ internal static class Program
     private static int Version()
     {
         Console.WriteLine($"{FiveDoVersion.ProductName} {FiveDoVersion.Version} ({FiveDoVersion.NamespacePrefix})");
+        Console.WriteLine("License: FreeDO modified GNU LGPL (see LICENSE)");
         return 0;
     }
 

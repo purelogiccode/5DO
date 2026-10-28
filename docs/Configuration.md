@@ -396,7 +396,7 @@ See [`Audio.md`](Audio.md) for the full pipeline and diagnostics.
 
 | Variable | Used by | Meaning |
 |---|---|---|
-| `FIVEDO_AUDIO_TAP` | CLI/desktop OpenAL output | Path prefix for `<prefix>.wav` (exact queued PCM) and `<prefix>.csv` (per-buffer timing). |
+| `FIVEDO_AUDIO_TAP` | OpenAL output (CLI `--audio openal`/desktop) | Path prefix for `<prefix>.wav` (exact queued PCM) and `<prefix>.csv` (per-buffer timing). |
 | `ALSOFT_DRIVERS` | OpenAL Soft | Set to `null` to use OpenAL's null backend for headless tests. |
 | `FIVEDO_BIOS` | Tests | Path to a 1 MB BIOS for real-BIOS tests. |
 | `FIVEDO_FRAME_DUMP` | Tests | Directory for boot-frame PNGs. |

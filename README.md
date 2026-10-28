@@ -2,15 +2,20 @@
 
 A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from FreeDO/4DO, with **Opera/libopera as the primary behavioral reference** for new compatibility work, a cross-platform Avalonia frontend, a headless CLI, and a deterministic test harness.
 
+> **Documentation:** start at [`docs/README.md`](docs/README.md) for the full documentation map, or go directly to the [user guide](docs/UserGuide.md), [CLI reference](docs/CliReference.md), [configuration reference](docs/Configuration.md), [developer guide](docs/DeveloperGuide.md), and [troubleshooting guide](docs/Troubleshooting.md).
+
 > **Naming:** The emulator is called **5DO**. The solution is `5DO.sln`; source projects and namespaces use the `FiveDo` prefix because C# identifiers cannot begin with a digit.
 
 ## Status
 
-**Current position (2026-10-27, 1.0.0-rc.1 release preparation, sixteenth audio
-pass):** M0-M8 are functionally complete. The
+**Current position (2026-10-28, 1.0.0-rc.1 release preparation, seventeenth pass):**
+M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **798 tests pass.** The sixteenth pass corrected the DSP sample clock to
+prototype. **818 tests pass.** The seventeenth pass fixed the remaining live OpenAL
+crackle (buffer ownership), added the `FIVEDO_AUDIO_TAP` PCM/timing tap and overlay
+peak meter, added the opt-in AMD FSR 1.0 EASU/RCAS filter, and measured Road Rash's 3D
+race at 5.46 ms/frame total (p99 13.14 ms, 0 bytes/frame). The sixteenth pass corrected the DSP sample clock to
 an exact 44,100 samples per emulated second (the FreeDO 8.24 scheduler ran ~0.7%
 fast), fixed live OpenAL output by bundling OpenAL Soft 1.23.1 and making the
 context current on the audio thread, added audio-driven frame pacing, and added
@@ -46,8 +51,9 @@ NativeAOT CLI also opens the live backend. Audio content is unchanged: a
 6,000-frame Road Rash capture has the same spectral peaks before/after; only the
 timebase was corrected.
 
-The renderer now has an opt-in **xBR-lv2** edge-directed 4x filter, **HQx 2x/3x/4x**
-filters, and **CRT bloom** alongside accurate, nearest, sharp-bilinear, and CRT modes.
+The renderer now has an opt-in **AMD FSR 1.0 (EASU + RCAS)** filter, an opt-in
+**xBR-lv2** edge-directed 4x filter, **HQx 2x/3x/4x** filters, and **CRT bloom**
+alongside accurate, nearest, sharp-bilinear, and CRT modes.
 The HQx 3x/4x patterns match the C++ `hq3x_32_rb`/`hq4x_32_rb` reference hashes. The
 twelfth pass made settings, input profiles, save-slot metadata, and every CLI `--json`
 response source-generated and trim-safe, enabled `PublishTrimmed` for the CLI,
@@ -126,13 +132,24 @@ in [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. See
 [`docs/NextSession.md`](docs/NextSession.md) for the next-session plan. The
 implementation plan and architecture are in:
 
+- [`docs/README.md`](docs/README.md) - documentation index and reading paths.
 - [`docs/Status.md`](docs/Status.md) - current position, completion estimate, and next steps.
 - [`docs/ReleaseChecklist.md`](docs/ReleaseChecklist.md) - v1.0 release scope, gates, and sign-off.
-- [`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.md) - attribution audit and pending distribution decisions.
+- [`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.md) - attribution audit and remaining distribution decisions.
 - [`docs/NextSession.md`](docs/NextSession.md) - first task, commands, and acceptance criteria for the next session.
 - [`docs/ReferenceStrategy.md`](docs/ReferenceStrategy.md) - Opera/FreeDO reference hierarchy and differential procedure.
 - [`docs/ImplementationPlan.md`](docs/ImplementationPlan.md) - milestones, tasks, acceptance criteria, risks.
 - [`docs/Architecture.md`](docs/Architecture.md) - project layout, dependency rules, runtime composition.
+- [`docs/DeveloperGuide.md`](docs/DeveloperGuide.md) - source map, subsystem invariants, extension points, conventions, and architectural debt.
+- [`docs/BuildAndTest.md`](docs/BuildAndTest.md) - prerequisites, build/test/format, benchmarks, GPU probe, publish/trim/AOT, CI.
+- [`docs/CliReference.md`](docs/CliReference.md) - every CLI command, option, exit code, JSON response, and diagnostic file format.
+- [`docs/Configuration.md`](docs/Configuration.md) - settings.json schema, input profiles, NVRAM, paths, environment variables.
+- [`docs/SaveStates.md`](docs/SaveStates.md) - .tdos binary layout, section table, slots, validation, roundtrip workflow.
+- [`docs/Audio.md`](docs/Audio.md) - DSP clock, OpenAL output, WAV capture, tap, analysis, pacing.
+- [`docs/Video.md`](docs/Video.md) - VDLP/frame assembly, two-stage presenter, all filters including FSR, backends, probe.
+- [`docs/Diagnostics.md`](docs/Diagnostics.md) - logs, traces, watchpoints, dumps, KPRINT, input scripts, tap, probe.
+- [`docs/Troubleshooting.md`](docs/Troubleshooting.md) - symptom-driven diagnosis and fixes.
+- [`docs/Glossary.md`](docs/Glossary.md) - hardware, emulator, renderer, audio, and release terms.
 - [`docs/PortingNotes.md`](docs/PortingNotes.md) - C++ to C# porting rules and reference quirks.
 - [`docs/TestStrategy.md`](docs/TestStrategy.md) - unit, integration, golden, differential, and performance testing.
 - [`docs/Compatibility.md`](docs/Compatibility.md) - BIOS, disc, input, and game-fix compatibility notes.
@@ -301,6 +318,6 @@ Use **Open BIOS** and **Open Disc**, then **Play**. The default keyboard binding
 
 ## Legal and attribution
 
-FreeDO/4DO are **not** standard OSI-licensed projects. The FreeDO source headers contain a modified LGPL with additional restrictions, including a prohibition on commercial use without the owners' approval. This repository does **not** include BIOS ROMs or game images. Read [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) and [`docs/Licensing.md`](docs/Licensing.md) before distributing builds.
+5DO is distributed under the FreeDO modified GNU LGPL; see [`LICENSE`](LICENSE). FreeDO/4DO are **not** standard OSI-licensed projects. The FreeDO source headers contain a modified LGPL with additional restrictions, including a prohibition on commercial use without the owners' approval. This repository does **not** include BIOS ROMs or game images. Read [`LICENSE`](LICENSE), [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md), and [`docs/Licensing.md`](docs/Licensing.md) before distributing builds.
 
 "3DO" and "Panasonic" are trademarks of their respective owners. This project is not affiliated with or endorsed by them.

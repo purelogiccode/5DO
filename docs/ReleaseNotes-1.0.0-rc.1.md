@@ -4,6 +4,9 @@
 **Status:** release candidate. The local engineering release gates pass; CI and the
 distribution/attribution sign-off are still pending. See
 [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
+**Post-rc.1:** the 2026-10-28 pass added the OpenAL crackle fix, PCM tap, and FSR 1.0;
+the current suite is 818 tests. See [`../CHANGELOG.md`](../CHANGELOG.md) and
+[`Status.md`](Status.md).
 
 This is a **documented-compatibility** release: the emulator is supported on the
 validated platform and against the tested title set, with known issues listed below.
@@ -78,7 +81,7 @@ The release checklist is in [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 - [x] `dotnet build 5DO.sln -c Release`: 0 warnings, 0 errors.
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`: 798/798
-      passing (after the audio pass).
+      passing at rc.1 (818/818 after the 2026-10-28 pass).
 - [x] Synthetic benchmark budget gate: 2.28 ms/frame core mean, 4.03 ms core p99,
       4.66 ms total p99, 0 managed bytes/frame.
 - [x] Trimmed win-x64 CLI and frontend smoke tests (`selftest`, `bench`, `info`,
@@ -112,7 +115,8 @@ See [`KnownIssues.md`](KnownIssues.md). The main limitations are:
 ## Licensing
 
 This project is a C# port/derivative of FreeDO/4DO and uses Opera/libopera as a
-behavioral reference. FreeDO/4DO are not standard OSI-licensed projects; their
+behavioral reference. It is distributed under the FreeDO modified GNU LGPL; see
+[`LICENSE`](../LICENSE). FreeDO/4DO are not standard OSI-licensed projects; their
 modified LGPL includes a non-commercial restriction. Read
 [`THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md) and
 [`Licensing.md`](Licensing.md) before distributing builds.
@@ -128,6 +132,6 @@ The win-x64 release artifacts are:
 - `5do-frontend-win-x64.zip`
 
 Sizes and SHA-256 checksums are recorded in `SHA256SUMS.txt` next to the packages.
-Each archive contains the executable, `README.md`, `THIRD-PARTY-NOTICES.md`,
-`docs/Licensing.md`, `docs/ReleaseLegalReview.md`, these release notes, and
-`PACKAGE.txt`.
+Each archive contains the executable, `README.md`, `LICENSE`,
+`THIRD-PARTY-NOTICES.md`, `docs/Licensing.md`, `docs/ReleaseLegalReview.md`, these
+release notes, and `PACKAGE.txt`.

@@ -10,7 +10,8 @@ for the exact commit).
 behavioral reference for new compatibility work; see
 [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-This is the short, current answer to "where are we?" The detailed task list is in
+This is the short, current answer to "where are we?" The documentation index is
+[`README.md`](README.md). The detailed task list is in
 [`ImplementationPlan.md`](ImplementationPlan.md), the performance contract in
 [`Performance.md`](Performance.md), the local game corpus in
 [`TestCorpus.md`](TestCorpus.md), the release gate in
@@ -311,7 +312,9 @@ the candidate version is `1.0.0-rc.1`; installers, signing, and notarization are
 deferred; the compatibility set is the 12 documented titles, with five showcase
 titles carrying scripted gameplay evidence.
 
-The only hard blocker is the distribution/attribution decision: FreeDO/4DO carry a
+The project license is recorded in [`../LICENSE`](../LICENSE) as the FreeDO modified
+GNU LGPL, so release builds are non-commercial and source-available. The remaining hard
+blocker is rights-holder clarification and commercial-use sign-off: FreeDO/4DO carry a
 modified LGPL with restrictions, including a prohibition on commercial use without
 owner approval. See [`Licensing.md`](Licensing.md),
 [`ReleaseLegalReview.md`](ReleaseLegalReview.md), and

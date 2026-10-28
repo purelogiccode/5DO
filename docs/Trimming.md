@@ -4,7 +4,10 @@ This document records the trimming audit for the managed emulator. The core, hos
 and CLI must remain fully managed C#; trimming is a packaging optimization, not an
 emulation feature.
 
-## Current status (2026-10-26, fifteenth pass)
+## Current status (2026-10-28)
+
+See [`BuildAndTest.md`](BuildAndTest.md) for the build/publish commands and CI jobs.
+The 2026-10-28 audio/FSR changes did not add reflection or trim-unsafe code.
 
 | Component | Trimming | NativeAOT |
 |---|---|---|

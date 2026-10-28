@@ -1,16 +1,16 @@
 # Performance and 4K60 Strategy
 
-**Status:** target definition and implementation baseline (2026-10-26). The desktop
+**Status:** target definition and implementation baseline (2026-10-28). The desktop
 path now has a dedicated audio-paced core thread (60 Hz fallback), a two-stage palette/scale presenter,
 immutable texture storage with per-frame `TexSubImage2D`, cached uniform locations,
-full sharp-bilinear and CRT scanline/aperture/curvature/vignette filters, an opt-in xBR
-pass, an opt-in bounded disc
+full sharp-bilinear and CRT scanline/aperture/curvature/vignette filters, opt-in
+xBR/HQx/FSR filters, an opt-in bounded disc
 prefetch cache, a platform swap-interval path, and a real benchmark harness with
 p50/p95/p99 and per-stage allocations. CPU-side frame cost is ~1.25-1.6 ms, leaving
 ~15 ms of headroom at 60 Hz; the synthetic steady state is allocation-free. The GPU
 probe now records true 4K offscreen timings: sharp-bilinear GPU p99 0.089 ms and
 present p99 0.208 ms on the RTX 4070 development machine. Manual DPI validation, the
-GLES backend, and Tier B timing remain open; see §9 and M9P in
+GLES/Raspberry Pi path, and Tier B timing remain open; see §9 and M9P in
 [`ImplementationPlan.md`](ImplementationPlan.md). The overall project position is
 summarized in [`Status.md`](Status.md).
 
@@ -75,7 +75,7 @@ stated otherwise:
 | Allocations | 0 bytes/frame | Core and presenter, steady state |
 | Managed heap | < 150 MB resident | Including GL textures and caches |
 | Startup to first frame | < 1 s | After BIOS/disc validation |
-| Audio latency | ≤ 100 ms typical | 8192-frame ring + eight 512-frame OpenAL buffers with a 3072-frame prefill; current steady state is ~113 ms (the crack-free margin), the old 3-buffer/4096-ring config was ~89 ms |
+| Audio latency | ≤ 100 ms typical | 8192-frame ring + eight variable-size OpenAL buffers with a 3072-frame prefill; current steady state is ~113 ms (the crack-free margin), the old 3-buffer/4096-ring config was ~89 ms |
 
 The core cost must not grow with output resolution. A 4K window must cost the same
 CPU time as a 1080p window apart from the presenter's final draw call.
@@ -97,12 +97,14 @@ Stage 1: palette expansion at native resolution
         │
         ▼
 Stage 2: scaling/filter at output resolution
-  - nearest / sharp-bilinear / CRT / xBR
+  - nearest / sharp-bilinear / CRT / xBR / HQx / FSR
   - samples the expanded RGB texture into the 4K framebuffer
   - ~8.3M pixels/frame at 4K
   - xBR adds a native-resolution CPU palette expansion and a 4x offscreen pass
     (1280x960 for 320x240 sources) before the final sharp-bilinear scale. It is
     opt-in; benchmark it at 4K before enabling by default.
+  - HQx 2x/3x/4x adds a CPU expansion and a larger intermediate texture.
+  - FSR 1.0 adds two GPU passes: EASU to the viewport, then RCAS to the output.
         │
         ▼
 Window / fullscreen
@@ -179,18 +181,18 @@ sequence or the output size changes.
 
 Target model:
 
-- **Core thread:** dedicated `EmulatorSession` thread runs `RunFrame` using
-  `FramePacer` and a high-resolution timer; the period comes from `AudioFramePacer`
-  and falls back to 60 Hz. No wall-clock reads inside emulated state.
+- **Core thread:** `CoreRunner` runs `RunFrame` using its private `FramePacer` and a
+  high-resolution timer; the period comes from `AudioFramePacer` and falls back to
+  60 Hz. No wall-clock reads inside emulated state.
 - **Render/UI thread:** consumes the latest completed frame from a lock-free or
   triple-buffered mailbox and submits GPU work. It never calls `RunFrame`.
 - **Audio thread:** consumes the SPSC ring buffer; never calls into the core. It
   makes the OpenAL context current on its own thread.
-- **Frame pacing:** audio-derived (44.1 kHz) with a 60 Hz fallback; catch-up capped
-  at one or two frames; skip presentation (not emulation) if the renderer is late.
-  A real-time CLI validation of 300 frames completed in 5.000 s with 529 dropped
-  samples, 14 padded buffers, and ~89 ms output latency through the OpenAL null
-  backend.
+- **Frame pacing:** audio-derived (44.1 kHz) with a 60 Hz fallback; a stall longer
+  than 100 ms resyncs the pacer; skip presentation (not emulation) if the renderer is
+  late. The current live configuration uses an 8192-frame ring, eight variable-size
+  buffers, and a 3072-frame prefill (~113 ms steady-state latency); the earlier
+  3-buffer/4096-ring config was ~89 ms but underran.
 - **Mailbox:** latest frame wins. Do not queue frames. Avoid holding a lock while
   submitting GPU work; use a seqlock/triple buffer or copy only the visible pixels.
 - **Render on demand:** request a new render only when a new frame is available (or
@@ -351,7 +353,7 @@ compositor paces the window independently of the control's swap interval. The
 renderer cost itself is far below the 16.67 ms budget, so a 4K60 presentation is
 GPU-headroom-bound, not renderer-bound. The probe also validates the platform
 swap-interval path: on Windows WGL it resolves `WGL_EXT_swap_control` and reports
-`vsyncActive: true` when requested; the compositor may still pace independently.
+`VsyncActive: true` when requested; the compositor may still pace independently.
 The renderer/mailbox present path reports **0 managed bytes/frame** after warm-up.
 The residual probe allocation (~2.3 KB/frame) is outside `OpenGlRenderer.Present`
 and comes from the Avalonia UI/compositor loop; it is a host-side follow-up, not
@@ -398,8 +400,13 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
 ```
 
 Repeat with `--gl-backend angle` for the GLES variant. Both runs report
-`"parity": { "matches": true, "differentPixels": 0 }`. This is the first real GL
+`"Parity": { "Matches": true, "DifferentPixels": 0 }`. This is the first real GL
 and GLES parity evidence; the probe is still a manual/self-hosted GPU tool.
+
+**FSR 1.0 (2026-10-28).** FSR is opt-in and runs EASU into a viewport-sized FBO, then
+RCAS into the output. It adds two GPU passes and a sharpness uniform; no separate 4K
+FSR probe table is recorded yet. Use `--gl-probe-filter fsr` to measure it on the
+target GPU before enabling it by default.
 
 The Raspberry Pi and 100/150/200% DPI validation remain open. Headless CI keeps the
 CPU renderer and allocation tests.

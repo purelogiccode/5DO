@@ -206,7 +206,8 @@ clipped/silent frames, and DC offset for the capture.
 
 ## 5. Audio tap (exact queued PCM)
 
-Set `FIVEDO_AUDIO_TAP` to a path prefix before launching the CLI or desktop app:
+Set `FIVEDO_AUDIO_TAP` to a path prefix **and use the OpenAL backend** (`--audio openal`
+for the CLI; the desktop uses OpenAL when audio is enabled) before launching:
 
 ```powershell
 $env:FIVEDO_AUDIO_TAP = "$PWD\artifacts\tap"
@@ -226,8 +227,8 @@ crackles, the problem is downstream of 5DO. If the tap itself has a discontinuit
 emulator/queue path is the cause.
 
 The 2026-10-28 validation recorded 0 OpenAL errors, 0 underruns, and 0 discontinuities
-across 2,345 buffer boundaries. The tap is created on the audio fill thread and disposed
-after that thread stops; only one writer touches it.
+across 2,345 buffer boundaries. The tap is owned by the OpenAL output and written only by the fill thread; disposal
+happens after that thread stops.
 
 The status overlay shows a live peak meter and the ring/queue/underrun/drop counters.
 The meter decays at 15% per status update so it follows the music rather than flickering

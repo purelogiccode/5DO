@@ -1,6 +1,6 @@
 # 5DO Architecture
 
-**Status:** implemented through M9P desktop (M0-M8 complete; M9/M9R/M9P/M10 partial). The dedicated core thread, two-stage presenter, persistent upload, physical-pixel sizing, and render-on-demand described below are implemented. GLES/ANGLE/Pi validation and the remaining M9P items are pending. See [`Status.md`](Status.md) for the current position and completion estimate.
+**Status:** implemented through M9P desktop (M0-M8 complete; M9/M9R/M9P/M10 implemented as a working prototype). The dedicated core thread, two-stage presenter, persistent upload, physical-pixel sizing, FSR/xBR/HQx filters, and render-on-demand described below are implemented. Raspberry Pi/GLES 3.1, DPI, Tier B timing, and the remaining M9P items are pending. See [`Status.md`](Status.md) for the current position, [`DeveloperGuide.md`](DeveloperGuide.md) for the source map, and [`docs/README.md`](README.md) for the documentation index.
 **Reference:** the C# port was originally derived from FreeDOCore; since 2026-10-23, `References/opera-libretro-master/libopera` is the primary behavioral reference for new compatibility work. See [`ReferenceStrategy.md`](ReferenceStrategy.md).
 **Scope:** the emulator core, host layer, CLI, Avalonia frontend, tests, and build layout.
 
@@ -28,19 +28,20 @@
 │   - views / viewmodels                      - headless commands     │
 │   - settings / library                      - frame/state dumps     │
 │   - hosts FiveDo.Video.OpenGL              - benchmarks             │
-│     (palette shader, scaling, CRT/xBR)                              │
+│     (palette shader, scaling, CRT/xBR/FSR)                          │
 └───────────────────────────────┬─────────────────────────────────────┘
                                 │
 ┌───────────────────────────────▼─────────────────────────────────────┐
 │                         FiveDo.Host                                 │
-│  EmulatorSession, FramePacer, AudioPipeline, InputManager,          │
-│  BiosLoader, NvramStore, DiscLoader, GameDatabase, SaveStateService │
+│  CoreRunner, AudioFramePacer, AppSettings/Store, NvramStore,        │
+│  SaveStateSlotManager, StateInspector, GameLibraryScanner,          │
+│  GameCompatibility, MemoryPatch, RoadRashAutopilot                  │
 └───────────────────────────────┬─────────────────────────────────────┘
                                 │
 ┌───────────────────────────────▼─────────────────────────────────────┐
 │                        FiveDo.Machine                               │
-│  FiveDoMachine, FrameLoop, Quartz, machine composition,             │
-│  state sections, device wiring                                      │
+│  FiveDoMachine, Quartz, machine composition, state sections,        │
+│  device wiring                                                      │
 └───────┬─────────┬─────────┬─────────┬─────────┬─────────┬───────────┘
         │         │         │         │         │         │
    ┌────▼───┐ ┌───▼────┐ ┌──▼────┐ ┌──▼───┐ ┌───▼───┐ ┌───▼────┐
@@ -70,27 +71,27 @@
 
 | Project | Responsibility | Key types | References |
 |---|---|---|---|
-| `FiveDo.Core` | Contracts, shared value types, constants, compatibility flags, logging abstraction, state reader/writer interfaces | `IAddressBus`, `IRam`, `ICpuBackend`, `IPcAdjustSource`, `IInterruptSink`, `IFrameSink`, `IAudioSink`, `IPbusSource`, `IDiscSource`, `IXbusDevice`, `IVdlp`, `IMadamBus`, `VdlFrame`, `VdlLine`, `FrameBuffer`, `FixMode`, `EmulatorTuning`, `IStateReader/Writer` | none |
+| `FiveDo.Core` | Contracts, shared value types, constants, compatibility flags, logging abstraction, state reader/writer interfaces | `IAddressBus`, `IRam`, `ICpuBackend`, `IPcAdjustSource`, `IInterruptSink`, `IFrameSink`, `IAudioSink`, `IPbusSource`, `IDiscSource`, `IXbusDevice`, `IVdlp`, `IMadamBus`, `VdlFrame`, `VdlLine`, `FrameBuffer`, `FixMode`, `EmulatorTuning`, `CompatibilityState`, `StateFormat`, `StateSectionIds`, `IStateReader/Writer` | none |
 | `FiveDo.Cpu` | ARM60 interpreter, condition codes, banked registers, cycle accounting, disassembler | `Arm60`, `Arm60State`, `ArmDecoder`, `ArmAlu`, `ArmBarrelShifter`, `ArmDisassembler` | Core |
-| `FiveDo.Memory` | Physical RAM/ROM/NVRAM, word-swapped representation, mirrors, byte/halfword/word helpers | `FiveDoMemory`, `Ram`, `RomBank`, `Nvram`, `MemoryAccess` | Core |
-| `FiveDo.Madam` | MADAM registers, CEL engine, pixel decoder/processor/projector, matrix engine, pixel bus, DMA | `Madam`, `MadamRegisters`, `CelEngine`, `CelBitReader`, `PixelDecoder`, `PixelProcessor`, `Projector`, `CelRasterizer`, `MatrixEngine` | Core |
-| `FiveDo.Clio` | CLIO registers, timers, FIFOs, DMA, interrupts, DSP interface, XBUS register window, ROM select | `Clio`, `ClioRegisters`, `ClioTimers`, `ClioFifo`, `ClioDma`, `ClioInterrupts` | Core |
-| `FiveDo.Dsp` | 3DO audio DSP: instruction decode/precompute, ALU, multiplier, barrel shifter, NMem/IMem, semaphore, sample output | `Dsp`, `DspCore`, `DspInstructionDecoder`, `DspAlu`, `DspRegisters`, `DspMemory` | Core |
-| `FiveDo.Sport` | SPORT VRAM fill/copy engine | `Sport` | Core |
-| `FiveDo.Video` | VDLP display-list parser, line/frame assembly, palette expansion reference path, frame extraction, scaler contracts, CPU fallback presenter | `Vdlp`, `VdlParser`, `FrameAssembler`, `FrameBufferFactory`, `IVideoRenderer`, `VideoFilter`, `CpuVideoRenderer` | Core |
-| `FiveDo.Video.OpenGL` | **Required desktop renderer**: desktop GL 3.3 and GLES 3.0/3.1 context integration, two-stage native-resolution palette expansion + output upscaling, persistent texture upload, scaling/filter pipeline, vsync presentation, screenshots | `OpenGlRenderer`, `OpenGlCapabilities`, `VdlFrameUploader`, `RendererSettings`, `GlContextAdapter`, shader variants | Core, Video, Silk.NET.OpenGL/OpenGLES |
-| `FiveDo.Xbus` | XBUS controller, device selection, poll/status/data FIFOs, device interface | `Xbus`, `XbusDevice`, `XbusFifo` | Core |
-| `FiveDo.Cdrom` | Mitsumi/MEI CD-ROM device, command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice`, `CdromCommand`, `Toc`, `Msf` | Core |
-| `FiveDo.Storage` | Disc image readers (ISO/BIN/CUE/CHD), bounded host prefetch, BIOS validation, NVRAM file format, game database, game ID | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `GameDatabase`, `GameId` | Core, CHDSharp |
-| `FiveDo.Audio` | Sample format conversion, ring buffer, null/WAV/live sinks, statistics, WAV analysis | `AudioRingBuffer`, `AudioSample`, `NullAudioSink`, `WavAudioSink`, `AudioStatistics`, `AudioAnalyzer`, `OpenAlAudioOutput` | Core |
-| `FiveDo.Input` | Controller state, PBUS encoding, input profiles, keyboard/gamepad abstractions | `FiveDoController`, `PbusEncoder`, `InputProfile`, `InputBinding` | Core |
-| `FiveDo.Diagnostics` | Logging, tracing, disassembly helpers, frame timing statistics, memory/frame dumpers | `ILogSink`, `Log`, `CpuTracer`, `MemoryDumper`, `FrameDumper`, `FrameTiming`, `PerformanceCounters` | Core |
-| `FiveDo.Machine` | Machine composition root, frame loop, Quartz scheduler, device wiring, state sections | `FiveDoMachine`, `MachineOptions`, `FrameLoop`, `Quartz`, `StateSection` | Core + all chips |
-| `FiveDo.Host` | Session lifecycle, audio-derived frame pacing, BIOS/disc/NVRAM loading, audio/input backends, save states, settings | `EmulatorSession`, `FramePacer`, `AudioFramePacer`, `AudioPipeline`, `InputManager`, `BiosLoader`, `NvramStore`, `SaveStateService` | Machine, Storage, Audio, Input, Diagnostics |
-| `FiveDo.Cli` | Headless command-line interface | `Program`, `RunCommand`, `InfoCommand`, `BenchCommand` | Host |
-| `FiveDo.Frontend.Avalonia` | Cross-platform desktop UI | `App`, `MainWindow`, viewmodels, views, services, OpenGL video surface | Host, Video.OpenGL, Avalonia |
-| `FiveDo.Tests` | Unit/integration tests (subfolders per subsystem) | test fixtures, ARM assembler, fake sinks | production projects |
-| `FiveDo.Benchmarks` | BenchmarkDotNet benchmarks | CPU, CEL, DSP, frame benchmarks | Cpu, Madam, Dsp, Machine |
+| `FiveDo.Memory` | Physical RAM/ROM/NVRAM, word-swapped representation, mirrors, byte/halfword/word helpers | `FiveDoMemory` | Core |
+| `FiveDo.Madam` | MADAM registers, CEL engine, pixel decoder/processor/projector, matrix engine, pixel bus, DMA | `Madam`, `CelEngine`, `CelBitReader`, `CelRasterizer`, `CelGeometry`, `CelMemory`, `CcbParser`, `PixelDecoder`, `PixelProcessor`, `Projector` | Core |
+| `FiveDo.Clio` | CLIO registers, timers, FIFOs, DMA, interrupts, DSP interface, XBUS register window, ROM select, diagnostic port | `Clio`, `DiagPort` | Core |
+| `FiveDo.Dsp` | 3DO audio DSP: instruction decode/precompute, ALU, multiplier, barrel shifter, NMem/IMem, semaphore, sample output | `Dsp`, `DspInstruction`, `DspTraceEntry` | Core |
+| `FiveDo.Sport` | SPORT VRAM fill/copy engine, high-res plane mirroring | `Sport` | Core |
+| `FiveDo.Video` | VDLP display-list parser, line/frame assembly, palette expansion reference path, frame extraction, scaler contracts, CPU fallback presenter, mailbox | `Vdlp`, `FrameAssembler`, `GpuPalette`, `VdlFrameUploader`, `VdlFrameMailbox`, `ViewportCalculator`, `IVideoRenderer`, `VideoFilter`, `RendererSettings`, `CpuVideoRenderer` | Core |
+| `FiveDo.Video.OpenGL` | **Required desktop renderer**: desktop GL 3.3 and GLES 3.0/3.1 context integration, two-stage native-resolution palette expansion + output upscaling, persistent texture upload, scaling/filter pipeline (including FSR/xBR/HQx), vsync presentation, screenshots | `OpenGlRenderer`, `OpenGlCapabilities`, `SwapInterval`, `HqxFilter`, `Shaders`, `GlContextAdapter`, `OffscreenRenderTarget` | Core, Video, Silk.NET.OpenGL |
+| `FiveDo.Xbus` | XBUS controller, device selection, poll/status/data FIFOs, device interface | `Xbus` | Core |
+| `FiveDo.Cdrom` | Mitsumi/MEI CD-ROM device, command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice` | Core |
+| `FiveDo.Storage` | Disc image readers (ISO/BIN/CUE/CHD), bounded host prefetch, BIOS validation, NVRAM file format, game database, game ID | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `VolumeHeader`, `GameDatabase`, `GameId` | Core, CHDSharp |
+| `FiveDo.Audio` | Sample format conversion, ring buffer, null/WAV/live sinks, soft limiter, PCM tap, statistics, WAV analysis | `AudioRingBuffer`, `AudioPipeline`, `NullAudioSink`, `WavAudioSink`, `AudioSoftLimiter`, `AudioTap`, `AudioStatistics`, `AudioAnalyzer`, `OpenAlAudioOutput` | Core, Silk.NET.OpenAL |
+| `FiveDo.Input` | Controller state, PBUS encoding, input profiles, keyboard/gamepad abstractions, scripts | `ControllerState`, `ControllerButton`, `PbusEncoder`, `PbusSource`, `InputProfile`, `PlayerProfile`, `KeyboardInputMapper`, `InputManager`, `GamepadMapper`, `InputScript` | Core |
+| `FiveDo.Diagnostics` | Logging, tracing, disassembly helpers, frame timing statistics, memory/frame dumpers, benchmark gates | `ILogSink`, `Log`, `CpuTracer`, `MemoryDumper`, `FrameDumper`, `PngDumper`, `FrameTiming`, `BenchmarkGate`, `BenchmarkComparison` | Core |
+| `FiveDo.Machine` | Machine composition root, frame loop, Quartz scheduler, device wiring, state sections | `FiveDoMachine`, `Quartz` | Core + all chips + Diagnostics |
+| `FiveDo.Host` | Core thread lifecycle, audio-derived frame pacing, BIOS/disc/NVRAM loading, audio/input backends, save slots, settings, library, fixes, autopilot | `CoreRunner`, `AudioFramePacer`, `AppSettings`, `AppSettingsStore`, `NvramStore`, `SaveStateSlotManager`, `StateInspector`, `GameLibraryScanner`, `GameCompatibility`, `MemoryPatch`, `RoadRashAutopilot` | Machine, Storage, Audio, Input, Video, Diagnostics |
+| `FiveDo.Cli` | Headless command-line interface, JSON contracts | `Program`, `CliJsonModels` | Host |
+| `FiveDo.Frontend.Avalonia` | Cross-platform desktop UI, library/settings/input/slots/logs, OpenGL video surface, GPU probe | `App`, `MainWindow`, `VideoSurface`, `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`, `GameLibraryWindow`, `LogsWindow`, `WelcomeWindow`, `GlProbeWindow`, `GlProbeOptions`, `GlBackendOption`, `PlatformGamepadBackend` | Host, Video.OpenGL, Avalonia |
+| `FiveDo.Tests` | Unit/integration/golden/CLI/frontend tests (subfolders per subsystem) | test fixtures, ARM assembler/rig, fake chips/MMIO, PNG writer | production projects |
+| `FiveDo.Benchmarks` | Frame benchmark, CI gate, baseline comparison | `Program` | Cpu, Madam, Dsp, Diagnostics, Machine, Storage, Video |
 
 ### Why `FiveDo.Machine` is separate from `FiveDo.Core`
 
@@ -234,7 +235,7 @@ while cycles < 12_500_000 / 60:
 
 The original code processes at most one DSP/timer/VDL event per `InternalFrame` call. The port keeps that behavior initially. A later accuracy task may drain all due events in a loop, but only with golden-frame evidence.
 
-`RunFrame` is called by the host's dedicated core thread (`EmulatorSession` + `FramePacer`), never by the Avalonia UI thread. The UI consumes completed frames from the mailbox. This is required for stable 60 fps at 4K and is tracked by M9P.2.
+`RunFrame` is called by the host's dedicated core thread (`CoreRunner` + its private `FramePacer`), never by the Avalonia UI thread. The UI consumes completed frames from the mailbox. This is required for stable 60 fps at 4K and is tracked by M9P.2.
 
 ### Multitask mode
 
@@ -286,8 +287,8 @@ The core never knows about Avalonia or OpenGL. `IFrameSink` receives a `VdlFrame
 ### Video rules
 
 - Base output is **320x240, 4:3**, 60 Hz NTSC.
-- Wider VDLP modes are parsed but the first playable milestone may crop to 320 pixels. The `VdlLine` capacity is 1280 pixels so 384/512/640/1024 modes can be enabled without changing the data model.
-- High-resolution (`RESSCALE`) is a later milestone. It changes VRAM mirroring, VDLP line duplication, CEL stepping, SPORT copies, and frame extraction, so it must be implemented as a coherent feature with its own tests, not as isolated conditionals.
+- Wider VDLP modes are parsed as 384/512/640/1024 pixels per line. The `VdlLine` capacity is 1280 pixels so all modes fit without changing the data model.
+- High-resolution (`RESSCALE`) is implemented as an opt-in 640x480 mode. It changes VRAM mirroring (four 1 MB planes), VDLP line duplication, CEL stepping, SPORT copies, and frame extraction, so it is a coherent feature with its own tests rather than isolated conditionals.
 - **OpenGL "Accurate" mode must match the CPU `FrameAssembler` pixel-for-pixel.** Enhanced filters are opt-in and never affect emulated state.
 - The renderer receives indexed 16-bit pixels and per-line palette/control data, not a pre-expanded BGRA image. Palette expansion happens on the GPU, which cuts CPU work and enables high-quality upscaling at 1080p/1440p/4K.
 
@@ -312,8 +313,9 @@ Stage 1 - palette expansion at native resolution (320x240):
 Stage 2 - scaling/filter at output resolution (up to 4K):
   - Nearest (pixel-perfect integer scaling)
   - Sharp-bilinear (default enhanced)
-  - CRT (scanlines, mask, curvature, bloom)
-  - xBR 4x / HQx 2x/3x/4x (optional)
+  - CRT (scanlines, mask, curvature, vignette, bloom)
+  - xBR 4x / HQx 2x/3x/4x (optional; CPU-expanded source)
+  - FSR 1.0 EASU + RCAS (optional; two GPU passes)
         │
         ▼
 Framebuffer -> window / fullscreen (vsync, latest-frame mailbox)
@@ -323,7 +325,7 @@ Framebuffer -> window / fullscreen (vsync, latest-frame mailbox)
 
 - Raw indexed upload is ~150 KB/frame for 320x240, plus ~23 KB of per-line CLUT and ~2 KB of line parameters.
 - Palette expansion runs at 320x240 (~77k pixels/frame), not at 4K (~8.3M pixels/frame).
-- 4K output costs the CPU nothing beyond the same small upload; the GPU performs one cheap upscale/filter pass.
+- 4K output costs the CPU nothing beyond the same small upload; the GPU performs the upscale/filter pass (FSR/xBR/HQx add extra passes and are opt-in).
 - Textures use immutable storage (`TexStorage2D`) plus `TexSubImage2D`/PBO updates; no per-frame `TexImage2D` reallocation.
 - The core remains single-threaded and deterministic; only presentation is GPU-accelerated.
 - A `FrameMailbox` drops stale frames instead of queueing them; the core never waits for the GPU.
@@ -378,8 +380,8 @@ The full budget table, measurement methodology, and current gaps are in
 
 ```text
 ICpuBackend
-  ├── Arm60Interpreter   (default, reference behavior)
-  └── Arm60JitBackend    (optional, later; IL/DynamicMethod block compiler)
+  ├── Arm60            (default, reference behavior)
+  └── (optional future IL JIT backend)
 ```
 
 - `ICpuBackend` exposes `Step()`, `Reset()`, `Save/LoadState`, and the register/state surface.
@@ -417,7 +419,8 @@ AudioAnalyzer (offline WAV peak/RMS/clipping/DC report)
 
 - Sample rate is **44,100 Hz**, stereo, signed 16-bit, from an exact rational DSP clock: 44,100 samples per ARM second. It is independent of the VDL/timer 8.24 accumulators.
 - The DSP runs on the core thread; the audio backend runs on its own thread and only consumes the ring buffer. The OpenAL context is made current on that thread because OpenAL's current context is thread-local.
-- The ring drops the newest sample when full and reports it. The OpenAL backend queues variable-size buffers containing exactly the samples the DSP produced, keeps up to eight buffers in flight after a 3072-frame prefill lead, and counts underruns. Buffers are rented from a free pool so a buffer still attached to the source is never rewritten. `IAudioSink.Reset` drops queued audio on machine reset/state load so the new timeline does not replay the old one. `FIVEDO_AUDIO_TAP=<prefix>` records the exact queued PCM plus a per-buffer timing log.
+- The ring drops the newest sample when full and reports it. The OpenAL backend queues variable-size buffers containing exactly the samples the DSP produced, keeps up to eight buffers in flight after a 3072-frame prefill lead, and counts underruns. Buffers are rented from a free pool so a buffer still attached to the source is never rewritten; the fill thread is registered as a Windows "Pro Audio" multimedia thread and runs above normal priority. `IAudioSink.Reset` drops queued audio on machine reset/state load so the new timeline does not replay the old one. `FIVEDO_AUDIO_TAP=<prefix>` records the exact queued PCM (`<prefix>.wav`) plus a per-buffer timing log (`<prefix>.csv`).
+- Live OpenAL applies a soft peak limiter (0.8 threshold, 0.9 ceiling) after volume; WAV captures keep the raw DSP output.
 - No allocations in the steady-state audio path.
 - Audio-driven frame pacing: `CoreRunner` feeds the samples produced by each frame into `AudioFramePacer`, which sets the next frame period to `samples / 44100`. A 30-frame rolling average absorbs jitter, implausible deltas reset the window, and the period is clamped to 50-70 fps with a 60 Hz fallback.
 - The CLI exposes the same clock with `--realtime`, and `audio analyze <wav> --json` reports capture statistics.
@@ -431,7 +434,7 @@ Keyboard / gamepad
         │
         ▼
 FiveDo.Input.InputManager (host)
-  - maps physical inputs to FiveDoControllerState
+  - maps physical inputs to `ControllerState`
   - supports 1-6 controllers
         │
         ▼
@@ -467,27 +470,31 @@ High byte bits: `0x01` A, `0x02` Left, `0x04` Right, `0x08` Up, `0x10` Down, `0x
 
 `FiveDo.Host` is the only layer allowed to touch the operating system:
 
-- **`EmulatorSession`** - owns a `FiveDoMachine`, runs a dedicated core thread, exposes `Start/Pause/Resume/Stop/Reset`, `RunFrames(n)`, `SaveState/LoadState`, and frame events.
-- **`FramePacer`** - `Stopwatch` deadlines with a settable period; **`AudioFramePacer`** derives the period from DSP samples and falls back to 60 Hz.
-- **`BiosLoader`** - validates 1 MB BIOS1 and optional ≤1 MB BIOS2; computes MD5; detects Anvil BIOS (`byte[28] == 234`).
-- **`DiscLoader`** - opens ISO/BIN/CUE, detects 2048 vs 2352 sector size, validates sector count.
-- **`NvramStore`** - 32 KB NVRAM file, atomic write, debounce (ported from 4DO's 250 ms timer).
-- **`GameDatabase`** - MD5-of-first-two-sectors game ID, names, and fix-mode flags.
-- **`AudioPipeline`** - ring buffer plus selected backend.
-- **`InputManager`** - keyboard/gamepad mapping and PBUS encoding.
-- **`SaveStateService`** - slots, versioning, hashes, atomic file writes.
-- **`SettingsStore`** - JSON settings with source generation, per-platform config directory.
-- **`GameLibraryService`** - scans folders for supported disc images and reads metadata.
+- **`CoreRunner`** - owns the dedicated core thread, frame/audio pacers, pause/resume/stop, and `Invoke` marshalling. It does not own the machine; the frontend/CLI constructs it.
+- **`AudioFramePacer`** - derives the frame period from DSP samples and falls back to 60 Hz; `CoreRunner` has a private `FramePacer` for sleep/spin deadlines.
+- **`BiosImage`** (`FiveDo.Storage`) - validates 1 MB BIOS1 and optional <=1 MB BIOS2; computes MD5; detects Anvil BIOS (`byte[28] == 234`).
+- **`DiscImageFactory`** (`FiveDo.Storage`) - opens ISO/BIN/CUE/CHD, detects sector size, validates geometry.
+- **`NvramStore`** - 32 KB NVRAM file, atomic write, 250 ms debounce, `.bad` recovery.
+- **`GameDatabase`** / **`GameCompatibility`** - MD5-of-first-two-sectors game ID, metadata, and fix-mode mapping.
+- **`AudioPipeline`** (`FiveDo.Audio`) - reusable ring sink; the live path uses `OpenAlAudioOutput`/`WavAudioSink` directly.
+- **`InputManager`** / **`KeyboardInputMapper`** / **`PlatformGamepadBackend`** - keyboard/gamepad mapping and PBUS encoding.
+- **`SaveStateSlotManager`** - slots, metadata, thumbnails, atomic writes; **`StateInspector`** reads headers/sections.
+- **`AppSettings` / `AppSettingsStore`** - source-generated JSON settings and atomic writes.
+- **`GameLibraryScanner`** - scans folders for supported disc images and reads metadata.
+- **`MemoryPatch`** / **`RoadRashAutopilot`** - diagnostic RAM patches and the Road Rash test driver.
 
 ### Settings locations
 
-| Platform | Config | Saves | Screenshots |
+| Platform | Settings / NVRAM | Default saves | Default screenshots |
 |---|---|---|---|
-| Windows | `%APPDATA%\5DO` | `%APPDATA%\5DO\Saves` | `%APPDATA%\5DO\Screenshots` |
-| Linux | `$XDG_CONFIG_HOME/5do` or `~/.config/5do` | same `Saves` | same `Screenshots` |
-| macOS | `~/Library/Application Support/5DO` | `.../Saves` | `.../Screenshots` |
+| Windows | `%LOCALAPPDATA%\5DO` | `%LOCALAPPDATA%\5DO\states` | Pictures |
+| Linux | `$XDG_DATA_HOME/5DO` or `~/.local/share/5DO` | `<that>/states` | Pictures |
+| macOS | .NET `LocalApplicationData/5DO` (verify in About/Settings) | `<that>/states` | Pictures |
 
-Portable mode: if a `portable.flag` file exists next to the executable, use `<exe-dir>/Data` instead.
+`AppSettingsStore.DefaultDirectory` is `Path.Combine(LocalApplicationData, "5DO")`;
+`nvram.ram` and `settings.json` live there. A save state is ~25 MB (full RAM backing +
+VDL frame). **Portable mode is not implemented**; a `portable.flag` file has no effect.
+See [`Configuration.md`](Configuration.md) and [`SaveStates.md`](SaveStates.md).
 
 ---
 
@@ -495,8 +502,8 @@ Portable mode: if a `portable.flag` file exists next to the executable, use `<ex
 
 | State | Owner | Included in save state? |
 |---|---|---|
-| CPU registers, CPSR, banked registers, FIQ pending | `Arm60` | yes |
-| 3 MB RAM (and high-res mirrors derived) | `FiveDoMemory` | yes (3 MB; mirrors rebuilt) |
+| CPU registers, CPSR, banked registers, FIQ pending, ROM select, data abort | `Arm60` | yes |
+| Full RAM backing (3 MB visible + 16 x 1 MB high-res mirrors) | `FiveDoMemory` | yes |
 | ROM banks | `FiveDoMemory` | yes (for exact restore) |
 | NVRAM | `FiveDoMemory` | yes |
 | MADAM registers, CEL FSM, PLUT, PBUS queue, matrix results | `Madam` | yes |
@@ -504,12 +511,16 @@ Portable mode: if a `portable.flag` file exists next to the executable, use `<ex
 | DSP registers, NMem, IMem, semaphore, running flag, PRNG seed | `Dsp` | yes (precomputed tables rebuilt) |
 | SPORT color/source/destination | `Sport` | yes |
 | VDLP head/current bitmap/palette/linedelay | `Vdlp` | yes |
-| XBUS selection/poll/FIFO state | `Xbus` | yes |
-| CD device command/status/data/TOC state | `CdromDevice` | yes |
-| Quartz accumulators/line counters | `Quartz` | yes |
-| Disc contents | host `IDiscSource` | no; store disc hash and warn on mismatch |
-| Input state | host | no (optional replay recording) |
-| Derived `VdlFrame` / `FrameBuffer` | machine/host | no; regenerated |
+| XBUS selection/poll/FIFO state and attached device state | `Xbus` | yes |
+| CD device command/status/data/TOC state | `CdromDevice` | yes (also via XBUS) |
+| Quartz accumulators/line counters | `Quartz` | yes (section v2) |
+| Compatibility flags and the derived `VdlFrame` | `FiveDoMachine` | yes (Machine section) |
+| Disc contents | host `IDiscSource` | no; the game ID is recorded in the header but not validated on load |
+| Input state | host | no |
+| Derived `FrameBuffer` / audio queue | host | no; regenerated/cleared |
+
+A typical `.tdos` is ~25 MB because the memory section stores the full RAM backing and
+the machine section stores all 960 VDL lines. See [`SaveStates.md`](SaveStates.md).
 
 ---
 
@@ -522,17 +533,17 @@ Portable mode: if a `portable.flag` file exists next to the executable, use `<ex
 
 A `VdlFrameMailbox` holds the most recent completed `VdlFrame`. If the renderer is slow, old frames are dropped rather than queued, preventing latency growth. The renderer uploads the frame to a texture and applies the two-stage filter pipeline; the core does not wait for the GPU. The mailbox copies only the visible line width, and `Read(destination, reader)` copies into a caller-owned frame before invoking the renderer so the lock is not held during GPU submission. The present delegate is cached.
 
-**Frame pacing:** audio-derived on the core thread (60 Hz fallback), catch-up capped at one or two frames, render-on-demand when a new frame is available. Implemented in `CoreRunner`; the Avalonia surface renders only when the mailbox sequence or the output size changes. Status/FPS updates run at 4 Hz, not every frame.
+**Frame pacing:** audio-derived on the core thread (60 Hz fallback), render-on-demand when a new frame is available. Implemented in `CoreRunner`; the Avalonia surface renders only when the mailbox sequence or the output size changes. Status/FPS updates run at 4 Hz, not every frame. A stall longer than 100 ms resyncs the pacer instead of chasing the past.
 
 ---
 
 ## 13. Error handling and diagnostics
 
-- **Fatal configuration errors** (missing BIOS, invalid disc, unsupported state version) throw `EmulationException` from the host, not the core.
+- **Fatal configuration errors** (missing BIOS, invalid disc, unsupported state version) throw host/storage exceptions (`InvalidDataException`, `DiscImageException`, `InvalidStateException`, `ArgumentException`); the CLI catches these and exits 1. `EmulationException` is the base type for fatal emulator errors.
 - **Non-fatal emulation anomalies** (unmapped MMIO read, unknown CD command, malformed CEL) are logged at `Warning`/`Debug` and the core continues with the same sentinel behavior as FreeDOCore (`0xBADACCE5`, zero, etc.).
 - **No exceptions in the hot path.** Device methods return values; diagnostics use `ILogSink.IsEnabled` guards.
 - **Deterministic logging:** log categories and levels, no timestamps in core logs; host sinks may add timestamps.
-- **Debug builds** can enable `CpuTracer`, `ExecutionProfiler`, `MemoryDumper`, and `FrameDumper`.
+- **Debug builds** can enable `CpuTracer`, `MemoryDumper`, `FrameDumper`, and the CLI trace/dump options.
 
 ---
 
@@ -541,13 +552,13 @@ A `VdlFrameMailbox` holds the most recent completed `VdlFrame`. If the renderer 
 | Extension | Interface | Example |
 |---|---|---|
 | Video presenter | `IFrameSink` / `IVideoRenderer` | OpenGL (required), CPU BGRA fallback, null/hash sink |
-| Audio output | `IAudioSink` / host `IAudioOutput` | null, WAV, OpenAL, platform audio |
-| Input backend | `IPbusSource` / host `IInputBackend` | keyboard, SDL gamepad, scripted replay |
-| Disc format | `IDiscSource` | ISO, BIN, CUE, CHD |
-| Save state format | `IStateReader/Writer` | v1 native format, legacy 4DO import |
-| Renderer/filter | `IVideoRenderer` / `IVideoFilter` | nearest, sharp-bilinear, CRT, xBR, HQx 2x/3x/4x |
-| CPU backend | `ICpuBackend` | ARM60 interpreter, optional IL JIT |
-| Debugger | `ICpuTraceSink` | console, file, in-app debugger |
+| Audio output | `IAudioSink` | null, WAV, OpenAL |
+| Input backend | `IPbusSource` / `IGamepadBackend` | keyboard, XInput, evdev, scripted replay |
+| Disc format | `IDiscSource` | ISO, BIN, CUE, CHD, prefetch wrapper |
+| Save state format | `IStateReader/Writer`, `IStateSection` | native `.tdos` sections (no 4DO import in this release) |
+| Renderer/filter | `IVideoRenderer` / shader variants | nearest, sharp-bilinear, CRT, xBR, HQx 2x/3x/4x, FSR |
+| CPU backend | `ICpuBackend` | ARM60 interpreter; optional IL JIT (not implemented) |
+| Diagnostics | `ILogSink`, `CpuTracer`, `FrameDumper` | console, in-memory, file traces, CLI `trace` |
 
 ---
 

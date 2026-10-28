@@ -77,8 +77,9 @@ passing (verified 2026-10-28). Windows x64 is the validated platform. See
 | [`Status.md`](Status.md) | Current position, completion estimate, release path, reproduce commands. |
 | [`Performance.md`](Performance.md) | 4K60 budgets, presentation pipeline, measured baselines, CI gates, remaining gaps. |
 | [`ReleaseChecklist.md`](ReleaseChecklist.md) | v1.0 scope, hard gates, packaging, sign-off. |
-| [`ReleaseLegalReview.md`](ReleaseLegalReview.md) | Attribution audit and pending distribution decisions. |
+| [`ReleaseLegalReview.md`](ReleaseLegalReview.md) | Attribution audit and remaining distribution decisions. |
 | [`Licensing.md`](Licensing.md) | FreeDO/4DO/Opera licensing, third-party dependencies, trademarks. |
+| [`../LICENSE`](../LICENSE) | Project license: FreeDO modified GNU LGPL. |
 | [`../THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md) | Required attribution text for distributed builds. |
 | [`../CHANGELOG.md`](../CHANGELOG.md) | User-visible changes by release. |
 

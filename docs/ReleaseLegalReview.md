@@ -16,6 +16,7 @@ The portable archives contain only:
 
 - the published CLI or frontend binaries and their runtime dependencies,
 - `README.md`,
+- `LICENSE`,
 - `THIRD-PARTY-NOTICES.md`,
 - `docs/Licensing.md`,
 - `PACKAGE.txt`,
@@ -30,6 +31,9 @@ images, BIOS ROMs, extracted assets, screenshots, or WAV captures.
       `.3do`, `.png`, or `.jpg` files.
 - [x] `bios/` and `artifacts/` are ignored by `.gitignore` and are not copied by
       `packaging/package.ps1`.
+- [x] The root `LICENSE` records the FreeDO modified GNU LGPL: the FreeDO notice is
+      reproduced verbatim, the GNU LGPL 2.1 text is included, and the additional terms
+      are carried forward. `packaging/package.ps1` copies `LICENSE` into each archive.
 - [x] `THIRD-PARTY-NOTICES.md` covers FreeDO, 4DO, Opera/libopera, xBR-lv2, HQx,
       CHDSharp, VideoGameFileSystemParser, Avalonia, CommunityToolkit.Mvvm,
       Microsoft.Extensions.*, System.CommandLine, Silk.NET/OpenAL, xUnit,
@@ -38,17 +42,20 @@ images, BIOS ROMs, extracted assets, screenshots, or WAV captures.
       `Silk.NET.OpenAL.Soft.Native`; Windows copies `soft_oal.dll` as `OpenAL32.dll`.
       This adds an LGPL-2.0-or-later binary-distribution obligation to the release.
 - [x] The desktop About dialog reports the version, renderer state, and the
-      FreeDO/4DO licensing warning, and states that no BIOS ROMs or game images are
+      FreeDO modified GNU LGPL notice, and states that no BIOS ROMs or game images are
       included.
 - [x] The CLI prints the product/version and does not bundle BIOS/disc content.
 - [x] FreeDO/4DO/Opera source headers and attribution remain in the repository.
 
 ## 3. Open decisions (release blockers)
 
-- [ ] **Distribution model and project license.** The repository still has no root
-      `LICENSE` file. The upstream FreeDO/4DO terms are a modified GNU LGPL with a
-      non-commercial restriction and a requirement for full credits. The project's own
-      license cannot be more permissive than the upstream terms allow.
+- [x] **Distribution model and project license.** The root `LICENSE` now records the
+      project license as the FreeDO modified GNU LGPL: the FreeDO notice is reproduced
+      verbatim, the GNU LGPL 2.1 text is the base, and the additional terms are carried
+      forward. The upstream FreeDO/4DO terms include a non-commercial restriction and a
+      requirement for full credits, so the project remains non-commercial and
+      source-available. The project's own license is not more permissive than the
+      upstream terms allow.
 - [ ] **Rights-holder contact.** Ask the FreeDO/4DO maintainers to clarify port and
       binary-distribution terms, and keep the correspondence.
 - [ ] **Commercial-use position.** Do not sell builds or bundle them with commercial
@@ -56,7 +63,8 @@ images, BIOS ROMs, extracted assets, screenshots, or WAV captures.
 - [ ] **Source availability.** Confirm how corresponding source will be offered for
       distributed binaries, as required by the LGPL/GPL terms.
 - [ ] **Third-party license review.** Confirm the CHDSharp LGPL-2.1 component, the
-      HQx LGPL-2.1 filter obligations, and the OpenAL Soft LGPL-2.0-or-later native
+      HQx LGPL-2.1 filter obligations, the 4DO game database terms (the 4DO tree has
+      no LICENSE file or source headers), and the OpenAL Soft LGPL-2.0-or-later native
       runtime obligation (notice, source offer, and relinking rights). Decide whether
       any of these remain in a binary distribution that cannot comply.
 - [ ] **Trademark review.** "3DO", "Panasonic", and "GoldStar" are trademarks of their
@@ -66,6 +74,7 @@ images, BIOS ROMs, extracted assets, screenshots, or WAV captures.
 
 Until the owner/legal review is signed off:
 
+- keep the root `LICENSE` and the FreeDO modified GNU LGPL terms in every distribution,
 - distribute the **source** and release-candidate artifacts as **non-commercial,
   source-available** builds,
 - keep full FreeDO/4DO/Opera attribution in the README, About box, and release notes,

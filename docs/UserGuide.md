@@ -3,6 +3,12 @@
 This guide covers the desktop application and the headless CLI. The emulator does not
 include a BIOS ROM or any game images; you must supply legally obtained files.
 
+For the complete documentation map, see [`README.md`](README.md). For every CLI option,
+see [`CliReference.md`](CliReference.md); for settings and paths, see
+[`Configuration.md`](Configuration.md); for save-state details, see
+[`SaveStates.md`](SaveStates.md); for symptom-driven fixes, see
+[`Troubleshooting.md`](Troubleshooting.md).
+
 ## Quick start
 
 1. Install the .NET 10 runtime (or use a self-contained build).
@@ -50,6 +56,17 @@ Supported gamepad backends:
 Windows/Linux backends hot-plug controllers. The **About** dialog reports the number
 of connected controllers.
 
+### Keyboard shortcuts
+
+- **F11** toggles fullscreen.
+- **Escape** exits fullscreen.
+- **Save State**, **Load State**, **Screenshot**, **Reset**, slot changes, and
+  fullscreen are available from the toolbar and the **Emulation** menu.
+
+The input profile also stores default F5 (save), F8 (load), F12 (screenshot), and F10
+(reset) hotkeys, but the current shell does not dispatch those keys; use the
+menu/toolbar. Do not rely on them in this release candidate.
+
 ## Display
 
 The desktop renderer expands the 3DO palette at native resolution and scales on the
@@ -65,14 +82,19 @@ GPU. Available filters:
 - **Hqx / Hqx3x / Hqx4x**: HQx 2x/3x/4x pixel-art smoothing on the CPU-expanded
   frame, followed by a sharp-bilinear finish. They are opt-in and use CPU time per
   frame; 3x/4x cost roughly twice/three times the 2x filter.
+- **FSR**: AMD FidelityFX Super Resolution 1.0 (EASU upscale + RCAS sharpening) at the
+  output resolution. It is opt-in and has a **FSR sharpness** slider in
+  Settings > Video (0 = soft, 1 = maximum). It costs two GPU passes and is not
+  recommended at 4K on weak GPUs.
 
 The Settings dialog's **Emulation** page can override the filter for the current
 game. **Automatic** uses the global filter; an explicit choice is stored by game ID
 in `settings.json`.
 
 Aspect, integer scaling, vsync preference (applied through WGL/GLX/EGL where the
-platform exposes a swap-interval extension), fullscreen (F11/Escape; the cursor is
-hidden while fullscreen), and the FPS/status overlay are in **Settings**. The renderer
+platform exposes a swap-interval extension), CRT bloom, FSR sharpness, fullscreen
+(F11/Escape; the cursor is hidden while fullscreen), and the FPS/status overlay are in
+**Settings**. The renderer
 falls back to the CPU `WriteableBitmap` presenter when OpenGL initialization or context
 recovery fails; the status line and **Logs** report the reason.
 
@@ -90,7 +112,8 @@ It is off by default because 320x240 titles must not be upscaled.
 The shell exposes ten numbered slots. **Save State** and **Load State** use the
 selected slot; **<** and **>** change slots. **Slots** lists, saves, loads, and deletes
 states. Each slot writes `slot-NN.tdos`, a JSON sidecar, and a PNG thumbnail. Writes are
-atomic.
+atomic. A state is about 25 MB because it includes the full RAM backing and VDL frame;
+see [`SaveStates.md`](SaveStates.md) for the format and limits.
 
 **Screenshot** writes a PNG named `<game>-<timestamp>-f<frames>.png` from the OpenGL
 output (or the CPU frame when GL is unavailable). Enable **Also save the native CPU
@@ -103,7 +126,7 @@ change it in **Settings > Paths**.
 **Library** scans the folders configured in **Settings > Paths** for ISO/BIN/CUE/CHD
 files and resolves titles through the embedded 4DO game database. Select a title to
 open it. A sibling image with the same base name (for example `game.png` beside
-`game.chd`) is shown as cover art.
+`game.chd`) is shown as cover art. Scanning is recursive to depth 4.
 
 Settings persist under the user local application data folder:
 
@@ -112,7 +135,9 @@ Settings persist under the user local application data folder:
 
 Per-game fix-mode overrides, automatic 4DO fixes, audio enable/volume, high-resolution
 mode, save/screenshot paths, input bindings, and the current slot are stored there.
-NVRAM is stored as `nvram.ram` in the same directory.
+NVRAM is stored as `nvram.ram` in the same directory. The full `settings.json` schema,
+per-game override keys, input profile format, and precedence rules are in
+[`Configuration.md`](Configuration.md).
 
 ## Audio
 
@@ -143,8 +168,9 @@ and OpenAL dropped/underrun/queued/buffered counters plus estimated latency.
 
 ### Audio diagnostics tap
 
-Set `FIVEDO_AUDIO_TAP` to a path prefix before launching the CLI or desktop app to
-record the exact PCM handed to OpenAL and a per-buffer timing log:
+Set `FIVEDO_AUDIO_TAP` to a path prefix before launching the CLI with `--audio openal`
+or the desktop app (which uses OpenAL when audio is enabled) to record the exact PCM
+handed to OpenAL and a per-buffer timing log:
 
 ```powershell
 $env:FIVEDO_AUDIO_TAP = "$PWD\artifacts\tap"
@@ -181,7 +207,9 @@ dotnet run -c Release --project src/FiveDo.Cli -- selftest
 Audio backends: `--audio null|wav|openal`, `--wav-out`, `--volume`, `--realtime`.
 Diagnostics: `--watch-lowmem`, `--dump-ram`, `--dump-dsp`, `--trace-frames`, `--poke`,
 `--capture-dir`, `--capture-every`, `--input-script`, and `--autopilot road`. See
-[`TestCorpus.md`](TestCorpus.md) for the full command set and script format.
+[`CliReference.md`](CliReference.md) for the full command/option/JSON reference and
+[`Diagnostics.md`](Diagnostics.md) for trace formats; [`TestCorpus.md`](TestCorpus.md)
+has the local corpus commands and script format.
 
 Input scripts use **absolute emulated frame numbers** by default. When a run starts
 from `--state-in`, the first executed frame is the state's saved frame count, so a
@@ -201,12 +229,19 @@ for example, `0 A` then applies on the first frame after the state loads. `run
 - **No gamepad input**: check that the controller is connected before starting the
   emulator, and review the **Gamepad** tab in **Input**. Linux users may need the
   `input` group.
-- **Save state rejected**: states are tied to a BIOS/disc hash; warnings are reported
-  in the status line and log, but the state is still loaded when possible.
-- **xBR is slow**: use SharpBilinear or Accurate at 4K, or lower the output resolution.
+- **Save state rejected**: states are tied to a BIOS/disc hash; the loader warns on a
+  BIOS or emulator-version mismatch but still loads when possible. A different disc is
+  recorded in the header but not rejected, so verify the slot metadata. See
+  [`SaveStates.md`](SaveStates.md).
+- **xBR/HQx/FSR is slow**: use SharpBilinear or Accurate at 4K, or lower the output
+  resolution. HQx 3x/4x and FSR are the most expensive opt-in modes.
+
+For a full symptom-by-symptom guide, see [`Troubleshooting.md`](Troubleshooting.md).
+For traces, dumps, and probes, see [`Diagnostics.md`](Diagnostics.md).
 
 ## Legal
 
+5DO is distributed under the FreeDO modified GNU LGPL; see [`../LICENSE`](../LICENSE).
 FreeDO/4DO are not standard OSI-licensed projects. Read
 [`../THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md) and
 [`Licensing.md`](Licensing.md) before distributing builds. "3DO" and "Panasonic" are

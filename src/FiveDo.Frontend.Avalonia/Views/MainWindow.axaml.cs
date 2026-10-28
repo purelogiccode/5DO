@@ -743,8 +743,8 @@ public partial class MainWindow : Window, IDisposable
                 ? "Gamepads: backend unavailable."
                 : $"Gamepads: {_gamepad.ConnectedControllers} connected ({_gamepad.SourceName}).");
         text.AppendLine();
-        text.AppendLine("FreeDO/4DO are not standard OSI-licensed projects. See THIRD-PARTY-NOTICES.md "
-            + "and docs/Licensing.md before distributing builds.");
+        text.AppendLine("5DO is distributed under the FreeDO modified GNU LGPL. See LICENSE, "
+            + "THIRD-PARTY-NOTICES.md, and docs/Licensing.md before distributing builds.");
         text.AppendLine();
         text.AppendLine("This project does not include BIOS ROMs or game images.");
 

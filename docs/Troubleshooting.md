@@ -137,7 +137,7 @@ report and backend.
 | CLI live audio is a short burst | Add `--realtime`. |
 | WAV silent | `--audio null` discards; use `--audio wav --wav-out <path>`. |
 | WAV click at state load | WAV capture spans resets/loads by design; split the capture. |
-| Frontend AOT has no audio | Frontend NativeAOT audio is not validated; use the trimmed IL build. |
+| Frontend AOT audio is not validated | Use the trimmed IL build for audio testing; CLI AOT live OpenAL is validated. |
 
 Audio analysis:
 
@@ -276,7 +276,8 @@ Do **not** attach BIOS ROMs, game images, or extracted copyrighted assets.
 
 ## 15. Legal / distribution
 
-- FreeDO/4DO are not standard OSI-licensed; the modified LGPL includes a
+- 5DO is distributed under the FreeDO modified GNU LGPL; see [`../LICENSE`](../LICENSE).
+  FreeDO/4DO are not standard OSI-licensed, and the modified LGPL includes a
   non-commercial restriction. Read [`Licensing.md`](Licensing.md) and
   [`../THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md) before distributing builds.
 - The bundled OpenAL Soft 1.23.1 runtime adds an LGPL-2.0-or-later binary distribution

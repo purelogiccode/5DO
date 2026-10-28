@@ -24,13 +24,13 @@ The emulator is a large, stateful port. Tests are the only way to keep a 600 KB 
      └────────────────────────────────────────────────────────────┘
 ```
 
-**Default `dotnet test` must run the unit + integration layers and finish in a few minutes.** Real-BIOS and real-disc tests are opt-in via environment variables.
+**Default `dotnet test` must run the unit + integration layers and finish in a few minutes.** Real-BIOS and real-disc tests are opt-in via environment variables. The current suite is **818 tests** (verified 2026-10-28).
 
 ---
 
 ## 2. Test project layout
 
-For M0 there is one test project:
+There is one xUnit project:
 
 ```text
 tests/FiveDo.Tests/
@@ -49,12 +49,16 @@ tests/FiveDo.Tests/
   Input/
   Machine/
   Host/
-  Integration/
-  Fixtures/
+  Diagnostics/
+  Frontend/
+  Cli/
   TestUtilities/
 ```
 
-If the suite becomes slow or a subsystem needs a different runner, split it into `FiveDo.<Subsystem>.Tests` projects later. The folder structure already mirrors the production projects, so the split is mechanical.
+`Diagnostics/`, `Frontend/`, and `Cli/` cover the host/tooling/frontend surfaces that
+were added after M0. If the suite becomes slow or a subsystem needs a different runner,
+split it into `FiveDo.<Subsystem>.Tests` projects later; the folders already mirror the
+production projects.
 
 ---
 
@@ -64,8 +68,10 @@ If the suite becomes slow or a subsystem needs a different runner, split it into
 - Checked-in fixtures are synthetic: generated ARM programs, synthetic CD sector images, generated CHD images (via CHDSharp's encoder), hand-built VDL/CCB data, generated WAV expectations.
 - Real-BIOS tests are enabled by environment variables:
   - `FIVEDO_BIOS` = path to a 1 MB BIOS ROM.
-  - `FIVEDO_BIOS2` = optional second 1 MB ROM.
-  - `FIVEDO_DISC` = path to a legally obtained disc image.
+  - `FIVEDO_FRAME_DUMP` = directory for optional boot-frame PNGs.
+  - `FIVEDO_GPU_TESTS=1` = run the real WGL/ANGLE GPU probe integration test.
+  - `FIVEDO_AUDIO_TESTS=1` = open a real OpenAL device (use `ALSOFT_DRIVERS=null` on headless machines).
+- `FIVEDO_DISC` is used by some release/corpus scripts, not by the default test suite.
 - Tests that require missing data are skipped with a clear message, not failed.
 - Golden frame hashes for real BIOS/disc content are stored only if the content is redistributable; otherwise they are local developer artifacts.
 
@@ -309,13 +315,13 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
   - fixed CLUT flag (`xOUTCONTROLL & 0x02000000`) and pixel bit 15
   - multiple lines with different CLUTs
 - **Upload correctness:** raw `R16UI` texture contents match `VdlLine.Pixels`; palette texture matches per-line CLUT; line-param texture matches background/out-control.
-- **Filter tests:** screenshot hashes at fixed output sizes for nearest, sharp-bilinear, CRT, and xBR modes. Filters are allowed to differ from the CPU path; Accurate mode is not.
+- **Filter tests:** screenshot hashes at fixed output sizes for nearest, sharp-bilinear, CRT, xBR, HQx 2x/3x/4x, and FSR modes. Filters are allowed to differ from the CPU path; Accurate mode is not. Shader-source tests cover the GLSL 330/ES 300 variants, CRT uniforms, and FSR EASU/RCAS bodies.
 - **Geometry:** aspect ratio, integer scaling, letterbox, fullscreen, window resize.
 - **Context lifecycle:** initialize, resize, context loss/recreate, dispose, fallback to CPU.
 - **Shader compilation:** all shader programs compile/link; log source hash and GL version.
 - **Performance:** two-stage palette expansion at native resolution, persistent upload, no per-frame `TexImage2D`/uniform lookup, upload/present CPU time, GPU frame time, 1080p/1440p/4K output, no CPU per-pixel scaling.
 - **DPI/geometry:** physical-pixel sizing at 100/150/200% scaling, resize, integer scaling, letterbox. `PixelSize.Compute` is unit-tested for 100/125/150/200%, fractional bounds, and invalid inputs; on-device DPI/resize validation remains.
-- **Backends:** desktop GL 3.3 and GLES 3.0/3.1 shader variants compile and produce identical Accurate-mode output. The `--gl-probe` tool validates this with `--gl-backend wgl` and `--gl-backend angle`; `--gl-probe-capture` writes the presented frame and the JSON `parity` block compares it with `FrameAssembler` (WGL and ANGLE/GLES 3.0 both report 0 different pixels on the development RTX 4070). The opt-in `GpuProbeIntegrationTests` test (`FIVEDO_GPU_TESTS=1`) runs the real probe for both backends, checks parity, and runs a short 4K pass.
+- **Backends:** desktop GL 3.3 and GLES 3.0/3.1 shader variants compile and produce identical Accurate-mode output. The `--gl-probe` tool validates this with `--gl-backend wgl` and `--gl-backend angle`; `--gl-probe-capture` writes the presented frame and the JSON `Parity` block compares it with `FrameAssembler` (WGL and ANGLE/GLES 3.0 both report 0 different pixels on the development RTX 4070). The opt-in `GpuProbeIntegrationTests` test (`FIVEDO_GPU_TESTS=1`) runs the real probe for both backends, checks parity, and runs a short 4K pass.
 - **Render-on-demand:** no continuous rendering at monitor refresh rate when the emulator is producing 60 fps.
 - **Headless CI:** run CPU-renderer tests everywhere; GPU tests run on a local/self-hosted job with a real GL context. Skip cleanly when no context is available.
 

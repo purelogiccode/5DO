@@ -24,6 +24,9 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
   on synthetic checkerboard content and about 15 ms/frame on random noise at 320x240,
   so it is not recommended with `--high-res` on slow CPUs.
 - CRT bloom is implemented as a 3x3 native-resolution glow in the CRT filter.
+- FSR 1.0 is opt-in (EASU + RCAS, two GPU passes). It has a sharpness setting and
+  MIT attribution, but no separate 4K FSR probe table is recorded yet; measure it on
+  the target GPU before enabling it by default.
 - The xBR path expands the palette on the CPU at native resolution before uploading the
   source texture. Other filters use GPU palette expansion. This is a deliberate
   workaround for a driver readback issue with the FBO-attached palette texture.
@@ -40,6 +43,24 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
   and comes from the Avalonia UI/compositor loop; the renderer/mailbox path itself is
   zero-allocation after warm-up.
 - Linux/macOS OpenGL launch validation is not complete.
+
+## Tooling and UI
+
+- The input profile stores default F5/F8/F12/F10 hotkeys, but the shell currently
+  dispatches only F11/Escape. Use the toolbar/Emulation menu for save/load/screenshot/
+  reset.
+- `AppSettings.PreferOpenGl` is persisted but not consulted; the shell always tries
+  OpenGL and falls back to CPU.
+- `fs list`/`fs extract` and `disc tracks` currently support CHD only. Use `disc dump`
+  for raw ISO/BIN inspection.
+- CLI JSON casing is split: `state inspect`/`state slots` are PascalCase for historical
+  compatibility; other commands are camelCase.
+- A save state is about 25 MB because it includes the full 19 MB RAM backing and the
+  VDL frame. Ten slots use about 250 MB; the 100-slot maximum uses about 2.5 GB.
+- The save-state header records the disc hash but the loader does not reject a different
+  disc; only BIOS/emulator-version mismatches produce warnings. Verify slot metadata.
+- Some code comments are stale (for example `EmulatorTuning.HighResolution` says the
+  mode is reserved even though it is implemented). Treat behavior/tests as authoritative.
 
 ## Packaging and platforms
 
@@ -99,7 +120,7 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 ## Legal
 
-- The FreeDO/4DO license includes restrictions, including a prohibition on commercial
-  use without the owners' approval. A distribution/attribution review is still pending
-  before any public build.
+- The project is licensed under the FreeDO modified GNU LGPL (see the root `LICENSE`).
+  That license includes a prohibition on commercial use without the owners' approval.
+  A distribution/attribution review is still pending before any public build.
 - The repository does not include BIOS ROMs, game images, or extracted assets.

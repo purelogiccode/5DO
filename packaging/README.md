@@ -28,7 +28,7 @@ configured BIOS.
 CI packages each published CLI and frontend folder with
 `packaging/package.ps1`. The archives are named
 `5do-<component>-<rid>.zip` for Windows and `.tar.gz` for Linux/macOS.
-They contain the publish output, `README.md`, `THIRD-PARTY-NOTICES.md`,
+They contain the publish output, `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
 `docs/Licensing.md`, and a generated `PACKAGE.txt` with the component, RID, version,
 commit, and build time. Linux archives also include `5do.desktop`.
 

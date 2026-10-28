@@ -2,12 +2,14 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current position (2026-10-26, fifteenth pass):** all five golden-corpus titles boot,
+**Current position (2026-10-28, seventeenth pass):** all five golden-corpus titles boot,
 load their own OS, render real frames, and produce non-silent DSP audio. Seven
 additional titles were validated on 2026-10-26 (Gex, Need for Speed, Super Street
 Fighter II Turbo, Total Eclipse, Killing Time, Theme Park, and Return Fire): each
 boots, renders, and save-state roundtrips deterministically; six produce non-silent
-44.1 kHz stereo audio, while Theme Park's captured menu is silent. Road Rash's 3D race
+44.1 kHz stereo audio, while Theme Park's captured menu is silent. The 2026-10-28 pass
+fixed live OpenAL crackle, added the PCM tap and FSR 1.0; compatibility status is
+unchanged. Road Rash's 3D race
 renders correctly and the attract race continues past 60,000 frames with no allocator
 error; Wolfenstein 3D starts a fresh game (FLOOR 1-1), walks/turns/fires, and its save
 states roundtrip; Alone in the Dark's in-game character renders upright at the
@@ -244,12 +246,18 @@ does not need a separate high-resolution input path.
 ## 8. Save states
 
 - Native C# format, versioned, explicit little-endian, CRC-protected.
-- Includes CPU, RAM, ROM, NVRAM, MADAM, CLIO, DSP, SPORT, VDLP, XBUS, CD, Quartz.
+- Includes CPU, the full 19 MB RAM backing (3 MB visible + 16 high-res mirrors), ROM,
+  NVRAM, MADAM, CLIO, DSP, SPORT, VDLP, XBUS, CD, Quartz, compatibility flags, and the
+  parsed VDL frame. A typical state is ~25 MB.
 - Does not include disc contents or input state.
 - Includes the parsed VDL frame lines, so a zero-frame load is pixel-identical to the
   saved frame even in high-resolution mode.
-- Stores BIOS and disc hashes; a mismatch warns and can be rejected by default.
-- 4DO `.4dosav` import/export is **not** a v1 goal. The native format is compiler/struct-layout dependent and includes precomputed DSP tables; a best-effort importer can be added later if there is demand.
+- Stores BIOS and disc hashes. A BIOS or emulator-version mismatch produces a warning
+  but the load continues; the disc hash is recorded but not validated, so loading a
+  state from a different disc is allowed.
+- 4DO `.4dosav` import/export is **not** a v1 goal and is not implemented. The native
+  format is explicit and versioned; a best-effort importer can be added later if there
+  is demand. See [`SaveStates.md`](SaveStates.md).
 
 ---
 

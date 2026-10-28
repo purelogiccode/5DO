@@ -12,7 +12,7 @@ The FreeDOCore source headers (`References/4DO-master/FreeDOCore/FreeDO/*.cpp`, 
 - Any **commercial** use is **strictly forbidden** without the owners' approval.
 - These notes take precedence over the GNU LGPL where they conflict.
 
-This is a restrictive license. It is not the same as "LGPL v2.1 or later" and it is not an OSI-approved license. The 4DO project may also carry GPL obligations for its own code. The repository does not contain a root LICENSE file yet because the distribution model has not been decided.
+This is a restrictive license. It is not the same as "LGPL v2.1 or later" and it is not an OSI-approved license. The 4DO project may also carry GPL obligations for its own code. The project license decision is recorded in the root [`LICENSE`](../LICENSE): 5DO is distributed under the FreeDO modified GNU LGPL, with the FreeDO notice reproduced verbatim and the GNU LGPL 2.1 text as the base license.
 
 ### 1a. Opera/libopera
 
@@ -25,7 +25,8 @@ contributors in addition to FreeDO and 4DO.
 
 ## 2. What this means for the project
 
-Until the rights holders grant different terms:
+The project license is the FreeDO modified GNU LGPL recorded in the root
+[`LICENSE`](../LICENSE). Until the rights holders grant different terms:
 
 - Treat the project as **non-commercial**.
 - Keep **full attribution** to FreeDO and 4DO in the source, README, About box, and release notes.
@@ -37,8 +38,8 @@ Until the rights holders grant different terms:
 ## 3. Recommended actions before the first public release
 
 1. **Contact the FreeDO/4DO authors** (or the current maintainers) and ask for clarification of the port and distribution terms. Keep the correspondence.
-2. Decide the project's own license. It cannot be more permissive than the upstream terms allow.
-3. Add a root `LICENSE` file with the chosen terms and a `THIRD-PARTY-NOTICES.md` with the upstream notices.
+2. Keep the project license aligned with the upstream terms. It cannot be more permissive than the upstream terms allow.
+3. Keep the root [`LICENSE`](../LICENSE) and [`THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md) current when dependencies or upstream terms change.
 4. Add an in-app **About / Licenses** page listing FreeDO, 4DO, Avalonia, and other dependencies.
 5. Have a lawyer review the final distribution model if the project is published commercially or bundled with hardware.
 

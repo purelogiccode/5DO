@@ -20,9 +20,10 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
   `--high-res`, `--prefetch`, `--no-game-fixes`).
 - A flag followed by a non-`--` token consumes that token as its value. Put boolean
   flags last or before another `--option` to avoid ambiguity.
-- The first non-option token is the positional disc path for `run`, `trace`, `info`,
+- The first non-option token is the positional path for `run`, `trace`, `info`,
   `disc dump`, `disc tracks`, `bios info`, `audio analyze`, `state inspect`,
-  `disasm`. `fs` uses fixed positional subcommand/path positions.
+  `disasm` (disc or file, depending on the command). `fs` uses fixed positional
+  subcommand/path positions.
 - Integer options accept decimal and, where noted, `0x` hexadecimal. Some address
   options (`--watch-start`, `--watch-end`, `--stop-pc`, `--stop-cd`,
   `--dump-ram-offset`, `--base`) are parsed as **hexadecimal even without `0x`**.

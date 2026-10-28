@@ -337,6 +337,8 @@ The desktop overlay shows the same counters plus a peak meter.
 
 ### Tap vs loopback
 
+Use the OpenAL backend (desktop, or CLI `--audio openal`) and set the tap:
+
 ```powershell
 $env:FIVEDO_AUDIO_TAP = "$PWD\artifacts\tap"
 dotnet run --project src/FiveDo.Frontend.Avalonia

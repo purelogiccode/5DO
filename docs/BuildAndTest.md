@@ -335,7 +335,7 @@ pwsh -File packaging/package.ps1 -Component cli -Rid win-x64 `
   -PublishDirectory artifacts/cli/win-x64 -OutputDirectory artifacts/packages
 ```
 
-The archive contains the publish output (minus PDBs), `README.md`,
+The archive contains the publish output (minus PDBs), `README.md`, `LICENSE`,
 `THIRD-PARTY-NOTICES.md`, `docs/Licensing.md`, `docs/ReleaseLegalReview.md`, the latest
 `docs/ReleaseNotes-*.md`, and a generated `PACKAGE.txt` with component, RID, version,
 commit, and build time. Linux archives also include `5do.desktop`.

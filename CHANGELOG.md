@@ -7,6 +7,9 @@ still change.
 
 ### Added
 
+- Root `LICENSE`: the project is now distributed under the FreeDO modified GNU LGPL,
+  with the FreeDO notice reproduced verbatim, the GNU LGPL 2.1 text, and the additional
+  non-commercial/attribution terms. `LICENSE` is included in portable archives.
 - Audio tap diagnostics: set `FIVEDO_AUDIO_TAP=<prefix>` to record the exact PCM
   queued to OpenAL (`<prefix>.wav`) plus a per-buffer CSV (`<prefix>.csv`) with
   elapsed time, frames, ring/queue depth, underruns, peak, and OpenAL errors. The
