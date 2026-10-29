@@ -100,8 +100,11 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release` passes:
       861/861 with 1.0.0-rc.1 (after the 2026-10-29 Vulkan xBR/FSR pass).
 - [x] `dotnet format 5DO.sln --verify-no-changes` passes.
-- [ ] CI is green on the supported runners. (Local gates pass; the GitHub Actions
-      workflow was not re-run in this session.)
+- [ ] CI is green on the supported runners. (Local gates pass. GitHub Actions jobs
+      currently fail before starting because the account's recent payments/spending
+      limit are blocked; the run annotation points to Billing & plans. This is an
+      external billing action, not a code failure. The workflow was re-run on
+      2026-10-29 and every job reported the same annotation.)
 - [x] Synthetic benchmark `--gate` passes: 2.28 ms/frame core mean, 4.03 ms core
       p99, 4.66 ms total p99, 0 bytes/frame.
 - [x] Trimmed CLI smoke test passes: `--version`, `selftest --json`,

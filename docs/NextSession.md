@@ -29,7 +29,9 @@ this audio pass, the 2026-10-29 release-hardening pass (save-state disc warnings
 console hotkeys, ISO/BIN `disc tracks`, and OpenAL Soft LGPL packaging), or the
 twenty-first Vulkan xBR/FSR/HQx filter pass. The remaining **release** work is the legal/attribution review
 (now including OpenAL Soft's LGPL runtime), a stability soak, release
-packaging/notes, and optional Linux/macOS launch validation. Full-race completion,
+packaging/notes, and optional Linux/macOS launch validation. GitHub Actions is
+currently blocked before job start by the account billing/spending-limit annotation;
+that is an external action, not a code failure. Full-race completion,
 extra title scripts, GLES 3.1/Pi/DPI, Tier B timing, arm64/installers, frontend AOT
 audio, and the optional JIT are post-1.0. See
 [`ReleaseChecklist.md`](ReleaseChecklist.md).
