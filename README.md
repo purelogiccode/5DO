@@ -139,6 +139,7 @@ implementation plan and architecture are in:
 - [`docs/Status.md`](docs/Status.md) - current position, completion estimate, and next steps.
 - [`docs/ReleaseChecklist.md`](docs/ReleaseChecklist.md) - v1.0 release scope, gates, and sign-off.
 - [`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.md) - attribution audit and remaining distribution decisions.
+- [`docs/OpenALSoft.md`](docs/OpenALSoft.md) - OpenAL Soft LGPL notice, source offer, and relinking rights.
 - [`docs/NextSession.md`](docs/NextSession.md) - first task, commands, and acceptance criteria for the next session.
 - [`docs/ReferenceStrategy.md`](docs/ReferenceStrategy.md) - Opera/FreeDO reference hierarchy and differential procedure.
 - [`docs/ImplementationPlan.md`](docs/ImplementationPlan.md) - milestones, tasks, acceptance criteria, risks.
