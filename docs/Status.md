@@ -1,8 +1,10 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-29, 1.0.0-rc.1 release preparation after the twenty-fourth pass
-(the first-party Opera file-system reader now backs `fs list`/`fs extract` for
-ISO/BIN/CUE/CHD, including multi-block directories and `burst`/`gap` layouts; the
+**Snapshot:** 2026-10-29, 1.0.0-rc.1 release preparation after the twenty-fifth pass
+(the desktop shell now dispatches F6/F7 slot selection, F9 single-frame advance, and
+records player-1 input to a replayable `--input-script` file; the first-party Opera
+file-system reader backs `fs list`/`fs extract` for ISO/BIN/CUE/CHD, including
+multi-block directories and `burst`/`gap` layouts; the
 twenty-third pass added native Win32 Vulkan swapchain and `--vk-window-probe`,
 `PreferOpenGl` enforcement, custom aspect editing, frontend AOT audio validation, and
 bug-report hygiene; the
@@ -103,8 +105,10 @@ This is the short, current answer to "where are we?" The documentation index is
   `.desktop` entry; Windows/macOS associations remain installer work. Per-game 4DO fix
   flags are applied automatically when a disc opens; explicit masks can be set in the
   settings dialog. The shell dispatches the configurable `InputProfile.Hotkeys`
-  bindings (F5 save, F8 load, F10 reset, F11 fullscreen, F12 screenshot, Escape
-  pause by default) before forwarding keys to the emulated pad. Loading a state
+  bindings (F5 save, F8 load, F6/F7 previous/next slot, F9 frame advance, F10
+  reset, F11 fullscreen, F12 screenshot, Escape pause by default) before forwarding
+  keys to the emulated pad. **Emulation > Record Input** captures player-1 input to
+  a replayable script. Loading a state
   whose recorded disc hash differs from the current disc reports a warning in the
   status line and log instead of loading silently.
 - **Logging and bug reports:** Serilog is configured once by each host through
@@ -155,7 +159,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 890 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 904 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
@@ -163,8 +167,9 @@ This is the short, current answer to "where are we?" The documentation index is
   source-generated CLI JSON contracts, frontend startup-argument parsing, renderer
   backend selection, GPU-probe capture/parity contracts, shader source invariants,
   Vulkan xBR/FSR/HQx split-frame orientation, save-state disc-hash warnings, hotkey
-  routing, ISO/BIN `disc tracks`, and Opera FS parsing (multi-block directories,
-  `burst`/`gap` reads, invalid headers, and CLI ISO extraction).
+  routing, input-recorder coalescing/roundtrip, ISO/BIN `disc tracks`, and Opera FS
+  parsing (multi-block directories, `burst`/`gap` reads, invalid headers, and CLI ISO
+  extraction).
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   Both executables are self-contained, single-file, and trimmed (`PublishTrimmed=true`,
   `TrimMode=full`). The CLI also has an opt-in NativeAOT win-x64 publish

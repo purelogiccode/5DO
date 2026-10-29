@@ -29,4 +29,13 @@ public enum HotkeyAction
 
     /// <summary>Reset the emulated machine.</summary>
     Reset,
+
+    /// <summary>Select the previous save-state slot.</summary>
+    SlotPrevious,
+
+    /// <summary>Select the next save-state slot.</summary>
+    SlotNext,
+
+    /// <summary>Advance the paused machine by one frame.</summary>
+    FrameAdvance,
 }

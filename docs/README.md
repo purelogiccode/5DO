@@ -5,7 +5,7 @@ emulator for the Panasonic 3DO Interactive Multiplayer. The desktop app is Avalo
 headless tool is `FiveDo.Cli`; the emulation core is split into one assembly per console
 subsystem.
 
-**Current snapshot:** `1.0.0-rc.1`, documented-compatibility release scope, 890 tests
+**Current snapshot:** `1.0.0-rc.1`, documented-compatibility release scope, 904 tests
 passing (verified 2026-10-29). Windows x64 is the validated platform. See
 [`Status.md`](Status.md), [`ReleaseChecklist.md`](ReleaseChecklist.md), and
 [`KnownIssues.md`](KnownIssues.md) for the honest release position.

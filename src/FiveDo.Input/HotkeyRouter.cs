@@ -21,6 +21,9 @@ public static class HotkeyRouter
         ["Fullscreen"] = HotkeyAction.Fullscreen,
         ["Pause"] = HotkeyAction.Pause,
         ["Reset"] = HotkeyAction.Reset,
+        ["SlotPrevious"] = HotkeyAction.SlotPrevious,
+        ["SlotNext"] = HotkeyAction.SlotNext,
+        ["FrameAdvance"] = HotkeyAction.FrameAdvance,
     };
 
     /// <summary>Resolves a key name to its bound console action.</summary>
@@ -71,6 +74,9 @@ public static class HotkeyRouter
         HotkeyAction.Fullscreen => "Fullscreen",
         HotkeyAction.Pause => "Pause",
         HotkeyAction.Reset => "Reset",
+        HotkeyAction.SlotPrevious => "SlotPrevious",
+        HotkeyAction.SlotNext => "SlotNext",
+        HotkeyAction.FrameAdvance => "FrameAdvance",
         _ => string.Empty,
     };
 }

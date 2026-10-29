@@ -54,7 +54,7 @@ reports. **882 tests pass.**
 reads the volume/directory records directly through `IDiscSource`, so `fs list`/`fs
 extract` support ISO, BIN, CUE+BIN, and CHD with one parser. Multi-block directory
 chains, `burst`/`gap` file layouts, special entries, and malformed-record rejection are
-covered by tests; the `VideoGameFileSystemParser` dependency was removed. **890 tests
+covered by tests; the `VideoGameFileSystemParser` dependency was removed. **904 tests
 pass.**
 
 **Last updated:** 2026-10-29
@@ -273,7 +273,7 @@ project/type layout is unchanged.
 
 ### 4a. Current position vs. the plan (2026-10-26)
 
-Snapshot: 890 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
+Snapshot: 904 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
 and zero synthetic steady-state allocations; all five local corpus titles boot and
 render, and scripted gameplay is validated in Wolfenstein, Lemmings, Road Rash, and
 Alone. The opt-in 640x480 high-resolution mode is implemented and matches the
@@ -1044,9 +1044,11 @@ dotnet run --project src/FiveDo.Frontend.Avalonia
   - `AppSettings`/`AppSettingsStore` persist paths, renderer/aspect/vsync/integer scale, audio enable/volume, high-resolution mode, library folders, save slots, overlay, automatic fixes, per-game fix/filter overrides, and input bindings. The Settings dialog edits video/audio/emulation/paths and validates the per-game fix mask; the Input dialog has keyboard and gamepad binding tabs for all six players. Per-game fix-mode and filter overrides are complete; other per-game settings remain. The shell exposes a Hi-Res checkbox that restarts the machine.
   - **DONE (2026-10-29):** the shell dispatches the `InputProfile.Hotkeys`
     bindings before forwarding a key to the emulated pad: F5 save, F8 load,
-    F10 reset, F11 fullscreen, F12 screenshot, and Escape pause by default.
-    `HotkeyRouter` resolves custom bindings case-insensitively; unknown action
-    names are ignored and tested.
+    F6/F7 previous/next slot, F9 frame advance, F10 reset, F11 fullscreen,
+    F12 screenshot, and Escape pause by default. `CoreRunner.StepFrame` runs one
+    frame on the caller's thread while preserving the loop's pause state, so F9
+    leaves emulation paused on the new frame. `HotkeyRouter` resolves custom
+    bindings case-insensitively; unknown action names are ignored and tested.
 - [x] **M9.6 Input UI.**
   - Binding capture dialog, conflict detection, and reset defaults are implemented for all six players (`InputBindingsWindow`/`KeyboardBindingEditor`); the player selector switches profiles, rebinding a key removes it from its previous button, and the edited `InputProfile` is saved to `AppSettings`.
   - The optional controller preview remains a nice-to-have.
@@ -1067,6 +1069,15 @@ dotnet run --project src/FiveDo.Frontend.Avalonia
   - Settings roundtrip, library scanning, frame mailbox, input mapping.
   - No UI thread dependency for logic.
   - Tests cover AppSettings roundtrip, the frame mailbox, renderer contracts, input mapping, GamepadMapper, LogViewFilter, save-slot thumbnails, and shader source invariants; ViewModel-level tests remain.
+- [x] **M9.11 Input recording.**
+  - **DONE (2026-10-29):** `InputRecorder` captures player-1 controller state in
+    frame order and coalesces unchanged frames. `InputManager` records through an
+    optional recorder/frame provider on the emulation thread, and the desktop
+    **Emulation > Record Input** toggle writes `<game>-<timestamp>-input.txt` to
+    the save-state directory. The output is the same format as `--input-script`,
+    so a desktop recording can be replayed headlessly (with `--script-base state`
+    when it starts from a loaded state). Tests cover coalescing, button-name
+    formatting, out-of-order rejection, file roundtrip, and the InputManager hook.
 
 **Deliverables**
 

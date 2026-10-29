@@ -12,6 +12,9 @@ public sealed class HotkeyRouterTests
     [InlineData("F11", HotkeyAction.Fullscreen)]
     [InlineData("F12", HotkeyAction.Screenshot)]
     [InlineData("Escape", HotkeyAction.Pause)]
+    [InlineData("F6", HotkeyAction.SlotPrevious)]
+    [InlineData("F7", HotkeyAction.SlotNext)]
+    [InlineData("F9", HotkeyAction.FrameAdvance)]
     public void Resolve_ReturnsEveryDefaultHotkey(string key, HotkeyAction expected)
     {
         InputProfile profile = InputProfile.CreateDefault();
@@ -68,6 +71,9 @@ public sealed class HotkeyRouterTests
     [InlineData(HotkeyAction.Fullscreen, "Fullscreen")]
     [InlineData(HotkeyAction.Pause, "Pause")]
     [InlineData(HotkeyAction.Reset, "Reset")]
+    [InlineData(HotkeyAction.SlotPrevious, "SlotPrevious")]
+    [InlineData(HotkeyAction.SlotNext, "SlotNext")]
+    [InlineData(HotkeyAction.FrameAdvance, "FrameAdvance")]
     [InlineData(HotkeyAction.None, "")]
     public void GetActionName_RoundtripsThePersistedName(HotkeyAction action, string expected)
     {

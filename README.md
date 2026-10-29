@@ -8,12 +8,14 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-29, 1.0.0-rc.1 release preparation, twenty-fourth pass):**
+**Current position (2026-10-29, 1.0.0-rc.1 release preparation, twenty-fifth pass):**
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **890 tests pass.** The twenty-fourth pass added a first-party Opera
-file-system reader, so `fs list`/`fs extract` now work on ISO, BIN, CUE+BIN, and CHD
+prototype. **904 tests pass.** The twenty-fifth pass added F6/F7 slot selection,
+F9 single-frame advance, and desktop input recording; the twenty-fourth pass added a
+first-party Opera file-system reader, so `fs list`/`fs extract` now work on ISO,
+BIN, CUE+BIN, and CHD
 images (multi-block directories and `burst`/`gap` layouts included). The twenty-third
 pass added native Win32 Vulkan
 swapchain presentation and `--vk-window-probe`, honored the `PreferOpenGl` setting,
@@ -365,7 +367,7 @@ dotnet run --project src/FiveDo.Frontend.Avalonia
 dotnet run --project src/FiveDo.Frontend.Avalonia -- "game.chd"
 ```
 
-Use **Open BIOS** and **Open Disc**, then **Play**. The default keyboard bindings are the arrow keys, Z (A), X (B), C (C), A (L), S (R), Enter (P), and Backspace (X). **Save State**/**Load State** use the selected slot; the **<**/**>** buttons change slots. **Screenshot** writes a PNG from the OpenGL output (or the CPU frame when GL is unavailable), named by game, time, and frame. **Library** scans configured folders through the 4DO database, **Settings** edits video/audio/emulation/paths, and **Input** captures keyboard bindings for all six players. **Fullscreen** toggles F11/Escape; **Hi-Res** restarts the machine in the opt-in 640x480 mode. Settings persist under the user local application data folder, including per-game fix-mode overrides.
+Use **Open BIOS** and **Open Disc**, then **Play**. The default keyboard bindings are the arrow keys, Z (A), X (B), C (C), A (L), S (R), Enter (P), and Backspace (X). **Save State**/**Load State** use the selected slot; the **<**/**>** buttons change slots, and F6/F7 select the previous/next slot. F9 advances one frame while paused; F5/F8/F10/F11/F12 and Escape are the save/load/reset/fullscreen/screenshot/pause hotkeys. **Emulation > Record Input** writes a replayable input script. **Screenshot** writes a PNG from the OpenGL output (or the CPU frame when GL is unavailable), named by game, time, and frame. **Library** scans configured folders through the 4DO database, **Settings** edits video/audio/emulation/paths, and **Input** captures keyboard bindings for all six players. **Fullscreen** toggles F11/Escape; **Hi-Res** restarts the machine in the opt-in 640x480 mode. Settings persist under the user local application data folder, including per-game fix-mode overrides.
 
 ## Legal and attribution
 

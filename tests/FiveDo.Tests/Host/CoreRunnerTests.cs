@@ -78,6 +78,41 @@ public sealed class CoreRunnerTests
     }
 
     [Fact]
+    public void StepFrame_AdvancesExactlyOneFrameWhilePaused()
+    {
+        FiveDoMachine machine = CreateMachine();
+        using var runner = new CoreRunner(machine);
+        runner.Start();
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(2)));
+        runner.Pause();
+
+        var runnerFrames = runner.Frames;
+        var machineFrames = machine.FramesExecuted;
+        runner.StepFrame();
+
+        Assert.Equal(runnerFrames + 1, runner.Frames);
+        Assert.Equal(machineFrames + 1, machine.FramesExecuted);
+        Thread.Sleep(80);
+        Assert.Equal(runnerFrames + 1, runner.Frames);
+
+        runner.Stop();
+    }
+
+    [Fact]
+    public void StepFrame_ReportsTheNewFrameToTheSink()
+    {
+        FiveDoMachine machine = CreateMachine();
+        VdlFrame? last = null;
+        using var runner = new CoreRunner(machine, frameSink: frame => last = frame);
+        runner.Pause();
+        runner.StepFrame();
+
+        Assert.NotNull(last);
+        Assert.Equal(1, runner.Frames);
+        Assert.Equal(1, machine.FramesExecuted);
+    }
+
+    [Fact]
     public void Status_ReportsTheAudioDerivedTargetFrameRate()
     {
         FiveDoMachine machine = CreateMachine();

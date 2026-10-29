@@ -60,6 +60,8 @@ of connected controllers.
 
 - **F5** saves the current state to the selected slot.
 - **F8** loads the selected slot.
+- **F6** / **F7** select the previous / next save-state slot.
+- **F9** advances the paused machine by one frame.
 - **F10** resets the machine.
 - **F11** toggles fullscreen.
 - **F12** captures a screenshot.
@@ -69,6 +71,32 @@ of connected controllers.
 
 The hotkey map is part of the input profile. Custom key assignments are resolved
 case-insensitively; an unbound key falls through to the emulated pad.
+
+### Recording input
+
+**Emulation > Record Input** starts capturing player-1 controller input while the
+game runs. Selecting it again stops recording and writes
+`<game>-<timestamp>-input.txt` to the configured save-state directory (or the default
+5DO directory). Unchanged frames are coalesced into one line per button change, and
+the file uses the same format as `--input-script`:
+
+```text
+# frame buttons
+0 None
+120 A
+180 A,Down
+240 None
+```
+
+Replay a recording headlessly with:
+
+```powershell
+dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin `
+  --frames 1000 --input-script "path/to/game-20261029-120000-input.txt"
+```
+
+If the recording started after a save state was loaded, add `--script-base state` so
+the script's frame numbers are shifted by the loaded frame count.
 
 ## Display
 

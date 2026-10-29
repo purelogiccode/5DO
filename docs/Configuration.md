@@ -194,7 +194,10 @@ player-1 defaults. See section 3 for the full input structure.
       "Screenshot": "F12",
       "Fullscreen": "F11",
       "Pause": "Escape",
-      "Reset": "F10"
+      "Reset": "F10",
+      "SlotPrevious": "F6",
+      "SlotNext": "F7",
+      "FrameAdvance": "F9"
     }
   }
 }
@@ -262,10 +265,11 @@ Default gamepad mapping:
 Explicit stick/trigger bindings win over the fallback. The default radial dead zone is
 0.5; the default trigger threshold is 0.5.
 
-**Hotkeys:** the profile stores default F5 (save), F8 (load), F12 (screenshot), F11
-(fullscreen), Escape (pause), and F10 (reset). The shell dispatches these bindings
-before forwarding a key to the emulated pad; F11 also works from the library, and
-Escape leaves fullscreen before it reaches the pause action. `HotkeyRouter` resolves
+**Hotkeys:** the profile stores default F5 (save), F8 (load), F6/F7 (previous/next
+slot), F9 (advance one frame while paused), F12 (screenshot), F11 (fullscreen),
+Escape (pause), and F10 (reset). The shell dispatches these bindings before
+forwarding a key to the emulated pad; F11 also works from the library, and Escape
+leaves fullscreen before it reaches the pause action. `HotkeyRouter` resolves
 the persisted action names case-insensitively, so a custom key assignment in the
 profile is honored. Unknown action names and unbound keys are ignored.
 

@@ -159,7 +159,7 @@ See [`Audio.md`](Audio.md) for metric definitions and the tap workflow.
 | Gamepad not detected (Linux) | Ensure the user is in the `input` group and `/dev/input/event*` is readable. |
 | Gamepad not detected (macOS) | No platform backend yet; use a keyboard. |
 | Analog stick does nothing | Left-stick directions fall back to D-pad bindings; explicit stick bindings win. Triggers fall back to shoulders. |
-| Hotkeys F5/F8/F12/F10 do nothing | The profile stores them, but the current shell only dispatches F11/Escape; use the toolbar/Emulation menu. |
+| Hotkeys F5/F8/F6/F7/F9/F12/F10 do nothing | The shell dispatches the bindings in the input profile; check **Input Bindings** for a custom map, and make sure the game view has focus. The Library view and TextBox focus deliberately swallow game keys. |
 | Scripted input seems offset after a state load | Scripts are absolute by default; add `--script-base state` to shift by the loaded frame count. |
 | Autopilot won't combine with a script | `--autopilot road` and `--input-script` are mutually exclusive. |
 

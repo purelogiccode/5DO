@@ -50,6 +50,8 @@ public partial class MainWindow : Window, IDisposable
     private readonly DispatcherTimer _logTimer;
     private InputManager _input;
     private readonly SaveStateSlotManager _slots;
+    private InputRecorder? _inputRecorder;
+    private string? _inputRecordingPath;
     private OpenAlAudioOutput? _audio;
     private float _meterPeak;
     private FiveDoMachine? _machine;
@@ -290,6 +292,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void OpenBiosPath(string path)
     {
+        StopInputRecording(save: true);
         if (_running)
         {
             PauseEmulation(showLibrary: false);
@@ -326,6 +329,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void OpenDiscPath(string path, bool autoStart = false)
     {
+        StopInputRecording(save: true);
         if (autoStart && _running)
         {
             PauseEmulation(showLibrary: false);
@@ -541,7 +545,9 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OnPreviousSlot(object? sender, RoutedEventArgs e)
+    private void OnPreviousSlot(object? sender, RoutedEventArgs e) => SelectPreviousSlot();
+
+    private void SelectPreviousSlot()
     {
         _slots.Previous();
         PersistSlot();
@@ -549,7 +555,9 @@ public partial class MainWindow : Window, IDisposable
         StatusText.Text = $"Selected slot {_slots.CurrentSlot + 1}.";
     }
 
-    private void OnNextSlot(object? sender, RoutedEventArgs e)
+    private void OnNextSlot(object? sender, RoutedEventArgs e) => SelectNextSlot();
+
+    private void SelectNextSlot()
     {
         _slots.Next();
         PersistSlot();
@@ -608,6 +616,78 @@ public partial class MainWindow : Window, IDisposable
         SaveNativeScreenshot(path);
         StatusText.Text = $"Screenshot: {path}";
         _logger.ForCategory(LogCategory.Host).Information("Screenshot written from the CPU frame: {Path}.", path);
+    }
+
+    private void OnRecordInput(object? sender, RoutedEventArgs e)
+    {
+        if (RecordInputMenuItem.IsChecked)
+        {
+            StartInputRecording();
+        }
+        else
+        {
+            StopInputRecording(save: true);
+        }
+    }
+
+    private void StartInputRecording()
+    {
+        if (_machine is null || _runner is null)
+        {
+            RecordInputMenuItem.IsChecked = false;
+            StatusText.Text = "Open a 3DO BIOS before recording input.";
+            return;
+        }
+
+        var directory = string.IsNullOrWhiteSpace(_settings.SaveDirectory)
+            ? AppSettingsStore.DefaultDirectory
+            : _settings.SaveDirectory;
+        var name = string.IsNullOrWhiteSpace(_gameName) ? "5do" : SanitizeFileName(_gameName);
+        var stamp = DateTime.Now.ToString(
+            "yyyyMMdd-HHmmss",
+            System.Globalization.CultureInfo.InvariantCulture);
+        _inputRecordingPath = Path.Combine(directory, $"{name}-{stamp}-input.txt");
+        _inputRecorder = new InputRecorder();
+        _input.FrameProvider = () => _machine?.FramesExecuted ?? 0;
+        _input.Recorder = _inputRecorder;
+        StatusText.Text = $"Recording input to {_inputRecordingPath}.";
+        _logger.ForCategory(LogCategory.Input).Information(
+            "Input recording started: {Path}.",
+            _inputRecordingPath);
+    }
+
+    private void StopInputRecording(bool save)
+    {
+        _input.Recorder = null;
+        _input.FrameProvider = null;
+        InputRecorder? recorder = _inputRecorder;
+        var path = _inputRecordingPath;
+        _inputRecorder = null;
+        _inputRecordingPath = null;
+        RecordInputMenuItem.IsChecked = false;
+        if (!save || recorder is null || path is null)
+        {
+            return;
+        }
+
+        try
+        {
+            recorder.Save(path);
+            StatusText.Text = $"Input recorded: {path} ({recorder.Frames} frames, {recorder.EntryCount} entries).";
+            _logger.ForCategory(LogCategory.Input).Information(
+                "Input recording saved: {Path} ({Frames} frames, {Entries} entries).",
+                path,
+                recorder.Frames,
+                recorder.EntryCount);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            StatusText.Text = $"Input recording could not be saved: {exception.Message}";
+            _logger.ForCategory(LogCategory.Input).Warning(
+                exception,
+                "Input recording save failed: {Path}.",
+                path);
+        }
     }
 
     private void SaveNativeScreenshot(string path)
@@ -1383,6 +1463,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void RecreateMachine(bool highResolution)
     {
+        StopInputRecording(save: true);
         var biosPath = _settings.BiosPath;
         var discPath = _settings.DiscPath;
         if (string.IsNullOrWhiteSpace(biosPath) || !File.Exists(biosPath))
@@ -1700,6 +1781,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         _shuttingDown = true;
+        StopInputRecording(save: true);
         _logTimer.Stop();
         _runner?.Dispose();
         _runner = null;
@@ -1801,9 +1883,35 @@ public partial class MainWindow : Window, IDisposable
             case HotkeyAction.Reset:
                 ResetMachine();
                 break;
+            case HotkeyAction.SlotPrevious:
+                SelectPreviousSlot();
+                break;
+            case HotkeyAction.SlotNext:
+                SelectNextSlot();
+                break;
+            case HotkeyAction.FrameAdvance:
+                AdvanceFrame();
+                break;
             default:
                 break;
         }
+    }
+
+    private void AdvanceFrame()
+    {
+        if (_machine is null || _runner is null)
+        {
+            StatusText.Text = "Open a 3DO BIOS before advancing a frame.";
+            return;
+        }
+
+        if (_running)
+        {
+            PauseEmulation(showLibrary: false);
+        }
+
+        _runner.StepFrame();
+        StatusText.Text = $"Advanced to frame {_machine.FramesExecuted}.";
     }
 
     /// <inheritdoc />

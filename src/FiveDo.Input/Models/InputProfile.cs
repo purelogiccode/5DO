@@ -23,6 +23,9 @@ public sealed class InputProfile
         ["Fullscreen"] = "F11",
         ["Pause"] = "Escape",
         ["Reset"] = "F10",
+        ["SlotPrevious"] = "F6",
+        ["SlotNext"] = "F7",
+        ["FrameAdvance"] = "F9",
     };
 
     /// <summary>Creates the default input profile.</summary>

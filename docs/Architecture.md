@@ -85,7 +85,7 @@
 | `FiveDo.Cdrom` | Mitsumi/MEI CD-ROM device, command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice` | Core |
 | `FiveDo.Storage` | Disc image readers (ISO/BIN/CUE/CHD), bounded host prefetch, BIOS validation, NVRAM file format, game database, game ID | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `VolumeHeader`, `GameDatabase`, `GameId` | Core, CHDSharp |
 | `FiveDo.Audio` | Sample format conversion, ring buffer, null/WAV/live sinks, soft limiter, PCM tap, statistics, WAV analysis | `AudioRingBuffer`, `AudioPipeline`, `NullAudioSink`, `WavAudioSink`, `AudioSoftLimiter`, `AudioTap`, `AudioStatistics`, `AudioAnalyzer`, `OpenAlAudioOutput` | Core, Silk.NET.OpenAL |
-| `FiveDo.Input` | Controller state, PBUS encoding, input profiles, keyboard/gamepad abstractions, scripts | `ControllerState`, `ControllerButton`, `PbusEncoder`, `PbusSource`, `InputProfile`, `PlayerProfile`, `KeyboardInputMapper`, `InputManager`, `GamepadMapper`, `InputScript` | Core |
+| `FiveDo.Input` | Controller state, PBUS encoding, input profiles, keyboard/gamepad abstractions, scripts, input recording | `ControllerState`, `ControllerButton`, `PbusEncoder`, `PbusSource`, `InputProfile`, `PlayerProfile`, `KeyboardInputMapper`, `InputManager`, `GamepadMapper`, `InputScript`, `InputRecorder` | Core |
 | `FiveDo.Diagnostics` | Serilog configuration, in-memory log viewer sink, bug reporting, launch statistics, tracing, disassembly helpers, frame timing statistics, memory/frame dumpers, benchmark gates | `LoggingSetup`, `AppLogging`, `InMemorySerilogSink`, `BugReportSink`, `BugReportFormatter`, `ApplicationStatsClient`, `ApplicationStatsOptions`, `CpuTracer`, `MemoryDumper`, `FrameDumper`, `PngDumper`, `FrameTiming`, `BenchmarkGate`, `BenchmarkComparison` | Core, Serilog |
 | `FiveDo.Machine` | Machine composition root, frame loop, Quartz scheduler, device wiring, state sections | `FiveDoMachine`, `Quartz` | Core + all chips + Diagnostics |
 | `FiveDo.Host` | Core thread lifecycle, audio-derived frame pacing, BIOS/disc/NVRAM loading, audio/input backends, save slots, settings, library, fixes, autopilot | `CoreRunner`, `AudioFramePacer`, `AppSettings`, `AppSettingsStore`, `NvramStore`, `SaveStateSlotManager`, `StateInspector`, `GameLibraryScanner`, `GameCompatibility`, `MemoryPatch`, `RoadRashAutopilot` | Machine, Storage, Audio, Input, Video, Diagnostics |
@@ -478,7 +478,7 @@ High byte bits: `0x01` A, `0x02` Left, `0x04` Right, `0x08` Up, `0x10` Down, `0x
 - **`NvramStore`** - 32 KB NVRAM file, atomic write, 250 ms debounce, `.bad` recovery.
 - **`GameDatabase`** / **`GameCompatibility`** - MD5-of-first-two-sectors game ID, metadata, and fix-mode mapping.
 - **`AudioPipeline`** (`FiveDo.Audio`) - reusable ring sink; the live path uses `OpenAlAudioOutput`/`WavAudioSink` directly.
-- **`InputManager`** / **`KeyboardInputMapper`** / **`PlatformGamepadBackend`** - keyboard/gamepad mapping and PBUS encoding.
+- **`InputManager`** / **`KeyboardInputMapper`** / **`PlatformGamepadBackend`** - keyboard/gamepad mapping and PBUS encoding. `InputRecorder` optionally captures player-1 states as an `InputScript` document for replay.
 - **`SaveStateSlotManager`** - slots, metadata, thumbnails, atomic writes; **`StateInspector`** reads headers/sections.
 - **`AppSettings` / `AppSettingsStore`** - source-generated JSON settings and atomic writes.
 - **`GameLibraryScanner`** - scans folders for supported disc images and reads metadata.

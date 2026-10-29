@@ -1,6 +1,8 @@
 # Next Session Handoff
 
-**Date:** 2026-10-29 (twenty-fourth pass: first-party Opera file-system parsing for
+**Date:** 2026-10-29 (twenty-fifth pass: F6/F7 slot selection, F9 single-frame
+advance, and desktop input recording to a replayable `--input-script` file; the
+twenty-fourth pass added first-party Opera file-system parsing for
 ISO/BIN/CUE/CHD in `fs list`/`fs extract`, multi-block directory chaining, and
 `burst`/`gap` file reads; the twenty-third pass added native Win32 Vulkan swapchain and
 `--vk-window-probe`, `PreferOpenGl` enforcement, custom aspect editing, frontend AOT
@@ -21,7 +23,7 @@ is made current on the audio thread, underruns are padded/counted, and the CLI h
 `--audio openal`, `--volume`, `--realtime`, and `audio analyze <wav> --json`. Core
 frames are paced by `AudioFramePacer` (audio clock with a 60 Hz fallback), WAV writes
 are buffered with streaming peak/RMS/clipping statistics, and the NativeAOT CLI now
-opens the live backend. **890 tests pass.** The twenty-third pass added native Win32
+opens the live backend. **904 tests pass.** The twenty-third pass added native Win32
 Vulkan swapchain presentation and `--vk-window-probe` (4K FIFO: 1.34/1.43 ms GPU,
 5.99/6.24 ms present including the display wait, 0 managed bytes/frame), honored
 `PreferOpenGl` as an explicit CPU mode, added custom aspect editing, validated the
@@ -43,8 +45,9 @@ the portable archives, the swap-interval/GPU-probe work, the ANGLE/GLES parity w
 this audio pass, the 2026-10-29 release-hardening pass (save-state disc warnings,
 console hotkeys, ISO/BIN `disc tracks`, and OpenAL Soft LGPL packaging), the
 twenty-first Vulkan xBR/FSR/HQx filter pass, the twenty-second save-state
-compression pass, the twenty-third Vulkan-window/release-polish pass, or the
-twenty-fourth Opera file-system pass. The remaining
+compression pass, the twenty-third Vulkan-window/release-polish pass, the
+twenty-fourth Opera file-system pass, or the twenty-fifth hotkey/input-recording
+pass. The remaining
 **release** work is the legal/attribution review
 (now including OpenAL Soft's LGPL runtime), a stability soak, release
 packaging/notes, and optional Linux/macOS launch validation. GitHub Actions is
@@ -852,7 +855,7 @@ validation.
   and Theme Park ISOs also parse (260/247/291 entries). `OperaFileSystemTests` covers
   nested directories, multi-block directories, offsets/EOF, burst/gap reads, special
   entries, invalid volume headers, and traversal names; `FsListAndExtract_ReadAnIsoImage`
-  covers the CLI path. **890 tests pass.**
+  covers the CLI path. **904 tests pass.**
 - **Do not** re-add the `VideoGameFileSystemParser` dependency or make `fs` CHD-only
   again. Extend the parser with new on-disc evidence only.
 

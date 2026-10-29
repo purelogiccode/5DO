@@ -31,7 +31,7 @@
                           ToolTip.Tip="Close 5DO and return to the desktop." />
             </MenuItem>
 
-            <MenuItem Header="Emulation" ToolTip.Tip="Start, pause, reset, save/load, capture screenshots, and toggle fullscreen.">
+            <MenuItem Header="Emulation" ToolTip.Tip="Start, pause, reset, save/load, record input, capture screenshots, and toggle fullscreen.">
                 <MenuItem x:Name="PlayPauseMenuItem" Header="Start" Click="OnPlayPause"
                           ToolTip.Tip="Start or pause the emulated console." />
                 <MenuItem x:Name="StopMenuItem" Header="Stop" Click="OnStop"
@@ -52,6 +52,9 @@
                 <Separator />
                 <MenuItem Header="Screenshot" Click="OnScreenshot"
                           ToolTip.Tip="Save a PNG screenshot of the current frame." />
+                <MenuItem x:Name="RecordInputMenuItem" Header="Record Input" ToggleType="CheckBox"
+                          Click="OnRecordInput"
+                          ToolTip.Tip="Record player-1 input to a replay script that the CLI can run with --input-script." />
                 <Separator />
                 <MenuItem Header="Fullscreen" Click="OnFullscreen"
                           ToolTip.Tip="Toggle fullscreen presentation." />

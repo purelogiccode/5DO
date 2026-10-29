@@ -5,7 +5,8 @@
 distribution/attribution sign-off are still pending. See
 [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 **Post-rc.1:** the 2026-10-28 pass added the OpenAL crackle fix, PCM tap, and FSR 1.0;
-the 2026-10-29 passes added the save-state disc warning, console hotkeys, ISO/BIN
+the 2026-10-29 passes added the save-state disc warning, console hotkeys (including
+F6/F7 slot selection and F9 frame advance), desktop input recording, ISO/BIN
 `disc tracks`, the OpenAL Soft LGPL notice/source offer, the optional offscreen Vulkan
 backend, Vulkan xBR/FSR GPU filters, a native Win32 Vulkan swapchain probe, explicit
 `PreferOpenGl` handling, custom aspect editing, frontend AOT audio validation, and
@@ -94,7 +95,7 @@ The release checklist is in [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 - [x] `dotnet build 5DO.sln -c Release`: 0 warnings, 0 errors.
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`: 798/798
-      passing at rc.1 (882/882 after the 2026-10-29 Vulkan-window/release-polish pass).
+      passing at rc.1 (904/904 after the 2026-10-29 hotkey/input-recording pass).
 - [x] Synthetic benchmark budget gate: 2.28 ms/frame core mean, 4.03 ms core p99,
       4.66 ms total p99, 0 managed bytes/frame.
 - [x] Trimmed win-x64 CLI and frontend smoke tests (`selftest`, `bench`, `info`,

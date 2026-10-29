@@ -146,6 +146,25 @@ public sealed class CoreRunner : IDisposable
         }
     }
 
+    /// <summary>
+    /// Runs exactly one emulated frame on the caller's thread.
+    /// </summary>
+    /// <remarks>
+    /// The loop is paused for the duration of the frame and restored to its previous
+    /// state afterward. The desktop shell pauses before calling this so frame advance
+    /// leaves emulation stopped on the new frame.
+    /// </remarks>
+    public void StepFrame()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        Invoke(() =>
+        {
+            _machine.RunFrame();
+            Interlocked.Increment(ref _frames);
+            _frameSink?.Invoke(_machine.Frame);
+        });
+    }
+
     /// <inheritdoc />
     public void Dispose()
     {

@@ -53,14 +53,21 @@ still change.
   parsing, split-frame xBR/FSR orientation at 320x240 and 640x480, and opt-in
   `FIVEDO_VULKAN_TESTS=1` CPU-parity/source-size-change and 4K/xBR/FSR probe
   integration tests.
+- Input recording: **Emulation > Record Input** captures player-1 input to a
+  frame-ordered script while a game runs and saves it to the configured save-state
+  directory (or the default 5DO directory) as `<game>-<timestamp>-input.txt`. The
+  recording coalesces unchanged frames and is directly replayable with the CLI's
+  `--input-script` option.
 - Save-state disc identity check: loading a state now reports a warning when the
   disc/game hash stored in the state header differs from the disc currently
   inserted. The state still loads; the CLI `run`/`trace` commands, the desktop
   Load State action, and the slot manager all pass the current game ID through.
 - Console hotkeys: the desktop shell now dispatches the `InputProfile.Hotkeys`
-  bindings (default F5 save, F8 load, F10 reset, F11 fullscreen, F12 screenshot,
-  Escape pause) before forwarding a key to the emulated pad. `HotkeyRouter`
-  resolves the bindings case-insensitively and is unit-tested.
+  bindings (default F5 save, F8 load, F6/F7 previous/next slot, F9 frame advance,
+  F10 reset, F11 fullscreen, F12 screenshot, Escape pause) before forwarding a key
+  to the emulated pad. F9 uses `CoreRunner.StepFrame` to run exactly one frame and
+  leaves emulation paused. `HotkeyRouter` resolves the bindings case-insensitively
+  and is unit-tested.
 - `disc tracks` now reports ISO, BIN, and CUE images as a single 2048-byte
   user-data track in addition to the existing CHD track list, so the command no
   longer requires a CHD container.

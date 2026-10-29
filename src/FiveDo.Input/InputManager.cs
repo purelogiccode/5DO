@@ -128,6 +128,8 @@ public sealed class InputManager : IPbusSource
     private readonly IGamepadBackend _gamepad;
     private readonly ControllerState[] _states = new ControllerState[PbusEncoder.MaxControllers];
     private int _controllerCount = 1;
+    private InputRecorder? _recorder;
+    private Func<long>? _frameProvider;
 
     /// <summary>Initializes a new instance of the <see cref="InputManager"/> class.</summary>
     /// <param name="profile">Input profile whose player bindings drive the keyboard.</param>
@@ -141,6 +143,24 @@ public sealed class InputManager : IPbusSource
 
     /// <summary>Gets the keyboard mapper for the UI layer.</summary>
     public KeyboardInputMapper Keyboard => _keyboard;
+
+    /// <summary>Gets or sets an optional recorder for player 1 input.</summary>
+    /// <remarks>
+    /// The recorder is invoked from the emulation thread once per <see cref="GetPbusData"/>
+    /// call. Set it before starting emulation and clear it before disposing the recorder.
+    /// </remarks>
+    public InputRecorder? Recorder
+    {
+        get => Volatile.Read(ref _recorder);
+        set => Volatile.Write(ref _recorder, value);
+    }
+
+    /// <summary>Gets or sets the frame number provider used by <see cref="Recorder"/>.</summary>
+    public Func<long>? FrameProvider
+    {
+        get => Volatile.Read(ref _frameProvider);
+        set => Volatile.Write(ref _frameProvider, value);
+    }
 
     /// <summary>Gets or sets the connected controller count.</summary>
     public int ControllerCount
@@ -169,6 +189,13 @@ public sealed class InputManager : IPbusSource
     public int GetPbusData(Span<byte> destination)
     {
         Update();
+        InputRecorder? recorder = Volatile.Read(ref _recorder);
+        if (recorder is not null)
+        {
+            Func<long>? frameProvider = Volatile.Read(ref _frameProvider);
+            recorder.Record(frameProvider?.Invoke() ?? 0, _states[0]);
+        }
+
         PbusEncoder.Encode(_states.AsSpan(0, Volatile.Read(ref _controllerCount)), destination);
         return PbusEncoder.PacketSize;
     }

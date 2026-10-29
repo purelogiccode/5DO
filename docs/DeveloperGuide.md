@@ -105,7 +105,7 @@ FiveDo.Cdrom --------------> Core
 | `FiveDo.Cdrom` | MEI CD-ROM command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice` | Core |
 | `FiveDo.Storage` | ISO/BIN/CUE/CHD readers, prefetch, BIOS/NVRAM, volume header, game ID/database | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `VolumeHeader`, `GameId`, `GameDatabase` | Core, CHDSharp |
 | `FiveDo.Audio` | Ring buffer, WAV capture, OpenAL output, soft limiter, tap, analysis | `AudioRingBuffer`, `AudioPipeline`, `WavAudioSink`, `OpenAlAudioOutput`, `AudioSoftLimiter`, `AudioTap`, `AudioAnalyzer`, `AudioStatistics` | Core, Silk.NET.OpenAL |
-| `FiveDo.Input` | Controller state, PBUS encoding, profiles, scripts, keyboard/gamepad mapping | `ControllerState`, `PbusEncoder`, `InputProfile`, `KeyboardInputMapper`, `InputManager`, `GamepadMapper`, `InputScript` | Core |
+| `FiveDo.Input` | Controller state, PBUS encoding, profiles, scripts, keyboard/gamepad mapping, input recording | `ControllerState`, `PbusEncoder`, `InputProfile`, `KeyboardInputMapper`, `InputManager`, `GamepadMapper`, `InputScript`, `InputRecorder` | Core |
 | `FiveDo.Diagnostics` | PNG/frame dumps, CPU tracing, timing, benchmark gates | `PngDumper`, `FrameDumper`, `CpuTracer`, `FrameTiming`, `BenchmarkGate`, `BenchmarkComparison` | Core |
 | `FiveDo.Machine` | Composition root, frame loop, Quartz scheduler, state sections, device wiring | `FiveDoMachine`, `Quartz` | Core + chips |
 | `FiveDo.Host` | Core thread/pacing, settings, BIOS/disc/NVRAM loading, audio/input backends, save slots, library, fixes, autopilot | `CoreRunner`, `AudioFramePacer`, `AppSettings`, `AppSettingsStore`, `NvramStore`, `SaveStateSlotManager`, `StateInspector`, `GameLibraryScanner`, `GameCompatibility`, `MemoryPatch`, `RoadRashAutopilot` | Core, Machine, Storage, Audio, Input, Video, Diagnostics |
@@ -309,10 +309,14 @@ lines from the current VDLP state for the optional multitask path.
 - `ControllerButton` flags map to the two PBUS bytes.
 - PBUS order is 1, 3, 2, 5, 4, 6; active high byte has bit 7 set.
 - `InputScript` frames are absolute; `--script-base state` offsets.
+- `InputRecorder` coalesces unchanged player-1 states into the same script format;
+  `InputManager.Recorder` is called on the emulation thread and `FrameProvider`
+  supplies the frame number. The desktop writes `<game>-<timestamp>-input.txt`.
 - Keyboard/gamepad profiles are per-player; gamepad fallbacks for sticks/triggers.
 - `HotkeyRouter` resolves the persisted console hotkeys; the shell dispatches
   them before forwarding a key to the emulated pad. F11 works from the library,
-  and Escape leaves fullscreen before the pause action runs.
+  and Escape leaves fullscreen before the pause action runs. F6/F7 change slots;
+  F9 steps one frame through `CoreRunner.StepFrame` and leaves emulation paused.
 
 ### Diagnostics
 
