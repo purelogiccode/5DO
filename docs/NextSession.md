@@ -1,7 +1,9 @@
 # Next Session Handoff
 
-**Date:** 2026-10-28 (eighteenth pass: Serilog logging and bug reporting; the
-seventeenth pass added the OpenAL crackle fix, PCM tap, and race profile)
+**Date:** 2026-10-29 (nineteenth pass: save-state disc warnings, console hotkeys,
+ISO/BIN `disc tracks`, and OpenAL Soft LGPL packaging; the eighteenth pass added
+Serilog logging and bug reporting; the seventeenth pass added the OpenAL crackle
+fix, PCM tap, and race profile)
 **Goal:** make the audio path correct and testable. The sixteenth pass replaced the
 FreeDO 8.24 DSP sample accumulator with an exact 44,100-samples-per-ARM-second clock
 (600 frames now produce 441,015-441,020 samples / 10.000 s instead of 444,097 /
@@ -12,14 +14,15 @@ is made current on the audio thread, underruns are padded/counted, and the CLI h
 `--audio openal`, `--volume`, `--realtime`, and `audio analyze <wav> --json`. Core
 frames are paced by `AudioFramePacer` (audio clock with a 60 Hz fallback), WAV writes
 are buffered with streaming peak/RMS/clipping statistics, and the NativeAOT CLI now
-opens the live backend. **821 tests pass.** The eighteenth pass replaced the custom
+opens the live backend. **845 tests pass.** The eighteenth pass replaced the custom
 logger with Serilog and added the asynchronous bug-report sink. The seventeenth pass fixed live OpenAL
 crackle by giving the fill loop real buffer ownership, added the `FIVEDO_AUDIO_TAP`
 PCM/timing recorder and overlay peak meter, added the FSR 1.0 filter, and recorded
 the Road Rash 3D-race profile. Do not redo the Serilog/bug-report work, the trim-safe JSON work, the
 trimmed CLI/frontend publishes, the frontend smoke test, the benchmark comparison,
 the portable archives, the swap-interval/GPU-probe work, the ANGLE/GLES parity work,
-or this audio pass. The remaining **release** work is the legal/attribution review
+this audio pass, or the 2026-10-29 release-hardening pass (save-state disc warnings,
+console hotkeys, ISO/BIN `disc tracks`, and OpenAL Soft LGPL packaging). The remaining **release** work is the legal/attribution review
 (now including OpenAL Soft's LGPL runtime), a stability soak, release
 packaging/notes, and optional Linux/macOS launch validation. Full-race completion,
 extra title scripts, GLES 3.1/Pi/DPI, Tier B timing, arm64/installers, frontend AOT
@@ -685,6 +688,34 @@ runtime or move the context-current call back to the UI thread.
 - **Tests.** 818 pass. Coverage includes the in-memory sink, category/level/search
   filter, the required bug-report blocks, and an HTTP handler test proving the
   warning payload reaches the configured endpoint with the `X-API-KEY` header.
+
+### 1.23 Nineteenth pass: release hardening (2026-10-29)
+
+- **Save-state disc identity.** `FiveDoMachine.LoadState`/`LoadStateFromFile` accept
+  the current game ID and add "State disc hash differs from the loaded disc." to
+  `StateWarnings` when both hashes are present and differ. The state still loads.
+  The CLI `run`/`trace` commands, `SaveStateSlotManager.Load`, and the desktop
+  Load State/Slots actions pass the current game ID; the desktop shows the warning
+  in the status line and log. Tests cover mismatch, match, and empty-hash cases.
+- **Console hotkeys.** `HotkeyRouter` resolves the persisted `InputProfile.Hotkeys`
+  action names (SaveState, LoadState, Screenshot, Fullscreen, Pause, Reset) against
+  a key name, case-insensitively, and ignores unknown action names. The shell
+  dispatches the resolved action before forwarding the key to the emulated pad:
+  F5 save, F8 load, F10 reset, F11 fullscreen, F12 screenshot, Escape pause. F11
+  works from the library; Escape leaves fullscreen first.
+- **`disc tracks` for ISO/BIN/CUE.** The command still prints the CHD track table;
+  other containers now print one 2048-byte user-data track with
+  `format=<iso|bin|cue>`, `dataSize`, `frames`, and `start=0`. In-process CLI tests
+  cover ISO and raw BIN images.
+- **OpenAL Soft LGPL packaging.** `docs/OpenALSoft.md` records the LGPL notice,
+  copyright, exact upstream 1.23.1 source, a three-year written source offer, and
+  relinking/replacement instructions. `docs/licenses/OpenAL-Soft-COPYING.txt`
+  contains the complete LGPL-2.0 text. `packaging/package.ps1` copies both into
+  every portable archive and names them in `PACKAGE.txt`; the win-x64 archive was
+  inspected and the extracted CLI passed `--version` and `selftest --json`.
+- **Tests.** 845 pass (was 821). New coverage: three disc-hash warning cases, one
+  slot-manager warning case, eighteen hotkey-router cases, and two `disc tracks`
+  CLI cases.
 
 ---
 

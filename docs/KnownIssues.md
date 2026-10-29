@@ -46,19 +46,19 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 ## Tooling and UI
 
-- The input profile stores default F5/F8/F12/F10 hotkeys, but the shell currently
-  dispatches only F11/Escape. Use the toolbar/Emulation menu for save/load/screenshot/
-  reset.
 - `AppSettings.PreferOpenGl` is persisted but not consulted; the shell always tries
   OpenGL and falls back to CPU.
-- `fs list`/`fs extract` and `disc tracks` currently support CHD only. Use `disc dump`
-  for raw ISO/BIN inspection.
+- `fs list`/`fs extract` currently support CHD only. Use `disc dump` or
+  `disc tracks` for raw ISO/BIN inspection; `disc tracks` now reports ISO, BIN,
+  and CUE images as a single 2048-byte user-data track.
 - CLI JSON casing is split: `state inspect`/`state slots` are PascalCase for historical
   compatibility; other commands are camelCase.
 - A save state is about 25 MB because it includes the full 19 MB RAM backing and the
   VDL frame. Ten slots use about 250 MB; the 100-slot maximum uses about 2.5 GB.
-- The save-state header records the disc hash but the loader does not reject a different
-  disc; only BIOS/emulator-version mismatches produce warnings. Verify slot metadata.
+- The save-state header records the disc hash. Loading with a different disc now adds
+  a warning to `StateWarnings` (surfaced by the CLI and the desktop status line) but
+  still loads; only BIOS/emulator-version mismatches are otherwise warned about.
+  Verify slot metadata before continuing a run.
 - Some code comments are stale (for example `EmulatorTuning.HighResolution` says the
   mode is reserved even though it is implemented). Treat behavior/tests as authoritative.
 
@@ -78,8 +78,11 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
   starts/renders but its audio path is not yet validated.
 - The macOS gamepad backend is not implemented.
 - The bundled OpenAL Soft 1.23.1 runtime adds an LGPL-2.0-or-later binary
-  distribution obligation to the release; see [`Licensing.md`](Licensing.md) and
-  [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
+  distribution obligation to the release. The notice, complete license text,
+  three-year written source offer, and relinking instructions ship in
+  [`OpenALSoft.md`](OpenALSoft.md) and
+  [`licenses/OpenAL-Soft-COPYING.txt`](licenses/OpenAL-Soft-COPYING.txt); the
+  owner/legal sign-off remains in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 
 ## Audio
 

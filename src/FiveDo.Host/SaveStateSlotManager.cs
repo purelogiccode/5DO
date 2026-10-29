@@ -132,9 +132,13 @@ public sealed class SaveStateSlotManager
     /// <summary>Loads a slot into the machine.</summary>
     /// <param name="machine">Machine to load.</param>
     /// <param name="slot">Slot to read, or <see langword="null"/> for <see cref="CurrentSlot"/>.</param>
+    /// <param name="expectedGameId">
+    /// Optional game ID of the disc currently inserted. A mismatch is reported through
+    /// <see cref="FiveDoMachine.StateWarnings"/> rather than rejected.
+    /// </param>
     /// <returns>The loaded slot information.</returns>
     /// <exception cref="FileNotFoundException">Thrown when the slot has no state file.</exception>
-    public SaveStateSlotInfo Load(FiveDoMachine machine, int? slot = null)
+    public SaveStateSlotInfo Load(FiveDoMachine machine, int? slot = null, string? expectedGameId = null)
     {
         ArgumentNullException.ThrowIfNull(machine);
         var target = slot ?? CurrentSlot;
@@ -145,7 +149,7 @@ public sealed class SaveStateSlotManager
             throw new FileNotFoundException($"Save slot {target} is empty.", path);
         }
 
-        machine.LoadStateFromFile(path);
+        machine.LoadStateFromFile(path, expectedGameId);
         CurrentSlot = target;
         return Inspect(target);
     }

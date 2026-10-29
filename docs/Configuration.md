@@ -261,10 +261,11 @@ Explicit stick/trigger bindings win over the fallback. The default radial dead z
 0.5; the default trigger threshold is 0.5.
 
 **Hotkeys:** the profile stores default F5 (save), F8 (load), F12 (screenshot), F11
-(fullscreen), Escape (pause), and F10 (reset). The current shell dispatches **F11** and
-**Escape** (fullscreen exit) directly; save/load/screenshot/reset are available from
-the toolbar and **Emulation** menu. Do not assume F5/F8/F12/F10 are active in this
-release candidate.
+(fullscreen), Escape (pause), and F10 (reset). The shell dispatches these bindings
+before forwarding a key to the emulated pad; F11 also works from the library, and
+Escape leaves fullscreen before it reaches the pause action. `HotkeyRouter` resolves
+the persisted action names case-insensitively, so a custom key assignment in the
+profile is honored. Unknown action names and unbound keys are ignored.
 
 The binding editor reports conflicts when one key/control is bound to multiple buttons
 or one hotkey is bound to multiple actions.

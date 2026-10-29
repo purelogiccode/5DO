@@ -74,9 +74,13 @@ Recommended title statuses:
       Silk.NET, Serilog and its console/file sinks, the bundled OpenAL Soft 1.23.1
       runtime, and other NuGet dependencies. See
       [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
-- [ ] OpenAL Soft LGPL-2.0-or-later obligations (notice, corresponding source
+- [x] OpenAL Soft LGPL-2.0-or-later obligations (notice, corresponding source
       offer, relinking rights) are included in the release decision. The runtime is
-      now bundled for all six RIDs.
+      bundled for all six RIDs. Evidence: `docs/OpenALSoft.md` records the notice,
+      the exact upstream 1.23.1 source, the three-year written source offer, and
+      relinking instructions; `docs/licenses/OpenAL-Soft-COPYING.txt` contains the
+      complete LGPL-2.0 text; `packaging/package.ps1` copies both into every
+      archive, and the win-x64 archive was inspected after repackaging.
 - [x] About dialog and CLI `--version`/license output are current.
 - [x] No BIOS ROM, disc image, extracted asset, WAV capture, or copyrighted game
       content is tracked in the repository; packaging uses only publish output plus
@@ -94,7 +98,7 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - [x] `dotnet build 5DO.sln -c Release` passes with 0 warnings and 0 errors
       (1.0.0-rc.1).
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release` passes:
-      821/821 with 1.0.0-rc.1 (after the 2026-10-28 statistics pass).
+      845/845 with 1.0.0-rc.1 (after the 2026-10-29 release-hardening pass).
 - [x] `dotnet format 5DO.sln --verify-no-changes` passes.
 - [ ] CI is green on the supported runners. (Local gates pass; the GitHub Actions
       workflow was not re-run in this session.)
@@ -180,8 +184,9 @@ A new crash, silent corruption, or save-state regression is not.
 - [x] Publish each supported RID with the release version (win-x64 validated).
 - [x] Build portable archives with `packaging/package.ps1`.
 - [x] Each archive contains the executable, `README.md`, `LICENSE`,
-      `THIRD-PARTY-NOTICES.md`, `docs/Licensing.md`, `docs/ReleaseLegalReview.md`, the
-      release notes, and `PACKAGE.txt`.
+      `THIRD-PARTY-NOTICES.md`, `docs/Licensing.md`, `docs/ReleaseLegalReview.md`,
+      `docs/OpenALSoft.md`, `docs/licenses/OpenAL-Soft-COPYING.txt`, the release
+      notes, and `PACKAGE.txt`.
 - [x] `PACKAGE.txt` records component, RID, version, commit, and UTC build time
       (repackaged after the release commit so the commit field is final).
 - [x] No PDBs or copyrighted content in release archives.

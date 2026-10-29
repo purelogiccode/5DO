@@ -37,12 +37,19 @@ try {
     }
 
     $docsStaging = Join-Path $staging 'docs'
-    foreach ($docName in @('Licensing.md', 'ReleaseLegalReview.md')) {
+    foreach ($docName in @('Licensing.md', 'ReleaseLegalReview.md', 'OpenALSoft.md')) {
         $docSource = Join-Path $repoRoot "docs/$docName"
         if (Test-Path -LiteralPath $docSource) {
             New-Item -ItemType Directory -Path $docsStaging -Force | Out-Null
             Copy-Item -LiteralPath $docSource -Destination $docsStaging -Force
         }
+    }
+
+    $licensesStaging = Join-Path $docsStaging 'licenses'
+    $openAlLicense = Join-Path $repoRoot 'docs/licenses/OpenAL-Soft-COPYING.txt'
+    if (Test-Path -LiteralPath $openAlLicense) {
+        New-Item -ItemType Directory -Path $licensesStaging -Force | Out-Null
+        Copy-Item -LiteralPath $openAlLicense -Destination $licensesStaging -Force
     }
 
     $releaseNotes = Get-ChildItem -LiteralPath (Join-Path $repoRoot 'docs') `
@@ -88,7 +95,8 @@ try {
         "built: $([DateTimeOffset]::UtcNow.ToString('u'))"
         ''
         'BIOS ROMs and game images are not included.'
-        'See README.md, LICENSE, THIRD-PARTY-NOTICES.md, and docs/Licensing.md.'
+        'See README.md, LICENSE, THIRD-PARTY-NOTICES.md, docs/Licensing.md, and docs/OpenALSoft.md.'
+        'The bundled OpenAL Soft runtime is LGPL-2.0-or-later; the license text is in docs/licenses/OpenAL-Soft-COPYING.txt.'
     )
     Set-Content -LiteralPath (Join-Path $staging 'PACKAGE.txt') -Value $manifest -Encoding utf8NoBOM
 

@@ -8,11 +8,13 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-28, 1.0.0-rc.1 release preparation, seventeenth pass):**
+**Current position (2026-10-29, 1.0.0-rc.1 release preparation, nineteenth pass):**
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **821 tests pass.** The seventeenth pass fixed the remaining live OpenAL
+prototype. **845 tests pass.** The nineteenth pass added save-state disc-identity
+warnings, console hotkey dispatch, ISO/BIN/CUE `disc tracks`, and the OpenAL Soft
+LGPL notice/source offer in the portable archives. The seventeenth pass fixed the remaining live OpenAL
 crackle (buffer ownership), added the `FIVEDO_AUDIO_TAP` PCM/timing tap and overlay
 peak meter, added the opt-in AMD FSR 1.0 EASU/RCAS filter, and measured Road Rash's 3D
 race at 5.46 ms/frame total (p99 13.14 ms, 0 bytes/frame). The sixteenth pass corrected the DSP sample clock to

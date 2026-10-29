@@ -101,6 +101,57 @@ public sealed class CliProcessTests
         Assert.Contains("fps:", result.Output, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void DiscTracks_ReportsAnIsoImage()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fivedo-cli-{Guid.NewGuid():N}.iso");
+        try
+        {
+            File.WriteAllBytes(path, new byte[3 * 2048]);
+
+            CliResult result = Invoke("disc", "tracks", path);
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("track 1:", result.Output, StringComparison.Ordinal);
+            Assert.Contains("format=iso", result.Output, StringComparison.Ordinal);
+            Assert.Contains("dataSize=6144", result.Output, StringComparison.Ordinal);
+            Assert.Contains("frames=3", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void DiscTracks_ReportsARawBinImage()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fivedo-cli-{Guid.NewGuid():N}.bin");
+        try
+        {
+            var image = new byte[2 * 2352];
+            image[0] = 0x00;
+            for (var i = 1; i <= 10; i++)
+            {
+                image[i] = 0xFF;
+            }
+
+            image[11] = 0x00;
+            image[15] = 1;
+            File.WriteAllBytes(path, image);
+
+            CliResult result = Invoke("disc", "tracks", path);
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("format=bin", result.Output, StringComparison.Ordinal);
+            Assert.Contains("frames=2", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     private static CliResult Invoke(params string[] args)
     {
         TextWriter previousOut = Console.Out;

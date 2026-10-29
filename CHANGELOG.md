@@ -7,6 +7,22 @@ still change.
 
 ### Added
 
+- Save-state disc identity check: loading a state now reports a warning when the
+  disc/game hash stored in the state header differs from the disc currently
+  inserted. The state still loads; the CLI `run`/`trace` commands, the desktop
+  Load State action, and the slot manager all pass the current game ID through.
+- Console hotkeys: the desktop shell now dispatches the `InputProfile.Hotkeys`
+  bindings (default F5 save, F8 load, F10 reset, F11 fullscreen, F12 screenshot,
+  Escape pause) before forwarding a key to the emulated pad. `HotkeyRouter`
+  resolves the bindings case-insensitively and is unit-tested.
+- `disc tracks` now reports ISO, BIN, and CUE images as a single 2048-byte
+  user-data track in addition to the existing CHD track list, so the command no
+  longer requires a CHD container.
+- OpenAL Soft LGPL compliance: `docs/OpenALSoft.md` records the notice, exact
+  upstream 1.23.1 source, three-year written source offer, and relinking/
+  replacement instructions; `docs/licenses/OpenAL-Soft-COPYING.txt` contains the
+  complete LGPL-2.0 text. `packaging/package.ps1` copies both into every portable
+  archive and lists them in `PACKAGE.txt`.
 - Root `LICENSE`: the project is now distributed under the FreeDO modified GNU LGPL,
   with the FreeDO notice reproduced verbatim, the GNU LGPL 2.1 text, and the additional
   non-commercial/attribution terms. `LICENSE` is included in portable archives.

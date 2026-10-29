@@ -377,7 +377,9 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OnPlayPause(object? sender, RoutedEventArgs e)
+    private void OnPlayPause(object? sender, RoutedEventArgs e) => TogglePlayPause();
+
+    private void TogglePlayPause()
     {
         if (_running)
         {
@@ -459,14 +461,18 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OnReset(object? sender, RoutedEventArgs e)
+    private void OnReset(object? sender, RoutedEventArgs e) => ResetMachine();
+
+    private void ResetMachine()
     {
         _runner?.Invoke(() => _machine?.Reset());
         StatusText.Text = "Reset.";
         _logger.ForCategory(LogCategory.Machine).Information("Machine reset.");
     }
 
-    private void OnSaveState(object? sender, RoutedEventArgs e)
+    private void OnSaveState(object? sender, RoutedEventArgs e) => SaveStateToCurrentSlot();
+
+    private void SaveStateToCurrentSlot()
     {
         if (_machine is null)
         {
@@ -489,7 +495,9 @@ public partial class MainWindow : Window, IDisposable
             _gameName);
     }
 
-    private void OnLoadState(object? sender, RoutedEventArgs e)
+    private void OnLoadState(object? sender, RoutedEventArgs e) => LoadStateFromCurrentSlot();
+
+    private void LoadStateFromCurrentSlot()
     {
         var slot = _slots.CurrentSlot;
         if (_machine is null || !_slots.Exists(slot))
@@ -498,9 +506,20 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        _runner!.Invoke(() => _slots.Load(_machine, slot));
-        StatusText.Text = $"State loaded: slot {slot + 1}.";
-        _logger.ForCategory(LogCategory.State).Information("State loaded from slot {Slot}.", slot + 1);
+        _runner!.Invoke(() => _slots.Load(_machine, slot, _gameId));
+        if (_machine.StateWarnings.Count > 0)
+        {
+            StatusText.Text = $"State loaded with warnings: {string.Join(" ", _machine.StateWarnings)}";
+            _logger.ForCategory(LogCategory.State).Warning(
+                "State loaded from slot {Slot} with warnings: {Warnings}",
+                slot + 1,
+                string.Join(" ", _machine.StateWarnings));
+        }
+        else
+        {
+            StatusText.Text = $"State loaded: slot {slot + 1}.";
+            _logger.ForCategory(LogCategory.State).Information("State loaded from slot {Slot}.", slot + 1);
+        }
     }
 
     private void OnPreviousSlot(object? sender, RoutedEventArgs e)
@@ -530,7 +549,9 @@ public partial class MainWindow : Window, IDisposable
         SlotText.Text = $"Slot {_slots.CurrentSlot + 1}/{_slots.SlotCount}";
     }
 
-    private void OnScreenshot(object? sender, RoutedEventArgs e)
+    private void OnScreenshot(object? sender, RoutedEventArgs e) => CaptureScreenshot();
+
+    private void CaptureScreenshot()
     {
         if (_machine is null)
         {
@@ -1232,7 +1253,7 @@ public partial class MainWindow : Window, IDisposable
             {
                 if (_machine is not null)
                 {
-                    _runner!.Invoke(() => _slots.Load(_machine, slot));
+                    _runner!.Invoke(() => _slots.Load(_machine, slot, _gameId));
                 }
             },
             slot => _slots.Delete(slot));
@@ -1611,7 +1632,11 @@ public partial class MainWindow : Window, IDisposable
     /// <inheritdoc />
     protected override void OnKeyDown(KeyEventArgs e)
     {
-        if (e.Key == Key.F11)
+        var keyName = e.Key.ToString();
+        HotkeyAction hotkey = HotkeyRouter.Resolve(_settings.Input, keyName);
+
+        // Fullscreen works from the library and game views; Escape always leaves fullscreen.
+        if (hotkey == HotkeyAction.Fullscreen)
         {
             ToggleFullscreen();
             e.Handled = true;
@@ -1632,12 +1657,46 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        if (_input.Keyboard.SetKey(e.Key.ToString(), pressed: true))
+        if (hotkey != HotkeyAction.None)
+        {
+            HandleHotkey(hotkey);
+            e.Handled = true;
+            return;
+        }
+
+        if (_input.Keyboard.SetKey(keyName, pressed: true))
         {
             e.Handled = true;
         }
 
         base.OnKeyDown(e);
+    }
+
+    private void HandleHotkey(HotkeyAction action)
+    {
+        switch (action)
+        {
+            case HotkeyAction.SaveState:
+                SaveStateToCurrentSlot();
+                break;
+            case HotkeyAction.LoadState:
+                LoadStateFromCurrentSlot();
+                break;
+            case HotkeyAction.Screenshot:
+                CaptureScreenshot();
+                break;
+            case HotkeyAction.Fullscreen:
+                ToggleFullscreen();
+                break;
+            case HotkeyAction.Pause:
+                TogglePlayPause();
+                break;
+            case HotkeyAction.Reset:
+                ResetMachine();
+                break;
+            default:
+                break;
+        }
     }
 
     /// <inheritdoc />

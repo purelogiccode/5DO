@@ -1,9 +1,10 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-28, 1.0.0-rc.1 release preparation after the eighteenth
-pass (Serilog logging and bug reporting; the seventeenth pass added the OpenAL
-crackle fix, PCM tap, FSR 1.0, and the Road Rash race profile; see `git log` for
-the exact commits).
+**Snapshot:** 2026-10-29, 1.0.0-rc.1 release preparation after the nineteenth
+pass (save-state disc warnings, console hotkeys, ISO/BIN `disc tracks`, and the
+OpenAL Soft LGPL notice/source offer; the eighteenth pass added Serilog logging
+and bug reporting; the seventeenth pass added the OpenAL crackle fix, PCM tap,
+FSR 1.0, and the Road Rash race profile; see `git log` for the exact commits).
 **Release definition:** documented compatibility, not full compatibility; see
 [`ReleaseChecklist.md`](ReleaseChecklist.md).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
@@ -71,7 +72,11 @@ This is the short, current answer to "where are we?" The documentation index is
   filters. The app accepts a positional disc path or `--disc <path>` and ships a Linux
   `.desktop` entry; Windows/macOS associations remain installer work. Per-game 4DO fix
   flags are applied automatically when a disc opens; explicit masks can be set in the
-  settings dialog.
+  settings dialog. The shell dispatches the configurable `InputProfile.Hotkeys`
+  bindings (F5 save, F8 load, F10 reset, F11 fullscreen, F12 screenshot, Escape
+  pause by default) before forwarding keys to the emulated pad. Loading a state
+  whose recorded disc hash differs from the current disc reports a warning in the
+  status line and log instead of loading silently.
 - **Logging and bug reports:** Serilog is configured once by each host through
   `FiveDo.Diagnostics.Logging`. The pipeline writes rolling daily files, stderr
   (desktop), the in-memory **Log Viewer**, and an asynchronous bug-report sink for
@@ -84,8 +89,9 @@ This is the short, current answer to "where are we?" The documentation index is
   `info` report the applied mask. Alone in the Dark's `FIX_BIT_TIMING_6` is applied
   automatically; the current 3,000-frame boot keys are in
   [`TestCorpus.md`](TestCorpus.md) 1.1 after the audio-clock rebaseline.
-- **Tooling:** CLI `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks`,
-  `fs list/extract`, `disasm`, plus KPRINT, CD, CLIO, FIQ, RAM-write watchpoints,
+- **Tooling:** CLI `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks`
+  (`disc tracks` now covers ISO/BIN/CUE as well as CHD), `fs list/extract`,
+  `disasm`, plus KPRINT, CD, CLIO, FIQ, RAM-write watchpoints,
   RAM/DSP dumps, DSP-instruction rings, CEL command/geometry traces, PBUS packet
   traces, CPU instruction-ring diagnostics, scripted input, NVRAM load/save, periodic
   frame capture (`--capture-dir`/`--capture-every`), RAM patches at run start
@@ -118,14 +124,14 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 821 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 845 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
   thumbnails, keyboard/gamepad binding capture, gamepad mapping, log filtering,
   source-generated CLI JSON contracts, frontend startup-argument parsing, renderer
-  backend selection, GPU-probe capture/parity contracts, and shader source
-  invariants.
+  backend selection, GPU-probe capture/parity contracts, shader source invariants,
+  save-state disc-hash warnings, hotkey routing, and ISO/BIN `disc tracks`.
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   Both executables are self-contained, single-file, and trimmed (`PublishTrimmed=true`,
   `TrimMode=full`). The CLI also has an opt-in NativeAOT win-x64 publish
@@ -138,7 +144,9 @@ This is the short, current answer to "where are we?" The documentation index is
   validated with synthetic/ISO/CHD runs, state roundtrips, `fs list`, and a real
   window/render pass.
   CI also creates portable `5do-<component>-<rid>.zip`/`.tar.gz` archives
-  with README/notices/licensing and a generated `PACKAGE.txt` via
+  with README/notices/licensing, the OpenAL Soft LGPL notice/source offer
+  (`docs/OpenALSoft.md`), the full LGPL-2.0 text
+  (`docs/licenses/OpenAL-Soft-COPYING.txt`), and a generated `PACKAGE.txt` via
   `packaging/package.ps1`. See [`Trimming.md`](Trimming.md) and
   [`../packaging/README.md`](../packaging/README.md).
 
@@ -307,7 +315,7 @@ way; full compatibility is not a v1 requirement.
 | M9P performance/pacing | Tier A measured, zero-allocation steady state, CI gate | 0 (Tier B/Pi and hot-path are post-1.0) |
 | M10 packaging | Six-RID CI, trimmed/AOT builds, portable archives | 0-1 dd for release packaging |
 | M11 compatibility | 12 titles boot/render; five have scripted gameplay evidence; matrix and known issues documented | 2-3 dd soak on the supported set |
-| M11 release/legal | Attribution and distribution model not decided | Legal review + ~1 dd prep |
+| M11 release/legal | OpenAL notice/source offer/relinking record and license text ship in every archive; distribution model decided | Rights-holder/owner legal sign-off |
 
 **Estimate: 5-10 developer-days plus the legal review.** That is **1-3 weeks** to a
 v1.0 release candidate with Windows x64 as the validated target and portable archives.
@@ -324,8 +332,11 @@ The project license is recorded in [`../LICENSE`](../LICENSE) as the FreeDO modi
 GNU LGPL, so release builds are non-commercial and source-available. The remaining hard
 blocker is rights-holder clarification and commercial-use sign-off: FreeDO/4DO carry a
 modified LGPL with restrictions, including a prohibition on commercial use without
-owner approval. See [`Licensing.md`](Licensing.md),
-[`ReleaseLegalReview.md`](ReleaseLegalReview.md), and
+owner approval. The OpenAL Soft LGPL-2.0-or-later binary-distribution obligation is
+handled on the engineering side: the notice, complete license text, three-year source
+offer, and relinking instructions ship in [`OpenALSoft.md`](OpenALSoft.md) and
+[`licenses/OpenAL-Soft-COPYING.txt`](licenses/OpenAL-Soft-COPYING.txt). See
+[`Licensing.md`](Licensing.md), [`ReleaseLegalReview.md`](ReleaseLegalReview.md), and
 [`../THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md).
 
 Full-compatibility work is **post-1.0**, not a release gate: finishing Road Rash's

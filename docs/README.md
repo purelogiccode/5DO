@@ -5,8 +5,8 @@ emulator for the Panasonic 3DO Interactive Multiplayer. The desktop app is Avalo
 headless tool is `FiveDo.Cli`; the emulation core is split into one assembly per console
 subsystem.
 
-**Current snapshot:** `1.0.0-rc.1`, documented-compatibility release scope, 821 tests
-passing (verified 2026-10-28). Windows x64 is the validated platform. See
+**Current snapshot:** `1.0.0-rc.1`, documented-compatibility release scope, 845 tests
+passing (verified 2026-10-29). Windows x64 is the validated platform. See
 [`Status.md`](Status.md), [`ReleaseChecklist.md`](ReleaseChecklist.md), and
 [`KnownIssues.md`](KnownIssues.md) for the honest release position.
 
@@ -78,6 +78,7 @@ passing (verified 2026-10-28). Windows x64 is the validated platform. See
 | [`Performance.md`](Performance.md) | 4K60 budgets, presentation pipeline, measured baselines, CI gates, remaining gaps. |
 | [`ReleaseChecklist.md`](ReleaseChecklist.md) | v1.0 scope, hard gates, packaging, sign-off. |
 | [`ReleaseLegalReview.md`](ReleaseLegalReview.md) | Attribution audit and remaining distribution decisions. |
+| [`OpenALSoft.md`](OpenALSoft.md) | OpenAL Soft LGPL notice, source offer, relinking/replacement rights, and packaged files. |
 | [`Licensing.md`](Licensing.md) | FreeDO/4DO/Opera licensing, third-party dependencies, trademarks. |
 | [`../LICENSE`](../LICENSE) | Project license: FreeDO modified GNU LGPL. |
 | [`../THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md) | Required attribution text for distributed builds. |

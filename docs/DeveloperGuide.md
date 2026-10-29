@@ -308,7 +308,9 @@ lines from the current VDLP state for the optional multitask path.
 - PBUS order is 1, 3, 2, 5, 4, 6; active high byte has bit 7 set.
 - `InputScript` frames are absolute; `--script-base state` offsets.
 - Keyboard/gamepad profiles are per-player; gamepad fallbacks for sticks/triggers.
-- Hotkeys are persisted but only F11/Escape are dispatched by the shell today.
+- `HotkeyRouter` resolves the persisted console hotkeys; the shell dispatches
+  them before forwarding a key to the emulated pad. F11 works from the library,
+  and Escape leaves fullscreen before the pause action runs.
 
 ### Diagnostics
 
@@ -594,23 +596,22 @@ These are real, current limitations. Do not "fix" them casually without tests.
 2. **Large save states.** The Memory section writes the entire 19 MB RAM backing,
    including high-res mirrors; the Machine section writes all 960 VDL lines. States are
    ~25 MB. Compressing or trimming mirrors is a format change.
-3. **Disc hash is recorded but not validated.** Loading a state from a different disc
-   is allowed; only the BIOS hash/emulator version produce warnings.
-4. **Hotkey map is persisted but not dispatched.** The shell handles F11/Escape; F5/F8/
-   F12/F10 are defaults in the profile but not wired.
-5. **`PreferOpenGl` is unused.** The shell always tries OpenGL then falls back; the
+3. **Disc hash is warned, not enforced.** Loading a state from a different disc adds
+   a `StateWarnings` entry but still loads; the CLI and desktop surface the warning.
+4. **`PreferOpenGl` is unused.** The shell always tries OpenGL then falls back; the
    setting is persisted for future use.
-6. **`fs`/`disc tracks` are CHD-only.** Other containers use `disc dump`/`info`.
-7. **CLI JSON casing is split.** `state inspect`/`state slots` are PascalCase for
+5. **`fs` is CHD-only.** Other containers use `disc dump`, `info`, or `disc tracks`
+   (which now reports one data track for ISO/BIN/CUE).
+6. **CLI JSON casing is split.** `state inspect`/`state slots` are PascalCase for
    historical compatibility; other commands are camelCase.
-8. **Some stale code comments.** For example, `EmulatorTuning.HighResolution` says the
+7. **Some stale code comments.** For example, `EmulatorTuning.HighResolution` says the
    mode is reserved, but it is implemented; `Vdlp` says high-res is left for M11, but it
    is implemented. Treat behavior/tests as authoritative.
-9. **Frontend NativeAOT audio is not validated.** CLI AOT live OpenAL is validated;
+8. **Frontend NativeAOT audio is not validated.** CLI AOT live OpenAL is validated;
    the frontend AOT path starts/renders but audio needs validation.
-10. **No guest JIT.** The ARM60 interpreter is the only backend; `ICpuBackend` exists
+9. **No guest JIT.** The ARM60 interpreter is the only backend; `ICpuBackend` exists
     for a future managed IL JIT.
-11. **`AudioPipeline` is not the live path.** It is a reusable host ring sink; the
+10. **`AudioPipeline` is not the live path.** It is a reusable host ring sink; the
     desktop/CLI live path uses `OpenAlAudioOutput` and `WavAudioSink` directly.
 12. **Custom aspect is not edited in Settings.** `RendererSettings.CustomAspect` exists;
     the dialog exposes the enum but no ratio editor.

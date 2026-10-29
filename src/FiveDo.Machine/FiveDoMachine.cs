@@ -283,8 +283,13 @@ public sealed class FiveDoMachine
 
     /// <summary>Loads a complete machine state from a stream.</summary>
     /// <param name="source">Source stream.</param>
+    /// <param name="expectedDiscHash">
+    /// Optional game/disc hash of the disc currently inserted. When both this value and the
+    /// state header's disc hash are present and differ, a warning is added to
+    /// <see cref="StateWarnings"/> instead of rejecting the state.
+    /// </param>
     /// <exception cref="InvalidStateException">Thrown when the state is invalid or incomplete.</exception>
-    public void LoadState(Stream source)
+    public void LoadState(Stream source, string? expectedDiscHash = null)
     {
         ArgumentNullException.ThrowIfNull(source);
         using var buffer = new MemoryStream();
@@ -314,7 +319,7 @@ public sealed class FiveDoMachine
         var armClock = reader.ReadInt32();
         var fixMode = reader.ReadUInt32();
         var biosHash = reader.ReadString();
-        _ = reader.ReadString();
+        var discHash = reader.ReadString();
         var frames = reader.ReadInt64();
 
         if (!string.Equals(emulatorVersion, FiveDoVersion.Version, StringComparison.Ordinal))
@@ -332,6 +337,13 @@ public sealed class FiveDoMachine
         if (!string.Equals(biosHash, currentBios, StringComparison.OrdinalIgnoreCase))
         {
             _stateWarnings.Add("State BIOS hash differs from the loaded BIOS.");
+        }
+
+        if (!string.IsNullOrEmpty(discHash)
+            && !string.IsNullOrEmpty(expectedDiscHash)
+            && !string.Equals(discHash, expectedDiscHash, StringComparison.OrdinalIgnoreCase))
+        {
+            _stateWarnings.Add("State disc hash differs from the loaded disc.");
         }
 
         var required = new HashSet<uint>
@@ -417,11 +429,15 @@ public sealed class FiveDoMachine
 
     /// <summary>Loads a machine state atomically from a file.</summary>
     /// <param name="path">Source path.</param>
-    public void LoadStateFromFile(string path)
+    /// <param name="expectedDiscHash">
+    /// Optional game/disc hash of the disc currently inserted. A mismatch is reported through
+    /// <see cref="StateWarnings"/> rather than rejected.
+    /// </param>
+    public void LoadStateFromFile(string path, string? expectedDiscHash = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         using FileStream stream = File.OpenRead(path);
-        LoadState(stream);
+        LoadState(stream, expectedDiscHash);
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage(

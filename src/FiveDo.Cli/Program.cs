@@ -453,7 +453,7 @@ internal static class Program
 
         if (stateIn is not null)
         {
-            machine.LoadStateFromFile(stateIn);
+            machine.LoadStateFromFile(stateIn, gameId);
             if (scriptEntries is not null
                 && string.Equals(inputScriptBase, "state", StringComparison.OrdinalIgnoreCase))
             {
@@ -744,7 +744,7 @@ internal static class Program
         machine.Reset();
         if (stateIn is not null)
         {
-            machine.LoadStateFromFile(stateIn);
+            machine.LoadStateFromFile(stateIn, gameId);
         }
         else
         {
@@ -1051,21 +1051,35 @@ internal static class Program
         {
             ParsedOptions options = Parse(args, startIndex: 2);
             var trackPath = options.Positional ?? throw new ArgumentException("disc tracks needs a disc path.", nameof(args));
-            if (ChdFile.Open(trackPath, out ChdFile? chd) != ChdError.Chderrnone || chd is null)
+            if (IsChdImage(trackPath))
             {
-                throw new InvalidDataException($"Cannot open CHD '{trackPath}'.");
-            }
-
-            using (chd)
-            {
-                foreach (ChdTrackInfo track in chd.Tracks ?? [])
+                if (ChdFile.Open(trackPath, out ChdFile? chd) != ChdError.Chderrnone || chd is null)
                 {
-                    Console.WriteLine(
-                        $"track {track.TrackNumber}: type={track.TrackType} dataSize={track.DataSize} "
-                        + $"frames={track.Frames} start={track.StartFrame}");
+                    throw new InvalidDataException($"Cannot open CHD '{trackPath}'.");
                 }
+
+                using (chd)
+                {
+                    foreach (ChdTrackInfo track in chd.Tracks ?? [])
+                    {
+                        Console.WriteLine(
+                            $"track {track.TrackNumber}: type={track.TrackType} dataSize={track.DataSize} "
+                            + $"frames={track.Frames} start={track.StartFrame}");
+                    }
+                }
+
+                return 0;
             }
 
+            // ISO, BIN, and CUE images expose one 2048-byte user-data track through
+            // IDiscSource. Report the same columns as the CHD path so scripts can parse
+            // both container families.
+            using IDiscSource source = DiscImageFactory.Open(trackPath);
+            var format = Path.GetExtension(trackPath).TrimStart('.').ToLowerInvariant();
+            Console.WriteLine(
+                $"track 1: type=data format={(format.Length == 0 ? "raw" : format)} "
+                + $"dataSize={(long)source.SectorCount * source.SectorSize} "
+                + $"frames={source.SectorCount} start=0");
             return 0;
         }
 
@@ -1089,6 +1103,14 @@ internal static class Program
         File.WriteAllBytes(output, buffer);
         Console.WriteLine($"wrote {count} sector(s) from LBA {sector} to {output}");
         return 0;
+    }
+
+    private static bool IsChdImage(string path)
+    {
+        using FileStream stream = File.OpenRead(path);
+        Span<byte> signature = stackalloc byte[8];
+        return stream.Read(signature) == signature.Length
+            && signature.SequenceEqual("MComprHD"u8);
     }
 
     private static int FsCommand(string[] args)

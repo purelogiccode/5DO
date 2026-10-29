@@ -47,7 +47,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `trace [disc]` | Run with a diagnostic instruction ring and stop conditions. |
 | `info <disc>` | Disc geometry, volume header, game ID, database metadata, fixes. |
 | `disc dump <disc>` | Write raw 2048-byte sectors. |
-| `disc tracks <disc>` | List CHD track table entries. |
+| `disc tracks <disc>` | List CHD track table entries, or one data track for ISO/BIN/CUE. |
 | `fs list <disc>` | List the 3DO file tree (CHD container). |
 | `fs extract <disc>` | Extract files from a 3DO disc image (CHD container). |
 | `bios info <path>` | BIOS size, MD5, Anvil detection. |
@@ -351,7 +351,9 @@ No JSON.
 ```
 
 Lists the CHD track table: `track <n>: type=<type> dataSize=<n> frames=<n> start=<n>`.
-CHD only; other containers do not expose a track table through this command.
+For ISO, BIN, and CUE images it reports the single 2048-byte user-data track:
+`track 1: type=data format=<iso|bin|cue> dataSize=<n> frames=<n> start=0`.
+No JSON.
 
 ---
 
@@ -606,7 +608,8 @@ dotnet run --project src/FiveDo.Cli -- disasm artifacts/ram.bin `
 - `--realtime` is pacing only; without it, live OpenAL audio is a short burst.
 - `--capture-dir` does nothing unless `--capture-every` is greater than zero.
 - `--frame-out` and captures use the CPU assembler, not the selected GPU filter.
-- `fs` and `disc tracks` are CHD-only in this release.
+- `fs` is CHD-only in this release. `disc tracks` now covers ISO/BIN/CUE as a
+  single data track in addition to CHD.
 - `trace` and `disasm` have no JSON output.
 - `state inspect`/`state slots` JSON is PascalCase; all other CLI JSON is camelCase.
 - `--watch-start`, `--watch-end`, `--stop-pc`, `--stop-cd`, `--dump-ram-offset`, and

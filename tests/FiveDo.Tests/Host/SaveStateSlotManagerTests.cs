@@ -37,10 +37,24 @@ public sealed class SaveStateSlotManagerTests
         var expectedPc = machine.Cpu.ProgramCounter;
         machine.RunFrames(10);
 
-        SaveStateSlotInfo loaded = manager.Load(machine, slot: 2);
+        SaveStateSlotInfo loaded = manager.Load(machine, slot: 2, expectedGameId: "9F7D72BC");
         Assert.Equal(3, loaded.FramesExecuted);
         Assert.Equal(expectedPc, machine.Cpu.ProgramCounter);
         Assert.Equal(3, machine.FramesExecuted);
+        Assert.Empty(machine.StateWarnings);
+    }
+
+    [Fact]
+    public void Load_ReportsADifferentExpectedGameIdAsAWarning()
+    {
+        using var directory = new TempDirectory();
+        var manager = new SaveStateSlotManager(directory.Path, slotCount: 2);
+        FiveDoMachine machine = CreateMachine();
+        manager.Save(machine, "9F7D72BC", "Alone in the Dark", slot: 0);
+
+        manager.Load(machine, slot: 0, expectedGameId: "D7672550");
+
+        Assert.Contains(machine.StateWarnings, warning => warning.Contains("disc", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]

@@ -5,8 +5,9 @@
 distribution/attribution sign-off are still pending. See
 [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 **Post-rc.1:** the 2026-10-28 pass added the OpenAL crackle fix, PCM tap, and FSR 1.0;
-the current suite is 818 tests. See [`../CHANGELOG.md`](../CHANGELOG.md) and
-[`Status.md`](Status.md).
+the 2026-10-29 pass added the save-state disc warning, console hotkeys, ISO/BIN
+`disc tracks`, and the OpenAL Soft LGPL notice/source offer. See
+[`../CHANGELOG.md`](../CHANGELOG.md) and [`Status.md`](Status.md).
 
 This is a **documented-compatibility** release: the emulator is supported on the
 validated platform and against the tested title set, with known issues listed below.
@@ -81,7 +82,7 @@ The release checklist is in [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 - [x] `dotnet build 5DO.sln -c Release`: 0 warnings, 0 errors.
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`: 798/798
-      passing at rc.1 (818/818 after the 2026-10-28 pass).
+      passing at rc.1 (845/845 after the 2026-10-29 pass).
 - [x] Synthetic benchmark budget gate: 2.28 ms/frame core mean, 4.03 ms core p99,
       4.66 ms total p99, 0 managed bytes/frame.
 - [x] Trimmed win-x64 CLI and frontend smoke tests (`selftest`, `bench`, `info`,
@@ -133,5 +134,6 @@ The win-x64 release artifacts are:
 
 Sizes and SHA-256 checksums are recorded in `SHA256SUMS.txt` next to the packages.
 Each archive contains the executable, `README.md`, `LICENSE`,
-`THIRD-PARTY-NOTICES.md`, `docs/Licensing.md`, `docs/ReleaseLegalReview.md`, these
-release notes, and `PACKAGE.txt`.
+`THIRD-PARTY-NOTICES.md`, `docs/Licensing.md`, `docs/ReleaseLegalReview.md`,
+`docs/OpenALSoft.md`, `docs/licenses/OpenAL-Soft-COPYING.txt`, these release
+notes, and `PACKAGE.txt`.

@@ -49,6 +49,24 @@ This file records the projects and licenses that influence or ship with 5DO. It 
   framebuffer does not provide.
 - FSR 1.0 is a spatial post-process only; it does not change emulated output.
 
+### OpenAL Soft
+
+- Version: 1.23.1, bundled through `Silk.NET.OpenAL.Soft.Native` 1.23.1.
+- License: GNU Library General Public License 2.0 or later
+  (LGPL-2.0-or-later); the complete text is in
+  [`docs/licenses/OpenAL-Soft-COPYING.txt`](docs/licenses/OpenAL-Soft-COPYING.txt).
+- Copyright: OpenAL Soft is Copyright (C) 1999-2007 by authors and is
+  distributed under the LGPL-2.0-or-later.
+- Use: the native OpenAL runtime loaded by `FiveDo.Audio` for live playback.
+  The binary is unmodified. Windows ships `soft_oal.dll` and `OpenAL32.dll`
+  (the same binary under the loader name); Linux ships `libopenal.so`; macOS
+  ships `libopenal.dylib`.
+- Source offer and relinking instructions: [`docs/OpenALSoft.md`](docs/OpenALSoft.md).
+  The corresponding source is the unmodified upstream 1.23.1 release
+  (<https://github.com/kcat/openal-soft>); 5DO also offers the complete source
+  on request through the project issue tracker. The library is dynamically
+  loaded, so users may replace it with a compatible build without rebuilding 5DO.
+
 ### Serilog
 
 - Packages: `Serilog` 4.4.0, `Serilog.Sinks.Console` 6.1.1, and
@@ -87,7 +105,7 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 | coverlet.collector | Coverage | MIT |
 | BenchmarkDotNet | Benchmarks | MIT |
 | Silk.NET.OpenAL 2.23.0 | Desktop audio bindings | MIT |
-| Silk.NET.OpenAL.Soft.Native 1.23.1 | Native OpenAL Soft runtime bundled beside the CLI/frontend (win-x64/win-arm64/win-x86, linux-x64/linux-arm64, osx-x64/osx-arm64); `soft_oal.dll` is copied as `OpenAL32.dll` on Windows | MIT wrapper for OpenAL Soft; OpenAL Soft itself is LGPL-2.0-or-later. Source: <https://github.com/kcat/openal-soft>. The release must ship the LGPL notice/source offer; include this item in the legal review. |
+| Silk.NET.OpenAL.Soft.Native 1.23.1 | Native OpenAL Soft runtime bundled beside the CLI/frontend (win-x64/win-arm64/win-x86, linux-x64/linux-arm64, osx-x64/osx-arm64); `soft_oal.dll` is copied as `OpenAL32.dll` on Windows | MIT wrapper for OpenAL Soft; OpenAL Soft itself is LGPL-2.0-or-later. The notice, source offer, relinking rights, and license text ship in [`docs/OpenALSoft.md`](docs/OpenALSoft.md) and [`docs/licenses/OpenAL-Soft-COPYING.txt`](docs/licenses/OpenAL-Soft-COPYING.txt). |
 | OS XInput / Linux evdev | Gamepad input (optional, no bundled native library) | OS API; no third-party runtime dependency |
 | CHDSharp 1.5.2 | CHD disc images (v1) | MIT + LGPL-2.1 component; pure C#, no native dependency. Verify the package LICENSE before release. |
 | VideoGameFileSystemParser 1.4.0 | 3DO Opera FS listing/extraction in `5do fs` | MIT; depends on CHDSharp. Written by the 5DO author. |

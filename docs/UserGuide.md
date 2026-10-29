@@ -58,14 +58,17 @@ of connected controllers.
 
 ### Keyboard shortcuts
 
+- **F5** saves the current state to the selected slot.
+- **F8** loads the selected slot.
+- **F10** resets the machine.
 - **F11** toggles fullscreen.
-- **Escape** exits fullscreen.
+- **F12** captures a screenshot.
+- **Escape** pauses emulation; in fullscreen it exits fullscreen first.
 - **Save State**, **Load State**, **Screenshot**, **Reset**, slot changes, and
-  fullscreen are available from the toolbar and the **Emulation** menu.
+  fullscreen are also available from the toolbar and the **Emulation** menu.
 
-The input profile also stores default F5 (save), F8 (load), F12 (screenshot), and F10
-(reset) hotkeys, but the current shell does not dispatch those keys; use the
-menu/toolbar. Do not rely on them in this release candidate.
+The hotkey map is part of the input profile. Custom key assignments are resolved
+case-insensitively; an unbound key falls through to the emulated pad.
 
 ## Display
 

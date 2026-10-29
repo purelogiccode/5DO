@@ -308,7 +308,7 @@ make cross-version loads visible, not to guarantee compatibility.
 | `State BIOS hash differs...` warning | The loaded BIOS is not the one used to write the state. The load continues; expect possible divergence. |
 | `State was written by version ...` warning | Different emulator version. Verify the roundtrip before relying on it. |
 | State loads but audio is silent for a moment | Live OpenAL was reset to drop the old timeline; the DSP resumes on the next frames. |
-| State loads on the wrong game | The loader does not reject a disc-hash mismatch; check the slot metadata/game ID. |
+| State loads on the wrong game | The loader adds a `StateWarnings` entry when the recorded disc hash differs from the inserted disc, but still loads. Check the slot metadata/game ID. |
 | Thumbnail missing | The CPU frame was unavailable or the PNG write failed; the state is still valid. |
 | Metadata shows `(unnamed)` or unknown time | The sidecar is missing/invalid; the state header still has the game ID and frame count. |
 

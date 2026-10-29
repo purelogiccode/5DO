@@ -127,6 +127,56 @@ public sealed class SaveStateTests
     }
 
     [Fact]
+    public void LoadState_WarnsOnDiscHashMismatch()
+    {
+        FiveDoMachine writer = CreateMachine();
+        writer.RunFrames(2);
+        using var state = new MemoryStream();
+        writer.SaveState(state, "disc-a");
+
+        FiveDoMachine reader = CreateMachine();
+        state.Position = 0;
+        reader.LoadState(state, "disc-b");
+
+        Assert.Contains(reader.StateWarnings, warning => warning.Contains("disc", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void LoadState_DoesNotWarnOnMatchingDiscHash()
+    {
+        FiveDoMachine writer = CreateMachine();
+        writer.RunFrames(2);
+        using var state = new MemoryStream();
+        writer.SaveState(state, "disc-a");
+
+        FiveDoMachine reader = CreateMachine();
+        state.Position = 0;
+        reader.LoadState(state, "disc-a");
+
+        Assert.Empty(reader.StateWarnings);
+    }
+
+    [Fact]
+    public void LoadState_DoesNotWarnWhenEitherDiscHashIsEmpty()
+    {
+        FiveDoMachine writer = CreateMachine();
+        writer.RunFrames(2);
+        using var stateWithoutDisc = new MemoryStream();
+        writer.SaveState(stateWithoutDisc);
+        using var stateWithDisc = new MemoryStream();
+        writer.SaveState(stateWithDisc, "disc-a");
+
+        FiveDoMachine reader = CreateMachine();
+        stateWithoutDisc.Position = 0;
+        reader.LoadState(stateWithoutDisc, "disc-a");
+        Assert.Empty(reader.StateWarnings);
+
+        stateWithDisc.Position = 0;
+        reader.LoadState(stateWithDisc);
+        Assert.Empty(reader.StateWarnings);
+    }
+
+    [Fact]
     public void SaveStateToFile_IsAtomicAndRoundtrips()
     {
         var path = Path.Combine(Path.GetTempPath(), $"fivedo-state-{Guid.NewGuid():N}.tdos");

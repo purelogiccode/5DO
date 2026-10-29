@@ -3,7 +3,7 @@
 **Product:** 5DO
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Status (2026-10-26, fifteenth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five golden-corpus titles plus seven additional discs boot, load their own OS, and render real frames; six of the seven additional titles produce non-silent 44.1 kHz stereo DSP audio (Theme Park's menu is silent). Road Rash's 3D race renders correctly; a CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait and the game now advances through `BUSTED`/race select to a new race. Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room, Begin/Resume menu, and intro; Lemmings types the Fun 4 passcode entirely with the D-pad, starts gameplay at 23,000 frames, and its 640x480 high-resolution title matches the reference; Space Ace plays its demo and starts its interactive scene (X menu, A play). **775 tests passed at that pass; 821 tests pass after the 2026-10-28 statistics pass.** The fifteenth pass added an explicit `--gl-backend` selector and validated the Windows ANGLE/GLES 3.0 path: 4K present p99 0.47 ms with zero renderer allocations, all filters compile, and a 320x240 Accurate capture is pixel-identical to the CPU oracle. It also added opt-in NativeAOT win-x64 publishes: a 9.97 MB CLI that passes the smoke suite, `info`/`fs list`, and a 3,000-frame golden boot, and a 28.8 MB frontend that passes the smoke and WGL/ANGLE parity probes. The fourteenth pass wired the platform swap interval (WGL/GLX/EGL) and added a `--gl-probe` offscreen 4K presentation probe: on the RTX 4070 development machine, sharp-bilinear 4K measures GPU p99 0.089 ms, present p99 0.208 ms, and zero renderer/mailbox allocations per frame after warm-up. The thirteenth pass enabled `PublishTrimmed` for the Avalonia frontend, removed the reflection-based `ViewLocator`, added a trimmed-frontend startup smoke test, and now publishes both executables trimmed for all six RIDs. The twelfth pass made settings, input profiles, save-slot metadata, and every CLI `--json` response source-generated and trim-safe, enabled `PublishTrimmed` for the CLI, added a trimmed-CLI CI smoke test, and added a same-machine benchmark baseline comparison; see [`Trimming.md`](Trimming.md) and [`Performance.md`](Performance.md). The eleventh pass added HQx 3x/4x and the benchmark budget gate. The tenth pass added the pure D-pad passcode script and CRT bloom. The ninth pass recorded per-title save-state/PNG/WAV evidence, fixed the CD wait, and added autopilot A pulses for post-race menus. The eighth pass fixed the real-content GPU palette expansion (independent R/G/B CLUT indices), added the opt-in xBR-lv2 filter, Windows XInput/Linux evdev gamepad backends with a binding UI, an in-app log viewer, save-state thumbnails, a first-run guide, and error dialogs. Remaining work: finish a full Road Rash race without wrecking, Raspberry Pi/GLES 3.1 and DPI validation, Tier B timing, frontend AOT audio/installers, the M0.8 legal/attribution review (including the bundled OpenAL Soft LGPL runtime), and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
+**Status (2026-10-26, fifteenth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five golden-corpus titles plus seven additional discs boot, load their own OS, and render real frames; six of the seven additional titles produce non-silent 44.1 kHz stereo DSP audio (Theme Park's menu is silent). Road Rash's 3D race renders correctly; a CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait and the game now advances through `BUSTED`/race select to a new race. Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room, Begin/Resume menu, and intro; Lemmings types the Fun 4 passcode entirely with the D-pad, starts gameplay at 23,000 frames, and its 640x480 high-resolution title matches the reference; Space Ace plays its demo and starts its interactive scene (X menu, A play). **775 tests passed at that pass; 845 tests pass after the 2026-10-29 release-hardening pass.** The fifteenth pass added an explicit `--gl-backend` selector and validated the Windows ANGLE/GLES 3.0 path: 4K present p99 0.47 ms with zero renderer allocations, all filters compile, and a 320x240 Accurate capture is pixel-identical to the CPU oracle. It also added opt-in NativeAOT win-x64 publishes: a 9.97 MB CLI that passes the smoke suite, `info`/`fs list`, and a 3,000-frame golden boot, and a 28.8 MB frontend that passes the smoke and WGL/ANGLE parity probes. The fourteenth pass wired the platform swap interval (WGL/GLX/EGL) and added a `--gl-probe` offscreen 4K presentation probe: on the RTX 4070 development machine, sharp-bilinear 4K measures GPU p99 0.089 ms, present p99 0.208 ms, and zero renderer/mailbox allocations per frame after warm-up. The thirteenth pass enabled `PublishTrimmed` for the Avalonia frontend, removed the reflection-based `ViewLocator`, added a trimmed-frontend startup smoke test, and now publishes both executables trimmed for all six RIDs. The twelfth pass made settings, input profiles, save-slot metadata, and every CLI `--json` response source-generated and trim-safe, enabled `PublishTrimmed` for the CLI, added a trimmed-CLI CI smoke test, and added a same-machine benchmark baseline comparison; see [`Trimming.md`](Trimming.md) and [`Performance.md`](Performance.md). The eleventh pass added HQx 3x/4x and the benchmark budget gate. The tenth pass added the pure D-pad passcode script and CRT bloom. The ninth pass recorded per-title save-state/PNG/WAV evidence, fixed the CD wait, and added autopilot A pulses for post-race menus. The eighth pass fixed the real-content GPU palette expansion (independent R/G/B CLUT indices), added the opt-in xBR-lv2 filter, Windows XInput/Linux evdev gamepad backends with a binding UI, an in-app log viewer, save-state thumbnails, a first-run guide, and error dialogs. Remaining work: finish a full Road Rash race without wrecking, Raspberry Pi/GLES 3.1 and DPI validation, Tier B timing, frontend AOT audio/installers, the M0.8 legal/attribution review (including the bundled OpenAL Soft LGPL runtime), and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
 **Audio update (2026-10-27, sixteenth pass):** exact 44.1 kHz DSP sample clock
 (600 frames = 10.000 s, 441,015-441,020 samples), Quartz state v2 with v1
 conversion, bundled OpenAL Soft 1.23.1 live output, audio-thread context-current
@@ -11,9 +11,14 @@ fix, audio-driven `CoreRunner` pacing with a 60 Hz fallback, buffered/instrument
 WAV capture, `audio analyze <wav> --json`, CLI `--audio openal`/`--volume`/
 `--realtime`, and validated CLI NativeAOT audio. The 3,000-frame boot keys were
 re-baselined; see [`TestCorpus.md`](TestCorpus.md) 1.1/1.5a2 and
-[`PortingNotes.md`](PortingNotes.md) 12.4. **821 tests pass.**
+[`PortingNotes.md`](PortingNotes.md) 12.4. **845 tests pass after the 2026-10-29
+release-hardening pass.**
 
-**Last updated:** 2026-10-27
+**Release-hardening update (2026-10-29, nineteenth pass):** save-state disc
+identity warnings, console hotkey dispatch, ISO/BIN/CUE `disc tracks`, and the
+OpenAL Soft LGPL notice/source offer in every portable archive. **845 tests pass.**
+
+**Last updated:** 2026-10-29
 
 ---
 
@@ -229,7 +234,7 @@ project/type layout is unchanged.
 
 ### 4a. Current position vs. the plan (2026-10-26)
 
-Snapshot: 821 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
+Snapshot: 845 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
 and zero synthetic steady-state allocations; all five local corpus titles boot and
 render, and scripted gameplay is validated in Wolfenstein, Lemmings, Road Rash, and
 Alone. The opt-in 640x480 high-resolution mode is implemented and matches the
@@ -906,6 +911,10 @@ dotnet run --project src/FiveDo.Frontend.Avalonia
   - Save -> run 60 frames -> load -> run 60 frames; frame hash, PC, and frame count match the control run.
   - Corrupt/truncated state rejection.
   - BIOS hash mismatch is reported as a warning, not a hard failure.
+  - **DONE (2026-10-29):** a disc/game-hash mismatch is also reported as a warning,
+    not a hard failure. `FiveDoMachine.LoadState`/`LoadStateFromFile` accept the
+    current game ID; the CLI `run`/`trace` commands and the desktop slot manager
+    pass it through. Tests cover mismatch, matching, and empty-hash cases.
 - [~] **M8.5 Diagnostics.**
   - Frame dumpers (BMP/PNG), state inspector, CPU tracer with disassembly, raw memory/VRAM dumpers, RAM/DSP dumps, and core allocation assertions are implemented; CPU counters are available through the machine.
   - Allocation counters for the full host/presenter path and a UI log viewer remain follow-up work; logging sinks already exist.
@@ -916,6 +925,9 @@ dotnet run --project src/FiveDo.Frontend.Avalonia
   - `state inspect <path>`.
   - `bench`.
   - `selftest`.
+  - **DONE (2026-10-29):** `disc tracks` reports ISO, BIN, and CUE images as one
+    2048-byte user-data track; CHD images keep the full track list. The command no
+    longer requires a CHD container.
   - Exit codes and machine-readable output (`--json`).
 - [x] **M8.7 CLI tests.**
   - State inspector, frame dumper, save/load, patch parser, input-script, and autopilot tests run in the suite.
@@ -972,6 +984,11 @@ dotnet run --project src/FiveDo.Frontend.Avalonia
   - Emulation: ARM clock, fix mode, high-res (opt-in; default off), save slots, CPU backend (interpreter; JIT when available).
   - Paths: BIOS, saves, screenshots, library.
   - `AppSettings`/`AppSettingsStore` persist paths, renderer/aspect/vsync/integer scale, audio enable/volume, high-resolution mode, library folders, save slots, overlay, automatic fixes, per-game fix/filter overrides, and input bindings. The Settings dialog edits video/audio/emulation/paths and validates the per-game fix mask; the Input dialog has keyboard and gamepad binding tabs for all six players. Per-game fix-mode and filter overrides are complete; other per-game settings remain. The shell exposes a Hi-Res checkbox that restarts the machine.
+  - **DONE (2026-10-29):** the shell dispatches the `InputProfile.Hotkeys`
+    bindings before forwarding a key to the emulated pad: F5 save, F8 load,
+    F10 reset, F11 fullscreen, F12 screenshot, and Escape pause by default.
+    `HotkeyRouter` resolves custom bindings case-insensitively; unknown action
+    names are ignored and tested.
 - [x] **M9.6 Input UI.**
   - Binding capture dialog, conflict detection, and reset defaults are implemented for all six players (`InputBindingsWindow`/`KeyboardBindingEditor`); the player selector switches profiles, rebinding a key removes it from its previous button, and the edited `InputProfile` is saved to `AppSettings`.
   - The optional controller preview remains a nice-to-have.
@@ -1336,7 +1353,11 @@ harness. See [`Performance.md`](Performance.md).
   - Verify audio/gamepad backends.
 - [~] **M10.7 Portable archives and installers.**
   - `packaging/package.ps1` creates `5do-<component>-<rid>.zip` for Windows and `.tar.gz` for Linux/macOS, with README/notices/licensing, a generated `PACKAGE.txt`, and the Linux desktop entry. CI publishes and uploads both the raw folders and the portable archives for all six RIDs.
-  - Remaining: MSIX/dmg/AppImage packaging, signing/notarization, Windows/macOS file associations, and installer smoke tests.
+  - **DONE (2026-10-29):** the portable archives include the OpenAL Soft LGPL
+     notice/source offer (`docs/OpenALSoft.md`) and the complete LGPL-2.0 text
+     (`docs/licenses/OpenAL-Soft-COPYING.txt`), and `PACKAGE.txt` names them.
+     Remaining: MSIX/dmg/AppImage packaging, signing/notarization, Windows/macOS
+     file associations, and installer smoke tests.
 
 **Deliverables**
 
@@ -1412,6 +1433,10 @@ backlog, not release gates; the release gate is
   - Moved to v1/M6: `ChdDiscImage` via CHDSharp, including parent/child and read-ahead.
 - [~] **M11.6 Documentation/release.**
   - User guide, compatibility list, known issues, and changelog are implemented in `docs/UserGuide.md`, `docs/Compatibility.md`, `docs/KnownIssues.md`, and `CHANGELOG.md`.
+  - **DONE (2026-10-29):** the OpenAL Soft LGPL notice/source offer/relinking
+    record is in `docs/OpenALSoft.md` with the full license text in
+    `docs/licenses/OpenAL-Soft-COPYING.txt`; the release review and checklist
+    record it as complete on the engineering side.
   - License/attribution review, the stability soak, and final release notes remain; work through [`ReleaseChecklist.md`](ReleaseChecklist.md).
 - [-] **M11.7 Post-release backlog.**
   - Netplay, rewind, debugger UI, CD-DA, PAL, additional peripherals.

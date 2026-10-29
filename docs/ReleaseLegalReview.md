@@ -1,6 +1,6 @@
 # Release Legal and Attribution Review
 
-**Date:** 2026-10-27 (OpenAL Soft bundle added)
+**Date:** 2026-10-29 (OpenAL Soft notice/source offer added)
 **Status:** engineering audit complete; **owner/legal sign-off pending**
 **Release candidate:** 1.0.0-rc.1 (documented-compatibility scope)
 
@@ -19,6 +19,8 @@ The portable archives contain only:
 - `LICENSE`,
 - `THIRD-PARTY-NOTICES.md`,
 - `docs/Licensing.md`,
+- `docs/OpenALSoft.md` (OpenAL Soft notice, source offer, and relinking rights),
+- `docs/licenses/OpenAL-Soft-COPYING.txt` (the LGPL-2.0 license text),
 - `PACKAGE.txt`,
 - the Linux `.desktop` entry for Linux packages.
 
@@ -38,9 +40,14 @@ images, BIOS ROMs, extracted assets, screenshots, or WAV captures.
       CHDSharp, VideoGameFileSystemParser, Avalonia, CommunityToolkit.Mvvm,
       Microsoft.Extensions.*, System.CommandLine, Silk.NET/OpenAL, xUnit,
       BenchmarkDotNet, and the now-bundled OpenAL Soft 1.23.1 runtime.
-- [x] The OpenAL Soft native runtime is now included for all six RIDs through
+- [x] The OpenAL Soft native runtime is included for all six RIDs through
       `Silk.NET.OpenAL.Soft.Native`; Windows copies `soft_oal.dll` as `OpenAL32.dll`.
       This adds an LGPL-2.0-or-later binary-distribution obligation to the release.
+      `docs/OpenALSoft.md` records the notice, the exact upstream 1.23.1 source,
+      the three-year written source offer, and the relinking/replacement
+      instructions; `docs/licenses/OpenAL-Soft-COPYING.txt` contains the complete
+      LGPL-2.0 text. Both files are copied into every portable archive by
+      `packaging/package.ps1`.
 - [x] The desktop About dialog reports the version, renderer state, and the
       FreeDO modified GNU LGPL notice, and states that no BIOS ROMs or game images are
       included.
@@ -62,11 +69,17 @@ images, BIOS ROMs, extracted assets, screenshots, or WAV captures.
       products without written permission.
 - [ ] **Source availability.** Confirm how corresponding source will be offered for
       distributed binaries, as required by the LGPL/GPL terms.
-- [ ] **Third-party license review.** Confirm the CHDSharp LGPL-2.1 component, the
-      HQx LGPL-2.1 filter obligations, the 4DO game database terms (the 4DO tree has
-      no LICENSE file or source headers), and the OpenAL Soft LGPL-2.0-or-later native
-      runtime obligation (notice, source offer, and relinking rights). Decide whether
-      any of these remain in a binary distribution that cannot comply.
+- [x] **OpenAL Soft LGPL-2.0-or-later runtime obligation.** The engineering side is
+      complete: notice and copyright, the complete LGPL-2.0 text, the upstream 1.23.1
+      source location, a three-year written source offer, and relinking/replacement
+      instructions are in `docs/OpenALSoft.md` and
+      `docs/licenses/OpenAL-Soft-COPYING.txt`, and both files are packaged. The
+      owner/legal reviewer must still accept the written offer and contact details
+      before distribution.
+- [ ] **Remaining third-party license review.** Confirm the CHDSharp LGPL-2.1
+      component, the HQx LGPL-2.1 filter obligations, and the 4DO game database terms
+      (the 4DO tree has no LICENSE file or source headers). Decide whether any of
+      these remain in a binary distribution that cannot comply.
 - [ ] **Trademark review.** "3DO", "Panasonic", and "GoldStar" are trademarks of their
       respective owners; the 5DO name and store listing must not imply endorsement.
 
