@@ -61,6 +61,7 @@
   <ItemGroup>
     <ProjectReference Include="..\FiveDo.Host\FiveDo.Host.csproj" />
     <ProjectReference Include="..\FiveDo.Video.OpenGL\FiveDo.Video.OpenGL.csproj" />
+    <ProjectReference Include="..\FiveDo.Video.Vulkan\FiveDo.Video.Vulkan.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(FiveDoOpenAlNativeRid)' == 'win-x64' or '$(FiveDoOpenAlNativeRid)' == 'win-arm64' or '$(FiveDoOpenAlNativeRid)' == 'win-x86'">

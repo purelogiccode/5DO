@@ -27,6 +27,7 @@ using FiveDo.Input;
 using FiveDo.Machine;
 using FiveDo.Storage;
 using FiveDo.Video;
+using FiveDo.Video.Vulkan;
 using AvaloniaPixelFormat = Avalonia.Platform.PixelFormat;
 
 namespace FiveDo.Frontend.Avalonia.Views;
@@ -56,7 +57,8 @@ public partial class MainWindow : Window, IDisposable
     private IDiscSource? _disc;
     private string _gameId = string.Empty;
     private string _gameName = string.Empty;
-    private CpuVideoRenderer? _cpuVideo;
+    private ICpuFrameRenderer? _cpuVideo;
+    private bool _vulkanPresenter;
     private WriteableBitmap? _cpuBitmap;
     private DispatcherTimer? _cpuTimer;
     private byte[]? _cpuPixels;
@@ -108,6 +110,14 @@ public partial class MainWindow : Window, IDisposable
         HighResMenuItem.IsChecked = _settings.HighResolution;
         OverlayPanel.IsVisible = _settings.ShowOverlay;
         Video.Settings = _settings.ToRendererSettings(_gameId);
+        if (Program.RequestedGlBackend == GlBackend.Vulkan)
+        {
+            // The optional Vulkan path renders offscreen and presents through the CPU
+            // bitmap. Hide the OpenGL control so it never creates a WGL/ANGLE context.
+            Video.IsVisible = false;
+            StartCpuFallback(new NotSupportedException("Vulkan renderer requested."));
+        }
+
         if (Program.SmokeTest)
         {
             // CI runners may not expose a desktop GL context. The smoke test
@@ -1423,6 +1433,11 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnOpenGlReady(object? sender, Controls.OpenGlReadyEventArgs e)
     {
+        if (_vulkanPresenter)
+        {
+            return;
+        }
+
         var capabilities = e.Capabilities;
         StopCpuFallback();
         RendererText.Text = $"{capabilities.Name} {capabilities.MajorVersion}.{capabilities.MinorVersion}";
@@ -1460,8 +1475,42 @@ public partial class MainWindow : Window, IDisposable
             ? _machine.Frame.SourceHeight
             : EmulatorConstants.VideoHeight;
 
-        _cpuVideo = new CpuVideoRenderer { Settings = _settings.ToRendererSettings(_gameId) };
-        _cpuVideo.Initialize(width, height);
+        RendererSettings rendererSettings = _settings.ToRendererSettings(_gameId);
+        ICpuFrameRenderer renderer;
+        if (Program.RequestedGlBackend == GlBackend.Vulkan)
+        {
+            VulkanOffscreenRenderer? vulkan = null;
+            try
+            {
+                vulkan = new VulkanOffscreenRenderer
+                {
+                    Settings = rendererSettings,
+                    CaptureToFrame = true,
+                };
+                vulkan.Initialize(width, height);
+                renderer = vulkan;
+                _vulkanPresenter = true;
+                _logger.ForCategory(LogCategory.Video).Information(
+                    "Vulkan renderer ready: {Device}.",
+                    vulkan.DeviceName);
+            }
+            catch (Exception vulkanException) when (vulkanException is not OutOfMemoryException)
+            {
+                vulkan?.Dispose();
+                _logger.ForCategory(LogCategory.Video).Warning(
+                    vulkanException,
+                    "Vulkan is unavailable; falling back to the CPU presenter.");
+                renderer = new CpuVideoRenderer { Settings = rendererSettings };
+                renderer.Initialize(width, height);
+            }
+        }
+        else
+        {
+            renderer = new CpuVideoRenderer { Settings = rendererSettings };
+            renderer.Initialize(width, height);
+        }
+
+        _cpuVideo = renderer;
         _cpuPixels = new byte[width * height * 4];
         _cpuBitmap = CreateBitmap(width, height);
         CpuVideo.Source = _cpuBitmap;
@@ -1470,8 +1519,10 @@ public partial class MainWindow : Window, IDisposable
         _cpuTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
         _cpuTimer.Tick += (_, _) => RenderCpuFrame();
         _cpuTimer.Start();
-        RendererText.Text = "CPU fallback";
-        StatusText.Text = $"OpenGL unavailable ({exception.Message}); using the CPU renderer.";
+        RendererText.Text = _vulkanPresenter ? "Vulkan (offscreen)" : "CPU fallback";
+        StatusText.Text = _vulkanPresenter
+            ? "Vulkan renderer ready (offscreen, CPU readback)."
+            : $"OpenGL unavailable ({exception.Message}); using the CPU renderer.";
     }
 
     private void StopCpuFallback()
@@ -1482,6 +1533,7 @@ public partial class MainWindow : Window, IDisposable
         Video.IsVisible = true;
         _cpuVideo?.Dispose();
         _cpuVideo = null;
+        _vulkanPresenter = false;
         _cpuBitmap = null;
         _cpuPixels = null;
     }

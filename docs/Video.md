@@ -17,10 +17,11 @@ Source map:
 | Viewport/aspect | `src/FiveDo.Video/ViewportCalculator.cs` |
 | CPU fallback | `src/FiveDo.Video/CpuVideoRenderer.cs` |
 | GPU presenter | `src/FiveDo.Video.OpenGL/OpenGlRenderer.cs`, `Shaders.cs` |
+| Optional Vulkan presenter | `src/FiveDo.Video.Vulkan/VulkanOffscreenRenderer.cs`, `Frame.vert`, `Palette.frag`, `Scale.frag` |
 | Filters | `HqxFilter.cs`, `HqxPatterns*.cs`, xBR/FSR shader bodies |
 | Capabilities/vsync | `OpenGlCapabilities.cs`, `SwapInterval.cs` |
 | Avalonia surface | `src/FiveDo.Frontend.Avalonia/Controls/VideoSurface.cs` |
-| GPU probe | `src/FiveDo.Frontend.Avalonia/GlProbeWindow.cs`, `GlProbeOptions.cs` |
+| GPU probes | `src/FiveDo.Frontend.Avalonia/GlProbeWindow.cs`, `GlProbeOptions.cs`, `VkProbeRunner.cs`, `VkProbeOptions.cs` |
 
 ---
 
@@ -261,18 +262,22 @@ The renderer clears to black before drawing, so letterbox/pillarbox bars are bla
 |---|---|---|---|
 | Desktop GL | OpenGL 3.3 core / GLSL 330 | Windows WGL, Linux GLX/EGL, macOS 4.1 core | Primary desktop path; `R16UI`, `usampler2D`, `texelFetch`. |
 | GLES | OpenGL ES 3.0/3.1 / GLSL ES 300 | Windows ANGLE, Raspberry Pi 4/5, other GLES | Same two-stage pipeline. |
-| CPU | `WriteableBitmap` + `FrameAssembler` | Any | Fallback when no usable GL/GLES context; accuracy oracle. |
+| Vulkan | Vulkan 1.0 / SPIR-V 1.0 | Windows/Linux/macOS with a Vulkan loader and device | Optional offscreen backend and probe; CPU readback for the desktop fallback. |
+| CPU | `WriteableBitmap` + `FrameAssembler` | Any | Fallback when no usable GL/GLES/Vulkan context; accuracy oracle. |
 
-On Windows, `--gl-backend auto|wgl|angle|software` selects the Avalonia rendering mode:
+On Windows, `--gl-backend auto|wgl|angle|software|vulkan` selects the Avalonia rendering
+mode:
 
 - `auto` (default): WGL, then ANGLE/EGL, then software.
 - `wgl`: force desktop OpenGL.
 - `angle`: force ANGLE/GLES.
 - `software`: force Avalonia software rendering (no GL surface).
+- `vulkan`: hide the OpenGL surface and use the optional Vulkan offscreen presenter
+  with CPU readback.
 
 `GlBackendOption` also accepts aliases: `default`, `desktop`, `gl`, `angleegl`, `egl`,
-`gles`, `cpu`. The option is wired through `Win32PlatformOptions.RenderingMode`; on
-non-Windows platforms the platform's default context selection applies.
+`gles`, `cpu`, `vk`. The option is wired through `Win32PlatformOptions.RenderingMode`;
+on non-Windows platforms the platform's default context selection applies.
 
 `OpenGlCapabilities.Detect` parses `GL_VERSION` and reports:
 
@@ -287,6 +292,45 @@ If GL initialization fails or the context is lost, the frontend logs the error a
 switches to `CpuVideoRenderer` + `WriteableBitmap`. Calling `Initialize` again recreates
 all GL objects; the frontend re-uploads the latest frame. The CPU fallback is not
 expected to hit 4K60; it exists for compatibility and headless/CI use.
+
+### Optional Vulkan backend
+
+`FiveDo.Video.Vulkan` is an optional, offscreen Vulkan 1.0 backend. It mirrors the
+two-stage pipeline with SPIR-V shaders compiled at build time:
+
+```text
+VdlFrame
+  -> R16_UINT pixel texture / R8G8B8A8 CLUT / R32G32_UINT line params
+  -> palette pass at native resolution
+  -> scale/filter pass at output resolution
+  -> B8G8R8A8 (or R8G8B8A8) color target
+  -> readback buffer
+```
+
+The desktop shell uses it when `--gl-backend vulkan` is selected. Because it renders
+offscreen, the result is copied into the existing `WriteableBitmap` path; the OpenGL
+presenter remains the full-performance path. The probe uses the same renderer without
+Avalonia and is the recommended way to validate a Vulkan device:
+
+```powershell
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
+  --vk-probe artifacts/vk-probe/4k-sharp.json `
+  --vk-probe-size 3840x2160 --vk-probe-frames 30 --vk-probe-warmup 10 `
+  --vk-probe-filter sharp-bilinear
+```
+
+Supported filters are `accurate`, `nearest`, `sharp-bilinear`, and `crt`. xBR, HQx, and
+FSR are not implemented in the Vulkan shader; the renderer reports `filterFallback: true`
+and uses sharp-bilinear for those modes. The Vulkan path has no swapchain or window-system
+surface yet, so it is not a replacement for the WGL/ANGLE presenter and does not request
+vsync.
+
+A 320x240 `accurate` probe compares the GPU output with `FrameAssembler` and reports the
+same FNV-1a hash as the OpenGL probe (`0xD6BD89C5`, 0 different pixels, no vertical flip).
+On the development RTX 4070, 4K sharp-bilinear measured 1.51 ms mean / 1.80 ms p99
+present and 1.34 ms mean / 1.62 ms p99 GPU time, with 0 managed bytes/frame; 1080p
+sharp-bilinear measured 0.49 ms mean / 0.50 ms p99 present. See
+[`Vulkan.md`](Vulkan.md) for the full report and limitations.
 
 ---
 
@@ -334,10 +378,12 @@ flips bottom-up rows to top-down, and converts to BGRA. The native screenshot us
 
 ---
 
-## 9. GPU probe
+## 9. GPU probes
 
-The probe is a developer/validation tool that opens the real Avalonia GL surface,
+The OpenGL probe is a developer/validation tool that opens the real Avalonia GL surface,
 presents synthetic 320x240 VDL frames, and writes JSON. It never loads a BIOS or disc.
+The Vulkan probe runs the optional offscreen backend headlessly and writes the same
+report shape with `RequestedBackend: "Vulkan"`.
 
 ```powershell
 dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
@@ -376,6 +422,16 @@ The report is PascalCase JSON:
 | `RendererPresentAllocatedBytes`, `UploadAllocatedBytes`, `PaletteAllocatedBytes`, `ScaleAllocatedBytes` | Last-frame stage allocation. |
 | `Present` | `{ MeanMs, P50Ms, P95Ms, P99Ms, MaxMs }`. |
 | `Gpu` | Same timing summary, or null if GPU timing is unavailable. |
+| `FilterFallback` | True when the backend substituted sharp-bilinear for an unsupported filter. |
+
+The Vulkan probe uses the same report shape and adds no GL-specific fields:
+
+```powershell
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
+  --vk-probe artifacts/vk-probe/parity.json `
+  --vk-probe-size 320x240 --vk-probe-frames 20 --vk-probe-warmup 5 `
+  --vk-probe-filter accurate --vk-probe-capture artifacts/vk-probe/parity.png
+```
 
 ### Parity
 
@@ -431,6 +487,10 @@ See [`Performance.md`](Performance.md) for the full budget and methodology.
 | `SwapIntervalTests` | WGL/GLX/EGL selection and return conventions. |
 | `GlRendererContractTests` | Renderer contract, settings validation. |
 | `GpuProbeIntegrationTests` (opt-in `FIVEDO_GPU_TESTS=1`) | Real WGL/ANGLE 320x240 parity and 4K pass. |
+| `VulkanShaderTests` | Generated SPIR-V modules and the `RendererApi.Vulkan` capability contract. |
+| `VulkanRendererTests` (opt-in `FIVEDO_VULKAN_TESTS=1`) | CPU parity, fixed/background CLUTs, and source/output size changes. |
+| `VulkanProbeIntegrationTests` (opt-in `FIVEDO_VULKAN_TESTS=1`) | Real Vulkan 320x240 parity and a 4K probe pass. |
+| `VkProbeOptionsTests` | Vulkan probe option parsing and defaults. |
 
 ---
 
@@ -444,6 +504,9 @@ See [`Performance.md`](Performance.md) for the full budget and methodology.
   renderer/mailbox path is zero-allocation after warm-up.
 - HQx 3x/4x are CPU-heavy; xBR uses a CPU palette expansion for driver compatibility.
 - FSR has no recorded 4K budget measurement yet.
+- The Vulkan backend is offscreen and readback-based. It has no swapchain/window-system
+  surface, no vsync, and no xBR/HQx/FSR shaders; OpenGL remains the required desktop
+  presenter. Vulkan device/driver validation outside the development machine is pending.
 - No GPU CEL compositing; CEL rendering remains software at native resolution.
 - No PAL video modes; high-resolution is the opt-in 640x480 mode, not a general 4K
   internal renderer.

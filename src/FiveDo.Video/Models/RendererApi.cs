@@ -15,4 +15,7 @@ public enum RendererApi
 
     /// <summary>OpenGL ES (ANGLE, Raspberry Pi, mobile-class GLES).</summary>
     OpenGlEs,
+
+    /// <summary>Vulkan (optional headless/validation backend).</summary>
+    Vulkan,
 }

@@ -8,11 +8,12 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-29, 1.0.0-rc.1 release preparation, nineteenth pass):**
+**Current position (2026-10-29, 1.0.0-rc.1 release preparation, twentieth pass):**
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **845 tests pass.** The nineteenth pass added save-state disc-identity
+prototype. **860 tests pass.** The twentieth pass added the optional offscreen Vulkan
+backend and `--vk-probe` (see [`docs/Vulkan.md`](docs/Vulkan.md)). The nineteenth pass added save-state disc-identity
 warnings, console hotkey dispatch, ISO/BIN/CUE `disc tracks`, and the OpenAL Soft
 LGPL notice/source offer in the portable archives. The seventeenth pass fixed the remaining live OpenAL
 crackle (buffer ownership), added the `FIVEDO_AUDIO_TAP` PCM/timing tap and overlay
@@ -150,7 +151,8 @@ implementation plan and architecture are in:
 - [`docs/Configuration.md`](docs/Configuration.md) - settings.json schema, input profiles, NVRAM, paths, environment variables.
 - [`docs/SaveStates.md`](docs/SaveStates.md) - .tdos binary layout, section table, slots, validation, roundtrip workflow.
 - [`docs/Audio.md`](docs/Audio.md) - DSP clock, OpenAL output, WAV capture, tap, analysis, pacing.
-- [`docs/Video.md`](docs/Video.md) - VDLP/frame assembly, two-stage presenter, all filters including FSR, backends, probe.
+- [`docs/Video.md`](docs/Video.md) - VDLP/frame assembly, two-stage presenter, all filters including FSR, backends, probes.
+- [`docs/Vulkan.md`](docs/Vulkan.md) - optional offscreen Vulkan backend, probe, filters, measured results, and limitations.
 - [`docs/Diagnostics.md`](docs/Diagnostics.md) - logs, traces, watchpoints, dumps, KPRINT, input scripts, tap, probe.
 - [`docs/Troubleshooting.md`](docs/Troubleshooting.md) - symptom-driven diagnosis and fixes.
 - [`docs/Glossary.md`](docs/Glossary.md) - hardware, emulator, renderer, audio, and release terms.
@@ -195,6 +197,15 @@ The desktop frontend uses **Silk.NET.OpenGL/OpenGLES** through Avalonia's OpenGL
 - CPU `WriteableBitmap` fallback only when neither GL 3.3 nor GLES 3.0/3.1 is available.
 
 The emulation core still renders CELs in software for accuracy. The GPU accelerates presentation, palette expansion, scaling, and filters; it does not change emulated state.
+
+An optional **Vulkan 1.0 offscreen backend** (`FiveDo.Video.Vulkan`) mirrors the
+two-stage pipeline with build-time SPIR-V shaders, supports accurate, nearest,
+sharp-bilinear, and CRT modes, and can be selected for the desktop fallback with
+`--gl-backend vulkan`. It is also exposed as a headless probe
+(`--vk-probe`). The Vulkan path matches the CPU oracle pixel-for-pixel at 320x240
+(`0xD6BD89C5`), measures 1.51 ms mean / 1.80 ms p99 at 4K sharp-bilinear with 0 managed
+bytes/frame on the RTX 4070, and remains optional: OpenGL/GLES is still the required
+desktop presenter. See [`docs/Vulkan.md`](docs/Vulkan.md).
 
 ## Performance target
 
@@ -289,10 +300,19 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
   --gl-probe-capture artifacts/gl-probe/parity-angle.png
 ```
 
-The probe writes per-frame present/GPU percentiles, capabilities, allocations, and
-optional CPU/GPU parity as JSON. `--gl-backend auto|wgl|angle|software` also works
-for a normal desktop launch. See [`docs/Performance.md`](docs/Performance.md) for
-the measured WGL and ANGLE results.
+Optional Vulkan probe (headless, no Avalonia window):
+
+```powershell
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
+  --vk-probe artifacts/vk-probe/parity.json `
+  --vk-probe-size 320x240 --vk-probe-frames 20 --vk-probe-warmup 5 `
+  --vk-probe-filter accurate --vk-probe-capture artifacts/vk-probe/parity.png
+```
+
+The probes write per-frame present/GPU percentiles, capabilities, allocations, and
+optional CPU/GPU parity as JSON. `--gl-backend auto|wgl|angle|software|vulkan` also
+works for a normal desktop launch. See [`docs/Performance.md`](docs/Performance.md)
+and [`docs/Vulkan.md`](docs/Vulkan.md) for the measured results.
 
 Both the CLI and the Avalonia frontend publish trimmed by default
 (`PublishTrimmed=true`). Settings/input/save-slot JSON and all CLI `--json` responses

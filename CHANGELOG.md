@@ -7,6 +7,17 @@ still change.
 
 ### Added
 
+- Optional Vulkan 1.0 offscreen backend (`FiveDo.Video.Vulkan`): a two-stage
+  palette/scale pipeline with build-time SPIR-V shaders, accurate/nearest/
+  sharp-bilinear/CRT filters, GPU timestamp queries, and host readback. `--vk-probe`
+  writes the shared GPU probe JSON and PNG captures; `--gl-backend vulkan` selects
+  the optional desktop offscreen/readback path. A 320x240 Accurate probe matches the
+  CPU oracle (`0xD6BD89C5`, 0 different pixels); 4K sharp-bilinear measures 1.51 ms
+  mean / 1.80 ms p99 present with 0 managed bytes/frame on the RTX 4070. See
+  [`docs/Vulkan.md`](docs/Vulkan.md).
+- Vulkan tests: generated SPIR-V module checks, probe option parsing, and opt-in
+  `FIVEDO_VULKAN_TESTS=1` CPU-parity/source-size-change and 4K probe integration
+  tests.
 - Save-state disc identity check: loading a state now reports a warning when the
   disc/game hash stored in the state header differs from the disc currently
   inserted. The state still loads; the CLI `run`/`trace` commands, the desktop

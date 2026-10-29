@@ -10,7 +10,7 @@ namespace FiveDo.Video;
 /// Uses <see cref="FrameAssembler"/> to expand the palette. The desktop frontend uses it only
 /// when an OpenGL 3.3 context is unavailable, and tests use it to compare the GPU path.
 /// </remarks>
-public sealed class CpuVideoRenderer : IVideoRenderer
+public sealed class CpuVideoRenderer : ICpuFrameRenderer
 {
     private FrameBuffer _frame = new(1, 1);
     private RendererSettings _settings = new();

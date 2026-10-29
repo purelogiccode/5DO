@@ -219,6 +219,7 @@ The renderer must support two shader/API variants behind one contract:
 |---|---|---|---|
 | Desktop GL | OpenGL 3.3 core, GLSL 330 | Windows via WGL, Linux GLX/EGL, macOS 4.1 core | Primary desktop path; integer textures and `texelFetch`. Validated on Windows 11 / RTX 4070 (OpenGL 4.0) with `--gl-backend wgl`. |
 | GLES | OpenGL ES 3.0/3.1, GLSL ES 300 | Windows ANGLE, Raspberry Pi 4/5, other GLES devices | Same two-stage pipeline; `R16UI` + `usampler2D`. Validated on Windows 11 / RTX 4070 via ANGLE (OpenGL ES 3.0) with `--gl-backend angle`; Pi remains open. |
+| Vulkan (optional) | Vulkan 1.0, SPIR-V | Windows/Linux/macOS with a Vulkan loader | Offscreen two-stage pipeline with CPU readback; `--vk-probe`. 4K sharp-bilinear measured 1.51 ms mean / 1.80 ms p99 present and 0 bytes/frame on the RTX 4070. Not a window-system/swapchain presenter. |
 
 Implementation requirements:
 
@@ -385,6 +386,29 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
 ANGLE does not expose `GL_TIME_ELAPSED`, so the GPU timing column is `null`; the
 CPU present times and the pixel-parity result below are still measured. The
 renderer/mailbox path remains allocation-free after warm-up.
+
+**Optional Vulkan (2026-10-29).** The headless `--vk-probe` runs the
+`FiveDo.Video.Vulkan` offscreen backend on the same RTX 4070 (Vulkan 1.4). It waits
+for each frame; the readback used for captures/parity is outside the timing loop.
+30 measured frames after 10 warm-up frames:
+
+```powershell
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
+  --vk-probe artifacts/vk-probe/4k-sharp.json `
+  --vk-probe-size 3840x2160 --vk-probe-frames 30 --vk-probe-warmup 10 `
+  --vk-probe-filter sharp-bilinear
+```
+
+| Vulkan case | Output | Present mean | Present p99 | GPU mean | GPU p99 | Managed bytes/frame |
+|---|---:|---:|---:|---:|---:|---:|
+| Sharp-bilinear | 3840x2160 | 1.508 ms | 1.797 ms | 1.344 ms | 1.615 ms | 0 |
+| Accurate | 3840x2160 | 1.505 ms | 1.752 ms | 1.341 ms | 1.501 ms | 0 |
+| CRT | 3840x2160 | 1.508 ms | 1.635 ms | 1.336 ms | 1.382 ms | 0 |
+| Sharp-bilinear | 1920x1080 | 0.489 ms | 0.502 ms | 0.344 ms | 0.348 ms | 0 |
+
+A 320x240 Accurate probe reports 0 different pixels and the same `0xD6BD89C5`
+(`3602745797`) hash as the OpenGL backends. The Vulkan path is optional and does not
+replace the measured WGL/ANGLE presenter; see [`Vulkan.md`](Vulkan.md).
 
 **CPU/GPU parity (2026-10-26).** `--gl-probe-capture <path>` writes the presented
 frame as a PNG and, for a 1:1 Accurate capture, compares it with the CPU

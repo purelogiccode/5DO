@@ -38,8 +38,9 @@ images, BIOS ROMs, extracted assets, screenshots, or WAV captures.
       are carried forward. `packaging/package.ps1` copies `LICENSE` into each archive.
 - [x] `THIRD-PARTY-NOTICES.md` covers FreeDO, 4DO, Opera/libopera, xBR-lv2, HQx,
       CHDSharp, VideoGameFileSystemParser, Avalonia, CommunityToolkit.Mvvm,
-      Microsoft.Extensions.*, System.CommandLine, Silk.NET/OpenAL, xUnit,
-      BenchmarkDotNet, and the now-bundled OpenAL Soft 1.23.1 runtime.
+      Microsoft.Extensions.*, System.CommandLine, Silk.NET/OpenAL/Vulkan,
+      XenoAtom.ShaderCompiler.Build, xUnit, BenchmarkDotNet, and the now-bundled
+      OpenAL Soft 1.23.1 runtime.
 - [x] The OpenAL Soft native runtime is included for all six RIDs through
       `Silk.NET.OpenAL.Soft.Native`; Windows copies `soft_oal.dll` as `OpenAL32.dll`.
       This adds an LGPL-2.0-or-later binary-distribution obligation to the release.

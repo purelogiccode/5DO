@@ -156,7 +156,7 @@ internal sealed record GlProbeOptions(
         return true;
     }
 
-    private static bool TryParseSize(string text, out int width, out int height)
+    internal static bool TryParseSize(string text, out int width, out int height)
     {
         width = 0;
         height = 0;
@@ -178,7 +178,7 @@ internal sealed record GlProbeOptions(
                 out height);
     }
 
-    private static bool TryParseRange(
+    internal static bool TryParseRange(
         string? text,
         int defaultValue,
         int minimum,
@@ -205,7 +205,7 @@ internal sealed record GlProbeOptions(
         return true;
     }
 
-    private static bool TryParseFilter(string text, out VideoFilter filter)
+    internal static bool TryParseFilter(string text, out VideoFilter filter)
     {
         var normalized = text.Replace("-", string.Empty, StringComparison.Ordinal)
             .Replace("_", string.Empty, StringComparison.Ordinal)

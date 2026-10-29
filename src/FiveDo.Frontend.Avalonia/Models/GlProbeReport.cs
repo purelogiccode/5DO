@@ -57,6 +57,7 @@ namespace FiveDo.Frontend.Avalonia;
 /// <param name="ScaleAllocatedBytes">Bytes allocated by the last scale/filter stage.</param>
 /// <param name="Present">CPU present timing.</param>
 /// <param name="Gpu">GPU timing when available.</param>
+/// <param name="FilterFallback">Whether the backend substituted a supported filter.</param>
 public sealed record GlProbeReport(
     bool Ok,
     string? Error,
@@ -97,4 +98,5 @@ public sealed record GlProbeReport(
     long PaletteAllocatedBytes,
     long ScaleAllocatedBytes,
     GlProbeTiming? Present,
-    GlProbeTiming? Gpu);
+    GlProbeTiming? Gpu,
+    bool FilterFallback = false);

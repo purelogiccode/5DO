@@ -24,6 +24,8 @@
     <PackageVersion Include="Silk.NET.OpenAL" Version="2.23.0" />
     <PackageVersion Include="Silk.NET.OpenAL.Soft.Native" Version="$(FiveDoOpenAlSoftVersion)" />
     <PackageVersion Include="Silk.NET.Input" Version="2.23.0" />
+    <PackageVersion Include="Silk.NET.Vulkan" Version="2.23.0" />
+    <PackageVersion Include="XenoAtom.ShaderCompiler.Build" Version="1.2.2" />
     <PackageVersion Include="CHDSharp" Version="1.5.2" />
     <!-- Tests and benchmarks -->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />

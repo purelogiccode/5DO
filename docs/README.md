@@ -5,7 +5,7 @@ emulator for the Panasonic 3DO Interactive Multiplayer. The desktop app is Avalo
 headless tool is `FiveDo.Cli`; the emulation core is split into one assembly per console
 subsystem.
 
-**Current snapshot:** `1.0.0-rc.1`, documented-compatibility release scope, 845 tests
+**Current snapshot:** `1.0.0-rc.1`, documented-compatibility release scope, 860 tests
 passing (verified 2026-10-29). Windows x64 is the validated platform. See
 [`Status.md`](Status.md), [`ReleaseChecklist.md`](ReleaseChecklist.md), and
 [`KnownIssues.md`](KnownIssues.md) for the honest release position.
@@ -23,7 +23,7 @@ passing (verified 2026-10-29). Windows x64 is the validated platform. See
 | Change settings, paths, or input bindings | [`Configuration.md`](Configuration.md) |
 | Understand or inspect save states | [`SaveStates.md`](SaveStates.md) |
 | Work on audio or diagnose audio problems | [`Audio.md`](Audio.md), [`Troubleshooting.md`](Troubleshooting.md) |
-| Work on video, filters, or the OpenGL presenter | [`Video.md`](Video.md) |
+| Work on video, filters, the OpenGL presenter, or the optional Vulkan backend | [`Video.md`](Video.md), [`Vulkan.md`](Vulkan.md) |
 | Use traces, dumps, probes, and diagnostics | [`Diagnostics.md`](Diagnostics.md) |
 | Understand the source layout and add a feature | [`DeveloperGuide.md`](DeveloperGuide.md) |
 | Diagnose a failure | [`Troubleshooting.md`](Troubleshooting.md) |
@@ -52,7 +52,8 @@ passing (verified 2026-10-29). Windows x64 is the validated platform. See
 | [`Configuration.md`](Configuration.md) | `settings.json` schema, per-game overrides, input profiles, NVRAM, paths, environment variables, precedence. |
 | [`SaveStates.md`](SaveStates.md) | `.tdos` binary layout, section table, validation rules, slot layout, roundtrip workflow, compatibility. |
 | [`Audio.md`](Audio.md) | DSP clock, 44.1 kHz pipeline, OpenAL output, soft limiter, WAV capture, audio tap, analysis, pacing. |
-| [`Video.md`](Video.md) | VDLP/frame assembly, CPU oracle, OpenGL/GLES two-stage pipeline, every filter including FSR, backends, probe, screenshots. |
+| [`Video.md`](Video.md) | VDLP/frame assembly, CPU oracle, OpenGL/GLES two-stage pipeline, every filter including FSR, backends, probes, screenshots. |
+| [`Vulkan.md`](Vulkan.md) | Optional offscreen Vulkan backend: SPIR-V pipeline, filters, probe, measured results, and limitations. |
 | [`Diagnostics.md`](Diagnostics.md) | Logs, CPU/DSP/CD/CLIO/CEL/PBUS traces, watchpoints, dumps, KPRINT, input scripts, audio tap, GPU probe, benchmark. |
 
 ### Developer and maintainer

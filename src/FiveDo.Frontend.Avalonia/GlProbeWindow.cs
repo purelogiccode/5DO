@@ -326,39 +326,9 @@ internal sealed class GlProbeWindow : Window, IDisposable
     private static uint HashGpuPixels(byte[] pixels, int width, int height, bool flipVertically)
         => HashPixels(pixels, width, height, flipVertically);
 
-    private void InitializeSyntheticFrame()
-    {
-        _frame.SourceWidth = SourceWidth;
-        _frame.SourceHeight = SourceHeight;
-        for (var y = 0; y < SourceHeight; y++)
-        {
-            VdlLine line = _frame[y];
-            line.Width = SourceWidth;
-            line.OutControl = 0;
-            line.Background = 0;
-            for (var i = 0; i < VdlLine.ClutSize; i++)
-            {
-                line.ClutR[i] = (byte)(i * 8);
-                line.ClutG[i] = (byte)(255 - (i * 8));
-                line.ClutB[i] = (byte)(((i * 3) & 0x1f) * 8);
-            }
-        }
-    }
+    private void InitializeSyntheticFrame() => SyntheticVdlFrame.Initialize(_frame);
 
-    private void FillSyntheticFrame(int phase)
-    {
-        for (var y = 0; y < SourceHeight; y++)
-        {
-            Span<ushort> pixels = _frame[y].Pixels;
-            var row = (y + phase) & 0x1f;
-            for (var x = 0; x < SourceWidth; x++)
-            {
-                var column = (x + phase) & 0x1f;
-                var xor = (x ^ y) & 0x1f;
-                pixels[x] = (ushort)(column | (row << 5) | (xor << 10));
-            }
-        }
-    }
+    private void FillSyntheticFrame(int phase) => SyntheticVdlFrame.Fill(_frame, phase);
 
     private void Finish(bool success, string? error)
     {

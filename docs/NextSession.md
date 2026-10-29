@@ -1,6 +1,7 @@
 # Next Session Handoff
 
-**Date:** 2026-10-29 (nineteenth pass: save-state disc warnings, console hotkeys,
+**Date:** 2026-10-29 (twentieth pass: optional offscreen Vulkan backend and
+`--vk-probe`; the nineteenth pass added save-state disc warnings, console hotkeys,
 ISO/BIN `disc tracks`, and OpenAL Soft LGPL packaging; the eighteenth pass added
 Serilog logging and bug reporting; the seventeenth pass added the OpenAL crackle
 fix, PCM tap, and race profile)
@@ -14,7 +15,7 @@ is made current on the audio thread, underruns are padded/counted, and the CLI h
 `--audio openal`, `--volume`, `--realtime`, and `audio analyze <wav> --json`. Core
 frames are paced by `AudioFramePacer` (audio clock with a 60 Hz fallback), WAV writes
 are buffered with streaming peak/RMS/clipping statistics, and the NativeAOT CLI now
-opens the live backend. **845 tests pass.** The eighteenth pass replaced the custom
+opens the live backend. **860 tests pass.** The eighteenth pass replaced the custom
 logger with Serilog and added the asynchronous bug-report sink. The seventeenth pass fixed live OpenAL
 crackle by giving the fill loop real buffer ownership, added the `FIVEDO_AUDIO_TAP`
 PCM/timing recorder and overlay peak meter, added the FSR 1.0 filter, and recorded
@@ -717,6 +718,40 @@ runtime or move the context-current call back to the UI thread.
   slot-manager warning case, eighteen hotkey-router cases, and two `disc tracks`
   CLI cases.
 
+### 1.24 Twentieth pass: optional Vulkan backend and probe (2026-10-29)
+
+- **Offscreen Vulkan renderer.** `FiveDo.Video.Vulkan` implements the two-stage
+  presenter with Vulkan 1.0: R16_UINT indexed pixels, R8G8B8A8 CLUT, R32G32_UINT
+  line parameters, a native-resolution palette pass, an output-resolution
+  scale/filter pass, GPU timestamp queries, and a host readback buffer. GLSL is
+  compiled to SPIR-V at build time by `XenoAtom.ShaderCompiler.Build`; no Vulkan SDK
+  or shader compiler is required at runtime. `Silk.NET.Vulkan` provides the bindings.
+- **Filters.** Accurate/nearest, sharp-bilinear, and CRT are implemented. xBR, HQx,
+  and FSR are not in the Vulkan shader; they fall back to sharp-bilinear and set
+  `filterFallback` in the probe report.
+- **Probe.** `--vk-probe <path>` runs the renderer headlessly (no Avalonia window) and
+  writes the same GPU probe JSON as `--gl-probe`, including `present`/`gpu` timing,
+  allocations, capabilities, optional PNG capture, and CPU/GPU parity. Options:
+  `--vk-probe-size`, `--vk-probe-frames`, `--vk-probe-warmup`, `--vk-probe-filter`,
+  `--vk-probe-capture`, `--vk-probe-timeout`.
+- **Desktop path.** `--gl-backend vulkan` hides the OpenGL surface and presents the
+  Vulkan output through the existing `WriteableBitmap` path (`CaptureToFrame`).
+  OpenGL remains the required full-performance presenter; the Vulkan path is optional
+  and offscreen/readback-based.
+- **Results.** 320x240 Accurate parity: 0 different pixels, FNV-1a `0xD6BD89C5`
+  (`3602745797`), no vertical flip. RTX 4070 / Vulkan 1.4, 4K sharp-bilinear:
+  present 1.51 ms mean / 1.80 ms p99, GPU 1.34 ms mean / 1.62 ms p99, 0 managed
+  bytes/frame; 1080p sharp-bilinear present 0.49 ms mean / 0.50 ms p99. A 640x480
+  source/output case and a 320x240 -> 640x480 source-size change also match the CPU
+  oracle.
+- **Tests.** `VulkanShaderTests`, `VulkanRendererTests` (opt-in
+  `FIVEDO_VULKAN_TESTS=1`), `VulkanProbeIntegrationTests` (same opt-in), and
+  `VkProbeOptionsTests`. The opt-in tests are skipped without a Vulkan device.
+
+Do not replace the OpenGL presenter with the offscreen Vulkan path, and do not treat
+the Vulkan probe as a 4K window-system benchmark. The backend is a validated optional
+path; a native surface/swapchain and non-Windows device validation are future work.
+
 ---
 
 ## 2. Current evidence
@@ -1031,6 +1066,10 @@ save/load proof.
 - Do not redo the fifteenth-pass `--gl-backend` selection, `--gl-probe-capture`
   parity path, or the measured WGL/ANGLE/GLES 3.0 results. Extend them with
   GLES 3.1/Pi/DPI evidence only.
+- Do not redo the twentieth-pass Vulkan backend or `--vk-probe`: the offscreen
+  two-stage pipeline, build-time SPIR-V shaders, 320x240 CPU parity, 4K/1080p probe
+  results, and optional `--gl-backend vulkan` desktop path are implemented. Extend
+  them with a native surface/swapchain or non-Windows device evidence only.
 
 ---
 

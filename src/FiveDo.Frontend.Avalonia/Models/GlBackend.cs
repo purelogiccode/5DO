@@ -19,4 +19,7 @@ public enum GlBackend
 
     /// <summary>Force Avalonia's software renderer (no OpenGL surface).</summary>
     Software,
+
+    /// <summary>Use the optional offscreen Vulkan presenter with CPU readback.</summary>
+    Vulkan,
 }

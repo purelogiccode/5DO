@@ -6,8 +6,8 @@ namespace FiveDo.Video;
 
 /// <summary>Capabilities reported by a renderer backend.</summary>
 /// <param name="Name">Backend name.</param>
-/// <param name="MajorVersion">OpenGL major version, or 0 for the CPU fallback.</param>
-/// <param name="MinorVersion">OpenGL minor version.</param>
+/// <param name="MajorVersion">Graphics API major version, or 0 for the CPU fallback.</param>
+/// <param name="MinorVersion">Graphics API minor version.</param>
 /// <param name="MaxTextureSize">Maximum texture dimension.</param>
 /// <param name="SupportsIntegerTextures">Whether R16UI/usampler2D are available.</param>
 /// <param name="SupportsVsync">Whether the context supports vsync (swap interval).</param>

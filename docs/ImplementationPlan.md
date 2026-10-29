@@ -18,6 +18,13 @@ release-hardening pass.**
 identity warnings, console hotkey dispatch, ISO/BIN/CUE `disc tracks`, and the
 OpenAL Soft LGPL notice/source offer in every portable archive. **845 tests pass.**
 
+**Optional Vulkan update (2026-10-29, twentieth pass):** `FiveDo.Video.Vulkan`
+adds an offscreen Vulkan 1.0 two-stage presenter with build-time SPIR-V shaders,
+`--vk-probe`, and the optional `--gl-backend vulkan` desktop readback path. The
+320x240 Accurate probe matches the CPU oracle (`0xD6BD89C5`, 0 different pixels);
+4K sharp-bilinear measures 1.51 ms mean / 1.80 ms p99 present with 0 managed
+bytes/frame on the RTX 4070. **860 tests pass.** See [`Vulkan.md`](Vulkan.md).
+
 **Last updated:** 2026-10-29
 
 ---
@@ -234,7 +241,7 @@ project/type layout is unchanged.
 
 ### 4a. Current position vs. the plan (2026-10-26)
 
-Snapshot: 845 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
+Snapshot: 860 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
 and zero synthetic steady-state allocations; all five local corpus titles boot and
 render, and scripted gameplay is validated in Wolfenstein, Lemmings, Road Rash, and
 Alone. The opt-in 640x480 high-resolution mode is implemented and matches the
@@ -331,7 +338,7 @@ ARM timing work. See [`ReferenceStrategy.md`](ReferenceStrategy.md) and
 
 **Deliverables**
 
-- Buildable solution with 19 production projects, one test project, one benchmark project.
+- Buildable solution with 20 production projects, one test project, one benchmark project.
 - CLI and Avalonia app launch with placeholders.
 - CI green.
 
@@ -1129,6 +1136,17 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - Before the full renderer, create a small Avalonia + Silk.NET.OpenGL window that displays a synthetic 320x240 indexed frame with the palette shader.
   - This de-risks context creation, shader loading, and presentation on all three OSes.
   - Implemented as the Avalonia `VideoSurface` + `OpenGlRenderer`; a 6-second Windows launch smoke test passed. Linux/macOS smoke validation remains.
+- [x] **M9R.11 Optional Vulkan backend and probe.**
+  - **DONE (2026-10-29):** `FiveDo.Video.Vulkan` implements an offscreen Vulkan 1.0
+    two-stage presenter with build-time SPIR-V shaders (`XenoAtom.ShaderCompiler.Build`),
+    sampled R16_UINT/CLUT/parameter textures, accurate/nearest/sharp-bilinear/CRT
+    filters, GPU timestamp queries, and a host readback buffer. `--vk-probe` writes the
+    shared GPU probe JSON and PNG captures; `--gl-backend vulkan` selects the optional
+    desktop offscreen/readback path. A 320x240 Accurate probe matches the CPU oracle
+    with 0 different pixels and hash `0xD6BD89C5`; 4K sharp-bilinear measures 1.51 ms
+    mean / 1.80 ms p99 present with 0 managed bytes/frame on the RTX 4070. xBR/HQx/FSR
+    fall back to sharp-bilinear. A window-system surface/swapchain and non-Windows
+    device validation remain future work. See [`Vulkan.md`](Vulkan.md).
 
 **Deliverables**
 

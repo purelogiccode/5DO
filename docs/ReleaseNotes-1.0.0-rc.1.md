@@ -26,6 +26,11 @@ Full compatibility with the 3DO library is not claimed and is not a v1 gate.
   ten save slots, screenshots, fullscreen, logs, and first-run guide.
 - OpenGL/GLES two-stage presenter with accurate, nearest, sharp-bilinear, CRT, xBR,
   and HQx filters, CPU fallback, and 4K output support.
+- Optional offscreen Vulkan 1.0 backend with build-time SPIR-V shaders,
+  accurate/nearest/sharp-bilinear/CRT modes, CPU readback, and a headless
+  `--vk-probe`. It matches the CPU oracle at 320x240 (`0xD6BD89C5`) and measures
+  1.51 ms mean / 1.80 ms p99 present at 4K sharp-bilinear on the RTX 4070. OpenGL
+  remains the required desktop presenter; see [`Vulkan.md`](Vulkan.md).
 - 44.1 kHz stereo DSP audio with an exact sample clock, bundled OpenAL Soft live
   output, audio-driven frame pacing, and WAV capture/analysis
   (`audio analyze <wav> --json`).
@@ -82,7 +87,7 @@ The release checklist is in [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 - [x] `dotnet build 5DO.sln -c Release`: 0 warnings, 0 errors.
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`: 798/798
-      passing at rc.1 (845/845 after the 2026-10-29 pass).
+      passing at rc.1 (860/860 after the 2026-10-29 Vulkan pass).
 - [x] Synthetic benchmark budget gate: 2.28 ms/frame core mean, 4.03 ms core p99,
       4.66 ms total p99, 0 managed bytes/frame.
 - [x] Trimmed win-x64 CLI and frontend smoke tests (`selftest`, `bench`, `info`,

@@ -38,6 +38,10 @@ internal static class GlBackendOption
             case "CPU":
                 backend = GlBackend.Software;
                 return true;
+            case "VULKAN":
+            case "VK":
+                backend = GlBackend.Vulkan;
+                return true;
             default:
                 return false;
         }
@@ -52,6 +56,7 @@ internal static class GlBackendOption
             GlBackend.Wgl => [global::Avalonia.Win32RenderingMode.Wgl],
             GlBackend.Angle => [global::Avalonia.Win32RenderingMode.AngleEgl],
             GlBackend.Software => [global::Avalonia.Win32RenderingMode.Software],
+            GlBackend.Vulkan => [global::Avalonia.Win32RenderingMode.Software],
             _ => [global::Avalonia.Win32RenderingMode.Wgl, global::Avalonia.Win32RenderingMode.AngleEgl, global::Avalonia.Win32RenderingMode.Software],
         };
 }

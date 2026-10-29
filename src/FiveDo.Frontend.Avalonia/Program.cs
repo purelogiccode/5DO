@@ -36,6 +36,12 @@ internal static class Program
     public static GlProbeOptions? GlProbe { get; private set; }
 
     /// <summary>
+    /// Gets the optional headless Vulkan probe request. When set, the process runs the
+    /// offscreen Vulkan pipeline and exits without initializing Avalonia.
+    /// </summary>
+    public static VkProbeOptions? VkProbe { get; private set; }
+
+    /// <summary>
     /// Gets the renderer backend requested with <c>--gl-backend</c> (or the probe alias
     /// <c>--gl-probe-backend</c>). The default is <see cref="GlBackend.Auto"/>.
     /// </summary>
@@ -100,13 +106,27 @@ internal static class Program
             if (!GlBackendOption.TryParse(backendText, out GlBackend backend))
             {
                 Serilog.Log.Warning(
-                    "Unrecognized --gl-backend value {Backend}; use auto, wgl, angle, or software.",
+                    "Unrecognized --gl-backend value {Backend}; use auto, wgl, angle, software, or vulkan.",
                     backendText);
                 Environment.ExitCode = 1;
                 return;
             }
 
             RequestedGlBackend = backend;
+
+            if (HasFlag(args, "--vk-probe"))
+            {
+                if (!VkProbeOptions.TryParse(args, out VkProbeOptions? vkProbe, out var vkProbeError))
+                {
+                    Serilog.Log.Warning("Invalid Vulkan probe options: {Error}.", vkProbeError);
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                VkProbe = vkProbe;
+                Environment.ExitCode = VkProbeRunner.Run(vkProbe!);
+                return;
+            }
 
             SmokeTest = HasFlag(args, "--smoke-test");
             SmokeOutputPath = FindOptionValue(args, "--smoke-output");
@@ -123,7 +143,7 @@ internal static class Program
             }
 
             StartupDiscPath = FindDiscPath(args);
-            if (GlProbe is null && !SmokeTest)
+            if (GlProbe is null && VkProbe is null && !SmokeTest)
             {
                 ApplicationStatsClient.TrackLaunch();
             }
@@ -244,7 +264,14 @@ internal static class Program
             || string.Equals(previous, "--gl-probe-frames", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--gl-probe-warmup", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--gl-probe-filter", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(previous, "--gl-probe-timeout", StringComparison.OrdinalIgnoreCase);
+            || string.Equals(previous, "--gl-probe-timeout", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--vk-probe", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--vk-probe-capture", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--vk-probe-size", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--vk-probe-frames", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--vk-probe-warmup", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--vk-probe-filter", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--vk-probe-timeout", StringComparison.OrdinalIgnoreCase);
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.

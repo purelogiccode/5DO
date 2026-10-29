@@ -190,6 +190,7 @@ The game database is ported with attribution. Unknown game IDs get the first 8 h
 |---|---|---|
 | 320x240 NTSC | Yes | |
 | **OpenGL/GLES renderer** | **Required desktop path** | |
+| Optional Vulkan renderer | Offscreen/readback backend and `--vk-probe`; accurate/nearest/sharp-bilinear/CRT | Native Vulkan surface/swapchain |
 | GPU palette expansion | Yes (exact CPU parity in Accurate mode) | |
 | 4:3 aspect ratio, letterbox | Yes | |
 | Nearest / integer scaling | Yes | |

@@ -43,6 +43,10 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
   and comes from the Avalonia UI/compositor loop; the renderer/mailbox path itself is
   zero-allocation after warm-up.
 - Linux/macOS OpenGL launch validation is not complete.
+- The optional Vulkan backend (`--gl-backend vulkan` / `--vk-probe`) is offscreen and
+  readback-based. It has no native surface/swapchain, vsync, or xBR/HQx/FSR shaders;
+  unsupported filters fall back to sharp-bilinear. Non-Windows Vulkan device validation
+  is pending. See [`Vulkan.md`](Vulkan.md).
 
 ## Tooling and UI
 

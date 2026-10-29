@@ -21,6 +21,7 @@ src/
   FiveDo.Sport/              VRAM fill/copy engine
   FiveDo.Video/              VDLP, frame assembly, mailbox, CPU presenter, viewport
   FiveDo.Video.OpenGL/       OpenGL/GLES presenter, shaders, filters, swap interval
+  FiveDo.Video.Vulkan/       optional offscreen Vulkan presenter, SPIR-V shaders
   FiveDo.Xbus/               XBUS controller and device slots
   FiveDo.Cdrom/              MEI CD-ROM device
   FiveDo.Storage/            ISO/BIN/CUE/CHD, BIOS/NVRAM, game database, prefetch
@@ -99,6 +100,7 @@ FiveDo.Cdrom --------------> Core
 | `FiveDo.Sport` | VRAM fill/copy, high-res plane mirroring | `Sport` | Core |
 | `FiveDo.Video` | VDLP display-list parser, line/frame assembly, CPU oracle, mailbox, viewport, CPU fallback | `Vdlp`, `FrameAssembler`, `GpuPalette`, `VdlFrameUploader`, `VdlFrameMailbox`, `ViewportCalculator`, `CpuVideoRenderer`, `RendererSettings`, `IVideoRenderer` | Core |
 | `FiveDo.Video.OpenGL` | Desktop GL/GLES presenter, two-stage palette/scale, filters, shaders, swap interval | `OpenGlRenderer`, `OpenGlCapabilities`, `SwapInterval`, `HqxFilter`, `Shaders`, `GlContextAdapter`, `OffscreenRenderTarget` | Core, Video, Silk.NET.OpenGL |
+| `FiveDo.Video.Vulkan` | Optional offscreen Vulkan 1.0 presenter, build-time SPIR-V palette/scale shaders, accurate/nearest/sharp-bilinear/CRT, readback | `VulkanOffscreenRenderer`, generated `VulkanShaders` | Core, Video, Silk.NET.Vulkan |
 | `FiveDo.Xbus` | XBUS controller, device slots, poll/status/data FIFOs | `Xbus` | Core |
 | `FiveDo.Cdrom` | MEI CD-ROM command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice` | Core |
 | `FiveDo.Storage` | ISO/BIN/CUE/CHD readers, prefetch, BIOS/NVRAM, volume header, game ID/database | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `VolumeHeader`, `GameId`, `GameDatabase` | Core, CHDSharp |
@@ -108,7 +110,7 @@ FiveDo.Cdrom --------------> Core
 | `FiveDo.Machine` | Composition root, frame loop, Quartz scheduler, state sections, device wiring | `FiveDoMachine`, `Quartz` | Core + chips |
 | `FiveDo.Host` | Core thread/pacing, settings, BIOS/disc/NVRAM loading, audio/input backends, save slots, library, fixes, autopilot | `CoreRunner`, `AudioFramePacer`, `AppSettings`, `AppSettingsStore`, `NvramStore`, `SaveStateSlotManager`, `StateInspector`, `GameLibraryScanner`, `GameCompatibility`, `MemoryPatch`, `RoadRashAutopilot` | Core, Machine, Storage, Audio, Input, Video, Diagnostics |
 | `FiveDo.Cli` | Headless commands, JSON contracts | `Program`, `CliJsonModels` | Host |
-| `FiveDo.Frontend.Avalonia` | Desktop shell, library, settings, input, save slots, logs, GPU probe | `MainWindow`, `VideoSurface`, `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`, `GameLibraryWindow`, `LogsWindow`, `WelcomeWindow`, `GlProbeWindow`, `GlProbeOptions`, `GlBackendOption`, `PlatformGamepadBackend` | Host, Video.OpenGL, Avalonia |
+| `FiveDo.Frontend.Avalonia` | Desktop shell, library, settings, input, save slots, logs, GPU probes | `MainWindow`, `VideoSurface`, `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`, `GameLibraryWindow`, `LogsWindow`, `WelcomeWindow`, `GlProbeWindow`, `GlProbeOptions`, `VkProbeRunner`, `VkProbeOptions`, `GlBackendOption`, `PlatformGamepadBackend` | Host, Video.OpenGL, Video.Vulkan, Avalonia |
 | `FiveDo.Tests` | Unit/integration/golden/CLI/frontend tests | subsystem fixtures, ARM test assembler/rig, fake chips/MMIO, PNG writer | all production projects |
 | `FiveDo.Benchmarks` | Synthetic/real-content frame benchmark, gate, baseline | `Program` | Cpu, Madam, Dsp, Diagnostics, Machine, Storage, Video |
 

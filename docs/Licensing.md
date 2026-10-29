@@ -71,7 +71,9 @@ The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NO
 - xUnit (Apache-2.0)
 - Serilog, Serilog.Sinks.Console, Serilog.Sinks.File (Apache-2.0)
 - BenchmarkDotNet (MIT)
-- Silk.NET (MIT)
+- Silk.NET (MIT), including Silk.NET.OpenGL, Silk.NET.OpenAL, and Silk.NET.Vulkan
+- XenoAtom.ShaderCompiler.Build (BSD-2-Clause; build-time GLSL-to-SPIR-V compiler,
+  not distributed at runtime)
 - xBR-lv2 shader algorithm by Hyllian (MIT; attribution preserved in the shader and
   `THIRD-PARTY-NOTICES.md`)
 - HQx 2x/3x/4x filters by Maxim Stepin and Cameron Zemek (LGPL-2.1+; attribution

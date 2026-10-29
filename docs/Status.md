@@ -1,13 +1,14 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-29, 1.0.0-rc.1 release preparation after the nineteenth
-pass (save-state disc warnings, console hotkeys, ISO/BIN `disc tracks`, and the
-OpenAL Soft LGPL notice/source offer; the eighteenth pass added Serilog logging
-and bug reporting; the seventeenth pass added the OpenAL crackle fix, PCM tap,
-FSR 1.0, and the Road Rash race profile; see `git log` for the exact commits).
+**Snapshot:** 2026-10-29, 1.0.0-rc.1 release preparation after the twentieth pass
+(optional offscreen Vulkan backend and `--vk-probe`; the nineteenth pass added
+save-state disc warnings, console hotkeys, ISO/BIN `disc tracks`, and the OpenAL
+Soft LGPL notice/source offer; the eighteenth pass added Serilog logging and bug
+reporting; the seventeenth pass added the OpenAL crackle fix, PCM tap, FSR 1.0,
+and the Road Rash race profile; see `git log` for the exact commits).
 **Release definition:** documented compatibility, not full compatibility; see
 [`ReleaseChecklist.md`](ReleaseChecklist.md).
-**Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, CLI, and deterministic tests.
+**Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, optional Vulkan backend, CLI, and deterministic tests.
 **Reference:** `References/opera-libretro-master/libopera` is now the primary
 behavioral reference for new compatibility work; see
 [`ReferenceStrategy.md`](ReferenceStrategy.md).
@@ -57,6 +58,15 @@ This is the short, current answer to "where are we?" The documentation index is
   ANGLE/GLES: 4K sharp-bilinear presents in 0.14 ms mean / 0.47 ms p99 with 0
   renderer allocations/frame on the RTX 4070; a 320x240 Accurate capture matches
   the CPU oracle on both backends.
+- **Optional Vulkan:** `FiveDo.Video.Vulkan` is an offscreen Vulkan 1.0 two-stage
+  presenter with build-time SPIR-V shaders, sampled R16_UINT/CLUT/parameter
+  textures, accurate/nearest/sharp-bilinear/CRT filters, GPU timestamp queries, and
+  a host readback buffer. `--vk-probe` writes the shared GPU probe JSON and PNG
+  captures; `--gl-backend vulkan` selects the optional desktop offscreen/readback
+  path. The 320x240 Accurate probe matches the CPU oracle (`0xD6BD89C5`, 0 different
+  pixels); 4K sharp-bilinear measures 1.51 ms mean / 1.80 ms p99 present with 0
+  managed bytes/frame on the RTX 4070. xBR/HQx/FSR fall back to sharp-bilinear, and
+  a window-system surface/swapchain is future work. See [`Vulkan.md`](Vulkan.md).
 - **Renderer robustness:** GL/GLES capability parsing reports the API and version,
   fullscreen/F11/Escape work, GL readback screenshots are implemented, and GL init
   failure or context loss switches the shell to the CPU `WriteableBitmap` presenter.
@@ -124,7 +134,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 845 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 860 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
@@ -272,6 +282,12 @@ measured the presentation path on Windows 11 (Ryzen 9 7900, RTX 4070, OpenGL 4.0
 | Accurate | 0.082 ms | 0.178 ms | 0.091 ms | 0.287 ms | 0 B/frame |
 | CRT | 0.147 ms | 1.157 ms | 0.191 ms | 0.193 ms | 0 B/frame |
 | xBR 4x | 0.425 ms | 1.788 ms | 0.203 ms | 0.205 ms | 0 B/frame |
+
+The optional Vulkan offscreen backend was also measured on the same machine: 4K
+sharp-bilinear present 1.51 ms mean / 1.80 ms p99, GPU 1.34 ms mean / 1.62 ms p99,
+0 managed bytes/frame; 1080p sharp-bilinear present 0.49 ms mean / 0.50 ms p99. Its
+320x240 Accurate output matches the CPU oracle (`0xD6BD89C5`, 0 different pixels).
+See [`Vulkan.md`](Vulkan.md).
 
 The platform swap interval is wired through `SwapInterval.TryCreate` (WGL/GLX/EGL);
 the Windows WGL path resolves `WGL_EXT_swap_control` and reports `vsyncActive: true`
