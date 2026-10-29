@@ -45,7 +45,7 @@ internal sealed record GlProbeOptions(
     /// <param name="options">Parsed options on success.</param>
     /// <param name="error">Validation error on failure.</param>
     /// <returns><see langword="true"/> when a valid probe request was found.</returns>
-    public static bool TryParse(string[] args, out GlProbeOptions? options, out string? error)
+    internal static bool TryParse(string[] args, out GlProbeOptions? options, out string? error)
     {
         options = null;
         error = null;

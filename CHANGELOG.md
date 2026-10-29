@@ -86,6 +86,10 @@ still change.
 
 ### Changed
 
+- Tightened method visibility: `StateCrc32.Compute`, `GlBackendOption.TryParse`,
+  `GlProbeOptions.TryParse`, and the `GlProbeWindow` constructor are now `internal`
+  to match their internal containing types. Interface implementations, entry
+  points, and the Avalonia designer hook remain public as required.
 - Reorganized the production projects: domain models and enums now live in each
   project's `Models/` folder and interfaces in `Interfaces/`. Nested implementation
   details and interop structs stay with their owning types; namespaces are unchanged.

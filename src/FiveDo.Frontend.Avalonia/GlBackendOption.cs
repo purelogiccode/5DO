@@ -9,7 +9,7 @@ internal static class GlBackendOption
     /// <param name="text">Option value, or <see langword="null"/> when not supplied.</param>
     /// <param name="backend">Parsed backend.</param>
     /// <returns><see langword="true"/> when the value is recognized.</returns>
-    public static bool TryParse(string? text, out GlBackend backend)
+    internal static bool TryParse(string? text, out GlBackend backend)
     {
         backend = GlBackend.Auto;
         if (string.IsNullOrWhiteSpace(text))

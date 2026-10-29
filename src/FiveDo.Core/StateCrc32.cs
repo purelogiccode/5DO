@@ -12,7 +12,7 @@ internal static class StateCrc32
     /// <summary>Computes the CRC-32 of a byte span.</summary>
     /// <param name="data">Data to checksum.</param>
     /// <returns>The checksum.</returns>
-    public static uint Compute(ReadOnlySpan<byte> data)
+    internal static uint Compute(ReadOnlySpan<byte> data)
     {
         var crc = 0xFFFFFFFFu;
         foreach (var value in data)

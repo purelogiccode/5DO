@@ -53,7 +53,7 @@ internal sealed class GlProbeWindow : Window, IDisposable
     /// <summary>Initializes a new instance of the <see cref="GlProbeWindow"/> class.</summary>
     /// <param name="options">Probe options.</param>
     /// <param name="exit">Callback that shuts down the application with an exit code.</param>
-    public GlProbeWindow(GlProbeOptions options, Action<int> exit)
+    internal GlProbeWindow(GlProbeOptions options, Action<int> exit)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(exit);
