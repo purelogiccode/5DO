@@ -36,8 +36,9 @@ internal static class Program
     public static GlProbeOptions? GlProbe { get; private set; }
 
     /// <summary>
-    /// Gets the optional headless Vulkan probe request. When set, the process runs the
-    /// offscreen Vulkan pipeline and exits without initializing Avalonia.
+    /// Gets the optional Vulkan probe request. When set, the process runs the offscreen
+    /// pipeline (or the native Win32 swapchain for <c>--vk-window-probe</c>) and exits
+    /// without initializing Avalonia.
     /// </summary>
     public static VkProbeOptions? VkProbe { get; private set; }
 
@@ -60,7 +61,9 @@ internal static class Program
                 ApplicationMode = "Desktop",
                 WriteToConsole = true,
                 WriteToFile = true,
-                EnableBugReports = true,
+                // Automated smoke/probe runs must never create bug reports; they run
+                // without a user session and their environment warnings are expected.
+                EnableBugReports = !IsAutomatedRun(args),
             });
         }
         catch (Exception exception)
@@ -113,6 +116,20 @@ internal static class Program
             }
 
             RequestedGlBackend = backend;
+
+            if (HasFlag(args, "--vk-window-probe"))
+            {
+                if (!VkProbeOptions.TryParseWindow(args, out VkProbeOptions? windowProbe, out var windowProbeError))
+                {
+                    Serilog.Log.Warning("Invalid Vulkan window probe options: {Error}.", windowProbeError);
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                VkProbe = windowProbe;
+                Environment.ExitCode = VkProbeRunner.Run(windowProbe!);
+                return;
+            }
 
             if (HasFlag(args, "--vk-probe"))
             {
@@ -206,6 +223,18 @@ internal static class Program
         return false;
     }
 
+    /// <summary>
+    /// Gets a value indicating whether the process is an automated smoke or probe run.
+    /// These runs disable bug reporting and launch statistics.
+    /// </summary>
+    /// <param name="args">Command-line arguments.</param>
+    /// <returns><see langword="true"/> for smoke, OpenGL probe, or Vulkan probe runs.</returns>
+    internal static bool IsAutomatedRun(string[] args)
+        => HasFlag(args, "--smoke-test")
+            || HasFlag(args, "--gl-probe")
+            || HasFlag(args, "--vk-probe")
+            || HasFlag(args, "--vk-window-probe");
+
     internal static string? FindOptionValue(string[] args, string option)
     {
         for (var i = 0; i < args.Length - 1; i++)
@@ -266,12 +295,19 @@ internal static class Program
             || string.Equals(previous, "--gl-probe-filter", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--gl-probe-timeout", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--vk-probe", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--vk-window-probe", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--vk-probe-capture", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--vk-probe-size", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--vk-probe-frames", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--vk-probe-warmup", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--vk-probe-filter", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(previous, "--vk-probe-timeout", StringComparison.OrdinalIgnoreCase);
+            || string.Equals(previous, "--vk-probe-timeout", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--vk-window-probe-capture", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--vk-window-probe-size", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--vk-window-probe-frames", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--vk-window-probe-warmup", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--vk-window-probe-filter", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--vk-window-probe-timeout", StringComparison.OrdinalIgnoreCase);
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.

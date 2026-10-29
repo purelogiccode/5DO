@@ -240,29 +240,51 @@ public sealed class LogTests
         Assert.False(handler.Body.IsCompleted);
     }
 
+    [Fact]
+    public void BugReportSink_SuppressesExpectedEnvironmentalEvents()
+    {
+        LogEvent expected = CreateEvent(
+            LogEventLevel.Warning,
+            exception: null,
+            "OpenAL audio is unavailable; emulation continues silently.",
+            suppressBugReport: true);
+        LogEvent actionable = CreateEvent(
+            LogEventLevel.Warning,
+            exception: null,
+            "The disc read failed.");
+
+        Assert.True(BugReportSink.IsSuppressed(expected));
+        Assert.False(BugReportSink.IsSuppressed(actionable));
+    }
+
     private static Logger CreateLogger(InMemorySerilogSink sink)
         => new LoggerConfiguration()
             .MinimumLevel.Verbose()
             .WriteTo.Sink(sink)
             .CreateLogger();
 
-    private static LogEvent CreateEvent(LogEventLevel level, Exception? exception, string message)
+    private static LogEvent CreateEvent(
+        LogEventLevel level,
+        Exception? exception,
+        string message,
+        bool suppressBugReport = false)
     {
         var sink = new CapturingSink();
         using Logger logger = new LoggerConfiguration()
             .MinimumLevel.Verbose()
             .WriteTo.Sink(sink)
             .CreateLogger();
+        ILogger source = suppressBugReport ? logger.WithoutBugReport() : logger;
         switch (level)
         {
             case LogEventLevel.Warning:
-                logger.Warning(exception, "{Message}", message);
+                source.Warning(exception, "{Message}", message);
                 break;
             case LogEventLevel.Error:
-                logger.Error(exception, "{Message}", message);
+                source.Error(exception, "{Message}", message);
                 break;
             case LogEventLevel.Information:
-                logger.Information("{Message}", message);
+                source.Information("{Message}", message);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(level), level, "Unsupported test level.");

@@ -8,11 +8,15 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-29, 1.0.0-rc.1 release preparation, twenty-second pass):**
+**Current position (2026-10-29, 1.0.0-rc.1 release preparation, twenty-third pass):**
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **876 tests pass.** The twenty-second pass added state-format version 2 with
+prototype. **882 tests pass.** The twenty-third pass added native Win32 Vulkan
+swapchain presentation and `--vk-window-probe`, honored the `PreferOpenGl` setting,
+added custom aspect editing, validated frontend NativeAOT audio with OpenAL's null
+device, and stopped expected environmental warnings from filing bug reports. The
+twenty-second pass added state-format version 2 with
 per-section Brotli compression (a 24.9 MB state becomes roughly 0.6-2.0 MB while
 version-1 states still load), plus stored/compressed sizes in `state inspect`. The
 twenty-first pass added the optional Vulkan xBR and
@@ -207,11 +211,14 @@ An optional **Vulkan 1.0 offscreen backend** (`FiveDo.Video.Vulkan`) mirrors the
 two-stage pipeline with build-time SPIR-V shaders, supports accurate, nearest,
 sharp-bilinear, CRT, xBR-lv2, FSR 1.0 (EASU + RCAS), and HQx 2x/3x/4x modes, and can
 be selected for the desktop fallback with `--gl-backend vulkan`. It is also exposed
-as a headless probe (`--vk-probe`). The Vulkan path matches the CPU oracle
+as a headless probe (`--vk-probe`) and a native Win32 swapchain probe
+(`--vk-window-probe`). The Vulkan path matches the CPU oracle
 pixel-for-pixel at 320x240 (`0xD6BD89C5`), measures 1.51 ms mean / 1.80 ms p99 at 4K
 sharp-bilinear, 1.55/1.92 ms at 4K xBR, 1.87/2.15 ms at 4K FSR, and 7.66/10.36 ms at
-4K HQx 2x (CPU-bound), with 0 managed bytes/frame on the RTX 4070. It remains
-optional: OpenGL/GLES is still the required desktop presenter. See
+4K HQx 2x (CPU-bound), with 0 managed bytes/frame on the RTX 4070. The native window
+probe presents 4K sharp-bilinear through a FIFO swapchain at 1.34 ms mean / 1.43 ms
+p99 GPU time (present includes the 165 Hz display wait) with 0 managed bytes/frame.
+It remains optional: OpenGL/GLES is still the required desktop presenter. See
 [`docs/Vulkan.md`](docs/Vulkan.md).
 
 ## Performance target
@@ -314,6 +321,16 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
   --vk-probe artifacts/vk-probe/parity.json `
   --vk-probe-size 320x240 --vk-probe-frames 20 --vk-probe-warmup 5 `
   --vk-probe-filter accurate --vk-probe-capture artifacts/vk-probe/parity.png
+```
+
+Optional native Win32 Vulkan swapchain probe (opens a window and presents through
+FIFO vsync):
+
+```powershell
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
+  --vk-window-probe artifacts/vk-probe/window-4k.json `
+  --vk-window-probe-size 3840x2160 --vk-window-probe-frames 60 `
+  --vk-window-probe-warmup 15 --vk-window-probe-filter sharp-bilinear
 ```
 
 The probes write per-frame present/GPU percentiles, capabilities, allocations, and

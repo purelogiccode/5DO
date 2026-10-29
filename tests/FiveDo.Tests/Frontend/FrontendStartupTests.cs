@@ -16,6 +16,17 @@ public class FrontendStartupTests
     }
 
     [Fact]
+    public void IsAutomatedRun_DetectsSmokeAndProbeModes()
+    {
+        Assert.True(Program.IsAutomatedRun(["--smoke-test"]));
+        Assert.True(Program.IsAutomatedRun(["--gl-probe", "out.json"]));
+        Assert.True(Program.IsAutomatedRun(["--vk-probe", "out.json"]));
+        Assert.True(Program.IsAutomatedRun(["--vk-window-probe", "out.json"]));
+        Assert.False(Program.IsAutomatedRun([]));
+        Assert.False(Program.IsAutomatedRun(["--disc", "game.chd"]));
+    }
+
+    [Fact]
     public void FindOptionValue_ReturnsTheFollowingArgument()
     {
         Assert.Equal("out.txt", Program.FindOptionValue(["--smoke-output", "out.txt"], "--smoke-output"));

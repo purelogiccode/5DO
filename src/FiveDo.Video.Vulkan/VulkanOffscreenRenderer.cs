@@ -26,7 +26,7 @@ namespace FiveDo.Video.Vulkan;
 /// <see cref="FilterFallback"/>.
 /// </para>
 /// </remarks>
-public sealed unsafe class VulkanOffscreenRenderer : ICpuFrameRenderer, IRendererTiming
+public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, IRendererTiming
 {
     private const uint InvalidHandle = uint.MaxValue;
     private const int MaxSourceWidth = VdlFrameUploader.MaxWidth;
@@ -210,6 +210,7 @@ public sealed unsafe class VulkanOffscreenRenderer : ICpuFrameRenderer, IRendere
         CreateOutputTarget();
         UpdateDescriptors();
         _initialized = true;
+        CreateSwapchainResources();
     }
 
     /// <inheritdoc />
@@ -230,6 +231,7 @@ public sealed unsafe class VulkanOffscreenRenderer : ICpuFrameRenderer, IRendere
         {
             DestroyOutputTarget();
             CreateOutputTarget();
+            ResizeSwapchain(width, height);
         }
     }
 
@@ -271,6 +273,8 @@ public sealed unsafe class VulkanOffscreenRenderer : ICpuFrameRenderer, IRendere
         {
             ReadPixels(_frame.PixelSpan, out _, out _);
         }
+
+        PresentSwapchain();
     }
 
     private bool IsHqxFilter
@@ -375,7 +379,15 @@ public sealed unsafe class VulkanOffscreenRenderer : ICpuFrameRenderer, IRendere
         }
 
         _disposed = true;
+        DestroySwapchainResources();
+        DestroySurfaceResources();
         DestroyResources();
+        if (_instance.Handle != 0 && _vk is not null)
+        {
+            _vk.DestroyInstance(_instance, null);
+            _instance = default;
+        }
+
         if (_vk is not null)
         {
             _vk.Dispose();
@@ -389,28 +401,53 @@ public sealed unsafe class VulkanOffscreenRenderer : ICpuFrameRenderer, IRendere
         _vk = VkApi.GetApi();
         var applicationName = SilkMarshal.StringToPtr("5DO Vulkan");
         var engineName = SilkMarshal.StringToPtr("5DO");
+        string[] instanceExtensions = GetInstanceExtensions();
+        var extensionPointers = new nint[instanceExtensions.Length];
         try
         {
-            ApplicationInfo application = new()
+            for (var i = 0; i < instanceExtensions.Length; i++)
             {
-                SType = StructureType.ApplicationInfo,
-                PApplicationName = (byte*)applicationName,
-                ApplicationVersion = new Silk.NET.Core.Version32(1, 0, 0),
-                PEngineName = (byte*)engineName,
-                EngineVersion = new Silk.NET.Core.Version32(1, 0, 0),
-                ApiVersion = VkApi.Version10,
-            };
-            InstanceCreateInfo instanceCreate = new()
+                extensionPointers[i] = SilkMarshal.StringToPtr(instanceExtensions[i]);
+            }
+
+            fixed (nint* extensionPointer = extensionPointers)
             {
-                SType = StructureType.InstanceCreateInfo,
-                PApplicationInfo = &application,
-            };
-            Check(_vk.CreateInstance(&instanceCreate, null, out _instance), "vkCreateInstance");
+                ApplicationInfo application = new()
+                {
+                    SType = StructureType.ApplicationInfo,
+                    PApplicationName = (byte*)applicationName,
+                    ApplicationVersion = new Silk.NET.Core.Version32(1, 0, 0),
+                    PEngineName = (byte*)engineName,
+                    EngineVersion = new Silk.NET.Core.Version32(1, 0, 0),
+                    ApiVersion = VkApi.Version10,
+                };
+                InstanceCreateInfo instanceCreate = new()
+                {
+                    SType = StructureType.InstanceCreateInfo,
+                    PApplicationInfo = &application,
+                    EnabledExtensionCount = (uint)instanceExtensions.Length,
+                    PpEnabledExtensionNames = (byte**)extensionPointer,
+                };
+                Check(_vk.CreateInstance(&instanceCreate, null, out _instance), "vkCreateInstance");
+            }
         }
         finally
         {
+            foreach (var pointer in extensionPointers)
+            {
+                if (pointer != 0)
+                {
+                    SilkMarshal.Free(pointer);
+                }
+            }
+
             SilkMarshal.Free(applicationName);
             SilkMarshal.Free(engineName);
+        }
+
+        if (_windowHandle != 0)
+        {
+            CreateSurface();
         }
 
         uint deviceCount = 0;
@@ -422,7 +459,9 @@ public sealed unsafe class VulkanOffscreenRenderer : ICpuFrameRenderer, IRendere
 
         var devices = stackalloc PhysicalDevice[(int)deviceCount];
         Check(_vk.EnumeratePhysicalDevices(_instance, &deviceCount, devices), "vkEnumeratePhysicalDevices");
-        _physicalDevice = SelectPhysicalDevice(_vk, devices, deviceCount);
+        _physicalDevice = _windowHandle != 0
+            ? SelectSurfacePhysicalDevice(_vk, devices, deviceCount)
+            : SelectPhysicalDevice(_vk, devices, deviceCount);
         PhysicalDeviceProperties properties = _vk.GetPhysicalDeviceProperties(_physicalDevice);
         _deviceName = SilkMarshal.PtrToString((nint)properties.DeviceName) ?? "Vulkan device";
         _timestampPeriod = properties.Limits.TimestampPeriod;
@@ -439,10 +478,12 @@ public sealed unsafe class VulkanOffscreenRenderer : ICpuFrameRenderer, IRendere
             (int)((properties.ApiVersion >> 12) & 0x3ff),
             (int)properties.Limits.MaxImageDimension2D,
             SupportsIntegerTextures: true,
-            SupportsVsync: false,
+            SupportsVsync: _windowHandle != 0,
             RendererApi.Vulkan);
 
-        _queueFamily = FindGraphicsQueueFamily(_vk, _physicalDevice);
+        _queueFamily = _windowHandle != 0
+            ? FindSurfaceQueueFamily(_vk, _physicalDevice)
+            : FindGraphicsQueueFamily(_vk, _physicalDevice);
         float priority = 1f;
         DeviceQueueCreateInfo queueCreate = new()
         {
@@ -451,14 +492,47 @@ public sealed unsafe class VulkanOffscreenRenderer : ICpuFrameRenderer, IRendere
             QueueCount = 1,
             PQueuePriorities = &priority,
         };
-        DeviceCreateInfo deviceCreate = new()
+        string[] deviceExtensions = GetDeviceExtensions();
+        var deviceExtensionPointers = new nint[deviceExtensions.Length];
+        try
         {
-            SType = StructureType.DeviceCreateInfo,
-            QueueCreateInfoCount = 1,
-            PQueueCreateInfos = &queueCreate,
-        };
-        Check(_vk.CreateDevice(_physicalDevice, &deviceCreate, null, out _device), "vkCreateDevice");
+            for (var i = 0; i < deviceExtensions.Length; i++)
+            {
+                deviceExtensionPointers[i] = SilkMarshal.StringToPtr(deviceExtensions[i]);
+            }
+
+            fixed (nint* deviceExtensionPointer = deviceExtensionPointers)
+            {
+                DeviceCreateInfo deviceCreate = new()
+                {
+                    SType = StructureType.DeviceCreateInfo,
+                    QueueCreateInfoCount = 1,
+                    PQueueCreateInfos = &queueCreate,
+                    EnabledExtensionCount = (uint)deviceExtensions.Length,
+                    PpEnabledExtensionNames = (byte**)deviceExtensionPointer,
+                };
+                Check(_vk.CreateDevice(_physicalDevice, &deviceCreate, null, out _device), "vkCreateDevice");
+            }
+        }
+        finally
+        {
+            foreach (var pointer in deviceExtensionPointers)
+            {
+                if (pointer != 0)
+                {
+                    SilkMarshal.Free(pointer);
+                }
+            }
+        }
+
         _vk.GetDeviceQueue(_device, _queueFamily, 0, out _queue);
+        if (_windowHandle != 0)
+        {
+            if (!_vk.TryGetDeviceExtension(_instance, _device, out _khrSwapchain))
+            {
+                throw new NotSupportedException("VK_KHR_swapchain is unavailable.");
+            }
+        }
     }
 
     private void EnsureSourceFormat(Format format)
@@ -1972,6 +2046,7 @@ public sealed unsafe class VulkanOffscreenRenderer : ICpuFrameRenderer, IRendere
         }
 
         _vk.DeviceWaitIdle(_device);
+        DestroySwapchainResources();
         DestroyOutputTarget();
         DestroyExpandedTarget();
         DestroyImage(_pixelImage, _pixelMemory, _pixelView);
@@ -2090,6 +2165,8 @@ public sealed unsafe class VulkanOffscreenRenderer : ICpuFrameRenderer, IRendere
             _vk.DestroyDevice(_device, null);
             _device = default;
         }
+
+        DestroySurfaceResources();
 
         if (_instance.Handle != 0)
         {

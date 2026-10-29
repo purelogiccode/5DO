@@ -1,13 +1,16 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-29, 1.0.0-rc.1 release preparation after the twenty-second pass
-(save-state version 2 with per-section Brotli compression; the twenty-first pass added
-the optional offscreen Vulkan xBR/FSR/HQx filters and GPU-palette xBR in the OpenGL path;
-the twentieth pass added the optional offscreen Vulkan backend and `--vk-probe`; the
-nineteenth pass added save-state disc warnings, console hotkeys, ISO/BIN `disc tracks`,
-and the OpenAL Soft LGPL notice/source offer; the eighteenth pass added Serilog logging
-and bug reporting; the seventeenth pass added the OpenAL crackle fix, PCM tap, FSR 1.0,
-and the Road Rash race profile; see `git log` for the exact commits).
+**Snapshot:** 2026-10-29, 1.0.0-rc.1 release preparation after the twenty-third pass
+(native Win32 Vulkan swapchain and `--vk-window-probe`, `PreferOpenGl` enforcement,
+custom aspect editing, frontend AOT audio validation, and bug-report hygiene; the
+twenty-second pass added save-state version 2 with per-section Brotli compression; the
+twenty-first pass added the optional offscreen Vulkan xBR/FSR/HQx filters and GPU-palette
+xBR in the OpenGL path; the twentieth pass added the optional offscreen Vulkan backend
+and `--vk-probe`; the nineteenth pass added save-state disc warnings, console hotkeys,
+ISO/BIN `disc tracks`, and the OpenAL Soft LGPL notice/source offer; the eighteenth pass
+added Serilog logging and bug reporting; the seventeenth pass added the OpenAL crackle
+fix, PCM tap, FSR 1.0, and the Road Rash race profile; see `git log` for the exact
+commits).
 **Release definition:** documented compatibility, not full compatibility; see
 [`ReleaseChecklist.md`](ReleaseChecklist.md).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, optional Vulkan backend, CLI, and deterministic tests.
@@ -70,13 +73,17 @@ This is the short, current answer to "where are we?" The documentation index is
   textures, accurate/nearest/sharp-bilinear/CRT/xBR/FSR/HQx filters, GPU timestamp
   queries, and a host readback buffer. xBR-lv2 runs as a 4x GPU pass; FSR 1.0 runs
   EASU plus RCAS; HQx uses the shared CPU expansion. `--vk-probe` writes the shared
-  GPU probe JSON and PNG captures;
-  `--gl-backend vulkan` selects the optional desktop offscreen/readback path. The
-  320x240 Accurate probe matches the CPU oracle (`0xD6BD89C5`, 0 different pixels);
-  4K sharp-bilinear measures 1.51 ms mean / 1.80 ms p99 present, 4K xBR 1.55/1.92 ms,
-  and 4K FSR 1.87/2.15 ms, all with 0 managed bytes/frame on the RTX 4070. HQx
-  2x/3x/4x use the shared CPU expansion (4K HQx present 7.66/10.36 ms, CPU-bound), and
-  a window-system surface/swapchain is future work. See [`Vulkan.md`](Vulkan.md).
+  GPU probe JSON and PNG captures; `--vk-window-probe` creates a native Win32
+  swapchain, presents through FIFO vsync, and writes the same report with
+  `offscreen: false`; `--gl-backend vulkan` selects the optional desktop
+  offscreen/readback path. The 320x240 Accurate probe matches the CPU oracle
+  (`0xD6BD89C5`, 0 different pixels); 4K sharp-bilinear measures 1.51 ms mean /
+  1.80 ms p99 present, 4K xBR 1.55/1.92 ms, and 4K FSR 1.87/2.15 ms, all with 0
+  managed bytes/frame on the RTX 4070. The 4K window probe reports 1.34/1.43 ms GPU
+  and 5.99/6.24 ms present (including the 165 Hz FIFO wait), 0 managed bytes/frame.
+  HQx 2x/3x/4x use the shared CPU expansion (4K HQx present 7.66/10.36 ms, CPU-bound),
+  and Avalonia-embedded/X11/Wayland/Metal surfaces are future work. See
+  [`Vulkan.md`](Vulkan.md).
 - **Renderer robustness:** GL/GLES capability parsing reports the API and version,
   fullscreen/F11/Escape work, GL readback screenshots are implemented, and GL init
   failure or context loss switches the shell to the CPU `WriteableBitmap` presenter.
@@ -144,7 +151,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 876 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 882 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
@@ -159,8 +166,9 @@ This is the short, current answer to "where are we?" The documentation index is
   (`-p:FiveDoNativeAot=true`): 10.54 MB, CI-smoke-tested with `--version`, `selftest`,
   `bench`, `info`, `fs list`, a golden 3,000-frame boot, and live OpenAL audio. The
   frontend has an opt-in NativeAOT single-file publish (28.8 MB executable plus native
-  assets) that passes `--smoke-test` and the WGL/ANGLE parity probes; Silk.NET.Core
-  loader warnings remain and frontend AOT audio is not yet validated. A Windows CI smoke test runs the trimmed
+  assets) that passes `--smoke-test` and the WGL/ANGLE parity probes; the bundled
+  OpenAL path was validated with `ALSOFT_DRIVERS=null`, and Silk.NET.Core loader
+  warnings remain. A Windows CI smoke test runs the trimmed
   CLI and starts the trimmed frontend (`--smoke-test`); the win-x64 packages were
   validated with synthetic/ISO/CHD runs, state roundtrips, `fs list`, and a real
   window/render pass.

@@ -1531,6 +1531,7 @@ internal static class Program
             {
                 Serilog.Log
                     .ForContext("SourceContext", "FiveDo.Cli.Program.Audio")
+                    .WithoutBugReport()
                     .Warning(
                         "OpenAL is unavailable; audio is silent ({Error}).",
                         openAlError ?? "unknown error");

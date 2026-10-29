@@ -7,6 +7,20 @@ still change.
 
 ### Added
 
+- Native Win32 Vulkan swapchain presentation and `--vk-window-probe`. The optional
+  Vulkan backend now enables `VK_KHR_surface`/`VK_KHR_win32_surface`/`VK_KHR_swapchain`
+  for a real window, blits its rendered output into the acquired swapchain image, and
+  presents with FIFO vsync. The probe writes the same timing/parity JSON as `--vk-probe`
+  with `offscreen: false`, `vsyncActive`, and `vsyncBackend`. On Windows 11 / RTX 4070,
+  4K sharp-bilinear measures 5.99 ms mean / 6.24 ms p99 present (including the 165 Hz
+  FIFO wait) and 1.34/1.43 ms GPU with 0 managed bytes/frame; a 320x240 Accurate
+  capture still matches the CPU oracle with 0 different pixels. See
+  [`docs/Vulkan.md`](docs/Vulkan.md).
+- `AppSettings.PreferOpenGl` is now honored: unchecking "Use the OpenGL renderer" in
+  Settings starts the CPU presenter without attempting a GL context, and re-enabling
+  it restores OpenGL. The status line and log identify the explicit CPU mode.
+- Custom aspect ratio editing in Settings (`CustomAspect`, a positive width/height
+  field) alongside the existing presets.
 - Save-state format version 2 with per-section Brotli compression. Large sections
   (4 KiB and up) are compressed when the result is smaller; the section CRC remains
   over the uncompressed payload, and version-1 states still load. A 24.9 MB local
@@ -98,6 +112,12 @@ still change.
 
 ### Fixed
 
+- Expected environmental warnings are no longer filed as bug reports. The
+  "OpenAL audio is unavailable" fallback is marked with the new
+  `WithoutBugReport()` context and is ignored by `BugReportSink`; `--smoke-test`,
+  `--gl-probe`, `--vk-probe`, and `--vk-window-probe` disable bug reporting entirely.
+  The bug-report sink still forwards actionable warnings and errors, including
+  unexpected audio failures.
 - **Live OpenAL crackle.** The fill loop chose the next buffer with
   `_buffers[queued]`. After OpenAL unqueues the oldest buffers, that index pointed
   at buffers still attached to the playing source; rewriting them corrupted audio

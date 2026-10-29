@@ -71,9 +71,10 @@ serialized property in `AppSettings`.
 | `FilterOverrides` | object | `{}` | Per-game filter overrides, keyed by game ID. |
 | `Filter` | enum string | `"SharpBilinear"` | Global presentation filter. |
 | `Aspect` | enum string | `"FourThree"` | Aspect policy. |
+| `CustomAspect` | double | `1.3333` | Width/height ratio used when `Aspect` is `Custom`. |
 | `Vsync` | bool | `true` | Request platform vsync (where supported). |
 | `IntegerScale` | bool | `true` | Prefer integer scaling for 4:3/integer modes. |
-| `PreferOpenGl` | bool | `true` | Reserved/persisted; the shell currently always tries OpenGL then falls back. |
+| `PreferOpenGl` | bool | `true` | Use the OpenGL presenter. When false, the shell starts directly in the CPU renderer; the Settings dialog exposes the toggle. |
 | `ShowOverlay` | bool | `false` | Show the FPS/status overlay. |
 | `SaveNativeScreenshot` | bool | `false` | Also write a `-native.png` CPU frame with each screenshot. |
 | `Bloom` | float | `0.35` | CRT bloom strength, 0..1. |
@@ -138,6 +139,7 @@ player-1 defaults. See section 3 for the full input structure.
   "FilterOverrides": {},
   "Filter": "SharpBilinear",
   "Aspect": "FourThree",
+  "CustomAspect": 1.3333,
   "Vsync": true,
   "IntegerScale": true,
   "PreferOpenGl": true,
@@ -403,6 +405,8 @@ See [`Audio.md`](Audio.md) for the full pipeline and diagnostics.
 | `FIVEDO_FRAME_DUMP` | Tests | Directory for boot-frame PNGs. |
 | `FIVEDO_GPU_TESTS` | Tests | Set to `1` to run the real WGL/ANGLE probe test. |
 | `FIVEDO_AUDIO_TESTS` | Tests | Set to `1` to open a real OpenAL device. |
+| `FIVEDO_VULKAN_TESTS` | Tests | Set to `1` to run the opt-in Vulkan renderer and window-probe integration tests. |
+| `FIVEDO_BUG_REPORTS` | Desktop/CLI | Set to `0` to disable bug-report submissions. Automated smoke/probe runs disable them automatically. |
 | `FIVEDO_GAMES` | `tools/release-soak.ps1` | Disc corpus root. |
 
 The CLI does not read any of these except `FIVEDO_AUDIO_TAP` (through the OpenAL

@@ -45,15 +45,14 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
   zero-allocation after warm-up.
 - Linux/macOS OpenGL launch validation is not complete.
 - The optional Vulkan backend (`--gl-backend vulkan` / `--vk-probe`) is offscreen and
-  readback-based. It has no native surface/swapchain or vsync. xBR-lv2 and FSR 1.0
+  readback-based. `--vk-window-probe` adds a native Win32 swapchain with FIFO vsync,
+  but it is a probe path, not an Avalonia-embedded surface; X11/Wayland/Metal surfaces
+  and non-Windows Vulkan device validation are pending. xBR-lv2 and FSR 1.0
   (EASU + RCAS) are GPU passes; HQx 2x/3x/4x use the shared CPU expansion and are
-  CPU-bound. Non-Windows Vulkan device validation is pending. See
-  [`Vulkan.md`](Vulkan.md).
+  CPU-bound. See [`Vulkan.md`](Vulkan.md).
 
 ## Tooling and UI
 
-- `AppSettings.PreferOpenGl` is persisted but not consulted; the shell always tries
-  OpenGL and falls back to CPU.
 - `fs list`/`fs extract` currently support CHD only. Use `disc dump` or
   `disc tracks` for raw ISO/BIN inspection; `disc tracks` now reports ISO, BIN,
   and CUE images as a single 2048-byte user-data track.
@@ -85,7 +84,8 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
   [`Trimming.md`](Trimming.md).
 - NativeAOT, installers, signing, and notarization are not complete. The opt-in
   win-x64 CLI AOT build is validated, including live OpenAL; the frontend AOT build
-  starts/renders but its audio path is not yet validated.
+  starts/renders and its bundled OpenAL path was validated with OpenAL's null device
+  (`ALSOFT_DRIVERS=null`) on 2026-10-29.
 - The macOS gamepad backend is not implemented.
 - The bundled OpenAL Soft 1.23.1 runtime adds an LGPL-2.0-or-later binary
   distribution obligation to the release. The notice, complete license text,
@@ -138,9 +138,12 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
 - `Warning`-or-higher events are submitted asynchronously to the configured
   bug-report API with the required environment, error, and exception details.
   Submission is deduplicated for five minutes, capped at ten per minute, and
-  disabled when `FIVEDO_BUG_REPORTS=0` or in CI/test runs. If the endpoint is
-  unreachable, the local file remains the source of truth and the submission is
-  dropped after the HTTP timeout.
+  disabled when `FIVEDO_BUG_REPORTS=0` or in CI/test runs. Expected environmental
+  conditions such as a missing audio device are logged as warnings for the user but
+  marked with `WithoutBugReport()` so they are not filed as bugs. Automated smoke and
+  GPU-probe runs disable bug reporting entirely. If the endpoint is unreachable, the
+  local file remains the source of truth and the submission is dropped after the HTTP
+  timeout.
 - The submit API key is embedded per the service's client instructions; override
   it with `FIVEDO_BUGREPORT_API_KEY` for a different deployment.
 - Launch statistics send only the application id (`5do`) and version to the

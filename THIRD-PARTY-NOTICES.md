@@ -104,7 +104,7 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 | Microsoft.NET.Test.Sdk | Tests | MIT |
 | coverlet.collector | Coverage | MIT |
 | BenchmarkDotNet | Benchmarks | MIT |
-| Silk.NET.Vulkan 2.23.0 | Optional offscreen Vulkan backend and `--vk-probe` | MIT |
+| Silk.NET.Vulkan 2.23.0 + Silk.NET.Vulkan.Extensions.KHR 2.23.0 | Optional offscreen Vulkan backend, native Win32 swapchain probe, and `--vk-probe`/`--vk-window-probe` | MIT |
 | XenoAtom.ShaderCompiler.Build 1.2.2 | Build-time GLSL-to-SPIR-V compilation for the Vulkan backend; not distributed at runtime | BSD-2-Clause |
 | Silk.NET.OpenAL 2.23.0 | Desktop audio bindings | MIT |
 | Silk.NET.OpenAL.Soft.Native 1.23.1 | Native OpenAL Soft runtime bundled beside the CLI/frontend (win-x64/win-arm64/win-x86, linux-x64/linux-arm64, osx-x64/osx-arm64); `soft_oal.dll` is copied as `OpenAL32.dll` on Windows | MIT wrapper for OpenAL Soft; OpenAL Soft itself is LGPL-2.0-or-later. The notice, source offer, relinking rights, and license text ship in [`docs/OpenALSoft.md`](docs/OpenALSoft.md) and [`docs/licenses/OpenAL-Soft-COPYING.txt`](docs/licenses/OpenAL-Soft-COPYING.txt). |

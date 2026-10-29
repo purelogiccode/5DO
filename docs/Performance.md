@@ -219,7 +219,7 @@ The renderer must support two shader/API variants behind one contract:
 |---|---|---|---|
 | Desktop GL | OpenGL 3.3 core, GLSL 330 | Windows via WGL, Linux GLX/EGL, macOS 4.1 core | Primary desktop path; integer textures and `texelFetch`. Validated on Windows 11 / RTX 4070 (OpenGL 4.0) with `--gl-backend wgl`. |
 | GLES | OpenGL ES 3.0/3.1, GLSL ES 300 | Windows ANGLE, Raspberry Pi 4/5, other GLES devices | Same two-stage pipeline; `R16UI` + `usampler2D`. Validated on Windows 11 / RTX 4070 via ANGLE (OpenGL ES 3.0) with `--gl-backend angle`; Pi remains open. |
-| Vulkan (optional) | Vulkan 1.0, SPIR-V | Windows/Linux/macOS with a Vulkan loader | Offscreen two-stage pipeline with CPU readback; `--vk-probe`. 4K sharp-bilinear measured 1.51 ms mean / 1.80 ms p99 present, 4K xBR 1.55/1.92 ms, 4K FSR 1.87/2.15 ms, and 4K HQx 2x 7.66/10.36 ms (CPU-bound), all with 0 managed bytes/frame on the RTX 4070. Not a window-system/swapchain presenter. |
+| Vulkan (optional) | Vulkan 1.0, SPIR-V | Windows/Linux/macOS with a Vulkan loader | Offscreen two-stage pipeline with CPU readback and `--vk-probe`; a native Win32 swapchain probe (`--vk-window-probe`) presents through FIFO vsync. 4K sharp-bilinear measured 1.51 ms mean / 1.80 ms p99 present, 4K xBR 1.55/1.92 ms, 4K FSR 1.87/2.15 ms, and 4K HQx 2x 7.66/10.36 ms (CPU-bound), all with 0 managed bytes/frame on the RTX 4070. The 4K window probe measures 1.34/1.43 ms GPU and 5.99/6.24 ms present including the 165 Hz FIFO wait. Not an Avalonia-embedded surface. |
 
 Implementation requirements:
 
@@ -416,6 +416,22 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
 A 320x240 Accurate probe reports 0 different pixels and the same `0xD6BD89C5`
 (`3602745797`) hash as the OpenGL backends. The Vulkan path is optional and does not
 replace the measured WGL/ANGLE presenter; see [`Vulkan.md`](Vulkan.md).
+
+**Optional Vulkan Win32 swapchain (2026-10-29).** `--vk-window-probe` opens a real
+window and presents through a FIFO swapchain on the same RTX 4070 (Vulkan 1.4,
+165 Hz display). Present includes the acquire/present wait; GPU time is the
+comparable rendering cost. 60 measured frames after 15 warm-up frames:
+
+| Window probe case | Output | Present mean | Present p99 | GPU mean | GPU p99 | Managed bytes/frame |
+|---|---:|---:|---:|---:|---:|---:|
+| Sharp-bilinear, FIFO | 3840x2160 | 5.993 ms | 6.240 ms | 1.344 ms | 1.428 ms | 0 |
+| Sharp-bilinear, 8 frames | 3840x2160 | 5.181 ms | 18.463 ms | 1.409 ms | 1.570 ms | 0 |
+| Sharp-bilinear, 10 frames | 640x480 | 5.025 ms | 18.033 ms | 0.073 ms | 0.113 ms | 0 |
+
+The probe reports `vsyncActive: true`, `vsyncBackend: "fifo"`, and `offscreen: false`;
+a 320x240 Accurate capture still matches the CPU oracle with 0 different pixels. This
+validates the native surface/swapchain path but is not yet the Avalonia presentation
+path.
 
 **CPU/GPU parity (2026-10-26).** `--gl-probe-capture <path>` writes the presented
 frame as a PNG and, for a 1:1 Accurate capture, compares it with the CPU

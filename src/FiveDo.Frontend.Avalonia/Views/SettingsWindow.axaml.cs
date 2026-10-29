@@ -48,6 +48,8 @@ public partial class SettingsWindow : Window
             : "Automatic";
         AspectCombo.ItemsSource = Enum.GetValues<AspectMode>();
         AspectCombo.SelectedItem = settings.Aspect;
+        CustomAspectBox.Text = settings.CustomAspect.ToString("0.###", CultureInfo.InvariantCulture);
+        OpenGlCheck.IsChecked = settings.PreferOpenGl;
         IntegerCheck.IsChecked = settings.IntegerScale;
         VsyncCheck.IsChecked = settings.Vsync;
         OverlayCheck.IsChecked = settings.ShowOverlay;
@@ -119,6 +121,19 @@ public partial class SettingsWindow : Window
         ArgumentNullException.ThrowIfNull(settings);
         settings.Filter = FilterCombo.SelectedItem is VideoFilter filter ? filter : VideoFilter.SharpBilinear;
         settings.Aspect = AspectCombo.SelectedItem is AspectMode aspect ? aspect : AspectMode.FourThree;
+        if (!double.TryParse(
+                CustomAspectBox.Text?.Trim(),
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out var customAspect)
+            || !double.IsFinite(customAspect)
+            || customAspect <= 0)
+        {
+            throw new FormatException("The custom aspect ratio must be a positive number such as 1.333 or 1.6.");
+        }
+
+        settings.CustomAspect = customAspect;
+        settings.PreferOpenGl = OpenGlCheck.IsChecked == true;
         settings.IntegerScale = IntegerCheck.IsChecked == true;
         settings.Vsync = VsyncCheck.IsChecked == true;
         settings.ShowOverlay = OverlayCheck.IsChecked == true;

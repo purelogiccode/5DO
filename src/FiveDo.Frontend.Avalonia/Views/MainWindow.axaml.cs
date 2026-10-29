@@ -59,6 +59,7 @@ public partial class MainWindow : Window, IDisposable
     private string _gameName = string.Empty;
     private ICpuFrameRenderer? _cpuVideo;
     private bool _vulkanPresenter;
+    private bool _openGlDisabled;
     private WriteableBitmap? _cpuBitmap;
     private DispatcherTimer? _cpuTimer;
     private byte[]? _cpuPixels;
@@ -101,7 +102,7 @@ public partial class MainWindow : Window, IDisposable
         }
         else if (_settings.AudioEnabled)
         {
-            _logger.ForCategory(LogCategory.Audio).Warning(
+            _logger.ForCategory(LogCategory.Audio).WithoutBugReport().Warning(
                 "OpenAL audio is unavailable; emulation continues silently ({Error}).",
                 audioError ?? "unknown error");
         }
@@ -116,6 +117,14 @@ public partial class MainWindow : Window, IDisposable
             // bitmap. Hide the OpenGL control so it never creates a WGL/ANGLE context.
             Video.IsVisible = false;
             StartCpuFallback(new NotSupportedException("Vulkan renderer requested."));
+        }
+        else if (!Program.SmokeTest && !_settings.PreferOpenGl)
+        {
+            // The user explicitly disabled the OpenGL presenter; use the CPU path
+            // even when a GL context is available.
+            _openGlDisabled = true;
+            Video.IsVisible = false;
+            StartCpuFallback(new NotSupportedException("OpenGL renderer disabled in settings."));
         }
 
         if (Program.SmokeTest)
@@ -1232,6 +1241,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         ApplyAudioSettings();
+        ApplyRendererPreference();
         HighResMenuItem.IsChecked = _settings.HighResolution;
         UpdateEmulationHeader();
         if (_machine is not null && _settings.HighResolution != _machine.Tuning.HighResolution)
@@ -1314,7 +1324,7 @@ public partial class MainWindow : Window, IDisposable
 
                 if (_audio is null)
                 {
-                    _logger.ForCategory(LogCategory.Audio).Warning(
+                    _logger.ForCategory(LogCategory.Audio).WithoutBugReport().Warning(
                         "OpenAL audio is unavailable; emulation continues silently ({Error}).",
                         audioError ?? "unknown error");
                 }
@@ -1433,7 +1443,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnOpenGlReady(object? sender, Controls.OpenGlReadyEventArgs e)
     {
-        if (_vulkanPresenter)
+        if (_vulkanPresenter || _openGlDisabled)
         {
             return;
         }
@@ -1459,6 +1469,41 @@ public partial class MainWindow : Window, IDisposable
             exception,
             "OpenGL unavailable; falling back to the CPU presenter.");
         StartCpuFallback(exception);
+    }
+
+    private void ApplyRendererPreference()
+    {
+        if (Program.RequestedGlBackend == GlBackend.Vulkan || _vulkanPresenter)
+        {
+            return;
+        }
+
+        if (_settings.PreferOpenGl)
+        {
+            if (_openGlDisabled)
+            {
+                _openGlDisabled = false;
+                StopCpuFallback();
+                RendererText.Text = "OpenGL";
+                StatusText.Text = "OpenGL renderer enabled.";
+                _logger.ForCategory(LogCategory.Video).Information(
+                    "OpenGL renderer enabled by settings.");
+            }
+
+            return;
+        }
+
+        _openGlDisabled = true;
+        if (_cpuVideo is null)
+        {
+            Video.IsVisible = false;
+            StartCpuFallback(new NotSupportedException("OpenGL renderer disabled in settings."));
+        }
+        else
+        {
+            RendererText.Text = "CPU fallback";
+            StatusText.Text = "OpenGL is disabled in Settings; using the CPU renderer.";
+        }
     }
 
     private void StartCpuFallback(Exception exception)
@@ -1519,14 +1564,20 @@ public partial class MainWindow : Window, IDisposable
         _cpuTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
         _cpuTimer.Tick += (_, _) => RenderCpuFrame();
         _cpuTimer.Start();
+        _logger.ForCategory(LogCategory.Video).Information(
+            "CPU presenter active ({Reason}).",
+            _openGlDisabled ? "OpenGL disabled in settings" : exception.Message);
         RendererText.Text = _vulkanPresenter ? "Vulkan (offscreen)" : "CPU fallback";
-        StatusText.Text = _vulkanPresenter
-            ? "Vulkan renderer ready (offscreen, CPU readback)."
-            : $"OpenGL unavailable ({exception.Message}); using the CPU renderer.";
+        StatusText.Text = _openGlDisabled
+            ? "OpenGL is disabled in Settings; using the CPU renderer."
+            : _vulkanPresenter
+                ? "Vulkan renderer ready (offscreen, CPU readback)."
+                : $"OpenGL unavailable ({exception.Message}); using the CPU renderer.";
     }
 
     private void StopCpuFallback()
     {
+        var hadCpuPresenter = _cpuVideo is not null;
         _cpuTimer?.Stop();
         _cpuTimer = null;
         CpuVideo.IsVisible = false;
@@ -1536,6 +1587,10 @@ public partial class MainWindow : Window, IDisposable
         _vulkanPresenter = false;
         _cpuBitmap = null;
         _cpuPixels = null;
+        if (hadCpuPresenter)
+        {
+            _logger.ForCategory(LogCategory.Video).Information("OpenGL presenter restored.");
+        }
     }
 
     private void RenderCpuFrame()

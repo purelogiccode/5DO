@@ -30,6 +30,12 @@ namespace FiveDo.Diagnostics.Logging;
 /// </remarks>
 public sealed class BugReportSink : ILogEventSink, IDisposable
 {
+    /// <summary>
+    /// Property name used to mark an event as expected and therefore not a bug report.
+    /// Set it to <see langword="false"/> with <see cref="LoggingExtensions.WithoutBugReport"/>.
+    /// </summary>
+    public const string SuppressProperty = "SuppressBugReport";
+
     private readonly BugReportOptions _options;
     private readonly Channel<BugReportPayload> _queue;
     private readonly HttpClient _http;
@@ -82,6 +88,11 @@ public sealed class BugReportSink : ILogEventSink, IDisposable
     {
         ArgumentNullException.ThrowIfNull(logEvent);
         if (logEvent.Level < LogEventLevel.Warning)
+        {
+            return;
+        }
+
+        if (IsSuppressed(logEvent))
         {
             return;
         }
@@ -219,6 +230,13 @@ public sealed class BugReportSink : ILogEventSink, IDisposable
                 _ = _recent.TryRemove(pair.Key, out _);
             }
         }
+    }
+
+    internal static bool IsSuppressed(LogEvent logEvent)
+    {
+        ArgumentNullException.ThrowIfNull(logEvent);
+        return logEvent.Properties.TryGetValue(SuppressProperty, out LogEventPropertyValue? value)
+            && value is ScalarValue { Value: false };
     }
 
     private static string CreateDedupeKey(LogEvent logEvent)

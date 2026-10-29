@@ -41,6 +41,15 @@ bytes and a 14,900-frame state is 2,001,229 bytes instead of 24,902,592 bytes. T
 section inspector reports `Compressed`/`StoredLength` and reads the table without
 decompressing payloads. **876 tests pass.** See [`SaveStates.md`](SaveStates.md).
 
+**Vulkan window and release-polish update (2026-10-29, twenty-third pass):** the
+optional Vulkan backend now creates a native Win32 surface/swapchain and presents
+through FIFO vsync via `--vk-window-probe`; 4K sharp-bilinear measures 1.34/1.43 ms
+GPU and 5.99/6.24 ms present (including the 165 Hz wait) with 0 managed bytes/frame.
+The shell now honors `PreferOpenGl` (explicit CPU mode), Settings edits the custom
+aspect ratio, frontend NativeAOT audio is validated with OpenAL's null device, and
+expected environmental warnings such as a missing audio device no longer file bug
+reports. **882 tests pass.**
+
 **Last updated:** 2026-10-29
 
 ---
@@ -257,7 +266,7 @@ project/type layout is unchanged.
 
 ### 4a. Current position vs. the plan (2026-10-26)
 
-Snapshot: 876 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
+Snapshot: 882 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
 and zero synthetic steady-state allocations; all five local corpus titles boot and
 render, and scripted gameplay is validated in Wolfenstein, Lemmings, Road Rash, and
 Alone. The opt-in 640x480 high-resolution mode is implemented and matches the
@@ -1174,9 +1183,9 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
     shared GPU probe JSON and PNG captures; `--gl-backend vulkan` selects the optional
     desktop offscreen/readback path. A 320x240 Accurate probe matches the CPU oracle
     with 0 different pixels and hash `0xD6BD89C5`; 4K sharp-bilinear measures 1.51 ms
-    mean / 1.80 ms p99 present with 0 managed bytes/frame on the RTX 4070. A
-    window-system surface/swapchain and non-Windows device validation remain future
-    work. See [`Vulkan.md`](Vulkan.md).
+    mean / 1.80 ms p99 present with 0 managed bytes/frame on the RTX 4070. The native
+    Win32 swapchain probe was added in M9R.13; Avalonia embedding and non-Windows
+    device validation remain future work. See [`Vulkan.md`](Vulkan.md).
 - [x] **M9R.12 Vulkan xBR, FSR, and HQx filters.**
   - **DONE (2026-10-29):** the offscreen backend runs xBR-lv2 as a 4x GPU pass and
     FSR 1.0 as EASU plus RCAS GPU passes over the GPU-expanded native frame. HQx
@@ -1189,6 +1198,18 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
     `filterFallback: false`. The required OpenGL xBR path now samples the
     GPU-expanded palette texture directly instead of uploading a CPU `FrameAssembler`
     copy.
+- [x] **M9R.13 Vulkan native Win32 swapchain probe.**
+  - **DONE (2026-10-29):** `VulkanOffscreenRenderer.InitializeSurface` enables
+    `VK_KHR_surface`, `VK_KHR_win32_surface`, and `VK_KHR_swapchain`, creates a
+    surface/swapchain for a Win32 HWND, blits the rendered output image into the
+    acquired swapchain image, and presents with FIFO vsync. `--vk-window-probe`
+    opens a real window, runs the same synthetic frames and timing/parity capture as
+    `--vk-probe`, and reports `offscreen: false`, `vsyncActive`, and
+    `vsyncBackend`. On Windows 11 / RTX 4070, 4K sharp-bilinear measures 5.99 ms
+    mean / 6.24 ms p99 present (including the 165 Hz FIFO wait) and 1.34/1.43 ms GPU
+    with 0 managed bytes/frame; a 320x240 Accurate capture still matches the CPU
+    oracle with 0 different pixels. Avalonia embedding and X11/Wayland/Metal
+    surfaces remain future work. See [`Vulkan.md`](Vulkan.md).
 
 **Deliverables**
 
@@ -1370,7 +1391,7 @@ harness. See [`Performance.md`](Performance.md).
 - [~] **M10.1 Publish profiles.**
   - `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`.
   - Self-contained, single-file; both the CLI and frontend are trimmed (`PublishTrimmed=true`, `TrimMode=full`).
-  - **DONE (2026-10-27):** opt-in NativeAOT win-x64 publishes are validated for both executables (`-p:FiveDoNativeAot=true`); the CLI is 10.54 MB and opens the bundled OpenAL runtime, the frontend is a 28.8 MB single-file executable plus native Skia/HarfBuzz/ANGLE assets. Silk.NET.Core loader warnings remain and frontend AOT audio is not yet validated.
+  - **DONE (2026-10-27):** opt-in NativeAOT win-x64 publishes are validated for both executables (`-p:FiveDoNativeAot=true`); the CLI is 10.54 MB and opens the bundled OpenAL runtime, the frontend is a 28.8 MB single-file executable plus native Skia/HarfBuzz/ANGLE assets. Silk.NET.Core loader warnings remain. **DONE (2026-10-29):** the frontend AOT OpenAL path was validated with `ALSOFT_DRIVERS=null` (`OpenAL audio ready (44100 Hz stereo)`).
   - Include native audio/gamepad assets and GLSL shader resources per RID.
 - [x] **M10.2 CI matrix.**
   - Build/test on Windows/Linux/macOS.

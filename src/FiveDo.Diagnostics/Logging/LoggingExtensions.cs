@@ -19,4 +19,16 @@ public static class LoggingExtensions
         ArgumentNullException.ThrowIfNull(logger);
         return logger.ForContext("Category", category);
     }
+
+    /// <summary>
+    /// Marks an event as an expected environmental condition so the bug-report sink ignores it.
+    /// </summary>
+    /// <param name="logger">Source logger.</param>
+    /// <returns>A logger that stamps the suppression property.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="logger"/> is null.</exception>
+    public static ILogger WithoutBugReport(this ILogger logger)
+    {
+        ArgumentNullException.ThrowIfNull(logger);
+        return logger.ForContext(BugReportSink.SuppressProperty, false);
+    }
 }

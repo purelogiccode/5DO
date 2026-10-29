@@ -603,8 +603,9 @@ These are real, current limitations. Do not "fix" them casually without tests.
    change.
 3. **Disc hash is warned, not enforced.** Loading a state from a different disc adds
    a `StateWarnings` entry but still loads; the CLI and desktop surface the warning.
-4. **`PreferOpenGl` is unused.** The shell always tries OpenGL then falls back; the
-   setting is persisted for future use.
+4. **`PreferOpenGl` is honored at startup and when Settings is applied.** When false,
+   the shell uses the CPU renderer without trying OpenGL; the Settings dialog exposes
+   the toggle. GL init failure or context loss still falls back automatically.
 5. **`fs` is CHD-only.** Other containers use `disc dump`, `info`, or `disc tracks`
    (which now reports one data track for ISO/BIN/CUE).
 6. **CLI JSON casing is split.** `state inspect`/`state slots` are PascalCase for
@@ -612,14 +613,16 @@ These are real, current limitations. Do not "fix" them casually without tests.
 7. **Some stale code comments.** For example, `EmulatorTuning.HighResolution` says the
    mode is reserved, but it is implemented; `Vdlp` says high-res is left for M11, but it
    is implemented. Treat behavior/tests as authoritative.
-8. **Frontend NativeAOT audio is not validated.** CLI AOT live OpenAL is validated;
-   the frontend AOT path starts/renders but audio needs validation.
+8. **Frontend NativeAOT audio is validated with OpenAL's null device.** The frontend
+   AOT build loads the bundled OpenAL Soft runtime and reports `OpenAL audio ready`
+   with `ALSOFT_DRIVERS=null`; a physical-device listen remains a manual check.
 9. **No guest JIT.** The ARM60 interpreter is the only backend; `ICpuBackend` exists
     for a future managed IL JIT.
 10. **`AudioPipeline` is not the live path.** It is a reusable host ring sink; the
     desktop/CLI live path uses `OpenAlAudioOutput` and `WavAudioSink` directly.
-12. **Custom aspect is not edited in Settings.** `RendererSettings.CustomAspect` exists;
-    the dialog exposes the enum but no ratio editor.
+12. **Custom aspect is edited as a numeric ratio.** `RendererSettings.CustomAspect`
+    exists and the Settings dialog exposes a positive width/height field; presets are
+    still the common 4:3/16:9 modes.
 13. **CD timing is approximate.** The MEI state machine/poll behavior is a reference
     port, not a cycle-accurate drive model. Do not port `opera_cdrom.c` wholesale.
 14. **Platform validation gaps.** Windows x64 is validated; Linux/macOS launch, arm64,

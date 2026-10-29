@@ -81,11 +81,12 @@ Silk.NET.Core's native-asset loader (`DefaultPathResolver`) still uses
 analyzer reports `IL3000`/`IL3002` for single-file. The opt-in frontend AOT build
 keeps `PublishSingleFile=true`, demotes those ILC warnings to visible warnings, and
 the resulting app starts and renders. The loader warnings primarily affect optional
-native audio discovery; the **CLI** single-file AOT path now opens the bundled
-OpenAL runtime, but **frontend** AOT audio is not yet validated because the
-frontend's native-asset set is larger. The default six-RID publishes remain trimmed
-IL. A future cleanup should replace the Silk.NET loader dependency or install a
-custom native-asset resolver for the frontend.
+native audio discovery; both the **CLI** and **frontend** single-file AOT paths now
+open the bundled OpenAL runtime. The frontend was validated on 2026-10-29 with
+`ALSOFT_DRIVERS=null`: the log reports `OpenAL audio ready (44100 Hz stereo)` and the
+smoke test exits 0. A physical-device listen remains a manual check. The default
+six-RID publishes remain trimmed IL. A future cleanup should replace the Silk.NET
+loader dependency or install a custom native-asset resolver for the frontend.
 
 ## What was fixed
 
@@ -226,8 +227,8 @@ publish. The CI publish steps use the same switch.
 The CLI and the frontend single-file layout are AOT-validated on win-x64. Remaining:
 
 - Silk.NET.Core's `Assembly.Location`/`DependencyContext` native-asset loader still
-  emits `IL3000`/`IL3002`; the CLI's single-file AOT audio path is validated, but
-  the frontend's is not. A Silk.NET-compatible resolver or a custom
+  emits `IL3000`/`IL3002`; both single-file AOT audio paths are validated (the
+  frontend with OpenAL's null device). A Silk.NET-compatible resolver or a custom
   `DllImportResolver` is the cleanup.
 - Cross-OS AOT publishing needs a native toolchain per target (the current six-RID
   matrix is produced on one Linux runner and uses trimmed IL).

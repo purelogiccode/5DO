@@ -128,6 +128,51 @@ public sealed class VulkanProbeIntegrationTests
         }
     }
 
+    [Fact]
+    public void WindowProbe_PresentsThroughASwapchain()
+    {
+        if (!OperatingSystem.IsWindows()
+            || !string.Equals(
+                Environment.GetEnvironmentVariable("FIVEDO_VULKAN_TESTS"),
+                "1",
+                StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var frontend = FindFrontendAssembly();
+        var root = FindRepositoryRoot();
+        var temporary = Path.Combine(root, "artifacts", "vk-probe-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(temporary);
+        try
+        {
+            var reportPath = Path.Combine(temporary, "window.json");
+            var capturePath = Path.Combine(temporary, "window.png");
+            RunWindowProbe(frontend, reportPath, capturePath, size: "320x240", frames: 5, warmup: 2, filter: "accurate");
+
+            GlProbeReport report = ReadReport(reportPath);
+            Assert.True(report.Ok, report.Error);
+            Assert.False(report.Offscreen);
+            Assert.True(report.VsyncRequested);
+            Assert.True(report.VsyncActive);
+            Assert.Equal("fifo", report.VsyncBackend);
+            Assert.NotNull(report.Parity);
+            Assert.True(report.Parity!.Value.Matches);
+            Assert.Equal(0, report.Parity.Value.DifferentPixels);
+            Assert.Equal(0, report.RendererAllocatedBytesPerFrame);
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(temporary, recursive: true);
+            }
+            catch (IOException)
+            {
+            }
+        }
+    }
+
     private static void RunProbe(
         string frontend,
         string reportPath,
@@ -179,6 +224,60 @@ public sealed class VulkanProbeIntegrationTests
         Assert.True(
             process.ExitCode == 0,
             $"The Vulkan probe exited with {process.ExitCode}.{Environment.NewLine}"
+            + $"{stdout.Result}{Environment.NewLine}{stderr.Result}");
+    }
+
+    private static void RunWindowProbe(
+        string frontend,
+        string reportPath,
+        string? capturePath,
+        string size,
+        int frames,
+        int warmup,
+        string filter)
+    {
+        var start = new ProcessStartInfo
+        {
+            FileName = "dotnet",
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            WorkingDirectory = FindRepositoryRoot(),
+        };
+        start.ArgumentList.Add(frontend);
+        start.ArgumentList.Add("--vk-window-probe");
+        start.ArgumentList.Add(reportPath);
+        start.ArgumentList.Add("--vk-window-probe-size");
+        start.ArgumentList.Add(size);
+        start.ArgumentList.Add("--vk-window-probe-frames");
+        start.ArgumentList.Add(frames.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        start.ArgumentList.Add("--vk-window-probe-warmup");
+        start.ArgumentList.Add(warmup.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        start.ArgumentList.Add("--vk-window-probe-filter");
+        start.ArgumentList.Add(filter);
+        start.ArgumentList.Add("--vk-window-probe-timeout");
+        start.ArgumentList.Add("120");
+        if (capturePath is not null)
+        {
+            start.ArgumentList.Add("--vk-window-probe-capture");
+            start.ArgumentList.Add(capturePath);
+        }
+
+        using Process process = Process.Start(start)
+                                ?? throw new InvalidOperationException("The Vulkan window probe process could not be started.");
+        Task<string> stdout = process.StandardOutput.ReadToEndAsync();
+        Task<string> stderr = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(180_000))
+        {
+            process.Kill(entireProcessTree: true);
+            throw new TimeoutException("The Vulkan window probe did not exit within 180 seconds.");
+        }
+
+        stdout.Wait();
+        stderr.Wait();
+        Assert.True(
+            process.ExitCode == 0,
+            $"The Vulkan window probe exited with {process.ExitCode}.{Environment.NewLine}"
             + $"{stdout.Result}{Environment.NewLine}{stderr.Result}");
     }
 

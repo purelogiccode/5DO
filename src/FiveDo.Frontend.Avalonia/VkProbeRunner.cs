@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using FiveDo.Core;
 using FiveDo.Diagnostics;
@@ -24,6 +25,11 @@ internal static class VkProbeRunner
     internal static int Run(VkProbeOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
+        return options.Window ? RunWindow(options) : RunOffscreen(options);
+    }
+
+    private static int RunOffscreen(VkProbeOptions options)
+    {
         var frame = new VdlFrame();
         SyntheticVdlFrame.Initialize(frame);
         var presentSamples = new List<double>(options.Frames);
@@ -103,7 +109,11 @@ internal static class VkProbeRunner
                 stopwatch.Elapsed.TotalSeconds,
                 allocatedBytes,
                 parity,
-                error: null);
+                error: null,
+                offscreen: true,
+                vsyncRequested: false,
+                vsyncActive: false,
+                vsyncBackend: null);
             WriteReport(options.OutputPath, report);
             return 0;
         }
@@ -121,7 +131,11 @@ internal static class VkProbeRunner
                     stopwatch.Elapsed.TotalSeconds,
                     allocatedBytes,
                     parity: null,
-                    error: exception.Message);
+                    error: exception.Message,
+                    offscreen: true,
+                    vsyncRequested: false,
+                    vsyncActive: false,
+                    vsyncBackend: null);
                 WriteReport(options.OutputPath, report);
             }
             catch (Exception reportException) when (reportException is IOException or UnauthorizedAccessException)
@@ -134,6 +148,133 @@ internal static class VkProbeRunner
         finally
         {
             renderer?.Dispose();
+        }
+    }
+
+    private static int RunWindow(VkProbeOptions options)
+    {
+        var frame = new VdlFrame();
+        SyntheticVdlFrame.Initialize(frame);
+        var presentSamples = new List<double>(options.Frames);
+        var gpuSamples = new List<double>(options.Frames);
+        var stopwatch = new Stopwatch();
+        long allocatedBytes = 0;
+        var measured = 0;
+        VulkanOffscreenRenderer? renderer = null;
+        Win32ProbeWindow? window = null;
+        byte[]? capturedPixels = null;
+        try
+        {
+            window = new Win32ProbeWindow(options.Width, options.Height);
+            renderer = new VulkanOffscreenRenderer
+            {
+                Settings = new RendererSettings
+                {
+                    Filter = options.Filter,
+                    Aspect = AspectMode.Stretch,
+                    IntegerScale = false,
+                    Vsync = true,
+                },
+            };
+            renderer.InitializeSurface(window.Handle, options.Width, options.Height, vsync: true);
+            for (var i = 0; i < options.WarmupFrames + options.Frames; i++)
+            {
+                window.PumpMessages();
+                SyntheticVdlFrame.Fill(frame, i);
+                if (i == options.WarmupFrames)
+                {
+                    allocatedBytes = GC.GetAllocatedBytesForCurrentThread();
+                    stopwatch.Restart();
+                    presentSamples.Clear();
+                    gpuSamples.Clear();
+                }
+
+                var start = Stopwatch.GetTimestamp();
+                renderer.Present(frame);
+                var presentMs = (Stopwatch.GetTimestamp() - start) * 1000.0 / Stopwatch.Frequency;
+                if (i < options.WarmupFrames)
+                {
+                    continue;
+                }
+
+                presentSamples.Add(presentMs);
+                if (renderer.GpuMilliseconds is { } gpuMs)
+                {
+                    gpuSamples.Add(gpuMs);
+                }
+
+                measured++;
+                if (stopwatch.Elapsed.TotalSeconds > options.TimeoutSeconds)
+                {
+                    throw new TimeoutException(
+                        $"The Vulkan window probe timed out after {options.TimeoutSeconds} seconds.");
+                }
+            }
+
+            stopwatch.Stop();
+            allocatedBytes = GC.GetAllocatedBytesForCurrentThread() - allocatedBytes;
+            if (options.CapturePath is not null || IsParityCandidate(options))
+            {
+                capturedPixels = new byte[checked(options.Width * options.Height * 4)];
+                renderer.ReadPixels(capturedPixels, out _, out _);
+                if (options.CapturePath is not null)
+                {
+                    PngDumper.WriteBgra(capturedPixels, options.Width, options.Height, options.CapturePath);
+                }
+            }
+
+            GlProbeParity? parity = capturedPixels is null
+                ? null
+                : ComputeParity(capturedPixels, frame, options.Width, options.Height, options.Filter);
+            GlProbeReport report = BuildReport(
+                options,
+                renderer,
+                presentSamples,
+                gpuSamples,
+                measured,
+                stopwatch.Elapsed.TotalSeconds,
+                allocatedBytes,
+                parity,
+                error: null,
+                offscreen: false,
+                vsyncRequested: true,
+                vsyncActive: renderer.SwapchainActive && string.Equals(renderer.PresentMode, "fifo", StringComparison.Ordinal),
+                vsyncBackend: renderer.PresentMode);
+            WriteReport(options.OutputPath, report);
+            return 0;
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            Serilog.Log.Error(exception, "Vulkan window probe failed.");
+            try
+            {
+                GlProbeReport report = BuildReport(
+                    options,
+                    renderer,
+                    presentSamples,
+                    gpuSamples,
+                    measured,
+                    stopwatch.Elapsed.TotalSeconds,
+                    allocatedBytes,
+                    parity: null,
+                    error: exception.Message,
+                    offscreen: false,
+                    vsyncRequested: true,
+                    vsyncActive: renderer?.SwapchainActive == true && string.Equals(renderer.PresentMode, "fifo", StringComparison.Ordinal),
+                    vsyncBackend: renderer?.PresentMode);
+                WriteReport(options.OutputPath, report);
+            }
+            catch (Exception reportException) when (reportException is IOException or UnauthorizedAccessException)
+            {
+                Serilog.Log.Error(reportException, "Vulkan window probe report failed.");
+            }
+
+            return 2;
+        }
+        finally
+        {
+            renderer?.Dispose();
+            window?.Dispose();
         }
     }
 
@@ -151,7 +292,11 @@ internal static class VkProbeRunner
         double elapsedSeconds,
         long allocatedBytes,
         GlProbeParity? parity,
-        string? error)
+        string? error,
+        bool offscreen,
+        bool vsyncRequested,
+        bool vsyncActive,
+        string? vsyncBackend)
     {
         var frames = Math.Max(1, measured);
         RendererCapabilities capabilities = renderer?.Capabilities ?? default;
@@ -167,16 +312,16 @@ internal static class VkProbeRunner
             MinorVersion: capabilities.MinorVersion,
             MaxTextureSize: capabilities.MaxTextureSize,
             SupportsIntegerTextures: capabilities.SupportsIntegerTextures,
-            SupportsVsync: false,
-            VsyncRequested: false,
-            VsyncActive: false,
-            VsyncBackend: null,
+            SupportsVsync: renderer?.Capabilities.SupportsVsync ?? false,
+            VsyncRequested: vsyncRequested,
+            VsyncActive: vsyncActive,
+            VsyncBackend: vsyncBackend,
             SourceWidth: SourceWidth,
             SourceHeight: SourceHeight,
             OutputWidth: options.Width,
             OutputHeight: options.Height,
             Filter: options.Filter.ToString(),
-            Offscreen: true,
+            Offscreen: offscreen,
             CapturePath: options.CapturePath,
             Parity: parity,
             Frames: measured,
@@ -303,4 +448,221 @@ internal static class VkProbeRunner
     }
 
     private static double Round(double value) => Math.Round(value, 3, MidpointRounding.AwayFromZero);
+
+    private sealed class Win32ProbeWindow : IDisposable
+    {
+        private const uint WsOverlappedWindow = 0x00CF0000;
+        private const uint WsVisible = 0x10000000;
+        private const uint WmDestroy = 0x0002;
+        private const uint WmClose = 0x0010;
+        private const uint PmRemove = 0x0001;
+        private const uint IdiArrow = 32512;
+        private const int SwShow = 5;
+        private const int ErrorClassAlreadyExists = 1410;
+
+        private readonly WndProc _windowProc;
+        private readonly string _className;
+        private nint _handle;
+        private bool _closed;
+
+        internal Win32ProbeWindow(int width, int height)
+        {
+            _windowProc = WindowProc;
+            _className = $"5DOVulkanProbeWindow{Environment.ProcessId}";
+            nint instance = GetModuleHandle(null);
+            WndClassEx windowClass = new()
+            {
+                CbSize = (uint)Marshal.SizeOf<WndClassEx>(),
+                LpfnWndProc = _windowProc,
+                HInstance = instance,
+                HCursor = LoadCursor(0, IdiArrow),
+                LpszClassName = _className,
+            };
+            if (RegisterClassEx(ref windowClass) == 0)
+            {
+                var error = Marshal.GetLastWin32Error();
+                if (error != ErrorClassAlreadyExists)
+                {
+                    throw new InvalidOperationException($"RegisterClassEx failed with Win32 error {error}.");
+                }
+            }
+
+            Rect rect = new() { Left = 0, Top = 0, Right = width, Bottom = height };
+            if (!AdjustWindowRect(ref rect, WsOverlappedWindow, false))
+            {
+                throw new InvalidOperationException("AdjustWindowRect failed.");
+            }
+
+            _handle = CreateWindowEx(
+                0,
+                _className,
+                "5DO Vulkan Window Probe",
+                WsOverlappedWindow | WsVisible,
+                100,
+                100,
+                rect.Right - rect.Left,
+                rect.Bottom - rect.Top,
+                0,
+                0,
+                instance,
+                0);
+            if (_handle == 0)
+            {
+                throw new InvalidOperationException(
+                    $"CreateWindowEx failed with Win32 error {Marshal.GetLastWin32Error()}.");
+            }
+
+            _ = ShowWindow(_handle, SwShow);
+            _ = UpdateWindow(_handle);
+        }
+
+        internal nint Handle => _handle;
+
+        internal void PumpMessages()
+        {
+            while (PeekMessage(out Msg message, 0, 0, 0, PmRemove))
+            {
+                if (message.Message == 0x0012)
+                {
+                    _closed = true;
+                    continue;
+                }
+
+                _ = TranslateMessage(ref message);
+                _ = DispatchMessage(ref message);
+            }
+
+            if (_closed)
+            {
+                throw new InvalidOperationException("The Vulkan window was closed.");
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_handle != 0)
+            {
+                _ = DestroyWindow(_handle);
+                _handle = 0;
+            }
+        }
+
+        private nint WindowProc(nint hwnd, uint message, nint wParam, nint lParam)
+        {
+            switch (message)
+            {
+                case WmClose:
+                    _ = DestroyWindow(hwnd);
+                    return 0;
+                case WmDestroy:
+                    PostQuitMessage(0);
+                    return 0;
+                default:
+                    return DefWindowProc(hwnd, message, wParam, lParam);
+            }
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        private delegate nint WndProc(nint hwnd, uint message, nint wParam, nint lParam);
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        private struct WndClassEx
+        {
+            public uint CbSize;
+            public uint Style;
+            public WndProc LpfnWndProc;
+            public int CbClsExtra;
+            public int CbWndExtra;
+            public nint HInstance;
+            public nint HIcon;
+            public nint HCursor;
+            public nint HbrBackground;
+            public string? LpszMenuName;
+            public string LpszClassName;
+            public nint HIconSm;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct Msg
+        {
+            public nint Hwnd;
+            public uint Message;
+            public nint WParam;
+            public nint LParam;
+            public uint Time;
+            public Point Pt;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct Point
+        {
+            public int X;
+            public int Y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct Rect
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+        }
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern ushort RegisterClassEx(ref WndClassEx windowClass);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern nint CreateWindowEx(
+            uint exStyle,
+            string className,
+            string windowName,
+            uint style,
+            int x,
+            int y,
+            int width,
+            int height,
+            nint parent,
+            nint menu,
+            nint instance,
+            nint parameter);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern nint LoadCursor(nint instance, uint cursorName);
+
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(nint hwnd, int command);
+
+        [DllImport("user32.dll")]
+        private static extern bool UpdateWindow(nint hwnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool PeekMessage(
+            out Msg message,
+            nint hwnd,
+            uint filterMin,
+            uint filterMax,
+            uint remove);
+
+        [DllImport("user32.dll")]
+        private static extern bool TranslateMessage(ref Msg message);
+
+        [DllImport("user32.dll")]
+        private static extern nint DispatchMessage(ref Msg message);
+
+        [DllImport("user32.dll")]
+        private static extern void PostQuitMessage(int exitCode);
+
+        [DllImport("user32.dll")]
+        private static extern bool DestroyWindow(nint hwnd);
+
+        [DllImport("user32.dll")]
+        private static extern nint DefWindowProc(nint hwnd, uint message, nint wParam, nint lParam);
+
+        [DllImport("user32.dll")]
+        private static extern bool AdjustWindowRect(ref Rect rect, uint style, bool menu);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+        private static extern nint GetModuleHandle(string? moduleName);
+    }
 }

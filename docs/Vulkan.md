@@ -1,9 +1,10 @@
 # Optional Vulkan Backend
 
-**Status:** implemented as an optional offscreen presenter and validation probe.
-OpenGL/GLES remains the required desktop presenter; Vulkan is not a v1 release gate.
-The backend now implements xBR-lv2, FSR 1.0 (EASU + RCAS), and HQx 2x/3x/4x in
-addition to accurate, nearest, sharp-bilinear, and CRT.
+**Status:** implemented as an optional offscreen presenter, a validation probe, and a
+native Win32 swapchain probe. OpenGL/GLES remains the required desktop presenter;
+Vulkan is not a v1 release gate. The backend now implements xBR-lv2, FSR 1.0
+(EASU + RCAS), and HQx 2x/3x/4x in addition to accurate, nearest, sharp-bilinear,
+and CRT.
 
 ## What it is
 
@@ -38,10 +39,13 @@ the per-line background, the fixed CLUT is selected by output-control bit 25 plu
 bit 15, and the per-line CLUT uses independent red, green, and blue indices. A 320x240
 `Accurate` render matches the CPU oracle exactly.
 
-The renderer is intentionally offscreen. It does not create an instance surface,
-swapchain, or presentation queue. The desktop shell can display it through the existing
-`WriteableBitmap` path (`--gl-backend vulkan`), and the headless probe is the primary
-validation tool.
+The renderer is offscreen by default. It does not create an instance surface, swapchain,
+or presentation queue unless `InitializeSurface` is called. `--vk-window-probe` creates
+a Win32 window, enables `VK_KHR_surface`/`VK_KHR_win32_surface`/`VK_KHR_swapchain`, and
+blits the rendered output image into the current swapchain image before presenting. The
+desktop shell can display the offscreen result through the existing `WriteableBitmap`
+path (`--gl-backend vulkan`), and the headless probe remains the primary validation tool.
+The native swapchain is currently a Win32 probe path, not an Avalonia-embedded surface.
 
 ## Filters
 
@@ -96,11 +100,25 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
   --gl-backend vulkan --disc "game.chd"
 ```
 
-Options: `--vk-probe` (required output JSON), `--vk-probe-size WxH` (default
-1920x1080), `--vk-probe-frames` (60), `--vk-probe-warmup` (10), `--vk-probe-filter`
-(`accurate`, `nearest`, `sharp-bilinear`/`sharp`, `crt`, `xbr`, `fsr`, `hqx`,
-`hqx3x`, `hqx4x`, plus the OpenGL aliases), `--vk-probe-capture <png>`, and
-`--vk-probe-timeout` (30 seconds).
+Native Win32 swapchain probe (opens a real window, presents through a Vulkan
+swapchain, and writes the same JSON report):
+
+```powershell
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
+  --vk-window-probe artifacts/vk-probe/window-4k.json `
+  --vk-window-probe-size 3840x2160 --vk-window-probe-frames 60 `
+  --vk-window-probe-warmup 15 --vk-window-probe-filter sharp-bilinear
+```
+
+Options: `--vk-probe` (headless output JSON), `--vk-window-probe` (native window
+output JSON), `--vk-probe-size`/`--vk-window-probe-size` (default 1920x1080),
+`--vk-probe-frames`/`--vk-window-probe-frames` (60),
+`--vk-probe-warmup`/`--vk-window-probe-warmup` (10),
+`--vk-probe-filter`/`--vk-window-probe-filter` (`accurate`, `nearest`,
+`sharp-bilinear`/`sharp`, `crt`, `xbr`, `fsr`, `hqx`, `hqx3x`, `hqx4x`, plus the
+OpenGL aliases), `--vk-probe-capture`/`--vk-window-probe-capture <png>`, and
+`--vk-probe-timeout`/`--vk-window-probe-timeout` (30 seconds). The window probe
+requests FIFO (vsync) presentation; the headless probe is uncapped.
 
 ## Measured results
 
@@ -120,6 +138,21 @@ excluded from the timing loop.
 | 1080p xBR | 0.606 ms | 0.848 ms | 0.423 ms | 0.591 ms | 0 |
 | 1080p FSR (EASU + RCAS) | 0.562 ms | 0.600 ms | 0.434 ms | 0.436 ms | 0 |
 | 4K HQx 2x | 7.661 ms | 10.355 ms | 1.386 ms | 1.431 ms | 0 |
+
+Native Win32 swapchain probe, same machine, 60 measured frames after 15 warm-up
+frames, FIFO presentation on a 165 Hz display:
+
+| Case | Present mean | Present p99 | GPU mean | GPU p99 | Managed bytes/frame |
+|---|---:|---:|---:|---:|---:|
+| 4K sharp-bilinear, FIFO | 5.993 ms | 6.240 ms | 1.344 ms | 1.428 ms | 0 |
+| 4K sharp-bilinear, 8 frames | 5.181 ms | 18.463 ms | 1.409 ms | 1.570 ms | 0 |
+| 640x480 sharp-bilinear, 10 frames | 5.025 ms | 18.033 ms | 0.073 ms | 0.113 ms | 0 |
+
+Present time includes the swapchain acquire/present wait and the display refresh
+interval; GPU time is the comparable rendering cost. The 8- and 10-frame rows include
+first-frame/pipeline warm-up outliers. The window probe reports `vsyncActive: true`
+and `vsyncBackend: "fifo"`; a 320x240 Accurate capture still matches the CPU oracle
+with 0 different pixels.
 
 320x240 Accurate parity: 0 different pixels, CPU/GPU FNV-1a hash `3602745797`
 (`0xD6BD89C5`), no vertical flip. The same hash is produced by the OpenGL WGL/ANGLE
@@ -160,8 +193,12 @@ These are development-machine numbers, not a hardware guarantee.
 - `VulkanProbeIntegrationTests` (`FIVEDO_VULKAN_TESTS=1`) runs the built frontend probe
   for 320x240 parity, a 4K sharp-bilinear pass, and 640x480 xBR/FSR/HQx passes with
   `filterFallback: false`.
-- `VkProbeOptionsTests` covers defaults, size/frames/filter/capture parsing, and invalid
-  values.
+- `VkProbeOptionsTests` covers headless/window defaults, size/frames/filter/capture
+  parsing, shared option aliases, and invalid values.
+- The native swapchain probe was validated manually on Windows 11 / RTX 4070 at
+  320x240, 640x480, and 4K: 0 different pixels for a 320x240 Accurate capture,
+  `vsyncActive: true`, `vsyncBackend: "fifo"`, and 0 managed bytes/frame. A CI-run
+  window probe would require a desktop session and is not part of the default suite.
 
 ```powershell
 $env:FIVEDO_VULKAN_TESTS = "1"
@@ -174,14 +211,14 @@ The SPIR-V and option-parsing tests run everywhere.
 
 ## Limitations and next steps
 
-- No window-system surface or swapchain; presentation is offscreen plus CPU readback.
-  A native Win32/X11/Metal surface and swapchain are future work.
+- The native swapchain is a Win32 probe path. It is not yet embedded in the Avalonia
+  video control, and X11/Wayland/Metal surfaces are future work. The desktop
+  `--gl-backend vulkan` path remains offscreen plus CPU readback at source size.
 - xBR and FSR 1.0 are GPU passes. HQx 2x/3x/4x are CPU expansions (shared with the
   OpenGL presenter) and are CPU-bound; they are opt-in and not recommended at 4K on
   slow CPUs.
-- No vsync control on the offscreen path.
-- The desktop Vulkan path renders at the source size (320x240 or 640x480) and lets
-  Avalonia scale the bitmap; it is not the 4K presentation path.
+- The offscreen path has no vsync control. The window probe requests FIFO and reports
+  the selected present mode; it does not yet expose mailbox/immediate as user settings.
 - Vulkan 1.1+ features (storage buffers in fragment shaders, timeline semaphores) are not
   required; the backend requests Vulkan 1.0 and uses sampled images and push constants.
 - Device/driver validation on Linux, macOS/MoltenVK, arm64, and integrated GPUs is

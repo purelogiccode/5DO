@@ -57,6 +57,9 @@ public sealed class AppSettings
     /// <summary>Gets or sets the aspect policy.</summary>
     public AspectMode Aspect { get; set; } = AspectMode.FourThree;
 
+    /// <summary>Gets or sets the custom aspect ratio (width / height) used by <see cref="AspectMode.Custom"/>.</summary>
+    public double CustomAspect { get; set; } = 4.0 / 3.0;
+
     /// <summary>Gets or sets a value indicating whether vsync is requested.</summary>
     public bool Vsync { get; set; } = true;
 
@@ -205,6 +208,7 @@ public sealed class AppSettings
         {
             Filter = ResolveFilter(gameId),
             Aspect = Aspect,
+            CustomAspect = CustomAspect,
             Vsync = Vsync,
             IntegerScale = IntegerScale,
             Bloom = Bloom,

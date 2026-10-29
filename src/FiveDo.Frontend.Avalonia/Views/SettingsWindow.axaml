@@ -7,36 +7,43 @@
 
     <Grid RowDefinitions="*,Auto" Margin="12">
         <TabControl Grid.Row="0" ToolTip.Tip="Video, audio, emulation, and path settings.">
-            <TabItem Header="Video" ToolTip.Tip="Filter, aspect ratio, scaling, overlay, bloom, and FSR options.">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Filter" VerticalAlignment="Center"
+            <TabItem Header="Video" ToolTip.Tip="Renderer, filter, aspect ratio, scaling, overlay, bloom, and FSR options.">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                    <CheckBox x:Name="OpenGlCheck" Grid.Row="0" Grid.Column="1"
+                              Content="Use the OpenGL renderer (uncheck for CPU fallback)"
+                              ToolTip.Tip="OpenGL is the full-performance presenter. Uncheck to force the CPU frame renderer." />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Filter" VerticalAlignment="Center"
                                ToolTip.Tip="Choose the output filter applied by the OpenGL presenter." />
-                    <ComboBox x:Name="FilterCombo" Grid.Row="0" Grid.Column="1" Margin="0,0,0,8"
+                    <ComboBox x:Name="FilterCombo" Grid.Row="1" Grid.Column="1" Margin="0,0,0,8"
                               ToolTip.Tip="Nearest, sharp-bilinear, CRT, xBR, HQx, or AMD FSR 1.0." />
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Aspect" VerticalAlignment="Center"
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Aspect" VerticalAlignment="Center"
                                ToolTip.Tip="Choose how the 4:3 source is fitted to the window." />
-                    <ComboBox x:Name="AspectCombo" Grid.Row="1" Grid.Column="1" Margin="0,0,0,8"
-                              ToolTip.Tip="Auto, 4:3, 16:9, or stretch." />
-                    <CheckBox x:Name="IntegerCheck" Grid.Row="2" Grid.Column="1" Content="Integer scaling"
+                    <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,Auto" Margin="0,0,0,8">
+                        <ComboBox x:Name="AspectCombo" Grid.Column="0"
+                                  ToolTip.Tip="Auto, 4:3, 16:9, stretch, or custom." />
+                        <TextBox x:Name="CustomAspectBox" Grid.Column="1" Width="72" Margin="6,0,0,0"
+                                 ToolTip.Tip="Custom width/height ratio, for example 1.333 or 1.6." />
+                    </Grid>
+                    <CheckBox x:Name="IntegerCheck" Grid.Row="3" Grid.Column="1" Content="Integer scaling"
                               ToolTip.Tip="Restrict scaling to whole-number multiples for uniform pixels." />
-                    <CheckBox x:Name="VsyncCheck" Grid.Row="3" Grid.Column="1" Content="VSync (where supported)"
+                    <CheckBox x:Name="VsyncCheck" Grid.Row="4" Grid.Column="1" Content="VSync (where supported)"
                               ToolTip.Tip="Request vertical sync from the platform where the backend supports it." />
-                    <CheckBox x:Name="OverlayCheck" Grid.Row="4" Grid.Column="1" Content="Show FPS/status overlay"
+                    <CheckBox x:Name="OverlayCheck" Grid.Row="5" Grid.Column="1" Content="Show FPS/status overlay"
                               ToolTip.Tip="Show frame rate, renderer timing, and audio queue counters over the game." />
-                    <CheckBox x:Name="NativeScreenshotCheck" Grid.Row="5" Grid.Column="1"
+                    <CheckBox x:Name="NativeScreenshotCheck" Grid.Row="6" Grid.Column="1"
                               Content="Also save the native CPU frame with screenshots"
                               ToolTip.Tip="Write a second, unfiltered PNG of the 320x240 CPU frame beside the filtered capture." />
-                    <TextBlock Grid.Row="6" Grid.Column="0" Text="CRT bloom" VerticalAlignment="Center"
+                    <TextBlock Grid.Row="7" Grid.Column="0" Text="CRT bloom" VerticalAlignment="Center"
                                ToolTip.Tip="Adjust the glow around bright areas in the CRT filter." />
-                    <Slider x:Name="BloomSlider" Grid.Row="6" Grid.Column="1"
+                    <Slider x:Name="BloomSlider" Grid.Row="7" Grid.Column="1"
                             Minimum="0" Maximum="1" TickFrequency="0.05"
                             ToolTip.Tip="CRT bloom strength from 0 (off) to 1 (strongest)." />
-                    <TextBlock Grid.Row="7" Grid.Column="0" Text="FSR sharpness" VerticalAlignment="Center"
+                    <TextBlock Grid.Row="8" Grid.Column="0" Text="FSR sharpness" VerticalAlignment="Center"
                                ToolTip.Tip="Adjust RCAS sharpening when the FSR filter is selected." />
-                    <Slider x:Name="FsrSharpnessSlider" Grid.Row="7" Grid.Column="1"
+                    <Slider x:Name="FsrSharpnessSlider" Grid.Row="8" Grid.Column="1"
                             Minimum="0" Maximum="1" TickFrequency="0.05"
                             ToolTip.Tip="FSR RCAS sharpness from 0 (soft) to 1 (maximum)." />
-                    <TextBlock Grid.Row="8" Grid.Column="1" Text="xBR runs an edge-directed 4x pass; HQx runs a 2x/3x/4x CPU pixel-art pass; FSR runs AMD FidelityFX Super Resolution 1.0 (EASU + RCAS) at the output. CRT bloom adds a glow around bright areas. All of them cost more CPU/GPU time at 4K; HQx 3x/4x are the most expensive."
+                    <TextBlock Grid.Row="9" Grid.Column="1" Text="xBR runs an edge-directed 4x pass; HQx runs a 2x/3x/4x CPU pixel-art pass; FSR runs AMD FidelityFX Super Resolution 1.0 (EASU + RCAS) at the output. CRT bloom adds a glow around bright areas. All of them cost more CPU/GPU time at 4K; HQx 3x/4x are the most expensive."
                                Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"
                                ToolTip.Tip="Filter notes: xBR and HQx are CPU-heavy; FSR and CRT bloom run on the GPU." />
                 </Grid>

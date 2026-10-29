@@ -164,6 +164,28 @@ public sealed class NvramStoreTests
     }
 
     [Fact]
+    public void AppSettings_RoundtripsCustomAspectAndRendererSettings()
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "settings.json");
+        var settings = new AppSettings
+        {
+            Aspect = FiveDo.Video.AspectMode.Custom,
+            CustomAspect = 1.6,
+            PreferOpenGl = false,
+        };
+
+        AppSettingsStore.Save(settings, path);
+        AppSettings loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal(FiveDo.Video.AspectMode.Custom, loaded.Aspect);
+        Assert.Equal(1.6, loaded.CustomAspect);
+        Assert.False(loaded.PreferOpenGl);
+        Assert.Equal(FiveDo.Video.AspectMode.Custom, loaded.ToRendererSettings().Aspect);
+        Assert.Equal(1.6, loaded.ToRendererSettings().CustomAspect);
+    }
+
+    [Fact]
     public void AppSettings_RoundtripsTheHqx4xFilterName()
     {
         using var directory = new TempDirectory();

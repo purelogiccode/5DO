@@ -5,12 +5,13 @@ using FiveDo.Video;
 namespace FiveDo.Frontend.Avalonia;
 
 /// <summary>
-/// Command-line options for the headless Vulkan presentation probe.
+/// Command-line options for the Vulkan presentation probe.
 /// </summary>
 /// <remarks>
-/// The Vulkan probe renders the same synthetic frames as the OpenGL probe through the
+/// The probe renders the same synthetic frames as the OpenGL probe through the
 /// optional <c>FiveDo.Video.Vulkan</c> backend and writes timing, capability, and parity
-/// JSON. It does not open a window or require Avalonia's render loop.
+/// JSON. <c>--vk-probe</c> runs headless; <c>--vk-window-probe</c> opens a Win32 window
+/// and presents through a native swapchain. Neither path requires Avalonia's render loop.
 /// </remarks>
 internal sealed record VkProbeOptions(
     string OutputPath,
@@ -37,20 +38,43 @@ internal sealed record VkProbeOptions(
     /// <summary>Default probe timeout in seconds.</summary>
     public const int DefaultTimeoutSeconds = 30;
 
-    /// <summary>Parses the Vulkan probe options from the process arguments.</summary>
+    /// <summary>Gets a value indicating whether the probe presents to a native window swapchain.</summary>
+    public bool Window { get; init; }
+
+    /// <summary>Parses the headless Vulkan probe options from the process arguments.</summary>
     /// <param name="args">Process arguments.</param>
     /// <param name="options">Parsed options on success.</param>
     /// <param name="error">Validation error on failure.</param>
     /// <returns><see langword="true"/> when a valid probe request was found.</returns>
     internal static bool TryParse(string[] args, out VkProbeOptions? options, out string? error)
+        => TryParseCore(args, "--vk-probe", window: false, out options, out error);
+
+    /// <summary>Parses the native-window Vulkan probe options from the process arguments.</summary>
+    /// <param name="args">Process arguments.</param>
+    /// <param name="options">Parsed options on success.</param>
+    /// <param name="error">Validation error on failure.</param>
+    /// <returns><see langword="true"/> when a valid window probe request was found.</returns>
+    internal static bool TryParseWindow(string[] args, out VkProbeOptions? options, out string? error)
+        => TryParseCore(args, "--vk-window-probe", window: true, out options, out error);
+
+    private static bool TryParseCore(
+        string[] args,
+        string optionName,
+        bool window,
+        out VkProbeOptions? options,
+        out string? error)
     {
         options = null;
         error = null;
 
-        var output = Program.FindOptionValue(args, "--vk-probe");
+        string? Find(string suffix)
+            => Program.FindOptionValue(args, optionName + suffix)
+                ?? Program.FindOptionValue(args, "--vk-probe" + suffix);
+
+        var output = Program.FindOptionValue(args, optionName);
         if (string.IsNullOrWhiteSpace(output))
         {
-            error = "--vk-probe requires an output JSON path.";
+            error = $"{optionName} requires an output JSON path.";
             return false;
         }
 
@@ -61,12 +85,12 @@ internal sealed record VkProbeOptions(
         }
         catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
         {
-            error = $"--vk-probe output path is invalid: {exception.Message}";
+            error = $"{optionName} output path is invalid: {exception.Message}";
             return false;
         }
 
         string? capturePath = null;
-        var capture = Program.FindOptionValue(args, "--vk-probe-capture");
+        var capture = Find("-capture");
         if (capture is not null)
         {
             try
@@ -75,26 +99,26 @@ internal sealed record VkProbeOptions(
             }
             catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
             {
-                error = $"--vk-probe-capture path is invalid: {exception.Message}";
+                error = $"{optionName}-capture path is invalid: {exception.Message}";
                 return false;
             }
         }
 
         var width = DefaultWidth;
         var height = DefaultHeight;
-        var size = Program.FindOptionValue(args, "--vk-probe-size");
+        var size = Find("-size");
         if (size is not null && !GlProbeOptions.TryParseSize(size, out width, out height))
         {
-            error = $"--vk-probe-size must be WIDTHxHEIGHT, not '{size}'.";
+            error = $"{optionName}-size must be WIDTHxHEIGHT, not '{size}'.";
             return false;
         }
 
         if (!GlProbeOptions.TryParseRange(
-                Program.FindOptionValue(args, "--vk-probe-frames"),
+                Find("-frames"),
                 DefaultFrames,
                 1,
                 100_000,
-                "--vk-probe-frames",
+                optionName + "-frames",
                 out var frames,
                 out error))
         {
@@ -102,11 +126,11 @@ internal sealed record VkProbeOptions(
         }
 
         if (!GlProbeOptions.TryParseRange(
-                Program.FindOptionValue(args, "--vk-probe-warmup"),
+                Find("-warmup"),
                 DefaultWarmupFrames,
                 0,
                 10_000,
-                "--vk-probe-warmup",
+                optionName + "-warmup",
                 out var warmup,
                 out error))
         {
@@ -114,11 +138,11 @@ internal sealed record VkProbeOptions(
         }
 
         if (!GlProbeOptions.TryParseRange(
-                Program.FindOptionValue(args, "--vk-probe-timeout"),
+                Find("-timeout"),
                 DefaultTimeoutSeconds,
                 1,
                 600,
-                "--vk-probe-timeout",
+                optionName + "-timeout",
                 out var timeout,
                 out error))
         {
@@ -126,10 +150,10 @@ internal sealed record VkProbeOptions(
         }
 
         VideoFilter filter = VideoFilter.Accurate;
-        var filterText = Program.FindOptionValue(args, "--vk-probe-filter");
+        var filterText = Find("-filter");
         if (filterText is not null && !GlProbeOptions.TryParseFilter(filterText, out filter))
         {
-            error = $"--vk-probe-filter does not recognize '{filterText}'.";
+            error = $"{optionName}-filter does not recognize '{filterText}'.";
             return false;
         }
 
@@ -139,7 +163,10 @@ internal sealed record VkProbeOptions(
             return false;
         }
 
-        options = new VkProbeOptions(outputPath, capturePath, width, height, frames, warmup, filter, timeout);
+        options = new VkProbeOptions(outputPath, capturePath, width, height, frames, warmup, filter, timeout)
+        {
+            Window = window,
+        };
         return true;
     }
 }

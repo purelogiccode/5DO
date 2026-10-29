@@ -1,12 +1,14 @@
 # Next Session Handoff
 
-**Date:** 2026-10-29 (twenty-second pass: save-state format version 2 with
-per-section Brotli compression; the twenty-first pass added Vulkan xBR/FSR/HQx filters
-and the GPU-palette xBR path in the OpenGL presenter; the twentieth pass added the
-optional offscreen Vulkan backend and `--vk-probe`; the nineteenth pass added
-save-state disc warnings, console hotkeys, ISO/BIN `disc tracks`, and OpenAL Soft LGPL
-packaging; the eighteenth pass added Serilog logging and bug reporting; the seventeenth
-pass added the OpenAL crackle fix, PCM tap, and race profile)
+**Date:** 2026-10-29 (twenty-third pass: native Win32 Vulkan swapchain and
+`--vk-window-probe`, `PreferOpenGl` enforcement, custom aspect editing, frontend AOT
+audio validation, and bug-report hygiene; the twenty-second pass added save-state
+format version 2 with per-section Brotli compression; the twenty-first pass added
+Vulkan xBR/FSR/HQx filters and the GPU-palette xBR path in the OpenGL presenter; the
+twentieth pass added the optional offscreen Vulkan backend and `--vk-probe`; the
+nineteenth pass added save-state disc warnings, console hotkeys, ISO/BIN `disc tracks`,
+and OpenAL Soft LGPL packaging; the eighteenth pass added Serilog logging and bug
+reporting; the seventeenth pass added the OpenAL crackle fix, PCM tap, and race profile)
 **Goal:** make the audio path correct and testable. The sixteenth pass replaced the
 FreeDO 8.24 DSP sample accumulator with an exact 44,100-samples-per-ARM-second clock
 (600 frames now produce 441,015-441,020 samples / 10.000 s instead of 444,097 /
@@ -17,7 +19,13 @@ is made current on the audio thread, underruns are padded/counted, and the CLI h
 `--audio openal`, `--volume`, `--realtime`, and `audio analyze <wav> --json`. Core
 frames are paced by `AudioFramePacer` (audio clock with a 60 Hz fallback), WAV writes
 are buffered with streaming peak/RMS/clipping statistics, and the NativeAOT CLI now
-opens the live backend. **876 tests pass.** The twenty-second pass added state format
+opens the live backend. **882 tests pass.** The twenty-third pass added native Win32
+Vulkan swapchain presentation and `--vk-window-probe` (4K FIFO: 1.34/1.43 ms GPU,
+5.99/6.24 ms present including the display wait, 0 managed bytes/frame), honored
+`PreferOpenGl` as an explicit CPU mode, added custom aspect editing, validated the
+frontend NativeAOT OpenAL path with `ALSOFT_DRIVERS=null`, and stopped expected
+environmental warnings (such as a missing audio device) from filing bug reports.
+The twenty-second pass added state format
 version 2: large section payloads are Brotli-compressed, the CRC stays over the
 uncompressed data, version-1 states still load, and `state inspect` reports stored and
 compressed sizes. A 24,902,592-byte local state becomes 647,647 bytes (300-frame Gex)
@@ -32,14 +40,15 @@ trimmed CLI/frontend publishes, the frontend smoke test, the benchmark compariso
 the portable archives, the swap-interval/GPU-probe work, the ANGLE/GLES parity work,
 this audio pass, the 2026-10-29 release-hardening pass (save-state disc warnings,
 console hotkeys, ISO/BIN `disc tracks`, and OpenAL Soft LGPL packaging), the
-twenty-first Vulkan xBR/FSR/HQx filter pass, or the twenty-second save-state
-compression pass. The remaining **release** work is the legal/attribution review
+twenty-first Vulkan xBR/FSR/HQx filter pass, the twenty-second save-state
+compression pass, or the twenty-third Vulkan-window/release-polish pass. The remaining
+**release** work is the legal/attribution review
 (now including OpenAL Soft's LGPL runtime), a stability soak, release
 packaging/notes, and optional Linux/macOS launch validation. GitHub Actions is
 currently blocked before job start by a billing/spending-limit annotation; that is an
 external account action, not a code failure. Full-race completion,
-extra title scripts, GLES 3.1/Pi/DPI, Tier B timing, arm64/installers, frontend AOT
-audio, and the optional JIT are post-1.0. See
+extra title scripts, GLES 3.1/Pi/DPI, Tier B timing, arm64/installers, and the
+optional JIT are post-1.0. See
 [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 > **Release-scope update (2026-10-26):** v1.0 ships a documented compatibility set,
