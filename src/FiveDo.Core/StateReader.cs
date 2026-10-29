@@ -40,7 +40,7 @@ public class StateReader : IStateReader
         EnsureAvailable(StateFormat.SectionHeaderSize, "section header");
         var id = ReadUInt32();
         var version = ReadUInt16();
-        _ = ReadUInt16();
+        var flags = ReadUInt16();
         var length = ReadUInt32();
 
         if (length > int.MaxValue)
@@ -48,22 +48,38 @@ public class StateReader : IStateReader
             throw new InvalidStateException($"Section 0x{id:X8} has an invalid payload length.");
         }
 
-        var payloadLength = (int)length;
-        if (Remaining < payloadLength + StateFormat.SectionCrcSize)
+        if ((flags & ~StateFormat.SectionFlagCompressed) != 0)
+        {
+            throw new InvalidStateException($"Section 0x{id:X8} has unsupported flags 0x{flags:X4}.");
+        }
+
+        var storedLength = (int)length;
+        if (Remaining < storedLength + StateFormat.SectionCrcSize)
         {
             throw new InvalidStateException($"Section 0x{id:X8} is truncated.");
         }
 
-        ReadOnlyMemory<byte> payload = _data.Slice(_position, payloadLength);
-        _position += payloadLength;
+        ReadOnlyMemory<byte> storedPayload = _data.Slice(_position, storedLength);
+        _position += storedLength;
         var expectedCrc = ReadUInt32();
+        var compressed = (flags & StateFormat.SectionFlagCompressed) != 0;
+        ReadOnlyMemory<byte> payload;
+        if (compressed)
+        {
+            payload = StateCompression.DecompressSection(storedPayload.Span, id);
+        }
+        else
+        {
+            payload = storedPayload;
+        }
+
         var actualCrc = StateCrc32.Compute(payload.Span);
         if (expectedCrc != actualCrc)
         {
             throw new InvalidStateException($"Section 0x{id:X8} failed its CRC check.");
         }
 
-        section = new StateSectionReader(id, version, payload);
+        section = new StateSectionReader(id, version, payload, storedLength, compressed);
         return true;
     }
 

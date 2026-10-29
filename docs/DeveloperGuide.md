@@ -596,8 +596,11 @@ These are real, current limitations. Do not "fix" them casually without tests.
    build; byte/halfword accesses apply lane XORs. A clean big-endian refactor would
    touch hundreds of places and must be guarded by the full suite/state compatibility.
 2. **Large save states.** The Memory section writes the entire 19 MB RAM backing,
-   including high-res mirrors; the Machine section writes all 960 VDL lines. States are
-   ~25 MB. Compressing or trimming mirrors is a format change.
+   including high-res mirrors; the Machine section writes all 960 VDL lines. Format
+   version 2 compresses large sections with Brotli (typically 0.6-2.0 MB), but the
+   in-memory state and the uncompressed payloads remain ~25 MB. Version-1 states are
+   still readable. Further reductions (trimming duplicate mirrors) are a format
+   change.
 3. **Disc hash is warned, not enforced.** Loading a state from a different disc adds
    a `StateWarnings` entry but still loads; the CLI and desktop surface the warning.
 4. **`PreferOpenGl` is unused.** The shell always tries OpenGL then falls back; the

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using FiveDo.Core;
+using FiveDo.Host;
 using FiveDo.Machine;
 using FiveDo.Tests.TestUtilities;
 using FiveDo.Video;
@@ -196,6 +197,78 @@ public sealed class SaveStateTests
         {
             File.Delete(path);
         }
+    }
+
+    [Fact]
+    public void SaveState_CompressesLargeSectionsAndRoundtrips()
+    {
+        FiveDoMachine machine = CreateMachine();
+        machine.RunFrames(3);
+
+        using var compressed = new MemoryStream();
+        machine.SaveState(compressed);
+        using var uncompressed = new MemoryStream();
+        machine.SaveState(uncompressed, compress: false);
+
+        Assert.True(compressed.Length < uncompressed.Length / 2);
+
+        var bytes = compressed.ToArray();
+        StateInfo info = StateInspector.Read(new MemoryStream(bytes));
+        Assert.Equal(StateFormat.Version, info.Version);
+        Assert.True(info.Compressed);
+        Assert.Equal(bytes.Length, info.StoredLength);
+        Assert.Contains(info.Sections, section => section.Compressed && section.StoredLength < section.PayloadLength);
+
+        FiveDoMachine loaded = CreateMachine();
+        loaded.LoadState(new MemoryStream(bytes));
+        Assert.Equal(machine.Cpu.ProgramCounter, loaded.Cpu.ProgramCounter);
+    }
+
+    [Fact]
+    public void SaveState_UncompressedSectionsRoundtrip()
+    {
+        FiveDoMachine machine = CreateMachine();
+        machine.RunFrames(3);
+        using var state = new MemoryStream();
+        machine.SaveState(state, compress: false);
+
+        FiveDoMachine loaded = CreateMachine();
+        state.Position = 0;
+        loaded.LoadState(state);
+
+        Assert.Equal(machine.Cpu.ProgramCounter, loaded.Cpu.ProgramCounter);
+        Assert.Empty(loaded.StateWarnings);
+    }
+
+    [Fact]
+    public void LoadState_AcceptsVersionOneStates()
+    {
+        FiveDoMachine machine = CreateMachine();
+        machine.RunFrames(2);
+        using var state = new MemoryStream();
+        machine.SaveState(state);
+        var bytes = state.ToArray();
+        bytes[4] = 1;
+        bytes[5] = 0;
+
+        FiveDoMachine loaded = CreateMachine();
+        loaded.LoadState(new MemoryStream(bytes));
+
+        Assert.Equal(machine.Cpu.ProgramCounter, loaded.Cpu.ProgramCounter);
+    }
+
+    [Fact]
+    public void LoadState_RejectsUnsupportedVersion()
+    {
+        FiveDoMachine machine = CreateMachine();
+        machine.RunFrames(2);
+        using var state = new MemoryStream();
+        machine.SaveState(state);
+        var bytes = state.ToArray();
+        bytes[4] = 3;
+        bytes[5] = 0;
+
+        Assert.Throws<InvalidStateException>(() => machine.LoadState(new MemoryStream(bytes)));
     }
 
     private static FiveDoMachine CreateMachine(byte[]? rom = null)

@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Binary;
 using FiveDo.Core;
 
 namespace FiveDo.Tests.Core;
@@ -199,6 +200,160 @@ public sealed class StateWriterReaderTests
         var reader = new StateReader(writer.ToArray());
 
         Assert.Throws<InvalidStateException>(() => reader.ReadString());
+    }
+
+    [Fact]
+    public void LargeSection_IsCompressedAndRoundtrips()
+    {
+        var source = new LargeTestSection { Payload = CreatePayload(64 * 1024) };
+        var writer = new StateWriter();
+        writer.WriteSection(source);
+        var state = writer.ToArray();
+
+        var flags = BinaryPrimitives.ReadUInt16LittleEndian(state.AsSpan(6, 2));
+        Assert.Equal(StateFormat.SectionFlagCompressed, flags);
+
+        var reader = new StateReader(state);
+        Assert.True(reader.TryReadSection(out StateSectionReader? sectionReader));
+        Assert.NotNull(sectionReader);
+        Assert.True(sectionReader.Compressed);
+        Assert.Equal(source.Payload.Length, sectionReader.PayloadLength);
+        Assert.True(sectionReader.StoredLength < sectionReader.PayloadLength);
+
+        var restored = new LargeTestSection();
+        restored.Load(sectionReader);
+        Assert.Equal(source.Payload.ToArray(), restored.Payload.ToArray());
+        Assert.False(reader.TryReadSection(out _));
+    }
+
+    [Fact]
+    public void CompressionDisabled_WritesUncompressedSection()
+    {
+        var source = new LargeTestSection { Payload = CreatePayload(64 * 1024) };
+        var writer = new StateWriter { CompressionEnabled = false };
+        writer.WriteSection(source);
+        var state = writer.ToArray();
+
+        var flags = BinaryPrimitives.ReadUInt16LittleEndian(state.AsSpan(6, 2));
+        Assert.Equal(0, flags);
+
+        var reader = new StateReader(state);
+        Assert.True(reader.TryReadSection(out StateSectionReader? sectionReader));
+        Assert.NotNull(sectionReader);
+        Assert.False(sectionReader.Compressed);
+        Assert.Equal(source.Payload.Length, sectionReader.PayloadLength);
+        Assert.Equal(sectionReader.PayloadLength, sectionReader.StoredLength);
+    }
+
+    [Fact]
+    public void SmallSection_StaysUncompressed()
+    {
+        var writer = new StateWriter();
+        writer.WriteSection(new LargeTestSection { Payload = new byte[100] });
+        var state = writer.ToArray();
+
+        var flags = BinaryPrimitives.ReadUInt16LittleEndian(state.AsSpan(6, 2));
+        Assert.Equal(0, flags);
+    }
+
+    [Fact]
+    public void IncompressibleSection_StaysUncompressed()
+    {
+        var writer = new StateWriter();
+        writer.WriteSection(new LargeTestSection { Payload = CreateIncompressiblePayload(64 * 1024) });
+        var state = writer.ToArray();
+
+        var flags = BinaryPrimitives.ReadUInt16LittleEndian(state.AsSpan(6, 2));
+        Assert.Equal(0, flags);
+
+        var reader = new StateReader(state);
+        Assert.True(reader.TryReadSection(out StateSectionReader? sectionReader));
+        Assert.NotNull(sectionReader);
+        Assert.False(sectionReader.Compressed);
+        Assert.Equal(sectionReader.PayloadLength, sectionReader.StoredLength);
+    }
+
+    [Fact]
+    public void CompressedSection_CorruptPayload_Throws()
+    {
+        var writer = new StateWriter();
+        writer.WriteSection(new LargeTestSection { Payload = CreatePayload(64 * 1024) });
+        var state = writer.ToArray();
+        state[StateFormat.SectionHeaderSize + StateFormat.CompressedSectionPrefixSize] ^= 0xFF;
+
+        var reader = new StateReader(state);
+
+        Assert.Throws<InvalidStateException>(() => reader.TryReadSection(out _));
+    }
+
+    [Fact]
+    public void CompressedSection_InvalidLength_Throws()
+    {
+        var writer = new StateWriter();
+        writer.WriteSection(new LargeTestSection { Payload = CreatePayload(64 * 1024) });
+        var state = writer.ToArray();
+        BinaryPrimitives.WriteInt32LittleEndian(state.AsSpan(StateFormat.SectionHeaderSize), -1);
+
+        var reader = new StateReader(state);
+
+        Assert.Throws<InvalidStateException>(() => reader.TryReadSection(out _));
+    }
+
+    [Fact]
+    public void UnknownSectionFlags_Throws()
+    {
+        var writer = new StateWriter { CompressionEnabled = false };
+        writer.WriteSection(new TestStateSection { Value = 1 });
+        var state = writer.ToArray();
+        BinaryPrimitives.WriteUInt16LittleEndian(state.AsSpan(6), 0x0002);
+
+        var reader = new StateReader(state);
+
+        Assert.Throws<InvalidStateException>(() => reader.TryReadSection(out _));
+    }
+
+    private static byte[] CreateIncompressiblePayload(int length)
+    {
+        var payload = new byte[length];
+        var state = 0x12345678u;
+        for (var i = 0; i < payload.Length; i++)
+        {
+            state = (state * 1664525u) + 1013904223u;
+            payload[i] = (byte)(state >> 24);
+        }
+
+        return payload;
+    }
+
+    private static byte[] CreatePayload(int length)
+    {
+        var payload = new byte[length];
+        for (var i = 0; i < payload.Length; i++)
+        {
+            payload[i] = (byte)(i % 251);
+        }
+
+        return payload;
+    }
+
+    private sealed class LargeTestSection : IStateSection
+    {
+        public const uint SectionId = 0x87654321;
+
+        public uint Id => SectionId;
+
+        public ushort Version => 1;
+
+        public ReadOnlyMemory<byte> Payload { get; set; }
+
+        public void Save(IStateWriter writer) => writer.WriteBytes(Payload.Span);
+
+        public void Load(IStateReader reader)
+        {
+            var payload = new byte[reader.Remaining];
+            reader.ReadBytes(payload);
+            Payload = payload;
+        }
     }
 
     private sealed class TestStateSection : IStateSection

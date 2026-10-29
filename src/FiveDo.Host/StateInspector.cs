@@ -30,7 +30,8 @@ public static class StateInspector
         ArgumentNullException.ThrowIfNull(stream);
         using var buffer = new MemoryStream();
         stream.CopyTo(buffer);
-        var reader = new StateReader(buffer.ToArray());
+        var bytes = buffer.ToArray();
+        var reader = new StateReader(bytes);
         if (reader.Remaining < 8)
         {
             throw new InvalidStateException("The save state is truncated.");
@@ -42,7 +43,7 @@ public static class StateInspector
         }
 
         var version = reader.ReadUInt16();
-        if (version != StateFormat.Version)
+        if (!StateFormat.IsSupportedVersion(version))
         {
             throw new InvalidStateException($"Unsupported save-state version {version}.");
         }
@@ -56,12 +57,29 @@ public static class StateInspector
         var frames = reader.ReadInt64();
 
         var sections = new List<StateSectionInfo>();
+        var compressed = false;
         while (reader.TryReadSection(out StateSectionReader? section))
         {
-            sections.Add(new StateSectionInfo(section.Id, section.Version, section.PayloadLength));
+            sections.Add(new StateSectionInfo(
+                section.Id,
+                section.Version,
+                section.PayloadLength,
+                section.Compressed,
+                section.StoredLength));
+            compressed |= section.Compressed;
         }
 
-        return new StateInfo(version, emulatorVersion, armClock, fixMode, biosHash, discHash, frames, sections);
+        return new StateInfo(
+            version,
+            emulatorVersion,
+            armClock,
+            fixMode,
+            biosHash,
+            discHash,
+            frames,
+            sections,
+            compressed,
+            bytes.Length);
     }
 
     /// <summary>
@@ -93,6 +111,7 @@ public static class StateInspector
             return Read(stream);
         }
 
+        var startPosition = stream.Position;
         using var reader = new BinaryReader(stream, System.Text.Encoding.UTF8, leaveOpen: true);
         if (stream.Length - stream.Position < 8)
         {
@@ -105,7 +124,7 @@ public static class StateInspector
         }
 
         var version = reader.ReadUInt16();
-        if (version != StateFormat.Version)
+        if (!StateFormat.IsSupportedVersion(version))
         {
             throw new InvalidStateException($"Unsupported save-state version {version}.");
         }
@@ -119,6 +138,7 @@ public static class StateInspector
         var frames = reader.ReadInt64();
 
         var sections = new List<StateSectionInfo>();
+        var compressed = false;
         while (stream.Position < stream.Length)
         {
             if (stream.Length - stream.Position < StateFormat.SectionHeaderSize)
@@ -128,23 +148,64 @@ public static class StateInspector
 
             var id = reader.ReadUInt32();
             var sectionVersion = reader.ReadUInt16();
-            _ = reader.ReadUInt16();
+            var flags = reader.ReadUInt16();
             var length = reader.ReadUInt32();
             if (length > int.MaxValue)
             {
                 throw new InvalidStateException($"Section 0x{id:X8} has an invalid payload length.");
             }
 
-            if (stream.Length - stream.Position < length + StateFormat.SectionCrcSize)
+            if ((flags & ~StateFormat.SectionFlagCompressed) != 0)
+            {
+                throw new InvalidStateException($"Section 0x{id:X8} has unsupported flags 0x{flags:X4}.");
+            }
+
+            var storedLength = (int)length;
+            if (stream.Length - stream.Position < storedLength + StateFormat.SectionCrcSize)
             {
                 throw new InvalidStateException($"Section 0x{id:X8} is truncated.");
             }
 
-            stream.Seek(length + StateFormat.SectionCrcSize, SeekOrigin.Current);
-            sections.Add(new StateSectionInfo(id, sectionVersion, (int)length));
+            var sectionCompressed = (flags & StateFormat.SectionFlagCompressed) != 0;
+            int payloadLength = storedLength;
+            if (sectionCompressed)
+            {
+                if (storedLength < StateFormat.CompressedSectionPrefixSize)
+                {
+                    throw new InvalidStateException($"Section 0x{id:X8} has a truncated compressed payload.");
+                }
+
+                payloadLength = reader.ReadInt32();
+                if (payloadLength < 0 || payloadLength > StateFormat.MaxUncompressedSectionLength)
+                {
+                    throw new InvalidStateException(
+                        $"Section 0x{id:X8} has an invalid uncompressed length {payloadLength}.");
+                }
+
+                stream.Seek(
+                    storedLength - StateFormat.CompressedSectionPrefixSize + StateFormat.SectionCrcSize,
+                    SeekOrigin.Current);
+            }
+            else
+            {
+                stream.Seek(storedLength + StateFormat.SectionCrcSize, SeekOrigin.Current);
+            }
+
+            sections.Add(new StateSectionInfo(id, sectionVersion, payloadLength, sectionCompressed, storedLength));
+            compressed |= sectionCompressed;
         }
 
-        return new StateInfo(version, emulatorVersion, armClock, fixMode, biosHash, discHash, frames, sections);
+        return new StateInfo(
+            version,
+            emulatorVersion,
+            armClock,
+            fixMode,
+            biosHash,
+            discHash,
+            frames,
+            sections,
+            compressed,
+            stream.Length - startPosition);
     }
 
     private static string ReadString(BinaryReader reader)

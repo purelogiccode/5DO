@@ -115,7 +115,8 @@ It is off by default because 320x240 titles must not be upscaled.
 The shell exposes ten numbered slots. **Save State** and **Load State** use the
 selected slot; **<** and **>** change slots. **Slots** lists, saves, loads, and deletes
 states. Each slot writes `slot-NN.tdos`, a JSON sidecar, and a PNG thumbnail. Writes are
-atomic. A state is about 25 MB because it includes the full RAM backing and VDL frame;
+atomic. Format version 2 compresses large sections with Brotli, so a state is typically
+0.6-2.0 MB on disk (the uncompressed payload is ~25 MB). Version-1 states still load;
 see [`SaveStates.md`](SaveStates.md) for the format and limits.
 
 **Screenshot** writes a PNG named `<game>-<timestamp>-f<frames>.png` from the OpenGL

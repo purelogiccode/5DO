@@ -627,7 +627,7 @@ M1 implements the section primitive used by all later chips:
 
 ### 12.11 M8 implementation notes
 
-- Save states use the existing `TDO1` header plus per-section `[id][version][length][payload][crc32]` frames. Header fields are the emulator version, ARM clock, fix mode, BIOS MD5, optional disc hash, and frame count. Unknown format/section versions fail; BIOS hash mismatch is a warning.
+- Save states use the existing `TDO1` header plus per-section `[id][version][flags][length][payload][crc32]` frames. Header fields are the emulator version, ARM clock, fix mode, BIOS MD5, optional disc hash, and frame count. Format version 2 sets `flags` bit 0 for Brotli-compressed payloads; the stored payload begins with its uncompressed length and the CRC stays over the uncompressed bytes. Version 1 (raw sections) remains readable. Unknown format/section versions and unknown flag bits fail; BIOS hash mismatch is a warning.
 - `FiveDoMemory` now implements `IStateSection` and serializes RAM, both ROM banks, NVRAM, the selected bank, and the PC-adjust latch. RAM/ROM are written as raw little-endian words because the emulated representation is word-swapped; all supported runtimes are little-endian.
 - `Dsp` serializes its architectural state and NMem/IMem; REGCONV, request/BS tables, and BRCONDTAB are immutable precomputed tables rebuilt in the constructor, so they are not duplicated in the file.
 - The machine state also stores the derived VDL frame and the mutable `CompatibilityState`. Without the latter, the CPU's runtime Anvil detection (which changes `IsAnvil`/`BiosAnvil`) made a loaded run diverge after a few frames even though the CPU registers matched at load.

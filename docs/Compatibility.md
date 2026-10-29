@@ -253,13 +253,15 @@ does not need a separate high-resolution input path.
 - Native C# format, versioned, explicit little-endian, CRC-protected.
 - Includes CPU, the full 19 MB RAM backing (3 MB visible + 16 high-res mirrors), ROM,
   NVRAM, MADAM, CLIO, DSP, SPORT, VDLP, XBUS, CD, Quartz, compatibility flags, and the
-  parsed VDL frame. A typical state is ~25 MB.
+  parsed VDL frame. Format version 2 compresses large sections with Brotli; a typical
+  state is 0.6-2.0 MB on disk (the uncompressed payload is ~25 MB). Version-1 states
+  still load.
 - Does not include disc contents or input state.
 - Includes the parsed VDL frame lines, so a zero-frame load is pixel-identical to the
   saved frame even in high-resolution mode.
 - Stores BIOS and disc hashes. A BIOS or emulator-version mismatch produces a warning
-  but the load continues; the disc hash is recorded but not validated, so loading a
-  state from a different disc is allowed.
+  but the load continues; a differing expected disc hash adds a warning but still
+  loads.
 - 4DO `.4dosav` import/export is **not** a v1 goal and is not implemented. The native
   format is explicit and versioned; a best-effort importer can be added later if there
   is demand. See [`SaveStates.md`](SaveStates.md).

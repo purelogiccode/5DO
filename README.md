@@ -8,11 +8,14 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-29, 1.0.0-rc.1 release preparation, twenty-first pass):**
+**Current position (2026-10-29, 1.0.0-rc.1 release preparation, twenty-second pass):**
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **861 tests pass.** The twenty-first pass added the optional Vulkan xBR and
+prototype. **876 tests pass.** The twenty-second pass added state-format version 2 with
+per-section Brotli compression (a 24.9 MB state becomes roughly 0.6-2.0 MB while
+version-1 states still load), plus stored/compressed sizes in `state inspect`. The
+twenty-first pass added the optional Vulkan xBR and
 FSR GPU filters and removed the CPU palette-upload workaround from the OpenGL xBR
 path. The twentieth pass added the optional offscreen Vulkan
 backend and `--vk-probe` (see [`docs/Vulkan.md`](docs/Vulkan.md)). The nineteenth pass added save-state disc-identity

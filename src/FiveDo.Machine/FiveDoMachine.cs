@@ -232,14 +232,15 @@ public sealed class FiveDoMachine
     /// <summary>Saves the complete machine state to a stream. FreeDO: <c>_3do_Save</c>.</summary>
     /// <param name="destination">Destination stream.</param>
     /// <param name="discHash">Optional game/disc hash stored in the state header.</param>
+    /// <param name="compress">When true, large section payloads are Brotli-compressed.</param>
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
         "Security",
         "CA5351:Do Not Use Broken Cryptographic Algorithms",
         Justification = "MD5 is the 3DO BIOS/game identifier used by 4DO.")]
-    public void SaveState(Stream destination, string? discHash = null)
+    public void SaveState(Stream destination, string? discHash = null, bool compress = true)
     {
         ArgumentNullException.ThrowIfNull(destination);
-        var writer = new StateWriter();
+        var writer = new StateWriter { CompressionEnabled = compress };
         writer.WriteUInt32(StateFormat.Magic);
         writer.WriteUInt16(StateFormat.Version);
         writer.WriteUInt16(0);
@@ -269,13 +270,14 @@ public sealed class FiveDoMachine
     /// <summary>Saves the machine state atomically to a file.</summary>
     /// <param name="path">Destination path.</param>
     /// <param name="discHash">Optional game/disc hash.</param>
-    public void SaveStateToFile(string path, string? discHash = null)
+    /// <param name="compress">When true, large section payloads are Brotli-compressed.</param>
+    public void SaveStateToFile(string path, string? discHash = null, bool compress = true)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         var temporary = path + ".tmp";
         using (FileStream stream = File.Create(temporary))
         {
-            SaveState(stream, discHash);
+            SaveState(stream, discHash, compress);
         }
 
         File.Move(temporary, path, overwrite: true);
@@ -309,7 +311,7 @@ public sealed class FiveDoMachine
         }
 
         var version = reader.ReadUInt16();
-        if (version != StateFormat.Version)
+        if (!StateFormat.IsSupportedVersion(version))
         {
             throw new InvalidStateException($"Unsupported save-state version {version}.");
         }

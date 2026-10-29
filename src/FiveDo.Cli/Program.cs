@@ -1316,9 +1316,12 @@ internal static class Program
             Console.WriteLine($"bios md5:    {info.BiosHash}");
             Console.WriteLine($"disc hash:   {info.DiscHash}");
             Console.WriteLine($"frames:      {info.FramesExecuted}");
+            Console.WriteLine($"stored:      {info.StoredLength} bytes{(info.Compressed ? " (compressed sections)" : string.Empty)}");
             foreach (StateSectionInfo section in info.Sections)
             {
-                Console.WriteLine($"section {section.Id}: v{section.Version}, {section.PayloadLength} bytes");
+                Console.WriteLine(
+                    $"section {section.Id}: v{section.Version}, {section.PayloadLength} bytes"
+                    + (section.Compressed ? $" (stored {section.StoredLength}, compressed)" : string.Empty));
             }
         }
 

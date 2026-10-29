@@ -58,6 +58,58 @@ public sealed class StateInspectorTests
     }
 
     [Fact]
+    public void Inspect_ReportsCompressedSections()
+    {
+        FiveDoMachine machine = CreateMachine();
+        machine.RunFrames(3);
+        using var stream = new MemoryStream();
+        machine.SaveState(stream);
+        var bytes = stream.ToArray();
+
+        StateInfo info = StateInspector.Read(new MemoryStream(bytes));
+
+        Assert.True(info.Compressed);
+        Assert.Equal(bytes.Length, info.StoredLength);
+        Assert.Contains(
+            info.Sections,
+            section => section.Compressed && section.StoredLength < section.PayloadLength);
+    }
+
+    [Fact]
+    public void Inspect_AcceptsVersionOneStates()
+    {
+        FiveDoMachine machine = CreateMachine();
+        machine.RunFrames(3);
+        using var stream = new MemoryStream();
+        machine.SaveState(stream);
+        var bytes = stream.ToArray();
+        bytes[4] = 1;
+        bytes[5] = 0;
+
+        StateInfo info = StateInspector.Read(new MemoryStream(bytes));
+
+        Assert.Equal(1, info.Version);
+    }
+
+    [Fact]
+    public void ReadHeader_AcceptsVersionOneUncompressedState()
+    {
+        FiveDoMachine machine = CreateMachine();
+        machine.RunFrames(3);
+        using var stream = new MemoryStream();
+        machine.SaveState(stream, compress: false);
+        var bytes = stream.ToArray();
+        bytes[4] = 1;
+        bytes[5] = 0;
+
+        StateInfo info = StateInspector.ReadHeader(new MemoryStream(bytes));
+
+        Assert.Equal(1, info.Version);
+        Assert.False(info.Compressed);
+        Assert.All(info.Sections, section => Assert.False(section.Compressed));
+    }
+
+    [Fact]
     public void Inspect_RejectsInvalidFile()
     {
         var path = Path.Combine(Path.GetTempPath(), $"fivedo-invalid-{Guid.NewGuid():N}.tdos");

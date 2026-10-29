@@ -1,7 +1,8 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-29, 1.0.0-rc.1 release preparation after the twenty-first pass
-(optional offscreen Vulkan xBR/FSR/HQx filters and GPU-palette xBR in the OpenGL path;
+**Snapshot:** 2026-10-29, 1.0.0-rc.1 release preparation after the twenty-second pass
+(save-state version 2 with per-section Brotli compression; the twenty-first pass added
+the optional offscreen Vulkan xBR/FSR/HQx filters and GPU-palette xBR in the OpenGL path;
 the twentieth pass added the optional offscreen Vulkan backend and `--vk-probe`; the
 nineteenth pass added save-state disc warnings, console hotkeys, ISO/BIN `disc tracks`,
 and the OpenAL Soft LGPL notice/source offer; the eighteenth pass added Serilog logging
@@ -29,6 +30,11 @@ This is the short, current answer to "where are we?" The documentation index is
 - **Core:** ARM60 interpreter, 3 MB RAM/2 MB ROM, NVRAM, CLIO timers/FIQ/FIFO/DMA,
   MADAM CEL/pixel/matrix engines, VDLP, SPORT, DSP, Quartz scheduler, XBUS, CD-ROM,
   ISO/BIN/CUE/CHD storage, input/PBUS, game database, deterministic save states.
+- **Save states:** state format version 2 compresses large section payloads with Brotli
+  while keeping the CRC over the uncompressed data. Version-1 states still load. A
+  24,902,592-byte local state becomes 647,647 bytes (300-frame Gex) or 2,001,229 bytes
+  (14,900-frame Gex); the section inspector reads the header without decompressing
+  payloads, and `state inspect` reports stored/compressed sizes.
 - **BIOS:** `panafz1.bin` boots, runs the splash/animation, initializes the OS, and
   reaches the shell. The earlier `PC 0x205C4` "halt" was the Portfolio idle loop.
 - **Video:** the desktop two-stage presenter expands palettes at native resolution
@@ -138,7 +144,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 861 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 876 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and

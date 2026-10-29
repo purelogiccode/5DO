@@ -33,6 +33,14 @@ HQx is CPU-bound (4K HQx 2x present 7.66/10.36 ms). The required OpenGL xBR path
 samples the GPU-expanded palette texture directly instead of uploading a CPU
 `FrameAssembler` copy. **861 tests pass.** See [`Vulkan.md`](Vulkan.md).
 
+**Save-state compression update (2026-10-29, twenty-second pass):** state format
+version 2 adds per-section Brotli compression. The writer compresses payloads of at
+least 4 KiB when the result is smaller; the CRC stays over the uncompressed payload,
+and version-1 states still load. On the local corpus a 300-frame Gex state is 647,647
+bytes and a 14,900-frame state is 2,001,229 bytes instead of 24,902,592 bytes. The
+section inspector reports `Compressed`/`StoredLength` and reads the table without
+decompressing payloads. **876 tests pass.** See [`SaveStates.md`](SaveStates.md).
+
 **Last updated:** 2026-10-29
 
 ---
@@ -249,7 +257,7 @@ project/type layout is unchanged.
 
 ### 4a. Current position vs. the plan (2026-10-26)
 
-Snapshot: 861 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
+Snapshot: 876 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
 and zero synthetic steady-state allocations; all five local corpus titles boot and
 render, and scripted gameplay is validated in Wolfenstein, Lemmings, Road Rash, and
 Alone. The opt-in 640x480 high-resolution mode is implemented and matches the
@@ -947,6 +955,20 @@ dotnet run --project src/FiveDo.Frontend.Avalonia
 - [x] **M8.7 CLI tests.**
   - State inspector, frame dumper, save/load, patch parser, input-script, and autopilot tests run in the suite.
   - In-process CLI tests now cover version/usage, unknown-command exit codes, JSON errors, missing-BIOS validation, missing state files, and `bench` output.
+- [x] **M8.8 Save-state compression.**
+  - **DONE (2026-10-29):** state format version 2 stores large section payloads with
+    Brotli. `StateWriter` compresses payloads of at least 4 KiB when the result is
+    smaller, writes a per-section `flags` field, and keeps the CRC over the
+    uncompressed payload. `StateReader` decompresses and validates flagged sections.
+    Version-1 states still load; future versions are rejected.
+  - `StateInspector` reports `Compressed` and `StoredLength`; `state inspect` prints
+    the stored size and marks compressed sections, and the fast header path reads the
+    section table without decompressing payloads.
+  - Evidence: local 24,902,592-byte version-1 states become 647,647 bytes (300-frame
+    Gex) and 2,001,229 bytes (14,900-frame Gex); `SaveStateTests`,
+    `StateWriterReaderTests`, `StateInspectorTests`, and `SaveStateSlotManagerTests`
+    cover roundtrips, legacy loads, corrupt streams, invalid flags/lengths, and
+    compressed slot metadata.
 
 **Deliverables**
 

@@ -59,8 +59,12 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
   and CUE images as a single 2048-byte user-data track.
 - CLI JSON casing is split: `state inspect`/`state slots` are PascalCase for historical
   compatibility; other commands are camelCase.
-- A save state is about 25 MB because it includes the full 19 MB RAM backing and the
-  VDL frame. Ten slots use about 250 MB; the 100-slot maximum uses about 2.5 GB.
+- Save-state format version 2 compresses large sections with Brotli, so a state is
+  typically 0.6-2.0 MB instead of the 24.9 MB uncompressed size. Version-1 states still
+  load and remain ~25 MB. The state still contains the full 19 MB RAM backing and the
+  VDL frame before compression; ten compressed slots use a few MB. Older builds that
+  only understand version 1 reject new states with
+  `Unsupported save-state version 2.`
 - The save-state header records the disc hash. Loading with a different disc now adds
   a warning to `StateWarnings` (surfaced by the CLI and the desktop status line) but
   still loads; only BIOS/emulator-version mismatches are otherwise warned about.

@@ -34,7 +34,7 @@ ROM, NVRAM, device state, and the derived VDL frame, plus hashes for diagnostics
 +---------------------------------------------------------------+
 | Header                                                        |
 |   magic           u32   "TDO1" (0x314F4454 little-endian)      |
-|   version         u16   1                                     |
+|   version         u16   2 (v1 is still readable)              |
 |   reserved        u16   0                                     |
 |   emulatorVersion string (i32 byte count + UTF-8 bytes)       |
 |   armClock        i32   12,500,000                            |
@@ -46,10 +46,10 @@ ROM, NVRAM, device state, and the derived VDL frame, plus hashes for diagnostics
 | Section 1                                                     |
 |   id              u32                                         |
 |   version         u16                                         |
-|   reserved        u16   0                                     |
-|   length          u32   payload byte count                    |
+|   flags           u16   0 = raw, 1 = Brotli                   |
+|   length          u32   stored payload byte count             |
 |   payload         byte[length]                                |
-|   crc32           u32   CRC-32 of payload                     |
+|   crc32           u32   CRC-32 of the uncompressed payload    |
 +---------------------------------------------------------------+
 | Section 2 ...                                                 |
 +---------------------------------------------------------------+
@@ -59,7 +59,8 @@ ROM, NVRAM, device state, and the derived VDL frame, plus hashes for diagnostics
 - Strings are a signed 32-bit UTF-8 byte count followed by exactly that many bytes.
   Invalid UTF-8 is rejected.
 - `magic` is `TDO1` as ASCII; the little-endian `u32` is `0x314F4454`.
-- `version` must be `1`.
+- `version` is `2` for new states. The reader also accepts version `1` (raw
+  sections) for backward compatibility.
 - `armClock` is the tuning clock used when the state was written.
 - `fixMode` is the applied compatibility mask.
 - `biosHash` is the MD5 of BIOS bank 0 as restored from memory.
@@ -72,12 +73,19 @@ ROM, NVRAM, device state, and the derived VDL frame, plus hashes for diagnostics
 Each section is:
 
 ```text
-[id:u32][version:u16][reserved:u16][length:u32][payload:length][crc32:u32]
+[id:u32][version:u16][flags:u16][length:u32][payload:length][crc32:u32]
 ```
 
 The CRC is CRC-32/IEEE 802.3 (reflected polynomial `0xEDB88320`, init `0xFFFFFFFF`,
-final XOR `0xFFFFFFFF`). The reader verifies the CRC before exposing the payload. A
-truncated section, oversized length, or CRC mismatch throws `InvalidStateException`.
+final XOR `0xFFFFFFFF`). The reader verifies the CRC over the **uncompressed** payload
+before exposing it. A truncated section, oversized length, or CRC mismatch throws
+`InvalidStateException`.
+
+`flags` is `0` for a raw payload and `1` for Brotli. A compressed payload starts with a
+little-endian `i32` uncompressed length followed by the Brotli stream; `length` counts
+the prefix plus the Brotli bytes. The writer compresses payloads of at least 4 KiB when
+the result is smaller, and leaves small or incompressible payloads raw. Unknown flag
+bits and malformed compressed payloads are rejected.
 
 ---
 
@@ -104,15 +112,19 @@ existing section.
 
 The memory section stores the **entire RAM backing array**, including the 16 reserved
 1 MB high-resolution mirrors, and the machine section stores all 960 VDL lines with
-their full 1280-pixel buffers. A typical state is therefore about **24.9 MB**
-(observed 24,902,560-24,902,597 bytes across the local corpus), not a few hundred
-kilobytes. Plan disk space accordingly:
+their full 1280-pixel buffers. The uncompressed state is therefore about **24.9 MB**
+(observed 24,902,560-24,902,597 bytes across the local corpus).
 
-- 10 slots: about 250 MB.
-- 100 slots (the maximum `SaveSlotCount`): about 2.5 GB.
+Version 2 writes large sections with Brotli. On the local corpus the state shrinks to
+roughly **0.6-2.0 MB** (a 300-frame Gex state measured 647,647 bytes, a 14,900-frame
+state 2,001,229 bytes), so ten slots use a few megabytes instead of ~250 MB. Small
+sections (under 4 KiB) and incompressible payloads stay raw. The CRC is always over the
+uncompressed payload, and the state inspector reads the section table without
+decompressing the payloads.
 
-The state is still deterministic and compresses well with a general-purpose archiver,
-but 5DO does not compress `.tdos` files.
+Version-1 states are read unchanged; they remain uncompressed and ~25 MB. Loading a
+version-2 state in a build that only understands version 1 is rejected with
+`Unsupported save-state version 2.`
 
 ### Section version compatibility
 
@@ -125,6 +137,8 @@ but 5DO does not compress `.tdos` files.
   `Ignored unknown state section <id>.`
 - All eleven sections are required. A missing section throws
   `The save state is missing sections: ...`.
+- The outer state version is 2. Version 1 is accepted; version 2 adds Brotli section
+  flags. A future outer version is rejected.
 
 ---
 
@@ -132,16 +146,18 @@ but 5DO does not compress `.tdos` files.
 
 `FiveDoMachine.LoadState`:
 
-1. Reads the whole stream into memory (a state is ~25 MB).
-2. Verifies the magic and format version.
+1. Reads the whole stream into memory (a version-2 state is typically under 2 MB;
+   a version-1 state is ~25 MB).
+2. Verifies the magic and format version. Versions 1 and 2 are accepted.
 3. Reads the header strings and frame count.
 4. Adds a warning when the writer's emulator version differs from the current
    `FiveDoVersion.Version`.
 5. Compares the stored BIOS MD5 with the currently loaded BIOS; adds
    `State BIOS hash differs from the loaded BIOS.` when they differ. The load
    continues.
-6. Reads each section, verifies its version and CRC, dispatches to the owner, and
-   removes it from the required set.
+6. Reads each section, verifies its flags and version, decompresses Brotli payloads
+   when flagged, verifies the CRC over the uncompressed payload, dispatches to the
+   owner, and removes it from the required set.
 7. Throws if any required section is missing.
 8. Restores `Compatibility.HighResolution` from the Machine section; an explicit
    `--high-res` tuning flag is OR-ed in.
@@ -149,9 +165,9 @@ but 5DO does not compress `.tdos` files.
 10. Calls `AudioSink.Reset()` so live audio drops the old timeline.
 
 **Disc hash:** the header stores `discHash`, and the slot manager uses it as the
-displayed game ID, but the loader does not compare it with the inserted disc. Loading a
-state from a different disc is therefore allowed; verify the slot metadata/game ID
-yourself. The BIOS hash mismatch is also a warning, not a rejection.
+displayed game ID. When the host supplies the inserted disc's game ID and it differs,
+the loader adds `State disc hash differs from the loaded disc.` to `StateWarnings` but
+still loads; verify the slot metadata/game ID before relying on the continuation. The BIOS hash mismatch is also a warning, not a rejection.
 
 **NVRAM:** the Memory section includes NVRAM. Loading a state restores it in the
 machine; the host persists it through `NvramStore` on the next flush.
@@ -223,7 +239,9 @@ dotnet run --project src/FiveDo.Cli -- state inspect artifacts/states/slot-00.td
 dotnet run --project src/FiveDo.Cli -- state inspect artifacts/states/slot-00.tdos --json
 ```
 
-`state inspect` performs full CRC validation. JSON is PascalCase (see
+`state inspect` performs full CRC validation, including Brotli decompression. The text
+output reports the file's stored size and marks compressed sections with their stored
+size; `--json` includes `Compressed` and `StoredLength`. JSON is PascalCase (see
 [`CliReference.md`](CliReference.md) section 10).
 
 ### List slots
@@ -290,10 +308,11 @@ Not included:
 - Screenshot/log metadata.
 - Host settings (`settings.json`).
 
-A state written by a future format version (header version other than 1) is rejected.
-A state written by a future section version (other than the supported set) is rejected.
-Keep states with the emulator version that wrote them; the version warning exists to
-make cross-version loads visible, not to guarantee compatibility.
+A state written by a future format version (header version other than 1 or 2) is
+rejected. A state written by a future section version (other than the supported set)
+is rejected. Version-1 states load unchanged; version-2 states use Brotli section
+compression. Keep states with the emulator version that wrote them; the version
+warning exists to make cross-version loads visible, not to guarantee compatibility.
 
 ---
 
@@ -304,6 +323,8 @@ make cross-version loads visible, not to guarantee compatibility.
 | `invalid magic value` | Not a `.tdos` file, or the file is corrupted/truncated. |
 | `Unsupported save-state version N` | Written by a different format version; use a compatible build. |
 | `Section 0x... failed its CRC check` | File corruption or partial copy; restore from a backup. |
+| `Section 0x... could not be decompressed` | A compressed section is corrupt; the state is unusable. Restore from a backup. |
+| `Section 0x... has unsupported flags` | Written by a newer format that uses unknown section flags; use a compatible build. |
 | `The save state is missing sections: ...` | Truncated/incomplete file; re-save. |
 | `State BIOS hash differs...` warning | The loaded BIOS is not the one used to write the state. The load continues; expect possible divergence. |
 | `State was written by version ...` warning | Different emulator version. Verify the roundtrip before relying on it. |

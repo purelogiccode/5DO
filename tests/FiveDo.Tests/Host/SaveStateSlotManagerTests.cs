@@ -45,6 +45,21 @@ public sealed class SaveStateSlotManagerTests
     }
 
     [Fact]
+    public void Save_WritesCompressedState()
+    {
+        using var directory = new TempDirectory();
+        var manager = new SaveStateSlotManager(directory.Path, slotCount: 2);
+        FiveDoMachine machine = CreateMachine();
+        machine.RunFrames(3);
+
+        manager.Save(machine, gameId: "9F7D72BC", slot: 0);
+
+        StateInfo info = StateInspector.Read(manager.GetStatePath(0));
+        Assert.True(info.Compressed);
+        Assert.Contains(info.Sections, section => section.Compressed);
+    }
+
+    [Fact]
     public void Load_ReportsADifferentExpectedGameIdAsAWarning()
     {
         using var directory = new TempDirectory();

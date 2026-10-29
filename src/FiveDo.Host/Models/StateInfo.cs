@@ -15,6 +15,8 @@ namespace FiveDo.Host;
 /// <param name="DiscHash">Recorded disc hash, or empty.</param>
 /// <param name="FramesExecuted">Recorded frame count.</param>
 /// <param name="Sections">Section table.</param>
+/// <param name="Compressed">Whether at least one section payload is compressed.</param>
+/// <param name="StoredLength">State length on disk in bytes.</param>
 public sealed record StateInfo(
     ushort Version,
     string EmulatorVersion,
@@ -23,4 +25,6 @@ public sealed record StateInfo(
     string BiosHash,
     string DiscHash,
     long FramesExecuted,
-    IReadOnlyList<StateSectionInfo> Sections);
+    IReadOnlyList<StateSectionInfo> Sections,
+    bool Compressed = false,
+    long StoredLength = 0);

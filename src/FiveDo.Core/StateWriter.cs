@@ -17,6 +17,11 @@ public sealed class StateWriter : IStateWriter
 {
     private readonly ArrayBufferWriter<byte> _buffer = new();
 
+    /// <summary>
+    /// Gets or sets a value indicating whether large section payloads are Brotli-compressed.
+    /// </summary>
+    public bool CompressionEnabled { get; set; } = true;
+
     /// <summary>Gets the number of bytes written so far.</summary>
     public int Length => _buffer.WrittenCount;
 
@@ -100,12 +105,15 @@ public sealed class StateWriter : IStateWriter
         var payloadWriter = new StateWriter();
         section.Save(payloadWriter);
         ReadOnlySpan<byte> payload = payloadWriter.WrittenSpan;
+        byte[] storedPayload = [];
+        var compressed = CompressionEnabled && StateCompression.TryCompress(payload, out storedPayload);
+        ReadOnlySpan<byte> framedPayload = compressed ? storedPayload : payload;
 
         WriteUInt32(section.Id);
         WriteUInt16(section.Version);
-        WriteUInt16(0);
-        WriteUInt32(checked((uint)payload.Length));
-        WriteBytes(payload);
+        WriteUInt16(compressed ? StateFormat.SectionFlagCompressed : (ushort)0);
+        WriteUInt32(checked((uint)framedPayload.Length));
+        WriteBytes(framedPayload);
         WriteUInt32(StateCrc32.Compute(payload));
     }
 

@@ -493,8 +493,9 @@ High byte bits: `0x01` A, `0x02` Left, `0x04` Right, `0x08` Up, `0x10` Down, `0x
 | macOS | .NET `LocalApplicationData/5DO` (verify in About/Settings) | `<that>/states` | Pictures |
 
 `AppSettingsStore.DefaultDirectory` is `Path.Combine(LocalApplicationData, "5DO")`;
-`nvram.ram` and `settings.json` live there. A save state is ~25 MB (full RAM backing +
-VDL frame). **Portable mode is not implemented**; a `portable.flag` file has no effect.
+`nvram.ram` and `settings.json` live there. A version-2 save state is typically
+0.6-2.0 MB on disk (the uncompressed payload is ~25 MB: full RAM backing + VDL frame).
+**Portable mode is not implemented**; a `portable.flag` file has no effect.
 See [`Configuration.md`](Configuration.md) and [`SaveStates.md`](SaveStates.md).
 
 ---
@@ -516,12 +517,14 @@ See [`Configuration.md`](Configuration.md) and [`SaveStates.md`](SaveStates.md).
 | CD device command/status/data/TOC state | `CdromDevice` | yes (also via XBUS) |
 | Quartz accumulators/line counters | `Quartz` | yes (section v2) |
 | Compatibility flags and the derived `VdlFrame` | `FiveDoMachine` | yes (Machine section) |
-| Disc contents | host `IDiscSource` | no; the game ID is recorded in the header but not validated on load |
+| Disc contents | host `IDiscSource` | no; the game ID is recorded in the header and a mismatch with the inserted disc is a warning |
 | Input state | host | no |
 | Derived `FrameBuffer` / audio queue | host | no; regenerated/cleared |
 
-A typical `.tdos` is ~25 MB because the memory section stores the full RAM backing and
-the machine section stores all 960 VDL lines. See [`SaveStates.md`](SaveStates.md).
+A typical `.tdos` is 0.6-2.0 MB on disk in format version 2 because the memory section
+stores the full RAM backing and the machine section stores all 960 VDL lines, then the
+writer Brotli-compresses large sections. The uncompressed payload is ~25 MB; version-1
+states remain uncompressed. See [`SaveStates.md`](SaveStates.md).
 
 ---
 

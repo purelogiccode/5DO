@@ -7,6 +7,13 @@ still change.
 
 ### Added
 
+- Save-state format version 2 with per-section Brotli compression. Large sections
+  (4 KiB and up) are compressed when the result is smaller; the section CRC remains
+  over the uncompressed payload, and version-1 states still load. A 24.9 MB local
+  state becomes 647,647 bytes at 300 frames and 2,001,229 bytes at 14,900 frames.
+  `state inspect` reports the stored file size and marks compressed sections with
+  their stored size; `StateInfo`/`StateSectionInfo` expose `Compressed` and
+  `StoredLength`.
 - Optional Vulkan 1.0 offscreen backend (`FiveDo.Video.Vulkan`): a two-stage
   palette/scale pipeline with build-time SPIR-V shaders, accurate/nearest/
   sharp-bilinear/CRT filters, GPU timestamp queries, and host readback. `--vk-probe`

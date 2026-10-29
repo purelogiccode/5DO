@@ -266,8 +266,10 @@ controllers are ordered 1, 3, 2, 5, 4, 6.
 
 ## S
 
-**Save state (.tdos)** - Native versioned machine snapshot with CRC'd sections. About
-25 MB because it includes the full RAM backing and VDL frame.
+**Save state (.tdos)** - Native versioned machine snapshot with CRC'd sections. Format
+version 2 compresses large sections with Brotli, so a typical file is 0.6-2.0 MB on disk
+(the uncompressed payload is ~25 MB because it includes the full RAM backing and VDL
+frame). Version-1 states remain uncompressed.
 
 **Sharp-bilinear** - The default enhanced filter: integer prescale plus bilinear
 sub-texel blending.

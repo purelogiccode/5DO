@@ -52,7 +52,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `fs extract <disc>` | Extract files from a 3DO disc image (CHD container). |
 | `bios info <path>` | BIOS size, MD5, Anvil detection. |
 | `audio analyze <wav>` | WAV format, peak, RMS, clipping, silence, DC offset. |
-| `state inspect <path>` | Save-state header and section table (full CRC validation). |
+| `state inspect <path>` | Save-state header and section table (full CRC validation, including Brotli sections). |
 | `state slots <dir>` | List numbered save slots and metadata. |
 | `disasm <file>` | Disassemble raw little-endian ARM words. |
 | `bench` | Synthetic-ROM frame benchmark (or real content with options). |
@@ -422,11 +422,12 @@ See [`Audio.md`](Audio.md) for interpretation.
 5do state inspect quick.tdos --json
 ```
 
-Reads the full file and validates every section CRC. JSON is PascalCase:
+Reads the full file and validates every section CRC, decompressing Brotli sections when
+needed. JSON is PascalCase:
 
 ```json
 {
-  "Version": 1,
+  "Version": 2,
   "EmulatorVersion": "1.0.0-rc.1",
   "ArmClock": 12500000,
   "FixMode": 0,
@@ -434,13 +435,17 @@ Reads the full file and validates every section CRC. JSON is PascalCase:
   "DiscHash": "....",
   "FramesExecuted": 12000,
   "Sections": [
-    { "Id": 1, "Version": 1, "PayloadLength": 0 }
-  ]
+    { "Id": 1, "Version": 1, "PayloadLength": 199, "Compressed": false, "StoredLength": 199 },
+    { "Id": 2, "Version": 1, "PayloadLength": 22052866, "Compressed": true, "StoredLength": 640070 }
+  ],
+  "Compressed": true,
+  "StoredLength": 647647
 }
 ```
 
-Text output prints the header fields and one `section <id>: v<version>, <bytes> bytes`
-line per section. See [`SaveStates.md`](SaveStates.md) for the binary layout.
+Text output prints the header fields, the stored file size, and one
+`section <id>: v<version>, <bytes> bytes` line per section; compressed sections add
+`(stored <n>, compressed)`. See [`SaveStates.md`](SaveStates.md) for the binary layout.
 
 ### `state slots`
 

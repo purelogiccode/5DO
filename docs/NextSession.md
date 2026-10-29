@@ -1,11 +1,12 @@
 # Next Session Handoff
 
-**Date:** 2026-10-29 (twenty-first pass: Vulkan xBR/FSR/HQx filters and the
-GPU-palette xBR path in the OpenGL presenter; the twentieth pass added the optional
-offscreen Vulkan backend and `--vk-probe`; the nineteenth pass added save-state disc
-warnings, console hotkeys, ISO/BIN `disc tracks`, and OpenAL Soft LGPL packaging; the
-eighteenth pass added Serilog logging and bug reporting; the seventeenth pass added
-the OpenAL crackle fix, PCM tap, and race profile)
+**Date:** 2026-10-29 (twenty-second pass: save-state format version 2 with
+per-section Brotli compression; the twenty-first pass added Vulkan xBR/FSR/HQx filters
+and the GPU-palette xBR path in the OpenGL presenter; the twentieth pass added the
+optional offscreen Vulkan backend and `--vk-probe`; the nineteenth pass added
+save-state disc warnings, console hotkeys, ISO/BIN `disc tracks`, and OpenAL Soft LGPL
+packaging; the eighteenth pass added Serilog logging and bug reporting; the seventeenth
+pass added the OpenAL crackle fix, PCM tap, and race profile)
 **Goal:** make the audio path correct and testable. The sixteenth pass replaced the
 FreeDO 8.24 DSP sample accumulator with an exact 44,100-samples-per-ARM-second clock
 (600 frames now produce 441,015-441,020 samples / 10.000 s instead of 444,097 /
@@ -16,7 +17,11 @@ is made current on the audio thread, underruns are padded/counted, and the CLI h
 `--audio openal`, `--volume`, `--realtime`, and `audio analyze <wav> --json`. Core
 frames are paced by `AudioFramePacer` (audio clock with a 60 Hz fallback), WAV writes
 are buffered with streaming peak/RMS/clipping statistics, and the NativeAOT CLI now
-opens the live backend. **861 tests pass.** The twenty-first pass added the Vulkan
+opens the live backend. **876 tests pass.** The twenty-second pass added state format
+version 2: large section payloads are Brotli-compressed, the CRC stays over the
+uncompressed data, version-1 states still load, and `state inspect` reports stored and
+compressed sizes. A 24,902,592-byte local state becomes 647,647 bytes (300-frame Gex)
+or 2,001,229 bytes (14,900-frame Gex). The twenty-first pass added the Vulkan
 xBR/FSR/HQx filters and made the OpenGL xBR path sample the GPU-expanded palette
 texture directly. The eighteenth pass replaced the custom
 logger with Serilog and added the asynchronous bug-report sink. The seventeenth pass fixed live OpenAL
@@ -26,8 +31,9 @@ the Road Rash 3D-race profile. Do not redo the Serilog/bug-report work, the trim
 trimmed CLI/frontend publishes, the frontend smoke test, the benchmark comparison,
 the portable archives, the swap-interval/GPU-probe work, the ANGLE/GLES parity work,
 this audio pass, the 2026-10-29 release-hardening pass (save-state disc warnings,
-console hotkeys, ISO/BIN `disc tracks`, and OpenAL Soft LGPL packaging), or the
-twenty-first Vulkan xBR/FSR/HQx filter pass. The remaining **release** work is the legal/attribution review
+console hotkeys, ISO/BIN `disc tracks`, and OpenAL Soft LGPL packaging), the
+twenty-first Vulkan xBR/FSR/HQx filter pass, or the twenty-second save-state
+compression pass. The remaining **release** work is the legal/attribution review
 (now including OpenAL Soft's LGPL runtime), a stability soak, release
 packaging/notes, and optional Linux/macOS launch validation. GitHub Actions is
 currently blocked before job start by a billing/spending-limit annotation; that is an
@@ -789,6 +795,31 @@ path; a native surface/swapchain and non-Windows device validation are future wo
 Do not redo the Vulkan xBR/FSR/HQx filter work or reintroduce the CPU xBR upload. The
 remaining Vulkan work is a native surface/swapchain, vsync, and non-Windows device
 validation.
+
+### 1.26 Twenty-second pass: save-state version 2 and Brotli compression (2026-10-29)
+
+- **Format version 2.** `StateFormat.Version` is now 2; the reader accepts versions
+  1 and 2. The outer header layout is unchanged.
+- **Per-section compression.** `StateWriter.WriteSection` compresses payloads of at
+  least 4 KiB with Brotli when the result is smaller and sets the section `flags`
+  field to 1. The stored payload is `[uncompressedLength i32][Brotli bytes]`; the
+  section `length` counts both. The section CRC remains over the uncompressed
+  payload. `StateReader` validates the flags, decompresses, and verifies the CRC
+  before exposing the section.
+- **Backward compatibility.** Version-1 states (raw sections) load unchanged.
+  A version-2 state is rejected by older builds with
+  `Unsupported save-state version 2.` The section inspector's fast header path reads
+  the table without decompressing payloads, so slot listing stays cheap.
+- **Inspector/CLI.** `StateInfo`/`StateSectionInfo` add `Compressed` and
+  `StoredLength`; `state inspect` prints the stored size and marks compressed
+  sections with their stored size. `--json` includes the new PascalCase fields.
+- **Evidence.** A 24,902,592-byte version-1 state becomes 647,647 bytes at 300 frames
+  and 2,001,229 bytes at 14,900 frames. `SaveStateTests`,
+  `StateWriterReaderTests`, `StateInspectorTests`, and `SaveStateSlotManagerTests`
+  cover compressed/uncompressed roundtrips, version-1 loads, corrupt compressed
+  payloads, invalid lengths/flags, and slot metadata. **876 tests pass.**
+- **Do not** change the CRC to cover compressed bytes, remove the version-1 read
+  path, or make the inspector decompress every section to list slots.
 
 ---
 
