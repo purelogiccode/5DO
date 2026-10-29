@@ -101,10 +101,9 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
       861/861 with 1.0.0-rc.1 (after the 2026-10-29 Vulkan xBR/FSR pass).
 - [x] `dotnet format 5DO.sln --verify-no-changes` passes.
 - [ ] CI is green on the supported runners. (Local gates pass. GitHub Actions jobs
-      currently fail before starting because the account's recent payments/spending
-      limit are blocked; the run annotation points to Billing & plans. This is an
-      external billing action, not a code failure. The workflow was re-run on
-      2026-10-29 and every job reported the same annotation.)
+      currently fail before starting with a GitHub billing/spending-limit annotation;
+      this is an external account action, not a code failure. The workflow was re-run
+      on 2026-10-29 and every job reported the same annotation.)
 - [x] Synthetic benchmark `--gate` passes: 2.28 ms/frame core mean, 4.03 ms core
       p99, 4.66 ms total p99, 0 bytes/frame.
 - [x] Trimmed CLI smoke test passes: `--version`, `selftest --json`,
