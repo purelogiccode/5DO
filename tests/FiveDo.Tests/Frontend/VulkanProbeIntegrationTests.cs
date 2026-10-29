@@ -70,6 +70,51 @@ public sealed class VulkanProbeIntegrationTests
             Assert.Equal(2160, fourK.OutputHeight);
             Assert.Equal(0, fourK.RendererAllocatedBytesPerFrame);
             Assert.NotNull(fourK.Gpu);
+
+            var xbrPath = Path.Combine(temporary, "xbr.json");
+            RunProbe(
+                frontend,
+                xbrPath,
+                capturePath: null,
+                size: "640x480",
+                frames: 10,
+                warmup: 3,
+                filter: "xbr");
+            GlProbeReport xbr = ReadReport(xbrPath);
+            Assert.True(xbr.Ok, xbr.Error);
+            Assert.Equal("Xbr", xbr.Filter);
+            Assert.False(xbr.FilterFallback);
+            Assert.Equal(0, xbr.RendererAllocatedBytesPerFrame);
+
+            var fsrPath = Path.Combine(temporary, "fsr.json");
+            RunProbe(
+                frontend,
+                fsrPath,
+                capturePath: null,
+                size: "640x480",
+                frames: 10,
+                warmup: 3,
+                filter: "fsr");
+            GlProbeReport fsr = ReadReport(fsrPath);
+            Assert.True(fsr.Ok, fsr.Error);
+            Assert.Equal("Fsr", fsr.Filter);
+            Assert.False(fsr.FilterFallback);
+            Assert.Equal(0, fsr.RendererAllocatedBytesPerFrame);
+
+            var hqxPath = Path.Combine(temporary, "hqx.json");
+            RunProbe(
+                frontend,
+                hqxPath,
+                capturePath: null,
+                size: "640x480",
+                frames: 10,
+                warmup: 3,
+                filter: "hqx");
+            GlProbeReport hqx = ReadReport(hqxPath);
+            Assert.True(hqx.Ok, hqx.Error);
+            Assert.Equal("Hqx", hqx.Filter);
+            Assert.False(hqx.FilterFallback);
+            Assert.Equal(0, hqx.RendererAllocatedBytesPerFrame);
         }
         finally
         {

@@ -25,6 +25,14 @@ adds an offscreen Vulkan 1.0 two-stage presenter with build-time SPIR-V shaders,
 4K sharp-bilinear measures 1.51 ms mean / 1.80 ms p99 present with 0 managed
 bytes/frame on the RTX 4070. **860 tests pass.** See [`Vulkan.md`](Vulkan.md).
 
+**Vulkan filter update (2026-10-29, twenty-first pass):** the offscreen Vulkan
+backend now runs xBR-lv2 and FSR 1.0 (EASU + RCAS) as GPU passes and HQx 2x/3x/4x
+through the shared CPU expansion. 4K xBR measures 1.55 ms mean / 1.92 ms p99
+present, and 4K FSR 1.87 ms mean / 2.15 ms p99, both with 0 managed bytes/frame;
+HQx is CPU-bound (4K HQx 2x present 7.66/10.36 ms). The required OpenGL xBR path now
+samples the GPU-expanded palette texture directly instead of uploading a CPU
+`FrameAssembler` copy. **861 tests pass.** See [`Vulkan.md`](Vulkan.md).
+
 **Last updated:** 2026-10-29
 
 ---
@@ -241,7 +249,7 @@ project/type layout is unchanged.
 
 ### 4a. Current position vs. the plan (2026-10-26)
 
-Snapshot: 860 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
+Snapshot: 861 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
 and zero synthetic steady-state allocations; all five local corpus titles boot and
 render, and scripted gameplay is validated in Wolfenstein, Lemmings, Road Rash, and
 Alone. The opt-in 640x480 high-resolution mode is implemented and matches the
@@ -1144,9 +1152,21 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
     shared GPU probe JSON and PNG captures; `--gl-backend vulkan` selects the optional
     desktop offscreen/readback path. A 320x240 Accurate probe matches the CPU oracle
     with 0 different pixels and hash `0xD6BD89C5`; 4K sharp-bilinear measures 1.51 ms
-    mean / 1.80 ms p99 present with 0 managed bytes/frame on the RTX 4070. xBR/HQx/FSR
-    fall back to sharp-bilinear. A window-system surface/swapchain and non-Windows
-    device validation remain future work. See [`Vulkan.md`](Vulkan.md).
+    mean / 1.80 ms p99 present with 0 managed bytes/frame on the RTX 4070. A
+    window-system surface/swapchain and non-Windows device validation remain future
+    work. See [`Vulkan.md`](Vulkan.md).
+- [x] **M9R.12 Vulkan xBR, FSR, and HQx filters.**
+  - **DONE (2026-10-29):** the offscreen backend runs xBR-lv2 as a 4x GPU pass and
+    FSR 1.0 as EASU plus RCAS GPU passes over the GPU-expanded native frame. HQx
+    2x/3x/4x use the shared CPU `FrameAssembler` + `HqxFilter` expansion and a
+    reusable upload path; they are CPU-bound and opt-in (4K HQx 2x present 7.66 ms
+    mean / 10.36 ms p99). 4K xBR measures 1.55 ms mean / 1.92 ms p99 present and 4K
+    FSR 1.87 ms mean / 2.15 ms p99, both with 0 managed bytes/frame. A
+    top-red/bottom-blue split-frame test verifies top-down orientation at 320x240 and
+    640x480, and the probe integration test covers all three filters at 640x480 with
+    `filterFallback: false`. The required OpenGL xBR path now samples the
+    GPU-expanded palette texture directly instead of uploading a CPU `FrameAssembler`
+    copy.
 
 **Deliverables**
 

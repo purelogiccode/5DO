@@ -24,7 +24,7 @@ The emulator is a large, stateful port. Tests are the only way to keep a 600 KB 
      └────────────────────────────────────────────────────────────┘
 ```
 
-**Default `dotnet test` must run the unit + integration layers and finish in a few minutes.** Real-BIOS and real-disc tests are opt-in via environment variables. The current suite is **860 tests** (verified 2026-10-29).
+**Default `dotnet test` must run the unit + integration layers and finish in a few minutes.** Real-BIOS and real-disc tests are opt-in via environment variables. The current suite is **861 tests** (verified 2026-10-29).
 
 ---
 
@@ -327,18 +327,24 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
 
 ### 4.17 Optional Vulkan renderer
 
-- **SPIR-V:** generated `Frame.vert`, `Palette.frag`, and `Scale.frag` modules are
-  non-empty SPIR-V with the correct magic number (`VulkanShaderTests`).
+- **SPIR-V:** generated `Frame.vert`, `Palette.frag`, `Scale.frag`, `Xbr.frag`,
+  `FsrEasu.frag`, and `FsrRcas.frag` modules are non-empty SPIR-V with the correct
+  magic number (`VulkanShaderTests`).
 - **Palette parity:** 320x240 and 640x480 Accurate renders match `FrameAssembler`,
   including background pixel 0, the fixed CLUT flag/pixel bit 15, and per-line CLUTs
   (`VulkanRendererTests`, opt-in `FIVEDO_VULKAN_TESTS=1`).
 - **Source/output changes:** changing the source size recreates the expanded target
-  and rebinds the scale descriptor; changing the output size recreates the target and
-  readback buffer.
+  and rebinds the scale/xBR/FSR descriptors; changing the output size recreates the
+  target, FSR target, and readback buffer.
+- **Filter orientation:** a top-red/bottom-blue split frame rendered through xBR and
+  FSR at 320x240 and 640x480 stays top-down (`VulkanRendererTests`).
 - **Probe:** `--vk-probe` writes the shared JSON shape, supports PNG capture, and
   performs the 320x240 CPU/GPU parity check. `VulkanProbeIntegrationTests`
-  (`FIVEDO_VULKAN_TESTS=1`) runs the built frontend for parity and a 4K pass.
-- **Fallback:** xBR/HQx/FSR report `filterFallback: true` and use sharp-bilinear.
+  (`FIVEDO_VULKAN_TESTS=1`) runs the built frontend for parity, a 4K pass, and
+  640x480 xBR/FSR passes with `filterFallback: false`.
+- **Filters:** xBR and FSR are GPU passes; HQx 2x/3x/4x use the shared CPU expansion
+  and are CPU-bound. All three preserve top-down orientation and report
+  `filterFallback: false` in the Vulkan backend.
 - **Headless CI:** SPIR-V and option tests run everywhere; device tests skip cleanly
   without a Vulkan loader/device.
 

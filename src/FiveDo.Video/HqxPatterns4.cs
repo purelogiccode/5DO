@@ -2,7 +2,7 @@
 // HQx 4x pattern switch derived from Maxim Stepin's hq4x and Cameron
 // Zemek's C port (LGPL 2.1+). See the header of HqxFilter.cs and
 // THIRD-PARTY-NOTICES.md. Regenerate with tools/generate_hqx34.py.
-namespace FiveDo.Video.OpenGL;
+namespace FiveDo.Video;
 
 public sealed partial class HqxFilter
 {

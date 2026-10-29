@@ -1,7 +1,7 @@
 using System;
 using FiveDo.Core;
 
-namespace FiveDo.Video.OpenGL;
+namespace FiveDo.Video;
 
 /// <summary>
 /// A CPU implementation of the HQx 2x/3x/4x pixel-art filters, used as an

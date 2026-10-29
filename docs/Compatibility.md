@@ -2,7 +2,7 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current position (2026-10-28, seventeenth pass):** all five golden-corpus titles boot,
+**Current position (2026-10-29, twenty-first pass):** all five golden-corpus titles boot,
 load their own OS, render real frames, and produce non-silent DSP audio. Seven
 additional titles were validated on 2026-10-26 (Gex, Need for Speed, Super Street
 Fighter II Turbo, Total Eclipse, Killing Time, Theme Park, and Return Fire): each
@@ -21,7 +21,10 @@ interactive scene (`X` menu, `A` play) with a save/load roundtrip. The fifteenth
 also added the `--gl-backend` selector and validated Windows ANGLE/GLES 3.0 with
 pixel-identical CPU/GPU output. The tenth pass added CRT bloom and committed the D-pad
 passcode script. The eighth pass fixed the GPU palette shader so real frames use
-independent R/G/B CLUT indices and added the opt-in xBR-lv2 filter.
+independent R/G/B CLUT indices and added the opt-in xBR-lv2 filter. The 2026-10-29
+twenty-first pass added the optional Vulkan xBR/FSR GPU filters and HQx CPU path and
+removed the CPU palette-upload workaround from the OpenGL xBR path; compatibility
+status is unchanged.
 
 The ninth pass captured per-title save-state, PNG, and WAV evidence (see
 `TestCorpus.md` 1.5a) and fixed the old Road Rash ~42,000/~92,000 stops. They were a
@@ -72,8 +75,9 @@ The 2026-10-25 eighth pass fixed a renderer-only issue: the GPU palette shader u
 the low five bits of each pixel as one CLUT index for all three channels, so real
 content appeared grayscale even though the CPU oracle was correct. The shader now
 uses the red, green, and blue indices independently. Lemmings gameplay was captured
-through sharp-bilinear and xBR with correct colors; xBR uses a CPU-expanded source to
-avoid a driver readback issue with the FBO-attached palette texture.
+through sharp-bilinear and xBR with correct colors. The 2026-10-29 pass removed the
+former CPU-expanded xBR source; xBR now samples the GPU palette texture directly and
+the 320x240 WGL/ANGLE captures remain top-down and visually correct.
 
 Space Ace's former frame-681 runaway was a downstream consequence of the DSP
 failure: the ReadySoft player's audio task copied a decoded buffer to a null
@@ -190,7 +194,7 @@ The game database is ported with attribution. Unknown game IDs get the first 8 h
 |---|---|---|
 | 320x240 NTSC | Yes | |
 | **OpenGL/GLES renderer** | **Required desktop path** | |
-| Optional Vulkan renderer | Offscreen/readback backend and `--vk-probe`; accurate/nearest/sharp-bilinear/CRT | Native Vulkan surface/swapchain |
+| Optional Vulkan renderer | Offscreen/readback backend and `--vk-probe`; accurate/nearest/sharp-bilinear/CRT/xBR/FSR/HQx | Native Vulkan surface/swapchain, vsync |
 | GPU palette expansion | Yes (exact CPU parity in Accurate mode) | |
 | 4:3 aspect ratio, letterbox | Yes | |
 | Nearest / integer scaling | Yes | |

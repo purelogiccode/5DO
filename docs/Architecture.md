@@ -78,9 +78,9 @@
 | `FiveDo.Clio` | CLIO registers, timers, FIFOs, DMA, interrupts, DSP interface, XBUS register window, ROM select, diagnostic port | `Clio`, `DiagPort` | Core |
 | `FiveDo.Dsp` | 3DO audio DSP: instruction decode/precompute, ALU, multiplier, barrel shifter, NMem/IMem, semaphore, sample output | `Dsp`, `DspInstruction`, `DspTraceEntry` | Core |
 | `FiveDo.Sport` | SPORT VRAM fill/copy engine, high-res plane mirroring | `Sport` | Core |
-| `FiveDo.Video` | VDLP display-list parser, line/frame assembly, palette expansion reference path, frame extraction, scaler contracts, CPU fallback presenter, mailbox | `Vdlp`, `FrameAssembler`, `GpuPalette`, `VdlFrameUploader`, `VdlFrameMailbox`, `ViewportCalculator`, `IVideoRenderer`, `VideoFilter`, `RendererSettings`, `CpuVideoRenderer` | Core |
-| `FiveDo.Video.OpenGL` | **Required desktop renderer**: desktop GL 3.3 and GLES 3.0/3.1 context integration, two-stage native-resolution palette expansion + output upscaling, persistent texture upload, scaling/filter pipeline (including FSR/xBR/HQx), vsync presentation, screenshots | `OpenGlRenderer`, `OpenGlCapabilities`, `SwapInterval`, `HqxFilter`, `Shaders`, `GlContextAdapter`, `OffscreenRenderTarget` | Core, Video, Silk.NET.OpenGL |
-| `FiveDo.Video.Vulkan` | **Optional offscreen Vulkan 1.0 renderer**: build-time SPIR-V palette/scale shaders, sampled source textures, accurate/nearest/sharp-bilinear/CRT filters, timestamp queries, host readback | `VulkanOffscreenRenderer`, `VulkanShaders` (generated) | Core, Video, Silk.NET.Vulkan |
+| `FiveDo.Video` | VDLP display-list parser, line/frame assembly, palette expansion reference path, frame extraction, scaler contracts, CPU fallback presenter, mailbox, shared HQx CPU filter | `Vdlp`, `FrameAssembler`, `GpuPalette`, `VdlFrameUploader`, `VdlFrameMailbox`, `ViewportCalculator`, `IVideoRenderer`, `VideoFilter`, `RendererSettings`, `CpuVideoRenderer`, `HqxFilter` | Core |
+| `FiveDo.Video.OpenGL` | **Required desktop renderer**: desktop GL 3.3 and GLES 3.0/3.1 context integration, two-stage native-resolution palette expansion + output upscaling, persistent texture upload, scaling/filter pipeline (including FSR/xBR/HQx), vsync presentation, screenshots | `OpenGlRenderer`, `OpenGlCapabilities`, `SwapInterval`, `Shaders`, `GlContextAdapter`, `OffscreenRenderTarget` | Core, Video, Silk.NET.OpenGL |
+| `FiveDo.Video.Vulkan` | **Optional offscreen Vulkan 1.0 renderer**: build-time SPIR-V palette/scale/xBR/FSR shaders, sampled source textures, accurate/nearest/sharp-bilinear/CRT/xBR/FSR/HQx filters, timestamp queries, host readback | `VulkanOffscreenRenderer`, `VulkanShaders` (generated) | Core, Video, Silk.NET.Vulkan |
 | `FiveDo.Xbus` | XBUS controller, device selection, poll/status/data FIFOs, device interface | `Xbus` | Core |
 | `FiveDo.Cdrom` | Mitsumi/MEI CD-ROM device, command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice` | Core |
 | `FiveDo.Storage` | Disc image readers (ISO/BIN/CUE/CHD), bounded host prefetch, BIOS validation, NVRAM file format, game database, game ID | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `VolumeHeader`, `GameDatabase`, `GameId` | Core, CHDSharp |
@@ -315,7 +315,7 @@ Stage 2 - scaling/filter at output resolution (up to 4K):
   - Nearest (pixel-perfect integer scaling)
   - Sharp-bilinear (default enhanced)
   - CRT (scanlines, mask, curvature, vignette, bloom)
-  - xBR 4x / HQx 2x/3x/4x (optional; CPU-expanded source)
+  - xBR 4x (optional; GPU palette source) / HQx 2x/3x/4x (optional; CPU-expanded source)
   - FSR 1.0 EASU + RCAS (optional; two GPU passes)
         │
         ▼

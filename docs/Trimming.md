@@ -129,7 +129,10 @@ custom native-asset resolver for the frontend.
    Avalonia initializes. The CI Windows job publishes the trimmed win-x64 frontend
    and runs this smoke test. The trimmed win-x64 executable also runs the
    `--gl-probe` 4K offscreen path (source-generated `GlProbeJsonContext`) and
-   reports 0 renderer/mailbox allocations per frame after warm-up.
+   reports 0 renderer/mailbox allocations per frame after warm-up. The trimmed
+   win-x64 build was also re-checked with the `--vk-probe` xBR, FSR, and HQx paths
+   after the twenty-first-pass Vulkan filters; all returned `ok: true` with
+   `filterFallback: false`.
 
 6. **CHDSharp warning.** The only remaining trim warning is in CHDSharp's
    vendored FLAC assembly:

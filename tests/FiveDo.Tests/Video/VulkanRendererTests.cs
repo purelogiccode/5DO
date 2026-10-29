@@ -40,6 +40,105 @@ public sealed class VulkanRendererTests
         AssertParity(renderer, highResolution, 640, 480);
     }
 
+    [Fact]
+    public void XbrFsrAndHqx_RenderWithoutFallbackAndPreserveTopDownOrientation()
+    {
+        if (!string.Equals(
+                Environment.GetEnvironmentVariable("FIVEDO_VULKAN_TESTS"),
+                "1",
+                StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        using var renderer = new VulkanOffscreenRenderer
+        {
+            Settings = new RendererSettings
+            {
+                Filter = VideoFilter.Xbr,
+                Aspect = AspectMode.Stretch,
+                IntegerScale = false,
+                Vsync = false,
+            },
+        };
+
+        renderer.Initialize(320, 240);
+        VdlFrame split = CreateSplitFrame();
+        renderer.Present(split);
+        Assert.False(renderer.FilterFallback);
+        AssertSplitOrientation(renderer, 320, 240);
+
+        renderer.Resize(640, 480);
+        renderer.Present(split);
+        Assert.False(renderer.FilterFallback);
+        AssertSplitOrientation(renderer, 640, 480);
+
+        renderer.Settings = new RendererSettings
+        {
+            Filter = VideoFilter.Fsr,
+            Aspect = AspectMode.Stretch,
+            IntegerScale = false,
+            Vsync = false,
+        };
+        renderer.Present(split);
+        Assert.False(renderer.FilterFallback);
+        AssertSplitOrientation(renderer, 640, 480);
+
+        foreach (var hqx in new[] { VideoFilter.Hqx, VideoFilter.Hqx3x, VideoFilter.Hqx4x })
+        {
+            renderer.Settings = new RendererSettings
+            {
+                Filter = hqx,
+                Aspect = AspectMode.Stretch,
+                IntegerScale = false,
+                Vsync = false,
+            };
+            renderer.Present(split);
+            Assert.False(renderer.FilterFallback);
+            AssertSplitOrientation(renderer, 640, 480);
+        }
+    }
+
+    private static VdlFrame CreateSplitFrame()
+    {
+        var frame = new VdlFrame
+        {
+            SourceWidth = 320,
+            SourceHeight = 240,
+        };
+        for (var y = 0; y < 240; y++)
+        {
+            VdlLine line = frame[y];
+            line.Width = 320;
+            line.OutControl = 0;
+            // The 5-bit background word is B in bits 0-4, G in 5-9, R in 10-14.
+            line.Background = y < 120 ? 31u << 10 : 31u;
+            line.Pixels.Clear();
+        }
+
+        return frame;
+    }
+
+    private static void AssertSplitOrientation(
+        VulkanOffscreenRenderer renderer,
+        int width,
+        int height)
+    {
+        var gpu = new byte[width * height * 4];
+        renderer.ReadPixels(gpu, out var readWidth, out var readHeight);
+        Assert.Equal(width, readWidth);
+        Assert.Equal(height, readHeight);
+
+        var top = (((height / 4) * width) + (width / 2)) * 4;
+        var bottom = ((((3 * height) / 4) * width) + (width / 2)) * 4;
+        Assert.True(
+            gpu[top + 2] > 200 && gpu[top] < 50,
+            $"The top half was not red: B={gpu[top]} G={gpu[top + 1]} R={gpu[top + 2]}.");
+        Assert.True(
+            gpu[bottom] > 200 && gpu[bottom + 2] < 50,
+            $"The bottom half was not blue: B={gpu[bottom]} G={gpu[bottom + 1]} R={gpu[bottom + 2]}.");
+    }
+
     private static VdlFrame CreateFrame(int width, int height, int phase)
     {
         var frame = new VdlFrame

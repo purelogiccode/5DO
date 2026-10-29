@@ -14,6 +14,7 @@ layout(push_constant) uniform PushConstants
     float scanline;
     float bloom;
     float bloomThreshold;
+    float sharpness;
 } pc;
 
 uint expand5(uint value)

@@ -25,11 +25,12 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
   so it is not recommended with `--high-res` on slow CPUs.
 - CRT bloom is implemented as a 3x3 native-resolution glow in the CRT filter.
 - FSR 1.0 is opt-in (EASU + RCAS, two GPU passes). It has a sharpness setting and
-  MIT attribution, but no separate 4K FSR probe table is recorded yet; measure it on
-  the target GPU before enabling it by default.
-- The xBR path expands the palette on the CPU at native resolution before uploading the
-  source texture. Other filters use GPU palette expansion. This is a deliberate
-  workaround for a driver readback issue with the FBO-attached palette texture.
+  MIT attribution. The 4K WGL probe measures present 0.132 ms mean / 1.191 ms p99 and
+  GPU 0.441/0.483 ms; the optional Vulkan backend measures 1.873/2.154 ms present and
+  1.694/1.967 ms GPU.
+- The xBR path now samples the GPU-expanded palette texture directly; it no longer
+  uploads a CPU `FrameAssembler` copy. WGL and ANGLE 4K xBR probes pass, and the
+  320x240 xBR capture is within one mean channel level of the accurate frame.
 - Tier A 4K presentation is measured with `--gl-probe` (RTX 4070: sharp-bilinear GPU
   p99 0.089 ms, present p99 0.208 ms, zero renderer/mailbox allocations per frame).
   Windows ANGLE/GLES 3.0 is validated (4K present p99 0.47 ms, pixel parity with the
@@ -44,9 +45,10 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
   zero-allocation after warm-up.
 - Linux/macOS OpenGL launch validation is not complete.
 - The optional Vulkan backend (`--gl-backend vulkan` / `--vk-probe`) is offscreen and
-  readback-based. It has no native surface/swapchain, vsync, or xBR/HQx/FSR shaders;
-  unsupported filters fall back to sharp-bilinear. Non-Windows Vulkan device validation
-  is pending. See [`Vulkan.md`](Vulkan.md).
+  readback-based. It has no native surface/swapchain or vsync. xBR-lv2 and FSR 1.0
+  (EASU + RCAS) are GPU passes; HQx 2x/3x/4x use the shared CPU expansion and are
+  CPU-bound. Non-Windows Vulkan device validation is pending. See
+  [`Vulkan.md`](Vulkan.md).
 
 ## Tooling and UI
 

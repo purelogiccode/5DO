@@ -15,9 +15,19 @@ still change.
   CPU oracle (`0xD6BD89C5`, 0 different pixels); 4K sharp-bilinear measures 1.51 ms
   mean / 1.80 ms p99 present with 0 managed bytes/frame on the RTX 4070. See
   [`docs/Vulkan.md`](docs/Vulkan.md).
-- Vulkan tests: generated SPIR-V module checks, probe option parsing, and opt-in
-  `FIVEDO_VULKAN_TESTS=1` CPU-parity/source-size-change and 4K probe integration
-  tests.
+- Vulkan xBR-lv2, FSR 1.0 (EASU + RCAS), and HQx 2x/3x/4x filters. xBR runs as a
+  4x pass over the GPU-expanded native frame and FSR runs EASU plus RCAS; HQx uses
+  the shared CPU `FrameAssembler` + `HqxFilter` expansion and a reusable upload path.
+  All three preserve top-down orientation and report `filterFallback: false`. 4K xBR
+  measures 1.55 ms mean / 1.92 ms p99 present, 4K FSR 1.87/2.15 ms, and 4K HQx 2x
+  7.66/10.36 ms (CPU-bound), with 0 managed bytes/frame on the RTX 4070.
+- The required OpenGL xBR path now samples the GPU-expanded palette texture directly
+  instead of uploading a CPU `FrameAssembler` copy; the 4K WGL xBR probe measures
+  present 0.28 ms mean / 1.47 ms p99 with 0 renderer allocations.
+- Vulkan tests: generated SPIR-V module checks for all six shaders, probe option
+  parsing, split-frame xBR/FSR orientation at 320x240 and 640x480, and opt-in
+  `FIVEDO_VULKAN_TESTS=1` CPU-parity/source-size-change and 4K/xBR/FSR probe
+  integration tests.
 - Save-state disc identity check: loading a state now reports a warning when the
   disc/game hash stored in the state header differs from the disc currently
   inserted. The state still loads; the CLI `run`/`trace` commands, the desktop

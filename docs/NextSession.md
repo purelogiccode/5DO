@@ -1,10 +1,11 @@
 # Next Session Handoff
 
-**Date:** 2026-10-29 (twentieth pass: optional offscreen Vulkan backend and
-`--vk-probe`; the nineteenth pass added save-state disc warnings, console hotkeys,
-ISO/BIN `disc tracks`, and OpenAL Soft LGPL packaging; the eighteenth pass added
-Serilog logging and bug reporting; the seventeenth pass added the OpenAL crackle
-fix, PCM tap, and race profile)
+**Date:** 2026-10-29 (twenty-first pass: Vulkan xBR/FSR/HQx filters and the
+GPU-palette xBR path in the OpenGL presenter; the twentieth pass added the optional
+offscreen Vulkan backend and `--vk-probe`; the nineteenth pass added save-state disc
+warnings, console hotkeys, ISO/BIN `disc tracks`, and OpenAL Soft LGPL packaging; the
+eighteenth pass added Serilog logging and bug reporting; the seventeenth pass added
+the OpenAL crackle fix, PCM tap, and race profile)
 **Goal:** make the audio path correct and testable. The sixteenth pass replaced the
 FreeDO 8.24 DSP sample accumulator with an exact 44,100-samples-per-ARM-second clock
 (600 frames now produce 441,015-441,020 samples / 10.000 s instead of 444,097 /
@@ -15,15 +16,18 @@ is made current on the audio thread, underruns are padded/counted, and the CLI h
 `--audio openal`, `--volume`, `--realtime`, and `audio analyze <wav> --json`. Core
 frames are paced by `AudioFramePacer` (audio clock with a 60 Hz fallback), WAV writes
 are buffered with streaming peak/RMS/clipping statistics, and the NativeAOT CLI now
-opens the live backend. **860 tests pass.** The eighteenth pass replaced the custom
+opens the live backend. **861 tests pass.** The twenty-first pass added the Vulkan
+xBR/FSR/HQx filters and made the OpenGL xBR path sample the GPU-expanded palette
+texture directly. The eighteenth pass replaced the custom
 logger with Serilog and added the asynchronous bug-report sink. The seventeenth pass fixed live OpenAL
 crackle by giving the fill loop real buffer ownership, added the `FIVEDO_AUDIO_TAP`
 PCM/timing recorder and overlay peak meter, added the FSR 1.0 filter, and recorded
 the Road Rash 3D-race profile. Do not redo the Serilog/bug-report work, the trim-safe JSON work, the
 trimmed CLI/frontend publishes, the frontend smoke test, the benchmark comparison,
 the portable archives, the swap-interval/GPU-probe work, the ANGLE/GLES parity work,
-this audio pass, or the 2026-10-29 release-hardening pass (save-state disc warnings,
-console hotkeys, ISO/BIN `disc tracks`, and OpenAL Soft LGPL packaging). The remaining **release** work is the legal/attribution review
+this audio pass, the 2026-10-29 release-hardening pass (save-state disc warnings,
+console hotkeys, ISO/BIN `disc tracks`, and OpenAL Soft LGPL packaging), or the
+twenty-first Vulkan xBR/FSR/HQx filter pass. The remaining **release** work is the legal/attribution review
 (now including OpenAL Soft's LGPL runtime), a stability soak, release
 packaging/notes, and optional Linux/macOS launch validation. Full-race completion,
 extra title scripts, GLES 3.1/Pi/DPI, Tier B timing, arm64/installers, frontend AOT
@@ -752,6 +756,38 @@ Do not replace the OpenGL presenter with the offscreen Vulkan path, and do not t
 the Vulkan probe as a 4K window-system benchmark. The backend is a validated optional
 path; a native surface/swapchain and non-Windows device validation are future work.
 
+### 1.25 Twenty-first pass: Vulkan xBR/FSR filters and GPU-palette xBR (2026-10-29)
+
+- **Vulkan xBR-lv2.** `Xbr.frag` runs Hyllian's xBR-lv2 4x expansion over the
+  GPU-expanded native frame, then the existing scale pass finishes with
+  sharp-bilinear. The offscreen backend no longer reports `filterFallback` for xBR.
+- **Vulkan FSR 1.0.** `FsrEasu.frag` upscales the native frame into a viewport-sized
+  target, and `FsrRcas.frag` sharpens it into the output. Both are Vulkan 450 GPU
+  passes with the shared push-constant block and one-image descriptor layout.
+- **Vulkan HQx.** The CPU `HqxFilter` moved from `FiveDo.Video.OpenGL` to
+  `FiveDo.Video` so both presenters share it. The Vulkan backend assembles the frame
+  with `FrameAssembler`, expands it with `HqxFilter`, uploads the result through a
+  reusable staging buffer, and finishes with sharp-bilinear. HQx 2x/3x/4x are
+  CPU-bound and opt-in; 4K HQx 2x present measures 7.66 ms mean / 10.36 ms p99.
+- **GPU-palette xBR in OpenGL.** The required OpenGL xBR path now samples
+  `_paletteTexture` directly instead of running `FrameAssembler` and uploading a CPU
+  RGBA copy. The 320x240 WGL xBR capture is within one mean channel level of the
+  accurate frame, and the flipped comparison is far worse, confirming top-down
+  orientation. The CPU `_xbrSourceTexture`/`_xbrCpuFrame` path was removed.
+- **Measurements.** RTX 4070 / Vulkan 1.4, 60 frames after 15 warm-up: 4K xBR present
+  1.55 ms mean / 1.92 ms p99, GPU 1.39/1.73 ms; 4K FSR present 1.87/2.15 ms, GPU
+  1.69/1.97 ms; both 0 managed bytes/frame. 1080p xBR 0.61/0.85 ms and 1080p FSR
+  0.56/0.60 ms present. OpenGL WGL 4K xBR: present 0.28/1.47 ms, GPU 0.19/0.32 ms;
+  ANGLE 4K xBR: present 0.21/0.59 ms with no GPU timer.
+- **Tests.** 861 pass. `VulkanRendererTests` adds a top-red/bottom-blue split-frame
+  orientation check for xBR, FSR, and HQx at 320x240 and 640x480; `VulkanShaderTests`
+  checks all six SPIR-V modules; the probe integration test runs xBR, FSR, and HQx at
+  640x480 with `filterFallback: false`.
+
+Do not redo the Vulkan xBR/FSR/HQx filter work or reintroduce the CPU xBR upload. The
+remaining Vulkan work is a native surface/swapchain, vsync, and non-Windows device
+validation.
+
 ---
 
 ## 2. Current evidence
@@ -1068,8 +1104,10 @@ save/load proof.
   GLES 3.1/Pi/DPI evidence only.
 - Do not redo the twentieth-pass Vulkan backend or `--vk-probe`: the offscreen
   two-stage pipeline, build-time SPIR-V shaders, 320x240 CPU parity, 4K/1080p probe
-  results, and optional `--gl-backend vulkan` desktop path are implemented. Extend
-  them with a native surface/swapchain or non-Windows device evidence only.
+  results, and optional `--gl-backend vulkan` desktop path are implemented. Do not
+  redo the twenty-first-pass Vulkan xBR/FSR GPU passes or the GPU-palette OpenGL xBR
+  source; extend the backend with a native surface/swapchain, HQx, or non-Windows
+  device evidence only.
 
 ---
 

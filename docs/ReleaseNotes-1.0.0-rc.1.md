@@ -5,9 +5,10 @@
 distribution/attribution sign-off are still pending. See
 [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 **Post-rc.1:** the 2026-10-28 pass added the OpenAL crackle fix, PCM tap, and FSR 1.0;
-the 2026-10-29 pass added the save-state disc warning, console hotkeys, ISO/BIN
-`disc tracks`, and the OpenAL Soft LGPL notice/source offer. See
-[`../CHANGELOG.md`](../CHANGELOG.md) and [`Status.md`](Status.md).
+the 2026-10-29 passes added the save-state disc warning, console hotkeys, ISO/BIN
+`disc tracks`, the OpenAL Soft LGPL notice/source offer, the optional offscreen Vulkan
+backend, and Vulkan xBR/FSR GPU filters. See [`../CHANGELOG.md`](../CHANGELOG.md) and
+[`Status.md`](Status.md).
 
 This is a **documented-compatibility** release: the emulator is supported on the
 validated platform and against the tested title set, with known issues listed below.
@@ -27,10 +28,11 @@ Full compatibility with the 3DO library is not claimed and is not a v1 gate.
 - OpenGL/GLES two-stage presenter with accurate, nearest, sharp-bilinear, CRT, xBR,
   and HQx filters, CPU fallback, and 4K output support.
 - Optional offscreen Vulkan 1.0 backend with build-time SPIR-V shaders,
-  accurate/nearest/sharp-bilinear/CRT modes, CPU readback, and a headless
+  accurate/nearest/sharp-bilinear/CRT/xBR/FSR/HQx modes, CPU readback, and a headless
   `--vk-probe`. It matches the CPU oracle at 320x240 (`0xD6BD89C5`) and measures
-  1.51 ms mean / 1.80 ms p99 present at 4K sharp-bilinear on the RTX 4070. OpenGL
-  remains the required desktop presenter; see [`Vulkan.md`](Vulkan.md).
+  1.51 ms mean / 1.80 ms p99 present at 4K sharp-bilinear, 1.55/1.92 ms at 4K xBR,
+  1.87/2.15 ms at 4K FSR, and 7.66/10.36 ms at 4K HQx 2x (CPU-bound) on the RTX
+  4070. OpenGL remains the required desktop presenter; see [`Vulkan.md`](Vulkan.md).
 - 44.1 kHz stereo DSP audio with an exact sample clock, bundled OpenAL Soft live
   output, audio-driven frame pacing, and WAV capture/analysis
   (`audio analyze <wav> --json`).
@@ -87,7 +89,7 @@ The release checklist is in [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 - [x] `dotnet build 5DO.sln -c Release`: 0 warnings, 0 errors.
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`: 798/798
-      passing at rc.1 (860/860 after the 2026-10-29 Vulkan pass).
+      passing at rc.1 (861/861 after the 2026-10-29 Vulkan xBR/FSR pass).
 - [x] Synthetic benchmark budget gate: 2.28 ms/frame core mean, 4.03 ms core p99,
       4.66 ms total p99, 0 managed bytes/frame.
 - [x] Trimmed win-x64 CLI and frontend smoke tests (`selftest`, `bench`, `info`,

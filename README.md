@@ -8,11 +8,13 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-29, 1.0.0-rc.1 release preparation, twentieth pass):**
+**Current position (2026-10-29, 1.0.0-rc.1 release preparation, twenty-first pass):**
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **860 tests pass.** The twentieth pass added the optional offscreen Vulkan
+prototype. **861 tests pass.** The twenty-first pass added the optional Vulkan xBR and
+FSR GPU filters and removed the CPU palette-upload workaround from the OpenGL xBR
+path. The twentieth pass added the optional offscreen Vulkan
 backend and `--vk-probe` (see [`docs/Vulkan.md`](docs/Vulkan.md)). The nineteenth pass added save-state disc-identity
 warnings, console hotkey dispatch, ISO/BIN/CUE `disc tracks`, and the OpenAL Soft
 LGPL notice/source offer in the portable archives. The seventeenth pass fixed the remaining live OpenAL
@@ -200,12 +202,14 @@ The emulation core still renders CELs in software for accuracy. The GPU accelera
 
 An optional **Vulkan 1.0 offscreen backend** (`FiveDo.Video.Vulkan`) mirrors the
 two-stage pipeline with build-time SPIR-V shaders, supports accurate, nearest,
-sharp-bilinear, and CRT modes, and can be selected for the desktop fallback with
-`--gl-backend vulkan`. It is also exposed as a headless probe
-(`--vk-probe`). The Vulkan path matches the CPU oracle pixel-for-pixel at 320x240
-(`0xD6BD89C5`), measures 1.51 ms mean / 1.80 ms p99 at 4K sharp-bilinear with 0 managed
-bytes/frame on the RTX 4070, and remains optional: OpenGL/GLES is still the required
-desktop presenter. See [`docs/Vulkan.md`](docs/Vulkan.md).
+sharp-bilinear, CRT, xBR-lv2, FSR 1.0 (EASU + RCAS), and HQx 2x/3x/4x modes, and can
+be selected for the desktop fallback with `--gl-backend vulkan`. It is also exposed
+as a headless probe (`--vk-probe`). The Vulkan path matches the CPU oracle
+pixel-for-pixel at 320x240 (`0xD6BD89C5`), measures 1.51 ms mean / 1.80 ms p99 at 4K
+sharp-bilinear, 1.55/1.92 ms at 4K xBR, 1.87/2.15 ms at 4K FSR, and 7.66/10.36 ms at
+4K HQx 2x (CPU-bound), with 0 managed bytes/frame on the RTX 4070. It remains
+optional: OpenGL/GLES is still the required desktop presenter. See
+[`docs/Vulkan.md`](docs/Vulkan.md).
 
 ## Performance target
 

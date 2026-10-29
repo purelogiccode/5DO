@@ -100,9 +100,9 @@ Stage 2: scaling/filter at output resolution
   - nearest / sharp-bilinear / CRT / xBR / HQx / FSR
   - samples the expanded RGB texture into the 4K framebuffer
   - ~8.3M pixels/frame at 4K
-  - xBR adds a native-resolution CPU palette expansion and a 4x offscreen pass
-    (1280x960 for 320x240 sources) before the final sharp-bilinear scale. It is
-    opt-in; benchmark it at 4K before enabling by default.
+  - xBR adds a 4x offscreen pass (1280x960 for 320x240 sources) over the
+    GPU-expanded native frame, then finishes with sharp-bilinear. It is opt-in;
+    benchmark it at 4K before enabling by default.
   - HQx 2x/3x/4x adds a CPU expansion and a larger intermediate texture.
   - FSR 1.0 adds two GPU passes: EASU to the viewport, then RCAS to the output.
         │
@@ -219,7 +219,7 @@ The renderer must support two shader/API variants behind one contract:
 |---|---|---|---|
 | Desktop GL | OpenGL 3.3 core, GLSL 330 | Windows via WGL, Linux GLX/EGL, macOS 4.1 core | Primary desktop path; integer textures and `texelFetch`. Validated on Windows 11 / RTX 4070 (OpenGL 4.0) with `--gl-backend wgl`. |
 | GLES | OpenGL ES 3.0/3.1, GLSL ES 300 | Windows ANGLE, Raspberry Pi 4/5, other GLES devices | Same two-stage pipeline; `R16UI` + `usampler2D`. Validated on Windows 11 / RTX 4070 via ANGLE (OpenGL ES 3.0) with `--gl-backend angle`; Pi remains open. |
-| Vulkan (optional) | Vulkan 1.0, SPIR-V | Windows/Linux/macOS with a Vulkan loader | Offscreen two-stage pipeline with CPU readback; `--vk-probe`. 4K sharp-bilinear measured 1.51 ms mean / 1.80 ms p99 present and 0 bytes/frame on the RTX 4070. Not a window-system/swapchain presenter. |
+| Vulkan (optional) | Vulkan 1.0, SPIR-V | Windows/Linux/macOS with a Vulkan loader | Offscreen two-stage pipeline with CPU readback; `--vk-probe`. 4K sharp-bilinear measured 1.51 ms mean / 1.80 ms p99 present, 4K xBR 1.55/1.92 ms, 4K FSR 1.87/2.15 ms, and 4K HQx 2x 7.66/10.36 ms (CPU-bound), all with 0 managed bytes/frame on the RTX 4070. Not a window-system/swapchain presenter. |
 
 Implementation requirements:
 
@@ -338,15 +338,17 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
   --gl-probe-filter sharp-bilinear --gl-probe-offscreen
 ```
 
-Measured on Windows 11, Ryzen 9 7900, NVIDIA RTX 4070, OpenGL 4.0, 120 measured frames
-after 30 warm-up frames (offscreen 4K unless noted):
+Measured on Windows 11, Ryzen 9 7900, NVIDIA RTX 4070, OpenGL 4.0 (offscreen 4K
+unless noted). Sharp-bilinear/accurate/CRT rows use 120 measured frames after 30
+warm-up frames; the xBR/FSR rows use 60 after 15.
 
 | Case | Output | Present mean | Present p99 | GPU mean | GPU p99 | Renderer alloc |
 |---|---:|---:|---:|---:|---:|---:|
 | Sharp-bilinear | 3840x2160 | **0.080 ms** | **0.208 ms** | **0.086 ms** | **0.089 ms** | **0 B/frame** |
 | Accurate (nearest) | 3840x2160 | 0.082 ms | 0.178 ms | 0.091 ms | 0.287 ms | 0 B/frame |
 | CRT | 3840x2160 | 0.147 ms | 1.157 ms | 0.191 ms | 0.193 ms | 0 B/frame |
-| xBR 4x | 3840x2160 | 0.425 ms | 1.788 ms | 0.203 ms | 0.205 ms | 0 B/frame |
+| xBR 4x | 3840x2160 | 0.283 ms | 1.466 ms | 0.185 ms | 0.324 ms | 0 B/frame |
+| FSR (EASU + RCAS) | 3840x2160 | 0.132 ms | 1.191 ms | 0.441 ms | 0.483 ms | 0 B/frame |
 | Sharp-bilinear | 1920x1080 | 0.093 ms | 0.335 ms | 0.080 ms | 0.146 ms | 0 B/frame |
 
 The probe reports ~64 fps throughput even with vsync disabled because the Avalonia
@@ -404,7 +406,12 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
 | Sharp-bilinear | 3840x2160 | 1.508 ms | 1.797 ms | 1.344 ms | 1.615 ms | 0 |
 | Accurate | 3840x2160 | 1.505 ms | 1.752 ms | 1.341 ms | 1.501 ms | 0 |
 | CRT | 3840x2160 | 1.508 ms | 1.635 ms | 1.336 ms | 1.382 ms | 0 |
+| xBR | 3840x2160 | 1.549 ms | 1.918 ms | 1.389 ms | 1.728 ms | 0 |
+| FSR (EASU + RCAS) | 3840x2160 | 1.873 ms | 2.154 ms | 1.694 ms | 1.967 ms | 0 |
+| HQx 2x (CPU-bound) | 3840x2160 | 7.661 ms | 10.355 ms | 1.386 ms | 1.431 ms | 0 |
 | Sharp-bilinear | 1920x1080 | 0.489 ms | 0.502 ms | 0.344 ms | 0.348 ms | 0 |
+| xBR | 1920x1080 | 0.606 ms | 0.848 ms | 0.423 ms | 0.591 ms | 0 |
+| FSR (EASU + RCAS) | 1920x1080 | 0.562 ms | 0.600 ms | 0.434 ms | 0.436 ms | 0 |
 
 A 320x240 Accurate probe reports 0 different pixels and the same `0xD6BD89C5`
 (`3602745797`) hash as the OpenGL backends. The Vulkan path is optional and does not
@@ -428,9 +435,10 @@ Repeat with `--gl-backend angle` for the GLES variant. Both runs report
 and GLES parity evidence; the probe is still a manual/self-hosted GPU tool.
 
 **FSR 1.0 (2026-10-28).** FSR is opt-in and runs EASU into a viewport-sized FBO, then
-RCAS into the output. It adds two GPU passes and a sharpness uniform; no separate 4K
-FSR probe table is recorded yet. Use `--gl-probe-filter fsr` to measure it on the
-target GPU before enabling it by default.
+RCAS into the output. It adds two GPU passes and a sharpness uniform. The 4K WGL probe
+measures present 0.132 ms mean / 1.191 ms p99 and GPU 0.441/0.483 ms; the optional
+Vulkan backend measures present 1.873/2.154 ms and GPU 1.694/1.967 ms. Use
+`--gl-probe-filter fsr` or `--vk-probe-filter fsr` to reproduce on the target GPU.
 
 The Raspberry Pi and 100/150/200% DPI validation remain open. Headless CI keeps the
 CPU renderer and allocation tests.

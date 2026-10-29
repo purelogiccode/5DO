@@ -9,6 +9,7 @@ layout(push_constant) uniform PushConstants
     float scanline;
     float bloom;
     float bloomThreshold;
+    float sharpness;
 } pc;
 
 void main()

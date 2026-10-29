@@ -98,9 +98,9 @@ FiveDo.Cdrom --------------> Core
 | `FiveDo.Clio` | CLIO registers, timers, FIFOs, DMA, interrupts, DSP interface, XBUS window, ROM select, diag port | `Clio`, `DiagPort` | Core |
 | `FiveDo.Dsp` | DSP instruction decode/execute, ALU, multiplier, NMem/IMem, semaphore, sample output | `Dsp`, `DspInstruction` | Core |
 | `FiveDo.Sport` | VRAM fill/copy, high-res plane mirroring | `Sport` | Core |
-| `FiveDo.Video` | VDLP display-list parser, line/frame assembly, CPU oracle, mailbox, viewport, CPU fallback | `Vdlp`, `FrameAssembler`, `GpuPalette`, `VdlFrameUploader`, `VdlFrameMailbox`, `ViewportCalculator`, `CpuVideoRenderer`, `RendererSettings`, `IVideoRenderer` | Core |
-| `FiveDo.Video.OpenGL` | Desktop GL/GLES presenter, two-stage palette/scale, filters, shaders, swap interval | `OpenGlRenderer`, `OpenGlCapabilities`, `SwapInterval`, `HqxFilter`, `Shaders`, `GlContextAdapter`, `OffscreenRenderTarget` | Core, Video, Silk.NET.OpenGL |
-| `FiveDo.Video.Vulkan` | Optional offscreen Vulkan 1.0 presenter, build-time SPIR-V palette/scale shaders, accurate/nearest/sharp-bilinear/CRT, readback | `VulkanOffscreenRenderer`, generated `VulkanShaders` | Core, Video, Silk.NET.Vulkan |
+| `FiveDo.Video` | VDLP display-list parser, line/frame assembly, CPU oracle, mailbox, viewport, CPU fallback, shared HQx CPU filter | `Vdlp`, `FrameAssembler`, `GpuPalette`, `VdlFrameUploader`, `VdlFrameMailbox`, `ViewportCalculator`, `CpuVideoRenderer`, `RendererSettings`, `IVideoRenderer`, `HqxFilter` | Core |
+| `FiveDo.Video.OpenGL` | Desktop GL/GLES presenter, two-stage palette/scale, filters, shaders, swap interval | `OpenGlRenderer`, `OpenGlCapabilities`, `SwapInterval`, `Shaders`, `GlContextAdapter`, `OffscreenRenderTarget` | Core, Video, Silk.NET.OpenGL |
+| `FiveDo.Video.Vulkan` | Optional offscreen Vulkan 1.0 presenter, build-time SPIR-V palette/scale/xBR/FSR shaders, accurate/nearest/sharp-bilinear/CRT/xBR/FSR/HQx, readback | `VulkanOffscreenRenderer`, generated `VulkanShaders` | Core, Video, Silk.NET.Vulkan |
 | `FiveDo.Xbus` | XBUS controller, device slots, poll/status/data FIFOs | `Xbus` | Core |
 | `FiveDo.Cdrom` | MEI CD-ROM command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice` | Core |
 | `FiveDo.Storage` | ISO/BIN/CUE/CHD readers, prefetch, BIOS/NVRAM, volume header, game ID/database | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `VolumeHeader`, `GameId`, `GameDatabase` | Core, CHDSharp |

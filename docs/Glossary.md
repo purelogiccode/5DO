@@ -331,8 +331,8 @@ output (no soft limiter).
 
 ## X
 
-**xBR** - Hyllian's edge-directed 4x pixel-art filter, implemented as an opt-in CPU
-palette expansion + 4x shader pass.
+**xBR** - Hyllian's edge-directed 4x pixel-art filter, implemented as an opt-in
+GPU-palette-expanded 4x shader pass.
 
 **XBUS** - The 3DO expansion/device bus. Device 0 is the CD-ROM; CLIO owns the
 select/poll/FIFO window.

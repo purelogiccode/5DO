@@ -1,10 +1,11 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-29, 1.0.0-rc.1 release preparation after the twentieth pass
-(optional offscreen Vulkan backend and `--vk-probe`; the nineteenth pass added
-save-state disc warnings, console hotkeys, ISO/BIN `disc tracks`, and the OpenAL
-Soft LGPL notice/source offer; the eighteenth pass added Serilog logging and bug
-reporting; the seventeenth pass added the OpenAL crackle fix, PCM tap, FSR 1.0,
+**Snapshot:** 2026-10-29, 1.0.0-rc.1 release preparation after the twenty-first pass
+(optional offscreen Vulkan xBR/FSR/HQx filters and GPU-palette xBR in the OpenGL path;
+the twentieth pass added the optional offscreen Vulkan backend and `--vk-probe`; the
+nineteenth pass added save-state disc warnings, console hotkeys, ISO/BIN `disc tracks`,
+and the OpenAL Soft LGPL notice/source offer; the eighteenth pass added Serilog logging
+and bug reporting; the seventeenth pass added the OpenAL crackle fix, PCM tap, FSR 1.0,
 and the Road Rash race profile; see `git log` for the exact commits).
 **Release definition:** documented compatibility, not full compatibility; see
 [`ReleaseChecklist.md`](ReleaseChecklist.md).
@@ -60,12 +61,15 @@ This is the short, current answer to "where are we?" The documentation index is
   the CPU oracle on both backends.
 - **Optional Vulkan:** `FiveDo.Video.Vulkan` is an offscreen Vulkan 1.0 two-stage
   presenter with build-time SPIR-V shaders, sampled R16_UINT/CLUT/parameter
-  textures, accurate/nearest/sharp-bilinear/CRT filters, GPU timestamp queries, and
-  a host readback buffer. `--vk-probe` writes the shared GPU probe JSON and PNG
-  captures; `--gl-backend vulkan` selects the optional desktop offscreen/readback
-  path. The 320x240 Accurate probe matches the CPU oracle (`0xD6BD89C5`, 0 different
-  pixels); 4K sharp-bilinear measures 1.51 ms mean / 1.80 ms p99 present with 0
-  managed bytes/frame on the RTX 4070. xBR/HQx/FSR fall back to sharp-bilinear, and
+  textures, accurate/nearest/sharp-bilinear/CRT/xBR/FSR/HQx filters, GPU timestamp
+  queries, and a host readback buffer. xBR-lv2 runs as a 4x GPU pass; FSR 1.0 runs
+  EASU plus RCAS; HQx uses the shared CPU expansion. `--vk-probe` writes the shared
+  GPU probe JSON and PNG captures;
+  `--gl-backend vulkan` selects the optional desktop offscreen/readback path. The
+  320x240 Accurate probe matches the CPU oracle (`0xD6BD89C5`, 0 different pixels);
+  4K sharp-bilinear measures 1.51 ms mean / 1.80 ms p99 present, 4K xBR 1.55/1.92 ms,
+  and 4K FSR 1.87/2.15 ms, all with 0 managed bytes/frame on the RTX 4070. HQx
+  2x/3x/4x use the shared CPU expansion (4K HQx present 7.66/10.36 ms, CPU-bound), and
   a window-system surface/swapchain is future work. See [`Vulkan.md`](Vulkan.md).
 - **Renderer robustness:** GL/GLES capability parsing reports the API and version,
   fullscreen/F11/Escape work, GL readback screenshots are implemented, and GL init
@@ -134,14 +138,15 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 860 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 861 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
   thumbnails, keyboard/gamepad binding capture, gamepad mapping, log filtering,
   source-generated CLI JSON contracts, frontend startup-argument parsing, renderer
   backend selection, GPU-probe capture/parity contracts, shader source invariants,
-  save-state disc-hash warnings, hotkey routing, and ISO/BIN `disc tracks`.
+  Vulkan xBR/FSR/HQx split-frame orientation, save-state disc-hash warnings, hotkey
+  routing, and ISO/BIN `disc tracks`.
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   Both executables are self-contained, single-file, and trimmed (`PublishTrimmed=true`,
   `TrimMode=full`). The CLI also has an opt-in NativeAOT win-x64 publish
@@ -193,8 +198,8 @@ The 2026-10-25 eighth pass fixed a real-content renderer bug: the GPU palette sh
 used the low five bits of each pixel as a single CLUT index for all three channels,
 so games appeared grayscale. It now uses the red, green, and blue indices independently
 and matches the CPU frame assembler. Lemmings gameplay was captured through
-sharp-bilinear and xBR with correct colors. The xBR path uses a CPU-expanded source to
-avoid a driver readback issue with the FBO-attached palette texture.
+sharp-bilinear and xBR with correct colors. The 2026-10-29 pass removed the former
+CPU-expanded xBR source; xBR now samples the GPU palette texture directly.
 
 The 2026-10-24 session found and fixed the common blockers:
 
@@ -281,13 +286,18 @@ measured the presentation path on Windows 11 (Ryzen 9 7900, RTX 4070, OpenGL 4.0
 | Sharp-bilinear | **0.080 ms** | **0.208 ms** | **0.086 ms** | **0.089 ms** | **0 B/frame** |
 | Accurate | 0.082 ms | 0.178 ms | 0.091 ms | 0.287 ms | 0 B/frame |
 | CRT | 0.147 ms | 1.157 ms | 0.191 ms | 0.193 ms | 0 B/frame |
-| xBR 4x | 0.425 ms | 1.788 ms | 0.203 ms | 0.205 ms | 0 B/frame |
+| xBR 4x | 0.283 ms | 1.466 ms | 0.185 ms | 0.324 ms | 0 B/frame |
+| FSR (EASU + RCAS) | 0.132 ms | 1.191 ms | 0.441 ms | 0.483 ms | 0 B/frame |
 
-The optional Vulkan offscreen backend was also measured on the same machine: 4K
-sharp-bilinear present 1.51 ms mean / 1.80 ms p99, GPU 1.34 ms mean / 1.62 ms p99,
-0 managed bytes/frame; 1080p sharp-bilinear present 0.49 ms mean / 0.50 ms p99. Its
-320x240 Accurate output matches the CPU oracle (`0xD6BD89C5`, 0 different pixels).
-See [`Vulkan.md`](Vulkan.md).
+The xBR row now uses the GPU-expanded palette texture directly; the previous path
+uploaded a CPU `FrameAssembler` copy. The optional Vulkan offscreen backend was also
+measured on the same machine: 4K sharp-bilinear present 1.51 ms mean / 1.80 ms p99,
+GPU 1.34 ms mean / 1.62 ms p99, 0 managed bytes/frame; 4K xBR present 1.55/1.92 ms,
+GPU 1.39/1.73 ms; 4K FSR present 1.87/2.15 ms, GPU 1.69/1.97 ms; 4K HQx 2x present
+7.66/10.36 ms, GPU 1.39/1.43 ms; 1080p sharp-bilinear present 0.49/0.50 ms, 1080p xBR
+0.61/0.85 ms, and 1080p FSR 0.56/0.60 ms, all with 0 managed bytes/frame. Its 320x240
+Accurate output matches the CPU oracle
+(`0xD6BD89C5`, 0 different pixels). See [`Vulkan.md`](Vulkan.md).
 
 The platform swap interval is wired through `SwapInterval.TryCreate` (WGL/GLX/EGL);
 the Windows WGL path resolves `WGL_EXT_swap_control` and reports `vsyncActive: true`
