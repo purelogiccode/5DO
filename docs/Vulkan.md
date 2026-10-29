@@ -195,10 +195,10 @@ These are development-machine numbers, not a hardware guarantee.
   `filterFallback: false`.
 - `VkProbeOptionsTests` covers headless/window defaults, size/frames/filter/capture
   parsing, shared option aliases, and invalid values.
-- The native swapchain probe was validated manually on Windows 11 / RTX 4070 at
-  320x240, 640x480, and 4K: 0 different pixels for a 320x240 Accurate capture,
-  `vsyncActive: true`, `vsyncBackend: "fifo"`, and 0 managed bytes/frame. A CI-run
-  window probe would require a desktop session and is not part of the default suite.
+- `VulkanProbeIntegrationTests.WindowProbe_PresentsThroughASwapchain`
+  (`FIVEDO_VULKAN_TESTS=1`, Windows) opens a window and checks `offscreen: false`,
+  FIFO vsync, CPU parity, and zero managed bytes/frame. A CI-run window probe would
+  require a desktop session and is not part of the default suite.
 
 ```powershell
 $env:FIVEDO_VULKAN_TESTS = "1"
