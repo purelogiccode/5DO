@@ -95,7 +95,7 @@ The release checklist is in [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 - [x] `dotnet build 5DO.sln -c Release`: 0 warnings, 0 errors.
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`: 798/798
-      passing at rc.1 (904/904 after the 2026-10-29 hotkey/input-recording pass).
+      passing at rc.1 (906/906 after the 2026-10-29 hotkey/input-recording pass).
 - [x] Synthetic benchmark budget gate: 2.28 ms/frame core mean, 4.03 ms core p99,
       4.66 ms total p99, 0 managed bytes/frame.
 - [x] Trimmed win-x64 CLI and frontend smoke tests (`selftest`, `bench`, `info`,

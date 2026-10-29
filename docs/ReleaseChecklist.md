@@ -98,7 +98,7 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - [x] `dotnet build 5DO.sln -c Release` passes with 0 warnings and 0 errors
       (1.0.0-rc.1).
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release` passes:
-      904/904 with 1.0.0-rc.1 (after the 2026-10-29 hotkey/input-recording pass).
+      906/906 with 1.0.0-rc.1 (after the 2026-10-29 hotkey/input-recording pass).
 - [x] `dotnet format 5DO.sln --verify-no-changes` passes.
 - [ ] CI is green on the supported runners. (Local gates pass. GitHub Actions jobs
       currently fail before starting with a GitHub billing/spending-limit annotation;

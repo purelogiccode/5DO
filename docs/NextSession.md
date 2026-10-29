@@ -23,7 +23,7 @@ is made current on the audio thread, underruns are padded/counted, and the CLI h
 `--audio openal`, `--volume`, `--realtime`, and `audio analyze <wav> --json`. Core
 frames are paced by `AudioFramePacer` (audio clock with a 60 Hz fallback), WAV writes
 are buffered with streaming peak/RMS/clipping statistics, and the NativeAOT CLI now
-opens the live backend. **904 tests pass.** The twenty-third pass added native Win32
+opens the live backend. **906 tests pass.** The twenty-third pass added native Win32
 Vulkan swapchain presentation and `--vk-window-probe` (4K FIFO: 1.34/1.43 ms GPU,
 5.99/6.24 ms present including the display wait, 0 managed bytes/frame), honored
 `PreferOpenGl` as an explicit CPU mode, added custom aspect editing, validated the
@@ -855,7 +855,7 @@ validation.
   and Theme Park ISOs also parse (260/247/291 entries). `OperaFileSystemTests` covers
   nested directories, multi-block directories, offsets/EOF, burst/gap reads, special
   entries, invalid volume headers, and traversal names; `FsListAndExtract_ReadAnIsoImage`
-  covers the CLI path. **904 tests pass.**
+  covers the CLI path. **906 tests pass.**
 - **Do not** re-add the `VideoGameFileSystemParser` dependency or make `fs` CHD-only
   again. Extend the parser with new on-disc evidence only.
 

@@ -54,7 +54,7 @@ reports. **882 tests pass.**
 reads the volume/directory records directly through `IDiscSource`, so `fs list`/`fs
 extract` support ISO, BIN, CUE+BIN, and CHD with one parser. Multi-block directory
 chains, `burst`/`gap` file layouts, special entries, and malformed-record rejection are
-covered by tests; the `VideoGameFileSystemParser` dependency was removed. **904 tests
+covered by tests; the `VideoGameFileSystemParser` dependency was removed. **906 tests
 pass.**
 
 **Last updated:** 2026-10-29
@@ -273,7 +273,7 @@ project/type layout is unchanged.
 
 ### 4a. Current position vs. the plan (2026-10-26)
 
-Snapshot: 904 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
+Snapshot: 906 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
 and zero synthetic steady-state allocations; all five local corpus titles boot and
 render, and scripted gameplay is validated in Wolfenstein, Lemmings, Road Rash, and
 Alone. The opt-in 640x480 high-resolution mode is implemented and matches the

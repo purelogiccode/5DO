@@ -12,7 +12,7 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **904 tests pass.** The twenty-fifth pass added F6/F7 slot selection,
+prototype. **906 tests pass.** The twenty-fifth pass added F6/F7 slot selection,
 F9 single-frame advance, and desktop input recording; the twenty-fourth pass added a
 first-party Opera file-system reader, so `fs list`/`fs extract` now work on ISO,
 BIN, CUE+BIN, and CHD

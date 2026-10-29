@@ -32,6 +32,29 @@ public sealed class InputProfile
     /// <returns>A profile with six players and default hotkeys.</returns>
     public static InputProfile CreateDefault() => new();
 
+    /// <summary>Adds hotkeys introduced after an older profile was saved.</summary>
+    /// <remarks>
+    /// Existing assignments are preserved, so a user's custom key map is never
+    /// overwritten. This keeps profiles created before F6/F7/F9 were added working
+    /// without requiring a reset-to-defaults action.
+    /// </remarks>
+    public void AddMissingDefaultHotkeys()
+    {
+        if (Hotkeys is null)
+        {
+            Hotkeys = new Dictionary<string, string>(StringComparer.Ordinal);
+        }
+
+        InputProfile defaults = CreateDefault();
+        foreach ((var action, var key) in defaults.Hotkeys)
+        {
+            if (!Hotkeys.ContainsKey(action))
+            {
+                Hotkeys[action] = key;
+            }
+        }
+    }
+
     /// <summary>Creates a deep copy of this profile.</summary>
     /// <returns>A copy that can be edited without changing the original.</returns>
     public InputProfile Clone()

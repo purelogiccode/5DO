@@ -27,7 +27,13 @@ public static class InputProfileStore
         try
         {
             InputProfile? profile = JsonSerializer.Deserialize(File.ReadAllText(path), InputProfileJsonContext.Default.InputProfile);
-            return profile ?? throw new InvalidDataException($"Input profile '{path}' is empty.");
+            if (profile is null)
+            {
+                throw new InvalidDataException($"Input profile '{path}' is empty.");
+            }
+
+            profile.AddMissingDefaultHotkeys();
+            return profile;
         }
         catch (JsonException exception)
         {

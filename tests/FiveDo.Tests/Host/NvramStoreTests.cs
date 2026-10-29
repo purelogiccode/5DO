@@ -200,6 +200,31 @@ public sealed class NvramStoreTests
     }
 
     [Fact]
+    public void AppSettings_AddsNewDefaultHotkeysToAnOlderProfile()
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "settings.json");
+        File.WriteAllText(
+            path,
+            """
+            {
+              "Input": {
+                "Hotkeys": {
+                  "SaveState": "F2"
+                }
+              }
+            }
+            """);
+
+        AppSettings loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal("F2", loaded.Input.Hotkeys["SaveState"]);
+        Assert.Equal("F6", loaded.Input.Hotkeys["SlotPrevious"]);
+        Assert.Equal("F7", loaded.Input.Hotkeys["SlotNext"]);
+        Assert.Equal("F9", loaded.Input.Hotkeys["FrameAdvance"]);
+    }
+
+    [Fact]
     public void AppSettings_InvalidJsonFallsBackToDefaults()
     {
         using var directory = new TempDirectory();

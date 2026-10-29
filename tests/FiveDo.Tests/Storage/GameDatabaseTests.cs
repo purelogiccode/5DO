@@ -96,6 +96,21 @@ public sealed class InputProfileTests
     }
 
     [Fact]
+    public void AddMissingDefaultHotkeys_PreservesCustomBindings()
+    {
+        var profile = InputProfile.CreateDefault();
+        profile.Hotkeys.Clear();
+        profile.Hotkeys["SaveState"] = "F2";
+
+        profile.AddMissingDefaultHotkeys();
+
+        Assert.Equal("F2", profile.Hotkeys["SaveState"]);
+        Assert.Equal("F6", profile.Hotkeys["SlotPrevious"]);
+        Assert.Equal("F7", profile.Hotkeys["SlotNext"]);
+        Assert.Equal("F9", profile.Hotkeys["FrameAdvance"]);
+    }
+
+    [Fact]
     public void Load_CreatesDefaultsWhenMissing()
     {
         var path = Path.Combine(Path.GetTempPath(), $"fivedo-profile-{Guid.NewGuid():N}", "input.json");

@@ -35,8 +35,12 @@ public static class AppSettingsStore
 
         try
         {
-            return JsonSerializer.Deserialize(File.ReadAllText(resolved), AppSettingsJsonContext.Default.AppSettings)
-                ?? new AppSettings();
+            AppSettings settings = JsonSerializer.Deserialize(
+                File.ReadAllText(resolved),
+                AppSettingsJsonContext.Default.AppSettings) ?? new AppSettings();
+            settings.Input ??= InputProfile.CreateDefault();
+            settings.Input.AddMissingDefaultHotkeys();
+            return settings;
         }
         catch (JsonException exception)
         {
