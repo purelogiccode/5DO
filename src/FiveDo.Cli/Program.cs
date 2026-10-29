@@ -15,6 +15,7 @@ using FiveDo.Core;
 using FiveDo.Cpu;
 using FiveDo.Diagnostics;
 using FiveDo.Diagnostics.Logging;
+using FiveDo.Diagnostics.Statistics;
 using FiveDo.Host;
 using FiveDo.Input;
 using FiveDo.Machine;
@@ -57,6 +58,10 @@ internal static class Program
             var json = HasFlag(args, "--json");
             var logger = Serilog.Log.ForContext("SourceContext", "FiveDo.Cli.Program");
             logger.Information("CLI command {Command} starting.", args[0]);
+            if (!IsDiagnosticCommand(args[0]))
+            {
+                ApplicationStatsClient.TrackLaunch();
+            }
             try
             {
                 return args[0] switch
@@ -116,9 +121,13 @@ internal static class Program
         }
         finally
         {
+            ApplicationStatsClient.WaitForPending(TimeSpan.FromSeconds(2));
             AppLogging.Shutdown();
         }
     }
+
+    private static bool IsDiagnosticCommand(string command)
+        => command is "--version" or "-v" or "--help" or "-h" or "help" or "bench" or "selftest";
 
     private static int Version()
     {

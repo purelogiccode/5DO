@@ -12,7 +12,7 @@ is made current on the audio thread, underruns are padded/counted, and the CLI h
 `--audio openal`, `--volume`, `--realtime`, and `audio analyze <wav> --json`. Core
 frames are paced by `AudioFramePacer` (audio clock with a 60 Hz fallback), WAV writes
 are buffered with streaming peak/RMS/clipping statistics, and the NativeAOT CLI now
-opens the live backend. **818 tests pass.** The eighteenth pass replaced the custom
+opens the live backend. **821 tests pass.** The eighteenth pass replaced the custom
 logger with Serilog and added the asynchronous bug-report sink. The seventeenth pass fixed live OpenAL
 crackle by giving the fill loop real buffer ownership, added the `FIVEDO_AUDIO_TAP`
 PCM/timing recorder and overlay peak meter, added the FSR 1.0 filter, and recorded

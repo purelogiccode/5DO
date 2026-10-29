@@ -130,6 +130,9 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
   dropped after the HTTP timeout.
 - The submit API key is embedded per the service's client instructions; override
   it with `FIVEDO_BUGREPORT_API_KEY` for a different deployment.
+- Launch statistics send only the application id (`5do`) and version to the
+  ApplicationStats service. No user or game data is included; set
+  `FIVEDO_STATS=0` to opt out.
 
 ## Legal
 

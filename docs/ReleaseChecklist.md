@@ -94,7 +94,7 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - [x] `dotnet build 5DO.sln -c Release` passes with 0 warnings and 0 errors
       (1.0.0-rc.1).
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release` passes:
-      818/818 with 1.0.0-rc.1 (after the 2026-10-28 Serilog logging pass).
+      821/821 with 1.0.0-rc.1 (after the 2026-10-28 statistics pass).
 - [x] `dotnet format 5DO.sln --verify-no-changes` passes.
 - [ ] CI is green on the supported runners. (Local gates pass; the GitHub Actions
       workflow was not re-run in this session.)

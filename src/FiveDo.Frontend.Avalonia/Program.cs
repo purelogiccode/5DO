@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using FiveDo.Core;
 using FiveDo.Diagnostics.Logging;
+using FiveDo.Diagnostics.Statistics;
 
 namespace FiveDo.Frontend.Avalonia;
 
@@ -122,6 +123,11 @@ internal static class Program
             }
 
             StartupDiscPath = FindDiscPath(args);
+            if (GlProbe is null && !SmokeTest)
+            {
+                ApplicationStatsClient.TrackLaunch();
+            }
+
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
         catch (Exception exception)
@@ -131,6 +137,7 @@ internal static class Program
         }
         finally
         {
+            ApplicationStatsClient.WaitForPending(TimeSpan.FromSeconds(2));
             AppLogging.Shutdown();
         }
     }

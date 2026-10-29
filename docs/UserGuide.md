@@ -202,6 +202,14 @@ details; submissions are deduplicated for five minutes and capped at ten per min
 Set `FIVEDO_BUG_REPORTS=0` to disable submission. CI and test runs disable it
 automatically, and the CLI keeps JSON on stdout with concise errors on stderr.
 
+### Usage statistics
+
+On launch, 5DO sends the application id (`5do`) and version to the
+ApplicationStats service so the project can track usage. No user, machine, or game
+data is sent. Set `FIVEDO_STATS=0` to opt out; CI and test runs are disabled
+automatically. Override the endpoint, key, or id with `FIVEDO_STATS_ENDPOINT`,
+`FIVEDO_STATS_API_KEY`, and `FIVEDO_STATS_APPLICATION_ID`.
+
 ## CLI
 
 Common commands:

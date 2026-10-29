@@ -10,6 +10,11 @@ still change.
 - Root `LICENSE`: the project is now distributed under the FreeDO modified GNU LGPL,
   with the FreeDO notice reproduced verbatim, the GNU LGPL 2.1 text, and the additional
   non-commercial/attribution terms. `LICENSE` is included in portable archives.
+- Application usage statistics: the CLI and desktop hosts POST the application id
+  (`5do`) and version to the ApplicationStats service at launch. Only those two
+  fields are sent. CI/test runs and `FIVEDO_STATS=0` disable it; override the
+  endpoint, key, or id with `FIVEDO_STATS_ENDPOINT`, `FIVEDO_STATS_API_KEY`, and
+  `FIVEDO_STATS_APPLICATION_ID`.
 - Serilog logging across the CLI and desktop hosts: rolling daily files, stderr
   console output (desktop), the in-memory **Log Viewer**, and an asynchronous
   bug-report sink that forwards `Warning`-or-higher events with environment,

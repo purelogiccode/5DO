@@ -12,6 +12,7 @@ internal static class TestEnvironment
         // The CLI tests execute Program.Main in-process. Never let expected test
         // failures reach the production bug-report endpoint or the user's log file.
         Environment.SetEnvironmentVariable("FIVEDO_BUG_REPORTS", "0");
+        Environment.SetEnvironmentVariable("FIVEDO_STATS", "0");
         Environment.SetEnvironmentVariable(
             "FIVEDO_LOG_DIR",
             Path.Combine(Path.GetTempPath(), "5do-tests-logs"));
