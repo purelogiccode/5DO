@@ -27,4 +27,3 @@ internal sealed partial class AppSettingsJsonContext : JsonSerializerContext;
     UseStringEnumConverter = true)]
 [JsonSerializable(typeof(SaveStateSlotMetadata))]
 internal sealed partial class SaveStateSlotJsonContext : JsonSerializerContext;
-

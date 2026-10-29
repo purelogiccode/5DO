@@ -393,4 +393,3 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
         _gl = null;
     }
 }
-
