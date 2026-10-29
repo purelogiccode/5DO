@@ -37,7 +37,7 @@ The win-x64 single-file executable is **10.54 MB** (versus the trimmed IL single
 file) plus the bundled `OpenAL32.dll`. The audit covered:
 
 - `--version`, `selftest --json`, and `bench --frames 2 --json`.
-- `info` and `fs list` on `Lemmings (USA).chd` (482 files).
+- `info` and `fs list` on the Lemmings ISO/CHD pair (482 entries each).
 - A 3,000-frame Lemmings boot; the audio-clock keys are in
   [`TestCorpus.md`](TestCorpus.md) 1.1.
 - **Live OpenAL audio** with `--audio openal` (validated with the OpenAL null
@@ -210,8 +210,8 @@ $process.ExitCode
 Get-Content artifacts/frontend-smoke.txt
 ```
 
-The CLI audit also covered `state inspect`, `state slots`, `fs list` on a
-generated CHD, a CHD boot/run, and a save-state roundtrip through the trimmed
+The CLI audit also covered `state inspect`, `state slots`, `fs list` on the
+Lemmings ISO/CHD pair, a CHD boot/run, and a save-state roundtrip through the trimmed
 executable. The trimmed win-x64 CLI reproduces the current 3,000-frame golden
 results for Lemmings (`PC 0x0012B36C`, hash `0x6CCA83F5`) and Alone in the Dark
 (`PC 0x000C4C94`, hash `0x4EC2E1A7`) from `artifacts/regression/`; the frame

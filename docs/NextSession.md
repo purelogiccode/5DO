@@ -1,6 +1,8 @@
 # Next Session Handoff
 
-**Date:** 2026-10-29 (twenty-third pass: native Win32 Vulkan swapchain and
+**Date:** 2026-10-29 (twenty-fourth pass: first-party Opera file-system parsing for
+ISO/BIN/CUE/CHD in `fs list`/`fs extract`, multi-block directory chaining, and
+`burst`/`gap` file reads; the twenty-third pass added native Win32 Vulkan swapchain and
 `--vk-window-probe`, `PreferOpenGl` enforcement, custom aspect editing, frontend AOT
 audio validation, and bug-report hygiene; the twenty-second pass added save-state
 format version 2 with per-section Brotli compression; the twenty-first pass added
@@ -19,7 +21,7 @@ is made current on the audio thread, underruns are padded/counted, and the CLI h
 `--audio openal`, `--volume`, `--realtime`, and `audio analyze <wav> --json`. Core
 frames are paced by `AudioFramePacer` (audio clock with a 60 Hz fallback), WAV writes
 are buffered with streaming peak/RMS/clipping statistics, and the NativeAOT CLI now
-opens the live backend. **882 tests pass.** The twenty-third pass added native Win32
+opens the live backend. **890 tests pass.** The twenty-third pass added native Win32
 Vulkan swapchain presentation and `--vk-window-probe` (4K FIFO: 1.34/1.43 ms GPU,
 5.99/6.24 ms present including the display wait, 0 managed bytes/frame), honored
 `PreferOpenGl` as an explicit CPU mode, added custom aspect editing, validated the
@@ -41,7 +43,8 @@ the portable archives, the swap-interval/GPU-probe work, the ANGLE/GLES parity w
 this audio pass, the 2026-10-29 release-hardening pass (save-state disc warnings,
 console hotkeys, ISO/BIN `disc tracks`, and OpenAL Soft LGPL packaging), the
 twenty-first Vulkan xBR/FSR/HQx filter pass, the twenty-second save-state
-compression pass, or the twenty-third Vulkan-window/release-polish pass. The remaining
+compression pass, the twenty-third Vulkan-window/release-polish pass, or the
+twenty-fourth Opera file-system pass. The remaining
 **release** work is the legal/attribution review
 (now including OpenAL Soft's LGPL runtime), a stability soak, release
 packaging/notes, and optional Linux/macOS launch validation. GitHub Actions is
@@ -829,6 +832,29 @@ validation.
   payloads, invalid lengths/flags, and slot metadata. **876 tests pass.**
 - **Do not** change the CRC to cover compressed bytes, remove the version-1 read
   path, or make the inspector decompress every section to list slots.
+
+### 1.27 Twenty-fourth pass: Opera file-system reader for all containers (2026-10-29)
+
+- **First-party parser.** `FiveDo.Storage.OperaFileSystem` reads the volume header,
+  directory headers/entries, copies, and file data directly through `IDiscSource`.
+  ISO, BIN, CUE+BIN, and CHD now share one parser; the `VideoGameFileSystemParser`
+  package was removed.
+- **Directory chaining.** Multi-block directories are followed through the relative
+  `nextBlock` field and the last-in-block/last-in-directory flags. The parser rejects
+  block cycles, duplicate directory references, traversal names, and malformed
+  record offsets.
+- **File layout.** `ReadFile` maps logical offsets through `burst`/`gap` layouts and
+  honors partial reads and EOF. Special entries such as `Disc label` are exposed as
+  files, matching the previous CHD output.
+- **Evidence.** On the Lemmings pair (`artifacts/s2/lem.iso` and
+  `artifacts/chdmaker/lem.chd`), both formats produce 482 identical entries (461
+  files, 21 directories) and 461 byte-identical extracted files. Road Rash, Alone,
+  and Theme Park ISOs also parse (260/247/291 entries). `OperaFileSystemTests` covers
+  nested directories, multi-block directories, offsets/EOF, burst/gap reads, special
+  entries, invalid volume headers, and traversal names; `FsListAndExtract_ReadAnIsoImage`
+  covers the CLI path. **890 tests pass.**
+- **Do not** re-add the `VideoGameFileSystemParser` dependency or make `fs` CHD-only
+  again. Extend the parser with new on-disc evidence only.
 
 ---
 

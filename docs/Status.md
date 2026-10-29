@@ -1,8 +1,11 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-29, 1.0.0-rc.1 release preparation after the twenty-third pass
-(native Win32 Vulkan swapchain and `--vk-window-probe`, `PreferOpenGl` enforcement,
-custom aspect editing, frontend AOT audio validation, and bug-report hygiene; the
+**Snapshot:** 2026-10-29, 1.0.0-rc.1 release preparation after the twenty-fourth pass
+(the first-party Opera file-system reader now backs `fs list`/`fs extract` for
+ISO/BIN/CUE/CHD, including multi-block directories and `burst`/`gap` layouts; the
+twenty-third pass added native Win32 Vulkan swapchain and `--vk-window-probe`,
+`PreferOpenGl` enforcement, custom aspect editing, frontend AOT audio validation, and
+bug-report hygiene; the
 twenty-second pass added save-state version 2 with per-section Brotli compression; the
 twenty-first pass added the optional offscreen Vulkan xBR/FSR/HQx filters and GPU-palette
 xBR in the OpenGL path; the twentieth pass added the optional offscreen Vulkan backend
@@ -117,7 +120,8 @@ This is the short, current answer to "where are we?" The documentation index is
   automatically; the current 3,000-frame boot keys are in
   [`TestCorpus.md`](TestCorpus.md) 1.1 after the audio-clock rebaseline.
 - **Tooling:** CLI `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks`
-  (`disc tracks` now covers ISO/BIN/CUE as well as CHD), `fs list/extract`,
+  (`disc tracks` covers ISO/BIN/CUE as well as CHD), `fs list/extract` (the
+  first-party Opera parser covers ISO/BIN/CUE/CHD),
   `disasm`, plus KPRINT, CD, CLIO, FIQ, RAM-write watchpoints,
   RAM/DSP dumps, DSP-instruction rings, CEL command/geometry traces, PBUS packet
   traces, CPU instruction-ring diagnostics, scripted input, NVRAM load/save, periodic
@@ -151,7 +155,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 882 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 890 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
@@ -159,7 +163,8 @@ This is the short, current answer to "where are we?" The documentation index is
   source-generated CLI JSON contracts, frontend startup-argument parsing, renderer
   backend selection, GPU-probe capture/parity contracts, shader source invariants,
   Vulkan xBR/FSR/HQx split-frame orientation, save-state disc-hash warnings, hotkey
-  routing, and ISO/BIN `disc tracks`.
+  routing, ISO/BIN `disc tracks`, and Opera FS parsing (multi-block directories,
+  `burst`/`gap` reads, invalid headers, and CLI ISO extraction).
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   Both executables are self-contained, single-file, and trimmed (`PublishTrimmed=true`,
   `TrimMode=full`). The CLI also has an opt-in NativeAOT win-x64 publish

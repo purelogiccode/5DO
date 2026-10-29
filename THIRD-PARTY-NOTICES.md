@@ -110,7 +110,6 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 | Silk.NET.OpenAL.Soft.Native 1.23.1 | Native OpenAL Soft runtime bundled beside the CLI/frontend (win-x64/win-arm64/win-x86, linux-x64/linux-arm64, osx-x64/osx-arm64); `soft_oal.dll` is copied as `OpenAL32.dll` on Windows | MIT wrapper for OpenAL Soft; OpenAL Soft itself is LGPL-2.0-or-later. The notice, source offer, relinking rights, and license text ship in [`docs/OpenALSoft.md`](docs/OpenALSoft.md) and [`docs/licenses/OpenAL-Soft-COPYING.txt`](docs/licenses/OpenAL-Soft-COPYING.txt). |
 | OS XInput / Linux evdev | Gamepad input (optional, no bundled native library) | OS API; no third-party runtime dependency |
 | CHDSharp 1.5.2 | CHD disc images (v1) | MIT + LGPL-2.1 component; pure C#, no native dependency. Verify the package LICENSE before release. |
-| VideoGameFileSystemParser 1.4.0 | 3DO Opera FS listing/extraction in `5do fs` | MIT; depends on CHDSharp. Written by the 5DO author. |
 | 4DO game database | Game IDs and fix flags | Ported with attribution from `References/4DO-master`. The 4DO tree has no LICENSE file or source headers; permission or replacement is required before release. |
 
 ## Project license

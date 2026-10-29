@@ -606,8 +606,10 @@ These are real, current limitations. Do not "fix" them casually without tests.
 4. **`PreferOpenGl` is honored at startup and when Settings is applied.** When false,
    the shell uses the CPU renderer without trying OpenGL; the Settings dialog exposes
    the toggle. GL init failure or context loss still falls back automatically.
-5. **`fs` is CHD-only.** Other containers use `disc dump`, `info`, or `disc tracks`
-   (which now reports one data track for ISO/BIN/CUE).
+5. **`fs` has its own Opera parser.** `FiveDo.Storage.OperaFileSystem` reads the
+   volume/directory records directly from any `IDiscSource`, so ISO, BIN, CUE+BIN,
+   and CHD share one code path. `disc dump`, `info`, and `disc tracks` remain the
+   raw-container inspection tools.
 6. **CLI JSON casing is split.** `state inspect`/`state slots` are PascalCase for
    historical compatibility; other commands are camelCase.
 7. **Some stale code comments.** For example, `EmulatorTuning.HighResolution` says the

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using FiveDo.Audio;
 using FiveDo.Core;
@@ -124,6 +125,87 @@ public sealed class CliProcessTests
     }
 
     [Fact]
+    public void FsListAndExtract_ReadAnIsoImage()
+    {
+        var discPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-fs-{Guid.NewGuid():N}.iso");
+        var outputDirectory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-fs-out-{Guid.NewGuid():N}");
+        try
+        {
+            var image = SyntheticOperaDisc.Build(
+                [
+                    new("HELLO.TXT", IsDirectory: false, Lba: 2, LengthBytes: 5),
+                    new("SUB", IsDirectory: true, Lba: 3, LengthBytes: 2048),
+                ],
+                blockCount: 5,
+                label: "TESTDISC",
+                directories: new Dictionary<uint, IReadOnlyList<SyntheticOperaDisc.EntrySpec>>
+                {
+                    [3] = [new("NESTED.BIN", IsDirectory: false, Lba: 4, LengthBytes: 4)],
+                });
+            SyntheticOperaDisc.WriteFile(image, 2, "hello"u8);
+            SyntheticOperaDisc.WriteFile(image, 4, "nest"u8);
+            File.WriteAllBytes(discPath, image);
+
+            CliResult list = Invoke("fs", "list", discPath);
+            Assert.Equal(0, list.Code);
+            Assert.Contains("volume=TESTDISC entries=4", list.Output, StringComparison.Ordinal);
+            Assert.Contains("[F] HELLO.TXT 5 lba=2", list.Output, StringComparison.Ordinal);
+            Assert.Contains("[D] SUB 2048 lba=3", list.Output, StringComparison.Ordinal);
+
+            CliResult json = Invoke("fs", "list", discPath, "--json");
+            Assert.Equal(0, json.Code);
+            Assert.Contains("\"ok\": true", json.Output, StringComparison.Ordinal);
+            Assert.Contains("\"path\": \"\\\\HELLO.TXT\"", json.Output, StringComparison.Ordinal);
+
+            CliResult extract = Invoke("fs", "extract", discPath, "--out", outputDirectory, "--json");
+            Assert.Equal(0, extract.Code);
+            Assert.Contains("\"extracted\": 2", extract.Output, StringComparison.Ordinal);
+            Assert.Equal("hello", File.ReadAllText(Path.Combine(outputDirectory, "HELLO.TXT")));
+            Assert.Equal("nest", File.ReadAllText(Path.Combine(outputDirectory, "SUB", "NESTED.BIN")));
+        }
+        finally
+        {
+            File.Delete(discPath);
+            if (Directory.Exists(outputDirectory))
+            {
+                Directory.Delete(outputDirectory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void FsList_ReadsRawBinAndCueImages()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-fs-bin-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var image = SyntheticOperaDisc.Build(
+                [new("HELLO.TXT", IsDirectory: false, Lba: 2, LengthBytes: 5)],
+                blockCount: 3);
+            SyntheticOperaDisc.WriteFile(image, 2, "hello"u8);
+            var binPath = Path.Combine(directory, "disc.bin");
+            var cuePath = Path.Combine(directory, "disc.cue");
+            File.WriteAllBytes(binPath, ToRawBin(image));
+            File.WriteAllText(
+                cuePath,
+                $"FILE \"{Path.GetFileName(binPath)}\" BINARY\n  TRACK 01 MODE1/2352\n    INDEX 01 00:00:00\n");
+
+            CliResult bin = Invoke("fs", "list", binPath);
+            Assert.Equal(0, bin.Code);
+            Assert.Contains("entries=2", bin.Output, StringComparison.Ordinal);
+
+            CliResult cue = Invoke("fs", "list", cuePath);
+            Assert.Equal(0, cue.Code);
+            Assert.Contains("entries=2", cue.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void DiscTracks_ReportsARawBinImage()
     {
         var path = Path.Combine(Path.GetTempPath(), $"fivedo-cli-{Guid.NewGuid():N}.bin");
@@ -150,6 +232,27 @@ public sealed class CliProcessTests
         {
             File.Delete(path);
         }
+    }
+
+    private static byte[] ToRawBin(byte[] iso)
+    {
+        const int rawSectorSize = 2352;
+        var raw = new byte[(iso.Length / 2048) * rawSectorSize];
+        for (var sector = 0; sector < iso.Length / 2048; sector++)
+        {
+            var offset = sector * rawSectorSize;
+            raw[offset] = 0;
+            for (var i = 1; i <= 10; i++)
+            {
+                raw[offset + i] = 0xFF;
+            }
+
+            raw[offset + 11] = 0;
+            raw[offset + 15] = 1;
+            iso.AsSpan(sector * 2048, 2048).CopyTo(raw.AsSpan(offset + 16));
+        }
+
+        return raw;
     }
 
     private static CliResult Invoke(params string[] args)

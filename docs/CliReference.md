@@ -48,8 +48,8 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `info <disc>` | Disc geometry, volume header, game ID, database metadata, fixes. |
 | `disc dump <disc>` | Write raw 2048-byte sectors. |
 | `disc tracks <disc>` | List CHD track table entries, or one data track for ISO/BIN/CUE. |
-| `fs list <disc>` | List the 3DO file tree (CHD container). |
-| `fs extract <disc>` | Extract files from a 3DO disc image (CHD container). |
+| `fs list <disc>` | List the 3DO file tree (ISO, BIN, CUE, or CHD). |
+| `fs extract <disc>` | Extract files from a 3DO disc image (ISO, BIN, CUE, or CHD). |
 | `bios info <path>` | BIOS size, MD5, Anvil detection. |
 | `audio analyze <wav>` | WAV format, peak, RMS, clipping, silence, DC offset. |
 | `state inspect <path>` | Save-state header and section table (full CRC validation, including Brotli sections). |
@@ -361,13 +361,15 @@ No JSON.
 
 ```powershell
 5do fs list game.chd
-5do fs list game.chd --json
-5do fs extract game.chd --out extracted/ --filter GAME/
+5do fs list game.iso --json
+5do fs extract game.cue --out extracted/ --filter GAME/
 ```
 
-`fs` mounts the 3DO file system through `VideoGameFileSystemParser`'s `ChdContainer`.
-**The current implementation is CHD-only.** Use `disc dump` for raw ISO/BIN sector
-inspection.
+`fs` mounts the 3DO Opera file system directly through `FiveDo.Storage.OperaFileSystem`
+for ISO, BIN, CUE+BIN, and CHD images. The same parser handles every container, so the
+tree and extracted bytes are identical regardless of format. Directory blocks are
+chained through the on-disc `nextBlock` field, and files with `burst`/`gap` layouts are
+read with the gaps skipped.
 
 - `list` prints `volume=<name> entries=<n>` and a tree of `[D]`/`[F]` entries with size
   and LBA. JSON: `{ "ok": true, "entries": [{ "path", "directory", "size", "lba" }] }`.
@@ -613,8 +615,9 @@ dotnet run --project src/FiveDo.Cli -- disasm artifacts/ram.bin `
 - `--realtime` is pacing only; without it, live OpenAL audio is a short burst.
 - `--capture-dir` does nothing unless `--capture-every` is greater than zero.
 - `--frame-out` and captures use the CPU assembler, not the selected GPU filter.
-- `fs` is CHD-only in this release. `disc tracks` now covers ISO/BIN/CUE as a
-  single data track in addition to CHD.
+- `fs` reads the 3DO Opera file system from ISO, BIN, CUE+BIN, and CHD images. A
+  malformed volume/directory record fails with a clear parse error; `disc dump`
+  remains available for raw sector inspection.
 - `trace` and `disasm` have no JSON output.
 - `state inspect`/`state slots` JSON is PascalCase; all other CLI JSON is camelCase.
 - `--watch-start`, `--watch-end`, `--stop-pc`, `--stop-cd`, `--dump-ram-offset`, and

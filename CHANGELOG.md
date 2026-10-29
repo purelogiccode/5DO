@@ -7,6 +7,10 @@ still change.
 
 ### Added
 
+- `fs list`/`fs extract` now read the 3DO Opera file system from ISO, BIN, CUE+BIN,
+  and CHD images through the first-party `FiveDo.Storage.OperaFileSystem` parser. It
+  follows multi-block directory chains and `burst`/`gap` file layouts. The Lemmings
+  ISO/CHD pair produces 482 identical entries and 461 byte-identical extracted files.
 - Native Win32 Vulkan swapchain presentation and `--vk-window-probe`. The optional
   Vulkan backend now enables `VK_KHR_surface`/`VK_KHR_win32_surface`/`VK_KHR_swapchain`
   for a real window, blits its rendered output into the acquired swapchain image, and
@@ -150,6 +154,11 @@ still change.
 
 ### Changed
 
+- Removed the `VideoGameFileSystemParser` dependency. The `5do fs` command now uses
+  the first-party `FiveDo.Storage.OperaFileSystem` reader for every container, so
+  ISO, BIN, CUE+BIN, and CHD share one parser and one output contract. `fs list`
+  reports the on-disc volume label (the corpus images use `CD-ROM`) rather than the
+  CHD file base name.
 - Tightened method visibility: `StateCrc32.Compute`, `GlBackendOption.TryParse`,
   `GlProbeOptions.TryParse`, and the `GlProbeWindow` constructor are now `internal`
   to match their internal containing types. Interface implementations, entry

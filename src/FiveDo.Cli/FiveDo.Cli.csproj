@@ -35,7 +35,6 @@
     </PackageReference>
     <PackageReference Include="Serilog" />
     <PackageReference Include="System.CommandLine" />
-    <PackageReference Include="VideoGameFileSystemParser" />
   </ItemGroup>
 
   <ItemGroup>

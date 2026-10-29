@@ -27,6 +27,7 @@ public sealed class VolumeHeaderTests
         Assert.Equal(0xFFFFFFFEu, header.RootDirectoryId);
         Assert.Equal(1u, header.RootDirectoryBlocks);
         Assert.Equal(2048u, header.RootDirectoryBlockSize);
+        Assert.Equal(4u, header.FirstRootDirectoryCopy);
     }
 
     [Fact]

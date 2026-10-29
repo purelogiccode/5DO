@@ -994,8 +994,10 @@ dotnet run --project src/FiveDo.Cli -- fs extract "$env:FIVEDO_DISC" `
   --out "$env:TEMP\fivedo-fs" --filter "Rash/"
 ```
 
-`fs` uses the `VideoGameFileSystemParser` package (MIT) and currently accepts CHD
-images; `info` and `disc dump` use the emulator's own readers.
+`fs` uses the first-party `FiveDo.Storage.OperaFileSystem` parser and accepts ISO,
+BIN, CUE+BIN, and CHD images; `info` and `disc dump` use the emulator's own readers.
+The Lemmings ISO/CHD pair was cross-checked with 482 identical entries and 461
+byte-identical extracted files.
 
 Run a fixed number of frames and dump the last frame:
 

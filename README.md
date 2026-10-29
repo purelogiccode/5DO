@@ -8,11 +8,14 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-29, 1.0.0-rc.1 release preparation, twenty-third pass):**
+**Current position (2026-10-29, 1.0.0-rc.1 release preparation, twenty-fourth pass):**
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **882 tests pass.** The twenty-third pass added native Win32 Vulkan
+prototype. **890 tests pass.** The twenty-fourth pass added a first-party Opera
+file-system reader, so `fs list`/`fs extract` now work on ISO, BIN, CUE+BIN, and CHD
+images (multi-block directories and `burst`/`gap` layouts included). The twenty-third
+pass added native Win32 Vulkan
 swapchain presentation and `--vk-window-probe`, honored the `PreferOpenGl` setting,
 added custom aspect editing, validated frontend NativeAOT audio with OpenAL's null
 device, and stopped expected environmental warnings from filing bug reports. The

@@ -82,7 +82,7 @@ dotnet build 5DO.sln -c Release
 dotnet test 5DO.sln -c Release
 ```
 
-The current suite is **882 tests** (verified 2026-10-29) and completes in a few seconds
+The current suite is **890 tests** (verified 2026-10-29) and completes in a few seconds
 on the development machine. The build treats warnings as errors and runs the .NET
 analyzers plus Meziantou and Roslynator analyzers.
 
@@ -406,8 +406,9 @@ Key properties in `Directory.Build.props`:
 
 Central package versions live in `Directory.Packages.props`. The notable dependencies
 are Avalonia 12.1.4, CommunityToolkit.Mvvm, Silk.NET.OpenGL/OpenAL, CHDSharp 1.5.2,
-VideoGameFileSystemParser 1.4.0, xUnit, and BenchmarkDotNet (present but the current
-benchmark harness is custom).
+xUnit, and BenchmarkDotNet (present but the current benchmark harness is custom).
+The 3DO Opera file-system reader used by `5do fs` is first-party
+(`FiveDo.Storage.OperaFileSystem`).
 
 ---
 

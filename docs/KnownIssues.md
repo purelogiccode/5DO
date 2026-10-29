@@ -53,9 +53,11 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 ## Tooling and UI
 
-- `fs list`/`fs extract` currently support CHD only. Use `disc dump` or
-  `disc tracks` for raw ISO/BIN inspection; `disc tracks` now reports ISO, BIN,
-  and CUE images as a single 2048-byte user-data track.
+- `fs list`/`fs extract` now parse the Opera file system directly from ISO, BIN,
+  CUE+BIN, and CHD images. The parser handles multi-block directories and
+  `burst`/`gap` file layouts; malformed or non-3DO images fail with a clear parse
+  error. `disc tracks` reports ISO, BIN, and CUE images as a single 2048-byte
+  user-data track.
 - CLI JSON casing is split: `state inspect`/`state slots` are PascalCase for historical
   compatibility; other commands are camelCase.
 - Save-state format version 2 compresses large sections with Brotli, so a state is

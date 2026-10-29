@@ -37,7 +37,7 @@ images, BIOS ROMs, extracted assets, screenshots, or WAV captures.
       reproduced verbatim, the GNU LGPL 2.1 text is included, and the additional terms
       are carried forward. `packaging/package.ps1` copies `LICENSE` into each archive.
 - [x] `THIRD-PARTY-NOTICES.md` covers FreeDO, 4DO, Opera/libopera, xBR-lv2, HQx,
-      CHDSharp, VideoGameFileSystemParser, Avalonia, CommunityToolkit.Mvvm,
+      CHDSharp, Avalonia, CommunityToolkit.Mvvm,
       Microsoft.Extensions.*, System.CommandLine, Silk.NET/OpenAL/Vulkan,
       XenoAtom.ShaderCompiler.Build, xUnit, BenchmarkDotNet, and the now-bundled
       OpenAL Soft 1.23.1 runtime.

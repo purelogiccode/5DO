@@ -50,6 +50,13 @@ aspect ratio, frontend NativeAOT audio is validated with OpenAL's null device, a
 expected environmental warnings such as a missing audio device no longer file bug
 reports. **882 tests pass.**
 
+**Opera file-system update (2026-10-29, twenty-fourth pass):** `FiveDo.Storage.OperaFileSystem`
+reads the volume/directory records directly through `IDiscSource`, so `fs list`/`fs
+extract` support ISO, BIN, CUE+BIN, and CHD with one parser. Multi-block directory
+chains, `burst`/`gap` file layouts, special entries, and malformed-record rejection are
+covered by tests; the `VideoGameFileSystemParser` dependency was removed. **890 tests
+pass.**
+
 **Last updated:** 2026-10-29
 
 ---
@@ -266,7 +273,7 @@ project/type layout is unchanged.
 
 ### 4a. Current position vs. the plan (2026-10-26)
 
-Snapshot: 882 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
+Snapshot: 890 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
 and zero synthetic steady-state allocations; all five local corpus titles boot and
 render, and scripted gameplay is validated in Wolfenstein, Lemmings, Road Rash, and
 Alone. The opt-in 640x480 high-resolution mode is implemented and matches the
@@ -960,6 +967,11 @@ dotnet run --project src/FiveDo.Frontend.Avalonia
   - **DONE (2026-10-29):** `disc tracks` reports ISO, BIN, and CUE images as one
     2048-byte user-data track; CHD images keep the full track list. The command no
     longer requires a CHD container.
+  - **DONE (2026-10-29):** `fs list`/`fs extract` parse the Opera file system
+    directly from ISO, BIN, CUE+BIN, and CHD through `FiveDo.Storage.OperaFileSystem`.
+    Multi-block directory chains, `burst`/`gap` file layouts, special entries, and
+    malformed-record rejection are covered by tests. The
+    `VideoGameFileSystemParser` dependency was removed.
   - Exit codes and machine-readable output (`--json`).
 - [x] **M8.7 CLI tests.**
   - State inspector, frame dumper, save/load, patch parser, input-script, and autopilot tests run in the suite.
@@ -1853,3 +1865,4 @@ Suggested parallelization with two developers:
 | 2026-10-28 | Audio, M9R, M9P | OpenAL crackle fix, PCM tap, FSR 1.0, and race profile | Fixed live OpenAL crackle: the fill loop indexed its buffers by queued count, which named buffers still attached to the playing source, so `BufferData`/`SourceQueueBuffers` rewrote audio about to play; buffers now come from a free pool, variable-size blocks are queued, queued frames are tracked, and `alGetError` is checked. Registered the fill thread as a Pro Audio multimedia thread. Added `FIVEDO_AUDIO_TAP` (exact queued PCM WAV plus per-buffer CSV) and an overlay peak meter; tap validation is 0 OpenAL errors, 0 underruns, and 0 discontinuities across 2,345 buffer boundaries. Restored float uniform casts (black canvas) and added the opt-in FSR 1.0 EASU/RCAS filter with a sharpness setting and MIT attribution. Measured Road Rash's 3D race at 5.46 ms/frame total (p50 2.91, p95 10.60, p99 13.14), 0 bytes/frame, 183 fps. 818 tests pass |
 | 2026-10-28 | Architecture | Models/Interfaces folder reorganization | Moved top-level models and enums into each production project's `Models/` folder and interfaces into `Interfaces/`, splitting mixed files. Namespaces stayed project-level; nested implementation details and interop structs stayed with their owning types. 818 tests pass |
 | 2026-10-28 | Diagnostics, M9, M10 | Application usage statistics | Added `ApplicationStatsClient`/`ApplicationStatsOptions`; the CLI and desktop hosts POST `{applicationId:"5do", version}` to `https://www.purelogiccode.com/ApplicationStats/stats` at launch. The call is non-blocking, tolerates the one-per-hour rate limit, and is disabled in CI/tests and via `FIVEDO_STATS=0`; endpoint/key/id are overridable. 821 tests pass |
+| 2026-10-29 | M8.6 | Opera file-system reader for every container | Added the first-party `FiveDo.Storage.OperaFileSystem` volume/directory parser and switched `fs list`/`fs extract` to it for ISO, BIN, CUE+BIN, and CHD; removed the `VideoGameFileSystemParser` dependency. It follows relative `nextBlock` directory chains and `burst`/`gap` file layouts, rejects cycles/traversal/malformed records, and exposes special entries such as `Disc label`. The Lemmings ISO/CHD pair produces 482 identical entries and 461 byte-identical extracted files; Road Rash, Alone, and Theme Park ISOs also parse. 890 tests pass |

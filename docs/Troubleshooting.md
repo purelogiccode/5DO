@@ -61,8 +61,8 @@ BIOS ROMs are not included. Use a legally obtained image.
 | `CHD has no data track` | Audio-only CHD; 5DO needs a data track. |
 | CUE fails | Only the first data track is used; multi-file/multi-track CUEs may not match. Try extracting the data track to ISO/CHD. |
 | Wrong game title/ID | Check `info game.chd --json`; the ID is the MD5 of the first two sectors. A modified/patched disc has a different ID and may not match the database. |
-| `fs` fails | `fs list/extract` currently mount CHD only. Use `disc dump` for raw ISO/BIN inspection. |
-| `disc tracks` fails | CHD only. |
+| `fs` fails | The image is not a 3DO Opera volume, or its volume/directory records are malformed. Try `info` and `disc dump` to inspect the container. |
+| `disc tracks` fails | The image is not ISO/BIN/CUE/CHD or its track table is malformed. |
 
 Disc images are not included.
 
@@ -216,7 +216,7 @@ See [`SaveStates.md`](SaveStates.md).
 | `run needs --bios ... unless --state-in` | Supply `--bios` or load a state. |
 | `--script-base state requires --state-in` | Add `--state-in` or use `absolute`. |
 | `--autopilot` + `--input-script` error | They are mutually exclusive. |
-| `fs`/`disc tracks` fails on ISO/BIN | CHD-only commands. |
+| `fs`/`disc tracks` fails on ISO/BIN | The image may not contain a valid 3DO volume/track table; check `info` and `disc dump`. |
 | `state inspect` JSON is PascalCase | Historical contract; other CLI JSON is camelCase. |
 | Address options behave oddly | `--watch-start`, `--watch-end`, `--stop-pc`, `--stop-cd`, `--dump-ram-offset`, `--base` are hex even without `0x`. |
 | `--capture-dir` writes nothing | Add `--capture-every N` (>0). |

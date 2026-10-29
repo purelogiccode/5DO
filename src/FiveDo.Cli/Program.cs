@@ -21,7 +21,6 @@ using FiveDo.Input;
 using FiveDo.Machine;
 using FiveDo.Storage;
 using FiveDo.Video;
-using VideoGameFileSystemParser.Models;
 
 namespace FiveDo.Cli;
 
@@ -1124,22 +1123,28 @@ internal static class Program
         var subcommand = args[1];
         var discPath = args[2];
         ParsedOptions options = Parse(args, startIndex: 3);
-        using var container = new VideoGameFileSystemParser.Parsers.ChdContainer(discPath);
-        if (!container.MountAndParse(ConsoleType.ThreeDo))
+        using IDiscSource disc = DiscImageFactory.Open(discPath);
+        OperaFileSystem fileSystem;
+        try
+        {
+            fileSystem = OperaFileSystem.Mount(disc);
+        }
+        catch (InvalidDataException exception)
         {
             throw new InvalidDataException(
-                $"Cannot parse the 3DO file system in '{discPath}': {container.LastError}");
+                $"Cannot parse the 3DO file system in '{discPath}': {exception.Message}",
+                exception);
         }
 
         if (string.Equals(subcommand, "list", StringComparison.OrdinalIgnoreCase))
         {
             if (options.Json)
             {
-                var entries = new List<CliFsListEntry>(container.Entries.Count);
-                foreach (FileEntry entry in container.Entries)
+                var entries = new List<CliFsListEntry>(fileSystem.Entries.Count);
+                foreach (OperaFileEntry entry in fileSystem.Entries)
                 {
                     entries.Add(new CliFsListEntry(
-                        Path: entry.FullPath,
+                        Path: entry.Path,
                         Directory: entry.IsDirectory,
                         Size: entry.Size,
                         Lba: entry.Lba));
@@ -1151,10 +1156,10 @@ internal static class Program
                 return 0;
             }
 
-            Console.WriteLine($"volume={container.VolumeName} entries={container.Entries.Count}");
-            foreach (FileEntry entry in container.Entries)
+            Console.WriteLine($"volume={fileSystem.Label} entries={fileSystem.Entries.Count}");
+            foreach (OperaFileEntry entry in fileSystem.Entries)
             {
-                var indent = new string(' ', entry.FullPath.Count(c => c is '\\' or '/') * 2);
+                var indent = new string(' ', entry.Path.Count(c => c is '\\' or '/') * 2);
                 var kind = entry.IsDirectory ? "[D]" : "[F]";
                 Console.WriteLine($"{indent}{kind} {entry.Name} {entry.Size} lba={entry.Lba}");
             }
@@ -1174,14 +1179,14 @@ internal static class Program
         Directory.CreateDirectory(outputDirectory);
         var buffer = new byte[1 << 20];
         var extracted = 0;
-        foreach (FileEntry entry in container.Entries)
+        foreach (OperaFileEntry entry in fileSystem.Entries)
         {
             if (entry.IsDirectory)
             {
                 continue;
             }
 
-            var relative = entry.FullPath.TrimStart('\\', '/').Replace('\\', '/');
+            var relative = entry.Path.TrimStart('\\', '/').Replace('\\', '/');
             if (filter is not null
                 && !relative.StartsWith(filter.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase))
             {
@@ -1192,18 +1197,18 @@ internal static class Program
             if (!destination.StartsWith(outputDirectory + Path.DirectorySeparatorChar, StringComparison.Ordinal)
                 && !string.Equals(destination, outputDirectory, StringComparison.Ordinal))
             {
-                throw new InvalidDataException($"The file entry '{entry.FullPath}' escapes the output directory.");
+                throw new InvalidDataException($"The file entry '{entry.Path}' escapes the output directory.");
             }
 
             Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
             using (FileStream output = File.Create(destination))
             {
-                ulong offset = 0;
+                long offset = 0;
                 int read;
-                while ((read = container.ReadFile(entry, offset, buffer, 0, buffer.Length)) > 0)
+                while ((read = fileSystem.ReadFile(entry, offset, buffer)) > 0)
                 {
                     output.Write(buffer, 0, read);
-                    offset += (ulong)read;
+                    offset += read;
                 }
             }
 

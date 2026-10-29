@@ -33,6 +33,7 @@ public readonly struct VolumeHeader
         uint rootDirectoryId,
         uint rootDirectoryBlocks,
         uint rootDirectoryBlockSize,
+        uint firstRootDirectoryCopy,
         uint lastRootDirectoryCopy)
     {
         RecordType = recordType;
@@ -45,6 +46,7 @@ public readonly struct VolumeHeader
         RootDirectoryId = rootDirectoryId;
         RootDirectoryBlocks = rootDirectoryBlocks;
         RootDirectoryBlockSize = rootDirectoryBlockSize;
+        FirstRootDirectoryCopy = firstRootDirectoryCopy;
         LastRootDirectoryCopy = lastRootDirectoryCopy;
     }
 
@@ -78,6 +80,9 @@ public readonly struct VolumeHeader
     /// <summary>Gets the root directory block size.</summary>
     public uint RootDirectoryBlockSize { get; }
 
+    /// <summary>Gets the block number of the first root-directory copy.</summary>
+    public uint FirstRootDirectoryCopy { get; }
+
     /// <summary>Gets the last root directory copy index.</summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
         "ReSharper",
@@ -107,6 +112,7 @@ public readonly struct VolumeHeader
             BinaryPrimitives.ReadUInt32BigEndian(sector[84..]),
             BinaryPrimitives.ReadUInt32BigEndian(sector[88..]),
             BinaryPrimitives.ReadUInt32BigEndian(sector[92..]),
+            BinaryPrimitives.ReadUInt32BigEndian(sector[100..]),
             BinaryPrimitives.ReadUInt32BigEndian(sector[96..]));
     }
 
