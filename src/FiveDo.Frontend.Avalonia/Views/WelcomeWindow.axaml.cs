@@ -3,19 +3,6 @@ using Avalonia.Interactivity;
 
 namespace FiveDo.Frontend.Avalonia.Views;
 
-/// <summary>The action chosen by the first-run welcome dialog.</summary>
-public enum WelcomeAction
-{
-    /// <summary>Continue without opening a file.</summary>
-    Continue,
-
-    /// <summary>Open a BIOS ROM.</summary>
-    OpenBios,
-
-    /// <summary>Open a disc image.</summary>
-    OpenDisc,
-}
-
 /// <summary>
 /// First-run guide shown when no BIOS path has been configured. It explains the
 /// user-provided BIOS/disc requirement and returns the next action.

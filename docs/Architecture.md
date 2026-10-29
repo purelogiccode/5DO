@@ -565,6 +565,10 @@ A `VdlFrameMailbox` holds the most recent completed `VdlFrame`. If the renderer 
 ## 15. Coding conventions
 
 - File-scoped namespaces; one public top-level type per file.
+- Production projects keep domain models and enums in `Models/` and interfaces in
+  `Interfaces/`; services, parsers, renderers, and other logic stay in their feature
+  folders or project root. Folders are organizational only; namespaces remain
+  project-level (for example `FiveDo.Core`).
 - `sealed` classes unless inheritance is required.
 - `readonly` fields where possible; no mutable static state.
 - `uint`/`ushort`/`byte` for emulated registers; `int` only where the original uses signed arithmetic.

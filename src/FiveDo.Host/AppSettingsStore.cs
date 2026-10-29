@@ -1,0 +1,65 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using FiveDo.Core;
+using FiveDo.Input;
+using FiveDo.Video;
+
+namespace FiveDo.Host;
+
+/// <summary>
+/// Loads and saves <see cref="AppSettings"/> atomically as JSON.
+/// </summary>
+public static class AppSettingsStore
+{
+    /// <summary>Gets the default settings directory under the user's local application data.</summary>
+    public static string DefaultDirectory => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "5DO");
+
+    /// <summary>Gets the default settings file path.</summary>
+    public static string DefaultPath => Path.Combine(DefaultDirectory, "settings.json");
+
+    /// <summary>Loads settings, creating defaults when the file does not exist or is invalid.</summary>
+    /// <param name="path">Settings path. Defaults to <see cref="DefaultPath"/>.</param>
+    /// <returns>The loaded or default settings.</returns>
+    public static AppSettings Load(string? path = null)
+    {
+        var resolved = path ?? DefaultPath;
+        if (!File.Exists(resolved))
+        {
+            return new AppSettings();
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize(File.ReadAllText(resolved), AppSettingsJsonContext.Default.AppSettings)
+                ?? new AppSettings();
+        }
+        catch (JsonException exception)
+        {
+            Serilog.Log.Warning(exception, "Settings file {Path} is invalid; using defaults.", resolved);
+            return new AppSettings();
+        }
+    }
+
+    /// <summary>Saves settings atomically.</summary>
+    /// <param name="settings">Settings to save.</param>
+    /// <param name="path">Settings path. Defaults to <see cref="DefaultPath"/>.</param>
+    public static void Save(AppSettings settings, string? path = null)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        var resolved = path ?? DefaultPath;
+        var directory = Path.GetDirectoryName(Path.GetFullPath(resolved));
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        var temporary = resolved + ".tmp";
+        File.WriteAllText(temporary, JsonSerializer.Serialize(settings, AppSettingsJsonContext.Default.AppSettings));
+        File.Move(temporary, resolved, overwrite: true);
+    }
+}

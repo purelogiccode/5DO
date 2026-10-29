@@ -8,35 +8,6 @@ using FiveDo.Video;
 
 namespace FiveDo.Host;
 
-/// <summary>Status snapshot published by <see cref="CoreRunner"/> at a low rate.</summary>
-/// <param name="Frames">Number of frames executed since the runner started.</param>
-/// <param name="ProgramCounter">Current ARM program counter.</param>
-/// <param name="Cycles">ARM cycles consumed by the most recent frame.</param>
-/// <param name="FramesPerSecond">Measured frame rate over the status interval.</param>
-/// <param name="TargetFramesPerSecond">Audio-derived target frame rate, or 0 before measurement.</param>
-[StructLayout(LayoutKind.Sequential)]
-public readonly record struct CoreStatus(
-    long Frames,
-    uint ProgramCounter,
-    int Cycles,
-    double FramesPerSecond,
-    double TargetFramesPerSecond);
-
-/// <summary>Describes a fault raised by the emulation core thread.</summary>
-public sealed class CoreFaultedEventArgs : EventArgs
-{
-    /// <summary>Initializes a new instance of the <see cref="CoreFaultedEventArgs"/> class.</summary>
-    /// <param name="exception">The exception that stopped the core thread.</param>
-    public CoreFaultedEventArgs(Exception exception)
-    {
-        ArgumentNullException.ThrowIfNull(exception);
-        Exception = exception;
-    }
-
-    /// <summary>Gets the exception that stopped the core thread.</summary>
-    public Exception Exception { get; }
-}
-
 /// <summary>
 /// Runs the emulated machine on a dedicated thread with a 60 Hz frame pacer.
 /// </summary>

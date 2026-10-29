@@ -1,0 +1,53 @@
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using FiveDo.Host;
+
+namespace FiveDo.Cli;
+
+
+internal sealed record CliRunResult(
+    bool Ok,
+    long Frames,
+    double ElapsedSeconds,
+    int CyclesPerFrame,
+    int SourceWidth,
+    int SourceHeight,
+    uint VdlModulo,
+    uint Pc,
+    long Instructions,
+    uint FrameHash,
+    long Samples,
+    string DiscHash,
+    string? GameId,
+    uint FixMode,
+    bool DspRunning,
+    uint DspPc,
+    uint DspSema,
+    uint DspSeed,
+    byte CdStatus,
+    byte CdPoll,
+    string? Autopilot,
+    double? AutopilotLineX,
+    double? AutopilotRoadCoverage,
+    int? AutopilotSteering,
+    int? AutopilotObstacle,
+    bool? AutopilotRecovery,
+    bool? AutopilotCrashRestart,
+    bool? AutopilotMenuAdvance,
+    int? AutopilotStaticFrames,
+    bool? AutopilotPacing,
+    bool? AutopilotUpset,
+    double[]? AutopilotLookahead,
+    double? AudioDurationSeconds,
+    int? AudioPeak,
+    double? AudioRms,
+    long? AudioClippedFrames,
+    long? AudioSilentFrames,
+    double? AudioDcOffsetLeft,
+    double? AudioDcOffsetRight,
+    long? AudioDroppedSamples,
+    long? AudioUnderrunBuffers,
+    long? AudioQueuedBuffers,
+    int? AudioBufferedFrames,
+    double? AudioLatencyMilliseconds,
+    IReadOnlyList<string> Warnings);

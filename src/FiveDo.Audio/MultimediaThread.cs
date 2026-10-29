@@ -3,23 +3,6 @@ using System.Runtime.InteropServices;
 
 namespace FiveDo.Audio;
 
-/// <summary>Opaque handle for a thread registered with the Windows multimedia scheduler.</summary>
-internal readonly struct MultimediaThreadToken : IDisposable
-{
-    private readonly nint _handle;
-
-    internal MultimediaThreadToken(nint handle) => _handle = handle;
-
-    /// <summary>Reverts the thread to normal scheduling.</summary>
-    public void Dispose()
-    {
-        if (_handle != 0)
-        {
-            MultimediaThread.End(_handle);
-        }
-    }
-}
-
 /// <summary>
 /// Registers a thread with the Windows multimedia scheduler so it is scheduled like a
 /// real-time audio thread instead of ordinary background work.

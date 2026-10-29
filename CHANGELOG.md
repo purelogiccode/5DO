@@ -81,6 +81,9 @@ still change.
 
 ### Changed
 
+- Reorganized the production projects: domain models and enums now live in each
+  project's `Models/` folder and interfaces in `Interfaces/`. Nested implementation
+  details and interop structs stay with their owning types; namespaces are unchanged.
 - Renamed every `async`/`Task`-returning method to the `Async` suffix, including
   Avalonia event handlers and their XAML bindings, for consistent async naming.
 - Replaced the custom `Log`/`ILogSink`/`ConsoleLogSink`/`InMemoryLogSink`/`NullLogSink`

@@ -1,0 +1,88 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
+
+namespace FiveDo.Input;
+
+
+/// <summary>
+/// Complete input configuration: up to six player profiles plus console hotkeys.
+/// </summary>
+public sealed class InputProfile
+{
+    /// <summary>Gets player profiles. The array always has six entries.</summary>
+    public PlayerProfile[] Players { get; set; } = CreateDefaultPlayers();
+
+    /// <summary>Gets console hotkeys (action name to key name).</summary>
+    public IDictionary<string, string> Hotkeys { get; set; } = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["SaveState"] = "F5",
+        ["LoadState"] = "F8",
+        ["Screenshot"] = "F12",
+        ["Fullscreen"] = "F11",
+        ["Pause"] = "Escape",
+        ["Reset"] = "F10",
+    };
+
+    /// <summary>Creates the default input profile.</summary>
+    /// <returns>A profile with six players and default hotkeys.</returns>
+    public static InputProfile CreateDefault() => new();
+
+    /// <summary>Creates a deep copy of this profile.</summary>
+    /// <returns>A copy that can be edited without changing the original.</returns>
+    public InputProfile Clone()
+    {
+        var players = new PlayerProfile[Players.Length];
+        for (var i = 0; i < players.Length; i++)
+        {
+            players[i] = Players[i].Clone();
+        }
+
+        return new InputProfile
+        {
+            Players = players,
+            Hotkeys = new Dictionary<string, string>(Hotkeys, StringComparer.OrdinalIgnoreCase),
+        };
+    }
+
+    /// <summary>Gets all binding conflicts across players and hotkeys.</summary>
+    /// <returns>Conflict descriptions; empty when the profile is consistent.</returns>
+    public IReadOnlyList<string> FindConflicts()
+    {
+        var conflicts = new List<string>();
+        for (var i = 0; i < Players.Length; i++)
+        {
+            foreach (var conflict in Players[i].FindConflicts())
+            {
+                conflicts.Add($"Player {i + 1}: {conflict}");
+            }
+        }
+
+        var hotkeyNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (action, key) in Hotkeys)
+        {
+            if (hotkeyNames.TryGetValue(key, out var existing))
+            {
+                conflicts.Add($"Hotkey '{key}' is bound to both {existing} and {action}.");
+            }
+            else
+            {
+                hotkeyNames[key] = action;
+            }
+        }
+
+        return conflicts;
+    }
+
+    private static PlayerProfile[] CreateDefaultPlayers()
+    {
+        var players = new PlayerProfile[6];
+        for (var i = 0; i < players.Length; i++)
+        {
+            players[i] = PlayerProfile.CreateDefault(i + 1);
+        }
+
+        return players;
+    }
+}
