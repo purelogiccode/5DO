@@ -6,9 +6,11 @@ headless tool is `FiveDo.Cli`; the emulation core is split into one assembly per
 subsystem.
 
 **Current snapshot:** `1.0.0-rc.1` source tree, 925 tests passing (2026-10-30), with
-the v1.0 release deliberately deferred. The active work is the full-collection
-compatibility sweep (M13) and high-resolution CEL research (M14). The project is
-donationware: non-commercial, source-available, and funded by voluntary donations.
+the v1.0 release deliberately deferred. The first full-collection loadability sweep is
+complete: **594 discs tested, 576 rendered, 13 black/blank, 5 not loadable**. The
+active work is triage/in-game review (M13) and high-resolution CEL research (M14). The
+project is donationware: non-commercial, source-available, and funded by voluntary
+donations.
 Windows x64 is the validated platform; the local Linux validation target is the
 `LinuxMint` Hyper-V VM. See [`Status.md`](Status.md),
 [`CompatibilitySweep.md`](CompatibilitySweep.md),
@@ -45,6 +47,7 @@ Windows x64 is the validated platform; the local Linux validation target is the
 | [`UserGuide.md`](UserGuide.md) | Quick start, controls, display filters, save states, screenshots, library, settings, audio, logs, CLI overview, troubleshooting. |
 | [`Compatibility.md`](Compatibility.md) | BIOS/disc/input compatibility, game-specific fixes, high-resolution mode, compatibility matrix and soak evidence. |
 | [`GameCompatibilityList.md`](GameCompatibilityList.md) | 241-title 4DO reference list, local collection matches, and the working 5DO status columns. |
+| [`GameCompatibilityResults.md`](GameCompatibilityResults.md) | Automated 594-disc loadability results: 576 rendered, 13 black/blank, 5 not loadable, with per-disc evidence paths. |
 | [`CompatibilitySweep.md`](CompatibilitySweep.md) | Full-collection loadability/in-game sweep procedure, status definitions, triage, and Linux VM validation. |
 | [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md) | True internal high-resolution CEL research: current mode, options, experiments, and decision criteria. |
 | [`KnownIssues.md`](KnownIssues.md) | Current game, renderer, audio, packaging, emulation, and legal limitations. |

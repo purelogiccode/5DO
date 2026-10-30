@@ -1,7 +1,8 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-30, compatibility-sweep preparation after the twenty-seventh
-pass. **925 tests pass.** The twenty-seventh pass embedded the Vulkan surface and fixed
+**Snapshot:** 2026-10-30, after the first full-collection loadability sweep.
+**594 discs tested: 576 Loadable/Rendered, 13 Loadable/No video, 5 Not Loadable.**
+**925 tests pass.** The twenty-seventh pass embedded the Vulkan surface and fixed
 the CoreRunner stop/start race; the twenty-sixth pass added renderer selection and
 output-resolution presets; the twenty-fifth pass added F6/F7 slot selection, F9
 single-frame advance, and desktop input recording. The v1.0 release is deliberately
@@ -199,6 +200,41 @@ This is the short, current answer to "where are we?" The documentation index is
   [`../packaging/README.md`](../packaging/README.md).
 
 ---
+
+## 1a. Latest compatibility sweep (2026-10-30)
+
+The first full loadability pass over both collections is complete. It booted every
+disc for 3,000 frames and recorded JSON/PNG evidence under `artifacts/compat-full/`.
+The committed summary is [`GameCompatibilityResults.md`](GameCompatibilityResults.md).
+
+| Result | Count | Meaning |
+|---|---:|---|
+| `Loadable/Rendered` | **576** | Completed 3,000 frames; final frame is non-black. |
+| `Loadable/No video` | **13** | Completed 3,000 frames; final frame is black/blank. |
+| `Not Loadable` | **5** | CLI error or 90-second timeout. |
+| **Total** | **594** | 589 main collection + 5 MAME software-list images. |
+
+The five `Not Loadable` results:
+
+- `Crime Patrol (USA) (Arcade CD-ROM)` — 90-second timeout.
+- `Mad Dog II - The Lost Gold (USA) (Arcade CD-ROM)` — 90-second timeout.
+- `Mirai Shounen Conan - Digital Library (Japan)` — CHD decompression failure at LBA 1.
+- `Orbatak (USA) (Arcade CD-ROM)` — 90-second timeout.
+- `Shootout at Old Tucson (USA) (RE3) (Arcade CD-ROM)` — 90-second timeout.
+
+The four arcade CD-ROM timeouts match the 4DO notes that these titles need a patched
+BIOS and have control limitations. They need a longer-timeout rerun and a reference
+comparison before being called unplayable. The Mirai Shounen Conan image needs a CHD
+integrity check or re-acquisition.
+
+The 13 `Loadable/No video` titles need the 12,000-frame in-game rerun: `Crash 'n Burn
+(Japan)`, `Ishida Yoshio Kudan no Igo Seiha (Japan)`, `Konpeki no Kantai (Japan)`
+(original and Rev 1), `Myst` (Japan, Japan Rev A, USA), `Olympic Summer Games (USA)`,
+`Powers Kingdom (Europe)`, `Slayer` (Europe, USA, USA Action Pak), and `WorldCup Super
+Stadium (Japan)`.
+
+`Loadable/Rendered` is **not** a final compatibility grade; it still needs the visual
+and input review described in [`CompatibilitySweep.md`](CompatibilitySweep.md).
 
 ## 2. Real-game status (local corpus, `panafz1.bin`)
 
@@ -422,12 +458,13 @@ current gates are the M13 collection sweep and the M14 high-resolution decision.
 
 ### P0 - active work
 
-1. **Run the M13 loadability sweep.** Use `tools/compat-sweep.ps1` with 3,000 frames
-   over both collection roots. Record `Not Loadable`, `Loadable/No video`, and
-   `Loadable/Rendered` for every disc.
-2. **Triage the failures.** Group by CLI error, timeout, black frame, palette/CLUT,
-   VDL modulo, input wait, and CD READ_ID-only wait. Keep the smallest reproduction
-   command and the matching trace for each class.
+1. **M13 loadability sweep: complete.** 594 discs tested: 576 `Loadable/Rendered`,
+   13 `Loadable/No video`, 5 `Not Loadable`. See
+   [`GameCompatibilityResults.md`](GameCompatibilityResults.md).
+2. **Triage the failures.** Rerun the four Arcade CD-ROM timeouts with a longer
+   timeout, check the `Mirai Shounen Conan` CHD, and run the 12,000-frame pass for the
+   13 black/blank titles. Keep the smallest reproduction command and the matching
+   trace for each class.
 3. **Run the in-game/visual check.** Inspect every rendered final frame, run
    12,000-frame captures for titles that reach a title/menu, rerun black/static titles
    at 12,000 frames, and record `Unplayable`/`Playable`/`Good` in

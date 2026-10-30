@@ -30,6 +30,16 @@ def escape(value: str | None) -> str:
     return str(value).replace("|", "\\|").replace("\n", " ").strip()
 
 
+def relative_evidence(value: str | None) -> str:
+    if not value:
+        return ""
+    path = Path(value)
+    try:
+        return str(path.resolve().relative_to(Path.cwd().resolve())).replace("\\", "/")
+    except ValueError:
+        return str(path)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results", default=DEFAULT_RESULTS, help="Sweep summary.csv")
@@ -84,7 +94,7 @@ def main() -> int:
     )
     lines.append("|---|---|---|---:|---:|---|---|---:|---:|---|---|")
     for row in rows:
-        evidence = row.get("PngPath") or row.get("JsonPath") or ""
+        evidence = relative_evidence(row.get("PngPath") or row.get("JsonPath"))
         lines.append(
             "| "
             + " | ".join(

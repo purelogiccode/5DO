@@ -1,6 +1,8 @@
 # Full-Collection Compatibility Sweep
 
-**Status:** active workstream (2026-10-30)
+**Status:** first loadability pass complete (2026-10-30): **594 discs tested, 576
+rendered, 13 black/blank, 5 not loadable**. See
+[`GameCompatibilityResults.md`](GameCompatibilityResults.md).
 **Goal:** give every disc in the local 3DO collection a recorded 5DO status, starting
 with loadability and then an in-game/visual check. Gameplay-depth scripts (full races,
 inventory interaction, long playthroughs) are deliberately deferred.

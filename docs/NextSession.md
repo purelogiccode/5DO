@@ -24,10 +24,13 @@ research. Do not work on gameplay depth and do not cut a release yet.
    `dotnet build src/FiveDo.Cli/FiveDo.Cli.csproj -c Release`.
 2. Smoke-test the sweep with two discs:
    `pwsh -File tools/compat-sweep.ps1 -Limit 2 -Frames 3000 -TimeoutSeconds 120 -OutDir artifacts/compat-smoke`.
-3. Run the full baseline with `-Resume -Frames 3000 -OutDir artifacts/compat`.
-4. Inspect `artifacts/compat/summary.csv` and triage every `Not Loadable` row.
+3. ~~Run the full baseline.~~ Done on 2026-10-30: 594 discs, 576
+   `Loadable/Rendered`, 13 `Loadable/No video`, 5 `Not Loadable`; see
+   [`GameCompatibilityResults.md`](GameCompatibilityResults.md).
+4. Triage every `Not Loadable` row: rerun the four Arcade CD-ROM timeouts with a longer
+   timeout and check the `Mirai Shounen Conan` CHD.
 5. Inspect `frame.png` for every rendered title; run 12,000-frame captures for titles
-   that reach a title/menu and rerun black/static titles at 12,000 frames.
+   that reach a title/menu and rerun the 13 black/blank titles at 12,000 frames.
 6. Run the high-resolution pass with `-HighRes -OutDir artifacts/compat-highres`.
 7. Fill the 5DO status/notes in [`GameCompatibilityList.md`](GameCompatibilityList.md).
 8. Validate the CLI in the `LinuxMint` Hyper-V VM

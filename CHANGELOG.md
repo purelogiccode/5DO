@@ -17,6 +17,9 @@ still change.
   `docs/HighResolutionCelResearch.md` document the compatibility status scale, the
   loadability/in-game sweep, the Linux VM validation procedure, and the true
   high-resolution CEL research options.
+- The first full-collection loadability sweep completed: 594 discs tested, 576
+  `Loadable/Rendered`, 13 `Loadable/No video`, and 5 `Not Loadable`. The per-disc
+  results are in `docs/GameCompatibilityResults.md`.
 - Embedded Win32 Vulkan video surface for the desktop shell. `VulkanVideoSurface`
   hosts a click-through child HWND inside the Avalonia window and presents through
   the existing FIFO swapchain, eliminating the per-frame GPU-to-CPU readback and

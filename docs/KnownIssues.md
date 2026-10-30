@@ -11,11 +11,19 @@ high-resolution CEL decision (M14) are complete.
 
 ## Compatibility sweep status
 
-- The 12 titles in the matrix below are validated. The full local collection
-  (`J:\Panasonic 3DO`, 589 CHDs, and `G:\MAME\MAME Software List CHDs\3do`, 5 CHDs) has
-  not yet been swept end-to-end. The procedure is in
-  [`CompatibilitySweep.md`](CompatibilitySweep.md); the reference table is
-  [`GameCompatibilityList.md`](GameCompatibilityList.md).
+- The 12 titles in the matrix below are validated. The first full loadability sweep
+  (`J:\Panasonic 3DO`, 589 CHDs, plus `G:\MAME\MAME Software List CHDs\3do`, 5 CHDs)
+  completed on 2026-10-30: **576 rendered, 13 black/blank, 5 not loadable** out of 594.
+  The procedure is in [`CompatibilitySweep.md`](CompatibilitySweep.md); the per-disc
+  table is [`GameCompatibilityResults.md`](GameCompatibilityResults.md).
+- The five not-loadable images are four Arcade CD-ROM timeouts (`Crime Patrol`,
+  `Mad Dog II`, `Orbatak`, `Shootout at Old Tucson RE3`) and one CHD decompression
+  failure (`Mirai Shounen Conan - Digital Library`, LBA 1). The arcade titles match the
+  4DO notes about a patched BIOS; rerun with a longer timeout before classifying them.
+- The 13 black/blank titles need the 12,000-frame in-game rerun: Crash 'n Burn (Japan),
+  Ishida Yoshio Kudan no Igo Seiha (Japan), Konpeki no Kantai (Japan and Rev 1),
+  Myst (Japan, Japan Rev A, USA), Olympic Summer Games (USA), Powers Kingdom (Europe),
+  Slayer (Europe, USA, USA Action Pak), and WorldCup Super Stadium (Japan).
 - The 4DO wiki list is a reference, not a guarantee. Filename matching does not prove
   the local image is the same revision, and a 4DO score of 100 does not mean 5DO has
   the same behavior.

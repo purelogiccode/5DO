@@ -582,3 +582,20 @@ This sweep is the current compatibility gate. It is deliberately broader than th
 12-title matrix above and does not require full gameplay completion. The 4DO list is
 used to prioritize known problem titles, not to assume that a filename match is the
 same disc revision.
+
+### 13.1 First sweep results
+
+The first 594-disc pass completed on 2026-10-30:
+
+| Result | Count |
+|---|---:|
+| `Loadable/Rendered` | **576** |
+| `Loadable/No video` | **13** |
+| `Not Loadable` | **5** |
+
+The per-disc table is [`GameCompatibilityResults.md`](GameCompatibilityResults.md).
+The `Not Loadable` set is four Arcade CD-ROM timeouts (`Crime Patrol`, `Mad Dog II`,
+`Orbatak`, `Shootout at Old Tucson RE3`) and one CHD decompression failure (`Mirai
+Shounen Conan - Digital Library`, LBA 1). The arcade titles match the 4DO notes about
+a patched BIOS; rerun them with a longer timeout and the reference before classifying
+them as unplayable. The 13 black/blank titles need the 12,000-frame in-game pass.

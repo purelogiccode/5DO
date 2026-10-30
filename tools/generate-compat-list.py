@@ -259,7 +259,8 @@ def write_markdown(
     )
     lines.append(
         "- 5DO sweep tool: `tools/compat-sweep.ps1`; results are written under "
-        "`artifacts/compat/` and can be merged into the 5DO columns below."
+        "`artifacts/compat/` and can be merged into the 5DO columns below. The latest "
+        "automated pass is [`GameCompatibilityResults.md`](GameCompatibilityResults.md)."
     )
     lines.append("")
     lines.append("## 4DO status scale")

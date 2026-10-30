@@ -4,12 +4,14 @@
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
 **Current status (2026-10-30, twenty-eighth pass):** **925 tests pass**; the v1.0
-release is deliberately deferred. The active workstream is **M13, the full-collection
-compatibility sweep** (589 CHDs in `J:\Panasonic 3DO` plus 5 in
-`G:\MAME\MAME Software List CHDs\3do`), followed by **M14, high-resolution CEL
-research**. Gameplay-depth work is deferred. The project is **donationware**
-(non-commercial, source-available, voluntary donations only). See §4b and
-[`CompatibilitySweep.md`](CompatibilitySweep.md).
+release is deliberately deferred. The first **M13 full-collection loadability sweep**
+is complete: 594 discs tested (589 in `J:\Panasonic 3DO` plus 5 in
+`G:\MAME\MAME Software List CHDs\3do`), with **576 `Loadable/Rendered`, 13
+`Loadable/No video`, and 5 `Not Loadable`**. Triage and the 12,000-frame in-game review
+are next, followed by **M14 high-resolution CEL research**. Gameplay-depth work is
+deferred. The project is **donationware** (non-commercial, source-available, voluntary
+donations only). See §4b, [`GameCompatibilityResults.md`](GameCompatibilityResults.md),
+and [`CompatibilitySweep.md`](CompatibilitySweep.md).
 **Historical status (2026-10-26, fifteenth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five golden-corpus titles plus seven additional discs boot, load their own OS, and render real frames; six of the seven additional titles produce non-silent 44.1 kHz stereo DSP audio (Theme Park's menu is silent). Road Rash's 3D race renders correctly; a CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait and the game now advances through `BUSTED`/race select to a new race. Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room, Begin/Resume menu, and intro; Lemmings types the Fun 4 passcode entirely with the D-pad, starts gameplay at 23,000 frames, and its 640x480 high-resolution title matches the reference; Space Ace plays its demo and starts its interactive scene (X menu, A play). **775 tests passed at that pass; 845 tests pass after the 2026-10-29 release-hardening pass.** The fifteenth pass added an explicit `--gl-backend` selector and validated the Windows ANGLE/GLES 3.0 path: 4K present p99 0.47 ms with zero renderer allocations, all filters compile, and a 320x240 Accurate capture is pixel-identical to the CPU oracle. It also added opt-in NativeAOT win-x64 publishes: a 9.97 MB CLI that passes the smoke suite, `info`/`fs list`, and a 3,000-frame golden boot, and a 28.8 MB frontend that passes the smoke and WGL/ANGLE parity probes. The fourteenth pass wired the platform swap interval (WGL/GLX/EGL) and added a `--gl-probe` offscreen 4K presentation probe: on the RTX 4070 development machine, sharp-bilinear 4K measures GPU p99 0.089 ms, present p99 0.208 ms, and zero renderer/mailbox allocations per frame after warm-up. The thirteenth pass enabled `PublishTrimmed` for the Avalonia frontend, removed the reflection-based `ViewLocator`, added a trimmed-frontend startup smoke test, and now publishes both executables trimmed for all six RIDs. The twelfth pass made settings, input profiles, save-slot metadata, and every CLI `--json` response source-generated and trim-safe, enabled `PublishTrimmed` for the CLI, added a trimmed-CLI CI smoke test, and added a same-machine benchmark baseline comparison; see [`Trimming.md`](Trimming.md) and [`Performance.md`](Performance.md). The eleventh pass added HQx 3x/4x and the benchmark budget gate. The tenth pass added the pure D-pad passcode script and CRT bloom. The ninth pass recorded per-title save-state/PNG/WAV evidence, fixed the CD wait, and added autopilot A pulses for post-race menus. The eighth pass fixed the real-content GPU palette expansion (independent R/G/B CLUT indices), added the opt-in xBR-lv2 filter, Windows XInput/Linux evdev gamepad backends with a binding UI, an in-app log viewer, save-state thumbnails, a first-run guide, and error dialogs. Remaining work: finish a full Road Rash race without wrecking, Raspberry Pi/GLES 3.1 and DPI validation, Tier B timing, frontend AOT audio/installers, the M0.8 legal/attribution review (including the bundled OpenAL Soft LGPL runtime), and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
 **Audio update (2026-10-27, sixteenth pass):** exact 44.1 kHz DSP sample clock
 (600 frames = 10.000 s, 441,015-441,020 samples), Quartz state v2 with v1
@@ -1688,20 +1690,24 @@ full-race completion, inventory scripting, or long-playthrough gates.
   - Smoke-validated on `Cowboy Casino (USA)`, `Captain Quazar (USA)`, and
     `Road Rash (Europe) (Rev 1)`; the `-HighRes` pass also renders `Cowboy Casino`
     at a 640x480 source size.
-- [ ] **M13.3 Run the baseline loadability sweep.**
-  - Run 3,000 frames per disc on the full collection.
-  - Classify `Not Loadable`, `Loadable/No video`, and `Loadable/Rendered`.
-  - Record frame count, PC, frame hash, source dimensions, disc hash, DSP state, CD
+- [x] **M13.3 Run the baseline loadability sweep.**
+  - Ran 3,000 frames per disc on the full 594-disc collection on 2026-10-30.
+  - Result: **576 `Loadable/Rendered`, 13 `Loadable/No video`, 5 `Not Loadable`**.
+  - Recorded frame count, PC, frame hash, source dimensions, disc hash, DSP state, CD
     status/poll, elapsed time, and image metrics.
-  - Generate `docs/GameCompatibilityResults.md` from `summary.csv` with
+  - Generated `docs/GameCompatibilityResults.md` from `summary.csv` with
     `tools/generate-compat-results.py`.
-- [ ] **M13.4 Triage every failure class.**
+- [~] **M13.4 Triage every failure class.**
   - Group by CLI error, timeout, short run, black frame, palette/CLUT, VDL modulo,
     input wait, and CD READ_ID-only wait.
   - Capture the smallest reproduction command and the relevant trace (CD/CLIO/CEL/
     KPRINT/PBUS) for each class.
   - Compare with the 4DO notes and the Opera reference before changing behavior.
   - Add a game-specific fix only with evidence.
+  - Initial triage: four Arcade CD-ROM timeouts (`Crime Patrol`, `Mad Dog II`,
+    `Orbatak`, `Shootout at Old Tucson RE3`) match the 4DO "patched BIOS" notes; one
+    CHD decompression failure (`Mirai Shounen Conan`, LBA 1); 13 black/blank titles
+    need the 12,000-frame rerun.
 - [ ] **M13.5 Run the in-game/visual check.**
   - Inspect the final frame for every rendered title.
   - Run 12,000-frame captures for titles that reach a title/menu; this is the in-game
@@ -2105,4 +2111,4 @@ Suggested parallelization with two developers:
 | 2026-10-28 | Architecture | Models/Interfaces folder reorganization | Moved top-level models and enums into each production project's `Models/` folder and interfaces into `Interfaces/`, splitting mixed files. Namespaces stayed project-level; nested implementation details and interop structs stayed with their owning types. 818 tests pass |
 | 2026-10-28 | Diagnostics, M9, M10 | Application usage statistics | Added `ApplicationStatsClient`/`ApplicationStatsOptions`; the CLI and desktop hosts POST `{applicationId:"5do", version}` to `https://www.purelogiccode.com/ApplicationStats/stats` at launch. The call is non-blocking, tolerates the one-per-hour rate limit, and is disabled in CI/tests and via `FIVEDO_STATS=0`; endpoint/key/id are overridable. 821 tests pass |
 | 2026-10-29 | M8.6 | Opera file-system reader for every container | Added the first-party `FiveDo.Storage.OperaFileSystem` volume/directory parser and switched `fs list`/`fs extract` to it for ISO, BIN, CUE+BIN, and CHD; removed the `VideoGameFileSystemParser` dependency. It follows relative `nextBlock` directory chains and `burst`/`gap` file layouts, rejects cycles/traversal/malformed records, and exposes special entries such as `Disc label`. The Lemmings ISO/CHD pair produces 482 identical entries and 461 byte-identical extracted files; Road Rash, Alone, and Theme Park ISOs also parse. 890 tests pass |
-| 2026-10-30 | M13.1-M13.2, M14 | Compatibility sweep tooling and high-resolution research plan | Parsed the saved 4DO wiki into a 241-title reference, scanned the two local collections (589 + 5 CHDs), generated `docs/GameCompatibilityList.md`, and added `tools/compat-sweep.ps1` plus `tools/generate-compat-list.py`. The sweep boots each disc in a fresh process, records JSON/PNG/timeout evidence, and classifies loadability. Added `docs/CompatibilitySweep.md` and `docs/HighResolutionCelResearch.md`; v1.0 release is deferred until the collection sweep and high-res decision are complete. Project distribution is recorded as donationware (non-commercial, source-available); Linux validation target is the local Hyper-V VM `LinuxMint`. No runtime tests were added; the current suite remains 925 tests |
+| 2026-10-30 | M13.1-M13.2, M14 | Compatibility sweep tooling and high-resolution research plan | Parsed the saved 4DO wiki into a 241-title reference, scanned the two local collections (589 + 5 CHDs), generated `docs/GameCompatibilityList.md`, and added `tools/compat-sweep.ps1` plus `tools/generate-compat-list.py`. The sweep boots each disc in a fresh process, records JSON/PNG/timeout evidence, and classifies loadability. The first 594-disc pass completed: 576 `Loadable/Rendered`, 13 `Loadable/No video`, 5 `Not Loadable`; results are in `docs/GameCompatibilityResults.md`. Added `docs/CompatibilitySweep.md` and `docs/HighResolutionCelResearch.md`; v1.0 release is deferred until the collection sweep and high-res decision are complete. Project distribution is recorded as donationware (non-commercial, source-available); Linux validation target is the local Hyper-V VM `LinuxMint`. No runtime tests were added; the current suite remains 925 tests |
