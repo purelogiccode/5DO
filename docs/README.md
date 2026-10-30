@@ -5,10 +5,15 @@ emulator for the Panasonic 3DO Interactive Multiplayer. The desktop app is Avalo
 headless tool is `FiveDo.Cli`; the emulation core is split into one assembly per console
 subsystem.
 
-**Current snapshot:** `1.0.0-rc.1`, documented-compatibility release scope, 906 tests
-passing (verified 2026-10-29). Windows x64 is the validated platform. See
-[`Status.md`](Status.md), [`ReleaseChecklist.md`](ReleaseChecklist.md), and
-[`KnownIssues.md`](KnownIssues.md) for the honest release position.
+**Current snapshot:** `1.0.0-rc.1` source tree, 925 tests passing (2026-10-30), with
+the v1.0 release deliberately deferred. The active work is the full-collection
+compatibility sweep (M13) and high-resolution CEL research (M14). The project is
+donationware: non-commercial, source-available, and funded by voluntary donations.
+Windows x64 is the validated platform; the local Linux validation target is the
+`LinuxMint` Hyper-V VM. See [`Status.md`](Status.md),
+[`CompatibilitySweep.md`](CompatibilitySweep.md),
+[`HighResolutionCelResearch.md`](HighResolutionCelResearch.md), and
+[`KnownIssues.md`](KnownIssues.md).
 
 ---
 
@@ -39,6 +44,9 @@ passing (verified 2026-10-29). Windows x64 is the validated platform. See
 |---|---|
 | [`UserGuide.md`](UserGuide.md) | Quick start, controls, display filters, save states, screenshots, library, settings, audio, logs, CLI overview, troubleshooting. |
 | [`Compatibility.md`](Compatibility.md) | BIOS/disc/input compatibility, game-specific fixes, high-resolution mode, compatibility matrix and soak evidence. |
+| [`GameCompatibilityList.md`](GameCompatibilityList.md) | 241-title 4DO reference list, local collection matches, and the working 5DO status columns. |
+| [`CompatibilitySweep.md`](CompatibilitySweep.md) | Full-collection loadability/in-game sweep procedure, status definitions, triage, and Linux VM validation. |
+| [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md) | True internal high-resolution CEL research: current mode, options, experiments, and decision criteria. |
 | [`KnownIssues.md`](KnownIssues.md) | Current game, renderer, audio, packaging, emulation, and legal limitations. |
 | [`Troubleshooting.md`](Troubleshooting.md) | Symptom-driven diagnosis with commands, log sources, and fixes. |
 | [`Glossary.md`](Glossary.md) | 3DO hardware, emulator, renderer, audio, and release terminology. |
@@ -105,14 +113,17 @@ passing (verified 2026-10-29). Windows x64 is the validated platform. See
 5. [`PortingNotes.md`](PortingNotes.md) and [`ReferenceStrategy.md`](ReferenceStrategy.md) - reference behavior.
 6. [`Trimming.md`](Trimming.md) - keep the trimmed/AOT paths healthy.
 
-### "I want to validate or release"
+### "I want to validate compatibility or release"
 
-1. [`ReleaseChecklist.md`](ReleaseChecklist.md) - release gates.
-2. [`Status.md`](Status.md) - current position and remaining work.
-3. [`Performance.md`](Performance.md) - budgets and measured evidence.
-4. [`TestCorpus.md`](TestCorpus.md) - real-content commands and hashes.
-5. [`ReleaseLegalReview.md`](ReleaseLegalReview.md) and [`Licensing.md`](Licensing.md) - legal gate.
-6. [`BuildAndTest.md`](BuildAndTest.md) - CI, publish, packaging.
+1. [`CompatibilitySweep.md`](CompatibilitySweep.md) - current collection-sweep procedure.
+2. [`GameCompatibilityList.md`](GameCompatibilityList.md) - per-title reference and results.
+3. [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md) - high-res research plan.
+4. [`ReleaseChecklist.md`](ReleaseChecklist.md) - eventual release gates.
+5. [`Status.md`](Status.md) - current position and remaining work.
+6. [`Performance.md`](Performance.md) - budgets and measured evidence.
+7. [`TestCorpus.md`](TestCorpus.md) - real-content commands and hashes.
+8. [`ReleaseLegalReview.md`](ReleaseLegalReview.md) and [`Licensing.md`](Licensing.md) - legal gate.
+9. [`BuildAndTest.md`](BuildAndTest.md) - CI, publish, packaging.
 
 ### "I need to debug an emulation problem"
 

@@ -302,7 +302,7 @@ substitute for a Tier B percentile run.
 ```powershell
 dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- `
   --frames 600 --warmup 120 --bios bios/panafz1.bin `
-  --disc "E:\Panasonic 3DO\Road Rash (USA).chd" `
+  --disc "J:\Panasonic 3DO\Road Rash (USA).chd" `
   --state-in artifacts/rr-race2-100k.state --label road-rash-race --json
 ```
 

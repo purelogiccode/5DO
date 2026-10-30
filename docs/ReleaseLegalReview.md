@@ -1,7 +1,10 @@
 # Release Legal and Attribution Review
 
-**Date:** 2026-10-29 (OpenAL Soft notice/source offer added)
-**Status:** engineering audit complete; **owner/legal sign-off pending**
+**Date:** 2026-10-30 (donationware model recorded; release timing deferred)
+**Status:** engineering audit complete; **owner/legal sign-off pending**; release
+timing deferred until M13/M14 complete
+**Distribution model:** **donationware** — non-commercial, source-available, voluntary
+donations only (no sales)
 **Release candidate:** 1.0.0-rc.1 (documented-compatibility scope)
 
 This is an engineering audit, not legal advice. It records what the release
@@ -61,9 +64,16 @@ images, BIOS ROMs, extracted assets, screenshots, or WAV captures.
       project license as the FreeDO modified GNU LGPL: the FreeDO notice is reproduced
       verbatim, the GNU LGPL 2.1 text is the base, and the additional terms are carried
       forward. The upstream FreeDO/4DO terms include a non-commercial restriction and a
-      requirement for full credits, so the project remains non-commercial and
-      source-available. The project's own license is not more permissive than the
-      upstream terms allow.
+      requirement for full credits, so the project remains **donationware**:
+      non-commercial, source-available, and funded by voluntary donations rather than
+      sales. The project's own license is not more permissive than the upstream terms
+      allow.
+- [x] **Donationware position recorded.** The project accepts voluntary donations for
+      development costs but does not sell builds, licenses, support, or access. Donation
+      tiers must not be described as purchasing a license or commercial rights.
+- [ ] **Confirm donationware with the rights holders.** Ask whether voluntary donations
+      are acceptable under the FreeDO/4DO non-commercial terms, and keep the
+      correspondence.
 - [ ] **Rights-holder contact.** Ask the FreeDO/4DO maintainers to clarify port and
       binary-distribution terms, and keep the correspondence.
 - [ ] **Commercial-use position.** Do not sell builds or bundle them with commercial
@@ -89,8 +99,9 @@ images, BIOS ROMs, extracted assets, screenshots, or WAV captures.
 Until the owner/legal review is signed off:
 
 - keep the root `LICENSE` and the FreeDO modified GNU LGPL terms in every distribution,
-- distribute the **source** and release-candidate artifacts as **non-commercial,
-  source-available** builds,
+- distribute the **source** and release-candidate artifacts as **donationware**
+  (non-commercial, source-available) builds; donations are voluntary and do not grant
+  commercial rights,
 - keep full FreeDO/4DO/Opera attribution in the README, About box, and release notes,
 - ship the portable archives only, with no installers or store listings,
 - do not describe the build as an officially licensed 3DO product.

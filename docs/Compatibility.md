@@ -26,6 +26,14 @@ twenty-first pass added the optional Vulkan xBR/FSR GPU filters and HQx CPU path
 removed the CPU palette-upload workaround from the OpenGL xBR path; compatibility
 status is unchanged.
 
+> **Full-collection matrix (2026-10-30):** the curated evidence below is being
+> expanded into [`GameCompatibilityList.md`](GameCompatibilityList.md), which contains
+> the 241-title 4DO reference list, local filename matches from `J:\Panasonic 3DO` and
+> `G:\MAME\MAME Software List CHDs\3do`, and empty 5DO status columns. The sweep
+> procedure and status definitions are in
+> [`CompatibilitySweep.md`](CompatibilitySweep.md). The high-resolution research plan is
+> in [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+
 The ninth pass captured per-title save-state, PNG, and WAV evidence (see
 `TestCorpus.md` 1.5a) and fixed the old Road Rash ~42,000/~92,000 stops. They were a
 static game-side wait (only READ_ID polls, all input ignored), not wall/rider pins.
@@ -204,7 +212,7 @@ The game database is ported with attribution. Unknown game IDs get the first 8 h
 | 1080p/1440p/4K output | Yes (GPU scaling); 4K60 on Tier A hardware | |
 | Fullscreen | Yes | |
 | 384/512/640/1024-wide VDLP modes | Parsed, may crop | Full presentation |
-| High-resolution CEL (`RESSCALE`) | Opt-in `--high-res`; 640x480 output | Enable per game after input validation |
+| High-resolution CEL (`RESSCALE`) | Opt-in `--high-res`; line-doubled 640x480 output | True internal 640x480 / supersampling research in M14 |
 | PAL | No | Later if needed |
 | CPU fallback renderer | Yes (no GL context) | |
 | Screenshots | Yes (GL readback or CPU frame) | |
@@ -220,6 +228,13 @@ frame source becomes 640x480. The extra planes live in the reserved RAM mirrors 
 are not CPU-visible. SPORT fill/copy operations mirror the source page into the extra
 planes. Save states, frame hashes, screenshots, the CPU assembler, and the OpenGL
 uploader all carry the larger frame.
+
+**Important limitation:** this is FreeDO-style line doubling, not true internal
+640x480 rendering. Each 240-line source line is written to both interlace fields, so
+the vertical detail is still 240 lines. The mode improves horizontal CEL sampling and
+matches 640-wide titles such as Lemmings, but it does not add true vertical geometry.
+See [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md) for the M14 research
+options (true 640x480, 2x supersampling, and GPU CEL compositing).
 
 Evidence: from a fresh Lemmings boot, the 640x480 title screen shows all four buttons
 and the full logo and matches the reference screenshot; the five 3,000-frame low-res
@@ -276,7 +291,9 @@ does not need a separate high-resolution input path.
 - No multi-disc swapping.
 - No PAL.
 - High-resolution CEL rendering is opt-in (`--high-res`) and validated for the
-  Lemmings title; output upscaling via OpenGL is supported separately.
+  Lemmings title; it is FreeDO-style line doubling, not true internal 640x480.
+  Output upscaling via OpenGL is supported separately. See
+  [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 - No GPU CEL compositing in v1; CEL rendering is software, matching FreeDO. The OpenGL renderer accelerates presentation, palette expansion, scaling, and filters.
 - No 3DO mouse/light gun/other peripherals.
 - No 3DO modem/network emulation.
@@ -288,8 +305,10 @@ does not need a separate high-resolution input path.
 
 ---
 
-## 10. Compatibility matrix template
+## 10. Curated compatibility matrix
 
+This is the validated showcase set. The full 241-title 4DO reference list and the
+local collection matrix are in [`GameCompatibilityList.md`](GameCompatibilityList.md).
 Use this table when testing real discs. Record the disc hash/ID, BIOS, build, and result.
 
 | Game | Region | Disc ID | BIOS | Build | Boot | In-game | Audio | Input | Notes | Opera reference |
@@ -536,3 +555,30 @@ Include:
 - Steps to reproduce.
 - Save state and a short input recording if possible.
 - Log output with the `Emulation` and `Cdrom` categories enabled.
+
+---
+
+## 13. Full-collection sweep (2026-10-30)
+
+The local collection is:
+
+- `J:\Panasonic 3DO` — 589 CHD images.
+- `G:\MAME\MAME Software List CHDs\3do` — 5 CHD images.
+
+The sweep is automated by `tools/compat-sweep.ps1`; the reference table is
+[`GameCompatibilityList.md`](GameCompatibilityList.md), and the procedure/status
+definitions are in [`CompatibilitySweep.md`](CompatibilitySweep.md).
+
+Automated labels:
+
+- `Not Loadable` — CLI error, timeout, invalid JSON, or a short frame count.
+- `Loadable/No video` — completed the frame count but the final frame is black/blank.
+- `Loadable/Rendered` — completed and the final frame is non-black with several colors.
+
+Final labels (after visual/input review): `No data`, `Not Loadable`, `Unplayable`,
+`Playable`, `Good`.
+
+This sweep is the current compatibility gate. It is deliberately broader than the
+12-title matrix above and does not require full gameplay completion. The 4DO list is
+used to prioritize known problem titles, not to assume that a filename match is the
+same disc revision.

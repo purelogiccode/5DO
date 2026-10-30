@@ -119,10 +119,11 @@ reproduces the FreeDO notice verbatim, includes the GNU LGPL 2.1 text, and recor
 additional project terms. The FreeDO additional terms take precedence where they
 conflict with the LGPL.
 
-Release builds remain **non-commercial, source-available** builds. Commercial use
-requires prior written approval from the FreeDO rights holders; the owner/legal
-sign-off is tracked in [`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.md).
-Keep the FreeDO/4DO/Opera attribution intact.
+Release builds are **donationware**: non-commercial, source-available, and funded by
+voluntary donations rather than sales. Commercial use requires prior written approval
+from the FreeDO rights holders; the owner/legal sign-off is tracked in
+[`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.md). Donations do not grant a
+license or commercial rights. Keep the FreeDO/4DO/Opera attribution intact.
 
 ## Assets and content
 

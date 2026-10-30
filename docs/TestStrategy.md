@@ -24,7 +24,7 @@ The emulator is a large, stateful port. Tests are the only way to keep a 600 KB 
      └────────────────────────────────────────────────────────────┘
 ```
 
-**Default `dotnet test` must run the unit + integration layers and finish in a few minutes.** Real-BIOS and real-disc tests are opt-in via environment variables. The current suite is **906 tests** (verified 2026-10-29).
+**Default `dotnet test` must run the unit + integration layers and finish in a few minutes.** Real-BIOS and real-disc tests are opt-in via environment variables. The current suite is **925 tests** (verified 2026-10-30).
 
 ---
 
@@ -80,17 +80,18 @@ production projects.
 The development machine has a legally obtained corpus documented in
 [`TestCorpus.md`](TestCorpus.md):
 
-- BIOS images: `D:\Dropbox\source\repos\CSharp_5DO\bios\` (use
-  `panafz1.bin` by default; Anvil/GoldStar variants for compatibility checks).
-- Disc images: set `FIVEDO_GAMES` to the corpus root (office machine
-  `D:\Samples\3DO`, home machine `E:\Panasonic 3DO`) — `Alone in the Dark (USA).chd`,
-  `Lemmings (USA).chd`, `Road Rash (USA).chd`, `Space Ace (USA).chd`, and
-  `Wolfenstein 3D (USA).chd`.
+- BIOS images: `bios/` (use `panafz1.bin` by default; Anvil/GoldStar variants for
+  compatibility checks).
+- Disc images: `J:\Panasonic 3DO` (589 CHDs) and
+  `G:\MAME\MAME Software List CHDs\3do` (5 CHDs); older handoffs used
+  `D:\Samples\3DO` and `E:\Panasonic 3DO`.
 
 The corpus is local-only and must never be committed, packaged, or uploaded. Use it
 for manual boot/gameplay/audio/input/save-state validation and for end-to-end
-performance measurements. CI continues to use synthetic fixtures and skips
-real-content tests when the environment variables are unset.
+performance measurements. The full-collection loadability sweep is
+`tools/compat-sweep.ps1`; see [`CompatibilitySweep.md`](CompatibilitySweep.md). CI
+continues to use synthetic fixtures and skips real-content tests when the environment
+variables are unset.
 
 ---
 

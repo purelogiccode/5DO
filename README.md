@@ -8,21 +8,26 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-29, 1.0.0-rc.1 release preparation, twenty-fifth pass):**
+**Current position (2026-10-30, compatibility-sweep preparation):**
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **919 tests pass.** The twenty-sixth pass added renderer selection and fixed
-output-resolution presets to the desktop video settings. The twenty-fifth pass added F6/F7 slot selection,
-F9 single-frame advance, and desktop input recording; the twenty-fourth pass added a
-first-party Opera file-system reader, so `fs list`/`fs extract` now work on ISO,
-BIN, CUE+BIN, and CHD
+prototype. **925 tests pass.** The v1.0 release is deliberately deferred: the next
+work is the full-collection loadability/in-game sweep (M13) and high-resolution CEL
+research (M14). The project is **donationware** (non-commercial, source-available;
+voluntary donations only). See [`docs/CompatibilitySweep.md`](docs/CompatibilitySweep.md),
+[`docs/GameCompatibilityList.md`](docs/GameCompatibilityList.md), and
+[`docs/HighResolutionCelResearch.md`](docs/HighResolutionCelResearch.md). The
+twenty-seventh pass embedded the Vulkan surface and fixed the CoreRunner stop/start
+race; the twenty-sixth pass added renderer selection and fixed output-resolution
+presets; the twenty-fifth pass added F6/F7 slot selection, F9 single-frame advance,
+and desktop input recording. The twenty-fourth pass added a first-party Opera
+file-system reader, so `fs list`/`fs extract` now work on ISO, BIN, CUE+BIN, and CHD
 images (multi-block directories and `burst`/`gap` layouts included). The twenty-third
-pass added native Win32 Vulkan
-swapchain presentation and `--vk-window-probe`, honored the renderer setting,
-added custom aspect editing, validated frontend NativeAOT audio with OpenAL's null
-device, and stopped expected environmental warnings from filing bug reports. The
-twenty-second pass added state-format version 2 with
+pass added native Win32 Vulkan swapchain presentation and `--vk-window-probe`, honored
+the renderer setting, added custom aspect editing, validated frontend NativeAOT audio
+with OpenAL's null device, and stopped expected environmental warnings from filing bug
+reports. The twenty-second pass added state-format version 2 with
 per-section Brotli compression (a 24.9 MB state becomes roughly 0.6-2.0 MB while
 version-1 states still load), plus stored/compressed sizes in `state inspect`. The
 twenty-first pass added the optional Vulkan xBR and
@@ -373,6 +378,6 @@ Use **Open BIOS** and **Open Disc**, then **Play**. The default keyboard binding
 
 ## Legal and attribution
 
-5DO is distributed under the FreeDO modified GNU LGPL; see [`LICENSE`](LICENSE). FreeDO/4DO are **not** standard OSI-licensed projects. The FreeDO source headers contain a modified LGPL with additional restrictions, including a prohibition on commercial use without the owners' approval. This repository does **not** include BIOS ROMs or game images. Read [`LICENSE`](LICENSE), [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md), and [`docs/Licensing.md`](docs/Licensing.md) before distributing builds.
+5DO is distributed under the FreeDO modified GNU LGPL; see [`LICENSE`](LICENSE). FreeDO/4DO are **not** standard OSI-licensed projects. The FreeDO source headers contain a modified LGPL with additional restrictions, including a prohibition on commercial use without the owners' approval. 5DO is **donationware**: non-commercial, source-available, and funded by voluntary donations rather than sales; donations do not grant commercial rights. This repository does **not** include BIOS ROMs or game images. Read [`LICENSE`](LICENSE), [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md), and [`docs/Licensing.md`](docs/Licensing.md) before distributing builds.
 
 "3DO" and "Panasonic" are trademarks of their respective owners. This project is not affiliated with or endorsed by them.

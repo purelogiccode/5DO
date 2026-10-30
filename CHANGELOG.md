@@ -7,6 +7,16 @@ still change.
 
 ### Added
 
+- Full-collection compatibility tooling: `tools/compat-sweep.ps1` boots every local
+  disc in a fresh CLI process, records JSON/PNG/timeout evidence, and writes
+  `summary.csv`/`summary.md`; `tools/generate-compat-list.py` parses the saved 4DO
+  compatibility wiki into a 241-title reference and matches it against the local
+  collections; `tools/generate-compat-results.py` turns a sweep CSV into
+  `docs/GameCompatibilityResults.md`.
+- `docs/GameCompatibilityList.md`, `docs/CompatibilitySweep.md`, and
+  `docs/HighResolutionCelResearch.md` document the compatibility status scale, the
+  loadability/in-game sweep, the Linux VM validation procedure, and the true
+  high-resolution CEL research options.
 - Embedded Win32 Vulkan video surface for the desktop shell. `VulkanVideoSurface`
   hosts a click-through child HWND inside the Avalonia window and presents through
   the existing FIFO swapchain, eliminating the per-frame GPU-to-CPU readback and
@@ -184,6 +194,10 @@ still change.
 
 ### Changed
 
+- Recorded the distribution model as **donationware**: non-commercial,
+  source-available, voluntary donations only. The v1.0 release is deferred until the
+  full-collection compatibility sweep (M13) and high-resolution CEL research (M14)
+  produce a baseline.
 - Removed the `VideoGameFileSystemParser` dependency. The `5do fs` command now uses
   the first-party `FiveDo.Storage.OperaFileSystem` reader for every container, so
   ISO, BIN, CUE+BIN, and CHD share one parser and one output contract. `fs list`

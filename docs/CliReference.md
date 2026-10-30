@@ -628,3 +628,27 @@ dotnet run --project src/FiveDo.Cli -- disasm artifacts/ram.bin `
 - A save state records the BIOS hash and disc hash, but the current loader only warns
   on a BIOS/emulator-version mismatch; it does not reject a different disc. See
   [`SaveStates.md`](SaveStates.md).
+
+---
+
+## 16. Full-collection sweep
+
+`tools/compat-sweep.ps1` wraps `run` for the local collection. It starts a fresh CLI
+process per disc, uses a fresh NVRAM image, records `result.json`/`stderr.txt`/`frame.png`,
+enforces a timeout, and writes `summary.csv`/`summary.md`.
+
+```powershell
+# Smoke test
+pwsh -File tools/compat-sweep.ps1 -Limit 2 -Frames 3000 -OutDir artifacts/compat-smoke
+
+# Full collection, resume-safe
+pwsh -File tools/compat-sweep.ps1 -Frames 3000 -Resume -OutDir artifacts/compat
+
+# High-resolution pass
+pwsh -File tools/compat-sweep.ps1 -Frames 3000 -HighRes -OutDir artifacts/compat-highres
+```
+
+The sweep uses the same `run --json` fields documented in §3, plus image metrics from
+the final CPU-assembled PNG. See [`CompatibilitySweep.md`](CompatibilitySweep.md) for
+status definitions and triage, and
+[`GameCompatibilityList.md`](GameCompatibilityList.md) for the per-title matrix.

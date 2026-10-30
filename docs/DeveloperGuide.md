@@ -35,7 +35,7 @@ src/
 tests/FiveDo.Tests/          xUnit suite, one folder per subsystem
 benchmarks/FiveDo.Benchmarks custom frame benchmark and CI gate
 packaging/                   portable archive script and Linux desktop entry
-tools/                       release soak and HQx generation
+tools/                       release soak, collection compatibility sweep, 4DO reference/result generators, HQx generation
 docs/                        this documentation set
 ```
 

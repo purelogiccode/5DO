@@ -1,23 +1,26 @@
 # Local Test Corpus
 
 **Status:** local developer machine only; not part of the repository.
-**Last inventoried:** 2026-10-24
+**Last inventoried:** 2026-10-30
 
 This document records the legally obtained BIOS and disc images available on the
 development machine for manual compatibility, boot, audio, input, save-state, and
 performance testing. None of these files may be committed, packaged, or uploaded.
 
 - BIOS directory: `bios/` in this repository (ignored by `.gitignore`)
-- Disc directory: **machine-specific**, set `FIVEDO_GAMES` to the root:
-  - Office machine: `D:\Samples\3DO`
-  - Home machine: `E:\Panasonic 3DO`
+- Disc directories: **machine-specific**, set `FIVEDO_GAMES` to the main root:
+  - Main collection: `J:\Panasonic 3DO` (589 CHDs)
+  - MAME software-list collection: `G:\MAME\MAME Software List CHDs\3do` (5 CHDs)
+  - Older paths used in earlier handoffs: `D:\Samples\3DO` and
+    `E:\Panasonic 3DO`
 
-Both locations are outside version control. `bios/` is already ignored by
+All locations are outside version control. `bios/` is already ignored by
 `.gitignore`, and `*.chd`/`*.iso`/`*.bin`/`*.cue` are ignored as a second guard.
-The corpus root is never hard-coded in scripts; use `$env:FIVEDO_GAMES` so the same
-commands work on both machines. The older `D:\Samples\3DO` path used by earlier
-handoffs and the `E:\Panasonic 3DO` path used by others are both aliases for the
-same corpus root depending on the machine.
+The full-collection sweep uses both roots explicitly; see
+[`CompatibilitySweep.md`](CompatibilitySweep.md) and
+[`GameCompatibilityList.md`](GameCompatibilityList.md). The corpus root is never
+hard-coded in scripts; use `$env:FIVEDO_GAMES` and the `-Roots` parameter so the same
+commands work on other machines.
 
 **The corpus contents differ between machines.** Do not treat a title that is
 missing on one machine as unavailable in the project. Use
@@ -469,7 +472,7 @@ and reproduces the 91,000 state exactly:
 
 ```powershell
 dotnet run -c Release --project src/FiveDo.Cli -- run `
-  "E:\Panasonic 3DO\Road Rash (USA).chd" --bios bios\panafz1.bin `
+  "J:\Panasonic 3DO\Road Rash (USA).chd" --bios bios\panafz1.bin `
   --state-in artifacts\s2\rr-v35-83000.state --frames 8000 --autopilot road `
   --frame-out artifacts\s2\rr-v43-91000.png `
   --state-out artifacts\s2\rr-v43-91000.state --json
@@ -974,8 +977,8 @@ corpus root and is different on each machine; everything else is derived from it
 
 ```powershell
 $env:FIVEDO_BIOS  = (Resolve-Path "bios\panafz1.bin")
-$env:FIVEDO_GAMES = "D:\Samples\3DO"          # office machine
-# $env:FIVEDO_GAMES = "E:\Panasonic 3DO"      # home machine
+$env:FIVEDO_GAMES = "J:\Panasonic 3DO"        # main collection
+# $env:FIVEDO_MAME = "G:\MAME\MAME Software List CHDs\3do"
 $env:FIVEDO_DISC  = "$env:FIVEDO_GAMES\Road Rash (USA).chd"
 Get-ChildItem $env:FIVEDO_GAMES
 ```

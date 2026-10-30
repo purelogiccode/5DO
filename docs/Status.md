@@ -1,27 +1,34 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-29, 1.0.0-rc.1 release preparation after the twenty-fifth pass
-(the desktop shell now dispatches F6/F7 slot selection, F9 single-frame advance, and
-records player-1 input to a replayable `--input-script` file; the first-party Opera
-file-system reader backs `fs list`/`fs extract` for ISO/BIN/CUE/CHD, including
-multi-block directories and `burst`/`gap` layouts; the
-twenty-third pass added native Win32 Vulkan swapchain and `--vk-window-probe`,
-`PreferOpenGl` enforcement, custom aspect editing, frontend AOT audio validation, and
-bug-report hygiene; the
-twenty-second pass added save-state version 2 with per-section Brotli compression; the
-twenty-first pass added the optional offscreen Vulkan xBR/FSR/HQx filters and GPU-palette
-xBR in the OpenGL path; the twentieth pass added the optional offscreen Vulkan backend
-and `--vk-probe`; the nineteenth pass added save-state disc warnings, console hotkeys,
-ISO/BIN `disc tracks`, and the OpenAL Soft LGPL notice/source offer; the eighteenth pass
-added Serilog logging and bug reporting; the seventeenth pass added the OpenAL crackle
-fix, PCM tap, FSR 1.0, and the Road Rash race profile; see `git log` for the exact
-commits).
+**Snapshot:** 2026-10-30, compatibility-sweep preparation after the twenty-seventh
+pass. **925 tests pass.** The twenty-seventh pass embedded the Vulkan surface and fixed
+the CoreRunner stop/start race; the twenty-sixth pass added renderer selection and
+output-resolution presets; the twenty-fifth pass added F6/F7 slot selection, F9
+single-frame advance, and desktop input recording. The v1.0 release is deliberately
+deferred: the next work is the full-collection compatibility sweep (M13) and
+high-resolution CEL research (M14). The project is **donationware** (non-commercial,
+source-available, voluntary donations only). See
+[`CompatibilitySweep.md`](CompatibilitySweep.md),
+[`GameCompatibilityList.md`](GameCompatibilityList.md), and
+[`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 **Release definition:** documented compatibility, not full compatibility; see
 [`ReleaseChecklist.md`](ReleaseChecklist.md).
 **Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, optional Vulkan backend, CLI, and deterministic tests.
 **Reference:** `References/opera-libretro-master/libopera` is now the primary
 behavioral reference for new compatibility work; see
 [`ReferenceStrategy.md`](ReferenceStrategy.md).
+
+> **2026-10-30 priority change:** the v1.0 release is deliberately deferred. The next
+> active work is **M13, a full-collection loadability and in-game sweep** of
+> `J:\Panasonic 3DO` (589 CHDs) and `G:\MAME\MAME Software List CHDs\3do` (5 CHDs),
+> followed by **M14, research into true internal high-resolution CEL rendering**.
+> Gameplay-depth work (full races, inventory interaction, long playthroughs) is not
+> part of this phase. The project is **donationware**: non-commercial,
+> source-available, and funded by voluntary donations rather than sales. The Linux
+> validation target is the local Hyper-V VM `LinuxMint`
+> (`D:\Hyper-V\VMs\LinuxMint`). See [`CompatibilitySweep.md`](CompatibilitySweep.md),
+> [`GameCompatibilityList.md`](GameCompatibilityList.md), and
+> [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 
 This is the short, current answer to "where are we?" The documentation index is
 [`README.md`](README.md). The detailed task list is in
@@ -56,7 +63,8 @@ This is the short, current answer to "where are we?" The documentation index is
   used only the low five bits and made real games grayscale. An opt-in high-resolution
   mode (`--high-res`, `EmulatorTuning.HighResolution`) renders CELs and bitmap lines
   into four 1 MB VRAM planes and presents 640x480 by line-doubling the 640x240 source;
-  Lemmings' title screen now matches the 640x480 reference. The mode is off by default
+  Lemmings' title screen now matches the 640x480 reference. This is not true vertical
+  640x480 rendering; the internal high-resolution research is M14. The mode is off by default
   because 320x240 titles must not be upscaled, and the desktop shell exposes it as a
   Hi-Res checkbox that restarts the machine. An opt-in xBR-lv2 4x filter, HQx
   2x/3x/4x filters, and CRT bloom are available in Settings; xBR and HQx use a
@@ -160,7 +168,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 906 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 925 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
@@ -193,6 +201,11 @@ This is the short, current answer to "where are we?" The documentation index is
 ---
 
 ## 2. Real-game status (local corpus, `panafz1.bin`)
+
+The table below is the curated five-title showcase set. The full local collection
+(594 images across `J:\Panasonic 3DO` and `G:\MAME\MAME Software List CHDs\3do`) is
+being swept in M13; the working matrix is
+[`GameCompatibilityList.md`](GameCompatibilityList.md).
 
 The 2026-10-24 comparison used the same BIOS and an ISO extracted from the same CHD
 on both sides. Opera is the bundled Windows `OperaCore` build in
@@ -358,101 +371,106 @@ Ship the platforms and titles that are validated, publish the per-title matrix a
 known issues, and move the rest to the post-1.0 backlog. Most emulators release this
 way; full compatibility is not a v1 requirement.
 
+**As of 2026-10-30 the release is deferred.** The project is not cutting a candidate
+until M13 gives every local disc a loadability/in-game status and M14 records a
+high-resolution CEL decision. The old 5-10 day release estimate is therefore historical;
+the current work is compatibility and video quality, not release mechanics.
+
 | Release workstream | State | Remaining |
 |---|---|---:|
 | M0-M8 core, CPU, boot, MADAM, DSP, CD, input, save states | Functionally complete | 0 |
 | M9 Avalonia frontend | Feature-complete for the tested workflow | 0 (optional polish is post-1.0) |
-| M9R OpenGL presenter | Windows WGL + ANGLE validated; CPU fallback, filters, parity, 4K probe | 0 on Windows; 1-2 dd if Linux/macOS are claimed |
+| M9R OpenGL presenter | Windows WGL + ANGLE validated; CPU fallback, filters, parity, 4K probe | 0 on Windows; Linux VM validation in M13.7 |
 | M9P performance/pacing | Tier A measured, zero-allocation steady state, CI gate | 0 (Tier B/Pi and hot-path are post-1.0) |
 | M10 packaging | Six-RID CI, trimmed/AOT builds, portable archives | 0-1 dd for release packaging |
-| M11 compatibility | 12 titles boot/render; five have scripted gameplay evidence; matrix and known issues documented | 2-3 dd soak on the supported set |
+| M11 compatibility | 12 titles boot/render; five have scripted gameplay evidence; matrix and known issues documented | Full-collection sweep in M13 |
+| **M13 compatibility sweep** | **Tooling + 241-title reference list ready** | **10-15 dd: sweep, triage, visual check, Linux VM** |
+| **M14 high-res CEL research** | **Research plan written** | **10-20 dd: measure, prototype, decide** |
 | M11 release/legal | OpenAL notice/source offer/relinking record and license text ship in every archive; distribution model decided | Rights-holder/owner legal sign-off |
 
-**Estimate: 5-10 developer-days plus the legal review.** That is **1-3 weeks** to a
-v1.0 release candidate with Windows x64 as the validated target and portable archives.
-Adding validated Linux/macOS builds and installers makes it **2-4 weeks**. Against
-this release scope the project is roughly **85-90% done**; the earlier "three-quarters"
-figure measured the original full-compatibility plan (124/157 dd, ~43 dd remaining).
+**Historical estimate:** 5-10 developer-days plus legal review for the old release
+scope, i.e. 1-3 weeks to a v1.0 candidate. Against that scope the project was roughly
+**85-90% done**. That estimate no longer sets the schedule; M13/M14 are the active
+workstreams.
 
-**Release-candidate decisions (2026-10-26):** Windows x64 is the validated target;
-the candidate version is `1.0.0-rc.1`; installers, signing, and notarization are
-deferred; the compatibility set is the 12 documented titles, with five showcase
-titles carrying scripted gameplay evidence.
+**Release-candidate decisions (2026-10-26, deferred):** Windows x64 is the validated
+target; the candidate version is `1.0.0-rc.1`; installers, signing, and notarization
+are deferred; the compatibility set is the 12 documented titles, with five showcase
+titles carrying scripted gameplay evidence. The distribution model is now recorded as
+**donationware** (non-commercial, source-available).
 
 The project license is recorded in [`../LICENSE`](../LICENSE) as the FreeDO modified
-GNU LGPL, so release builds are non-commercial and source-available. The remaining hard
-blocker is rights-holder clarification and commercial-use sign-off: FreeDO/4DO carry a
-modified LGPL with restrictions, including a prohibition on commercial use without
-owner approval. The OpenAL Soft LGPL-2.0-or-later binary-distribution obligation is
-handled on the engineering side: the notice, complete license text, three-year source
-offer, and relinking instructions ship in [`OpenALSoft.md`](OpenALSoft.md) and
+GNU LGPL, so release builds are **donationware**: non-commercial, source-available, and
+funded by voluntary donations rather than sales. The remaining hard blocker is
+rights-holder clarification and commercial-use sign-off: FreeDO/4DO carry a modified
+LGPL with restrictions, including a prohibition on commercial use without owner
+approval. The OpenAL Soft LGPL-2.0-or-later binary-distribution obligation is handled
+on the engineering side: the notice, complete license text, three-year source offer,
+and relinking instructions ship in [`OpenALSoft.md`](OpenALSoft.md) and
 [`licenses/OpenAL-Soft-COPYING.txt`](licenses/OpenAL-Soft-COPYING.txt). See
 [`Licensing.md`](Licensing.md), [`ReleaseLegalReview.md`](ReleaseLegalReview.md), and
 [`../THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md).
 
-Full-compatibility work is **post-1.0**, not a release gate: finishing Road Rash's
-5.5-mile race, scripting Alone's inventory, adding gameplay scripts for the other
-seven titles, and further CD/CLIO/MADAM/ARM timing triage.
+Gameplay-depth and full-compatibility work is **post-release**, not a current gate:
+finishing Road Rash's 5.5-mile race, scripting Alone's inventory, adding gameplay
+scripts for the other seven titles, and further CD/CLIO/MADAM/ARM timing triage. The
+current gates are the M13 collection sweep and the M14 high-resolution decision.
 
 ---
 
-## 5. Release path
+## 5. Current path (compatibility and video quality)
 
-### P0 - v1.0 release blockers
+### P0 - active work
 
-1. **Decide the release scope.** Pick the supported platforms and titles and record
-   them in [`ReleaseChecklist.md`](ReleaseChecklist.md). Recommended: Windows x64 as
-   the validated target; publish Linux/macOS x64 only after the launch/render smoke
-   test passes; defer arm64 and Raspberry Pi to 1.1.
-2. **Complete the legal/attribution review.** Decide the distribution model, keep the
-   FreeDO/4DO/Opera attribution current, and confirm no BIOS/disc content is packaged.
-3. **Run the stability soak.** Ten-minute runs on the five showcase titles
-   (Wolfenstein, Lemmings, Road Rash, Alone, Space Ace) and the seven boot-validated
-   titles; no new crashes or regressions. Document known hang points rather than
-   fixing every game.
-4. **Publish the honest compatibility matrix.** Use Playable / Boots-menus / Known
-   issues columns in [`Compatibility.md`](Compatibility.md), refresh
-   [`KnownIssues.md`](KnownIssues.md), and update the user guide.
-5. **Cut the release.** Bump the version, update `CHANGELOG.md`, write release notes,
-   produce checksums and portable archives for the supported RIDs, and run the clean
-   build/test/format checks. Work through [`ReleaseChecklist.md`](ReleaseChecklist.md).
+1. **Run the M13 loadability sweep.** Use `tools/compat-sweep.ps1` with 3,000 frames
+   over both collection roots. Record `Not Loadable`, `Loadable/No video`, and
+   `Loadable/Rendered` for every disc.
+2. **Triage the failures.** Group by CLI error, timeout, black frame, palette/CLUT,
+   VDL modulo, input wait, and CD READ_ID-only wait. Keep the smallest reproduction
+   command and the matching trace for each class.
+3. **Run the in-game/visual check.** Inspect every rendered final frame, run
+   12,000-frame captures for titles that reach a title/menu, rerun black/static titles
+   at 12,000 frames, and record `Unplayable`/`Playable`/`Good` in
+   [`GameCompatibilityList.md`](GameCompatibilityList.md).
+4. **Run the high-resolution pass.** Repeat the sweep with `-HighRes`, compare
+   screenshots and speed, and feed the results into M14.
+5. **Validate Linux.** Build/test/smoke the CLI in the `LinuxMint` Hyper-V VM, run a
+   reduced sweep, and record the GL renderer/fallback result.
 
-### P1 - post-1.0 backlog (not release-blocking)
+### P1 - research and later work
 
-6. **Gameplay depth:** finish a full Road Rash race, script Alone's inventory and a
-   longer exploration sequence, and add input scripts for Gex, Need for Speed, Super
-   Street Fighter II Turbo, Total Eclipse, Killing Time, Theme Park, and Return Fire.
-7. **Platforms:** Raspberry Pi 4/5 GLES 3.1, arm64 builds on real hardware,
-   100/150/200% DPI validation, and Linux/macOS OpenGL launch validation if not
-   claimed for v1.
-8. **Performance:** Tier B 1080p60 numbers, 3D CEL frame timing, hot-path
-   optimization, and the same-machine relative benchmark gate on stable CI hardware.
-9. **Packaging polish:** MSIX/dmg/AppImage installers, signing/notarization,
-   Windows/macOS file associations, and frontend AOT audio validation.
-10. **Optional M12 guest ARM JIT:** profile first; not needed for v1.
+6. **M14 high-resolution CEL research:** measure the current mode, prototype true
+   640x480 and 2x supersampling, and write the GPU CEL feasibility note.
+7. **Compatibility fixes:** only after the failure classes are triaged and compared
+   with the 4DO/Opera reference.
+8. **Gameplay depth (deferred):** finish a full Road Rash race, script Alone's
+   inventory, and add input scripts for the other seven titles.
+9. **Platforms/performance/packaging:** Pi/GLES 3.1, arm64 hardware, DPI, Tier B
+   timing, installers/signing, file associations, and the optional M12 JIT.
+10. **Release blockers remain:** legal/attribution sign-off and green CI. Do not cut a
+    release until M13/M14 are complete and the distribution model is signed off.
 
 ---
 
 ## 6. Next session
 
-The next session is **release prep**, not a compatibility pass. The fifteenth code pass
-completed the Windows ANGLE/GLES backend validation and CPU/GPU parity work; start with
-[`ReleaseChecklist.md`](ReleaseChecklist.md):
+The next session is the **compatibility sweep**, not release prep:
 
-1. Decide and record the v1 platforms, supported titles, version, and distribution
-   model.
-2. Run the 10-minute soak on the supported set and record crashes, hangs, and hashes.
-3. Refresh [`Compatibility.md`](Compatibility.md) and
-   [`KnownIssues.md`](KnownIssues.md) with honest per-title statuses.
-4. Cut the release: version, changelog, release notes, archives, checksums. Run the
-   legal/attribution review in parallel because it is the hard blocker.
+1. Read [`CompatibilitySweep.md`](CompatibilitySweep.md) and
+   [`GameCompatibilityList.md`](GameCompatibilityList.md).
+2. Run `pwsh -File tools/compat-sweep.ps1 -Limit 2 -Frames 3000` as a smoke test.
+3. Run the full sweep with `-Resume`, then triage the `Not Loadable` rows.
+4. Inspect the rendered frames and start filling the 5DO status columns.
+5. Run the high-resolution pass with `-HighRes` and record the comparison.
+6. Start the M14 measurement work from
+   [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 
 Do not re-enable the null audio-sink short-circuit, do not change the XBUS DMA byte
 order (the raw `IRam` order is correct), do not port `opera_cdrom.c` wholesale, and do
 not redo the trimmed CLI/frontend or source-generated JSON work; see
 [`Trimming.md`](Trimming.md). Do not treat full-race completion, scripts for the other
-seven titles, Pi/arm64 validation, or installers as v1 release gates; they are
-post-1.0 backlog.
+seven titles, Pi/arm64 validation, or installers as current gates; they are later
+backlog.
 
 ---
 
@@ -462,9 +480,16 @@ post-1.0 backlog.
 dotnet build -c Release
 dotnet test tests/FiveDo.Tests -c Release
 
-# The corpus root is machine-specific; set it once per shell.
-$env:FIVEDO_GAMES = "D:\Samples\3DO"   # office; home: E:\Panasonic 3DO
+# The corpus roots are machine-specific; set them once per shell.
+$env:FIVEDO_GAMES = "J:\Panasonic 3DO"
+$env:FIVEDO_MAME  = "G:\MAME\MAME Software List CHDs\3do"
 $env:FIVEDO_DISC  = "$env:FIVEDO_GAMES\Road Rash (USA).chd"
+
+# Full-collection loadability sweep (3000 frames, resume-safe)
+pwsh -File tools/compat-sweep.ps1 -Frames 3000 -Resume -OutDir artifacts/compat
+
+# Regenerate the 4DO reference table after changing the collection
+python tools/generate-compat-list.py
 
 # Build/test/format
 dotnet build -c Release

@@ -12,7 +12,7 @@ NativeAOT details, see [`Trimming.md`](Trimming.md). For packaging contents, see
 | Requirement | Version / notes |
 |---|---|
 | .NET SDK | **10.0.100** or newer. `global.json` rolls forward to the latest 10.0 feature band. |
-| OS | Windows 10+ (validated), current Linux desktop, macOS 12+ (publish outputs only for the latter two in this release candidate). |
+| OS | Windows 10+ (validated), current Linux desktop, macOS 12+ (publish outputs only for the latter two in the current release scope). |
 | GPU | OpenGL 3.3 desktop or OpenGL ES 3.0/3.1 for the GPU presenter. The CPU fallback runs without one. |
 | Audio | No system OpenAL install is required. OpenAL Soft 1.23.1 is bundled by the build. |
 | Optional | A legally obtained 3DO BIOS (1 MB) and disc images for real-content validation. Tests do not need them. |
@@ -82,7 +82,7 @@ dotnet build 5DO.sln -c Release
 dotnet test 5DO.sln -c Release
 ```
 
-The current suite is **906 tests** (verified 2026-10-29) and completes in a few seconds
+The current suite is **925 tests** (verified 2026-10-30) and completes in a few seconds
 on the development machine. The build treats warnings as errors and runs the .NET
 analyzers plus Meziantou and Roslynator analyzers.
 
@@ -383,6 +383,29 @@ The workflow is [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
 
 CI does not download BIOS ROMs or game images. GPU tests and real-audio tests are
 opt-in and not part of the default matrix.
+
+### 7.1 Local Linux VM validation
+
+The local Linux validation target is the Hyper-V VM `LinuxMint`
+(`D:\Hyper-V\VMs\LinuxMint`, generation 2, 8 GB assigned). It is a manual validation
+target, not a CI replacement.
+
+Suggested flow:
+
+1. Start the VM (`Start-VM -Name LinuxMint`) and confirm the guest has the .NET 10 SDK,
+   or publish `linux-x64` on the host and copy the publish folder into the guest.
+2. Copy the repository or the published CLI/frontend into the guest.
+3. Run `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`.
+4. Run `dotnet run -c Release --project src/FiveDo.Cli -- selftest --json`.
+5. Run the frontend smoke test (`--smoke-test`) and, when the VM has a usable GL
+   display, the OpenGL probe (`--gl-probe`).
+6. Run a reduced compatibility sweep with `-NoFrameCapture`; the PNG analysis uses
+   `System.Drawing.Common`, which is Windows-oriented. Record the CLI JSON results.
+7. Record the renderer/vendor/version and any fallback behavior in
+   [`Compatibility.md`](Compatibility.md) and [`KnownIssues.md`](KnownIssues.md).
+
+The Linux pass should use the same BIOS/disc set as the Windows pass. Do not commit
+BIOS or disc images.
 
 ---
 

@@ -1,5 +1,53 @@
 # Next Session Handoff
 
+## 0. Current handoff (2026-10-30)
+
+**Goal:** run the full-collection compatibility sweep and start high-resolution CEL
+research. Do not work on gameplay depth and do not cut a release yet.
+
+**Read first:**
+
+- [`GameCompatibilityList.md`](GameCompatibilityList.md) — 241 4DO reference titles,
+  local matches, empty 5DO status columns.
+- [`CompatibilitySweep.md`](CompatibilitySweep.md) — sweep procedure, status
+  definitions, triage, and Linux VM validation.
+- [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md) — current
+  `--high-res` limitations and the M14 research options.
+- [`Status.md`](Status.md) — current position and the deferred release path.
+
+**Inputs:** `J:\Panasonic 3DO` (589 CHDs), `G:\MAME\MAME Software List CHDs\3do`
+(5 CHDs), `bios/panafz1.bin`, and the saved 4DO wiki MHTML in `References/4DO-master/`.
+
+**Ordered tasks:**
+
+1. Build the Release CLI:
+   `dotnet build src/FiveDo.Cli/FiveDo.Cli.csproj -c Release`.
+2. Smoke-test the sweep with two discs:
+   `pwsh -File tools/compat-sweep.ps1 -Limit 2 -Frames 3000 -TimeoutSeconds 120 -OutDir artifacts/compat-smoke`.
+3. Run the full baseline with `-Resume -Frames 3000 -OutDir artifacts/compat`.
+4. Inspect `artifacts/compat/summary.csv` and triage every `Not Loadable` row.
+5. Inspect `frame.png` for every rendered title; run 12,000-frame captures for titles
+   that reach a title/menu and rerun black/static titles at 12,000 frames.
+6. Run the high-resolution pass with `-HighRes -OutDir artifacts/compat-highres`.
+7. Fill the 5DO status/notes in [`GameCompatibilityList.md`](GameCompatibilityList.md).
+8. Validate the CLI in the `LinuxMint` Hyper-V VM
+   (`D:\Hyper-V\VMs\LinuxMint`); see [`CompatibilitySweep.md`](CompatibilitySweep.md) §7.
+9. Start M14 measurements from [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+
+**Status scale:** No data / Not Loadable / Unplayable / Playable / Good, matching the
+4DO wiki. `Loadable/Rendered` and `Loadable/No video` are intermediate automated labels,
+not final statuses.
+
+**Do not redo:** the 4DO MHTML parser, the sweep harness, the OpenAL/Serilog/trimming
+work, or the renderer/filter work. Do not treat full-race completion, inventory
+scripting, Pi/arm64 validation, or installers as current gates.
+
+**Project position:** donationware, non-commercial, source-available. The legal
+sign-off and the GitHub Actions billing issue remain release blockers, but release is
+deferred until M13/M14 complete.
+
+---
+
 **Date:** 2026-10-29 (twenty-fifth pass: F6/F7 slot selection, F9 single-frame
 advance, and desktop input recording to a replayable `--input-script` file; the
 twenty-fourth pass added first-party Opera file-system parsing for
@@ -1203,7 +1251,7 @@ save/load proof.
 ```powershell
 $o = "artifacts\s2"
 $b = Join-Path $PWD "bios\panafz1.bin"
-$g = $env:FIVEDO_GAMES   # office: D:\Samples\3DO; home: E:\Panasonic 3DO
+$g = $env:FIVEDO_GAMES   # main collection: J:\Panasonic 3DO
 
 # Build/test/format
 dotnet build -c Release

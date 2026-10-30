@@ -30,7 +30,8 @@ Source map:
 The 3DO renders at **320x240** (NTSC, 4:3) in the default mode. Wider VDLP bitmap
 modes are parsed as **384, 512, 640, or 1024** pixels per line. The opt-in
 **high-resolution** mode (`--high-res`, Settings > Emulation, or
-`EmulatorTuning.HighResolution`) renders CELs and bitmap lines at **640x480**.
+`EmulatorTuning.HighResolution`) presents a line-doubled **640x480** frame. The CEL
+X coordinate is 640-wide, but the source remains 240 lines; see the limitation below.
 
 `VdlFrame` contains:
 
@@ -61,6 +62,12 @@ the even/odd columns of two adjacent high-resolution lines; planes 0/1 form the 
 line and planes 2/3 form the odd line. CEL rasterization, SPORT copies, and VDLP line
 copying all honor the same plane layout. Lemmings' 640x480 title is the primary
 validation case.
+
+**This is line doubling, not true internal 640x480 rendering.** The 240-line source is
+written to both interlace fields, so horizontal CEL sampling improves but vertical
+detail remains 240 lines. True 640x480, 2x supersampling, and GPU CEL compositing are
+research topics in [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md); the
+compatibility-safe default remains 320x240 plus output filtering.
 
 ---
 

@@ -278,7 +278,8 @@ Do **not** attach BIOS ROMs, game images, or extracted copyrighted assets.
 
 - 5DO is distributed under the FreeDO modified GNU LGPL; see [`../LICENSE`](../LICENSE).
   FreeDO/4DO are not standard OSI-licensed, and the modified LGPL includes a
-  non-commercial restriction. Read [`Licensing.md`](Licensing.md) and
+  non-commercial restriction. 5DO is **donationware** (non-commercial,
+  source-available; voluntary donations only). Read [`Licensing.md`](Licensing.md) and
   [`../THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md) before distributing builds.
 - The bundled OpenAL Soft 1.23.1 runtime adds an LGPL-2.0-or-later binary distribution
   obligation; the release legal review is still pending.

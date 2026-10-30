@@ -1,11 +1,32 @@
 # Known Issues
 
-**Snapshot:** 2026-10-28. This list covers the supported local corpus and the current
+**Snapshot:** 2026-10-30. This list covers the supported local corpus and the current
 prototype state. It is not a compatibility guarantee.
 
 **Release scope:** v1.0 ships with these known issues documented; full-race completion,
 extra title scripts, Pi/arm64 validation, installers, and the optional JIT are
-post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
+post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md). **As of 2026-10-30 the
+release is deferred** until the full-collection compatibility sweep (M13) and the
+high-resolution CEL decision (M14) are complete.
+
+## Compatibility sweep status
+
+- The 12 titles in the matrix below are validated. The full local collection
+  (`J:\Panasonic 3DO`, 589 CHDs, and `G:\MAME\MAME Software List CHDs\3do`, 5 CHDs) has
+  not yet been swept end-to-end. The procedure is in
+  [`CompatibilitySweep.md`](CompatibilitySweep.md); the reference table is
+  [`GameCompatibilityList.md`](GameCompatibilityList.md).
+- The 4DO wiki list is a reference, not a guarantee. Filename matching does not prove
+  the local image is the same revision, and a 4DO score of 100 does not mean 5DO has
+  the same behavior.
+- `--high-res` is FreeDO-style line doubling, not true internal 640x480 rendering. The
+  vertical detail remains 240 lines. See
+  [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+- Linux/macOS OpenGL launch validation is pending. The local Linux target is the
+  `LinuxMint` Hyper-V VM (`D:\Hyper-V\VMs\LinuxMint`); results are not yet recorded.
+- The project is **donationware** (non-commercial, source-available). Legal/attribution
+  sign-off remains a release blocker; donations do not change the upstream
+  non-commercial restriction.
 
 ## Real-game status
 
@@ -20,9 +41,10 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
 ## Renderer
 
 - HQx 2x/3x/4x are implemented as opt-in CPU expansions followed by sharp-bilinear
-  finishing; the GPU xBR/HQx variants are not shipped. HQx 4x costs about 7.5 ms/frame
-  on synthetic checkerboard content and about 15 ms/frame on random noise at 320x240,
-  so it is not recommended with `--high-res` on slow CPUs.
+  finishing; GPU xBR and FSR are available in the optional Vulkan backend, while HQx
+  remains CPU-bound. HQx 4x costs about 7.5 ms/frame on synthetic checkerboard content
+  and about 15 ms/frame on random noise at 320x240, so it is not recommended with
+  `--high-res` on slow CPUs.
 - CRT bloom is implemented as a 3x3 native-resolution glow in the CRT filter.
 - FSR 1.0 is opt-in (EASU + RCAS, two GPU passes). It has a sharpness setting and
   MIT attribution. The 4K WGL probe measures present 0.132 ms mean / 1.191 ms p99 and
@@ -131,8 +153,10 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
   race. Alone's intro and Wolfenstein's fresh-game load share the old signature and
   should be re-checked with this fix. The current 3,000-frame audio-clock keys are in
   [`TestCorpus.md`](TestCorpus.md) 1.1.
-- High-resolution mode is opt-in and validated mainly with Lemmings. A true 640x240
-  non-interlaced mode has not been identified.
+- High-resolution mode is opt-in and validated mainly with Lemmings. It line-doubles
+  240 lines to 480; it is not true vertical high-resolution rendering. A true 640x240
+  non-interlaced mode has not been identified. Research options are in
+  [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 - PAL video, CD-DA/Red Book audio, multi-disc swapping, netplay, rewind, and additional
   peripherals are out of scope for v1.
 

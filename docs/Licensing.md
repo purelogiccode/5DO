@@ -2,6 +2,11 @@
 
 > This is an engineering note, not legal advice. Review the actual licenses and, if you intend to distribute the emulator, consult a lawyer.
 
+**Distribution model:** 5DO is **donationware** — non-commercial, source-available, and
+funded by voluntary donations rather than sales. Donations are not a license purchase
+and do not grant commercial rights. The upstream FreeDO/4DO terms still control what
+may be distributed.
+
 ## 1. The FreeDO/4DO source is not under a standard OSI license
 
 The FreeDOCore source headers (`References/4DO-master/FreeDOCore/FreeDO/*.cpp`, `*.h`) contain the following notice:
@@ -28,11 +33,12 @@ contributors in addition to FreeDO and 4DO.
 The project license is the FreeDO modified GNU LGPL recorded in the root
 [`LICENSE`](../LICENSE). Until the rights holders grant different terms:
 
-- Treat the project as **non-commercial**.
+- Treat the project as **donationware**: non-commercial, source-available, and funded by voluntary donations rather than sales.
 - Keep **full attribution** to FreeDO and 4DO in the source, README, About box, and release notes.
 - Preserve the original copyright/license headers in ported files (adapted to C# comments).
 - Publish the corresponding source for any distributed binaries if the LGPL/GPL terms require it.
-- Do **not** sell builds, bundle them with commercial products, or use them in a commercial service without written permission.
+- Do **not** sell builds, licenses, support, or access; do not bundle builds with commercial products or use them in a commercial service without written permission.
+- Do **not** describe a donation as purchasing a license or commercial rights.
 - Do **not** include BIOS ROMs, game discs, or other copyrighted 3DO material in the repository or release artifacts.
 
 ## 3. Recommended actions before the first public release

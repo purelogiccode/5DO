@@ -1,6 +1,7 @@
 # v1.0 Release Checklist
 
 **Adopted:** 2026-10-26
+**Release timing:** **deferred 2026-10-30** until M13/M14 complete
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
 full-compatibility one. Ship the platforms and titles that are validated, publish an
 honest per-title matrix and known issues, and move everything else to the post-1.0
@@ -27,7 +28,9 @@ been validated.**
 | Disc formats | ISO, BIN, CUE+BIN, CHD | Already implemented and tested |
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
 | Packages | Portable zip/tar.gz | Installers/signing/notarization are post-1.0 |
+| Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
 | Version | `v1.0.0-rc.1` for the candidate; `v1.0.0` after legal sign-off | Bump `FiveDoVersion.Version` and `Directory.Build.props` |
+| Release timing | **Deferred** | Do not cut a candidate until M13/M14 complete |
 
 ---
 
@@ -42,8 +45,8 @@ been validated.**
 - [x] Confirm the release version: **1.0.0-rc.1** for this candidate; 1.0.0 after
       legal/distribution sign-off.
 - [x] Confirm the distribution model and license in `docs/Licensing.md`:
-      FreeDO modified GNU LGPL, non-commercial/source-available, recorded in the root
-      `LICENSE`.
+      FreeDO modified GNU LGPL, **donationware** (non-commercial/source-available;
+      voluntary donations, no sales), recorded in the root `LICENSE`.
 - [x] Confirm installers/signing/notarization are **out of scope** for 1.0.0-rc.1.
 - [x] Record the decisions in this file and in `docs/Status.md`.
 
@@ -98,7 +101,7 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - [x] `dotnet build 5DO.sln -c Release` passes with 0 warnings and 0 errors
       (1.0.0-rc.1).
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release` passes:
-      906/906 with 1.0.0-rc.1 (after the 2026-10-29 hotkey/input-recording pass).
+      925/925 with 1.0.0-rc.1 (after the 2026-10-30 Vulkan-surface/core-runner pass).
 - [x] `dotnet format 5DO.sln --verify-no-changes` passes.
 - [ ] CI is green on the supported runners. (Local gates pass. GitHub Actions jobs
       currently fail before starting with a GitHub billing/spending-limit annotation;
@@ -134,6 +137,32 @@ two development machines, so a `Missing on this machine` row is expected and is 
 failure. The script uses archived 12k states for absent discs when available and
 writes `summary.md`/`summary.json` for the release evidence.
 
+### 4.1 Full-collection compatibility sweep (M13)
+
+The release candidate must not be cut until the full local collection has a recorded
+status. See [`CompatibilitySweep.md`](CompatibilitySweep.md) and
+[`GameCompatibilityList.md`](GameCompatibilityList.md).
+
+- [ ] Run the 3,000-frame loadability sweep over `J:\Panasonic 3DO` (589 CHDs) and
+      `G:\MAME\MAME Software List CHDs\3do` (5 CHDs).
+- [ ] Every image has a 5DO status (No data / Not Loadable / Unplayable / Playable /
+      Good) and an evidence path.
+- [ ] Every `Not Loadable` result has a triage note and reproduction command.
+- [ ] Rendered titles have a screenshot and a short input smoke test.
+- [ ] The high-resolution pass has a per-title result.
+- [ ] Linux VM build/test/smoke results are recorded.
+
+### 4.2 High-resolution CEL decision (M14)
+
+- [ ] Current `--high-res` mode is measured per tested title.
+- [ ] True 640x480 prototype is validated or rejected with evidence.
+- [ ] 2x supersampling prototype has frame-time/allocations data.
+- [ ] GPU CEL feasibility note has a parity/performance estimate.
+- [ ] The default remains compatibility-safe 320x240 + output filtering unless a title
+      is explicitly validated.
+
+### 4.3 Existing soak evidence (12-title set)
+
 - [x] Wolfenstein 3D soak: 36,000 frames, exit 0; `0x0814F039`.
 - [x] Lemmings soak: 36,000 frames, exit 0; `0x9939D345`.
 - [x] Road Rash soak: 36,000 frames, exit 0; `0xBDC2DBEA`.
@@ -168,7 +197,7 @@ writes `summary.md`/`summary.json` for the release evidence.
 Suggested soak command:
 
 ```powershell
-$env:FIVEDO_GAMES = "D:\Samples\3DO"
+$env:FIVEDO_GAMES = "J:\Panasonic 3DO"
 $env:FIVEDO_DISC  = "$env:FIVEDO_GAMES\Wolfenstein 3D (USA).chd"
 
 dotnet run -c Release --project src/FiveDo.Cli -- run `
