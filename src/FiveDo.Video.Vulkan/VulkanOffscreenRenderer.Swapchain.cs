@@ -47,6 +47,21 @@ public sealed unsafe partial class VulkanOffscreenRenderer
     /// <summary>Gets the swapchain height in pixels.</summary>
     public int SwapchainHeight => _swapchainHeight;
 
+    /// <summary>Recreates the swapchain with the requested vsync mode.</summary>
+    /// <param name="vsync">Whether FIFO vsync should be used.</param>
+    public void SetVsync(bool vsync)
+    {
+        if (_swapchainVsync == vsync || !_swapchainValid || _vk is null)
+        {
+            return;
+        }
+
+        _swapchainVsync = vsync;
+        _vk.DeviceWaitIdle(_device);
+        DestroySwapchainResources();
+        CreateSwapchainResources();
+    }
+
     /// <summary>
     /// Initializes the renderer and a Win32 swapchain for the supplied window handle.
     /// </summary>
@@ -466,6 +481,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer
         PipelineStageFlags waitStage = PipelineStageFlags.TransferBit;
         Semaphore imageAvailable = _imageAvailableSemaphore;
         Semaphore renderFinished = _renderFinishedSemaphore;
+        Fence fence = _frameFence;
         SubmitInfo submit = new()
         {
             SType = StructureType.SubmitInfo,
@@ -477,8 +493,8 @@ public sealed unsafe partial class VulkanOffscreenRenderer
             SignalSemaphoreCount = 1,
             PSignalSemaphores = &renderFinished,
         };
-        Check(_vk.QueueSubmit(_queue, 1, &submit, default), "vkQueueSubmit");
-        Check(_vk.QueueWaitIdle(_queue), "vkQueueWaitIdle");
+        Check(_vk.QueueSubmit(_queue, 1, &submit, fence), "vkQueueSubmit");
+        _frameFencePending = true;
 
         SwapchainKHR swapchain = _swapchain;
         PresentInfoKHR present = new()
@@ -566,6 +582,13 @@ public sealed unsafe partial class VulkanOffscreenRenderer
         }
 
         _vk.DeviceWaitIdle(_device);
+        _frameFencePending = false;
+        if (_frameFence.Handle != 0)
+        {
+            Fence fence = _frameFence;
+            _vk.ResetFences(_device, 1, &fence);
+        }
+
         foreach (ImageView view in _swapchainImageViews)
         {
             if (view.Handle != 0)

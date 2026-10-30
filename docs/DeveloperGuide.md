@@ -21,7 +21,7 @@ src/
   FiveDo.Sport/              VRAM fill/copy engine
   FiveDo.Video/              VDLP, frame assembly, mailbox, CPU presenter, viewport
   FiveDo.Video.OpenGL/       OpenGL/GLES presenter, shaders, filters, swap interval
-  FiveDo.Video.Vulkan/       optional offscreen Vulkan presenter, SPIR-V shaders
+  FiveDo.Video.Vulkan/       optional Vulkan presenter, Win32 swapchain surface, SPIR-V shaders
   FiveDo.Xbus/               XBUS controller and device slots
   FiveDo.Cdrom/              MEI CD-ROM device
   FiveDo.Storage/            ISO/BIN/CUE/CHD, BIOS/NVRAM, game database, prefetch

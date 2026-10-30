@@ -219,7 +219,7 @@ The renderer must support two shader/API variants behind one contract:
 |---|---|---|---|
 | Desktop GL | OpenGL 3.3 core, GLSL 330 | Windows via WGL, Linux GLX/EGL, macOS 4.1 core | Primary desktop path; integer textures and `texelFetch`. Validated on Windows 11 / RTX 4070 (OpenGL 4.0) with `--gl-backend wgl`. |
 | GLES | OpenGL ES 3.0/3.1, GLSL ES 300 | Windows ANGLE, Raspberry Pi 4/5, other GLES devices | Same two-stage pipeline; `R16UI` + `usampler2D`. Validated on Windows 11 / RTX 4070 via ANGLE (OpenGL ES 3.0) with `--gl-backend angle`; Pi remains open. |
-| Vulkan (optional) | Vulkan 1.0, SPIR-V | Windows/Linux/macOS with a Vulkan loader | Offscreen two-stage pipeline with CPU readback and `--vk-probe`; a native Win32 swapchain probe (`--vk-window-probe`) presents through FIFO vsync. 4K sharp-bilinear measured 1.51 ms mean / 1.80 ms p99 present, 4K xBR 1.55/1.92 ms, 4K FSR 1.87/2.15 ms, and 4K HQx 2x 7.66/10.36 ms (CPU-bound), all with 0 managed bytes/frame on the RTX 4070. The 4K window probe measures 1.34/1.43 ms GPU and 5.99/6.24 ms present including the 165 Hz FIFO wait. Not an Avalonia-embedded surface. |
+| Vulkan (optional) | Vulkan 1.0, SPIR-V | Windows/Linux/macOS with a Vulkan loader | Offscreen two-stage pipeline with optional CPU readback and `--vk-probe`; a native Win32 swapchain probe (`--vk-window-probe`) presents through FIFO vsync. 4K sharp-bilinear measured 0.24 ms mean / 1.06 ms p99 present and 0.075/0.091 ms GPU, 4K xBR 0.32/0.80 ms present and 0.13/0.14 ms GPU, 4K FSR 0.60/1.30 ms present and 0.40/0.42 ms GPU, and 4K HQx 2x 6.82/10.93 ms (CPU-bound), all with 0 managed bytes/frame on the RTX 4070. The 4K window probe measures 0.077/0.088 ms GPU and 5.96/6.53 ms present including the 165 Hz FIFO wait. The desktop `--gl-backend vulkan` path hosts the swapchain in a native Win32 child window inside the Avalonia window, so it does not copy the frame back; non-Windows platforms fall back to offscreen/readback. |
 
 Implementation requirements:
 
@@ -391,31 +391,36 @@ renderer/mailbox path remains allocation-free after warm-up.
 
 **Optional Vulkan (2026-10-29).** The headless `--vk-probe` runs the
 `FiveDo.Video.Vulkan` offscreen backend on the same RTX 4070 (Vulkan 1.4). It waits
-for each frame; the readback used for captures/parity is outside the timing loop.
-30 measured frames after 10 warm-up frames:
+for each frame. The per-frame GPU readback is only recorded when `CaptureToFrame` is
+enabled; the probe performs a one-shot readback after the timing loop, so GPU time
+covers the upload, palette, and filter passes. 60 measured frames after 15 warm-up
+frames:
 
 ```powershell
 dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
   --vk-probe artifacts/vk-probe/4k-sharp.json `
-  --vk-probe-size 3840x2160 --vk-probe-frames 30 --vk-probe-warmup 10 `
+  --vk-probe-size 3840x2160 --vk-probe-frames 60 --vk-probe-warmup 15 `
   --vk-probe-filter sharp-bilinear
 ```
 
 | Vulkan case | Output | Present mean | Present p99 | GPU mean | GPU p99 | Managed bytes/frame |
 |---|---:|---:|---:|---:|---:|---:|
-| Sharp-bilinear | 3840x2160 | 1.508 ms | 1.797 ms | 1.344 ms | 1.615 ms | 0 |
-| Accurate | 3840x2160 | 1.505 ms | 1.752 ms | 1.341 ms | 1.501 ms | 0 |
-| CRT | 3840x2160 | 1.508 ms | 1.635 ms | 1.336 ms | 1.382 ms | 0 |
-| xBR | 3840x2160 | 1.549 ms | 1.918 ms | 1.389 ms | 1.728 ms | 0 |
-| FSR (EASU + RCAS) | 3840x2160 | 1.873 ms | 2.154 ms | 1.694 ms | 1.967 ms | 0 |
-| HQx 2x (CPU-bound) | 3840x2160 | 7.661 ms | 10.355 ms | 1.386 ms | 1.431 ms | 0 |
-| Sharp-bilinear | 1920x1080 | 0.489 ms | 0.502 ms | 0.344 ms | 0.348 ms | 0 |
-| xBR | 1920x1080 | 0.606 ms | 0.848 ms | 0.423 ms | 0.591 ms | 0 |
-| FSR (EASU + RCAS) | 1920x1080 | 0.562 ms | 0.600 ms | 0.434 ms | 0.436 ms | 0 |
+| Sharp-bilinear | 3840x2160 | 0.240 ms | 1.060 ms | 0.075 ms | 0.091 ms | 0 |
+| Accurate | 3840x2160 | 0.221 ms | 0.687 ms | 0.071 ms | 0.080 ms | 0 |
+| CRT | 3840x2160 | 0.364 ms | 1.015 ms | 0.175 ms | 0.187 ms | 0 |
+| xBR | 3840x2160 | 0.316 ms | 0.796 ms | 0.132 ms | 0.143 ms | 0 |
+| FSR (EASU + RCAS) | 3840x2160 | 0.604 ms | 1.303 ms | 0.404 ms | 0.415 ms | 0 |
+| HQx 2x (CPU-bound) | 3840x2160 | 6.816 ms | 10.934 ms | 0.130 ms | 0.179 ms | 0 |
+| Sharp-bilinear | 1920x1080 | 0.169 ms | 0.790 ms | 0.030 ms | 0.040 ms | 0 |
+| xBR | 1920x1080 | 0.214 ms | 0.375 ms | 0.085 ms | 0.088 ms | 0 |
+| FSR (EASU + RCAS) | 1920x1080 | 0.269 ms | 0.781 ms | 0.116 ms | 0.122 ms | 0 |
 
-A 320x240 Accurate probe reports 0 different pixels and the same `0xD6BD89C5`
-(`3602745797`) hash as the OpenGL backends. The Vulkan path is optional and does not
-replace the measured WGL/ANGLE presenter; see [`Vulkan.md`](Vulkan.md).
+Present time includes the per-frame `vkQueueWaitIdle` and is a synchronous end-to-end
+number; the OpenGL probe measures asynchronous command submission. The GPU column is
+the comparable renderer cost. A 320x240 Accurate probe reports 0 different pixels and
+the same `0xD6BD89C5` (`3602745797`) hash as the OpenGL backends. The Vulkan path is
+optional and does not replace the measured WGL/ANGLE presenter; see
+[`Vulkan.md`](Vulkan.md).
 
 **Optional Vulkan Win32 swapchain (2026-10-29).** `--vk-window-probe` opens a real
 window and presents through a FIFO swapchain on the same RTX 4070 (Vulkan 1.4,
@@ -424,9 +429,8 @@ comparable rendering cost. 60 measured frames after 15 warm-up frames:
 
 | Window probe case | Output | Present mean | Present p99 | GPU mean | GPU p99 | Managed bytes/frame |
 |---|---:|---:|---:|---:|---:|---:|
-| Sharp-bilinear, FIFO | 3840x2160 | 5.993 ms | 6.240 ms | 1.344 ms | 1.428 ms | 0 |
-| Sharp-bilinear, 8 frames | 3840x2160 | 5.181 ms | 18.463 ms | 1.409 ms | 1.570 ms | 0 |
-| Sharp-bilinear, 10 frames | 640x480 | 5.025 ms | 18.033 ms | 0.073 ms | 0.113 ms | 0 |
+| Sharp-bilinear, FIFO | 3840x2160 | 5.963 ms | 6.534 ms | 0.077 ms | 0.088 ms | 0 |
+| Sharp-bilinear, FIFO | 640x480 | 5.935 ms | 6.811 ms | 0.019 ms | 0.031 ms | 0 |
 
 The probe reports `vsyncActive: true`, `vsyncBackend: "fifo"`, and `offscreen: false`;
 a 320x240 Accurate capture still matches the CPU oracle with 0 different pixels. This
@@ -453,8 +457,9 @@ and GLES parity evidence; the probe is still a manual/self-hosted GPU tool.
 **FSR 1.0 (2026-10-28).** FSR is opt-in and runs EASU into a viewport-sized FBO, then
 RCAS into the output. It adds two GPU passes and a sharpness uniform. The 4K WGL probe
 measures present 0.132 ms mean / 1.191 ms p99 and GPU 0.441/0.483 ms; the optional
-Vulkan backend measures present 1.873/2.154 ms and GPU 1.694/1.967 ms. Use
-`--gl-probe-filter fsr` or `--vk-probe-filter fsr` to reproduce on the target GPU.
+Vulkan backend measures present 0.604/1.303 ms and GPU 0.404/0.415 ms (excluding the
+optional per-frame readback). Use `--gl-probe-filter fsr` or `--vk-probe-filter fsr` to
+reproduce on the target GPU.
 
 The Raspberry Pi and 100/150/200% DPI validation remain open. Headless CI keeps the
 CPU renderer and allocation tests.

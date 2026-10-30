@@ -30,13 +30,14 @@ Full compatibility with the 3DO library is not claimed and is not a v1 gate.
   ten save slots, screenshots, fullscreen, logs, and first-run guide.
 - OpenGL/GLES two-stage presenter with accurate, nearest, sharp-bilinear, CRT, xBR,
   and HQx filters, CPU fallback, and 4K output support.
-- Optional offscreen Vulkan 1.0 backend with build-time SPIR-V shaders,
-  accurate/nearest/sharp-bilinear/CRT/xBR/FSR/HQx modes, CPU readback, a headless
+- Optional Vulkan 1.0 backend with build-time SPIR-V shaders,
+  accurate/nearest/sharp-bilinear/CRT/xBR/FSR/HQx modes, an embedded Win32 child
+  surface for the desktop path, CPU readback fallback, a headless
   `--vk-probe`, and a native Win32 swapchain probe (`--vk-window-probe`). It matches
   the CPU oracle at 320x240 (`0xD6BD89C5`) and measures
-  1.51 ms mean / 1.80 ms p99 present at 4K sharp-bilinear, 1.55/1.92 ms at 4K xBR,
-  1.87/2.15 ms at 4K FSR, and 7.66/10.36 ms at 4K HQx 2x (CPU-bound) on the RTX
-  4070. The 4K window probe reports 1.34/1.43 ms GPU and 5.99/6.24 ms present
+  0.24 ms mean / 1.06 ms p99 present at 4K sharp-bilinear, 0.32/0.80 ms at 4K xBR,
+  0.60/1.30 ms at 4K FSR, and 6.82/10.93 ms at 4K HQx 2x (CPU-bound) on the RTX
+  4070. The 4K window probe reports 0.077/0.088 ms GPU and 5.96/6.53 ms present
   including the 165 Hz FIFO wait, with 0 managed bytes/frame. OpenGL remains the
   required desktop presenter; see [`Vulkan.md`](Vulkan.md).
 - 44.1 kHz stereo DSP audio with an exact sample clock, bundled OpenAL Soft live

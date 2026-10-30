@@ -1,10 +1,10 @@
 # Optional Vulkan Backend
 
-**Status:** implemented as an optional offscreen presenter, a validation probe, and a
-native Win32 swapchain probe. OpenGL/GLES remains the required desktop presenter;
-Vulkan is not a v1 release gate. The backend now implements xBR-lv2, FSR 1.0
-(EASU + RCAS), and HQx 2x/3x/4x in addition to accurate, nearest, sharp-bilinear,
-and CRT.
+**Status:** implemented as an optional offscreen presenter, a validation probe, a
+native Win32 swapchain probe, and an embedded Win32 child surface for the desktop
+shell. OpenGL/GLES remains the required desktop presenter; Vulkan is not a v1 release
+gate. The backend now implements xBR-lv2, FSR 1.0 (EASU + RCAS), and HQx 2x/3x/4x in
+addition to accurate, nearest, sharp-bilinear, and CRT.
 
 ## What it is
 
@@ -30,8 +30,9 @@ VdlFrame
         v
   B8G8R8A8_UNORM (or R8G8B8A8_UNORM) target
         |
-        v
-  host readback buffer
+        +--> host readback buffer (offscreen probe and captures)
+        |
+        +--> Win32 swapchain (desktop child surface and window probe)
 ```
 
 The palette shader is a direct port of `FrameAssembler`/`GpuPalette`: pixel zero uses
@@ -43,9 +44,11 @@ The renderer is offscreen by default. It does not create an instance surface, sw
 or presentation queue unless `InitializeSurface` is called. `--vk-window-probe` creates
 a Win32 window, enables `VK_KHR_surface`/`VK_KHR_win32_surface`/`VK_KHR_swapchain`, and
 blits the rendered output image into the current swapchain image before presenting. The
-desktop shell can display the offscreen result through the existing `WriteableBitmap`
-path (`--gl-backend vulkan`), and the headless probe remains the primary validation tool.
-The native swapchain is currently a Win32 probe path, not an Avalonia-embedded surface.
+desktop shell hosts a native Win32 child window inside the Avalonia window through
+`VulkanVideoSurface` (`--gl-backend vulkan`), so the steady-state desktop path has no
+GPU-to-CPU readback and no `WriteableBitmap` upload. The offscreen readback path remains
+for the headless probe, screenshots, non-Windows platforms, and fallback if the child
+surface cannot be created. The headless probe remains the primary validation tool.
 
 ## Filters
 
@@ -122,35 +125,39 @@ requests FIFO (vsync) presentation; the headless probe is uncapped.
 
 ## Measured results
 
-Development machine: Windows 11, Ryzen 9 7900, RTX 4070, Vulkan 1.4. The xBR, FSR,
-and HQx rows use 60 measured frames after 15 warm-up frames; the earlier baseline rows
-use 30 frames after 10 warm-up frames. The probe waits for each frame; readback is
-excluded from the timing loop.
+Development machine: Windows 11, Ryzen 9 7900, RTX 4070, Vulkan 1.4. All rows use
+60 measured frames after 15 warm-up frames. The probe waits for each frame. The
+per-frame GPU readback is recorded only when `CaptureToFrame` is enabled; the probe
+leaves it disabled and performs a one-shot readback after the timing loop. GPU time
+covers the upload, palette, and filter passes, not the readback.
 
 | Case | Present mean | Present p99 | GPU mean | GPU p99 | Managed bytes/frame |
 |---|---:|---:|---:|---:|---:|
-| 4K sharp-bilinear | 1.508 ms | 1.797 ms | 1.344 ms | 1.615 ms | 0 |
-| 4K accurate | 1.505 ms | 1.752 ms | 1.341 ms | 1.501 ms | 0 |
-| 4K CRT | 1.508 ms | 1.635 ms | 1.336 ms | 1.382 ms | 0 |
-| 4K xBR | 1.549 ms | 1.918 ms | 1.389 ms | 1.728 ms | 0 |
-| 4K FSR (EASU + RCAS) | 1.873 ms | 2.154 ms | 1.694 ms | 1.967 ms | 0 |
-| 1080p sharp-bilinear | 0.489 ms | 0.502 ms | 0.344 ms | 0.348 ms | 0 |
-| 1080p xBR | 0.606 ms | 0.848 ms | 0.423 ms | 0.591 ms | 0 |
-| 1080p FSR (EASU + RCAS) | 0.562 ms | 0.600 ms | 0.434 ms | 0.436 ms | 0 |
-| 4K HQx 2x | 7.661 ms | 10.355 ms | 1.386 ms | 1.431 ms | 0 |
+| 4K sharp-bilinear | 0.240 ms | 1.060 ms | 0.075 ms | 0.091 ms | 0 |
+| 4K accurate | 0.221 ms | 0.687 ms | 0.071 ms | 0.080 ms | 0 |
+| 4K CRT | 0.364 ms | 1.015 ms | 0.175 ms | 0.187 ms | 0 |
+| 4K xBR | 0.316 ms | 0.796 ms | 0.132 ms | 0.143 ms | 0 |
+| 4K FSR (EASU + RCAS) | 0.604 ms | 1.303 ms | 0.404 ms | 0.415 ms | 0 |
+| 1080p sharp-bilinear | 0.169 ms | 0.790 ms | 0.030 ms | 0.040 ms | 0 |
+| 1080p xBR | 0.214 ms | 0.375 ms | 0.085 ms | 0.088 ms | 0 |
+| 1080p FSR (EASU + RCAS) | 0.269 ms | 0.781 ms | 0.116 ms | 0.122 ms | 0 |
+| 4K HQx 2x | 6.816 ms | 10.934 ms | 0.130 ms | 0.179 ms | 0 |
+
+Present time includes the per-frame `vkQueueWaitIdle` and is therefore a synchronous
+end-to-end number; the OpenGL probe measures asynchronous command submission. Compare
+the GPU column for renderer cost.
 
 Native Win32 swapchain probe, same machine, 60 measured frames after 15 warm-up
 frames, FIFO presentation on a 165 Hz display:
 
 | Case | Present mean | Present p99 | GPU mean | GPU p99 | Managed bytes/frame |
 |---|---:|---:|---:|---:|---:|
-| 4K sharp-bilinear, FIFO | 5.993 ms | 6.240 ms | 1.344 ms | 1.428 ms | 0 |
-| 4K sharp-bilinear, 8 frames | 5.181 ms | 18.463 ms | 1.409 ms | 1.570 ms | 0 |
-| 640x480 sharp-bilinear, 10 frames | 5.025 ms | 18.033 ms | 0.073 ms | 0.113 ms | 0 |
+| 4K sharp-bilinear, FIFO | 5.963 ms | 6.534 ms | 0.077 ms | 0.088 ms | 0 |
+| 640x480 sharp-bilinear, FIFO | 5.935 ms | 6.811 ms | 0.019 ms | 0.031 ms | 0 |
 
 Present time includes the swapchain acquire/present wait and the display refresh
-interval; GPU time is the comparable rendering cost. The 8- and 10-frame rows include
-first-frame/pipeline warm-up outliers. The window probe reports `vsyncActive: true`
+interval; GPU time is the comparable rendering cost. At 165 Hz the FIFO floor is
+~6.06 ms, so both rows are display-paced. The window probe reports `vsyncActive: true`
 and `vsyncBackend: "fifo"`; a 320x240 Accurate capture still matches the CPU oracle
 with 0 different pixels.
 
@@ -211,9 +218,15 @@ The SPIR-V and option-parsing tests run everywhere.
 
 ## Limitations and next steps
 
-- The native swapchain is a Win32 probe path. It is not yet embedded in the Avalonia
-  video control, and X11/Wayland/Metal surfaces are future work. The desktop
-  `--gl-backend vulkan` path remains offscreen plus CPU readback at source size.
+- The native swapchain is a Win32 path. The desktop shell embeds it as a native child
+  window inside the Avalonia window; X11/Wayland/Metal surfaces are future work. The
+  child window is outside Avalonia's compositor, so Avalonia-drawn overlays over the
+  video rectangle (for example the diagnostic overlay) are obscured; the status bar and
+  header remain visible. Non-Windows platforms fall back to the offscreen/readback path.
+- The per-frame readback is only recorded when `CaptureToFrame` is enabled; probes and
+  screenshots use a one-shot copy. The embedded Win32 surface does not read back at all.
+  The offscreen fallback still needs the readback every frame and remains slower than
+  the direct OpenGL presenter.
 - xBR and FSR 1.0 are GPU passes. HQx 2x/3x/4x are CPU expansions (shared with the
   OpenGL presenter) and are CPU-bound; they are opt-in and not recommended at 4K on
   slow CPUs.

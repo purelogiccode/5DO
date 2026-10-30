@@ -63,7 +63,7 @@
 
 **Dependency rule:** arrows point *downward only*. `FiveDo.Core` has no project references. No chip project references another chip project; they communicate through small interfaces defined in `FiveDo.Core` and are wired by `FiveDo.Machine`. This avoids the circular dependencies that the original C++ code solved with globals and `extern`.
 
-**Renderer rule:** the Avalonia frontend hosts `FiveDo.Video.OpenGL` and uses it as the primary desktop presenter. `FiveDo.Video.Vulkan` is an optional offscreen/readback presenter and probe; it is never the default. The CLI uses the CPU/null renderer. Both GPU backends consume completed `VdlFrame` data and never touch emulated state.
+**Renderer rule:** the Avalonia frontend hosts `FiveDo.Video.OpenGL` and uses it as the primary desktop presenter. `FiveDo.Video.Vulkan` is an optional presenter and probe; on Windows the frontend hosts its native Win32 child surface, with an offscreen/readback fallback elsewhere. It is never the default. The CLI uses the CPU/null renderer. Both GPU backends consume completed `VdlFrame` data and never touch emulated state.
 
 ---
 
@@ -80,7 +80,7 @@
 | `FiveDo.Sport` | SPORT VRAM fill/copy engine, high-res plane mirroring | `Sport` | Core |
 | `FiveDo.Video` | VDLP display-list parser, line/frame assembly, palette expansion reference path, frame extraction, scaler contracts, CPU fallback presenter, mailbox, shared HQx CPU filter | `Vdlp`, `FrameAssembler`, `GpuPalette`, `VdlFrameUploader`, `VdlFrameMailbox`, `ViewportCalculator`, `IVideoRenderer`, `VideoFilter`, `RendererSettings`, `CpuVideoRenderer`, `HqxFilter` | Core |
 | `FiveDo.Video.OpenGL` | **Required desktop renderer**: desktop GL 3.3 and GLES 3.0/3.1 context integration, two-stage native-resolution palette expansion + output upscaling, persistent texture upload, scaling/filter pipeline (including FSR/xBR/HQx), vsync presentation, screenshots | `OpenGlRenderer`, `OpenGlCapabilities`, `SwapInterval`, `Shaders`, `GlContextAdapter`, `OffscreenRenderTarget` | Core, Video, Silk.NET.OpenGL |
-| `FiveDo.Video.Vulkan` | **Optional offscreen Vulkan 1.0 renderer**: build-time SPIR-V palette/scale/xBR/FSR shaders, sampled source textures, accurate/nearest/sharp-bilinear/CRT/xBR/FSR/HQx filters, timestamp queries, host readback | `VulkanOffscreenRenderer`, `VulkanShaders` (generated) | Core, Video, Silk.NET.Vulkan |
+| `FiveDo.Video.Vulkan` | **Optional Vulkan 1.0 renderer**: build-time SPIR-V palette/scale/xBR/FSR shaders, sampled source textures, accurate/nearest/sharp-bilinear/CRT/xBR/FSR/HQx filters, timestamp queries, host readback, and a Win32 swapchain surface for the desktop child window | `VulkanOffscreenRenderer`, `VulkanShaders` (generated) | Core, Video, Silk.NET.Vulkan |
 | `FiveDo.Xbus` | XBUS controller, device selection, poll/status/data FIFOs, device interface | `Xbus` | Core |
 | `FiveDo.Cdrom` | Mitsumi/MEI CD-ROM device, command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice` | Core |
 | `FiveDo.Storage` | Disc image readers (ISO/BIN/CUE/CHD), bounded host prefetch, BIOS validation, NVRAM file format, game database, game ID | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `VolumeHeader`, `GameDatabase`, `GameId` | Core, CHDSharp |
@@ -90,7 +90,7 @@
 | `FiveDo.Machine` | Machine composition root, frame loop, Quartz scheduler, device wiring, state sections | `FiveDoMachine`, `Quartz` | Core + all chips + Diagnostics |
 | `FiveDo.Host` | Core thread lifecycle, audio-derived frame pacing, BIOS/disc/NVRAM loading, audio/input backends, save slots, settings, library, fixes, autopilot | `CoreRunner`, `AudioFramePacer`, `AppSettings`, `AppSettingsStore`, `NvramStore`, `SaveStateSlotManager`, `StateInspector`, `GameLibraryScanner`, `GameCompatibility`, `MemoryPatch`, `RoadRashAutopilot` | Machine, Storage, Audio, Input, Video, Diagnostics |
 | `FiveDo.Cli` | Headless command-line interface, JSON contracts | `Program`, `CliJsonModels` | Host |
-| `FiveDo.Frontend.Avalonia` | Cross-platform desktop UI, library/settings/input/slots/logs, OpenGL video surface, GPU probes | `App`, `MainWindow`, `VideoSurface`, `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`, `GameLibraryWindow`, `LogsWindow`, `WelcomeWindow`, `GlProbeWindow`, `GlProbeOptions`, `VkProbeRunner`, `VkProbeOptions`, `GlBackendOption`, `PlatformGamepadBackend` | Host, Video.OpenGL, Video.Vulkan, Avalonia |
+| `FiveDo.Frontend.Avalonia` | Cross-platform desktop UI, library/settings/input/slots/logs, OpenGL video surface, embedded Vulkan video surface, GPU probes | `App`, `MainWindow`, `VideoSurface`, `VulkanVideoSurface`, `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`, `GameLibraryWindow`, `LogsWindow`, `WelcomeWindow`, `GlProbeWindow`, `GlProbeOptions`, `VkProbeRunner`, `VkProbeOptions`, `GlBackendOption`, `PlatformGamepadBackend` | Host, Video.OpenGL, Video.Vulkan, Avalonia |
 | `FiveDo.Tests` | Unit/integration/golden/CLI/frontend tests (subfolders per subsystem) | test fixtures, ARM assembler/rig, fake chips/MMIO, PNG writer | production projects |
 | `FiveDo.Benchmarks` | Frame benchmark, CI gate, baseline comparison | `Program` | Cpu, Madam, Dsp, Diagnostics, Machine, Storage, Video |
 

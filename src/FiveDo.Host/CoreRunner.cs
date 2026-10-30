@@ -27,12 +27,13 @@ public sealed class CoreRunner : IDisposable
     private readonly FiveDoMachine _machine;
     private readonly Action<VdlFrame>? _frameSink;
     private readonly Action<CoreStatus>? _statusSink;
-    private readonly ManualResetEventSlim _paused = new(false);
-    private readonly ManualResetEventSlim _wake = new(false);
+    private readonly object _stateGate = new();
     private readonly Lock _invokeGate = new();
     private Thread? _thread;
-    private volatile bool _stop;
-    private volatile bool _pauseRequested;
+    private bool _stop;
+    private bool _pauseRequested;
+    private bool _paused;
+    private bool _faulted;
     private long _frames;
     private bool _disposed;
 
@@ -52,7 +53,16 @@ public sealed class CoreRunner : IDisposable
     public event EventHandler<CoreFaultedEventArgs>? Faulted;
 
     /// <summary>Gets a value indicating whether the core thread is running.</summary>
-    public bool IsRunning => _thread is { IsAlive: true };
+    public bool IsRunning
+    {
+        get
+        {
+            lock (_stateGate)
+            {
+                return _thread is { IsAlive: true } && !_faulted;
+            }
+        }
+    }
 
     /// <summary>Gets the number of frames executed by this runner.</summary>
     public long Frames => Interlocked.Read(ref _frames);
@@ -61,52 +71,73 @@ public sealed class CoreRunner : IDisposable
     public void Start()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        if (IsRunning)
+        lock (_stateGate)
         {
-            return;
-        }
+            if (_thread is { IsAlive: true } && !_faulted)
+            {
+                return;
+            }
 
-        _stop = false;
-        _pauseRequested = false;
-        _thread = new Thread(Run)
-        {
-            IsBackground = true,
-            Name = "3DO core",
-        };
-        _thread.Start();
+            _stop = false;
+            _pauseRequested = false;
+            _paused = false;
+            _faulted = false;
+            _thread = new Thread(Run)
+            {
+                IsBackground = true,
+                Name = "3DO core",
+            };
+            _thread.Start();
+        }
     }
 
     /// <summary>Pauses the core loop after the current frame.</summary>
     public void Pause()
     {
-        if (!IsRunning)
+        lock (_stateGate)
         {
-            return;
-        }
+            if (_thread is not { IsAlive: true } || _stop || _thread == Thread.CurrentThread)
+            {
+                return;
+            }
 
-        _pauseRequested = true;
-        _paused.Wait();
+            _pauseRequested = true;
+            Monitor.PulseAll(_stateGate);
+            while (!_paused && !_stop && !_faulted)
+            {
+                Monitor.Wait(_stateGate);
+            }
+        }
     }
 
     /// <summary>Resumes a paused core loop.</summary>
     public void Resume()
     {
-        if (!IsRunning)
+        lock (_stateGate)
         {
-            return;
-        }
+            if (_thread is not { IsAlive: true } || _faulted)
+            {
+                return;
+            }
 
-        _pauseRequested = false;
-        _wake.Set();
+            _pauseRequested = false;
+            Monitor.PulseAll(_stateGate);
+        }
     }
 
     /// <summary>Stops the core thread and waits briefly for it to exit.</summary>
     public void Stop()
     {
-        _stop = true;
-        _wake.Set();
-        Thread? thread = _thread;
-        _thread = null;
+        Thread? thread;
+        lock (_stateGate)
+        {
+            _stop = true;
+            _pauseRequested = false;
+            Monitor.PulseAll(_stateGate);
+            thread = _thread;
+            _thread = null;
+        }
+
         if (thread is not null && thread.IsAlive && thread != Thread.CurrentThread)
         {
             _ = thread.Join(TimeSpan.FromSeconds(2));
@@ -120,27 +151,48 @@ public sealed class CoreRunner : IDisposable
     public void Invoke(Action action)
     {
         ArgumentNullException.ThrowIfNull(action);
-        if (_thread is null || !_thread.IsAlive || _thread == Thread.CurrentThread)
+        lock (_stateGate)
         {
-            action();
-            return;
+            if (_thread is null || !_thread.IsAlive || _thread == Thread.CurrentThread || _stop || _faulted)
+            {
+                action();
+                return;
+            }
         }
 
         lock (_invokeGate)
         {
-            var wasPaused = _pauseRequested;
-            _pauseRequested = true;
-            _paused.Wait();
+            var wasPaused = false;
+            lock (_stateGate)
+            {
+                if (_thread is null || !_thread.IsAlive || _stop || _faulted)
+                {
+                    action();
+                    return;
+                }
+
+                wasPaused = _pauseRequested;
+                _pauseRequested = true;
+                Monitor.PulseAll(_stateGate);
+                while (!_paused && !_stop && !_faulted)
+                {
+                    Monitor.Wait(_stateGate);
+                }
+            }
+
             try
             {
                 action();
             }
             finally
             {
-                _pauseRequested = wasPaused;
-                if (!wasPaused)
+                lock (_stateGate)
                 {
-                    _wake.Set();
+                    if (!wasPaused && !_stop)
+                    {
+                        _pauseRequested = false;
+                        Monitor.PulseAll(_stateGate);
+                    }
                 }
             }
         }
@@ -175,8 +227,6 @@ public sealed class CoreRunner : IDisposable
 
         _disposed = true;
         Stop();
-        _paused.Dispose();
-        _wake.Dispose();
     }
 
     private void Run()
@@ -190,20 +240,32 @@ public sealed class CoreRunner : IDisposable
             var statusFrames = 0L;
             TimeSpan statusStart = statusClock.Elapsed;
 
-            while (!_stop)
+            while (true)
             {
-                if (_pauseRequested)
+                lock (_stateGate)
                 {
-                    _paused.Set();
-                    _wake.Wait();
-                    _wake.Reset();
-                    _paused.Reset();
-                    pacer.Resync();
-                    audioPacer.Resync(_machine.AudioSamplesProduced);
-                    statusClock.Restart();
-                    statusStart = TimeSpan.Zero;
-                    statusFrames = 0;
-                    continue;
+                    while (_pauseRequested && !_stop)
+                    {
+                        _paused = true;
+                        Monitor.PulseAll(_stateGate);
+                        while (_pauseRequested && !_stop)
+                        {
+                            Monitor.Wait(_stateGate);
+                        }
+
+                        _paused = false;
+                        Monitor.PulseAll(_stateGate);
+                        pacer.Resync();
+                        audioPacer.Resync(_machine.AudioSamplesProduced);
+                        statusClock.Restart();
+                        statusStart = TimeSpan.Zero;
+                        statusFrames = 0;
+                    }
+
+                    if (_stop)
+                    {
+                        return;
+                    }
                 }
 
                 _machine.RunFrame();
@@ -232,6 +294,12 @@ public sealed class CoreRunner : IDisposable
         }
         catch (Exception exception)
         {
+            lock (_stateGate)
+            {
+                _faulted = true;
+                Monitor.PulseAll(_stateGate);
+            }
+
             _statusSink?.Invoke(new CoreStatus(
                 Frames,
                 _machine.Cpu.ProgramCounter,

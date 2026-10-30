@@ -22,6 +22,7 @@ using FiveDo.Audio;
 using FiveDo.Core;
 using FiveDo.Diagnostics;
 using FiveDo.Diagnostics.Logging;
+using FiveDo.Frontend.Avalonia.Controls;
 using FiveDo.Frontend.Avalonia.Input;
 using FiveDo.Frontend.Avalonia.ViewModels;
 using FiveDo.Host;
@@ -61,9 +62,9 @@ public partial class MainWindow : Window, IDisposable
     private IDiscSource? _disc;
     private string _gameId = string.Empty;
     private string _gameName = string.Empty;
-    private ICpuFrameRenderer? _cpuVideo;
+    private CpuVideoRenderer? _cpuVideo;
     private VideoRendererKind _rendererKind;
-    private bool _vulkanPresenter;
+    private volatile bool _vulkanPresenter;
     private bool _openGlDisabled;
     private WriteableBitmap? _cpuBitmap;
     private DispatcherTimer? _cpuTimer;
@@ -121,8 +122,8 @@ public partial class MainWindow : Window, IDisposable
         if (_rendererKind != VideoRendererKind.OpenGl
             && (!Program.SmokeTest || Program.RequestedGlBackend != GlBackend.Auto))
         {
-            // Software and Vulkan present through the CPU bitmap. Hide the OpenGL control
-            // so it never creates a WGL/ANGLE context.
+            // Software uses the CPU bitmap and Vulkan uses its native child surface.
+            // Hide the OpenGL control so it never creates a WGL/ANGLE context.
             _openGlDisabled = true;
             Video.IsVisible = false;
             StartCpuFallback(new NotSupportedException(
@@ -162,6 +163,8 @@ public partial class MainWindow : Window, IDisposable
 
         Video.OpenGlReady += OnOpenGlReady;
         Video.OpenGlFailed += OnOpenGlFailed;
+        VulkanVideo.Failed += OnVulkanFailed;
+        VulkanVideo.Started += OnVulkanStarted;
         Deactivated += (_, _) => _input.Keyboard.Reset();
         Closing += (_, _) =>
         {
@@ -454,6 +457,10 @@ public partial class MainWindow : Window, IDisposable
         if (_rendererKind == VideoRendererKind.OpenGl)
         {
             Video.RequestRedraw();
+        }
+        else if (_vulkanPresenter)
+        {
+            VulkanVideo.RequestRedraw();
         }
 
         StatusText.Text = string.IsNullOrWhiteSpace(_gameName)
@@ -819,6 +826,7 @@ public partial class MainWindow : Window, IDisposable
 
         Title = "5DO";
         EmulationView.IsVisible = false;
+        VulkanVideo.SetPresentationVisible(false);
         LibraryView.IsVisible = true;
         _input.Keyboard.Reset();
         ApplyLibraryFilter();
@@ -836,6 +844,10 @@ public partial class MainWindow : Window, IDisposable
         UpdateEmulationHeader();
         LibraryView.IsVisible = false;
         EmulationView.IsVisible = true;
+        if (_vulkanPresenter)
+        {
+            VulkanVideo.SetPresentationVisible(true);
+        }
     }
 
     private void UpdateEmulationHeader()
@@ -1590,10 +1602,11 @@ public partial class MainWindow : Window, IDisposable
         FpsText.Text = $"{status.FramesPerSecond,5:F1} fps";
         if (OverlayPanel.IsVisible)
         {
-            var gpu = Video.GpuMilliseconds;
+            var gpu = _vulkanPresenter ? VulkanVideo.GpuMilliseconds : Video.GpuMilliseconds;
+            var present = _vulkanPresenter ? VulkanVideo.PresentMilliseconds : Video.PresentMilliseconds;
             var timing = gpu is null
-                ? $"present {Video.PresentMilliseconds:F2} ms"
-                : $"gpu {gpu.Value:F2} ms  present {Video.PresentMilliseconds:F2} ms";
+                ? $"present {present:F2} ms"
+                : $"gpu {gpu.Value:F2} ms  present {present:F2} ms";
             var audio = _audio is null
                 ? string.Empty
                 : $"  audio {_audio.BufferedFrames}f q{_audio.QueuedBuffers} u{_audio.UnderrunBuffers} "
@@ -1634,6 +1647,39 @@ public partial class MainWindow : Window, IDisposable
             capabilities.MaxTextureSize);
     }
 
+    private void OnVulkanStarted(object? sender, EventArgs e)
+    {
+        if (_rendererKind != VideoRendererKind.Vulkan || !_vulkanPresenter)
+        {
+            return;
+        }
+
+        _logger.ForCategory(LogCategory.Video).Information(
+            "Vulkan renderer ready: {Device}.",
+            VulkanVideo.DeviceName);
+        if (!_running)
+        {
+            StatusText.Text = "Vulkan renderer ready.";
+        }
+    }
+
+    private void OnVulkanFailed(object? sender, VulkanFailedEventArgs e)
+    {
+        if (_rendererKind != VideoRendererKind.Vulkan || !_vulkanPresenter)
+        {
+            return;
+        }
+
+        var exception = e.Exception;
+        _logger.ForCategory(LogCategory.Video).Warning(
+            exception,
+            "Vulkan surface failed; falling back to the CPU presenter.");
+        _vulkanPresenter = false;
+        VulkanVideo.Stop();
+        VulkanVideo.IsVisible = false;
+        StartCpuFallback(exception, allowVulkan: false);
+    }
+
     private void OnOpenGlFailed(object? sender, Controls.OpenGlFailedEventArgs e)
     {
         if (_rendererKind != VideoRendererKind.OpenGl || _openGlDisabled)
@@ -1664,7 +1710,7 @@ public partial class MainWindow : Window, IDisposable
         Video.Settings = _settings.ToRendererSettings(_gameId);
         if (_rendererKind == VideoRendererKind.OpenGl)
         {
-            var hadCpuPresenter = _cpuVideo is not null;
+            var hadCpuPresenter = _cpuVideo is not null || _vulkanPresenter;
             if (hadCpuPresenter)
             {
                 StopCpuFallback();
@@ -1672,6 +1718,7 @@ public partial class MainWindow : Window, IDisposable
 
             _openGlDisabled = false;
             _vulkanPresenter = false;
+            VulkanVideo.IsVisible = false;
             Video.IsVisible = true;
             if (previousRenderer != VideoRendererKind.OpenGl || hadCpuPresenter)
             {
@@ -1686,7 +1733,8 @@ public partial class MainWindow : Window, IDisposable
 
         _openGlDisabled = true;
         Video.IsVisible = false;
-        if (_cpuVideo is not null)
+        VulkanVideo.IsVisible = false;
+        if (_cpuVideo is not null || _vulkanPresenter)
         {
             StopCpuFallback(showVideo: false);
         }
@@ -1710,9 +1758,9 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void StartCpuFallback(Exception exception)
+    private void StartCpuFallback(Exception exception, bool allowVulkan = true)
     {
-        if (_cpuVideo is not null || _shuttingDown)
+        if (_cpuVideo is not null || _vulkanPresenter || _shuttingDown)
         {
             return;
         }
@@ -1724,48 +1772,62 @@ public partial class MainWindow : Window, IDisposable
             ? _machine.Frame.SourceHeight
             : EmulatorConstants.VideoHeight;
         var (width, height) = ResolveOutputSize(sourceWidth, sourceHeight);
-
         RendererSettings rendererSettings = _settings.ToRendererSettings(_gameId);
-        ICpuFrameRenderer renderer;
-        if (_rendererKind == VideoRendererKind.Vulkan)
+
+        if (allowVulkan && _rendererKind == VideoRendererKind.Vulkan)
         {
-            VulkanOffscreenRenderer? vulkan = null;
             try
             {
-                vulkan = new VulkanOffscreenRenderer
+                VulkanVideo.Settings = rendererSettings;
+                if (!VulkanVideo.Start())
                 {
-                    Settings = rendererSettings,
-                    CaptureToFrame = true,
-                };
-                vulkan.Initialize(width, height);
-                renderer = vulkan;
+                    throw new InvalidOperationException("The embedded Vulkan surface is unavailable.");
+                }
+
                 _vulkanPresenter = true;
-                _logger.ForCategory(LogCategory.Video).Information(
-                    "Vulkan renderer ready: {Device}.",
-                    vulkan.DeviceName);
+                _cpuVideo = null;
+                _cpuBitmap = null;
+                _cpuPixels = null;
+                CpuVideo.IsVisible = false;
+                Video.IsVisible = false;
+                VulkanVideo.IsVisible = true;
+                VulkanVideo.SetPresentationVisible(EmulationView.IsVisible);
+                RendererText.Text = "Vulkan";
+                StatusText.Text = "Vulkan renderer active.";
+                if (VulkanVideo.DeviceName is { } deviceName)
+                {
+                    _logger.ForCategory(LogCategory.Video).Information(
+                        "Vulkan renderer ready: {Device}.",
+                        deviceName);
+                }
+                else
+                {
+                    _logger.ForCategory(LogCategory.Video).Information(
+                        "Vulkan surface initializing; waiting for the control to attach.");
+                }
+
+                return;
             }
             catch (Exception vulkanException) when (vulkanException is not OutOfMemoryException)
             {
-                vulkan?.Dispose();
+                VulkanVideo.Stop();
+                VulkanVideo.IsVisible = false;
+                exception = vulkanException;
                 _logger.ForCategory(LogCategory.Video).Warning(
                     vulkanException,
                     "Vulkan is unavailable; falling back to the CPU presenter.");
-                renderer = new CpuVideoRenderer { Settings = rendererSettings };
-                renderer.Initialize(width, height);
             }
         }
-        else
-        {
-            renderer = new CpuVideoRenderer { Settings = rendererSettings };
-            renderer.Initialize(width, height);
-        }
 
+        var renderer = new CpuVideoRenderer { Settings = rendererSettings };
+        renderer.Initialize(width, height);
         _cpuVideo = renderer;
         _cpuPixels = new byte[width * height * 4];
         _cpuBitmap = CreateBitmap(width, height);
         CpuVideo.Source = _cpuBitmap;
         CpuVideo.IsVisible = true;
         Video.IsVisible = false;
+        VulkanVideo.IsVisible = false;
         _cpuTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
         _cpuTimer.Tick += (_, _) => RenderCpuFrame();
         _cpuTimer.Start();
@@ -1776,33 +1838,30 @@ public partial class MainWindow : Window, IDisposable
                 : exception.Message);
         var softwareSelected = _rendererKind == VideoRendererKind.Software;
         var vulkanSelected = _rendererKind == VideoRendererKind.Vulkan;
-        RendererText.Text = _vulkanPresenter
-            ? "Vulkan (offscreen)"
-            : softwareSelected
-                ? "Software (CPU)"
-                : "CPU fallback";
+        RendererText.Text = softwareSelected ? "Software (CPU)" : "CPU fallback";
         StatusText.Text = softwareSelected
             ? "Software renderer active (CPU)."
-            : _vulkanPresenter
-                ? "Vulkan renderer ready (offscreen, CPU readback)."
-                : vulkanSelected
-                    ? $"Vulkan unavailable ({exception.Message}); using the CPU renderer."
-                    : $"OpenGL unavailable ({exception.Message}); using the CPU renderer.";
+            : vulkanSelected
+                ? $"Vulkan unavailable ({exception.Message}); using the CPU renderer."
+                : $"OpenGL unavailable ({exception.Message}); using the CPU renderer.";
     }
 
     private void StopCpuFallback(bool showVideo = true)
     {
-        var hadCpuPresenter = _cpuVideo is not null;
+        var hadPresenter = _cpuVideo is not null || _vulkanPresenter;
         _cpuTimer?.Stop();
         _cpuTimer = null;
         CpuVideo.IsVisible = false;
+        VulkanVideo.SetPresentationVisible(false);
+        VulkanVideo.IsVisible = false;
+        VulkanVideo.Stop();
         Video.IsVisible = showVideo;
         _cpuVideo?.Dispose();
         _cpuVideo = null;
         _vulkanPresenter = false;
         _cpuBitmap = null;
         _cpuPixels = null;
-        if (hadCpuPresenter && showVideo)
+        if (hadPresenter && showVideo)
         {
             _logger.ForCategory(LogCategory.Video).Information("OpenGL presenter restored.");
         }
@@ -1866,7 +1925,7 @@ public partial class MainWindow : Window, IDisposable
     private static WriteableBitmap CreateBitmap(int width, int height)
     {
         return new WriteableBitmap(
-            new PixelSize(width, height),
+            new global::Avalonia.PixelSize(width, height),
             new Vector(96, 96),
             AvaloniaPixelFormat.Bgra8888,
             AlphaFormat.Premul);
@@ -1883,7 +1942,7 @@ public partial class MainWindow : Window, IDisposable
             };
             _runner = new CoreRunner(
                 _machine,
-                frame => Video.SubmitFrame(frame),
+                frame => SubmitFrameToActiveRenderer(frame),
                 status => Dispatcher.UIThread.Post(() => OnCoreStatus(status)));
             _runner.Faulted += (_, args) => Dispatcher.UIThread.Post(() =>
             {
@@ -1898,6 +1957,18 @@ public partial class MainWindow : Window, IDisposable
         }
 
         return _machine;
+    }
+
+    private void SubmitFrameToActiveRenderer(VdlFrame frame)
+    {
+        if (_vulkanPresenter)
+        {
+            VulkanVideo.SubmitFrame(frame);
+        }
+        else
+        {
+            Video.SubmitFrame(frame);
+        }
     }
 
     private void FlushNvram()
@@ -1950,6 +2021,7 @@ public partial class MainWindow : Window, IDisposable
         _cpuTimer = null;
         _cpuVideo?.Dispose();
         _cpuVideo = null;
+        VulkanVideo.Dispose();
         // VideoSurface owns GL resources until Avalonia detaches it. Disposing it from
         // Closing runs before the GL context is current and crashes in Silk.NET.
         _nvramStore.Dispose();

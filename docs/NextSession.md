@@ -13,6 +13,22 @@ twentieth pass added the optional offscreen Vulkan backend and `--vk-probe`; the
 nineteenth pass added save-state disc warnings, console hotkeys, ISO/BIN `disc tracks`,
 and OpenAL Soft LGPL packaging; the eighteenth pass added Serilog logging and bug
 reporting; the seventeenth pass added the OpenAL crackle fix, PCM tap, and race profile)
+
+**Vulkan performance follow-up (2026-10-30, twenty-sixth pass):** the offscreen Vulkan
+readback is now on demand. Probes and screenshots use a one-shot copy, and the GPU
+timestamp covers the render passes only; 4K sharp-bilinear GPU time is 0.075 ms and
+present 0.24 ms. The desktop fallback writes the captured frame directly into the
+locked `WriteableBitmap`, and the swapchain blit uses a fence instead of
+`vkQueueWaitIdle`. The desktop path is still offscreen plus per-frame readback, so
+OpenGL remains the full-performance presenter. **924 tests pass.**
+
+**Vulkan embedded surface and core-runner fix (2026-10-30, twenty-seventh pass):**
+`VulkanVideoSurface` hosts a click-through Win32 child HWND inside the Avalonia window
+and presents through the FIFO swapchain, so `--gl-backend vulkan` no longer reads frames
+back to the CPU or uploads a `WriteableBitmap`. `CoreRunner` now uses a monitor
+handshake with an explicit paused state, fixing rapid stop/start cycles. **925 tests
+pass.**
+
 **Goal:** make the audio path correct and testable. The sixteenth pass replaced the
 FreeDO 8.24 DSP sample accumulator with an exact 44,100-samples-per-ARM-second clock
 (600 frames now produce 441,015-441,020 samples / 10.000 s instead of 444,097 /

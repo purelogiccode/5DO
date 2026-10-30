@@ -236,8 +236,8 @@ adapted to GLSL 3.30 / GLSL ES 300 and is attributed to AMD under the MIT licens
 
 FSR is presentation-only and does not feed back into VRAM or emulation. The 4K WGL
 probe measures present 0.132 ms mean / 1.191 ms p99 and GPU 0.441/0.483 ms; the
-optional Vulkan backend measures present 1.873/2.154 ms and GPU 1.694/1.967 ms. It is
-opt-in and costs two GPU passes.
+optional Vulkan backend measures present 0.604/1.303 ms and GPU 0.404/0.415 ms
+(excluding the optional per-frame readback). It is opt-in and costs two GPU passes.
 
 ---
 
@@ -271,7 +271,7 @@ frame into a fixed output buffer.
 |---|---|---|---|
 | Desktop GL | OpenGL 3.3 core / GLSL 330 | Windows WGL, Linux GLX/EGL, macOS 4.1 core | Primary desktop path; `R16UI`, `usampler2D`, `texelFetch`. |
 | GLES | OpenGL ES 3.0/3.1 / GLSL ES 300 | Windows ANGLE, Raspberry Pi 4/5, other GLES | Same two-stage pipeline. |
-| Vulkan | Vulkan 1.0 / SPIR-V 1.0 | Windows/Linux/macOS with a Vulkan loader and device | Optional offscreen backend and probe; CPU readback for the desktop fallback. |
+| Vulkan | Vulkan 1.0 / SPIR-V 1.0 | Windows/Linux/macOS with a Vulkan loader and device | Optional offscreen backend and probe; embedded Win32 child surface for the desktop path; CPU readback fallback. |
 | CPU | `WriteableBitmap` + `FrameAssembler` | Any | Fallback when no usable GL/GLES/Vulkan context; accuracy oracle. |
 
 On Windows, `--gl-backend auto|wgl|angle|software|vulkan` selects the Avalonia rendering
@@ -281,8 +281,8 @@ mode:
 - `wgl`: force desktop OpenGL.
 - `angle`: force ANGLE/GLES.
 - `software`: force Avalonia software rendering (no GL surface).
-- `vulkan`: hide the OpenGL surface and use the optional Vulkan offscreen presenter
-  with CPU readback.
+- `vulkan`: hide the OpenGL surface and use the optional embedded Vulkan Win32 child
+  surface; platforms without a Win32 surface fall back to the offscreen/readback path.
 
 `GlBackendOption` also accepts aliases: `default`, `desktop`, `gl`, `angleegl`, `egl`,
 `gles`, `cpu`, `vk`. The option is wired through `Win32PlatformOptions.RenderingMode`;
@@ -334,17 +334,19 @@ and `hqx`/`hqx3x`/`hqx4x`. xBR runs as a 4x GPU pass over the GPU-expanded nativ
 frame and finishes with sharp-bilinear; FSR runs EASU into a viewport-sized target,
 then RCAS into the output. HQx uses the shared CPU `FrameAssembler` + `HqxFilter`
 expansion, uploads the result, and finishes with sharp-bilinear; it is CPU-bound and
-opt-in. The Vulkan path has no swapchain or window-system surface yet, so it is not a
-replacement for the WGL/ANGLE presenter and does not request vsync.
+opt-in. The desktop Vulkan path hosts a native Win32 child window inside the Avalonia
+window, so it presents through a swapchain without CPU readback. It is still optional
+and does not replace the WGL/ANGLE presenter; non-Windows platforms fall back to the
+offscreen/readback path. The `--vk-window-probe` validates FIFO presentation separately.
 
 A 320x240 `accurate` probe compares the GPU output with `FrameAssembler` and reports the
 same FNV-1a hash as the OpenGL probe (`0xD6BD89C5`, 0 different pixels, no vertical flip).
-On the development RTX 4070, 4K sharp-bilinear measured 1.51 ms mean / 1.80 ms p99
-present and 1.34 ms mean / 1.62 ms p99 GPU time, with 0 managed bytes/frame; 4K xBR
-measured 1.55/1.92 ms present and 1.39/1.73 ms GPU; 4K FSR measured 1.87/2.15 ms
-present and 1.69/1.97 ms GPU; 1080p sharp-bilinear measured 0.49/0.50 ms present,
-1080p xBR 0.61/0.85 ms, and 1080p FSR 0.56/0.60 ms. See [`Vulkan.md`](Vulkan.md) for
-the full report and limitations.
+On the development RTX 4070, 4K sharp-bilinear measured 0.24 ms mean / 1.06 ms p99
+present and 0.075/0.091 ms GPU time, with 0 managed bytes/frame; 4K xBR measured
+0.32/0.80 ms present and 0.13/0.14 ms GPU; 4K FSR measured 0.60/1.30 ms present and
+0.40/0.42 ms GPU; 1080p sharp-bilinear measured 0.17/0.79 ms present, 1080p xBR
+0.21/0.38 ms, and 1080p FSR 0.27/0.78 ms. GPU time excludes the optional per-frame
+readback. See [`Vulkan.md`](Vulkan.md) for the full report and limitations.
 
 ---
 

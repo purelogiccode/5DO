@@ -51,6 +51,8 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
     private CommandPool _commandPool;
     private CommandBuffer _commandBuffer;
     private QueryPool _queryPool;
+    private Fence _frameFence;
+    private bool _frameFencePending;
     private Sampler _nearestSampler;
     private Sampler _linearSampler;
     private DescriptorSetLayout _paletteLayout;
@@ -125,6 +127,9 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
     private DeviceMemory _readbackMemory;
     private void* _readbackMapped;
     private ulong _readbackSize;
+    private bool _readbackValid;
+    private bool _readbackRecorded;
+    private bool _hasPresentedFrame;
 
     private Format _outputFormat = Format.B8G8R8A8Unorm;
     private bool _swizzleReadback;
@@ -150,9 +155,26 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
     /// <summary>
     /// Gets or sets a value indicating whether each present copies the rendered output into
     /// <see cref="Frame"/>. The desktop Vulkan fallback enables this; the timing probe leaves
-    /// it disabled so readback is not part of the measured present path.
+    /// it disabled so the per-frame GPU readback is not part of the measured present path.
+    /// When disabled, <see cref="ReadPixels"/> performs a one-shot readback on demand.
     /// </summary>
     public bool CaptureToFrame { get; set; }
+
+    /// <summary>
+    /// Gets or sets an optional unmanaged destination for the per-frame capture.
+    /// </summary>
+    /// <remarks>
+    /// When non-zero, <see cref="Present"/> copies the captured frame directly into this
+    /// address using <see cref="ReadbackStride"/> instead of copying into <see cref="Frame"/>.
+    /// The caller must keep the memory valid until <see cref="Present"/> returns; the
+    /// desktop fallback locks its <c>WriteableBitmap</c> for the duration of the present.
+    /// </remarks>
+    public nint ReadbackTarget { get; set; }
+
+    /// <summary>
+    /// Gets or sets the destination row stride, in bytes, for <see cref="ReadbackTarget"/>.
+    /// </summary>
+    public int ReadbackStride { get; set; }
 
     /// <inheritdoc />
     public FrameBuffer Frame => _frame;
@@ -195,6 +217,9 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         _frame = new FrameBuffer(width, height);
         _filterFallback = false;
         _gpuMilliseconds = null;
+        _readbackValid = false;
+        _readbackRecorded = false;
+        _hasPresentedFrame = false;
         CreateDevice();
         CreateCommandResources();
         CreateSamplers();
@@ -224,6 +249,9 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         _outputWidth = width;
         _outputHeight = height;
         _frame = new FrameBuffer(width, height);
+        _readbackValid = false;
+        _readbackRecorded = false;
+        _hasPresentedFrame = false;
         if (_initialized)
         {
             DestroyOutputTarget();
@@ -265,8 +293,10 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         UploadSourceData();
         RecordFrame();
         WaitForFrame();
+        _readbackValid = _readbackRecorded;
+        _hasPresentedFrame = true;
         ReadGpuTiming();
-        if (CaptureToFrame)
+        if (CaptureToFrame && !TryCopyReadbackToTarget())
         {
             ReadPixels(_frame.PixelSpan, out _, out _);
         }
@@ -344,7 +374,13 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             throw new ArgumentException($"The destination needs {required} bytes.", nameof(destination));
         }
 
-        if (!_initialized || _readbackMapped is null)
+        if (!_initialized || _readbackMapped is null || !_hasPresentedFrame)
+        {
+            destination[..required].Clear();
+            return;
+        }
+
+        if (!_readbackValid && !TryReadbackNow())
         {
             destination[..required].Clear();
             return;
@@ -365,6 +401,107 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         {
             source.CopyTo(destination);
         }
+    }
+
+    /// <summary>
+    /// Copies the last presented output image into the readback buffer on demand.
+    /// </summary>
+    /// <remarks>
+    /// The normal present path only records this copy when <see cref="CaptureToFrame"/> is
+    /// enabled. Probes and screenshot paths call <see cref="ReadPixels"/> directly, so they
+    /// need a one-shot copy that is not part of the steady-state frame cost.
+    /// </remarks>
+    private bool TryReadbackNow()
+    {
+        if (_vk is null
+            || _device.Handle == 0
+            || _outputImage.Handle == 0
+            || _readbackBuffer.Handle == 0)
+        {
+            return false;
+        }
+
+        // The output image is sampled/blitted after the render pass; wait for any
+        // outstanding submission before reusing the shared command buffer.
+        Check(_vk.QueueWaitIdle(_queue), "vkQueueWaitIdle(readback)");
+        Check(
+            _vk.ResetCommandBuffer(_commandBuffer, CommandBufferResetFlags.None),
+            "vkResetCommandBuffer(readback)");
+        CommandBufferBeginInfo begin = new()
+        {
+            SType = StructureType.CommandBufferBeginInfo,
+            Flags = CommandBufferUsageFlags.OneTimeSubmitBit,
+        };
+        Check(_vk.BeginCommandBuffer(_commandBuffer, &begin), "vkBeginCommandBuffer(readback)");
+        CopyOutputToReadback();
+        Check(_vk.EndCommandBuffer(_commandBuffer), "vkEndCommandBuffer(readback)");
+
+        CommandBuffer commandBuffer = _commandBuffer;
+        SubmitInfo submit = new()
+        {
+            SType = StructureType.SubmitInfo,
+            CommandBufferCount = 1,
+            PCommandBuffers = &commandBuffer,
+        };
+        Check(_vk.QueueSubmit(_queue, 1, &submit, default), "vkQueueSubmit(readback)");
+        Check(_vk.QueueWaitIdle(_queue), "vkQueueWaitIdle(readback)");
+        _readbackValid = true;
+        return true;
+    }
+
+    private bool TryCopyReadbackToTarget()
+    {
+        var rowBytes = checked(_outputWidth * 4);
+        var stride = ReadbackStride > 0 ? ReadbackStride : rowBytes;
+        if (!_readbackValid
+            || _readbackMapped is null
+            || ReadbackTarget == 0
+            || stride < rowBytes)
+        {
+            return false;
+        }
+
+        var source = (byte*)_readbackMapped;
+        var destination = (byte*)ReadbackTarget;
+        if (_swizzleReadback)
+        {
+            for (var y = 0; y < _outputHeight; y++)
+            {
+                var sourceRow = source + (y * rowBytes);
+                var destinationRow = destination + (y * stride);
+                for (var x = 0; x < _outputWidth; x++)
+                {
+                    var offset = x * 4;
+                    destinationRow[offset] = sourceRow[offset + 2];
+                    destinationRow[offset + 1] = sourceRow[offset + 1];
+                    destinationRow[offset + 2] = sourceRow[offset];
+                    destinationRow[offset + 3] = 0xff;
+                }
+            }
+
+            return true;
+        }
+
+        if (stride == rowBytes)
+        {
+            System.Buffer.MemoryCopy(
+                source,
+                destination,
+                (long)rowBytes * _outputHeight,
+                (long)rowBytes * _outputHeight);
+            return true;
+        }
+
+        for (var y = 0; y < _outputHeight; y++)
+        {
+            System.Buffer.MemoryCopy(
+                source + (y * rowBytes),
+                destination + (y * stride),
+                rowBytes,
+                rowBytes);
+        }
+
+        return true;
     }
 
     /// <inheritdoc />
@@ -670,6 +807,11 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             QueryCount = 2,
         };
         Check(_vk.CreateQueryPool(_device, &queryCreate, null, out _queryPool), "vkCreateQueryPool");
+        FenceCreateInfo fenceCreate = new()
+        {
+            SType = StructureType.FenceCreateInfo,
+        };
+        Check(_vk.CreateFence(_device, &fenceCreate, null, out _frameFence), "vkCreateFence");
     }
 
     private void CreateSamplers()
@@ -1369,6 +1511,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
 
     private void RecordFrame()
     {
+        WaitForFrameFence();
         Check(_vk!.ResetCommandBuffer(_commandBuffer, CommandBufferResetFlags.None), "vkResetCommandBuffer");
         CommandBufferBeginInfo begin = new()
         {
@@ -1384,12 +1527,17 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         CopyStagingToImages();
         RecordPalettePass();
         RecordFilterPass();
-        CopyOutputToReadback();
         _vk.CmdWriteTimestamp(
             _commandBuffer,
             PipelineStageFlags.BottomOfPipeBit,
             _queryPool,
             1);
+        _readbackRecorded = CaptureToFrame;
+        if (_readbackRecorded)
+        {
+            CopyOutputToReadback();
+        }
+
         Check(_vk.EndCommandBuffer(_commandBuffer), "vkEndCommandBuffer");
 
         CommandBuffer commandBuffer = _commandBuffer;
@@ -1405,6 +1553,21 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
     private void WaitForFrame()
     {
         Check(_vk!.QueueWaitIdle(_queue), "vkQueueWaitIdle");
+    }
+
+    private void WaitForFrameFence()
+    {
+        if (!_frameFencePending || _vk is null || _frameFence.Handle == 0)
+        {
+            return;
+        }
+
+        Fence fence = _frameFence;
+        Check(
+            _vk.WaitForFences(_device, 1, &fence, true, ulong.MaxValue),
+            "vkWaitForFences");
+        Check(_vk.ResetFences(_device, 1, &fence), "vkResetFences");
+        _frameFencePending = false;
     }
 
     private void CopyStagingToImages()
@@ -1661,7 +1824,6 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             _filterFallback = true;
         }
 
-        UpdateScaleDescriptor(_expandedView);
         RecordScalePass(_sourceWidth, _sourceHeight, FilterValue(filter), filter, _scaleSet);
     }
 
@@ -2144,6 +2306,14 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             _vk.DestroySampler(_device, _linearSampler, null);
             _linearSampler = default;
         }
+
+        if (_frameFence.Handle != 0)
+        {
+            _vk.DestroyFence(_device, _frameFence, null);
+            _frameFence = default;
+        }
+
+        _frameFencePending = false;
 
         if (_queryPool.Handle != 0)
         {

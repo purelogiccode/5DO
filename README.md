@@ -167,7 +167,7 @@ implementation plan and architecture are in:
 - [`docs/SaveStates.md`](docs/SaveStates.md) - .tdos binary layout, section table, slots, validation, roundtrip workflow.
 - [`docs/Audio.md`](docs/Audio.md) - DSP clock, OpenAL output, WAV capture, tap, analysis, pacing.
 - [`docs/Video.md`](docs/Video.md) - VDLP/frame assembly, two-stage presenter, all filters including FSR, backends, probes.
-- [`docs/Vulkan.md`](docs/Vulkan.md) - optional offscreen Vulkan backend, probe, filters, measured results, and limitations.
+- [`docs/Vulkan.md`](docs/Vulkan.md) - optional Vulkan backend, probe, filters, measured results, and limitations.
 - [`docs/Diagnostics.md`](docs/Diagnostics.md) - logs, traces, watchpoints, dumps, KPRINT, input scripts, tap, probe.
 - [`docs/Troubleshooting.md`](docs/Troubleshooting.md) - symptom-driven diagnosis and fixes.
 - [`docs/Glossary.md`](docs/Glossary.md) - hardware, emulator, renderer, audio, and release terms.
@@ -213,16 +213,17 @@ The desktop frontend uses **Silk.NET.OpenGL/OpenGLES** through Avalonia's OpenGL
 
 The emulation core still renders CELs in software for accuracy. The GPU accelerates presentation, palette expansion, scaling, and filters; it does not change emulated state.
 
-An optional **Vulkan 1.0 offscreen backend** (`FiveDo.Video.Vulkan`) mirrors the
+An optional **Vulkan 1.0 backend** (`FiveDo.Video.Vulkan`) mirrors the
 two-stage pipeline with build-time SPIR-V shaders, supports accurate, nearest,
 sharp-bilinear, CRT, xBR-lv2, FSR 1.0 (EASU + RCAS), and HQx 2x/3x/4x modes, and can
-be selected for the desktop fallback with `--gl-backend vulkan`. It is also exposed
+be selected for the desktop with `--gl-backend vulkan`, where it hosts a native Win32
+child surface inside the Avalonia window with no CPU readback. It is also exposed
 as a headless probe (`--vk-probe`) and a native Win32 swapchain probe
 (`--vk-window-probe`). The Vulkan path matches the CPU oracle
-pixel-for-pixel at 320x240 (`0xD6BD89C5`), measures 1.51 ms mean / 1.80 ms p99 at 4K
-sharp-bilinear, 1.55/1.92 ms at 4K xBR, 1.87/2.15 ms at 4K FSR, and 7.66/10.36 ms at
+pixel-for-pixel at 320x240 (`0xD6BD89C5`), measures 0.24 ms mean / 1.06 ms p99 at 4K
+sharp-bilinear, 0.32/0.80 ms at 4K xBR, 0.60/1.30 ms at 4K FSR, and 6.82/10.93 ms at
 4K HQx 2x (CPU-bound), with 0 managed bytes/frame on the RTX 4070. The native window
-probe presents 4K sharp-bilinear through a FIFO swapchain at 1.34 ms mean / 1.43 ms
+probe presents 4K sharp-bilinear through a FIFO swapchain at 0.077 ms mean / 0.088 ms
 p99 GPU time (present includes the 165 Hz display wait) with 0 managed bytes/frame.
 It remains optional: OpenGL/GLES is still the required desktop presenter. See
 [`docs/Vulkan.md`](docs/Vulkan.md).

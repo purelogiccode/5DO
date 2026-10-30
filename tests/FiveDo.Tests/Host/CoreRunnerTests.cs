@@ -78,6 +78,27 @@ public sealed class CoreRunnerTests
     }
 
     [Fact]
+    public void RapidPauseResumeAndInvoke_KeepFramesConsistent()
+    {
+        FiveDoMachine machine = CreateMachine();
+        using var runner = new CoreRunner(machine);
+        runner.Start();
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(2)));
+
+        for (var i = 0; i < 50; i++)
+        {
+            runner.Pause();
+            var paused = runner.Frames;
+            runner.Invoke(() => Assert.Equal(paused, runner.Frames));
+            Assert.Equal(paused, runner.Frames);
+            runner.Resume();
+            Assert.True(SpinWait.SpinUntil(() => runner.Frames > paused, TimeSpan.FromSeconds(2)));
+        }
+
+        runner.Stop();
+    }
+
+    [Fact]
     public void StepFrame_AdvancesExactlyOneFrameWhilePaused()
     {
         FiveDoMachine machine = CreateMachine();

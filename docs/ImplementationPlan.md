@@ -57,7 +57,24 @@ chains, `burst`/`gap` file layouts, special entries, and malformed-record reject
 covered by tests; the `VideoGameFileSystemParser` dependency was removed. **906 tests
 pass.**
 
-**Last updated:** 2026-10-29
+**Vulkan performance update (2026-10-30, twenty-sixth pass):** the optional Vulkan
+backend now records the full-frame readback only when `CaptureToFrame` is enabled;
+probes and screenshots use a one-shot copy, and the GPU timestamp covers the render
+passes only. On the RTX 4070, 4K sharp-bilinear GPU time drops from 1.34 ms to
+0.075 ms and present from 1.51 ms to 0.24 ms; 4K FSR drops from 1.69/1.87 ms to
+0.40/0.60 ms (GPU/present). The desktop fallback writes the captured frame directly
+into the locked `WriteableBitmap`, and the swapchain blit uses a fence instead of
+`vkQueueWaitIdle`. **924 tests pass.**
+
+**Vulkan embedded surface and core-runner fix (2026-10-30, twenty-seventh pass):**
+`VulkanVideoSurface` hosts a click-through Win32 child HWND inside the Avalonia window
+and presents through the existing FIFO swapchain, so `--gl-backend vulkan` no longer
+copies frames back to the CPU or uploads a `WriteableBitmap`. The `CoreRunner`
+pause/resume handshake now uses a monitor with an explicit paused state, fixing rapid
+stop/start cycles where the UI could touch the machine while the core thread was still
+running. **925 tests pass.**
+
+**Last updated:** 2026-10-30
 
 ---
 

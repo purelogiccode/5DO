@@ -451,6 +451,9 @@
                                    ToolTip.Tip="Emulated 3DO video output rendered by OpenGL." />
                 <Image x:Name="CpuVideo" Stretch="Uniform" IsVisible="False"
                        ToolTip.Tip="CPU fallback frame shown when OpenGL is unavailable." />
+                <ctrl:VulkanVideoSurface x:Name="VulkanVideo" HorizontalAlignment="Stretch"
+                                         VerticalAlignment="Stretch" IsVisible="False"
+                                         ToolTip.Tip="Emulated 3DO video output rendered by Vulkan." />
                 <Border x:Name="OverlayPanel" IsVisible="False" HorizontalAlignment="Left"
                         VerticalAlignment="Top" Margin="8" Padding="6,3"
                         Background="#A0000000" CornerRadius="3">

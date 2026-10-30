@@ -80,14 +80,15 @@ This is the short, current answer to "where are we?" The documentation index is
   EASU plus RCAS; HQx uses the shared CPU expansion. `--vk-probe` writes the shared
   GPU probe JSON and PNG captures; `--vk-window-probe` creates a native Win32
   swapchain, presents through FIFO vsync, and writes the same report with
-  `offscreen: false`; `--gl-backend vulkan` selects the optional desktop
-  offscreen/readback path. The 320x240 Accurate probe matches the CPU oracle
-  (`0xD6BD89C5`, 0 different pixels); 4K sharp-bilinear measures 1.51 ms mean /
-  1.80 ms p99 present, 4K xBR 1.55/1.92 ms, and 4K FSR 1.87/2.15 ms, all with 0
-  managed bytes/frame on the RTX 4070. The 4K window probe reports 1.34/1.43 ms GPU
-  and 5.99/6.24 ms present (including the 165 Hz FIFO wait), 0 managed bytes/frame.
-  HQx 2x/3x/4x use the shared CPU expansion (4K HQx present 7.66/10.36 ms, CPU-bound),
-  and Avalonia-embedded/X11/Wayland/Metal surfaces are future work. See
+  `offscreen: false`; `--gl-backend vulkan` hosts the optional desktop Win32 child
+  surface. The 320x240 Accurate probe matches the CPU oracle
+  (`0xD6BD89C5`, 0 different pixels); 4K sharp-bilinear measures 0.24 ms mean /
+  1.06 ms p99 present and 0.075/0.091 ms GPU, 4K xBR 0.32/0.80 ms present and
+  0.13/0.14 ms GPU, and 4K FSR 0.60/1.30 ms present and 0.40/0.42 ms GPU, all with 0
+  managed bytes/frame on the RTX 4070. The 4K window probe reports 0.077/0.088 ms GPU
+  and 5.96/6.53 ms present (including the 165 Hz FIFO wait), 0 managed bytes/frame.
+  HQx 2x/3x/4x use the shared CPU expansion (4K HQx present 6.82/10.93 ms, CPU-bound),
+  and compositor-embedded/X11/Wayland/Metal surfaces are future work. See
   [`Vulkan.md`](Vulkan.md).
 - **Renderer robustness:** GL/GLES capability parsing reports the API and version,
   fullscreen/F11/Escape work, GL readback screenshots are implemented, and GL init
@@ -315,13 +316,13 @@ measured the presentation path on Windows 11 (Ryzen 9 7900, RTX 4070, OpenGL 4.0
 
 The xBR row now uses the GPU-expanded palette texture directly; the previous path
 uploaded a CPU `FrameAssembler` copy. The optional Vulkan offscreen backend was also
-measured on the same machine: 4K sharp-bilinear present 1.51 ms mean / 1.80 ms p99,
-GPU 1.34 ms mean / 1.62 ms p99, 0 managed bytes/frame; 4K xBR present 1.55/1.92 ms,
-GPU 1.39/1.73 ms; 4K FSR present 1.87/2.15 ms, GPU 1.69/1.97 ms; 4K HQx 2x present
-7.66/10.36 ms, GPU 1.39/1.43 ms; 1080p sharp-bilinear present 0.49/0.50 ms, 1080p xBR
-0.61/0.85 ms, and 1080p FSR 0.56/0.60 ms, all with 0 managed bytes/frame. Its 320x240
-Accurate output matches the CPU oracle
-(`0xD6BD89C5`, 0 different pixels). See [`Vulkan.md`](Vulkan.md).
+measured on the same machine: 4K sharp-bilinear present 0.24 ms mean / 1.06 ms p99,
+GPU 0.075/0.091 ms, 0 managed bytes/frame; 4K xBR present 0.32/0.80 ms, GPU
+0.13/0.14 ms; 4K FSR present 0.60/1.30 ms, GPU 0.40/0.42 ms; 4K HQx 2x present
+6.82/10.93 ms, GPU 0.13/0.18 ms; 1080p sharp-bilinear present 0.17/0.79 ms, 1080p xBR
+0.21/0.38 ms, and 1080p FSR 0.27/0.78 ms, all with 0 managed bytes/frame. GPU time
+excludes the optional per-frame readback. Its 320x240 Accurate output matches the CPU
+oracle (`0xD6BD89C5`, 0 different pixels). See [`Vulkan.md`](Vulkan.md).
 
 The platform swap interval is wired through `SwapInterval.TryCreate` (WGL/GLX/EGL);
 the Windows WGL path resolves `WGL_EXT_swap_control` and reports `vsyncActive: true`

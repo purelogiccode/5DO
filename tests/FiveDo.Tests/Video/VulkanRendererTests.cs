@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using FiveDo.Core;
 using FiveDo.Video;
 using FiveDo.Video.Vulkan;
@@ -36,6 +37,106 @@ public sealed class VulkanRendererTests
         VdlFrame highResolution = CreateFrame(640, 480, 3);
         renderer.Present(highResolution);
         AssertParity(renderer, highResolution, 640, 480);
+    }
+
+    [Fact]
+    public void CaptureToFrame_WritesDirectlyToReadbackTarget()
+    {
+        if (!string.Equals(
+                Environment.GetEnvironmentVariable("FIVEDO_VULKAN_TESTS"),
+                "1",
+                StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        using var renderer = new VulkanOffscreenRenderer
+        {
+            Settings = new RendererSettings
+            {
+                Filter = VideoFilter.Accurate,
+                Aspect = AspectMode.Stretch,
+                IntegerScale = false,
+                Vsync = false,
+            },
+            CaptureToFrame = true,
+        };
+        renderer.Initialize(320, 240);
+        VdlFrame frame = CreateFrame(320, 240, 0);
+        const int rowBytes = 320 * 4;
+        const int stride = rowBytes + 64;
+        var pixels = new byte[stride * 240];
+        GCHandle handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
+        try
+        {
+            renderer.ReadbackTarget = handle.AddrOfPinnedObject();
+            renderer.ReadbackStride = stride;
+            renderer.Present(frame);
+        }
+        finally
+        {
+            renderer.ReadbackTarget = 0;
+            renderer.ReadbackStride = 0;
+            handle.Free();
+        }
+
+        var cpu = new FrameBuffer(320, 240);
+        FrameAssembler.Assemble(frame, cpu, 320, 240);
+        Span<byte> expected = cpu.PixelSpan;
+        var different = 0;
+        for (var y = 0; y < 240; y++)
+        {
+            var row = y * stride;
+            var expectedRow = y * rowBytes;
+            for (var x = 0; x < rowBytes; x += 4)
+            {
+                if (pixels[row + x] != expected[expectedRow + x]
+                    || pixels[row + x + 1] != expected[expectedRow + x + 1]
+                    || pixels[row + x + 2] != expected[expectedRow + x + 2])
+                {
+                    different++;
+                }
+            }
+        }
+
+        Assert.Equal(0, different);
+    }
+
+    [Fact]
+    public void Renderer_LetterboxesWithBlackBars()
+    {
+        if (!string.Equals(
+                Environment.GetEnvironmentVariable("FIVEDO_VULKAN_TESTS"),
+                "1",
+                StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        using var renderer = new VulkanOffscreenRenderer
+        {
+            Settings = new RendererSettings
+            {
+                Filter = VideoFilter.Accurate,
+                Aspect = AspectMode.FourThree,
+                IntegerScale = false,
+                Vsync = false,
+            },
+        };
+        renderer.Initialize(640, 360);
+        renderer.Present(CreateSplitFrame());
+
+        var gpu = new byte[640 * 360 * 4];
+        renderer.ReadPixels(gpu, out _, out _);
+        var bar = ((180 * 640) + 10) * 4;
+        Assert.Equal(0, gpu[bar]);
+        Assert.Equal(0, gpu[bar + 1]);
+        Assert.Equal(0, gpu[bar + 2]);
+
+        var center = ((180 * 640) + 320) * 4;
+        Assert.True(
+            gpu[center] > 200 && gpu[center + 2] < 50,
+            $"The centered viewport was not blue: B={gpu[center]} G={gpu[center + 1]} R={gpu[center + 2]}.");
     }
 
     [Fact]

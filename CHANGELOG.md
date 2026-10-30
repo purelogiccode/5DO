@@ -7,6 +7,11 @@ still change.
 
 ### Added
 
+- Embedded Win32 Vulkan video surface for the desktop shell. `VulkanVideoSurface`
+  hosts a click-through child HWND inside the Avalonia window and presents through
+  the existing FIFO swapchain, eliminating the per-frame GPU-to-CPU readback and
+  `WriteableBitmap` upload for `--gl-backend vulkan`. The child surface is
+  Windows-only; non-Windows platforms keep the offscreen/readback fallback.
 - `fs list`/`fs extract` now read the 3DO Opera file system from ISO, BIN, CUE+BIN,
   and CHD images through the first-party `FiveDo.Storage.OperaFileSystem` parser. It
   follows multi-block directory chains and `burst`/`gap` file layouts. The Lemmings
@@ -16,8 +21,8 @@ still change.
   for a real window, blits its rendered output into the acquired swapchain image, and
   presents with FIFO vsync. The probe writes the same timing/parity JSON as `--vk-probe`
   with `offscreen: false`, `vsyncActive`, and `vsyncBackend`. On Windows 11 / RTX 4070,
-  4K sharp-bilinear measures 5.99 ms mean / 6.24 ms p99 present (including the 165 Hz
-  FIFO wait) and 1.34/1.43 ms GPU with 0 managed bytes/frame; a 320x240 Accurate
+  4K sharp-bilinear measures 5.96 ms mean / 6.53 ms p99 present (including the 165 Hz
+  FIFO wait) and 0.077/0.088 ms GPU with 0 managed bytes/frame; a 320x240 Accurate
   capture still matches the CPU oracle with 0 different pixels. See
   [`docs/Vulkan.md`](docs/Vulkan.md).
 - `AppSettings.PreferOpenGl` is now honored: unchecking "Use the OpenGL renderer" in
@@ -37,15 +42,17 @@ still change.
   sharp-bilinear/CRT filters, GPU timestamp queries, and host readback. `--vk-probe`
   writes the shared GPU probe JSON and PNG captures; `--gl-backend vulkan` selects
   the optional desktop offscreen/readback path. A 320x240 Accurate probe matches the
-  CPU oracle (`0xD6BD89C5`, 0 different pixels); 4K sharp-bilinear measures 1.51 ms
-  mean / 1.80 ms p99 present with 0 managed bytes/frame on the RTX 4070. See
+  CPU oracle (`0xD6BD89C5`, 0 different pixels); 4K sharp-bilinear measures 0.24 ms
+  mean / 1.06 ms p99 present and 0.075/0.091 ms GPU with 0 managed bytes/frame on the
+  RTX 4070. See
   [`docs/Vulkan.md`](docs/Vulkan.md).
 - Vulkan xBR-lv2, FSR 1.0 (EASU + RCAS), and HQx 2x/3x/4x filters. xBR runs as a
   4x pass over the GPU-expanded native frame and FSR runs EASU plus RCAS; HQx uses
   the shared CPU `FrameAssembler` + `HqxFilter` expansion and a reusable upload path.
   All three preserve top-down orientation and report `filterFallback: false`. 4K xBR
-  measures 1.55 ms mean / 1.92 ms p99 present, 4K FSR 1.87/2.15 ms, and 4K HQx 2x
-  7.66/10.36 ms (CPU-bound), with 0 managed bytes/frame on the RTX 4070.
+  measures 0.32 ms mean / 0.80 ms p99 present and 0.13/0.14 ms GPU, 4K FSR 0.60/1.30 ms
+  present and 0.40/0.42 ms GPU, and 4K HQx 2x 6.82/10.93 ms (CPU-bound), with 0 managed
+  bytes/frame on the RTX 4070.
 - The required OpenGL xBR path now samples the GPU-expanded palette texture directly
   instead of uploading a CPU `FrameAssembler` copy; the 4K WGL xBR probe measures
   present 0.28 ms mean / 1.47 ms p99 with 0 renderer allocations.
@@ -123,6 +130,22 @@ still change.
 
 ### Fixed
 
+- **Stop/start race in the core runner.** `CoreRunner.Pause`/`Resume`/`Invoke` used
+  a manual-reset event pair that could return from `Pause` before the core thread had
+  actually stopped, letting the UI reset or replace the machine while the core thread
+  was still running. The handshake now uses a monitor with an explicit paused state,
+  and `Invoke` cannot run concurrently with `RunFrame`. Rapid stop/start cycles now
+  restart games reliably; a stress test covers 50 pause/invoke/resume cycles.
+- **Vulkan readback cost.** The Vulkan renderer copied the full output image to a
+  host-visible buffer every frame, even when no caller read it, and the GPU timestamp
+  bracketed that transfer. The readback is now recorded only when `CaptureToFrame` is
+  enabled; probes and screenshots use a one-shot copy, and the GPU timestamp covers the
+  render passes only. On the RTX 4070, 4K sharp-bilinear GPU time drops from 1.34 ms to
+  0.075 ms and present from 1.51 ms to 0.24 ms; 4K FSR GPU/present drops from
+  1.69/1.87 ms to 0.40/0.60 ms. The desktop fallback also writes the captured frame
+  directly into the locked `WriteableBitmap` instead of through two intermediate
+  full-frame copies, and the swapchain blit no longer stalls the queue with
+  `vkQueueWaitIdle`.
 - Expected environmental warnings are no longer filed as bug reports. The
   "OpenAL audio is unavailable" fallback is marked with the new
   `WithoutBugReport()` context and is ignored by `BugReportSink`; `--smoke-test`,

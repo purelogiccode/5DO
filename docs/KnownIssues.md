@@ -26,8 +26,9 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
 - CRT bloom is implemented as a 3x3 native-resolution glow in the CRT filter.
 - FSR 1.0 is opt-in (EASU + RCAS, two GPU passes). It has a sharpness setting and
   MIT attribution. The 4K WGL probe measures present 0.132 ms mean / 1.191 ms p99 and
-  GPU 0.441/0.483 ms; the optional Vulkan backend measures 1.873/2.154 ms present and
-  1.694/1.967 ms GPU.
+  GPU 0.441/0.483 ms; the optional Vulkan backend measures 0.604/1.303 ms present and
+  0.404/0.415 ms GPU. The Vulkan figures exclude the optional per-frame readback; the
+  desktop `--gl-backend vulkan` path still renders offscreen and copies the frame back.
 - The xBR path now samples the GPU-expanded palette texture directly; it no longer
   uploads a CPU `FrameAssembler` copy. WGL and ANGLE 4K xBR probes pass, and the
   320x240 xBR capture is within one mean channel level of the accurate frame.
@@ -44,10 +45,12 @@ post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
   and comes from the Avalonia UI/compositor loop; the renderer/mailbox path itself is
   zero-allocation after warm-up.
 - Linux/macOS OpenGL launch validation is not complete.
-- The optional Vulkan backend (`--gl-backend vulkan` / `--vk-probe`) is offscreen and
-  readback-based. `--vk-window-probe` adds a native Win32 swapchain with FIFO vsync,
-  but it is a probe path, not an Avalonia-embedded surface; X11/Wayland/Metal surfaces
-  and non-Windows Vulkan device validation are pending. xBR-lv2 and FSR 1.0
+- The optional Vulkan backend (`--gl-backend vulkan` / `--vk-probe`) hosts a native
+  Win32 child window inside the Avalonia window on Windows, so the desktop path has no
+  CPU readback. The child window is outside Avalonia's compositor, so Avalonia-drawn
+  overlays over the video rectangle are obscured; X11/Wayland/Metal surfaces and
+  non-Windows Vulkan device validation are pending. The offscreen/readback path remains
+  for probes, screenshots, and non-Windows fallback. xBR-lv2 and FSR 1.0
   (EASU + RCAS) are GPU passes; HQx 2x/3x/4x use the shared CPU expansion and are
   CPU-bound. See [`Vulkan.md`](Vulkan.md).
 
