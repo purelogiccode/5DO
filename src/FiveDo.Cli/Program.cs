@@ -968,11 +968,13 @@ internal static class Program
         {
         }
 
+        // ReSharper disable once UnusedMember.Local
         public TraceStopException(string message)
             : base(message)
         {
         }
 
+        // ReSharper disable once UnusedMember.Local
         public TraceStopException(string message, Exception innerException)
             : base(message, innerException)
         {
@@ -985,11 +987,13 @@ internal static class Program
         {
         }
 
+        // ReSharper disable once UnusedMember.Local
         public TraceLimitReachedException(string message)
             : base(message)
         {
         }
 
+        // ReSharper disable once UnusedMember.Local
         public TraceLimitReachedException(string message, Exception innerException)
             : base(message, innerException)
         {

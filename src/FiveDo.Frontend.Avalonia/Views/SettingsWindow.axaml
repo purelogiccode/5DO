@@ -64,7 +64,7 @@
                             Content="Play 440 Hz test tone" Click="OnTestAudioClickAsync"
                             HorizontalAlignment="Left" Margin="0,12,0,0"
                             ToolTip.Tip="Play a one-second 440 Hz tone to verify the output device." />
-                    <TextBlock x:Name="TestAudioText" Grid.Row="3" Grid.ColumnSpan="2"
+                    <TextBlock x:Name="TestAudioText" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
                                Text="OpenAL Soft 1.23.1 · 44.1 kHz stereo"
                                Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
                                ToolTip.Tip="Audio backend status and test-tone result." />

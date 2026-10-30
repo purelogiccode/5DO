@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using FiveDo.Core;
 
 namespace FiveDo.Input;
 

@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using FiveDo.Core;
 using Silk.NET.Core.Native;
@@ -28,11 +27,9 @@ namespace FiveDo.Video.Vulkan;
 /// </remarks>
 public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, IRendererTiming
 {
-    private const uint InvalidHandle = uint.MaxValue;
     private const int MaxSourceWidth = VdlFrameUploader.MaxWidth;
     private const int MaxSourceHeight = VdlFrameUploader.MaxHeight;
     private const int ClutEntries = VdlFrameUploader.ClutEntries;
-    private const uint FixedClutEnable = 0x02000000;
 
     private readonly VdlFrameUploader _uploader = new();
     private readonly HqxFilter _hqxProcessor = new();
@@ -842,8 +839,8 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
                 {
                     X = 0,
                     Y = 0,
-                    Width = (float)_outputWidth,
-                    Height = (float)_outputHeight,
+                    Width = _outputWidth,
+                    Height = _outputHeight,
                     MinDepth = 0f,
                     MaxDepth = 1f,
                 };
@@ -990,7 +987,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
     private void CreateStagingResources()
     {
         _pixelStaging = CreateBuffer(
-            (ulong)(MaxSourceWidth * MaxSourceHeight * sizeof(ushort)),
+            MaxSourceWidth * MaxSourceHeight * sizeof(ushort),
             BufferUsageFlags.TransferSrcBit,
             MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit,
             out _pixelStagingMemory);
@@ -999,7 +996,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         _pixelStagingMapped = pixelMapped;
 
         _clutStaging = CreateBuffer(
-            (ulong)(ClutEntries * MaxSourceHeight * sizeof(uint)),
+            ClutEntries * MaxSourceHeight * sizeof(uint),
             BufferUsageFlags.TransferSrcBit,
             MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit,
             out _clutStagingMemory);
@@ -1008,7 +1005,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         _clutStagingMapped = clutMapped;
 
         _paramStaging = CreateBuffer(
-            (ulong)(MaxSourceHeight * 2 * sizeof(uint)),
+            MaxSourceHeight * 2 * sizeof(uint),
             BufferUsageFlags.TransferSrcBit,
             MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit,
             out _paramStagingMemory);
@@ -1020,16 +1017,16 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
     private void CreateSourceImages()
     {
         CreateImage(
-            (uint)MaxSourceWidth,
-            (uint)MaxSourceHeight,
+            MaxSourceWidth,
+            MaxSourceHeight,
             Format.R16Uint,
             ImageUsageFlags.SampledBit | ImageUsageFlags.TransferDstBit,
             out _pixelImage,
             out _pixelMemory,
             out _pixelView);
         CreateImage(
-            (uint)ClutEntries,
-            (uint)MaxSourceHeight,
+            ClutEntries,
+            MaxSourceHeight,
             Format.R8G8B8A8Unorm,
             ImageUsageFlags.SampledBit | ImageUsageFlags.TransferDstBit,
             out _clutImage,
@@ -1037,7 +1034,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             out _clutView);
         CreateImage(
             1,
-            (uint)MaxSourceHeight,
+            MaxSourceHeight,
             Format.R32G32Uint,
             ImageUsageFlags.SampledBit | ImageUsageFlags.TransferDstBit,
             out _paramImage,

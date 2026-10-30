@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using FiveDo.Core;
 
 namespace FiveDo.Diagnostics.Logging;
 
@@ -43,8 +44,8 @@ public static class EnvironmentDetails
             Environment.NewLine,
             "=== Environment Details ===",
             $"Date: {DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture)}",
-            $"Application Name: {FiveDo.Core.FiveDoVersion.ProductName}",
-            $"Application Version: {FiveDo.Core.FiveDoVersion.Version}",
+            $"Application Name: {FiveDoVersion.ProductName}",
+            $"Application Version: {FiveDoVersion.Version}",
             $"OS Version: {RuntimeInformation.OSDescription}",
             $"Architecture: {RuntimeInformation.ProcessArchitecture}",
             $"Bitness: {(Environment.Is64BitProcess ? "64-bit" : "32-bit")}",

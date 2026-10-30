@@ -1,5 +1,3 @@
-using Avalonia.Controls;
-using Avalonia.Interactivity;
 
 namespace FiveDo.Frontend.Avalonia.Views;
 

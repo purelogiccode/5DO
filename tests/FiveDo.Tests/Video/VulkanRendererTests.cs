@@ -18,15 +18,13 @@ public sealed class VulkanRendererTests
             return;
         }
 
-        using var renderer = new VulkanOffscreenRenderer
+        using var renderer = new VulkanOffscreenRenderer();
+        renderer.Settings = new RendererSettings
         {
-            Settings = new RendererSettings
-            {
-                Filter = VideoFilter.Accurate,
-                Aspect = AspectMode.Stretch,
-                IntegerScale = false,
-                Vsync = false,
-            },
+            Filter = VideoFilter.Accurate,
+            Aspect = AspectMode.Stretch,
+            IntegerScale = false,
+            Vsync = false,
         };
 
         renderer.Initialize(320, 240);
@@ -51,15 +49,13 @@ public sealed class VulkanRendererTests
             return;
         }
 
-        using var renderer = new VulkanOffscreenRenderer
+        using var renderer = new VulkanOffscreenRenderer();
+        renderer.Settings = new RendererSettings
         {
-            Settings = new RendererSettings
-            {
-                Filter = VideoFilter.Xbr,
-                Aspect = AspectMode.Stretch,
-                IntegerScale = false,
-                Vsync = false,
-            },
+            Filter = VideoFilter.Xbr,
+            Aspect = AspectMode.Stretch,
+            IntegerScale = false,
+            Vsync = false,
         };
 
         renderer.Initialize(320, 240);
@@ -150,7 +146,7 @@ public sealed class VulkanRendererTests
         {
             VdlLine line = frame[y];
             line.Width = width;
-            line.OutControl = (uint)((y & 1) == 0 ? 0x02000000u : 0u);
+            line.OutControl = (y & 1) == 0 ? 0x02000000u : 0u;
             line.Background = (uint)(((y & 0x1f) << 10) | (((y * 3) & 0x1f) << 5) | (y & 0x1f));
             for (var i = 0; i < VdlLine.ClutSize; i++)
             {

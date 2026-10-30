@@ -54,12 +54,14 @@ public sealed class OperaFileEntry
     public uint Lba { get; }
 
     /// <summary>Gets the raw Opera directory-entry flags.</summary>
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public uint Flags { get; }
 
     /// <summary>Gets the entry block size in bytes.</summary>
     public uint BlockSize { get; }
 
     /// <summary>Gets the entry length in blocks.</summary>
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public uint EntryLengthBlocks { get; }
 
     /// <summary>Gets the number of contiguous data blocks in each burst.</summary>
@@ -69,6 +71,7 @@ public sealed class OperaFileEntry
     public uint Gap { get; }
 
     /// <summary>Gets every recorded copy of the entry; the first copy is the primary one.</summary>
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public IReadOnlyList<uint> Copies { get; }
 }
 
@@ -132,6 +135,7 @@ public sealed class OperaFileSystem
     public string Label { get; }
 
     /// <summary>Gets the volume comment.</summary>
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public string Comment { get; }
 
     /// <summary>Gets every parsed directory and file, including the root directory.</summary>
@@ -201,7 +205,7 @@ public sealed class OperaFileSystem
         var blockSize = entry.BlockSize != 0 ? entry.BlockSize : _blockSize;
         var burst = entry.Burst == 0 ? 1u : entry.Burst;
         var groupSize = (ulong)burst + entry.Gap;
-        var remaining = Math.Min((long)destination.Length, (long)entry.Size - offset);
+        var remaining = Math.Min(destination.Length, (long)entry.Size - offset);
         var total = 0;
         while (remaining > 0)
         {
@@ -209,7 +213,7 @@ public sealed class OperaFileSystem
             var inBlock = (int)((ulong)offset % blockSize);
             var group = logicalBlock / burst;
             var withinBurst = logicalBlock % burst;
-            var physicalBlock = (ulong)entry.Lba + (group * groupSize) + withinBurst;
+            var physicalBlock = entry.Lba + (group * groupSize) + withinBurst;
             if (physicalBlock > (ulong)long.MaxValue / blockSize)
             {
                 throw new InvalidDataException($"The Opera entry '{entry.Path}' has an invalid data block.");
@@ -301,7 +305,7 @@ public sealed class OperaFileSystem
                     $"The 3DO directory at LBA {currentBlock} has an invalid next block ({nextBlock}).");
             }
 
-            var next = (long)firstBlock + nextBlock;
+            var next = firstBlock + nextBlock;
             if (next <= 0 || next > uint.MaxValue)
             {
                 throw new InvalidDataException(

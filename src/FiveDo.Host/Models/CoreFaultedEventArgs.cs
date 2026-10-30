@@ -1,10 +1,4 @@
 using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Threading;
-using FiveDo.Core;
-using FiveDo.Machine;
-using FiveDo.Video;
 
 namespace FiveDo.Host;
 

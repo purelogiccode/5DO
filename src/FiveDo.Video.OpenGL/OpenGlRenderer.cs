@@ -285,6 +285,8 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     /// <inheritdoc />
     public void Present(VdlFrame frame)
     {
+        // ReSharper disable RedundantCast
+        // GL.Uniform* has int and float overloads; the explicit casts select the float overload.
         ArgumentNullException.ThrowIfNull(frame);
         var measureAlloc = MeasureAllocations;
         var allocationStart = measureAlloc ? GC.GetAllocatedBytesForCurrentThread() : 0;
@@ -506,6 +508,8 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             _lastScaleAllocatedBytes = allocation4 - allocation3;
             _lastPresentAllocatedBytes = allocation4 - allocationStart;
         }
+
+        // ReSharper restore RedundantCast
     }
 
     /// <inheritdoc />

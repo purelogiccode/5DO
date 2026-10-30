@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Runtime.InteropServices;
-using FiveDo.Core;
 
 namespace FiveDo.Input;
 

@@ -11,6 +11,7 @@ public sealed record LoggingOptions
     public string ApplicationMode { get; init; } = "Desktop";
 
     /// <summary>Gets the log directory. Defaults to the per-user platform log location.</summary>
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public string? LogDirectory { get; init; }
 
     /// <summary>Gets a value indicating whether events are written to the console (stderr).</summary>
@@ -29,9 +30,11 @@ public sealed record LoggingOptions
     public bool EnableBugReports { get; init; } = true;
 
     /// <summary>Gets an optional bug-report API key override.</summary>
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public string? BugReportApiKey { get; init; }
 
     /// <summary>Gets an optional bug-report endpoint override.</summary>
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public string? BugReportEndpoint { get; init; }
 
     /// <summary>Gets the minimum level written to sinks.</summary>

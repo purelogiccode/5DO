@@ -1,13 +1,4 @@
 using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using Avalonia.Controls;
-using Avalonia.OpenGL;
-using Avalonia.OpenGL.Controls;
-using FiveDo.Core;
-using FiveDo.Video;
-using FiveDo.Video.OpenGL;
-using Silk.NET.OpenGL;
 
 namespace FiveDo.Frontend.Avalonia.Controls;
 

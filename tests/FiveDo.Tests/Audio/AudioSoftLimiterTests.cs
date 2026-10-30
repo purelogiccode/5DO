@@ -1,4 +1,3 @@
-using System;
 using FiveDo.Audio;
 
 namespace FiveDo.Tests.Audio;

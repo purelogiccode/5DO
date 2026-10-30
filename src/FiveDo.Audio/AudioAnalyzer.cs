@@ -78,8 +78,8 @@ public static class AudioAnalyzer
                 }
 
                 hasData = true;
-                dataBytes += ReadData(stream, (long)requested, format, statistics);
-                if (((long)requested & 1) != 0 && stream.Position < stream.Length)
+                dataBytes += ReadData(stream, requested, format, statistics);
+                if ((requested & 1) != 0 && stream.Position < stream.Length)
                 {
                     stream.Seek(1, SeekOrigin.Current);
                 }

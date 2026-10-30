@@ -1,17 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Avalonia.Controls;
-using Avalonia.Media;
-using Avalonia.Threading;
-using FiveDo.Core;
-using FiveDo.Diagnostics;
-using FiveDo.Frontend.Avalonia.Controls;
-using FiveDo.Video;
 
 namespace FiveDo.Frontend.Avalonia;
 
