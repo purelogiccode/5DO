@@ -173,6 +173,7 @@ public sealed class NvramStoreTests
             Aspect = FiveDo.Video.AspectMode.Custom,
             CustomAspect = 1.6,
             PreferOpenGl = false,
+            OutputResolution = FiveDo.Video.OutputResolution.FullHd1080,
         };
 
         AppSettingsStore.Save(settings, path);
@@ -180,9 +181,50 @@ public sealed class NvramStoreTests
 
         Assert.Equal(FiveDo.Video.AspectMode.Custom, loaded.Aspect);
         Assert.Equal(1.6, loaded.CustomAspect);
+        Assert.Equal(VideoRendererKind.Software, loaded.Renderer);
         Assert.False(loaded.PreferOpenGl);
+        Assert.Equal(FiveDo.Video.OutputResolution.FullHd1080, loaded.OutputResolution);
         Assert.Equal(FiveDo.Video.AspectMode.Custom, loaded.ToRendererSettings().Aspect);
         Assert.Equal(1.6, loaded.ToRendererSettings().CustomAspect);
+        Assert.Equal(
+            FiveDo.Video.OutputResolution.FullHd1080,
+            loaded.ToRendererSettings().OutputResolution);
+    }
+
+    [Theory]
+    [InlineData(true, VideoRendererKind.OpenGl)]
+    [InlineData(false, VideoRendererKind.Software)]
+    public void AppSettings_MigratesLegacyPreferOpenGl(bool preferOpenGl, VideoRendererKind expected)
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "settings.json");
+        File.WriteAllText(
+            path,
+            $$"""
+            {
+              "PreferOpenGl": {{(preferOpenGl ? "true" : "false")}}
+            }
+            """);
+
+        AppSettings loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal(expected, loaded.Renderer);
+        Assert.Equal(preferOpenGl, loaded.PreferOpenGl);
+    }
+
+    [Fact]
+    public void AppSettings_RoundtripsVulkanRenderer()
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "settings.json");
+        var settings = new AppSettings { Renderer = VideoRendererKind.Vulkan };
+
+        AppSettingsStore.Save(settings, path);
+        AppSettings loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal(VideoRendererKind.Vulkan, loaded.Renderer);
+        Assert.False(loaded.PreferOpenGl);
+        Assert.DoesNotContain("PreferOpenGl", File.ReadAllText(path), StringComparison.Ordinal);
     }
 
     [Fact]

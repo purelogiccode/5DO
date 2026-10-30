@@ -74,7 +74,8 @@ serialized property in `AppSettings`.
 | `CustomAspect` | double | `1.3333` | Width/height ratio used when `Aspect` is `Custom`. |
 | `Vsync` | bool | `true` | Request platform vsync (where supported). |
 | `IntegerScale` | bool | `true` | Prefer integer scaling for 4:3/integer modes. |
-| `PreferOpenGl` | bool | `true` | Use the OpenGL presenter. When false, the shell starts directly in the CPU renderer; the Settings dialog exposes the toggle. |
+| `Renderer` | enum string | `"OpenGl"` | Presentation backend: `OpenGl`, `Vulkan`, or `Software`. |
+| `OutputResolution` | enum string | `"Window"` | Final output size: `Window`, `Native`, `Scale2X`, `Scale3X`, `Scale4X`, `Hd720`, `FullHd1080`, `Qhd1440`, or `Uhd2160`. |
 | `ShowOverlay` | bool | `false` | Show the FPS/status overlay. |
 | `SaveNativeScreenshot` | bool | `false` | Also write a `-native.png` CPU frame with each screenshot. |
 | `Bloom` | float | `0.35` | CRT bloom strength, 0..1. |
@@ -84,12 +85,20 @@ serialized property in `AppSettings`.
 | `AudioEnabled` | bool | `true` | Enable live OpenAL output. |
 | `Input` | object | defaults | Six-player keyboard/gamepad bindings plus hotkeys. |
 
+The legacy `PreferOpenGl` boolean is still read when loading older files; `false` maps to
+`Renderer: "Software"`. New files write `Renderer` instead.
+
 ### Enum values
 
 `Filter` (string): `Accurate`, `Nearest`, `SharpBilinear`, `Crt`, `Xbr`, `Hqx`,
 `Hqx3x`, `Hqx4x`, `Fsr`.
 
 `Aspect` (string): `Integer`, `FourThree`, `Stretch`, `Custom`.
+
+`Renderer` (string): `OpenGl`, `Vulkan`, `Software`.
+
+`OutputResolution` (string): `Window`, `Native`, `Scale2X`, `Scale3X`, `Scale4X`,
+`Hd720`, `FullHd1080`, `Qhd1440`, `Uhd2160`.
 
 `FixModeOverrides` values (string flags): `None`, `BitTiming1`, `BitTiming2`,
 `BitTiming3`, `BitTiming4`, `BitTiming5`, `BitTiming6`, `BitTiming7`,
@@ -142,7 +151,8 @@ player-1 defaults. See section 3 for the full input structure.
   "CustomAspect": 1.3333,
   "Vsync": true,
   "IntegerScale": true,
-  "PreferOpenGl": true,
+  "Renderer": "OpenGl",
+  "OutputResolution": "Window",
   "ShowOverlay": false,
   "SaveNativeScreenshot": false,
   "Bloom": 0.35,
@@ -432,7 +442,9 @@ CLI flags
 For the desktop shell, changes made in **Settings** are applied when the dialog is
 accepted; `settings.json` is written immediately. Changes to high-resolution mode
 restart the machine. Changes to audio settings recreate the OpenAL output if needed.
-Changes to filters/aspect/vsync apply to the current renderer without restarting.
+Changing `Renderer` recreates the active presenter without restarting emulation.
+Changes to `OutputResolution`, filters, aspect, and vsync apply to the current renderer
+without restarting the machine.
 
 ---
 

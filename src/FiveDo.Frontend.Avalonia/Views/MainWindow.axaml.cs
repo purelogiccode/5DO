@@ -60,6 +60,7 @@ public partial class MainWindow : Window, IDisposable
     private string _gameId = string.Empty;
     private string _gameName = string.Empty;
     private ICpuFrameRenderer? _cpuVideo;
+    private VideoRendererKind _rendererKind;
     private bool _vulkanPresenter;
     private bool _openGlDisabled;
     private WriteableBitmap? _cpuBitmap;
@@ -78,6 +79,7 @@ public partial class MainWindow : Window, IDisposable
     {
         InitializeComponent();
         _settings = AppSettingsStore.Load();
+        _rendererKind = ResolveRendererKind();
         _logSink = AppLogging.InMemorySink ?? new InMemorySerilogSink(4000);
         _logger = Serilog.Log.ForContext<MainWindow>();
         _logger.ForCategory(LogCategory.Host).Information(
@@ -113,20 +115,17 @@ public partial class MainWindow : Window, IDisposable
         HighResMenuItem.IsChecked = _settings.HighResolution;
         OverlayPanel.IsVisible = _settings.ShowOverlay;
         Video.Settings = _settings.ToRendererSettings(_gameId);
-        if (Program.RequestedGlBackend == GlBackend.Vulkan)
+        if (_rendererKind != VideoRendererKind.OpenGl
+            && (!Program.SmokeTest || Program.RequestedGlBackend != GlBackend.Auto))
         {
-            // The optional Vulkan path renders offscreen and presents through the CPU
-            // bitmap. Hide the OpenGL control so it never creates a WGL/ANGLE context.
-            Video.IsVisible = false;
-            StartCpuFallback(new NotSupportedException("Vulkan renderer requested."));
-        }
-        else if (!Program.SmokeTest && !_settings.PreferOpenGl)
-        {
-            // The user explicitly disabled the OpenGL presenter; use the CPU path
-            // even when a GL context is available.
+            // Software and Vulkan present through the CPU bitmap. Hide the OpenGL control
+            // so it never creates a WGL/ANGLE context.
             _openGlDisabled = true;
             Video.IsVisible = false;
-            StartCpuFallback(new NotSupportedException("OpenGL renderer disabled in settings."));
+            StartCpuFallback(new NotSupportedException(
+                _rendererKind == VideoRendererKind.Vulkan
+                    ? "Vulkan renderer selected."
+                    : "Software renderer selected."));
         }
 
         if (Program.SmokeTest)
@@ -850,8 +849,9 @@ public partial class MainWindow : Window, IDisposable
         var text = new StringBuilder();
         text.AppendLine($"{FiveDoVersion.ProductName} {FiveDoVersion.Version}");
         text.AppendLine();
-        text.AppendLine("A pure C# / .NET 3DO emulator with an Avalonia frontend and OpenGL presenter.");
-        if (Video.Capabilities is { } capabilities)
+        text.AppendLine("A pure C# / .NET 3DO emulator with an Avalonia frontend and OpenGL, Vulkan, or software presentation.");
+        RendererCapabilities? renderer = Video.Capabilities ?? _cpuVideo?.Capabilities;
+        if (renderer is { } capabilities)
         {
             text.AppendLine(
                 System.Globalization.CultureInfo.InvariantCulture,
@@ -862,6 +862,8 @@ public partial class MainWindow : Window, IDisposable
         {
             text.AppendLine("Renderer: CPU fallback (OpenGL unavailable).");
         }
+
+        text.AppendLine($"Output resolution: {_settings.OutputResolution}.");
 
         if (_machine is not null)
         {
@@ -1328,13 +1330,9 @@ public partial class MainWindow : Window, IDisposable
         AppSettingsStore.Save(_settings);
         Video.Settings = _settings.ToRendererSettings(_gameId);
         OverlayPanel.IsVisible = _settings.ShowOverlay;
-        if (_cpuVideo is not null)
-        {
-            _cpuVideo.Settings = _settings.ToRendererSettings(_gameId);
-        }
 
         ApplyAudioSettings();
-        ApplyRendererPreference();
+        ApplyRendererSelection();
         HighResMenuItem.IsChecked = _settings.HighResolution;
         UpdateEmulationHeader();
         if (_machine is not null && _settings.HighResolution != _machine.Tuning.HighResolution)
@@ -1543,7 +1541,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnOpenGlReady(object? sender, Controls.OpenGlReadyEventArgs e)
     {
-        if (_vulkanPresenter || _openGlDisabled)
+        if (_rendererKind != VideoRendererKind.OpenGl || _vulkanPresenter || _openGlDisabled)
         {
             return;
         }
@@ -1564,6 +1562,11 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnOpenGlFailed(object? sender, Controls.OpenGlFailedEventArgs e)
     {
+        if (_rendererKind != VideoRendererKind.OpenGl || _openGlDisabled)
+        {
+            return;
+        }
+
         var exception = e.Exception;
         _logger.ForCategory(LogCategory.Video).Warning(
             exception,
@@ -1571,39 +1574,46 @@ public partial class MainWindow : Window, IDisposable
         StartCpuFallback(exception);
     }
 
-    private void ApplyRendererPreference()
-    {
-        if (Program.RequestedGlBackend == GlBackend.Vulkan || _vulkanPresenter)
+    private VideoRendererKind ResolveRendererKind()
+        => Program.RequestedGlBackend switch
         {
-            return;
-        }
+            GlBackend.Vulkan => VideoRendererKind.Vulkan,
+            GlBackend.Software => VideoRendererKind.Software,
+            GlBackend.Wgl or GlBackend.Angle => VideoRendererKind.OpenGl,
+            _ => _settings.Renderer,
+        };
 
-        if (_settings.PreferOpenGl)
+    private void ApplyRendererSelection()
+    {
+        _rendererKind = _settings.Renderer;
+        Video.Settings = _settings.ToRendererSettings(_gameId);
+        if (_rendererKind == VideoRendererKind.OpenGl)
         {
-            if (_openGlDisabled)
+            if (_cpuVideo is not null)
             {
-                _openGlDisabled = false;
                 StopCpuFallback();
-                RendererText.Text = "OpenGL";
-                StatusText.Text = "OpenGL renderer enabled.";
-                _logger.ForCategory(LogCategory.Video).Information(
-                    "OpenGL renderer enabled by settings.");
             }
 
+            _openGlDisabled = false;
+            _vulkanPresenter = false;
+            Video.IsVisible = true;
+            RendererText.Text = "OpenGL";
+            StatusText.Text = "OpenGL renderer enabled.";
+            _logger.ForCategory(LogCategory.Video).Information("OpenGL renderer enabled by settings.");
             return;
         }
 
         _openGlDisabled = true;
-        if (_cpuVideo is null)
+        Video.IsVisible = false;
+        if (_cpuVideo is not null)
         {
-            Video.IsVisible = false;
-            StartCpuFallback(new NotSupportedException("OpenGL renderer disabled in settings."));
+            StopCpuFallback(showVideo: false);
         }
-        else
-        {
-            RendererText.Text = "CPU fallback";
-            StatusText.Text = "OpenGL is disabled in Settings; using the CPU renderer.";
-        }
+
+        StartCpuFallback(new NotSupportedException(
+            _rendererKind == VideoRendererKind.Vulkan
+                ? "Vulkan renderer selected in settings."
+                : "Software renderer selected in settings."));
     }
 
     private void StartCpuFallback(Exception exception)
@@ -1613,16 +1623,17 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        var width = _machine?.Frame.SourceWidth > 0
+        var sourceWidth = _machine?.Frame.SourceWidth > 0
             ? _machine.Frame.SourceWidth
             : EmulatorConstants.VideoWidth;
-        var height = _machine?.Frame.SourceHeight > 0
+        var sourceHeight = _machine?.Frame.SourceHeight > 0
             ? _machine.Frame.SourceHeight
             : EmulatorConstants.VideoHeight;
+        var (width, height) = ResolveOutputSize(sourceWidth, sourceHeight);
 
         RendererSettings rendererSettings = _settings.ToRendererSettings(_gameId);
         ICpuFrameRenderer renderer;
-        if (Program.RequestedGlBackend == GlBackend.Vulkan)
+        if (_rendererKind == VideoRendererKind.Vulkan)
         {
             VulkanOffscreenRenderer? vulkan = null;
             try
@@ -1666,28 +1677,38 @@ public partial class MainWindow : Window, IDisposable
         _cpuTimer.Start();
         _logger.ForCategory(LogCategory.Video).Information(
             "CPU presenter active ({Reason}).",
-            _openGlDisabled ? "OpenGL disabled in settings" : exception.Message);
-        RendererText.Text = _vulkanPresenter ? "Vulkan (offscreen)" : "CPU fallback";
-        StatusText.Text = _openGlDisabled
-            ? "OpenGL is disabled in Settings; using the CPU renderer."
+            _rendererKind == VideoRendererKind.Software
+                ? "software renderer selected"
+                : exception.Message);
+        var softwareSelected = _rendererKind == VideoRendererKind.Software;
+        var vulkanSelected = _rendererKind == VideoRendererKind.Vulkan;
+        RendererText.Text = _vulkanPresenter
+            ? "Vulkan (offscreen)"
+            : softwareSelected
+                ? "Software (CPU)"
+                : "CPU fallback";
+        StatusText.Text = softwareSelected
+            ? "Software renderer active (CPU)."
             : _vulkanPresenter
                 ? "Vulkan renderer ready (offscreen, CPU readback)."
-                : $"OpenGL unavailable ({exception.Message}); using the CPU renderer.";
+                : vulkanSelected
+                    ? $"Vulkan unavailable ({exception.Message}); using the CPU renderer."
+                    : $"OpenGL unavailable ({exception.Message}); using the CPU renderer.";
     }
 
-    private void StopCpuFallback()
+    private void StopCpuFallback(bool showVideo = true)
     {
         var hadCpuPresenter = _cpuVideo is not null;
         _cpuTimer?.Stop();
         _cpuTimer = null;
         CpuVideo.IsVisible = false;
-        Video.IsVisible = true;
+        Video.IsVisible = showVideo;
         _cpuVideo?.Dispose();
         _cpuVideo = null;
         _vulkanPresenter = false;
         _cpuBitmap = null;
         _cpuPixels = null;
-        if (hadCpuPresenter)
+        if (hadCpuPresenter && showVideo)
         {
             _logger.ForCategory(LogCategory.Video).Information("OpenGL presenter restored.");
         }
@@ -1700,14 +1721,15 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        var width = _machine?.Frame.SourceWidth ?? 0;
-        var height = _machine?.Frame.SourceHeight ?? 0;
-        if (width <= 0 || height <= 0)
+        var sourceWidth = _machine?.Frame.SourceWidth ?? 0;
+        var sourceHeight = _machine?.Frame.SourceHeight ?? 0;
+        if (sourceWidth <= 0 || sourceHeight <= 0)
         {
-            width = EmulatorConstants.VideoWidth;
-            height = EmulatorConstants.VideoHeight;
+            sourceWidth = EmulatorConstants.VideoWidth;
+            sourceHeight = EmulatorConstants.VideoHeight;
         }
 
+        var (width, height) = ResolveOutputSize(sourceWidth, sourceHeight);
         if (_cpuVideo.Frame.Width != width || _cpuVideo.Frame.Height != height)
         {
             _cpuVideo.Resize(width, height);
@@ -1741,6 +1763,11 @@ public partial class MainWindow : Window, IDisposable
                 rowBytes);
         }
     }
+
+    private (int Width, int Height) ResolveOutputSize(int fallbackWidth, int fallbackHeight)
+        => OutputResolutionSizes.TryGetSize(_settings.OutputResolution, out var width, out var height)
+            ? (width, height)
+            : (fallbackWidth, fallbackHeight);
 
     private static WriteableBitmap CreateBitmap(int width, int height)
     {

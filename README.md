@@ -12,13 +12,14 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **906 tests pass.** The twenty-fifth pass added F6/F7 slot selection,
+prototype. **919 tests pass.** The twenty-sixth pass added renderer selection and fixed
+output-resolution presets to the desktop video settings. The twenty-fifth pass added F6/F7 slot selection,
 F9 single-frame advance, and desktop input recording; the twenty-fourth pass added a
 first-party Opera file-system reader, so `fs list`/`fs extract` now work on ISO,
 BIN, CUE+BIN, and CHD
 images (multi-block directories and `burst`/`gap` layouts included). The twenty-third
 pass added native Win32 Vulkan
-swapchain presentation and `--vk-window-probe`, honored the `PreferOpenGl` setting,
+swapchain presentation and `--vk-window-probe`, honored the renderer setting,
 added custom aspect editing, validated frontend NativeAOT audio with OpenAL's null
 device, and stopped expected environmental warnings from filing bug reports. The
 twenty-second pass added state-format version 2 with

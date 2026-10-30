@@ -154,4 +154,30 @@ public sealed class GlRendererContractTests
         Assert.Equal("CPU", renderer.Name);
         Assert.False(renderer.Capabilities.SupportsOpenGl33);
     }
+
+    [Fact]
+    public void CpuRenderer_ScalesToFixedOutputResolution()
+    {
+        var frame = new VdlFrame { SourceWidth = 2, SourceHeight = 2 };
+        for (var line = 0; line < 2; line++)
+        {
+            VdlLine target = frame[line];
+            target.Width = 2;
+            target.Background = (uint)(line * 0x3fff);
+        }
+
+        using var renderer = new CpuVideoRenderer();
+        renderer.Settings = new RendererSettings
+        {
+            Aspect = AspectMode.Stretch,
+            Filter = VideoFilter.Nearest,
+        };
+        renderer.Initialize(8, 8);
+        renderer.Present(frame);
+
+        Assert.Equal(8, renderer.Frame.Width);
+        Assert.Equal(8, renderer.Frame.Height);
+        Assert.Equal(0xff, renderer.Frame.PixelSpan[3]);
+        Assert.Equal(0xff, renderer.Frame.PixelSpan[^1]);
+    }
 }

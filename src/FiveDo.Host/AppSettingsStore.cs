@@ -31,9 +31,11 @@ public static class AppSettingsStore
 
         try
         {
+            var json = File.ReadAllText(resolved);
             AppSettings settings = JsonSerializer.Deserialize(
-                File.ReadAllText(resolved),
+                json,
                 AppSettingsJsonContext.Default.AppSettings) ?? new AppSettings();
+            ApplyLegacyRendererPreference(json, settings);
             // JSON can deserialize null despite the non-nullable annotation.
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             settings.Input ??= InputProfile.CreateDefault();
@@ -44,6 +46,19 @@ public static class AppSettingsStore
         {
             Serilog.Log.Warning(exception, "Settings file {Path} is invalid; using defaults.", resolved);
             return new AppSettings();
+        }
+    }
+
+    private static void ApplyLegacyRendererPreference(string json, AppSettings settings)
+    {
+        using var document = JsonDocument.Parse(json);
+        JsonElement root = document.RootElement;
+        if (root.ValueKind == JsonValueKind.Object
+            && !root.TryGetProperty(nameof(AppSettings.Renderer), out _)
+            && root.TryGetProperty("PreferOpenGl", out JsonElement preferOpenGl)
+            && preferOpenGl.ValueKind == JsonValueKind.False)
+        {
+            settings.Renderer = VideoRendererKind.Software;
         }
     }
 

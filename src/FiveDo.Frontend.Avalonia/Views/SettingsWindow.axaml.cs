@@ -20,6 +20,26 @@ namespace FiveDo.Frontend.Avalonia.Views;
 /// </summary>
 public partial class SettingsWindow : Window
 {
+    private static readonly RendererOption[] _rendererOptions =
+    [
+        new(VideoRendererKind.OpenGl, "OpenGL (recommended)"),
+        new(VideoRendererKind.Vulkan, "Vulkan (offscreen)"),
+        new(VideoRendererKind.Software, "Software (CPU)"),
+    ];
+
+    private static readonly ResolutionOption[] _resolutionOptions =
+    [
+        new(OutputResolution.Window, "Match window"),
+        new(OutputResolution.Native, "Native 320 x 240"),
+        new(OutputResolution.Scale2X, "2x 640 x 480"),
+        new(OutputResolution.Scale3X, "3x 960 x 720"),
+        new(OutputResolution.Scale4X, "4x 1280 x 960"),
+        new(OutputResolution.Hd720, "HD 1280 x 720"),
+        new(OutputResolution.FullHd1080, "Full HD 1920 x 1080"),
+        new(OutputResolution.Qhd1440, "QHD 2560 x 1440"),
+        new(OutputResolution.Uhd2160, "4K UHD 3840 x 2160"),
+    ];
+
     private readonly string? _gameId;
 
     /// <summary>Creates the dialog with the persisted settings.</summary>
@@ -38,6 +58,12 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         _gameId = gameId;
 
+        RendererCombo.ItemsSource = _rendererOptions;
+        RendererCombo.SelectedItem = _rendererOptions.FirstOrDefault(option => option.Value == settings.Renderer)
+            ?? _rendererOptions[0];
+        ResolutionCombo.ItemsSource = _resolutionOptions;
+        ResolutionCombo.SelectedItem = _resolutionOptions.FirstOrDefault(option => option.Value == settings.OutputResolution)
+            ?? _resolutionOptions[0];
         FilterCombo.ItemsSource = Enum.GetValues<VideoFilter>();
         FilterCombo.SelectedItem = settings.Filter;
         FilterOverrideCombo.ItemsSource = new object[] { "Automatic" }
@@ -49,7 +75,6 @@ public partial class SettingsWindow : Window
         AspectCombo.ItemsSource = Enum.GetValues<AspectMode>();
         AspectCombo.SelectedItem = settings.Aspect;
         CustomAspectBox.Text = settings.CustomAspect.ToString("0.###", CultureInfo.InvariantCulture);
-        OpenGlCheck.IsChecked = settings.PreferOpenGl;
         IntegerCheck.IsChecked = settings.IntegerScale;
         VsyncCheck.IsChecked = settings.Vsync;
         OverlayCheck.IsChecked = settings.ShowOverlay;
@@ -138,7 +163,12 @@ public partial class SettingsWindow : Window
         }
 
         settings.CustomAspect = customAspect;
-        settings.PreferOpenGl = OpenGlCheck.IsChecked == true;
+        settings.Renderer = RendererCombo.SelectedItem is RendererOption renderer
+            ? renderer.Value
+            : VideoRendererKind.OpenGl;
+        settings.OutputResolution = ResolutionCombo.SelectedItem is ResolutionOption resolution
+            ? resolution.Value
+            : OutputResolution.Window;
         settings.IntegerScale = IntegerCheck.IsChecked == true;
         settings.Vsync = VsyncCheck.IsChecked == true;
         settings.ShowOverlay = OverlayCheck.IsChecked == true;
@@ -247,5 +277,15 @@ public partial class SettingsWindow : Window
 
         mode = FixMode.None;
         return false;
+    }
+
+    private sealed record RendererOption(VideoRendererKind Value, string Label)
+    {
+        public override string ToString() => Label;
+    }
+
+    private sealed record ResolutionOption(OutputResolution Value, string Label)
+    {
+        public override string ToString() => Label;
     }
 }

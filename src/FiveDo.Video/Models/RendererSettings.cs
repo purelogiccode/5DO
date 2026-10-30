@@ -37,6 +37,9 @@ public sealed record RendererSettings
     /// <summary>Gets the FSR 1.0 RCAS sharpness (0 = soft, 1 = maximum).</summary>
     public float FsrSharpness { get; init; } = 0.8f;
 
+    /// <summary>Gets the output resolution used for the final presentation pass.</summary>
+    public OutputResolution OutputResolution { get; init; } = OutputResolution.Window;
+
     /// <summary>Validates the settings.</summary>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when a value is out of range.</exception>
     [System.Diagnostics.CodeAnalysis.SuppressMessage(

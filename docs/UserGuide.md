@@ -126,13 +126,15 @@ Aspect, custom aspect ratio, integer scaling, vsync preference (applied through
 WGL/GLX/EGL where the platform exposes a swap-interval extension), CRT bloom, FSR
 sharpness, fullscreen
 (F11/Escape; the cursor is hidden while fullscreen), and the FPS/status overlay are in
-**Settings**. Unchecking **Use the OpenGL renderer** starts the CPU presenter without
-creating a GL context; re-enabling it restores OpenGL. The renderer
-falls back to the CPU `WriteableBitmap` presenter when OpenGL initialization or context
-recovery fails; the status line and **Logs** report the reason.
+**Settings > Video**. The **Graphics API** list selects **OpenGL**, **Vulkan**, or
+**Software (CPU)**; changing it recreates the presenter without restarting emulation.
+**Output resolution** selects the final presentation size: match the window, native
+320x240, 2x/3x/4x, 720p, 1080p, 1440p, or 4K. This is output upscaling, not internal CEL
+rendering. The renderer falls back to the CPU `WriteableBitmap` presenter when OpenGL
+initialization or context recovery fails; the status line and **Logs** report the reason.
 
-On Windows, the frontend accepts `--gl-backend auto|wgl|angle|software` to force a
-renderer backend for troubleshooting or validation. `auto` is the default (desktop
+On Windows, the frontend accepts `--gl-backend auto|wgl|angle|software|vulkan` to force
+a renderer backend for troubleshooting or validation. `auto` is the default (desktop
 WGL, then ANGLE/GLES, then software). The developer `--gl-probe` tool uses the same
 option and can capture a 1:1 Accurate frame for CPU/GPU parity; see
 [`Performance.md`](Performance.md).

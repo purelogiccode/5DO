@@ -33,11 +33,14 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     private GlContextAdapter? _adapter;
     private OpenGlRenderer? _renderer;
     private OffscreenRenderTarget? _offscreen;
+    private OffscreenRenderTarget? _outputTarget;
     private Action<VdlFrame>? _present;
     private RendererSettings _settings = new();
     private long _renderedSequence = -1;
     private int _renderedWidth;
     private int _renderedHeight;
+    private int _renderedWindowWidth;
+    private int _renderedWindowHeight;
     private bool _captureRequested;
     private double _presentMilliseconds;
     private long _rendererAllocatedBytes;
@@ -217,7 +220,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
             _renderer = new OpenGlRenderer(_adapter, swapInterval);
             _present = _renderer.Present;
             _renderer.Settings = _settings;
-            var (width, height) = GetPixelSize();
+            var (width, height) = ResolveOutputSize(GetPixelSize());
             _renderer.Initialize(width, height);
             RendererCapabilities capabilities = _renderer.Capabilities;
             if (!capabilities.SupportsIntegerTextures
@@ -249,14 +252,17 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
             return;
         }
 
+        (int Width, int Height) windowSize = GetPixelSize();
         var (width, height) = UseOffscreenProbe
             ? (OffscreenProbeWidth, OffscreenProbeHeight)
-            : GetPixelSize();
+            : ResolveOutputSize(windowSize);
         var sequence = _mailbox.Sequence;
         if (!_captureRequested
             && sequence == _renderedSequence
             && width == _renderedWidth
-            && height == _renderedHeight)
+            && height == _renderedHeight
+            && windowSize.Width == _renderedWindowWidth
+            && windowSize.Height == _renderedWindowHeight)
         {
             return;
         }
@@ -266,10 +272,14 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
             return;
         }
 
+        var useOutputTarget = !UseOffscreenProbe
+            && (width != windowSize.Width || height != windowSize.Height);
         try
         {
             if (UseOffscreenProbe)
             {
+                _outputTarget?.Dispose();
+                _outputTarget = null;
                 if (_offscreen is null
                     || _offscreen.Width != width
                     || _offscreen.Height != height)
@@ -280,8 +290,22 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
 
                 _adapter.Framebuffer = (int)_offscreen.Framebuffer;
             }
+            else if (useOutputTarget)
+            {
+                if (_outputTarget is null
+                    || _outputTarget.Width != width
+                    || _outputTarget.Height != height)
+                {
+                    _outputTarget?.Dispose();
+                    _outputTarget = OffscreenRenderTarget.Create(_adapter.Gl, width, height);
+                }
+
+                _adapter.Framebuffer = (int)_outputTarget.Framebuffer;
+            }
             else
             {
+                _outputTarget?.Dispose();
+                _outputTarget = null;
                 _adapter.Framebuffer = fb;
             }
         }
@@ -303,6 +327,8 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
         _renderedSequence = sequence;
         _renderedWidth = width;
         _renderedHeight = height;
+        _renderedWindowWidth = windowSize.Width;
+        _renderedWindowHeight = windowSize.Height;
         _renderer.MeasureAllocations = MeasureAllocations;
         _renderer.Settings = _settings;
         _renderer.Resize(width, height);
@@ -340,6 +366,11 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
             // Leave the default framebuffer bound for Avalonia's compositor.
             _adapter.Framebuffer = fb;
         }
+        else if (useOutputTarget)
+        {
+            BlitOutputToWindow(fb, width, height, windowSize.Width, windowSize.Height);
+            _adapter.Framebuffer = fb;
+        }
 
         _presentMilliseconds =
             (Stopwatch.GetTimestamp() - presentStart) * 1000.0 / Stopwatch.Frequency;
@@ -352,6 +383,48 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
         return PixelSize.Compute(Bounds.Width, Bounds.Height, scaling);
     }
 
+    private (int Width, int Height) ResolveOutputSize((int Width, int Height) windowSize)
+        => OutputResolutionSizes.TryGetSize(_settings.OutputResolution, out var width, out var height)
+            ? (width, height)
+            : windowSize;
+
+    private void BlitOutputToWindow(int framebuffer, int width, int height, int windowWidth, int windowHeight)
+    {
+        if (_adapter is null || _outputTarget is null)
+        {
+            return;
+        }
+
+        var sourceWidth = _presentFrame.SourceWidth > 0 ? _presentFrame.SourceWidth : width;
+        var sourceHeight = _presentFrame.SourceHeight > 0 ? _presentFrame.SourceHeight : height;
+        ViewportRect sourceRect = ViewportCalculator.Compute(sourceWidth, sourceHeight, width, height, _settings);
+        ViewportRect destinationRect = ViewportCalculator.Compute(
+            sourceWidth,
+            sourceHeight,
+            windowWidth,
+            windowHeight,
+            _settings);
+
+        GL gl = _adapter.Gl;
+        gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, _outputTarget.Framebuffer);
+        gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, (uint)framebuffer);
+        gl.Viewport(0, 0, (uint)windowWidth, (uint)windowHeight);
+        gl.ClearColor(0f, 0f, 0f, 1f);
+        gl.Clear(ClearBufferMask.ColorBufferBit);
+        gl.BlitFramebuffer(
+            sourceRect.X,
+            sourceRect.Y,
+            sourceRect.X + sourceRect.Width,
+            sourceRect.Y + sourceRect.Height,
+            destinationRect.X,
+            destinationRect.Y,
+            destinationRect.X + destinationRect.Width,
+            destinationRect.Y + destinationRect.Height,
+            ClearBufferMask.ColorBufferBit,
+            BlitFramebufferFilter.Linear);
+        gl.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)framebuffer);
+    }
+
     /// <inheritdoc />
     protected override void OnOpenGlLost()
     {
@@ -360,6 +433,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
         // Avalonia calls OnOpenGlDeinit with a current context for normal teardown;
         // after a context loss the driver owns the abandoned objects.
         _offscreen = null;
+        _outputTarget = null;
         _renderer = null;
         _adapter = null;
         _present = null;
@@ -372,6 +446,8 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     {
         _offscreen?.Dispose();
         _offscreen = null;
+        _outputTarget?.Dispose();
+        _outputTarget = null;
         _renderer?.Dispose();
         _renderer = null;
         _adapter = null;
@@ -387,6 +463,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
         // must stay GL-free because callers (window close/probe shutdown) can run after
         // the context has already gone away.
         _offscreen = null;
+        _outputTarget = null;
         _renderer = null;
         _adapter = null;
         _present = null;

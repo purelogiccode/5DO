@@ -257,6 +257,12 @@ centered in the output.
 
 The renderer clears to black before drawing, so letterbox/pillarbox bars are black.
 
+`RendererSettings.OutputResolution` selects the final output size. `Window` follows the
+physical window size; the fixed presets render the filtered image offscreen and scale it
+into the window. This is output upscaling only: the emulated frame and CEL/VRAM resolution
+do not change. The CPU fallback applies the same viewport policy when it scales its native
+frame into a fixed output buffer.
+
 ---
 
 ## 6. Backends, capabilities, and fallback

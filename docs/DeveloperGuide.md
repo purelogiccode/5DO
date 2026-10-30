@@ -607,9 +607,11 @@ These are real, current limitations. Do not "fix" them casually without tests.
    change.
 3. **Disc hash is warned, not enforced.** Loading a state from a different disc adds
    a `StateWarnings` entry but still loads; the CLI and desktop surface the warning.
-4. **`PreferOpenGl` is honored at startup and when Settings is applied.** When false,
-   the shell uses the CPU renderer without trying OpenGL; the Settings dialog exposes
-   the toggle. GL init failure or context loss still falls back automatically.
+4. **`Renderer` and `OutputResolution` are honored at startup and when Settings is
+   applied.** The shell can use OpenGL, Vulkan, or the CPU renderer; changing the
+   backend recreates the active presenter without restarting emulation. Fixed output
+   resolutions render offscreen and scale into the window. GL init failure or context
+   loss still falls back automatically.
 5. **`fs` has its own Opera parser.** `FiveDo.Storage.OperaFileSystem` reads the
    volume/directory records directly from any `IDiscSource`, so ISO, BIN, CUE+BIN,
    and CHD share one code path. `disc dump`, `info`, and `disc tracks` remain the

@@ -13,6 +13,7 @@ namespace FiveDo.Video;
 public sealed class CpuVideoRenderer : ICpuFrameRenderer
 {
     private FrameBuffer _frame = new(1, 1);
+    private FrameBuffer? _sourceFrame;
     private RendererSettings _settings = new();
 
     /// <inheritdoc />
@@ -42,6 +43,7 @@ public sealed class CpuVideoRenderer : ICpuFrameRenderer
         ArgumentOutOfRangeException.ThrowIfLessThan(width, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(height, 1);
         _frame = new FrameBuffer(width, height);
+        _sourceFrame = null;
     }
 
     /// <inheritdoc />
@@ -59,7 +61,23 @@ public sealed class CpuVideoRenderer : ICpuFrameRenderer
     public void Present(VdlFrame frame)
     {
         ArgumentNullException.ThrowIfNull(frame);
-        FrameAssembler.Assemble(frame, _frame, _frame.Width, _frame.Height);
+        var sourceWidth = frame.SourceWidth > 0 ? frame.SourceWidth : EmulatorConstants.VideoWidth;
+        var sourceHeight = frame.SourceHeight > 0 ? frame.SourceHeight : EmulatorConstants.VideoHeight;
+        if (_frame.Width == sourceWidth && _frame.Height == sourceHeight)
+        {
+            FrameAssembler.Assemble(frame, _frame, sourceWidth, sourceHeight);
+            return;
+        }
+
+        if (_sourceFrame is null
+            || _sourceFrame.Width != sourceWidth
+            || _sourceFrame.Height != sourceHeight)
+        {
+            _sourceFrame = new FrameBuffer(sourceWidth, sourceHeight);
+        }
+
+        FrameAssembler.Assemble(frame, _sourceFrame, sourceWidth, sourceHeight);
+        FrameScaler.Scale(_sourceFrame, _frame, _settings);
     }
 
     /// <inheritdoc />

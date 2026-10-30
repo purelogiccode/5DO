@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using FiveDo.Core;
 using FiveDo.Input;
 using FiveDo.Video;
@@ -64,8 +65,28 @@ public sealed class AppSettings
     /// <summary>Gets or sets a value indicating whether integer scaling is used.</summary>
     public bool IntegerScale { get; set; } = true;
 
-    /// <summary>Gets or sets a value indicating whether the OpenGL renderer is preferred.</summary>
-    public bool PreferOpenGl { get; set; } = true;
+    /// <summary>Gets or sets the desktop presentation renderer.</summary>
+    public VideoRendererKind Renderer { get; set; } = VideoRendererKind.OpenGl;
+
+    /// <summary>
+    /// Gets or sets the legacy OpenGL preference. New settings use <see cref="Renderer"/>;
+    /// this property keeps older settings files working.
+    /// </summary>
+    [JsonIgnore]
+    public bool PreferOpenGl
+    {
+        get => Renderer == VideoRendererKind.OpenGl;
+        init
+        {
+            if (!value && Renderer == VideoRendererKind.OpenGl)
+            {
+                Renderer = VideoRendererKind.Software;
+            }
+        }
+    }
+
+    /// <summary>Gets or sets the output resolution used for presentation.</summary>
+    public OutputResolution OutputResolution { get; set; } = OutputResolution.Window;
 
     /// <summary>Gets or sets a value indicating whether the FPS/status overlay is shown over the video.</summary>
     public bool ShowOverlay { get; set; }
@@ -211,6 +232,7 @@ public sealed class AppSettings
             IntegerScale = IntegerScale,
             Bloom = Bloom,
             FsrSharpness = FsrSharpness,
+            OutputResolution = OutputResolution,
         };
         settings.Validate();
         return settings;
