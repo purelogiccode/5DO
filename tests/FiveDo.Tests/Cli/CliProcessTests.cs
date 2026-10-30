@@ -133,14 +133,14 @@ public sealed class CliProcessTests
         {
             var image = SyntheticOperaDisc.Build(
                 [
-                    new("HELLO.TXT", IsDirectory: false, Lba: 2, LengthBytes: 5),
-                    new("SUB", IsDirectory: true, Lba: 3, LengthBytes: 2048),
+                    new SyntheticOperaDisc.EntrySpec("HELLO.TXT", IsDirectory: false, Lba: 2, LengthBytes: 5),
+                    new SyntheticOperaDisc.EntrySpec("SUB", IsDirectory: true, Lba: 3, LengthBytes: 2048),
                 ],
                 blockCount: 5,
                 label: "TESTDISC",
                 directories: new Dictionary<uint, IReadOnlyList<SyntheticOperaDisc.EntrySpec>>
                 {
-                    [3] = [new("NESTED.BIN", IsDirectory: false, Lba: 4, LengthBytes: 4)],
+                    [3] = [new SyntheticOperaDisc.EntrySpec("NESTED.BIN", IsDirectory: false, Lba: 4, LengthBytes: 4)],
                 });
             SyntheticOperaDisc.WriteFile(image, 2, "hello"u8);
             SyntheticOperaDisc.WriteFile(image, 4, "nest"u8);
@@ -181,7 +181,7 @@ public sealed class CliProcessTests
         try
         {
             var image = SyntheticOperaDisc.Build(
-                [new("HELLO.TXT", IsDirectory: false, Lba: 2, LengthBytes: 5)],
+                [new SyntheticOperaDisc.EntrySpec("HELLO.TXT", IsDirectory: false, Lba: 2, LengthBytes: 5)],
                 blockCount: 3);
             SyntheticOperaDisc.WriteFile(image, 2, "hello"u8);
             var binPath = Path.Combine(directory, "disc.bin");

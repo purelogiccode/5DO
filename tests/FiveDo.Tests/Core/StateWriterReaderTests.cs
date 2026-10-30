@@ -338,7 +338,7 @@ public sealed class StateWriterReaderTests
 
     private sealed class LargeTestSection : IStateSection
     {
-        public const uint SectionId = 0x87654321;
+        private const uint SectionId = 0x87654321;
 
         public uint Id => SectionId;
 
