@@ -45,7 +45,7 @@ public sealed class KeyboardBindingEditor
     /// <param name="button">Controller button.</param>
     /// <returns>The key name, or <see langword="null"/>.</returns>
     public string? GetKey(ControllerButton button) =>
-        _bindings.TryGetValue(button, out var key) ? key : null;
+        _bindings.GetValueOrDefault(button);
 
     /// <summary>Binds a key to a button, removing the key from any other button.</summary>
     /// <param name="button">Controller button.</param>

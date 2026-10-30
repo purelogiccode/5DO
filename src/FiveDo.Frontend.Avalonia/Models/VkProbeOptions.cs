@@ -67,10 +67,6 @@ internal sealed record VkProbeOptions(
         options = null;
         error = null;
 
-        string? Find(string suffix)
-            => Program.FindOptionValue(args, optionName + suffix)
-                ?? Program.FindOptionValue(args, "--vk-probe" + suffix);
-
         var output = Program.FindOptionValue(args, optionName);
         if (string.IsNullOrWhiteSpace(output))
         {
@@ -168,5 +164,9 @@ internal sealed record VkProbeOptions(
             Window = window,
         };
         return true;
+
+        string? Find(string suffix)
+            => Program.FindOptionValue(args, optionName + suffix)
+               ?? Program.FindOptionValue(args, "--vk-probe" + suffix);
     }
 }

@@ -14,15 +14,15 @@ public sealed class OperaFileSystemTests
     {
         var image = SyntheticOperaDisc.Build(
             [
-                new("HELLO.TXT", IsDirectory: false, Lba: 2, LengthBytes: 5),
-                new("DIR", IsDirectory: true, Lba: 3, LengthBytes: 2048),
-                new("Disc label", IsDirectory: false, Lba: 0, LengthBytes: 132, Type: 6),
+                new SyntheticOperaDisc.EntrySpec("HELLO.TXT", IsDirectory: false, Lba: 2, LengthBytes: 5),
+                new SyntheticOperaDisc.EntrySpec("DIR", IsDirectory: true, Lba: 3, LengthBytes: 2048),
+                new SyntheticOperaDisc.EntrySpec("Disc label", IsDirectory: false, Lba: 0, LengthBytes: 132, Type: 6),
             ],
             blockCount: 6,
             label: "TESTDISC",
             directories: new Dictionary<uint, IReadOnlyList<SyntheticOperaDisc.EntrySpec>>
             {
-                [3] = [new("NESTED.BIN", IsDirectory: false, Lba: 4, LengthBytes: 4)],
+                [3] = [new SyntheticOperaDisc.EntrySpec("NESTED.BIN", IsDirectory: false, Lba: 4, LengthBytes: 4)],
             });
         SyntheticOperaDisc.WriteFile(image, 2, "hello"u8);
         SyntheticOperaDisc.WriteFile(image, 4, "nest"u8);
@@ -53,7 +53,7 @@ public sealed class OperaFileSystemTests
     public void ReadFile_HonorsOffsetsAndEndOfFile()
     {
         var image = SyntheticOperaDisc.Build(
-            [new("DATA.BIN", IsDirectory: false, Lba: 2, LengthBytes: 6)],
+            [new SyntheticOperaDisc.EntrySpec("DATA.BIN", IsDirectory: false, Lba: 2, LengthBytes: 6)],
             blockCount: 4);
         SyntheticOperaDisc.WriteFile(image, 2, "abcdef"u8);
         using var disc = new MemoryDisc(image);
@@ -100,7 +100,7 @@ public sealed class OperaFileSystemTests
     public void ReadFile_SkipsGapsBetweenBursts()
     {
         var image = SyntheticOperaDisc.Build(
-            [new("STREAM.BIN", IsDirectory: false, Lba: 10, LengthBytes: 4 * 2048, Burst: 2, Gap: 1)],
+            [new SyntheticOperaDisc.EntrySpec("STREAM.BIN", IsDirectory: false, Lba: 10, LengthBytes: 4 * 2048, Burst: 2, Gap: 1)],
             blockCount: 30);
         for (var i = 0; i < 4; i++)
         {
@@ -134,7 +134,7 @@ public sealed class OperaFileSystemTests
         }
 
         var image = SyntheticOperaDisc.Build(
-            [new("FILE", IsDirectory: false, Lba: 2, LengthBytes: 1)],
+            [new SyntheticOperaDisc.EntrySpec("FILE", IsDirectory: false, Lba: 2, LengthBytes: 1)],
             blockCount: 3);
         image[0] = 0;
         using (var badRecord = new MemoryDisc(image))
@@ -143,7 +143,7 @@ public sealed class OperaFileSystemTests
         }
 
         var noRoot = SyntheticOperaDisc.Build(
-            [new("FILE", IsDirectory: false, Lba: 2, LengthBytes: 1)],
+            [new SyntheticOperaDisc.EntrySpec("FILE", IsDirectory: false, Lba: 2, LengthBytes: 1)],
             blockCount: 3);
         noRoot.AsSpan(100, 4).Clear();
         using (var missingRoot = new MemoryDisc(noRoot))
@@ -156,7 +156,7 @@ public sealed class OperaFileSystemTests
     public void Mount_RejectsDirectoryTraversalNames()
     {
         var image = SyntheticOperaDisc.Build(
-            [new("..\\escape", IsDirectory: false, Lba: 2, LengthBytes: 1)],
+            [new SyntheticOperaDisc.EntrySpec("..\\escape", IsDirectory: false, Lba: 2, LengthBytes: 1)],
             blockCount: 3);
 
         using var disc = new MemoryDisc(image);
