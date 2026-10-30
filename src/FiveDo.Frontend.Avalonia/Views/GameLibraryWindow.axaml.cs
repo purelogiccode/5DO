@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -36,7 +37,10 @@ public partial class GameLibraryWindow : Window
 
     private void OnRefresh(object? sender, RoutedEventArgs e) => Refresh();
 
-    private async void OnAddFolderAsync(object? sender, RoutedEventArgs e)
+    private void OnAddFolderAsync(object? sender, RoutedEventArgs e) =>
+        AsyncEvent.Run(AddFolderAsync, "adding a game folder");
+
+    private async Task AddFolderAsync()
     {
         IReadOnlyList<IStorageFolder> folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {

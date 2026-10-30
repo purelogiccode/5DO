@@ -70,7 +70,10 @@ public partial class SettingsWindow : Window
         FixModeBox.Text = overrideMode is null ? string.Empty : $"0x{(uint)overrideMode.Value:x}";
     }
 
-    private async void OnTestAudioClickAsync(object? sender, RoutedEventArgs e)
+    private void OnTestAudioClickAsync(object? sender, RoutedEventArgs e) =>
+        AsyncEvent.Run(TestAudioAsync, "testing audio output");
+
+    private async Task TestAudioAsync()
     {
         TestAudioButton.IsEnabled = false;
         TestAudioText.Text = "Playing a 1 s 440 Hz tone...";
@@ -189,7 +192,10 @@ public partial class SettingsWindow : Window
 
     private void OnCancel(object? sender, RoutedEventArgs e) => Close(false);
 
-    private async void OnBrowseSaveDirectoryAsync(object? sender, RoutedEventArgs e)
+    private void OnBrowseSaveDirectoryAsync(object? sender, RoutedEventArgs e) =>
+        AsyncEvent.Run(BrowseSaveDirectoryAsync, "selecting the save-state directory");
+
+    private async Task BrowseSaveDirectoryAsync()
     {
         var path = await PickFolderAsync("Select the save-state directory", SaveDirectoryBox.Text).ConfigureAwait(true);
         if (path is not null)
@@ -198,7 +204,10 @@ public partial class SettingsWindow : Window
         }
     }
 
-    private async void OnBrowseScreenshotDirectoryAsync(object? sender, RoutedEventArgs e)
+    private void OnBrowseScreenshotDirectoryAsync(object? sender, RoutedEventArgs e) =>
+        AsyncEvent.Run(BrowseScreenshotDirectoryAsync, "selecting the screenshot directory");
+
+    private async Task BrowseScreenshotDirectoryAsync()
     {
         var path = await PickFolderAsync("Select the screenshot directory", ScreenshotDirectoryBox.Text).ConfigureAwait(true);
         if (path is not null)

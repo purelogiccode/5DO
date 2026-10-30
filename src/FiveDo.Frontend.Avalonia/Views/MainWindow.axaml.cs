@@ -192,7 +192,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         LoadConfiguredPaths();
-        RefreshLibraryAsync();
+        AsyncEvent.Run(RefreshLibraryAsync, "refreshing the game library");
     }
 
     private void ShowWelcome(bool firstRun)
@@ -224,7 +224,7 @@ public partial class MainWindow : Window, IDisposable
                     LoadConfiguredPaths();
                 }
 
-                RefreshLibraryAsync();
+                AsyncEvent.Run(RefreshLibraryAsync, "refreshing the game library");
             };
             IsEnabled = false;
             welcome.Show(this);
@@ -254,7 +254,10 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private async void OnOpenBiosAsync(object? sender, RoutedEventArgs e)
+    private void OnOpenBiosAsync(object? sender, RoutedEventArgs e) =>
+        AsyncEvent.Run(OpenBiosAsync, "opening a BIOS");
+
+    private async Task OpenBiosAsync()
     {
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
@@ -269,7 +272,10 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private async void OnOpenDiscAsync(object? sender, RoutedEventArgs e)
+    private void OnOpenDiscAsync(object? sender, RoutedEventArgs e) =>
+        AsyncEvent.Run(OpenDiscAsync, "opening a disc");
+
+    private async Task OpenDiscAsync()
     {
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
@@ -918,7 +924,10 @@ public partial class MainWindow : Window, IDisposable
         _ = window.ShowDialog(this);
     }
 
-    private async void OnAddFolderAsync(object? sender, RoutedEventArgs e)
+    private void OnAddFolderAsync(object? sender, RoutedEventArgs e) =>
+        AsyncEvent.Run(AddFolderAsync, "adding a game folder");
+
+    private async Task AddFolderAsync()
     {
         var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
@@ -943,7 +952,7 @@ public partial class MainWindow : Window, IDisposable
         if (added)
         {
             AppSettingsStore.Save(_settings);
-            RefreshLibraryAsync();
+            await RefreshLibraryAsync().ConfigureAwait(true);
         }
         else if (folders.Count > 0)
         {
@@ -951,7 +960,8 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OnRefresh(object? sender, RoutedEventArgs e) => RefreshLibraryAsync();
+    private void OnRefresh(object? sender, RoutedEventArgs e) =>
+        AsyncEvent.Run(RefreshLibraryAsync, "refreshing the game library");
 
     private void OnExit(object? sender, RoutedEventArgs e) => Close();
 
@@ -1120,7 +1130,7 @@ public partial class MainWindow : Window, IDisposable
 
     private static string CountLabel(int count) => count == 1 ? "1 game" : $"{count} games";
 
-    private async void RefreshLibraryAsync()
+    private async Task RefreshLibraryAsync()
     {
         if (Program.SmokeTest)
         {
@@ -1293,7 +1303,10 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private async void OnSettingsAsync(object? sender, RoutedEventArgs e)
+    private void OnSettingsAsync(object? sender, RoutedEventArgs e) =>
+        AsyncEvent.Run(ShowSettingsAsync, "showing settings");
+
+    private async Task ShowSettingsAsync()
     {
         var window = new SettingsWindow(_settings, _gameId, _gameName);
         if (!await window.ShowDialog<bool>(this).ConfigureAwait(true))
@@ -1334,7 +1347,10 @@ public partial class MainWindow : Window, IDisposable
         _logger.ForCategory(LogCategory.Host).Information("Settings saved.");
     }
 
-    private async void OnSaveSlotsAsync(object? sender, RoutedEventArgs e)
+    private void OnSaveSlotsAsync(object? sender, RoutedEventArgs e) =>
+        AsyncEvent.Run(ShowSaveSlotsAsync, "showing save slots");
+
+    private async Task ShowSaveSlotsAsync()
     {
         var window = new SaveSlotsWindow(
             _slots,
@@ -1362,7 +1378,10 @@ public partial class MainWindow : Window, IDisposable
         UpdateSlotText();
     }
 
-    private async void OnInputBindingsAsync(object? sender, RoutedEventArgs e)
+    private void OnInputBindingsAsync(object? sender, RoutedEventArgs e) =>
+        AsyncEvent.Run(ShowInputBindingsAsync, "showing input bindings");
+
+    private async Task ShowInputBindingsAsync()
     {
         var window = new InputBindingsWindow(_settings.Input);
         var profile = await window.ShowDialog<InputProfile?>(this).ConfigureAwait(true);
