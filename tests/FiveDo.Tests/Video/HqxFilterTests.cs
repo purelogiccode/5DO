@@ -1,7 +1,6 @@
 using System;
 using FiveDo.Core;
 using FiveDo.Video;
-using FiveDo.Video.OpenGL;
 
 namespace FiveDo.Tests.Video;
 

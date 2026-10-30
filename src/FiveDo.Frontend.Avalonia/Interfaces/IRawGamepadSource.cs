@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using FiveDo.Input;
 
 namespace FiveDo.Frontend.Avalonia.Input;

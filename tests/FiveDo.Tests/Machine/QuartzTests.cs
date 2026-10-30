@@ -250,7 +250,7 @@ public sealed class QuartzTests
         var quartz = new Quartz();
         quartz.LoadState(sectionReader);
 
-        var expected = (uint)(((ulong)legacyFraction * (uint)EmulatorConstants.ArmClock) >> 24);
+        var expected = (uint)(((ulong)legacyFraction * EmulatorConstants.ArmClock) >> 24);
         Assert.Equal(expected, quartz.DspAccumulator);
     }
 
@@ -263,7 +263,7 @@ public sealed class QuartzTests
             writer =>
             {
                 writer.WriteUInt32(0);
-                writer.WriteUInt32((uint)EmulatorConstants.ArmClock);
+                writer.WriteUInt32(EmulatorConstants.ArmClock);
                 writer.WriteUInt32(0);
                 writer.WriteUInt32(0);
                 writer.WriteUInt32(0);

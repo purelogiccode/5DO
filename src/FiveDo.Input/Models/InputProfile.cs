@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
 
 namespace FiveDo.Input;
 
@@ -40,6 +38,8 @@ public sealed class InputProfile
     /// </remarks>
     public void AddMissingDefaultHotkeys()
     {
+        // Older profiles can deserialize a null Hotkeys dictionary.
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (Hotkeys is null)
         {
             Hotkeys = new Dictionary<string, string>(StringComparer.Ordinal);

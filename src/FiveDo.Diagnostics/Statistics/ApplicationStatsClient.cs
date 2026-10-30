@@ -70,10 +70,8 @@ public static class ApplicationStatsClient
         try
         {
             var payload = new ApplicationStatsPayload(options.ApplicationId, options.Version);
-            using var request = new HttpRequestMessage(HttpMethod.Post, options.Endpoint)
-            {
-                Content = JsonContent.Create(payload, ApplicationStatsJsonContext.Default.ApplicationStatsPayload),
-            };
+            using var request = new HttpRequestMessage(HttpMethod.Post, options.Endpoint);
+            request.Content = JsonContent.Create(payload, ApplicationStatsJsonContext.Default.ApplicationStatsPayload);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiKey);
             using HttpResponseMessage response = await httpClient
                 .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)

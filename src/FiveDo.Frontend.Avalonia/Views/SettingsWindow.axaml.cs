@@ -93,6 +93,8 @@ public partial class SettingsWindow : Window
                     {
                         var phase = (frame * 735 + i) * 2.0 * Math.PI * 440.0 / 44_100.0;
                         var value = (short)(Math.Sin(phase) * 6000.0);
+                        // The await completes before the finally disposes the output.
+                        // ReSharper disable once AccessToDisposedClosure
                         output.PushSample(new AudioSample(value, value).Packed);
                     }
 
@@ -205,7 +207,7 @@ public partial class SettingsWindow : Window
         }
     }
 
-    private async System.Threading.Tasks.Task<string?> PickFolderAsync(string title, string? current)
+    private async Task<string?> PickFolderAsync(string title, string? current)
     {
         var options = new FolderPickerOpenOptions
         {

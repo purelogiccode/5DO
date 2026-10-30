@@ -1,11 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
-using FiveDo.Core;
 using FiveDo.Input;
-using FiveDo.Video;
 
 namespace FiveDo.Host;
 
@@ -38,6 +34,8 @@ public static class AppSettingsStore
             AppSettings settings = JsonSerializer.Deserialize(
                 File.ReadAllText(resolved),
                 AppSettingsJsonContext.Default.AppSettings) ?? new AppSettings();
+            // JSON can deserialize null despite the non-nullable annotation.
+            // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             settings.Input ??= InputProfile.CreateDefault();
             settings.Input.AddMissingDefaultHotkeys();
             return settings;

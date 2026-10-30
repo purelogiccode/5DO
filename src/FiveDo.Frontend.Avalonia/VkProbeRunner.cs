@@ -460,23 +460,21 @@ internal static class VkProbeRunner
         private const int SwShow = 5;
         private const int ErrorClassAlreadyExists = 1410;
 
-        private readonly WndProc _windowProc;
-        private readonly string _className;
         private nint _handle;
         private bool _closed;
 
         internal Win32ProbeWindow(int width, int height)
         {
-            _windowProc = WindowProc;
-            _className = $"5DOVulkanProbeWindow{Environment.ProcessId}";
+            WndProc windowProc = WindowProc;
+            var className = $"5DOVulkanProbeWindow{Environment.ProcessId}";
             nint instance = GetModuleHandle(null);
             WndClassEx windowClass = new()
             {
                 CbSize = (uint)Marshal.SizeOf<WndClassEx>(),
-                LpfnWndProc = _windowProc,
+                LpfnWndProc = windowProc,
                 HInstance = instance,
                 HCursor = LoadCursor(0, IdiArrow),
-                LpszClassName = _className,
+                LpszClassName = className,
             };
             if (RegisterClassEx(ref windowClass) == 0)
             {
@@ -495,7 +493,7 @@ internal static class VkProbeRunner
 
             _handle = CreateWindowEx(
                 0,
-                _className,
+                className,
                 "5DO Vulkan Window Probe",
                 WsOverlappedWindow | WsVisible,
                 100,

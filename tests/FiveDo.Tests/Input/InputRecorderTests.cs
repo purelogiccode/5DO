@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using FiveDo.Core;
 using FiveDo.Input;
 
 namespace FiveDo.Tests.Input;

@@ -8,7 +8,7 @@ public sealed class AudioFramePacerTests
     [Fact]
     public void BeforeTheFirstFrame_UsesTheFallbackPeriod()
     {
-        var pacer = new AudioFramePacer(60.0);
+        var pacer = new AudioFramePacer();
 
         Assert.Equal(60.0, pacer.FramesPerSecond, precision: 6);
         Assert.Equal(0, pacer.SamplesPerFrame);

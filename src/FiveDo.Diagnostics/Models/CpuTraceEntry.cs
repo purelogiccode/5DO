@@ -1,7 +1,3 @@
-using System;
-using System.IO;
-using FiveDo.Core;
-using FiveDo.Cpu;
 
 namespace FiveDo.Diagnostics;
 

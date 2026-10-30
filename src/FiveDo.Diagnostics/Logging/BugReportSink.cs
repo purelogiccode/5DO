@@ -173,10 +173,8 @@ public sealed class BugReportSink : ILogEventSink, IDisposable
     {
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Post, _options.Endpoint)
-            {
-                Content = JsonContent.Create(payload, BugReportJsonContext.Default.BugReportPayload),
-            };
+            using var request = new HttpRequestMessage(HttpMethod.Post, _options.Endpoint);
+            request.Content = JsonContent.Create(payload, BugReportJsonContext.Default.BugReportPayload);
             request.Headers.TryAddWithoutValidation("X-API-KEY", _options.ApiKey);
             using HttpResponseMessage response = await _http
                 .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _stop.Token)

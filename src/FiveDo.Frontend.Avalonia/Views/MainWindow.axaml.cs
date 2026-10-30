@@ -1892,8 +1892,6 @@ public partial class MainWindow : Window, IDisposable
             case HotkeyAction.FrameAdvance:
                 AdvanceFrame();
                 break;
-            default:
-                break;
         }
     }
 

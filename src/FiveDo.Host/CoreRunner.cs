@@ -185,7 +185,7 @@ public sealed class CoreRunner : IDisposable
         try
         {
             var pacer = new FramePacer(60.0);
-            var audioPacer = new AudioFramePacer(60.0);
+            var audioPacer = new AudioFramePacer();
             var statusClock = Stopwatch.StartNew();
             var statusFrames = 0L;
             TimeSpan statusStart = statusClock.Elapsed;
