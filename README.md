@@ -272,8 +272,8 @@ and the remaining M9P work items.
 ## Build
 
 ```powershell
-git clone https://github.com/purelogiccode/3DOEmulator.git
-cd 3DOEmulator
+git clone https://github.com/purelogiccode/5DO.git
+cd 5DO
 dotnet build 5DO.sln
 dotnet test 5DO.sln
 ```

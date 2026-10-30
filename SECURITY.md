@@ -16,10 +16,10 @@ ship for Windows, Linux, and macOS (x64/arm64).
 
 Use GitHub's private vulnerability reporting:
 
-<https://github.com/purelogiccode/3DOEmulator/security/advisories/new>
+<https://github.com/purelogiccode/5DO/security/advisories/new>
 
 If that form is unavailable, contact the maintainer through the repository's
-[security page](https://github.com/purelogiccode/3DOEmulator/security) and a private
+[security page](https://github.com/purelogiccode/5DO/security) and a private
 channel will be arranged.
 
 Please include:

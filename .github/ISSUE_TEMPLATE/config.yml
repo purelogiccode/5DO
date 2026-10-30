@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
   - name: Report a security vulnerability
-    url: https://github.com/purelogiccode/3DOEmulator/security
+    url: https://github.com/purelogiccode/5DO/security
     about: Please report security issues privately; do not open a public issue.
