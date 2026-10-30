@@ -80,7 +80,7 @@ production projects.
 The development machine has a legally obtained corpus documented in
 [`TestCorpus.md`](TestCorpus.md):
 
-- BIOS images: `D:\Dropbox\source\repos\CSharp_3DOEmulator\bios\` (use
+- BIOS images: `D:\Dropbox\source\repos\CSharp_5DO\bios\` (use
   `panafz1.bin` by default; Anvil/GoldStar variants for compatibility checks).
 - Disc images: set `FIVEDO_GAMES` to the corpus root (office machine
   `D:\Samples\3DO`, home machine `E:\Panasonic 3DO`) — `Alone in the Dark (USA).chd`,

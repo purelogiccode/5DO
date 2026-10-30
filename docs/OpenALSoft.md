@@ -63,7 +63,7 @@ for the bundled OpenAL Soft runtime to any third party, for no charge beyond the
 cost of physically performing the source distribution. Requests can be made
 through the project issue tracker:
 
-<https://github.com/purelogiccode/3DOEmulator/issues>
+<https://github.com/purelogiccode/5DO/issues>
 
 If the upstream archive is unavailable, the written offer above remains the
 source-delivery mechanism.
