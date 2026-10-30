@@ -448,6 +448,11 @@ public partial class MainWindow : Window, IDisposable
             ShowEmulationView();
         }
 
+        if (_rendererKind == VideoRendererKind.OpenGl)
+        {
+            Video.RequestRedraw();
+        }
+
         StatusText.Text = string.IsNullOrWhiteSpace(_gameName)
             ? "Emulation running."
             : $"Running {_gameName}.";
@@ -1585,11 +1590,13 @@ public partial class MainWindow : Window, IDisposable
 
     private void ApplyRendererSelection()
     {
+        var previousRenderer = _rendererKind;
         _rendererKind = _settings.Renderer;
         Video.Settings = _settings.ToRendererSettings(_gameId);
         if (_rendererKind == VideoRendererKind.OpenGl)
         {
-            if (_cpuVideo is not null)
+            var hadCpuPresenter = _cpuVideo is not null;
+            if (hadCpuPresenter)
             {
                 StopCpuFallback();
             }
@@ -1597,6 +1604,11 @@ public partial class MainWindow : Window, IDisposable
             _openGlDisabled = false;
             _vulkanPresenter = false;
             Video.IsVisible = true;
+            if (previousRenderer != VideoRendererKind.OpenGl || hadCpuPresenter)
+            {
+                ReattachOpenGlSurface();
+            }
+
             RendererText.Text = "OpenGL";
             StatusText.Text = "OpenGL renderer enabled.";
             _logger.ForCategory(LogCategory.Video).Information("OpenGL renderer enabled by settings.");
@@ -1614,6 +1626,19 @@ public partial class MainWindow : Window, IDisposable
             _rendererKind == VideoRendererKind.Vulkan
                 ? "Vulkan renderer selected in settings."
                 : "Software renderer selected in settings."));
+    }
+
+    private void ReattachOpenGlSurface()
+    {
+        // OpenGlControlBase only creates its context when it is attached to the visual
+        // tree. Reattach it when returning from the software/Vulkan presenter so a
+        // previously hidden or failed surface is initialized again.
+        if (Video.Parent is Panel parent)
+        {
+            parent.Children.Remove(Video);
+            parent.Children.Insert(0, Video);
+            _logger.ForCategory(LogCategory.Video).Information("OpenGL surface reattached.");
+        }
     }
 
     private void StartCpuFallback(Exception exception)

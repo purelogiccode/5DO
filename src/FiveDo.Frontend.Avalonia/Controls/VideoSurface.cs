@@ -162,6 +162,13 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     /// <summary>Gets the mailbox sequence number of the last submitted frame.</summary>
     public long FrameSequence => _mailbox.Sequence;
 
+    /// <summary>Forces the next render pass to present the latest frame.</summary>
+    public void RequestRedraw()
+    {
+        _renderedSequence = -1;
+        RequestNextFrameRendering();
+    }
+
     /// <summary>Requests a GL readback of the next rendered output frame.</summary>
     public void RequestCapture()
     {
@@ -215,6 +222,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
             _gl = GL.GetApi(gl.GetProcAddress);
             _glVendor = gl.Vendor;
             _glRenderer = gl.Renderer;
+            _renderedSequence = -1;
             _adapter = new GlContextAdapter(_gl);
             ISwapIntervalBackend? swapInterval = SwapInterval.TryCreate(gl.GetProcAddress);
             _renderer = new OpenGlRenderer(_adapter, swapInterval);
