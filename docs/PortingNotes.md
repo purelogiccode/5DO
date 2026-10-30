@@ -613,7 +613,7 @@ M1 implements the section primitive used by all later chips:
 - `CdromDevice` ports `cdrom_Device` from `Iso.cpp`: poll/status/data FIFOs, all documented command status layouts, sector streaming, and the reference's MSF/LBA quirk (`InitCD` adds 150 frames, then `LBA2MSF` adds them again). The device is attached to XBUS slot 0 and talks to storage only through `IDiscSource`.
 - Sector reads call `ReadSectorIntoData` before advancing `_currentSector`. This matches the reference's effective host behaviour: `_3do_OnSector(curr_sector++)` selects the current sector and `_3do_Read2048` fills the FIFO from it.
 - `IsoImage` reads 2048-byte sectors; `BinImage` strips the 2352-byte sync/header at offset 16 (Mode 1) or 24 (Mode 2 Form 1); `CueSheet` supports the first MODE1/MODE2 data track (single file); `DiscImageFactory` also sniffs CHD/ISO/BIN headers.
-- `ChdDiscImage` uses CHDSharp 1.5.2, rejects non-CD images, maps the first data track's LBA space, enables 4-hunk read-ahead, and supports an optional parent CHD for differential images.
+- `ChdDiscImage` uses CHDSharp 1.6.0, rejects non-CD images, maps the first data track's LBA space, enables 4-hunk read-ahead, and supports an optional parent CHD for differential images.
 - `VolumeHeader` parses the big-endian 132-byte record (blockCount at offset 80); `GameId` is the lowercase MD5 of sectors 0 and 1. Game database lookup is M7.6.
 - Tests generate synthetic ISO/BIN/CUE/CHD fixtures with CHDSharp's encoder and verify identical sector streams, parent/child opening, non-CD rejection, command transcripts, and CD state roundtrip.
 

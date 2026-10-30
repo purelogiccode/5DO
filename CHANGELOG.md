@@ -143,6 +143,15 @@ still change.
 
 ### Fixed
 
+- **Vulkan startup fallback.** `VulkanVideoSurface.Start()` threw
+  "The Vulkan surface is not attached to a window." when the shell selected Vulkan
+  before the control was attached. It now records a pending start and initializes on
+  attachment, so the Vulkan presenter starts normally or reports a failure through
+  the CPU-fallback path instead of failing startup.
+- **CHD read-ahead shutdown race.** CHDSharp 1.6.0 defers read-ahead teardown until
+  in-flight hunk decompression finishes, so closing a CHD no longer produces an
+  unobserved `ObjectDisposedException` from `SemaphoreSlim.Release` on the finalizer
+  thread.
 - **Stop/start race in the core runner.** `CoreRunner.Pause`/`Resume`/`Invoke` used
   a manual-reset event pair that could return from `Pause` before the core thread had
   actually stopped, letting the UI reset or replace the machine while the core thread
