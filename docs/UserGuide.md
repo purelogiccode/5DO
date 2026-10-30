@@ -162,12 +162,15 @@ change it in **Settings > Paths**.
 **Library** scans the folders configured in **Settings > Paths** for ISO/BIN/CUE/CHD
 files and resolves titles through the embedded 4DO game database. Select a title to
 open it. A sibling image with the same base name (for example `game.png` beside
-`game.chd`) is shown as cover art. Scanning is recursive to depth 4.
+`game.chd`) is shown as cover art. Scanning is recursive to depth 4. Discs are listed
+immediately; game IDs and database titles are resolved in the background. Later scans
+reuse `library-cache.json` and only reopen files whose size or timestamp changed.
 
 Settings persist under the user local application data folder:
 
 - Windows: `%LOCALAPPDATA%\5DO\settings.json`
 - Linux/macOS: the equivalent local application data directory.
+- Library metadata cache: `%LOCALAPPDATA%\5DO\library-cache.json`.
 
 Per-game fix-mode overrides, automatic 4DO fixes, audio enable/volume, high-resolution
 mode, save/screenshot paths, input bindings, and the current slot are stored there.

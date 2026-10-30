@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -74,6 +76,7 @@ public partial class MainWindow : Window, IDisposable
     private bool _logDockVisible;
     private int _lastLogEntryCount = -1;
     private int _scanGeneration;
+    private CancellationTokenSource? _libraryScanCts;
 
     public MainWindow()
     {
@@ -1145,6 +1148,10 @@ public partial class MainWindow : Window, IDisposable
         }
 
         var generation = ++_scanGeneration;
+        _libraryScanCts?.Cancel();
+        _libraryScanCts?.Dispose();
+        var scanCts = new CancellationTokenSource();
+        _libraryScanCts = scanCts;
         var folders = _settings.LibraryFolders.Count > 0
             ? _settings.LibraryFolders.ToList()
             : RecentFolders();
@@ -1152,13 +1159,63 @@ public partial class MainWindow : Window, IDisposable
             ? "No game folders configured. Use File > Add Game Folder."
             : "Scanning game folders...";
 
-        IReadOnlyList<GameLibraryEntry> entries = [];
+        var scanToken = scanCts.Token;
+        var stopwatch = Stopwatch.StartNew();
+        IReadOnlyList<GameLibraryEntry> finalEntries;
         try
         {
-            if (folders.Count > 0)
+            GameLibraryScanResult initial = folders.Count == 0
+                ? new GameLibraryScanResult([], [])
+                : await Task.Run(
+                    () => GameLibraryScanner.BeginScan(
+                        folders,
+                        cachePath: GameLibraryScanner.DefaultCachePath,
+                        cancellationToken: scanToken),
+                    scanToken).ConfigureAwait(true);
+            if (_shuttingDown || generation != _scanGeneration)
             {
-                entries = await Task.Run(() => GameLibraryScanner.Scan(folders)).ConfigureAwait(true);
+                return;
             }
+
+            ReplaceLibraryEntries(initial.Entries);
+            finalEntries = initial.Entries;
+            _logger.ForCategory(LogCategory.Storage).Information(
+                "Library listed: {Count} entries in {ElapsedMs} ms ({Pending} pending metadata).",
+                initial.Entries.Count,
+                stopwatch.ElapsedMilliseconds,
+                initial.PendingPaths.Count);
+            if (initial.PendingPaths.Count > 0)
+            {
+                var pendingCount = initial.PendingPaths.Count;
+                var metadataProgress = new Progress<int>(count =>
+                {
+                    if (!_shuttingDown && generation == _scanGeneration && _libraryScanCts is not null)
+                    {
+                        StatusText.Text = $"Scanning metadata... {count} of {pendingCount} games";
+                    }
+                });
+                IReadOnlyList<GameLibraryEntry> enriched = await Task.Run(
+                    () => GameLibraryScanner.InspectPending(
+                        initial.PendingPaths,
+                        GameLibraryScanner.DefaultCachePath,
+                        metadataProgress,
+                        scanToken),
+                    scanToken).ConfigureAwait(true);
+                if (_shuttingDown || generation != _scanGeneration)
+                {
+                    return;
+                }
+
+                finalEntries = initial.Entries
+                    .Where(entry => !entry.Pending)
+                    .Concat(enriched)
+                    .ToList();
+                ReplaceLibraryEntries(finalEntries);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
         {
@@ -1166,38 +1223,50 @@ public partial class MainWindow : Window, IDisposable
             _logger.ForCategory(LogCategory.Storage).Error(exception, "Library scan failed.");
             return;
         }
-
-        if (_shuttingDown)
+        finally
         {
-            return;
+            if (ReferenceEquals(_libraryScanCts, scanCts))
+            {
+                _libraryScanCts = null;
+            }
+
+            scanCts.Dispose();
         }
 
-        if (generation != _scanGeneration)
-        {
-            return;
-        }
+        stopwatch.Stop();
+        _logger.ForCategory(LogCategory.Storage).Information(
+            "Library metadata completed: {Count} entries in {ElapsedMs} ms.",
+            finalEntries.Count,
+            stopwatch.ElapsedMilliseconds);
 
+        StatusText.Text = finalEntries.Count == 0
+            ? "No discs found. Add a game folder from the File menu."
+            : $"{CountLabel(finalEntries.Count)} in the library.";
+    }
+
+    private void ReplaceLibraryEntries(IReadOnlyList<GameLibraryEntry> entries)
+    {
         var selectedPath = SelectedLibraryItem()?.Path;
         ClearLibraryItems();
-        foreach (var entry in entries)
+        foreach (var entry in entries
+                     .OrderBy(entry => entry.Name, StringComparer.OrdinalIgnoreCase)
+                     .ThenBy(entry => entry.Path, StringComparer.OrdinalIgnoreCase))
         {
             _allGames.Add(new LibraryItem(entry));
         }
 
         ApplyLibraryFilter();
-        if (!string.IsNullOrWhiteSpace(selectedPath))
+        if (string.IsNullOrWhiteSpace(selectedPath))
         {
-            var reselect = _visibleGames.FirstOrDefault(item =>
-                string.Equals(item.Path, selectedPath, StringComparison.OrdinalIgnoreCase));
-            if (reselect is not null)
-            {
-                SelectLibraryItem(reselect);
-            }
+            return;
         }
 
-        StatusText.Text = entries.Count == 0
-            ? "No discs found. Add a game folder from the File menu."
-            : $"{CountLabel(entries.Count)} in the library.";
+        var reselect = _visibleGames.FirstOrDefault(item =>
+            string.Equals(item.Path, selectedPath, StringComparison.OrdinalIgnoreCase));
+        if (reselect is not null)
+        {
+            SelectLibraryItem(reselect);
+        }
     }
 
     private void ClearLibraryItems()
@@ -1852,6 +1921,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         _shuttingDown = true;
+        _libraryScanCts?.Cancel();
         StopInputRecording(save: true);
         _logTimer.Stop();
         _runner?.Dispose();
@@ -2011,6 +2081,7 @@ public partial class MainWindow : Window, IDisposable
         _shuttingDown = true;
         try
         {
+            _libraryScanCts?.Cancel();
             _logTimer.Stop();
             _runner?.Dispose();
             _runner = null;

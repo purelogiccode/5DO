@@ -72,6 +72,84 @@ public sealed class GameLibraryScannerTests
         Assert.Equal(string.Empty, GameLibraryScanner.FindCover(isoPath));
     }
 
+    [Fact]
+    public void Scan_UsesCachedMetadataForUnchangedFiles()
+    {
+        using var directory = new TempDirectory();
+        var isoPath = Path.Combine(directory.Path, "game.iso");
+        WriteIso(isoPath, sectors: 3);
+        var cachePath = Path.Combine(directory.Path, "library-cache.json");
+
+        GameLibraryEntry first = Assert.Single(
+            GameLibraryScanner.Scan([directory.Path], cachePath: cachePath));
+        Assert.Equal(3, first.SectorCount);
+        Assert.True(File.Exists(cachePath));
+        Assert.False(File.Exists(cachePath + ".tmp"));
+
+        using (new FileStream(isoPath, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            GameLibraryEntry cached = Assert.Single(
+                GameLibraryScanner.Scan([directory.Path], cachePath: cachePath));
+            Assert.Equal(3, cached.SectorCount);
+            Assert.Equal(string.Empty, cached.Error);
+        }
+
+        WriteIso(isoPath, sectors: 5);
+        File.SetLastWriteTimeUtc(isoPath, DateTime.UtcNow.AddMinutes(1));
+        GameLibraryEntry changed = Assert.Single(
+            GameLibraryScanner.Scan([directory.Path], cachePath: cachePath));
+        Assert.Equal(5, changed.SectorCount);
+    }
+
+    [Fact]
+    public void BeginScan_ListsFilesBeforeMetadataInspection()
+    {
+        using var directory = new TempDirectory();
+        var isoPath = Path.Combine(directory.Path, "game.iso");
+        WriteIso(isoPath, sectors: 3);
+        var cachePath = Path.Combine(directory.Path, "library-cache.json");
+
+        GameLibraryScanResult initial = GameLibraryScanner.BeginScan(
+            [directory.Path],
+            cachePath: cachePath);
+        GameLibraryEntry placeholder = Assert.Single(initial.Entries);
+        Assert.True(placeholder.Pending);
+        Assert.Equal("game", placeholder.Name);
+        Assert.Single(initial.PendingPaths);
+
+        GameLibraryEntry enriched = Assert.Single(
+            GameLibraryScanner.InspectPending(initial.PendingPaths, cachePath));
+        Assert.False(enriched.Pending);
+        Assert.Equal(3, enriched.SectorCount);
+
+        GameLibraryScanResult cached = GameLibraryScanner.BeginScan(
+            [directory.Path],
+            cachePath: cachePath);
+        GameLibraryEntry cachedEntry = Assert.Single(cached.Entries);
+        Assert.False(cachedEntry.Pending);
+        Assert.Equal(3, cachedEntry.SectorCount);
+        Assert.Empty(cached.PendingPaths);
+    }
+
+    [Fact]
+    public void Scan_RebuildsACorruptCache()
+    {
+        using var directory = new TempDirectory();
+        var isoPath = Path.Combine(directory.Path, "game.iso");
+        WriteIso(isoPath, sectors: 3);
+        var cachePath = Path.Combine(directory.Path, "library-cache.json");
+        File.WriteAllText(cachePath, "{ this is not json");
+
+        GameLibraryEntry entry = Assert.Single(
+            GameLibraryScanner.Scan([directory.Path], cachePath: cachePath));
+
+        Assert.Equal(3, entry.SectorCount);
+        Assert.Equal(string.Empty, entry.Error);
+    }
+
+    private static void WriteIso(string path, int sectors)
+        => File.WriteAllBytes(path, new byte[2048 * sectors]);
+
     private sealed class TempDirectory : IDisposable
     {
         internal TempDirectory()

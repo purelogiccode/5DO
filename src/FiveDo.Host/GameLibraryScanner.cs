@@ -1,10 +1,21 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using FiveDo.Core;
 using FiveDo.Storage;
 
 namespace FiveDo.Host;
+
+/// <summary>An initial library listing plus files whose metadata still needs inspection.</summary>
+/// <param name="Entries">Entries available immediately, including pending placeholders.</param>
+/// <param name="PendingPaths">Disc paths that still need a game ID and sector count.</param>
+public sealed record GameLibraryScanResult(
+    IReadOnlyList<GameLibraryEntry> Entries,
+    IReadOnlyList<string> PendingPaths);
 
 /// <summary>
 /// Scans folders for ISO/BIN/CUE/CHD images and resolves titles through the 4DO game database.
@@ -15,39 +26,201 @@ public static class GameLibraryScanner
 
     private static readonly string[] CoverExtensions = [".png", ".jpg", ".jpeg", ".webp"];
 
-    /// <summary>Scans one or more folders, recursively.</summary>
+    /// <summary>Gets the default persistent cache path.</summary>
+    public static string DefaultCachePath => LibraryCacheStore.DefaultPath;
+
+    /// <summary>
+    /// Lists discs immediately, reusing cached metadata for unchanged files.
+    /// </summary>
     /// <param name="folders">Folders to scan. Missing folders are skipped.</param>
     /// <param name="maximumDepth">Maximum recursion depth (0 scans only the top level).</param>
-    /// <returns>Entries sorted by title then path.</returns>
-    public static IReadOnlyList<GameLibraryEntry> Scan(IEnumerable<string> folders, int maximumDepth = 4)
+    /// <param name="cachePath">Optional persistent cache path.</param>
+    /// <param name="cancellationToken">Cancellation token for a superseded scan.</param>
+    /// <returns>
+    /// Cached/full entries plus placeholders for files that need <see cref="InspectPending"/>.
+    /// </returns>
+    public static GameLibraryScanResult BeginScan(
+        IEnumerable<string> folders,
+        int maximumDepth = 4,
+        string? cachePath = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(folders);
         ArgumentOutOfRangeException.ThrowIfNegative(maximumDepth);
 
-        var entries = new List<GameLibraryEntry>();
-        foreach (var folder in folders)
+        HashSet<string> files = CollectFolders(folders, maximumDepth, cancellationToken);
+        LibraryCache cache = cachePath is null ? new LibraryCache() : LibraryCacheStore.Load(cachePath);
+        var cachedByPath = new Dictionary<string, CachedLibraryEntry>(StringComparer.OrdinalIgnoreCase);
+        foreach (CachedLibraryEntry cached in cache.Entries)
         {
-            if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+            if (!string.IsNullOrWhiteSpace(cached.Path))
             {
-                continue;
+                cachedByPath[cached.Path] = cached;
             }
-
-            ScanFolder(folder, maximumDepth, entries);
         }
 
-        entries.Sort(static (left, right) =>
+        var entries = new List<GameLibraryEntry>(files.Count);
+        var pending = new List<string>();
+        foreach (var file in files)
         {
-            var title = string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase);
-            return title != 0 ? title : string.Compare(left.Path, right.Path, StringComparison.OrdinalIgnoreCase);
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                var info = new FileInfo(file);
+                if (cachedByPath.TryGetValue(file, out CachedLibraryEntry? cached) && cached.Matches(info))
+                {
+                    entries.Add(CreateEntry(cached));
+                }
+                else
+                {
+                    entries.Add(CreatePlaceholder(file));
+                    pending.Add(file);
+                }
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                Serilog.Log.Debug(exception, "Could not inspect library entry {Path}.", file);
+            }
+        }
+
+        SortEntries(entries);
+        return new GameLibraryScanResult(entries, pending);
+    }
+
+    /// <summary>
+    /// Computes game IDs and sector counts for the entries returned by <see cref="BeginScan"/>.
+    /// </summary>
+    /// <param name="paths">Pending disc paths.</param>
+    /// <param name="cachePath">Optional persistent cache path.</param>
+    /// <param name="progress">Optional progress receiver for the number of inspected entries.</param>
+    /// <param name="cancellationToken">Cancellation token for a superseded scan.</param>
+    /// <returns>The enriched entries, sorted by title then path.</returns>
+    public static IReadOnlyList<GameLibraryEntry> InspectPending(
+        IReadOnlyList<string> paths,
+        string? cachePath = null,
+        IProgress<int>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+        if (paths.Count == 0)
+        {
+            return [];
+        }
+
+        var entries = new ConcurrentBag<GameLibraryEntry>();
+        var inspected = new ConcurrentDictionary<string, CachedLibraryEntry>(StringComparer.OrdinalIgnoreCase);
+        var found = 0;
+        var options = new ParallelOptions
+        {
+            CancellationToken = cancellationToken,
+            MaxDegreeOfParallelism = Math.Clamp(Environment.ProcessorCount / 2, 1, 4),
+        };
+        Parallel.ForEach(paths, options, file =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                var info = new FileInfo(file);
+                GameLibraryEntry? entry = Inspect(file, chdReadAheadHunks: 0);
+                if (entry is null)
+                {
+                    return;
+                }
+
+                entries.Add(entry);
+                if (entry.Error.Length == 0)
+                {
+                    inspected[file] = CachedLibraryEntry.From(entry, info);
+                }
+
+                var count = Interlocked.Increment(ref found);
+                if ((count & 15) == 0)
+                {
+                    progress?.Report(count);
+                }
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                Serilog.Log.Debug(exception, "Could not inspect library entry {Path}.", file);
+            }
         });
 
-        return entries;
+        progress?.Report(found);
+
+        if (cachePath is not null && !cancellationToken.IsCancellationRequested)
+        {
+            LibraryCache cache = LibraryCacheStore.Load(cachePath);
+            var merged = new Dictionary<string, CachedLibraryEntry>(StringComparer.OrdinalIgnoreCase);
+            foreach (CachedLibraryEntry cached in cache.Entries)
+            {
+                if (!string.IsNullOrWhiteSpace(cached.Path))
+                {
+                    merged[cached.Path] = cached;
+                }
+            }
+
+            // Re-inspect unreadable or deleted files on the next scan.
+            foreach (var path in paths)
+            {
+                merged.Remove(path);
+            }
+
+            foreach (KeyValuePair<string, CachedLibraryEntry> pair in inspected)
+            {
+                merged[pair.Key] = pair.Value;
+            }
+
+            LibraryCacheStore.Save(cachePath, new LibraryCache { Entries = merged.Values.ToList() });
+        }
+
+        var result = entries.ToList();
+        SortEntries(result);
+        return result;
+    }
+
+    /// <summary>Scans one or more folders, recursively, and returns fully inspected entries.</summary>
+    /// <param name="folders">Folders to scan. Missing folders are skipped.</param>
+    /// <param name="maximumDepth">Maximum recursion depth (0 scans only the top level).</param>
+    /// <param name="cachePath">
+    /// Optional cache path. When supplied, unchanged files reuse their previous metadata
+    /// instead of reopening and hashing every disc.
+    /// </param>
+    /// <param name="progress">Optional progress receiver for the number of entries inspected.</param>
+    /// <param name="cancellationToken">Cancellation token for a superseded scan.</param>
+    /// <returns>Entries sorted by title then path.</returns>
+    public static IReadOnlyList<GameLibraryEntry> Scan(
+        IEnumerable<string> folders,
+        int maximumDepth = 4,
+        string? cachePath = null,
+        IProgress<int>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        GameLibraryScanResult initial = BeginScan(folders, maximumDepth, cachePath, cancellationToken);
+        if (initial.PendingPaths.Count == 0)
+        {
+            return initial.Entries;
+        }
+
+        IReadOnlyList<GameLibraryEntry> inspected = InspectPending(
+            initial.PendingPaths,
+            cachePath,
+            progress,
+            cancellationToken);
+        var all = initial.Entries
+            .Where(entry => !entry.Pending)
+            .Concat(inspected)
+            .ToList();
+        SortEntries(all);
+        return all;
     }
 
     /// <summary>Builds a library entry for one disc, or returns null for an unsupported file.</summary>
     /// <param name="path">Disc path.</param>
+    /// <param name="chdReadAheadHunks">
+    /// CHD hunks to pre-decompress. Metadata scans pass zero to avoid background work.
+    /// </param>
     /// <returns>The entry, or null when the extension is not a supported disc container.</returns>
-    public static GameLibraryEntry? Inspect(string path)
+    public static GameLibraryEntry? Inspect(string path, int chdReadAheadHunks = 0)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         if (!IsDiscPath(path))
@@ -58,12 +231,12 @@ public static class GameLibraryScanner
         var coverPath = FindCover(path);
         try
         {
-            using IDiscSource disc = DiscImageFactory.Open(path);
+            using IDiscSource disc = DiscImageFactory.Open(path, chdReadAheadHunks: chdReadAheadHunks);
             var gameId = disc.SectorCount >= 2 ? GameId.Compute(disc) : string.Empty;
             GameRecord? record = gameId.Length == 0 ? null : GameDatabase.Default.FindByChecksum(gameId);
             return new GameLibraryEntry(
                 path,
-                Path.GetExtension(path).TrimStart('.').ToUpperInvariant(),
+                FormatFor(path),
                 disc.SectorCount,
                 gameId,
                 record?.Name ?? Path.GetFileNameWithoutExtension(path),
@@ -76,7 +249,7 @@ public static class GameLibraryScanner
             Serilog.Log.Debug(exception, "Skipped unreadable library entry {Path}.", path);
             return new GameLibraryEntry(
                 path,
-                Path.GetExtension(path).TrimStart('.').ToUpperInvariant(),
+                FormatFor(path),
                 0,
                 string.Empty,
                 Path.GetFileNameWithoutExtension(path),
@@ -114,12 +287,84 @@ public static class GameLibraryScanner
         return string.Empty;
     }
 
-    private static void ScanFolder(string folder, int depth, List<GameLibraryEntry> entries)
+    private static HashSet<string> CollectFolders(
+        IEnumerable<string> folders,
+        int maximumDepth,
+        CancellationToken cancellationToken)
     {
-        IEnumerable<string> files;
+        var files = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var folder in folders)
+        {
+            if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+            {
+                continue;
+            }
+
+            CollectFiles(folder, maximumDepth, files, cancellationToken);
+        }
+
+        return files;
+    }
+
+    private static GameLibraryEntry CreateEntry(CachedLibraryEntry cached)
+    {
+        GameRecord? record = cached.GameId.Length == 0
+            ? null
+            : GameDatabase.Default.FindByChecksum(cached.GameId);
+        return new GameLibraryEntry(
+            cached.Path,
+            cached.Format,
+            cached.SectorCount,
+            cached.GameId,
+            record?.Name ?? Path.GetFileNameWithoutExtension(cached.Path),
+            record is not null,
+            cached.Error,
+            FindCover(cached.Path));
+    }
+
+    private static GameLibraryEntry CreatePlaceholder(string path)
+        => new(
+            path,
+            FormatFor(path),
+            0,
+            string.Empty,
+            Path.GetFileNameWithoutExtension(path),
+            false,
+            string.Empty,
+            FindCover(path),
+            Pending: true);
+
+    private static string FormatFor(string path)
+        => Path.GetExtension(path).TrimStart('.').ToUpperInvariant();
+
+    private static void SortEntries(List<GameLibraryEntry> entries)
+    {
+        entries.Sort(static (left, right) =>
+        {
+            var title = string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase);
+            return title != 0
+                ? title
+                : string.Compare(left.Path, right.Path, StringComparison.OrdinalIgnoreCase);
+        });
+    }
+
+    private static void CollectFiles(
+        string folder,
+        int depth,
+        HashSet<string> files,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            files = Directory.EnumerateFiles(folder);
+            foreach (var file in Directory.EnumerateFiles(folder))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (IsDiscPath(file))
+                {
+                    files.Add(Path.GetFullPath(file));
+                }
+            }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
@@ -127,34 +372,22 @@ public static class GameLibraryScanner
             return;
         }
 
-        foreach (var file in files)
-        {
-            GameLibraryEntry? entry = Inspect(file);
-            if (entry is not null)
-            {
-                entries.Add(entry);
-            }
-        }
-
         if (depth == 0)
         {
             return;
         }
 
-        IEnumerable<string> directories;
         try
         {
-            directories = Directory.EnumerateDirectories(folder);
+            foreach (var directory in Directory.EnumerateDirectories(folder))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                CollectFiles(directory, depth - 1, files, cancellationToken);
+            }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             Serilog.Log.Debug(exception, "Could not enumerate subdirectories in {Folder}.", folder);
-            return;
-        }
-
-        foreach (var directory in directories)
-        {
-            ScanFolder(directory, depth - 1, entries);
         }
     }
 

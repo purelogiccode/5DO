@@ -16,6 +16,10 @@ public static class DiscImageFactory
     /// <param name="prefetch">Whether to add a host-side read-ahead cache.</param>
     /// <param name="prefetchAhead">Sectors to read ahead when prefetching is enabled.</param>
     /// <param name="prefetchCapacity">Maximum cached sectors when prefetching is enabled.</param>
+    /// <param name="chdReadAheadHunks">
+    /// CHD hunks to decompress in the background. Zero disables CHD read-ahead for
+    /// metadata-only callers such as the game-library scanner.
+    /// </param>
     /// <returns>An open disc source. The caller owns and must dispose it.</returns>
     /// <exception cref="DiscImageException">Thrown when the image cannot be opened or its format is unsupported.</exception>
     public static IDiscSource Open(
@@ -23,7 +27,8 @@ public static class DiscImageFactory
         string? chdParentPath = null,
         bool prefetch = false,
         int prefetchAhead = 32,
-        int prefetchCapacity = 128)
+        int prefetchCapacity = 128,
+        int chdReadAheadHunks = 4)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         if (!File.Exists(path))
@@ -34,10 +39,10 @@ public static class DiscImageFactory
         IDiscSource source = Path.GetExtension(path).ToLowerInvariant() switch
         {
             ".cue" => CueSheet.Open(path),
-            ".chd" => ChdDiscImage.Open(path, chdParentPath),
+            ".chd" => ChdDiscImage.Open(path, chdParentPath, chdReadAheadHunks),
             ".iso" => new IsoImage(path),
             ".bin" => OpenBin(path),
-            _ => OpenByHeader(path, chdParentPath),
+            _ => OpenByHeader(path, chdParentPath, chdReadAheadHunks),
         };
 
         if (!prefetch)
@@ -101,7 +106,7 @@ public static class DiscImageFactory
         return new BinImage(path, payloadOffset: payloadOffset);
     }
 
-    private static IDiscSource OpenByHeader(string path, string? chdParentPath)
+    private static IDiscSource OpenByHeader(string path, string? chdParentPath, int chdReadAheadHunks)
     {
         Span<byte> signature = stackalloc byte[8];
         using (FileStream stream = File.OpenRead(path))
@@ -114,7 +119,7 @@ public static class DiscImageFactory
 
         if (signature.SequenceEqual("MComprHD"u8))
         {
-            return ChdDiscImage.Open(path, chdParentPath);
+            return ChdDiscImage.Open(path, chdParentPath, chdReadAheadHunks);
         }
 
         if (HasCdSyncHeader(path))

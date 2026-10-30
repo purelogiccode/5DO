@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -18,6 +19,8 @@ namespace FiveDo.Frontend.Avalonia.Views;
 public partial class GameLibraryWindow : Window
 {
     private readonly AppSettings _settings;
+    private CancellationTokenSource? _scanCts;
+    private int _scanGeneration;
 
     /// <summary>Creates the window with the persisted settings.</summary>
     public GameLibraryWindow()
@@ -32,10 +35,17 @@ public partial class GameLibraryWindow : Window
         ArgumentNullException.ThrowIfNull(settings);
         InitializeComponent();
         _settings = settings;
-        Refresh();
+        Closed += (_, _) =>
+        {
+            _scanCts?.Cancel();
+            _scanCts?.Dispose();
+            _scanCts = null;
+        };
+        AsyncEvent.Run(RefreshAsync, "loading the game library");
     }
 
-    private void OnRefresh(object? sender, RoutedEventArgs e) => Refresh();
+    private void OnRefresh(object? sender, RoutedEventArgs e) =>
+        AsyncEvent.Run(RefreshAsync, "refreshing the game library");
 
     private void OnAddFolderAsync(object? sender, RoutedEventArgs e) =>
         AsyncEvent.Run(AddFolderAsync, "adding a game folder");
@@ -65,7 +75,7 @@ public partial class GameLibraryWindow : Window
         if (added)
         {
             AppSettingsStore.Save(_settings);
-            Refresh();
+            await RefreshAsync().ConfigureAwait(true);
         }
     }
 
@@ -116,17 +126,107 @@ public partial class GameLibraryWindow : Window
         }
     }
 
-    private void Refresh()
+    private async Task RefreshAsync()
     {
+        var generation = ++_scanGeneration;
+        _scanCts?.Cancel();
+        _scanCts?.Dispose();
+        var scanCts = new CancellationTokenSource();
+        _scanCts = scanCts;
         IList<string> folders = _settings.LibraryFolders.Count > 0
             ? _settings.LibraryFolders
             : RecentFolders();
-        IReadOnlyList<GameLibraryEntry> entries = folders.Count == 0
-            ? []
-            : GameLibraryScanner.Scan(folders);
-        LibraryList.ItemsSource = entries;
-        UpdateCover();
-        if (entries.Count == 0)
+        StatusText.Text = folders.Count == 0
+            ? "Add a folder that contains ISO, BIN, CUE, or CHD images."
+            : "Scanning game folders...";
+
+        var scanToken = scanCts.Token;
+        IReadOnlyList<GameLibraryEntry> finalEntries;
+        try
+        {
+            GameLibraryScanResult initial = folders.Count == 0
+                ? new GameLibraryScanResult([], [])
+                : await Task.Run(
+                    () => GameLibraryScanner.BeginScan(
+                        folders,
+                        cachePath: GameLibraryScanner.DefaultCachePath,
+                        cancellationToken: scanToken),
+                    scanToken).ConfigureAwait(true);
+            if (generation != _scanGeneration)
+            {
+                return;
+            }
+
+            LibraryList.ItemsSource = initial.Entries;
+            UpdateCover();
+            finalEntries = initial.Entries;
+            if (initial.PendingPaths.Count > 0)
+            {
+                var pendingCount = initial.PendingPaths.Count;
+                StatusText.Text = $"{CountLabel(initial.Entries.Count)}; scanning metadata... 0 of {pendingCount}";
+                var metadataProgress = new Progress<int>(count =>
+                {
+                    if (generation == _scanGeneration && _scanCts is not null)
+                    {
+                        StatusText.Text =
+                            $"{CountLabel(initial.Entries.Count)}; scanning metadata... {count} of {pendingCount}";
+                    }
+                });
+                var selectedPath = (LibraryList.SelectedItem as GameLibraryEntry)?.Path;
+                IReadOnlyList<GameLibraryEntry> enriched = await Task.Run(
+                    () => GameLibraryScanner.InspectPending(
+                        initial.PendingPaths,
+                        GameLibraryScanner.DefaultCachePath,
+                        metadataProgress,
+                        scanToken),
+                    scanToken).ConfigureAwait(true);
+                if (generation != _scanGeneration)
+                {
+                    return;
+                }
+
+                finalEntries = initial.Entries
+                    .Where(entry => !entry.Pending)
+                    .Concat(enriched)
+                    .OrderBy(entry => entry.Name, StringComparer.OrdinalIgnoreCase)
+                    .ThenBy(entry => entry.Path, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                LibraryList.ItemsSource = finalEntries;
+                if (!string.IsNullOrWhiteSpace(selectedPath))
+                {
+                    LibraryList.SelectedItem = finalEntries.FirstOrDefault(entry =>
+                        string.Equals(entry.Path, selectedPath, StringComparison.OrdinalIgnoreCase));
+                }
+
+                UpdateCover();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            StatusText.Text = $"Library scan failed: {exception.Message}";
+            Serilog.Log.Debug(exception, "Library scan failed.");
+            return;
+        }
+        finally
+        {
+            if (ReferenceEquals(_scanCts, scanCts))
+            {
+                _scanCts = null;
+            }
+
+            scanCts.Dispose();
+        }
+
+        if (generation != _scanGeneration)
+        {
+            return;
+        }
+
+        if (finalEntries.Count == 0)
         {
             StatusText.Text = folders.Count == 0
                 ? "Add a folder that contains ISO, BIN, CUE, or CHD images."
@@ -135,7 +235,7 @@ public partial class GameLibraryWindow : Window
         }
 
         var known = 0;
-        foreach (GameLibraryEntry entry in entries)
+        foreach (GameLibraryEntry entry in finalEntries)
         {
             if (entry.Known)
             {
@@ -143,8 +243,10 @@ public partial class GameLibraryWindow : Window
             }
         }
 
-        StatusText.Text = $"{entries.Count} disc(s), {known} recognized by the 4DO database.";
+        StatusText.Text = $"{finalEntries.Count} disc(s), {known} recognized by the 4DO database.";
     }
+
+    private static string CountLabel(int count) => count == 1 ? "1 game" : $"{count} games";
 
     private List<string> RecentFolders()
     {

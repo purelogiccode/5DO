@@ -26,3 +26,12 @@ internal sealed partial class AppSettingsJsonContext : JsonSerializerContext;
     UseStringEnumConverter = true)]
 [JsonSerializable(typeof(SaveStateSlotMetadata))]
 internal sealed partial class SaveStateSlotJsonContext : JsonSerializerContext;
+
+/// <summary>
+/// Source-generated JSON metadata for the game-library cache.
+/// </summary>
+[JsonSourceGenerationOptions(
+    WriteIndented = true,
+    PropertyNameCaseInsensitive = true)]
+[JsonSerializable(typeof(LibraryCache))]
+internal sealed partial class LibraryCacheJsonContext : JsonSerializerContext;

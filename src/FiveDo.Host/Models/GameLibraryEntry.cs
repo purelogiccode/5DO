@@ -11,6 +11,9 @@ namespace FiveDo.Host;
 /// <param name="Known">Whether the 4DO game database recognized the disc.</param>
 /// <param name="Error">Error message when the image could not be opened.</param>
 /// <param name="CoverPath">Cover-art image path, or empty when none was found.</param>
+/// <param name="Pending">
+/// Whether the entry was listed before its game ID and sector count were computed.
+/// </param>
 [System.Diagnostics.CodeAnalysis.SuppressMessage(
     "ReSharper",
     "NotAccessedPositionalProperty.Global",
@@ -23,4 +26,5 @@ public sealed record GameLibraryEntry(
     string Name,
     bool Known,
     string Error,
-    string CoverPath = "");
+    string CoverPath = "",
+    bool Pending = false);

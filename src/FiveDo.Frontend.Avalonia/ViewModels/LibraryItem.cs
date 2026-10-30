@@ -21,7 +21,7 @@ public sealed class LibraryItem : IDisposable
         ArgumentNullException.ThrowIfNull(entry);
         Entry = entry;
 
-        if (!string.IsNullOrWhiteSpace(entry.CoverPath))
+        if (!entry.Pending && !string.IsNullOrWhiteSpace(entry.CoverPath))
         {
             try
             {
@@ -55,7 +55,7 @@ public sealed class LibraryItem : IDisposable
     public bool IsUnknown => !Known;
 
     /// <summary>Gets the database badge text.</summary>
-    public string DatabaseBadge => Known ? "4DO DB" : "Unknown";
+    public string DatabaseBadge => Entry.Pending ? "Scanning" : Known ? "4DO DB" : "Unknown";
 
     /// <summary>Gets the short game identifier shown under the title.</summary>
     public string GameIdText => Entry.GameId.Length >= 8
@@ -63,9 +63,11 @@ public sealed class LibraryItem : IDisposable
         : Entry.GameId.ToUpperInvariant();
 
     /// <summary>Gets the formatted sector count.</summary>
-    public string SectorText => Entry.SectorCount > 0
-        ? string.Create(CultureInfo.InvariantCulture, $"{Entry.SectorCount:N0} sectors")
-        : "Unreadable image";
+    public string SectorText => Entry.Pending
+        ? "Scanning metadata..."
+        : Entry.SectorCount > 0
+            ? string.Create(CultureInfo.InvariantCulture, $"{Entry.SectorCount:N0} sectors")
+            : "Unreadable image";
 
     /// <summary>Gets the decoded cover art, or <see langword="null"/> when none exists.</summary>
     public Bitmap? Cover { get; }

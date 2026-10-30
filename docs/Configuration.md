@@ -365,6 +365,12 @@ same base name and an extension of `.png`, `.jpg`, `.jpeg`, or `.webp` (for exam
 `game.png` beside `game.chd`). Unknown discs use the file name as the title and show
 `Unknown`; known discs use the embedded 4DO database metadata.
 
+Discs are listed immediately from the folder enumeration. Game IDs and sector counts are
+then computed in the background with bounded parallelism, and the list updates as titles
+resolve. Results are cached in `<LocalApplicationData>/5DO/library-cache.json`; later
+scans reuse the cache for files whose length and last-write time are unchanged. The
+status bar reports metadata-scan progress.
+
 The **Library** view supports grid/list modes, search by title/path/game ID/format, and
 an icon-size slider. Double-click or Enter boots the selected disc.
 
