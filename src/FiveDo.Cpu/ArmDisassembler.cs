@@ -300,5 +300,8 @@ public static class ArmDisassembler
         return $"{(link ? "bl" : "b")}{condition} 0x{target.ToString("x8", CultureInfo.InvariantCulture)}";
     }
 
-    private static string Register(int index) => $"r{index.ToString(CultureInfo.InvariantCulture)}";
+    private static string Register(int index)
+    {
+        return $"r{index.ToString(CultureInfo.InvariantCulture)}";
+    }
 }

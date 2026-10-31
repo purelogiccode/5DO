@@ -444,9 +444,15 @@ public sealed class DspTests
 
         internal int Count => _words.Count;
 
-        internal void Word(ushort value) => _words.Add(value);
+        internal void Word(ushort value)
+        {
+            _words.Add(value);
+        }
 
-        internal void Patch(int index, ushort value) => _words[index] = value;
+        internal void Patch(int index, ushort value)
+        {
+            _words[index] = value;
+        }
 
         internal void Seed(int address, ushort value)
         {
@@ -511,9 +517,15 @@ public sealed class DspTests
             return InputFifoValue;
         }
 
-        public ushort GetInputFifoStatus(byte channel) => 2;
+        public ushort GetInputFifoStatus(byte channel)
+        {
+            return 2;
+        }
 
-        public ushort GetOutputFifoStatus(byte channel) => 1;
+        public ushort GetOutputFifoStatus(byte channel)
+        {
+            return 1;
+        }
 
         public void WriteOutputFifo(ushort channel, ushort value)
         {

@@ -165,7 +165,10 @@ public sealed class Xbus : IClioXbus, IStateSection
     }
 
     /// <inheritdoc />
-    public uint GetResult() => GetSelectedDevice()?.GetReserved() ?? 0;
+    public uint GetResult()
+    {
+        return GetSelectedDevice()?.GetReserved() ?? 0;
+    }
 
     /// <inheritdoc />
     public uint GetPoll()
@@ -218,7 +221,10 @@ public sealed class Xbus : IClioXbus, IStateSection
     }
 
     /// <inheritdoc />
-    public uint GetDataFifo() => GetSelectedDevice()?.GetData() ?? 0;
+    public uint GetDataFifo()
+    {
+        return GetSelectedDevice()?.GetData() ?? 0;
+    }
 
     /// <summary>Writes the XBUS save-state payload. FreeDO: <c>_xbus_Save</c>.</summary>
     /// <param name="writer">Destination writer.</param>
@@ -265,7 +271,10 @@ public sealed class Xbus : IClioXbus, IStateSection
         }
     }
 
-    private IXbusDevice? GetSelectedDevice() => _select < DeviceCount ? _devices[_select] : null;
+    private IXbusDevice? GetSelectedDevice()
+    {
+        return _select < DeviceCount ? _devices[_select] : null;
+    }
 
     private void ExecuteBuiltInCommand()
     {

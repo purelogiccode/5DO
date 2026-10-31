@@ -22,7 +22,10 @@ public sealed class BiosUiValidationTests
 {
     private readonly ITestOutputHelper _output;
 
-    public BiosUiValidationTests(ITestOutputHelper output) => _output = output;
+    public BiosUiValidationTests(ITestOutputHelper output)
+    {
+        _output = output;
+    }
 
     [Fact]
     public void RealBios_RendersStableBootFrameWhenProvided()

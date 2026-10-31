@@ -76,7 +76,10 @@ public sealed class CelMemory
 
     /// <summary>Adds precomputed CEL cycles from a batched rasterizer loop.</summary>
     /// <param name="cycles">Cycle count to add.</param>
-    internal void AddCycles(int cycles) => Cycles += cycles;
+    internal void AddCycles(int cycles)
+    {
+        Cycles += cycles;
+    }
 
     /// <summary>Returns and clears the accumulated CEL cycles. FreeDO: <c>_madam_GetCELCycles</c>.</summary>
     /// <returns>The accumulated cycle count.</returns>

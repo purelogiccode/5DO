@@ -474,7 +474,10 @@ public sealed class CoreRunner : IDisposable
             }
         }
 
-        internal void Resync() => _next = _clock.ElapsedTicks;
+        internal void Resync()
+        {
+            _next = _clock.ElapsedTicks;
+        }
 
         internal void Wait()
         {

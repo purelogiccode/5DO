@@ -253,7 +253,10 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OnWelcome(object? sender, RoutedEventArgs e) => ShowWelcome(firstRun: false);
+    private void OnWelcome(object? sender, RoutedEventArgs e)
+    {
+        ShowWelcome(firstRun: false);
+    }
 
     private void LoadConfiguredPaths()
     {
@@ -271,8 +274,10 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OnOpenBiosAsync(object? sender, RoutedEventArgs e) =>
+    private void OnOpenBiosAsync(object? sender, RoutedEventArgs e)
+    {
         AsyncEvent.Run(OpenBiosAsync, "opening a BIOS");
+    }
 
     private async Task OpenBiosAsync()
     {
@@ -289,8 +294,10 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OnOpenDiscAsync(object? sender, RoutedEventArgs e) =>
+    private void OnOpenDiscAsync(object? sender, RoutedEventArgs e)
+    {
         AsyncEvent.Run(OpenDiscAsync, "opening a disc");
+    }
 
     private async Task OpenDiscAsync()
     {
@@ -429,7 +436,10 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OnPlayPause(object? sender, RoutedEventArgs e) => TogglePlayPause();
+    private void OnPlayPause(object? sender, RoutedEventArgs e)
+    {
+        TogglePlayPause();
+    }
 
     private void TogglePlayPause()
     {
@@ -508,7 +518,10 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OnStop(object? sender, RoutedEventArgs e) => StopEmulation();
+    private void OnStop(object? sender, RoutedEventArgs e)
+    {
+        StopEmulation();
+    }
 
     private void StopEmulation()
     {
@@ -539,7 +552,10 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OnReset(object? sender, RoutedEventArgs e) => ResetMachine();
+    private void OnReset(object? sender, RoutedEventArgs e)
+    {
+        ResetMachine();
+    }
 
     private void ResetMachine()
     {
@@ -548,7 +564,10 @@ public partial class MainWindow : Window, IDisposable
         _logger.ForCategory(LogCategory.Machine).Information("Machine reset.");
     }
 
-    private void OnSaveState(object? sender, RoutedEventArgs e) => SaveStateToCurrentSlot();
+    private void OnSaveState(object? sender, RoutedEventArgs e)
+    {
+        SaveStateToCurrentSlot();
+    }
 
     private void SaveStateToCurrentSlot()
     {
@@ -573,7 +592,10 @@ public partial class MainWindow : Window, IDisposable
             _gameName);
     }
 
-    private void OnLoadState(object? sender, RoutedEventArgs e) => LoadStateFromCurrentSlot();
+    private void OnLoadState(object? sender, RoutedEventArgs e)
+    {
+        LoadStateFromCurrentSlot();
+    }
 
     private void LoadStateFromCurrentSlot()
     {
@@ -600,7 +622,10 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OnPreviousSlot(object? sender, RoutedEventArgs e) => SelectPreviousSlot();
+    private void OnPreviousSlot(object? sender, RoutedEventArgs e)
+    {
+        SelectPreviousSlot();
+    }
 
     private void SelectPreviousSlot()
     {
@@ -610,7 +635,10 @@ public partial class MainWindow : Window, IDisposable
         StatusText.Text = $"Selected slot {_slots.CurrentSlot + 1}.";
     }
 
-    private void OnNextSlot(object? sender, RoutedEventArgs e) => SelectNextSlot();
+    private void OnNextSlot(object? sender, RoutedEventArgs e)
+    {
+        SelectNextSlot();
+    }
 
     private void SelectNextSlot()
     {
@@ -631,7 +659,10 @@ public partial class MainWindow : Window, IDisposable
         SlotText.Text = $"Slot {_slots.CurrentSlot + 1}/{_slots.SlotCount}";
     }
 
-    private void OnScreenshot(object? sender, RoutedEventArgs e) => CaptureScreenshot();
+    private void OnScreenshot(object? sender, RoutedEventArgs e)
+    {
+        CaptureScreenshot();
+    }
 
     private void CaptureScreenshot()
     {
@@ -866,7 +897,10 @@ public partial class MainWindow : Window, IDisposable
         LogPanel.IsVisible = visible && _logDockVisible;
     }
 
-    private void OnShowLibrary(object? sender, RoutedEventArgs e) => ShowLibraryView();
+    private void OnShowLibrary(object? sender, RoutedEventArgs e)
+    {
+        ShowLibraryView();
+    }
 
     private void ShowLibraryView()
     {
@@ -1033,10 +1067,15 @@ public partial class MainWindow : Window, IDisposable
         _ = window.ShowDialog(this);
     }
 
-    private void OnDonationStatus(object? sender, RoutedEventArgs e) =>
+    private void OnDonationStatus(object? sender, RoutedEventArgs e)
+    {
         AsyncEvent.Run(ShowDonationStatusAsync, "checking donation status");
+    }
 
-    private void OnDonate(object? sender, RoutedEventArgs e) => OpenDonationPage();
+    private void OnDonate(object? sender, RoutedEventArgs e)
+    {
+        OpenDonationPage();
+    }
 
     private void OnDismissDonationBanner(object? sender, RoutedEventArgs e)
     {
@@ -1198,7 +1237,7 @@ public partial class MainWindow : Window, IDisposable
         try
         {
             Uri uri = DonationVerificationClient.CreateDonationPageUri(_settings.DonationEmail);
-            var launcher = TopLevel.GetTopLevel(this)?.Launcher;
+            var launcher = GetTopLevel(this)?.Launcher;
             if (launcher is null)
             {
                 StatusText.Text = "Could not open the donation page.";
@@ -1237,8 +1276,10 @@ public partial class MainWindow : Window, IDisposable
         UpdateDonationBanner();
     }
 
-    private void OnAddFolderAsync(object? sender, RoutedEventArgs e) =>
+    private void OnAddFolderAsync(object? sender, RoutedEventArgs e)
+    {
         AsyncEvent.Run(AddFolderAsync, "adding a game folder");
+    }
 
     private async Task AddFolderAsync()
     {
@@ -1273,12 +1314,20 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OnRefresh(object? sender, RoutedEventArgs e) =>
+    private void OnRefresh(object? sender, RoutedEventArgs e)
+    {
         AsyncEvent.Run(RefreshLibraryAsync, "refreshing the game library");
+    }
 
-    private void OnExit(object? sender, RoutedEventArgs e) => Close();
+    private void OnExit(object? sender, RoutedEventArgs e)
+    {
+        Close();
+    }
 
-    private void OnSearchChanged(object? sender, TextChangedEventArgs e) => ApplyLibraryFilter();
+    private void OnSearchChanged(object? sender, TextChangedEventArgs e)
+    {
+        ApplyLibraryFilter();
+    }
 
     private void OnIconSizeChanged(object? sender, RangeBaseValueChangedEventArgs e)
     {
@@ -1287,9 +1336,15 @@ public partial class MainWindow : Window, IDisposable
         Resources["LibraryCardImageHeight"] = Math.Max(80, width - 14);
     }
 
-    private void OnGridView(object? sender, RoutedEventArgs e) => SetLibraryMode(grid: true);
+    private void OnGridView(object? sender, RoutedEventArgs e)
+    {
+        SetLibraryMode(grid: true);
+    }
 
-    private void OnListView(object? sender, RoutedEventArgs e) => SetLibraryMode(grid: false);
+    private void OnListView(object? sender, RoutedEventArgs e)
+    {
+        SetLibraryMode(grid: false);
+    }
 
     private void SetLibraryMode(bool grid)
     {
@@ -1332,11 +1387,15 @@ public partial class MainWindow : Window, IDisposable
         UpdateSelectedStatus(item);
     }
 
-    private void OnGridDoubleTapped(object? sender, TappedEventArgs e) =>
+    private void OnGridDoubleTapped(object? sender, TappedEventArgs e)
+    {
         BootLibrarySelection(GridLibraryList.SelectedItem as LibraryItem);
+    }
 
-    private void OnListDoubleTapped(object? sender, TappedEventArgs e) =>
+    private void OnListDoubleTapped(object? sender, TappedEventArgs e)
+    {
         BootLibrarySelection(ListLibraryList.SelectedItem as LibraryItem);
+    }
 
     private void OnLibraryKeyDown(object? sender, KeyEventArgs e)
     {
@@ -1441,7 +1500,10 @@ public partial class MainWindow : Window, IDisposable
                 : $"{_visibleGames.Count} of {CountLabel(_allGames.Count)}";
     }
 
-    private static string CountLabel(int count) => count == 1 ? "1 game" : $"{count} games";
+    private static string CountLabel(int count)
+    {
+        return count == 1 ? "1 game" : $"{count} games";
+    }
 
     private async Task RefreshLibraryAsync()
     {
@@ -1638,7 +1700,10 @@ public partial class MainWindow : Window, IDisposable
         RecentMenu.Items.Add(clear);
     }
 
-    private void OnToggleLog(object? sender, RoutedEventArgs e) => SetLogDockVisible(!_logDockVisible);
+    private void OnToggleLog(object? sender, RoutedEventArgs e)
+    {
+        SetLogDockVisible(!_logDockVisible);
+    }
 
     private void SetLogDockVisible(bool visible)
     {
@@ -1686,8 +1751,10 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OnSettingsAsync(object? sender, RoutedEventArgs e) =>
+    private void OnSettingsAsync(object? sender, RoutedEventArgs e)
+    {
         AsyncEvent.Run(ShowSettingsAsync, "showing settings");
+    }
 
     private async Task ShowSettingsAsync()
     {
@@ -1740,8 +1807,10 @@ public partial class MainWindow : Window, IDisposable
         _logger.ForCategory(LogCategory.Host).Information("Settings saved.");
     }
 
-    private void OnSaveSlotsAsync(object? sender, RoutedEventArgs e) =>
+    private void OnSaveSlotsAsync(object? sender, RoutedEventArgs e)
+    {
         AsyncEvent.Run(ShowSaveSlotsAsync, "showing save slots");
+    }
 
     private async Task ShowSaveSlotsAsync()
     {
@@ -1771,8 +1840,10 @@ public partial class MainWindow : Window, IDisposable
         UpdateSlotText();
     }
 
-    private void OnInputBindingsAsync(object? sender, RoutedEventArgs e) =>
+    private void OnInputBindingsAsync(object? sender, RoutedEventArgs e)
+    {
         AsyncEvent.Run(ShowInputBindingsAsync, "showing input bindings");
+    }
 
     private async Task ShowInputBindingsAsync()
     {
@@ -2010,13 +2081,15 @@ public partial class MainWindow : Window, IDisposable
     }
 
     private VideoRendererKind ResolveRendererKind()
-        => Program.RequestedGlBackend switch
+    {
+        return Program.RequestedGlBackend switch
         {
             GlBackend.Vulkan => VideoRendererKind.Vulkan,
             GlBackend.Software => VideoRendererKind.Software,
             GlBackend.Wgl or GlBackend.Angle => VideoRendererKind.OpenGl,
             _ => _settings.Renderer,
         };
+    }
 
     private void ApplyRendererSelection()
     {
@@ -2233,9 +2306,11 @@ public partial class MainWindow : Window, IDisposable
     }
 
     private (int Width, int Height) ResolveOutputSize(int fallbackWidth, int fallbackHeight)
-        => OutputResolutionSizes.TryGetSize(_settings.OutputResolution, out var width, out var height)
+    {
+        return OutputResolutionSizes.TryGetSize(_settings.OutputResolution, out var width, out var height)
             ? (width, height)
             : (fallbackWidth, fallbackHeight);
+    }
 
     private static WriteableBitmap CreateBitmap(int width, int height)
     {

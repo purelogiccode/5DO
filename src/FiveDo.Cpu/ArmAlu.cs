@@ -147,7 +147,10 @@ public static class ArmAlu
     /// <summary>Gets the current carry flag as zero or one. FreeDO: <c>ARM_GET_C</c>.</summary>
     /// <param name="state">CPU state.</param>
     /// <returns>Zero or one.</returns>
-    internal static uint GetCarry(Arm60State state) => (state.Cpsr >> 29) & 1;
+    internal static uint GetCarry(Arm60State state)
+    {
+        return (state.Cpsr >> 29) & 1;
+    }
 
     /// <summary>Sets the N and Z flags from a result. FreeDO: <c>ARM_SET_ZN</c>.</summary>
     /// <param name="state">CPU state.</param>

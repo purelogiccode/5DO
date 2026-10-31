@@ -35,7 +35,10 @@ internal sealed class ArmTestRig
 
     public FakeInterruptSink Interrupts { get; }
 
-    public void LoadProgram(params uint[] instructions) => LoadProgramAt(0x1000, instructions);
+    public void LoadProgram(params uint[] instructions)
+    {
+        LoadProgramAt(0x1000, instructions);
+    }
 
     public void LoadProgramAt(uint address, params uint[] instructions)
     {
@@ -75,11 +78,23 @@ internal sealed class ArmTestRig
         return cycles;
     }
 
-    public uint ReadRam(uint address) => Memory.Ram.Read32(address);
+    public uint ReadRam(uint address)
+    {
+        return Memory.Ram.Read32(address);
+    }
 
-    public void WriteRam(uint address, uint value) => Memory.Ram.Write32(address, value);
+    public void WriteRam(uint address, uint value)
+    {
+        Memory.Ram.Write32(address, value);
+    }
 
-    public byte ReadRamByte(uint address) => Memory.Ram.Read8(address);
+    public byte ReadRamByte(uint address)
+    {
+        return Memory.Ram.Read8(address);
+    }
 
-    public void WriteRamByte(uint address, byte value) => Memory.Ram.Write8(address, value);
+    public void WriteRamByte(uint address, byte value)
+    {
+        Memory.Ram.Write8(address, value);
+    }
 }

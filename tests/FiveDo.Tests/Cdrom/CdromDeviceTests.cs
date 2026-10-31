@@ -264,13 +264,19 @@ public sealed class CdromDeviceTests
 
         public int SectorSize => 2048;
 
-        public void ReadSector(int lba, Span<byte> destination) => _sectors[lba].CopyTo(destination);
+        public void ReadSector(int lba, Span<byte> destination)
+        {
+            _sectors[lba].CopyTo(destination);
+        }
 
         public void Dispose()
         {
         }
 
-        internal byte[] Sector(int lba) => _sectors[lba];
+        internal byte[] Sector(int lba)
+        {
+            return _sectors[lba];
+        }
     }
 
     private sealed class FakeInterrupts : IInterruptSink
@@ -279,6 +285,9 @@ public sealed class CdromDeviceTests
 
         public bool Pending { get; private set; }
 
-        public void GenerateFiq(uint reason1, uint reason2) => Pending = true;
+        public void GenerateFiq(uint reason1, uint reason2)
+        {
+            Pending = true;
+        }
     }
 }

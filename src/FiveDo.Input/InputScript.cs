@@ -201,5 +201,8 @@ public sealed class ScriptedPbusSource : IPbusSource
     }
 
     /// <inheritdoc />
-    public int GetPbusData(Span<byte> destination) => _inner.GetPbusData(destination);
+    public int GetPbusData(Span<byte> destination)
+    {
+        return _inner.GetPbusData(destination);
+    }
 }

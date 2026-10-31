@@ -187,6 +187,9 @@ public static class CueSheet
             _sector.AsSpan(0, Math.Min(2048, destination.Length)).CopyTo(destination);
         }
 
-        public void Dispose() => _stream.Dispose();
+        public void Dispose()
+        {
+            _stream.Dispose();
+        }
     }
 }

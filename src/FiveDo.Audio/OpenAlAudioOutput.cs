@@ -180,8 +180,10 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
     /// <summary>Tries to open the default OpenAL device.</summary>
     /// <param name="capacityFrames">Ring-buffer capacity in stereo frames.</param>
     /// <returns>A running output, or <see langword="null"/> when OpenAL is unavailable.</returns>
-    public static OpenAlAudioOutput? TryCreate(int capacityFrames = 4096) =>
-        TryCreate(capacityFrames, out _);
+    public static OpenAlAudioOutput? TryCreate(int capacityFrames = 4096)
+    {
+        return TryCreate(capacityFrames, out _);
+    }
 
     /// <summary>Tries to open the default OpenAL device and reports why it failed.</summary>
     /// <param name="capacityFrames">Ring-buffer capacity in stereo frames.</param>
@@ -249,7 +251,10 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
     }
 
     /// <summary>Drops buffered and queued samples after a machine reset or state load.</summary>
-    public void Reset() => _flushRequested = true;
+    public void Reset()
+    {
+        _flushRequested = true;
+    }
 
     /// <inheritdoc />
     public void PushSample(uint packedSample)

@@ -331,7 +331,10 @@ public sealed class Madam : IMadamBus, IStateSection
     /// </summary>
     /// <param name="offset">Register offset.</param>
     /// <returns>The raw register value.</returns>
-    internal uint ReadRegister(uint offset) => _registers[offset & 0x7ff];
+    internal uint ReadRegister(uint offset)
+    {
+        return _registers[offset & 0x7ff];
+    }
 
     /// <summary>
     /// Writes the raw register file without CPU-facing side effects.
@@ -339,7 +342,10 @@ public sealed class Madam : IMadamBus, IStateSection
     /// </summary>
     /// <param name="offset">Register offset.</param>
     /// <param name="value">Register value.</param>
-    internal void WriteRegister(uint offset, uint value) => _registers[offset & 0x7ff] = value;
+    internal void WriteRegister(uint offset, uint value)
+    {
+        _registers[offset & 0x7ff] = value;
+    }
 
     private void HandleDma8()
     {
@@ -434,11 +440,20 @@ public sealed class Madam : IMadamBus, IStateSection
         _registers[0x66c] = ToRegister(_result3Temp);
     }
 
-    private double M(int offset) => unchecked((int)_registers[offset]);
+    private double M(int offset)
+    {
+        return unchecked((int)_registers[offset]);
+    }
 
-    private double V(int offset) => unchecked((int)_registers[offset]);
+    private double V(int offset)
+    {
+        return unchecked((int)_registers[offset]);
+    }
 
-    private long Nfrac16() => unchecked(((long)_registers[0x680] << 32) | _registers[0x684]);
+    private long Nfrac16()
+    {
+        return unchecked(((long)_registers[0x680] << 32) | _registers[0x684]);
+    }
 
     /// <summary>
     /// Converts a matrix result to a register value. FreeDO assigns a <c>double</c> directly

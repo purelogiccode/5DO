@@ -116,7 +116,10 @@ public sealed class NullGamepadBackend : IGamepadBackend
     }
 
     /// <inheritdoc />
-    public ControllerState GetState(int player) => ControllerState.Empty;
+    public ControllerState GetState(int player)
+    {
+        return ControllerState.Empty;
+    }
 }
 
 /// <summary>

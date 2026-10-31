@@ -184,11 +184,17 @@ public sealed class Quartz : IStateSection
 
     /// <summary>Writes the scheduler section.</summary>
     /// <param name="writer">State writer.</param>
-    public void Save(IStateWriter writer) => SaveState(writer);
+    public void Save(IStateWriter writer)
+    {
+        SaveState(writer);
+    }
 
     /// <summary>Reads the scheduler section.</summary>
     /// <param name="reader">State reader.</param>
-    public void Load(IStateReader reader) => LoadState(reader);
+    public void Load(IStateReader reader)
+    {
+        LoadState(reader);
+    }
 
     /// <summary>Writes the scheduler state.</summary>
     /// <param name="writer">State writer.</param>

@@ -277,10 +277,12 @@ internal static class Program
     /// <param name="args">Command-line arguments.</param>
     /// <returns><see langword="true"/> for smoke, OpenGL probe, or Vulkan probe runs.</returns>
     internal static bool IsAutomatedRun(string[] args)
-        => HasFlag(args, "--smoke-test")
-            || HasFlag(args, "--gl-probe")
-            || HasFlag(args, "--vk-probe")
-            || HasFlag(args, "--vk-window-probe");
+    {
+        return HasFlag(args, "--smoke-test")
+               || HasFlag(args, "--gl-probe")
+               || HasFlag(args, "--vk-probe")
+               || HasFlag(args, "--vk-window-probe");
+    }
 
     internal static string? FindOptionValue(string[] args, string option)
     {
@@ -373,7 +375,8 @@ internal static class Program
 
     // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<App>()
+    {
+        return AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .With(new Win32PlatformOptions
             {
@@ -383,4 +386,5 @@ internal static class Program
             })
             .WithInterFont()
             .LogToTrace();
+    }
 }

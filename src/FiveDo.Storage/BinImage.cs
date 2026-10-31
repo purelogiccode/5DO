@@ -74,5 +74,8 @@ public sealed class BinImage : IDiscSource
     }
 
     /// <inheritdoc />
-    public void Dispose() => _stream.Dispose();
+    public void Dispose()
+    {
+        _stream.Dispose();
+    }
 }

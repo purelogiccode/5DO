@@ -76,7 +76,10 @@ public sealed class SaveStateSlotManager
     /// <summary>Checks whether a slot contains a state file.</summary>
     /// <param name="slot">Zero-based slot number.</param>
     /// <returns><see langword="true"/> when the state file exists.</returns>
-    public bool Exists(int slot) => File.Exists(GetStatePath(slot));
+    public bool Exists(int slot)
+    {
+        return File.Exists(GetStatePath(slot));
+    }
 
     /// <summary>Selects a slot.</summary>
     /// <param name="slot">Zero-based slot number.</param>
@@ -91,12 +94,18 @@ public sealed class SaveStateSlotManager
     /// <summary>Advances to the next slot, wrapping at the end.</summary>
     /// <param name="existingOnly">When true, skip empty slots; the current slot is kept when none exist.</param>
     /// <returns>The selected slot.</returns>
-    public int Next(bool existingOnly = false) => Move(1, existingOnly);
+    public int Next(bool existingOnly = false)
+    {
+        return Move(1, existingOnly);
+    }
 
     /// <summary>Moves to the previous slot, wrapping at the start.</summary>
     /// <param name="existingOnly">When true, skip empty slots; the current slot is kept when none exist.</param>
     /// <returns>The selected slot.</returns>
-    public int Previous(bool existingOnly = false) => Move(-1, existingOnly);
+    public int Previous(bool existingOnly = false)
+    {
+        return Move(-1, existingOnly);
+    }
 
     /// <summary>Saves the machine to a slot and writes its metadata.</summary>
     /// <param name="machine">Machine to save.</param>

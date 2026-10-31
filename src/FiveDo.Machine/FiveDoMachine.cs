@@ -191,18 +191,30 @@ public sealed class FiveDoMachine
 
     /// <summary>Inserts a disc into the CD-ROM drive. The machine does not take ownership.</summary>
     /// <param name="disc">Disc source.</param>
-    public void InsertDisc(IDiscSource disc) => Cdrom.InsertDisc(disc);
+    public void InsertDisc(IDiscSource disc)
+    {
+        Cdrom.InsertDisc(disc);
+    }
 
     /// <summary>Ejects the disc from the CD-ROM drive.</summary>
-    public void EjectDisc() => Cdrom.EjectDisc();
+    public void EjectDisc()
+    {
+        Cdrom.EjectDisc();
+    }
 
     /// <summary>Loads a 32 KB NVRAM image.</summary>
     /// <param name="nvram">Exactly 32 KB of NVRAM data.</param>
-    public void LoadNvram(ReadOnlySpan<byte> nvram) => Memory.LoadNvram(nvram);
+    public void LoadNvram(ReadOnlySpan<byte> nvram)
+    {
+        Memory.LoadNvram(nvram);
+    }
 
     /// <summary>Copies the current NVRAM image.</summary>
     /// <param name="destination">Destination span of at least 32 KB.</param>
-    public void CopyNvram(Span<byte> destination) => Memory.CopyNvram(destination);
+    public void CopyNvram(Span<byte> destination)
+    {
+        Memory.CopyNvram(destination);
+    }
 
     /// <summary>Resets every chip in the FreeDOCore initialization order.</summary>
     public void Reset()
@@ -454,11 +466,17 @@ public sealed class FiveDoMachine
     }
 
     /// <summary>Runs one emulated frame in single-threaded mode. FreeDO: <c>_3do_Frame</c>.</summary>
-    public void RunFrame() => RunFrame(false, null);
+    public void RunFrame()
+    {
+        RunFrame(false, null);
+    }
 
     /// <summary>Runs one emulated frame.</summary>
     /// <param name="skipFrame">When true, VDLP rendering and frame presentation are skipped (multitask mode).</param>
-    public void RunFrame(bool skipFrame) => RunFrame(skipFrame, null);
+    public void RunFrame(bool skipFrame)
+    {
+        RunFrame(skipFrame, null);
+    }
 
     /// <summary>Runs one emulated frame with an optional per-instruction diagnostic observer.</summary>
     /// <param name="skipFrame">When true, VDLP rendering and frame presentation are skipped (multitask mode).</param>

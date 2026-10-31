@@ -140,7 +140,10 @@ public sealed class VolumeHeaderTests
 
         public int SectorSize => 2048;
 
-        public void ReadSector(int lba, Span<byte> destination) => Sectors[lba].CopyTo(destination);
+        public void ReadSector(int lba, Span<byte> destination)
+        {
+            Sectors[lba].CopyTo(destination);
+        }
 
         public void Dispose()
         {

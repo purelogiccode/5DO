@@ -54,9 +54,15 @@ public partial class SaveSlotsWindow : Window, IDisposable
         Refresh();
     }
 
-    private void OnRefresh(object? sender, RoutedEventArgs e) => Refresh();
+    private void OnRefresh(object? sender, RoutedEventArgs e)
+    {
+        Refresh();
+    }
 
-    private void OnSelectionChanged(object? sender, SelectionChangedEventArgs e) => UpdateThumbnail();
+    private void OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        UpdateThumbnail();
+    }
 
     private void UpdateThumbnail()
     {
@@ -112,15 +118,20 @@ public partial class SaveSlotsWindow : Window, IDisposable
         Refresh();
     }
 
-    private void OnLoad(object? sender, RoutedEventArgs e) => LoadSelected();
+    private void OnLoad(object? sender, RoutedEventArgs e)
+    {
+        LoadSelected();
+    }
 
-    private void OnDoubleTapped(object? sender, TappedEventArgs e) => LoadSelected();
+    private void OnDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        LoadSelected();
+    }
 
     private void OnDelete(object? sender, RoutedEventArgs e)
     {
         var slot = SelectedSlot();
-        var info = SlotList.SelectedItem as SaveStateSlotInfo;
-        if (info is null || !info.Exists)
+        if (SlotList.SelectedItem is not SaveStateSlotInfo info || !info.Exists)
         {
             StatusText.Text = $"Slot {slot + 1} is empty.";
             return;
@@ -131,13 +142,15 @@ public partial class SaveSlotsWindow : Window, IDisposable
         Refresh();
     }
 
-    private void OnClose(object? sender, RoutedEventArgs e) => Close();
+    private void OnClose(object? sender, RoutedEventArgs e)
+    {
+        Close();
+    }
 
     private void LoadSelected()
     {
         var slot = SelectedSlot();
-        var info = SlotList.SelectedItem as SaveStateSlotInfo;
-        if (info is null || !info.Exists)
+        if (SlotList.SelectedItem is not SaveStateSlotInfo info || !info.Exists)
         {
             StatusText.Text = $"Slot {slot + 1} is empty.";
             return;

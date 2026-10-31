@@ -412,9 +412,11 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     }
 
     private (int Width, int Height) ResolveOutputSize((int Width, int Height) windowSize)
-        => OutputResolutionSizes.TryGetSize(_settings.OutputResolution, out var width, out var height)
+    {
+        return OutputResolutionSizes.TryGetSize(_settings.OutputResolution, out var width, out var height)
             ? (width, height)
             : windowSize;
+    }
 
     private void BlitOutputToWindow(int framebuffer, int width, int height, int windowWidth, int windowHeight)
     {

@@ -128,7 +128,10 @@ internal sealed class NullRawGamepadSource : IRawGamepadSource
     {
     }
 
-    public GamepadState Read(int index) => GamepadState.Empty;
+    public GamepadState Read(int index)
+    {
+        return GamepadState.Empty;
+    }
 
     public void Dispose()
     {

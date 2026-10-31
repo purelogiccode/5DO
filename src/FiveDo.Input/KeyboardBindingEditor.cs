@@ -44,8 +44,10 @@ public sealed class KeyboardBindingEditor
     /// <summary>Gets the current key for a button, or <see langword="null"/> when unbound.</summary>
     /// <param name="button">Controller button.</param>
     /// <returns>The key name, or <see langword="null"/>.</returns>
-    public string? GetKey(ControllerButton button) =>
-        _bindings.GetValueOrDefault(button);
+    public string? GetKey(ControllerButton button)
+    {
+        return _bindings.GetValueOrDefault(button);
+    }
 
     /// <summary>Binds a key to a button, removing the key from any other button.</summary>
     /// <param name="button">Controller button.</param>
@@ -76,10 +78,16 @@ public sealed class KeyboardBindingEditor
 
     /// <summary>Clears one binding.</summary>
     /// <param name="button">Controller button.</param>
-    public void Clear(ControllerButton button) => _bindings.Remove(button);
+    public void Clear(ControllerButton button)
+    {
+        _bindings.Remove(button);
+    }
 
     /// <summary>Replaces the bindings with the player-1 defaults.</summary>
-    public void ResetDefaults() => Load(PlayerProfile.CreateDefault(1));
+    public void ResetDefaults()
+    {
+        Load(PlayerProfile.CreateDefault(1));
+    }
 
     /// <summary>Gets binding conflicts. The editor prevents duplicates, so this is normally empty.</summary>
     /// <returns>Conflict descriptions.</returns>

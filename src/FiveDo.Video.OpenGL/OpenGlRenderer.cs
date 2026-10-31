@@ -839,12 +839,15 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         return shader;
     }
 
-    private static int FilterValue(VideoFilter filter) => filter switch
+    private static int FilterValue(VideoFilter filter)
     {
-        VideoFilter.Accurate or VideoFilter.Nearest => 0,
-        VideoFilter.Crt => 2,
-        _ => 1,
-    };
+        return filter switch
+        {
+            VideoFilter.Accurate or VideoFilter.Nearest => 0,
+            VideoFilter.Crt => 2,
+            _ => 1,
+        };
+    }
 
     private bool TryReadGpuQuery(GL gl)
     {

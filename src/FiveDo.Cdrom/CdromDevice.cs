@@ -199,14 +199,9 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     }
 
     /// <inheritdoc />
-    public bool FiqPending
-    {
-        get
-        {
-            return (((_poll & PollStatus) != 0) && ((_poll & PollStatusMask) != 0))
-                || (((_poll & PollData) != 0) && ((_poll & PollDataMask) != 0));
-        }
-    }
+    public bool FiqPending =>
+        (((_poll & PollStatus) != 0) && ((_poll & PollStatusMask) != 0))
+        || (((_poll & PollData) != 0) && ((_poll & PollDataMask) != 0));
 
     /// <inheritdoc />
     public void SetData(uint value)
@@ -278,10 +273,16 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     }
 
     /// <inheritdoc />
-    public uint GetPoll() => _poll;
+    public uint GetPoll()
+    {
+        return _poll;
+    }
 
     /// <inheritdoc />
-    public uint GetReserved() => 0;
+    public uint GetReserved()
+    {
+        return 0;
+    }
 
     /// <summary>Writes the device save-state payload.</summary>
     /// <param name="writer">Destination writer.</param>
@@ -377,10 +378,16 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     }
 
     /// <inheritdoc />
-    public void SaveState(IStateWriter writer) => Save(writer);
+    public void SaveState(IStateWriter writer)
+    {
+        Save(writer);
+    }
 
     /// <inheritdoc />
-    public void LoadState(IStateReader reader) => Load(reader);
+    public void LoadState(IStateReader reader)
+    {
+        Load(reader);
+    }
 
     private void ExecuteCommand()
     {

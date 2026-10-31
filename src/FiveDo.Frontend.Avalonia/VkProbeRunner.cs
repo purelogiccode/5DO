@@ -279,9 +279,11 @@ internal static class VkProbeRunner
     }
 
     private static bool IsParityCandidate(VkProbeOptions options)
-        => options.Width == SourceWidth
-            && options.Height == SourceHeight
-            && options.Filter == VideoFilter.Accurate;
+    {
+        return options.Width == SourceWidth
+               && options.Height == SourceHeight
+               && options.Filter == VideoFilter.Accurate;
+    }
 
     private static GlProbeReport BuildReport(
         VkProbeOptions options,
@@ -447,7 +449,10 @@ internal static class VkProbeRunner
             JsonSerializer.Serialize(report, GlProbeJsonContext.Default.GlProbeReport) + Environment.NewLine);
     }
 
-    private static double Round(double value) => Math.Round(value, 3, MidpointRounding.AwayFromZero);
+    private static double Round(double value)
+    {
+        return Math.Round(value, 3, MidpointRounding.AwayFromZero);
+    }
 
     private sealed class Win32ProbeWindow : IDisposable
     {

@@ -332,5 +332,8 @@ public static class GamepadMapper
         return false;
     }
 
-    private static bool Has(GamepadButtons value, GamepadButtons flag) => (value & flag) != GamepadButtons.None;
+    private static bool Has(GamepadButtons value, GamepadButtons flag)
+    {
+        return (value & flag) != GamepadButtons.None;
+    }
 }

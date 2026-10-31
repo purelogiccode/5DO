@@ -193,7 +193,9 @@ public sealed class GameLibraryScannerTests
     }
 
     private static void WriteIso(string path, int sectors)
-        => File.WriteAllBytes(path, new byte[2048 * sectors]);
+    {
+        File.WriteAllBytes(path, new byte[2048 * sectors]);
+    }
 
     private sealed class TempDirectory : IDisposable
     {

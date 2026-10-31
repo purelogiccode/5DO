@@ -41,7 +41,8 @@ public static class FrameSkipPolicy
     /// <param name="mode">Frame-skip policy.</param>
     /// <returns>1 for <see cref="FrameSkipMode.Off"/> and <see cref="FrameSkipMode.Auto"/>; 2-5 for fixed cadences.</returns>
     public static int Cadence(FrameSkipMode mode)
-        => mode switch
+    {
+        return mode switch
         {
             FrameSkipMode.OneInTwo => 2,
             FrameSkipMode.OneInThree => 3,
@@ -49,6 +50,7 @@ public static class FrameSkipPolicy
             FrameSkipMode.OneInFive => 5,
             _ => 1,
         };
+    }
 
     /// <summary>Gets a value indicating whether a frame should be presented.</summary>
     /// <param name="mode">Frame-skip policy.</param>
@@ -68,9 +70,12 @@ public static class FrameSkipPolicy
     /// <param name="autoCadence">Auto-mode cadence chosen by the runner.</param>
     /// <returns>A label such as <c>off</c>, <c>auto x2</c>, or <c>1 of 3</c>.</returns>
     public static string Describe(FrameSkipMode mode, int autoCadence = 1)
-        => mode == FrameSkipMode.Auto
-            ? autoCadence <= 1 ? "auto" : $"auto x{Math.Clamp(autoCadence, 1, 5)}"
-            : mode == FrameSkipMode.Off
-                ? "off"
-                : $"1 of {Cadence(mode)}";
+    {
+        return mode switch
+        {
+            FrameSkipMode.Auto => autoCadence <= 1 ? "auto" : $"auto x{Math.Clamp(autoCadence, 1, 5)}",
+            FrameSkipMode.Off => "off",
+            _ => $"1 of {Cadence(mode)}"
+        };
+    }
 }

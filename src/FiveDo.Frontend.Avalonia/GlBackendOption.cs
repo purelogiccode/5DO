@@ -51,7 +51,8 @@ internal static class GlBackendOption
     /// <param name="backend">Requested backend.</param>
     /// <returns>The ordered rendering modes.</returns>
     public static global::Avalonia.Win32RenderingMode[] ToRenderingModes(GlBackend backend)
-        => backend switch
+    {
+        return backend switch
         {
             GlBackend.Wgl => [global::Avalonia.Win32RenderingMode.Wgl],
             GlBackend.Angle => [global::Avalonia.Win32RenderingMode.AngleEgl],
@@ -59,4 +60,5 @@ internal static class GlBackendOption
             GlBackend.Vulkan => [global::Avalonia.Win32RenderingMode.Software],
             _ => [global::Avalonia.Win32RenderingMode.Wgl, global::Avalonia.Win32RenderingMode.AngleEgl, global::Avalonia.Win32RenderingMode.Software],
         };
+    }
 }

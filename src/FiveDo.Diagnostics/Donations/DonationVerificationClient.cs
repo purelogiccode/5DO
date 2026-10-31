@@ -44,8 +44,10 @@ public static class DonationVerificationClient
     /// <returns>The verification result. Network failures are reported as unavailable.</returns>
     public static Task<DonationVerificationResult> VerifyAsync(
         string email,
-        CancellationToken cancellationToken = default) =>
-        VerifyAsync(email, new DonationVerificationOptions(), Http, cancellationToken);
+        CancellationToken cancellationToken = default)
+    {
+        return VerifyAsync(email, new DonationVerificationOptions(), Http, cancellationToken);
+    }
 
     /// <summary>Sends one verification request. Exposed to tests with an injected handler.</summary>
     /// <param name="email">Email address used on the donation page.</param>

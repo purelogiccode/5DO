@@ -2,7 +2,6 @@ using System;
 
 namespace FiveDo.Frontend.Avalonia.Controls;
 
-
 /// <summary>Event data for <see cref="VideoSurface.CaptureCompleted"/>.</summary>
 public sealed class CaptureCompletedEventArgs : EventArgs
 {

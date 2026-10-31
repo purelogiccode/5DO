@@ -61,7 +61,10 @@ public partial class DonationEmailWindow : Window
         Close();
     }
 
-    private void OnCancel(object? sender, RoutedEventArgs e) => Close();
+    private void OnCancel(object? sender, RoutedEventArgs e)
+    {
+        Close();
+    }
 
     private void OnEmailChanged(object? sender, TextChangedEventArgs e)
     {

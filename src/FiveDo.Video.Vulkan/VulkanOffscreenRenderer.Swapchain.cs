@@ -94,7 +94,9 @@ public sealed unsafe partial class VulkanOffscreenRenderer
     }
 
     private string[] GetDeviceExtensions()
-        => _windowHandle == 0 ? [] : ["VK_KHR_swapchain"];
+    {
+        return _windowHandle == 0 ? [] : ["VK_KHR_swapchain"];
+    }
 
     private void CreateSurface()
     {

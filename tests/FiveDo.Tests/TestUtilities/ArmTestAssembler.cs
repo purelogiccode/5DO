@@ -9,7 +9,10 @@ internal static class ArmTestAssembler
 {
     public const uint Al = 0xe;
 
-    public static uint Condition(uint condition, uint instruction) => (condition << 28) | (instruction & 0x0fffffffu);
+    public static uint Condition(uint condition, uint instruction)
+    {
+        return (condition << 28) | (instruction & 0x0fffffffu);
+    }
 
     public static uint EncodeImmediate(uint value)
     {
@@ -91,34 +94,65 @@ internal static class ArmTestAssembler
         return Condition(condition, instruction);
     }
 
-    public static uint Mov(int rd, uint value, uint condition = Al) => DpImmediate(13, rd, 0, value, false, condition);
+    public static uint Mov(int rd, uint value, uint condition = Al)
+    {
+        return DpImmediate(13, rd, 0, value, false, condition);
+    }
 
-    public static uint Mvn(int rd, uint value, uint condition = Al) => DpImmediate(15, rd, 0, value, false, condition);
+    public static uint Mvn(int rd, uint value, uint condition = Al)
+    {
+        return DpImmediate(15, rd, 0, value, false, condition);
+    }
 
-    public static uint MovRegister(int rd, int rm, uint condition = Al) => DpRegister(13, rd, 0, rm, condition: condition);
+    public static uint MovRegister(int rd, int rm, uint condition = Al)
+    {
+        return DpRegister(13, rd, 0, rm, condition: condition);
+    }
 
-    public static uint AddImmediate(int rd, int rn, uint value, bool setFlags = false, uint condition = Al) =>
-        DpImmediate(4, rd, rn, value, setFlags, condition);
+    public static uint AddImmediate(int rd, int rn, uint value, bool setFlags = false, uint condition = Al)
+    {
+        return DpImmediate(4, rd, rn, value, setFlags, condition);
+    }
 
-    public static uint SubImmediate(int rd, int rn, uint value, bool setFlags = false, uint condition = Al) =>
-        DpImmediate(2, rd, rn, value, setFlags, condition);
+    public static uint SubImmediate(int rd, int rn, uint value, bool setFlags = false, uint condition = Al)
+    {
+        return DpImmediate(2, rd, rn, value, setFlags, condition);
+    }
 
-    public static uint CmpImmediate(int rn, uint value, uint condition = Al) => DpImmediate(10, 0, rn, value, true, condition);
+    public static uint CmpImmediate(int rn, uint value, uint condition = Al)
+    {
+        return DpImmediate(10, 0, rn, value, true, condition);
+    }
 
-    public static uint CmpRegister(int rn, int rm, uint condition = Al) => DpRegister(10, 0, rn, rm, setFlags: true, condition: condition);
+    public static uint CmpRegister(int rn, int rm, uint condition = Al)
+    {
+        return DpRegister(10, 0, rn, rm, setFlags: true, condition: condition);
+    }
 
-    public static uint TstRegister(int rn, int rm, uint condition = Al) => DpRegister(8, 0, rn, rm, setFlags: true, condition: condition);
+    public static uint TstRegister(int rn, int rm, uint condition = Al)
+    {
+        return DpRegister(8, 0, rn, rm, setFlags: true, condition: condition);
+    }
 
-    public static uint TeqRegister(int rn, int rm, uint condition = Al) => DpRegister(9, 0, rn, rm, setFlags: true, condition: condition);
+    public static uint TeqRegister(int rn, int rm, uint condition = Al)
+    {
+        return DpRegister(9, 0, rn, rm, setFlags: true, condition: condition);
+    }
 
-    public static uint Mul(int rd, int rm, int rs, bool setFlags = false, uint condition = Al) =>
-        Condition(condition, 0x00000090u | ((uint)rd << 16) | ((uint)rs << 8) | (uint)rm | (setFlags ? 1u << 20 : 0));
+    public static uint Mul(int rd, int rm, int rs, bool setFlags = false, uint condition = Al)
+    {
+        return Condition(condition, 0x00000090u | ((uint)rd << 16) | ((uint)rs << 8) | (uint)rm | (setFlags ? 1u << 20 : 0));
+    }
 
-    public static uint Mla(int rd, int rm, int rs, int rn, bool setFlags = false, uint condition = Al) =>
-        Condition(condition, 0x00200090u | ((uint)rd << 16) | ((uint)rn << 12) | ((uint)rs << 8) | (uint)rm | (setFlags ? 1u << 20 : 0));
+    public static uint Mla(int rd, int rm, int rs, int rn, bool setFlags = false, uint condition = Al)
+    {
+        return Condition(condition, 0x00200090u | ((uint)rd << 16) | ((uint)rn << 12) | ((uint)rs << 8) | (uint)rm | (setFlags ? 1u << 20 : 0));
+    }
 
-    public static uint Swp(int rd, int rm, int rn, bool byteAccess = false, uint condition = Al) =>
-        Condition(condition, 0x01000090u | (byteAccess ? 1u << 22 : 0) | ((uint)rn << 16) | ((uint)rd << 12) | (uint)rm);
+    public static uint Swp(int rd, int rm, int rn, bool byteAccess = false, uint condition = Al)
+    {
+        return Condition(condition, 0x01000090u | (byteAccess ? 1u << 22 : 0) | ((uint)rn << 16) | ((uint)rd << 12) | (uint)rm);
+    }
 
     public static uint LdrImmediate(
         int rd,
@@ -240,15 +274,25 @@ internal static class ArmTestAssembler
         return Condition(condition, instruction);
     }
 
-    public static uint Swi(uint immediate, uint condition = Al) => Condition(condition, 0x0f000000u | (immediate & 0xffffff));
+    public static uint Swi(uint immediate, uint condition = Al)
+    {
+        return Condition(condition, 0x0f000000u | (immediate & 0xffffff));
+    }
 
-    public static uint Mrs(int rd, bool spsr = false, uint condition = Al) =>
-        Condition(condition, 0x010f0000u | (spsr ? 1u << 22 : 0) | ((uint)rd << 12));
+    public static uint Mrs(int rd, bool spsr = false, uint condition = Al)
+    {
+        return Condition(condition, 0x010f0000u | (spsr ? 1u << 22 : 0) | ((uint)rd << 12));
+    }
 
-    public static uint Msr(int rm, bool spsr = false, uint mask = 0x9, uint condition = Al) =>
-        Condition(condition, 0x0129f000u | (spsr ? 1u << 22 : 0) | ((mask & 0xf) << 16) | (uint)rm);
+    public static uint Msr(int rm, bool spsr = false, uint mask = 0x9, uint condition = Al)
+    {
+        return Condition(condition, 0x0129f000u | (spsr ? 1u << 22 : 0) | ((mask & 0xf) << 16) | (uint)rm);
+    }
 
-    public static uint Nop(uint condition = Al) => MovRegister(0, 0, condition);
+    public static uint Nop(uint condition = Al)
+    {
+        return MovRegister(0, 0, condition);
+    }
 
     private static uint RotateLeft(uint value, int shift)
     {

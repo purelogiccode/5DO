@@ -7,7 +7,10 @@ internal readonly struct MultimediaThreadToken : IDisposable
 {
     private readonly nint _handle;
 
-    internal MultimediaThreadToken(nint handle) => _handle = handle;
+    internal MultimediaThreadToken(nint handle)
+    {
+        _handle = handle;
+    }
 
     /// <summary>Reverts the thread to normal scheduling.</summary>
     public void Dispose()

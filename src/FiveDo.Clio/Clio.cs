@@ -788,13 +788,16 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         writer.WriteInt32(fifo.NextLength);
     }
 
-    private static FifoDescriptor ReadFifo(IStateReader reader) => new()
+    private static FifoDescriptor ReadFifo(IStateReader reader)
     {
-        StartAddress = reader.ReadUInt32(),
-        StartLength = reader.ReadInt32(),
-        NextAddress = reader.ReadUInt32(),
-        NextLength = reader.ReadInt32(),
-    };
+        return new FifoDescriptor
+        {
+            StartAddress = reader.ReadUInt32(),
+            StartLength = reader.ReadInt32(),
+            NextAddress = reader.ReadUInt32(),
+            NextLength = reader.ReadInt32(),
+        };
+    }
 
     private void ClearFifos(uint value)
     {

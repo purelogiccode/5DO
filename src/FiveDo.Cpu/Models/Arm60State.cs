@@ -165,7 +165,10 @@ public sealed class Arm60State
     /// <summary>Writes a currently visible register. FreeDO: <c>load</c>.</summary>
     /// <param name="index">Register index.</param>
     /// <param name="value">Value to write.</param>
-    internal void Load(int index, uint value) => User[index] = value;
+    internal void Load(int index, uint value)
+    {
+        User[index] = value;
+    }
 
     /// <summary>Writes a register using user-mode bank selection. FreeDO: <c>loadusr</c>.</summary>
     /// <param name="index">Register index.</param>
@@ -239,31 +242,52 @@ public sealed class Arm60State
 
     /// <summary>Sets or clears the negative flag. FreeDO: <c>SETN</c>.</summary>
     /// <param name="value">Flag value.</param>
-    internal void SetN(bool value) => Cpsr = (Cpsr & 0x7fffffffu) | (value ? 1u << 31 : 0u);
+    internal void SetN(bool value)
+    {
+        Cpsr = (Cpsr & 0x7fffffffu) | (value ? 1u << 31 : 0u);
+    }
 
     /// <summary>Sets or clears the zero flag. FreeDO: <c>SETZ</c>.</summary>
     /// <param name="value">Flag value.</param>
-    internal void SetZ(bool value) => Cpsr = (Cpsr & 0xbfffffffu) | (value ? 1u << 30 : 0u);
+    internal void SetZ(bool value)
+    {
+        Cpsr = (Cpsr & 0xbfffffffu) | (value ? 1u << 30 : 0u);
+    }
 
     /// <summary>Sets or clears the carry flag. FreeDO: <c>SETC</c>.</summary>
     /// <param name="value">Flag value.</param>
-    internal void SetC(bool value) => Cpsr = (Cpsr & 0xdfffffffu) | (value ? 1u << 29 : 0u);
+    internal void SetC(bool value)
+    {
+        Cpsr = (Cpsr & 0xdfffffffu) | (value ? 1u << 29 : 0u);
+    }
 
     /// <summary>Sets the carry flag from bit zero of <paramref name="value"/>. FreeDO: <c>ARM_SET_C</c>.</summary>
     /// <param name="value">Value whose low bit becomes the carry flag.</param>
-    internal void SetC(uint value) => Cpsr = (Cpsr & 0xdfffffffu) | ((value & 1u) << 29);
+    internal void SetC(uint value)
+    {
+        Cpsr = (Cpsr & 0xdfffffffu) | ((value & 1u) << 29);
+    }
 
     /// <summary>Sets or clears the overflow flag. FreeDO: <c>SETV</c>.</summary>
     /// <param name="value">Flag value.</param>
-    internal void SetV(bool value) => Cpsr = (Cpsr & 0xefffffffu) | (value ? 1u << 28 : 0u);
+    internal void SetV(bool value)
+    {
+        Cpsr = (Cpsr & 0xefffffffu) | (value ? 1u << 28 : 0u);
+    }
 
     /// <summary>Sets or clears the IRQ disable bit. FreeDO: <c>SETI</c>.</summary>
     /// <param name="value">Flag value.</param>
-    internal void SetI(bool value) => Cpsr = (Cpsr & 0xffffff7fu) | (value ? 1u << 7 : 0u);
+    internal void SetI(bool value)
+    {
+        Cpsr = (Cpsr & 0xffffff7fu) | (value ? 1u << 7 : 0u);
+    }
 
     /// <summary>Sets or clears the FIQ disable bit. FreeDO: <c>SETF</c>.</summary>
     /// <param name="value">Flag value.</param>
-    internal void SetF(bool value) => Cpsr = (Cpsr & 0xffffffbfu) | (value ? 1u << 6 : 0u);
+    internal void SetF(bool value)
+    {
+        Cpsr = (Cpsr & 0xffffffbfu) | (value ? 1u << 6 : 0u);
+    }
 
     private void RestUserRegisters()
     {

@@ -325,7 +325,10 @@ public sealed class QuartzTests
 
         public ushort Version { get; }
 
-        public void Save(IStateWriter writer) => _save(writer);
+        public void Save(IStateWriter writer)
+        {
+            _save(writer);
+        }
 
         public void Load(IStateReader reader)
         {

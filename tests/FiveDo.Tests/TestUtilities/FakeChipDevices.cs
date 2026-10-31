@@ -34,9 +34,15 @@ internal sealed class FakeClioXbus : IClioXbus
         }
     }
 
-    public void SetSelect(uint value) => LastSelect = value;
+    public void SetSelect(uint value)
+    {
+        LastSelect = value;
+    }
 
-    public void SetPoll(uint value) => LastPoll = value;
+    public void SetPoll(uint value)
+    {
+        LastPoll = value;
+    }
 
     public void SetCommandFifo(uint value)
     {
@@ -46,15 +52,30 @@ internal sealed class FakeClioXbus : IClioXbus
     {
     }
 
-    public uint GetResult() => Result;
+    public uint GetResult()
+    {
+        return Result;
+    }
 
-    public uint GetPoll() => Poll;
+    public uint GetPoll()
+    {
+        return Poll;
+    }
 
-    public uint GetStatusFifo() => Status;
+    public uint GetStatusFifo()
+    {
+        return Status;
+    }
 
-    public uint GetDataFifo() => _data.Count == 0 ? 0 : _data.Dequeue();
+    public uint GetDataFifo()
+    {
+        return _data.Count == 0 ? 0 : _data.Dequeue();
+    }
 
-    public void Reset() => ResetCount++;
+    public void Reset()
+    {
+        ResetCount++;
+    }
 }
 
 internal sealed class FakeVdlp : IVdlp
@@ -87,12 +108,18 @@ internal sealed class RecordingFrameSink : IFrameSink
         LastHeight = frame.SourceHeight;
     }
 
-    public void OnFrameTrigger() => TriggerCount++;
+    public void OnFrameTrigger()
+    {
+        TriggerCount++;
+    }
 }
 
 internal sealed class ZeroPbusSource : IPbusSource
 {
-    public int GetPbusData(Span<byte> destination) => 0;
+    public int GetPbusData(Span<byte> destination)
+    {
+        return 0;
+    }
 }
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -113,5 +140,8 @@ internal sealed class RecordingAudioSink : IAudioSink
         LastSample = packedSample;
     }
 
-    public void Reset() => ResetCount++;
+    public void Reset()
+    {
+        ResetCount++;
+    }
 }

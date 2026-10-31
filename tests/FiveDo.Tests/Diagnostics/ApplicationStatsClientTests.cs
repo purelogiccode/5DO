@@ -49,19 +49,25 @@ public sealed class ApplicationStatsClientTests
         await ApplicationStatsClient.TrackLaunchAsync(CreateOptions(), http);
     }
 
-    private static ApplicationStatsOptions CreateOptions() => new()
+    private static ApplicationStatsOptions CreateOptions()
     {
-        Endpoint = "https://example.test/stats",
-        ApiKey = "test-key",
-        ApplicationId = "test-app",
-        Version = "9.9.9",
-    };
+        return new ApplicationStatsOptions
+        {
+            Endpoint = "https://example.test/stats",
+            ApiKey = "test-key",
+            ApplicationId = "test-app",
+            Version = "9.9.9",
+        };
+    }
 
     private sealed class RecordingHandler : HttpMessageHandler
     {
         private readonly HttpStatusCode _status;
 
-        public RecordingHandler(HttpStatusCode status) => _status = status;
+        public RecordingHandler(HttpStatusCode status)
+        {
+            _status = status;
+        }
 
         public HttpMethod? Method { get; private set; }
 
@@ -93,6 +99,8 @@ public sealed class ApplicationStatsClientTests
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
-            => throw new HttpRequestException("network down");
+        {
+            throw new HttpRequestException("network down");
+        }
     }
 }

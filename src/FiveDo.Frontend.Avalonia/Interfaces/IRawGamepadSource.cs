@@ -3,7 +3,6 @@ using FiveDo.Input;
 
 namespace FiveDo.Frontend.Avalonia.Input;
 
-
 /// <summary>
 /// A raw platform gamepad source. Implementations translate native devices into
 /// <see cref="GamepadState"/> samples and are polled once per emulated frame.

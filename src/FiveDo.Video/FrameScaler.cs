@@ -119,5 +119,8 @@ internal static class FrameScaler
         }
     }
 
-    private static float Lerp(float from, float to, float amount) => from + ((to - from) * amount);
+    private static float Lerp(float from, float to, float amount)
+    {
+        return from + ((to - from) * amount);
+    }
 }

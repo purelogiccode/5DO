@@ -323,11 +323,19 @@ internal sealed class GlProbeWindow : Window, IDisposable
     }
 
     private static uint HashGpuPixels(byte[] pixels, int width, int height, bool flipVertically)
-        => HashPixels(pixels, width, height, flipVertically);
+    {
+        return HashPixels(pixels, width, height, flipVertically);
+    }
 
-    private void InitializeSyntheticFrame() => SyntheticVdlFrame.Initialize(_frame);
+    private void InitializeSyntheticFrame()
+    {
+        SyntheticVdlFrame.Initialize(_frame);
+    }
 
-    private void FillSyntheticFrame(int phase) => SyntheticVdlFrame.Fill(_frame, phase);
+    private void FillSyntheticFrame(int phase)
+    {
+        SyntheticVdlFrame.Fill(_frame, phase);
+    }
 
     private void Finish(bool success, string? error)
     {
@@ -429,9 +437,15 @@ internal sealed class GlProbeWindow : Window, IDisposable
             Round(summary.MaxMs));
     }
 
-    private static double Round(double value) => Math.Round(value, 3, MidpointRounding.AwayFromZero);
+    private static double Round(double value)
+    {
+        return Math.Round(value, 3, MidpointRounding.AwayFromZero);
+    }
 
-    private void OnClosed(object? sender, EventArgs e) => Dispose();
+    private void OnClosed(object? sender, EventArgs e)
+    {
+        Dispose();
+    }
 
     /// <inheritdoc />
     public void Dispose()

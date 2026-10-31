@@ -66,17 +66,20 @@ public static class HotkeyRouter
     /// <summary>Gets the action name stored in <see cref="InputProfile.Hotkeys"/>.</summary>
     /// <param name="action">Action to name.</param>
     /// <returns>The persisted action name, or an empty string for <see cref="HotkeyAction.None"/>.</returns>
-    public static string GetActionName(HotkeyAction action) => action switch
+    public static string GetActionName(HotkeyAction action)
     {
-        HotkeyAction.SaveState => "SaveState",
-        HotkeyAction.LoadState => "LoadState",
-        HotkeyAction.Screenshot => "Screenshot",
-        HotkeyAction.Fullscreen => "Fullscreen",
-        HotkeyAction.Pause => "Pause",
-        HotkeyAction.Reset => "Reset",
-        HotkeyAction.SlotPrevious => "SlotPrevious",
-        HotkeyAction.SlotNext => "SlotNext",
-        HotkeyAction.FrameAdvance => "FrameAdvance",
-        _ => string.Empty,
-    };
+        return action switch
+        {
+            HotkeyAction.SaveState => "SaveState",
+            HotkeyAction.LoadState => "LoadState",
+            HotkeyAction.Screenshot => "Screenshot",
+            HotkeyAction.Fullscreen => "Fullscreen",
+            HotkeyAction.Pause => "Pause",
+            HotkeyAction.Reset => "Reset",
+            HotkeyAction.SlotPrevious => "SlotPrevious",
+            HotkeyAction.SlotNext => "SlotNext",
+            HotkeyAction.FrameAdvance => "FrameAdvance",
+            _ => string.Empty,
+        };
+    }
 }

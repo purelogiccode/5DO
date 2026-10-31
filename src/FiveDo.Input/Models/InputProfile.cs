@@ -28,7 +28,10 @@ public sealed class InputProfile
 
     /// <summary>Creates the default input profile.</summary>
     /// <returns>A profile with six players and default hotkeys.</returns>
-    public static InputProfile CreateDefault() => new();
+    public static InputProfile CreateDefault()
+    {
+        return new InputProfile();
+    }
 
     /// <summary>Adds hotkeys introduced after an older profile was saved.</summary>
     /// <remarks>
@@ -48,10 +51,7 @@ public sealed class InputProfile
         InputProfile defaults = CreateDefault();
         foreach ((var action, var key) in defaults.Hotkeys)
         {
-            if (!Hotkeys.ContainsKey(action))
-            {
-                Hotkeys[action] = key;
-            }
+            Hotkeys.TryAdd(action, key);
         }
     }
 

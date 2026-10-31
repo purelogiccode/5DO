@@ -69,8 +69,10 @@ internal sealed class CachedLibraryEntry
     /// <param name="info">Current file information.</param>
     /// <returns><see langword="true"/> when the size and timestamp match.</returns>
     public bool Matches(FileInfo info)
-        => info.Length == Length
-            && info.LastWriteTimeUtc.Ticks == LastWriteTimeUtcTicks;
+    {
+        return info.Length == Length
+               && info.LastWriteTimeUtc.Ticks == LastWriteTimeUtcTicks;
+    }
 }
 
 /// <summary>Loads and saves <see cref="LibraryCache"/> atomically.</summary>

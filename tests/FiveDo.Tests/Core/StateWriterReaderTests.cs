@@ -346,7 +346,10 @@ public sealed class StateWriterReaderTests
 
         public ReadOnlyMemory<byte> Payload { get; set; }
 
-        public void Save(IStateWriter writer) => writer.WriteBytes(Payload.Span);
+        public void Save(IStateWriter writer)
+        {
+            writer.WriteBytes(Payload.Span);
+        }
 
         public void Load(IStateReader reader)
         {

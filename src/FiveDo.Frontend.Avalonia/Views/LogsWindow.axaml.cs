@@ -17,7 +17,7 @@ public partial class LogsWindow : Window
 {
     private readonly InMemorySerilogSink _sink;
     private readonly DispatcherTimer _timer;
-    private bool _initializing;
+    private readonly bool _initializing;
 
     /// <summary>Creates the dialog with an empty log.</summary>
     public LogsWindow()
@@ -71,7 +71,10 @@ public partial class LogsWindow : Window
         }
     }
 
-    private void OnRefresh(object? sender, RoutedEventArgs e) => Refresh();
+    private void OnRefresh(object? sender, RoutedEventArgs e)
+    {
+        Refresh();
+    }
 
     private void OnClear(object? sender, RoutedEventArgs e)
     {
@@ -79,7 +82,10 @@ public partial class LogsWindow : Window
         Refresh();
     }
 
-    private void OnClose(object? sender, RoutedEventArgs e) => Close();
+    private void OnClose(object? sender, RoutedEventArgs e)
+    {
+        Close();
+    }
 
     private void RefreshIfAuto()
     {

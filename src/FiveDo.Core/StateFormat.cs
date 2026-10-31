@@ -36,5 +36,7 @@ public static class StateFormat
     /// <param name="version">Format version from the file header.</param>
     /// <returns><see langword="true"/> when the version is supported.</returns>
     public static bool IsSupportedVersion(ushort version)
-        => version >= MinSupportedVersion && version <= Version;
+    {
+        return version >= MinSupportedVersion && version <= Version;
+    }
 }

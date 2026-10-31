@@ -59,6 +59,9 @@ public sealed class InputManagerTests
         {
         }
 
-        public ControllerState GetState(int player) => States[player];
+        public ControllerState GetState(int player)
+        {
+            return States[player];
+        }
     }
 }

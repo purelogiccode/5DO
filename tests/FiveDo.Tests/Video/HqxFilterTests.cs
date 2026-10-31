@@ -127,7 +127,7 @@ public sealed class HqxFilterTests
             {
                 uint r = (uint)((x * 7 + y * 3) & 0xFF);
                 uint g = (uint)(((x / 3) * 40 + (y / 2) * 20) & 0xFF);
-                uint b = (uint)((x ^ y) * 11 & 0xFF);
+                uint b = (uint)(((x ^ y) * 11) & 0xFF);
                 if ((x + y) % 5 == 0)
                 {
                     r = 254;

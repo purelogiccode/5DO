@@ -64,7 +64,10 @@ public static class SwapInterval
 
         public string Name => "WGL_EXT_swap_control";
 
-        public bool Apply(int interval) => _swap(interval) != 0;
+        public bool Apply(int interval)
+        {
+            return _swap(interval) != 0;
+        }
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         private delegate int WglSwapInterval(int interval);

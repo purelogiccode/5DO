@@ -131,16 +131,28 @@ public class StateReader : IStateReader
     }
 
     /// <inheritdoc />
-    public int ReadInt32() => unchecked((int)ReadUInt32());
+    public int ReadInt32()
+    {
+        return unchecked((int)ReadUInt32());
+    }
 
     /// <inheritdoc />
-    public long ReadInt64() => unchecked((long)ReadUInt64());
+    public long ReadInt64()
+    {
+        return unchecked((long)ReadUInt64());
+    }
 
     /// <inheritdoc />
-    public float ReadSingle() => BitConverter.UInt32BitsToSingle(ReadUInt32());
+    public float ReadSingle()
+    {
+        return BitConverter.UInt32BitsToSingle(ReadUInt32());
+    }
 
     /// <inheritdoc />
-    public double ReadDouble() => BitConverter.UInt64BitsToDouble(ReadUInt64());
+    public double ReadDouble()
+    {
+        return BitConverter.UInt64BitsToDouble(ReadUInt64());
+    }
 
     /// <inheritdoc />
     public bool ReadBoolean()

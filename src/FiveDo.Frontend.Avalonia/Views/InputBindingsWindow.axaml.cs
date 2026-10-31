@@ -34,7 +34,7 @@ public partial class InputBindingsWindow : Window
     private KeyboardBindingEditor _editor;
     private int _playerIndex;
     private ControllerButton? _pendingButton;
-    private bool _initializing;
+    private readonly bool _initializing;
     private bool _refreshingGamepad;
 
     /// <summary>Creates the dialog with the default input profile.</summary>
@@ -253,5 +253,8 @@ public partial class InputBindingsWindow : Window
         Close(_profile);
     }
 
-    private void OnCancel(object? sender, RoutedEventArgs e) => Close(null);
+    private void OnCancel(object? sender, RoutedEventArgs e)
+    {
+        Close(null);
+    }
 }

@@ -148,5 +148,8 @@ public sealed class CcbParser
         return header;
     }
 
-    private uint ReadWord(uint address) => _celMemory is null ? _ram.Read32(address) : _celMemory.ReadWord(address);
+    private uint ReadWord(uint address)
+    {
+        return _celMemory?.ReadWord(address) ?? _ram.Read32(address);
+    }
 }

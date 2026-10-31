@@ -50,5 +50,7 @@ public static class LogPaths
     /// <param name="applicationName">Product folder name.</param>
     /// <returns>The log file path.</returns>
     public static string GetLogFilePath(string applicationName = "5DO")
-        => Path.Combine(GetLogDirectory(applicationName), "5do-.log");
+    {
+        return Path.Combine(GetLogDirectory(applicationName), "5do-.log");
+    }
 }

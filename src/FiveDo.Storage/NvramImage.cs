@@ -64,7 +64,10 @@ public sealed class NvramImage
 
     /// <summary>Copies the NVRAM bytes into a destination span.</summary>
     /// <param name="destination">Destination of at least 32 KB.</param>
-    public void CopyTo(Span<byte> destination) => _data.CopyTo(destination);
+    public void CopyTo(Span<byte> destination)
+    {
+        _data.CopyTo(destination);
+    }
 
     /// <summary>Saves the image to a file.</summary>
     /// <param name="path">Destination path.</param>
@@ -76,7 +79,10 @@ public sealed class NvramImage
 
     /// <summary>Returns a copy of the NVRAM bytes.</summary>
     /// <returns>A 32 KB array.</returns>
-    public byte[] ToArray() => (byte[])_data.Clone();
+    public byte[] ToArray()
+    {
+        return (byte[])_data.Clone();
+    }
 
     private static void InitializeVolumeHeader(byte[] data)
     {

@@ -48,5 +48,8 @@ public sealed class WavAudioSink : IAudioSink, IDisposable
     }
 
     /// <inheritdoc />
-    public void Dispose() => _writer.Dispose();
+    public void Dispose()
+    {
+        _writer.Dispose();
+    }
 }

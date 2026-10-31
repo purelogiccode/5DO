@@ -80,7 +80,13 @@ internal sealed class FakeDiagPort : IDiagPort
 
     public uint ReadValue { get; set; }
 
-    public uint Get() => ReadValue;
+    public uint Get()
+    {
+        return ReadValue;
+    }
 
-    public void Send(uint value) => LastSent = value;
+    public void Send(uint value)
+    {
+        LastSent = value;
+    }
 }

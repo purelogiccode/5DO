@@ -71,7 +71,10 @@ public sealed class CelBitReader
 
     /// <summary>Sets the absolute bit position. FreeDO: <c>SetPos</c>.</summary>
     /// <param name="bitPosition">Absolute bit position.</param>
-    public void SetPos(uint bitPosition) => SetPosition(bitPosition >> 3, (byte)(bitPosition & 7));
+    public void SetPos(uint bitPosition)
+    {
+        SetPosition(bitPosition >> 3, (byte)(bitPosition & 7));
+    }
 
     /// <summary>Skips bits. FreeDO: <c>Skip</c>.</summary>
     /// <param name="bits">Number of bits to skip.</param>
@@ -135,5 +138,8 @@ public sealed class CelBitReader
         return Read();
     }
 
-    private byte ReadByte(uint point) => _ram.Read8(_buffer + (point ^ 3));
+    private byte ReadByte(uint point)
+    {
+        return _ram.Read8(_buffer + (point ^ 3));
+    }
 }

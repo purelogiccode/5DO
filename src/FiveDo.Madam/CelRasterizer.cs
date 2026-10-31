@@ -1386,7 +1386,10 @@ internal sealed class CelRasterizer
         }
     }
 
-    private ushort ReadPixel(uint source, int x, int y) => ReadPixel(source, x, y, _writeModulo);
+    private ushort ReadPixel(uint source, int x, int y)
+    {
+        return ReadPixel(source, x, y, _writeModulo);
+    }
 
     private ushort ReadPixel(uint source, int x, int y, int modulo)
     {
@@ -1401,7 +1404,10 @@ internal sealed class CelRasterizer
         return _ram.Read16(unchecked(source + (uint)offset) ^ 2);
     }
 
-    private void WritePixel(uint target, int x, int y, ushort value) => WritePixel(target, x, y, value, _writeModulo);
+    private void WritePixel(uint target, int x, int y, ushort value)
+    {
+        WritePixel(target, x, y, value, _writeModulo);
+    }
 
     private void WritePixel(uint target, int x, int y, ushort value, int modulo)
     {
@@ -1449,7 +1455,13 @@ internal sealed class CelRasterizer
         return unchecked(((b >> 1) * c) + ((b & 1) << 1) + a);
     }
 
-    private static int Divide(int numerator, int denominator) => denominator == 0 ? 0 : numerator / denominator;
+    private static int Divide(int numerator, int denominator)
+    {
+        return denominator == 0 ? 0 : numerator / denominator;
+    }
 
-    private static uint Address(uint baseAddress, int offset) => unchecked(baseAddress + (uint)offset);
+    private static uint Address(uint baseAddress, int offset)
+    {
+        return unchecked(baseAddress + (uint)offset);
+    }
 }

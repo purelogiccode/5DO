@@ -2,7 +2,6 @@ using System.Runtime.InteropServices;
 
 namespace FiveDo.Frontend.Avalonia;
 
-
 /// <summary>One timing summary in the GPU probe report.</summary>
 /// <param name="MeanMs">Mean milliseconds.</param>
 /// <param name="P50Ms">Median milliseconds.</param>

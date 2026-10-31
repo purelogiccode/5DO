@@ -2,7 +2,6 @@ using System;
 
 namespace FiveDo.Frontend.Avalonia.Controls;
 
-
 /// <summary>Event data for <see cref="VideoSurface.FramePresented"/>.</summary>
 public sealed class FramePresentedEventArgs : EventArgs
 {

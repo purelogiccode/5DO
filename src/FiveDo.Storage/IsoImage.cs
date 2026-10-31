@@ -53,5 +53,8 @@ public sealed class IsoImage : IDiscSource
     }
 
     /// <inheritdoc />
-    public void Dispose() => _stream.Dispose();
+    public void Dispose()
+    {
+        _stream.Dispose();
+    }
 }

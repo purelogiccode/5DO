@@ -19,41 +19,62 @@ internal static class Shaders
         precision highp usampler2D;
         """;
 
-    internal static string Vertex(bool es) => Header(es) + VertexBody;
+    internal static string Vertex(bool es)
+    {
+        return Header(es) + VertexBody;
+    }
 
     /// <summary>Stage 1: palette expansion at native resolution.</summary>
-    internal static string FragmentPalette(bool es) => Header(es) + FragmentPaletteBody;
+    internal static string FragmentPalette(bool es)
+    {
+        return Header(es) + FragmentPaletteBody;
+    }
 
     /// <summary>Stage 2: scaling/filtering at output resolution.</summary>
-    internal static string FragmentScale(bool es) => Header(es) + FragmentScaleBody;
+    internal static string FragmentScale(bool es)
+    {
+        return Header(es) + FragmentScaleBody;
+    }
 
     /// <summary>
     /// Optional xBR pass: edge-directed 4x expansion of the native-resolution expanded frame.
     /// </summary>
-    internal static string FragmentXbr(bool es) => Header(es) + FragmentXbrBody;
+    internal static string FragmentXbr(bool es)
+    {
+        return Header(es) + FragmentXbrBody;
+    }
 
     /// <summary>
     /// FSR 1.0 EASU pass: edge-adaptive spatial upsampling of the native-resolution frame
     /// into the viewport-sized target.
     /// </summary>
-    internal static string FragmentFsrEasu(bool es) => Header(es) + FragmentFsrEasuBody;
+    internal static string FragmentFsrEasu(bool es)
+    {
+        return Header(es) + FragmentFsrEasuBody;
+    }
 
     /// <summary>FSR 1.0 RCAS pass: contrast-adaptive sharpening at output resolution.</summary>
-    internal static string FragmentFsrRcas(bool es) => Header(es) + FragmentFsrRcasBody;
+    internal static string FragmentFsrRcas(bool es)
+    {
+        return Header(es) + FragmentFsrRcasBody;
+    }
 
-    private static string Header(bool es) => es ? EsHeader + "\n" : DesktopHeader;
+    private static string Header(bool es)
+    {
+        return es ? EsHeader + "\n" : DesktopHeader;
+    }
 
     private const string VertexBody = """
-        layout (location = 0) in vec2 aPosition;
-        uniform vec4 uRect;      // x, y, width, height in target pixels
-        uniform vec2 uOutput;    // target width, height
-        void main()
-        {
-            vec2 pixel = uRect.xy + (aPosition * uRect.zw);
-            vec2 ndc = (pixel / uOutput) * 2.0 - 1.0;
-            gl_Position = vec4(ndc.x, -ndc.y, 0.0, 1.0);
-        }
-        """;
+                                      layout (location = 0) in vec2 aPosition;
+                                      uniform vec4 uRect;      // x, y, width, height in target pixels
+                                      uniform vec2 uOutput;    // target width, height
+                                      void main()
+                                      {
+                                          vec2 pixel = uRect.xy + (aPosition * uRect.zw);
+                                          vec2 ndc = (pixel / uOutput) * 2.0 - 1.0;
+                                          gl_Position = vec4(ndc.x, -ndc.y, 0.0, 1.0);
+                                      }
+                                      """;
 
     private const string FragmentPaletteBody = """
         uniform usampler2D uPixels;  // R16UI indexed pixels

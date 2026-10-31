@@ -142,7 +142,7 @@ public sealed class CoreRunnerTests
     {
         FiveDoMachine machine = CreateMachine();
         VdlFrame? last = null;
-        using var runner = new CoreRunner(machine, frameSink: frame => last = frame);
+        using var runner = new CoreRunner(machine, frame => last = frame);
         runner.Pause();
         runner.StepFrame();
 
@@ -155,7 +155,8 @@ public sealed class CoreRunnerTests
     public void OneInTwo_SkipsPresentationButRunsEveryEmulatedFrame()
     {
         FiveDoMachine machine = CreateMachine();
-        using var runner = new CoreRunner(machine) { FrameSkip = FrameSkipMode.OneInTwo };
+        using var runner = new CoreRunner(machine);
+        runner.FrameSkip = FrameSkipMode.OneInTwo;
         runner.Start();
         Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 20, TimeSpan.FromSeconds(2)));
         runner.Stop();

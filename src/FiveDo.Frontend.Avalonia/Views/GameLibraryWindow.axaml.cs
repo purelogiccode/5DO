@@ -44,11 +44,15 @@ public partial class GameLibraryWindow : Window
         AsyncEvent.Run(RefreshAsync, "loading the game library");
     }
 
-    private void OnRefresh(object? sender, RoutedEventArgs e) =>
+    private void OnRefresh(object? sender, RoutedEventArgs e)
+    {
         AsyncEvent.Run(RefreshAsync, "refreshing the game library");
+    }
 
-    private void OnAddFolderAsync(object? sender, RoutedEventArgs e) =>
+    private void OnAddFolderAsync(object? sender, RoutedEventArgs e)
+    {
         AsyncEvent.Run(AddFolderAsync, "adding a game folder");
+    }
 
     private async Task AddFolderAsync()
     {
@@ -79,11 +83,20 @@ public partial class GameLibraryWindow : Window
         }
     }
 
-    private void OnOpenSelected(object? sender, RoutedEventArgs e) => OpenSelected();
+    private void OnOpenSelected(object? sender, RoutedEventArgs e)
+    {
+        OpenSelected();
+    }
 
-    private void OnDoubleTapped(object? sender, TappedEventArgs e) => OpenSelected();
+    private void OnDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        OpenSelected();
+    }
 
-    private void OnSelectionChanged(object? sender, SelectionChangedEventArgs e) => UpdateCover();
+    private void OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        UpdateCover();
+    }
 
     private void UpdateCover()
     {
@@ -249,7 +262,10 @@ public partial class GameLibraryWindow : Window
         StatusText.Text = $"{finalEntries.Count} disc(s), {known} recognized by the 4DO database.";
     }
 
-    private static string CountLabel(int count) => count == 1 ? "1 game" : $"{count} games";
+    private static string CountLabel(int count)
+    {
+        return count == 1 ? "1 game" : $"{count} games";
+    }
 
     private List<string> RecentFolders()
     {

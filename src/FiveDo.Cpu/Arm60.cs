@@ -123,7 +123,10 @@ public sealed class Arm60 : ICpuBackend, IStateSection
 
     /// <summary>Selects the active ROM bank. FreeDO: <c>SelectROM</c>.</summary>
     /// <param name="bank">Zero for BIOS1, non-zero for BIOS2.</param>
-    public void SelectRom(int bank) => _state.SecondRom = bank > 0;
+    public void SelectRom(int bank)
+    {
+        _state.SecondRom = bank > 0;
+    }
 
     /// <summary>Resets the CPU to the FreeDOCore power-on state.</summary>
     public void Reset()
@@ -181,12 +184,18 @@ public sealed class Arm60 : ICpuBackend, IStateSection
     /// <summary>Reads a user-visible register (R0-R15).</summary>
     /// <param name="index">Register index, 0-15.</param>
     /// <returns>The register value.</returns>
-    public uint ReadRegister(int index) => _state[index];
+    public uint ReadRegister(int index)
+    {
+        return _state[index];
+    }
 
     /// <summary>Writes a user-visible register (R0-R15).</summary>
     /// <param name="index">Register index, 0-15.</param>
     /// <param name="value">Value to write.</param>
-    public void WriteRegister(int index, uint value) => _state[index] = value;
+    public void WriteRegister(int index, uint value)
+    {
+        _state[index] = value;
+    }
 
     /// <summary>Writes the CPU save-state section payload.</summary>
     /// <param name="writer">Destination writer.</param>
@@ -256,11 +265,17 @@ public sealed class Arm60 : ICpuBackend, IStateSection
 
     /// <summary>Writes the CPU save-state section payload. FreeDO: <c>_arm_Save</c>.</summary>
     /// <param name="writer">Destination writer.</param>
-    public void Save(IStateWriter writer) => SaveState(writer);
+    public void Save(IStateWriter writer)
+    {
+        SaveState(writer);
+    }
 
     /// <summary>Reads the CPU save-state section payload. FreeDO: <c>_arm_Load</c>.</summary>
     /// <param name="reader">Source reader.</param>
-    public void Load(IStateReader reader) => LoadState(reader);
+    public void Load(IStateReader reader)
+    {
+        LoadState(reader);
+    }
 
     private static void WriteRegisters(IStateWriter writer, uint[] registers)
     {
@@ -914,7 +929,10 @@ public sealed class Arm60 : ICpuBackend, IStateSection
         state.ProgramCounter = 0x0000001c;
     }
 
-    private uint ReadWord(uint address) => _bus.Read32(address);
+    private uint ReadWord(uint address)
+    {
+        return _bus.Read32(address);
+    }
 
     private void WriteWord(uint address, uint value)
     {

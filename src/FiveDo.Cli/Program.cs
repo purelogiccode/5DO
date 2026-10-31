@@ -126,7 +126,9 @@ internal static class Program
     }
 
     private static bool IsDiagnosticCommand(string command)
-        => command is "--version" or "-v" or "--help" or "-h" or "help" or "bench" or "selftest";
+    {
+        return command is "--version" or "-v" or "--help" or "-h" or "help" or "bench" or "selftest";
+    }
 
     private static int Version()
     {
@@ -1892,7 +1894,10 @@ internal static class Program
 
         internal string? Positional { get; set; }
 
-        internal string? Get(string name) => Values.TryGetValue(name, out var value) ? value : null;
+        internal string? Get(string name)
+        {
+            return Values.TryGetValue(name, out var value) ? value : null;
+        }
 
         internal int GetInt(string name, int fallback)
         {
@@ -1927,11 +1932,20 @@ internal static class Arm
 {
     private const uint Al = 14;
 
-    internal static uint Mov(int rd, uint value) => DpImmediate(13, rd, 0, value);
+    internal static uint Mov(int rd, uint value)
+    {
+        return DpImmediate(13, rd, 0, value);
+    }
 
-    internal static uint Mvn(int rd, uint value) => DpImmediate(15, rd, 0, value);
+    internal static uint Mvn(int rd, uint value)
+    {
+        return DpImmediate(15, rd, 0, value);
+    }
 
-    internal static uint AddImmediate(int rd, int rn, uint value) => DpImmediate(4, rd, rn, value);
+    internal static uint AddImmediate(int rd, int rn, uint value)
+    {
+        return DpImmediate(4, rd, rn, value);
+    }
 
     internal static uint StrImmediate(int rd, int rn, int offset)
     {

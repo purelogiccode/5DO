@@ -56,7 +56,10 @@ public sealed class AudioPipeline : IAudioSink
     /// <summary>Reads normalized interleaved stereo frames for the audio callback.</summary>
     /// <param name="destination">Destination span.</param>
     /// <returns>The number of frames read.</returns>
-    public int Read(Span<float> destination) => _buffer.Read(destination);
+    public int Read(Span<float> destination)
+    {
+        return _buffer.Read(destination);
+    }
 
     /// <summary>Resets the counters and empties the ring.</summary>
     public void Reset()

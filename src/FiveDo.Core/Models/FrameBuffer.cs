@@ -53,5 +53,8 @@ public sealed class FrameBuffer
     public Span<byte> PixelSpan => _pixels;
 
     /// <summary>Clears the frame to transparent black.</summary>
-    public void Clear() => _pixels.AsSpan().Clear();
+    public void Clear()
+    {
+        _pixels.AsSpan().Clear();
+    }
 }

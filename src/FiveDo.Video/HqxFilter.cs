@@ -38,12 +38,15 @@ public sealed partial class HqxFilter
     /// <summary>Gets the scale factor used by a video filter, or 2 for non-HQx filters.</summary>
     /// <param name="filter">Video filter.</param>
     /// <returns>The HQx scale factor.</returns>
-    public static int ScaleFor(VideoFilter filter) => filter switch
+    public static int ScaleFor(VideoFilter filter)
     {
-        VideoFilter.Hqx3x => 3,
-        VideoFilter.Hqx4x => 4,
-        _ => 2,
-    };
+        return filter switch
+        {
+            VideoFilter.Hqx3x => 3,
+            VideoFilter.Hqx4x => 4,
+            _ => 2,
+        };
+    }
 
     /// <summary>Expands a BGRA frame by 2x, 3x, or 4x.</summary>
     /// <param name="source">Source frame.</param>
@@ -193,25 +196,55 @@ public sealed partial class HqxFilter
         return Math.Abs(y1 - y2) > 48 || Math.Abs(u1 - u2) > 7 || Math.Abs(v1 - v2) > 6;
     }
 
-    private static uint Interp1(uint c1, uint c2) => Interpolate2(c1, 3, c2, 1, 2);
+    private static uint Interp1(uint c1, uint c2)
+    {
+        return Interpolate2(c1, 3, c2, 1, 2);
+    }
 
-    private static uint Interp2(uint c1, uint c2, uint c3) => Interpolate3(c1, 2, c2, 1, c3, 1, 2);
+    private static uint Interp2(uint c1, uint c2, uint c3)
+    {
+        return Interpolate3(c1, 2, c2, 1, c3, 1, 2);
+    }
 
-    private static uint Interp3(uint c1, uint c2) => Interpolate2(c1, 7, c2, 1, 3);
+    private static uint Interp3(uint c1, uint c2)
+    {
+        return Interpolate2(c1, 7, c2, 1, 3);
+    }
 
-    private static uint Interp4(uint c1, uint c2, uint c3) => Interpolate3(c1, 2, c2, 7, c3, 7, 4);
+    private static uint Interp4(uint c1, uint c2, uint c3)
+    {
+        return Interpolate3(c1, 2, c2, 7, c3, 7, 4);
+    }
 
-    private static uint Interp5(uint c1, uint c2) => Interpolate2(c1, 1, c2, 1, 1);
+    private static uint Interp5(uint c1, uint c2)
+    {
+        return Interpolate2(c1, 1, c2, 1, 1);
+    }
 
-    private static uint Interp6(uint c1, uint c2, uint c3) => Interpolate3(c1, 5, c2, 2, c3, 1, 3);
+    private static uint Interp6(uint c1, uint c2, uint c3)
+    {
+        return Interpolate3(c1, 5, c2, 2, c3, 1, 3);
+    }
 
-    private static uint Interp7(uint c1, uint c2, uint c3) => Interpolate3(c1, 6, c2, 1, c3, 1, 3);
+    private static uint Interp7(uint c1, uint c2, uint c3)
+    {
+        return Interpolate3(c1, 6, c2, 1, c3, 1, 3);
+    }
 
-    private static uint Interp8(uint c1, uint c2) => Interpolate2(c1, 5, c2, 3, 3);
+    private static uint Interp8(uint c1, uint c2)
+    {
+        return Interpolate2(c1, 5, c2, 3, 3);
+    }
 
-    private static uint Interp9(uint c1, uint c2, uint c3) => Interpolate3(c1, 2, c2, 3, c3, 3, 3);
+    private static uint Interp9(uint c1, uint c2, uint c3)
+    {
+        return Interpolate3(c1, 2, c2, 3, c3, 3, 3);
+    }
 
-    private static uint Interp10(uint c1, uint c2, uint c3) => Interpolate3(c1, 14, c2, 1, c3, 1, 4);
+    private static uint Interp10(uint c1, uint c2, uint c3)
+    {
+        return Interpolate3(c1, 14, c2, 1, c3, 1, 4);
+    }
 
     private static uint Interpolate2(uint c1, uint w1, uint c2, uint w2, int shift)
     {

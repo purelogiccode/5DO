@@ -65,12 +65,15 @@ public sealed class PlayerProfile
 
     /// <summary>Creates a deep copy of this profile.</summary>
     /// <returns>A copy that can be edited without changing the original.</returns>
-    public PlayerProfile Clone() => new()
+    public PlayerProfile Clone()
     {
-        Name = Name,
-        Keyboard = new Dictionary<string, ControllerButton>(Keyboard, StringComparer.OrdinalIgnoreCase),
-        Gamepad = new Dictionary<string, ControllerButton>(Gamepad, StringComparer.OrdinalIgnoreCase),
-    };
+        return new PlayerProfile
+        {
+            Name = Name,
+            Keyboard = new Dictionary<string, ControllerButton>(Keyboard, StringComparer.OrdinalIgnoreCase),
+            Gamepad = new Dictionary<string, ControllerButton>(Gamepad, StringComparer.OrdinalIgnoreCase),
+        };
+    }
 
     /// <summary>Finds keys bound to more than one button.</summary>
     /// <returns>Conflict descriptions; empty when the profile is consistent.</returns>

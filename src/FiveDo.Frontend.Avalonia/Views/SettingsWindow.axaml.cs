@@ -109,8 +109,10 @@ public partial class SettingsWindow : Window
         FixModeBox.Text = overrideMode is null ? string.Empty : $"0x{(uint)overrideMode.Value:x}";
     }
 
-    private void OnTestAudioClickAsync(object? sender, RoutedEventArgs e) =>
+    private void OnTestAudioClickAsync(object? sender, RoutedEventArgs e)
+    {
         AsyncEvent.Run(TestAudioAsync, "testing audio output");
+    }
 
     private async Task TestAudioAsync()
     {
@@ -238,10 +240,15 @@ public partial class SettingsWindow : Window
         Close(true);
     }
 
-    private void OnCancel(object? sender, RoutedEventArgs e) => Close(false);
+    private void OnCancel(object? sender, RoutedEventArgs e)
+    {
+        Close(false);
+    }
 
-    private void OnBrowseSaveDirectoryAsync(object? sender, RoutedEventArgs e) =>
+    private void OnBrowseSaveDirectoryAsync(object? sender, RoutedEventArgs e)
+    {
         AsyncEvent.Run(BrowseSaveDirectoryAsync, "selecting the save-state directory");
+    }
 
     private async Task BrowseSaveDirectoryAsync()
     {
@@ -252,8 +259,10 @@ public partial class SettingsWindow : Window
         }
     }
 
-    private void OnBrowseScreenshotDirectoryAsync(object? sender, RoutedEventArgs e) =>
+    private void OnBrowseScreenshotDirectoryAsync(object? sender, RoutedEventArgs e)
+    {
         AsyncEvent.Run(BrowseScreenshotDirectoryAsync, "selecting the screenshot directory");
+    }
 
     private async Task BrowseScreenshotDirectoryAsync()
     {
@@ -264,8 +273,10 @@ public partial class SettingsWindow : Window
         }
     }
 
-    private void OnBrowseCoverDirectoryAsync(object? sender, RoutedEventArgs e) =>
+    private void OnBrowseCoverDirectoryAsync(object? sender, RoutedEventArgs e)
+    {
         AsyncEvent.Run(BrowseCoverDirectoryAsync, "selecting the cover-art directory");
+    }
 
     private async Task BrowseCoverDirectoryAsync()
     {
@@ -311,16 +322,25 @@ public partial class SettingsWindow : Window
 
     private sealed record RendererOption(VideoRendererKind Value, string Label)
     {
-        public override string ToString() => Label;
+        public override string ToString()
+        {
+            return Label;
+        }
     }
 
     private sealed record ResolutionOption(OutputResolution Value, string Label)
     {
-        public override string ToString() => Label;
+        public override string ToString()
+        {
+            return Label;
+        }
     }
 
     private sealed record FrameSkipOption(FrameSkipMode Value, string Label)
     {
-        public override string ToString() => Label;
+        public override string ToString()
+        {
+            return Label;
+        }
     }
 }

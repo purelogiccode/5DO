@@ -100,7 +100,10 @@ public sealed class FrameAssembler
     /// <summary>Expands a 5-bit color component to 8 bits.</summary>
     /// <param name="value">5-bit component.</param>
     /// <returns>8-bit component.</returns>
-    public static byte Expand5(byte value) => (byte)((value << 3) | (value >> 2));
+    public static byte Expand5(byte value)
+    {
+        return (byte)((value << 3) | (value >> 2));
+    }
 
     private static byte[] CreateFixedClut()
     {

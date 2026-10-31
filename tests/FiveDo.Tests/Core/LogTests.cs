@@ -258,10 +258,12 @@ public sealed class LogTests
     }
 
     private static Logger CreateLogger(InMemorySerilogSink sink)
-        => new LoggerConfiguration()
+    {
+        return new LoggerConfiguration()
             .MinimumLevel.Verbose()
             .WriteTo.Sink(sink)
             .CreateLogger();
+    }
 
     private static LogEvent CreateEvent(
         LogEventLevel level,
@@ -297,7 +299,10 @@ public sealed class LogTests
     {
         public LogEvent? Last { get; private set; }
 
-        public void Emit(LogEvent logEvent) => Last = logEvent;
+        public void Emit(LogEvent logEvent)
+        {
+            Last = logEvent;
+        }
     }
 
     private sealed class RecordingHandler : HttpMessageHandler

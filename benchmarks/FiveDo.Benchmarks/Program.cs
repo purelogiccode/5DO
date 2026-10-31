@@ -408,7 +408,10 @@ internal static class Program
         double TotalMeanMs,
         double TotalP99Ms);
 
-    private static double Round(double value) => Math.Round(value, 3, MidpointRounding.AwayFromZero);
+    private static double Round(double value)
+    {
+        return Math.Round(value, 3, MidpointRounding.AwayFromZero);
+    }
 
     private static uint FrameHash(FiveDoMachine machine)
     {
@@ -463,11 +466,20 @@ internal static class Arm
 {
     private const uint Al = 14;
 
-    internal static uint Mov(int rd, uint value) => DpImmediate(13, rd, 0, value);
+    internal static uint Mov(int rd, uint value)
+    {
+        return DpImmediate(13, rd, 0, value);
+    }
 
-    internal static uint Mvn(int rd, uint value) => DpImmediate(15, rd, 0, value);
+    internal static uint Mvn(int rd, uint value)
+    {
+        return DpImmediate(15, rd, 0, value);
+    }
 
-    internal static uint AddImmediate(int rd, int rn, uint value) => DpImmediate(4, rd, rn, value);
+    internal static uint AddImmediate(int rd, int rn, uint value)
+    {
+        return DpImmediate(4, rd, rn, value);
+    }
 
     internal static uint StrImmediate(int rd, int rn, int offset)
     {

@@ -233,7 +233,10 @@ public sealed class AppSettings
     /// <summary>Resolves the presentation filter for a game, honoring per-game overrides.</summary>
     /// <param name="gameId">4DO game ID, or <see langword="null"/> when no disc is loaded.</param>
     /// <returns>The override when present, otherwise the global filter.</returns>
-    public VideoFilter ResolveFilter(string? gameId) => GetFilterOverride(gameId) ?? Filter;
+    public VideoFilter ResolveFilter(string? gameId)
+    {
+        return GetFilterOverride(gameId) ?? Filter;
+    }
 
     /// <summary>Resolves the fix-mode bits for a game, honoring per-game overrides.</summary>
     /// <param name="gameId">4DO game ID, or <see langword="null"/> when no disc is loaded.</param>

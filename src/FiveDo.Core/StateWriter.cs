@@ -58,19 +58,34 @@ public sealed class StateWriter : IStateWriter
     }
 
     /// <inheritdoc />
-    public void WriteInt32(int value) => WriteUInt32(unchecked((uint)value));
+    public void WriteInt32(int value)
+    {
+        WriteUInt32(unchecked((uint)value));
+    }
 
     /// <inheritdoc />
-    public void WriteInt64(long value) => WriteUInt64(unchecked((ulong)value));
+    public void WriteInt64(long value)
+    {
+        WriteUInt64(unchecked((ulong)value));
+    }
 
     /// <inheritdoc />
-    public void WriteSingle(float value) => WriteUInt32(BitConverter.SingleToUInt32Bits(value));
+    public void WriteSingle(float value)
+    {
+        WriteUInt32(BitConverter.SingleToUInt32Bits(value));
+    }
 
     /// <inheritdoc />
-    public void WriteDouble(double value) => WriteUInt64(BitConverter.DoubleToUInt64Bits(value));
+    public void WriteDouble(double value)
+    {
+        WriteUInt64(BitConverter.DoubleToUInt64Bits(value));
+    }
 
     /// <inheritdoc />
-    public void WriteBoolean(bool value) => WriteByte(value ? (byte)1 : (byte)0);
+    public void WriteBoolean(bool value)
+    {
+        WriteByte(value ? (byte)1 : (byte)0);
+    }
 
     /// <inheritdoc />
     public void WriteBytes(ReadOnlySpan<byte> value)
@@ -119,5 +134,8 @@ public sealed class StateWriter : IStateWriter
 
     /// <summary>Returns the written bytes as a new array.</summary>
     /// <returns>A copy of the written state.</returns>
-    public byte[] ToArray() => _buffer.WrittenSpan.ToArray();
+    public byte[] ToArray()
+    {
+        return _buffer.WrittenSpan.ToArray();
+    }
 }

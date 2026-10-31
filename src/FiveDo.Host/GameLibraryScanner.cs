@@ -376,7 +376,8 @@ public static class GameLibraryScanner
     }
 
     private static GameLibraryEntry CreatePlaceholder(string path, string? coverDirectory)
-        => new(
+    {
+        return new GameLibraryEntry(
             path,
             FormatFor(path),
             0,
@@ -386,9 +387,12 @@ public static class GameLibraryScanner
             string.Empty,
             FindCover(path, coverDirectory),
             Pending: true);
+    }
 
     private static string FormatFor(string path)
-        => Path.GetExtension(path).TrimStart('.').ToUpperInvariant();
+    {
+        return Path.GetExtension(path).TrimStart('.').ToUpperInvariant();
+    }
 
     private static void SortEntries(List<GameLibraryEntry> entries)
     {

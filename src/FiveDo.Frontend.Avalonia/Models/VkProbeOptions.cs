@@ -47,7 +47,9 @@ internal sealed record VkProbeOptions(
     /// <param name="error">Validation error on failure.</param>
     /// <returns><see langword="true"/> when a valid probe request was found.</returns>
     internal static bool TryParse(string[] args, out VkProbeOptions? options, out string? error)
-        => TryParseCore(args, "--vk-probe", window: false, out options, out error);
+    {
+        return TryParseCore(args, "--vk-probe", window: false, out options, out error);
+    }
 
     /// <summary>Parses the native-window Vulkan probe options from the process arguments.</summary>
     /// <param name="args">Process arguments.</param>
@@ -55,7 +57,9 @@ internal sealed record VkProbeOptions(
     /// <param name="error">Validation error on failure.</param>
     /// <returns><see langword="true"/> when a valid window probe request was found.</returns>
     internal static bool TryParseWindow(string[] args, out VkProbeOptions? options, out string? error)
-        => TryParseCore(args, "--vk-window-probe", window: true, out options, out error);
+    {
+        return TryParseCore(args, "--vk-window-probe", window: true, out options, out error);
+    }
 
     private static bool TryParseCore(
         string[] args,
@@ -166,7 +170,9 @@ internal sealed record VkProbeOptions(
         return true;
 
         string? Find(string suffix)
-            => Program.FindOptionValue(args, optionName + suffix)
-               ?? Program.FindOptionValue(args, "--vk-probe" + suffix);
+        {
+            return Program.FindOptionValue(args, optionName + suffix)
+                   ?? Program.FindOptionValue(args, "--vk-probe" + suffix);
+        }
     }
 }

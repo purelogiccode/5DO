@@ -13,7 +13,10 @@ public sealed class NullAudioSink : IAudioSink
     public long SampleCount => _samples;
 
     /// <inheritdoc />
-    public void PushSample(uint packedSample) => _samples++;
+    public void PushSample(uint packedSample)
+    {
+        _samples++;
+    }
 
     /// <summary>Keeps the sample counter; a null sink has no queued audio to drop.</summary>
     public void Reset()

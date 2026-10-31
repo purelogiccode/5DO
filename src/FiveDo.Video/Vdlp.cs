@@ -327,7 +327,10 @@ public sealed class Vdlp : IVdlp, IStateSection
         _lineDelay = reader.ReadInt32();
     }
 
-    private uint ReadVram(uint address) => _ram.Read32((address & 0xfffff) + VramOffset);
+    private uint ReadVram(uint address)
+    {
+        return _ram.Read32((address & 0xfffff) + VramOffset);
+    }
 
     private void ExecuteVdl()
     {

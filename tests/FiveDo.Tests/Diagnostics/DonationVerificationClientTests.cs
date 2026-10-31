@@ -116,12 +116,15 @@ public sealed class DonationVerificationClientTests
         Assert.Equal("https://www.purelogiccode.com/donate?app=5do", uri.AbsoluteUri);
     }
 
-    private static DonationVerificationOptions CreateOptions() => new()
+    private static DonationVerificationOptions CreateOptions()
     {
-        Endpoint = "https://example.test/api/donations/verify",
-        ApiKey = "test-key",
-        ApplicationSlug = "5do",
-    };
+        return new DonationVerificationOptions
+        {
+            Endpoint = "https://example.test/api/donations/verify",
+            ApiKey = "test-key",
+            ApplicationSlug = "5do",
+        };
+    }
 
     private sealed class RecordingHandler : HttpMessageHandler
     {
@@ -165,7 +168,9 @@ public sealed class DonationVerificationClientTests
     {
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
+        {
             throw new HttpRequestException("network down");
+        }
     }
 }

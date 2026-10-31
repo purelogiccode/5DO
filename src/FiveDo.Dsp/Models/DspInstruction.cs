@@ -15,7 +15,10 @@ internal readonly struct DspInstruction
 {
     private readonly ushort _raw;
 
-    internal DspInstruction(ushort raw) => _raw = raw;
+    internal DspInstruction(ushort raw)
+    {
+        _raw = raw;
+    }
 
     internal ushort Raw => _raw;
 

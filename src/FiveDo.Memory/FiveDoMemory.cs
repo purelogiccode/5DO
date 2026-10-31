@@ -113,7 +113,10 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
 
     /// <summary>Loads BIOS1.</summary>
     /// <param name="bios1">Exactly 1 MB of big-endian BIOS1 data.</param>
-    public void LoadBios(ReadOnlySpan<byte> bios1) => LoadRom(0, bios1);
+    public void LoadBios(ReadOnlySpan<byte> bios1)
+    {
+        LoadRom(0, bios1);
+    }
 
     /// <summary>Loads BIOS1 and BIOS2.</summary>
     /// <param name="bios1">Exactly 1 MB of big-endian BIOS1 data.</param>
@@ -227,7 +230,10 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
 
     /// <summary>Selects the active ROM bank through the bus contract. FreeDO: <c>SelectROM</c>.</summary>
     /// <param name="bank">Zero for BIOS1, non-zero for BIOS2.</param>
-    void IRomSelector.SelectRom(int bank) => SelectRomBank(bank == 0 ? 0 : 1);
+    void IRomSelector.SelectRom(int bank)
+    {
+        SelectRomBank(bank == 0 ? 0 : 1);
+    }
 
     /// <summary>Copies CPU-visible RAM bytes for diagnostics.</summary>
     /// <param name="offset">Byte offset in CPU-visible RAM.</param>
@@ -241,7 +247,10 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     }
 
     /// <summary>Clears the CPU-visible RAM and the reserved mirrors.</summary>
-    public void ClearRam() => _ram.AsSpan().Clear();
+    public void ClearRam()
+    {
+        _ram.AsSpan().Clear();
+    }
 
     /// <summary>Resets the bus and ROM bank without clearing RAM or NVRAM.</summary>
     public void Reset()
@@ -250,17 +259,35 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
         _pcAdjustPending = false;
     }
 
-    byte IRam.Read8(uint offset) => ReadRam8(offset);
+    byte IRam.Read8(uint offset)
+    {
+        return ReadRam8(offset);
+    }
 
-    ushort IRam.Read16(uint offset) => ReadRam16(offset);
+    ushort IRam.Read16(uint offset)
+    {
+        return ReadRam16(offset);
+    }
 
-    uint IRam.Read32(uint offset) => ReadRam32(offset);
+    uint IRam.Read32(uint offset)
+    {
+        return ReadRam32(offset);
+    }
 
-    void IRam.Write8(uint offset, byte value) => WriteRam8(offset, value);
+    void IRam.Write8(uint offset, byte value)
+    {
+        WriteRam8(offset, value);
+    }
 
-    void IRam.Write16(uint offset, ushort value) => WriteRam16(offset, value);
+    void IRam.Write16(uint offset, ushort value)
+    {
+        WriteRam16(offset, value);
+    }
 
-    void IRam.Write32(uint offset, uint value) => WriteRam32(offset, value);
+    void IRam.Write32(uint offset, uint value)
+    {
+        WriteRam32(offset, value);
+    }
 
     private byte ReadRam8(uint offset)
     {
