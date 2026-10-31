@@ -475,9 +475,10 @@ current gates are the M13 collection sweep and the M14 high-resolution decision.
      Myst discs rendering by 6,000-9,000 frames.
    - Crash 'n Burn, Powers Kingdom (Europe), Slayer, and WorldCup Super Stadium are
      BIOS-sensitive. Crash/Powers/WorldCup change their boot screens with the Anvil
-     BIOS; Powers reaches a live-action intro and Slayer reaches its title menu at
-     60,000 frames with `panafz10`. Crash and WorldCup are still stuck at 60,000, so
-     the Anvil BIOS is not a fix for them.
+     BIOS; Powers reaches a live-action intro with Anvil, Slayer Europe renders with
+     `panafz1`, and Slayer USA reaches its title menu at 60,000 frames with `panafz10`.
+     Crash and WorldCup are still stuck at 60,000, so the Anvil BIOS is not a fix for
+     them.
    - Olympic Summer Games was blocked by the headless PBUS bug, now fixed by the
      default player-1 pad.
 3. **Run the BIOS-aware sweep and fill the status columns.** Rerun the `Not Loadable`

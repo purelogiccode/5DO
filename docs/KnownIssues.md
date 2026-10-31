@@ -37,8 +37,9 @@ high-resolution CEL decision (M14) are complete.
     Japan-revision issue, not a general Crash 'n Burn failure.
   - Powers Kingdom (Europe) renders its animated intro with the Anvil BIOS by
     30,000 frames, matching the 4DO note "Use Anvil-bios to load EU version of game".
-  - Slayer reaches its full title menu with `panafz10` (also GoldStar/Sanyo), but
-    stays black with `panafz1`.
+  - Slayer is region-sensitive: the Europe disc renders its credits with `panafz1` at
+    12,000 frames, while the USA disc stays black with `panafz1` and needs `panafz10`
+    (also GoldStar/Sanyo) to reach its title menu at 60,000 frames.
   - WorldCup Super Stadium changes from a solid blue screen to the same Anvil boot
     screen as Crash 'n Burn (Japan); both are still stuck at 60,000 frames, so the
     Anvil BIOS is not a fix for these two.

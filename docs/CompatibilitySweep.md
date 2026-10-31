@@ -140,8 +140,9 @@ The rendered test rejects the 3DO boot starfield, which has many colors but only
 found that the four Arcade CD-ROM rows need `panafz10-patched.bin` plus the default
 headless pad; unpatched `panafz1`/`panafz10` reach only a starfield or the 3DO
 storage-manager shell. Crash 'n Burn, Powers Kingdom (Europe), and WorldCup Super
-Stadium only leave their black or solid-blue boot state with the Anvil BIOS; Slayer
-needs `panafz10`, GoldStar, or Sanyo. Always record the BIOS used with a result.
+Stadium only leave their black or solid-blue boot state with the Anvil BIOS. Slayer is
+region-sensitive: Europe renders with `panafz1`, while USA needs `panafz10`,
+GoldStar, or Sanyo. Always record the BIOS used with a result.
 
 The `bios-probe.ps1` helper retries the sweep's failures with several BIOS images and
 keeps the best result:

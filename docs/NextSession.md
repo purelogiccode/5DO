@@ -31,10 +31,10 @@ MHTML in `References/4DO-master/`.
   default headless pad; unpatched BIOSes reach only a starfield or the 3DO
   storage-manager shell.
 - The 12,000-frame rerun shows Ishida, both Konpeki no Kantai discs, and all three Myst
-  discs rendering. Powers Kingdom (Europe) reaches a live-action intro and Slayer
-  reaches its title menu at 60,000 frames with the Anvil and `panafz10` BIOSes
-  respectively. Crash 'n Burn (Japan) and WorldCup Super Stadium show the same Anvil
-  boot screen and are still stuck at 60,000 frames.
+  discs rendering. Powers Kingdom (Europe) reaches a live-action intro with Anvil;
+  Slayer Europe renders credits with `panafz1`, while Slayer USA needs `panafz10` for
+  its title menu at 60,000 frames. Crash 'n Burn (Japan) and WorldCup Super Stadium
+  show the same Anvil boot screen and are still stuck at 60,000 frames.
 - Headless `run`/`trace` now attach a default player-1 pad. Olympic Summer Games
   proceeds past its controller check. The 3,000-frame corpus keys were re-baselined in
   [`TestCorpus.md`](TestCorpus.md) 1.1. **925 tests pass.**

@@ -618,6 +618,10 @@ The Arcade CD-ROM rows need the **patched** BIOS; unpatched `panafz10` reaches t
 them, and the patched BIOS alone is not enough either: the headless PBUS fix is what
 lets their boot code proceed past the controller probe.
 
+Slayer has the opposite regional split: the Europe disc renders its credits with
+`panafz1` by 12,000 frames, while the USA disc stays black with `panafz1` and needs
+`panafz10` to reach the title menu at 60,000 frames.
+
 The 12,000-frame rerun also shows that Ishida Yoshio Kudan no Igo Seiha, both Konpeki
 no Kantai discs, and all three Myst discs render between 6,000 and 9,000 frames; their
 3,000-frame `Loadable/No video` label was a false negative caused by a long black
