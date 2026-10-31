@@ -1,6 +1,6 @@
 # Game Compatibility Results
 
-Automated output of `tools/compat-sweep.ps1`. These are **loadability** results, not final compatibility grades: `Loadable/Rendered` still needs a visual and input review before it becomes `Playable` or `Good`. The 2026-10-30 12,000-frame and BIOS triage is in [`Compatibility.md`](Compatibility.md) §13.2.
+Automated output of `tools/compat-sweep.ps1`. These are **loadability** results, not final compatibility grades: `Loadable/Rendered` still needs a visual and input review before it becomes `Playable` or `Good`. This is the pre-2026-10-30 baseline: it predates the headless default pad and the 3%/8-color rendered threshold. The 12,000-frame and BIOS triage is in [`Compatibility.md`](Compatibility.md) §13.2.
 
 ## Summary
 

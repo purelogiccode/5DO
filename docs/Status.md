@@ -7,7 +7,9 @@ The five not-loadable rows are resolved or explained: Mirai Shounen Conan now ru
 `panafz10-patched.bin` plus the default headless pad. The 12,000-frame rerun shows that six of the
 13 black/blank discs render by 6,000-9,000 frames; the rest are BIOS-sensitive or
 still under investigation. Headless `run`/`trace` now attach a default player-1 pad,
-fixing Olympic Summer Games' controller check. **925 tests pass.**
+fixing Olympic Summer Games' controller check. Fifteen triaged titles now have a
+reviewed 5DO status in [`GameCompatibilityList.md`](GameCompatibilityList.md); the
+rest remain `No data`. **925 tests pass.**
 The v1.0 release is deliberately deferred: the next work is a BIOS-aware sweep and
 5DO status merge (M13), then high-resolution CEL research (M14). The project is
 **donationware** (non-commercial, source-available, voluntary donations only). See
