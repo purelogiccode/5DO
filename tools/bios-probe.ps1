@@ -12,10 +12,12 @@ the BIOS that produced the best result, so the next compatibility pass can recor
 Sweep summary.csv to read. Defaults to artifacts/compat-full/summary.csv.
 
 .PARAMETER Status
-Statuses to retry. Defaults to Loadable/No video and Not Loadable.
+Statuses to retry. Defaults to Loadable/No video and Not Loadable. When invoking with
+-File, pass a comma-separated list.
 
 .PARAMETER Bios
 BIOS images to try, in order. Defaults to panafz1, panafz10, and the Anvil BIOS.
+When invoking with -File, pass a comma-separated list.
 
 .PARAMETER Frames
 Frames per attempt. Defaults to 12000, enough for the long black transitions.

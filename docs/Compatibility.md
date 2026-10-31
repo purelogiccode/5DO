@@ -611,7 +611,7 @@ several failures are BIOS-selection problems rather than emulator defects:
 | Powers Kingdom (Europe) | solid blue | solid blue | live-action intro by 60,000 | Anvil BIOS required, matching the 4DO note |
 | Slayer (USA) | black | title menu at 60,000 | black | `panafz10`/GoldStar/Sanyo required |
 | WorldCup Super Stadium (Japan) | solid blue | solid blue | purple boot screen, still stuck at 60,000 | No tested BIOS reaches the game |
-| Olympic Summer Games (USA) | "Insert a controller" | not tested | not tested | Fixed by the default headless pad; renders the high-jump screen |
+| Olympic Summer Games (USA) | "Insert a controller" | not tested | not tested | Fixed by the default headless pad; high-jump screen and A/P input reach the credits |
 
 The Arcade CD-ROM rows need the **patched** BIOS; unpatched `panafz10` reaches the
 3DO storage-manager shell instead of the game. The default pad alone does not fix

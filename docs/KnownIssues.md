@@ -43,8 +43,9 @@ high-resolution CEL decision (M14) are complete.
     screen as Crash 'n Burn (Japan); both are still stuck at 60,000 frames, so the
     Anvil BIOS is not a fix for these two.
 - Olympic Summer Games now proceeds past the "Insert a controller into controller
-  port!" screen because headless `run`/`trace` attach a default player-1 pad. This is
-  a CLI input fix, not a disc-specific patch.
+  port!" screen because headless `run`/`trace` attach a default player-1 pad. A/P
+  input reaches the credits screen. This is a CLI input fix, not a disc-specific
+  patch.
 - The baseline sweep used `panafz1.bin` only, so its `Loadable/No video` and
   `Not Loadable` labels must not be treated as final. A BIOS-aware sweep with
   `panafz10-patched` and the Anvil BIOS is required before the 5DO status columns are
