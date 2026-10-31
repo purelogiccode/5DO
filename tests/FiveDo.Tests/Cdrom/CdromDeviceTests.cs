@@ -168,6 +168,74 @@ public sealed class CdromDeviceTests
     }
 
     [Fact]
+    public void DataSectorCycles_ScalesWithTheConfiguredSpeed()
+    {
+        var cd = new CdromDevice();
+
+        cd.ConfiguredSpeed = CdSpeed.X1;
+        Assert.Equal(164_591UL, cd.DataSectorCycles);
+
+        cd.ConfiguredSpeed = CdSpeed.X2;
+        Assert.Equal(81_246UL, cd.DataSectorCycles);
+
+        cd.ConfiguredSpeed = CdSpeed.X4;
+        Assert.Equal(39_554UL, cd.DataSectorCycles);
+
+        cd.ConfiguredSpeed = CdSpeed.X8;
+        Assert.Equal(18_715UL, cd.DataSectorCycles);
+
+        cd.ConfiguredSpeed = CdSpeed.X16;
+        Assert.Equal(8_286UL, cd.DataSectorCycles);
+
+        cd.ConfiguredSpeed = CdSpeed.X24;
+        Assert.Equal(4_826UL, cd.DataSectorCycles);
+
+        cd.ConfiguredSpeed = CdSpeed.X32;
+        Assert.Equal(3_090UL, cd.DataSectorCycles);
+
+        cd.ConfiguredSpeed = CdSpeed.Unbounded;
+        Assert.Equal(0UL, cd.DataSectorCycles);
+        Assert.Equal(0, cd.EffectiveSpeed);
+    }
+
+    [Fact]
+    public void Unbounded_PublishesTheRequestedSectorImmediately()
+    {
+        var disc = new MemoryDisc(2);
+        var cd = new CdromDevice
+        {
+            TimingMode = CdromTimingMode.OperaCycleBased,
+            ConfiguredSpeed = CdSpeed.Unbounded,
+        };
+        cd.InsertDisc(disc);
+
+        Send(cd, 0x10, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02);
+
+        Assert.NotEqual(0, (int)cd.GetPoll() & 0x20);
+        Assert.Equal(disc.Sector(0), ReadData(cd, 2048));
+        Assert.NotEqual(0, (int)cd.GetPoll() & 0x20);
+        Assert.Equal(disc.Sector(1), ReadData(cd, 2048));
+        Assert.NotEqual(0, (int)cd.GetPoll() & 0x10);
+    }
+
+    [Fact]
+    public void SingleSpeed_TakesLongerThanTheStockDrive()
+    {
+        var stock = new CdromDevice();
+        var single = new CdromDevice { ConfiguredSpeed = CdSpeed.X1 };
+
+        Assert.True(single.DataSectorCycles > stock.DataSectorCycles);
+    }
+
+    [Fact]
+    public void UnknownConfiguredSpeed_Throws()
+    {
+        var cd = new CdromDevice();
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => cd.ConfiguredSpeed = (CdSpeed)3);
+    }
+
+    [Fact]
     public void EjectDisc_ResetsToTheReferenceInitialState()
     {
         var cd = new CdromDevice();

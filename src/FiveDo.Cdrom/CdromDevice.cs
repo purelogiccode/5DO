@@ -24,11 +24,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 {
     private const int RequestSize = 2048;
 
-    // Opera's stock 3DO drive is 2x. SYS-09 will make this configurable; CORE-04 only
-    // needs the stock speed to model data-sector readiness.
-    private const uint OperaStockSpeed = 2;
     private const ulong FramesPerSecond = 75;
-    private const ulong OverheadCompensationX10Usec = 1670;
 
     private const byte PollStatusMask = 0x01;
     private const byte PollDataMask = 0x02;
@@ -63,6 +59,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     private DiscState _discState = new();
     private int _currentSector;
     private CdromTimingMode _timingMode = CdromTimingMode.FreeDoCompatible;
+    private CdSpeed _configuredSpeed = CdSpeed.X2;
     private int _armClock = EmulatorConstants.ArmClock;
     private ulong _cycles;
     private ulong _nextReadyCycle;
@@ -83,6 +80,41 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             _timingMode = value;
         }
     }
+
+    /// <summary>
+    /// Gets or sets the effective CD-ROM read speed used by
+    /// <see cref="CdromTimingMode.OperaCycleBased"/>. The stock 3DO drive is 2x.
+    /// </summary>
+    /// <remarks>
+    /// The drive status does not advertise the 2x bit in 5DO, so the configured speed is
+    /// treated as the drive's effective speed instead of being reduced to 1x. This keeps the
+    /// default CORE-04 timing unchanged and makes the speed option measurable; the status-bit
+    /// divergence is recorded in <c>docs/PortingNotes.md</c>.
+    /// </remarks>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is unknown.</exception>
+    public CdSpeed ConfiguredSpeed
+    {
+        get => _configuredSpeed;
+        set
+        {
+            if (value is not CdSpeed.Unbounded
+                and not CdSpeed.X1
+                and not CdSpeed.X2
+                and not CdSpeed.X4
+                and not CdSpeed.X8
+                and not CdSpeed.X16
+                and not CdSpeed.X24
+                and not CdSpeed.X32)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), value, "Unknown CD-ROM speed.");
+            }
+
+            _configuredSpeed = value;
+        }
+    }
+
+    /// <summary>Gets the effective speed multiplier, or 0 for <see cref="CdSpeed.Unbounded"/>.</summary>
+    public int EffectiveSpeed => (int)_configuredSpeed;
 
     /// <summary>Gets or sets the ARM clock used to convert sector time to cycles.</summary>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is not positive.</exception>
@@ -107,18 +139,35 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     public ulong NextReadyCycle => _nextReadyCycle;
 
     /// <summary>
-    /// Gets the ARM cycles one 2048-byte data sector takes at the stock 2x drive speed,
-    /// including Opera's measured overhead compensation.
+    /// Gets the ARM cycles one 2048-byte data sector takes at the configured speed,
+    /// including Opera's measured overhead compensation. <see cref="CdSpeed.Unbounded"/>
+    /// returns zero so the sector is published immediately.
     /// </summary>
     public ulong DataSectorCycles
     {
         get
         {
-            var baseCycles = (ulong)_armClock / (FramesPerSecond * OperaStockSpeed);
+            var speed = (ulong)EffectiveSpeed;
+            if (speed == 0)
+            {
+                return 0;
+            }
+
+            var baseCycles = (ulong)_armClock / (FramesPerSecond * speed);
             var compensation = (ulong)_armClock * OverheadCompensationX10Usec / 10_000_000;
             return baseCycles > compensation ? baseCycles - compensation : baseCycles;
         }
     }
+
+    private uint OverheadCompensationX10Usec => _configuredSpeed switch
+    {
+        CdSpeed.X1 => 1660,
+        CdSpeed.X2 => 1670,
+        CdSpeed.X4 => 1690,
+        CdSpeed.X8 => 1695,
+        CdSpeed.X16 => 1704,
+        _ => 1695,
+    };
 
     /// <summary>
     /// Gets or sets the callback used to raise the XBUS CD FIQ when a delayed data sector or

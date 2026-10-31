@@ -130,6 +130,13 @@ public sealed class AppSettings
     public bool HighResolution { get; set; }
 
     /// <summary>
+    /// Gets or sets the last selected timing profile. The individual timing options below
+    /// remain authoritative; the profile is a convenience label and becomes
+    /// <see cref="EmulationProfile.Custom"/> when the options no longer match it.
+    /// </summary>
+    public EmulationProfile Profile { get; set; } = EmulationProfile.Compatible;
+
+    /// <summary>
     /// Gets or sets the ARM60 N-cycle timing mode. The default is the FreeDO-compatible
     /// baseline; <see cref="ArmTimingMode.Arm60Datasheet"/> is the accuracy option.
     /// </summary>
@@ -155,6 +162,12 @@ public sealed class AppSettings
     /// sector at the stock 2x drive speed.
     /// </summary>
     public CdromTimingMode CdromTiming { get; set; } = CdromTimingMode.FreeDoCompatible;
+
+    /// <summary>
+    /// Gets or sets the effective CD-ROM read speed for the cycle-based timing model. The
+    /// stock 3DO drive is 2x; <see cref="CdSpeed.Unbounded"/> removes the host-side delay.
+    /// </summary>
+    public CdSpeed CdSpeed { get; set; } = CdSpeed.X2;
 
     /// <summary>
     /// Gets or sets the ARM clock multiplier. 1.0 is the stock 12.5 MHz clock; the
@@ -300,6 +313,47 @@ public sealed class AppSettings
         }
 
         return (int)Math.Round(EmulatorConstants.ArmClock * CpuClockMultiplier);
+    }
+
+    /// <summary>Applies a timing profile to the individual emulation options.</summary>
+    /// <param name="profile">Profile to apply.</param>
+    /// <remarks>
+    /// <see cref="EmulationProfile.Custom"/> leaves the current options unchanged. The
+    /// profile never changes the per-game fixes, high-resolution mode, or random seed.
+    /// </remarks>
+    public void ApplyProfile(EmulationProfile profile)
+    {
+        EmulationProfiles.Validate(profile);
+        if (profile == EmulationProfile.Custom)
+        {
+            Profile = EmulationProfile.Custom;
+            return;
+        }
+
+        EmulatorTuning applied = EmulationProfiles.Apply(profile);
+        ArmTiming = applied.ArmTiming;
+        ClioTimers = applied.ClioTimers;
+        CelTiming = applied.CelTiming;
+        CdromTiming = applied.CdromTiming;
+        CdSpeed = applied.CdSpeed;
+        CpuClockMultiplier = applied.ArmClock / (double)EmulatorConstants.ArmClock;
+        Profile = profile;
+    }
+
+    /// <summary>Detects which timing profile the current individual options match.</summary>
+    /// <returns>The matching profile, or <see cref="EmulationProfile.Custom"/>.</returns>
+    public EmulationProfile DetectProfile()
+    {
+        var tuning = new EmulatorTuning
+        {
+            ArmTiming = ArmTiming,
+            ClioTimers = ClioTimers,
+            CelTiming = CelTiming,
+            CdromTiming = CdromTiming,
+            CdSpeed = CdSpeed,
+            ArmClock = ResolveArmClock(),
+        };
+        return EmulationProfiles.Detect(tuning);
     }
 
     /// <summary>Gets the renderer settings derived from this configuration.</summary>

@@ -87,10 +87,12 @@ every serialized property in `AppSettings`.
 | `Bloom` | float | `0.35` | CRT bloom strength, 0..1. |
 | `FsrSharpness` | float | `0.8` | FSR 1.0 RCAS sharpness, 0 (soft) .. 1 (maximum). |
 | `HighResolution` | bool | `false` | Opt-in 640x480 CEL/VDLP mode. |
+| `Profile` | enum string | `"Compatible"` | Last selected timing profile: `Compatible`, `Accuracy`, `Performance`, or `Custom`. The individual timing fields remain authoritative. |
 | `ArmTiming` | enum string | `"FreeDoCompatible"` | ARM60 N-cycle class: `FreeDoCompatible` (N=4) or `Arm60Datasheet` (N=2, accuracy). |
 | `ClioTimers` | enum string | `"FreeDoCompatible"` | CLIO timer scan: `FreeDoCompatible` (all sixteen timers per event) or `OperaScheduler` (one slot at a time with an explicit cascade carry). |
 | `CelTiming` | enum string | `"FreeDoCompatible"` | MADAM CEL timing: `FreeDoCompatible` (synchronous draw) or `OperaBusy` (deferred draw with a pixel/texel busy deadline). |
-| `CdromTiming` | enum string | `"FreeDoCompatible"` | CD-ROM data timing: `FreeDoCompatible` (immediate transfers) or `OperaCycleBased` (2x cycle-based sector readiness with delayed status/FIQ). |
+| `CdromTiming` | enum string | `"FreeDoCompatible"` | CD-ROM data timing: `FreeDoCompatible` (immediate transfers) or `OperaCycleBased` (cycle-based sector readiness with delayed status/FIQ). |
+| `CdSpeed` | enum string | `"X2"` | Effective read speed for `OperaCycleBased`: `Unbounded`, `X1`, `X2` (stock), `X4`, `X8`, `X16`, `X24`, or `X32`. Ignored by `FreeDoCompatible`. |
 | `CpuClockMultiplier` | double | `1.0` | ARM clock multiplier, 0.5..4.0 (6.25-50 MHz). 1.0 is the stock 12.5 MHz. |
 | `RandomSeed` | uint? | `null` | Optional initial DSP PRNG seed; `null` uses FreeDO's `0xa5a5a5a5`. |
 | `Volume` | float | `1.0` | OpenAL gain, 0..1. |
@@ -116,11 +118,18 @@ states are identical.
 
 `Renderer` (string): `OpenGl`, `Vulkan`, `Software`.
 
+`Profile` (string): `Compatible`, `Accuracy`, `Performance`, `Custom`. A profile is a
+shortcut for the individual timing fields; it never changes fixes, high-resolution mode,
+or the random seed. If the fields no longer match the selected profile, the dialog saves
+`Custom`.
+
 `ClioTimers` (string): `FreeDoCompatible`, `OperaScheduler`.
 
 `CelTiming` (string): `FreeDoCompatible`, `OperaBusy`.
 
 `CdromTiming` (string): `FreeDoCompatible`, `OperaCycleBased`.
+
+`CdSpeed` (string): `Unbounded`, `X1`, `X2`, `X4`, `X8`, `X16`, `X24`, `X32`.
 
 `OutputResolution` (string): `Window`, `Native`, `Scale2X`, `Scale3X`, `Scale4X`,
 `Hd720`, `FullHd1080`, `Qhd1440`, `Uhd2160`.
@@ -349,19 +358,23 @@ The Settings dialog's **Emulation** page edits:
 
 - `AutoGameFixes` checkbox.
 - `HighResolution` checkbox (restarts the machine when changed).
+- `Profile` combo: Compatible, Accuracy, Performance, or Custom. Selecting a profile
+  fills the timing controls; manually changing one of them saves `Custom`.
 - `ArmTiming` combo: FreeDO-compatible N=4 or ARM60 datasheet N=2 (restarts the machine when changed).
 - `ClioTimers` combo: FreeDO-compatible all-timer scan or Opera per-slot scheduler (restarts the machine when changed).
 - `CelTiming` combo: FreeDO-compatible synchronous draw or Opera pixel/texel busy timing (restarts the machine when changed).
-- `CdromTiming` combo: FreeDO-compatible immediate transfers or Opera 2x cycle-based sector readiness (restarts the machine when changed).
+- `CdromTiming` combo: FreeDO-compatible immediate transfers or Opera cycle-based sector readiness (restarts the machine when changed).
+- `CdSpeed` combo: unbounded or 1x-32x for the cycle-based model; 2x is the stock drive speed (restarts the machine when changed).
 - `CpuClockMultiplier` field: 0.5..4.0 (restarts the machine when changed).
 - `RandomSeed` field: blank for the FreeDO default, or a 32-bit hexadecimal value.
 - Current game display and fix-mode override (`0x...` hex mask, blank = automatic).
 - Per-game filter override (`Automatic` or an explicit filter).
 
-Changing high-resolution mode, ARM timing, the CLIO timer mode, the CEL timing mode, or
-the CD-ROM timing mode recreates the machine and reopens the current BIOS/disc; the
-state is not preserved. Save states record all four timing modes, and loading a state
-written with another mode reports a warning instead of rejecting it.
+Changing high-resolution mode, ARM timing, the CLIO timer mode, the CEL timing mode, the
+CD-ROM timing mode, or the CD-ROM speed recreates the machine and reopens the current
+BIOS/disc; the state is not preserved. Save states record all four timing modes and the CD
+speed, and loading a state written with another value reports a warning instead of
+rejecting it.
 
 ---
 

@@ -24,11 +24,13 @@ public sealed class CliJsonTests
             Samples: 737,
             DiscHash: "abc",
             GameId: null,
+            Profile: "Accuracy",
             ArmTiming: "Arm60Datasheet",
             ClioTimers: "OperaScheduler",
             CelTiming: "OperaBusy",
             CelBusyCycles: 1234,
             CdromTiming: "OperaCycleBased",
+            CdSpeed: "X8",
             CpuClock: 25_000_000,
             FixMode: 0x20,
             DspRunning: true,
@@ -69,11 +71,13 @@ public sealed class CliJsonTests
         Assert.Contains("\"sourceWidth\": 320", json, StringComparison.Ordinal);
         Assert.Contains("\"vdlModulo\": 320", json, StringComparison.Ordinal);
         Assert.Contains("\"dspSema\": 524289", json, StringComparison.Ordinal);
+        Assert.Contains("\"profile\": \"Accuracy\"", json, StringComparison.Ordinal);
         Assert.Contains("\"armTiming\": \"Arm60Datasheet\"", json, StringComparison.Ordinal);
         Assert.Contains("\"clioTimers\": \"OperaScheduler\"", json, StringComparison.Ordinal);
         Assert.Contains("\"celTiming\": \"OperaBusy\"", json, StringComparison.Ordinal);
         Assert.Contains("\"celBusyCycles\": 1234", json, StringComparison.Ordinal);
         Assert.Contains("\"cdromTiming\": \"OperaCycleBased\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"cdSpeed\": \"X8\"", json, StringComparison.Ordinal);
         Assert.Contains("\"cpuClock\": 25000000", json, StringComparison.Ordinal);
         Assert.Contains("\"autopilotLookahead\": null", json, StringComparison.Ordinal);
         Assert.Contains("\"audioDurationSeconds\": 10", json, StringComparison.Ordinal);

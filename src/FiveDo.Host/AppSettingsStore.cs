@@ -48,6 +48,11 @@ public static class AppSettingsStore
                 settings.CpuClockMultiplier = 1.0;
             }
 
+            if (!Enum.IsDefined(settings.Profile))
+            {
+                settings.Profile = EmulationProfile.Compatible;
+            }
+
             if (!Enum.IsDefined(settings.ArmTiming))
             {
                 settings.ArmTiming = ArmTimingMode.FreeDoCompatible;
@@ -66,6 +71,20 @@ public static class AppSettingsStore
             if (!Enum.IsDefined(settings.CdromTiming))
             {
                 settings.CdromTiming = CdromTimingMode.FreeDoCompatible;
+            }
+
+            if (!Enum.IsDefined(settings.CdSpeed))
+            {
+                settings.CdSpeed = CdSpeed.X2;
+            }
+
+            // The profile is a convenience label over the individual options. Keep an explicit
+            // Custom selection, but correct a stale named profile so hand-edited or older
+            // settings cannot report a profile they do not match.
+            EmulationProfile detectedProfile = settings.DetectProfile();
+            if (settings.Profile != EmulationProfile.Custom && detectedProfile != settings.Profile)
+            {
+                settings.Profile = detectedProfile;
             }
 
             return settings;

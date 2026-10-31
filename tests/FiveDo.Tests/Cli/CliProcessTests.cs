@@ -213,6 +213,143 @@ public sealed class CliProcessTests
     }
 
     [Fact]
+    public void Run_CdSpeedOption_IsReportedInJson()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--cd-timing",
+                "opera",
+                "--cd-speed",
+                "8x",
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"cdSpeed\": \"X8\"", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void Run_InvalidCdSpeed_ReturnsOne()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--cd-speed",
+                "3x");
+
+            Assert.Equal(1, result.Code);
+            Assert.Contains("--cd-speed", result.Error, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void Run_AccuracyProfile_IsReportedAndSetsTheTimingOptions()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--profile",
+                "accuracy",
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"profile\": \"Accuracy\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"armTiming\": \"Arm60Datasheet\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"clioTimers\": \"OperaScheduler\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"celTiming\": \"OperaBusy\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"cdromTiming\": \"OperaCycleBased\"", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void Run_ExplicitTimingOverridesTheProfile()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--profile",
+                "accuracy",
+                "--arm-timing",
+                "freedo",
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"profile\": \"Custom\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"armTiming\": \"FreeDoCompatible\"", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void Run_InvalidProfile_ReturnsOne()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--profile",
+                "turbo");
+
+            Assert.Equal(1, result.Code);
+            Assert.Contains("--profile", result.Error, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
     public void Run_InvalidClioTimers_ReturnsOne()
     {
         var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");

@@ -202,6 +202,43 @@ At 10,000 frames with input and a fresh NVRAM (pre-transposition-fix):
 These two hashes are retained for historical comparison; the current first-pass
 numbers are in section 1.2.
 
+### 1.1e CD speed and timing-profile differential (2026-10-31)
+
+The SYS-09 speed option was checked with `panafz1.bin`, fresh NVRAM, and 3,000 frames.
+The FreeDO path is independent of `--cd-speed`: Lemmings with `freedo`/`X2`, `freedo`/`X1`,
+and `freedo`/`Unbounded` all end at `PC 0x0012B324`, hash `0x9C2E3236`, matching section
+1.1. The cycle-based path changes with the speed setting, and every run completed and
+rendered:
+
+| Title | Speed | Final PC | Frame hash | CD poll |
+|---|---|---:|---|---:|
+| Lemmings | `1x` | `0x0012B1C0` | `0x50A882FC` | `0x4B` |
+| Lemmings | `2x` | `0x00059710` | `0xB1CE635A` | `0x49` |
+| Lemmings | `4x` | `0x00012A08` | `0xB5A493B9` | `0x4B` |
+| Lemmings | `8x` | `0x0012DE7C` | `0x6D9321A4` | `0x49` |
+| Lemmings | `32x` | `0x0012A308` | `0x1FCCAB07` | `0x49` |
+| Lemmings | `unbounded` | `0x0012B42C` | `0x1F4E236C` | `0x49` |
+| Gex | `1x` | `0x00013F7C` | `0xB87FA1D5` | `0x0F` |
+| Gex | `2x` | `0x0010FD60` | `0x496B0DFE` | `0x0F` |
+| Gex | `4x` | `0x0002A7D4` | `0x2BF57DC4` | `0x0D` |
+| Gex | `8x` | `0x0000E19C` | `0xCF03CA3B` | `0x0C` |
+| Gex | `unbounded` | `0x0010F908` | `0x05F38B50` | `0x0C` |
+| Road Rash | `1x` | `0x000B9D08` | `0x8733E5EB` | `0x0F` |
+| Road Rash | `2x` | `0x0001276C` | `0x6F93310D` | `0x0C` |
+| Road Rash | `4x` | `0x000B9D80` | `0xB2B1325E` | `0x0F` |
+| Road Rash | `8x` | `0x000BA0E0` | `0xA64C80AC` | `0x48` |
+| Road Rash | `unbounded` | `0x000B9C40` | `0x7EBB3876` | `0x48` |
+
+The CD poll column is diagnostic only; the `0x40` media-access pulse is expected on the
+idle READ_ID paths. This is a three-title smoke differential, not the full-collection
+report required to change the default timing model. The `--profile accuracy` path was
+also smoke-tested through the CLI: it reports `profile: Accuracy`, `armTiming:
+Arm60Datasheet`, `clioTimers: OperaScheduler`, `celTiming: OperaBusy`,
+`cdromTiming: OperaCycleBased`, and `cdSpeed: X2`; the 3,000-frame Lemmings run reaches
+`PC 0x000109AC`, hash `0xF303CBB4`. An explicit `--arm-timing freedo` override reports
+`profile: Custom` and the FreeDO timing value. The individual option tests and
+state-mismatch tests are in `tests/FiveDo.Tests`.
+
 The 30,000-frame Road Rash run after the CCB fix originally ended at
 `PC 0x00016194` with frame hash `0xE2D08131` and rendered the race scene when run
 without NVRAM. That result was produced before the arbitrary-CEL transposition fix;

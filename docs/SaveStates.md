@@ -108,7 +108,7 @@ Machine; the table below is sorted by ID. Never renumber an existing section.
 | 9 | CD-ROM | 2 | `CdromDevice` | Poll/status, status/data buffers, command buffer, requested count, MEI status, current sector, disc state (tracks/MSF/TOC), cycle clock, next-ready cycle, and pending read-status flag. Version 1 is accepted with a zeroed clock and pending flag. The timing mode itself is recorded in the Options section. |
 | 10 | Quartz | 3 | `Quartz` | ARM/VDL/timer accumulators, exact DSP cycle remainder, VDL line counter, Opera timer slot/gap flag and 16.16 slot accumulator. Versions 1-2 are accepted with a reset timer scheduler. |
 | 11 | Machine | 1 | `FiveDoMachine` | Compatibility flags (fix mode, Anvil, speed fixes, sf/sdf, unknown flag 11, jw, cnbfix, high-res), frame source dimensions, and all 960 `VdlLine` objects (width, control words, CLUT, 1280 pixels each). |
-| 12 | Options | 4 | `FiveDoMachine` | ARM timing mode, CLIO timer mode, MADAM CEL timing mode, and CD-ROM timing mode. Version 1 records only ARM timing; version 2 adds CLIO timers; version 3 adds CEL timing. Loading a lower version leaves the missing modes at the machine default. |
+| 12 | Options | 5 | `FiveDoMachine` | ARM timing mode, CLIO timer mode, MADAM CEL timing mode, CD-ROM timing mode, and CD-ROM speed. Version 1 records only ARM timing; version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing. Loading a lower version leaves the missing options at the machine default (including the stock 2x CD speed). |
 
 ### Why the state is large
 
@@ -140,8 +140,10 @@ version-2 state in a build that only understands version 1 is rejected with
 - CD-ROM writes version 2 (cycle clock, next-ready cycle, and pending status) and
   accepts version 1 with a zeroed clock and pending flag. The timing mode itself is in
   the Options section.
-- Options writes version 4 (ARM timing, CLIO timer mode, CEL timing, and CD-ROM timing)
-  and accepts versions 1-3 with the missing modes left at the machine default.
+- Options writes version 5 (ARM timing, CLIO timer mode, CEL timing, CD-ROM timing, and
+  CD-ROM speed) and accepts versions 1-4 with the missing options left at the machine
+  default. Timing profiles are a host-side shortcut over these options and are derived
+  from them rather than stored separately.
 - Any other section version is rejected with
   `Unsupported section <id> version <n>.`
 - Unknown section IDs are ignored and recorded as a warning:

@@ -28,10 +28,10 @@ internal sealed class MachineOptionsSection : IStateSection
     /// <summary>Gets the save-state section version.</summary>
     /// <remarks>
     /// Version 2 adds the CLIO timer mode; version 3 adds the MADAM CEL timing mode;
-    /// version 4 adds the CD-ROM timing mode. Older states default the missing fields to
-    /// FreeDO-compatible.
+    /// version 4 adds the CD-ROM timing mode; version 5 adds the CD-ROM speed. Older states
+    /// default the missing fields to FreeDO-compatible and the stock 2x drive.
     /// </remarks>
-    public ushort Version => 4;
+    public ushort Version => 5;
 
     /// <summary>Gets the ARM timing mode read from a state, or <see langword="null"/> when absent.</summary>
     internal ArmTimingMode? LoadedArmTiming { get; private set; }
@@ -45,6 +45,9 @@ internal sealed class MachineOptionsSection : IStateSection
     /// <summary>Gets the CD-ROM timing mode read from a state, or <see langword="null"/> when absent.</summary>
     internal CdromTimingMode? LoadedCdromTiming { get; private set; }
 
+    /// <summary>Gets the CD-ROM speed read from a state, or <see langword="null"/> when absent.</summary>
+    internal CdSpeed? LoadedCdSpeed { get; private set; }
+
     /// <summary>Writes the option snapshot.</summary>
     /// <param name="writer">State writer.</param>
     public void Save(IStateWriter writer)
@@ -54,6 +57,7 @@ internal sealed class MachineOptionsSection : IStateSection
         writer.WriteUInt32((uint)_tuning.ClioTimers);
         writer.WriteUInt32((uint)_tuning.CelTiming);
         writer.WriteUInt32((uint)_tuning.CdromTiming);
+        writer.WriteUInt32((uint)_tuning.CdSpeed);
     }
 
     /// <summary>Reads the option snapshot.</summary>
@@ -75,6 +79,7 @@ internal sealed class MachineOptionsSection : IStateSection
             LoadedClioTimers = null;
             LoadedCelTiming = null;
             LoadedCdromTiming = null;
+            LoadedCdSpeed = null;
             return;
         }
 
@@ -90,6 +95,7 @@ internal sealed class MachineOptionsSection : IStateSection
         {
             LoadedCelTiming = null;
             LoadedCdromTiming = null;
+            LoadedCdSpeed = null;
             return;
         }
 
@@ -104,6 +110,7 @@ internal sealed class MachineOptionsSection : IStateSection
         if (reader is StateSectionReader { Version: 3 })
         {
             LoadedCdromTiming = null;
+            LoadedCdSpeed = null;
             return;
         }
 
@@ -115,5 +122,26 @@ internal sealed class MachineOptionsSection : IStateSection
         }
 
         LoadedCdromTiming = cdromTiming;
+
+        if (reader is StateSectionReader { Version: 4 })
+        {
+            LoadedCdSpeed = null;
+            return;
+        }
+
+        var cdSpeed = (CdSpeed)reader.ReadUInt32();
+        if (cdSpeed is not CdSpeed.Unbounded
+            and not CdSpeed.X1
+            and not CdSpeed.X2
+            and not CdSpeed.X4
+            and not CdSpeed.X8
+            and not CdSpeed.X16
+            and not CdSpeed.X24
+            and not CdSpeed.X32)
+        {
+            throw new InvalidStateException($"Unknown CD-ROM speed {(uint)cdSpeed} in the save state.");
+        }
+
+        LoadedCdSpeed = cdSpeed;
     }
 }

@@ -7,6 +7,22 @@ still change.
 
 ### Added
 
+- Timing profiles (`EmulationProfile`). **Compatible** keeps the FreeDO timing
+  baseline, **Accuracy** enables ARM60 N=2, the Opera CLIO timer scheduler, CEL busy
+  timing, cycle-based CD reads, and the stock 2x drive, and **Performance** uses a
+  1.5x CPU clock with FreeDO timing. **Custom** keeps the individual options.
+  Profiles never change per-game fixes, high-resolution rendering, or the random seed.
+  They are available as `--profile compatible|accuracy|performance|custom` on `run` and
+  `trace`, as Settings > Emulation > Timing profile, and as `run --json` `profile`
+  (derived from the actual options, so an explicit override reports `Custom`). The
+  individual options remain authoritative and are recorded in save states.
+- CD-ROM speed control (`CdSpeed`). The default `X2` preserves the stock drive timing;
+  `--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x` (or Settings > Emulation > CD speed)
+  changes the effective read speed for the cycle-based `--cd-timing opera` model.
+  Sector times follow Opera's per-speed overhead table, `unbounded` publishes sectors
+  immediately, and the default FreeDO timing path is unchanged. `run --json` reports
+  `cdSpeed`; save states record the speed in the `Options` section (version 5) and warn
+  when a state was written with a different speed.
 - CD-ROM cycle-based data timing option (`CdromTimingMode`). The default
   `FreeDoCompatible` mode keeps the immediate transfer. The opt-in `OperaCycleBased`
   mode schedules each 2048-byte data sector at the stock 2x drive speed (81,246 ARM

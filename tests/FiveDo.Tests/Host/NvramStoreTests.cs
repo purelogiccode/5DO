@@ -128,8 +128,10 @@ public sealed class NvramStoreTests
         Assert.True(settings.Vsync);
         Assert.True(settings.IntegerScale);
         Assert.False(settings.HighResolution);
+        Assert.Equal(EmulationProfile.Compatible, settings.Profile);
         Assert.Equal(ArmTimingMode.FreeDoCompatible, settings.ArmTiming);
         Assert.Equal(CdromTimingMode.FreeDoCompatible, settings.CdromTiming);
+        Assert.Equal(CdSpeed.X2, settings.CdSpeed);
         Assert.Equal(1.0, settings.CpuClockMultiplier);
         Assert.Equal(EmulatorConstants.ArmClock, settings.ResolveArmClock());
         Assert.False(settings.ShowOverlay);
@@ -147,6 +149,78 @@ public sealed class NvramStoreTests
     }
 
     [Fact]
+    public void AppSettings_ApplyProfileUpdatesTheTimingOptionsAndDetectsTheProfile()
+    {
+        var settings = new AppSettings();
+
+        settings.ApplyProfile(EmulationProfile.Accuracy);
+
+        Assert.Equal(EmulationProfile.Accuracy, settings.Profile);
+        Assert.Equal(ArmTimingMode.Arm60Datasheet, settings.ArmTiming);
+        Assert.Equal(ClioTimerMode.OperaScheduler, settings.ClioTimers);
+        Assert.Equal(CelTimingMode.OperaBusy, settings.CelTiming);
+        Assert.Equal(CdromTimingMode.OperaCycleBased, settings.CdromTiming);
+        Assert.Equal(CdSpeed.X2, settings.CdSpeed);
+        Assert.Equal(1.0, settings.CpuClockMultiplier);
+        Assert.Equal(EmulationProfile.Accuracy, settings.DetectProfile());
+    }
+
+    [Fact]
+    public void AppSettings_ManualTimingChangeBecomesCustom()
+    {
+        var settings = new AppSettings();
+        settings.ApplyProfile(EmulationProfile.Accuracy);
+
+        settings.ArmTiming = ArmTimingMode.FreeDoCompatible;
+
+        Assert.Equal(EmulationProfile.Custom, settings.DetectProfile());
+    }
+
+    [Fact]
+    public void AppSettings_PerformanceProfileUsesTheOverclock()
+    {
+        var settings = new AppSettings();
+
+        settings.ApplyProfile(EmulationProfile.Performance);
+
+        Assert.Equal(EmulationProfiles.PerformanceCpuClockMultiplier, settings.CpuClockMultiplier);
+        Assert.Equal(CdSpeed.X2, settings.CdSpeed);
+        Assert.Equal(EmulationProfile.Performance, settings.DetectProfile());
+    }
+
+    [Fact]
+    public void AppSettings_ProfileRoundtripsWhenTheOptionsMatch()
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "settings.json");
+        var settings = new AppSettings();
+        settings.ApplyProfile(EmulationProfile.Accuracy);
+
+        AppSettingsStore.Save(settings, path);
+        AppSettings loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal(EmulationProfile.Accuracy, loaded.Profile);
+        Assert.Equal(EmulationProfile.Accuracy, loaded.DetectProfile());
+    }
+
+    [Fact]
+    public void AppSettings_ExplicitCustomProfileSurvivesAReload()
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "settings.json");
+        var settings = new AppSettings
+        {
+            Profile = EmulationProfile.Custom,
+        };
+
+        AppSettingsStore.Save(settings, path);
+        AppSettings loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal(EmulationProfile.Custom, loaded.Profile);
+        Assert.Equal(EmulationProfile.Compatible, loaded.DetectProfile());
+    }
+
+    [Fact]
     public void AppSettings_RoundtripsAndDerivesRendererSettings()
     {
         using var directory = new TempDirectory();
@@ -158,10 +232,12 @@ public sealed class NvramStoreTests
             Aspect = AspectMode.Integer,
             Volume = 0.5f,
             HighResolution = true,
+            Profile = EmulationProfile.Accuracy,
             ArmTiming = ArmTimingMode.Arm60Datasheet,
             ClioTimers = ClioTimerMode.OperaScheduler,
             CelTiming = CelTimingMode.OperaBusy,
             CdromTiming = CdromTimingMode.OperaCycleBased,
+            CdSpeed = CdSpeed.X8,
             CpuClockMultiplier = 2.0,
             RandomSeed = 0x1234,
             SaveSlot = 3,
@@ -190,10 +266,12 @@ public sealed class NvramStoreTests
         Assert.Equal(AspectMode.Integer, loaded.Aspect);
         Assert.Equal(0.5f, loaded.Volume);
         Assert.True(loaded.HighResolution);
+        Assert.Equal(EmulationProfile.Custom, loaded.Profile);
         Assert.Equal(ArmTimingMode.Arm60Datasheet, loaded.ArmTiming);
         Assert.Equal(ClioTimerMode.OperaScheduler, loaded.ClioTimers);
         Assert.Equal(CelTimingMode.OperaBusy, loaded.CelTiming);
         Assert.Equal(CdromTimingMode.OperaCycleBased, loaded.CdromTiming);
+        Assert.Equal(CdSpeed.X8, loaded.CdSpeed);
         Assert.Equal(2.0, loaded.CpuClockMultiplier);
         Assert.Equal(25_000_000, loaded.ResolveArmClock());
         Assert.Equal(0x1234u, loaded.RandomSeed);
@@ -336,20 +414,24 @@ public sealed class NvramStoreTests
             """
             {
               "CpuClockMultiplier": 8.0,
+              "Profile": 99,
               "ArmTiming": 99,
               "ClioTimers": 99,
               "CelTiming": 99,
-              "CdromTiming": 99
+              "CdromTiming": 99,
+              "CdSpeed": 3
             }
             """);
 
         AppSettings loaded = AppSettingsStore.Load(path);
 
         Assert.Equal(1.0, loaded.CpuClockMultiplier);
+        Assert.Equal(EmulationProfile.Compatible, loaded.Profile);
         Assert.Equal(ArmTimingMode.FreeDoCompatible, loaded.ArmTiming);
         Assert.Equal(ClioTimerMode.FreeDoCompatible, loaded.ClioTimers);
         Assert.Equal(CelTimingMode.FreeDoCompatible, loaded.CelTiming);
         Assert.Equal(CdromTimingMode.FreeDoCompatible, loaded.CdromTiming);
+        Assert.Equal(CdSpeed.X2, loaded.CdSpeed);
     }
 
     [Fact]

@@ -75,6 +75,7 @@ public sealed class FiveDoMachine
         Cdrom = new CdromChip
         {
             TimingMode = Tuning.CdromTiming,
+            ConfiguredSpeed = Tuning.CdSpeed,
             ArmClock = Tuning.ArmClock,
             InterruptRequested = () => Clio.GenerateFiq(4, 0),
         };
@@ -391,6 +392,7 @@ public sealed class FiveDoMachine
         ClioTimerMode? stateClioTimers = null;
         CelTimingMode? stateCelTiming = null;
         CdromTimingMode? stateCdromTiming = null;
+        CdSpeed? stateCdSpeed = null;
         while (reader.TryReadSection(out StateSectionReader? section))
         {
             var supportedVersion = section.Version == 1
@@ -398,7 +400,7 @@ public sealed class FiveDoMachine
                 || (section.Id == StateSectionIds.Quartz && section.Version <= 3)
                 || (section.Id == StateSectionIds.Clio && section.Version == 2)
                 || (section.Id == StateSectionIds.Madam && section.Version == 2)
-                || (section.Id == StateSectionIds.Options && section.Version <= 4);
+                || (section.Id == StateSectionIds.Options && section.Version <= 5);
             if (!supportedVersion)
             {
                 throw new InvalidStateException($"Unsupported section {section.Id} version {section.Version}.");
@@ -443,6 +445,7 @@ public sealed class FiveDoMachine
                     stateClioTimers = options.LoadedClioTimers;
                     stateCelTiming = options.LoadedCelTiming;
                     stateCdromTiming = options.LoadedCdromTiming;
+                    stateCdSpeed = options.LoadedCdSpeed;
                     break;
                 case StateSectionIds.Machine:
                     new MachineFrameSection(_frame, Compatibility).Load(section);
@@ -482,6 +485,12 @@ public sealed class FiveDoMachine
         {
             _stateWarnings.Add(
                 $"State CD-ROM timing mode {savedCdromTiming} differs from the machine mode {Tuning.CdromTiming}.");
+        }
+
+        if (stateCdSpeed is { } savedCdSpeed && savedCdSpeed != Tuning.CdSpeed)
+        {
+            _stateWarnings.Add(
+                $"State CD-ROM speed {savedCdSpeed} differs from the machine speed {Tuning.CdSpeed}.");
         }
 
         // A command-line/front-end override survives loads of states written before the

@@ -755,9 +755,14 @@ M1 implements the section primitive used by all later chips:
   `opera_cdrom.c`: `cdrom_cmd_read_data` schedules the first sector at
   `cycles + cdrom_data_sector_cycles()`, clears both poll bits, and
   `cdrom_data_load_next_if_ready()` publishes a sector only after its deadline. The
-  sector time is `ARM clock / (75 * 2x)` minus Opera's measured overhead compensation
-  (1670 x 0.1 us, or 2,087 cycles at 12.5 MHz), giving 81,246 cycles at the stock clock.
-  The default drive speed is Opera's stock 2x; SYS-09 will expose the speed option.
+  sector time is `ARM clock / (75 * speed)` minus Opera's measured overhead
+  compensation (1,660-1,704 x 0.1 us depending on speed), giving 81,246 cycles at the
+  stock 2x clock and 164,591/39,554/18,715/8,286/4,826/3,090 cycles at
+  1x/4x/8x/16x/24x/32x. `CdSpeed.Unbounded` returns zero cycles and publishes sectors
+  immediately. The configured speed is treated as the effective speed; 5DO does not
+  advertise the XBUS 2x status bit, so Opera's `cdrom_effective_speed` reduction to 1x
+  does not apply. That status-byte divergence is intentional for now: changing the
+  default status byte would alter every golden CD transcript.
 - The 0x10 read-data status response is deferred until the guest has drained the last
   requested sector, matching `cdrom_data_publish_read_status_if_ready()`. A zero-length
   read publishes status immediately. While waiting, `POLDT` and `POLST` are clear, so
@@ -768,11 +773,37 @@ M1 implements the section primitive used by all later chips:
   the guest could see the poll bit but never receive the interrupt.
 - The CLI exposes `--cd-timing freedo|opera` on `run` and `trace`; Settings >
   Emulation exposes the same choice. `run --json` reports `cdromTiming`.
-- Save states record the mode in the Options section (version 4) and the device clock,
-  next-ready cycle, and pending-status flag in the CD-ROM section (version 2). Version-1
-  CD-ROM sections load with a zeroed clock; version-1/2/3 Options sections default the
-  mode to FreeDO-compatible. A mode mismatch is a warning, not a rejection.
+- Save states record the mode and speed in the Options section (version 5) and the device
+  clock, next-ready cycle, and pending-status flag in the CD-ROM section (version 2).
+  Version-1 CD-ROM sections load with a zeroed clock; version-1/2/3/4 Options sections
+  default the mode to FreeDO-compatible and the speed to 2x. A mode or speed mismatch is a
+  warning, not a rejection.
 - This is the first CORE-04 increment, not the whole CD port: command latency, TOC from
-  the disc source, read-ahead, subcode, DIPIR tagging, CD-DA, ODE, and CD speed control
-  remain. Do not make the cycle model the default until the full-collection differential
-  shows it is safe. The smoke keys are in `TestCorpus.md` 1.1d.
+  the disc source, read-ahead, subcode, DIPIR tagging, CD-DA, and ODE remain. SYS-09 adds
+  the speed selector without changing the default 2x timing. Do not make the cycle model
+  the default until the full-collection differential shows it is safe. The smoke keys are
+  in `TestCorpus.md` 1.1d/1.1e.
+
+### 12.19 CD speed and timing profiles (2026-10-31)
+
+- `CdSpeed` values map directly to Opera's `cd_speed` option: `Unbounded`, `X1`, `X2`,
+  `X4`, `X8`, `X16`, `X24`, `X32`. The default is `X2`, the stock 3DO drive.
+- `CdromDevice.DataSectorCycles` uses `clock / (75 * speed)` and subtracts the
+  per-speed overhead table from `cdrom_data_sector_overhead_compensation_x10_usec`:
+  1,660 (1x), 1,670 (2x), 1,690 (4x), 1,695 (8x), 1,704 (16x), and 1,695 for 24x/32x.
+  `Unbounded` returns zero so the requested sector is published immediately. The FreeDO
+  timing path ignores the speed and remains immediate.
+- The drive status does not advertise the XBUS 2x bit in 5DO, so the configured speed is
+  treated as the effective speed instead of following Opera's reduction to 1x when the
+  bit is clear. Do not set the 2x bit as part of a speed change without re-baselining the
+  CD transcripts; it changes every status response.
+- `EmulationProfile` is a host-side shortcut over the timing options, not a new machine
+  mode. `EmulationProfiles.Apply` preserves fixes, high-res, backend, and seed.
+  `Detect` compares the actual options (including the ARM clock) and returns `Custom` on
+  any mismatch. `AppSettings.Profile` is persisted for the dialog, but the individual
+  options remain the save-state source of truth.
+- The `Performance` profile uses a 1.5x ARM clock with FreeDO timing. It is an explicit
+  speed-over-accuracy choice; do not present it as a compatibility mode.
+- The three-title 3,000-frame smoke differential is in `TestCorpus.md` 1.1e. All speeds
+  complete and render; the FreeDO default is bit-identical across speed settings. A
+  full-collection speed sweep and CD-DA speed behavior remain.

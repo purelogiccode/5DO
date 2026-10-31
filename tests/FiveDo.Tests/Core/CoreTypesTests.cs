@@ -18,6 +18,7 @@ public sealed class CoreTypesTests
         Assert.Equal(ClioTimerMode.FreeDoCompatible, tuning.ClioTimers);
         Assert.Equal(CelTimingMode.FreeDoCompatible, tuning.CelTiming);
         Assert.Equal(CdromTimingMode.FreeDoCompatible, tuning.CdromTiming);
+        Assert.Equal(CdSpeed.X2, tuning.CdSpeed);
         tuning.Validate();
     }
 
@@ -77,6 +78,23 @@ public sealed class CoreTypesTests
     public void EmulatorTuning_UnknownCdromTimingMode_Throws()
     {
         var tuning = new EmulatorTuning { CdromTiming = (CdromTimingMode)99 };
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => tuning.Validate());
+    }
+
+    [Fact]
+    public void EmulatorTuning_AcceptsEveryCdSpeed()
+    {
+        foreach (CdSpeed speed in Enum.GetValues<CdSpeed>())
+        {
+            new EmulatorTuning { CdSpeed = speed }.Validate();
+        }
+    }
+
+    [Fact]
+    public void EmulatorTuning_UnknownCdSpeed_Throws()
+    {
+        var tuning = new EmulatorTuning { CdSpeed = (CdSpeed)3 };
 
         Assert.Throws<ArgumentOutOfRangeException>(() => tuning.Validate());
     }

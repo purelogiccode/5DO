@@ -350,6 +350,35 @@ public sealed class SaveStateTests
     }
 
     [Fact]
+    public void SaveState_RecordsCdSpeedAndWarnsOnMismatch()
+    {
+        var fastCd = new EmulatorTuning
+        {
+            CdromTiming = CdromTimingMode.OperaCycleBased,
+            CdSpeed = CdSpeed.X8,
+        };
+        FiveDoMachine machine = CreateMachine(tuning: fastCd);
+        machine.RunFrames(2);
+        using var state = new MemoryStream();
+        machine.SaveState(state);
+
+        FiveDoMachine matching = CreateMachine(tuning: fastCd);
+        state.Position = 0;
+        matching.LoadState(state);
+        Assert.DoesNotContain(
+            matching.StateWarnings,
+            warning => warning.Contains("CD-ROM speed", StringComparison.Ordinal));
+
+        FiveDoMachine stock = CreateMachine();
+        state.Position = 0;
+        stock.LoadState(state);
+        Assert.Contains(
+            stock.StateWarnings,
+            warning => warning.Contains("CD-ROM speed", StringComparison.Ordinal)
+                && warning.Contains("X8", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void LoadState_AcceptsVersionOneStates()
     {
         FiveDoMachine machine = CreateMachine();

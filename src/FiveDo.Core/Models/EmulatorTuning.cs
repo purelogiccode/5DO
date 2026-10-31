@@ -46,6 +46,13 @@ public sealed record EmulatorTuning
     public CdromTimingMode CdromTiming { get; init; } = CdromTimingMode.FreeDoCompatible;
 
     /// <summary>
+    /// Gets the effective CD-ROM read speed used by
+    /// <see cref="CdromTimingMode.OperaCycleBased"/>. The stock 3DO drive is 2x;
+    /// <see cref="CdSpeed.Unbounded"/> removes the host-side sector delay.
+    /// </summary>
+    public CdSpeed CdSpeed { get; init; } = CdSpeed.X2;
+
+    /// <summary>
     /// Gets the optional initial DSP PRNG seed. <see langword="null"/> keeps FreeDO's
     /// default seed (<c>0xa5a5a5a5</c>); a value makes fresh runs reproducible from a
     /// known seed.
@@ -75,6 +82,7 @@ public sealed record EmulatorTuning
         ValidateClioTimers(ClioTimers);
         ValidateCelTiming(CelTiming);
         ValidateCdromTiming(CdromTiming);
+        ValidateCdSpeed(CdSpeed);
         ValidateCpuBackend(CpuBackend);
     }
 
@@ -128,6 +136,24 @@ public sealed record EmulatorTuning
                 nameof(cdromTiming),
                 cdromTiming,
                 "Unknown CD-ROM timing mode.");
+        }
+    }
+
+    private static void ValidateCdSpeed(CdSpeed cdSpeed)
+    {
+        if (cdSpeed is not CdSpeed.Unbounded
+            and not CdSpeed.X1
+            and not CdSpeed.X2
+            and not CdSpeed.X4
+            and not CdSpeed.X8
+            and not CdSpeed.X16
+            and not CdSpeed.X24
+            and not CdSpeed.X32)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(cdSpeed),
+                cdSpeed,
+                "Unknown CD-ROM speed.");
         }
     }
 

@@ -3,7 +3,7 @@
 **Product:** 5DO
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Current status (2026-10-31, thirty-third pass):** **1014 tests pass**; the v1.0
+**Current status (2026-10-31, thirty-fourth pass):** **1039 tests pass**; the v1.0
 release is deliberately deferred. The first **M13 full-collection loadability sweep**
 is complete: 594 discs tested (589 in `J:\Panasonic 3DO` plus 5 in
 `G:\MAME\MAME Software List CHDs\3do`), with **576 `Loadable/Rendered`, 13
@@ -144,6 +144,19 @@ plus the CD-ROM section (version 2). The default is unchanged, and a three-title
 subcode, DIPIR tagging, CD-DA, ODE, and CD speed control remain; the full-collection
 differential is the acceptance step before the cycle model can become a default.
 **1014 tests pass.** See [`PortingNotes.md`](PortingNotes.md) 12.18.
+
+**CD speed and timing profiles (2026-10-31, thirty-fourth pass):** SYS-09 is
+implemented. `CdSpeed` (`Unbounded`, `X1`-`X32`) selects the effective speed for the
+cycle-based CD model, using Opera's per-speed overhead compensation; `unbounded`
+publishes sectors immediately. The default `X2` keeps the existing CORE-04 timing and the
+FreeDO path is unaffected. It is exposed through `--cd-speed` and Settings > Emulation,
+reported in `run --json`, and recorded in the Options section (version 5) with a
+mismatch warning. CORE-08 adds `EmulationProfile` (`Compatible`, `Accuracy`,
+`Performance`, `Custom`) with CLI/Settings selection and a derived `run --json` profile;
+the accuracy profile bundles the ARM60, Opera timer, CEL busy, and CD cycle options.
+The three-title smoke differential is in [`TestCorpus.md`](TestCorpus.md) 1.1e.
+Remaining: per-profile benchmark deltas, a full-collection accuracy run, and CD-DA speed
+behavior (SYS-01). **1039 tests pass.** See [`PortingNotes.md`](PortingNotes.md) 12.19.
 
 **Compatibility-sweep and high-resolution research plan (2026-10-30, twenty-eighth
 pass):** v1.0 release work is deliberately deferred. The next active milestone is

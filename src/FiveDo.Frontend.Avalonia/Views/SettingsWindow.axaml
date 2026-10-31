@@ -105,8 +105,8 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, ARM, CLIO, and CEL timing, CPU clock, random seed, high-resolution mode, and overrides.">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+            <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, ARM, CLIO, CEL, and CD timing, CD speed, CPU clock, random seed, high-resolution mode, and overrides.">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <CheckBox x:Name="AutoFixesCheck" Grid.Row="0" Grid.Column="1"
                               Content="Apply the 4DO per-game fixes automatically"
                               ToolTip.Tip="Apply the compatibility fix mask from the built-in game database when a disc opens." />
@@ -156,6 +156,15 @@
                                ToolTip.Tip="Override the output filter for this game." />
                     <ComboBox x:Name="FilterOverrideCombo" Grid.Row="11" Grid.Column="1" Margin="0,12,0,0"
                               ToolTip.Tip="Automatic or a per-game filter override." />
+                    <TextBlock Grid.Row="12" Grid.Column="0" Text="CD speed" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Effective read speed for the cycle-based CD model." />
+                    <ComboBox x:Name="CdSpeedCombo" Grid.Row="12" Grid.Column="1" Margin="0,12,0,0"
+                              ToolTip.Tip="Stock is 2x. Unbounded removes the host-side sector delay; speeds above 16x can expose timing issues." />
+                    <TextBlock Grid.Row="13" Grid.Column="0" Text="Timing profile" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Apply a named bundle of timing options." />
+                    <ComboBox x:Name="ProfileCombo" Grid.Row="13" Grid.Column="1" Margin="0,12,0,0"
+                              SelectionChanged="OnProfileChanged"
+                              ToolTip.Tip="Compatible keeps FreeDO timing. Accuracy enables ARM60, Opera timers, CEL busy timing, and cycle-based CD reads. Performance uses a 1.5x CPU clock with FreeDO timing. Custom keeps the current options." />
                 </Grid>
             </TabItem>
 

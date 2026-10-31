@@ -1,7 +1,8 @@
 # Project Status and Next Steps
 
 **Snapshot:** 2026-10-31, after the first full-collection sweep, the performance pass,
-and the ARM/CLIO/CEL/CD timing-option pass. Road Rash's 100k-state race now measures
+the ARM/CLIO/CEL/CD timing-option pass, and the CD speed/timing-profile pass. Road Rash's
+100k-state race now measures
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
 **594 discs tested: 576 Loadable/Rendered, 13 Loadable/No video, 5 Not Loadable.**
@@ -26,7 +27,14 @@ The CORE-04 CD option (`--cd-timing freedo|opera`) now implements Opera's cycle-
 polling, deferred read-data status, the XBUS CD FIQ, a CD-ROM section v2 clock
 snapshot, and an Options v4 mode snapshot. The immediate FreeDO path remains the
 default; the three-title smoke differential is in `TestCorpus.md` 1.1d.
-**1014 tests pass.**
+SYS-09 adds `--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x` (Settings > Emulation > CD
+speed), Opera's per-speed overhead table, an Options v5 speed snapshot with a mismatch
+warning, and the three-title 3,000-frame smoke differential in `TestCorpus.md` 1.1e.
+CORE-08 adds `EmulationProfile` (`Compatible`, `Accuracy`, `Performance`, `Custom`),
+`--profile`, and Settings > Emulation > Timing profile; the accuracy profile enables the
+ARM60, Opera timer, CEL busy, and CD cycle options together, and `run --json` reports the
+profile derived from the actual options.
+**1039 tests pass.**
 The v1.0 release is deliberately deferred: the next work is a BIOS-aware sweep and
 5DO status merge (M13), then high-resolution CEL research (M14). The project is
 **donationware** (non-commercial, source-available, voluntary donations only). See
@@ -190,7 +198,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 1014 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 1039 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and

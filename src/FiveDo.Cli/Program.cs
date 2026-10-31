@@ -215,14 +215,17 @@ internal static class Program
         }
 
         FixMode fixMode = ResolveFixMode(options, args, gameId);
+        EmulatorTuning profileTuning = EmulationProfiles.Apply(
+            ParseEmulationProfile(options.Get("--profile")));
         var machine = new FiveDoMachine(new EmulatorTuning
         {
             HighResolution = HasFlag(args, "--high-res"),
-            ArmTiming = ParseArmTiming(options.Get("--arm-timing")),
-            ClioTimers = ParseClioTimers(options.Get("--clio-timers")),
-            CelTiming = ParseCelTiming(options.Get("--cel-timing")),
-            CdromTiming = ParseCdromTiming(options.Get("--cd-timing")),
-            ArmClock = ParseCpuClock(options.Get("--cpu-clock")),
+            ArmTiming = ParseArmTiming(options.Get("--arm-timing"), profileTuning.ArmTiming),
+            ClioTimers = ParseClioTimers(options.Get("--clio-timers"), profileTuning.ClioTimers),
+            CelTiming = ParseCelTiming(options.Get("--cel-timing"), profileTuning.CelTiming),
+            CdromTiming = ParseCdromTiming(options.Get("--cd-timing"), profileTuning.CdromTiming),
+            CdSpeed = ParseCdSpeed(options.Get("--cd-speed"), profileTuning.CdSpeed),
+            ArmClock = ParseCpuClock(options.Get("--cpu-clock"), profileTuning.ArmClock),
             RandomSeed = ParseRandomSeed(options.Get("--random-seed")),
             FixMode = fixMode,
         });
@@ -641,11 +644,13 @@ internal static class Program
             Samples: audio.SampleCount,
             DiscHash: discHash,
             GameId: gameId,
+            Profile: EmulationProfiles.Detect(machine.Tuning).ToString(),
             ArmTiming: machine.Tuning.ArmTiming.ToString(),
             ClioTimers: machine.Tuning.ClioTimers.ToString(),
             CelTiming: machine.Tuning.CelTiming.ToString(),
             CelBusyCycles: machine.Madam.CelBusyCyclesRemaining,
             CdromTiming: machine.Tuning.CdromTiming.ToString(),
+            CdSpeed: machine.Tuning.CdSpeed.ToString(),
             CpuClock: machine.Tuning.ArmClock,
             FixMode: (uint)machine.Compatibility.FixMode,
             DspRunning: machine.Dsp.IsRunning,
@@ -745,14 +750,17 @@ internal static class Program
         }
 
         FixMode fixMode = ResolveFixMode(options, args, gameId);
+        EmulatorTuning profileTuning = EmulationProfiles.Apply(
+            ParseEmulationProfile(options.Get("--profile")));
         var machine = new FiveDoMachine(new EmulatorTuning
         {
             HighResolution = HasFlag(args, "--high-res"),
-            ArmTiming = ParseArmTiming(options.Get("--arm-timing")),
-            ClioTimers = ParseClioTimers(options.Get("--clio-timers")),
-            CelTiming = ParseCelTiming(options.Get("--cel-timing")),
-            CdromTiming = ParseCdromTiming(options.Get("--cd-timing")),
-            ArmClock = ParseCpuClock(options.Get("--cpu-clock")),
+            ArmTiming = ParseArmTiming(options.Get("--arm-timing"), profileTuning.ArmTiming),
+            ClioTimers = ParseClioTimers(options.Get("--clio-timers"), profileTuning.ClioTimers),
+            CelTiming = ParseCelTiming(options.Get("--cel-timing"), profileTuning.CelTiming),
+            CdromTiming = ParseCdromTiming(options.Get("--cd-timing"), profileTuning.CdromTiming),
+            CdSpeed = ParseCdSpeed(options.Get("--cd-speed"), profileTuning.CdSpeed),
+            ArmClock = ParseCpuClock(options.Get("--cpu-clock"), profileTuning.ArmClock),
             RandomSeed = ParseRandomSeed(options.Get("--random-seed")),
             FixMode = fixMode,
         });
@@ -1719,11 +1727,13 @@ internal static class Program
 
         Console.WriteLine($"disc hash:   {result.DiscHash}");
         Console.WriteLine($"game id:     {result.GameId}");
+        Console.WriteLine($"profile:     {result.Profile}");
         Console.WriteLine($"arm timing:  {result.ArmTiming}");
         Console.WriteLine($"clio timers: {result.ClioTimers}");
         Console.WriteLine($"cel timing:  {result.CelTiming}");
         Console.WriteLine($"cel busy:    {result.CelBusyCycles} cycles");
         Console.WriteLine($"cd timing:   {result.CdromTiming}");
+        Console.WriteLine($"cd speed:    {result.CdSpeed}");
         Console.WriteLine($"cpu clock:   {result.CpuClock / 1_000_000.0:0.###} MHz");
         Console.WriteLine($"fix mode:    0x{result.FixMode:x8}");
         Console.WriteLine($"dsp running: {result.DspRunning}");
@@ -1777,10 +1787,47 @@ internal static class Program
         return GameCompatibility.ForGameId(gameId).FixMode;
     }
 
-    private static ArmTimingMode ParseArmTiming(string? value)
+    private static EmulationProfile ParseEmulationProfile(string? value)
     {
         if (string.IsNullOrWhiteSpace(value)
-            || string.Equals(value, "freedo", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "compatible", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "default", StringComparison.OrdinalIgnoreCase))
+        {
+            return EmulationProfile.Compatible;
+        }
+
+        if (string.Equals(value, "accuracy", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "accurate", StringComparison.OrdinalIgnoreCase))
+        {
+            return EmulationProfile.Accuracy;
+        }
+
+        if (string.Equals(value, "performance", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "fast", StringComparison.OrdinalIgnoreCase))
+        {
+            return EmulationProfile.Performance;
+        }
+
+        if (string.Equals(value, "custom", StringComparison.OrdinalIgnoreCase))
+        {
+            return EmulationProfile.Custom;
+        }
+
+        throw new ArgumentException(
+            $"Invalid --profile value '{value}'; expected compatible, accuracy, performance, or custom.",
+            nameof(value));
+    }
+
+    private static ArmTimingMode ParseArmTiming(
+        string? value,
+        ArmTimingMode fallback = ArmTimingMode.FreeDoCompatible)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return fallback;
+        }
+
+        if (string.Equals(value, "freedo", StringComparison.OrdinalIgnoreCase)
             || string.Equals(value, "freedo-compatible", StringComparison.OrdinalIgnoreCase))
         {
             return ArmTimingMode.FreeDoCompatible;
@@ -1797,10 +1844,16 @@ internal static class Program
             nameof(value));
     }
 
-    private static ClioTimerMode ParseClioTimers(string? value)
+    private static ClioTimerMode ParseClioTimers(
+        string? value,
+        ClioTimerMode fallback = ClioTimerMode.FreeDoCompatible)
     {
-        if (string.IsNullOrWhiteSpace(value)
-            || string.Equals(value, "freedo", StringComparison.OrdinalIgnoreCase)
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return fallback;
+        }
+
+        if (string.Equals(value, "freedo", StringComparison.OrdinalIgnoreCase)
             || string.Equals(value, "freedo-compatible", StringComparison.OrdinalIgnoreCase))
         {
             return ClioTimerMode.FreeDoCompatible;
@@ -1817,10 +1870,16 @@ internal static class Program
             nameof(value));
     }
 
-    private static CelTimingMode ParseCelTiming(string? value)
+    private static CelTimingMode ParseCelTiming(
+        string? value,
+        CelTimingMode fallback = CelTimingMode.FreeDoCompatible)
     {
-        if (string.IsNullOrWhiteSpace(value)
-            || string.Equals(value, "freedo", StringComparison.OrdinalIgnoreCase)
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return fallback;
+        }
+
+        if (string.Equals(value, "freedo", StringComparison.OrdinalIgnoreCase)
             || string.Equals(value, "freedo-compatible", StringComparison.OrdinalIgnoreCase)
             || string.Equals(value, "sync", StringComparison.OrdinalIgnoreCase))
         {
@@ -1839,10 +1898,16 @@ internal static class Program
             nameof(value));
     }
 
-    private static CdromTimingMode ParseCdromTiming(string? value)
+    private static CdromTimingMode ParseCdromTiming(
+        string? value,
+        CdromTimingMode fallback = CdromTimingMode.FreeDoCompatible)
     {
-        if (string.IsNullOrWhiteSpace(value)
-            || string.Equals(value, "freedo", StringComparison.OrdinalIgnoreCase)
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return fallback;
+        }
+
+        if (string.Equals(value, "freedo", StringComparison.OrdinalIgnoreCase)
             || string.Equals(value, "freedo-compatible", StringComparison.OrdinalIgnoreCase))
         {
             return CdromTimingMode.FreeDoCompatible;
@@ -1860,11 +1925,46 @@ internal static class Program
             nameof(value));
     }
 
-    private static int ParseCpuClock(string? value)
+    private static CdSpeed ParseCdSpeed(string? value, CdSpeed fallback = CdSpeed.X2)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            return EmulatorConstants.ArmClock;
+            return fallback;
+        }
+
+        var text = value.Trim();
+        if (string.Equals(text, "unbounded", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(text, "none", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(text, "max", StringComparison.OrdinalIgnoreCase))
+        {
+            return CdSpeed.Unbounded;
+        }
+
+        if (text.EndsWith('x') || text.EndsWith('X'))
+        {
+            text = text[..^1].Trim();
+        }
+
+        return text switch
+        {
+            "1" => CdSpeed.X1,
+            "2" => CdSpeed.X2,
+            "4" => CdSpeed.X4,
+            "8" => CdSpeed.X8,
+            "16" => CdSpeed.X16,
+            "24" => CdSpeed.X24,
+            "32" => CdSpeed.X32,
+            _ => throw new ArgumentException(
+                $"Invalid --cd-speed value '{value}'; expected unbounded or 1x, 2x, 4x, 8x, 16x, 24x, 32x.",
+                nameof(value)),
+        };
+    }
+
+    private static int ParseCpuClock(string? value, int fallback = EmulatorConstants.ArmClock)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return fallback;
         }
 
         var text = value.Trim();
@@ -1998,15 +2098,19 @@ internal static class Program
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--script-base absolute|state] [--autopilot road] [--progress N] [--cel-trace path] [--pbus-trace path]");
         Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--prefetch]");
+        Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
         Console.WriteLine("             [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
-        Console.WriteLine("             [--cd-timing freedo|opera] [--cpu-clock 0.5x-4x|6.25-50MHz]");
+        Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
+        Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--realtime] [--json]");
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
         Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path] [--high-res] [--prefetch]");
+        Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
         Console.WriteLine("             [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
-        Console.WriteLine("             [--cd-timing freedo|opera] [--cpu-clock 0.5x-4x|6.25-50MHz]");
+        Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
+        Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--fix-mode 0xMASK] [--no-game-fixes]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             Runs the machine and records a diagnostic instruction ring buffer.");

@@ -33,6 +33,19 @@ public sealed class CdromTimingTests
     }
 
     [Fact]
+    public void Machine_PropagatesTheConfiguredCdSpeedToTheDevice()
+    {
+        var machine = new FiveDoMachine(new EmulatorTuning
+        {
+            CdromTiming = CdromTimingMode.OperaCycleBased,
+            CdSpeed = CdSpeed.X8,
+        });
+
+        Assert.Equal(CdSpeed.X8, machine.Cdrom.ConfiguredSpeed);
+        Assert.Equal(18_715UL, machine.Cdrom.DataSectorCycles);
+    }
+
+    [Fact]
     public void RunFrame_KeepsTheFreeDoCdromDataImmediate()
     {
         var machine = new FiveDoMachine(new EmulatorTuning

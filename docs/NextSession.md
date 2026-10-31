@@ -2,6 +2,18 @@
 
 ## 0. Current handoff (2026-10-30)
 
+**2026-10-31 update:** SYS-09 CD speed control and CORE-08 timing profiles are
+implemented. `CdSpeed` (`Unbounded`, `X1`-`X32`, default `X2`) changes the effective
+speed of the cycle-based CD model with Opera's per-speed overhead table;
+`--cd-speed`/Settings expose it, `run --json` reports `cdSpeed`, and Options section v5
+records it with a mismatch warning. `EmulationProfile` (`Compatible`, `Accuracy`,
+`Performance`, `Custom`) bundles the timing options through `--profile` and Settings >
+Emulation; the accuracy profile enables ARM60, Opera timers, CEL busy timing, and cycle
+CD reads. The default FreeDO path is unchanged, and the three-title smoke differential is
+in [`TestCorpus.md`](TestCorpus.md) 1.1e. Do not redo the CD speed selector or the profile
+mapping; remaining work is per-profile benchmark deltas, a full-collection accuracy run,
+and CD-DA speed behavior with SYS-01. **1039 tests pass.**
+
 **2026-10-31 update:** the CORE-04 CD cycle-timing option is implemented as the first
 increment of the CD port. The default `--cd-timing freedo` path is unchanged;
 `--cd-timing opera` schedules each 2048-byte data sector at the stock 2x drive speed,
@@ -10,8 +22,8 @@ transfer drains, and raises the XBUS CD FIQ when ready. Settings > Emulation exp
 the choice, `run --json` reports `cdromTiming`, the CD-ROM section is version 2, and the
 Options section is version 4. The three-title 12,000/24,000-frame smoke differential is
 in [`TestCorpus.md`](TestCorpus.md) 1.1d. Do not redo this option; the remaining CD work
-is command latency, disc-derived TOC, read-ahead, subcode, DIPIR tagging, CD-DA, ODE,
-and CD speed control. **1014 tests pass.**
+is command latency, disc-derived TOC, read-ahead, subcode, DIPIR tagging, CD-DA, and ODE;
+SYS-09 later added CD speed control. **1014 tests passed at that point.**
 
 **2026-10-31 update:** the CORE-03 MADAM CEL busy option is implemented. The default
 `--cel-timing freedo` path is unchanged; `--cel-timing opera` defers the CEL draw to the
@@ -82,9 +94,9 @@ MHTML in `References/4DO-master/`.
 not final statuses.
 
 **Do not redo:** the 4DO MHTML parser, the sweep harness, the OpenAL/Serilog/trimming
-work, the renderer/filter work, the ARM/CLIO/CEL/CD timing options, or the 2026-10-31
-performance pass (CEL pipeline caching, Debug core optimization, render-request
-coalescing, Auto frame skip). Do not treat full-race completion, inventory
+work, the renderer/filter work, the ARM/CLIO/CEL/CD timing options, the CD speed selector and
+timing-profile mapping, or the 2026-10-31 performance pass (CEL pipeline caching, Debug
+core optimization, render-request coalescing, Auto frame skip). Do not treat full-race completion, inventory
 scripting, Pi/arm64 validation, or installers as current gates.
 
 **Project position:** donationware, non-commercial, source-available. The legal

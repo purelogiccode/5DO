@@ -37,6 +37,14 @@ public partial class SettingsWindow : Window
         new(FrameSkipMode.OneInFive, "Skip 4 of 5 (12 fps)"),
     ];
 
+    private static readonly ProfileOption[] _profileOptions =
+    [
+        new(EmulationProfile.Compatible, "Compatible (FreeDO timing, default)"),
+        new(EmulationProfile.Accuracy, "Accuracy (ARM60 + Opera timing)"),
+        new(EmulationProfile.Performance, "Performance (1.5x CPU)"),
+        new(EmulationProfile.Custom, "Custom (keep current options)"),
+    ];
+
     private static readonly ArmTimingOption[] _armTimingOptions =
     [
         new(ArmTimingMode.FreeDoCompatible, "FreeDO-compatible (N=4, default)"),
@@ -61,6 +69,18 @@ public partial class SettingsWindow : Window
         new(CdromTimingMode.OperaCycleBased, "Opera cycle-based (2x, accuracy)"),
     ];
 
+    private static readonly CdSpeedOption[] _cdSpeedOptions =
+    [
+        new(CdSpeed.Unbounded, "Unbounded (no host limit)"),
+        new(CdSpeed.X1, "1x (~150 KB/s)"),
+        new(CdSpeed.X2, "2x (~300 KB/s, stock)"),
+        new(CdSpeed.X4, "4x (~600 KB/s)"),
+        new(CdSpeed.X8, "8x (~1200 KB/s)"),
+        new(CdSpeed.X16, "16x (~2400 KB/s)"),
+        new(CdSpeed.X24, "24x (~3600 KB/s)"),
+        new(CdSpeed.X32, "32x (~4800 KB/s)"),
+    ];
+
     private static readonly ResolutionOption[] _resolutionOptions =
     [
         new(OutputResolution.Window, "Match window"),
@@ -75,6 +95,7 @@ public partial class SettingsWindow : Window
     ];
 
     private readonly string? _gameId;
+    private bool _initializing = true;
 
     /// <summary>Creates the dialog with the persisted settings.</summary>
     public SettingsWindow()
@@ -122,6 +143,9 @@ public partial class SettingsWindow : Window
         VolumeSlider.Value = settings.Volume;
         AutoFixesCheck.IsChecked = settings.AutoGameFixes;
         HighResCheck.IsChecked = settings.HighResolution;
+        ProfileCombo.ItemsSource = _profileOptions;
+        ProfileCombo.SelectedItem = _profileOptions.FirstOrDefault(option => option.Value == settings.Profile)
+            ?? _profileOptions[0];
         ArmTimingCombo.ItemsSource = _armTimingOptions;
         ArmTimingCombo.SelectedItem = _armTimingOptions.FirstOrDefault(option => option.Value == settings.ArmTiming)
             ?? _armTimingOptions[0];
@@ -134,6 +158,9 @@ public partial class SettingsWindow : Window
         CdromTimingCombo.ItemsSource = _cdromTimingOptions;
         CdromTimingCombo.SelectedItem = _cdromTimingOptions.FirstOrDefault(option => option.Value == settings.CdromTiming)
             ?? _cdromTimingOptions[0];
+        CdSpeedCombo.ItemsSource = _cdSpeedOptions;
+        CdSpeedCombo.SelectedItem = _cdSpeedOptions.FirstOrDefault(option => option.Value == settings.CdSpeed)
+            ?? _cdSpeedOptions[2];
         CpuClockBox.Text = settings.CpuClockMultiplier.ToString("0.###", CultureInfo.InvariantCulture);
         RandomSeedBox.Text = settings.RandomSeed is { } seed ? $"0x{seed:x8}" : string.Empty;
         SaveDirectoryBox.Text = settings.SaveDirectory;
@@ -145,6 +172,26 @@ public partial class SettingsWindow : Window
 
         FixMode? overrideMode = settings.GetFixModeOverride(gameId);
         FixModeBox.Text = overrideMode is null ? string.Empty : $"0x{(uint)overrideMode.Value:x}";
+        _initializing = false;
+    }
+
+    private void OnProfileChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_initializing
+            || ProfileCombo.SelectedItem is not ProfileOption option
+            || option.Value == EmulationProfile.Custom)
+        {
+            return;
+        }
+
+        var preview = new AppSettings();
+        preview.ApplyProfile(option.Value);
+        ArmTimingCombo.SelectedItem = _armTimingOptions.First(item => item.Value == preview.ArmTiming);
+        ClioTimersCombo.SelectedItem = _clioTimerOptions.First(item => item.Value == preview.ClioTimers);
+        CelTimingCombo.SelectedItem = _celTimingOptions.First(item => item.Value == preview.CelTiming);
+        CdromTimingCombo.SelectedItem = _cdromTimingOptions.First(item => item.Value == preview.CdromTiming);
+        CdSpeedCombo.SelectedItem = _cdSpeedOptions.First(item => item.Value == preview.CdSpeed);
+        CpuClockBox.Text = preview.CpuClockMultiplier.ToString("0.###", CultureInfo.InvariantCulture);
     }
 
     private void OnTestAudioClickAsync(object? sender, RoutedEventArgs e)
@@ -248,6 +295,12 @@ public partial class SettingsWindow : Window
         settings.CdromTiming = CdromTimingCombo.SelectedItem is CdromTimingOption cdromTiming
             ? cdromTiming.Value
             : CdromTimingMode.FreeDoCompatible;
+        settings.CdSpeed = CdSpeedCombo.SelectedItem is CdSpeedOption cdSpeed
+            ? cdSpeed.Value
+            : CdSpeed.X2;
+        EmulationProfile selectedProfile = ProfileCombo.SelectedItem is ProfileOption profileOption
+            ? profileOption.Value
+            : EmulationProfile.Custom;
         if (!double.TryParse(
                 CpuClockBox.Text?.Trim(),
                 NumberStyles.Float,
@@ -261,6 +314,10 @@ public partial class SettingsWindow : Window
         }
 
         settings.CpuClockMultiplier = cpuClockMultiplier;
+        settings.Profile = selectedProfile != EmulationProfile.Custom
+            && settings.DetectProfile() == selectedProfile
+                ? selectedProfile
+                : EmulationProfile.Custom;
         var seedText = RandomSeedBox.Text?.Trim();
         if (string.IsNullOrEmpty(seedText))
         {
@@ -425,6 +482,14 @@ public partial class SettingsWindow : Window
         }
     }
 
+    private sealed record ProfileOption(EmulationProfile Value, string Label)
+    {
+        public override string ToString()
+        {
+            return Label;
+        }
+    }
+
     private sealed record ArmTimingOption(ArmTimingMode Value, string Label)
     {
         public override string ToString()
@@ -450,6 +515,14 @@ public partial class SettingsWindow : Window
     }
 
     private sealed record CdromTimingOption(CdromTimingMode Value, string Label)
+    {
+        public override string ToString()
+        {
+            return Label;
+        }
+    }
+
+    private sealed record CdSpeedOption(CdSpeed Value, string Label)
     {
         public override string ToString()
         {
