@@ -485,7 +485,7 @@ public sealed class VulkanVideoSurface : Control, IDisposable
             case WmEraseBkgnd:
                 if (GetClientRect(hwnd, out Rect rect))
                 {
-                    _ = FillRect((nint)wParam, ref rect, GetStockObject(BlackBrush));
+                    _ = FillRect(wParam, ref rect, GetStockObject(BlackBrush));
                 }
 
                 return 1;

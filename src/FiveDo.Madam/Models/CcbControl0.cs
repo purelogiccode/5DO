@@ -21,7 +21,7 @@ public enum CcbControl0 : uint
     B0PositionMask = 0x30000000,
 
     /// <summary>Swap the H and V bits. FreeDO: <c>SWAPHV</c>.</summary>
-    SwapHV = 0x08000000,
+    SwapHv = 0x08000000,
 
     /// <summary>All-subcode flag. FreeDO: <c>ASCALL</c>.</summary>
     AscAll = 0x04000000,

@@ -162,7 +162,7 @@ public sealed class CoreRunner : IDisposable
 
         lock (_invokeGate)
         {
-            var wasPaused = false;
+            bool wasPaused;
             lock (_stateGate)
             {
                 if (_thread is null || !_thread.IsAlive || _stop || _faulted)

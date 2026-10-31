@@ -30,7 +30,6 @@ using FiveDo.Input;
 using FiveDo.Machine;
 using FiveDo.Storage;
 using FiveDo.Video;
-using FiveDo.Video.Vulkan;
 using AvaloniaPixelFormat = Avalonia.Platform.PixelFormat;
 
 namespace FiveDo.Frontend.Avalonia.Views;
@@ -619,7 +618,7 @@ public partial class MainWindow : Window, IDisposable
             StatusText.Text = "Capturing screenshot...";
             return;
 
-            void OnCaptured(object? sender, Controls.CaptureCompletedEventArgs e)
+            void OnCaptured(object? sender, CaptureCompletedEventArgs e)
             {
                 Video.CaptureCompleted -= OnCaptured;
                 PngDumper.WriteBgra(e.Pixels, e.Width, e.Height, path);
@@ -1626,7 +1625,7 @@ public partial class MainWindow : Window, IDisposable
         return $"{new string('█', filled)}{new string('░', 10 - filled)} {_meterPeak:F2}";
     }
 
-    private void OnOpenGlReady(object? sender, Controls.OpenGlReadyEventArgs e)
+    private void OnOpenGlReady(object? sender, OpenGlReadyEventArgs e)
     {
         if (_rendererKind != VideoRendererKind.OpenGl || _vulkanPresenter || _openGlDisabled)
         {
@@ -1680,7 +1679,7 @@ public partial class MainWindow : Window, IDisposable
         StartCpuFallback(exception, allowVulkan: false);
     }
 
-    private void OnOpenGlFailed(object? sender, Controls.OpenGlFailedEventArgs e)
+    private void OnOpenGlFailed(object? sender, OpenGlFailedEventArgs e)
     {
         if (_rendererKind != VideoRendererKind.OpenGl || _openGlDisabled)
         {

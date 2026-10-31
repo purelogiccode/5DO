@@ -68,7 +68,7 @@ public sealed class ProjectorTests
             0x7ffe,
             0,
             CcbControl.PlutPosition,
-            (uint)CcbControl0.SwapHV | (uint)B15Position.PixelDecoder | (uint)B0Position.PixelDecoder,
+            (uint)CcbControl0.SwapHv | (uint)B15Position.PixelDecoder | (uint)B0Position.PixelDecoder,
             0,
             0);
 
@@ -83,7 +83,7 @@ public sealed class ProjectorTests
             0x7ffe,
             0,
             CcbControl.PlutPosition,
-            (uint)CcbControl0.SwapHV | (uint)B15Position.PixelDecoder | (uint)B0Position.PixelDecoder,
+            (uint)CcbControl0.SwapHv | (uint)B15Position.PixelDecoder | (uint)B0Position.PixelDecoder,
             (uint)CcbPreamble1.NoSwap,
             0);
 

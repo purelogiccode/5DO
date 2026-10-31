@@ -41,7 +41,7 @@ public static class Projector
             ? (uint)(decoderOutput & 0x8001)
             : celOriginVh;
 
-        if ((ccbControl0 & (uint)CcbControl0.SwapHV) != 0
+        if ((ccbControl0 & (uint)CcbControl0.SwapHv) != 0
             && (pre1 & (uint)CcbPreamble1.NoSwap) == 0)
         {
             vhOutput = (vhOutput >> 15) | ((vhOutput & 1) << 15);

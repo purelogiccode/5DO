@@ -777,7 +777,7 @@ public sealed class Dsp : IDsp, IStateSection
                 var tdCare0 = inst.BranchFlagM0 == 0 || nstat1;
                 var rdCare = inst.BranchFlagM1 == 0 && inst.BranchFlagM0 == 0;
 
-                var md12s = tdCare1 && tdCare0 && (mode1 != mode0) && !rdCare;
+                var md12S = tdCare1 && tdCare0 && (mode1 != mode0) && !rdCare;
                 var super0 = md1 && inst.BranchFlagSel == 0 && rdCare;
                 var super1 = md1 && inst.BranchFlagSel != 0 && rdCare;
 
@@ -801,9 +801,9 @@ public sealed class Dsp : IDsp, IStateSection
                     var xactTest = ((exact != 0) != (inst.BranchFlagM0 != 0))
                         && inst.BranchFlagSel != 0
                         && inst.BranchFlagM1 != 0;
-                    var md3s = (nvTest || czTest || xactTest) && md3;
+                    var md3S = (nvTest || czTest || xactTest) && md3;
 
-                    _branchCond[inst.BranchBits, exact | flagsPacked] = md12s || md3s || sds;
+                    _branchCond[inst.BranchBits, exact | flagsPacked] = md12S || md3S || sds;
                 }
             }
         }

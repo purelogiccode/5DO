@@ -50,17 +50,15 @@ public sealed class VulkanRendererTests
             return;
         }
 
-        using var renderer = new VulkanOffscreenRenderer
+        using var renderer = new VulkanOffscreenRenderer();
+        renderer.Settings = new RendererSettings
         {
-            Settings = new RendererSettings
-            {
-                Filter = VideoFilter.Accurate,
-                Aspect = AspectMode.Stretch,
-                IntegerScale = false,
-                Vsync = false,
-            },
-            CaptureToFrame = true,
+            Filter = VideoFilter.Accurate,
+            Aspect = AspectMode.Stretch,
+            IntegerScale = false,
+            Vsync = false,
         };
+        renderer.CaptureToFrame = true;
         renderer.Initialize(320, 240);
         VdlFrame frame = CreateFrame(320, 240, 0);
         const int rowBytes = 320 * 4;
@@ -113,15 +111,13 @@ public sealed class VulkanRendererTests
             return;
         }
 
-        using var renderer = new VulkanOffscreenRenderer
+        using var renderer = new VulkanOffscreenRenderer();
+        renderer.Settings = new RendererSettings
         {
-            Settings = new RendererSettings
-            {
-                Filter = VideoFilter.Accurate,
-                Aspect = AspectMode.FourThree,
-                IntegerScale = false,
-                Vsync = false,
-            },
+            Filter = VideoFilter.Accurate,
+            Aspect = AspectMode.FourThree,
+            IntegerScale = false,
+            Vsync = false,
         };
         renderer.Initialize(640, 360);
         renderer.Present(CreateSplitFrame());
