@@ -105,8 +105,8 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, ARM timing, CPU clock, random seed, high-resolution mode, and overrides.">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+            <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, ARM and CLIO timing, CPU clock, random seed, high-resolution mode, and overrides.">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <CheckBox x:Name="AutoFixesCheck" Grid.Row="0" Grid.Column="1"
                               Content="Apply the 4DO per-game fixes automatically"
                               ToolTip.Tip="Apply the compatibility fix mask from the built-in game database when a disc opens." />
@@ -117,32 +117,36 @@
                                ToolTip.Tip="Select the ARM60 N-cycle length used by the interpreter." />
                     <ComboBox x:Name="ArmTimingCombo" Grid.Row="2" Grid.Column="1" Margin="0,12,0,0"
                               ToolTip.Tip="FreeDO-compatible uses N=4. ARM60 datasheet uses N=2 and changes instruction timing; save states record the mode." />
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="CPU clock" VerticalAlignment="Center" Margin="0,12,0,0"
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="CLIO timers" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Select how the CLIO timer slots are scanned." />
+                    <ComboBox x:Name="ClioTimersCombo" Grid.Row="3" Grid.Column="1" Margin="0,12,0,0"
+                              ToolTip.Tip="FreeDO services all timers per event. Opera walks one timer slot at a time with an explicit cascade carry; save states record the mode." />
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="CPU clock" VerticalAlignment="Center" Margin="0,12,0,0"
                                ToolTip.Tip="ARM60 clock multiplier. 1.0 is the stock 12.5 MHz; 0.5x-4x is supported." />
-                    <TextBox x:Name="CpuClockBox" Grid.Row="3" Grid.Column="1" Margin="0,12,0,0"
+                    <TextBox x:Name="CpuClockBox" Grid.Row="4" Grid.Column="1" Margin="0,12,0,0"
                              PlaceholderText="1.0 (stock 12.5 MHz; range 0.5-4.0)"
                              ToolTip.Tip="Enter a multiplier between 0.5 and 4.0. Higher clocks can change timing-sensitive behavior." />
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Random seed" VerticalAlignment="Center" Margin="0,12,0,0"
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Random seed" VerticalAlignment="Center" Margin="0,12,0,0"
                                ToolTip.Tip="Initial DSP PRNG seed. Leave blank for the FreeDO default, or enter a 32-bit value." />
-                    <TextBox x:Name="RandomSeedBox" Grid.Row="4" Grid.Column="1" Margin="0,12,0,0"
+                    <TextBox x:Name="RandomSeedBox" Grid.Row="5" Grid.Column="1" Margin="0,12,0,0"
                              PlaceholderText="Default (blank) or a 32-bit seed such as 0x1234"
                              ToolTip.Tip="A fixed seed makes fresh runs reproducible. The seed is part of save-state data once the DSP advances." />
-                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Current game" VerticalAlignment="Center" Margin="0,12,0,0"
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Current game" VerticalAlignment="Center" Margin="0,12,0,0"
                                ToolTip.Tip="The disc whose per-game overrides are being edited." />
-                    <TextBlock x:Name="GameText" Grid.Row="5" Grid.Column="1" Text="No disc loaded."
+                    <TextBlock x:Name="GameText" Grid.Row="6" Grid.Column="1" Text="No disc loaded."
                                TextWrapping="Wrap" Margin="0,12,0,0"
                                ToolTip.Tip="The currently loaded game and its database entry." />
-                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Fix-mode override" VerticalAlignment="Center"
+                    <TextBlock Grid.Row="7" Grid.Column="0" Text="Fix-mode override" VerticalAlignment="Center"
                                ToolTip.Tip="Override the automatic 4DO compatibility fix mask." />
-                    <TextBox x:Name="FixModeBox" Grid.Row="6" Grid.Column="1"
+                    <TextBox x:Name="FixModeBox" Grid.Row="7" Grid.Column="1"
                              PlaceholderText="Automatic (hexadecimal mask, for example 0x20)"
                              ToolTip.Tip="Enter a hexadecimal fix mask, or leave blank to use the database value." />
-                    <TextBlock Grid.Row="7" Grid.Column="1" Text="Leave blank to use the database value."
+                    <TextBlock Grid.Row="8" Grid.Column="1" Text="Leave blank to use the database value."
                                Opacity="0.7" FontSize="11"
                                ToolTip.Tip="A blank override keeps the automatic per-game fix mask." />
-                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Filter override" VerticalAlignment="Center" Margin="0,12,0,0"
+                    <TextBlock Grid.Row="9" Grid.Column="0" Text="Filter override" VerticalAlignment="Center" Margin="0,12,0,0"
                                ToolTip.Tip="Override the output filter for this game." />
-                    <ComboBox x:Name="FilterOverrideCombo" Grid.Row="8" Grid.Column="1" Margin="0,12,0,0"
+                    <ComboBox x:Name="FilterOverrideCombo" Grid.Row="9" Grid.Column="1" Margin="0,12,0,0"
                               ToolTip.Tip="Automatic or a per-game filter override." />
                 </Grid>
             </TabItem>

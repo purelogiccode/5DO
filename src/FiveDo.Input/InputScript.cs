@@ -27,6 +27,15 @@ namespace FiveDo.Input;
 /// </remarks>
 public static class InputScript
 {
+    private static readonly Dictionary<string, ControllerButton> ButtonAliases =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Start"] = ControllerButton.P,
+            ["Play"] = ControllerButton.P,
+            ["Pause"] = ControllerButton.P,
+            ["Stop"] = ControllerButton.X,
+        };
+
     /// <summary>Parses script text into frame-ordered entries.</summary>
     /// <param name="text">Script text.</param>
     /// <returns>Entries sorted by frame; duplicate frames keep the last entry.</returns>
@@ -117,6 +126,12 @@ public static class InputScript
         {
             if (string.Equals(part, "None", StringComparison.OrdinalIgnoreCase))
             {
+                continue;
+            }
+
+            if (ButtonAliases.TryGetValue(part, out ControllerButton alias))
+            {
+                buttons |= alias;
                 continue;
             }
 

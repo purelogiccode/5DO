@@ -21,11 +21,22 @@ namespace FiveDo.Machine;
 /// </remarks>
 public sealed class Quartz : IStateSection
 {
+    private const uint TimerSlotCount = 16;
+    private const uint TimerSlotTicks = 4;
+
+    private readonly ClioTimerMode _timerMode;
     private int _armClock;
     private uint _accArm;
     private uint _accVdl;
     private uint _tCount;
     private uint _vdlLine;
+
+    // Opera's timer scheduler walks one slot per 4 M25M ticks and inserts a slack gap
+    // after slot 15. The accumulator is 16.16 ARM cycles so a 12.5 MHz CPU produces
+    // exact two-cycle slots instead of rounding every scan.
+    private ulong _timerAccumulator1616;
+    private uint _timerSlot;
+    private bool _timerInGap;
 
     // The DSP sample accumulator counts ARM cycles toward the next 44.1 kHz sample. The
     // FreeDO 8.24 scheme quantizes every batch to 1/2^24 second and over-produced samples by
@@ -42,6 +53,7 @@ public sealed class Quartz : IStateSection
         EmulatorTuning effectiveTuning = tuning ?? EmulatorTuning.Default;
         effectiveTuning.Validate();
         _armClock = effectiveTuning.ArmClock;
+        _timerMode = effectiveTuning.ClioTimers;
         TimerDelayProvider = timerDelayProvider;
     }
 
@@ -83,7 +95,23 @@ public sealed class Quartz : IStateSection
     public uint VdlAccumulator => _accVdl;
 
     /// <summary>Gets the raw timer accumulator. Exposed for tests and diagnostics.</summary>
-    public uint TimerAccumulator => _tCount;
+    /// <remarks>
+    /// In <see cref="ClioTimerMode.FreeDoCompatible"/> mode this is the 8.24 FreeDO
+    /// accumulator. In <see cref="ClioTimerMode.OperaScheduler"/> mode it is the whole
+    /// ARM-cycle part of the 16.16 per-slot accumulator.
+    /// </remarks>
+    public uint TimerAccumulator => _timerMode == ClioTimerMode.OperaScheduler
+        ? (uint)(_timerAccumulator1616 >> 16)
+        : _tCount;
+
+    /// <summary>Gets the timer mode selected at construction.</summary>
+    public ClioTimerMode TimerMode => _timerMode;
+
+    /// <summary>Gets the next timer slot in Opera mode. Exposed for tests and diagnostics.</summary>
+    public int TimerSlot => (int)_timerSlot;
+
+    /// <summary>Gets a value indicating whether the scheduler is in the post-slot gap in Opera mode.</summary>
+    public bool TimerInGap => _timerInGap;
 
     /// <summary>Gets the current VDL line within the half-frame. FreeDO: <c>_qrz_VDCurrLine()</c>.</summary>
     public int VdCurrLine => (int)(_vdlLine % EmulatorConstants.VdlLinesPerHalfFrame);
@@ -102,6 +130,9 @@ public sealed class Quartz : IStateSection
         _accVdl = 0;
         _tCount = 0;
         _vdlLine = 0;
+        _timerAccumulator1616 = 0;
+        _timerSlot = 0;
+        _timerInGap = false;
     }
 
     /// <summary>Adds ARM cycles to the scheduler. FreeDO: <c>_qrz_PushARMCycles</c>.</summary>
@@ -124,10 +155,19 @@ public sealed class Quartz : IStateSection
         _dspCycleRemainder = unchecked(_dspCycleRemainder + (cycles * EmulatorConstants.SoundClock));
         _accVdl = unchecked(_accVdl + (arm * EmulatorConstants.VdlClock));
 
-        var timerDelay = TimerDelayProvider?.Invoke() ?? 0;
-        if (timerDelay != 0)
+        if (_timerMode == ClioTimerMode.OperaScheduler)
         {
-            _tCount = unchecked(_tCount + (arm * (EmulatorConstants.TimerClock / timerDelay)));
+            // Opera accumulates the raw ARM cycle batch in 16.16 and walks one timer
+            // slot per four M25M ticks, plus a slack gap after slot 15.
+            _timerAccumulator1616 += (ulong)cycles << 16;
+        }
+        else
+        {
+            var timerDelay = TimerDelayProvider?.Invoke() ?? 0;
+            if (timerDelay != 0)
+            {
+                _tCount = unchecked(_tCount + (arm * (EmulatorConstants.TimerClock / timerDelay)));
+            }
         }
     }
 
@@ -148,6 +188,24 @@ public sealed class Quartz : IStateSection
     /// <returns><see langword="true"/> when a timer tick is due.</returns>
     public bool QueueTimer()
     {
+        return QueueTimer(out _);
+    }
+
+    /// <summary>Consumes one timer event and reports the due timer slot.</summary>
+    /// <param name="timer">
+    /// Zero-based timer slot in <see cref="ClioTimerMode.OperaScheduler"/> mode. In
+    /// <see cref="ClioTimerMode.FreeDoCompatible"/> mode the all-timer scan is due and
+    /// the value is zero.
+    /// </param>
+    /// <returns><see langword="true"/> when a timer event is due.</returns>
+    public bool QueueTimer(out int timer)
+    {
+        if (_timerMode == ClioTimerMode.OperaScheduler)
+        {
+            return QueueOperaTimer(out timer);
+        }
+
+        timer = 0;
         if ((_tCount >> 24) != 0)
         {
             _tCount = unchecked(_tCount - 0x1000000);
@@ -155,6 +213,45 @@ public sealed class Quartz : IStateSection
         }
 
         return false;
+    }
+
+    private bool QueueOperaTimer(out int timer)
+    {
+        // CLIO resets 0x220 to 64, which is also Opera's default timer slack.
+        var slack = TimerDelayProvider?.Invoke() ?? 64u;
+        if (slack > 0x3ffu)
+        {
+            slack = 0x3ffu;
+        }
+
+        var ticks = _timerInGap ? TimerSlotTicks + slack : TimerSlotTicks;
+        var threshold = (((ulong)(uint)_armClock * ticks) << 16) / (uint)EmulatorConstants.TimerClock;
+        if (threshold == 0)
+        {
+            threshold = 1;
+        }
+
+        if (_timerAccumulator1616 < threshold)
+        {
+            timer = -1;
+            return false;
+        }
+
+        _timerAccumulator1616 -= threshold;
+        timer = (int)_timerSlot;
+
+        _timerSlot++;
+        if (_timerSlot >= TimerSlotCount)
+        {
+            _timerSlot = 0;
+            _timerInGap = true;
+        }
+        else
+        {
+            _timerInGap = false;
+        }
+
+        return true;
     }
 
     /// <summary>Consumes one VDL line event. FreeDO: <c>_qrz_QueueVDL</c>.</summary>
@@ -178,9 +275,11 @@ public sealed class Quartz : IStateSection
     /// <summary>Gets the save-state section version.</summary>
     /// <remarks>
     /// Version 2 stores the exact DSP cycle remainder instead of FreeDO's 8.24 sample
-    /// accumulator. A version-1 section is still accepted and converted on load.
+    /// accumulator. Version 3 adds the Opera timer slot/accumulator state. Version-1 and
+    /// version-2 sections are still accepted; missing timer fields default to a reset
+    /// scheduler.
     /// </remarks>
-    public ushort Version => 2;
+    public ushort Version => 3;
 
     /// <summary>Writes the scheduler section.</summary>
     /// <param name="writer">State writer.</param>
@@ -205,6 +304,9 @@ public sealed class Quartz : IStateSection
         writer.WriteUInt32(_accVdl);
         writer.WriteUInt32(_tCount);
         writer.WriteUInt32(_vdlLine);
+        writer.WriteUInt64(_timerAccumulator1616);
+        writer.WriteUInt32(_timerSlot);
+        writer.WriteUInt32(_timerInGap ? 1u : 0u);
     }
 
     /// <summary>Reads the scheduler state.</summary>
@@ -241,5 +343,29 @@ public sealed class Quartz : IStateSection
         }
 
         _vdlLine = line;
+
+        if (reader is StateSectionReader { Version: 1 or 2 })
+        {
+            _timerAccumulator1616 = 0;
+            _timerSlot = 0;
+            _timerInGap = false;
+            return;
+        }
+
+        _timerAccumulator1616 = reader.ReadUInt64();
+        var timerSlot = reader.ReadUInt32();
+        var timerInGap = reader.ReadUInt32();
+        if (timerSlot >= TimerSlotCount)
+        {
+            throw new InvalidStateException($"Invalid quartz timer slot {timerSlot}.");
+        }
+
+        if (timerInGap > 1)
+        {
+            throw new InvalidStateException($"Invalid quartz timer gap flag {timerInGap}.");
+        }
+
+        _timerSlot = timerSlot;
+        _timerInGap = timerInGap != 0;
     }
 }

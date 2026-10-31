@@ -7,6 +7,16 @@ still change.
 
 ### Added
 
+- CLIO timer scheduler option (`ClioTimerMode`). The default `FreeDoCompatible` mode
+  keeps the original all-sixteen-timer scan. The opt-in `OperaScheduler` mode follows
+  `opera_clock.c`/`opera_clio.c`: one timer slot per four 25 MHz ticks, the `0x220`
+  slack gap after slot 15, and an explicit cascade carry. It is available as
+  `--clio-timers freedo|opera` on `run`/`trace` and in Settings > Emulation, and
+  `run --json` reports the selected mode. Save states record the mode in the `Options`
+  section and add a warning on mismatch. Quartz section version 3 stores the Opera
+  slot/accumulator and Clio section version 2 stores the carry; older states still
+  load. The default path is unchanged; the 3,000-frame differential is in
+  `docs/TestCorpus.md` 1.1b.
 - ARM60 cycle-class timing option (`ArmTimingMode`). The default
   `FreeDoCompatible` mode keeps the original N=4 timing; the opt-in
   `Arm60Datasheet` mode uses N=2 from the ARM60 datasheet/SDK and Opera. It is
@@ -182,6 +192,13 @@ still change.
 
 ### Fixed
 
+- **Input-script button aliases.** `Start`, `Play`, and `Pause` are now accepted as
+  aliases for the 3DO `P` button, and `Stop` for `X`. Scripts that used the common
+  `Start` name no longer fail with `unknown button 'Start'`.
+- **CLI user errors no longer file bug reports.** Expected command-line errors
+  (bad arguments, missing paths, offsets outside a file, and malformed input scripts)
+  are still logged and printed to stderr, but are marked as expected so the bug-report
+  sink ignores them. Unexpected exceptions still report at `Fatal`.
 - **Desktop Stop button.** The toolbar, menu, and in-game Stop actions called
   `PauseEmulation`, so the core thread stayed paused with the previous machine state;
   a later Start reused that state and the game could fail to resume. Stop now joins

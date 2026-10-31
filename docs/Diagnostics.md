@@ -50,8 +50,10 @@ stdout/stderr contract (JSON and concise errors) and writes diagnostics to the f
 and bug-report sinks.
 
 Warning-or-higher events are submitted asynchronously to the bug-report API with
-the required environment, error, and exception blocks. Submissions are deduplicated
-for five minutes and capped at ten per minute. Set `FIVEDO_BUG_REPORTS=0` to
+the required environment, error, and exception blocks. Expected command-line usage
+errors (bad arguments, missing paths, malformed input scripts, and out-of-range
+offsets) are logged with `WithoutBugReport` so they do not create bug reports.
+Submissions are deduplicated for five minutes and capped at ten per minute. Set `FIVEDO_BUG_REPORTS=0` to
 disable submission, `FIVEDO_LOG_DIR` to redirect log files, or
 `FIVEDO_BUGREPORT_API_KEY` to override the API key. CI and test runs disable
 submission automatically.
@@ -304,6 +306,9 @@ Input scripts are frame-stamped button states:
 180      A,Down
 240      None
 ```
+
+Button names are `A`, `B`, `C`, `P`, `X`, `L`, `R`, and the D-pad directions.
+`Start`, `Play`, and `Pause` are accepted aliases for `P`, and `Stop` for `X`.
 
 ```powershell
 dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin `

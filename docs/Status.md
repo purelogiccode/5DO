@@ -13,7 +13,10 @@ fixing Olympic Summer Games' controller check. Fifteen triaged titles now have a
 reviewed 5DO status in [`GameCompatibilityList.md`](GameCompatibilityList.md); the
 rest remain `No data`. The CORE-01 ARM timing option (`--arm-timing freedo|arm60`), its
 save-state snapshot, `--cpu-clock 0.5x-4x`, and `--random-seed` are implemented with
-tests. **972 tests pass.**
+tests. The CORE-02 CLIO timer option (`--clio-timers freedo|opera`) now implements
+Opera's per-slot scan and cascade carry behind the safe FreeDO-compatible default, with
+a state snapshot and a 3,000-frame smoke differential in `TestCorpus.md` 1.1b.
+**988 tests pass.**
 The v1.0 release is deliberately deferred: the next work is a BIOS-aware sweep and
 5DO status merge (M13), then high-resolution CEL research (M14). The project is
 **donationware** (non-commercial, source-available, voluntary donations only). See

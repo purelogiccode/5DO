@@ -275,6 +275,31 @@ public sealed class SaveStateTests
     }
 
     [Fact]
+    public void SaveState_RecordsClioTimersAndWarnsOnMismatch()
+    {
+        var operaTimers = new EmulatorTuning { ClioTimers = ClioTimerMode.OperaScheduler };
+        FiveDoMachine machine = CreateMachine(tuning: operaTimers);
+        machine.RunFrames(2);
+        using var state = new MemoryStream();
+        machine.SaveState(state);
+
+        FiveDoMachine matching = CreateMachine(tuning: operaTimers);
+        state.Position = 0;
+        matching.LoadState(state);
+        Assert.DoesNotContain(
+            matching.StateWarnings,
+            warning => warning.Contains("CLIO timer", StringComparison.Ordinal));
+
+        FiveDoMachine freeDo = CreateMachine();
+        state.Position = 0;
+        freeDo.LoadState(state);
+        Assert.Contains(
+            freeDo.StateWarnings,
+            warning => warning.Contains("CLIO timer", StringComparison.Ordinal)
+                && warning.Contains("OperaScheduler", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void LoadState_AcceptsVersionOneStates()
     {
         FiveDoMachine machine = CreateMachine();

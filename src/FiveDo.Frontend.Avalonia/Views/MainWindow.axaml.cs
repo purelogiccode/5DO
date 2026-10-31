@@ -1800,6 +1800,7 @@ public partial class MainWindow : Window, IDisposable
         if (_machine is not null
             && (_settings.HighResolution != _machine.Tuning.HighResolution
                 || _settings.ArmTiming != _machine.Tuning.ArmTiming
+                || _settings.ClioTimers != _machine.Tuning.ClioTimers
                 || _settings.ResolveArmClock() != _machine.Tuning.ArmClock
                 || _settings.RandomSeed != _machine.Tuning.RandomSeed))
         {
@@ -2331,6 +2332,7 @@ public partial class MainWindow : Window, IDisposable
             {
                 HighResolution = _settings.HighResolution,
                 ArmTiming = _settings.ArmTiming,
+                ClioTimers = _settings.ClioTimers,
                 ArmClock = _settings.ResolveArmClock(),
                 RandomSeed = _settings.RandomSeed,
             })

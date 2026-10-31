@@ -26,10 +26,14 @@ internal sealed class MachineOptionsSection : IStateSection
     public uint Id => StateSectionIds.Options;
 
     /// <summary>Gets the save-state section version.</summary>
-    public ushort Version => 1;
+    /// <remarks>Version 2 adds the CLIO timer mode; version-1 states default to FreeDO-compatible.</remarks>
+    public ushort Version => 2;
 
     /// <summary>Gets the ARM timing mode read from a state, or <see langword="null"/> when absent.</summary>
     internal ArmTimingMode? LoadedArmTiming { get; private set; }
+
+    /// <summary>Gets the CLIO timer mode read from a state, or <see langword="null"/> when absent.</summary>
+    internal ClioTimerMode? LoadedClioTimers { get; private set; }
 
     /// <summary>Writes the option snapshot.</summary>
     /// <param name="writer">State writer.</param>
@@ -37,11 +41,12 @@ internal sealed class MachineOptionsSection : IStateSection
     {
         ArgumentNullException.ThrowIfNull(writer);
         writer.WriteUInt32((uint)_tuning.ArmTiming);
+        writer.WriteUInt32((uint)_tuning.ClioTimers);
     }
 
     /// <summary>Reads the option snapshot.</summary>
     /// <param name="reader">State reader.</param>
-    /// <exception cref="InvalidStateException">Thrown when the ARM timing value is unknown.</exception>
+    /// <exception cref="InvalidStateException">Thrown when an option value is unknown.</exception>
     public void Load(IStateReader reader)
     {
         ArgumentNullException.ThrowIfNull(reader);
@@ -52,5 +57,19 @@ internal sealed class MachineOptionsSection : IStateSection
         }
 
         LoadedArmTiming = timing;
+
+        if (reader is StateSectionReader { Version: 1 })
+        {
+            LoadedClioTimers = null;
+            return;
+        }
+
+        var clioTimers = (ClioTimerMode)reader.ReadUInt32();
+        if (clioTimers is not ClioTimerMode.FreeDoCompatible and not ClioTimerMode.OperaScheduler)
+        {
+            throw new InvalidStateException($"Unknown CLIO timer mode {(uint)clioTimers} in the save state.");
+        }
+
+        LoadedClioTimers = clioTimers;
     }
 }

@@ -25,6 +25,13 @@ public sealed record EmulatorTuning
     public ArmTimingMode ArmTiming { get; init; } = ArmTimingMode.FreeDoCompatible;
 
     /// <summary>
+    /// Gets the CLIO timer scan model. The default is the FreeDO-compatible all-timer
+    /// scan; <see cref="ClioTimerMode.OperaScheduler"/> walks one timer slot at a time
+    /// with an explicit cascade carry.
+    /// </summary>
+    public ClioTimerMode ClioTimers { get; init; } = ClioTimerMode.FreeDoCompatible;
+
+    /// <summary>
     /// Gets the optional initial DSP PRNG seed. <see langword="null"/> keeps FreeDO's
     /// default seed (<c>0xa5a5a5a5</c>); a value makes fresh runs reproducible from a
     /// known seed.
@@ -51,6 +58,7 @@ public sealed record EmulatorTuning
     {
         ValidateArmClock(ArmClock);
         ValidateArmTiming(ArmTiming);
+        ValidateClioTimers(ClioTimers);
         ValidateCpuBackend(CpuBackend);
     }
 
@@ -70,6 +78,17 @@ public sealed record EmulatorTuning
                 nameof(armTiming),
                 armTiming,
                 "Unknown ARM timing mode.");
+        }
+    }
+
+    private static void ValidateClioTimers(ClioTimerMode clioTimers)
+    {
+        if (clioTimers is not ClioTimerMode.FreeDoCompatible and not ClioTimerMode.OperaScheduler)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(clioTimers),
+                clioTimers,
+                "Unknown CLIO timer mode.");
         }
     }
 

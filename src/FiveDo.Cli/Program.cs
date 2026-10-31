@@ -85,9 +85,12 @@ internal static class Program
                 or InvalidDataException
                 or InvalidStateException
                 or ArgumentException
+                or FormatException
                 or NotSupportedException)
             {
-                logger.Warning(exception, "CLI command {Command} failed.", args[0]);
+                // Bad arguments, missing paths, and malformed input scripts are expected
+                // user errors. Keep them in the log, but do not submit them as bug reports.
+                logger.WithoutBugReport().Warning(exception, "CLI command {Command} failed.", args[0]);
                 if (json)
                 {
                     Console.WriteLine(JsonSerializer.Serialize(
@@ -216,6 +219,7 @@ internal static class Program
         {
             HighResolution = HasFlag(args, "--high-res"),
             ArmTiming = ParseArmTiming(options.Get("--arm-timing")),
+            ClioTimers = ParseClioTimers(options.Get("--clio-timers")),
             ArmClock = ParseCpuClock(options.Get("--cpu-clock")),
             RandomSeed = ParseRandomSeed(options.Get("--random-seed")),
             FixMode = fixMode,
@@ -636,6 +640,7 @@ internal static class Program
             DiscHash: discHash,
             GameId: gameId,
             ArmTiming: machine.Tuning.ArmTiming.ToString(),
+            ClioTimers: machine.Tuning.ClioTimers.ToString(),
             CpuClock: machine.Tuning.ArmClock,
             FixMode: (uint)machine.Compatibility.FixMode,
             DspRunning: machine.Dsp.IsRunning,
@@ -739,6 +744,7 @@ internal static class Program
         {
             HighResolution = HasFlag(args, "--high-res"),
             ArmTiming = ParseArmTiming(options.Get("--arm-timing")),
+            ClioTimers = ParseClioTimers(options.Get("--clio-timers")),
             ArmClock = ParseCpuClock(options.Get("--cpu-clock")),
             RandomSeed = ParseRandomSeed(options.Get("--random-seed")),
             FixMode = fixMode,
@@ -1707,6 +1713,7 @@ internal static class Program
         Console.WriteLine($"disc hash:   {result.DiscHash}");
         Console.WriteLine($"game id:     {result.GameId}");
         Console.WriteLine($"arm timing:  {result.ArmTiming}");
+        Console.WriteLine($"clio timers: {result.ClioTimers}");
         Console.WriteLine($"cpu clock:   {result.CpuClock / 1_000_000.0:0.###} MHz");
         Console.WriteLine($"fix mode:    0x{result.FixMode:x8}");
         Console.WriteLine($"dsp running: {result.DspRunning}");
@@ -1777,6 +1784,26 @@ internal static class Program
 
         throw new ArgumentException(
             $"Invalid --arm-timing value '{value}'; expected freedo or arm60.",
+            nameof(value));
+    }
+
+    private static ClioTimerMode ParseClioTimers(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)
+            || string.Equals(value, "freedo", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "freedo-compatible", StringComparison.OrdinalIgnoreCase))
+        {
+            return ClioTimerMode.FreeDoCompatible;
+        }
+
+        if (string.Equals(value, "opera", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "opera-scheduler", StringComparison.OrdinalIgnoreCase))
+        {
+            return ClioTimerMode.OperaScheduler;
+        }
+
+        throw new ArgumentException(
+            $"Invalid --clio-timers value '{value}'; expected freedo or opera.",
             nameof(value));
     }
 
@@ -1918,13 +1945,15 @@ internal static class Program
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--script-base absolute|state] [--autopilot road] [--progress N] [--cel-trace path] [--pbus-trace path]");
         Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--prefetch]");
-        Console.WriteLine("             [--arm-timing freedo|arm60] [--cpu-clock 0.5x-4x|6.25-50MHz]");
+        Console.WriteLine("             [--arm-timing freedo|arm60] [--clio-timers freedo|opera]");
+        Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--realtime] [--json]");
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
         Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path] [--high-res] [--prefetch]");
-        Console.WriteLine("             [--arm-timing freedo|arm60] [--cpu-clock 0.5x-4x|6.25-50MHz]");
+        Console.WriteLine("             [--arm-timing freedo|arm60] [--clio-timers freedo|opera]");
+        Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--fix-mode 0xMASK] [--no-game-fixes]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             Runs the machine and records a diagnostic instruction ring buffer.");

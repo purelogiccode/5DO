@@ -685,3 +685,28 @@ M1 implements the section primitive used by all later chips:
   `AppSettings.RandomSeed` and edited in Settings > Emulation.
 - Save states already serialize the DSP seed, so a loaded state continues from its
   recorded PRNG position rather than the configured initial seed.
+
+### 12.16 CLIO timer scheduler (2026-10-31)
+
+- `ClioTimerMode.FreeDoCompatible` keeps the original port's `DoTimers()` all-timer
+  scan: one 25 MHz/64 event decrements every enabled timer. It remains the default so
+  golden frames and existing states are unchanged.
+- `ClioTimerMode.OperaScheduler` follows `opera_clock.c` and `opera_clio.c`: the
+  scheduler walks timer slots 0-15, each slot lasting four 25 MHz ticks, then waits the
+  `0x220` slack plus four ticks before slot 0 of the next scan. Only the due timer is
+  executed, and `DoTimers(int)` keeps the explicit `TIMER_CARRY` so a cascade timer
+  decrements only after the previous timer underflows. A non-reload underflow writes
+  `0xFFFF` and clears `DECREMENT`; a reload underflow reloads from `+4`.
+- The scheduler accumulates raw ARM cycles in 16.16, matching Opera's `timer_acc`. At
+  the stock 12.5 MHz clock a slot is exactly two ARM cycles; with the default slack of
+  64, one scan is 64 ARM cycles (15 slot intervals plus the 34-cycle gap).
+- The CLI exposes `--clio-timers freedo|opera` on `run` and `trace`; Settings >
+  Emulation exposes the same choice. `run --json` reports `clioTimers`. Changing the
+  mode recreates the desktop machine.
+- Save states record the mode in the optional `Options` section (version 2). Quartz
+  section version 3 stores the Opera slot, gap flag, and 16.16 accumulator; Clio section
+  version 2 stores the cascade carry. Version-1/2 sections still load with a reset
+  timer scheduler. A mode mismatch is a warning, not a rejection.
+- Do not make the Opera scheduler the default until a full-collection differential
+  shows it is safe. The 3,000-frame smoke keys in `TestCorpus.md` show the expected
+  timing divergence.

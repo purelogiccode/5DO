@@ -45,9 +45,21 @@ public sealed class InputScriptTests
     }
 
     [Fact]
+    public void Parse_AcceptsStartAndStopAliases()
+    {
+        IReadOnlyList<InputScriptEntry> entries = InputScript.Parse("0 Start,Stop\n");
+        Assert.Equal(ControllerButton.P | ControllerButton.X, entries[0].State.Buttons);
+
+        entries = InputScript.Parse("0 Play\n10 Pause\n20 Stop\n");
+        Assert.Equal(ControllerButton.P, entries[0].State.Buttons);
+        Assert.Equal(ControllerButton.P, entries[1].State.Buttons);
+        Assert.Equal(ControllerButton.X, entries[2].State.Buttons);
+    }
+
+    [Fact]
     public void Parse_RejectsUnknownButtons()
     {
-        FormatException exception = Assert.Throws<FormatException>(() => InputScript.Parse("0 Start\n"));
+        FormatException exception = Assert.Throws<FormatException>(() => InputScript.Parse("0 Turbo\n"));
         Assert.Contains("unknown button", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 

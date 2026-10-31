@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using FiveDo.Core;
 using FiveDo.Machine;
 
@@ -137,6 +139,80 @@ public sealed class QuartzTests
     }
 
     [Fact]
+    public void OperaTimerMode_WalksSlotsInOrderAndInsertsTheSlackGap()
+    {
+        var quartz = new Quartz(
+            new EmulatorTuning { ClioTimers = ClioTimerMode.OperaScheduler },
+            () => 64);
+        var slots = new List<int>();
+
+        quartz.PushArmCycles(200);
+        while (quartz.QueueTimer(out var timer))
+        {
+            slots.Add(timer);
+        }
+
+        Assert.Equal(ClioTimerMode.OperaScheduler, quartz.TimerMode);
+        Assert.True(slots.Count >= 17);
+        Assert.Equal(Enumerable.Range(0, 16), slots.Take(16));
+        Assert.Equal(0, slots[16]);
+        Assert.False(quartz.TimerInGap);
+        Assert.InRange(quartz.TimerSlot, 1, 15);
+    }
+
+    [Fact]
+    public void OperaTimerMode_OneSecondProducesTheExpectedSlotEvents()
+    {
+        var quartz = new Quartz(
+            new EmulatorTuning { ClioTimers = ClioTimerMode.OperaScheduler },
+            () => 64);
+        var events = 0;
+        var total = 0u;
+
+        while (total < EmulatorConstants.ArmClock)
+        {
+            var chunk = Math.Min(16u, EmulatorConstants.ArmClock - total);
+            quartz.PushArmCycles(chunk);
+            total += chunk;
+            while (quartz.QueueTimer())
+            {
+                events++;
+            }
+        }
+
+        // Fifteen 2-cycle slot intervals plus the 34-cycle (4+64 M25M tick) gap:
+        // one scan is 64 cycles, or 195,312.5 scans and 3,125,000 slot events per
+        // 12.5 MHz second.
+        Assert.InRange(events, 3_124_000, 3_126_000);
+    }
+
+    [Fact]
+    public void OperaTimerMode_ZeroSlackUsesTheFourTickGap()
+    {
+        var quartz = new Quartz(
+            new EmulatorTuning { ClioTimers = ClioTimerMode.OperaScheduler },
+            () => 0);
+        var events = 0;
+        var total = 0u;
+
+        while (total < EmulatorConstants.ArmClock)
+        {
+            var chunk = Math.Min(16u, EmulatorConstants.ArmClock - total);
+            quartz.PushArmCycles(chunk);
+            total += chunk;
+            while (quartz.QueueTimer())
+            {
+                events++;
+            }
+        }
+
+        // A zero slack still has the four-tick post-slot gap: fifteen 2-cycle slot
+        // intervals plus the 2-cycle gap make a 32-cycle scan, or 6,250,000 events
+        // per 12.5 MHz second.
+        Assert.InRange(events, 6_249_000, 6_251_000);
+    }
+
+    [Fact]
     public void QueueDsp_DoesNotDriftAcrossSixteenCycleBatches()
     {
         var quartz = new Quartz();
@@ -266,6 +342,81 @@ public sealed class QuartzTests
                 writer.WriteUInt32(EmulatorConstants.ArmClock);
                 writer.WriteUInt32(0);
                 writer.WriteUInt32(0);
+                writer.WriteUInt32(0);
+            });
+        var outer = new StateWriter();
+        outer.WriteSection(section);
+        StateSectionReader sectionReader = new StateReader(outer.ToArray()).ReadSection();
+
+        var quartz = new Quartz();
+        Assert.Throws<InvalidStateException>(() => quartz.LoadState(sectionReader));
+    }
+
+    [Fact]
+    public void SaveLoad_RoundtripsTheOperaTimerState()
+    {
+        var quartz = new Quartz(
+            new EmulatorTuning { ClioTimers = ClioTimerMode.OperaScheduler },
+            () => 64);
+        quartz.PushArmCycles(200);
+        while (quartz.QueueTimer())
+        {
+        }
+
+        var writer = new StateWriter();
+        quartz.SaveState(writer);
+
+        var restored = new Quartz(
+            new EmulatorTuning { ClioTimers = ClioTimerMode.OperaScheduler },
+            () => 64);
+        restored.LoadState(new StateReader(writer.ToArray()));
+
+        Assert.Equal(quartz.TimerAccumulator, restored.TimerAccumulator);
+        Assert.Equal(quartz.TimerSlot, restored.TimerSlot);
+        Assert.Equal(quartz.TimerInGap, restored.TimerInGap);
+    }
+
+    [Fact]
+    public void LoadState_Version2_DefaultsTheOperaTimerFields()
+    {
+        var section = new TestSection(
+            StateSectionIds.Quartz,
+            version: 2,
+            writer =>
+            {
+                writer.WriteUInt32(0);
+                writer.WriteUInt32(0);
+                writer.WriteUInt32(0);
+                writer.WriteUInt32(0);
+                writer.WriteUInt32(0);
+            });
+        var outer = new StateWriter();
+        outer.WriteSection(section);
+        StateSectionReader sectionReader = new StateReader(outer.ToArray()).ReadSection();
+
+        var quartz = new Quartz();
+        quartz.LoadState(sectionReader);
+
+        Assert.Equal(0, quartz.TimerSlot);
+        Assert.False(quartz.TimerInGap);
+        Assert.Equal(0u, quartz.TimerAccumulator);
+    }
+
+    [Fact]
+    public void LoadState_Version3_RejectsAnInvalidTimerSlot()
+    {
+        var section = new TestSection(
+            StateSectionIds.Quartz,
+            version: 3,
+            writer =>
+            {
+                writer.WriteUInt32(0);
+                writer.WriteUInt32(0);
+                writer.WriteUInt32(0);
+                writer.WriteUInt32(0);
+                writer.WriteUInt32(0);
+                writer.WriteUInt64(0);
+                writer.WriteUInt32(16);
                 writer.WriteUInt32(0);
             });
         var outer = new StateWriter();

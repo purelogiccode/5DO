@@ -136,6 +136,13 @@ public sealed class AppSettings
     public ArmTimingMode ArmTiming { get; set; } = ArmTimingMode.FreeDoCompatible;
 
     /// <summary>
+    /// Gets or sets the CLIO timer scan model. The default is the FreeDO-compatible
+    /// all-timer scan; <see cref="ClioTimerMode.OperaScheduler"/> uses Opera's per-slot
+    /// walk and explicit cascade carry.
+    /// </summary>
+    public ClioTimerMode ClioTimers { get; set; } = ClioTimerMode.FreeDoCompatible;
+
+    /// <summary>
     /// Gets or sets the ARM clock multiplier. 1.0 is the stock 12.5 MHz clock; the
     /// supported range is 0.5x to 4x (6.25-50 MHz).
     /// </summary>

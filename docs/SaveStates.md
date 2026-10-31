@@ -91,22 +91,24 @@ bits and malformed compressed payloads are rejected.
 
 ## 3. Section table
 
-Sections are written in this order and identified by stable IDs. Never renumber an
-existing section.
+Sections are identified by stable IDs. `FiveDoMachine.SaveState` writes them in the
+order CPU, Memory, MADAM, CLIO, DSP, SPORT, VDLP, XBUS, CD-ROM, Quartz, Options, and
+Machine; the table below is sorted by ID. Never renumber an existing section.
 
 | ID | Name | Version | Owner | Payload summary |
 |---:|---|---:|---|---|
 | 1 | CPU | 1 | `Arm60` | R0-R15, banked SVC/ABT/FIQ/IRQ/UND/SPSR register sets, CPSR, FIQ pending, second-ROM select, data-abort pending, carry-out, LDM scratch. |
 | 2 | Memory | 1 | `FiveDoMemory` | ROM bank, PC-adjust flag, the full 19 MB RAM backing (3 MB visible + 16 x 1 MB high-res mirrors), 2 MB ROM, 32 KB NVRAM. |
 | 3 | MADAM | 1 | `Madam` | 2048+64 register file, 32-entry PLUT, PBUS queue, read/write modulo, CEL FSM, matrix result temporaries. |
-| 4 | CLIO | 1 | `Clio` | 65536-word register file, DSP window words, timer/line state, input/output FIFOs and pointers, DMA state. |
+| 4 | CLIO | 2 | `Clio` | 65536-word register file, DSP window words, timer/line state, Opera cascade carry, input/output FIFOs and pointers, DMA state. Version 1 is accepted with a cleared carry. |
 | 5 | DSP | 1 | `Dsp` | PC, noise/audio status, semaphore status/data, counters, interrupt/multiplier/ALU/shifter state, masks, running/FIQ flags, base/seed, IMem/DMem. |
 | 6 | SPORT | 1 | `Sport` | Color, source, and destination registers. |
 | 7 | VDLP | 1 | `Vdlp` | CLUT B/G/R, background, head/current VDL, modulo, current/previous bitmap, out-control, CLUT DMA, line delay. |
 | 8 | XBUS | 1 | `Xbus` | Select/poll state, status/command FIFOs, and attached-device state. The CD-ROM device is also written as section 9. |
 | 9 | CD-ROM | 1 | `CdromDevice` | Poll/status, status/data buffers, command buffer, requested count, MEI status, current sector, disc state (tracks/MSF/TOC). |
-| 10 | Quartz | 2 | `Quartz` | ARM/VDL/timer accumulators, exact DSP cycle remainder, VDL line counter. Version 1 is accepted and converted. |
+| 10 | Quartz | 3 | `Quartz` | ARM/VDL/timer accumulators, exact DSP cycle remainder, VDL line counter, Opera timer slot/gap flag and 16.16 slot accumulator. Versions 1-2 are accepted with a reset timer scheduler. |
 | 11 | Machine | 1 | `FiveDoMachine` | Compatibility flags (fix mode, Anvil, speed fixes, sf/sdf, unknown flag 11, jw, cnbfix, high-res), frame source dimensions, and all 960 `VdlLine` objects (width, control words, CLUT, 1280 pixels each). |
+| 12 | Options | 2 | `FiveDoMachine` | ARM timing mode and CLIO timer mode. Version 1 records only ARM timing; loading it leaves the CLIO timer mode at the machine default. |
 
 ### Why the state is large
 
@@ -128,14 +130,19 @@ version-2 state in a build that only understands version 1 is rejected with
 
 ### Section version compatibility
 
-- All sections currently write version 1.
-- Quartz writes version 2 (exact rational DSP clock) and accepts version 1, converting
-  the legacy 8.24 fractional sample position to ARM cycles.
+- Most sections still write version 1.
+- CLIO writes version 2 (Opera cascade carry) and accepts version 1 with a cleared carry.
+- Quartz writes version 3 (exact rational DSP clock plus Opera timer slot state) and
+  accepts versions 1-2. Version 1 converts the legacy 8.24 fractional sample position
+  to ARM cycles; versions 1-2 default the timer slot state to a reset scheduler.
+- Options writes version 2 (ARM timing plus CLIO timer mode) and accepts version 1 with
+  the CLIO timer mode left at the machine default.
 - Any other section version is rejected with
   `Unsupported section <id> version <n>.`
 - Unknown section IDs are ignored and recorded as a warning:
   `Ignored unknown state section <id>.`
-- All eleven sections are required. A missing section throws
+- All eleven core sections are required. The Options section is optional for
+  backward compatibility. A missing required section throws
   `The save state is missing sections: ...`.
 - The outer state version is 2. Version 1 is accepted; version 2 adds Brotli section
   flags. A future outer version is rejected.

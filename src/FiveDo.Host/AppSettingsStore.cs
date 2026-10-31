@@ -53,6 +53,11 @@ public static class AppSettingsStore
                 settings.ArmTiming = ArmTimingMode.FreeDoCompatible;
             }
 
+            if (!Enum.IsDefined(settings.ClioTimers))
+            {
+                settings.ClioTimers = ClioTimerMode.FreeDoCompatible;
+            }
+
             return settings;
         }
         catch (JsonException exception)

@@ -15,6 +15,7 @@ public sealed class CoreTypesTests
         Assert.Equal(CpuBackendKind.Interpreter, tuning.CpuBackend);
         Assert.False(tuning.HighResolution);
         Assert.Equal(ArmTimingMode.FreeDoCompatible, tuning.ArmTiming);
+        Assert.Equal(ClioTimerMode.FreeDoCompatible, tuning.ClioTimers);
         tuning.Validate();
     }
 
@@ -29,6 +30,21 @@ public sealed class CoreTypesTests
     public void EmulatorTuning_UnknownArmTiming_Throws()
     {
         var tuning = new EmulatorTuning { ArmTiming = (ArmTimingMode)99 };
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => tuning.Validate());
+    }
+
+    [Fact]
+    public void EmulatorTuning_AcceptsBothClioTimerModes()
+    {
+        new EmulatorTuning { ClioTimers = ClioTimerMode.FreeDoCompatible }.Validate();
+        new EmulatorTuning { ClioTimers = ClioTimerMode.OperaScheduler }.Validate();
+    }
+
+    [Fact]
+    public void EmulatorTuning_UnknownClioTimerMode_Throws()
+    {
+        var tuning = new EmulatorTuning { ClioTimers = (ClioTimerMode)99 };
 
         Assert.Throws<ArgumentOutOfRangeException>(() => tuning.Validate());
     }

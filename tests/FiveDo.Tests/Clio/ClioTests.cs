@@ -97,6 +97,84 @@ public sealed class ClioTests
     }
 
     [Fact]
+    public void Timers_OperaSlotUsesTheCascadeCarryAcrossSlots()
+    {
+        var clio = new ClioChip();
+        clio.Poke(0x200, 0x1u | (0x5u << 4));
+        clio.Poke(0x100, 1);
+        clio.Poke(0x108, 5);
+
+        clio.DoTimers(0);
+        Assert.Equal(0u, clio.Peek(0x100));
+        Assert.False(clio.TimerCarry);
+
+        clio.DoTimers(1);
+        Assert.Equal(5u, clio.Peek(0x108));
+        Assert.False(clio.TimerCarry);
+
+        clio.DoTimers(0);
+        Assert.Equal(0xFFFFu, clio.Peek(0x100));
+        Assert.True(clio.TimerCarry);
+
+        clio.DoTimers(1);
+        Assert.Equal(4u, clio.Peek(0x108));
+        Assert.False(clio.TimerCarry);
+    }
+
+    [Fact]
+    public void Timers_OperaUnderflowReloadsAndRaisesOddFiq()
+    {
+        var clio = new ClioChip();
+        clio.Poke(0x200, 0x3u);
+        clio.Poke(0x100, 0);
+        clio.Poke(0x104, 5);
+
+        clio.DoTimers(0);
+        Assert.Equal(5u, clio.Peek(0x100));
+        Assert.True(clio.TimerCarry);
+        Assert.Equal(0u, clio.Peek(0x40) & (1u << 10));
+
+        clio.Poke(0x200, 0x1u << 4);
+        clio.Poke(0x108, 0);
+        clio.DoTimers(1);
+        Assert.Equal(0xFFFFu, clio.Peek(0x108));
+        Assert.Equal(1u << 10, clio.Peek(0x40) & (1u << 10));
+        Assert.True(clio.TimerCarry);
+    }
+
+    [Fact]
+    public void Timers_OperaNonReloadDisablesDecrementAndSetsAllOnes()
+    {
+        var clio = new ClioChip();
+        clio.Poke(0x200, 0x1u);
+        clio.Poke(0x100, 0);
+
+        clio.DoTimers(0);
+
+        Assert.Equal(0xFFFFu, clio.Peek(0x100));
+        Assert.Equal(0u, clio.Peek(0x200) & 0x1u);
+        Assert.True(clio.TimerCarry);
+    }
+
+    [Fact]
+    public void SaveLoad_RoundtripsTheOperaTimerCarry()
+    {
+        var clio = new ClioChip();
+        clio.Poke(0x200, 0x1u);
+        clio.Poke(0x100, 0);
+        clio.DoTimers(0);
+        Assert.True(clio.TimerCarry);
+
+        var writer = new StateWriter();
+        clio.Save(writer);
+        var copy = new ClioChip();
+        copy.Load(new StateReader(writer.ToArray()));
+
+        Assert.True(copy.TimerCarry);
+        Assert.Equal(0xFFFFu, copy.Peek(0x100));
+    }
+
+    [Fact]
     public void Fifo_ReadsWordsAndAdvances()
     {
         var memory = new FiveDoMemory();

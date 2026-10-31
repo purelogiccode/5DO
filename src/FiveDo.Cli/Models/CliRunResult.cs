@@ -18,6 +18,7 @@ internal sealed record CliRunResult(
     string DiscHash,
     string? GameId,
     string ArmTiming,
+    string ClioTimers,
     int CpuClock,
     uint FixMode,
     bool DspRunning,

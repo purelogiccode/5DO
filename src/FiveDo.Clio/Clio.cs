@@ -41,6 +41,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     private int _timerValue;
     private int _lineSize;
     private int _flagTime;
+    private bool _timerCarry;
 
     /// <summary>Initializes a new instance of the <see cref="Clio"/> class.</summary>
     /// <param name="tuning">Machine tuning. Defaults to <see cref="EmulatorTuning.Default"/>.</param>
@@ -95,11 +96,15 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     /// <summary>Gets the timer-dependent value used by register <c>0x120</c>. FreeDO: <c>TIMER_VAL</c>.</summary>
     public int TimerValue => _timerValue;
 
+    /// <summary>Gets the cascade carry from the previous timer slot in Opera mode. FreeDO: <c>TIMER_CARRY</c>.</summary>
+    public bool TimerCarry => _timerCarry;
+
     /// <summary>Gets the save-state section identifier.</summary>
     public uint Id => StateSectionIds.Clio;
 
     /// <summary>Gets the save-state section version.</summary>
-    public ushort Version => 1;
+    /// <remarks>Version 2 adds the Opera timer cascade carry; version-1 states default it to false.</remarks>
+    public ushort Version => 2;
 
     /// <summary>Resets the chip. FreeDO: <c>_clio_Init</c> and <c>_clio_Reset</c>.</summary>
     /// <param name="resetReason">Value stored in register <c>0x28</c>. FreeDO uses <c>0x40</c> for 3DO-CD.</param>
@@ -116,6 +121,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         _timerValue = 0;
         _lineSize = 0;
         _flagTime = 0;
+        _timerCarry = false;
 
         _registers[0x0028] = unchecked((uint)resetReason);
         _registers[0x0400] = 0x80;
@@ -498,6 +504,66 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         }
     }
 
+    /// <summary>
+    /// Services one timer slot. Opera: <c>opera_clio_timer_execute</c>.
+    /// </summary>
+    /// <param name="timer">Timer index, 0-15.</param>
+    /// <remarks>
+    /// Timer 0 starts a new scan and clears the carry. A cascade timer only decrements
+    /// when the previous timer wrapped in this scan. An underflowing timer raises the
+    /// odd-timer FIQ, reloads or stops, and leaves the carry set for the next slot.
+    /// </remarks>
+    public void DoTimers(int timer)
+    {
+        timer &= 0x0f;
+        if (timer == 0)
+        {
+            _timerCarry = false;
+        }
+
+        var flags = (_registers[timer < 8 ? 0x200 : 0x208] >> ((timer * 4) & 31)) & 0xfu;
+        if ((flags & Decrement) == 0)
+        {
+            _timerCarry = false;
+            return;
+        }
+
+        if ((flags & Cascade) != 0 && !_timerCarry)
+        {
+            _timerCarry = false;
+            return;
+        }
+
+        var counterAddress = 0x100 + (timer * 8);
+        var counter = unchecked((ushort)_registers[counterAddress]);
+        var underflow = counter == 0;
+
+        if (underflow)
+        {
+            if ((timer & 1) != 0)
+            {
+                GenerateFiq(1u << (10 - (timer / 2)), 0);
+            }
+
+            if ((flags & Reload) != 0)
+            {
+                counter = unchecked((ushort)_registers[counterAddress + 4]);
+            }
+            else
+            {
+                counter = 0xffff;
+                _registers[timer < 8 ? 0x200 : 0x208] &= ~(Decrement << ((timer * 4) & 31));
+            }
+        }
+        else
+        {
+            counter--;
+        }
+
+        _registers[counterAddress] = counter;
+        _timerCarry = underflow;
+    }
+
     /// <summary>Writes a FIFO descriptor. FreeDO: <c>_clio_SetFIFO</c>.</summary>
     /// <param name="address">Register offset.</param>
     /// <param name="value">Register value.</param>
@@ -736,6 +802,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         writer.WriteInt32(_timerValue);
         writer.WriteInt32(_lineSize);
         writer.WriteInt32(_flagTime);
+        writer.WriteUInt32(_timerCarry ? 1u : 0u);
 
         for (var i = 0; i < InputFifoCount; i++)
         {
@@ -766,6 +833,20 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         _timerValue = reader.ReadInt32();
         _lineSize = reader.ReadInt32();
         _flagTime = reader.ReadInt32();
+        if (reader is StateSectionReader { Version: 1 })
+        {
+            _timerCarry = false;
+        }
+        else
+        {
+            var carry = reader.ReadUInt32();
+            if (carry > 1)
+            {
+                throw new InvalidStateException($"Invalid CLIO timer carry {carry}.");
+            }
+
+            _timerCarry = carry != 0;
+        }
 
         for (var i = 0; i < InputFifoCount; i++)
         {

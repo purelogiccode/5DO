@@ -79,7 +79,7 @@ current VDL frame.
 1. Open the disc (if any) and compute its game ID.
 2. Resolve the fix mode: explicit `--fix-mode`, else `--no-game-fixes`, else the 4DO
    database mapping for the game ID.
-3. Create the machine with `--high-res`, `--arm-timing`, and the resolved fix mode.
+3. Create the machine with `--high-res`, `--arm-timing`, `--clio-timers`, and the resolved fix mode.
 4. Load BIOS1/BIOS2 (unless `--state-in`).
 5. Create the audio backend and insert the disc.
 6. Reset the machine.
@@ -103,6 +103,7 @@ current VDL frame.
 | `--nvram <path>` | none | Load a 32 KB NVRAM image before the run and save it after. Missing file means a fresh image. |
 | `--high-res` | off | Enable the opt-in 640x480 CEL/VDLP mode. |
 | `--arm-timing freedo\|arm60` | `freedo` | ARM60 N-cycle class. `freedo` keeps the FreeDO-compatible N=4 baseline; `arm60` uses the ARM60 datasheet/SDK N=2 timing from Opera. |
+| `--clio-timers freedo\|opera` | `freedo` | CLIO timer scan model. `freedo` services all sixteen timers per 25 MHz/64 event; `opera` walks one slot per four M25M ticks with the `0x220` slack gap and an explicit cascade carry. |
 | `--cpu-clock 0.5x-4x\|6.25-50MHz` | 1x (12.5 MHz) | ARM clock multiplier or absolute MHz. Values outside 0.5x-4x (6.25-50 MHz) fail. |
 | `--random-seed default\|random\|SEED` | `default` | Initial DSP PRNG seed. `default` keeps `0xa5a5a5a5`, `random` picks a fresh 32-bit value, and a decimal or `0x` value fixes the seed. |
 | `--prefetch` | off | Enable the bounded disc read-ahead cache (32 sectors ahead, 128-sector capacity). |
@@ -148,6 +149,7 @@ Input script format:
 
 Frames are absolute emulated frame numbers (decimal or `0x`). Button names are
 case-insensitive `A`, `B`, `C`, `P`, `X`, `L`, `R`, `Up`, `Down`, `Left`, `Right`.
+`Start`, `Play`, and `Pause` are aliases for `P`; `Stop` is an alias for `X`.
 Separators are comma, plus, or vertical bar. `None` or an empty field releases all
 buttons. The state persists until the next entry. Duplicate frames keep the last entry.
 With `--state-in`, a script starting at `0` applies its last entry immediately unless
@@ -303,6 +305,7 @@ instruction ring buffer. It stops early on a stop condition or `--count` limit.
 | `--input-script <path>` | none | Scripted input (absolute frames only). |
 | `--high-res`, `--prefetch` | off | As in `run`. |
 | `--arm-timing freedo\|arm60` | `freedo` | As in `run`. |
+| `--clio-timers freedo\|opera` | `freedo` | As in `run`. |
 | `--cpu-clock 0.5x-4x\|6.25-50MHz` | 1x | As in `run`. |
 | `--random-seed default\|random\|SEED` | `default` | As in `run`. |
 | `--fix-mode`, `--no-game-fixes` | database | As in `run`. |

@@ -43,6 +43,12 @@ public partial class SettingsWindow : Window
         new(ArmTimingMode.Arm60Datasheet, "ARM60 datasheet (N=2, accuracy)"),
     ];
 
+    private static readonly ClioTimerOption[] _clioTimerOptions =
+    [
+        new(ClioTimerMode.FreeDoCompatible, "FreeDO-compatible (all timers, default)"),
+        new(ClioTimerMode.OperaScheduler, "Opera per-slot scheduler (accuracy)"),
+    ];
+
     private static readonly ResolutionOption[] _resolutionOptions =
     [
         new(OutputResolution.Window, "Match window"),
@@ -107,6 +113,9 @@ public partial class SettingsWindow : Window
         ArmTimingCombo.ItemsSource = _armTimingOptions;
         ArmTimingCombo.SelectedItem = _armTimingOptions.FirstOrDefault(option => option.Value == settings.ArmTiming)
             ?? _armTimingOptions[0];
+        ClioTimersCombo.ItemsSource = _clioTimerOptions;
+        ClioTimersCombo.SelectedItem = _clioTimerOptions.FirstOrDefault(option => option.Value == settings.ClioTimers)
+            ?? _clioTimerOptions[0];
         CpuClockBox.Text = settings.CpuClockMultiplier.ToString("0.###", CultureInfo.InvariantCulture);
         RandomSeedBox.Text = settings.RandomSeed is { } seed ? $"0x{seed:x8}" : string.Empty;
         SaveDirectoryBox.Text = settings.SaveDirectory;
@@ -212,6 +221,9 @@ public partial class SettingsWindow : Window
         settings.ArmTiming = ArmTimingCombo.SelectedItem is ArmTimingOption armTiming
             ? armTiming.Value
             : ArmTimingMode.FreeDoCompatible;
+        settings.ClioTimers = ClioTimersCombo.SelectedItem is ClioTimerOption clioTimers
+            ? clioTimers.Value
+            : ClioTimerMode.FreeDoCompatible;
         if (!double.TryParse(
                 CpuClockBox.Text?.Trim(),
                 NumberStyles.Float,
@@ -390,6 +402,14 @@ public partial class SettingsWindow : Window
     }
 
     private sealed record ArmTimingOption(ArmTimingMode Value, string Label)
+    {
+        public override string ToString()
+        {
+            return Label;
+        }
+    }
+
+    private sealed record ClioTimerOption(ClioTimerMode Value, string Label)
     {
         public override string ToString()
         {

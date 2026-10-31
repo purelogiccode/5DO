@@ -101,6 +101,19 @@ FreeDO's default seed. A Lemmings 3,000-frame smoke differential is recorded in
 acceptance step before the accuracy mode can become a default. **972 tests pass.** See
 [`PortingNotes.md`](PortingNotes.md) 12.13-12.15.
 
+**CLIO timer scheduler option (2026-10-31, thirty-first pass):** CORE-02's option
+surface is implemented. `ClioTimerMode.FreeDoCompatible` keeps the original all-timer
+scan; `ClioTimerMode.OperaScheduler` walks one timer slot per four 25 MHz ticks, applies
+the `0x220` slack gap after slot 15, and keeps an explicit cascade carry. The mode is
+per-instance, exposed through `--clio-timers freedo|opera` and Settings > Emulation,
+reported in `run --json`, covered by slot-order/carry/state tests, and recorded in the
+save-state `Options` section with a mismatch warning. Quartz section version 3 stores
+the slot/accumulator and Clio section version 2 stores the carry; older sections load
+with a reset scheduler. The FreeDO default is unchanged, and a three-title 3,000-frame
+smoke differential is recorded in [`TestCorpus.md`](TestCorpus.md) 1.1b. The
+full-collection differential remains the acceptance step before the Opera scheduler can
+become a default. **988 tests pass.** See [`PortingNotes.md`](PortingNotes.md) 12.16.
+
 **Compatibility-sweep and high-resolution research plan (2026-10-30, twenty-eighth
 pass):** v1.0 release work is deliberately deferred. The next active milestone is
 **M13, a full-collection loadability and in-game sweep** of the local 3DO library

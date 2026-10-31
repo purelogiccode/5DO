@@ -381,10 +381,13 @@ public sealed class FiveDoMachine
         };
 
         ArmTimingMode? stateArmTiming = null;
+        ClioTimerMode? stateClioTimers = null;
         while (reader.TryReadSection(out StateSectionReader? section))
         {
             var supportedVersion = section.Version == 1
-                || (section.Id == StateSectionIds.Quartz && section.Version == 2);
+                || (section.Id == StateSectionIds.Quartz && section.Version <= 3)
+                || (section.Id == StateSectionIds.Clio && section.Version == 2)
+                || (section.Id == StateSectionIds.Options && section.Version == 2);
             if (!supportedVersion)
             {
                 throw new InvalidStateException($"Unsupported section {section.Id} version {section.Version}.");
@@ -426,6 +429,7 @@ public sealed class FiveDoMachine
                     var options = new MachineOptionsSection(Tuning);
                     options.Load(section);
                     stateArmTiming = options.LoadedArmTiming;
+                    stateClioTimers = options.LoadedClioTimers;
                     break;
                 case StateSectionIds.Machine:
                     new MachineFrameSection(_frame, Compatibility).Load(section);
@@ -447,6 +451,12 @@ public sealed class FiveDoMachine
         {
             _stateWarnings.Add(
                 $"State ARM timing {savedTiming} differs from the machine timing {Tuning.ArmTiming}.");
+        }
+
+        if (stateClioTimers is { } savedClioTimers && savedClioTimers != Tuning.ClioTimers)
+        {
+            _stateWarnings.Add(
+                $"State CLIO timer mode {savedClioTimers} differs from the machine mode {Tuning.ClioTimers}.");
         }
 
         // A command-line/front-end override survives loads of states written before the
@@ -572,7 +582,14 @@ public sealed class FiveDoMachine
             AudioSink?.PushSample(sample);
         }
 
-        if (Quartz.QueueTimer())
+        if (Tuning.ClioTimers == ClioTimerMode.OperaScheduler)
+        {
+            while (Quartz.QueueTimer(out var timer))
+            {
+                Clio.DoTimers(timer);
+            }
+        }
+        else if (Quartz.QueueTimer())
         {
             Clio.DoTimers();
         }

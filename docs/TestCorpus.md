@@ -108,6 +108,26 @@ instead of four, so the guest reaches a different point at 3,000 frames.
 Both modes completed the boot and produced a rendered frame. This is a single-title
 smoke differential, not the full-collection report required to change the default.
 
+### 1.1b CLIO timer scheduler differential (2026-10-31)
+
+The CORE-02 option was checked on the 3,000-frame boot with the same `panafz1.bin`,
+fresh NVRAM, and disc files. The FreeDO-compatible default is unchanged; the Opera
+per-slot scheduler changes when timer FIQs fire, so the guest reaches a different
+instruction boundary at 3,000 frames.
+
+| Title | Mode | Final PC | Frame hash | Instructions | Cycles/frame |
+|---|---|---|---|---:|---:|
+| Lemmings | `--clio-timers freedo` | `0x0012B324` | `0x9C2E3236` | 194,135,650 | 208,356 |
+| Lemmings | `--clio-timers opera` | `0x0012DA44` | `0x44EEA93D` | 192,399,552 | 208,343 |
+| Gex | `--clio-timers freedo` | `0x001105C4` | `0x05F38B50` | 209,334,971 | 208,338 |
+| Gex | `--clio-timers opera` | `0x00110524` | `0xA9DE7B03` | 209,116,136 | 208,335 |
+| Road Rash | `--clio-timers freedo` | `0x000BA0F4` | `0x5E9EE515` | 171,049,511 | 208,342 |
+| Road Rash | `--clio-timers opera` | `0x00098AF0` | `0x36359402` | 170,826,129 | 208,350 |
+
+All six runs completed and rendered. This is a smoke differential, not the full 594-disc
+report required to change the default. The Lemmings and Road Rash FreeDO hashes match
+the section 1.1 keys, confirming that the new option did not alter the default path.
+
 At 10,000 frames with input and a fresh NVRAM (pre-transposition-fix):
  
 | Title | Final PC | Frame hash | Observation |
