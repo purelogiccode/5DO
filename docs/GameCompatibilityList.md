@@ -40,7 +40,7 @@ The automated loadability pass uses three intermediate labels before a human ass
 
 ## 4DO reference and 5DO results
 
-`Local disc(s)` is a filename match, not proof that the image is the same revision. `5DO status` starts as `No data`; use the same scale as 4DO.
+`Local disc(s)` is a filename match, not proof that the image is the same revision. Untested discs start as `No data`; use the same scale as 4DO.
 
 | Category | Game | 4DO score | 4DO status | 4DO version | 4DO notes | Local disc(s) | 5DO status | 5DO notes |
 |---|---|---:|---|---|---|---|---|---|
@@ -64,8 +64,8 @@ The automated loadability pass uses three intermediate labels before a human ass
 | Adult | Virtual Cameraman Part 5 - Yuri Andou | — | No data | — | — | Virtual Cameraman Part 5 - Yuri Andou (Japan).chd | No data | Not tested yet |
 | Adult | Virtual Vivid | — | No data | — | — | Virtual Vivid (USA) (RE-1).chd<br>Virtual Vivid (USA).chd | No data | Not tested yet |
 | Arcade | Mad Dog McCree 2: The Lost Gold | 25 | Unplayable | 1.1.1.1 Beta | Requires patched bios, no controls | — | No data | Not tested yet |
-| Arcade | Orbatak | 25 | Unplayable | 1.1.1.1 Beta | Requires patched bios, no controls | Orbatak (USA) (Arcade CD-ROM).chd | No data | Not tested yet |
-| Arcade | Shootout at Old Tucson | 25 | Unplayable | 1.1.1.1 Beta | Requires patched bios, no controls | Shootout at Old Tucson (USA) (RE2) (Arcade CD-ROM) [b].chd<br>Shootout at Old Tucson (USA) (RE3) (Arcade CD-ROM).chd | No data | Not tested yet |
+| Arcade | Orbatak | 25 | Unplayable | 1.1.1.1 Beta | Requires patched bios, no controls | Orbatak (USA) (Arcade CD-ROM).chd | Playable | panafz10-patched; input script starts a match. 4DO's no-controls note does not reproduce. |
+| Arcade | Shootout at Old Tucson | 25 | Unplayable | 1.1.1.1 Beta | Requires patched bios, no controls | Shootout at Old Tucson (USA) (RE2) (Arcade CD-ROM) [b].chd<br>Shootout at Old Tucson (USA) (RE3) (Arcade CD-ROM).chd | Playable | RE2/RE3 render with panafz10-patched; input reaches the title/advisory screen. |
 | Demo | 3DO Interactive Sampler CD #2, The | 100 | Good | 1.3.2.4 | All freezes fixed in 1.3.2.4 | — | No data | Not tested yet |
 | Demo | 3DO Interactive Sampler CD #3, The | 100 | Good | 1.3.2.4 | All freezes fixed in 1.3.2.4 | — | No data | Not tested yet |
 | Demo | 3DO Interactive Sampler CD #4, The | 100 | Good | 1.3.2.4 | All freezes fixed in 1.3.2.4 | — | No data | Not tested yet |
@@ -124,10 +124,10 @@ The automated loadability pass uses three intermediate labels before a human ass
 | Main list | Club 3DO - Station Invasion | 100 | Good | 1.2.0.3 | — | Club 3DO - Station Invasion (USA).chd | No data | Not tested yet |
 | Main list | Corpse Killer | 100 | Good | 1.3.0.1 | — | Corpse Killer (Japan).chd<br>Corpse Killer (USA).chd | No data | Not tested yet |
 | Main list | Cowboy Casino - Interactive Poker | 100 | Good | 1.3.0.1 | — | cowboy casino (usa).chd<br>Cowboy Casino (USA).chd | No data | Not tested yet |
-| Main list | Crash 'n Burn | 90 | Good | 1.3.0.1 | (Fixed in 1.3.0.0) See Detailed Note | Crash 'n Burn (Japan).chd<br>Crash 'n Burn (USA) (Not for Resale).chd<br>Crash 'n Burn (USA, Korea).chd | No data | Not tested yet |
+| Main list | Crash 'n Burn | 90 | Good | 1.3.0.1 | (Fixed in 1.3.0.0) See Detailed Note | Crash 'n Burn (Japan).chd<br>Crash 'n Burn (USA) (Not for Resale).chd<br>Crash 'n Burn (USA, Korea).chd | Playable | USA/Korea revisions render with panafz1; Japan revision stuck on the Anvil boot screen (2026-10-30). |
 | Main list | Crayon Shin-chan - Puzzle Daimaou no Nazo | 100 | Good | 1.3.0.1 | — | Crayon Shin-chan - Puzzle Daimaou no Nazo (Japan).chd | No data | Not tested yet |
 | Main list | Creature Shock | 100 | Good | 1.3.0.1 | — | Creature Shock (USA) (Disc 1).chd<br>Creature Shock (USA) (Disc 2).chd | No data | Not tested yet |
-| Main list | Crime Patrol | 100 | Good | 1.2.0.2 | — | Crime Patrol (USA) (Arcade CD-ROM).chd<br>Crime Patrol (USA).chd | No data | Not tested yet |
+| Main list | Crime Patrol | 100 | Good | 1.2.0.2 | — | Crime Patrol (USA) (Arcade CD-ROM).chd<br>Crime Patrol (USA).chd | Playable | Arcade CD-ROM: panafz10-patched; regular USA: panafz1. Input reaches live-action/credits. |
 | Main list | Cyberdillo | 100 | Good | 1.3.0.1 | — | Cyberdillo (USA).chd | No data | Not tested yet |
 | Main list | Cyberia | 100 | Good | 1.3.0.1 | — | Cyberia (Europe).chd<br>Cyberia (Japan).chd<br>Cyberia (USA).chd | No data | Not tested yet |
 | Main list | D | 100 | Good | 1.3.0.1 | — | D (Germany) (Disc 1).chd<br>D (Germany) (Disc 2).chd<br>D (USA, Europe) (Disc 1).chd<br>+1 more | No data | Not tested yet |
@@ -151,7 +151,7 @@ The automated loadability pass uses three intermediate labels before a human ass
 | Main list | Foes of Ali | 100 | Good | 1.1.6.1 Beta | — | Foes of Ali (Europe).chd<br>Foes of Ali (USA).chd | No data | Not tested yet |
 | Main list | Gex | 100 | Good | 1.3.2.4 | (Crash fixed in 1.3.0.1) | Gex (Japan, Korea).chd<br>Gex (USA, Europe).chd | No data | Not tested yet |
 | Main list | Gridders | 100 | Good | 1.1.2.3 Beta | — | Gridders (Europe).chd<br>Gridders (Japan).chd<br>Gridders (USA, Korea).chd | No data | Not tested yet |
-| Main list | Guardian War (Powers Kingdom) | 100 | Good | 1.3.2.4 | Use Anvil-bios to load EU version of game. | Guardian War (Canada).chd<br>Guardian War (USA, Korea).chd | No data | Not tested yet |
+| Main list | Guardian War (Powers Kingdom) | 100 | Good | 1.3.2.4 | Use Anvil-bios to load EU version of game. | Guardian War (Canada).chd<br>Guardian War (USA, Korea).chd | Playable | EU version needs Anvil BIOS; Canada/USA render; Europe reaches a live-action intro at 60,000 frames. |
 | Main list | Hell - A Cyberpunk Thriller | 100 | Good | 1.2.0.3 | — | Hell - A Cyberpunk Thriller (USA).chd | No data | Not tested yet |
 | Main list | Horde, The | 95 | Good | 1.1.6.4 Beta | Minor graphical inaccuracy in bird's eye map. | Horde, The (Japan).chd<br>Horde, The (USA) (RCB).chd<br>Horde, The (USA).chd<br>+1 more | No data | Not tested yet |
 | Main list | Icebreaker | 100 | Good | 1.2.0.2 | — | Icebreaker (USA).chd | No data | Not tested yet |
@@ -172,19 +172,19 @@ The automated loadability pass uses three intermediate labels before a human ass
 | Main list | Lost Eden | 100 | Good | 1.2.0.3 | Takes a long time to boot up. | Lost Eden (USA, Korea).chd | No data | Not tested yet |
 | Main list | Lost Files of Sherlock Holmes, The | 100 | Good | 1.3.0.1 | — | Lost Files of Sherlock Holmes, The (Europe).chd<br>Lost Files of Sherlock Holmes, The (USA).chd | No data | Not tested yet |
 | Main list | Lucienne's Quest | 100 | Good | 1.2.0.3 | — | Lucienne's Quest (USA).chd | No data | Not tested yet |
-| Main list | Mad Dog II - the Lost Gold | 100 | Good | 1.3.1.0 | Sometimes takes a long time to load. | Mad Dog II - The Lost Gold (USA) (Arcade CD-ROM).chd<br>Mad Dog II - the Lost Gold (USA).chd | No data | Not tested yet |
+| Main list | Mad Dog II - the Lost Gold | 100 | Good | 1.3.1.0 | Sometimes takes a long time to load. | Mad Dog II - The Lost Gold (USA) (Arcade CD-ROM).chd<br>Mad Dog II - the Lost Gold (USA).chd | Playable | Arcade CD-ROM: panafz10-patched; regular USA: panafz1. Input reaches live-action. |
 | Main list | Mad Dog McCree | 100 | Good | 1.2.0.2 | — | Mad Dog McCree (USA).chd | No data | Not tested yet |
 | Main list | Mazer | 100 | Good | 1.3.2.4 | All freezes fixed in 1.3.2.4 | Mazer (USA).chd | No data | Not tested yet |
 | Main list | MegaRace | 100 | Good | 1.3.0.1 | (Video Freeze fixed in 1.3.0.1) | MegaRace (Europe) (En,Fr,De,Es,It).chd<br>MegaRace (Japan).chd<br>MegaRace (USA, Europe) (En,Fr,De,Es,It).chd<br>+1 more | No data | Not tested yet |
 | Main list | Microcosm | 100 | Good | 1.3.2.4 | start screens fixed in 1.3.2.4 | Microcosm (Japan).chd<br>Microcosm (USA).chd | No data | Not tested yet |
-| Main list | Myst | 100 | Good | 1.2.0.3 | — | Myst (Germany).chd<br>Myst (Japan) (Rev A).chd<br>Myst (Japan).chd<br>+1 more | No data | Not tested yet |
+| Main list | Myst | 100 | Good | 1.2.0.3 | — | Myst (Germany).chd<br>Myst (Japan) (Rev A).chd<br>Myst (Japan).chd<br>+1 more | Playable | Japan/USA discs render by 9,000 frames with panafz1; Germany untested. |
 | Main list | N. O. B. - Neo Organic Bioform | 100 | Good | 1.2.0.1 | — | N.O.B. (Neo Organic Bioform) (Japan).chd | No data | Not tested yet |
 | Main list | Need for Speed, The | 100 | Good | 1.3.2.4 | — | Road & Track Presents - The Need for Speed (Korea).chd<br>Road & Track Presents - The Need for Speed (USA, Europe).chd | No data | Not tested yet |
 | Main list | Night Trap | 100 | Good | 1.2.0.3 | — | Night Trap (Japan) (Disc 1).chd<br>Night Trap (Japan) (Disc 2).chd<br>Night Trap (USA, Europe) (Disc 1).chd<br>+1 more | No data | Not tested yet |
 | Main list | Novastorm | 100 | Good | 1.3.2.4 Beta | (FZ-1 BIOS Issue Fixed in 1.1.5.0) | Novastorm (USA).chd | No data | Not tested yet |
 | Main list | Off-world Interceptor | 100 | Good | 1.3.0.1 | — | Off-World Interceptor (Japan).chd<br>Off-World Interceptor (Korea).chd<br>Off-world Interceptor (USA, Europe).chd | No data | Not tested yet |
 | Main list | Olympic Soccer | 100 | Good | 1.3.0.1 | — | Olympic Soccer (USA) (En,Fr,De,Es,It).chd | No data | Not tested yet |
-| Main list | Olympic Summer Games | 100 | Good | 1.3.0.1 | — | Olympic Summer Games (USA).chd | No data | Not tested yet |
+| Main list | Olympic Summer Games | 100 | Good | 1.3.0.1 | — | Olympic Summer Games (USA).chd | Playable | Default headless pad fixes controller detection; A/P reaches the credits. |
 | Main list | Out of this World / Another World | 100 | Good | 1.2.0.2 | — | Another World (Europe).chd<br>Out of This World (USA) (RE).chd<br>Out of this World (USA).chd | No data | Not tested yet |
 | Main list | OverDrivin' | 100 | Good | 1.2.0.2 | — | Road & Track Presents - OverDrivin' (Japan).chd | No data | Not tested yet |
 | Main list | Paddock Note '95 | 100 | Good | 1.3.0.1 | — | Paddock Note '95 (Japan) (Rev 1).chd<br>Paddock Note '95 (Japan).chd | No data | Not tested yet |
@@ -218,7 +218,7 @@ The automated loadability pass uses three intermediate labels before a human ass
 | Main list | Shock Wave - Operation JumpGate | 100 | Good | 1.3.0.1 | — | Shock Wave (Europe).chd<br>Shock Wave (Japan).chd<br>Shock Wave (Korea).chd<br>+4 more | No data | Not tested yet |
 | Main list | Shockwave 2 - Beyond the Gate | 100 | Good | 1.3.0.1 | — | Shockwave 2 - Beyond the Gate (Europe) (Disc 1).chd<br>Shockwave 2 - Beyond the Gate (Europe) (Disc 2).chd<br>Shockwave 2 - Beyond the Gate (USA) (Disc 1).chd<br>+1 more | No data | Not tested yet |
 | Main list | Slam 'N Jam '95 | 100 | Good | 1.2.0.3 | — | Slam 'n Jam '95 (Japan, Korea).chd<br>Slam 'n Jam '95 (USA) (Alt).chd<br>Slam 'n Jam '95 (USA, Europe).chd | No data | Not tested yet |
-| Main list | Slayer | 100 | Good | 1.2.0.3 | — | Slayer (Europe).chd<br>Slayer (USA) (3DO Action Pak).chd<br>Slayer (USA).chd | No data | Not tested yet |
+| Main list | Slayer | 100 | Good | 1.2.0.3 | — | Slayer (Europe).chd<br>Slayer (USA) (3DO Action Pak).chd<br>Slayer (USA).chd | Playable | USA title menu at 60,000 frames with panafz10; panafz1 black. Europe/Action Pak not individually tested. |
 | Main list | Snow Job | 100 | Good | 1.3.0.1 | — | SnowJob Starring Tracy Scoggins (Europe) (Disc 1).chd<br>SnowJob Starring Tracy Scoggins (Europe) (Disc 2).chd<br>SnowJob Starring Tracy Scoggins (USA) (Disc 1).chd<br>+1 more | No data | Not tested yet |
 | Main list | Soccer Kid | 100 | Good | 1.3.0.1 | — | Soccer Kid (Europe).chd<br>Soccer Kid (USA).chd | No data | Not tested yet |
 | Main list | Space Ace | 100 | Good | 1.2.0.1 | — | Space Ace (USA) (RE-1).chd<br>Space Ace (USA).chd | No data | Not tested yet |
@@ -284,7 +284,7 @@ The automated loadability pass uses three intermediate labels before a human ass
 | Multimedia | Woody Woodpecker and Friends - Volume 1 | 100 | Good | 1.3.0.1 | — | Woody Woodpecker and Friends - Volume One (USA) (RE-1).chd<br>Woody Woodpecker and Friends - Volume Three (USA).chd<br>Woody Woodpecker and Friends - Volume Two (USA).chd | No data | Not tested yet |
 | Multimedia | Woody Woodpecker and Friends - Volume 2 | 100 | Good | 1.3.0.1 | — | Woody Woodpecker and Friends - Volume One (USA) (RE-1).chd<br>Woody Woodpecker and Friends - Volume Three (USA).chd<br>Woody Woodpecker and Friends - Volume Two (USA).chd | No data | Not tested yet |
 | Multimedia | Woody Woodpecker and Friends - Volume 3 | 100 | Good | 1.3.0.1 | — | Woody Woodpecker and Friends - Volume One (USA) (RE-1).chd<br>Woody Woodpecker and Friends - Volume Three (USA).chd<br>Woody Woodpecker and Friends - Volume Two (USA).chd | No data | Not tested yet |
-| Multimedia | Worldcup Super Stadium | — | No data | — | — | WorldCup Super Stadium (Japan).chd | No data | Not tested yet |
+| Multimedia | Worldcup Super Stadium | — | No data | — | — | WorldCup Super Stadium (Japan).chd | Unplayable | Still stuck on the Anvil boot screen at 60,000 frames; no tested BIOS reaches the game. |
 
 ## Local images without a 4DO reference entry
 
@@ -362,7 +362,7 @@ These images still belong in the loadability sweep. Add a 4DO/5DO row when the t
 | Igo Time Trial - Tsumego I (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Immercenary - Combat in a Digital World (USA).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Incredible Machine, The - Pararancho (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
-| Ishida Yoshio Kudan no Igo Seiha (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
+| Ishida Yoshio Kudan no Igo Seiha (Japan).chd | J:\Panasonic 3DO | Playable | Renders by 6,000 frames with panafz1. |
 | J. B. Harold - Blue Chicago Blues (Japan) (Disc 1).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | J. B. Harold - Blue Chicago Blues (Japan) (Disc 2).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | J.League Virtual Stadium '95 (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
@@ -374,8 +374,8 @@ These images still belong in the loadability sweep. Add a 4DO/5DO row when the t
 | Kakinoki Shougi (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Keiba Saishou no Housoku (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Kero Kero Keroppi to Origami no Tabibito (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
-| Konpeki no Kantai (Japan) (Rev 1).chd | J:\Panasonic 3DO | No data | Not tested yet |
-| Konpeki no Kantai (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
+| Konpeki no Kantai (Japan) (Rev 1).chd | J:\Panasonic 3DO | Playable | Renders by 6,000 frames with panafz1. |
+| Konpeki no Kantai (Japan).chd | J:\Panasonic 3DO | Playable | Renders by 6,000 frames with panafz1. |
 | Kyuumei Kyuukyuu Teate no ABC (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Kyuusei Senjutsu ni Yoru - Heisei Kaiun Koyomi (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Lost Dungeon (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
@@ -384,7 +384,7 @@ These images still belong in the loadability sweep. Add a 4DO/5DO row when the t
 | Mahjong-kyou Jidai Cogal Houkago-hen (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Makaroni Hourensou Interactive (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Memory Gwanli CD (Korea) (RE).chd | J:\Panasonic 3DO | No data | Not tested yet |
-| Mirai Shounen Conan - Digital Library (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
+| Mirai Shounen Conan - Digital Library (Japan).chd | J:\Panasonic 3DO | Playable | Menu renders with panafz1; the sweep CHD error was transient. |
 | Monoshiri Jiyuugaku - Ogura Hyakunin Isshu-hen (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Moon Cradle - Igyou no Hanayome (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Multimedia Shinsho - Driving School - Futsuu Menkyo Gakka-hen (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
@@ -416,7 +416,7 @@ These images still belong in the loadability sweep. Add a 4DO/5DO row when the t
 | Perfect World - Combat in a Digital World (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Peter Frankl - Puzzle no Tou (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Policenauts - Pilot Disk (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
-| Powers Kingdom (Europe).chd | J:\Panasonic 3DO | No data | Not tested yet |
+| Powers Kingdom (Europe).chd | J:\Panasonic 3DO | Playable | Anvil BIOS required; live-action intro at 60,000 frames. |
 | Powers Kingdom (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Powerslide (USA) (Unl).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Pretty Soldier SailorMoon S (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |

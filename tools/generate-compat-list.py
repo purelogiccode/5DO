@@ -354,7 +354,7 @@ def write_markdown(
     lines.append("")
     lines.append(
         "`Local disc(s)` is a filename match, not proof that the image is the same "
-        "revision. `5DO status` starts as `No data`; use the same scale as 4DO."
+        "revision. Untested discs start as `No data`; use the same scale as 4DO."
     )
     lines.append("")
     lines.append(
