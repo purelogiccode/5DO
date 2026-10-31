@@ -225,12 +225,48 @@ def escape_cell(value: str) -> str:
     return value.replace("|", "\\|").replace("\n", " ").strip()
 
 
+def unescape_cell(value: str) -> str:
+    return value.replace("\\|", "|").strip()
+
+
+def read_existing_statuses(path: Path) -> dict[str, tuple[str, str]]:
+    """Read the 5DO status/notes from a previously written compatibility table."""
+    if not path.exists():
+        return {}
+
+    preserved: dict[str, tuple[str, str]] = {}
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
+        line = line.strip()
+        if not line.startswith("|"):
+            continue
+
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if len(cells) >= 9:
+            local, status, notes = cells[6], cells[7], cells[8]
+        elif len(cells) == 4:
+            local, status, notes = cells[0], cells[2], cells[3]
+        else:
+            continue
+
+        if status == "No data" and notes == "Not tested yet":
+            continue
+
+        for name in local.split("<br>"):
+            name = unescape_cell(name)
+            if name.startswith("+") or not name.lower().endswith(DISC_EXTENSIONS):
+                continue
+            preserved[name.lower()] = (status, notes)
+
+    return preserved
+
+
 def write_markdown(
     output: Path,
     records: list[GameRecord],
     discs: list[Path],
     matched: set[Path],
     roots: list[str],
+    preserved: dict[str, tuple[str, str]],
 ) -> None:
     records.sort(key=lambda record: (record.category.lower(), record.name.lower()))
     unmatched = [disc for disc in discs if disc not in matched]
@@ -329,6 +365,11 @@ def write_markdown(
         local = "<br>".join(escape_cell(name) for name in record.local_files[:3])
         if len(record.local_files) > 3:
             local += f"<br>+{len(record.local_files) - 3} more"
+        status, notes = "No data", "Not tested yet"
+        for name in record.local_files:
+            if name.lower() in preserved:
+                status, notes = preserved[name.lower()]
+                break
         lines.append(
             "| "
             + " | ".join(
@@ -340,8 +381,8 @@ def write_markdown(
                     escape_cell(record.version) or "—",
                     escape_cell(record.notes) or "—",
                     local or "—",
-                    "No data",
-                    "Not tested yet",
+                    escape_cell(status),
+                    escape_cell(notes),
                 ]
             )
             + " |"
@@ -362,14 +403,15 @@ def write_markdown(
         lines.append("|---|---|---|---|")
         for disc in unmatched:
             root = next((root for root in roots if str(disc).lower().startswith(str(Path(root)).lower())), "")
+            status, notes = preserved.get(disc.name.lower(), ("No data", "Not tested yet"))
             lines.append(
                 "| "
                 + " | ".join(
                     [
                         escape_cell(disc.name),
                         escape_cell(root) or "—",
-                        "No data",
-                        "Not tested yet",
+                        escape_cell(status),
+                        escape_cell(notes),
                     ]
                 )
                 + " |"
@@ -417,6 +459,11 @@ def main() -> int:
         help="Collection root. Repeat for multiple roots.",
     )
     parser.add_argument("--out", default=DEFAULT_OUT, help="Markdown output path.")
+    parser.add_argument(
+        "--reset-status",
+        action="store_true",
+        help="Discard the previous 5DO status/notes instead of preserving them.",
+    )
     args = parser.parse_args()
 
     mhtml = Path(args.mhtml) if args.mhtml else None
@@ -430,7 +477,9 @@ def main() -> int:
     records = parse_records(load_mhtml(mhtml))
     discs = scan_discs(roots)
     matched = match_discs(records, discs)
-    write_markdown(Path(args.out), records, discs, matched, roots)
+    output = Path(args.out)
+    preserved = {} if args.reset_status else read_existing_statuses(output)
+    write_markdown(output, records, discs, matched, roots, preserved)
     return 0
 
 

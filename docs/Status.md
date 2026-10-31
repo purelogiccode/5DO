@@ -479,10 +479,11 @@ current gates are the M13 collection sweep and the M14 high-resolution decision.
    - Olympic Summer Games was blocked by the headless PBUS bug, now fixed by the
      default player-1 pad.
 3. **Run the BIOS-aware sweep and fill the status columns.** Rerun the `Not Loadable`
-   and `Loadable/No video` subsets with `panafz10` and the Anvil BIOS, record the BIOS
-   used per disc, then assign `Unplayable`/`Playable`/`Good` in
-   [`GameCompatibilityList.md`](GameCompatibilityList.md). Keep Crash 'n Burn and
-   WorldCup Super Stadium on the investigation list.
+   and `Loadable/No video` subsets with `tools/bios-probe.ps1` (`panafz10-patched` and
+   the Anvil BIOS), record the BIOS used per disc, then assign
+   `Unplayable`/`Playable`/`Good` in
+   [`GameCompatibilityList.md`](GameCompatibilityList.md). Keep Crash 'n Burn (Japan)
+   and WorldCup Super Stadium on the investigation list.
 4. **Run the high-resolution pass.** Repeat the sweep with `-HighRes`, compare
    screenshots and speed, and feed the results into M14.
 5. **Validate Linux.** Build/test/smoke the CLI in the `LinuxMint` Hyper-V VM, run a

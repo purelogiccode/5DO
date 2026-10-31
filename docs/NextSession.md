@@ -44,8 +44,8 @@ MHTML in `References/4DO-master/`.
 1. Build the Release CLI:
    `dotnet build src/FiveDo.Cli/FiveDo.Cli.csproj -c Release`.
 2. Rerun the `Not Loadable` and `Loadable/No video` subsets with
-   `panafz10-patched` and the Anvil BIOS, recording which BIOS each disc needs. Use a
-   separate output directory; do not overwrite the `panafz1` baseline.
+   `tools/bios-probe.ps1` and `panafz10-patched`/Anvil, recording which BIOS each disc
+   needs. Use a separate output directory; do not overwrite the `panafz1` baseline.
 3. Investigate Crash 'n Burn (Japan) and WorldCup Super Stadium, which still stop on
    the Anvil boot screen at 60,000 frames. Keep the smallest repro and a trace; compare
    the Japan revision with the working Crash USA/Korea revisions.
