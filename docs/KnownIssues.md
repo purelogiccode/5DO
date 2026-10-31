@@ -22,10 +22,10 @@ high-resolution CEL decision (M14) are complete.
     frame (`PC 0x000284EC`, hash `0xBE2A023B`); treat the sweep failure as a transient
     disc/read error, not a reproducible emulator defect.
   - The four Arcade CD-ROM titles (`Crime Patrol`, `Mad Dog II`, `Orbatak`,
-    `Shootout at Old Tucson RE3`) hang at about frame 1,740 with `panafz1.bin` but
-    complete 3,000 frames and render with `panafz10.bin`. This is a BIOS-selection
-    issue, not a timeout; the 4DO notes about a patched BIOS point in the same
-    direction.
+    `Shootout at Old Tucson RE3`) stall at a starfield or the storage-manager shell
+    with `panafz1.bin`, but complete 3,000 frames and render game content with
+    `panafz10-patched.bin` plus the default pad. The 4DO notes about a patched BIOS
+    match this result.
 - The 12,000-frame rerun of the 13 black/blank titles shows that Ishida Yoshio Kudan
   no Igo Seiha, both Konpeki no Kantai discs, and all three Myst discs render by
   6,000-9,000 frames. The remaining titles are BIOS-sensitive or still under
@@ -37,10 +37,11 @@ high-resolution CEL decision (M14) are complete.
     Japan-revision issue, not a general Crash 'n Burn failure.
   - Powers Kingdom (Europe) renders its animated intro with the Anvil BIOS by
     30,000 frames, matching the 4DO note "Use Anvil-bios to load EU version of game".
-  - Slayer renders its title/credits with `panafz10`, GoldStar, or Sanyo, but stays
-    black with `panafz1`.
-  - WorldCup Super Stadium changes from a solid blue screen to a boot screen with the
-    Anvil BIOS; the in-game path is still unconfirmed.
+  - Slayer reaches its full title menu with `panafz10` (also GoldStar/Sanyo), but
+    stays black with `panafz1`.
+  - WorldCup Super Stadium changes from a solid blue screen to the same Anvil boot
+    screen as Crash 'n Burn (Japan); both are still stuck at 60,000 frames, so the
+    Anvil BIOS is not a fix for these two.
 - Olympic Summer Games now proceeds past the "Insert a controller into controller
   port!" screen because headless `run`/`trace` attach a default player-1 pad. This is
   a CLI input fix, not a disc-specific patch.

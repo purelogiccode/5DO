@@ -600,18 +600,23 @@ The per-disc table is [`GameCompatibilityResults.md`](GameCompatibilityResults.m
 The baseline used `panafz1.bin`. Reruns with the other local BIOS images show that
 several failures are BIOS-selection problems rather than emulator defects:
 
-| Disc | `panafz1` | `panafz10` | Anvil BIOS | Result |
+| Disc | `panafz1` | `panafz10-patched` | Anvil BIOS | Result |
 |---|---|---|---|---|
-| Crime Patrol (Arcade CD-ROM) | hangs ~frame 1,740 | 3,000 frames | not needed | Loadable with `panafz10` |
-| Mad Dog II (Arcade CD-ROM) | hangs ~frame 1,740 | 3,000 frames | not needed | Loadable with `panafz10` |
-| Orbatak (Arcade CD-ROM) | hangs ~frame 1,740 | 3,000 frames | not needed | Loadable with `panafz10` |
-| Shootout at Old Tucson RE3 | hangs ~frame 1,740 | 3,000 frames | not needed | Loadable with `panafz10` |
-| Mirai Shounen Conan | transient CHD read error | 3,000 frames | 3,000 frames | Loadable; repeated runs are stable |
-| Crash 'n Burn (Japan) | invalid PC / black | invalid PC / black | purple boot screen | Japan revision stuck; USA/Korea revisions render with `panafz1` |
-| Powers Kingdom (Europe) | solid blue | solid blue | intro animation by 30,000 frames | Anvil BIOS required, matching the 4DO note |
-| Slayer (USA) | black | title/credits render | black | `panafz10`/GoldStar/Sanyo required |
-| WorldCup Super Stadium (Japan) | solid blue | solid blue | boot screen | Anvil BIOS gets further; in-game path unconfirmed |
+| Crime Patrol (Arcade CD-ROM) | starfield / no game | 3,000 frames, live-action | not needed | Loadable with `panafz10-patched` |
+| Mad Dog II (Arcade CD-ROM) | starfield / no game | 3,000 frames, live-action | not needed | Loadable with `panafz10-patched` |
+| Orbatak (Arcade CD-ROM) | starfield / no game | 3,000 frames, gameplay | not needed | Loadable with `panafz10-patched` |
+| Shootout at Old Tucson RE3 | starfield / no game | 3,000 frames, text screen | not needed | Loadable with `panafz10-patched` |
+| Mirai Shounen Conan | transient CHD read error; 3,000 frames now stable | not tested | not tested | Loadable with `panafz1` |
+| Crash 'n Burn (Japan) | invalid PC / black | invalid PC / black | purple boot screen, still stuck at 60,000 | Japan revision stuck; USA/Korea revisions render with `panafz1` |
+| Powers Kingdom (Europe) | solid blue | solid blue | live-action intro by 60,000 | Anvil BIOS required, matching the 4DO note |
+| Slayer (USA) | black | title menu at 60,000 | black | `panafz10`/GoldStar/Sanyo required |
+| WorldCup Super Stadium (Japan) | solid blue | solid blue | purple boot screen, still stuck at 60,000 | No tested BIOS reaches the game |
 | Olympic Summer Games (USA) | "Insert a controller" | not tested | not tested | Fixed by the default headless pad; renders the high-jump screen |
+
+The Arcade CD-ROM rows need the **patched** BIOS; unpatched `panafz10` reaches the
+3DO storage-manager shell instead of the game. The default pad alone does not fix
+them, and the patched BIOS alone is not enough either: the headless PBUS fix is what
+lets their boot code proceed past the controller probe.
 
 The 12,000-frame rerun also shows that Ishida Yoshio Kudan no Igo Seiha, both Konpeki
 no Kantai discs, and all three Myst discs render between 6,000 and 9,000 frames; their
@@ -620,8 +625,9 @@ transition.
 
 Consequences for the sweep:
 
-- The four Arcade CD-ROM rows are not timeouts. They are loadable with a later BIOS
-  and should be recorded with that BIOS in their notes.
+- The four Arcade CD-ROM rows are not timeouts. They are loadable with the patched
+  BIOS plus the default headless pad, and should be recorded with that BIOS in their
+  notes.
 - The `Loadable/No video` set is not a stable failure class. Some titles need 12,000
   frames, and some need a different BIOS. Do not convert these rows to `Unplayable`
   without a BIOS-aware rerun.

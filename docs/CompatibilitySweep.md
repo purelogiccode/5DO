@@ -23,7 +23,7 @@ and the per-title result columns are in
 | Main collection | `J:\Panasonic 3DO` | 589 CHD images |
 | MAME software-list collection | `G:\MAME\MAME Software List CHDs\3do` | 5 CHD images |
 | BIOS | `bios/panafz1.bin` (baseline) | 1 MB, user-provided |
-| Alternate BIOSes | `panafz10.bin`, `panafz10e-anvil.bin`, `panafz10ja-anvil-kanji.bin` | 1 MB each; used for BIOS-sensitive titles |
+| Alternate BIOSes | `panafz10.bin`, `panafz10-patched.bin`, `panafz10e-anvil.bin`, `panafz10ja-anvil-kanji.bin` | 1 MB each; used for BIOS-sensitive titles |
 | 4DO reference list | `References/4DO-master/4DO Compatibility List ⚈ 3DO emulator Wiki ».mhtml` | 241 titles |
 
 The two collections contain regional variants and alternate revisions. The sweep tests
@@ -132,20 +132,24 @@ Useful options:
 ### 3.3.1 BIOS selection
 
 `panafz1.bin` is the baseline BIOS, not a universal reference. The 2026-10-30 triage
-found that all four Arcade CD-ROM rows hang at about frame 1,740 with `panafz1.bin`
-but boot with `panafz10.bin`. Crash 'n Burn, Powers Kingdom (Europe), and WorldCup
-Super Stadium only leave their black or solid-blue boot state with the Anvil BIOS;
-Slayer needs `panafz10`, GoldStar, or Sanyo. Always record the BIOS used with a
-result:
+found that the four Arcade CD-ROM rows need `panafz10-patched.bin` plus the default
+headless pad; unpatched `panafz1`/`panafz10` reach only a starfield or the 3DO
+storage-manager shell. Crash 'n Burn, Powers Kingdom (Europe), and WorldCup Super
+Stadium only leave their black or solid-blue boot state with the Anvil BIOS; Slayer
+needs `panafz10`, GoldStar, or Sanyo. Always record the BIOS used with a result.
+
+The `bios-probe.ps1` helper retries the sweep's failures with several BIOS images and
+keeps the best result:
 
 ```powershell
-pwsh -File tools/compat-sweep.ps1 `
-  -Bios bios/panafz10.bin -Frames 3000 -TimeoutSeconds 180 `
-  -OutDir artifacts/compat-panafz10
+pwsh -File tools/bios-probe.ps1 `
+  -Csv artifacts/compat-full/summary.csv `
+  -Bios 'bios/panafz1.bin,bios/panafz10-patched.bin,bios/panafz10e-anvil.bin' `
+  -Frames 12000 -OutDir artifacts/bios-probe
 ```
 
-Do not compare a `panafz1` black screen with a `panafz10` render as if they were the
-same test. The final 5DO status needs the BIOS in its notes.
+Do not compare a `panafz1` black screen with a `panafz10-patched` render as if they
+were the same test. The final 5DO status needs the BIOS in its notes.
 
 ### 3.4 Deeper in-game pass
 
@@ -190,8 +194,8 @@ Loadability is not the same as a usable picture. After the automated pass:
    games show black during a load or FMV transition; the 2026-10-30 pass moved six of
    the 13 black/blank discs into the rendered set at 6,000-9,000 frames.
 4. If a title is still black or a solid color at 12,000 frames, rerun it with
-   `panafz10.bin` and then the Anvil BIOS before classifying it. Do not assume the
-   `panafz1` result is the final result.
+   `panafz10-patched.bin` and then the Anvil BIOS before classifying it. Do not
+   assume the `panafz1` result is the final result.
 5. For a sample of titles, run a second pass with a short input script (A/B/Start) to
    confirm the game responds. This is an input smoke test, not a gameplay-depth test.
 6. Record `Playable`, `Unplayable`, or `Good` in

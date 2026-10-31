@@ -958,7 +958,7 @@ inputs for the emulator.
 |---|---:|---|
 | `panafz1.bin` | 1,048,576 | Primary NTSC test BIOS (MD5 `f47264dd47fe30f73ab3c010015c155b`) |
 | `panafz10.bin` | 1,048,576 | Alternate NTSC BIOS |
-| `panafz10-patched.bin` | 1,048,576 | Alternate NTSC BIOS |
+| `panafz10-patched.bin` | 1,048,576 | Patched NTSC BIOS; required by the Arcade CD-ROM titles |
 | `goldstar.bin` | 1,048,576 | GoldStar BIOS |
 | `sanyotry.bin` | 1,048,576 | Sanyo BIOS |
 | `panafz10e-anvil.bin` | 1,048,576 | Anvil BIOS path |

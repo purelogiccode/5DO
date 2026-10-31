@@ -4,7 +4,7 @@
 **594 discs tested: 576 Loadable/Rendered, 13 Loadable/No video, 5 Not Loadable.**
 The five not-loadable rows are resolved or explained: Mirai Shounen Conan now runs
 (transient CHD read error), and the four Arcade CD-ROM titles load with
-`panafz10.bin` instead of `panafz1.bin`. The 12,000-frame rerun shows that six of the
+`panafz10-patched.bin` plus the default headless pad. The 12,000-frame rerun shows that six of the
 13 black/blank discs render by 6,000-9,000 frames; the rest are BIOS-sensitive or
 still under investigation. Headless `run`/`trace` now attach a default player-1 pad,
 fixing Olympic Summer Games' controller check. **925 tests pass.**
@@ -466,14 +466,16 @@ current gates are the M13 collection sweep and the M14 high-resolution decision.
 2. **Failure triage: first pass complete (2026-10-30).**
    - `Mirai Shounen Conan` no longer reproduces its LBA 1 CHD error; repeated
      3,000-frame runs reach the menu with hash `0xBE2A023B`.
-   - The four Arcade CD-ROM rows are not timeouts: they boot with `panafz10.bin` and
-     hang at about frame 1,740 with `panafz1.bin`.
+   - The four Arcade CD-ROM rows are not timeouts: they render game content with
+     `panafz10-patched.bin` and the default pad. Unpatched `panafz1`/`panafz10` reach
+     only a starfield or the 3DO storage-manager shell.
    - The 12,000-frame rerun shows Ishida, both Konpeki no Kantai discs, and all three
      Myst discs rendering by 6,000-9,000 frames.
    - Crash 'n Burn, Powers Kingdom (Europe), Slayer, and WorldCup Super Stadium are
-     BIOS-sensitive. Crash/Powers/WorldCup need the Anvil BIOS to leave the black or
-     solid-blue boot state; Slayer needs `panafz10`/GoldStar/Sanyo. Crash and WorldCup
-     still do not progress past their boot screens at 12,000 frames.
+     BIOS-sensitive. Crash/Powers/WorldCup change their boot screens with the Anvil
+     BIOS; Powers reaches a live-action intro and Slayer reaches its title menu at
+     60,000 frames with `panafz10`. Crash and WorldCup are still stuck at 60,000, so
+     the Anvil BIOS is not a fix for them.
    - Olympic Summer Games was blocked by the headless PBUS bug, now fixed by the
      default player-1 pad.
 3. **Run the BIOS-aware sweep and fill the status columns.** Rerun the `Not Loadable`
@@ -509,8 +511,9 @@ The next session is the **BIOS-aware compatibility pass**, not release prep:
    [`GameCompatibilityList.md`](GameCompatibilityList.md), and the triage results in
    [`Compatibility.md`](Compatibility.md) 13.2.
 2. Rerun the `Not Loadable` and `Loadable/No video` subsets with
-   `-Bios bios/panafz10.bin` and `-Bios bios/panafz10e-anvil.bin`. Record which BIOS
-   each title needs; do not assume `panafz1` is the compatibility reference.
+   `-Bios bios/panafz10-patched.bin` and `-Bios bios/panafz10e-anvil.bin`. Record
+   which BIOS each title needs; do not assume `panafz1` is the compatibility
+   reference.
 3. Investigate Crash 'n Burn and WorldCup Super Stadium, which still stop on a boot
    screen with the Anvil BIOS at 12,000 frames.
 4. Fill the 5DO status columns from the BIOS-aware results and the 12,000-frame

@@ -18,21 +18,23 @@ release yet.
 - [`Status.md`](Status.md) — current position and the deferred release path.
 
 **Inputs:** `J:\Panasonic 3DO` (589 CHDs), `G:\MAME\MAME Software List CHDs\3do`
-(5 CHDs), `bios/panafz1.bin`, `bios/panafz10.bin`, `bios/panafz10e-anvil.bin`,
-`bios/panafz10ja-anvil-kanji.bin`, and the saved 4DO wiki MHTML in
-`References/4DO-master/`.
+(5 CHDs), `bios/panafz1.bin`, `bios/panafz10.bin`, `bios/panafz10-patched.bin`,
+`bios/panafz10e-anvil.bin`, `bios/panafz10ja-anvil-kanji.bin`, and the saved 4DO wiki
+MHTML in `References/4DO-master/`.
 
 **What changed on 2026-10-30:**
 
 - The 594-disc baseline sweep is complete: 576 `Loadable/Rendered`,
   13 `Loadable/No video`, 5 `Not Loadable`.
 - `Mirai Shounen Conan` was a transient CHD read error; it now reaches its menu with
-  hash `0xBE2A023B`. The four Arcade CD-ROM rows are BIOS-sensitive: they hang with
-  `panafz1.bin` at about frame 1,740 but boot with `panafz10.bin`.
+  hash `0xBE2A023B`. The four Arcade CD-ROM rows need `panafz10-patched.bin` and the
+  default headless pad; unpatched BIOSes reach only a starfield or the 3DO
+  storage-manager shell.
 - The 12,000-frame rerun shows Ishida, both Konpeki no Kantai discs, and all three Myst
-  discs rendering. Crash 'n Burn, Powers Kingdom (Europe), and WorldCup Super Stadium
-  only leave their black/blue boot state with the Anvil BIOS; Slayer needs
-  `panafz10`/GoldStar/Sanyo.
+  discs rendering. Powers Kingdom (Europe) reaches a live-action intro and Slayer
+  reaches its title menu at 60,000 frames with the Anvil and `panafz10` BIOSes
+  respectively. Crash 'n Burn (Japan) and WorldCup Super Stadium show the same Anvil
+  boot screen and are still stuck at 60,000 frames.
 - Headless `run`/`trace` now attach a default player-1 pad. Olympic Summer Games
   proceeds past its controller check. The 3,000-frame corpus keys were re-baselined in
   [`TestCorpus.md`](TestCorpus.md) 1.1. **925 tests pass.**
@@ -41,11 +43,12 @@ release yet.
 
 1. Build the Release CLI:
    `dotnet build src/FiveDo.Cli/FiveDo.Cli.csproj -c Release`.
-2. Rerun the `Not Loadable` and `Loadable/No video` subsets with `panafz10` and the
-   Anvil BIOS, recording which BIOS each disc needs. Use a separate output directory;
-   do not overwrite the `panafz1` baseline.
-3. Investigate Crash 'n Burn and WorldCup Super Stadium, which still stop on a boot
-   screen with the Anvil BIOS at 12,000 frames. Keep the smallest repro and a trace.
+2. Rerun the `Not Loadable` and `Loadable/No video` subsets with
+   `panafz10-patched` and the Anvil BIOS, recording which BIOS each disc needs. Use a
+   separate output directory; do not overwrite the `panafz1` baseline.
+3. Investigate Crash 'n Burn (Japan) and WorldCup Super Stadium, which still stop on
+   the Anvil boot screen at 60,000 frames. Keep the smallest repro and a trace; compare
+   the Japan revision with the working Crash USA/Korea revisions.
 4. Inspect the rendered 12,000-frame captures and fill the 5DO status/notes in
    [`GameCompatibilityList.md`](GameCompatibilityList.md), including the BIOS used.
 5. Run the high-resolution subset with `-HighRes -OutDir artifacts/compat-highres`.
