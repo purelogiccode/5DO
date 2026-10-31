@@ -21,8 +21,23 @@ public sealed class AppSettings
     /// <summary>Gets or sets a value indicating whether the first-run guide has been shown.</summary>
     public bool FirstRunCompleted { get; set; }
 
-    /// <summary>Gets or sets the last BIOS path.</summary>
+    /// <summary>Gets or sets the last primary BIOS path.</summary>
     public string BiosPath { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the optional BIOS2/Kanji font path.</summary>
+    public string Bios2Path { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the folder scanned for automatic BIOS selection.</summary>
+    public string BiosFolder { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the shell chooses a region-appropriate BIOS
+    /// from <see cref="BiosFolder"/> for each disc. The configured BIOS remains the fallback.
+    /// </summary>
+    public bool AutoBios { get; set; } = true;
+
+    /// <summary>Gets per-game BIOS overrides keyed by 4DO game ID. Values are BIOS MD5 hashes.</summary>
+    public IDictionary<string, string> BiosOverrides { get; set; } = new Dictionary<string, string>(StringComparer.Ordinal);
 
     /// <summary>Gets or sets the optional email used to recognize a donation.</summary>
     public string DonationEmail { get; set; } = string.Empty;
@@ -189,6 +204,49 @@ public sealed class AppSettings
 
     /// <summary>Gets or sets player input bindings.</summary>
     public InputProfile Input { get; set; } = InputProfile.CreateDefault();
+
+    /// <summary>Gets the per-game BIOS override MD5, if one is configured.</summary>
+    /// <param name="gameId">4DO game ID, case-insensitive.</param>
+    /// <returns>The override MD5, or <see langword="null"/> when the game uses automatic selection.</returns>
+    public string? GetBiosOverride(string? gameId)
+    {
+        if (string.IsNullOrWhiteSpace(gameId))
+        {
+            return null;
+        }
+
+        var normalized = NormalizeGameId(gameId);
+        foreach ((var id, var md5) in BiosOverrides)
+        {
+            if (string.Equals(NormalizeGameId(id), normalized, StringComparison.Ordinal))
+            {
+                return md5.Trim();
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Sets or removes a per-game BIOS override.</summary>
+    /// <param name="gameId">4DO game ID, case-insensitive.</param>
+    /// <param name="md5">BIOS MD5, or <see langword="null"/> to restore automatic selection.</param>
+    public void SetBiosOverride(string gameId, string? md5)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(gameId);
+        var normalized = NormalizeGameId(gameId);
+        foreach (var id in BiosOverrides.Keys.ToArray())
+        {
+            if (string.Equals(NormalizeGameId(id), normalized, StringComparison.Ordinal))
+            {
+                BiosOverrides.Remove(id);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(md5))
+        {
+            BiosOverrides[normalized] = md5.Trim().ToLowerInvariant();
+        }
+    }
 
     /// <summary>Gets the per-game fix-mode override, if one is configured.</summary>
     /// <param name="gameId">4DO game ID, case-insensitive.</param>

@@ -60,7 +60,11 @@ every serialized property in `AppSettings`.
 | Property | Type | Default | Meaning |
 |---|---|---|---|
 | `FirstRunCompleted` | bool | `false` | Whether the first-run guide has been shown. |
-| `BiosPath` | string | `""` | Last BIOS path. |
+| `BiosPath` | string | `""` | Last primary BIOS path; fallback when auto-selection is off or unavailable. |
+| `Bios2Path` | string | `""` | Optional BIOS2/Kanji font path. |
+| `BiosFolder` | string | `""` | Folder scanned for automatic region/BIOS selection. |
+| `AutoBios` | bool | `true` | Select a region-appropriate BIOS when `BiosFolder` is set. |
+| `BiosOverrides` | object | `{}` | Per-game BIOS MD5 overrides keyed by 4DO game ID. |
 | `DonationEmail` | string | `""` | Optional email used to recognize a 5DO donation. |
 | `HasDonated` | bool | `false` | Cached confirmation for `DonationEmail`. |
 | `DonationLastCheckedUtc` | string? | `null` | UTC timestamp of the last successful donation check. |
@@ -166,6 +170,12 @@ player-1 defaults. See section 3 for the full input structure.
 {
   "FirstRunCompleted": true,
   "BiosPath": "C:\\3DO\\panafz1.bin",
+  "Bios2Path": "",
+  "BiosFolder": "C:\\3DO\\bios",
+  "AutoBios": true,
+  "BiosOverrides": {
+    "6B1A7FED": "51F2F43AE2F3508A14D9F56597E2D3CE"
+  },
   "DonationEmail": "",
   "HasDonated": false,
   "DonationLastCheckedUtc": null,
@@ -252,6 +262,23 @@ player-1 defaults. See section 3 for the full input structure.
 
 In a real file `Players` has six entries. Players 2-6 have no keyboard bindings by
 default but do have the default gamepad mapping.
+
+### BIOS selection
+
+`BiosFolder` is the source of automatic selection. `AutoBios` defaults to `true`, but
+selection only runs when `BiosFolder` is set; an existing `BiosPath`-only configuration
+continues to use that exact BIOS. Selection order is:
+
+1. `BiosOverrides[gameId]` (MD5), if present and found in the folder.
+2. A known title requirement (Slayer Europe/USA, Powers Kingdom Europe, Arcade CD-ROM).
+3. Region matching from the game database (`US`, `JP`, `EU`, and combined strings),
+   including Kanji and patched-image preferences.
+4. `BiosPath`/`Bios2Path` as the configured fallback.
+
+`bios list`/`bios scan` and the Settings > Paths scan button validate the folder.
+Per-game overrides can be assigned in Settings > Emulation > BIOS override or with
+**File > Assign BIOS to Current Game...**. Save states already warn when the loaded
+BIOS hash differs from the state header.
 
 ---
 
@@ -402,7 +429,11 @@ also used for the post-run save.
 
 | Setting | Behavior |
 |---|---|
-| `BiosPath` | Last BIOS; used by **About** and optional startup auto-open. |
+| `BiosPath` | Primary BIOS fallback; used by **About** and optional startup auto-open. |
+| `Bios2Path` | Optional BIOS2/Kanji font loaded with the primary BIOS. |
+| `BiosFolder` | Folder scanned for automatic selection; required for auto BIOS. |
+| `AutoBios` | Enables region/known-title selection when `BiosFolder` is set. |
+| `BiosOverrides` | Per-game MD5 pins, assigned in Settings or **File > Assign BIOS to Current Game...**. |
 | `DiscPath` | Last disc; used by optional startup auto-open. |
 | `RecentDiscs` | Newest first, deduplicated case-insensitively, capped at 10. |
 | `SaveDirectory` | Default `.../5DO/states`; used by `SaveStateSlotManager`. |
@@ -493,6 +524,10 @@ backend) and `ALSOFT_DRIVERS` (through OpenAL Soft).
 ```text
 frontend launch arguments (--disc, --bios, --fullscreen, --gl-backend)
   > CLI flags
+  > per-game BIOS override (MD5)
+  > known title BIOS requirement
+  > region-based BIOS selection (when BiosFolder is set)
+  > configured BiosPath/Bios2Path fallback
   > per-game fix/filter overrides (desktop)
   > explicit --fix-mode / --no-game-fixes (CLI)
   > automatic 4DO database fixes

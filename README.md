@@ -8,15 +8,20 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-31, after the first full-collection sweep, triage, and the ARM/CLIO/CEL/CD timing, CD speed, and timing-profile passes):**
+**Current position (2026-10-31, after the first full-collection sweep, triage, the ARM/CLIO/CEL/CD timing, CD speed, and timing-profile passes, and the BIOS manager):**
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **1039 tests pass.** The 594-disc baseline found 576 rendered, 13 black/blank,
+prototype. **1065 tests pass.** The 594-disc baseline found 576 rendered, 13 black/blank,
 and 5 not-loadable images. Triage resolved the five not-loadable rows (Mirai Shounen
 Conan was a transient CHD read error; the four Arcade CD-ROM titles boot with
 `panafz10`), and six of the 13 black/blank titles render by 6,000-9,000 frames. Headless
-`run`/`trace` now attach a default player-1 pad. The v1.0 release is deliberately
+`run`/`trace` now attach a default player-1 pad. The BIOS manager (SYS-04) scans a BIOS
+folder, classifies region/Kanji/Anvil/patch metadata, and auto-selects a BIOS from the
+game database region, known title requirements, or a per-game MD5 override; the
+configured BIOS remains the fallback. `--bios2`, `--bios-auto`, `bios list|scan|select`,
+Settings > Paths > BIOS folder, and File > Assign BIOS to Current Game are available.
+The v1.0 release is deliberately
 deferred: the next work is a BIOS-aware sweep and 5DO status merge (M13), then
 high-resolution CEL research (M14). The project is **donationware** (non-commercial,
 source-available; voluntary donations only). See
@@ -307,6 +312,8 @@ dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin --frames 
 dotnet run --project src/FiveDo.Cli -- info game.chd --json
 dotnet run --project src/FiveDo.Cli -- audio analyze capture.wav --json
 dotnet run --project src/FiveDo.Cli -- bios info panafz1.bin
+dotnet run --project src/FiveDo.Cli -- bios scan bios --json
+dotnet run --project src/FiveDo.Cli -- run game.chd --bios-auto bios --frames 600
 dotnet run --project src/FiveDo.Cli -- state inspect quick.tdos
 dotnet run --project src/FiveDo.Cli -- bench --frames 600
 dotnet run --project src/FiveDo.Cli -- selftest
@@ -407,7 +414,7 @@ The developer GPU probes (`--gl-probe`, `--vk-probe`, `--vk-window-probe`) and
 `--smoke-test` retain their existing options; see [`docs/Performance.md`](docs/Performance.md)
 and [`docs/BuildAndTest.md`](docs/BuildAndTest.md).
 
-Use **Open BIOS** and **Open Disc**, then **Play**. The default keyboard bindings are the arrow keys, Z (A), X (B), C (C), A (L), S (R), Enter (P), and Backspace (X). **Save State**/**Load State** use the selected slot; the **<**/**>** buttons change slots, and F6/F7 select the previous/next slot. F9 advances one frame while paused; F5/F8/F10/F11/F12 and Escape are the save/load/reset/fullscreen/screenshot/pause hotkeys. **Emulation > Record Input** writes a replayable input script. **Screenshot** writes a PNG from the OpenGL output (or the CPU frame when GL is unavailable), named by game, time, and frame. **Library** scans configured folders through the 4DO database, **Settings** edits video/audio/emulation/paths, and **Input** captures keyboard bindings for all six players. **Fullscreen** toggles F11/Escape; **Hi-Res** restarts the machine in the opt-in 640x480 mode. Settings persist under the user local application data folder, including per-game fix-mode overrides.
+Use **Open BIOS** and **Open Disc**, then **Play**. The default keyboard bindings are the arrow keys, Z (A), X (B), C (C), A (L), S (R), Enter (P), and Backspace (X). **Save State**/**Load State** use the selected slot; the **<**/**>** buttons change slots, and F6/F7 select the previous/next slot. F9 advances one frame while paused; F5/F8/F10/F11/F12 and Escape are the save/load/reset/fullscreen/screenshot/pause hotkeys. **Emulation > Record Input** writes a replayable input script. **Screenshot** writes a PNG from the OpenGL output (or the CPU frame when GL is unavailable), named by game, time, and frame. **Library** scans configured folders through the 4DO database, **Settings** edits video/audio/emulation/paths (including the BIOS folder, auto-select, primary/secondary BIOS, and per-game BIOS override), and **Input** captures keyboard bindings for all six players. **Fullscreen** toggles F11/Escape; **Hi-Res** restarts the machine in the opt-in 640x480 mode. Settings persist under the user local application data folder, including per-game fix-mode overrides.
 
 ## Legal and attribution
 

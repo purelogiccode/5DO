@@ -8,4 +8,14 @@ internal sealed record CliBiosInfoResult(
     int Size,
     string Md5,
     bool Anvil,
-    int AnvilKind);
+    int AnvilKind,
+    string Name,
+    string Kind,
+    string Territory,
+    string VideoStandard,
+    string Region,
+    bool Kanji,
+    bool Patched,
+    int Preference,
+    string Notes,
+    string Md5Bios2);

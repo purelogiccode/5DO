@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using FiveDo.Audio;
 using FiveDo.Core;
+using FiveDo.Storage;
 
 namespace FiveDo.Tests.Cli;
 
@@ -696,6 +697,171 @@ public sealed class CliProcessTests
         }
 
         return raw;
+    }
+
+    [Fact]
+    public void BiosScan_ReportsPrimarySecondaryAndErrors()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-scan-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(folder);
+        try
+        {
+            File.WriteAllBytes(Path.Combine(folder, "fz1.bin"), new byte[1_048_576]);
+            File.WriteAllBytes(Path.Combine(folder, "kanji.bin"), new byte[512]);
+            File.WriteAllBytes(Path.Combine(folder, "bad.bin"), new byte[1_048_577]);
+
+            CliResult result = Invoke("bios", "scan", folder, "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"primaryCount\": 1", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"secondaryCount\": 1", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"errorCount\": 1", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"kind\": \"Primary\"", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void BiosInfo_ReportsRegionMetadata()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"panafz1-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(path, new byte[1_048_576]);
+
+            CliResult result = Invoke("bios", "info", path, "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"kind\": \"Primary\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"territory\": \"Usa\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"region\": \"USA (NTSC)\"", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Run_BiosAuto_SelectsFromFolder()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-auto-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(folder);
+        try
+        {
+            File.WriteAllBytes(Path.Combine(folder, "panafz1.bin"), new byte[1_048_576]);
+
+            CliResult result = Invoke(
+                "run",
+                "--bios-auto",
+                folder,
+                "--frames",
+                "0",
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"biosSource\": \"auto\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"biosName\": \"panafz1\"", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Run_Bios2_ReportsTheSecondaryHash()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios2-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(folder);
+        try
+        {
+            var primary = new byte[1_048_576];
+            var secondary = new byte[512];
+            var primaryPath = Path.Combine(folder, "panafz1.bin");
+            var secondaryPath = Path.Combine(folder, "kanji.bin");
+            File.WriteAllBytes(primaryPath, primary);
+            File.WriteAllBytes(secondaryPath, secondary);
+            var expected = BiosImage.FromBytes(primary, secondary).Md5Bios2;
+
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                primaryPath,
+                "--bios2",
+                secondaryPath,
+                "--frames",
+                "0",
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains($"\"bios2Md5\": \"{expected}\"", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Run_BiosAndBiosAuto_ReturnsOne()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-conflict-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(folder);
+        try
+        {
+            var path = Path.Combine(folder, "panafz1.bin");
+            File.WriteAllBytes(path, new byte[1_048_576]);
+
+            CliResult result = Invoke("run", "--bios", path, "--bios-auto", folder, "--frames", "0");
+
+            Assert.Equal(1, result.Code);
+            Assert.Contains("--bios", result.Error, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void BiosSelect_ChoosesAnImageForASyntheticDisc()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-select-{Guid.NewGuid():N}");
+        var discPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-select-{Guid.NewGuid():N}.iso");
+        Directory.CreateDirectory(folder);
+        try
+        {
+            var primary = new byte[1_048_576];
+            var europe = new byte[1_048_576];
+            europe[28] = 234;
+            File.WriteAllBytes(Path.Combine(folder, "panafz1.bin"), primary);
+            File.WriteAllBytes(Path.Combine(folder, "panafz10e-anvil.bin"), europe);
+            File.WriteAllBytes(discPath, new byte[4096]);
+            var expected = BiosImage.FromBytes(europe).Md5;
+
+            CliResult result = Invoke(
+                "bios",
+                "select",
+                discPath,
+                "--folder",
+                folder,
+                "--md5",
+                expected,
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"ok\": true", result.Output, StringComparison.Ordinal);
+            Assert.Contains($"\"md5\": \"{expected}\"", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+            File.Delete(discPath);
+        }
     }
 
     private static CliResult Invoke(params string[] args)

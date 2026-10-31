@@ -1,7 +1,8 @@
 # Project Status and Next Steps
 
 **Snapshot:** 2026-10-31, after the first full-collection sweep, the performance pass,
-the ARM/CLIO/CEL/CD timing-option pass, and the CD speed/timing-profile pass. Road Rash's
+the ARM/CLIO/CEL/CD timing-option pass, the CD speed/timing-profile pass, and the BIOS
+manager. Road Rash's
 100k-state race now measures
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
@@ -34,7 +35,14 @@ CORE-08 adds `EmulationProfile` (`Compatible`, `Accuracy`, `Performance`, `Custo
 `--profile`, and Settings > Emulation > Timing profile; the accuracy profile enables the
 ARM60, Opera timer, CEL busy, and CD cycle options together, and `run --json` reports the
 profile derived from the actual options.
-**1039 tests pass.**
+SYS-04 adds the BIOS manager: a built-in MD5 catalog, `BiosLibrary` scanning/validation,
+region/Kanji/Anvil/patch metadata, `--bios2` and `--bios-auto`, `bios list|scan|select`,
+Settings > Paths BIOS folder/auto-select/scan, per-game BIOS overrides, and the
+Settings > Emulation override combo. Auto-selection uses the game database region plus
+known requirements for Slayer Europe/USA, Powers Kingdom (Europe), and Arcade CD-ROM
+discs; the configured BIOS remains the fallback when no BIOS folder is set. The
+five-title 3,000-frame smoke run and four known-requirement 12,000-frame runs are in
+[`TestCorpus.md`](TestCorpus.md) 1.1f. **1065 tests pass.**
 The v1.0 release is deliberately deferred: the next work is a BIOS-aware sweep and
 5DO status merge (M13), then high-resolution CEL research (M14). The project is
 **donationware** (non-commercial, source-available, voluntary donations only). See
@@ -82,6 +90,14 @@ This is the short, current answer to "where are we?" The documentation index is
   payloads, and `state inspect` reports stored/compressed sizes.
 - **BIOS:** `panafz1.bin` boots, runs the splash/animation, initializes the OS, and
   reaches the shell. The earlier `PC 0x205C4` "halt" was the Portfolio idle loop.
+  SYS-04 adds a BIOS manager: `BiosLibrary` scans `.bin`/`.rom` files, computes MD5, and
+  classifies region, video standard, Kanji, Anvil, and patch state; the built-in catalog
+  covers the common FZ-1/FZ-10/FZ-10E/FZ-10JA, GoldStar, Sanyo, patched arcade, Kanji
+  font, and arcade support images. `--bios-auto` and Settings > Paths > Auto-select BIOS
+  choose a region-appropriate primary plus optional BIOS2; `--bios2` loads an explicit
+  secondary. `bios list|scan|select` expose the catalog, and per-game BIOS overrides are
+  stored by 4DO game ID. The configured `BiosPath` remains the fallback, so existing
+  settings keep their exact BIOS.
 - **Video:** the desktop two-stage presenter expands palettes at native resolution
   into an FBO, then scales/filters to the output. Desktop GL 3.3 and GLSL ES 300
   sources are selected from the context version; the frontend can force the backend
@@ -198,7 +214,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 1039 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 1065 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
@@ -206,9 +222,9 @@ This is the short, current answer to "where are we?" The documentation index is
   source-generated CLI JSON contracts, frontend startup-argument parsing, renderer
   backend selection, GPU-probe capture/parity contracts, shader source invariants,
   Vulkan xBR/FSR/HQx split-frame orientation, save-state disc-hash warnings, hotkey
-  routing, input-recorder coalescing/roundtrip, ISO/BIN `disc tracks`, and Opera FS
-  parsing (multi-block directories, `burst`/`gap` reads, invalid headers, and CLI ISO
-  extraction).
+  routing, input-recorder coalescing/roundtrip, ISO/BIN `disc tracks`, Opera FS parsing
+  (multi-block directories, `burst`/`gap` reads, invalid headers, and CLI ISO
+  extraction), and BIOS catalog/scan/selection/override tests.
 - **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
   Both executables are self-contained, single-file, and trimmed (`PublishTrimmed=true`,
   `TrimMode=full`). The CLI also has an opt-in NativeAOT win-x64 publish
@@ -510,8 +526,8 @@ current gates are the M13 collection sweep and the M14 high-resolution decision.
    - Olympic Summer Games was blocked by the headless PBUS bug, now fixed by the
      default player-1 pad.
 3. **Run the BIOS-aware sweep and fill the status columns.** Rerun the `Not Loadable`
-   and `Loadable/No video` subsets with `tools/bios-probe.ps1` (`panafz10-patched` and
-   the Anvil BIOS), record the BIOS used per disc, then assign
+   and `Loadable/No video` subsets with `tools/bios-probe.ps1` or `--bios-auto bios`
+   (`panafz10-patched` and the Anvil BIOS), record the BIOS used per disc, then assign
    `Unplayable`/`Playable`/`Good` in
    [`GameCompatibilityList.md`](GameCompatibilityList.md). Keep Crash 'n Burn (Japan)
    and WorldCup Super Stadium on the investigation list.

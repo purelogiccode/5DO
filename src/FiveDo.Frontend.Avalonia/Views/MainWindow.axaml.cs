@@ -72,6 +72,9 @@ public partial class MainWindow : Window, IDisposable
     private bool _running;
     private bool _shuttingDown;
     private bool _biosLoaded;
+    private string _biosMd5 = string.Empty;
+    private string _bios2Md5 = string.Empty;
+    private string _biosSelectionReason = string.Empty;
     private bool _gridMode = true;
     private bool _syncingSelection;
     private bool _logDockVisible;
@@ -260,10 +263,13 @@ public partial class MainWindow : Window, IDisposable
 
     private void LoadConfiguredPaths()
     {
-        var biosPath = Program.StartupBiosPath ?? _settings.BiosPath;
-        if (File.Exists(biosPath))
+        var startupBios = Program.StartupBiosPath;
+        ResolvedBios resolved = startupBios is not null
+            ? new ResolvedBios(startupBios, string.Empty, "startup", "Using the --bios startup path.", null, null, [])
+            : BiosResolver.Resolve(_settings, null, null);
+        if (resolved.HasPrimary && File.Exists(resolved.PrimaryPath))
         {
-            OpenBiosPath(biosPath);
+            OpenBiosPath(resolved.PrimaryPath!, resolved.SecondaryPath, persist: false, resolved.Reason);
         }
 
         var startupDisc = Program.StartupDiscPath;
@@ -294,6 +300,81 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
+    private void OnAssignBiosToGameAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(AssignBiosToGameAsync, "assigning a BIOS to the current game");
+    }
+
+    private async Task AssignBiosToGameAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_gameId))
+        {
+            StatusText.Text = "Load a game before assigning a BIOS.";
+            return;
+        }
+
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Assign a BIOS to the current game",
+            AllowMultiple = false,
+            FileTypeFilter = [new FilePickerFileType("BIOS ROM") { Patterns = ["*.bin", "*.rom"] }],
+        }).ConfigureAwait(true);
+        var path = files.Count > 0 ? files[0].TryGetLocalPath() : null;
+        if (path is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var bios = BiosImage.Load(path);
+            var directory = Path.GetDirectoryName(Path.GetFullPath(path));
+            if (!string.IsNullOrWhiteSpace(directory)
+                && !string.Equals(
+                    directory,
+                    _settings.BiosFolder,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                // The override is resolved by MD5 from the BIOS folder, so keep the
+                // assigned image discoverable even when it lives outside the old folder.
+                _settings.BiosFolder = directory;
+            }
+
+            _settings.SetBiosOverride(_gameId, bios.Md5);
+            AppSettingsStore.Save(_settings);
+            StatusText.Text =
+                $"BIOS {bios.Md5[..8]} assigned to {_gameName}; restart the game to apply it.";
+            _logger.ForCategory(LogCategory.Storage).Information(
+                "BIOS {Md5} assigned to game {GameId} ({Game}).",
+                bios.Md5,
+                _gameId,
+                _gameName);
+        }
+        catch (Exception exception) when (exception is IOException or InvalidDataException or ArgumentException)
+        {
+            StatusText.Text = $"BIOS assignment error: {exception.Message}";
+            _logger.ForCategory(LogCategory.Storage).Error(exception, "BIOS assignment failed.");
+            ShowError("BIOS assignment error", exception.Message);
+        }
+    }
+
+    private void OnClearBiosAssignment(object? sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(_gameId))
+        {
+            StatusText.Text = "Load a game before clearing a BIOS assignment.";
+            return;
+        }
+
+        _settings.SetBiosOverride(_gameId, null);
+        AppSettingsStore.Save(_settings);
+        StatusText.Text = $"Automatic BIOS selection restored for {_gameName}; restart the game to apply it.";
+        _logger.ForCategory(LogCategory.Storage).Information(
+            "BIOS override cleared for game {GameId} ({Game}).",
+            _gameId,
+            _gameName);
+    }
+
     private void OnOpenDiscAsync(object? sender, RoutedEventArgs e)
     {
         AsyncEvent.Run(OpenDiscAsync, "opening a disc");
@@ -320,7 +401,7 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OpenBiosPath(string path)
+    private void OpenBiosPath(string path, string? bios2Path = null, bool persist = true, string? reason = null)
     {
         StopInputRecording(save: true);
         if (_running)
@@ -330,7 +411,7 @@ public partial class MainWindow : Window, IDisposable
 
         try
         {
-            var bios = BiosImage.Load(path);
+            var bios = BiosImage.Load(path, string.IsNullOrWhiteSpace(bios2Path) ? null : bios2Path);
             var machine = CreateMachine();
             _runner!.Invoke(() =>
             {
@@ -343,14 +424,27 @@ public partial class MainWindow : Window, IDisposable
                 machine.LoadNvram(nvram.Data.Span);
             });
             _biosLoaded = true;
-            _settings.BiosPath = path;
-            AppSettingsStore.Save(_settings);
-            StatusText.Text = $"BIOS {bios.Md5[..8]} loaded{(bios.IsAnvil ? " (Anvil)" : string.Empty)}.";
+            _biosMd5 = bios.Md5;
+            _bios2Md5 = bios.Md5Bios2;
+            _biosSelectionReason = reason ?? string.Empty;
+            if (persist)
+            {
+                _settings.BiosPath = path;
+                _settings.Bios2Path = string.IsNullOrWhiteSpace(bios2Path) ? string.Empty : bios2Path;
+                AppSettingsStore.Save(_settings);
+            }
+
+            var secondary = string.IsNullOrWhiteSpace(bios2Path)
+                ? string.Empty
+                : $" + BIOS2 {bios.Md5Bios2[..Math.Min(8, bios.Md5Bios2.Length)]}";
+            StatusText.Text =
+                $"BIOS {bios.Md5[..8]}{secondary} loaded{(bios.IsAnvil ? " (Anvil)" : string.Empty)}.";
             _logger.ForCategory(LogCategory.Storage).Information(
-                "BIOS loaded: {Path} ({Md5}, {Kind}).",
+                "BIOS loaded: {Path} ({Md5}, {Kind}){Reason}.",
                 path,
                 bios.Md5,
-                bios.IsAnvil ? "Anvil" : "retail");
+                bios.IsAnvil ? "Anvil" : "retail",
+                string.IsNullOrWhiteSpace(reason) ? string.Empty : $" [{reason}]");
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException or ArgumentException)
         {
@@ -375,13 +469,61 @@ public partial class MainWindow : Window, IDisposable
             var gameId = disc.SectorCount >= 2 ? GameId.Compute(disc) : string.Empty;
             var record = gameId.Length == 0 ? null : GameDatabase.Default.FindByChecksum(gameId);
             var fixMode = _settings.ResolveFixMode(gameId);
+            ResolvedBios resolved;
+            try
+            {
+                resolved = BiosResolver.Resolve(_settings, gameId, record, path);
+            }
+            catch
+            {
+                disc.Dispose();
+                throw;
+            }
+
+            foreach (var warning in resolved.Warnings)
+            {
+                _logger.ForCategory(LogCategory.Storage).Warning("BIOS selection: {Warning}", warning);
+            }
+
+            BiosImage? selectedBios = null;
+            var biosChanged = false;
+            if (resolved.HasPrimary && File.Exists(resolved.PrimaryPath))
+            {
+                try
+                {
+                    selectedBios = BiosImage.Load(
+                        resolved.PrimaryPath!,
+                        string.IsNullOrWhiteSpace(resolved.SecondaryPath) ? null : resolved.SecondaryPath);
+                }
+                catch
+                {
+                    disc.Dispose();
+                    throw;
+                }
+
+                biosChanged = !_biosLoaded
+                    || !string.Equals(_biosMd5, selectedBios.Md5, StringComparison.OrdinalIgnoreCase)
+                    || !string.Equals(_bios2Md5, selectedBios.Md5Bios2, StringComparison.OrdinalIgnoreCase);
+            }
+            else if (!_biosLoaded)
+            {
+                disc.Dispose();
+                throw new InvalidDataException(resolved.Reason);
+            }
+
             _runner!.Invoke(() =>
             {
+                if (selectedBios is not null && biosChanged)
+                {
+                    machine.LoadBios(selectedBios.Bios1.Span, selectedBios.Bios2.Span);
+                    machine.Memory.ClearRam();
+                }
+
                 _disc?.Dispose();
                 _disc = disc;
                 machine.Compatibility.FixMode = fixMode;
                 machine.InsertDisc(disc);
-                if (autoStart)
+                if (autoStart || biosChanged)
                 {
                     // A different game must boot from a cold RAM image; the previous
                     // game's leftovers can leave the BIOS waiting at PC 0x1658.
@@ -389,6 +531,14 @@ public partial class MainWindow : Window, IDisposable
                     machine.Reset();
                 }
             });
+            if (selectedBios is not null && biosChanged)
+            {
+                _biosLoaded = true;
+                _biosMd5 = selectedBios.Md5;
+                _bios2Md5 = selectedBios.Md5Bios2;
+                _biosSelectionReason = resolved.Reason;
+            }
+
             _gameId = gameId;
             _gameName = record?.Name ?? Path.GetFileNameWithoutExtension(path);
             Video.Settings = _settings.ToRendererSettings(_gameId);
@@ -415,13 +565,17 @@ public partial class MainWindow : Window, IDisposable
             AppSettingsStore.Save(_settings);
             UpdateRecentMenu();
             UpdateEmulationHeader();
-            StatusText.Text = $"{_gameName}: {disc.SectorCount} sectors, fixes 0x{(uint)fixMode:x8}.";
+            var biosText = string.IsNullOrWhiteSpace(_biosMd5)
+                ? "no BIOS"
+                : $"BIOS {_biosMd5[..Math.Min(8, _biosMd5.Length)]}";
+            StatusText.Text = $"{_gameName}: {disc.SectorCount} sectors, fixes 0x{(uint)fixMode:x8}, {biosText}.";
             _logger.ForCategory(LogCategory.Storage).Information(
-                "Disc opened: {Game} ({GameId}), {Sectors} sectors, fixes 0x{FixMode:x8}.",
+                "Disc opened: {Game} ({GameId}), {Sectors} sectors, fixes 0x{FixMode:x8}, {Bios}.",
                 _gameName,
                 gameId[..Math.Min(8, gameId.Length)],
                 disc.SectorCount,
-                (uint)fixMode);
+                (uint)fixMode,
+                biosText);
 
             if (autoStart)
             {
@@ -1017,6 +1171,16 @@ public partial class MainWindow : Window, IDisposable
         }
 
         text.AppendLine($"BIOS: {(_settings.BiosPath.Length > 0 ? _settings.BiosPath : "(not set)")}");
+        if (!string.IsNullOrWhiteSpace(_bios2Md5))
+        {
+            text.AppendLine($"BIOS2: {_settings.Bios2Path} ({_bios2Md5[..Math.Min(8, _bios2Md5.Length)]})");
+        }
+
+        if (!string.IsNullOrWhiteSpace(_biosSelectionReason))
+        {
+            text.AppendLine($"BIOS selection: {_biosSelectionReason}");
+        }
+
         text.AppendLine($"Save states: {_settings.SaveDirectory}");
         text.AppendLine($"Screenshots: {_settings.ScreenshotDirectory}");
         text.AppendLine(
@@ -1759,6 +1923,11 @@ public partial class MainWindow : Window, IDisposable
     private async Task ShowSettingsAsync()
     {
         var previousCoverDirectory = _settings.CoverDirectory;
+        var previousBiosPath = _settings.BiosPath;
+        var previousBios2Path = _settings.Bios2Path;
+        var previousBiosFolder = _settings.BiosFolder;
+        var previousAutoBios = _settings.AutoBios;
+        var previousBiosOverride = _settings.GetBiosOverride(_gameId);
         var window = new SettingsWindow(_settings, _gameId, _gameName);
         if (!await window.ShowDialog<bool>(this).ConfigureAwait(true))
         {
@@ -1797,8 +1966,15 @@ public partial class MainWindow : Window, IDisposable
             AsyncEvent.Run(RefreshLibraryAsync, "refreshing game covers");
         }
 
+        var biosSettingsChanged =
+            !string.Equals(previousBiosPath, _settings.BiosPath, StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(previousBios2Path, _settings.Bios2Path, StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(previousBiosFolder, _settings.BiosFolder, StringComparison.OrdinalIgnoreCase)
+            || previousAutoBios != _settings.AutoBios
+            || !string.Equals(previousBiosOverride, _settings.GetBiosOverride(_gameId), StringComparison.OrdinalIgnoreCase);
         if (_machine is not null
-            && (_settings.HighResolution != _machine.Tuning.HighResolution
+            && (biosSettingsChanged
+                || _settings.HighResolution != _machine.Tuning.HighResolution
                 || _settings.ArmTiming != _machine.Tuning.ArmTiming
                 || _settings.ClioTimers != _machine.Tuning.ClioTimers
                 || _settings.CelTiming != _machine.Tuning.CelTiming
@@ -1955,11 +2131,12 @@ public partial class MainWindow : Window, IDisposable
     private void RecreateMachine()
     {
         StopInputRecording(save: true);
-        var biosPath = _settings.BiosPath;
         var discPath = _settings.DiscPath;
-        if (string.IsNullOrWhiteSpace(biosPath) || !File.Exists(biosPath))
+        GameRecord? record = _gameId.Length == 0 ? null : GameDatabase.Default.FindByChecksum(_gameId);
+        ResolvedBios resolved = BiosResolver.Resolve(_settings, _gameId, record, discPath);
+        if (!resolved.HasPrimary || !File.Exists(resolved.PrimaryPath))
         {
-            StatusText.Text = "Reload the BIOS to apply the emulation mode.";
+            StatusText.Text = $"Reload the BIOS to apply the emulation mode: {resolved.Reason}";
             return;
         }
 
@@ -1971,7 +2148,10 @@ public partial class MainWindow : Window, IDisposable
         _disc?.Dispose();
         _disc = null;
         _biosLoaded = false;
-        OpenBiosPath(biosPath);
+        _biosMd5 = string.Empty;
+        _bios2Md5 = string.Empty;
+        _biosSelectionReason = string.Empty;
+        OpenBiosPath(resolved.PrimaryPath!, resolved.SecondaryPath, persist: false, resolved.Reason);
         if (!string.IsNullOrWhiteSpace(discPath) && File.Exists(discPath))
         {
             OpenDiscPath(discPath);

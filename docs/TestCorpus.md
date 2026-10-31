@@ -239,6 +239,42 @@ Arm60Datasheet`, `clioTimers: OperaScheduler`, `celTiming: OperaBusy`,
 `profile: Custom` and the FreeDO timing value. The individual option tests and
 state-mismatch tests are in `tests/FiveDo.Tests`.
 
+### 1.1f BIOS manager and auto-selection (2026-10-31)
+
+`bios scan bios` finds 8 primary BIOS images, 2 secondary images (the FZ-1 Kanji font
+and the 512 KB arcade support ROM), and 0 errors. The common Panasonic FZ-1/FZ-10/
+FZ-10E/FZ-10JA, GoldStar, Sanyo, patched arcade, Kanji font, and arcade support hashes
+are recognized by MD5; unknown images are classified from the file name and marked
+unverified.
+
+The five-title 3,000-frame boot corpus was rerun with `--bios-auto bios`, a fresh
+NVRAM, and the Release build. Automatic selection chose the FZ-10 for these US titles;
+the hashes differ from the FZ-1 section 1.1 keys because the BIOS image differs, but
+every run completed and the final frame was non-black.
+
+| Title | Selected BIOS | Final PC | Frame hash |
+|---|---|---|---|
+| Alone in the Dark (USA) | Panasonic FZ-10 | `0x00021BEC` | `0x175B8FE4` |
+| Lemmings (USA) | Panasonic FZ-10 | `0x0012DA2C` | `0x0C5B2F8E` |
+| Road Rash (USA) | Panasonic FZ-10 | `0x000BA13C` | `0x6D23530B` |
+| Space Ace (USA) | Panasonic FZ-10 | `0x0007A160` | `0xF55471B4` |
+| Wolfenstein 3D (USA) | Panasonic FZ-10 | `0x00018FAC` | `0x175B8FE4` |
+
+Known-title requirements were checked at 12,000 frames. These are the BIOS choices the
+BIOS-aware triage in `Compatibility.md` 13.2 identified; each final frame contained
+rendered content.
+
+| Title | Selected BIOS | Final PC | Frame hash |
+|---|---|---|---|
+| Powers Kingdom (Europe) | Panasonic FZ-10E (Anvil) | `0x00010F3C` | `0xD5F7AF94` |
+| Slayer (USA) | Panasonic FZ-10 | `0x000EC8B8` | `0xA50A108B` |
+| Slayer (Europe) | Panasonic FZ-1 | `0x00020640` | `0xAB8BC516` |
+| Crime Patrol (USA) (Arcade CD-ROM) | Panasonic FZ-10 (patched) | `0x00070D20` | `0x76C2D1D1` |
+
+This is smoke evidence, not the full-collection BIOS-aware sweep. The configured
+`BiosPath` remains the fallback and is still used when `BiosFolder` is empty, so
+existing settings keep their exact BIOS.
+
 The 30,000-frame Road Rash run after the CCB fix originally ended at
 `PC 0x00016194` with frame hash `0xE2D08131` and rendered the race scene when run
 without NVRAM. That result was produced before the arbitrary-CEL transposition fix;

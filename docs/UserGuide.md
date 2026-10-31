@@ -27,6 +27,25 @@ see [`CliReference.md`](CliReference.md); for settings and paths, see
 The first-run guide is shown only once. **About** always shows the current BIOS, disc,
 renderer, machine state, and paths.
 
+### BIOS manager and automatic selection
+
+Settings > Paths now edits a BIOS folder, a primary BIOS, an optional BIOS2/Kanji font,
+and the **Auto-select BIOS** option. **Scan BIOS folder** validates every `.bin`/`.rom`
+file and reports primary/secondary/error counts. The scanner recognizes the common
+Panasonic FZ-1/FZ-10/FZ-10E/FZ-10JA, GoldStar, Sanyo, patched arcade, Kanji font, and
+arcade support ROM hashes; unknown images are accepted with file-name-derived metadata.
+
+When a BIOS folder is set and auto-selection is enabled, 5DO chooses a BIOS from the
+disc's game database region, known title requirements, and the image's Kanji/Anvil/patch
+metadata. The configured primary BIOS remains the fallback. Use **File > Assign BIOS to
+Current Game...** to pin a specific image to the current game, or **Clear Game BIOS
+Assignment** to return it to automatic selection. The status line and log show which BIOS
+was selected and why.
+
+From the CLI, `--bios-auto <folder>` performs the same selection for `run`/`trace`, and
+`bios list`, `bios scan`, and `bios select` expose the catalog directly. `--bios2` loads
+an explicit secondary ROM.
+
 ## Command-line launch (frontends and file associations)
 
 The desktop executable accepts the following arguments. A positional disc path or
@@ -319,6 +338,8 @@ dotnet run -c Release --project src/FiveDo.Cli -- run game.chd --bios panafz1.bi
 dotnet run -c Release --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin --frames 600 --prefetch --high-res
 dotnet run -c Release --project src/FiveDo.Cli -- info game.chd --json
 dotnet run -c Release --project src/FiveDo.Cli -- bios info panafz1.bin
+dotnet run -c Release --project src/FiveDo.Cli -- bios scan bios --json
+dotnet run -c Release --project src/FiveDo.Cli -- run game.chd --bios-auto bios --frames 600
 dotnet run -c Release --project src/FiveDo.Cli -- state inspect quick.tdos
 dotnet run -c Release --project src/FiveDo.Cli -- bench --frames 600
 dotnet run -c Release --project src/FiveDo.Cli -- selftest
@@ -341,7 +362,8 @@ for example, `0 A` then applies on the first frame after the state loads. `run
 
 ## Troubleshooting
 
-- **"Load a BIOS first"**: open a BIOS before pressing Play.
+- **"Load a BIOS first"**: open a BIOS before pressing Play, or set a BIOS folder with
+  auto-selection enabled. Check the scan result if the folder contains renamed dumps.
 - **Disc error**: verify the image is a 3DO disc and that the BIOS is compatible. CHD
   must be a CD image, not a DVD/HDD/raw image.
 - **OpenGL unavailable**: update the GPU driver. The CPU fallback still runs; check

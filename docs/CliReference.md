@@ -50,7 +50,9 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `disc tracks <disc>` | List CHD track table entries, or one data track for ISO/BIN/CUE. |
 | `fs list <disc>` | List the 3DO file tree (ISO, BIN, CUE, or CHD). |
 | `fs extract <disc>` | Extract files from a 3DO disc image (ISO, BIN, CUE, or CHD). |
-| `bios info <path>` | BIOS size, MD5, Anvil detection. |
+| `bios info <path>` | BIOS size, MD5, region, Kanji, and Anvil detection. |
+| `bios list\|scan <folder>` | Scan and validate a BIOS folder. |
+| `bios select <disc> --folder <dir>` | Choose a region-appropriate BIOS for a disc. |
 | `audio analyze <wav>` | WAV format, peak, RMS, clipping, silence, DC offset. |
 | `state inspect <path>` | Save-state header and section table (full CRC validation, including Brotli sections). |
 | `state slots <dir>` | List numbered save slots and metadata. |
@@ -66,13 +68,17 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 ### Synopsis
 
 ```text
-5do run [disc] --bios <path> [options]
+5do run [disc] --bios <path> [--bios2 <path>] [options]
+5do run [disc] --bios-auto <folder> [--bios2 <path>] [options]
 5do run [disc] --state-in <path> [options]
 ```
 
-`--bios` is required unless `--state-in` supplies the ROM/RAM state. A disc is optional
-for a BIOS-only boot. `--state-in` restores ROM, RAM, NVRAM, device state, and the
-current VDL frame.
+`--bios` or `--bios-auto` is required unless `--state-in` supplies the ROM/RAM state.
+A disc is optional for a BIOS-only boot. `--bios-auto` scans the folder, computes the
+game ID/region, and selects a primary BIOS plus an optional Kanji/BIOS2 image; explicit
+`--bios2` overrides the selected secondary. `--bios` and `--bios-auto` are mutually
+exclusive. `--state-in` restores ROM, RAM, NVRAM, device state, and the current VDL
+frame.
 
 ### Order of operations
 
@@ -82,7 +88,7 @@ current VDL frame.
 3. Apply `--profile` (if any), then create the machine with `--high-res`,
    `--arm-timing`, `--clio-timers`, `--cel-timing`, `--cd-timing`, `--cd-speed`,
    `--cpu-clock`, and the resolved fix mode. Explicit options override the profile.
-4. Load BIOS1/BIOS2 (unless `--state-in`).
+4. Resolve `--bios`/`--bios-auto` and load BIOS1/BIOS2 (unless `--state-in`).
 5. Create the audio backend and insert the disc.
 6. Reset the machine.
 7. Load NVRAM (`--nvram` if it exists, else a fresh image) unless `--state-in`.
@@ -98,7 +104,9 @@ current VDL frame.
 
 | Option | Default | Meaning |
 |---|---:|---|
-| `--bios <path>` | none | BIOS1 path (exactly 1 MB). Required unless `--state-in`. |
+| `--bios <path>` | none | BIOS1 path (exactly 1 MB). Required unless `--bios-auto` or `--state-in`. |
+| `--bios2 <path>` | none | Optional BIOS2/Kanji font path. Requires `--bios` or `--bios-auto`. |
+| `--bios-auto <folder>` | none | Scan a folder and select a region-appropriate BIOS for the disc. |
 | `--frames N` | 600 | Number of frames to run. Decimal or `0x`. |
 | `--state-in <path>` | none | Load a `.tdos` state instead of booting. |
 | `--state-out <path>` | none | Save a `.tdos` state after the run. |
@@ -211,6 +219,9 @@ audio:       10.000 s, peak 32767, RMS 8123.4, clipped 0, silent 0
 disc hash:   0123456789abcdef0123456789abcdef
 game id:     0123456789abcdef0123456789abcdef
 fix mode:    0x00000000
+bios:        Panasonic FZ-1 (f47264dd47fe30f73ab3c010015c155b)
+bios region: USA (NTSC) [auto]
+bios reason: Auto-selected Panasonic FZ-1 for US (USA (NTSC)).
 dsp running: True
 dsp pc:      0x0000
 dsp sema:    0x00000000
@@ -276,6 +287,13 @@ All fields are camelCase. Nullable fields are omitted or `null` when not applica
 | `audioQueuedBuffers` | long? | Buffers attached to the OpenAL source at the end. |
 | `audioBufferedFrames` | int? | Frames waiting in the emulation ring. |
 | `audioLatencyMilliseconds` | double? | `(queuedFrames + bufferedFrames) * 1000 / 44100`. |
+| `biosPath` | string? | Primary BIOS path used for the run. |
+| `bios2Path` | string? | BIOS2/font path used for the run, if any. |
+| `biosMd5`, `bios2Md5` | string? | Lowercase MD5 hashes of the loaded BIOS images. |
+| `biosName` | string? | Human-readable BIOS profile name. |
+| `biosRegion` | string? | Region label such as `USA (NTSC)` or `Europe (PAL)`. |
+| `biosSelection` | string? | Why automatic selection chose this image. |
+| `biosSource` | string | `auto`, `configured`, or `none`. |
 | `warnings` | string[] | `machine.StateWarnings` after a state load. |
 
 `cdStatus=0xE1` and `cdPoll=0x0C` is the historical static READ_ID-only wait signature.
@@ -297,7 +315,9 @@ instruction ring buffer. It stops early on a stop condition or `--count` limit.
 
 | Option | Default | Meaning |
 |---|---:|---|
-| `--bios <path>` | none | BIOS1. Required unless `--state-in`. |
+| `--bios <path>` | none | BIOS1. Required unless `--bios-auto` or `--state-in`. |
+| `--bios2 <path>` | none | Optional BIOS2/Kanji font path. |
+| `--bios-auto <folder>` | none | Auto-select a region-appropriate BIOS for the disc. |
 | `--state-in <path>` | none | Load a state before tracing. |
 | `--frames N` | 0 | Frames to run before tracing. |
 | `--trace-frames N` | 1 | Frames to trace. |
@@ -410,16 +430,36 @@ read with the gaps skipped.
 
 ---
 
-## 8. `bios info`
+## 8. `bios` commands
 
 ```powershell
-5do bios info panafz1.bin
-5do bios info panafz1.bin --json
+5do bios info panafz1.bin [--bios2 panafz1-kanji.bin] [--json]
+5do bios list bios --recursive --json
+5do bios scan bios --json
+5do bios select "Lemmings (USA).chd" --folder bios --json
 ```
 
-Fields: `path`, `size`, `md5`, `anvil`, `anvilKind`. BIOS1 must be exactly 1 MB. Anvil
-is detected by `byte[28] == 234`; `anvilKind` is 30 when true, else 0. Text output
-prints the same fields.
+`bios info` reports `path`, `size`, `md5`, `anvil`, `anvilKind`, `name`, `kind`,
+`territory`, `videoStandard`, `region`, `kanji`, `patched`, `preference`, `notes`, and
+`md5Bios2`. BIOS1 must be exactly 1 MB; a smaller file is classified as a BIOS2/Kanji
+font or arcade support ROM. Anvil is detected by `byte[28] == 234`.
+
+`bios list`/`bios scan` scan `.bin` and `.rom` files, classify known MD5 hashes from the
+built-in catalog, validate sizes, and report skipped files. Add `--recursive` to include
+subfolders. JSON fields: `folder`, `primaryCount`, `secondaryCount`, `errorCount`,
+`profiles`, and `errors`.
+
+`bios select` opens a disc, computes its game ID/region, and prints the selected primary
+and optional BIOS2 with the reason. Options: `--folder <dir>` (required),
+`--recursive`, `--allow-patched`, `--require-kanji`, `--prefer-anvil`, and
+`--md5 <hash>`. Known title requirements currently cover Slayer Europe/USA, Powers
+Kingdom (Europe), and Arcade CD-ROM discs; other titles use region matching plus
+per-game overrides.
+
+Known BIOS hashes include Panasonic FZ-1/FZ-10/FZ-10E/FZ-10JA, GoldStar, Sanyo TRY, the
+patched FZ-10/FZ-10E arcade images, the FZ-1 Kanji font, and the 3DO arcade support ROM.
+Unknown images are still accepted, but their metadata is inferred from the file name and
+marked unverified in `notes`.
 
 ---
 

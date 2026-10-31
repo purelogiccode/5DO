@@ -807,3 +807,32 @@ M1 implements the section primitive used by all later chips:
 - The three-title 3,000-frame smoke differential is in `TestCorpus.md` 1.1e. All speeds
   complete and render; the FreeDO default is bit-identical across speed settings. A
   full-collection speed sweep and CD-DA speed behavior remain.
+
+### 12.20 BIOS manager and auto-selection (2026-10-31)
+
+- `BiosCatalog.Default` stores published MD5 identifiers, not ROM bytes: Panasonic FZ-1
+  (`f47264dd...`), FZ-10 (`51f2f43a...`), FZ-10E Anvil (`a48e6746...`), FZ-10JA Anvil
+  Kanji (`42857725...`), GoldStar (`8639fd5e...`), Sanyo TRY (`35fa1a1e...`), patched
+  FZ-10 (`1477bda8...`), patched FZ-10E (`cf11bbb5...`), the FZ-1 Kanji font
+  (`b8dc97f7...`), and the 512 KB arcade support ROM (`8970fc98...`).
+- `BiosLibrary.Describe` treats exactly 1 MB as a primary BIOS and a smaller non-empty
+  file as a secondary/font/arcade ROM. Other sizes are rejected. Unknown images are
+  accepted; their region/video metadata is inferred from the file name and the notes
+  explicitly say it is unverified.
+- `BiosLibrary.SelectForGame` scores candidates by territory, video standard, Kanji,
+  Anvil, patch state, and a catalog preference. Patched images are excluded for
+  non-arcade discs unless explicitly allowed. Arcade detection uses the game name or
+  disc file name containing `Arcade`, because some arcade discs are absent from the
+  game database and have no region string.
+- Known title requirements are intentionally small and evidence-based: Slayer Europe
+  -> FZ-1, Slayer USA -> FZ-10, Powers Kingdom Europe -> FZ-10E Anvil. Arcade discs use
+  the patched image through the scoring rules. Do not add title hacks without the same
+  evidence standard used by `Compatibility.md`.
+- `BiosResolver` runs only when `AutoBios` is true **and** `BiosFolder` is non-empty.
+  This preserves existing `BiosPath`-only configurations. Per-game overrides still use
+  the folder if present, then fall back to the configured path.
+- `run --json` adds `biosPath`, `bios2Path`, `biosMd5`, `bios2Md5`, `biosName`,
+  `biosRegion`, `biosSelection`, and `biosSource`. `bios select` uses the same selector;
+  `bios list/scan` validates a folder. The smoke evidence is in `TestCorpus.md` 1.1f.
+- Save-state BIOS mismatch warnings already cover the primary BIOS hash. A BIOS2 hash is
+  not in the v2 header; adding one would require a state-format change.

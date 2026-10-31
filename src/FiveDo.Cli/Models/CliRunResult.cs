@@ -56,4 +56,12 @@ internal sealed record CliRunResult(
     long? AudioQueuedBuffers,
     int? AudioBufferedFrames,
     double? AudioLatencyMilliseconds,
+    string? BiosPath,
+    string? Bios2Path,
+    string? BiosMd5,
+    string? Bios2Md5,
+    string? BiosName,
+    string? BiosRegion,
+    string? BiosSelection,
+    string BiosSource,
     IReadOnlyList<string> Warnings);

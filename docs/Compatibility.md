@@ -111,7 +111,7 @@ The 3DO boot ROM is **1 MB**. 4DO also accepts an optional second 1 MB ROM (BIOS
 | Region-specific BIOS files | Loaded as-is; no region lock emulation |
 | BIOS distribution | Not included; user must provide |
 
-The BIOS picker shows the file name, size, MD5, and detected Anvil flag. The selected BIOS path is stored in settings. A missing/invalid BIOS prevents starting a session with a clear error.
+The BIOS manager scans a folder, reports file name, size, MD5, region, video standard, Kanji, Anvil, and patch state, and stores the selected primary/secondary paths. Auto-selection uses the game database region, known title requirements, and per-game MD5 overrides; the configured BIOS remains the fallback. A missing/invalid BIOS prevents starting a session with a clear error. See [`UserGuide.md`](UserGuide.md) and [`Configuration.md`](Configuration.md).
 
 ---
 
@@ -646,3 +646,11 @@ Consequences for the sweep:
   without a BIOS-aware rerun.
 - The final 5DO status must record the BIOS used, because a result is only meaningful
   for the BIOS that was tested.
+
+The SYS-04 BIOS selector encodes the actionable part of this triage: arcade discs get
+the patched FZ-10 image, European games prefer the FZ-10E Anvil image, Japanese games
+prefer the FZ-10JA/Kanji image, and Slayer Europe/USA plus Powers Kingdom Europe have
+explicit known requirements. `bios select` prints the reason for each choice, and
+`run --json` records it in `biosSelection`. The full BIOS-aware sweep is still the
+acceptance step; the selector does not claim a title is compatible merely because a
+BIOS was chosen.

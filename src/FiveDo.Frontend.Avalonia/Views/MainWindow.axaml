@@ -20,6 +20,10 @@
             <MenuItem Header="File" ToolTip.Tip="Open a BIOS or disc, add game folders, boot recent discs, or exit.">
                 <MenuItem Header="Open BIOS..." Click="OnOpenBiosAsync"
                           ToolTip.Tip="Choose a 3DO BIOS ROM (for example panafz1.bin)." />
+                <MenuItem Header="Assign BIOS to Current Game..." Click="OnAssignBiosToGameAsync"
+                          ToolTip.Tip="Pin the current game to a specific BIOS MD5. Restart the game to apply it." />
+                <MenuItem Header="Clear Game BIOS Assignment" Click="OnClearBiosAssignment"
+                          ToolTip.Tip="Return the current game to automatic BIOS selection." />
                 <MenuItem Header="Boot Disc..." Click="OnOpenDiscAsync"
                           ToolTip.Tip="Choose an ISO, BIN, CUE, or CHD disc image and boot it." />
                 <MenuItem Header="Add Game Folder..." Click="OnAddFolderAsync"

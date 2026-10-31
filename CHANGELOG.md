@@ -7,6 +7,19 @@ still change.
 
 ### Added
 
+- BIOS manager and automatic selection (SYS-04). `BiosCatalog` recognizes the common
+  Panasonic FZ-1/FZ-10/FZ-10E/FZ-10JA, GoldStar, Sanyo, patched arcade, Kanji font, and
+  arcade support MD5s. `BiosLibrary.Scan` validates a folder, classifies primary and
+  secondary images, detects Anvil from the ROM and Kanji/patch state from metadata or
+  the file name, and reports bad files. `SelectForGame` combines game-database regions,
+  known title requirements (Slayer Europe/USA, Powers Kingdom Europe, Arcade CD-ROM),
+  and per-game MD5 overrides. New CLI surface: `--bios2`, `--bios-auto <folder>`, and
+  `bios list|scan|select`; `run --json` reports the selected BIOS path, MD5, name,
+  region, reason, and source. Settings > Paths adds the BIOS folder, primary/secondary
+  paths, auto-select, and scan; Settings > Emulation adds a per-game override; File adds
+  assign/clear actions. The configured BIOS remains the fallback when no folder is set.
+  The five-title 3,000-frame and four known-requirement 12,000-frame smoke runs are in
+  `docs/TestCorpus.md` 1.1f.
 - Timing profiles (`EmulationProfile`). **Compatible** keeps the FreeDO timing
   baseline, **Accuracy** enables ARM60 N=2, the Opera CLIO timer scheduler, CEL busy
   timing, cycle-based CD reads, and the stock 2x drive, and **Performance** uses a

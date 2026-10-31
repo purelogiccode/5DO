@@ -63,6 +63,14 @@ public sealed class CliJsonTests
             AudioQueuedBuffers: null,
             AudioBufferedFrames: null,
             AudioLatencyMilliseconds: null,
+            BiosPath: "bios/panafz1.bin",
+            Bios2Path: "bios/panafz1-kanji.bin",
+            BiosMd5: "f47264dd47fe30f73ab3c010015c155b",
+            Bios2Md5: "b8dc97f778a6245c58e064b0312e8281",
+            BiosName: "Panasonic FZ-1",
+            BiosRegion: "USA (NTSC)",
+            BiosSelection: "Auto-selected Panasonic FZ-1 for US.",
+            BiosSource: "auto",
             Warnings: []);
 
         var json = JsonSerializer.Serialize(result, CliJsonContext.Default.CliRunResult);
@@ -83,6 +91,9 @@ public sealed class CliJsonTests
         Assert.Contains("\"audioDurationSeconds\": 10", json, StringComparison.Ordinal);
         Assert.Contains("\"audioPeak\": 12345", json, StringComparison.Ordinal);
         Assert.Contains("\"audioRms\": 1234.5", json, StringComparison.Ordinal);
+        Assert.Contains("\"biosName\": \"Panasonic FZ-1\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"biosRegion\": \"USA (NTSC)\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"biosSource\": \"auto\"", json, StringComparison.Ordinal);
         Assert.Contains("\"warnings\": []", json, StringComparison.Ordinal);
     }
 

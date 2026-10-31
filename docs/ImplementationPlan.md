@@ -3,7 +3,7 @@
 **Product:** 5DO
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Current status (2026-10-31, thirty-fourth pass):** **1039 tests pass**; the v1.0
+**Current status (2026-10-31, thirty-fifth pass):** **1065 tests pass**; the v1.0
 release is deliberately deferred. The first **M13 full-collection loadability sweep**
 is complete: 594 discs tested (589 in `J:\Panasonic 3DO` plus 5 in
 `G:\MAME\MAME Software List CHDs\3do`), with **576 `Loadable/Rendered`, 13
@@ -157,6 +157,21 @@ the accuracy profile bundles the ARM60, Opera timer, CEL busy, and CD cycle opti
 The three-title smoke differential is in [`TestCorpus.md`](TestCorpus.md) 1.1e.
 Remaining: per-profile benchmark deltas, a full-collection accuracy run, and CD-DA speed
 behavior (SYS-01). **1039 tests pass.** See [`PortingNotes.md`](PortingNotes.md) 12.19.
+
+**BIOS manager and auto-selection (2026-10-31, thirty-fifth pass):** SYS-04 is
+implemented. `BiosCatalog` recognizes the common 3DO BIOS hashes and their region,
+video-standard, Kanji, Anvil, and patch metadata. `BiosLibrary.Scan` validates a folder,
+computes MD5s, classifies primary and secondary images, and reports bad files;
+`SelectForGame` combines game-database regions, known title requirements (Slayer
+Europe/USA, Powers Kingdom Europe, Arcade CD-ROM), and per-game MD5 overrides. The CLI
+adds `--bios2`, `--bios-auto`, and `bios list|scan|select`; `run --json` reports the
+selected BIOS path/hash/name/region/reason/source. Settings > Paths adds the BIOS folder,
+primary/secondary paths, auto-select, and folder validation; Settings > Emulation adds a
+per-game BIOS override; File adds assign/clear actions. The configured BIOS remains the
+fallback when no BIOS folder is set, so existing settings do not change. The five-title
+3,000-frame smoke run and four known-requirement 12,000-frame runs are in
+[`TestCorpus.md`](TestCorpus.md) 1.1f. **1065 tests pass.** See
+[`PortingNotes.md`](PortingNotes.md) 12.20.
 
 **Compatibility-sweep and high-resolution research plan (2026-10-30, twenty-eighth
 pass):** v1.0 release work is deliberately deferred. The next active milestone is

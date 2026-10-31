@@ -133,6 +133,47 @@ internal static class Program
         return command is "--version" or "-v" or "--help" or "-h" or "help" or "bench" or "selftest";
     }
 
+    private sealed record BiosLoadResult(
+        BiosImage? Image,
+        string? PrimaryPath,
+        string? SecondaryPath,
+        BiosSelection? Selection,
+        string Source);
+
+    private static BiosLoadResult LoadBios(
+        string? biosPath,
+        string? bios2Path,
+        string? biosAutoFolder,
+        GameRecord? game,
+        string? discPath)
+    {
+        if (biosAutoFolder is not null)
+        {
+            BiosLibrary library = BiosLibrary.Scan(biosAutoFolder);
+            BiosSelection selection = library.SelectForGame(
+                game,
+                new BiosSelectionOptions(DiscName: discPath));
+            if (!selection.HasBios)
+            {
+                throw new ArgumentException(
+                    $"No usable BIOS found in '{biosAutoFolder}'. {selection.Reason}",
+                    nameof(biosAutoFolder));
+            }
+
+            var secondary = string.IsNullOrWhiteSpace(bios2Path) ? selection.Secondary?.Path : bios2Path;
+            BiosImage image = BiosImage.Load(selection.Primary!.Path, secondary);
+            return new BiosLoadResult(image, selection.Primary.Path, secondary, selection, "auto");
+        }
+
+        if (biosPath is not null)
+        {
+            BiosImage image = BiosImage.Load(biosPath, bios2Path);
+            return new BiosLoadResult(image, biosPath, bios2Path, null, "configured");
+        }
+
+        return new BiosLoadResult(null, null, null, null, "none");
+    }
+
     private static int Version()
     {
         Console.WriteLine($"{FiveDoVersion.ProductName} {FiveDoVersion.Version} ({FiveDoVersion.NamespacePrefix})");
@@ -172,6 +213,8 @@ internal static class Program
         var json = options.Json;
         var frames = options.GetInt("--frames", 600);
         var biosPath = options.Get("--bios");
+        var bios2Path = options.Get("--bios2");
+        var biosAutoFolder = options.Get("--bios-auto");
         var stateIn = options.Get("--state-in");
         var stateOut = options.Get("--state-out");
         var frameOut = options.Get("--frame-out");
@@ -201,18 +244,34 @@ internal static class Program
         var realtime = HasFlag(args, "--realtime");
         var discPath = options.Positional;
 
-        if (biosPath is null && stateIn is null)
+        if (biosPath is not null && biosAutoFolder is not null)
         {
-            throw new ArgumentException("run needs --bios <path> unless --state-in supplies the ROM state.", nameof(args));
+            throw new ArgumentException("Use either --bios or --bios-auto, not both.", nameof(args));
+        }
+
+        if (bios2Path is not null && biosPath is null && biosAutoFolder is null)
+        {
+            throw new ArgumentException("--bios2 requires --bios or --bios-auto.", nameof(args));
+        }
+
+        if (biosPath is null && biosAutoFolder is null && stateIn is null)
+        {
+            throw new ArgumentException(
+                "run needs --bios <path> or --bios-auto <folder> unless --state-in supplies the ROM state.",
+                nameof(args));
         }
 
         IDiscSource? disc = null;
         string? gameId = null;
+        GameRecord? gameRecord = null;
         if (discPath is not null)
         {
             disc = DiscImageFactory.Open(discPath, prefetch: HasFlag(args, "--prefetch"));
             gameId = GameId.Compute(disc);
+            gameRecord = GameDatabase.Default.FindByChecksum(gameId);
         }
+
+        BiosLoadResult biosLoad = LoadBios(biosPath, bios2Path, biosAutoFolder, gameRecord, discPath);
 
         FixMode fixMode = ResolveFixMode(options, args, gameId);
         EmulatorTuning profileTuning = EmulationProfiles.Apply(
@@ -229,10 +288,9 @@ internal static class Program
             RandomSeed = ParseRandomSeed(options.Get("--random-seed")),
             FixMode = fixMode,
         });
-        if (biosPath is not null)
+        if (biosLoad.Image is not null)
         {
-            var bios = BiosImage.Load(biosPath);
-            machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
+            machine.LoadBios(biosLoad.Image.Bios1.Span, biosLoad.Image.Bios2.Span);
         }
 
         using AudioOutput audio = CreateAudio(options);
@@ -694,6 +752,15 @@ internal static class Program
             AudioQueuedBuffers: audio.OpenAl?.QueuedBuffers,
             AudioBufferedFrames: audio.OpenAl?.BufferedFrames,
             AudioLatencyMilliseconds: audio.OpenAl?.LatencyMilliseconds,
+            BiosPath: biosLoad.PrimaryPath,
+            Bios2Path: string.IsNullOrEmpty(biosLoad.SecondaryPath) ? null : biosLoad.SecondaryPath,
+            BiosMd5: biosLoad.Image?.Md5,
+            Bios2Md5: string.IsNullOrEmpty(biosLoad.Image?.Md5Bios2) ? null : biosLoad.Image.Md5Bios2,
+            BiosName: biosLoad.Selection?.Primary?.Name
+                ?? (biosLoad.PrimaryPath is null ? null : Path.GetFileNameWithoutExtension(biosLoad.PrimaryPath)),
+            BiosRegion: biosLoad.Selection?.Primary?.RegionLabel,
+            BiosSelection: biosLoad.Selection?.Reason,
+            BiosSource: biosLoad.Source,
             Warnings: machine.StateWarnings);
 
         if (nvramPath is not null)
@@ -716,6 +783,8 @@ internal static class Program
     {
         ParsedOptions options = Parse(args);
         var biosPath = options.Get("--bios");
+        var bios2Path = options.Get("--bios2");
+        var biosAutoFolder = options.Get("--bios-auto");
         var stateIn = options.Get("--state-in");
         var discPath = options.Positional;
         var frames = options.GetInt("--frames", 0);
@@ -736,18 +805,34 @@ internal static class Program
         var dumpRamLength = options.GetInt("--dump-ram-length", 0x1000);
         var pokeSpec = options.Get("--poke");
 
-        if (biosPath is null && stateIn is null)
+        if (biosPath is not null && biosAutoFolder is not null)
         {
-            throw new ArgumentException("trace needs --bios <path> unless --state-in supplies the ROM state.", nameof(args));
+            throw new ArgumentException("Use either --bios or --bios-auto, not both.", nameof(args));
+        }
+
+        if (bios2Path is not null && biosPath is null && biosAutoFolder is null)
+        {
+            throw new ArgumentException("--bios2 requires --bios or --bios-auto.", nameof(args));
+        }
+
+        if (biosPath is null && biosAutoFolder is null && stateIn is null)
+        {
+            throw new ArgumentException(
+                "trace needs --bios <path> or --bios-auto <folder> unless --state-in supplies the ROM state.",
+                nameof(args));
         }
 
         IDiscSource? disc = null;
         string? gameId = null;
+        GameRecord? gameRecord = null;
         if (discPath is not null)
         {
             disc = DiscImageFactory.Open(discPath, prefetch: HasFlag(args, "--prefetch"));
             gameId = GameId.Compute(disc);
+            gameRecord = GameDatabase.Default.FindByChecksum(gameId);
         }
+
+        BiosLoadResult biosLoad = LoadBios(biosPath, bios2Path, biosAutoFolder, gameRecord, discPath);
 
         FixMode fixMode = ResolveFixMode(options, args, gameId);
         EmulatorTuning profileTuning = EmulationProfiles.Apply(
@@ -764,10 +849,9 @@ internal static class Program
             RandomSeed = ParseRandomSeed(options.Get("--random-seed")),
             FixMode = fixMode,
         });
-        if (biosPath is not null)
+        if (biosLoad.Image is not null)
         {
-            var bios = BiosImage.Load(biosPath);
-            machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
+            machine.LoadBios(biosLoad.Image.Bios1.Span, biosLoad.Image.Bios2.Span);
         }
 
         if (disc is not null)
@@ -1273,21 +1357,47 @@ internal static class Program
 
     private static int Bios(string[] args)
     {
-        if (args.Length < 2 || !string.Equals(args[1], "info", StringComparison.OrdinalIgnoreCase))
+        if (args.Length < 2)
         {
-            throw new ArgumentException("bios needs the 'info <path>' subcommand.", nameof(args));
+            throw new ArgumentException("bios needs the 'info', 'list', 'scan', or 'select' subcommand.", nameof(args));
         }
 
+        return args[1].ToLowerInvariant() switch
+        {
+            "info" => BiosInfo(args),
+            "list" => BiosList(args),
+            "scan" => BiosList(args),
+            "select" => BiosSelect(args),
+            _ => throw new ArgumentException(
+                $"Unknown bios subcommand '{args[1]}'. Supported: info, list, scan, select.",
+                nameof(args)),
+        };
+    }
+
+    private static int BiosInfo(string[] args)
+    {
         ParsedOptions options = Parse(args, startIndex: 2);
         var path = options.Positional ?? throw new ArgumentException("bios info needs a path.", nameof(args));
-        var bios = BiosImage.Load(path);
+        var bios2Path = options.Get("--bios2");
+        BiosProfile profile = BiosLibrary.Describe(path);
+        BiosImage? image = profile.IsPrimary ? BiosImage.Load(path, bios2Path) : null;
         var result = new CliBiosInfoResult(
             Ok: true,
             Path: path,
-            Size: bios.Bios1.Length,
-            Md5: bios.Md5,
-            Anvil: bios.IsAnvil,
-            AnvilKind: bios.AnvilKind);
+            Size: checked((int)profile.Size),
+            Md5: profile.Md5,
+            Anvil: profile.IsAnvil,
+            AnvilKind: image?.AnvilKind ?? 0,
+            Name: profile.Name,
+            Kind: profile.Kind.ToString(),
+            Territory: profile.Territory.ToString(),
+            VideoStandard: profile.VideoStandard.ToString(),
+            Region: profile.RegionLabel,
+            Kanji: profile.IsKanji,
+            Patched: profile.IsPatched,
+            Preference: profile.Preference,
+            Notes: profile.Notes,
+            Md5Bios2: image?.Md5Bios2 ?? string.Empty);
 
         if (options.Json)
         {
@@ -1295,13 +1405,125 @@ internal static class Program
         }
         else
         {
-            Console.WriteLine($"path:  {result.Path}");
-            Console.WriteLine($"size:  {result.Size}");
-            Console.WriteLine($"md5:   {result.Md5}");
-            Console.WriteLine($"anvil: {result.Anvil} (kind {result.AnvilKind})");
+            Console.WriteLine($"path:     {result.Path}");
+            Console.WriteLine($"size:     {result.Size}");
+            Console.WriteLine($"md5:      {result.Md5}");
+            Console.WriteLine($"name:     {result.Name}");
+            Console.WriteLine($"kind:     {result.Kind}");
+            Console.WriteLine($"region:   {result.Region}");
+            Console.WriteLine($"kanji:    {result.Kanji}");
+            Console.WriteLine($"anvil:    {result.Anvil} (kind {result.AnvilKind})");
+            Console.WriteLine($"patched:  {result.Patched}");
+            Console.WriteLine($"md5 bios2: {result.Md5Bios2}");
+            Console.WriteLine($"notes:    {result.Notes}");
         }
 
         return 0;
+    }
+
+    private static int BiosList(string[] args)
+    {
+        ParsedOptions options = Parse(args, startIndex: 2);
+        var folder = options.Positional ?? throw new ArgumentException("bios list/scan needs a folder.", nameof(args));
+        var recursive = HasFlag(args, "--recursive");
+        BiosLibrary library = BiosLibrary.Scan(folder, recursive: recursive);
+        var profiles = library.Profiles.Select(CliBiosProfileResult.FromProfile).ToArray();
+        var result = new CliBiosScanResult(
+            Ok: true,
+            Folder: Path.GetFullPath(folder),
+            PrimaryCount: library.Primaries.Count,
+            SecondaryCount: library.Secondaries.Count,
+            ErrorCount: library.Errors.Count,
+            Profiles: profiles,
+            Errors: library.Errors);
+
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(result, CliJsonContext.Default.CliBiosScanResult));
+        }
+        else
+        {
+            Console.WriteLine($"folder:    {result.Folder}");
+            Console.WriteLine($"primary:   {result.PrimaryCount}");
+            Console.WriteLine($"secondary: {result.SecondaryCount}");
+            Console.WriteLine($"errors:    {result.ErrorCount}");
+            foreach (CliBiosProfileResult profile in profiles)
+            {
+                Console.WriteLine(
+                    $"{profile.Kind,-9} {profile.Md5}  {profile.Region,-18} {profile.Name}  ({profile.Path})");
+                if (profile.Kanji || profile.Anvil || profile.Patched)
+                {
+                    Console.WriteLine(
+                        $"          kanji={profile.Kanji} anvil={profile.Anvil} patched={profile.Patched}");
+                }
+            }
+
+            foreach (var error in library.Errors)
+            {
+                Console.WriteLine($"error: {error}");
+            }
+        }
+
+        return 0;
+    }
+
+    private static int BiosSelect(string[] args)
+    {
+        ParsedOptions options = Parse(args, startIndex: 2);
+        var discPath = options.Positional ?? throw new ArgumentException("bios select needs a disc path.", nameof(args));
+        var folder = options.Get("--folder")
+            ?? throw new ArgumentException("bios select needs --folder <path>.", nameof(args));
+        var recursive = HasFlag(args, "--recursive");
+        using IDiscSource disc = DiscImageFactory.Open(discPath);
+        var gameId = disc.SectorCount >= 2 ? GameId.Compute(disc) : string.Empty;
+        GameRecord? record = gameId.Length == 0 ? null : GameDatabase.Default.FindByChecksum(gameId);
+        BiosLibrary library = BiosLibrary.Scan(folder, recursive: recursive);
+        BiosSelection selection = library.SelectForGame(
+            record,
+            new BiosSelectionOptions(
+                AllowPatched: HasFlag(args, "--allow-patched"),
+                RequireKanji: HasFlag(args, "--require-kanji"),
+                PreferAnvil: HasFlag(args, "--prefer-anvil"),
+                PreferredMd5: options.Get("--md5"),
+                DiscName: discPath));
+        var result = new CliBiosSelectionResult(
+            Ok: selection.HasBios,
+            GameId: gameId,
+            GameName: record?.Name ?? Path.GetFileNameWithoutExtension(discPath),
+            Regions: record?.Regions ?? string.Empty,
+            Reason: selection.Reason,
+            Primary: selection.Primary is null ? null : CliBiosProfileResult.FromProfile(selection.Primary),
+            Secondary: selection.Secondary is null ? null : CliBiosProfileResult.FromProfile(selection.Secondary),
+            Warnings: library.Errors);
+
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(result, CliJsonContext.Default.CliBiosSelectionResult));
+        }
+        else
+        {
+            Console.WriteLine($"game:    {result.GameName} ({result.GameId})");
+            Console.WriteLine($"regions: {result.Regions}");
+            Console.WriteLine($"reason:  {result.Reason}");
+            if (result.Primary is not null)
+            {
+                Console.WriteLine($"primary: {result.Primary.Name} ({result.Primary.Md5})");
+                Console.WriteLine($"         {result.Primary.Path}");
+            }
+
+            if (result.Secondary is not null)
+            {
+                Console.WriteLine($"bios2:   {result.Secondary.Name} ({result.Secondary.Md5})");
+                Console.WriteLine($"         {result.Secondary.Path}");
+            }
+
+            foreach (var warning in result.Warnings)
+            {
+                Console.WriteLine($"warning: {warning}");
+            }
+        }
+
+        return selection.HasBios ? 0 : 1;
     }
 
     private static int State(string[] args)
@@ -1736,6 +1958,21 @@ internal static class Program
         Console.WriteLine($"cd speed:    {result.CdSpeed}");
         Console.WriteLine($"cpu clock:   {result.CpuClock / 1_000_000.0:0.###} MHz");
         Console.WriteLine($"fix mode:    0x{result.FixMode:x8}");
+        if (result.BiosMd5 is not null)
+        {
+            Console.WriteLine($"bios:        {result.BiosName} ({result.BiosMd5})");
+            Console.WriteLine($"bios region: {result.BiosRegion} [{result.BiosSource}]");
+            if (result.Bios2Md5 is not null)
+            {
+                Console.WriteLine($"bios2:       {result.Bios2Md5}");
+            }
+
+            if (result.BiosSelection is not null)
+            {
+                Console.WriteLine($"bios reason: {result.BiosSelection}");
+            }
+        }
+
         Console.WriteLine($"dsp running: {result.DspRunning}");
         Console.WriteLine($"dsp pc:      0x{result.DspPc:x4}");
         Console.WriteLine($"dsp sema:    0x{result.DspSema:x8}");
@@ -2091,7 +2328,7 @@ internal static class Program
         Console.WriteLine("Usage: 5do <command> [options]");
         Console.WriteLine();
         Console.WriteLine("Commands:");
-        Console.WriteLine("  run [disc] [--bios path] [--frames N] [--state-in path] [--state-out path]");
+        Console.WriteLine("  run [disc] [--bios path] [--bios2 path] [--bios-auto folder] [--frames N] [--state-in path] [--state-out path]");
         Console.WriteLine("             [--frame-out path] [--audio null|wav|openal] [--wav-out path] [--volume 0..1] [--cd-trace path]");
         Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
@@ -2103,7 +2340,7 @@ internal static class Program
         Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
         Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--realtime] [--json]");
-        Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
+        Console.WriteLine("  trace [disc] --bios path [--bios2 path] [--bios-auto folder] [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
         Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path] [--high-res] [--prefetch]");
@@ -2120,7 +2357,9 @@ internal static class Program
         Console.WriteLine("  fs list <disc> [--json]              List the 3DO (Opera FS) file tree.");
         Console.WriteLine("  fs extract <disc> --out dir [--filter prefix]");
         Console.WriteLine("                                       Extract files from a 3DO disc image.");
-        Console.WriteLine("  bios info <path> [--json]            BIOS size, MD5, and Anvil detection.");
+        Console.WriteLine("  bios info <path> [--json]            BIOS size, MD5, region, and Anvil detection.");
+        Console.WriteLine("  bios list|scan <folder> [--recursive] [--json]  List and validate BIOS images.");
+        Console.WriteLine("  bios select <disc> --folder <dir> [--json]      Auto-select a BIOS for a disc.");
         Console.WriteLine("  audio analyze <wav> [--json]         WAV format, peak, RMS, clipping, and DC offset.");
         Console.WriteLine("  state inspect <path> [--json]        Save-state header and section table.");
         Console.WriteLine("  state slots <dir> [--count N] [--json]");

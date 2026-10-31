@@ -2,6 +2,21 @@
 
 ## 0. Current handoff (2026-10-30)
 
+**2026-10-31 update:** SYS-04 BIOS manager and auto-selection are implemented.
+`BiosCatalog`/`BiosLibrary` scan `.bin`/`.rom` files, compute MD5, validate sizes, and
+classify primary/secondary, region, video standard, Kanji, Anvil, and patch state.
+`--bios2` and `--bios-auto` work on `run`/`trace`; `bios list|scan|select` expose the
+catalog and selection; `run --json` reports `biosPath`, `biosMd5`, `biosName`,
+`biosRegion`, `biosSelection`, and `biosSource`. Settings > Paths adds the BIOS folder,
+primary/secondary paths, auto-select, and scan; Settings > Emulation adds a per-game
+BIOS override; File adds assign/clear actions. Auto-selection uses game-database
+regions, known requirements (Slayer Europe/USA, Powers Kingdom Europe, Arcade CD-ROM),
+and per-game MD5 pins; the configured BIOS remains the fallback when no folder is set.
+The five-title 3,000-frame and four known-requirement 12,000-frame smoke runs are in
+[`TestCorpus.md`](TestCorpus.md) 1.1f. **Do not redo the BIOS catalog, scanner,
+selector, CLI commands, or settings UI; remaining work is the full-collection
+BIOS-aware sweep and per-game auto profiles (SYS-18).** **1065 tests pass.**
+
 **2026-10-31 update:** SYS-09 CD speed control and CORE-08 timing profiles are
 implemented. `CdSpeed` (`Unbounded`, `X1`-`X32`, default `X2`) changes the effective
 speed of the cycle-based CD model with Opera's per-speed overhead table;
@@ -77,8 +92,9 @@ MHTML in `References/4DO-master/`.
 1. Build the Release CLI:
    `dotnet build src/FiveDo.Cli/FiveDo.Cli.csproj -c Release`.
 2. Rerun the `Not Loadable` and `Loadable/No video` subsets with
-   `tools/bios-probe.ps1` and `panafz10-patched`/Anvil, recording which BIOS each disc
-   needs. Use a separate output directory; do not overwrite the `panafz1` baseline.
+   `tools/bios-probe.ps1` or `--bios-auto bios`, recording which BIOS each disc needs.
+   `bios select <disc> --folder bios` prints the chosen image and reason. Use a separate
+   output directory; do not overwrite the `panafz1` baseline.
 3. Investigate Crash 'n Burn (Japan) and WorldCup Super Stadium, which still stop on
    the Anvil boot screen at 60,000 frames. Keep the smallest repro and a trace; compare
    the Japan revision with the working Crash USA/Korea revisions.
@@ -95,8 +111,9 @@ not final statuses.
 
 **Do not redo:** the 4DO MHTML parser, the sweep harness, the OpenAL/Serilog/trimming
 work, the renderer/filter work, the ARM/CLIO/CEL/CD timing options, the CD speed selector and
-timing-profile mapping, or the 2026-10-31 performance pass (CEL pipeline caching, Debug
-core optimization, render-request coalescing, Auto frame skip). Do not treat full-race completion, inventory
+timing-profile mapping, the BIOS catalog/scanner/selector or its CLI/settings surface, or
+the 2026-10-31 performance pass (CEL pipeline caching, Debug core optimization,
+render-request coalescing, Auto frame skip). Do not treat full-race completion, inventory
 scripting, Pi/arm64 validation, or installers as current gates.
 
 **Project position:** donationware, non-commercial, source-available. The legal

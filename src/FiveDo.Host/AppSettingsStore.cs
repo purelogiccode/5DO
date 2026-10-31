@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using FiveDo.Core;
@@ -41,6 +42,9 @@ public static class AppSettingsStore
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             settings.Input ??= InputProfile.CreateDefault();
             settings.Input.AddMissingDefaultHotkeys();
+            // JSON can deserialize null despite the non-nullable annotation.
+            // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+            settings.BiosOverrides ??= new Dictionary<string, string>(StringComparer.Ordinal);
             if (!double.IsFinite(settings.CpuClockMultiplier)
                 || settings.CpuClockMultiplier < 0.5
                 || settings.CpuClockMultiplier > 4.0)

@@ -106,7 +106,7 @@
             </TabItem>
 
             <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, ARM, CLIO, CEL, and CD timing, CD speed, CPU clock, random seed, high-resolution mode, and overrides.">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <CheckBox x:Name="AutoFixesCheck" Grid.Row="0" Grid.Column="1"
                               Content="Apply the 4DO per-game fixes automatically"
                               ToolTip.Tip="Apply the compatibility fix mask from the built-in game database when a disc opens." />
@@ -165,11 +165,15 @@
                     <ComboBox x:Name="ProfileCombo" Grid.Row="13" Grid.Column="1" Margin="0,12,0,0"
                               SelectionChanged="OnProfileChanged"
                               ToolTip.Tip="Compatible keeps FreeDO timing. Accuracy enables ARM60, Opera timers, CEL busy timing, and cycle-based CD reads. Performance uses a 1.5x CPU clock with FreeDO timing. Custom keeps the current options." />
+                    <TextBlock Grid.Row="14" Grid.Column="0" Text="BIOS override" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Override automatic BIOS selection for the current game." />
+                    <ComboBox x:Name="BiosOverrideCombo" Grid.Row="14" Grid.Column="1" Margin="0,12,0,0"
+                              ToolTip.Tip="Automatic uses the region-appropriate BIOS from the BIOS folder. A specific image pins this game to that BIOS MD5." />
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Paths" ToolTip.Tip="Save-state, screenshot, and cover-art folder settings.">
-                <Grid ColumnDefinitions="170,*,Auto" RowDefinitions="Auto,Auto,Auto" Margin="8">
+            <TabItem Header="Paths" ToolTip.Tip="Save-state, screenshot, cover-art, and BIOS folder settings.">
+                <Grid ColumnDefinitions="170,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Save states" VerticalAlignment="Center"
                                ToolTip.Tip="Folder used for numbered save slots and thumbnails." />
                     <TextBox x:Name="SaveDirectoryBox" Grid.Row="0" Grid.Column="1" Margin="0,0,6,8"
@@ -188,6 +192,35 @@
                              ToolTip.Tip="Cover images use the disc filename with an image extension, for example Battle Chess (Europe).png." />
                     <Button Grid.Row="2" Grid.Column="2" Content="Browse" Click="OnBrowseCoverDirectoryAsync"
                             ToolTip.Tip="Choose the folder containing game cover images." />
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="BIOS folder" VerticalAlignment="Center" Margin="0,8,0,0"
+                               ToolTip.Tip="Folder scanned for 1 MB BIOS images and optional BIOS2/Kanji fonts." />
+                    <TextBox x:Name="BiosFolderBox" Grid.Row="3" Grid.Column="1" Margin="0,8,6,0"
+                             ToolTip.Tip="Folder containing BIOS files. Auto-select scans this folder for a region-appropriate image." />
+                    <Button Grid.Row="3" Grid.Column="2" Content="Browse" Click="OnBrowseBiosFolderAsync" Margin="0,8,0,0"
+                            ToolTip.Tip="Choose the BIOS folder." />
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Auto-select BIOS" VerticalAlignment="Center" Margin="0,8,0,0"
+                               ToolTip.Tip="Pick a region-appropriate BIOS for each disc." />
+                    <CheckBox x:Name="AutoBiosCheck" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,8,0,0"
+                              Content="Choose the best BIOS for each disc (region, Kanji, arcade)"
+                              ToolTip.Tip="Uses the disc's game database region and known title requirements. The configured BIOS remains the fallback." />
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="BIOS1" VerticalAlignment="Center" Margin="0,8,0,0"
+                               ToolTip.Tip="Fallback primary BIOS image." />
+                    <TextBox x:Name="BiosPathBox" Grid.Row="5" Grid.Column="1" Margin="0,8,6,0"
+                             ToolTip.Tip="Path to the 1 MB primary BIOS used when auto-selection is off or unavailable." />
+                    <Button Grid.Row="5" Grid.Column="2" Content="Browse" Click="OnBrowseBiosPathAsync" Margin="0,8,0,0"
+                            ToolTip.Tip="Choose the primary BIOS file." />
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="BIOS2 / font" VerticalAlignment="Center" Margin="0,8,0,0"
+                               ToolTip.Tip="Optional BIOS2 or Kanji font ROM." />
+                    <TextBox x:Name="Bios2PathBox" Grid.Row="6" Grid.Column="1" Margin="0,8,6,0"
+                             ToolTip.Tip="Optional secondary ROM, such as a Kanji font, loaded into ROM bank 2." />
+                    <Button Grid.Row="6" Grid.Column="2" Content="Browse" Click="OnBrowseBios2PathAsync" Margin="0,8,0,0"
+                            ToolTip.Tip="Choose the optional BIOS2/font file." />
+                    <Button x:Name="ScanBiosButton" Grid.Row="7" Grid.Column="0" Content="Scan BIOS folder"
+                            Click="OnScanBiosAsync" Margin="0,8,0,0"
+                            ToolTip.Tip="Validate every BIOS file in the folder and show the recognized profiles." />
+                    <TextBlock x:Name="BiosScanText" Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2"
+                               VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,8,0,0"
+                               ToolTip.Tip="BIOS scan result." />
                 </Grid>
             </TabItem>
         </TabControl>

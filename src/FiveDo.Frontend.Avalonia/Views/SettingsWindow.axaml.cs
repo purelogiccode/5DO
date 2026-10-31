@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using Avalonia.Platform.Storage;
 using FiveDo.Audio;
 using FiveDo.Core;
 using FiveDo.Host;
+using FiveDo.Storage;
 using FiveDo.Video;
 
 namespace FiveDo.Frontend.Avalonia.Views;
@@ -166,6 +168,25 @@ public partial class SettingsWindow : Window
         SaveDirectoryBox.Text = settings.SaveDirectory;
         ScreenshotDirectoryBox.Text = settings.ScreenshotDirectory;
         CoverDirectoryBox.Text = settings.CoverDirectory;
+        BiosFolderBox.Text = settings.BiosFolder;
+        BiosPathBox.Text = settings.BiosPath;
+        Bios2PathBox.Text = settings.Bios2Path;
+        AutoBiosCheck.IsChecked = settings.AutoBios;
+        BiosOverrideCombo.IsEnabled = !string.IsNullOrWhiteSpace(gameId);
+        var biosFolder = settings.BiosFolder;
+        if (string.IsNullOrWhiteSpace(biosFolder) && !string.IsNullOrWhiteSpace(settings.BiosPath))
+        {
+            try
+            {
+                biosFolder = Path.GetDirectoryName(Path.GetFullPath(settings.BiosPath));
+            }
+            catch (Exception exception) when (exception is ArgumentException or IOException or NotSupportedException)
+            {
+                Serilog.Log.Debug(exception, "Configured BIOS path could not be resolved in the settings dialog.");
+            }
+        }
+
+        PopulateBiosOverrides(biosFolder, settings.GetBiosOverride(gameId));
         GameText.Text = string.IsNullOrWhiteSpace(gameId)
             ? "No disc loaded."
             : $"{gameName ?? "Unknown"} ({gameId[..Math.Min(8, gameId.Length)]})";
@@ -339,9 +360,16 @@ public partial class SettingsWindow : Window
         settings.SaveDirectory = SaveDirectoryBox.Text?.Trim() ?? string.Empty;
         settings.ScreenshotDirectory = ScreenshotDirectoryBox.Text?.Trim() ?? string.Empty;
         settings.CoverDirectory = CoverDirectoryBox.Text?.Trim() ?? string.Empty;
+        settings.BiosFolder = BiosFolderBox.Text?.Trim() ?? string.Empty;
+        settings.BiosPath = BiosPathBox.Text?.Trim() ?? string.Empty;
+        settings.Bios2Path = Bios2PathBox.Text?.Trim() ?? string.Empty;
+        settings.AutoBios = AutoBiosCheck.IsChecked == true;
 
         if (!string.IsNullOrWhiteSpace(_gameId))
         {
+            settings.SetBiosOverride(
+                _gameId,
+                BiosOverrideCombo.SelectedItem is BiosOverrideOption { Md5: { } biosMd5 } ? biosMd5 : null);
             settings.SetFilterOverride(
                 _gameId,
                 FilterOverrideCombo.SelectedItem is VideoFilter filterOverride ? filterOverride : null);
@@ -445,6 +473,174 @@ public partial class SettingsWindow : Window
         return folders.Count > 0 ? folders[0].TryGetLocalPath() : null;
     }
 
+    private void PopulateBiosOverrides(string? folder, string? selectedMd5)
+    {
+        var options = new List<BiosOverrideOption>
+        {
+            new(null, "Automatic (region-based)"),
+        };
+
+        BiosLibrary? library = TryScanBiosFolder(folder);
+        if (library is not null)
+        {
+            foreach (BiosProfile profile in library.Primaries)
+            {
+                options.Add(new BiosOverrideOption(
+                    profile.Md5,
+                    $"{profile.Name} [{profile.Md5[..8]}] - {profile.RegionLabel}"));
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(selectedMd5)
+            && options.All(option => !string.Equals(option.Md5, selectedMd5, StringComparison.OrdinalIgnoreCase)))
+        {
+            options.Add(new BiosOverrideOption(
+                selectedMd5,
+                $"Missing BIOS {selectedMd5[..Math.Min(8, selectedMd5.Length)]}"));
+        }
+
+        BiosOverrideCombo.ItemsSource = options;
+        BiosOverrideCombo.SelectedItem = options.FirstOrDefault(
+            option => string.Equals(option.Md5, selectedMd5, StringComparison.OrdinalIgnoreCase))
+            ?? options[0];
+    }
+
+    private static BiosLibrary? TryScanBiosFolder(string? folder)
+    {
+        if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+        {
+            return null;
+        }
+
+        try
+        {
+            return BiosLibrary.Scan(folder);
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or ArgumentException)
+        {
+            Serilog.Log.Debug(exception, "BIOS folder scan failed in the settings dialog.");
+            return null;
+        }
+    }
+
+    private void OnBrowseBiosFolderAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(BrowseBiosFolderAsync, "selecting the BIOS folder");
+    }
+
+    private async Task BrowseBiosFolderAsync()
+    {
+        var path = await PickFolderAsync("Select the BIOS folder", BiosFolderBox.Text).ConfigureAwait(true);
+        if (path is not null)
+        {
+            BiosFolderBox.Text = path;
+            PopulateBiosOverrides(
+                path,
+                (BiosOverrideCombo.SelectedItem as BiosOverrideOption)?.Md5);
+        }
+    }
+
+    private void OnBrowseBiosPathAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(BrowseBiosPathAsync, "selecting the primary BIOS");
+    }
+
+    private async Task BrowseBiosPathAsync()
+    {
+        var path = await PickFileAsync("Select the primary 3DO BIOS", BiosPathBox.Text).ConfigureAwait(true);
+        if (path is not null)
+        {
+            BiosPathBox.Text = path;
+        }
+    }
+
+    private void OnBrowseBios2PathAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(BrowseBios2PathAsync, "selecting the BIOS2/font ROM");
+    }
+
+    private async Task BrowseBios2PathAsync()
+    {
+        var path = await PickFileAsync("Select the optional BIOS2 or Kanji font ROM", Bios2PathBox.Text)
+            .ConfigureAwait(true);
+        if (path is not null)
+        {
+            Bios2PathBox.Text = path;
+        }
+    }
+
+    private void OnScanBiosAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ScanBiosAsync, "scanning the BIOS folder");
+    }
+
+    private async Task ScanBiosAsync()
+    {
+        var folder = BiosFolderBox.Text?.Trim();
+        if (string.IsNullOrWhiteSpace(folder) && !string.IsNullOrWhiteSpace(BiosPathBox.Text))
+        {
+            folder = Path.GetDirectoryName(Path.GetFullPath(BiosPathBox.Text));
+        }
+
+        if (string.IsNullOrWhiteSpace(folder))
+        {
+            BiosScanText.Text = "Set a BIOS folder or primary BIOS first.";
+            return;
+        }
+
+        try
+        {
+            ScanBiosButton.IsEnabled = false;
+            BiosLibrary library = await Task.Run(() => BiosLibrary.Scan(folder)).ConfigureAwait(true);
+            var errors = library.Errors.Count == 0
+                ? string.Empty
+                : $" First error: {library.Errors[0]}";
+            BiosScanText.Text =
+                $"{library.Primaries.Count} primary, {library.Secondaries.Count} secondary, "
+                + $"{library.Errors.Count} error(s).{errors}";
+            PopulateBiosOverrides(
+                folder,
+                (BiosOverrideCombo.SelectedItem as BiosOverrideOption)?.Md5);
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or ArgumentException)
+        {
+            BiosScanText.Text = $"Scan failed: {exception.Message}";
+        }
+        finally
+        {
+            ScanBiosButton.IsEnabled = true;
+        }
+    }
+
+    private async Task<string?> PickFileAsync(string title, string? current)
+    {
+        var options = new FilePickerOpenOptions
+        {
+            Title = title,
+            AllowMultiple = false,
+            FileTypeFilter = [new FilePickerFileType("BIOS ROM") { Patterns = ["*.bin", "*.rom"] }],
+        };
+        if (!string.IsNullOrWhiteSpace(current))
+        {
+            var directory = Path.GetDirectoryName(Path.GetFullPath(current));
+            if (!string.IsNullOrWhiteSpace(directory) && Directory.Exists(directory))
+            {
+                IStorageFolder? start = await StorageProvider.TryGetFolderFromPathAsync(directory).ConfigureAwait(true);
+                if (start is not null)
+                {
+                    options.SuggestedStartLocation = start;
+                }
+            }
+        }
+
+        IReadOnlyList<IStorageFile> files = await StorageProvider.OpenFilePickerAsync(options).ConfigureAwait(true);
+        return files.Count > 0 ? files[0].TryGetLocalPath() : null;
+    }
+
     private static bool TryParseFixMode(string text, out FixMode mode)
     {
         var value = text.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? text[2..] : text;
@@ -523,6 +719,14 @@ public partial class SettingsWindow : Window
     }
 
     private sealed record CdSpeedOption(CdSpeed Value, string Label)
+    {
+        public override string ToString()
+        {
+            return Label;
+        }
+    }
+
+    private sealed record BiosOverrideOption(string? Md5, string Label)
     {
         public override string ToString()
         {
