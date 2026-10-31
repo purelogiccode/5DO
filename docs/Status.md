@@ -1,6 +1,8 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-30, after the first full-collection sweep and its first triage.
+**Snapshot:** 2026-10-31, after the first full-collection sweep and the performance
+pass. Road Rash's 100k-state race now measures 4.20 ms/frame total (p99 7.40 ms),
+Debug core builds are optimized, and Auto presentation frame skip is the default.
 **594 discs tested: 576 Loadable/Rendered, 13 Loadable/No video, 5 Not Loadable.**
 The five not-loadable rows are resolved or explained: Mirai Shounen Conan now runs
 (transient CHD read error), and the four Arcade CD-ROM titles load with
@@ -9,7 +11,7 @@ The five not-loadable rows are resolved or explained: Mirai Shounen Conan now ru
 still under investigation. Headless `run`/`trace` now attach a default player-1 pad,
 fixing Olympic Summer Games' controller check. Fifteen triaged titles now have a
 reviewed 5DO status in [`GameCompatibilityList.md`](GameCompatibilityList.md); the
-rest remain `No data`. **926 tests pass.**
+rest remain `No data`. **952 tests pass.**
 The v1.0 release is deliberately deferred: the next work is a BIOS-aware sweep and
 5DO status merge (M13), then high-resolution CEL research (M14). The project is
 **donationware** (non-commercial, source-available, voluntary donations only). See
@@ -343,10 +345,13 @@ Release build, development machine, 600 frames, CPU side only:
 | Synthetic | **1.250 ms/frame** | 1.218 ms | 1.434 ms | 1.638 ms | **0 bytes/frame** |
 | Lemmings CHD | **1.281 ms/frame** | 1.088 ms | 2.005 ms | 3.398 ms | ~5.9 KB/frame (CHD decode) |
 | Lemmings CHD, high-res | **1.605 ms/frame** | 1.398 ms | 2.497 ms | 4.598 ms | ~5.8 KB/frame (CHD decode) |
-| Road Rash 3D race (100k state) | **5.46 ms/frame** | 2.91 ms | 10.60 ms | 13.14 ms | **0 bytes/frame** |
+| Road Rash 3D race (100k state) | **4.20 ms/frame** | 2.15 ms | 7.13 ms | 7.40 ms | **0 bytes/frame** |
 
 This leaves ~15.4 ms of headroom against the 16.67 ms frame budget for the synthetic
-case. CI now runs the synthetic benchmark with `--gate`: it fails on any steady-state
+case. The 2026-10-31 hot-path pass reduced the Road Rash race from 5.46 to 4.20 ms
+mean and from 13.14 to 7.40 ms p99 (frame hash unchanged). The core projects are also
+compiled with JIT optimizations in Debug, so an IDE Debug run is no longer limited to
+~40 fps. CI now runs the synthetic benchmark with `--gate`: it fails on any steady-state
 allocation, core p99 > 8 ms, total mean > 8 ms, or total p99 > 16.667 ms, and uploads
 the JSON result as the baseline artifact. The benchmark's `--baseline` option also
 implements the same-machine >10% relative comparison (core p99, total mean, total

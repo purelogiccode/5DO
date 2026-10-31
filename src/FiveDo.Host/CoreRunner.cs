@@ -35,6 +35,12 @@ public sealed class CoreRunner : IDisposable
     private bool _paused;
     private bool _faulted;
     private long _frames;
+    private long _presentedFrames;
+    private int _frameSkipMode = (int)FrameSkipMode.Auto;
+    private long _frameSkipIndex;
+    private int _autoSkipLevel;
+    private int _autoBehindFrames;
+    private int _autoRecoverFrames;
     private bool _disposed;
 
     /// <summary>Initializes a new instance of the <see cref="CoreRunner"/> class.</summary>
@@ -66,6 +72,32 @@ public sealed class CoreRunner : IDisposable
 
     /// <summary>Gets the number of frames executed by this runner.</summary>
     public long Frames => Interlocked.Read(ref _frames);
+
+    /// <summary>Gets the number of frames rendered and presented by this runner.</summary>
+    public long PresentedFrames => Interlocked.Read(ref _presentedFrames);
+
+    /// <summary>
+    /// Gets or sets the presentation frame-skip policy. The default is
+    /// <see cref="FrameSkipMode.Auto"/>.
+    /// </summary>
+    /// <remarks>
+    /// Only presentation is skipped. The emulated machine still executes every frame,
+    /// so game speed, audio, input, and save states are unchanged. The setting can be
+    /// changed while the core loop is running.
+    /// </remarks>
+    public FrameSkipMode FrameSkip
+    {
+        get => (FrameSkipMode)Volatile.Read(ref _frameSkipMode);
+        set
+        {
+            if (!Enum.IsDefined(value))
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), value, "Unknown frame-skip mode.");
+            }
+
+            Volatile.Write(ref _frameSkipMode, (int)value);
+        }
+    }
 
     /// <summary>Starts the core thread. Does nothing when already running.</summary>
     public void Start()
@@ -213,7 +245,9 @@ public sealed class CoreRunner : IDisposable
         {
             _machine.RunFrame();
             Interlocked.Increment(ref _frames);
+            Interlocked.Increment(ref _presentedFrames);
             _frameSink?.Invoke(_machine.Frame);
+            _frameSkipIndex = 0;
         });
     }
 
@@ -238,6 +272,8 @@ public sealed class CoreRunner : IDisposable
             var audioPacer = new AudioFramePacer();
             var statusClock = Stopwatch.StartNew();
             var statusFrames = 0L;
+            var statusPresentedFrames = 0L;
+            var previousMode = FrameSkipMode.Off;
             TimeSpan statusStart = statusClock.Elapsed;
 
             while (true)
@@ -260,6 +296,12 @@ public sealed class CoreRunner : IDisposable
                         statusClock.Restart();
                         statusStart = TimeSpan.Zero;
                         statusFrames = 0;
+                        statusPresentedFrames = 0;
+                        _frameSkipIndex = 0;
+                        _autoSkipLevel = 0;
+                        _autoBehindFrames = 0;
+                        _autoRecoverFrames = 0;
+                        previousMode = FrameSkip;
                     }
 
                     if (_stop)
@@ -268,12 +310,32 @@ public sealed class CoreRunner : IDisposable
                     }
                 }
 
-                _machine.RunFrame();
+                FrameSkipMode mode = FrameSkip;
+                if (mode != previousMode)
+                {
+                    previousMode = mode;
+                    _frameSkipIndex = 0;
+                    _autoSkipLevel = 0;
+                    _autoBehindFrames = 0;
+                    _autoRecoverFrames = 0;
+                }
+
+                var present = FrameSkipPolicy.ShouldPresent(mode, _frameSkipIndex, _autoSkipLevel + 1);
+                var frameStart = Stopwatch.GetTimestamp();
+                _machine.RunFrame(!present);
                 Interlocked.Increment(ref _frames);
-                _frameSink?.Invoke(_machine.Frame);
+                if (present)
+                {
+                    Interlocked.Increment(ref _presentedFrames);
+                    _frameSink?.Invoke(_machine.Frame);
+                    statusPresentedFrames++;
+                }
+
+                var frameDuration = Stopwatch.GetTimestamp() - frameStart;
                 audioPacer.FrameCompleted(_machine.AudioSamplesProduced);
                 pacer.SetPeriod(audioPacer.FramePeriodTicks);
                 statusFrames++;
+                _frameSkipIndex++;
 
                 TimeSpan elapsed = statusClock.Elapsed;
                 if (elapsed - statusStart >= TimeSpan.FromMilliseconds(250))
@@ -284,12 +346,19 @@ public sealed class CoreRunner : IDisposable
                         _machine.Cpu.ProgramCounter,
                         _machine.LastFrameCycles,
                         seconds > 0 ? statusFrames / seconds : 0,
-                        audioPacer.FramesPerSecond));
+                        audioPacer.FramesPerSecond)
+                    {
+                        PresentedFramesPerSecond = seconds > 0 ? statusPresentedFrames / seconds : 0,
+                        FrameSkipMode = mode,
+                        FrameSkipCadence = mode == FrameSkipMode.Auto ? _autoSkipLevel + 1 : FrameSkipPolicy.Cadence(mode),
+                    });
                     statusStart = elapsed;
                     statusFrames = 0;
+                    statusPresentedFrames = 0;
                 }
 
                 pacer.Wait();
+                UpdateAutoFrameSkip(mode, present, frameDuration, pacer.PeriodTicks);
             }
         }
         catch (Exception exception)
@@ -315,6 +384,70 @@ public sealed class CoreRunner : IDisposable
         }
     }
 
+    private void UpdateAutoFrameSkip(FrameSkipMode mode, bool present, long frameDuration, double targetPeriod)
+    {
+        if (mode != FrameSkipMode.Auto)
+        {
+            _autoSkipLevel = 0;
+            _autoBehindFrames = 0;
+            _autoRecoverFrames = 0;
+            return;
+        }
+
+        if (targetPeriod <= 0 || double.IsNaN(targetPeriod) || double.IsInfinity(targetPeriod))
+        {
+            return;
+        }
+
+        // Measure actual work per *presented* frame rather than the pacer's schedule
+        // offset: a one-time startup stall leaves a constant offset, but it does not
+        // mean the machine is still too slow. Skipping presentation only helps when
+        // the frame work itself exceeds the budget.
+        if (!present)
+        {
+            return;
+        }
+
+        if (frameDuration > targetPeriod * 1.05)
+        {
+            _autoRecoverFrames = 0;
+            if (++_autoBehindFrames < 3)
+            {
+                return;
+            }
+
+            _autoBehindFrames = 0;
+            if (_autoSkipLevel < 2)
+            {
+                _autoSkipLevel++;
+                _frameSkipIndex = 0;
+            }
+
+            return;
+        }
+
+        if (frameDuration < targetPeriod * 0.90)
+        {
+            _autoBehindFrames = 0;
+            if (++_autoRecoverFrames < 120)
+            {
+                return;
+            }
+
+            _autoRecoverFrames = 0;
+            if (_autoSkipLevel > 0)
+            {
+                _autoSkipLevel--;
+                _frameSkipIndex = 0;
+            }
+
+            return;
+        }
+
+        _autoBehindFrames = 0;
+        _autoRecoverFrames = 0;
+    }
+
     /// <summary>
     /// A monotonic 60 Hz pacer. Sleeps for the bulk of the wait and spins for the last
     /// millisecond so frame times stay close to the target on Windows.
@@ -324,6 +457,8 @@ public sealed class CoreRunner : IDisposable
         private readonly Stopwatch _clock = Stopwatch.StartNew();
         private double _periodTicks;
         private double _next;
+
+        internal double PeriodTicks => _periodTicks;
 
         internal FramePacer(double framesPerSecond)
         {

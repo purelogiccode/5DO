@@ -21,6 +21,7 @@ using Avalonia.Threading;
 using FiveDo.Audio;
 using FiveDo.Core;
 using FiveDo.Diagnostics;
+using FiveDo.Diagnostics.Donations;
 using FiveDo.Diagnostics.Logging;
 using FiveDo.Frontend.Avalonia.Controls;
 using FiveDo.Frontend.Avalonia.Input;
@@ -77,11 +78,16 @@ public partial class MainWindow : Window, IDisposable
     private int _lastLogEntryCount = -1;
     private int _scanGeneration;
     private CancellationTokenSource? _libraryScanCts;
+    private DateTime _lastDonationCheckUtc = DateTime.MinValue;
+    private string? _donationBannerMessage;
+    private bool _donationCheckInProgress;
+    private bool _donationBannerDismissed;
 
     public MainWindow()
     {
         InitializeComponent();
         _settings = AppSettingsStore.Load();
+        _lastDonationCheckUtc = _settings.DonationLastCheckedUtc ?? DateTime.MinValue;
         _rendererKind = ResolveRendererKind();
         _logSink = AppLogging.InMemorySink ?? new InMemorySerilogSink(4000);
         _logger = Serilog.Log.ForContext<MainWindow>();
@@ -159,6 +165,8 @@ public partial class MainWindow : Window, IDisposable
         SetLibraryMode(grid: true);
         ApplyLibraryFilter();
         UpdateRecentMenu();
+        UpdateDonationBanner();
+        Activated += OnDonationCheckActivated;
 
         Video.OpenGlReady += OnOpenGlReady;
         Video.OpenGlFailed += OnOpenGlFailed;
@@ -970,6 +978,12 @@ public partial class MainWindow : Window, IDisposable
             TextWrapping = TextWrapping.Wrap,
         };
         ToolTip.SetTip(textBlock, "Version, renderer, audio, input, and license information.");
+        var scroll = new ScrollViewer
+        {
+            Content = textBlock,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+        };
         var close = new Button
         {
             Content = "Close",
@@ -981,18 +995,223 @@ public partial class MainWindow : Window, IDisposable
             Margin = new Thickness(16),
             Spacing = 12,
         };
-        panel.Children.Add(textBlock);
+        panel.Children.Add(scroll);
         panel.Children.Add(close);
         var window = new Window
         {
             Title = "About 5DO",
             Width = 460,
-            Height = 300,
+            MaxHeight = 720,
+            SizeToContent = SizeToContent.Height,
             Content = panel,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
         };
         close.Click += (_, _) => window.Close();
         _ = window.ShowDialog(this);
+    }
+
+    private void OnDonationStatus(object? sender, RoutedEventArgs e) =>
+        AsyncEvent.Run(ShowDonationStatusAsync, "checking donation status");
+
+    private void OnDonate(object? sender, RoutedEventArgs e) => OpenDonationPage();
+
+    private void OnDismissDonationBanner(object? sender, RoutedEventArgs e)
+    {
+        _donationBannerDismissed = true;
+        UpdateDonationBanner();
+    }
+
+    private async Task ShowDonationStatusAsync()
+    {
+        if (_donationCheckInProgress)
+        {
+            return;
+        }
+
+        var email = await DonationEmailWindow
+            .ShowAsync(this, _settings.DonationEmail)
+            .ConfigureAwait(true);
+        if (email is null)
+        {
+            return;
+        }
+
+        _donationBannerDismissed = false;
+        SaveDonationEmail(email);
+        await RefreshDonationStatusAsync(showMessages: true).ConfigureAwait(true);
+    }
+
+    private void SaveDonationEmail(string email)
+    {
+        var trimmed = email.Trim();
+        if (string.Equals(_settings.DonationEmail, trimmed, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        _settings.DonationEmail = trimmed;
+        _settings.HasDonated = false;
+        _settings.DonationLastCheckedUtc = null;
+        _donationBannerMessage = null;
+        AppSettingsStore.Save(_settings);
+        UpdateDonationBanner();
+    }
+
+    private void OnDonationCheckActivated(object? sender, EventArgs e)
+    {
+        if (Program.SmokeTest ||
+            _donationCheckInProgress ||
+            _settings.HasDonated ||
+            string.IsNullOrWhiteSpace(_settings.DonationEmail) ||
+            DateTime.UtcNow - _lastDonationCheckUtc < TimeSpan.FromMinutes(2))
+        {
+            return;
+        }
+
+        AsyncEvent.Run(
+            () => RefreshDonationStatusAsync(showMessages: false),
+            "checking donation status");
+    }
+
+    private async Task RefreshDonationStatusAsync(bool showMessages)
+    {
+        if (_donationCheckInProgress)
+        {
+            return;
+        }
+
+        var email = _settings.DonationEmail;
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return;
+        }
+
+        _donationCheckInProgress = true;
+        _lastDonationCheckUtc = DateTime.UtcNow;
+        if (showMessages)
+        {
+            _donationBannerMessage = "Checking donation status...";
+        }
+
+        UpdateDonationBanner();
+        try
+        {
+            DonationVerificationResult result = await DonationVerificationClient
+                .VerifyAsync(email)
+                .ConfigureAwait(true);
+            switch (result.Status)
+            {
+                case DonationVerificationStatus.Donated:
+                    _settings.HasDonated = true;
+                    _settings.DonationLastCheckedUtc = DateTime.UtcNow;
+                    AppSettingsStore.Save(_settings);
+                    _donationBannerMessage = null;
+                    _logger.ForCategory(LogCategory.Host).Information(
+                        "Donation confirmed for the saved email.");
+                    if (showMessages)
+                    {
+                        StatusText.Text = "Thank you for supporting 5DO!";
+                    }
+
+                    break;
+
+                case DonationVerificationStatus.NotDonated:
+                    _settings.HasDonated = false;
+                    _settings.DonationLastCheckedUtc = DateTime.UtcNow;
+                    AppSettingsStore.Save(_settings);
+                    if (showMessages)
+                    {
+                        _donationBannerMessage =
+                            "No donation was found for that email yet. If you just donated, try again in a moment.";
+                    }
+
+                    break;
+
+                default:
+                    if (showMessages)
+                    {
+                        _donationBannerMessage =
+                            "Could not check donation status. Please try again later.";
+                    }
+
+                    break;
+            }
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            _logger.ForCategory(LogCategory.Host).Warning(
+                exception,
+                "Unexpected donation verification failure.");
+            if (showMessages)
+            {
+                _donationBannerMessage =
+                    "Could not check donation status. Please try again later.";
+            }
+        }
+        finally
+        {
+            _donationCheckInProgress = false;
+            UpdateDonationBanner();
+        }
+    }
+
+    private void UpdateDonationBanner()
+    {
+        DonationBanner.IsVisible = !_settings.HasDonated && !_donationBannerDismissed;
+        if (!DonationBanner.IsVisible)
+        {
+            return;
+        }
+
+        DonationBannerText.Text = string.IsNullOrWhiteSpace(_donationBannerMessage)
+            ? "5DO is free donationware. If it helps you, please consider supporting development."
+            : _donationBannerMessage;
+        DonationStatusButton.IsEnabled = !_donationCheckInProgress;
+        DonateButton.IsEnabled = !_donationCheckInProgress;
+    }
+
+    private void OpenDonationPage()
+    {
+        try
+        {
+            Uri uri = DonationVerificationClient.CreateDonationPageUri(_settings.DonationEmail);
+            var launcher = TopLevel.GetTopLevel(this)?.Launcher;
+            if (launcher is null)
+            {
+                StatusText.Text = "Could not open the donation page.";
+                return;
+            }
+
+            AsyncEvent.Run(
+                () => LaunchDonationPageAsync(launcher, uri),
+                "opening the donation page");
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            _logger.ForCategory(LogCategory.Host).Warning(
+                exception,
+                "Could not open the donation page.");
+            StatusText.Text = "Could not open the donation page.";
+        }
+    }
+
+    private async Task LaunchDonationPageAsync(ILauncher launcher, Uri uri)
+    {
+        if (!await launcher.LaunchUriAsync(uri).ConfigureAwait(true))
+        {
+            StatusText.Text = "Could not open the donation page.";
+            return;
+        }
+
+        _lastDonationCheckUtc = DateTime.MinValue;
+        if (_settings.HasDonated)
+        {
+            return;
+        }
+
+        _donationBannerDismissed = false;
+        _donationBannerMessage = "After donating, click 'I already donated' to check your support.";
+        UpdateDonationBanner();
     }
 
     private void OnAddFolderAsync(object? sender, RoutedEventArgs e) =>
@@ -1469,6 +1688,11 @@ public partial class MainWindow : Window, IDisposable
 
         AppSettingsStore.Save(_settings);
         Video.Settings = _settings.ToRendererSettings(_gameId);
+        if (_runner is not null)
+        {
+            _runner.FrameSkip = _settings.FrameSkip;
+        }
+
         OverlayPanel.IsVisible = _settings.ShowOverlay;
 
         ApplyAudioSettings();
@@ -1659,9 +1883,12 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnCoreStatus(CoreStatus status)
     {
+        var skip = status.FrameSkipMode == FrameSkipMode.Off && status.FrameSkipCadence <= 1
+            ? string.Empty
+            : $" ({FrameSkipPolicy.Describe(status.FrameSkipMode, status.FrameSkipCadence)})";
         StatsText.Text =
             $"frame {status.Frames} · PC 0x{status.ProgramCounter:x8} · {status.Cycles} cyc";
-        FpsText.Text = $"{status.FramesPerSecond,5:F1} fps";
+        FpsText.Text = $"{status.FramesPerSecond,5:F1} fps{skip}";
         if (OverlayPanel.IsVisible)
         {
             var gpu = _vulkanPresenter ? VulkanVideo.GpuMilliseconds : Video.GpuMilliseconds;
@@ -1673,8 +1900,11 @@ public partial class MainWindow : Window, IDisposable
                 ? string.Empty
                 : $"  audio {_audio.BufferedFrames}f q{_audio.QueuedBuffers} u{_audio.UnderrunBuffers} "
                     + $"d{_audio.SamplesDropped} {FormatAudioMeter(_audio.TakePeakLevel())}";
+            var shown = status.PresentedFramesPerSecond > 0 && status.PresentedFramesPerSecond < status.FramesPerSecond - 0.5
+                ? $"  shown {status.PresentedFramesPerSecond:F1}"
+                : string.Empty;
             OverlayText.Text =
-                $"{status.FramesPerSecond,5:F1}/{status.TargetFramesPerSecond:F2} fps  "
+                $"{status.FramesPerSecond,5:F1}/{status.TargetFramesPerSecond:F2} fps{shown}{skip}  "
                 + $"{status.Cycles,6} cyc  PC 0x{status.ProgramCounter:x8}  {timing}{audio}";
         }
     }
@@ -2005,7 +2235,10 @@ public partial class MainWindow : Window, IDisposable
             _runner = new CoreRunner(
                 _machine,
                 frame => SubmitFrameToActiveRenderer(frame),
-                status => Dispatcher.UIThread.Post(() => OnCoreStatus(status)));
+                status => Dispatcher.UIThread.Post(() => OnCoreStatus(status)))
+            {
+                FrameSkip = _settings.FrameSkip,
+            };
             _runner.Faulted += (_, args) => Dispatcher.UIThread.Post(() =>
             {
                 var exception = args.Exception;

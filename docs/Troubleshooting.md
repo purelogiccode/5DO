@@ -233,7 +233,9 @@ See [`SaveStates.md`](SaveStates.md).
 | 4K stutters | Use SharpBilinear/Accurate; xBR/HQx/FSR cost more. Check GPU probe percentiles. |
 | CPU fallback is slow | Expected; it is not a 4K60 path. Use a GL/GLES context. |
 | High-res mode is slow | 640x480 increases CEL/VDLP/SPORT work; disable it for 320x240 titles. |
+| Gameplay is slow when started from the IDE | Debug builds optimize the core projects by default (`-p:FiveDoOptimizeDebug=false` opts out). If Visual Studio's debugger suppresses JIT optimization on module load, use Start Without Debugging or disable that debugger option. Check the actual build: a Debug run with optimization disabled measured ~25 ms/frame on the Road Rash race. |
 | Frame pacing oscillates | Check audio samples/frame; the pacer clamps 50-70 fps and falls back to 60 Hz. |
+| Auto frame skip does not raise the presented rate | Auto is presentation-only. If the emulated CPU/CEL/DSP is the bottleneck, reducing filter cost or output resolution will not help either; use a Release/optimized build and check the benchmark core time. Fixed frame-skip modes are available when the GPU/presenter is the bottleneck. |
 | Memory grows | Check for per-frame allocations with the benchmark/probe; steady state should be 0 bytes/frame. |
 
 ---

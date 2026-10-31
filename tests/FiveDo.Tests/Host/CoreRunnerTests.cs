@@ -152,6 +152,28 @@ public sealed class CoreRunnerTests
     }
 
     [Fact]
+    public void OneInTwo_SkipsPresentationButRunsEveryEmulatedFrame()
+    {
+        FiveDoMachine machine = CreateMachine();
+        using var runner = new CoreRunner(machine) { FrameSkip = FrameSkipMode.OneInTwo };
+        runner.Start();
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 20, TimeSpan.FromSeconds(2)));
+        runner.Stop();
+
+        Assert.Equal(runner.Frames, machine.FramesExecuted);
+        Assert.InRange(runner.PresentedFrames, (runner.Frames / 2) - 1, (runner.Frames / 2) + 1);
+    }
+
+    [Fact]
+    public void FrameSkip_RejectsUnknownModes()
+    {
+        FiveDoMachine machine = CreateMachine();
+        using var runner = new CoreRunner(machine);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => runner.FrameSkip = (FrameSkipMode)99);
+    }
+
+    [Fact]
     public void Status_ReportsTheAudioDerivedTargetFrameRate()
     {
         FiveDoMachine machine = CreateMachine();

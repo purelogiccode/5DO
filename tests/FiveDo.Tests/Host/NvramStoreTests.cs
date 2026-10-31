@@ -3,6 +3,7 @@ using System.IO;
 using FiveDo.Core;
 using FiveDo.Host;
 using FiveDo.Storage;
+using FiveDo.Video;
 
 namespace FiveDo.Tests.Host;
 
@@ -110,6 +111,21 @@ public sealed class NvramStoreTests
     }
 
     [Fact]
+    public void AppSettings_DefaultToTheOptimizedVideoAndOutputConfiguration()
+    {
+        var settings = new AppSettings();
+
+        Assert.Equal(VideoRendererKind.OpenGl, settings.Renderer);
+        Assert.Equal(FiveDo.Video.VideoFilter.SharpBilinear, settings.Filter);
+        Assert.Equal(FiveDo.Video.OutputResolution.Window, settings.OutputResolution);
+        Assert.Equal(FrameSkipMode.Auto, settings.FrameSkip);
+        Assert.True(settings.Vsync);
+        Assert.True(settings.IntegerScale);
+        Assert.False(settings.HighResolution);
+        Assert.False(settings.ShowOverlay);
+    }
+
+    [Fact]
     public void AppSettings_RoundtripsAndDerivesRendererSettings()
     {
         using var directory = new TempDirectory();
@@ -126,8 +142,12 @@ public sealed class NvramStoreTests
             AutoGameFixes = false,
             ShowOverlay = true,
             SaveNativeScreenshot = true,
+            FrameSkip = FrameSkipMode.OneInThree,
             Bloom = 0.7f,
             FirstRunCompleted = true,
+            DonationEmail = "donor@example.com",
+            HasDonated = true,
+            DonationLastCheckedUtc = new DateTime(2026, 10, 30, 12, 0, 0, DateTimeKind.Utc),
         };
         settings.Input.Players[0].Keyboard["Q"] = FiveDo.Input.ControllerButton.C;
         settings.RecentDiscs.Add("game.iso");
@@ -148,9 +168,15 @@ public sealed class NvramStoreTests
         Assert.False(loaded.AutoGameFixes);
         Assert.True(loaded.ShowOverlay);
         Assert.True(loaded.SaveNativeScreenshot);
+        Assert.Equal(FrameSkipMode.OneInThree, loaded.FrameSkip);
         Assert.Equal(0.7f, loaded.Bloom);
         Assert.Equal(0.7f, loaded.ToRendererSettings().Bloom);
         Assert.True(loaded.FirstRunCompleted);
+        Assert.Equal("donor@example.com", loaded.DonationEmail);
+        Assert.True(loaded.HasDonated);
+        Assert.Equal(
+            new DateTime(2026, 10, 30, 12, 0, 0, DateTimeKind.Utc),
+            loaded.DonationLastCheckedUtc);
         Assert.Equal(FiveDo.Input.ControllerButton.C, loaded.Input.Players[0].Keyboard["Q"]);
         Assert.Equal("game.iso", Assert.Single(loaded.RecentDiscs));
         Assert.Equal("games", Assert.Single(loaded.LibraryFolders));

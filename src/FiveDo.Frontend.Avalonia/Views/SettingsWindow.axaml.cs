@@ -27,6 +27,16 @@ public partial class SettingsWindow : Window
         new(VideoRendererKind.Software, "Software (CPU)"),
     ];
 
+    private static readonly FrameSkipOption[] _frameSkipOptions =
+    [
+        new(FrameSkipMode.Auto, "Auto (recommended)"),
+        new(FrameSkipMode.Off, "Off - present every frame"),
+        new(FrameSkipMode.OneInTwo, "Skip 1 of 2 (30 fps)"),
+        new(FrameSkipMode.OneInThree, "Skip 2 of 3 (20 fps)"),
+        new(FrameSkipMode.OneInFour, "Skip 3 of 4 (15 fps)"),
+        new(FrameSkipMode.OneInFive, "Skip 4 of 5 (12 fps)"),
+    ];
+
     private static readonly ResolutionOption[] _resolutionOptions =
     [
         new(OutputResolution.Window, "Match window"),
@@ -77,6 +87,9 @@ public partial class SettingsWindow : Window
         CustomAspectBox.Text = settings.CustomAspect.ToString("0.###", CultureInfo.InvariantCulture);
         IntegerCheck.IsChecked = settings.IntegerScale;
         VsyncCheck.IsChecked = settings.Vsync;
+        FrameSkipCombo.ItemsSource = _frameSkipOptions;
+        FrameSkipCombo.SelectedItem = _frameSkipOptions.FirstOrDefault(option => option.Value == settings.FrameSkip)
+            ?? _frameSkipOptions[0];
         OverlayCheck.IsChecked = settings.ShowOverlay;
         NativeScreenshotCheck.IsChecked = settings.SaveNativeScreenshot;
         BloomSlider.Value = settings.Bloom;
@@ -172,6 +185,9 @@ public partial class SettingsWindow : Window
             : OutputResolution.Window;
         settings.IntegerScale = IntegerCheck.IsChecked == true;
         settings.Vsync = VsyncCheck.IsChecked == true;
+        settings.FrameSkip = FrameSkipCombo.SelectedItem is FrameSkipOption frameSkip
+            ? frameSkip.Value
+            : FrameSkipMode.Auto;
         settings.ShowOverlay = OverlayCheck.IsChecked == true;
         settings.SaveNativeScreenshot = NativeScreenshotCheck.IsChecked == true;
         settings.Bloom = (float)BloomSlider.Value;
@@ -299,6 +315,11 @@ public partial class SettingsWindow : Window
     }
 
     private sealed record ResolutionOption(OutputResolution Value, string Label)
+    {
+        public override string ToString() => Label;
+    }
+
+    private sealed record FrameSkipOption(FrameSkipMode Value, string Label)
     {
         public override string ToString() => Label;
     }

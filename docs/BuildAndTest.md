@@ -82,9 +82,17 @@ dotnet build 5DO.sln -c Release
 dotnet test 5DO.sln -c Release
 ```
 
-The current suite is **926 tests** (verified 2026-10-30) and completes in a few seconds
+The current suite is **952 tests** (verified 2026-10-31) and completes in a few seconds
 on the development machine. The build treats warnings as errors and runs the .NET
 analyzers plus Meziantou and Roslynator analyzers.
+
+Debug builds compile the emulator core projects (`FiveDo.Core`, `Cpu`, `Memory`,
+`Machine`, `Madam`, `Clio`, `Dsp`, `Sport`, `Video`, `Xbus`, `Cdrom`, and `Host`) with
+JIT optimizations, while the frontend/UI projects stay unoptimized. This keeps IDE
+gameplay near Release speed; pass `-p:FiveDoOptimizeDebug=false` to restore fully
+unoptimized Debug core assemblies. If Visual Studio's debugger is set to suppress JIT
+optimization on module load, gameplay will still be slow while attached; use Start
+Without Debugging or disable that debugger option.
 
 Useful variants:
 

@@ -92,6 +92,9 @@ public sealed class Madam : IMadamBus, IStateSection
     /// <summary>Gets the palette lookup table. FreeDO: <c>PLUT</c>.</summary>
     public Span<ushort> Plut => _plut;
 
+    /// <summary>Gets the backing PLUT array for the CEL decoder hot path.</summary>
+    internal ushort[] PlutEntries => _plut;
+
     /// <summary>Gets the last PBUS controller packet. FreeDO: <c>PBUSQueue</c>.</summary>
     public ReadOnlySpan<byte> PbusQueue => _pbusQueue;
 

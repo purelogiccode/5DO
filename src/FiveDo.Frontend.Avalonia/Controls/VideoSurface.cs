@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 using Avalonia.Controls;
 using Avalonia.OpenGL;
 using Avalonia.OpenGL.Controls;
@@ -27,6 +28,8 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     private readonly VdlFrameMailbox _mailbox = new();
     private readonly VdlFrame _presentFrame = new();
     private readonly Action _requestRender;
+    private readonly Action _requestRenderFromCore;
+    private int _renderRequestPending;
     private GL? _gl;
     private string? _glVendor;
     private string? _glRenderer;
@@ -49,10 +52,11 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     /// <summary>Initializes a new instance of the <see cref="VideoSurface"/> class.</summary>
     public VideoSurface()
     {
-        // Cache the method-group delegate: SubmitFrame is called once per emulated
+        // Cache the method-group delegates: SubmitFrame is called once per emulated
         // frame, and allocating a new delegate on every frame violates the presenter's
         // zero-allocation steady-state contract.
         _requestRender = RequestNextFrameRendering;
+        _requestRenderFromCore = RequestRenderFromCore;
     }
 
     /// <summary>Gets the CPU time spent presenting the most recent GL frame, in milliseconds.</summary>
@@ -186,16 +190,32 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     public void SubmitFrame(VdlFrame frame)
     {
         _mailbox.Write(frame);
+        if (_renderer is null)
+        {
+            return;
+        }
+
+        if (global::Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+        {
+            _requestRender();
+            return;
+        }
+
+        // Coalesce core-thread render requests. If the UI thread is already behind,
+        // additional posts would only grow the dispatcher queue; the mailbox already
+        // holds the latest frame, so one pending request is sufficient.
+        if (Interlocked.Exchange(ref _renderRequestPending, 1) == 0)
+        {
+            global::Avalonia.Threading.Dispatcher.UIThread.Post(_requestRenderFromCore);
+        }
+    }
+
+    private void RequestRenderFromCore()
+    {
+        Interlocked.Exchange(ref _renderRequestPending, 0);
         if (_renderer is not null)
         {
-            if (global::Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
-            {
-                _requestRender();
-            }
-            else
-            {
-                global::Avalonia.Threading.Dispatcher.UIThread.Post(_requestRender);
-            }
+            RequestNextFrameRendering();
         }
     }
 

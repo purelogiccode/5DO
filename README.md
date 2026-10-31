@@ -12,7 +12,7 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **926 tests pass.** The 594-disc baseline found 576 rendered, 13 black/blank,
+prototype. **952 tests pass.** The 594-disc baseline found 576 rendered, 13 black/blank,
 and 5 not-loadable images. Triage resolved the five not-loadable rows (Mirai Shounen
 Conan was a transient CHD read error; the four Arcade CD-ROM titles boot with
 `panafz10`), and six of the 13 black/blank titles render by 6,000-9,000 frames. Headless
@@ -43,7 +43,12 @@ warnings, console hotkey dispatch, ISO/BIN/CUE `disc tracks`, and the OpenAL Sof
 LGPL notice/source offer in the portable archives. The seventeenth pass fixed the remaining live OpenAL
 crackle (buffer ownership), added the `FIVEDO_AUDIO_TAP` PCM/timing tap and overlay
 peak meter, added the opt-in AMD FSR 1.0 EASU/RCAS filter, and measured Road Rash's 3D
-race at 5.46 ms/frame total (p99 13.14 ms, 0 bytes/frame). The sixteenth pass corrected the DSP sample clock to
+race at 5.46 ms/frame total (p99 13.14 ms, 0 bytes/frame). The 2026-10-31 performance
+pass reduced the same race to **4.20 ms/frame total (p99 7.40 ms)** with an unchanged
+frame hash, optimized the core projects in Debug builds (Road Rash went from ~40 fps to
+~240 fps CPU headroom in the race benchmark), coalesced UI render requests, and added
+presentation-only frame skipping (`Off|Auto|OneInTwo..OneInFive`; **Auto** is the new
+default). The sixteenth pass corrected the DSP sample clock to
 an exact 44,100 samples per emulated second (the FreeDO 8.24 scheduler ran ~0.7%
 fast), fixed live OpenAL output by bundling OpenAL Soft 1.23.1 and making the
 context current on the audio thread, added audio-driven frame pacing, and added

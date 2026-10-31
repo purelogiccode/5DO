@@ -97,6 +97,11 @@
                           ToolTip.Tip="Open the first-run guide for BIOS and disc setup." />
                 <MenuItem Header="About 5DO" Click="OnAbout"
                           ToolTip.Tip="Show version, renderer, audio, and license information." />
+                <Separator />
+                <MenuItem Header="Donation Status..." Click="OnDonationStatus"
+                          ToolTip.Tip="Enter the email used for a donation and check whether it was recognized." />
+                <MenuItem Header="Support 5DO..." Click="OnDonate"
+                          ToolTip.Tip="Open the 5DO donation page on purelogiccode.com." />
             </MenuItem>
         </Menu>
 
@@ -226,7 +231,7 @@
         </Border>
 
         <!-- Game library -->
-        <Grid Grid.Row="2" x:Name="LibraryView" RowDefinitions="Auto,*">
+        <Grid Grid.Row="2" x:Name="LibraryView" RowDefinitions="Auto,*,Auto">
             <Border Grid.Row="0" Padding="14,8"
                     Background="{DynamicResource SurfaceBrush}"
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
@@ -363,6 +368,37 @@
                         HorizontalAlignment="Center"
                         ToolTip.Tip="Add a folder that contains ISO, BIN, CUE, or CHD images." />
             </StackPanel>
+
+            <!-- Optional donation strip. It stays inside the library view so gameplay is never covered. -->
+            <Border x:Name="DonationBanner" Grid.Row="2" IsVisible="False"
+                    Padding="12,6"
+                    Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0"
+                    ToolTip.Tip="Optional support for 5DO development.">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                    <PathIcon Grid.Column="0" Width="14" Height="14" Margin="0,0,8,0"
+                              VerticalAlignment="Center" IsHitTestVisible="False"
+                              Foreground="{DynamicResource AccentBrush}"
+                              Data="{StaticResource IconHeart}" />
+                    <TextBlock x:Name="DonationBannerText" Grid.Column="1" Classes="caption"
+                               VerticalAlignment="Center" TextWrapping="Wrap"
+                               Text="5DO is free donationware. If it helps you, please consider supporting development."
+                               ToolTip.Tip="5DO is free to use. Donations are optional and support development." />
+                    <Button x:Name="DonationStatusButton" Grid.Column="2" Classes="chrome"
+                            Content="I already donated" Margin="10,0,0,0"
+                            Click="OnDonationStatus"
+                            ToolTip.Tip="Enter the email used for your donation and check whether it was recognized." />
+                    <Button x:Name="DonateButton" Grid.Column="3" Classes="accent"
+                            Content="Donate" Padding="12,4" Margin="6,0,0,0"
+                            Click="OnDonate"
+                            ToolTip.Tip="Open the 5DO donation page on purelogiccode.com." />
+                    <Button Grid.Column="4" Classes="chrome" Padding="5,4" Margin="4,0,0,0"
+                            Click="OnDismissDonationBanner"
+                            ToolTip.Tip="Hide this banner until the next launch.">
+                        <PathIcon Width="11" Height="11" Data="{StaticResource IconClose}" />
+                    </Button>
+                </Grid>
+            </Border>
         </Grid>
 
         <!-- Emulation view (shown while a game is booted) -->

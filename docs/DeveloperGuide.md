@@ -106,11 +106,11 @@ FiveDo.Cdrom --------------> Core
 | `FiveDo.Storage` | ISO/BIN/CUE/CHD readers, prefetch, BIOS/NVRAM, volume header, game ID/database | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `VolumeHeader`, `GameId`, `GameDatabase` | Core, CHDSharp |
 | `FiveDo.Audio` | Ring buffer, WAV capture, OpenAL output, soft limiter, tap, analysis | `AudioRingBuffer`, `AudioPipeline`, `WavAudioSink`, `OpenAlAudioOutput`, `AudioSoftLimiter`, `AudioTap`, `AudioAnalyzer`, `AudioStatistics` | Core, Silk.NET.OpenAL |
 | `FiveDo.Input` | Controller state, PBUS encoding, profiles, scripts, keyboard/gamepad mapping, input recording | `ControllerState`, `PbusEncoder`, `InputProfile`, `KeyboardInputMapper`, `InputManager`, `GamepadMapper`, `InputScript`, `InputRecorder` | Core |
-| `FiveDo.Diagnostics` | PNG/frame dumps, CPU tracing, timing, benchmark gates | `PngDumper`, `FrameDumper`, `CpuTracer`, `FrameTiming`, `BenchmarkGate`, `BenchmarkComparison` | Core |
+| `FiveDo.Diagnostics` | Logging, bug reports, launch statistics, donation verification, PNG/frame dumps, CPU tracing, timing, benchmark gates | `BugReportSink`, `ApplicationStatsClient`, `DonationVerificationClient`, `PngDumper`, `FrameDumper`, `CpuTracer`, `FrameTiming`, `BenchmarkGate`, `BenchmarkComparison` | Core |
 | `FiveDo.Machine` | Composition root, frame loop, Quartz scheduler, state sections, device wiring | `FiveDoMachine`, `Quartz` | Core + chips |
 | `FiveDo.Host` | Core thread/pacing, settings, BIOS/disc/NVRAM loading, audio/input backends, save slots, library, fixes, autopilot | `CoreRunner`, `AudioFramePacer`, `AppSettings`, `AppSettingsStore`, `NvramStore`, `SaveStateSlotManager`, `StateInspector`, `GameLibraryScanner`, `GameCompatibility`, `MemoryPatch`, `RoadRashAutopilot` | Core, Machine, Storage, Audio, Input, Video, Diagnostics |
 | `FiveDo.Cli` | Headless commands, JSON contracts | `Program`, `CliJsonModels` | Host |
-| `FiveDo.Frontend.Avalonia` | Desktop shell, library, settings, input, save slots, logs, GPU probes | `MainWindow`, `VideoSurface`, `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`, `GameLibraryWindow`, `LogsWindow`, `WelcomeWindow`, `GlProbeWindow`, `GlProbeOptions`, `VkProbeRunner`, `VkProbeOptions`, `GlBackendOption`, `PlatformGamepadBackend` | Host, Video.OpenGL, Video.Vulkan, Avalonia |
+| `FiveDo.Frontend.Avalonia` | Desktop shell, library, settings, input, save slots, logs, donation banner, GPU probes | `MainWindow`, `VideoSurface`, `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`, `GameLibraryWindow`, `LogsWindow`, `WelcomeWindow`, `DonationEmailWindow`, `GlProbeWindow`, `GlProbeOptions`, `VkProbeRunner`, `VkProbeOptions`, `GlBackendOption`, `PlatformGamepadBackend` | Host, Video.OpenGL, Video.Vulkan, Avalonia |
 | `FiveDo.Tests` | Unit/integration/golden/CLI/frontend tests | subsystem fixtures, ARM test assembler/rig, fake chips/MMIO, PNG writer | all production projects |
 | `FiveDo.Benchmarks` | Synthetic/real-content frame benchmark, gate, baseline | `Program` | Cpu, Madam, Dsp, Diagnostics, Machine, Storage, Video |
 
@@ -246,6 +246,10 @@ lines from the current VDLP state for the optional multitask path.
 - `Madam` owns 2048+64 registers, PLUT, PBUS queue, CEL FSM, matrix results.
 - `CelEngine` walks CCBs; `CelRasterizer` draws packed/literal/LR/arbitrary CELs.
 - `CelMemory` accounts +1/+2/+4 CEL cycle costs.
+- `CelRasterizer.PreparePipeline` caches the CCB's pixel source/target, modulos, PLUT,
+  flags, and control words once per CEL. It must run after `PrepareGeometry` and before
+  any pixel write; batched fast paths that bypass `CelMemory` must add the same
+  read/write cycle counts explicitly.
 - High-res `ResScale` addresses four 1 MB VRAM planes; preserve plane 0/1 vs 2/3
   semantics.
 - Fix-mode quirks (`BitTiming3/6`, `GraphicsStepY`, speedfixes, unknownflag11) are

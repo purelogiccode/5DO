@@ -10,7 +10,7 @@
             <TabItem Header="Video" ToolTip.Tip="Renderer, output resolution, filter, aspect ratio, scaling, overlay, bloom, and FSR options.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <Grid ColumnDefinitions="170,*"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                           Margin="8">
                         <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Renderer"
                                    FontWeight="SemiBold" Margin="0,0,0,4" />
@@ -52,22 +52,30 @@
                                   ToolTip.Tip="Restrict scaling to whole-number multiples for uniform pixels." />
                         <CheckBox x:Name="VsyncCheck" Grid.Row="10" Grid.Column="1" Content="VSync (where supported)"
                                   ToolTip.Tip="Request vertical sync from the platform where the backend supports it." />
-                        <CheckBox x:Name="OverlayCheck" Grid.Row="11" Grid.Column="1" Content="Show FPS/status overlay"
+                        <TextBlock Grid.Row="11" Grid.Column="0" Text="Frame skip" VerticalAlignment="Center"
+                                   ToolTip.Tip="Skip presentation frames when the emulator falls behind. Emulation and audio keep full speed." />
+                        <ComboBox x:Name="FrameSkipCombo" Grid.Row="11" Grid.Column="1" Margin="0,0,0,4"
+                                  ToolTip.Tip="Auto is recommended. Fixed modes present one of every 2-5 frames; emulation still runs every frame." />
+                        <TextBlock Grid.Row="12" Grid.Column="1"
+                                   Text="Auto only drops presentation frames when the loop misses its deadline. The game still runs at full speed, so input, audio, and save states are unchanged."
+                                   Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
+                                   ToolTip.Tip="Frame skipping is presentation-only." />
+                        <CheckBox x:Name="OverlayCheck" Grid.Row="13" Grid.Column="1" Content="Show FPS/status overlay"
                                   ToolTip.Tip="Show frame rate, renderer timing, and audio queue counters over the game." />
-                        <CheckBox x:Name="NativeScreenshotCheck" Grid.Row="12" Grid.Column="1"
+                        <CheckBox x:Name="NativeScreenshotCheck" Grid.Row="14" Grid.Column="1"
                                   Content="Also save the native CPU frame with screenshots"
                                   ToolTip.Tip="Write a second, unfiltered PNG of the native CPU frame beside the filtered capture." />
-                        <TextBlock Grid.Row="13" Grid.Column="0" Text="CRT bloom" VerticalAlignment="Center"
+                        <TextBlock Grid.Row="15" Grid.Column="0" Text="CRT bloom" VerticalAlignment="Center"
                                    ToolTip.Tip="Adjust the glow around bright areas in the CRT filter." />
-                        <Slider x:Name="BloomSlider" Grid.Row="13" Grid.Column="1"
+                        <Slider x:Name="BloomSlider" Grid.Row="15" Grid.Column="1"
                                 Minimum="0" Maximum="1" TickFrequency="0.05"
                                 ToolTip.Tip="CRT bloom strength from 0 (off) to 1 (strongest)." />
-                        <TextBlock Grid.Row="14" Grid.Column="0" Text="FSR sharpness" VerticalAlignment="Center"
+                        <TextBlock Grid.Row="16" Grid.Column="0" Text="FSR sharpness" VerticalAlignment="Center"
                                    ToolTip.Tip="Adjust RCAS sharpening when the FSR filter is selected." />
-                        <Slider x:Name="FsrSharpnessSlider" Grid.Row="14" Grid.Column="1"
+                        <Slider x:Name="FsrSharpnessSlider" Grid.Row="16" Grid.Column="1"
                                 Minimum="0" Maximum="1" TickFrequency="0.05"
                                 ToolTip.Tip="FSR RCAS sharpness from 0 (soft) to 1 (maximum)." />
-                        <TextBlock Grid.Row="15" Grid.Column="1"
+                        <TextBlock Grid.Row="17" Grid.Column="1"
                                    Text="xBR runs an edge-directed 4x pass; HQx runs a 2x/3x/4x CPU pixel-art pass; FSR runs AMD FidelityFX Super Resolution 1.0 (EASU + RCAS) at the output. CRT bloom adds a glow around bright areas. All of them cost more CPU/GPU time at 4K; HQx 3x/4x are the most expensive."
                                    Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"
                                    ToolTip.Tip="Filter notes: xBR and HQx are CPU-heavy; FSR and CRT bloom run on the GPU." />

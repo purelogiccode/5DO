@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="FiveDo.Frontend.Avalonia.Views.DonationEmailWindow"
+        Title="Donation Status"
+        Width="500"
+        SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="20" Spacing="12">
+        <TextBlock Text="Support 5DO" FontSize="20" FontWeight="SemiBold"
+                   ToolTip.Tip="Optional donation recognition for 5DO." />
+        <TextBlock TextWrapping="Wrap" Opacity="0.85"
+                   Text="5DO is free to use and supported by optional donations. Enter the email address you use on purelogiccode.com so the app can check whether your donation was recognized. The address is stored only on this computer."
+                   ToolTip.Tip="The email is used only to look up a donation for 5DO." />
+        <TextBox x:Name="EmailBox" PlaceholderText="Email address" MaxLength="254"
+                 ToolTip.Tip="Email address used on purelogiccode.com for your donation." />
+        <TextBlock x:Name="ValidationText" IsVisible="False"
+                   Foreground="{DynamicResource ErrorBrush}" FontSize="11"
+                   Text="Please enter a valid email address."
+                   ToolTip.Tip="Validation message shown when the email address is invalid." />
+
+        <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,4,0,0">
+            <TextBlock Grid.Column="0" Classes="caption" VerticalAlignment="Center"
+                       Text="The email is sent only when checking donation status."
+                       ToolTip.Tip="The app contacts purelogiccode.com only to check the saved email." />
+            <Button Grid.Column="1" Content="Cancel" Click="OnCancel" IsCancel="True"
+                    Margin="8,0,6,0"
+                    ToolTip.Tip="Close without checking a donation." />
+            <Button Grid.Column="2" Classes="accent" Content="Check Donation"
+                    Click="OnCheck" IsDefault="True"
+                    ToolTip.Tip="Check this email for a completed 5DO donation." />
+        </Grid>
+    </StackPanel>
+</Window>

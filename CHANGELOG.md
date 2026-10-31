@@ -7,6 +7,15 @@ still change.
 
 ### Added
 
+- Presentation frame skipping (`FrameSkipMode`): **Auto** (default) plus fixed
+  one-in-two through one-in-five cadences. Only VDLP rendering and host presentation
+  are skipped; every emulated frame still runs the CPU, CEL, DSP, timers, CD-ROM, and
+  input, so game speed, audio, and save states are unchanged. Settings > Video exposes
+  the policy and its tooltip explains that it is not fast-forward. Auto uses measured
+  per-presented-frame work and recovers after 120 good frames.
+- Optional donation banner in the game library. It links to the 5DO donation page,
+  can check a saved email through the PureLogicCode donation API, hides after a
+  completed donation is confirmed, and can be dismissed until the next launch.
 - Configurable shared cover-art directory for the game library. Covers are matched by
   the disc file's base name (for example `Battle Chess (Europe).png`) and can live
   either beside the disc or in a folder selected under **Configuration > Settings...
@@ -236,6 +245,20 @@ still change.
 
 ### Changed
 
+- Performance hot-path pass: Road Rash's 100k-state 3D race now measures **4.20
+  ms/frame total** (p99 7.40 ms) instead of 5.46 ms (p99 13.14 ms), with the frame hash
+  unchanged and zero allocations. The CEL rasterizer caches per-CCB registers, uses
+  row-span address counters, and skips the per-texel PLUT length check; the DSP resolves
+  its instruction-memory windows before the special-register switch.
+- Debug builds now compile the emulator core projects with JIT optimizations. The same
+  Road Rash race measured 24.98 ms/frame (about 40 fps) in Debug before this change and
+  4.30 ms/frame after it. Frontend/UI projects remain unoptimized for normal XAML
+  debugging; pass `-p:FiveDoOptimizeDebug=false` to opt out.
+- The Avalonia video surface coalesces core-thread render requests, so a slow UI thread
+  cannot accumulate a dispatcher backlog while the mailbox keeps the latest frame.
+- Fresh settings default to the optimized video/output configuration: OpenGL,
+  match-window output, sharp-bilinear filtering, vsync on, integer scaling, and Auto
+  frame skip.
 - Recorded the distribution model as **donationware**: non-commercial,
   source-available, voluntary donations only. The v1.0 release is deferred until the
   full-collection compatibility sweep (M13) and high-resolution CEL research (M14)

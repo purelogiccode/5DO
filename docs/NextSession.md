@@ -37,7 +37,7 @@ MHTML in `References/4DO-master/`.
   show the same Anvil boot screen and are still stuck at 60,000 frames.
 - Headless `run`/`trace` now attach a default player-1 pad. Olympic Summer Games
   proceeds past its controller check. The 3,000-frame corpus keys were re-baselined in
-  [`TestCorpus.md`](TestCorpus.md) 1.1. **926 tests pass.**
+  [`TestCorpus.md`](TestCorpus.md) 1.1. **952 tests pass.**
 
 **Ordered tasks:**
 
@@ -61,7 +61,8 @@ MHTML in `References/4DO-master/`.
 not final statuses.
 
 **Do not redo:** the 4DO MHTML parser, the sweep harness, the OpenAL/Serilog/trimming
-work, or the renderer/filter work. Do not treat full-race completion, inventory
+work, the renderer/filter work, or the 2026-10-31 performance pass (CEL pipeline
+caching, Debug core optimization, render-request coalescing, Auto frame skip). Do not treat full-race completion, inventory
 scripting, Pi/arm64 validation, or installers as current gates.
 
 **Project position:** donationware, non-commercial, source-available. The legal

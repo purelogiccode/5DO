@@ -1,5 +1,28 @@
 <Project>
 
+  <!--
+    Emulator hot paths are compiled with JIT optimizations in Debug too. A debug build
+    otherwise runs Road Rash at ~40 fps on the reference machine (24.6 ms/frame) versus
+    ~4 ms/frame optimized. UI/frontend projects remain unoptimized so XAML and host
+    debugging stays predictable. Pass -p:FiveDoOptimizeDebug=false to opt out.
+  -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug' and '$(FiveDoOptimizeDebug)' != 'false'">
+    <FiveDoOptimizedDebugProject
+      Condition="'$(MSBuildProjectName)' == 'FiveDo.Core'
+                 or '$(MSBuildProjectName)' == 'FiveDo.Cpu'
+                 or '$(MSBuildProjectName)' == 'FiveDo.Memory'
+                 or '$(MSBuildProjectName)' == 'FiveDo.Machine'
+                 or '$(MSBuildProjectName)' == 'FiveDo.Madam'
+                 or '$(MSBuildProjectName)' == 'FiveDo.Clio'
+                 or '$(MSBuildProjectName)' == 'FiveDo.Dsp'
+                 or '$(MSBuildProjectName)' == 'FiveDo.Sport'
+                 or '$(MSBuildProjectName)' == 'FiveDo.Video'
+                 or '$(MSBuildProjectName)' == 'FiveDo.Xbus'
+                 or '$(MSBuildProjectName)' == 'FiveDo.Cdrom'
+                 or '$(MSBuildProjectName)' == 'FiveDo.Host'">true</FiveDoOptimizedDebugProject>
+    <Optimize Condition="'$(FiveDoOptimizedDebugProject)' == 'true'">true</Optimize>
+  </PropertyGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>

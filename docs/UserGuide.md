@@ -126,12 +126,24 @@ Aspect, custom aspect ratio, integer scaling, vsync preference (applied through
 WGL/GLX/EGL where the platform exposes a swap-interval extension), CRT bloom, FSR
 sharpness, fullscreen
 (F11/Escape; the cursor is hidden while fullscreen), and the FPS/status overlay are in
-**Settings > Video**. The **Graphics API** list selects **OpenGL**, **Vulkan**, or
-**Software (CPU)**; changing it recreates the presenter without restarting emulation.
-**Output resolution** selects the final presentation size: match the window, native
-320x240, 2x/3x/4x, 720p, 1080p, 1440p, or 4K. This is output upscaling, not internal CEL
-rendering. The renderer falls back to the CPU `WriteableBitmap` presenter when OpenGL
-initialization or context recovery fails; the status line and **Logs** report the reason.
+**Settings > Video**. **Frame skip** controls presentation catch-up: **Auto** is the
+default and only drops presentation frames when the host misses its deadline; fixed
+modes present one of every 2/3/4/5 frames. Emulation, input, audio, and save states still
+run at full speed in every mode, so this is not fast-forward. Use Auto for normal play;
+a fixed mode is useful on a slow GPU or when recording. The status overlay shows both
+the emulated and presented rates. The **Graphics API** list selects **OpenGL**,
+**Vulkan**, or **Software (CPU)**; changing it recreates the presenter without restarting
+emulation. **Output resolution** selects the final presentation size: match the window,
+native 320x240, 2x/3x/4x, 720p, 1080p, 1440p, or 4K. This is output upscaling, not
+internal CEL rendering. The renderer falls back to the CPU `WriteableBitmap` presenter
+when OpenGL initialization or context recovery fails; the status line and **Logs** report
+the reason.
+
+The fresh-install defaults are tuned for 60 fps without lowering quality: OpenGL,
+match-window output, **SharpBilinear**, vsync on, integer scaling, and **Auto** frame
+skip. If a title still misses 60 fps, use `Nearest`, a lower output resolution, or turn
+off expensive filters first. The emulation core is also optimized in Debug builds, so
+starting the app from the IDE should stay near Release speed.
 
 On Windows, the frontend accepts `--gl-backend auto|wgl|angle|software|vulkan` to force
 a renderer backend for troubleshooting or validation. `auto` is the default (desktop
@@ -177,6 +189,14 @@ mode, save/screenshot paths, input bindings, and the current slot are stored the
 NVRAM is stored as `nvram.ram` in the same directory. The full `settings.json` schema,
 per-game override keys, input profile format, and precedence rules are in
 [`Configuration.md`](Configuration.md).
+
+The game library also shows a compact donation banner. **Donate** opens
+[the 5DO donation page](https://www.purelogiccode.com/donate?app=5do), and
+**I already donated** asks for the email used on the website and checks it through the
+donation API. The email is stored only in the local settings file and is sent only when
+checking a donation. A confirmed donation hides the banner; the close button hides it
+until the next launch. The same actions are available under **Help > Donation Status...**
+and **Help > Support 5DO...**.
 
 ## Audio
 

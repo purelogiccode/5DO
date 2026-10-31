@@ -3,15 +3,19 @@
 **Product:** 5DO
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Current status (2026-10-30, twenty-eighth pass):** **926 tests pass**; the v1.0
+**Current status (2026-10-31, twenty-ninth pass):** **952 tests pass**; the v1.0
 release is deliberately deferred. The first **M13 full-collection loadability sweep**
 is complete: 594 discs tested (589 in `J:\Panasonic 3DO` plus 5 in
 `G:\MAME\MAME Software List CHDs\3do`), with **576 `Loadable/Rendered`, 13
 `Loadable/No video`, and 5 `Not Loadable`**. Triage and the 12,000-frame in-game review
-are next, followed by **M14 high-resolution CEL research**. Gameplay-depth work is
-deferred. The project is **donationware** (non-commercial, source-available, voluntary
-donations only). See §4b, [`GameCompatibilityResults.md`](GameCompatibilityResults.md),
-and [`CompatibilitySweep.md`](CompatibilitySweep.md).
+are next, followed by **M14 high-resolution CEL research**. The 2026-10-31 performance
+pass reduced the Road Rash 3D race to 4.20 ms/frame (p99 7.40 ms), optimized core
+projects in Debug builds (~40 fps to ~240 fps CPU headroom), coalesced UI render
+requests, and added **Auto** presentation frame skip as the default. Gameplay-depth work
+is deferred. The project is **donationware** (non-commercial, source-available,
+voluntary donations only). See §4b,
+[`GameCompatibilityResults.md`](GameCompatibilityResults.md), and
+[`CompatibilitySweep.md`](CompatibilitySweep.md).
 **Historical status (2026-10-26, fifteenth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five golden-corpus titles plus seven additional discs boot, load their own OS, and render real frames; six of the seven additional titles produce non-silent 44.1 kHz stereo DSP audio (Theme Park's menu is silent). Road Rash's 3D race renders correctly; a CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait and the game now advances through `BUSTED`/race select to a new race. Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room, Begin/Resume menu, and intro; Lemmings types the Fun 4 passcode entirely with the D-pad, starts gameplay at 23,000 frames, and its 640x480 high-resolution title matches the reference; Space Ace plays its demo and starts its interactive scene (X menu, A play). **775 tests passed at that pass; 845 tests pass after the 2026-10-29 release-hardening pass.** The fifteenth pass added an explicit `--gl-backend` selector and validated the Windows ANGLE/GLES 3.0 path: 4K present p99 0.47 ms with zero renderer allocations, all filters compile, and a 320x240 Accurate capture is pixel-identical to the CPU oracle. It also added opt-in NativeAOT win-x64 publishes: a 9.97 MB CLI that passes the smoke suite, `info`/`fs list`, and a 3,000-frame golden boot, and a 28.8 MB frontend that passes the smoke and WGL/ANGLE parity probes. The fourteenth pass wired the platform swap interval (WGL/GLX/EGL) and added a `--gl-probe` offscreen 4K presentation probe: on the RTX 4070 development machine, sharp-bilinear 4K measures GPU p99 0.089 ms, present p99 0.208 ms, and zero renderer/mailbox allocations per frame after warm-up. The thirteenth pass enabled `PublishTrimmed` for the Avalonia frontend, removed the reflection-based `ViewLocator`, added a trimmed-frontend startup smoke test, and now publishes both executables trimmed for all six RIDs. The twelfth pass made settings, input profiles, save-slot metadata, and every CLI `--json` response source-generated and trim-safe, enabled `PublishTrimmed` for the CLI, added a trimmed-CLI CI smoke test, and added a same-machine benchmark baseline comparison; see [`Trimming.md`](Trimming.md) and [`Performance.md`](Performance.md). The eleventh pass added HQx 3x/4x and the benchmark budget gate. The tenth pass added the pure D-pad passcode script and CRT bloom. The ninth pass recorded per-title save-state/PNG/WAV evidence, fixed the CD wait, and added autopilot A pulses for post-race menus. The eighth pass fixed the real-content GPU palette expansion (independent R/G/B CLUT indices), added the opt-in xBR-lv2 filter, Windows XInput/Linux evdev gamepad backends with a binding UI, an in-app log viewer, save-state thumbnails, a first-run guide, and error dialogs. Remaining work: finish a full Road Rash race without wrecking, Raspberry Pi/GLES 3.1 and DPI validation, Tier B timing, frontend AOT audio/installers, the M0.8 legal/attribution review (including the bundled OpenAL Soft LGPL runtime), and release documentation. See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md) for the completion estimate and next-session plan.
 **Audio update (2026-10-27, sixteenth pass):** exact 44.1 kHz DSP sample clock
 (600 frames = 10.000 s, 441,015-441,020 samples), Quartz state v2 with v1
@@ -81,7 +85,7 @@ and presents through the existing FIFO swapchain, so `--gl-backend vulkan` no lo
 copies frames back to the CPU or uploads a `WriteableBitmap`. The `CoreRunner`
 pause/resume handshake now uses a monitor with an explicit paused state, fixing rapid
 stop/start cycles where the UI could touch the machine while the core thread was still
-running. **926 tests pass.**
+running. **952 tests pass.**
 
 **Compatibility-sweep and high-resolution research plan (2026-10-30, twenty-eighth
 pass):** v1.0 release work is deliberately deferred. The next active milestone is
@@ -95,7 +99,7 @@ titles), [`CompatibilitySweep.md`](CompatibilitySweep.md), and
 (full races, inventory interaction, long playthroughs) is explicitly not part of this
 phase. The project is **donationware**: non-commercial, source-available, and funded by
 voluntary donations rather than sales. The local Linux validation target is the
-Hyper-V VM `LinuxMint` (`D:\Hyper-V\VMs\LinuxMint`). **926 tests pass before the new
+Hyper-V VM `LinuxMint` (`D:\Hyper-V\VMs\LinuxMint`). **952 tests pass before the new
 sweep documentation/tooling; the docs/tools themselves add no runtime tests.**
 
 **Last updated:** 2026-10-30
@@ -316,7 +320,7 @@ project/type layout is unchanged.
 
 ### 4a. Current position vs. the plan (2026-10-26)
 
-Snapshot: 926 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
+Snapshot: 952 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
 and zero synthetic steady-state allocations; all five local corpus titles boot and
 render, and scripted gameplay is validated in Wolfenstein, Lemmings, Road Rash, and
 Alone. The opt-in 640x480 high-resolution mode is implemented and matches the

@@ -1,6 +1,6 @@
 # Performance and 4K60 Strategy
 
-**Status:** target definition and implementation baseline (2026-10-28). The desktop
+**Status:** target definition and implementation baseline (2026-10-31). The desktop
 path now has a dedicated audio-paced core thread (60 Hz fallback), a two-stage palette/scale presenter,
 immutable texture storage with per-frame `TexSubImage2D`, cached uniform locations,
 full sharp-bilinear and CRT scanline/aperture/curvature/vignette filters, opt-in
@@ -205,6 +205,30 @@ Target model:
   the platform pixel size), not Avalonia logical units. A 4K display at 150–200%
   scaling must still render 3840x2160, not 1920x1080.
 
+### Frame skipping
+
+`CoreRunner.FrameSkip` (`FrameSkipMode.Off|Auto|OneInTwo|OneInThree|OneInFour|OneInFive`)
+suppresses **presentation only**. Every frame still calls
+`FiveDoMachine.RunFrame(skipFrame: true)`, which runs the ARM CPU, CEL engine, DSP,
+timers, CD-ROM, CLIO, and PBUS input. The skipped flag suppresses only
+`Vdlp.DoLine` and the `FrameSink.OnFrame` callback; `FrameSink.OnFrameTrigger` still
+fires so a multitask sink sees the frame boundary. Game speed, audio, input, and save
+states are therefore identical to a full-rate run.
+
+`Auto` uses actual work per presented frame, not the pacer's schedule offset. A startup
+stall leaves a constant offset but is not a reason to drop frames, so Auto compares the
+measured per-frame work against the audio-derived period:
+
+- three consecutive presented frames above 1.05x the period increase the cadence, up
+  to one-in-three (level 2 for Auto);
+- 120 presented frames below 0.90x the period decrease it again;
+- fixed modes use the selected 2-5 cadence immediately.
+
+The Avalonia surface also coalesces core-thread render requests: a mailbox sequence
+already covers the latest frame, so at most one UI callback is pending at a time. This
+keeps a slow UI thread from building a dispatcher backlog without dropping emulated
+frames.
+
 ---
 
 ## 6. Renderer backend matrix
@@ -308,15 +332,27 @@ dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- `
 
 | Case | Total ms/frame | p50 | p95 | p99 | Allocations |
 |---|---:|---:|---:|---:|---:|
-| Road Rash 3D race | **5.46** | 2.91 | 10.60 | 13.14 | **0 bytes/frame** |
+| Road Rash 3D race (before hot-path pass) | **5.46** | 2.91 | 10.60 | 13.14 | **0 bytes/frame** |
+| Road Rash 3D race (current) | **4.20** | 2.15 | 7.13 | 7.40 | **0 bytes/frame** |
 
-Core-only: 5.39 ms mean, p50 2.85, p95 10.53, p99 13.01, max 14.82; 183 fps
-total, 10.7 MIPS, 57,693 instructions/frame, 208,344 cycles/frame. The
-pack/mailbox/read stages cost ~25/21/21 µs/frame. This is the heaviest
-real-content scene measured so far and remains inside the 16.67 ms frame budget
-at p99 with ~3.5 ms of headroom. The spread comes from CEL/VDLP scene complexity,
-not allocations. The synthetic `--gate` remains the CI budget check; this race
-profile is a reference measurement, not a gate input.
+Core-only (current): 4.16 ms mean, p50 2.12, p95 7.09, p99 7.32, max 8.10; 240 fps
+total, 13.9 MIPS, 57,693 instructions/frame, 208,344 cycles/frame. The
+pack/mailbox/read stages cost ~17/8/9 µs/frame. This is the heaviest real-content
+scene measured so far and remains inside the 16.67 ms frame budget at p99 with
+~9.3 ms of headroom. The hot-path pass cached per-CCB CEL registers, replaced
+per-pixel address multiplies with row-span counters, removed the per-texel PLUT
+length check, and added fast DSP instruction-memory paths. The frame hash is
+unchanged (`0x78A1706F`) and managed allocations remain zero. The old profile is
+kept as the before measurement. The synthetic `--gate` remains the CI budget check;
+this race profile is a reference measurement, not a gate input.
+
+**Debug builds (2026-10-31).** The core projects are compiled with JIT
+optimizations in Debug (`Directory.Build.props`). Before this change, a Debug build
+of the same Road Rash race measured 24.98 ms/frame (40 fps) on the reference
+machine; after it, the Debug build measures 4.30 ms/frame, matching Release within
+noise. The frontend/UI projects remain unoptimized for normal XAML debugging. If a
+debugger is configured to suppress JIT optimization on module load, disable that
+option or use Start Without Debugging for gameplay.
 
 **GPU timer query (2026-10-25).** The desktop renderer now wraps the palette/xBR/scale
 pipeline in a `GL_TIME_ELAPSED` query on desktop GL. On the Windows development machine

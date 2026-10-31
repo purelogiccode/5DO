@@ -52,13 +52,18 @@ or delete the file to reset the desktop configuration.
 ## 2. `settings.json` schema
 
 The file is indented JSON with PascalCase property names and string enum values.
-Unknown properties are ignored by `System.Text.Json`. The following table lists every
-serialized property in `AppSettings`.
+Unknown properties are ignored by `System.Text.Json`. Fresh settings use the optimized
+defaults: OpenGL presentation, match-window output, sharp-bilinear filtering, vsync on,
+integer scaling, and automatic presentation frame skipping. The following table lists
+every serialized property in `AppSettings`.
 
 | Property | Type | Default | Meaning |
 |---|---|---|---|
 | `FirstRunCompleted` | bool | `false` | Whether the first-run guide has been shown. |
 | `BiosPath` | string | `""` | Last BIOS path. |
+| `DonationEmail` | string | `""` | Optional email used to recognize a 5DO donation. |
+| `HasDonated` | bool | `false` | Cached confirmation for `DonationEmail`. |
+| `DonationLastCheckedUtc` | string? | `null` | UTC timestamp of the last successful donation check. |
 | `DiscPath` | string | `""` | Last disc path. |
 | `RecentDiscs` | string[] | `[]` | Recent disc paths, newest first, capped at 10. |
 | `SaveDirectory` | string | `""` | Save-state directory; empty means `<LocalApplicationData>/5DO/states`. |
@@ -70,6 +75,7 @@ serialized property in `AppSettings`.
 | `FixModeOverrides` | object | `{}` | Per-game fix-mode overrides, keyed by game ID. |
 | `FilterOverrides` | object | `{}` | Per-game filter overrides, keyed by game ID. |
 | `Filter` | enum string | `"SharpBilinear"` | Global presentation filter. |
+| `FrameSkip` | enum string | `"Auto"` | Presentation frame-skip policy: `Off`, `Auto`, `OneInTwo`, `OneInThree`, `OneInFour`, or `OneInFive`. Only presentation is skipped; emulation and audio always run every frame. |
 | `Aspect` | enum string | `"FourThree"` | Aspect policy. |
 | `CustomAspect` | double | `1.3333` | Width/height ratio used when `Aspect` is `Custom`. |
 | `Vsync` | bool | `true` | Request platform vsync (where supported). |
@@ -92,6 +98,13 @@ The legacy `PreferOpenGl` boolean is still read when loading older files; `false
 
 `Filter` (string): `Accurate`, `Nearest`, `SharpBilinear`, `Crt`, `Xbr`, `Hqx`,
 `Hqx3x`, `Hqx4x`, `Fsr`.
+
+`FrameSkip` (string): `Off`, `Auto`, `OneInTwo`, `OneInThree`, `OneInFour`,
+`OneInFive`. `Auto` skips a presentation frame only after three presented frames exceed
+the audio-derived frame budget; it recovers after 120 good frames. The fixed modes
+present one of every 2/3/4/5 emulated frames. In every mode the ARM CPU, CEL engine,
+DSP, timers, and CD-ROM still execute all frames, so game speed, input, audio, and save
+states are identical.
 
 `Aspect` (string): `Integer`, `FourThree`, `Stretch`, `Custom`.
 
@@ -132,6 +145,9 @@ player-1 defaults. See section 3 for the full input structure.
 {
   "FirstRunCompleted": true,
   "BiosPath": "C:\\3DO\\panafz1.bin",
+  "DonationEmail": "",
+  "HasDonated": false,
+  "DonationLastCheckedUtc": null,
   "DiscPath": "C:\\3DO\\Road Rash (USA).chd",
   "RecentDiscs": [
     "C:\\3DO\\Road Rash (USA).chd"
@@ -455,7 +471,27 @@ accepted; `settings.json` is written immediately. Changes to high-resolution mod
 restart the machine. Changes to audio settings recreate the OpenAL output if needed.
 Changing `Renderer` recreates the active presenter without restarting emulation.
 Changes to `OutputResolution`, filters, aspect, and vsync apply to the current renderer
-without restarting the machine.
+without restarting the machine. Frame-skip changes apply immediately to the running core
+loop.
+
+### Performance defaults
+
+Fresh settings target 60 fps without lowering image quality:
+
+- **OpenGL** presentation at **match-window** output resolution. The emulated frame stays
+  at its native resolution and the GPU performs the final filtered upscale.
+- **Sharp-bilinear** filtering (smooth at non-integer scale factors with far less CPU/GPU
+  cost than xBR/HQx).
+- **VSync** requested and **integer scaling** enabled.
+- **Auto** frame skip. This is presentation-only and stays off when the core meets its
+  deadline; if the host cannot present every frame, it drops presentation frames instead
+  of slowing the game down.
+- High-resolution CEL mode disabled. Use it only for titles validated at 640x480.
+
+If the machine is CPU-bound rather than presentation-bound, choose a faster filter
+(`Nearest`), reduce `OutputResolution`, or run a Release build. Auto frame skip cannot make
+the emulated CPU, CEL, or DSP faster; it only removes presentation work from the frame
+budget.
 
 ---
 

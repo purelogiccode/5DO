@@ -74,6 +74,10 @@ public sealed class CelMemory
         return plutBase == 0 ? (ushort)0 : _ram.Read16(plutBase + (offset ^ 2));
     }
 
+    /// <summary>Adds precomputed CEL cycles from a batched rasterizer loop.</summary>
+    /// <param name="cycles">Cycle count to add.</param>
+    internal void AddCycles(int cycles) => Cycles += cycles;
+
     /// <summary>Returns and clears the accumulated CEL cycles. FreeDO: <c>_madam_GetCELCycles</c>.</summary>
     /// <returns>The accumulated cycle count.</returns>
     public int TakeCycles()

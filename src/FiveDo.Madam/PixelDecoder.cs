@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 
 namespace FiveDo.Madam;
 
@@ -40,6 +41,20 @@ public sealed class PixelDecoder
             throw new ArgumentException("The PLUT must contain 32 entries.", nameof(plut));
         }
 
+        return DecodeFast(pixel, pre0, ccbFlags, plut);
+    }
+
+    /// <summary>
+    /// Decodes one CEL pixel without the public-API PLUT length check.
+    /// </summary>
+    /// <remarks>
+    /// The CEL rasterizer owns a 32-entry PLUT and calls this path once per texel, so
+    /// the length check is hoisted to its per-CEL pipeline setup. Do not call this
+    /// method with a shorter span.
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal PixelDecodeResult DecodeFast(uint pixel, uint pre0, uint ccbFlags, ReadOnlySpan<ushort> plut)
+    {
         ushort pres;
         ushort amv;
 

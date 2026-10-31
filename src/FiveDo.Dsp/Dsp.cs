@@ -989,7 +989,18 @@ public sealed class Dsp : IDsp, IStateSection
 
     private ushort ReadData(uint address)
     {
-        // FreeDO: ireadh.
+        // FreeDO: ireadh. The large instruction-memory windows are the common case;
+        // resolve them before the sparse special-register switch.
+        if (address >= 0x100 && address < 0x2ff)
+        {
+            return _imem[address];
+        }
+
+        if (address >= 0x300)
+        {
+            return _imem[address & 0x7f];
+        }
+
         switch (address)
         {
             case 0xea:
@@ -1043,6 +1054,17 @@ public sealed class Dsp : IDsp, IStateSection
     {
         // FreeDO: iwriteh.
         address &= 0x3ff;
+        if (address < 0x100)
+        {
+            return;
+        }
+
+        if (address < 0x3eb)
+        {
+            _imem[address] = value;
+            return;
+        }
+
         switch (address)
         {
             case 0x3eb:

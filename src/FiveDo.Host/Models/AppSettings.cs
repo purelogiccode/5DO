@@ -12,6 +12,10 @@ namespace FiveDo.Host;
 /// <summary>
 /// Persistent desktop settings: paths, presentation options, audio, and input bindings.
 /// </summary>
+/// <remarks>
+/// Fresh settings use the optimized video/output defaults: OpenGL, match-window output,
+/// sharp-bilinear filtering, vsync, integer scaling, and Auto presentation frame skip.
+/// </remarks>
 public sealed class AppSettings
 {
     /// <summary>Gets or sets a value indicating whether the first-run guide has been shown.</summary>
@@ -19,6 +23,15 @@ public sealed class AppSettings
 
     /// <summary>Gets or sets the last BIOS path.</summary>
     public string BiosPath { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the optional email used to recognize a donation.</summary>
+    public string DonationEmail { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets a value indicating whether a donation was confirmed for <see cref="DonationEmail"/>.</summary>
+    public bool HasDonated { get; set; }
+
+    /// <summary>Gets or sets the UTC timestamp of the last successful donation check.</summary>
+    public DateTime? DonationLastCheckedUtc { get; set; }
 
     /// <summary>Gets or sets the last disc path.</summary>
     public string DiscPath { get; set; } = string.Empty;
@@ -58,6 +71,13 @@ public sealed class AppSettings
 
     /// <summary>Gets or sets the presentation filter.</summary>
     public VideoFilter Filter { get; set; } = VideoFilter.SharpBilinear;
+
+    /// <summary>
+    /// Gets or sets the presentation frame-skip policy. The default <see cref="FrameSkipMode.Auto"/>
+    /// only skips presentation when the core loop cannot hold its deadline; emulation and
+    /// audio keep running at full speed.
+    /// </summary>
+    public FrameSkipMode FrameSkip { get; set; } = FrameSkipMode.Auto;
 
     /// <summary>Gets or sets the aspect policy.</summary>
     public AspectMode Aspect { get; set; } = AspectMode.FourThree;
