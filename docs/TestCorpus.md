@@ -128,6 +128,40 @@ All six runs completed and rendered. This is a smoke differential, not the full 
 report required to change the default. The Lemmings and Road Rash FreeDO hashes match
 the section 1.1 keys, confirming that the new option did not alter the default path.
 
+### 1.1c CEL busy timing differential (2026-10-31)
+
+The CORE-03 option was checked on the 3,000-frame boot with the same `panafz1.bin`,
+fresh NVRAM, and disc files. The FreeDO-compatible default is unchanged. Opera's busy
+model defers the CEL draw and keeps the status register busy, so titles that render
+large CELs early reach a different instruction boundary at 3,000 frames.
+
+| Title | Mode | Final PC | Frame hash | Instructions | Cycles/frame |
+|---|---|---|---:|---:|---:|
+| Lemmings | `--cel-timing freedo` | `0x0012B324` | `0x9C2E3236` | 194,135,650 | 208,356 |
+| Lemmings | `--cel-timing opera` | `0x0012B324` | `0x9C2E3236` | 194,135,650 | 208,356 |
+| Gex | `--cel-timing freedo` | `0x001105C4` | `0x05F38B50` | 209,334,971 | 208,338 |
+| Gex | `--cel-timing opera` | `0x001105C4` | `0x05F38B50` | 209,334,971 | 208,338 |
+| Road Rash | `--cel-timing freedo` | `0x000BA0F4` | `0x5E9EE515` | 171,049,511 | 208,342 |
+| Road Rash | `--cel-timing opera` | `0x000B9E9C` | `0xA39F031F` | 170,868,164 | 208,338 |
+
+All six runs completed and rendered. Lemmings and Gex are pixel-identical because their
+early boot path does not poll CEL status; Road Rash diverges at its early CEL-heavy boot
+frames, which is the expected effect of serializing CEL work. This is a smoke
+differential, not the full 594-disc report required to change the default.
+
+Four more CEL-heavy titles completed 3,000 frames with `--cel-timing opera`:
+
+| Title | Final PC | Frame hash |
+|---|---|---|
+| Alone in the Dark | `0x000C4CB4` | `0x328ABCD3` |
+| Space Ace | `0x00076458` | `0xD666228E` |
+| Wolfenstein 3D | `0x000320D8` | `0x9A3B5131` |
+| Total Eclipse | `0x000C9870` | `0xAD0C92D2` |
+
+Lemmings and Road Rash also completed 12,000 frames with the Opera model
+(`0xCE7E7A74` and `0xAEE9963B` respectively), so the deferred draw and busy deadline do
+not stall those boot paths.
+
 At 10,000 frames with input and a fresh NVRAM (pre-transposition-fix):
  
 | Title | Final PC | Frame hash | Observation |

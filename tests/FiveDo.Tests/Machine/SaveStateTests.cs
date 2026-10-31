@@ -300,6 +300,31 @@ public sealed class SaveStateTests
     }
 
     [Fact]
+    public void SaveState_RecordsCelTimingAndWarnsOnMismatch()
+    {
+        var operaCel = new EmulatorTuning { CelTiming = CelTimingMode.OperaBusy };
+        FiveDoMachine machine = CreateMachine(tuning: operaCel);
+        machine.RunFrames(2);
+        using var state = new MemoryStream();
+        machine.SaveState(state);
+
+        FiveDoMachine matching = CreateMachine(tuning: operaCel);
+        state.Position = 0;
+        matching.LoadState(state);
+        Assert.DoesNotContain(
+            matching.StateWarnings,
+            warning => warning.Contains("CEL timing", StringComparison.Ordinal));
+
+        FiveDoMachine freeDo = CreateMachine();
+        state.Position = 0;
+        freeDo.LoadState(state);
+        Assert.Contains(
+            freeDo.StateWarnings,
+            warning => warning.Contains("CEL timing", StringComparison.Ordinal)
+                && warning.Contains("OperaBusy", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void LoadState_AcceptsVersionOneStates()
     {
         FiveDoMachine machine = CreateMachine();

@@ -19,6 +19,8 @@ internal sealed record CliRunResult(
     string? GameId,
     string ArmTiming,
     string ClioTimers,
+    string CelTiming,
+    ulong CelBusyCycles,
     int CpuClock,
     uint FixMode,
     bool DspRunning,

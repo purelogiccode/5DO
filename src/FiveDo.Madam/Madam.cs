@@ -29,12 +29,25 @@ public sealed class Madam : IMadamBus, IStateSection
     private const uint SpriteContinue = 0x108;
     private const uint SpritePause = 0x10c;
 
+    // Opera Specification, CEL engine chapter: the engine renders about nine million
+    // pixels per second, and each list entry adds a small fixed fetch/decode cost.
+    private const ulong CelPixelsPerSecond = 9_000_000;
+    private const ulong CelSetupCycles = 64;
+
     private readonly uint[] _registers = new uint[RegisterCount];
     private readonly ushort[] _plut = new ushort[32];
     private readonly byte[] _pbusQueue = new byte[20];
 
     private CelEngine? _cel;
     private IRam? _celRam;
+    private CelTimingMode _celTiming = CelTimingMode.FreeDoCompatible;
+    private int _armClock = EmulatorConstants.ArmClock;
+    private bool _celDrawPending;
+    private ulong _celBusyCyclesRemaining;
+    private ulong _celBusyCyclesTotal;
+    private long _celPixelsDrawn;
+    private long _celTexelsWalked;
+    private int _celCelsProcessed;
     private int _readModulo;
     private int _writeModulo;
     private CelFsmState _fsm;
@@ -72,6 +85,65 @@ public sealed class Madam : IMadamBus, IStateSection
     }
 
     /// <summary>
+    /// Gets or sets the CEL timing model. The default is the synchronous FreeDO model;
+    /// <see cref="CelTimingMode.OperaBusy"/> defers the draw to the next CPU tick and keeps
+    /// the CEL status busy until the estimated work deadline.
+    /// </summary>
+    public CelTimingMode CelTiming
+    {
+        get => _celTiming;
+        set
+        {
+            if (value is not CelTimingMode.FreeDoCompatible and not CelTimingMode.OperaBusy)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), value, "Unknown CEL timing mode.");
+            }
+
+            _celTiming = value;
+        }
+    }
+
+    /// <summary>Gets or sets the ARM clock used to convert CEL work into busy cycles.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the clock is not positive.</exception>
+    public int ArmClock
+    {
+        get => _armClock;
+        set
+        {
+            if (value <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), value, "The ARM clock must be positive.");
+            }
+
+            _armClock = value;
+        }
+    }
+
+    /// <summary>Gets a value indicating whether a CEL list is waiting for the next CPU tick.</summary>
+    public bool CelDrawPending => _celDrawPending;
+
+    /// <summary>Gets the ARM cycles left in the current CEL busy period.</summary>
+    public ulong CelBusyCyclesRemaining => _celBusyCyclesRemaining;
+
+    /// <summary>Gets the total ARM cycles estimated for the most recent CEL list.</summary>
+    public ulong CelBusyCyclesTotal => _celBusyCyclesTotal;
+
+    /// <summary>
+    /// Gets the pixels drawn by the most recent CEL list when
+    /// <see cref="CelTimingMode.OperaBusy"/> tracking is active.
+    /// </summary>
+    public long CelPixelsDrawn => _celPixelsDrawn;
+
+    /// <summary>
+    /// Gets the source texels walked by the most recent CEL list when
+    /// <see cref="CelTimingMode.OperaBusy"/> tracking is active.
+    /// </summary>
+    public long CelTexelsWalked => _celTexelsWalked;
+
+    /// <summary>Gets the number of list entries processed by the most recent CEL list.</summary>
+    public int CelCelsProcessed => _celCelsProcessed;
+
+    /// <summary>
     /// Gets or sets the shared compatibility state used by the CEL timing heuristics.
     /// FreeDO: <c>fixmode</c>, <c>speedfixes</c>, <c>unknownflag11</c>, <c>sdf</c>.
     /// </summary>
@@ -102,7 +174,8 @@ public sealed class Madam : IMadamBus, IStateSection
     public uint Id => StateSectionIds.Madam;
 
     /// <summary>Gets the save-state section version.</summary>
-    public ushort Version => 1;
+    /// <remarks>Version 2 adds the CEL busy deadline and pending-draw flag.</remarks>
+    public ushort Version => 2;
 
     /// <summary>Resets the MADAM register file and CEL state. FreeDO: <c>_madam_Init</c>.</summary>
     public void Reset()
@@ -113,6 +186,12 @@ public sealed class Madam : IMadamBus, IStateSection
         _readModulo = 0;
         _writeModulo = 0;
         _fsm = CelFsmState.Idle;
+        _celDrawPending = false;
+        _celBusyCyclesRemaining = 0;
+        _celBusyCyclesTotal = 0;
+        _celPixelsDrawn = 0;
+        _celTexelsWalked = 0;
+        _celCelsProcessed = 0;
         _result0Temp = 0;
         _result1Temp = 0;
         _result2Temp = 0;
@@ -192,9 +271,19 @@ public sealed class Madam : IMadamBus, IStateSection
                     _fsm = CelFsmState.InProcess;
                 }
 
+                if (_celTiming == CelTimingMode.OperaBusy)
+                {
+                    // Opera replaces the pending busy period when software starts a new
+                    // list before the old deadline expires.
+                    _celDrawPending = true;
+                }
+
                 return;
             case SpriteStop:
                 _fsm = CelFsmState.Idle;
+                _celDrawPending = false;
+                _celBusyCyclesRemaining = 0;
+                _celBusyCyclesTotal = 0;
                 _registers[0x5a4] = 0;
                 return;
             case SpriteContinue:
@@ -259,6 +348,9 @@ public sealed class Madam : IMadamBus, IStateSection
         if (Ram is null)
         {
             _fsm = CelFsmState.Idle;
+            _celDrawPending = false;
+            _celBusyCyclesRemaining = 0;
+            _celBusyCyclesTotal = 0;
             return 0;
         }
 
@@ -269,7 +361,84 @@ public sealed class Madam : IMadamBus, IStateSection
         }
 
         _cel.TraceWriter = CelTraceWriter;
-        return _cel.HandleCel();
+        _cel.TrackWork = _celTiming == CelTimingMode.OperaBusy;
+        var cycles = _cel.HandleCel();
+        _celPixelsDrawn = _cel.PixelsDrawn;
+        _celTexelsWalked = _cel.TexelsWalked;
+        _celCelsProcessed = _cel.CelsProcessed;
+
+        if (_celTiming == CelTimingMode.FreeDoCompatible)
+        {
+            _fsm = CelFsmState.Idle;
+            _celDrawPending = false;
+            _celBusyCyclesRemaining = 0;
+            _celBusyCyclesTotal = 0;
+        }
+        else
+        {
+            StartCelBusy();
+        }
+
+        return cycles;
+    }
+
+    /// <summary>
+    /// Advances the CEL state machine before a CPU instruction. FreeDO: no equivalent;
+    /// Opera: <c>opera_madam_cel_tick</c>.
+    /// </summary>
+    /// <param name="elapsedCycles">ARM cycles executed since the previous tick.</param>
+    /// <returns><see langword="true"/> when a pending CEL list was drawn.</returns>
+    public bool TickCel(uint elapsedCycles)
+    {
+        if (_celTiming != CelTimingMode.OperaBusy || _fsm != CelFsmState.InProcess)
+        {
+            return false;
+        }
+
+        if (_celDrawPending)
+        {
+            HandleCel();
+            return true;
+        }
+
+        if (_celBusyCyclesRemaining > elapsedCycles)
+        {
+            _celBusyCyclesRemaining -= elapsedCycles;
+            return false;
+        }
+
+        _celBusyCyclesRemaining = 0;
+        _fsm = CelFsmState.Idle;
+        return false;
+    }
+
+    private void StartCelBusy()
+    {
+        _celDrawPending = false;
+
+        // Opera paces the engine by the larger of rendered pixels and walked source
+        // texels, plus one fixed setup cost per list entry.
+        var work = Math.Max(_celPixelsDrawn, _celTexelsWalked);
+        var busy = work <= 0
+            ? 0
+            : ((ulong)work * (uint)_armClock) / CelPixelsPerSecond;
+        busy += (ulong)Math.Max(_celCelsProcessed, 0) * CelSetupCycles;
+
+        _celBusyCyclesRemaining = busy;
+        _celBusyCyclesTotal = busy;
+
+        if (busy == 0)
+        {
+            _fsm = CelFsmState.Idle;
+        }
+        else
+        {
+            _fsm = CelFsmState.InProcess;
+        }
+
+        CelTraceWriter?.WriteLine(
+            $"cel-list cels={_celCelsProcessed} pixels={_celPixelsDrawn} "
+            + $"texels={_celTexelsWalked} busy={busy}");
     }
 
     /// <summary>Gets or sets an optional diagnostic writer for CEL commands.</summary>
@@ -298,6 +467,9 @@ public sealed class Madam : IMadamBus, IStateSection
         writer.WriteDouble(_result1Temp);
         writer.WriteDouble(_result2Temp);
         writer.WriteDouble(_result3Temp);
+        writer.WriteUInt32(_celDrawPending ? 1u : 0u);
+        writer.WriteUInt64(_celBusyCyclesRemaining);
+        writer.WriteUInt64(_celBusyCyclesTotal);
     }
 
     /// <summary>Reads the MADAM save-state payload. FreeDO: <c>_madam_Load</c>.</summary>
@@ -323,6 +495,37 @@ public sealed class Madam : IMadamBus, IStateSection
         _result1Temp = reader.ReadDouble();
         _result2Temp = reader.ReadDouble();
         _result3Temp = reader.ReadDouble();
+        _celPixelsDrawn = 0;
+        _celTexelsWalked = 0;
+        _celCelsProcessed = 0;
+
+        if (reader is StateSectionReader { Version: 1 })
+        {
+            // Version-1 states have no timing fields. A running or suspended FSM implies
+            // that the list has not been drawn yet.
+            _celDrawPending = _fsm is CelFsmState.InProcess or CelFsmState.Suspended;
+            _celBusyCyclesRemaining = 0;
+            _celBusyCyclesTotal = 0;
+            return;
+        }
+
+        var pending = reader.ReadUInt32();
+        if (pending > 1)
+        {
+            throw new InvalidStateException($"Invalid CEL pending-draw flag {pending}.");
+        }
+
+        var busyRemaining = reader.ReadUInt64();
+        var busyTotal = reader.ReadUInt64();
+        if (busyRemaining > busyTotal)
+        {
+            throw new InvalidStateException(
+                $"Invalid CEL busy deadline: {busyRemaining} of {busyTotal} cycles remain.");
+        }
+
+        _celDrawPending = pending != 0;
+        _celBusyCyclesRemaining = busyRemaining;
+        _celBusyCyclesTotal = busyTotal;
     }
 
     /// <summary>

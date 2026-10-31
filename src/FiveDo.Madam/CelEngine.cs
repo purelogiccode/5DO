@@ -102,6 +102,47 @@ internal sealed class CelEngine
     /// <summary>Gets or sets an optional diagnostic writer for CEL commands.</summary>
     internal TextWriter? TraceWriter { get; set; }
 
+    /// <summary>
+    /// Gets the pixels written by the most recent list while work tracking is enabled.
+    /// Opera: <c>g_CEL_PIXELS_DRAWN</c>.
+    /// </summary>
+    internal long PixelsDrawn { get; private set; }
+
+    /// <summary>
+    /// Gets the source texels walked by the most recent list while work tracking is
+    /// enabled. Opera: <c>g_CEL_TEXELS_WALKED</c>.
+    /// </summary>
+    internal long TexelsWalked { get; private set; }
+
+    /// <summary>Gets the list entries processed by the most recent list. Opera: <c>g_CEL_LIST_CELS</c>.</summary>
+    internal int CelsProcessed { get; private set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the rasterizer should count work for the
+    /// CEL busy estimate. The default FreeDO path leaves this off to keep its hot loops
+    /// unchanged.
+    /// </summary>
+    internal bool TrackWork { get; set; }
+
+    /// <summary>Counts rendered pixels toward the CEL busy estimate.</summary>
+    /// <param name="count">Pixels written by a rasterizer span or loop.</param>
+    internal void AddPixels(int count)
+    {
+        if (TrackWork && count > 0)
+        {
+            PixelsDrawn += count;
+        }
+    }
+
+    /// <summary>Counts one source texel walked by an arbitrary-quad CEL.</summary>
+    internal void AddTexel()
+    {
+        if (TrackWork)
+        {
+            TexelsWalked++;
+        }
+    }
+
     private long _celNumber;
     private uint _currentCcb;
     private int _arbitraryTraceCount;
@@ -164,6 +205,9 @@ internal sealed class CelEngine
     {
         // FreeDO: __smallcicles=CELCYCLES=0.
         _ = _memory.TakeCycles();
+        PixelsDrawn = 0;
+        TexelsWalked = 0;
+        CelsProcessed = 0;
 
         _nextCcb = _madam.ReadRegister(NextCcbRegister);
         _madam.WriteRegister(CcbStatus, _madam.ReadRegister(CcbStatus) | 0x10u);
@@ -171,6 +215,7 @@ internal sealed class CelEngine
         var stop = false;
         while (_nextCcb != 0 && !stop)
         {
+            CelsProcessed++;
             _currentCcb = _nextCcb;
             CcbHeader header = _parser.Parse(_nextCcb & 0xfffffcu);
             _flags = header.Flags;
@@ -274,7 +319,6 @@ internal sealed class CelEngine
         }
 
         _madam.WriteRegister(NextCcbRegister, _nextCcb);
-        _madam.Fsm = CelFsmState.Idle;
         return _memory.TakeCycles();
     }
 }

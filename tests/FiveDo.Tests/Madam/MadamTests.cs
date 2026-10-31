@@ -1,4 +1,7 @@
+using System;
+using System.IO;
 using FiveDo.Core;
+using FiveDo.Madam;
 using FiveDo.Memory;
 using FiveDo.Tests.TestUtilities;
 using CelFsmState = FiveDo.Madam.CelFsmState;
@@ -252,5 +255,246 @@ public sealed class MadamTests
         Assert.Equal(0x1234u, copy.Peek(0x600));
         Assert.Equal(9, copy.PbusQueue[0]);
         Assert.Equal(0xff, copy.PbusQueue[3]);
+    }
+
+    [Fact]
+    public void FreeDoCelTiming_DrawsSynchronouslyAndReturnsToIdle()
+    {
+        (FiveDoMemory memory, MadamChip madam) = CreatePackedCelScene();
+        _ = memory;
+
+        madam.CelTiming = CelTimingMode.FreeDoCompatible;
+        madam.Poke(0x100, 0);
+        var cycles = madam.HandleCel();
+
+        Assert.True(cycles > 0);
+        Assert.Equal(CelFsmState.Idle, madam.Fsm);
+        Assert.False(madam.CelDrawPending);
+        Assert.Equal(0UL, madam.CelBusyCyclesRemaining);
+        Assert.Equal(0, madam.CelPixelsDrawn);
+        Assert.Equal(1, madam.CelCelsProcessed);
+    }
+
+    [Fact]
+    public void OperaCelTiming_DefersTheDrawAndHoldsStatusBusyUntilTheDeadline()
+    {
+        (FiveDoMemory memory, MadamChip madam) = CreatePackedCelScene();
+        _ = memory;
+
+        madam.Poke(0x100, 0);
+
+        Assert.Equal(CelFsmState.InProcess, madam.Fsm);
+        Assert.True(madam.CelDrawPending);
+        Assert.Equal(0x10u, madam.Peek(0x28));
+
+        Assert.True(madam.TickCel(0));
+        Assert.False(madam.CelDrawPending);
+        Assert.Equal(CelFsmState.InProcess, madam.Fsm);
+        Assert.Equal(0x10u, madam.Peek(0x28));
+        Assert.Equal(4, madam.CelPixelsDrawn);
+        Assert.Equal(1, madam.CelCelsProcessed);
+        Assert.Equal(69UL, madam.CelBusyCyclesRemaining);
+
+        Assert.False(madam.TickCel(68));
+        Assert.Equal(1UL, madam.CelBusyCyclesRemaining);
+        Assert.Equal(CelFsmState.InProcess, madam.Fsm);
+
+        Assert.False(madam.TickCel(1));
+        Assert.Equal(0UL, madam.CelBusyCyclesRemaining);
+        Assert.Equal(CelFsmState.Idle, madam.Fsm);
+        Assert.Equal(0u, madam.Peek(0x28));
+    }
+
+    [Fact]
+    public void OperaCelTiming_PauseFreezesTheBusyCountdown()
+    {
+        (FiveDoMemory memory, MadamChip madam) = CreatePackedCelScene();
+        _ = memory;
+
+        madam.Poke(0x100, 0);
+        Assert.True(madam.TickCel(0));
+        ulong busy = madam.CelBusyCyclesRemaining;
+
+        madam.Poke(0x10c, 0);
+        Assert.Equal(CelFsmState.Suspended, madam.Fsm);
+        Assert.False(madam.TickCel(10_000));
+        Assert.Equal(busy, madam.CelBusyCyclesRemaining);
+
+        madam.Poke(0x108, 0);
+        Assert.Equal(CelFsmState.InProcess, madam.Fsm);
+        Assert.False(madam.TickCel((uint)busy));
+        Assert.Equal(CelFsmState.Idle, madam.Fsm);
+    }
+
+    [Fact]
+    public void OperaCelTiming_StartDuringBusyReplacesThePendingPeriod()
+    {
+        (FiveDoMemory memory, MadamChip madam) = CreatePackedCelScene();
+        _ = memory;
+
+        madam.Poke(0x100, 0);
+        Assert.True(madam.TickCel(0));
+        ulong first = madam.CelBusyCyclesRemaining;
+
+        madam.Poke(0x5a4, 0x100);
+        madam.Poke(0x100, 0);
+        Assert.True(madam.CelDrawPending);
+        Assert.True(madam.TickCel(10));
+
+        Assert.Equal(first, madam.CelBusyCyclesRemaining);
+        Assert.Equal(4, madam.CelPixelsDrawn);
+        Assert.Equal(1, madam.CelCelsProcessed);
+    }
+
+    [Fact]
+    public void OperaCelTiming_SaveLoadRestoresTheBusyDeadline()
+    {
+        (FiveDoMemory memory, MadamChip madam) = CreatePackedCelScene();
+        _ = memory;
+
+        madam.Poke(0x100, 0);
+        Assert.True(madam.TickCel(0));
+        Assert.False(madam.TickCel(10));
+
+        var writer = new StateWriter();
+        madam.Save(writer);
+        var copy = new MadamChip { CelTiming = CelTimingMode.OperaBusy, ArmClock = 12_500_000 };
+        copy.Load(new StateReader(writer.ToArray()));
+
+        Assert.Equal(CelFsmState.InProcess, copy.Fsm);
+        Assert.False(copy.CelDrawPending);
+        Assert.Equal(madam.CelBusyCyclesRemaining, copy.CelBusyCyclesRemaining);
+        Assert.False(copy.TickCel((uint)copy.CelBusyCyclesRemaining));
+        Assert.Equal(CelFsmState.Idle, copy.Fsm);
+    }
+
+    [Fact]
+    public void OperaCelTiming_WritesBusyTraceLine()
+    {
+        (FiveDoMemory memory, MadamChip madam) = CreatePackedCelScene();
+        _ = memory;
+        using var writer = new StringWriter();
+        madam.CelTraceWriter = writer;
+
+        madam.Poke(0x100, 0);
+        Assert.True(madam.TickCel(0));
+
+        var trace = writer.ToString();
+        Assert.Contains("cel-list cels=1 pixels=4 texels=0 busy=69", trace, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void LoadVersionOneState_DerivesThePendingFlagFromTheFsm()
+    {
+        (FiveDoMemory memory, MadamChip madam) = CreatePackedCelScene();
+        _ = memory;
+        madam.Poke(0x100, 0);
+
+        var writer = new StateWriter();
+        writer.WriteSection(new VersionOneSection(madam));
+
+        var copy = new MadamChip { CelTiming = CelTimingMode.OperaBusy, ArmClock = 12_500_000 };
+        var reader = new StateReader(writer.ToArray());
+        copy.Load(reader.ReadSection());
+
+        Assert.Equal(CelFsmState.InProcess, copy.Fsm);
+        Assert.True(copy.CelDrawPending);
+        Assert.Equal(0UL, copy.CelBusyCyclesRemaining);
+    }
+
+    [Fact]
+    public void OperaCelTiming_EmptyListReturnsToIdle()
+    {
+        var memory = new FiveDoMemory();
+        var madam = new MadamChip
+        {
+            Ram = memory.Ram,
+            CelTiming = CelTimingMode.OperaBusy,
+        };
+
+        madam.Poke(0x100, 0);
+        Assert.True(madam.TickCel(0));
+
+        Assert.Equal(CelFsmState.Idle, madam.Fsm);
+        Assert.Equal(0UL, madam.CelBusyCyclesRemaining);
+    }
+
+    private static (FiveDoMemory Memory, MadamChip Madam) CreatePackedCelScene()
+    {
+        const uint ccb = 0x100;
+        const uint source = 0x200;
+        const uint frameBuffer = 0x2000;
+
+        var memory = new FiveDoMemory();
+        var madam = new MadamChip
+        {
+            Ram = memory.Ram,
+            CelTiming = CelTimingMode.OperaBusy,
+            ArmClock = 12_500_000,
+        };
+
+        madam.Poke(0x130, 0x1414);
+        madam.Poke(0x134, 0x00070007);
+        madam.Poke(0x138, frameBuffer);
+        madam.Poke(0x13c, frameBuffer);
+
+        CcbControl flags = CcbControl.NextPointerAbsolute
+                           | CcbControl.SourcePointerAbsolute
+                           | CcbControl.LoadSize
+                           | CcbControl.LoadPixelProcessor
+                           | CcbControl.HasPosition
+                           | CcbControl.Clockwise
+                           | CcbControl.Last;
+
+        memory.Ram.Write32(ccb, (uint)flags);
+        memory.Ram.Write32(ccb + 4, 0);
+        memory.Ram.Write32(ccb + 8, source);
+        memory.Ram.Write32(ccb + 12, 0);
+        memory.Ram.Write32(ccb + 16, 0);
+        memory.Ram.Write32(ccb + 20, 0);
+        memory.Ram.Write32(ccb + 24, 0x00200000);
+        memory.Ram.Write32(ccb + 28, 0);
+        memory.Ram.Write32(ccb + 32, 0);
+        memory.Ram.Write32(ccb + 36, 0x00020000);
+        memory.Ram.Write32(ccb + 40, 0x00001f00);
+
+        memory.Ram.Write32(source, 6 | 0x10);
+        memory.Ram.Write32(source + 4, 0);
+        WriteBytes(memory, source + 8, 0x7f, 0xfe);
+
+        madam.Poke(0x5a4, ccb);
+        return (memory, madam);
+    }
+
+    private static void WriteBytes(FiveDoMemory memory, uint buffer, params byte[] bytes)
+    {
+        for (var i = 0; i < bytes.Length; i++)
+        {
+            memory.Ram.Write8(buffer + ((uint)i ^ 3), bytes[i]);
+        }
+    }
+
+    private sealed class VersionOneSection : IStateSection
+    {
+        private readonly MadamChip _madam;
+
+        internal VersionOneSection(MadamChip madam)
+        {
+            _madam = madam;
+        }
+
+        public uint Id => StateSectionIds.Madam;
+
+        public ushort Version => 1;
+
+        public void Save(IStateWriter writer)
+        {
+            _madam.Save(writer);
+        }
+
+        public void Load(IStateReader reader)
+        {
+            throw new NotSupportedException();
+        }
     }
 }

@@ -3,7 +3,7 @@
 **Product:** 5DO
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Current status (2026-10-31, thirtieth pass):** **972 tests pass**; the v1.0
+**Current status (2026-10-31, thirty-second pass):** **1003 tests pass**; the v1.0
 release is deliberately deferred. The first **M13 full-collection loadability sweep**
 is complete: 594 discs tested (589 in `J:\Panasonic 3DO` plus 5 in
 `G:\MAME\MAME Software List CHDs\3do`), with **576 `Loadable/Rendered`, 13
@@ -114,6 +114,21 @@ smoke differential is recorded in [`TestCorpus.md`](TestCorpus.md) 1.1b. The
 full-collection differential remains the acceptance step before the Opera scheduler can
 become a default. **988 tests pass.** See [`PortingNotes.md`](PortingNotes.md) 12.16.
 
+**MADAM CEL busy timing option (2026-10-31, thirty-second pass):** CORE-03's option
+surface is implemented. `CelTimingMode.FreeDoCompatible` keeps the synchronous draw;
+`CelTimingMode.OperaBusy` defers the list to the next CPU tick, holds the status
+register busy, and expires an estimated deadline based on rendered pixels, walked
+texels, and list entries (nine million pixels per second plus 64 setup cycles per
+entry). The mode is per-instance, exposed through `--cel-timing freedo|opera` and
+Settings > Emulation, reported in `run --json`, covered by unit and synthetic-ROM
+integration tests, and recorded in the Options section (version 3) with a mismatch
+warning. The Madam section is now version 2 (pending draw and busy deadline); older
+sections load with the pending flag derived from the FSM. The FreeDO default is
+unchanged, and a three-title 3,000-frame smoke differential is recorded in
+[`TestCorpus.md`](TestCorpus.md) 1.1c. The full-collection differential remains the
+acceptance step before the Opera busy model can become a default. **1003 tests pass.**
+See [`PortingNotes.md`](PortingNotes.md) 12.17.
+
 **Compatibility-sweep and high-resolution research plan (2026-10-30, twenty-eighth
 pass):** v1.0 release work is deliberately deferred. The next active milestone is
 **M13, a full-collection loadability and in-game sweep** of the local 3DO library
@@ -129,7 +144,7 @@ voluntary donations rather than sales. The local Linux validation target is the
 Hyper-V VM `LinuxMint` (`D:\Hyper-V\VMs\LinuxMint`). **954 tests pass before the new
 sweep documentation/tooling; the docs/tools themselves add no runtime tests.**
 
-**Last updated:** 2026-10-30
+**Last updated:** 2026-10-31
 
 ---
 

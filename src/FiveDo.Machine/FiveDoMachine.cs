@@ -67,6 +67,8 @@ public sealed class FiveDoMachine
             Fifo = Clio,
             Bus = Memory.Bus,
             Ram = Memory.Ram,
+            CelTiming = Tuning.CelTiming,
+            ArmClock = Tuning.ArmClock,
         };
         Madam.Compatibility = Compatibility;
         Xbus = new XbusChip { Interrupts = Clio };
@@ -382,12 +384,14 @@ public sealed class FiveDoMachine
 
         ArmTimingMode? stateArmTiming = null;
         ClioTimerMode? stateClioTimers = null;
+        CelTimingMode? stateCelTiming = null;
         while (reader.TryReadSection(out StateSectionReader? section))
         {
             var supportedVersion = section.Version == 1
                 || (section.Id == StateSectionIds.Quartz && section.Version <= 3)
                 || (section.Id == StateSectionIds.Clio && section.Version == 2)
-                || (section.Id == StateSectionIds.Options && section.Version == 2);
+                || (section.Id == StateSectionIds.Madam && section.Version == 2)
+                || (section.Id == StateSectionIds.Options && section.Version <= 3);
             if (!supportedVersion)
             {
                 throw new InvalidStateException($"Unsupported section {section.Id} version {section.Version}.");
@@ -430,6 +434,7 @@ public sealed class FiveDoMachine
                     options.Load(section);
                     stateArmTiming = options.LoadedArmTiming;
                     stateClioTimers = options.LoadedClioTimers;
+                    stateCelTiming = options.LoadedCelTiming;
                     break;
                 case StateSectionIds.Machine:
                     new MachineFrameSection(_frame, Compatibility).Load(section);
@@ -457,6 +462,12 @@ public sealed class FiveDoMachine
         {
             _stateWarnings.Add(
                 $"State CLIO timer mode {savedClioTimers} differs from the machine mode {Tuning.ClioTimers}.");
+        }
+
+        if (stateCelTiming is { } savedCelTiming && savedCelTiming != Tuning.CelTiming)
+        {
+            _stateWarnings.Add(
+                $"State CEL timing mode {savedCelTiming} differs from the machine mode {Tuning.CelTiming}.");
         }
 
         // A command-line/front-end override survives loads of states written before the
@@ -518,10 +529,20 @@ public sealed class FiveDoMachine
         var total = 0;
         var batch = 0;
         var frameCycles = Tuning.ArmClock / 60;
+        var celBusyTiming = Tuning.CelTiming == CelTimingMode.OperaBusy;
+        uint celElapsedCycles = 0;
 
         while (total < frameCycles)
         {
-            if (Madam.Fsm == CelFsmState.InProcess)
+            if (celBusyTiming)
+            {
+                // Opera draws a pending list and expires the busy deadline before each
+                // ARM instruction, so the CPU observes CEL status at instruction
+                // granularity. The FreeDO path below keeps its synchronous draw.
+                Madam.TickCel(celElapsedCycles);
+                celElapsedCycles = 0;
+            }
+            else if (Madam.Fsm == CelFsmState.InProcess)
             {
                 Madam.HandleCel();
                 Madam.Fsm = CelFsmState.Idle;
@@ -534,7 +555,13 @@ public sealed class FiveDoMachine
                 instructionObserver(pc, Cpu.Cpsr, Memory.Bus.Read32(pc));
             }
 
-            batch += Cpu.Step();
+            var stepCycles = Cpu.Step();
+            batch += stepCycles;
+            if (celBusyTiming)
+            {
+                celElapsedCycles += (uint)stepCycles;
+            }
+
             if (batch < 16)
             {
                 continue;

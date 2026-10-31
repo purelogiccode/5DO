@@ -58,6 +58,11 @@ public static class AppSettingsStore
                 settings.ClioTimers = ClioTimerMode.FreeDoCompatible;
             }
 
+            if (!Enum.IsDefined(settings.CelTiming))
+            {
+                settings.CelTiming = CelTimingMode.FreeDoCompatible;
+            }
+
             return settings;
         }
         catch (JsonException exception)

@@ -703,10 +703,44 @@ M1 implements the section primitive used by all later chips:
 - The CLI exposes `--clio-timers freedo|opera` on `run` and `trace`; Settings >
   Emulation exposes the same choice. `run --json` reports `clioTimers`. Changing the
   mode recreates the desktop machine.
-- Save states record the mode in the optional `Options` section (version 2). Quartz
-  section version 3 stores the Opera slot, gap flag, and 16.16 accumulator; Clio section
-  version 2 stores the cascade carry. Version-1/2 sections still load with a reset
-  timer scheduler. A mode mismatch is a warning, not a rejection.
+- Save states record the mode in the optional `Options` section (version 2 at the time;
+  the section is version 3 after the CEL timing pass). Quartz section version 3 stores
+  the Opera slot, gap flag, and 16.16 accumulator; Clio section version 2 stores the
+  cascade carry. Version-1/2 sections still load with a reset timer scheduler. A mode
+  mismatch is a warning, not a rejection.
 - Do not make the Opera scheduler the default until a full-collection differential
   shows it is safe. The 3,000-frame smoke keys in `TestCorpus.md` show the expected
   timing divergence.
+
+### 12.17 MADAM CEL busy timing (2026-10-31)
+
+- `CelTimingMode.FreeDoCompatible` keeps the original synchronous model: `RunFrame`
+  draws the CEL list as soon as it sees `Fsm == InProcess` and returns the FSM to idle.
+  It remains the default so golden frames and existing states are unchanged.
+- `CelTimingMode.OperaBusy` follows `opera_madam.c`:
+  `opera_madam_cel_tick()` runs before each ARM instruction. A `SPRSTRT` write sets a
+  pending-draw flag; the next tick draws the whole list, then keeps `Fsm == InProcess`
+  and the status register at `0x10` until the estimated deadline expires. A `SPRSTRT`
+  while busy replaces the pending period; `SPRPAUS` freezes the countdown and
+  `SPRCNTU` resumes it.
+- The deadline mirrors Opera's work estimate: the larger of rendered pixels and walked
+  source texels, divided by nine million pixels per second and scaled by the ARM clock,
+  plus 64 setup cycles per list entry. The rasterizer counts one pixel per framebuffer
+  write (one logical pixel in high-resolution mode, not two planes) and one texel per
+  arbitrary-quad walk.
+- The CEL work runs in parallel with the CPU, as it does on hardware and in Opera; the
+  estimate is compared against elapsed CPU cycles and is not added to the Quartz
+  accumulators. The `RunFrame` loop ticks the CEL state before each instruction, so
+  the guest observes the busy status at instruction granularity.
+- The CLI exposes `--cel-timing freedo|opera` on `run` and `trace`; Settings >
+  Emulation exposes the same choice. `run --json` reports `celTiming` and the remaining
+  `celBusyCycles`. The CEL trace adds a `cel-list` line with the list entry, pixel,
+  texel, and busy-cycle totals.
+- Save states record the mode in the Options section (version 3) and the pending/busy
+  fields in the Madam section (version 2). Version-1 Madam sections derive the pending
+  flag from the FSM; version-1/2 Options sections default the mode to FreeDO-compatible.
+  A mode mismatch is a warning, not a rejection.
+- Do not make the Opera busy model the default until a full-collection differential
+  shows it is safe. The 3,000-frame smoke keys in `TestCorpus.md` show the expected
+  divergence: Lemmings and Gex are unchanged, while Road Rash reaches a different boot
+  frame because its early CELs now consume time.

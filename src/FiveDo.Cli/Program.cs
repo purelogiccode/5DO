@@ -220,6 +220,7 @@ internal static class Program
             HighResolution = HasFlag(args, "--high-res"),
             ArmTiming = ParseArmTiming(options.Get("--arm-timing")),
             ClioTimers = ParseClioTimers(options.Get("--clio-timers")),
+            CelTiming = ParseCelTiming(options.Get("--cel-timing")),
             ArmClock = ParseCpuClock(options.Get("--cpu-clock")),
             RandomSeed = ParseRandomSeed(options.Get("--random-seed")),
             FixMode = fixMode,
@@ -641,6 +642,8 @@ internal static class Program
             GameId: gameId,
             ArmTiming: machine.Tuning.ArmTiming.ToString(),
             ClioTimers: machine.Tuning.ClioTimers.ToString(),
+            CelTiming: machine.Tuning.CelTiming.ToString(),
+            CelBusyCycles: machine.Madam.CelBusyCyclesRemaining,
             CpuClock: machine.Tuning.ArmClock,
             FixMode: (uint)machine.Compatibility.FixMode,
             DspRunning: machine.Dsp.IsRunning,
@@ -745,6 +748,7 @@ internal static class Program
             HighResolution = HasFlag(args, "--high-res"),
             ArmTiming = ParseArmTiming(options.Get("--arm-timing")),
             ClioTimers = ParseClioTimers(options.Get("--clio-timers")),
+            CelTiming = ParseCelTiming(options.Get("--cel-timing")),
             ArmClock = ParseCpuClock(options.Get("--cpu-clock")),
             RandomSeed = ParseRandomSeed(options.Get("--random-seed")),
             FixMode = fixMode,
@@ -1714,6 +1718,8 @@ internal static class Program
         Console.WriteLine($"game id:     {result.GameId}");
         Console.WriteLine($"arm timing:  {result.ArmTiming}");
         Console.WriteLine($"clio timers: {result.ClioTimers}");
+        Console.WriteLine($"cel timing:  {result.CelTiming}");
+        Console.WriteLine($"cel busy:    {result.CelBusyCycles} cycles");
         Console.WriteLine($"cpu clock:   {result.CpuClock / 1_000_000.0:0.###} MHz");
         Console.WriteLine($"fix mode:    0x{result.FixMode:x8}");
         Console.WriteLine($"dsp running: {result.DspRunning}");
@@ -1804,6 +1810,28 @@ internal static class Program
 
         throw new ArgumentException(
             $"Invalid --clio-timers value '{value}'; expected freedo or opera.",
+            nameof(value));
+    }
+
+    private static CelTimingMode ParseCelTiming(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)
+            || string.Equals(value, "freedo", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "freedo-compatible", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "sync", StringComparison.OrdinalIgnoreCase))
+        {
+            return CelTimingMode.FreeDoCompatible;
+        }
+
+        if (string.Equals(value, "opera", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "opera-busy", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "busy", StringComparison.OrdinalIgnoreCase))
+        {
+            return CelTimingMode.OperaBusy;
+        }
+
+        throw new ArgumentException(
+            $"Invalid --cel-timing value '{value}'; expected freedo or opera.",
             nameof(value));
     }
 
@@ -1945,14 +1973,14 @@ internal static class Program
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--script-base absolute|state] [--autopilot road] [--progress N] [--cel-trace path] [--pbus-trace path]");
         Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--prefetch]");
-        Console.WriteLine("             [--arm-timing freedo|arm60] [--clio-timers freedo|opera]");
+        Console.WriteLine("             [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
         Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--realtime] [--json]");
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
         Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path] [--high-res] [--prefetch]");
-        Console.WriteLine("             [--arm-timing freedo|arm60] [--clio-timers freedo|opera]");
+        Console.WriteLine("             [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
         Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--fix-mode 0xMASK] [--no-game-fixes]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");

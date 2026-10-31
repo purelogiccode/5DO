@@ -43,6 +43,7 @@ internal sealed class CelRasterizer
     private uint _flagsRaw;
     private ushort[] _plut = null!;
     private bool _resScale;
+    private bool _trackWork;
 
     internal CelRasterizer(CelEngine engine)
     {
@@ -69,6 +70,7 @@ internal sealed class CelRasterizer
         _flagsRaw = (uint)_engine.Flags;
         _plut = _engine.Madam.PlutEntries;
         _resScale = ResScale != 0;
+        _trackWork = _engine.TrackWork;
     }
 
     /// <summary>Renders a packed CEL. FreeDO: <c>DrawPackedCel_New</c>.</summary>
@@ -939,6 +941,10 @@ internal sealed class CelRasterizer
                             _pre1,
                             _celOriginVh);
                         _ram.Write16(unchecked(_frameBufferTarget + (uint)writeAddress) ^ 2, pixel);
+                        if (_trackWork)
+                        {
+                            _engine.AddPixels(1);
+                        }
                         pixels++;
                     }
 
@@ -989,6 +995,10 @@ internal sealed class CelRasterizer
         int yD)
     {
         CelGeometry geometry = _engine.Geometry;
+        if (_trackWork)
+        {
+            _engine.AddTexel();
+        }
         if (_engine.TraceWriter is not null)
         {
             _engine.TraceArbitrary(xA, yA, xB, yB, xC, yC, xD, yD);
@@ -1259,6 +1269,11 @@ internal sealed class CelRasterizer
                 }
 
                 _ram.Write16(unchecked(_frameBufferTarget + (uint)writeAddress) ^ 2, (ushort)pixel);
+                if (_trackWork)
+                {
+                    _engine.AddPixels(1);
+                }
+
                 readAddress += 4;
                 writeAddress += 4;
             }
@@ -1411,6 +1426,11 @@ internal sealed class CelRasterizer
 
     private void WritePixel(uint target, int x, int y, ushort value, int modulo)
     {
+        if (_trackWork)
+        {
+            _engine.AddPixels(1);
+        }
+
         var offset = Xy2Off((x >> ResScale) << 2, y, modulo);
         if (_resScale)
         {

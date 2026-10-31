@@ -16,7 +16,10 @@ save-state snapshot, `--cpu-clock 0.5x-4x`, and `--random-seed` are implemented 
 tests. The CORE-02 CLIO timer option (`--clio-timers freedo|opera`) now implements
 Opera's per-slot scan and cascade carry behind the safe FreeDO-compatible default, with
 a state snapshot and a 3,000-frame smoke differential in `TestCorpus.md` 1.1b.
-**988 tests pass.**
+The CORE-03 CEL option (`--cel-timing freedo|opera`) now implements Opera's deferred
+draw and pixel/texel busy deadline behind the unchanged synchronous default, with a
+Madam section v2 busy snapshot, an Options v3 mode snapshot, and a three-title
+3,000-frame smoke differential in `TestCorpus.md` 1.1c. **1003 tests pass.**
 The v1.0 release is deliberately deferred: the next work is a BIOS-aware sweep and
 5DO status merge (M13), then high-resolution CEL research (M14). The project is
 **donationware** (non-commercial, source-available, voluntary donations only). See
@@ -180,7 +183,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 926 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 1003 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and

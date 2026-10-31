@@ -2,6 +2,16 @@
 
 ## 0. Current handoff (2026-10-30)
 
+**2026-10-31 update:** the CORE-03 MADAM CEL busy option is implemented. The default
+`--cel-timing freedo` path is unchanged; `--cel-timing opera` defers the CEL draw to the
+next CPU tick and holds the status register busy for the estimated pixel/texel work.
+Settings > Emulation exposes the same choice, `run --json` reports `celTiming` and
+`celBusyCycles`, and save states record the mode in the Options section (v3) plus the
+pending/busy fields in the Madam section (v2). The 3,000-frame smoke differential is in
+[`TestCorpus.md`](TestCorpus.md) 1.1c. Do not redo this option; the remaining work is the
+full-collection differential, a CEL-status polling title, and a frame-time check before
+considering it the default. **1003 tests pass.**
+
 **Goal:** finish the BIOS-aware compatibility triage, fill the 5DO statuses, and then
 start high-resolution CEL research. Do not work on gameplay depth and do not cut a
 release yet.

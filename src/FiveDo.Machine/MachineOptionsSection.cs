@@ -26,14 +26,20 @@ internal sealed class MachineOptionsSection : IStateSection
     public uint Id => StateSectionIds.Options;
 
     /// <summary>Gets the save-state section version.</summary>
-    /// <remarks>Version 2 adds the CLIO timer mode; version-1 states default to FreeDO-compatible.</remarks>
-    public ushort Version => 2;
+    /// <remarks>
+    /// Version 2 adds the CLIO timer mode; version 3 adds the MADAM CEL timing mode.
+    /// Version-1 and version-2 states default the missing fields to FreeDO-compatible.
+    /// </remarks>
+    public ushort Version => 3;
 
     /// <summary>Gets the ARM timing mode read from a state, or <see langword="null"/> when absent.</summary>
     internal ArmTimingMode? LoadedArmTiming { get; private set; }
 
     /// <summary>Gets the CLIO timer mode read from a state, or <see langword="null"/> when absent.</summary>
     internal ClioTimerMode? LoadedClioTimers { get; private set; }
+
+    /// <summary>Gets the CEL timing mode read from a state, or <see langword="null"/> when absent.</summary>
+    internal CelTimingMode? LoadedCelTiming { get; private set; }
 
     /// <summary>Writes the option snapshot.</summary>
     /// <param name="writer">State writer.</param>
@@ -42,6 +48,7 @@ internal sealed class MachineOptionsSection : IStateSection
         ArgumentNullException.ThrowIfNull(writer);
         writer.WriteUInt32((uint)_tuning.ArmTiming);
         writer.WriteUInt32((uint)_tuning.ClioTimers);
+        writer.WriteUInt32((uint)_tuning.CelTiming);
     }
 
     /// <summary>Reads the option snapshot.</summary>
@@ -61,6 +68,7 @@ internal sealed class MachineOptionsSection : IStateSection
         if (reader is StateSectionReader { Version: 1 })
         {
             LoadedClioTimers = null;
+            LoadedCelTiming = null;
             return;
         }
 
@@ -71,5 +79,19 @@ internal sealed class MachineOptionsSection : IStateSection
         }
 
         LoadedClioTimers = clioTimers;
+
+        if (reader is StateSectionReader { Version: 2 })
+        {
+            LoadedCelTiming = null;
+            return;
+        }
+
+        var celTiming = (CelTimingMode)reader.ReadUInt32();
+        if (celTiming is not CelTimingMode.FreeDoCompatible and not CelTimingMode.OperaBusy)
+        {
+            throw new InvalidStateException($"Unknown CEL timing mode {(uint)celTiming} in the save state.");
+        }
+
+        LoadedCelTiming = celTiming;
     }
 }

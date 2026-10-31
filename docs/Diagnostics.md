@@ -231,8 +231,9 @@ dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin `
 
 `--cel-trace` writes one line per CEL command with CCB/next pointers, flags, PRE0/PRE1,
 data address, bpp, size, positions, deltas, clip window, source/destination, plus
-progress/arbitrary/`ccbdata`/`done` lines. It is verbose; use a short frame range or a
-specific state.
+progress/arbitrary/`ccbdata`/`done` lines. With `--cel-timing opera`, each list also
+writes a `cel-list` line with the list entry, pixel, texel, and busy-cycle totals. It is
+verbose; use a short frame range or a specific state.
 
 `--capture-dir` + `--capture-every N` writes `f%06d.png` at frame multiples. Captures
 use the CPU `FrameAssembler`, so they are the oracle image, not the selected GPU filter.

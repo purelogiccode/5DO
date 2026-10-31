@@ -49,6 +49,12 @@ public partial class SettingsWindow : Window
         new(ClioTimerMode.OperaScheduler, "Opera per-slot scheduler (accuracy)"),
     ];
 
+    private static readonly CelTimingOption[] _celTimingOptions =
+    [
+        new(CelTimingMode.FreeDoCompatible, "FreeDO-compatible (synchronous, default)"),
+        new(CelTimingMode.OperaBusy, "Opera busy timing (accuracy)"),
+    ];
+
     private static readonly ResolutionOption[] _resolutionOptions =
     [
         new(OutputResolution.Window, "Match window"),
@@ -116,6 +122,9 @@ public partial class SettingsWindow : Window
         ClioTimersCombo.ItemsSource = _clioTimerOptions;
         ClioTimersCombo.SelectedItem = _clioTimerOptions.FirstOrDefault(option => option.Value == settings.ClioTimers)
             ?? _clioTimerOptions[0];
+        CelTimingCombo.ItemsSource = _celTimingOptions;
+        CelTimingCombo.SelectedItem = _celTimingOptions.FirstOrDefault(option => option.Value == settings.CelTiming)
+            ?? _celTimingOptions[0];
         CpuClockBox.Text = settings.CpuClockMultiplier.ToString("0.###", CultureInfo.InvariantCulture);
         RandomSeedBox.Text = settings.RandomSeed is { } seed ? $"0x{seed:x8}" : string.Empty;
         SaveDirectoryBox.Text = settings.SaveDirectory;
@@ -224,6 +233,9 @@ public partial class SettingsWindow : Window
         settings.ClioTimers = ClioTimersCombo.SelectedItem is ClioTimerOption clioTimers
             ? clioTimers.Value
             : ClioTimerMode.FreeDoCompatible;
+        settings.CelTiming = CelTimingCombo.SelectedItem is CelTimingOption celTiming
+            ? celTiming.Value
+            : CelTimingMode.FreeDoCompatible;
         if (!double.TryParse(
                 CpuClockBox.Text?.Trim(),
                 NumberStyles.Float,
@@ -410,6 +422,14 @@ public partial class SettingsWindow : Window
     }
 
     private sealed record ClioTimerOption(ClioTimerMode Value, string Label)
+    {
+        public override string ToString()
+        {
+            return Label;
+        }
+    }
+
+    private sealed record CelTimingOption(CelTimingMode Value, string Label)
     {
         public override string ToString()
         {

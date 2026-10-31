@@ -32,6 +32,13 @@ public sealed record EmulatorTuning
     public ClioTimerMode ClioTimers { get; init; } = ClioTimerMode.FreeDoCompatible;
 
     /// <summary>
+    /// Gets the MADAM CEL timing model. The default draws synchronously like FreeDO;
+    /// <see cref="CelTimingMode.OperaBusy"/> keeps the CEL status busy until an estimated
+    /// pixel/texel deadline.
+    /// </summary>
+    public CelTimingMode CelTiming { get; init; } = CelTimingMode.FreeDoCompatible;
+
+    /// <summary>
     /// Gets the optional initial DSP PRNG seed. <see langword="null"/> keeps FreeDO's
     /// default seed (<c>0xa5a5a5a5</c>); a value makes fresh runs reproducible from a
     /// known seed.
@@ -59,6 +66,7 @@ public sealed record EmulatorTuning
         ValidateArmClock(ArmClock);
         ValidateArmTiming(ArmTiming);
         ValidateClioTimers(ClioTimers);
+        ValidateCelTiming(CelTiming);
         ValidateCpuBackend(CpuBackend);
     }
 
@@ -89,6 +97,17 @@ public sealed record EmulatorTuning
                 nameof(clioTimers),
                 clioTimers,
                 "Unknown CLIO timer mode.");
+        }
+    }
+
+    private static void ValidateCelTiming(CelTimingMode celTiming)
+    {
+        if (celTiming is not CelTimingMode.FreeDoCompatible and not CelTimingMode.OperaBusy)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(celTiming),
+                celTiming,
+                "Unknown CEL timing mode.");
         }
     }
 

@@ -143,6 +143,13 @@ public sealed class AppSettings
     public ClioTimerMode ClioTimers { get; set; } = ClioTimerMode.FreeDoCompatible;
 
     /// <summary>
+    /// Gets or sets the MADAM CEL timing model. The default is the synchronous
+    /// FreeDO-compatible draw; <see cref="CelTimingMode.OperaBusy"/> keeps the CEL status
+    /// busy until the estimated pixel/texel deadline.
+    /// </summary>
+    public CelTimingMode CelTiming { get; set; } = CelTimingMode.FreeDoCompatible;
+
+    /// <summary>
     /// Gets or sets the ARM clock multiplier. 1.0 is the stock 12.5 MHz clock; the
     /// supported range is 0.5x to 4x (6.25-50 MHz).
     /// </summary>

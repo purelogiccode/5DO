@@ -7,6 +7,16 @@ still change.
 
 ### Added
 
+- MADAM CEL busy timing option (`CelTimingMode`). The default `FreeDoCompatible` mode
+  keeps the synchronous draw. The opt-in `OperaBusy` mode follows `opera_madam.c`:
+  the list is drawn at the next CPU tick, the status register stays busy, and the
+  deadline is estimated from rendered pixels, walked texels, and list entries (nine
+  million pixels per second plus 64 setup cycles per entry). It is available as
+  `--cel-timing freedo|opera` on `run`/`trace` and in Settings > Emulation, and
+  `run --json` reports the selected mode and remaining busy cycles. Save states record
+  the mode in the `Options` section (version 3) and the pending/busy fields in the
+  Madam section (version 2); older states still load. The default path is unchanged;
+  the 3,000-frame differential is in `docs/TestCorpus.md` 1.1c.
 - CLIO timer scheduler option (`ClioTimerMode`). The default `FreeDoCompatible` mode
   keeps the original all-sixteen-timer scan. The opt-in `OperaScheduler` mode follows
   `opera_clock.c`/`opera_clio.c`: one timer slot per four 25 MHz ticks, the `0x220`

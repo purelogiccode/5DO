@@ -89,6 +89,7 @@ every serialized property in `AppSettings`.
 | `HighResolution` | bool | `false` | Opt-in 640x480 CEL/VDLP mode. |
 | `ArmTiming` | enum string | `"FreeDoCompatible"` | ARM60 N-cycle class: `FreeDoCompatible` (N=4) or `Arm60Datasheet` (N=2, accuracy). |
 | `ClioTimers` | enum string | `"FreeDoCompatible"` | CLIO timer scan: `FreeDoCompatible` (all sixteen timers per event) or `OperaScheduler` (one slot at a time with an explicit cascade carry). |
+| `CelTiming` | enum string | `"FreeDoCompatible"` | MADAM CEL timing: `FreeDoCompatible` (synchronous draw) or `OperaBusy` (deferred draw with a pixel/texel busy deadline). |
 | `CpuClockMultiplier` | double | `1.0` | ARM clock multiplier, 0.5..4.0 (6.25-50 MHz). 1.0 is the stock 12.5 MHz. |
 | `RandomSeed` | uint? | `null` | Optional initial DSP PRNG seed; `null` uses FreeDO's `0xa5a5a5a5`. |
 | `Volume` | float | `1.0` | OpenAL gain, 0..1. |
@@ -115,6 +116,8 @@ states are identical.
 `Renderer` (string): `OpenGl`, `Vulkan`, `Software`.
 
 `ClioTimers` (string): `FreeDoCompatible`, `OperaScheduler`.
+
+`CelTiming` (string): `FreeDoCompatible`, `OperaBusy`.
 
 `OutputResolution` (string): `Window`, `Native`, `Scale2X`, `Scale3X`, `Scale4X`,
 `Hd720`, `FullHd1080`, `Qhd1440`, `Uhd2160`.
@@ -345,15 +348,16 @@ The Settings dialog's **Emulation** page edits:
 - `HighResolution` checkbox (restarts the machine when changed).
 - `ArmTiming` combo: FreeDO-compatible N=4 or ARM60 datasheet N=2 (restarts the machine when changed).
 - `ClioTimers` combo: FreeDO-compatible all-timer scan or Opera per-slot scheduler (restarts the machine when changed).
+- `CelTiming` combo: FreeDO-compatible synchronous draw or Opera pixel/texel busy timing (restarts the machine when changed).
 - `CpuClockMultiplier` field: 0.5..4.0 (restarts the machine when changed).
 - `RandomSeed` field: blank for the FreeDO default, or a 32-bit hexadecimal value.
 - Current game display and fix-mode override (`0x...` hex mask, blank = automatic).
 - Per-game filter override (`Automatic` or an explicit filter).
 
-Changing high-resolution mode, ARM timing, or the CLIO timer mode recreates the machine
-and reopens the current BIOS/disc; the state is not preserved. Save states record both
-timing modes, and loading a state written with another mode reports a warning instead of
-rejecting it.
+Changing high-resolution mode, ARM timing, the CLIO timer mode, or the CEL timing mode
+recreates the machine and reopens the current BIOS/disc; the state is not preserved.
+Save states record all three timing modes, and loading a state written with another mode
+reports a warning instead of rejecting it.
 
 ---
 
