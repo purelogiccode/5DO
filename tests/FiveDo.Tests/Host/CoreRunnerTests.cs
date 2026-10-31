@@ -37,6 +37,24 @@ public sealed class CoreRunnerTests
     }
 
     [Fact]
+    public void StopThenStart_RunsAgain()
+    {
+        FiveDoMachine machine = CreateMachine();
+        using var runner = new CoreRunner(machine);
+        runner.Start();
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(2)));
+
+        runner.Stop();
+        var stopped = runner.Frames;
+        Thread.Sleep(100);
+        Assert.Equal(stopped, runner.Frames);
+
+        runner.Start();
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames > stopped, TimeSpan.FromSeconds(2)));
+        runner.Stop();
+    }
+
+    [Fact]
     public void Invoke_PausesTheLoopWhileTheActionRuns()
     {
         FiveDoMachine machine = CreateMachine();

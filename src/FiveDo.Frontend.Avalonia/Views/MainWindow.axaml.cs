@@ -489,7 +489,23 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OnStop(object? sender, RoutedEventArgs e) => PauseEmulation(showLibrary: true);
+    private void OnStop(object? sender, RoutedEventArgs e) => StopEmulation();
+
+    private void StopEmulation()
+    {
+        StopInputRecording(save: true);
+
+        // Stop, not pause: join the core thread and reset the machine so a later
+        // Start (or a new game selection) begins from a known state.
+        _runner?.Stop();
+        FlushNvram();
+        _machine?.Reset();
+        _running = false;
+        SetPlayState(running: false);
+        ShowLibraryView();
+        StatusText.Text = "Emulation stopped.";
+        _logger.ForCategory(LogCategory.Host).Information("Emulation stopped.");
+    }
 
     private void SetPlayState(bool running)
     {
@@ -847,6 +863,11 @@ public partial class MainWindow : Window, IDisposable
         {
             VulkanVideo.SetPresentationVisible(true);
         }
+
+        // Returning from the library can leave its search box focused. The key
+        // handlers intentionally ignore TextBox input, so move focus back to the
+        // window before the game starts receiving pad input.
+        FocusManager?.Focus(this, NavigationMethod.Unspecified, KeyModifiers.None);
     }
 
     private void UpdateEmulationHeader()

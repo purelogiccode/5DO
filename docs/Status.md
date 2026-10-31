@@ -9,7 +9,7 @@ The five not-loadable rows are resolved or explained: Mirai Shounen Conan now ru
 still under investigation. Headless `run`/`trace` now attach a default player-1 pad,
 fixing Olympic Summer Games' controller check. Fifteen triaged titles now have a
 reviewed 5DO status in [`GameCompatibilityList.md`](GameCompatibilityList.md); the
-rest remain `No data`. **925 tests pass.**
+rest remain `No data`. **926 tests pass.**
 The v1.0 release is deliberately deferred: the next work is a BIOS-aware sweep and
 5DO status merge (M13), then high-resolution CEL research (M14). The project is
 **donationware** (non-commercial, source-available, voluntary donations only). See
@@ -173,7 +173,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 925 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 926 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and
