@@ -157,6 +157,11 @@ still change.
   game's RAM prevents the next boot from sticking at the BIOS wait at `PC 0x1658`.
   Returning from the library also focuses the window again, so a hidden search box
   cannot swallow game keys.
+- **BIOS switch cold boot.** Loading a different BIOS while a game was resident left
+  the previous game's RAM in place, so the new BIOS could stall at `PC 0x1658`.
+  `OpenBiosPath` now clears CPU RAM before resetting. Verified in the desktop shell
+  with Battle Chess (Europe): the NTSC BIOS shows the game's "This is not a PAL TV
+  system!" screen, and `panafz10e-anvil.bin` boots to the title screen.
 - **Headless controller detection.** `run` and `trace` left PBUS empty unless
   `--input-script` or `--autopilot` was supplied, so games that check the controller
   ports saw no pad. Both commands now attach a default player-1 `PbusSource`, matching

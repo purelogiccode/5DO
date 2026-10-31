@@ -37,6 +37,10 @@ high-resolution CEL decision (M14) are complete.
     Japan-revision issue, not a general Crash 'n Burn failure.
   - Powers Kingdom (Europe) renders its animated intro with the Anvil BIOS by
     30,000 frames, matching the 4DO note "Use Anvil-bios to load EU version of game".
+  - Battle Chess (Europe) is PAL-only and refuses NTSC system software with "This is
+    not a PAL TV system!" at `PC 0x00088EDC`. The European Anvil BIOS
+    (`panafz10e-anvil.bin`) reaches the title screen at 6,000 frames and the board at
+    30,000; the USA and Japan discs boot with `panafz10`.
   - Slayer is region-sensitive: the Europe disc renders its credits with `panafz1` at
     12,000 frames, while the USA disc stays black with `panafz1` and needs `panafz10`
     (also GoldStar/Sanyo) to reach its title menu at 60,000 frames.

@@ -315,6 +315,9 @@ public partial class MainWindow : Window, IDisposable
             _runner!.Invoke(() =>
             {
                 machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
+                // Switching BIOS is a cold start: the previous game's RAM can leave
+                // the new BIOS waiting at PC 0x1658 before it ever reaches the disc.
+                machine.Memory.ClearRam();
                 machine.Reset();
                 var nvram = _nvramStore.LoadOrCreate();
                 machine.LoadNvram(nvram.Data.Span);

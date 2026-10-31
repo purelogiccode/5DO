@@ -961,15 +961,17 @@ inputs for the emulator.
 | `panafz10-patched.bin` | 1,048,576 | Patched NTSC BIOS; required by the Arcade CD-ROM titles |
 | `goldstar.bin` | 1,048,576 | GoldStar BIOS |
 | `sanyotry.bin` | 1,048,576 | Sanyo BIOS |
-| `panafz10e-anvil.bin` | 1,048,576 | Anvil BIOS path |
-| `panafz10e-anvil-patched.bin` | 1,048,576 | Anvil BIOS path |
+| `panafz10e-anvil.bin` | 1,048,576 | European/PAL Anvil BIOS (MD5 `a48e6746bd7edec0f40cff078f0bb19f`); required by Battle Chess (Europe) |
+| `panafz10e-anvil-patched.bin` | 1,048,576 | European/PAL Anvil BIOS with the RSA check disabled (MD5 `cf11bbb5a16d7af9875cca9de9a15e09`) |
 | `panafz10ja-anvil-kanji.bin` | 1,048,576 | Japanese Anvil/Kanji BIOS |
 | `panafz1-kanji.bin` | 933,636 | Not accepted (not 1 MB) |
 | `3do_arcade_saot.bin` | 524,288 | Not accepted (arcade ROM, not a 1 MB BIOS) |
 | `panafz10.bin.fstree` | 17,459 | Metadata, not a BIOS |
 
 Use `panafz1.bin` for the default smoke test. Use the Anvil and GoldStar variants
-only when validating compatibility-specific code paths.
+only when validating compatibility-specific code paths. `panafz10e-anvil.bin` is the
+European/PAL build and is the reference BIOS for European-only discs such as Battle
+Chess (Europe), which rejects NTSC system software.
 
 ---
 

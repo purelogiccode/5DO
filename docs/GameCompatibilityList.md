@@ -106,7 +106,7 @@ The automated loadability pass uses three intermediate labels before a human ass
 | Main list | Alone in the Dark 2 | 85 | Good | 1.2.0.3 | Occulusion/culling visual problems | Alone in the Dark 2 (Europe).chd<br>Alone in the Dark 2 (France).chd<br>Alone in the Dark 2 (Japan).chd<br>+1 more | No data | Not tested yet |
 | Main list | AutoBahn Tokio | 100 | Good | 1.2.0.1 | — | AutoBahn Tokio (Japan).chd | No data | Not tested yet |
 | Main list | Ballz - The Director's Cut | 100 | Good | 1.1.6.1 Beta | — | Ballz - The Director's Cut (World) (En,Ja).chd | No data | Not tested yet |
-| Main list | Battle Chess | 100 | Good | 1.3.0.1 | — | Battle Chess (Europe).chd<br>Battle Chess (Japan).chd<br>Battle Chess (USA).chd | No data | Not tested yet |
+| Main list | Battle Chess | 100 | Good | 1.3.0.1 | — | Battle Chess (Europe).chd<br>Battle Chess (Japan).chd<br>Battle Chess (USA).chd | Playable | Europe disc is PAL-only and needs `panafz10e-anvil`; it reaches the board at 30,000 frames. USA/Japan boot with `panafz10`. |
 | Main list | Battle Pinball | 100 | Good | 1.2.0.1 | — | Battle Pinball (Japan).chd | No data | Not tested yet |
 | Main list | BattleSport | 100 | Good | 1.2.0.3 | — | BattleSport (Europe).chd<br>BattleSport (USA).chd | No data | Not tested yet |
 | Main list | BC Racers | 100 | Good | 1.3.0.1 | — | BC Racers (USA, Europe).chd | No data | Not tested yet |

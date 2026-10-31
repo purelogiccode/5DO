@@ -609,6 +609,7 @@ several failures are BIOS-selection problems rather than emulator defects:
 | Mirai Shounen Conan | transient CHD read error; 3,000 frames now stable | not tested | not tested | Loadable with `panafz1` |
 | Crash 'n Burn (Japan) | invalid PC / black | invalid PC / black | purple boot screen, still stuck at 60,000 | Japan revision stuck; USA/Korea revisions render with `panafz1` |
 | Powers Kingdom (Europe) | solid blue | solid blue | live-action intro by 60,000 | Anvil BIOS required, matching the 4DO note |
+| Battle Chess (Europe) | "This is not a PAL TV system!" | same message | title screen at 6,000, board at 30,000 | European BIOS required; USA/Japan discs use `panafz10` |
 | Slayer (USA) | black | title menu at 60,000 | black | `panafz10`/GoldStar/Sanyo required |
 | WorldCup Super Stadium (Japan) | solid blue | solid blue | purple boot screen, still stuck at 60,000 | No tested BIOS reaches the game |
 | Olympic Summer Games (USA) | "Insert a controller" | not tested | not tested | Fixed by the default headless pad; high-jump screen and A/P input reach the credits |
@@ -621,6 +622,14 @@ lets their boot code proceed past the controller probe.
 Slayer has the opposite regional split: the Europe disc renders its credits with
 `panafz1` by 12,000 frames, while the USA disc stays black with `panafz1` and needs
 `panafz10` to reach the title menu at 60,000 frames.
+
+Battle Chess (Europe) is the first confirmed disc that rejects the NTSC system
+software outright. It prints "This is not a PAL TV system!" and halts at
+`PC 0x00088EDC` with `panafz1`, `panafz10`, and the GoldStar/Sanyo BIOSes. The
+European Anvil BIOS (`panafz10e-anvil.bin`) satisfies the region check: the title
+screen appears at 6,000 frames and the board at 30,000 frames. 5DO still emits NTSC
+320x240 timing, so this is a region/OS check, not proof of PAL 50 Hz emulation. The
+USA and Japan discs boot with `panafz10`.
 
 The 12,000-frame rerun also shows that Ishida Yoshio Kudan no Igo Seiha, both Konpeki
 no Kantai discs, and all three Myst discs render between 6,000 and 9,000 frames; their
