@@ -20,6 +20,12 @@ still change.
 - The first full-collection loadability sweep completed: 594 discs tested, 576
   `Loadable/Rendered`, 13 `Loadable/No video`, and 5 `Not Loadable`. The per-disc
   results are in `docs/GameCompatibilityResults.md`.
+- BIOS-aware compatibility tooling: `tools/bios-probe.ps1` retries the sweep's
+  failures with `panafz10-patched`, the Anvil BIOS, or any other supplied image and
+  records the BIOS that produced the best result. The sweep and probe now reject the
+  3DO boot starfield by requiring at least 3% non-black sampled pixels and 8 distinct
+  colors, and the compatibility-list generator preserves manually reviewed 5DO
+  statuses across regeneration.
 - Embedded Win32 Vulkan video surface for the desktop shell. `VulkanVideoSurface`
   hosts a click-through child HWND inside the Avalonia window and presents through
   the existing FIFO swapchain, eliminating the per-frame GPU-to-CPU readback and
