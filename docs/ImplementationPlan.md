@@ -3,7 +3,7 @@
 **Product:** 5DO
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Current status (2026-10-31, twenty-ninth pass):** **952 tests pass**; the v1.0
+**Current status (2026-10-31, twenty-ninth pass):** **954 tests pass**; the v1.0
 release is deliberately deferred. The first **M13 full-collection loadability sweep**
 is complete: 594 discs tested (589 in `J:\Panasonic 3DO` plus 5 in
 `G:\MAME\MAME Software List CHDs\3do`), with **576 `Loadable/Rendered`, 13
@@ -85,7 +85,7 @@ and presents through the existing FIFO swapchain, so `--gl-backend vulkan` no lo
 copies frames back to the CPU or uploads a `WriteableBitmap`. The `CoreRunner`
 pause/resume handshake now uses a monitor with an explicit paused state, fixing rapid
 stop/start cycles where the UI could touch the machine while the core thread was still
-running. **952 tests pass.**
+running. **954 tests pass.**
 
 **Compatibility-sweep and high-resolution research plan (2026-10-30, twenty-eighth
 pass):** v1.0 release work is deliberately deferred. The next active milestone is
@@ -99,7 +99,7 @@ titles), [`CompatibilitySweep.md`](CompatibilitySweep.md), and
 (full races, inventory interaction, long playthroughs) is explicitly not part of this
 phase. The project is **donationware**: non-commercial, source-available, and funded by
 voluntary donations rather than sales. The local Linux validation target is the
-Hyper-V VM `LinuxMint` (`D:\Hyper-V\VMs\LinuxMint`). **952 tests pass before the new
+Hyper-V VM `LinuxMint` (`D:\Hyper-V\VMs\LinuxMint`). **954 tests pass before the new
 sweep documentation/tooling; the docs/tools themselves add no runtime tests.**
 
 **Last updated:** 2026-10-30
@@ -320,7 +320,7 @@ project/type layout is unchanged.
 
 ### 4a. Current position vs. the plan (2026-10-26)
 
-Snapshot: 952 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
+Snapshot: 954 tests pass; CPU-side frame cost is ~1.25-1.6 ms with p99 1.6-4.6 ms
 and zero synthetic steady-state allocations; all five local corpus titles boot and
 render, and scripted gameplay is validated in Wolfenstein, Lemmings, Road Rash, and
 Alone. The opt-in 640x480 high-resolution mode is implemented and matches the

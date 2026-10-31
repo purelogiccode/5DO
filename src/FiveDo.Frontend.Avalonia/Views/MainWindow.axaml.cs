@@ -197,13 +197,16 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        if (!_settings.FirstRunCompleted && string.IsNullOrWhiteSpace(_settings.BiosPath))
+        if (!_settings.FirstRunCompleted
+            && string.IsNullOrWhiteSpace(_settings.BiosPath)
+            && Program.StartupBiosPath is null)
         {
             ShowWelcome(firstRun: true);
             return;
         }
 
         LoadConfiguredPaths();
+        EnterFullscreenIfRequested();
         AsyncEvent.Run(RefreshLibraryAsync, "refreshing the game library");
     }
 
@@ -236,6 +239,7 @@ public partial class MainWindow : Window, IDisposable
                     LoadConfiguredPaths();
                 }
 
+                EnterFullscreenIfRequested();
                 AsyncEvent.Run(RefreshLibraryAsync, "refreshing the game library");
             };
             IsEnabled = false;
@@ -253,9 +257,10 @@ public partial class MainWindow : Window, IDisposable
 
     private void LoadConfiguredPaths()
     {
-        if (File.Exists(_settings.BiosPath))
+        var biosPath = Program.StartupBiosPath ?? _settings.BiosPath;
+        if (File.Exists(biosPath))
         {
-            OpenBiosPath(_settings.BiosPath);
+            OpenBiosPath(biosPath);
         }
 
         var startupDisc = Program.StartupDiscPath;
@@ -827,6 +832,24 @@ public partial class MainWindow : Window, IDisposable
             }
 
             ShowEmulationView();
+        }
+
+        EnterFullscreen();
+    }
+
+    private void EnterFullscreenIfRequested()
+    {
+        if (Program.StartFullscreen)
+        {
+            EnterFullscreen();
+        }
+    }
+
+    private void EnterFullscreen()
+    {
+        if (WindowState == WindowState.FullScreen)
+        {
+            return;
         }
 
         WindowState = WindowState.FullScreen;

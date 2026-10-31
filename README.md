@@ -12,7 +12,7 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **952 tests pass.** The 594-disc baseline found 576 rendered, 13 black/blank,
+prototype. **954 tests pass.** The 594-disc baseline found 576 rendered, 13 black/blank,
 and 5 not-loadable images. Triage resolved the five not-loadable rows (Mirai Shounen
 Conan was a transient CHD read error; the four Arcade CD-ROM titles boot with
 `panafz10`), and six of the 13 black/blank titles render by 6,000-9,000 frames. Headless
@@ -382,7 +382,30 @@ Desktop app:
 ```powershell
 dotnet run --project src/FiveDo.Frontend.Avalonia
 dotnet run --project src/FiveDo.Frontend.Avalonia -- "game.chd"
+dotnet run --project src/FiveDo.Frontend.Avalonia -- "game.chd" --bios "bios/panafz1.bin" --fullscreen
 ```
+
+Desktop frontend arguments for file associations and external frontends:
+
+| Argument | Meaning |
+|---|---|
+| `"<disc>"` | Positional disc path (ISO, BIN, CUE, CHD); opens and auto-starts it. |
+| `--disc <path>` | Explicit disc path; same behavior as the positional form. |
+| `--bios <path>` | BIOS image for this launch; overrides the saved BIOS path. A missing file exits with code 1. |
+| `-f`, `--fullscreen` | Start fullscreen, including when a disc is auto-started. |
+| `--gl-backend <mode>` | `auto` (default), `wgl`, `angle`, `software`, or `vulkan`. |
+| `--version` | Print the version and exit. |
+| `-h`, `--help` | Print frontend usage and exit. |
+
+Typical launcher command template:
+
+```text
+FiveDo.Frontend.Avalonia.exe "{rom}" --bios "{bios}" --fullscreen
+```
+
+The developer GPU probes (`--gl-probe`, `--vk-probe`, `--vk-window-probe`) and
+`--smoke-test` retain their existing options; see [`docs/Performance.md`](docs/Performance.md)
+and [`docs/BuildAndTest.md`](docs/BuildAndTest.md).
 
 Use **Open BIOS** and **Open Disc**, then **Play**. The default keyboard bindings are the arrow keys, Z (A), X (B), C (C), A (L), S (R), Enter (P), and Backspace (X). **Save State**/**Load State** use the selected slot; the **<**/**>** buttons change slots, and F6/F7 select the previous/next slot. F9 advances one frame while paused; F5/F8/F10/F11/F12 and Escape are the save/load/reset/fullscreen/screenshot/pause hotkeys. **Emulation > Record Input** writes a replayable input script. **Screenshot** writes a PNG from the OpenGL output (or the CPU frame when GL is unavailable), named by game, time, and frame. **Library** scans configured folders through the 4DO database, **Settings** edits video/audio/emulation/paths, and **Input** captures keyboard bindings for all six players. **Fullscreen** toggles F11/Escape; **Hi-Res** restarts the machine in the opt-in 640x480 mode. Settings persist under the user local application data folder, including per-game fix-mode overrides.
 

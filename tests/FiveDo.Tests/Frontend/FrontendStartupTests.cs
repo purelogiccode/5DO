@@ -11,6 +11,7 @@ public class FrontendStartupTests
     {
         Assert.True(Program.HasFlag(["--SMOKE-TEST"], "--smoke-test"));
         Assert.True(Program.HasFlag(["--version"], "--version"));
+        Assert.True(Program.HasFlag(["--fullscreen"], "--fullscreen"));
         Assert.False(Program.HasFlag(["--smoke-test=1"], "--smoke-test"));
         Assert.False(Program.HasFlag([], "--smoke-test"));
     }
@@ -44,6 +45,31 @@ public class FrontendStartupTests
 
         Assert.Null(Program.FindDiscPath(["--smoke-output", marker]));
         Assert.Null(Program.FindDiscPath(["--smoke-test", "--smoke-output", marker]));
+    }
+
+    [Fact]
+    public void FindDiscPath_IgnoresAnExistingBiosValue()
+    {
+        using var directory = new TempDirectory();
+        var bios = Path.Combine(directory.Path, "panafz1.bin");
+        var disc = Path.Combine(directory.Path, "game.iso");
+        File.WriteAllText(bios, "bios");
+        File.WriteAllText(disc, "disc");
+
+        Assert.Equal(Path.GetFullPath(disc), Program.FindDiscPath(["--bios", bios, disc]));
+        Assert.Equal(Path.GetFullPath(disc), Program.FindDiscPath(["--bios", bios, "--disc", disc]));
+    }
+
+    [Fact]
+    public void FindBiosPath_ReturnsTheExistingAbsolutePath()
+    {
+        using var directory = new TempDirectory();
+        var bios = Path.Combine(directory.Path, "panafz1.bin");
+        File.WriteAllText(bios, "bios");
+
+        Assert.Equal(Path.GetFullPath(bios), Program.FindBiosPath(["--bios", bios]));
+        Assert.Null(Program.FindBiosPath(["--bios", Path.Combine(directory.Path, "missing.bin")]));
+        Assert.Null(Program.FindBiosPath(["--disc", "game.iso"]));
     }
 
     [Fact]

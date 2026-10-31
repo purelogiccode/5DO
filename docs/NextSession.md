@@ -37,7 +37,7 @@ MHTML in `References/4DO-master/`.
   show the same Anvil boot screen and are still stuck at 60,000 frames.
 - Headless `run`/`trace` now attach a default player-1 pad. Olympic Summer Games
   proceeds past its controller check. The 3,000-frame corpus keys were re-baselined in
-  [`TestCorpus.md`](TestCorpus.md) 1.1. **952 tests pass.**
+  [`TestCorpus.md`](TestCorpus.md) 1.1. **954 tests pass.**
 
 **Ordered tasks:**
 

@@ -17,6 +17,18 @@ internal static class Program
     public static string? StartupDiscPath { get; private set; }
 
     /// <summary>
+    /// Gets the optional `--bios` path used for this launch. External frontends can
+    /// provide the BIOS without changing the saved desktop configuration.
+    /// </summary>
+    public static string? StartupBiosPath { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether `--fullscreen` (or `-f`) requested a fullscreen
+    /// launch. Used by launchers and emulator frontends.
+    /// </summary>
+    public static bool StartFullscreen { get; private set; }
+
+    /// <summary>
     /// Gets a value indicating whether the process was started by the packaged
     /// frontend smoke test. The shell skips the welcome/config load and exits after
     /// the first frame so CI can validate a trimmed publish without a user session.
@@ -104,6 +116,12 @@ internal static class Program
                 return;
             }
 
+            if (HasFlag(args, "--help") || HasFlag(args, "-h") || HasFlag(args, "help"))
+            {
+                PrintUsage();
+                return;
+            }
+
             var backendText = FindOptionValue(args, "--gl-backend")
                 ?? FindOptionValue(args, "--gl-probe-backend");
             if (!GlBackendOption.TryParse(backendText, out GlBackend backend))
@@ -160,6 +178,16 @@ internal static class Program
             }
 
             StartupDiscPath = FindDiscPath(args);
+            StartupBiosPath = FindBiosPath(args);
+            StartFullscreen = HasFlag(args, "--fullscreen") || HasFlag(args, "-f");
+            var biosOption = FindOptionValue(args, "--bios");
+            if (biosOption is not null && StartupBiosPath is null)
+            {
+                Console.Error.WriteLine($"BIOS image not found: {biosOption}");
+                Environment.ExitCode = 1;
+                return;
+            }
+
             if (GlProbe is null && VkProbe is null && !SmokeTest)
             {
                 ApplicationStatsClient.TrackLaunch();
@@ -210,6 +238,25 @@ internal static class Program
         }
     }
 
+    private static void PrintUsage()
+    {
+        Console.WriteLine("5DO desktop frontend");
+        Console.WriteLine("Usage: FiveDo.Frontend.Avalonia [disc-path] [options]");
+        Console.WriteLine();
+        Console.WriteLine("  <disc-path>             Open and auto-start a disc image (ISO, BIN, CUE, CHD).");
+        Console.WriteLine("  --disc <path>           Same as the positional disc path.");
+        Console.WriteLine("  --bios <path>           Use this BIOS image for this launch.");
+        Console.WriteLine("  -f, --fullscreen        Start in fullscreen.");
+        Console.WriteLine("  --gl-backend <backend>  auto (default), wgl, angle, software, or vulkan.");
+        Console.WriteLine("  --version               Print the version and exit.");
+        Console.WriteLine("  -h, --help              Show this help and exit.");
+        Console.WriteLine();
+        Console.WriteLine("Developer GPU probes (see docs/Performance.md):");
+        Console.WriteLine("  --gl-probe <json> [--gl-probe-size WxH] [--gl-probe-frames N] ...");
+        Console.WriteLine("  --vk-probe <json> | --vk-window-probe <json> ...");
+        Console.WriteLine("  --smoke-test [--smoke-output <path>]");
+    }
+
     internal static bool HasFlag(string[] args, string flag)
     {
         foreach (var argument in args)
@@ -249,6 +296,19 @@ internal static class Program
         return null;
     }
 
+    /// <summary>
+    /// Finds an existing `--bios` path and returns its absolute path.
+    /// </summary>
+    /// <param name="args">Command-line arguments.</param>
+    /// <returns>The absolute BIOS path, or <see langword="null"/> when absent or missing.</returns>
+    internal static string? FindBiosPath(string[] args)
+    {
+        var path = FindOptionValue(args, "--bios");
+        return !string.IsNullOrWhiteSpace(path) && File.Exists(path)
+            ? Path.GetFullPath(path)
+            : null;
+    }
+
     internal static string? FindDiscPath(string[] args)
     {
         for (var i = 0; i < args.Length; i++)
@@ -284,6 +344,7 @@ internal static class Program
 
         var previous = args[index - 1];
         return string.Equals(previous, "--disc", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--bios", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--smoke-output", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--gl-backend", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--gl-probe", StringComparison.OrdinalIgnoreCase)

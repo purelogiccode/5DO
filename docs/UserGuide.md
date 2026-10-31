@@ -27,6 +27,46 @@ see [`CliReference.md`](CliReference.md); for settings and paths, see
 The first-run guide is shown only once. **About** always shows the current BIOS, disc,
 renderer, machine state, and paths.
 
+## Command-line launch (frontends and file associations)
+
+The desktop executable accepts the following arguments. A positional disc path or
+`--disc` opens and auto-starts the game, so no extra Play action is needed. This is the
+form used by file associations and external emulator frontends:
+
+```powershell
+FiveDo.Frontend.Avalonia.exe "D:\Games\Road Rash (USA).chd" `
+  --bios "D:\BIOS\panafz1.bin" --fullscreen
+```
+
+| Argument | Meaning |
+|---|---|
+| `"<disc>"` | Positional disc path (ISO, BIN, CUE+BIN, or CHD); opens and auto-starts it. |
+| `--disc <path>` | Explicit disc path; same behavior as the positional form. |
+| `--bios <path>` | BIOS image for this launch; overrides the saved BIOS path. A missing file prints an error and exits with code 1. |
+| `-f`, `--fullscreen` | Start in fullscreen. Works with a disc or with the library view. Escape/F11 leaves fullscreen. |
+| `--gl-backend <mode>` | `auto` (default), `wgl`, `angle`, `software`, or `vulkan`. |
+| `--gl-probe-backend <mode>` | Alias for `--gl-backend` retained for the GPU probe. |
+| `--version` | Print the version and exit. |
+| `-h`, `--help` | Print frontend usage and exit. |
+
+Launcher command template:
+
+```text
+FiveDo.Frontend.Avalonia.exe "{rom}" --bios "{bios}" --fullscreen
+```
+
+Developer/CI options already supported by the frontend:
+
+| Argument | Meaning |
+|---|---|
+| `--gl-probe <json>` | OpenGL presentation probe with `--gl-probe-size`, `--gl-probe-frames`, `--gl-probe-warmup`, `--gl-probe-filter`, `--gl-probe-vsync`, `--gl-probe-offscreen`, `--gl-probe-capture`, and `--gl-probe-timeout`. |
+| `--vk-probe <json>` | Headless Vulkan probe with `--vk-probe-size`, `--vk-probe-frames`, `--vk-probe-warmup`, `--vk-probe-filter`, `--vk-probe-capture`, and `--vk-probe-timeout`. |
+| `--vk-window-probe <json>` | Native Win32 Vulkan swapchain probe with the matching `--vk-window-probe-*` options. |
+| `--smoke-test [--smoke-output <path>]` | Startup smoke test used by CI; exits after the first UI pass. |
+
+See [`Performance.md`](Performance.md), [`Vulkan.md`](Vulkan.md), and
+[`BuildAndTest.md`](BuildAndTest.md) for the probe reports and commands.
+
 ## Controls
 
 Default player 1 keyboard bindings:

@@ -7,6 +7,11 @@ still change.
 
 ### Added
 
+- Frontend command-line launch options for file associations and external emulator
+  frontends: positional disc / `--disc <path>`, `--bios <path>`, `-f`/`--fullscreen`,
+  `--gl-backend`, `--version`, and `-h`/`--help`. A missing explicit BIOS path exits
+  with code 1. Frontend usage is documented in `README.md`, `docs/UserGuide.md`, and
+  `docs/Configuration.md`.
 - Presentation frame skipping (`FrameSkipMode`): **Auto** (default) plus fixed
   one-in-two through one-in-five cadences. Only VDLP rendering and host presentation
   are skipped; every emulated frame still runs the CPU, CEL, DSP, timers, CD-ROM, and

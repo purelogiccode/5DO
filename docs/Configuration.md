@@ -458,7 +458,8 @@ backend) and `ALSOFT_DRIVERS` (through OpenAL Soft).
 ## 10. Precedence summary
 
 ```text
-CLI flags
+frontend launch arguments (--disc, --bios, --fullscreen, --gl-backend)
+  > CLI flags
   > per-game fix/filter overrides (desktop)
   > explicit --fix-mode / --no-game-fixes (CLI)
   > automatic 4DO database fixes
