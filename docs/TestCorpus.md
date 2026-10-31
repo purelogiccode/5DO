@@ -162,6 +162,36 @@ Lemmings and Road Rash also completed 12,000 frames with the Opera model
 (`0xCE7E7A74` and `0xAEE9963B` respectively), so the deferred draw and busy deadline do
 not stall those boot paths.
 
+### 1.1d CD-ROM cycle timing differential (2026-10-31)
+
+The CORE-04 option was checked with `panafz1.bin`, fresh NVRAM, and the same discs.
+The FreeDO-compatible default is unchanged. The Opera cycle model schedules each
+2048-byte data sector at the stock 2x drive speed (81,246 ARM cycles at 12.5 MHz
+after Opera's 167 us overhead compensation), holds the data poll clear until the
+sector is ready, and publishes the read-data status after the transfer is drained.
+The XBUS CD FIQ is raised when the delayed data or status becomes ready.
+
+| Title | Frames | Mode | Final PC | Frame hash | Observation |
+|---|---|---:|---|---|---|
+| Lemmings | 3,000 | `--cd-timing freedo` | `0x0012B324` | `0x9C2E3236` | unchanged baseline |
+| Lemmings | 3,000 | `--cd-timing opera` | `0x00059710` | `0xB1CE635A` | still loading; expected slower CD |
+| Lemmings | 12,000 | `--cd-timing freedo` | `0x00128490` | `0xCE7E7A74` | title/menu |
+| Lemmings | 12,000 | `--cd-timing opera` | `0x0012918C` | `0x110E7DC5` | boot reaches the intro later |
+| Lemmings | 24,000 | `--cd-timing opera` | `0x0012DE58` | `0x9D4DBD37` | intro animation rendered |
+| Road Rash | 12,000 | `--cd-timing freedo` | `0x00020640` | `0x2D05A53C` | intro credits |
+| Road Rash | 12,000 | `--cd-timing opera` | `0x00020640` | `0x37D5CCFE` | intro credits at a different FMV point |
+| Gex | 12,000 | `--cd-timing freedo` | `0x0008D3BC` | `0x9B1F45AE` | boot/menu |
+| Gex | 12,000 | `--cd-timing opera` | `0x000820F8` | `0x259870E0` | boot/menu, later CD phase |
+
+All nine runs completed and rendered. The mode is intentionally slower than the
+immediate FreeDO path because it models the real 2x drive; the important result is
+that the boot, OS, and FMV paths continue rather than stalling. This is a
+three-title smoke differential, not the full 594-disc report required to change the
+default. The five-title 3,000-frame default regression keys are unchanged from
+section 1.1 (Alone `0x05225F76`, Lemmings `0x9C2E3236`, Road Rash `0x5E9EE515`,
+Space Ace `0xD666228E`, Wolfenstein `0x9A3B5131`), confirming that the new option did
+not alter the FreeDO path.
+
 At 10,000 frames with input and a fresh NVRAM (pre-transposition-fix):
  
 | Title | Final PC | Frame hash | Observation |

@@ -3,7 +3,7 @@
 **Product:** 5DO
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Current status (2026-10-31, thirty-second pass):** **1003 tests pass**; the v1.0
+**Current status (2026-10-31, thirty-third pass):** **1014 tests pass**; the v1.0
 release is deliberately deferred. The first **M13 full-collection loadability sweep**
 is complete: 594 discs tested (589 in `J:\Panasonic 3DO` plus 5 in
 `G:\MAME\MAME Software List CHDs\3do`), with **576 `Loadable/Rendered`, 13
@@ -128,6 +128,22 @@ unchanged, and a three-title 3,000-frame smoke differential is recorded in
 [`TestCorpus.md`](TestCorpus.md) 1.1c. The full-collection differential remains the
 acceptance step before the Opera busy model can become a default. **1003 tests pass.**
 See [`PortingNotes.md`](PortingNotes.md) 12.17.
+
+**CD-ROM cycle-based data timing (2026-10-31, thirty-third pass):** CORE-04's first
+increment is implemented. `CdromTimingMode.FreeDoCompatible` keeps the immediate
+FreeDO transfer; `CdromTimingMode.OperaCycleBased` schedules each 2048-byte data sector
+at the stock 2x drive speed (81,246 ARM cycles at 12.5 MHz after Opera's overhead
+compensation), clears the data/status poll bits while the drive is busy, publishes the
+read-data status after the last requested sector is drained, and raises the XBUS CD FIQ
+when delayed data or status becomes ready. The device clock is advanced by
+`FiveDoMachine.InternalFrame`, exposed through `--cd-timing freedo|opera` and Settings >
+Emulation, reported in `run --json`, and recorded in the Options section (version 4)
+plus the CD-ROM section (version 2). The default is unchanged, and a three-title
+12,000/24,000-frame smoke differential is recorded in
+[`TestCorpus.md`](TestCorpus.md) 1.1d. Command latency, disc-derived TOC, read-ahead,
+subcode, DIPIR tagging, CD-DA, ODE, and CD speed control remain; the full-collection
+differential is the acceptance step before the cycle model can become a default.
+**1014 tests pass.** See [`PortingNotes.md`](PortingNotes.md) 12.18.
 
 **Compatibility-sweep and high-resolution research plan (2026-10-30, twenty-eighth
 pass):** v1.0 release work is deliberately deferred. The next active milestone is

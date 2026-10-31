@@ -24,7 +24,7 @@ The emulator is a large, stateful port. Tests are the only way to keep a 600 KB 
      └────────────────────────────────────────────────────────────┘
 ```
 
-**Default `dotnet test` must run the unit + integration layers and finish in a few minutes.** Real-BIOS and real-disc tests are opt-in via environment variables. The current suite is **1003 tests** (verified 2026-10-31).
+**Default `dotnet test` must run the unit + integration layers and finish in a few minutes.** Real-BIOS and real-disc tests are opt-in via environment variables. The current suite is **1014 tests** (verified 2026-10-31).
 
 ---
 

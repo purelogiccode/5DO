@@ -129,6 +129,7 @@ public sealed class NvramStoreTests
         Assert.True(settings.IntegerScale);
         Assert.False(settings.HighResolution);
         Assert.Equal(ArmTimingMode.FreeDoCompatible, settings.ArmTiming);
+        Assert.Equal(CdromTimingMode.FreeDoCompatible, settings.CdromTiming);
         Assert.Equal(1.0, settings.CpuClockMultiplier);
         Assert.Equal(EmulatorConstants.ArmClock, settings.ResolveArmClock());
         Assert.False(settings.ShowOverlay);
@@ -160,6 +161,7 @@ public sealed class NvramStoreTests
             ArmTiming = ArmTimingMode.Arm60Datasheet,
             ClioTimers = ClioTimerMode.OperaScheduler,
             CelTiming = CelTimingMode.OperaBusy,
+            CdromTiming = CdromTimingMode.OperaCycleBased,
             CpuClockMultiplier = 2.0,
             RandomSeed = 0x1234,
             SaveSlot = 3,
@@ -191,6 +193,7 @@ public sealed class NvramStoreTests
         Assert.Equal(ArmTimingMode.Arm60Datasheet, loaded.ArmTiming);
         Assert.Equal(ClioTimerMode.OperaScheduler, loaded.ClioTimers);
         Assert.Equal(CelTimingMode.OperaBusy, loaded.CelTiming);
+        Assert.Equal(CdromTimingMode.OperaCycleBased, loaded.CdromTiming);
         Assert.Equal(2.0, loaded.CpuClockMultiplier);
         Assert.Equal(25_000_000, loaded.ResolveArmClock());
         Assert.Equal(0x1234u, loaded.RandomSeed);
@@ -335,7 +338,8 @@ public sealed class NvramStoreTests
               "CpuClockMultiplier": 8.0,
               "ArmTiming": 99,
               "ClioTimers": 99,
-              "CelTiming": 99
+              "CelTiming": 99,
+              "CdromTiming": 99
             }
             """);
 
@@ -345,6 +349,7 @@ public sealed class NvramStoreTests
         Assert.Equal(ArmTimingMode.FreeDoCompatible, loaded.ArmTiming);
         Assert.Equal(ClioTimerMode.FreeDoCompatible, loaded.ClioTimers);
         Assert.Equal(CelTimingMode.FreeDoCompatible, loaded.CelTiming);
+        Assert.Equal(CdromTimingMode.FreeDoCompatible, loaded.CdromTiming);
     }
 
     [Fact]

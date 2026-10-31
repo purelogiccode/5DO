@@ -68,6 +68,106 @@ public sealed class CdromDeviceTests
     }
 
     [Fact]
+    public void OperaCycleBased_ReadDataWaitsForTheSectorDeadline()
+    {
+        var disc = new MemoryDisc(4);
+        var cd = new CdromDevice
+        {
+            TimingMode = CdromTimingMode.OperaCycleBased,
+        };
+        cd.InsertDisc(disc);
+
+        Send(cd, 0x10, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02);
+
+        // Both poll bits stay clear until the first sector has been read at the stock
+        // 2x drive speed. The status response is published after the transfer finishes.
+        Assert.Equal(0, (int)cd.GetPoll() & 0x20);
+        Assert.Equal(0, (int)cd.GetPoll() & 0x10);
+        Assert.Equal(cd.DataSectorCycles, cd.NextReadyCycle);
+
+        cd.Tick((uint)(cd.DataSectorCycles - 1));
+        Assert.Equal(0, (int)cd.GetPoll() & 0x20);
+
+        cd.Tick(1);
+        Assert.NotEqual(0, (int)cd.GetPoll() & 0x20);
+        Assert.True(cd.FiqPending);
+
+        var first = ReadData(cd, 2048);
+        Assert.Equal(disc.Sector(0), first);
+
+        // The next sector is scheduled after the one that was just consumed.
+        Assert.Equal(0, (int)cd.GetPoll() & 0x20);
+        Assert.Equal(0, (int)cd.GetPoll() & 0x10);
+        Assert.Equal(cd.Cycles + cd.DataSectorCycles, cd.NextReadyCycle);
+
+        cd.Tick((uint)cd.DataSectorCycles);
+        var second = ReadData(cd, 2048);
+        Assert.Equal(disc.Sector(1), second);
+
+        // The 0x10 status becomes readable once the last sector has been consumed.
+        Assert.NotEqual(0, (int)cd.GetPoll() & 0x10);
+        var status = ReadStatus(cd, 2);
+        Assert.Equal(0x10, status[0]);
+    }
+
+    [Fact]
+    public void OperaCycleBased_SaveLoadPreservesTheSectorDeadline()
+    {
+        var disc = new MemoryDisc(4);
+        var cd = new CdromDevice
+        {
+            TimingMode = CdromTimingMode.OperaCycleBased,
+        };
+        cd.InsertDisc(disc);
+        Send(cd, 0x10, 0x00, 0x02, 0x00, 0x00, 0x00, 0x01);
+        cd.Tick((uint)(cd.DataSectorCycles / 2));
+
+        var writer = new StateWriter();
+        cd.Save(writer);
+
+        var loaded = new CdromDevice
+        {
+            TimingMode = CdromTimingMode.OperaCycleBased,
+        };
+        loaded.InsertDisc(disc);
+        loaded.Load(new StateReader(writer.WrittenSpan.ToArray()));
+
+        Assert.Equal(CdromTimingMode.OperaCycleBased, loaded.TimingMode);
+        Assert.Equal(cd.Cycles, loaded.Cycles);
+        Assert.Equal(cd.NextReadyCycle, loaded.NextReadyCycle);
+
+        loaded.Tick((uint)(loaded.NextReadyCycle - loaded.Cycles));
+        Assert.Equal(disc.Sector(0), ReadData(loaded, 2048));
+    }
+
+    [Fact]
+    public void OperaCycleBased_RaisesTheXbusFiqWhenDataBecomesReady()
+    {
+        var cd = new CdromDevice
+        {
+            TimingMode = CdromTimingMode.OperaCycleBased,
+        };
+        var interrupts = 0;
+        cd.InterruptRequested = () => interrupts++;
+        cd.InsertDisc(new MemoryDisc(4));
+        Send(cd, 0x10, 0x00, 0x02, 0x00, 0x00, 0x00, 0x01);
+
+        Assert.Equal(0, interrupts);
+        cd.Tick((uint)cd.DataSectorCycles);
+        Assert.Equal(1, interrupts);
+    }
+
+    [Fact]
+    public void DataSectorCycles_MatchesTheStock2xOperaCompensation()
+    {
+        var cd = new CdromDevice();
+
+        // 12.5 MHz / (75 sectors/s * 2x) = 83,333 cycles; Opera subtracts 167.0 us
+        // (2,087 cycles) of measured per-sector overhead.
+        Assert.Equal(81_246UL, cd.DataSectorCycles);
+    }
+
+    [Fact]
     public void EjectDisc_ResetsToTheReferenceInitialState()
     {
         var cd = new CdromDevice();

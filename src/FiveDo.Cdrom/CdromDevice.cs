@@ -24,6 +24,12 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 {
     private const int RequestSize = 2048;
 
+    // Opera's stock 3DO drive is 2x. SYS-09 will make this configurable; CORE-04 only
+    // needs the stock speed to model data-sector readiness.
+    private const uint OperaStockSpeed = 2;
+    private const ulong FramesPerSecond = 75;
+    private const ulong OverheadCompensationX10Usec = 1670;
+
     private const byte PollStatusMask = 0x01;
     private const byte PollDataMask = 0x02;
     private const byte PollStatus = 0x10;
@@ -56,6 +62,69 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     private MeiError _meiStatus;
     private DiscState _discState = new();
     private int _currentSector;
+    private CdromTimingMode _timingMode = CdromTimingMode.FreeDoCompatible;
+    private int _armClock = EmulatorConstants.ArmClock;
+    private ulong _cycles;
+    private ulong _nextReadyCycle;
+    private bool _readStatusPending;
+
+    /// <summary>Gets or sets the data-sector timing model.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is unknown.</exception>
+    public CdromTimingMode TimingMode
+    {
+        get => _timingMode;
+        set
+        {
+            if (value is not CdromTimingMode.FreeDoCompatible and not CdromTimingMode.OperaCycleBased)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), value, "Unknown CD-ROM timing mode.");
+            }
+
+            _timingMode = value;
+        }
+    }
+
+    /// <summary>Gets or sets the ARM clock used to convert sector time to cycles.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is not positive.</exception>
+    public int ArmClock
+    {
+        get => _armClock;
+        set
+        {
+            if (value <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), value, "The ARM clock must be positive.");
+            }
+
+            _armClock = value;
+        }
+    }
+
+    /// <summary>Gets the total ARM cycles observed by the drive.</summary>
+    public ulong Cycles => _cycles;
+
+    /// <summary>Gets the cycle at which the next data sector becomes available.</summary>
+    public ulong NextReadyCycle => _nextReadyCycle;
+
+    /// <summary>
+    /// Gets the ARM cycles one 2048-byte data sector takes at the stock 2x drive speed,
+    /// including Opera's measured overhead compensation.
+    /// </summary>
+    public ulong DataSectorCycles
+    {
+        get
+        {
+            var baseCycles = (ulong)_armClock / (FramesPerSecond * OperaStockSpeed);
+            var compensation = (ulong)_armClock * OverheadCompensationX10Usec / 10_000_000;
+            return baseCycles > compensation ? baseCycles - compensation : baseCycles;
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the callback used to raise the XBUS CD FIQ when a delayed data sector or
+    /// status becomes ready. The machine wires this to CLIO.
+    /// </summary>
+    public Action? InterruptRequested { get; set; }
 
     /// <summary>Gets or sets an optional diagnostic writer for command and sector traces.</summary>
     public System.IO.TextWriter? TraceWriter { get; set; }
@@ -91,7 +160,8 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     public uint Id => StateSectionIds.Cdrom;
 
     /// <summary>Gets the save-state section version.</summary>
-    public ushort Version => 1;
+    /// <remarks>Version 2 adds the cycle-based data-sector clock and deadline.</remarks>
+    public ushort Version => 2;
 
     /// <summary>Inserts a disc and initializes the drive for it.</summary>
     /// <param name="disc">Disc source. The device does not take ownership.</param>
@@ -113,6 +183,9 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     public void Initialize()
     {
         _dataPointer = 0;
+        _cycles = 0;
+        _nextReadyCycle = 0;
+        _readStatusPending = false;
         _xbusStatus = 0;
         _poll = 0x0f;
         _xbusStatus |= CdstTray;
@@ -146,10 +219,29 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         }
     }
 
+    /// <summary>
+    /// Advances the drive clock. In <see cref="CdromTimingMode.OperaCycleBased"/> mode this
+    /// publishes the next data sector when its scheduled cycle arrives.
+    /// </summary>
+    /// <param name="cycles">ARM cycles executed since the previous tick.</param>
+    public void Tick(uint cycles)
+    {
+        _cycles += cycles;
+        if (_timingMode == CdromTimingMode.OperaCycleBased
+            && _dataLength == 0
+            && _requested > 0
+            && (_poll & PollData) == 0)
+        {
+            TryLoadSector();
+        }
+    }
+
     /// <summary>Initializes the drive for the inserted disc. FreeDO: <c>InitCD</c>.</summary>
     public void InitCd()
     {
         _currentSector = 0;
+        _nextReadyCycle = 0;
+        _readStatusPending = false;
         _xbusStatus = 0;
         _poll = 0x0f;
         _xbusStatus |= CdstTray;
@@ -213,6 +305,11 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <inheritdoc />
     public uint GetData()
     {
+        if (_dataLength == 0 && _requested > 0)
+        {
+            TryLoadSector();
+        }
+
         uint result = 0;
 
         if (_dataLength > 0)
@@ -226,10 +323,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
                 _dataPointer = 0;
                 if (_requested != 0)
                 {
-                    ReadSectorIntoData();
-                    _currentSector++;
-                    _requested--;
-                    _dataLength = RequestSize;
+                    TryLoadSector();
                 }
                 else
                 {
@@ -237,6 +331,15 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
                     _requested = 0;
                     _dataLength = 0;
                     _dataPointer = 0;
+                    if (_readStatusPending)
+                    {
+                        _readStatusPending = false;
+                        _poll |= PollStatus;
+                        if (FiqPending)
+                        {
+                            InterruptRequested?.Invoke();
+                        }
+                    }
                 }
             }
         }
@@ -301,6 +404,9 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         writer.WriteBytes(_status);
         writer.WriteBytes(_data);
         writer.WriteBytes(_command);
+        writer.WriteUInt64(_cycles);
+        writer.WriteUInt64(_nextReadyCycle);
+        writer.WriteByte(_readStatusPending ? (byte)1 : (byte)0);
 
         writer.WriteByte(_discState.FirstTrack);
         writer.WriteByte(_discState.LastTrack);
@@ -349,6 +455,25 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         reader.ReadBytes(_data);
         reader.ReadBytes(_command);
 
+        if (reader is not StateSectionReader sectionReader || sectionReader.Version >= 2)
+        {
+            _cycles = reader.ReadUInt64();
+            _nextReadyCycle = reader.ReadUInt64();
+            var readStatusPending = reader.ReadByte();
+            if (readStatusPending > 1)
+            {
+                throw new InvalidStateException($"Invalid CD-ROM pending status flag {readStatusPending}.");
+            }
+
+            _readStatusPending = readStatusPending != 0;
+        }
+        else
+        {
+            _cycles = 0;
+            _nextReadyCycle = 0;
+            _readStatusPending = false;
+        }
+
         _discState.FirstTrack = reader.ReadByte();
         _discState.LastTrack = reader.ReadByte();
         reader.ReadBytes(_discState.CurrentAbsoluteMsf);
@@ -392,6 +517,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     private void ExecuteCommand()
     {
         _statusLength = 0;
+        _readStatusPending = false;
         _poll &= unchecked((byte)~PollStatus);
         _poll &= unchecked((byte)~PollData);
         _xbusStatus &= unchecked((byte)~CdstError);
@@ -727,20 +853,45 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _currentSector = _discState.TempLba;
 
         _requested = (_command[5] << 8) + _command[6];
-        if (_requested != 0)
+        if (_timingMode == CdromTimingMode.OperaCycleBased)
         {
-            ReadSectorIntoData();
-            _currentSector++;
-            _dataLength = RequestSize;
-            _requested--;
+            // Opera schedules the first sector one sector-time after the command and
+            // clears both poll bits until the transfer is ready. The 0x10 status response
+            // is published after the last requested sector has been consumed, matching
+            // cdrom_data_publish_read_status_if_ready.
+            _poll &= unchecked((byte)~PollData);
+            _poll &= unchecked((byte)~PollStatus);
+            _dataLength = 0;
+            _dataPointer = 0;
+            _readStatusPending = _requested != 0;
+            if (_requested != 0)
+            {
+                _nextReadyCycle = _cycles + DataSectorCycles;
+                TryLoadSector();
+            }
+            else
+            {
+                _poll |= PollStatus;
+            }
         }
         else
         {
-            _dataLength = 0;
+            if (_requested != 0)
+            {
+                ReadSectorIntoData();
+                _currentSector++;
+                _dataLength = RequestSize;
+                _requested--;
+            }
+            else
+            {
+                _dataLength = 0;
+            }
+
+            _poll |= PollData;
+            _poll |= PollStatus;
         }
 
-        _poll |= PollData;
-        _poll |= PollStatus;
         _meiStatus = MeiError.NoError;
     }
 
@@ -814,6 +965,39 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         return (_xbusStatus & CdstTray) != 0
             && (_xbusStatus & CdstDisc) != 0
             && (_xbusStatus & CdstSpin) != 0;
+    }
+
+    private bool TryLoadSector()
+    {
+        if (_requested <= 0)
+        {
+            _poll &= unchecked((byte)~PollData);
+            return false;
+        }
+
+        if (_timingMode == CdromTimingMode.OperaCycleBased && _cycles < _nextReadyCycle)
+        {
+            _poll &= unchecked((byte)~PollData);
+            return false;
+        }
+
+        ReadSectorIntoData();
+        _currentSector++;
+        _requested--;
+        _dataLength = RequestSize;
+        _dataPointer = 0;
+        _poll |= PollData;
+
+        if (_timingMode == CdromTimingMode.OperaCycleBased)
+        {
+            _nextReadyCycle = _cycles + DataSectorCycles;
+            if (FiqPending)
+            {
+                InterruptRequested?.Invoke();
+            }
+        }
+
+        return true;
     }
 
     private void ReadSectorIntoData()

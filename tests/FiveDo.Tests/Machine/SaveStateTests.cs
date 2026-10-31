@@ -325,6 +325,31 @@ public sealed class SaveStateTests
     }
 
     [Fact]
+    public void SaveState_RecordsCdromTimingAndWarnsOnMismatch()
+    {
+        var operaCd = new EmulatorTuning { CdromTiming = CdromTimingMode.OperaCycleBased };
+        FiveDoMachine machine = CreateMachine(tuning: operaCd);
+        machine.RunFrames(2);
+        using var state = new MemoryStream();
+        machine.SaveState(state);
+
+        FiveDoMachine matching = CreateMachine(tuning: operaCd);
+        state.Position = 0;
+        matching.LoadState(state);
+        Assert.DoesNotContain(
+            matching.StateWarnings,
+            warning => warning.Contains("CD-ROM timing", StringComparison.Ordinal));
+
+        FiveDoMachine freeDo = CreateMachine();
+        state.Position = 0;
+        freeDo.LoadState(state);
+        Assert.Contains(
+            freeDo.StateWarnings,
+            warning => warning.Contains("CD-ROM timing", StringComparison.Ordinal)
+                && warning.Contains("OperaCycleBased", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void LoadState_AcceptsVersionOneStates()
     {
         FiveDoMachine machine = CreateMachine();

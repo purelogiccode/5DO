@@ -7,6 +7,17 @@ still change.
 
 ### Added
 
+- CD-ROM cycle-based data timing option (`CdromTimingMode`). The default
+  `FreeDoCompatible` mode keeps the immediate transfer. The opt-in `OperaCycleBased`
+  mode schedules each 2048-byte data sector at the stock 2x drive speed (81,246 ARM
+  cycles at 12.5 MHz after Opera's overhead compensation), keeps the data and status
+  poll bits clear while the drive is busy, publishes the read-data status after the
+  transfer drains, and raises the XBUS CD FIQ when delayed data or status becomes
+  ready. It is available as `--cd-timing freedo|opera` on `run`/`trace` and in
+  Settings > Emulation, and `run --json` reports the selected mode. Save states record
+  the mode in the `Options` section (version 4) and the drive clock, next-ready cycle,
+  and pending status in the CD-ROM section (version 2); older states still load. The
+  default path is unchanged; the smoke differential is in `docs/TestCorpus.md` 1.1d.
 - MADAM CEL busy timing option (`CelTimingMode`). The default `FreeDoCompatible` mode
   keeps the synchronous draw. The opt-in `OperaBusy` mode follows `opera_madam.c`:
   the list is drawn at the next CPU tick, the status register stays busy, and the

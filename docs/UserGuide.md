@@ -225,7 +225,7 @@ Settings persist under the user local application data folder:
 - Library metadata cache: `%LOCALAPPDATA%\5DO\library-cache.json`.
 
 Per-game fix-mode overrides, automatic 4DO fixes, audio enable/volume, high-resolution
-mode, ARM/CLIO/CEL timing, save/screenshot paths, input bindings, and the current slot
+mode, ARM/CLIO/CEL/CD timing, save/screenshot paths, input bindings, and the current slot
 are stored there.
 NVRAM is stored as `nvram.ram` in the same directory. The full `settings.json` schema,
 per-game override keys, input profile format, and precedence rules are in

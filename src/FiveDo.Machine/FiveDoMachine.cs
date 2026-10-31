@@ -72,7 +72,12 @@ public sealed class FiveDoMachine
         };
         Madam.Compatibility = Compatibility;
         Xbus = new XbusChip { Interrupts = Clio };
-        Cdrom = new CdromChip();
+        Cdrom = new CdromChip
+        {
+            TimingMode = Tuning.CdromTiming,
+            ArmClock = Tuning.ArmClock,
+            InterruptRequested = () => Clio.GenerateFiq(4, 0),
+        };
         Xbus.Attach(Cdrom);
         Dsp = new DspCore { Host = Clio };
         if (Tuning.RandomSeed is { } randomSeed)
@@ -385,13 +390,15 @@ public sealed class FiveDoMachine
         ArmTimingMode? stateArmTiming = null;
         ClioTimerMode? stateClioTimers = null;
         CelTimingMode? stateCelTiming = null;
+        CdromTimingMode? stateCdromTiming = null;
         while (reader.TryReadSection(out StateSectionReader? section))
         {
             var supportedVersion = section.Version == 1
+                || (section.Id == StateSectionIds.Cdrom && section.Version == 2)
                 || (section.Id == StateSectionIds.Quartz && section.Version <= 3)
                 || (section.Id == StateSectionIds.Clio && section.Version == 2)
                 || (section.Id == StateSectionIds.Madam && section.Version == 2)
-                || (section.Id == StateSectionIds.Options && section.Version <= 3);
+                || (section.Id == StateSectionIds.Options && section.Version <= 4);
             if (!supportedVersion)
             {
                 throw new InvalidStateException($"Unsupported section {section.Id} version {section.Version}.");
@@ -435,6 +442,7 @@ public sealed class FiveDoMachine
                     stateArmTiming = options.LoadedArmTiming;
                     stateClioTimers = options.LoadedClioTimers;
                     stateCelTiming = options.LoadedCelTiming;
+                    stateCdromTiming = options.LoadedCdromTiming;
                     break;
                 case StateSectionIds.Machine:
                     new MachineFrameSection(_frame, Compatibility).Load(section);
@@ -468,6 +476,12 @@ public sealed class FiveDoMachine
         {
             _stateWarnings.Add(
                 $"State CEL timing mode {savedCelTiming} differs from the machine mode {Tuning.CelTiming}.");
+        }
+
+        if (stateCdromTiming is { } savedCdromTiming && savedCdromTiming != Tuning.CdromTiming)
+        {
+            _stateWarnings.Add(
+                $"State CD-ROM timing mode {savedCdromTiming} differs from the machine mode {Tuning.CdromTiming}.");
         }
 
         // A command-line/front-end override survives loads of states written before the
@@ -598,6 +612,7 @@ public sealed class FiveDoMachine
     private void InternalFrame(int cycles, bool skipFrame)
     {
         Quartz.PushArmCycles((uint)cycles);
+        Cdrom.Tick((uint)cycles);
 
         if (Quartz.QueueDsp())
         {

@@ -1,7 +1,8 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-31, after the first full-collection sweep and the performance
-pass. Road Rash's 100k-state race now measures 4.20 ms/frame total (p99 7.40 ms),
+**Snapshot:** 2026-10-31, after the first full-collection sweep, the performance pass,
+and the ARM/CLIO/CEL/CD timing-option pass. Road Rash's 100k-state race now measures
+4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
 **594 discs tested: 576 Loadable/Rendered, 13 Loadable/No video, 5 Not Loadable.**
 The five not-loadable rows are resolved or explained: Mirai Shounen Conan now runs
@@ -19,7 +20,13 @@ a state snapshot and a 3,000-frame smoke differential in `TestCorpus.md` 1.1b.
 The CORE-03 CEL option (`--cel-timing freedo|opera`) now implements Opera's deferred
 draw and pixel/texel busy deadline behind the unchanged synchronous default, with a
 Madam section v2 busy snapshot, an Options v3 mode snapshot, and a three-title
-3,000-frame smoke differential in `TestCorpus.md` 1.1c. **1003 tests pass.**
+3,000-frame smoke differential in `TestCorpus.md` 1.1c.
+The CORE-04 CD option (`--cd-timing freedo|opera`) now implements Opera's cycle-based
+2048-byte data-sector readiness at the stock 2x drive speed, including delayed data
+polling, deferred read-data status, the XBUS CD FIQ, a CD-ROM section v2 clock
+snapshot, and an Options v4 mode snapshot. The immediate FreeDO path remains the
+default; the three-title smoke differential is in `TestCorpus.md` 1.1d.
+**1014 tests pass.**
 The v1.0 release is deliberately deferred: the next work is a BIOS-aware sweep and
 5DO status merge (M13), then high-resolution CEL research (M14). The project is
 **donationware** (non-commercial, source-available, voluntary donations only). See
@@ -183,7 +190,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 1003 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 1014 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and

@@ -55,6 +55,12 @@ public partial class SettingsWindow : Window
         new(CelTimingMode.OperaBusy, "Opera busy timing (accuracy)"),
     ];
 
+    private static readonly CdromTimingOption[] _cdromTimingOptions =
+    [
+        new(CdromTimingMode.FreeDoCompatible, "FreeDO-compatible (immediate, default)"),
+        new(CdromTimingMode.OperaCycleBased, "Opera cycle-based (2x, accuracy)"),
+    ];
+
     private static readonly ResolutionOption[] _resolutionOptions =
     [
         new(OutputResolution.Window, "Match window"),
@@ -125,6 +131,9 @@ public partial class SettingsWindow : Window
         CelTimingCombo.ItemsSource = _celTimingOptions;
         CelTimingCombo.SelectedItem = _celTimingOptions.FirstOrDefault(option => option.Value == settings.CelTiming)
             ?? _celTimingOptions[0];
+        CdromTimingCombo.ItemsSource = _cdromTimingOptions;
+        CdromTimingCombo.SelectedItem = _cdromTimingOptions.FirstOrDefault(option => option.Value == settings.CdromTiming)
+            ?? _cdromTimingOptions[0];
         CpuClockBox.Text = settings.CpuClockMultiplier.ToString("0.###", CultureInfo.InvariantCulture);
         RandomSeedBox.Text = settings.RandomSeed is { } seed ? $"0x{seed:x8}" : string.Empty;
         SaveDirectoryBox.Text = settings.SaveDirectory;
@@ -236,6 +245,9 @@ public partial class SettingsWindow : Window
         settings.CelTiming = CelTimingCombo.SelectedItem is CelTimingOption celTiming
             ? celTiming.Value
             : CelTimingMode.FreeDoCompatible;
+        settings.CdromTiming = CdromTimingCombo.SelectedItem is CdromTimingOption cdromTiming
+            ? cdromTiming.Value
+            : CdromTimingMode.FreeDoCompatible;
         if (!double.TryParse(
                 CpuClockBox.Text?.Trim(),
                 NumberStyles.Float,
@@ -430,6 +442,14 @@ public partial class SettingsWindow : Window
     }
 
     private sealed record CelTimingOption(CelTimingMode Value, string Label)
+    {
+        public override string ToString()
+        {
+            return Label;
+        }
+    }
+
+    private sealed record CdromTimingOption(CdromTimingMode Value, string Label)
     {
         public override string ToString()
         {

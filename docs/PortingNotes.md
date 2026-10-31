@@ -744,3 +744,35 @@ M1 implements the section primitive used by all later chips:
   shows it is safe. The 3,000-frame smoke keys in `TestCorpus.md` show the expected
   divergence: Lemmings and Gex are unchanged, while Road Rash reaches a different boot
   frame because its early CELs now consume time.
+
+### 12.18 CD-ROM cycle-based data timing (2026-10-31)
+
+- `CdromTimingMode.FreeDoCompatible` keeps the original immediate transfer: the first
+  requested sector is read during the command, and each following sector is read as soon
+  as the previous buffer drains. It remains the default so golden frames and existing
+  states are unchanged.
+- `CdromTimingMode.OperaCycleBased` follows the data path in
+  `opera_cdrom.c`: `cdrom_cmd_read_data` schedules the first sector at
+  `cycles + cdrom_data_sector_cycles()`, clears both poll bits, and
+  `cdrom_data_load_next_if_ready()` publishes a sector only after its deadline. The
+  sector time is `ARM clock / (75 * 2x)` minus Opera's measured overhead compensation
+  (1670 x 0.1 us, or 2,087 cycles at 12.5 MHz), giving 81,246 cycles at the stock clock.
+  The default drive speed is Opera's stock 2x; SYS-09 will expose the speed option.
+- The 0x10 read-data status response is deferred until the guest has drained the last
+  requested sector, matching `cdrom_data_publish_read_status_if_ready()`. A zero-length
+  read publishes status immediately. While waiting, `POLDT` and `POLST` are clear, so
+  the guest polls instead of reading stale zeroes.
+- `CdromDevice.Tick(cycles)` is called from `FiveDoMachine.InternalFrame` for every
+  16-255-cycle CPU batch. The device raises the XBUS CD FIQ through
+  `InterruptRequested` when delayed data or status becomes ready; without that callback
+  the guest could see the poll bit but never receive the interrupt.
+- The CLI exposes `--cd-timing freedo|opera` on `run` and `trace`; Settings >
+  Emulation exposes the same choice. `run --json` reports `cdromTiming`.
+- Save states record the mode in the Options section (version 4) and the device clock,
+  next-ready cycle, and pending-status flag in the CD-ROM section (version 2). Version-1
+  CD-ROM sections load with a zeroed clock; version-1/2/3 Options sections default the
+  mode to FreeDO-compatible. A mode mismatch is a warning, not a rejection.
+- This is the first CORE-04 increment, not the whole CD port: command latency, TOC from
+  the disc source, read-ahead, subcode, DIPIR tagging, CD-DA, ODE, and CD speed control
+  remain. Do not make the cycle model the default until the full-collection differential
+  shows it is safe. The smoke keys are in `TestCorpus.md` 1.1d.

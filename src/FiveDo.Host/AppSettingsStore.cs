@@ -63,6 +63,11 @@ public static class AppSettingsStore
                 settings.CelTiming = CelTimingMode.FreeDoCompatible;
             }
 
+            if (!Enum.IsDefined(settings.CdromTiming))
+            {
+                settings.CdromTiming = CdromTimingMode.FreeDoCompatible;
+            }
+
             return settings;
         }
         catch (JsonException exception)

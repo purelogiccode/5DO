@@ -39,6 +39,13 @@ public sealed record EmulatorTuning
     public CelTimingMode CelTiming { get; init; } = CelTimingMode.FreeDoCompatible;
 
     /// <summary>
+    /// Gets the CD-ROM data-sector timing model. The default transfers sectors immediately
+    /// like FreeDO; <see cref="CdromTimingMode.OperaCycleBased"/> schedules each sector at the
+    /// stock 2x drive speed and reports the drive busy while it is not ready.
+    /// </summary>
+    public CdromTimingMode CdromTiming { get; init; } = CdromTimingMode.FreeDoCompatible;
+
+    /// <summary>
     /// Gets the optional initial DSP PRNG seed. <see langword="null"/> keeps FreeDO's
     /// default seed (<c>0xa5a5a5a5</c>); a value makes fresh runs reproducible from a
     /// known seed.
@@ -67,6 +74,7 @@ public sealed record EmulatorTuning
         ValidateArmTiming(ArmTiming);
         ValidateClioTimers(ClioTimers);
         ValidateCelTiming(CelTiming);
+        ValidateCdromTiming(CdromTiming);
         ValidateCpuBackend(CpuBackend);
     }
 
@@ -108,6 +116,18 @@ public sealed record EmulatorTuning
                 nameof(celTiming),
                 celTiming,
                 "Unknown CEL timing mode.");
+        }
+    }
+
+    private static void ValidateCdromTiming(CdromTimingMode cdromTiming)
+    {
+        if (cdromTiming is not CdromTimingMode.FreeDoCompatible
+            and not CdromTimingMode.OperaCycleBased)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(cdromTiming),
+                cdromTiming,
+                "Unknown CD-ROM timing mode.");
         }
     }
 

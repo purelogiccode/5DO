@@ -188,7 +188,9 @@ cd read sector <lba>
 
 Use `--stop-cd 0x83` to stop on READ_ID, or `--stop-cd 0x10` for READ_DATA. Combine
 with `run --json` `cdStatus`/`cdPoll` and `--progress` to see whether the guest is
-polling a static state.
+polling a static state. With `--cd-timing opera`, `cd read sector <lba>` appears when
+the scheduled sector deadline expires rather than at command time, so the gap between
+the command and the read line is the modeled 2x drive time.
 
 `disc tracks game.chd` lists the CHD track table; `info game.chd` shows the volume
 header and game ID. `disc dump` writes raw 2048-byte sectors for manual inspection.

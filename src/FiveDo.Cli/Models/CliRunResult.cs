@@ -21,6 +21,7 @@ internal sealed record CliRunResult(
     string ClioTimers,
     string CelTiming,
     ulong CelBusyCycles,
+    string CdromTiming,
     int CpuClock,
     uint FixMode,
     bool DspRunning,

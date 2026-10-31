@@ -2,6 +2,17 @@
 
 ## 0. Current handoff (2026-10-30)
 
+**2026-10-31 update:** the CORE-04 CD cycle-timing option is implemented as the first
+increment of the CD port. The default `--cd-timing freedo` path is unchanged;
+`--cd-timing opera` schedules each 2048-byte data sector at the stock 2x drive speed,
+clears the data/status poll bits while busy, publishes the read-data status after the
+transfer drains, and raises the XBUS CD FIQ when ready. Settings > Emulation exposes
+the choice, `run --json` reports `cdromTiming`, the CD-ROM section is version 2, and the
+Options section is version 4. The three-title 12,000/24,000-frame smoke differential is
+in [`TestCorpus.md`](TestCorpus.md) 1.1d. Do not redo this option; the remaining CD work
+is command latency, disc-derived TOC, read-ahead, subcode, DIPIR tagging, CD-DA, ODE,
+and CD speed control. **1014 tests pass.**
+
 **2026-10-31 update:** the CORE-03 MADAM CEL busy option is implemented. The default
 `--cel-timing freedo` path is unchanged; `--cel-timing opera` defers the CEL draw to the
 next CPU tick and holds the status register busy for the estimated pixel/texel work.
@@ -71,8 +82,9 @@ MHTML in `References/4DO-master/`.
 not final statuses.
 
 **Do not redo:** the 4DO MHTML parser, the sweep harness, the OpenAL/Serilog/trimming
-work, the renderer/filter work, or the 2026-10-31 performance pass (CEL pipeline
-caching, Debug core optimization, render-request coalescing, Auto frame skip). Do not treat full-race completion, inventory
+work, the renderer/filter work, the ARM/CLIO/CEL/CD timing options, or the 2026-10-31
+performance pass (CEL pipeline caching, Debug core optimization, render-request
+coalescing, Auto frame skip). Do not treat full-race completion, inventory
 scripting, Pi/arm64 validation, or installers as current gates.
 
 **Project position:** donationware, non-commercial, source-available. The legal

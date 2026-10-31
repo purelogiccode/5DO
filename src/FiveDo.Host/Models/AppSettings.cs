@@ -150,6 +150,13 @@ public sealed class AppSettings
     public CelTimingMode CelTiming { get; set; } = CelTimingMode.FreeDoCompatible;
 
     /// <summary>
+    /// Gets or sets the CD-ROM data-sector timing model. The default transfers sectors
+    /// immediately like FreeDO; <see cref="CdromTimingMode.OperaCycleBased"/> schedules each
+    /// sector at the stock 2x drive speed.
+    /// </summary>
+    public CdromTimingMode CdromTiming { get; set; } = CdromTimingMode.FreeDoCompatible;
+
+    /// <summary>
     /// Gets or sets the ARM clock multiplier. 1.0 is the stock 12.5 MHz clock; the
     /// supported range is 0.5x to 4x (6.25-50 MHz).
     /// </summary>

@@ -1802,6 +1802,7 @@ public partial class MainWindow : Window, IDisposable
                 || _settings.ArmTiming != _machine.Tuning.ArmTiming
                 || _settings.ClioTimers != _machine.Tuning.ClioTimers
                 || _settings.CelTiming != _machine.Tuning.CelTiming
+                || _settings.CdromTiming != _machine.Tuning.CdromTiming
                 || _settings.ResolveArmClock() != _machine.Tuning.ArmClock
                 || _settings.RandomSeed != _machine.Tuning.RandomSeed))
         {
@@ -2335,6 +2336,7 @@ public partial class MainWindow : Window, IDisposable
                 ArmTiming = _settings.ArmTiming,
                 ClioTimers = _settings.ClioTimers,
                 CelTiming = _settings.CelTiming,
+                CdromTiming = _settings.CdromTiming,
                 ArmClock = _settings.ResolveArmClock(),
                 RandomSeed = _settings.RandomSeed,
             })

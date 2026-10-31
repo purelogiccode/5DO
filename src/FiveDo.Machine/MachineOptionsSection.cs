@@ -27,10 +27,11 @@ internal sealed class MachineOptionsSection : IStateSection
 
     /// <summary>Gets the save-state section version.</summary>
     /// <remarks>
-    /// Version 2 adds the CLIO timer mode; version 3 adds the MADAM CEL timing mode.
-    /// Version-1 and version-2 states default the missing fields to FreeDO-compatible.
+    /// Version 2 adds the CLIO timer mode; version 3 adds the MADAM CEL timing mode;
+    /// version 4 adds the CD-ROM timing mode. Older states default the missing fields to
+    /// FreeDO-compatible.
     /// </remarks>
-    public ushort Version => 3;
+    public ushort Version => 4;
 
     /// <summary>Gets the ARM timing mode read from a state, or <see langword="null"/> when absent.</summary>
     internal ArmTimingMode? LoadedArmTiming { get; private set; }
@@ -41,6 +42,9 @@ internal sealed class MachineOptionsSection : IStateSection
     /// <summary>Gets the CEL timing mode read from a state, or <see langword="null"/> when absent.</summary>
     internal CelTimingMode? LoadedCelTiming { get; private set; }
 
+    /// <summary>Gets the CD-ROM timing mode read from a state, or <see langword="null"/> when absent.</summary>
+    internal CdromTimingMode? LoadedCdromTiming { get; private set; }
+
     /// <summary>Writes the option snapshot.</summary>
     /// <param name="writer">State writer.</param>
     public void Save(IStateWriter writer)
@@ -49,6 +53,7 @@ internal sealed class MachineOptionsSection : IStateSection
         writer.WriteUInt32((uint)_tuning.ArmTiming);
         writer.WriteUInt32((uint)_tuning.ClioTimers);
         writer.WriteUInt32((uint)_tuning.CelTiming);
+        writer.WriteUInt32((uint)_tuning.CdromTiming);
     }
 
     /// <summary>Reads the option snapshot.</summary>
@@ -69,6 +74,7 @@ internal sealed class MachineOptionsSection : IStateSection
         {
             LoadedClioTimers = null;
             LoadedCelTiming = null;
+            LoadedCdromTiming = null;
             return;
         }
 
@@ -83,6 +89,7 @@ internal sealed class MachineOptionsSection : IStateSection
         if (reader is StateSectionReader { Version: 2 })
         {
             LoadedCelTiming = null;
+            LoadedCdromTiming = null;
             return;
         }
 
@@ -93,5 +100,20 @@ internal sealed class MachineOptionsSection : IStateSection
         }
 
         LoadedCelTiming = celTiming;
+
+        if (reader is StateSectionReader { Version: 3 })
+        {
+            LoadedCdromTiming = null;
+            return;
+        }
+
+        var cdromTiming = (CdromTimingMode)reader.ReadUInt32();
+        if (cdromTiming is not CdromTimingMode.FreeDoCompatible
+            and not CdromTimingMode.OperaCycleBased)
+        {
+            throw new InvalidStateException($"Unknown CD-ROM timing mode {(uint)cdromTiming} in the save state.");
+        }
+
+        LoadedCdromTiming = cdromTiming;
     }
 }
