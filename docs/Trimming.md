@@ -216,7 +216,8 @@ executable. The trimmed win-x64 CLI reproduces the current 3,000-frame golden
 results for Lemmings (`PC 0x0012B36C`, hash `0x6CCA83F5`) and Alone in the Dark
 (`PC 0x000C4C94`, hash `0x4EC2E1A7`) from `artifacts/regression/`; the frame
 hashes, PCs, cycle counts, disc IDs, and fix modes match. These keys postdate the
-exact DSP audio clock; see [`TestCorpus.md`](TestCorpus.md) 1.1.
+exact DSP audio clock but predate the 2026-10-30 headless PBUS fix; see
+[`TestCorpus.md`](TestCorpus.md) 1.1 for the current keys.
 
 `-m:1` avoids a .NET SDK 10.0.301 `GenerateDepsFile` race seen when several
 project references generate dependency files in parallel during a trimmed

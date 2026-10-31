@@ -129,6 +129,10 @@ prints a warning and runs silently. `--realtime` only affects pacing, not the ba
 | `--autopilot road` | none | Road Rash autopilot. Cannot be combined with `--input-script`. |
 | `--progress N` | 0 (off) | Print a progress line to stderr every N frames. |
 
+`run` and `trace` always attach a default player-1 pad, matching the desktop shell;
+without `--input-script` the pad is connected but idle. This matters for titles such
+as Olympic Summer Games that reject the boot when PBUS reports no controller.
+
 Input script format:
 
 ```text

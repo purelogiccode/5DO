@@ -262,6 +262,12 @@ def write_markdown(
         "`artifacts/compat/` and can be merged into the 5DO columns below. The latest "
         "automated pass is [`GameCompatibilityResults.md`](GameCompatibilityResults.md)."
     )
+    lines.append(
+        "- BIOS sensitivity: the 2026-10-30 triage found that several titles need "
+        "`panafz10` or the Anvil BIOS; see "
+        "[`Compatibility.md`](Compatibility.md) 13.2. Record the BIOS used in the "
+        "5DO notes."
+    )
     lines.append("")
     lines.append("## 4DO status scale")
     lines.append("")

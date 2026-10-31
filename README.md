@@ -8,14 +8,19 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-10-30, compatibility-sweep preparation):**
+**Current position (2026-10-30, after the first full-collection sweep and triage):**
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **925 tests pass.** The v1.0 release is deliberately deferred: the next
-work is the full-collection loadability/in-game sweep (M13) and high-resolution CEL
-research (M14). The project is **donationware** (non-commercial, source-available;
-voluntary donations only). See [`docs/CompatibilitySweep.md`](docs/CompatibilitySweep.md),
+prototype. **925 tests pass.** The 594-disc baseline found 576 rendered, 13 black/blank,
+and 5 not-loadable images. Triage resolved the five not-loadable rows (Mirai Shounen
+Conan was a transient CHD read error; the four Arcade CD-ROM titles boot with
+`panafz10`), and six of the 13 black/blank titles render by 6,000-9,000 frames. Headless
+`run`/`trace` now attach a default player-1 pad. The v1.0 release is deliberately
+deferred: the next work is a BIOS-aware sweep and 5DO status merge (M13), then
+high-resolution CEL research (M14). The project is **donationware** (non-commercial,
+source-available; voluntary donations only). See
+[`docs/CompatibilitySweep.md`](docs/CompatibilitySweep.md),
 [`docs/GameCompatibilityList.md`](docs/GameCompatibilityList.md), and
 [`docs/HighResolutionCelResearch.md`](docs/HighResolutionCelResearch.md). The
 twenty-seventh pass embedded the Vulkan surface and fixed the CoreRunner stop/start

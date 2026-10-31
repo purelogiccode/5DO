@@ -607,8 +607,8 @@ several failures are BIOS-selection problems rather than emulator defects:
 | Orbatak (Arcade CD-ROM) | hangs ~frame 1,740 | 3,000 frames | not needed | Loadable with `panafz10` |
 | Shootout at Old Tucson RE3 | hangs ~frame 1,740 | 3,000 frames | not needed | Loadable with `panafz10` |
 | Mirai Shounen Conan | transient CHD read error | 3,000 frames | 3,000 frames | Loadable; repeated runs are stable |
-| Crash 'n Burn (Japan) | invalid PC / black | invalid PC / black | purple boot screen | Anvil BIOS required |
-| Powers Kingdom (Europe) | solid blue | solid blue | intro renders | Anvil BIOS required, matching the 4DO note |
+| Crash 'n Burn (Japan) | invalid PC / black | invalid PC / black | purple boot screen | Japan revision stuck; USA/Korea revisions render with `panafz1` |
+| Powers Kingdom (Europe) | solid blue | solid blue | intro animation by 30,000 frames | Anvil BIOS required, matching the 4DO note |
 | Slayer (USA) | black | title/credits render | black | `panafz10`/GoldStar/Sanyo required |
 | WorldCup Super Stadium (Japan) | solid blue | solid blue | boot screen | Anvil BIOS gets further; in-game path unconfirmed |
 | Olympic Summer Games (USA) | "Insert a controller" | not tested | not tested | Fixed by the default headless pad; renders the high-jump screen |
