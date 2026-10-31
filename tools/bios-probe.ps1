@@ -16,8 +16,8 @@ Statuses to retry. Defaults to Loadable/No video and Not Loadable. When invoking
 -File, pass a comma-separated list.
 
 .PARAMETER Bios
-BIOS images to try, in order. Defaults to panafz1, panafz10, and the Anvil BIOS.
-When invoking with -File, pass a comma-separated list.
+BIOS images to try, in order. Defaults to panafz1, panafz10-patched, and the Anvil
+BIOS. When invoking with -File, pass a comma-separated list.
 
 .PARAMETER Frames
 Frames per attempt. Defaults to 12000, enough for the long black transitions.
@@ -44,7 +44,7 @@ param(
     [string[]]$Status = @('Loadable/No video', 'Not Loadable'),
     [string[]]$Bios = @(
         'bios/panafz1.bin',
-        'bios/panafz10.bin',
+        'bios/panafz10-patched.bin',
         'bios/panafz10e-anvil.bin'
     ),
     [int]$Frames = 12000,
