@@ -129,6 +129,24 @@ public sealed class AppSettings
     /// <summary>Gets or sets a value indicating whether the opt-in 640x480 high-resolution mode is used.</summary>
     public bool HighResolution { get; set; }
 
+    /// <summary>
+    /// Gets or sets the ARM60 N-cycle timing mode. The default is the FreeDO-compatible
+    /// baseline; <see cref="ArmTimingMode.Arm60Datasheet"/> is the accuracy option.
+    /// </summary>
+    public ArmTimingMode ArmTiming { get; set; } = ArmTimingMode.FreeDoCompatible;
+
+    /// <summary>
+    /// Gets or sets the ARM clock multiplier. 1.0 is the stock 12.5 MHz clock; the
+    /// supported range is 0.5x to 4x (6.25-50 MHz).
+    /// </summary>
+    public double CpuClockMultiplier { get; set; } = 1.0;
+
+    /// <summary>
+    /// Gets or sets the optional initial DSP PRNG seed. <see langword="null"/> uses
+    /// FreeDO's default seed.
+    /// </summary>
+    public uint? RandomSeed { get; set; }
+
     /// <summary>Gets or sets the audio volume (0-1).</summary>
     public float Volume { get; set; } = 1f;
 
@@ -245,6 +263,22 @@ public sealed class AppSettings
     {
         FixMode? overrideMode = GetFixModeOverride(gameId);
         return overrideMode ?? (AutoGameFixes ? GameCompatibility.ForGameId(gameId).FixMode : FixMode.None);
+    }
+
+    /// <summary>Resolves and validates the configured ARM clock in hertz.</summary>
+    /// <returns>The clock derived from <see cref="CpuClockMultiplier"/>.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the multiplier is outside 0.5x-4x.</exception>
+    public int ResolveArmClock()
+    {
+        if (!double.IsFinite(CpuClockMultiplier) || CpuClockMultiplier < 0.5 || CpuClockMultiplier > 4.0)
+        {
+            throw new ArgumentOutOfRangeException(
+                paramName: null,
+                actualValue: CpuClockMultiplier,
+                message: "The CPU clock multiplier must be between 0.5 and 4.0.");
+        }
+
+        return (int)Math.Round(EmulatorConstants.ArmClock * CpuClockMultiplier);
     }
 
     /// <summary>Gets the renderer settings derived from this configuration.</summary>

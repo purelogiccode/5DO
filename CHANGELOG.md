@@ -7,6 +7,20 @@ still change.
 
 ### Added
 
+- ARM60 cycle-class timing option (`ArmTimingMode`). The default
+  `FreeDoCompatible` mode keeps the original N=4 timing; the opt-in
+  `Arm60Datasheet` mode uses N=2 from the ARM60 datasheet/SDK and Opera. It is
+  available as `--arm-timing freedo|arm60` on `run`/`trace` and in Settings >
+  Emulation, and `run --json` reports the selected mode. Save states record the mode
+  in an optional `Options` section; loading a state written with another mode adds a
+  warning instead of rejecting the state.
+- CPU clock control for the CLI and desktop: `--cpu-clock 0.5x-4x` (or an absolute
+  `6.25-50MHz` value) and Settings > Emulation > CPU clock. The stock 12.5 MHz default
+  is unchanged, the existing save-state ARM-clock warning still applies, and `run --json`
+  reports the active clock in hertz.
+- Random-seed control for the DSP PRNG: `--random-seed default|random|SEED` and
+  Settings > Emulation > Random seed. The default preserves FreeDO's `0xa5a5a5a5`
+  seed; a fixed value makes fresh runs reproducible.
 - Frontend command-line launch options for file associations and external emulator
   frontends: positional disc / `--disc <path>`, `--bios <path>`, `-f`/`--fullscreen`,
   `--gl-backend`, `--version`, and `-h`/`--help`. A missing explicit BIOS path exits

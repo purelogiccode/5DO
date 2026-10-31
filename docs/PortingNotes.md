@@ -646,3 +646,42 @@ M1 implements the section primitive used by all later chips:
 - `AppSettings`/`AppSettingsStore` persist BIOS/disc paths, save/screenshot directories, renderer filter/aspect/vsync, audio enable/volume, and the JSON input profile. The shell auto-loads the last BIOS/disc when the files still exist and saves settings on close.
 - CI now publishes both the CLI and the Avalonia frontend for the six target RIDs; a local win-x64 CLI publish and a short Windows frontend launch were smoke-tested. The launch smoke test did not prove 4K60, GLES compatibility, or sustained frame pacing; those are M9P gates. Live audio output and arm64 validation remain.
 - `OpenAlAudioOutput` is host I/O: a dedicated thread fills three 512-frame OpenAL Stereo16 buffers from a 4096-frame SPSC ring. The OpenAL context is made current **on the audio thread** (the current context is thread-local); failing to do this leaves all fill calls on a thread with no context and produces silence. Underruns are padded with silence and counted. `TryCreate` returns null with a diagnostic when no device/context exists, keeping headless and CI runs silent and stable. The OpenAL Soft 1.23.1 native runtime is bundled (`Silk.NET.OpenAL.Soft.Native`); Windows copies `soft_oal.dll` as `OpenAL32.dll`.
+
+### 12.13 ARM timing mode (2026-10-31)
+
+- `ArmTimingMode.FreeDoCompatible` keeps the original port's `Ncycle = 4` and remains
+  the default. `ArmTimingMode.Arm60Datasheet` selects `Ncycle = 2`, matching
+  `References/opera-libretro-master/libopera/opera_arm.c` and the ARM60 datasheet/SDK
+  rationale documented there. S and I cycles are unchanged.
+- The interpreter stores the selected N-cycle length per instance; no mutable static
+  state is involved, so machines with different modes can run in parallel.
+- The CLI exposes `--arm-timing freedo|arm60` on `run` and `trace`, and the desktop
+  Settings dialog exposes the same choice. Changing the mode recreates the machine.
+- Save states include an optional `Options` section (id 12) that records the ARM timing
+  mode. Older states load with the FreeDO-compatible default. A mismatch is reported in
+  `StateWarnings` and does not reject the state. Older 5DO builds ignore the unknown
+  section, preserving backward compatibility without a format-version bump.
+- This is a timing option, not a compatibility fix. Do not apply the ARM60 mode by
+  default until a full-collection differential shows it is safe.
+
+### 12.14 CPU clock control (2026-10-31)
+
+- `EmulatorTuning.ArmClock` was already the single source of truth for the frame budget
+  and Quartz. The CLI now accepts `--cpu-clock` as a multiplier (`0.5x`-`4x`) or an
+  absolute clock (`6.25MHz`-`50MHz`), and `AppSettings.CpuClockMultiplier` exposes the
+  same range in the desktop shell. The stock 12.5 MHz clock remains the default.
+- The save-state header already records the absolute ARM clock; loading a state written
+  at another clock adds the existing mismatch warning and does not reject the state.
+- Overclocking is a performance option, not an accuracy option. Do not change the
+  default based on compatibility anecdotes; measure a title at each clock first.
+
+### 12.15 Random seed control (2026-10-31)
+
+- FreeDO seeds the DSP PRNG once in `_dsp_Init` (`0xa5a5a5a5`) and leaves it alone in
+  `_dsp_Reset`. `Dsp.SetSeed` preserves that lifecycle; `FiveDoMachine` applies
+  `EmulatorTuning.RandomSeed` after construction and before the first instruction.
+- `--random-seed default` keeps the reference seed, `random` chooses a fresh 32-bit
+  value at launch, and a decimal/`0x` value fixes the seed. The same option is stored in
+  `AppSettings.RandomSeed` and edited in Settings > Emulation.
+- Save states already serialize the DSP seed, so a loaded state continues from its
+  recorded PRNG position rather than the configured initial seed.

@@ -87,6 +87,9 @@ every serialized property in `AppSettings`.
 | `Bloom` | float | `0.35` | CRT bloom strength, 0..1. |
 | `FsrSharpness` | float | `0.8` | FSR 1.0 RCAS sharpness, 0 (soft) .. 1 (maximum). |
 | `HighResolution` | bool | `false` | Opt-in 640x480 CEL/VDLP mode. |
+| `ArmTiming` | enum string | `"FreeDoCompatible"` | ARM60 N-cycle class: `FreeDoCompatible` (N=4) or `Arm60Datasheet` (N=2, accuracy). |
+| `CpuClockMultiplier` | double | `1.0` | ARM clock multiplier, 0.5..4.0 (6.25-50 MHz). 1.0 is the stock 12.5 MHz. |
+| `RandomSeed` | uint? | `null` | Optional initial DSP PRNG seed; `null` uses FreeDO's `0xa5a5a5a5`. |
 | `Volume` | float | `1.0` | OpenAL gain, 0..1. |
 | `AudioEnabled` | bool | `true` | Enable live OpenAL output. |
 | `Input` | object | defaults | Six-player keyboard/gamepad bindings plus hotkeys. |
@@ -337,11 +340,15 @@ The Settings dialog's **Emulation** page edits:
 
 - `AutoGameFixes` checkbox.
 - `HighResolution` checkbox (restarts the machine when changed).
+- `ArmTiming` combo: FreeDO-compatible N=4 or ARM60 datasheet N=2 (restarts the machine when changed).
+- `CpuClockMultiplier` field: 0.5..4.0 (restarts the machine when changed).
+- `RandomSeed` field: blank for the FreeDO default, or a 32-bit hexadecimal value.
 - Current game display and fix-mode override (`0x...` hex mask, blank = automatic).
 - Per-game filter override (`Automatic` or an explicit filter).
 
-Changing high-resolution mode recreates the machine and reopens the current BIOS/disc;
-the state is not preserved.
+Changing high-resolution mode or ARM timing recreates the machine and reopens the
+current BIOS/disc; the state is not preserved. Save states record the ARM timing mode,
+and loading a state written with another mode reports a warning instead of rejecting it.
 
 ---
 

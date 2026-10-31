@@ -12,7 +12,8 @@ namespace FiveDo.Cpu;
 /// the same cycle count as <c>_arm_Execute</c>. It preserves the reference's decode order,
 /// including the C++ switch fallthrough, the banked-register model, the CLIO PC-adjust
 /// quirk, the Anvil/Crash 'n Burn compatibility hacks, and the immediate data-processing
-/// carry-out behaviour.
+/// carry-out behaviour. The N-cycle class is selected by
+/// <see cref="EmulatorTuning.ArmTiming"/>; the default remains FreeDO's N=4.
 /// </para>
 /// <para>
 /// All mutable state is instance state; the CPU can be used by independent machines in
@@ -21,9 +22,10 @@ namespace FiveDo.Cpu;
 /// </remarks>
 public sealed class Arm60 : ICpuBackend, IStateSection
 {
-    private const int Ncycle = 4;
     private const int Scycle = 1;
     private const int Icycle = 1;
+
+    private readonly int _nCycle;
 
     private static readonly bool[] IsLogic =
     {
@@ -63,6 +65,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
         _interrupts = interrupts;
         _tuning = tuning ?? EmulatorTuning.Default;
         _tuning.Validate();
+        _nCycle = _tuning.ArmTiming == ArmTimingMode.Arm60Datasheet ? 2 : 4;
         _compatibility = compatibility ?? new CompatibilityState { FixMode = _tuning.FixMode };
         Reset();
     }
@@ -72,6 +75,9 @@ public sealed class Arm60 : ICpuBackend, IStateSection
 
     /// <summary>Gets the machine tuning.</summary>
     public EmulatorTuning Tuning => _tuning;
+
+    /// <summary>Gets the N-cycle length in ARM clock cycles selected by <see cref="EmulatorTuning.ArmTiming"/>.</summary>
+    public int NCycle => _nCycle;
 
     /// <summary>Gets the shared compatibility state.</summary>
     public CompatibilityState Compatibility => _compatibility;
@@ -440,7 +446,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
             state.User[(int)((instruction >> 12) & 0xf)] = temporary;
         }
 
-        _cycles -= (2 * Ncycle) + Icycle;
+        _cycles -= (2 * _nCycle) + Icycle;
         return true;
     }
 
@@ -520,7 +526,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
                 state.SetCpsr(state.CurrentSpsr);
             }
 
-            _cycles -= Icycle + Ncycle;
+            _cycles -= Icycle + _nCycle;
         }
     }
 
@@ -609,10 +615,10 @@ public sealed class Arm60 : ICpuBackend, IStateSection
 
             if (destination == 15)
             {
-                _cycles -= Scycle + Ncycle;
+                _cycles -= Scycle + _nCycle;
             }
 
-            _cycles -= Ncycle + Icycle;
+            _cycles -= _nCycle + Icycle;
             state.ProgramCounter = programCounter;
 
             if ((instruction & (1u << 21)) != 0 || (instruction & (1u << 24)) == 0)
@@ -642,7 +648,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
             }
 
             state.ProgramCounter = programCounter;
-            _cycles -= -Scycle + (2 * Ncycle);
+            _cycles -= -Scycle + (2 * _nCycle);
 
             if ((instruction & (1u << 22)) != 0)
             {
@@ -670,7 +676,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
         {
             if ((instruction & 0x8000) != 0)
             {
-                _cycles -= Scycle + Ncycle;
+                _cycles -= Scycle + _nCycle;
             }
 
             LoadMultiple(instruction, baseAddress, register);
@@ -785,7 +791,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
             }
         }
 
-        _cycles -= ((count - 1) * Scycle) + Ncycle + Icycle;
+        _cycles -= ((count - 1) * Scycle) + _nCycle + Icycle;
     }
 
     private void StoreMultiple(uint instruction, uint baseAddress, int register)
@@ -879,7 +885,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
             WriteWord(basePointer, state.User[15] + 8);
         }
 
-        _cycles -= ((count - 2) * Scycle) + Ncycle + Ncycle;
+        _cycles -= ((count - 2) * Scycle) + _nCycle + _nCycle;
     }
 
     private void ExecuteBranch(uint instruction)
@@ -892,7 +898,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
 
         var offset = (instruction & 0xffffff) | ((instruction & 0x800000) != 0 ? 0xff000000u : 0u);
         state.ProgramCounter = unchecked(state.ProgramCounter + (offset << 2) + 4);
-        _cycles -= Scycle + Ncycle;
+        _cycles -= Scycle + _nCycle;
     }
 
     private void EnterSwi()
@@ -903,7 +909,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
         state.SetMode(0x13);
         state.Load(14, state.ProgramCounter);
         state.ProgramCounter = 0x00000008;
-        _cycles -= Scycle + Ncycle;
+        _cycles -= Scycle + _nCycle;
     }
 
     private void EnterUndefined()
@@ -914,7 +920,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
         state.SetMode(0x1b);
         state.Load(14, state.ProgramCounter);
         state.ProgramCounter = 0x00000004;
-        _cycles -= Scycle + Ncycle;
+        _cycles -= Scycle + _nCycle;
     }
 
     private void EnterFiq()

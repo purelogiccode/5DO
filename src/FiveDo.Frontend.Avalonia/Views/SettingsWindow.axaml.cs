@@ -37,6 +37,12 @@ public partial class SettingsWindow : Window
         new(FrameSkipMode.OneInFive, "Skip 4 of 5 (12 fps)"),
     ];
 
+    private static readonly ArmTimingOption[] _armTimingOptions =
+    [
+        new(ArmTimingMode.FreeDoCompatible, "FreeDO-compatible (N=4, default)"),
+        new(ArmTimingMode.Arm60Datasheet, "ARM60 datasheet (N=2, accuracy)"),
+    ];
+
     private static readonly ResolutionOption[] _resolutionOptions =
     [
         new(OutputResolution.Window, "Match window"),
@@ -98,6 +104,11 @@ public partial class SettingsWindow : Window
         VolumeSlider.Value = settings.Volume;
         AutoFixesCheck.IsChecked = settings.AutoGameFixes;
         HighResCheck.IsChecked = settings.HighResolution;
+        ArmTimingCombo.ItemsSource = _armTimingOptions;
+        ArmTimingCombo.SelectedItem = _armTimingOptions.FirstOrDefault(option => option.Value == settings.ArmTiming)
+            ?? _armTimingOptions[0];
+        CpuClockBox.Text = settings.CpuClockMultiplier.ToString("0.###", CultureInfo.InvariantCulture);
+        RandomSeedBox.Text = settings.RandomSeed is { } seed ? $"0x{seed:x8}" : string.Empty;
         SaveDirectoryBox.Text = settings.SaveDirectory;
         ScreenshotDirectoryBox.Text = settings.ScreenshotDirectory;
         CoverDirectoryBox.Text = settings.CoverDirectory;
@@ -198,6 +209,40 @@ public partial class SettingsWindow : Window
         settings.Volume = (float)VolumeSlider.Value;
         settings.AutoGameFixes = AutoFixesCheck.IsChecked == true;
         settings.HighResolution = HighResCheck.IsChecked == true;
+        settings.ArmTiming = ArmTimingCombo.SelectedItem is ArmTimingOption armTiming
+            ? armTiming.Value
+            : ArmTimingMode.FreeDoCompatible;
+        if (!double.TryParse(
+                CpuClockBox.Text?.Trim(),
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out var cpuClockMultiplier)
+            || !double.IsFinite(cpuClockMultiplier)
+            || cpuClockMultiplier < 0.5
+            || cpuClockMultiplier > 4.0)
+        {
+            throw new FormatException("The CPU clock multiplier must be between 0.5 and 4.0.");
+        }
+
+        settings.CpuClockMultiplier = cpuClockMultiplier;
+        var seedText = RandomSeedBox.Text?.Trim();
+        if (string.IsNullOrEmpty(seedText))
+        {
+            settings.RandomSeed = null;
+        }
+        else
+        {
+            var seedValue = seedText.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+                ? seedText[2..]
+                : seedText;
+            if (!uint.TryParse(seedValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var seed))
+            {
+                throw new FormatException("The random seed must be a 32-bit hexadecimal value such as 0x1234, or blank.");
+            }
+
+            settings.RandomSeed = seed;
+        }
+
         settings.SaveDirectory = SaveDirectoryBox.Text?.Trim() ?? string.Empty;
         settings.ScreenshotDirectory = ScreenshotDirectoryBox.Text?.Trim() ?? string.Empty;
         settings.CoverDirectory = CoverDirectoryBox.Text?.Trim() ?? string.Empty;
@@ -337,6 +382,14 @@ public partial class SettingsWindow : Window
     }
 
     private sealed record FrameSkipOption(FrameSkipMode Value, string Label)
+    {
+        public override string ToString()
+        {
+            return Label;
+        }
+    }
+
+    private sealed record ArmTimingOption(ArmTimingMode Value, string Label)
     {
         public override string ToString()
         {

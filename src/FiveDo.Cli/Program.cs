@@ -215,6 +215,9 @@ internal static class Program
         var machine = new FiveDoMachine(new EmulatorTuning
         {
             HighResolution = HasFlag(args, "--high-res"),
+            ArmTiming = ParseArmTiming(options.Get("--arm-timing")),
+            ArmClock = ParseCpuClock(options.Get("--cpu-clock")),
+            RandomSeed = ParseRandomSeed(options.Get("--random-seed")),
             FixMode = fixMode,
         });
         if (biosPath is not null)
@@ -632,6 +635,8 @@ internal static class Program
             Samples: audio.SampleCount,
             DiscHash: discHash,
             GameId: gameId,
+            ArmTiming: machine.Tuning.ArmTiming.ToString(),
+            CpuClock: machine.Tuning.ArmClock,
             FixMode: (uint)machine.Compatibility.FixMode,
             DspRunning: machine.Dsp.IsRunning,
             DspPc: machine.Dsp.ProgramCounter,
@@ -733,6 +738,9 @@ internal static class Program
         var machine = new FiveDoMachine(new EmulatorTuning
         {
             HighResolution = HasFlag(args, "--high-res"),
+            ArmTiming = ParseArmTiming(options.Get("--arm-timing")),
+            ArmClock = ParseCpuClock(options.Get("--cpu-clock")),
+            RandomSeed = ParseRandomSeed(options.Get("--random-seed")),
             FixMode = fixMode,
         });
         if (biosPath is not null)
@@ -1698,6 +1706,8 @@ internal static class Program
 
         Console.WriteLine($"disc hash:   {result.DiscHash}");
         Console.WriteLine($"game id:     {result.GameId}");
+        Console.WriteLine($"arm timing:  {result.ArmTiming}");
+        Console.WriteLine($"cpu clock:   {result.CpuClock / 1_000_000.0:0.###} MHz");
         Console.WriteLine($"fix mode:    0x{result.FixMode:x8}");
         Console.WriteLine($"dsp running: {result.DspRunning}");
         Console.WriteLine($"dsp pc:      0x{result.DspPc:x4}");
@@ -1748,6 +1758,95 @@ internal static class Program
         }
 
         return GameCompatibility.ForGameId(gameId).FixMode;
+    }
+
+    private static ArmTimingMode ParseArmTiming(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)
+            || string.Equals(value, "freedo", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "freedo-compatible", StringComparison.OrdinalIgnoreCase))
+        {
+            return ArmTimingMode.FreeDoCompatible;
+        }
+
+        if (string.Equals(value, "arm60", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "datasheet", StringComparison.OrdinalIgnoreCase))
+        {
+            return ArmTimingMode.Arm60Datasheet;
+        }
+
+        throw new ArgumentException(
+            $"Invalid --arm-timing value '{value}'; expected freedo or arm60.",
+            nameof(value));
+    }
+
+    private static int ParseCpuClock(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return EmulatorConstants.ArmClock;
+        }
+
+        var text = value.Trim();
+        var isMegahertz = text.EndsWith("mhz", StringComparison.OrdinalIgnoreCase);
+        if (isMegahertz)
+        {
+            text = text[..^3].Trim();
+        }
+        else if (text.EndsWith('x') || text.EndsWith('X'))
+        {
+            text = text[..^1].Trim();
+        }
+
+        if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var number)
+            || !double.IsFinite(number)
+            || number <= 0)
+        {
+            throw new ArgumentException(
+                $"Invalid --cpu-clock value '{value}'; expected a multiplier such as 2x or a clock such as 25MHz.",
+                nameof(value));
+        }
+
+        var clock = isMegahertz
+            ? (int)Math.Round(number * 1_000_000.0)
+            : (int)Math.Round(number * EmulatorConstants.ArmClock);
+        if (clock < EmulatorConstants.ArmClock / 2 || clock > EmulatorConstants.ArmClock * 4)
+        {
+            throw new ArgumentException(
+                $"Invalid --cpu-clock value '{value}'; the clock must be between 0.5x and 4x "
+                + $"({EmulatorConstants.ArmClock / 2_000_000.0:0.##}-{EmulatorConstants.ArmClock * 4 / 1_000_000.0:0.##} MHz).",
+                nameof(value));
+        }
+
+        return clock;
+    }
+
+    private static uint? ParseRandomSeed(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)
+            || string.Equals(value, "default", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        if (string.Equals(value, "random", StringComparison.OrdinalIgnoreCase))
+        {
+            return (uint)Random.Shared.NextInt64(0, (long)uint.MaxValue + 1);
+        }
+
+        var text = value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? value[2..] : value;
+        if (!uint.TryParse(
+                text,
+                value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? NumberStyles.HexNumber : NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out var seed))
+        {
+            throw new ArgumentException(
+                $"Invalid --random-seed value '{value}'; expected default, random, or a 32-bit seed.",
+                nameof(value));
+        }
+
+        return seed;
     }
 
     private static FixMode ParseFixMode(string value)
@@ -1819,12 +1918,14 @@ internal static class Program
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--script-base absolute|state] [--autopilot road] [--progress N] [--cel-trace path] [--pbus-trace path]");
         Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--prefetch]");
-        Console.WriteLine("             [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--realtime] [--json]");
+        Console.WriteLine("             [--arm-timing freedo|arm60] [--cpu-clock 0.5x-4x|6.25-50MHz]");
+        Console.WriteLine("             [--random-seed default|random|SEED] [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--realtime] [--json]");
         Console.WriteLine("  trace [disc] --bios path [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
         Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path] [--high-res] [--prefetch]");
-        Console.WriteLine("             [--fix-mode 0xMASK] [--no-game-fixes]");
+        Console.WriteLine("             [--arm-timing freedo|arm60] [--cpu-clock 0.5x-4x|6.25-50MHz]");
+        Console.WriteLine("             [--random-seed default|random|SEED] [--fix-mode 0xMASK] [--no-game-fixes]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             Runs the machine and records a diagnostic instruction ring buffer.");
         Console.WriteLine("  info <disc> [--json]                 Disc geometry, volume header, and game ID.");

@@ -73,6 +73,10 @@ public sealed class FiveDoMachine
         Cdrom = new CdromChip();
         Xbus.Attach(Cdrom);
         Dsp = new DspCore { Host = Clio };
+        if (Tuning.RandomSeed is { } randomSeed)
+        {
+            Dsp.SetSeed(randomSeed);
+        }
 
         Clio.Ram = Memory.Ram;
         Clio.RomSelector = Memory;
@@ -273,6 +277,7 @@ public sealed class FiveDoMachine
         writer.WriteSection(Xbus);
         writer.WriteSection(Cdrom);
         writer.WriteSection(Quartz);
+        writer.WriteSection(new MachineOptionsSection(Tuning));
         writer.WriteSection(new MachineFrameSection(_frame, Compatibility));
 
         var bytes = writer.ToArray();
@@ -375,6 +380,7 @@ public sealed class FiveDoMachine
             StateSectionIds.Machine,
         };
 
+        ArmTimingMode? stateArmTiming = null;
         while (reader.TryReadSection(out StateSectionReader? section))
         {
             var supportedVersion = section.Version == 1
@@ -416,6 +422,11 @@ public sealed class FiveDoMachine
                 case StateSectionIds.Quartz:
                     Quartz.Load(section);
                     break;
+                case StateSectionIds.Options:
+                    var options = new MachineOptionsSection(Tuning);
+                    options.Load(section);
+                    stateArmTiming = options.LoadedArmTiming;
+                    break;
                 case StateSectionIds.Machine:
                     new MachineFrameSection(_frame, Compatibility).Load(section);
                     break;
@@ -430,6 +441,12 @@ public sealed class FiveDoMachine
         if (required.Count > 0)
         {
             throw new InvalidStateException($"The save state is missing sections: {string.Join(", ", required)}.");
+        }
+
+        if (stateArmTiming is { } savedTiming && savedTiming != Tuning.ArmTiming)
+        {
+            _stateWarnings.Add(
+                $"State ARM timing {savedTiming} differs from the machine timing {Tuning.ArmTiming}.");
         }
 
         // A command-line/front-end override survives loads of states written before the

@@ -24,6 +24,8 @@ public sealed class CliJsonTests
             Samples: 737,
             DiscHash: "abc",
             GameId: null,
+            ArmTiming: "Arm60Datasheet",
+            CpuClock: 25_000_000,
             FixMode: 0x20,
             DspRunning: true,
             DspPc: 0x3ff,
@@ -63,6 +65,8 @@ public sealed class CliJsonTests
         Assert.Contains("\"sourceWidth\": 320", json, StringComparison.Ordinal);
         Assert.Contains("\"vdlModulo\": 320", json, StringComparison.Ordinal);
         Assert.Contains("\"dspSema\": 524289", json, StringComparison.Ordinal);
+        Assert.Contains("\"armTiming\": \"Arm60Datasheet\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"cpuClock\": 25000000", json, StringComparison.Ordinal);
         Assert.Contains("\"autopilotLookahead\": null", json, StringComparison.Ordinal);
         Assert.Contains("\"audioDurationSeconds\": 10", json, StringComparison.Ordinal);
         Assert.Contains("\"audioPeak\": 12345", json, StringComparison.Ordinal);

@@ -3,7 +3,7 @@
 **Product:** 5DO
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Current status (2026-10-31, twenty-ninth pass):** **954 tests pass**; the v1.0
+**Current status (2026-10-31, thirtieth pass):** **972 tests pass**; the v1.0
 release is deliberately deferred. The first **M13 full-collection loadability sweep**
 is complete: 594 discs tested (589 in `J:\Panasonic 3DO` plus 5 in
 `G:\MAME\MAME Software List CHDs\3do`), with **576 `Loadable/Rendered`, 13
@@ -86,6 +86,20 @@ copies frames back to the CPU or uploads a `WriteableBitmap`. The `CoreRunner`
 pause/resume handshake now uses a monitor with an explicit paused state, fixing rapid
 stop/start cycles where the UI could touch the machine while the core thread was still
 running. **954 tests pass.**
+
+**ARM timing option (2026-10-31, thirtieth pass):** CORE-01's option surface is
+implemented. `ArmTimingMode.FreeDoCompatible` keeps the N=4 baseline;
+`ArmTimingMode.Arm60Datasheet` selects N=2 from the ARM60 datasheet/SDK and Opera. The
+mode is per-instance, exposed through `--arm-timing freedo|arm60` and Settings >
+Emulation, reported in `run --json`, covered by both-mode cycle tests, and recorded in
+an optional save-state `Options` section with a mismatch warning. The same pass exposed
+`--cpu-clock 0.5x-4x|6.25-50MHz` and a Settings field, with the stock 12.5 MHz default
+unchanged and the existing state ARM-clock warning retained. The DSP PRNG now accepts
+`--random-seed default|random|SEED` (and the matching Settings field) while preserving
+FreeDO's default seed. A Lemmings 3,000-frame smoke differential is recorded in
+[`TestCorpus.md`](TestCorpus.md) 1.1a. The full-collection differential remains the
+acceptance step before the accuracy mode can become a default. **972 tests pass.** See
+[`PortingNotes.md`](PortingNotes.md) 12.13-12.15.
 
 **Compatibility-sweep and high-resolution research plan (2026-10-30, twenty-eighth
 pass):** v1.0 release work is deliberately deferred. The next active milestone is

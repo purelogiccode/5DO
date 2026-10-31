@@ -98,6 +98,17 @@ public sealed class Dsp : IDsp, IStateSection
     /// <summary>Gets the current PRNG seed.</summary>
     public uint Seed => _seed;
 
+    /// <summary>Sets the PRNG seed used by subsequent <see cref="FastRandom"/> calls.</summary>
+    /// <param name="seed">Seed value.</param>
+    /// <remarks>
+    /// FreeDO seeds the PRNG once in <c>_dsp_Init</c>; <c>_dsp_Reset</c> leaves it alone.
+    /// The machine applies the configured seed after construction, before the first run.
+    /// </remarks>
+    public void SetSeed(uint seed)
+    {
+        _seed = seed;
+    }
+
     /// <summary>Gets the program counter.</summary>
     public uint ProgramCounter => _pc;
 

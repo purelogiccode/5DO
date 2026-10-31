@@ -128,7 +128,21 @@ public sealed class NvramStoreTests
         Assert.True(settings.Vsync);
         Assert.True(settings.IntegerScale);
         Assert.False(settings.HighResolution);
+        Assert.Equal(ArmTimingMode.FreeDoCompatible, settings.ArmTiming);
+        Assert.Equal(1.0, settings.CpuClockMultiplier);
+        Assert.Equal(EmulatorConstants.ArmClock, settings.ResolveArmClock());
         Assert.False(settings.ShowOverlay);
+    }
+
+    [Theory]
+    [InlineData(0.4)]
+    [InlineData(4.1)]
+    [InlineData(double.NaN)]
+    public void AppSettings_RejectsInvalidCpuClockMultipliers(double multiplier)
+    {
+        var settings = new AppSettings { CpuClockMultiplier = multiplier };
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => settings.ResolveArmClock());
     }
 
     [Fact]
@@ -143,6 +157,9 @@ public sealed class NvramStoreTests
             Aspect = AspectMode.Integer,
             Volume = 0.5f,
             HighResolution = true,
+            ArmTiming = ArmTimingMode.Arm60Datasheet,
+            CpuClockMultiplier = 2.0,
+            RandomSeed = 0x1234,
             SaveSlot = 3,
             SaveSlotCount = 12,
             AutoGameFixes = false,
@@ -169,6 +186,10 @@ public sealed class NvramStoreTests
         Assert.Equal(AspectMode.Integer, loaded.Aspect);
         Assert.Equal(0.5f, loaded.Volume);
         Assert.True(loaded.HighResolution);
+        Assert.Equal(ArmTimingMode.Arm60Datasheet, loaded.ArmTiming);
+        Assert.Equal(2.0, loaded.CpuClockMultiplier);
+        Assert.Equal(25_000_000, loaded.ResolveArmClock());
+        Assert.Equal(0x1234u, loaded.RandomSeed);
         Assert.Equal(3, loaded.SaveSlot);
         Assert.Equal(12, loaded.SaveSlotCount);
         Assert.False(loaded.AutoGameFixes);
@@ -296,6 +317,26 @@ public sealed class NvramStoreTests
         Assert.Equal("F6", loaded.Input.Hotkeys["SlotPrevious"]);
         Assert.Equal("F7", loaded.Input.Hotkeys["SlotNext"]);
         Assert.Equal("F9", loaded.Input.Hotkeys["FrameAdvance"]);
+    }
+
+    [Fact]
+    public void AppSettings_InvalidEmulationValuesFallBackToDefaults()
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "settings.json");
+        File.WriteAllText(
+            path,
+            """
+            {
+              "CpuClockMultiplier": 8.0,
+              "ArmTiming": 99
+            }
+            """);
+
+        AppSettings loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal(1.0, loaded.CpuClockMultiplier);
+        Assert.Equal(ArmTimingMode.FreeDoCompatible, loaded.ArmTiming);
     }
 
     [Fact]

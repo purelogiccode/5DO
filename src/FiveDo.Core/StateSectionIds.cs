@@ -40,4 +40,7 @@ public static class StateSectionIds
 
     /// <summary>Machine-level state.</summary>
     public const uint Machine = 11;
+
+    /// <summary>Machine option snapshot (ARM timing and future accuracy options).</summary>
+    public const uint Options = 12;
 }

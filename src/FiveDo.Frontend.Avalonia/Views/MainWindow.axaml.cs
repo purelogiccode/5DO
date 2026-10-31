@@ -1797,9 +1797,13 @@ public partial class MainWindow : Window, IDisposable
             AsyncEvent.Run(RefreshLibraryAsync, "refreshing game covers");
         }
 
-        if (_machine is not null && _settings.HighResolution != _machine.Tuning.HighResolution)
+        if (_machine is not null
+            && (_settings.HighResolution != _machine.Tuning.HighResolution
+                || _settings.ArmTiming != _machine.Tuning.ArmTiming
+                || _settings.ResolveArmClock() != _machine.Tuning.ArmClock
+                || _settings.RandomSeed != _machine.Tuning.RandomSeed))
         {
-            RecreateMachine(_settings.HighResolution);
+            RecreateMachine();
             return;
         }
 
@@ -1941,17 +1945,17 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        RecreateMachine(enabled);
+        RecreateMachine();
     }
 
-    private void RecreateMachine(bool highResolution)
+    private void RecreateMachine()
     {
         StopInputRecording(save: true);
         var biosPath = _settings.BiosPath;
         var discPath = _settings.DiscPath;
         if (string.IsNullOrWhiteSpace(biosPath) || !File.Exists(biosPath))
         {
-            StatusText.Text = "Reload the BIOS to apply the video mode.";
+            StatusText.Text = "Reload the BIOS to apply the emulation mode.";
             return;
         }
 
@@ -1970,9 +1974,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         ShowLibraryView();
-        StatusText.Text = highResolution
-            ? "High-resolution mode enabled; machine restarted."
-            : "High-resolution mode disabled; machine restarted.";
+        StatusText.Text = "Emulation options changed; machine restarted.";
     }
 
     private void OnCoreStatus(CoreStatus status)
@@ -2325,7 +2327,13 @@ public partial class MainWindow : Window, IDisposable
     {
         if (_machine is null)
         {
-            _machine = new FiveDoMachine(new EmulatorTuning { HighResolution = _settings.HighResolution })
+            _machine = new FiveDoMachine(new EmulatorTuning
+            {
+                HighResolution = _settings.HighResolution,
+                ArmTiming = _settings.ArmTiming,
+                ArmClock = _settings.ResolveArmClock(),
+                RandomSeed = _settings.RandomSeed,
+            })
             {
                 PbusSource = _input,
                 AudioSink = _audio,

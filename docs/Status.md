@@ -11,7 +11,9 @@ The five not-loadable rows are resolved or explained: Mirai Shounen Conan now ru
 still under investigation. Headless `run`/`trace` now attach a default player-1 pad,
 fixing Olympic Summer Games' controller check. Fifteen triaged titles now have a
 reviewed 5DO status in [`GameCompatibilityList.md`](GameCompatibilityList.md); the
-rest remain `No data`. **954 tests pass.**
+rest remain `No data`. The CORE-01 ARM timing option (`--arm-timing freedo|arm60`), its
+save-state snapshot, `--cpu-clock 0.5x-4x`, and `--random-seed` are implemented with
+tests. **972 tests pass.**
 The v1.0 release is deliberately deferred: the next work is a BIOS-aware sweep and
 5DO status merge (M13), then high-resolution CEL research (M14). The project is
 **donationware** (non-commercial, source-available, voluntary donations only). See

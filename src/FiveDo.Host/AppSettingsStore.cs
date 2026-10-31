@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using FiveDo.Core;
 using FiveDo.Input;
 
 namespace FiveDo.Host;
@@ -40,6 +41,18 @@ public static class AppSettingsStore
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             settings.Input ??= InputProfile.CreateDefault();
             settings.Input.AddMissingDefaultHotkeys();
+            if (!double.IsFinite(settings.CpuClockMultiplier)
+                || settings.CpuClockMultiplier < 0.5
+                || settings.CpuClockMultiplier > 4.0)
+            {
+                settings.CpuClockMultiplier = 1.0;
+            }
+
+            if (!Enum.IsDefined(settings.ArmTiming))
+            {
+                settings.ArmTiming = ArmTimingMode.FreeDoCompatible;
+            }
+
             return settings;
         }
         catch (JsonException exception)

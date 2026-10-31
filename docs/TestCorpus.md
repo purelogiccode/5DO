@@ -93,6 +93,21 @@ fix. Do not use the older keys after this date. The PBUS fix changes input-sensi
 hashes because games now see a connected pad; re-record longer-run hashes before
 using them as regression keys.
 
+### 1.1a ARM timing differential (2026-10-31)
+
+The CORE-01 option was checked on the Lemmings boot with the same BIOS, disc, frame
+count, and fresh NVRAM. The FreeDO-compatible default is unchanged; the ARM60
+datasheet mode runs more instructions per frame because its N cycle is two ARM clocks
+instead of four, so the guest reaches a different point at 3,000 frames.
+
+| Mode | Final PC | Frame hash | Instructions | Cycles/frame |
+|---|---|---|---:|---:|
+| `--arm-timing freedo` | `0x0012B324` | `0x9C2E3236` | 194,135,650 | 208,356 |
+| `--arm-timing arm60` | `0x0012A324` | `0xFBED38D3` | 272,410,816 | 208,341 |
+
+Both modes completed the boot and produced a rendered frame. This is a single-title
+smoke differential, not the full-collection report required to change the default.
+
 At 10,000 frames with input and a fresh NVRAM (pre-transposition-fix):
  
 | Title | Final PC | Frame hash | Observation |

@@ -14,7 +14,23 @@ public sealed class CoreTypesTests
         Assert.Equal(FixMode.None, tuning.FixMode);
         Assert.Equal(CpuBackendKind.Interpreter, tuning.CpuBackend);
         Assert.False(tuning.HighResolution);
+        Assert.Equal(ArmTimingMode.FreeDoCompatible, tuning.ArmTiming);
         tuning.Validate();
+    }
+
+    [Fact]
+    public void EmulatorTuning_AcceptsBothArmTimingModes()
+    {
+        new EmulatorTuning { ArmTiming = ArmTimingMode.FreeDoCompatible }.Validate();
+        new EmulatorTuning { ArmTiming = ArmTimingMode.Arm60Datasheet }.Validate();
+    }
+
+    [Fact]
+    public void EmulatorTuning_UnknownArmTiming_Throws()
+    {
+        var tuning = new EmulatorTuning { ArmTiming = (ArmTimingMode)99 };
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => tuning.Validate());
     }
 
     [Fact]

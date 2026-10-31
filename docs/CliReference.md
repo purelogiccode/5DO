@@ -79,7 +79,7 @@ current VDL frame.
 1. Open the disc (if any) and compute its game ID.
 2. Resolve the fix mode: explicit `--fix-mode`, else `--no-game-fixes`, else the 4DO
    database mapping for the game ID.
-3. Create the machine with `--high-res` and the resolved fix mode.
+3. Create the machine with `--high-res`, `--arm-timing`, and the resolved fix mode.
 4. Load BIOS1/BIOS2 (unless `--state-in`).
 5. Create the audio backend and insert the disc.
 6. Reset the machine.
@@ -102,6 +102,9 @@ current VDL frame.
 | `--state-out <path>` | none | Save a `.tdos` state after the run. |
 | `--nvram <path>` | none | Load a 32 KB NVRAM image before the run and save it after. Missing file means a fresh image. |
 | `--high-res` | off | Enable the opt-in 640x480 CEL/VDLP mode. |
+| `--arm-timing freedo\|arm60` | `freedo` | ARM60 N-cycle class. `freedo` keeps the FreeDO-compatible N=4 baseline; `arm60` uses the ARM60 datasheet/SDK N=2 timing from Opera. |
+| `--cpu-clock 0.5x-4x\|6.25-50MHz` | 1x (12.5 MHz) | ARM clock multiplier or absolute MHz. Values outside 0.5x-4x (6.25-50 MHz) fail. |
+| `--random-seed default\|random\|SEED` | `default` | Initial DSP PRNG seed. `default` keeps `0xa5a5a5a5`, `random` picks a fresh 32-bit value, and a decimal or `0x` value fixes the seed. |
 | `--prefetch` | off | Enable the bounded disc read-ahead cache (32 sectors ahead, 128-sector capacity). |
 | `--fix-mode 0xMASK` | database | Explicit `FixMode` bits. Accepts hex with or without `0x`. Overrides `--no-game-fixes`. |
 | `--no-game-fixes` | off | Disable automatic 4DO fixes. |
@@ -227,6 +230,8 @@ All fields are camelCase. Nullable fields are omitted or `null` when not applica
 | `samples` | long | WAV stereo frames or OpenAL pushed+dropped samples. |
 | `discHash` | string | Game ID (MD5 of first two sectors), or empty. |
 | `gameId` | string? | Same game ID, or null when no disc. |
+| `armTiming` | string | `FreeDoCompatible` or `Arm60Datasheet`. |
+| `cpuClock` | int | ARM clock in hertz (12,500,000 at the stock 1x setting). |
 | `fixMode` | uint | Applied fix-mode bits. |
 | `dspRunning` | bool | DSP running flag. |
 | `dspPc` | uint | DSP program counter. |
@@ -297,6 +302,9 @@ instruction ring buffer. It stops early on a stop condition or `--count` limit.
 | `--nvram <path>` | none | Load NVRAM before, save after. |
 | `--input-script <path>` | none | Scripted input (absolute frames only). |
 | `--high-res`, `--prefetch` | off | As in `run`. |
+| `--arm-timing freedo\|arm60` | `freedo` | As in `run`. |
+| `--cpu-clock 0.5x-4x\|6.25-50MHz` | 1x | As in `run`. |
+| `--random-seed default\|random\|SEED` | `default` | As in `run`. |
 | `--fix-mode`, `--no-game-fixes` | database | As in `run`. |
 
 ### Output format

@@ -16,6 +16,21 @@ public sealed record EmulatorTuning
     /// <summary>Gets the ARM60 clock in hertz. FreeDO: <c>ARM_CLOCK</c>.</summary>
     public int ArmClock { get; init; } = EmulatorConstants.ArmClock;
 
+    /// <summary>Gets the ARM60 N-cycle class. The default is the FreeDO-compatible value.</summary>
+    /// <remarks>
+    /// See <see cref="ArmTimingMode"/>. This option changes instruction timing, so save
+    /// states record the mode and report a warning when a state was written with another
+    /// value.
+    /// </remarks>
+    public ArmTimingMode ArmTiming { get; init; } = ArmTimingMode.FreeDoCompatible;
+
+    /// <summary>
+    /// Gets the optional initial DSP PRNG seed. <see langword="null"/> keeps FreeDO's
+    /// default seed (<c>0xa5a5a5a5</c>); a value makes fresh runs reproducible from a
+    /// known seed.
+    /// </summary>
+    public uint? RandomSeed { get; init; }
+
     /// <summary>Gets the per-game compatibility fixes.</summary>
     public FixMode FixMode { get; init; } = FixMode.None;
 
@@ -35,6 +50,7 @@ public sealed record EmulatorTuning
     public void Validate()
     {
         ValidateArmClock(ArmClock);
+        ValidateArmTiming(ArmTiming);
         ValidateCpuBackend(CpuBackend);
     }
 
@@ -43,6 +59,17 @@ public sealed record EmulatorTuning
         if (armClock <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(armClock), armClock, "The ARM clock must be positive.");
+        }
+    }
+
+    private static void ValidateArmTiming(ArmTimingMode armTiming)
+    {
+        if (armTiming is not ArmTimingMode.FreeDoCompatible and not ArmTimingMode.Arm60Datasheet)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(armTiming),
+                armTiming,
+                "Unknown ARM timing mode.");
         }
     }
 

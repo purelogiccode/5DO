@@ -59,6 +59,159 @@ public sealed class CliProcessTests
     }
 
     [Fact]
+    public void Run_ArmTimingOption_IsReportedInJson()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--arm-timing",
+                "arm60",
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"armTiming\": \"Arm60Datasheet\"", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void Run_CpuClockOption_IsReportedInJson()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--cpu-clock",
+                "2x",
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"cpuClock\": 25000000", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void Run_RandomSeedOption_IsAppliedToTheDsp()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--random-seed",
+                "0x1234",
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"dspSeed\": 4660", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void Run_InvalidRandomSeed_ReturnsOne()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--random-seed",
+                "not-a-seed");
+
+            Assert.Equal(1, result.Code);
+            Assert.Contains("--random-seed", result.Error, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void Run_InvalidCpuClock_ReturnsOne()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--cpu-clock",
+                "8x");
+
+            Assert.Equal(1, result.Code);
+            Assert.Contains("--cpu-clock", result.Error, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void Run_InvalidArmTiming_ReturnsOne()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--arm-timing",
+                "bogus");
+
+            Assert.Equal(1, result.Code);
+            Assert.Contains("--arm-timing", result.Error, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
     public void StateInspectMissingFile_ReturnsOne()
     {
         CliResult result = Invoke("state", "inspect", Path.Combine(Path.GetTempPath(), "missing-fivedo-state.tdos"));

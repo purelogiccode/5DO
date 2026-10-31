@@ -241,6 +241,40 @@ public sealed class SaveStateTests
     }
 
     [Fact]
+    public void Machine_AppliesConfiguredRandomSeed()
+    {
+        FiveDoMachine machine = CreateMachine(tuning: new EmulatorTuning { RandomSeed = 0x1234 });
+
+        Assert.Equal(0x1234u, machine.Dsp.Seed);
+    }
+
+    [Fact]
+    public void SaveState_RecordsArmTimingAndWarnsOnMismatch()
+    {
+        var arm60 = new EmulatorTuning { ArmTiming = ArmTimingMode.Arm60Datasheet };
+        FiveDoMachine machine = CreateMachine(tuning: arm60);
+        machine.RunFrames(2);
+        using var state = new MemoryStream();
+        machine.SaveState(state);
+
+        StateInfo info = StateInspector.Read(new MemoryStream(state.ToArray()));
+        Assert.Contains(info.Sections, section => section.Id == StateSectionIds.Options);
+
+        FiveDoMachine matching = CreateMachine(tuning: arm60);
+        state.Position = 0;
+        matching.LoadState(state);
+        Assert.DoesNotContain(matching.StateWarnings, warning => warning.Contains("ARM timing", StringComparison.Ordinal));
+
+        FiveDoMachine freeDo = CreateMachine();
+        state.Position = 0;
+        freeDo.LoadState(state);
+        Assert.Contains(
+            freeDo.StateWarnings,
+            warning => warning.Contains("ARM timing", StringComparison.Ordinal)
+                && warning.Contains("Arm60Datasheet", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void LoadState_AcceptsVersionOneStates()
     {
         FiveDoMachine machine = CreateMachine();
@@ -271,9 +305,9 @@ public sealed class SaveStateTests
         Assert.Throws<InvalidStateException>(() => machine.LoadState(new MemoryStream(bytes)));
     }
 
-    private static FiveDoMachine CreateMachine(byte[]? rom = null)
+    private static FiveDoMachine CreateMachine(byte[]? rom = null, EmulatorTuning? tuning = null)
     {
-        var machine = new FiveDoMachine();
+        var machine = new FiveDoMachine(tuning);
         machine.LoadBios(rom ?? BuildSyntheticRom());
         machine.Reset();
         return machine;
