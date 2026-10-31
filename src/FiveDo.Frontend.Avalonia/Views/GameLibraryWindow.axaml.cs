@@ -136,6 +136,7 @@ public partial class GameLibraryWindow : Window
         IList<string> folders = _settings.LibraryFolders.Count > 0
             ? _settings.LibraryFolders
             : RecentFolders();
+        var coverDirectory = _settings.CoverDirectory;
         StatusText.Text = folders.Count == 0
             ? "Add a folder that contains ISO, BIN, CUE, or CHD images."
             : "Scanning game folders...";
@@ -150,7 +151,8 @@ public partial class GameLibraryWindow : Window
                     () => GameLibraryScanner.BeginScan(
                         folders,
                         cachePath: GameLibraryScanner.DefaultCachePath,
-                        cancellationToken: scanToken),
+                        cancellationToken: scanToken,
+                        coverDirectory: coverDirectory),
                     scanToken).ConfigureAwait(true);
             if (generation != _scanGeneration)
             {
@@ -176,9 +178,10 @@ public partial class GameLibraryWindow : Window
                 IReadOnlyList<GameLibraryEntry> enriched = await Task.Run(
                     () => GameLibraryScanner.InspectPending(
                         initial.PendingPaths,
-                        GameLibraryScanner.DefaultCachePath,
-                        metadataProgress,
-                        scanToken),
+                        cachePath: GameLibraryScanner.DefaultCachePath,
+                        progress: metadataProgress,
+                        coverDirectory: coverDirectory,
+                        cancellationToken: scanToken),
                     scanToken).ConfigureAwait(true);
                 if (generation != _scanGeneration)
                 {

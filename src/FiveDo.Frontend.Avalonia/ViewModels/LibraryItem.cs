@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using Avalonia.Media.Imaging;
@@ -12,8 +13,6 @@ namespace FiveDo.Frontend.Avalonia.ViewModels;
 /// </summary>
 public sealed class LibraryItem : IDisposable
 {
-    private const int CoverDecodeWidth = 480;
-
     /// <summary>Creates the item and loads its cover art when one is available.</summary>
     /// <param name="entry">Scanner result for the disc.</param>
     public LibraryItem(GameLibraryEntry entry)
@@ -23,16 +22,7 @@ public sealed class LibraryItem : IDisposable
 
         if (!entry.Pending && !string.IsNullOrWhiteSpace(entry.CoverPath))
         {
-            try
-            {
-                using FileStream stream = File.OpenRead(entry.CoverPath);
-                Cover = Bitmap.DecodeToWidth(stream, CoverDecodeWidth);
-            }
-            catch (Exception exception) when (exception is IOException or ArgumentException or UnauthorizedAccessException)
-            {
-                Serilog.Log.Debug(exception, "Cover art could not be decoded for {Path}.", entry.CoverPath);
-                Cover = null;
-            }
+            Cover = CoverCache.GetOrLoad(entry.CoverPath);
         }
     }
 
@@ -88,5 +78,56 @@ public sealed class LibraryItem : IDisposable
     }
 
     /// <inheritdoc />
-    public void Dispose() => Cover?.Dispose();
+    /// <remarks>
+    /// Cover bitmaps are shared by path through <see cref="CoverCache"/>, so they are
+    /// released when the library is cleared rather than with an individual item.
+    /// </remarks>
+    public void Dispose()
+    {
+    }
+}
+
+/// <summary>
+/// Decodes cover art once per file. Duplicate discs in different library folders share
+/// the same bitmap instead of decoding a separate copy for each entry.
+/// </summary>
+internal static class CoverCache
+{
+    private const int DecodeHeight = 256;
+    private static readonly Dictionary<string, Bitmap> Covers = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Loads and caches a cover image.</summary>
+    /// <param name="path">Cover image path.</param>
+    /// <returns>The shared bitmap, or <see langword="null"/> when the image cannot be decoded.</returns>
+    internal static Bitmap? GetOrLoad(string path)
+    {
+        if (Covers.TryGetValue(path, out Bitmap? cached))
+        {
+            return cached;
+        }
+
+        try
+        {
+            using FileStream stream = File.OpenRead(path);
+            Bitmap bitmap = Bitmap.DecodeToHeight(stream, DecodeHeight);
+            Covers[path] = bitmap;
+            return bitmap;
+        }
+        catch (Exception exception) when (exception is IOException or ArgumentException or UnauthorizedAccessException)
+        {
+            Serilog.Log.Debug(exception, "Cover art could not be decoded for {Path}.", path);
+            return null;
+        }
+    }
+
+    /// <summary>Disposes every cached cover. Call when the library items are replaced.</summary>
+    internal static void Clear()
+    {
+        foreach (Bitmap cover in Covers.Values)
+        {
+            cover.Dispose();
+        }
+
+        Covers.Clear();
+    }
 }

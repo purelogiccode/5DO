@@ -7,6 +7,11 @@ still change.
 
 ### Added
 
+- Configurable shared cover-art directory for the game library. Covers are matched by
+  the disc file's base name (for example `Battle Chess (Europe).png`) and can live
+  either beside the disc or in a folder selected under **Configuration > Settings...
+  > Paths > Game covers**. Images are decoded once per file at a bounded height and
+  shared by path, so duplicate discs in different library folders reuse one bitmap.
 - Full-collection compatibility tooling: `tools/compat-sweep.ps1` boots every local
   disc in a fresh CLI process, records JSON/PNG/timeout evidence, and writes
   `summary.csv`/`summary.md`; `tools/generate-compat-list.py` parses the saved 4DO

@@ -358,12 +358,17 @@ also used for the post-run save.
 | `RecentDiscs` | Newest first, deduplicated case-insensitively, capped at 10. |
 | `SaveDirectory` | Default `.../5DO/states`; used by `SaveStateSlotManager`. |
 | `ScreenshotDirectory` | Empty means Pictures; screenshots are named `<game>-<yyyyMMdd-HHmmss>-f<frame>.png`. |
+| `CoverDirectory` | Optional shared folder for cover art named after the disc files. |
 | `LibraryFolders` | Scanned recursively to depth 4 for `.iso`, `.bin`, `.cue`, `.chd`. |
 
-Library entries are sorted by title then path. Cover art is a sibling image with the
-same base name and an extension of `.png`, `.jpg`, `.jpeg`, or `.webp` (for example
-`game.png` beside `game.chd`). Unknown discs use the file name as the title and show
-`Unknown`; known discs use the embedded 4DO database metadata.
+Library entries are sorted by title then path. Cover art is matched by file name: a
+sibling image with the same base name and an extension of `.png`, `.jpg`, `.jpeg`, or
+`.webp` (for example `game.png` beside `game.chd`) takes precedence. If no sibling
+exists, `CoverDirectory` is searched for `<disc base name>.<ext>`; the folder is set
+under **Configuration > Settings > Paths > Game covers**. Unknown discs use the file
+name as the title and show `Unknown`; known discs use the embedded 4DO database
+metadata. Covers are decoded once per file at a bounded height and shared by path, so
+duplicate discs in different library folders reuse the same bitmap.
 
 Discs are listed immediately from the folder enumeration. Game IDs and sector counts are
 then computed in the background with bounded parallelism, and the list updates as titles

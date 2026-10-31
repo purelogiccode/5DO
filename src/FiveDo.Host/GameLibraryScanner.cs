@@ -36,6 +36,9 @@ public static class GameLibraryScanner
     /// <param name="maximumDepth">Maximum recursion depth (0 scans only the top level).</param>
     /// <param name="cachePath">Optional persistent cache path.</param>
     /// <param name="cancellationToken">Cancellation token for a superseded scan.</param>
+    /// <param name="coverDirectory">
+    /// Optional directory containing cover images named after the disc files.
+    /// </param>
     /// <returns>
     /// Cached/full entries plus placeholders for files that need <see cref="InspectPending"/>.
     /// </returns>
@@ -43,6 +46,7 @@ public static class GameLibraryScanner
         IEnumerable<string> folders,
         int maximumDepth = 4,
         string? cachePath = null,
+        string? coverDirectory = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(folders);
@@ -69,11 +73,11 @@ public static class GameLibraryScanner
                 var info = new FileInfo(file);
                 if (cachedByPath.TryGetValue(file, out CachedLibraryEntry? cached) && cached.Matches(info))
                 {
-                    entries.Add(CreateEntry(cached));
+                    entries.Add(CreateEntry(cached, coverDirectory));
                 }
                 else
                 {
-                    entries.Add(CreatePlaceholder(file));
+                    entries.Add(CreatePlaceholder(file, coverDirectory));
                     pending.Add(file);
                 }
             }
@@ -94,11 +98,15 @@ public static class GameLibraryScanner
     /// <param name="cachePath">Optional persistent cache path.</param>
     /// <param name="progress">Optional progress receiver for the number of inspected entries.</param>
     /// <param name="cancellationToken">Cancellation token for a superseded scan.</param>
+    /// <param name="coverDirectory">
+    /// Optional directory containing cover images named after the disc files.
+    /// </param>
     /// <returns>The enriched entries, sorted by title then path.</returns>
     public static IReadOnlyList<GameLibraryEntry> InspectPending(
         IReadOnlyList<string> paths,
         string? cachePath = null,
         IProgress<int>? progress = null,
+        string? coverDirectory = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(paths);
@@ -121,7 +129,7 @@ public static class GameLibraryScanner
             try
             {
                 var info = new FileInfo(file);
-                GameLibraryEntry? entry = Inspect(file, chdReadAheadHunks: 0);
+                GameLibraryEntry? entry = Inspect(file, chdReadAheadHunks: 0, coverDirectory: coverDirectory);
                 if (entry is null)
                 {
                     return;
@@ -187,15 +195,24 @@ public static class GameLibraryScanner
     /// </param>
     /// <param name="progress">Optional progress receiver for the number of entries inspected.</param>
     /// <param name="cancellationToken">Cancellation token for a superseded scan.</param>
+    /// <param name="coverDirectory">
+    /// Optional directory containing cover images named after the disc files.
+    /// </param>
     /// <returns>Entries sorted by title then path.</returns>
     public static IReadOnlyList<GameLibraryEntry> Scan(
         IEnumerable<string> folders,
         int maximumDepth = 4,
         string? cachePath = null,
         IProgress<int>? progress = null,
+        string? coverDirectory = null,
         CancellationToken cancellationToken = default)
     {
-        GameLibraryScanResult initial = BeginScan(folders, maximumDepth, cachePath, cancellationToken);
+        GameLibraryScanResult initial = BeginScan(
+            folders,
+            maximumDepth,
+            cachePath,
+            coverDirectory,
+            cancellationToken);
         if (initial.PendingPaths.Count == 0)
         {
             return initial.Entries;
@@ -205,6 +222,7 @@ public static class GameLibraryScanner
             initial.PendingPaths,
             cachePath,
             progress,
+            coverDirectory,
             cancellationToken);
         var all = initial.Entries
             .Where(entry => !entry.Pending)
@@ -219,8 +237,14 @@ public static class GameLibraryScanner
     /// <param name="chdReadAheadHunks">
     /// CHD hunks to pre-decompress. Metadata scans pass zero to avoid background work.
     /// </param>
+    /// <param name="coverDirectory">
+    /// Optional directory containing cover images named after the disc files.
+    /// </param>
     /// <returns>The entry, or null when the extension is not a supported disc container.</returns>
-    public static GameLibraryEntry? Inspect(string path, int chdReadAheadHunks = 0)
+    public static GameLibraryEntry? Inspect(
+        string path,
+        int chdReadAheadHunks = 0,
+        string? coverDirectory = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         if (!IsDiscPath(path))
@@ -228,7 +252,7 @@ public static class GameLibraryScanner
             return null;
         }
 
-        var coverPath = FindCover(path);
+        var coverPath = FindCover(path, coverDirectory);
         try
         {
             using IDiscSource disc = DiscImageFactory.Open(path, chdReadAheadHunks: chdReadAheadHunks);
@@ -260,21 +284,50 @@ public static class GameLibraryScanner
     }
 
     /// <summary>
-    /// Finds cover art next to a disc: a sibling image with the same base name
-    /// (for example <c>game.png</c> beside <c>game.iso</c>).
+    /// Finds cover art for a disc. A sibling image with the same base name next to the
+    /// disc takes precedence (for example <c>game.png</c> beside <c>game.iso</c>);
+    /// otherwise the configured cover directory is searched for the same base name.
     /// </summary>
     /// <param name="discPath">Disc path.</param>
+    /// <param name="coverDirectory">
+    /// Optional directory containing cover images named after the disc files.
+    /// </param>
     /// <returns>The cover path, or an empty string when none exists.</returns>
-    public static string FindCover(string discPath)
+    public static string FindCover(string discPath, string? coverDirectory = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(discPath);
+        var baseName = Path.GetFileNameWithoutExtension(discPath);
         var directory = Path.GetDirectoryName(Path.GetFullPath(discPath));
         if (string.IsNullOrEmpty(directory))
         {
             return string.Empty;
         }
 
-        var baseName = Path.GetFileNameWithoutExtension(discPath);
+        var sibling = FindCoverIn(directory, baseName);
+        if (sibling.Length > 0)
+        {
+            return sibling;
+        }
+
+        if (string.IsNullOrWhiteSpace(coverDirectory))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            var covers = Path.GetFullPath(coverDirectory);
+            return Directory.Exists(covers) ? FindCoverIn(covers, baseName) : string.Empty;
+        }
+        catch (Exception exception) when (exception is ArgumentException or IOException or UnauthorizedAccessException)
+        {
+            Serilog.Log.Debug(exception, "Cover directory {Directory} could not be searched.", coverDirectory);
+            return string.Empty;
+        }
+    }
+
+    private static string FindCoverIn(string directory, string baseName)
+    {
         foreach (var extension in CoverExtensions)
         {
             var candidate = Path.Combine(directory, baseName + extension);
@@ -306,7 +359,7 @@ public static class GameLibraryScanner
         return files;
     }
 
-    private static GameLibraryEntry CreateEntry(CachedLibraryEntry cached)
+    private static GameLibraryEntry CreateEntry(CachedLibraryEntry cached, string? coverDirectory)
     {
         GameRecord? record = cached.GameId.Length == 0
             ? null
@@ -319,10 +372,10 @@ public static class GameLibraryScanner
             record?.Name ?? Path.GetFileNameWithoutExtension(cached.Path),
             record is not null,
             cached.Error,
-            FindCover(cached.Path));
+            FindCover(cached.Path, coverDirectory));
     }
 
-    private static GameLibraryEntry CreatePlaceholder(string path)
+    private static GameLibraryEntry CreatePlaceholder(string path, string? coverDirectory)
         => new(
             path,
             FormatFor(path),
@@ -331,7 +384,7 @@ public static class GameLibraryScanner
             Path.GetFileNameWithoutExtension(path),
             false,
             string.Empty,
-            FindCover(path),
+            FindCover(path, coverDirectory),
             Pending: true);
 
     private static string FormatFor(string path)

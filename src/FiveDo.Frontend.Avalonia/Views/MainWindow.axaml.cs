@@ -1216,6 +1216,7 @@ public partial class MainWindow : Window, IDisposable
         var folders = _settings.LibraryFolders.Count > 0
             ? _settings.LibraryFolders.ToList()
             : RecentFolders();
+        var coverDirectory = _settings.CoverDirectory;
         StatusText.Text = folders.Count == 0
             ? "No game folders configured. Use File > Add Game Folder."
             : "Scanning game folders...";
@@ -1231,7 +1232,8 @@ public partial class MainWindow : Window, IDisposable
                     () => GameLibraryScanner.BeginScan(
                         folders,
                         cachePath: GameLibraryScanner.DefaultCachePath,
-                        cancellationToken: scanToken),
+                        cancellationToken: scanToken,
+                        coverDirectory: coverDirectory),
                     scanToken).ConfigureAwait(true);
             if (_shuttingDown || generation != _scanGeneration)
             {
@@ -1258,9 +1260,10 @@ public partial class MainWindow : Window, IDisposable
                 IReadOnlyList<GameLibraryEntry> enriched = await Task.Run(
                     () => GameLibraryScanner.InspectPending(
                         initial.PendingPaths,
-                        GameLibraryScanner.DefaultCachePath,
-                        metadataProgress,
-                        scanToken),
+                        cachePath: GameLibraryScanner.DefaultCachePath,
+                        progress: metadataProgress,
+                        coverDirectory: coverDirectory,
+                        cancellationToken: scanToken),
                     scanToken).ConfigureAwait(true);
                 if (_shuttingDown || generation != _scanGeneration)
                 {
@@ -1343,6 +1346,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         _allGames.Clear();
+        CoverCache.Clear();
     }
 
     private List<string> RecentFolders()
@@ -1445,6 +1449,7 @@ public partial class MainWindow : Window, IDisposable
 
     private async Task ShowSettingsAsync()
     {
+        var previousCoverDirectory = _settings.CoverDirectory;
         var window = new SettingsWindow(_settings, _gameId, _gameName);
         if (!await window.ShowDialog<bool>(this).ConfigureAwait(true))
         {
@@ -1470,6 +1475,14 @@ public partial class MainWindow : Window, IDisposable
         ApplyRendererSelection();
         HighResMenuItem.IsChecked = _settings.HighResolution;
         UpdateEmulationHeader();
+        if (!string.Equals(
+                previousCoverDirectory,
+                _settings.CoverDirectory,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            AsyncEvent.Run(RefreshLibraryAsync, "refreshing game covers");
+        }
+
         if (_machine is not null && _settings.HighResolution != _machine.Tuning.HighResolution)
         {
             RecreateMachine(_settings.HighResolution);

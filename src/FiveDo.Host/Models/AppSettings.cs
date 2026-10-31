@@ -32,6 +32,12 @@ public sealed class AppSettings
     /// <summary>Gets or sets the screenshot directory.</summary>
     public string ScreenshotDirectory { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the directory containing cover art named after the disc files.
+    /// Sibling images next to a disc still take precedence.
+    /// </summary>
+    public string CoverDirectory { get; set; } = string.Empty;
+
     /// <summary>Gets or sets the currently selected save slot.</summary>
     public int SaveSlot { get; set; }
 

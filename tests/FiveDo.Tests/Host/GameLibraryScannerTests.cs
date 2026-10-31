@@ -73,6 +73,51 @@ public sealed class GameLibraryScannerTests
     }
 
     [Fact]
+    public void Scan_UsesConfiguredCoverDirectory()
+    {
+        using var discs = new TempDirectory();
+        using var covers = new TempDirectory();
+        var isoPath = Path.Combine(discs.Path, "Battle Chess (Europe).iso");
+        WriteIso(isoPath, sectors: 1);
+        var coverPath = Path.Combine(covers.Path, "Battle Chess (Europe).png");
+        File.WriteAllBytes(coverPath, [0x89, 0x50, 0x4E, 0x47]);
+
+        GameLibraryEntry entry = Assert.Single(
+            GameLibraryScanner.Scan([discs.Path], coverDirectory: covers.Path));
+
+        Assert.Equal(coverPath, entry.CoverPath);
+    }
+
+    [Fact]
+    public void FindCover_PrefersSiblingOverConfiguredDirectory()
+    {
+        using var discs = new TempDirectory();
+        using var covers = new TempDirectory();
+        var isoPath = Path.Combine(discs.Path, "game.iso");
+        WriteIso(isoPath, sectors: 1);
+        var sibling = Path.Combine(discs.Path, "game.png");
+        File.WriteAllBytes(sibling, [0x89, 0x50, 0x4E, 0x47]);
+        File.WriteAllBytes(
+            Path.Combine(covers.Path, "game.png"),
+            [0x89, 0x50, 0x4E, 0x47]);
+
+        Assert.Equal(sibling, GameLibraryScanner.FindCover(isoPath, covers.Path));
+    }
+
+    [Fact]
+    public void FindCover_FallsBackToConfiguredDirectory()
+    {
+        using var discs = new TempDirectory();
+        using var covers = new TempDirectory();
+        var isoPath = Path.Combine(discs.Path, "game.iso");
+        WriteIso(isoPath, sectors: 1);
+        var coverPath = Path.Combine(covers.Path, "game.jpg");
+        File.WriteAllBytes(coverPath, [0xFF, 0xD8, 0xFF, 0xD9]);
+
+        Assert.Equal(coverPath, GameLibraryScanner.FindCover(isoPath, covers.Path));
+    }
+
+    [Fact]
     public void Scan_UsesCachedMetadataForUnchangedFiles()
     {
         using var directory = new TempDirectory();

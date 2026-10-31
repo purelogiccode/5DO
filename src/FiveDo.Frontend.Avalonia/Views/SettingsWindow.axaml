@@ -125,8 +125,8 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Paths" ToolTip.Tip="Save-state and screenshot folder settings.">
-                <Grid ColumnDefinitions="170,*,Auto" RowDefinitions="Auto,Auto" Margin="8">
+            <TabItem Header="Paths" ToolTip.Tip="Save-state, screenshot, and cover-art folder settings.">
+                <Grid ColumnDefinitions="170,*,Auto" RowDefinitions="Auto,Auto,Auto" Margin="8">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Save states" VerticalAlignment="Center"
                                ToolTip.Tip="Folder used for numbered save slots and thumbnails." />
                     <TextBox x:Name="SaveDirectoryBox" Grid.Row="0" Grid.Column="1" Margin="0,0,6,8"
@@ -135,10 +135,16 @@
                             ToolTip.Tip="Choose the save-state folder." />
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Screenshots" VerticalAlignment="Center"
                                ToolTip.Tip="Folder used for PNG screenshots." />
-                    <TextBox x:Name="ScreenshotDirectoryBox" Grid.Row="1" Grid.Column="1" Margin="0,0,6,0"
+                    <TextBox x:Name="ScreenshotDirectoryBox" Grid.Row="1" Grid.Column="1" Margin="0,0,6,8"
                              ToolTip.Tip="Path to the screenshot folder." />
-                    <Button Grid.Row="1" Grid.Column="2" Content="Browse" Click="OnBrowseScreenshotDirectoryAsync"
+                    <Button Grid.Row="1" Grid.Column="2" Content="Browse" Click="OnBrowseScreenshotDirectoryAsync" Margin="0,0,0,8"
                             ToolTip.Tip="Choose the screenshot folder." />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Game covers" VerticalAlignment="Center"
+                               ToolTip.Tip="Folder containing cover images named after the disc files." />
+                    <TextBox x:Name="CoverDirectoryBox" Grid.Row="2" Grid.Column="1" Margin="0,0,6,0"
+                             ToolTip.Tip="Cover images use the disc filename with an image extension, for example Battle Chess (Europe).png." />
+                    <Button Grid.Row="2" Grid.Column="2" Content="Browse" Click="OnBrowseCoverDirectoryAsync"
+                            ToolTip.Tip="Choose the folder containing game cover images." />
                 </Grid>
             </TabItem>
         </TabControl>

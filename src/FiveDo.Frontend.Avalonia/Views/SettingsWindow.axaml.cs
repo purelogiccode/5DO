@@ -87,6 +87,7 @@ public partial class SettingsWindow : Window
         HighResCheck.IsChecked = settings.HighResolution;
         SaveDirectoryBox.Text = settings.SaveDirectory;
         ScreenshotDirectoryBox.Text = settings.ScreenshotDirectory;
+        CoverDirectoryBox.Text = settings.CoverDirectory;
         GameText.Text = string.IsNullOrWhiteSpace(gameId)
             ? "No disc loaded."
             : $"{gameName ?? "Unknown"} ({gameId[..Math.Min(8, gameId.Length)]})";
@@ -181,6 +182,7 @@ public partial class SettingsWindow : Window
         settings.HighResolution = HighResCheck.IsChecked == true;
         settings.SaveDirectory = SaveDirectoryBox.Text?.Trim() ?? string.Empty;
         settings.ScreenshotDirectory = ScreenshotDirectoryBox.Text?.Trim() ?? string.Empty;
+        settings.CoverDirectory = CoverDirectoryBox.Text?.Trim() ?? string.Empty;
 
         if (!string.IsNullOrWhiteSpace(_gameId))
         {
@@ -243,6 +245,18 @@ public partial class SettingsWindow : Window
         if (path is not null)
         {
             ScreenshotDirectoryBox.Text = path;
+        }
+    }
+
+    private void OnBrowseCoverDirectoryAsync(object? sender, RoutedEventArgs e) =>
+        AsyncEvent.Run(BrowseCoverDirectoryAsync, "selecting the cover-art directory");
+
+    private async Task BrowseCoverDirectoryAsync()
+    {
+        var path = await PickFolderAsync("Select the game cover directory", CoverDirectoryBox.Text).ConfigureAwait(true);
+        if (path is not null)
+        {
+            CoverDirectoryBox.Text = path;
         }
     }
 
