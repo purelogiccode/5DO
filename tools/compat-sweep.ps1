@@ -75,6 +75,8 @@ param(
     [string]$Filter = '*.chd',
     [switch]$NoFrameCapture,
     [switch]$NoPrefetch,
+    [int]$MinNonBlackPercent = 3,
+    [int]$MinColors = 8,
     [switch]$Build
 )
 
@@ -309,7 +311,8 @@ function Invoke-OneDisc {
     else {
         $rendered = $false
         if ($metrics.NonBlackPixels -ne $null -and $metrics.TotalSamples -gt 0) {
-            $rendered = ($metrics.NonBlackPixels -gt 8) -and ($metrics.DistinctColors -ge 3)
+            $nonBlackPercent = 100.0 * $metrics.NonBlackPixels / $metrics.TotalSamples
+            $rendered = ($nonBlackPercent -ge $MinNonBlackPercent) -and ($metrics.DistinctColors -ge $MinColors)
         }
         $status = if ($rendered) { 'Loadable/Rendered' } else { 'Loadable/No video' }
         $reason = if ($rendered) { 'completed and final frame is non-black' } else { 'completed but final frame is black/blank' }

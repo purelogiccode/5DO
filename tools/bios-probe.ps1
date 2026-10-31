@@ -253,9 +253,13 @@ foreach ($biosPath in $biosPaths) {
 if ($biosPaths.Count -eq 0) { throw 'At least one BIOS is required.' }
 
 $cliCommand = Get-CliCommand $Cli
-$selected = @(Import-Csv -LiteralPath $csvPath | Where-Object { $Status -contains $_.Status })
+$statusItems = @($Status |
+    ForEach-Object { $_ -split ',' } |
+    ForEach-Object { $_.Trim() } |
+    Where-Object { $_ })
+$selected = @(Import-Csv -LiteralPath $csvPath | Where-Object { $statusItems -contains $_.Status })
 if ($Limit -gt 0) { $selected = @($selected | Select-Object -First $Limit) }
-if ($selected.Count -eq 0) { throw "No rows matched status: $($Status -join ', ')" }
+if ($selected.Count -eq 0) { throw "No rows matched status: $($statusItems -join ', ')" }
 
 New-Item -ItemType Directory -Force -Path $outPath | Out-Null
 $rows = [System.Collections.Generic.List[object]]::new()

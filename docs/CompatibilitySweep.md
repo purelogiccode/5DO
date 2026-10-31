@@ -128,6 +128,11 @@ Useful options:
 | `-NoPrefetch` | Disable the CLI's bounded disc cache. |
 | `-Build` | Build the Release CLI before the sweep. |
 | `-Cli <path>` | Use a specific CLI executable or `.dll`. |
+| `-MinNonBlackPercent N` | Rendered threshold; defaults to 3% of sampled pixels. |
+| `-MinColors N` | Rendered threshold; defaults to 8 distinct colors. |
+
+The rendered test rejects the 3DO boot starfield, which has many colors but only about
+2% non-black sampled pixels. Adjust the thresholds only when a known title needs it.
 
 ### 3.3.1 BIOS selection
 

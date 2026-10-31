@@ -612,4 +612,4 @@ Status definitions and triage guidance are in [`CompatibilitySweep.md`](Compatib
 
 ## Next step
 
-For each `Loadable/Rendered` row, inspect the PNG and run a short input smoke test. Record the final `Unplayable`/`Playable`/`Good` status in [`GameCompatibilityList.md`](GameCompatibilityList.md) with the BIOS used. For `Loadable/No video`, rerun at 12,000 frames and inspect intermediate captures; if it is still black or a solid color, retry with `panafz10` and the Anvil BIOS.
+For each `Loadable/Rendered` row, inspect the PNG and run a short input smoke test. Record the final `Unplayable`/`Playable`/`Good` status in [`GameCompatibilityList.md`](GameCompatibilityList.md) with the BIOS used. For `Loadable/No video`, rerun at 12,000 frames and inspect intermediate captures; if it is still black or a solid color, retry with `tools/bios-probe.ps1` using `panafz10-patched` and the Anvil BIOS.
