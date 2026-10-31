@@ -47,7 +47,8 @@ high-resolution CEL decision (M14) are complete.
   a CLI input fix, not a disc-specific patch.
 - The baseline sweep used `panafz1.bin` only, so its `Loadable/No video` and
   `Not Loadable` labels must not be treated as final. A BIOS-aware sweep with
-  `panafz10` and the Anvil BIOS is required before the 5DO status columns are filled.
+  `panafz10-patched` and the Anvil BIOS is required before the 5DO status columns are
+  filled.
 - The 4DO wiki list is a reference, not a guarantee. Filename matching does not prove
   the local image is the same revision, and a 4DO score of 100 does not mean 5DO has
   the same behavior.

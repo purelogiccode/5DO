@@ -7,7 +7,7 @@ This is the working compatibility matrix for the full local 3DO collection. The 
 - 4DO compatibility wiki snapshot: `References/4DO-master/4DO Compatibility List ⚈ 3DO emulator Wiki ».mhtml` (saved 2026-10-25). `References/` is local-only and ignored by git; this Markdown file is the committed reference copy.
 - Local collection roots: `J:\Panasonic 3DO`, `G:\MAME\MAME Software List CHDs\3do`.
 - 5DO sweep tool: `tools/compat-sweep.ps1`; results are written under `artifacts/compat/` and can be merged into the 5DO columns below. The latest automated pass is [`GameCompatibilityResults.md`](GameCompatibilityResults.md).
-- BIOS sensitivity: the 2026-10-30 triage found that several titles need `panafz10` or the Anvil BIOS; see [`Compatibility.md`](Compatibility.md) 13.2. Record the BIOS used in the 5DO notes.
+- BIOS sensitivity: the 2026-10-30 triage found that several titles need `panafz10-patched` or the Anvil BIOS; see [`Compatibility.md`](Compatibility.md) 13.2. Record the BIOS used in the 5DO notes.
 
 ## 4DO status scale
 

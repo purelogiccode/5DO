@@ -300,7 +300,7 @@ def write_markdown(
     )
     lines.append(
         "- BIOS sensitivity: the 2026-10-30 triage found that several titles need "
-        "`panafz10` or the Anvil BIOS; see "
+        "`panafz10-patched` or the Anvil BIOS; see "
         "[`Compatibility.md`](Compatibility.md) 13.2. Record the BIOS used in the "
         "5DO notes."
     )
