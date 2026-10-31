@@ -1,0 +1,75 @@
+name: Differential harness
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: diff-harness-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  diff:
+    name: 5DO vs OperaCore differential
+    # Requires a self-hosted Windows machine with the BIOS and disc corpus.
+    runs-on: [self-hosted, windows, x64]
+    timeout-minutes: 240
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Preflight
+        id: preflight
+        shell: pwsh
+        run: |
+          $missing = @()
+          if (-not (Test-Path 'bios/panafz1.bin')) { $missing += 'bios/panafz1.bin' }
+          if (-not (Test-Path 'References/CPP_SimpleGui/cmake-build-release/SimpleGui/Core/OperaCore.dll')) {
+            $missing += 'OperaCore.dll'
+          }
+          if (-not (Test-Path 'J:/Panasonic 3DO')) { $missing += 'J:/Panasonic 3DO' }
+          if ($missing.Count -gt 0) {
+            Write-Host "::notice::Differential harness skipped; missing $($missing -join ', ')"
+            "skip=true" >> $env:GITHUB_OUTPUT
+          } else {
+            "skip=false" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Build
+        if: steps.preflight.outputs.skip != 'true'
+        run: |
+          dotnet build src/FiveDo.Cli/FiveDo.Cli.csproj -c Release --nologo
+          dotnet build tools/FiveDo.DiffHarness/FiveDo.DiffHarness.csproj -c Release --nologo
+
+      - name: Validate manifest
+        if: steps.preflight.outputs.skip != 'true'
+        run: tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe validate benchmarks/diff/showcase.json --strict
+
+      - name: Run differential
+        if: steps.preflight.outputs.skip != 'true'
+        run: tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe run benchmarks/diff/showcase.json --out artifacts/diff/nightly --resume
+
+      - name: Upload report
+        if: always() && steps.preflight.outputs.skip != 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: diff-harness-report
+          path: artifacts/diff/nightly
+          if-no-files-found: warn

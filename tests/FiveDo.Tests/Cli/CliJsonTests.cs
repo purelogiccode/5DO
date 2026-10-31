@@ -74,6 +74,8 @@ public sealed class CliJsonTests
             NvramPath: "/data/nvram/per-game/game.0.ram",
             NvramMode: "per-game",
             NvramVersion: 0,
+            AudioHash: null,
+            Checkpoints: [],
             Warnings: []);
 
         var json = JsonSerializer.Serialize(result, CliJsonContext.Default.CliRunResult);

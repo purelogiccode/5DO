@@ -67,4 +67,6 @@ internal sealed record CliRunResult(
     string? NvramPath,
     string NvramMode,
     int NvramVersion,
+    uint? AudioHash,
+    IReadOnlyList<CliCheckpointResult> Checkpoints,
     IReadOnlyList<string> Warnings);

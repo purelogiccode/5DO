@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>FiveDo.DiffHarness</RootNamespace>
+    <AssemblyName>FiveDo.DiffHarness</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Meziantou.Analyzer">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Roslynator.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\FiveDo.Core\FiveDo.Core.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Video\FiveDo.Video.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Audio\FiveDo.Audio.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Input\FiveDo.Input.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Storage\FiveDo.Storage.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="FiveDo.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "name": "5DO differential smoke",
+  "defaults": {
+    "bios": "bios/panafz1.bin",
+    "frames": 300,
+    "checkpoints": [300],
+    "timeoutSeconds": 120,
+    "workDirectory": "artifacts/diff/work",
+    "options": {
+      "profile": "accuracy",
+      "cdSpeed": "unbounded"
+    },
+    "compare": {
+      "compareAudio": false,
+      "comparePc": false,
+      "compareSamples": false
+    }
+  },
+  "titles": [
+    {
+      "id": "lemmings-usa-smoke",
+      "name": "Lemmings (USA) smoke",
+      "disc": "J:/Panasonic 3DO/Lemmings (USA).chd"
+    }
+  ]
+}

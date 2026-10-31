@@ -425,10 +425,13 @@ Record each command's status/data/poll bytes as a compact transcript. These are 
 The most efficient way to validate a 600 KB port is to compare against a maintained
 reference implementation.
 
-- **Primary oracle (new work): Opera/libopera.** Run the bundled Windows
-  `OperaCore` or the libretro test harness with the same BIOS and disc data, then
-  compare KPRINT, PC, frame hash, CD transcript, audio samples, and screenshots.
-  The procedure is in [`ReferenceStrategy.md`](ReferenceStrategy.md).
+- **Primary oracle (new work): Opera/libopera.** Use `tools/FiveDo.DiffHarness`
+  with a manifest from `benchmarks/diff/`. It stages the bundled `OperaCore` and
+  BIOS, runs both engines with the same options, and compares normalized frame
+  hashes at checkpoints; reports include PC, audio, state, and CD fields when the
+  engine exposes them. The manifest schema and allowlist policy are in
+  [`DifferentialHarness.md`](DifferentialHarness.md); the manual procedure is in
+  [`ReferenceStrategy.md`](ReferenceStrategy.md).
 - **Historical oracle: FreeDOCore/4DO.** Keep the original C# port's golden tests and
   use the FreeDO harness for behavior that predates the Opera migration.
 - **Optional, developer-only tool** (`tools/FiveDo.Oracle`, not shipped): load the

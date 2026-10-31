@@ -2,6 +2,20 @@
 
 ## 0. Current handoff (2026-10-30)
 
+**2026-10-31 update:** the differential harness (FND-05/CORE-11/CORE-16) is
+implemented. `tools/FiveDo.DiffHarness` stages the bundled OperaCore and BIOS,
+extracts/caches a data ISO from the disc, runs 5DO and OperaCore with the same
+options, compares checkpoint frame hashes, applies manifest allowances, and writes
+JSON/Markdown/HTML reports. `run` adds `--checkpoints`, `--audio-hash`, and
+`--state-hash`; `FiveDo.DiffHarness baseline` gates report changes. The Lemmings
+(USA) 300-frame smoke matches at `0x110E7DC5`; the early boot frames diverge and
+are recorded as a scheduling finding. Manifests are
+`benchmarks/diff/smoke.json` and `benchmarks/diff/showcase.json`. **Do not redo the
+checkpoint contract, hash algorithms, staging, comparer, reports, or baseline
+command; remaining work is the full-collection manifest, reference-side PC/state/
+CD-transcript exports, visual artifacts, and the nightly baseline.** See
+[`DifferentialHarness.md`](DifferentialHarness.md).
+
 **2026-10-31 update:** SYS-14 per-game NVRAM and versions are implemented.
 `NvramStorageMode` (`Global`, `PerGame`), `NvramVersion` (0-9), and `NvramDirectory`
 select shared `nvram.ram`, versioned `nvram.<n>.ram`, or
@@ -14,7 +28,7 @@ Unit, store, settings, JSON-contract, and CLI tests pass. **Do not redo the NVRA
 store, settings controls, or CLI commands; remaining work is the UX-12 manager UI
 (library listing, per-game assignment, and backup/restore dialogs) and portable-mode
 path selection.**
-**1091 tests pass.**
+**1125 tests pass.**
 
 **2026-10-31 update:** SYS-04 BIOS manager and auto-selection are implemented.
 `BiosCatalog`/`BiosLibrary` scan `.bin`/`.rom` files, compute MD5, validate sizes, and
@@ -29,7 +43,7 @@ and per-game MD5 pins; the configured BIOS remains the fallback when no folder i
 The five-title 3,000-frame and four known-requirement 12,000-frame smoke runs are in
 [`TestCorpus.md`](TestCorpus.md) 1.1f. **Do not redo the BIOS catalog, scanner,
 selector, CLI commands, or settings UI; remaining work is the full-collection
-BIOS-aware sweep and per-game auto profiles (SYS-18).** **1091 tests pass.**
+BIOS-aware sweep and per-game auto profiles (SYS-18).** **1125 tests pass.**
 
 **2026-10-31 update:** SYS-09 CD speed control and CORE-08 timing profiles are
 implemented. `CdSpeed` (`Unbounded`, `X1`-`X32`, default `X2`) changes the effective
@@ -65,8 +79,9 @@ full-collection differential, a CEL-status polling title, and a frame-time check
 considering it the default. **1003 tests pass.**
 
 **Goal:** finish the BIOS-aware compatibility triage, fill the 5DO statuses, and then
-start high-resolution CEL research. Do not work on gameplay depth and do not cut a
-release yet.
+start high-resolution CEL research. Keep the differential harness green on the
+showcase and extend it to the full collection. Do not work on gameplay depth and do
+not cut a release yet.
 
 **Read first:**
 

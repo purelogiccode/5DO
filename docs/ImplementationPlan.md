@@ -1919,6 +1919,54 @@ vertical high-resolution rendering. See
 
 ---
 
+### M15 - Differential harness and regression baseline (active, 2026-10-31)
+
+**Goal:** make accuracy changes measurable without manual side-by-side runs. This
+implements FND-05, CORE-11, and CORE-16 from
+[`../5DO-Feature-Spec.md`](../5DO-Feature-Spec.md).
+
+**Delivered:**
+
+- [x] **M15.1 Checkpoint contract.** `run --checkpoints N,N,... --audio-hash
+      --state-hash` emits frame hash, PC, instruction count, sample count, audio
+      hash, state hash, CD status/poll, DSP state, and CEL busy cycles.
+- [x] **M15.2 Harness.** `tools/FiveDo.DiffHarness` stages the bundled OperaCore
+      and BIOS, extracts/caches a data ISO, runs both engines with the same
+      options, compares normalized BGRA8888 frame hashes, applies manifest
+      allowances, and writes JSON/Markdown/HTML reports.
+- [x] **M15.3 First evidence.** The Lemmings smoke matches at frame 300
+      (`0x110E7DC5` on both engines); the early boot frames diverge and are
+      recorded as a scheduling finding.
+- [x] **M15.4 Manifest.** `benchmarks/diff/smoke.json` and
+      `benchmarks/diff/showcase.json`; schema and staging rules are documented in
+      [`DifferentialHarness.md`](DifferentialHarness.md).
+- [x] **M15.5 Baseline gate.** `FiveDo.DiffHarness baseline` compares report
+      fields and exits non-zero on a changed 5DO value.
+- [~] **M15.6 Nightly.** `.github/workflows/diff-harness.yml` targets a
+      self-hosted Windows runner with the local corpus; the first showcase run is
+      recorded. The nightly schedule is wired but has not run on the runner yet.
+- [~] **M15.7 Full collection.** `manifest` generated the portable 594-title
+      `benchmarks/diff/full.json`; the full run remains (about 8-9 hours).
+- [ ] **M15.8 Reference-side fields.** Add PC/state/CD transcript exports to the
+      reference wrapper (requires rebuilding the SimpleGui core, not changing
+      libopera behavior).
+- [~] **M15.9 Visual artifacts.** Checkpoint PNG/BMP captures and report links are
+      in place; the trend dashboard remains.
+
+**Acceptance**
+
+- [x] `dotnet test` covers the hashers, manifest, comparer, reports, baseline,
+      and CLI checkpoint contract (1,123 tests pass).
+- [x] A real BIOS/disc smoke run matches the reference frame hash.
+- [x] The five-title showcase has a recorded report: two video matches and three
+      named video divergences at 3,000 frames; the strict PC gate shows 0/5 and
+      makes the video-only matches explicit.
+- [ ] Nightly CI publishes a report artifact and fails on regressions.
+- [~] The full collection has a checkpoint manifest; known-divergence allowlisting
+      and the first full run remain.
+
+---
+
 ## 6. Historical first sprint (completed 2026-10-23)
 
 This was the original two-week bootstrap plan. It is retained as a record; every item
@@ -2105,6 +2153,7 @@ These need a decision before the relevant milestone; the plan assumes the defaul
 | M12 optional ARM IL JIT | 10-20 dd | M2, only if profiling demands |
 | M13 full-collection compatibility sweep | 10-15 dd | M10; current workstream |
 | M14 high-resolution CEL research | 10-20 dd | M13.6; can start in parallel with triage |
+| M15 differential harness and baseline | 5-8 dd (core delivered) | M13; current workstream |
 
 The 25+ day M11 line is the full-compatibility plan. The adopted v1 scope replaces
 most of it with the release gate (soak, compatibility docs, legal review) and moves
@@ -2145,8 +2194,9 @@ Suggested parallelization with two developers:
 15. **Validate on the Linux VM.** Build/test/smoke the CLI in `LinuxMint` (`D:\Hyper-V\VMs\LinuxMint`), run a reduced sweep, and record the GL renderer/fallback result.
 16. **Start M14 research.** Measure the current `--high-res` mode, prototype true 640x480 and 2x supersampling, and write the GPU CEL feasibility note.
 17. **Refresh the compatibility docs.** Merge the 5DO status/evidence into [`GameCompatibilityList.md`](GameCompatibilityList.md), [`Compatibility.md`](Compatibility.md), and [`KnownIssues.md`](KnownIssues.md).
-18. **Keep the release deferred until M13/M14 complete.** The legal/attribution review and CI billing issue remain release blockers; do not cut a release before the compatibility and video-quality baseline exists.
-19. **Post-release backlog, not current work:** Road Rash full race, Alone inventory, gameplay scripts for the other seven titles, CD/CLIO/MADAM/ARM timing triage, Raspberry Pi/GLES 3.1, arm64 hardware, DPI, installers/signing, frontend AOT audio, ViewModel tests, hot-path optimization, and the optional M12 JIT.
+18. **Keep the differential harness green.** Run `benchmarks/diff/showcase.json`, record the baseline, and extend the manifest to the full collection (M15). Do not allowlist an early-frame divergence without a reason.
+19. **Keep the release deferred until M13/M14 complete.** The legal/attribution review and CI billing issue remain release blockers; do not cut a release before the compatibility and video-quality baseline exists.
+20. **Post-release backlog, not current work:** Road Rash full race, Alone inventory, gameplay scripts for the other seven titles, CD/CLIO/MADAM/ARM timing triage, Raspberry Pi/GLES 3.1, arm64 hardware, DPI, installers/signing, frontend AOT audio, ViewModel tests, hot-path optimization, and the optional M12 JIT.
 
 ---
 

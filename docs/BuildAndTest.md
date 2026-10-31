@@ -250,6 +250,27 @@ See [`Performance.md`](Performance.md) for the measured baselines and methodolog
 
 ---
 
+## 4a. Differential harness
+
+The reference harness is a separate tool; it is not part of the shipped
+emulator and is not run by the default test job when the BIOS/disc corpus is
+absent.
+
+```powershell
+dotnet build tools/FiveDo.DiffHarness -c Release
+tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+  validate benchmarks/diff/smoke.json --strict
+tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+  run benchmarks/diff/smoke.json --out artifacts/diff/smoke
+```
+
+It needs `bios/panafz1.bin`, the local disc collection, and the bundled
+`References/CPP_SimpleGui/.../OperaCore.dll`. The Lemmings smoke is the quick
+health check; the five-title showcase takes about ten minutes because the
+reference core runs in real time. See
+[`DifferentialHarness.md`](DifferentialHarness.md) for the manifest and report
+contracts.
+
 ## 5. GPU presentation probe
 
 The probe opens the real Avalonia OpenGL surface, presents synthetic 320x240 VDL

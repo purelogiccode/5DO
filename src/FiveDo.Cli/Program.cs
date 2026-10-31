@@ -244,6 +244,10 @@ internal static class Program
         var nvramDirectoryOption = options.Get("--nvram-dir");
         var captureDir = options.Get("--capture-dir");
         var captureEvery = options.GetInt("--capture-every", 0);
+        var checkpointFrames = ParseCheckpoints(options.Get("--checkpoints"));
+        var captureFrames = ParseCheckpoints(options.Get("--capture-frames"));
+        var stateHashEnabled = HasFlag(args, "--state-hash");
+        var audioHashEnabled = HasFlag(args, "--audio-hash") || checkpointFrames.Length > 0;
         var pokeSpec = options.Get("--poke");
         var realtime = HasFlag(args, "--realtime");
         var discPath = options.Positional;
@@ -304,7 +308,7 @@ internal static class Program
             machine.LoadBios(biosLoad.Image.Bios1.Span, biosLoad.Image.Bios2.Span);
         }
 
-        using AudioOutput audio = CreateAudio(options);
+        using AudioOutput audio = CreateAudio(options, audioHashEnabled);
         if (disc is not null)
         {
             machine.InsertDisc(disc);
@@ -564,6 +568,9 @@ internal static class Program
         }
 
         var runClock = Stopwatch.StartNew();
+        var checkpointResults = new List<CliCheckpointResult>(checkpointFrames.Length);
+        var checkpointIndex = 0;
+        var captureFrameIndex = 0;
         try
         {
             if (scriptedInput is null
@@ -571,13 +578,15 @@ internal static class Program
                 && progressEvery <= 0
                 && pbusTraceWriter is null
                 && captureDir is null
+                && checkpointFrames.Length == 0
+                && captureFrames.Length == 0
                 && !realtime)
             {
                 machine.RunFrames(frames);
             }
             else
             {
-                if (captureDir is not null && captureEvery > 0)
+                if (captureDir is not null && (captureEvery > 0 || captureFrames.Length > 0))
                 {
                     Directory.CreateDirectory(captureDir);
                 }
@@ -648,6 +657,31 @@ internal static class Program
                         && machine.FramesExecuted % captureEvery == 0)
                     {
                         WriteFrame(machine, Path.Combine(captureDir, $"f{machine.FramesExecuted:D6}.png"));
+                    }
+
+                    if (captureDir is not null && captureFrames.Length > 0)
+                    {
+                        while (captureFrameIndex < captureFrames.Length
+                            && machine.FramesExecuted >= captureFrames[captureFrameIndex])
+                        {
+                            if (machine.FramesExecuted == captureFrames[captureFrameIndex])
+                            {
+                                WriteFrame(machine, Path.Combine(captureDir, $"f{machine.FramesExecuted:D6}.png"));
+                            }
+
+                            captureFrameIndex++;
+                        }
+                    }
+
+                    while (checkpointIndex < checkpointFrames.Length
+                        && machine.FramesExecuted >= checkpointFrames[checkpointIndex])
+                    {
+                        if (machine.FramesExecuted == checkpointFrames[checkpointIndex])
+                        {
+                            checkpointResults.Add(CaptureCheckpoint(machine, audio, stateHashEnabled));
+                        }
+
+                        checkpointIndex++;
                     }
                 }
             }
@@ -775,6 +809,8 @@ internal static class Program
             NvramPath: nvramSelection.Path,
             NvramMode: nvramSelection.Mode,
             NvramVersion: nvramSelection.Version,
+            AudioHash: audio.Hash,
+            Checkpoints: checkpointResults,
             Warnings: machine.StateWarnings);
 
         SaveNvramIfRequested(machine, nvramSelection);
@@ -2070,13 +2106,13 @@ internal static class Program
         return machine;
     }
 
-    private static AudioOutput CreateAudio(ParsedOptions options)
+    private static AudioOutput CreateAudio(ParsedOptions options, bool hashAudio)
     {
         var mode = options.Get("--audio") ?? "null";
         if (string.Equals(mode, "wav", StringComparison.OrdinalIgnoreCase))
         {
             var path = options.Get("--wav-out") ?? "audio.wav";
-            return new AudioOutput(new WavAudioSink(path), null);
+            return new AudioOutput(new WavAudioSink(path), null, hashAudio);
         }
 
         if (string.Equals(mode, "openal", StringComparison.OrdinalIgnoreCase))
@@ -2091,7 +2127,7 @@ internal static class Program
                         "OpenAL is unavailable; audio is silent ({Error}).",
                         openAlError ?? "unknown error");
 
-                return new AudioOutput(null, null);
+                return new AudioOutput(null, null, hashAudio);
             }
 
             if (options.Get("--volume") is { } volumeText)
@@ -2105,7 +2141,7 @@ internal static class Program
                 output.Volume = volume;
             }
 
-            return new AudioOutput(null, output);
+            return new AudioOutput(null, output, hashAudio);
         }
 
         if (!string.Equals(mode, "null", StringComparison.OrdinalIgnoreCase))
@@ -2113,7 +2149,7 @@ internal static class Program
             throw new ArgumentException($"Unknown audio backend '{mode}'.", nameof(options));
         }
 
-        return new AudioOutput(null, null);
+        return new AudioOutput(null, null, hashAudio);
     }
 
     /// <summary>Owns the CLI's optional WAV/OpenAL audio backend.</summary>
@@ -2121,16 +2157,24 @@ internal static class Program
     {
         private readonly WavAudioSink? _wav;
         private readonly OpenAlAudioOutput? _openAl;
+        private readonly HashingAudioSink? _hashing;
 
-        internal AudioOutput(WavAudioSink? wav, OpenAlAudioOutput? openAl)
+        internal AudioOutput(WavAudioSink? wav, OpenAlAudioOutput? openAl, bool hashAudio = false)
         {
             _wav = wav;
             _openAl = openAl;
+            if (hashAudio)
+            {
+                _hashing = new HashingAudioSink((IAudioSink?)_wav ?? _openAl);
+            }
         }
 
-        internal IAudioSink? Sink => (IAudioSink?)_wav ?? _openAl;
+        internal IAudioSink? Sink => (IAudioSink?)_hashing ?? (IAudioSink?)_wav ?? _openAl;
 
-        internal long SampleCount => _wav?.SampleCount
+        internal uint? Hash => _hashing?.Hash;
+
+        internal long SampleCount => _hashing?.SampleCount
+            ?? _wav?.SampleCount
             ?? ((_openAl?.SamplesPushed ?? 0) + (_openAl?.SamplesDropped ?? 0));
 
         internal AudioStatistics? Statistics => _wav?.Statistics;
@@ -2190,15 +2234,35 @@ internal static class Program
 
     private static uint FrameHash(FiveDoMachine machine)
     {
-        var buffer = new FrameBuffer(machine.Frame.SourceWidth, machine.Frame.SourceHeight);
-        FrameAssembler.Assemble(machine.Frame, buffer, buffer.Width, buffer.Height);
-        var hash = 2166136261u;
-        foreach (var value in buffer.PixelSpan)
-        {
-            hash = unchecked((hash ^ value) * 16777619);
-        }
+        return FrameHasher.Hash(machine.Frame);
+    }
 
-        return hash;
+    private static CliCheckpointResult CaptureCheckpoint(
+        FiveDoMachine machine,
+        AudioOutput audio,
+        bool stateHashEnabled)
+    {
+        return new CliCheckpointResult(
+            Frame: machine.FramesExecuted,
+            Pc: machine.Cpu.ProgramCounter,
+            Instructions: machine.Cpu.InstructionsExecuted,
+            FrameHash: FrameHash(machine),
+            Samples: machine.AudioSamplesProduced,
+            AudioHash: audio.Hash,
+            StateHash: stateHashEnabled ? HashState(machine) : null,
+            CdStatus: machine.Cdrom.DriveStatus,
+            CdPoll: machine.Cdrom.Poll,
+            DspPc: machine.Dsp.ProgramCounter,
+            DspSema: ((uint)machine.Dsp.SemaphoreStatus << 16) | machine.Dsp.SemaphoreData,
+            DspSeed: machine.Dsp.Seed,
+            CelBusyCycles: machine.Madam.CelBusyCyclesRemaining);
+    }
+
+    private static uint HashState(FiveDoMachine machine)
+    {
+        using var stream = new MemoryStream();
+        machine.SaveState(stream);
+        return FrameHasher.HashBytes(stream.GetBuffer().AsSpan(0, checked((int)stream.Length)));
     }
 
     private static void WriteRunResult(CliRunResult result, bool json)
@@ -2217,6 +2281,23 @@ internal static class Program
         Console.WriteLine($"pc:          0x{result.Pc:x8}");
         Console.WriteLine($"frame hash:  0x{result.FrameHash:x8}");
         Console.WriteLine($"samples:     {result.Samples}");
+        if (result.AudioHash is { } audioHash)
+        {
+            Console.WriteLine($"audio hash:  0x{audioHash:x8}");
+        }
+
+        if (result.Checkpoints.Count > 0)
+        {
+            Console.WriteLine("checkpoints:");
+            foreach (var checkpoint in result.Checkpoints)
+            {
+                Console.WriteLine(
+                    $"  f={checkpoint.Frame} pc=0x{checkpoint.Pc:x8} "
+                    + $"frame=0x{checkpoint.FrameHash:x8} "
+                    + $"audio=0x{checkpoint.AudioHash.GetValueOrDefault():x8} "
+                    + $"samples={checkpoint.Samples}");
+            }
+        }
         if (result.AudioDurationSeconds is { } audioSeconds)
         {
             Console.WriteLine(
@@ -2576,6 +2657,32 @@ internal static class Program
         return false;
     }
 
+    private static int[] ParseCheckpoints(string? specification)
+    {
+        if (string.IsNullOrWhiteSpace(specification))
+        {
+            return [];
+        }
+
+        var frames = new SortedSet<int>();
+        foreach (var part in specification.Split(
+            [',', ';', ' '],
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (!int.TryParse(part, NumberStyles.None, CultureInfo.InvariantCulture, out var frame)
+                || frame <= 0)
+            {
+                throw new ArgumentException(
+                    $"Invalid checkpoint frame '{part}'. Checkpoints must be positive integers.",
+                    nameof(specification));
+            }
+
+            frames.Add(frame);
+        }
+
+        return [.. frames];
+    }
+
     private static ParsedOptions Parse(string[] args, int startIndex = 1)
     {
         var options = new ParsedOptions();
@@ -2627,6 +2734,9 @@ internal static class Program
         Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
         Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--realtime] [--json]");
+        Console.WriteLine("             [--checkpoints 3000,6000,12000] [--audio-hash] [--state-hash]");
+        Console.WriteLine("             [--capture-frames 3000,6000] [--capture-dir path]");
+        Console.WriteLine("                                       Emit deterministic checkpoint samples and optional frame images.");
         Console.WriteLine("  trace [disc] --bios path [--bios2 path] [--bios-auto folder] [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");

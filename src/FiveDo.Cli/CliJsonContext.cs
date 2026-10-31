@@ -13,6 +13,8 @@ namespace FiveDo.Cli;
     UseStringEnumConverter = true)]
 [JsonSerializable(typeof(CliErrorResult))]
 [JsonSerializable(typeof(CliRunResult))]
+[JsonSerializable(typeof(CliCheckpointResult))]
+[JsonSerializable(typeof(System.Collections.Generic.IReadOnlyList<CliCheckpointResult>))]
 [JsonSerializable(typeof(CliInfoResult))]
 [JsonSerializable(typeof(CliBiosInfoResult))]
 [JsonSerializable(typeof(CliBiosProfileResult))]

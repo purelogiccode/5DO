@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "name": "5DO differential showcase",
+  "defaults": {
+    "bios": "bios/panafz1.bin",
+    "frames": 3000,
+    "checkpoints": [3000],
+    "timeoutSeconds": 600,
+    "workDirectory": "artifacts/diff/work",
+    "options": {
+      "profile": "accuracy",
+      "cdSpeed": "unbounded",
+      "noGameFixes": true,
+      "stateHash": true
+    },
+    "compare": {
+      "compareAudio": false,
+      "comparePc": false,
+      "compareSamples": false,
+      "frameWindow": 2
+    }
+  },
+  "titles": [
+    {
+      "id": "lemmings-usa",
+      "name": "Lemmings (USA)",
+      "disc": "J:/Panasonic 3DO/Lemmings (USA).chd"
+    },
+    {
+      "id": "gex-usa-europe",
+      "name": "Gex (USA, Europe)",
+      "disc": "J:/Panasonic 3DO/Gex (USA, Europe).chd"
+    },
+    {
+      "id": "road-rash-usa",
+      "name": "Road Rash (USA)",
+      "disc": "J:/Panasonic 3DO/Road Rash (USA).chd"
+    },
+    {
+      "id": "wolfenstein-3d-usa",
+      "name": "Wolfenstein 3D (USA)",
+      "disc": "J:/Panasonic 3DO/Wolfenstein 3D (USA).chd"
+    },
+    {
+      "id": "alone-in-the-dark-usa",
+      "name": "Alone in the Dark (USA)",
+      "disc": "J:/Panasonic 3DO/Alone in the Dark (USA).chd"
+    }
+  ]
+}

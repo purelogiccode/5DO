@@ -46,6 +46,7 @@
     <ProjectReference Include="..\..\src\FiveDo.Video.Vulkan\FiveDo.Video.Vulkan.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Cli\FiveDo.Cli.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Frontend.Avalonia\FiveDo.Frontend.Avalonia.csproj" />
+    <ProjectReference Include="..\..\tools\FiveDo.DiffHarness\FiveDo.DiffHarness.csproj" />
   </ItemGroup>
 
 </Project>

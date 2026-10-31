@@ -7,6 +7,16 @@ still change.
 
 ### Added
 
+- Differential harness (FND-05/CORE-11/CORE-16). `run` adds `--checkpoints`,
+  `--audio-hash`, and `--state-hash`; each checkpoint records frame hash, PC,
+  instruction count, sample count, audio hash, state hash, CD status/poll, DSP
+  state, and CEL busy cycles. `tools/FiveDo.DiffHarness` stages the bundled
+  OperaCore reference and BIOS, extracts/caches a data ISO from CHD, runs both
+  engines with identical options, compares normalized frame hashes, applies
+  manifest allowances, and writes JSON/Markdown/HTML reports.
+  `FiveDo.DiffHarness baseline` gates changed 5DO fields. The Lemmings (USA)
+  300-frame smoke matches at frame 300 (`0x110E7DC5`); see
+  `docs/DifferentialHarness.md` and `docs/TestCorpus.md` 1.1g.
 - Per-game NVRAM and NVRAM versions (SYS-14). `NvramStorageMode` (`Global`, `PerGame`),
   `NvramVersion` (0-9), and `NvramDirectory` select the layout: shared version 0 keeps
   the legacy `nvram.ram`, shared versions 1-9 use `nvram.<version>.ram`, and per-game

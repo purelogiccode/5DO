@@ -50,7 +50,21 @@ Settings > Emulation override combo. Auto-selection uses the game database regio
 known requirements for Slayer Europe/USA, Powers Kingdom (Europe), and Arcade CD-ROM
 discs; the configured BIOS remains the fallback when no BIOS folder is set. The
 five-title 3,000-frame smoke run and four known-requirement 12,000-frame runs are in
-[`TestCorpus.md`](TestCorpus.md) 1.1f. **1091 tests pass.**
+[`TestCorpus.md`](TestCorpus.md) 1.1f. **1125 tests pass.**
+The differential harness (FND-05/CORE-11/CORE-16) is implemented:
+`tools/FiveDo.DiffHarness` stages the bundled OperaCore and BIOS, runs both engines
+with identical options, compares checkpoint frame hashes, applies manifest
+allowances, and writes JSON/Markdown/HTML reports. The Lemmings (USA) 300-frame
+smoke matches at frame 300 (`0x110E7DC5` on both engines); the five-title showcase
+manifest is `benchmarks/diff/showcase.json`, and its first 3,000-frame run
+video-matched Wolfenstein 3D and Alone in the Dark while Lemmings, Gex, and Road
+Rash diverged. The strict PC gate shows 0/5 matches: the video matches still have
+PC deltas of 184,696 and 739,184 bytes, so frame hashes alone are not sufficient
+evidence. The `manifest` command generated the portable 594-title
+`benchmarks/diff/full.json`. See
+[`DifferentialHarness.md`](DifferentialHarness.md) and
+[`TestCorpus.md`](TestCorpus.md) 1.1g. The remaining work is the full-collection
+run, state/CD transcript fields, and the nightly baseline.
 The v1.0 release is deliberately deferred: the next work is a BIOS-aware sweep and
 5DO status merge (M13), then high-resolution CEL research (M14). The project is
 **donationware** (non-commercial, source-available, voluntary donations only). See
@@ -222,7 +236,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 1091 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 1125 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and

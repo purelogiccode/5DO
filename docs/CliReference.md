@@ -182,12 +182,16 @@ With `--state-in`, a script starting at `0` applies its last entry immediately u
 | Option | Default | Meaning |
 |---|---:|---|
 | `--frame-out <path>` | none | Write the final frame. `.png` writes PNG; any other extension writes BMP. |
-| `--capture-dir <dir>` | none | Write periodic frame PNGs. Requires `--capture-every > 0`. |
+| `--capture-dir <dir>` | none | Write periodic frame PNGs. Requires `--capture-every > 0` or `--capture-frames`. |
 | `--capture-every N` | 0 | Capture every N frames after execution. Files are `f000123.png`. |
+| `--capture-frames N,N,...` | none | Capture the listed frames as `fNNNNNN.png` in `--capture-dir`. |
 | `--dump-ram <path>` | none | Write raw CPU-visible RAM bytes after the run. |
 | `--dump-ram-offset N` | 0 | Byte offset. Parsed as hex even without `0x`. |
 | `--dump-ram-length N` | 0x1000 | Byte count. Decimal or `0x`. |
 | `--dump-dsp <prefix>` | none | Write `<prefix>.imem.bin` and `<prefix>.dmem.bin` (little-endian `ushort` words). |
+| `--checkpoints N,N,...` | none | Emit deterministic samples at the listed frames. Forces the frame-by-frame run path and enables audio hashing. |
+| `--audio-hash` | off | Hash every DSP sample with FNV-1a and report `audioHash`. |
+| `--state-hash` | off | Serialize and hash the machine state at every checkpoint (`stateHash`). |
 | `--json` | off | Emit a structured result instead of text. |
 
 `--frame-out` and `--capture-dir` use the CPU `FrameAssembler`, so the image is the
@@ -305,6 +309,8 @@ All fields are camelCase. Nullable fields are omitted or `null` when not applica
 | `nvramPath` | string? | Resolved NVRAM path, or null when NVRAM persistence was not requested. |
 | `nvramMode` | string | `disabled`, `explicit`, `global`, or `per-game`. |
 | `nvramVersion` | int | Resolved NVRAM version 0-9. |
+| `audioHash` | uint? | FNV-1a hash of all packed stereo samples, when hashing is enabled. |
+| `checkpoints` | object[] | Samples at the requested frames. Each entry has `frame`, `pc`, `instructions`, `frameHash`, `samples`, `audioHash`, `stateHash`, `cdStatus`, `cdPoll`, `dspPc`, `dspSema`, `dspSeed`, and `celBusyCycles`. |
 | `warnings` | string[] | `machine.StateWarnings` after a state load. |
 
 `cdStatus=0xE1` and `cdPoll=0x0C` is the historical static READ_ID-only wait signature.

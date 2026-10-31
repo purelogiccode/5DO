@@ -522,6 +522,26 @@ If a deviation is required for C# safety (e.g., division-by-zero guard), documen
 
 ---
 
+## 11a. Differential checkpoint contracts
+
+- The frame hash is FNV-1a over the assembled BGRA8888 pixels. It is
+  endianness-independent because it hashes bytes, not `ushort`/`uint` words.
+- The OperaCore host converts its XRGB8888 presenter frame to the same BGRA byte
+  order before hashing, and includes alpha `0xFF`.
+- The PCM hash is FNV-1a over each packed stereo sample as four little-endian
+  bytes (left low 16 bits, right high 16 bits). It is cumulative from reset/state
+  load.
+- A checkpoint is taken after the completed frame's CPU/VDL work and its DSP
+  samples. For OperaCore, the sample is finalized at the next video callback so
+  its audio timeline matches the 5DO end-of-frame definition.
+- `stateHash` hashes the serialized `.tdos` bytes (compressed v2 by default), not
+  the live objects. It is a 5DO-side golden only until the reference export
+  exposes an equivalent.
+- Do not compare audio hashes across engines while the reference seeds its PRNG
+  from wall-clock time; record them as informational evidence instead.
+
+---
+
 ## 12. M1 implementation notes
 
 These notes record decisions made while implementing the core/memory/scheduler milestone. They are not deviations from observable FreeDO behavior unless stated.

@@ -79,6 +79,7 @@ Windows x64 is the validated platform; the local Linux validation target is the
 | [`TestStrategy.md`](TestStrategy.md) | Test pyramid, actual test layout, unit/integration/golden/differential/fuzz/performance strategy, CI policy. |
 | [`PortingNotes.md`](PortingNotes.md) | C++ to C# rules, memory model, bitfields, integer/float semantics, function-by-function reference notes. |
 | [`ReferenceStrategy.md`](ReferenceStrategy.md) | Opera/libopera as primary behavioral reference, FreeDO/4DO hierarchy, differential procedure. |
+| [`DifferentialHarness.md`](DifferentialHarness.md) | 5DO vs OperaCore manifests, checkpoint hashes, reports, allowlists, baseline gate, and current limitations. |
 | [`Trimming.md`](Trimming.md) | Trim-safe JSON, trimmed CLI/frontend publishes, NativeAOT audit, remaining warnings. |
 | [`ImplementationPlan.md`](ImplementationPlan.md) | Full milestone plan, acceptance criteria, risk register, progress log. |
 | [`NextSession.md`](NextSession.md) | Handoff notes, ordered next steps, evidence, useful commands. |

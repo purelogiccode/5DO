@@ -178,6 +178,14 @@ license position; it adds another upstream project to the attribution list.
 
 Use the same BIOS, the same disc data, and the same frame count on both sides.
 
+**The automated path is `tools/FiveDo.DiffHarness`.** It stages the OperaCore
+library and BIOS, extracts a cached ISO from the CHD when needed, runs both
+engines with the same options, and compares checkpoint frame hashes. See
+[`DifferentialHarness.md`](DifferentialHarness.md) for the manifest schema,
+commands, allowlist policy, and current limitations. The manual procedure below
+is retained for ad-hoc investigation and for reference-side fields the ABI does
+not expose yet.
+
 ### 5.1 Prepare the disc
 
 ```powershell
@@ -189,6 +197,9 @@ dotnet run -c Release --project src/FiveDo.Cli -- disc dump `
   "$env:FIVEDO_GAMES\Road Rash (USA).chd" --sector 0 --count 328130 `
   --out "$env:TEMP\roadrash.iso"
 ```
+
+The harness does this automatically with `DiscImageFactory`; the staged ISO is
+cached under `artifacts/diff/work/discs/<title>/`.
 
 ### 5.2 Run the Opera reference
 
@@ -206,27 +217,34 @@ Copy-Item bios\panafz1.bin "$core\BIOS\panafz1.bin" -Force
   --debug-messages -n "$env:TEMP\roadrash.iso"
 ```
 
-Capture the window at fixed intervals (15/35/60 s) and keep the log. The wrapper
-prints core-level messages; guest KPRINT is not enabled by default.
+The harness copies the core and BIOS into a private runtime directory instead of
+editing the reference tree.
 
 ### 5.3 Run our emulator
 
 ```powershell
 dotnet run -c Release --project src/FiveDo.Cli -- run `
   "$env:TEMP\roadrash.iso" --bios bios\panafz1.bin --frames 3000 `
-  --kprint "$env:TEMP\rr-kprint.txt" --frame-out "$env:TEMP\rr.png"
+  --checkpoints 3000 --audio-hash --state-hash `
+  --kprint "$env:TEMP\rr-kprint.txt" --frame-out "$env:TEMP\rr.png" --json
 ```
 
 ### 5.4 Compare
 
 - KPRINT stream and the first differing line.
-- Final PC, frame hash, DSP sample count, CD command transcript.
+- Checkpoint PC, frame hash, audio hash, state hash, DSP sample count, CD command transcript.
 - Screenshot at the same frame.
 - Save state at a fixed frame, if the behavior is state-dependent.
 
-Record the result in [`Compatibility.md`](Compatibility.md) or
-[`TestCorpus.md`](TestCorpus.md). A differential run is evidence only if the BIOS,
-disc hash, frame count, and build are recorded.
+The automated harness compares the frame hash by default. Audio hashes are
+informational until the reference core accepts a fixed PRNG seed; PC/state/CD
+transcript fields are not exposed by the SimpleGui ABI and remain 5DO-side
+goldens.
+
+Record the result in [`Compatibility.md`](Compatibility.md),
+[`TestCorpus.md`](TestCorpus.md), or the harness report. A differential run is
+evidence only if the BIOS, disc hash, frame count, build, and manifest are
+recorded.
 
 ---
 
@@ -265,7 +283,7 @@ disc hash, frame count, and build are recorded.
 
 - [x] Decision recorded and linked from the plan, status, porting notes, and README.
 - [x] Empirical comparison recorded for the five local titles.
-- [ ] Differential harness documented and reproducible.
+- [x] Differential harness documented and reproducible.
 - [ ] First targeted port (CD-ROM read/status semantics) merged with tests.
 - [ ] SAudio `-6996` root cause identified and fixed.
 - [ ] Space Ace low-memory writer identified and fixed.

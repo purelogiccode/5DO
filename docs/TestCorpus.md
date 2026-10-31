@@ -314,6 +314,86 @@ are all boot/FMV screens.
 interrupts continue to run and the boot log advances. Earlier baselines that
 described this address as a "halt path" were misreading the idle loop.
 
+### 1.1g Differential harness (2026-10-31)
+
+The first automated 5DO-vs-OperaCore run uses
+`tools/FiveDo.DiffHarness` and `benchmarks/diff/smoke.json`:
+
+- Title: Lemmings (USA), `panafz1.bin`, 300 frames.
+- 5DO: `--profile accuracy --cd-speed unbounded --no-game-fixes`,
+  checkpoint 300, frame hash `0x110E7DC5`.
+- OperaCore: same disc data (cached ISO), same BIOS, 300 frames,
+  checkpoint 300, frame hash `0x110E7DC5`.
+- Result: **Match**. 5DO ran 300 frames in 1.3 s; OperaCore ran in 5.1 s.
+- The two engines also produced the same final frame hash at 300 frames but
+  diverged at frames 100 and 200: Opera reached the Lemmings boot screen earlier.
+  That is a real scheduling difference, not a renderer difference. The smoke
+  manifest now checkpoints only the matched frame; the early-frame divergence is
+  retained in the run history and will be triaged with CORE-01/02/04 evidence.
+
+The five-title `benchmarks/diff/showcase.json` run (3000 frames per title) is the
+next evidence set. It compares frame hashes only; the reference core seeds its PRNG
+from wall-clock time, so audio hashes are recorded but not part of the pass/fail
+gate. See [`DifferentialHarness.md`](DifferentialHarness.md) for the manifest,
+staging rules, allowlist policy, and limitations.
+
+**First showcase result (2026-10-31, 3,000 frames, checkpoint 3,000):**
+
+| Title | 5DO | OperaCore | Result |
+|---|---|---|---|
+| Lemmings (USA) | `0x20C4E404` | `0xEBDB01CA` | Diverged |
+| Gex (USA, Europe) | `0xC8A2B60F` | `0xBED174BD` | Diverged |
+| Road Rash (USA) | `0x6D066B83` | `0x0528251F` | Diverged |
+| Wolfenstein 3D (USA) | `0x175B8FE4` | `0x175B8FE4` | **Match** |
+| Alone in the Dark (USA) | `0x175B8FE4` | `0x175B8FE4` | **Match** |
+
+The two matches are exact pixel matches at the same frame. The three divergences
+are at game-code PCs (`0x0012DE84`, `0x0011005C`, `0x000B9FAC`) with the same CD
+status class, so they are candidates for the CORE-01/02/04 timing differences, not
+a failure to load. The next pass adds `frameWindow: 2` diagnostics and checkpoint
+images so the report can distinguish "same pixels one frame apart" from a real
+pixel/state divergence.
+
+**Strict PC gate (debug core, same captures):**
+
+| Title | Video | PC delta (Opera - 5DO) |
+|---|---|---:|
+| Lemmings (USA) | Diverged | -11,076 |
+| Gex (USA, Europe) | Diverged | 176 |
+| Road Rash (USA) | Diverged | 284 |
+| Wolfenstein 3D (USA) | **Match** | -184,696 |
+| Alone in the Dark (USA) | **Match** | 739,184 |
+
+With `--compare-pc`, every title is a divergence: Wolfenstein and Alone render
+identical pixels at frame 3000 while executing completely different code paths.
+This is the central lesson for CORE-16: a frame-hash match is necessary but not
+sufficient. Use the video gate for renderer/CLUT regressions and the PC gate (with
+the debug core) for instruction-stream timing.
+
+**Checkpoint images (second pass, 2026-10-31):** the harness now writes
+`f003000.png` for 5DO and `f003000.bmp` for Opera. The images confirm that the
+divergences are state/animation differences, not palette or scaling bugs:
+
+- Lemmings: the same intro bedroom scene, but the character's pose differs (6,160
+  of 76,800 sampled pixels differ); the difference is stable across Opera frames
+  2998-3000, so it is not a simple ±1/2-frame offset.
+- Gex: a different camera/character pose in the same opening scene.
+- The ±2-frame `frameWindow` did not find an exact hash match for either title,
+  so the harness correctly reports `Diverged`, not `Offset`.
+
+The next triage step is to compare the 5DO CEL/CD/CLIO traces at frame 3000 with
+the Opera reference and determine whether the divergence starts in the CD load
+handshake, CEL busy timing, or the ARM/timer scheduler.
+
+**Optional debug-core fields (2026-10-31):** a locally built OperaCore with the
+read-only `sg_debug_*` exports records the reference PC, ARM state hash, and CD
+FIFO status. On the Lemmings 300-frame smoke the frame hash matches while the PC
+delta is 4 bytes (`0x000205F8` vs `0x000205FC`). At frame 3000 the delta is
+`0x2B44` (11,076 bytes): 5DO `0x0012DE84`, Opera `0x0012B340`. That is a real
+instruction-stream divergence, not a renderer bug. The CD FIFO status/poll values
+are reference-internal and are captured for comparison but are not the same
+fields as 5DO's `DriveStatus`/`Poll`; do not compare them directly.
+
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 
 All runs use the Release build, `panafz1.bin`, and a fresh NVRAM. The 3,000-frame

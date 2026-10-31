@@ -35,7 +35,7 @@ src/
 tests/FiveDo.Tests/          xUnit suite, one folder per subsystem
 benchmarks/FiveDo.Benchmarks custom frame benchmark and CI gate
 packaging/                   portable archive script and Linux desktop entry
-tools/                       release soak, collection compatibility sweep, 4DO reference/result generators, HQx generation
+tools/                       release soak, collection compatibility sweep, 4DO reference/result generators, HQx generation, differential harness
 docs/                        this documentation set
 ```
 
@@ -113,6 +113,7 @@ FiveDo.Cdrom --------------> Core
 | `FiveDo.Frontend.Avalonia` | Desktop shell, library, settings, input, save slots, logs, donation banner, GPU probes | `MainWindow`, `VideoSurface`, `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`, `GameLibraryWindow`, `LogsWindow`, `WelcomeWindow`, `DonationEmailWindow`, `GlProbeWindow`, `GlProbeOptions`, `VkProbeRunner`, `VkProbeOptions`, `GlBackendOption`, `PlatformGamepadBackend` | Host, Video.OpenGL, Video.Vulkan, Avalonia |
 | `FiveDo.Tests` | Unit/integration/golden/CLI/frontend tests | subsystem fixtures, ARM test assembler/rig, fake chips/MMIO, PNG writer | all production projects |
 | `FiveDo.Benchmarks` | Synthetic/real-content frame benchmark, gate, baseline | `Program` | Cpu, Madam, Dsp, Diagnostics, Machine, Storage, Video |
+| `FiveDo.DiffHarness` | 5DO vs OperaCore differential runs, manifests, allowlists, reports, baseline gate | `Program`, `DiffManifestLoader`, `DiffComparer`, `OperaCoreHost`, `DiffReportWriter` | Core, Video, Audio, Input, Storage |
 
 ---
 
