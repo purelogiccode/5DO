@@ -1,8 +1,11 @@
 # Full-Collection Compatibility Sweep
 
 **Status:** first loadability pass complete (2026-10-30): **594 discs tested, 576
-rendered, 13 black/blank, 5 not loadable**. See
-[`GameCompatibilityResults.md`](GameCompatibilityResults.md).
+rendered, 13 black/blank, 5 not loadable**. The 12,000-frame rerun resolved six of the
+13 black/blank titles, and BIOS cross-testing showed that the four Arcade CD-ROM
+timeouts and several black-screen titles are BIOS-sensitive. See
+[`GameCompatibilityResults.md`](GameCompatibilityResults.md) and
+[`Compatibility.md`](Compatibility.md) §13.2.
 **Goal:** give every disc in the local 3DO collection a recorded 5DO status, starting
 with loadability and then an in-game/visual check. Gameplay-depth scripts (full races,
 inventory interaction, long playthroughs) are deliberately deferred.
@@ -19,7 +22,8 @@ and the per-title result columns are in
 |---|---|---:|
 | Main collection | `J:\Panasonic 3DO` | 589 CHD images |
 | MAME software-list collection | `G:\MAME\MAME Software List CHDs\3do` | 5 CHD images |
-| BIOS | `bios/panafz1.bin` | 1 MB, user-provided |
+| BIOS | `bios/panafz1.bin` (baseline) | 1 MB, user-provided |
+| Alternate BIOSes | `panafz10.bin`, `panafz10e-anvil.bin`, `panafz10ja-anvil-kanji.bin` | 1 MB each; used for BIOS-sensitive titles |
 | 4DO reference list | `References/4DO-master/4DO Compatibility List ⚈ 3DO emulator Wiki ».mhtml` | 241 titles |
 
 The two collections contain regional variants and alternate revisions. The sweep tests
@@ -116,6 +120,7 @@ Useful options:
 | Option | Purpose |
 |---|---|
 | `-Resume` | Skip discs whose `result.json` already exists and parses. |
+| `-Bios <path>` | BIOS image; the default is `bios/panafz1.bin`. |
 | `-Limit N` | Test only the first N discs. |
 | `-Filter '*.chd'` | File-name filter; the default is CHD. |
 | `-HighRes` | Pass `--high-res` to the CLI for the high-resolution pass. |
@@ -123,6 +128,24 @@ Useful options:
 | `-NoPrefetch` | Disable the CLI's bounded disc cache. |
 | `-Build` | Build the Release CLI before the sweep. |
 | `-Cli <path>` | Use a specific CLI executable or `.dll`. |
+
+### 3.3.1 BIOS selection
+
+`panafz1.bin` is the baseline BIOS, not a universal reference. The 2026-10-30 triage
+found that all four Arcade CD-ROM rows hang at about frame 1,740 with `panafz1.bin`
+but boot with `panafz10.bin`. Crash 'n Burn, Powers Kingdom (Europe), and WorldCup
+Super Stadium only leave their black or solid-blue boot state with the Anvil BIOS;
+Slayer needs `panafz10`, GoldStar, or Sanyo. Always record the BIOS used with a
+result:
+
+```powershell
+pwsh -File tools/compat-sweep.ps1 `
+  -Bios bios/panafz10.bin -Frames 3000 -TimeoutSeconds 180 `
+  -OutDir artifacts/compat-panafz10
+```
+
+Do not compare a `panafz1` black screen with a `panafz10` render as if they were the
+same test. The final 5DO status needs the BIOS in its notes.
 
 ### 3.4 Deeper in-game pass
 
@@ -164,11 +187,16 @@ Loadability is not the same as a usable picture. After the automated pass:
    real title/menu/game scene rather than a test pattern, corrupt palette, or frozen
    frame.
 3. For `Loadable/No video`, rerun at `-Frames 12000` and inspect the final frame. Some
-   games show black during a load or FMV transition.
-4. For a sample of titles, run a second pass with a short input script (A/B/Start) to
+   games show black during a load or FMV transition; the 2026-10-30 pass moved six of
+   the 13 black/blank discs into the rendered set at 6,000-9,000 frames.
+4. If a title is still black or a solid color at 12,000 frames, rerun it with
+   `panafz10.bin` and then the Anvil BIOS before classifying it. Do not assume the
+   `panafz1` result is the final result.
+5. For a sample of titles, run a second pass with a short input script (A/B/Start) to
    confirm the game responds. This is an input smoke test, not a gameplay-depth test.
-5. Record `Playable`, `Unplayable`, or `Good` in
-   [`GameCompatibilityList.md`](GameCompatibilityList.md) with a one-line note.
+6. Record `Playable`, `Unplayable`, or `Good` in
+   [`GameCompatibilityList.md`](GameCompatibilityList.md) with a one-line note and the
+   BIOS used.
 
 A useful visual-check command for one disc:
 

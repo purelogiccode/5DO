@@ -68,27 +68,30 @@ formats, or a locally generated fixture. Do not convert and commit a retail disc
 
 ### 1.1 Current boot baseline
 
-The following results were re-recorded on 2026-10-27 after the exact DSP sample
-clock and the CCB/NVRAM fixes, with `panafz1.bin`, a Release build, and
-`run --frames 3000 --audio null`. The CLI loads a fresh 32 KB NVRAM volume by
+The following results were re-recorded on 2026-10-30 after the headless PBUS fix,
+with `panafz1.bin`, a Release build, and `run --frames 3000 --audio null`. The CLI
+now attaches a default player-1 pad, matching the desktop shell; the earlier keys
+were recorded while headless runs reported no connected controller and are kept
+below for historical comparison. The CLI loads a fresh 32 KB NVRAM volume by
 default; pass `--nvram <path>` to persist it. They are the current regression
 baseline, not a full compatibility pass:
 
 | Title | Final PC | Frame hash | Frame at 3,000 | Observation |
 |---|---|---|---|---|
-| Alone in the Dark | `0x000C4C94` | `0x4EC2E1A7` | boot/logo | AudioFolio init succeeds; the frame is pixel-identical to the pre-clock baseline; with input and NVRAM it reaches the in-game room/inventory scene by 10,000 frames |
-| Lemmings | `0x0012B36C` | `0x6CCA83F5` | **rendered** | Reaches CyberIntro; the frame is pixel-identical to the pre-clock baseline; at 10,000 frames with input it reaches the Load/Options title menu |
-| Road Rash | `0x000B9C94` | `0xCE90FA5A` | **rendered** | Loads the game OS (`grafmath 21.10.504`); SAudio init succeeds; the 3,000-frame capture is the adjacent intro-FMV frame; the 30,000-frame run reaches the 3D race scene |
-| Space Ace | `0x000764F4` | `0xF349263B` | **rendered** | ReadySoft player finds the CD-ROM, plays the demo, and passes the former frame-681 crash; the 3,000-frame capture is the adjacent demo frame |
-| Wolfenstein 3D | `0x0001C0F8` | `0x9A3B5131` | boot/logo | Loads Sherry/Operator/FS v24.225; differs from the pre-clock frame only in the star-field sparkle; with input it reaches gameplay (FLOOR 1-1) |
+| Alone in the Dark | `0x000C4C94` | `0x05225F76` | boot/logo | AudioFolio init succeeds; with input and NVRAM it reaches the in-game room/inventory scene by 10,000 frames |
+| Lemmings | `0x0012B324` | `0x9C2E3236` | **rendered** | Reaches CyberIntro; at 10,000 frames with input it reaches the Load/Options title menu |
+| Road Rash | `0x000BA0F4` | `0x5E9EE515` | **rendered** | Loads the game OS (`grafmath 21.10.504`); SAudio init succeeds; the 3,000-frame capture is an intro-FMV frame; the 30,000-frame run reaches the 3D race scene |
+| Space Ace | `0x00076418` | `0xD666228E` | **rendered** | ReadySoft player finds the CD-ROM, plays the demo, and passes the former frame-681 crash; the 3,000-frame capture is the adjacent demo frame |
+| Wolfenstein 3D | `0x00031F74` | `0x9A3B5131` | boot/logo | Loads Sherry/Operator/FS v24.225; differs from the pre-clock frame only in the star-field sparkle; with input it reaches gameplay (FLOOR 1-1) |
 
-The 2026-10-24 keys were (`0xF4BDF79B`, `0x932C7722`, `0xEB31636F`,
-`0xA2B49CF0`, `0xC21BB6A1`); the immediate pre-clock build at commit `46785b2`
-already produced `0x4EC2E1A7`/`0x6CCA83F5` for Alone/Lemmings because the VDLP
-pixel-stride fix, so do not use the older keys as the audio comparison. The
-pre/post audio-clock screenshot comparison found Alone and Lemmings pixel-identical;
-Road Rash and Space Ace showed adjacent FMV frames; Wolfenstein differed only in
-the star field. Do not use the old keys after this date.
+The pre-PBUS-fix 2026-10-27 keys were (`0x4EC2E1A7`, `0x6CCA83F5`,
+`0xCE90FA5A`, `0xF349263B`, `0x9A3B5131`). The 2026-10-24 keys were
+(`0xF4BDF79B`, `0x932C7722`, `0xEB31636F`, `0xA2B49CF0`, `0xC21BB6A1`); the
+immediate pre-clock build at commit `46785b2` already produced
+`0x4EC2E1A7`/`0x6CCA83F5` for Alone/Lemmings because of the VDLP pixel-stride
+fix. Do not use the older keys after this date. The PBUS fix changes input-sensitive
+hashes because games now see a connected pad; re-record longer-run hashes before
+using them as regression keys.
 
 At 10,000 frames with input and a fresh NVRAM (pre-transposition-fix):
  

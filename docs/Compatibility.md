@@ -594,8 +594,36 @@ The first 594-disc pass completed on 2026-10-30:
 | `Not Loadable` | **5** |
 
 The per-disc table is [`GameCompatibilityResults.md`](GameCompatibilityResults.md).
-The `Not Loadable` set is four Arcade CD-ROM timeouts (`Crime Patrol`, `Mad Dog II`,
-`Orbatak`, `Shootout at Old Tucson RE3`) and one CHD decompression failure (`Mirai
-Shounen Conan - Digital Library`, LBA 1). The arcade titles match the 4DO notes about
-a patched BIOS; rerun them with a longer timeout and the reference before classifying
-them as unplayable. The 13 black/blank titles need the 12,000-frame in-game pass.
+
+### 13.2 Triage results (2026-10-30)
+
+The baseline used `panafz1.bin`. Reruns with the other local BIOS images show that
+several failures are BIOS-selection problems rather than emulator defects:
+
+| Disc | `panafz1` | `panafz10` | Anvil BIOS | Result |
+|---|---|---|---|---|
+| Crime Patrol (Arcade CD-ROM) | hangs ~frame 1,740 | 3,000 frames | not needed | Loadable with `panafz10` |
+| Mad Dog II (Arcade CD-ROM) | hangs ~frame 1,740 | 3,000 frames | not needed | Loadable with `panafz10` |
+| Orbatak (Arcade CD-ROM) | hangs ~frame 1,740 | 3,000 frames | not needed | Loadable with `panafz10` |
+| Shootout at Old Tucson RE3 | hangs ~frame 1,740 | 3,000 frames | not needed | Loadable with `panafz10` |
+| Mirai Shounen Conan | transient CHD read error | 3,000 frames | 3,000 frames | Loadable; repeated runs are stable |
+| Crash 'n Burn (Japan) | invalid PC / black | invalid PC / black | purple boot screen | Anvil BIOS required |
+| Powers Kingdom (Europe) | solid blue | solid blue | intro renders | Anvil BIOS required, matching the 4DO note |
+| Slayer (USA) | black | title/credits render | black | `panafz10`/GoldStar/Sanyo required |
+| WorldCup Super Stadium (Japan) | solid blue | solid blue | boot screen | Anvil BIOS gets further; in-game path unconfirmed |
+| Olympic Summer Games (USA) | "Insert a controller" | not tested | not tested | Fixed by the default headless pad; renders the high-jump screen |
+
+The 12,000-frame rerun also shows that Ishida Yoshio Kudan no Igo Seiha, both Konpeki
+no Kantai discs, and all three Myst discs render between 6,000 and 9,000 frames; their
+3,000-frame `Loadable/No video` label was a false negative caused by a long black
+transition.
+
+Consequences for the sweep:
+
+- The four Arcade CD-ROM rows are not timeouts. They are loadable with a later BIOS
+  and should be recorded with that BIOS in their notes.
+- The `Loadable/No video` set is not a stable failure class. Some titles need 12,000
+  frames, and some need a different BIOS. Do not convert these rows to `Unplayable`
+  without a BIOS-aware rerun.
+- The final 5DO status must record the BIOS used, because a result is only meaningful
+  for the BIOS that was tested.

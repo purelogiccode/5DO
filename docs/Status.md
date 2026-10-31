@@ -1,14 +1,16 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-30, after the first full-collection loadability sweep.
+**Snapshot:** 2026-10-30, after the first full-collection sweep and its first triage.
 **594 discs tested: 576 Loadable/Rendered, 13 Loadable/No video, 5 Not Loadable.**
-**925 tests pass.** The twenty-seventh pass embedded the Vulkan surface and fixed
-the CoreRunner stop/start race; the twenty-sixth pass added renderer selection and
-output-resolution presets; the twenty-fifth pass added F6/F7 slot selection, F9
-single-frame advance, and desktop input recording. The v1.0 release is deliberately
-deferred: the next work is the full-collection compatibility sweep (M13) and
-high-resolution CEL research (M14). The project is **donationware** (non-commercial,
-source-available, voluntary donations only). See
+The five not-loadable rows are resolved or explained: Mirai Shounen Conan now runs
+(transient CHD read error), and the four Arcade CD-ROM titles load with
+`panafz10.bin` instead of `panafz1.bin`. The 12,000-frame rerun shows that six of the
+13 black/blank discs render by 6,000-9,000 frames; the rest are BIOS-sensitive or
+still under investigation. Headless `run`/`trace` now attach a default player-1 pad,
+fixing Olympic Summer Games' controller check. **925 tests pass.**
+The v1.0 release is deliberately deferred: the next work is a BIOS-aware sweep and
+5DO status merge (M13), then high-resolution CEL research (M14). The project is
+**donationware** (non-commercial, source-available, voluntary donations only). See
 [`CompatibilitySweep.md`](CompatibilitySweep.md),
 [`GameCompatibilityList.md`](GameCompatibilityList.md), and
 [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
@@ -461,14 +463,24 @@ current gates are the M13 collection sweep and the M14 high-resolution decision.
 1. **M13 loadability sweep: complete.** 594 discs tested: 576 `Loadable/Rendered`,
    13 `Loadable/No video`, 5 `Not Loadable`. See
    [`GameCompatibilityResults.md`](GameCompatibilityResults.md).
-2. **Triage the failures.** Rerun the four Arcade CD-ROM timeouts with a longer
-   timeout, check the `Mirai Shounen Conan` CHD, and run the 12,000-frame pass for the
-   13 black/blank titles. Keep the smallest reproduction command and the matching
-   trace for each class.
-3. **Run the in-game/visual check.** Inspect every rendered final frame, run
-   12,000-frame captures for titles that reach a title/menu, rerun black/static titles
-   at 12,000 frames, and record `Unplayable`/`Playable`/`Good` in
-   [`GameCompatibilityList.md`](GameCompatibilityList.md).
+2. **Failure triage: first pass complete (2026-10-30).**
+   - `Mirai Shounen Conan` no longer reproduces its LBA 1 CHD error; repeated
+     3,000-frame runs reach the menu with hash `0xBE2A023B`.
+   - The four Arcade CD-ROM rows are not timeouts: they boot with `panafz10.bin` and
+     hang at about frame 1,740 with `panafz1.bin`.
+   - The 12,000-frame rerun shows Ishida, both Konpeki no Kantai discs, and all three
+     Myst discs rendering by 6,000-9,000 frames.
+   - Crash 'n Burn, Powers Kingdom (Europe), Slayer, and WorldCup Super Stadium are
+     BIOS-sensitive. Crash/Powers/WorldCup need the Anvil BIOS to leave the black or
+     solid-blue boot state; Slayer needs `panafz10`/GoldStar/Sanyo. Crash and WorldCup
+     still do not progress past their boot screens at 12,000 frames.
+   - Olympic Summer Games was blocked by the headless PBUS bug, now fixed by the
+     default player-1 pad.
+3. **Run the BIOS-aware sweep and fill the status columns.** Rerun the `Not Loadable`
+   and `Loadable/No video` subsets with `panafz10` and the Anvil BIOS, record the BIOS
+   used per disc, then assign `Unplayable`/`Playable`/`Good` in
+   [`GameCompatibilityList.md`](GameCompatibilityList.md). Keep Crash 'n Burn and
+   WorldCup Super Stadium on the investigation list.
 4. **Run the high-resolution pass.** Repeat the sweep with `-HighRes`, compare
    screenshots and speed, and feed the results into M14.
 5. **Validate Linux.** Build/test/smoke the CLI in the `LinuxMint` Hyper-V VM, run a
@@ -491,14 +503,19 @@ current gates are the M13 collection sweep and the M14 high-resolution decision.
 
 ## 6. Next session
 
-The next session is the **compatibility sweep**, not release prep:
+The next session is the **BIOS-aware compatibility pass**, not release prep:
 
-1. Read [`CompatibilitySweep.md`](CompatibilitySweep.md) and
-   [`GameCompatibilityList.md`](GameCompatibilityList.md).
-2. Run `pwsh -File tools/compat-sweep.ps1 -Limit 2 -Frames 3000` as a smoke test.
-3. Run the full sweep with `-Resume`, then triage the `Not Loadable` rows.
-4. Inspect the rendered frames and start filling the 5DO status columns.
-5. Run the high-resolution pass with `-HighRes` and record the comparison.
+1. Read [`CompatibilitySweep.md`](CompatibilitySweep.md),
+   [`GameCompatibilityList.md`](GameCompatibilityList.md), and the triage results in
+   [`Compatibility.md`](Compatibility.md) 13.2.
+2. Rerun the `Not Loadable` and `Loadable/No video` subsets with
+   `-Bios bios/panafz10.bin` and `-Bios bios/panafz10e-anvil.bin`. Record which BIOS
+   each title needs; do not assume `panafz1` is the compatibility reference.
+3. Investigate Crash 'n Burn and WorldCup Super Stadium, which still stop on a boot
+   screen with the Anvil BIOS at 12,000 frames.
+4. Fill the 5DO status columns from the BIOS-aware results and the 12,000-frame
+   screenshots. Mark the BIOS used in the notes.
+5. Run the high-resolution subset with `-HighRes` and record the comparison.
 6. Start the M14 measurement work from
    [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 

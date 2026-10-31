@@ -68,7 +68,9 @@ def main() -> int:
     lines.append(
         "Automated output of `tools/compat-sweep.ps1`. These are **loadability** "
         "results, not final compatibility grades: `Loadable/Rendered` still needs a "
-        "visual and input review before it becomes `Playable` or `Good`."
+        "visual and input review before it becomes `Playable` or `Good`. The "
+        "2026-10-30 12,000-frame and BIOS triage is in "
+        "[`Compatibility.md`](Compatibility.md) §13.2."
     )
     lines.append("")
     lines.append("## Summary")
@@ -88,32 +90,49 @@ def main() -> int:
     lines.append("")
     lines.append("## Results")
     lines.append("")
-    lines.append(
-        "| Status | Disc | Root | Frames | Elapsed (s) | PC | Frame hash | "
-        "Non-black | Colors | Reason | Evidence |"
+    has_bios = any(row.get("Bios") for row in rows)
+    header = ["Status", "Disc", "Root"]
+    separator = ["---", "---", "---"]
+    if has_bios:
+        header.append("BIOS")
+        separator.append("---")
+    header.extend(
+        [
+            "Frames",
+            "Elapsed (s)",
+            "PC",
+            "Frame hash",
+            "Non-black",
+            "Colors",
+            "Reason",
+            "Evidence",
+        ]
     )
-    lines.append("|---|---|---|---:|---:|---|---|---:|---:|---|---|")
+    separator.extend(["---:", "---:", "---", "---", "---:", "---:", "---", "---"])
+    lines.append("| " + " | ".join(header) + " |")
+    lines.append("|" + "|".join(separator) + "|")
     for row in rows:
         evidence = relative_evidence(row.get("PngPath") or row.get("JsonPath"))
-        lines.append(
-            "| "
-            + " | ".join(
-                [
-                    escape(row.get("Status")),
-                    escape(row.get("File")),
-                    escape(row.get("Root")),
-                    escape(row.get("Frames")),
-                    escape(row.get("ElapsedSeconds", "").replace(",", ".")),
-                    escape(row.get("Pc")),
-                    escape(row.get("FrameHash")),
-                    escape(row.get("NonBlackPixels")),
-                    escape(row.get("DistinctColors")),
-                    escape(row.get("Reason")),
-                    escape(evidence),
-                ]
-            )
-            + " |"
+        cells = [
+            escape(row.get("Status")),
+            escape(row.get("File")),
+            escape(row.get("Root")),
+        ]
+        if has_bios:
+            cells.append(escape(row.get("Bios")))
+        cells.extend(
+            [
+                escape(row.get("Frames")),
+                escape(row.get("ElapsedSeconds", "").replace(",", ".")),
+                escape(row.get("Pc")),
+                escape(row.get("FrameHash")),
+                escape(row.get("NonBlackPixels")),
+                escape(row.get("DistinctColors")),
+                escape(row.get("Reason")),
+                escape(evidence),
+            ]
         )
+        lines.append("| " + " | ".join(cells) + " |")
 
     lines.append("")
     lines.append("## Next step")
@@ -121,8 +140,9 @@ def main() -> int:
     lines.append(
         "For each `Loadable/Rendered` row, inspect the PNG and run a short input smoke "
         "test. Record the final `Unplayable`/`Playable`/`Good` status in "
-        "[`GameCompatibilityList.md`](GameCompatibilityList.md). For "
-        "`Loadable/No video`, rerun at 12,000 frames and inspect intermediate captures."
+        "[`GameCompatibilityList.md`](GameCompatibilityList.md) with the BIOS used. For "
+        "`Loadable/No video`, rerun at 12,000 frames and inspect intermediate captures; "
+        "if it is still black or a solid color, retry with `panafz10` and the Anvil BIOS."
     )
     lines.append("")
 

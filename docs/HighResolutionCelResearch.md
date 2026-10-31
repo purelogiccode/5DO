@@ -151,7 +151,9 @@ per-game setting.
 ### Phase 1 — Measure the current mode (1-2 days)
 
 - Run the collection sweep at 3,000 frames in both modes and record the rendered/black
-  result, frame time, and screenshot for every title that renders.
+  result, frame time, screenshot, and BIOS for every title that renders. Use the BIOS
+  that boots the title (see [`Compatibility.md`](Compatibility.md) 13.2); a black frame
+  caused by the wrong BIOS is not a high-resolution result.
 - Instrument the CEL trace for a sample of 2D and 3D titles: log `ResScale`, clip
   rectangle, `Modulo`, CEL function, and X/Y coordinates.
 - Identify titles that use 640-wide VDL modes and titles that read the framebuffer.

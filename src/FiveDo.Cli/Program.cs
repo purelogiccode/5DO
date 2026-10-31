@@ -290,6 +290,10 @@ internal static class Program
             machine.PbusSource = autopilotInput;
         }
 
+        // Headless runs must still report a connected player-1 pad. Some titles
+        // (for example Olympic Summer Games) reject the boot when PBUS is empty.
+        machine.PbusSource ??= new PbusSource();
+
         StreamWriter? fiqTraceWriter = null;
         if (fiqTrace is not null)
         {
@@ -765,6 +769,9 @@ internal static class Program
             scriptedInput = new ScriptedPbusSource(InputScript.Load(inputScriptPath));
             machine.PbusSource = scriptedInput;
         }
+
+        // Match the run command: trace output should see the same player-1 pad.
+        machine.PbusSource ??= new PbusSource();
 
         machine.RunFrames(frames);
 

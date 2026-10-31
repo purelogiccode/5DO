@@ -2,8 +2,9 @@
 
 ## 0. Current handoff (2026-10-30)
 
-**Goal:** run the full-collection compatibility sweep and start high-resolution CEL
-research. Do not work on gameplay depth and do not cut a release yet.
+**Goal:** finish the BIOS-aware compatibility triage, fill the 5DO statuses, and then
+start high-resolution CEL research. Do not work on gameplay depth and do not cut a
+release yet.
 
 **Read first:**
 
@@ -11,31 +12,46 @@ research. Do not work on gameplay depth and do not cut a release yet.
   local matches, empty 5DO status columns.
 - [`CompatibilitySweep.md`](CompatibilitySweep.md) — sweep procedure, status
   definitions, triage, and Linux VM validation.
+- [`Compatibility.md`](Compatibility.md) §13 — sweep and 2026-10-30 triage results.
 - [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md) — current
   `--high-res` limitations and the M14 research options.
 - [`Status.md`](Status.md) — current position and the deferred release path.
 
 **Inputs:** `J:\Panasonic 3DO` (589 CHDs), `G:\MAME\MAME Software List CHDs\3do`
-(5 CHDs), `bios/panafz1.bin`, and the saved 4DO wiki MHTML in `References/4DO-master/`.
+(5 CHDs), `bios/panafz1.bin`, `bios/panafz10.bin`, `bios/panafz10e-anvil.bin`,
+`bios/panafz10ja-anvil-kanji.bin`, and the saved 4DO wiki MHTML in
+`References/4DO-master/`.
+
+**What changed on 2026-10-30:**
+
+- The 594-disc baseline sweep is complete: 576 `Loadable/Rendered`,
+  13 `Loadable/No video`, 5 `Not Loadable`.
+- `Mirai Shounen Conan` was a transient CHD read error; it now reaches its menu with
+  hash `0xBE2A023B`. The four Arcade CD-ROM rows are BIOS-sensitive: they hang with
+  `panafz1.bin` at about frame 1,740 but boot with `panafz10.bin`.
+- The 12,000-frame rerun shows Ishida, both Konpeki no Kantai discs, and all three Myst
+  discs rendering. Crash 'n Burn, Powers Kingdom (Europe), and WorldCup Super Stadium
+  only leave their black/blue boot state with the Anvil BIOS; Slayer needs
+  `panafz10`/GoldStar/Sanyo.
+- Headless `run`/`trace` now attach a default player-1 pad. Olympic Summer Games
+  proceeds past its controller check. The 3,000-frame corpus keys were re-baselined in
+  [`TestCorpus.md`](TestCorpus.md) 1.1. **925 tests pass.**
 
 **Ordered tasks:**
 
 1. Build the Release CLI:
    `dotnet build src/FiveDo.Cli/FiveDo.Cli.csproj -c Release`.
-2. Smoke-test the sweep with two discs:
-   `pwsh -File tools/compat-sweep.ps1 -Limit 2 -Frames 3000 -TimeoutSeconds 120 -OutDir artifacts/compat-smoke`.
-3. ~~Run the full baseline.~~ Done on 2026-10-30: 594 discs, 576
-   `Loadable/Rendered`, 13 `Loadable/No video`, 5 `Not Loadable`; see
-   [`GameCompatibilityResults.md`](GameCompatibilityResults.md).
-4. Triage every `Not Loadable` row: rerun the four Arcade CD-ROM timeouts with a longer
-   timeout and check the `Mirai Shounen Conan` CHD.
-5. Inspect `frame.png` for every rendered title; run 12,000-frame captures for titles
-   that reach a title/menu and rerun the 13 black/blank titles at 12,000 frames.
-6. Run the high-resolution pass with `-HighRes -OutDir artifacts/compat-highres`.
-7. Fill the 5DO status/notes in [`GameCompatibilityList.md`](GameCompatibilityList.md).
-8. Validate the CLI in the `LinuxMint` Hyper-V VM
+2. Rerun the `Not Loadable` and `Loadable/No video` subsets with `panafz10` and the
+   Anvil BIOS, recording which BIOS each disc needs. Use a separate output directory;
+   do not overwrite the `panafz1` baseline.
+3. Investigate Crash 'n Burn and WorldCup Super Stadium, which still stop on a boot
+   screen with the Anvil BIOS at 12,000 frames. Keep the smallest repro and a trace.
+4. Inspect the rendered 12,000-frame captures and fill the 5DO status/notes in
+   [`GameCompatibilityList.md`](GameCompatibilityList.md), including the BIOS used.
+5. Run the high-resolution subset with `-HighRes -OutDir artifacts/compat-highres`.
+6. Validate the CLI in the `LinuxMint` Hyper-V VM
    (`D:\Hyper-V\VMs\LinuxMint`); see [`CompatibilitySweep.md`](CompatibilitySweep.md) §7.
-9. Start M14 measurements from [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+7. Start M14 measurements from [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 
 **Status scale:** No data / Not Loadable / Unplayable / Playable / Good, matching the
 4DO wiki. `Loadable/Rendered` and `Loadable/No video` are intermediate automated labels,

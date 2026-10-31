@@ -16,14 +16,34 @@ high-resolution CEL decision (M14) are complete.
   completed on 2026-10-30: **576 rendered, 13 black/blank, 5 not loadable** out of 594.
   The procedure is in [`CompatibilitySweep.md`](CompatibilitySweep.md); the per-disc
   table is [`GameCompatibilityResults.md`](GameCompatibilityResults.md).
-- The five not-loadable images are four Arcade CD-ROM timeouts (`Crime Patrol`,
-  `Mad Dog II`, `Orbatak`, `Shootout at Old Tucson RE3`) and one CHD decompression
-  failure (`Mirai Shounen Conan - Digital Library`, LBA 1). The arcade titles match the
-  4DO notes about a patched BIOS; rerun with a longer timeout before classifying them.
-- The 13 black/blank titles need the 12,000-frame in-game rerun: Crash 'n Burn (Japan),
-  Ishida Yoshio Kudan no Igo Seiha (Japan), Konpeki no Kantai (Japan and Rev 1),
-  Myst (Japan, Japan Rev A, USA), Olympic Summer Games (USA), Powers Kingdom (Europe),
-  Slayer (Europe, USA, USA Action Pak), and WorldCup Super Stadium (Japan).
+- The five not-loadable rows were triaged on 2026-10-30:
+  - `Mirai Shounen Conan - Digital Library` reported a CHD sector-read error at LBA 1
+    once during the sweep. Repeated 3,000-frame runs now complete with a stable menu
+    frame (`PC 0x0002847C`, hash `0xBE2A023B`); treat the sweep failure as a transient
+    disc/read error, not a reproducible emulator defect.
+  - The four Arcade CD-ROM titles (`Crime Patrol`, `Mad Dog II`, `Orbatak`,
+    `Shootout at Old Tucson RE3`) hang at about frame 1,740 with `panafz1.bin` but
+    complete 3,000 frames and render with `panafz10.bin`. This is a BIOS-selection
+    issue, not a timeout; the 4DO notes about a patched BIOS point in the same
+    direction.
+- The 12,000-frame rerun of the 13 black/blank titles shows that Ishida Yoshio Kudan
+  no Igo Seiha, both Konpeki no Kantai discs, and all three Myst discs render by
+  6,000-9,000 frames. The remaining titles are BIOS-sensitive or still under
+  investigation:
+  - Crash 'n Burn renders a purple boot screen only with the Anvil BIOS; `panafz1`,
+    `panafz10`, GoldStar, and Sanyo all end in an invalid PC.
+  - Powers Kingdom (Europe) renders its intro with the Anvil BIOS, matching the 4DO
+    note "Use Anvil-bios to load EU version of game".
+  - Slayer renders its title/credits with `panafz10`, GoldStar, or Sanyo, but stays
+    black with `panafz1`.
+  - WorldCup Super Stadium changes from a solid blue screen to a boot screen with the
+    Anvil BIOS; the in-game path is still unconfirmed.
+- Olympic Summer Games now proceeds past the "Insert a controller into controller
+  port!" screen because headless `run`/`trace` attach a default player-1 pad. This is
+  a CLI input fix, not a disc-specific patch.
+- The baseline sweep used `panafz1.bin` only, so its `Loadable/No video` and
+  `Not Loadable` labels must not be treated as final. A BIOS-aware sweep with
+  `panafz10` and the Anvil BIOS is required before the 5DO status columns are filled.
 - The 4DO wiki list is a reference, not a guarantee. Filename matching does not prove
   the local image is the same revision, and a 4DO score of 100 does not mean 5DO has
   the same behavior.

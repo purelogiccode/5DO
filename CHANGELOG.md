@@ -143,6 +143,12 @@ still change.
 
 ### Fixed
 
+- **Headless controller detection.** `run` and `trace` left PBUS empty unless
+  `--input-script` or `--autopilot` was supplied, so games that check the controller
+  ports saw no pad. Both commands now attach a default player-1 `PbusSource`, matching
+  the desktop shell. Olympic Summer Games no longer stops at the "Insert a controller
+  into controller port!" screen; input-sensitive 3,000-frame hashes were re-baselined
+  in `docs/TestCorpus.md`.
 - **Vulkan startup fallback.** `VulkanVideoSurface.Start()` threw
   "The Vulkan surface is not attached to a window." when the shell selected Vulkan
   before the control was attached. It now records a pending start and initializes on
