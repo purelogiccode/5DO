@@ -152,9 +152,11 @@ still change.
 - **Desktop Stop button.** The toolbar, menu, and in-game Stop actions called
   `PauseEmulation`, so the core thread stayed paused with the previous machine state;
   a later Start reused that state and the game could fail to resume. Stop now joins
-  the core thread, flushes NVRAM, resets the machine, and returns to the library.
-  Start or selecting a game boots from a clean state. Returning from the library also
-  focuses the window again, so a hidden search box cannot swallow game keys.
+  the core thread, flushes NVRAM, clears RAM, resets the machine, and returns to the
+  library. Start or selecting a game boots from a clean state; clearing the previous
+  game's RAM prevents the next boot from sticking at the BIOS wait at `PC 0x1658`.
+  Returning from the library also focuses the window again, so a hidden search box
+  cannot swallow game keys.
 - **Headless controller detection.** `run` and `trace` left PBUS empty unless
   `--input-script` or `--autopilot` was supplied, so games that check the controller
   ports saw no pad. Both commands now attach a default player-1 `PbusSource`, matching

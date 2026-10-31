@@ -360,6 +360,9 @@ public partial class MainWindow : Window, IDisposable
                 machine.InsertDisc(disc);
                 if (autoStart)
                 {
+                    // A different game must boot from a cold RAM image; the previous
+                    // game's leftovers can leave the BIOS waiting at PC 0x1658.
+                    machine.Memory.ClearRam();
                     machine.Reset();
                 }
             });
@@ -499,6 +502,7 @@ public partial class MainWindow : Window, IDisposable
         // Start (or a new game selection) begins from a known state.
         _runner?.Stop();
         FlushNvram();
+        _machine?.Memory.ClearRam();
         _machine?.Reset();
         _running = false;
         SetPlayState(running: false);
@@ -861,7 +865,29 @@ public partial class MainWindow : Window, IDisposable
         EmulationView.IsVisible = true;
         if (_vulkanPresenter)
         {
+            // Hiding the emulation view can stop the embedded surface. Bring it back
+            // before presenting the first frame of the restarted game.
+            if (!VulkanVideo.IsRunning)
+            {
+                try
+                {
+                    _logger.ForCategory(LogCategory.Video).Information(
+                        "Vulkan surface was stopped; restarting it for the game view.");
+                    VulkanVideo.Start();
+                }
+                catch (Exception exception) when (exception is not OutOfMemoryException)
+                {
+                    OnVulkanFailed(this, new VulkanFailedEventArgs(exception));
+                }
+            }
+
             VulkanVideo.SetPresentationVisible(true);
+            VulkanVideo.RequestRedraw();
+        }
+        else if (_rendererKind == VideoRendererKind.OpenGl && !_openGlDisabled && Video.Capabilities is null)
+        {
+            // A stopped OpenGL surface is reattached to create a fresh context.
+            ReattachOpenGlSurface();
         }
 
         // Returning from the library can leave its search box focused. The key
