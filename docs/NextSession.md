@@ -2,6 +2,20 @@
 
 ## 0. Current handoff (2026-10-30)
 
+**2026-10-31 update:** SYS-14 per-game NVRAM and versions are implemented.
+`NvramStorageMode` (`Global`, `PerGame`), `NvramVersion` (0-9), and `NvramDirectory`
+select shared `nvram.ram`, versioned `nvram.<n>.ram`, or
+`nvram/per-game/<gameId>.<n>.ram` images. `NvramLayout` owns path resolution and
+migration fallbacks; `NvramStore` reads the fallbacks without copying, writes atomically,
+and backs up a corrupt primary. Settings > Emulation exposes the mode and version; the
+CLI adds `--nvram-mode`, `--nvram-version`, `--nvram-dir`, `run --json`
+`nvramPath`/`nvramMode`/`nvramVersion`, and `nvram path|list|export|import|reset`.
+Unit, store, settings, JSON-contract, and CLI tests pass. **Do not redo the NVRAM layout,
+store, settings controls, or CLI commands; remaining work is the UX-12 manager UI
+(library listing, per-game assignment, and backup/restore dialogs) and portable-mode
+path selection.**
+**1091 tests pass.**
+
 **2026-10-31 update:** SYS-04 BIOS manager and auto-selection are implemented.
 `BiosCatalog`/`BiosLibrary` scan `.bin`/`.rom` files, compute MD5, validate sizes, and
 classify primary/secondary, region, video standard, Kanji, Anvil, and patch state.
@@ -15,7 +29,7 @@ and per-game MD5 pins; the configured BIOS remains the fallback when no folder i
 The five-title 3,000-frame and four known-requirement 12,000-frame smoke runs are in
 [`TestCorpus.md`](TestCorpus.md) 1.1f. **Do not redo the BIOS catalog, scanner,
 selector, CLI commands, or settings UI; remaining work is the full-collection
-BIOS-aware sweep and per-game auto profiles (SYS-18).** **1065 tests pass.**
+BIOS-aware sweep and per-game auto profiles (SYS-18).** **1091 tests pass.**
 
 **2026-10-31 update:** SYS-09 CD speed control and CORE-08 timing profiles are
 implemented. `CdSpeed` (`Unbounded`, `X1`-`X32`, default `X2`) changes the effective
@@ -111,7 +125,8 @@ not final statuses.
 
 **Do not redo:** the 4DO MHTML parser, the sweep harness, the OpenAL/Serilog/trimming
 work, the renderer/filter work, the ARM/CLIO/CEL/CD timing options, the CD speed selector and
-timing-profile mapping, the BIOS catalog/scanner/selector or its CLI/settings surface, or
+timing-profile mapping, the BIOS catalog/scanner/selector or its CLI/settings surface,
+the NVRAM layout/store/settings controls or the `nvram` CLI commands, or
 the 2026-10-31 performance pass (CEL pipeline caching, Debug core optimization,
 render-request coalescing, Auto frame skip). Do not treat full-race completion, inventory
 scripting, Pi/arm64 validation, or installers as current gates.

@@ -73,6 +73,7 @@ internal static class Program
                     "disc" => DiscCommand(args),
                     "fs" => FsCommand(args),
                     "bios" => Bios(args),
+                    "nvram" => NvramCommand(args),
                     "audio" => AudioCommand(args),
                     "state" => State(args),
                     "bench" => Bench(args),
@@ -237,7 +238,10 @@ internal static class Program
         var progressEvery = options.GetInt("--progress", 0);
         var celTrace = options.Get("--cel-trace");
         var pbusTrace = options.Get("--pbus-trace");
-        var nvramPath = options.Get("--nvram");
+        var nvramPathOption = options.Get("--nvram");
+        var nvramModeOption = options.Get("--nvram-mode");
+        var nvramVersionOption = options.Get("--nvram-version");
+        var nvramDirectoryOption = options.Get("--nvram-dir");
         var captureDir = options.Get("--capture-dir");
         var captureEvery = options.GetInt("--capture-every", 0);
         var pokeSpec = options.Get("--poke");
@@ -270,6 +274,13 @@ internal static class Program
             gameId = GameId.Compute(disc);
             gameRecord = GameDatabase.Default.FindByChecksum(gameId);
         }
+
+        NvramSelection nvramSelection = ResolveNvramSelection(
+            nvramPathOption,
+            nvramModeOption,
+            nvramVersionOption,
+            nvramDirectoryOption,
+            gameId);
 
         BiosLoadResult biosLoad = LoadBios(biosPath, bios2Path, biosAutoFolder, gameRecord, discPath);
 
@@ -304,8 +315,8 @@ internal static class Program
 
         if (stateIn is null)
         {
-            NvramImage nvram = nvramPath is not null && File.Exists(nvramPath)
-                ? NvramImage.Load(nvramPath)
+            NvramImage nvram = nvramSelection.Path is not null
+                ? LoadNvramImage(nvramSelection.Path, nvramSelection.Fallbacks)
                 : NvramImage.CreateFresh();
             machine.LoadNvram(nvram.Data.Span);
         }
@@ -761,18 +772,12 @@ internal static class Program
             BiosRegion: biosLoad.Selection?.Primary?.RegionLabel,
             BiosSelection: biosLoad.Selection?.Reason,
             BiosSource: biosLoad.Source,
+            NvramPath: nvramSelection.Path,
+            NvramMode: nvramSelection.Mode,
+            NvramVersion: nvramSelection.Version,
             Warnings: machine.StateWarnings);
 
-        if (nvramPath is not null)
-        {
-            var directory = Path.GetDirectoryName(Path.GetFullPath(nvramPath));
-            if (!string.IsNullOrEmpty(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            NvramImage.FromBytes(machine.Memory.Nvram).Save(nvramPath);
-        }
+        SaveNvramIfRequested(machine, nvramSelection);
 
         disc?.Dispose();
         WriteRunResult(result, json);
@@ -799,7 +804,10 @@ internal static class Program
         var dumpDspPrefix = options.Get("--dump-dsp");
         var dspTracePath = options.Get("--dsp-trace");
         var inputScriptPath = options.Get("--input-script");
-        var nvramPath = options.Get("--nvram");
+        var nvramPathOption = options.Get("--nvram");
+        var nvramModeOption = options.Get("--nvram-mode");
+        var nvramVersionOption = options.Get("--nvram-version");
+        var nvramDirectoryOption = options.Get("--nvram-dir");
         var dumpRamPath = options.Get("--dump-ram");
         var dumpRamOffset = options.GetUInt32("--dump-ram-offset", 0) ?? 0;
         var dumpRamLength = options.GetInt("--dump-ram-length", 0x1000);
@@ -831,6 +839,13 @@ internal static class Program
             gameId = GameId.Compute(disc);
             gameRecord = GameDatabase.Default.FindByChecksum(gameId);
         }
+
+        NvramSelection nvramSelection = ResolveNvramSelection(
+            nvramPathOption,
+            nvramModeOption,
+            nvramVersionOption,
+            nvramDirectoryOption,
+            gameId);
 
         BiosLoadResult biosLoad = LoadBios(biosPath, bios2Path, biosAutoFolder, gameRecord, discPath);
 
@@ -866,8 +881,8 @@ internal static class Program
         }
         else
         {
-            NvramImage nvram = nvramPath is not null && File.Exists(nvramPath)
-                ? NvramImage.Load(nvramPath)
+            NvramImage nvram = nvramSelection.Path is not null
+                ? LoadNvramImage(nvramSelection.Path, nvramSelection.Fallbacks)
                 : NvramImage.CreateFresh();
             machine.LoadNvram(nvram.Data.Span);
         }
@@ -1041,16 +1056,7 @@ internal static class Program
                 File.WriteAllBytes(dumpRamPath, buffer);
             }
 
-            if (nvramPath is not null)
-            {
-                var directory = Path.GetDirectoryName(Path.GetFullPath(nvramPath));
-                if (!string.IsNullOrEmpty(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-
-                NvramImage.FromBytes(machine.Memory.Nvram).Save(nvramPath);
-            }
+            SaveNvramIfRequested(machine, nvramSelection);
 
             file?.Dispose();
             disc?.Dispose();
@@ -1596,6 +1602,286 @@ internal static class Program
 
         return 0;
     }
+
+    private static int NvramCommand(string[] args)
+    {
+        if (args.Length < 2)
+        {
+            throw new ArgumentException(
+                "nvram needs path, list, export, import, or reset.",
+                nameof(args));
+        }
+
+        var subcommand = args[1].ToLowerInvariant();
+        ParsedOptions options = Parse(args, startIndex: 2);
+        var directory = options.Get("--dir") ?? AppSettingsStore.DefaultDirectory;
+        var mode = ParseNvramStorageMode(options.Get("--mode"));
+        var version = ParseNvramVersion(options.Get("--version"));
+        var discPath = options.Positional;
+        string? gameId = null;
+        if (discPath is not null)
+        {
+            using IDiscSource disc = DiscImageFactory.Open(discPath);
+            gameId = GameId.Compute(disc);
+        }
+
+        switch (subcommand)
+        {
+            case "path":
+                {
+                    var path = NvramLayout.Resolve(directory, mode, version, gameId);
+                    var exists = File.Exists(path);
+                    var length = exists ? new FileInfo(path).Length : 0;
+                    var result = new CliNvramPathResult(
+                        Ok: true,
+                        Path: path,
+                        Mode: mode == NvramStorageMode.PerGame ? "per-game" : "global",
+                        Version: version,
+                        GameId: gameId,
+                        Exists: exists,
+                        Length: length);
+                    if (options.Json)
+                    {
+                        Console.WriteLine(JsonSerializer.Serialize(result, CliJsonContext.Default.CliNvramPathResult));
+                    }
+                    else
+                    {
+                        Console.WriteLine($"path:     {result.Path}");
+                        Console.WriteLine($"mode:     {result.Mode}");
+                        Console.WriteLine($"version:  {result.Version}");
+                        Console.WriteLine($"game:     {result.GameId ?? "(shared)"}");
+                        Console.WriteLine($"exists:   {(result.Exists ? "yes" : "no")}");
+                        Console.WriteLine($"size:     {result.Length} bytes");
+                    }
+
+                    return 0;
+                }
+
+            case "list":
+                {
+                    IReadOnlyList<NvramFile> files = NvramLayout.Enumerate(directory);
+                    var entries = files
+                        .Select(file => new CliNvramEntry(
+                            Path: file.Path,
+                            Mode: file.Mode == NvramStorageMode.PerGame ? "per-game" : "global",
+                            Version: file.Version,
+                            GameId: file.GameId,
+                            Length: file.Length,
+                            LastWriteTimeUtc: file.LastWriteTimeUtc))
+                        .ToArray();
+                    if (options.Json)
+                    {
+                        Console.WriteLine(JsonSerializer.Serialize(
+                            new CliNvramListResult(true, Path.GetFullPath(directory), entries),
+                            CliJsonContext.Default.CliNvramListResult));
+                    }
+                    else
+                    {
+                        Console.WriteLine($"directory: {Path.GetFullPath(directory)}");
+                        if (entries.Length == 0)
+                        {
+                            Console.WriteLine("(no NVRAM images)");
+                        }
+
+                        foreach (CliNvramEntry entry in entries)
+                        {
+                            var saved = entry.LastWriteTimeUtc?.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) ?? "unknown";
+                            var game = string.IsNullOrEmpty(entry.GameId) ? "shared" : entry.GameId;
+                            Console.WriteLine(
+                                $"{entry.Mode,-8} v{entry.Version} {game,-32} {entry.Length,8} bytes  {saved}  {entry.Path}");
+                        }
+                    }
+
+                    return 0;
+                }
+
+            case "export":
+                {
+                    var output = options.Get("--out")
+                        ?? throw new ArgumentException("nvram export needs --out <path>.", nameof(args));
+                    var path = NvramLayout.Resolve(directory, mode, version, gameId);
+                    NvramImage image = LoadNvramImage(
+                        path,
+                        NvramLayout.GetFallbackPaths(directory, mode, version, gameId));
+                    var outputDirectory = Path.GetDirectoryName(Path.GetFullPath(output));
+                    if (!string.IsNullOrEmpty(outputDirectory))
+                    {
+                        Directory.CreateDirectory(outputDirectory);
+                    }
+
+                    image.Save(output);
+                    WriteNvramActionResult(options, "export", output, path, image.Data.Length);
+                    return 0;
+                }
+
+            case "import":
+                {
+                    var input = options.Get("--in")
+                        ?? throw new ArgumentException("nvram import needs --in <path>.", nameof(args));
+                    NvramImage image = NvramImage.Load(input);
+                    var path = NvramLayout.Resolve(directory, mode, version, gameId);
+                    using (var store = new NvramStore(path))
+                    {
+                        store.Save(image.Data.Span);
+                    }
+
+                    WriteNvramActionResult(options, "import", path, input, image.Data.Length);
+                    return 0;
+                }
+
+            case "reset":
+                {
+                    var path = NvramLayout.Resolve(directory, mode, version, gameId);
+                    using (var store = new NvramStore(path))
+                    {
+                        store.Reset();
+                    }
+
+                    WriteNvramActionResult(options, "reset", path, null, EmulatorConstants.NvramSize);
+                    return 0;
+                }
+
+            default:
+                throw new ArgumentException(
+                    $"Unknown nvram subcommand '{subcommand}'. Use path, list, export, import, or reset.",
+                    nameof(args));
+        }
+    }
+
+    private static void WriteNvramActionResult(
+        ParsedOptions options,
+        string action,
+        string path,
+        string? source,
+        long length)
+    {
+        var result = new CliNvramActionResult(true, action, path, source, length);
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(result, CliJsonContext.Default.CliNvramActionResult));
+        }
+        else
+        {
+            Console.WriteLine($"{action}: {path}");
+            if (!string.IsNullOrEmpty(source))
+            {
+                Console.WriteLine($"source: {source}");
+            }
+
+            Console.WriteLine($"size:   {length} bytes");
+        }
+    }
+
+    private static NvramSelection ResolveNvramSelection(
+        string? explicitPath,
+        string? modeText,
+        string? versionText,
+        string? directoryText,
+        string? gameId)
+    {
+        var hasLayoutOption = modeText is not null || versionText is not null || directoryText is not null;
+        if (explicitPath is not null)
+        {
+            if (hasLayoutOption)
+            {
+                throw new ArgumentException(
+                    "--nvram cannot be combined with --nvram-mode, --nvram-version, or --nvram-dir.",
+                    nameof(explicitPath));
+            }
+
+            return new NvramSelection(explicitPath, "explicit", NvramLayout.MinVersion, []);
+        }
+
+        if (!hasLayoutOption)
+        {
+            return new NvramSelection(null, "disabled", NvramLayout.MinVersion, []);
+        }
+
+        NvramStorageMode mode = ParseNvramStorageMode(modeText);
+        var version = ParseNvramVersion(versionText);
+        var directory = directoryText ?? AppSettingsStore.DefaultDirectory;
+        if (mode == NvramStorageMode.PerGame && string.IsNullOrWhiteSpace(gameId))
+        {
+            throw new ArgumentException(
+                "--nvram-mode per-game needs a disc so the game ID can be computed.",
+                nameof(modeText));
+        }
+
+        return new NvramSelection(
+            NvramLayout.Resolve(directory, mode, version, gameId),
+            mode == NvramStorageMode.PerGame ? "per-game" : "global",
+            version,
+            NvramLayout.GetFallbackPaths(directory, mode, version, gameId));
+    }
+
+    private static NvramImage LoadNvramImage(string path, IReadOnlyList<string> fallbackPaths)
+    {
+        foreach (var candidate in new[] { path }.Concat(fallbackPaths))
+        {
+            if (File.Exists(candidate))
+            {
+                return NvramImage.Load(candidate);
+            }
+        }
+
+        return NvramImage.CreateFresh();
+    }
+
+    private static void SaveNvramIfRequested(FiveDoMachine machine, NvramSelection selection)
+    {
+        if (selection.Path is null)
+        {
+            return;
+        }
+
+        using var store = new NvramStore(selection.Path);
+        store.Save(machine.Memory.Nvram);
+    }
+
+    private static NvramStorageMode ParseNvramStorageMode(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)
+            || string.Equals(value, "global", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "shared", StringComparison.OrdinalIgnoreCase))
+        {
+            return NvramStorageMode.Global;
+        }
+
+        if (string.Equals(value, "per-game", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "pergame", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "per_game", StringComparison.OrdinalIgnoreCase))
+        {
+            return NvramStorageMode.PerGame;
+        }
+
+        throw new ArgumentException(
+            $"Invalid NVRAM storage mode '{value}'; expected global or per-game.",
+            nameof(value));
+    }
+
+    private static int ParseNvramVersion(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return NvramLayout.MinVersion;
+        }
+
+        if (!int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var version)
+            || version is < NvramLayout.MinVersion or > NvramLayout.MaxVersion)
+        {
+            throw new ArgumentException(
+                $"Invalid NVRAM version '{value}'; expected 0-{NvramLayout.MaxVersion}.",
+                nameof(value));
+        }
+
+        return version;
+    }
+
+    private sealed record NvramSelection(
+        string? Path,
+        string Mode,
+        int Version,
+        IReadOnlyList<string> Fallbacks);
 
     private static int AudioCommand(string[] args)
     {
@@ -2335,6 +2621,7 @@ internal static class Program
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--script-base absolute|state] [--autopilot road] [--progress N] [--cel-trace path] [--pbus-trace path]");
         Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--prefetch]");
+        Console.WriteLine("             [--nvram-mode global|per-game] [--nvram-version 0-9] [--nvram-dir path]");
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
         Console.WriteLine("             [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
         Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
@@ -2344,6 +2631,7 @@ internal static class Program
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
         Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path] [--high-res] [--prefetch]");
+        Console.WriteLine("             [--nvram-mode global|per-game] [--nvram-version 0-9] [--nvram-dir path]");
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
         Console.WriteLine("             [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
         Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
@@ -2360,6 +2648,13 @@ internal static class Program
         Console.WriteLine("  bios info <path> [--json]            BIOS size, MD5, region, and Anvil detection.");
         Console.WriteLine("  bios list|scan <folder> [--recursive] [--json]  List and validate BIOS images.");
         Console.WriteLine("  bios select <disc> --folder <dir> [--json]      Auto-select a BIOS for a disc.");
+        Console.WriteLine("  nvram path [disc] [--mode global|per-game] [--version 0-9] [--dir path] [--json]");
+        Console.WriteLine("                                       Resolve the NVRAM image for a game.");
+        Console.WriteLine("  nvram list [--dir path] [--json]    List global and per-game NVRAM images.");
+        Console.WriteLine("  nvram export [disc] --out path [--mode ...] [--version N] [--dir path]");
+        Console.WriteLine("  nvram import [disc] --in path [--mode ...] [--version N] [--dir path]");
+        Console.WriteLine("  nvram reset [disc] [--mode ...] [--version N] [--dir path]");
+        Console.WriteLine("                                       Back up, restore, or clear NVRAM data.");
         Console.WriteLine("  audio analyze <wav> [--json]         WAV format, peak, RMS, clipping, and DC offset.");
         Console.WriteLine("  state inspect <path> [--json]        Save-state header and section table.");
         Console.WriteLine("  state slots <dir> [--count N] [--json]");

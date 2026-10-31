@@ -43,7 +43,7 @@ namespace FiveDo.Frontend.Avalonia.Views;
 /// </summary>
 public partial class MainWindow : Window, IDisposable
 {
-    private readonly NvramStore _nvramStore;
+    private NvramStore _nvramStore;
     private readonly AppSettings _settings;
     private readonly InMemorySerilogSink _logSink;
     private readonly Serilog.ILogger _logger;
@@ -62,6 +62,10 @@ public partial class MainWindow : Window, IDisposable
     private IDiscSource? _disc;
     private string _gameId = string.Empty;
     private string _gameName = string.Empty;
+    private string _nvramGameId = string.Empty;
+    private NvramStorageMode _nvramMode;
+    private int _nvramVersion;
+    private string _nvramDirectory = string.Empty;
     private CpuVideoRenderer? _cpuVideo;
     private VideoRendererKind _rendererKind;
     private volatile bool _vulkanPresenter;
@@ -123,7 +127,10 @@ public partial class MainWindow : Window, IDisposable
                 audioError ?? "unknown error");
         }
 
-        _nvramStore = new NvramStore(Path.Combine(AppSettingsStore.DefaultDirectory, "nvram.ram"));
+        _nvramStore = CreateNvramStore(null);
+        _nvramMode = _settings.NvramStorageMode;
+        _nvramVersion = _settings.NvramVersion;
+        _nvramDirectory = _settings.NvramDirectory;
         HighResMenuItem.IsChecked = _settings.HighResolution;
         OverlayPanel.IsVisible = _settings.ShowOverlay;
         Video.Settings = _settings.ToRendererSettings(_gameId);
@@ -375,6 +382,149 @@ public partial class MainWindow : Window, IDisposable
             _gameName);
     }
 
+    private void OnExportNvramAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ExportNvramAsync, "exporting NVRAM");
+    }
+
+    private async Task ExportNvramAsync()
+    {
+        if (_machine is null)
+        {
+            StatusText.Text = "Start a game before exporting NVRAM.";
+            return;
+        }
+
+        var suffix = _gameId.Length > 0
+            ? _gameId[..Math.Min(8, _gameId.Length)]
+            : "shared";
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Export NVRAM",
+            SuggestedFileName = $"nvram-{suffix}.ram",
+            DefaultExtension = "ram",
+            FileTypeChoices = [new FilePickerFileType("NVRAM image") { Patterns = ["*.ram"] }],
+        }).ConfigureAwait(true);
+        var path = file?.TryGetLocalPath();
+        if (path is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var buffer = new byte[EmulatorConstants.NvramSize];
+            if (_runner is not null)
+            {
+                _runner.Invoke(() => _machine.CopyNvram(buffer));
+            }
+            else
+            {
+                _machine.CopyNvram(buffer);
+            }
+
+            File.WriteAllBytes(path, buffer);
+            StatusText.Text = $"NVRAM exported to {path}.";
+            _logger.ForCategory(LogCategory.Storage).Information(
+                "NVRAM exported for {Game} ({GameId}) to {Path}.",
+                _gameName,
+                _gameId,
+                path);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            StatusText.Text = $"NVRAM export failed: {exception.Message}";
+            ShowError("NVRAM export failed", exception.Message);
+        }
+    }
+
+    private void OnImportNvramAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ImportNvramAsync, "importing NVRAM");
+    }
+
+    private async Task ImportNvramAsync()
+    {
+        if (_machine is null)
+        {
+            StatusText.Text = "Start a game before importing NVRAM.";
+            return;
+        }
+
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Import NVRAM",
+            AllowMultiple = false,
+            FileTypeFilter = [new FilePickerFileType("NVRAM image") { Patterns = ["*.ram"] }],
+        }).ConfigureAwait(true);
+        var path = files.Count > 0 ? files[0].TryGetLocalPath() : null;
+        if (path is null)
+        {
+            return;
+        }
+
+        try
+        {
+            NvramImage image = NvramImage.Load(path);
+            byte[] data = image.Data.ToArray();
+            if (_runner is not null)
+            {
+                _runner.Invoke(() =>
+                {
+                    _machine.LoadNvram(data);
+                    PersistNvram(_machine);
+                });
+            }
+            else
+            {
+                _machine.LoadNvram(data);
+                PersistNvram(_machine);
+            }
+
+            StatusText.Text = $"NVRAM imported from {path}.";
+            _logger.ForCategory(LogCategory.Storage).Information(
+                "NVRAM imported for {Game} ({GameId}) from {Path}.",
+                _gameName,
+                _gameId,
+                path);
+        }
+        catch (Exception exception) when (exception is IOException or InvalidDataException or UnauthorizedAccessException)
+        {
+            StatusText.Text = $"NVRAM import failed: {exception.Message}";
+            ShowError("NVRAM import failed", exception.Message);
+        }
+    }
+
+    private void OnResetNvram(object? sender, RoutedEventArgs e)
+    {
+        if (_machine is null)
+        {
+            StatusText.Text = "Start a game before resetting NVRAM.";
+            return;
+        }
+
+        byte[] fresh = NvramImage.CreateFresh().Data.ToArray();
+        if (_runner is not null)
+        {
+            _runner.Invoke(() =>
+            {
+                _machine.LoadNvram(fresh);
+                PersistNvram(_machine);
+            });
+        }
+        else
+        {
+            _machine.LoadNvram(fresh);
+            PersistNvram(_machine);
+        }
+
+        StatusText.Text = $"NVRAM reset for {(_gameName.Length > 0 ? _gameName : "the current machine")}.";
+        _logger.ForCategory(LogCategory.Storage).Information(
+            "NVRAM reset for {Game} ({GameId}).",
+            _gameName,
+            _gameId);
+    }
+
     private void OnOpenDiscAsync(object? sender, RoutedEventArgs e)
     {
         AsyncEvent.Run(OpenDiscAsync, "opening a disc");
@@ -511,8 +661,29 @@ public partial class MainWindow : Window, IDisposable
                 throw new InvalidDataException(resolved.Reason);
             }
 
+            var nvramChanged =
+                _settings.NvramStorageMode != _nvramMode
+                || _settings.NvramVersion != _nvramVersion
+                || !string.Equals(_settings.NvramDirectory, _nvramDirectory, StringComparison.OrdinalIgnoreCase)
+                || (_settings.NvramStorageMode == NvramStorageMode.PerGame
+                    && !string.Equals(_nvramGameId, gameId, StringComparison.OrdinalIgnoreCase));
+            NvramStore? nextNvramStore = null;
             _runner!.Invoke(() =>
             {
+                if (nvramChanged)
+                {
+                    // Save the outgoing game's NVRAM before switching images, then load
+                    // the incoming game's image (or the shared fallback on first use).
+                    if (!string.IsNullOrEmpty(_nvramGameId))
+                    {
+                        PersistNvram(machine);
+                    }
+
+                    nextNvramStore = CreateNvramStore(gameId);
+                    NvramImage nvram = nextNvramStore.LoadOrCreate();
+                    machine.LoadNvram(nvram.Data.Span);
+                }
+
                 if (selectedBios is not null && biosChanged)
                 {
                     machine.LoadBios(selectedBios.Bios1.Span, selectedBios.Bios2.Span);
@@ -531,6 +702,17 @@ public partial class MainWindow : Window, IDisposable
                     machine.Reset();
                 }
             });
+            if (nextNvramStore is not null)
+            {
+                NvramStore previous = _nvramStore;
+                _nvramStore = nextNvramStore;
+                _nvramGameId = gameId;
+                _nvramMode = _settings.NvramStorageMode;
+                _nvramVersion = _settings.NvramVersion;
+                _nvramDirectory = _settings.NvramDirectory;
+                previous.Dispose();
+            }
+
             if (selectedBios is not null && biosChanged)
             {
                 _biosLoaded = true;
@@ -1972,8 +2154,13 @@ public partial class MainWindow : Window, IDisposable
             || !string.Equals(previousBiosFolder, _settings.BiosFolder, StringComparison.OrdinalIgnoreCase)
             || previousAutoBios != _settings.AutoBios
             || !string.Equals(previousBiosOverride, _settings.GetBiosOverride(_gameId), StringComparison.OrdinalIgnoreCase);
+        var nvramSettingsChanged =
+            _settings.NvramStorageMode != _nvramMode
+            || _settings.NvramVersion != _nvramVersion
+            || !string.Equals(_settings.NvramDirectory, _nvramDirectory, StringComparison.OrdinalIgnoreCase);
         if (_machine is not null
             && (biosSettingsChanged
+                || nvramSettingsChanged
                 || _settings.HighResolution != _machine.Tuning.HighResolution
                 || _settings.ArmTiming != _machine.Tuning.ArmTiming
                 || _settings.ClioTimers != _machine.Tuning.ClioTimers
@@ -1985,6 +2172,11 @@ public partial class MainWindow : Window, IDisposable
         {
             RecreateMachine();
             return;
+        }
+
+        if (_machine is null && nvramSettingsChanged)
+        {
+            ReplaceNvramStore(_gameId.Length > 0 ? _gameId : null);
         }
 
         StatusText.Text = "Settings saved.";
@@ -2131,6 +2323,7 @@ public partial class MainWindow : Window, IDisposable
     private void RecreateMachine()
     {
         StopInputRecording(save: true);
+        FlushNvram();
         var discPath = _settings.DiscPath;
         GameRecord? record = _gameId.Length == 0 ? null : GameDatabase.Default.FindByChecksum(_gameId);
         ResolvedBios resolved = BiosResolver.Resolve(_settings, _gameId, record, discPath);
@@ -2560,17 +2753,46 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
+    private NvramStore CreateNvramStore(string? gameId)
+    {
+        try
+        {
+            return _settings.CreateNvramStore(gameId);
+        }
+        catch (ArgumentException)
+        {
+            // Per-game mode without a selected game: keep the shared image as the
+            // placeholder until a disc supplies a game ID.
+            return new NvramStore(
+                Path.Combine(_settings.ResolveNvramDirectory(), NvramLayout.LegacyFileName));
+        }
+    }
+
     private void FlushNvram()
     {
-        if (_machine is null)
+        if (_machine is not null)
         {
-            return;
+            PersistNvram(_machine);
         }
+    }
 
+    private void PersistNvram(FiveDoMachine machine)
+    {
         var buffer = new byte[EmulatorConstants.NvramSize];
-        _machine.CopyNvram(buffer);
+        machine.CopyNvram(buffer);
         _nvramStore.MarkChanged(buffer);
         _nvramStore.Flush();
+    }
+
+    private void ReplaceNvramStore(string? gameId)
+    {
+        NvramStore previous = _nvramStore;
+        _nvramStore = CreateNvramStore(gameId);
+        _nvramGameId = gameId ?? string.Empty;
+        _nvramMode = _settings.NvramStorageMode;
+        _nvramVersion = _settings.NvramVersion;
+        _nvramDirectory = _settings.NvramDirectory;
+        previous.Dispose();
     }
 
     private void Shutdown()

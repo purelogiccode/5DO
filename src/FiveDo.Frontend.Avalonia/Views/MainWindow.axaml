@@ -24,6 +24,12 @@
                           ToolTip.Tip="Pin the current game to a specific BIOS MD5. Restart the game to apply it." />
                 <MenuItem Header="Clear Game BIOS Assignment" Click="OnClearBiosAssignment"
                           ToolTip.Tip="Return the current game to automatic BIOS selection." />
+                <MenuItem Header="Export NVRAM..." Click="OnExportNvramAsync"
+                          ToolTip.Tip="Write the current game's 32 KB NVRAM image to a file." />
+                <MenuItem Header="Import NVRAM..." Click="OnImportNvramAsync"
+                          ToolTip.Tip="Replace the current game's NVRAM with a 32 KB image." />
+                <MenuItem Header="Reset NVRAM" Click="OnResetNvram"
+                          ToolTip.Tip="Clear the current game's NVRAM back to a fresh volume." />
                 <MenuItem Header="Boot Disc..." Click="OnOpenDiscAsync"
                           ToolTip.Tip="Choose an ISO, BIN, CUE, or CHD disc image and boot it." />
                 <MenuItem Header="Add Game Folder..." Click="OnAddFolderAsync"

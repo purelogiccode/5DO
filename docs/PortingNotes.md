@@ -836,3 +836,27 @@ M1 implements the section primitive used by all later chips:
   `bios list/scan` validates a folder. The smoke evidence is in `TestCorpus.md` 1.1f.
 - Save-state BIOS mismatch warnings already cover the primary BIOS hash. A BIOS2 hash is
   not in the v2 header; adding one would require a state-format change.
+
+### 12.21 Per-game NVRAM and versions (2026-10-31)
+
+- Opera's `opera_nvram_storage` and `opera_nvram_version` options map to
+  `NvramStorageMode` (`Global`, `PerGame`) and `NvramVersion` (0-9). 5DO keeps the
+  historical shared file for `Global` version 0 so existing installations are untouched.
+- Paths follow `NvramLayout`: shared v0 is `<root>/nvram.ram`, shared v1-9 is
+  `<root>/nvram.<n>.ram`, and per-game is
+  `<root>/nvram/per-game/<gameId>.<n>.ram`. The game ID is the lowercase 4DO MD5 of the
+  first two sectors; unsafe file-name characters are replaced with `_`.
+- Migration is read-only. When the primary per-game image is missing, `NvramStore`
+  tries per-game version 0, then the shared version, then legacy `nvram.ram`. The next
+  save writes the per-game primary. A corrupt primary is moved to `.bad` and replaced
+  with a fresh image; it does not fall through to an older image, because that would
+  hide data loss.
+- The desktop shell flushes the outgoing image before switching games, then loads the
+  incoming image on the core thread before reset. Changing the mode/version restarts the
+  machine through the normal options path. The CLI resolves the same layout and reports
+  it in `run --json`.
+- `nvram path|list|export|import|reset` are host-side utilities; they do not run the
+  machine. Import validates exactly 32 KB and writes atomically. Reset writes a fresh
+  initialized volume, which also prevents a shared fallback from reappearing.
+- Smoke evidence is in `TestCorpus.md` 1.1g. Per-game storage does not change the
+  Lemmings 3,000-frame hash.

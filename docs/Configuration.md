@@ -31,8 +31,10 @@ the exact path rather than hard-coding one.
 | File / directory | Purpose |
 |---|---|
 | `settings.json` | All persistent desktop settings, including the input profile. |
-| `nvram.ram` | 32 KB 3DO NVRAM image, debounced and written atomically. |
-| `nvram.ram.bad` | A corrupt NVRAM image moved aside on load; the app starts fresh. |
+| `nvram.ram` | Shared 32 KB 3DO NVRAM image (global version 0), written atomically. |
+| `nvram.<version>.ram` | Global version 1-9 image. |
+| `nvram/per-game/<gameId>.<version>.ram` | Per-game NVRAM image. |
+| `nvram*.bad` | A corrupt NVRAM image moved aside on load; the app starts fresh. |
 | `states/` | Default save-state directory (`slot-NN.tdos`, sidecar JSON, PNG thumbnail). |
 | `settings.json.tmp` | Temporary file used during atomic settings writes. |
 
@@ -99,6 +101,9 @@ every serialized property in `AppSettings`.
 | `CdSpeed` | enum string | `"X2"` | Effective read speed for `OperaCycleBased`: `Unbounded`, `X1`, `X2` (stock), `X4`, `X8`, `X16`, `X24`, or `X32`. Ignored by `FreeDoCompatible`. |
 | `CpuClockMultiplier` | double | `1.0` | ARM clock multiplier, 0.5..4.0 (6.25-50 MHz). 1.0 is the stock 12.5 MHz. |
 | `RandomSeed` | uint? | `null` | Optional initial DSP PRNG seed; `null` uses FreeDO's `0xa5a5a5a5`. |
+| `NvramStorageMode` | enum string | `"Global"` | `Global` keeps one shared image; `PerGame` keeps a separate image per 4DO game ID. |
+| `NvramVersion` | int | `0` | Independent NVRAM version slot, 0-9. |
+| `NvramDirectory` | string | `""` | Directory that owns the NVRAM layout; empty means `<LocalApplicationData>/5DO`. |
 | `Volume` | float | `1.0` | OpenAL gain, 0..1. |
 | `AudioEnabled` | bool | `true` | Enable live OpenAL output. |
 | `Input` | object | defaults | Six-player keyboard/gamepad bindings plus hotkeys. |
@@ -134,6 +139,8 @@ or the random seed. If the fields no longer match the selected profile, the dial
 `CdromTiming` (string): `FreeDoCompatible`, `OperaCycleBased`.
 
 `CdSpeed` (string): `Unbounded`, `X1`, `X2`, `X4`, `X8`, `X16`, `X24`, `X32`.
+
+`NvramStorageMode` (string): `Global`, `PerGame`.
 
 `OutputResolution` (string): `Window`, `Native`, `Scale2X`, `Scale3X`, `Scale4X`,
 `Hd720`, `FullHd1080`, `Qhd1440`, `Uhd2160`.
@@ -407,21 +414,45 @@ rejecting it.
 
 ## 5. NVRAM
 
-`NvramStore` manages a 32 KB image at `<LocalApplicationData>/5DO/nvram.ram`.
+`NvramStore` manages a 32 KB image. The default is the historical shared image at
+`<LocalApplicationData>/5DO/nvram.ram`; `NvramStorageMode` and `NvramVersion` select the
+layout:
+
+| Mode | Version | Path |
+|---|---:|---|
+| `Global` | 0 | `<root>/nvram.ram` (legacy) |
+| `Global` | 1-9 | `<root>/nvram.<version>.ram` |
+| `PerGame` | 0-9 | `<root>/nvram/per-game/<gameId>.<version>.ram` |
+
+`<root>` is `NvramDirectory`, or the settings directory when empty. Per-game IDs are
+the lowercase 4DO game ID (the MD5 of the first two sectors); unsafe characters are
+replaced with `_`. Versions are independent images, so switching versions never
+overwrites another version's data.
 
 - A missing file produces `NvramImage.CreateFresh()`, which initializes the volume
   header and initial directory words.
+- When a per-game image does not exist yet, loading falls back to the per-game version 0
+  image, then the shared version, then the legacy `nvram.ram`. The next save writes the
+  per-game file, so switching from shared to per-game preserves the existing data once.
 - The machine writes NVRAM snapshots through `MarkChanged`; the host flushes at most
   once per 250 ms (`NvramStore.FlushInterval`) and forces a flush on pause/stop/dispose.
 - Writes use a temporary file plus atomic replace.
-- If the file is not exactly 32 KB, it is moved to `nvram.ram.bad` and a fresh image is
-  used. This preserves the bad image for diagnosis.
+- If the primary file is not exactly 32 KB, it is moved to `<name>.bad` and a fresh image
+  is used. A corrupt primary image does not silently fall back to an older image.
 - A save state also contains NVRAM; loading a state restores the state's NVRAM and the
   host later persists it through the normal path.
 
-The CLI uses `--nvram <path>` instead: load if the file exists, otherwise fresh; write
-back after the run. With `--state-in`, NVRAM comes from the state unless `--nvram` is
-also used for the post-run save.
+The CLI supports both explicit and layout-based NVRAM:
+
+- `--nvram <path>` loads that file if it exists and writes it back after the run.
+- `--nvram-mode global|per-game`, `--nvram-version 0-9`, and `--nvram-dir <path>`
+  resolve the same layout as the desktop settings. These options cannot be combined
+  with `--nvram`.
+- `nvram path|list|export|import|reset` resolves, lists, backs up, restores, or clears
+  images without running the machine.
+
+With `--state-in`, NVRAM comes from the state; a layout or explicit NVRAM path is still
+written after the run when supplied.
 
 ---
 

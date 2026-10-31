@@ -79,6 +79,113 @@ public sealed class NvramStoreTests
         Assert.True(File.Exists(path + ".bad"));
     }
 
+    [Fact]
+    public void LoadOrCreate_UsesAFallbackWhenThePrimaryImageIsMissing()
+    {
+        using var directory = new TempDirectory();
+        var fallbackPath = Path.Combine(directory.Path, "nvram.ram");
+        var primaryPath = Path.Combine(directory.Path, "nvram", "per-game", "game.0.ram");
+        var fallback = NvramImage.CreateFresh().ToArray();
+        fallback[123] = 0x42;
+        File.WriteAllBytes(fallbackPath, fallback);
+        var store = new NvramStore(primaryPath, [fallbackPath]);
+
+        NvramImage image = store.LoadOrCreate();
+
+        Assert.Equal(0x42, image.Data.Span[123]);
+        Assert.False(File.Exists(primaryPath));
+    }
+
+    [Fact]
+    public void Save_WritesThePrimaryImageInsteadOfTheFallback()
+    {
+        using var directory = new TempDirectory();
+        var fallbackPath = Path.Combine(directory.Path, "nvram.ram");
+        var primaryPath = Path.Combine(directory.Path, "nvram", "per-game", "game.0.ram");
+        File.WriteAllBytes(fallbackPath, NvramImage.CreateFresh().ToArray());
+        using var store = new NvramStore(primaryPath, [fallbackPath]);
+        var image = NvramImage.CreateFresh().ToArray();
+        image[200] = 0x77;
+
+        store.Save(image);
+
+        Assert.True(File.Exists(primaryPath));
+        Assert.Equal(0x77, File.ReadAllBytes(primaryPath)[200]);
+        Assert.Equal(0, File.ReadAllBytes(fallbackPath)[200]);
+    }
+
+    [Fact]
+    public void Reset_WritesAFreshImageToThePrimaryPath()
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "nvram.ram");
+        var image = NvramImage.CreateFresh().ToArray();
+        image[300] = 0xEE;
+        File.WriteAllBytes(path, image);
+        using var store = new NvramStore(path);
+
+        store.Reset();
+
+        var reset = File.ReadAllBytes(path);
+        Assert.Equal(EmulatorConstants.NvramSize, reset.Length);
+        Assert.Equal(0, reset[300]);
+        Assert.Equal((byte)'n', reset[40]);
+    }
+
+    [Fact]
+    public void LoadOrCreate_DoesNotUseAFallbackWhenThePrimaryImageIsCorrupt()
+    {
+        using var directory = new TempDirectory();
+        var fallbackPath = Path.Combine(directory.Path, "nvram.ram");
+        var primaryPath = Path.Combine(directory.Path, "nvram", "per-game", "game.0.ram");
+        Directory.CreateDirectory(Path.GetDirectoryName(primaryPath)!);
+        var fallback = NvramImage.CreateFresh().ToArray();
+        fallback[123] = 0x42;
+        File.WriteAllBytes(fallbackPath, fallback);
+        File.WriteAllBytes(primaryPath, new byte[100]);
+        var store = new NvramStore(primaryPath, [fallbackPath]);
+
+        NvramImage image = store.LoadOrCreate();
+
+        Assert.Equal(0, image.Data.Span[123]);
+        Assert.True(File.Exists(primaryPath + ".bad"));
+    }
+
+    [Fact]
+    public void PerGameStoresKeepDifferentImagesIsolated()
+    {
+        using var directory = new TempDirectory();
+        var settings = new AppSettings
+        {
+            NvramDirectory = directory.Path,
+            NvramStorageMode = NvramStorageMode.PerGame,
+        };
+        var firstBytes = NvramImage.CreateFresh().ToArray();
+        firstBytes[10] = 0x11;
+        var secondBytes = NvramImage.CreateFresh().ToArray();
+        secondBytes[10] = 0x22;
+
+        using (NvramStore first = settings.CreateNvramStore("game-a"))
+        {
+            first.Save(firstBytes);
+        }
+
+        using (NvramStore second = settings.CreateNvramStore("game-b"))
+        {
+            second.Save(secondBytes);
+        }
+
+        using (NvramStore first = settings.CreateNvramStore("game-a"))
+        {
+            Assert.Equal(0x11, first.LoadOrCreate().Data.Span[10]);
+        }
+
+        using (NvramStore second = settings.CreateNvramStore("game-b"))
+        {
+            Assert.Equal(0x22, second.LoadOrCreate().Data.Span[10]);
+        }
+    }
+
     private sealed class ManualTimeProvider : TimeProvider
     {
         private DateTimeOffset _now = new(2026, 10, 23, 12, 0, 0, TimeSpan.Zero);
@@ -132,6 +239,9 @@ public sealed class NvramStoreTests
         Assert.Equal(ArmTimingMode.FreeDoCompatible, settings.ArmTiming);
         Assert.Equal(CdromTimingMode.FreeDoCompatible, settings.CdromTiming);
         Assert.Equal(CdSpeed.X2, settings.CdSpeed);
+        Assert.Equal(NvramStorageMode.Global, settings.NvramStorageMode);
+        Assert.Equal(0, settings.NvramVersion);
+        Assert.Equal(string.Empty, settings.NvramDirectory);
         Assert.Equal(1.0, settings.CpuClockMultiplier);
         Assert.Equal(EmulatorConstants.ArmClock, settings.ResolveArmClock());
         Assert.False(settings.ShowOverlay);
@@ -238,6 +348,9 @@ public sealed class NvramStoreTests
             CelTiming = CelTimingMode.OperaBusy,
             CdromTiming = CdromTimingMode.OperaCycleBased,
             CdSpeed = CdSpeed.X8,
+            NvramStorageMode = NvramStorageMode.PerGame,
+            NvramVersion = 4,
+            NvramDirectory = "nvram-data",
             CpuClockMultiplier = 2.0,
             RandomSeed = 0x1234,
             SaveSlot = 3,
@@ -272,6 +385,9 @@ public sealed class NvramStoreTests
         Assert.Equal(CelTimingMode.OperaBusy, loaded.CelTiming);
         Assert.Equal(CdromTimingMode.OperaCycleBased, loaded.CdromTiming);
         Assert.Equal(CdSpeed.X8, loaded.CdSpeed);
+        Assert.Equal(NvramStorageMode.PerGame, loaded.NvramStorageMode);
+        Assert.Equal(4, loaded.NvramVersion);
+        Assert.Equal("nvram-data", loaded.NvramDirectory);
         Assert.Equal(2.0, loaded.CpuClockMultiplier);
         Assert.Equal(25_000_000, loaded.ResolveArmClock());
         Assert.Equal(0x1234u, loaded.RandomSeed);
@@ -419,7 +535,9 @@ public sealed class NvramStoreTests
               "ClioTimers": 99,
               "CelTiming": 99,
               "CdromTiming": 99,
-              "CdSpeed": 3
+              "CdSpeed": 3,
+              "NvramStorageMode": 99,
+              "NvramVersion": 12
             }
             """);
 
@@ -432,6 +550,23 @@ public sealed class NvramStoreTests
         Assert.Equal(CelTimingMode.FreeDoCompatible, loaded.CelTiming);
         Assert.Equal(CdromTimingMode.FreeDoCompatible, loaded.CdromTiming);
         Assert.Equal(CdSpeed.X2, loaded.CdSpeed);
+        Assert.Equal(NvramStorageMode.Global, loaded.NvramStorageMode);
+        Assert.Equal(0, loaded.NvramVersion);
+    }
+
+    [Fact]
+    public void AppSettings_OlderFilesWithoutNvramFieldsUseTheSharedDefaults()
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "settings.json");
+        File.WriteAllText(path, """{ "BiosPath": "bios.bin" }""");
+
+        AppSettings loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal("bios.bin", loaded.BiosPath);
+        Assert.Equal(NvramStorageMode.Global, loaded.NvramStorageMode);
+        Assert.Equal(0, loaded.NvramVersion);
+        Assert.Equal(string.Empty, loaded.NvramDirectory);
     }
 
     [Fact]

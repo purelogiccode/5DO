@@ -7,6 +7,18 @@ still change.
 
 ### Added
 
+- Per-game NVRAM and NVRAM versions (SYS-14). `NvramStorageMode` (`Global`, `PerGame`),
+  `NvramVersion` (0-9), and `NvramDirectory` select the layout: shared version 0 keeps
+  the legacy `nvram.ram`, shared versions 1-9 use `nvram.<version>.ram`, and per-game
+  images use `nvram/per-game/<gameId>.<version>.ram`. `NvramStore` reads migration
+  fallbacks (per-game version 0, shared version, legacy) without copying, writes
+  atomically, and backs up a corrupt primary instead of silently loading an older image.
+  Settings > Emulation exposes the storage mode and version and restarts the machine
+  safely when they change; File > Export NVRAM..., Import NVRAM..., and Reset NVRAM
+  manage the current image. The CLI adds `--nvram-mode`, `--nvram-version`, and
+  `--nvram-dir` to `run`/`trace`, reports `nvramPath`/`nvramMode`/`nvramVersion` in
+  `run --json`, and adds `nvram path|list|export|import|reset`. Documentation is in
+  `docs/Configuration.md`, `docs/CliReference.md`, and `docs/UserGuide.md`.
 - BIOS manager and automatic selection (SYS-04). `BiosCatalog` recognizes the common
   Panasonic FZ-1/FZ-10/FZ-10E/FZ-10JA, GoldStar, Sanyo, patched arcade, Kanji font, and
   arcade support MD5s. `BiosLibrary.Scan` validates a folder, classifies primary and

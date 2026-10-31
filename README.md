@@ -12,7 +12,7 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **1065 tests pass.** The 594-disc baseline found 576 rendered, 13 black/blank,
+prototype. **1091 tests pass.** The 594-disc baseline found 576 rendered, 13 black/blank,
 and 5 not-loadable images. Triage resolved the five not-loadable rows (Mirai Shounen
 Conan was a transient CHD read error; the four Arcade CD-ROM titles boot with
 `panafz10`), and six of the 13 black/blank titles render by 6,000-9,000 frames. Headless
@@ -21,6 +21,9 @@ folder, classifies region/Kanji/Anvil/patch metadata, and auto-selects a BIOS fr
 game database region, known title requirements, or a per-game MD5 override; the
 configured BIOS remains the fallback. `--bios2`, `--bios-auto`, `bios list|scan|select`,
 Settings > Paths > BIOS folder, and File > Assign BIOS to Current Game are available.
+Per-game NVRAM (SYS-14) adds shared/versioned/per-game images, Settings > Emulation >
+NVRAM storage/version, `--nvram-mode|--nvram-version|--nvram-dir`, and
+`nvram path|list|export|import|reset`.
 The v1.0 release is deliberately
 deferred: the next work is a BIOS-aware sweep and 5DO status merge (M13), then
 high-resolution CEL research (M14). The project is **donationware** (non-commercial,

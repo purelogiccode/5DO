@@ -244,11 +244,17 @@ Settings persist under the user local application data folder:
 - Library metadata cache: `%LOCALAPPDATA%\5DO\library-cache.json`.
 
 Per-game fix-mode overrides, automatic 4DO fixes, audio enable/volume, high-resolution
-mode, the timing profile, ARM/CLIO/CEL/CD timing, CD speed, save/screenshot paths, input
-bindings, and the current slot are stored there.
-NVRAM is stored as `nvram.ram` in the same directory. The full `settings.json` schema,
-per-game override keys, input profile format, and precedence rules are in
-[`Configuration.md`](Configuration.md).
+mode, the timing profile, ARM/CLIO/CEL/CD timing, CD speed, NVRAM storage/version,
+save/screenshot paths, input bindings, and the current slot are stored there.
+NVRAM defaults to `nvram.ram` in the same directory. Choose **Settings > Emulation >
+NVRAM storage > Per game** to keep each title's save data in
+`nvram/per-game/<gameId>.<version>.ram`, or pick a version 0-9 for independent save
+slots. The first per-game save copies the shared image so existing data is not lost.
+**File > Export NVRAM...**, **Import NVRAM...**, and **Reset NVRAM** manage the current
+image from the desktop shell; the CLI can list, export, import, and reset images with
+`nvram path|list|export|import|reset`.
+The full `settings.json` schema, per-game override keys, input profile format, and
+precedence rules are in [`Configuration.md`](Configuration.md).
 
 The game library also shows a compact donation banner. **Donate** opens
 [the 5DO donation page](https://www.purelogiccode.com/donate?app=5do), and

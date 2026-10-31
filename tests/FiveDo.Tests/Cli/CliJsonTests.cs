@@ -71,6 +71,9 @@ public sealed class CliJsonTests
             BiosRegion: "USA (NTSC)",
             BiosSelection: "Auto-selected Panasonic FZ-1 for US.",
             BiosSource: "auto",
+            NvramPath: "/data/nvram/per-game/game.0.ram",
+            NvramMode: "per-game",
+            NvramVersion: 0,
             Warnings: []);
 
         var json = JsonSerializer.Serialize(result, CliJsonContext.Default.CliRunResult);
@@ -94,6 +97,8 @@ public sealed class CliJsonTests
         Assert.Contains("\"biosName\": \"Panasonic FZ-1\"", json, StringComparison.Ordinal);
         Assert.Contains("\"biosRegion\": \"USA (NTSC)\"", json, StringComparison.Ordinal);
         Assert.Contains("\"biosSource\": \"auto\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"nvramMode\": \"per-game\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"nvramVersion\": 0", json, StringComparison.Ordinal);
         Assert.Contains("\"warnings\": []", json, StringComparison.Ordinal);
     }
 

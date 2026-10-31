@@ -105,8 +105,8 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, ARM, CLIO, CEL, and CD timing, CD speed, CPU clock, random seed, high-resolution mode, and overrides.">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+            <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, ARM, CLIO, CEL, and CD timing, CD speed, CPU clock, random seed, NVRAM storage, high-resolution mode, and overrides.">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <CheckBox x:Name="AutoFixesCheck" Grid.Row="0" Grid.Column="1"
                               Content="Apply the 4DO per-game fixes automatically"
                               ToolTip.Tip="Apply the compatibility fix mask from the built-in game database when a disc opens." />
@@ -169,6 +169,15 @@
                                ToolTip.Tip="Override automatic BIOS selection for the current game." />
                     <ComboBox x:Name="BiosOverrideCombo" Grid.Row="14" Grid.Column="1" Margin="0,12,0,0"
                               ToolTip.Tip="Automatic uses the region-appropriate BIOS from the BIOS folder. A specific image pins this game to that BIOS MD5." />
+                    <TextBlock Grid.Row="15" Grid.Column="0" Text="NVRAM storage" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Choose one shared NVRAM image or a separate image for every game." />
+                    <ComboBox x:Name="NvramStorageCombo" Grid.Row="15" Grid.Column="1" Margin="0,12,0,0"
+                              ToolTip.Tip="Per-game keeps each title's save data isolated. Switching from shared copies the shared image on the first save." />
+                    <TextBlock Grid.Row="16" Grid.Column="0" Text="NVRAM version" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Independent NVRAM version slot, 0-9." />
+                    <TextBox x:Name="NvramVersionBox" Grid.Row="16" Grid.Column="1" Margin="0,12,0,0"
+                             PlaceholderText="0"
+                             ToolTip.Tip="Versions 0-9 are separate images. Changing the version does not overwrite another version." />
                 </Grid>
             </TabItem>
 

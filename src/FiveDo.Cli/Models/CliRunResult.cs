@@ -64,4 +64,7 @@ internal sealed record CliRunResult(
     string? BiosRegion,
     string? BiosSelection,
     string BiosSource,
+    string? NvramPath,
+    string NvramMode,
+    int NvramVersion,
     IReadOnlyList<string> Warnings);

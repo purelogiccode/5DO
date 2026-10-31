@@ -3,7 +3,7 @@
 **Product:** 5DO
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Current status (2026-10-31, thirty-fifth pass):** **1065 tests pass**; the v1.0
+**Current status (2026-10-31, thirty-sixth pass):** **1091 tests pass**; the v1.0
 release is deliberately deferred. The first **M13 full-collection loadability sweep**
 is complete: 594 discs tested (589 in `J:\Panasonic 3DO` plus 5 in
 `G:\MAME\MAME Software List CHDs\3do`), with **576 `Loadable/Rendered`, 13
@@ -157,6 +157,21 @@ the accuracy profile bundles the ARM60, Opera timer, CEL busy, and CD cycle opti
 The three-title smoke differential is in [`TestCorpus.md`](TestCorpus.md) 1.1e.
 Remaining: per-profile benchmark deltas, a full-collection accuracy run, and CD-DA speed
 behavior (SYS-01). **1039 tests pass.** See [`PortingNotes.md`](PortingNotes.md) 12.19.
+
+**Per-game NVRAM and versions (2026-10-31, thirty-sixth pass):** SYS-14 is implemented.
+`NvramStorageMode` (`Global`, `PerGame`), `NvramVersion` (0-9), and `NvramDirectory`
+select the historical shared `nvram.ram`, versioned `nvram.<n>.ram`, or
+`nvram/per-game/<gameId>.<n>.ram`. `NvramLayout` resolves paths and migration fallbacks;
+`NvramStore` reads per-game version 0, the shared version, and the legacy image in that
+order, writes atomically, and backs up a corrupt primary instead of silently loading an
+older image. Settings > Emulation exposes the storage mode and version and restarts the
+machine safely when either changes; File > Export/Import/Reset NVRAM manages the current
+image. The CLI adds `--nvram-mode`, `--nvram-version`, and
+`--nvram-dir` to `run`/`trace`, reports `nvramPath`/`nvramMode`/`nvramVersion` in
+`run --json`, and adds `nvram path|list|export|import|reset`. Unit, store, settings,
+JSON-contract, and CLI tests cover isolation, migration, version separation, corrupt
+images, and import/export/reset. **1091 tests pass.** See
+[`Configuration.md`](Configuration.md) 5 and [`CliReference.md`](CliReference.md) 8.1.
 
 **BIOS manager and auto-selection (2026-10-31, thirty-fifth pass):** SYS-04 is
 implemented. `BiosCatalog` recognizes the common 3DO BIOS hashes and their region,

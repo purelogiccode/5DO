@@ -275,6 +275,24 @@ This is smoke evidence, not the full-collection BIOS-aware sweep. The configured
 `BiosPath` remains the fallback and is still used when `BiosFolder` is empty, so
 existing settings keep their exact BIOS.
 
+### 1.1g Per-game NVRAM smoke (2026-10-31)
+
+Two titles were run at 3,000 frames with `panafz1.bin`, a fresh temporary NVRAM root,
+`--nvram-mode per-game --nvram-version 1`, and `--audio null`. Each run created its own
+32,768-byte image and left the other title untouched:
+
+| Title | Final PC | Frame hash | NVRAM file |
+|---|---|---|---|
+| 3D Atlas (USA) | `0x000189C4` | `0x1187598D` | `83d70d9c6a4a525a6774ae22ddb1fa23.1.ram` |
+| Lemmings (USA) | `0x0012B324` | `0x9C2E3236` | `0be38b22987b40b5d48f70a167656049.1.ram` |
+
+Lemmings' hash matches section 1.1, confirming that per-game storage does not change
+emulation. `nvram list --dir <root> --json` reported both images with the correct game
+IDs, modes, versions, and lengths. The store and CLI tests cover shared-to-per-game
+migration, version separation, corrupt-primary backup, and import/export/reset; see
+`tests/FiveDo.Tests/Host/NvramLayoutTests.cs`, `NvramStoreTests.cs`, and
+`tests/FiveDo.Tests/Cli/CliProcessTests.cs`.
+
 The 30,000-frame Road Rash run after the CCB fix originally ended at
 `PC 0x00016194` with frame hash `0xE2D08131` and rendered the race scene when run
 without NVRAM. That result was produced before the arbitrary-CEL transposition fix;

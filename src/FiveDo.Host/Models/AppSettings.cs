@@ -196,6 +196,58 @@ public sealed class AppSettings
     /// </summary>
     public uint? RandomSeed { get; set; }
 
+    /// <summary>
+    /// Gets or sets the NVRAM storage mode. <see cref="NvramStorageMode.Global"/> keeps
+    /// the historical single image; <see cref="NvramStorageMode.PerGame"/> gives every
+    /// game its own save data.
+    /// </summary>
+    public NvramStorageMode NvramStorageMode { get; set; } = NvramStorageMode.Global;
+
+    /// <summary>
+    /// Gets or sets the NVRAM version slot (0-9). Versions are independent images, so
+    /// changing the version never overwrites another version's data.
+    /// </summary>
+    public int NvramVersion { get; set; }
+
+    /// <summary>
+    /// Gets or sets the directory that owns the NVRAM layout. An empty value uses
+    /// <see cref="AppSettingsStore.DefaultDirectory"/>.
+    /// </summary>
+    public string NvramDirectory { get; set; } = string.Empty;
+
+    /// <summary>Gets the absolute directory that owns the NVRAM layout.</summary>
+    /// <returns>The configured directory, or the default settings directory.</returns>
+    public string ResolveNvramDirectory()
+    {
+        var directory = string.IsNullOrWhiteSpace(NvramDirectory)
+            ? AppSettingsStore.DefaultDirectory
+            : NvramDirectory;
+        return System.IO.Path.GetFullPath(directory);
+    }
+
+    /// <summary>Resolves the primary NVRAM image path for a game.</summary>
+    /// <param name="gameId">4DO game ID. Required in per-game mode.</param>
+    /// <returns>The absolute NVRAM path.</returns>
+    public string ResolveNvramPath(string? gameId)
+    {
+        return NvramLayout.Resolve(
+            ResolveNvramDirectory(),
+            NvramStorageMode,
+            NvramVersion,
+            gameId);
+    }
+
+    /// <summary>Creates a debounced store for the configured NVRAM image.</summary>
+    /// <param name="gameId">4DO game ID. Required in per-game mode.</param>
+    /// <returns>A store over the resolved primary and migration fallback paths.</returns>
+    public NvramStore CreateNvramStore(string? gameId)
+    {
+        var directory = ResolveNvramDirectory();
+        return new NvramStore(
+            NvramLayout.Resolve(directory, NvramStorageMode, NvramVersion, gameId),
+            NvramLayout.GetFallbackPaths(directory, NvramStorageMode, NvramVersion, gameId));
+    }
+
     /// <summary>Gets or sets the audio volume (0-1).</summary>
     public float Volume { get; set; } = 1f;
 

@@ -53,6 +53,9 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `bios info <path>` | BIOS size, MD5, region, Kanji, and Anvil detection. |
 | `bios list\|scan <folder>` | Scan and validate a BIOS folder. |
 | `bios select <disc> --folder <dir>` | Choose a region-appropriate BIOS for a disc. |
+| `nvram path [disc]` | Resolve the shared or per-game NVRAM image. |
+| `nvram list` | List global and per-game NVRAM images. |
+| `nvram export\|import\|reset` | Back up, restore, or clear an NVRAM image. |
 | `audio analyze <wav>` | WAV format, peak, RMS, clipping, silence, DC offset. |
 | `state inspect <path>` | Save-state header and section table (full CRC validation, including Brotli sections). |
 | `state slots <dir>` | List numbered save slots and metadata. |
@@ -91,14 +94,16 @@ frame.
 4. Resolve `--bios`/`--bios-auto` and load BIOS1/BIOS2 (unless `--state-in`).
 5. Create the audio backend and insert the disc.
 6. Reset the machine.
-7. Load NVRAM (`--nvram` if it exists, else a fresh image) unless `--state-in`.
+7. Load NVRAM unless `--state-in`: the explicit `--nvram` file, or the image resolved
+   by `--nvram-mode`/`--nvram-version`/`--nvram-dir` (with shared-image migration
+   fallbacks). With no NVRAM option, a fresh image is used.
 8. Load the input script, validate `--script-base`, and set up `--autopilot`.
 9. Install trace writers/watchpoints/KPRINT hooks.
 10. Load `--state-in` (and offset the script if `--script-base state`).
 11. Apply `--poke` patches.
 12. Run frames (paced only with `--realtime`).
 13. Write RAM/DSP dumps, dispose traces, write `--frame-out`, write `--state-out`.
-14. Emit the result and, if `--nvram` was supplied, save NVRAM.
+14. Emit the result and, when an explicit or layout NVRAM path was resolved, save NVRAM.
 
 ### Emulation options
 
@@ -110,7 +115,10 @@ frame.
 | `--frames N` | 600 | Number of frames to run. Decimal or `0x`. |
 | `--state-in <path>` | none | Load a `.tdos` state instead of booting. |
 | `--state-out <path>` | none | Save a `.tdos` state after the run. |
-| `--nvram <path>` | none | Load a 32 KB NVRAM image before the run and save it after. Missing file means a fresh image. |
+| `--nvram <path>` | none | Load a 32 KB NVRAM image before the run and save it after. Missing file means a fresh image. Cannot be combined with the layout options below. |
+| `--nvram-mode global\|per-game` | `global` when a layout option is used | Resolve the shared or per-game NVRAM image. Per-game mode needs a disc for its game ID. |
+| `--nvram-version 0-9` | `0` | Independent NVRAM version slot. |
+| `--nvram-dir <path>` | settings directory | Root directory for the resolved NVRAM layout. |
 | `--high-res` | off | Enable the opt-in 640x480 CEL/VDLP mode. |
 | `--profile compatible\|accuracy\|performance\|custom` | `compatible` | Timing profile. `accuracy` enables ARM60 N=2, Opera CLIO/CEL/CD timing, and the stock 2x drive; `performance` uses a 1.5x CPU clock with FreeDO timing; `custom` keeps the individual options. Explicit timing options override the profile. |
 | `--arm-timing freedo\|arm60` | `freedo` | ARM60 N-cycle class. `freedo` keeps the FreeDO-compatible N=4 baseline; `arm60` uses the ARM60 datasheet/SDK N=2 timing from Opera. |
@@ -294,6 +302,9 @@ All fields are camelCase. Nullable fields are omitted or `null` when not applica
 | `biosRegion` | string? | Region label such as `USA (NTSC)` or `Europe (PAL)`. |
 | `biosSelection` | string? | Why automatic selection chose this image. |
 | `biosSource` | string | `auto`, `configured`, or `none`. |
+| `nvramPath` | string? | Resolved NVRAM path, or null when NVRAM persistence was not requested. |
+| `nvramMode` | string | `disabled`, `explicit`, `global`, or `per-game`. |
+| `nvramVersion` | int | Resolved NVRAM version 0-9. |
 | `warnings` | string[] | `machine.StateWarnings` after a state load. |
 
 `cdStatus=0xE1` and `cdPoll=0x0C` is the historical static READ_ID-only wait signature.
@@ -333,7 +344,10 @@ instruction ring buffer. It stops early on a stop condition or `--count` limit.
 | `--dump-ram <path>` | none | Write RAM after the trace. |
 | `--dump-ram-offset N` | 0 | Hex byte offset. |
 | `--dump-ram-length N` | 0x1000 | Byte count. |
-| `--nvram <path>` | none | Load NVRAM before, save after. |
+| `--nvram <path>` | none | Load NVRAM before, save after. Cannot be combined with the layout options. |
+| `--nvram-mode global\|per-game` | none | Resolve the shared or per-game NVRAM image. |
+| `--nvram-version 0-9` | `0` | NVRAM version slot. |
+| `--nvram-dir <path>` | settings directory | Root directory for the NVRAM layout. |
 | `--input-script <path>` | none | Scripted input (absolute frames only). |
 | `--high-res`, `--prefetch` | off | As in `run`. |
 | `--profile compatible\|accuracy\|performance\|custom` | `compatible` | As in `run`. |
@@ -460,6 +474,37 @@ Known BIOS hashes include Panasonic FZ-1/FZ-10/FZ-10E/FZ-10JA, GoldStar, Sanyo T
 patched FZ-10/FZ-10E arcade images, the FZ-1 Kanji font, and the 3DO arcade support ROM.
 Unknown images are still accepted, but their metadata is inferred from the file name and
 marked unverified in `notes`.
+
+---
+
+## 8.1 `nvram` commands
+
+```powershell
+5do nvram path "Lemmings (USA).chd" --mode per-game --version 1 --dir data --json
+5do nvram list --dir data --json
+5do nvram export "Lemmings (USA).chd" --out lemmings.ram --mode per-game --dir data
+5do nvram import "Lemmings (USA).chd" --in lemmings.ram --mode per-game --dir data
+5do nvram reset "Lemmings (USA).chd" --mode per-game --dir data
+```
+
+The layout matches the desktop settings: shared version 0 is `<dir>/nvram.ram`, shared
+version 1-9 is `<dir>/nvram.<version>.ram`, and per-game images are
+`<dir>/nvram/per-game/<gameId>.<version>.ram`. `--mode` defaults to `global` and
+`--version` to `0`; per-game mode requires a disc so the game ID can be computed.
+`--dir` defaults to the desktop settings directory.
+
+- `path` prints `path`, `mode`, `version`, `gameId`, `exists`, and `length`.
+- `list` scans both layouts and reports `path`, `mode`, `version`, `gameId`, `length`,
+  and `lastWriteTimeUtc`.
+- `export` loads the resolved image (including shared-to-per-game migration fallbacks)
+  and writes a 32 KB copy to `--out`.
+- `import` validates `--in` as a 32 KB image and writes it atomically to the resolved
+  path.
+- `reset` writes a fresh initialized image to the resolved path. It does not delete the
+  shared fallback, so the reset image remains authoritative.
+
+JSON actions use `{ "ok": true, "action", "path", "source", "length" }`. A missing image
+is not an error for `path` or `export`; both use a fresh image.
 
 ---
 

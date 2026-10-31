@@ -1,8 +1,8 @@
 # Project Status and Next Steps
 
 **Snapshot:** 2026-10-31, after the first full-collection sweep, the performance pass,
-the ARM/CLIO/CEL/CD timing-option pass, the CD speed/timing-profile pass, and the BIOS
-manager. Road Rash's
+the ARM/CLIO/CEL/CD timing-option pass, the CD speed/timing-profile pass, the BIOS
+manager, and the per-game NVRAM pass. Road Rash's
 100k-state race now measures
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
@@ -35,6 +35,14 @@ CORE-08 adds `EmulationProfile` (`Compatible`, `Accuracy`, `Performance`, `Custo
 `--profile`, and Settings > Emulation > Timing profile; the accuracy profile enables the
 ARM60, Opera timer, CEL busy, and CD cycle options together, and `run --json` reports the
 profile derived from the actual options.
+SYS-14 adds per-game NVRAM and versions. `NvramStorageMode` (`Global`, `PerGame`),
+`NvramVersion` (0-9), and `NvramDirectory` select shared `nvram.ram`, versioned
+`nvram.<n>.ram`, or `nvram/per-game/<gameId>.<n>.ram` images. The store reads migration
+fallbacks from per-game version 0, the shared version, and the legacy image; saves stay
+atomic, and a corrupt primary is backed up rather than replaced by an older image.
+Settings > Emulation exposes the mode and version. The CLI adds `--nvram-mode`,
+`--nvram-version`, and `--nvram-dir`, reports the resolved path in `run --json`, and
+adds `nvram path|list|export|import|reset`.
 SYS-04 adds the BIOS manager: a built-in MD5 catalog, `BiosLibrary` scanning/validation,
 region/Kanji/Anvil/patch metadata, `--bios2` and `--bios-auto`, `bios list|scan|select`,
 Settings > Paths BIOS folder/auto-select/scan, per-game BIOS overrides, and the
@@ -42,7 +50,7 @@ Settings > Emulation override combo. Auto-selection uses the game database regio
 known requirements for Slayer Europe/USA, Powers Kingdom (Europe), and Arcade CD-ROM
 discs; the configured BIOS remains the fallback when no BIOS folder is set. The
 five-title 3,000-frame smoke run and four known-requirement 12,000-frame runs are in
-[`TestCorpus.md`](TestCorpus.md) 1.1f. **1065 tests pass.**
+[`TestCorpus.md`](TestCorpus.md) 1.1f. **1091 tests pass.**
 The v1.0 release is deliberately deferred: the next work is a BIOS-aware sweep and
 5DO status merge (M13), then high-resolution CEL research (M14). The project is
 **donationware** (non-commercial, source-available, voluntary donations only). See
@@ -80,7 +88,7 @@ This is the short, current answer to "where are we?" The documentation index is
 
 ## 1. What works today
 
-- **Core:** ARM60 interpreter, 3 MB RAM/2 MB ROM, NVRAM, CLIO timers/FIQ/FIFO/DMA,
+- **Core:** ARM60 interpreter, 3 MB RAM/2 MB ROM, shared/per-game NVRAM, CLIO timers/FIQ/FIFO/DMA,
   MADAM CEL/pixel/matrix engines, VDLP, SPORT, DSP, Quartz scheduler, XBUS, CD-ROM,
   ISO/BIN/CUE/CHD storage, input/PBUS, game database, deterministic save states.
 - **Save states:** state format version 2 compresses large section payloads with Brotli
@@ -214,7 +222,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 1065 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 1091 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and

@@ -864,6 +864,234 @@ public sealed class CliProcessTests
         }
     }
 
+    [Fact]
+    public void NvramPath_GlobalWithoutDiscResolvesTheLegacyFile()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-nvram-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            CliResult result = Invoke("nvram", "path", "--dir", directory, "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"mode\": \"global\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("nvram.ram", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"exists\": false", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void NvramPath_PerGameUsesTheDiscGameIdAndVersion()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-nvram-{Guid.NewGuid():N}");
+        var discPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-nvram-{Guid.NewGuid():N}.iso");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            File.WriteAllBytes(discPath, new byte[4096]);
+            CliResult result = Invoke(
+                "nvram",
+                "path",
+                discPath,
+                "--mode",
+                "per-game",
+                "--version",
+                "2",
+                "--dir",
+                directory,
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"mode\": \"per-game\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"version\": 2", result.Output, StringComparison.Ordinal);
+            Assert.Contains("per-game", result.Output, StringComparison.Ordinal);
+            Assert.Contains(".2.ram", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+            File.Delete(discPath);
+        }
+    }
+
+    [Fact]
+    public void NvramImportExportAndResetRoundtripA32KImage()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-nvram-{Guid.NewGuid():N}");
+        var input = Path.Combine(Path.GetTempPath(), $"fivedo-cli-nvram-{Guid.NewGuid():N}.ram");
+        var output = Path.Combine(Path.GetTempPath(), $"fivedo-cli-nvram-{Guid.NewGuid():N}.ram");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var bytes = NvramImage.CreateFresh().ToArray();
+            bytes[321] = 0x5A;
+            File.WriteAllBytes(input, bytes);
+
+            CliResult import = Invoke("nvram", "import", "--in", input, "--dir", directory, "--json");
+            Assert.Equal(0, import.Code);
+            Assert.Contains("\"action\": \"import\"", import.Output, StringComparison.Ordinal);
+
+            CliResult list = Invoke("nvram", "list", "--dir", directory, "--json");
+            Assert.Equal(0, list.Code);
+            Assert.Contains("nvram.ram", list.Output, StringComparison.Ordinal);
+
+            CliResult export = Invoke("nvram", "export", "--out", output, "--dir", directory, "--json");
+            Assert.Equal(0, export.Code);
+            Assert.Equal(bytes, File.ReadAllBytes(output));
+
+            CliResult reset = Invoke("nvram", "reset", "--dir", directory, "--json");
+            Assert.Equal(0, reset.Code);
+            var resetBytes = File.ReadAllBytes(Path.Combine(directory, "nvram.ram"));
+            Assert.Equal(EmulatorConstants.NvramSize, resetBytes.Length);
+            Assert.Equal(0, resetBytes[321]);
+            Assert.Equal((byte)'n', resetBytes[40]);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+            File.Delete(input);
+            File.Delete(output);
+        }
+    }
+
+    [Fact]
+    public void NvramPerGameImportExportUsesTheGameIdPath()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-nvram-{Guid.NewGuid():N}");
+        var discPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-nvram-{Guid.NewGuid():N}.iso");
+        var input = Path.Combine(Path.GetTempPath(), $"fivedo-cli-nvram-{Guid.NewGuid():N}.ram");
+        var output = Path.Combine(Path.GetTempPath(), $"fivedo-cli-nvram-{Guid.NewGuid():N}.ram");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            File.WriteAllBytes(discPath, new byte[4096]);
+            var bytes = NvramImage.CreateFresh().ToArray();
+            bytes[456] = 0x33;
+            File.WriteAllBytes(input, bytes);
+
+            CliResult import = Invoke(
+                "nvram",
+                "import",
+                discPath,
+                "--in",
+                input,
+                "--mode",
+                "per-game",
+                "--version",
+                "1",
+                "--dir",
+                directory,
+                "--json");
+            Assert.Equal(0, import.Code);
+
+            var files = Directory.GetFiles(directory, "*.1.ram", SearchOption.AllDirectories);
+            Assert.Single(files);
+            Assert.Contains("per-game", files[0], StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(bytes, File.ReadAllBytes(files[0]));
+
+            CliResult export = Invoke(
+                "nvram",
+                "export",
+                discPath,
+                "--out",
+                output,
+                "--mode",
+                "per-game",
+                "--version",
+                "1",
+                "--dir",
+                directory,
+                "--json");
+            Assert.Equal(0, export.Code);
+            Assert.Equal(bytes, File.ReadAllBytes(output));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+            File.Delete(discPath);
+            File.Delete(input);
+            File.Delete(output);
+        }
+    }
+
+    [Fact]
+    public void Run_PerGameNvramWithoutDiscReturnsOne()
+    {
+        CliResult result = Invoke("run", "--bios", "unused.bin", "--frames", "0", "--nvram-mode", "per-game");
+
+        Assert.Equal(1, result.Code);
+        Assert.Contains("per-game", result.Error, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Run_NvramLayoutOptionsCannotBeCombinedWithExplicitPath()
+    {
+        CliResult result = Invoke(
+            "run",
+            "--bios",
+            "unused.bin",
+            "--frames",
+            "0",
+            "--nvram",
+            "custom.ram",
+            "--nvram-version",
+            "1");
+
+        Assert.Equal(1, result.Code);
+        Assert.Contains("--nvram", result.Error, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Run_GlobalNvramVersionIsReportedAndSaved()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-nvram-{Guid.NewGuid():N}");
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--nvram-mode",
+                "global",
+                "--nvram-version",
+                "3",
+                "--nvram-dir",
+                directory,
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"nvramMode\": \"global\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"nvramVersion\": 3", result.Output, StringComparison.Ordinal);
+            Assert.Contains("nvram.3.ram", result.Output, StringComparison.Ordinal);
+            var path = Path.Combine(directory, "nvram.3.ram");
+            Assert.True(File.Exists(path));
+            Assert.Equal(EmulatorConstants.NvramSize, new FileInfo(path).Length);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void Nvram_InvalidVersionReturnsOne()
+    {
+        CliResult result = Invoke("nvram", "path", "--version", "10");
+
+        Assert.Equal(1, result.Code);
+        Assert.Contains("NVRAM version", result.Error, StringComparison.Ordinal);
+    }
+
     private static CliResult Invoke(params string[] args)
     {
         TextWriter previousOut = Console.Out;

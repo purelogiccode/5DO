@@ -82,6 +82,16 @@ public static class AppSettingsStore
                 settings.CdSpeed = CdSpeed.X2;
             }
 
+            if (!Enum.IsDefined(settings.NvramStorageMode))
+            {
+                settings.NvramStorageMode = NvramStorageMode.Global;
+            }
+
+            if (settings.NvramVersion is < NvramLayout.MinVersion or > NvramLayout.MaxVersion)
+            {
+                settings.NvramVersion = NvramLayout.MinVersion;
+            }
+
             // The profile is a convenience label over the individual options. Keep an explicit
             // Custom selection, but correct a stale named profile so hand-edited or older
             // settings cannot report a profile they do not match.

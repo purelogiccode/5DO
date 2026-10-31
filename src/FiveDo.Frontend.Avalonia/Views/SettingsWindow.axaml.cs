@@ -83,6 +83,12 @@ public partial class SettingsWindow : Window
         new(CdSpeed.X32, "32x (~4800 KB/s)"),
     ];
 
+    private static readonly NvramStorageOption[] _nvramStorageOptions =
+    [
+        new(NvramStorageMode.Global, "Shared (one image, default)"),
+        new(NvramStorageMode.PerGame, "Per game (isolated saves)"),
+    ];
+
     private static readonly ResolutionOption[] _resolutionOptions =
     [
         new(OutputResolution.Window, "Match window"),
@@ -163,6 +169,10 @@ public partial class SettingsWindow : Window
         CdSpeedCombo.ItemsSource = _cdSpeedOptions;
         CdSpeedCombo.SelectedItem = _cdSpeedOptions.FirstOrDefault(option => option.Value == settings.CdSpeed)
             ?? _cdSpeedOptions[2];
+        NvramStorageCombo.ItemsSource = _nvramStorageOptions;
+        NvramStorageCombo.SelectedItem = _nvramStorageOptions.FirstOrDefault(option => option.Value == settings.NvramStorageMode)
+            ?? _nvramStorageOptions[0];
+        NvramVersionBox.Text = settings.NvramVersion.ToString(CultureInfo.InvariantCulture);
         CpuClockBox.Text = settings.CpuClockMultiplier.ToString("0.###", CultureInfo.InvariantCulture);
         RandomSeedBox.Text = settings.RandomSeed is { } seed ? $"0x{seed:x8}" : string.Empty;
         SaveDirectoryBox.Text = settings.SaveDirectory;
@@ -319,6 +329,25 @@ public partial class SettingsWindow : Window
         settings.CdSpeed = CdSpeedCombo.SelectedItem is CdSpeedOption cdSpeed
             ? cdSpeed.Value
             : CdSpeed.X2;
+        settings.NvramStorageMode = NvramStorageCombo.SelectedItem is NvramStorageOption nvramStorage
+            ? nvramStorage.Value
+            : NvramStorageMode.Global;
+        var nvramVersionText = NvramVersionBox.Text?.Trim();
+        if (string.IsNullOrEmpty(nvramVersionText))
+        {
+            settings.NvramVersion = NvramLayout.MinVersion;
+        }
+        else if (!int.TryParse(nvramVersionText, NumberStyles.None, CultureInfo.InvariantCulture, out var nvramVersion)
+            || nvramVersion is < NvramLayout.MinVersion or > NvramLayout.MaxVersion)
+        {
+            throw new FormatException(
+                $"The NVRAM version must be between {NvramLayout.MinVersion} and {NvramLayout.MaxVersion}.");
+        }
+        else
+        {
+            settings.NvramVersion = nvramVersion;
+        }
+
         EmulationProfile selectedProfile = ProfileCombo.SelectedItem is ProfileOption profileOption
             ? profileOption.Value
             : EmulationProfile.Custom;
@@ -719,6 +748,14 @@ public partial class SettingsWindow : Window
     }
 
     private sealed record CdSpeedOption(CdSpeed Value, string Label)
+    {
+        public override string ToString()
+        {
+            return Label;
+        }
+    }
+
+    private sealed record NvramStorageOption(NvramStorageMode Value, string Label)
     {
         public override string ToString()
         {
