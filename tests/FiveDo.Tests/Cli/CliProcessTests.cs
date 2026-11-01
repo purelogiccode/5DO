@@ -1092,6 +1092,114 @@ public sealed class CliProcessTests
         Assert.Contains("NVRAM version", result.Error, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Cheat_AddListDisableRemove_Roundtrips()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-cheats-{Guid.NewGuid():N}");
+        try
+        {
+            CliResult add = Invoke(
+                "cheat",
+                "add",
+                "--game",
+                "ABCD1234",
+                "--dir",
+                directory,
+                "--name",
+                "Infinite Health",
+                "--code",
+                "write8 0x2000 = 0x64",
+                "--json");
+            Assert.Equal(0, add.Code);
+            Assert.Contains("\"ok\": true", add.Output, StringComparison.Ordinal);
+            Assert.Contains("\"name\": \"Infinite Health\"", add.Output, StringComparison.Ordinal);
+
+            CliResult list = Invoke(
+                "cheat",
+                "list",
+                "--game",
+                "ABCD1234",
+                "--dir",
+                directory,
+                "--json");
+            Assert.Equal(0, list.Code);
+            Assert.Contains("\"name\": \"Infinite Health\"", list.Output, StringComparison.Ordinal);
+            Assert.Contains("\"enabled\": true", list.Output, StringComparison.Ordinal);
+
+            CliResult disable = Invoke(
+                "cheat",
+                "disable",
+                "--game",
+                "ABCD1234",
+                "--dir",
+                directory,
+                "--name",
+                "Infinite Health",
+                "--json");
+            Assert.Equal(0, disable.Code);
+
+            CliResult afterDisable = Invoke(
+                "cheat",
+                "list",
+                "--game",
+                "ABCD1234",
+                "--dir",
+                directory,
+                "--json");
+            Assert.Contains("\"enabled\": false", afterDisable.Output, StringComparison.Ordinal);
+
+            CliResult remove = Invoke(
+                "cheat",
+                "remove",
+                "--game",
+                "ABCD1234",
+                "--dir",
+                directory,
+                "--name",
+                "Infinite Health",
+                "--json");
+            Assert.Equal(0, remove.Code);
+            Assert.Contains("\"count\": 0", remove.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void Cheat_AddMalformedCode_ReturnsOne()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-cheats-{Guid.NewGuid():N}");
+        try
+        {
+            CliResult result = Invoke(
+                "cheat",
+                "add",
+                "--game",
+                "ABCD1234",
+                "--dir",
+                directory,
+                "--name",
+                "Broken",
+                "--code",
+                "write8 0x2000 =");
+
+            Assert.Equal(1, result.Code);
+            Assert.Contains("Expected", result.Error, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
     private static CliResult Invoke(params string[] args)
     {
         TextWriter previousOut = Console.Out;

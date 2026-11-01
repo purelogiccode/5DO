@@ -28,6 +28,8 @@ namespace FiveDo.Cli;
 [JsonSerializable(typeof(CliNvramPathResult))]
 [JsonSerializable(typeof(CliNvramListResult))]
 [JsonSerializable(typeof(CliNvramActionResult))]
+[JsonSerializable(typeof(CliCheatListResult))]
+[JsonSerializable(typeof(CliCheatActionResult))]
 internal sealed partial class CliJsonContext : JsonSerializerContext;
 
 /// <summary>

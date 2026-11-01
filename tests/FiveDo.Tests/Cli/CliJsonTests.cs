@@ -76,7 +76,10 @@ public sealed class CliJsonTests
             NvramVersion: 0,
             AudioHash: null,
             Checkpoints: [],
-            Warnings: []);
+            Warnings: [],
+            CheatCount: 2,
+            CheatWrites: 1234,
+            CheatPath: "/data/cheats/ABCD1234.json");
 
         var json = JsonSerializer.Serialize(result, CliJsonContext.Default.CliRunResult);
 
@@ -102,6 +105,9 @@ public sealed class CliJsonTests
         Assert.Contains("\"nvramMode\": \"per-game\"", json, StringComparison.Ordinal);
         Assert.Contains("\"nvramVersion\": 0", json, StringComparison.Ordinal);
         Assert.Contains("\"warnings\": []", json, StringComparison.Ordinal);
+        Assert.Contains("\"cheatCount\": 2", json, StringComparison.Ordinal);
+        Assert.Contains("\"cheatWrites\": 1234", json, StringComparison.Ordinal);
+        Assert.Contains("\"cheatPath\": \"/data/cheats/ABCD1234.json\"", json, StringComparison.Ordinal);
     }
 
     [Fact]

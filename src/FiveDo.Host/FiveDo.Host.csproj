@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FiveDo.Cheats\FiveDo.Cheats.csproj" />
     <ProjectReference Include="..\FiveDo.Core\FiveDo.Core.csproj" />
     <ProjectReference Include="..\FiveDo.Machine\FiveDo.Machine.csproj" />
     <ProjectReference Include="..\FiveDo.Storage\FiveDo.Storage.csproj" />

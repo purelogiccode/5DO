@@ -182,6 +182,7 @@ public partial class SettingsWindow : Window
         SaveDirectoryBox.Text = settings.SaveDirectory;
         ScreenshotDirectoryBox.Text = settings.ScreenshotDirectory;
         CoverDirectoryBox.Text = settings.CoverDirectory;
+        CheatsDirectoryBox.Text = settings.CheatsDirectory;
         BiosFolderBox.Text = settings.BiosFolder;
         BiosPathBox.Text = settings.BiosPath;
         Bios2PathBox.Text = settings.Bios2Path;
@@ -433,6 +434,7 @@ public partial class SettingsWindow : Window
         settings.SaveDirectory = SaveDirectoryBox.Text?.Trim() ?? string.Empty;
         settings.ScreenshotDirectory = ScreenshotDirectoryBox.Text?.Trim() ?? string.Empty;
         settings.CoverDirectory = CoverDirectoryBox.Text?.Trim() ?? string.Empty;
+        settings.CheatsDirectory = CheatsDirectoryBox.Text?.Trim() ?? string.Empty;
         settings.BiosFolder = BiosFolderBox.Text?.Trim() ?? string.Empty;
         settings.BiosPath = BiosPathBox.Text?.Trim() ?? string.Empty;
         settings.Bios2Path = Bios2PathBox.Text?.Trim() ?? string.Empty;
@@ -523,6 +525,20 @@ public partial class SettingsWindow : Window
         if (path is not null)
         {
             CoverDirectoryBox.Text = path;
+        }
+    }
+
+    private void OnBrowseCheatsDirectoryAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(BrowseCheatsDirectoryAsync, "selecting the cheat directory");
+    }
+
+    private async Task BrowseCheatsDirectoryAsync()
+    {
+        var path = await PickFolderAsync("Select the cheat directory", CheatsDirectoryBox.Text).ConfigureAwait(true);
+        if (path is not null)
+        {
+            CheatsDirectoryBox.Text = path;
         }
     }
 

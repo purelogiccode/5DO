@@ -56,6 +56,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `nvram path [disc]` | Resolve the shared or per-game NVRAM image. |
 | `nvram list` | List global and per-game NVRAM images. |
 | `nvram export\|import\|reset` | Back up, restore, or clear an NVRAM image. |
+| `cheat list\|add\|enable\|disable\|remove\|import\|export` | Manage per-game RAM cheat files. |
 | `audio analyze <wav>` | WAV format, peak, RMS, clipping, silence, DC offset. |
 | `state inspect <path>` | Save-state header and section table (full CRC validation, including Brotli sections). |
 | `state slots <dir>` | List numbered save slots and metadata. |
@@ -101,9 +102,11 @@ frame.
 9. Install trace writers/watchpoints/KPRINT hooks.
 10. Load `--state-in` (and offset the script if `--script-base state`).
 11. Apply `--poke` patches.
-12. Run frames (paced only with `--realtime`).
-13. Write RAM/DSP dumps, dispose traces, write `--frame-out`, write `--state-out`.
-14. Emit the result and, when an explicit or layout NVRAM path was resolved, save NVRAM.
+12. Load `--cheat`/`--cheat-auto` and/or add `--cheat-code`, then attach the per-frame
+    cheat hook.
+13. Run frames (paced only with `--realtime`).
+14. Write RAM/DSP dumps, dispose traces, write `--frame-out`, write `--state-out`.
+15. Emit the result and, when an explicit or layout NVRAM path was resolved, save NVRAM.
 
 ### Emulation options
 
@@ -132,6 +135,10 @@ frame.
 | `--fix-mode 0xMASK` | database | Explicit `FixMode` bits. Accepts hex with or without `0x`. Overrides `--no-game-fixes`. |
 | `--no-game-fixes` | off | Disable automatic 4DO fixes. |
 | `--poke ADDR=HEX[;...]` | none | Patch RAM bytes after state load. Address decimal or `0x`; bytes hex with optional spaces/commas. |
+| `--cheat <path>` | none | Load a cheat document and apply its enabled entries every frame. The file must exist. |
+| `--cheat-code <code>` | none | Add a one-off enabled cheat. Can be combined with `--cheat` or `--cheat-auto`. |
+| `--cheat-auto` | off | Load `<gameId>.json` (or `global.json`) from `--cheats-dir`. A missing file is an empty set. |
+| `--cheats-dir <path>` | default cheat directory | Directory used by `--cheat-auto`. Requires `--cheat-auto`. |
 | `--realtime` | off | Pace the run against the audio clock instead of running as fast as possible. |
 
 ### Audio options
@@ -312,6 +319,9 @@ All fields are camelCase. Nullable fields are omitted or `null` when not applica
 | `audioHash` | uint? | FNV-1a hash of all packed stereo samples, when hashing is enabled. |
 | `checkpoints` | object[] | Samples at the requested frames. Each entry has `frame`, `pc`, `instructions`, `frameHash`, `samples`, `audioHash`, `stateHash`, `cdStatus`, `cdPoll`, `dspPc`, `dspSema`, `dspSeed`, and `celBusyCycles`. |
 | `warnings` | string[] | `machine.StateWarnings` after a state load. |
+| `cheatCount` | int | Enabled, valid cheats attached to the run. |
+| `cheatWrites` | long | Bytes written by the cheat engine, including the initial apply. |
+| `cheatPath` | string? | Loaded cheat document path, or null when no file was used. |
 
 `cdStatus=0xE1` and `cdPoll=0x0C` is the historical static READ_ID-only wait signature.
 
@@ -511,6 +521,31 @@ version 1-9 is `<dir>/nvram.<version>.ram`, and per-game images are
 
 JSON actions use `{ "ok": true, "action", "path", "source", "length" }`. A missing image
 is not an error for `path` or `export`; both use a fresh image.
+
+---
+
+## 8.2 `cheat` commands
+
+```powershell
+5do cheat list --game ABCD1234 --dir data
+5do cheat add --game ABCD1234 --name "Infinite health" --code "write16 0x00123456 = 0x0064"
+5do cheat enable --game ABCD1234 --name "Infinite health"
+5do cheat disable --game ABCD1234 --name "Infinite health"
+5do cheat remove --game ABCD1234 --name "Infinite health"
+5do cheat import --game ABCD1234 --in my-cheats.json
+5do cheat export --game ABCD1234 --out my-cheats.json
+```
+
+`--game` is the 4DO game ID; a disc path may be supplied instead. `--dir` defaults to
+the desktop cheat directory. `add` needs `--name` and `--code`; `--description` is
+optional and `--disabled` adds the entry disabled. `import` merges by name and replaces
+existing entries with the same name. The file format and code syntax are documented in
+[`Cheats.md`](Cheats.md).
+
+`cheat list --json` returns `{ "ok": true, "path", "gameId", "cheats": [...] }` with
+`name`, `description`, `code`, `enabled`, and `error` per entry. Actions return
+`{ "ok": true, "action", "path", "gameId", "name", "count" }`. Invalid code is an error
+for `add` and is preserved with an `error` field when it is already in a file.
 
 ---
 
@@ -745,8 +780,9 @@ dotnet run --project src/FiveDo.Cli -- disasm artifacts/ram.bin `
 - `--watch-start`, `--watch-end`, `--stop-pc`, `--stop-cd`, `--dump-ram-offset`, and
   `--base` are hexadecimal even without `0x`; do not pass a decimal address expecting
   decimal interpretation.
-- `--poke` writes raw RAM bytes, bypassing the MMIO map. It is a diagnostic tool, not a
-  cheat engine.
+- `--poke` writes raw RAM bytes once, bypassing the MMIO map; it is a diagnostic tool.
+  For persistent per-game cheats use `--cheat`, `--cheat-code`, or the `cheat`
+  commands. See [`Cheats.md`](Cheats.md).
 - A save state records the BIOS hash and disc hash, but the current loader only warns
   on a BIOS/emulator-version mismatch; it does not reject a different disc. See
   [`SaveStates.md`](SaveStates.md).

@@ -11,6 +11,7 @@ using System.Threading;
 using CHDSharp;
 using CHDSharp.Models;
 using FiveDo.Audio;
+using FiveDo.Cheats;
 using FiveDo.Core;
 using FiveDo.Cpu;
 using FiveDo.Diagnostics;
@@ -73,6 +74,7 @@ internal static class Program
                     "disc" => DiscCommand(args),
                     "fs" => FsCommand(args),
                     "bios" => Bios(args),
+                    "cheat" => CheatCommand(args),
                     "nvram" => NvramCommand(args),
                     "audio" => AudioCommand(args),
                     "state" => State(args),
@@ -249,6 +251,10 @@ internal static class Program
         var stateHashEnabled = HasFlag(args, "--state-hash");
         var audioHashEnabled = HasFlag(args, "--audio-hash") || checkpointFrames.Length > 0;
         var pokeSpec = options.Get("--poke");
+        var cheatPath = options.Get("--cheat");
+        var cheatCode = options.Get("--cheat-code");
+        var cheatsDirectory = options.Get("--cheats-dir");
+        var cheatAuto = HasFlag(args, "--cheat-auto");
         var realtime = HasFlag(args, "--realtime");
         var discPath = options.Positional;
 
@@ -267,6 +273,16 @@ internal static class Program
             throw new ArgumentException(
                 "run needs --bios <path> or --bios-auto <folder> unless --state-in supplies the ROM state.",
                 nameof(args));
+        }
+
+        if (cheatPath is not null && cheatAuto)
+        {
+            throw new ArgumentException("Use either --cheat or --cheat-auto, not both.", nameof(args));
+        }
+
+        if (cheatsDirectory is not null && !cheatAuto)
+        {
+            throw new ArgumentException("--cheats-dir requires --cheat-auto.", nameof(args));
         }
 
         IDiscSource? disc = null;
@@ -561,6 +577,55 @@ internal static class Program
             Console.Error.WriteLine($"patched {patched} RAM byte(s)");
         }
 
+        CheatSet? cheats = null;
+        string? resolvedCheatPath = null;
+        if (cheatAuto)
+        {
+            resolvedCheatPath = CheatStore.ResolvePath(
+                CheatStore.ResolveDirectory(cheatsDirectory),
+                gameId);
+            if (File.Exists(resolvedCheatPath))
+            {
+                cheats = CheatSet.FromDocument(CheatStore.Load(resolvedCheatPath, gameId));
+            }
+        }
+        else if (cheatPath is not null)
+        {
+            resolvedCheatPath = Path.GetFullPath(cheatPath);
+            if (!File.Exists(resolvedCheatPath))
+            {
+                throw new FileNotFoundException("The cheat file was not found.", resolvedCheatPath);
+            }
+
+            cheats = CheatSet.FromDocument(CheatStore.Load(resolvedCheatPath, gameId));
+        }
+
+        if (cheatCode is not null)
+        {
+            cheats ??= new CheatSet();
+            cheats.Add("Command line", string.Empty, cheatCode, enabled: true);
+        }
+
+        if (cheats is not null)
+        {
+            CheatEntry? invalid = cheats.Entries.FirstOrDefault(
+                entry => entry.Enabled && entry.Error.Length > 0);
+            if (invalid is not null)
+            {
+                throw new InvalidDataException(
+                    $"Cheat '{invalid.Name}' is invalid: {invalid.Error}");
+            }
+
+            CheatSet activeCheats = cheats;
+            machine.BeforeFrame = () => activeCheats.Apply(machine);
+            activeCheats.Apply(machine);
+            if (resolvedCheatPath is not null)
+            {
+                Console.Error.WriteLine(
+                    $"loaded {activeCheats.ActiveCount} cheat(s) from {resolvedCheatPath}");
+            }
+        }
+
         AudioFramePacer? realtimePacer = realtime ? new AudioFramePacer() : null;
         var realtimeClock = realtime ? Stopwatch.StartNew() : null;
         var realtimeNext = realtimeClock?.ElapsedTicks ?? 0.0;
@@ -813,7 +878,10 @@ internal static class Program
             NvramVersion: nvramSelection.NvramVersion,
             AudioHash: audio.Hash,
             Checkpoints: checkpointResults,
-            Warnings: machine.StateWarnings);
+            Warnings: machine.StateWarnings,
+            CheatCount: cheats?.ActiveCount ?? 0,
+            CheatWrites: cheats?.Writes ?? 0,
+            CheatPath: resolvedCheatPath);
 
         SaveNvramIfRequested(machine, nvramSelection);
 
@@ -1641,6 +1709,209 @@ internal static class Program
         }
 
         return 0;
+    }
+
+    private static int CheatCommand(string[] args)
+    {
+        if (args.Length < 2)
+        {
+            throw new ArgumentException(
+                "cheat needs list, add, enable, disable, remove, import, or export.",
+                nameof(args));
+        }
+
+        var subcommand = args[1].ToLowerInvariant();
+        ParsedOptions options = Parse(args, startIndex: 2);
+        var directory = CheatStore.ResolveDirectory(options.Get("--dir"));
+        var gameId = options.Get("--game");
+        if (string.IsNullOrWhiteSpace(gameId) && options.Positional is not null)
+        {
+            using IDiscSource disc = DiscImageFactory.Open(options.Positional);
+            gameId = GameId.Compute(disc);
+        }
+
+        if (string.IsNullOrWhiteSpace(gameId))
+        {
+            throw new ArgumentException("cheat needs --game <id> or a disc path.", nameof(args));
+        }
+
+        var path = CheatStore.ResolvePath(directory, gameId);
+        switch (subcommand)
+        {
+            case "list":
+                {
+                    CheatDocument document = CheatStore.Load(path, gameId);
+                    CheatSet set = CheatSet.FromDocument(document);
+                    var entries = set.Entries
+                        .Select(entry => new CliCheatEntry(
+                            entry.Name,
+                            entry.Description,
+                            entry.Code,
+                            entry.Enabled,
+                            entry.Error.Length == 0 ? null : entry.Error))
+                        .ToArray();
+                    if (options.Json)
+                    {
+                        Console.WriteLine(JsonSerializer.Serialize(
+                            new CliCheatListResult(true, path, CheatStore.NormalizeGameId(gameId), entries),
+                            CliJsonContext.Default.CliCheatListResult));
+                    }
+                    else
+                    {
+                        Console.WriteLine($"path:  {path}");
+                        Console.WriteLine($"game:  {CheatStore.NormalizeGameId(gameId)}");
+                        if (entries.Length == 0)
+                        {
+                            Console.WriteLine("(no cheats)");
+                        }
+
+                        foreach (CliCheatEntry entry in entries)
+                        {
+                            var state = entry.Enabled ? "on " : "off";
+                            Console.WriteLine(
+                                $"{state}  {entry.Name}  {entry.Code}"
+                                + (entry.Error is null ? string.Empty : $"  error={entry.Error}"));
+                        }
+                    }
+
+                    return 0;
+                }
+
+            case "add":
+                {
+                    var name = options.Get("--name")
+                        ?? throw new ArgumentException("cheat add needs --name <name>.", nameof(args));
+                    var code = options.Get("--code")
+                        ?? throw new ArgumentException("cheat add needs --code <code>.", nameof(args));
+                    CheatDocument document = CheatStore.Load(path, gameId);
+                    CheatSet set = CheatSet.FromDocument(document);
+                    CheatEntry entry = set.Add(
+                        name,
+                        options.Get("--description") ?? string.Empty,
+                        code,
+                        enabled: !HasFlag(args, "--disabled"));
+                    CheatStore.Save(path, CheatDocument.FromSet(gameId, set));
+                    WriteCheatActionResult(options, "add", path, gameId, entry.Name, set.Count);
+                    return 0;
+                }
+
+            case "enable":
+            case "disable":
+                {
+                    var name = options.Get("--name")
+                        ?? throw new ArgumentException($"cheat {subcommand} needs --name <name>.", nameof(args));
+                    CheatDocument document = CheatStore.Load(path, gameId);
+                    CheatSet set = CheatSet.FromDocument(document);
+                    if (!set.SetEnabled(name, string.Equals(subcommand, "enable", StringComparison.Ordinal)))
+                    {
+                        throw new ArgumentException($"No cheat named '{name}' exists.", nameof(args));
+                    }
+
+                    CheatStore.Save(path, CheatDocument.FromSet(gameId, set));
+                    WriteCheatActionResult(options, subcommand, path, gameId, name, set.Count);
+                    return 0;
+                }
+
+            case "remove":
+                {
+                    var name = options.Get("--name")
+                        ?? throw new ArgumentException("cheat remove needs --name <name>.", nameof(args));
+                    CheatDocument document = CheatStore.Load(path, gameId);
+                    CheatSet set = CheatSet.FromDocument(document);
+                    if (!set.Remove(name))
+                    {
+                        throw new ArgumentException($"No cheat named '{name}' exists.", nameof(args));
+                    }
+
+                    CheatStore.Save(path, CheatDocument.FromSet(gameId, set));
+                    WriteCheatActionResult(options, "remove", path, gameId, name, set.Count);
+                    return 0;
+                }
+
+            case "import":
+                {
+                    var input = options.Get("--in")
+                        ?? throw new ArgumentException("cheat import needs --in <path>.", nameof(args));
+                    var inputPath = Path.GetFullPath(input);
+                    if (!File.Exists(inputPath))
+                    {
+                        throw new FileNotFoundException("The cheat import file was not found.", inputPath);
+                    }
+
+                    CheatDocument source = CheatStore.Load(inputPath, gameId);
+                    CheatDocument target = CheatStore.Load(path, gameId);
+                    MergeCheats(target, source);
+                    CheatStore.Save(path, target);
+                    WriteCheatActionResult(options, "import", path, gameId, null, target.Cheats.Count);
+                    return 0;
+                }
+
+            case "export":
+                {
+                    var output = options.Get("--out")
+                        ?? throw new ArgumentException("cheat export needs --out <path>.", nameof(args));
+                    CheatDocument document = CheatStore.Load(path, gameId);
+                    CheatStore.Save(Path.GetFullPath(output), document);
+                    WriteCheatActionResult(options, "export", path, gameId, null, document.Cheats.Count);
+                    return 0;
+                }
+
+            default:
+                throw new ArgumentException(
+                    $"Unknown cheat subcommand '{subcommand}'. Use list, add, enable, disable, remove, import, or export.",
+                    nameof(args));
+        }
+    }
+
+    private static void MergeCheats(CheatDocument target, CheatDocument source)
+    {
+        foreach (CheatEntry entry in source.Cheats)
+        {
+            CheatEntry? existing = target.Cheats.FirstOrDefault(
+                item => string.Equals(item.Name, entry.Name, StringComparison.OrdinalIgnoreCase));
+            if (existing is null)
+            {
+                target.Cheats.Add(entry.Clone());
+            }
+            else
+            {
+                existing.Description = entry.Description;
+                existing.Code = entry.Code;
+                existing.Enabled = entry.Enabled;
+            }
+        }
+    }
+
+    private static void WriteCheatActionResult(
+        ParsedOptions options,
+        string action,
+        string path,
+        string? gameId,
+        string? name,
+        int count)
+    {
+        var result = new CliCheatActionResult(
+            true,
+            action,
+            path,
+            CheatStore.NormalizeGameId(gameId),
+            name,
+            count);
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(result, CliJsonContext.Default.CliCheatActionResult));
+        }
+        else
+        {
+            Console.WriteLine($"{action}: {path}");
+            Console.WriteLine($"game:  {result.GameId}");
+            if (name is not null)
+            {
+                Console.WriteLine($"name:  {name}");
+            }
+
+            Console.WriteLine($"count: {count}");
+        }
     }
 
     private static int NvramCommand(string[] args)
@@ -2738,6 +3009,7 @@ internal static class Program
         Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
         Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--realtime] [--json]");
+        Console.WriteLine("             [--cheat path] [--cheat-code code] [--cheat-auto] [--cheats-dir path]");
         Console.WriteLine("             [--checkpoints 3000,6000,12000] [--audio-hash] [--state-hash]");
         Console.WriteLine("             [--capture-frames 3000,6000] [--capture-dir path]");
         Console.WriteLine("                                       Emit deterministic checkpoint samples and optional frame images.");
@@ -2769,6 +3041,9 @@ internal static class Program
         Console.WriteLine("  nvram import [disc] --in path [--mode ...] [--version N] [--dir path]");
         Console.WriteLine("  nvram reset [disc] [--mode ...] [--version N] [--dir path]");
         Console.WriteLine("                                       Back up, restore, or clear NVRAM data.");
+        Console.WriteLine("  cheat list|add|enable|disable|remove|import|export --game ID [--dir path] [--json]");
+        Console.WriteLine("                                       Manage per-game cheats. add needs --name and --code;");
+        Console.WriteLine("                                       import/export use --in/--out. See docs/Cheats.md.");
         Console.WriteLine("  audio analyze <wav> [--json]         WAV format, peak, RMS, clipping, and DC offset.");
         Console.WriteLine("  state inspect <path> [--json]        Save-state header and section table.");
         Console.WriteLine("  state slots <dir> [--count N] [--json]");

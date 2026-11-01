@@ -69,4 +69,7 @@ internal sealed record CliRunResult(
     int NvramVersion,
     uint? AudioHash,
     IReadOnlyList<CliCheckpointResult> Checkpoints,
-    IReadOnlyList<string> Warnings);
+    IReadOnlyList<string> Warnings,
+    int CheatCount,
+    long CheatWrites,
+    string? CheatPath);

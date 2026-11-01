@@ -1,0 +1,80 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:cheats="using:FiveDo.Cheats"
+        x:Class="FiveDo.Frontend.Avalonia.Views.CheatsWindow"
+        Title="Cheats"
+        Width="900" Height="620"
+        MinWidth="720" MinHeight="480"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="12">
+        <StackPanel Grid.Row="0" Spacing="2">
+            <TextBlock x:Name="HeaderText" Classes="sectionTitle" Text="Cheats"
+                       ToolTip.Tip="Per-game RAM cheats applied before every emulated frame." />
+            <TextBlock x:Name="PathText" Opacity="0.7" TextWrapping="Wrap"
+                       ToolTip.Tip="Cheat file path. The file is saved whenever an entry changes." />
+        </StackPanel>
+
+        <Grid Grid.Row="1" ColumnDefinitions="2*,*" Margin="0,8">
+            <ListBox x:Name="CheatList" Grid.Column="0" SelectionChanged="OnSelectionChanged"
+                     ToolTip.Tip="Select a cheat to edit it. The checkbox enables or disables it.">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="cheats:CheatEntry">
+                        <Grid ColumnDefinitions="Auto,*" Margin="4">
+                            <CheckBox Grid.Column="0" IsChecked="{Binding Enabled}"
+                                      Click="OnCheatToggled" VerticalAlignment="Top"
+                                      ToolTip.Tip="Apply this cheat while the game runs." />
+                            <StackPanel Grid.Column="1" Spacing="1">
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding Code}" Opacity="0.75"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip.Tip="{Binding Code}" />
+                                <TextBlock Text="{Binding Error}" Foreground="#FF8080"
+                                           TextWrapping="Wrap" IsVisible="{Binding HasError}"
+                                           ToolTip.Tip="Fix the code to enable this cheat." />
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <Border Grid.Column="1" Margin="8,0,0,0" Padding="10"
+                    Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="4">
+                <ScrollViewer>
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Name" FontWeight="SemiBold" />
+                        <TextBox x:Name="NameBox" ToolTip.Tip="Unique name shown in the cheat list." />
+                        <TextBlock Text="Description" FontWeight="SemiBold" Margin="0,4,0,0" />
+                        <TextBox x:Name="DescriptionBox" ToolTip.Tip="Optional notes about what the cheat changes." />
+                        <TextBlock Text="Code" FontWeight="SemiBold" Margin="0,4,0,0" />
+                        <TextBox x:Name="CodeBox" AcceptsReturn="True" Height="170"
+                                 FontFamily="Consolas,monospace"
+                                 ToolTip.Tip="Raw writes, typed writes, and conditional writes. See docs/Cheats.md." />
+                        <CheckBox x:Name="EnabledCheck" Content="Enabled"
+                                  ToolTip.Tip="Apply this cheat while the game runs." />
+                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,4,0,0">
+                            <Button Content="Add" Click="OnAdd" IsDefault="True"
+                                    ToolTip.Tip="Add a new cheat using the fields above." />
+                            <Button Content="Update" Click="OnUpdate"
+                                    ToolTip.Tip="Apply the edited fields to the selected cheat." />
+                            <Button Content="Delete" Click="OnDelete"
+                                    ToolTip.Tip="Remove the selected cheat." />
+                        </StackPanel>
+                        <TextBlock Opacity="0.65" TextWrapping="Wrap" Margin="0,8,0,0"
+                                   Text="Numbers are hexadecimal by default. Use write8, write16, or write32 for typed values, and if ... then ... for conditional writes." />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+            <TextBlock x:Name="StatusText" Grid.Column="0" VerticalAlignment="Center"
+                       TextWrapping="Wrap"
+                       ToolTip.Tip="Result of the most recent cheat operation." />
+            <Button Grid.Column="1" Content="Close" Click="OnClose"
+                    ToolTip.Tip="Save changes and close the cheat manager." />
+        </Grid>
+    </Grid>
+</Window>

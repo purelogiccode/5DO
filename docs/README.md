@@ -5,13 +5,14 @@ emulator for the Panasonic 3DO Interactive Multiplayer. The desktop app is Avalo
 headless tool is `FiveDo.Cli`; the emulation core is split into one assembly per console
 subsystem.
 
-**Current snapshot:** `1.0.0-rc.1` source tree, 1,182 tests passing (2026-11-01), with
+**Current snapshot:** `1.0.0-rc.1` source tree, 1,199 tests passing (2026-11-01), with
 the v1.0 release deliberately deferred. The first full-collection loadability sweep is
 complete: **594 discs tested, 576 rendered, 13 black/blank, 5 not loadable**. The
 2026-10-31 performance pass brings the Road Rash 3D race to 4.20 ms/frame (p99 7.40 ms),
 keeps Debug core builds optimized, and adds Auto presentation frame skip. The
 2026-11-01 rewind/fast-forward pass adds deterministic 30-300 second rewind and
-2x-10x turbo playback. The active work is triage/in-game review (M13) and
+2x-10x turbo playback, and the cheat-engine pass adds per-game RAM cheats with a
+desktop manager and CLI. The active work is triage/in-game review (M13) and
 high-resolution CEL research (M14). The project is donationware: non-commercial,
 source-available, and funded by voluntary donations.
 Windows x64 is the validated platform; the local Linux validation target is the
@@ -32,6 +33,7 @@ Windows x64 is the validated platform; the local Linux validation target is the
 | Look up every CLI command and option | [`CliReference.md`](CliReference.md) |
 | Change settings, paths, or input bindings | [`Configuration.md`](Configuration.md) |
 | Understand or inspect save states | [`SaveStates.md`](SaveStates.md) |
+| Create or manage per-game cheats | [`Cheats.md`](Cheats.md) |
 | Work on audio or diagnose audio problems | [`Audio.md`](Audio.md), [`Troubleshooting.md`](Troubleshooting.md) |
 | Work on video, filters, the OpenGL presenter, or the optional Vulkan backend | [`Video.md`](Video.md), [`Vulkan.md`](Vulkan.md) |
 | Use traces, dumps, probes, and diagnostics | [`Diagnostics.md`](Diagnostics.md) |
@@ -47,7 +49,8 @@ Windows x64 is the validated platform; the local Linux validation target is the
 
 | Document | Contents |
 |---|---|
-| [`UserGuide.md`](UserGuide.md) | Quick start, controls, display filters, save states, screenshots, library, settings, audio, logs, CLI overview, troubleshooting. |
+| [`UserGuide.md`](UserGuide.md) | Quick start, controls, display filters, save states, screenshots, library, settings, audio, logs, cheats, CLI overview, troubleshooting. |
+| [`Cheats.md`](Cheats.md) | Per-game cheat files, raw/typed/conditional code syntax, CLI commands, desktop manager, and legal scope. |
 | [`Compatibility.md`](Compatibility.md) | BIOS/disc/input compatibility, game-specific fixes, high-resolution mode, compatibility matrix and soak evidence. |
 | [`GameCompatibilityList.md`](GameCompatibilityList.md) | 241-title 4DO reference list, local collection matches, and the working 5DO status columns. |
 | [`GameCompatibilityResults.md`](GameCompatibilityResults.md) | Automated 594-disc loadability results: 576 rendered, 13 black/blank, 5 not loadable, with per-disc evidence paths. |

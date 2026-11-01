@@ -19,6 +19,7 @@ using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using FiveDo.Audio;
+using FiveDo.Cheats;
 using FiveDo.Core;
 using FiveDo.Diagnostics;
 using FiveDo.Diagnostics.Donations;
@@ -61,6 +62,8 @@ public partial class MainWindow : Window, IDisposable
     private float _meterPeak;
     private FiveDoMachine? _machine;
     private CoreRunner? _runner;
+    private CheatSet? _cheats;
+    private string _cheatPath = string.Empty;
     private IDiscSource? _disc;
     private string _gameId = string.Empty;
     private string _gameName = string.Empty;
@@ -157,10 +160,11 @@ public partial class MainWindow : Window, IDisposable
             // presentation is covered by the renderer tests and manual runs.
             Video.IsVisible = false;
 
-            // Construct the settings dialog so its XAML and named controls are also
-            // validated by the trimmed smoke test. Do not close it: closing a window
-            // before the main loop starts can shut down the dispatcher.
+            // Construct the settings and cheat dialogs so their XAML and named controls
+            // are also validated by the trimmed smoke test. Do not close them: closing a
+            // window before the main loop starts can shut down the dispatcher.
             _ = new SettingsWindow(_settings, _gameId, _gameName);
+            _ = new CheatsWindow();
         }
 
         GridLibraryList.ItemsSource = _visibleGames;
@@ -726,6 +730,7 @@ public partial class MainWindow : Window, IDisposable
 
             _gameId = gameId;
             _gameName = record?.Name ?? Path.GetFileNameWithoutExtension(path);
+            ReloadCheats();
             Video.Settings = _settings.ToRendererSettings(_gameId);
             if (_cpuVideo is not null)
             {
@@ -2140,6 +2145,7 @@ public partial class MainWindow : Window, IDisposable
         var previousBiosPath = _settings.BiosPath;
         var previousBios2Path = _settings.Bios2Path;
         var previousBiosFolder = _settings.BiosFolder;
+        var previousCheatsDirectory = _settings.ResolveCheatsDirectory();
         var previousAutoBios = _settings.AutoBios;
         var previousBiosOverride = _settings.GetBiosOverride(_gameId);
         var window = new SettingsWindow(_settings, _gameId, _gameName);
@@ -2209,6 +2215,14 @@ public partial class MainWindow : Window, IDisposable
         if (_machine is null && nvramSettingsChanged)
         {
             ReplaceNvramStore(_gameId.Length > 0 ? _gameId : null);
+        }
+
+        if (!string.Equals(
+                previousCheatsDirectory,
+                _settings.ResolveCheatsDirectory(),
+                StringComparison.OrdinalIgnoreCase))
+        {
+            ReloadCheats();
         }
 
         StatusText.Text = "Settings saved.";
@@ -2747,6 +2761,79 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
+    private void ApplyCheats()
+    {
+        if (_machine is not null)
+        {
+            _cheats?.Apply(_machine);
+        }
+    }
+
+    private void ReloadCheats()
+    {
+        try
+        {
+            _cheatPath = CheatStore.ResolvePath(_settings.ResolveCheatsDirectory(), _gameId);
+            CheatDocument document = CheatStore.Load(_cheatPath, _gameId);
+            _cheats = CheatSet.FromDocument(document);
+            CheatEntry? invalid = _cheats.Entries.FirstOrDefault(
+                entry => entry.Enabled && entry.HasError);
+            if (invalid is not null)
+            {
+                _logger.ForCategory(LogCategory.Host).Warning(
+                    "Cheat {Name} in {Path} is invalid and will not run: {Error}",
+                    invalid.Name,
+                    _cheatPath,
+                    invalid.Error);
+            }
+
+            _logger.ForCategory(LogCategory.Host).Information(
+                "Loaded {Count} cheat(s) from {Path}.",
+                _cheats.ActiveCount,
+                _cheatPath);
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or NotSupportedException)
+        {
+            _cheats = new CheatSet();
+            _logger.ForCategory(LogCategory.Host).Warning(
+                exception,
+                "Cheat file {Path} could not be loaded.",
+                _cheatPath);
+        }
+    }
+
+    private void OnCheatsAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ShowCheatsAsync, "showing cheats");
+    }
+
+    private async Task ShowCheatsAsync()
+    {
+        if (_machine is null || _cheats is null)
+        {
+            StatusText.Text = "Open a BIOS and disc before editing cheats.";
+            return;
+        }
+
+        ReloadCheats();
+        var window = new CheatsWindow(
+            _gameId,
+            _gameName,
+            _cheatPath,
+            CheatDocument.FromSet(_gameId, _cheats),
+            () =>
+            {
+                ReloadCheats();
+                _runner?.ResetRewind();
+            });
+        await window.ShowDialog(this).ConfigureAwait(true);
+        ReloadCheats();
+        StatusText.Text = $"Cheats: {_cheats.ActiveCount} enabled ({_cheatPath}).";
+    }
+
     private FiveDoMachine CreateMachine()
     {
         if (_machine is null)
@@ -2765,6 +2852,7 @@ public partial class MainWindow : Window, IDisposable
             {
                 PbusSource = _input,
                 AudioSink = _audio,
+                BeforeFrame = ApplyCheats,
             };
             _runner = new CoreRunner(
                 _machine,
@@ -2784,6 +2872,7 @@ public partial class MainWindow : Window, IDisposable
                 ShowLibraryView();
                 ShowError("Emulation error", exception.Message);
             });
+            ReloadCheats();
         }
 
         return _machine;

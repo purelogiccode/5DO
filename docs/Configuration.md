@@ -74,6 +74,7 @@ every serialized property in `AppSettings`.
 | `RecentDiscs` | string[] | `[]` | Recent disc paths, newest first, capped at 10. |
 | `SaveDirectory` | string | `""` | Save-state directory; empty means `<LocalApplicationData>/5DO/states`. |
 | `ScreenshotDirectory` | string | `""` | Screenshot directory; empty means the user's Pictures folder. |
+| `CheatsDirectory` | string | `""` | Per-game cheat JSON directory; empty means `<LocalApplicationData>/5DO/cheats`. |
 | `SaveSlot` | int | `0` | Selected zero-based slot. Clamped to the slot count on load. |
 | `SaveSlotCount` | int | `10` | Number of slots. Clamped to 1..100 on load. |
 | `LibraryFolders` | string[] | `[]` | Folders scanned by the game library. |
@@ -195,6 +196,7 @@ player-1 defaults. See section 3 for the full input structure.
   ],
   "SaveDirectory": "C:\\Users\\me\\AppData\\Local\\5DO\\states",
   "ScreenshotDirectory": "",
+  "CheatsDirectory": "",
   "SaveSlot": 0,
   "SaveSlotCount": 10,
   "LibraryFolders": [
@@ -479,6 +481,7 @@ written after the run when supplied.
 | `SaveDirectory` | Default `.../5DO/states`; used by `SaveStateSlotManager`. |
 | `ScreenshotDirectory` | Empty means Pictures; screenshots are named `<game>-<yyyyMMdd-HHmmss>-f<frame>.png`. |
 | `CoverDirectory` | Optional shared folder for cover art named after the disc files. |
+| `CheatsDirectory` | Per-game cheat JSON folder; empty means `.../5DO/cheats`. |
 | `LibraryFolders` | Scanned recursively to depth 4 for `.iso`, `.bin`, `.cue`, `.chd`. |
 
 Library entries are sorted by title then path. Cover art is matched by file name: a

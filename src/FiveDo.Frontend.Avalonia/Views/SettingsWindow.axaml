@@ -196,8 +196,8 @@
                 </ScrollViewer>
             </TabItem>
 
-            <TabItem Header="Paths" ToolTip.Tip="Save-state, screenshot, cover-art, and BIOS folder settings.">
-                <Grid ColumnDefinitions="170,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+            <TabItem Header="Paths" ToolTip.Tip="Save-state, screenshot, cover-art, cheat, and BIOS folder settings.">
+                <Grid ColumnDefinitions="170,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Save states" VerticalAlignment="Center"
                                ToolTip.Tip="Folder used for numbered save slots and thumbnails." />
                     <TextBox x:Name="SaveDirectoryBox" Grid.Row="0" Grid.Column="1" Margin="0,0,6,8"
@@ -245,6 +245,12 @@
                     <TextBlock x:Name="BiosScanText" Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2"
                                VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,8,0,0"
                                ToolTip.Tip="BIOS scan result." />
+                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Cheats" VerticalAlignment="Center" Margin="0,8,0,0"
+                               ToolTip.Tip="Folder containing per-game cheat JSON files." />
+                    <TextBox x:Name="CheatsDirectoryBox" Grid.Row="8" Grid.Column="1" Margin="0,8,6,0"
+                             ToolTip.Tip="Per-game cheat files use the 4DO game ID as the file name." />
+                    <Button Grid.Row="8" Grid.Column="2" Content="Browse" Click="OnBrowseCheatsDirectoryAsync" Margin="0,8,0,0"
+                            ToolTip.Tip="Choose the cheat folder." />
                 </Grid>
             </TabItem>
         </TabControl>

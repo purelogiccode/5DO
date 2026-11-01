@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
+using FiveDo.Cheats;
 using FiveDo.Core;
 using FiveDo.Host.Rewind;
 using FiveDo.Input;
@@ -66,6 +67,19 @@ public sealed class AppSettings
     /// Sibling images next to a disc still take precedence.
     /// </summary>
     public string CoverDirectory { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the directory containing per-game cheat files. An empty value uses
+    /// <see cref="CheatStore.DefaultDirectory"/>.
+    /// </summary>
+    public string CheatsDirectory { get; set; } = string.Empty;
+
+    /// <summary>Resolves the absolute directory that owns per-game cheat files.</summary>
+    /// <returns>The configured directory, or the default cheat directory.</returns>
+    public string ResolveCheatsDirectory()
+    {
+        return CheatStore.ResolveDirectory(CheatsDirectory);
+    }
 
     /// <summary>Gets or sets the currently selected save slot.</summary>
     public int SaveSlot { get; set; }

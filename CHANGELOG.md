@@ -50,6 +50,17 @@ still change.
 
 ### Added
 
+- Per-game cheat engine (UX-04). The new `FiveDo.Cheats` project parses raw byte writes,
+  typed `write8`/`write16`/`write32` writes, memory conditions, player-1 button
+  conditions, and `and`/`or`/`not` combinations. `CheatStore` reads/writes atomic
+  `<gameId>.json` documents (or `global.json`) and preserves invalid codes with an
+  error. `FiveDoMachine.BeforeFrame` applies enabled cheats every frame, including
+  fast-forward and rewind replay, and state loads keep them attached. The desktop shell
+  adds **Emulation > Cheats...** and **Settings > Paths > Cheats**; the CLI adds
+  `--cheat`, `--cheat-code`, `--cheat-auto`, `--cheats-dir`, and
+  `cheat list|add|enable|disable|remove|import|export`. `run --json` reports
+  `cheatCount`, `cheatWrites`, and `cheatPath`. See `docs/Cheats.md`.
+
 - Rewind and fast-forward (UX-01/UX-02). `RewindBuffer` keeps compressed keyframes plus
   the exact per-frame PBUS packet, replays input deterministically after the nearest
   keyframe, clears on timeline jumps, and enforces a 256 MB default cap; the shell binds

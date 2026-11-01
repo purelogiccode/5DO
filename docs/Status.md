@@ -2,7 +2,8 @@
 
 **Snapshot:** 2026-11-01, after the first full-collection sweep, the performance pass,
 the ARM/CLIO/CEL/CD timing-option pass, the CD speed/timing-profile pass, the BIOS
-manager, the per-game NVRAM pass, and the rewind/fast-forward pass. Road Rash's
+manager, the per-game NVRAM pass, the rewind/fast-forward pass, and the per-game cheat
+engine. Road Rash's
 100k-state race now measures
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
@@ -57,7 +58,12 @@ clears on timeline jumps, and enforces a 256 MB default cap; `CoreRunner.Rewind`
 the machine and presents the frame. `CoreRunner.SpeedMultiplier` runs 2x-10x frames per
 presentation tick with intermediate rendering skipped and audio muted. The shell binds
 `R` (one-second rewind), `Shift+F9` (one-frame rewind), and hold-`Tab` (fast-forward);
-Settings > Emulation controls the history length and multiplier. **1182 tests pass.**
+Settings > Emulation controls the history length and multiplier. UX-04 adds per-game RAM
+cheats: `FiveDo.Cheats` parses raw, typed, conditional, and button-activated codes;
+`CheatStore` owns the per-game JSON files; `FiveDoMachine.BeforeFrame` applies them every
+frame (including rewind replay and fast-forward); the shell adds **Emulation > Cheats...**
+and Settings > Paths > Cheats; the CLI adds `--cheat`, `--cheat-code`, `--cheat-auto`,
+`--cheats-dir`, and `cheat list|add|enable|disable|remove|import|export`. **1199 tests pass.**
 The differential harness (FND-05/CORE-11/CORE-16) is implemented:
 `tools/FiveDo.DiffHarness` stages the bundled OperaCore and BIOS, runs both engines
 with identical options, compares checkpoint frame hashes, applies manifest
@@ -202,6 +208,13 @@ This is the short, current answer to "where are we?" The documentation index is
   exception blocks; submission is deduplicated for five minutes, capped at ten per
   minute, and disabled in CI/test runs. `FIVEDO_BUG_REPORTS=0` disables it and
   `FIVEDO_LOG_DIR` redirects the files.
+- **Cheats:** per-game JSON cheat files are applied before every frame by
+  `FiveDoMachine.BeforeFrame`, so state loads, rewind replay, and fast-forward keep the
+  configured entries active. The engine supports raw byte writes, typed
+  `write8`/`write16`/`write32` writes, memory conditions, player-1 button conditions, and
+  `and`/`or`/`not` combinations. Emulation > Cheats... and Settings > Paths > Cheats
+  manage files; the CLI exposes `cheat list|add|enable|disable|remove|import|export` and
+  `run --cheat`/`--cheat-code`/`--cheat-auto`. See [`Cheats.md`](Cheats.md).
 - **Per-game fixes:** `GameCompatibility` maps the 4DO game IDs to `FixMode` bits.
   The CLI exposes `--fix-mode 0xMASK` and `--no-game-fixes`, and `run --json` /
   `info` report the applied mask. Alone in the Dark's `FIX_BIT_TIMING_6` is applied
@@ -243,7 +256,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 1159 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 1199 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and

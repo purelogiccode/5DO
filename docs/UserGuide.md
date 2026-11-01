@@ -155,6 +155,21 @@ first, and at least one keyframe is always retained. Keyframes are compressed on
 emulation thread, so a very slow machine may see a brief hitch when one is captured
 (every 120 frames by default).
 
+### Cheats
+
+**Emulation > Cheats...** opens the per-game cheat manager. Each game has a JSON file
+named after its 4DO ID in the cheat directory (**Settings > Paths > Cheats**). The
+manager lists every entry with an enable checkbox; select one to edit its name,
+description, or code, or use **Add**, **Update**, and **Delete**. Changes are saved
+immediately, invalid code is shown in red and is not applied, and the running game picks
+up the new set without a restart.
+
+Cheats are applied before every emulated frame, so they survive save-state loads, rewind,
+and fast-forward. The engine supports raw byte writes, typed `write8`/`write16`/`write32`
+writes, memory conditions, button conditions, and `and`/`or`/`not` combinations. Numbers
+are hexadecimal by default. See [`Cheats.md`](Cheats.md) for the complete syntax and
+CLI commands.
+
 ### Recording input
 
 **Emulation > Record Input** starts capturing player-1 controller input while the

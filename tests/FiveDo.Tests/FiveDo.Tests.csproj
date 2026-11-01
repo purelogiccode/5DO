@@ -36,6 +36,7 @@
     <ProjectReference Include="..\..\src\FiveDo.Video\FiveDo.Video.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Xbus\FiveDo.Xbus.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Cdrom\FiveDo.Cdrom.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Cheats\FiveDo.Cheats.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Storage\FiveDo.Storage.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Audio\FiveDo.Audio.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Input\FiveDo.Input.csproj" />

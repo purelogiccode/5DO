@@ -19,6 +19,7 @@
                  or '$(MSBuildProjectName)' == 'FiveDo.Video'
                  or '$(MSBuildProjectName)' == 'FiveDo.Xbus'
                  or '$(MSBuildProjectName)' == 'FiveDo.Cdrom'
+                 or '$(MSBuildProjectName)' == 'FiveDo.Cheats'
                  or '$(MSBuildProjectName)' == 'FiveDo.Host'">true</FiveDoOptimizedDebugProject>
     <Optimize Condition="'$(FiveDoOptimizedDebugProject)' == 'true'">true</Optimize>
   </PropertyGroup>

@@ -2,6 +2,18 @@
 
 ## 0. Current handoff (2026-10-30)
 
+**2026-11-01 update:** UX-04 per-game cheats are implemented. `FiveDo.Cheats` parses
+raw/typed writes, memory/button conditions, and `and`/`or`/`not` combinations;
+`CheatStore` reads/writes atomic `<gameId>.json` documents; `FiveDoMachine.BeforeFrame`
+applies enabled entries every frame (normal play, fast-forward, and rewind replay);
+the shell adds Emulation > Cheats... and Settings > Paths > Cheats; the CLI adds
+`--cheat`, `--cheat-code`, `--cheat-auto`, `--cheats-dir`, and
+`cheat list|add|enable|disable|remove|import|export`. 3DO has no standard RAM cheat
+format (Game Guru is a save editor), so the documented 5DO syntax is used and no code
+databases are shipped. **Do not redo the cheat parser, store, per-frame hook, manager,
+CLI commands, or docs; remaining cheat work is optional code-type extensions and a
+community code format once one is documented.** **1199 tests pass.**
+
 **2026-10-31 update:** the differential harness (FND-05/CORE-11/CORE-16) is
 implemented. `tools/FiveDo.DiffHarness` stages the bundled OperaCore and BIOS,
 extracts/caches a data ISO from the disc, runs 5DO and OperaCore with the same

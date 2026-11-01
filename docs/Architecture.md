@@ -35,7 +35,7 @@
 │                         FiveDo.Host                                 │
 │  CoreRunner, AudioFramePacer, AppSettings/Store, NvramStore,        │
 │  SaveStateSlotManager, StateInspector, GameLibraryScanner,          │
-│  GameCompatibility, MemoryPatch, RoadRashAutopilot                  │
+│  GameCompatibility, MemoryPatch, RoadRashAutopilot, cheats          │
 └───────────────────────────────┬─────────────────────────────────────┘
                                 │
 ┌───────────────────────────────▼─────────────────────────────────────┐
@@ -88,9 +88,10 @@
 | `FiveDo.Input` | Controller state, PBUS encoding, input profiles, keyboard/gamepad abstractions, scripts, input recording | `ControllerState`, `ControllerButton`, `PbusEncoder`, `PbusSource`, `InputProfile`, `PlayerProfile`, `KeyboardInputMapper`, `InputManager`, `GamepadMapper`, `InputScript`, `InputRecorder` | Core |
 | `FiveDo.Diagnostics` | Serilog configuration, in-memory log viewer sink, bug reporting, launch statistics, donation verification, tracing, disassembly helpers, frame timing statistics, memory/frame dumpers, benchmark gates | `LoggingSetup`, `AppLogging`, `InMemorySerilogSink`, `BugReportSink`, `BugReportFormatter`, `ApplicationStatsClient`, `ApplicationStatsOptions`, `DonationVerificationClient`, `DonationVerificationOptions`, `CpuTracer`, `MemoryDumper`, `FrameDumper`, `PngDumper`, `FrameTiming`, `BenchmarkGate`, `BenchmarkComparison` | Core, Serilog |
 | `FiveDo.Machine` | Machine composition root, frame loop, Quartz scheduler, device wiring, state sections | `FiveDoMachine`, `Quartz` | Core + all chips + Diagnostics |
+| `FiveDo.Cheats` | Per-game cheat parser, typed/conditional/button code engine, atomic JSON document store | `CheatSet`, `CheatEntry`, `CheatDocument`, `CheatStore`, `CheatJsonContext` | Machine, Input |
 | `FiveDo.Host` | Core thread lifecycle, audio-derived frame pacing, rewind/fast-forward, BIOS/disc/NVRAM loading, audio/input backends, save slots, settings, library, fixes, autopilot | `CoreRunner`, `RewindBuffer`, `RewindOptions`, `AudioFramePacer`, `AppSettings`, `AppSettingsStore`, `BiosResolver`, `NvramStore`, `SaveStateSlotManager`, `StateInspector`, `GameLibraryScanner`, `GameCompatibility`, `MemoryPatch`, `RoadRashAutopilot` | Machine, Storage, Audio, Input, Video, Diagnostics |
 | `FiveDo.Cli` | Headless command-line interface, JSON contracts | `Program`, `CliJsonModels` | Host |
-| `FiveDo.Frontend.Avalonia` | Cross-platform desktop UI, library/settings/input/slots/logs, donation banner, OpenGL video surface, embedded Vulkan video surface, GPU probes | `App`, `MainWindow`, `VideoSurface`, `VulkanVideoSurface`, `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`, `GameLibraryWindow`, `LogsWindow`, `WelcomeWindow`, `DonationEmailWindow`, `GlProbeWindow`, `GlProbeOptions`, `VkProbeRunner`, `VkProbeOptions`, `GlBackendOption`, `PlatformGamepadBackend` | Host, Video.OpenGL, Video.Vulkan, Avalonia |
+| `FiveDo.Frontend.Avalonia` | Cross-platform desktop UI, library/settings/input/slots/logs, donation banner, OpenGL video surface, embedded Vulkan video surface, GPU probes | `App`, `MainWindow`, `VideoSurface`, `VulkanVideoSurface`, `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`, `CheatsWindow`, `GameLibraryWindow`, `LogsWindow`, `WelcomeWindow`, `DonationEmailWindow`, `GlProbeWindow`, `GlProbeOptions`, `VkProbeRunner`, `VkProbeOptions`, `GlBackendOption`, `PlatformGamepadBackend` | Host, Video.OpenGL, Video.Vulkan, Avalonia |
 | `FiveDo.Tests` | Unit/integration/golden/CLI/frontend tests (subfolders per subsystem) | test fixtures, ARM assembler/rig, fake chips/MMIO, PNG writer | production projects |
 | `FiveDo.Benchmarks` | Frame benchmark, CI gate, baseline comparison | `Program` | Cpu, Madam, Dsp, Diagnostics, Machine, Storage, Video |
 

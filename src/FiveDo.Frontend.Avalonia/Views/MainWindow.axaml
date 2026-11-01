@@ -66,6 +66,8 @@
                           ToolTip.Tip="Select the next save slot." />
                 <MenuItem Header="Save Slots..." Click="OnSaveSlotsAsync"
                           ToolTip.Tip="Open the save-slot manager with previews." />
+                <MenuItem Header="Cheats..." Click="OnCheatsAsync"
+                          ToolTip.Tip="Enable, add, or edit per-game RAM cheats." />
                 <Separator />
                 <MenuItem Header="Screenshot" Click="OnScreenshot"
                           ToolTip.Tip="Save a PNG screenshot of the current frame." />

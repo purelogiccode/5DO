@@ -181,6 +181,13 @@ public sealed class FiveDoMachine
     /// <summary>Gets or sets the PBUS controller source.</summary>
     public IPbusSource? PbusSource { get; set; }
 
+    /// <summary>
+    /// Gets or sets a callback invoked once before each emulated frame. The host uses it
+    /// for per-frame cheat writes so rewind replay and fast-forward observe the same
+    /// modifications as normal execution.
+    /// </summary>
+    public Action? BeforeFrame { get; set; }
+
     /// <summary>Gets or sets the audio sample sink.</summary>
     public IAudioSink? AudioSink { get; set; }
 
@@ -576,6 +583,7 @@ public sealed class FiveDoMachine
     /// </param>
     public void RunFrame(bool skipFrame, Action<uint, uint, uint>? instructionObserver)
     {
+        BeforeFrame?.Invoke();
         Clio.OnFrame();
 
         var total = 0;
