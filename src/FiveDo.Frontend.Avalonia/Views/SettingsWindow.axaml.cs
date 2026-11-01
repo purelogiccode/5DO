@@ -153,6 +153,7 @@ public partial class SettingsWindow : Window
     ];
 
     private readonly string? _gameId;
+    private readonly AppSettings _settings;
     private bool _initializing = true;
 
     /// <summary>Creates the dialog with the persisted settings.</summary>
@@ -170,6 +171,7 @@ public partial class SettingsWindow : Window
         ArgumentNullException.ThrowIfNull(settings);
         InitializeComponent();
         _gameId = gameId;
+        _settings = settings;
 
         RendererCombo.ItemsSource = _rendererOptions;
         RendererCombo.SelectedItem = _rendererOptions.FirstOrDefault(option => option.Value == settings.Renderer)
@@ -290,6 +292,197 @@ public partial class SettingsWindow : Window
         FixMode? overrideMode = settings.GetFixModeOverride(gameId);
         FixModeBox.Text = overrideMode is null ? string.Empty : $"0x{(uint)overrideMode.Value:x}";
         _initializing = false;
+        UpdateGameProfileStatus();
+    }
+
+    private void OnSaveGameProfileClick(object? sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(_gameId))
+        {
+            return;
+        }
+
+        GameProfile profile = CaptureProfile();
+        _settings.SetGameProfile(_gameId, profile);
+        UpdateGameProfileStatus();
+    }
+
+    private void OnDeleteGameProfileClick(object? sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(_gameId))
+        {
+            return;
+        }
+
+        _settings.SetGameProfile(_gameId, null);
+        UpdateGameProfileStatus();
+    }
+
+    private void OnImportGameProfileAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ImportGameProfileAsync, "importing a game profile");
+    }
+
+    private async Task ImportGameProfileAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_gameId))
+        {
+            return;
+        }
+
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Import game profile",
+            AllowMultiple = false,
+            FileTypeFilter =
+            [
+                new FilePickerFileType("5DO game profile") { Patterns = ["*.json"] },
+            ],
+        }).ConfigureAwait(true);
+        var path = files.Count > 0 ? files[0].TryGetLocalPath() : null;
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        try
+        {
+            GameProfile profile = GameProfileJson.Deserialize(await File.ReadAllTextAsync(path).ConfigureAwait(true));
+            _settings.SetGameProfile(_gameId, profile);
+            LoadProfileIntoControls(profile);
+            UpdateGameProfileStatus();
+            GameProfileText.Text = $"Imported {Path.GetFileName(path)}.";
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or ArgumentException)
+        {
+            GameProfileText.Text = $"Import failed: {exception.Message}";
+        }
+    }
+
+    private void OnExportGameProfileAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ExportGameProfileAsync, "exporting a game profile");
+    }
+
+    private async Task ExportGameProfileAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_gameId))
+        {
+            return;
+        }
+
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Export game profile",
+            SuggestedFileName = "5do-game-profile.json",
+            DefaultExtension = "json",
+            FileTypeChoices =
+            [
+                new FilePickerFileType("5DO game profile") { Patterns = ["*.json"] },
+            ],
+        }).ConfigureAwait(true);
+        var path = file?.TryGetLocalPath();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        try
+        {
+            GameProfile profile = _settings.GetGameProfile(_gameId) ?? CaptureProfile();
+            await File.WriteAllTextAsync(path, GameProfileJson.Serialize(profile)).ConfigureAwait(true);
+            GameProfileText.Text = $"Exported {Path.GetFileName(path)}.";
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            GameProfileText.Text = $"Export failed: {exception.Message}";
+        }
+    }
+
+    private GameProfile CaptureProfile()
+    {
+        GameProfile profile = GameProfile.FromSettings(_settings);
+        profile.Profile = ProfileCombo.SelectedItem is ProfileOption profileOption
+            ? profileOption.Value
+            : EmulationProfile.Custom;
+        profile.Region = RegionCombo.SelectedItem is RegionOption region
+            ? region.Value
+            : VideoRegion.Ntsc;
+        profile.ArmTiming = ArmTimingCombo.SelectedItem is ArmTimingOption armTiming
+            ? armTiming.Value
+            : ArmTimingMode.FreeDoCompatible;
+        profile.ClioTimers = ClioTimersCombo.SelectedItem is ClioTimerOption clioTimers
+            ? clioTimers.Value
+            : ClioTimerMode.FreeDoCompatible;
+        profile.CelTiming = CelTimingCombo.SelectedItem is CelTimingOption celTiming
+            ? celTiming.Value
+            : CelTimingMode.FreeDoCompatible;
+        profile.CdromTiming = CdromTimingCombo.SelectedItem is CdromTimingOption cdromTiming
+            ? cdromTiming.Value
+            : CdromTimingMode.FreeDoCompatible;
+        profile.CdSpeed = CdSpeedCombo.SelectedItem is CdSpeedOption cdSpeed
+            ? cdSpeed.Value
+            : CdSpeed.X2;
+        if (double.TryParse(
+                CpuClockBox.Text?.Trim(),
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out var clock)
+            && double.IsFinite(clock)
+            && clock is >= 0.5 and <= 4.0)
+        {
+            profile.CpuClockMultiplier = clock;
+        }
+
+        profile.CdAudioVolume = (float)Math.Clamp(CdVolumeSlider.Value, 0, 1);
+        profile.CdAudioMuted = CdMuteCheck.IsChecked == true;
+        return profile;
+    }
+
+    private void LoadProfileIntoControls(GameProfile profile)
+    {
+        _initializing = true;
+        try
+        {
+            ProfileCombo.SelectedItem = _profileOptions.FirstOrDefault(
+                    option => option.Value == profile.Profile)
+                ?? _profileOptions[^1];
+            RegionCombo.SelectedItem = _regionOptions.FirstOrDefault(
+                    option => option.Value == profile.Region)
+                ?? _regionOptions[0];
+            ArmTimingCombo.SelectedItem = _armTimingOptions.First(
+                option => option.Value == profile.ArmTiming);
+            ClioTimersCombo.SelectedItem = _clioTimerOptions.First(
+                option => option.Value == profile.ClioTimers);
+            CelTimingCombo.SelectedItem = _celTimingOptions.First(
+                option => option.Value == profile.CelTiming);
+            CdromTimingCombo.SelectedItem = _cdromTimingOptions.First(
+                option => option.Value == profile.CdromTiming);
+            CdSpeedCombo.SelectedItem = _cdSpeedOptions.First(
+                option => option.Value == profile.CdSpeed);
+            CpuClockBox.Text = profile.CpuClockMultiplier.ToString("0.###", CultureInfo.InvariantCulture);
+            CdVolumeSlider.Value = Math.Clamp(profile.CdAudioVolume, 0, 1);
+            CdMuteCheck.IsChecked = profile.CdAudioMuted;
+        }
+        finally
+        {
+            _initializing = false;
+        }
+    }
+
+    private void UpdateGameProfileStatus()
+    {
+        bool hasGame = !string.IsNullOrWhiteSpace(_gameId);
+        hasGame = hasGame && _settings.GetGameProfile(_gameId) is not null;
+        SaveGameProfileButton.IsEnabled = !string.IsNullOrWhiteSpace(_gameId);
+        DeleteGameProfileButton.IsEnabled = hasGame;
+        ImportGameProfileButton.IsEnabled = !string.IsNullOrWhiteSpace(_gameId);
+        ExportGameProfileButton.IsEnabled = !string.IsNullOrWhiteSpace(_gameId);
+        GameProfileText.Text = string.IsNullOrWhiteSpace(_gameId)
+            ? "Open a disc to store a per-game profile."
+            : hasGame
+                ? "A profile is stored for this game. Applying it requires the next machine creation."
+                : "No profile stored; Save captures the current timing/CD-DA options.";
     }
 
     private void OnAudioDeviceRefreshClick(object? sender, RoutedEventArgs e)

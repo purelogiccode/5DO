@@ -71,6 +71,12 @@ still change.
   illegal-request status instead of silently doing nothing, the guest RESET command
   restores the default transfer state and sector size, and `PrefetchingDiscSource`
   read-aheads native track sectors so CD-DA does not decompress on the sample clock.
+- SYS-18/UX-20 per-game profile editor: `GameProfileJson` exports/imports timing,
+  region, CD speed, CPU multiplier, and CD-DA settings with value normalization.
+  Settings > Emulation saves, deletes, imports, and exports the current disc's profile;
+  `AppSettings.CreateEffectiveForGame` applies it at machine creation without changing
+  live settings, and `run/trace --game-profile` applies one headlessly. BIOS/fix/filter/
+  high-resolution fields and inherit/reset remain.
 - AUD-02 desktop WAV recording: `TeeAudioSink` mirrors the DSP stream to live output
   and a WAV writer. **File > Record Audio...** starts/stops a capture without pausing
   emulation, keeps recording across audio-device changes, and finalizes the WAV header

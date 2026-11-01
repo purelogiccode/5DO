@@ -718,7 +718,7 @@ public partial class MainWindow : Window, IDisposable
         try
         {
             var bios = BiosImage.Load(path, string.IsNullOrWhiteSpace(bios2Path) ? null : bios2Path);
-            var machine = CreateMachine();
+            var machine = CreateMachine(_gameId);
             VideoRegion region = ResolveRegionForBios(path, _gameId);
             _runner!.Invoke(() =>
             {
@@ -1034,10 +1034,10 @@ public partial class MainWindow : Window, IDisposable
                     path = _playlist.Current.Path;
                 }
             }
-            var machine = _machine ?? CreateMachine();
             var disc = DiscImageFactory.Open(path);
             var gameId = disc.SectorCount >= 2 ? GameId.Compute(disc) : string.Empty;
             var record = gameId.Length == 0 ? null : GameDatabase.Default.FindByChecksum(gameId);
+            var machine = _machine ?? CreateMachine(gameId);
             var autoDevices = gameId.Length > 0
                 && _settings.EnsureAutoInputDeviceOverride(
                     gameId,
@@ -4414,28 +4414,29 @@ public partial class MainWindow : Window, IDisposable
         return _settings.ResolveRegionForGame(gameId, detected);
     }
 
-    private FiveDoMachine CreateMachine()
+    private FiveDoMachine CreateMachine(string? gameId = null)
     {
         if (_machine is null)
         {
+            AppSettings effective = _settings.CreateEffectiveForGame(gameId);
             _machine = new FiveDoMachine(new EmulatorTuning
             {
-                HighResolution = _settings.HighResolution,
-                Region = _settings.Region,
-                ArmTiming = _settings.ArmTiming,
-                ClioTimers = _settings.ClioTimers,
-                CelTiming = _settings.CelTiming,
-                CdromTiming = _settings.CdromTiming,
-                CdSpeed = _settings.CdSpeed,
-                ArmClock = _settings.ResolveArmClock(),
-                RandomSeed = _settings.RandomSeed,
+                HighResolution = effective.HighResolution,
+                Region = effective.Region,
+                ArmTiming = effective.ArmTiming,
+                ClioTimers = effective.ClioTimers,
+                CelTiming = effective.CelTiming,
+                CdromTiming = effective.CdromTiming,
+                CdSpeed = effective.CdSpeed,
+                ArmClock = effective.ResolveArmClock(),
+                RandomSeed = effective.RandomSeed,
             })
             {
                 PbusSource = _input,
                 AudioSink = _audio,
                 BeforeFrame = ApplyCheats,
-                CdAudioVolume = _settings.CdAudioVolume,
-                CdAudioMuted = _settings.CdAudioMuted,
+                CdAudioVolume = effective.CdAudioVolume,
+                CdAudioMuted = effective.CdAudioMuted,
             };
             _runner = new CoreRunner(
                 _machine,

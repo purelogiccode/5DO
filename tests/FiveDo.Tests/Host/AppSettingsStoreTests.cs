@@ -263,6 +263,83 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void GameProfileJson_RoundtripsAndNormalizes()
+    {
+        var profile = new GameProfile
+        {
+            Profile = EmulationProfile.Accuracy,
+            Region = VideoRegion.Pal2,
+            ArmTiming = ArmTimingMode.Arm60Datasheet,
+            ClioTimers = ClioTimerMode.OperaScheduler,
+            CelTiming = CelTimingMode.OperaBusy,
+            CdromTiming = CdromTimingMode.OperaCycleBased,
+            CdSpeed = CdSpeed.X8,
+            CpuClockMultiplier = 1.5,
+            CdAudioVolume = 0.4f,
+            CdAudioMuted = true,
+        };
+
+        var json = GameProfileJson.Serialize(profile);
+        GameProfile loaded = GameProfileJson.Deserialize(json);
+
+        Assert.Equal(EmulationProfile.Accuracy, loaded.Profile);
+        Assert.Equal(VideoRegion.Pal2, loaded.Region);
+        Assert.Equal(ArmTimingMode.Arm60Datasheet, loaded.ArmTiming);
+        Assert.Equal(CdSpeed.X8, loaded.CdSpeed);
+        Assert.Equal(1.5, loaded.CpuClockMultiplier);
+        Assert.Equal(0.4f, loaded.CdAudioVolume);
+        Assert.True(loaded.CdAudioMuted);
+
+        var invalid = json
+            .Replace("\"CpuClockMultiplier\": 1.5", "\"CpuClockMultiplier\": 99")
+            .Replace("\"CdAudioVolume\": 0.4", "\"CdAudioVolume\": 9");
+        GameProfile normalized = GameProfileJson.Deserialize(invalid);
+        Assert.Equal(1.0, normalized.CpuClockMultiplier);
+        Assert.Equal(0.8f, normalized.CdAudioVolume);
+    }
+
+    [Fact]
+    public void CreateEffectiveForGame_AppliesProfileWithoutChangingLiveSettings()
+    {
+        var settings = new AppSettings
+        {
+            Region = VideoRegion.Ntsc,
+            CdSpeed = CdSpeed.X2,
+            ArmTiming = ArmTimingMode.FreeDoCompatible,
+            CdAudioVolume = 1f,
+        };
+        settings.SetGameProfile(
+            "A1B2C3D4",
+            new GameProfile
+            {
+                Profile = EmulationProfile.Accuracy,
+                Region = VideoRegion.Pal1,
+                ArmTiming = ArmTimingMode.Arm60Datasheet,
+                CdSpeed = CdSpeed.X4,
+                CdAudioVolume = 0.25f,
+                CdAudioMuted = true,
+            });
+
+        AppSettings effective = settings.CreateEffectiveForGame("a1b2c3d4");
+
+        Assert.Equal(VideoRegion.Pal1, effective.Region);
+        Assert.Equal(ArmTimingMode.Arm60Datasheet, effective.ArmTiming);
+        Assert.Equal(CdSpeed.X4, effective.CdSpeed);
+        Assert.Equal(0.25f, effective.CdAudioVolume);
+        Assert.True(effective.CdAudioMuted);
+
+        Assert.Equal(VideoRegion.Ntsc, settings.Region);
+        Assert.Equal(ArmTimingMode.FreeDoCompatible, settings.ArmTiming);
+        Assert.Equal(CdSpeed.X2, settings.CdSpeed);
+        Assert.Equal(1f, settings.CdAudioVolume);
+        Assert.False(settings.CdAudioMuted);
+
+        AppSettings noProfile = settings.CreateEffectiveForGame("other");
+        Assert.Equal(VideoRegion.Ntsc, noProfile.Region);
+        Assert.False(noProfile.CdAudioMuted);
+    }
+
+    [Fact]
     public void RegionOverrides_WinOverAutomaticAndGlobalChoices()
     {
         var settings = new AppSettings

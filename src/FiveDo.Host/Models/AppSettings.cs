@@ -862,6 +862,26 @@ public sealed class AppSettings
         }
     }
 
+    /// <summary>
+    /// Creates a shallow settings snapshot with the game's stored profile applied.
+    /// </summary>
+    /// <param name="gameId">4DO game ID, case-insensitive.</param>
+    /// <returns>A copy for machine construction; the live settings are unchanged.</returns>
+    /// <remarks>
+    /// Collection references are shared intentionally. Machine construction only reads
+    /// scalar tuning values and CD-DA volume/mute, so the copy never mutates a collection.
+    /// </remarks>
+    public AppSettings CreateEffectiveForGame(string? gameId)
+    {
+        var copy = (AppSettings)MemberwiseClone();
+        if (GetGameProfile(gameId) is { } profile)
+        {
+            profile.ApplyTo(copy);
+        }
+
+        return copy;
+    }
+
     /// <summary>Gets the per-game timing profile, if one is configured.</summary>
     /// <param name="gameId">4DO game ID, case-insensitive.</param>
     /// <returns>The profile, or <see langword="null"/> when the game uses global options.</returns>

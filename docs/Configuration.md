@@ -475,9 +475,11 @@ matches the first eight uppercase characters; see
 
 `GameProfiles` stores a per-game timing/CD-DA snapshot keyed by game ID. `GetGameProfile`
 and `SetGameProfile` normalize the key case-insensitively; `ApplyGameProfile(gameId)`
-copies the snapshot into the live settings. Automatic application and the profile editor
-belong to SYS-18/FND-06. `RegionOverrides` pins a disc to NTSC/PAL1/PAL2 and wins over
-the automatic/global region choice. `settings validate [path]` reports syntax and schema version;
+copies the snapshot into the live settings, and `CreateEffectiveForGame(gameId)` returns
+a copy for machine creation without mutating live settings. Settings > Emulation edits,
+saves, deletes, imports, and exports the current game's profile; `run/trace
+--game-profile` applies one headlessly. `RegionOverrides` pins a disc to
+NTSC/PAL1/PAL2 and wins over the automatic/global region choice. `settings validate [path]` reports syntax and schema version;
 `settings migrate [path]` normalizes a file and rewrites it at the current version.
 
 The Settings dialog's **Emulation** page edits:

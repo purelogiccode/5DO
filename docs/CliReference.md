@@ -134,6 +134,7 @@ frame.
 | `--nvram-version 0-9` | `0` | Independent NVRAM version slot. |
 | `--nvram-dir <path>` | settings directory | Root directory for the resolved NVRAM layout. |
 | `--high-res` | off | Enable the opt-in 640x480 CEL/VDLP mode. |
+| `--game-profile <json>` | none | Load a per-game profile as the timing/region baseline before explicit flags. |
 | `--region auto\|ntsc\|pal1\|pal2` | `auto` | Video region. `auto` chooses PAL1 when the selected BIOS is a PAL image, otherwise NTSC; `pal2` is the 384-wide PAL mode. |
 | `--profile compatible\|accuracy\|performance\|custom` | `compatible` | Timing profile. `accuracy` enables ARM60 N=2, Opera CLIO/CEL/CD timing, and the stock 2x drive; `performance` uses a 1.5x CPU clock with FreeDO timing; `custom` keeps the individual options. Explicit timing options override the profile. |
 | `--arm-timing freedo\|arm60` | `freedo` | ARM60 N-cycle class. `freedo` keeps the FreeDO-compatible N=4 baseline; `arm60` uses the ARM60 datasheet/SDK N=2 timing from Opera. |

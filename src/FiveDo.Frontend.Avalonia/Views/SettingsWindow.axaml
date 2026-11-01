@@ -168,7 +168,7 @@
 
             <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, ARM, CLIO, CEL, and CD timing, CD speed, CPU clock, random seed, NVRAM storage, high-resolution mode, rewind/fast-forward, and overrides.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <CheckBox x:Name="AutoFixesCheck" Grid.Row="0" Grid.Column="1"
                               Content="Apply the 4DO per-game fixes automatically"
                               ToolTip.Tip="Apply the compatibility fix mask from the built-in game database when a disc opens." />
@@ -294,6 +294,21 @@
                     <CheckBox x:Name="PerGameInputCheck" Grid.Row="28" Grid.Column="1" Margin="0,12,0,0"
                               Content="Override input devices for this game"
                               ToolTip.Tip="Store the six device choices as a per-game override. Unchecked edits the global device list." />
+                    <TextBlock Grid.Row="29" Grid.Column="0" Text="Game profile" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Save, delete, import, or export the timing/CD-DA profile for the current game." />
+                    <StackPanel Grid.Row="29" Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="0,12,0,0">
+                        <Button x:Name="SaveGameProfileButton" Content="Save" Click="OnSaveGameProfileClick"
+                                ToolTip.Tip="Store the timing and CD-DA options as this game's profile." />
+                        <Button x:Name="DeleteGameProfileButton" Content="Delete" Click="OnDeleteGameProfileClick"
+                                ToolTip.Tip="Remove this game's stored profile." />
+                        <Button x:Name="ImportGameProfileButton" Content="Import..." Click="OnImportGameProfileAsync"
+                                ToolTip.Tip="Load a profile JSON file and apply it to this game." />
+                        <Button x:Name="ExportGameProfileButton" Content="Export..." Click="OnExportGameProfileAsync"
+                                ToolTip.Tip="Save this game's profile as JSON." />
+                    </StackPanel>
+                    <TextBlock Grid.Row="30" Grid.Column="1" x:Name="GameProfileText"
+                               Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
+                               ToolTip.Tip="Whether this game has a stored profile." />
                     <TextBlock Grid.Row="27" Grid.Column="0" Text="Pointer calibration" VerticalAlignment="Center" Margin="0,12,0,0"
                                ToolTip.Tip="Scale and offset applied to the host pointer before it reaches the emulated device." />
                     <StackPanel Grid.Row="27" Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="0,12,0,0">

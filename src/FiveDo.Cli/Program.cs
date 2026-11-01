@@ -419,6 +419,7 @@ internal static class Program
         FixMode fixMode = ResolveFixMode(options, args, gameId);
         EmulatorTuning profileTuning = EmulationProfiles.Apply(
             ParseEmulationProfile(options.Get("--profile")));
+        profileTuning = ApplyGameProfile(profileTuning, options.Get("--game-profile"));
         VideoRegion fallbackRegion = biosLoad.Selection?.Primary?.VideoStandard == BiosVideoStandard.Pal
             ? VideoRegion.Pal1
             : profileTuning.Region;
@@ -1231,6 +1232,7 @@ internal static class Program
         FixMode fixMode = ResolveFixMode(options, args, gameId);
         EmulatorTuning profileTuning = EmulationProfiles.Apply(
             ParseEmulationProfile(options.Get("--profile")));
+        profileTuning = ApplyGameProfile(profileTuning, options.Get("--game-profile"));
         VideoRegion fallbackRegion = biosLoad.Selection?.Primary?.VideoStandard == BiosVideoStandard.Pal
             ? VideoRegion.Pal1
             : profileTuning.Region;
@@ -3521,6 +3523,28 @@ internal static class Program
             nameof(value));
     }
 
+    private static EmulatorTuning ApplyGameProfile(EmulatorTuning tuning, string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return tuning;
+        }
+
+        GameProfile profile = GameProfileJson.Deserialize(File.ReadAllText(path));
+        return tuning with
+        {
+            Region = profile.Region,
+            ArmTiming = profile.ArmTiming,
+            ClioTimers = profile.ClioTimers,
+            CelTiming = profile.CelTiming,
+            CdromTiming = profile.CdromTiming,
+            CdSpeed = profile.CdSpeed,
+            ArmClock = (int)Math.Round(
+                EmulatorConstants.ArmClock * profile.CpuClockMultiplier,
+                MidpointRounding.AwayFromZero),
+        };
+    }
+
     private static VideoRegion ParseRegion(string? value, VideoRegion fallback = VideoRegion.Ntsc)
     {
         if (string.IsNullOrWhiteSpace(value)
@@ -4022,7 +4046,7 @@ internal static class Program
         Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--prefetch]");
         Console.WriteLine("             [--nvram-mode global|per-game] [--nvram-version 0-9] [--nvram-dir path]");
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
-        Console.WriteLine("             [--region auto|ntsc|pal1|pal2] [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
+        Console.WriteLine("             [--game-profile path] [--region auto|ntsc|pal1|pal2] [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
         Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
         Console.WriteLine("             [--input-device 1=joypad,2=mouse,...] [--pbus-format legacy|opera]");
         Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz]");
@@ -4039,7 +4063,7 @@ internal static class Program
         Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path] [--high-res] [--prefetch]");
         Console.WriteLine("             [--nvram-mode global|per-game] [--nvram-version 0-9] [--nvram-dir path]");
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
-        Console.WriteLine("             [--region auto|ntsc|pal1|pal2] [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
+        Console.WriteLine("             [--game-profile path] [--region auto|ntsc|pal1|pal2] [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
         Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
         Console.WriteLine("             [--input-device 1=joypad,2=mouse,...] [--pbus-format legacy|opera]");
         Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz]");

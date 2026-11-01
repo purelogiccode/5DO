@@ -688,7 +688,7 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,447 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,450 tests pass with no changed NTSC hashes.
 
 ### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
 
@@ -797,6 +797,18 @@ UX-23 coverage is compile/status level:
   `AudioAnalyzerTests` and `AudioPipelineTests`.
 - Manual smoke: start **File > Record Audio...**, run a game, stop, and analyze the WAV
   with `5do audio analyze` (same writer and sample clock as the CLI path).
+
+### 1.1y Per-game profile editor (2026-11-01)
+
+- `GameProfileJson_RoundtripsAndNormalizes` covers export/import and clamping of invalid
+  clock/volume values.
+- `CreateEffectiveForGame_AppliesProfileWithoutChangingLiveSettings` verifies the
+  machine-construction copy and that global settings are untouched.
+- `Run_GameProfileOption_AppliesTimingAndRegion` runs the CLI with a PAL1/Arm60/X8/1.5x
+  profile and checks `region`, `armTiming`, `clioTimers`, `cdSpeed`, and `cpuClock` in
+  `--json`.
+- The desktop editor is build-validated; its Save/Import/Export paths use the same
+  `GameProfileJson` and settings APIs.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

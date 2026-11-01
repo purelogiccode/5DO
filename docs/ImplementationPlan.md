@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,447 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,450 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,447** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,450** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 18 done · 21 partial · 81 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 18 done · 22 partial · 80 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -170,7 +170,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[SYS-15](#feat-sys-15)** Mouse/lightgun/arcade lightgun/flightstick/trackball — P0 · L · depends on: FND-01 — **Partial** — remaining: device models, encoder, CLI/settings, pointer input, crosshair, pointer-port routing, and pointer calibration are done; scripted gameplay validation remains
 - [ ] **[SYS-16](#feat-sys-16)** Six-player/multi-tap verification — P1 · S · depends on: SYS-15 — **Pending**
 - [ ] **[SYS-17](#feat-sys-17)** Game database expansion and community DB — P1 · M · depends on: FND-02 — **Pending**
-- [ ] **[SYS-18](#feat-sys-18)** Auto per-game profile — P0 · L · depends on: SYS-04, SYS-17 — **Partial** — auto BIOS/region/fixes/NVRAM already work, and known lightgun/trackball titles now seed a per-game input-device override automatically; full timing/filter/high-res profiles and the profile editor remain
+- [ ] **[SYS-18](#feat-sys-18)** Auto per-game profile — P0 · L · depends on: SYS-04, SYS-17 — **Partial** — auto BIOS/region/fixes/NVRAM, known-title input seeding, a timing/CD-DA profile editor with import/export, machine-creation application, and CLI `--game-profile` are implemented; full BIOS/fix/filter/high-res fields and DB-driven auto profiles remain
 - [ ] **[SYS-19](#feat-sys-19)** Save-state interoperability with 4DO/Opera — P2 · L · depends on: CORE-14 — **Pending**
 - [ ] **[SYS-20](#feat-sys-20)** Disc health / Redump DAT / CHD integrity — P2 · M · depends on: SYS-22 — **Pending**
 - [ ] **[SYS-21](#feat-sys-21)** Physical CD drive support — P2 · M — **Pending**
@@ -222,7 +222,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[UX-17](#feat-ux-17)** Crash report, compatibility report, log bundle — P1 · M · depends on: FND-08 — **Partial** — one-click desktop and CLI bundles include logs, scrubbed settings, environment, state, and frame evidence; upload and the compatibility-report form remain
 - [ ] **[UX-18](#feat-ux-18)** Onboarding and verification — P1 · M · depends on: SYS-20 — **Pending**
 - [x] **[UX-19](#feat-ux-19)** OSD, notifications, quick menu — P1 · S · depends on: FND-06 — **Done**
-- [ ] **[UX-20](#feat-ux-20)** Per-game settings UI — P1 · M · depends on: SYS-18 — **Pending**
+- [ ] **[UX-20](#feat-ux-20)** Per-game settings UI — P1 · M · depends on: SYS-18 — **Partial** — the timing/CD-DA profile editor (save/delete/import/export) is implemented; BIOS/fix/filter/high-res/shader/cheat fields and inherit/reset remain
 - [ ] **[UX-21](#feat-ux-21)** Debugger UI — P2 · L · depends on: CORE-15 — **Pending**
 - [ ] **[UX-22](#feat-ux-22)** Trace viewer and performance profiler — P2 · M · depends on: UX-21 — **Pending**
 - [x] **[UX-23](#feat-ux-23)** Input display and lag counter — P1 · S · depends on: UX-06 — **Done**
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,447 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,450 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,447**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,450**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -2895,6 +2895,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | VID-14 | Screenshot gallery | Added `ScreenshotLibrary` metadata parsing/sorting/delete, `AppSettings.ResolveScreenshotDirectory`, and **File > Screenshot Gallery...** with thumbnails, open/copy/delete/refresh. VID-14 is partial for filters/compare/export; 1,440 tests pass |
 | 2026-11-01 | VID-09 | GIF recording | Added `GifRecorder` (GIF89a, 3-3-2 palette, looping, 2-50 fps accumulator), CLI `--record-gif/--record-fps/--record-frames` with JSON fields, and **File > Record GIF...** with live start/stop and frame-skip restoration. A 40-frame PAL capture produced a 20-frame 320x288 GIF that Pillow decoded fully; VID-09 is partial for MP4/WebM/audio/replay; 1,444 tests pass |
 | 2026-11-01 | AUD-02 | Desktop WAV recording | Added `TeeAudioSink`, **File > Record Audio...** with start/stop and finalize-on-stop, WAV naming/duration reporting, and keeping the recorder attached across audio-device changes. AUD-02 is partial for mixer/spectrum/format options; 1,447 tests pass |
+| 2026-11-01 | SYS-18, UX-20, FND-06 | Per-game profile editor | Added `GameProfileJson` with normalization, `AppSettings.CreateEffectiveForGame`, machine-creation application, Settings > Emulation save/delete/import/export, and CLI `run/trace --game-profile`. SYS-18/UX-20/FND-06 remain partial for BIOS/fix/filter/high-res fields and inherit/reset; 1,450 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -3065,7 +3066,7 @@ A feature is done only when:
 | UX-17 | Crash report, compatibility report, log bundle | P1 | M | FND-08 | Partial |
 | UX-18 | Onboarding and verification | P1 | M | SYS-20 | Pending |
 | UX-19 | OSD, notifications, quick menu | P1 | S | FND-06 | Done |
-| UX-20 | Per-game settings UI | P1 | M | SYS-18 | Pending |
+| UX-20 | Per-game settings UI | P1 | M | SYS-18 | Partial |
 | UX-21 | Debugger UI | P2 | L | CORE-15 | Pending |
 | UX-22 | Trace viewer and performance profiler | P2 | M | UX-21 | Pending |
 | UX-23 | Input display and lag counter | P1 | S | UX-06 | Done |
@@ -3288,7 +3289,7 @@ full 594-disc manifest, and the nightly trend dashboard. See
 <a id="feat-fnd-06"></a>
 ### FND-06 - UI settings and per-game profile framework
 
-**Priority:** P0 | **Effort:** M | **Depends on:** FND-01/02
+**Priority:** P0 | **Effort:** M | **Depends on:** FND-01/02 | **Status:** Partial (2026-11-01)
 
 **Problem.** The Settings dialog has Video/Audio/Emulation/Paths tabs. New features need many more controls and per-game overrides.
 
@@ -3299,6 +3300,8 @@ full 594-disc manifest, and the nightly trend dashboard. See
 - Search/filter for settings.
 - Reset section/defaults.
 - Localized labels.
+
+**Implemented.** The four tabs cover video/audio/emulation/paths, validation errors are reported without closing the dialog, and the Emulation tab now includes per-game region, input-device, and timing/CD-DA profile overrides with JSON import/export. Remaining: search/filter, reset-section/defaults, a `SettingsPage` view-model split, and localized labels.
 
 **Files.** `src/FiveDo.Frontend.Avalonia/Views/SettingsWindow.axaml`, `SettingsWindow.axaml.cs`, new view models, `AppSettings.cs`.
 
@@ -4281,12 +4284,14 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
 - Auto BIOS selection (SYS-04), BIOS-driven region selection (SYS-03), automatic fix masks, and per-game NVRAM (SYS-14) already cover the default path.
 - `GameControlDefaults` seeds a per-game PBUS device override for known lightgun/arcade titles (Crime Patrol, Mad Dog II, Who Shot Johnny Rock, The Last Bounty Hunter, Shootout at Old Tucson, Space Pirates, Drug Wars) and Orbatak trackball titles when `AutoInputDevices` is on.
 - `InputDeviceOverrides` persists six-device lists per game ID; `ResolveInputDevices`/`ApplyInputDevices(input, gameId)` honor them, and Settings > Emulation has a **Override input devices for this game** control.
-- Auto seeding is user-replaceable: an existing override is never replaced.
+- `GameProfile` stores timing, region, CD speed, CPU multiplier, and CD-DA volume/mute. Settings > Emulation can save/delete/import/export the profile for the current disc.
+- `AppSettings.CreateEffectiveForGame` applies a stored profile at machine creation without mutating the live settings.
+- CLI `run/trace --game-profile <json>` uses the profile as the timing/region baseline before explicit flags.
+- Auto seeding is user-replaceable: an existing override or profile is never replaced.
 
 **Remaining.**
-- A unified `GameProfile` covering BIOS/fix/filter/high-resolution/clock/CD speed plus timing, with automatic application at game open.
-- Profile import/export and a full per-game editor.
-- CLI `--game-profile`/profile application.
+- Extend `GameProfile` with BIOS/fix/filter/high-resolution/cheat fields and automatic DB-driven population.
+- Apply profile changes to an already-running machine (or prompt for restart).
 - Game-database fields for region/revision/fix/BIOS (SYS-17).
 
 **Files.** New `GameProfile.cs`, `AppSettings.cs`, UI/CLI.
@@ -5328,14 +5333,22 @@ hotkey roundtrip.
 <a id="feat-ux-20"></a>
 ### UX-20 - Per-game settings UI
 
-**Priority:** P1 | **Effort:** M | **Depends on:** SYS-18 | **Status:** Pending
+**Priority:** P1 | **Effort:** M | **Depends on:** SYS-18 | **Status:** Partial (2026-11-01)
 
 **Problem.** Only fix/filter overrides.
 
-**Add.**
-- BIOS/region/input/clock/CD speed/shader/cheats per game.
-- Inherit/reset.
-- Import/export.
+**Implemented.**
+- Settings > Emulation edits a stored timing/CD-DA profile for the current game: ARM/CLIO/CEL/CD timing, CD speed, CPU multiplier, region, profile label, and CD-DA volume/mute.
+- Save, Delete, Import JSON, and Export JSON actions; imported values populate the controls and are normalized/clamped.
+- `run/trace --game-profile <json>` applies the same profile headlessly before explicit options.
+- The profile is used when the machine is created; the dialog states that a restart is required for an already-running machine.
+
+**Remaining.**
+- BIOS/fix/filter/high-resolution/shader/cheat fields in the profile.
+- Inherit/reset controls per field.
+- Applying a changed profile to the current machine without a restart.
+
+**Tests.** Profile JSON roundtrip/normalization; effective-settings application; CLI application.
 
 **Files.** Settings UI, `GameProfile`.
 

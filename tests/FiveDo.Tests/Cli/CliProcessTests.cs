@@ -481,6 +481,55 @@ public sealed class CliProcessTests
     }
 
     [Fact]
+    public void Run_GameProfileOption_AppliesTimingAndRegion()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        var profilePath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-profile-{Guid.NewGuid():N}.json");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            File.WriteAllText(
+                profilePath,
+                """
+                {
+                  "Profile": "Accuracy",
+                  "Region": "Pal1",
+                  "ArmTiming": "Arm60Datasheet",
+                  "ClioTimers": "OperaScheduler",
+                  "CelTiming": "OperaBusy",
+                  "CdromTiming": "OperaCycleBased",
+                  "CdSpeed": "X8",
+                  "CpuClockMultiplier": 1.5,
+                  "CdAudioVolume": 0.8,
+                  "CdAudioMuted": false
+                }
+                """);
+
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--game-profile",
+                profilePath,
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"armTiming\": \"Arm60Datasheet\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"clioTimers\": \"OperaScheduler\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"cdSpeed\": \"X8\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"cpuClock\": 18750000", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"region\": \"Pal1\"", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+            File.Delete(profilePath);
+        }
+    }
+
+    [Fact]
     public void Run_RandomSeedOption_IsAppliedToTheDsp()
     {
         var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
