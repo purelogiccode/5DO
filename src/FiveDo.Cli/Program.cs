@@ -2792,9 +2792,32 @@ internal static class Program
 
     private static int AudioCommand(string[] args)
     {
+        if (args.Length >= 2 && string.Equals(args[1], "devices", StringComparison.OrdinalIgnoreCase))
+        {
+            ParsedOptions deviceOptions = Parse(args, startIndex: 2);
+            var devicesResult = new CliAudioDevicesResult(
+                Ok: true,
+                Devices: OpenAlAudioOutput.EnumerateDevices());
+            if (deviceOptions.Json)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(
+                    devicesResult,
+                    CliJsonContext.Default.CliAudioDevicesResult));
+            }
+            else
+            {
+                foreach (var device in devicesResult.Devices)
+                {
+                    Console.WriteLine(device);
+                }
+            }
+
+            return 0;
+        }
+
         if (args.Length < 2 || !string.Equals(args[1], "analyze", StringComparison.OrdinalIgnoreCase))
         {
-            throw new ArgumentException("audio needs the 'analyze <wav>' subcommand.", nameof(args));
+            throw new ArgumentException("audio needs 'analyze <wav>' or 'devices'.", nameof(args));
         }
 
         ParsedOptions options = Parse(args, startIndex: 2);
@@ -2988,7 +3011,18 @@ internal static class Program
 
         if (string.Equals(mode, "openal", StringComparison.OrdinalIgnoreCase))
         {
-            var output = OpenAlAudioOutput.TryCreate(4096, out var openAlError);
+            var bufferMilliseconds = options.GetInt("--audio-buffer", 100);
+            if (bufferMilliseconds is < 20 or > 500)
+            {
+                throw new ArgumentException(
+                    "--audio-buffer must be between 20 and 500 milliseconds.",
+                    nameof(options));
+            }
+
+            var output = OpenAlAudioOutput.TryCreate(
+                bufferMilliseconds,
+                options.Get("--audio-device"),
+                out var openAlError);
             if (output is null)
             {
                 Serilog.Log
@@ -3846,7 +3880,7 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine("Commands:");
         Console.WriteLine("  run [disc] [--bios path] [--bios2 path] [--bios-auto folder] [--frames N] [--state-in path] [--state-out path]");
-        Console.WriteLine("             [--frame-out path] [--audio null|wav|openal] [--wav-out path] [--volume 0..1] [--cd-volume 0..1] [--mute-cd] [--cd-trace path] [--cd-transcript path]");
+        Console.WriteLine("             [--frame-out path] [--audio null|wav|openal] [--audio-device name] [--audio-buffer 20..500] [--wav-out path] [--volume 0..1] [--cd-volume 0..1] [--mute-cd] [--cd-trace path] [--cd-transcript path]");
         Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");

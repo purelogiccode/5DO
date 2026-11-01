@@ -65,6 +65,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `settings profiles` | List named configuration profiles under the data directory. |
 | `cheat list\|add\|enable\|disable\|remove\|import\|export` | Manage per-game RAM cheat files. |
 | `movie info\|record\|play\|verify\|branch` | Inspect, record, replay, verify, or branch `.5domovie` TAS movies. |
+| `audio devices [--json]` | List OpenAL playback devices. |
 | `audio analyze <wav>` | WAV format, peak, RMS, clipping, silence, DC offset. |
 | `state inspect <path>` | Save-state header and section table (full CRC validation, including Brotli sections). |
 | `state slots <dir>` | List numbered save slots and metadata. |
@@ -166,6 +167,8 @@ frame.
 | `--audio null|wav|openal` | `null` | Audio backend. `null` still executes the DSP but discards samples. |
 | `--wav-out <path>` | `audio.wav` | WAV destination for `--audio wav`. |
 | `--volume 0..1` | 1.0 | OpenAL gain. Invalid values fail. |
+| `--audio-device <name>` | default | OpenAL playback device; use `audio devices` to list names. |
+| `--audio-buffer 20..500` | 100 | Target OpenAL buffer latency in milliseconds. |
 | `--cd-volume 0..1` | 0.8 | CD-DA mix level. Invalid values fail. |
 | `--mute-cd` | off | Keep CD-DA playback running but remove it from the mixed output. |
 

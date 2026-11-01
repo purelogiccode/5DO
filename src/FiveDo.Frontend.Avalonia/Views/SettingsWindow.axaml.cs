@@ -207,6 +207,8 @@ public partial class SettingsWindow : Window
         BloomSlider.Value = settings.Bloom;
         FsrSharpnessSlider.Value = settings.FsrSharpness;
         AudioCheck.IsChecked = settings.AudioEnabled;
+        PopulateAudioDevices(settings.AudioDevice);
+        AudioBufferBox.Text = settings.AudioBufferMilliseconds.ToString(CultureInfo.InvariantCulture);
         VolumeSlider.Value = settings.Volume;
         CdVolumeSlider.Value = Math.Clamp(settings.CdAudioVolume, 0, 1);
         CdMuteCheck.IsChecked = settings.CdAudioMuted;
@@ -290,6 +292,38 @@ public partial class SettingsWindow : Window
         _initializing = false;
     }
 
+    private void OnAudioDeviceRefreshClick(object? sender, RoutedEventArgs e)
+    {
+        PopulateAudioDevices(
+            (AudioDeviceCombo.SelectedItem as AudioDeviceOption)?.Name);
+    }
+
+    private void PopulateAudioDevices(string? selectedDevice)
+    {
+        var options = new List<AudioDeviceOption>
+        {
+            new(null, "Default device"),
+        };
+        foreach (var device in OpenAlAudioOutput.EnumerateDevices())
+        {
+            if (!options.Exists(option => string.Equals(option.Name, device, StringComparison.Ordinal)))
+            {
+                options.Add(new AudioDeviceOption(device, device));
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(selectedDevice)
+            && !options.Exists(option => string.Equals(option.Name, selectedDevice, StringComparison.Ordinal)))
+        {
+            options.Add(new AudioDeviceOption(selectedDevice, $"{selectedDevice} (saved)"));
+        }
+
+        AudioDeviceCombo.ItemsSource = options;
+        AudioDeviceCombo.SelectedItem = options.FirstOrDefault(
+                option => string.Equals(option.Name, selectedDevice, StringComparison.Ordinal))
+            ?? options[0];
+    }
+
     private void OnProfileChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (_initializing
@@ -318,7 +352,10 @@ public partial class SettingsWindow : Window
     {
         TestAudioButton.IsEnabled = false;
         TestAudioText.Text = "Playing a 1 s 440 Hz tone...";
-        OpenAlAudioOutput? output = OpenAlAudioOutput.TryCreate(2048, out var error);
+        OpenAlAudioOutput? output = OpenAlAudioOutput.TryCreate(
+            100,
+            (AudioDeviceCombo.SelectedItem as AudioDeviceOption)?.Name,
+            out var error);
         if (output is null)
         {
             TestAudioText.Text = $"OpenAL is unavailable: {error ?? "unknown error"}.";
@@ -420,6 +457,28 @@ public partial class SettingsWindow : Window
         settings.Bloom = (float)BloomSlider.Value;
         settings.FsrSharpness = (float)FsrSharpnessSlider.Value;
         settings.AudioEnabled = AudioCheck.IsChecked == true;
+        settings.AudioDevice = AudioDeviceCombo.SelectedItem is AudioDeviceOption { Name: { } device }
+            ? device
+            : string.Empty;
+        var audioBufferText = AudioBufferBox.Text?.Trim();
+        if (string.IsNullOrEmpty(audioBufferText))
+        {
+            settings.AudioBufferMilliseconds = 100;
+        }
+        else if (!int.TryParse(
+                     audioBufferText,
+                     NumberStyles.Integer,
+                     CultureInfo.InvariantCulture,
+                     out var audioBufferMilliseconds)
+                 || audioBufferMilliseconds is < 20 or > 500)
+        {
+            throw new FormatException("The audio buffer latency must be between 20 and 500 milliseconds.");
+        }
+        else
+        {
+            settings.AudioBufferMilliseconds = audioBufferMilliseconds;
+        }
+
         settings.Volume = (float)VolumeSlider.Value;
         settings.CdAudioVolume = (float)Math.Clamp(CdVolumeSlider.Value, 0, 1);
         settings.CdAudioMuted = CdMuteCheck.IsChecked == true;
@@ -965,6 +1024,11 @@ public partial class SettingsWindow : Window
         {
             return Label;
         }
+    }
+
+    private sealed record AudioDeviceOption(string? Name, string Label)
+    {
+        public override string ToString() => Label;
     }
 
     private sealed record PointerPortOption(int Value, string Label)

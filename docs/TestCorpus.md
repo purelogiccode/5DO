@@ -688,7 +688,7 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,417 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,425 tests pass with no changed NTSC hashes.
 
 ### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
 
@@ -709,6 +709,19 @@ UX-23 coverage is compile/status level:
   `--cd-transcript artifacts/cd-transcript.txt` produced 393 entries. The first entries
   are READ_ID, READ_ERROR, MODE_SET, READ_DISC_INFO, READ_TOC, and READ_DATA; the frame
   hash `0x88883E88` is unchanged from the pre-transcript run.
+
+### 1.1q Audio device and buffer latency (2026-11-01)
+
+- `AudioBufferConfigurationTests` checks clamping at 1/20/100/500/10,000 ms, monotonic
+  queue growth, and that a 100 ms target yields an 80-120 ms queued window.
+- `AppSettingsStoreTests.AudioDeviceAndBuffer_RoundtripAndClamp` covers device-name
+  trimming, buffer persistence, and 20/500 ms clamping.
+- Manual evidence: `5do audio devices --json` listed
+  `OpenAL Soft on Headphones (JBL DUET NC)` and
+  `OpenAL Soft on PG34WQ15R2B (NVIDIA High Definition Audio)`. A 60-frame PAL
+  Battle Chess run with `--audio openal --audio-buffer 20 --audio-device
+  "OpenAL Soft on Headphones (JBL DUET NC)"` completed with `ok: true`, 52,921
+  samples, and frame hash `0x88883E88`.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

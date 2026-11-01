@@ -141,6 +141,32 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void AudioDeviceAndBuffer_RoundtripAndClamp()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        var settings = new AppSettings
+        {
+            AudioDevice = "  OpenAL Soft on Speakers  ",
+            AudioBufferMilliseconds = 120,
+        };
+
+        AppSettingsStore.Save(settings, path);
+        AppSettings loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal("OpenAL Soft on Speakers", loaded.AudioDevice);
+        Assert.Equal(120, loaded.AudioBufferMilliseconds);
+
+        loaded.AudioBufferMilliseconds = 900;
+        AppSettingsStore.Save(loaded, path);
+        Assert.Equal(500, AppSettingsStore.Load(path).AudioBufferMilliseconds);
+
+        loaded.AudioBufferMilliseconds = 1;
+        AppSettingsStore.Save(loaded, path);
+        Assert.Equal(20, AppSettingsStore.Load(path).AudioBufferMilliseconds);
+    }
+
+    [Fact]
     public void PointerSettings_RoutePortsAndMapCoordinates()
     {
         var settings = new AppSettings();

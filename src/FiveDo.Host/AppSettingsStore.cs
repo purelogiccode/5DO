@@ -230,6 +230,11 @@ public static class AppSettingsStore
             }
 
             settings.InputDisplayPlayer = Math.Clamp(settings.InputDisplayPlayer, 1, 6);
+            settings.AudioBufferMilliseconds = Math.Clamp(settings.AudioBufferMilliseconds, 20, 500);
+            // JSON can deserialize null despite the non-nullable annotation.
+            // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+            settings.AudioDevice ??= string.Empty;
+            settings.AudioDevice = settings.AudioDevice.Trim();
             settings.PointerPort = Math.Clamp(settings.PointerPort, 0, 6);
             settings.PointerScale = double.IsFinite(settings.PointerScale)
                 ? Math.Clamp(settings.PointerScale, 0.5, 2.0)

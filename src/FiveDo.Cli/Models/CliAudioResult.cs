@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 
 namespace FiveDo.Cli;
 
@@ -17,3 +19,7 @@ internal sealed record CliAudioResult(
     long SilentFrames,
     double DcOffsetLeft,
     double DcOffsetRight);
+
+internal sealed record CliAudioDevicesResult(
+    bool Ok,
+    IReadOnlyList<string> Devices);

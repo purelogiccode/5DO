@@ -71,6 +71,12 @@ still change.
   illegal-request status instead of silently doing nothing, the guest RESET command
   restores the default transfer state and sector size, and `PrefetchingDiscSource`
   read-aheads native track sectors so CD-DA does not decompress on the sample clock.
+- AUD-01 audio device and buffer latency: `OpenAlAudioOutput` enumerates OpenAL Soft
+  playback devices, accepts a selected device name and a 20-500 ms buffer target, and
+  derives buffer count, prefill, and ring capacity from that target. Settings > Audio
+  adds the device combo, **Refresh**, and latency box; changing either recreates only the
+  host output while emulation continues. CLI adds `--audio-device`, `--audio-buffer`,
+  and `audio devices`. The status bar and run JSON report estimated latency.
 - SYS-15 pointer routing and calibration: `PointerPort` routes host mouse/lightgun input
   to all pointer devices or one controller port, and `PointerScale`/`PointerOffsetX`/Y
   apply a native-pixel calibration with a reset control in Settings > Emulation. This

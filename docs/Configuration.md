@@ -135,6 +135,8 @@ every serialized property in `AppSettings`.
 | `AudioEnabled` | bool | `true` | Enable live OpenAL output. |
 | `CdAudioVolume` | float | `0.8` | CD-DA mix level, 0..1. Applies only while PLAY_AUDIO is active. |
 | `CdAudioMuted` | bool | `false` | Keep CD-DA playback running but remove it from the mixed output. |
+| `AudioDevice` | string | `""` | OpenAL playback device name; empty uses the system default. |
+| `AudioBufferMilliseconds` | int | `100` | Target OpenAL buffer latency, 20-500 ms. |
 | `PointerPort` | int | `0` | `0` sends host pointer input to every pointer device; `1`-`6` routes it to that controller port. |
 | `PointerScale` | float | `1.0` | Pointer calibration scale (0.5-2.0). |
 | `PointerOffsetX`, `PointerOffsetY` | int | `0` | Pointer calibration offset in native pixels. |
@@ -268,6 +270,8 @@ player-1 defaults. See section 3 for the full input structure.
   "AutoRegion": true,
   "Volume": 1.0,
   "AudioEnabled": true,
+  "AudioDevice": "",
+  "AudioBufferMilliseconds": 100,
   "CdAudioVolume": 0.8,
   "CdAudioMuted": false,
   "AutoSwapOnEject": true,
@@ -483,6 +487,8 @@ The Settings dialog's **Emulation** page edits:
   or PAL2 regardless of the automatic choice.
 - **Pointer port** and **Pointer calibration**: choose all pointer devices or a single
   controller port, then scale and offset the host pointer in native pixels.
+- **Output device** and **Buffer latency**: select an OpenAL device and a 20-500 ms
+  target; changes recreate only the host audio output.
 - `Profile` combo: Compatible, Accuracy, Performance, or Custom. Selecting a profile
   fills the timing controls; manually changing one of them saves `Custom`.
 - `ArmTiming` combo: FreeDO-compatible N=4 or ARM60 datasheet N=2 (restarts the machine when changed).

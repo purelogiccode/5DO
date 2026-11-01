@@ -117,7 +117,7 @@
             </TabItem>
 
             <TabItem Header="Audio" ToolTip.Tip="OpenAL output, volume, CD-DA mix, and test-tone settings.">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Output" VerticalAlignment="Center"
                                ToolTip.Tip="Enable or disable live OpenAL playback." />
                     <CheckBox x:Name="AudioCheck" Grid.Row="0" Grid.Column="1" Content="Enable OpenAL output"
@@ -141,6 +141,24 @@
                             Content="Play 440 Hz test tone" Click="OnTestAudioClickAsync"
                             HorizontalAlignment="Left" Margin="0,12,0,0"
                             ToolTip.Tip="Play a one-second 440 Hz tone to verify the output device." />
+                    <TextBlock Grid.Row="7" Grid.Column="0" Text="Output device" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Choose the OpenAL playback device." />
+                    <Grid Grid.Row="7" Grid.Column="1" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+                        <ComboBox x:Name="AudioDeviceCombo" Grid.Column="0"
+                                  ToolTip.Tip="Default uses the OpenAL Soft default. Selecting a named device switches output immediately." />
+                        <Button x:Name="AudioDeviceRefreshButton" Grid.Column="1" Content="Refresh" Margin="6,0,0,0"
+                                Click="OnAudioDeviceRefreshClick"
+                                ToolTip.Tip="Rescan the OpenAL playback devices." />
+                    </Grid>
+                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Buffer latency" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Target OpenAL queue latency. Lower values reduce delay; higher values resist crackle." />
+                    <StackPanel Grid.Row="8" Grid.Column="1" Orientation="Horizontal" Margin="0,12,0,0" Spacing="4">
+                        <TextBox x:Name="AudioBufferBox" Width="64" ToolTip.Tip="20-500 milliseconds." />
+                        <TextBlock Text="ms (20-500)" VerticalAlignment="Center" Opacity="0.7" />
+                    </StackPanel>
+                    <TextBlock Grid.Row="9" Grid.Column="1" Text="Device and buffer changes restart OpenAL output without resetting the machine."
+                               Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
+                               ToolTip.Tip="The emulated machine keeps running; only the host audio queue is recreated." />
                     <TextBlock x:Name="TestAudioText" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2"
                                Text="OpenAL Soft 1.23.1 · 44.1 kHz stereo"
                                Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"

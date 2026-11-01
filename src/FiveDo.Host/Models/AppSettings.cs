@@ -436,6 +436,12 @@ public sealed class AppSettings
     /// <summary>Gets or sets a value indicating whether audio output is enabled.</summary>
     public bool AudioEnabled { get; set; } = true;
 
+    /// <summary>Gets or sets the OpenAL output device name, or an empty string for the default.</summary>
+    public string AudioDevice { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the target OpenAL buffer latency in milliseconds (20-500).</summary>
+    public int AudioBufferMilliseconds { get; set; } = 100;
+
     /// <summary>
     /// Gets or sets the controller port that receives host pointer input, or zero to
     /// send it to every mouse/lightgun/arcade-lightgun/trackball port.

@@ -82,6 +82,8 @@ public partial class MainWindow : Window, IDisposable
     private bool _pointerMiddleDown;
     private bool _pointerRightDown;
     private OpenAlAudioOutput? _audio;
+    private string _audioDevice;
+    private int _audioBufferMilliseconds;
     private float _meterPeak;
     private FiveDoMachine? _machine;
     private CoreRunner? _runner;
@@ -175,13 +177,19 @@ public partial class MainWindow : Window, IDisposable
         _input = new InputManager(_settings.Input, _gamepad);
         _settings.ApplyInputDevices(_input);
         string? audioError = null;
-        _audio = _settings.AudioEnabled ? OpenAlAudioOutput.TryCreate(8192, out audioError) : null;
+        _audioDevice = _settings.AudioDevice;
+        _audioBufferMilliseconds = _settings.AudioBufferMilliseconds;
+        _audio = _settings.AudioEnabled
+            ? OpenAlAudioOutput.TryCreate(_audioBufferMilliseconds, _audioDevice, out audioError)
+            : null;
         if (_audio is not null)
         {
             _audio.Volume = _settings.Volume;
             _logger.ForCategory(LogCategory.Audio).Information(
-                "OpenAL audio ready ({SampleRate} Hz stereo).",
-                OpenAlAudioOutput.OutputSampleRate);
+                "OpenAL audio ready ({SampleRate} Hz stereo, {BufferMs} ms, device {Device}).",
+                OpenAlAudioOutput.OutputSampleRate,
+                _audioBufferMilliseconds,
+                string.IsNullOrWhiteSpace(_audioDevice) ? "default" : _audioDevice);
         }
         else if (_settings.AudioEnabled)
         {
@@ -3188,25 +3196,43 @@ public partial class MainWindow : Window, IDisposable
 
         if (_settings.AudioEnabled)
         {
-            if (_audio is null)
+            bool configurationChanged =
+                !string.Equals(_audioDevice, _settings.AudioDevice, StringComparison.Ordinal)
+                || _audioBufferMilliseconds != _settings.AudioBufferMilliseconds;
+            if (_audio is null || configurationChanged)
             {
-                _audio = OpenAlAudioOutput.TryCreate(8192, out var audioError);
-                if (_audio is not null && _machine is not null)
+                OpenAlAudioOutput? previous = _audio;
+                OpenAlAudioOutput? replacement = OpenAlAudioOutput.TryCreate(
+                    _settings.AudioBufferMilliseconds,
+                    _settings.AudioDevice,
+                    out var audioError);
+                if (replacement is not null)
                 {
-                    _machine.AudioSink = _audio;
-                }
+                    replacement.Volume = _settings.Volume;
+                    if (_machine is not null)
+                    {
+                        _machine.AudioSink = replacement;
+                    }
 
-                if (_audio is null)
+                    _audio = replacement;
+                    _audioDevice = _settings.AudioDevice;
+                    _audioBufferMilliseconds = _settings.AudioBufferMilliseconds;
+                    previous?.Dispose();
+                    _logger.ForCategory(LogCategory.Audio).Information(
+                        "OpenAL audio ready ({SampleRate} Hz stereo, {BufferMs} ms, device {Device}).",
+                        OpenAlAudioOutput.OutputSampleRate,
+                        _audioBufferMilliseconds,
+                        string.IsNullOrWhiteSpace(_audioDevice) ? "default" : _audioDevice);
+                }
+                else
                 {
                     _logger.ForCategory(LogCategory.Audio).WithoutBugReport().Warning(
                         "OpenAL audio is unavailable; emulation continues silently ({Error}).",
                         audioError ?? "unknown error");
-                }
-                else
-                {
-                    _logger.ForCategory(LogCategory.Audio).Information(
-                        "OpenAL audio ready ({SampleRate} Hz stereo).",
-                        OpenAlAudioOutput.OutputSampleRate);
+                    if (previous is not null)
+                    {
+                        _audio = previous;
+                    }
                 }
             }
 
@@ -3570,7 +3596,7 @@ public partial class MainWindow : Window, IDisposable
                 : $"gpu {gpu.Value:F2} ms  present {present:F2} ms";
             var audio = _audio is null
                 ? string.Empty
-                : $"  audio {_audio.BufferedFrames}f q{_audio.QueuedBuffers} u{_audio.UnderrunBuffers} "
+                : $"  audio {_audio.LatencyMilliseconds:F0}ms {_audio.BufferedFrames}f q{_audio.QueuedBuffers} u{_audio.UnderrunBuffers} "
                     + $"d{_audio.SamplesDropped} {FormatAudioMeter(_audio.TakePeakLevel())}";
             var shown = status.PresentedFramesPerSecond > 0 && status.PresentedFramesPerSecond < status.FramesPerSecond - 0.5
                 ? $"  shown {status.PresentedFramesPerSecond:F1}"

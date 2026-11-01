@@ -448,10 +448,12 @@ and **Help > Support 5DO...**.
 
 The desktop app ships the OpenAL Soft 1.23.1 runtime, so live stereo output works
 without a system OpenAL installation. Use Settings > Audio to enable/disable audio,
-set the output volume, set the CD-DA mix level, mute CD-DA, and play a 1 s 440 Hz test
-tone; the test reports the OpenAL error when no playback device is available. If no
-device is present, the app logs a warning and continues silently; the emulated DSP
-still runs so games do not stall.
+choose the output device, set a 20-500 ms buffer target, set the output volume, set the
+CD-DA mix level, mute CD-DA, and play a 1 s 440 Hz test tone; the test reports the
+OpenAL error when no playback device is available. Device and buffer changes recreate
+only the host audio output, so the game keeps running. If no device is present, the app
+logs a warning and continues silently; the emulated DSP still runs so games do not
+stall. **Refresh** rescans devices after plugging in a headset.
 
 CD-DA applies only while the disc is playing an audio track through PLAY_AUDIO. Most
 3DO software reads audio sectors through READ_DATA and feeds the DSP itself. The volume
@@ -462,7 +464,8 @@ dedicated core thread paces frames against that clock (falling back to 60 Hz whe
 no samples are available). The optional FPS overlay shows measured/target fps.
 
 The CLI can write WAV files with `--audio wav --wav-out <path>` or play live with
-`--audio openal --volume 0.5`. Add `--realtime` to pace a CLI run at the audio
+`--audio openal --volume 0.5 --audio-device "<name>" --audio-buffer 50`.
+`5do audio devices` lists the OpenAL playback devices. Add `--realtime` to pace a CLI run at the audio
 clock; without it, the CLI runs as fast as possible and live audio is a short
 burst. Use `--cd-volume 0..1` and `--mute-cd` to control the CD-DA mix independently.
 

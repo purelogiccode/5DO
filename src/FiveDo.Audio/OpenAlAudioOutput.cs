@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading;
 using FiveDo.Core;
 using Silk.NET.OpenAL;
@@ -28,26 +30,22 @@ namespace FiveDo.Audio;
 public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
 {
     private const int SampleRate = EmulatorConstants.SoundClock;
-    private const int BufferFrames = 512;
-    private const int BufferCount = 8;
+    private const int DefaultBufferMilliseconds = 100;
 
-    // Playback starts once this many frames are buffered. The core emits a burst of
-    // samples once per video frame while the device drains steadily, and the frontend's
-    // UI/render threads can delay the core or fill thread; a deep lead keeps the queue
-    // fed through that jitter so the device never plays a gap.
-    private const int PrefillFrames = 3072;
-
+    private readonly int _bufferFrames;
+    private readonly int _bufferCount;
+    private readonly int _prefillFrames;
     private readonly ALContext _alc;
     private readonly AL _al;
     private readonly Device* _device;
     private readonly Context* _context;
     private readonly uint _source;
-    private readonly uint[] _buffers = new uint[BufferCount];
-    private readonly int[] _bufferFrameCounts = new int[BufferCount];
-    private readonly uint[] _unqueue = new uint[BufferCount];
+    private readonly uint[] _buffers;
+    private readonly int[] _bufferFrameCounts;
+    private readonly uint[] _unqueue;
     private readonly AudioBufferPool _freeBuffers;
-    private readonly short[] _samples = new short[BufferFrames * 2];
-    private readonly float[] _floatFrames = new float[BufferFrames * 2];
+    private readonly short[] _samples;
+    private readonly float[] _floatFrames;
     private readonly float[] _pushFrame = new float[2];
     private readonly AudioRingBuffer _ring;
     private readonly AudioTap? _tap;
@@ -73,13 +71,22 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         AL al,
         Device* device,
         Context* context,
-        AudioRingBuffer ring)
+        AudioRingBuffer ring,
+        AudioBufferConfiguration configuration)
     {
         _alc = alc;
         _al = al;
         _device = device;
         _context = context;
         _ring = ring;
+        _bufferFrames = configuration.BufferFrames;
+        _bufferCount = configuration.BufferCount;
+        _prefillFrames = configuration.PrefillFrames;
+        _buffers = new uint[_bufferCount];
+        _bufferFrameCounts = new int[_bufferCount];
+        _unqueue = new uint[_bufferCount];
+        _samples = new short[_bufferFrames * 2];
+        _floatFrames = new float[_bufferFrames * 2];
 
         if (!_alc.MakeContextCurrent(_context))
         {
@@ -169,6 +176,34 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
     /// <summary>Gets the output sample rate.</summary>
     public const int OutputSampleRate = SampleRate;
 
+    /// <summary>Gets the OpenAL buffer size used for silence padding and queue chunks.</summary>
+    public int BufferFrames => _bufferFrames;
+
+    /// <summary>Gets the number of OpenAL buffers queued by the fill loop.</summary>
+    public int BufferCount => _bufferCount;
+
+    /// <summary>Gets the ring frames required before playback starts.</summary>
+    public int PrefillFrames => _prefillFrames;
+
+    /// <summary>
+    /// Computes the queue shape for a requested latency in milliseconds.
+    /// </summary>
+    /// <param name="milliseconds">Requested target latency, clamped to 20-500 ms.</param>
+    /// <returns>Buffer frames, buffer count, prefill frames, and ring capacity.</returns>
+    public static AudioBufferConfiguration ComputeBufferConfiguration(int milliseconds)
+    {
+        int clamped = Math.Clamp(milliseconds, 20, 500);
+        int targetFrames = (int)((long)SampleRate * clamped / 1000);
+        const int bufferFrames = 256;
+        int bufferCount = Math.Clamp(
+            (targetFrames + bufferFrames - 1) / bufferFrames,
+            4,
+            32);
+        int prefillFrames = Math.Max(bufferFrames, bufferCount * bufferFrames / 2);
+        int ringCapacity = Math.Max(targetFrames * 2, bufferCount * bufferFrames * 2);
+        return new AudioBufferConfiguration(bufferFrames, bufferCount, prefillFrames, ringCapacity);
+    }
+
     /// <summary>Takes the peak absolute level of the audio queued since the previous call.</summary>
     /// <returns>A value from 0 to 1, or zero when nothing was queued.</returns>
     public float TakePeakLevel()
@@ -191,6 +226,34 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
     /// <returns>A running output, or <see langword="null"/> when OpenAL is unavailable.</returns>
     public static OpenAlAudioOutput? TryCreate(int capacityFrames, out string? error)
     {
+        AudioBufferConfiguration configuration = ComputeBufferConfiguration(DefaultBufferMilliseconds);
+        return TryCreate(
+            Math.Max(capacityFrames, configuration.RingCapacityFrames),
+            deviceName: null,
+            configuration,
+            out error);
+    }
+
+    /// <summary>Tries to open an OpenAL device with a requested latency.</summary>
+    /// <param name="bufferMilliseconds">Target buffer latency, 20-500 ms.</param>
+    /// <param name="deviceName">Device name, or <see langword="null"/> for the default device.</param>
+    /// <param name="error">Receives a diagnostic message when the result is null.</param>
+    /// <returns>A running output, or <see langword="null"/> when OpenAL is unavailable.</returns>
+    public static OpenAlAudioOutput? TryCreate(
+        int bufferMilliseconds,
+        string? deviceName,
+        out string? error)
+    {
+        AudioBufferConfiguration configuration = ComputeBufferConfiguration(bufferMilliseconds);
+        return TryCreate(configuration.RingCapacityFrames, deviceName, configuration, out error);
+    }
+
+    private static OpenAlAudioOutput? TryCreate(
+        int capacityFrames,
+        string? deviceName,
+        AudioBufferConfiguration configuration,
+        out string? error)
+    {
         error = null;
         ALContext? alc = null;
         AL? al = null;
@@ -200,7 +263,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         {
             alc = ALContext.GetApi();
             al = AL.GetApi();
-            device = alc.OpenDevice(string.Empty);
+            device = alc.OpenDevice(string.IsNullOrWhiteSpace(deviceName) ? string.Empty : deviceName);
             if (device is null)
             {
                 error = "No OpenAL playback device was found.";
@@ -220,7 +283,13 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
                 return null;
             }
 
-            var output = new OpenAlAudioOutput(alc, al, device, context, new AudioRingBuffer(capacityFrames));
+            var output = new OpenAlAudioOutput(
+                alc,
+                al,
+                device,
+                context,
+                new AudioRingBuffer(capacityFrames),
+                configuration);
             alc = null;
             al = null;
             device = null;
@@ -248,6 +317,62 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
             al?.Dispose();
             alc?.Dispose();
         }
+    }
+
+    /// <summary>Enumerates the OpenAL playback devices visible to the process.</summary>
+    /// <returns>Device names; the list may contain only the default device when enumeration is unsupported.</returns>
+    public static IReadOnlyList<string> EnumerateDevices()
+    {
+        var devices = new List<string>();
+        ALContext? alc = null;
+        try
+        {
+            alc = ALContext.GetApi();
+            if (alc.IsExtensionPresent(null, "ALC_ENUMERATE_ALL_EXT"))
+            {
+                void* address = alc.GetProcAddress(null, "alcGetString");
+                if (address is not null)
+                {
+                    var getString = (delegate* unmanaged<Device*, int, byte*>)address;
+                    byte* cursor = getString(null, 0x1013);
+                    while (cursor is not null && *cursor != 0)
+                    {
+                        var start = cursor;
+                        while (*cursor != 0)
+                        {
+                            cursor++;
+                        }
+
+                        var name = Marshal.PtrToStringAnsi((IntPtr)start);
+                        if (!string.IsNullOrWhiteSpace(name))
+                        {
+                            devices.Add(name);
+                        }
+
+                        cursor++;
+                    }
+                }
+            }
+
+            if (devices.Count == 0)
+            {
+                var name = alc.GetContextProperty(null, GetContextString.DeviceSpecifier);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    devices.Add(name);
+                }
+            }
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            Serilog.Log.Debug(exception, "OpenAL device enumeration failed.");
+        }
+        finally
+        {
+            alc?.Dispose();
+        }
+
+        return devices;
     }
 
     /// <summary>Drops buffered and queued samples after a machine reset or state load.</summary>
@@ -362,13 +487,13 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
                 }
 
                 var batchPeak = 0f;
-                while (queued < BufferCount && !_stop.IsCancellationRequested)
+                while (queued < _bufferCount && !_stop.IsCancellationRequested)
                 {
                     // The emulation emits a burst of samples once per video frame while the
                     // device drains steadily, so build a lead in the ring before the first
                     // block is queued. Without it the ring empties between bursts and the
                     // device plays a gap.
-                    if (!started && _ring.FramesAvailable < PrefillFrames)
+                    if (!started && _ring.FramesAvailable < _prefillFrames)
                     {
                         break;
                     }
@@ -401,7 +526,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
 
                         // The queue is empty and the ring is dry: emit one silent block so
                         // the source keeps running instead of underrunning and restarting.
-                        frames = BufferFrames;
+                        frames = _bufferFrames;
                         Array.Clear(_floatFrames);
                         underrun = true;
                         Interlocked.Increment(ref _underrunBuffers);
@@ -537,3 +662,15 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         _alc.Dispose();
     }
 }
+
+/// <summary>OpenAL queue sizing derived from a requested latency.</summary>
+/// <param name="BufferFrames">Frames per queued OpenAL buffer.</param>
+/// <param name="BufferCount">Maximum queued buffers.</param>
+/// <param name="PrefillFrames">Ring frames buffered before playback starts.</param>
+/// <param name="RingCapacityFrames">Suggested ring-buffer capacity.</param>
+[StructLayout(LayoutKind.Auto)]
+public readonly record struct AudioBufferConfiguration(
+    int BufferFrames,
+    int BufferCount,
+    int PrefillFrames,
+    int RingCapacityFrames);

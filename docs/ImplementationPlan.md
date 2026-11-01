@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,417 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,425 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,417** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,425** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 13 done · 14 partial · 93 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 13 done · 15 partial · 92 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -195,7 +195,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ### Audio
 
-- [ ] **[AUD-01](#feat-aud-01)** Audio buffer/latency/device/resampler — P1 · M · depends on: FND-06 — **Pending**
+- [ ] **[AUD-01](#feat-aud-01)** Audio buffer/latency/device/resampler — P1 · M · depends on: FND-06 — **Partial** — OpenAL device enumeration/selection, 20-500 ms buffer latency, live output recreation, and latency display are implemented; resampler quality, exclusive mode, and sync offset remain
 - [ ] **[AUD-02](#feat-aud-02)** Audio recording UI, mixer, spectrum — P1 · M · depends on: FND-06 — **Pending**
 - [ ] **[AUD-03](#feat-aud-03)** DSP debugger — P2 · M · depends on: UX-21 — **Pending**
 - [ ] **[AUD-04](#feat-aud-04)** Audio golden tests vs Opera/hardware — P1 · M · depends on: CORE-11 — **Pending**
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,417 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,425 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,417**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,425**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -801,6 +801,12 @@ records the live region. CORE-04 gains illegal-request responses for unsupported
 commands, the guest RESET command, `CdromCommandTranscript` plus `--cd-transcript`, and
 native-sector read-ahead in the prefetch cache. `Battle Chess (Europe)` produced a
 393-entry boot transcript with matching frame hash. **1415 tests pass.**
+
+**Audio-latency pass (2026-11-01, forty-sixth pass):** AUD-01 moves to partial. OpenAL
+devices are enumerated and selectable, the buffer target is 20-500 ms, and queue,
+prefill, and ring sizes derive from that target. Device/buffer changes recreate only
+the host output. The local host enumerated two devices, and a 60-frame PAL run opened
+the selected device at a 20 ms target. **1425 tests pass.**
 
 **Last updated:** 2026-11-01
 
@@ -2881,6 +2887,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | UX-15 | Named configuration profiles | Added `FIVEDO_PROFILE`/`--config-profile`, per-profile data directories under `profiles/<name>/`, safe profile-name normalization, `AppSettingsStore.ListProfiles`/`GetProfilePath`, and `settings profiles` listing. Portable, override, profile, and sanitization tests pass; UX-15 remains partial for a selector/import-export UI and instance locking. 1,395 tests pass |
 | 2026-11-01 | UX-15 | Per-instance write lock | Added `InstanceLock`, an exclusive `5do.instance.lock` in the resolved data directory, desktop conflict handling, and `FIVEDO_ALLOW_MULTIPLE=1`. Separate profiles/directories still run together. UX-15 remains partial for the profile selector/import-export UI; 1,415 tests pass |
 | 2026-11-01 | SYS-15 | Pointer routing and calibration | Added `PointerPort` (all or port 1-6), `PointerScale`/`PointerOffsetX`/`PointerOffsetY` with clamping, `AppSettings.MapPointer`/`RoutesPointerTo`, Settings > Emulation pointer controls, and native-resolution mapping for mouse, lightgun, arcade lightgun, and trackball input. SYS-15 remains partial only for scripted gameplay validation; 1,417 tests pass |
+| 2026-11-01 | AUD-01 | Audio device and buffer latency | Added OpenAL device enumeration and selection, 20-500 ms buffer targets with derived queue/prefill/ring sizing, live output recreation without resetting the machine, Settings > Audio device/buffer controls, `--audio-device`/`--audio-buffer`, `audio devices`, and latency in the status/JSON output. AUD-01 is partial for resampler quality/exclusive/sync; 1,425 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -3022,7 +3029,7 @@ A feature is done only when:
 
 | ID | Feature | Priority | Effort | Depends on | Status |
 |---|---|---|---|---|---|
-| AUD-01 | Audio buffer/latency/device/resampler | P1 | M | FND-06 | Pending |
+| AUD-01 | Audio buffer/latency/device/resampler | P1 | M | FND-06 | Partial |
 | AUD-02 | Audio recording UI, mixer, spectrum | P1 | M | FND-06 | Pending |
 | AUD-03 | DSP debugger | P2 | M | UX-21 | Pending |
 | AUD-04 | Audio golden tests vs Opera/hardware | P1 | M | CORE-11 | Pending |
@@ -4684,23 +4691,26 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
 <a id="feat-aud-01"></a>
 ### AUD-01 - Audio buffer/latency/device/resampler
 
-**Priority:** P1 | **Effort:** M | **Depends on:** FND-06 | **Status:** Pending
+**Priority:** P1 | **Effort:** M | **Depends on:** FND-06 | **Status:** Partial (2026-11-01)
 
-**Problem.** 5DO exposes only volume; 4DO exposes buffer size.
+**Problem.** 5DO exposed only volume; 4DO exposes buffer size.
 
-**Add.**
-- Device enumeration/selection.
-- Buffer size 20-500 ms.
-- Resampler quality.
-- Exclusive mode.
-- Sync offset.
-- Overlay latency display.
+**Implemented.**
+- `OpenAlAudioOutput.EnumerateDevices()` lists OpenAL Soft playback devices through `ALC_ENUMERATE_ALL_EXT`, with a default-device fallback.
+- `AppSettings.AudioDevice` persists the selected device; `AudioBufferMilliseconds` selects a 20-500 ms target.
+- `AudioBufferConfiguration` derives buffer frames, queue depth, prefill, and ring capacity from the requested latency.
+- Settings > Audio adds an output-device combo with **Refresh** and a buffer-latency box. Changing either recreates only the host audio output; the machine, rewind history, and emulation state continue.
+- The status bar and `run --json` report estimated latency alongside queued/buffered/underrun counters.
+- CLI `--audio-device <name>`, `--audio-buffer 20..500`, and `audio devices [--json]`.
 
-**Files.** `OpenAlAudioOutput.cs`, `AppSettings.cs`, UI.
+**Remaining.**
+- Resampler quality selection.
+- Exclusive mode and a sync-offset control.
+- A real-device crackle sweep at 20-200 ms on Tier B hardware.
 
-**Tests.** Null/real device; buffer sizes; device switch; no crackle.
+**Files.** `OpenAlAudioOutput.cs`, `AppSettings.cs`, Settings UI, CLI.
 
-**Done when.** Users can tune latency without restarting emulation.
+**Tests.** `AudioBufferConfigurationTests` covers clamping, monotonic growth, and queue duration; `AppSettingsStoreTests` covers device/buffer roundtrip and clamping. Device enumeration was exercised on the local Windows host (two devices listed).
 
 ---
 
@@ -6724,7 +6734,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 
 | ID | Enhancement | Why / reference | Done when | Effort |
 |---|---|---|---|---|
-| [ ] **AUD-01** | Audio buffer/latency/device/resampler settings | 4DO exposes buffer ms; 5DO only volume. | Device list, buffer size, resampler quality, exclusive mode, sync slider. | M |
+| [~] **AUD-01** | Audio buffer/latency/device/resampler settings | 4DO exposes buffer ms; 5DO only volume. | Device list, buffer size, resampler quality, exclusive mode, sync slider. **Partial 2026-11-01:** device enumeration/selection, 20-500 ms buffer latency, live output recreation, latency display, and CLI `audio devices`/`--audio-device`/`--audio-buffer` are implemented; resampler quality, exclusive mode, and sync offset remain. | M |
 | [ ] **AUD-02** | Audio recording UI, mixer, spectrum | CLI WAV exists; UI does not. | Record/stop; per-channel mute; spectrum; file naming. | M |
 | [ ] **AUD-03** | DSP debugger | DSP is a black box outside traces. | Registers, memory, instruction ring, breakpoints, semaphore view. | M |
 | [ ] **AUD-04** | Audio golden tests vs Opera/hardware | Current tests check non-silence/peak/RMS, not spectral parity. | Golden WAVs; spectral cosine; regression gate. | M |
@@ -6732,7 +6742,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 
 #### AUD-01 deep dive: audio buffer and latency
 
-**Current:** `OpenAlAudioOutput` uses a fixed prefill/queue policy; `AppSettings` has `Volume` and `AudioEnabled` only. The 4DO audio buffer setting is absent.
+**Current (2026-11-01):** `OpenAlAudioOutput` enumerates devices, derives queue/prefill/ring sizing from a 20-500 ms target, and can be recreated live when the device or buffer changes. `AppSettings` persists `AudioDevice` and `AudioBufferMilliseconds`; resampler quality, exclusive mode, and sync offset remain.
 
 **Why:** users have different devices, Bluetooth latency, and driver behavior. A buffer slider and device selection eliminate crackle and lip-sync complaints.
 
