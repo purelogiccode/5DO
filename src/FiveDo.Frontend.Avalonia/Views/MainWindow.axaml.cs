@@ -181,6 +181,7 @@ public partial class MainWindow : Window, IDisposable
             _ = new CheatsWindow();
             _ = new DiscBrowserWindow();
             _ = new DiscInfoWindow();
+            _ = new BiosNvramManagerWindow();
         }
 
         GridLibraryList.ItemsSource = _visibleGames;
@@ -2581,6 +2582,83 @@ public partial class MainWindow : Window, IDisposable
         _logger.ForCategory(LogCategory.Host).Information("Settings saved.");
     }
 
+    private void OnBiosNvramManagerAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ShowBiosNvramManagerAsync, "showing the BIOS/NVRAM manager");
+    }
+
+    private async Task ShowBiosNvramManagerAsync()
+    {
+        var wasRunning = _running;
+        if (wasRunning)
+        {
+            // NVRAM reset/delete must not race the running store's next flush.
+            PauseEmulation(showLibrary: false);
+        }
+
+        var previousBiosPath = _settings.BiosPath;
+        var previousBios2Path = _settings.Bios2Path;
+        var previousBiosFolder = _settings.BiosFolder;
+        var previousBiosOverride = _settings.GetBiosOverride(_gameId);
+        var previousNvramMode = _settings.NvramStorageMode;
+        var previousNvramVersion = _settings.NvramVersion;
+        var previousNvramDirectory = _settings.NvramDirectory;
+
+        var window = new BiosNvramManagerWindow(_settings, _gameId, _gameName);
+        await window.ShowDialog<bool>(this).ConfigureAwait(true);
+        var settingsChanged = window.SettingsChanged;
+        var nvramFilesChanged = window.NvramFilesChanged;
+        if (!settingsChanged && !nvramFilesChanged)
+        {
+            if (wasRunning)
+            {
+                StartEmulation(showGameView: false);
+            }
+
+            return;
+        }
+
+        if (settingsChanged)
+        {
+            AppSettingsStore.Save(_settings);
+        }
+
+        var biosChanged =
+            !string.Equals(previousBiosPath, _settings.BiosPath, StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(previousBios2Path, _settings.Bios2Path, StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(previousBiosFolder, _settings.BiosFolder, StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(previousBiosOverride, _settings.GetBiosOverride(_gameId), StringComparison.OrdinalIgnoreCase);
+        var nvramChanged =
+            previousNvramMode != _settings.NvramStorageMode
+            || previousNvramVersion != _settings.NvramVersion
+            || !string.Equals(previousNvramDirectory, _settings.NvramDirectory, StringComparison.OrdinalIgnoreCase);
+
+        if (_machine is not null && (biosChanged || nvramChanged || nvramFilesChanged))
+        {
+            // A reset/delete/import must not be overwritten by the machine's old
+            // in-memory NVRAM, so skip the pre-recreate flush in that case.
+            RecreateMachine(flushNvram: !nvramFilesChanged);
+            return;
+        }
+
+        if (_machine is null && (nvramChanged || nvramFilesChanged))
+        {
+            ReplaceNvramStore(_gameId.Length > 0 ? _gameId : null);
+        }
+
+        StatusText.Text = nvramFilesChanged
+            ? "NVRAM image changed; the next game start uses the new data."
+            : "BIOS and NVRAM settings saved.";
+        _logger.ForCategory(LogCategory.Host).Information(
+            "BIOS/NVRAM manager closed (settings={Settings}, nvramFiles={NvramFiles}).",
+            settingsChanged,
+            nvramFilesChanged);
+        if (wasRunning)
+        {
+            StartEmulation(showGameView: false);
+        }
+    }
+
     private void OnSaveSlotsAsync(object? sender, RoutedEventArgs e)
     {
         AsyncEvent.Run(ShowSaveSlotsAsync, "showing save slots");
@@ -2720,10 +2798,13 @@ public partial class MainWindow : Window, IDisposable
         RecreateMachine();
     }
 
-    private void RecreateMachine()
+    private void RecreateMachine(bool flushNvram = true)
     {
         StopInputRecording(save: true);
-        FlushNvram();
+        if (flushNvram)
+        {
+            FlushNvram();
+        }
         var discPath = _settings.DiscPath;
         GameRecord? record = _gameId.Length == 0 ? null : GameDatabase.Default.FindByChecksum(_gameId);
         ResolvedBios resolved = BiosResolver.Resolve(_settings, _gameId, record, discPath);

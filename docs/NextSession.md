@@ -2,6 +2,19 @@
 
 ## 0. Current handoff (2026-10-30)
 
+**2026-11-01 update:** UX-12 BIOS/NVRAM manager is implemented. **File > BIOS / NVRAM
+Manager...** opens a two-tab window. The BIOS tab scans and classifies images, imports
+validated `.bin`/`.rom` files without overwriting a different image, sets BIOS1/BIOS2,
+and pins or clears the current game's BIOS MD5. The NVRAM tab lists shared and per-game
+images with validation, game metadata, version, size, and modification time; it backs
+up one image or the whole layout, imports a validated 32 KB image, resets an image to a
+fresh volume, and deletes an image. Reset, delete, and import-overwrite require a
+second click on the same button. `BiosInventory` and `NvramInventory` isolate the file
+operations and use atomic NVRAM writes. **Do not redo the inventory helpers, the
+manager window, the menu wiring, or the backup/import/reset/delete semantics; remaining
+UX-12 polish is per-game NVRAM assignment from the list and drag-and-drop import.**
+**1309 tests pass.**
+
 **2026-11-01 update:** SYS-15 input devices are implemented. `InputDeviceSet` selects
 a joypad, flightstick, mouse, lightgun, arcade lightgun, Orbatak trackball, or no
 device on each of six PBUS ports; `PbusChainEncoder` emits Opera's exact daisy-chain
@@ -23,8 +36,8 @@ file, directory, or the whole disc with cross-platform name sanitization and
 destination-root containment, and exposes volume/game-database/fix metadata.
 File > Disc Browser... and File > Disc Info... use the new windows; both are
 constructed by the trimmed frontend smoke test. **Do not redo the browser model,
-extraction, or the two windows; remaining UX work is UX-12 BIOS/NVRAM manager,
-UX-19 OSD/quick menu, and the TAS input editor/Lua work.** **1246 tests pass.**
+extraction, or the two windows; remaining UX work is UX-19 OSD/quick menu and the TAS
+input editor/Lua work.** **1246 tests pass.**
 
 **2026-11-01 update:** UX-06 TAS movies are implemented as a partial first increment.
 `FiveDo.Tas` owns the versioned `.5domovie` container (per-frame PBUS packets, optional

@@ -46,6 +46,18 @@ From the CLI, `--bios-auto <folder>` performs the same selection for `run`/`trac
 `bios list`, `bios scan`, and `bios select` expose the catalog directly. `--bios2` loads
 an explicit secondary ROM.
 
+**File > BIOS / NVRAM Manager...** opens a two-tab manager for the same data. The
+**BIOS images** tab scans a folder, shows each image's kind, region, MD5, size, and
+Kanji/Anvil/patch flags, and imports a validated `.bin`/`.rom` without overwriting a
+different image. **Use as BIOS1** and **Use as BIOS2 / font** set the primary and
+secondary paths; **Assign to Current Game** pins the selected image's MD5 to the
+loaded disc, and **Clear Game Assignment** restores automatic selection. The
+**NVRAM images** tab lists shared and per-game images with their version, game title,
+size, modification time, and validation state. It backs up one image or the whole
+layout, imports a validated 32 KB image over the selected file, resets an image to a
+fresh volume, and deletes an image. Reset, delete, and import-overwrite require a
+second click on the same button, so a single accidental click cannot destroy data.
+
 ## Command-line launch (frontends and file associations)
 
 The desktop executable accepts the following arguments. A positional disc path or
@@ -338,8 +350,10 @@ NVRAM storage > Per game** to keep each title's save data in
 `nvram/per-game/<gameId>.<version>.ram`, or pick a version 0-9 for independent save
 slots. The first per-game save copies the shared image so existing data is not lost.
 **File > Export NVRAM...**, **Import NVRAM...**, and **Reset NVRAM** manage the current
-image from the desktop shell; the CLI can list, export, import, and reset images with
-`nvram path|list|export|import|reset`.
+image from the desktop shell; **File > BIOS / NVRAM Manager...** adds a layout-wide
+list, per-image backup, import, reset, and delete, and a **Backup All...** action that
+preserves the shared/per-game folder structure. The CLI can list, export, import, and
+reset images with `nvram path|list|export|import|reset`.
 The full `settings.json` schema, per-game override keys, input profile format, and
 precedence rules are in [`Configuration.md`](Configuration.md).
 

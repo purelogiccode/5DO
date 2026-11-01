@@ -1,0 +1,227 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:host="using:FiveDo.Host"
+        xmlns:storage="using:FiveDo.Storage"
+        x:Class="FiveDo.Frontend.Avalonia.Views.BiosNvramManagerWindow"
+        Title="BIOS / NVRAM Manager"
+        Width="1000" Height="680"
+        MinWidth="820" MinHeight="560"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="12">
+        <StackPanel Grid.Row="0" Spacing="2">
+            <TextBlock Classes="sectionTitle" Text="BIOS / NVRAM Manager"
+                       ToolTip.Tip="Inspect BIOS images and manage the NVRAM images used by the emulator." />
+            <TextBlock x:Name="GameText" Opacity="0.7" TextWrapping="Wrap"
+                       ToolTip.Tip="Per-game BIOS assignments and the current game's NVRAM image." />
+        </StackPanel>
+
+        <TabControl Grid.Row="1" Margin="0,8,0,0">
+            <TabItem Header="BIOS images" ToolTip.Tip="Scan a folder, import a ROM, and choose the BIOS used by the emulator.">
+                <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="0,8">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto,Auto" Margin="0,0,0,4">
+                        <TextBlock Grid.Column="0" Text="Folder" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox x:Name="BiosFolderBox" Grid.Column="1" VerticalAlignment="Center"
+                                 ToolTip.Tip="Folder scanned for 1 MB BIOS images and optional BIOS2/Kanji fonts." />
+                        <Button Grid.Column="2" Content="Browse..." Click="OnBrowseBiosFolderAsync" Margin="6,0,0,0"
+                                ToolTip.Tip="Choose the BIOS folder." />
+                        <Button Grid.Column="3" Content="Scan" Click="OnScanBiosAsync" Margin="6,0,0,0"
+                                ToolTip.Tip="Re-scan the folder and validate every BIOS image." />
+                        <Button Grid.Column="4" Content="Import..." Click="OnImportBiosAsync" Margin="6,0,0,0"
+                                ToolTip.Tip="Copy a validated BIOS image into the folder." />
+                    </Grid>
+
+                    <TextBlock x:Name="BiosSummaryText" Grid.Row="1" Opacity="0.7"
+                               TextWrapping="Wrap" Margin="0,0,0,4"
+                               ToolTip.Tip="Scan summary and recognized image counts." />
+
+                    <Grid Grid.Row="2" ColumnDefinitions="*,340" Margin="0,4">
+                        <ListBox x:Name="BiosList" Grid.Column="0" SelectionChanged="OnBiosSelectionChanged"
+                                 ToolTip.Tip="Recognized BIOS images. Select one to inspect or use it.">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="storage:BiosProfile">
+                                    <Grid ColumnDefinitions="*,Auto" Margin="4,2">
+                                        <StackPanel Grid.Column="0" Spacing="1">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding FileName}" Opacity="0.7"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Opacity="0.65" FontSize="11">
+                                                <Run Text="{Binding RegionLabel}" />
+                                                <Run Text=" · " />
+                                                <Run Text="{Binding Kind}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding Md5}" Opacity="0.55"
+                                                   FontFamily="Consolas,monospace" VerticalAlignment="Center"
+                                                   ToolTip.Tip="MD5 identifier used by per-game BIOS assignments." />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <Border Grid.Column="1" Margin="10,0,0,0" Padding="10"
+                                Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                CornerRadius="4">
+                            <ScrollViewer>
+                                <StackPanel Spacing="8">
+                                    <TextBlock x:Name="DetailBiosName" Classes="sectionTitle"
+                                               Text="Select a BIOS image" TextWrapping="Wrap" />
+                                    <Grid ColumnDefinitions="90,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Kind" Opacity="0.65" />
+                                        <TextBlock x:Name="DetailBiosKind" Grid.Row="0" Grid.Column="1" />
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Region" Opacity="0.65" />
+                                        <TextBlock x:Name="DetailBiosRegion" Grid.Row="1" Grid.Column="1" />
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="MD5" Opacity="0.65" />
+                                        <TextBlock x:Name="DetailBiosMd5" Grid.Row="2" Grid.Column="1"
+                                                   FontFamily="Consolas,monospace" TextWrapping="Wrap" />
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Size" Opacity="0.65" />
+                                        <TextBlock x:Name="DetailBiosSize" Grid.Row="3" Grid.Column="1" />
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Flags" Opacity="0.65" />
+                                        <TextBlock x:Name="DetailBiosFlags" Grid.Row="4" Grid.Column="1"
+                                                   TextWrapping="Wrap" />
+                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Path" Opacity="0.65" />
+                                        <TextBlock x:Name="DetailBiosPath" Grid.Row="5" Grid.Column="1"
+                                                   TextWrapping="Wrap" />
+                                    </Grid>
+                                    <TextBlock x:Name="DetailBiosNotes" Opacity="0.75" TextWrapping="Wrap" />
+
+                                    <StackPanel Spacing="6" Margin="0,6,0,0">
+                                        <Button x:Name="UseBios1Button" Content="Use as BIOS1"
+                                                Click="OnUseBios1" IsEnabled="False" HorizontalAlignment="Stretch"
+                                                ToolTip.Tip="Set this image as the primary BIOS." />
+                                        <Button x:Name="UseBios2Button" Content="Use as BIOS2 / font"
+                                                Click="OnUseBios2" IsEnabled="False" HorizontalAlignment="Stretch"
+                                                ToolTip.Tip="Set this image as the optional secondary or Kanji ROM." />
+                                        <Button x:Name="AssignBiosButton" Content="Assign to Current Game"
+                                                Click="OnAssignBios" IsEnabled="False" HorizontalAlignment="Stretch"
+                                                ToolTip.Tip="Pin the current game to this BIOS MD5." />
+                                        <Button x:Name="ClearBiosAssignmentButton" Content="Clear Game Assignment"
+                                                Click="OnClearBiosAssignment" IsEnabled="False"
+                                                HorizontalAlignment="Stretch"
+                                                ToolTip.Tip="Return the current game to automatic BIOS selection." />
+                                        <Button x:Name="OpenBiosFolderButton" Content="Open Folder"
+                                                Click="OnOpenBiosFolder" HorizontalAlignment="Stretch"
+                                                ToolTip.Tip="Open the BIOS folder in the file manager." />
+                                    </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+
+                    <TextBlock x:Name="BiosStatusText" Grid.Row="3" Opacity="0.8"
+                               TextWrapping="Wrap" Margin="0,4,0,0"
+                               ToolTip.Tip="Result of the most recent BIOS operation." />
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="NVRAM images" ToolTip.Tip="Inspect, back up, import, reset, or delete saved NVRAM volumes.">
+                <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="0,8">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto,Auto" Margin="0,0,0,4">
+                        <TextBlock Grid.Column="0" Text="Folder" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox x:Name="NvramFolderBox" Grid.Column="1" VerticalAlignment="Center"
+                                 ToolTip.Tip="Root directory that owns shared and per-game NVRAM images." />
+                        <Button Grid.Column="2" Content="Browse..." Click="OnBrowseNvramFolderAsync" Margin="6,0,0,0"
+                                ToolTip.Tip="Choose the NVRAM root folder." />
+                        <Button Grid.Column="3" Content="Refresh" Click="OnRefreshNvram" Margin="6,0,0,0"
+                                ToolTip.Tip="Re-scan the NVRAM layout." />
+                        <Button Grid.Column="4" Content="Backup All..." Click="OnBackupAllNvramAsync" Margin="6,0,0,0"
+                                ToolTip.Tip="Copy every recognized NVRAM image into a backup folder." />
+                    </Grid>
+
+                    <TextBlock x:Name="NvramSummaryText" Grid.Row="1" Opacity="0.7"
+                               TextWrapping="Wrap" Margin="0,0,0,4"
+                               ToolTip.Tip="Number of recognized images and their validation state." />
+
+                    <Grid Grid.Row="2" ColumnDefinitions="*,340" Margin="0,4">
+                        <ListBox x:Name="NvramList" Grid.Column="0" SelectionChanged="OnNvramSelectionChanged"
+                                 ToolTip.Tip="Recognized NVRAM images. Select one to inspect or manage it.">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="host:NvramInventoryEntry">
+                                    <Grid ColumnDefinitions="*,Auto" Margin="4,2">
+                                        <StackPanel Grid.Column="0" Spacing="1">
+                                            <TextBlock Text="{Binding GameLabel}" FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Opacity="0.7" FontSize="11">
+                                                <Run Text="{Binding ModeLabel}" />
+                                                <Run Text=" · version " />
+                                                <Run Text="{Binding File.Version}" />
+                                                <Run Text=" · " />
+                                                <Run Text="{Binding ModifiedLabel}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding StateLabel}" Opacity="0.7"
+                                                   VerticalAlignment="Center" Margin="8,0,0,0" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <Border Grid.Column="1" Margin="10,0,0,0" Padding="10"
+                                Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                CornerRadius="4">
+                            <ScrollViewer>
+                                <StackPanel Spacing="8">
+                                    <TextBlock x:Name="DetailNvramTitle" Classes="sectionTitle"
+                                               Text="Select an NVRAM image" TextWrapping="Wrap" />
+                                    <Grid ColumnDefinitions="90,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Mode" Opacity="0.65" />
+                                        <TextBlock x:Name="DetailNvramMode" Grid.Row="0" Grid.Column="1" />
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Version" Opacity="0.65" />
+                                        <TextBlock x:Name="DetailNvramVersion" Grid.Row="1" Grid.Column="1" />
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Game" Opacity="0.65" />
+                                        <TextBlock x:Name="DetailNvramGame" Grid.Row="2" Grid.Column="1"
+                                                   TextWrapping="Wrap" />
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Size" Opacity="0.65" />
+                                        <TextBlock x:Name="DetailNvramSize" Grid.Row="3" Grid.Column="1" />
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Modified" Opacity="0.65" />
+                                        <TextBlock x:Name="DetailNvramModified" Grid.Row="4" Grid.Column="1" />
+                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="State" Opacity="0.65" />
+                                        <TextBlock x:Name="DetailNvramState" Grid.Row="5" Grid.Column="1"
+                                                   TextWrapping="Wrap" />
+                                    </Grid>
+                                    <TextBlock x:Name="DetailNvramPath" Opacity="0.75" TextWrapping="Wrap" />
+
+                                    <StackPanel Spacing="6" Margin="0,6,0,0">
+                                        <Button x:Name="BackupNvramButton" Content="Backup Selected..."
+                                                Click="OnBackupNvramAsync" IsEnabled="False"
+                                                HorizontalAlignment="Stretch"
+                                                ToolTip.Tip="Write a copy of the selected image to a file." />
+                                        <Button x:Name="ImportNvramButton" Content="Import Into Selected..."
+                                                Click="OnImportNvramAsync" IsEnabled="False"
+                                                HorizontalAlignment="Stretch"
+                                                ToolTip.Tip="Replace the selected image with a validated 32 KB file." />
+                                        <Button x:Name="ResetNvramButton" Content="Reset Selected"
+                                                Click="OnResetNvram" IsEnabled="False"
+                                                HorizontalAlignment="Stretch"
+                                                ToolTip.Tip="Replace the selected image with a fresh NVRAM volume. Click again to confirm." />
+                                        <Button x:Name="DeleteNvramButton" Content="Delete Selected"
+                                                Click="OnDeleteNvram" IsEnabled="False"
+                                                HorizontalAlignment="Stretch"
+                                                ToolTip.Tip="Delete the selected image. Click again to confirm." />
+                                        <Button x:Name="OpenNvramFolderButton" Content="Open Folder"
+                                                Click="OnOpenNvramFolder" HorizontalAlignment="Stretch"
+                                                ToolTip.Tip="Open the NVRAM root folder in the file manager." />
+                                    </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+
+                    <TextBlock x:Name="NvramStatusText" Grid.Row="3" Opacity="0.8"
+                               TextWrapping="Wrap" Margin="0,4,0,0"
+                               ToolTip.Tip="Result of the most recent NVRAM operation." />
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+            <TextBlock x:Name="FooterText" Grid.Column="0" Opacity="0.65" TextWrapping="Wrap"
+                       ToolTip.Tip="BIOS and NVRAM manager status." />
+            <Button Grid.Column="1" Content="Close" Click="OnClose" IsDefault="True"
+                    ToolTip.Tip="Apply the selected BIOS/NVRAM settings and close." />
+        </Grid>
+    </Grid>
+</Window>

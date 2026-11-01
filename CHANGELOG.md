@@ -7,6 +7,15 @@ still change.
 
 ### Added
 
+- UX-12 BIOS/NVRAM manager: **File > BIOS / NVRAM Manager...** opens a two-tab window
+  that lists and classifies BIOS images, imports validated `.bin`/`.rom` files without
+  overwriting different images, sets BIOS1/BIOS2, pins or clears a per-game BIOS
+  assignment, and lists shared/per-game NVRAM images with validation, game metadata,
+  version, size, and modification time. The NVRAM tab backs up one image or the whole
+  layout, imports a validated 32 KB image, resets an image to a fresh volume, and
+  deletes an image; destructive actions require a second confirming click.
+  `BiosInventory` and `NvramInventory` keep the file operations testable and use
+  atomic writes for NVRAM changes.
 - SYS-15 input devices: six PBUS ports can each select a joypad, flightstick, mouse,
   lightgun, arcade lightgun, Orbatak trackball, or no device. `PbusChainEncoder` emits
   Opera's exact daisy-chain records (joypad, flightstick, mouse, lightgun, arcade

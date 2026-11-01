@@ -294,9 +294,10 @@ continues to use that exact BIOS. Selection order is:
 4. `BiosPath`/`Bios2Path` as the configured fallback.
 
 `bios list`/`bios scan` and the Settings > Paths scan button validate the folder.
-Per-game overrides can be assigned in Settings > Emulation > BIOS override or with
-**File > Assign BIOS to Current Game...**. Save states already warn when the loaded
-BIOS hash differs from the state header.
+Per-game overrides can be assigned in Settings > Emulation > BIOS override, with
+**File > Assign BIOS to Current Game...**, or in **File > BIOS / NVRAM Manager...**.
+The manager also imports validated images and sets BIOS1/BIOS2. Save states already
+warn when the loaded BIOS hash differs from the state header.
 
 ---
 
@@ -475,6 +476,11 @@ The CLI supports both explicit and layout-based NVRAM:
   with `--nvram`.
 - `nvram path|list|export|import|reset` resolves, lists, backs up, restores, or clears
   images without running the machine.
+
+**File > BIOS / NVRAM Manager...** lists the shared and per-game images with validation
+state and game metadata, and adds per-image backup, import, reset, delete, and a
+layout-preserving **Backup All...** action. Reset, delete, and import-overwrite require
+a second click on the same button.
 
 With `--state-in`, NVRAM comes from the state; a layout or explicit NVRAM path is still
 written after the run when supplied.

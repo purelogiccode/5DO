@@ -34,6 +34,7 @@ Windows x64 is the validated platform; the local Linux validation target is the
 | Build, test, benchmark, or publish | [`BuildAndTest.md`](BuildAndTest.md) |
 | Look up every CLI command and option | [`CliReference.md`](CliReference.md) |
 | Change settings, paths, or input bindings | [`Configuration.md`](Configuration.md) |
+| Manage BIOS and NVRAM images | [`UserGuide.md`](UserGuide.md), [`Configuration.md`](Configuration.md) |
 | Understand or inspect save states | [`SaveStates.md`](SaveStates.md) |
 | Create or manage per-game cheats | [`Cheats.md`](Cheats.md) |
 | Record, replay, verify, or branch a TAS movie | [`Tas.md`](Tas.md) |

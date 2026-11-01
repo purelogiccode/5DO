@@ -82,7 +82,14 @@ desktop shell adds Settings > Emulation > Input devices, pointer-driven mouse/li
 input with a crosshair, and the CLI adds `--input-device` and `--pbus-format`. Crime
 Patrol, Mad Dog II, Orbatak, and Shootout at Old Tucson boot and detect the selected
 arcade device; scripted gameplay and calibration remain.
-**1294 tests pass.**
+UX-12 adds **File > BIOS / NVRAM Manager...**, a two-tab manager that scans and
+classifies BIOS images, imports validated `.bin`/`.rom` files, sets BIOS1/BIOS2, pins
+or clears per-game BIOS assignments, and lists shared/per-game NVRAM images with
+validation, game metadata, version, size, and modification time. The NVRAM tab backs
+up one image or the whole layout, imports a validated 32 KB image, resets an image to a
+fresh volume, and deletes an image with a second-click confirmation. `BiosInventory`
+and `NvramInventory` isolate the file operations for tests and use atomic writes.
+**1309 tests pass.**
 The differential harness (FND-05/CORE-11/CORE-16) is implemented:
 `tools/FiveDo.DiffHarness` stages the bundled OperaCore and BIOS, runs both engines
 with identical options, compares checkpoint frame hashes, applies manifest
@@ -211,7 +218,9 @@ This is the short, current answer to "where are we?" The documentation index is
   screenshots are PNG files named by game, time, and frame. **File > Disc Browser...**
   lists the current disc's Opera tree and extracts a file, directory, or the whole
   disc; **File > Disc Info...** shows the volume, game ID, database metadata, and
-  automatic fixes. The shell has a first-run
+  automatic fixes. **File > BIOS / NVRAM Manager...** lists the BIOS library, sets
+  BIOS1/BIOS2 and per-game assignments, and backs up, imports, resets, or deletes
+  shared/per-game NVRAM images. The shell has a first-run
   guide, error dialogs, and an in-app diagnostic log viewer with level/category/search
   filters. The app accepts a positional disc path or `--disc <path>` and ships a Linux
   `.desktop` entry; Windows/macOS associations remain installer work. Per-game 4DO fix
@@ -285,7 +294,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 1294 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 1309 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and

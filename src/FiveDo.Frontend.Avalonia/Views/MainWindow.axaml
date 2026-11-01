@@ -24,6 +24,8 @@
                           ToolTip.Tip="Pin the current game to a specific BIOS MD5. Restart the game to apply it." />
                 <MenuItem Header="Clear Game BIOS Assignment" Click="OnClearBiosAssignment"
                           ToolTip.Tip="Return the current game to automatic BIOS selection." />
+                <MenuItem Header="BIOS / NVRAM Manager..." Click="OnBiosNvramManagerAsync"
+                          ToolTip.Tip="Browse BIOS images, assign a per-game BIOS, and back up or restore NVRAM images." />
                 <MenuItem Header="Export NVRAM..." Click="OnExportNvramAsync"
                           ToolTip.Tip="Write the current game's 32 KB NVRAM image to a file." />
                 <MenuItem Header="Import NVRAM..." Click="OnImportNvramAsync"
