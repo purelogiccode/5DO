@@ -45,8 +45,14 @@ The screenshot directory defaults to the user's **Pictures** folder when
 **Portable mode.** Place a `portable.flag` file next to the executable (or pass
 `--portable`) to keep `settings.json`, NVRAM, `states/`, cheats, library state, and logs
 beside the executable. `FIVEDO_DATA_DIR` overrides the data directory and is useful for
-separate instances or named configurations. Portable mode never writes to
-`%LOCALAPPDATA%`; the executable directory must be writable.
+separate instances. Portable mode never writes to `%LOCALAPPDATA%`; the executable
+directory must be writable.
+
+**Named profiles.** `--config-profile <name>` (or `FIVEDO_PROFILE`) selects
+`<data-directory>/profiles/<name>/` for settings, NVRAM, save states, cheats, library
+state, and logs. Profiles are created on first launch and isolated from each other.
+`5do settings profiles` lists existing profile directories; `FIVEDO_DATA_DIR` takes
+precedence over a named profile.
 
 Settings are written atomically (temporary file + replace) and carry
 `"SettingsVersion": 2`. An unversioned or v1 file is migrated in place on the next load.
@@ -674,7 +680,8 @@ See [`Audio.md`](Audio.md) for the full pipeline and diagnostics.
 | Variable | Used by | Meaning |
 |---|---|---|
 | `FIVEDO_AUDIO_TAP` | OpenAL output (CLI `--audio openal`/desktop) | Path prefix for `<prefix>.wav` (exact queued PCM) and `<prefix>.csv` (per-buffer timing). |
-| `FIVEDO_DATA_DIR` | Desktop/CLI | Override the data directory for settings, NVRAM, cheats, library state, and logs. |
+| `FIVEDO_DATA_DIR` | Desktop/CLI | Override the data directory for settings, NVRAM, cheats, library state, and logs. Takes precedence over named profiles. |
+| `FIVEDO_PROFILE` | Desktop/CLI | Select `<data-directory>/profiles/<name>/` as an isolated named configuration. |
 | `FIVEDO_PORTABLE` | Desktop/CLI | Set to `1` to behave as if `portable.flag` is next to the executable. |
 | `FIVEDO_LOG_DIR` | Desktop/CLI | Override the rolling log directory. |
 | `ALSOFT_DRIVERS` | OpenAL Soft | Set to `null` to use OpenAL's null backend for headless tests. |

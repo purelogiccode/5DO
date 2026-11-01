@@ -33,6 +33,11 @@ internal static class Program
             Environment.SetEnvironmentVariable("FIVEDO_PORTABLE", "1");
             args = Array.FindAll(args, arg => !string.Equals(arg, "--portable", StringComparison.OrdinalIgnoreCase));
         }
+        if (TryTakeOption(args, "--config-profile", out var configProfile, out var configArgs))
+        {
+            Environment.SetEnvironmentVariable("FIVEDO_PROFILE", configProfile);
+            args = configArgs;
+        }
 
         try
         {
@@ -1507,6 +1512,36 @@ internal static class Program
         }
 
         ParsedOptions options = Parse(args, startIndex: 2);
+        if (string.Equals(args[1], "profiles", StringComparison.OrdinalIgnoreCase))
+        {
+            var profiles = AppSettingsStore.ListProfiles()
+                .Select(name => new CliSettingsProfile(
+                    name,
+                    AppSettingsStore.GetProfilePath(name),
+                    AppSettingsStore.Inspect(AppSettingsStore.GetProfilePath(name)).Version))
+                .ToArray();
+            var result = new CliSettingsProfilesResult(
+                true,
+                PortablePaths.ProfilesDirectory,
+                profiles);
+            if (options.Json)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(
+                    result,
+                    CliJsonContext.Default.CliSettingsProfilesResult));
+            }
+            else
+            {
+                Console.WriteLine($"directory: {result.Directory}");
+                foreach (CliSettingsProfile profile in result.Profiles)
+                {
+                    Console.WriteLine($"  {profile.Name} (v{profile.Version})  {profile.Path}");
+                }
+            }
+
+            return 0;
+        }
+
         var path = options.Positional ?? options.Get("--path") ?? AppSettingsStore.DefaultPath;
         if (string.Equals(args[1], "validate", StringComparison.OrdinalIgnoreCase))
         {
@@ -3696,6 +3731,21 @@ internal static class Program
         return (FixMode)bits;
     }
 
+    private static bool TryTakeOption(string[] args, string option, out string value, out string[] remaining)
+    {
+        var index = Array.FindIndex(args, arg => string.Equals(arg, option, StringComparison.OrdinalIgnoreCase));
+        if (index < 0 || index + 1 >= args.Length)
+        {
+            value = string.Empty;
+            remaining = args;
+            return false;
+        }
+
+        value = args[index + 1];
+        remaining = args.Where((_, i) => i != index && i != index + 1).ToArray();
+        return true;
+    }
+
     private static bool HasFlag(string[] args, string flag)
     {
         foreach (var arg in args)
@@ -3828,6 +3878,8 @@ internal static class Program
         Console.WriteLine("                                       Check settings.json syntax and schema version.");
         Console.WriteLine("  settings migrate [path] [--path path] [--json]");
         Console.WriteLine("                                       Normalize and rewrite settings at the current version.");
+        Console.WriteLine("  settings profiles [--json]           List named configuration profiles under the data directory.");
+        Console.WriteLine("  --config-profile <name>              Use profiles/<name> for settings, NVRAM, cheats, and logs.");
         Console.WriteLine("  --portable                           Store settings, NVRAM, cheats, and logs beside the executable.");
         Console.WriteLine("  cheat list|add|enable|disable|remove|import|export --game ID [--dir path] [--json]");
         Console.WriteLine("                                       Manage per-game cheats. add needs --name and --code;");

@@ -31,7 +31,8 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
   created when the command writes files.
 - `--portable` stores the default settings/NVRAM/cheat/log directory beside the
   executable. `FIVEDO_DATA_DIR` overrides the data directory even when `--portable` is
-  not used.
+  not used. `--config-profile <name>` selects `<data-directory>/profiles/<name>/` for
+  an isolated named configuration; `FIVEDO_PROFILE` is the environment equivalent.
 - `--json` is accepted by commands that have structured output. It is ignored by
   `trace` and `disasm`, which are text-only.
 - JSON field casing is mixed by design: most command results are camelCase
@@ -61,6 +62,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `nvram list` | List global and per-game NVRAM images. |
 | `nvram export\|import\|reset` | Back up, restore, or clear an NVRAM image. |
 | `settings validate\|migrate` | Check or normalize a `settings.json` file. |
+| `settings profiles` | List named configuration profiles under the data directory. |
 | `cheat list\|add\|enable\|disable\|remove\|import\|export` | Manage per-game RAM cheat files. |
 | `movie info\|record\|play\|verify\|branch` | Inspect, record, replay, verify, or branch `.5domovie` TAS movies. |
 | `audio analyze <wav>` | WAV format, peak, RMS, clipping, silence, DC offset. |

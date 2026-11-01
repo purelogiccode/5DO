@@ -57,7 +57,9 @@ still change.
 - UX-15 portable mode: `PortablePaths` resolves the data directory from `portable.flag`,
   `--portable`, or `FIVEDO_DATA_DIR`. A portable run keeps settings, NVRAM, states,
   cheats, library state, and logs beside the executable; the explicit data directory
-  enables separate instances. Named configuration profiles remain pending.
+  enables separate instances. Named profiles use `--config-profile <name>` /
+  `FIVEDO_PROFILE` and live under `profiles/<name>/`; `settings profiles` lists them.
+  A profile selector/import-export UI and instance locking remain pending.
 - UX-23 input display: the game view shows a bottom-left frame, lag, and skip counter
   plus the selected controller's buttons decoded from the current PBUS packet. A lag
   frame is one without a guest PBUS DMA read. **F2** or **View > Input Display** toggles

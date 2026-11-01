@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using FiveDo.Core;
@@ -70,6 +71,14 @@ internal static class Program
         {
             Environment.SetEnvironmentVariable("FIVEDO_PORTABLE", "1");
             args = Array.FindAll(args, arg => !string.Equals(arg, "--portable", StringComparison.OrdinalIgnoreCase));
+        }
+        var profileIndex = Array.FindIndex(
+            args,
+            arg => string.Equals(arg, "--config-profile", StringComparison.OrdinalIgnoreCase));
+        if (profileIndex >= 0 && profileIndex + 1 < args.Length)
+        {
+            Environment.SetEnvironmentVariable("FIVEDO_PROFILE", args[profileIndex + 1]);
+            args = args.Where((_, index) => index != profileIndex && index != profileIndex + 1).ToArray();
         }
 
         try
@@ -254,6 +263,7 @@ internal static class Program
         Console.WriteLine("  --bios <path>           Use this BIOS image for this launch.");
         Console.WriteLine("  -f, --fullscreen        Start in fullscreen.");
         Console.WriteLine("  --portable              Store settings, NVRAM, cheats, and logs beside the executable.");
+        Console.WriteLine("  --config-profile <name> Use profiles/<name> for settings, NVRAM, cheats, and logs.");
         Console.WriteLine("  --gl-backend <backend>  auto (default), wgl, angle, software, or vulkan.");
         Console.WriteLine("  --version               Print the version and exit.");
         Console.WriteLine("  -h, --help              Show this help and exit.");

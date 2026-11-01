@@ -30,7 +30,7 @@ library state, and logs. **F2** toggles the frame/lag/skip and selected-player i
 Remaining disc work is known-title
 CD-DA evidence and a real in-game multi-disc swap, plus read-ahead/subcode. A 10-disc
 Release smoke after the
-TOC change reported 10/10 Loadable/Rendered. **1392 tests pass.**
+TOC change reported 10/10 Loadable/Rendered. **1395 tests pass.**
 The five not-loadable rows are resolved or explained: Mirai Shounen Conan now runs
 (transient CHD read error), and the four Arcade CD-ROM titles load with
 `panafz10-patched.bin` plus the default headless pad. The 12,000-frame rerun shows that six of the

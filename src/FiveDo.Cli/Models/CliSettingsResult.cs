@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace FiveDo.Cli;
 
 internal sealed record CliSettingsValidationResult(
@@ -14,3 +16,10 @@ internal sealed record CliSettingsMigrationResult(
     int FromVersion,
     int ToVersion,
     bool Changed);
+
+internal sealed record CliSettingsProfile(string Name, string Path, int Version);
+
+internal sealed record CliSettingsProfilesResult(
+    bool Ok,
+    string Directory,
+    IReadOnlyList<CliSettingsProfile> Profiles);

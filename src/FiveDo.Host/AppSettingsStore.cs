@@ -32,6 +32,35 @@ public static class AppSettingsStore
     /// <summary>Gets the default settings file path.</summary>
     public static string DefaultPath => Path.Combine(DefaultDirectory, "settings.json");
 
+    /// <summary>Lists named configuration profiles under the data directory.</summary>
+    /// <param name="profilesDirectory">Optional explicit profiles directory for tests and tools.</param>
+    /// <returns>Profile names sorted case-insensitively; only profiles with a settings file are returned.</returns>
+    public static IReadOnlyList<string> ListProfiles(string? profilesDirectory = null)
+    {
+        var directory = profilesDirectory ?? PortablePaths.ProfilesDirectory;
+        if (!Directory.Exists(directory))
+        {
+            return [];
+        }
+
+        return Directory.GetDirectories(directory)
+            .Where(profile => File.Exists(Path.Combine(profile, "settings.json")))
+            .Select(Path.GetFileName)
+            .OfType<string>()
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    /// <summary>Gets the settings path for a named configuration profile.</summary>
+    /// <param name="name">Profile name.</param>
+    /// <param name="profilesDirectory">Optional explicit profiles directory for tests and tools.</param>
+    /// <returns>The absolute settings path; the directory is not created.</returns>
+    public static string GetProfilePath(string name, string? profilesDirectory = null)
+    {
+        var normalized = PortablePaths.NormalizeProfileName(name);
+        return Path.Combine(profilesDirectory ?? PortablePaths.ProfilesDirectory, normalized, "settings.json");
+    }
+
     /// <summary>Describes a settings file without applying migrations.</summary>
     /// <param name="path">Settings path. Defaults to <see cref="DefaultPath"/>.</param>
     /// <returns>Existence, JSON validity, schema version, and the parse error when invalid.</returns>

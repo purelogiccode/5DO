@@ -16,7 +16,7 @@ public static class LogPaths
     public static string GetLogDirectory(string applicationName = "5DO")
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(applicationName);
-        if (PortablePaths.IsPortable || PortablePaths.DataDirectoryOverride is not null)
+        if (PortablePaths.IsPortable || PortablePaths.IsCustomDataDirectory)
         {
             return Path.Combine(PortablePaths.DataDirectory, "logs");
         }

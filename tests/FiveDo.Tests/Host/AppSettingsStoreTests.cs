@@ -126,6 +126,21 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void Profiles_ListOnlyDirectoriesWithSettings()
+    {
+        using var temp = new TemporaryDirectory();
+        var profiles = Path.Combine(temp.Path, "profiles");
+        Directory.CreateDirectory(Path.Combine(profiles, "work"));
+        Directory.CreateDirectory(Path.Combine(profiles, "empty"));
+        File.WriteAllText(Path.Combine(profiles, "work", "settings.json"), "{}");
+
+        Assert.Equal(["work"], AppSettingsStore.ListProfiles(profiles));
+        Assert.Equal(
+            Path.Combine(profiles, "work", "settings.json"),
+            AppSettingsStore.GetProfilePath("work", profiles));
+    }
+
+    [Fact]
     public void ResolveRegion_HonorsAutomaticAndManualModes()
     {
         var automatic = new AppSettings { AutoRegion = true, Region = VideoRegion.Ntsc };

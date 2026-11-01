@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,392 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,395 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,392** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,395** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,392 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,395 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,392**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,395**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -2867,6 +2867,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | SYS-03 | PAL/NTSC region modes | Added `VideoRegion`/`VideoRegionProfile` (NTSC 320x240@60, PAL1 320x288@50, PAL2 384x288@50), PAL VDL timing and 576-line frame storage, VDLP start-line mapping, region-aware machine frame cycles and source size, 50 Hz CoreRunner pacing, Settings/CLI region options with BIOS auto-selection, GameProfile snapshot, and state options v6 with region warning. Battle Chess Europe renders 320x288 at 50 Hz, and a 300-frame PAL capture is exactly 6.000 s. SYS-03 is partial (desktop auto-detection/per-game override remain); 1,387 tests pass |
 | 2026-11-01 | SYS-03 | Desktop BIOS region auto-switch | Added `AppSettings.AutoRegion`, `AppSettings.ResolveRegion`, `FiveDoMachine.SetVideoRegion`, and `Quartz.SetRegion` so the desktop follows the resolved BIOS and switches PAL/NTSC between frames without recreating the machine. Settings > Video region gains the automatic checkbox; `VideoRegionTests` covers runtime switching. 1,392 tests pass |
 | 2026-11-01 | UX-23 | Input display completion | Added `Madam.PbusReadCount`, per-frame lag detection, `CoreStatus.LagFrames`/`IsLagFrame`, selected controller port `InputDisplayPlayer`/`CoreRunner.InputPlayer`, Settings > Video port selector, and overlay lag/player text. UX-23 is done; 1,390 tests pass |
+| 2026-11-01 | UX-15 | Named configuration profiles | Added `FIVEDO_PROFILE`/`--config-profile`, per-profile data directories under `profiles/<name>/`, safe profile-name normalization, `AppSettingsStore.ListProfiles`/`GetProfilePath`, and `settings profiles` listing. Portable, override, profile, and sanitization tests pass; UX-15 remains partial for a selector/import-export UI and instance locking. 1,395 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -5157,11 +5158,12 @@ metadata providers/import, screenshots/manuals/videos, a metadata editor, and th
 - `PortablePaths` resolves the data directory from `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`.
 - A portable run keeps `settings.json`, NVRAM, `states/`, cheats, library state, and logs beside the executable.
 - `FIVEDO_DATA_DIR` provides separate per-instance configurations without environment-specific code.
-- The desktop and CLI strip `--portable` before command dispatch and log the resolved directory.
-- Tests cover portable, per-user, and explicit-override resolution.
+- `--config-profile <name>` / `FIVEDO_PROFILE` selects `<data>/profiles/<name>/` for a named configuration; `settings profiles` lists them.
+- The desktop and CLI strip `--portable` and `--config-profile` before command dispatch and log the resolved directory.
+- Tests cover portable, per-user, explicit-override, named-profile, and profile-name sanitization.
 
 **Remaining.**
-- Named configuration profiles with a selector/import/export.
+- A profile selector/import-export UI (profiles are currently selected by launch option or environment).
 - A per-instance lock to prevent two processes from writing the same settings/NVRAM files.
 - Installer integration for creating/removing `portable.flag`.
 
