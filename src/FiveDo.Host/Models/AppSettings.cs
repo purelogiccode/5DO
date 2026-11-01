@@ -436,6 +436,25 @@ public sealed class AppSettings
     /// <summary>Gets or sets a value indicating whether audio output is enabled.</summary>
     public bool AudioEnabled { get; set; } = true;
 
+    /// <summary>
+    /// Gets or sets the controller port that receives host pointer input, or zero to
+    /// send it to every mouse/lightgun/arcade-lightgun/trackball port.
+    /// </summary>
+    /// <remarks>
+    /// Multiplayer lightgun sessions set this to the active player so one host pointer
+    /// cannot aim two guns at the same place.
+    /// </remarks>
+    public int PointerPort { get; set; }
+
+    /// <summary>Gets or sets the pointer calibration scale (0.5-2.0).</summary>
+    public double PointerScale { get; set; } = 1.0;
+
+    /// <summary>Gets or sets the horizontal pointer offset in native pixels.</summary>
+    public int PointerOffsetX { get; set; }
+
+    /// <summary>Gets or sets the vertical pointer offset in native pixels.</summary>
+    public int PointerOffsetY { get; set; }
+
     /// <summary>Gets or sets the CD-DA mix level (0-1).</summary>
     public float CdAudioVolume { get; set; } = 0.8f;
 
@@ -635,6 +654,28 @@ public sealed class AppSettings
     public VideoFilter ResolveFilter(string? gameId)
     {
         return GetFilterOverride(gameId) ?? Filter;
+    }
+
+    /// <summary>Returns whether host pointer input should drive a one-based controller port.</summary>
+    /// <param name="port">One-based controller port.</param>
+    /// <returns><see langword="true"/> when <see cref="PointerPort"/> is zero or matches the port.</returns>
+    public bool RoutesPointerTo(int port) => PointerPort == 0 || PointerPort == port;
+
+    /// <summary>Maps a normalized host pointer position into native frame coordinates.</summary>
+    /// <param name="normalizedX">Horizontal position in 0..1 across the video area.</param>
+    /// <param name="normalizedY">Vertical position in 0..1 across the video area.</param>
+    /// <param name="width">Native frame width in pixels.</param>
+    /// <param name="height">Native frame height in lines.</param>
+    /// <returns>The clamped pixel coordinate.</returns>
+    public (int X, int Y) MapPointer(double normalizedX, double normalizedY, int width, int height)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(width, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(height, 1);
+        double x = (((normalizedX - 0.5) * PointerScale) + 0.5) * width + PointerOffsetX;
+        double y = (((normalizedY - 0.5) * PointerScale) + 0.5) * height + PointerOffsetY;
+        return (
+            Math.Clamp((int)Math.Round(x), 0, width - 1),
+            Math.Clamp((int)Math.Round(y), 0, height - 1));
     }
 
     /// <summary>Resolves the effective video region.</summary>

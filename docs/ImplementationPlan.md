@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,415 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,417 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,415** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,417** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 12 done · 15 partial · 93 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 13 done · 14 partial · 93 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -167,7 +167,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[SYS-12](#feat-sys-12)** SWI HLE for Portfolio OS — P2 · L · depends on: CORE-01 — **Pending**
 - [ ] **[SYS-13](#feat-sys-13)** VDLP bypass CLUT — P1 · S · depends on: FND-01 — **Pending**
 - [x] **[SYS-14](#feat-sys-14)** Per-game NVRAM and versions — P1 · M · depends on: FND-02 — **Done**
-- [ ] **[SYS-15](#feat-sys-15)** Mouse/lightgun/arcade lightgun/flightstick/trackball — P0 · L · depends on: FND-01 — **Partial** — remaining: device models, encoder, CLI/settings, pointer input, and crosshair are done; per-device calibration, multiplayer pointer routing, and scripted gameplay validation remain
+- [ ] **[SYS-15](#feat-sys-15)** Mouse/lightgun/arcade lightgun/flightstick/trackball — P0 · L · depends on: FND-01 — **Partial** — remaining: device models, encoder, CLI/settings, pointer input, crosshair, pointer-port routing, and pointer calibration are done; scripted gameplay validation remains
 - [ ] **[SYS-16](#feat-sys-16)** Six-player/multi-tap verification — P1 · S · depends on: SYS-15 — **Pending**
 - [ ] **[SYS-17](#feat-sys-17)** Game database expansion and community DB — P1 · M · depends on: FND-02 — **Pending**
 - [ ] **[SYS-18](#feat-sys-18)** Auto per-game profile — P0 · L · depends on: SYS-04, SYS-17 — **Pending**
@@ -214,7 +214,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[UX-09](#feat-ux-09)** Localization — P1 · M · depends on: FND-07 — **Pending**
 - [ ] **[UX-10](#feat-ux-10)** Themes and accessibility — P2 · M · depends on: FND-06 — **Pending**
 - [x] **[UX-11](#feat-ux-11)** Disc browser UI and game info — P1 · M · depends on: FND-06 — **Done**
-- [ ] **[UX-12](#feat-ux-12)** BIOS/NVRAM manager UI — P1 · M · depends on: SYS-04, SYS-14 — **Partial** — remaining: inventory helpers, manager window, menu wiring, import, assignment, backup, reset, and delete are done; per-game NVRAM assignment from the list and drag-and-drop import remain
+- [x] **[UX-12](#feat-ux-12)** BIOS/NVRAM manager UI — P1 · M · depends on: SYS-04, SYS-14 — **Done**
 - [ ] **[UX-13](#feat-ux-13)** Library metadata, favorites, playtime — P1 · L · depends on: SYS-17 — **Partial** — remaining: favorites, playtime, launch history, offline metadata, filters, and sorts are done; external Redump/No-Intro/IGDB/LaunchBox providers, screenshots/manuals/videos, metadata editor, and >=90% rich metadata remain
 - [ ] **[UX-14](#feat-ux-14)** Auto-update and release channels — P1 · M · depends on: ENG-10 — **Pending**
 - [ ] **[UX-15](#feat-ux-15)** Portable mode, multi-instance, config profiles — P1 · S · depends on: FND-02 — **Partial** — `portable.flag`, `--portable`, `FIVEDO_DATA_DIR`, named profiles, and the per-instance desktop lock are implemented; a profile selector/import-export UI remains
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,415 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,417 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,415**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,417**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -2880,6 +2880,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | UX-23 | Input display completion | Added `Madam.PbusReadCount`, per-frame lag detection, `CoreStatus.LagFrames`/`IsLagFrame`, selected controller port `InputDisplayPlayer`/`CoreRunner.InputPlayer`, Settings > Video port selector, and overlay lag/player text. UX-23 is done; 1,390 tests pass |
 | 2026-11-01 | UX-15 | Named configuration profiles | Added `FIVEDO_PROFILE`/`--config-profile`, per-profile data directories under `profiles/<name>/`, safe profile-name normalization, `AppSettingsStore.ListProfiles`/`GetProfilePath`, and `settings profiles` listing. Portable, override, profile, and sanitization tests pass; UX-15 remains partial for a selector/import-export UI and instance locking. 1,395 tests pass |
 | 2026-11-01 | UX-15 | Per-instance write lock | Added `InstanceLock`, an exclusive `5do.instance.lock` in the resolved data directory, desktop conflict handling, and `FIVEDO_ALLOW_MULTIPLE=1`. Separate profiles/directories still run together. UX-15 remains partial for the profile selector/import-export UI; 1,415 tests pass |
+| 2026-11-01 | SYS-15 | Pointer routing and calibration | Added `PointerPort` (all or port 1-6), `PointerScale`/`PointerOffsetX`/`PointerOffsetY` with clamping, `AppSettings.MapPointer`/`RoutesPointerTo`, Settings > Emulation pointer controls, and native-resolution mapping for mouse, lightgun, arcade lightgun, and trackball input. SYS-15 remains partial only for scripted gameplay validation; 1,417 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -4201,18 +4202,17 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
 **Implemented.**
 - `InputDeviceSet` and `PbusChainEncoder` emit Opera's exact daisy-chain records for joypad, flightstick, mouse, lightgun, arcade lightgun, Orbatak trackball, and none; the legacy 4DO packet is preserved for all-joypad configurations.
 - Six per-port devices are selectable in Settings > Emulation > Input devices and with `--input-device 1=mouse,3=lightgun`; `--pbus-format opera` forces the chain layout and `run --json` reports `inputDevices`.
-- The desktop pointer drives the first mouse/lightgun/arcade-lightgun/Orbatak port, including relative mouse/trackball motion, off-screen lightgun reload mapping, arcade start/coin/service buttons, and a lightgun crosshair.
+- The desktop pointer drives mouse/lightgun/arcade-lightgun/Orbatak ports, including relative mouse/trackball motion, off-screen lightgun reload mapping, arcade start/coin/service buttons, and a lightgun crosshair.
+- **Settings > Emulation > Pointer port** routes the pointer to one port or all pointer devices, so a multiplayer lightgun session can give each player an independent aim. **Pointer calibration** scales the mapping 0.5-2.0 and applies X/Y offsets in native pixels, with a reset button.
 - Packet tests cover every device and the Orbatak record; Crime Patrol, Mad Dog II, Orbatak, and Shootout at Old Tucson boot and detect the selected device.
 
 **Remaining.**
-- Per-device calibration and crosshair configuration.
-- Multiplayer pointer routing (multiple pointer ports).
 - Scripted gameplay validation for each device.
 - A six-player title pass (tracked by SYS-16).
 
 **Files.** `src/FiveDo.Input/`, `src/FiveDo.Madam/Madam.cs`, UI/CLI.
 
-**Tests.** Device packet tests, Orbatak tests, boot detection for the four named lightgun/arcade titles, and six-joypad regression.
+**Tests.** Device packet tests, Orbatak tests, boot detection for the four named lightgun/arcade titles, six-joypad regression, and pointer port/calibration mapping.
 
 **Done when.** Every device works in a representative title and is selectable per port.
 
@@ -6584,7 +6584,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [ ] **SYS-12** | SWI HLE for Portfolio OS | Opera's optional HLE can improve performance. | Opt-in; parity tests; documented trade-offs. | L |
 | [ ] **SYS-13** | VDLP bypass CLUT | Opera option for speed/debug. | Opt-in; visual difference documented; tests. | S |
 | [x] **SYS-14** | Per-game NVRAM and NVRAM versions | Opera per-game/shared and versions 0-9; 5DO uses one global file. | Per-game NVRAM; import/export/reset; tests. **Done 2026-10-31:** `NvramStorageMode`/`NvramVersion`/`NvramDirectory`, `NvramLayout`, shared-to-per-game migration fallbacks, atomic stores, Settings > Emulation controls, File > Export/Import/Reset NVRAM, CLI layout options, `run --json` fields, and `nvram path|list|export|import|reset`; unit, store, settings, and CLI tests. | M |
-| [~] **SYS-15** | Mouse, lightgun, arcade lightgun, flightstick, Orbatak trackball | Opera supports all; 5DO is joypad-only. | Each device works in a representative title; per-port selection; crosshairs/calibration. **Partial 2026-11-01:** `InputDeviceSet` and `PbusChainEncoder` implement Opera's exact joypad/flightstick/mouse/lightgun/arcade-lightgun/Orbatak trackball and button records; Settings > Emulation > Input devices, CLI `--input-device`/`--pbus-format`, `run --json inputDevices`, pointer-driven mouse/lightgun input, and a lightgun crosshair are implemented; Crime Patrol, Mad Dog II, Orbatak, and Shootout at Old Tucson boot and detect the selected device. Scripted gameplay and calibration remain. | L |
+| [~] **SYS-15** | Mouse, lightgun, arcade lightgun, flightstick, Orbatak trackball | Opera supports all; 5DO is joypad-only. | Each device works in a representative title; per-port selection; crosshairs/calibration. **Partial 2026-11-01:** `InputDeviceSet` and `PbusChainEncoder` implement Opera's exact joypad/flightstick/mouse/lightgun/arcade-lightgun/Orbatak trackball and button records; Settings > Emulation > Input devices, CLI `--input-device`/`--pbus-format`, `run --json inputDevices`, pointer-driven mouse/lightgun input, and a lightgun crosshair are implemented; Crime Patrol, Mad Dog II, Orbatak, and Shootout at Old Tucson boot and detect the selected device. Pointer-port routing and calibration are implemented; scripted gameplay remains. | L |
 | [ ] **SYS-16** | Six-player / multi-tap verification | 5DO encodes six pads; not all titles are validated. | Six-player test ROM/title; PBUS trace; docs. | S |
 | [ ] **SYS-17** | Game database expansion and community compatibility DB | 5DO has 518 records and a 241-title 4DO reference list; the local collection has 594 images. | >=95% local images have metadata; region/revision/fix/BIOS fields; contribution workflow. | M |
 | [ ] **SYS-18** | Auto per-game profile ("just works") | Best-in-class means no manual BIOS/region/fix/input selection. | Every local disc gets a profile; known problem titles boot without manual steps. | L |
@@ -7271,7 +7271,7 @@ These are not one-line fixes. They should be staged behind feature flags or the 
 | **OP-SYS-05** | PR 254, `opera_clock.c`/`opera_region.c` | Fixed 60 Hz frame loop; no 263-line NTSC / 59.94 Hz field timing or PAL1/PAL2. | **Partial** | Add region/timing modes (SYS-03), 263/312 scanlines, 50/59.94 Hz, 288-line output, and PAL BIOS handling. Test Battle Chess Europe. | L |
 | **OP-SYS-06** | PR 283, `opera_3do.c`/`prng16.c`/`prng32.c` | DSP PRNG seed/state existed, but CLIO reused the DSP generator and there was no separate 16/32-bit PRNG state. | **Done 2026-10-31** | CLIO now has its own splitmix32 state for `0x17F0`, seeded from `EmulatorTuning.RandomSeed` when provided, and saved in CLIO state version 3 with v1/v2 migration. The DSP keeps its separate FreeDO-compatible LCG state. Fixed-seed replay and state roundtrip tests cover the CLIO generator. | S |
 | **OP-SYS-07** | PR 290, `opera_bios.c` | 5DO requires a user BIOS; no embedded open-source boot ROM. | **Deferred** | Legal review first. Do not embed copyrighted BIOS. Consider an open-source boot option only if compatible with 5DO's license. | M |
-| **OP-SYS-08** | PR 256/277, `lr_input.c`/`opera_pbus.c` | Joypad-only input; no mouse, lightgun, arcade lightgun, flightstick, or Orbatak trackball. | **Partial 2026-11-01** | Implement SYS-15. Use Opera's PBUS packet layouts and Orbatak 24-bit split, but reimplement in C#. `InputDeviceSet`/`PbusChainEncoder` now emit the exact device records, and CLI/settings/pointer input are wired; representative-title validation and calibration remain. | L |
+| **OP-SYS-08** | PR 256/277, `lr_input.c`/`opera_pbus.c` | Joypad-only input; no mouse, lightgun, arcade lightgun, flightstick, or Orbatak trackball. | **Partial 2026-11-01** | Implement SYS-15. Use Opera's PBUS packet layouts and Orbatak 24-bit split, but reimplement in C#. `InputDeviceSet`/`PbusChainEncoder` now emit the exact device records, and CLI/settings/pointer input, pointer-port routing, and calibration are wired; scripted representative-title validation remains. | L |
 | **OP-SYS-09** | PR 256, `opera_cdrom.c` | No ODE/disc-swap/CD-DA/multi-track. | **Deferred** | SYS-01/SYS-02. 3DO titles generally reboot on disc change; per-game NVRAM (SYS-14) may cover multi-disc saves. Verify before building a swap UI. | L |
 | **OP-SYS-10** | PR 285/223, CHD/libchdr | CHDSharp 1.6 is the current dependency; zstd/CHD support had to be verified against the local corpus. | **Done 2026-10-31** | CHDSharp 1.6.0 already supports Zstd (`ChdCodec.Zstd`/`Cdzstd`) and ships `VendoredZSTD.dll`; no code change or native dependency is needed. Opened all 589 local CHDs: they use CDLZMA/CDZLIB/CDFLAC, none zstd. Add a zstd CHD fixture when one is available. | S |
 

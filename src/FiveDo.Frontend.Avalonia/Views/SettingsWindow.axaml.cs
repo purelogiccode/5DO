@@ -42,6 +42,17 @@ public partial class SettingsWindow : Window
         new(FrameSkipMode.OneInFive, "Skip 4 of 5 (12 fps)"),
     ];
 
+    private static readonly PointerPortOption[] _pointerPortOptions =
+    [
+        new(0, "All pointer devices"),
+        new(1, "Port 1"),
+        new(2, "Port 2"),
+        new(3, "Port 3"),
+        new(4, "Port 4"),
+        new(5, "Port 5"),
+        new(6, "Port 6"),
+    ];
+
     private static readonly RegionOverrideOption[] _regionOverrideOptions =
     [
         new(null, "Automatic (follow BIOS)"),
@@ -206,6 +217,13 @@ public partial class SettingsWindow : Window
         RegionCombo.SelectedItem = _regionOptions.FirstOrDefault(option => option.Value == settings.Region)
             ?? _regionOptions[0];
         AutoRegionCheck.IsChecked = settings.AutoRegion;
+        PointerPortCombo.ItemsSource = _pointerPortOptions;
+        PointerPortCombo.SelectedItem = _pointerPortOptions.FirstOrDefault(
+                option => option.Value == settings.PointerPort)
+            ?? _pointerPortOptions[0];
+        PointerScaleBox.Text = settings.PointerScale.ToString("0.00", CultureInfo.InvariantCulture);
+        PointerOffsetXBox.Text = settings.PointerOffsetX.ToString(CultureInfo.InvariantCulture);
+        PointerOffsetYBox.Text = settings.PointerOffsetY.ToString(CultureInfo.InvariantCulture);
         RegionOverrideCombo.ItemsSource = _regionOverrideOptions;
         RegionOverrideCombo.SelectedItem = _regionOverrideOptions.FirstOrDefault(
                 option => option.Value == settings.GetRegionOverride(gameId))
@@ -487,6 +505,24 @@ public partial class SettingsWindow : Window
             ? regionOption.Value
             : VideoRegion.Ntsc;
         settings.AutoRegion = AutoRegionCheck.IsChecked == true;
+        settings.PointerPort = PointerPortCombo.SelectedItem is PointerPortOption pointerPort
+            ? pointerPort.Value
+            : 0;
+        settings.PointerScale = ParsePointerNumber(
+            PointerScaleBox.Text,
+            "pointer scale",
+            0.5,
+            2.0);
+        settings.PointerOffsetX = (int)ParsePointerNumber(
+            PointerOffsetXBox.Text,
+            "pointer X offset",
+            -160,
+            160);
+        settings.PointerOffsetY = (int)ParsePointerNumber(
+            PointerOffsetYBox.Text,
+            "pointer Y offset",
+            -120,
+            120);
         if (!string.IsNullOrWhiteSpace(_gameId))
         {
             settings.SetRegionOverride(
@@ -931,9 +967,42 @@ public partial class SettingsWindow : Window
         }
     }
 
+    private sealed record PointerPortOption(int Value, string Label)
+    {
+        public override string ToString() => Label;
+    }
+
     private sealed record RegionOverrideOption(VideoRegion? Value, string Label)
     {
         public override string ToString() => Label;
+    }
+
+    private static double ParsePointerNumber(string? text, string label, double minimum, double maximum)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return label.Contains("scale", StringComparison.Ordinal) ? 1.0 : 0.0;
+        }
+
+        if (!double.TryParse(text.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var value)
+            || !double.IsFinite(value)
+            || value < minimum
+            || value > maximum)
+        {
+            throw new FormatException(
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"The {label} must be between {minimum} and {maximum}."));
+        }
+
+        return value;
+    }
+
+    private void OnPointerResetClick(object? sender, RoutedEventArgs e)
+    {
+        PointerScaleBox.Text = "1.00";
+        PointerOffsetXBox.Text = "0";
+        PointerOffsetYBox.Text = "0";
     }
 
     private sealed record RegionOption(VideoRegion Value, string Label)

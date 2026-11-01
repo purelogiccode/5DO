@@ -135,6 +135,9 @@ every serialized property in `AppSettings`.
 | `AudioEnabled` | bool | `true` | Enable live OpenAL output. |
 | `CdAudioVolume` | float | `0.8` | CD-DA mix level, 0..1. Applies only while PLAY_AUDIO is active. |
 | `CdAudioMuted` | bool | `false` | Keep CD-DA playback running but remove it from the mixed output. |
+| `PointerPort` | int | `0` | `0` sends host pointer input to every pointer device; `1`-`6` routes it to that controller port. |
+| `PointerScale` | float | `1.0` | Pointer calibration scale (0.5-2.0). |
+| `PointerOffsetX`, `PointerOffsetY` | int | `0` | Pointer calibration offset in native pixels. |
 | `AutoSwapOnEject` | bool | `true` | Advance to the next playlist entry when the guest ejects the disc (ODE-style). Without a playlist, **F3** opens a disc picker. |
 | `RewindEnabled` | bool | `true` | Record compressed keyframes and input for rewind. |
 | `RewindSeconds` | int | `60` | Rewind history length in seconds, 30..300. |
@@ -478,6 +481,8 @@ The Settings dialog's **Emulation** page edits:
   default and switches the running machine between frames when a newly resolved BIOS
   changes the video standard. **Region override** pins the current game to NTSC, PAL1,
   or PAL2 regardless of the automatic choice.
+- **Pointer port** and **Pointer calibration**: choose all pointer devices or a single
+  controller port, then scale and offset the host pointer in native pixels.
 - `Profile` combo: Compatible, Accuracy, Performance, or Custom. Selecting a profile
   fills the timing controls; manually changing one of them saves `Custom`.
 - `ArmTiming` combo: FreeDO-compatible N=4 or ARM60 datasheet N=2 (restarts the machine when changed).

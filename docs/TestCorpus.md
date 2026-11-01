@@ -688,7 +688,7 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,415 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,417 tests pass with no changed NTSC hashes.
 
 ### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
 

@@ -71,6 +71,10 @@ still change.
   illegal-request status instead of silently doing nothing, the guest RESET command
   restores the default transfer state and sector size, and `PrefetchingDiscSource`
   read-aheads native track sectors so CD-DA does not decompress on the sample clock.
+- SYS-15 pointer routing and calibration: `PointerPort` routes host mouse/lightgun input
+  to all pointer devices or one controller port, and `PointerScale`/`PointerOffsetX`/Y
+  apply a native-pixel calibration with a reset control in Settings > Emulation. This
+  gives multiplayer lightgun sessions independent aim points and handles bezels/overscan.
 - UX-23 input display: the game view shows a bottom-left frame, lag, and skip counter
   plus the selected controller's buttons decoded from the current PBUS packet. A lag
   frame is one without a guest PBUS DMA read. **F2** or **View > Input Display** toggles

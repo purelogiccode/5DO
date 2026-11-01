@@ -141,6 +141,54 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void PointerSettings_RoutePortsAndMapCoordinates()
+    {
+        var settings = new AppSettings();
+        Assert.True(settings.RoutesPointerTo(1));
+        Assert.True(settings.RoutesPointerTo(6));
+        settings.PointerPort = 2;
+        Assert.False(settings.RoutesPointerTo(1));
+        Assert.True(settings.RoutesPointerTo(2));
+        Assert.False(settings.RoutesPointerTo(6));
+
+        Assert.Equal((160, 120), settings.MapPointer(0.5, 0.5, 320, 240));
+        Assert.Equal((0, 0), settings.MapPointer(0.0, 0.0, 320, 240));
+        Assert.Equal((319, 239), settings.MapPointer(1.0, 1.0, 320, 240));
+
+        settings.PointerOffsetX = 20;
+        settings.PointerOffsetY = -10;
+        Assert.Equal((180, 110), settings.MapPointer(0.5, 0.5, 320, 240));
+
+        settings.PointerScale = 2.0;
+        settings.PointerOffsetX = 0;
+        settings.PointerOffsetY = 0;
+        Assert.Equal((0, 0), settings.MapPointer(0.0, 0.0, 320, 240));
+        Assert.Equal((320 - 1, 240 - 1), settings.MapPointer(1.0, 1.0, 320, 240));
+    }
+
+    [Fact]
+    public void PointerSettings_AreClampedWhenTheFileLoads()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        var settings = new AppSettings
+        {
+            PointerPort = 9,
+            PointerScale = 9.0,
+            PointerOffsetX = 999,
+            PointerOffsetY = -999,
+        };
+
+        AppSettingsStore.Save(settings, path);
+        AppSettings loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal(6, loaded.PointerPort);
+        Assert.Equal(2.0, loaded.PointerScale);
+        Assert.Equal(160, loaded.PointerOffsetX);
+        Assert.Equal(-120, loaded.PointerOffsetY);
+    }
+
+    [Fact]
     public void RegionOverrides_WinOverAutomaticAndGlobalChoices()
     {
         var settings = new AppSettings

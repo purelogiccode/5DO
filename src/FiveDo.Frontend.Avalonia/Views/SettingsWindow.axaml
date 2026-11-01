@@ -150,7 +150,7 @@
 
             <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, ARM, CLIO, CEL, and CD timing, CD speed, CPU clock, random seed, NVRAM storage, high-resolution mode, rewind/fast-forward, and overrides.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <CheckBox x:Name="AutoFixesCheck" Grid.Row="0" Grid.Column="1"
                               Content="Apply the 4DO per-game fixes automatically"
                               ToolTip.Tip="Apply the compatibility fix mask from the built-in game database when a disc opens." />
@@ -269,6 +269,19 @@
                                ToolTip.Tip="Pin this game to NTSC, PAL1, or PAL2 regardless of the automatic/global choice." />
                     <ComboBox x:Name="RegionOverrideCombo" Grid.Row="25" Grid.Column="1" Margin="0,12,0,0"
                               ToolTip.Tip="Automatic follows the BIOS/global region. A specific region applies whenever this disc opens." />
+                    <TextBlock Grid.Row="26" Grid.Column="0" Text="Pointer port" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Choose which controller port receives the host mouse/lightgun pointer." />
+                    <ComboBox x:Name="PointerPortCombo" Grid.Row="26" Grid.Column="1" HorizontalAlignment="Left" Width="220" Margin="0,12,0,0"
+                              ToolTip.Tip="All sends one pointer to every pointer device. Selecting a port gives each player an independent aim point." />
+                    <TextBlock Grid.Row="27" Grid.Column="0" Text="Pointer calibration" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Scale and offset applied to the host pointer before it reaches the emulated device." />
+                    <StackPanel Grid.Row="27" Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="0,12,0,0">
+                        <TextBox x:Name="PointerScaleBox" Width="64" ToolTip.Tip="Scale 0.50-2.00; 1.00 is uncalibrated." />
+                        <TextBox x:Name="PointerOffsetXBox" Width="64" ToolTip.Tip="Horizontal offset in native pixels (-160 to 160)." />
+                        <TextBox x:Name="PointerOffsetYBox" Width="64" ToolTip.Tip="Vertical offset in native pixels (-120 to 120)." />
+                        <Button x:Name="PointerResetButton" Content="Reset" Click="OnPointerResetClick"
+                                ToolTip.Tip="Restore scale 1.0 and zero offsets." />
+                    </StackPanel>
                 </Grid>
                 </ScrollViewer>
             </TabItem>

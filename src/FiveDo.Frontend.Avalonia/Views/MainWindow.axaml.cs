@@ -4285,20 +4285,32 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        var screenX = (int)Math.Clamp(position.X * EmulatorConstants.VideoWidth / width, 0, EmulatorConstants.VideoWidth - 1);
-        var screenY = (int)Math.Clamp(position.Y * EmulatorConstants.VideoHeight / height, 0, EmulatorConstants.VideoHeight - 1);
+        int frameWidth = _machine?.RegionProfile.Width ?? EmulatorConstants.VideoWidth;
+        int frameHeight = _machine?.RegionProfile.Height ?? EmulatorConstants.VideoHeight;
+        (int screenX, int screenY) = _settings.MapPointer(
+            position.X / width,
+            position.Y / height,
+            frameWidth,
+            frameHeight);
         var deltaX = 0;
         var deltaY = 0;
         if (_lastPointerPosition is { } last)
         {
-            deltaX = (int)Math.Round((position.X - last.X) * EmulatorConstants.VideoWidth / width);
-            deltaY = (int)Math.Round((position.Y - last.Y) * EmulatorConstants.VideoHeight / height);
+            deltaX = (int)Math.Round(
+                (position.X - last.X) * frameWidth / width * _settings.PointerScale);
+            deltaY = (int)Math.Round(
+                (position.Y - last.Y) * frameHeight / height * _settings.PointerScale);
         }
 
         _lastPointerPosition = position;
         var lightgunVisible = false;
         for (var port = 0; port < PbusEncoder.MaxControllers; port++)
         {
+            if (!_settings.RoutesPointerTo(port + 1))
+            {
+                continue;
+            }
+
             switch (_input.Devices.GetDevice(port))
             {
                 case InputDeviceType.Mouse:

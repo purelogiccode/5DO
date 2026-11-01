@@ -230,6 +230,12 @@ public static class AppSettingsStore
             }
 
             settings.InputDisplayPlayer = Math.Clamp(settings.InputDisplayPlayer, 1, 6);
+            settings.PointerPort = Math.Clamp(settings.PointerPort, 0, 6);
+            settings.PointerScale = double.IsFinite(settings.PointerScale)
+                ? Math.Clamp(settings.PointerScale, 0.5, 2.0)
+                : 1.0;
+            settings.PointerOffsetX = Math.Clamp(settings.PointerOffsetX, -160, 160);
+            settings.PointerOffsetY = Math.Clamp(settings.PointerOffsetY, -120, 120);
 
             if (!Enum.IsDefined(settings.ArmTiming))
             {

@@ -149,9 +149,14 @@ ports: joypad, flightstick, mouse, lightgun, arcade lightgun, Orbatak trackball,
 none. Joypads remain the default and keep the historical packet. Selecting a
 peripheral switches to the 3DO daisy-chain packet used by Opera.
 
-In the game view, the pointer drives the first mouse, lightgun, arcade lightgun, or
-Orbatak trackball port. Mouse and trackball motion is relative; lightguns use the
-absolute pointer position and show a crosshair. Left/right/middle pointer buttons map
+**Pointer port** selects which controller receives the host mouse/lightgun pointer, or
+**All pointer devices** to drive every pointer. **Pointer calibration** applies a
+0.5-2.0 scale plus X/Y offsets in native pixels; use it for bezels, overscan, or a
+window that is not perfectly aligned.
+
+In the game view, the pointer drives every mouse, lightgun, arcade lightgun, or Orbatak
+trackball port, or only the selected **Pointer port**. Mouse and trackball motion is
+relative; lightguns use the absolute pointer position and show a crosshair. Left/right/middle pointer buttons map
 to the primary, option/coin, and reload/start buttons for the selected device. Changing
 the device list while a game is running applies on the next frame and clears rewind
 history. The CLI
