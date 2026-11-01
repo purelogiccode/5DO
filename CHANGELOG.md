@@ -12,7 +12,7 @@ still change.
   ARM immediate rotates update the shifter carry; DSP CPU-supplied high FIFO reads
   return instruction memory instead of PRNG noise; MADAM uses the inclusive arbitrary
   span endpoint, stops MARIA scale/arbitrary work after the first pixel, treats BPP 0
-  as 1 bpp, honors packed SKIPX, reads literal LRFORM row pairs, applies blue-LSB substitution, decodes REGCTL stride
+  as 1 bpp, honors packed SKIPX, reads literal LRFORM row pairs, applies blue-LSB substitution while preserving raw VH bits, decodes REGCTL stride
   with Opera's byte groups, and uses decoded PIXC multiplier bits for `PDC_MFONLY`;
   CLIO input FIFOs complete before the end address is observed, reload only when the
   channel is enabled, and reset the pointer on a new start address. The Lemmings

@@ -895,8 +895,9 @@ M1 implements the section primitive used by all later chips:
 - MADAM now uses the inclusive arbitrary-CEL span endpoint, stops MARIA scale/arbitrary
   drawing after the first pixel, treats `PRE0_BPP=0` as the 1-bpp group, honors packed
   `SKIPX`, reads literal LRFORM row pairs, applies blue-LSB substitution before the
-  projector, decodes REGCTL stride with the Opera byte groups, and uses the decoded
-  pixel's high components for `PDC_MFONLY`.
+  projector, carries the pre-substitution VH bits through every texel path, decodes
+  REGCTL stride with the Opera byte groups, and uses the decoded pixel's high
+  components for `PDC_MFONLY`.
 - CLIO input FIFOs complete before the CPU observes the end address, reload only when
   the channel request bit is enabled, and reset the pointer when a new start address is
   written.

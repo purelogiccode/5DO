@@ -22,6 +22,19 @@ public sealed class PixelDecoderTests
     }
 
     [Fact]
+    public void Decode_RawVhBitsSurviveBlueLsbSubstitution()
+    {
+        var decoder = new PixelDecoder();
+        var plut = CreatePlut();
+        plut[0] = 0x8001;
+
+        PixelDecodeResult result = decoder.Decode(0, 1, 0, plut);
+
+        Assert.Equal(0x8001, result.RawVhBits);
+        Assert.Equal(0x8000, result.Pixel);
+    }
+
+    [Fact]
     public void Decode_ZeroBppUsesTheOneBppGroup()
     {
         var decoder = new PixelDecoder();

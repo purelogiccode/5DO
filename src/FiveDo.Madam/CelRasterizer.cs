@@ -236,7 +236,7 @@ internal sealed class CelRasterizer
                             ApplyPackedRepeatSpeedFix(repeat.Pixel);
                             if (!repeat.Transparent)
                             {
-                                TexelDrawLine(repeat.Pixel, repeat.Amv, xcur, ycur, pixcount);
+                                TexelDrawLine(repeat.Pixel, repeat.RawVhBits, repeat.Amv, xcur, ycur, pixcount);
                             }
 
                             if (geometry.Hdx1616 != 0)
@@ -312,6 +312,7 @@ internal sealed class CelRasterizer
                                 {
                                     if (TexelDrawScale(
                                             decoded.Pixel,
+                                            decoded.RawVhBits,
                                             decoded.Amv,
                                             xcur >> 16,
                                             ycur >> 16,
@@ -338,6 +339,7 @@ internal sealed class CelRasterizer
                             {
                                 if (TexelDrawScale(
                                         repeat.Pixel,
+                                        repeat.RawVhBits,
                                         repeat.Amv,
                                         xcur >> 16,
                                         ycur >> 16,
@@ -425,6 +427,7 @@ internal sealed class CelRasterizer
                                 {
                                     if (TexelDrawArbitrary(
                                             decoded.Pixel,
+                                            decoded.RawVhBits,
                                             decoded.Amv,
                                             xcur,
                                             ycur,
@@ -468,6 +471,7 @@ internal sealed class CelRasterizer
                                     remaining--;
                                     if (TexelDrawArbitrary(
                                             repeat.Pixel,
+                                            repeat.RawVhBits,
                                             repeat.Amv,
                                             xcur,
                                             ycur,
@@ -619,6 +623,7 @@ internal sealed class CelRasterizer
                     {
                         if (TexelDrawScale(
                                 decoded.Pixel,
+                                decoded.RawVhBits,
                                 decoded.Amv,
                                 xcur >> 16,
                                 ycur >> 16,
@@ -673,6 +678,7 @@ internal sealed class CelRasterizer
                     {
                         if (TexelDrawArbitrary(
                                 decoded.Pixel,
+                                decoded.RawVhBits,
                                 decoded.Amv,
                                 xcur,
                                 ycur,
@@ -788,6 +794,7 @@ internal sealed class CelRasterizer
                     {
                         if (TexelDrawScale(
                                 decoded.Pixel,
+                                decoded.RawVhBits,
                                 decoded.Amv,
                                 xcur >> 16,
                                 ycur >> 16,
@@ -828,6 +835,7 @@ internal sealed class CelRasterizer
                     {
                         if (TexelDrawArbitrary(
                                 decoded.Pixel,
+                                decoded.RawVhBits,
                                 decoded.Amv,
                                 xcur,
                                 ycur,
@@ -876,7 +884,7 @@ internal sealed class CelRasterizer
     }
 
     /// <summary>Draws one texel row segment. FreeDO: <c>TexelDraw_Line</c>.</summary>
-    internal int TexelDrawLine(ushort curPix, ushort lamv, int xcur, int ycur, int count)
+    internal int TexelDrawLine(ushort curPix, ushort rawVhBits, ushort lamv, int xcur, int ycur, int count)
     {
         CelGeometry geometry = _engine.Geometry;
         xcur >>= 16;
@@ -898,7 +906,7 @@ internal sealed class CelRasterizer
             }
 
             pixel = Projector.Apply(
-                curPix,
+                rawVhBits,
                 (ushort)pixel,
                 next,
                 _ccbFlags,
@@ -924,7 +932,7 @@ internal sealed class CelRasterizer
     }
 
     /// <summary>Draws a scaled texel rectangle. FreeDO: <c>TexelDraw_Scale</c>.</summary>
-    internal int TexelDrawScale(ushort curPix, ushort lamv, int xcur, int ycur, int deltax, int deltay)
+    internal int TexelDrawScale(ushort curPix, ushort rawVhBits, ushort lamv, int xcur, int ycur, int deltax, int deltay)
     {
         CelGeometry geometry = _engine.Geometry;
 
@@ -976,7 +984,7 @@ internal sealed class CelRasterizer
                         var framePixel = _ram.Read16(unchecked(_pixelSource + (uint)readAddress) ^ 2);
                         var pixel = ProcessPixel(curPix, lamv, framePixel);
                         pixel = Projector.Apply(
-                            curPix,
+                            rawVhBits,
                             pixel,
                             framePixel,
                             _ccbFlags,
@@ -1017,7 +1025,7 @@ internal sealed class CelRasterizer
                 var framePixel = ReadPixel(_pixelSource, j >> 2, i, _readModulo);
                 var pixel = ProcessPixel(curPix, lamv, framePixel);
                 pixel = Projector.Apply(
-                    curPix,
+                    rawVhBits,
                     pixel,
                     framePixel,
                     _ccbFlags,
@@ -1038,6 +1046,7 @@ internal sealed class CelRasterizer
     /// <summary>Fills an arbitrary texel quad. FreeDO: <c>TexelDraw_Arbitrary</c>.</summary>
     internal int TexelDrawArbitrary(
         ushort curPix,
+        ushort rawVhBits,
         ushort lamv,
         int xA,
         int yA,
@@ -1266,7 +1275,7 @@ internal sealed class CelRasterizer
                     maxx = maxXt;
                 }
 
-                FillArbitrarySpan(curPix, lamv, i, j, maxx, ref currentFramePixel, ref pixel);
+                FillArbitrarySpan(curPix, rawVhBits, lamv, i, j, maxx, ref currentFramePixel, ref pixel);
                 if ((_ccbFlags & CcbControl.Maria) != CcbControl.None)
                 {
                     return 0;
@@ -1288,7 +1297,7 @@ internal sealed class CelRasterizer
                     maxx = maxXt;
                 }
 
-                FillArbitrarySpan(curPix, lamv, i, j, maxx, ref currentFramePixel, ref pixel);
+                FillArbitrarySpan(curPix, rawVhBits, lamv, i, j, maxx, ref currentFramePixel, ref pixel);
                 if ((_ccbFlags & CcbControl.Maria) != CcbControl.None)
                 {
                     return 0;
@@ -1301,6 +1310,7 @@ internal sealed class CelRasterizer
 
     private void FillArbitrarySpan(
         ushort curPix,
+        ushort rawVhBits,
         ushort lamv,
         int y,
         int startX,
@@ -1323,7 +1333,7 @@ internal sealed class CelRasterizer
                     currentFramePixel = next;
                     pixel = ProcessPixel(curPix, lamv, next);
                     pixel = Projector.Apply(
-                        curPix,
+                        rawVhBits,
                         (ushort)pixel,
                         next,
                         _ccbFlags,
@@ -1358,7 +1368,7 @@ internal sealed class CelRasterizer
                 currentFramePixel = next;
                 pixel = ProcessPixel(curPix, lamv, next);
                 pixel = Projector.Apply(
-                    curPix,
+                    rawVhBits,
                     (ushort)pixel,
                     next,
                     _ccbFlags,
@@ -1458,7 +1468,7 @@ internal sealed class CelRasterizer
 
         var pixel = ProcessPixel(decoded.Pixel, decoded.Amv, framePixel);
         pixel = Projector.Apply(
-            decoded.Pixel,
+            decoded.RawVhBits,
             pixel,
             framePixel,
             _ccbFlags,
