@@ -182,6 +182,7 @@ public partial class SettingsWindow : Window
         VolumeSlider.Value = settings.Volume;
         CdVolumeSlider.Value = Math.Clamp(settings.CdAudioVolume, 0, 1);
         CdMuteCheck.IsChecked = settings.CdAudioMuted;
+        AutoSwapCheck.IsChecked = settings.AutoSwapOnEject;
         AutoFixesCheck.IsChecked = settings.AutoGameFixes;
         HighResCheck.IsChecked = settings.HighResolution;
         ProfileCombo.ItemsSource = _profileOptions;
@@ -375,6 +376,7 @@ public partial class SettingsWindow : Window
         settings.Volume = (float)VolumeSlider.Value;
         settings.CdAudioVolume = (float)Math.Clamp(CdVolumeSlider.Value, 0, 1);
         settings.CdAudioMuted = CdMuteCheck.IsChecked == true;
+        settings.AutoSwapOnEject = AutoSwapCheck.IsChecked == true;
         settings.AutoGameFixes = AutoFixesCheck.IsChecked == true;
         settings.HighResolution = HighResCheck.IsChecked == true;
         settings.ArmTiming = ArmTimingCombo.SelectedItem is ArmTimingOption armTiming

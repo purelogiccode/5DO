@@ -302,6 +302,23 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <summary>Gets the drive status byte. FreeDO: <c>XbusStatus</c>.</summary>
     public byte DriveStatus => _xbusStatus;
 
+    /// <summary>Gets a value indicating whether the virtual tray is open.</summary>
+    /// <remarks>
+    /// The guest eject command clears <c>CdstTray</c>; a host insert or the guest
+    /// inject command closes it again.
+    /// </remarks>
+    public bool TrayOpen => (_xbusStatus & CdstTray) == 0;
+
+    /// <summary>Gets a value indicating whether the drive reports a disc.</summary>
+    public bool DiscPresent => (_xbusStatus & CdstDisc) != 0;
+
+    /// <summary>Gets the number of guest-issued eject commands.</summary>
+    /// <remarks>
+    /// The counter lets a frontend provide an ODE-style swap prompt. Host
+    /// <see cref="EjectDisc"/> calls do not change it.
+    /// </remarks>
+    public int GuestEjectCount { get; private set; }
+
     /// <summary>Gets the device poll byte. FreeDO: <c>Poll</c>.</summary>
     public byte Poll => _poll;
 
@@ -996,6 +1013,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
                 Spin(false);
                 break;
             case 0x06: // eject
+                GuestEjectCount++;
                 _audioPlaying = false;
                 _xbusStatus &= unchecked((byte)~CdstTray);
                 _xbusStatus &= unchecked((byte)~CdstDisc);

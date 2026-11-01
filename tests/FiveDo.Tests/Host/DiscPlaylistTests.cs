@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using FiveDo.Host;
 
 namespace FiveDo.Tests.Host;
@@ -50,6 +51,81 @@ public sealed class DiscPlaylistTests
         File.WriteAllText(playlistPath, "#EXTM3U\n# nothing here\n");
 
         Assert.Throws<InvalidDataException>(() => DiscPlaylist.Load(playlistPath));
+    }
+
+    [Fact]
+    public void EditAndSave_RoundTripsEntriesInOrder()
+    {
+        using var temp = new TemporaryDirectory();
+        string first = Path.Combine(temp.Path, "disc1.iso");
+        string second = Path.Combine(temp.Path, "disc2.iso");
+        string third = Path.Combine(temp.Path, "disc3.iso");
+        string fourth = Path.Combine(temp.Path, "disc4.iso");
+        File.WriteAllText(first, string.Empty);
+        File.WriteAllText(second, string.Empty);
+        File.WriteAllText(third, string.Empty);
+        File.WriteAllText(fourth, string.Empty);
+
+        DiscPlaylist playlist = DiscPlaylist.Create(
+        [
+            new DiscPlaylistEntry(first, "One"),
+            new DiscPlaylistEntry(second, "Two"),
+            new DiscPlaylistEntry(third, "Three"),
+        ]);
+        Assert.Equal(string.Empty, playlist.SourcePath);
+        playlist.Add(fourth, "Four");
+        Assert.True(playlist.MoveEntryUp(3));
+        Assert.False(playlist.MoveEntryUp(0));
+        Assert.True(playlist.MoveEntryDown(1));
+        playlist.Select(1);
+        playlist.RemoveAt(0);
+
+        var savedPath = Path.Combine(temp.Path, "edited.m3u8");
+        string written = playlist.Save(savedPath);
+
+        Assert.Equal(Path.GetFullPath(savedPath), written);
+        Assert.Equal(3, playlist.Count);
+        Assert.Equal("Four", playlist.Current.DisplayName);
+        var text = File.ReadAllText(savedPath);
+        Assert.StartsWith("#EXTM3U", text, StringComparison.Ordinal);
+        Assert.Contains("#EXTINF:-1,Two", text, StringComparison.Ordinal);
+
+        DiscPlaylist reloaded = DiscPlaylist.Load(savedPath);
+        Assert.Equal(3, reloaded.Count);
+        Assert.Equal(
+            ["Four", "Two", "Three"],
+            reloaded.Entries.Select(entry => entry.DisplayName),
+            StringComparer.Ordinal);
+        Assert.All(reloaded.Entries, entry => Assert.True(File.Exists(entry.Path)));
+    }
+
+    [Fact]
+    public void Save_RejectsAnEmptyPlaylistOrMissingPath()
+    {
+        DiscPlaylist playlist = DiscPlaylist.Create([]);
+
+        Assert.Throws<InvalidOperationException>(() => playlist.Save());
+        Assert.Throws<InvalidOperationException>(() => playlist.Save(Path.GetTempFileName()));
+    }
+
+    [Fact]
+    public void RemoveAt_KeepsTheSelectionValid()
+    {
+        DiscPlaylist playlist = DiscPlaylist.Create(
+        [
+            new DiscPlaylistEntry(Path.GetTempPath() + "a.iso", null),
+            new DiscPlaylistEntry(Path.GetTempPath() + "b.iso", null),
+        ]);
+        playlist.Select(1);
+
+        playlist.RemoveAt(1);
+
+        Assert.Equal(1, playlist.Count);
+        Assert.Equal(0, playlist.CurrentIndex);
+        Assert.Equal("a", playlist.Current.DisplayName);
+        playlist.RemoveAt(0);
+        Assert.Equal(0, playlist.Count);
+        Assert.Equal(0, playlist.CurrentIndex);
     }
 
     private sealed class TemporaryDirectory : IDisposable

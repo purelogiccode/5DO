@@ -1,0 +1,64 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:host="using:FiveDo.Host"
+        x:Class="FiveDo.Frontend.Avalonia.Views.DiscPlaylistWindow"
+        Title="Disc Playlist"
+        Width="760" Height="500"
+        MinWidth="600" MinHeight="380"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+        <TextBlock Grid.Row="0"
+                   Text="Entries play in order. A guest eject can advance the playlist automatically (ODE-style)."
+                   Opacity="0.7" TextWrapping="Wrap" Margin="0,0,0,10" />
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,190" ColumnSpacing="12">
+            <ListBox x:Name="EntryList" Grid.Column="0"
+                     SelectionChanged="OnSelectionChanged"
+                     ToolTip.Tip="Playlist order. Use Move Up and Move Down to reorder.">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="host:DiscPlaylistEntry">
+                        <StackPanel Margin="4">
+                            <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Path}" Opacity="0.6"
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip.Tip="{Binding Path}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <StackPanel Grid.Column="1" Spacing="8">
+                <Button x:Name="AddButton" Content="Add discs..."
+                        HorizontalAlignment="Stretch" Click="OnAddClick"
+                        ToolTip.Tip="Add ISO, BIN, CUE, CHD, M3U, or M3U8 entries." />
+                <Button x:Name="MoveUpButton" Content="Move up"
+                        HorizontalAlignment="Stretch" Click="OnMoveUpClick"
+                        ToolTip.Tip="Move the selected disc one position earlier." />
+                <Button x:Name="MoveDownButton" Content="Move down"
+                        HorizontalAlignment="Stretch" Click="OnMoveDownClick"
+                        ToolTip.Tip="Move the selected disc one position later." />
+                <Button x:Name="RemoveButton" Content="Remove"
+                        HorizontalAlignment="Stretch" Click="OnRemoveClick"
+                        ToolTip.Tip="Remove the selected disc from the playlist." />
+                <Separator Margin="0,6" />
+                <Button x:Name="SaveButton" Content="Save playlist..."
+                        HorizontalAlignment="Stretch" Click="OnSaveClick"
+                        ToolTip.Tip="Save the playlist as an extended M3U file." />
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,14,0,0">
+            <StackPanel Grid.Column="0" Spacing="2">
+                <TextBlock x:Name="SourceText" Opacity="0.7" FontSize="11"
+                           TextTrimming="CharacterEllipsis"
+                           ToolTip.Tip="Playlist file path." />
+                <TextBlock x:Name="StatusText" Opacity="0.8" FontSize="11"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+            <Button Grid.Column="1" Content="Close" Click="OnCloseClick"
+                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                    ToolTip.Tip="Discard changes and close this dialog." />
+        </Grid>
+    </Grid>
+</Window>

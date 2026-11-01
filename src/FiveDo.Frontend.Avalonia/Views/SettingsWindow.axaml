@@ -111,7 +111,7 @@
             </TabItem>
 
             <TabItem Header="Audio" ToolTip.Tip="OpenAL output, volume, CD-DA mix, and test-tone settings.">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Output" VerticalAlignment="Center"
                                ToolTip.Tip="Enable or disable live OpenAL playback." />
                     <CheckBox x:Name="AudioCheck" Grid.Row="0" Grid.Column="1" Content="Enable OpenAL output"
@@ -128,11 +128,14 @@
                              ToolTip.Tip="CD-DA mix level from 0 (silent) to 1 (full)." />
                     <CheckBox x:Name="CdMuteCheck" Grid.Row="3" Grid.Column="1" Content="Mute CD-DA"
                                ToolTip.Tip="Keep CD-DA playback running without mixing it into the output." />
-                    <Button x:Name="TestAudioButton" Grid.Row="4" Grid.Column="1"
+                    <CheckBox x:Name="AutoSwapCheck" Grid.Row="4" Grid.Column="1"
+                              Content="Insert the next playlist disc when a game ejects"
+                              ToolTip.Tip="ODE-style automatic disc advance after a guest eject. When no playlist is loaded, use F3 to insert a disc." />
+                    <Button x:Name="TestAudioButton" Grid.Row="5" Grid.Column="1"
                             Content="Play 440 Hz test tone" Click="OnTestAudioClickAsync"
                             HorizontalAlignment="Left" Margin="0,12,0,0"
                             ToolTip.Tip="Play a one-second 440 Hz tone to verify the output device." />
-                    <TextBlock x:Name="TestAudioText" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2"
+                    <TextBlock x:Name="TestAudioText" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2"
                                Text="OpenAL Soft 1.23.1 · 44.1 kHz stereo"
                                Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
                                ToolTip.Tip="Audio backend status and test-tone result." />

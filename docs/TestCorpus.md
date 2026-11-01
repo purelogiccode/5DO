@@ -617,7 +617,7 @@ validated:
   version roundtrip, invalid-value normalization, per-game profile roundtrip/apply, and
   `Inspect`/`Migrate`; the CLI tests cover `settings validate|migrate`.
 
-The full suite is **1,376 tests** in Debug. A Release 10-disc smoke after the
+The full suite is **1,381 tests** in Debug. A Release 10-disc smoke after the
 track/TOC change (`tools/compat-sweep.ps1 -Limit 10 -Frames 3000`) reported
 **10/10 Loadable/Rendered**, so the data-track path is unchanged. A real CD-DA title
 and a 10-second DSP+CD-DA WAV capture are still required for SYS-01 completion.
@@ -658,6 +658,20 @@ UX-23 coverage is compile/status level:
 - `PbusDecoderTests` already cover the button formatting used by the overlay.
 - The Avalonia overlay is build-validated; a screenshot comparison and TAS lag semantics
   remain.
+
+### 1.1n ODE eject and playlist editing (2026-11-01)
+
+- `DiscPlaylistTests` covers create/add/remove/reorder/save with an extended-M3U
+  roundtrip, empty-playlist rejection, and selection repair after removal.
+- `CoreRunnerTests` proves a guest `0x06` raises `GuestDiscEjected` once when the tray
+  opens and not again while it remains open; `CdromMultiTrackTests` verifies
+  `TrayOpen`, `DiscPresent`, and the guest-eject counter across eject/inject.
+- `SaveStateTests` saves and reloads after a disc swap and confirms the second disc's
+  drive state and hash metadata survive.
+- Manual headless evidence: an M3U for `D (USA, Europe)` disc 1/disc 2 was swapped at
+  frame 300 in a 600-frame `run`; the disc hash changed to
+  `a52a01c7b6d2c8740651ac952b291c0a`, 38.4 M instructions executed, and the run
+  completed. This is a timed swap, not yet a game-requested swap.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

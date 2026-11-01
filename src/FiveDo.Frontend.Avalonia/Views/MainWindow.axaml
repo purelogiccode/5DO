@@ -40,6 +40,8 @@
                           ToolTip.Tip="Show the current disc's volume, game ID, metadata, and fixes." />
                 <MenuItem Header="Swap Disc..." Click="OnSwapDiscAsync"
                           ToolTip.Tip="Advance to the next disc in the loaded playlist, or choose another disc without resetting the console. F3." />
+                <MenuItem Header="Playlist Editor..." Click="OnPlaylistEditorAsync"
+                          ToolTip.Tip="Add, remove, reorder, and save multi-disc M3U playlists. Drop M3U or disc files on the window to import them." />
                 <MenuItem Header="Add Game Folder..." Click="OnAddFolderAsync"
                           ToolTip.Tip="Add a folder that the library scans for disc images." />
                 <MenuItem x:Name="RecentMenu" Header="Boot Recent"

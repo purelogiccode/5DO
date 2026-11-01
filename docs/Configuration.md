@@ -118,11 +118,12 @@ every serialized property in `AppSettings`.
 | `RandomSeed` | uint? | `null` | Optional initial DSP PRNG seed; `null` uses FreeDO's `0xa5a5a5a5`. |
 | `NvramStorageMode` | enum string | `"Global"` | `Global` keeps one shared image; `PerGame` keeps a separate image per 4DO game ID. |
 | `NvramVersion` | int | `0` | Independent NVRAM version slot, 0-9. |
-| `NvramDirectory` | string | `""` | Directory that owns the NVRAM layout; empty means `<LocalApplicationData>/5DO`. |
+| `NvramDirectory` | string | `""` | Directory that owns the NVRAM layout; empty means the resolved data directory (portable-aware). |
 | `Volume` | float | `1.0` | OpenAL gain, 0..1. |
 | `AudioEnabled` | bool | `true` | Enable live OpenAL output. |
 | `CdAudioVolume` | float | `0.8` | CD-DA mix level, 0..1. Applies only while PLAY_AUDIO is active. |
 | `CdAudioMuted` | bool | `false` | Keep CD-DA playback running but remove it from the mixed output. |
+| `AutoSwapOnEject` | bool | `true` | Advance to the next playlist entry when the guest ejects the disc (ODE-style). Without a playlist, **F3** opens a disc picker. |
 | `RewindEnabled` | bool | `true` | Record compressed keyframes and input for rewind. |
 | `RewindSeconds` | int | `60` | Rewind history length in seconds, 30..300. |
 | `FastForwardMultiplier` | int | `4` | Fast-forward speed, 2..10. Audio is muted while active. |
@@ -247,6 +248,7 @@ player-1 defaults. See section 3 for the full input structure.
   "AudioEnabled": true,
   "CdAudioVolume": 0.8,
   "CdAudioMuted": false,
+  "AutoSwapOnEject": true,
   "RewindEnabled": true,
   "RewindSeconds": 60,
   "FastForwardMultiplier": 4,
@@ -638,6 +640,7 @@ Save slots:
 | `Volume` | OpenAL gain, clamped 0..1. |
 | `CdAudioVolume` | CD-DA mix level, clamped 0..1. |
 | `CdAudioMuted` | Removes CD-DA from the mix while playback continues. |
+| `AutoSwapOnEject` | ODE-style automatic advance to the next playlist disc after a guest eject. |
 | `Bloom` | CRT bloom only; 0 disables. |
 | `FsrSharpness` | FSR RCAS sharpness; 0 soft, 1 maximum. |
 

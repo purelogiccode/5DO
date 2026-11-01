@@ -409,6 +409,29 @@ public sealed class SaveStateTests
         Assert.Throws<InvalidStateException>(() => machine.LoadState(new MemoryStream(bytes)));
     }
 
+    [Fact]
+    public void SaveLoad_AfterDiscSwapRestoresTheNewDriveState()
+    {
+        FiveDoMachine machine = CreateMachine();
+        using var first = new FakeDisc(64);
+        using var second = new FakeDisc(96);
+        machine.InsertDisc(first);
+        machine.RunFrames(3);
+        machine.InsertDisc(second);
+        machine.RunFrames(2);
+
+        using var state = new MemoryStream();
+        machine.SaveState(state, "disc-b");
+        state.Position = 0;
+        machine.LoadState(state, "disc-b");
+
+        Assert.Empty(machine.StateWarnings);
+        Assert.Same(second, machine.Cdrom.Disc);
+        Assert.True(machine.Cdrom.DiscPresent);
+        Assert.False(machine.Cdrom.TrayOpen);
+        Assert.Equal(96, machine.Cdrom.Disc?.SectorCount);
+    }
+
     private static FiveDoMachine CreateMachine(byte[]? rom = null, EmulatorTuning? tuning = null)
     {
         var machine = new FiveDoMachine(tuning);
@@ -428,6 +451,29 @@ public sealed class SaveStateTests
         }
 
         return (hash, machine.Cpu.ProgramCounter, machine.FramesExecuted);
+    }
+
+    private sealed class FakeDisc : IDiscSource
+    {
+        private readonly int _sectorCount;
+
+        internal FakeDisc(int sectorCount)
+        {
+            _sectorCount = sectorCount;
+        }
+
+        public int SectorCount => _sectorCount;
+
+        public int SectorSize => 2048;
+
+        public void ReadSector(int lba, Span<byte> destination)
+        {
+            destination.Clear();
+        }
+
+        public void Dispose()
+        {
+        }
     }
 
     private static byte[] BuildSyntheticRom()

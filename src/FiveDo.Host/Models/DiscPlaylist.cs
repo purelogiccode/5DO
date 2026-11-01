@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace FiveDo.Host;
 
@@ -36,7 +37,7 @@ public sealed class DiscPlaylist
     }
 
     /// <summary>Gets the playlist file path.</summary>
-    public string SourcePath { get; }
+    public string SourcePath { get; private set; }
 
     /// <summary>Gets the entries in playlist order.</summary>
     public IReadOnlyList<DiscPlaylistEntry> Entries => _entries;
@@ -100,6 +101,161 @@ public sealed class DiscPlaylist
         return new DiscPlaylist(fullPath, entries);
     }
 
+    /// <summary>Creates an editable playlist from existing entries.</summary>
+    /// <param name="entries">Entries to copy. Paths are converted to absolute paths.</param>
+    /// <param name="sourcePath">Optional path used by <see cref="Save"/>.</param>
+    /// <returns>A playlist with the first entry selected.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="entries"/> is null.</exception>
+    public static DiscPlaylist Create(
+        IEnumerable<DiscPlaylistEntry> entries,
+        string? sourcePath = null)
+    {
+        ArgumentNullException.ThrowIfNull(entries);
+        var copy = new List<DiscPlaylistEntry>();
+        foreach (DiscPlaylistEntry entry in entries)
+        {
+            copy.Add(new DiscPlaylistEntry(Path.GetFullPath(entry.Path), entry.Title));
+        }
+
+        return new DiscPlaylist(
+            string.IsNullOrWhiteSpace(sourcePath) ? string.Empty : Path.GetFullPath(sourcePath),
+            copy);
+    }
+
+    /// <summary>Adds a disc to the end of the playlist.</summary>
+    /// <param name="path">Disc image or cue path.</param>
+    /// <param name="title">Optional display title.</param>
+    /// <returns>The added entry.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="path"/> is empty.</exception>
+    public DiscPlaylistEntry Add(string path, string? title = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        var entry = new DiscPlaylistEntry(Path.GetFullPath(path), title);
+        _entries.Add(entry);
+        return entry;
+    }
+
+    /// <summary>Removes an entry and keeps a valid selection.</summary>
+    /// <param name="index">Zero-based index.</param>
+    /// <exception cref="ArgumentOutOfRangeException">The index is outside the playlist.</exception>
+    public void RemoveAt(int index)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, _entries.Count);
+        _entries.RemoveAt(index);
+        if (_entries.Count == 0)
+        {
+            CurrentIndex = 0;
+            return;
+        }
+
+        if (index < CurrentIndex)
+        {
+            CurrentIndex--;
+        }
+        else if (CurrentIndex >= _entries.Count)
+        {
+            CurrentIndex = _entries.Count - 1;
+        }
+    }
+
+    /// <summary>Moves an entry one position toward the start.</summary>
+    /// <param name="index">Zero-based index.</param>
+    /// <returns><see langword="true"/> when the entry moved.</returns>
+    public bool MoveEntryUp(int index)
+    {
+        if (index <= 0 || index >= _entries.Count)
+        {
+            return false;
+        }
+
+        DiscPlaylistEntry entry = _entries[index];
+        _entries.RemoveAt(index);
+        _entries.Insert(index - 1, entry);
+        if (CurrentIndex == index)
+        {
+            CurrentIndex--;
+        }
+        else if (CurrentIndex == index - 1)
+        {
+            CurrentIndex++;
+        }
+
+        return true;
+    }
+
+    /// <summary>Moves an entry one position toward the end.</summary>
+    /// <param name="index">Zero-based index.</param>
+    /// <returns><see langword="true"/> when the entry moved.</returns>
+    public bool MoveEntryDown(int index)
+    {
+        if (index < 0 || index >= _entries.Count - 1)
+        {
+            return false;
+        }
+
+        DiscPlaylistEntry entry = _entries[index];
+        _entries.RemoveAt(index);
+        _entries.Insert(index + 1, entry);
+        if (CurrentIndex == index)
+        {
+            CurrentIndex++;
+        }
+        else if (CurrentIndex == index + 1)
+        {
+            CurrentIndex--;
+        }
+
+        return true;
+    }
+
+    /// <summary>Writes the playlist as an extended M3U file.</summary>
+    /// <param name="path">
+    /// Destination path. Defaults to <see cref="SourcePath"/> when the playlist was loaded
+    /// from disk.
+    /// </param>
+    /// <returns>The absolute path written.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the playlist is empty or no destination path is available.
+    /// </exception>
+    public string Save(string? path = null)
+    {
+        var target = string.IsNullOrWhiteSpace(path) ? SourcePath : path;
+        if (string.IsNullOrWhiteSpace(target))
+        {
+            throw new InvalidOperationException("No playlist path is set.");
+        }
+
+        if (_entries.Count == 0)
+        {
+            throw new InvalidOperationException("Cannot save an empty playlist.");
+        }
+
+        var fullPath = Path.GetFullPath(target);
+        var directory = Path.GetDirectoryName(fullPath) ?? Environment.CurrentDirectory;
+        Directory.CreateDirectory(directory);
+        var lines = new List<string> { "#EXTM3U" };
+        foreach (DiscPlaylistEntry entry in _entries)
+        {
+            lines.Add($"#EXTINF:-1,{entry.DisplayName}");
+            lines.Add(FormatEntryPath(directory, entry.Path));
+        }
+
+        File.WriteAllLines(fullPath, lines, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        SourcePath = fullPath;
+        return fullPath;
+    }
+
+    private static string FormatEntryPath(string directory, string path)
+    {
+        var relative = Path.GetRelativePath(directory, path);
+        return string.Equals(relative, "..", StringComparison.Ordinal)
+            || relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+            || Path.IsPathRooted(relative)
+            ? path
+            : relative;
+    }
+
     /// <summary>Selects an entry by index.</summary>
     /// <param name="index">Zero-based index.</param>
     /// <exception cref="ArgumentOutOfRangeException">The index is outside the playlist.</exception>
@@ -112,16 +268,28 @@ public sealed class DiscPlaylist
 
     /// <summary>Selects the next entry, wrapping to the first at the end.</summary>
     /// <returns>The newly selected entry.</returns>
+    /// <exception cref="InvalidOperationException">The playlist is empty.</exception>
     public DiscPlaylistEntry MoveNext()
     {
+        if (_entries.Count == 0)
+        {
+            throw new InvalidOperationException("The playlist is empty.");
+        }
+
         CurrentIndex = (CurrentIndex + 1) % _entries.Count;
         return Current;
     }
 
     /// <summary>Selects the previous entry, wrapping to the last at the start.</summary>
     /// <returns>The newly selected entry.</returns>
+    /// <exception cref="InvalidOperationException">The playlist is empty.</exception>
     public DiscPlaylistEntry MovePrevious()
     {
+        if (_entries.Count == 0)
+        {
+            throw new InvalidOperationException("The playlist is empty.");
+        }
+
         CurrentIndex = (CurrentIndex + _entries.Count - 1) % _entries.Count;
         return Current;
     }

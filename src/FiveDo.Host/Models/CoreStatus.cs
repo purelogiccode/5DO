@@ -32,4 +32,10 @@ public readonly record struct CoreStatus(
 
     /// <summary>Gets the number of frames whose presentation was skipped.</summary>
     public long SkippedFrames { get; init; }
+
+    /// <summary>Gets a value indicating whether the virtual disc tray is open.</summary>
+    public bool TrayOpen { get; init; }
+
+    /// <summary>Gets a value indicating whether the drive reports a disc.</summary>
+    public bool DiscPresent { get; init; }
 }

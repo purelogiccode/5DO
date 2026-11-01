@@ -125,6 +125,9 @@ public partial class MainWindow : Window, IDisposable
     public MainWindow()
     {
         InitializeComponent();
+        DragDrop.SetAllowDrop(this, true);
+        AddHandler(DragDrop.DragOverEvent, OnWindowDragOver);
+        AddHandler(DragDrop.DropEvent, OnWindowDrop);
         Deactivated += (_, _) => CancelFastForward();
         _settings = AppSettingsStore.Load();
         _libraryState = LibraryStateStore.Load();
@@ -755,6 +758,172 @@ public partial class MainWindow : Window, IDisposable
         AsyncEvent.Run(SwapDiscAsync, "swapping discs");
     }
 
+    private void OnPlaylistEditorAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ShowPlaylistEditorAsync, "editing the disc playlist");
+    }
+
+    private async Task ShowPlaylistEditorAsync()
+    {
+        List<DiscPlaylistEntry> entries = _playlist is not null ? [.. _playlist.Entries] : [];
+        if (entries.Count == 0
+            && !string.IsNullOrWhiteSpace(_settings.DiscPath)
+            && File.Exists(_settings.DiscPath)
+            && !IsPlaylistPath(_settings.DiscPath))
+        {
+            entries.Add(new DiscPlaylistEntry(Path.GetFullPath(_settings.DiscPath), _gameName));
+        }
+
+        string? currentPath = _playlist?.Current.Path;
+        var window = new DiscPlaylistWindow(entries, _playlistPath);
+        string? savedPath = await window.ShowDialog<string?>(this).ConfigureAwait(true);
+        if (string.IsNullOrWhiteSpace(savedPath))
+        {
+            return;
+        }
+
+        DiscPlaylist saved = DiscPlaylist.Load(savedPath);
+        var selected = 0;
+        if (!string.IsNullOrWhiteSpace(currentPath))
+        {
+            for (var i = 0; i < saved.Count; i++)
+            {
+                if (string.Equals(saved.Entries[i].Path, currentPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    selected = i;
+                    break;
+                }
+            }
+        }
+
+        saved.Select(selected);
+        _playlist = saved;
+        _playlistPath = savedPath;
+        _settings.DiscPath = savedPath;
+        AppSettingsStore.Save(_settings);
+        ShowOsd(
+            $"Playlist saved: {Path.GetFileName(savedPath)} ({saved.Count} discs).",
+            OsdSeverity.Success);
+    }
+
+    private void OnWindowDragOver(object? sender, DragEventArgs e)
+    {
+        var files = e.DataTransfer.TryGetFiles();
+        e.DragEffects =
+            files is not null && files.Any(file => IsSupportedDroppedPath(file.TryGetLocalPath()))
+                ? DragDropEffects.Copy
+                : DragDropEffects.None;
+    }
+
+    private void OnWindowDrop(object? sender, DragEventArgs e)
+    {
+        var files = e.DataTransfer.TryGetFiles();
+        if (files is null)
+        {
+            return;
+        }
+
+        string[] paths = files
+            .Select(file => file.TryGetLocalPath())
+            .Where(IsSupportedDroppedPath)
+            .Cast<string>()
+            .ToArray();
+        if (paths.Length == 0)
+        {
+            return;
+        }
+
+        e.Handled = true;
+        AsyncEvent.Run(() => ImportDroppedPathsAsync(paths), "importing dropped files");
+    }
+
+    private async Task ImportDroppedPathsAsync(string[] paths)
+    {
+        if (paths.Length == 1 && IsPlaylistPath(paths[0]))
+        {
+            if (!_running)
+            {
+                OpenDiscPath(paths[0], autoStart: true);
+                ShowOsd(
+                    $"Opened playlist: {Path.GetFileName(paths[0])}.",
+                    OsdSeverity.Success);
+                return;
+            }
+
+            DiscPlaylist loaded = DiscPlaylist.Load(paths[0]);
+            _playlist = loaded;
+            _playlistPath = paths[0];
+            _settings.DiscPath = paths[0];
+            AppSettingsStore.Save(_settings);
+            ShowOsd(
+                $"Loaded playlist: {loaded.Count} discs. Press F3 to swap.",
+                OsdSeverity.Success);
+            return;
+        }
+
+        var entries = new List<DiscPlaylistEntry>();
+        foreach (var path in paths)
+        {
+            if (!IsPlaylistPath(path))
+            {
+                entries.Add(new DiscPlaylistEntry(Path.GetFullPath(path), null));
+                continue;
+            }
+
+            try
+            {
+                entries.AddRange(DiscPlaylist.Load(path).Entries);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
+            {
+                ShowOsd(
+                    $"Could not import {Path.GetFileName(path)}: {exception.Message}",
+                    OsdSeverity.Warning);
+            }
+        }
+
+        if (entries.Count == 0)
+        {
+            return;
+        }
+
+        DiscPlaylist dropped = DiscPlaylist.Create(entries);
+        if (_running)
+        {
+            _playlist = dropped;
+            _playlistPath = null;
+            ShowOsd(
+                $"Imported {dropped.Count} discs. Press F3 to swap.",
+                OsdSeverity.Success);
+            return;
+        }
+
+        if (OpenDiscPath(entries[0].Path, autoStart: true, preservePlaylist: true))
+        {
+            _playlist = dropped;
+            _playlistPath = null;
+            ShowOsd(
+                $"Imported {dropped.Count} discs and booted {entries[0].DisplayName}.",
+                OsdSeverity.Success);
+        }
+    }
+
+    private static bool IsSupportedDroppedPath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        var extension = Path.GetExtension(path);
+        return extension.Equals(".iso", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".bin", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".cue", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".chd", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".m3u", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".m3u8", StringComparison.OrdinalIgnoreCase);
+    }
+
     private async Task SwapDiscAsync()
     {
         if (_disc is null)
@@ -795,6 +964,35 @@ public partial class MainWindow : Window, IDisposable
             {
                 ShowOsd($"Disc swapped: {Path.GetFileName(path)}", OsdSeverity.Success);
             }
+        }
+    }
+
+    private void HandleGuestDiscEjection()
+    {
+        if (!_settings.AutoSwapOnEject || _playlist is not { Count: > 1 } || _disc is null)
+        {
+            ShowOsd(
+                "The game ejected the disc. Press F3 to insert the next disc.",
+                OsdSeverity.Warning);
+            return;
+        }
+
+        int nextIndex = _playlist.CurrentIndex + 1;
+        if (nextIndex >= _playlist.Count)
+        {
+            ShowOsd(
+                "The game ejected the last disc in the playlist. Press F3 to choose a disc.",
+                OsdSeverity.Warning);
+            return;
+        }
+
+        DiscPlaylistEntry entry = _playlist.Entries[nextIndex];
+        if (OpenDiscPath(entry.Path, autoStart: false, preservePlaylist: true))
+        {
+            _playlist.Select(nextIndex);
+            ShowOsd(
+                $"ODE inserted disc {_playlist.FormatPosition()}: {entry.DisplayName}",
+                OsdSeverity.Success);
         }
     }
 
@@ -3375,7 +3573,11 @@ public partial class MainWindow : Window, IDisposable
 
         if (InputDisplayPanel.IsVisible)
         {
-            InputFrameText.Text = $"frame {status.Frames} · skip {status.SkippedFrames}";
+            var disc = status.DiscPresent
+                ? "disc"
+                : status.TrayOpen ? "tray open" : "no disc";
+            InputFrameText.Text =
+                $"frame {status.Frames} · skip {status.SkippedFrames} · {disc}";
             InputButtonsText.Text = $"P1 {PbusDecoder.FormatButtons(status.Player1)}";
         }
     }
@@ -3852,6 +4054,7 @@ public partial class MainWindow : Window, IDisposable
                 ShowLibraryView();
                 ShowError("Emulation error", exception.Message);
             });
+            _runner.GuestDiscEjected += (_, _) => Dispatcher.UIThread.Post(HandleGuestDiscEjection);
             ReloadCheats();
         }
 

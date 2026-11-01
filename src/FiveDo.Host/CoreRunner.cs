@@ -47,6 +47,9 @@ public sealed class CoreRunner : IDisposable
     private int _autoRecoverFrames;
     private bool _disposed;
     private ControllerState _lastPlayer1;
+    private bool _trayOpen;
+    private bool _discPresent;
+    private int _guestEjectCount;
 
     /// <summary>Initializes a new instance of the <see cref="CoreRunner"/> class.</summary>
     /// <param name="machine">Machine to run. The runner does not own it.</param>
@@ -68,6 +71,15 @@ public sealed class CoreRunner : IDisposable
 
     /// <summary>Raised on the core thread when the emulation loop faults.</summary>
     public event EventHandler<CoreFaultedEventArgs>? Faulted;
+
+    /// <summary>
+    /// Raised on the core thread when the guest issues a CD eject command.
+    /// </summary>
+    /// <remarks>
+    /// Frontends use this for ODE-style disc-swap prompts. Handlers must not block:
+    /// marshal UI work to the UI thread and return promptly.
+    /// </remarks>
+    public event EventHandler? GuestDiscEjected;
 
     /// <summary>Gets a value indicating whether the core thread is running.</summary>
     public bool IsRunning
@@ -300,7 +312,7 @@ public sealed class CoreRunner : IDisposable
             _machine.RunFrame();
             Interlocked.Increment(ref _frames);
             Interlocked.Increment(ref _presentedFrames);
-            CapturePlayer1();
+            CaptureFrameState();
             _rewind.Capture(_machine.FramesExecuted);
             _frameSink?.Invoke(_machine.Frame);
             _frameSkipIndex = 0;
@@ -439,7 +451,7 @@ public sealed class CoreRunner : IDisposable
                         var presentStep = present && step == speed - 1;
                         _machine.RunFrame(!presentStep);
                         Interlocked.Increment(ref _frames);
-                        CapturePlayer1();
+                        CaptureFrameState();
                         _rewind.Capture(_machine.FramesExecuted);
                         audioPacer.FrameCompleted(_machine.AudioSamplesProduced);
                         if (!presentStep)
@@ -482,6 +494,8 @@ public sealed class CoreRunner : IDisposable
                         FrameSkipCadence = mode == FrameSkipMode.Auto ? _autoSkipLevel + 1 : FrameSkipPolicy.Cadence(mode),
                         Player1 = _lastPlayer1,
                         SkippedFrames = Frames - PresentedFrames,
+                        TrayOpen = _trayOpen,
+                        DiscPresent = _discPresent,
                     });
                     statusStart = elapsed;
                     statusFrames = 0;
@@ -509,6 +523,8 @@ public sealed class CoreRunner : IDisposable
             {
                 Player1 = _lastPlayer1,
                 SkippedFrames = Frames - PresentedFrames,
+                TrayOpen = _trayOpen,
+                DiscPresent = _discPresent,
             });
             Faulted?.Invoke(this, new CoreFaultedEventArgs(exception));
             Serilog.Log.Error(exception, "Core thread stopped.");
@@ -519,9 +535,21 @@ public sealed class CoreRunner : IDisposable
         }
     }
 
-    private void CapturePlayer1()
+    private void CaptureFrameState()
     {
         _lastPlayer1 = PbusDecoder.DecodeController(_machine.Madam.PbusQueue, 0);
+        bool wasTrayOpen = _trayOpen;
+        _trayOpen = _machine.Cdrom.TrayOpen;
+        _discPresent = _machine.Cdrom.DiscPresent;
+        var ejects = _machine.Cdrom.GuestEjectCount;
+        if (ejects != _guestEjectCount)
+        {
+            _guestEjectCount = ejects;
+            if (_trayOpen && !wasTrayOpen)
+            {
+                GuestDiscEjected?.Invoke(this, EventArgs.Empty);
+            }
+        }
     }
 
     private void UpdateAutoFrameSkip(FrameSkipMode mode, bool present, long frameDuration, double targetPeriod)

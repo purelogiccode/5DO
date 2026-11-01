@@ -424,6 +424,16 @@ public sealed class AppSettings
     /// <summary>Gets or sets a value indicating whether CD-DA mixing is muted.</summary>
     public bool CdAudioMuted { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether a guest eject automatically advances to the
+    /// next entry in the loaded playlist.
+    /// </summary>
+    /// <remarks>
+    /// This is the ODE-style behavior expected by multi-disc titles. When no playlist is
+    /// loaded, or the option is off, the frontend asks the user to insert a disc instead.
+    /// </remarks>
+    public bool AutoSwapOnEject { get; set; } = true;
+
     /// <summary>Gets or sets a value indicating whether rewind history is recorded.</summary>
     public bool RewindEnabled { get; set; } = true;
 

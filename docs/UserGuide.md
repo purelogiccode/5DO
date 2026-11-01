@@ -275,6 +275,12 @@ machine, wrapping at the end. Without a playlist, the same action opens a file p
 The current disc's hash is used for save-state metadata while BIOS, NVRAM, fixes, and
 cheats stay keyed to the session's original game ID.
 
+**File > Playlist Editor...** adds, removes, and reorders entries and saves an extended
+M3U file. Drag one or more disc images or playlists onto the window to import them. When
+a game ejects the disc, 5DO advances to the next playlist entry automatically by default
+(ODE-style), or shows an on-screen prompt when no playlist is loaded. Change this with
+**Settings > Audio > Insert the next playlist disc when a game ejects**.
+
 The CLI can list a playlist with `disc playlist game.m3u`, open its first entry with
 `run --playlist game.m3u`, and test a swap with
 `run game.chd --swap-at 1200 --swap-disc disc2.chd`.

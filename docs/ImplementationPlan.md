@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,376 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,381 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,376** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,381** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -154,7 +154,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 ### System, disc, BIOS, region, peripherals
 
 - [ ] **[SYS-01](#feat-sys-01)** CD-DA / Red Book and multi-track discs — P0 · L · depends on: CORE-04 — **Partial** — remaining: multi-track CUE/CHD TOC, raw CD-DA sectors, TOC/Sub-Q commands, DSP mixing, volume UI, and `disc tracks --json` are implemented; known-title audio evidence and read-ahead/subcode remain
-- [ ] **[SYS-02](#feat-sys-02)** Disc swap / ODE / multi-disc — P0 · M · depends on: CORE-04 — **Partial** — remaining: M3U playlist, host/F3/UI/CLI swap, guest inject, and per-disc hash are implemented; guest-driven ODE prompts, playlist editor, and a known multi-disc title roundtrip remain
+- [ ] **[SYS-02](#feat-sys-02)** Disc swap / ODE / multi-disc — P0 · M · depends on: CORE-04 — **Partial** — remaining: M3U playlist, host/F3/UI/CLI swap, guest inject, per-disc hash, guest-eject ODE auto-advance, and playlist editor/drop import are implemented; real in-game multi-disc swap evidence remains
 - [ ] **[SYS-03](#feat-sys-03)** PAL/NTSC region modes — P0 · L · depends on: CORE-02 — **Pending**
 - [x] **[SYS-04](#feat-sys-04)** BIOS manager and auto-selection — P0 · L · depends on: FND-02 — **Done**
 - [ ] **[SYS-05](#feat-sys-05)** Embedded open-source boot ROM — P1 · M · depends on: SYS-04, ENG-03 — **Pending**
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,376 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,381 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,376**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,381**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -772,6 +772,15 @@ plus the presentation-skip count. The game view adds a bottom-left frame/skip an
 player-1 button overlay, toggled by **F2** or **View > Input Display** and persisted as
 `ShowInputDisplay`. TAS-style lag detection and layout options remain. **1376 tests
 pass.**
+
+**ODE and playlist pass (2026-11-01, forty-third pass):** SYS-02 gains
+`GuestEjectCount`, `TrayOpen`, `DiscPresent`, and a core-thread `GuestDiscEjected`
+callback. `AutoSwapOnEject` advances to the next playlist disc on a guest eject, giving
+ODE-style behavior; without a playlist the frontend prompts for **F3**. The playlist
+editor adds, removes, reorders, imports, and saves extended M3U files, and drag-and-drop
+import accepts disc images or playlists. `SaveStateTests` covers swap plus state
+roundtrip, and a two-disc `D (USA, Europe)` headless run swapped at frame 300 and
+continued to frame 600 with a new disc hash. **1381 tests pass.**
 
 **Last updated:** 2026-11-01
 
@@ -2843,6 +2852,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | FND-02 | Settings schema versioning and migration | Added `SettingsVersion`/`CurrentVersion`, legacy normalization, malformed-file backup, renderer/value validation, and version roundtrip. 4 new tests; 1,361 tests pass |
 | 2026-11-01 | AUD-05, FND-02 | CD-DA volume and settings completion | Persisted `CdAudioVolume`/`CdAudioMuted` in Settings v2, added the Audio-tab slider/mute check, `--cd-volume`/`--mute-cd`, CD state v4, mix-level tests, per-game `GameProfiles`, and `settings validate|migrate`. AUD-05 and FND-02 are done; 1,376 tests pass |
 | 2026-11-01 | SYS-02 | Multi-disc playlist and live swap | Added `DiscPlaylist` (M3U/M3U8, `#EXTINF`, relative paths), persisted playlist path, File > Swap Disc and F3, one-off swap without reset, guest inject `0x07`, `disc playlist`, and `run --playlist/--swap-at/--swap-disc`. SYS-02 is partial; 1,376 tests pass |
+| 2026-11-01 | SYS-02 | ODE eject handling and playlist editor | Added `GuestEjectCount`/`TrayOpen`/`DiscPresent`, a core-thread `GuestDiscEjected` callback, `AutoSwapOnEject`, ODE playlist auto-advance, guest-eject ODE behavior, a playlist editor with save/import/reorder, drag-and-drop playlist import, `DiscPlaylist.Create/Add/RemoveAt/MoveEntryUp/MoveEntryDown/Save`, and a swap/state roundtrip test. A `D (USA, Europe)` playlist swap at frame 300 ran to frame 600 with a new disc hash. SYS-02 remains partial pending a real in-game swap; 1,381 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -3795,21 +3805,23 @@ artifacts.
 **Problem.** 5DO had `InsertDisc`/`EjectDisc` but no swap flow, multi-disc playlist, or ODE.
 
 **Implemented.**
-- `DiscPlaylist` loads M3U/M3U8 with `#EXTINF` titles and relative-path resolution.
+- `DiscPlaylist` loads and saves M3U/M3U8 with `#EXTINF` titles and relative-path resolution; the editor adds, removes, and reorders entries.
+- **File > Playlist Editor...** edits the playlist, and dropping disc images or playlists on the window imports them.
 - File > Swap Disc and **F3** advance the playlist without resetting the machine; a one-off file picker swaps to any disc.
 - The playlist path is persisted in `AppSettings.DiscPath` and recent discs, so restarting resumes the multi-disc session.
 - Guest eject (`0x06`) opens the virtual tray; guest inject (`0x07`) restores the Opera tray/disc/spin/ready bits and media-access poll.
+- A guest eject raises `CoreRunner.GuestDiscEjected` on the core thread. The frontend advances to the next playlist entry when `AutoSwapOnEject` is enabled, giving ODE-style behavior; without a playlist it prompts for **F3**.
 - CLI `disc playlist` lists entries; `run --playlist`, `--swap-at N`, and `--swap-disc` open and swap discs headlessly.
 - Per-disc hashes update after a swap; the original game identity keys BIOS, NVRAM, fixes, and cheats for the session.
+- A save-state saved after a swap reloads with the new drive state; `SaveStateTests` covers the roundtrip.
+- A two-disc `D (USA, Europe)` playlist was swapped at frame 300 in a 600-frame headless run; the disc hash changed and the machine continued without reset.
 
 **Remaining.**
-- Guest-driven ODE swap prompts (a frontend callback after a guest eject).
-- Playlist editor and drag-and-drop playlist import.
-- A known real multi-disc title roundtrip and a state save/load after swap.
+- A real in-game disc-swap prompt from a supported multi-disc title (reaching the actual game-requested swap, not a timed test swap).
 
 **Files.** `src/FiveDo.Cdrom/CdromDevice.cs`, `src/FiveDo.Host/`, UI/CLI.
 
-**Tests.** Swap in a multi-disc title; state roundtrip; eject/insert; no crash.
+**Tests.** `DiscPlaylistTests` covers editing/saving; `CdromMultiTrackTests` covers eject/inject counters; `CoreRunnerTests` covers the guest-eject callback; `SaveStateTests` covers swap plus state roundtrip.
 
 **Done when.** A multi-disc title can continue after a swap; ODE works in a supported frontend.
 

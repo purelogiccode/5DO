@@ -6,7 +6,7 @@ manager, the per-game NVRAM pass, the rewind/fast-forward pass, the per-game che
 engine, the TAS-movie pass, the disc browser, the input-device pass, the
 OSD/quick-menu pass, the library metadata/favorites/playtime pass, the
 multi-track/CD-DA pass, the CD-DA volume/settings pass, the multi-disc swap pass, the
-portable-mode pass, and the input-display pass. Road Rash's
+portable-mode pass, the input-display pass, and the ODE/playlist-editor pass. Road Rash's
 100k-state race now measures
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
@@ -18,14 +18,16 @@ carries native 2048/2336/2352-byte sectors, `CueDiscImage` handles multi-file/mu
 PLAY_AUDIO position tracking, 2352-byte digital-audio reads, and guest inject. CD-DA is
 mixed into the 44.1 kHz DSP output with persisted volume/mute; CD state v4 stores the
 mode, audio position, volume, and mute. `disc tracks` reports every track, and SYS-02
-adds an M3U/M3U8 playlist, File > Swap Disc/F3, and `run --playlist/--swap-at/--swap-disc`.
+adds an M3U/M3U8 playlist, playlist editor, drag-and-drop import, File > Swap Disc/F3,
+guest-eject ODE auto-advance, and `run --playlist/--swap-at/--swap-disc`.
 FND-02 is complete with settings schema v2, legacy normalization, malformed-file backup,
 per-game profiles, and `settings validate|migrate`. UX-15 adds portable mode:
 `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR` redirects settings, NVRAM, cheats,
 library state, and logs. **F2** toggles the new frame/skip and player-1 input overlay.
 Remaining disc work is known-title
-CD-DA evidence, ODE prompts, and read-ahead/subcode. A 10-disc Release smoke after the
-TOC change reported 10/10 Loadable/Rendered. **1376 tests pass.**
+CD-DA evidence and a real in-game multi-disc swap, plus read-ahead/subcode. A 10-disc
+Release smoke after the
+TOC change reported 10/10 Loadable/Rendered. **1381 tests pass.**
 The five not-loadable rows are resolved or explained: Mirai Shounen Conan now runs
 (transient CHD read error), and the four Arcade CD-ROM titles load with
 `panafz10-patched.bin` plus the default headless pad. The 12,000-frame rerun shows that six of the
@@ -124,7 +126,7 @@ metadata/play-time text, All/Favorites/Played/Unplayed filters, and
 Title/Recently played/Most played/Release year/Publisher sorts; Settings > Paths
 chooses the metadata file. External metadata providers, rich media, and the >=90%
 rich-metadata target remain. The Lemmings 300-frame differential smoke still passes
-(1 match, 0 diverged). **1376 tests pass.**
+(1 match, 0 diverged). **1381 tests pass.**
 The differential harness (FND-05/CORE-11/CORE-16) is implemented:
 `tools/FiveDo.DiffHarness` stages the bundled OperaCore and BIOS, runs both engines
 with identical options, compares checkpoint frame hashes, applies manifest
@@ -332,7 +334,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 1376 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 1381 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and

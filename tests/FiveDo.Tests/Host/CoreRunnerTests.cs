@@ -276,6 +276,39 @@ public sealed class CoreRunnerTests
         Assert.Equal(ControllerState.Empty, last.Value.Player1);
     }
 
+    [Fact]
+    public void GuestEject_RaisesTheOdeCallbackOnlyWhenTheTrayOpens()
+    {
+        FiveDoMachine machine = CreateMachine();
+        var ejections = 0;
+        using var runner = new CoreRunner(machine);
+        runner.GuestDiscEjected += (_, _) => ejections++;
+        runner.StepFrame();
+        Assert.Equal(0, ejections);
+
+        EjectFromGuest(machine);
+        runner.StepFrame();
+        Assert.Equal(1, ejections);
+        Assert.True(machine.Cdrom.TrayOpen);
+        Assert.False(machine.Cdrom.DiscPresent);
+
+        // A game that reissues eject while the tray is already open must not trigger
+        // a second automatic swap.
+        EjectFromGuest(machine);
+        runner.StepFrame();
+        Assert.Equal(1, ejections);
+        Assert.Equal(2, machine.Cdrom.GuestEjectCount);
+    }
+
+    private static void EjectFromGuest(FiveDoMachine machine)
+    {
+        machine.Cdrom.SetCommand(0x06);
+        for (var i = 1; i < 7; i++)
+        {
+            machine.Cdrom.SetCommand(0);
+        }
+    }
+
     private static FiveDoMachine CreateMachine()
     {
         var machine = new FiveDoMachine();

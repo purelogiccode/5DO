@@ -27,6 +27,15 @@ still change.
   without resetting the machine, or open a one-off disc. The guest inject command
   (`0x07`) restores the Opera tray/disc/spin/ready bits and media-access poll. CLI adds
   `disc playlist`, `run --playlist`, `--swap-at N`, and `--swap-disc`.
+- SYS-02 ODE eject handling and playlist editing: `CdromDevice` exposes
+  `GuestEjectCount`, `TrayOpen`, and `DiscPresent`; `CoreRunner` raises
+  `GuestDiscEjected` on the core thread. With `AutoSwapOnEject` enabled (default), a
+  guest eject advances to the next playlist entry like an ODE; without a playlist the
+  frontend prompts for **F3**. **File > Playlist Editor...** adds, removes, reorders,
+  imports, and saves extended M3U files, and disc images or playlists can be dropped on
+  the window. `DiscPlaylist` gains `Create`, `Add`, `RemoveAt`, move, and save methods.
+  A two-disc `D (USA, Europe)` run swapped at frame 300 and continued to frame 600, and
+  a post-swap save-state roundtrip is covered by tests.
 - FND-02 settings schema versioning: `AppSettings.SettingsVersion` / `CurrentVersion = 2`
   are written on save; unversioned and v1 files are normalized on load. Malformed
   settings are copied to `settings.json.invalid-<timestamp>.bak` before defaults are
