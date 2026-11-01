@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,459 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,462 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,459** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,462** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 19 done · 22 partial · 79 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 19 done · 23 partial · 78 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -172,7 +172,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[SYS-17](#feat-sys-17)** Game database expansion and community DB — P1 · M · depends on: FND-02 — **Pending**
 - [ ] **[SYS-18](#feat-sys-18)** Auto per-game profile — P0 · L · depends on: SYS-04, SYS-17 — **Partial** — auto BIOS/region/fixes/NVRAM, known-title input seeding, a timing/CD-DA profile editor with import/export, machine-creation application, and CLI `--game-profile` are implemented; full BIOS/fix/filter/high-res fields and DB-driven auto profiles remain
 - [ ] **[SYS-19](#feat-sys-19)** Save-state interoperability with 4DO/Opera — P2 · L · depends on: CORE-14 — **Pending**
-- [ ] **[SYS-20](#feat-sys-20)** Disc health / Redump DAT / CHD integrity — P2 · M · depends on: SYS-22 — **Pending**
+- [ ] **[SYS-20](#feat-sys-20)** Disc health / Redump DAT / CHD integrity — P2 · M · depends on: SYS-22 — **Partial** — `disc verify` reads every native sector and reports CHD/CUE/BIN errors and a stable hash; Redump/No-Intro DAT parsing and a known-dump badge remain
 - [ ] **[SYS-21](#feat-sys-21)** Physical CD drive support — P2 · M — **Pending**
 - [ ] **[SYS-22](#feat-sys-22)** Disc image conversion/repair — P2 · M · depends on: SYS-01 — **Pending**
 
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,459 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,462 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,459**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,462**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -2900,6 +2900,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | UX-06 | Movie frame editor | Extended `MovieEditor` with per-frame set/button/insert/remove and added **File > Movie Editor...** (frame list, player-1 button checkboxes, insert/delete/trim, Save As). UX-06 remains partial for Lua, an input timeline, and multiplayer display; 1,457 tests pass |
 | 2026-11-01 | UX-13 | Game metadata editor | Added `LibraryMetadataStore.Upsert`/`Remove` and **File > Game Metadata...** for the current disc (title, developer, publisher, year, genre, regions, players, description), with a library rescan after saving. UX-13 remains partial for external providers and media; 1,458 tests pass |
 | 2026-11-01 | UX-15 | Profile selector and import/export UI | Added `default-profile.txt` resolution, Settings > Paths profile selector, Set default, Create, Open folder, Import, and Export actions. UX-15 is done; installer integration belongs to UX-16; 1,459 tests pass |
+| 2026-11-01 | SYS-20 | Disc integrity verifier | Added `DiscVerifier` and `disc verify` (native-sector reads, LBA errors, FNV-1a hash, JSON). Battle Chess verified 143,810 sectors / 338,241,120 bytes with no errors. SYS-20 is partial for Redump DAT matching and the UI badge; 1,462 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -3014,7 +3015,7 @@ A feature is done only when:
 | SYS-17 | Game database expansion and community DB | P1 | M | FND-02 | Pending |
 | SYS-18 | Auto per-game profile | P0 | L | SYS-04, SYS-17 | Pending |
 | SYS-19 | Save-state interoperability with 4DO/Opera | P2 | L | CORE-14 | Pending |
-| SYS-20 | Disc health / Redump DAT / CHD integrity | P2 | M | SYS-22 | Pending |
+| SYS-20 | Disc health / Redump DAT / CHD integrity | P2 | M | SYS-22 | Partial |
 | SYS-21 | Physical CD drive support | P2 | M | none | Pending |
 | SYS-22 | Disc image conversion/repair | P2 | M | SYS-01 | Pending |
 
@@ -4335,16 +4336,20 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
 <a id="feat-sys-20"></a>
 ### SYS-20 - Disc health / Redump DAT / CHD integrity
 
-**Priority:** P2 | **Effort:** M | **Depends on:** SYS-22 | **Status:** Pending
+**Priority:** P2 | **Effort:** M | **Depends on:** SYS-22 | **Status:** Partial (2026-11-01)
 
 **Problem.** Bad dumps cause false compatibility failures.
 
-**Add.**
-- Redump/No-Intro DAT parser.
-- Verify file hashes/sector counts.
-- CHD integrity check.
-- Clear warnings and a "known dump" badge.
-- UI/CLI.
+**Implemented.**
+- `DiscVerifier` reads every native track sector (audio and data), reports the first errors with LBA, verifies sector counts, and computes an FNV-1a 64-bit content hash.
+- CLI `disc verify <path> [--json] [--max-errors N]` exits 1 on a read error or an incomplete read.
+- `DiscVerifierTests` covers a clean disc, a mid-disc failure that continues to the end, and a mixed data/audio track table.
+- A real Battle Chess (Europe) CHD verified 143,810/143,810 sectors and 338,241,120 bytes with no errors.
+
+**Remaining.**
+- Redump/No-Intro DAT parsing and known-dump matching.
+- A library "known dump" badge and health summary.
+- 4DO/Opera hash comparison.
 
 **Files.** New `DiscHealth.cs`, `DiscImageFactory.cs`, UI/CLI.
 
@@ -6648,7 +6653,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [ ] **SYS-17** | Game database expansion and community compatibility DB | 5DO has 518 records and a 241-title 4DO reference list; the local collection has 594 images. | >=95% local images have metadata; region/revision/fix/BIOS fields; contribution workflow. | M |
 | [ ] **SYS-18** | Auto per-game profile ("just works") | Best-in-class means no manual BIOS/region/fix/input selection. | Every local disc gets a profile; known problem titles boot without manual steps. | L |
 | [ ] **SYS-19** | Save-state interoperability with 4DO/Opera | Users should be able to migrate saves; preservation value. | Import/export 4DO `.4dosav` and Opera states; roundtrip tests. | L |
-| [ ] **SYS-20** | Disc health / Redump DAT / CHD integrity | Bad dumps cause false compatibility failures. | Verify against DAT; clear warnings; no silent corruption. | M |
+| [~] **SYS-20** | Disc health / Redump DAT / CHD integrity | Bad dumps cause false compatibility failures. | Verify against DAT; clear warnings; no silent corruption. **Partial 2026-11-01:** `disc verify` reads every native sector, reports errors, and hashes the content; DAT matching and the UI badge remain. | M |
 | [ ] **SYS-21** | Physical CD drive support | 4DO can boot from a CD drive; 5DO is file-only. | Drive selection; same `IDiscSource` path; tests. | M |
 | [ ] **SYS-22** | Disc image conversion/repair | Users need CUE/BIN/ISO/CHD conversion and repair. | CLI/UI convert; preserve tracks; verify output. | M |
 

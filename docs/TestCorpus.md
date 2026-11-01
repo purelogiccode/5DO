@@ -688,7 +688,7 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,459 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,462 tests pass with no changed NTSC hashes.
 
 ### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
 
@@ -845,6 +845,13 @@ UX-23 coverage is compile/status level:
 - The Settings > Paths controls are build-validated; they use `AppSettingsStore` for
   create/import/export and `PortablePaths.SetDefaultProfile` for the next-launch choice.
 - Existing portable, explicit-override, named-profile, and lock tests remain green.
+
+### 1.1ad Disc integrity verifier (2026-11-01)
+
+- `DiscVerifierTests` covers a clean disc and a stable hash, a mid-disc read failure that
+  continues to the end, and a tracked data/audio disc using native sector sizes.
+- Manual evidence: `disc verify` on Battle Chess (Europe) read 143,810/143,810 sectors,
+  338,241,120 bytes, hash `0x9147e756840bc269`, with no errors.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

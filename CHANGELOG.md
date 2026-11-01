@@ -71,6 +71,10 @@ still change.
   illegal-request status instead of silently doing nothing, the guest RESET command
   restores the default transfer state and sector size, and `PrefetchingDiscSource`
   read-aheads native track sectors so CD-DA does not decompress on the sample clock.
+- SYS-20 disc integrity verifier: `DiscVerifier` reads every native data/audio sector,
+  reports the first LBA errors, verifies the sector count, and computes an FNV-1a
+  content hash. CLI `disc verify <path> [--json]` exits 1 on failure. Redump DAT
+  matching and a UI badge remain.
 - UX-15 profile selector: `PortablePaths.ProfileName` falls back to
   `<base>/default-profile.txt`, and Settings > Paths selects a profile, sets the
   next-launch default, creates a profile from current settings, opens the profiles

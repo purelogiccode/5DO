@@ -18,6 +18,7 @@ namespace FiveDo.Cli;
 [JsonSerializable(typeof(CliInfoResult))]
 [JsonSerializable(typeof(CliDiscTracksResult))]
 [JsonSerializable(typeof(CliDiscPlaylistResult))]
+[JsonSerializable(typeof(CliDiscVerifyResult))]
 [JsonSerializable(typeof(CliSettingsValidationResult))]
 [JsonSerializable(typeof(CliSettingsMigrationResult))]
 [JsonSerializable(typeof(CliSettingsProfilesResult))]

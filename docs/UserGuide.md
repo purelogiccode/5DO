@@ -296,7 +296,9 @@ a game ejects the disc, 5DO advances to the next playlist entry automatically by
 (ODE-style), or shows an on-screen prompt when no playlist is loaded. Change this with
 **Settings > Audio > Insert the next playlist disc when a game ejects**.
 
-The CLI can list a playlist with `disc playlist game.m3u`, open its first entry with
+`5do disc verify game.chd` reads every native sector and reports the first read errors,
+the verified sector count, and a content hash; use it to distinguish a bad dump from an
+emulator issue. The CLI can list a playlist with `disc playlist game.m3u`, open its first entry with
 `run --playlist game.m3u`, and test a swap with
 `run game.chd --swap-at 1200 --swap-disc disc2.chd`.
 

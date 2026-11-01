@@ -53,6 +53,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `disc dump <disc>` | Write raw 2048-byte sectors. |
 | `disc tracks <disc>` | List the CUE/CHD track table (data and audio), or one data track for ISO/BIN. |
 | `disc playlist <m3u>` | List multi-disc playlist entries and the selected disc. |
+| `disc verify <disc> [--json] [--max-errors N]` | Read every native sector, report the first LBA errors, verified count, bytes, and content hash. Exits 1 on failure. |
 | `fs list <disc>` | List the 3DO file tree (ISO, BIN, CUE, or CHD). |
 | `fs extract <disc>` | Extract files from a 3DO disc image (ISO, BIN, CUE, or CHD). |
 | `bios info <path>` | BIOS size, MD5, region, Kanji, and Anvil detection. |
@@ -479,6 +480,19 @@ track: `track 1: type=data format=<iso|bin> dataSize=<total bytes> frames=<n> st
 `--json` emits `{ "ok": true, "path": "...", "tracks": [{ "number", "type", "dataSize",
 "frames", "start" }] }`; `dataSize` is the native per-sector size in JSON and the
 total payload size in the text line for ISO/BIN.
+
+### `disc verify`
+
+```powershell
+5do disc verify game.chd
+5do disc verify game.chd --json --max-errors 8
+```
+
+Reads every data and audio track sector through the native-sector path, so CHD/CUE/BIN
+corruption surfaces without booting. The report includes the declared and verified
+sector counts, tracks, native bytes read, an FNV-1a content hash, and up to
+`--max-errors` failures with LBA numbers. The command exits 1 when any sector cannot be
+read or the verified count is short.
 
 ### `disc playlist`
 

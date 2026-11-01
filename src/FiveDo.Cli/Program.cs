@@ -1663,7 +1663,7 @@ internal static class Program
     {
         if (args.Length < 2)
         {
-            throw new ArgumentException("disc needs the 'dump', 'tracks', or 'playlist' subcommand.", nameof(args));
+            throw new ArgumentException("disc needs the 'dump', 'tracks', 'verify', or 'playlist' subcommand.", nameof(args));
         }
 
         if (string.Equals(args[1], "playlist", StringComparison.OrdinalIgnoreCase))
@@ -1703,6 +1703,46 @@ internal static class Program
             }
 
             return 0;
+        }
+
+        if (string.Equals(args[1], "verify", StringComparison.OrdinalIgnoreCase))
+        {
+            ParsedOptions options = Parse(args, startIndex: 2);
+            var verifyPath = options.Positional ?? throw new ArgumentException("disc verify needs a disc path.", nameof(args));
+            using IDiscSource source = DiscImageFactory.Open(verifyPath);
+            DiscVerificationResult verification = DiscVerifier.Verify(
+                source,
+                options.GetInt("--max-errors", 32));
+            var result = new CliDiscVerifyResult(
+                verification.Ok,
+                verifyPath,
+                verification.Sectors,
+                verification.SectorsVerified,
+                verification.Tracks,
+                verification.BytesVerified,
+                $"0x{verification.Hash:x16}",
+                verification.Errors);
+            if (options.Json)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(
+                    result,
+                    CliJsonContext.Default.CliDiscVerifyResult));
+            }
+            else
+            {
+                Console.WriteLine($"path:        {result.Path}");
+                Console.WriteLine($"ok:          {result.Ok}");
+                Console.WriteLine($"sectors:     {result.SectorsVerified}/{result.Sectors}");
+                Console.WriteLine($"tracks:      {result.Tracks}");
+                Console.WriteLine($"bytes:       {result.BytesVerified}");
+                Console.WriteLine($"hash:        {result.Hash}");
+                foreach (var error in result.Errors)
+                {
+                    Console.WriteLine($"error:       {error}");
+                }
+            }
+
+            return result.Ok ? 0 : 1;
         }
 
         if (string.Equals(args[1], "tracks", StringComparison.OrdinalIgnoreCase))
@@ -1764,7 +1804,7 @@ internal static class Program
 
         if (!string.Equals(args[1], "dump", StringComparison.OrdinalIgnoreCase))
         {
-            throw new ArgumentException("disc needs the 'dump', 'tracks', or 'playlist' subcommand.", nameof(args));
+            throw new ArgumentException("disc needs the 'dump', 'tracks', 'verify', or 'playlist' subcommand.", nameof(args));
         }
 
         ParsedOptions dumpOptions = Parse(args, startIndex: 2);
