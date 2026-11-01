@@ -3400,9 +3400,10 @@ exposed through `--cd-timing freedo|opera` and Settings > Emulation, reported in
 `run --json`, covered by device, state, CLI, and machine tests, and recorded in the
 CD-ROM section (version 2) plus the Options section (version 4). The default FreeDO
 path is unchanged; a three-title 12,000/24,000-frame smoke differential is in
-[`docs/TestCorpus.md`](TestCorpus.md) 1.1d. Remaining: command latency, TOC from
-the disc source, read-ahead, subcode, DIPIR tagging, CD-DA, and ODE, followed by the
-full-collection differential. SYS-09 adds the CD speed selector.
+[`docs/TestCorpus.md`](TestCorpus.md) 1.1d. Remaining: command latency, read-ahead,
+subcode, DIPIR tagging, and the full-collection differential. TOC from the disc source,
+CD-DA, and guest eject/inject are now implemented; guest ODE prompts remain. SYS-09 adds
+the CD speed selector.
 
 **Problem.** 5DO's CD device is a frame-based FreeDO port. Opera models cycle-based sector readiness, command latency, DIPIR, read-ahead, subcode, media access, CD-DA, and ODE.
 
@@ -6444,7 +6445,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 
 #### CORE-04 deep dive: CD-ROM timing and command parity
 
-**Current:** `CdromDevice` is a port of FreeDO's `Iso.cpp`. It executes commands immediately, reads sectors synchronously, and uses a frame-based media-access pulse heuristic. It has no subcode, CD-DA, ODE, or cycle-based sector-ready timing.
+**Current (2026-11-01):** `CdromDevice` implements the multi-track TOC from the disc source, READ TOC/Sub-Q, MODE SET/SENSE, cycle-based data-sector readiness, PLAY_AUDIO and CD-DA, and guest eject/inject. It still executes other commands immediately, reads sectors synchronously, and uses a frame-based media-access pulse heuristic; read-ahead, real subcode, guest ODE prompts, DIPIR tagging, and a full transcript differential remain.
 
 **Opera:** `opera_cdrom.c` models command latency, cycle-based data-sector readiness, read-ahead, DIPIR, tagged status, chunks, subcode, CD-DA, ODE, TOC, and configurable speed.
 
