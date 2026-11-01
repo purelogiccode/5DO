@@ -688,7 +688,7 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,440 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,444 tests pass with no changed NTSC hashes.
 
 ### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
 
@@ -777,6 +777,17 @@ UX-23 coverage is compile/status level:
   directory.
 - The gallery itself is build-validated; thumbnail decoding uses
   `Bitmap.DecodeToWidth` and unreadable PNGs fall back to a blank tile.
+
+### 1.1w GIF recording (2026-11-01)
+
+- `GifRecorderTests` covers GIF89a header/trailer, 60-to-30 frame decimation, target-rate
+  clamping, frame limits, size-change skipping, and an empty GIF.
+- Manual evidence: a 40-frame PAL Battle Chess run with
+  `--record-gif artifacts/test-recording.gif --record-fps 25` produced 20 frames at
+  320x288. Pillow loaded every frame and the extracted pixel at (160,120) was a valid
+  RGB color.
+- The encoder uses a 3-3-2 global palette and a NETSCAPE2.0 loop extension; LZW output
+  was validated against Pillow after the code-size transition was corrected.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,440 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,444 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,440** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,444** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 18 done · 19 partial · 83 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 18 done · 20 partial · 82 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -186,7 +186,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[VID-06](#feat-vid-06)** Auto-crop, overscan, void area, gray border — P1 · M · depends on: FND-06 — **Pending**
 - [ ] **[VID-07](#feat-vid-07)** Shader preset system — P1 · L · depends on: FND-06 — **Pending**
 - [ ] **[VID-08](#feat-vid-08)** NTSC composite/S-Video/RF, HDR, gamma — P2 · L · depends on: VID-07 — **Pending**
-- [ ] **[VID-09](#feat-vid-09)** Video recording — P1 · M · depends on: FND-06 — **Pending**
+- [ ] **[VID-09](#feat-vid-09)** Video recording — P1 · M · depends on: FND-06 — **Partial** — animated GIF recording is implemented in the CLI and desktop with a 3-3-2 palette and configurable frame rate; MP4/WebM, audio, and the replay buffer remain
 - [ ] **[VID-10](#feat-vid-10)** Overlays, bezels, touch controls — P2 · M · depends on: FND-06 — **Pending**
 - [ ] **[VID-11](#feat-vid-11)** Vulkan surfaces on Linux/macOS — P1 · L · depends on: ECO-04 — **Pending**
 - [ ] **[VID-12](#feat-vid-12)** Run-ahead, frame delay, VRR, audio sync — P2 · L · depends on: CORE-14 — **Pending**
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,440 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,444 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,440**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,444**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -2893,6 +2893,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | FND-03, CORE-14 | Save-state format v3 | Added header feature flags, an up-front section table with duplicate/version validation, `UnknownSectionPolicy` warn/reject, v1/v2 downgrade tests, and v3 inspector support. The options section records the live region. FND-03 and CORE-14 are done; 1,433 tests pass |
 | 2026-11-01 | CORE-15 | State diff tooling | Added `StateDiff` (section presence/version/length/FNV hash/first difference/differing-byte count) and CLI `state diff <a> <b> [--json]`. A real Battle Chess PAL pair (100 vs 120 frames) reports CPU first difference at byte 4 and Memory at 24,603. CORE-15 is done; 1,437 tests pass |
 | 2026-11-01 | VID-14 | Screenshot gallery | Added `ScreenshotLibrary` metadata parsing/sorting/delete, `AppSettings.ResolveScreenshotDirectory`, and **File > Screenshot Gallery...** with thumbnails, open/copy/delete/refresh. VID-14 is partial for filters/compare/export; 1,440 tests pass |
+| 2026-11-01 | VID-09 | GIF recording | Added `GifRecorder` (GIF89a, 3-3-2 palette, looping, 2-50 fps accumulator), CLI `--record-gif/--record-fps/--record-frames` with JSON fields, and **File > Record GIF...** with live start/stop and frame-skip restoration. A 40-frame PAL capture produced a 20-frame 320x288 GIF that Pillow decoded fully; VID-09 is partial for MP4/WebM/audio/replay; 1,444 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -3023,7 +3024,7 @@ A feature is done only when:
 | VID-06 | Auto-crop, overscan, void area, gray border | P1 | M | FND-06 | Pending |
 | VID-07 | Shader preset system | P1 | L | FND-06 | Pending |
 | VID-08 | NTSC composite/S-Video/RF, HDR, gamma | P2 | L | VID-07 | Pending |
-| VID-09 | Video recording | P1 | M | FND-06 | Pending |
+| VID-09 | Video recording | P1 | M | FND-06 | Partial |
 | VID-10 | Overlays, bezels, touch controls | P2 | M | FND-06 | Pending |
 | VID-11 | Vulkan surfaces on Linux/macOS | P1 | L | ECO-04 | Pending |
 | VID-12 | Run-ahead, frame delay, VRR, audio sync | P2 | L | CORE-14 | Pending |
@@ -4565,22 +4566,25 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
 <a id="feat-vid-09"></a>
 ### VID-09 - Video recording
 
-**Priority:** P1 | **Effort:** M | **Depends on:** FND-06 | **Status:** Pending
+**Priority:** P1 | **Effort:** M | **Depends on:** FND-06 | **Status:** Partial (2026-11-01)
 
 **Problem.** 5DO has screenshots but no video recording.
 
-**Add.**
-- MP4/WebM/GIF recording with audio.
-- Start/stop hotkey/UI.
-- File naming/metadata.
-- Replay buffer.
-- CLI `--record`.
+**Implemented.**
+- `GifRecorder` writes animated GIF89a files with a fixed 3-3-2 global palette, NETSCAPE looping, 2-50 fps capture, and a per-frame accumulator that decimates higher-rate sources.
+- CLI `run --record-gif <path> [--record-fps 1..60] [--record-frames N]`; `run --json` adds `gifPath`/`gifFrames`.
+- **File > Record GIF...** starts/stops a capture, temporarily disables presentation frame skip, and restores the previous setting.
+- Frames are captured from the emulated frame sink, so the GIF is deterministic with the run and does not depend on the host renderer.
+- A 40-frame PAL Battle Chess capture produced a 20-frame 320x288 GIF that Pillow decoded fully.
 
-**Files.** New recorder in `FiveDo.Host`/frontend.
+**Remaining.**
+- MP4/WebM or an FFmpeg pipe with synchronized audio.
+- A replay buffer and hotkey start/stop.
+- Metadata sidecars and file naming templates.
 
-**Tests.** Record/play; audio sync; file validity.
+**Files.** `src/FiveDo.Video/GifRecorder.cs`, `src/FiveDo.Cli/Program.cs`, `src/FiveDo.Frontend.Avalonia/Views/MainWindow.*`.
 
-**Done when.** A 60s clip records with synchronized audio.
+**Tests.** GIF header/trailer/frame count, rate clamping, frame limit, size-change skip, and empty GIF.
 
 ---
 

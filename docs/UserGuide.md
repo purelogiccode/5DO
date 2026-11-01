@@ -368,7 +368,9 @@ see [`SaveStates.md`](SaveStates.md) for the format and limits.
 
 **Screenshot** writes a PNG named `<game>-<timestamp>-f<frames>.png`. **File > Screenshot
 Gallery...** lists captures with thumbnails and supports open, copy path, refresh, and
-delete (the first Delete click asks for confirmation). The gallery writes from the OpenGL
+delete (the first Delete click asks for confirmation). **File > Record GIF...** records
+emulated frames to an animated GIF at 30 fps and asks for a destination; click it again
+(or stop emulation) to finish the file. The gallery writes from the OpenGL
 output (or the CPU frame when GL is unavailable). Enable **Also save the native CPU
 frame with screenshots** in **Settings > Video** to write a second `-native.png`
 image from the CPU frame assembler. The default directory is your Pictures folder;

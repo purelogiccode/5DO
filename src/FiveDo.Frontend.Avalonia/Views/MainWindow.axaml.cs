@@ -84,6 +84,12 @@ public partial class MainWindow : Window, IDisposable
     private OpenAlAudioOutput? _audio;
     private string _audioDevice;
     private int _audioBufferMilliseconds;
+    private GifRecorder? _gifRecorder;
+    private FileStream? _gifStream;
+    private string? _gifPath;
+    private FrameSkipMode _gifPreviousFrameSkip;
+    private WavAudioSink? _audioRecorder;
+    private string? _audioRecordingPath;
     private float _meterPeak;
     private FiveDoMachine? _machine;
     private CoreRunner? _runner;
@@ -1312,6 +1318,8 @@ public partial class MainWindow : Window, IDisposable
 
     private void StopEmulation()
     {
+        StopAudioRecording();
+        StopGifRecording();
         StopMovie(save: true);
         StopInputRecording(save: true);
         CancelFastForward();
@@ -1567,6 +1575,221 @@ public partial class MainWindow : Window, IDisposable
                     // Temporary evidence cleanup is best-effort.
                 }
             }
+        }
+    }
+
+    private void OnRecordAudioAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ToggleAudioRecordingAsync, "recording audio");
+    }
+
+    private async Task ToggleAudioRecordingAsync()
+    {
+        if (_audioRecorder is not null)
+        {
+            StopAudioRecording();
+            return;
+        }
+
+        if (_machine is null)
+        {
+            ShowOsd("Boot a disc before recording audio.", OsdSeverity.Warning);
+            return;
+        }
+
+        var name = string.IsNullOrWhiteSpace(_gameName) ? "5do" : SanitizeFileName(_gameName);
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Record audio",
+            SuggestedFileName = $"{name}-{DateTime.Now:yyyyMMdd-HHmmss}.wav",
+            DefaultExtension = "wav",
+            FileTypeChoices =
+            [
+                new FilePickerFileType("WAV audio") { Patterns = ["*.wav"] },
+            ],
+        }).ConfigureAwait(true);
+        var path = file?.TryGetLocalPath();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        try
+        {
+            _audioRecorder = new WavAudioSink(path);
+            _audioRecordingPath = path;
+            UpdateAudioSink();
+            RecordAudioMenuItem.Header = "Stop Audio Recording";
+            StatusText.Text = $"Recording audio: {path}.";
+            ShowOsd($"Recording audio: {Path.GetFileName(path)}", OsdSeverity.Success);
+            _logger.ForCategory(LogCategory.Audio).Information("Audio recording started: {Path}.", path);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            _audioRecorder = null;
+            _audioRecordingPath = null;
+            RecordAudioMenuItem.Header = "Record Audio...";
+            ShowError("Audio recording", exception.Message);
+            _logger.ForCategory(LogCategory.Audio).Error(exception, "Audio recording failed to start.");
+        }
+    }
+
+    private void StopAudioRecording()
+    {
+        WavAudioSink? recorder = _audioRecorder;
+        var path = _audioRecordingPath;
+        _audioRecorder = null;
+        _audioRecordingPath = null;
+        if (recorder is null)
+        {
+            return;
+        }
+
+        UpdateAudioSink();
+        long frames = recorder.SampleCount;
+        recorder.Dispose();
+        RecordAudioMenuItem.Header = "Record Audio...";
+        if (path is not null)
+        {
+            var seconds = frames / (double)EmulatorConstants.SoundClock;
+            StatusText.Text =
+                $"Audio saved: {path} ({frames} samples, {seconds:F2} s).";
+            ShowOsd($"Audio saved: {Path.GetFileName(path)}", OsdSeverity.Success);
+            _logger.ForCategory(LogCategory.Audio).Information(
+                "Audio recording saved: {Path} ({Frames} samples).",
+                path,
+                frames);
+        }
+    }
+
+    private void UpdateAudioSink()
+    {
+        if (_machine is null)
+        {
+            return;
+        }
+
+        _machine.AudioSink = _audioRecorder is null
+            ? _audio
+            : new TeeAudioSink(_audio, _audioRecorder);
+    }
+
+    private void OnRecordGifAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ToggleGifRecordingAsync, "recording a GIF");
+    }
+
+    private async Task ToggleGifRecordingAsync()
+    {
+        if (_gifRecorder is not null)
+        {
+            StopGifRecording();
+            return;
+        }
+
+        if (_machine is null)
+        {
+            ShowOsd("Boot a disc before recording.", OsdSeverity.Warning);
+            return;
+        }
+
+        var name = string.IsNullOrWhiteSpace(_gameName) ? "5do" : SanitizeFileName(_gameName);
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Record GIF",
+            SuggestedFileName = $"{name}-{DateTime.Now:yyyyMMdd-HHmmss}.gif",
+            DefaultExtension = "gif",
+            FileTypeChoices =
+            [
+                new FilePickerFileType("Animated GIF") { Patterns = ["*.gif"] },
+            ],
+        }).ConfigureAwait(true);
+        var path = file?.TryGetLocalPath();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        try
+        {
+            _gifStream = new FileStream(path, FileMode.Create, FileAccess.Write);
+            _gifRecorder = new GifRecorder(_gifStream, _machine.FramesPerSecond, targetFramesPerSecond: 30);
+            _gifPath = path;
+            _gifPreviousFrameSkip = _settings.FrameSkip;
+            if (_runner is not null)
+            {
+                _runner.FrameSkip = FrameSkipMode.Off;
+                _runner.Invoke(() => _machine.FrameSink = _gifRecorder);
+            }
+            else
+            {
+                _machine.FrameSink = _gifRecorder;
+            }
+
+            RecordGifMenuItem.Header = "Stop GIF Recording";
+            ShowOsd($"Recording GIF: {Path.GetFileName(path)}", OsdSeverity.Success);
+            StatusText.Text = $"Recording GIF: {path} (30 fps).";
+            _logger.ForCategory(LogCategory.Video).Information("GIF recording started: {Path}.", path);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            _gifRecorder = null;
+            _gifStream?.Dispose();
+            _gifStream = null;
+            _gifPath = null;
+            RecordGifMenuItem.Header = "Record GIF...";
+            ShowError("GIF recording", exception.Message);
+            _logger.ForCategory(LogCategory.Video).Error(exception, "GIF recording failed to start.");
+        }
+    }
+
+    private void StopGifRecording()
+    {
+        GifRecorder? recorder = _gifRecorder;
+        FileStream? stream = _gifStream;
+        var path = _gifPath;
+        _gifRecorder = null;
+        _gifStream = null;
+        _gifPath = null;
+        if (recorder is null)
+        {
+            return;
+        }
+
+        if (_machine is not null)
+        {
+            if (_runner is not null)
+            {
+                _runner.Invoke(() =>
+                {
+                    if (ReferenceEquals(_machine.FrameSink, recorder))
+                    {
+                        _machine.FrameSink = null;
+                    }
+                });
+            }
+            else if (ReferenceEquals(_machine.FrameSink, recorder))
+            {
+                _machine.FrameSink = null;
+            }
+        }
+
+        recorder.Complete();
+        stream?.Dispose();
+        if (_runner is not null)
+        {
+            _runner.FrameSkip = _gifPreviousFrameSkip;
+        }
+
+        RecordGifMenuItem.Header = "Record GIF...";
+        if (path is not null)
+        {
+            StatusText.Text = $"GIF saved: {path} ({recorder.CapturedFrames} frames, {recorder.Width}x{recorder.Height}).";
+            ShowOsd($"GIF saved: {Path.GetFileName(path)}", OsdSeverity.Success);
+            _logger.ForCategory(LogCategory.Video).Information(
+                "GIF recording saved: {Path} ({Frames} frames).",
+                path,
+                recorder.CapturedFrames);
         }
     }
 
@@ -3320,7 +3543,7 @@ public partial class MainWindow : Window, IDisposable
                     replacement.Volume = _settings.Volume;
                     if (_machine is not null)
                     {
-                        _machine.AudioSink = replacement;
+                        UpdateAudioSink();
                     }
 
                     _audio = replacement;
@@ -3356,7 +3579,7 @@ public partial class MainWindow : Window, IDisposable
             _audio = null;
             if (_machine is not null)
             {
-                _machine.AudioSink = null;
+                UpdateAudioSink();
             }
         }
     }
@@ -4803,6 +5026,8 @@ public partial class MainWindow : Window, IDisposable
             _libraryScanCts?.Cancel();
             _logTimer.Stop();
             _movieTimer?.Stop();
+            StopAudioRecording();
+            StopGifRecording();
             StopMovie(save: true);
             _runner?.Dispose();
             _runner = null;

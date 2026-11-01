@@ -84,4 +84,8 @@ internal sealed record CliRunResult(
     string? MovieVerification = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     IReadOnlyList<string>? MovieFailures = null,
-    string InputDevices = "1=joypad,2=joypad,3=joypad,4=joypad,5=joypad,6=joypad");
+    string InputDevices = "1=joypad,2=joypad,3=joypad,4=joypad,5=joypad,6=joypad",
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? GifPath = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    int? GifFrames = null);

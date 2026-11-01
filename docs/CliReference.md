@@ -171,6 +171,9 @@ frame.
 | `--volume 0..1` | 1.0 | OpenAL gain. Invalid values fail. |
 | `--audio-device <name>` | default | OpenAL playback device; use `audio devices` to list names. |
 | `--audio-buffer 20..500` | 100 | Target OpenAL buffer latency in milliseconds. |
+| `--record-gif <path>` | off | Record emulated frames as an animated GIF. |
+| `--record-fps 1..60` | 30 | GIF capture rate; sources above 50 fps are decimated. |
+| `--record-frames N` | 0 | Stop the GIF after N captured frames (0 = unlimited). |
 | `--cd-volume 0..1` | 0.8 | CD-DA mix level. Invalid values fail. |
 | `--mute-cd` | off | Keep CD-DA playback running but remove it from the mixed output. |
 
@@ -288,6 +291,7 @@ All fields are camelCase. Nullable fields are omitted or `null` when not applica
 | `cyclesPerFrame` | int | ARM cycles in the last frame. |
 | `sourceWidth`, `sourceHeight` | int | Visible source dimensions (640x480 in high-res; 320x288 or 384x288 in PAL). |
 | `region` | string | `Ntsc`, `Pal1`, or `Pal2`. |
+| `gifPath`, `gifFrames` | string?, int? | GIF output path and captured frame count when `--record-gif` is used. |
 | `fieldRate` | int | `60` for NTSC or `50` for PAL. |
 | `vdlModulo` | uint | VDLP line width. |
 | `pc` | uint | CPU program counter at the end. |

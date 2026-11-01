@@ -290,6 +290,12 @@ internal static class Program
         var frameOut = options.Get("--frame-out");
         var cdTrace = options.Get("--cd-trace");
         var cdTranscriptPath = options.Get("--cd-transcript");
+        var recordGifPath = options.Get("--record-gif");
+        var recordGifFps = options.GetInt("--record-fps", 30);
+        if (recordGifFps is < 1 or > 60)
+        {
+            throw new ArgumentException("--record-fps must be between 1 and 60.", nameof(args));
+        }
         var clioTrace = options.Get("--clio-trace");
         var fiqTrace = options.Get("--fiq-trace");
         var kprintPath = options.Get("--kprint");
@@ -792,6 +798,24 @@ internal static class Program
                 movieRecorder);
         }
 
+        GifRecorder? gifRecorder = null;
+        FileStream? gifStream = null;
+        if (recordGifPath is not null)
+        {
+            var directory = Path.GetDirectoryName(Path.GetFullPath(recordGifPath));
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            gifStream = new FileStream(recordGifPath, FileMode.Create, FileAccess.Write);
+            gifRecorder = new GifRecorder(
+                gifStream,
+                machine.FramesPerSecond,
+                recordGifFps,
+                options.GetInt("--record-frames", 0));
+        }
+
         AudioFramePacer? realtimePacer = realtime ? new AudioFramePacer() : null;
         var realtimeClock = realtime ? Stopwatch.StartNew() : null;
         var realtimeNext = realtimeClock?.ElapsedTicks ?? 0.0;
@@ -814,7 +838,8 @@ internal static class Program
                 && checkpointFrames.Length == 0
                 && captureFrames.Length == 0
                 && !realtime
-                && swapDiscPath is null)
+                && swapDiscPath is null
+                && gifRecorder is null)
             {
                 machine.RunFrames(frames);
             }
@@ -843,6 +868,7 @@ internal static class Program
 
                     scriptedInput?.AdvanceTo(machine.FramesExecuted);
                     machine.RunFrame();
+                    gifRecorder?.OnFrame(machine.Frame);
                     if (realtimePacer is not null && realtimeClock is not null)
                     {
                         realtimePacer.FrameCompleted(machine.AudioSamplesProduced);
@@ -942,6 +968,9 @@ internal static class Program
                 RealtimeTimer.End();
             }
         }
+
+        gifRecorder?.Complete();
+        gifStream?.Dispose();
 
         if (dumpRamPath is not null)
         {
@@ -1121,7 +1150,9 @@ internal static class Program
                 ? null
                 : movieVerification.Ok ? "pass" : "fail",
             MovieFailures: movieVerification?.Failures,
-            InputDevices: FormatInputDevices(inputDevices));
+            InputDevices: FormatInputDevices(inputDevices),
+            GifPath: gifRecorder is null ? null : Path.GetFullPath(recordGifPath!),
+            GifFrames: gifRecorder?.CapturedFrames);
 
         SaveNvramIfRequested(machine, nvramSelection);
 
@@ -3306,6 +3337,10 @@ internal static class Program
         Console.WriteLine($"pc:          0x{result.Pc:x8}");
         Console.WriteLine($"frame hash:  0x{result.FrameHash:x8}");
         Console.WriteLine($"samples:     {result.Samples}");
+        if (result.GifPath is not null)
+        {
+            Console.WriteLine($"gif:         {result.GifPath} ({result.GifFrames} frames)");
+        }
         if (result.AudioHash is { } audioHash)
         {
             Console.WriteLine($"audio hash:  0x{audioHash:x8}");

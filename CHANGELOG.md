@@ -71,6 +71,11 @@ still change.
   illegal-request status instead of silently doing nothing, the guest RESET command
   restores the default transfer state and sector size, and `PrefetchingDiscSource`
   read-aheads native track sectors so CD-DA does not decompress on the sample clock.
+- VID-09 GIF recording: `GifRecorder` writes GIF89a animations with a fixed 3-3-2
+  palette, NETSCAPE looping, and a 2-50 fps capture accumulator. CLI
+  `run --record-gif/--record-fps/--record-frames` adds `gifPath`/`gifFrames` to JSON, and
+  **File > Record GIF...** starts/stops a live capture while temporarily disabling
+  presentation frame skip. MP4/WebM, audio, and the replay buffer remain.
 - VID-14 screenshot gallery: `ScreenshotLibrary` parses game/frame/time/native metadata
   from capture file names, lists them newest first, and deletes captures.
   **File > Screenshot Gallery...** shows thumbnails and supports open, copy path,
