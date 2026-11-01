@@ -48,10 +48,10 @@ public sealed class HotkeyRouterTests
     public void Resolve_UsesCustomBindingsAndIgnoresUnknownActionNames()
     {
         InputProfile profile = InputProfile.CreateDefault();
-        profile.Hotkeys["SaveState"] = "F2";
+        profile.Hotkeys["SaveState"] = "F15";
         profile.Hotkeys["NotARealAction"] = "F14";
 
-        Assert.Equal(HotkeyAction.SaveState, HotkeyRouter.Resolve(profile, "F2"));
+        Assert.Equal(HotkeyAction.SaveState, HotkeyRouter.Resolve(profile, "F15"));
         Assert.Equal(HotkeyAction.None, HotkeyRouter.Resolve(profile, "F5"));
         Assert.Equal(HotkeyAction.None, HotkeyRouter.Resolve(profile, "F14"));
     }

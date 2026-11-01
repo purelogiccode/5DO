@@ -115,6 +115,10 @@
                           Click="OnListView"
                           ToolTip.Tip="Show games as a compact list." />
                 <Separator />
+                <MenuItem x:Name="InputDisplayMenuItem" Header="Input Display" ToggleType="CheckBox"
+                          Click="OnInputDisplayChanged"
+                          ToolTip.Tip="Show the frame/skip counters and player-1 buttons over the game. F2." />
+                <Separator />
                 <MenuItem x:Name="ShowLogMenuItem" Header="Show Log" ToggleType="CheckBox"
                           Click="OnToggleLog"
                           ToolTip.Tip="Show or hide the log dock at the bottom of the window." />
@@ -574,6 +578,18 @@
                     <TextBlock x:Name="OverlayText" Foreground="#E0E0E0"
                                FontFamily="Cascadia Mono, Consolas, monospace"
                                ToolTip.Tip="Live frame, PC, renderer, and audio diagnostics." />
+                </Border>
+                <Border x:Name="InputDisplayPanel" IsVisible="False" HorizontalAlignment="Left"
+                        VerticalAlignment="Bottom" Margin="8" Padding="7,4"
+                        Background="#B0000000" CornerRadius="3">
+                    <StackPanel Spacing="1">
+                        <TextBlock x:Name="InputFrameText" Foreground="#E0E0E0"
+                                   FontFamily="Cascadia Mono, Consolas, monospace" FontSize="11"
+                                   ToolTip.Tip="Emulated frame and presentation-skip counters." />
+                        <TextBlock x:Name="InputButtonsText" Foreground="#8FD3FF"
+                                   FontFamily="Cascadia Mono, Consolas, monospace" FontSize="12"
+                                   ToolTip.Tip="Player-1 buttons from the current PBUS packet. Toggle with F2." />
+                    </StackPanel>
                 </Border>
 
                 <!-- Transient notifications (save/load/rewind/fast-forward/screenshot). -->

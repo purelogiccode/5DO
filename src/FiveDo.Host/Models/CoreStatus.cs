@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using FiveDo.Input;
 
 namespace FiveDo.Host;
 
@@ -25,4 +26,10 @@ public readonly record struct CoreStatus(
 
     /// <summary>Gets the effective auto frame-skip cadence (1 = every frame).</summary>
     public int FrameSkipCadence { get; init; } = 1;
+
+    /// <summary>Gets the player-1 controller state from the most recent frame.</summary>
+    public ControllerState Player1 { get; init; }
+
+    /// <summary>Gets the number of frames whose presentation was skipped.</summary>
+    public long SkippedFrames { get; init; }
 }

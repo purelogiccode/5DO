@@ -28,6 +28,7 @@ public static class HotkeyRouter
         ["FastForward"] = HotkeyAction.FastForward,
         ["QuickMenu"] = HotkeyAction.QuickMenu,
         ["SwapDisc"] = HotkeyAction.SwapDisc,
+        ["ToggleInputDisplay"] = HotkeyAction.ToggleInputDisplay,
     };
 
     /// <summary>Resolves a key name to its bound console action.</summary>
@@ -87,6 +88,7 @@ public static class HotkeyRouter
             HotkeyAction.FastForward => "FastForward",
             HotkeyAction.QuickMenu => "QuickMenu",
             HotkeyAction.SwapDisc => "SwapDisc",
+            HotkeyAction.ToggleInputDisplay => "ToggleInputDisplay",
             _ => string.Empty,
         };
     }

@@ -37,6 +37,10 @@ still change.
   `--portable`, or `FIVEDO_DATA_DIR`. A portable run keeps settings, NVRAM, states,
   cheats, library state, and logs beside the executable; the explicit data directory
   enables separate instances. Named configuration profiles remain pending.
+- UX-23 input display: the game view shows a bottom-left frame/skip counter and
+  player-1 buttons decoded from the current PBUS packet. **F2** or **View > Input
+  Display** toggles it, and `ShowInputDisplay` persists. TAS-style lag detection and
+  layout options remain.
 - UX-13 library metadata, favorites, and playtime: `LibraryState`/`LibraryStateStore`
   persist favorites, launch counts, last-played timestamps, and play time in
   `library-state.json`; path-keyed records migrate to game-ID keys. `LibraryPlaytimeTracker`

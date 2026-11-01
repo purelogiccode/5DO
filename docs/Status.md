@@ -5,8 +5,8 @@ the ARM/CLIO/CEL/CD timing-option pass, the CD speed/timing-profile pass, the BI
 manager, the per-game NVRAM pass, the rewind/fast-forward pass, the per-game cheat
 engine, the TAS-movie pass, the disc browser, the input-device pass, the
 OSD/quick-menu pass, the library metadata/favorites/playtime pass, the
-multi-track/CD-DA pass, the CD-DA volume/settings pass, the multi-disc swap pass, and
-the portable-mode pass. Road Rash's
+multi-track/CD-DA pass, the CD-DA volume/settings pass, the multi-disc swap pass, the
+portable-mode pass, and the input-display pass. Road Rash's
 100k-state race now measures
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
@@ -22,7 +22,8 @@ adds an M3U/M3U8 playlist, File > Swap Disc/F3, and `run --playlist/--swap-at/--
 FND-02 is complete with settings schema v2, legacy normalization, malformed-file backup,
 per-game profiles, and `settings validate|migrate`. UX-15 adds portable mode:
 `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR` redirects settings, NVRAM, cheats,
-library state, and logs. Remaining disc work is known-title
+library state, and logs. **F2** toggles the new frame/skip and player-1 input overlay.
+Remaining disc work is known-title
 CD-DA evidence, ODE prompts, and read-ahead/subcode. A 10-disc Release smoke after the
 TOC change reported 10/10 Loadable/Rendered. **1376 tests pass.**
 The five not-loadable rows are resolved or explained: Mirai Shounen Conan now runs

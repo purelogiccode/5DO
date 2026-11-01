@@ -190,6 +190,9 @@ public sealed class AppSettings
     /// <summary>Gets or sets a value indicating whether the FPS/status overlay is shown over the video.</summary>
     public bool ShowOverlay { get; set; }
 
+    /// <summary>Gets or sets a value indicating whether the frame/input display is shown.</summary>
+    public bool ShowInputDisplay { get; set; }
+
     /// <summary>Gets or sets a value indicating whether on-screen notifications are shown.</summary>
     public bool OsdEnabled { get; set; } = true;
 

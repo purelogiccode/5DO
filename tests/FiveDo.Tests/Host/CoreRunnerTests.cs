@@ -3,6 +3,7 @@ using System.Threading;
 using FiveDo.Core;
 using FiveDo.Host;
 using FiveDo.Host.Rewind;
+using FiveDo.Input;
 using FiveDo.Machine;
 using FiveDo.Tests.TestUtilities;
 
@@ -271,6 +272,8 @@ public sealed class CoreRunnerTests
 
         Assert.NotNull(last);
         Assert.InRange(last.Value.TargetFramesPerSecond, 59.5, 60.5);
+        Assert.True(last.Value.SkippedFrames >= 0);
+        Assert.Equal(ControllerState.Empty, last.Value.Player1);
     }
 
     private static FiveDoMachine CreateMachine()

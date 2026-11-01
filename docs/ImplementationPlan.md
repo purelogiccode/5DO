@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 9 done · 16 partial · 95 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 9 done · 17 partial · 94 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -225,7 +225,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[UX-20](#feat-ux-20)** Per-game settings UI — P1 · M · depends on: SYS-18 — **Pending**
 - [ ] **[UX-21](#feat-ux-21)** Debugger UI — P2 · L · depends on: CORE-15 — **Pending**
 - [ ] **[UX-22](#feat-ux-22)** Trace viewer and performance profiler — P2 · M · depends on: UX-21 — **Pending**
-- [ ] **[UX-23](#feat-ux-23)** Input display and lag counter — P1 · S · depends on: UX-06 — **Pending**
+- [ ] **[UX-23](#feat-ux-23)** Input display and lag counter — P1 · S · depends on: UX-06 — **Partial** — F2/View toggles a frame/skip counter and player-1 button overlay; TAS-style lag detection and a configurable layout remain
 - [ ] **[UX-24](#feat-ux-24)** Lua scripting and automation — P3 · L · depends on: UX-06 — **Pending**
 
 ### Ecosystem and platforms
@@ -404,6 +404,13 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Desktop and CLI strip `--portable` before dispatch; the CLI reports the portable settings path.
 - [x] Tests cover portable, per-user, and explicit-override resolution.
 - [ ] Remaining: named configuration profiles, per-instance locking, and installer integration.
+
+### 2026-11-01 — UX-23 input display (core)
+
+- [x] Bottom-left overlay shows frame count, presentation-skip count, and player-1 buttons.
+- [x] **F2** and **View > Input Display** toggle it; `ShowInputDisplay` persists.
+- [x] `CoreRunner` captures player 1 every frame and reports it in `CoreStatus`.
+- [ ] Remaining: TAS-style lag detection, layout/player options, and screenshot tests.
 
 ### 2026-11-01 — ReSharper inspectcode cleanup
 
@@ -758,6 +765,13 @@ tests passed** at that pass; build, format, and inspectcode were clean.
 `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; the CLI and desktop strip the flag
 before dispatch. A portable USB-stick run no longer touches `%LOCALAPPDATA%`. Named
 configuration profiles and a per-instance write lock remain. **1376 tests pass.**
+
+**Input-display pass (2026-11-01, forty-second pass):** UX-23 moves to partial.
+`CoreRunner` captures the player-1 PBUS state every frame, and `CoreStatus` carries it
+plus the presentation-skip count. The game view adds a bottom-left frame/skip and
+player-1 button overlay, toggled by **F2** or **View > Input Display** and persisted as
+`ShowInputDisplay`. TAS-style lag detection and layout options remain. **1376 tests
+pass.**
 
 **Last updated:** 2026-11-01
 
@@ -2830,6 +2844,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | AUD-05, FND-02 | CD-DA volume and settings completion | Persisted `CdAudioVolume`/`CdAudioMuted` in Settings v2, added the Audio-tab slider/mute check, `--cd-volume`/`--mute-cd`, CD state v4, mix-level tests, per-game `GameProfiles`, and `settings validate|migrate`. AUD-05 and FND-02 are done; 1,376 tests pass |
 | 2026-11-01 | SYS-02 | Multi-disc playlist and live swap | Added `DiscPlaylist` (M3U/M3U8, `#EXTINF`, relative paths), persisted playlist path, File > Swap Disc and F3, one-off swap without reset, guest inject `0x07`, `disc playlist`, and `run --playlist/--swap-at/--swap-disc`. SYS-02 is partial; 1,376 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
+| 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
 ---
 
@@ -3001,7 +3016,7 @@ A feature is done only when:
 | UX-20 | Per-game settings UI | P1 | M | SYS-18 | Pending |
 | UX-21 | Debugger UI | P2 | L | CORE-15 | Pending |
 | UX-22 | Trace viewer and performance profiler | P2 | M | UX-21 | Pending |
-| UX-23 | Input display and lag counter | P1 | S | UX-06 | Pending |
+| UX-23 | Input display and lag counter | P1 | S | UX-06 | Partial |
 | UX-24 | Lua scripting and automation | P3 | L | UX-06 | Pending |
 
 ### 1.6 Ecosystem and platforms
@@ -5283,18 +5298,24 @@ hotkey roundtrip.
 <a id="feat-ux-23"></a>
 ### UX-23 - Input display and lag counter
 
-**Priority:** P1 | **Effort:** S | **Depends on:** UX-06 | **Status:** Pending
+**Priority:** P1 | **Effort:** S | **Depends on:** UX-06 | **Status:** Partial (2026-11-01)
 
 **Problem.** No input display/lag counter.
 
-**Add.**
-- On-screen buttons.
-- Frame/lag counters.
-- Toggle hotkey.
+**Implemented.**
+- The game view has a bottom-left overlay with the emulated frame count, presentation-skip count, and player-1 buttons decoded from the current PBUS packet.
+- **F2** or **View > Input Display** toggles it; the choice persists in `ShowInputDisplay`.
+- `CoreRunner` captures player 1 every frame and includes it plus the skip count in `CoreStatus`.
+- The overlay uses the existing monospace styling and does not affect emulation or input.
 
-**Files.** Frontend.
+**Remaining.**
+- TAS-style lag-frame detection (frames where the game does not poll input).
+- Configurable layout, player selection, and button glyphs/images.
+- Automated screenshot comparison for the overlay.
 
-**Tests.** Correct display; no perf impact.
+**Files.** Frontend, `CoreRunner`, `CoreStatus`, `AppSettings`.
+
+**Tests.** `CoreRunnerTests` checks the new status fields; the display is compile-validated and manual.
 
 **Done when.** TAS/streaming users can see input/lag.
 
@@ -6696,7 +6717,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [ ] **UX-20** | Per-game settings UI | Only fix/filter overrides today. | BIOS/region/input/clock/CD speed/shader/cheats per game. | M |
 | [ ] **UX-21** | Debugger UI | CLI traces only. | CPU, memory, disasm, breakpoints, watchpoints, call stack, MADAM/CEL, DSP, CD, VDLP, VRAM. | L |
 | [ ] **UX-22** | Trace viewer and performance profiler | Traces are text files. | Timeline; filters; frame/CPU/CEL/DSP charts; export. | M |
-| [ ] **UX-23** | Input display and lag counter | TAS/streaming. | On-screen buttons; frame/lag counters. | S |
+| [~] **UX-23** | Input display and lag counter | TAS/streaming. | On-screen buttons; frame/lag counters. **Partial 2026-11-01:** F2/View toggles a frame/skip counter and player-1 button overlay; TAS lag semantics and layout options remain. | S |
 | [ ] **UX-24** | Lua scripting and automation | Power users/TAS. | Script API; input/state/memory; sandbox; examples. | L |
 
 #### UX-01 deep dive: rewind

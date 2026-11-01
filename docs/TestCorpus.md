@@ -649,6 +649,16 @@ UX-15 coverage is path-resolution level:
   dispatch and the default path follows the portable directory.
 - Named profiles and a per-instance write lock remain.
 
+### 1.1m Input display (2026-11-01)
+
+UX-23 coverage is compile/status level:
+
+- `CoreRunnerTests.Status_ReportsTheAudioDerivedTargetFrameRate` also asserts the new
+  `SkippedFrames` and `Player1` fields are populated.
+- `PbusDecoderTests` already cover the button formatting used by the overlay.
+- The Avalonia overlay is build-validated; a screenshot comparison and TAS lag semantics
+  remain.
+
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 
 All runs use the Release build, `panafz1.bin`, and a fresh NVRAM. The 3,000-frame

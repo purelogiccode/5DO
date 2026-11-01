@@ -50,4 +50,7 @@ public enum HotkeyAction
 
     /// <summary>Swap to the next disc in the playlist, or open a disc picker.</summary>
     SwapDisc,
+
+    /// <summary>Toggle the on-screen frame and player-1 input display.</summary>
+    ToggleInputDisplay,
 }

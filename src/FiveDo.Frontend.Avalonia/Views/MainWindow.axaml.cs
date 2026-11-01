@@ -193,6 +193,8 @@ public partial class MainWindow : Window, IDisposable
         _nvramDirectory = _settings.NvramDirectory;
         HighResMenuItem.IsChecked = _settings.HighResolution;
         OverlayPanel.IsVisible = _settings.ShowOverlay;
+        InputDisplayPanel.IsVisible = _settings.ShowInputDisplay;
+        InputDisplayMenuItem.IsChecked = _settings.ShowInputDisplay;
         Video.Settings = _settings.ToRendererSettings(_gameId);
         if (_rendererKind != VideoRendererKind.OpenGl
             && (!Program.SmokeTest || Program.RequestedGlBackend != GlBackend.Auto))
@@ -2763,6 +2765,8 @@ public partial class MainWindow : Window, IDisposable
         }
 
         OverlayPanel.IsVisible = _settings.ShowOverlay;
+        InputDisplayPanel.IsVisible = _settings.ShowInputDisplay;
+        InputDisplayMenuItem.IsChecked = _settings.ShowInputDisplay;
         ApplyOsdSettings();
 
         ApplyAudioSettings();
@@ -3368,6 +3372,38 @@ public partial class MainWindow : Window, IDisposable
                 $"{status.FramesPerSecond,5:F1}/{status.TargetFramesPerSecond:F2} fps{shown}{skip}  "
                 + $"{status.Cycles,6} cyc  PC 0x{status.ProgramCounter:x8}  {timing}{audio}";
         }
+
+        if (InputDisplayPanel.IsVisible)
+        {
+            InputFrameText.Text = $"frame {status.Frames} · skip {status.SkippedFrames}";
+            InputButtonsText.Text = $"P1 {PbusDecoder.FormatButtons(status.Player1)}";
+        }
+    }
+
+    private void OnInputDisplayChanged(object? sender, RoutedEventArgs e)
+    {
+        SetInputDisplay(InputDisplayMenuItem.IsChecked);
+    }
+
+    private void ToggleInputDisplay()
+    {
+        SetInputDisplay(!_settings.ShowInputDisplay);
+    }
+
+    private void SetInputDisplay(bool enabled)
+    {
+        if (_settings.ShowInputDisplay == enabled)
+        {
+            InputDisplayMenuItem.IsChecked = enabled;
+            InputDisplayPanel.IsVisible = enabled;
+            return;
+        }
+
+        _settings.ShowInputDisplay = enabled;
+        InputDisplayMenuItem.IsChecked = enabled;
+        InputDisplayPanel.IsVisible = enabled;
+        AppSettingsStore.Save(_settings);
+        ShowOsd(enabled ? "Input display on." : "Input display off.");
     }
 
     private string FormatAudioMeter(float level)
@@ -4220,6 +4256,9 @@ public partial class MainWindow : Window, IDisposable
                 break;
             case HotkeyAction.SwapDisc:
                 AsyncEvent.Run(SwapDiscAsync, "swapping discs");
+                break;
+            case HotkeyAction.ToggleInputDisplay:
+                ToggleInputDisplay();
                 break;
         }
     }
