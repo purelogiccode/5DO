@@ -54,6 +54,7 @@ internal sealed partial class CliJsonContext : JsonSerializerContext;
     WriteIndented = true,
     UseStringEnumConverter = true)]
 [JsonSerializable(typeof(StateInfo))]
+[JsonSerializable(typeof(StateDiffResult))]
 [JsonSerializable(typeof(List<SaveStateSlotInfo>))]
 [JsonSerializable(typeof(IReadOnlyList<SaveStateSlotInfo>))]
 internal sealed partial class CliHostJsonContext : JsonSerializerContext;

@@ -9,6 +9,7 @@ this release.
 - Machine framing: `FiveDoMachine.SaveState` / `LoadState`.
 - Slot management: `SaveStateSlotManager` (`FiveDo.Host`).
 - Inspector: `StateInspector` (`FiveDo.Host`).
+- Diff: `StateDiff` (`FiveDo.Host`) and `state diff`.
 - CLI: `state inspect`, `state slots`; `run --state-in`/`--state-out`.
 
 ---

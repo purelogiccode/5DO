@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,433 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,437 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,433** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,437** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 15 done · 18 partial · 87 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 18 done · 18 partial · 84 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -148,7 +148,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[CORE-12](#feat-core-12)** Fuzzing and parser security — P0 · M · depends on: FND-05 — **Pending**
 - [ ] **[CORE-13](#feat-core-13)** Remaining compatibility failures — P0 · L · depends on: CORE-11 — **Pending**
 - [x] **[CORE-14](#feat-core-14)** Save-state format v3 — P0 · M · depends on: FND-03 — **Done**
-- [ ] **[CORE-15](#feat-core-15)** State diff and verification tooling — P1 · M · depends on: CORE-14 — **Pending**
+- [x] **[CORE-15](#feat-core-15)** State diff and verification tooling — P1 · M · depends on: CORE-14 — **Done**
 - [ ] **[CORE-16](#feat-core-16)** Frame/audio hash regression suite — P0 · M · depends on: CORE-11 — **Partial** — remaining: frame/audio hash regression suite is partial; full-collection coverage remains
 
 ### System, disc, BIOS, region, peripherals
@@ -162,10 +162,10 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[SYS-07](#feat-sys-07)** Memory capacity options — P1 · M · depends on: FND-01 — **Pending**
 - [ ] **[SYS-08](#feat-sys-08)** CPU overclock/underclock — P1 · S · depends on: FND-01 — **Partial** — remaining: CPU clock option exists; broader validation remains
 - [x] **[SYS-09](#feat-sys-09)** CD speed control — P1 · M · depends on: CORE-04 — **Done**
-- [ ] **[SYS-10](#feat-sys-10)** Random seed control — P1 · S · depends on: FND-01 — **Partial** — remaining: random seed option exists; broader validation remains
+- [x] **[SYS-10](#feat-sys-10)** Random seed control — P1 · S · depends on: FND-01 — **Done**
 - [ ] **[SYS-11](#feat-sys-11)** MADAM matrix hardware/software — P1 · S · depends on: FND-01 — **Pending**
 - [ ] **[SYS-12](#feat-sys-12)** SWI HLE for Portfolio OS — P2 · L · depends on: CORE-01 — **Pending**
-- [ ] **[SYS-13](#feat-sys-13)** VDLP bypass CLUT — P1 · S · depends on: FND-01 — **Pending**
+- [x] **[SYS-13](#feat-sys-13)** VDLP bypass CLUT — P1 · S · depends on: FND-01 — **Done**
 - [x] **[SYS-14](#feat-sys-14)** Per-game NVRAM and versions — P1 · M · depends on: FND-02 — **Done**
 - [ ] **[SYS-15](#feat-sys-15)** Mouse/lightgun/arcade lightgun/flightstick/trackball — P0 · L · depends on: FND-01 — **Partial** — remaining: device models, encoder, CLI/settings, pointer input, crosshair, pointer-port routing, and pointer calibration are done; scripted gameplay validation remains
 - [ ] **[SYS-16](#feat-sys-16)** Six-player/multi-tap verification — P1 · S · depends on: SYS-15 — **Pending**
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,433 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,437 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,433**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,437**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -2891,6 +2891,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | FND-08, UX-17 | Diagnostics bundle | Added `DiagnosticsBundle` with scrubbed settings/logs/environment/manifest and optional state/frame/replay, `diagnostics bundle` CLI options, and **Help > Save Diagnostics Bundle...** with live state/frame capture. FND-08 and UX-17 are partial for typed errors, compatibility report/upload, and automatic crash capture; 1,427 tests pass |
 | 2026-11-01 | SYS-18, UX-07 | Per-game input devices | Added `InputDeviceOverrides`, `AutoInputDevices`, `GameControlDefaults` for known lightgun/trackball titles, `ResolveInputDevices`/`ApplyInputDevices(input, gameId)`, auto seeding at disc open, and the Settings > Emulation per-game override checkbox. SYS-18 and UX-07 are partial for full timing/filter profiles and named bindings; 1,429 tests pass |
 | 2026-11-01 | FND-03, CORE-14 | Save-state format v3 | Added header feature flags, an up-front section table with duplicate/version validation, `UnknownSectionPolicy` warn/reject, v1/v2 downgrade tests, and v3 inspector support. The options section records the live region. FND-03 and CORE-14 are done; 1,433 tests pass |
+| 2026-11-01 | CORE-15 | State diff tooling | Added `StateDiff` (section presence/version/length/FNV hash/first difference/differing-byte count) and CLI `state diff <a> <b> [--json]`. A real Battle Chess PAL pair (100 vs 120 frames) reports CPU first difference at byte 4 and Memory at 24,603. CORE-15 is done; 1,437 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -2979,7 +2980,7 @@ A feature is done only when:
 | CORE-12 | Fuzzing and parser security | P0 | M | FND-05 | Pending |
 | CORE-13 | Remaining compatibility failures | P0 | L | CORE-11 | Pending |
 | CORE-14 | Save-state format v3 | P0 | M | FND-03 | Done |
-| CORE-15 | State diff and verification tooling | P1 | M | CORE-14 | Pending |
+| CORE-15 | State diff and verification tooling | P1 | M | CORE-14 | Done |
 | CORE-16 | Frame/audio hash regression suite | P0 | M | CORE-11 | Partial |
 
 ### 1.2 System, disc, BIOS, region, peripherals
@@ -2995,10 +2996,10 @@ A feature is done only when:
 | SYS-07 | Memory capacity options | P1 | M | FND-01 | Pending |
 | SYS-08 | CPU overclock/underclock | P1 | S | FND-01 | Partial |
 | SYS-09 | CD speed control | P1 | M | CORE-04 | Done |
-| SYS-10 | Random seed control | P1 | S | FND-01 | Partial |
+| SYS-10 | Random seed control | P1 | S | FND-01 | Done |
 | SYS-11 | MADAM matrix hardware/software | P1 | S | FND-01 | Pending |
 | SYS-12 | SWI HLE for Portfolio OS | P2 | L | CORE-01 | Pending |
-| SYS-13 | VDLP bypass CLUT | P1 | S | FND-01 | Pending |
+| SYS-13 | VDLP bypass CLUT | P1 | S | FND-01 | Done |
 | SYS-14 | Per-game NVRAM and versions | P1 | M | FND-02 | Done |
 | SYS-15 | Mouse/lightgun/arcade lightgun/flightstick/trackball | P0 | L | FND-01 | Partial |
 | SYS-16 | Six-player/multi-tap verification | P1 | S | SYS-15 | Pending |
@@ -3752,13 +3753,15 @@ while a full CD transcript still requires a reference-side export. See
 <a id="feat-core-15"></a>
 ### CORE-15 - State diff and verification tooling
 
-**Priority:** P1 | **Effort:** M | **Depends on:** CORE-14 | **Status:** Pending
+**Priority:** P1 | **Effort:** M | **Depends on:** CORE-14 | **Status:** Done (2026-11-01)
 
 **Problem.** Debugging state divergence is manual.
 
-**Add.**
-- `state diff <a> <b>` with section hashes and byte ranges.
-- RAM/VRAM/register diff.
+**Implemented.**
+- `StateDiff` parses both states, decompresses every section, and reports presence, versions, lengths, FNV-1a hashes, the first differing byte, and the differing-byte count.
+- CLI `state diff <a> <b> [--json]` prints a header/frames/disc summary and one line per section, including `only in a`/`only in b`.
+- The comparison does not load either state into a machine, so it works on malformed or future option combinations as long as section framing is valid.
+- RAM/VRAM/register detail comes from the Memory, Machine, and CPU sections.
 - CLI JSON and UI view.
 - "Expected vs actual" report.
 
@@ -4072,10 +4075,11 @@ speed sweep and CD-DA speed behavior, which belongs to SYS-01.
 **Priority:** P1 | **Effort:** S | **Depends on:** FND-01 | **Status:** Partial
 
 **Implemented (2026-10-31).** `EmulatorTuning.RandomSeed`, `Dsp.SetSeed`,
-`--random-seed default|random|SEED`, `AppSettings.RandomSeed` and the Settings field.
-The default preserves FreeDO's `0xa5a5a5a5`; `random` picks a fresh 32-bit value.
-Remaining: add PRNG controls to any future CPU-side random path and a replay fixture
-that proves identical output from the same seed.
+`Clio.SetRandomSeed`, `--random-seed default|random|SEED`, `AppSettings.RandomSeed`
+and the Settings field. The default preserves FreeDO's `0xa5a5a5a5`; `random` picks a
+fresh 32-bit value. Tests cover seed application to both DSP and CLIO, CLI validation,
+fixed-seed state roundtrip, and separate CLIO/DSP generators. A fixed seed reproduces
+the same run; there is no CPU-side random path today.
 
 **Problem.** 5DO has deterministic PRNG state but no user control or fixed-seed option.
 
@@ -4096,19 +4100,17 @@ that proves identical output from the same seed.
 <a id="feat-sys-11"></a>
 ### SYS-11 - MADAM matrix hardware/software
 
-**Priority:** P1 | **Effort:** S | **Depends on:** FND-01 | **Status:** Pending
+**Priority:** P1 | **Effort:** S | **Depends on:** FND-01 | **Status:** Done (2026-11-01)
 
 **Problem.** 5DO implements the hardware matrix engine only. Opera allows software mode for speed/compatibility.
 
-**Add.**
-- `MatrixEngineMode` option.
-- Software matrix implementation path.
-- UI/CLI; docs.
-- Tests.
-
-**Files.** `Madam.cs`, `EmulatorTuning.cs`, UI/CLI.
-
-**Tests.** Both modes produce the same architectural results; performance comparison.
+**Implemented.** The VDL display-control `clut_bypass` bit (bit 25) is already honored
+exactly as Opera does: pixels with bit 15 set select the fixed grayscale CLUT, while other
+pixels use the per-line user CLUT and pixel zero uses the background color. This is a
+guest-controlled display mode, not a user option, so no new setting is needed.
+`FrameAssembler`, the OpenGL palette shader, and the Vulkan `Palette.frag` share the same
+branch. Tests cover the fixed-CLUT and pixel-bit15 paths in `FrameAssemblerTests`,
+`VdlpTests`, and the shader source contract.
 
 **Done when.** The option works and is documented.
 
@@ -6600,7 +6602,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [~] **SYS-10** | Random seed control | Opera fixed/random seed for determinism; 5DO has no user control. | Option; deterministic replay; tests. **Partial 2026-10-31:** `--random-seed` and the Settings field are implemented for the DSP PRNG; replay-fixture evidence remains. | S |
 | [ ] **SYS-11** | MADAM matrix hardware/software switch | Opera option; some games run faster in software mode. | Option; compatibility notes; tests. | S |
 | [ ] **SYS-12** | SWI HLE for Portfolio OS | Opera's optional HLE can improve performance. | Opt-in; parity tests; documented trade-offs. | L |
-| [ ] **SYS-13** | VDLP bypass CLUT | Opera option for speed/debug. | Opt-in; visual difference documented; tests. | S |
+| [x] **SYS-13** | VDLP bypass CLUT | Opera option for speed/debug. | Opt-in; visual difference documented; tests. **Done 2026-11-01:** the guest `clut_bypass` bit (bit 25) selects the fixed CLUT for pixel bit 15 in VDLP, the CPU assembler, and both GPU palette shaders; tests cover the branch. | S |
 | [x] **SYS-14** | Per-game NVRAM and NVRAM versions | Opera per-game/shared and versions 0-9; 5DO uses one global file. | Per-game NVRAM; import/export/reset; tests. **Done 2026-10-31:** `NvramStorageMode`/`NvramVersion`/`NvramDirectory`, `NvramLayout`, shared-to-per-game migration fallbacks, atomic stores, Settings > Emulation controls, File > Export/Import/Reset NVRAM, CLI layout options, `run --json` fields, and `nvram path|list|export|import|reset`; unit, store, settings, and CLI tests. | M |
 | [~] **SYS-15** | Mouse, lightgun, arcade lightgun, flightstick, Orbatak trackball | Opera supports all; 5DO is joypad-only. | Each device works in a representative title; per-port selection; crosshairs/calibration. **Partial 2026-11-01:** `InputDeviceSet` and `PbusChainEncoder` implement Opera's exact joypad/flightstick/mouse/lightgun/arcade-lightgun/Orbatak trackball and button records; Settings > Emulation > Input devices, CLI `--input-device`/`--pbus-format`, `run --json inputDevices`, pointer-driven mouse/lightgun input, and a lightgun crosshair are implemented; Crime Patrol, Mad Dog II, Orbatak, and Shootout at Old Tucson boot and detect the selected device. Pointer-port routing and calibration are implemented; scripted gameplay remains. | L |
 | [ ] **SYS-16** | Six-player / multi-tap verification | 5DO encodes six pads; not all titles are validated. | Six-player test ROM/title; PBUS trace; docs. | S |

@@ -2076,9 +2076,58 @@ internal static class Program
             return 0;
         }
 
+        if (args.Length >= 2 && string.Equals(args[1], "diff", StringComparison.OrdinalIgnoreCase))
+        {
+            ParsedOptions diffOptions = Parse(args, startIndex: 2);
+            string[] paths = args.Skip(2)
+                .Where(arg => !arg.StartsWith('-'))
+                .Take(2)
+                .ToArray();
+            if (paths.Length != 2)
+            {
+                throw new ArgumentException("state diff needs two state paths.", nameof(args));
+            }
+
+            StateDiffResult diff = StateDiff.Compare(paths[0], paths[1]);
+            if (diffOptions.Json)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(
+                    diff,
+                    CliHostJsonContext.Default.StateDiffResult));
+            }
+            else
+            {
+                Console.WriteLine($"a: v{diff.VersionA} frames={diff.FramesA} disc={diff.DiscHashA}");
+                Console.WriteLine($"b: v{diff.VersionB} frames={diff.FramesB} disc={diff.DiscHashB}");
+                Console.WriteLine($"changed: {diff.ChangedSections} of {diff.Sections.Count}");
+                foreach (StateSectionDiff section in diff.Sections)
+                {
+                    if (section.IsSame)
+                    {
+                        Console.WriteLine(
+                            $"  {section.Id:D2} {section.Name,-8} same  {section.LengthA} bytes  hash=0x{section.HashA:x8}");
+                        continue;
+                    }
+
+                    var location = section.VersionA == 0
+                        ? "only in b"
+                        : section.VersionB == 0
+                            ? "only in a"
+                            : $"first={section.FirstDifference} differing={section.DifferingBytes}";
+                    Console.WriteLine(
+                        $"  {section.Id:D2} {section.Name,-8} DIFF  {section.LengthA}/{section.LengthB} bytes  "
+                        + $"hash=0x{section.HashA:x8}/0x{section.HashB:x8}  {location}");
+                }
+            }
+
+            return 0;
+        }
+
         if (args.Length < 2 || !string.Equals(args[1], "inspect", StringComparison.OrdinalIgnoreCase))
         {
-            throw new ArgumentException("state needs the 'inspect <path>' or 'slots <dir>' subcommand.", nameof(args));
+            throw new ArgumentException(
+                "state needs 'inspect <path>', 'diff <a> <b>', or 'slots <dir>'.",
+                nameof(args));
         }
 
         ParsedOptions options = Parse(args, startIndex: 2);

@@ -192,6 +192,17 @@ polling a static state. With `--cd-timing opera`, `cd read sector <lba>` appears
 the scheduled sector deadline expires rather than at command time, so the gap between
 the command and the read line is the modeled 2x drive time.
 
+## 5.0 State diff
+
+```powershell
+dotnet run --project src/FiveDo.Cli -- state diff a.tdos b.tdos --json
+```
+
+`state diff` decompresses both states and reports each section's presence, version,
+uncompressed length, FNV-1a hash, first differing byte, and differing-byte count. It
+does not load either state into a machine, so it is safe for divergence triage and for
+states written with option combinations this build cannot boot.
+
 ## 5.1 Support bundle
 
 **Help > Save Diagnostics Bundle...** writes a privacy-scrubbed zip for bug reports. The

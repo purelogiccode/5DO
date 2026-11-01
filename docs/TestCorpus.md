@@ -688,7 +688,7 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,433 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,437 tests pass with no changed NTSC hashes.
 
 ### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
 
@@ -755,6 +755,17 @@ UX-23 coverage is compile/status level:
 - `StateInspectorTests` covers v1, v2, and v3 headers, including the uncompressed v1
   path; `FrameSkipStateTests` still proves skip presentation changes only the Machine
   section.
+
+### 1.1u State diff (2026-11-01)
+
+- `StateDiffTests.Compare_IdenticalStatesReportsNoChanges` and
+  `Compare_DifferentFramesReportsChangedSectionsAndOffsets` cover equal and diverging
+  states, CPU hash/offset changes, and changed-section counts.
+- `Compare_ReportsAnExtraSectionInOnlyOneState` appends a declared unknown section and
+  checks the `only in b` shape.
+- Manual evidence: Battle Chess (Europe) PAL1 states at frames 100 and 120 produced a
+  CPU first difference at byte 4 (39 differing bytes) and a Memory first difference at
+  byte 24,603 (4,184 differing bytes); both report format v3 and the same disc hash.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

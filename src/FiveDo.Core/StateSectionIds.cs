@@ -43,4 +43,24 @@ public static class StateSectionIds
 
     /// <summary>Machine option snapshot (ARM timing and future accuracy options).</summary>
     public const uint Options = 12;
+
+    /// <summary>Returns a human-readable name for a section identifier.</summary>
+    /// <param name="id">Section identifier.</param>
+    /// <returns>The stable name, or <c>Unknown</c> for an unrecognized identifier.</returns>
+    public static string GetName(uint id) => id switch
+    {
+        Cpu => "CPU",
+        Memory => "Memory",
+        Madam => "MADAM",
+        Clio => "CLIO",
+        Dsp => "DSP",
+        Sport => "SPORT",
+        Vdlp => "VDLP",
+        Xbus => "XBUS",
+        Cdrom => "CD-ROM",
+        Quartz => "Quartz",
+        Machine => "Machine",
+        Options => "Options",
+        _ => "Unknown",
+    };
 }
