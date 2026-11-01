@@ -51,12 +51,10 @@ public static class GameCompatibility
             // Microcosm: VDLP current/previous bitmap offsets.
             "1A370EBA" or "B35C911D" => new GameQuirks(FixMode.BitTiming5),
 
-            // Alone in the Dark: literal CEL Y step.
-            "0511D3D2" or "9F7D72BC" or "E843C635" => new GameQuirks(FixMode.BitTiming6),
-
-            // Samurai Shodown (EU-US/JP): preserve Y between CELs.
-            "2AABA5B9" or "BF61BB32" => new GameQuirks(FixMode.GraphicsStepY),
-
+            // Alone in the Dark and Samurai Shodown no longer need per-title fixes:
+            // the generic XYPOSH/XYPOSL CEL origin model and the corrected literal
+            // CEL read row cover both cases. The old BitTiming6/GraphicsStepY bits
+            // remain defined for old save states but are no longer assigned.
             _ => GameQuirks.None,
         };
     }

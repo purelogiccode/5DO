@@ -217,7 +217,7 @@ internal sealed class CelRasterizer
                                 PixelDecodeResult decoded = DecodePixel(bpp);
                                 if (!decoded.Transparent)
                                 {
-                                    DrawPixel(decoded, xcur, ycur, false);
+                                    DrawPixel(decoded, xcur, ycur);
                                 }
 
                                 xcur = unchecked(xcur + geometry.Hdx1616);
@@ -615,7 +615,7 @@ internal sealed class CelRasterizer
                     PixelDecodeResult decoded = lrForm ? DecodePixelLr(bpp) : DecodePixel(bpp);
                     if (!decoded.Transparent)
                     {
-                        DrawPixel(decoded, xcur, ycur, (compatibility.FixMode & FixMode.BitTiming6) != FixMode.None);
+                        DrawPixel(decoded, xcur, ycur);
                     }
 
                     xcur = unchecked(xcur + geometry.Hdx1616);
@@ -797,7 +797,7 @@ internal sealed class CelRasterizer
                     PixelDecodeResult decoded = _engine.Decoder.DecodeFast(raw, _pre0, _flagsRaw, _plut, _pre1, _control0);
                     if (!decoded.Transparent)
                     {
-                        DrawPixel(decoded, xcur, ycur, false);
+                        DrawPixel(decoded, xcur, ycur);
                     }
 
                     xcur = unchecked(xcur + geometry.Hdx1616);
@@ -1478,10 +1478,10 @@ internal sealed class CelRasterizer
             _ccbFlags);
     }
 
-    private void DrawPixel(PixelDecodeResult decoded, int xcur, int ycur, bool doubleY)
+    private void DrawPixel(PixelDecodeResult decoded, int xcur, int ycur)
     {
         var x = xcur >> 16;
-        var readY = doubleY ? unchecked((ycur >> 16) << 1) : ycur >> 16;
+        var readY = ycur >> 16;
         var writeY = ycur >> 16;
 
         ushort framePixel;

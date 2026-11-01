@@ -7,17 +7,22 @@ still change.
 
 ### Fixed
 
-- Opera parity batch 1: VDLP now retains a separate next display-list pointer,
-  latches the force line, follows zero entries, and saves/migrates state version 2;
-  ARM immediate rotates update the shifter carry; DSP CPU-supplied high FIFO reads
-  return instruction memory instead of PRNG noise; MADAM uses the inclusive arbitrary
-  span endpoint, stops MARIA scale/arbitrary work after the first pixel, treats BPP 0
-  as 1 bpp, honors packed SKIPX, reads literal LRFORM row pairs, applies blue-LSB substitution while preserving raw VH bits, gates CLUT/video DMA on MCTL, handles exhausted literal SKIPX, advances CEL origins through the XYPOSH/XYPOSL model, decodes REGCTL stride
-  with Opera's byte groups, and uses decoded PIXC multiplier bits for `PDC_MFONLY`;
-  CLIO input FIFOs complete before the end address is observed, reload only when the
-  channel is enabled, and reset the pointer on a new start address. The Lemmings
-  300-frame differential still matches; the five-title showcase hashes are unchanged.
-  See `Make5doTheBestOfAll.md` 13.11 and `docs/TestCorpus.md` 1.1g.
+- Opera parity batch 1 and OP-14: VDLP now keeps the retained head separate from the
+  active successor cursor, follows zero entries, processes a zero-persist successor on
+  the same line, and saves/migrates state version 3; ARM immediate rotates update the
+  shifter carry; DSP CPU-supplied high FIFO reads return instruction memory instead of
+  PRNG noise; MADAM uses the inclusive arbitrary span endpoint, stops MARIA
+  scale/arbitrary work after the first pixel, treats BPP 0 as 1 bpp, honors packed
+  SKIPX, reads literal LRFORM row pairs, applies blue-LSB substitution while preserving
+  raw VH bits, gates CLUT/video DMA on MCTL, handles exhausted literal SKIPX, advances
+  CEL origins through the XYPOSH/XYPOSL model, decodes REGCTL stride with Opera's byte
+  groups, and uses decoded PIXC multiplier bits for `PDC_MFONLY`. The automatic
+  `GraphicsStepY`/`BitTiming6` mappings are retired; the literal-CEL path reads the
+  actual source row, and the enum values remain loadable for old states. CLIO input
+  FIFOs complete before the end address is observed, reload only when the channel is
+  enabled, and reset the pointer on a new start address. The Lemmings 300-frame
+  differential still matches; the five-title showcase hashes are unchanged. See
+  `Make5doTheBestOfAll.md` 13.11/13.12 and `docs/TestCorpus.md` 1.1g.
 
 ### Added
 

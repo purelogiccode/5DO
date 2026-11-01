@@ -211,7 +211,7 @@ public sealed class CelLiteralRasterizerTests
     }
 
     [Fact]
-    public void LiteralLine_BitTiming6UsesDoubledY()
+    public void LiteralLine_RetiredBitTiming6ReadsTheActualRow()
     {
         (FiveDoMemory memory, MadamChip madam) = CreateScene();
         madam.Compatibility.FixMode = FixMode.BitTiming6;
@@ -223,13 +223,23 @@ public sealed class CelLiteralRasterizerTests
             pre1: 0,
             loadPlut: true,
             ypos: 0x10000);
-        WritePlut(memory, 0, 0x7fff);
+
+        // PIXC 0x9f00 selects the frame pixel as the processor input and uses
+        // the identity scale (mxf=7, dv1=3), so the output is the source row
+        // the rasterizer read.
+        memory.Ram.Write32(Ccb + 40, 0x9f00);
+        WritePlut(memory, 0, 0x7ffe);
         WriteBytes(memory, SourceData + 8, 0x80);
+
+        // Row 1 is at FrameBuffer+0 and row 2 is at FrameBuffer+2 with the
+        // default zero modulo. The retired hack used to read row 2 for y=1.
+        memory.Ram.Write16(FrameBuffer + 0, 0x1234);
+        memory.Ram.Write16(FrameBuffer + 2, 0x2346);
 
         _ = RunCel(madam);
 
-        Assert.Equal(0x7ffe, memory.Ram.Read16(FrameBuffer + 0));
-        Assert.Equal(0, memory.Ram.Read16(FrameBuffer + 2));
+        Assert.Equal(0x1234, memory.Ram.Read16(FrameBuffer + 0));
+        Assert.Equal(0x2346, memory.Ram.Read16(FrameBuffer + 2));
     }
 
     [Fact]

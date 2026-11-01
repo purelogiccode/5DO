@@ -31,12 +31,20 @@ public enum FixMode
     /// <summary>FreeDO <c>FIX_BIT_TIMING_5</c>: Microcosm VDL bitmap pointer swap.</summary>
     BitTiming5 = 0x00000010,
 
-    /// <summary>FreeDO <c>FIX_BIT_TIMING_6</c>: Alone in the Dark literal CEL Y step.</summary>
+    /// <summary>
+    /// FreeDO <c>FIX_BIT_TIMING_6</c>: retired Alone in the Dark literal CEL Y step.
+    /// The value remains defined so old save states and overrides still load, but the
+    /// generic CEL origin model replaced its behavior.
+    /// </summary>
     BitTiming6 = 0x00000020,
 
     /// <summary>FreeDO <c>FIX_BIT_TIMING_7</c>: reserved.</summary>
     BitTiming7 = 0x00000040,
 
-    /// <summary>FreeDO <c>FIX_BIT_GRAPHICS_STEP_Y</c>: Samurai Shodown CEL Y step.</summary>
+    /// <summary>
+    /// FreeDO <c>FIX_BIT_GRAPHICS_STEP_Y</c>: retired Samurai Shodown CEL Y step.
+    /// The value remains defined for old save states; the generic origin model replaced
+    /// its behavior.
+    /// </summary>
     GraphicsStepY = 0x00080000,
 }

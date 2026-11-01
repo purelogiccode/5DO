@@ -16,11 +16,6 @@ public sealed class GameCompatibilityTests
     [InlineData("CB8EE795", FixMode.BitTiming3)]
     [InlineData("1A370EBA", FixMode.BitTiming5)]
     [InlineData("B35C911D", FixMode.BitTiming5)]
-    [InlineData("0511D3D2", FixMode.BitTiming6)]
-    [InlineData("9F7D72BC", FixMode.BitTiming6)]
-    [InlineData("E843C635", FixMode.BitTiming6)]
-    [InlineData("2AABA5B9", FixMode.GraphicsStepY)]
-    [InlineData("BF61BB32", FixMode.GraphicsStepY)]
     public void ForGameId_MapsThe4DoDatabaseIds(string gameId, FixMode expected)
     {
         Assert.Equal(expected, GameCompatibility.ForGameId(gameId).FixMode);
@@ -32,6 +27,11 @@ public sealed class GameCompatibilityTests
     [InlineData("")]
     [InlineData("00000000")]
     [InlineData("FFFFFFFF")]
+    [InlineData("0511D3D2")]
+    [InlineData("9F7D72BC")]
+    [InlineData("E843C635")]
+    [InlineData("2AABA5B9")]
+    [InlineData("BF61BB32")]
     public void ForGameId_ReturnsNoneForUnknownIds(string gameId)
     {
         Assert.Equal(GameQuirks.None, GameCompatibility.ForGameId(gameId));
@@ -47,10 +47,10 @@ public sealed class GameCompatibilityTests
     public void ApplyTo_ReplacesTheFixModeAndHonorsAnOverride()
     {
         var machine = new FiveDoMachine();
-        Assert.Equal(FixMode.BitTiming6, GameCompatibility.ApplyTo(machine, "9F7D72BC"));
-        Assert.Equal(FixMode.BitTiming6, machine.Compatibility.FixMode);
+        Assert.Equal(FixMode.BitTiming3, GameCompatibility.ApplyTo(machine, "CB8EE795"));
+        Assert.Equal(FixMode.BitTiming3, machine.Compatibility.FixMode);
 
-        Assert.Equal(FixMode.None, GameCompatibility.ApplyTo(machine, "9F7D72BC", FixMode.None));
+        Assert.Equal(FixMode.None, GameCompatibility.ApplyTo(machine, "CB8EE795", FixMode.None));
         Assert.Equal(FixMode.None, machine.Compatibility.FixMode);
 
         Assert.Equal(FixMode.GraphicsStepY, GameCompatibility.ApplyTo(machine, "unknown", FixMode.GraphicsStepY));
@@ -61,20 +61,21 @@ public sealed class GameCompatibilityTests
     public void AppSettings_ResolvesAutomaticAndPerGameOverrides()
     {
         var settings = new AppSettings();
-        Assert.Equal(FixMode.BitTiming6, settings.ResolveFixMode("9F7D72BC"));
+        Assert.Equal(FixMode.BitTiming3, settings.ResolveFixMode("CB8EE795"));
+        Assert.Equal(FixMode.None, settings.ResolveFixMode("9F7D72BC"));
         Assert.Equal(FixMode.None, settings.ResolveFixMode("00000000"));
         Assert.Equal(FixMode.None, settings.ResolveFixMode(null));
 
-        settings.SetFixModeOverride("9f7d72bc", FixMode.None);
-        Assert.Equal(FixMode.None, settings.ResolveFixMode("9F7D72BC"));
-        Assert.Equal(FixMode.None, settings.GetFixModeOverride("9F7D72BC"));
+        settings.SetFixModeOverride("9f7d72bc", FixMode.BitTiming6);
+        Assert.Equal(FixMode.BitTiming6, settings.ResolveFixMode("9F7D72BC"));
+        Assert.Equal(FixMode.BitTiming6, settings.GetFixModeOverride("9F7D72BC"));
 
         settings.SetFixModeOverride("9F7D72BC", null);
         Assert.Null(settings.GetFixModeOverride("9F7D72BC"));
-        Assert.Equal(FixMode.BitTiming6, settings.ResolveFixMode("9F7D72BC"));
+        Assert.Equal(FixMode.None, settings.ResolveFixMode("9F7D72BC"));
 
         settings.AutoGameFixes = false;
-        Assert.Equal(FixMode.None, settings.ResolveFixMode("2AABA5B9"));
+        Assert.Equal(FixMode.None, settings.ResolveFixMode("CB8EE795"));
     }
 
     [Fact]

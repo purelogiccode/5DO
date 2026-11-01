@@ -57,6 +57,7 @@ public sealed class Vdlp : IVdlp, IStateSection
     private readonly byte[] _clutR = new byte[VdlLine.ClutSize];
 
     private uint _background;
+    private uint _headVdl;
     private uint _nextVdl;
     private uint _modulo = 320;
     private uint _currentVdl;
@@ -66,7 +67,7 @@ public sealed class Vdlp : IVdlp, IStateSection
     private uint _clutDma;
     private int _lineDelay;
     private int _persistLength;
-    private int _forceLine = 5;
+    private int _forceLine;
 
     /// <summary>Initializes a new instance of the <see cref="Vdlp"/> class.</summary>
     /// <param name="ram">Raw VRAM accessor.</param>
@@ -80,8 +81,8 @@ public sealed class Vdlp : IVdlp, IStateSection
         Reset();
     }
 
-    /// <summary>Gets the retained display-list head. FreeDO: <c>HEADVDL</c>; Opera: <c>next_vdl</c>.</summary>
-    public uint HeadVdl => _nextVdl;
+    /// <summary>Gets the retained display-list head. FreeDO: <c>HEADVDL</c>; Opera: <c>head_vdl</c>.</summary>
+    public uint HeadVdl => _headVdl;
 
     /// <summary>Gets the current display-list pointer. FreeDO: <c>CURRENTVDL</c>.</summary>
     public uint CurrentVdl => _currentVdl;
@@ -117,13 +118,14 @@ public sealed class Vdlp : IVdlp, IStateSection
     public uint Id => StateSectionIds.Vdlp;
 
     /// <summary>Gets the save-state section version.</summary>
-    /// <remarks>Version 2 adds the retained next-VDL, force-line, and persistence fields.</remarks>
-    public ushort Version => 2;
+    /// <remarks>Version 3 separates the retained head from the active successor cursor.</remarks>
+    public ushort Version => 3;
 
     /// <summary>Resets the VDLP and writes the startup display list. FreeDO: <c>_vdl_Init</c>.</summary>
     public void Reset()
     {
         _background = 0;
+        _headVdl = 0xb0000;
         _nextVdl = 0xb0000;
         _modulo = 320;
         _currentVdl = 0;
@@ -133,11 +135,11 @@ public sealed class Vdlp : IVdlp, IStateSection
         _clutDma = 0;
         _lineDelay = 0;
         _persistLength = 0;
-        _forceLine = 5;
+        _forceLine = 0;
 
         for (var i = 0u; i < (uint)StartupVdl.Length; i++)
         {
-            _ram.Write32(_nextVdl + (i * 4) + VramOffset, StartupVdl[i]);
+            _ram.Write32(_headVdl + (i * 4) + VramOffset, StartupVdl[i]);
         }
 
         for (var i = 0; i < VdlLine.ClutSize; i++)
@@ -153,9 +155,9 @@ public sealed class Vdlp : IVdlp, IStateSection
     /// <param name="address">VDL address within VRAM.</param>
     public void ProcessVdl(uint address)
     {
-        // Opera: retain the CPU-programmed successor; the current field keeps
+        // Opera: retain the CPU-programmed head; the current field keeps
         // traversing its existing display list until the next force line.
-        _nextVdl = address;
+        _headVdl = address;
     }
 
     /// <summary>Renders one scanline. FreeDO: <c>_vdl_DoLineNew</c>.</summary>
@@ -169,17 +171,32 @@ public sealed class Vdlp : IVdlp, IStateSection
         var line = line2X & 0x7ff;
         if (line == 0)
         {
-            // Opera: latch the display-effective transfer boundary at field start.
             // A VDL programmed during the previous field becomes visible here.
+            // Opera latches this boundary at scanline 5 because its visible area
+            // starts at scanline 21. 5DO still starts visible output at scanline
+            // 16, so keep the boundary at zero until OP-SYS-05 aligns the region
+            // timing; starting at five here would shift the boot display.
             _lineDelay = 0;
-            _forceLine = 5;
+            _forceLine = 0;
         }
 
-        if ((ClutDmaEnabled?.Invoke() ?? true)
-            && line >= 5
-            && (line == _forceLine || (_lineDelay == 0 && _persistLength != 0)))
+        if (ClutDmaEnabled?.Invoke() ?? true)
         {
-            ExecuteVdl();
+            if (line == _forceLine)
+            {
+                // Every field restarts from the retained head. The entry itself
+                // is processed even when the previous field left a delay.
+                _nextVdl = _headVdl;
+                ExecuteVdl();
+            }
+
+            // When the current entry's persist count is exhausted, the successor
+            // is processed on this same line. This second call is what keeps a
+            // zero-persist head from shifting the whole field by a line.
+            if (_lineDelay <= 0)
+            {
+                ExecuteVdl();
+            }
         }
 
         var y = line - 16;
@@ -317,6 +334,7 @@ public sealed class Vdlp : IVdlp, IStateSection
         writer.WriteUInt32(_background);
         writer.WriteInt32(_forceLine);
         writer.WriteUInt32(_currentVdl);
+        writer.WriteUInt32(_headVdl);
         writer.WriteUInt32(_nextVdl);
         writer.WriteUInt32(_modulo);
         writer.WriteUInt32(_currentBitmap);
@@ -350,15 +368,39 @@ public sealed class Vdlp : IVdlp, IStateSection
             _outControl = reader.ReadUInt32();
             _clutDma = reader.ReadUInt32();
             _lineDelay = reader.ReadInt32();
+            _headVdl = _currentVdl;
             _nextVdl = _currentVdl;
-            _forceLine = 5;
+            _forceLine = 0;
             _persistLength = _lineDelay > 0 ? _lineDelay : 0;
             return;
         }
 
+        if (reader is StateSectionReader { Version: 2 })
+        {
+            // Version 2 kept the retained head in the successor slot; the active
+            // cursor was already past the entry body. Resume from the successor.
+            _background = reader.ReadUInt32();
+            _ = reader.ReadInt32(); // old force_line
+            _currentVdl = reader.ReadUInt32();
+            var nextVdl = reader.ReadUInt32();
+            _modulo = reader.ReadUInt32();
+            _currentBitmap = reader.ReadUInt32();
+            _previousBitmap = reader.ReadUInt32();
+            _outControl = reader.ReadUInt32();
+            _clutDma = reader.ReadUInt32();
+            _lineDelay = reader.ReadInt32();
+            _persistLength = reader.ReadInt32();
+            _headVdl = nextVdl;
+            _nextVdl = nextVdl;
+            _forceLine = 0;
+            return;
+        }
+
         _background = reader.ReadUInt32();
-        _forceLine = reader.ReadInt32();
+        _ = reader.ReadInt32(); // saved force_line; normalized to the current cadence
+        _forceLine = 0;
         _currentVdl = reader.ReadUInt32();
+        _headVdl = reader.ReadUInt32();
         _nextVdl = reader.ReadUInt32();
         _modulo = reader.ReadUInt32();
         _currentBitmap = reader.ReadUInt32();

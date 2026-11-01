@@ -399,17 +399,35 @@ fields as 5DO's `DriveStatus`/`Poll`; do not compare them directly.
 span/MARIA/BPP0/SKIPX/blue-LSB/REGCTL/PIXC, CLIO FIFO) was validated with the
 full unit suite and the differential harness:
 
-- `dotnet test 5DO.sln`: **1,139 passed**, 0 failed.
+- `dotnet test 5DO.sln`: **1,140 passed**, 0 failed.
 - Smoke: Lemmings (USA), 300 frames, checkpoint 300: **PASS**, 1 match,
   0 diverged, 5DO `0x110E7DC5` = Opera `0x110E7DC5`.
 - Showcase: 3,000 frames, checkpoint 3,000: unchanged from the pre-batch
   baseline; Wolfenstein and Alone still match, Lemmings/Gex/Road Rash still
   diverge, and the 5DO hashes are identical to the pre-batch values.
-- VDLP save states are now version 2; version-1 states migrate by restarting
-  traversal from the saved active cursor.
+- VDLP save states are now version 3; v1 and v2 states migrate to the
+  head/successor cursor model.
 
-The remaining parity item is the legacy-hack retirement pass for OP-14
-(`GraphicsStepY`/`BitTiming6`), followed by the CD/XBUS/DIPIR/reset system batch.
+**OP-14 retirement (2026-10-31):** the automatic `GraphicsStepY` (Samurai
+Shodown) and `BitTiming6` (Alone in the Dark) mappings were removed. The enum
+values remain loadable for old states, but they are no-ops. The literal-CEL
+path now always reads the actual source row.
+
+- Samurai Shodown (USA/EU): frames 3,000/4,000/5,000/6,000 are identical with
+  and without `GraphicsStepY`.
+- Alone in the Dark (USA): with `BitTiming6` disabled, the credits use the
+  actual row and no longer stretch vertically. A 9,000-frame harness probe
+  still diverges from Opera for unrelated CD/timing reasons.
+- DinoPark Tycoon (USA): the 3,000-frame image renders correctly with the
+  generic XYPOSH/XYPOSL origin model and its existing `BitTiming3` scale fix.
+- VDLP now keeps the retained head separate from the active successor cursor
+  and processes a zero-persist successor on the same line. The Opera
+  scanline-5 boundary is deferred until OP-SYS-05 aligns 5DO's visible start
+  line (16) with Opera's (21); the line-0 cadence keeps Lemmings at
+  `0x110E7DC5`.
+
+The next batch is OP-SYS-02 (CD poll/media access/read-ahead/local reset), then
+OP-SYS-01 (ROM overlay/DIPIR/XBUS) and OP-SYS-03 (CSTAT soft reset).
 
 **Opera-parity title probes (2026-10-31):** 5DO completed 3,000 frames for
 Samurai Shodown (USA/EU), DinoPark Tycoon, Alone in the Dark, Johnny Bazookatone,

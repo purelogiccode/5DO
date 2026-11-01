@@ -1,3 +1,4 @@
+using System;
 using FiveDo.Core;
 using FiveDo.Memory;
 using FiveDo.Video;
@@ -48,7 +49,8 @@ public sealed class VdlpTests
         }
 
         vdlp.ProcessVdl(head);
-        RenderLines(vdlp, frame, 0, 16);
+        vdlp.DoLine(0, frame);
+        vdlp.DoLine(16, frame);
 
         Assert.Equal(0, frame[0].Pixels[0]);
         Assert.Equal(1, frame[0].Pixels[1]);
@@ -84,7 +86,8 @@ public sealed class VdlpTests
         }
 
         vdlp.ProcessVdl(head);
-        RenderLines(vdlp, frame, 0, 16);
+        vdlp.DoLine(0, frame);
+        vdlp.DoLine(16, frame);
 
         Assert.Equal(640, frame[0].Width);
         Assert.Equal(640, frame[1].Width);
@@ -112,7 +115,8 @@ public sealed class VdlpTests
         }
 
         vdlp.ProcessVdl(head);
-        RenderLines(vdlp, frame, 0, 255);
+        vdlp.DoLine(0, frame);
+        vdlp.DoLine(255, frame);
         Assert.Equal(7, frame[239].Pixels[0]);
 
         vdlp.DoLine(256, frame);
@@ -137,7 +141,8 @@ public sealed class VdlpTests
         }
 
         vdlp.ProcessVdl(head);
-        RenderLines(vdlp, frame, 0, 16);
+        vdlp.DoLine(0, frame);
+        vdlp.DoLine(16, frame);
 
         Assert.Equal(384, frame[0].Width);
         Assert.Equal(383 & 0x1f, frame[0].Pixels[383]);
@@ -159,7 +164,8 @@ public sealed class VdlpTests
         WriteVdl(memory, head + 16, 0xffffffff);
 
         vdlp.ProcessVdl(head);
-        RenderLines(vdlp, frame, 0, 16);
+        vdlp.DoLine(0, frame);
+        vdlp.DoLine(16, frame);
 
         Assert.Equal(0, frame[0].ClutR[0]);
         Assert.Equal(8, frame[0].ClutR[1]);
@@ -187,8 +193,8 @@ public sealed class VdlpTests
         }
 
         vdlp.ProcessVdl(head);
-        RenderLines(vdlp, frame, 0, 255);
-        RenderLines(vdlp, frame, 0, 16);
+        vdlp.DoLine(0, frame);
+        vdlp.DoLine(16, frame);
 
         Assert.Equal(9, frame[0].Pixels[0]);
         Assert.Equal(9, frame[0].Pixels[319]);
@@ -211,6 +217,24 @@ public sealed class VdlpTests
         Assert.Equal(vdlp.CurrentVdl, copy.CurrentVdl);
     }
 
+    [Fact]
+    public void LoadVersionTwoState_MigratesHeadAndCursor()
+    {
+        var memory = new FiveDoMemory();
+        var writer = new StateWriter();
+        writer.WriteSection(new VersionTwoSection());
+
+        var copy = new Vdlp(memory.Ram);
+        copy.Load(new StateReader(writer.ToArray()).ReadSection());
+
+        Assert.Equal(0x5678u, copy.HeadVdl);
+        Assert.Equal(0x1234u, copy.CurrentVdl);
+        Assert.Equal(320u, copy.Modulo);
+        Assert.Equal(0x8000u, copy.CurrentBitmap);
+        Assert.Equal(0x8002u, copy.PreviousBitmap);
+        Assert.Equal(3, copy.LineDelay);
+    }
+
     private static void RenderLines(Vdlp vdlp, VdlFrame frame, int firstLine, int lastLine)
     {
         for (var line = firstLine; line <= lastLine; line++)
@@ -224,6 +248,34 @@ public sealed class VdlpTests
         for (var i = 0; i < words.Length; i++)
         {
             memory.Ram.Write32(address + ((uint)i * 4) + VramOffset, words[i]);
+        }
+    }
+
+    private sealed class VersionTwoSection : IStateSection
+    {
+        public uint Id => StateSectionIds.Vdlp;
+
+        public ushort Version => 2;
+
+        public void Save(IStateWriter writer)
+        {
+            writer.WriteBytes(new byte[VdlLine.ClutSize * 3]);
+            writer.WriteUInt32(0x11223344);
+            writer.WriteInt32(5);
+            writer.WriteUInt32(0x1234);
+            writer.WriteUInt32(0x5678);
+            writer.WriteUInt32(320);
+            writer.WriteUInt32(0x8000);
+            writer.WriteUInt32(0x8002);
+            writer.WriteUInt32(0);
+            writer.WriteUInt32(0);
+            writer.WriteInt32(3);
+            writer.WriteInt32(3);
+        }
+
+        public void Load(IStateReader reader)
+        {
+            throw new NotSupportedException();
         }
     }
 }

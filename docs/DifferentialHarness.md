@@ -31,7 +31,8 @@ video fields match.
 ## 2. Quick start
 
 ```powershell
-# Build the CLI and the harness.
+# Build the CLI and the harness. The harness runs the external Release CLI, so
+# rebuild the CLI after every core change or it will silently test the old build.
 dotnet build src/FiveDo.Cli -c Release
 dotnet build tools/FiveDo.DiffHarness -c Release
 
