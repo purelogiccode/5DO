@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using FiveDo.Core;
 using FiveDo.Host;
+using FiveDo.Input;
 
 namespace FiveDo.Tests.Host;
 
@@ -138,6 +139,53 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(
             Path.Combine(profiles, "work", "settings.json"),
             AppSettingsStore.GetProfilePath("work", profiles));
+    }
+
+    [Fact]
+    public void InputDeviceOverrides_WinOverGlobalAndSurviveRoundtrip()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        var settings = new AppSettings();
+        settings.SetInputDevice(0, InputDeviceType.Flightstick);
+        Assert.Equal("Flightstick", settings.GetInputDevice(0).ToString());
+        Assert.Equal("Flightstick", settings.ResolveInputDevices("A1B2C3D4")[0]);
+
+        settings.SetInputDeviceOverride(
+            "a1b2c3d4",
+            ["Mouse", "Lightgun", "bogus", "Joypad", "Joypad", "Joypad"]);
+        Assert.Equal("Mouse", settings.ResolveInputDevices("A1B2C3D4")[0]);
+        Assert.Equal("Lightgun", settings.ResolveInputDevices("A1B2C3D4")[1]);
+        Assert.Equal("Joypad", settings.ResolveInputDevices("A1B2C3D4")[2]);
+
+        AppSettingsStore.Save(settings, path);
+        AppSettings loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal("Mouse", loaded.ResolveInputDevices("a1b2c3d4")[0]);
+        Assert.Equal("Flightstick", loaded.ResolveInputDevices("other")[0]);
+
+        loaded.SetInputDeviceOverride("A1B2C3D4", null);
+        Assert.Null(loaded.GetInputDeviceOverride("a1b2c3d4"));
+        Assert.Equal("Flightstick", loaded.ResolveInputDevices("A1B2C3D4")[0]);
+    }
+
+    [Fact]
+    public void AutoInputDevices_SeedKnownLightgunAndTrackballTitles()
+    {
+        var settings = new AppSettings();
+
+        Assert.True(settings.EnsureAutoInputDeviceOverride("11111111", "Crime Patrol (USA)"));
+        Assert.Equal("Lightgun", settings.GetInputDeviceOverride("11111111")![0]);
+        Assert.False(settings.EnsureAutoInputDeviceOverride("11111111", "Crime Patrol (USA)"));
+
+        Assert.True(settings.EnsureAutoInputDeviceOverride("22222222", "Orbatak (USA)"));
+        Assert.Equal("OrbatakTrackball", settings.GetInputDeviceOverride("22222222")![0]);
+
+        Assert.False(settings.EnsureAutoInputDeviceOverride("33333333", "Gex (USA, Europe)"));
+        Assert.Null(settings.GetInputDeviceOverride("33333333"));
+
+        settings.AutoInputDevices = false;
+        Assert.False(settings.EnsureAutoInputDeviceOverride("44444444", "Mad Dog II (USA)"));
     }
 
     [Fact]

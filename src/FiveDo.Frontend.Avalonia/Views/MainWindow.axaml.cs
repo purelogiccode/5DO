@@ -1032,6 +1032,21 @@ public partial class MainWindow : Window, IDisposable
             var disc = DiscImageFactory.Open(path);
             var gameId = disc.SectorCount >= 2 ? GameId.Compute(disc) : string.Empty;
             var record = gameId.Length == 0 ? null : GameDatabase.Default.FindByChecksum(gameId);
+            var autoDevices = gameId.Length > 0
+                && _settings.EnsureAutoInputDeviceOverride(
+                    gameId,
+                    record?.Name ?? Path.GetFileNameWithoutExtension(path));
+            if (gameId.Length > 0)
+            {
+                _settings.ApplyInputDevices(_input, gameId);
+            }
+
+            if (autoDevices)
+            {
+                ShowOsd(
+                    $"Auto input: {Path.GetFileNameWithoutExtension(path)} uses {_settings.ResolveInputDevices(gameId)[0]}.");
+            }
+
             var fixMode = _settings.ResolveFixMode(gameId);
             ResolvedBios resolved;
             try
@@ -3049,7 +3064,7 @@ public partial class MainWindow : Window, IDisposable
             RefreshLibraryDecorations();
         }
 
-        _settings.ApplyInputDevices(_input);
+        _settings.ApplyInputDevices(_input, _gameId);
         if (!string.Equals(
                 previousInputDevices,
                 string.Join(",", _settings.InputDevices),
@@ -3255,7 +3270,7 @@ public partial class MainWindow : Window, IDisposable
         StopMovie(save: true);
         _gamepad?.UpdateProfile(profile);
         _input = new InputManager(_settings.Input, _gamepad);
-        _settings.ApplyInputDevices(_input);
+        _settings.ApplyInputDevices(_input, _gameId);
         if (_machine is not null)
         {
             _machine.PbusSource = _input;

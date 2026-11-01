@@ -145,6 +145,8 @@ every serialized property in `AppSettings`.
 | `RewindSeconds` | int | `60` | Rewind history length in seconds, 30..300. |
 | `FastForwardMultiplier` | int | `4` | Fast-forward speed, 2..10. Audio is muted while active. |
 | `InputDevices` | string[] | six `"Joypad"` entries | PBUS device per port: `Joypad`, `Flightstick`, `Mouse`, `Lightgun`, `ArcadeLightgun`, `OrbatakTrackball`, or `None`. |
+| `InputDeviceOverrides` | object | `{}` | Per-game six-device lists keyed by game ID. An override wins over `InputDevices`. |
+| `AutoInputDevices` | bool | `true` | Seed a lightgun or Orbatak trackball override for known titles when the game has no override. |
 | `Input` | object | defaults | Six-player keyboard/gamepad bindings plus hotkeys. |
 
 The legacy `PreferOpenGl` boolean is still read when loading older files; `false` maps to
@@ -272,6 +274,8 @@ player-1 defaults. See section 3 for the full input structure.
   "AudioEnabled": true,
   "AudioDevice": "",
   "AudioBufferMilliseconds": 100,
+  "InputDeviceOverrides": {},
+  "AutoInputDevices": true,
   "CdAudioVolume": 0.8,
   "CdAudioMuted": false,
   "AutoSwapOnEject": true,

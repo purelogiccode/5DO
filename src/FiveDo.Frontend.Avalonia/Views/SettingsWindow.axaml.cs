@@ -258,7 +258,7 @@ public partial class SettingsWindow : Window
         RewindCheck.IsChecked = settings.RewindEnabled;
         RewindSecondsBox.Text = settings.RewindSeconds.ToString(CultureInfo.InvariantCulture);
         FastForwardBox.Text = settings.FastForwardMultiplier.ToString(CultureInfo.InvariantCulture);
-        PopulateInputDevices(settings);
+        PopulateInputDevices(settings, gameId);
         SaveDirectoryBox.Text = settings.SaveDirectory;
         ScreenshotDirectoryBox.Text = settings.ScreenshotDirectory;
         CoverDirectoryBox.Text = settings.CoverDirectory;
@@ -778,7 +778,7 @@ public partial class SettingsWindow : Window
         return folders.Count > 0 ? folders[0].TryGetLocalPath() : null;
     }
 
-    private void PopulateInputDevices(AppSettings settings)
+    private void PopulateInputDevices(AppSettings settings, string? gameId)
     {
         ComboBox[] combos =
         [
@@ -789,13 +789,19 @@ public partial class SettingsWindow : Window
             InputDevice5Combo,
             InputDevice6Combo,
         ];
+        IReadOnlyList<string> devices = settings.ResolveInputDevices(gameId);
         for (var i = 0; i < combos.Length; i++)
         {
             combos[i].ItemsSource = _inputDeviceOptions;
-            InputDeviceType device = settings.GetInputDevice(i);
+            InputDeviceType device = Enum.TryParse(devices[i], ignoreCase: true, out InputDeviceType parsed)
+                ? parsed
+                : InputDeviceType.Joypad;
             combos[i].SelectedItem = _inputDeviceOptions.FirstOrDefault(option => option.Value == device)
                 ?? _inputDeviceOptions[0];
         }
+
+        PerGameInputCheck.IsChecked = settings.GetInputDeviceOverride(gameId) is not null;
+        PerGameInputCheck.IsEnabled = !string.IsNullOrWhiteSpace(gameId);
     }
 
     private void SaveInputDevices(AppSettings settings)
@@ -809,11 +815,34 @@ public partial class SettingsWindow : Window
             InputDevice5Combo,
             InputDevice6Combo,
         ];
+        var devices = new string[combos.Length];
         for (var i = 0; i < combos.Length; i++)
         {
-            settings.SetInputDevice(
-                i,
-                combos[i].SelectedItem is InputDeviceOption option ? option.Value : InputDeviceType.Joypad);
+            devices[i] = (combos[i].SelectedItem is InputDeviceOption option
+                    ? option.Value
+                    : InputDeviceType.Joypad)
+                .ToString();
+        }
+
+        if (!string.IsNullOrWhiteSpace(_gameId) && PerGameInputCheck.IsChecked == true)
+        {
+            settings.SetInputDeviceOverride(_gameId, devices);
+        }
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(_gameId))
+            {
+                settings.SetInputDeviceOverride(_gameId, null);
+            }
+
+            for (var i = 0; i < devices.Length; i++)
+            {
+                settings.SetInputDevice(
+                    i,
+                    Enum.TryParse(devices[i], ignoreCase: true, out InputDeviceType device)
+                        ? device
+                        : InputDeviceType.Joypad);
+            }
         }
     }
 

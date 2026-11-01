@@ -142,6 +142,16 @@ public sealed class AppSettings
     /// <summary>Gets per-game video-region overrides keyed by 4DO game ID.</summary>
     public IDictionary<string, VideoRegion> RegionOverrides { get; set; } = new Dictionary<string, VideoRegion>(StringComparer.Ordinal);
 
+    /// <summary>Gets per-game PBUS device overrides keyed by 4DO game ID.</summary>
+    public IDictionary<string, IList<string>> InputDeviceOverrides { get; set; } =
+        new Dictionary<string, IList<string>>(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Gets or sets a value indicating whether known lightgun/trackball titles seed a
+    /// per-game input-device override automatically.
+    /// </summary>
+    public bool AutoInputDevices { get; set; } = true;
+
     /// <summary>Gets per-game timing and CD-DA profiles keyed by 4DO game ID.</summary>
     public IDictionary<string, GameProfile> GameProfiles { get; set; } = new Dictionary<string, GameProfile>(StringComparer.Ordinal);
 
@@ -361,13 +371,19 @@ public sealed class AppSettings
     /// The connected count only grows to the highest non-joypad port so the default
     /// single-pad packet is unchanged for existing configurations.
     /// </remarks>
-    public void ApplyInputDevices(InputManager input)
+    public void ApplyInputDevices(InputManager input) => ApplyInputDevices(input, gameId: null);
+
+    /// <summary>Applies the resolved devices for a game to an input manager.</summary>
+    /// <param name="input">Input manager to configure.</param>
+    /// <param name="gameId">4DO game ID, or <see langword="null"/> for the global devices.</param>
+    public void ApplyInputDevices(InputManager input, string? gameId)
     {
         ArgumentNullException.ThrowIfNull(input);
+        IReadOnlyList<string> devices = ResolveInputDevices(gameId);
         var count = 1;
         for (var port = 0; port < PbusEncoder.MaxControllers; port++)
         {
-            InputDeviceType device = GetInputDevice(port);
+            InputDeviceType device = ParseDevice(devices[port]);
             input.Devices.SetDevice(port, device);
             if (device != InputDeviceType.Joypad)
             {
@@ -376,6 +392,101 @@ public sealed class AppSettings
         }
 
         input.ControllerCount = count;
+    }
+
+    /// <summary>Gets the per-game input-device override, if one is configured.</summary>
+    /// <param name="gameId">4DO game ID, case-insensitive.</param>
+    /// <returns>Six normalized device names, or <see langword="null"/> when the game uses the global list.</returns>
+    public IReadOnlyList<string>? GetInputDeviceOverride(string? gameId)
+    {
+        if (string.IsNullOrWhiteSpace(gameId))
+        {
+            return null;
+        }
+
+        var normalized = NormalizeGameId(gameId);
+        foreach ((var id, IList<string> devices) in InputDeviceOverrides)
+        {
+            if (string.Equals(NormalizeGameId(id), normalized, StringComparison.Ordinal))
+            {
+                return NormalizeInputDevices(devices);
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Sets or removes a per-game input-device override.</summary>
+    /// <param name="gameId">4DO game ID, case-insensitive.</param>
+    /// <param name="devices">Six device names, or <see langword="null"/> to use the global list.</param>
+    public void SetInputDeviceOverride(string gameId, IReadOnlyList<string>? devices)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(gameId);
+        var normalized = NormalizeGameId(gameId);
+        foreach (var id in InputDeviceOverrides.Keys.ToArray())
+        {
+            if (string.Equals(NormalizeGameId(id), normalized, StringComparison.Ordinal))
+            {
+                InputDeviceOverrides.Remove(id);
+            }
+        }
+
+        if (devices is not null)
+        {
+            InputDeviceOverrides[normalized] = NormalizeInputDevices(devices).ToList();
+        }
+    }
+
+    /// <summary>Resolves the devices for a game, honoring per-game overrides.</summary>
+    /// <param name="gameId">4DO game ID, or <see langword="null"/> for the global list.</param>
+    /// <returns>Six normalized device names.</returns>
+    public IReadOnlyList<string> ResolveInputDevices(string? gameId) =>
+        GetInputDeviceOverride(gameId) ?? NormalizeInputDevices(InputDevices);
+
+    /// <summary>Creates the known-title input override when none exists.</summary>
+    /// <param name="gameId">4DO game ID.</param>
+    /// <param name="title">Game title from the database or file name.</param>
+    /// <returns><see langword="true"/> when an automatic override was added.</returns>
+    public bool EnsureAutoInputDeviceOverride(string gameId, string? title)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(gameId);
+        if (!AutoInputDevices || GetInputDeviceOverride(gameId) is not null)
+        {
+            return false;
+        }
+
+        IReadOnlyList<string>? devices = GameControlDefaults.TryGetInputDevices(title);
+        if (devices is null)
+        {
+            return false;
+        }
+
+        SetInputDeviceOverride(gameId, devices);
+        return true;
+    }
+
+    /// <summary>Normalizes a device list to six valid names.</summary>
+    /// <param name="devices">Source names; missing or invalid entries become joypads.</param>
+    /// <returns>Six device names.</returns>
+    public static IReadOnlyList<string> NormalizeInputDevices(IEnumerable<string>? devices)
+    {
+        var source = devices as IList<string> ?? (devices is null ? null : new List<string>(devices));
+        var normalized = new string[PbusEncoder.MaxControllers];
+        for (var port = 0; port < normalized.Length; port++)
+        {
+            string? name = source is not null && port < source.Count ? source[port] : null;
+            normalized[port] = ParseDevice(name).ToString();
+        }
+
+        return normalized;
+    }
+
+    private static InputDeviceType ParseDevice(string? name)
+    {
+        return Enum.TryParse(name, ignoreCase: true, out InputDeviceType device)
+            && Enum.IsDefined(device)
+            ? device
+            : InputDeviceType.Joypad;
     }
 
     /// <summary>

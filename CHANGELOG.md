@@ -84,6 +84,13 @@ still change.
   adds the device combo, **Refresh**, and latency box; changing either recreates only the
   host output while emulation continues. CLI adds `--audio-device`, `--audio-buffer`,
   and `audio devices`. The status bar and run JSON report estimated latency.
+- SYS-18/UX-07 per-game input devices: `InputDeviceOverrides` stores a six-device PBUS
+  list per game, `ResolveInputDevices`/`ApplyInputDevices(input, gameId)` honor it, and
+  Settings > Emulation can save or clear the override for the current disc.
+  `GameControlDefaults` seeds lightgun profiles for Crime Patrol, Mad Dog II, Who Shot
+  Johnny Rock, The Last Bounty Hunter, Shootout at Old Tucson, Space Pirates, and Drug
+  Wars, plus an Orbatak trackball profile, when `AutoInputDevices` is enabled. Existing
+  user overrides are never replaced.
 - SYS-15 pointer routing and calibration: `PointerPort` routes host mouse/lightgun input
   to all pointer devices or one controller port, and `PointerScale`/`PointerOffsetX`/Y
   apply a native-pixel calibration with a reset control in Settings > Emulation. This

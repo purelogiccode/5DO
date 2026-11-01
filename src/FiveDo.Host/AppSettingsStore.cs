@@ -242,6 +242,16 @@ public static class AppSettingsStore
             settings.PointerOffsetX = Math.Clamp(settings.PointerOffsetX, -160, 160);
             settings.PointerOffsetY = Math.Clamp(settings.PointerOffsetY, -120, 120);
 
+            // JSON can deserialize null despite the non-nullable annotation.
+            // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+            settings.InputDeviceOverrides ??= new Dictionary<string, IList<string>>(StringComparer.Ordinal);
+            foreach (var key in settings.InputDeviceOverrides.Keys.ToArray())
+            {
+                settings.InputDeviceOverrides[key] = AppSettings.NormalizeInputDevices(
+                        settings.InputDeviceOverrides[key])
+                    .ToList();
+            }
+
             if (!Enum.IsDefined(settings.ArmTiming))
             {
                 settings.ArmTiming = ArmTimingMode.FreeDoCompatible;

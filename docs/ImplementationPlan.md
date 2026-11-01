@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,427 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,429 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,427** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,429** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 13 done · 16 partial · 91 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 13 done · 18 partial · 89 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -170,7 +170,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[SYS-15](#feat-sys-15)** Mouse/lightgun/arcade lightgun/flightstick/trackball — P0 · L · depends on: FND-01 — **Partial** — remaining: device models, encoder, CLI/settings, pointer input, crosshair, pointer-port routing, and pointer calibration are done; scripted gameplay validation remains
 - [ ] **[SYS-16](#feat-sys-16)** Six-player/multi-tap verification — P1 · S · depends on: SYS-15 — **Pending**
 - [ ] **[SYS-17](#feat-sys-17)** Game database expansion and community DB — P1 · M · depends on: FND-02 — **Pending**
-- [ ] **[SYS-18](#feat-sys-18)** Auto per-game profile — P0 · L · depends on: SYS-04, SYS-17 — **Pending**
+- [ ] **[SYS-18](#feat-sys-18)** Auto per-game profile — P0 · L · depends on: SYS-04, SYS-17 — **Partial** — auto BIOS/region/fixes/NVRAM already work, and known lightgun/trackball titles now seed a per-game input-device override automatically; full timing/filter/high-res profiles and the profile editor remain
 - [ ] **[SYS-19](#feat-sys-19)** Save-state interoperability with 4DO/Opera — P2 · L · depends on: CORE-14 — **Pending**
 - [ ] **[SYS-20](#feat-sys-20)** Disc health / Redump DAT / CHD integrity — P2 · M · depends on: SYS-22 — **Pending**
 - [ ] **[SYS-21](#feat-sys-21)** Physical CD drive support — P2 · M — **Pending**
@@ -209,7 +209,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [x] **[UX-04](#feat-ux-04)** Cheat engine — P1 · M · depends on: FND-06 — **Done**
 - [ ] **[UX-05](#feat-ux-05)** Achievements — P2 · L · depends on: UX-03 — **Pending**
 - [ ] **[UX-06](#feat-ux-06)** TAS tools — P1 · L · depends on: UX-01 — **Partial** — remaining: movie container, record/replay/verify, branching, CLI, shell controls, and input display are done; Lua, frame editor, lag counter, and full TAS UI remain
-- [ ] **[UX-07](#feat-ux-07)** Controller profiles and per-game input — P1 · M · depends on: FND-06 — **Pending**
+- [ ] **[UX-07](#feat-ux-07)** Controller profiles and per-game input — P1 · M · depends on: FND-06 — **Partial** — per-game PBUS device overrides, automatic known-title lightgun/trackball defaults, and the override UI are implemented; named controller profiles, deadzones/curves, hot-plug prompts, and import/export remain
 - [ ] **[UX-08](#feat-ux-08)** Gamepad navigation, big picture, Steam Deck — P1 · L · depends on: FND-06 — **Pending**
 - [ ] **[UX-09](#feat-ux-09)** Localization — P1 · M · depends on: FND-07 — **Pending**
 - [ ] **[UX-10](#feat-ux-10)** Themes and accessibility — P2 · M · depends on: FND-06 — **Pending**
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,427 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,429 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,427**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,429**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -2889,6 +2889,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | SYS-15 | Pointer routing and calibration | Added `PointerPort` (all or port 1-6), `PointerScale`/`PointerOffsetX`/`PointerOffsetY` with clamping, `AppSettings.MapPointer`/`RoutesPointerTo`, Settings > Emulation pointer controls, and native-resolution mapping for mouse, lightgun, arcade lightgun, and trackball input. SYS-15 remains partial only for scripted gameplay validation; 1,417 tests pass |
 | 2026-11-01 | AUD-01 | Audio device and buffer latency | Added OpenAL device enumeration and selection, 20-500 ms buffer targets with derived queue/prefill/ring sizing, live output recreation without resetting the machine, Settings > Audio device/buffer controls, `--audio-device`/`--audio-buffer`, `audio devices`, and latency in the status/JSON output. AUD-01 is partial for resampler quality/exclusive/sync; 1,425 tests pass |
 | 2026-11-01 | FND-08, UX-17 | Diagnostics bundle | Added `DiagnosticsBundle` with scrubbed settings/logs/environment/manifest and optional state/frame/replay, `diagnostics bundle` CLI options, and **Help > Save Diagnostics Bundle...** with live state/frame capture. FND-08 and UX-17 are partial for typed errors, compatibility report/upload, and automatic crash capture; 1,427 tests pass |
+| 2026-11-01 | SYS-18, UX-07 | Per-game input devices | Added `InputDeviceOverrides`, `AutoInputDevices`, `GameControlDefaults` for known lightgun/trackball titles, `ResolveInputDevices`/`ApplyInputDevices(input, gameId)`, auto seeding at disc open, and the Settings > Emulation per-game override checkbox. SYS-18 and UX-07 are partial for full timing/filter profiles and named bindings; 1,429 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -3046,7 +3047,7 @@ A feature is done only when:
 | UX-04 | Cheat engine | P1 | M | FND-06 | Done |
 | UX-05 | Achievements | P2 | L | UX-03 | Pending |
 | UX-06 | TAS tools | P1 | L | UX-01 | Pending |
-| UX-07 | Controller profiles and per-game input | P1 | M | FND-06 | Pending |
+| UX-07 | Controller profiles and per-game input | P1 | M | FND-06 | Partial |
 | UX-08 | Gamepad navigation, big picture, Steam Deck | P1 | L | FND-06 | Pending |
 | UX-09 | Localization | P1 | M | FND-07 | Pending |
 | UX-10 | Themes and accessibility | P2 | M | FND-06 | Pending |
@@ -4282,12 +4283,17 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
 
 **Problem.** Users must know which BIOS/region/fix/input device a title needs.
 
-**Add.**
-- `GameProfile` with BIOS, region, fix, input devices, clock, CD speed, high-res, shader, cheats, NVRAM.
-- Auto-populate from DB + heuristics.
-- Per-game overrides and import/export.
-- UI profile editor.
-- CLI `--profile`.
+**Implemented.**
+- Auto BIOS selection (SYS-04), BIOS-driven region selection (SYS-03), automatic fix masks, and per-game NVRAM (SYS-14) already cover the default path.
+- `GameControlDefaults` seeds a per-game PBUS device override for known lightgun/arcade titles (Crime Patrol, Mad Dog II, Who Shot Johnny Rock, The Last Bounty Hunter, Shootout at Old Tucson, Space Pirates, Drug Wars) and Orbatak trackball titles when `AutoInputDevices` is on.
+- `InputDeviceOverrides` persists six-device lists per game ID; `ResolveInputDevices`/`ApplyInputDevices(input, gameId)` honor them, and Settings > Emulation has a **Override input devices for this game** control.
+- Auto seeding is user-replaceable: an existing override is never replaced.
+
+**Remaining.**
+- A unified `GameProfile` covering BIOS/fix/filter/high-resolution/clock/CD speed plus timing, with automatic application at game open.
+- Profile import/export and a full per-game editor.
+- CLI `--game-profile`/profile application.
+- Game-database fields for region/revision/fix/BIOS (SYS-17).
 
 **Files.** New `GameProfile.cs`, `AppSettings.cs`, UI/CLI.
 
@@ -4991,16 +4997,20 @@ counter is not applicable because 3DO PBUS input is sampled every frame. See
 <a id="feat-ux-07"></a>
 ### UX-07 - Controller profiles and per-game input
 
-**Priority:** P1 | **Effort:** M | **Depends on:** FND-06 | **Status:** Pending
+**Priority:** P1 | **Effort:** M | **Depends on:** FND-06 | **Status:** Partial (2026-11-01)
 
 **Problem.** One global input profile.
 
-**Add.**
-- Named profiles.
-- Per-game assignment.
-- Deadzone/curves.
-- Hot-plug.
-- Import/export.
+**Implemented.**
+- Per-game PBUS device overrides (`InputDeviceOverrides`) with `ResolveInputDevices` and `ApplyInputDevices(input, gameId)`.
+- Settings > Emulation can store the six-device list for the current game or edit the global list.
+- Known lightgun/arcade/trackball titles seed an override automatically when `AutoInputDevices` is enabled; an explicit override wins.
+
+**Remaining.**
+- Named input profiles with per-game assignment of bindings, not only devices.
+- Deadzone/response curves.
+- Hot-plug prompts and device remapping.
+- Profile import/export.
 
 **Files.** `FiveDo.Input`, `AppSettings`, UI.
 

@@ -688,7 +688,7 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,427 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,429 tests pass with no changed NTSC hashes.
 
 ### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
 
@@ -732,6 +732,16 @@ UX-23 coverage is compile/status level:
 - Manual evidence: `5do diagnostics bundle --out artifacts/diag-test.zip --json` wrote
   `environment.txt`, sanitized `settings.json`, five logs, and `manifest.json` with 22
   scrub replacements; the archive contained no `DiscPath` or raw user path.
+
+### 1.1s Per-game input devices (2026-11-01)
+
+- `AppSettingsStoreTests.InputDeviceOverrides_WinOverGlobalAndSurviveRoundtrip` checks
+  override precedence, invalid-device normalization, settings roundtrip, and clearing the
+  override back to the global list.
+- `AutoInputDevices_SeedKnownLightgunAndTrackballTitles` verifies Crime Patrol and
+  Orbatak seeding, idempotence, unknown titles, and the `AutoInputDevices` switch.
+- The local `Crime Patrol (USA)` and `Orbatak (USA)` names match the prefix table; the
+  auto override is written on first disc open and shown in the OSD.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 
