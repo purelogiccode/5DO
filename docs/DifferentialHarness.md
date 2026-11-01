@@ -268,6 +268,10 @@ the reference core or the local discs.
   core and `--compare-pc`, **0/5 titles match**: the two video matches still have
   PC deltas of 184,696 and 739,184 bytes. See `docs/TestCorpus.md` 1.1g for the
   hashes, PCs, and images.
+- `benchmarks/diff/sample40.json`: first 40 full-collection titles, 300 frames,
+  one checkpoint, accuracy profile, no game fixes. Result: **18 match, 22
+  diverged, 0 error**. This is the current broad post-parity baseline; the full
+  594-title run remains runner-bound.
 - `benchmarks/diff/full.json`: generated from the 594-disc collection on
   2026-10-31 (589 main + 5 MAME) and validated with `--strict`. A two-title
   300-frame smoke (`--limit 2 --frames 300 --no-images --cleanup-iso`) ran both

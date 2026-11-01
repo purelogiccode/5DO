@@ -487,6 +487,12 @@ from v1/v2. The DSP keeps its separate FreeDO-compatible LCG state.
 succeeded; they use CDLZMA/CDZLIB/CDFLAC, so no zstd fixture is present. No native
 dependency or code change is required; add a zstd CHD fixture when one is available.
 
+**40-title differential sample (2026-10-31):** `benchmarks/diff/sample40.json` runs
+the first 40 titles from the full manifest at 300 frames with the accuracy profile,
+no game fixes, unbounded CD speed, and no images. Result: **18 match, 22 diverged,
+0 error**; every 5DO run completed. This is the first broad post-parity baseline.
+The full 594-title collection remains runner-bound.
+
 The next step is to capture a CLIO CSTAT/DIPIR boot transcript, compare the
 `OperaDipir`/`OperaSoftReset` path against Opera, and then enable it in the accuracy
 profile.
