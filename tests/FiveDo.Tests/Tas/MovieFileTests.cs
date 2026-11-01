@@ -30,7 +30,7 @@ public sealed class MovieFileTests
         {
             new byte[] { 0x00, 0x48 },
             new byte[] { 0x80, 0x80, 0x01, 0x02 },
-            System.Array.Empty<byte>(),
+            Array.Empty<byte>(),
         };
         var state = new byte[] { 1, 2, 3, 4, 5 };
         var movie = new Movie(header, frames, state);

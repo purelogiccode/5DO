@@ -105,7 +105,7 @@ internal static class CheatParser
 
                 if (index == start)
                 {
-                    throw Error("Expected hexadecimal digits after '$'.", position);
+                    throw CreateError("Expected hexadecimal digits after '$'.", position);
                 }
 
                 tokens.Add(NumberToken(text[start..index], position, 16));
@@ -154,7 +154,7 @@ internal static class CheatParser
                 continue;
             }
 
-            throw Error($"Unexpected character '{character}'.", position);
+            throw CreateError($"Unexpected character '{character}'.", position);
         }
 
         tokens.Add(new Token(TokenKind.End, string.Empty, 0, text.Length));
@@ -182,12 +182,12 @@ internal static class CheatParser
     {
         if (text.Length == 0)
         {
-            throw Error("Expected a number.", position);
+            throw CreateError("Expected a number.", position);
         }
 
         if (!ulong.TryParse(text, numberBase == 16 ? NumberStyles.HexNumber : NumberStyles.None, CultureInfo.InvariantCulture, out var value))
         {
-            throw Error($"'{text}' is not a valid {(numberBase == 16 ? "hexadecimal" : "decimal")} number.", position);
+            throw CreateError($"'{text}' is not a valid {(numberBase == 16 ? "hexadecimal" : "decimal")} number.", position);
         }
 
         return new Token(TokenKind.Number, text, value, position);
@@ -216,7 +216,7 @@ internal static class CheatParser
         return true;
     }
 
-    private static FormatException Error(string message, int position)
+    private static FormatException CreateError(string message, int position)
     {
         return new FormatException($"{message} (column {position + 1}).");
     }
@@ -567,7 +567,7 @@ internal static class CheatParser
         if (value <= 0xFFFF)
         {
             bytes.Add((byte)(value >> 8));
-            bytes.Add((byte)value);
+            bytes.Add((byte)(value & 0xFF));
             return;
         }
 
@@ -576,7 +576,7 @@ internal static class CheatParser
             bytes.Add((byte)(value >> 24));
             bytes.Add((byte)(value >> 16));
             bytes.Add((byte)(value >> 8));
-            bytes.Add((byte)value);
+            bytes.Add((byte)(value & 0xFF));
             return;
         }
 

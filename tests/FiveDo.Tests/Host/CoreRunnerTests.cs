@@ -192,7 +192,8 @@ public sealed class CoreRunnerTests
         FiveDoMachine machine = CreateMachine();
         var audio = new RecordingAudioSink();
         machine.AudioSink = audio;
-        using var runner = new CoreRunner(machine) { SpeedMultiplier = 4 };
+        using var runner = new CoreRunner(machine);
+        runner.SpeedMultiplier = 4;
 
         runner.Start();
         Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 40, TimeSpan.FromSeconds(3)));

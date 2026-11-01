@@ -53,6 +53,8 @@ public sealed class CheatSet
     {
         ArgumentNullException.ThrowIfNull(document);
         var set = new CheatSet();
+        // JSON can deserialize null despite the non-nullable annotation.
+        // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
         set.LoadEntries(document.Cheats ?? []);
         return set;
     }

@@ -97,6 +97,8 @@ public sealed class LibraryMetadataCatalog
             }
 
             var catalog = new LibraryMetadataCatalog();
+            // JSON can deserialize null despite the non-nullable annotation.
+            // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             foreach (LibraryMetadataRecord record in metadata.Records ?? [])
             {
                 catalog.Add(record);
@@ -214,6 +216,8 @@ public static class LibraryMetadataStore
             LibraryMetadata metadata = JsonSerializer.Deserialize(
                 File.ReadAllText(resolved),
                 LibraryMetadataJsonContext.Default.LibraryMetadata) ?? new LibraryMetadata();
+            // JSON can deserialize null despite the non-nullable annotation.
+            // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             metadata.Records ??= [];
             return metadata;
         }

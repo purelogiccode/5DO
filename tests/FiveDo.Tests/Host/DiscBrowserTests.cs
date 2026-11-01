@@ -35,7 +35,7 @@ public sealed class DiscBrowserTests
         Assert.Equal("Synthetic disc", browser.Comment);
         Assert.Equal("ISO", browser.Format);
         Assert.Equal(6, browser.SectorCount);
-        Assert.Equal(FiveDo.Storage.GameId.Compute(disc), browser.GameId);
+        Assert.Equal(GameId.Compute(disc), browser.GameId);
         Assert.Equal("\\", browser.Root.Path);
         Assert.Equal(
             "DIR,Disc label,HELLO.TXT",

@@ -171,11 +171,9 @@ public readonly record struct OrbatakTrackballState(int DeltaX, int DeltaY)
     /// <returns>A state safe for the PBUS encoder.</returns>
     public OrbatakTrackballState Clamped()
     {
-        return this with
-        {
-            DeltaX = Math.Clamp(DeltaX, -24, 24),
-            DeltaY = Math.Clamp(DeltaY, -24, 24),
-        };
+        return new OrbatakTrackballState(
+            Math.Clamp(DeltaX, -24, 24),
+            Math.Clamp(DeltaY, -24, 24));
     }
 }
 
@@ -360,7 +358,7 @@ public sealed class InputDeviceSet
 
         for (var i = 0; i < _trackballs.Length; i++)
         {
-            _trackballs[i] = _trackballs[i] with { DeltaX = 0, DeltaY = 0 };
+            _trackballs[i] = new OrbatakTrackballState(0, 0);
         }
     }
 

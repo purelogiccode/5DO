@@ -78,6 +78,8 @@ public static class CheatStore
                 document.Version = 1;
             }
 
+            // JSON can deserialize null despite the non-nullable annotation.
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
             if (document.Cheats is null)
             {
                 document.Cheats = [];

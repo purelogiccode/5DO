@@ -109,7 +109,7 @@ public sealed class AppSettings
 
         try
         {
-            return System.IO.Path.GetFullPath(LibraryMetadataPath);
+            return Path.GetFullPath(LibraryMetadataPath);
         }
         catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
         {
@@ -290,6 +290,8 @@ public sealed class AppSettings
     {
         ArgumentOutOfRangeException.ThrowIfNegative(port);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxControllers);
+        // JSON can deserialize null despite the non-nullable annotation.
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (InputDevices is null || port >= InputDevices.Count)
         {
             return InputDeviceType.Joypad;
@@ -365,7 +367,7 @@ public sealed class AppSettings
         var directory = string.IsNullOrWhiteSpace(NvramDirectory)
             ? AppSettingsStore.DefaultDirectory
             : NvramDirectory;
-        return System.IO.Path.GetFullPath(directory);
+        return Path.GetFullPath(directory);
     }
 
     /// <summary>Resolves the primary NVRAM image path for a game.</summary>

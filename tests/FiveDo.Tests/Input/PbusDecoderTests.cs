@@ -101,9 +101,9 @@ public sealed class PbusDecoderTests
     {
         var packet = new byte[PbusEncoder.PacketSize];
 
-        Assert.Throws<System.ArgumentOutOfRangeException>(() => PbusDecoder.DecodeController(packet, -1));
-        Assert.Throws<System.ArgumentOutOfRangeException>(() => PbusDecoder.DecodeController(packet, 6));
-        Assert.Throws<System.ArgumentOutOfRangeException>(() => PbusDecoder.IsConnected(packet, 6));
+        Assert.Throws<ArgumentOutOfRangeException>(() => PbusDecoder.DecodeController(packet, -1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => PbusDecoder.DecodeController(packet, 6));
+        Assert.Throws<ArgumentOutOfRangeException>(() => PbusDecoder.IsConnected(packet, 6));
     }
 
     [Fact]

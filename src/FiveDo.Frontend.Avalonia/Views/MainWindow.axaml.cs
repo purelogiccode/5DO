@@ -1076,7 +1076,7 @@ public partial class MainWindow : Window, IDisposable
         CancelFastForward();
         _runner?.Invoke(() => _machine?.Reset());
         StatusText.Text = "Reset.";
-        ShowOsd("Console reset.", OsdSeverity.Info);
+        ShowOsd("Console reset.");
         _logger.ForCategory(LogCategory.Machine).Information("Machine reset.");
     }
 
@@ -1154,7 +1154,7 @@ public partial class MainWindow : Window, IDisposable
         PersistSlot();
         UpdateSlotText();
         StatusText.Text = $"Selected slot {_slots.CurrentSlot + 1}.";
-        ShowOsd($"Selected slot {_slots.CurrentSlot + 1}", OsdSeverity.Info);
+        ShowOsd($"Selected slot {_slots.CurrentSlot + 1}");
     }
 
     private void OnNextSlot(object? sender, RoutedEventArgs e)
@@ -1168,7 +1168,7 @@ public partial class MainWindow : Window, IDisposable
         PersistSlot();
         UpdateSlotText();
         StatusText.Text = $"Selected slot {_slots.CurrentSlot + 1}.";
-        ShowOsd($"Selected slot {_slots.CurrentSlot + 1}", OsdSeverity.Info);
+        ShowOsd($"Selected slot {_slots.CurrentSlot + 1}");
     }
 
     private void PersistSlot()
@@ -3177,13 +3177,13 @@ public partial class MainWindow : Window, IDisposable
         {
             PauseEmulation(showLibrary: false);
             CloseQuickMenu(resume: false);
-            ShowOsd("Emulation paused.", OsdSeverity.Info);
+            ShowOsd("Emulation paused.");
             return;
         }
 
         CloseQuickMenu(resume: false);
         StartEmulation(showGameView: false);
-        ShowOsd("Emulation resumed.", OsdSeverity.Info);
+        ShowOsd("Emulation resumed.");
     }
 
     private void OnQuickMenuSave(object? sender, RoutedEventArgs e)
@@ -4172,7 +4172,7 @@ public partial class MainWindow : Window, IDisposable
         if (_runner.Rewind(frames))
         {
             StatusText.Text = $"Rewound to frame {_machine.FramesExecuted}.";
-            ShowOsd($"Rewound to frame {_machine.FramesExecuted}", OsdSeverity.Info);
+            ShowOsd($"Rewound to frame {_machine.FramesExecuted}");
         }
         else
         {
@@ -4210,7 +4210,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         StatusText.Text = $"Fast-forward {_runner.SpeedMultiplier}x.";
-        ShowOsd($"Fast-forward {_runner.SpeedMultiplier}x", OsdSeverity.Info);
+        ShowOsd($"Fast-forward {_runner.SpeedMultiplier}x");
     }
 
     private void StopFastForward()
@@ -4219,7 +4219,7 @@ public partial class MainWindow : Window, IDisposable
         if (_running)
         {
             StatusText.Text = "Emulation running.";
-            ShowOsd("Fast-forward off.", OsdSeverity.Info);
+            ShowOsd("Fast-forward off.");
         }
     }
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace FiveDo.Host;
 
@@ -249,6 +248,8 @@ public static class LibraryStateStore
                 return new LibraryState();
             }
 
+            // JSON can deserialize null despite the non-nullable annotation.
+            // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             IDictionary<string, LibraryGameState> games = state.Games
                 ?? new Dictionary<string, LibraryGameState>(StringComparer.OrdinalIgnoreCase);
             state.Games = new Dictionary<string, LibraryGameState>(games, StringComparer.OrdinalIgnoreCase);

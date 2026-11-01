@@ -1,7 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Runtime.CompilerServices;
 using FiveDo.Host;
 
 namespace FiveDo.Tests.Host;
@@ -163,22 +162,22 @@ public sealed class LibraryStateTests
         using var directory = new TempDirectory();
         var path = Path.Combine(directory.Path, "game.iso");
         var state = new LibraryState();
-        var now = new DateTime(2026, 11, 1, 12, 0, 0, DateTimeKind.Utc);
-        var saves = 0;
-        var tracker = new LibraryPlaytimeTracker(state, () => saves++, () => now);
+        var now = new StrongBox<DateTime>(new DateTime(2026, 11, 1, 12, 0, 0, DateTimeKind.Utc));
+        var saves = new StrongBox<int>(0);
+        var tracker = new LibraryPlaytimeTracker(state, () => saves.Value++, () => now.Value);
 
         tracker.Start("F3AF1B13", path);
-        now = now.AddSeconds(30);
+        now.Value = now.Value.AddSeconds(30);
         tracker.Start("F3AF1B13", path);
         Assert.True(tracker.IsTracking);
 
-        now = now.AddSeconds(60);
+        now.Value = now.Value.AddSeconds(60);
         TimeSpan elapsed = tracker.Stop();
 
         Assert.Equal(TimeSpan.FromSeconds(90), elapsed);
         Assert.False(tracker.IsTracking);
         Assert.Equal(90, state.Find("F3AF1B13", path)?.PlaytimeSeconds);
-        Assert.Equal(1, saves);
+        Assert.Equal(1, saves.Value);
     }
 
     [Fact]
@@ -188,11 +187,11 @@ public sealed class LibraryStateTests
         var first = Path.Combine(directory.Path, "first.iso");
         var second = Path.Combine(directory.Path, "second.iso");
         var state = new LibraryState();
-        var now = new DateTime(2026, 11, 1, 12, 0, 0, DateTimeKind.Utc);
-        var tracker = new LibraryPlaytimeTracker(state, utcNow: () => now);
+        var now = new StrongBox<DateTime>(new DateTime(2026, 11, 1, 12, 0, 0, DateTimeKind.Utc));
+        var tracker = new LibraryPlaytimeTracker(state, utcNow: () => now.Value);
 
         tracker.Start("11111111", first);
-        now = now.AddSeconds(45);
+        now.Value = now.Value.AddSeconds(45);
         tracker.Start("22222222", second);
 
         Assert.Equal(45, state.Find("11111111", first)?.PlaytimeSeconds);

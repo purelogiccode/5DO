@@ -19,7 +19,7 @@ namespace FiveDo.Frontend.Avalonia.Views;
 /// </summary>
 /// <remarks>
 /// The window edits <see cref="AppSettings"/> in place and returns <see langword="true"/>
-/// from <see cref="ShowDialog{T}"/> when a setting changed. The caller persists the
+/// from <see cref="Window.ShowDialog{T}(Window)"/> when a setting changed. The caller persists the
 /// settings and recreates the machine when required, matching the settings dialog.
 /// </remarks>
 public partial class BiosNvramManagerWindow : Window
@@ -27,7 +27,6 @@ public partial class BiosNvramManagerWindow : Window
     private readonly AppSettings _settings;
     private readonly string _gameId;
     private readonly string _gameName;
-    private readonly bool _scanOnLoad;
     private bool _biosFolderDerived;
 
     private IReadOnlyList<BiosProfile> _biosProfiles = [];
@@ -61,7 +60,6 @@ public partial class BiosNvramManagerWindow : Window
         _settings = settings;
         _gameId = gameId;
         _gameName = gameName;
-        _scanOnLoad = scanOnLoad;
 
         GameText.Text = string.IsNullOrWhiteSpace(_gameId)
             ? "No game is loaded. Open a disc to assign a BIOS to that game."
@@ -85,7 +83,7 @@ public partial class BiosNvramManagerWindow : Window
         NvramFolderBox.Text = settings.ResolveNvramDirectory();
         UpdateAssignmentButtons();
 
-        if (_scanOnLoad)
+        if (scanOnLoad)
         {
             RefreshBios(selectPath: settings.BiosPath);
             RefreshNvram(selectPath: null);

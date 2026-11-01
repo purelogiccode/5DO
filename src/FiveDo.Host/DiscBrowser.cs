@@ -161,7 +161,7 @@ public sealed class DiscBrowser : IDisposable
         _ownsDisc = ownsDisc;
         SourcePath = string.IsNullOrWhiteSpace(sourcePath)
             ? string.Empty
-            : System.IO.Path.GetFullPath(sourcePath);
+            : Path.GetFullPath(sourcePath);
         _fileSystem = OperaFileSystem.Mount(disc);
 
         GameId = TryComputeGameId(disc);
@@ -174,7 +174,7 @@ public sealed class DiscBrowser : IDisposable
     public string SourcePath { get; }
 
     /// <summary>Gets the detected image format label.</summary>
-    public string Format => System.IO.Path.GetExtension(SourcePath).ToUpperInvariant() switch
+    public string Format => Path.GetExtension(SourcePath).ToUpperInvariant() switch
     {
         ".ISO" => "ISO",
         ".BIN" => "BIN",
@@ -250,7 +250,7 @@ public sealed class DiscBrowser : IDisposable
         ArgumentException.ThrowIfNullOrWhiteSpace(destinationDirectory);
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        var root = System.IO.Path.GetFullPath(destinationDirectory);
+        var root = Path.GetFullPath(destinationDirectory);
         Directory.CreateDirectory(root);
 
         var files = 0;
@@ -316,7 +316,7 @@ public sealed class DiscBrowser : IDisposable
             sanitized = "_";
         }
 
-        var stem = System.IO.Path.GetFileNameWithoutExtension(sanitized);
+        var stem = Path.GetFileNameWithoutExtension(sanitized);
         if (IsReservedDeviceName(stem))
         {
             sanitized = "_" + sanitized;
@@ -487,7 +487,7 @@ public sealed class DiscBrowser : IDisposable
 
         var parts = node.Path.TrimStart('\\').Split('\\');
         return string.Join(
-            System.IO.Path.DirectorySeparatorChar,
+            Path.DirectorySeparatorChar,
             parts.Select(SanitizeFileName));
     }
 
@@ -502,7 +502,7 @@ public sealed class DiscBrowser : IDisposable
     {
         var target = relativePath.Length == 0
             ? root
-            : System.IO.Path.Combine(root, relativePath);
+            : Path.Combine(root, relativePath);
         EnsureContained(root, target);
 
         if (node.IsDirectory)
@@ -513,7 +513,7 @@ public sealed class DiscBrowser : IDisposable
             {
                 var childRelative = relativePath.Length == 0
                     ? SanitizeFileName(child.Name)
-                    : System.IO.Path.Combine(relativePath, SanitizeFileName(child.Name));
+                    : Path.Combine(relativePath, SanitizeFileName(child.Name));
                 ExtractNode(child, root, childRelative, overwrite, ref files, ref directories, ref bytes);
             }
 
@@ -522,7 +522,7 @@ public sealed class DiscBrowser : IDisposable
 
         OperaFileEntry entry = node.Entry
             ?? throw new InvalidDataException($"The Opera node '{node.Path}' has no file entry.");
-        var parent = System.IO.Path.GetDirectoryName(target);
+        var parent = Path.GetDirectoryName(target);
         if (!string.IsNullOrEmpty(parent))
         {
             Directory.CreateDirectory(parent);
@@ -560,11 +560,11 @@ public sealed class DiscBrowser : IDisposable
 
     private static void EnsureContained(string root, string target)
     {
-        var fullRoot = System.IO.Path.GetFullPath(root);
-        var fullTarget = System.IO.Path.GetFullPath(target);
-        var prefix = fullRoot.EndsWith(System.IO.Path.DirectorySeparatorChar)
+        var fullRoot = Path.GetFullPath(root);
+        var fullTarget = Path.GetFullPath(target);
+        var prefix = fullRoot.EndsWith(Path.DirectorySeparatorChar)
             ? fullRoot
-            : fullRoot + System.IO.Path.DirectorySeparatorChar;
+            : fullRoot + Path.DirectorySeparatorChar;
         var comparison = OperatingSystem.IsWindows()
             ? StringComparison.OrdinalIgnoreCase
             : StringComparison.Ordinal;

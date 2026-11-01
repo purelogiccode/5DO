@@ -186,10 +186,11 @@ public partial class DiscBrowserWindow : Window
 
         StatusText.Text = $"Extracting {label}...";
         _extracting = true;
+        DiscBrowser browser = _browser;
         try
         {
             DiscExtractionResult result = await Task.Run(
-                () => _browser.Extract(node, destination)).ConfigureAwait(true);
+                () => browser.Extract(node, destination)).ConfigureAwait(true);
             _lastExtractionPath = result.DestinationPath;
             OpenFolderButton.IsEnabled = true;
             StatusText.Text =
