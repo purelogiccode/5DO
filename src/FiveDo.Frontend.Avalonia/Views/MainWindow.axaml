@@ -48,6 +48,13 @@
                           ToolTip.Tip="Stop emulation and return to the game list." />
                 <MenuItem Header="Reset" Click="OnReset"
                           ToolTip.Tip="Reset the emulated console and reload the current disc." />
+                <MenuItem Header="Rewind 1 Second" Click="OnRewind"
+                          ToolTip.Tip="Restore the machine one second back using the rewind history." />
+                <MenuItem Header="Rewind 1 Frame" Click="OnRewindFrame"
+                          ToolTip.Tip="Restore the machine one frame back using the rewind history." />
+                <MenuItem x:Name="FastForwardMenuItem" Header="Fast-Forward" ToggleType="CheckBox"
+                          Click="OnFastForward"
+                          ToolTip.Tip="Run at the configured 2x-10x speed until toggled off or Tab is released." />
                 <Separator />
                 <MenuItem Header="Save State" Click="OnSaveState"
                           ToolTip.Tip="Save the current state to the selected slot." />

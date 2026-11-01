@@ -121,6 +121,9 @@ of connected controllers.
 - **F8** loads the selected slot.
 - **F6** / **F7** select the previous / next save-state slot.
 - **F9** advances the paused machine by one frame.
+- **Shift+F9** rewinds one frame.
+- **R** rewinds one second.
+- **Tab** holds fast-forward; release it to return to normal speed.
 - **F10** resets the machine.
 - **F11** toggles fullscreen.
 - **F12** captures a screenshot.
@@ -130,6 +133,27 @@ of connected controllers.
 
 The hotkey map is part of the input profile. Custom key assignments are resolved
 case-insensitively; an unbound key falls through to the emulated pad.
+
+### Rewind and fast-forward
+
+Rewind is on by default. 5DO keeps compressed keyframes and the exact per-frame
+controller packet for the configured window (60 seconds by default, 30-300 seconds in
+**Settings > Emulation**). Press **R** to step back one second or **Shift+F9** to step
+back one frame. The **Emulation** menu also exposes **Rewind 1 Second** and **Rewind 1
+Frame**. Rewinding restores the full machine state and replays the recorded input, so
+resuming is deterministic. The history is cleared when a state is loaded, the machine is
+reset, or a different disc starts.
+
+Hold **Tab** to fast-forward. The default multiplier is 4x and is configurable from 2x
+to 10x in **Settings > Emulation**. The **Emulation > Fast-Forward** menu item toggles
+the same mode for pointer-only use. Intermediate frames skip presentation and audio is
+muted while fast-forwarding; emulation and input are unchanged. Releasing **Tab**,
+pausing, stopping, or resetting returns to normal speed.
+
+The default memory cap for compressed keyframes is 256 MB. Older keyframes are dropped
+first, and at least one keyframe is always retained. Keyframes are compressed on the
+emulation thread, so a very slow machine may see a brief hitch when one is captured
+(every 120 frames by default).
 
 ### Recording input
 

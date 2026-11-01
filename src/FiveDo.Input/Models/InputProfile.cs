@@ -24,6 +24,8 @@ public sealed class InputProfile
         ["SlotPrevious"] = "F6",
         ["SlotNext"] = "F7",
         ["FrameAdvance"] = "F9",
+        ["Rewind"] = "R",
+        ["FastForward"] = "Tab",
     };
 
     /// <summary>Creates the default input profile.</summary>

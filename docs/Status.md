@@ -1,8 +1,8 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-10-31, after the first full-collection sweep, the performance pass,
+**Snapshot:** 2026-11-01, after the first full-collection sweep, the performance pass,
 the ARM/CLIO/CEL/CD timing-option pass, the CD speed/timing-profile pass, the BIOS
-manager, and the per-game NVRAM pass. Road Rash's
+manager, the per-game NVRAM pass, and the rewind/fast-forward pass. Road Rash's
 100k-state race now measures
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
@@ -50,7 +50,14 @@ Settings > Emulation override combo. Auto-selection uses the game database regio
 known requirements for Slayer Europe/USA, Powers Kingdom (Europe), and Arcade CD-ROM
 discs; the configured BIOS remains the fallback when no BIOS folder is set. The
 five-title 3,000-frame smoke run and four known-requirement 12,000-frame runs are in
-[`TestCorpus.md`](TestCorpus.md) 1.1f. **1159 tests pass.** The first Opera parity batch (VDLP, ARM carry, DSP FIFO, MADAM span/MARIA/BPP0/SKIPX/LRFORM/blue-LSB/REGCTL/PIXC, CLIO FIFO), OP-14 (XYPOSH/XYPOSL origin, retired `GraphicsStepY`/`BitTiming6`), OP-SYS-02 (Opera CD poll/local reset), OP-SYS-01/03's ROM overlay, DIPIR, XBUS, and CSTAT soft-reset work, and OP-SYS-06's separate CLIO PRNG are complete (the DIPIR/soft-reset path remains opt-in pending a boot transcript); see `Make5doTheBestOfAll.md` 13.11–13.17.
+[`TestCorpus.md`](TestCorpus.md) 1.1f. The first Opera parity batch (VDLP, ARM carry, DSP FIFO, MADAM span/MARIA/BPP0/SKIPX/LRFORM/blue-LSB/REGCTL/PIXC, CLIO FIFO), OP-14 (XYPOSH/XYPOSL origin, retired `GraphicsStepY`/`BitTiming6`), OP-SYS-02 (Opera CD poll/local reset), OP-SYS-01/03's ROM overlay, DIPIR, XBUS, and CSTAT soft-reset work, and OP-SYS-06's separate CLIO PRNG are complete (the DIPIR/soft-reset path remains opt-in pending a boot transcript); see `Make5doTheBestOfAll.md` 13.11–13.17.
+UX-01/UX-02 add rewind and fast-forward. `RewindBuffer` keeps compressed keyframes plus
+the per-frame PBUS packet, replays input deterministically after the nearest keyframe,
+clears on timeline jumps, and enforces a 256 MB default cap; `CoreRunner.Rewind` restores
+the machine and presents the frame. `CoreRunner.SpeedMultiplier` runs 2x-10x frames per
+presentation tick with intermediate rendering skipped and audio muted. The shell binds
+`R` (one-second rewind), `Shift+F9` (one-frame rewind), and hold-`Tab` (fast-forward);
+Settings > Emulation controls the history length and multiplier. **1182 tests pass.**
 The differential harness (FND-05/CORE-11/CORE-16) is implemented:
 `tools/FiveDo.DiffHarness` stages the bundled OperaCore and BIOS, runs both engines
 with identical options, compares checkpoint frame hashes, applies manifest

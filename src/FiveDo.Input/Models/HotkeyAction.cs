@@ -38,4 +38,10 @@ public enum HotkeyAction
 
     /// <summary>Advance the paused machine by one frame.</summary>
     FrameAdvance,
+
+    /// <summary>Rewind the emulated machine by a short step.</summary>
+    Rewind,
+
+    /// <summary>Hold or toggle fast-forward playback.</summary>
+    FastForward,
 }

@@ -27,6 +27,7 @@ using FiveDo.Frontend.Avalonia.Controls;
 using FiveDo.Frontend.Avalonia.Input;
 using FiveDo.Frontend.Avalonia.ViewModels;
 using FiveDo.Host;
+using FiveDo.Host.Rewind;
 using FiveDo.Input;
 using FiveDo.Machine;
 using FiveDo.Storage;
@@ -55,6 +56,7 @@ public partial class MainWindow : Window, IDisposable
     private readonly SaveStateSlotManager _slots;
     private InputRecorder? _inputRecorder;
     private string? _inputRecordingPath;
+    private bool _fastForwardHeld;
     private OpenAlAudioOutput? _audio;
     private float _meterPeak;
     private FiveDoMachine? _machine;
@@ -93,6 +95,7 @@ public partial class MainWindow : Window, IDisposable
     public MainWindow()
     {
         InitializeComponent();
+        Deactivated += (_, _) => CancelFastForward();
         _settings = AppSettingsStore.Load();
         _lastDonationCheckUtc = _settings.DonationLastCheckedUtc ?? DateTime.MinValue;
         _rendererKind = ResolveRendererKind();
@@ -837,6 +840,7 @@ public partial class MainWindow : Window, IDisposable
         if (_running)
         {
             _running = false;
+            CancelFastForward();
             _runner?.Pause();
             FlushNvram();
             _logger.ForCategory(LogCategory.Host).Information("Emulation paused.");
@@ -862,6 +866,7 @@ public partial class MainWindow : Window, IDisposable
     private void StopEmulation()
     {
         StopInputRecording(save: true);
+        CancelFastForward();
 
         // Stop, not pause: join the core thread and reset the machine so a later
         // Start (or a new game selection) begins from a known state.
@@ -893,8 +898,35 @@ public partial class MainWindow : Window, IDisposable
         ResetMachine();
     }
 
+    private void OnRewind(object? sender, RoutedEventArgs e)
+    {
+        RewindSeconds(1);
+    }
+
+    private void OnRewindFrame(object? sender, RoutedEventArgs e)
+    {
+        RewindFrames(1);
+    }
+
+    private void OnFastForward(object? sender, RoutedEventArgs e)
+    {
+        if (FastForwardMenuItem.IsChecked)
+        {
+            StartFastForward();
+            if (!_fastForwardHeld)
+            {
+                FastForwardMenuItem.IsChecked = false;
+            }
+        }
+        else
+        {
+            StopFastForward();
+        }
+    }
+
     private void ResetMachine()
     {
+        CancelFastForward();
         _runner?.Invoke(() => _machine?.Reset());
         StatusText.Text = "Reset.";
         _logger.ForCategory(LogCategory.Machine).Information("Machine reset.");
@@ -2700,6 +2732,21 @@ public partial class MainWindow : Window, IDisposable
             AlphaFormat.Premul);
     }
 
+    private RewindOptions CreateRewindOptions()
+    {
+        try
+        {
+            return _settings.ToRewindOptions();
+        }
+        catch (ArgumentOutOfRangeException exception)
+        {
+            _logger.ForCategory(LogCategory.Host).Warning(
+                exception,
+                "Invalid rewind settings; using the defaults.");
+            return RewindOptions.Default;
+        }
+    }
+
     private FiveDoMachine CreateMachine()
     {
         if (_machine is null)
@@ -2722,7 +2769,8 @@ public partial class MainWindow : Window, IDisposable
             _runner = new CoreRunner(
                 _machine,
                 frame => SubmitFrameToActiveRenderer(frame),
-                status => Dispatcher.UIThread.Post(() => OnCoreStatus(status)))
+                status => Dispatcher.UIThread.Post(() => OnCoreStatus(status)),
+                CreateRewindOptions())
             {
                 FrameSkip = _settings.FrameSkip,
             };
@@ -2870,6 +2918,14 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
+        // Shift+F9 is a frame-by-frame rewind companion to F9 frame advance.
+        if (e.Key == Key.F9 && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            RewindFrames(1);
+            e.Handled = true;
+            return;
+        }
+
         if (hotkey != HotkeyAction.None)
         {
             HandleHotkey(hotkey);
@@ -2916,6 +2972,12 @@ public partial class MainWindow : Window, IDisposable
             case HotkeyAction.FrameAdvance:
                 AdvanceFrame();
                 break;
+            case HotkeyAction.Rewind:
+                RewindSeconds(1);
+                break;
+            case HotkeyAction.FastForward:
+                StartFastForward();
+                break;
         }
     }
 
@@ -2936,12 +2998,99 @@ public partial class MainWindow : Window, IDisposable
         StatusText.Text = $"Advanced to frame {_machine.FramesExecuted}.";
     }
 
+    private void RewindSeconds(int seconds)
+    {
+        RewindFrames(seconds * 60);
+    }
+
+    private void RewindFrames(int frames)
+    {
+        if (_machine is null || _runner is null)
+        {
+            StatusText.Text = "Open a 3DO BIOS before rewinding.";
+            return;
+        }
+
+        CancelFastForward();
+        if (_runner.Rewind(frames))
+        {
+            StatusText.Text = $"Rewound to frame {_machine.FramesExecuted}.";
+        }
+        else
+        {
+            StatusText.Text = "No rewind history is available yet.";
+        }
+    }
+
+    private void StartFastForward()
+    {
+        if (_fastForwardHeld)
+        {
+            return;
+        }
+
+        if (_runner is null)
+        {
+            StatusText.Text = "Open a 3DO BIOS before fast-forwarding.";
+            return;
+        }
+
+        _fastForwardHeld = true;
+        try
+        {
+            _runner.SpeedMultiplier = _settings.ResolveFastForwardMultiplier();
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            _runner.SpeedMultiplier = 4;
+        }
+
+        if (FastForwardMenuItem is not null)
+        {
+            FastForwardMenuItem.IsChecked = true;
+        }
+
+        StatusText.Text = $"Fast-forward {_runner.SpeedMultiplier}x.";
+    }
+
+    private void StopFastForward()
+    {
+        CancelFastForward();
+        if (_running)
+        {
+            StatusText.Text = "Emulation running.";
+        }
+    }
+
+    private void CancelFastForward()
+    {
+        _fastForwardHeld = false;
+        if (FastForwardMenuItem is not null)
+        {
+            FastForwardMenuItem.IsChecked = false;
+        }
+
+        if (_runner is not null)
+        {
+            _runner.SpeedMultiplier = 1;
+        }
+    }
+
     /// <inheritdoc />
     protected override void OnKeyUp(KeyEventArgs e)
     {
         if (LibraryView.IsVisible || FocusManager.GetFocusedElement() is TextBox)
         {
+            CancelFastForward();
             base.OnKeyUp(e);
+            return;
+        }
+
+        HotkeyAction hotkey = HotkeyRouter.Resolve(_settings.Input, e.Key.ToString());
+        if (hotkey == HotkeyAction.FastForward)
+        {
+            StopFastForward();
+            e.Handled = true;
             return;
         }
 

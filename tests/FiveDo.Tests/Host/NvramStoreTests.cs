@@ -353,6 +353,9 @@ public sealed class NvramStoreTests
             NvramDirectory = "nvram-data",
             CpuClockMultiplier = 2.0,
             RandomSeed = 0x1234,
+            RewindEnabled = false,
+            RewindSeconds = 120,
+            FastForwardMultiplier = 8,
             SaveSlot = 3,
             SaveSlotCount = 12,
             AutoGameFixes = false,
@@ -391,6 +394,12 @@ public sealed class NvramStoreTests
         Assert.Equal(2.0, loaded.CpuClockMultiplier);
         Assert.Equal(25_000_000, loaded.ResolveArmClock());
         Assert.Equal(0x1234u, loaded.RandomSeed);
+        Assert.False(loaded.RewindEnabled);
+        Assert.Equal(120, loaded.RewindSeconds);
+        Assert.Equal(8, loaded.FastForwardMultiplier);
+        Assert.False(loaded.ToRewindOptions().Enabled);
+        Assert.Equal(120, loaded.ToRewindOptions().Seconds);
+        Assert.Equal(8, loaded.ResolveFastForwardMultiplier());
         Assert.Equal(3, loaded.SaveSlot);
         Assert.Equal(12, loaded.SaveSlotCount);
         Assert.False(loaded.AutoGameFixes);
@@ -415,6 +424,22 @@ public sealed class NvramStoreTests
         Assert.Equal(VideoFilter.Hqx, loaded.ToRendererSettings("9F7D72BC").Filter);
         Assert.Equal(VideoFilter.Crt, loaded.ToRendererSettings().Filter);
         Assert.False(File.Exists(path + ".tmp"));
+    }
+
+    [Fact]
+    public void AppSettings_ValidatesRewindAndFastForwardOptions()
+    {
+        var settings = new AppSettings { RewindSeconds = 29 };
+        Assert.Throws<ArgumentOutOfRangeException>(settings.ToRewindOptions);
+
+        settings.RewindSeconds = 301;
+        Assert.Throws<ArgumentOutOfRangeException>(settings.ToRewindOptions);
+
+        settings.FastForwardMultiplier = 1;
+        Assert.Throws<ArgumentOutOfRangeException>(() => settings.ResolveFastForwardMultiplier());
+
+        settings.FastForwardMultiplier = 11;
+        Assert.Throws<ArgumentOutOfRangeException>(() => settings.ResolveFastForwardMultiplier());
     }
 
     [Fact]

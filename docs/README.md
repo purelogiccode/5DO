@@ -5,14 +5,15 @@ emulator for the Panasonic 3DO Interactive Multiplayer. The desktop app is Avalo
 headless tool is `FiveDo.Cli`; the emulation core is split into one assembly per console
 subsystem.
 
-**Current snapshot:** `1.0.0-rc.1` source tree, 972 tests passing (2026-10-31), with
+**Current snapshot:** `1.0.0-rc.1` source tree, 1,182 tests passing (2026-11-01), with
 the v1.0 release deliberately deferred. The first full-collection loadability sweep is
 complete: **594 discs tested, 576 rendered, 13 black/blank, 5 not loadable**. The
 2026-10-31 performance pass brings the Road Rash 3D race to 4.20 ms/frame (p99 7.40 ms),
-keeps Debug core builds optimized, and adds Auto presentation frame skip. The active
-work is triage/in-game review (M13) and high-resolution CEL research (M14). The
-project is donationware: non-commercial, source-available, and funded by voluntary
-donations.
+keeps Debug core builds optimized, and adds Auto presentation frame skip. The
+2026-11-01 rewind/fast-forward pass adds deterministic 30-300 second rewind and
+2x-10x turbo playback. The active work is triage/in-game review (M13) and
+high-resolution CEL research (M14). The project is donationware: non-commercial,
+source-available, and funded by voluntary donations.
 Windows x64 is the validated platform; the local Linux validation target is the
 `LinuxMint` Hyper-V VM. See [`Status.md`](Status.md),
 [`CompatibilitySweep.md`](CompatibilitySweep.md),

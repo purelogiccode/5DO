@@ -2,7 +2,9 @@ using System;
 using System.Threading;
 using FiveDo.Core;
 using FiveDo.Host;
+using FiveDo.Host.Rewind;
 using FiveDo.Machine;
+using FiveDo.Tests.TestUtilities;
 
 namespace FiveDo.Tests.Host;
 
@@ -172,6 +174,77 @@ public sealed class CoreRunnerTests
         using var runner = new CoreRunner(machine);
 
         Assert.Throws<ArgumentOutOfRangeException>(() => runner.FrameSkip = (FrameSkipMode)99);
+    }
+
+    [Fact]
+    public void SpeedMultiplier_RejectsOutOfRangeValues()
+    {
+        FiveDoMachine machine = CreateMachine();
+        using var runner = new CoreRunner(machine);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => runner.SpeedMultiplier = 0);
+        Assert.Throws<ArgumentOutOfRangeException>(() => runner.SpeedMultiplier = 11);
+    }
+
+    [Fact]
+    public void SpeedMultiplier_RunsEveryEmulatedFrameAndMutesAudio()
+    {
+        FiveDoMachine machine = CreateMachine();
+        var audio = new RecordingAudioSink();
+        machine.AudioSink = audio;
+        using var runner = new CoreRunner(machine) { SpeedMultiplier = 4 };
+
+        runner.Start();
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 40, TimeSpan.FromSeconds(3)));
+        runner.Stop();
+
+        Assert.Equal(runner.Frames, machine.FramesExecuted);
+        Assert.Equal(0, audio.SampleCount);
+        Assert.True(audio.ResetCount > 0);
+    }
+
+    [Fact]
+    public void Rewind_RestoresAnEarlierFrameAndUpdatesTheRunnerCounter()
+    {
+        FiveDoMachine machine = CreateMachine();
+        using var runner = new CoreRunner(
+            machine,
+            rewindOptions: new RewindOptions { Seconds = 30, KeyframeInterval = 5 });
+        runner.Start();
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 30, TimeSpan.FromSeconds(3)));
+        runner.Pause();
+
+        var before = machine.FramesExecuted;
+        Assert.True(runner.Rewind(10));
+
+        Assert.True(machine.FramesExecuted < before);
+        Assert.Equal(machine.FramesExecuted, runner.Frames);
+        Assert.True(runner.CanRewind);
+        runner.Stop();
+    }
+
+    [Fact]
+    public void Rewind_ReturnsFalseWhenHistoryIsDisabled()
+    {
+        FiveDoMachine machine = CreateMachine();
+        using var runner = new CoreRunner(
+            machine,
+            rewindOptions: new RewindOptions { Enabled = false });
+        runner.Start();
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(2)));
+        runner.Pause();
+
+        Assert.False(runner.Rewind(1));
+        runner.Stop();
+    }
+
+    [Fact]
+    public void Rewind_RejectsNegativeFrameCounts()
+    {
+        FiveDoMachine machine = CreateMachine();
+        using var runner = new CoreRunner(machine);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => runner.Rewind(-1));
     }
 
     [Fact]

@@ -11,6 +11,7 @@ using Avalonia.Platform.Storage;
 using FiveDo.Audio;
 using FiveDo.Core;
 using FiveDo.Host;
+using FiveDo.Host.Rewind;
 using FiveDo.Storage;
 using FiveDo.Video;
 
@@ -175,6 +176,9 @@ public partial class SettingsWindow : Window
         NvramVersionBox.Text = settings.NvramVersion.ToString(CultureInfo.InvariantCulture);
         CpuClockBox.Text = settings.CpuClockMultiplier.ToString("0.###", CultureInfo.InvariantCulture);
         RandomSeedBox.Text = settings.RandomSeed is { } seed ? $"0x{seed:x8}" : string.Empty;
+        RewindCheck.IsChecked = settings.RewindEnabled;
+        RewindSecondsBox.Text = settings.RewindSeconds.ToString(CultureInfo.InvariantCulture);
+        FastForwardBox.Text = settings.FastForwardMultiplier.ToString(CultureInfo.InvariantCulture);
         SaveDirectoryBox.Text = settings.SaveDirectory;
         ScreenshotDirectoryBox.Text = settings.ScreenshotDirectory;
         CoverDirectoryBox.Text = settings.CoverDirectory;
@@ -346,6 +350,46 @@ public partial class SettingsWindow : Window
         else
         {
             settings.NvramVersion = nvramVersion;
+        }
+
+        settings.RewindEnabled = RewindCheck.IsChecked == true;
+        var rewindSecondsText = RewindSecondsBox.Text?.Trim();
+        if (string.IsNullOrEmpty(rewindSecondsText))
+        {
+            settings.RewindSeconds = 60;
+        }
+        else if (!int.TryParse(
+                     rewindSecondsText,
+                     NumberStyles.Integer,
+                     CultureInfo.InvariantCulture,
+                     out var rewindSeconds)
+                 || rewindSeconds is < RewindOptions.MinSeconds or > RewindOptions.MaxSeconds)
+        {
+            throw new FormatException(
+                $"The rewind history must be between {RewindOptions.MinSeconds} and {RewindOptions.MaxSeconds} seconds.");
+        }
+        else
+        {
+            settings.RewindSeconds = rewindSeconds;
+        }
+
+        var fastForwardText = FastForwardBox.Text?.Trim();
+        if (string.IsNullOrEmpty(fastForwardText))
+        {
+            settings.FastForwardMultiplier = 4;
+        }
+        else if (!int.TryParse(
+                     fastForwardText,
+                     NumberStyles.Integer,
+                     CultureInfo.InvariantCulture,
+                     out var fastForwardMultiplier)
+                 || fastForwardMultiplier is < 2 or > 10)
+        {
+            throw new FormatException("The fast-forward multiplier must be between 2 and 10.");
+        }
+        else
+        {
+            settings.FastForwardMultiplier = fastForwardMultiplier;
         }
 
         EmulationProfile selectedProfile = ProfileCombo.SelectedItem is ProfileOption profileOption

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using FiveDo.Core;
+using FiveDo.Host.Rewind;
 using FiveDo.Machine;
 using FiveDo.Video;
 
@@ -27,6 +28,7 @@ public sealed class CoreRunner : IDisposable
     private readonly FiveDoMachine _machine;
     private readonly Action<VdlFrame>? _frameSink;
     private readonly Action<CoreStatus>? _statusSink;
+    private readonly RewindBuffer _rewind;
     private readonly object _stateGate = new();
     private readonly Lock _invokeGate = new();
     private Thread? _thread;
@@ -37,6 +39,7 @@ public sealed class CoreRunner : IDisposable
     private long _frames;
     private long _presentedFrames;
     private int _frameSkipMode = (int)FrameSkipMode.Auto;
+    private int _speedMultiplier = 1;
     private long _frameSkipIndex;
     private int _autoSkipLevel;
     private int _autoBehindFrames;
@@ -47,12 +50,18 @@ public sealed class CoreRunner : IDisposable
     /// <param name="machine">Machine to run. The runner does not own it.</param>
     /// <param name="frameSink">Optional per-frame sink, invoked on the core thread.</param>
     /// <param name="statusSink">Optional low-rate status sink, invoked on the core thread.</param>
-    public CoreRunner(FiveDoMachine machine, Action<VdlFrame>? frameSink = null, Action<CoreStatus>? statusSink = null)
+    /// <param name="rewindOptions">Optional rewind-history configuration. Null uses the defaults.</param>
+    public CoreRunner(
+        FiveDoMachine machine,
+        Action<VdlFrame>? frameSink = null,
+        Action<CoreStatus>? statusSink = null,
+        RewindOptions? rewindOptions = null)
     {
         ArgumentNullException.ThrowIfNull(machine);
         _machine = machine;
         _frameSink = frameSink;
         _statusSink = statusSink;
+        _rewind = new RewindBuffer(machine, rewindOptions);
     }
 
     /// <summary>Raised on the core thread when the emulation loop faults.</summary>
@@ -99,6 +108,46 @@ public sealed class CoreRunner : IDisposable
         }
     }
 
+    /// <summary>
+    /// Gets or sets the fast-forward multiplier. The default is 1 (normal speed).
+    /// </summary>
+    /// <remarks>
+    /// Values from 2 to 10 run that many emulated frames per presentation tick. Intermediate
+    /// frames skip VDLP rendering, and audio is muted while the multiplier is above one.
+    /// Emulated state and input are unchanged.
+    /// </remarks>
+    public int SpeedMultiplier
+    {
+        get => Volatile.Read(ref _speedMultiplier);
+        set
+        {
+            if (value is < 1 or > 10)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(value),
+                    value,
+                    "The speed multiplier must be between 1 and 10.");
+            }
+
+            Volatile.Write(ref _speedMultiplier, value);
+        }
+    }
+
+    /// <summary>Gets a value indicating whether rewind history is being recorded.</summary>
+    public bool RewindEnabled => _rewind.Enabled;
+
+    /// <summary>Gets a value indicating whether at least one frame can currently be rewound.</summary>
+    public bool CanRewind => _rewind.CanRewind;
+
+    /// <summary>Gets the oldest frame retained by the rewind history, or -1 when empty.</summary>
+    public long RewindOldestFrame => _rewind.OldestFrame;
+
+    /// <summary>Gets the newest frame retained by the rewind history, or -1 when empty.</summary>
+    public long RewindNewestFrame => _rewind.NewestFrame;
+
+    /// <summary>Gets the configured rewind history length.</summary>
+    public TimeSpan RewindWindow => _rewind.Window;
+
     /// <summary>Starts the core thread. Does nothing when already running.</summary>
     public void Start()
     {
@@ -114,6 +163,7 @@ public sealed class CoreRunner : IDisposable
             _pauseRequested = false;
             _paused = false;
             _faulted = false;
+            _rewind.ResetHistory();
             _thread = new Thread(Run)
             {
                 IsBackground = true,
@@ -174,6 +224,8 @@ public sealed class CoreRunner : IDisposable
         {
             _ = thread.Join(TimeSpan.FromSeconds(2));
         }
+
+        _rewind.Clear();
     }
 
     /// <summary>
@@ -246,9 +298,48 @@ public sealed class CoreRunner : IDisposable
             _machine.RunFrame();
             Interlocked.Increment(ref _frames);
             Interlocked.Increment(ref _presentedFrames);
+            _rewind.Capture(_machine.FramesExecuted);
             _frameSink?.Invoke(_machine.Frame);
             _frameSkipIndex = 0;
         });
+    }
+
+    /// <summary>
+    /// Rewinds the machine by a number of frames and presents the restored frame.
+    /// </summary>
+    /// <param name="frames">Number of frames to rewind. The request is clamped to the retained history.</param>
+    /// <returns><see langword="true"/> when the machine was restored; otherwise <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="frames"/> is negative.</exception>
+    public bool Rewind(int frames)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentOutOfRangeException.ThrowIfNegative(frames);
+        var rewound = false;
+        Invoke(() =>
+        {
+            rewound = _rewind.Rewind(frames);
+            if (!rewound)
+            {
+                return;
+            }
+
+            Interlocked.Exchange(ref _frames, _machine.FramesExecuted);
+            _frameSink?.Invoke(_machine.Frame);
+            Interlocked.Increment(ref _presentedFrames);
+            _frameSkipIndex = 0;
+            _autoSkipLevel = 0;
+            _autoBehindFrames = 0;
+            _autoRecoverFrames = 0;
+        });
+
+        return rewound;
+    }
+
+    /// <summary>Clears the rewind history and records the current machine state.</summary>
+    public void ResetRewind()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        Invoke(_rewind.ResetHistory);
     }
 
     /// <inheritdoc />
@@ -274,6 +365,7 @@ public sealed class CoreRunner : IDisposable
             var statusFrames = 0L;
             var statusPresentedFrames = 0L;
             var previousMode = FrameSkipMode.Off;
+            var previousSpeed = 1;
             TimeSpan statusStart = statusClock.Elapsed;
 
             while (true)
@@ -302,6 +394,7 @@ public sealed class CoreRunner : IDisposable
                         _autoBehindFrames = 0;
                         _autoRecoverFrames = 0;
                         previousMode = FrameSkip;
+                        previousSpeed = SpeedMultiplier;
                     }
 
                     if (_stop)
@@ -320,22 +413,54 @@ public sealed class CoreRunner : IDisposable
                     _autoRecoverFrames = 0;
                 }
 
+                var speed = SpeedMultiplier;
+                if (speed != previousSpeed)
+                {
+                    previousSpeed = speed;
+                    pacer.Resync();
+                    audioPacer.Resync(_machine.AudioSamplesProduced);
+                }
+
                 var present = FrameSkipPolicy.ShouldPresent(mode, _frameSkipIndex, _autoSkipLevel + 1);
                 var frameStart = Stopwatch.GetTimestamp();
-                _machine.RunFrame(!present);
-                Interlocked.Increment(ref _frames);
-                if (present)
+                IAudioSink? mutedAudio = speed > 1 ? _machine.AudioSink : null;
+                if (mutedAudio is not null)
                 {
-                    Interlocked.Increment(ref _presentedFrames);
-                    _frameSink?.Invoke(_machine.Frame);
-                    statusPresentedFrames++;
+                    _machine.AudioSink = null;
+                }
+
+                try
+                {
+                    for (var step = 0; step < speed; step++)
+                    {
+                        var presentStep = present && step == speed - 1;
+                        _machine.RunFrame(!presentStep);
+                        Interlocked.Increment(ref _frames);
+                        _rewind.Capture(_machine.FramesExecuted);
+                        audioPacer.FrameCompleted(_machine.AudioSamplesProduced);
+                        if (!presentStep)
+                        {
+                            continue;
+                        }
+
+                        Interlocked.Increment(ref _presentedFrames);
+                        _frameSink?.Invoke(_machine.Frame);
+                        statusPresentedFrames++;
+                    }
+                }
+                finally
+                {
+                    if (mutedAudio is not null)
+                    {
+                        mutedAudio.Reset();
+                        _machine.AudioSink = mutedAudio;
+                    }
                 }
 
                 var frameDuration = Stopwatch.GetTimestamp() - frameStart;
-                audioPacer.FrameCompleted(_machine.AudioSamplesProduced);
                 pacer.SetPeriod(audioPacer.FramePeriodTicks);
-                statusFrames++;
-                _frameSkipIndex++;
+                statusFrames += speed;
+                _frameSkipIndex += speed;
 
                 TimeSpan elapsed = statusClock.Elapsed;
                 if (elapsed - statusStart >= TimeSpan.FromMilliseconds(250))

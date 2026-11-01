@@ -105,8 +105,9 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, ARM, CLIO, CEL, and CD timing, CD speed, CPU clock, random seed, NVRAM storage, high-resolution mode, and overrides.">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+            <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, ARM, CLIO, CEL, and CD timing, CD speed, CPU clock, random seed, NVRAM storage, high-resolution mode, rewind/fast-forward, and overrides.">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <CheckBox x:Name="AutoFixesCheck" Grid.Row="0" Grid.Column="1"
                               Content="Apply the 4DO per-game fixes automatically"
                               ToolTip.Tip="Apply the compatibility fix mask from the built-in game database when a disc opens." />
@@ -178,7 +179,21 @@
                     <TextBox x:Name="NvramVersionBox" Grid.Row="16" Grid.Column="1" Margin="0,12,0,0"
                              PlaceholderText="0"
                              ToolTip.Tip="Versions 0-9 are separate images. Changing the version does not overwrite another version." />
+                    <CheckBox x:Name="RewindCheck" Grid.Row="17" Grid.Column="1" Margin="0,12,0,0"
+                              Content="Enable rewind history"
+                              ToolTip.Tip="Keep compressed keyframes and input so the emulated machine can be rewound." />
+                    <TextBlock Grid.Row="18" Grid.Column="0" Text="Rewind history" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Rewind window in seconds. Longer windows use more memory." />
+                    <TextBox x:Name="RewindSecondsBox" Grid.Row="18" Grid.Column="1" Margin="0,12,0,0"
+                             PlaceholderText="60 (30-300 seconds)"
+                             ToolTip.Tip="History length in seconds. The default is 60 seconds." />
+                    <TextBlock Grid.Row="19" Grid.Column="0" Text="Fast-forward speed" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Multiplier used while the fast-forward hotkey is held." />
+                    <TextBox x:Name="FastForwardBox" Grid.Row="19" Grid.Column="1" Margin="0,12,0,0"
+                             PlaceholderText="4 (2-10x)"
+                             ToolTip.Tip="Run 2x-10x emulated frames per presentation tick. Audio is muted while fast-forwarding." />
                 </Grid>
+                </ScrollViewer>
             </TabItem>
 
             <TabItem Header="Paths" ToolTip.Tip="Save-state, screenshot, cover-art, and BIOS folder settings.">

@@ -505,6 +505,39 @@ diverged at frame 3000, consistent with the existing PC/timing gap. A Johnny
 Bazookatone checkpoint image shows the game scene without the issue #291
 horizontal-line artifact.
 
+### 1.1h Rewind and fast-forward (2026-11-01)
+
+Rewind and fast-forward are host features and do not change emulation output. The
+evidence is the unit/integration suite plus the state-equality test:
+
+| Test | Result |
+|---|---|
+| `RewindBufferTests.RewindTo_ReplaysInputAndRestoresTheExactMachineState` | PASS: a 90-frame run rewound to frame 37 produces a byte-identical save state to a fresh control run to frame 37. |
+| `RewindBufferTests.RewindTo_ClampsToTheOldestRetainedFrame` | PASS: targets before the oldest keyframe clamp to frame 0. |
+| `RewindBufferTests.Capture_ResetsHistoryWhenTheFrameCounterJumps` | PASS: a timeline jump clears stale keyframes. |
+| `RewindBufferTests.MemoryLimit_KeepsAtLeastOneKeyframe` | PASS: a one-byte cap retains one keyframe. |
+| `CoreRunnerTests.Rewind_RestoresAnEarlierFrameAndUpdatesTheRunnerCounter` | PASS: the runner and machine frame counters agree after rewind. |
+| `CoreRunnerTests.SpeedMultiplier_RunsEveryEmulatedFrameAndMutesAudio` | PASS: 4x runs every emulated frame, pushes no audio samples, and resets the audio queue. |
+| `FrameSkipStateTests.SkipFrame_OnlyChangesThePresentedFrameBuffer` | PASS: 60 frames with three of four rendered produce identical CPU, memory, MADAM, CLIO, DSP, SPORT, VDLP, XBUS, CD, Quartz, and options sections; only the Machine frame section differs. |
+| `GameDatabaseTests.AddMissingDefaultHotkeys_PreservesCustomBindings` | PASS: older profiles gain the `Rewind`/`FastForward` defaults without overwriting a custom save key. |
+| `HotkeyRouterTests.Resolve_ReturnsEveryDefaultHotkey` | PASS: `R` and `Tab` resolve to `Rewind` and `FastForward`. |
+
+Command:
+
+```powershell
+dotnet test 5DO.sln -c Release --filter "FullyQualifiedName~RewindBufferTests|FullyQualifiedName~CoreRunnerTests|FullyQualifiedName~FrameSkipStateTests|FullyQualifiedName~HotkeyRouterTests|FullyQualifiedName~GameDatabaseTests"
+```
+
+The default timing profile and golden boot hashes are unchanged because the core
+machine is untouched; the rewind buffer only observes and restores complete states.
+The Lemmings (USA) 300-frame CLI smoke still reports `0x110E7DC5`:
+
+```powershell
+dotnet run -c Release --project src/FiveDo.Cli -- run `
+  artifacts/diff/work/discs/lemmings-usa-smoke/lemmings-usa-smoke.iso `
+  --bios bios/panafz1.bin --frames 300 --json
+```
+
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 
 All runs use the Release build, `panafz1.bin`, and a fresh NVRAM. The 3,000-frame

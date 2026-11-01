@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 using FiveDo.Core;
+using FiveDo.Host.Rewind;
 using FiveDo.Input;
 using FiveDo.Video;
 
@@ -253,6 +254,45 @@ public sealed class AppSettings
 
     /// <summary>Gets or sets a value indicating whether audio output is enabled.</summary>
     public bool AudioEnabled { get; set; } = true;
+
+    /// <summary>Gets or sets a value indicating whether rewind history is recorded.</summary>
+    public bool RewindEnabled { get; set; } = true;
+
+    /// <summary>Gets or sets the rewind history length in seconds (30-300).</summary>
+    public int RewindSeconds { get; set; } = 60;
+
+    /// <summary>Gets or sets the fast-forward multiplier (2-10).</summary>
+    public int FastForwardMultiplier { get; set; } = 4;
+
+    /// <summary>Creates validated rewind options from the current settings.</summary>
+    /// <returns>The rewind configuration.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when a rewind setting is outside its supported range.</exception>
+    public RewindOptions ToRewindOptions()
+    {
+        var options = new RewindOptions
+        {
+            Enabled = RewindEnabled,
+            Seconds = RewindSeconds,
+        };
+        options.Validate();
+        return options;
+    }
+
+    /// <summary>Validates and returns the fast-forward multiplier.</summary>
+    /// <returns>The configured multiplier.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the multiplier is outside 2-10.</exception>
+    public int ResolveFastForwardMultiplier()
+    {
+        if (FastForwardMultiplier is < 2 or > 10)
+        {
+            throw new ArgumentOutOfRangeException(
+                paramName: null,
+                actualValue: FastForwardMultiplier,
+                message: "The fast-forward multiplier must be between 2 and 10.");
+        }
+
+        return FastForwardMultiplier;
+    }
 
     /// <summary>Gets or sets player input bindings.</summary>
     public InputProfile Input { get; set; } = InputProfile.CreateDefault();

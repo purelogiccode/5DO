@@ -50,6 +50,15 @@ still change.
 
 ### Added
 
+- Rewind and fast-forward (UX-01/UX-02). `RewindBuffer` keeps compressed keyframes plus
+  the exact per-frame PBUS packet, replays input deterministically after the nearest
+  keyframe, clears on timeline jumps, and enforces a 256 MB default cap; the shell binds
+  `R` to a one-second rewind and `Shift+F9` to a one-frame rewind. `CoreRunner` gains a
+  1x-10x `SpeedMultiplier` that runs extra emulated frames per presentation tick, skips
+  intermediate rendering, and mutes/reset the audio queue while active; hold `Tab` to
+  fast-forward. Settings > Emulation configures the rewind window (30-300 s) and the
+  fast-forward multiplier (2-10x).
+
 - Differential harness (FND-05/CORE-11/CORE-16). `run` adds `--checkpoints`,
   `--audio-hash`, and `--state-hash`; each checkpoint records frame hash, PC,
   instruction count, sample count, audio hash, state hash, CD status/poll, DSP

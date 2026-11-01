@@ -106,6 +106,9 @@ every serialized property in `AppSettings`.
 | `NvramDirectory` | string | `""` | Directory that owns the NVRAM layout; empty means `<LocalApplicationData>/5DO`. |
 | `Volume` | float | `1.0` | OpenAL gain, 0..1. |
 | `AudioEnabled` | bool | `true` | Enable live OpenAL output. |
+| `RewindEnabled` | bool | `true` | Record compressed keyframes and input for rewind. |
+| `RewindSeconds` | int | `60` | Rewind history length in seconds, 30..300. |
+| `FastForwardMultiplier` | int | `4` | Fast-forward speed, 2..10. Audio is muted while active. |
 | `Input` | object | defaults | Six-player keyboard/gamepad bindings plus hotkeys. |
 
 The legacy `PreferOpenGl` boolean is still read when loading older files; `false` maps to
@@ -214,6 +217,9 @@ player-1 defaults. See section 3 for the full input structure.
   "HighResolution": false,
   "Volume": 1.0,
   "AudioEnabled": true,
+  "RewindEnabled": true,
+  "RewindSeconds": 60,
+  "FastForwardMultiplier": 4,
   "Input": {
     "Players": [
       {
@@ -261,7 +267,9 @@ player-1 defaults. See section 3 for the full input structure.
       "Reset": "F10",
       "SlotPrevious": "F6",
       "SlotNext": "F7",
-      "FrameAdvance": "F9"
+      "FrameAdvance": "F9",
+      "Rewind": "R",
+      "FastForward": "Tab"
     }
   }
 }
@@ -347,12 +355,13 @@ Explicit stick/trigger bindings win over the fallback. The default radial dead z
 0.5; the default trigger threshold is 0.5.
 
 **Hotkeys:** the profile stores default F5 (save), F8 (load), F6/F7 (previous/next
-slot), F9 (advance one frame while paused), F12 (screenshot), F11 (fullscreen),
-Escape (pause), and F10 (reset). The shell dispatches these bindings before
-forwarding a key to the emulated pad; F11 also works from the library, and Escape
-leaves fullscreen before it reaches the pause action. `HotkeyRouter` resolves
-the persisted action names case-insensitively, so a custom key assignment in the
-profile is honored. Unknown action names and unbound keys are ignored.
+slot), F9 (advance one frame while paused), Shift+F9 (rewind one frame), R (rewind one
+second), Tab (hold to fast-forward), F12 (screenshot), F11 (fullscreen), Escape (pause),
+and F10 (reset). The shell dispatches these bindings before forwarding a key to the
+emulated pad; F11 also works from the library, and Escape leaves fullscreen before it
+reaches the pause action. `HotkeyRouter` resolves the persisted action names
+case-insensitively, so a custom key assignment in the profile is honored. Unknown action
+names and unbound keys are ignored.
 
 The binding editor reports conflicts when one key/control is bound to multiple buttons
 or one hotkey is bound to multiple actions.

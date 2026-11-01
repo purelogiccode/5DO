@@ -108,6 +108,8 @@ public sealed class InputProfileTests
         Assert.Equal("F6", profile.Hotkeys["SlotPrevious"]);
         Assert.Equal("F7", profile.Hotkeys["SlotNext"]);
         Assert.Equal("F9", profile.Hotkeys["FrameAdvance"]);
+        Assert.Equal("R", profile.Hotkeys["Rewind"]);
+        Assert.Equal("Tab", profile.Hotkeys["FastForward"]);
     }
 
     [Fact]
