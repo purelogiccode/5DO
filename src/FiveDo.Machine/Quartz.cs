@@ -25,7 +25,7 @@ public sealed class Quartz : IStateSection
     private const uint TimerSlotTicks = 4;
 
     private readonly ClioTimerMode _timerMode;
-    private readonly VideoRegionProfile _region;
+    private VideoRegionProfile _region;
     private int _armClock;
     private uint _accArm;
     private uint _accVdl;
@@ -70,6 +70,15 @@ public sealed class Quartz : IStateSection
 
     /// <summary>Gets the active region profile.</summary>
     public VideoRegionProfile RegionProfile => _region;
+
+    /// <summary>Switches the region and resets the VDL phase at the next frame boundary.</summary>
+    /// <param name="region">New video region.</param>
+    public void SetRegion(VideoRegion region)
+    {
+        _region = VideoRegionProfile.For(region);
+        _accVdl = 0;
+        _vdlLine = 0;
+    }
 
     /// <summary>Gets the VDL lines in one field for the active region.</summary>
     public int VdlFieldLines => _region.FieldLines;

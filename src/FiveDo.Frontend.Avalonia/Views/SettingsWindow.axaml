@@ -150,7 +150,7 @@
 
             <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, ARM, CLIO, CEL, and CD timing, CD speed, CPU clock, random seed, NVRAM storage, high-resolution mode, rewind/fast-forward, and overrides.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <CheckBox x:Name="AutoFixesCheck" Grid.Row="0" Grid.Column="1"
                               Content="Apply the 4DO per-game fixes automatically"
                               ToolTip.Tip="Apply the compatibility fix mask from the built-in game database when a disc opens." />
@@ -262,6 +262,9 @@
                     <TextBlock Grid.Row="23" Grid.Column="1" Text="PAL runs at 50 Hz with 288 visible lines. Use a European BIOS for PAL titles."
                                Opacity="0.7" FontSize="11" TextWrapping="Wrap"
                                ToolTip.Tip="The machine applies the region when it boots; restart emulation after changing it." />
+                    <CheckBox x:Name="AutoRegionCheck" Grid.Row="24" Grid.Column="1"
+                              Content="Choose PAL/NTSC automatically from the BIOS"
+                              ToolTip.Tip="When enabled, a PAL BIOS selects PAL1 and an NTSC BIOS selects NTSC. Disable to force the Video region selection." />
                 </Grid>
                 </ScrollViewer>
             </TabItem>

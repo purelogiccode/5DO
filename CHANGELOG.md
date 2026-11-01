@@ -43,8 +43,11 @@ still change.
   output. `CoreRunner` paces PAL audio at 50 Hz. Settings > Emulation > Video region,
   `AppSettings.Region`, and CLI `--region auto|ntsc|pal1|pal2` select the mode; the CLI
   auto-picks PAL1 from a PAL BIOS. Save-state options v6 records the region and warns
-  on mismatch. Battle Chess Europe renders 320x288 at 50 Hz, and a 300-frame capture is
-  exactly 6.000 seconds of 44.1 kHz audio.
+  on mismatch. `AutoRegion` (default on) follows the resolved BIOS and switches a
+  running machine between frames, so opening a PAL title does not require a manual
+  region change. `FiveDoMachine.SetVideoRegion`/`Quartz.SetRegion` make the switch
+  without recreating the machine. Battle Chess Europe renders 320x288 at 50 Hz, and a
+  300-frame capture is exactly 6.000 seconds of 44.1 kHz audio.
 - FND-02 settings schema versioning: `AppSettings.SettingsVersion` / `CurrentVersion = 2`
   are written on save; unversioned and v1 files are normalized on load. Malformed
   settings are copied to `settings.json.invalid-<timestamp>.bak` before defaults are

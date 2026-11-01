@@ -126,6 +126,16 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void ResolveRegion_HonorsAutomaticAndManualModes()
+    {
+        var automatic = new AppSettings { AutoRegion = true, Region = VideoRegion.Ntsc };
+        Assert.Equal(VideoRegion.Pal1, automatic.ResolveRegion(VideoRegion.Pal1));
+
+        var manual = new AppSettings { AutoRegion = false, Region = VideoRegion.Ntsc };
+        Assert.Equal(VideoRegion.Ntsc, manual.ResolveRegion(VideoRegion.Pal1));
+    }
+
+    [Fact]
     public void Load_ClampsTheInputDisplayPlayer()
     {
         using var temp = new TemporaryDirectory();

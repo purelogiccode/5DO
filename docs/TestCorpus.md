@@ -684,9 +684,11 @@ UX-23 coverage is compile/status level:
   `fieldRate=50`, `source=320x288`, frame hash `0x88883E88`. The captured PNG shows the
   3DO logo at the correct PAL size.
 - `--bios-auto bios --region auto` selected `Panasonic FZ-10E (Anvil)` and PAL1.
+- `FiveDoMachine.SetVideoRegion` switches NTSC/PAL1 between frames; `VideoRegionTests`
+  verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,390 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,392 tests pass with no changed NTSC hashes.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

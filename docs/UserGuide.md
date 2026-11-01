@@ -291,8 +291,10 @@ The CLI can list a playlist with `disc playlist game.m3u`, open its first entry 
 The desktop renderer expands the 3DO palette at native resolution and scales on the
 GPU. **Settings > Emulation > Video region** selects NTSC (320x240 at 60 Hz), PAL1
 (320x288 at 50 Hz), or PAL2 (384x288 at 50 Hz). PAL needs a European BIOS and applies
-the next time the machine is created; the CLI defaults to `--region auto`, which picks
-PAL1 when auto-selected BIOS is a PAL image. Available filters:
+the next time the machine is created. **Choose PAL/NTSC automatically from the BIOS**
+is on by default and switches the running machine when a newly resolved BIOS changes the
+video standard; the CLI defaults to `--region auto`, which picks PAL1 when the selected
+BIOS is a PAL image. Available filters:
 
 - **Accurate**: nearest-neighbor, pixel-perfect; the reference for the CPU assembler.
 - **Nearest**: nearest-neighbor with arbitrary scale/letterboxing.

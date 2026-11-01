@@ -152,10 +152,31 @@ public sealed class FiveDoMachine
     public DspCore Dsp { get; }
 
     /// <summary>Gets the active video-region geometry and field timing.</summary>
-    public VideoRegionProfile RegionProfile { get; }
+    public VideoRegionProfile RegionProfile { get; private set; }
 
     /// <summary>Gets the emulated field rate in hertz.</summary>
     public int FramesPerSecond => RegionProfile.FieldRate;
+
+    /// <summary>Switches the video region without reloading the machine.</summary>
+    /// <param name="region">New video region.</param>
+    /// <remarks>
+    /// Frontends call this between frames when a newly resolved BIOS changes the video
+    /// standard. The frame store is cleared so stale lines from the old height cannot be
+    /// presented.
+    /// </remarks>
+    public void SetVideoRegion(VideoRegion region)
+    {
+        VideoRegionProfile profile = VideoRegionProfile.For(region);
+        if (profile == RegionProfile)
+        {
+            return;
+        }
+
+        RegionProfile = profile;
+        Vdlp.Region = profile;
+        Quartz.SetRegion(region);
+        _frame.Clear();
+    }
 
     /// <summary>Gets the diagnostic port.</summary>
     public DiagPort Diag { get; }

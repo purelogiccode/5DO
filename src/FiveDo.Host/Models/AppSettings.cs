@@ -253,6 +253,12 @@ public sealed class AppSettings
     public VideoRegion Region { get; set; } = VideoRegion.Ntsc;
 
     /// <summary>
+    /// Gets or sets a value indicating whether the video region follows the resolved BIOS
+    /// (PAL for a PAL BIOS, NTSC otherwise) instead of <see cref="Region"/>.
+    /// </summary>
+    public bool AutoRegion { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the ARM60 N-cycle timing mode. The default is the FreeDO-compatible
     /// baseline; <see cref="ArmTimingMode.Arm60Datasheet"/> is the accuracy option.
     /// </summary>
@@ -627,6 +633,11 @@ public sealed class AppSettings
     {
         return GetFilterOverride(gameId) ?? Filter;
     }
+
+    /// <summary>Resolves the effective video region.</summary>
+    /// <param name="detected">Region inferred from the BIOS or disc.</param>
+    /// <returns>The detected region when <see cref="AutoRegion"/> is enabled; otherwise <see cref="Region"/>.</returns>
+    public VideoRegion ResolveRegion(VideoRegion detected) => AutoRegion ? detected : Region;
 
     /// <summary>Gets the per-game timing profile, if one is configured.</summary>
     /// <param name="gameId">4DO game ID, case-insensitive.</param>

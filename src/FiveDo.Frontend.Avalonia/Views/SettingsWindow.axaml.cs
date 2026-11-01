@@ -197,6 +197,7 @@ public partial class SettingsWindow : Window
         RegionCombo.ItemsSource = _regionOptions;
         RegionCombo.SelectedItem = _regionOptions.FirstOrDefault(option => option.Value == settings.Region)
             ?? _regionOptions[0];
+        AutoRegionCheck.IsChecked = settings.AutoRegion;
         ProfileCombo.ItemsSource = _profileOptions;
         ProfileCombo.SelectedItem = _profileOptions.FirstOrDefault(option => option.Value == settings.Profile)
             ?? _profileOptions[0];
@@ -472,6 +473,7 @@ public partial class SettingsWindow : Window
         settings.Region = RegionCombo.SelectedItem is RegionOption regionOption
             ? regionOption.Value
             : VideoRegion.Ntsc;
+        settings.AutoRegion = AutoRegionCheck.IsChecked == true;
         EmulationProfile selectedProfile = ProfileCombo.SelectedItem is ProfileOption profileOption
             ? profileOption.Value
             : EmulationProfile.Custom;

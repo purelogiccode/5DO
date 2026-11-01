@@ -94,6 +94,29 @@ public sealed class VideoRegionTests
     }
 
     [Fact]
+    public void Machine_CanSwitchRegionBetweenFrames()
+    {
+        var machine = new FiveDoMachine();
+        machine.RunFrame();
+        Assert.Equal(VideoRegion.Ntsc, machine.RegionProfile.Region);
+
+        machine.SetVideoRegion(VideoRegion.Pal1);
+        machine.RunFrame();
+
+        Assert.Equal(VideoRegion.Pal1, machine.RegionProfile.Region);
+        Assert.Equal(50, machine.FramesPerSecond);
+        Assert.InRange(machine.LastFrameCycles, 250_000, 250_100);
+        Assert.Equal(288, machine.Frame.SourceHeight);
+
+        machine.SetVideoRegion(VideoRegion.Ntsc);
+        machine.RunFrame();
+
+        Assert.Equal(VideoRegion.Ntsc, machine.RegionProfile.Region);
+        Assert.InRange(machine.LastFrameCycles, 208_333, 208_400);
+        Assert.Equal(240, machine.Frame.SourceHeight);
+    }
+
+    [Fact]
     public void StateWarnsWhenTheVideoRegionDiffers()
     {
         var pal = new FiveDoMachine(new EmulatorTuning { Region = VideoRegion.Pal1 });

@@ -705,8 +705,10 @@ public partial class MainWindow : Window, IDisposable
         {
             var bios = BiosImage.Load(path, string.IsNullOrWhiteSpace(bios2Path) ? null : bios2Path);
             var machine = CreateMachine();
+            VideoRegion region = ResolveRegionForBios(path);
             _runner!.Invoke(() =>
             {
+                machine.SetVideoRegion(region);
                 machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
                 // Switching BIOS is a cold start: the previous game's RAM can leave
                 // the new BIOS waiting at PC 0x1658 before it ever reaches the disc.
@@ -1065,6 +1067,7 @@ public partial class MainWindow : Window, IDisposable
                 throw new InvalidDataException(resolved.Reason);
             }
 
+            VideoRegion region = ResolveRegionForBios(resolved.PrimaryPath);
             var nvramChanged =
                 _settings.NvramStorageMode != _nvramMode
                 || _settings.NvramVersion != _nvramVersion
@@ -1074,6 +1077,7 @@ public partial class MainWindow : Window, IDisposable
             NvramStore? nextNvramStore = null;
             _runner!.Invoke(() =>
             {
+                machine.SetVideoRegion(region);
                 if (nvramChanged)
                 {
                     // Save the outgoing game's NVRAM before switching images, then load
@@ -4020,6 +4024,36 @@ public partial class MainWindow : Window, IDisposable
         await window.ShowDialog(this).ConfigureAwait(true);
         ReloadCheats();
         StatusText.Text = $"Cheats: {_cheats.ActiveCount} enabled ({_cheatPath}).";
+    }
+
+    private VideoRegion ResolveRegionForBios(string? path)
+    {
+        if (!_settings.AutoRegion || string.IsNullOrWhiteSpace(path))
+        {
+            return _settings.Region;
+        }
+
+        try
+        {
+            BiosProfile profile = BiosLibrary.Describe(path);
+            return profile.VideoStandard switch
+            {
+                BiosVideoStandard.Pal => VideoRegion.Pal1,
+                BiosVideoStandard.Ntsc => VideoRegion.Ntsc,
+                _ => _settings.Region,
+            };
+        }
+        catch (Exception exception) when (exception is IOException
+            or InvalidDataException
+            or UnauthorizedAccessException
+            or ArgumentException)
+        {
+            _logger.ForCategory(LogCategory.Storage).Warning(
+                exception,
+                "Could not classify BIOS {Path} for region selection.",
+                path);
+            return _settings.Region;
+        }
     }
 
     private FiveDoMachine CreateMachine()
