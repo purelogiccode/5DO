@@ -286,6 +286,23 @@
                     </Grid>
 
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <ComboBox x:Name="LibraryFilterBox" Width="118" VerticalAlignment="Center"
+                                  SelectionChanged="OnLibraryViewChanged"
+                                  ToolTip.Tip="Show all games, favorites, played games, or unplayed games.">
+                            <ComboBoxItem Content="All games" Tag="All" />
+                            <ComboBoxItem Content="Favorites" Tag="Favorites" />
+                            <ComboBoxItem Content="Played" Tag="Played" />
+                            <ComboBoxItem Content="Unplayed" Tag="Unplayed" />
+                        </ComboBox>
+                        <ComboBox x:Name="LibrarySortBox" Width="138" VerticalAlignment="Center"
+                                  SelectionChanged="OnLibraryViewChanged"
+                                  ToolTip.Tip="Sort by title, recent play, play time, release year, or publisher.">
+                            <ComboBoxItem Content="Title" Tag="Title" />
+                            <ComboBoxItem Content="Recently played" Tag="RecentlyPlayed" />
+                            <ComboBoxItem Content="Most played" Tag="MostPlayed" />
+                            <ComboBoxItem Content="Release year" Tag="ReleaseYear" />
+                            <ComboBoxItem Content="Publisher" Tag="Publisher" />
+                        </ComboBox>
                         <TextBlock Text="Icon size" Classes="caption" VerticalAlignment="Center" />
                         <Slider x:Name="IconSizeSlider" Width="110" Minimum="128" Maximum="240"
                                 Value="176" TickFrequency="8" IsSnapToTickEnabled="True"
@@ -316,15 +333,23 @@
                                         <TextBlock Text="5DO" FontSize="26" FontWeight="Bold" Opacity="0.12"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         <Image Source="{Binding Cover}" Stretch="Uniform" />
+                                        <Button Classes="favorite" Content="{Binding FavoriteGlyph}"
+                                                Tag="{Binding Path}" Click="OnToggleFavorite"
+                                                HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                Margin="4" ToolTip.Tip="Add or remove this game from favorites." />
                                     </Panel>
                                 </Border>
                                 <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12.5"
                                            Margin="2,8,2,3" Height="34" TextWrapping="Wrap" MaxLines="2"
                                            TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding MetadataText}" Classes="caption"
+                                           Margin="2,0,2,2" TextTrimming="CharacterEllipsis"
+                                           ToolTip.Tip="{Binding DetailText}" />
                                 <Grid ColumnDefinitions="*,Auto" Margin="2,0,2,1">
                                     <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding Format}" Classes="caption" />
                                         <TextBlock Text="{Binding GameIdText}" Classes="caption" />
+                                        <TextBlock Text="{Binding PlaytimeText}" Classes="caption" />
                                     </StackPanel>
                                     <Border Grid.Column="1" Classes="badge known" IsVisible="{Binding Known}">
                                         <TextBlock Text="4DO DB" />
@@ -348,16 +373,22 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="vm:LibraryItem">
                         <Border Classes="card" Padding="4" ToolTip.Tip="{Binding Tip}">
-                            <Grid ColumnDefinitions="54,*,80,110,76">
+                            <Grid ColumnDefinitions="54,*,80,110,90,76">
                                 <Border Classes="coverFrame" Width="48" Height="48">
                                     <Panel>
                                         <TextBlock Text="5DO" FontSize="9" FontWeight="Bold" Opacity="0.15"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         <Image Source="{Binding Cover}" Stretch="Uniform" />
+                                        <Button Classes="favorite small" Content="{Binding FavoriteGlyph}"
+                                                Tag="{Binding Path}" Click="OnToggleFavorite"
+                                                HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                Margin="1" ToolTip.Tip="Add or remove this game from favorites." />
                                     </Panel>
                                 </Border>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="9,0,8,0">
                                     <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12.5"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding MetadataText}" Classes="caption"
                                                TextTrimming="CharacterEllipsis" />
                                     <TextBlock Text="{Binding Path}" Classes="caption"
                                                TextTrimming="CharacterEllipsis" />
@@ -367,11 +398,14 @@
                                 <TextBlock Grid.Column="3" Text="{Binding SectorText}" Classes="caption"
                                            VerticalAlignment="Center" HorizontalAlignment="Right"
                                            Margin="0,0,12,0" />
-                                <Border Grid.Column="4" Classes="badge known" IsVisible="{Binding Known}"
+                                <TextBlock Grid.Column="4" Text="{Binding PlaytimeText}" Classes="caption"
+                                           VerticalAlignment="Center" HorizontalAlignment="Right"
+                                           Margin="0,0,12,0" />
+                                <Border Grid.Column="5" Classes="badge known" IsVisible="{Binding Known}"
                                         VerticalAlignment="Center" HorizontalAlignment="Right">
                                     <TextBlock Text="4DO DB" />
                                 </Border>
-                                <Border Grid.Column="4" Classes="badge" IsVisible="{Binding IsUnknown}"
+                                <Border Grid.Column="5" Classes="badge" IsVisible="{Binding IsUnknown}"
                                         VerticalAlignment="Center" HorizontalAlignment="Right">
                                     <TextBlock Text="Unknown" />
                                 </Border>

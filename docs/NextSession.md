@@ -2,6 +2,22 @@
 
 ## 0. Current handoff (2026-10-30)
 
+**2026-11-01 update:** UX-13 library metadata, favorites, and playtime are implemented
+as a partial increment. `LibraryState`/`LibraryStateStore` persist favorites, launch
+counts, last-played timestamps, and play time in `library-state.json`; a path-keyed
+record migrates to the game ID when a disc becomes known. `LibraryPlaytimeTracker`
+measures only running emulation and flushes every 60 seconds. `LibraryMetadata`/
+`LibraryMetadataStore` read an optional offline `library-metadata.json` overlay
+(title/developer/publisher/year/genre/region/players/description) keyed by game ID or
+path; the 4DO database now supplies year/publisher/region directly. `LibraryQuery`
+implements All/Favorites/Played/Unplayed filters and Title/Recently played/Most
+played/Release year/Publisher sorts. The game list adds star toggles, metadata/play
+time, filter/sort selectors, and Settings > Paths chooses the metadata file.
+**Do not redo the state/store, tracker, metadata overlay, query rules, star toggles,
+filter/sort UI, or settings path; remaining UX-13 work is external Redump/No-Intro/
+IGDB/LaunchBox providers, screenshots/manuals/videos, a metadata editor, and the
+>=90% rich-metadata target.** **1350 tests pass.**
+
 **2026-11-01 update:** UX-19 OSD notifications and the in-game quick menu are
 implemented. `FiveDo.Host.Osd` adds a bounded, time-expiring notification list and
 validated position/opacity/duration options; the game view shows colour-coded toasts
@@ -14,7 +30,7 @@ position, opacity, duration, and quick-menu enable controls. **Do not redo the
 notification model, quick-menu controls, gamepad chord, or settings surface; remaining
 UX-19 polish is full gamepad navigation of the menu (UX-08) and richer OSD types such
 as achievement/recording badges.** The Lemmings 300-frame differential smoke passes
-(1 match, 0 diverged). **1336 tests pass.**
+(1 match, 0 diverged). **1350 tests pass.**
 
 **2026-11-01 update:** UX-12 BIOS/NVRAM manager is implemented. **File > BIOS / NVRAM
 Manager...** opens a two-tab window. The BIOS tab scans and classifies images, imports
@@ -216,9 +232,11 @@ not final statuses.
 **Do not redo:** the 4DO MHTML parser, the sweep harness, the OpenAL/Serilog/trimming
 work, the renderer/filter work, the ARM/CLIO/CEL/CD timing options, the CD speed selector and
 timing-profile mapping, the BIOS catalog/scanner/selector or its CLI/settings surface,
-the NVRAM layout/store/settings controls or the `nvram` CLI commands, the TAS movie
-container/recorder/verifier/editor or its CLI/shell surface, the OSD notification model
-or the quick menu/chord/settings surface, or
+the NVRAM layout/store/settings controls or the `nvram` CLI commands, the library
+state/store/playtime tracker, the offline metadata overlay, the library query rules,
+the star/filter/sort UI, the TAS movie container/recorder/verifier/editor or its
+CLI/shell surface, the OSD notification model or the quick menu/chord/settings
+surface, or
 the 2026-10-31 performance pass (CEL pipeline caching, Debug core optimization,
 render-request coalescing, Auto frame skip). Do not treat full-race completion, inventory
 scripting, Pi/arm64 validation, or installers as current gates.

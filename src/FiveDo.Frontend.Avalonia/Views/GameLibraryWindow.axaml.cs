@@ -19,6 +19,8 @@ namespace FiveDo.Frontend.Avalonia.Views;
 public partial class GameLibraryWindow : Window
 {
     private readonly AppSettings _settings;
+    private readonly LibraryState _libraryState;
+    private LibraryMetadataCatalog _libraryMetadata;
     private CancellationTokenSource? _scanCts;
     private int _scanGeneration;
 
@@ -35,6 +37,8 @@ public partial class GameLibraryWindow : Window
         ArgumentNullException.ThrowIfNull(settings);
         InitializeComponent();
         _settings = settings;
+        _libraryState = LibraryStateStore.Load();
+        _libraryMetadata = LibraryMetadataCatalog.Load(_settings.ResolveLibraryMetadataPath());
         Closed += (_, _) =>
         {
             _scanCts?.Cancel();
@@ -98,6 +102,47 @@ public partial class GameLibraryWindow : Window
         UpdateCover();
     }
 
+    private void OnToggleFavorite(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string path })
+        {
+            return;
+        }
+
+        GameLibraryEntry? entry = LibraryList.ItemsSource?
+            .OfType<GameLibraryEntry>()
+            .FirstOrDefault(candidate => string.Equals(candidate.Path, path, StringComparison.OrdinalIgnoreCase));
+        if (entry is null)
+        {
+            return;
+        }
+
+        var favorite = _libraryState.ToggleFavorite(entry.GameId, entry.Path);
+        LibraryStateStore.Save(_libraryState);
+        var selectedPath = (LibraryList.SelectedItem as GameLibraryEntry)?.Path;
+        var decorated = LibraryList.ItemsSource?
+            .OfType<GameLibraryEntry>()
+            .Select(DecorateEntry)
+            .ToList() ?? [];
+        LibraryList.ItemsSource = decorated;
+        if (!string.IsNullOrWhiteSpace(selectedPath))
+        {
+            LibraryList.SelectedItem = decorated.FirstOrDefault(candidate =>
+                string.Equals(candidate.Path, selectedPath, StringComparison.OrdinalIgnoreCase));
+        }
+
+        UpdateCover();
+        StatusText.Text = favorite
+            ? $"{entry.Name} added to favorites."
+            : $"{entry.Name} removed from favorites.";
+        e.Handled = true;
+    }
+
+    private GameLibraryEntry DecorateEntry(GameLibraryEntry entry)
+    {
+        return _libraryMetadata.Apply(_libraryState.Apply(entry));
+    }
+
     private void UpdateCover()
     {
         if (LibraryList.SelectedItem is not GameLibraryEntry entry)
@@ -141,6 +186,7 @@ public partial class GameLibraryWindow : Window
 
     private async Task RefreshAsync()
     {
+        _libraryMetadata = LibraryMetadataCatalog.Load(_settings.ResolveLibraryMetadataPath());
         var generation = ++_scanGeneration;
         _scanCts?.Cancel();
         _scanCts?.Dispose();
@@ -172,7 +218,7 @@ public partial class GameLibraryWindow : Window
                 return;
             }
 
-            LibraryList.ItemsSource = initial.Entries;
+            LibraryList.ItemsSource = initial.Entries.Select(DecorateEntry).ToList();
             UpdateCover();
             finalEntries = initial.Entries;
             if (initial.PendingPaths.Count > 0)
@@ -207,10 +253,11 @@ public partial class GameLibraryWindow : Window
                     .OrderBy(entry => entry.Name, StringComparer.OrdinalIgnoreCase)
                     .ThenBy(entry => entry.Path, StringComparer.OrdinalIgnoreCase)
                     .ToList();
-                LibraryList.ItemsSource = finalEntries;
+                List<GameLibraryEntry> decorated = finalEntries.Select(DecorateEntry).ToList();
+                LibraryList.ItemsSource = decorated;
                 if (!string.IsNullOrWhiteSpace(selectedPath))
                 {
-                    LibraryList.SelectedItem = finalEntries.FirstOrDefault(entry =>
+                    LibraryList.SelectedItem = decorated.FirstOrDefault(entry =>
                         string.Equals(entry.Path, selectedPath, StringComparison.OrdinalIgnoreCase));
                 }
 

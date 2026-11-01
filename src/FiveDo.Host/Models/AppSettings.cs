@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
 using FiveDo.Cheats;
@@ -90,6 +91,31 @@ public sealed class AppSettings
 
     /// <summary>Gets folders scanned by the game library.</summary>
     public IList<string> LibraryFolders { get; set; } = new List<string>();
+
+    /// <summary>
+    /// Gets or sets the optional offline library metadata file. An empty value uses
+    /// <see cref="LibraryMetadataStore.DefaultPath"/>.
+    /// </summary>
+    public string LibraryMetadataPath { get; set; } = string.Empty;
+
+    /// <summary>Resolves the absolute library metadata path.</summary>
+    /// <returns>The configured path, or the default metadata path.</returns>
+    public string ResolveLibraryMetadataPath()
+    {
+        if (string.IsNullOrWhiteSpace(LibraryMetadataPath))
+        {
+            return LibraryMetadataStore.DefaultPath;
+        }
+
+        try
+        {
+            return System.IO.Path.GetFullPath(LibraryMetadataPath);
+        }
+        catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return LibraryMetadataStore.DefaultPath;
+        }
+    }
 
     /// <summary>Gets or sets a value indicating whether database fixes are applied automatically.</summary>
     public bool AutoGameFixes { get; set; } = true;

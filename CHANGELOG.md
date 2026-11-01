@@ -7,6 +7,18 @@ still change.
 
 ### Added
 
+- UX-13 library metadata, favorites, and playtime: `LibraryState`/`LibraryStateStore`
+  persist favorites, launch counts, last-played timestamps, and play time in
+  `library-state.json`; path-keyed records migrate to game-ID keys. `LibraryPlaytimeTracker`
+  measures running emulation only and flushes every 60 seconds. `LibraryMetadata`/
+  `LibraryMetadataStore` read an optional offline `library-metadata.json` overlay
+  (title, developer, publisher, year, genre, region, players, description) keyed by
+  game ID or path; Settings > Paths chooses the file. The scanner now carries the 4DO
+  database's year/publisher/region. `LibraryQuery` adds All/Favorites/Played/Unplayed
+  filters and Title/Recently played/Most played/Release year/Publisher sorts. The game
+  list adds star toggles, metadata/play-time text, and the filter/sort controls. 13 new
+  tests cover state, migration, pruning, store corruption, tracker timing, metadata,
+  filters, search, and sorts.
 - UX-19 OSD notifications and the in-game quick menu: `FiveDo.Host.Osd` provides a
   bounded, time-expiring notification list with validated position/opacity/duration
   options. The game view shows colour-coded toasts for save/load, slot changes, rewind,

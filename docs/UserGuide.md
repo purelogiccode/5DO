@@ -341,6 +341,21 @@ open it. A sibling image with the same base name (for example `game.png` beside
 immediately; game IDs and database titles are resolved in the background. Later scans
 reuse `library-cache.json` and only reopen files whose size or timestamp changed.
 
+Use the star button on a card or list row to mark a favorite. The filter selector
+switches between **All games**, **Favorites**, **Played**, and **Unplayed**; the sort
+selector orders by title, recently played, most played, release year, or publisher.
+The library records play time while emulation is running and flushes it every minute
+to `library-state.json`, so a crash loses at most about a minute. Launch counts and
+last-played timestamps are stored in the same file.
+
+The 4DO database supplies title, release year, publisher, and region. For additional
+facts, point **Settings > Paths > Library metadata** at a JSON file (default
+`library-metadata.json` in the 5DO settings folder). Records can match by `GameId`,
+by full `Path`, or both and may set `Title`, `Developer`, `Publisher`, `ReleaseYear`,
+`Genre`, `Regions`, `Players`, and `Description`. The file is read at library refresh
+time and works completely offline; see [`Configuration.md`](Configuration.md) for the
+schema.
+
 **File > Disc Browser...** mounts the current disc's Opera file system without
 stopping emulation. The list is sorted directories-first and shows each entry's
 depth, size, and LBA. **Extract Selected...** writes a file or directory,
@@ -356,6 +371,8 @@ Settings persist under the user local application data folder:
 - Windows: `%LOCALAPPDATA%\5DO\settings.json`
 - Linux/macOS: the equivalent local application data directory.
 - Library metadata cache: `%LOCALAPPDATA%\5DO\library-cache.json`.
+- Library favorites/play time: `%LOCALAPPDATA%\5DO\library-state.json`.
+- Optional offline library metadata: `%LOCALAPPDATA%\5DO\library-metadata.json`.
 
 Per-game fix-mode overrides, automatic 4DO fixes, audio enable/volume, high-resolution
 mode, the timing profile, ARM/CLIO/CEL/CD timing, CD speed, NVRAM storage/version,

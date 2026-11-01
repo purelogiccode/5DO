@@ -215,6 +215,19 @@ navigate, and closing resumes only when the game was running. Settings > Video e
 the OSD options. No emulation-core behavior or save-state layout changed. **1336 tests
 pass.** See `Make5doTheBestOfAll.md` 13.26.
 
+**Library metadata/favorites/playtime pass (2026-11-01, thirty-eighth pass):** UX-13
+is implemented as a partial increment. `LibraryState`/`LibraryStateStore` persist
+favorites, launch counts, last-played timestamps, and play time in
+`library-state.json`; `LibraryPlaytimeTracker` measures only running emulation and
+flushes every 60 seconds. `LibraryMetadata`/`LibraryMetadataStore` read an optional
+offline `library-metadata.json` overlay keyed by game ID or path; the scanner now
+carries the 4DO database's year/publisher/region. `LibraryQuery` implements
+All/Favorites/Played/Unplayed filters and Title/Recently played/Most played/Release
+year/Publisher sorts. The game list adds star toggles, metadata/play-time text, and
+filter/sort selectors; Settings > Paths chooses the metadata file. No emulation-core
+behavior, timing options, save-state layout, or CLI contracts changed. **1350 tests
+pass.** See `Make5doTheBestOfAll.md` 13.27.
+
 **Last updated:** 2026-11-01
 
 ---
@@ -2279,3 +2292,4 @@ Suggested parallelization with two developers:
 | 2026-10-28 | Diagnostics, M9, M10 | Application usage statistics | Added `ApplicationStatsClient`/`ApplicationStatsOptions`; the CLI and desktop hosts POST `{applicationId:"5do", version}` to `https://www.purelogiccode.com/ApplicationStats/stats` at launch. The call is non-blocking, tolerates the one-per-hour rate limit, and is disabled in CI/tests and via `FIVEDO_STATS=0`; endpoint/key/id are overridable. 821 tests pass |
 | 2026-10-29 | M8.6 | Opera file-system reader for every container | Added the first-party `FiveDo.Storage.OperaFileSystem` volume/directory parser and switched `fs list`/`fs extract` to it for ISO, BIN, CUE+BIN, and CHD; removed the `VideoGameFileSystemParser` dependency. It follows relative `nextBlock` directory chains and `burst`/`gap` file layouts, rejects cycles/traversal/malformed records, and exposes special entries such as `Disc label`. The Lemmings ISO/CHD pair produces 482 identical entries and 461 byte-identical extracted files; Road Rash, Alone, and Theme Park ISOs also parse. 890 tests pass |
 | 2026-10-30 | M13.1-M13.2, M14 | Compatibility sweep tooling and high-resolution research plan | Parsed the saved 4DO wiki into a 241-title reference, scanned the two local collections (589 + 5 CHDs), generated `docs/GameCompatibilityList.md`, and added `tools/compat-sweep.ps1` plus `tools/generate-compat-list.py`. The sweep boots each disc in a fresh process, records JSON/PNG/timeout evidence, and classifies loadability. The first 594-disc pass completed: 576 `Loadable/Rendered`, 13 `Loadable/No video`, 5 `Not Loadable`; results are in `docs/GameCompatibilityResults.md`. Added `docs/CompatibilitySweep.md` and `docs/HighResolutionCelResearch.md`; v1.0 release is deferred until the collection sweep and high-res decision are complete. Project distribution is recorded as donationware (non-commercial, source-available); Linux validation target is the local Hyper-V VM `LinuxMint`. No runtime tests were added; the current suite remains 925 tests |
+| 2026-11-01 | UX-13 | Library metadata, favorites, and playtime | Added `LibraryState`/`LibraryStateStore` for favorites, launch counts, last-played timestamps, and play seconds in `library-state.json`; `LibraryPlaytimeTracker` measures only running emulation and flushes every 60 seconds; `LibraryMetadata`/`LibraryMetadataStore` read an optional offline `library-metadata.json` overlay keyed by game ID or path; the scanner carries 4DO year/publisher/region; `LibraryQuery` adds All/Favorites/Played/Unplayed filters and Title/Recently played/Most played/Release year/Publisher sorts; the game list adds star toggles, metadata/play-time text, and Settings > Paths chooses the metadata file. 13 tests cover state, migration, pruning, store corruption, tracker timing, metadata, filters, search, and sorts; 1,350 tests pass. External providers and rich media remain |

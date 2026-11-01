@@ -243,8 +243,8 @@
                 </ScrollViewer>
             </TabItem>
 
-            <TabItem Header="Paths" ToolTip.Tip="Save-state, screenshot, cover-art, cheat, and BIOS folder settings.">
-                <Grid ColumnDefinitions="170,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+            <TabItem Header="Paths" ToolTip.Tip="Save-state, screenshot, cover-art, cheat, BIOS, and library-metadata settings.">
+                <Grid ColumnDefinitions="170,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Save states" VerticalAlignment="Center"
                                ToolTip.Tip="Folder used for numbered save slots and thumbnails." />
                     <TextBox x:Name="SaveDirectoryBox" Grid.Row="0" Grid.Column="1" Margin="0,0,6,8"
@@ -298,6 +298,12 @@
                              ToolTip.Tip="Per-game cheat files use the 4DO game ID as the file name." />
                     <Button Grid.Row="8" Grid.Column="2" Content="Browse" Click="OnBrowseCheatsDirectoryAsync" Margin="0,8,0,0"
                             ToolTip.Tip="Choose the cheat folder." />
+                    <TextBlock Grid.Row="9" Grid.Column="0" Text="Library metadata" VerticalAlignment="Center" Margin="0,8,0,0"
+                               ToolTip.Tip="Optional offline JSON metadata for titles, developers, genres, and descriptions." />
+                    <TextBox x:Name="LibraryMetadataPathBox" Grid.Row="9" Grid.Column="1" Margin="0,8,6,0"
+                             ToolTip.Tip="Leave empty to use library-metadata.json in the 5DO settings folder." />
+                    <Button Grid.Row="9" Grid.Column="2" Content="Browse" Click="OnBrowseLibraryMetadataAsync" Margin="0,8,0,0"
+                            ToolTip.Tip="Choose a library-metadata.json file." />
                 </Grid>
             </TabItem>
         </TabControl>

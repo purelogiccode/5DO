@@ -54,6 +54,9 @@ public partial class MainWindow : Window, IDisposable
     private readonly PlatformGamepadBackend? _gamepad;
     private readonly ObservableCollection<LibraryItem> _visibleGames = [];
     private readonly List<LibraryItem> _allGames = [];
+    private readonly LibraryState _libraryState;
+    private LibraryMetadataCatalog _libraryMetadata;
+    private readonly LibraryPlaytimeTracker _playtime;
     private readonly DispatcherTimer _logTimer;
     private InputManager _input;
     private readonly SaveStateSlotManager _slots;
@@ -108,7 +111,9 @@ public partial class MainWindow : Window, IDisposable
     private bool _syncingSelection;
     private bool _logDockVisible;
     private int _lastLogEntryCount = -1;
+    private DateTime _lastPlaytimeFlushUtc = DateTime.UtcNow;
     private int _scanGeneration;
+    private bool _libraryReady;
     private CancellationTokenSource? _libraryScanCts;
     private DateTime _lastDonationCheckUtc;
     private string? _donationBannerMessage;
@@ -120,6 +125,11 @@ public partial class MainWindow : Window, IDisposable
         InitializeComponent();
         Deactivated += (_, _) => CancelFastForward();
         _settings = AppSettingsStore.Load();
+        _libraryState = LibraryStateStore.Load();
+        _libraryMetadata = LibraryMetadataCatalog.Load(_settings.ResolveLibraryMetadataPath());
+        _playtime = new LibraryPlaytimeTracker(
+            _libraryState,
+            () => LibraryStateStore.Save(_libraryState));
         _lastDonationCheckUtc = _settings.DonationLastCheckedUtc ?? DateTime.MinValue;
         _rendererKind = ResolveRendererKind();
         _logSink = AppLogging.InMemorySink ?? new InMemorySerilogSink(4000);
@@ -221,6 +231,13 @@ public partial class MainWindow : Window, IDisposable
             {
                 RefreshLogDock(force: false);
             }
+
+            if (_playtime.IsTracking
+                && (DateTime.UtcNow - _lastPlaytimeFlushUtc).TotalSeconds >= 60)
+            {
+                _playtime.Flush();
+                _lastPlaytimeFlushUtc = DateTime.UtcNow;
+            }
         };
         _logTimer.Start();
         _movieTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
@@ -228,6 +245,9 @@ public partial class MainWindow : Window, IDisposable
         _movieTimer.Start();
         SetLogDockVisible(false);
         SetLibraryMode(grid: true);
+        LibraryFilterBox.SelectedIndex = 0;
+        LibrarySortBox.SelectedIndex = 0;
+        _libraryReady = true;
         ApplyLibraryFilter();
         UpdateRecentMenu();
         UpdateDonationBanner();
@@ -839,6 +859,9 @@ public partial class MainWindow : Window, IDisposable
 
             _gameId = gameId;
             _gameName = record?.Name ?? Path.GetFileNameWithoutExtension(path);
+            _libraryState.RecordLaunch(gameId, path);
+            LibraryStateStore.Save(_libraryState);
+            RefreshLibraryDecorations();
             ReloadCheats();
             Video.Settings = _settings.ToRendererSettings(_gameId);
             if (_cpuVideo is not null)
@@ -929,6 +952,11 @@ public partial class MainWindow : Window, IDisposable
             _logger.ForCategory(LogCategory.Host).Information("Emulation started.");
         }
 
+        if (!string.IsNullOrWhiteSpace(_settings.DiscPath))
+        {
+            _playtime.Start(_gameId, _settings.DiscPath);
+        }
+
         SetPlayState(running: true);
         if (showGameView)
         {
@@ -956,6 +984,8 @@ public partial class MainWindow : Window, IDisposable
             _running = false;
             CancelFastForward();
             _runner?.Pause();
+            _playtime.Stop();
+            RefreshLibraryDecorations();
             FlushNvram();
             _logger.ForCategory(LogCategory.Host).Information("Emulation paused.");
         }
@@ -986,6 +1016,8 @@ public partial class MainWindow : Window, IDisposable
         // Stop, not pause: join the core thread and reset the machine so a later
         // Start (or a new game selection) begins from a known state.
         _runner?.Stop();
+        _playtime.Stop();
+        RefreshLibraryDecorations();
         FlushNvram();
         _machine?.Memory.ClearRam();
         _machine?.Reset();
@@ -2210,21 +2242,58 @@ public partial class MainWindow : Window, IDisposable
             : $"{item.Name} · {item.Entry.Error}";
     }
 
+    private void OnLibraryViewChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_libraryReady)
+        {
+            ApplyLibraryFilter();
+        }
+    }
+
+    private void OnToggleFavorite(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string path })
+        {
+            return;
+        }
+
+        LibraryItem? item = _allGames.FirstOrDefault(candidate =>
+            string.Equals(candidate.Path, path, StringComparison.OrdinalIgnoreCase));
+        if (item is null)
+        {
+            return;
+        }
+
+        var favorite = _libraryState.ToggleFavorite(item.Entry.GameId, item.Path);
+        LibraryStateStore.Save(_libraryState);
+        item.Update(DecorateEntry(item.Entry));
+        ApplyLibraryFilter();
+        StatusText.Text = favorite
+            ? $"{item.Name} added to favorites."
+            : $"{item.Name} removed from favorites.";
+        e.Handled = true;
+    }
+
     private void ApplyLibraryFilter()
     {
-        var query = SearchBox.Text?.Trim() ?? string.Empty;
-        var selected = SelectedLibraryItem();
-        _visibleGames.Clear();
-        foreach (var item in _allGames)
+        if (!_libraryReady)
         {
-            if (query.Length == 0
-                || item.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
-                || item.Path.Contains(query, StringComparison.OrdinalIgnoreCase)
-                || item.GameIdText.Contains(query, StringComparison.OrdinalIgnoreCase)
-                || item.Format.Contains(query, StringComparison.OrdinalIgnoreCase))
-            {
-                _visibleGames.Add(item);
-            }
+            return;
+        }
+
+        var query = SearchBox.Text?.Trim() ?? string.Empty;
+        LibraryFilter filter = CurrentLibraryFilter();
+        LibrarySort sort = CurrentLibrarySort();
+        var selected = SelectedLibraryItem();
+        var visible = _allGames
+            .Where(item => LibraryQuery.Matches(item.Entry, query, filter))
+            .ToList();
+        visible.Sort((left, right) => LibraryQuery.Compare(left.Entry, right.Entry, sort));
+
+        _visibleGames.Clear();
+        foreach (LibraryItem item in visible)
+        {
+            _visibleGames.Add(item);
         }
 
         _syncingSelection = true;
@@ -2254,14 +2323,57 @@ public partial class MainWindow : Window, IDisposable
         else if (!hasVisible)
         {
             EmptyLibraryTitle.Text = "No matching games";
-            EmptyLibraryText.Text = $"No game matches \"{query}\".";
+            EmptyLibraryText.Text = query.Length > 0
+                ? $"No game matches \"{query}\"."
+                : filter == LibraryFilter.Favorites
+                    ? "No favorites yet. Select a game and click the star."
+                    : "No game matches the selected collection.";
         }
 
+        var narrowed = query.Length > 0 || filter != LibraryFilter.All;
         LibraryCountText.Text = !hasGames
             ? "0 games"
-            : query.Length == 0
-                ? CountLabel(_allGames.Count)
-                : $"{_visibleGames.Count} of {CountLabel(_allGames.Count)}";
+            : narrowed
+                ? $"{_visibleGames.Count} of {CountLabel(_allGames.Count)}"
+                : CountLabel(_allGames.Count);
+    }
+
+    private LibraryFilter CurrentLibraryFilter()
+    {
+        return ParseLibraryTag(LibraryFilterBox.SelectedItem, LibraryFilter.All);
+    }
+
+    private LibrarySort CurrentLibrarySort()
+    {
+        return ParseLibraryTag(LibrarySortBox.SelectedItem, LibrarySort.Title);
+    }
+
+    private static T ParseLibraryTag<T>(object? selectedItem, T fallback)
+        where T : struct, Enum
+    {
+        return selectedItem is ComboBoxItem { Tag: string tag }
+               && Enum.TryParse(tag, ignoreCase: true, out T value)
+               && Enum.IsDefined(value)
+            ? value
+            : fallback;
+    }
+
+    private GameLibraryEntry DecorateEntry(GameLibraryEntry entry)
+    {
+        return _libraryMetadata.Apply(_libraryState.Apply(entry));
+    }
+
+    private void RefreshLibraryDecorations()
+    {
+        foreach (LibraryItem item in _allGames)
+        {
+            item.Update(DecorateEntry(item.Entry));
+        }
+
+        if (_libraryReady)
+        {
+            ApplyLibraryFilter();
+        }
     }
 
     private static string CountLabel(int count)
@@ -2276,6 +2388,7 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
+        _libraryMetadata = LibraryMetadataCatalog.Load(_settings.ResolveLibraryMetadataPath());
         var generation = ++_scanGeneration;
         _libraryScanCts?.Cancel();
         _libraryScanCts?.Dispose();
@@ -2384,7 +2497,7 @@ public partial class MainWindow : Window, IDisposable
                      .OrderBy(entry => entry.Name, StringComparer.OrdinalIgnoreCase)
                      .ThenBy(entry => entry.Path, StringComparer.OrdinalIgnoreCase))
         {
-            _allGames.Add(new LibraryItem(entry));
+            _allGames.Add(new LibraryItem(DecorateEntry(entry)));
         }
 
         ApplyLibraryFilter();
@@ -2523,6 +2636,7 @@ public partial class MainWindow : Window, IDisposable
     private async Task ShowSettingsAsync()
     {
         var previousCoverDirectory = _settings.CoverDirectory;
+        var previousLibraryMetadataPath = _settings.ResolveLibraryMetadataPath();
         var previousBiosPath = _settings.BiosPath;
         var previousBios2Path = _settings.Bios2Path;
         var previousBiosFolder = _settings.BiosFolder;
@@ -2548,6 +2662,15 @@ public partial class MainWindow : Window, IDisposable
         }
 
         AppSettingsStore.Save(_settings);
+        if (!string.Equals(
+                previousLibraryMetadataPath,
+                _settings.ResolveLibraryMetadataPath(),
+                StringComparison.OrdinalIgnoreCase))
+        {
+            _libraryMetadata = LibraryMetadataCatalog.Load(_settings.ResolveLibraryMetadataPath());
+            RefreshLibraryDecorations();
+        }
+
         _settings.ApplyInputDevices(_input);
         if (!string.Equals(
                 previousInputDevices,
@@ -3678,6 +3801,7 @@ public partial class MainWindow : Window, IDisposable
 
         _shuttingDown = true;
         _libraryScanCts?.Cancel();
+        _playtime.Stop();
         StopInputRecording(save: true);
         _logTimer.Stop();
         _runner?.Dispose();

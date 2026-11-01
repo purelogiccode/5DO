@@ -1,4 +1,8 @@
 
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+
 namespace FiveDo.Host;
 
 
@@ -27,4 +31,103 @@ public sealed record GameLibraryEntry(
     bool Known,
     string Error,
     string CoverPath = "",
-    bool Pending = false);
+    bool Pending = false)
+{
+    /// <summary>Gets the release year from the game database or an offline metadata overlay.</summary>
+    public string ReleaseYear { get; init; } = string.Empty;
+
+    /// <summary>Gets the publisher from the game database or an offline metadata overlay.</summary>
+    public string Publisher { get; init; } = string.Empty;
+
+    /// <summary>Gets the region codes from the game database or an offline metadata overlay.</summary>
+    public string Regions { get; init; } = string.Empty;
+
+    /// <summary>Gets the developer from an offline metadata overlay.</summary>
+    public string Developer { get; init; } = string.Empty;
+
+    /// <summary>Gets the genre from an offline metadata overlay.</summary>
+    public string Genre { get; init; } = string.Empty;
+
+    /// <summary>Gets the supported player count from an offline metadata overlay.</summary>
+    public int Players { get; init; }
+
+    /// <summary>Gets the description from an offline metadata overlay.</summary>
+    public string Description { get; init; } = string.Empty;
+
+    /// <summary>Gets a value indicating whether the user marked this disc as a favorite.</summary>
+    public bool Favorite { get; init; }
+
+    /// <summary>Gets the accumulated play time in seconds.</summary>
+    public long PlaytimeSeconds { get; init; }
+
+    /// <summary>Gets the UTC timestamp of the last launch or play session.</summary>
+    public DateTime? LastPlayedUtc { get; init; }
+
+    /// <summary>Gets the number of times the disc was opened.</summary>
+    public int LaunchCount { get; init; }
+
+    /// <summary>Gets the favorite indicator shown by the desktop shell.</summary>
+    public string FavoriteGlyph => Favorite ? "★" : "☆";
+
+    /// <summary>Gets a compact metadata line for the library views.</summary>
+    public string MetadataText
+    {
+        get
+        {
+            var parts = new List<string>(4);
+            Add(parts, ReleaseYear);
+            Add(parts, Publisher);
+            Add(parts, Developer);
+            Add(parts, Genre);
+            Add(parts, Regions);
+            return string.Join(" · ", parts);
+        }
+    }
+
+    /// <summary>Gets the accumulated play time formatted for the library views.</summary>
+    public string PlaytimeText => PlaytimeSeconds <= 0
+        ? string.Empty
+        : FormatPlaytime(PlaytimeSeconds);
+
+    /// <summary>Gets the last-played timestamp formatted for the library views.</summary>
+    public string LastPlayedText => LastPlayedUtc is null
+        ? string.Empty
+        : LastPlayedUtc.Value.ToLocalTime().ToString("g", CultureInfo.CurrentCulture);
+
+    /// <summary>Gets a detailed tooltip line for the library views.</summary>
+    public string DetailText
+    {
+        get
+        {
+            var parts = new List<string>(5);
+            Add(parts, MetadataText);
+            Add(parts, Players > 0 ? string.Create(CultureInfo.InvariantCulture, $"{Players} players") : string.Empty);
+            Add(parts, PlaytimeText.Length == 0 ? string.Empty : $"Played {PlaytimeText}");
+            Add(parts, LaunchCount > 0 ? string.Create(CultureInfo.InvariantCulture, $"Launched {LaunchCount} times") : string.Empty);
+            Add(parts, Description);
+            return string.Join(" · ", parts);
+        }
+    }
+
+    private static void Add(List<string> parts, string value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            parts.Add(value.Trim());
+        }
+    }
+
+    private static string FormatPlaytime(long seconds)
+    {
+        if (seconds >= 3600)
+        {
+            return string.Create(
+                CultureInfo.InvariantCulture,
+                $"{seconds / 3600}h {seconds % 3600 / 60:00}m");
+        }
+
+        return seconds >= 60
+            ? string.Create(CultureInfo.InvariantCulture, $"{seconds / 60}m")
+            : string.Create(CultureInfo.InvariantCulture, $"{seconds}s");
+    }
+}

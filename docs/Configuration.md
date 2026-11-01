@@ -78,6 +78,7 @@ every serialized property in `AppSettings`.
 | `SaveSlot` | int | `0` | Selected zero-based slot. Clamped to the slot count on load. |
 | `SaveSlotCount` | int | `10` | Number of slots. Clamped to 1..100 on load. |
 | `LibraryFolders` | string[] | `[]` | Folders scanned by the game library. |
+| `LibraryMetadataPath` | string | `""` | Optional offline metadata JSON; empty means `<LocalApplicationData>/5DO/library-metadata.json`. |
 | `AutoGameFixes` | bool | `true` | Apply the 4DO per-game fix-mode mapping automatically. |
 | `FixModeOverrides` | object | `{}` | Per-game fix-mode overrides, keyed by game ID. |
 | `FilterOverrides` | object | `{}` | Per-game filter overrides, keyed by game ID. |
@@ -208,6 +209,7 @@ player-1 defaults. See section 3 for the full input structure.
   "LibraryFolders": [
     "C:\\3DO"
   ],
+  "LibraryMetadataPath": "",
   "AutoGameFixes": true,
   "FixModeOverrides": {},
   "FilterOverrides": {},
@@ -513,6 +515,7 @@ written after the run when supplied.
 | `CoverDirectory` | Optional shared folder for cover art named after the disc files. |
 | `CheatsDirectory` | Per-game cheat JSON folder; empty means `.../5DO/cheats`. |
 | `LibraryFolders` | Scanned recursively to depth 4 for `.iso`, `.bin`, `.cue`, `.chd`. |
+| `LibraryMetadataPath` | Optional offline metadata overlay; empty means `.../5DO/library-metadata.json`. |
 
 Library entries are sorted by title then path. Cover art is matched by file name: a
 sibling image with the same base name and an extension of `.png`, `.jpg`, `.jpeg`, or
@@ -529,8 +532,58 @@ resolve. Results are cached in `<LocalApplicationData>/5DO/library-cache.json`; 
 scans reuse the cache for files whose length and last-write time are unchanged. The
 status bar reports metadata-scan progress.
 
-The **Library** view supports grid/list modes, search by title/path/game ID/format, and
-an icon-size slider. Double-click or Enter boots the selected disc.
+The **Library** view supports grid/list modes, search by title/path/game ID/format/
+metadata, an icon-size slider, All/Favorites/Played/Unplayed filters, and
+Title/Recently played/Most played/Release year/Publisher sorts. Double-click or Enter
+boots the selected disc. Star buttons toggle favorites.
+
+User library data is stored in `<LocalApplicationData>/5DO/library-state.json`:
+
+```json
+{
+  "Version": 1,
+  "Games": {
+    "id:F3AF1B13": {
+      "Favorite": true,
+      "PlaytimeSeconds": 4500,
+      "LastPlayedUtc": "2026-11-01T15:00:00Z",
+      "LaunchCount": 3
+    }
+  }
+}
+```
+
+Records are keyed by `id:<4DO game ID>` when known and `path:<full path>` for unknown
+discs. A path-keyed record migrates to the game-ID key when the disc becomes known.
+Play time is measured only while emulation is running and is flushed every 60 seconds
+and on pause/stop/close.
+
+The optional `<LocalApplicationData>/5DO/library-metadata.json` overlay (or the path in
+`LibraryMetadataPath`) adds facts without a network provider:
+
+```json
+{
+  "Version": 1,
+  "Records": [
+    {
+      "GameId": "F3AF1B13",
+      "Path": "",
+      "Title": "Example Title",
+      "Developer": "Example Developer",
+      "Publisher": "Example Publisher",
+      "ReleaseYear": "1995",
+      "Genre": "Action",
+      "Regions": "USA",
+      "Players": 2,
+      "Description": "Optional description."
+    }
+  ]
+}
+```
+
+`GameId` and `Path` are both optional; the game ID is preferred when both match.
+Non-empty overlay fields override the 4DO database and file name. The file is read on
+library refresh and works fully offline.
 
 ---
 

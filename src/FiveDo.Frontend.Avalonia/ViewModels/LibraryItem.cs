@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Avalonia.Media.Imaging;
 using FiveDo.Host;
 
@@ -11,7 +13,7 @@ namespace FiveDo.Frontend.Avalonia.ViewModels;
 /// Presentation wrapper for one disc in the game library: title, metadata, and an
 /// optional cover thumbnail decoded at a bounded size.
 /// </summary>
-public sealed class LibraryItem : IDisposable
+public sealed class LibraryItem : IDisposable, INotifyPropertyChanged
 {
     /// <summary>Creates the item and loads its cover art when one is available.</summary>
     /// <param name="entry">Scanner result for the disc.</param>
@@ -26,8 +28,11 @@ public sealed class LibraryItem : IDisposable
         }
     }
 
+    /// <inheritdoc />
+    public event PropertyChangedEventHandler? PropertyChanged;
+
     /// <summary>Gets the underlying scanner result.</summary>
-    public GameLibraryEntry Entry { get; }
+    public GameLibraryEntry Entry { get; private set; }
 
     /// <summary>Gets the display title.</summary>
     public string Name => Entry.Name;
@@ -59,6 +64,24 @@ public sealed class LibraryItem : IDisposable
             ? string.Create(CultureInfo.InvariantCulture, $"{Entry.SectorCount:N0} sectors")
             : "Unreadable image";
 
+    /// <summary>Gets the favorite indicator shown on the card.</summary>
+    public string FavoriteGlyph => Entry.FavoriteGlyph;
+
+    /// <summary>Gets a value indicating whether the game is a favorite.</summary>
+    public bool IsFavorite => Entry.Favorite;
+
+    /// <summary>Gets the compact metadata line.</summary>
+    public string MetadataText => Entry.MetadataText;
+
+    /// <summary>Gets the formatted play time.</summary>
+    public string PlaytimeText => Entry.PlaytimeText;
+
+    /// <summary>Gets the formatted last-played timestamp.</summary>
+    public string LastPlayedText => Entry.LastPlayedText;
+
+    /// <summary>Gets the detailed tooltip text.</summary>
+    public string DetailText => Entry.DetailText;
+
     /// <summary>Gets the decoded cover art, or <see langword="null"/> when none exists.</summary>
     public Bitmap? Cover { get; }
 
@@ -71,10 +94,42 @@ public sealed class LibraryItem : IDisposable
         get
         {
             var tip = $"{Path}{Environment.NewLine}{Format} · {SectorText}";
+            if (MetadataText.Length > 0)
+            {
+                tip += $"{Environment.NewLine}{MetadataText}";
+            }
+
+            if (PlaytimeText.Length > 0)
+            {
+                tip += $"{Environment.NewLine}Played {PlaytimeText}";
+            }
+
+            if (LastPlayedText.Length > 0)
+            {
+                tip += $"{Environment.NewLine}Last played {LastPlayedText}";
+            }
+
             return string.IsNullOrWhiteSpace(Entry.Error)
                 ? tip
                 : $"{tip}{Environment.NewLine}{Entry.Error}";
         }
+    }
+
+    /// <summary>Replaces the entry with a decorated version and notifies bound views.</summary>
+    /// <param name="entry">Updated entry.</param>
+    public void Update(GameLibraryEntry entry)
+    {
+        ArgumentNullException.ThrowIfNull(entry);
+        Entry = entry;
+        OnPropertyChanged(nameof(Entry));
+        OnPropertyChanged(nameof(Name));
+        OnPropertyChanged(nameof(FavoriteGlyph));
+        OnPropertyChanged(nameof(IsFavorite));
+        OnPropertyChanged(nameof(MetadataText));
+        OnPropertyChanged(nameof(PlaytimeText));
+        OnPropertyChanged(nameof(LastPlayedText));
+        OnPropertyChanged(nameof(DetailText));
+        OnPropertyChanged(nameof(Tip));
     }
 
     /// <inheritdoc />
@@ -84,6 +139,11 @@ public sealed class LibraryItem : IDisposable
     /// </remarks>
     public void Dispose()
     {
+    }
+
+    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
 

@@ -156,6 +156,32 @@
         <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
     </Style>
 
+    <!-- Favorite toggle shown on library cards and list rows. -->
+    <Style Selector="Button.favorite">
+        <Setter Property="Background" Value="#CC111216" />
+        <Setter Property="Foreground" Value="#FFD166" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="4,0" />
+        <Setter Property="MinWidth" Value="26" />
+        <Setter Property="MinHeight" Value="26" />
+        <Setter Property="CornerRadius" Value="13" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="Button.favorite:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+
+    <Style Selector="Button.favorite.small">
+        <Setter Property="Padding" Value="1,0" />
+        <Setter Property="MinWidth" Value="18" />
+        <Setter Property="MinHeight" Value="18" />
+        <Setter Property="CornerRadius" Value="9" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
     <!-- Game list. -->
     <Style Selector="ListBox.library">
         <Setter Property="Background" Value="Transparent" />

@@ -35,3 +35,21 @@ internal sealed partial class SaveStateSlotJsonContext : JsonSerializerContext;
     PropertyNameCaseInsensitive = true)]
 [JsonSerializable(typeof(LibraryCache))]
 internal sealed partial class LibraryCacheJsonContext : JsonSerializerContext;
+
+/// <summary>
+/// Source-generated JSON metadata for persistent library user state.
+/// </summary>
+[JsonSourceGenerationOptions(
+    WriteIndented = true,
+    PropertyNameCaseInsensitive = true)]
+[JsonSerializable(typeof(LibraryState))]
+internal sealed partial class LibraryStateJsonContext : JsonSerializerContext;
+
+/// <summary>
+/// Source-generated JSON metadata for the optional offline library metadata overlay.
+/// </summary>
+[JsonSourceGenerationOptions(
+    WriteIndented = true,
+    PropertyNameCaseInsensitive = true)]
+[JsonSerializable(typeof(LibraryMetadata))]
+internal sealed partial class LibraryMetadataJsonContext : JsonSerializerContext;

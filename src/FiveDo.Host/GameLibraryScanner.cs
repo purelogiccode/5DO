@@ -266,7 +266,12 @@ public static class GameLibraryScanner
                 record?.Name ?? Path.GetFileNameWithoutExtension(path),
                 record is not null,
                 string.Empty,
-                coverPath);
+                coverPath)
+            {
+                ReleaseYear = record?.ReleaseYear ?? string.Empty,
+                Publisher = record?.Publisher ?? string.Empty,
+                Regions = record?.Regions ?? string.Empty,
+            };
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException or DiscImageException or ArgumentException)
         {
@@ -372,7 +377,12 @@ public static class GameLibraryScanner
             record?.Name ?? Path.GetFileNameWithoutExtension(cached.Path),
             record is not null,
             cached.Error,
-            FindCover(cached.Path, coverDirectory));
+            FindCover(cached.Path, coverDirectory))
+        {
+            ReleaseYear = record?.ReleaseYear ?? string.Empty,
+            Publisher = record?.Publisher ?? string.Empty,
+            Regions = record?.Regions ?? string.Empty,
+        };
     }
 
     private static GameLibraryEntry CreatePlaceholder(string path, string? coverDirectory)
