@@ -129,7 +129,7 @@ public sealed class InputManager : IPbusSource
 {
     private readonly KeyboardInputMapper _keyboard;
     private readonly IGamepadBackend _gamepad;
-    private readonly ControllerState[] _states = new ControllerState[PbusEncoder.MaxControllers];
+    private readonly InputDeviceSet _devices = new();
     private int _controllerCount = 1;
     private InputRecorder? _recorder;
     private Func<long>? _frameProvider;
@@ -146,6 +146,18 @@ public sealed class InputManager : IPbusSource
 
     /// <summary>Gets the keyboard mapper for the UI layer.</summary>
     public KeyboardInputMapper Keyboard => _keyboard;
+
+    /// <summary>Gets the per-port device selection and peripheral state.</summary>
+    public InputDeviceSet Devices => _devices;
+
+    /// <summary>Sets the device type on a port.</summary>
+    /// <param name="port">Zero-based port index.</param>
+    /// <param name="device">Device type.</param>
+    public void SetDevice(int port, InputDeviceType device)
+    {
+        _devices.SetDevice(port, device);
+        ControllerCount = Math.Max(ControllerCount, port + 1);
+    }
 
     /// <summary>Gets or sets an optional recorder for player 1 input.</summary>
     /// <remarks>
@@ -173,6 +185,7 @@ public sealed class InputManager : IPbusSource
         {
             ArgumentOutOfRangeException.ThrowIfLessThan(value, 1);
             ArgumentOutOfRangeException.ThrowIfGreaterThan(value, PbusEncoder.MaxControllers);
+            _devices.SetPortCount(value);
             Volatile.Write(ref _controllerCount, value);
         }
     }
@@ -181,10 +194,22 @@ public sealed class InputManager : IPbusSource
     public void Update()
     {
         _gamepad.Poll();
-        for (var player = 0; player < _states.Length; player++)
+        for (var player = 0; player < PbusEncoder.MaxControllers; player++)
         {
             ControllerState pad = player < _gamepad.ControllerCount ? _gamepad.GetState(player) : ControllerState.Empty;
-            _states[player] = new ControllerState(_keyboard.GetState(player).Buttons | pad.Buttons);
+            ControllerState state = new(_keyboard.GetState(player).Buttons | pad.Buttons);
+            _devices.SetJoypad(player, state);
+            if (_devices.GetDevice(player) == InputDeviceType.Flightstick)
+            {
+                _devices.SetFlightstick(
+                    player,
+                    new FlightstickState(
+                        state.IsDown(ControllerButton.Left) ? -32768 : state.IsDown(ControllerButton.Right) ? 32767 : 0,
+                        state.IsDown(ControllerButton.Up) ? -32768 : state.IsDown(ControllerButton.Down) ? 32767 : 0,
+                        0,
+                        state.Buttons,
+                        state.IsDown(ControllerButton.A)));
+            }
         }
     }
 
@@ -196,10 +221,19 @@ public sealed class InputManager : IPbusSource
         if (recorder is not null)
         {
             Func<long>? frameProvider = Volatile.Read(ref _frameProvider);
-            recorder.Record(frameProvider?.Invoke() ?? 0, _states[0]);
+            recorder.Record(frameProvider?.Invoke() ?? 0, _devices.GetJoypad(0));
         }
 
-        PbusEncoder.Encode(_states.AsSpan(0, Volatile.Read(ref _controllerCount)), destination);
+        var length = _devices.HasPeripheral
+            ? PbusChainEncoder.Encode(_devices, destination)
+            : LegacyPacket(destination);
+        _devices.ClearTransientMotion();
+        return length;
+    }
+
+    private int LegacyPacket(Span<byte> destination)
+    {
+        PbusEncoder.Encode(_devices.Joypads, destination);
         return PbusEncoder.PacketSize;
     }
 }

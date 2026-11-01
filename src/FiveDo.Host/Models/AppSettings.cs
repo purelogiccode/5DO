@@ -212,6 +212,76 @@ public sealed class AppSettings
     public uint? RandomSeed { get; set; }
 
     /// <summary>
+    /// Gets the PBUS device type for each of the six ports. Values are the
+    /// <see cref="InputDeviceType"/> names; missing or invalid entries use a joypad.
+    /// </summary>
+    public IList<string> InputDevices { get; set; } = new List<string>
+    {
+        "Joypad",
+        "Joypad",
+        "Joypad",
+        "Joypad",
+        "Joypad",
+        "Joypad",
+    };
+
+    /// <summary>Resolves the configured device for a zero-based port.</summary>
+    /// <param name="port">Zero-based port index.</param>
+    /// <returns>The configured device, or <see cref="InputDeviceType.Joypad"/>.</returns>
+    public InputDeviceType GetInputDevice(int port)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(port);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxControllers);
+        if (InputDevices is null || port >= InputDevices.Count)
+        {
+            return InputDeviceType.Joypad;
+        }
+
+        return Enum.TryParse(InputDevices[port], ignoreCase: true, out InputDeviceType device)
+            && Enum.IsDefined(device)
+            ? device
+            : InputDeviceType.Joypad;
+    }
+
+    /// <summary>Sets the configured device for a zero-based port.</summary>
+    /// <param name="port">Zero-based port index.</param>
+    /// <param name="device">Device type.</param>
+    public void SetInputDevice(int port, InputDeviceType device)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(port);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxControllers);
+        while (InputDevices.Count <= port)
+        {
+            InputDevices.Add(nameof(InputDeviceType.Joypad));
+        }
+
+        InputDevices[port] = device.ToString();
+    }
+
+    /// <summary>Applies the configured devices to an input manager.</summary>
+    /// <param name="input">Input manager to configure.</param>
+    /// <remarks>
+    /// The connected count only grows to the highest non-joypad port so the default
+    /// single-pad packet is unchanged for existing configurations.
+    /// </remarks>
+    public void ApplyInputDevices(InputManager input)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        var count = 1;
+        for (var port = 0; port < PbusEncoder.MaxControllers; port++)
+        {
+            InputDeviceType device = GetInputDevice(port);
+            input.Devices.SetDevice(port, device);
+            if (device != InputDeviceType.Joypad)
+            {
+                count = port + 1;
+            }
+        }
+
+        input.ControllerCount = count;
+    }
+
+    /// <summary>
     /// Gets or sets the NVRAM storage mode. <see cref="NvramStorageMode.Global"/> keeps
     /// the historical single image; <see cref="NvramStorageMode.PerGame"/> gives every
     /// game its own save data.

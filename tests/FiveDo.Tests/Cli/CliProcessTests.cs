@@ -267,6 +267,85 @@ public sealed class CliProcessTests
     }
 
     [Fact]
+    public void Run_InputDevices_AreReportedInJson()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--input-device",
+                "1=mouse,3=lightgun,4=arcade-lightgun,5=flightstick,6=orbatak-trackball",
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains(
+                "\"inputDevices\": \"1=mouse,2=joypad,3=lightgun,4=arcade-lightgun,5=flightstick,6=orbatak-trackball\"",
+                result.Output,
+                StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void Run_InvalidInputDevice_ReturnsOne()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--input-device",
+                "1=banana");
+
+            Assert.Equal(1, result.Code);
+            Assert.Contains("--input-device", result.Error, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void Run_InvalidPbusFormat_ReturnsOne()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--pbus-format",
+                "banana");
+
+            Assert.Equal(1, result.Code);
+            Assert.Contains("--pbus-format", result.Error, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
     public void Run_AccuracyProfile_IsReportedAndSetsTheTimingOptions()
     {
         var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");

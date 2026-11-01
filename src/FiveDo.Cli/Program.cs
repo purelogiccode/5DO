@@ -291,6 +291,8 @@ internal static class Program
         var dumpDspPrefix = options.Get("--dump-dsp");
         var inputScriptPath = options.Get("--input-script");
         var inputScriptBase = options.Get("--script-base");
+        var inputDevices = ParseInputDevices(options.Get("--input-device"));
+        PbusFormat? pbusFormat = ParsePbusFormat(options.Get("--pbus-format"));
         var autopilotMode = options.Get("--autopilot");
         var progressEvery = options.GetInt("--progress", 0);
         var celTrace = options.Get("--cel-trace");
@@ -463,6 +465,8 @@ internal static class Program
         // Headless runs must still report a connected player-1 pad. Some titles
         // (for example Olympic Summer Games) reject the boot when PBUS is empty.
         machine.PbusSource ??= new PbusSource();
+        ApplyInputDevices(machine.PbusSource, inputDevices);
+        ApplyPbusFormat(machine.PbusSource, pbusFormat);
 
         StreamWriter? fiqTraceWriter = null;
         if (fiqTrace is not null)
@@ -1026,7 +1030,8 @@ internal static class Program
             MovieVerification: movieVerification is null
                 ? null
                 : movieVerification.Ok ? "pass" : "fail",
-            MovieFailures: movieVerification?.Failures);
+            MovieFailures: movieVerification?.Failures,
+            InputDevices: FormatInputDevices(inputDevices));
 
         SaveNvramIfRequested(machine, nvramSelection);
 
@@ -1055,6 +1060,8 @@ internal static class Program
         var dumpDspPrefix = options.Get("--dump-dsp");
         var dspTracePath = options.Get("--dsp-trace");
         var inputScriptPath = options.Get("--input-script");
+        var inputDevices = ParseInputDevices(options.Get("--input-device"));
+        PbusFormat? pbusFormat = ParsePbusFormat(options.Get("--pbus-format"));
         var nvramPathOption = options.Get("--nvram");
         var nvramModeOption = options.Get("--nvram-mode");
         var nvramVersionOption = options.Get("--nvram-version");
@@ -1155,6 +1162,8 @@ internal static class Program
 
         // Match the run command: trace output should see the same player-1 pad.
         machine.PbusSource ??= new PbusSource();
+        ApplyInputDevices(machine.PbusSource, inputDevices);
+        ApplyPbusFormat(machine.PbusSource, pbusFormat);
 
         machine.RunFrames(frames);
 
@@ -3215,6 +3224,157 @@ internal static class Program
         };
     }
 
+    private static PbusFormat? ParsePbusFormat(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return value.Trim().ToLowerInvariant() switch
+        {
+            "legacy" or "4do" => PbusFormat.Legacy,
+            "opera" or "chain" => PbusFormat.OperaChain,
+            _ => throw new ArgumentException(
+                $"Invalid --pbus-format value '{value}'; expected legacy or opera.",
+                nameof(value)),
+        };
+    }
+
+    private static void ApplyPbusFormat(IPbusSource source, PbusFormat? format)
+    {
+        if (format is null)
+        {
+            return;
+        }
+
+        switch (source)
+        {
+            case PbusSource pbus:
+                pbus.Format = format.Value;
+                break;
+            case ScriptedPbusSource scripted:
+                scripted.Source.Format = format.Value;
+                break;
+        }
+    }
+
+    private static InputDeviceType[] ParseInputDevices(string? value)
+    {
+        var devices = new InputDeviceType[PbusEncoder.MaxControllers];
+        Array.Fill(devices, InputDeviceType.Joypad);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return devices;
+        }
+
+        foreach (var item in value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var separator = item.IndexOf('=', StringComparison.Ordinal);
+            if (separator <= 0 || separator == item.Length - 1)
+            {
+                throw new ArgumentException(
+                    $"Invalid --input-device item '{item}'; expected <port>=<device>.",
+                    nameof(value));
+            }
+
+            if (!int.TryParse(item[..separator], NumberStyles.Integer, CultureInfo.InvariantCulture, out var port)
+                || port < 1
+                || port > PbusEncoder.MaxControllers)
+            {
+                throw new ArgumentException(
+                    $"Invalid --input-device port '{item[..separator]}'; expected 1-{PbusEncoder.MaxControllers}.",
+                    nameof(value));
+            }
+
+            devices[port - 1] = ParseInputDevice(item[(separator + 1)..]);
+        }
+
+        return devices;
+    }
+
+    private static InputDeviceType ParseInputDevice(string value)
+    {
+        var text = value.Trim().Replace("-", string.Empty, StringComparison.Ordinal)
+            .Replace("_", string.Empty, StringComparison.Ordinal);
+        return text.ToLowerInvariant() switch
+        {
+            "joypad" or "pad" or "gamepad" => InputDeviceType.Joypad,
+            "flightstick" or "stick" => InputDeviceType.Flightstick,
+            "mouse" => InputDeviceType.Mouse,
+            "lightgun" or "gun" => InputDeviceType.Lightgun,
+            "arcadelightgun" or "arcadegun" => InputDeviceType.ArcadeLightgun,
+            "orbatak" or "orbataktrackball" or "trackball" => InputDeviceType.OrbatakTrackball,
+            "none" or "empty" => InputDeviceType.None,
+            _ => throw new ArgumentException(
+                $"Invalid --input-device value '{value}'; expected joypad, flightstick, mouse, lightgun, "
+                + "arcade-lightgun, orbatak-trackball, or none.",
+                nameof(value)),
+        };
+    }
+
+    private static string FormatInputDevices(InputDeviceType[] devices)
+    {
+        return string.Join(
+            ',',
+            devices.Select(static (device, index) => $"{index + 1}={DeviceName(device)}"));
+    }
+
+    private static string DeviceName(InputDeviceType device)
+    {
+        return device switch
+        {
+            InputDeviceType.Joypad => "joypad",
+            InputDeviceType.Flightstick => "flightstick",
+            InputDeviceType.Mouse => "mouse",
+            InputDeviceType.Lightgun => "lightgun",
+            InputDeviceType.ArcadeLightgun => "arcade-lightgun",
+            InputDeviceType.OrbatakTrackball => "orbatak-trackball",
+            InputDeviceType.None => "none",
+            _ => device.ToString(),
+        };
+    }
+
+    private static void ApplyInputDevices(IPbusSource source, InputDeviceType[] devices)
+    {
+        var count = 1;
+        for (var i = 0; i < devices.Length; i++)
+        {
+            if (devices[i] != InputDeviceType.Joypad)
+            {
+                count = i + 1;
+            }
+        }
+
+        switch (source)
+        {
+            case PbusSource pbus:
+                for (var i = 0; i < devices.Length; i++)
+                {
+                    pbus.SetDevice(i, devices[i]);
+                }
+
+                pbus.SetControllerCount(count);
+                break;
+            case ScriptedPbusSource scripted:
+                for (var i = 0; i < devices.Length; i++)
+                {
+                    scripted.Source.SetDevice(i, devices[i]);
+                }
+
+                scripted.Source.SetControllerCount(count);
+                break;
+            case InputManager input:
+                for (var i = 0; i < devices.Length; i++)
+                {
+                    input.SetDevice(i, devices[i]);
+                }
+
+                input.ControllerCount = count;
+                break;
+        }
+    }
+
     private static int ParseCpuClock(string? value, int fallback = EmulatorConstants.ArmClock)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -3383,6 +3543,7 @@ internal static class Program
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
         Console.WriteLine("             [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
         Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
+        Console.WriteLine("             [--input-device 1=joypad,2=mouse,...] [--pbus-format legacy|opera]");
         Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--realtime] [--json]");
         Console.WriteLine("             [--cheat path] [--cheat-code code] [--cheat-auto] [--cheats-dir path]");
@@ -3398,6 +3559,7 @@ internal static class Program
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
         Console.WriteLine("             [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
         Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
+        Console.WriteLine("             [--input-device 1=joypad,2=mouse,...] [--pbus-format legacy|opera]");
         Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--fix-mode 0xMASK] [--no-game-fixes]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");

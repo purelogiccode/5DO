@@ -190,6 +190,9 @@ public sealed class ScriptedPbusSource : IPbusSource
         Array.Sort(_entries, static (left, right) => left.Frame.CompareTo(right.Frame));
     }
 
+    /// <summary>Gets the inner PBUS source so a host can configure devices.</summary>
+    public PbusSource Source => _inner;
+
     /// <summary>Gets the most recently applied frame.</summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
         "ReSharper",

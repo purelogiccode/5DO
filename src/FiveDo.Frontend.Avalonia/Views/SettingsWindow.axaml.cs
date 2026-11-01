@@ -12,6 +12,7 @@ using FiveDo.Audio;
 using FiveDo.Core;
 using FiveDo.Host;
 using FiveDo.Host.Rewind;
+using FiveDo.Input;
 using FiveDo.Storage;
 using FiveDo.Video;
 
@@ -82,6 +83,17 @@ public partial class SettingsWindow : Window
         new(CdSpeed.X16, "16x (~2400 KB/s)"),
         new(CdSpeed.X24, "24x (~3600 KB/s)"),
         new(CdSpeed.X32, "32x (~4800 KB/s)"),
+    ];
+
+    private static readonly InputDeviceOption[] _inputDeviceOptions =
+    [
+        new(InputDeviceType.Joypad, "Joypad"),
+        new(InputDeviceType.Flightstick, "Flightstick"),
+        new(InputDeviceType.Mouse, "Mouse"),
+        new(InputDeviceType.Lightgun, "Lightgun"),
+        new(InputDeviceType.ArcadeLightgun, "Arcade lightgun"),
+        new(InputDeviceType.OrbatakTrackball, "Orbatak trackball"),
+        new(InputDeviceType.None, "None"),
     ];
 
     private static readonly NvramStorageOption[] _nvramStorageOptions =
@@ -179,6 +191,7 @@ public partial class SettingsWindow : Window
         RewindCheck.IsChecked = settings.RewindEnabled;
         RewindSecondsBox.Text = settings.RewindSeconds.ToString(CultureInfo.InvariantCulture);
         FastForwardBox.Text = settings.FastForwardMultiplier.ToString(CultureInfo.InvariantCulture);
+        PopulateInputDevices(settings);
         SaveDirectoryBox.Text = settings.SaveDirectory;
         ScreenshotDirectoryBox.Text = settings.ScreenshotDirectory;
         CoverDirectoryBox.Text = settings.CoverDirectory;
@@ -334,6 +347,7 @@ public partial class SettingsWindow : Window
         settings.CdSpeed = CdSpeedCombo.SelectedItem is CdSpeedOption cdSpeed
             ? cdSpeed.Value
             : CdSpeed.X2;
+        SaveInputDevices(settings);
         settings.NvramStorageMode = NvramStorageCombo.SelectedItem is NvramStorageOption nvramStorage
             ? nvramStorage.Value
             : NvramStorageMode.Global;
@@ -560,6 +574,45 @@ public partial class SettingsWindow : Window
 
         IReadOnlyList<IStorageFolder> folders = await StorageProvider.OpenFolderPickerAsync(options).ConfigureAwait(true);
         return folders.Count > 0 ? folders[0].TryGetLocalPath() : null;
+    }
+
+    private void PopulateInputDevices(AppSettings settings)
+    {
+        ComboBox[] combos =
+        [
+            InputDevice1Combo,
+            InputDevice2Combo,
+            InputDevice3Combo,
+            InputDevice4Combo,
+            InputDevice5Combo,
+            InputDevice6Combo,
+        ];
+        for (var i = 0; i < combos.Length; i++)
+        {
+            combos[i].ItemsSource = _inputDeviceOptions;
+            InputDeviceType device = settings.GetInputDevice(i);
+            combos[i].SelectedItem = _inputDeviceOptions.FirstOrDefault(option => option.Value == device)
+                ?? _inputDeviceOptions[0];
+        }
+    }
+
+    private void SaveInputDevices(AppSettings settings)
+    {
+        ComboBox[] combos =
+        [
+            InputDevice1Combo,
+            InputDevice2Combo,
+            InputDevice3Combo,
+            InputDevice4Combo,
+            InputDevice5Combo,
+            InputDevice6Combo,
+        ];
+        for (var i = 0; i < combos.Length; i++)
+        {
+            settings.SetInputDevice(
+                i,
+                combos[i].SelectedItem is InputDeviceOption option ? option.Value : InputDeviceType.Joypad);
+        }
     }
 
     private void PopulateBiosOverrides(string? folder, string? selectedMd5)
@@ -808,6 +861,14 @@ public partial class SettingsWindow : Window
     }
 
     private sealed record CdSpeedOption(CdSpeed Value, string Label)
+    {
+        public override string ToString()
+        {
+            return Label;
+        }
+    }
+
+    private sealed record InputDeviceOption(InputDeviceType Value, string Label)
     {
         public override string ToString()
         {

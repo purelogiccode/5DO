@@ -510,15 +510,26 @@
                 </Grid>
             </Border>
 
-            <Grid Grid.Row="1">
+            <Grid Grid.Row="1" x:Name="VideoHost" Background="Transparent"
+                  PointerMoved="OnVideoPointerMoved"
+                  PointerPressed="OnVideoPointerPressed"
+                  PointerReleased="OnVideoPointerReleased"
+                  PointerExited="OnVideoPointerExited">
                 <ctrl:VideoSurface x:Name="Video" HorizontalAlignment="Stretch"
-                                   VerticalAlignment="Stretch"
+                                   VerticalAlignment="Stretch" IsHitTestVisible="False"
                                    ToolTip.Tip="Emulated 3DO video output rendered by OpenGL." />
-                <Image x:Name="CpuVideo" Stretch="Uniform" IsVisible="False"
+                <Image x:Name="CpuVideo" Stretch="Uniform" IsVisible="False" IsHitTestVisible="False"
                        ToolTip.Tip="CPU fallback frame shown when OpenGL is unavailable." />
                 <ctrl:VulkanVideoSurface x:Name="VulkanVideo" HorizontalAlignment="Stretch"
-                                         VerticalAlignment="Stretch" IsVisible="False"
+                                         VerticalAlignment="Stretch" IsVisible="False" IsHitTestVisible="False"
                                          ToolTip.Tip="Emulated 3DO video output rendered by Vulkan." />
+                <Canvas x:Name="LightgunOverlay" IsHitTestVisible="False" IsVisible="False">
+                    <Line x:Name="LightgunHorizontal" Stroke="#E0FF4040" StrokeThickness="1"
+                          StartPoint="0,0" EndPoint="0,0" />
+                    <Line x:Name="LightgunVertical" Stroke="#E0FF4040" StrokeThickness="1"
+                          StartPoint="0,0" EndPoint="0,0" />
+                    <Ellipse x:Name="LightgunDot" Width="6" Height="6" Fill="#E0FF4040" />
+                </Canvas>
                 <Border x:Name="OverlayPanel" IsVisible="False" HorizontalAlignment="Left"
                         VerticalAlignment="Top" Margin="8" Padding="6,3"
                         Background="#A0000000" CornerRadius="3">

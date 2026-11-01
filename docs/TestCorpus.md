@@ -385,6 +385,36 @@ The next triage step is to compare the 5DO CEL/CD/CLIO traces at frame 3000 with
 the Opera reference and determine whether the divergence starts in the CD load
 handshake, CEL busy timing, or the ARM/timer scheduler.
 
+### 1.1h SYS-15 input devices (2026-11-01)
+
+Lemmings (USA), `panafz1.bin`, 300 frames:
+
+| Configuration | Frame hash | PBUS packet (first frame) |
+|---|---|---|
+| Legacy all-joypad | `0x110E7DC5` (286,162,373) | `00480080000000000000000000800000` |
+| `--pbus-format opera` | `0x110E7DC5` (286,162,373) | `8000FFFFFFFF...` |
+| `--input-device 1=mouse` | `0x110E7DC5` (286,162,373) | `49000000FFFFFFFF...` |
+
+The chain and legacy layouts render the same boot frame. Exact encoder tests cover
+the joypad, flightstick (`01 7B 08` signature), mouse (`0x49`), lightgun (`0x4D`,
+20-bit scan counter and `0x1F` hit count), arcade lightgun, Orbatak trackball (`0x49`),
+and Orbatak buttons (`0xC0`), including `0xFF` padding and mixed-device port order.
+
+Representative arcade titles, 3,000 frames, `panafz10-patched.bin`:
+
+| Title | Device | Frame hash | PC | Image |
+|---|---|---|---:|---|
+| Crime Patrol (USA, Arcade CD-ROM) | `arcade-lightgun` | `0xFEC54535` (4,274,341,173) | `0x0008F9E0` | Non-black, differs from joypad |
+| Crime Patrol (USA, Arcade CD-ROM) | joypad | `0x0430CFAD` (70,307,757) | `0x0008F744` | Reference |
+| Mad Dog II (USA, Arcade CD-ROM) | `arcade-lightgun` | `0xC5F4A77C` (3,321,145,212) | `0x00090554` | Non-black |
+| Orbatak (USA, Arcade CD-ROM) | `orbatak-trackball` | `0x9BCA1E9E` (2,613,714,590) | `0x000A7428` | Non-black, differs from joypad |
+| Orbatak (USA, Arcade CD-ROM) | joypad | `0x322D23AB` (841,819,051) | `0x00083570` | Reference |
+| Shootout at Old Tucson (USA, RE3) | `arcade-lightgun` | `0x9F199B5A` (2,669,255,514) | `0x00020600` | Non-black |
+
+The different hashes and PCs between the joypad and peripheral runs show that the
+games detect the selected device. These are boot/title checks, not scripted
+playthroughs; calibration and gameplay input remain.
+
 **Optional debug-core fields (2026-10-31):** a locally built OperaCore with the
 read-only `sg_debug_*` exports records the reference PC, ARM state hash, and CD
 FIFO status. On the Lemmings 300-frame smoke the frame hash matches while the PC

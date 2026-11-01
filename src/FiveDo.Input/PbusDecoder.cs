@@ -25,7 +25,7 @@ public static class PbusDecoder
     ];
 
     /// <summary>Decodes every controller slot in a PBUS packet.</summary>
-    /// <param name="packet">Packet bytes, normally 16.</param>
+    /// <param name="packet">Packet bytes: a 16-byte legacy packet or an Opera device chain.</param>
     /// <returns>Six controller states; slots outside the packet are empty.</returns>
     public static ControllerState[] Decode(ReadOnlySpan<byte> packet)
     {
@@ -47,9 +47,77 @@ public static class PbusDecoder
                 nameof(destination));
         }
 
-        for (var slot = 0; slot < PbusEncoder.MaxControllers; slot++)
+        if (packet.Length >= 2 && packet[0] == 0x00 && packet[1] == 0x48)
         {
-            destination[slot] = DecodeController(packet, slot);
+            for (var slot = 0; slot < PbusEncoder.MaxControllers; slot++)
+            {
+                destination[slot] = DecodeController(packet, slot);
+            }
+
+            return;
+        }
+
+        DecodeChain(packet, destination);
+    }
+
+    private static void DecodeChain(ReadOnlySpan<byte> packet, Span<ControllerState> destination)
+    {
+        destination[..PbusEncoder.MaxControllers].Clear();
+        var slot = 0;
+        var offset = 0;
+        while (offset < packet.Length && slot < PbusEncoder.MaxControllers)
+        {
+            byte id = packet[offset];
+            if (id == 0xFF)
+            {
+                break;
+            }
+
+            if (id == 0x01 && offset + 2 < packet.Length && packet[offset + 1] == 0x7B && packet[offset + 2] == 0x08)
+            {
+                offset += 9;
+                continue;
+            }
+
+            if (id == 0x49)
+            {
+                offset += 4;
+                continue;
+            }
+
+            if (id == 0x4D)
+            {
+                offset += 5;
+                continue;
+            }
+
+            if (id == 0xC0)
+            {
+                offset += 3;
+                continue;
+            }
+
+            if ((id & 0xC0) != 0 && offset + 1 < packet.Length)
+            {
+                ControllerButton buttons = ControllerButton.None;
+                buttons |= (id & 0x01) != 0 ? ControllerButton.A : ControllerButton.None;
+                buttons |= (id & 0x02) != 0 ? ControllerButton.Left : ControllerButton.None;
+                buttons |= (id & 0x04) != 0 ? ControllerButton.Right : ControllerButton.None;
+                buttons |= (id & 0x08) != 0 ? ControllerButton.Up : ControllerButton.None;
+                buttons |= (id & 0x10) != 0 ? ControllerButton.Down : ControllerButton.None;
+                byte high = packet[offset + 1];
+                buttons |= (high & 0x80) != 0 ? ControllerButton.B : ControllerButton.None;
+                buttons |= (high & 0x40) != 0 ? ControllerButton.C : ControllerButton.None;
+                buttons |= (high & 0x20) != 0 ? ControllerButton.P : ControllerButton.None;
+                buttons |= (high & 0x10) != 0 ? ControllerButton.X : ControllerButton.None;
+                buttons |= (high & 0x08) != 0 ? ControllerButton.R : ControllerButton.None;
+                buttons |= (high & 0x04) != 0 ? ControllerButton.L : ControllerButton.None;
+                destination[slot++] = new ControllerState(buttons);
+                offset += 2;
+                continue;
+            }
+
+            break;
         }
     }
 
@@ -62,6 +130,11 @@ public static class PbusDecoder
     {
         ArgumentOutOfRangeException.ThrowIfNegative(slot);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, PbusEncoder.MaxControllers);
+        if (packet.Length < 2 || packet[0] != 0x00 || packet[1] != 0x48)
+        {
+            return DecodeChainController(packet, slot);
+        }
+
         var offset = OffsetForSlot(slot);
         if (packet.Length < offset + 2)
         {
@@ -83,6 +156,72 @@ public static class PbusDecoder
         buttons |= (high & 0x08) != 0 ? ControllerButton.Up : ControllerButton.None;
         buttons |= (high & 0x10) != 0 ? ControllerButton.Down : ControllerButton.None;
         return new ControllerState(buttons);
+    }
+
+    private static ControllerState DecodeChainController(ReadOnlySpan<byte> packet, int slot)
+    {
+        var current = 0;
+        var offset = 0;
+        while (offset < packet.Length)
+        {
+            byte id = packet[offset];
+            if (id == 0xFF)
+            {
+                break;
+            }
+
+            if (id == 0x01 && offset + 2 < packet.Length && packet[offset + 1] == 0x7B && packet[offset + 2] == 0x08)
+            {
+                offset += 9;
+                continue;
+            }
+
+            if (id == 0x49)
+            {
+                offset += 4;
+                continue;
+            }
+
+            if (id == 0x4D)
+            {
+                offset += 5;
+                continue;
+            }
+
+            if (id == 0xC0)
+            {
+                offset += 3;
+                continue;
+            }
+
+            if ((id & 0xC0) == 0 || offset + 1 >= packet.Length)
+            {
+                break;
+            }
+
+            if (current == slot)
+            {
+                ControllerButton buttons = ControllerButton.None;
+                buttons |= (id & 0x01) != 0 ? ControllerButton.A : ControllerButton.None;
+                buttons |= (id & 0x02) != 0 ? ControllerButton.Left : ControllerButton.None;
+                buttons |= (id & 0x04) != 0 ? ControllerButton.Right : ControllerButton.None;
+                buttons |= (id & 0x08) != 0 ? ControllerButton.Up : ControllerButton.None;
+                buttons |= (id & 0x10) != 0 ? ControllerButton.Down : ControllerButton.None;
+                byte high = packet[offset + 1];
+                buttons |= (high & 0x80) != 0 ? ControllerButton.B : ControllerButton.None;
+                buttons |= (high & 0x40) != 0 ? ControllerButton.C : ControllerButton.None;
+                buttons |= (high & 0x20) != 0 ? ControllerButton.P : ControllerButton.None;
+                buttons |= (high & 0x10) != 0 ? ControllerButton.X : ControllerButton.None;
+                buttons |= (high & 0x08) != 0 ? ControllerButton.R : ControllerButton.None;
+                buttons |= (high & 0x04) != 0 ? ControllerButton.L : ControllerButton.None;
+                return new ControllerState(buttons);
+            }
+
+            current++;
+            offset += 2;
+        }
+
+        return ControllerState.Empty;
     }
 
     /// <summary>Tests whether a slot reports the connected/power bit.</summary>

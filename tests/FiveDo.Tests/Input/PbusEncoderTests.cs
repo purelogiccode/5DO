@@ -89,4 +89,36 @@ public sealed class PbusEncoderTests
         Assert.Equal(0x80, packet[7]);
         Assert.Equal(0x00, packet[9]);
     }
+
+    [Fact]
+    public void PbusSource_OperaChainFormatWritesOneJoypad()
+    {
+        var source = new PbusSource { Format = PbusFormat.OperaChain };
+        source[0] = new ControllerState(ControllerButton.A);
+        var packet = new byte[PbusChainEncoder.MaxPacketSize];
+
+        var length = source.GetPbusData(packet);
+
+        Assert.Equal(4, length);
+        Assert.Equal(0x81, packet[0]);
+        Assert.Equal(0x00, packet[1]);
+        Assert.Equal(0xFF, packet[2]);
+        Assert.Equal(0xFF, packet[3]);
+    }
+
+    [Fact]
+    public void PbusSource_NonJoypadDeviceSelectsTheChain()
+    {
+        var source = new PbusSource();
+        source.SetDevice(0, InputDeviceType.Mouse);
+        var packet = new byte[PbusChainEncoder.MaxPacketSize];
+
+        var length = source.GetPbusData(packet);
+
+        Assert.Equal(8, length);
+        Assert.Equal(0x49, packet[0]);
+        Assert.Equal(0x00, packet[1]);
+        Assert.Equal(0x00, packet[2]);
+        Assert.Equal(0x00, packet[3]);
+    }
 }

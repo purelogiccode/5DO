@@ -340,7 +340,7 @@ public sealed class Madam : IMadamBus, IStateSection
     /// <param name="data">Controller packet.</param>
     public void KeyPressed(ReadOnlySpan<byte> data)
     {
-        var count = Math.Min(data.Length, 16);
+        var count = Math.Min(data.Length, _pbusQueue.Length);
         data[..count].CopyTo(_pbusQueue);
         _pbusQueue.AsSpan(count).Fill(0xff);
     }

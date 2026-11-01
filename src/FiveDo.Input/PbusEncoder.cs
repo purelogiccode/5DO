@@ -87,25 +87,56 @@ public static class PbusEncoder
 /// </summary>
 public sealed class PbusSource : IPbusSource
 {
-    private readonly ControllerState[] _controllers = new ControllerState[PbusEncoder.MaxControllers];
+    private readonly InputDeviceSet _devices = new();
 
     /// <summary>Gets the number of connected controllers.</summary>
-    public int ControllerCount { get; private set; } = 1;
+    public int ControllerCount
+    {
+        get => _devices.PortCount;
+        private set => _devices.SetPortCount(value);
+    }
+
+    /// <summary>Gets or sets the packet layout written by <see cref="GetPbusData"/>.</summary>
+    /// <remarks>
+    /// The legacy 4DO layout can only carry joypads. Selecting any other device
+    /// automatically switches the source to the Opera chain layout.
+    /// </remarks>
+    public PbusFormat Format { get; set; } = PbusFormat.Legacy;
+
+    /// <summary>Gets the per-port device selection and peripheral state.</summary>
+    public InputDeviceSet Devices => _devices;
 
     /// <summary>Gets a controller state by zero-based player index.</summary>
     /// <param name="player">Player index, 0-5.</param>
     /// <returns>The controller state.</returns>
     public ControllerState this[int player]
     {
-        get => _controllers[player];
+        get => _devices.GetJoypad(player);
         set
         {
             ArgumentOutOfRangeException.ThrowIfNegative(player);
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(player, PbusEncoder.MaxControllers);
-            _controllers[player] = value;
-            ControllerCount = Math.Max(ControllerCount, player + 1);
+            _devices.SetJoypad(player, value);
+            if (player >= ControllerCount)
+            {
+                ControllerCount = player + 1;
+            }
         }
     }
+
+    /// <summary>Sets the device type on a port.</summary>
+    /// <param name="port">Zero-based port index.</param>
+    /// <param name="device">Device type.</param>
+    public void SetDevice(int port, InputDeviceType device)
+    {
+        _devices.SetDevice(port, device);
+        ControllerCount = Math.Max(ControllerCount, port + 1);
+    }
+
+    /// <summary>Gets the device type on a port.</summary>
+    /// <param name="port">Zero-based port index.</param>
+    /// <returns>The configured device.</returns>
+    public InputDeviceType GetDevice(int port) => _devices.GetDevice(port);
 
     /// <summary>Sets the connected controller count.</summary>
     /// <param name="count">Count, 1-6.</param>
@@ -120,15 +151,23 @@ public sealed class PbusSource : IPbusSource
     /// <param name="controllers">Controller states, player 1 first.</param>
     public void SetControllers(ReadOnlySpan<ControllerState> controllers)
     {
-        _controllers.AsSpan().Clear();
-        controllers[..Math.Min(controllers.Length, _controllers.Length)].CopyTo(_controllers);
+        for (var i = 0; i < PbusEncoder.MaxControllers; i++)
+        {
+            _devices.SetJoypad(i, i < controllers.Length ? controllers[i] : ControllerState.Empty);
+        }
+
         ControllerCount = Math.Clamp(controllers.Length, 1, PbusEncoder.MaxControllers);
     }
 
     /// <inheritdoc />
     public int GetPbusData(Span<byte> destination)
     {
-        PbusEncoder.Encode(_controllers.AsSpan(0, ControllerCount), destination);
+        if (Format == PbusFormat.OperaChain || _devices.HasPeripheral)
+        {
+            return PbusChainEncoder.Encode(_devices, destination);
+        }
+
+        PbusEncoder.Encode(_devices.Joypads, destination);
         return PbusEncoder.PacketSize;
     }
 }

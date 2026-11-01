@@ -326,15 +326,16 @@ dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin `
   --input-script docs/scripts/lem-fun4-dpad.txt --script-base state
 ```
 
-`--pbus-trace` records the 16-byte packet sampled at V1:
+`--pbus-trace` records the 20-byte PBUS queue sampled at V1:
 
 ```text
-f=<frame> pbus=<32 hex chars>
+f=<frame> pbus=<40 hex chars>
 ```
 
-Use it to confirm that the guest sees the buttons you expect. The PBUS packet carries
-controllers in the wired order 1, 3, 2, 5, 4, 6; see [`Architecture.md`](Architecture.md)
-section 9.
+Use it to confirm that the guest sees the buttons you expect. The legacy packet carries
+controllers in the wired order 1, 3, 2, 5, 4, 6; when a peripheral is selected the
+queue contains the Opera daisy-chain records instead. See
+[`Architecture.md`](Architecture.md) section 9.
 
 `--autopilot road` is a Road Rash-specific driver and cannot be combined with
 `--input-script`. It is a test harness, not a general AI.

@@ -5,6 +5,18 @@ still change.
 
 ## [Unreleased]
 
+### Added
+
+- SYS-15 input devices: six PBUS ports can each select a joypad, flightstick, mouse,
+  lightgun, arcade lightgun, Orbatak trackball, or no device. `PbusChainEncoder` emits
+  Opera's exact daisy-chain records (joypad, flightstick, mouse, lightgun, arcade
+  lightgun, Orbatak trackball/buttons) and pads them with `0xFF`; the legacy 4DO packet
+  remains the default while every port is a joypad. Settings > Emulation > Input
+  devices and the CLI `--input-device`/`--pbus-format` expose the selection, the
+  desktop pointer drives the first mouse/lightgun/trackball port with a lightgun
+  crosshair, and `run --json` reports `inputDevices`. `PbusDecoder` now detects chain
+  packets for TAS input display.
+
 ### Fixed
 
 - Opera parity batch 1 and OP-14: VDLP now keeps the retained head separate from the

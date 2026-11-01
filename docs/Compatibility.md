@@ -161,10 +161,12 @@ The 3DO pad has: **A, B, C, P, X, L, R**, plus D-pad directions. P is the pause 
 | 1-6 controllers | v1 |
 | Keyboard mapping | v1 |
 | Gamepad mapping | v1 target; backend selected in M7/M9 |
-| PBUS packet | 16 bytes, device order 1,3,2,5,4,6 |
+| PBUS packet | Legacy 16-byte 4DO layout (device order 1,3,2,5,4,6) for all-joypad configurations; Opera daisy-chain records when a peripheral is selected |
+| Input devices | Joypad, flightstick, mouse, lightgun, arcade lightgun, Orbatak trackball, and none |
 | Console hotkeys | Save/load state, slot next/previous, fullscreen, screenshot, pause, frame advance, reset |
 
-PBUS encoding is documented in `docs/Architecture.md` and ported from 4DO's `JohnnyInputPlugin`.
+PBUS encoding is documented in `docs/Architecture.md`. The legacy packet is ported
+from 4DO's `JohnnyInputPlugin`; the device records follow `libopera/opera_pbus.c`.
 
 ---
 

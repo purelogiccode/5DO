@@ -167,7 +167,7 @@ Wiring rules:
 - **XBUS:** device 0 is the CD-ROM; up to 16 slots.
 - **DSP:** CLIO owns the register windows; DSP raises audio FIQ through CLIO.
 - **Frame:** VDLP writes `VdlFrame`; `FiveDoMachine` calls `IFrameSink.OnFrame` at V1.
-- **Input:** `FiveDoMachine` asks `IPbusSource` for the 16-byte PBUS packet at V1.
+- **Input:** `FiveDoMachine` asks `IPbusSource` for the PBUS packet at V1 (16-byte legacy joypad layout or the Opera device chain, up to the 20-byte MADAM DMA window).
 
 ---
 

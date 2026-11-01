@@ -2,6 +2,20 @@
 
 ## 0. Current handoff (2026-10-30)
 
+**2026-11-01 update:** SYS-15 input devices are implemented. `InputDeviceSet` selects
+a joypad, flightstick, mouse, lightgun, arcade lightgun, Orbatak trackball, or no
+device on each of six PBUS ports; `PbusChainEncoder` emits Opera's exact daisy-chain
+records (2/9/4/5/5/4/3 bytes plus `0xFF` padding) and the legacy 4DO packet is kept
+while every port is a joypad. Settings > Emulation > Input devices and the CLI
+`--input-device 1=mouse,3=lightgun` select devices; `--pbus-format opera` forces the
+chain for differential tests; `run --json` reports `inputDevices`. The desktop pointer
+drives the first mouse/lightgun/trackball port, with a crosshair overlay for lightguns.
+**Do not redo the device models, encoder, CLI/settings surface, pointer plumbing, or
+`PbusDecoder` chain support; remaining SYS-15 work is per-device calibration,
+multiplayer pointer routing, and scripted gameplay validation. Crime Patrol, Mad Dog
+II, Orbatak, and Shootout at Old Tucson boot and detect the selected arcade device.**
+**1294 tests pass.**
+
 **2026-11-01 update:** UX-11 disc browser and disc info are implemented.
 `FiveDo.Host.DiscBrowser` mounts `OperaFileSystem` from an ISO/BIN/CUE/CHD without
 starting the machine, builds a sorted tree with sizes/LBAs, extracts a selected

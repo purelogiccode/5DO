@@ -279,28 +279,7 @@ public sealed class CheatSet
     private static bool IsButtonDown(FiveDoMachine machine, ControllerButton button)
     {
         ReadOnlySpan<byte> pbus = machine.Madam.PbusQueue;
-        if (pbus.Length < 4)
-        {
-            return false;
-        }
-
-        var low = pbus[2];
-        var high = pbus[3];
-        return button switch
-        {
-            ControllerButton.A => (high & 0x01) != 0,
-            ControllerButton.Left => (high & 0x02) != 0,
-            ControllerButton.Right => (high & 0x04) != 0,
-            ControllerButton.Up => (high & 0x08) != 0,
-            ControllerButton.Down => (high & 0x10) != 0,
-            ControllerButton.L => (low & 0x04) != 0,
-            ControllerButton.R => (low & 0x08) != 0,
-            ControllerButton.X => (low & 0x10) != 0,
-            ControllerButton.P => (low & 0x20) != 0,
-            ControllerButton.C => (low & 0x40) != 0,
-            ControllerButton.B => (low & 0x80) != 0,
-            _ => false,
-        };
+        return pbus.Length >= 2 && PbusDecoder.DecodeController(pbus, 0).IsDown(button);
     }
 
     private void LoadEntries(IEnumerable<CheatEntry> entries)

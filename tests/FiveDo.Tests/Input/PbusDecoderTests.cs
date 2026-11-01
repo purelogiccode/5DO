@@ -1,3 +1,4 @@
+using System;
 using FiveDo.Input;
 
 namespace FiveDo.Tests.Input;
@@ -50,6 +51,49 @@ public sealed class PbusDecoderTests
 
         Assert.Equal(ControllerButton.None, decoded[0].Buttons);
         Assert.False(PbusDecoder.IsConnected(new byte[] { 0x00, 0x48 }, 0));
+    }
+
+    [Fact]
+    public void Decode_ChainPacketRoundtripsJoypadsAndSkipsPeripherals()
+    {
+        var devices = new InputDeviceSet();
+        devices.SetDevice(0, InputDeviceType.Joypad);
+        devices.SetDevice(1, InputDeviceType.Mouse);
+        devices.SetDevice(2, InputDeviceType.Joypad);
+        devices.SetJoypad(0, new ControllerState(ControllerButton.A));
+        devices.SetJoypad(2, new ControllerState(ControllerButton.B));
+        devices.SetMouse(1, new MouseState(1, 2, Left: true, Middle: false, Right: false, Shift: false));
+        var packet = new byte[PbusChainEncoder.MaxPacketSize];
+        var length = devices.Encode(packet);
+
+        ControllerState[] decoded = PbusDecoder.Decode(packet.AsSpan(0, length));
+
+        Assert.Equal(ControllerButton.A, decoded[0].Buttons);
+        Assert.Equal(ControllerButton.B, decoded[1].Buttons);
+        Assert.Equal(ControllerButton.None, decoded[2].Buttons);
+    }
+
+    [Fact]
+    public void DecodeController_ReadsAChainJoypadSlot()
+    {
+        var devices = new InputDeviceSet();
+        devices.SetDevice(0, InputDeviceType.Mouse);
+        devices.SetDevice(1, InputDeviceType.Joypad);
+        devices.SetDevice(2, InputDeviceType.Joypad);
+        devices.SetJoypad(1, new ControllerState(ControllerButton.C));
+        devices.SetJoypad(2, new ControllerState(ControllerButton.P));
+        var packet = new byte[PbusChainEncoder.MaxPacketSize];
+        var length = devices.Encode(packet);
+
+        Assert.Equal(
+            ControllerButton.C,
+            PbusDecoder.DecodeController(packet.AsSpan(0, length), 0).Buttons);
+        Assert.Equal(
+            ControllerButton.P,
+            PbusDecoder.DecodeController(packet.AsSpan(0, length), 1).Buttons);
+        Assert.Equal(
+            ControllerButton.None,
+            PbusDecoder.DecodeController(packet.AsSpan(0, length), 2).Buttons);
     }
 
     [Fact]

@@ -110,6 +110,7 @@ every serialized property in `AppSettings`.
 | `RewindEnabled` | bool | `true` | Record compressed keyframes and input for rewind. |
 | `RewindSeconds` | int | `60` | Rewind history length in seconds, 30..300. |
 | `FastForwardMultiplier` | int | `4` | Fast-forward speed, 2..10. Audio is muted while active. |
+| `InputDevices` | string[] | six `"Joypad"` entries | PBUS device per port: `Joypad`, `Flightstick`, `Mouse`, `Lightgun`, `ArcadeLightgun`, `OrbatakTrackball`, or `None`. |
 | `Input` | object | defaults | Six-player keyboard/gamepad bindings plus hotkeys. |
 
 The legacy `PreferOpenGl` boolean is still read when loading older files; `false` maps to
@@ -371,6 +372,19 @@ or one hotkey is bound to multiple actions.
 `InputProfileStore` can load/save a standalone input JSON file, but the desktop shell
 uses the embedded `AppSettings.Input` object. There is no separate `input.json` by
 default.
+
+### 3.1 PBUS devices
+
+`AppSettings.InputDevices` stores one device name per PBUS port. Missing, blank, or
+unknown entries fall back to `Joypad`, so older settings files keep working. The
+desktop shell applies the list through `AppSettings.ApplyInputDevices`; the connected
+port count only grows to the highest non-joypad port, preserving the historical
+single-pad packet for default configurations.
+
+Selecting a peripheral switches the packet to the Opera daisy-chain layout. The
+legacy 16-byte 4DO layout remains active while every port is a joypad. The CLI mirrors
+the setting with `--input-device 1=mouse,3=lightgun` and can force either layout with
+`--pbus-format legacy|opera`.
 
 ---
 

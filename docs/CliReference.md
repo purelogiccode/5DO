@@ -130,6 +130,8 @@ frame.
 | `--cel-timing freedo\|opera` | `freedo` | MADAM CEL timing model. `freedo` draws synchronously and returns the FSM to idle; `opera` defers the draw to the next CPU tick and keeps the status register busy until the pixel/texel deadline (nine million pixels per second plus 64 setup cycles per list entry). |
 | `--cd-timing freedo\|opera` | `freedo` | CD-ROM data-sector timing. `freedo` transfers each sector immediately; `opera` schedules each 2048-byte sector at the configured speed, clears the data/status poll bits while waiting, publishes status after the transfer drains, and raises the XBUS CD FIQ when ready. |
 | `--cd-speed unbounded\|1x\|2x\|4x\|8x\|16x\|24x\|32x` | `2x` | Effective read speed for the `opera` timing model. `unbounded` publishes sectors immediately; `1x` is the slowest and `32x` the fastest. The option has no effect with `--cd-timing freedo`. |
+| `--input-device 1=joypad,2=mouse,...` | all joypads | PBUS device on each of the six ports. Devices: `joypad`, `flightstick`, `mouse`, `lightgun`, `arcade-lightgun`, `orbatak-trackball`, `none`. Selecting a peripheral switches the packet to the Opera chain format; the legacy 4DO packet is kept while every port is a joypad. |
+| `--pbus-format legacy\|opera` | automatic | Force the PBUS packet layout. `opera` emits the 3DO daisy-chain records and is useful for differential tests; the chain is selected automatically when a peripheral is present. |
 | `--cpu-clock 0.5x-4x\|6.25-50MHz` | 1x (12.5 MHz) | ARM clock multiplier or absolute MHz. Values outside 0.5x-4x (6.25-50 MHz) fail. |
 | `--random-seed default\|random\|SEED` | `default` | Initial DSP PRNG seed. `default` keeps `0xa5a5a5a5`, `random` picks a fresh 32-bit value, and a decimal or `0x` value fixes the seed. |
 | `--prefetch` | off | Enable the bounded disc read-ahead cache (32 sectors ahead, 128-sector capacity). |
@@ -280,6 +282,7 @@ All fields are camelCase. Nullable fields are omitted or `null` when not applica
 | `celBusyCycles` | ulong | CEL busy cycles remaining at the end of the run. |
 | `cdromTiming` | string | `FreeDoCompatible` or `OperaCycleBased`. |
 | `cdSpeed` | string | `Unbounded`, `X1`, `X2`, `X4`, `X8`, `X16`, `X24`, or `X32`. |
+| `inputDevices` | string | Per-port device list, for example `1=joypad,2=mouse,3=lightgun,4=joypad,5=joypad,6=joypad`. |
 | `cpuClock` | int | ARM clock in hertz (12,500,000 at the stock 1x setting). |
 | `fixMode` | uint | Applied fix-mode bits. |
 | `dspRunning` | bool | DSP running flag. |
@@ -381,6 +384,8 @@ instruction ring buffer. It stops early on a stop condition or `--count` limit.
 | `--cel-timing freedo\|opera` | `freedo` | As in `run`. |
 | `--cd-timing freedo\|opera` | `freedo` | As in `run`. |
 | `--cd-speed unbounded\|1x\|2x\|4x\|8x\|16x\|24x\|32x` | `2x` | As in `run`. |
+| `--input-device 1=joypad,2=mouse,...` | all joypads | As in `run`. |
+| `--pbus-format legacy\|opera` | automatic | As in `run`. |
 | `--cpu-clock 0.5x-4x\|6.25-50MHz` | 1x | As in `run`. |
 | `--random-seed default\|random\|SEED` | `default` | As in `run`. |
 | `--fix-mode`, `--no-game-fixes` | database | As in `run`. |

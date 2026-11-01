@@ -3,7 +3,7 @@
 **Snapshot:** 2026-11-01, after the first full-collection sweep, the performance pass,
 the ARM/CLIO/CEL/CD timing-option pass, the CD speed/timing-profile pass, the BIOS
 manager, the per-game NVRAM pass, the rewind/fast-forward pass, the per-game cheat
-engine, and the TAS-movie pass. Road Rash's
+engine, the TAS-movie pass, the disc browser, and the input-device pass. Road Rash's
 100k-state race now measures
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
@@ -74,7 +74,15 @@ mounts the Opera file system without starting the machine, shows a sorted
 directories-first tree with sizes/LBAs, extracts a file, directory, or the whole
 disc with safe path containment, and reports the volume label/comment, game ID,
 4DO database metadata, and automatic fixes. File > Disc Browser... and File > Disc
-Info... expose it in the shell. **1246 tests pass.**
+Info... expose it in the shell. SYS-15 adds the missing 3DO input devices:
+`InputDeviceSet` selects a joypad, flightstick, mouse, lightgun, arcade lightgun,
+Orbatak trackball, or no device on each of six ports; `PbusChainEncoder` emits Opera's
+daisy-chain records and keeps the legacy 4DO packet while every port is a joypad. The
+desktop shell adds Settings > Emulation > Input devices, pointer-driven mouse/lightgun
+input with a crosshair, and the CLI adds `--input-device` and `--pbus-format`. Crime
+Patrol, Mad Dog II, Orbatak, and Shootout at Old Tucson boot and detect the selected
+arcade device; scripted gameplay and calibration remain.
+**1294 tests pass.**
 The differential harness (FND-05/CORE-11/CORE-16) is implemented:
 `tools/FiveDo.DiffHarness` stages the bundled OperaCore and BIOS, runs both engines
 with identical options, compares checkpoint frame hashes, applies manifest
@@ -265,12 +273,19 @@ This is the short, current answer to "where are we?" The documentation index is
   Lemmings 8,192 / 1,661, Gex 12,964 / 2,089, Road Rash 32,768 / 11,012 (2,036
   clipped), Theme Park silent; see `TestCorpus.md` 1.5a2. The trimmed win-x64 and
   linux-x64 CLI and the opt-in NativeAOT CLI open the same backend.
+- **Input:** joypad, flightstick, mouse, lightgun, arcade lightgun, and Orbatak
+  trackball devices are supported on six PBUS ports. The legacy 4DO packet remains the
+  default for all-joypad configurations; selecting a peripheral emits Opera's
+  daisy-chain records. Settings > Emulation > Input devices and the CLI
+  `--input-device` select devices; `--pbus-format opera` forces the chain layout. The
+  desktop pointer drives the first mouse/lightgun/trackball port and shows a crosshair
+  for lightguns. See [`Architecture.md`](Architecture.md) §9.
 - **Input scripting:** the CLI accepts `--input-script <path>` with
   `frame button[,button...]` lines for repeatable controller taps. Input has been
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 1246 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 1294 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and

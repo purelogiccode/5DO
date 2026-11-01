@@ -234,8 +234,9 @@ context is made current on the audio fill thread.
 
 ## P
 
-**PBUS** - The controller packet bus. The machine samples a 16-byte packet at V1;
-controllers are ordered 1, 3, 2, 5, 4, 6.
+**PBUS** - The controller packet bus. The machine samples a packet at V1; the legacy
+4DO layout is 16 bytes with controllers ordered 1, 3, 2, 5, 4, 6, while peripheral
+configurations use the Opera daisy-chain records within the 20-byte MADAM DMA window.
 
 **PLUT** - Palette Lookup Table used by CEL decoding.
 

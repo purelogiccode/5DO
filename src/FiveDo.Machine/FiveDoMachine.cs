@@ -712,7 +712,7 @@ public sealed class FiveDoMachine
 
         Clio.GenerateFiq(1u << 1, 0);
 
-        Span<byte> pbus = stackalloc byte[16];
+        Span<byte> pbus = stackalloc byte[64];
         var length = PbusSource?.GetPbusData(pbus) ?? 0;
         if (length < 0)
         {

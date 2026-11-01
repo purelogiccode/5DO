@@ -94,7 +94,8 @@ if not button Start then write8 0x00123456 = 0
 if button B and 0x00123456 == 0 then write8 0x00123456 = 0x01
 ```
 
-Buttons are read from the player-1 PBUS packet. Supported names: `A`, `B`, `C`, `P`
+Buttons are read from the player-1 PBUS record (the legacy packet or the first joypad
+in the Opera chain). Supported names: `A`, `B`, `C`, `P`
 (also `Start`/`Pause`), `X`, `L`, `R`, `Up`, `Down`, `Left`, `Right`. Conditions can be
 combined with `and`, `or`, `not`, and parentheses. The packet is the one the machine
 used for the previous frame, so a button condition reacts on the next frame.

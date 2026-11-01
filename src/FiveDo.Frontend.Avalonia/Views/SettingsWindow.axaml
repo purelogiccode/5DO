@@ -107,7 +107,7 @@
 
             <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, ARM, CLIO, CEL, and CD timing, CD speed, CPU clock, random seed, NVRAM storage, high-resolution mode, rewind/fast-forward, and overrides.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <CheckBox x:Name="AutoFixesCheck" Grid.Row="0" Grid.Column="1"
                               Content="Apply the 4DO per-game fixes automatically"
                               ToolTip.Tip="Apply the compatibility fix mask from the built-in game database when a disc opens." />
@@ -192,6 +192,26 @@
                     <TextBox x:Name="FastForwardBox" Grid.Row="19" Grid.Column="1" Margin="0,12,0,0"
                              PlaceholderText="4 (2-10x)"
                              ToolTip.Tip="Run 2x-10x emulated frames per presentation tick. Audio is muted while fast-forwarding." />
+                    <TextBlock Grid.Row="20" Grid.Column="0" Text="Input devices 1-3" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Choose the PBUS device on ports 1-3." />
+                    <StackPanel Grid.Row="20" Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="0,12,0,0">
+                        <ComboBox x:Name="InputDevice1Combo" Width="132"
+                                  ToolTip.Tip="Port 1 device. A joypad is the default; mouse, lightgun, arcade lightgun, flightstick, and Orbatak trackball are available." />
+                        <ComboBox x:Name="InputDevice2Combo" Width="132"
+                                  ToolTip.Tip="Port 2 device." />
+                        <ComboBox x:Name="InputDevice3Combo" Width="132"
+                                  ToolTip.Tip="Port 3 device." />
+                    </StackPanel>
+                    <TextBlock Grid.Row="21" Grid.Column="0" Text="Input devices 4-6" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Choose the PBUS device on ports 4-6." />
+                    <StackPanel Grid.Row="21" Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="0,12,0,0">
+                        <ComboBox x:Name="InputDevice4Combo" Width="132"
+                                  ToolTip.Tip="Port 4 device." />
+                        <ComboBox x:Name="InputDevice5Combo" Width="132"
+                                  ToolTip.Tip="Port 5 device." />
+                        <ComboBox x:Name="InputDevice6Combo" Width="132"
+                                  ToolTip.Tip="Port 6 device." />
+                    </StackPanel>
                 </Grid>
                 </ScrollViewer>
             </TabItem>

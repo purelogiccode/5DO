@@ -67,6 +67,10 @@ public partial class MainWindow : Window, IDisposable
     private long _movieStartFrame;
     private DispatcherTimer? _movieTimer;
     private bool _fastForwardHeld;
+    private Point? _lastPointerPosition;
+    private bool _pointerLeftDown;
+    private bool _pointerMiddleDown;
+    private bool _pointerRightDown;
     private OpenAlAudioOutput? _audio;
     private float _meterPeak;
     private FiveDoMachine? _machine;
@@ -126,6 +130,7 @@ public partial class MainWindow : Window, IDisposable
         _slots.Select(Math.Clamp(_settings.SaveSlot, 0, _slots.SlotCount - 1));
         _gamepad = PlatformGamepadBackend.TryCreate(_settings.Input);
         _input = new InputManager(_settings.Input, _gamepad);
+        _settings.ApplyInputDevices(_input);
         string? audioError = null;
         _audio = _settings.AudioEnabled ? OpenAlAudioOutput.TryCreate(8192, out audioError) : null;
         if (_audio is not null)
@@ -2485,6 +2490,7 @@ public partial class MainWindow : Window, IDisposable
         var previousCheatsDirectory = _settings.ResolveCheatsDirectory();
         var previousAutoBios = _settings.AutoBios;
         var previousBiosOverride = _settings.GetBiosOverride(_gameId);
+        var previousInputDevices = string.Join(",", _settings.InputDevices);
         var window = new SettingsWindow(_settings, _gameId, _gameName);
         if (!await window.ShowDialog<bool>(this).ConfigureAwait(true))
         {
@@ -2503,6 +2509,15 @@ public partial class MainWindow : Window, IDisposable
         }
 
         AppSettingsStore.Save(_settings);
+        _settings.ApplyInputDevices(_input);
+        if (!string.Equals(
+                previousInputDevices,
+                string.Join(",", _settings.InputDevices),
+                StringComparison.Ordinal))
+        {
+            _runner?.ResetRewind();
+        }
+
         Video.Settings = _settings.ToRendererSettings(_gameId);
         if (_runner is not null)
         {
@@ -2618,6 +2633,7 @@ public partial class MainWindow : Window, IDisposable
         StopMovie(save: true);
         _gamepad?.UpdateProfile(profile);
         _input = new InputManager(_settings.Input, _gamepad);
+        _settings.ApplyInputDevices(_input);
         if (_machine is not null)
         {
             _machine.PbusSource = _input;
@@ -3315,6 +3331,151 @@ public partial class MainWindow : Window, IDisposable
         _gamepad?.Dispose();
         ClearLibraryItems();
         _logger.ForCategory(LogCategory.Host).Information("Desktop shell shut down.");
+    }
+
+    private void OnVideoPointerMoved(object? sender, PointerEventArgs e)
+    {
+        UpdatePointerState(e.GetPosition(VideoHost));
+    }
+
+    private void OnVideoPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        PointerPointProperties properties = e.GetCurrentPoint(VideoHost).Properties;
+        _pointerLeftDown = properties.IsLeftButtonPressed;
+        _pointerMiddleDown = properties.IsMiddleButtonPressed;
+        _pointerRightDown = properties.IsRightButtonPressed;
+        UpdatePointerState(e.GetPosition(VideoHost));
+        e.Handled = true;
+    }
+
+    private void OnVideoPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        PointerPointProperties properties = e.GetCurrentPoint(VideoHost).Properties;
+        _pointerLeftDown = properties.IsLeftButtonPressed;
+        _pointerMiddleDown = properties.IsMiddleButtonPressed;
+        _pointerRightDown = properties.IsRightButtonPressed;
+        UpdatePointerState(e.GetPosition(VideoHost));
+        e.Handled = true;
+    }
+
+    private void OnVideoPointerExited(object? sender, PointerEventArgs e)
+    {
+        _lastPointerPosition = null;
+        _pointerLeftDown = false;
+        _pointerMiddleDown = false;
+        _pointerRightDown = false;
+        for (var port = 0; port < PbusEncoder.MaxControllers; port++)
+        {
+            if (_input.Devices.GetDevice(port) == InputDeviceType.Lightgun)
+            {
+                _input.Devices.SetLightgun(
+                    port,
+                    _input.Devices.GetLightgun(port) with { Trigger = false, Reload = false, OffScreen = true });
+            }
+            else if (_input.Devices.GetDevice(port) == InputDeviceType.ArcadeLightgun)
+            {
+                _input.Devices.SetArcadeLightgun(
+                    port,
+                    _input.Devices.GetArcadeLightgun(port) with { Trigger = false, Holster = false, OffScreen = true });
+            }
+            else if (_input.Devices.GetDevice(port) == InputDeviceType.Mouse)
+            {
+                _input.Devices.SetMouse(port, _input.Devices.GetMouse(port) with { DeltaX = 0, DeltaY = 0 });
+            }
+        }
+
+        LightgunOverlay.IsVisible = false;
+    }
+
+    private void UpdatePointerState(Point position)
+    {
+        double width = VideoHost.Bounds.Width;
+        double height = VideoHost.Bounds.Height;
+        if (width <= 0 || height <= 0)
+        {
+            return;
+        }
+
+        var screenX = (int)Math.Clamp(position.X * EmulatorConstants.VideoWidth / width, 0, EmulatorConstants.VideoWidth - 1);
+        var screenY = (int)Math.Clamp(position.Y * EmulatorConstants.VideoHeight / height, 0, EmulatorConstants.VideoHeight - 1);
+        var deltaX = 0;
+        var deltaY = 0;
+        if (_lastPointerPosition is { } last)
+        {
+            deltaX = (int)Math.Round((position.X - last.X) * EmulatorConstants.VideoWidth / width);
+            deltaY = (int)Math.Round((position.Y - last.Y) * EmulatorConstants.VideoHeight / height);
+        }
+
+        _lastPointerPosition = position;
+        var lightgunVisible = false;
+        for (var port = 0; port < PbusEncoder.MaxControllers; port++)
+        {
+            switch (_input.Devices.GetDevice(port))
+            {
+                case InputDeviceType.Mouse:
+                    MouseState mouse = _input.Devices.GetMouse(port);
+                    _input.Devices.SetMouse(
+                        port,
+                        new MouseState(
+                            mouse.DeltaX + deltaX,
+                            mouse.DeltaY + deltaY,
+                            _pointerLeftDown,
+                            _pointerMiddleDown,
+                            _pointerRightDown,
+                            false));
+                    break;
+                case InputDeviceType.Lightgun:
+                    _input.Devices.SetLightgun(
+                        port,
+                        new LightgunState(
+                            screenX,
+                            screenY,
+                            _pointerLeftDown,
+                            _pointerRightDown,
+                            _pointerMiddleDown,
+                            OffScreen: false));
+                    lightgunVisible = true;
+                    break;
+                case InputDeviceType.ArcadeLightgun:
+                    _input.Devices.SetArcadeLightgun(
+                        port,
+                        new ArcadeLightgunState(
+                            screenX,
+                            screenY,
+                            Trigger: _pointerLeftDown,
+                            Service: false,
+                            Coins: _pointerRightDown,
+                            Start: _pointerMiddleDown,
+                            Holster: false,
+                            OffScreen: false));
+                    lightgunVisible = true;
+                    break;
+                case InputDeviceType.OrbatakTrackball:
+                    OrbatakTrackballState trackball = _input.Devices.GetTrackball(port);
+                    _input.Devices.SetTrackball(
+                        port,
+                        new OrbatakTrackballState(
+                            trackball.DeltaX + Math.Clamp(deltaX, -24, 24),
+                            trackball.DeltaY + Math.Clamp(deltaY, -24, 24)));
+                    break;
+            }
+        }
+
+        if (lightgunVisible)
+        {
+            LightgunOverlay.IsVisible = true;
+            Canvas.SetLeft(LightgunDot, position.X - 3);
+            Canvas.SetTop(LightgunDot, position.Y - 3);
+            LightgunHorizontal.StartPoint = new Point(position.X - 8, position.Y);
+            LightgunHorizontal.EndPoint = new Point(position.X + 8, position.Y);
+            LightgunVertical.StartPoint = new Point(position.X, position.Y - 8);
+            LightgunVertical.EndPoint = new Point(position.X, position.Y + 8);
+        }
+        else
+        {
+            LightgunOverlay.IsVisible = false;
+        }
+
     }
 
     /// <inheritdoc />
