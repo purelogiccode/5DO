@@ -3,8 +3,8 @@
 
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
-**Branch:** `master` (latest code commit `26aad8b`; consolidation commit follows)  
-**Status:** **1,350 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.  
+**Branch:** `master` (consolidation commit `ea98895`; this feature batch follows)  
+**Status:** **1,361 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.  
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -25,10 +25,10 @@
 | Frontend | Avalonia shell, library, settings, gamepad, logs, screenshots, rewind, fast-forward, cheats, TAS movies, disc browser, BIOS/NVRAM manager, OSD/quick menu | UX-01/02/04/11 done; UX-06/12/13/19 partial |
 | Renderer | Two-stage OpenGL/GLES, optional Vulkan, 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR | M9R/M9P core complete; Pi/GLES 3.1, Tier B, and GPU CI remain |
 | Audio | Exact 44.1 kHz DSP clock, OpenAL Soft, WAV capture, tap, analysis, audio-driven pacing | AUD-01/02/04/05 remain for full settings/mixer/golden coverage |
-| Disc support | ISO, BIN, CUE+BIN, CHD parent/child, Opera file system, prefetch, disc browser | CD-DA, multi-track, ODE/disc swap, PAL remain (SYS-01/02/03) |
+| Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors and mixing, Opera file system, prefetch, disc browser | Direct-play UI/volume, known-title CD-DA evidence, ODE/disc swap, PAL remain (SYS-01/02/03, AUD-05) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,350** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,361** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -86,7 +86,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **6. Finish CORE-04 CD-ROM parity.** Complete command/timing parity, add command transcript + boot/reset tests, and keep CD-DA/multi-track as the next disc step. See Part II CORE-04 and Part III §13.3/§13.6.
 - [ ] **7. Finish CORE-03 CEL busy timing parity.** Add differential evidence against Opera and validate timing-sensitive titles under the Accuracy profile. See Part II CORE-03.
 - [ ] **8. Close CORE-01/CORE-02 accuracy profiles.** Complete ARM cycle-class and CLIO scheduler parity; keep the Accuracy profile opt-in until the full-collection differential is green. See Part II CORE-01/CORE-02 and Part III §13.6.
-- [ ] **9. Land the disc/peripheral P0 batch.** SYS-01 CD-DA/multi-track, SYS-02 disc swap/ODE, SYS-03 PAL/NTSC, SYS-15 calibration/multiplayer pointer, SYS-18 auto profiles. See Part II.
+- [ ] **9. Land the disc/peripheral P0 batch.** SYS-01 multi-track TOC, raw CD-DA sectors, and mixing are implemented; finish direct-play volume/UI and known-title evidence, then SYS-02 disc swap/ODE, SYS-03 PAL/NTSC, SYS-15 calibration/multiplayer pointer, SYS-18 auto profiles. See Part II.
 - [ ] **10. Polish the shipped UX.** UX-06 Lua/frame editor/lag counter, UX-12 per-game NVRAM/drag-drop, UX-13 external metadata/media/editor, UX-19 gamepad quick-menu navigation. See Part II.
 - [ ] **11. Clear the release blockers.** Legal/attribution sign-off, GitHub Actions billing, Linux/macOS runtime validation, installers/signing/notarization. See Part I M11 and Part III Appendix B.
 
@@ -118,7 +118,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 ## 5. Foundation checklist
 
 - [ ] **[FND-01](#feat-fnd-01)** Feature flags, tuning, and profiles — P0 · M — **Partial**: `EmulationProfile`/`EmulatorTuning` exist; every machine option is not yet centralized, validated, and recorded in state.
-- [ ] **[FND-02](#feat-fnd-02)** Settings schema versioning and migration — P0 · S — **Pending**: add `SettingsVersion`, migration chain, malformed-file backup, per-game profile storage.
+- [ ] **[FND-02](#feat-fnd-02)** Settings schema versioning and migration — P0 · S — **Partial**: `SettingsVersion`, legacy migration, malformed-file backup, validation, and atomic writes are done; explicit per-game profile storage and optional `settings migrate|validate` commands remain.
 - [ ] **[FND-03](#feat-fnd-03)** Save-state format v3 — P0 · M — **Pending**: feature flags, machine-option snapshot, section version table, unknown-section policy, v1/v2 loaders.
 - [ ] **[FND-04](#feat-fnd-04)** CLI option and JSON contract conventions — P0 · S — **Partial**: source-generated JSON and conventions exist; formal option table, help generation, and backward-compatibility policy remain.
 - [ ] **[FND-05](#feat-fnd-05)** Differential harness and golden corpus — P0 · L — **Partial**: harness, checkpoints, audio/state hashes, smoke + showcase done; full 594-disc manifest, nightly trend dashboard, and PC/state/CD transcript comparison remain.
@@ -130,14 +130,14 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 7 done · 14 partial · 99 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 7 done · 16 partial · 97 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
 - [ ] **[CORE-01](#feat-core-01)** ARM60 cycle-class accuracy mode — P0 · M · depends on: FND-01 — **Partial** — remaining: option surface is implemented; full ARM60 cycle-class parity and differential evidence remain
 - [ ] **[CORE-02](#feat-core-02)** CLIO timer scheduler parity — P0 · M · depends on: FND-01 — **Partial** — remaining: CLIO timer scheduler option is implemented; parity validation remains
 - [ ] **[CORE-03](#feat-core-03)** MADAM CEL busy timing — P0 · L · depends on: FND-01 — **Partial** — remaining: MADAM CEL busy option is implemented; full timing parity remains
-- [ ] **[CORE-04](#feat-core-04)** CD-ROM timing and command parity — P0 · XL · depends on: FND-01, CORE-11 — **Partial** — remaining: cycle-based CD data timing first increment is implemented; full command/timing parity, CD-DA, and transcript tests remain
+- [ ] **[CORE-04](#feat-core-04)** CD-ROM timing and command parity — P0 · XL · depends on: FND-01, CORE-11 — **Partial** — remaining: cycle-based data timing and the CD-DA/TOC/Sub-Q command path are implemented; full command/timing parity, read-ahead, subcode, and transcript tests remain
 - [ ] **[CORE-05](#feat-core-05)** DSP timing and optional threading — P0 · M · depends on: FND-01 — **Pending**
 - [ ] **[CORE-06](#feat-core-06)** SPORT/XBUS/DMA timing audit — P0 · M · depends on: CORE-11 — **Pending**
 - [ ] **[CORE-07](#feat-core-07)** Interrupt latency / FIQ/IRQ audit — P0 · M · depends on: CORE-11 — **Pending**
@@ -153,7 +153,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ### System, disc, BIOS, region, peripherals
 
-- [ ] **[SYS-01](#feat-sys-01)** CD-DA / Red Book and multi-track discs — P0 · L · depends on: CORE-04 — **Pending**
+- [ ] **[SYS-01](#feat-sys-01)** CD-DA / Red Book and multi-track discs — P0 · L · depends on: CORE-04 — **Partial** — remaining: multi-track CUE/CHD TOC, raw CD-DA sectors, TOC/Sub-Q commands, DSP mixing, and `disc tracks --json` are implemented; known-title audio evidence, direct-play volume/UI, and read-ahead/subcode remain
 - [ ] **[SYS-02](#feat-sys-02)** Disc swap / ODE / multi-disc — P0 · M · depends on: CORE-04 — **Pending**
 - [ ] **[SYS-03](#feat-sys-03)** PAL/NTSC region modes — P0 · L · depends on: CORE-02 — **Pending**
 - [x] **[SYS-04](#feat-sys-04)** BIOS manager and auto-selection — P0 · L · depends on: FND-02 — **Done**
@@ -199,7 +199,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[AUD-02](#feat-aud-02)** Audio recording UI, mixer, spectrum — P1 · M · depends on: FND-06 — **Pending**
 - [ ] **[AUD-03](#feat-aud-03)** DSP debugger — P2 · M · depends on: UX-21 — **Pending**
 - [ ] **[AUD-04](#feat-aud-04)** Audio golden tests vs Opera/hardware — P1 · M · depends on: CORE-11 — **Pending**
-- [ ] **[AUD-05](#feat-aud-05)** CD-DA mixing and volume — P1 · S · depends on: SYS-01 — **Pending**
+- [ ] **[AUD-05](#feat-aud-05)** CD-DA mixing and volume — P1 · S · depends on: SYS-01 — **Partial** — remaining: CD-DA is mixed into DSP output with a live `CdAudioVolume`; persisted volume/mute settings, state fields, UI, and mix-level tests remain
 
 ### UX and quality-of-life
 
@@ -367,13 +367,32 @@ A release can be called “the best 3DO emulator in the world” only when all o
 
 ## 9. Recently completed fixes and verification
 
+### 2026-11-01 — SYS-01/AUD-05 multi-track and CD-DA core
+
+- [x] `ITrackedDiscSource` exposes the full track table and native 2048/2336/2352-byte sectors.
+- [x] `CueDiscImage` parses multi-file/multi-track CUE sheets through the MAME-compatible CHDSharp parser; `ChdDiscImage` exposes CHD audio tracks and byte-swaps Red Book samples.
+- [x] `CdromDevice` builds a multi-track TOC, implements READ TOC lead-out, READ SUB-Q, MODE SET/MODE SENSE, 24-bit READ_DATA counts, PLAY_AUDIO position tracking, and 2352-byte digital-audio reads.
+- [x] CD-DA is mixed into the DSP output at 44.1 kHz (`FiveDoMachine.CdAudioVolume`); CD section v3 stores sector size, block flags, and audio position.
+- [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
+- [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, and `disc tracks --json`.
+- [x] Verification: **1,361 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**.
+- [ ] Remaining: known CD-DA title evidence, a DSP+CD-DA WAV, and persisted volume/mute UI.
+
+### 2026-11-01 — FND-02 settings schema versioning
+
+- [x] `AppSettings.SettingsVersion` and `CurrentVersion`; loads migrate unversioned files and stamp the current version.
+- [x] Malformed settings are backed up as `settings.json.invalid-<timestamp>.bak` before defaults are used.
+- [x] Renderer, profile, timing, NVRAM, OSD, and clock values are validated on load; saves stay atomic.
+- [x] Tests cover legacy migration, malformed-file backup, version roundtrip, and invalid-value normalization.
+- [ ] Remaining: per-game profile storage and optional `settings migrate|validate` commands.
+
 ### 2026-11-01 — ReSharper inspectcode cleanup
 
 - [x] Ran `jb inspectcode 5DO.sln`: **0 errors, 50 warnings**.
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed**.
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,361**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -692,6 +711,21 @@ year/Publisher sorts. The game list adds star toggles, metadata/play-time text, 
 filter/sort selectors; Settings > Paths chooses the metadata file. No emulation-core
 behavior, timing options, save-state layout, or CLI contracts changed. **1350 tests
 pass.** See Part III §13.27.
+
+**Multi-track and CD-DA pass (2026-11-01, thirty-ninth pass):** SYS-01 and AUD-05
+move to partial. `ITrackedDiscSource` exposes the complete track table and native
+2048/2336/2352-byte sectors; `CueDiscImage` uses the MAME-compatible CHDSharp CUE
+parser for multi-file/multi-track `INDEX`/`PREGAP`/`POSTGAP` layouts; `ChdDiscImage`
+exposes CHD audio tracks and byte-swaps Red Book samples. `CdromDevice` now builds the
+TOC from the track table and implements READ TOC (track and `0xAA` lead-out), READ
+SUB-Q, MODE SET/MODE SENSE block pages, 24-bit READ_DATA block counts, PLAY_AUDIO
+position tracking, 2352-byte digital-audio reads, and a 44.1 kHz CD-DA sample path.
+`FiveDoMachine.CdAudioVolume` mixes CD-DA into DSP output; CD section v3 records the
+mode and playback position. `disc tracks` reports every CUE/CHD track. FND-02 adds
+settings schema versioning, legacy normalization, malformed-file backup, and load-time
+validation. **1361 tests pass**; build, format, and inspectcode are clean. Remaining:
+known-title CD-DA evidence, persisted volume/mute UI, `disc tracks --json`, and
+per-game profile storage.
 
 **Last updated:** 2026-11-01
 
@@ -2759,6 +2793,8 @@ Suggested parallelization with two developers:
 | 2026-10-30 | M13.1-M13.2, M14 | Compatibility sweep tooling and high-resolution research plan | Parsed the saved 4DO wiki into a 241-title reference, scanned the two local collections (589 + 5 CHDs), generated `docs/GameCompatibilityList.md`, and added `tools/compat-sweep.ps1` plus `tools/generate-compat-list.py`. The sweep boots each disc in a fresh process, records JSON/PNG/timeout evidence, and classifies loadability. The first 594-disc pass completed: 576 `Loadable/Rendered`, 13 `Loadable/No video`, 5 `Not Loadable`; results are in `docs/GameCompatibilityResults.md`. Added `docs/CompatibilitySweep.md` and `docs/HighResolutionCelResearch.md`; v1.0 release is deferred until the collection sweep and high-res decision are complete. Project distribution is recorded as donationware (non-commercial, source-available); Linux validation target is the local Hyper-V VM `LinuxMint`. No runtime tests were added; the current suite remains 925 tests |
 | 2026-11-01 | UX-13 | Library metadata, favorites, and playtime | Added `LibraryState`/`LibraryStateStore` for favorites, launch counts, last-played timestamps, and play seconds in `library-state.json`; `LibraryPlaytimeTracker` measures only running emulation and flushes every 60 seconds; `LibraryMetadata`/`LibraryMetadataStore` read an optional offline `library-metadata.json` overlay keyed by game ID or path; the scanner carries 4DO year/publisher/region; `LibraryQuery` adds All/Favorites/Played/Unplayed filters and Title/Recently played/Most played/Release year/Publisher sorts; the game list adds star toggles, metadata/play-time text, and Settings > Paths chooses the metadata file. 13 tests cover state, migration, pruning, store corruption, tracker timing, metadata, filters, search, and sorts; 1,350 tests pass. External providers and rich media remain |
 | 2026-11-01 | Quality | ReSharper inspectcode warning cleanup | Ran `jb inspectcode 5DO.sln`: 0 errors, 50 warnings. Fixed all 50 across 18 files (disposed/modified closures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, XML doc reference). `jb inspectcode --severity=WARNING` reports 0 results; build 0 warnings/0 errors; 1,350 tests pass; `dotnet format --verify-no-changes` clean; commit `26aad8b` |
+| 2026-11-01 | SYS-01/AUD-05 | Multi-track and CD-DA core | Added `ITrackedDiscSource`, `CueDiscImage` (MAME-compatible multi-track CUE), CHD track/audio exposure, multi-track TOC and lead-out, READ SUB-Q, MODE SET/MODE SENSE, 24-bit READ_DATA counts, PLAY_AUDIO tracking, 2352-byte digital-audio reads, 44.1 kHz CD-DA mixing, CD state v3, and multi-track `disc tracks` text/JSON. 7 new CD/storage tests; 1,361 tests pass |
+| 2026-11-01 | FND-02 | Settings schema versioning and migration | Added `SettingsVersion`/`CurrentVersion`, legacy normalization, malformed-file backup, renderer/value validation, and version roundtrip. 4 new tests; 1,361 tests pass |
 
 ---
 
@@ -2852,7 +2888,7 @@ A feature is done only when:
 
 | ID | Feature | Priority | Effort | Depends on | Status |
 |---|---|---|---|---|---|
-| SYS-01 | CD-DA / Red Book and multi-track discs | P0 | L | CORE-04 | Pending |
+| SYS-01 | CD-DA / Red Book and multi-track discs | P0 | L | CORE-04 | Partial |
 | SYS-02 | Disc swap / ODE / multi-disc | P0 | M | CORE-04 | Pending |
 | SYS-03 | PAL/NTSC region modes | P0 | L | CORE-02 | Pending |
 | SYS-04 | BIOS manager and auto-selection | P0 | L | FND-02 | Done |
@@ -2902,7 +2938,7 @@ A feature is done only when:
 | AUD-02 | Audio recording UI, mixer, spectrum | P1 | M | FND-06 | Pending |
 | AUD-03 | DSP debugger | P2 | M | UX-21 | Pending |
 | AUD-04 | Audio golden tests vs Opera/hardware | P1 | M | CORE-11 | Pending |
-| AUD-05 | CD-DA mixing and volume | P1 | S | SYS-01 | Pending |
+| AUD-05 | CD-DA mixing and volume | P1 | S | SYS-01 | Partial |
 
 ### 1.5 UX and quality-of-life
 
@@ -3045,17 +3081,19 @@ These are not user-visible features, but most other work depends on them. Build 
 <a id="feat-fnd-02"></a>
 ### FND-02 - Settings schema versioning and migration
 
-**Priority:** P0 | **Effort:** S | **Depends on:** FND-01
+**Priority:** P0 | **Effort:** S | **Depends on:** FND-01 | **Status:** Partial (2026-11-01)
 
-**Problem.** `settings.json` has no version field. New options are added ad hoc; old files are accepted by `System.Text.Json` but there is no migration policy.
+**Problem.** `settings.json` had no version field. New options were added ad hoc; old files were accepted by `System.Text.Json` but there was no migration policy.
 
-**Add.**
-- `SettingsVersion` integer.
-- Migration chain (`v1 -> v2 -> ...`).
-- Unknown properties ignored; malformed files backed up, not silently lost.
-- Per-game profile storage.
-- Atomic writes remain.
-- CLI `settings migrate`/`settings validate` (optional).
+**Implemented.**
+- `AppSettings.SettingsVersion` with `AppSettings.CurrentVersion`; every load stamps the current version and every save writes it.
+- Legacy migration: unversioned files are normalized (renderer preference, CPU clock, enums, NVRAM version, OSD ranges, profile detection).
+- Malformed files are copied to `settings.json.invalid-<timestamp>.bak` before defaults are returned, so user data is not silently lost.
+- Unknown properties are ignored by the source-generated serializer; writes remain atomic through the temporary file and rename.
+
+**Remaining.**
+- Explicit per-game profile storage and a documented `v1 -> v2 -> ...` migration chain for future versions.
+- Optional CLI `settings migrate`/`settings validate` commands.
 
 **Files.** `src/FiveDo.Host/Models/AppSettings.cs`, `AppSettingsStore.cs`, `HostJsonContext.cs`, `docs/Configuration.md`.
 
@@ -3673,18 +3711,23 @@ artifacts.
 <a id="feat-sys-01"></a>
 ### SYS-01 - CD-DA / Red Book and multi-track discs
 
-**Priority:** P0 | **Effort:** L | **Depends on:** CORE-04 | **Status:** Pending
+**Priority:** P0 | **Effort:** L | **Depends on:** CORE-04 | **Status:** Partial (2026-11-01)
 
-**Problem.** 5DO exposes only 2048-byte data sectors. `CueSheet` opens only the first data track; `ChdDiscImage` extracts data-track bytes. CD-DA is unsupported.
+**Problem.** 5DO exposed only 2048-byte data sectors. `CueSheet` opened only the first data track; `ChdDiscImage` extracted data-track bytes. CD-DA was unsupported.
 
-**Add.**
-- Extend `IDiscSource` with `TrackCount`, `GetTrack`, `ReadRawSector`, `ReadAudio`.
-- Multi-file/multi-track CUE parsing with `PREGAP`/`INDEX 00/01`.
-- CHD track metadata and audio hunks.
-- CD-DA decode to 44.1 kHz 16-bit stereo.
-- Mix CD-DA with DSP output; volume/mute.
-- `disc tracks --json`.
-- Save-state fields for audio position/volume.
+**Implemented (2026-11-01).**
+- `ITrackedDiscSource` exposes the track table, total sector count, and native track sectors (2048/2336/2352).
+- `CueDiscImage` uses the MAME-compatible CHDSharp CUE parser: multi-file/multi-track, `INDEX 00/01`, `PREGAP`/`POSTGAP`, WAVE audio, and sessions.
+- `ChdDiscImage` maps CHD track metadata to logical LBA ranges, reads audio tracks, and byte-swaps Red Book samples back to little-endian.
+- `CdromDevice` builds the TOC from the track table, implements READ TOC (track and `0xAA` lead-out), READ SUB-Q, MODE SET/MODE SENSE block pages, 24-bit READ_DATA counts, PLAY_AUDIO_MSF/TRACK position tracking, and 2352-byte digital-audio reads.
+- CD-DA is decoded at 44.1 kHz and mixed into the DSP output with `FiveDoMachine.CdAudioVolume`; CD section v3 records sector size, block flags, and audio position.
+- `disc tracks` reports every CUE/CHD track (kind, sector size, frames, start LBA) in text and `--json`.
+
+**Remaining.**
+- Known CD-DA title evidence and a 10-second DSP+CD-DA WAV capture.
+- Persisted volume/mute UI.
+- Save-state fields for volume (position is already stored).
+- CD-DA read-ahead, subcode, and a data-track parity check against the old 2048-only path.
 
 **Files.** `src/FiveDo.Storage/IDiscSource.cs`, `CueSheet.cs`, `Chd/ChdDiscImage.cs`, `src/FiveDo.Cdrom/CdromDevice.cs`, `src/FiveDo.Audio/`.
 
@@ -4616,15 +4659,19 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
 <a id="feat-aud-05"></a>
 ### AUD-05 - CD-DA mixing and volume
 
-**Priority:** P1 | **Effort:** S | **Depends on:** SYS-01 | **Status:** Pending
+**Priority:** P1 | **Effort:** S | **Depends on:** SYS-01 | **Status:** Partial (2026-11-01)
 
 **Problem.** CD-DA needs independent mixing.
 
-**Add.**
-- CD-DA/DSP volumes.
-- Mute toggles.
-- Save-state fields.
-- UI.
+**Implemented.**
+- CD-DA frames are decoded from 2352-byte audio sectors and mixed into the DSP sample stream every 44.1 kHz tick.
+- `FiveDoMachine.CdAudioVolume` (0..1) provides a live mix level; 0 mutes.
+- Samples saturate to 16-bit; playback stops cleanly at the end LBA or on a bad sector.
+
+**Remaining.**
+- Persisted DSP/CD-DA volume and mute settings plus UI/CLI.
+- Save-state fields for volume (audio position is stored in the CD section).
+- WAV-level mix tests and a known CD-DA title capture.
 
 **Files.** Audio, `CdromDevice`.
 

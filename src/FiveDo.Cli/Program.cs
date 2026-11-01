@@ -8,8 +8,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
-using CHDSharp;
-using CHDSharp.Models;
 using FiveDo.Audio;
 using FiveDo.Cheats;
 using FiveDo.Core;
@@ -1444,35 +1442,56 @@ internal static class Program
         {
             ParsedOptions options = Parse(args, startIndex: 2);
             var trackPath = options.Positional ?? throw new ArgumentException("disc tracks needs a disc path.", nameof(args));
-            if (IsChdImage(trackPath))
+            using IDiscSource source = DiscImageFactory.Open(trackPath);
+            var format = Path.GetExtension(trackPath).TrimStart('.').ToLowerInvariant();
+            var tracks = new List<CliDiscTrackResult>();
+            if (source is ITrackedDiscSource tracked)
             {
-                if (ChdFile.Open(trackPath, out ChdFile? chd) != ChdError.Chderrnone || chd is null)
+                foreach (DiscTrack track in tracked.Tracks)
                 {
-                    throw new InvalidDataException($"Cannot open CHD '{trackPath}'.");
+                    tracks.Add(new CliDiscTrackResult(
+                        track.Number,
+                        track.IsAudio ? "audio" : "data",
+                        track.SectorSize,
+                        track.SectorCount,
+                        track.StartLba));
                 }
+            }
+            else
+            {
+                tracks.Add(new CliDiscTrackResult(
+                    1,
+                    "data",
+                    source.SectorSize,
+                    source.SectorCount,
+                    0));
+            }
 
-                using (chd)
-                {
-                    foreach (ChdTrackInfo track in chd.Tracks ?? [])
-                    {
-                        Console.WriteLine(
-                            $"track {track.TrackNumber}: type={track.TrackType} dataSize={track.DataSize} "
-                            + $"frames={track.Frames} start={track.StartFrame}");
-                    }
-                }
-
+            if (options.Json)
+            {
+                var result = new CliDiscTracksResult(
+                    true,
+                    trackPath,
+                    tracks);
+                Console.WriteLine(JsonSerializer.Serialize(result, CliJsonContext.Default.CliDiscTracksResult));
                 return 0;
             }
 
-            // ISO, BIN, and CUE images expose one 2048-byte user-data track through
-            // IDiscSource. Report the same columns as the CHD path so scripts can parse
-            // both container families.
-            using IDiscSource source = DiscImageFactory.Open(trackPath);
-            var format = Path.GetExtension(trackPath).TrimStart('.').ToLowerInvariant();
-            Console.WriteLine(
-                $"track 1: type=data format={(format.Length == 0 ? "raw" : format)} "
-                + $"dataSize={(long)source.SectorCount * source.SectorSize} "
-                + $"frames={source.SectorCount} start=0");
+            foreach (CliDiscTrackResult track in tracks)
+            {
+                int dataSize = track.DataSize;
+                if (source is not ITrackedDiscSource)
+                {
+                    dataSize = (long)source.SectorCount * source.SectorSize <= int.MaxValue
+                        ? source.SectorCount * source.SectorSize
+                        : dataSize;
+                }
+
+                Console.WriteLine(
+                    $"track {track.Number}: type={track.Type} format={(format.Length == 0 ? "raw" : format)} "
+                    + $"dataSize={dataSize} frames={track.Frames} start={track.Start}");
+            }
+
             return 0;
         }
 
@@ -1496,14 +1515,6 @@ internal static class Program
         File.WriteAllBytes(output, buffer);
         Console.WriteLine($"wrote {count} sector(s) from LBA {sector} to {output}");
         return 0;
-    }
-
-    private static bool IsChdImage(string path)
-    {
-        using FileStream stream = File.OpenRead(path);
-        Span<byte> signature = stackalloc byte[8];
-        return stream.Read(signature) == signature.Length
-            && signature.SequenceEqual("MComprHD"u8);
     }
 
     private static int FsCommand(string[] args)

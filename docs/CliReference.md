@@ -47,7 +47,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `trace [disc]` | Run with a diagnostic instruction ring and stop conditions. |
 | `info <disc>` | Disc geometry, volume header, game ID, database metadata, fixes. |
 | `disc dump <disc>` | Write raw 2048-byte sectors. |
-| `disc tracks <disc>` | List CHD track table entries, or one data track for ISO/BIN/CUE. |
+| `disc tracks <disc>` | List the CUE/CHD track table (data and audio), or one data track for ISO/BIN. |
 | `fs list <disc>` | List the 3DO file tree (ISO, BIN, CUE, or CHD). |
 | `fs extract <disc>` | Extract files from a 3DO disc image (ISO, BIN, CUE, or CHD). |
 | `bios info <path>` | BIOS size, MD5, region, Kanji, and Anvil detection. |
@@ -445,10 +445,14 @@ No JSON.
 5do disc tracks game.chd
 ```
 
-Lists the CHD track table: `track <n>: type=<type> dataSize=<n> frames=<n> start=<n>`.
-For ISO, BIN, and CUE images it reports the single 2048-byte user-data track:
-`track 1: type=data format=<iso|bin|cue> dataSize=<n> frames=<n> start=0`.
-No JSON.
+Lists every track for CUE and CHD images:
+`track <n>: type=<data|audio> format=<cue|chd> dataSize=<n> frames=<n> start=<lba>`.
+`start` is the track's first logical block address (LBA 0 = MSF 00:02:00). Audio tracks
+report `dataSize=2352`. For ISO and BIN images it reports the single 2048-byte user-data
+track: `track 1: type=data format=<iso|bin> dataSize=<total bytes> frames=<n> start=0`.
+`--json` emits `{ "ok": true, "path": "...", "tracks": [{ "number", "type", "dataSize",
+"frames", "start" }] }`; `dataSize` is the native per-sector size in JSON and the
+total payload size in the text line for ISO/BIN.
 
 ---
 

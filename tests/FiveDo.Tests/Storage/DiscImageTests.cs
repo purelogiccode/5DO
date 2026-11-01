@@ -69,8 +69,27 @@ public sealed class DiscImageTests
 
         using (IDiscSource cue = DiscImageFactory.Open(fixture.CuePath))
         {
-            Assert.IsType<BinImage>(cue);
+            var tracked = Assert.IsAssignableFrom<ITrackedDiscSource>(cue);
+            Assert.Single(tracked.Tracks);
+            Assert.Equal(DiscTrackKind.Data, tracked.Tracks[0].Kind);
         }
+    }
+
+    [Fact]
+    public void PrefetchedIsoStillExposesAUsableSingleDataTrack()
+    {
+        using var fixture = new DiscFixture(sectorCount: 8);
+        using IDiscSource source = DiscImageFactory.Open(fixture.IsoPath, prefetch: true);
+
+        var tracked = Assert.IsAssignableFrom<ITrackedDiscSource>(source);
+        DiscTrack track = Assert.Single(tracked.Tracks);
+        Assert.Equal(0, track.StartLba);
+        Assert.Equal(8, track.SectorCount);
+        Assert.Equal(2048, track.SectorSize);
+
+        var sector = new byte[2048];
+        source.ReadSector(5, sector);
+        Assert.Equal(DiscFixture.Expected(5), sector);
     }
 
     [Fact]
@@ -90,6 +109,57 @@ public sealed class DiscImageTests
     }
 
     [Fact]
+    public void CueSheet_ExposesMultiTrackTableOfContentsAndAudioSectors()
+    {
+        using var fixture = new DiscFixture(sectorCount: 16, audioSectorCount: 4);
+        using var image = CueDiscImage.Open(fixture.MultiTrackCuePath);
+
+        Assert.Equal(2, image.Tracks.Count);
+        Assert.Equal(20, image.TotalSectorCount);
+
+        DiscTrack data = image.Tracks[0];
+        Assert.Equal(DiscTrackKind.Data, data.Kind);
+        Assert.Equal(0, data.StartLba);
+        Assert.Equal(16, data.SectorCount);
+        Assert.Equal(2352, data.SectorSize);
+        Assert.Equal(16, data.PayloadOffset);
+
+        DiscTrack audio = image.Tracks[1];
+        Assert.Equal(DiscTrackKind.Audio, audio.Kind);
+        Assert.Equal(16, audio.StartLba);
+        Assert.Equal(4, audio.SectorCount);
+        Assert.Equal(2352, audio.SectorSize);
+
+        var userData = new byte[2048];
+        image.ReadSector(5, userData);
+        Assert.Equal(DiscFixture.Expected(5), userData);
+
+        var audioSector = new byte[2352];
+        int read = image.ReadTrackSector(18, audioSector);
+        Assert.Equal(2352, read);
+        Assert.Equal(DiscFixture.ExpectedAudio(2), audioSector);
+        Assert.Throws<DiscImageException>(() => image.ReadSector(18, userData));
+    }
+
+    [Fact]
+    public void ChdImage_ExposesAudioTracks()
+    {
+        using var fixture = new DiscFixture(sectorCount: 8, audioSectorCount: 4);
+        ChdEncoder.EncodeCd(fixture.MultiTrackCuePath, fixture.MultiTrackChdPath);
+
+        using var chd = FiveDo.Storage.Chd.ChdDiscImage.Open(fixture.MultiTrackChdPath);
+        Assert.Equal(2, chd.Tracks.Count);
+        Assert.Equal(DiscTrackKind.Data, chd.Tracks[0].Kind);
+        Assert.Equal(DiscTrackKind.Audio, chd.Tracks[1].Kind);
+        Assert.True(chd.Tracks[1].StartLba >= 8);
+
+        var audioSector = new byte[2352];
+        int read = chd.ReadTrackSector(chd.Tracks[1].StartLba, audioSector);
+        Assert.Equal(2352, read);
+        Assert.Equal(DiscFixture.ExpectedAudio(0), audioSector);
+    }
+
+    [Fact]
     public void ChdImage_RejectsNonCdImage()
     {
         using var fixture = new DiscFixture(sectorCount: 4);
@@ -103,7 +173,7 @@ public sealed class DiscImageTests
     {
         private readonly string _directory;
 
-        internal DiscFixture(int sectorCount)
+        internal DiscFixture(int sectorCount, int audioSectorCount = 0)
         {
             _directory = Path.Combine(Path.GetTempPath(), $"fivedo-disc-{Guid.NewGuid():N}");
             Directory.CreateDirectory(_directory);
@@ -112,6 +182,9 @@ public sealed class DiscImageTests
             CuePath = Path.Combine(_directory, "disc.cue");
             ChdPath = Path.Combine(_directory, "disc.chd");
             HddPath = Path.Combine(_directory, "hdd.chd");
+            MultiTrackBinPath = Path.Combine(_directory, "multi.bin");
+            MultiTrackCuePath = Path.Combine(_directory, "multi.cue");
+            MultiTrackChdPath = Path.Combine(_directory, "multi.chd");
 
             using (FileStream iso = File.Create(IsoPath))
             {
@@ -147,6 +220,40 @@ public sealed class DiscImageTests
                 $"FILE \"{Path.GetFileName(BinPath)}\" BINARY\n"
                 + "  TRACK 01 MODE1/2352\n"
                 + "    INDEX 01 00:00:00\n");
+
+            using (FileStream bin = File.Create(MultiTrackBinPath))
+            {
+                for (var lba = 0; lba < sectorCount; lba++)
+                {
+                    var raw = new byte[2352];
+                    raw[0] = 0x00;
+                    for (var i = 1; i <= 10; i++)
+                    {
+                        raw[i] = 0xFF;
+                    }
+
+                    raw[11] = 0x00;
+                    raw[12] = (byte)((lba / (60 * 75)) % 100);
+                    raw[13] = (byte)((lba / 75) % 60);
+                    raw[14] = (byte)(lba % 75);
+                    raw[15] = 1;
+                    Expected(lba).CopyTo(raw.AsSpan(16));
+                    bin.Write(raw);
+                }
+
+                for (var lba = 0; lba < audioSectorCount; lba++)
+                {
+                    bin.Write(ExpectedAudio(lba));
+                }
+            }
+
+            File.WriteAllText(
+                MultiTrackCuePath,
+                $"FILE \"{Path.GetFileName(MultiTrackBinPath)}\" BINARY\n"
+                + "  TRACK 01 MODE1/2352\n"
+                + "    INDEX 01 00:00:00\n"
+                + "  TRACK 02 AUDIO\n"
+                + $"    INDEX 01 00:00:{sectorCount:00}\n");
         }
 
         internal string IsoPath { get; }
@@ -158,6 +265,23 @@ public sealed class DiscImageTests
         internal string ChdPath { get; }
 
         internal string HddPath { get; }
+
+        internal string MultiTrackBinPath { get; }
+
+        internal string MultiTrackCuePath { get; }
+
+        internal string MultiTrackChdPath { get; }
+
+        internal static byte[] ExpectedAudio(int lba)
+        {
+            var sector = new byte[2352];
+            for (var i = 0; i < sector.Length; i++)
+            {
+                sector[i] = (byte)((lba * 17) + i + 0x80);
+            }
+
+            return sector;
+        }
 
         internal static byte[] Expected(int lba)
         {

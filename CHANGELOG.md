@@ -7,6 +7,22 @@ still change.
 
 ### Added
 
+- SYS-01/AUD-05 multi-track discs and CD-DA: `ITrackedDiscSource` exposes the CUE/CHD
+  track table and native 2048/2336/2352-byte sectors. `CueDiscImage` uses the
+  MAME-compatible CHDSharp parser for multi-file/multi-track `INDEX`/`PREGAP`/`POSTGAP`
+  layouts; `ChdDiscImage` exposes CHD audio tracks and byte-swaps Red Book samples back
+  to little-endian. `CdromDevice` now builds a multi-track TOC and implements READ TOC
+  (track and `0xAA` lead-out), READ SUB-Q, MODE SET/MODE SENSE block pages, 24-bit
+  READ_DATA counts, PLAY_AUDIO_MSF/TRACK position tracking, and 2352-byte digital-audio
+  reads. CD-DA is mixed into the 44.1 kHz DSP output through `CdAudioVolume`; the CD
+  state section is version 3 and records the mode and audio position. `disc tracks`
+  reports every CUE/CHD track. New tests cover multi-track CUE, CHD audio, TOC/lead-out,
+  MODE SET, raw audio reads, Sub-Q, playback position, and CD-DA sample extraction.
+- FND-02 settings schema versioning: `AppSettings.SettingsVersion` /
+  `AppSettings.CurrentVersion` are written on save; unversioned files are normalized on
+  load. Malformed settings are copied to `settings.json.invalid-<timestamp>.bak` before
+  defaults are used, and renderer/timing/NVRAM/OSD/clock values are validated. Atomic
+  writes are unchanged. Per-game profile storage remains pending.
 - UX-13 library metadata, favorites, and playtime: `LibraryState`/`LibraryStateStore`
   persist favorites, launch counts, last-played timestamps, and play time in
   `library-state.json`; path-keyed records migrate to game-ID keys. `LibraryPlaytimeTracker`

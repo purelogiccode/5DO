@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using FiveDo.Core;
@@ -29,7 +30,7 @@ public static class AppSettingsStore
         var resolved = path ?? DefaultPath;
         if (!File.Exists(resolved))
         {
-            return new AppSettings();
+            return new AppSettings { SettingsVersion = AppSettings.CurrentVersion };
         }
 
         try
@@ -38,6 +39,15 @@ public static class AppSettingsStore
             AppSettings settings = JsonSerializer.Deserialize(
                 json,
                 AppSettingsJsonContext.Default.AppSettings) ?? new AppSettings();
+            if (settings.SettingsVersion > AppSettings.CurrentVersion)
+            {
+                Serilog.Log.Warning(
+                    "Settings file {Path} uses schema version {Version}; this build supports version {Supported}.",
+                    resolved,
+                    settings.SettingsVersion,
+                    AppSettings.CurrentVersion);
+            }
+
             ApplyLegacyRendererPreference(json, settings);
             // JSON can deserialize null despite the non-nullable annotation.
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
@@ -51,6 +61,11 @@ public static class AppSettingsStore
                 || settings.CpuClockMultiplier > 4.0)
             {
                 settings.CpuClockMultiplier = 1.0;
+            }
+
+            if (!Enum.IsDefined(settings.Renderer))
+            {
+                settings.Renderer = VideoRendererKind.OpenGl;
             }
 
             if (!Enum.IsDefined(settings.Profile))
@@ -118,12 +133,27 @@ public static class AppSettingsStore
                 settings.Profile = detectedProfile;
             }
 
+            settings.SettingsVersion = AppSettings.CurrentVersion;
             return settings;
         }
         catch (JsonException exception)
         {
+            TryBackupInvalidFile(resolved);
             Serilog.Log.Warning(exception, "Settings file {Path} is invalid; using defaults.", resolved);
-            return new AppSettings();
+            return new AppSettings { SettingsVersion = AppSettings.CurrentVersion };
+        }
+    }
+
+    private static void TryBackupInvalidFile(string path)
+    {
+        try
+        {
+            var timestamp = DateTime.UtcNow.ToString("yyyyMMddTHHmmssfff", CultureInfo.InvariantCulture);
+            File.Copy(path, $"{path}.invalid-{timestamp}.bak", overwrite: true);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Serilog.Log.Warning(exception, "Could not back up the invalid settings file {Path}.", path);
         }
     }
 
@@ -153,6 +183,7 @@ public static class AppSettingsStore
             Directory.CreateDirectory(directory);
         }
 
+        settings.SettingsVersion = AppSettings.CurrentVersion;
         var temporary = resolved + ".tmp";
         File.WriteAllText(temporary, JsonSerializer.Serialize(settings, AppSettingsJsonContext.Default.AppSettings));
         File.Move(temporary, resolved, overwrite: true);

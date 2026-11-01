@@ -121,9 +121,9 @@ The BIOS manager scans a folder, reports file name, size, MD5, region, video sta
 |---|---|---|
 | ISO, 2048-byte sectors | v1 | Most common 3DO image format |
 | BIN, 2352-byte sectors | v1 | Payload starts at offset `0x10` |
-| CUE + BIN | v1 | Single data track, MODE1/2048 or MODE1/2352 |
-| **CHD** | **v1** | **MAME CHD via pure C# CHDSharp; CD/GD-ROM track table; parent/child supported** |
-| Multi-track / CD-DA | Not supported | 3DO games use a single data track; Red Book audio is out of scope |
+| CUE + BIN | v1 | Multi-file/multi-track CUE, MODE1/2048, MODE1/2352, audio tracks, `INDEX`/`PREGAP`/`POSTGAP` |
+| **CHD** | **v1** | **MAME CHD via pure C# CHDSharp; CD/GD-ROM track table incl. audio; parent/child supported** |
+| Multi-track / CD-DA | Partial (2026-11-01) | Track table, raw CD-DA sectors, PLAY_AUDIO position, and DSP mixing are implemented; read-ahead/subcode and known-title evidence remain |
 | ZIP/7z archives | Later | Prefer extracting first |
 
 Sector count is read from the 3DO volume header at sector 0 (big-endian `blockCount` at byte offset 80). If the header is invalid, fall back to `fileSize / sectorSize` for ISO/BIN or the CHD data track's frame count.
@@ -261,7 +261,7 @@ does not need a separate high-resolution input path.
 | Audio-driven frame pacing | Yes (audio clock with a 60 Hz fallback) | |
 | Audio analysis | `audio analyze <wav> --json` | Spectrum/loudness comparison with Opera remains a manual check |
 | AOT live audio | Validated for the win-x64 NativeAOT CLI with the bundled runtime | Frontend AOT audio remains unvalidated |
-| CD-DA | No | Out of scope |
+| CD-DA | Partial | Raw 2352-byte audio sectors, PLAY_AUDIO position, and 44.1 kHz DSP mixing; read-ahead/subcode and persisted volume UI remain |
 
 ---
 
@@ -288,16 +288,19 @@ does not need a separate high-resolution input path.
 ## 9. Known limitations / out of scope for v1
 
 - No netplay.
-- No rewind.
-- No CD-DA / Red Book audio.
-- No multi-disc swapping.
+- Rewind, fast-forward, cheats, TAS movies, OSD/quick menu, and multi-track/CD-DA
+  sectors are implemented; CD-DA read-ahead/subcode, a persisted volume UI, and
+  known-title CD-DA evidence remain.
+- No multi-disc swapping/ODE.
 - No PAL.
 - High-resolution CEL rendering is opt-in (`--high-res`) and validated for the
   Lemmings title; it is FreeDO-style line doubling, not true internal 640x480.
   Output upscaling via OpenGL is supported separately. See
   [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 - No GPU CEL compositing in v1; CEL rendering is software, matching FreeDO. The OpenGL renderer accelerates presentation, palette expansion, scaling, and filters.
-- No 3DO mouse/light gun/other peripherals.
+- Mouse, light gun, arcade light gun, flightstick, and Orbatak trackball devices are
+  implemented on the PBUS ports; per-device calibration and scripted gameplay
+  validation remain.
 - No 3DO modem/network emulation.
 - No cycle-exact ARM bus timing yet. The interpreter preserves FreeDOCore's `Ncycle = 4`; Opera uses `Ncycle = 2` with datasheet references. The difference is under evaluation and must not be changed by default until a differential test proves the impact.
 - No guarantee of 4DO save-state compatibility.

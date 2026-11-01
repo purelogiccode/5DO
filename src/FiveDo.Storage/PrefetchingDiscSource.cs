@@ -21,7 +21,7 @@ namespace FiveDo.Storage;
 /// reader.
 /// </para>
 /// </remarks>
-public sealed class PrefetchingDiscSource : IDiscSource
+public sealed class PrefetchingDiscSource : ITrackedDiscSource
 {
     private readonly IDiscSource _inner;
     private readonly int _capacity;
@@ -91,6 +91,51 @@ public sealed class PrefetchingDiscSource : IDiscSource
             {
                 return _inner.SectorSize;
             }
+        }
+    }
+
+    /// <summary>Gets the wrapped track table, or an empty list for a single-track image.</summary>
+    public IReadOnlyList<DiscTrack> Tracks
+    {
+        get
+        {
+            lock (_innerGate)
+            {
+                return _inner is ITrackedDiscSource tracked
+                    ? tracked.Tracks
+                    : [new DiscTrack(1, DiscTrackKind.Data, 0, _inner.SectorCount, _inner.SectorSize)];
+            }
+        }
+    }
+
+    /// <summary>Gets the wrapped total sector count.</summary>
+    public int TotalSectorCount
+    {
+        get
+        {
+            lock (_innerGate)
+            {
+                return _inner is ITrackedDiscSource tracked ? tracked.TotalSectorCount : _inner.SectorCount;
+            }
+        }
+    }
+
+    /// <summary>Reads one native track sector, bypassing the 2048-byte cache.</summary>
+    /// <param name="lba">Logical block address.</param>
+    /// <param name="destination">Destination span.</param>
+    /// <returns>The number of bytes written.</returns>
+    public int ReadTrackSector(int lba, Span<byte> destination)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        lock (_innerGate)
+        {
+            if (_inner is ITrackedDiscSource tracked)
+            {
+                return tracked.ReadTrackSector(lba, destination);
+            }
+
+            _inner.ReadSector(lba, destination);
+            return _inner.SectorSize;
         }
     }
 

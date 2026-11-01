@@ -640,6 +640,11 @@ public sealed class CliProcessTests
             Assert.Contains("format=iso", result.Output, StringComparison.Ordinal);
             Assert.Contains("dataSize=6144", result.Output, StringComparison.Ordinal);
             Assert.Contains("frames=3", result.Output, StringComparison.Ordinal);
+
+            CliResult json = Invoke("disc", "tracks", path, "--json");
+            Assert.Equal(0, json.Code);
+            Assert.Contains("\"tracks\"", json.Output, StringComparison.Ordinal);
+            Assert.Contains("\"dataSize\": 2048", json.Output, StringComparison.Ordinal);
         }
         finally
         {

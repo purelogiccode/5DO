@@ -14,10 +14,10 @@ namespace FiveDo.Storage.Chd;
 /// </summary>
 /// <remarks>
 /// 3DO software is distributed on CD-ROM. CHDSharp exposes CD CHDs as 2352-byte raw sectors
-/// (plus optional subcode); this adapter extracts the 2048-byte user-data payload according
-/// to the first data track's type and data size. It does not expose audio tracks.
+/// (plus optional subcode); this adapter exposes both the normalized 2048-byte user-data
+/// stream and the native track sectors, including Red Book audio tracks.
 /// </remarks>
-public sealed class ChdDiscImage : IDiscSource
+public sealed class ChdDiscImage : ITrackedDiscSource
 {
     /// <summary>The 3DO user-data sector size.</summary>
     public const int UserDataSectorSize = 2048;
@@ -26,18 +26,23 @@ public sealed class ChdDiscImage : IDiscSource
 
     private readonly ChdFile _chd;
     private readonly byte[] _rawSector = new byte[RawSectorSize];
-    private readonly int _dataOffset;
     private bool _disposed;
 
-    private ChdDiscImage(ChdFile chd, int sectorCount, int dataOffset)
+    private ChdDiscImage(ChdFile chd, IReadOnlyList<DiscTrack> tracks)
     {
         _chd = chd;
-        SectorCount = sectorCount;
-        _dataOffset = dataOffset;
+        Tracks = tracks;
+        TotalSectorCount = tracks.Sum(static track => track.SectorCount);
     }
 
-    /// <summary>Gets the number of 2048-byte user-data sectors.</summary>
-    public int SectorCount { get; }
+    /// <summary>Gets the tracks in disc order.</summary>
+    public IReadOnlyList<DiscTrack> Tracks { get; }
+
+    /// <summary>Gets the total number of logical sectors across all tracks.</summary>
+    public int TotalSectorCount { get; }
+
+    /// <summary>Gets the number of logical sectors across all tracks.</summary>
+    public int SectorCount => TotalSectorCount;
 
     /// <summary>Gets the user-data sector size (2048 bytes).</summary>
     public int SectorSize => UserDataSectorSize;
@@ -91,10 +96,31 @@ public sealed class ChdDiscImage : IDiscSource
             }
 
             int dataOffset = GetUserDataOffset(dataTrack);
-            int sectorCount = dataTrack.Frames;
-            if (sectorCount <= 0)
+            if (dataTrack.Frames <= 0)
             {
                 throw new InvalidDataException($"CHD data track has no sectors: '{path}'.");
+            }
+
+            var discTracks = new List<DiscTrack>(tracks.Count);
+            int startLba = 0;
+            foreach (ChdTrackInfo track in tracks)
+            {
+                if (track.Frames <= 0)
+                {
+                    continue;
+                }
+
+                bool audio = track.TrackType == ChdTrackType.Audio;
+                int sectorSize = audio ? RawSectorSize : track.DataSize;
+                var discTrack = new DiscTrack(
+                    track.TrackNumber,
+                    audio ? DiscTrackKind.Audio : DiscTrackKind.Data,
+                    startLba,
+                    track.Frames,
+                    sectorSize,
+                    GetPayloadOffset(track, dataOffset, sectorSize));
+                discTracks.Add(discTrack);
+                startLba += track.Frames;
             }
 
             if (readAheadHunks > 0)
@@ -102,7 +128,7 @@ public sealed class ChdDiscImage : IDiscSource
                 chd.ConfigureReadAhead(readAheadHunks);
             }
 
-            return new ChdDiscImage(chd, sectorCount, dataOffset);
+            return new ChdDiscImage(chd, discTracks);
         }
         catch
         {
@@ -111,26 +137,66 @@ public sealed class ChdDiscImage : IDiscSource
         }
     }
 
-    /// <summary>Reads one 2048-byte user-data sector.</summary>
+    /// <summary>Reads one 2048-byte user-data sector from a data track.</summary>
     /// <param name="lba">Logical block address, zero-based.</param>
     /// <param name="destination">Destination span of at least 2048 bytes.</param>
     public void ReadSector(int lba, Span<byte> destination)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentOutOfRangeException.ThrowIfNegative(lba);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(lba, SectorCount);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(lba, TotalSectorCount);
         if (destination.Length < UserDataSectorSize)
         {
             throw new ArgumentException("Destination must hold one 2048-byte 3DO sector.", nameof(destination));
         }
 
-        ChdError error = _chd.ReadSector((uint)lba, _rawSector, CancellationToken.None);
-        if (error != ChdError.Chderrnone)
+        DiscTrack? track = LocateTrack(lba);
+        if (track is null || track.IsAudio)
         {
-            throw new IOException($"CHD sector read failed ({error.GetMessage()}) at LBA {lba}.");
+            throw new InvalidDataException($"LBA {lba} is not a data track sector.");
         }
 
-        _rawSector.AsSpan(_dataOffset, UserDataSectorSize).CopyTo(destination);
+        ReadRawSector(lba);
+        _rawSector.AsSpan(track.PayloadOffset, UserDataSectorSize).CopyTo(destination);
+    }
+
+    /// <summary>Reads one native track sector (2048, 2336, or 2352 bytes).</summary>
+    /// <param name="lba">Logical block address.</param>
+    /// <param name="destination">Destination span.</param>
+    /// <returns>The number of bytes written.</returns>
+    public int ReadTrackSector(int lba, Span<byte> destination)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentOutOfRangeException.ThrowIfNegative(lba);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(lba, TotalSectorCount);
+        DiscTrack track = LocateTrack(lba)
+            ?? throw new InvalidDataException($"LBA {lba} is outside the CHD track table.");
+        if (destination.Length < track.SectorSize)
+        {
+            throw new ArgumentException(
+                $"Destination must hold {track.SectorSize} bytes for track {track.Number}.",
+                nameof(destination));
+        }
+
+        ReadRawSector(lba);
+        if (track.IsAudio)
+        {
+            // CHD stores Red Book audio byte-swapped (cdrom_file::track_info::swap).
+            for (var i = 0; i < RawSectorSize; i += 2)
+            {
+                (_rawSector[i], _rawSector[i + 1]) = (_rawSector[i + 1], _rawSector[i]);
+            }
+        }
+
+        if (track.SectorSize == RawSectorSize)
+        {
+            _rawSector.AsSpan(0, RawSectorSize).CopyTo(destination);
+            return RawSectorSize;
+        }
+
+        int payloadOffset = track.SectorSize == UserDataSectorSize ? 0 : RawSectorSize - track.SectorSize;
+        _rawSector.AsSpan(payloadOffset, track.SectorSize).CopyTo(destination);
+        return track.SectorSize;
     }
 
     /// <summary>Disposes the underlying CHD reader.</summary>
@@ -141,6 +207,44 @@ public sealed class ChdDiscImage : IDiscSource
             _chd.Dispose();
             _disposed = true;
         }
+    }
+
+    private DiscTrack? LocateTrack(int lba)
+    {
+        foreach (DiscTrack track in Tracks)
+        {
+            if (track.Contains(lba))
+            {
+                return track;
+            }
+        }
+
+        return null;
+    }
+
+    private void ReadRawSector(int lba)
+    {
+        ChdError error = _chd.ReadSector((uint)lba, _rawSector, CancellationToken.None);
+        if (error != ChdError.Chderrnone)
+        {
+            throw new IOException($"CHD sector read failed ({error.GetMessage()}) at LBA {lba}.");
+        }
+    }
+
+    private static int GetPayloadOffset(ChdTrackInfo track, int rawPayloadOffset, int sectorSize)
+    {
+        if (track.TrackType == ChdTrackType.Audio)
+        {
+            return 0;
+        }
+
+        return sectorSize switch
+        {
+            RawSectorSize => rawPayloadOffset,
+            UserDataSectorSize => 0,
+            // Native 2336-byte Mode 2 sectors begin after the 16-byte sync/header.
+            _ => Math.Max(0, rawPayloadOffset - 16),
+        };
     }
 
     private static int GetUserDataOffset(ChdTrackInfo track)

@@ -22,6 +22,15 @@ namespace FiveDo.Host;
 /// </remarks>
 public sealed class AppSettings
 {
+    /// <summary>The settings schema version written by this build.</summary>
+    public const int CurrentVersion = 1;
+
+    /// <summary>
+    /// Gets or sets the settings schema version. Zero or missing means a pre-versioned file
+    /// that is migrated by <see cref="AppSettingsStore"/> on load.
+    /// </summary>
+    public int SettingsVersion { get; set; }
+
     /// <summary>Gets or sets a value indicating whether the first-run guide has been shown.</summary>
     public bool FirstRunCompleted { get; set; }
 

@@ -593,6 +593,29 @@ Command:
 dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release --filter "FullyQualifiedName~DiscBrowserTests"
 ```
 
+### 1.1j Multi-track and CD-DA (2026-11-01)
+
+SYS-01/AUD-05 are covered by synthetic fixtures until a known CD-DA title is
+validated:
+
+- `CueSheet_ExposesMultiTrackTableOfContentsAndAudioSectors` builds one Mode 1 data
+  track and one audio track, checks the logical start LBAs and native sector sizes,
+  reads data through `ReadSector`, reads 2352-byte audio through `ReadTrackSector`, and
+  verifies that an audio LBA has no 2048-byte user data.
+- `ChdImage_ExposesAudioTracks` encodes the same layout to CHD and checks the CHD track
+  table plus byte-swapped audio samples.
+- `DiscInfoReportsEveryTrackAndTheLeadOut`, `ModeSetToDigitalAudioReadsRawAudioSectors`,
+  `PlayAudioTrackMovesTheSubQPositionAndStopsAtTheEnd`, and
+  `ModeSetRejectsAnOversizedBlock` cover the CD-ROM command path.
+- `PlayAudioTrackMovesTheSubQPositionAndStopsAtTheEnd` also verifies the first CD-DA
+  sample is decoded little-endian from the audio sector.
+- `DiscTracks_ReportsAnIsoImage` also checks the `--json` track table.
+- `AppSettingsStoreTests` covers FND-02 legacy migration, malformed-file backup,
+  version roundtrip, and invalid-value normalization.
+
+The full suite is **1,361 tests** in Debug. A real CD-DA title and a 10-second
+DSP+CD-DA WAV capture are still required for SYS-01 completion.
+
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 
 All runs use the Release build, `panafz1.bin`, and a fresh NVRAM. The 3,000-frame

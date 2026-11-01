@@ -24,6 +24,17 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 {
     private const int RequestSize = 2048;
 
+    private const int MaxSectorSize = 2352;
+
+    private const int SubcodeSize = 96;
+
+    private const byte BlockFlagSubcode = 0x40;
+    private const byte BlockFlagError = 0x80;
+
+    private const byte CdCtlAudioTrack = 0x00;
+
+    private const byte DensityDigitalAudio = 0x82;
+
     private const ulong FramesPerSecond = 75;
 
     private const byte PollStatusMask = 0x01;
@@ -45,7 +56,9 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     private const byte CdCtlDataTrack = 0x04;
 
     private readonly byte[] _status = new byte[256];
-    private readonly byte[] _data = new byte[RequestSize];
+    private readonly byte[] _data = new byte[MaxSectorSize];
+    private readonly byte[] _trackSector = new byte[MaxSectorSize];
+    private readonly byte[] _audioSector = new byte[MaxSectorSize];
     private readonly byte[] _command = new byte[7];
 
     private IDiscSource? _disc;
@@ -67,6 +80,15 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     private ulong _cycles;
     private ulong _nextReadyCycle;
     private bool _readStatusPending;
+    private int _readSectorSize = RequestSize;
+    private byte _densityCode;
+    private byte _blockFlags;
+    private bool _audioPlaying;
+    private int _audioStartLba;
+    private int _audioEndLba;
+    private ulong _audioStartCycle;
+    private int _audioSampleLba;
+    private int _audioSampleOffset;
 
     /// <summary>Gets or sets the data-sector timing model.</summary>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is unknown.</exception>
@@ -118,6 +140,52 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 
     /// <summary>Gets the effective speed multiplier, or 0 for <see cref="CdSpeed.Unbounded"/>.</summary>
     public int EffectiveSpeed => (int)_configuredSpeed;
+
+    /// <summary>Gets the native sector size selected by the most recent MODE SET block page.</summary>
+    /// <remarks>
+    /// The default is 2048 (Mode 1 user data). A CD-DA player selects 2352-byte
+    /// digital-audio sectors with density code <c>0x82</c>, so READ_DATA returns the raw
+    /// audio frames from the disc track rather than a 2048-byte data payload.
+    /// </remarks>
+    public int ReadSectorSize => _readSectorSize;
+
+    private int TransferSize
+    {
+        get
+        {
+            int size = _readSectorSize;
+            if ((_blockFlags & BlockFlagSubcode) != 0)
+            {
+                size += SubcodeSize;
+            }
+
+            if ((_blockFlags & BlockFlagError) != 0)
+            {
+                size++;
+            }
+
+            return Math.Min(size, MaxSectorSize);
+        }
+    }
+
+    /// <summary>Gets whether PLAY_AUDIO_MSF or PLAY_AUDIO_TRACK is currently active.</summary>
+    public bool IsAudioPlaying => _audioPlaying;
+
+    /// <summary>Gets the current logical block address of the audio playback head.</summary>
+    public int AudioPositionLba
+    {
+        get
+        {
+            if (!_audioPlaying)
+            {
+                return _audioStartLba;
+            }
+
+            var frames = (int)(((_cycles - _audioStartCycle) * FramesPerSecond) / (ulong)_armClock);
+            int position = _audioStartLba + frames;
+            return Math.Min(position, _audioEndLba);
+        }
+    }
 
     /// <summary>Gets or sets the ARM clock used to convert sector time to cycles.</summary>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is not positive.</exception>
@@ -216,12 +284,84 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <summary>Gets the emulated frame of the most recent read-data request, or -1.</summary>
     public long LastReadFrame { get; private set; } = -1;
 
+    /// <summary>
+    /// Reads the next 44.1 kHz stereo CD-DA sample while PLAY_AUDIO is active.
+    /// </summary>
+    /// <param name="sample">The decoded signed 16-bit stereo sample.</param>
+    /// <returns><see langword="true"/> when a sample was produced.</returns>
+    /// <remarks>
+    /// Red Book audio sectors carry 588 stereo frames (2352 bytes) at 44.1 kHz. The
+    /// machine calls this once per DSP sample and mixes the result into its output.
+    /// </remarks>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Design",
+        "CA1031:Do not catch general exception types",
+        Justification = "A bad audio sector stops CD-DA playback; it must not fault emulation.")]
+    public bool TryGetAudioSample(out AudioSample sample)
+    {
+        sample = default;
+        if (!_audioPlaying || _disc is not ITrackedDiscSource tracked)
+        {
+            return false;
+        }
+
+        while (true)
+        {
+            if (_audioSampleLba >= _audioEndLba || _audioSampleLba < _audioStartLba)
+            {
+                _audioPlaying = false;
+                return false;
+            }
+
+            if (_audioSampleOffset == 0)
+            {
+                try
+                {
+                    int read = tracked.ReadTrackSector(_audioSampleLba, _audioSector);
+                    if (read < 4)
+                    {
+                        _audioPlaying = false;
+                        return false;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    TraceWriter?.WriteLine($"cd audio read failed lba={_audioSampleLba}: {exception.Message}");
+                    _audioPlaying = false;
+                    return false;
+                }
+            }
+
+            if (_audioSampleOffset + 4 > MaxSectorSize)
+            {
+                _audioSampleLba++;
+                _audioSampleOffset = 0;
+                continue;
+            }
+
+            short left = (short)(_audioSector[_audioSampleOffset] | (_audioSector[_audioSampleOffset + 1] << 8));
+            short right = (short)(_audioSector[_audioSampleOffset + 2] | (_audioSector[_audioSampleOffset + 3] << 8));
+            _audioSampleOffset += 4;
+            if (_audioSampleOffset >= MaxSectorSize)
+            {
+                _audioSampleOffset = 0;
+                _audioSampleLba++;
+            }
+
+            sample = new AudioSample(left, right);
+            return true;
+        }
+    }
+
     /// <summary>Gets the save-state section identifier.</summary>
     public uint Id => StateSectionIds.Cdrom;
 
     /// <summary>Gets the save-state section version.</summary>
-    /// <remarks>Version 2 adds the cycle-based data-sector clock and deadline.</remarks>
-    public ushort Version => 2;
+    /// <remarks>
+    /// Version 2 adds the cycle-based data-sector clock and deadline. Version 3 adds the
+    /// MODE SET sector size/block flags and the PLAY_AUDIO playback position.
+    /// </remarks>
+    public ushort Version => 3;
 
     /// <summary>Inserts a disc and initializes the drive for it.</summary>
     /// <param name="disc">Disc source. The device does not take ownership.</param>
@@ -246,6 +386,15 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _cycles = 0;
         _nextReadyCycle = 0;
         _readStatusPending = false;
+        _readSectorSize = RequestSize;
+        _densityCode = 0;
+        _blockFlags = 0;
+        _audioPlaying = false;
+        _audioStartLba = 0;
+        _audioEndLba = 0;
+        _audioStartCycle = 0;
+        _audioSampleLba = 0;
+        _audioSampleOffset = 0;
         _xbusStatus = 0;
         ResetPoll();
         if (UseOperaPollSemantics)
@@ -278,6 +427,11 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _discState.TempLba = 0;
         LbaToMsf();
         CopyMsf(_discState.SessionMsf, _discState.TempMsf);
+
+        if (_disc is ITrackedDiscSource tracked)
+        {
+            BuildToc(tracked);
+        }
     }
 
     /// <inheritdoc />
@@ -298,6 +452,11 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     public void Tick(uint cycles)
     {
         _cycles += cycles;
+        if (_audioPlaying && AudioPositionLba >= _audioEndLba)
+        {
+            _audioPlaying = false;
+        }
+
         if (UseOperaPollSemantics && (_poll & PollResetMask) != 0)
         {
             return;
@@ -318,6 +477,15 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _currentSector = 0;
         _nextReadyCycle = 0;
         _readStatusPending = false;
+        _readSectorSize = RequestSize;
+        _densityCode = 0;
+        _blockFlags = 0;
+        _audioPlaying = false;
+        _audioStartLba = 0;
+        _audioEndLba = 0;
+        _audioStartCycle = 0;
+        _audioSampleLba = 0;
+        _audioSampleOffset = 0;
         _xbusStatus = 0;
         ResetPoll();
         _xbusStatus |= CdstTray;
@@ -348,6 +516,11 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _discState.TempLba = 0;
         LbaToMsf();
         CopyMsf(_discState.SessionMsf, _discState.TempMsf);
+
+        if (_disc is ITrackedDiscSource tracked)
+        {
+            BuildToc(tracked);
+        }
     }
 
     /// <inheritdoc />
@@ -557,6 +730,15 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         writer.WriteUInt64(_cycles);
         writer.WriteUInt64(_nextReadyCycle);
         writer.WriteByte(_readStatusPending ? (byte)1 : (byte)0);
+        writer.WriteInt32(_readSectorSize);
+        writer.WriteByte(_densityCode);
+        writer.WriteByte(_blockFlags);
+        writer.WriteByte(_audioPlaying ? (byte)1 : (byte)0);
+        writer.WriteInt32(_audioStartLba);
+        writer.WriteInt32(_audioEndLba);
+        writer.WriteUInt64(_audioStartCycle);
+        writer.WriteInt32(_audioSampleLba);
+        writer.WriteInt32(_audioSampleOffset);
 
         writer.WriteByte(_discState.FirstTrack);
         writer.WriteByte(_discState.LastTrack);
@@ -622,6 +804,43 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             _cycles = 0;
             _nextReadyCycle = 0;
             _readStatusPending = false;
+        }
+
+        int version = reader is StateSectionReader section ? section.Version : int.MaxValue;
+        if (version >= 3)
+        {
+            _readSectorSize = reader.ReadInt32();
+            if (_readSectorSize is < 1 or > MaxSectorSize)
+            {
+                throw new InvalidStateException($"Invalid CD-ROM sector size {_readSectorSize}.");
+            }
+
+            _densityCode = reader.ReadByte();
+            _blockFlags = reader.ReadByte();
+            byte audioPlaying = reader.ReadByte();
+            if (audioPlaying > 1)
+            {
+                throw new InvalidStateException($"Invalid CD-ROM audio playback flag {audioPlaying}.");
+            }
+
+            _audioPlaying = audioPlaying != 0;
+            _audioStartLba = reader.ReadInt32();
+            _audioEndLba = reader.ReadInt32();
+            _audioStartCycle = reader.ReadUInt64();
+            _audioSampleLba = reader.ReadInt32();
+            _audioSampleOffset = reader.ReadInt32();
+        }
+        else
+        {
+            _readSectorSize = RequestSize;
+            _densityCode = 0;
+            _blockFlags = 0;
+            _audioPlaying = false;
+            _audioStartLba = 0;
+            _audioEndLba = 0;
+            _audioStartCycle = 0;
+            _audioSampleLba = 0;
+            _audioSampleOffset = 0;
         }
 
         _discState.FirstTrack = reader.ReadByte();
@@ -725,6 +944,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
                 Spin(false);
                 break;
             case 0x06: // eject
+                _audioPlaying = false;
                 _xbusStatus &= unchecked((byte)~CdstTray);
                 _xbusStatus &= unchecked((byte)~CdstDisc);
                 _xbusStatus &= unchecked((byte)~CdstSpin);
@@ -737,15 +957,19 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
                 SetStatus(0x06);
                 break;
             case 0x08: // abort
+                _audioPlaying = false;
                 StatusWithTrailer(0x08, 31);
                 _xbusStatus |= CdstReady;
                 _meiStatus = MeiError.NoError;
                 break;
             case 0x09: // mode set
-                _xbusStatus |= CdstReady;
-                _meiStatus = MeiError.NoError;
-                _poll |= PollStatus;
-                SetStatus(0x09);
+                ModeSetCommand();
+                break;
+            case 0x0E: // play audio MSF
+                PlayAudioMsfCommand();
+                break;
+            case 0x0F: // play audio track
+                PlayAudioTrackCommand();
                 break;
             case 0x0B: // flush
                 _xbusStatus |= CdstReady;
@@ -796,22 +1020,22 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
                 _meiStatus = MeiError.NoError;
                 break;
             case 0x84: // mode sense
-                _statusLength = 4;
-                _status[0] = 0;
-                _status[1] = 0;
-                _status[2] = 0;
                 if ((_xbusStatus & CdstTray) != 0 && (_xbusStatus & CdstDisc) != 0)
                 {
                     _xbusStatus |= CdstReady;
+                    _meiStatus = MeiError.NoError;
+                    StatusWithPayload(0x84, ModeSensePayload());
                 }
                 else
                 {
                     _xbusStatus |= CdstError;
                     _xbusStatus &= unchecked((byte)~CdstReady);
+                    _statusLength = 2;
+                    _status[0] = 0x84;
+                    _status[1] = _xbusStatus;
+                    _poll |= PollStatus;
                 }
 
-                _poll |= PollStatus;
-                _status[3] = _xbusStatus;
                 break;
             case 0x85: // read capacity
                 if (DiscReadyForRead())
@@ -836,30 +1060,23 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 
                 break;
             case 0x87: // read sub-Q
-                if (DiscReadyForRead())
+                if (!DiscReadyForRead())
                 {
-                    _statusLength = 12;
-                    _status[0] = 0x87;
-                    for (var i = 1; i <= 5; i++)
-                    {
-                        _status[i] = 0;
-                    }
-
-                    _xbusStatus |= CdstReady;
-                    for (var i = 6; i <= 10; i++)
-                    {
-                        _status[i] = 0;
-                    }
-
-                    _status[11] = _xbusStatus;
-                    _poll |= PollStatus;
-                    _meiStatus = MeiError.NoError;
-                }
-                else
-                {
-                    FailWithStatus(0x85);
+                    FailWithStatus(0x87);
+                    break;
                 }
 
+                if (_disc is not ITrackedDiscSource tracked
+                    || !TryBuildSubQPayload(tracked, out byte[] subQ))
+                {
+                    FailWithStatus(0x87);
+                    _meiStatus = MeiError.TrackError;
+                    break;
+                }
+
+                _xbusStatus |= CdstReady;
+                _meiStatus = MeiError.NoError;
+                StatusWithPayload(0x87, subQ);
                 break;
             case 0x8A: // read disc code
                 if (DiscReadyForRead())
@@ -913,32 +1130,57 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
                 _poll |= PollStatus;
                 break;
             case 0x8C: // read TOC
-                _statusLength = 10;
-                _status[0] = 0x8C;
-                if ((_xbusStatus & (CdstTray | CdstDisc | CdstSpin)) != 0)
+                if (!DiscReadyForRead())
                 {
-                    TocEntry entry = _discState.Toc[_command[2]];
-                    _status[1] = entry.Reserved0;
-                    _status[2] = entry.Control;
-                    _status[3] = entry.TrackNumber;
-                    _status[4] = entry.Reserved1;
-                    _status[5] = entry.Minute;
+                    FailWithStatus(0x8C);
+                    _meiStatus = MeiError.ReceiveEcc;
+                    break;
+                }
+
+                byte requestedTrack = _command[2];
+                if (requestedTrack == 0xAA)
+                {
                     _xbusStatus |= CdstReady;
-                    _status[6] = entry.Second;
-                    _status[7] = entry.Frame;
-                    _status[8] = entry.Reserved2;
                     _meiStatus = MeiError.NoError;
-                    _status[9] = _xbusStatus;
+                    byte leadOutControl = _discState.Toc[_discState.LastTrack].Control;
+                    StatusWithPayload(
+                        0x8C,
+                        [
+                            0x00,
+                            leadOutControl,
+                            0xAA,
+                            0x00,
+                            _discState.TotalMsf[0],
+                            _discState.TotalMsf[1],
+                            _discState.TotalMsf[2],
+                            0x00,
+                        ]);
+                }
+                else if (requestedTrack >= _discState.FirstTrack
+                    && requestedTrack <= _discState.LastTrack)
+                {
+                    TocEntry entry = _discState.Toc[requestedTrack];
+                    _xbusStatus |= CdstReady;
+                    _meiStatus = MeiError.NoError;
+                    StatusWithPayload(
+                        0x8C,
+                        [
+                            entry.Reserved0,
+                            entry.Control,
+                            entry.TrackNumber,
+                            entry.Reserved1,
+                            entry.Minute,
+                            entry.Second,
+                            entry.Frame,
+                            entry.Reserved2,
+                        ]);
                 }
                 else
                 {
-                    _statusLength = 2;
-                    _xbusStatus |= CdstError;
-                    _meiStatus = MeiError.ReceiveEcc;
-                    _status[1] = _xbusStatus;
+                    FailWithStatus(0x8C);
+                    _meiStatus = MeiError.TrackError;
                 }
 
-                _poll |= PollStatus;
                 break;
             case 0x8D: // read session information
                 _statusLength = 8;
@@ -1009,7 +1251,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         MsfToLba();
         _currentSector = _discState.TempLba;
 
-        _requested = (_command[5] << 8) + _command[6];
+        _requested = (_command[4] << 16) | (_command[5] << 8) | _command[6];
         if (_timingMode == CdromTimingMode.OperaCycleBased)
         {
             // Opera schedules the first sector one sector-time after the command and
@@ -1037,7 +1279,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             {
                 ReadSectorIntoData();
                 _currentSector++;
-                _dataLength = RequestSize;
+                _dataLength = TransferSize;
                 _requested--;
             }
             else
@@ -1050,6 +1292,202 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         }
 
         _meiStatus = MeiError.NoError;
+    }
+
+    private void ModeSetCommand()
+    {
+        bool accepted;
+        switch (_command[1])
+        {
+            case 0:
+                accepted = ApplyBlockMode(_command[2], _command[3], _command[4], _command[5]);
+                break;
+            case 1: // error recovery
+            case 2: // stop time
+            case 4: // chunk size
+                accepted = true;
+                break;
+            case 3: // drive speed
+                accepted = true;
+                if (_command[2] == 2)
+                {
+                    _xbusStatus |= Cdst2X;
+                }
+                else
+                {
+                    _xbusStatus &= unchecked((byte)~Cdst2X);
+                }
+
+                break;
+            default:
+                accepted = false;
+                break;
+        }
+
+        if (accepted)
+        {
+            _xbusStatus |= CdstReady;
+            _xbusStatus &= unchecked((byte)~CdstError);
+            _meiStatus = MeiError.NoError;
+            _poll |= PollStatus;
+            SetStatus(0x09);
+        }
+        else
+        {
+            FailWithStatus(0x09);
+            _meiStatus = MeiError.ModeError;
+        }
+    }
+
+    private bool ApplyBlockMode(byte density, byte lengthMsb, byte lengthLsb, byte flags)
+    {
+        int requested = (lengthMsb << 8) | lengthLsb;
+        if (requested == 0)
+        {
+            requested = RequestSize;
+        }
+
+        if (requested > MaxSectorSize
+            || (flags & ~(BlockFlagSubcode | BlockFlagError)) != 0
+            || !IsDensitySupported(density))
+        {
+            return false;
+        }
+
+        int transfer = requested;
+        if ((flags & BlockFlagSubcode) != 0)
+        {
+            transfer += SubcodeSize;
+        }
+
+        if ((flags & BlockFlagError) != 0)
+        {
+            transfer++;
+        }
+
+        if (transfer > MaxSectorSize)
+        {
+            return false;
+        }
+
+        _densityCode = density;
+        _blockFlags = flags;
+        _readSectorSize = requested;
+        return true;
+    }
+
+    private static bool IsDensitySupported(byte density)
+    {
+        return density is 0x00 or 0x01 or 0x81 or DensityDigitalAudio;
+    }
+
+    private void PlayAudioMsfCommand()
+    {
+        int start = MsfToLba(_command[1], _command[2], _command[3]);
+        bool noEnd = _command[4] == 0xFF && _command[5] == 0xFF && _command[6] == 0xFF;
+        int end = noEnd ? TotalSectorCount : MsfToLba(_command[4], _command[5], _command[6]);
+        PlayAudio(start, end, 0x0E);
+    }
+
+    private void PlayAudioTrackCommand()
+    {
+        if (_disc is not ITrackedDiscSource tracked)
+        {
+            PlayAudio(0, 0, 0x0F);
+            return;
+        }
+
+        int startTrack = _command[1];
+        int endTrack = _command[3];
+        DiscTrack? start = FindTrackByNumber(tracked, startTrack);
+        if (start is null)
+        {
+            FailWithStatus(0x0F);
+            _meiStatus = MeiError.TrackError;
+            return;
+        }
+
+        int end = tracked.TotalSectorCount;
+        if (endTrack > 0 && endTrack < tracked.Tracks[^1].Number)
+        {
+            DiscTrack? next = FindTrackByNumber(tracked, endTrack + 1);
+            if (next is not null)
+            {
+                end = next.StartLba;
+            }
+        }
+
+        PlayAudio(start.StartLba, end, 0x0F);
+    }
+
+    private void PlayAudio(int start, int end, byte command)
+    {
+        if (start == 0 && end == 0)
+        {
+            _audioPlaying = false;
+            _audioStartLba = 0;
+            _audioEndLba = 0;
+            if (DiscReadyForRead())
+            {
+                _xbusStatus |= CdstReady;
+                _meiStatus = MeiError.NoError;
+            }
+            else
+            {
+                _meiStatus = MeiError.ReceiveEcc;
+                _xbusStatus |= CdstError;
+            }
+
+            _poll |= PollStatus;
+            SetStatus(command);
+            return;
+        }
+
+        if (!DiscReadyForRead() || end <= start)
+        {
+            _audioPlaying = false;
+            FailWithStatus(command);
+            _meiStatus = MeiError.ReceiveEcc;
+            return;
+        }
+
+        _audioStartLba = Math.Max(0, start);
+        _audioEndLba = Math.Min(end, TotalSectorCount);
+        _audioStartCycle = _cycles;
+        _audioSampleLba = _audioStartLba;
+        _audioSampleOffset = 0;
+        _audioPlaying = _audioEndLba > _audioStartLba;
+        _xbusStatus |= CdstReady;
+        _xbusStatus &= unchecked((byte)~CdstError);
+        _meiStatus = MeiError.NoError;
+        _poll |= PollStatus;
+        SetStatus(command);
+    }
+
+    private int TotalSectorCount => _disc switch
+    {
+        ITrackedDiscSource tracked => tracked.TotalSectorCount,
+        not null => _disc.SectorCount,
+        _ => 0,
+    };
+
+    private static DiscTrack? FindTrackByNumber(ITrackedDiscSource tracked, int number)
+    {
+        foreach (DiscTrack track in tracked.Tracks)
+        {
+            if (track.Number == number)
+            {
+                return track;
+            }
+        }
+
+        return null;
+    }
+
+    private static int MsfToLba(byte minute, byte second, byte frame)
+    {
+        int lba = ((minute * 60) + second) * 75 + frame - 150;
+        return Math.Max(0, lba);
     }
 
     private void Spin(bool up)
@@ -1092,6 +1530,28 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _statusLength = 2;
         _status[0] = command;
         _status[1] = _xbusStatus;
+    }
+
+    private byte[] ModeSensePayload()
+    {
+        return _command[1] switch
+        {
+            0 => [_densityCode, (byte)(_readSectorSize >> 8), (byte)_readSectorSize],
+            1 => [0x00, 0x08, 0x00],
+            2 => [0x00, 0x00, 0x00],
+            3 => [0x02, 0x00, 0x00],
+            4 => [0x01, 0x00, 0x00],
+            _ => [0x00, 0x00, 0x00],
+        };
+    }
+
+    private void StatusWithPayload(byte command, ReadOnlySpan<byte> payload)
+    {
+        _status[0] = command;
+        payload.CopyTo(_status.AsSpan(1));
+        _statusLength = (byte)(payload.Length + 2);
+        _status[payload.Length + 1] = _xbusStatus;
+        _poll |= PollStatus;
     }
 
     private void StatusWithTrailer(byte command, int count)
@@ -1147,7 +1607,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         ReadSectorIntoData();
         _currentSector++;
         _requested--;
-        _dataLength = RequestSize;
+        _dataLength = TransferSize;
         _dataPointer = 0;
         _poll |= PollData;
 
@@ -1163,21 +1623,144 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 
     private void ReadSectorIntoData()
     {
+        Array.Clear(_data);
         if (_disc is null)
         {
-            Array.Clear(_data);
             return;
         }
 
-        var sector = _currentSector;
-        if (sector < 0 || sector >= _disc.SectorCount)
+        int sector = _currentSector;
+        if (sector < 0 || sector >= TotalSectorCount)
         {
-            Array.Clear(_data);
             return;
         }
 
-        TraceWriter?.WriteLine($"cd read sector {sector}");
-        _disc.ReadSector(sector, _data);
+        TraceWriter?.WriteLine($"cd read sector {sector} size {_readSectorSize}");
+        if (_disc is not ITrackedDiscSource tracked)
+        {
+            _disc.ReadSector(sector, _data);
+            return;
+        }
+
+        DiscTrack? track = tracked.FindTrack(sector);
+        if (track is null)
+        {
+            return;
+        }
+
+        int available = tracked.ReadTrackSector(sector, _trackSector);
+        if (_readSectorSize <= RequestSize && !track.IsAudio)
+        {
+            int offset = track.PayloadOffset;
+            int copy = Math.Min(_readSectorSize, Math.Min(available - offset, _data.Length));
+            if (copy > 0)
+            {
+                _trackSector.AsSpan(offset, copy).CopyTo(_data);
+            }
+
+            return;
+        }
+
+        if (available >= _readSectorSize)
+        {
+            _trackSector.AsSpan(0, _readSectorSize).CopyTo(_data);
+            return;
+        }
+
+        if (!track.IsAudio && available == RequestSize)
+        {
+            // A cooked 2048-byte track was asked for a raw 2352-byte sector. Build a
+            // Mode 1 frame so command transcripts and disc tools see the expected shape.
+            BuildRawDataSector(_trackSector, sector, _data);
+            return;
+        }
+
+        _trackSector.AsSpan(0, Math.Min(available, _data.Length)).CopyTo(_data);
+    }
+
+    private static void BuildRawDataSector(ReadOnlySpan<byte> userData, int lba, Span<byte> destination)
+    {
+        destination.Clear();
+        destination[0] = 0x00;
+        for (var i = 1; i <= 10; i++)
+        {
+            destination[i] = 0xFF;
+        }
+
+        destination[11] = 0x00;
+        int absoluteFrame = lba + 150;
+        destination[12] = ToBcd(absoluteFrame / (60 * 75));
+        destination[13] = ToBcd((absoluteFrame / 75) % 60);
+        destination[14] = ToBcd(absoluteFrame % 75);
+        destination[15] = 0x01;
+        userData[..Math.Min(RequestSize, destination.Length - 16)].CopyTo(destination[16..]);
+    }
+
+    private static byte ToBcd(int value)
+    {
+        return (byte)(((value / 10) << 4) | (value % 10));
+    }
+
+    private void BuildToc(ITrackedDiscSource tracked)
+    {
+        if (tracked.Tracks.Count == 0)
+        {
+            return;
+        }
+
+        _discState.FirstTrack = (byte)tracked.Tracks[0].Number;
+        _discState.LastTrack = (byte)tracked.Tracks[^1].Number;
+
+        foreach (DiscTrack track in tracked.Tracks)
+        {
+            if (track.Number is < 1 or > 99)
+            {
+                continue;
+            }
+
+            int absoluteFrame = track.StartLba + 150;
+            SetTocEntry(
+                track.Number,
+                track.IsAudio ? CdCtlAudioTrack : CdCtlDataTrack,
+                (byte)track.Number,
+                (byte)(absoluteFrame / (60 * 75)),
+                (byte)((absoluteFrame / 75) % 60),
+                (byte)(absoluteFrame % 75));
+        }
+
+        _discState.TempLba = tracked.TotalSectorCount;
+        LbaToMsf();
+        CopyMsf(_discState.TotalMsf, _discState.TempMsf);
+    }
+
+    private bool TryBuildSubQPayload(ITrackedDiscSource tracked, out byte[] payload)
+    {
+        int lba = _audioPlaying ? AudioPositionLba : _currentSector;
+        DiscTrack? track = tracked.FindTrack(lba);
+        if (track is null)
+        {
+            payload = [];
+            return false;
+        }
+
+        int absoluteFrame = lba + 150;
+        int relative = lba - track.StartLba;
+        byte control = track.IsAudio ? CdCtlAudioTrack : CdCtlDataTrack;
+        byte controlAddress = (byte)(((control << 4) & 0xF0) | ((control >> 4) & 0x0F));
+        payload =
+        [
+            0x00,
+            controlAddress,
+            ToBcd(track.Number),
+            (byte)(relative < 0 ? 0x00 : 0x01),
+            ToBcd(absoluteFrame / (60 * 75)),
+            ToBcd((absoluteFrame / 75) % 60),
+            ToBcd(absoluteFrame % 75),
+            ToBcd(Math.Max(0, relative) / (60 * 75)),
+            ToBcd((Math.Max(0, relative) / 75) % 60),
+            ToBcd(Math.Max(0, relative) % 75),
+        ];
+        return true;
     }
 
     private void SetTocEntry(int index, byte control, byte track, byte minute, byte second, byte frame)

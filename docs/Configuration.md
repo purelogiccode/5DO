@@ -45,9 +45,11 @@ The screenshot directory defaults to the user's **Pictures** folder when
 **Portable mode is not implemented.** A `portable.flag` file has no effect in the
 current code, despite an older architecture note. Do not rely on it.
 
-Settings are written atomically (temporary file + replace). A malformed
-`settings.json` is ignored and defaults are used; the bad file is not renamed. Back up
-or delete the file to reset the desktop configuration.
+Settings are written atomically (temporary file + replace) and carry
+`"SettingsVersion": 1`. An unversioned file is migrated in place on the next load.
+A malformed `settings.json` is copied to `settings.json.invalid-<timestamp>.bak`
+before defaults are used, so the original bytes are never silently lost. Back up or
+delete the file to reset the desktop configuration.
 
 ---
 
@@ -61,6 +63,7 @@ every serialized property in `AppSettings`.
 
 | Property | Type | Default | Meaning |
 |---|---|---|---|
+| `SettingsVersion` | int | `1` | Settings schema version. Unversioned files are migrated on load. |
 | `FirstRunCompleted` | bool | `false` | Whether the first-run guide has been shown. |
 | `BiosPath` | string | `""` | Last primary BIOS path; fallback when auto-selection is off or unavailable. |
 | `Bios2Path` | string | `""` | Optional BIOS2/Kanji font path. |

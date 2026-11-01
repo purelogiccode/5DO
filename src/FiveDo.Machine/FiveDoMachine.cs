@@ -191,6 +191,16 @@ public sealed class FiveDoMachine
     /// <summary>Gets or sets the audio sample sink.</summary>
     public IAudioSink? AudioSink { get; set; }
 
+    /// <summary>
+    /// Gets or sets the CD-DA mix level, from 0 (muted) to 1 (full scale).
+    /// </summary>
+    /// <remarks>
+    /// CD-DA is mixed into the DSP output only while PLAY_AUDIO is active. Most 3DO
+    /// software reads audio tracks through READ_DATA and feeds the DSP itself, so this
+    /// path is primarily for CD-player titles and diagnostics.
+    /// </remarks>
+    public double CdAudioVolume { get; set; } = 0.8;
+
     /// <summary>Loads BIOS1 and optional BIOS2 and applies Anvil detection. FreeDO: <c>_3do_Init</c>.</summary>
     /// <param name="bios1">Exactly 1 MB of BIOS1 data.</param>
     /// <param name="bios2">Optional BIOS2 data, at most 1 MB. Missing bytes are zero-filled.</param>
@@ -431,7 +441,7 @@ public sealed class FiveDoMachine
         {
             var supportedVersion = section.Version == 1
                 || (section.Id == StateSectionIds.Memory && section.Version == 2)
-                || (section.Id == StateSectionIds.Cdrom && section.Version == 2)
+                || (section.Id == StateSectionIds.Cdrom && section.Version <= 3)
                 || (section.Id == StateSectionIds.Quartz && section.Version <= 3)
                 || (section.Id == StateSectionIds.Clio && section.Version <= 3)
                 || (section.Id == StateSectionIds.Madam && section.Version == 2)
@@ -655,6 +665,15 @@ public sealed class FiveDoMachine
         }
     }
 
+    private static AudioSample MixCdAudio(AudioSample dsp, AudioSample cd, double volume)
+    {
+        int left = dsp.Left + (int)Math.Round(cd.Left * volume);
+        int right = dsp.Right + (int)Math.Round(cd.Right * volume);
+        return new AudioSample(
+            (short)Math.Clamp(left, short.MinValue, short.MaxValue),
+            (short)Math.Clamp(right, short.MinValue, short.MaxValue));
+    }
+
     private void InternalFrame(int cycles, bool skipFrame)
     {
         Quartz.PushArmCycles((uint)cycles);
@@ -665,9 +684,15 @@ public sealed class FiveDoMachine
             // The DSP must run even when the host has no audio sink. The guest
             // uses the DSP for resource allocation and semaphore handshakes, not
             // just for sample output.
-            var sample = Dsp.Loop();
+            uint packedSample = Dsp.Loop();
+            if (CdAudioVolume > 0 && Cdrom.TryGetAudioSample(out AudioSample cdAudio))
+            {
+                AudioSample mixed = MixCdAudio(AudioSample.FromPacked(packedSample), cdAudio, CdAudioVolume);
+                packedSample = mixed.Packed;
+            }
+
             _audioSamplesProduced++;
-            AudioSink?.PushSample(sample);
+            AudioSink?.PushSample(packedSample);
         }
 
         if (Tuning.ClioTimers == ClioTimerMode.OperaScheduler)
