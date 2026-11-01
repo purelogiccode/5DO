@@ -267,6 +267,9 @@ frame and player-1 buttons, and playback pauses at the end. **Emulation > Stop M
 finishes a recording or detaches playback. Stopping emulation or closing the window
 also saves an active recording.
 
+**File > Game Metadata...** edits the current disc's offline library metadata
+(title, developer, publisher, year, genre, regions, players, description). Saving
+upserts the record in `library-metadata.json`; **Clear Metadata** removes it.
 **File > Movie Editor...** opens a `.5domovie` and lists every frame with player-1
 buttons. Select a frame, toggle buttons, and Apply; Insert copy after, Delete frame, and
 Trim after frame edit the timeline, then Save As writes a new movie. The CLI equivalents
@@ -424,7 +427,9 @@ executable or start with `--portable`. Settings, NVRAM, save states, cheats, lib
 state, and logs then stay beside the executable. `FIVEDO_DATA_DIR` selects an explicit
 data folder for separate instances. `--config-profile <name>` (or `FIVEDO_PROFILE`)
 uses `profiles/<name>/` under the data directory for an isolated named configuration;
-`5do settings profiles` lists them. The desktop takes an exclusive lock on the data
+`5do settings profiles` lists them. **Settings > Paths** selects a profile, sets it as
+the next-launch default (`default-profile.txt`), creates a profile from the current
+settings, opens the profiles folder, and imports/exports settings JSON. The desktop takes an exclusive lock on the data
 directory, so a second window using the same profile reports the owning process and
 exits; start it with `--config-profile` or `FIVEDO_DATA_DIR` for an isolated second
 instance. `FIVEDO_ALLOW_MULTIPLE=1` bypasses the lock for automation.

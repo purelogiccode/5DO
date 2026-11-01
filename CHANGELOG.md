@@ -71,6 +71,16 @@ still change.
   illegal-request status instead of silently doing nothing, the guest RESET command
   restores the default transfer state and sector size, and `PrefetchingDiscSource`
   read-aheads native track sectors so CD-DA does not decompress on the sample clock.
+- UX-15 profile selector: `PortablePaths.ProfileName` falls back to
+  `<base>/default-profile.txt`, and Settings > Paths selects a profile, sets the
+  next-launch default, creates a profile from current settings, opens the profiles
+  folder, and imports/exports settings JSON. UX-15 is complete; installer integration
+  remains under UX-16.
+- UX-13 game metadata editor: `LibraryMetadataStore.Upsert` and `Remove` manage offline
+  records by game ID or path, and **File > Game Metadata...** edits title, developer,
+  publisher, year, genre, regions, players, and description for the current disc. Saving
+  refreshes the library; Clear Metadata removes the record. External providers and
+  media attachments remain.
 - UX-06 movie frame editor: `MovieEditor` gains `SetFrame`, `SetButton`, `InsertFrame`,
   and `RemoveFrame`. **File > Movie Editor...** lists frames with player-1 buttons and
   supports apply, insert-copy-after, delete, trim-after, and Save As. Lua, an input

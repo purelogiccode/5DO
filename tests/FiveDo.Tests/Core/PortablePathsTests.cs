@@ -54,6 +54,29 @@ public sealed class PortablePathsTests
     }
 
     [Fact]
+    public void DefaultProfile_IsStoredAndClearedInTheBaseDirectory()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-profile-{Guid.NewGuid():N}");
+        try
+        {
+            Assert.Equal("work_profile", PortablePaths.SetDefaultProfile("work profile", directory));
+            Assert.Equal("work_profile", PortablePaths.GetDefaultProfile(directory));
+            Assert.True(File.Exists(Path.Combine(directory, PortablePaths.DefaultProfileFileName)));
+
+            Assert.Null(PortablePaths.SetDefaultProfile(null, directory));
+            Assert.Null(PortablePaths.GetDefaultProfile(directory));
+            Assert.False(File.Exists(Path.Combine(directory, PortablePaths.DefaultProfileFileName)));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
     public void ResolveDataDirectory_PrefersAnExplicitOverride()
     {
         var applicationDirectory = Path.Combine(Path.GetTempPath(), "fivedo-app");

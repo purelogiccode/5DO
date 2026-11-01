@@ -52,10 +52,12 @@ directory must be writable.
 `<data-directory>/profiles/<name>/` for settings, NVRAM, save states, cheats, library
 state, and logs. Profiles are created on first launch and isolated from each other.
 `5do settings profiles` lists existing profile directories; `FIVEDO_DATA_DIR` takes
-precedence over a named profile. The desktop acquires `<data>/5do.instance.lock` at
-startup; a second process using the same directory shows the owner and exits.
-`FIVEDO_ALLOW_MULTIPLE=1` disables that guard. Different profiles or data directories
-use different lock files and may run together.
+precedence over a named profile. Settings > Paths selects a profile and writes
+`<base>/default-profile.txt` for the next launch, creates a profile from the current
+settings, opens the profiles folder, and imports/exports settings JSON. The desktop
+acquires `<data>/5do.instance.lock` at startup; a second process using the same directory
+shows the owner and exits. `FIVEDO_ALLOW_MULTIPLE=1` disables that guard. Different
+profiles or data directories use different lock files and may run together.
 
 Settings are written atomically (temporary file + replace) and carry
 `"SettingsVersion": 2`. An unversioned or v1 file is migrated in place on the next load.

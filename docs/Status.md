@@ -41,7 +41,7 @@ v1/v2 readable, records the live region, and supports warn/reject unknown sectio
 Remaining disc work is known-title
 CD-DA evidence and a real in-game multi-disc swap, plus subcode. A 10-disc
 Release smoke after the
-TOC change reported 10/10 Loadable/Rendered. **1457 tests pass.**
+TOC change reported 10/10 Loadable/Rendered. **1459 tests pass.**
 The five not-loadable rows are resolved or explained: Mirai Shounen Conan now runs
 (transient CHD read error), and the four Arcade CD-ROM titles load with
 `panafz10-patched.bin` plus the default headless pad. The 12,000-frame rerun shows that six of the

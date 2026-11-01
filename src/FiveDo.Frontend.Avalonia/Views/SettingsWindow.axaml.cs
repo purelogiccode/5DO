@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -266,6 +267,7 @@ public partial class SettingsWindow : Window
         CoverDirectoryBox.Text = settings.CoverDirectory;
         CheatsDirectoryBox.Text = settings.CheatsDirectory;
         LibraryMetadataPathBox.Text = settings.LibraryMetadataPath;
+        PopulateConfigProfiles(PortablePaths.ProfileName);
         BiosFolderBox.Text = settings.BiosFolder;
         BiosPathBox.Text = settings.BiosPath;
         Bios2PathBox.Text = settings.Bios2Path;
@@ -293,6 +295,167 @@ public partial class SettingsWindow : Window
         FixModeBox.Text = overrideMode is null ? string.Empty : $"0x{(uint)overrideMode.Value:x}";
         _initializing = false;
         UpdateGameProfileStatus();
+    }
+
+    private void PopulateConfigProfiles(string? selectedName)
+    {
+        var options = new List<ConfigProfileOption>
+        {
+            new(null, "Default (shared)"),
+        };
+        foreach (var name in AppSettingsStore.ListProfiles())
+        {
+            options.Add(new ConfigProfileOption(name, name));
+        }
+
+        if (!string.IsNullOrWhiteSpace(selectedName)
+            && !options.Exists(option => string.Equals(option.Name, selectedName, StringComparison.Ordinal)))
+        {
+            options.Add(new ConfigProfileOption(selectedName, $"{selectedName} (current)"));
+        }
+
+        ConfigProfileCombo.ItemsSource = options;
+        ConfigProfileCombo.SelectedItem = options.FirstOrDefault(
+                option => string.Equals(option.Name, selectedName, StringComparison.Ordinal))
+            ?? options[0];
+        UpdateProfileStatus();
+    }
+
+    private void UpdateProfileStatus()
+    {
+        var current = PortablePaths.ProfileName ?? "Default";
+        var next = PortablePaths.GetDefaultProfile(PortablePaths.BaseDataDirectory) ?? "Default";
+        ProfileStatusText.Text =
+            $"Current: {current}. Next launch: {next}. Changing the profile requires a restart.";
+    }
+
+    private void OnSetDefaultProfileClick(object? sender, RoutedEventArgs e)
+    {
+        if (ConfigProfileCombo.SelectedItem is not ConfigProfileOption option)
+        {
+            return;
+        }
+
+        try
+        {
+            PortablePaths.SetDefaultProfile(option.Name);
+            UpdateProfileStatus();
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            ProfileStatusText.Text = $"Could not set the default profile: {exception.Message}";
+        }
+    }
+
+    private void OnCreateProfileClick(object? sender, RoutedEventArgs e)
+    {
+        var name = NewProfileBox.Text?.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            ProfileStatusText.Text = "Enter a profile name first.";
+            return;
+        }
+
+        try
+        {
+            AppSettings target = _settings.CreateEffectiveForGame(_gameId);
+            AppSettingsStore.Save(target, AppSettingsStore.GetProfilePath(name));
+            NewProfileBox.Text = string.Empty;
+            PopulateConfigProfiles(PortablePaths.NormalizeProfileName(name));
+            ProfileStatusText.Text = $"Created profile {PortablePaths.NormalizeProfileName(name)}.";
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            ProfileStatusText.Text = $"Could not create the profile: {exception.Message}";
+        }
+    }
+
+    private void OnOpenProfilesFolderClick(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Directory.CreateDirectory(PortablePaths.ProfilesDirectory);
+            Process.Start(new ProcessStartInfo(PortablePaths.ProfilesDirectory) { UseShellExecute = true });
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
+        {
+            ProfileStatusText.Text = $"Could not open the profiles folder: {exception.Message}";
+        }
+    }
+
+    private void OnImportProfileSettingsAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ImportProfileSettingsAsync, "importing profile settings");
+    }
+
+    private async Task ImportProfileSettingsAsync()
+    {
+        if (ConfigProfileCombo.SelectedItem is not ConfigProfileOption { Name: { } name })
+        {
+            ProfileStatusText.Text = "Select a named profile before importing settings.";
+            return;
+        }
+
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Import profile settings",
+            AllowMultiple = false,
+            FileTypeFilter =
+            [
+                new FilePickerFileType("5DO settings") { Patterns = ["*.json"] },
+            ],
+        }).ConfigureAwait(true);
+        var path = files.Count > 0 ? files[0].TryGetLocalPath() : null;
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        try
+        {
+            AppSettings imported = AppSettingsStore.Load(path);
+            AppSettingsStore.Save(imported, AppSettingsStore.GetProfilePath(name));
+            PopulateConfigProfiles(name);
+            ProfileStatusText.Text = $"Imported {Path.GetFileName(path)} into {name}.";
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            ProfileStatusText.Text = $"Import failed: {exception.Message}";
+        }
+    }
+
+    private void OnExportProfileSettingsAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ExportProfileSettingsAsync, "exporting profile settings");
+    }
+
+    private async Task ExportProfileSettingsAsync()
+    {
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Export settings",
+            SuggestedFileName = "5do-settings.json",
+            DefaultExtension = "json",
+            FileTypeChoices =
+            [
+                new FilePickerFileType("5DO settings") { Patterns = ["*.json"] },
+            ],
+        }).ConfigureAwait(true);
+        var path = file?.TryGetLocalPath();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        try
+        {
+            AppSettingsStore.Save(_settings, path);
+            ProfileStatusText.Text = $"Exported settings to {Path.GetFileName(path)}.";
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            ProfileStatusText.Text = $"Export failed: {exception.Message}";
+        }
     }
 
     private void OnSaveGameProfileClick(object? sender, RoutedEventArgs e)
@@ -1249,6 +1412,11 @@ public partial class SettingsWindow : Window
     }
 
     private sealed record AudioDeviceOption(string? Name, string Label)
+    {
+        public override string ToString() => Label;
+    }
+
+    private sealed record ConfigProfileOption(string? Name, string Label)
     {
         public override string ToString() => Label;
     }

@@ -688,7 +688,7 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,457 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,459 tests pass with no changed NTSC hashes.
 
 ### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
 
@@ -830,6 +830,21 @@ UX-23 coverage is compile/status level:
   also matching.
 - The movie editor window is build-validated; its Load/Save path uses `MovieFile`, whose
   container roundtrip is covered by `MovieFileTests`.
+
+### 1.1ab Game metadata editor (2026-11-01)
+
+- `MetadataStore_UpsertReplacesByGameIdOrPathAndRemoveClearsIt` verifies case-insensitive
+  game-ID replacement, path-key replacement, combined record coalescing, removal, and a
+  second remove returning false.
+- The editor window is build-validated; it uses the same catalog lookup and store calls.
+
+### 1.1ac Profile selector (2026-11-01)
+
+- `PortablePathsTests.DefaultProfile_IsStoredAndClearedInTheBaseDirectory` covers the
+  normalized `default-profile.txt` roundtrip and removal.
+- The Settings > Paths controls are build-validated; they use `AppSettingsStore` for
+  create/import/export and `PortablePaths.SetDefaultProfile` for the next-launch choice.
+- Existing portable, explicit-override, named-profile, and lock tests remain green.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

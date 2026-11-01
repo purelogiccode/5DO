@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,457 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,459 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,457** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,459** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 18 done · 23 partial · 79 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 19 done · 22 partial · 79 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -215,9 +215,9 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[UX-10](#feat-ux-10)** Themes and accessibility — P2 · M · depends on: FND-06 — **Pending**
 - [x] **[UX-11](#feat-ux-11)** Disc browser UI and game info — P1 · M · depends on: FND-06 — **Done**
 - [x] **[UX-12](#feat-ux-12)** BIOS/NVRAM manager UI — P1 · M · depends on: SYS-04, SYS-14 — **Done**
-- [ ] **[UX-13](#feat-ux-13)** Library metadata, favorites, playtime — P1 · L · depends on: SYS-17 — **Partial** — remaining: favorites, playtime, launch history, offline metadata, filters, and sorts are done; external Redump/No-Intro/IGDB/LaunchBox providers, screenshots/manuals/videos, metadata editor, and >=90% rich metadata remain
+- [ ] **[UX-13](#feat-ux-13)** Library metadata, favorites, playtime — P1 · L · depends on: SYS-17 — **Partial** — favorites, playtime, launch history, offline metadata, filters, sorts, and the per-game metadata editor are done; external Redump/No-Intro/IGDB/LaunchBox providers, screenshots/manuals/videos, and >=90% rich metadata remain
 - [ ] **[UX-14](#feat-ux-14)** Auto-update and release channels — P1 · M · depends on: ENG-10 — **Pending**
-- [ ] **[UX-15](#feat-ux-15)** Portable mode, multi-instance, config profiles — P1 · S · depends on: FND-02 — **Partial** — `portable.flag`, `--portable`, `FIVEDO_DATA_DIR`, named profiles, and the per-instance desktop lock are implemented; a profile selector/import-export UI remains
+- [x] **[UX-15](#feat-ux-15)** Portable mode, multi-instance, config profiles — P1 · S · depends on: FND-02 — **Done**
 - [ ] **[UX-16](#feat-ux-16)** Installers, signing, notarization, file associations — P1 · L · depends on: ENG-10 — **Pending**
 - [ ] **[UX-17](#feat-ux-17)** Crash report, compatibility report, log bundle — P1 · M · depends on: FND-08 — **Partial** — one-click desktop and CLI bundles include logs, scrubbed settings, environment, state, and frame evidence; upload and the compatibility-report form remain
 - [ ] **[UX-18](#feat-ux-18)** Onboarding and verification — P1 · M · depends on: SYS-20 — **Pending**
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,457 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,459 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,457**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,459**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -2898,6 +2898,8 @@ Suggested parallelization with two developers:
 | 2026-11-01 | SYS-18, UX-20, FND-06 | Per-game profile editor | Added `GameProfileJson` with normalization, `AppSettings.CreateEffectiveForGame`, machine-creation application, Settings > Emulation save/delete/import/export, and CLI `run/trace --game-profile`. SYS-18/UX-20/FND-06 remain partial for BIOS/fix/filter/high-res fields and inherit/reset; 1,450 tests pass |
 | 2026-11-01 | CORE-12 | Parser fuzzing | Added `ParserFuzzTests` with deterministic state mutations, random ISO/CHD headers, and CUE text mutations; all failures stay within the documented exception types. CORE-12 is partial for a nightly fuzz project and command/Opera-FS targets; 1,453 tests pass |
 | 2026-11-01 | UX-06 | Movie frame editor | Extended `MovieEditor` with per-frame set/button/insert/remove and added **File > Movie Editor...** (frame list, player-1 button checkboxes, insert/delete/trim, Save As). UX-06 remains partial for Lua, an input timeline, and multiplayer display; 1,457 tests pass |
+| 2026-11-01 | UX-13 | Game metadata editor | Added `LibraryMetadataStore.Upsert`/`Remove` and **File > Game Metadata...** for the current disc (title, developer, publisher, year, genre, regions, players, description), with a library rescan after saving. UX-13 remains partial for external providers and media; 1,458 tests pass |
+| 2026-11-01 | UX-15 | Profile selector and import/export UI | Added `default-profile.txt` resolution, Settings > Paths profile selector, Set default, Create, Open folder, Import, and Export actions. UX-15 is done; installer integration belongs to UX-16; 1,459 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -5182,10 +5184,14 @@ The scanner now carries the 4DO database's year, publisher, and region fields.
 `LibraryQuery` provides All/Favorites/Played/Unplayed filters and
 Title/Recently played/Most played/Release year/Publisher sorts, and search covers the
 new metadata. The game list and standalone library window add star toggles,
-metadata/play-time text, and the filter/sort controls. **Remaining:** external
-metadata providers/import, screenshots/manuals/videos, a metadata editor, and the
->=90% rich-metadata target. Tests: `tests/FiveDo.Tests/Host/LibraryStateTests.cs`
-(13 cases) plus the existing scanner/cache tests; 1,350 total tests pass.
+metadata/play-time text, and the filter/sort controls. **File > Game Metadata...**
+edits the current disc's offline record (title, developer, publisher, year, genre,
+regions, players, description), upserts by game ID/path, and can clear it; the library
+rescans after saving. **Remaining:** external metadata providers/import,
+screenshots/manuals/videos, and the >=90% rich-metadata target. Tests:
+`tests/FiveDo.Tests/Host/LibraryStateTests.cs` covers the catalog, playtime, filters,
+and metadata upsert/remove; `ParserFuzzTests` and the rest of the suite keep the total at
+1,458.
 
 ---
 
@@ -5214,7 +5220,7 @@ metadata providers/import, screenshots/manuals/videos, a metadata editor, and th
 <a id="feat-ux-15"></a>
 ### UX-15 - Portable mode, multi-instance, config profiles
 
-**Priority:** P1 | **Effort:** S | **Depends on:** FND-02 | **Status:** Partial (2026-11-01)
+**Priority:** P1 | **Effort:** S | **Depends on:** FND-02 | **Status:** Done (2026-11-01)
 
 **Problem.** No portable mode; single config.
 
@@ -5226,10 +5232,10 @@ metadata providers/import, screenshots/manuals/videos, a metadata editor, and th
 - The desktop and CLI strip `--portable` and `--config-profile` before command dispatch and log the resolved directory.
 - Tests cover portable, per-user, explicit-override, named-profile, and profile-name sanitization.
 - `InstanceLock` opens `<data>/5do.instance.lock` exclusively at desktop startup, records the owning PID/version, and shows a clear conflict window instead of letting two processes write the same settings/NVRAM. `FIVEDO_ALLOW_MULTIPLE=1` bypasses the check; separate profiles or data directories use separate locks.
+- Settings > Paths adds a profile selector, **Set default** (`default-profile.txt` for the next launch), **Create** (copies current settings), **Open folder**, **Import...**, and **Export...**. `PortablePaths.ProfileName` reads the environment first, then the default-profile file.
 
 **Remaining.**
-- A profile selector/import-export UI (profiles are currently selected by launch option or environment).
-- Installer integration for creating/removing `portable.flag`.
+- Installer integration for creating/removing `portable.flag` belongs to UX-16.
 
 **Files.** `AppSettingsStore`, `Program.cs`.
 
@@ -6817,9 +6823,9 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [ ] **UX-10** | Themes and accessibility | Modern shell expectations. | Dark/light/accent; UI scale; high contrast; screen-reader labels. | M |
 | [x] **UX-11** | Disc browser UI and game info | 4DO has both; 5DO only CLI `fs`. | Tree/list, extract, open directory, game info dialog. **Done 2026-11-01:** `DiscBrowser`/`DiscBrowserNode`/`DiscInfo` in `FiveDo.Host` mount the Opera file system without the emulator, flatten a sorted directory tree, extract a file/directory/disc with safe names and path-containment checks, and expose label/comment/game ID/database metadata/fixes. File > Disc Browser... and Disc Info... use the new windows; the browser shows sizes, LBAs, child counts, extraction results, and an Open Folder action. Unit tests cover synthetic ISO/CHD-independent trees, extraction, sanitization, and metadata. | M |
 | [x] **UX-12** | BIOS/NVRAM manager UI | Needed with SYS-04/SYS-14. | List/import/assign/reset/backup. **Done 2026-11-01:** `BiosInventory`/`NvramInventory` scan, validate, import, assign, back up, reset, and delete BIOS/NVRAM files with atomic writes; **File > BIOS / NVRAM Manager...** provides a two-tab BIOS and NVRAM window with per-game assignment, layout-wide backup, validation state, and second-click confirmation for destructive actions. Unit tests cover import reuse/collisions, invalid images, layout backup, reset, delete, and naming. | M |
-| [~] **UX-13** | Library metadata, favorites, playtime | 5DO has covers + 4DO metadata. | Redump/No-Intro/IGDB/LaunchBox; screenshots; manuals; favorites; playtime. **Partial 2026-11-01:** `LibraryState`/`LibraryStateStore` persist favorites, launch counts, last-played timestamps, and play time; `LibraryPlaytimeTracker` measures running sessions; `LibraryMetadata`/`LibraryMetadataStore` add an offline JSON overlay for title/developer/publisher/year/genre/region/players/description; `LibraryQuery` adds All/Favorites/Played/Unplayed filters and title/recent/most-played/year/publisher sorts; the game list shows star toggles, metadata, and play time, and Settings > Paths chooses the metadata file. External Redump/No-Intro/IGDB/LaunchBox providers, screenshots/manuals/videos, and the >=90% rich-metadata target remain. | L |
+| [~] **UX-13** | Library metadata, favorites, playtime | 5DO has covers + 4DO metadata. | Redump/No-Intro/IGDB/LaunchBox; screenshots; manuals; favorites; playtime. **Partial 2026-11-01:** `LibraryState`/`LibraryStateStore` persist favorites, launch counts, last-played timestamps, and play time; `LibraryPlaytimeTracker` measures running sessions; `LibraryMetadata`/`LibraryMetadataStore` add an offline JSON overlay for title/developer/publisher/year/genre/region/players/description; `LibraryQuery` adds All/Favorites/Played/Unplayed filters and title/recent/most-played/year/publisher sorts; the game list shows star toggles, metadata, and play time, and Settings > Paths chooses the metadata file. **File > Game Metadata...** edits and clears the current disc's offline record. External Redump/No-Intro/IGDB/LaunchBox providers, screenshots/manuals/videos, and the >=90% rich-metadata target remain. | L |
 | [ ] **UX-14** | Auto-update and release channels | Modern distribution. | Check/download/verify/install; stable/beta; rollback. | M |
-| [~] **UX-15** | Portable mode, multi-instance, config profiles | 4DO portable; 5DO not. | `portable.flag`/`--portable`; per-instance config; profiles. **Partial 2026-11-01:** `portable.flag`, `--portable`, and `FIVEDO_DATA_DIR` redirect settings/NVRAM/cheats/logs/library state; named profile UI and instance locking remain. | S |
+| [x] **UX-15** | Portable mode, multi-instance, config profiles | 4DO portable; 5DO not. | `portable.flag`/`--portable`; per-instance config; profiles. **Done 2026-11-01:** portable/explicit data directories, named profiles, `InstanceLock`, selector/create/import/export UI, and `default-profile.txt`. | S |
 | [ ] **UX-16** | Installers, signing, notarization, file associations | 5DO ships archives only. | MSIX/Inno/dmg/AppImage/Flatpak/Snap/AUR; signed; associations. | L |
 | [ ] **UX-17** | Crash report, compatibility report, log bundle | Bug reporting exists; compatibility evidence is manual. | One-click bundle: state, replay, logs, hashes, screenshot, settings. | M |
 | [ ] **UX-18** | Onboarding and verification | First-run guide exists; no disc/BIOS verification. | Guided setup; BIOS/disc health; redump check; clear errors. | M |

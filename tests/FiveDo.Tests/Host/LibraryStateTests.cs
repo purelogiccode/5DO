@@ -240,6 +240,39 @@ public sealed class LibraryStateTests
     }
 
     [Fact]
+    public void MetadataStore_UpsertReplacesByGameIdOrPathAndRemoveClearsIt()
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "game.iso");
+        var metadataPath = Path.Combine(directory.Path, "library-metadata.json");
+
+        LibraryMetadataStore.Upsert(
+            new LibraryMetadataRecord { GameId = "F3AF1B13", Title = "First" },
+            metadataPath);
+        LibraryMetadataStore.Upsert(
+            new LibraryMetadataRecord { GameId = "f3af1b13", Title = "Second" },
+            metadataPath);
+        LibraryMetadataStore.Upsert(
+            new LibraryMetadataRecord { Path = path, Publisher = "Path Publisher" },
+            metadataPath);
+
+        LibraryMetadataCatalog catalog = LibraryMetadataCatalog.Load(metadataPath);
+        Assert.Equal("Second", catalog.Find("F3AF1B13", "other.iso")?.Title);
+        Assert.Equal("Path Publisher", catalog.Find(string.Empty, path)?.Publisher);
+
+        LibraryMetadataStore.Upsert(
+            new LibraryMetadataRecord { GameId = "F3AF1B13", Path = path, Title = "Combined" },
+            metadataPath);
+        catalog = LibraryMetadataCatalog.Load(metadataPath);
+        Assert.Single(LibraryMetadataStore.Load(metadataPath).Records);
+        Assert.Equal("Combined", catalog.Find("F3AF1B13", path)?.Title);
+
+        Assert.True(LibraryMetadataStore.Remove("f3af1b13", path, metadataPath));
+        Assert.False(LibraryMetadataStore.Remove("f3af1b13", path, metadataPath));
+        Assert.Null(LibraryMetadataCatalog.Load(metadataPath).Find("F3AF1B13", path));
+    }
+
+    [Fact]
     public void MetadataCatalog_FallsBackToThePathKeyAndIgnoresUnknownVersions()
     {
         using var directory = new TempDirectory();

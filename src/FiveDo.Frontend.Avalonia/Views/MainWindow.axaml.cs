@@ -1804,6 +1804,39 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
+    private void OnGameMetadataAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(EditGameMetadataAsync, "editing game metadata");
+    }
+
+    private async Task EditGameMetadataAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_gameId) && string.IsNullOrWhiteSpace(_settings.DiscPath))
+        {
+            ShowOsd("Open a disc before editing metadata.", OsdSeverity.Warning);
+            return;
+        }
+
+        var window = new GameMetadataWindow(
+            _gameId,
+            _settings.DiscPath,
+            _settings.ResolveLibraryMetadataPath(),
+            _gameName);
+        if (!await window.ShowDialog<bool>(this).ConfigureAwait(true))
+        {
+            return;
+        }
+
+        _libraryMetadata = LibraryMetadataCatalog.Load(_settings.ResolveLibraryMetadataPath());
+        RefreshLibraryDecorations();
+        if (_settings.LibraryFolders.Count > 0)
+        {
+            await RefreshLibraryAsync().ConfigureAwait(true);
+        }
+
+        ShowOsd("Game metadata saved.", OsdSeverity.Success);
+    }
+
     private void OnScreenshotGalleryAsync(object? sender, RoutedEventArgs e)
     {
         AsyncEvent.Run(ShowScreenshotGalleryAsync, "showing the screenshot gallery");

@@ -19,6 +19,9 @@ public static class PortablePaths
     /// <summary>The flag file name that enables portable mode.</summary>
     public const string PortableFlagName = "portable.flag";
 
+    /// <summary>The file that stores the default named profile for the next launch.</summary>
+    public const string DefaultProfileFileName = "default-profile.txt";
+
     /// <summary>Gets the directory containing the running executable.</summary>
     public static string ApplicationDirectory => AppContext.BaseDirectory;
 
@@ -33,12 +36,21 @@ public static class PortablePaths
     }
 
     /// <summary>Gets the normalized named configuration profile, if one is configured.</summary>
+    /// <remarks>
+    /// <c>FIVEDO_PROFILE</c> takes precedence; otherwise the <c>default-profile.txt</c>
+    /// file in the base data directory selects the profile for the next launch.
+    /// </remarks>
     public static string? ProfileName
     {
         get
         {
             var value = Environment.GetEnvironmentVariable("FIVEDO_PROFILE");
-            return string.IsNullOrWhiteSpace(value) ? null : NormalizeProfileName(value);
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return NormalizeProfileName(value);
+            }
+
+            return GetDefaultProfile(BaseDataDirectory);
         }
     }
 
@@ -104,6 +116,53 @@ public static class PortablePaths
             throw new ArgumentException("The profile name has no usable characters.", nameof(name));
         }
 
+        return normalized;
+    }
+
+    /// <summary>Reads the default profile stored in a base data directory.</summary>
+    /// <param name="baseDirectory">Base data directory.</param>
+    /// <returns>The normalized profile name, or <see langword="null"/> when none is set.</returns>
+    public static string? GetDefaultProfile(string baseDirectory)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(baseDirectory);
+        try
+        {
+            var path = Path.Combine(baseDirectory, DefaultProfileFileName);
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
+            var value = File.ReadAllText(path).Trim();
+            return string.IsNullOrWhiteSpace(value) ? null : NormalizeProfileName(value);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Sets or clears the default profile for the next launch.</summary>
+    /// <param name="profileName">Profile name, or <see langword="null"/> to clear it.</param>
+    /// <param name="baseDirectory">Base data directory; defaults to <see cref="BaseDataDirectory"/>.</param>
+    /// <returns>The normalized profile name, or <see langword="null"/> when cleared.</returns>
+    public static string? SetDefaultProfile(string? profileName, string? baseDirectory = null)
+    {
+        var directory = Path.GetFullPath(baseDirectory ?? BaseDataDirectory);
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, DefaultProfileFileName);
+        if (string.IsNullOrWhiteSpace(profileName))
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+
+            return null;
+        }
+
+        var normalized = NormalizeProfileName(profileName);
+        File.WriteAllText(path, normalized);
         return normalized;
     }
 

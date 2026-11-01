@@ -1,0 +1,62 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="FiveDo.Frontend.Avalonia.Views.GameMetadataWindow"
+        Title="Game Metadata"
+        Width="620" Height="560"
+        MinWidth="520" MinHeight="460"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+        <TextBlock Grid.Row="0" Text="Offline library metadata overrides database and file-name facts."
+                   Opacity="0.7" TextWrapping="Wrap" Margin="0,0,0,10" />
+
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Title" VerticalAlignment="Center" />
+                <TextBox Grid.Row="0" Grid.Column="1" x:Name="TitleBox" ToolTip.Tip="Display title. Empty keeps the database title." />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Developer" VerticalAlignment="Center" />
+                <TextBox Grid.Row="1" Grid.Column="1" x:Name="DeveloperBox" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Publisher" VerticalAlignment="Center" />
+                <TextBox Grid.Row="2" Grid.Column="1" x:Name="PublisherBox" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Release year" VerticalAlignment="Center" />
+                <TextBox Grid.Row="3" Grid.Column="1" x:Name="YearBox" ToolTip.Tip="Four-digit year or a free-form date string." />
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Genre" VerticalAlignment="Center" />
+                <TextBox Grid.Row="4" Grid.Column="1" x:Name="GenreBox" />
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Regions" VerticalAlignment="Center" />
+                <TextBox Grid.Row="5" Grid.Column="1" x:Name="RegionsBox" ToolTip.Tip="Comma-separated region codes, for example US,EU,JP." />
+
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="Players" VerticalAlignment="Center" />
+                <TextBox Grid.Row="6" Grid.Column="1" x:Name="PlayersBox" Width="80" HorizontalAlignment="Left"
+                         ToolTip.Tip="Supported player count, 0-8 (0 = unknown)." />
+
+                <TextBlock Grid.Row="7" Grid.Column="0" Text="Description" VerticalAlignment="Top" Margin="0,6,0,0" />
+                <TextBox Grid.Row="7" Grid.Column="1" x:Name="DescriptionBox" AcceptsReturn="True"
+                         TextWrapping="Wrap" MinHeight="120" MaxHeight="200"
+                         ToolTip.Tip="Free-form description shown in the library details." />
+
+                <TextBlock Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" x:Name="StatusText"
+                           Opacity="0.75" FontSize="11" TextWrapping="Wrap"
+                           ToolTip.Tip="Metadata file and save status." />
+            </Grid>
+        </ScrollViewer>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+            <TextBlock Grid.Column="0" x:Name="PathText" VerticalAlignment="Center"
+                       Opacity="0.55" FontSize="11" TextTrimming="CharacterEllipsis"
+                       ToolTip.Tip="Metadata JSON path." />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <Button x:Name="ClearButton" Content="Clear Metadata" Click="OnClearClick"
+                        ToolTip.Tip="Remove this game's metadata record." />
+                <Button Content="Cancel" Click="OnCancelClick"
+                        ToolTip.Tip="Discard changes." />
+                <Button x:Name="SaveButton" Content="Save" Click="OnSaveClick"
+                        ToolTip.Tip="Write this record to the offline metadata file." />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
