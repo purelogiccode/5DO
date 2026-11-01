@@ -228,6 +228,94 @@ public static class LibraryMetadataStore
         }
     }
 
+    /// <summary>Adds or replaces the record for a game/path and saves the document.</summary>
+    /// <param name="record">Record to store.</param>
+    /// <param name="path">Metadata path. Defaults to <see cref="DefaultPath"/>.</param>
+    /// <exception cref="ArgumentException">Thrown when the record has neither a game ID nor a path.</exception>
+    public static void Upsert(LibraryMetadataRecord record, string? path = null)
+    {
+        ArgumentNullException.ThrowIfNull(record);
+        var gameId = NormalizeGameId(record.GameId);
+        var fullPath = NormalizePath(record.Path);
+        if (gameId.Length == 0 && fullPath.Length == 0)
+        {
+            throw new ArgumentException("Metadata needs a game ID or disc path.", nameof(record));
+        }
+
+        LibraryMetadata metadata = Load(path);
+        for (var i = metadata.Records.Count - 1; i >= 0; i--)
+        {
+            LibraryMetadataRecord existing = metadata.Records[i];
+            var existingId = NormalizeGameId(existing.GameId);
+            var existingPath = NormalizePath(existing.Path);
+            if ((gameId.Length > 0 && existingId.Length > 0
+                    && string.Equals(gameId, existingId, StringComparison.OrdinalIgnoreCase))
+                || (fullPath.Length > 0 && existingPath.Length > 0
+                    && string.Equals(fullPath, existingPath, StringComparison.OrdinalIgnoreCase)))
+            {
+                metadata.Records.RemoveAt(i);
+            }
+        }
+
+        metadata.Records.Add(record);
+        Save(metadata, path);
+    }
+
+    /// <summary>Removes the record matching a game ID or path and saves the document.</summary>
+    /// <param name="gameId">4DO game ID, or empty.</param>
+    /// <param name="discPath">Disc path, or empty.</param>
+    /// <param name="path">Metadata path. Defaults to <see cref="DefaultPath"/>.</param>
+    /// <returns><see langword="true"/> when a record was removed.</returns>
+    public static bool Remove(string? gameId, string? discPath, string? path = null)
+    {
+        var normalizedId = NormalizeGameId(gameId);
+        var normalizedPath = NormalizePath(discPath);
+        LibraryMetadata metadata = Load(path);
+        var removed = false;
+        for (var i = metadata.Records.Count - 1; i >= 0; i--)
+        {
+            LibraryMetadataRecord existing = metadata.Records[i];
+            if ((normalizedId.Length > 0
+                    && string.Equals(normalizedId, NormalizeGameId(existing.GameId), StringComparison.OrdinalIgnoreCase))
+                || (normalizedPath.Length > 0
+                    && string.Equals(normalizedPath, NormalizePath(existing.Path), StringComparison.OrdinalIgnoreCase)))
+            {
+                metadata.Records.RemoveAt(i);
+                removed = true;
+            }
+        }
+
+        if (removed)
+        {
+            Save(metadata, path);
+        }
+
+        return removed;
+    }
+
+    private static string NormalizeGameId(string? gameId)
+    {
+        var normalized = gameId?.Trim().ToUpperInvariant() ?? string.Empty;
+        return normalized.Length > 8 ? normalized[..8] : normalized;
+    }
+
+    private static string NormalizePath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            return Path.GetFullPath(path);
+        }
+        catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return path.Trim();
+        }
+    }
+
     /// <summary>Saves a metadata document atomically.</summary>
     /// <param name="metadata">Document to save.</param>
     /// <param name="path">Metadata path. Defaults to <see cref="DefaultPath"/>.</param>

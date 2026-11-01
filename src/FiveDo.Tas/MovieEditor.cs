@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using FiveDo.Input;
 
 namespace FiveDo.Tas;
 
@@ -34,6 +35,107 @@ public static class MovieEditor
             HasState = movie.HasState,
         };
         return new Movie(header, frames, movie.State);
+    }
+
+    /// <summary>Replaces one frame's controller states.</summary>
+    /// <param name="movie">Source movie.</param>
+    /// <param name="frame">Zero-based frame index.</param>
+    /// <param name="controllers">Six controller states, player 1 first.</param>
+    /// <returns>A movie with the edited frame and cleared completion evidence.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the frame is outside the movie.</exception>
+    public static Movie SetFrame(Movie movie, int frame, IReadOnlyList<ControllerState> controllers)
+    {
+        ArgumentNullException.ThrowIfNull(movie);
+        ArgumentNullException.ThrowIfNull(controllers);
+        ArgumentOutOfRangeException.ThrowIfNegative(frame);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(frame, movie.FrameCount);
+        var packet = new byte[PbusEncoder.PacketSize];
+        PbusEncoder.Encode(NormalizeControllers(controllers), packet);
+        var frames = new List<byte[]>(movie.FrameCount);
+        for (var i = 0; i < movie.FrameCount; i++)
+        {
+            frames.Add(i == frame ? packet : movie.Frames[i]);
+        }
+
+        return WithFrames(movie, frames);
+    }
+
+    /// <summary>Sets or clears one button on one player's frame.</summary>
+    /// <param name="movie">Source movie.</param>
+    /// <param name="frame">Zero-based frame index.</param>
+    /// <param name="player">Zero-based player index, 0-5.</param>
+    /// <param name="button">Button to change.</param>
+    /// <param name="pressed">Whether the button is pressed.</param>
+    /// <returns>A movie with the edited frame.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the frame or player is invalid.</exception>
+    public static Movie SetButton(
+        Movie movie,
+        int frame,
+        int player,
+        ControllerButton button,
+        bool pressed)
+    {
+        ArgumentNullException.ThrowIfNull(movie);
+        ArgumentOutOfRangeException.ThrowIfNegative(player);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(player, PbusEncoder.MaxControllers);
+        ControllerState[] controllers = movie.GetControllers(frame);
+        controllers[player] = controllers[player].Set(button, pressed);
+        return SetFrame(movie, frame, controllers);
+    }
+
+    /// <summary>Inserts a frame at an index.</summary>
+    /// <param name="movie">Source movie.</param>
+    /// <param name="index">Insertion index, 0 through the movie length.</param>
+    /// <param name="controllers">Optional controller states; empty when omitted.</param>
+    /// <returns>A movie with one more frame.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the index is outside the movie.</exception>
+    public static Movie InsertFrame(
+        Movie movie,
+        int index,
+        IReadOnlyList<ControllerState>? controllers = null)
+    {
+        ArgumentNullException.ThrowIfNull(movie);
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(index, movie.FrameCount);
+        var packet = new byte[PbusEncoder.PacketSize];
+        PbusEncoder.Encode(
+            controllers is null ? new ControllerState[PbusEncoder.MaxControllers] : NormalizeControllers(controllers),
+            packet);
+        var frames = new List<byte[]>(movie.FrameCount + 1);
+        for (var i = 0; i < index; i++)
+        {
+            frames.Add(movie.Frames[i]);
+        }
+
+        frames.Add(packet);
+        for (var i = index; i < movie.FrameCount; i++)
+        {
+            frames.Add(movie.Frames[i]);
+        }
+
+        return WithFrames(movie, frames);
+    }
+
+    /// <summary>Removes one frame.</summary>
+    /// <param name="movie">Source movie.</param>
+    /// <param name="index">Zero-based frame index.</param>
+    /// <returns>A movie with one fewer frame.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the index is outside the movie.</exception>
+    public static Movie RemoveFrame(Movie movie, int index)
+    {
+        ArgumentNullException.ThrowIfNull(movie);
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, movie.FrameCount);
+        var frames = new List<byte[]>(movie.FrameCount - 1);
+        for (var i = 0; i < movie.FrameCount; i++)
+        {
+            if (i != index)
+            {
+                frames.Add(movie.Frames[i]);
+            }
+        }
+
+        return WithFrames(movie, frames);
     }
 
     /// <summary>
@@ -84,5 +186,29 @@ public static class MovieEditor
             HasState = movie.HasState,
         };
         return new Movie(header, combined, movie.State);
+    }
+
+    private static ControllerState[] NormalizeControllers(IReadOnlyList<ControllerState> controllers)
+    {
+        var copy = new ControllerState[PbusEncoder.MaxControllers];
+        for (var i = 0; i < copy.Length; i++)
+        {
+            copy[i] = i < controllers.Count ? controllers[i] : ControllerState.Empty;
+        }
+
+        return copy;
+    }
+
+    private static Movie WithFrames(Movie movie, List<byte[]> frames)
+    {
+        MovieHeader header = movie.Header with
+        {
+            FrameCount = frames.Count,
+            FinalFrameHash = null,
+            FinalProgramCounter = null,
+            FinalStateHash = null,
+            HasState = movie.HasState,
+        };
+        return new Movie(header, frames, movie.State);
     }
 }

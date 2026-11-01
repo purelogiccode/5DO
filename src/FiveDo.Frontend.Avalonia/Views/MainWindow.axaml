@@ -44,6 +44,8 @@
                           ToolTip.Tip="Record emulated frames as an animated GIF. Click again to stop and save." />
                 <MenuItem x:Name="RecordAudioMenuItem" Header="Record Audio..." Click="OnRecordAudioAsync"
                           ToolTip.Tip="Record the 44.1 kHz DSP and CD-DA mix to a WAV file. Click again to stop and save." />
+                <MenuItem Header="Movie Editor..." Click="OnMovieEditorAsync"
+                          ToolTip.Tip="Open a 5DO TAS movie and edit player-1 buttons frame by frame." />
                 <MenuItem Header="Swap Disc..." Click="OnSwapDiscAsync"
                           ToolTip.Tip="Advance to the next disc in the loaded playlist, or choose another disc without resetting the console. F3." />
                 <MenuItem Header="Playlist Editor..." Click="OnPlaylistEditorAsync"

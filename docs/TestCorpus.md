@@ -688,7 +688,7 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,453 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,457 tests pass with no changed NTSC hashes.
 
 ### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
 
@@ -819,6 +819,17 @@ UX-23 coverage is compile/status level:
 - `CueParser_MutatedTextNeverEscapesTypedErrors` mutates a valid CUE 80 times and
   requires successful parses to expose a non-negative sector count.
 - The suite runs in normal `dotnet test` (~8 s) and is deterministic.
+
+### 1.1aa Movie frame editor and real-state determinism (2026-11-01)
+
+- `MovieEditorTests` covers per-button edits, six-controller replacement, insert/remove
+  ordering and header counts, completion-evidence clearing, and range checks.
+- Real save-state determinism after format v3: Battle Chess (Europe) PAL1 saved at frame
+  300 with the disc attached and ran 300 more frames to hash `0x88883E88`, matching the
+  uninterrupted 600-frame run. Gex saved at frame 300 and continued to `0x945B9A20`,
+  also matching.
+- The movie editor window is build-validated; its Load/Save path uses `MovieFile`, whose
+  container roundtrip is covered by `MovieFileTests`.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

@@ -71,6 +71,10 @@ still change.
   illegal-request status instead of silently doing nothing, the guest RESET command
   restores the default transfer state and sector size, and `PrefetchingDiscSource`
   read-aheads native track sectors so CD-DA does not decompress on the sample clock.
+- UX-06 movie frame editor: `MovieEditor` gains `SetFrame`, `SetButton`, `InsertFrame`,
+  and `RemoveFrame`. **File > Movie Editor...** lists frames with player-1 buttons and
+  supports apply, insert-copy-after, delete, trim-after, and Save As. Lua, an input
+  timeline, and multiplayer display remain.
 - CORE-12 parser fuzzing: deterministic mutation tests cover save states, random ISO/CHD
   headers, and CUE text. Mutated states report `InvalidStateException`; random disc
   headers report `DiscImageException` or another documented typed error. A dedicated

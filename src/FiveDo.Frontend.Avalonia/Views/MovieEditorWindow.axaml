@@ -1,0 +1,78 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:FiveDo.Frontend.Avalonia.Views"
+        x:Class="FiveDo.Frontend.Avalonia.Views.MovieEditorWindow"
+        Title="Movie Frame Editor"
+        Width="900" Height="620"
+        MinWidth="700" MinHeight="460"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,0,0,10">
+            <TextBlock Grid.Column="0" x:Name="PathText" VerticalAlignment="Center"
+                       Text="No movie loaded." TextTrimming="CharacterEllipsis"
+                       ToolTip.Tip="Open a .5domovie file to edit its per-frame controller input." />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <Button x:Name="LoadButton" Content="Open..." Click="OnLoadClick"
+                        ToolTip.Tip="Load a 5DO TAS movie." />
+                <Button x:Name="SaveButton" Content="Save As..." Click="OnSaveClick" IsEnabled="False"
+                        ToolTip.Tip="Save the edited movie to a new file." />
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,320" ColumnSpacing="12">
+            <ListBox Grid.Column="0" x:Name="FrameList" SelectionChanged="OnSelectionChanged"
+                     ToolTip.Tip="Recorded frames. Select a frame to edit player 1 buttons.">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="local:MovieFrameRow">
+                        <Grid ColumnDefinitions="80,*" Margin="2">
+                            <TextBlock Grid.Column="0" Text="{Binding FrameText}" FontFamily="Consolas"
+                                       ToolTip.Tip="Zero-based frame index." />
+                            <TextBlock Grid.Column="1" Text="{Binding Caption}" FontFamily="Consolas"
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip.Tip="Player-1 buttons on this frame." />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <StackPanel Grid.Column="1" Spacing="8">
+                <TextBlock Text="Player 1 buttons" FontWeight="SemiBold" />
+                <WrapPanel ItemWidth="96" ItemHeight="28">
+                    <CheckBox x:Name="AButton" Content="A" Tag="A" />
+                    <CheckBox x:Name="BButton" Content="B" Tag="B" />
+                    <CheckBox x:Name="CButton" Content="C" Tag="C" />
+                    <CheckBox x:Name="PButton" Content="P" Tag="P" />
+                    <CheckBox x:Name="XButton" Content="X" Tag="X" />
+                    <CheckBox x:Name="LButton" Content="L" Tag="L" />
+                    <CheckBox x:Name="RButton" Content="R" Tag="R" />
+                    <CheckBox x:Name="UpButton" Content="Up" Tag="Up" />
+                    <CheckBox x:Name="DownButton" Content="Down" Tag="Down" />
+                    <CheckBox x:Name="LeftButton" Content="Left" Tag="Left" />
+                    <CheckBox x:Name="RightButton" Content="Right" Tag="Right" />
+                </WrapPanel>
+                <Button x:Name="ApplyButton" Content="Apply to frame" Click="OnApplyClick" IsEnabled="False"
+                        HorizontalAlignment="Stretch"
+                        ToolTip.Tip="Replace player 1's buttons on the selected frame." />
+                <Separator />
+                <Button x:Name="InsertButton" Content="Insert copy after" Click="OnInsertClick" IsEnabled="False"
+                        HorizontalAlignment="Stretch"
+                        ToolTip.Tip="Insert a duplicate of the selected frame after it." />
+                <Button x:Name="DeleteButton" Content="Delete frame" Click="OnDeleteClick" IsEnabled="False"
+                        HorizontalAlignment="Stretch"
+                        ToolTip.Tip="Remove the selected frame." />
+                <Button x:Name="TrimButton" Content="Trim after frame" Click="OnTrimClick" IsEnabled="False"
+                        HorizontalAlignment="Stretch"
+                        ToolTip.Tip="Keep frames through the selection and discard the rest." />
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+            <TextBlock Grid.Column="0" x:Name="StatusText" VerticalAlignment="Center"
+                       Opacity="0.8" TextWrapping="Wrap"
+                       ToolTip.Tip="Movie length and edit status." />
+            <Button Grid.Column="1" Content="Close" Click="OnCloseClick"
+                    ToolTip.Tip="Close the movie editor." />
+        </Grid>
+    </Grid>
+</Window>

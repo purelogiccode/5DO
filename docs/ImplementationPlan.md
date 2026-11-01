@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,453 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,457 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,453** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,457** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -208,7 +208,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[UX-03](#feat-ux-03)** Netplay — P1 · XL · depends on: CORE-11 — **Pending**
 - [x] **[UX-04](#feat-ux-04)** Cheat engine — P1 · M · depends on: FND-06 — **Done**
 - [ ] **[UX-05](#feat-ux-05)** Achievements — P2 · L · depends on: UX-03 — **Pending**
-- [ ] **[UX-06](#feat-ux-06)** TAS tools — P1 · L · depends on: UX-01 — **Partial** — remaining: movie container, record/replay/verify, branching, CLI, shell controls, and input display are done; Lua, frame editor, lag counter, and full TAS UI remain
+- [ ] **[UX-06](#feat-ux-06)** TAS tools — P1 · L · depends on: UX-01 — **Partial** — movie container, record/replay/verify, branching, CLI, shell controls, input display, lag frames, and the per-frame movie editor are done; Lua, an input timeline, multiplayer display, and the full TAS UI remain
 - [ ] **[UX-07](#feat-ux-07)** Controller profiles and per-game input — P1 · M · depends on: FND-06 — **Partial** — per-game PBUS device overrides, automatic known-title lightgun/trackball defaults, and the override UI are implemented; named controller profiles, deadzones/curves, hot-plug prompts, and import/export remain
 - [ ] **[UX-08](#feat-ux-08)** Gamepad navigation, big picture, Steam Deck — P1 · L · depends on: FND-06 — **Pending**
 - [ ] **[UX-09](#feat-ux-09)** Localization — P1 · M · depends on: FND-07 — **Pending**
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,453 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,457 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,453**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,457**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -2897,6 +2897,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | AUD-02 | Desktop WAV recording | Added `TeeAudioSink`, **File > Record Audio...** with start/stop and finalize-on-stop, WAV naming/duration reporting, and keeping the recorder attached across audio-device changes. AUD-02 is partial for mixer/spectrum/format options; 1,447 tests pass |
 | 2026-11-01 | SYS-18, UX-20, FND-06 | Per-game profile editor | Added `GameProfileJson` with normalization, `AppSettings.CreateEffectiveForGame`, machine-creation application, Settings > Emulation save/delete/import/export, and CLI `run/trace --game-profile`. SYS-18/UX-20/FND-06 remain partial for BIOS/fix/filter/high-res fields and inherit/reset; 1,450 tests pass |
 | 2026-11-01 | CORE-12 | Parser fuzzing | Added `ParserFuzzTests` with deterministic state mutations, random ISO/CHD headers, and CUE text mutations; all failures stay within the documented exception types. CORE-12 is partial for a nightly fuzz project and command/Opera-FS targets; 1,453 tests pass |
+| 2026-11-01 | UX-06 | Movie frame editor | Extended `MovieEditor` with per-frame set/button/insert/remove and added **File > Movie Editor...** (frame list, player-1 button checkboxes, insert/delete/trim, Save As). UX-06 remains partial for Lua, an input timeline, and multiplayer display; 1,457 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -4980,15 +4981,16 @@ CLI add/list/enable/disable/remove.
 per-frame PBUS packets, an optional starting save state, CRC-32 checksums, a JSON
 header with game/disc/BIOS identity and timing options, and Brotli-compressed input.
 `MovieRecorder` wraps live input, `MoviePbusSource` replays packets, `MovieEditor`
-supports branch/trim/append, and `MovieVerifier` compares the final frame hash, ARM
-PC, and state hash. The CLI adds `movie info|record|play|verify|branch` and
+supports branch/trim/append plus per-frame `SetFrame`/`SetButton`/`InsertFrame`/
+`RemoveFrame`, and `MovieVerifier` compares the final frame hash, ARM PC, and state
+hash. The CLI adds `movie info|record|play|verify|branch` and
 `run --movie-record/--movie-play/--movie-verify/--movie-no-state`; verification
 failure exits 2. The desktop shell adds **Emulation > Record Movie.../Play
-Movie.../Stop Movie**, a player-1 input display, and automatic pause at the end of a
-movie. New `PbusDecoder` exposes decoded controller states. Lua, a frame-by-frame
-input editor, an input timeline, and multiplayer display remain. A separate lag
-counter is not applicable because 3DO PBUS input is sampled every frame. See
-[`docs/Tas.md`](Tas.md).
+Movie.../Stop Movie**, a player-1 input display, automatic pause at the end of a movie,
+and **File > Movie Editor...** for frame-by-frame player-1 button edits, insert/delete,
+trim, and Save As. New `PbusDecoder` exposes decoded controller states. TAS lag frames
+are exposed by the UX-23 input display. Lua, an input timeline, multiplayer display, and
+the full TAS UI remain. See [`docs/Tas.md`](Tas.md).
 
 **Problem.** Input recording exists; no movie format/input display/lag counter.
 

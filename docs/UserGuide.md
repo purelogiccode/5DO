@@ -267,7 +267,10 @@ frame and player-1 buttons, and playback pauses at the end. **Emulation > Stop M
 finishes a recording or detaches playback. Stopping emulation or closing the window
 also saves an active recording.
 
-The CLI equivalents are `movie record`, `movie play`, `movie verify`, `movie info`,
+**File > Movie Editor...** opens a `.5domovie` and lists every frame with player-1
+buttons. Select a frame, toggle buttons, and Apply; Insert copy after, Delete frame, and
+Trim after frame edit the timeline, then Save As writes a new movie. The CLI equivalents
+are `movie record`, `movie play`, `movie verify`, `movie info`,
 and `movie branch`. Verification replays every frame and compares the recorded frame
 hash, ARM PC, and state hash; it exits with code 2 on a mismatch. Branching keeps a
 prefix so a new attempt can be recorded from a checkpoint. Movies contain input and a

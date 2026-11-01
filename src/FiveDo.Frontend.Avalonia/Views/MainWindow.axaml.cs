@@ -1578,6 +1578,17 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
+    private void OnMovieEditorAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ShowMovieEditorAsync, "showing the movie editor");
+    }
+
+    private async Task ShowMovieEditorAsync()
+    {
+        var window = new MovieEditorWindow();
+        await window.ShowDialog(this).ConfigureAwait(true);
+    }
+
     private void OnRecordAudioAsync(object? sender, RoutedEventArgs e)
     {
         AsyncEvent.Run(ToggleAudioRecordingAsync, "recording audio");
