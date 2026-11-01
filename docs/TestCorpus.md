@@ -538,6 +538,31 @@ dotnet run -c Release --project src/FiveDo.Cli -- run `
   --bios bios/panafz1.bin --frames 300 --json
 ```
 
+### 1.1i Disc browser and disc info (2026-11-01)
+
+The disc browser is a read-only host model; it does not start the machine. Unit tests
+cover synthetic Opera images (tree order/depth, metadata totals, file/directory/all
+extraction, name sanitization, a real ISO file, and missing images). A manual probe
+against the local Lemmings CHD confirmed real CHD and database metadata:
+
+| Field | Value |
+|---|---|
+| Source | `artifacts/chdmaker/lem.chd` |
+| Format | CHD |
+| Volume label | CD-ROM |
+| Game ID | `0be38b22987b40b5d48f70a167656049` |
+| Sectors | 206,126 |
+| Contents | 461 files, 20 directories, 374,239,333 bytes |
+| Database | Lemmings, US, Psygnosis, 1993 |
+| Automatic fixes | None |
+| Extraction | One selected file (181 bytes) written and removed |
+
+Command:
+
+```powershell
+dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release --filter "FullyQualifiedName~DiscBrowserTests"
+```
+
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 
 All runs use the Release build, `panafz1.bin`, and a fresh NVRAM. The 3,000-frame

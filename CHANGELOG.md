@@ -50,6 +50,17 @@ still change.
 
 ### Added
 
+- Disc browser and disc info (UX-11). `FiveDo.Host.DiscBrowser` mounts the Opera
+  file system from any ISO, BIN, CUE, or CHD without starting the emulator, builds
+  a sorted directories-first tree with sizes and LBAs, and extracts a file,
+  directory, or the whole disc with cross-platform name sanitization and
+  destination-root containment. `DiscInfo` reports the volume label/comment, full
+  two-sector MD5, sector count, file/directory totals, 4DO database title, region,
+  publisher, release year, and automatic fix mask. The desktop shell adds File >
+  Disc Browser... (extract selected/all, open folder) and File > Disc Info...
+  Tests cover synthetic trees, extraction, sanitization, real ISO opening, and
+  missing images. See `Make5doTheBestOfAll.md` 13.23.
+
 - TAS movies (UX-06). The new `FiveDo.Tas` project writes versioned `.5domovie`
   containers with one raw PBUS packet per frame, an optional starting save state, a
   JSON metadata header, CRC-32 checksums, and Brotli-compressed input. Recording wraps

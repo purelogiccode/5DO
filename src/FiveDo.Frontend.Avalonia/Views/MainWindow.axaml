@@ -32,6 +32,10 @@
                           ToolTip.Tip="Clear the current game's NVRAM back to a fresh volume." />
                 <MenuItem Header="Boot Disc..." Click="OnOpenDiscAsync"
                           ToolTip.Tip="Choose an ISO, BIN, CUE, or CHD disc image and boot it." />
+                <MenuItem Header="Disc Browser..." Click="OnDiscBrowserAsync"
+                          ToolTip.Tip="Browse and extract files from the current disc image." />
+                <MenuItem Header="Disc Info..." Click="OnDiscInfoAsync"
+                          ToolTip.Tip="Show the current disc's volume, game ID, metadata, and fixes." />
                 <MenuItem Header="Add Game Folder..." Click="OnAddFolderAsync"
                           ToolTip.Tip="Add a folder that the library scans for disc images." />
                 <MenuItem x:Name="RecentMenu" Header="Boot Recent"

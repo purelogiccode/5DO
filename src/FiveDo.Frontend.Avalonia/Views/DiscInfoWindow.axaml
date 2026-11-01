@@ -1,0 +1,55 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="FiveDo.Frontend.Avalonia.Views.DiscInfoWindow"
+        Title="Disc Info"
+        Width="640" Height="500"
+        MinWidth="520" MinHeight="400"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="*,Auto" Margin="16">
+        <ScrollViewer Grid.Row="0">
+            <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Disc image" Opacity="0.65" Margin="0,2" />
+                <TextBlock x:Name="SourceText" Grid.Row="0" Grid.Column="1" TextWrapping="Wrap" Margin="0,2" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Format" Opacity="0.65" Margin="0,2" />
+                <TextBlock x:Name="FormatText" Grid.Row="1" Grid.Column="1" Margin="0,2" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Volume label" Opacity="0.65" Margin="0,2" />
+                <TextBlock x:Name="LabelText" Grid.Row="2" Grid.Column="1" TextWrapping="Wrap" Margin="0,2" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Volume comment" Opacity="0.65" Margin="0,2" />
+                <TextBlock x:Name="CommentText" Grid.Row="3" Grid.Column="1" TextWrapping="Wrap" Margin="0,2" />
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Game ID / checksum" Opacity="0.65" Margin="0,2" />
+                <TextBlock x:Name="GameIdText" Grid.Row="4" Grid.Column="1" TextWrapping="Wrap" Margin="0,2" />
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Database title" Opacity="0.65" Margin="0,2" />
+                <TextBlock x:Name="GameNameText" Grid.Row="5" Grid.Column="1" TextWrapping="Wrap" Margin="0,2" />
+
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="Region" Opacity="0.65" Margin="0,2" />
+                <TextBlock x:Name="RegionText" Grid.Row="6" Grid.Column="1" Margin="0,2" />
+
+                <TextBlock Grid.Row="7" Grid.Column="0" Text="Publisher" Opacity="0.65" Margin="0,2" />
+                <TextBlock x:Name="PublisherText" Grid.Row="7" Grid.Column="1" TextWrapping="Wrap" Margin="0,2" />
+
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="Release year" Opacity="0.65" Margin="0,2" />
+                <TextBlock x:Name="ReleaseYearText" Grid.Row="8" Grid.Column="1" Margin="0,2" />
+
+                <TextBlock Grid.Row="9" Grid.Column="0" Text="Contents" Opacity="0.65" Margin="0,2" />
+                <TextBlock x:Name="ContentsText" Grid.Row="9" Grid.Column="1" TextWrapping="Wrap" Margin="0,2" />
+
+                <TextBlock Grid.Row="10" Grid.Column="0" Text="Sectors" Opacity="0.65" Margin="0,2" />
+                <TextBlock x:Name="SectorsText" Grid.Row="10" Grid.Column="1" Margin="0,2" />
+
+                <TextBlock Grid.Row="11" Grid.Column="0" Text="Automatic fixes" Opacity="0.65" Margin="0,2" />
+                <TextBlock x:Name="FixesText" Grid.Row="11" Grid.Column="1" TextWrapping="Wrap" Margin="0,2" />
+            </Grid>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right"
+                    Spacing="8" Margin="0,14,0,0">
+            <Button Content="Close" Click="OnClose" IsDefault="True" />
+        </StackPanel>
+    </Grid>
+</Window>

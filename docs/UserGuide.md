@@ -293,6 +293,16 @@ open it. A sibling image with the same base name (for example `game.png` beside
 immediately; game IDs and database titles are resolved in the background. Later scans
 reuse `library-cache.json` and only reopen files whose size or timestamp changed.
 
+**File > Disc Browser...** mounts the current disc's Opera file system without
+stopping emulation. The list is sorted directories-first and shows each entry's
+depth, size, and LBA. **Extract Selected...** writes a file or directory,
+**Extract All...** writes the whole disc, and **Open Folder** opens the last
+destination. Extraction sanitizes names for Windows/Linux/macOS and refuses to
+write outside the chosen folder. **File > Disc Info...** shows the volume label
+and comment, full two-sector MD5, sector count, file/directory totals, the 4DO
+database title/region/publisher/year, and the automatic fix mask. The browser
+is read-only; it never modifies the image.
+
 Settings persist under the user local application data folder:
 
 - Windows: `%LOCALAPPDATA%\5DO\settings.json`

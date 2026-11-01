@@ -8,15 +8,18 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 
 ## Status
 
-**Current position (2026-11-01, after the first full-collection sweep, triage, the ARM/CLIO/CEL/CD timing, CD speed, timing-profile, BIOS manager, rewind/fast-forward, cheat-engine, and TAS-movie passes):**
+**Current position (2026-11-01, after the first full-collection sweep, triage, the ARM/CLIO/CEL/CD timing, CD speed, timing-profile, BIOS manager, rewind/fast-forward, cheat-engine, TAS-movie, and disc-browser passes):**
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **1239 tests pass.** The first Opera parity batch (VDLP, ARM carry, DSP FIFO, MADAM span/MARIA/BPP0/SKIPX/LRFORM/blue-LSB/REGCTL/PIXC, CLIO FIFO), OP-14 (generic CEL origin, retired legacy CEL hacks), OP-SYS-02 (Opera CD poll/local reset), OP-SYS-01/03's ROM overlay, DIPIR, XBUS, and CSTAT soft-reset work, and OP-SYS-06's separate CLIO PRNG are complete (the DIPIR/soft-reset path remains opt-in pending a boot transcript). Rewind and fast-forward (UX-01/UX-02) are implemented: `RewindBuffer` keeps compressed keyframes plus the per-frame PBUS packet and replays input deterministically; `R`/`Shift+F9` rewind and hold-`Tab` fast-forwards with muted audio. Per-game cheats
+prototype. **1246 tests pass.** The first Opera parity batch (VDLP, ARM carry, DSP FIFO, MADAM span/MARIA/BPP0/SKIPX/LRFORM/blue-LSB/REGCTL/PIXC, CLIO FIFO), OP-14 (generic CEL origin, retired legacy CEL hacks), OP-SYS-02 (Opera CD poll/local reset), OP-SYS-01/03's ROM overlay, DIPIR, XBUS, and CSTAT soft-reset work, and OP-SYS-06's separate CLIO PRNG are complete (the DIPIR/soft-reset path remains opt-in pending a boot transcript). Rewind and fast-forward (UX-01/UX-02) are implemented: `RewindBuffer` keeps compressed keyframes plus the per-frame PBUS packet and replays input deterministically; `R`/`Shift+F9` rewind and hold-`Tab` fast-forwards with muted audio. Per-game cheats
 (UX-04) add raw/typed/conditional/button RAM codes, a desktop manager, and the
 `cheat` CLI command. TAS movies (UX-06) add the versioned `.5domovie` container,
 deterministic record/replay/verify, branching, CLI `movie` commands, and desktop
-Record/Play/Stop controls with a player-1 input display. The 594-disc baseline found 576 rendered, 13 black/blank,
+Record/Play/Stop controls with a player-1 input display. The disc browser (UX-11)
+mounts the Opera file system without starting the machine and adds
+**File > Disc Browser...** with file/directory/disc extraction plus
+**File > Disc Info...** with volume, game-database, and fix metadata. The 594-disc baseline found 576 rendered, 13 black/blank,
 and 5 not-loadable images. Triage resolved the five not-loadable rows (Mirai Shounen
 Conan was a transient CHD read error; the four Arcade CD-ROM titles boot with
 `panafz10`), and six of the 13 black/blank titles render by 6,000-9,000 frames. Headless
@@ -74,7 +77,7 @@ matches the CPU oracle pixel-for-pixel on both WGL and ANGLE. The fourteenth pas
 renderer/mailbox allocations per frame after warm-up. The shell now has fullscreen,
 GL screenshots, an About
 dialog, a Hi-Res toggle, automatic CPU fallback when OpenGL init or the context fails,
-a game library browser with cover art, a settings dialog (video/audio/emulation/paths), six-player
+a game library browser with cover art, a disc browser with extraction and a disc-info dialog, a settings dialog (video/audio/emulation/paths), six-player
 keyboard and gamepad binding, ten numbered save slots with PNG thumbnails, PNG
 screenshots named by game/frame/time, an optional FPS/status overlay, a first-run
 guide, error dialogs, and a Serilog-backed in-app diagnostic log viewer with rolling

@@ -2,6 +2,16 @@
 
 ## 0. Current handoff (2026-10-30)
 
+**2026-11-01 update:** UX-11 disc browser and disc info are implemented.
+`FiveDo.Host.DiscBrowser` mounts `OperaFileSystem` from an ISO/BIN/CUE/CHD without
+starting the machine, builds a sorted tree with sizes/LBAs, extracts a selected
+file, directory, or the whole disc with cross-platform name sanitization and
+destination-root containment, and exposes volume/game-database/fix metadata.
+File > Disc Browser... and File > Disc Info... use the new windows; both are
+constructed by the trimmed frontend smoke test. **Do not redo the browser model,
+extraction, or the two windows; remaining UX work is UX-12 BIOS/NVRAM manager,
+UX-19 OSD/quick menu, and the TAS input editor/Lua work.** **1246 tests pass.**
+
 **2026-11-01 update:** UX-06 TAS movies are implemented as a partial first increment.
 `FiveDo.Tas` owns the versioned `.5domovie` container (per-frame PBUS packets, optional
 starting state, CRC-32/Brotli), deterministic record/replay, branch/trim/append, and

@@ -69,7 +69,12 @@ deterministic TAS movies: `FiveDo.Tas` owns the versioned `.5domovie` container
 branch/trim, and verification; the CLI adds `--movie-record`, `--movie-play`,
 `--movie-verify`, and `movie info|record|play|verify|branch`; the shell adds
 **Emulation > Record Movie.../Play Movie.../Stop Movie** and a live player-1 input
-display. **1239 tests pass.**
+display. UX-11 adds a disc browser and disc-info dialog: `FiveDo.Host.DiscBrowser`
+mounts the Opera file system without starting the machine, shows a sorted
+directories-first tree with sizes/LBAs, extracts a file, directory, or the whole
+disc with safe path containment, and reports the volume label/comment, game ID,
+4DO database metadata, and automatic fixes. File > Disc Browser... and File > Disc
+Info... expose it in the shell. **1246 tests pass.**
 The differential harness (FND-05/CORE-11/CORE-16) is implemented:
 `tools/FiveDo.DiffHarness` stages the bundled OperaCore and BIOS, runs both engines
 with identical options, compares checkpoint frame hashes, applies manifest
@@ -195,7 +200,10 @@ This is the short, current answer to "where are we?" The documentation index is
   automatic conflict removal and reset-to-defaults; gamepads are mapped through a
   Gamepad tab (Windows XInput, Linux evdev). Save states use ten numbered slots with
   next/previous, a list/save/load/delete window, JSON metadata, and PNG thumbnails;
-  screenshots are PNG files named by game, time, and frame. The shell has a first-run
+  screenshots are PNG files named by game, time, and frame. **File > Disc Browser...**
+  lists the current disc's Opera tree and extracts a file, directory, or the whole
+  disc; **File > Disc Info...** shows the volume, game ID, database metadata, and
+  automatic fixes. The shell has a first-run
   guide, error dialogs, and an in-app diagnostic log viewer with level/category/search
   filters. The app accepts a positional disc path or `--disc <path>` and ships a Linux
   `.desktop` entry; Windows/macOS associations remain installer work. Per-game 4DO fix
@@ -262,7 +270,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 1239 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 1246 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and

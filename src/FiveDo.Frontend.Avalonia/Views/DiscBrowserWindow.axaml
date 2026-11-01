@@ -1,0 +1,83 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:host="using:FiveDo.Host"
+        x:Class="FiveDo.Frontend.Avalonia.Views.DiscBrowserWindow"
+        Title="Disc Browser"
+        Width="940" Height="640"
+        MinWidth="760" MinHeight="480"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="12">
+        <Border Grid.Row="0" Padding="10" Background="#1A1A1A" CornerRadius="4">
+            <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Disc image" Opacity="0.7" />
+                <TextBlock x:Name="SourceText" Grid.Row="0" Grid.Column="1"
+                           TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
+                           ToolTip.Tip="Path to the mounted ISO, BIN, CUE, or CHD image." />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume" Opacity="0.7" />
+                <TextBlock x:Name="VolumeText" Grid.Row="1" Grid.Column="1"
+                           TextWrapping="Wrap" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Game ID" Opacity="0.7" />
+                <TextBlock x:Name="GameIdText" Grid.Row="2" Grid.Column="1"
+                           TextWrapping="Wrap" />
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Contents" Opacity="0.7" />
+                <TextBlock x:Name="ContentsText" Grid.Row="3" Grid.Column="1"
+                           TextWrapping="Wrap" />
+            </Grid>
+        </Border>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6" Margin="0,8">
+            <Button x:Name="ExtractSelectedButton" Content="Extract Selected..."
+                    Click="OnExtractSelectedAsync"
+                    ToolTip.Tip="Extract the selected file or directory." />
+            <Button x:Name="ExtractAllButton" Content="Extract All..."
+                    Click="OnExtractAllAsync"
+                    ToolTip.Tip="Extract every file on the disc." />
+            <Button x:Name="OpenFolderButton" Content="Open Folder"
+                    Click="OnOpenFolder" IsEnabled="False"
+                    ToolTip.Tip="Open the last extraction folder." />
+            <TextBlock x:Name="StatusText" VerticalAlignment="Center" Opacity="0.8"
+                       TextWrapping="Wrap" Margin="8,0,0,0" />
+        </StackPanel>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,300" Margin="0,8">
+            <ListBox x:Name="EntryList" Grid.Column="0" SelectionChanged="OnSelectionChanged"
+                     ToolTip.Tip="Disc contents. Directories are shown first and indented by depth.">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="host:DiscBrowserNode">
+                        <Grid ColumnDefinitions="*,Auto" Margin="2,1">
+                            <TextBlock Grid.Column="0" Text="{Binding IndentedName}"
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip.Tip="{Binding Path}" />
+                            <TextBlock Grid.Column="1" Text="{Binding SizeText}"
+                                       Opacity="0.65" Margin="12,0,4,0" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <Border Grid.Column="1" Margin="10,0,0,0" Padding="10"
+                    Background="#1A1A1A" CornerRadius="4">
+                <StackPanel Spacing="8">
+                    <TextBlock x:Name="DetailName" Classes="sectionTitle" Text="Select an entry"
+                               TextWrapping="Wrap" />
+                    <TextBlock x:Name="DetailPath" Opacity="0.75" TextWrapping="Wrap"
+                               ToolTip.Tip="Opera file-system path." />
+                    <Grid ColumnDefinitions="80,*" RowDefinitions="Auto,Auto,Auto,Auto">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Type" Opacity="0.65" />
+                        <TextBlock x:Name="DetailType" Grid.Row="0" Grid.Column="1" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Size" Opacity="0.65" />
+                        <TextBlock x:Name="DetailSize" Grid.Row="1" Grid.Column="1" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="LBA" Opacity="0.65" />
+                        <TextBlock x:Name="DetailLba" Grid.Row="2" Grid.Column="1" />
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Children" Opacity="0.65" />
+                        <TextBlock x:Name="DetailChildren" Grid.Row="3" Grid.Column="1" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <TextBlock x:Name="FooterText" Grid.Row="3" Opacity="0.65" TextWrapping="Wrap"
+                   ToolTip.Tip="Disc browser status and extraction results." />
+    </Grid>
+</Window>

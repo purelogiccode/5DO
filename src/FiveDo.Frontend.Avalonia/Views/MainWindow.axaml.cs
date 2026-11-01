@@ -174,6 +174,8 @@ public partial class MainWindow : Window, IDisposable
             // window before the main loop starts can shut down the dispatcher.
             _ = new SettingsWindow(_settings, _gameId, _gameName);
             _ = new CheatsWindow();
+            _ = new DiscBrowserWindow();
+            _ = new DiscInfoWindow();
         }
 
         GridLibraryList.ItemsSource = _visibleGames;
@@ -568,6 +570,65 @@ public partial class MainWindow : Window, IDisposable
         {
             OpenDiscPath(path, autoStart: true);
         }
+    }
+
+    private void OnDiscBrowserAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ShowDiscBrowserAsync, "opening the disc browser");
+    }
+
+    private async Task ShowDiscBrowserAsync()
+    {
+        var path = _settings.DiscPath;
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+        {
+            StatusText.Text = "Boot a disc first to browse its files.";
+            return;
+        }
+
+        var window = new DiscBrowserWindow(path);
+        await window.ShowDialog(this).ConfigureAwait(true);
+    }
+
+    private void OnDiscInfoAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ShowDiscInfoAsync, "reading disc information");
+    }
+
+    private async Task ShowDiscInfoAsync()
+    {
+        var path = _settings.DiscPath;
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+        {
+            StatusText.Text = "Boot a disc first to show its information.";
+            return;
+        }
+
+        DiscInfo? info;
+        try
+        {
+            info = await Task.Run(() =>
+            {
+                using DiscBrowser browser = DiscBrowser.Open(path);
+                return browser.Info;
+            }).ConfigureAwait(true);
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or InvalidDataException
+            or DiscImageException
+            or ArgumentException)
+        {
+            StatusText.Text = $"Disc information could not be read: {exception.Message}";
+            _logger.ForCategory(LogCategory.Storage).Error(
+                exception,
+                "Disc information failed for {Path}.",
+                path);
+            return;
+        }
+
+        var window = new DiscInfoWindow(info);
+        await window.ShowDialog(this).ConfigureAwait(true);
     }
 
     private void OpenBiosPath(string path, string? bios2Path = null, bool persist = true, string? reason = null)
