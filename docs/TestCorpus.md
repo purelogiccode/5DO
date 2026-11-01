@@ -482,6 +482,11 @@ from v1/v2. The DSP keeps its separate FreeDO-compatible LCG state.
   reads `0x17F0`, and its 3,000-frame image still shows a valid game scene. The other
   5DO hashes are unchanged.
 
+**OP-SYS-10 CHD-zstd (2026-10-31):** CHDSharp 1.6.0 already supports Zstd
+(`ChdCodec.Zstd`/`Cdzstd`) and ships `VendoredZSTD.dll`. Opening all 589 local CHDs
+succeeded; they use CDLZMA/CDZLIB/CDFLAC, so no zstd fixture is present. No native
+dependency or code change is required; add a zstd CHD fixture when one is available.
+
 The next step is to capture a CLIO CSTAT/DIPIR boot transcript, compare the
 `OperaDipir`/`OperaSoftReset` path against Opera, and then enable it in the accuracy
 profile.

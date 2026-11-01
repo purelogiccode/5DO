@@ -958,3 +958,6 @@ M1 implements the section primitive used by all later chips:
 - CLIO has its own splitmix32 PRNG for register `0x17F0`; it no longer borrows the DSP
   LCG. The state is seeded from `EmulatorTuning.RandomSeed` when provided and saved in
   CLIO state version 3. The DSP LCG remains separate and FreeDO-compatible.
+- CHDSharp 1.6.0 supports Zstd (`ChdCodec.Zstd`/`Cdzstd`) and ships `VendoredZSTD.dll`.
+  All 589 local CHDs use CDLZMA/CDZLIB/CDFLAC, so no zstd fixture is present; no native
+  dependency or code change is required.

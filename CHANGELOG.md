@@ -44,6 +44,9 @@ still change.
 - CLIO now has its own splitmix32 PRNG for register `0x17F0` instead of borrowing the
   DSP LCG. The state is seeded from `EmulatorTuning.RandomSeed` when provided and saved
   in CLIO state version 3 with v1/v2 migration; the DSP LCG remains separate.
+- Verified CHDSharp 1.6.0's Zstd support (`ChdCodec.Zstd`/`Cdzstd`, `VendoredZSTD.dll`).
+  All 589 local CHDs use CDLZMA/CDZLIB/CDFLAC; no zstd fixture is present, so no code
+  change or native dependency was needed.
 
 ### Added
 
