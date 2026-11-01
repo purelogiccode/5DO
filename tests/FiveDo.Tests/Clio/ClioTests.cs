@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using FiveDo.Core;
 using FiveDo.Memory;
 using FiveDo.Tests.TestUtilities;
@@ -407,6 +408,36 @@ public sealed class ClioTests
         clio.ClearDipirOnSoftReset();
 
         Assert.Equal(0x4000u, clio.Peek(0x410));
+    }
+
+    [Fact]
+    public void Cstat_SoftResetInvokesTheCallbackAndSetsDipirReset()
+    {
+        var clio = new ClioChip(new EmulatorTuning { OperaSoftReset = true });
+        var calls = new List<bool>();
+        clio.SoftResetRequested = calls.Add;
+
+        Assert.False(clio.Poke(0x28, 0x30));
+        Assert.Single(calls);
+        Assert.True(calls[0]);
+        Assert.Equal(0x40u, clio.Peek(0x28) & 0x40);
+
+        Assert.False(clio.Poke(0x28, 0x10));
+        Assert.Equal(2, calls.Count);
+        Assert.True(calls[0]);
+        Assert.False(calls[1]);
+    }
+
+    [Fact]
+    public void Cstat_ClearOnZeroBitsFollowOpera()
+    {
+        var clio = new ClioChip(new EmulatorTuning { OperaSoftReset = true });
+
+        clio.Poke(0x28, 0x30);
+        Assert.NotEqual(0u, clio.Peek(0x28) & 0x40);
+
+        clio.Poke(0x28, 0x00);
+        Assert.Equal(0u, clio.Peek(0x28) & 0x40);
     }
 
     [Fact]

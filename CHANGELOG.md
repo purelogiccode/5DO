@@ -35,8 +35,12 @@ still change.
 - CLIO now implements DIPIR1/DIPIR2 latches, before-reset conversion, the DIPIR FIQ,
   and XBUS access-abort rules. XBUS exposes the selected-device address, Opera mode
   returns the full poll high nibble, and poll/command writes can latch CD media
-  access. The DIPIR/abort path is opt-in via `EmulatorTuning.OperaDipir` until
-  OP-SYS-03 adds the soft-reset/clear-DIPIR path.
+  access. The DIPIR/abort path is opt-in via `EmulatorTuning.OperaDipir`.
+- CSTAT soft reset now implements Opera's reset/clear-on-zero/DIPIR-reset bits and a
+  machine handler that performs an ARM soft reset (SPSR_svc/R14_svc preserved, PC=0,
+  ROM overlay reasserted), MADAM/DSP soft resets, and optional XBUS/DIPIR clearing.
+  The path is opt-in via `EmulatorTuning.OperaSoftReset` pending boot-transcript
+  validation.
 
 ### Added
 

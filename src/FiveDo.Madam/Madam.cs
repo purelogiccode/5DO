@@ -213,6 +213,16 @@ public sealed class Madam : IMadamBus, IStateSection
         _registers[0x000] = 0x01020000;
     }
 
+    /// <summary>Stops the CEL engine without clearing registers. Opera: <c>opera_madam_soft_reset</c>.</summary>
+    public void SoftReset()
+    {
+        _registers[0x004] &= ~0xF1u;
+        _fsm = CelFsmState.Idle;
+        _celDrawPending = false;
+        _celBusyCyclesRemaining = 0;
+        _celBusyCyclesTotal = 0;
+    }
+
     /// <summary>Reads a MADAM register. FreeDO: <c>_madam_Peek</c>.</summary>
     /// <param name="offset">Byte offset within the MADAM window.</param>
     /// <returns>The register value.</returns>

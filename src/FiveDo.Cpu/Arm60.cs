@@ -146,6 +146,25 @@ public sealed class Arm60 : ICpuBackend, IStateSection
         _ldmInUse = 0;
     }
 
+    /// <summary>
+    /// Applies a CLIO software reset without a cold CPU reset. Opera:
+    /// <c>opera_arm_soft_reset</c>. The interrupted CPSR and next PC remain visible
+    /// as SPSR_svc and R14_svc.
+    /// </summary>
+    public void SoftReset()
+    {
+        var returnCpsr = _state.Cpsr;
+        var returnPc = _state.ProgramCounter;
+        _cycles = 0;
+        _carryOut = 0;
+        _state.Spsr[ArmModes.Svc] = returnCpsr;
+        _state.SetCpsr((returnCpsr & ~0x1fu) | 0x13u | 0x40u | 0x80u);
+        _state.User[14] = returnPc;
+        _state.User[15] = 0;
+        _state.DataAbortPending = false;
+        _state.FiqPending = false;
+    }
+
     /// <summary>Executes exactly one instruction.</summary>
     /// <returns>The ARM clock cycles consumed by the instruction.</returns>
     public int Step()

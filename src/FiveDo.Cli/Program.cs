@@ -300,6 +300,8 @@ internal static class Program
             CdromTiming = ParseCdromTiming(options.Get("--cd-timing"), profileTuning.CdromTiming),
             CdSpeed = ParseCdSpeed(options.Get("--cd-speed"), profileTuning.CdSpeed),
             ArmClock = ParseCpuClock(options.Get("--cpu-clock"), profileTuning.ArmClock),
+            OperaDipir = profileTuning.OperaDipir,
+            OperaSoftReset = profileTuning.OperaSoftReset,
             RandomSeed = ParseRandomSeed(options.Get("--random-seed")),
             FixMode = fixMode,
         });
@@ -897,6 +899,8 @@ internal static class Program
             CdromTiming = ParseCdromTiming(options.Get("--cd-timing"), profileTuning.CdromTiming),
             CdSpeed = ParseCdSpeed(options.Get("--cd-speed"), profileTuning.CdSpeed),
             ArmClock = ParseCpuClock(options.Get("--cpu-clock"), profileTuning.ArmClock),
+            OperaDipir = profileTuning.OperaDipir,
+            OperaSoftReset = profileTuning.OperaSoftReset,
             RandomSeed = ParseRandomSeed(options.Get("--random-seed")),
             FixMode = fixMode,
         });

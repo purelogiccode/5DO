@@ -950,3 +950,8 @@ M1 implements the section primitive used by all later chips:
 - DIPIR/aborts are opt-in via `EmulatorTuning.OperaDipir`. Enabling them before
   OP-SYS-03's soft-reset/clear-DIPIR path makes Lemmings stall after the first CD
   command burst, so the default and accuracy profiles leave the flag off.
+- CSTAT soft reset is implemented (`OperaSoftReset`): the register follows Opera's
+  reset/clear-on-zero/DIPIR-reset bits; the machine handler performs an ARM soft reset
+  (SPSR_svc/R14_svc preserved, PC=0, overlay reasserted), MADAM/DSP soft resets, and
+  optional XBUS/DIPIR clearing. It is also opt-in until a boot transcript validates
+  the combined `OperaDipir` + `OperaSoftReset` path.

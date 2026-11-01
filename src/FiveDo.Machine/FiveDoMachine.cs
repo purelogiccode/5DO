@@ -74,6 +74,8 @@ public sealed class FiveDoMachine
         Vdlp.ClutDmaEnabled = () => Madam.ClutDmaEnabled;
         Vdlp.VideoDmaEnabled = () => Madam.VideoDmaEnabled;
         Clio.OperaDipirEnabled = Tuning.OperaDipir;
+        Clio.OperaSoftResetEnabled = Tuning.OperaSoftReset;
+        Clio.SoftResetRequested = HandleSoftReset;
         Xbus = new XbusChip
         {
             Interrupts = Clio,
@@ -234,6 +236,22 @@ public sealed class FiveDoMachine
     public void CopyNvram(Span<byte> destination)
     {
         Memory.CopyNvram(destination);
+    }
+
+    /// <summary>Handles a CLIO CSTAT soft reset. Opera: <c>opera_3do_soft_reset</c>.</summary>
+    /// <param name="clearDipir">Whether the reset also clears the DIPIR latches and XBUS controller.</param>
+    private void HandleSoftReset(bool clearDipir)
+    {
+        Cpu.SoftReset();
+        Memory.Reset();
+        Madam.SoftReset();
+        Dsp.Reset();
+        Dsp.SetRunning(false);
+        if (clearDipir)
+        {
+            Xbus.ResetController();
+            Clio.ClearDipirOnSoftReset();
+        }
     }
 
     /// <summary>Resets every chip in the FreeDOCore initialization order.</summary>

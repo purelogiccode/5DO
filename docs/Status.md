@@ -50,7 +50,7 @@ Settings > Emulation override combo. Auto-selection uses the game database regio
 known requirements for Slayer Europe/USA, Powers Kingdom (Europe), and Arcade CD-ROM
 discs; the configured BIOS remains the fallback when no BIOS folder is set. The
 five-title 3,000-frame smoke run and four known-requirement 12,000-frame runs are in
-[`TestCorpus.md`](TestCorpus.md) 1.1f. **1154 tests pass.** The first Opera parity batch (VDLP, ARM carry, DSP FIFO, MADAM span/MARIA/BPP0/SKIPX/LRFORM/blue-LSB/REGCTL/PIXC, CLIO FIFO), OP-14 (XYPOSH/XYPOSL origin, retired `GraphicsStepY`/`BitTiming6`), OP-SYS-02 (Opera CD poll/local reset), and OP-SYS-01's ROM overlay/DIPIR/XBUS work are complete (DIPIR remains opt-in until OP-SYS-03); see `Make5doTheBestOfAll.md` 13.11–13.15.
+[`TestCorpus.md`](TestCorpus.md) 1.1f. **1157 tests pass.** The first Opera parity batch (VDLP, ARM carry, DSP FIFO, MADAM span/MARIA/BPP0/SKIPX/LRFORM/blue-LSB/REGCTL/PIXC, CLIO FIFO), OP-14 (XYPOSH/XYPOSL origin, retired `GraphicsStepY`/`BitTiming6`), OP-SYS-02 (Opera CD poll/local reset), and OP-SYS-01/03's ROM overlay, DIPIR, XBUS, and CSTAT soft-reset work are complete (the DIPIR/soft-reset path remains opt-in pending a boot transcript); see `Make5doTheBestOfAll.md` 13.11–13.16.
 The differential harness (FND-05/CORE-11/CORE-16) is implemented:
 `tools/FiveDo.DiffHarness` stages the bundled OperaCore and BIOS, runs both engines
 with identical options, compares checkpoint frame hashes, applies manifest
@@ -236,7 +236,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 1154 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 1157 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and

@@ -459,8 +459,21 @@ boot; the default and accuracy profiles leave it off.
 - Differential smoke (Lemmings, 300 frames): **PASS**, `0x110E7DC5`.
 - Five-title showcase: unchanged; all 5DO hashes identical to the pre-batch baseline.
 
-The next batch is OP-SYS-03 (CSTAT soft reset and DIPIR-clear propagation), then
-re-enable `OperaDipir` and validate the boot transcript.
+**OP-SYS-03 CSTAT soft reset (2026-10-31):** CLIO now implements the CSTAT reset
+bits, clear-on-zero bits, DIPIR-reset bit, and a soft-reset callback. The machine
+handler performs an ARM soft reset (SPSR_svc/R14_svc preserved, PC=0, ROM overlay
+reasserted), MADAM/DSP soft resets, and optional XBUS controller/DIPIR clearing. The
+full path is opt-in (`EmulatorTuning.OperaSoftReset`) because enabling it before a
+boot transcript changes the Lemmings path; the register and ARM semantics are covered
+by unit tests.
+
+- `dotnet test 5DO.sln`: **1,157 passed**, 0 failed.
+- Differential smoke (Lemmings, 300 frames): **PASS**, `0x110E7DC5`.
+- Five-title showcase: unchanged; all 5DO hashes identical to the pre-batch baseline.
+
+The next step is to capture a CLIO CSTAT/DIPIR boot transcript, compare the
+`OperaDipir`/`OperaSoftReset` path against Opera, and then enable it in the accuracy
+profile.
 
 **Opera-parity title probes (2026-10-31):** 5DO completed 3,000 frames for
 Samurai Shodown (USA/EU), DinoPark Tycoon, Alone in the Dark, Johnny Bazookatone,

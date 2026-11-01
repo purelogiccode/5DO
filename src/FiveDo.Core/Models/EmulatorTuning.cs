@@ -79,6 +79,12 @@ public sealed record EmulatorTuning
     /// </summary>
     public bool OperaDipir { get; init; }
 
+    /// <summary>
+    /// Gets a value indicating whether CLIO CSTAT soft resets use Opera's ARM/MADAM/DSP
+    /// reset path. Opt-in until the reset transcript is validated.
+    /// </summary>
+    public bool OperaSoftReset { get; init; }
+
     /// <summary>Validates the tuning values.</summary>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when a clock or size is invalid.</exception>
     public void Validate()

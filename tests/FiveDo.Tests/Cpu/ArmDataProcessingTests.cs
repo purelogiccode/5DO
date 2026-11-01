@@ -21,6 +21,22 @@ public sealed class ArmDataProcessingTests
     }
 
     [Fact]
+    public void SoftReset_PreservesReturnStateAndJumpsToZero()
+    {
+        var rig = new ArmTestRig();
+        rig.Cpu.Cpsr = 0x60000013;
+        rig.Cpu.ProgramCounter = 0x1234;
+
+        rig.Cpu.SoftReset();
+
+        Assert.Equal(0u, rig.Cpu.ProgramCounter);
+        Assert.Equal(0x13u, rig.Cpu.Cpsr & 0x1f);
+        Assert.NotEqual(0u, rig.Cpu.Cpsr & 0x40);
+        Assert.NotEqual(0u, rig.Cpu.Cpsr & 0x80);
+        Assert.Equal(0x1234u, rig.Cpu.ReadRegister(14));
+    }
+
+    [Fact]
     public void ArithmeticOperations_ProduceExpectedResults()
     {
         var rig = new ArmTestRig();

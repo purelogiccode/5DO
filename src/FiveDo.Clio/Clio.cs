@@ -35,6 +35,14 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     private const uint DipirDeviceMask = 0x00ff;
     private const uint DipirFiq = 1u << 1;
 
+    private const uint CstatPon = 0x01;
+    private const uint CstatRollover = 0x02;
+    private const uint CstatWatchdogMask = 0x0c;
+    private const uint CstatDipirReset = 0x40;
+    private const uint CstatClearOnZeroMask = CstatPon | CstatRollover | CstatDipirReset;
+    private const uint ResetSoft = 0x10;
+    private const uint ResetClearDipir = 0x20;
+
     private readonly EmulatorTuning _tuning;
     private readonly uint[] _registers = new uint[RegisterCount];
     private readonly int[] _inputPointers = new int[InputFifoCount];
@@ -57,6 +65,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         _tuning = tuning ?? EmulatorTuning.Default;
         _tuning.Validate();
         OperaDipirEnabled = _tuning.OperaDipir;
+        OperaSoftResetEnabled = _tuning.OperaSoftReset;
         Reset();
     }
 
@@ -65,6 +74,12 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
 
     /// <summary>Gets or sets whether Opera's DIPIR latches and access aborts are active.</summary>
     public bool OperaDipirEnabled { get; set; }
+
+    /// <summary>Gets or sets whether Opera's CSTAT soft-reset semantics are active.</summary>
+    public bool OperaSoftResetEnabled { get; set; }
+
+    /// <summary>Gets or sets the callback invoked for a CSTAT soft reset. The argument is clear-DIPIR.</summary>
+    public Action<bool>? SoftResetRequested { get; set; }
 
     private bool UseOperaDipir => OperaDipirEnabled;
 
@@ -361,13 +376,30 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
                 _registers[0x400] = value;
                 return false;
             case 0x28:
-                _registers[address] = value;
-                if (UseOperaDipir && (value & 0x30) == 0x30)
+                if (!OperaSoftResetEnabled)
                 {
-                    ClearDipirOnSoftReset();
+                    _registers[address] = value;
+                    return value == 0x30;
                 }
 
-                return value == 0x30;
+                var cstat = value & ~(ResetSoft | ResetClearDipir | CstatClearOnZeroMask | CstatWatchdogMask);
+                cstat |= _registers[address] & CstatWatchdogMask;
+                cstat |= _registers[address] & value & CstatClearOnZeroMask;
+                if ((value & (ResetSoft | ResetClearDipir)) == (ResetSoft | ResetClearDipir))
+                {
+                    cstat |= CstatDipirReset;
+                }
+
+                _registers[address] = cstat;
+                if ((value & ResetSoft) != 0)
+                {
+                    // The reset handler sets the PC directly; do not also apply the
+                    // normal CLIO four-byte PC adjustment for this write.
+                    SoftResetRequested?.Invoke((value & ResetClearDipir) != 0);
+                    return false;
+                }
+
+                return false;
             case 0x17e8:
                 Dsp?.Reset();
                 return false;

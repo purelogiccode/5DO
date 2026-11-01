@@ -91,6 +91,19 @@ public sealed class Xbus : IClioXbus, IStateSection
         return -1;
     }
 
+    /// <summary>Resets the controller without resetting attached devices. Opera: <c>xbus_controller_reset_f</c>.</summary>
+    public void ResetController()
+    {
+        _select = 0;
+        _selectHigh = 0;
+        _poll = 0;
+        _pollDevice = 0;
+        _statusLength = 0;
+        _commandPointer = 0;
+        Array.Clear(_statusFifo);
+        Array.Clear(_commandFifo);
+    }
+
     /// <summary>Resets the controller and all attached devices.</summary>
     public void Reset()
     {
