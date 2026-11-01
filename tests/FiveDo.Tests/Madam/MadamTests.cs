@@ -59,6 +59,22 @@ public sealed class MadamTests
     }
 
     [Fact]
+    public void MctlDmaFlags_DefaultEnabledUntilWritten()
+    {
+        var madam = new MadamChip();
+        Assert.True(madam.ClutDmaEnabled);
+        Assert.True(madam.VideoDmaEnabled);
+
+        madam.Poke(0x008, 0);
+        Assert.False(madam.ClutDmaEnabled);
+        Assert.False(madam.VideoDmaEnabled);
+
+        madam.Poke(0x008, 0x2000 | 0x4000);
+        Assert.True(madam.ClutDmaEnabled);
+        Assert.True(madam.VideoDmaEnabled);
+    }
+
+    [Fact]
     public void Modulo_RegisterDecodesReadAndWriteValues()
     {
         var madam = new MadamChip();

@@ -71,6 +71,8 @@ public sealed class FiveDoMachine
             ArmClock = Tuning.ArmClock,
         };
         Madam.Compatibility = Compatibility;
+        Vdlp.ClutDmaEnabled = () => Madam.ClutDmaEnabled;
+        Vdlp.VideoDmaEnabled = () => Madam.VideoDmaEnabled;
         Xbus = new XbusChip { Interrupts = Clio };
         Cdrom = new CdromChip
         {

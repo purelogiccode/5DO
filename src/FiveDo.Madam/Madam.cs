@@ -45,6 +45,11 @@ public sealed class Madam : IMadamBus, IStateSection
     private bool _celDrawPending;
     private ulong _celBusyCyclesRemaining;
     private ulong _celBusyCyclesTotal;
+    private bool _mctlWritten;
+
+    private const uint MctlClutXen = 0x00002000;
+    private const uint MctlVsctXen = 0x00004000;
+    private const uint MctlPlayXen = 0x00008000;
     private long _celPixelsDrawn;
     private long _celTexelsWalked;
     private int _celCelsProcessed;
@@ -127,6 +132,12 @@ public sealed class Madam : IMadamBus, IStateSection
 
     /// <summary>Gets the total ARM cycles estimated for the most recent CEL list.</summary>
     public ulong CelBusyCyclesTotal => _celBusyCyclesTotal;
+
+    /// <summary>Gets a value indicating whether CLUT DMA is enabled in MCTL.</summary>
+    public bool ClutDmaEnabled => !_mctlWritten || (_registers[0x008] & MctlClutXen) != 0;
+
+    /// <summary>Gets a value indicating whether VDL/video DMA is enabled in MCTL.</summary>
+    public bool VideoDmaEnabled => !_mctlWritten || (_registers[0x008] & MctlVsctXen) != 0;
 
     /// <summary>
     /// Gets the pixels drawn by the most recent CEL list when
@@ -248,6 +259,7 @@ public sealed class Madam : IMadamBus, IStateSection
                 return;
             case 0x008:
                 _registers[address] = value;
+                _mctlWritten = true;
                 HandleDma8();
                 return;
             case 0x580:
@@ -551,13 +563,13 @@ public sealed class Madam : IMadamBus, IStateSection
 
     private void HandleDma8()
     {
-        if ((_registers[0x008] & 0x8000) == 0)
+        if ((_registers[0x008] & MctlPlayXen) == 0)
         {
             return;
         }
 
         DmaPbus();
-        _registers[0x008] &= ~0x8000u;
+        _registers[0x008] &= ~MctlPlayXen;
         Interrupts?.GenerateFiq(0, 1);
     }
 

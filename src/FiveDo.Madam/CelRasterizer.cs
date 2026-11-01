@@ -532,6 +532,7 @@ internal sealed class CelRasterizer
 
         var spriteWidth = 1 + (int)(_engine.Pre1 & 0x7ffu);
         var lrForm = (_engine.Pre1 & (uint)CcbPreamble1.LrForm) != 0;
+        var skipX = (int)((_engine.Pre0 >> 24) & 0xfu);
         geometry.SpriteWidth = spriteWidth;
         geometry.SpriteHeight = (int)((_engine.Pre0 & 0xffc0u) >> 6) + 1;
         if (lrForm)
@@ -539,6 +540,18 @@ internal sealed class CelRasterizer
             // Opera: LRFORM describes a source row-pair layout. A 1-bpp LRFORM
             // CEL is used as a priority mask over LR-format bitmap data.
             geometry.SpriteHeight <<= 1;
+        }
+
+        if (skipX >= spriteWidth)
+        {
+            // Opera: SKIPX that exhausts the span draws nothing but still
+            // advances the CEL origin by the full sprite height.
+            var height = geometry.SpriteHeight;
+            geometry.Hdx1616 = unchecked(geometry.Hdx1616 + (geometry.Hddx1616 * height));
+            geometry.Hdy1616 = unchecked(geometry.Hdy1616 + (geometry.Hddy1616 * height));
+            geometry.XPosition1616 = unchecked(geometry.XPosition1616 + (geometry.Vdx1616 * height));
+            geometry.YPosition1616 = unchecked(geometry.YPosition1616 + (geometry.Vdy1616 * height));
+            return;
         }
 
         if (!PrepareGeometry(false))
@@ -552,7 +565,6 @@ internal sealed class CelRasterizer
         var yvert = geometry.YPosition1616;
         var xcur = xvert;
         var ycur = yvert;
-        var skipX = (int)((_engine.Pre0 >> 24) & 0xfu);
         var rowBytes = (offset + 2) << 2;
         var sourceBase = unchecked((int)_engine.DataAddress);
 

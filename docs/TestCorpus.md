@@ -399,7 +399,7 @@ fields as 5DO's `DriveStatus`/`Poll`; do not compare them directly.
 span/MARIA/BPP0/SKIPX/blue-LSB/REGCTL/PIXC, CLIO FIFO) was validated with the
 full unit suite and the differential harness:
 
-- `dotnet test 5DO.sln`: **1,136 passed**, 0 failed.
+- `dotnet test 5DO.sln`: **1,138 passed**, 0 failed.
 - Smoke: Lemmings (USA), 300 frames, checkpoint 300: **PASS**, 1 match,
   0 diverged, 5DO `0x110E7DC5` = Opera `0x110E7DC5`.
 - Showcase: 3,000 frames, checkpoint 3,000: unchanged from the pre-batch

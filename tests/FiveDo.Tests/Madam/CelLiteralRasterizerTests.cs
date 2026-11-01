@@ -90,6 +90,26 @@ public sealed class CelLiteralRasterizerTests
     }
 
     [Fact]
+    public void LiteralLine_ExhaustedSkipXDrawsNothing()
+    {
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
+        WriteLiteralCcb(
+            memory,
+            vcnt: 1,
+            widthMinusOne: 0,
+            pre0: 1u | (1u << 24),
+            pre1: 0,
+            loadPlut: true);
+        WritePlut(memory, 0, 0x7fff);
+        WriteBytes(memory, SourceData + 8, 0x80);
+
+        _ = RunCel(madam);
+
+        Assert.Equal(0, memory.Ram.Read16(FrameBuffer + 0));
+        Assert.Equal(0, memory.Ram.Read16(FrameBuffer + 2));
+    }
+
+    [Fact]
     public void LiteralLine_LrFormReadsRowPairs()
     {
         (FiveDoMemory memory, MadamChip madam) = CreateScene();

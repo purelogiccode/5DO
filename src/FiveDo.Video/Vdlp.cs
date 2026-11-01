@@ -107,6 +107,12 @@ public sealed class Vdlp : IVdlp, IStateSection
     /// <summary>Gets the current line delay. FreeDO: <c>linedelay</c>.</summary>
     public int LineDelay => _lineDelay;
 
+    /// <summary>Gets or sets the MADAM CLUT DMA enable source. Opera: <c>madam_clut_dma_enabled</c>.</summary>
+    public Func<bool>? ClutDmaEnabled { get; set; }
+
+    /// <summary>Gets or sets the MADAM video DMA enable source. Opera: <c>madam_video_dma_enabled</c>.</summary>
+    public Func<bool>? VideoDmaEnabled { get; set; }
+
     /// <summary>Gets the save-state section identifier.</summary>
     public uint Id => StateSectionIds.Vdlp;
 
@@ -169,7 +175,8 @@ public sealed class Vdlp : IVdlp, IStateSection
             _forceLine = 5;
         }
 
-        if (line >= 5
+        if ((ClutDmaEnabled?.Invoke() ?? true)
+            && line >= 5
             && (line == _forceLine || (_lineDelay == 0 && _persistLength != 0)))
         {
             ExecuteVdl();
@@ -186,7 +193,7 @@ public sealed class Vdlp : IVdlp, IStateSection
             else
             {
                 VdlLine target = frame.Lines[y];
-                if ((_clutDma & (1u << 21)) != 0)
+                if ((_clutDma & (1u << 21)) != 0 && (VideoDmaEnabled?.Invoke() ?? true))
                 {
                     var lineWidth = (int)Math.Min(_modulo, VdlLine.MaxPixels);
                     if (lineWidth <= 0)
@@ -259,7 +266,7 @@ public sealed class Vdlp : IVdlp, IStateSection
         VdlLine target0 = frame.Lines[y * 2];
         VdlLine target1 = frame.Lines[(y * 2) + 1];
 
-        if ((_clutDma & (1u << 21)) != 0)
+        if ((_clutDma & (1u << 21)) != 0 && (VideoDmaEnabled?.Invoke() ?? true))
         {
             var lineWidth = (int)Math.Min(_modulo, VdlLine.MaxPixels / 2);
             if (lineWidth <= 0)
