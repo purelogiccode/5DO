@@ -192,6 +192,19 @@ polling a static state. With `--cd-timing opera`, `cd read sector <lba>` appears
 the scheduled sector deadline expires rather than at command time, so the gap between
 the command and the read line is the modeled 2x drive time.
 
+`--cd-transcript <path>` writes the richer command/status record used for parity work:
+
+```text
+f=15 cmd=83 00 00 00 00 00 00 status=8300100001000000000000e1 poll=1f drive=e1
+f=15 cmd=10 00 02 00 00 00 01 status=10e1 poll=3f drive=e1
+```
+
+Each line contains the frame, all seven command bytes, the status response, poll, and
+drive status after the command handler. `Battle Chess (Europe)` produces 393 entries
+over its first 300 frames. Unsupported/unknown commands return an illegal-request
+status (`0x17` in the READ ERROR payload), and the guest RESET command restores the
+default 2048-byte transfer.
+
 `disc tracks game.chd` lists the CHD track table; `info game.chd` shows the volume
 header and game ID. `disc dump` writes raw 2048-byte sectors for manual inspection.
 

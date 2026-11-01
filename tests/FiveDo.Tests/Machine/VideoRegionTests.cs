@@ -117,7 +117,7 @@ public sealed class VideoRegionTests
     }
 
     [Fact]
-    public void StateWarnsWhenTheVideoRegionDiffers()
+    public void StateSwitchesTheVideoRegionWhenTheStateDiffers()
     {
         var pal = new FiveDoMachine(new EmulatorTuning { Region = VideoRegion.Pal1 });
         pal.RunFrame();
@@ -128,9 +128,15 @@ public sealed class VideoRegionTests
         state.Position = 0;
         ntsc.LoadState(state);
 
+        Assert.Equal(VideoRegion.Pal1, ntsc.RegionProfile.Region);
+        Assert.Equal(50, ntsc.FramesPerSecond);
         Assert.Contains(
             ntsc.StateWarnings,
-            warning => warning.Contains("video region", System.StringComparison.OrdinalIgnoreCase));
+            warning => warning.Contains("switched to Pal1", System.StringComparison.OrdinalIgnoreCase));
+
+        ntsc.RunFrame();
+        Assert.InRange(ntsc.LastFrameCycles, 250_000, 250_100);
+        Assert.Equal(288, ntsc.Frame.SourceHeight);
     }
 
     [Fact]

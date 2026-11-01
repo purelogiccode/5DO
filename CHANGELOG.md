@@ -46,8 +46,10 @@ still change.
   on mismatch. `AutoRegion` (default on) follows the resolved BIOS and switches a
   running machine between frames, so opening a PAL title does not require a manual
   region change. `FiveDoMachine.SetVideoRegion`/`Quartz.SetRegion` make the switch
-  without recreating the machine. Battle Chess Europe renders 320x288 at 50 Hz, and a
-  300-frame capture is exactly 6.000 seconds of 44.1 kHz audio.
+  without recreating the machine. A per-game `RegionOverrides` map and Settings >
+  Emulation > Region override pin a disc to NTSC/PAL1/PAL2, and loading a state written
+  under another region switches the machine to that region. Battle Chess Europe renders
+  320x288 at 50 Hz, and a 300-frame capture is exactly 6.000 seconds of 44.1 kHz audio.
 - FND-02 settings schema versioning: `AppSettings.SettingsVersion` / `CurrentVersion = 2`
   are written on save; unversioned and v1 files are normalized on load. Malformed
   settings are copied to `settings.json.invalid-<timestamp>.bak` before defaults are
@@ -59,7 +61,16 @@ still change.
   cheats, library state, and logs beside the executable; the explicit data directory
   enables separate instances. Named profiles use `--config-profile <name>` /
   `FIVEDO_PROFILE` and live under `profiles/<name>/`; `settings profiles` lists them.
-  A profile selector/import-export UI and instance locking remain pending.
+  `InstanceLock` opens `<data>/5do.instance.lock` exclusively so a second desktop
+  process reports the owner and exits instead of racing settings/NVRAM writes;
+  `FIVEDO_ALLOW_MULTIPLE=1` bypasses the check. A profile selector/import-export UI
+  remains pending.
+  - CORE-04 CD command transcripts: `CdromCommandTranscript` captures each command's
+  opcode, parameters, status bytes, poll, drive status, and frame; `run --cd-transcript
+  <path>` writes the transcript. Unsupported/unknown commands now return the Opera
+  illegal-request status instead of silently doing nothing, the guest RESET command
+  restores the default transfer state and sector size, and `PrefetchingDiscSource`
+  read-aheads native track sectors so CD-DA does not decompress on the sample clock.
 - UX-23 input display: the game view shows a bottom-left frame, lag, and skip counter
   plus the selected controller's buttons decoded from the current PBUS packet. A lag
   frame is one without a guest PBUS DMA read. **F2** or **View > Input Display** toggles

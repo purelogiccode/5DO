@@ -294,7 +294,9 @@ GPU. **Settings > Emulation > Video region** selects NTSC (320x240 at 60 Hz), PA
 the next time the machine is created. **Choose PAL/NTSC automatically from the BIOS**
 is on by default and switches the running machine when a newly resolved BIOS changes the
 video standard; the CLI defaults to `--region auto`, which picks PAL1 when the selected
-BIOS is a PAL image. Available filters:
+BIOS is a PAL image. **Region override** in Settings > Emulation pins the current disc
+to a specific mode, and loading a save state follows the region recorded in that state.
+Available filters:
 
 - **Accurate**: nearest-neighbor, pixel-perfect; the reference for the CPU assembler.
 - **Nearest**: nearest-neighbor with arbitrary scale/letterboxing.
@@ -407,7 +409,10 @@ executable or start with `--portable`. Settings, NVRAM, save states, cheats, lib
 state, and logs then stay beside the executable. `FIVEDO_DATA_DIR` selects an explicit
 data folder for separate instances. `--config-profile <name>` (or `FIVEDO_PROFILE`)
 uses `profiles/<name>/` under the data directory for an isolated named configuration;
-`5do settings profiles` lists them.
+`5do settings profiles` lists them. The desktop takes an exclusive lock on the data
+directory, so a second window using the same profile reports the owning process and
+exits; start it with `--config-profile` or `FIVEDO_DATA_DIR` for an isolated second
+instance. `FIVEDO_ALLOW_MULTIPLE=1` bypasses the lock for automation.
 - Library favorites/play time: `%LOCALAPPDATA%\5DO\library-state.json`.
 - Optional offline library metadata: `%LOCALAPPDATA%\5DO\library-metadata.json`.
 

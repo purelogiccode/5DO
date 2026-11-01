@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using FiveDo.Audio;
+using FiveDo.Cdrom;
 using FiveDo.Cheats;
 using FiveDo.Core;
 using FiveDo.Cpu;
@@ -287,6 +288,7 @@ internal static class Program
         var stateOut = options.Get("--state-out");
         var frameOut = options.Get("--frame-out");
         var cdTrace = options.Get("--cd-trace");
+        var cdTranscriptPath = options.Get("--cd-transcript");
         var clioTrace = options.Get("--clio-trace");
         var fiqTrace = options.Get("--fiq-trace");
         var kprintPath = options.Get("--kprint");
@@ -549,6 +551,21 @@ internal static class Program
 
             cdTraceWriter = new StreamWriter(cdTrace);
             machine.Cdrom.TraceWriter = cdTraceWriter;
+        }
+
+        CdromCommandTranscript? cdTranscript = null;
+        StreamWriter? cdTranscriptWriter = null;
+        if (cdTranscriptPath is not null)
+        {
+            var directory = Path.GetDirectoryName(Path.GetFullPath(cdTranscriptPath));
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            cdTranscriptWriter = new StreamWriter(cdTranscriptPath) { AutoFlush = true };
+            cdTranscript = new CdromCommandTranscript();
+            cdTranscript.Attach(machine.Cdrom);
         }
 
         StreamWriter? celTraceWriter = null;
@@ -946,6 +963,11 @@ internal static class Program
         fiqTraceWriter?.Dispose();
         clioTraceWriter?.Dispose();
         cdTraceWriter?.Dispose();
+        if (cdTranscriptWriter is not null)
+        {
+            cdTranscriptWriter.Write(cdTranscript?.ToText());
+            cdTranscriptWriter.Dispose();
+        }
         celTraceWriter?.Dispose();
         pbusTraceWriter?.Dispose();
         kprintWriter?.Dispose();
@@ -3824,7 +3846,7 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine("Commands:");
         Console.WriteLine("  run [disc] [--bios path] [--bios2 path] [--bios-auto folder] [--frames N] [--state-in path] [--state-out path]");
-        Console.WriteLine("             [--frame-out path] [--audio null|wav|openal] [--wav-out path] [--volume 0..1] [--cd-volume 0..1] [--mute-cd] [--cd-trace path]");
+        Console.WriteLine("             [--frame-out path] [--audio null|wav|openal] [--wav-out path] [--volume 0..1] [--cd-volume 0..1] [--mute-cd] [--cd-trace path] [--cd-transcript path]");
         Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");

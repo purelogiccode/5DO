@@ -6,8 +6,8 @@ manager, the per-game NVRAM pass, the rewind/fast-forward pass, the per-game che
 engine, the TAS-movie pass, the disc browser, the input-device pass, the
 OSD/quick-menu pass, the library metadata/favorites/playtime pass, the
 multi-track/CD-DA pass, the CD-DA volume/settings pass, the multi-disc swap pass, the
-portable-mode pass, the input-display pass, the ODE/playlist-editor pass, and the
-PAL/NTSC pass. Road Rash's
+portable-mode pass, the input-display pass, the ODE/playlist-editor pass, the
+PAL/NTSC pass, and the isolation/CD-transcript pass. Road Rash's
 100k-state race now measures
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
@@ -23,14 +23,20 @@ adds an M3U/M3U8 playlist, playlist editor, drag-and-drop import, File > Swap Di
 guest-eject ODE auto-advance, and `run --playlist/--swap-at/--swap-disc`. SYS-03 adds
 NTSC/PAL1/PAL2 timing: PAL runs at 50 Hz with 288 visible lines, a 312-line field, and
 region-aware VDLP/machine timing. Battle Chess Europe renders correctly at 320x288.
+Per-game region overrides and state-driven region switching are supported. CORE-04 now
+returns illegal-request statuses for unsupported/unknown CD commands, implements the
+guest RESET command, exposes `CdromCommandTranscript`/`run --cd-transcript`, and
+read-aheads native audio sectors in the disc prefetch cache.
 FND-02 is complete with settings schema v2, legacy normalization, malformed-file backup,
 per-game profiles, and `settings validate|migrate`. UX-15 adds portable mode:
-`portable.flag`, `--portable`, or `FIVEDO_DATA_DIR` redirects settings, NVRAM, cheats,
-library state, and logs. **F2** toggles the frame/lag/skip and selected-player input overlay.
+`portable.flag`, `--portable`, `FIVEDO_DATA_DIR`, and named profiles redirect settings,
+NVRAM, cheats, library state, and logs; `InstanceLock` prevents two desktop processes
+from writing the same directory. **F2** toggles the frame/lag/skip and selected-player
+input overlay.
 Remaining disc work is known-title
-CD-DA evidence and a real in-game multi-disc swap, plus read-ahead/subcode. A 10-disc
+CD-DA evidence and a real in-game multi-disc swap, plus subcode. A 10-disc
 Release smoke after the
-TOC change reported 10/10 Loadable/Rendered. **1395 tests pass.**
+TOC change reported 10/10 Loadable/Rendered. **1415 tests pass.**
 The five not-loadable rows are resolved or explained: Mirai Shounen Conan now runs
 (transient CHD read error), and the four Arcade CD-ROM titles load with
 `panafz10-patched.bin` plus the default headless pad. The 12,000-frame rerun shows that six of the

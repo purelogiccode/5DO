@@ -15,11 +15,13 @@ namespace FiveDo.Machine;
 internal sealed class MachineOptionsSection : IStateSection
 {
     private readonly EmulatorTuning _tuning;
+    private readonly VideoRegion _region;
 
-    internal MachineOptionsSection(EmulatorTuning tuning)
+    internal MachineOptionsSection(EmulatorTuning tuning, VideoRegion? region = null)
     {
         ArgumentNullException.ThrowIfNull(tuning);
         _tuning = tuning;
+        _region = region ?? tuning.Region;
     }
 
     /// <summary>Gets the save-state section identifier.</summary>
@@ -62,7 +64,7 @@ internal sealed class MachineOptionsSection : IStateSection
         writer.WriteUInt32((uint)_tuning.CelTiming);
         writer.WriteUInt32((uint)_tuning.CdromTiming);
         writer.WriteUInt32((uint)_tuning.CdSpeed);
-        writer.WriteUInt32((uint)_tuning.Region);
+        writer.WriteUInt32((uint)_region);
     }
 
     /// <summary>Reads the option snapshot.</summary>

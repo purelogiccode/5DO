@@ -29,6 +29,8 @@ public sealed class PrefetchingDiscSource : ITrackedDiscSource
     private readonly Lock _innerGate = new();
     private readonly Dictionary<int, byte[]> _cache = new();
     private readonly Queue<int> _cacheOrder = new();
+    private readonly Dictionary<int, byte[]> _trackCache = new();
+    private readonly Queue<int> _trackOrder = new();
     private readonly AutoResetEvent _wake = new(false);
     private readonly Thread _worker;
     private volatile bool _stop;
@@ -66,6 +68,23 @@ public sealed class PrefetchingDiscSource : ITrackedDiscSource
             lock (_gate)
             {
                 return _cache.Count;
+            }
+        }
+    }
+
+    /// <summary>Gets the current number of cached native track sectors.</summary>
+    /// <remarks>
+    /// Native sectors cover CD-DA and raw reads, which bypass the 2048-byte user-data
+    /// cache. The worker fills this cache while audio playback consumes a sector every
+    /// 588 stereo frames.
+    /// </remarks>
+    public int CachedTrackSectorCount
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _trackCache.Count;
             }
         }
     }
@@ -127,16 +146,42 @@ public sealed class PrefetchingDiscSource : ITrackedDiscSource
     public int ReadTrackSector(int lba, Span<byte> destination)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        lock (_gate)
+        {
+            if (_trackCache.TryGetValue(lba, out var cached))
+            {
+                int copy = Math.Min(cached.Length, destination.Length);
+                cached.AsSpan(0, copy).CopyTo(destination);
+                Advance(lba);
+                return copy;
+            }
+        }
+
+        int read;
         lock (_innerGate)
         {
             if (_inner is ITrackedDiscSource tracked)
             {
-                return tracked.ReadTrackSector(lba, destination);
+                read = tracked.ReadTrackSector(lba, destination);
+            }
+            else
+            {
+                _inner.ReadSector(lba, destination);
+                read = _inner.SectorSize;
+            }
+        }
+
+        lock (_gate)
+        {
+            if (read > 0 && read <= destination.Length)
+            {
+                StoreTrack(lba, destination[..read]);
             }
 
-            _inner.ReadSector(lba, destination);
-            return _inner.SectorSize;
+            Advance(lba);
         }
+
+        return read;
     }
 
     /// <inheritdoc />
@@ -197,6 +242,31 @@ public sealed class PrefetchingDiscSource : ITrackedDiscSource
         _wake.Set();
     }
 
+    private void StoreTrack(int lba, ReadOnlySpan<byte> data)
+    {
+        if (_trackCache.ContainsKey(lba))
+        {
+            return;
+        }
+
+        if (_trackCache.Count >= _capacity)
+        {
+            var oldest = _trackOrder.Dequeue();
+            _trackCache.Remove(oldest);
+        }
+
+        _trackCache[lba] = data.ToArray();
+        _trackOrder.Enqueue(lba);
+    }
+
+    private DiscTrack? TryFindTrack(int lba)
+    {
+        lock (_innerGate)
+        {
+            return _inner is ITrackedDiscSource tracked ? tracked.FindTrack(lba) : null;
+        }
+    }
+
     [SuppressMessage(
         "Design",
         "CA1031:Do not catch general exception types",
@@ -222,10 +292,39 @@ public sealed class PrefetchingDiscSource : ITrackedDiscSource
                     }
 
                     lba = _next++;
-                    if (_cache.ContainsKey(lba))
+                    if (_cache.ContainsKey(lba) || _trackCache.ContainsKey(lba))
                     {
                         continue;
                     }
+                }
+
+                if (TryFindTrack(lba) is { IsAudio: true } audioTrack)
+                {
+                    var trackBuffer = new byte[audioTrack.SectorSize];
+                    try
+                    {
+                        int read;
+                        lock (_innerGate)
+                        {
+                            read = ((ITrackedDiscSource)_inner).ReadTrackSector(lba, trackBuffer);
+                        }
+
+                        if (read <= 0)
+                        {
+                            continue;
+                        }
+
+                        lock (_gate)
+                        {
+                            StoreTrack(lba, trackBuffer.AsSpan(0, Math.Min(read, trackBuffer.Length)));
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        Serilog.Log.Debug(exception, "Audio prefetch read failed for LBA {Lba}.", lba);
+                    }
+
+                    continue;
                 }
 
                 var buffer = new byte[SectorSize];

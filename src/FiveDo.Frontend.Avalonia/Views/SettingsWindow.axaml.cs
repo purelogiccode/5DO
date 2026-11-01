@@ -42,6 +42,14 @@ public partial class SettingsWindow : Window
         new(FrameSkipMode.OneInFive, "Skip 4 of 5 (12 fps)"),
     ];
 
+    private static readonly RegionOverrideOption[] _regionOverrideOptions =
+    [
+        new(null, "Automatic (follow BIOS)"),
+        new(VideoRegion.Ntsc, "NTSC (320 x 240, 60 Hz)"),
+        new(VideoRegion.Pal1, "PAL1 (320 x 288, 50 Hz)"),
+        new(VideoRegion.Pal2, "PAL2 (384 x 288, 50 Hz)"),
+    ];
+
     private static readonly RegionOption[] _regionOptions =
     [
         new(VideoRegion.Ntsc, "NTSC (320 x 240, 60 Hz)"),
@@ -198,6 +206,11 @@ public partial class SettingsWindow : Window
         RegionCombo.SelectedItem = _regionOptions.FirstOrDefault(option => option.Value == settings.Region)
             ?? _regionOptions[0];
         AutoRegionCheck.IsChecked = settings.AutoRegion;
+        RegionOverrideCombo.ItemsSource = _regionOverrideOptions;
+        RegionOverrideCombo.SelectedItem = _regionOverrideOptions.FirstOrDefault(
+                option => option.Value == settings.GetRegionOverride(gameId))
+            ?? _regionOverrideOptions[0];
+        RegionOverrideCombo.IsEnabled = !string.IsNullOrWhiteSpace(gameId);
         ProfileCombo.ItemsSource = _profileOptions;
         ProfileCombo.SelectedItem = _profileOptions.FirstOrDefault(option => option.Value == settings.Profile)
             ?? _profileOptions[0];
@@ -474,6 +487,14 @@ public partial class SettingsWindow : Window
             ? regionOption.Value
             : VideoRegion.Ntsc;
         settings.AutoRegion = AutoRegionCheck.IsChecked == true;
+        if (!string.IsNullOrWhiteSpace(_gameId))
+        {
+            settings.SetRegionOverride(
+                _gameId,
+                RegionOverrideCombo.SelectedItem is RegionOverrideOption { Value: { } region }
+                    ? region
+                    : null);
+        }
         EmulationProfile selectedProfile = ProfileCombo.SelectedItem is ProfileOption profileOption
             ? profileOption.Value
             : EmulationProfile.Custom;
@@ -908,6 +929,11 @@ public partial class SettingsWindow : Window
         {
             return Label;
         }
+    }
+
+    private sealed record RegionOverrideOption(VideoRegion? Value, string Label)
+    {
+        public override string ToString() => Label;
     }
 
     private sealed record RegionOption(VideoRegion Value, string Label)

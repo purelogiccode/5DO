@@ -141,6 +141,44 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void RegionOverrides_WinOverAutomaticAndGlobalChoices()
+    {
+        var settings = new AppSettings
+        {
+            AutoRegion = true,
+            Region = VideoRegion.Ntsc,
+        };
+        Assert.Equal(VideoRegion.Pal1, settings.ResolveRegionForGame("ABCD1234", VideoRegion.Pal1));
+        Assert.Null(settings.GetRegionOverride("ABCD1234"));
+
+        settings.SetRegionOverride("abcd1234", VideoRegion.Pal2);
+        Assert.Equal(VideoRegion.Pal2, settings.GetRegionOverride("ABCD1234"));
+        Assert.Equal(VideoRegion.Pal2, settings.ResolveRegionForGame("abcd1234", VideoRegion.Pal1));
+        Assert.Equal(VideoRegion.Ntsc, settings.ResolveRegionForGame("other", VideoRegion.Ntsc));
+
+        settings.AutoRegion = false;
+        Assert.Equal(VideoRegion.Pal2, settings.ResolveRegionForGame("ABCD1234", VideoRegion.Pal1));
+        Assert.Equal(VideoRegion.Ntsc, settings.ResolveRegionForGame("other", VideoRegion.Pal1));
+
+        settings.SetRegionOverride("ABCD1234", null);
+        Assert.Null(settings.GetRegionOverride("ABCD1234"));
+    }
+
+    [Fact]
+    public void RegionOverrides_RoundtripThroughTheSettingsFile()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        var settings = new AppSettings();
+        settings.SetRegionOverride("A1B2C3D4", VideoRegion.Pal1);
+
+        AppSettingsStore.Save(settings, path);
+        AppSettings loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal(VideoRegion.Pal1, loaded.GetRegionOverride("a1b2c3d4"));
+    }
+
+    [Fact]
     public void ResolveRegion_HonorsAutomaticAndManualModes()
     {
         var automatic = new AppSettings { AutoRegion = true, Region = VideoRegion.Ntsc };

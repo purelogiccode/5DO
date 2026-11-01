@@ -688,7 +688,27 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,395 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,415 tests pass with no changed NTSC hashes.
+
+### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
+
+- `AppSettingsStoreTests.RegionOverrides_*` verifies that a per-game override wins over
+  both the automatic and global region and persists through the settings file.
+- `VideoRegionTests.StateSwitchesTheVideoRegionWhenTheStateDiffers` saves under PAL1,
+  loads into an NTSC machine, and checks the switch, warning, 250,000-cycle field, and
+  288-line output.
+- `InstanceLockTests` acquires the lock twice, checks conflict ownership data, recovers
+  after disposal, creates a missing directory, and reports an unwritable destination.
+- `CdromTranscriptTests` covers command/status/poll capture, eject/inject, reset replay,
+  and detach/clear. `CdromDeviceTests.UnsupportedCommandsPublishAnIllegalRequestStatus`
+  checks the `0x17` READ ERROR payload, and `ResetCommandClearsTheTransfer...` restores
+  the 2048-byte sector size after MODE SET.
+- `PrefetchingDiscSourceTests.ReadTrackSector_CachesAndPrefetchesAudioSectors` proves a
+  following audio sector comes from the native-sector cache without a second inner read.
+- Manual evidence: `Battle Chess (Europe)` with `panafz10e-anvil.bin`, PAL1, 300 frames,
+  `--cd-transcript artifacts/cd-transcript.txt` produced 393 entries. The first entries
+  are READ_ID, READ_ERROR, MODE_SET, READ_DISC_INFO, READ_TOC, and READ_DATA; the frame
+  hash `0x88883E88` is unchanged from the pre-transcript run.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

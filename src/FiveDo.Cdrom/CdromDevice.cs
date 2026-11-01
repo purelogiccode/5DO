@@ -290,6 +290,23 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <summary>Gets or sets an optional observer invoked for each executed command (diagnostics only).</summary>
     public Action<byte>? CommandObserver { get; set; }
 
+    /// <summary>Gets or sets an optional observer invoked after a command has completed (diagnostics only).</summary>
+    /// <remarks>
+    /// Unlike <see cref="CommandObserver"/>, this callback runs after the command handler
+    /// has populated the status bytes, poll bits, and drive status, so it can capture a
+    /// complete command/status transcript entry.
+    /// </remarks>
+    public Action? CommandCompleted { get; set; }
+
+    /// <summary>Gets the most recent command bytes (opcode plus parameters). Diagnostics only.</summary>
+    public ReadOnlySpan<byte> CommandBytes => _command;
+
+    /// <summary>Gets the number of valid bytes in <see cref="StatusBytes"/>.</summary>
+    public int StatusLength => _statusLength;
+
+    /// <summary>Gets the current status response buffer. Diagnostics only.</summary>
+    public ReadOnlySpan<byte> StatusBytes => _status.AsSpan(0, _statusLength);
+
     /// <summary>Initializes a new instance of the <see cref="CdromDevice"/> class.</summary>
     public CdromDevice()
     {
@@ -996,12 +1013,25 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         switch (_command[0])
         {
             case 0x01: // seek
+                FailWithStatus(0x01, MeiError.IllegalRequest);
+                break;
             case 0x04: // diagnostics
+                FailWithStatus(0x04, MeiError.IllegalRequest);
+                break;
             case 0x0A: // reset
+                ResetCommand();
+                break;
             case 0x86: // read header
+                FailWithStatus(0x86, MeiError.IllegalRequest);
+                break;
             case 0x88: // read UPC
+                FailWithStatus(0x88, MeiError.IllegalRequest);
+                break;
             case 0x89: // read ISRC
+                FailWithStatus(0x89, MeiError.IllegalRequest);
+                break;
             case 0x8E: // read device driver
+                FailWithStatus(0x8E, MeiError.IllegalRequest);
                 break;
             case 0x07: // inject disc
                 InjectDiscCommand();
@@ -1295,7 +1325,28 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
                 _poll |= PollStatus;
                 _status[3] = _xbusStatus;
                 break;
+            default:
+                FailWithStatus(_command[0], MeiError.IllegalRequest);
+                break;
         }
+
+        CommandCompleted?.Invoke();
+    }
+
+    private void ResetCommand()
+    {
+        _audioPlaying = false;
+        _requested = 0;
+        _dataLength = 0;
+        _dataPointer = 0;
+        _readStatusPending = false;
+        _readSectorSize = RequestSize;
+        _densityCode = 0;
+        _blockFlags = 0;
+        _xbusStatus |= CdstReady;
+        _xbusStatus &= unchecked((byte)~CdstError);
+        _meiStatus = MeiError.NoError;
+        SetStatus(0x0A);
     }
 
     private void ReadDataCommand()
@@ -1665,7 +1716,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _status[count + 1] = _xbusStatus;
     }
 
-    private void FailWithStatus(byte command)
+    private void FailWithStatus(byte command, MeiError meiError = MeiError.ReceiveEcc)
     {
         _xbusStatus |= CdstError;
         _xbusStatus &= unchecked((byte)~CdstReady);
@@ -1673,7 +1724,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _status[0] = command;
         _status[1] = _xbusStatus;
         _poll |= PollStatus;
-        _meiStatus = MeiError.ReceiveEcc;
+        _meiStatus = meiError;
     }
 
     private bool DiscReadyForRead()

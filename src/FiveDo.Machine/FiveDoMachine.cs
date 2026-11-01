@@ -369,7 +369,7 @@ public sealed class FiveDoMachine
         writer.WriteSection(Xbus);
         writer.WriteSection(Cdrom);
         writer.WriteSection(Quartz);
-        writer.WriteSection(new MachineOptionsSection(Tuning));
+        writer.WriteSection(new MachineOptionsSection(Tuning, RegionProfile.Region));
         writer.WriteSection(new MachineFrameSection(_frame, Compatibility));
 
         var bytes = writer.ToArray();
@@ -477,7 +477,6 @@ public sealed class FiveDoMachine
         CelTimingMode? stateCelTiming = null;
         CdromTimingMode? stateCdromTiming = null;
         CdSpeed? stateCdSpeed = null;
-        VideoRegion? stateRegion = null;
         while (reader.TryReadSection(out StateSectionReader? section))
         {
             var supportedVersion = section.Version == 1
@@ -533,7 +532,15 @@ public sealed class FiveDoMachine
                     stateCelTiming = options.LoadedCelTiming;
                     stateCdromTiming = options.LoadedCdromTiming;
                     stateCdSpeed = options.LoadedCdSpeed;
-                    stateRegion = options.LoadedRegion;
+                    if (options.LoadedRegion is { } savedRegion && savedRegion != RegionProfile.Region)
+                    {
+                        // The frame section is written after the options section, so
+                        // switching here clears the stale frame before it is restored.
+                        SetVideoRegion(savedRegion);
+                        _stateWarnings.Add(
+                            $"State video region {savedRegion} differs from the machine region; switched to {savedRegion}.");
+                    }
+
                     break;
                 case StateSectionIds.Machine:
                     new MachineFrameSection(_frame, Compatibility).Load(section);
@@ -581,11 +588,6 @@ public sealed class FiveDoMachine
                 $"State CD-ROM speed {savedCdSpeed} differs from the machine speed {Tuning.CdSpeed}.");
         }
 
-        if (stateRegion is { } savedRegion && savedRegion != Tuning.Region)
-        {
-            _stateWarnings.Add(
-                $"State video region {savedRegion} differs from the machine region {Tuning.Region}.");
-        }
 
         // A command-line/front-end override survives loads of states written before the
         // high-resolution flag was recorded as enabled.

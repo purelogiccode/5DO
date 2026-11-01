@@ -139,6 +139,9 @@ public sealed class AppSettings
     /// <summary>Gets per-game filter overrides keyed by 4DO game ID.</summary>
     public IDictionary<string, VideoFilter> FilterOverrides { get; set; } = new Dictionary<string, VideoFilter>(StringComparer.Ordinal);
 
+    /// <summary>Gets per-game video-region overrides keyed by 4DO game ID.</summary>
+    public IDictionary<string, VideoRegion> RegionOverrides { get; set; } = new Dictionary<string, VideoRegion>(StringComparer.Ordinal);
+
     /// <summary>Gets per-game timing and CD-DA profiles keyed by 4DO game ID.</summary>
     public IDictionary<string, GameProfile> GameProfiles { get; set; } = new Dictionary<string, GameProfile>(StringComparer.Ordinal);
 
@@ -638,6 +641,56 @@ public sealed class AppSettings
     /// <param name="detected">Region inferred from the BIOS or disc.</param>
     /// <returns>The detected region when <see cref="AutoRegion"/> is enabled; otherwise <see cref="Region"/>.</returns>
     public VideoRegion ResolveRegion(VideoRegion detected) => AutoRegion ? detected : Region;
+
+    /// <summary>Resolves the effective video region for a game, honoring per-game overrides.</summary>
+    /// <param name="gameId">4DO game ID, case-insensitive.</param>
+    /// <param name="detected">Region inferred from the BIOS or disc.</param>
+    /// <returns>The per-game override, otherwise the automatic or global region.</returns>
+    public VideoRegion ResolveRegionForGame(string? gameId, VideoRegion detected) =>
+        GetRegionOverride(gameId) ?? ResolveRegion(detected);
+
+    /// <summary>Gets the per-game region override, if one is configured.</summary>
+    /// <param name="gameId">4DO game ID, case-insensitive.</param>
+    /// <returns>The override, or <see langword="null"/> when the game follows the global region.</returns>
+    public VideoRegion? GetRegionOverride(string? gameId)
+    {
+        if (string.IsNullOrWhiteSpace(gameId))
+        {
+            return null;
+        }
+
+        var normalized = NormalizeGameId(gameId);
+        foreach ((var id, VideoRegion region) in RegionOverrides)
+        {
+            if (string.Equals(NormalizeGameId(id), normalized, StringComparison.Ordinal))
+            {
+                return region;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Sets or removes a per-game region override.</summary>
+    /// <param name="gameId">4DO game ID, case-insensitive.</param>
+    /// <param name="region">Region, or <see langword="null"/> to follow the global/automatic choice.</param>
+    public void SetRegionOverride(string gameId, VideoRegion? region)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(gameId);
+        var normalized = NormalizeGameId(gameId);
+        foreach (var id in RegionOverrides.Keys.ToArray())
+        {
+            if (string.Equals(NormalizeGameId(id), normalized, StringComparison.Ordinal))
+            {
+                RegionOverrides.Remove(id);
+            }
+        }
+
+        if (region is not null)
+        {
+            RegionOverrides[normalized] = region.Value;
+        }
+    }
 
     /// <summary>Gets the per-game timing profile, if one is configured.</summary>
     /// <param name="gameId">4DO game ID, case-insensitive.</param>

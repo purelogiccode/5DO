@@ -437,6 +437,48 @@ public sealed class CdromDeviceTests
         Assert.Equal(0x83, (int)xbus.GetStatusFifo());
     }
 
+    [Theory]
+    [InlineData((byte)0x01)]
+    [InlineData((byte)0x04)]
+    [InlineData((byte)0x86)]
+    [InlineData((byte)0x88)]
+    [InlineData((byte)0x89)]
+    [InlineData((byte)0x8E)]
+    [InlineData((byte)0x77)]
+    public void UnsupportedCommandsPublishAnIllegalRequestStatus(byte opcode)
+    {
+        var cd = new CdromDevice();
+
+        Send(cd, opcode);
+
+        Assert.NotEqual(0, (int)cd.GetPoll() & 0x10);
+        byte[] status = ReadStatus(cd, 2);
+        Assert.Equal(opcode, status[0]);
+        Assert.NotEqual(0, status[1] & 0x10);
+        Assert.Equal(0, status[1] & 0x01);
+
+        Send(cd, 0x82);
+        byte[] mei = ReadStatus(cd, 10);
+        Assert.Equal(0x17, mei[1]);
+    }
+
+    [Fact]
+    public void ResetCommandClearsTheTransferAndRestoresTheDefaultSectorSize()
+    {
+        var cd = new CdromDevice();
+        cd.InsertDisc(new MemoryDisc(4));
+        Send(cd, 0x09, 0x00, 0x00, 0x09, 0x30);
+        Assert.Equal(2352, cd.ReadSectorSize);
+
+        Send(cd, 0x0A);
+
+        Assert.Equal(2048, cd.ReadSectorSize);
+        byte[] status = ReadStatus(cd, 2);
+        Assert.Equal(0x0A, status[0]);
+        Assert.Equal(0, status[1] & 0x10);
+        Assert.NotEqual(0, status[1] & 0x01);
+    }
+
     private static void Send(CdromDevice device, params byte[] command)
     {
         foreach (var value in command)

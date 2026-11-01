@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,395 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,415 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,395** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,415** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -130,14 +130,14 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 11 done · 16 partial · 93 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 12 done · 15 partial · 93 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
 - [ ] **[CORE-01](#feat-core-01)** ARM60 cycle-class accuracy mode — P0 · M · depends on: FND-01 — **Partial** — remaining: option surface is implemented; full ARM60 cycle-class parity and differential evidence remain
 - [ ] **[CORE-02](#feat-core-02)** CLIO timer scheduler parity — P0 · M · depends on: FND-01 — **Partial** — remaining: CLIO timer scheduler option is implemented; parity validation remains
 - [ ] **[CORE-03](#feat-core-03)** MADAM CEL busy timing — P0 · L · depends on: FND-01 — **Partial** — remaining: MADAM CEL busy option is implemented; full timing parity remains
-- [ ] **[CORE-04](#feat-core-04)** CD-ROM timing and command parity — P0 · XL · depends on: FND-01, CORE-11 — **Partial** — remaining: cycle-based data timing and the CD-DA/TOC/Sub-Q command path are implemented; full command/timing parity, read-ahead, subcode, and transcript tests remain
+- [ ] **[CORE-04](#feat-core-04)** CD-ROM timing and command parity — P0 · XL · depends on: FND-01, CORE-11 — **Partial** — remaining: cycle-based data timing, the CD-DA/TOC/Sub-Q path, command/status transcripts, and CD-DA read-ahead are implemented; full command latency, subcode, DIPIR tagging, and raw-vs-Opera transcript diffs remain
 - [ ] **[CORE-05](#feat-core-05)** DSP timing and optional threading — P0 · M · depends on: FND-01 — **Pending**
 - [ ] **[CORE-06](#feat-core-06)** SPORT/XBUS/DMA timing audit — P0 · M · depends on: CORE-11 — **Pending**
 - [ ] **[CORE-07](#feat-core-07)** Interrupt latency / FIQ/IRQ audit — P0 · M · depends on: CORE-11 — **Pending**
@@ -153,9 +153,9 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ### System, disc, BIOS, region, peripherals
 
-- [ ] **[SYS-01](#feat-sys-01)** CD-DA / Red Book and multi-track discs — P0 · L · depends on: CORE-04 — **Partial** — remaining: multi-track CUE/CHD TOC, raw CD-DA sectors, TOC/Sub-Q commands, DSP mixing, volume UI, and `disc tracks --json` are implemented; known-title audio evidence and read-ahead/subcode remain
+- [ ] **[SYS-01](#feat-sys-01)** CD-DA / Red Book and multi-track discs — P0 · L · depends on: CORE-04 — **Partial** — remaining: multi-track CUE/CHD TOC, raw CD-DA sectors, TOC/Sub-Q commands, DSP mixing, volume UI, native-sector read-ahead, and `disc tracks --json` are implemented; known-title audio evidence and subcode remain
 - [ ] **[SYS-02](#feat-sys-02)** Disc swap / ODE / multi-disc — P0 · M · depends on: CORE-04 — **Partial** — remaining: M3U playlist, host/F3/UI/CLI swap, guest inject, per-disc hash, guest-eject ODE auto-advance, and playlist editor/drop import are implemented; real in-game multi-disc swap evidence remains
-- [ ] **[SYS-03](#feat-sys-03)** PAL/NTSC region modes — P0 · L · depends on: CORE-02 — **Partial** — PAL1/PAL2 timing, VDLP mapping, settings, CLI, BIOS auto-region for CLI, and state warning are implemented; desktop auto-detection and per-game override remain
+- [ ] **[SYS-03](#feat-sys-03)** PAL/NTSC region modes — P0 · L · depends on: CORE-02 — **Partial** — PAL1/PAL2 timing, VDLP mapping, settings, CLI, desktop BIOS auto-switch, per-game region override, and state-driven switching are implemented; PAL2 title evidence and automatic profile application remain
 - [x] **[SYS-04](#feat-sys-04)** BIOS manager and auto-selection — P0 · L · depends on: FND-02 — **Done**
 - [ ] **[SYS-05](#feat-sys-05)** Embedded open-source boot ROM — P1 · M · depends on: SYS-04, ENG-03 — **Pending**
 - [ ] **[SYS-06](#feat-sys-06)** RSA/unsigned-disc option — P1 · M · depends on: SYS-04, ENG-03 — **Pending**
@@ -217,11 +217,11 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[UX-12](#feat-ux-12)** BIOS/NVRAM manager UI — P1 · M · depends on: SYS-04, SYS-14 — **Partial** — remaining: inventory helpers, manager window, menu wiring, import, assignment, backup, reset, and delete are done; per-game NVRAM assignment from the list and drag-and-drop import remain
 - [ ] **[UX-13](#feat-ux-13)** Library metadata, favorites, playtime — P1 · L · depends on: SYS-17 — **Partial** — remaining: favorites, playtime, launch history, offline metadata, filters, and sorts are done; external Redump/No-Intro/IGDB/LaunchBox providers, screenshots/manuals/videos, metadata editor, and >=90% rich metadata remain
 - [ ] **[UX-14](#feat-ux-14)** Auto-update and release channels — P1 · M · depends on: ENG-10 — **Pending**
-- [ ] **[UX-15](#feat-ux-15)** Portable mode, multi-instance, config profiles — P1 · S · depends on: FND-02 — **Partial** — `portable.flag`, `--portable`, and `FIVEDO_DATA_DIR` redirect settings/NVRAM/cheats/logs/library state; named profile UI and per-instance locking remain
+- [ ] **[UX-15](#feat-ux-15)** Portable mode, multi-instance, config profiles — P1 · S · depends on: FND-02 — **Partial** — `portable.flag`, `--portable`, `FIVEDO_DATA_DIR`, named profiles, and the per-instance desktop lock are implemented; a profile selector/import-export UI remains
 - [ ] **[UX-16](#feat-ux-16)** Installers, signing, notarization, file associations — P1 · L · depends on: ENG-10 — **Pending**
 - [ ] **[UX-17](#feat-ux-17)** Crash report, compatibility report, log bundle — P1 · M · depends on: FND-08 — **Pending**
 - [ ] **[UX-18](#feat-ux-18)** Onboarding and verification — P1 · M · depends on: SYS-20 — **Pending**
-- [ ] **[UX-19](#feat-ux-19)** OSD, notifications, quick menu — P1 · S · depends on: FND-06 — **Partial** — remaining: notification model, quick menu, gamepad chord, and settings surface are done; full gamepad navigation (UX-08) and richer OSD types remain
+- [x] **[UX-19](#feat-ux-19)** OSD, notifications, quick menu — P1 · S · depends on: FND-06 — **Done**
 - [ ] **[UX-20](#feat-ux-20)** Per-game settings UI — P1 · M · depends on: SYS-18 — **Pending**
 - [ ] **[UX-21](#feat-ux-21)** Debugger UI — P2 · L · depends on: CORE-15 — **Pending**
 - [ ] **[UX-22](#feat-ux-22)** Trace viewer and performance profiler — P2 · M · depends on: UX-21 — **Pending**
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,395 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,415 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,395**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,415**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -792,6 +792,15 @@ PAL1 when the BIOS is a PAL image. The desktop `AutoRegion` option switches a ru
 machine between frames when the resolved BIOS changes standard. Battle Chess Europe
 renders correctly, a 300-frame capture is 6.000 s of audio, and NTSC tests remain green.
 **1392 tests pass.**
+
+**Isolation and CD-evidence pass (2026-11-01, forty-fifth pass):** UX-15 gains
+`InstanceLock`, so a second desktop launch against the same data directory reports the
+owning process and exits instead of racing settings/NVRAM writes. SYS-03 gains a
+per-game region override and state-driven region switching; the options section now
+records the live region. CORE-04 gains illegal-request responses for unsupported/unknown
+commands, the guest RESET command, `CdromCommandTranscript` plus `--cd-transcript`, and
+native-sector read-ahead in the prefetch cache. `Battle Chess (Europe)` produced a
+393-entry boot transcript with matching frame hash. **1415 tests pass.**
 
 **Last updated:** 2026-11-01
 
@@ -2866,8 +2875,11 @@ Suggested parallelization with two developers:
 | 2026-11-01 | SYS-02 | ODE eject handling and playlist editor | Added `GuestEjectCount`/`TrayOpen`/`DiscPresent`, a core-thread `GuestDiscEjected` callback, `AutoSwapOnEject`, ODE playlist auto-advance, guest-eject ODE behavior, a playlist editor with save/import/reorder, drag-and-drop playlist import, `DiscPlaylist.Create/Add/RemoveAt/MoveEntryUp/MoveEntryDown/Save`, and a swap/state roundtrip test. A `D (USA, Europe)` playlist swap at frame 300 ran to frame 600 with a new disc hash. SYS-02 remains partial pending a real in-game swap; 1,381 tests pass |
 | 2026-11-01 | SYS-03 | PAL/NTSC region modes | Added `VideoRegion`/`VideoRegionProfile` (NTSC 320x240@60, PAL1 320x288@50, PAL2 384x288@50), PAL VDL timing and 576-line frame storage, VDLP start-line mapping, region-aware machine frame cycles and source size, 50 Hz CoreRunner pacing, Settings/CLI region options with BIOS auto-selection, GameProfile snapshot, and state options v6 with region warning. Battle Chess Europe renders 320x288 at 50 Hz, and a 300-frame PAL capture is exactly 6.000 s. SYS-03 is partial (desktop auto-detection/per-game override remain); 1,387 tests pass |
 | 2026-11-01 | SYS-03 | Desktop BIOS region auto-switch | Added `AppSettings.AutoRegion`, `AppSettings.ResolveRegion`, `FiveDoMachine.SetVideoRegion`, and `Quartz.SetRegion` so the desktop follows the resolved BIOS and switches PAL/NTSC between frames without recreating the machine. Settings > Video region gains the automatic checkbox; `VideoRegionTests` covers runtime switching. 1,392 tests pass |
+| 2026-11-01 | SYS-03 | Per-game region override and state switching | Added `RegionOverrides`, Settings > Emulation > Region override, `ResolveRegionForGame`/`ResolveRegionForBios` integration, and state-driven region switching with a live region in the options section. SYS-03 remains partial only for PAL2 title evidence and automatic profile application; 1,415 tests pass |
+| 2026-11-01 | CORE-04 | CD transcripts and native-sector read-ahead | Unsupported/unknown CD commands now return an illegal-request status, guest RESET is implemented, `CdromCommandTranscript` captures command/status/poll exchanges, `--cd-transcript` writes them, and `PrefetchingDiscSource` read-aheads audio/native track sectors. Battle Chess boot produced 393 transcript entries; 1,415 tests pass |
 | 2026-11-01 | UX-23 | Input display completion | Added `Madam.PbusReadCount`, per-frame lag detection, `CoreStatus.LagFrames`/`IsLagFrame`, selected controller port `InputDisplayPlayer`/`CoreRunner.InputPlayer`, Settings > Video port selector, and overlay lag/player text. UX-23 is done; 1,390 tests pass |
 | 2026-11-01 | UX-15 | Named configuration profiles | Added `FIVEDO_PROFILE`/`--config-profile`, per-profile data directories under `profiles/<name>/`, safe profile-name normalization, `AppSettingsStore.ListProfiles`/`GetProfilePath`, and `settings profiles` listing. Portable, override, profile, and sanitization tests pass; UX-15 remains partial for a selector/import-export UI and instance locking. 1,395 tests pass |
+| 2026-11-01 | UX-15 | Per-instance write lock | Added `InstanceLock`, an exclusive `5do.instance.lock` in the resolved data directory, desktop conflict handling, and `FIVEDO_ALLOW_MULTIPLE=1`. Separate profiles/directories still run together. UX-15 remains partial for the profile selector/import-export UI; 1,415 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -3455,10 +3467,15 @@ exposed through `--cd-timing freedo|opera` and Settings > Emulation, reported in
 `run --json`, covered by device, state, CLI, and machine tests, and recorded in the
 CD-ROM section (version 2) plus the Options section (version 4). The default FreeDO
 path is unchanged; a three-title 12,000/24,000-frame smoke differential is in
-[`docs/TestCorpus.md`](TestCorpus.md) 1.1d. Remaining: command latency, read-ahead,
-subcode, DIPIR tagging, and the full-collection differential. TOC from the disc source,
-CD-DA, and guest eject/inject are now implemented; guest ODE prompts remain. SYS-09 adds
-the CD speed selector.
+[`docs/TestCorpus.md`](TestCorpus.md) 1.1d. TOC from the disc source, CD-DA, and guest
+eject/inject are implemented. Unsupported/unknown commands now publish the Opera
+illegal-request status instead of silently doing nothing, the guest RESET command clears
+transfer state and restores the 2048-byte sector size, and `CdromCommandTranscript`
+captures the full command/status/poll exchange. `PrefetchingDiscSource` now read-aheads
+native track sectors, so CD-DA playback consumes prefetched audio instead of
+decompressing every sector on the sample clock. Remaining: raw-vs-Opera transcript
+diffs, command latency, subcode, DIPIR tagging, and the full-collection differential.
+SYS-09 adds the CD speed selector.
 
 **Problem.** 5DO's CD device is a frame-based FreeDO port. Opera models cycle-based sector readiness, command latency, DIPIR, read-ahead, subcode, media access, CD-DA, and ODE.
 
@@ -3800,11 +3817,12 @@ artifacts.
 
 **Remaining.**
 - Known CD-DA title evidence and a 10-second DSP+CD-DA WAV capture.
-- CD-DA read-ahead, subcode, and a data-track parity check against the old 2048-only path.
+- Subcode and a data-track parity check against the old 2048-only path.
+- Real CD-DA evidence remains blocked on a sampled title with an audio track.
 
 **Files.** `src/FiveDo.Storage/IDiscSource.cs`, `CueSheet.cs`, `Chd/ChdDiscImage.cs`, `src/FiveDo.Cdrom/CdromDevice.cs`, `src/FiveDo.Audio/`.
 
-**Tests.** Multi-track CUE; CHD audio; CD-DA WAV; data-track parity; save/load.
+**Tests.** Multi-track CUE; CHD audio; CD-DA WAV; native-sector read-ahead; data-track parity; save/load.
 
 **Done when.** A known CD-DA title plays its audio; a 10s WAV contains DSP + CD-DA; data titles unchanged.
 
@@ -3858,20 +3876,21 @@ artifacts.
 - `FiveDoMachine` reports the region, uses the region frame clock, and sizes `SourceWidth`/`SourceHeight` to 320x288 or 384x288.
 - `CoreRunner` paces PAL at 50 Hz from the audio-derived sample count; a 300-frame PAL run produced exactly 6.000 seconds of 44.1 kHz audio.
 - Settings > Emulation > Video region and `AppSettings.Region` persist the manual choice; `AutoRegion` (default on) follows the resolved BIOS and calls `FiveDoMachine.SetVideoRegion` between frames, so opening a PAL title switches a running machine without recreating it. `GameProfile` snapshots the region.
+- Settings > Emulation > Region override pins a disc to NTSC, PAL1, or PAL2 through `RegionOverrides`; the override wins over the automatic/global choice and is applied when the disc opens.
+- Loading a save state written under a different region switches the machine to that region and records a clear warning. The options section now saves the live region rather than the startup tuning value.
 - CLI `--region auto|ntsc|pal1|pal2`; `auto` selects PAL1 when the selected BIOS is a PAL image. Run JSON adds `region` and `fieldRate`.
 - Save-state options section v6 records the region and warns on mismatch.
-- Eight new tests cover profiles, Quartz PAL wrap, VDLP start lines, machine geometry/timing, runtime region switching, state warning, PAL2 width, and automatic/manual region resolution.
+- Eleven new tests cover profiles, Quartz PAL wrap, VDLP start lines, machine geometry/timing, runtime region switching, state-driven region switching, PAL2 width, automatic/manual region resolution, and per-game region overrides.
 
 **Evidence.** `Battle Chess (Europe)` with `panafz10e-anvil.bin` ran 600 frames at `Pal1`, 320x288, 50 Hz, and produced the correct 3DO logo. `--bios-auto bios` selected the FZ-10E and PAL1 automatically. A 300-frame capture produced 264,609 samples (6.0002 s), confirming 50 Hz audio pacing.
 
 **Remaining.**
-- Per-game region override UI and automatic profile application.
-- A PAL2 title and a PAL-specific VDL test ROM.
-- Save-state migration to switch the machine region from the state rather than only warning.
+- Automatic per-game profile application (SYS-18) beyond the explicit region override.
+- A PAL2 title and a PAL-specific VDL test ROM; PAL2 geometry is covered synthetically.
 
 **Files.** `src/FiveDo.Core/Models/VideoRegion.cs`, `EmulatorTuning.cs`, `src/FiveDo.Machine/Quartz.cs`, `FiveDoMachine.cs`, `src/FiveDo.Video/Vdlp.cs`, `src/FiveDo.Host/`, UI/CLI.
 
-**Tests.** `VideoRegionTests`; `AppSettingsStoreTests`; `CliJsonTests`; full NTSC suite remains green (1,392 tests).
+**Tests.** `VideoRegionTests`; `AppSettingsStoreTests`; `CliJsonTests`; full NTSC suite remains green (1,415 tests).
 
 **Done when.** PAL titles run at the correct size/rate; no NTSC regression.
 
@@ -5165,15 +5184,15 @@ metadata providers/import, screenshots/manuals/videos, a metadata editor, and th
 - `--config-profile <name>` / `FIVEDO_PROFILE` selects `<data>/profiles/<name>/` for a named configuration; `settings profiles` lists them.
 - The desktop and CLI strip `--portable` and `--config-profile` before command dispatch and log the resolved directory.
 - Tests cover portable, per-user, explicit-override, named-profile, and profile-name sanitization.
+- `InstanceLock` opens `<data>/5do.instance.lock` exclusively at desktop startup, records the owning PID/version, and shows a clear conflict window instead of letting two processes write the same settings/NVRAM. `FIVEDO_ALLOW_MULTIPLE=1` bypasses the check; separate profiles or data directories use separate locks.
 
 **Remaining.**
 - A profile selector/import-export UI (profiles are currently selected by launch option or environment).
-- A per-instance lock to prevent two processes from writing the same settings/NVRAM files.
 - Installer integration for creating/removing `portable.flag`.
 
 **Files.** `AppSettingsStore`, `Program.cs`.
 
-**Tests.** Portable run; no AppData writes; multi-instance.
+**Tests.** Portable run; no AppData writes; `InstanceLockTests` covers exclusive acquisition, conflict reporting, stale-file recovery, and missing/writable directories.
 
 **Done when.** A USB-stick run works without touching AppData.
 

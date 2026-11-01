@@ -52,7 +52,10 @@ directory must be writable.
 `<data-directory>/profiles/<name>/` for settings, NVRAM, save states, cheats, library
 state, and logs. Profiles are created on first launch and isolated from each other.
 `5do settings profiles` lists existing profile directories; `FIVEDO_DATA_DIR` takes
-precedence over a named profile.
+precedence over a named profile. The desktop acquires `<data>/5do.instance.lock` at
+startup; a second process using the same directory shows the owner and exits.
+`FIVEDO_ALLOW_MULTIPLE=1` disables that guard. Different profiles or data directories
+use different lock files and may run together.
 
 Settings are written atomically (temporary file + replace) and carry
 `"SettingsVersion": 2`. An unversioned or v1 file is migrated in place on the next load.
@@ -462,7 +465,8 @@ matches the first eight uppercase characters; see
 `GameProfiles` stores a per-game timing/CD-DA snapshot keyed by game ID. `GetGameProfile`
 and `SetGameProfile` normalize the key case-insensitively; `ApplyGameProfile(gameId)`
 copies the snapshot into the live settings. Automatic application and the profile editor
-belong to SYS-18/FND-06. `settings validate [path]` reports syntax and schema version;
+belong to SYS-18/FND-06. `RegionOverrides` pins a disc to NTSC/PAL1/PAL2 and wins over
+the automatic/global region choice. `settings validate [path]` reports syntax and schema version;
 `settings migrate [path]` normalizes a file and rewrites it at the current version.
 
 The Settings dialog's **Emulation** page edits:
@@ -472,7 +476,8 @@ The Settings dialog's **Emulation** page edits:
 - `Region` combo: NTSC, PAL1, or PAL2. PAL runs at 50 Hz with 288 visible lines and
   needs a PAL BIOS. **Choose PAL/NTSC automatically from the BIOS** is enabled by
   default and switches the running machine between frames when a newly resolved BIOS
-  changes the video standard.
+  changes the video standard. **Region override** pins the current game to NTSC, PAL1,
+  or PAL2 regardless of the automatic choice.
 - `Profile` combo: Compatible, Accuracy, Performance, or Custom. Selecting a profile
   fills the timing controls; manually changing one of them saves `Custom`.
 - `ArmTiming` combo: FreeDO-compatible N=4 or ARM60 datasheet N=2 (restarts the machine when changed).
@@ -682,6 +687,7 @@ See [`Audio.md`](Audio.md) for the full pipeline and diagnostics.
 | `FIVEDO_AUDIO_TAP` | OpenAL output (CLI `--audio openal`/desktop) | Path prefix for `<prefix>.wav` (exact queued PCM) and `<prefix>.csv` (per-buffer timing). |
 | `FIVEDO_DATA_DIR` | Desktop/CLI | Override the data directory for settings, NVRAM, cheats, library state, and logs. Takes precedence over named profiles. |
 | `FIVEDO_PROFILE` | Desktop/CLI | Select `<data-directory>/profiles/<name>/` as an isolated named configuration. |
+| `FIVEDO_ALLOW_MULTIPLE` | Desktop | Set to `1` to skip the per-instance write lock (automation and test harnesses). |
 | `FIVEDO_PORTABLE` | Desktop/CLI | Set to `1` to behave as if `portable.flag` is next to the executable. |
 | `FIVEDO_LOG_DIR` | Desktop/CLI | Override the rolling log directory. |
 | `ALSOFT_DRIVERS` | OpenAL Soft | Set to `null` to use OpenAL's null backend for headless tests. |

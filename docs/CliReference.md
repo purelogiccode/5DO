@@ -229,6 +229,7 @@ accuracy oracle, not the filtered GPU output.
 | Option | Meaning |
 |---|---|
 | `--cd-trace <path>` | CD command and sector trace. |
+| `--cd-transcript <path>` | Full CD command/status/poll transcript (one line per command). |
 | `--clio-trace <path>` | CLIO register-write and DMA trace. |
 | `--fiq-trace <path>` | FIQ reason trace. |
 | `--kprint <path>` | KPRINT character stream (CR/LF become newlines). |
@@ -775,6 +776,7 @@ Exit code is 1 if any check fails. JSON: `{ "ok": true, "checks": [{ "name", "ok
 | Option | Format |
 |---|---|
 | `--cd-trace` | `cd f=<frame> pc=<pc> cmd <7 hex bytes>`; `cd read sector <n>`. |
+| `--cd-transcript` | `f=<frame> cmd=<op> ... status=<hex> poll=<hex> drive=<hex>`; captures every command/status exchange. |
 | `--clio-trace` | `clio f=<frame> write <addr:x3>=<value:x8> delay=<n>`; `clio dma f=... select=... target=... len=... first=...`. |
 | `--fiq-trace` | `f=<frame> pc=<pc> reason1=<hex> reason2=<hex>`. |
 | `--kprint` | Decoded characters; CR/LF become newlines; control characters below space are skipped. |
