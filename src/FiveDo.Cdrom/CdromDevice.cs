@@ -28,9 +28,12 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 
     private const byte PollStatusMask = 0x01;
     private const byte PollDataMask = 0x02;
+    private const byte PollMediaMask = 0x04;
+    private const byte PollResetMask = 0x08;
     private const byte PollStatus = 0x10;
     private const byte PollData = 0x20;
-    private const byte PollMagic = 0x40;
+    private const byte PollMedia = 0x40;
+    private const byte PollReset = 0x80;
 
     private const byte CdstTray = 0x80;
     private const byte CdstDisc = 0x40;
@@ -159,6 +162,14 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         }
     }
 
+    /// <summary>Gets whether the Opera poll/reset model is active.</summary>
+    /// <remarks>
+    /// The accuracy profile selects <see cref="CdromTimingMode.OperaCycleBased"/>. The
+    /// default FreeDO-compatible mode keeps the historical poll register behavior so
+    /// existing save states and title behavior do not change.
+    /// </remarks>
+    private bool UseOperaPollSemantics => _timingMode == CdromTimingMode.OperaCycleBased;
+
     private uint OverheadCompensationX10Usec => _configuredSpeed switch
     {
         CdSpeed.X1 => 1660,
@@ -236,11 +247,22 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _nextReadyCycle = 0;
         _readStatusPending = false;
         _xbusStatus = 0;
-        _poll = 0x0f;
-        _xbusStatus |= CdstTray;
-        _xbusStatus |= CdstReady;
-        _xbusStatus |= CdstDisc;
-        _xbusStatus |= CdstSpin;
+        ResetPoll();
+        if (UseOperaPollSemantics)
+        {
+            // Opera: no media callback means the door is closed and the drive is
+            // ready, but no disc is present.
+            _xbusStatus |= CdstReady;
+        }
+        else
+        {
+            // FreeDO's initial state reports a present disc even with no image.
+            _xbusStatus |= CdstTray;
+            _xbusStatus |= CdstReady;
+            _xbusStatus |= CdstDisc;
+            _xbusStatus |= CdstSpin;
+        }
+
         _meiStatus = MeiError.NoError;
 
         _discState = new DiscState();
@@ -276,6 +298,11 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     public void Tick(uint cycles)
     {
         _cycles += cycles;
+        if (UseOperaPollSemantics && (_poll & PollResetMask) != 0)
+        {
+            return;
+        }
+
         if (_timingMode == CdromTimingMode.OperaCycleBased
             && _dataLength == 0
             && _requested > 0
@@ -292,7 +319,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _nextReadyCycle = 0;
         _readStatusPending = false;
         _xbusStatus = 0;
-        _poll = 0x0f;
+        ResetPoll();
         _xbusStatus |= CdstTray;
         _xbusStatus |= CdstReady;
         _xbusStatus |= CdstDisc;
@@ -326,6 +353,11 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <inheritdoc />
     public void SetCommand(byte value)
     {
+        if (UseOperaPollSemantics && (_poll & PollResetMask) != 0)
+        {
+            return;
+        }
+
         if (_commandPointer < _command.Length)
         {
             _command[_commandPointer] = value;
@@ -342,7 +374,10 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <inheritdoc />
     public bool FiqPending =>
         (((_poll & PollStatus) != 0) && ((_poll & PollStatusMask) != 0))
-        || (((_poll & PollData) != 0) && ((_poll & PollDataMask) != 0));
+        || (((_poll & PollData) != 0) && ((_poll & PollDataMask) != 0))
+        || (UseOperaPollSemantics
+            && ((_poll & PollMedia) != 0)
+            && ((_poll & PollMediaMask) != 0));
 
     /// <inheritdoc />
     public void SetData(uint value)
@@ -354,6 +389,11 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <inheritdoc />
     public uint GetData()
     {
+        if (UseOperaPollSemantics && (_poll & PollResetMask) != 0)
+        {
+            return 0;
+        }
+
         if (_dataLength == 0 && _requested > 0)
         {
             TryLoadSector();
@@ -399,6 +439,11 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <inheritdoc />
     public uint GetStatus()
     {
+        if (UseOperaPollSemantics && (_poll & PollResetMask) != 0)
+        {
+            return 0;
+        }
+
         uint result = 0;
         if (_statusLength > 0)
         {
@@ -420,8 +465,61 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <inheritdoc />
     public void SetPoll(uint value)
     {
-        _poll &= 0xf0;
-        _poll |= (byte)(value & 0x0f);
+        if (!UseOperaPollSemantics)
+        {
+            _poll &= 0xf0;
+            _poll |= (byte)(value & 0x0f);
+            return;
+        }
+
+        var control = (byte)(value & 0x0f);
+        var resetWasAsserted = (_poll & PollResetMask) != 0;
+
+        // Opera: asserting POLREMASK performs a local reset. The reset clears the
+        // command/transfer FIFOs and leaves logical media presence untouched.
+        if (!resetWasAsserted && (control & PollResetMask) != 0)
+        {
+            LocalReset();
+        }
+
+        // POLRE is a write-one-to-clear media-access latch.
+        if ((value & PollReset) != 0)
+        {
+            _poll &= unchecked((byte)~PollReset);
+        }
+
+        _poll = (byte)((_poll & 0xf0) | control);
+
+        // Releasing local reset is itself a media-change notification.
+        if (resetWasAsserted && (control & PollResetMask) == 0)
+        {
+            _poll |= PollReset;
+        }
+    }
+
+    private void ResetPoll()
+    {
+        _poll = UseOperaPollSemantics ? PollReset : (byte)0x0f;
+    }
+
+    private void LocalReset()
+    {
+        _dataLength = 0;
+        _dataPointer = 0;
+        _requested = 0;
+        _statusLength = 0;
+        _readStatusPending = false;
+        _commandPointer = 0;
+        _poll &= unchecked((byte)~(PollStatus | PollData));
+        _xbusStatus |= CdstReady;
+        _xbusStatus &= unchecked((byte)~CdstError);
+        _currentSector = 0;
+        _nextReadyCycle = _cycles;
+        _meiStatus = MeiError.NoError;
+        Array.Clear(_command);
+        Array.Clear(_status);
+        Array.Clear(_data);
+        SetMsf(_discState.CurrentAbsoluteMsf, 0, 2, 0);
     }
 
     /// <inheritdoc />
@@ -549,6 +647,13 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             _discState.Toc[i].Frame = reader.ReadByte();
             _discState.Toc[i].Reserved2 = reader.ReadByte();
         }
+
+        // Opera applies the local reset after loading a state that was saved with
+        // the media-access/reset latch asserted.
+        if (UseOperaPollSemantics && (_poll & PollResetMask) != 0)
+        {
+            LocalReset();
+        }
     }
 
     /// <inheritdoc />
@@ -589,7 +694,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             // host is idle-waiting on the drive. Portfolio expects a media-access
             // event to finish a post-race/post-load transition; boot traffic never
             // has this pattern. Setting POLMA (0x40) wakes the waiting task.
-            _poll |= 0x40;
+            _poll |= PollMedia;
             _lastCommandOpcode = 0;
         }
         else
@@ -624,7 +729,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
                 _xbusStatus &= unchecked((byte)~CdstError);
                 _xbusStatus |= CdstReady;
                 _poll |= PollStatus;
-                _poll &= unchecked((byte)~PollMagic);
+                _poll &= unchecked((byte)~PollMedia);
                 _meiStatus = MeiError.NoError;
                 SetStatus(0x06);
                 break;
@@ -1018,6 +1123,12 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 
     private bool TryLoadSector()
     {
+        if (UseOperaPollSemantics && (_poll & PollResetMask) != 0)
+        {
+            _poll &= unchecked((byte)~PollData);
+            return false;
+        }
+
         if (_requested <= 0)
         {
             _poll &= unchecked((byte)~PollData);

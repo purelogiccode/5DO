@@ -914,5 +914,22 @@ M1 implements the section primitive used by all later chips:
 - The differential harness runs the external Release CLI. Rebuild
   `src/FiveDo.Cli` in Release before collecting evidence, or the harness will silently
   exercise the previous core build.
-- Remaining parity work: CD/XBUS/DIPIR/reset (OP-SYS-02, OP-SYS-01, OP-SYS-03), then
-  region timing (OP-SYS-05) so the VDLP scanline-5 boundary can be enabled.
+- Remaining parity work: CD/XBUS/DIPIR/reset (OP-SYS-01, OP-SYS-03), CD-DA read-ahead,
+  then region timing (OP-SYS-05) so the VDLP scanline-5 boundary can be enabled.
+
+### 12.23 OP-SYS-02 CD poll and local reset (2026-10-31)
+
+- The accuracy profile (`CdromTimingMode.OperaCycleBased`) now uses Opera's poll model.
+  The default FreeDO-compatible mode keeps the historical register behavior.
+- `POLREMASK` (`0x08`) asserts a local reset: command and transfer FIFOs, status/data
+  poll bits, pending read status, and sector position are cleared; logical media
+  presence is untouched. Status/data reads return zero and commands are ignored while
+  reset is asserted.
+- `POLRE` (`0x80`) is the media-access latch. Init sets it, releasing local reset sets
+  it again, and a poll write with `0x80` clears it (write-one-to-clear). Media-access
+  FIQ uses `POLMA`/`POLMAMASK`.
+- Opera-mode eject reports `READY` without FreeDO's phantom tray/disc/spin bits.
+- A loaded state with local reset asserted runs the same reset after the payload is
+  restored.
+- CD-DA read-ahead (48 sectors) and audio burst scheduling remain with SYS-01. The
+  `0x40` READ_ID idle heuristic remains until command transcripts replace it.

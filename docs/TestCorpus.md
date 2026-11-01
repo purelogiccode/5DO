@@ -426,8 +426,19 @@ path now always reads the actual source row.
   line (16) with Opera's (21); the line-0 cadence keeps Lemmings at
   `0x110E7DC5`.
 
-The next batch is OP-SYS-02 (CD poll/media access/read-ahead/local reset), then
-OP-SYS-01 (ROM overlay/DIPIR/XBUS) and OP-SYS-03 (CSTAT soft reset).
+**OP-SYS-02 CD poll/local reset (2026-10-31):** the accuracy timing mode now uses
+Opera's poll semantics. `POLREMASK` (`0x08`) performs a local reset that clears the
+command/transfer FIFOs and sector position; `POLRE` (`0x80`) is a write-one-to-clear
+media-access latch; status/data/command access is gated during reset; eject reports
+`READY` without the FreeDO phantom disc bits; and a loaded state with reset asserted
+runs the same reset. CD-DA read-ahead and the READ_ID heuristic remain for SYS-01.
+
+- `dotnet test 5DO.sln`: **1,143 passed**, 0 failed.
+- Differential smoke (Lemmings, 300 frames): **PASS**, `0x110E7DC5`.
+- Five-title showcase: unchanged; all 5DO hashes identical to the pre-batch baseline.
+
+The next batch is OP-SYS-01 (ROM overlay/DIPIR/XBUS), then OP-SYS-03 (CSTAT soft
+reset).
 
 **Opera-parity title probes (2026-10-31):** 5DO completed 3,000 frames for
 Samurai Shodown (USA/EU), DinoPark Tycoon, Alone in the Dark, Johnny Bazookatone,

@@ -76,6 +76,7 @@ public sealed class CdromDeviceTests
             TimingMode = CdromTimingMode.OperaCycleBased,
         };
         cd.InsertDisc(disc);
+        cd.SetPoll(0x03); // enable status/data FIQs, as the guest driver does
 
         Send(cd, 0x10, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02);
 
@@ -150,11 +151,73 @@ public sealed class CdromDeviceTests
         var interrupts = 0;
         cd.InterruptRequested = () => interrupts++;
         cd.InsertDisc(new MemoryDisc(4));
+        cd.SetPoll(0x03); // enable status/data FIQs, as the guest driver does
         Send(cd, 0x10, 0x00, 0x02, 0x00, 0x00, 0x00, 0x01);
 
         Assert.Equal(0, interrupts);
         cd.Tick((uint)cd.DataSectorCycles);
         Assert.Equal(1, interrupts);
+    }
+
+    [Fact]
+    public void OperaPollSemantics_LocalResetClearsTransferAndGatesFifos()
+    {
+        var disc = new MemoryDisc(4);
+        var cd = new CdromDevice
+        {
+            TimingMode = CdromTimingMode.OperaCycleBased,
+            ConfiguredSpeed = CdSpeed.Unbounded,
+        };
+        cd.InsertDisc(disc);
+        cd.SetPoll(0x03);
+        Send(cd, 0x10, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02);
+        Assert.NotEqual(0, (int)cd.GetPoll() & 0x20);
+
+        cd.SetPoll(0x08); // assert local reset
+        Assert.NotEqual(0, (int)cd.GetPoll() & 0x08);
+        Assert.Equal(0, (int)cd.GetPoll() & 0x30);
+        Assert.Equal(0u, cd.GetData());
+        Assert.Equal(0u, cd.GetStatus());
+        Assert.NotEqual(0, cd.DriveStatus & 0x01);
+
+        Send(cd, 0x83); // commands are ignored while reset is asserted
+        Assert.Equal(0, (int)cd.GetPoll() & 0x10);
+
+        cd.SetPoll(0x00); // release
+        Assert.Equal(0, (int)cd.GetPoll() & 0x08);
+        Assert.NotEqual(0, (int)cd.GetPoll() & 0x80);
+        Send(cd, 0x83);
+        Assert.NotEqual(0, (int)cd.GetPoll() & 0x10);
+    }
+
+    [Fact]
+    public void OperaPollSemantics_MediaAccessLatchIsWriteOneToClear()
+    {
+        var cd = new CdromDevice { TimingMode = CdromTimingMode.OperaCycleBased };
+        cd.InsertDisc(new MemoryDisc(4));
+
+        // Expansion-interface reset leaves the media-access latch asserted.
+        Assert.NotEqual(0, (int)cd.GetPoll() & 0x80);
+        cd.SetPoll(0x80);
+        Assert.Equal(0, (int)cd.GetPoll() & 0x80);
+
+        cd.SetPoll(0x08);
+        cd.SetPoll(0x00);
+        Assert.NotEqual(0, (int)cd.GetPoll() & 0x80);
+    }
+
+    [Fact]
+    public void OperaPollSemantics_EjectDiscLeavesReadyWithoutDisc()
+    {
+        var cd = new CdromDevice { TimingMode = CdromTimingMode.OperaCycleBased };
+        cd.InsertDisc(new MemoryDisc(4));
+        Assert.NotEqual(0, cd.DriveStatus & 0x40);
+
+        cd.EjectDisc();
+
+        Assert.Null(cd.Disc);
+        Assert.Equal(0x01, cd.DriveStatus);
+        Assert.NotEqual(0, (int)cd.GetPoll() & 0x80);
     }
 
     [Fact]

@@ -24,6 +24,12 @@ still change.
   differential still matches; the five-title showcase hashes are unchanged. See
   `Make5doTheBestOfAll.md` 13.11/13.12 and `docs/TestCorpus.md` 1.1g.
 
+- CD-ROM accuracy mode now models Opera's poll register: `POLREMASK` local reset,
+  `POLRE` write-one-to-clear media access, reset gating for commands/status/data,
+  media-access FIQ, Opera-style eject status, and state-load local reset. The default
+  FreeDO-compatible mode is unchanged. CD-DA read-ahead and the READ_ID heuristic
+  remain for SYS-01.
+
 ### Added
 
 - Differential harness (FND-05/CORE-11/CORE-16). `run` adds `--checkpoints`,
