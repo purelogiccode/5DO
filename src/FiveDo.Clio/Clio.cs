@@ -57,6 +57,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     private int _lineSize;
     private int _flagTime;
     private bool _timerCarry;
+    private uint _prng32State = 0xDEADBEEF;
 
     /// <summary>Initializes a new instance of the <see cref="Clio"/> class.</summary>
     /// <param name="tuning">Machine tuning. Defaults to <see cref="EmulatorTuning.Default"/>.</param>
@@ -131,8 +132,8 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     public uint Id => StateSectionIds.Clio;
 
     /// <summary>Gets the save-state section version.</summary>
-    /// <remarks>Version 2 adds the Opera timer cascade carry; version-1 states default it to false.</remarks>
-    public ushort Version => 2;
+    /// <remarks>Version 3 adds the separate CLIO 32-bit PRNG state.</remarks>
+    public ushort Version => 3;
 
     /// <summary>Resets the chip. FreeDO: <c>_clio_Init</c> and <c>_clio_Reset</c>.</summary>
     /// <param name="resetReason">Value stored in register <c>0x28</c>. FreeDO uses <c>0x40</c> for 3DO-CD.</param>
@@ -163,6 +164,24 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         {
             _flagTime--;
         }
+    }
+
+    /// <summary>Sets the CLIO 32-bit PRNG state. Opera: <c>prng32_seed</c>.</summary>
+    /// <param name="seed">Initial state.</param>
+    public void SetRandomSeed(uint seed)
+    {
+        _prng32State = seed;
+    }
+
+    /// <summary>Gets the CLIO 32-bit PRNG state. Opera: <c>prng32_state_get</c>.</summary>
+    public uint RandomState => _prng32State;
+
+    private uint NextRandom32()
+    {
+        var z = unchecked(_prng32State += 0x9e3779b9);
+        z = unchecked((z ^ (z >> 16)) * 0x85ebca6b);
+        z = unchecked((z ^ (z >> 13)) * 0xc2b2ae35);
+        return unchecked(z ^ (z >> 16));
     }
 
     /// <summary>Reads a CLIO register. FreeDO: <c>_clio_Peek</c>.</summary>
@@ -201,7 +220,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
             case 0x0:
                 return 0x02020000;
             case 0x17F0:
-                return Dsp?.FastRandom() ?? 0;
+                return NextRandom32();
             case 0x17D0:
                 return Dsp?.ArmReadSemaphore() ?? 0;
         }
@@ -986,6 +1005,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         writer.WriteInt32(_lineSize);
         writer.WriteInt32(_flagTime);
         writer.WriteUInt32(_timerCarry ? 1u : 0u);
+        writer.WriteUInt32(_prng32State);
 
         for (var i = 0; i < InputFifoCount; i++)
         {
@@ -1029,6 +1049,15 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
             }
 
             _timerCarry = carry != 0;
+        }
+
+        if (reader is not StateSectionReader sectionReader || sectionReader.Version >= 3)
+        {
+            _prng32State = reader.ReadUInt32();
+        }
+        else
+        {
+            _prng32State = 0xDEADBEEF;
         }
 
         for (var i = 0; i < InputFifoCount; i++)

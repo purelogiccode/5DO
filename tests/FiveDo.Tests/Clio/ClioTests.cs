@@ -411,6 +411,31 @@ public sealed class ClioTests
     }
 
     [Fact]
+    public void Random32_MatchesOperaSplitMix()
+    {
+        var clio = new ClioChip();
+        clio.SetRandomSeed(0xDEADBEEF);
+
+        Assert.Equal(0xD3CE9097u, clio.Peek(0x17F0));
+    }
+
+    [Fact]
+    public void Random32_SaveLoadRoundtrips()
+    {
+        var clio = new ClioChip();
+        clio.SetRandomSeed(0x12345678);
+        _ = clio.Peek(0x17F0);
+
+        var writer = new StateWriter();
+        clio.Save(writer);
+        var copy = new ClioChip();
+        copy.Load(new StateReader(writer.ToArray()));
+
+        Assert.Equal(clio.RandomState, copy.RandomState);
+        Assert.Equal(clio.Peek(0x17F0), copy.Peek(0x17F0));
+    }
+
+    [Fact]
     public void Cstat_SoftResetInvokesTheCallbackAndSetsDipirReset()
     {
         var clio = new ClioChip(new EmulatorTuning { OperaSoftReset = true });

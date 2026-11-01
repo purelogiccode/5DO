@@ -471,6 +471,17 @@ by unit tests.
 - Differential smoke (Lemmings, 300 frames): **PASS**, `0x110E7DC5`.
 - Five-title showcase: unchanged; all 5DO hashes identical to the pre-batch baseline.
 
+**OP-SYS-06 PRNG split (2026-10-31):** CLIO now has its own splitmix32 generator for
+`0x17F0` instead of borrowing the DSP LCG. The state is seeded from
+`EmulatorTuning.RandomSeed` when provided, saved in CLIO state version 3, and migrated
+from v1/v2. The DSP keeps its separate FreeDO-compatible LCG state.
+
+- `dotnet test 5DO.sln`: **1,159 passed**, 0 failed.
+- Differential smoke (Lemmings, 300 frames): **PASS**, `0x110E7DC5`.
+- Five-title showcase: 2 matches (Wolfenstein, Alone); Gex's hash changed because it
+  reads `0x17F0`, and its 3,000-frame image still shows a valid game scene. The other
+  5DO hashes are unchanged.
+
 The next step is to capture a CLIO CSTAT/DIPIR boot transcript, compare the
 `OperaDipir`/`OperaSoftReset` path against Opera, and then enable it in the accuracy
 profile.

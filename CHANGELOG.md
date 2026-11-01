@@ -41,6 +41,9 @@ still change.
   ROM overlay reasserted), MADAM/DSP soft resets, and optional XBUS/DIPIR clearing.
   The path is opt-in via `EmulatorTuning.OperaSoftReset` pending boot-transcript
   validation.
+- CLIO now has its own splitmix32 PRNG for register `0x17F0` instead of borrowing the
+  DSP LCG. The state is seeded from `EmulatorTuning.RandomSeed` when provided and saved
+  in CLIO state version 3 with v1/v2 migration; the DSP LCG remains separate.
 
 ### Added
 

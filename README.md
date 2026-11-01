@@ -12,7 +12,7 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **1157 tests pass.** The first Opera parity batch (VDLP, ARM carry, DSP FIFO, MADAM span/MARIA/BPP0/SKIPX/LRFORM/blue-LSB/REGCTL/PIXC, CLIO FIFO), OP-14 (generic CEL origin, retired legacy CEL hacks), OP-SYS-02 (Opera CD poll/local reset), and OP-SYS-01/03's ROM overlay, DIPIR, XBUS, and CSTAT soft-reset work are complete (the DIPIR/soft-reset path remains opt-in pending a boot transcript). The 594-disc baseline found 576 rendered, 13 black/blank,
+prototype. **1159 tests pass.** The first Opera parity batch (VDLP, ARM carry, DSP FIFO, MADAM span/MARIA/BPP0/SKIPX/LRFORM/blue-LSB/REGCTL/PIXC, CLIO FIFO), OP-14 (generic CEL origin, retired legacy CEL hacks), OP-SYS-02 (Opera CD poll/local reset), OP-SYS-01/03's ROM overlay, DIPIR, XBUS, and CSTAT soft-reset work, and OP-SYS-06's separate CLIO PRNG are complete (the DIPIR/soft-reset path remains opt-in pending a boot transcript). The 594-disc baseline found 576 rendered, 13 black/blank,
 and 5 not-loadable images. Triage resolved the five not-loadable rows (Mirai Shounen
 Conan was a transient CHD read error; the four Arcade CD-ROM titles boot with
 `panafz10`), and six of the 13 black/blank titles render by 6,000-9,000 frames. Headless

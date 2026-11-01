@@ -94,6 +94,7 @@ public sealed class FiveDoMachine
         if (Tuning.RandomSeed is { } randomSeed)
         {
             Dsp.SetSeed(randomSeed);
+            Clio.SetRandomSeed(randomSeed);
         }
 
         Clio.Ram = Memory.Ram;
@@ -425,7 +426,7 @@ public sealed class FiveDoMachine
                 || (section.Id == StateSectionIds.Memory && section.Version == 2)
                 || (section.Id == StateSectionIds.Cdrom && section.Version == 2)
                 || (section.Id == StateSectionIds.Quartz && section.Version <= 3)
-                || (section.Id == StateSectionIds.Clio && section.Version == 2)
+                || (section.Id == StateSectionIds.Clio && section.Version <= 3)
                 || (section.Id == StateSectionIds.Madam && section.Version == 2)
                 || (section.Id == StateSectionIds.Vdlp && section.Version <= 3)
                 || (section.Id == StateSectionIds.Options && section.Version <= 5);
