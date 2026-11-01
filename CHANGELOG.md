@@ -71,6 +71,10 @@ still change.
   illegal-request status instead of silently doing nothing, the guest RESET command
   restores the default transfer state and sector size, and `PrefetchingDiscSource`
   read-aheads native track sectors so CD-DA does not decompress on the sample clock.
+- VID-14 screenshot gallery: `ScreenshotLibrary` parses game/frame/time/native metadata
+  from capture file names, lists them newest first, and deletes captures.
+  **File > Screenshot Gallery...** shows thumbnails and supports open, copy path,
+  refresh, and two-click delete. Filters, compare, and export remain.
 - CORE-15 state diff: `StateDiff` compares two states section by section with
   presence, version, uncompressed length, FNV-1a hash, first differing offset, and
   differing-byte count. CLI `state diff <a> <b> [--json]` prints the report without

@@ -1570,6 +1570,17 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
+    private void OnScreenshotGalleryAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ShowScreenshotGalleryAsync, "showing the screenshot gallery");
+    }
+
+    private async Task ShowScreenshotGalleryAsync()
+    {
+        var window = new ScreenshotGalleryWindow(_settings.ResolveScreenshotDirectory());
+        await window.ShowDialog(this).ConfigureAwait(true);
+    }
+
     private void OnScreenshot(object? sender, RoutedEventArgs e)
     {
         CaptureScreenshot();
@@ -1582,9 +1593,7 @@ public partial class MainWindow : Window, IDisposable
             ShowOsd("Boot a disc before taking a screenshot.", OsdSeverity.Warning);
             return;
         }
-        var directory = string.IsNullOrWhiteSpace(_settings.ScreenshotDirectory)
-            ? Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
-            : _settings.ScreenshotDirectory;
+        var directory = _settings.ResolveScreenshotDirectory();
         var name = string.IsNullOrWhiteSpace(_gameName) ? "5do" : SanitizeFileName(_gameName);
         var stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss", System.Globalization.CultureInfo.InvariantCulture);
         var path = Path.Combine(directory, $"{name}-{stamp}-f{_machine.FramesExecuted:D6}.png");

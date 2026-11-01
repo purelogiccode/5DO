@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,437 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,440 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,437** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,440** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 18 done · 18 partial · 84 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 18 done · 19 partial · 83 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -191,7 +191,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[VID-11](#feat-vid-11)** Vulkan surfaces on Linux/macOS — P1 · L · depends on: ECO-04 — **Pending**
 - [ ] **[VID-12](#feat-vid-12)** Run-ahead, frame delay, VRR, audio sync — P2 · L · depends on: CORE-14 — **Pending**
 - [ ] **[VID-13](#feat-vid-13)** Video test suite and color accuracy — P1 · M · depends on: CORE-11 — **Pending**
-- [ ] **[VID-14](#feat-vid-14)** Screenshot gallery and metadata — P2 · S · depends on: FND-06 — **Pending**
+- [ ] **[VID-14](#feat-vid-14)** Screenshot gallery and metadata — P2 · S · depends on: FND-06 — **Partial** — the gallery lists thumbnails newest-first, opens/copies/deletes captures, and parses game/frame/time metadata; filters, compare, and export remain
 
 ### Audio
 
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,437 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,440 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,437**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,440**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -2892,6 +2892,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | SYS-18, UX-07 | Per-game input devices | Added `InputDeviceOverrides`, `AutoInputDevices`, `GameControlDefaults` for known lightgun/trackball titles, `ResolveInputDevices`/`ApplyInputDevices(input, gameId)`, auto seeding at disc open, and the Settings > Emulation per-game override checkbox. SYS-18 and UX-07 are partial for full timing/filter profiles and named bindings; 1,429 tests pass |
 | 2026-11-01 | FND-03, CORE-14 | Save-state format v3 | Added header feature flags, an up-front section table with duplicate/version validation, `UnknownSectionPolicy` warn/reject, v1/v2 downgrade tests, and v3 inspector support. The options section records the live region. FND-03 and CORE-14 are done; 1,433 tests pass |
 | 2026-11-01 | CORE-15 | State diff tooling | Added `StateDiff` (section presence/version/length/FNV hash/first difference/differing-byte count) and CLI `state diff <a> <b> [--json]`. A real Battle Chess PAL pair (100 vs 120 frames) reports CPU first difference at byte 4 and Memory at 24,603. CORE-15 is done; 1,437 tests pass |
+| 2026-11-01 | VID-14 | Screenshot gallery | Added `ScreenshotLibrary` metadata parsing/sorting/delete, `AppSettings.ResolveScreenshotDirectory`, and **File > Screenshot Gallery...** with thumbnails, open/copy/delete/refresh. VID-14 is partial for filters/compare/export; 1,440 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -3027,7 +3028,7 @@ A feature is done only when:
 | VID-11 | Vulkan surfaces on Linux/macOS | P1 | L | ECO-04 | Pending |
 | VID-12 | Run-ahead, frame delay, VRR, audio sync | P2 | L | CORE-14 | Pending |
 | VID-13 | Video test suite and color accuracy | P1 | M | CORE-11 | Pending |
-| VID-14 | Screenshot gallery and metadata | P2 | S | FND-06 | Pending |
+| VID-14 | Screenshot gallery and metadata | P2 | S | FND-06 | Partial |
 
 ### 1.4 Audio
 
@@ -4671,18 +4672,23 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
 <a id="feat-vid-14"></a>
 ### VID-14 - Screenshot gallery and metadata
 
-**Priority:** P2 | **Effort:** S | **Depends on:** FND-06 | **Status:** Pending
+**Priority:** P2 | **Effort:** S | **Depends on:** FND-06 | **Status:** Partial (2026-11-01)
 
 **Problem.** Screenshots are files without an in-app gallery.
 
-**Add.**
-- Gallery with filters/compare/export.
-- Metadata (game/frame/time/settings).
-- Delete/share.
+**Implemented.**
+- `ScreenshotLibrary` parses `<game>-<yyyyMMdd-HHmmss>-f<frame>[-native].png`, falls back to the file timestamp for other names, and sorts newest first.
+- **File > Screenshot Gallery...** shows decoded thumbnails, game/frame/time/path metadata, and supports open, copy path, refresh, and two-click delete.
+- `AppSettings.ResolveScreenshotDirectory` is shared by capture and the gallery.
+- `ScreenshotLibraryTests` covers parsing, native companions, sorting, unparsed names, missing directories, and delete.
 
-**Files.** Frontend.
+**Remaining.**
+- Filters (game/date), side-by-side compare, and export/share.
+- Settings snapshot metadata captured with each screenshot.
 
-**Tests.** Load large galleries; metadata; delete.
+**Files.** `src/FiveDo.Host/ScreenshotLibrary.cs`, `src/FiveDo.Frontend.Avalonia/Views/ScreenshotGalleryWindow.*`, `MainWindow.*`.
+
+**Tests.** Parse; large-directory listing; delete.
 
 **Done when.** Users can browse and compare captures.
 

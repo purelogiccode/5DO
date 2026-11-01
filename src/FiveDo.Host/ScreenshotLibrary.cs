@@ -1,0 +1,123 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+
+namespace FiveDo.Host;
+
+/// <summary>One PNG screenshot on disk.</summary>
+/// <param name="Path">Absolute file path.</param>
+/// <param name="FileName">File name with extension.</param>
+/// <param name="GameName">Game title parsed from the file name, or the file stem.</param>
+/// <param name="CapturedAt">Timestamp parsed from the file name or the file timestamp.</param>
+/// <param name="FrameNumber">Emulated frame parsed from the file name, or -1.</param>
+/// <param name="Native">Whether this is the optional native-resolution companion.</param>
+public sealed record ScreenshotEntry(
+    string Path,
+    string FileName,
+    string GameName,
+    DateTimeOffset CapturedAt,
+    long FrameNumber,
+    bool Native)
+{
+    /// <summary>Gets a display caption for the screenshot.</summary>
+    public string Caption
+    {
+        get
+        {
+            var frame = FrameNumber >= 0
+                ? $" · frame {FrameNumber.ToString(CultureInfo.InvariantCulture)}"
+                : string.Empty;
+            var native = Native ? " · native" : string.Empty;
+            return $"{GameName} · {CapturedAt.LocalDateTime:yyyy-MM-dd HH:mm:ss}{frame}{native}";
+        }
+    }
+}
+
+/// <summary>Lists, parses, and deletes screenshot PNGs.</summary>
+public static class ScreenshotLibrary
+{
+    private const string StampFormat = "yyyyMMdd-HHmmss";
+
+    /// <summary>Lists screenshots in a directory, newest first.</summary>
+    /// <param name="directory">Screenshot directory.</param>
+    /// <returns>Entries sorted by capture time and file name; empty when the directory is absent.</returns>
+    public static IReadOnlyList<ScreenshotEntry> List(string directory)
+    {
+        if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
+        {
+            return [];
+        }
+
+        return Directory.GetFiles(directory, "*.png")
+            .Select(Parse)
+            .OrderByDescending(entry => entry.CapturedAt)
+            .ThenBy(entry => entry.FileName, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    /// <summary>Parses a screenshot file name.</summary>
+    /// <param name="path">Screenshot path.</param>
+    /// <returns>The parsed entry.</returns>
+    public static ScreenshotEntry Parse(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        var fullPath = Path.GetFullPath(path);
+        var fileName = Path.GetFileName(fullPath);
+        var stem = Path.GetFileNameWithoutExtension(fileName);
+        var native = stem.EndsWith("-native", StringComparison.OrdinalIgnoreCase);
+        if (native)
+        {
+            stem = stem[..^"-native".Length];
+        }
+
+        DateTimeOffset capturedAt = File.Exists(fullPath)
+            ? new DateTimeOffset(File.GetLastWriteTimeUtc(fullPath), TimeSpan.Zero)
+            : DateTimeOffset.MinValue;
+        long frame = -1;
+        var gameName = stem;
+
+        int frameMarker = stem.LastIndexOf("-f", StringComparison.Ordinal);
+        if (frameMarker > 0
+            && long.TryParse(
+                stem.AsSpan(frameMarker + 2),
+                NumberStyles.None,
+                CultureInfo.InvariantCulture,
+                out var parsedFrame))
+        {
+            frame = parsedFrame;
+            gameName = stem[..frameMarker];
+            int stampMarker = gameName.Length - ("-" + StampFormat).Length;
+            if (stampMarker > 0
+                && gameName[stampMarker] == '-'
+                && DateTimeOffset.TryParseExact(
+                    gameName.AsSpan(stampMarker + 1),
+                    StampFormat,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeLocal,
+                    out var parsedStamp))
+            {
+                capturedAt = parsedStamp;
+                gameName = gameName[..stampMarker];
+            }
+        }
+
+        return new ScreenshotEntry(fullPath, fileName, gameName, capturedAt, frame, native);
+    }
+
+    /// <summary>Deletes a screenshot.</summary>
+    /// <param name="path">Screenshot path.</param>
+    /// <returns><see langword="true"/> when the file was deleted; <see langword="false"/> when it was absent.</returns>
+    public static bool Delete(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        if (!File.Exists(path))
+        {
+            return false;
+        }
+
+        File.Delete(path);
+        return true;
+    }
+}

@@ -795,6 +795,18 @@ public sealed class AppSettings
             Math.Clamp((int)Math.Round(y), 0, height - 1));
     }
 
+    /// <summary>Resolves the screenshot directory, defaulting to the user's Pictures folder.</summary>
+    /// <returns>The absolute screenshot directory.</returns>
+    public string ResolveScreenshotDirectory()
+    {
+        if (string.IsNullOrWhiteSpace(ScreenshotDirectory))
+        {
+            return Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+        }
+
+        return Path.GetFullPath(ScreenshotDirectory);
+    }
+
     /// <summary>Resolves the effective video region.</summary>
     /// <param name="detected">Region inferred from the BIOS or disc.</param>
     /// <returns>The detected region when <see cref="AutoRegion"/> is enabled; otherwise <see cref="Region"/>.</returns>

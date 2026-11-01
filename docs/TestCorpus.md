@@ -688,7 +688,7 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,437 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,440 tests pass with no changed NTSC hashes.
 
 ### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
 
@@ -766,6 +766,17 @@ UX-23 coverage is compile/status level:
 - Manual evidence: Battle Chess (Europe) PAL1 states at frames 100 and 120 produced a
   CPU first difference at byte 4 (39 differing bytes) and a Memory first difference at
   byte 24,603 (4,184 differing bytes); both report format v3 and the same disc hash.
+
+### 1.1v Screenshot gallery (2026-11-01)
+
+- `ScreenshotLibraryTests.Parse_ReadsGameStampFrameAndNativeSuffix` covers a normal and
+  native companion name.
+- `List_SortsNewestFirstAndKeepsUnparsedNames` verifies metadata ordering and fallback for
+  a manually named PNG.
+- `Delete_RemovesTheFileAndListHandlesMissingDirectories` covers delete and an absent
+  directory.
+- The gallery itself is build-validated; thumbnail decoding uses
+  `Bitmap.DecodeToWidth` and unreadable PNGs fall back to a blank tile.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

@@ -1,0 +1,55 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:FiveDo.Frontend.Avalonia.Views"
+        x:Class="FiveDo.Frontend.Avalonia.Views.ScreenshotGalleryWindow"
+        Title="Screenshot Gallery"
+        Width="820" Height="560"
+        MinWidth="620" MinHeight="420"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+        <TextBlock Grid.Row="0" x:Name="DirectoryText" Opacity="0.7" FontSize="11"
+                   TextTrimming="CharacterEllipsis" Margin="0,0,0,10"
+                   ToolTip.Tip="Screenshot directory. Change it in Settings > Paths." />
+
+        <ListBox Grid.Row="1" x:Name="ScreenshotList" SelectionChanged="OnSelectionChanged" DoubleTapped="OnDoubleTapped"
+                 ToolTip.Tip="Captured PNG screenshots, newest first. Double-click to open.">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="local:ScreenshotRow">
+                    <Grid ColumnDefinitions="180,*" Margin="4" ColumnSpacing="10">
+                        <Border Grid.Column="0" Width="170" Height="120" Background="#20000000" CornerRadius="3">
+                            <Image Source="{Binding Thumbnail}" Stretch="Uniform" />
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
+                            <TextBlock Text="{Binding Entry.GameName}" FontWeight="SemiBold"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding Entry.Caption}" Opacity="0.75"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding Entry.Path}" Opacity="0.55" FontSize="11"
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip.Tip="{Binding Entry.Path}" />
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,14,0,0">
+            <TextBlock Grid.Column="0" x:Name="StatusText" VerticalAlignment="Center"
+                       Opacity="0.8" TextWrapping="Wrap"
+                       ToolTip.Tip="Selection and file operation status." />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <Button x:Name="OpenButton" Content="Open" Click="OnOpenClick" IsEnabled="False"
+                        ToolTip.Tip="Open the selected screenshot in the default image viewer." />
+                <Button x:Name="CopyPathButton" Content="Copy Path" Click="OnCopyPathClick" IsEnabled="False"
+                        ToolTip.Tip="Copy the selected screenshot path to the clipboard." />
+                <Button x:Name="DeleteButton" Content="Delete" Click="OnDeleteClick" IsEnabled="False"
+                        ToolTip.Tip="Delete the selected screenshot. The first click asks for confirmation." />
+                <Button x:Name="RefreshButton" Content="Refresh" Click="OnRefreshClick"
+                        ToolTip.Tip="Rescan the screenshot directory." />
+                <Button Content="Close" Click="OnCloseClick"
+                        ToolTip.Tip="Close the gallery." />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
