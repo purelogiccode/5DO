@@ -38,6 +38,8 @@
                           ToolTip.Tip="Browse and extract files from the current disc image." />
                 <MenuItem Header="Disc Info..." Click="OnDiscInfoAsync"
                           ToolTip.Tip="Show the current disc's volume, game ID, metadata, and fixes." />
+                <MenuItem Header="Swap Disc..." Click="OnSwapDiscAsync"
+                          ToolTip.Tip="Advance to the next disc in the loaded playlist, or choose another disc without resetting the console. F3." />
                 <MenuItem Header="Add Game Folder..." Click="OnAddFolderAsync"
                           ToolTip.Tip="Add a folder that the library scans for disc images." />
                 <MenuItem x:Name="RecentMenu" Header="Boot Recent"

@@ -196,9 +196,10 @@ high-resolution CEL decision (M14) are complete.
   240 lines to 480; it is not true vertical high-resolution rendering. A true 640x240
   non-interlaced mode has not been identified. Research options are in
   [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
-- PAL video, CD swapping/ODE, CD-DA read-ahead/subcode, netplay, and additional
-  peripherals are out of scope for v1. Multi-track TOC and raw CD-DA sectors are
-  implemented; direct-play volume UI and known-title audio evidence remain pending.
+- PAL video, guest ODE prompts, CD-DA read-ahead/subcode, netplay, and additional
+  peripherals are out of scope for v1. Multi-track TOC, raw CD-DA sectors with
+  volume/mute, and M3U multi-disc playlists are implemented; known-title disc audio
+  evidence remains pending.
 
 ## Logging and bug reports
 

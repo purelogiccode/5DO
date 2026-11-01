@@ -1,0 +1,16 @@
+namespace FiveDo.Cli;
+
+internal sealed record CliSettingsValidationResult(
+    bool Ok,
+    string Path,
+    bool Exists,
+    bool Valid,
+    int Version,
+    string? Error);
+
+internal sealed record CliSettingsMigrationResult(
+    bool Ok,
+    string Path,
+    int FromVersion,
+    int ToVersion,
+    bool Changed);

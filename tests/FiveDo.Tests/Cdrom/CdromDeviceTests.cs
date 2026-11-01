@@ -339,12 +339,17 @@ public sealed class CdromDeviceTests
         Send(cd, 0x10, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02);
         _ = ReadStatus(cd, 2);
         _ = ReadData(cd, 100);
+        cd.AudioVolume = 0.25;
+        cd.AudioMuted = true;
 
         var writer = new StateWriter();
         cd.Save(writer);
 
         var loaded = new CdromDevice();
         loaded.Load(new StateReader(writer.WrittenSpan.ToArray()));
+
+        Assert.Equal(0.25, loaded.AudioVolume);
+        Assert.True(loaded.AudioMuted);
 
         var rest = ReadData(loaded, 200);
         Assert.Equal(ReadData(cd, 200), rest);

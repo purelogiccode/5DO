@@ -47,4 +47,7 @@ public enum HotkeyAction
 
     /// <summary>Open or close the in-game quick menu.</summary>
     QuickMenu,
+
+    /// <summary>Swap to the next disc in the playlist, or open a disc picker.</summary>
+    SwapDisc,
 }

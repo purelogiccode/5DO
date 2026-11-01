@@ -35,6 +35,8 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 
     private const byte DensityDigitalAudio = 0x82;
 
+    private const double DefaultAudioVolume = 0.8;
+
     private const ulong FramesPerSecond = 75;
 
     private const byte PollStatusMask = 0x01;
@@ -89,6 +91,8 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     private ulong _audioStartCycle;
     private int _audioSampleLba;
     private int _audioSampleOffset;
+    private double _audioVolume = DefaultAudioVolume;
+    private bool _audioMuted;
 
     /// <summary>Gets or sets the data-sector timing model.</summary>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is unknown.</exception>
@@ -170,6 +174,26 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 
     /// <summary>Gets whether PLAY_AUDIO_MSF or PLAY_AUDIO_TRACK is currently active.</summary>
     public bool IsAudioPlaying => _audioPlaying;
+
+    /// <summary>
+    /// Gets or sets the CD-DA mix level from 0 (silent) to 1 (full scale).
+    /// </summary>
+    /// <remarks>
+    /// This level is independent of the host output volume. It is persisted in the CD
+    /// save-state section so a resumed CD-DA session keeps the same mix.
+    /// </remarks>
+    public double AudioVolume
+    {
+        get => _audioVolume;
+        set => _audioVolume = double.IsFinite(value) ? Math.Clamp(value, 0, 1) : DefaultAudioVolume;
+    }
+
+    /// <summary>Gets or sets a value indicating whether CD-DA mixing is muted.</summary>
+    public bool AudioMuted
+    {
+        get => _audioMuted;
+        set => _audioMuted = value;
+    }
 
     /// <summary>Gets the current logical block address of the audio playback head.</summary>
     public int AudioPositionLba
@@ -359,9 +383,10 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <summary>Gets the save-state section version.</summary>
     /// <remarks>
     /// Version 2 adds the cycle-based data-sector clock and deadline. Version 3 adds the
-    /// MODE SET sector size/block flags and the PLAY_AUDIO playback position.
+    /// MODE SET sector size/block flags and the PLAY_AUDIO playback position. Version 4
+    /// adds the CD-DA mix volume and mute flag.
     /// </remarks>
-    public ushort Version => 3;
+    public ushort Version => 4;
 
     /// <summary>Inserts a disc and initializes the drive for it.</summary>
     /// <param name="disc">Disc source. The device does not take ownership.</param>
@@ -739,6 +764,8 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         writer.WriteUInt64(_audioStartCycle);
         writer.WriteInt32(_audioSampleLba);
         writer.WriteInt32(_audioSampleOffset);
+        writer.WriteDouble(_audioVolume);
+        writer.WriteByte(_audioMuted ? (byte)1 : (byte)0);
 
         writer.WriteByte(_discState.FirstTrack);
         writer.WriteByte(_discState.LastTrack);
@@ -843,6 +870,29 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             _audioSampleOffset = 0;
         }
 
+        if (version >= 4)
+        {
+            double volume = reader.ReadDouble();
+            if (!double.IsFinite(volume) || volume is < 0 or > 1)
+            {
+                throw new InvalidStateException($"Invalid CD-DA volume {volume}.");
+            }
+
+            byte muted = reader.ReadByte();
+            if (muted > 1)
+            {
+                throw new InvalidStateException($"Invalid CD-DA mute flag {muted}.");
+            }
+
+            _audioVolume = volume;
+            _audioMuted = muted != 0;
+        }
+        else
+        {
+            _audioVolume = DefaultAudioVolume;
+            _audioMuted = false;
+        }
+
         _discState.FirstTrack = reader.ReadByte();
         _discState.LastTrack = reader.ReadByte();
         reader.ReadBytes(_discState.CurrentAbsoluteMsf);
@@ -930,12 +980,14 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         {
             case 0x01: // seek
             case 0x04: // diagnostics
-            case 0x07: // inject disc
             case 0x0A: // reset
             case 0x86: // read header
             case 0x88: // read UPC
             case 0x89: // read ISRC
             case 0x8E: // read device driver
+                break;
+            case 0x07: // inject disc
+                InjectDiscCommand();
                 break;
             case 0x02: // spin up
                 Spin(true);
@@ -1488,6 +1540,35 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     {
         int lba = ((minute * 60) + second) * 75 + frame - 150;
         return Math.Max(0, lba);
+    }
+
+    private void InjectDiscCommand()
+    {
+        _dataLength = 0;
+        _dataPointer = 0;
+        _requested = 0;
+        _currentSector = 0;
+        _audioPlaying = false;
+        _xbusStatus |= CdstReady | CdstTray;
+        if (_disc is not null)
+        {
+            _xbusStatus |= CdstDisc | CdstSpin;
+        }
+        else
+        {
+            _xbusStatus &= unchecked((byte)~CdstDisc);
+            _xbusStatus &= unchecked((byte)~CdstSpin);
+        }
+
+        _xbusStatus &= unchecked((byte)~CdstError);
+        _meiStatus = MeiError.NoError;
+        if (_disc is ITrackedDiscSource tracked)
+        {
+            BuildToc(tracked);
+        }
+
+        _poll |= PollStatus | PollMedia;
+        SetStatus(0x07);
     }
 
     private void Spin(bool up)

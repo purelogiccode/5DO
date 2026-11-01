@@ -197,9 +197,21 @@ public sealed class FiveDoMachine
     /// <remarks>
     /// CD-DA is mixed into the DSP output only while PLAY_AUDIO is active. Most 3DO
     /// software reads audio tracks through READ_DATA and feeds the DSP itself, so this
-    /// path is primarily for CD-player titles and diagnostics.
+    /// path is primarily for CD-player titles and diagnostics. The value is stored in
+    /// the CD save-state section.
     /// </remarks>
-    public double CdAudioVolume { get; set; } = 0.8;
+    public double CdAudioVolume
+    {
+        get => Cdrom.AudioVolume;
+        set => Cdrom.AudioVolume = value;
+    }
+
+    /// <summary>Gets or sets a value indicating whether CD-DA mixing is muted.</summary>
+    public bool CdAudioMuted
+    {
+        get => Cdrom.AudioMuted;
+        set => Cdrom.AudioMuted = value;
+    }
 
     /// <summary>Loads BIOS1 and optional BIOS2 and applies Anvil detection. FreeDO: <c>_3do_Init</c>.</summary>
     /// <param name="bios1">Exactly 1 MB of BIOS1 data.</param>
@@ -441,7 +453,7 @@ public sealed class FiveDoMachine
         {
             var supportedVersion = section.Version == 1
                 || (section.Id == StateSectionIds.Memory && section.Version == 2)
-                || (section.Id == StateSectionIds.Cdrom && section.Version <= 3)
+                || (section.Id == StateSectionIds.Cdrom && section.Version <= 4)
                 || (section.Id == StateSectionIds.Quartz && section.Version <= 3)
                 || (section.Id == StateSectionIds.Clio && section.Version <= 3)
                 || (section.Id == StateSectionIds.Madam && section.Version == 2)
@@ -685,7 +697,7 @@ public sealed class FiveDoMachine
             // uses the DSP for resource allocation and semaphore handshakes, not
             // just for sample output.
             uint packedSample = Dsp.Loop();
-            if (CdAudioVolume > 0 && Cdrom.TryGetAudioSample(out AudioSample cdAudio))
+            if (!CdAudioMuted && CdAudioVolume > 0 && Cdrom.TryGetAudioSample(out AudioSample cdAudio))
             {
                 AudioSample mixed = MixCdAudio(AudioSample.FromPacked(packedSample), cdAudio, CdAudioVolume);
                 packedSample = mixed.Packed;

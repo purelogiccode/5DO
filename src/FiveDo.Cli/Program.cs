@@ -71,6 +71,7 @@ internal static class Program
                     "trace" => TraceCommand(args),
                     "info" => Info(args),
                     "disc" => DiscCommand(args),
+                    "settings" => SettingsCommand(args),
                     "fs" => FsCommand(args),
                     "bios" => Bios(args),
                     "cheat" => CheatCommand(args),
@@ -312,6 +313,32 @@ internal static class Program
         var cheatAuto = HasFlag(args, "--cheat-auto");
         var realtime = HasFlag(args, "--realtime");
         var discPath = options.Positional;
+        var playlistOption = options.Get("--playlist");
+        if (playlistOption is not null && discPath is not null)
+        {
+            throw new ArgumentException("Use either a positional disc or --playlist, not both.", nameof(args));
+        }
+
+        if (playlistOption is not null)
+        {
+            discPath = DiscPlaylist.Load(playlistOption).Current.Path;
+        }
+        else if (discPath is not null && IsPlaylistPath(discPath))
+        {
+            discPath = DiscPlaylist.Load(discPath).Current.Path;
+        }
+
+        var swapAtFrame = options.GetInt("--swap-at", -1);
+        var swapDiscPath = options.Get("--swap-disc");
+        if (swapDiscPath is not null && swapAtFrame < 0)
+        {
+            throw new ArgumentException("--swap-disc requires --swap-at.", nameof(args));
+        }
+
+        if (swapDiscPath is null && swapAtFrame >= 0)
+        {
+            throw new ArgumentException("--swap-at requires --swap-disc.", nameof(args));
+        }
 
         if (biosPath is not null && biosAutoFolder is not null)
         {
@@ -643,6 +670,16 @@ internal static class Program
             machine.LoadState(stateStream);
         }
 
+        if (ParseOptionalUnitInterval(options.Get("--cd-volume"), "--cd-volume") is { } cdVolume)
+        {
+            machine.CdAudioVolume = cdVolume;
+        }
+
+        if (HasFlag(args, "--mute-cd"))
+        {
+            machine.CdAudioMuted = true;
+        }
+
         if (pokeSpec is not null)
         {
             var patched = MemoryPatch.Apply(machine, pokeSpec);
@@ -743,7 +780,8 @@ internal static class Program
                 && captureDir is null
                 && checkpointFrames.Length == 0
                 && captureFrames.Length == 0
-                && !realtime)
+                && !realtime
+                && swapDiscPath is null)
             {
                 machine.RunFrames(frames);
             }
@@ -756,6 +794,20 @@ internal static class Program
 
                 for (var i = 0; i < frames; i++)
                 {
+                    if (swapAtFrame >= 0 && machine.FramesExecuted >= swapAtFrame)
+                    {
+                        IDiscSource swapDisc = DiscImageFactory.Open(
+                            swapDiscPath!,
+                            prefetch: HasFlag(args, "--prefetch"));
+                        machine.InsertDisc(swapDisc);
+                        disc?.Dispose();
+                        disc = swapDisc;
+                        discHash = GameId.Compute(swapDisc);
+                        Console.Error.WriteLine(
+                            $"swapped disc at frame {machine.FramesExecuted}: {swapDiscPath}");
+                        swapAtFrame = -1;
+                    }
+
                     scriptedInput?.AdvanceTo(machine.FramesExecuted);
                     machine.RunFrame();
                     if (realtimePacer is not null && realtimeClock is not null)
@@ -1431,11 +1483,119 @@ internal static class Program
         return 0;
     }
 
+    private static int SettingsCommand(string[] args)
+    {
+        if (args.Length < 2)
+        {
+            throw new ArgumentException("settings needs the 'validate' or 'migrate' subcommand.", nameof(args));
+        }
+
+        ParsedOptions options = Parse(args, startIndex: 2);
+        var path = options.Positional ?? options.Get("--path") ?? AppSettingsStore.DefaultPath;
+        if (string.Equals(args[1], "validate", StringComparison.OrdinalIgnoreCase))
+        {
+            SettingsFileInfo info = AppSettingsStore.Inspect(path);
+            var result = new CliSettingsValidationResult(
+                info.Exists && info.Valid,
+                path,
+                info.Exists,
+                info.Valid,
+                info.Version,
+                info.Error);
+            if (options.Json)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(
+                    result,
+                    CliJsonContext.Default.CliSettingsValidationResult));
+            }
+            else
+            {
+                Console.WriteLine($"path:    {path}");
+                Console.WriteLine($"exists:  {info.Exists}");
+                Console.WriteLine($"valid:   {info.Valid}");
+                Console.WriteLine($"version: {info.Version}");
+                if (info.Error is not null)
+                {
+                    Console.WriteLine($"error:   {info.Error}");
+                }
+            }
+
+            return result.Ok ? 0 : 1;
+        }
+
+        if (string.Equals(args[1], "migrate", StringComparison.OrdinalIgnoreCase))
+        {
+            int fromVersion = AppSettingsStore.Migrate(path);
+            var result = new CliSettingsMigrationResult(
+                true,
+                path,
+                fromVersion,
+                AppSettings.CurrentVersion,
+                fromVersion != AppSettings.CurrentVersion);
+            if (options.Json)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(
+                    result,
+                    CliJsonContext.Default.CliSettingsMigrationResult));
+            }
+            else
+            {
+                Console.WriteLine($"path:        {path}");
+                Console.WriteLine($"fromVersion: {fromVersion}");
+                Console.WriteLine($"toVersion:   {AppSettings.CurrentVersion}");
+                Console.WriteLine($"changed:     {result.Changed}");
+            }
+
+            return 0;
+        }
+
+        throw new ArgumentException($"Unknown settings subcommand '{args[1]}'.", nameof(args));
+    }
+
     private static int DiscCommand(string[] args)
     {
         if (args.Length < 2)
         {
-            throw new ArgumentException("disc needs the 'dump' or 'tracks' subcommand.", nameof(args));
+            throw new ArgumentException("disc needs the 'dump', 'tracks', or 'playlist' subcommand.", nameof(args));
+        }
+
+        if (string.Equals(args[1], "playlist", StringComparison.OrdinalIgnoreCase))
+        {
+            ParsedOptions options = Parse(args, startIndex: 2);
+            var playlistPath = options.Positional
+                ?? throw new ArgumentException("disc playlist needs an M3U path.", nameof(args));
+            DiscPlaylist playlist = DiscPlaylist.Load(playlistPath);
+            var entries = new List<CliDiscPlaylistEntry>(playlist.Count);
+            for (var i = 0; i < playlist.Count; i++)
+            {
+                DiscPlaylistEntry entry = playlist.Entries[i];
+                entries.Add(new CliDiscPlaylistEntry(i, entry.Path, entry.Title, entry.DisplayName));
+            }
+
+            var result = new CliDiscPlaylistResult(
+                true,
+                playlist.SourcePath,
+                playlist.CurrentIndex,
+                playlist.Count,
+                entries);
+            if (options.Json)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(
+                    result,
+                    CliJsonContext.Default.CliDiscPlaylistResult));
+            }
+            else
+            {
+                Console.WriteLine($"path:    {playlist.SourcePath}");
+                Console.WriteLine($"entries: {playlist.Count}");
+                foreach (CliDiscPlaylistEntry entry in entries)
+                {
+                    var marker = entry.Index == playlist.CurrentIndex ? "*" : " ";
+                    Console.WriteLine($"{marker} {entry.Index}: {entry.DisplayName} -> {entry.Path}");
+                }
+            }
+
+            return 0;
         }
 
         if (string.Equals(args[1], "tracks", StringComparison.OrdinalIgnoreCase))
@@ -1497,7 +1657,7 @@ internal static class Program
 
         if (!string.Equals(args[1], "dump", StringComparison.OrdinalIgnoreCase))
         {
-            throw new ArgumentException("disc needs the 'dump' or 'tracks' subcommand.", nameof(args));
+            throw new ArgumentException("disc needs the 'dump', 'tracks', or 'playlist' subcommand.", nameof(args));
         }
 
         ParsedOptions dumpOptions = Parse(args, startIndex: 2);
@@ -3386,6 +3546,30 @@ internal static class Program
         }
     }
 
+    private static bool IsPlaylistPath(string path)
+    {
+        var extension = Path.GetExtension(path);
+        return string.Equals(extension, ".m3u", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(extension, ".m3u8", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static double? ParseOptionalUnitInterval(string? value, string option)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed)
+            || !double.IsFinite(parsed)
+            || parsed is < 0 or > 1)
+        {
+            throw new ArgumentException($"{option} must be between 0 and 1.", option);
+        }
+
+        return parsed;
+    }
+
     private static int ParseCpuClock(string? value, int fallback = EmulatorConstants.ArmClock)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -3544,7 +3728,7 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine("Commands:");
         Console.WriteLine("  run [disc] [--bios path] [--bios2 path] [--bios-auto folder] [--frames N] [--state-in path] [--state-out path]");
-        Console.WriteLine("             [--frame-out path] [--audio null|wav|openal] [--wav-out path] [--volume 0..1] [--cd-trace path]");
+        Console.WriteLine("             [--frame-out path] [--audio null|wav|openal] [--wav-out path] [--volume 0..1] [--cd-volume 0..1] [--mute-cd] [--cd-trace path]");
         Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
@@ -3561,6 +3745,7 @@ internal static class Program
         Console.WriteLine("             [--checkpoints 3000,6000,12000] [--audio-hash] [--state-hash]");
         Console.WriteLine("             [--capture-frames 3000,6000] [--capture-dir path]");
         Console.WriteLine("             [--movie-record path] [--movie-play path] [--movie-verify] [--movie-no-state]");
+        Console.WriteLine("             [--playlist path] [--swap-at N --swap-disc path]");
         Console.WriteLine("                                       Emit deterministic checkpoint samples and optional frame images.");
         Console.WriteLine("  trace [disc] --bios path [--bios2 path] [--bios-auto folder] [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
@@ -3576,6 +3761,8 @@ internal static class Program
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             Runs the machine and records a diagnostic instruction ring buffer.");
         Console.WriteLine("  info <disc> [--json]                 Disc geometry, volume header, and game ID.");
+        Console.WriteLine("  disc tracks <disc> [--json]          List every CUE/CHD track (data and audio).");
+        Console.WriteLine("  disc playlist <m3u> [--json]        List multi-disc playlist entries.");
         Console.WriteLine("  disc dump <disc> --out path [--sector N] [--count N]");
         Console.WriteLine("                                       Write raw 2048-byte sectors for diagnostics.");
         Console.WriteLine("  fs list <disc> [--json]              List the 3DO (Opera FS) file tree.");
@@ -3591,6 +3778,10 @@ internal static class Program
         Console.WriteLine("  nvram import [disc] --in path [--mode ...] [--version N] [--dir path]");
         Console.WriteLine("  nvram reset [disc] [--mode ...] [--version N] [--dir path]");
         Console.WriteLine("                                       Back up, restore, or clear NVRAM data.");
+        Console.WriteLine("  settings validate [path] [--path path] [--json]");
+        Console.WriteLine("                                       Check settings.json syntax and schema version.");
+        Console.WriteLine("  settings migrate [path] [--path path] [--json]");
+        Console.WriteLine("                                       Normalize and rewrite settings at the current version.");
         Console.WriteLine("  cheat list|add|enable|disable|remove|import|export --game ID [--dir path] [--json]");
         Console.WriteLine("                                       Manage per-game cheats. add needs --name and --code;");
         Console.WriteLine("                                       import/export use --in/--out. See docs/Cheats.md.");

@@ -593,7 +593,7 @@ Command:
 dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release --filter "FullyQualifiedName~DiscBrowserTests"
 ```
 
-### 1.1j Multi-track and CD-DA (2026-11-01)
+### 1.1j Multi-track, CD-DA, and volume (2026-11-01)
 
 SYS-01/AUD-05 are covered by synthetic fixtures until a known CD-DA title is
 validated:
@@ -610,13 +610,32 @@ validated:
 - `PlayAudioTrackMovesTheSubQPositionAndStopsAtTheEnd` also verifies the first CD-DA
   sample is decoded little-endian from the audio sector.
 - `DiscTracks_ReportsAnIsoImage` also checks the `--json` track table.
+- `CdAudioMixTests` verifies that a full-volume CD-DA stream changes the packed DSP
+  output, that mute produces the same output as zero volume, and that volume/mute
+  roundtrip through the CD save-state section.
 - `AppSettingsStoreTests` covers FND-02 legacy migration, malformed-file backup,
-  version roundtrip, and invalid-value normalization.
+  version roundtrip, invalid-value normalization, per-game profile roundtrip/apply, and
+  `Inspect`/`Migrate`; the CLI tests cover `settings validate|migrate`.
 
-The full suite is **1,361 tests** in Debug. A Release 10-disc smoke after the
+The full suite is **1,373 tests** in Debug. A Release 10-disc smoke after the
 track/TOC change (`tools/compat-sweep.ps1 -Limit 10 -Frames 3000`) reported
 **10/10 Loadable/Rendered**, so the data-track path is unchanged. A real CD-DA title
 and a 10-second DSP+CD-DA WAV capture are still required for SYS-01 completion.
+
+### 1.1k Multi-disc playlist and live swap (2026-11-01)
+
+SYS-02 coverage is synthetic and command-level:
+
+- `DiscPlaylistTests` loads an extended M3U with relative paths and `#EXTINF` titles,
+  checks wrapping next/previous selection, and rejects an entry-less playlist.
+- `DiscPlaylist_ListsEntriesInOrder` checks the CLI text/JSON listing.
+- `EjectAndInjectCycleTheVirtualTray` checks guest eject (`0x06`), inject (`0x07`), the
+  Opera tray/disc/spin/ready bits, and the media-access poll.
+- `Run_SwapsDiscsAtTheRequestedFrame` runs the CLI with `--swap-at 0 --swap-disc` and
+  checks the swap log and successful result.
+- A manual Release run also swapped from `Road Rash (USA).chd` to `Space Ace (USA).chd`
+  at frame 0; the run completed and reported the new disc hash. A known multi-disc title
+  roundtrip remains.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

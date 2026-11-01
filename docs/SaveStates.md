@@ -105,7 +105,7 @@ Machine; the table below is sorted by ID. Never renumber an existing section.
 | 6 | SPORT | 1 | `Sport` | Color, source, and destination registers. |
 | 7 | VDLP | 1 | `Vdlp` | CLUT B/G/R, background, head/current VDL, modulo, current/previous bitmap, out-control, CLUT DMA, line delay. |
 | 8 | XBUS | 1 | `Xbus` | Select/poll state, status/command FIFOs, and attached-device state. The CD-ROM device is also written as section 9. |
-| 9 | CD-ROM | 2 | `CdromDevice` | Poll/status, status/data buffers, command buffer, requested count, MEI status, current sector, disc state (tracks/MSF/TOC), cycle clock, next-ready cycle, and pending read-status flag. Version 1 is accepted with a zeroed clock and pending flag. The timing mode itself is recorded in the Options section. |
+| 9 | CD-ROM | 4 | `CdromDevice` | Poll/status, status/data buffers, command buffer, requested count, MEI status, current sector, disc state (tracks/MSF/TOC), cycle clock, next-ready cycle, pending read-status flag, MODE SET sector size/block flags, PLAY_AUDIO position, CD-DA sample cursor, volume, and mute. Version 1 is accepted with a zeroed clock and pending flag; v2 adds the cycle clock; v3 adds MODE SET and audio position; v4 adds the CD-DA mix. Older versions use the documented defaults. The timing mode itself is recorded in the Options section. |
 | 10 | Quartz | 3 | `Quartz` | ARM/VDL/timer accumulators, exact DSP cycle remainder, VDL line counter, Opera timer slot/gap flag and 16.16 slot accumulator. Versions 1-2 are accepted with a reset timer scheduler. |
 | 11 | Machine | 1 | `FiveDoMachine` | Compatibility flags (fix mode, Anvil, speed fixes, sf/sdf, unknown flag 11, jw, cnbfix, high-res), frame source dimensions, and all 960 `VdlLine` objects (width, control words, CLUT, 1280 pixels each). |
 | 12 | Options | 5 | `FiveDoMachine` | ARM timing mode, CLIO timer mode, MADAM CEL timing mode, CD-ROM timing mode, and CD-ROM speed. Version 1 records only ARM timing; version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing. Loading a lower version leaves the missing options at the machine default (including the stock 2x CD speed). |
@@ -137,9 +137,10 @@ version-2 state in a build that only understands version 1 is rejected with
 - Quartz writes version 3 (exact rational DSP clock plus Opera timer slot state) and
   accepts versions 1-2. Version 1 converts the legacy 8.24 fractional sample position
   to ARM cycles; versions 1-2 default the timer slot state to a reset scheduler.
-- CD-ROM writes version 2 (cycle clock, next-ready cycle, and pending status) and
-  accepts version 1 with a zeroed clock and pending flag. The timing mode itself is in
-  the Options section.
+- CD-ROM writes version 4 (MODE SET, PLAY_AUDIO position, CD-DA cursor, volume, and
+  mute) and accepts versions 1-3. Version 1 uses a zeroed clock and pending flag;
+  versions 1-2 default the MODE SET/audio fields; version 3 defaults the CD-DA mix. The
+  timing mode itself is in the Options section.
 - Options writes version 5 (ARM timing, CLIO timer mode, CEL timing, CD-ROM timing, and
   CD-ROM speed) and accepts versions 1-4 with the missing options left at the machine
   default. Timing profiles are a host-side shortcut over these options and are derived

@@ -23,7 +23,11 @@ namespace FiveDo.Host;
 public sealed class AppSettings
 {
     /// <summary>The settings schema version written by this build.</summary>
-    public const int CurrentVersion = 1;
+    /// <remarks>
+    /// Version 2 adds the CD-DA mix volume and mute flag. Version 1 files load with the
+    /// documented defaults for new properties.
+    /// </remarks>
+    public const int CurrentVersion = 2;
 
     /// <summary>
     /// Gets or sets the settings schema version. Zero or missing means a pre-versioned file
@@ -134,6 +138,9 @@ public sealed class AppSettings
 
     /// <summary>Gets per-game filter overrides keyed by 4DO game ID.</summary>
     public IDictionary<string, VideoFilter> FilterOverrides { get; set; } = new Dictionary<string, VideoFilter>(StringComparer.Ordinal);
+
+    /// <summary>Gets per-game timing and CD-DA profiles keyed by 4DO game ID.</summary>
+    public IDictionary<string, GameProfile> GameProfiles { get; set; } = new Dictionary<string, GameProfile>(StringComparer.Ordinal);
 
     /// <summary>Gets or sets the presentation filter.</summary>
     public VideoFilter Filter { get; set; } = VideoFilter.SharpBilinear;
@@ -408,6 +415,12 @@ public sealed class AppSettings
     /// <summary>Gets or sets a value indicating whether audio output is enabled.</summary>
     public bool AudioEnabled { get; set; } = true;
 
+    /// <summary>Gets or sets the CD-DA mix level (0-1).</summary>
+    public float CdAudioVolume { get; set; } = 0.8f;
+
+    /// <summary>Gets or sets a value indicating whether CD-DA mixing is muted.</summary>
+    public bool CdAudioMuted { get; set; }
+
     /// <summary>Gets or sets a value indicating whether rewind history is recorded.</summary>
     public bool RewindEnabled { get; set; } = true;
 
@@ -591,6 +604,64 @@ public sealed class AppSettings
     public VideoFilter ResolveFilter(string? gameId)
     {
         return GetFilterOverride(gameId) ?? Filter;
+    }
+
+    /// <summary>Gets the per-game timing profile, if one is configured.</summary>
+    /// <param name="gameId">4DO game ID, case-insensitive.</param>
+    /// <returns>The profile, or <see langword="null"/> when the game uses global options.</returns>
+    public GameProfile? GetGameProfile(string? gameId)
+    {
+        if (string.IsNullOrWhiteSpace(gameId))
+        {
+            return null;
+        }
+
+        var normalized = NormalizeGameId(gameId);
+        foreach ((var id, GameProfile profile) in GameProfiles)
+        {
+            if (string.Equals(NormalizeGameId(id), normalized, StringComparison.Ordinal))
+            {
+                return profile;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Sets or removes a per-game timing profile.</summary>
+    /// <param name="gameId">4DO game ID, case-insensitive.</param>
+    /// <param name="profile">Profile, or <see langword="null"/> to restore global options.</param>
+    public void SetGameProfile(string gameId, GameProfile? profile)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(gameId);
+        var normalized = NormalizeGameId(gameId);
+        foreach (var id in GameProfiles.Keys.ToArray())
+        {
+            if (string.Equals(NormalizeGameId(id), normalized, StringComparison.Ordinal))
+            {
+                GameProfiles.Remove(id);
+            }
+        }
+
+        if (profile is not null)
+        {
+            GameProfiles[normalized] = profile;
+        }
+    }
+
+    /// <summary>Applies a game's stored timing profile to the global settings.</summary>
+    /// <param name="gameId">4DO game ID, case-insensitive.</param>
+    /// <returns><see langword="true"/> when a profile was found and applied.</returns>
+    public bool ApplyGameProfile(string? gameId)
+    {
+        GameProfile? profile = GetGameProfile(gameId);
+        if (profile is null)
+        {
+            return false;
+        }
+
+        profile.ApplyTo(this);
+        return true;
     }
 
     /// <summary>Resolves the fix-mode bits for a game, honoring per-game overrides.</summary>

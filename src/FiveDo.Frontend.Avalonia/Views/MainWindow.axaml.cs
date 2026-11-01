@@ -88,6 +88,8 @@ public partial class MainWindow : Window, IDisposable
     private CheatSet? _cheats;
     private string _cheatPath = string.Empty;
     private IDiscSource? _disc;
+    private DiscPlaylist? _playlist;
+    private string? _playlistPath;
     private string _gameId = string.Empty;
     private string _gameName = string.Empty;
     private string _nvramGameId = string.Empty;
@@ -615,7 +617,7 @@ public partial class MainWindow : Window, IDisposable
             [
                 new FilePickerFileType("3DO disc")
                 {
-                    Patterns = ["*.iso", "*.bin", "*.cue", "*.chd"],
+                    Patterns = ["*.iso", "*.bin", "*.cue", "*.chd", "*.m3u", "*.m3u8"],
                 },
             ],
         }).ConfigureAwait(true);
@@ -633,7 +635,7 @@ public partial class MainWindow : Window, IDisposable
 
     private async Task ShowDiscBrowserAsync()
     {
-        var path = _settings.DiscPath;
+        var path = _playlist?.Current.Path ?? _settings.DiscPath;
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
         {
             StatusText.Text = "Boot a disc first to browse its files.";
@@ -651,7 +653,7 @@ public partial class MainWindow : Window, IDisposable
 
     private async Task ShowDiscInfoAsync()
     {
-        var path = _settings.DiscPath;
+        var path = _playlist?.Current.Path ?? _settings.DiscPath;
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
         {
             StatusText.Text = "Boot a disc first to show its information.";
@@ -739,7 +741,62 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void OpenDiscPath(string path, bool autoStart = false)
+    private static bool IsPlaylistPath(string path)
+    {
+        var extension = Path.GetExtension(path);
+        return string.Equals(extension, ".m3u", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(extension, ".m3u8", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void OnSwapDiscAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(SwapDiscAsync, "swapping discs");
+    }
+
+    private async Task SwapDiscAsync()
+    {
+        if (_disc is null)
+        {
+            StatusText.Text = "Boot a disc before swapping.";
+            return;
+        }
+
+        if (_playlist is { Count: > 1 })
+        {
+            int nextIndex = (_playlist.CurrentIndex + 1) % _playlist.Count;
+            DiscPlaylistEntry entry = _playlist.Entries[nextIndex];
+            if (OpenDiscPath(entry.Path, autoStart: false, preservePlaylist: true))
+            {
+                _playlist.Select(nextIndex);
+                ShowOsd($"Disc {_playlist.FormatPosition()}: {entry.DisplayName}", OsdSeverity.Success);
+            }
+
+            return;
+        }
+
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Swap 3DO disc",
+            AllowMultiple = false,
+            FileTypeFilter =
+            [
+                new FilePickerFileType("3DO disc or playlist")
+                {
+                    Patterns = ["*.iso", "*.bin", "*.cue", "*.chd", "*.m3u", "*.m3u8"],
+                },
+            ],
+        }).ConfigureAwait(true);
+        var path = files.Count > 0 ? files[0].TryGetLocalPath() : null;
+        if (path is not null)
+        {
+            if (OpenDiscPath(path, autoStart: false))
+            {
+                ShowOsd($"Disc swapped: {Path.GetFileName(path)}", OsdSeverity.Success);
+            }
+        }
+    }
+
+    private bool OpenDiscPath(string path, bool autoStart = false, bool preservePlaylist = false)
     {
         StopMovie(save: true);
         StopInputRecording(save: true);
@@ -750,6 +807,17 @@ public partial class MainWindow : Window, IDisposable
 
         try
         {
+            if (!preservePlaylist)
+            {
+                _playlist = null;
+                _playlistPath = null;
+                if (IsPlaylistPath(path))
+                {
+                    _playlist = DiscPlaylist.Load(path);
+                    _playlistPath = path;
+                    path = _playlist.Current.Path;
+                }
+            }
             var machine = _machine ?? CreateMachine();
             var disc = DiscImageFactory.Open(path);
             var gameId = disc.SectorCount >= 2 ? GameId.Compute(disc) : string.Empty;
@@ -869,16 +937,17 @@ public partial class MainWindow : Window, IDisposable
                 _cpuVideo.Settings = _settings.ToRendererSettings(_gameId);
             }
 
-            _settings.DiscPath = path;
+            _settings.DiscPath = _playlistPath ?? path;
+            var recentPath = _playlistPath ?? path;
             for (var i = _settings.RecentDiscs.Count - 1; i >= 0; i--)
             {
-                if (string.Equals(_settings.RecentDiscs[i], path, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(_settings.RecentDiscs[i], recentPath, StringComparison.OrdinalIgnoreCase))
                 {
                     _settings.RecentDiscs.RemoveAt(i);
                 }
             }
 
-            _settings.RecentDiscs.Insert(0, path);
+            _settings.RecentDiscs.Insert(0, recentPath);
             while (_settings.RecentDiscs.Count > 10)
             {
                 _settings.RecentDiscs.RemoveAt(_settings.RecentDiscs.Count - 1);
@@ -891,6 +960,10 @@ public partial class MainWindow : Window, IDisposable
                 ? "no BIOS"
                 : $"BIOS {_biosMd5[..Math.Min(8, _biosMd5.Length)]}";
             StatusText.Text = $"{_gameName}: {disc.SectorCount} sectors, fixes 0x{(uint)fixMode:x8}, {biosText}.";
+            if (_playlist is not null)
+            {
+                StatusText.Text += $" ({_playlist.FormatPosition()})";
+            }
             _logger.ForCategory(LogCategory.Storage).Information(
                 "Disc opened: {Game} ({GameId}), {Sectors} sectors, fixes 0x{FixMode:x8}, {Bios}.",
                 _gameName,
@@ -903,12 +976,15 @@ public partial class MainWindow : Window, IDisposable
             {
                 StartEmulation(showGameView: true);
             }
+
+            return true;
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException or DiscImageException or ArgumentException)
         {
             StatusText.Text = $"Disc error: {exception.Message}";
             _logger.ForCategory(LogCategory.Storage).Error(exception, "Disc open failed.");
             ShowError("Disc error", exception.Message);
+            return false;
         }
     }
 
@@ -2893,6 +2969,12 @@ public partial class MainWindow : Window, IDisposable
 
     private void ApplyAudioSettings()
     {
+        if (_machine is not null)
+        {
+            _machine.CdAudioVolume = _settings.CdAudioVolume;
+            _machine.CdAudioMuted = _settings.CdAudioMuted;
+        }
+
         if (_settings.AudioEnabled)
         {
             if (_audio is null)
@@ -3713,6 +3795,8 @@ public partial class MainWindow : Window, IDisposable
                 PbusSource = _input,
                 AudioSink = _audio,
                 BeforeFrame = ApplyCheats,
+                CdAudioVolume = _settings.CdAudioVolume,
+                CdAudioMuted = _settings.CdAudioMuted,
             };
             _runner = new CoreRunner(
                 _machine,
@@ -4133,6 +4217,9 @@ public partial class MainWindow : Window, IDisposable
                 break;
             case HotkeyAction.QuickMenu:
                 ToggleQuickMenu();
+                break;
+            case HotkeyAction.SwapDisc:
+                AsyncEvent.Run(SwapDiscAsync, "swapping discs");
                 break;
         }
     }

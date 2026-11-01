@@ -46,7 +46,7 @@ The screenshot directory defaults to the user's **Pictures** folder when
 current code, despite an older architecture note. Do not rely on it.
 
 Settings are written atomically (temporary file + replace) and carry
-`"SettingsVersion": 1`. An unversioned file is migrated in place on the next load.
+`"SettingsVersion": 2`. An unversioned or v1 file is migrated in place on the next load.
 A malformed `settings.json` is copied to `settings.json.invalid-<timestamp>.bak`
 before defaults are used, so the original bytes are never silently lost. Back up or
 delete the file to reset the desktop configuration.
@@ -63,7 +63,7 @@ every serialized property in `AppSettings`.
 
 | Property | Type | Default | Meaning |
 |---|---|---|---|
-| `SettingsVersion` | int | `1` | Settings schema version. Unversioned files are migrated on load. |
+| `SettingsVersion` | int | `2` | Settings schema version. Unversioned files are migrated on load. |
 | `FirstRunCompleted` | bool | `false` | Whether the first-run guide has been shown. |
 | `BiosPath` | string | `""` | Last primary BIOS path; fallback when auto-selection is off or unavailable. |
 | `Bios2Path` | string | `""` | Optional BIOS2/Kanji font path. |
@@ -85,6 +85,7 @@ every serialized property in `AppSettings`.
 | `AutoGameFixes` | bool | `true` | Apply the 4DO per-game fix-mode mapping automatically. |
 | `FixModeOverrides` | object | `{}` | Per-game fix-mode overrides, keyed by game ID. |
 | `FilterOverrides` | object | `{}` | Per-game filter overrides, keyed by game ID. |
+| `GameProfiles` | object | `{}` | Per-game timing and CD-DA profile snapshots, keyed by game ID. Each entry holds `Profile`, `ArmTiming`, `ClioTimers`, `CelTiming`, `CdromTiming`, `CdSpeed`, `CpuClockMultiplier`, `CdAudioVolume`, and `CdAudioMuted`. |
 | `Filter` | enum string | `"SharpBilinear"` | Global presentation filter. |
 | `FrameSkip` | enum string | `"Auto"` | Presentation frame-skip policy: `Off`, `Auto`, `OneInTwo`, `OneInThree`, `OneInFour`, or `OneInFive`. Only presentation is skipped; emulation and audio always run every frame. |
 | `Aspect` | enum string | `"FourThree"` | Aspect policy. |
@@ -116,6 +117,8 @@ every serialized property in `AppSettings`.
 | `NvramDirectory` | string | `""` | Directory that owns the NVRAM layout; empty means `<LocalApplicationData>/5DO`. |
 | `Volume` | float | `1.0` | OpenAL gain, 0..1. |
 | `AudioEnabled` | bool | `true` | Enable live OpenAL output. |
+| `CdAudioVolume` | float | `0.8` | CD-DA mix level, 0..1. Applies only while PLAY_AUDIO is active. |
+| `CdAudioMuted` | bool | `false` | Keep CD-DA playback running but remove it from the mixed output. |
 | `RewindEnabled` | bool | `true` | Record compressed keyframes and input for rewind. |
 | `RewindSeconds` | int | `60` | Rewind history length in seconds, 30..300. |
 | `FastForwardMultiplier` | int | `4` | Fast-forward speed, 2..10. Audio is muted while active. |
@@ -189,6 +192,7 @@ player-1 defaults. See section 3 for the full input structure.
 
 ```json
 {
+  "SettingsVersion": 2,
   "FirstRunCompleted": true,
   "BiosPath": "C:\\3DO\\panafz1.bin",
   "Bios2Path": "",
@@ -216,6 +220,7 @@ player-1 defaults. See section 3 for the full input structure.
   "AutoGameFixes": true,
   "FixModeOverrides": {},
   "FilterOverrides": {},
+  "GameProfiles": {},
   "Filter": "SharpBilinear",
   "Aspect": "FourThree",
   "CustomAspect": 1.3333,
@@ -235,6 +240,8 @@ player-1 defaults. See section 3 for the full input structure.
   "HighResolution": false,
   "Volume": 1.0,
   "AudioEnabled": true,
+  "CdAudioVolume": 0.8,
+  "CdAudioMuted": false,
   "RewindEnabled": true,
   "RewindSeconds": 60,
   "FastForwardMultiplier": 4,
@@ -429,6 +436,12 @@ Filter resolution:
 matches the first eight uppercase characters; see
 [`Compatibility.md`](Compatibility.md) section 5 for the known titles.
 
+`GameProfiles` stores a per-game timing/CD-DA snapshot keyed by game ID. `GetGameProfile`
+and `SetGameProfile` normalize the key case-insensitively; `ApplyGameProfile(gameId)`
+copies the snapshot into the live settings. Automatic application and the profile editor
+belong to SYS-18/FND-06. `settings validate [path]` reports syntax and schema version;
+`settings migrate [path]` normalizes a file and rewrites it at the current version.
+
 The Settings dialog's **Emulation** page edits:
 
 - `AutoGameFixes` checkbox.
@@ -618,8 +631,13 @@ Save slots:
 |---|---|
 | `AudioEnabled` | Opens OpenAL Soft at startup. If no device is present, the app logs a warning and runs silently. |
 | `Volume` | OpenAL gain, clamped 0..1. |
+| `CdAudioVolume` | CD-DA mix level, clamped 0..1. |
+| `CdAudioMuted` | Removes CD-DA from the mix while playback continues. |
 | `Bloom` | CRT bloom only; 0 disables. |
 | `FsrSharpness` | FSR RCAS sharpness; 0 soft, 1 maximum. |
+
+The CLI matches the CD-DA controls with `run --cd-volume 0..1` and `--mute-cd`. The CD
+save-state section records both values; a v3 state loads with the defaults.
 
 The Settings > Audio page also has a **Play 440 Hz test tone** button. It opens a
 separate short-lived OpenAL output, plays one second, and reports the OpenAL error if no

@@ -2,12 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using FiveDo.Core;
 using FiveDo.Host.Osd;
 using FiveDo.Input;
 
 namespace FiveDo.Host;
+
+/// <summary>Describes the on-disk state of a settings file.</summary>
+/// <param name="Exists">Whether the file exists.</param>
+/// <param name="Valid">Whether the file is valid JSON with a readable schema version.</param>
+/// <param name="Version">The schema version in the file, or 0 when missing or invalid.</param>
+/// <param name="Error">The parse error when <paramref name="Valid"/> is false.</param>
+public sealed record SettingsFileInfo(bool Exists, bool Valid, int Version, string? Error);
 
 /// <summary>
 /// Loads and saves <see cref="AppSettings"/> atomically as JSON.
@@ -21,6 +29,55 @@ public static class AppSettingsStore
 
     /// <summary>Gets the default settings file path.</summary>
     public static string DefaultPath => Path.Combine(DefaultDirectory, "settings.json");
+
+    /// <summary>Describes a settings file without applying migrations.</summary>
+    /// <param name="path">Settings path. Defaults to <see cref="DefaultPath"/>.</param>
+    /// <returns>Existence, JSON validity, schema version, and the parse error when invalid.</returns>
+    public static SettingsFileInfo Inspect(string? path = null)
+    {
+        var resolved = path ?? DefaultPath;
+        if (!File.Exists(resolved))
+        {
+            return new SettingsFileInfo(false, false, 0, "Settings file not found.");
+        }
+
+        try
+        {
+            var json = File.ReadAllText(resolved);
+            AppSettings settings = JsonSerializer.Deserialize(
+                json,
+                AppSettingsJsonContext.Default.AppSettings) ?? new AppSettings();
+            return new SettingsFileInfo(true, true, settings.SettingsVersion, null);
+        }
+        catch (JsonException exception)
+        {
+            return new SettingsFileInfo(true, false, 0, exception.Message);
+        }
+    }
+
+    /// <summary>Loads, normalizes, and rewrites a settings file at the current schema version.</summary>
+    /// <param name="path">Settings path. Defaults to <see cref="DefaultPath"/>.</param>
+    /// <returns>The schema version read before migration.</returns>
+    /// <exception cref="FileNotFoundException">The settings file does not exist.</exception>
+    /// <exception cref="InvalidDataException">The settings file is not valid JSON.</exception>
+    public static int Migrate(string? path = null)
+    {
+        var resolved = path ?? DefaultPath;
+        SettingsFileInfo info = Inspect(resolved);
+        if (!info.Exists)
+        {
+            throw new FileNotFoundException("Settings file not found.", resolved);
+        }
+
+        if (!info.Valid)
+        {
+            throw new InvalidDataException($"Settings file is not valid JSON: {info.Error}");
+        }
+
+        AppSettings settings = Load(resolved);
+        Save(settings, resolved);
+        return info.Version;
+    }
 
     /// <summary>Loads settings, creating defaults when the file does not exist or is invalid.</summary>
     /// <param name="path">Settings path. Defaults to <see cref="DefaultPath"/>.</param>
@@ -61,6 +118,64 @@ public static class AppSettingsStore
                 || settings.CpuClockMultiplier > 4.0)
             {
                 settings.CpuClockMultiplier = 1.0;
+            }
+
+            if (!float.IsFinite(settings.CdAudioVolume) || settings.CdAudioVolume is < 0 or > 1)
+            {
+                settings.CdAudioVolume = 0.8f;
+            }
+
+            // JSON can deserialize null despite the non-nullable annotation.
+            // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+            settings.GameProfiles ??= new Dictionary<string, GameProfile>(StringComparer.Ordinal);
+            foreach ((var id, GameProfile profile) in settings.GameProfiles.ToArray())
+            {
+                if (string.IsNullOrWhiteSpace(id) || profile is null)
+                {
+                    settings.GameProfiles.Remove(id);
+                    continue;
+                }
+
+                if (!Enum.IsDefined(profile.Profile))
+                {
+                    profile.Profile = EmulationProfile.Custom;
+                }
+
+                if (!Enum.IsDefined(profile.ArmTiming))
+                {
+                    profile.ArmTiming = ArmTimingMode.FreeDoCompatible;
+                }
+
+                if (!Enum.IsDefined(profile.ClioTimers))
+                {
+                    profile.ClioTimers = ClioTimerMode.FreeDoCompatible;
+                }
+
+                if (!Enum.IsDefined(profile.CelTiming))
+                {
+                    profile.CelTiming = CelTimingMode.FreeDoCompatible;
+                }
+
+                if (!Enum.IsDefined(profile.CdromTiming))
+                {
+                    profile.CdromTiming = CdromTimingMode.FreeDoCompatible;
+                }
+
+                if (!Enum.IsDefined(profile.CdSpeed))
+                {
+                    profile.CdSpeed = CdSpeed.X2;
+                }
+
+                if (!double.IsFinite(profile.CpuClockMultiplier)
+                    || profile.CpuClockMultiplier is < 0.5 or > 4.0)
+                {
+                    profile.CpuClockMultiplier = 1.0;
+                }
+
+                if (!float.IsFinite(profile.CdAudioVolume) || profile.CdAudioVolume is < 0 or > 1)
+                {
+                    profile.CdAudioVolume = 0.8f;
+                }
             }
 
             if (!Enum.IsDefined(settings.Renderer))

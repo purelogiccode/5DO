@@ -626,6 +626,32 @@ public sealed class CliProcessTests
     }
 
     [Fact]
+    public void DiscPlaylist_ListsEntriesInOrder()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-playlist-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var playlist = Path.Combine(directory, "game.m3u");
+            File.WriteAllText(
+                playlist,
+                "#EXTM3U\n#EXTINF:0,First Disc\ndisc1.chd\n# comment\n#EXTINF:0,Second Disc\ndisc2.chd\n");
+
+            CliResult result = Invoke("disc", "playlist", playlist, "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"count\": 2", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"displayName\": \"First Disc\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"displayName\": \"Second Disc\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("disc2.chd", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void DiscTracks_ReportsAnIsoImage()
     {
         var path = Path.Combine(Path.GetTempPath(), $"fivedo-cli-{Guid.NewGuid():N}.iso");
@@ -1452,6 +1478,99 @@ public sealed class CliProcessTests
             {
                 Directory.Delete(directory, recursive: true);
             }
+        }
+    }
+
+    [Fact]
+    public void SettingsValidateAndMigrate_ReportTheSchemaVersion()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fivedo-settings-{Guid.NewGuid():N}.json");
+        try
+        {
+            File.WriteAllText(path, """{"PreferOpenGl":false}""");
+
+            CliResult validate = Invoke("settings", "validate", path, "--json");
+            Assert.Equal(0, validate.Code);
+            Assert.Contains("\"valid\": true", validate.Output, StringComparison.Ordinal);
+            Assert.Contains("\"version\": 0", validate.Output, StringComparison.Ordinal);
+
+            CliResult migrate = Invoke("settings", "migrate", path);
+            Assert.Equal(0, migrate.Code);
+            Assert.Contains($"toVersion:   {FiveDo.Host.AppSettings.CurrentVersion}", migrate.Output, StringComparison.Ordinal);
+
+            CliResult after = Invoke("settings", "validate", path);
+            Assert.Equal(0, after.Code);
+            Assert.Contains($"version: {FiveDo.Host.AppSettings.CurrentVersion}", after.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void SettingsValidate_ReturnsOneForMalformedJson()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fivedo-settings-{Guid.NewGuid():N}.json");
+        try
+        {
+            File.WriteAllText(path, "{ broken");
+            CliResult result = Invoke("settings", "validate", path, "--json");
+            Assert.Equal(1, result.Code);
+            Assert.Contains("\"valid\": false", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Run_SwapsDiscsAtTheRequestedFrame()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-swap-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var first = Path.Combine(directory, "first.iso");
+            var second = Path.Combine(directory, "second.iso");
+            var bios = Path.Combine(directory, "bios.bin");
+            File.WriteAllBytes(
+                first,
+                SyntheticOperaDisc.Build(
+                    [new SyntheticOperaDisc.EntrySpec("A.TXT", IsDirectory: false, Lba: 2, LengthBytes: 1)],
+                    blockCount: 4,
+                    label: "FIRST"));
+            File.WriteAllBytes(
+                second,
+                SyntheticOperaDisc.Build(
+                    [new SyntheticOperaDisc.EntrySpec("B.TXT", IsDirectory: false, Lba: 2, LengthBytes: 1)],
+                    blockCount: 4,
+                    label: "SECOND"));
+            File.WriteAllBytes(bios, new byte[1_048_576]);
+
+            CliResult result = Invoke(
+                "run",
+                first,
+                "--bios",
+                bios,
+                "--frames",
+                "2",
+                "--swap-at",
+                "0",
+                "--swap-disc",
+                second,
+                "--audio",
+                "null",
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("swapped disc at frame 0", result.Error, StringComparison.Ordinal);
+            Assert.Contains("\"ok\": true", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
         }
     }
 

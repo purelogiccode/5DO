@@ -89,6 +89,25 @@ public sealed class CdromMultiTrackTests
     }
 
     [Fact]
+    public void EjectAndInjectCycleTheVirtualTray()
+    {
+        var cd = new CdromDevice();
+        cd.InsertDisc(new TrackedMemoryDisc(dataSectors: 4, audioSectors: 0));
+
+        Send(cd, 0x06);
+        byte[] ejected = ReadStatus(cd, 2);
+        Assert.Equal(0x06, ejected[0]);
+        Assert.Equal(0, cd.DriveStatus & 0xE0);
+        Assert.NotEqual(0, cd.DriveStatus & 0x01);
+
+        Send(cd, 0x07);
+        byte[] injected = ReadStatus(cd, 2);
+        Assert.Equal(0x07, injected[0]);
+        Assert.Equal(0xE1, cd.DriveStatus);
+        Assert.NotEqual(0, cd.Poll & 0x40);
+    }
+
+    [Fact]
     public void ModeSetRejectsAnOversizedBlock()
     {
         var cd = new CdromDevice();

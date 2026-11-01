@@ -21,8 +21,8 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 - A flag followed by a non-`--` token consumes that token as its value. Put boolean
   flags last or before another `--option` to avoid ambiguity.
 - The first non-option token is the positional path for `run`, `trace`, `info`,
-  `disc dump`, `disc tracks`, `bios info`, `audio analyze`, `state inspect`,
-  `disasm` (disc or file, depending on the command). `fs` uses fixed positional
+  `disc dump`, `disc tracks`, `disc playlist`, `bios info`, `audio analyze`, `state inspect`,
+  `settings validate|migrate`, and `disasm` (disc or file, depending on the command). `fs` uses fixed positional
   subcommand/path positions.
 - Integer options accept decimal and, where noted, `0x` hexadecimal. Some address
   options (`--watch-start`, `--watch-end`, `--stop-pc`, `--stop-cd`,
@@ -48,6 +48,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `info <disc>` | Disc geometry, volume header, game ID, database metadata, fixes. |
 | `disc dump <disc>` | Write raw 2048-byte sectors. |
 | `disc tracks <disc>` | List the CUE/CHD track table (data and audio), or one data track for ISO/BIN. |
+| `disc playlist <m3u>` | List multi-disc playlist entries and the selected disc. |
 | `fs list <disc>` | List the 3DO file tree (ISO, BIN, CUE, or CHD). |
 | `fs extract <disc>` | Extract files from a 3DO disc image (ISO, BIN, CUE, or CHD). |
 | `bios info <path>` | BIOS size, MD5, region, Kanji, and Anvil detection. |
@@ -56,6 +57,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `nvram path [disc]` | Resolve the shared or per-game NVRAM image. |
 | `nvram list` | List global and per-game NVRAM images. |
 | `nvram export\|import\|reset` | Back up, restore, or clear an NVRAM image. |
+| `settings validate\|migrate` | Check or normalize a `settings.json` file. |
 | `cheat list\|add\|enable\|disable\|remove\|import\|export` | Manage per-game RAM cheat files. |
 | `movie info\|record\|play\|verify\|branch` | Inspect, record, replay, verify, or branch `.5domovie` TAS movies. |
 | `audio analyze <wav>` | WAV format, peak, RMS, clipping, silence, DC offset. |
@@ -135,6 +137,9 @@ frame.
 | `--cpu-clock 0.5x-4x\|6.25-50MHz` | 1x (12.5 MHz) | ARM clock multiplier or absolute MHz. Values outside 0.5x-4x (6.25-50 MHz) fail. |
 | `--random-seed default\|random\|SEED` | `default` | Initial DSP PRNG seed. `default` keeps `0xa5a5a5a5`, `random` picks a fresh 32-bit value, and a decimal or `0x` value fixes the seed. |
 | `--prefetch` | off | Enable the bounded disc read-ahead cache (32 sectors ahead, 128-sector capacity). |
+| `--playlist <m3u>` | none | Open the first entry of an M3U/M3U8 playlist. Cannot be combined with a positional disc. A positional `.m3u`/`.m3u8` is also detected. |
+| `--swap-at N` | none | With `--swap-disc`, replace the disc at emulated frame N without resetting the machine. |
+| `--swap-disc <path>` | none | Disc opened at `--swap-at`; the reported disc hash updates after the swap. |
 | `--fix-mode 0xMASK` | database | Explicit `FixMode` bits. Accepts hex with or without `0x`. Overrides `--no-game-fixes`. |
 | `--no-game-fixes` | off | Disable automatic 4DO fixes. |
 | `--poke ADDR=HEX[;...]` | none | Patch RAM bytes after state load. Address decimal or `0x`; bytes hex with optional spaces/commas. |
@@ -155,6 +160,8 @@ frame.
 | `--audio null|wav|openal` | `null` | Audio backend. `null` still executes the DSP but discards samples. |
 | `--wav-out <path>` | `audio.wav` | WAV destination for `--audio wav`. |
 | `--volume 0..1` | 1.0 | OpenAL gain. Invalid values fail. |
+| `--cd-volume 0..1` | 0.8 | CD-DA mix level. Invalid values fail. |
+| `--mute-cd` | off | Keep CD-DA playback running but remove it from the mixed output. |
 
 `--audio wav` writes 44.1 kHz, 16-bit stereo PCM and reports capture statistics.
 `--audio openal` opens the default OpenAL Soft device; if no device is available it
@@ -454,6 +461,17 @@ track: `track 1: type=data format=<iso|bin> dataSize=<total bytes> frames=<n> st
 "frames", "start" }] }`; `dataSize` is the native per-sector size in JSON and the
 total payload size in the text line for ISO/BIN.
 
+### `disc playlist`
+
+```powershell
+5do disc playlist "3DO Multi-Disc.m3u" --json
+```
+
+Loads an M3U/M3U8 playlist and lists each entry with its title (from `#EXTINF`), resolved
+path, and one-based position. Relative paths resolve against the playlist directory. The
+text output marks the selected entry with `*`; `--json` returns `path`, `current`,
+`count`, and an `entries` array of `index`, `path`, `title`, and `displayName`.
+
 ---
 
 ## 7. `fs`
@@ -588,6 +606,24 @@ new branch can be recorded. `movie info` reads only the header.
 final hashes, state size, options, notes, and file size. `movie verify` uses the
 normal `run --json` contract with `moviePath`, `movieFrames`, `movieVerification`
 (`pass`/`fail`), and `movieFailures`. See [`Tas.md`](Tas.md).
+
+---
+
+## 8.4 `settings` commands
+
+```powershell
+5do settings validate
+5do settings validate "C:\Users\me\AppData\Local\5DO\settings.json" --json
+5do settings migrate --path settings.json
+```
+
+`settings validate [path]` checks that the file exists and parses, and reports its
+`SettingsVersion`. It exits 1 when the file is missing or malformed and never rewrites
+it. `settings migrate [path]` normalizes a valid file at the current schema version and
+rewrites it atomically; it exits 1 rather than overwrite a malformed file. The path
+defaults to `AppSettingsStore.DefaultPath` (`%LOCALAPPDATA%\5DO\settings.json` on
+Windows). JSON output: `{ "ok", "path", "exists", "valid", "version", "error" }` for
+validate and `{ "ok", "path", "fromVersion", "toVersion", "changed" }` for migrate.
 
 ---
 

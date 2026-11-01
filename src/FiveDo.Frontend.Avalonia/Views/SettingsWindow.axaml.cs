@@ -180,6 +180,8 @@ public partial class SettingsWindow : Window
         FsrSharpnessSlider.Value = settings.FsrSharpness;
         AudioCheck.IsChecked = settings.AudioEnabled;
         VolumeSlider.Value = settings.Volume;
+        CdVolumeSlider.Value = Math.Clamp(settings.CdAudioVolume, 0, 1);
+        CdMuteCheck.IsChecked = settings.CdAudioMuted;
         AutoFixesCheck.IsChecked = settings.AutoGameFixes;
         HighResCheck.IsChecked = settings.HighResolution;
         ProfileCombo.ItemsSource = _profileOptions;
@@ -371,6 +373,8 @@ public partial class SettingsWindow : Window
         settings.FsrSharpness = (float)FsrSharpnessSlider.Value;
         settings.AudioEnabled = AudioCheck.IsChecked == true;
         settings.Volume = (float)VolumeSlider.Value;
+        settings.CdAudioVolume = (float)Math.Clamp(CdVolumeSlider.Value, 0, 1);
+        settings.CdAudioMuted = CdMuteCheck.IsChecked == true;
         settings.AutoGameFixes = AutoFixesCheck.IsChecked == true;
         settings.HighResolution = HighResCheck.IsChecked == true;
         settings.ArmTiming = ArmTimingCombo.SelectedItem is ArmTimingOption armTiming

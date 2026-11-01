@@ -123,17 +123,18 @@ The BIOS manager scans a folder, reports file name, size, MD5, region, video sta
 | BIN, 2352-byte sectors | v1 | Payload starts at offset `0x10` |
 | CUE + BIN | v1 | Multi-file/multi-track CUE, MODE1/2048, MODE1/2352, audio tracks, `INDEX`/`PREGAP`/`POSTGAP` |
 | **CHD** | **v1** | **MAME CHD via pure C# CHDSharp; CD/GD-ROM track table incl. audio; parent/child supported** |
-| Multi-track / CD-DA | Partial (2026-11-01) | Track table, raw CD-DA sectors, PLAY_AUDIO position, and DSP mixing are implemented; read-ahead/subcode and known-title evidence remain |
+| Multi-track / CD-DA | Partial (2026-11-01) | Track table, raw CD-DA sectors, PLAY_AUDIO position, DSP mixing, persisted volume/mute, and M3U multi-disc swap are implemented; read-ahead/subcode and known-title evidence remain |
 | ZIP/7z archives | Later | Prefer extracting first |
 
 Sector count is read from the 3DO volume header at sector 0 (big-endian `blockCount` at byte offset 80). If the header is invalid, fall back to `fileSize / sectorSize` for ISO/BIN or the CHD data track's frame count.
 
 CHD specifics:
 
-- CHDSharp's `ReadSector(lba)` returns the first 2352 bytes of the 2448-byte CD frame. `ChdDiscImage` extracts 2048 user-data bytes based on the first data track:
+- CHDSharp's `ReadSector(lba)` returns the first 2352 bytes of the 2448-byte CD frame. `ChdDiscImage` extracts 2048 user-data bytes from each track using its native layout:
   - cooked Mode1/2048 -> offset 0
   - raw Mode1/2352 -> offset 16
   - raw Mode2/Form1 -> offset 24
+  - audio/2352 -> raw sector bytes (byte-swapped from CHD's Red Book order)
 - Standalone and parent/child CHDs are supported; an optional parent path can be configured.
 - DVD, HDD, raw, and audio-only CHDs are rejected; 3DO software is CD-ROM based.
 - Read-ahead is enabled by default (4 hunks) for sequential streaming.
@@ -257,11 +258,12 @@ does not need a separate high-resolution input path.
 | Null/WAV sink | Yes; streaming peak/RMS/clipping/DC statistics | |
 | Desktop audio backend | OpenAL Soft 1.23.1 via Silk.NET, bundled for all six RIDs | Platform-specific backends possible |
 | Live CLI audio | `--audio openal --volume`, `--realtime` pacing; trimmed win-x64 and linux-x64 validated with the null backend | |
-| Volume/mute | Yes | |
+| Volume/mute | Yes (output and CD-DA) | |
 | Audio-driven frame pacing | Yes (audio clock with a 60 Hz fallback) | |
 | Audio analysis | `audio analyze <wav> --json` | Spectrum/loudness comparison with Opera remains a manual check |
 | AOT live audio | Validated for the win-x64 NativeAOT CLI with the bundled runtime | Frontend AOT audio remains unvalidated |
-| CD-DA | Partial | Raw 2352-byte audio sectors, PLAY_AUDIO position, and 44.1 kHz DSP mixing; read-ahead/subcode and persisted volume UI remain |
+| CD-DA | Partial | Raw 2352-byte audio sectors, PLAY_AUDIO position, 44.1 kHz DSP mixing, persisted volume/mute, and Settings/CLI controls; read-ahead/subcode and known-title evidence remain |
+| Multi-disc | Partial | M3U/M3U8 playlist, F3/UI/CLI swap, guest inject, and per-disc hash; guest ODE prompts and a known multi-disc title remain |
 
 ---
 
@@ -288,10 +290,9 @@ does not need a separate high-resolution input path.
 ## 9. Known limitations / out of scope for v1
 
 - No netplay.
-- Rewind, fast-forward, cheats, TAS movies, OSD/quick menu, and multi-track/CD-DA
-  sectors are implemented; CD-DA read-ahead/subcode, a persisted volume UI, and
-  known-title CD-DA evidence remain.
-- No multi-disc swapping/ODE.
+- Rewind, fast-forward, cheats, TAS movies, OSD/quick menu, multi-track/CD-DA
+  sectors, CD-DA volume/mute, and multi-disc playlists are implemented;
+  CD-DA read-ahead/subcode, guest ODE prompts, and known-title disc audio evidence remain.
 - No PAL.
 - High-resolution CEL rendering is opt-in (`--high-res`) and validated for the
   Lemmings title; it is FreeDO-style line doubling, not true internal 640x480.

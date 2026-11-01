@@ -110,8 +110,8 @@
                 </ScrollViewer>
             </TabItem>
 
-            <TabItem Header="Audio" ToolTip.Tip="OpenAL output, volume, and test-tone settings.">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="8">
+            <TabItem Header="Audio" ToolTip.Tip="OpenAL output, volume, CD-DA mix, and test-tone settings.">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Output" VerticalAlignment="Center"
                                ToolTip.Tip="Enable or disable live OpenAL playback." />
                     <CheckBox x:Name="AudioCheck" Grid.Row="0" Grid.Column="1" Content="Enable OpenAL output"
@@ -121,11 +121,18 @@
                     <Slider x:Name="VolumeSlider" Grid.Row="1" Grid.Column="1"
                             Minimum="0" Maximum="1" TickFrequency="0.05"
                             ToolTip.Tip="Output volume from 0 (muted) to 1 (full)." />
-                    <Button x:Name="TestAudioButton" Grid.Row="2" Grid.Column="1"
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="CD-DA volume" VerticalAlignment="Center"
+                               ToolTip.Tip="Set the Red Book CD audio mix level." />
+                    <Slider x:Name="CdVolumeSlider" Grid.Row="2" Grid.Column="1"
+                             Minimum="0" Maximum="1" TickFrequency="0.05"
+                             ToolTip.Tip="CD-DA mix level from 0 (silent) to 1 (full)." />
+                    <CheckBox x:Name="CdMuteCheck" Grid.Row="3" Grid.Column="1" Content="Mute CD-DA"
+                               ToolTip.Tip="Keep CD-DA playback running without mixing it into the output." />
+                    <Button x:Name="TestAudioButton" Grid.Row="4" Grid.Column="1"
                             Content="Play 440 Hz test tone" Click="OnTestAudioClickAsync"
                             HorizontalAlignment="Left" Margin="0,12,0,0"
                             ToolTip.Tip="Play a one-second 440 Hz tone to verify the output device." />
-                    <TextBlock x:Name="TestAudioText" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
+                    <TextBlock x:Name="TestAudioText" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2"
                                Text="OpenAL Soft 1.23.1 · 44.1 kHz stereo"
                                Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
                                ToolTip.Tip="Audio backend status and test-tone result." />

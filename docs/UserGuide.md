@@ -175,6 +175,8 @@ is widened.
 - **F10** resets the machine.
 - **F11** toggles fullscreen.
 - **F12** captures a screenshot.
+- **F3** swaps to the next disc in an M3U playlist or opens a disc picker; see
+  **File > Swap Disc**.
 - **Escape** pauses emulation; in fullscreen it exits fullscreen first.
 - **Save State**, **Load State**, **Screenshot**, **Reset**, slot changes, and
   fullscreen are also available from the toolbar and the **Emulation** menu.
@@ -260,6 +262,20 @@ hash, ARM PC, and state hash; it exits with code 2 on a mismatch. Branching keep
 prefix so a new attempt can be recorded from a checkpoint. Movies contain input and a
 save state, not BIOS or disc content. See [`Tas.md`](Tas.md) for the container layout
 and the full command set.
+
+### Multi-disc playlists
+
+Open an `.m3u`/`.m3u8` playlist from **File > Boot Disc...** (or pass it on the command
+line) to start its first entry. Blank lines and `#` comments are ignored;
+`#EXTINF:duration,title` sets the display title, and relative paths resolve against the
+playlist. **File > Swap Disc** or **F3** advances to the next entry without resetting the
+machine, wrapping at the end. Without a playlist, the same action opens a file picker.
+The current disc's hash is used for save-state metadata while BIOS, NVRAM, fixes, and
+cheats stay keyed to the session's original game ID.
+
+The CLI can list a playlist with `disc playlist game.m3u`, open its first entry with
+`run --playlist game.m3u`, and test a swap with
+`run game.chd --swap-at 1200 --swap-disc disc2.chd`.
 
 ## Display
 
@@ -401,9 +417,14 @@ and **Help > Support 5DO...**.
 
 The desktop app ships the OpenAL Soft 1.23.1 runtime, so live stereo output works
 without a system OpenAL installation. Use Settings > Audio to enable/disable audio,
-set the volume, and play a 1 s 440 Hz test tone; the test reports the OpenAL error
-when no playback device is available. If no device is present, the app logs a
-warning and continues silently; the emulated DSP still runs so games do not stall.
+set the output volume, set the CD-DA mix level, mute CD-DA, and play a 1 s 440 Hz test
+tone; the test reports the OpenAL error when no playback device is available. If no
+device is present, the app logs a warning and continues silently; the emulated DSP
+still runs so games do not stall.
+
+CD-DA applies only while the disc is playing an audio track through PLAY_AUDIO. Most
+3DO software reads audio sectors through READ_DATA and feeds the DSP itself. The volume
+and mute values are stored in `settings.json` and in the CD save-state section.
 
 The core produces exactly 44,100 stereo samples per emulated second, and the
 dedicated core thread paces frames against that clock (falling back to 60 Hz when
@@ -412,7 +433,7 @@ no samples are available). The optional FPS overlay shows measured/target fps.
 The CLI can write WAV files with `--audio wav --wav-out <path>` or play live with
 `--audio openal --volume 0.5`. Add `--realtime` to pace a CLI run at the audio
 clock; without it, the CLI runs as fast as possible and live audio is a short
-burst.
+burst. Use `--cd-volume 0..1` and `--mute-cd` to control the CD-DA mix independently.
 
 To inspect a capture:
 

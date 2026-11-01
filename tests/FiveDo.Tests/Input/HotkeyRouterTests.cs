@@ -49,11 +49,11 @@ public sealed class HotkeyRouterTests
     {
         InputProfile profile = InputProfile.CreateDefault();
         profile.Hotkeys["SaveState"] = "F2";
-        profile.Hotkeys["NotARealAction"] = "F3";
+        profile.Hotkeys["NotARealAction"] = "F14";
 
         Assert.Equal(HotkeyAction.SaveState, HotkeyRouter.Resolve(profile, "F2"));
         Assert.Equal(HotkeyAction.None, HotkeyRouter.Resolve(profile, "F5"));
-        Assert.Equal(HotkeyAction.None, HotkeyRouter.Resolve(profile, "F3"));
+        Assert.Equal(HotkeyAction.None, HotkeyRouter.Resolve(profile, "F14"));
     }
 
     [Fact]
