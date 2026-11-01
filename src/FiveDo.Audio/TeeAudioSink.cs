@@ -1,4 +1,3 @@
-using System;
 using FiveDo.Core;
 
 namespace FiveDo.Audio;

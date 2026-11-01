@@ -688,7 +688,7 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,444 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,447 tests pass with no changed NTSC hashes.
 
 ### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
 
@@ -788,6 +788,15 @@ UX-23 coverage is compile/status level:
   RGB color.
 - The encoder uses a 3-3-2 global palette and a NETSCAPE2.0 loop extension; LZW output
   was validated against Pillow after the code-size transition was corrected.
+
+### 1.1x Desktop WAV recording (2026-11-01)
+
+- `TeeAudioSinkTests` verifies sample forwarding to both destinations, reset forwarding,
+  and null-destination safety.
+- The desktop path reuses `WavAudioSink`, whose WAV header/data are already covered by
+  `AudioAnalyzerTests` and `AudioPipelineTests`.
+- Manual smoke: start **File > Record Audio...**, run a game, stop, and analyze the WAV
+  with `5do audio analyze` (same writer and sample clock as the CLI path).
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

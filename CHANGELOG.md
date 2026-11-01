@@ -71,6 +71,10 @@ still change.
   illegal-request status instead of silently doing nothing, the guest RESET command
   restores the default transfer state and sector size, and `PrefetchingDiscSource`
   read-aheads native track sectors so CD-DA does not decompress on the sample clock.
+- AUD-02 desktop WAV recording: `TeeAudioSink` mirrors the DSP stream to live output
+  and a WAV writer. **File > Record Audio...** starts/stops a capture without pausing
+  emulation, keeps recording across audio-device changes, and finalizes the WAV header
+  on stop. Per-channel mixing and spectrum analysis remain.
 - VID-09 GIF recording: `GifRecorder` writes GIF89a animations with a fixed 3-3-2
   palette, NETSCAPE looping, and a 2-50 fps capture accumulator. CLI
   `run --record-gif/--record-fps/--record-frames` adds `gifPath`/`gifFrames` to JSON, and

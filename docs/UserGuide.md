@@ -477,6 +477,8 @@ The core produces exactly 44,100 stereo samples per emulated second, and the
 dedicated core thread paces frames against that clock (falling back to 60 Hz when
 no samples are available). The optional FPS overlay shows measured/target fps.
 
+**File > Record Audio...** records the same 44.1 kHz DSP and CD-DA mix to a WAV file
+while live output continues; click it again (or stop emulation) to finalize the file.
 The CLI can write WAV files with `--audio wav --wav-out <path>` or play live with
 `--audio openal --volume 0.5 --audio-device "<name>" --audio-buffer 50`.
 `5do audio devices` lists the OpenAL playback devices. Add `--realtime` to pace a CLI run at the audio

@@ -16,8 +16,12 @@ public sealed class TeeAudioSinkTests
         tee.PushSample(0x12345678);
         tee.PushSample(0x9ABCDEF0);
 
-        Assert.Equal([0x12345678u, 0x9ABCDEF0u], first.Samples);
-        Assert.Equal(first.Samples, second.Samples);
+        Assert.Equal(2, first.Samples.Count);
+        Assert.Equal(0x12345678u, first.Samples[0]);
+        Assert.Equal(0x9ABCDEF0u, first.Samples[1]);
+        Assert.Equal(2, second.Samples.Count);
+        Assert.Equal(first.Samples[0], second.Samples[0]);
+        Assert.Equal(first.Samples[1], second.Samples[1]);
     }
 
     [Fact]
