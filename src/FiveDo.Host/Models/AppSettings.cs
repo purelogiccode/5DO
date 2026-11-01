@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using FiveDo.Cheats;
 using FiveDo.Core;
+using FiveDo.Host.Osd;
 using FiveDo.Host.Rewind;
 using FiveDo.Input;
 using FiveDo.Video;
@@ -146,6 +147,37 @@ public sealed class AppSettings
 
     /// <summary>Gets or sets a value indicating whether the FPS/status overlay is shown over the video.</summary>
     public bool ShowOverlay { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether on-screen notifications are shown.</summary>
+    public bool OsdEnabled { get; set; } = true;
+
+    /// <summary>Gets or sets the anchor position for on-screen notifications.</summary>
+    public OsdPosition OsdPosition { get; set; } = OsdPosition.TopRight;
+
+    /// <summary>Gets or sets the notification overlay opacity (0.1-1).</summary>
+    public double OsdOpacity { get; set; } = 0.9;
+
+    /// <summary>Gets or sets how long a notification stays visible, in milliseconds.</summary>
+    public int OsdDurationMilliseconds { get; set; } = 2200;
+
+    /// <summary>Gets or sets a value indicating whether the in-game quick menu is available.</summary>
+    public bool QuickMenuEnabled { get; set; } = true;
+
+    /// <summary>Creates validated OSD options from the current settings.</summary>
+    /// <returns>The OSD configuration.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when an OSD setting is outside its supported range.</exception>
+    public OsdOptions ToOsdOptions()
+    {
+        var options = new OsdOptions
+        {
+            Enabled = OsdEnabled,
+            Position = OsdPosition,
+            Opacity = OsdOpacity,
+            DurationMilliseconds = OsdDurationMilliseconds,
+        };
+        options.Validate();
+        return options;
+    }
 
     /// <summary>Gets or sets a value indicating whether a screenshot also saves the native CPU frame.</summary>
     public bool SaveNativeScreenshot { get; set; }

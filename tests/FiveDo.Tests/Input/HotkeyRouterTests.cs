@@ -17,6 +17,7 @@ public sealed class HotkeyRouterTests
     [InlineData("F9", HotkeyAction.FrameAdvance)]
     [InlineData("R", HotkeyAction.Rewind)]
     [InlineData("Tab", HotkeyAction.FastForward)]
+    [InlineData("F4", HotkeyAction.QuickMenu)]
     public void Resolve_ReturnsEveryDefaultHotkey(string key, HotkeyAction expected)
     {
         InputProfile profile = InputProfile.CreateDefault();
@@ -78,6 +79,7 @@ public sealed class HotkeyRouterTests
     [InlineData(HotkeyAction.FrameAdvance, "FrameAdvance")]
     [InlineData(HotkeyAction.Rewind, "Rewind")]
     [InlineData(HotkeyAction.FastForward, "FastForward")]
+    [InlineData(HotkeyAction.QuickMenu, "QuickMenu")]
     [InlineData(HotkeyAction.None, "")]
     public void GetActionName_RoundtripsThePersistedName(HotkeyAction action, string expected)
     {

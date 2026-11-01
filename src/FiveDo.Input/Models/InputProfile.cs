@@ -26,6 +26,7 @@ public sealed class InputProfile
         ["FrameAdvance"] = "F9",
         ["Rewind"] = "R",
         ["FastForward"] = "Tab",
+        ["QuickMenu"] = "F4",
     };
 
     /// <summary>Creates the default input profile.</summary>

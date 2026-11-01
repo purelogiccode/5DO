@@ -44,4 +44,7 @@ public enum HotkeyAction
 
     /// <summary>Hold or toggle fast-forward playback.</summary>
     FastForward,
+
+    /// <summary>Open or close the in-game quick menu.</summary>
+    QuickMenu,
 }

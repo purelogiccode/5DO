@@ -3,7 +3,8 @@
 **Snapshot:** 2026-11-01, after the first full-collection sweep, the performance pass,
 the ARM/CLIO/CEL/CD timing-option pass, the CD speed/timing-profile pass, the BIOS
 manager, the per-game NVRAM pass, the rewind/fast-forward pass, the per-game cheat
-engine, the TAS-movie pass, the disc browser, and the input-device pass. Road Rash's
+engine, the TAS-movie pass, the disc browser, the input-device pass, and the
+OSD/quick-menu pass. Road Rash's
 100k-state race now measures
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
@@ -89,7 +90,15 @@ validation, game metadata, version, size, and modification time. The NVRAM tab b
 up one image or the whole layout, imports a validated 32 KB image, resets an image to a
 fresh volume, and deletes an image with a second-click confirmation. `BiosInventory`
 and `NvramInventory` isolate the file operations for tests and use atomic writes.
-**1309 tests pass.**
+UX-19 adds OSD notifications and the in-game quick menu. `FiveDo.Host.Osd` owns a
+bounded, time-expiring notification list and validated position/opacity/duration
+options; the game view shows colour-coded toasts for save/load, slot changes, rewind,
+fast-forward, screenshots, reset, and settings. **F4** or the gamepad Select+Start
+chord opens a quick menu that pauses the game and offers resume/pause, save/load,
+rewind, fast-forward, screenshot, reset, cheats, settings, stop, and close; Up/Down
+and Enter navigate, and closing resumes the prior state. Settings > Video exposes the
+OSD and quick-menu options. The Lemmings 300-frame differential smoke still passes
+(1 match, 0 diverged). **1336 tests pass.**
 The differential harness (FND-05/CORE-11/CORE-16) is implemented:
 `tools/FiveDo.DiffHarness` stages the bundled OperaCore and BIOS, runs both engines
 with identical options, compares checkpoint frame hashes, applies manifest
@@ -294,7 +303,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 1309 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 1336 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and

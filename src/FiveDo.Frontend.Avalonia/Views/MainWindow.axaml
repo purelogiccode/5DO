@@ -539,6 +539,85 @@
                                FontFamily="Cascadia Mono, Consolas, monospace"
                                ToolTip.Tip="Live frame, PC, renderer, and audio diagnostics." />
                 </Border>
+
+                <!-- Transient notifications (save/load/rewind/fast-forward/screenshot). -->
+                <ItemsControl x:Name="OsdList" IsHitTestVisible="False"
+                              HorizontalAlignment="Right" VerticalAlignment="Top"
+                              Margin="12" MaxWidth="440">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:OsdEntry">
+                            <Border Background="{Binding Background}"
+                                    BorderBrush="{Binding Accent}" BorderThickness="3,0,0,0"
+                                    CornerRadius="3" Padding="9,5" Margin="0,0,0,4"
+                                    ToolTip.Tip="On-screen notification. Configure the position, opacity, and duration in Settings.">
+                                <TextBlock Text="{Binding Text}" Foreground="#F2F4F6"
+                                           FontSize="12" TextWrapping="Wrap" />
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- In-game quick menu. Keyboard, mouse, or the Select+Start gamepad chord. -->
+                <Border x:Name="QuickMenuPanel" IsVisible="False"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Background="#F0141519" BorderBrush="#663DAEE9" BorderThickness="1"
+                        CornerRadius="8" Padding="18,16" MinWidth="300"
+                        ToolTip.Tip="Quick access to save/load, rewind, fast-forward, screenshots, reset, cheats, and settings.">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Quick Menu" Foreground="#F2F4F6"
+                                   FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock x:Name="QuickMenuSubtitleText" Foreground="#9AA0A8"
+                                   FontSize="11" TextTrimming="CharacterEllipsis" />
+                        <StackPanel x:Name="QuickMenuButtons" Spacing="4" Margin="0,4,0,0">
+                            <Button x:Name="QuickMenuResumeButton" Content="Resume"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                    Click="OnQuickMenuResume"
+                                    ToolTip.Tip="Resume or pause emulation and close the menu." />
+                            <Button x:Name="QuickMenuSaveButton" Content="Save State"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                    Click="OnQuickMenuSave"
+                                    ToolTip.Tip="Save the current state to the selected slot." />
+                            <Button x:Name="QuickMenuLoadButton" Content="Load State"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                    Click="OnQuickMenuLoad"
+                                    ToolTip.Tip="Load the selected save slot." />
+                            <Button x:Name="QuickMenuRewindButton" Content="Rewind 1 Second"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                    Click="OnQuickMenuRewind"
+                                    ToolTip.Tip="Restore the machine one second back using the rewind history." />
+                            <Button x:Name="QuickMenuFastForwardButton" Content="Fast-Forward"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                    Click="OnQuickMenuFastForward"
+                                    ToolTip.Tip="Run at the configured 2x-10x speed." />
+                            <Button x:Name="QuickMenuScreenshotButton" Content="Screenshot"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                    Click="OnQuickMenuScreenshot"
+                                    ToolTip.Tip="Save a PNG screenshot of the current frame." />
+                            <Button x:Name="QuickMenuResetButton" Content="Reset"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                    Click="OnQuickMenuReset"
+                                    ToolTip.Tip="Reset the emulated console." />
+                            <Button x:Name="QuickMenuCheatsButton" Content="Cheats..."
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                    Click="OnQuickMenuCheats"
+                                    ToolTip.Tip="Enable, add, or edit per-game RAM cheats." />
+                            <Button x:Name="QuickMenuSettingsButton" Content="Settings..."
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                    Click="OnQuickMenuSettings"
+                                    ToolTip.Tip="Open video, audio, emulation, and path settings." />
+                            <Button x:Name="QuickMenuStopButton" Content="Stop Game"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                    Click="OnQuickMenuStop"
+                                    ToolTip.Tip="Stop emulation and return to the game list." />
+                            <Button x:Name="QuickMenuCloseButton" Content="Close"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                    Click="OnQuickMenuClose"
+                                    ToolTip.Tip="Close the quick menu and resume emulation." />
+                        </StackPanel>
+                        <TextBlock Text="Up/Down select · Enter activate · F4 or Esc close"
+                                   Foreground="#6E747D" FontSize="10" Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
             </Grid>
         </Grid>
 

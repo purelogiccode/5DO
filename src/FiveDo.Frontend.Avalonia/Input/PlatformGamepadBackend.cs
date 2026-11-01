@@ -14,6 +14,8 @@ public sealed class PlatformGamepadBackend : IGamepadBackend, IDisposable
     private readonly ControllerState[] _states = new ControllerState[PbusEncoder.MaxControllers];
     private InputProfile _profile;
     private int _count;
+    private bool _menuChordHeld;
+    private int _quickMenuToggle;
     private bool _disposed;
 
     private PlatformGamepadBackend(IRawGamepadSource source, InputProfile profile)
@@ -63,6 +65,18 @@ public sealed class PlatformGamepadBackend : IGamepadBackend, IDisposable
     public void Poll()
     {
         _source.Poll();
+
+        // Select+Start is the desktop quick-menu chord. Track the edge here so the
+        // UI thread only sees one toggle per press, and leave the individual buttons
+        // in the normal mapping for the emulated pad.
+        var menuChord = _source.Count > 0 && GamepadMenuChord.IsPressed(_source.Read(0));
+        if (menuChord && !_menuChordHeld)
+        {
+            Interlocked.Exchange(ref _quickMenuToggle, 1);
+        }
+
+        _menuChordHeld = menuChord;
+
         InputProfile profile = Volatile.Read(ref _profile);
         var available = Math.Min(_source.Count, _states.Length);
         for (var player = 0; player < _states.Length; player++)
@@ -77,6 +91,15 @@ public sealed class PlatformGamepadBackend : IGamepadBackend, IDisposable
         }
 
         _count = available;
+    }
+
+    /// <summary>
+    /// Takes a pending Select+Start quick-menu toggle.
+    /// </summary>
+    /// <returns><see langword="true"/> once for each press of the chord.</returns>
+    public bool ConsumeQuickMenuToggle()
+    {
+        return Interlocked.Exchange(ref _quickMenuToggle, 0) != 0;
     }
 
     /// <inheritdoc />

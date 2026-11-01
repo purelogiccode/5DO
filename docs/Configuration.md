@@ -90,6 +90,11 @@ every serialized property in `AppSettings`.
 | `Renderer` | enum string | `"OpenGl"` | Presentation backend: `OpenGl`, `Vulkan`, or `Software`. |
 | `OutputResolution` | enum string | `"Window"` | Final output size: `Window`, `Native`, `Scale2X`, `Scale3X`, `Scale4X`, `Hd720`, `FullHd1080`, `Qhd1440`, or `Uhd2160`. |
 | `ShowOverlay` | bool | `false` | Show the FPS/status overlay. |
+| `OsdEnabled` | bool | `true` | Show transient on-screen notifications. |
+| `OsdPosition` | enum string | `"TopRight"` | Notification anchor: `TopLeft`, `TopCenter`, `TopRight`, `BottomLeft`, `BottomCenter`, or `BottomRight`. |
+| `OsdOpacity` | double | `0.9` | Notification opacity, 0.1..1. |
+| `OsdDurationMilliseconds` | int | `2200` | Notification lifetime, 500..10000 ms. |
+| `QuickMenuEnabled` | bool | `true` | Enable the F4/Select+Start in-game quick menu. |
 | `SaveNativeScreenshot` | bool | `false` | Also write a `-native.png` CPU frame with each screenshot. |
 | `Bloom` | float | `0.35` | CRT bloom strength, 0..1. |
 | `FsrSharpness` | float | `0.8` | FSR 1.0 RCAS sharpness, 0 (soft) .. 1 (maximum). |
@@ -214,6 +219,11 @@ player-1 defaults. See section 3 for the full input structure.
   "Renderer": "OpenGl",
   "OutputResolution": "Window",
   "ShowOverlay": false,
+  "OsdEnabled": true,
+  "OsdPosition": "TopRight",
+  "OsdOpacity": 0.9,
+  "OsdDurationMilliseconds": 2200,
+  "QuickMenuEnabled": true,
   "SaveNativeScreenshot": false,
   "Bloom": 0.35,
   "FsrSharpness": 0.8,
@@ -360,10 +370,10 @@ Explicit stick/trigger bindings win over the fallback. The default radial dead z
 
 **Hotkeys:** the profile stores default F5 (save), F8 (load), F6/F7 (previous/next
 slot), F9 (advance one frame while paused), Shift+F9 (rewind one frame), R (rewind one
-second), Tab (hold to fast-forward), F12 (screenshot), F11 (fullscreen), Escape (pause),
-and F10 (reset). The shell dispatches these bindings before forwarding a key to the
-emulated pad; F11 also works from the library, and Escape leaves fullscreen before it
-reaches the pause action. `HotkeyRouter` resolves the persisted action names
+second), Tab (hold to fast-forward), F4 (quick menu), F12 (screenshot), F11 (fullscreen),
+Escape (pause), and F10 (reset). The shell dispatches these bindings before forwarding a
+key to the emulated pad; F11 also works from the library, and Escape leaves fullscreen
+before it reaches the pause action. `HotkeyRouter` resolves the persisted action names
 case-insensitively, so a custom key assignment in the profile is honored. Unknown action
 names and unbound keys are ignored.
 
@@ -604,7 +614,8 @@ restart the machine. Changes to audio settings recreate the OpenAL output if nee
 Changing `Renderer` recreates the active presenter without restarting emulation.
 Changes to `OutputResolution`, filters, aspect, and vsync apply to the current renderer
 without restarting the machine. Frame-skip changes apply immediately to the running core
-loop.
+loop. OSD enable/position/opacity/duration and the quick-menu toggle apply immediately;
+notification lifetime changes affect new messages.
 
 ### Performance defaults
 

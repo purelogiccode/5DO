@@ -2,6 +2,20 @@
 
 ## 0. Current handoff (2026-10-30)
 
+**2026-11-01 update:** UX-19 OSD notifications and the in-game quick menu are
+implemented. `FiveDo.Host.Osd` adds a bounded, time-expiring notification list and
+validated position/opacity/duration options; the game view shows colour-coded toasts
+for save/load, slot changes, rewind, fast-forward, screenshots, reset, and settings.
+**F4** or the gamepad Select+Start chord opens a quick menu that pauses the game and
+offers resume/pause, save/load, rewind, fast-forward, screenshot, reset, cheats,
+settings, stop, and close; Up/Down/Home/End and Enter navigate, and closing resumes
+only when the game was running before it opened. Settings > Video exposes OSD enable,
+position, opacity, duration, and quick-menu enable controls. **Do not redo the
+notification model, quick-menu controls, gamepad chord, or settings surface; remaining
+UX-19 polish is full gamepad navigation of the menu (UX-08) and richer OSD types such
+as achievement/recording badges.** The Lemmings 300-frame differential smoke passes
+(1 match, 0 diverged). **1336 tests pass.**
+
 **2026-11-01 update:** UX-12 BIOS/NVRAM manager is implemented. **File > BIOS / NVRAM
 Manager...** opens a two-tab window. The BIOS tab scans and classifies images, imports
 validated `.bin`/`.rom` files without overwriting a different image, sets BIOS1/BIOS2,
@@ -36,8 +50,8 @@ file, directory, or the whole disc with cross-platform name sanitization and
 destination-root containment, and exposes volume/game-database/fix metadata.
 File > Disc Browser... and File > Disc Info... use the new windows; both are
 constructed by the trimmed frontend smoke test. **Do not redo the browser model,
-extraction, or the two windows; remaining UX work is UX-19 OSD/quick menu and the TAS
-input editor/Lua work.** **1246 tests pass.**
+extraction, or the two windows; remaining UX work was UX-19 OSD/quick menu (now
+implemented) and the TAS input editor/Lua work.** **1246 tests pass.**
 
 **2026-11-01 update:** UX-06 TAS movies are implemented as a partial first increment.
 `FiveDo.Tas` owns the versioned `.5domovie` container (per-frame PBUS packets, optional
@@ -203,7 +217,8 @@ not final statuses.
 work, the renderer/filter work, the ARM/CLIO/CEL/CD timing options, the CD speed selector and
 timing-profile mapping, the BIOS catalog/scanner/selector or its CLI/settings surface,
 the NVRAM layout/store/settings controls or the `nvram` CLI commands, the TAS movie
-container/recorder/verifier/editor or its CLI/shell surface, or
+container/recorder/verifier/editor or its CLI/shell surface, the OSD notification model
+or the quick menu/chord/settings surface, or
 the 2026-10-31 performance pass (CEL pipeline caching, Debug core optimization,
 render-request coalescing, Auto frame skip). Do not treat full-race completion, inventory
 scripting, Pi/arm64 validation, or installers as current gates.

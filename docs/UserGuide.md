@@ -58,6 +58,21 @@ layout, imports a validated 32 KB image over the selected file, resets an image 
 fresh volume, and deletes an image. Reset, delete, and import-overwrite require a
 second click on the same button, so a single accidental click cannot destroy data.
 
+## On-screen notifications and quick menu
+
+The game view shows short colour-coded notifications for state saves and loads, slot
+changes, rewind, fast-forward, screenshots, resets, and settings changes. Blue is
+informational, green is success, amber is a warning, and red is an error. Settings >
+Video controls whether notifications are shown, their corner position, opacity, and
+duration (500-10000 ms).
+
+Press **F4** (the default Quick Menu hotkey) or hold **Select+Start** on a gamepad to
+open the quick menu. It pauses the game and offers Resume/Pause, Save State, Load
+State, Rewind 1 Second, Fast-Forward, Screenshot, Reset, Cheats..., Settings..., Stop
+Game, and Close. Use Up/Down/Home/End to move, Enter or Space to activate, and F4 or
+Escape to close. Closing the menu resumes the game only if it was running when the
+menu opened. Settings > Video can disable the quick menu.
+
 ## Command-line launch (frontends and file associations)
 
 The desktop executable accepts the following arguments. A positional disc path or

@@ -11,6 +11,7 @@ using Avalonia.Platform.Storage;
 using FiveDo.Audio;
 using FiveDo.Core;
 using FiveDo.Host;
+using FiveDo.Host.Osd;
 using FiveDo.Host.Rewind;
 using FiveDo.Input;
 using FiveDo.Storage;
@@ -102,6 +103,16 @@ public partial class SettingsWindow : Window
         new(NvramStorageMode.PerGame, "Per game (isolated saves)"),
     ];
 
+    private static readonly OsdPositionOption[] _osdPositionOptions =
+    [
+        new(OsdPosition.TopLeft, "Top left"),
+        new(OsdPosition.TopCenter, "Top center"),
+        new(OsdPosition.TopRight, "Top right (default)"),
+        new(OsdPosition.BottomLeft, "Bottom left"),
+        new(OsdPosition.BottomCenter, "Bottom center"),
+        new(OsdPosition.BottomRight, "Bottom right"),
+    ];
+
     private static readonly ResolutionOption[] _resolutionOptions =
     [
         new(OutputResolution.Window, "Match window"),
@@ -157,6 +168,13 @@ public partial class SettingsWindow : Window
         FrameSkipCombo.SelectedItem = _frameSkipOptions.FirstOrDefault(option => option.Value == settings.FrameSkip)
             ?? _frameSkipOptions[0];
         OverlayCheck.IsChecked = settings.ShowOverlay;
+        OsdCheck.IsChecked = settings.OsdEnabled;
+        OsdPositionCombo.ItemsSource = _osdPositionOptions;
+        OsdPositionCombo.SelectedItem = _osdPositionOptions.FirstOrDefault(option => option.Value == settings.OsdPosition)
+            ?? _osdPositionOptions[2];
+        OsdOpacitySlider.Value = Math.Clamp(settings.OsdOpacity, 0.1, 1);
+        OsdDurationBox.Text = settings.OsdDurationMilliseconds.ToString(CultureInfo.InvariantCulture);
+        QuickMenuCheck.IsChecked = settings.QuickMenuEnabled;
         NativeScreenshotCheck.IsChecked = settings.SaveNativeScreenshot;
         BloomSlider.Value = settings.Bloom;
         FsrSharpnessSlider.Value = settings.FsrSharpness;
@@ -325,6 +343,28 @@ public partial class SettingsWindow : Window
             ? frameSkip.Value
             : FrameSkipMode.Auto;
         settings.ShowOverlay = OverlayCheck.IsChecked == true;
+        settings.OsdEnabled = OsdCheck.IsChecked == true;
+        settings.OsdPosition = OsdPositionCombo.SelectedItem is OsdPositionOption osdPosition
+            ? osdPosition.Value
+            : OsdPosition.TopRight;
+        settings.OsdOpacity = Math.Clamp(OsdOpacitySlider.Value, 0.1, 1);
+        var osdDurationText = OsdDurationBox.Text?.Trim();
+        if (string.IsNullOrEmpty(osdDurationText))
+        {
+            settings.OsdDurationMilliseconds = 2200;
+        }
+        else if (!int.TryParse(osdDurationText, NumberStyles.None, CultureInfo.InvariantCulture, out var osdDuration)
+            || osdDuration is < OsdOptions.MinDurationMilliseconds or > OsdOptions.MaxDurationMilliseconds)
+        {
+            throw new FormatException(
+                $"The OSD duration must be between {OsdOptions.MinDurationMilliseconds} and {OsdOptions.MaxDurationMilliseconds} milliseconds.");
+        }
+        else
+        {
+            settings.OsdDurationMilliseconds = osdDuration;
+        }
+
+        settings.QuickMenuEnabled = QuickMenuCheck.IsChecked == true;
         settings.SaveNativeScreenshot = NativeScreenshotCheck.IsChecked == true;
         settings.Bloom = (float)BloomSlider.Value;
         settings.FsrSharpness = (float)FsrSharpnessSlider.Value;
@@ -877,6 +917,14 @@ public partial class SettingsWindow : Window
     }
 
     private sealed record NvramStorageOption(NvramStorageMode Value, string Label)
+    {
+        public override string ToString()
+        {
+            return Label;
+        }
+    }
+
+    private sealed record OsdPositionOption(OsdPosition Value, string Label)
     {
         public override string ToString()
         {

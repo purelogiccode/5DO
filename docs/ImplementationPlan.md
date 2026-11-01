@@ -203,7 +203,19 @@ voluntary donations rather than sales. The local Linux validation target is the
 Hyper-V VM `LinuxMint` (`D:\Hyper-V\VMs\LinuxMint`). **954 tests pass before the new
 sweep documentation/tooling; the docs/tools themselves add no runtime tests.**
 
-**Last updated:** 2026-10-31
+**OSD and quick-menu pass (2026-11-01, thirty-seventh pass):** UX-19 is implemented.
+`FiveDo.Host.Osd` adds `OsdOptions`, `OsdPosition`, `OsdSeverity`, `OsdMessage`, and
+the bounded, time-expiring `OsdNotifications` list. `AppSettings` persists OSD
+enable/position/opacity/duration and the quick-menu toggle. The game view shows
+colour-coded notifications for save/load, slot changes, rewind, fast-forward,
+screenshots, reset, and settings. `F4` or the gamepad Select+Start chord opens a quick
+menu that pauses the game and offers resume/pause, save/load, rewind, fast-forward,
+screenshot, reset, cheats, settings, stop, and close; Up/Down/Home/End and Enter
+navigate, and closing resumes only when the game was running. Settings > Video edits
+the OSD options. No emulation-core behavior or save-state layout changed. **1336 tests
+pass.** See `Make5doTheBestOfAll.md` 13.26.
+
+**Last updated:** 2026-11-01
 
 ---
 

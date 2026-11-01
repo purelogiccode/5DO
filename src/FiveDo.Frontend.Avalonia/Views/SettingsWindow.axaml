@@ -7,10 +7,10 @@
 
     <Grid RowDefinitions="*,Auto" Margin="12">
         <TabControl Grid.Row="0" ToolTip.Tip="Video, audio, emulation, and path settings.">
-            <TabItem Header="Video" ToolTip.Tip="Renderer, output resolution, filter, aspect ratio, scaling, overlay, bloom, and FSR options.">
+            <TabItem Header="Video" ToolTip.Tip="Renderer, output resolution, filter, aspect ratio, scaling, overlay, OSD notifications, quick menu, bloom, and FSR options.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <Grid ColumnDefinitions="170,*"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                           Margin="8">
                         <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Renderer"
                                    FontWeight="SemiBold" Margin="0,0,0,4" />
@@ -79,6 +79,33 @@
                                    Text="xBR runs an edge-directed 4x pass; HQx runs a 2x/3x/4x CPU pixel-art pass; FSR runs AMD FidelityFX Super Resolution 1.0 (EASU + RCAS) at the output. CRT bloom adds a glow around bright areas. All of them cost more CPU/GPU time at 4K; HQx 3x/4x are the most expensive."
                                    Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"
                                    ToolTip.Tip="Filter notes: xBR and HQx are CPU-heavy; FSR and CRT bloom run on the GPU." />
+
+                        <TextBlock Grid.Row="18" Grid.Column="0" Grid.ColumnSpan="2" Text="On-screen display"
+                                   FontWeight="SemiBold" Margin="0,12,0,4" />
+                        <CheckBox x:Name="OsdCheck" Grid.Row="19" Grid.Column="1"
+                                  Content="Show OSD notifications"
+                                  ToolTip.Tip="Show save, load, rewind, fast-forward, screenshot, and reset confirmations over the game." />
+                        <TextBlock Grid.Row="20" Grid.Column="0" Text="Notification position"
+                                   VerticalAlignment="Center" ToolTip.Tip="Choose where notifications appear over the game." />
+                        <ComboBox x:Name="OsdPositionCombo" Grid.Row="20" Grid.Column="1" Margin="0,0,0,4"
+                                  ToolTip.Tip="Top or bottom, left, center, or right." />
+                        <TextBlock Grid.Row="21" Grid.Column="0" Text="Notification opacity"
+                                   VerticalAlignment="Center" ToolTip.Tip="Fade notifications so they do not cover the game." />
+                        <Slider x:Name="OsdOpacitySlider" Grid.Row="21" Grid.Column="1"
+                                Minimum="0.1" Maximum="1" TickFrequency="0.05"
+                                ToolTip.Tip="Notification opacity from 0.1 (nearly transparent) to 1 (opaque)." />
+                        <TextBlock Grid.Row="22" Grid.Column="0" Text="Notification duration (ms)"
+                                   VerticalAlignment="Center" ToolTip.Tip="How long each notification stays visible." />
+                        <TextBox x:Name="OsdDurationBox" Grid.Row="22" Grid.Column="1" Width="100"
+                                 HorizontalAlignment="Left"
+                                 ToolTip.Tip="500-10000 milliseconds." />
+                        <CheckBox x:Name="QuickMenuCheck" Grid.Row="23" Grid.Column="1"
+                                  Content="Enable the in-game quick menu (F4 or Select+Start)"
+                                  ToolTip.Tip="Open a keyboard/gamepad quick menu for save, load, rewind, fast-forward, screenshot, reset, cheats, and settings." />
+                        <TextBlock Grid.Row="24" Grid.Column="1"
+                                   Text="Notifications confirm save/load, rewind, fast-forward, screenshots, resets, and settings changes. The quick menu pauses the game while it is open and resumes when it closes."
+                                   Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"
+                                   ToolTip.Tip="OSD and quick-menu behaviour." />
                     </Grid>
                 </ScrollViewer>
             </TabItem>

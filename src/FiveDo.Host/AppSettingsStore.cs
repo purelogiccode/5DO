@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using FiveDo.Core;
+using FiveDo.Host.Osd;
 using FiveDo.Input;
 
 namespace FiveDo.Host;
@@ -90,6 +91,22 @@ public static class AppSettingsStore
             if (settings.NvramVersion is < NvramLayout.MinVersion or > NvramLayout.MaxVersion)
             {
                 settings.NvramVersion = NvramLayout.MinVersion;
+            }
+
+            if (!Enum.IsDefined(settings.OsdPosition))
+            {
+                settings.OsdPosition = OsdPosition.TopRight;
+            }
+
+            if (!double.IsFinite(settings.OsdOpacity) || settings.OsdOpacity is < 0.1 or > 1.0)
+            {
+                settings.OsdOpacity = 0.9;
+            }
+
+            if (settings.OsdDurationMilliseconds is < OsdOptions.MinDurationMilliseconds
+                or > OsdOptions.MaxDurationMilliseconds)
+            {
+                settings.OsdDurationMilliseconds = 2200;
             }
 
             // The profile is a convenience label over the individual options. Keep an explicit

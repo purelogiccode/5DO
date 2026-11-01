@@ -7,6 +7,15 @@ still change.
 
 ### Added
 
+- UX-19 OSD notifications and the in-game quick menu: `FiveDo.Host.Osd` provides a
+  bounded, time-expiring notification list with validated position/opacity/duration
+  options. The game view shows colour-coded toasts for save/load, slot changes, rewind,
+  fast-forward, screenshots, reset, and settings. `F4` or the gamepad Select+Start
+  chord opens a quick menu that pauses the game and offers resume/pause, save/load,
+  rewind, fast-forward, screenshot, reset, cheats, settings, stop, and close; Up/Down/
+  Home/End and Enter navigate, and closing resumes only when the game was running.
+  Settings > Video edits OSD enable, position, opacity, duration, and the quick-menu
+  toggle.
 - UX-12 BIOS/NVRAM manager: **File > BIOS / NVRAM Manager...** opens a two-tab window
   that lists and classifies BIOS images, imports validated `.bin`/`.rom` files without
   overwriting different images, sets BIOS1/BIOS2, pins or clears a per-game BIOS

@@ -28,6 +28,7 @@ using FiveDo.Frontend.Avalonia.Controls;
 using FiveDo.Frontend.Avalonia.Input;
 using FiveDo.Frontend.Avalonia.ViewModels;
 using FiveDo.Host;
+using FiveDo.Host.Osd;
 using FiveDo.Host.Rewind;
 using FiveDo.Input;
 using FiveDo.Machine;
@@ -66,6 +67,12 @@ public partial class MainWindow : Window, IDisposable
     private byte[]? _movieStartState;
     private long _movieStartFrame;
     private DispatcherTimer? _movieTimer;
+    private readonly OsdNotifications _osdNotifications = new();
+    private readonly ObservableCollection<OsdEntry> _osdEntries = [];
+    private readonly Button[] _quickMenuButtons;
+    private DispatcherTimer? _osdTimer;
+    private bool _quickMenuOpen;
+    private bool _quickMenuResumeAfterClose;
     private bool _fastForwardHeld;
     private Point? _lastPointerPosition;
     private bool _pointerLeftDown;
@@ -120,6 +127,27 @@ public partial class MainWindow : Window, IDisposable
         _logger.ForCategory(LogCategory.Host).Information(
             "Desktop shell starting ({Version}).",
             FiveDoVersion.Version);
+
+        _osdNotifications.Lifetime = TimeSpan.FromMilliseconds(Math.Clamp(
+            _settings.OsdDurationMilliseconds,
+            OsdOptions.MinDurationMilliseconds,
+            OsdOptions.MaxDurationMilliseconds));
+        OsdList.ItemsSource = _osdEntries;
+        _quickMenuButtons =
+        [
+            QuickMenuResumeButton,
+            QuickMenuSaveButton,
+            QuickMenuLoadButton,
+            QuickMenuRewindButton,
+            QuickMenuFastForwardButton,
+            QuickMenuScreenshotButton,
+            QuickMenuResetButton,
+            QuickMenuCheatsButton,
+            QuickMenuSettingsButton,
+            QuickMenuStopButton,
+            QuickMenuCloseButton,
+        ];
+        ApplyOsdSettings();
         if (string.IsNullOrWhiteSpace(_settings.SaveDirectory))
         {
             _settings.SaveDirectory = Path.Combine(AppSettingsStore.DefaultDirectory, "states");
@@ -1016,6 +1044,7 @@ public partial class MainWindow : Window, IDisposable
         CancelFastForward();
         _runner?.Invoke(() => _machine?.Reset());
         StatusText.Text = "Reset.";
+        ShowOsd("Console reset.", OsdSeverity.Info);
         _logger.ForCategory(LogCategory.Machine).Information("Machine reset.");
     }
 
@@ -1029,6 +1058,7 @@ public partial class MainWindow : Window, IDisposable
         if (_machine is null)
         {
             StatusText.Text = "Nothing to save.";
+            ShowOsd("Nothing to save.", OsdSeverity.Warning);
             return;
         }
 
@@ -1041,6 +1071,7 @@ public partial class MainWindow : Window, IDisposable
         PersistSlot();
         UpdateSlotText();
         StatusText.Text = $"State saved: slot {slot + 1} ({_gameName}).";
+        ShowOsd($"State saved: slot {slot + 1}", OsdSeverity.Success);
         _logger.ForCategory(LogCategory.State).Information(
             "State saved to slot {Slot} ({Game}).",
             slot + 1,
@@ -1058,6 +1089,7 @@ public partial class MainWindow : Window, IDisposable
         if (_machine is null || !_slots.Exists(slot))
         {
             StatusText.Text = $"Slot {slot + 1} is empty.";
+            ShowOsd($"Slot {slot + 1} is empty.", OsdSeverity.Warning);
             return;
         }
 
@@ -1065,6 +1097,7 @@ public partial class MainWindow : Window, IDisposable
         if (_machine.StateWarnings.Count > 0)
         {
             StatusText.Text = $"State loaded with warnings: {string.Join(" ", _machine.StateWarnings)}";
+            ShowOsd($"State loaded with warnings: {string.Join(" ", _machine.StateWarnings)}", OsdSeverity.Warning);
             _logger.ForCategory(LogCategory.State).Warning(
                 "State loaded from slot {Slot} with warnings: {Warnings}",
                 slot + 1,
@@ -1073,6 +1106,7 @@ public partial class MainWindow : Window, IDisposable
         else
         {
             StatusText.Text = $"State loaded: slot {slot + 1}.";
+            ShowOsd($"State loaded: slot {slot + 1}", OsdSeverity.Success);
             _logger.ForCategory(LogCategory.State).Information("State loaded from slot {Slot}.", slot + 1);
         }
     }
@@ -1088,6 +1122,7 @@ public partial class MainWindow : Window, IDisposable
         PersistSlot();
         UpdateSlotText();
         StatusText.Text = $"Selected slot {_slots.CurrentSlot + 1}.";
+        ShowOsd($"Selected slot {_slots.CurrentSlot + 1}", OsdSeverity.Info);
     }
 
     private void OnNextSlot(object? sender, RoutedEventArgs e)
@@ -1101,6 +1136,7 @@ public partial class MainWindow : Window, IDisposable
         PersistSlot();
         UpdateSlotText();
         StatusText.Text = $"Selected slot {_slots.CurrentSlot + 1}.";
+        ShowOsd($"Selected slot {_slots.CurrentSlot + 1}", OsdSeverity.Info);
     }
 
     private void PersistSlot()
@@ -1123,9 +1159,9 @@ public partial class MainWindow : Window, IDisposable
     {
         if (_machine is null)
         {
+            ShowOsd("Boot a disc before taking a screenshot.", OsdSeverity.Warning);
             return;
         }
-
         var directory = string.IsNullOrWhiteSpace(_settings.ScreenshotDirectory)
             ? Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
             : _settings.ScreenshotDirectory;
@@ -1150,12 +1186,14 @@ public partial class MainWindow : Window, IDisposable
                 }
 
                 StatusText.Text = $"Screenshot: {path}";
+                ShowOsd($"Screenshot: {Path.GetFileName(path)}", OsdSeverity.Success);
                 _logger.ForCategory(LogCategory.Host).Information("Screenshot written: {Path}.", path);
             }
         }
 
         SaveNativeScreenshot(path);
         StatusText.Text = $"Screenshot: {path}";
+        ShowOsd($"Screenshot: {Path.GetFileName(path)}", OsdSeverity.Success);
         _logger.ForCategory(LogCategory.Host).Information("Screenshot written from the CPU frame: {Path}.", path);
     }
 
@@ -2526,6 +2564,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         OverlayPanel.IsVisible = _settings.ShowOverlay;
+        ApplyOsdSettings();
 
         ApplyAudioSettings();
         ApplyRendererSelection();
@@ -2562,6 +2601,7 @@ public partial class MainWindow : Window, IDisposable
                 || _settings.RandomSeed != _machine.Tuning.RandomSeed))
         {
             RecreateMachine();
+            ShowOsd("Settings saved; machine restarted.", OsdSeverity.Success);
             return;
         }
 
@@ -2579,6 +2619,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         StatusText.Text = "Settings saved.";
+        ShowOsd("Settings saved.", OsdSeverity.Success);
         _logger.ForCategory(LogCategory.Host).Information("Settings saved.");
     }
 
@@ -2835,8 +2876,269 @@ public partial class MainWindow : Window, IDisposable
         StatusText.Text = "Emulation options changed; machine restarted.";
     }
 
+    private void ApplyOsdSettings()
+    {
+        OsdOptions options;
+        try
+        {
+            options = _settings.ToOsdOptions();
+        }
+        catch (ArgumentOutOfRangeException exception)
+        {
+            _logger.ForCategory(LogCategory.Host).Warning(
+                exception,
+                "Invalid OSD settings; using defaults.");
+            options = new OsdOptions();
+        }
+
+        OsdList.IsVisible = options.Enabled;
+        OsdList.Opacity = options.Opacity;
+        OsdList.HorizontalAlignment = options.Position switch
+        {
+            OsdPosition.TopLeft or OsdPosition.BottomLeft => global::Avalonia.Layout.HorizontalAlignment.Left,
+            OsdPosition.TopCenter or OsdPosition.BottomCenter => global::Avalonia.Layout.HorizontalAlignment.Center,
+            _ => global::Avalonia.Layout.HorizontalAlignment.Right,
+        };
+        OsdList.VerticalAlignment = options.Position is OsdPosition.TopLeft
+            or OsdPosition.TopCenter
+            or OsdPosition.TopRight
+            ? global::Avalonia.Layout.VerticalAlignment.Top
+            : global::Avalonia.Layout.VerticalAlignment.Bottom;
+        _osdNotifications.Lifetime = TimeSpan.FromMilliseconds(options.DurationMilliseconds);
+        if (!options.Enabled)
+        {
+            _osdNotifications.Clear();
+            SyncOsdEntries();
+            _osdTimer?.Stop();
+        }
+    }
+
+    private void ShowOsd(string text, OsdSeverity severity = OsdSeverity.Info)
+    {
+        if (!_settings.OsdEnabled)
+        {
+            return;
+        }
+
+        if (_osdNotifications.Enqueue(text, severity, DateTimeOffset.UtcNow) is null)
+        {
+            return;
+        }
+
+        SyncOsdEntries();
+        if (_osdTimer is null)
+        {
+            _osdTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
+            _osdTimer.Tick += (_, _) =>
+            {
+                if (_osdNotifications.RemoveExpired(DateTimeOffset.UtcNow) > 0)
+                {
+                    SyncOsdEntries();
+                }
+
+                if (_osdNotifications.Count == 0)
+                {
+                    _osdTimer?.Stop();
+                }
+            };
+        }
+
+        _osdTimer.Start();
+    }
+
+    private void SyncOsdEntries()
+    {
+        _osdEntries.Clear();
+        foreach (OsdMessage message in _osdNotifications.Messages)
+        {
+            _osdEntries.Add(new OsdEntry(message.Text, message.Severity));
+        }
+    }
+
+    private void ToggleQuickMenu()
+    {
+        if (_quickMenuOpen)
+        {
+            CloseQuickMenu();
+            return;
+        }
+
+        if (!_settings.QuickMenuEnabled)
+        {
+            StatusText.Text = "The quick menu is disabled in Settings.";
+            ShowOsd("The quick menu is disabled in Settings.", OsdSeverity.Warning);
+            return;
+        }
+
+        if (!EmulationView.IsVisible || _machine is null)
+        {
+            StatusText.Text = "Boot a disc before opening the quick menu.";
+            ShowOsd("Boot a disc before opening the quick menu.", OsdSeverity.Warning);
+            return;
+        }
+
+        _quickMenuOpen = true;
+        _quickMenuResumeAfterClose = _running;
+        if (_running)
+        {
+            PauseEmulation(showLibrary: false);
+        }
+
+        UpdateQuickMenuState();
+        QuickMenuPanel.IsVisible = true;
+        _input.Keyboard.Reset();
+        QuickMenuResumeButton.Focus();
+    }
+
+    private void CloseQuickMenu(bool resume = true)
+    {
+        if (!_quickMenuOpen)
+        {
+            return;
+        }
+
+        _quickMenuOpen = false;
+        QuickMenuPanel.IsVisible = false;
+        var shouldResume = resume
+            && _quickMenuResumeAfterClose
+            && _machine is not null
+            && (_biosLoaded || _moviePlayback is not null);
+        _quickMenuResumeAfterClose = false;
+        if (shouldResume)
+        {
+            StartEmulation(showGameView: false);
+        }
+    }
+
+    private void UpdateQuickMenuState()
+    {
+        var multiplier = 4;
+        try
+        {
+            multiplier = _settings.ResolveFastForwardMultiplier();
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            // A hand-edited settings file can carry an invalid multiplier; the quick
+            // menu still opens and StartFastForward falls back to the same value.
+        }
+
+        QuickMenuResumeButton.Content = _running ? "Pause" : "Resume";
+        QuickMenuFastForwardButton.Content = _fastForwardHeld
+            ? "Stop Fast-Forward"
+            : $"Fast-Forward ({multiplier}x)";
+        QuickMenuSubtitleText.Text = _machine is null
+            ? "No machine loaded."
+            : $"{_gameName} · frame {_machine.FramesExecuted} · slot {_slots.CurrentSlot + 1}";
+    }
+
+    private void MoveQuickMenuFocus(int delta)
+    {
+        var focused = FocusManager.GetFocusedElement() as Button;
+        var index = focused is null ? -1 : Array.IndexOf(_quickMenuButtons, focused);
+        if (index < 0)
+        {
+            index = 0;
+        }
+        else
+        {
+            index = (index + delta + _quickMenuButtons.Length) % _quickMenuButtons.Length;
+        }
+
+        _quickMenuButtons[index].Focus();
+    }
+
+    private void OnQuickMenuResume(object? sender, RoutedEventArgs e)
+    {
+        if (_running)
+        {
+            PauseEmulation(showLibrary: false);
+            CloseQuickMenu(resume: false);
+            ShowOsd("Emulation paused.", OsdSeverity.Info);
+            return;
+        }
+
+        CloseQuickMenu(resume: false);
+        StartEmulation(showGameView: false);
+        ShowOsd("Emulation resumed.", OsdSeverity.Info);
+    }
+
+    private void OnQuickMenuSave(object? sender, RoutedEventArgs e)
+    {
+        SaveStateToCurrentSlot();
+        CloseQuickMenu();
+    }
+
+    private void OnQuickMenuLoad(object? sender, RoutedEventArgs e)
+    {
+        LoadStateFromCurrentSlot();
+        CloseQuickMenu();
+    }
+
+    private void OnQuickMenuRewind(object? sender, RoutedEventArgs e)
+    {
+        CloseQuickMenu();
+        RewindSeconds(1);
+    }
+
+    private void OnQuickMenuFastForward(object? sender, RoutedEventArgs e)
+    {
+        CloseQuickMenu();
+        if (!_running)
+        {
+            StartEmulation(showGameView: false);
+        }
+
+        StartFastForward();
+    }
+
+    private void OnQuickMenuScreenshot(object? sender, RoutedEventArgs e)
+    {
+        CaptureScreenshot();
+        CloseQuickMenu();
+    }
+
+    private void OnQuickMenuReset(object? sender, RoutedEventArgs e)
+    {
+        ResetMachine();
+        CloseQuickMenu();
+    }
+
+    private void OnQuickMenuCheats(object? sender, RoutedEventArgs e)
+    {
+        CloseQuickMenu(resume: false);
+        AsyncEvent.Run(ShowCheatsAsync, "showing cheats");
+    }
+
+    private void OnQuickMenuSettings(object? sender, RoutedEventArgs e)
+    {
+        CloseQuickMenu(resume: false);
+        AsyncEvent.Run(ShowSettingsAsync, "showing settings");
+    }
+
+    private void OnQuickMenuStop(object? sender, RoutedEventArgs e)
+    {
+        CloseQuickMenu(resume: false);
+        StopEmulation();
+    }
+
+    private void OnQuickMenuClose(object? sender, RoutedEventArgs e)
+    {
+        CloseQuickMenu();
+    }
+
     private void OnCoreStatus(CoreStatus status)
     {
+        if (_gamepad?.ConsumeQuickMenuToggle() == true && _settings.QuickMenuEnabled)
+        {
+            ToggleQuickMenu();
+        }
+
+        if (_quickMenuOpen)
+        {
+            UpdateQuickMenuState();
+        }
+
         var skip = status.FrameSkipMode == FrameSkipMode.Off && status.FrameSkipCadence <= 1
             ? string.Empty
             : $" ({FrameSkipPolicy.Describe(status.FrameSkipMode, status.FrameSkipCadence)})";
@@ -3416,11 +3718,21 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnVideoPointerMoved(object? sender, PointerEventArgs e)
     {
+        if (_quickMenuOpen)
+        {
+            return;
+        }
+
         UpdatePointerState(e.GetPosition(VideoHost));
     }
 
     private void OnVideoPointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        if (_quickMenuOpen)
+        {
+            return;
+        }
+
         PointerPointProperties properties = e.GetCurrentPoint(VideoHost).Properties;
         _pointerLeftDown = properties.IsLeftButtonPressed;
         _pointerMiddleDown = properties.IsMiddleButtonPressed;
@@ -3431,6 +3743,11 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnVideoPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
+        if (_quickMenuOpen)
+        {
+            return;
+        }
+
         PointerPointProperties properties = e.GetCurrentPoint(VideoHost).Properties;
         _pointerLeftDown = properties.IsLeftButtonPressed;
         _pointerMiddleDown = properties.IsMiddleButtonPressed;
@@ -3565,6 +3882,49 @@ public partial class MainWindow : Window, IDisposable
         var keyName = e.Key.ToString();
         HotkeyAction hotkey = HotkeyRouter.Resolve(_settings.Input, keyName);
 
+        if (_quickMenuOpen)
+        {
+            if (hotkey == HotkeyAction.QuickMenu || e.Key == Key.Escape)
+            {
+                CloseQuickMenu();
+                e.Handled = true;
+                return;
+            }
+
+            if (e.Key == Key.Up)
+            {
+                MoveQuickMenuFocus(-1);
+                e.Handled = true;
+                return;
+            }
+
+            if (e.Key == Key.Down)
+            {
+                MoveQuickMenuFocus(1);
+                e.Handled = true;
+                return;
+            }
+
+            if (e.Key == Key.Home)
+            {
+                _quickMenuButtons[0].Focus();
+                e.Handled = true;
+                return;
+            }
+
+            if (e.Key == Key.End)
+            {
+                _quickMenuButtons[^1].Focus();
+                e.Handled = true;
+                return;
+            }
+
+            // Let the focused button handle Enter, Space, and Tab. Never feed a
+            // quick-menu keystroke to the emulated pad.
+            base.OnKeyDown(e);
+            return;
+        }
+
         // Fullscreen works from the library and game views; Escape always leaves fullscreen.
         if (hotkey == HotkeyAction.Fullscreen)
         {
@@ -3647,6 +4007,9 @@ public partial class MainWindow : Window, IDisposable
             case HotkeyAction.FastForward:
                 StartFastForward();
                 break;
+            case HotkeyAction.QuickMenu:
+                ToggleQuickMenu();
+                break;
         }
     }
 
@@ -3677,6 +4040,7 @@ public partial class MainWindow : Window, IDisposable
         if (_machine is null || _runner is null)
         {
             StatusText.Text = "Open a 3DO BIOS before rewinding.";
+            ShowOsd("Boot a disc before rewinding.", OsdSeverity.Warning);
             return;
         }
 
@@ -3684,10 +4048,12 @@ public partial class MainWindow : Window, IDisposable
         if (_runner.Rewind(frames))
         {
             StatusText.Text = $"Rewound to frame {_machine.FramesExecuted}.";
+            ShowOsd($"Rewound to frame {_machine.FramesExecuted}", OsdSeverity.Info);
         }
         else
         {
             StatusText.Text = "No rewind history is available yet.";
+            ShowOsd("No rewind history is available yet.", OsdSeverity.Warning);
         }
     }
 
@@ -3720,6 +4086,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         StatusText.Text = $"Fast-forward {_runner.SpeedMultiplier}x.";
+        ShowOsd($"Fast-forward {_runner.SpeedMultiplier}x", OsdSeverity.Info);
     }
 
     private void StopFastForward()
@@ -3728,6 +4095,7 @@ public partial class MainWindow : Window, IDisposable
         if (_running)
         {
             StatusText.Text = "Emulation running.";
+            ShowOsd("Fast-forward off.", OsdSeverity.Info);
         }
     }
 
@@ -3748,6 +4116,12 @@ public partial class MainWindow : Window, IDisposable
     /// <inheritdoc />
     protected override void OnKeyUp(KeyEventArgs e)
     {
+        if (_quickMenuOpen)
+        {
+            base.OnKeyUp(e);
+            return;
+        }
+
         if (LibraryView.IsVisible || FocusManager.GetFocusedElement() is TextBox)
         {
             CancelFastForward();

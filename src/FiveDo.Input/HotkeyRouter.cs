@@ -26,6 +26,7 @@ public static class HotkeyRouter
         ["FrameAdvance"] = HotkeyAction.FrameAdvance,
         ["Rewind"] = HotkeyAction.Rewind,
         ["FastForward"] = HotkeyAction.FastForward,
+        ["QuickMenu"] = HotkeyAction.QuickMenu,
     };
 
     /// <summary>Resolves a key name to its bound console action.</summary>
@@ -83,6 +84,7 @@ public static class HotkeyRouter
             HotkeyAction.FrameAdvance => "FrameAdvance",
             HotkeyAction.Rewind => "Rewind",
             HotkeyAction.FastForward => "FastForward",
+            HotkeyAction.QuickMenu => "QuickMenu",
             _ => string.Empty,
         };
     }
