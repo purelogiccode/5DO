@@ -16,6 +16,13 @@ public sealed record EmulatorTuning
     /// <summary>Gets the ARM60 clock in hertz. FreeDO: <c>ARM_CLOCK</c>.</summary>
     public int ArmClock { get; init; } = EmulatorConstants.ArmClock;
 
+    /// <summary>Gets the video region and its field timing.</summary>
+    /// <remarks>
+    /// NTSC is the default. PAL changes the field clock, visible height, and VDL timing
+    /// and should be combined with a PAL BIOS for European titles.
+    /// </remarks>
+    public VideoRegion Region { get; init; } = VideoRegion.Ntsc;
+
     /// <summary>Gets the ARM60 N-cycle class. The default is the FreeDO-compatible value.</summary>
     /// <remarks>
     /// See <see cref="ArmTimingMode"/>. This option changes instruction timing, so save
@@ -90,6 +97,7 @@ public sealed record EmulatorTuning
     public void Validate()
     {
         ValidateArmClock(ArmClock);
+        ValidateRegion(Region);
         ValidateArmTiming(ArmTiming);
         ValidateClioTimers(ClioTimers);
         ValidateCelTiming(CelTiming);
@@ -103,6 +111,14 @@ public sealed record EmulatorTuning
         if (armClock <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(armClock), armClock, "The ARM clock must be positive.");
+        }
+    }
+
+    private static void ValidateRegion(VideoRegion region)
+    {
+        if (region is not VideoRegion.Ntsc and not VideoRegion.Pal1 and not VideoRegion.Pal2)
+        {
+            throw new ArgumentOutOfRangeException(nameof(region), region, "Unknown video region.");
         }
     }
 

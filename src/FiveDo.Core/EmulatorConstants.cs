@@ -99,6 +99,6 @@ public static class EmulatorConstants
     /// <summary>Maximum pixels stored for one VDL line, including wider VDLP modes.</summary>
     public const int VdlLineMaxPixels = 1280;
 
-    /// <summary>Maximum VDL lines stored in a frame, including the high-resolution mode.</summary>
-    public const int VdlFrameMaxLines = HighResolutionHeight * 2;
+    /// <summary>Maximum VDL lines stored in a frame, including PAL and high-resolution modes.</summary>
+    public const int VdlFrameMaxLines = 576;
 }

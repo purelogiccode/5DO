@@ -129,6 +129,7 @@ frame.
 | `--nvram-version 0-9` | `0` | Independent NVRAM version slot. |
 | `--nvram-dir <path>` | settings directory | Root directory for the resolved NVRAM layout. |
 | `--high-res` | off | Enable the opt-in 640x480 CEL/VDLP mode. |
+| `--region auto\|ntsc\|pal1\|pal2` | `auto` | Video region. `auto` chooses PAL1 when the selected BIOS is a PAL image, otherwise NTSC; `pal2` is the 384-wide PAL mode. |
 | `--profile compatible\|accuracy\|performance\|custom` | `compatible` | Timing profile. `accuracy` enables ARM60 N=2, Opera CLIO/CEL/CD timing, and the stock 2x drive; `performance` uses a 1.5x CPU clock with FreeDO timing; `custom` keeps the individual options. Explicit timing options override the profile. |
 | `--arm-timing freedo\|arm60` | `freedo` | ARM60 N-cycle class. `freedo` keeps the FreeDO-compatible N=4 baseline; `arm60` uses the ARM60 datasheet/SDK N=2 timing from Opera. |
 | `--clio-timers freedo\|opera` | `freedo` | CLIO timer scan model. `freedo` services all sixteen timers per 25 MHz/64 event; `opera` walks one slot per four M25M ticks with the `0x220` slack gap and an explicit cascade carry. |
@@ -277,7 +278,9 @@ All fields are camelCase. Nullable fields are omitted or `null` when not applica
 | `frames` | long | `machine.FramesExecuted` after the run. |
 | `elapsedSeconds` | double | Wall-clock time of the run loop. |
 | `cyclesPerFrame` | int | ARM cycles in the last frame. |
-| `sourceWidth`, `sourceHeight` | int | Visible source dimensions (640x480 in high-res). |
+| `sourceWidth`, `sourceHeight` | int | Visible source dimensions (640x480 in high-res; 320x288 or 384x288 in PAL). |
+| `region` | string | `Ntsc`, `Pal1`, or `Pal2`. |
+| `fieldRate` | int | `60` for NTSC or `50` for PAL. |
 | `vdlModulo` | uint | VDLP line width. |
 | `pc` | uint | CPU program counter at the end. |
 | `instructions` | long | Instructions executed since reset/state load. |

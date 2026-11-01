@@ -65,6 +65,7 @@ public sealed class Vdlp : IVdlp, IStateSection
     private uint _previousBitmap;
     private uint _outControl;
     private uint _clutDma;
+    private VideoRegionProfile _region = VideoRegionProfile.Ntsc;
     private int _lineDelay;
     private int _persistLength;
     private int _forceLine;
@@ -79,6 +80,17 @@ public sealed class Vdlp : IVdlp, IStateSection
         _ram = ram;
         _compatibility = compatibility ?? new CompatibilityState();
         Reset();
+    }
+
+    /// <summary>Gets or sets the active video region profile.</summary>
+    public VideoRegionProfile Region
+    {
+        get => _region;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _region = value;
+        }
     }
 
     /// <summary>Gets the retained display-list head. FreeDO: <c>HEADVDL</c>; Opera: <c>head_vdl</c>.</summary>
@@ -199,9 +211,9 @@ public sealed class Vdlp : IVdlp, IStateSection
             }
         }
 
-        var y = line - 16;
+        var y = line - _region.StartScanline;
 
-        if (y is >= 0 and < 240)
+        if (y >= 0 && y < _region.Height)
         {
             if (_compatibility.HighResolution)
             {

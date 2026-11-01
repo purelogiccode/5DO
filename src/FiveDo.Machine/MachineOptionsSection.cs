@@ -28,10 +28,11 @@ internal sealed class MachineOptionsSection : IStateSection
     /// <summary>Gets the save-state section version.</summary>
     /// <remarks>
     /// Version 2 adds the CLIO timer mode; version 3 adds the MADAM CEL timing mode;
-    /// version 4 adds the CD-ROM timing mode; version 5 adds the CD-ROM speed. Older states
-    /// default the missing fields to FreeDO-compatible and the stock 2x drive.
+    /// version 4 adds the CD-ROM timing mode; version 5 adds the CD-ROM speed; version 6
+    /// adds the video region. Older states default the missing fields to FreeDO-compatible,
+    /// the stock 2x drive, and NTSC.
     /// </remarks>
-    public ushort Version => 5;
+    public ushort Version => 6;
 
     /// <summary>Gets the ARM timing mode read from a state, or <see langword="null"/> when absent.</summary>
     internal ArmTimingMode? LoadedArmTiming { get; private set; }
@@ -48,6 +49,9 @@ internal sealed class MachineOptionsSection : IStateSection
     /// <summary>Gets the CD-ROM speed read from a state, or <see langword="null"/> when absent.</summary>
     internal CdSpeed? LoadedCdSpeed { get; private set; }
 
+    /// <summary>Gets the video region read from a state, or <see langword="null"/> when absent.</summary>
+    internal VideoRegion? LoadedRegion { get; private set; }
+
     /// <summary>Writes the option snapshot.</summary>
     /// <param name="writer">State writer.</param>
     public void Save(IStateWriter writer)
@@ -58,6 +62,7 @@ internal sealed class MachineOptionsSection : IStateSection
         writer.WriteUInt32((uint)_tuning.CelTiming);
         writer.WriteUInt32((uint)_tuning.CdromTiming);
         writer.WriteUInt32((uint)_tuning.CdSpeed);
+        writer.WriteUInt32((uint)_tuning.Region);
     }
 
     /// <summary>Reads the option snapshot.</summary>
@@ -143,5 +148,19 @@ internal sealed class MachineOptionsSection : IStateSection
         }
 
         LoadedCdSpeed = cdSpeed;
+
+        if (reader is StateSectionReader { Version: 5 })
+        {
+            LoadedRegion = null;
+            return;
+        }
+
+        var region = (VideoRegion)reader.ReadUInt32();
+        if (region is not VideoRegion.Ntsc and not VideoRegion.Pal1 and not VideoRegion.Pal2)
+        {
+            throw new InvalidStateException($"Unknown video region {(uint)region} in the save state.");
+        }
+
+        LoadedRegion = region;
     }
 }

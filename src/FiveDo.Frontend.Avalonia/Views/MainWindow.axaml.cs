@@ -4021,6 +4021,7 @@ public partial class MainWindow : Window, IDisposable
             _machine = new FiveDoMachine(new EmulatorTuning
             {
                 HighResolution = _settings.HighResolution,
+                Region = _settings.Region,
                 ArmTiming = _settings.ArmTiming,
                 ClioTimers = _settings.ClioTimers,
                 CelTiming = _settings.CelTiming,

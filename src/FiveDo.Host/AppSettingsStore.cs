@@ -143,6 +143,11 @@ public static class AppSettingsStore
                     profile.Profile = EmulationProfile.Custom;
                 }
 
+                if (!Enum.IsDefined(profile.Region))
+                {
+                    profile.Region = VideoRegion.Ntsc;
+                }
+
                 if (!Enum.IsDefined(profile.ArmTiming))
                 {
                     profile.ArmTiming = ArmTimingMode.FreeDoCompatible;
@@ -188,6 +193,11 @@ public static class AppSettingsStore
             if (!Enum.IsDefined(settings.Profile))
             {
                 settings.Profile = EmulationProfile.Compatible;
+            }
+
+            if (!Enum.IsDefined(settings.Region))
+            {
+                settings.Region = VideoRegion.Ntsc;
             }
 
             if (!Enum.IsDefined(settings.ArmTiming))

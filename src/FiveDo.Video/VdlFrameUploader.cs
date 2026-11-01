@@ -18,7 +18,7 @@ public sealed class VdlFrameUploader
     public const int MaxWidth = EmulatorConstants.VdlLineMaxPixels;
 
     /// <summary>Maximum supported height, including the high-resolution mode.</summary>
-    public const int MaxHeight = EmulatorConstants.HighResolutionHeight;
+    public const int MaxHeight = EmulatorConstants.VdlFrameMaxLines;
 
     /// <summary>Number of CLUT entries per line.</summary>
     public const int ClutEntries = VdlLine.ClutSize;

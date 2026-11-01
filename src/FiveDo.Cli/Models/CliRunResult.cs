@@ -11,6 +11,8 @@ internal sealed record CliRunResult(
     int CyclesPerFrame,
     int SourceWidth,
     int SourceHeight,
+    string Region,
+    int FieldRate,
     uint VdlModulo,
     uint Pc,
     long Instructions,

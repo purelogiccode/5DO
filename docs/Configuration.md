@@ -88,7 +88,7 @@ every serialized property in `AppSettings`.
 | `AutoGameFixes` | bool | `true` | Apply the 4DO per-game fix-mode mapping automatically. |
 | `FixModeOverrides` | object | `{}` | Per-game fix-mode overrides, keyed by game ID. |
 | `FilterOverrides` | object | `{}` | Per-game filter overrides, keyed by game ID. |
-| `GameProfiles` | object | `{}` | Per-game timing and CD-DA profile snapshots, keyed by game ID. Each entry holds `Profile`, `ArmTiming`, `ClioTimers`, `CelTiming`, `CdromTiming`, `CdSpeed`, `CpuClockMultiplier`, `CdAudioVolume`, and `CdAudioMuted`. |
+| `GameProfiles` | object | `{}` | Per-game timing and CD-DA profile snapshots, keyed by game ID. Each entry holds `Profile`, `Region`, `ArmTiming`, `ClioTimers`, `CelTiming`, `CdromTiming`, `CdSpeed`, `CpuClockMultiplier`, `CdAudioVolume`, and `CdAudioMuted`. |
 | `Filter` | enum string | `"SharpBilinear"` | Global presentation filter. |
 | `FrameSkip` | enum string | `"Auto"` | Presentation frame-skip policy: `Off`, `Auto`, `OneInTwo`, `OneInThree`, `OneInFour`, or `OneInFive`. Only presentation is skipped; emulation and audio always run every frame. |
 | `Aspect` | enum string | `"FourThree"` | Aspect policy. |
@@ -109,6 +109,7 @@ every serialized property in `AppSettings`.
 | `FsrSharpness` | float | `0.8` | FSR 1.0 RCAS sharpness, 0 (soft) .. 1 (maximum). |
 | `HighResolution` | bool | `false` | Opt-in 640x480 CEL/VDLP mode. |
 | `Profile` | enum string | `"Compatible"` | Last selected timing profile: `Compatible`, `Accuracy`, `Performance`, or `Custom`. The individual timing fields remain authoritative. |
+| `Region` | enum string | `"Ntsc"` | Video region: `Ntsc` (320x240, 60 Hz), `Pal1` (320x288, 50 Hz), or `Pal2` (384x288, 50 Hz). PAL needs a PAL BIOS and takes effect when the machine is created. |
 | `ArmTiming` | enum string | `"FreeDoCompatible"` | ARM60 N-cycle class: `FreeDoCompatible` (N=4) or `Arm60Datasheet` (N=2, accuracy). |
 | `ClioTimers` | enum string | `"FreeDoCompatible"` | CLIO timer scan: `FreeDoCompatible` (all sixteen timers per event) or `OperaScheduler` (one slot at a time with an explicit cascade carry). |
 | `CelTiming` | enum string | `"FreeDoCompatible"` | MADAM CEL timing: `FreeDoCompatible` (synchronous draw) or `OperaBusy` (deferred draw with a pixel/texel busy deadline). |
@@ -153,6 +154,11 @@ states are identical.
 shortcut for the individual timing fields; it never changes fixes, high-resolution mode,
 or the random seed. If the fields no longer match the selected profile, the dialog saves
 `Custom`.
+
+`Region` (string): `Ntsc`, `Pal1`, `Pal2`. NTSC runs 60 fields per second with 240
+visible lines. PAL1/PAL2 run 50 fields per second with 288 visible lines; PAL2 is 384
+pixels wide. PAL requires a European BIOS and changes the machine timing, so restart the
+machine after changing it.
 
 `ClioTimers` (string): `FreeDoCompatible`, `OperaScheduler`.
 
@@ -244,6 +250,7 @@ player-1 defaults. See section 3 for the full input structure.
   "Bloom": 0.35,
   "FsrSharpness": 0.8,
   "HighResolution": false,
+  "Region": "Ntsc",
   "Volume": 1.0,
   "AudioEnabled": true,
   "CdAudioVolume": 0.8,
@@ -453,6 +460,8 @@ The Settings dialog's **Emulation** page edits:
 
 - `AutoGameFixes` checkbox.
 - `HighResolution` checkbox (restarts the machine when changed).
+- `Region` combo: NTSC, PAL1, or PAL2. PAL runs at 50 Hz with 288 visible lines and
+  needs a PAL BIOS; the choice applies the next time the machine is created.
 - `Profile` combo: Compatible, Accuracy, Performance, or Custom. Selecting a profile
   fills the timing controls; manually changing one of them saves `Custom`.
 - `ArmTiming` combo: FreeDO-compatible N=4 or ARM60 datasheet N=2 (restarts the machine when changed).

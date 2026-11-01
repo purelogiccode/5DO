@@ -59,7 +59,8 @@ public sealed class FiveDoMachine
         Clio = new ClioChip(Tuning);
         Diag = new DiagPort();
         Sport = new SportChip(Memory.Ram, Compatibility);
-        Vdlp = new Vdlp(Memory.Ram, Compatibility);
+        RegionProfile = VideoRegionProfile.For(Tuning.Region);
+        Vdlp = new Vdlp(Memory.Ram, Compatibility) { Region = RegionProfile };
         Madam = new MadamChip
         {
             Vdlp = Vdlp,
@@ -149,6 +150,12 @@ public sealed class FiveDoMachine
 
     /// <summary>Gets the DSP backend. M5 replaces the stub with the full core.</summary>
     public DspCore Dsp { get; }
+
+    /// <summary>Gets the active video-region geometry and field timing.</summary>
+    public VideoRegionProfile RegionProfile { get; }
+
+    /// <summary>Gets the emulated field rate in hertz.</summary>
+    public int FramesPerSecond => RegionProfile.FieldRate;
 
     /// <summary>Gets the diagnostic port.</summary>
     public DiagPort Diag { get; }
@@ -449,6 +456,7 @@ public sealed class FiveDoMachine
         CelTimingMode? stateCelTiming = null;
         CdromTimingMode? stateCdromTiming = null;
         CdSpeed? stateCdSpeed = null;
+        VideoRegion? stateRegion = null;
         while (reader.TryReadSection(out StateSectionReader? section))
         {
             var supportedVersion = section.Version == 1
@@ -458,7 +466,7 @@ public sealed class FiveDoMachine
                 || (section.Id == StateSectionIds.Clio && section.Version <= 3)
                 || (section.Id == StateSectionIds.Madam && section.Version == 2)
                 || (section.Id == StateSectionIds.Vdlp && section.Version <= 3)
-                || (section.Id == StateSectionIds.Options && section.Version <= 5);
+                || (section.Id == StateSectionIds.Options && section.Version <= 6);
             if (!supportedVersion)
             {
                 throw new InvalidStateException($"Unsupported section {section.Id} version {section.Version}.");
@@ -504,6 +512,7 @@ public sealed class FiveDoMachine
                     stateCelTiming = options.LoadedCelTiming;
                     stateCdromTiming = options.LoadedCdromTiming;
                     stateCdSpeed = options.LoadedCdSpeed;
+                    stateRegion = options.LoadedRegion;
                     break;
                 case StateSectionIds.Machine:
                     new MachineFrameSection(_frame, Compatibility).Load(section);
@@ -549,6 +558,12 @@ public sealed class FiveDoMachine
         {
             _stateWarnings.Add(
                 $"State CD-ROM speed {savedCdSpeed} differs from the machine speed {Tuning.CdSpeed}.");
+        }
+
+        if (stateRegion is { } savedRegion && savedRegion != Tuning.Region)
+        {
+            _stateWarnings.Add(
+                $"State video region {savedRegion} differs from the machine region {Tuning.Region}.");
         }
 
         // A command-line/front-end override survives loads of states written before the
@@ -610,7 +625,7 @@ public sealed class FiveDoMachine
 
         var total = 0;
         var batch = 0;
-        var frameCycles = Tuning.ArmClock / 60;
+        var frameCycles = RegionProfile.GetFrameCycles(Tuning.ArmClock);
         var celBusyTiming = Tuning.CelTiming == CelTimingMode.OperaBusy;
         uint celElapsedCycles = 0;
 
@@ -671,7 +686,7 @@ public sealed class FiveDoMachine
     /// <summary>Renders 256 lines from the current VDLP state. FreeDO: <c>FDP_DO_FRAME_MT</c>.</summary>
     public void RenderFrameMultitask()
     {
-        for (var line = 0; line < 256; line++)
+        for (var line = 0; line < RegionProfile.Height; line++)
         {
             Vdlp.DoLine(line, _frame);
         }
@@ -763,11 +778,11 @@ public sealed class FiveDoMachine
         Madam.KeyPressed(pbus[..length]);
 
         var visibleHeight = Compatibility.HighResolution
-            ? EmulatorConstants.HighResolutionHeight
-            : EmulatorConstants.VideoHeight;
+            ? RegionProfile.Height * 2
+            : RegionProfile.Height;
         _frame.SourceWidth = Compatibility.HighResolution
-            ? EmulatorConstants.HighResolutionWidth
-            : EmulatorConstants.VideoWidth;
+            ? RegionProfile.Width * 2
+            : RegionProfile.Width;
         for (var lineIndex = 0; lineIndex < visibleHeight; lineIndex++)
         {
             var width = _frame.Lines[lineIndex].Width;

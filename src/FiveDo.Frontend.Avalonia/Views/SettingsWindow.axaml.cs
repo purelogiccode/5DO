@@ -42,6 +42,13 @@ public partial class SettingsWindow : Window
         new(FrameSkipMode.OneInFive, "Skip 4 of 5 (12 fps)"),
     ];
 
+    private static readonly RegionOption[] _regionOptions =
+    [
+        new(VideoRegion.Ntsc, "NTSC (320 x 240, 60 Hz)"),
+        new(VideoRegion.Pal1, "PAL1 (320 x 288, 50 Hz)"),
+        new(VideoRegion.Pal2, "PAL2 (384 x 288, 50 Hz)"),
+    ];
+
     private static readonly ProfileOption[] _profileOptions =
     [
         new(EmulationProfile.Compatible, "Compatible (FreeDO timing, default)"),
@@ -185,6 +192,9 @@ public partial class SettingsWindow : Window
         AutoSwapCheck.IsChecked = settings.AutoSwapOnEject;
         AutoFixesCheck.IsChecked = settings.AutoGameFixes;
         HighResCheck.IsChecked = settings.HighResolution;
+        RegionCombo.ItemsSource = _regionOptions;
+        RegionCombo.SelectedItem = _regionOptions.FirstOrDefault(option => option.Value == settings.Region)
+            ?? _regionOptions[0];
         ProfileCombo.ItemsSource = _profileOptions;
         ProfileCombo.SelectedItem = _profileOptions.FirstOrDefault(option => option.Value == settings.Profile)
             ?? _profileOptions[0];
@@ -454,6 +464,9 @@ public partial class SettingsWindow : Window
             settings.FastForwardMultiplier = fastForwardMultiplier;
         }
 
+        settings.Region = RegionCombo.SelectedItem is RegionOption regionOption
+            ? regionOption.Value
+            : VideoRegion.Ntsc;
         EmulationProfile selectedProfile = ProfileCombo.SelectedItem is ProfileOption profileOption
             ? profileOption.Value
             : EmulationProfile.Custom;
@@ -888,6 +901,11 @@ public partial class SettingsWindow : Window
         {
             return Label;
         }
+    }
+
+    private sealed record RegionOption(VideoRegion Value, string Label)
+    {
+        public override string ToString() => Label;
     }
 
     private sealed record ProfileOption(EmulationProfile Value, string Label)

@@ -25,6 +25,7 @@ public sealed class Quartz : IStateSection
     private const uint TimerSlotTicks = 4;
 
     private readonly ClioTimerMode _timerMode;
+    private readonly VideoRegionProfile _region;
     private int _armClock;
     private uint _accArm;
     private uint _accVdl;
@@ -53,6 +54,7 @@ public sealed class Quartz : IStateSection
         EmulatorTuning effectiveTuning = tuning ?? EmulatorTuning.Default;
         effectiveTuning.Validate();
         _armClock = effectiveTuning.ArmClock;
+        _region = VideoRegionProfile.For(effectiveTuning.Region);
         _timerMode = effectiveTuning.ClioTimers;
         TimerDelayProvider = timerDelayProvider;
     }
@@ -65,6 +67,18 @@ public sealed class Quartz : IStateSection
 
     /// <summary>Gets the VDL lines in one full cycle. FreeDO: <c>VDL_FS</c>.</summary>
     public static int VdlFrameLines => EmulatorConstants.VdlFrameLines;
+
+    /// <summary>Gets the active region profile.</summary>
+    public VideoRegionProfile RegionProfile => _region;
+
+    /// <summary>Gets the VDL lines in one field for the active region.</summary>
+    public int VdlFieldLines => _region.FieldLines;
+
+    /// <summary>Gets the VDL lines in one full two-field cycle for the active region.</summary>
+    public int VdlFrameLineCount => _region.FrameLines;
+
+    /// <summary>Gets the VDL events per second for the active region.</summary>
+    public int VdlEventClock => _region.VdlClock;
 
     /// <summary>Gets or sets the ARM clock in hertz. FreeDO: <c>ARM_CLOCK</c>.</summary>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is not positive.</exception>
@@ -114,10 +128,10 @@ public sealed class Quartz : IStateSection
     public bool TimerInGap => _timerInGap;
 
     /// <summary>Gets the current VDL line within the half-frame. FreeDO: <c>_qrz_VDCurrLine()</c>.</summary>
-    public int VdCurrLine => (int)(_vdlLine % EmulatorConstants.VdlLinesPerHalfFrame);
+    public int VdCurrLine => (int)(_vdlLine % (uint)_region.FieldLines);
 
     /// <summary>Gets the current half-frame index. FreeDO: <c>_qrz_VDHalfFrame()</c>.</summary>
-    public int VdHalfFrame => (int)(_vdlLine / EmulatorConstants.VdlLinesPerHalfFrame);
+    public int VdHalfFrame => (int)(_vdlLine / (uint)_region.FieldLines);
 
     /// <summary>Gets the absolute VDL line counter. FreeDO: <c>_qrz_VDCurrOverline()</c>.</summary>
     public int VdCurrOverline => (int)_vdlLine;
@@ -153,7 +167,7 @@ public sealed class Quartz : IStateSection
         // Exact rational sample clock: 44100 samples per ARM second. Both factors fit in a
         // uint for the normal 16-256 cycle batches; the remainder is always below _armClock.
         _dspCycleRemainder = unchecked(_dspCycleRemainder + (cycles * EmulatorConstants.SoundClock));
-        _accVdl = unchecked(_accVdl + (arm * EmulatorConstants.VdlClock));
+        _accVdl = unchecked(_accVdl + (arm * (uint)_region.VdlClock));
 
         if (_timerMode == ClioTimerMode.OperaScheduler)
         {
@@ -262,7 +276,7 @@ public sealed class Quartz : IStateSection
         {
             _accVdl = unchecked(_accVdl - 0x1000000);
             _vdlLine++;
-            _vdlLine %= EmulatorConstants.VdlFrameLines;
+            _vdlLine %= (uint)_region.FrameLines;
             return true;
         }
 
@@ -319,7 +333,7 @@ public sealed class Quartz : IStateSection
         _accVdl = reader.ReadUInt32();
         _tCount = reader.ReadUInt32();
         var line = reader.ReadUInt32();
-        if (line >= EmulatorConstants.VdlFrameLines)
+        if (line >= _region.FrameLines)
         {
             throw new InvalidStateException($"Invalid quartz VDL line {line}.");
         }

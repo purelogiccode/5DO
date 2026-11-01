@@ -17,6 +17,8 @@ public sealed class CliJsonTests
             CyclesPerFrame: 208345,
             SourceWidth: 320,
             SourceHeight: 240,
+            Region: "Ntsc",
+            FieldRate: 60,
             VdlModulo: 320,
             Pc: 0x1234,
             Instructions: 7,
@@ -85,6 +87,8 @@ public sealed class CliJsonTests
 
         Assert.Contains("\"ok\": true", json, StringComparison.Ordinal);
         Assert.Contains("\"sourceWidth\": 320", json, StringComparison.Ordinal);
+        Assert.Contains("\"region\": \"Ntsc\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"fieldRate\": 60", json, StringComparison.Ordinal);
         Assert.Contains("\"vdlModulo\": 320", json, StringComparison.Ordinal);
         Assert.Contains("\"dspSema\": 524289", json, StringComparison.Ordinal);
         Assert.Contains("\"profile\": \"Accuracy\"", json, StringComparison.Ordinal);

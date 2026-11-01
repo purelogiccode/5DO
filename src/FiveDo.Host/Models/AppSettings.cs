@@ -244,6 +244,12 @@ public sealed class AppSettings
     public EmulationProfile Profile { get; set; } = EmulationProfile.Compatible;
 
     /// <summary>
+    /// Gets or sets the video region. PAL changes the field rate, visible height, and VDL
+    /// timing and needs a PAL BIOS for European titles.
+    /// </summary>
+    public VideoRegion Region { get; set; } = VideoRegion.Ntsc;
+
+    /// <summary>
     /// Gets or sets the ARM60 N-cycle timing mode. The default is the FreeDO-compatible
     /// baseline; <see cref="ArmTimingMode.Arm60Datasheet"/> is the accuracy option.
     /// </summary>

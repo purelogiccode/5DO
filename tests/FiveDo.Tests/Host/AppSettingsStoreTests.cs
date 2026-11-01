@@ -93,6 +93,7 @@ public sealed class AppSettingsStoreTests
             new GameProfile
             {
                 Profile = EmulationProfile.Accuracy,
+                Region = VideoRegion.Pal1,
                 ArmTiming = ArmTimingMode.Arm60Datasheet,
                 ClioTimers = ClioTimerMode.OperaScheduler,
                 CelTiming = CelTimingMode.OperaBusy,
@@ -108,11 +109,13 @@ public sealed class AppSettingsStoreTests
         GameProfile? profile = loaded.GetGameProfile("A1B2C3D4");
         Assert.NotNull(profile);
         Assert.Equal(EmulationProfile.Accuracy, profile.Profile);
+        Assert.Equal(VideoRegion.Pal1, profile.Region);
         Assert.Equal(ArmTimingMode.Arm60Datasheet, profile.ArmTiming);
         Assert.Equal(CdSpeed.X4, profile.CdSpeed);
         Assert.True(profile.CdAudioMuted);
 
         Assert.True(loaded.ApplyGameProfile("a1b2c3d4"));
+        Assert.Equal(VideoRegion.Pal1, loaded.Region);
         Assert.Equal(ArmTimingMode.Arm60Datasheet, loaded.ArmTiming);
         Assert.Equal(ClioTimerMode.OperaScheduler, loaded.ClioTimers);
         Assert.Equal(1.25, loaded.CpuClockMultiplier);

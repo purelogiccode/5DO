@@ -15,6 +15,9 @@ public sealed class GameProfile
     /// <summary>Gets or sets the timing profile label recorded with the snapshot.</summary>
     public EmulationProfile Profile { get; set; } = EmulationProfile.Custom;
 
+    /// <summary>Gets or sets the video region.</summary>
+    public VideoRegion Region { get; set; } = VideoRegion.Ntsc;
+
     /// <summary>Gets or sets the ARM instruction timing mode.</summary>
     public ArmTimingMode ArmTiming { get; set; } = ArmTimingMode.FreeDoCompatible;
 
@@ -48,6 +51,7 @@ public sealed class GameProfile
         return new GameProfile
         {
             Profile = settings.Profile,
+            Region = settings.Region,
             ArmTiming = settings.ArmTiming,
             ClioTimers = settings.ClioTimers,
             CelTiming = settings.CelTiming,
@@ -65,6 +69,7 @@ public sealed class GameProfile
     {
         System.ArgumentNullException.ThrowIfNull(settings);
         settings.Profile = Profile;
+        settings.Region = Region;
         settings.ArmTiming = ArmTiming;
         settings.ClioTimers = ClioTimers;
         settings.CelTiming = CelTiming;

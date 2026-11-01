@@ -374,8 +374,8 @@ public sealed class CoreRunner : IDisposable
         TimerResolution.Begin();
         try
         {
-            var pacer = new FramePacer(60.0);
-            var audioPacer = new AudioFramePacer();
+            var pacer = new FramePacer(_machine.FramesPerSecond);
+            var audioPacer = new AudioFramePacer(_machine.FramesPerSecond);
             var statusClock = Stopwatch.StartNew();
             var statusFrames = 0L;
             var statusPresentedFrames = 0L;

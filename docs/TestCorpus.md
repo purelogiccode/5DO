@@ -673,6 +673,19 @@ UX-23 coverage is compile/status level:
   `a52a01c7b6d2c8740651ac952b291c0a`, 38.4 M instructions executed, and the run
   completed. This is a timed swap, not yet a game-requested swap.
 
+### 1.1o PAL/NTSC region modes (2026-11-01)
+
+- `VideoRegionTests` verifies NTSC/PAL1/PAL2 geometry and clocks, PAL Quartz wrapping,
+  VDLP start-line mapping, 250,000-cycle PAL fields with 288 visible lines, PAL2 width,
+  and the state region warning.
+- `Battle Chess (Europe)` with `panafz10e-anvil.bin`: 600 frames, `region=Pal1`,
+  `fieldRate=50`, `source=320x288`, frame hash `0x88883E88`. The captured PNG shows the
+  3DO logo at the correct PAL size.
+- `--bios-auto bios --region auto` selected `Panasonic FZ-10E (Anvil)` and PAL1.
+- A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
+  confirming the 50 Hz audio/frame cadence.
+- Full NTSC suite: 1,387 tests pass with no changed NTSC hashes.
+
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 
 All runs use the Release build, `panafz1.bin`, and a fresh NVRAM. The 3,000-frame

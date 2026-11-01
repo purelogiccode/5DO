@@ -405,9 +405,13 @@ internal static class Program
         FixMode fixMode = ResolveFixMode(options, args, gameId);
         EmulatorTuning profileTuning = EmulationProfiles.Apply(
             ParseEmulationProfile(options.Get("--profile")));
+        VideoRegion fallbackRegion = biosLoad.Selection?.Primary?.VideoStandard == BiosVideoStandard.Pal
+            ? VideoRegion.Pal1
+            : profileTuning.Region;
         var machine = new FiveDoMachine(new EmulatorTuning
         {
             HighResolution = HasFlag(args, "--high-res"),
+            Region = ParseRegion(options.Get("--region"), fallbackRegion),
             ArmTiming = ParseArmTiming(options.Get("--arm-timing"), profileTuning.ArmTiming),
             ClioTimers = ParseClioTimers(options.Get("--clio-timers"), profileTuning.ClioTimers),
             CelTiming = ParseCelTiming(options.Get("--cel-timing"), profileTuning.CelTiming),
@@ -1006,6 +1010,8 @@ internal static class Program
             CyclesPerFrame: machine.LastFrameCycles,
             SourceWidth: machine.Frame.SourceWidth,
             SourceHeight: machine.Frame.SourceHeight,
+            Region: machine.RegionProfile.Region.ToString(),
+            FieldRate: machine.RegionProfile.FieldRate,
             VdlModulo: machine.Vdlp.Modulo,
             Pc: machine.Cpu.ProgramCounter,
             Instructions: machine.Cpu.InstructionsExecuted,
@@ -1166,9 +1172,13 @@ internal static class Program
         FixMode fixMode = ResolveFixMode(options, args, gameId);
         EmulatorTuning profileTuning = EmulationProfiles.Apply(
             ParseEmulationProfile(options.Get("--profile")));
+        VideoRegion fallbackRegion = biosLoad.Selection?.Primary?.VideoStandard == BiosVideoStandard.Pal
+            ? VideoRegion.Pal1
+            : profileTuning.Region;
         var machine = new FiveDoMachine(new EmulatorTuning
         {
             HighResolution = HasFlag(args, "--high-res"),
+            Region = ParseRegion(options.Get("--region"), fallbackRegion),
             ArmTiming = ParseArmTiming(options.Get("--arm-timing"), profileTuning.ArmTiming),
             ClioTimers = ParseClioTimers(options.Get("--clio-timers"), profileTuning.ClioTimers),
             CelTiming = ParseCelTiming(options.Get("--cel-timing"), profileTuning.CelTiming),
@@ -3101,6 +3111,7 @@ internal static class Program
         Console.WriteLine($"elapsed:     {result.ElapsedSeconds:F3} s");
         Console.WriteLine($"cycles/frm:  {result.CyclesPerFrame}");
         Console.WriteLine($"source:      {result.SourceWidth}x{result.SourceHeight}");
+        Console.WriteLine($"region:      {result.Region} ({result.FieldRate} Hz)");
         Console.WriteLine($"vdl modulo:  {result.VdlModulo}");
         Console.WriteLine($"pc:          0x{result.Pc:x8}");
         Console.WriteLine($"frame hash:  0x{result.FrameHash:x8}");
@@ -3282,6 +3293,35 @@ internal static class Program
 
         throw new ArgumentException(
             $"Invalid --arm-timing value '{value}'; expected freedo or arm60.",
+            nameof(value));
+    }
+
+    private static VideoRegion ParseRegion(string? value, VideoRegion fallback = VideoRegion.Ntsc)
+    {
+        if (string.IsNullOrWhiteSpace(value)
+            || string.Equals(value, "auto", StringComparison.OrdinalIgnoreCase))
+        {
+            return fallback;
+        }
+
+        if (string.Equals(value, "ntsc", StringComparison.OrdinalIgnoreCase))
+        {
+            return VideoRegion.Ntsc;
+        }
+
+        if (string.Equals(value, "pal1", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "pal", StringComparison.OrdinalIgnoreCase))
+        {
+            return VideoRegion.Pal1;
+        }
+
+        if (string.Equals(value, "pal2", StringComparison.OrdinalIgnoreCase))
+        {
+            return VideoRegion.Pal2;
+        }
+
+        throw new ArgumentException(
+            $"Invalid --region value '{value}'; expected auto, ntsc, pal1, or pal2.",
             nameof(value));
     }
 
@@ -3742,7 +3782,7 @@ internal static class Program
         Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--prefetch]");
         Console.WriteLine("             [--nvram-mode global|per-game] [--nvram-version 0-9] [--nvram-dir path]");
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
-        Console.WriteLine("             [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
+        Console.WriteLine("             [--region auto|ntsc|pal1|pal2] [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
         Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
         Console.WriteLine("             [--input-device 1=joypad,2=mouse,...] [--pbus-format legacy|opera]");
         Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz]");
@@ -3759,7 +3799,7 @@ internal static class Program
         Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path] [--high-res] [--prefetch]");
         Console.WriteLine("             [--nvram-mode global|per-game] [--nvram-version 0-9] [--nvram-dir path]");
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
-        Console.WriteLine("             [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
+        Console.WriteLine("             [--region auto|ntsc|pal1|pal2] [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
         Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
         Console.WriteLine("             [--input-device 1=joypad,2=mouse,...] [--pbus-format legacy|opera]");
         Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz]");
