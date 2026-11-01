@@ -21,6 +21,7 @@ using FiveDo.Host;
 using FiveDo.Input;
 using FiveDo.Machine;
 using FiveDo.Storage;
+using FiveDo.Tas;
 using FiveDo.Video;
 
 namespace FiveDo.Cli;
@@ -76,6 +77,7 @@ internal static class Program
                     "bios" => Bios(args),
                     "cheat" => CheatCommand(args),
                     "nvram" => NvramCommand(args),
+                    "movie" => MovieCommand(args),
                     "audio" => AudioCommand(args),
                     "state" => State(args),
                     "bench" => Bench(args),
@@ -214,7 +216,60 @@ internal static class Program
     {
         ParsedOptions options = Parse(args);
         var json = options.Json;
+        var framesSpecified = options.Get("--frames") is not null;
         var frames = options.GetInt("--frames", 600);
+        var movieRecordPath = options.Get("--movie-record");
+        var moviePlayPath = options.Get("--movie-play");
+        var movieVerify = HasFlag(args, "--movie-verify");
+        var movieIncludeState = !HasFlag(args, "--movie-no-state");
+        Movie? movie = null;
+        if (moviePlayPath is not null)
+        {
+            movie = MovieFile.Load(moviePlayPath);
+            if (!framesSpecified)
+            {
+                frames = movie.FrameCount;
+            }
+            else if (frames > movie.FrameCount)
+            {
+                throw new ArgumentException(
+                    $"--frames {frames} exceeds the movie length of {movie.FrameCount}.",
+                    nameof(args));
+            }
+        }
+
+        if (movieRecordPath is not null && moviePlayPath is not null)
+        {
+            throw new ArgumentException(
+                "--movie-record and --movie-play cannot be combined.",
+                nameof(args));
+        }
+
+        if (movieVerify && movie is null)
+        {
+            throw new ArgumentException("--movie-verify requires --movie-play.", nameof(args));
+        }
+
+        if (movieVerify && frames != movie!.FrameCount)
+        {
+            throw new ArgumentException(
+                "Movie verification must play every frame; do not truncate with --frames.",
+                nameof(args));
+        }
+
+        if (movie is not null && options.Get("--input-script") is not null)
+        {
+            throw new ArgumentException(
+                "--movie-play and --input-script cannot be combined.",
+                nameof(args));
+        }
+
+        if (movie is not null && options.Get("--autopilot") is not null)
+        {
+            throw new ArgumentException(
+                "--movie-play and --autopilot cannot be combined.",
+                nameof(args));
+        }
         var biosPath = options.Get("--bios");
         var bios2Path = options.Get("--bios2");
         var biosAutoFolder = options.Get("--bios-auto");
@@ -268,10 +323,10 @@ internal static class Program
             throw new ArgumentException("--bios2 requires --bios or --bios-auto.", nameof(args));
         }
 
-        if (biosPath is null && biosAutoFolder is null && stateIn is null)
+        if (biosPath is null && biosAutoFolder is null && stateIn is null && movie?.State is null)
         {
             throw new ArgumentException(
-                "run needs --bios <path> or --bios-auto <folder> unless --state-in supplies the ROM state.",
+                "run needs --bios <path> or --bios-auto <folder> unless --state-in or an embedded movie state supplies the ROM state.",
                 nameof(args));
         }
 
@@ -293,6 +348,16 @@ internal static class Program
             disc = DiscImageFactory.Open(discPath, prefetch: HasFlag(args, "--prefetch"));
             gameId = GameId.Compute(disc);
             gameRecord = GameDatabase.Default.FindByChecksum(gameId);
+        }
+
+        var discHash = disc is null ? string.Empty : GameId.Compute(disc);
+        if (movie is not null
+            && !string.IsNullOrEmpty(movie.Header.DiscHash)
+            && !string.IsNullOrEmpty(discHash)
+            && !string.Equals(movie.Header.DiscHash, discHash, StringComparison.OrdinalIgnoreCase))
+        {
+            Console.Error.WriteLine(
+                $"warning: movie was recorded with disc {movie.Header.DiscHash}, current disc is {discHash}.");
         }
 
         NvramSelection nvramSelection = ResolveNvramSelection(
@@ -570,6 +635,11 @@ internal static class Program
                 machine.PbusSource = scriptedInput;
             }
         }
+        else if (movie?.State is not null)
+        {
+            using var stateStream = new MemoryStream(movie.State);
+            machine.LoadState(stateStream);
+        }
 
         if (pokeSpec is not null)
         {
@@ -624,6 +694,30 @@ internal static class Program
                 Console.Error.WriteLine(
                     $"loaded {activeCheats.ActiveCount} cheat(s) from {resolvedCheatPath}");
             }
+        }
+
+        MoviePbusSource? moviePlayback = null;
+        MovieRecorder? movieRecorder = null;
+        byte[]? movieState = null;
+        var movieStartFrame = machine.FramesExecuted;
+        if (movie is not null)
+        {
+            moviePlayback = new MoviePbusSource(movie);
+            machine.PbusSource = moviePlayback;
+        }
+        else if (movieRecordPath is not null)
+        {
+            if (movieIncludeState)
+            {
+                using var stateStream = new MemoryStream();
+                machine.SaveState(stateStream, discHash);
+                movieState = stateStream.ToArray();
+            }
+
+            movieRecorder = new MovieRecorder();
+            machine.PbusSource = new MovieRecordingPbusSource(
+                machine.PbusSource ?? new PbusSource(),
+                movieRecorder);
         }
 
         AudioFramePacer? realtimePacer = realtime ? new AudioFramePacer() : null;
@@ -794,10 +888,55 @@ internal static class Program
             WriteFrame(machine, frameOut);
         }
 
-        var discHash = disc is null ? string.Empty : GameId.Compute(disc);
         if (stateOut is not null)
         {
             machine.SaveStateToFile(stateOut, discHash);
+        }
+
+        MovieVerification? movieVerification = null;
+        if (movieRecorder is not null && movieRecordPath is not null)
+        {
+            var movieHeader = new MovieHeader
+            {
+                GameName = gameRecord?.Name
+                    ?? (discPath is null ? null : Path.GetFileNameWithoutExtension(discPath)),
+                GameId = gameId,
+                DiscHash = string.IsNullOrEmpty(discHash) ? null : discHash,
+                DiscFile = discPath is null ? null : Path.GetFileName(discPath),
+                BiosMd5 = biosLoad.Image?.Md5,
+                BiosName = biosLoad.Selection?.Primary?.Name
+                    ?? (biosLoad.PrimaryPath is null
+                        ? null
+                        : Path.GetFileNameWithoutExtension(biosLoad.PrimaryPath)),
+                StartFrame = movieStartFrame,
+                FrameCount = movieRecorder.FrameCount,
+                FinalFrameHash = FrameHash(machine),
+                FinalProgramCounter = machine.Cpu.ProgramCounter,
+                FinalStateHash = HashState(machine),
+                HasState = movieState is not null,
+                Options = BuildMovieOptions(machine),
+            };
+            MovieFile.Save(movieRecordPath, movieRecorder.Build(movieHeader, movieState));
+            Console.Error.WriteLine(
+                $"movie: wrote {movieRecorder.FrameCount} frame(s) to {movieRecordPath}");
+        }
+
+        if (moviePlayback is not null && movieVerify)
+        {
+            MovieHeader movieHeader = moviePlayback.Movie.Header;
+            uint? finalStateHash = movieHeader.FinalStateHash is null ? null : HashState(machine);
+            movieVerification = MovieVerifier.Verify(
+                movieHeader,
+                moviePlayback.Position,
+                FrameHash(machine),
+                machine.Cpu.ProgramCounter,
+                finalStateHash);
+            foreach (var difference in MovieVerifier.CompareOptions(movieHeader, BuildMovieOptions(machine)))
+            {
+                Console.Error.WriteLine($"movie option: {difference}");
+            }
+
+            Console.Error.WriteLine($"movie: {movieVerification.Summary}");
         }
 
         var result = new CliRunResult(
@@ -881,13 +1020,19 @@ internal static class Program
             Warnings: machine.StateWarnings,
             CheatCount: cheats?.ActiveCount ?? 0,
             CheatWrites: cheats?.Writes ?? 0,
-            CheatPath: resolvedCheatPath);
+            CheatPath: resolvedCheatPath,
+            MoviePath: moviePlayPath ?? movieRecordPath,
+            MovieFrames: moviePlayback?.Position ?? movieRecorder?.FrameCount,
+            MovieVerification: movieVerification is null
+                ? null
+                : movieVerification.Ok ? "pass" : "fail",
+            MovieFailures: movieVerification?.Failures);
 
         SaveNvramIfRequested(machine, nvramSelection);
 
         disc?.Dispose();
         WriteRunResult(result, json);
-        return 0;
+        return movieVerification is { Ok: false } ? 2 : 0;
     }
 
     private static int TraceCommand(string[] args)
@@ -2194,6 +2339,204 @@ internal static class Program
         int NvramVersion,
         IReadOnlyList<string> Fallbacks);
 
+    private static int MovieCommand(string[] args)
+    {
+        if (args.Length < 2)
+        {
+            throw new ArgumentException(
+                "movie needs a subcommand: info <movie> | record <disc> --out <movie> | "
+                + "play <movie> | verify <movie> | branch <movie> --frame N --out <movie>.",
+                nameof(args));
+        }
+
+        return args[1].ToLowerInvariant() switch
+        {
+            "info" => MovieInfo(args),
+            "record" => MovieRecord(args),
+            "play" => MoviePlay(args, verify: false),
+            "verify" => MoviePlay(args, verify: true),
+            "branch" or "trim" => MovieBranch(args),
+            _ => throw new ArgumentException(
+                $"Unknown movie subcommand '{args[1]}'. Supported: info, record, play, verify, branch.",
+                nameof(args)),
+        };
+    }
+
+    private static int MovieInfo(string[] args)
+    {
+        ParsedOptions options = Parse(args, startIndex: 2);
+        var path = options.Positional
+            ?? throw new ArgumentException("movie info needs a movie path.", nameof(args));
+        Movie movie = MovieFile.Load(path);
+        var info = new CliMovieInfoResult(
+            Ok: true,
+            Path: Path.GetFullPath(path),
+            FormatVersion: movie.Header.FormatVersion,
+            EmulatorVersion: movie.Header.EmulatorVersion,
+            CreatedUtc: movie.Header.CreatedUtc,
+            GameName: movie.Header.GameName,
+            GameId: movie.Header.GameId,
+            DiscHash: movie.Header.DiscHash,
+            DiscFile: movie.Header.DiscFile,
+            BiosMd5: movie.Header.BiosMd5,
+            BiosName: movie.Header.BiosName,
+            StartFrame: movie.Header.StartFrame,
+            FrameCount: movie.FrameCount,
+            EndFrame: movie.Header.EndFrame,
+            FinalFrameHash: movie.Header.FinalFrameHash,
+            FinalProgramCounter: movie.Header.FinalProgramCounter,
+            FinalStateHash: movie.Header.FinalStateHash,
+            HasState: movie.HasState,
+            StateBytes: movie.State?.Length ?? 0,
+            FileBytes: new FileInfo(path).Length,
+            Options: movie.Header.Options,
+            Notes: movie.Header.Notes);
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(info, CliJsonContext.Default.CliMovieInfoResult));
+            return 0;
+        }
+
+        Console.WriteLine($"movie:       {info.Path}");
+        Console.WriteLine($"format:      {info.FormatVersion} ({info.EmulatorVersion})");
+        Console.WriteLine($"created:     {info.CreatedUtc}");
+        Console.WriteLine($"game:        {info.GameName ?? "(unknown)"}");
+        Console.WriteLine($"game id:     {info.GameId ?? "(unknown)"}");
+        Console.WriteLine($"disc:        {info.DiscFile ?? "(none)"} {info.DiscHash}");
+        Console.WriteLine($"bios:        {info.BiosName ?? "(none)"} {info.BiosMd5}");
+        Console.WriteLine($"frames:      {info.FrameCount} (start {info.StartFrame}, end {info.EndFrame})");
+        Console.WriteLine($"state:       {(info.HasState ? $"{info.StateBytes} bytes" : "none")}");
+        Console.WriteLine($"file:        {info.FileBytes} bytes");
+        if (info.FinalFrameHash is { } frameHash)
+        {
+            Console.WriteLine($"frame hash:  0x{frameHash:x8}");
+            Console.WriteLine($"final pc:    0x{info.FinalProgramCounter.GetValueOrDefault():x8}");
+            if (info.FinalStateHash is { } stateHash)
+            {
+                Console.WriteLine($"state hash:  0x{stateHash:x8}");
+            }
+        }
+
+        if (info.Options is not null)
+        {
+            Console.WriteLine("options:");
+            foreach ((var key, var value) in info.Options)
+            {
+                Console.WriteLine($"  {key}: {value}");
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(info.Notes))
+        {
+            Console.WriteLine($"notes:       {info.Notes}");
+        }
+
+        return 0;
+    }
+
+    private static int MovieRecord(string[] args)
+    {
+        ParsedOptions options = Parse(args, startIndex: 2);
+        var output = options.Get("--out")
+            ?? throw new ArgumentException("movie record needs --out <movie>.", nameof(args));
+        var forwarded = new List<string> { "run" };
+        for (var i = 2; i < args.Length; i++)
+        {
+            if (string.Equals(args[i], "--out", StringComparison.OrdinalIgnoreCase))
+            {
+                i++;
+                continue;
+            }
+
+            forwarded.Add(args[i]);
+        }
+
+        forwarded.Add("--movie-record");
+        forwarded.Add(output);
+        return Run([.. forwarded]);
+    }
+
+    private static int MoviePlay(string[] args, bool verify)
+    {
+        ParsedOptions options = Parse(args, startIndex: 2);
+        var moviePath = options.Positional
+            ?? throw new ArgumentException(
+                verify ? "movie verify needs a movie path." : "movie play needs a movie path.",
+                nameof(args));
+        var forwarded = new List<string> { "run" };
+        var disc = options.Get("--disc");
+        if (!string.IsNullOrWhiteSpace(disc))
+        {
+            forwarded.Add(disc);
+        }
+
+        var skippedMovie = false;
+        for (var i = 2; i < args.Length; i++)
+        {
+            if (string.Equals(args[i], "--disc", StringComparison.OrdinalIgnoreCase))
+            {
+                i++;
+                continue;
+            }
+
+            if (string.Equals(args[i], "--movie-play", StringComparison.OrdinalIgnoreCase))
+            {
+                i++;
+                continue;
+            }
+
+            if (!skippedMovie && string.Equals(args[i], moviePath, StringComparison.Ordinal))
+            {
+                skippedMovie = true;
+                continue;
+            }
+
+            forwarded.Add(args[i]);
+        }
+
+        forwarded.Add("--movie-play");
+        forwarded.Add(moviePath);
+        if (verify)
+        {
+            forwarded.Add("--movie-verify");
+        }
+
+        return Run([.. forwarded]);
+    }
+
+    private static int MovieBranch(string[] args)
+    {
+        ParsedOptions options = Parse(args, startIndex: 2);
+        var path = options.Positional
+            ?? throw new ArgumentException("movie branch needs a movie path.", nameof(args));
+        var output = options.Get("--out")
+            ?? throw new ArgumentException("movie branch needs --out <movie>.", nameof(args));
+        var frame = options.GetInt("--frame", -1);
+        if (frame < 0)
+        {
+            throw new ArgumentException("movie branch needs --frame N.", nameof(args));
+        }
+
+        Movie movie = MovieFile.Load(path);
+        Movie branch = MovieEditor.Branch(movie, frame);
+        MovieFile.Save(output, branch);
+        var result = new CliMovieActionResult(
+            Ok: true,
+            Path: Path.GetFullPath(output),
+            FrameCount: branch.FrameCount,
+            Message: $"branched at frame {frame}");
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(result, CliJsonContext.Default.CliMovieActionResult));
+            return 0;
+        }
+
+        Console.WriteLine(
+            $"movie: branched {Path.GetFullPath(path)} at frame {frame} -> "
+            + $"{Path.GetFullPath(output)} ({branch.FrameCount} frames)");
+        return 0;
+    }
+
     private static int AudioCommand(string[] args)
     {
         if (args.Length < 2 || !string.Equals(args[1], "analyze", StringComparison.OrdinalIgnoreCase))
@@ -2540,6 +2883,26 @@ internal static class Program
         return FrameHasher.HashBytes(stream.GetBuffer().AsSpan(0, checked((int)stream.Length)));
     }
 
+    private static Dictionary<string, string> BuildMovieOptions(FiveDoMachine machine)
+    {
+        EmulatorTuning tuning = machine.Tuning;
+        return new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["profile"] = EmulationProfiles.Detect(tuning).ToString(),
+            ["armTiming"] = tuning.ArmTiming.ToString(),
+            ["clioTimers"] = tuning.ClioTimers.ToString(),
+            ["celTiming"] = tuning.CelTiming.ToString(),
+            ["cdromTiming"] = tuning.CdromTiming.ToString(),
+            ["cdSpeed"] = tuning.CdSpeed.ToString(),
+            ["cpuClock"] = tuning.ArmClock.ToString(CultureInfo.InvariantCulture),
+            ["randomSeed"] = tuning.RandomSeed?.ToString(CultureInfo.InvariantCulture) ?? "default",
+            ["fixMode"] = $"0x{(uint)tuning.FixMode:x8}",
+            ["highResolution"] = tuning.HighResolution.ToString(),
+            ["operaDipir"] = tuning.OperaDipir.ToString(),
+            ["operaSoftReset"] = tuning.OperaSoftReset.ToString(),
+        };
+    }
+
     private static void WriteRunResult(CliRunResult result, bool json)
     {
         if (json)
@@ -2619,6 +2982,19 @@ internal static class Program
         Console.WriteLine($"dsp pc:      0x{result.DspPc:x4}");
         Console.WriteLine($"dsp sema:    0x{result.DspSema:x8}");
         Console.WriteLine($"dsp seed:    0x{result.DspSeed:x8}");
+        if (result.MoviePath is not null)
+        {
+            Console.WriteLine($"movie:       {result.MoviePath}");
+            Console.WriteLine($"movie frames:{result.MovieFrames}");
+            if (result.MovieVerification is not null)
+            {
+                Console.WriteLine($"movie check: {result.MovieVerification}");
+                foreach (var failure in result.MovieFailures ?? [])
+                {
+                    Console.WriteLine($"  {failure}");
+                }
+            }
+        }
     }
 
     private static string DescribeWriter()
@@ -3012,6 +3388,7 @@ internal static class Program
         Console.WriteLine("             [--cheat path] [--cheat-code code] [--cheat-auto] [--cheats-dir path]");
         Console.WriteLine("             [--checkpoints 3000,6000,12000] [--audio-hash] [--state-hash]");
         Console.WriteLine("             [--capture-frames 3000,6000] [--capture-dir path]");
+        Console.WriteLine("             [--movie-record path] [--movie-play path] [--movie-verify] [--movie-no-state]");
         Console.WriteLine("                                       Emit deterministic checkpoint samples and optional frame images.");
         Console.WriteLine("  trace [disc] --bios path [--bios2 path] [--bios-auto folder] [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
@@ -3044,6 +3421,15 @@ internal static class Program
         Console.WriteLine("  cheat list|add|enable|disable|remove|import|export --game ID [--dir path] [--json]");
         Console.WriteLine("                                       Manage per-game cheats. add needs --name and --code;");
         Console.WriteLine("                                       import/export use --in/--out. See docs/Cheats.md.");
+        Console.WriteLine("  movie info <movie> [--json]          Movie metadata without running the emulator.");
+        Console.WriteLine("  movie record <disc> --out <movie> [run options]");
+        Console.WriteLine("                                       Record deterministic PBUS input while running.");
+        Console.WriteLine("  movie play <movie> [--disc path] [run options]");
+        Console.WriteLine("                                       Play a movie; the embedded state is optional.");
+        Console.WriteLine("  movie verify <movie> [--disc path] [--json]");
+        Console.WriteLine("                                       Replay a movie and compare recorded evidence.");
+        Console.WriteLine("  movie branch <movie> --frame N --out <movie>");
+        Console.WriteLine("                                       Keep frames before N for a new branch. See docs/Tas.md.");
         Console.WriteLine("  audio analyze <wav> [--json]         WAV format, peak, RMS, clipping, and DC offset.");
         Console.WriteLine("  state inspect <path> [--json]        Save-state header and section table.");
         Console.WriteLine("  state slots <dir> [--count N] [--json]");

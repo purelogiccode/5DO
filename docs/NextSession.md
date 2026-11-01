@@ -2,6 +2,18 @@
 
 ## 0. Current handoff (2026-10-30)
 
+**2026-11-01 update:** UX-06 TAS movies are implemented as a partial first increment.
+`FiveDo.Tas` owns the versioned `.5domovie` container (per-frame PBUS packets, optional
+starting state, CRC-32/Brotli), deterministic record/replay, branch/trim/append, and
+frame/PC/state verification. The CLI adds `movie info|record|play|verify|branch` and
+`run --movie-record/--movie-play/--movie-verify/--movie-no-state`; verification failure
+returns exit 2. The shell adds Emulation > Record Movie.../Play Movie.../Stop Movie and a
+player-1 input display, and playback pauses at the end. `PbusDecoder` decodes standard
+PBUS packets. **Do not redo the movie container, recorder/playback sources, verifier,
+editor, CLI commands, or shell controls; remaining TAS work is Lua, a frame-by-frame
+input editor, an input timeline, and multiplayer input display. A separate lag counter is
+not applicable because 3DO PBUS input is sampled every frame.** **1239 tests pass.**
+
 **2026-11-01 update:** UX-04 per-game cheats are implemented. `FiveDo.Cheats` parses
 raw/typed writes, memory/button conditions, and `and`/`or`/`not` combinations;
 `CheatStore` reads/writes atomic `<gameId>.json` documents; `FiveDoMachine.BeforeFrame`
@@ -153,7 +165,8 @@ not final statuses.
 **Do not redo:** the 4DO MHTML parser, the sweep harness, the OpenAL/Serilog/trimming
 work, the renderer/filter work, the ARM/CLIO/CEL/CD timing options, the CD speed selector and
 timing-profile mapping, the BIOS catalog/scanner/selector or its CLI/settings surface,
-the NVRAM layout/store/settings controls or the `nvram` CLI commands, or
+the NVRAM layout/store/settings controls or the `nvram` CLI commands, the TAS movie
+container/recorder/verifier/editor or its CLI/shell surface, or
 the 2026-10-31 performance pass (CEL pipeline caching, Debug core optimization,
 render-request coalescing, Auto frame skip). Do not treat full-race completion, inventory
 scripting, Pi/arm64 validation, or installers as current gates.

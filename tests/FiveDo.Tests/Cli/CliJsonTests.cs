@@ -108,6 +108,8 @@ public sealed class CliJsonTests
         Assert.Contains("\"cheatCount\": 2", json, StringComparison.Ordinal);
         Assert.Contains("\"cheatWrites\": 1234", json, StringComparison.Ordinal);
         Assert.Contains("\"cheatPath\": \"/data/cheats/ABCD1234.json\"", json, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"moviePath\"", json, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"movieVerification\"", json, StringComparison.Ordinal);
     }
 
     [Fact]

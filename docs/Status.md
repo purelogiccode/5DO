@@ -2,8 +2,8 @@
 
 **Snapshot:** 2026-11-01, after the first full-collection sweep, the performance pass,
 the ARM/CLIO/CEL/CD timing-option pass, the CD speed/timing-profile pass, the BIOS
-manager, the per-game NVRAM pass, the rewind/fast-forward pass, and the per-game cheat
-engine. Road Rash's
+manager, the per-game NVRAM pass, the rewind/fast-forward pass, the per-game cheat
+engine, and the TAS-movie pass. Road Rash's
 100k-state race now measures
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
@@ -63,7 +63,13 @@ cheats: `FiveDo.Cheats` parses raw, typed, conditional, and button-activated cod
 `CheatStore` owns the per-game JSON files; `FiveDoMachine.BeforeFrame` applies them every
 frame (including rewind replay and fast-forward); the shell adds **Emulation > Cheats...**
 and Settings > Paths > Cheats; the CLI adds `--cheat`, `--cheat-code`, `--cheat-auto`,
-`--cheats-dir`, and `cheat list|add|enable|disable|remove|import|export`. **1199 tests pass.**
+`--cheats-dir`, and `cheat list|add|enable|disable|remove|import|export`. UX-06 adds
+deterministic TAS movies: `FiveDo.Tas` owns the versioned `.5domovie` container
+(per-frame PBUS packets, optional starting state, CRC-32 and Brotli), record/replay,
+branch/trim, and verification; the CLI adds `--movie-record`, `--movie-play`,
+`--movie-verify`, and `movie info|record|play|verify|branch`; the shell adds
+**Emulation > Record Movie.../Play Movie.../Stop Movie** and a live player-1 input
+display. **1239 tests pass.**
 The differential harness (FND-05/CORE-11/CORE-16) is implemented:
 `tools/FiveDo.DiffHarness` stages the bundled OperaCore and BIOS, runs both engines
 with identical options, compares checkpoint frame hashes, applies manifest
@@ -256,7 +262,7 @@ This is the short, current answer to "where are we?" The documentation index is
   validated in Road Rash (race state/wreck), Wolfenstein (menus, gameplay, level
   start), Alone (scene/menu/intro), Lemmings (menu and passcode entry), and Space Ace
   (X menu, A play).
-- **Tests:** 1199 passing (`dotnet test -c Release`), including high-resolution CEL and
+- **Tests:** 1239 passing (`dotnet test -c Release`), including high-resolution CEL and
   VDLP regression coverage, RAM-patch and Road Rash autopilot contracts, CLI process
   tests, zero-allocation uploader/mailbox assertions, OpenGL capability parsing,
   bounded prefetch-cache tests, game-fix mapping, save-slot metadata/roundtrips and

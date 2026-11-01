@@ -57,6 +57,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `nvram list` | List global and per-game NVRAM images. |
 | `nvram export\|import\|reset` | Back up, restore, or clear an NVRAM image. |
 | `cheat list\|add\|enable\|disable\|remove\|import\|export` | Manage per-game RAM cheat files. |
+| `movie info\|record\|play\|verify\|branch` | Inspect, record, replay, verify, or branch `.5domovie` TAS movies. |
 | `audio analyze <wav>` | WAV format, peak, RMS, clipping, silence, DC offset. |
 | `state inspect <path>` | Save-state header and section table (full CRC validation, including Brotli sections). |
 | `state slots <dir>` | List numbered save slots and metadata. |
@@ -139,6 +140,10 @@ frame.
 | `--cheat-code <code>` | none | Add a one-off enabled cheat. Can be combined with `--cheat` or `--cheat-auto`. |
 | `--cheat-auto` | off | Load `<gameId>.json` (or `global.json`) from `--cheats-dir`. A missing file is an empty set. |
 | `--cheats-dir <path>` | default cheat directory | Directory used by `--cheat-auto`. Requires `--cheat-auto`. |
+| `--movie-record <path>` | none | Record one PBUS packet per frame to a `.5domovie` file. Cannot be combined with `--movie-play`. |
+| `--movie-play <path>` | none | Play a movie. The embedded state is loaded unless `--state-in` is supplied. Cannot be combined with `--input-script` or `--autopilot`. |
+| `--movie-verify` | off | With `--movie-play`, replay every frame and compare the recorded frame/PC/state evidence. Exit code 2 on mismatch. |
+| `--movie-no-state` | off | With `--movie-record`, omit the starting save state. |
 | `--realtime` | off | Pace the run against the audio clock instead of running as fast as possible. |
 
 ### Audio options
@@ -322,6 +327,10 @@ All fields are camelCase. Nullable fields are omitted or `null` when not applica
 | `cheatCount` | int | Enabled, valid cheats attached to the run. |
 | `cheatWrites` | long | Bytes written by the cheat engine, including the initial apply. |
 | `cheatPath` | string? | Loaded cheat document path, or null when no file was used. |
+| `moviePath` | string? | Recorded or played `.5domovie` path, when movie options were used. |
+| `movieFrames` | int? | Frames recorded or played by the movie. |
+| `movieVerification` | string? | `pass` or `fail` when `--movie-verify` ran. |
+| `movieFailures` | string[]? | Recorded evidence that differed during verification. |
 
 `cdStatus=0xE1` and `cdPoll=0x0C` is the historical static READ_ID-only wait signature.
 
@@ -546,6 +555,30 @@ existing entries with the same name. The file format and code syntax are documen
 `name`, `description`, `code`, `enabled`, and `error` per entry. Actions return
 `{ "ok": true, "action", "path", "gameId", "name", "count" }`. Invalid code is an error
 for `add` and is preserved with an `error` field when it is already in a file.
+
+---
+
+## 8.3 `movie` commands
+
+```powershell
+5do movie info run.5domovie --json
+5do movie record "game.chd" --bios bios/panafz1.bin --frames 6000 --out run.5domovie
+5do movie play run.5domovie --disc "game.chd" --bios bios/panafz1.bin
+5do movie verify run.5domovie --json
+5do movie branch run.5domovie --frame 1200 --out branch.5domovie
+```
+
+`movie record` forwards normal `run` options and writes a versioned `.5domovie`
+container with one raw PBUS packet per frame, an optional starting state, and
+frame/PC/state evidence. `movie play` restores the embedded state unless `--state-in`
+is supplied. `movie verify` replays every frame and exits with code 2 on a mismatch.
+`movie branch` keeps the prefix before `--frame` and clears completion evidence so a
+new branch can be recorded. `movie info` reads only the header.
+
+`movie info --json` returns the format/version, game/disc/BIOS metadata, frame range,
+final hashes, state size, options, notes, and file size. `movie verify` uses the
+normal `run --json` contract with `moviePath`, `movieFrames`, `movieVerification`
+(`pass`/`fail`), and `movieFailures`. See [`Tas.md`](Tas.md).
 
 ---
 

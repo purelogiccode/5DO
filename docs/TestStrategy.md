@@ -47,6 +47,7 @@ tests/FiveDo.Tests/
   Storage/
   Audio/
   Input/
+  Tas/
   Machine/
   Host/
   Diagnostics/
@@ -279,10 +280,22 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
 ### 4.13 Input
 
 - PBUS encoding for every button, combinations, 1-6 controllers.
+- PBUS decoding and button formatting for input display.
 - Device order 1,3,2,5,4,6.
 - Header bytes `0x00/0x48/0x80`.
 - Keyboard mapping and gamepad mapping (fake backend).
 - Profile serialization.
+
+### 4.13a TAS movies
+
+- `.5domovie` header/payload/state roundtrip, empty movies, atomic replacement.
+- Corrupt CRC, unsupported version, trailing data, malformed lengths, and frame-count
+  mismatches are rejected.
+- Recorder packet limits and recording-source wrapping.
+- Playback order, seek, step-back, finish behavior, and decoded controller display.
+- Branch/trim/append clears completion evidence and preserves the starting state.
+- Frame/PC/state verification, option comparison, and machine-level record/replay
+  equality on a synthetic state.
 
 ### 4.14 Machine
 

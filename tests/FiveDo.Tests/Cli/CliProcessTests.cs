@@ -1200,6 +1200,177 @@ public sealed class CliProcessTests
         }
     }
 
+    [Fact]
+    public void MovieInfo_ReportsHeaderFields()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fivedo-cli-movie-{Guid.NewGuid():N}.5domovie");
+        try
+        {
+            var movie = new FiveDo.Tas.Movie(
+                new FiveDo.Tas.MovieHeader
+                {
+                    GameName = "CLI Movie",
+                    GameId = "ABCD1234",
+                    StartFrame = 12,
+                },
+                [[0x00, 0x48, 0x01, 0x80]]);
+            FiveDo.Tas.MovieFile.Save(path, movie);
+
+            CliResult result = Invoke("movie", "info", path, "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"gameName\": \"CLI Movie\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"frameCount\": 1", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"startFrame\": 12", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void MovieRecordAndVerify_RoundtripFromState()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-movie-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        var biosPath = Path.Combine(directory, "bios.bin");
+        var statePath = Path.Combine(directory, "start.state");
+        var moviePath = Path.Combine(directory, "recorded.5domovie");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult start = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "2",
+                "--state-out",
+                statePath,
+                "--json");
+            Assert.Equal(0, start.Code);
+            Assert.True(File.Exists(statePath));
+
+            CliResult record = Invoke(
+                "movie",
+                "record",
+                "--state-in",
+                statePath,
+                "--frames",
+                "3",
+                "--out",
+                moviePath,
+                "--json");
+            Assert.Equal(0, record.Code);
+            Assert.True(File.Exists(moviePath));
+
+            CliResult verify = Invoke("movie", "verify", moviePath, "--json");
+            Assert.Equal(0, verify.Code);
+            Assert.Contains("\"movieVerification\": \"pass\"", verify.Output, StringComparison.Ordinal);
+            Assert.Contains("\"movieFrames\": 3", verify.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void MovieBranch_KeepsThePrefix()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-movie-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        var sourcePath = Path.Combine(directory, "source.5domovie");
+        var branchPath = Path.Combine(directory, "branch.5domovie");
+        try
+        {
+            var movie = new FiveDo.Tas.Movie(
+                new FiveDo.Tas.MovieHeader { GameName = "Branch" },
+                [
+                    new byte[] { 0x01 },
+                    new byte[] { 0x02 },
+                    new byte[] { 0x03 },
+                ]);
+            FiveDo.Tas.MovieFile.Save(sourcePath, movie);
+
+            CliResult result = Invoke(
+                "movie",
+                "branch",
+                sourcePath,
+                "--frame",
+                "2",
+                "--out",
+                branchPath,
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            FiveDo.Tas.Movie branch = FiveDo.Tas.MovieFile.Load(branchPath);
+            Assert.Equal(2, branch.FrameCount);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void MovieVerify_MismatchedEvidence_ReturnsTwo()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-movie-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        var biosPath = Path.Combine(directory, "bios.bin");
+        var statePath = Path.Combine(directory, "start.state");
+        var moviePath = Path.Combine(directory, "bad.5domovie");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult start = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "1",
+                "--state-out",
+                statePath,
+                "--json");
+            Assert.Equal(0, start.Code);
+
+            var movie = new FiveDo.Tas.Movie(
+                new FiveDo.Tas.MovieHeader
+                {
+                    GameName = "Bad Evidence",
+                    StartFrame = 1,
+                    FinalFrameHash = 0x12345678,
+                    FinalProgramCounter = 0,
+                },
+                [
+                    new byte[16],
+                    new byte[16],
+                ],
+                File.ReadAllBytes(statePath));
+            FiveDo.Tas.MovieFile.Save(moviePath, movie);
+
+            CliResult verify = Invoke("movie", "verify", moviePath, "--json");
+
+            Assert.Equal(2, verify.Code);
+            Assert.Contains("\"movieVerification\": \"fail\"", verify.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
     private static CliResult Invoke(params string[] args)
     {
         TextWriter previousOut = Console.Out;

@@ -50,6 +50,16 @@ still change.
 
 ### Added
 
+- TAS movies (UX-06). The new `FiveDo.Tas` project writes versioned `.5domovie`
+  containers with one raw PBUS packet per frame, an optional starting save state, a
+  JSON metadata header, CRC-32 checksums, and Brotli-compressed input. Recording wraps
+  live/scripted input; playback restores the embedded state and replays packets
+  deterministically. `MovieVerifier` compares frame count, final frame hash, ARM PC,
+  and state hash. The CLI adds `movie info|record|play|verify|branch` and
+  `run --movie-record/--movie-play/--movie-verify/--movie-no-state` (verification
+  failure exits 2). The desktop shell adds **Emulation > Record Movie.../Play
+  Movie.../Stop Movie**, a player-1 input display, and automatic pause at the end.
+  `PbusDecoder` exposes decoded controller states. See `docs/Tas.md`.
 - Per-game cheat engine (UX-04). The new `FiveDo.Cheats` project parses raw byte writes,
   typed `write8`/`write16`/`write32` writes, memory conditions, player-1 button
   conditions, and `and`/`or`/`not` combinations. `CheatStore` reads/writes atomic

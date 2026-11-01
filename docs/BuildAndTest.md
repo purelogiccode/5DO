@@ -53,6 +53,7 @@ src/
   FiveDo.Storage/            # ISO/BIN/CUE/CHD, BIOS/NVRAM, game database
   FiveDo.Audio/              # WAV/OpenAL/audio analysis/tap
   FiveDo.Input/              # controller state, PBUS, profiles, scripts
+  FiveDo.Tas/                # TAS movie container, record/replay, branching
   FiveDo.Diagnostics/        # logging, tracing, PNG/frame dumps, benchmark gates
   FiveDo.Machine/            # composition root, frame loop, Quartz
   FiveDo.Host/               # core runner, pacing, settings, save slots, library, fixes
@@ -135,7 +136,8 @@ The suite is one xUnit project with subsystem folders:
 | `Cdrom/` | command state machine, status/data, TOC, READ_ID pulse |
 | `Storage/` | ISO/BIN/CUE/CHD, BIOS, NVRAM, volume header, game database, prefetch |
 | `Audio/` | ring buffer, WAV writer/analyzer, statistics, limiter, tap, OpenAL (opt-in) |
-| `Input/` | PBUS encoding, profiles, binding editor, scripts, gamepad mapper |
+| `Input/` | PBUS encoding/decoding, profiles, binding editor, scripts, gamepad mapper |
+| `Tas/` | movie container, recorder/playback, branch/trim, verification, zero-allocation playback |
 | `Machine/` | composition, frame loop, Quartz, save/load, BIOS UI validation |
 | `Host/` | core runner, pacing, settings, save slots, state inspector, NVRAM, library, compatibility, autopilot |
 | `Diagnostics/` | frame timing, benchmark gate/comparison, diagnostic tools |

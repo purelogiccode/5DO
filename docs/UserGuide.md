@@ -196,6 +196,23 @@ dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin `
 If the recording started after a save state was loaded, add `--script-base state` so
 the script's frame numbers are shifted by the loaded frame count.
 
+### TAS movies
+
+**Emulation > Record Movie...** captures a deterministic `.5domovie` file: the exact
+PBUS packet for every frame, a starting save state, and a metadata header with the
+game, BIOS, disc, timing options, and final evidence. **Emulation > Play Movie...**
+restores the embedded state and replays the movie; the status bar shows the current
+frame and player-1 buttons, and playback pauses at the end. **Emulation > Stop Movie**
+finishes a recording or detaches playback. Stopping emulation or closing the window
+also saves an active recording.
+
+The CLI equivalents are `movie record`, `movie play`, `movie verify`, `movie info`,
+and `movie branch`. Verification replays every frame and compares the recorded frame
+hash, ARM PC, and state hash; it exits with code 2 on a mismatch. Branching keeps a
+prefix so a new attempt can be recorded from a checkpoint. Movies contain input and a
+save state, not BIOS or disc content. See [`Tas.md`](Tas.md) for the container layout
+and the full command set.
+
 ## Display
 
 The desktop renderer expands the 3DO palette at native resolution and scales on the

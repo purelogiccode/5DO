@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace FiveDo.Cli;
 
@@ -72,4 +73,12 @@ internal sealed record CliRunResult(
     IReadOnlyList<string> Warnings,
     int CheatCount,
     long CheatWrites,
-    string? CheatPath);
+    string? CheatPath,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? MoviePath = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    int? MovieFrames = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? MovieVerification = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    IReadOnlyList<string>? MovieFailures = null);

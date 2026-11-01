@@ -32,6 +32,7 @@ using FiveDo.Host.Rewind;
 using FiveDo.Input;
 using FiveDo.Machine;
 using FiveDo.Storage;
+using FiveDo.Tas;
 using FiveDo.Video;
 using AvaloniaPixelFormat = Avalonia.Platform.PixelFormat;
 
@@ -57,6 +58,14 @@ public partial class MainWindow : Window, IDisposable
     private readonly SaveStateSlotManager _slots;
     private InputRecorder? _inputRecorder;
     private string? _inputRecordingPath;
+    private MovieRecorder? _movieRecorder;
+    private MovieRecordingPbusSource? _movieRecordingSource;
+    private MoviePbusSource? _moviePlaybackSource;
+    private Movie? _moviePlayback;
+    private string? _movieRecordingPath;
+    private byte[]? _movieStartState;
+    private long _movieStartFrame;
+    private DispatcherTimer? _movieTimer;
     private bool _fastForwardHeld;
     private OpenAlAudioOutput? _audio;
     private float _meterPeak;
@@ -178,6 +187,9 @@ public partial class MainWindow : Window, IDisposable
             }
         };
         _logTimer.Start();
+        _movieTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+        _movieTimer.Tick += (_, _) => UpdateMovieStatus();
+        _movieTimer.Start();
         SetLogDockVisible(false);
         SetLibraryMode(grid: true);
         ApplyLibraryFilter();
@@ -560,6 +572,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void OpenBiosPath(string path, string? bios2Path = null, bool persist = true, string? reason = null)
     {
+        StopMovie(save: true);
         StopInputRecording(save: true);
         if (_running)
         {
@@ -613,6 +626,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void OpenDiscPath(string path, bool autoStart = false)
     {
+        StopMovie(save: true);
         StopInputRecording(save: true);
         if (autoStart && _running)
         {
@@ -799,7 +813,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void StartEmulation(bool showGameView)
     {
-        if (!_biosLoaded || _machine is null || _runner is null)
+        if ((!_biosLoaded && _moviePlayback is null) || _machine is null || _runner is null)
         {
             StatusText.Text = "Open a 3DO BIOS before starting emulation.";
             return;
@@ -870,6 +884,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void StopEmulation()
     {
+        StopMovie(save: true);
         StopInputRecording(save: true);
         CancelFastForward();
 
@@ -1147,6 +1162,267 @@ public partial class MainWindow : Window, IDisposable
                 "Input recording save failed: {Path}.",
                 path);
         }
+    }
+
+    private void OnRecordMovieAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(StartMovieRecordingAsync, "starting movie recording");
+    }
+
+    private void OnPlayMovieAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(PlayMovieAsync, "playing a movie");
+    }
+
+    private void OnStopMovie(object? sender, RoutedEventArgs e)
+    {
+        StopMovie(save: true);
+    }
+
+    private async Task StartMovieRecordingAsync()
+    {
+        if (_machine is null || _runner is null)
+        {
+            StatusText.Text = "Open a 3DO BIOS before recording a movie.";
+            return;
+        }
+
+        StopMovie(save: true);
+        var suffix = _gameId.Length > 0
+            ? _gameId[..Math.Min(8, _gameId.Length)]
+            : "5do";
+        var stamp = DateTime.Now.ToString(
+            "yyyyMMdd-HHmmss",
+            System.Globalization.CultureInfo.InvariantCulture);
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Record 5DO Movie",
+            SuggestedFileName = $"{SanitizeFileName(_gameName.Length > 0 ? _gameName : "5do")}-{suffix}-{stamp}.5domovie",
+            DefaultExtension = "5domovie",
+            FileTypeChoices = [new FilePickerFileType("5DO movie") { Patterns = ["*.5domovie"] }],
+        }).ConfigureAwait(true);
+        var path = file?.TryGetLocalPath();
+        if (path is null)
+        {
+            return;
+        }
+
+        _movieRecorder = new MovieRecorder();
+        _movieRecordingPath = path;
+        MovieRecorder recorder = _movieRecorder;
+        _runner.Invoke(() =>
+        {
+            _movieStartFrame = _machine.FramesExecuted;
+            using var state = new MemoryStream();
+            _machine.SaveState(state, _gameId);
+            _movieStartState = state.ToArray();
+            _movieRecordingSource = new MovieRecordingPbusSource(_input, recorder);
+            _machine.PbusSource = _movieRecordingSource;
+        });
+
+        StopMovieMenuItem.IsEnabled = true;
+        StatusText.Text = _running
+            ? $"Recording movie to {path}."
+            : $"Movie armed for {path}; start emulation to record.";
+        _logger.ForCategory(LogCategory.Host).Information("Movie recording started: {Path}.", path);
+    }
+
+    private async Task PlayMovieAsync()
+    {
+        if (_machine is null || _runner is null)
+        {
+            StatusText.Text = "Open a 3DO BIOS before playing a movie.";
+            return;
+        }
+
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Play 5DO Movie",
+            AllowMultiple = false,
+            FileTypeFilter = [new FilePickerFileType("5DO movie") { Patterns = ["*.5domovie"] }],
+        }).ConfigureAwait(true);
+        var path = files.Count > 0 ? files[0].TryGetLocalPath() : null;
+        if (path is null)
+        {
+            return;
+        }
+
+        Movie movie;
+        try
+        {
+            movie = MovieFile.Load(path);
+        }
+        catch (Exception exception) when (exception is IOException
+            or InvalidDataException
+            or NotSupportedException
+            or ArgumentException)
+        {
+            StatusText.Text = $"Movie could not be loaded: {exception.Message}";
+            _logger.ForCategory(LogCategory.Host).Warning(exception, "Movie load failed: {Path}.", path);
+            return;
+        }
+
+        StopMovie(save: true);
+        _runner.Invoke(() =>
+        {
+            if (movie.State is not null)
+            {
+                using var state = new MemoryStream(movie.State);
+                _machine.LoadState(state);
+            }
+
+            _moviePlayback = movie;
+            _moviePlaybackSource = new MoviePbusSource(movie);
+            _machine.PbusSource = _moviePlaybackSource;
+        });
+
+        StopMovieMenuItem.IsEnabled = true;
+        if (!_running)
+        {
+            StartEmulation(showGameView: true);
+        }
+
+        StatusText.Text = $"Playing movie {Path.GetFileName(path)} ({movie.FrameCount} frames).";
+        _logger.ForCategory(LogCategory.Host).Information(
+            "Movie playback started: {Path} ({Frames} frames).",
+            path,
+            movie.FrameCount);
+    }
+
+    private void StopMovie(bool save)
+    {
+        MovieRecorder? recorder = _movieRecorder;
+        MoviePbusSource? playback = _moviePlaybackSource;
+        MovieRecordingPbusSource? recording = _movieRecordingSource;
+        var recordingPath = _movieRecordingPath;
+        byte[]? startState = _movieStartState;
+        var startFrame = _movieStartFrame;
+        _movieRecorder = null;
+        _movieRecordingSource = null;
+        _moviePlaybackSource = null;
+        _moviePlayback = null;
+        _movieRecordingPath = null;
+        _movieStartState = null;
+        StopMovieMenuItem.IsEnabled = false;
+
+        if (_machine is not null && _runner is not null && (recording is not null || playback is not null))
+        {
+            _runner.Invoke(() =>
+            {
+                if (ReferenceEquals(_machine.PbusSource, recording)
+                    || ReferenceEquals(_machine.PbusSource, playback))
+                {
+                    _machine.PbusSource = _input;
+                }
+            });
+        }
+
+        if (!save || recorder is null || recordingPath is null || _machine is null)
+        {
+            return;
+        }
+
+        MovieHeader? header = null;
+        _runner?.Invoke(() =>
+        {
+            header = new MovieHeader
+            {
+                GameName = _gameName.Length > 0 ? _gameName : null,
+                GameId = _gameId.Length > 0 ? _gameId : null,
+                DiscHash = _gameId.Length > 0 ? _gameId : null,
+                DiscFile = string.IsNullOrWhiteSpace(_settings.DiscPath)
+                    ? null
+                    : Path.GetFileName(_settings.DiscPath),
+                BiosMd5 = _biosMd5.Length > 0 ? _biosMd5 : null,
+                BiosName = string.IsNullOrWhiteSpace(_settings.BiosPath)
+                    ? null
+                    : Path.GetFileNameWithoutExtension(_settings.BiosPath),
+                StartFrame = startFrame,
+                FrameCount = recorder.FrameCount,
+                FinalFrameHash = FrameHasher.Hash(_machine.Frame),
+                FinalProgramCounter = _machine.Cpu.ProgramCounter,
+                FinalStateHash = HashMachineState(_machine),
+                HasState = startState is not null,
+                Options = BuildMovieOptions(_machine),
+            };
+        });
+
+        if (header is null)
+        {
+            return;
+        }
+
+        try
+        {
+            MovieFile.Save(recordingPath, recorder.Build(header, startState));
+            StatusText.Text = $"Movie recorded: {recordingPath} ({recorder.FrameCount} frames).";
+            _logger.ForCategory(LogCategory.Host).Information(
+                "Movie recording saved: {Path} ({Frames} frames).",
+                recordingPath,
+                recorder.FrameCount);
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or ArgumentException)
+        {
+            StatusText.Text = $"Movie could not be saved: {exception.Message}";
+            _logger.ForCategory(LogCategory.Host).Warning(
+                exception,
+                "Movie save failed: {Path}.",
+                recordingPath);
+        }
+    }
+
+    private void UpdateMovieStatus()
+    {
+        MoviePbusSource? playback = _moviePlaybackSource;
+        if (playback is null)
+        {
+            return;
+        }
+
+        if (playback.IsFinished)
+        {
+            var frameCount = playback.FrameCount;
+            StopMovie(save: false);
+            PauseEmulation(showLibrary: false);
+            StatusText.Text = $"Movie finished ({frameCount} frames).";
+            return;
+        }
+
+        ControllerState player1 = playback.CurrentControllers.Length > 0
+            ? playback.CurrentControllers[0]
+            : ControllerState.Empty;
+        StatusText.Text =
+            $"Movie {playback.Position}/{playback.FrameCount}: "
+            + $"{PbusDecoder.FormatButtons(player1)}";
+    }
+
+    private static uint HashMachineState(FiveDoMachine machine)
+    {
+        using var stream = new MemoryStream();
+        machine.SaveState(stream);
+        return MovieHash.Fnv1a(stream.GetBuffer().AsSpan(0, checked((int)stream.Length)));
+    }
+
+    private static Dictionary<string, string> BuildMovieOptions(FiveDoMachine machine)
+    {
+        EmulatorTuning tuning = machine.Tuning;
+        return new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["profile"] = EmulationProfiles.Detect(tuning).ToString(),
+            ["armTiming"] = tuning.ArmTiming.ToString(),
+            ["clioTimers"] = tuning.ClioTimers.ToString(),
+            ["celTiming"] = tuning.CelTiming.ToString(),
+            ["cdromTiming"] = tuning.CdromTiming.ToString(),
+            ["cdSpeed"] = tuning.CdSpeed.ToString(),
+            ["cpuClock"] = tuning.ArmClock.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["randomSeed"] = tuning.RandomSeed?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "default",
+            ["fixMode"] = $"0x{(uint)tuning.FixMode:x8}",
+            ["highResolution"] = tuning.HighResolution.ToString(),
+            ["operaDipir"] = tuning.OperaDipir.ToString(),
+            ["operaSoftReset"] = tuning.OperaSoftReset.ToString(),
+        };
     }
 
     private void SaveNativeScreenshot(string path)
@@ -2278,6 +2554,7 @@ public partial class MainWindow : Window, IDisposable
 
         _settings.Input = profile;
         AppSettingsStore.Save(_settings);
+        StopMovie(save: true);
         _gamepad?.UpdateProfile(profile);
         _input = new InputManager(_settings.Input, _gamepad);
         if (_machine is not null)
@@ -3204,6 +3481,8 @@ public partial class MainWindow : Window, IDisposable
         {
             _libraryScanCts?.Cancel();
             _logTimer.Stop();
+            _movieTimer?.Stop();
+            StopMovie(save: true);
             _runner?.Dispose();
             _runner = null;
             _disc?.Dispose();

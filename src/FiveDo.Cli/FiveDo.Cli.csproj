@@ -39,6 +39,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FiveDo.Host\FiveDo.Host.csproj" />
+    <ProjectReference Include="..\FiveDo.Tas\FiveDo.Tas.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(FiveDoOpenAlNativeRid)' == 'win-x64' or '$(FiveDoOpenAlNativeRid)' == 'win-arm64' or '$(FiveDoOpenAlNativeRid)' == 'win-x86'">
