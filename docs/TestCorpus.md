@@ -394,6 +394,24 @@ instruction-stream divergence, not a renderer bug. The CD FIFO status/poll value
 are reference-internal and are captured for comparison but are not the same
 fields as 5DO's `DriveStatus`/`Poll`; do not compare them directly.
 
+**Opera parity batch 1 (2026-10-31):** the first source-level parity batch
+(VDLP next/force-line, ARM immediate rotate carry, DSP CPU FIFO, MADAM
+span/MARIA/BPP0/SKIPX/blue-LSB/REGCTL/PIXC, CLIO FIFO) was validated with the
+full unit suite and the differential harness:
+
+- `dotnet test 5DO.sln`: **1,135 passed**, 0 failed.
+- Smoke: Lemmings (USA), 300 frames, checkpoint 300: **PASS**, 1 match,
+  0 diverged, 5DO `0x110E7DC5` = Opera `0x110E7DC5`.
+- Showcase: 3,000 frames, checkpoint 3,000: unchanged from the pre-batch
+  baseline; Wolfenstein and Alone still match, Lemmings/Gex/Road Rash still
+  diverge, and the 5DO hashes are identical to the pre-batch values.
+- VDLP save states are now version 2; version-1 states migrate by restarting
+  traversal from the saved active cursor.
+
+The remaining parity items are OP-06 (literal LRFORM), OP-10 (MADAM CTL DMA
+flags), OP-09 finish (raw VH bits through the projector), OP-15 (literal SKIPX
+clamp), and OP-14 (YOXY/CEL origin).
+
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 
 All runs use the Release build, `panafz1.bin`, and a fresh NVRAM. The 3,000-frame

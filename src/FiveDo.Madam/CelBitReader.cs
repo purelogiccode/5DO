@@ -138,6 +138,36 @@ public sealed class CelBitReader
         return Read();
     }
 
+    /// <summary>
+    /// Reads an LR-form literal pixel. Opera: <c>BitReaderBig_ReadLRForm</c>.
+    /// </summary>
+    /// <param name="bits">Bits per pixel.</param>
+    /// <returns>The pixel value.</returns>
+    public uint ReadLrForm(byte bits)
+    {
+        SetBitRate(bits);
+        uint result = 0;
+        if (_buffer == 0)
+        {
+            return result;
+        }
+
+        for (var i = 0; i < bits; i++)
+        {
+            result <<= 1;
+            var lrPoint = (_point & 1u) + ((_point >> 1) << 2);
+            result |= (uint)((ReadByte(lrPoint) >> (7 - _bitPoint)) & 1);
+            _bitPoint++;
+            if (_bitPoint == 8)
+            {
+                _bitPoint = 0;
+                _point++;
+            }
+        }
+
+        return result;
+    }
+
     private byte ReadByte(uint point)
     {
         return _ram.Read8(_buffer + (point ^ 3));

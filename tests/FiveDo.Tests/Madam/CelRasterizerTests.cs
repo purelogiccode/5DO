@@ -79,6 +79,33 @@ public sealed class CelRasterizerTests
     }
 
     [Fact]
+    public void PackedLine_SkipXSkipsSourcePixels()
+    {
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
+        WritePackedCcb(
+            memory,
+            loadPlut: true,
+            hdx: 0x10000,
+            hdy: 0,
+            vdx: 0,
+            vdy: 0x10000,
+            flags: CcbControl.Clockwise);
+        WritePlut(memory, 0, 0);
+        WritePlut(memory, 1, 0x7fff);
+
+        // PRE0: 1 bpp plus SKIPX=1. The packet is a two-pixel literal run
+        // containing 0 then 1; skipping the first source pixel must draw the
+        // second at x=0 instead of x=1.
+        memory.Ram.Write32(SourceData, 1u | (1u << 24));
+        WriteBytes(memory, SourceData + 4, 0x00, 0x41, 0x40, 0x00);
+
+        _ = RunCel(madam);
+
+        Assert.Equal(0x7ffe, memory.Ram.Read16(FrameBuffer + 2));
+        Assert.Equal(0, memory.Ram.Read16(FrameBuffer + 6));
+    }
+
+    [Fact]
     public void PackedScale_LiteralRunFillsScaledRectangle()
     {
         (FiveDoMemory memory, MadamChip madam) = CreateScene();
@@ -101,6 +128,29 @@ public sealed class CelRasterizerTests
         Assert.Equal(0x7ffe, memory.Ram.Read16(FrameBuffer + 0));
         Assert.Equal(0x7ffe, memory.Ram.Read16(FrameBuffer + 4));
         Assert.Equal(24, cycles);
+    }
+
+    [Fact]
+    public void PackedScale_MariaStopsAfterFirstPixel()
+    {
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
+        WritePackedCcb(
+            memory,
+            loadPlut: true,
+            hdx: 0x20000,
+            hdy: 0,
+            vdx: 0,
+            vdy: 0x20000,
+            flags: CcbControl.Clockwise | CcbControl.Maria,
+            includePerspective: false);
+        WritePlut(memory, 0, 0x7fff);
+        WriteBytes(memory, SourceData + 4, 0x00, 0x40, 0x80);
+
+        var cycles = RunCel(madam);
+
+        Assert.Equal(0x7ffe, memory.Ram.Read16(FrameBuffer + 2));
+        Assert.Equal(0, memory.Ram.Read16(FrameBuffer + 6));
+        Assert.Equal(15, cycles);
     }
 
     [Fact]
@@ -170,11 +220,11 @@ public sealed class CelRasterizerTests
 
         _ = RunCel(madam);
 
-        // The quad covers (0,0)..(1,2). Both rows at x=0 are drawn; the second
-        // column is not. A transposed x/y would swap the two.
+        // The quad covers (0,0)..(1,2) inclusively. Both rows at x=0 are drawn,
+        // and the inclusive span endpoint draws the second column as well.
         Assert.Equal(0x7ffe, memory.Ram.Read16(FrameBuffer + 2));
         Assert.Equal(0x7ffe, memory.Ram.Read16(FrameBuffer));
-        Assert.Equal(0, memory.Ram.Read16(FrameBuffer + 6));
+        Assert.Equal(0x7ffe, memory.Ram.Read16(FrameBuffer + 6));
     }
 
     private static (FiveDoMemory Memory, MadamChip Madam) CreateScene()

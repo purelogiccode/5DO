@@ -305,9 +305,8 @@ public sealed class Madam : IMadamBus, IStateSection
                 return;
             case 0x130:
                 _registers[address] = value;
-                _readModulo = (int)(((value & 1) << 7) + ((value & 12) << 8) + ((value & 0x70) << 4));
-                var writeValue = value >> 8;
-                _writeModulo = (int)(((writeValue & 1) << 7) + ((writeValue & 12) << 8) + ((writeValue & 0x70) << 4));
+                _readModulo = DecodeRegCtlMod((int)(value & 0xff));
+                _writeModulo = DecodeRegCtlMod((int)((value >> 8) & 0xff));
                 return;
             default:
                 _registers[address] = value;
@@ -641,6 +640,55 @@ public sealed class Madam : IMadamBus, IStateSection
         _registers[0x664] = ToRegister(_result1Temp);
         _registers[0x668] = ToRegister(_result2Temp);
         _registers[0x66c] = ToRegister(_result3Temp);
+    }
+
+    private static int DecodeRegCtlMod(int value)
+    {
+        // Opera: REGCTL MOD bits encode pixel-width groups; XY2OFF needs a byte
+        // stride. The old FreeDO formula mixed bit positions and produced the
+        // wrong row stride for several widths (DinoPark Tycoon).
+        var mod = 0;
+        if ((value & 0x01) != 0)
+        {
+            mod += 32 << 2;
+        }
+
+        if ((value & 0x02) != 0)
+        {
+            mod += 512 << 2;
+        }
+
+        if ((value & 0x04) != 0)
+        {
+            mod += 256 << 2;
+        }
+
+        if ((value & 0x08) != 0)
+        {
+            mod += 1024 << 2;
+        }
+
+        if ((value & 0x10) != 0)
+        {
+            mod += 64 << 2;
+        }
+
+        if ((value & 0x20) != 0)
+        {
+            mod += 128 << 2;
+        }
+
+        if ((value & 0x40) != 0)
+        {
+            mod += 256 << 2;
+        }
+
+        if ((value & 0x80) != 0)
+        {
+            mod += 1024 << 2;
+        }
+
+        return mod;
     }
 
     private double M(int offset)

@@ -184,9 +184,15 @@ public static class PixelProcessor
                     | ((uint)Scale(pixelB >> 2, pixelB & 3, b) << 8)
                     | ((uint)Scale(pixelG >> 2, pixelG & 3, g) << 16);
             default:
-                return Scale(4, dv1, r)
-                    | ((uint)Scale(4, dv1, b) << 8)
-                    | ((uint)Scale(4, dv1, g) << 16);
+                // Opera: PDC_MFONLY uses the decoded pixel's high component bits
+                // as the multiplier index. FreeDO used a fixed index of 4, which
+                // made the AITD credits text blend incorrectly.
+                var mfR = ((pixel >> 10) & 0x1f) >> 2;
+                var mfG = ((pixel >> 5) & 0x1f) >> 2;
+                var mfB = (pixel & 0x1f) >> 2;
+                return Scale(mfR, dv1, r)
+                    | ((uint)Scale(mfB, dv1, b) << 8)
+                    | ((uint)Scale(mfG, dv1, g) << 16);
         }
     }
 

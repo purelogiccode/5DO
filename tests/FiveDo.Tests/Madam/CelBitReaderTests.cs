@@ -22,6 +22,17 @@ public sealed class CelBitReaderTests
     }
 
     [Fact]
+    public void ReadLrForm_UsesInterleavedRowBytes()
+    {
+        var memory = new FiveDoMemory();
+        WriteBytes(memory, 0x1000, 0x80, 0x00, 0x00, 0x00);
+        var reader = new CelBitReader(memory.Ram);
+        reader.AttachBuffer(0x1000);
+
+        Assert.Equal(1u, reader.ReadLrForm(1));
+    }
+
+    [Fact]
     public void Read_Nibbles()
     {
         var memory = new FiveDoMemory();

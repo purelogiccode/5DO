@@ -57,7 +57,7 @@ public sealed class Vdlp : IVdlp, IStateSection
     private readonly byte[] _clutR = new byte[VdlLine.ClutSize];
 
     private uint _background;
-    private uint _headVdl;
+    private uint _nextVdl;
     private uint _modulo = 320;
     private uint _currentVdl;
     private uint _currentBitmap;
@@ -65,6 +65,8 @@ public sealed class Vdlp : IVdlp, IStateSection
     private uint _outControl;
     private uint _clutDma;
     private int _lineDelay;
+    private int _persistLength;
+    private int _forceLine = 5;
 
     /// <summary>Initializes a new instance of the <see cref="Vdlp"/> class.</summary>
     /// <param name="ram">Raw VRAM accessor.</param>
@@ -78,8 +80,8 @@ public sealed class Vdlp : IVdlp, IStateSection
         Reset();
     }
 
-    /// <summary>Gets the current display-list head. FreeDO: <c>HEADVDL</c>.</summary>
-    public uint HeadVdl => _headVdl;
+    /// <summary>Gets the retained display-list head. FreeDO: <c>HEADVDL</c>; Opera: <c>next_vdl</c>.</summary>
+    public uint HeadVdl => _nextVdl;
 
     /// <summary>Gets the current display-list pointer. FreeDO: <c>CURRENTVDL</c>.</summary>
     public uint CurrentVdl => _currentVdl;
@@ -109,13 +111,14 @@ public sealed class Vdlp : IVdlp, IStateSection
     public uint Id => StateSectionIds.Vdlp;
 
     /// <summary>Gets the save-state section version.</summary>
-    public ushort Version => 1;
+    /// <remarks>Version 2 adds the retained next-VDL, force-line, and persistence fields.</remarks>
+    public ushort Version => 2;
 
     /// <summary>Resets the VDLP and writes the startup display list. FreeDO: <c>_vdl_Init</c>.</summary>
     public void Reset()
     {
         _background = 0;
-        _headVdl = 0xb0000;
+        _nextVdl = 0xb0000;
         _modulo = 320;
         _currentVdl = 0;
         _currentBitmap = 0;
@@ -123,10 +126,12 @@ public sealed class Vdlp : IVdlp, IStateSection
         _outControl = 0;
         _clutDma = 0;
         _lineDelay = 0;
+        _persistLength = 0;
+        _forceLine = 5;
 
         for (var i = 0u; i < (uint)StartupVdl.Length; i++)
         {
-            _ram.Write32(_headVdl + (i * 4) + VramOffset, StartupVdl[i]);
+            _ram.Write32(_nextVdl + (i * 4) + VramOffset, StartupVdl[i]);
         }
 
         for (var i = 0; i < VdlLine.ClutSize; i++)
@@ -142,7 +147,9 @@ public sealed class Vdlp : IVdlp, IStateSection
     /// <param name="address">VDL address within VRAM.</param>
     public void ProcessVdl(uint address)
     {
-        _headVdl = address;
+        // Opera: retain the CPU-programmed successor; the current field keeps
+        // traversing its existing display list until the next force line.
+        _nextVdl = address;
     }
 
     /// <summary>Renders one scanline. FreeDO: <c>_vdl_DoLineNew</c>.</summary>
@@ -156,16 +163,19 @@ public sealed class Vdlp : IVdlp, IStateSection
         var line = line2X & 0x7ff;
         if (line == 0)
         {
+            // Opera: latch the display-effective transfer boundary at field start.
+            // A VDL programmed during the previous field becomes visible here.
             _lineDelay = 0;
-            _currentVdl = _headVdl;
+            _forceLine = 5;
+        }
+
+        if (line >= 5
+            && (line == _forceLine || (_lineDelay == 0 && _persistLength != 0)))
+        {
             ExecuteVdl();
         }
 
         var y = line - 16;
-        if (_lineDelay == 0)
-        {
-            ExecuteVdl();
-        }
 
         if (y is >= 0 and < 240)
         {
@@ -298,14 +308,16 @@ public sealed class Vdlp : IVdlp, IStateSection
         writer.WriteBytes(_clutG);
         writer.WriteBytes(_clutR);
         writer.WriteUInt32(_background);
-        writer.WriteUInt32(_headVdl);
-        writer.WriteUInt32(_modulo);
+        writer.WriteInt32(_forceLine);
         writer.WriteUInt32(_currentVdl);
+        writer.WriteUInt32(_nextVdl);
+        writer.WriteUInt32(_modulo);
         writer.WriteUInt32(_currentBitmap);
         writer.WriteUInt32(_previousBitmap);
         writer.WriteUInt32(_outControl);
         writer.WriteUInt32(_clutDma);
         writer.WriteInt32(_lineDelay);
+        writer.WriteInt32(_persistLength);
     }
 
     /// <summary>Reads the VDLP save-state payload. FreeDO: <c>_vdl_Load</c>.</summary>
@@ -316,15 +328,38 @@ public sealed class Vdlp : IVdlp, IStateSection
         reader.ReadBytes(_clutB);
         reader.ReadBytes(_clutG);
         reader.ReadBytes(_clutR);
+
+        if (reader is StateSectionReader { Version: 1 })
+        {
+            // Version 1 stored the CPU-programmed head separately from the active
+            // cursor. Opera's migration restarts traversal from the active cursor;
+            // the old head may not be the entry the display was actually using.
+            _background = reader.ReadUInt32();
+            _ = reader.ReadUInt32(); // old head_vdl
+            _modulo = reader.ReadUInt32();
+            _currentVdl = reader.ReadUInt32();
+            _currentBitmap = reader.ReadUInt32();
+            _previousBitmap = reader.ReadUInt32();
+            _outControl = reader.ReadUInt32();
+            _clutDma = reader.ReadUInt32();
+            _lineDelay = reader.ReadInt32();
+            _nextVdl = _currentVdl;
+            _forceLine = 5;
+            _persistLength = _lineDelay > 0 ? _lineDelay : 0;
+            return;
+        }
+
         _background = reader.ReadUInt32();
-        _headVdl = reader.ReadUInt32();
-        _modulo = reader.ReadUInt32();
+        _forceLine = reader.ReadInt32();
         _currentVdl = reader.ReadUInt32();
+        _nextVdl = reader.ReadUInt32();
+        _modulo = reader.ReadUInt32();
         _currentBitmap = reader.ReadUInt32();
         _previousBitmap = reader.ReadUInt32();
         _outControl = reader.ReadUInt32();
         _clutDma = reader.ReadUInt32();
         _lineDelay = reader.ReadInt32();
+        _persistLength = reader.ReadInt32();
     }
 
     private uint ReadVram(uint address)
@@ -334,13 +369,16 @@ public sealed class Vdlp : IVdlp, IStateSection
 
     private void ExecuteVdl()
     {
-        var entry = ReadVram(_currentVdl);
-        if (entry == 0)
+        // Opera: a zero entry is still a valid display-list word. It may point at
+        // a successor through its next-pointer field, so do not treat zero as a
+        // 511-line stop. This is the Johnny Bazookatone horizontal-line fix.
+        if (_nextVdl == 0)
         {
-            _lineDelay = 511;
             return;
         }
 
+        _currentVdl = _nextVdl;
+        var entry = ReadVram(_currentVdl);
         _clutDma = entry;
 
         if ((entry & (1u << 16)) != 0)
@@ -431,8 +469,9 @@ public sealed class Vdlp : IVdlp, IStateSection
             }
         }
 
-        _currentVdl = nextVdl;
+        _nextVdl = nextVdl;
         _modulo = PixelsPerLine[(entry >> 23) & 7];
-        _lineDelay = (int)(entry & 0x1ff);
+        _persistLength = (int)(entry & 0x1ff);
+        _lineDelay = _persistLength;
     }
 }

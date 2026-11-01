@@ -400,6 +400,7 @@ public sealed class FiveDoMachine
                 || (section.Id == StateSectionIds.Quartz && section.Version <= 3)
                 || (section.Id == StateSectionIds.Clio && section.Version == 2)
                 || (section.Id == StateSectionIds.Madam && section.Version == 2)
+                || (section.Id == StateSectionIds.Vdlp && section.Version == 2)
                 || (section.Id == StateSectionIds.Options && section.Version <= 5);
             if (!supportedVersion)
             {

@@ -53,7 +53,13 @@ public sealed class PixelDecoder
     /// method with a shorter span.
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal PixelDecodeResult DecodeFast(uint pixel, uint pre0, uint ccbFlags, ReadOnlySpan<ushort> plut)
+    internal PixelDecodeResult DecodeFast(
+        uint pixel,
+        uint pre0,
+        uint ccbFlags,
+        ReadOnlySpan<ushort> plut,
+        uint pre1 = 0,
+        uint control0 = 0)
     {
         ushort pres;
         ushort amv;
@@ -96,13 +102,13 @@ public sealed class PixelDecoder
             default:
                 var pixelBitsMask = (pre0 & Pre0BppMask) switch
                 {
-                    1 => 1u,
+                    0 or 1 => 1u,
                     2 => 3u,
                     _ => 15u,
                 };
                 var plutBits = (pre0 & Pre0BppMask) switch
                 {
-                    1 => (ccbFlags & 0xf) * 4,
+                    0 or 1 => (ccbFlags & 0xf) * 4,
                     2 => (ccbFlags & 0xe) * 4,
                     _ => (ccbFlags & 0x8) * 4,
                 };
@@ -111,8 +117,30 @@ public sealed class PixelDecoder
                 break;
         }
 
+        // Opera: transparency is decided before blue-LSB substitution; the
+        // projector receives the pre-substitution bit 15/bit 0 pair.
+        var rawVhBits = (ushort)(pres & 0x8001);
         var transparent = (pres & 0x7fff) == 0 && (ccbFlags & CcbBackground) == 0;
-        return new PixelDecodeResult(pres, amv, transparent);
+
+        var lsbMode = (ccbFlags & (uint)CcbControl.Packed) != 0
+            ? (control0 >> 20) & 3u
+            : (pre1 >> 12) & 3u;
+        pres = SubstituteBlueLsb(pres, lsbMode);
+
+        return new PixelDecodeResult(pres, amv, transparent, rawVhBits);
+    }
+
+    private static ushort SubstituteBlueLsb(ushort pixel, uint mode)
+    {
+        var lsb = (mode & 3) switch
+        {
+            1 => pixel & 1u,
+            2 => (pixel >> 4) & 1u,
+            3 => (pixel >> 5) & 1u,
+            _ => 0u,
+        };
+
+        return (ushort)((pixel & ~1u) | lsb);
     }
 
     private void BuildTables()

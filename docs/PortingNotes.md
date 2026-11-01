@@ -880,3 +880,27 @@ M1 implements the section primitive used by all later chips:
   initialized volume, which also prevents a shared fallback from reappearing.
 - Smoke evidence is in `TestCorpus.md` 1.1g. Per-game storage does not change the
   Lemmings 3,000-frame hash.
+
+### 12.22 Opera parity batch 1 (2026-10-31)
+
+- VDLP now keeps `next_vdl` separate from the active traversal cursor, latches a
+  five-line force boundary at field start, and follows a zero entry through its
+  next-pointer word instead of stopping for 511 lines. The VDLP state section is
+  version 2; version-1 states migrate from the saved active cursor and do not use the
+  old CPU-programmed head.
+- ARM immediate data-processing instructions use the barrel-shifter no-carry path, so
+  rotate=0 preserves C and a rotated immediate produces bit 31 of the result.
+- DSP CPU-supplied FIFO reads `0xF0-0xFC` return the mirrored `0x70-0x7C` instruction
+  word and no longer consume the PRNG.
+- MADAM now uses the inclusive arbitrary-CEL span endpoint, stops MARIA scale/arbitrary
+  drawing after the first pixel, treats `PRE0_BPP=0` as the 1-bpp group, honors packed
+  `SKIPX`, reads literal LRFORM row pairs, applies blue-LSB substitution before the
+  projector, decodes REGCTL stride with the Opera byte groups, and uses the decoded
+  pixel's high components for `PDC_MFONLY`.
+- CLIO input FIFOs complete before the CPU observes the end address, reload only when
+  the channel request bit is enabled, and reset the pointer when a new start address is
+  written.
+- The differential smoke still matches Lemmings at frame 300; the five-title showcase
+  hashes are unchanged from the pre-batch baseline. See `TestCorpus.md` 1.1g.
+- Remaining parity work: literal LRFORM, MADAM CTL DMA flags, raw VH projector bits,
+  literal SKIPX clamp, YOXY/CEL origin, then CD/XBUS/DIPIR/reset.

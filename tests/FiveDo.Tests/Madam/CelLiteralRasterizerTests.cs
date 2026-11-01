@@ -90,6 +90,29 @@ public sealed class CelLiteralRasterizerTests
     }
 
     [Fact]
+    public void LiteralLine_LrFormReadsRowPairs()
+    {
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
+        WriteLiteralCcb(
+            memory,
+            vcnt: 0,
+            widthMinusOne: 0,
+            pre0: 1,
+            pre1: (uint)CcbPreamble1.LrForm,
+            loadPlut: true);
+        WritePlut(memory, 0, 0x7fff);
+
+        // LRFORM row 0 reads the byte at sourceBase+3; row 1 starts at
+        // sourceBase+2 and reads its byte at sourceBase+5.
+        WriteBytes(memory, SourceData + 8, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80);
+
+        _ = RunCel(madam);
+
+        Assert.Equal(0x7ffe, memory.Ram.Read16(FrameBuffer + 2));
+        Assert.Equal(0x7ffe, memory.Ram.Read16(FrameBuffer + 0));
+    }
+
+    [Fact]
     public void LiteralArbitrary_FillsQuad()
     {
         (FiveDoMemory memory, MadamChip madam) = CreateScene();

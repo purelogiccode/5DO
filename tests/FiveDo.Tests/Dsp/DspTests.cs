@@ -324,6 +324,27 @@ public sealed class DspTests
     }
 
     [Fact]
+    public void Loop_ReadsCpuSuppliedHighFifoFromInstructionMemory()
+    {
+        var host = new RecordingDspHost { InputFifoValue = 0xBEEF };
+        var dsp = new DspCore { Host = host };
+        dsp.WriteInstructionMemory(0x70, 0x1234);
+
+        var program = new ProgramBuilder();
+        program.Word(Alu(0, muxA: 1, muxB: 0, numOps: 1));
+        program.Word(NonRegister(0xF0));
+        program.Word(Alu(0, muxA: 1, muxB: 0, numOps: 1));
+        program.Word(NonRegister(0x3F0, writeBack: true));
+        program.Word(Sleep);
+
+        _ = Run(program, dsp);
+
+        Assert.Equal(0, host.InputFifoReads);
+        Assert.Equal(1, host.OutputFifoWrites);
+        Assert.Equal(0x1234, host.LastOutputValue);
+    }
+
+    [Fact]
     public void Loop_WritesOutputFifoThroughHost()
     {
         var host = new RecordingDspHost();

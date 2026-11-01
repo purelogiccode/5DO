@@ -70,6 +70,13 @@ public sealed class MadamTests
         madam.Poke(0x130, 0x00000100);
         Assert.Equal(0, madam.ReadModulo);
         Assert.Equal(128, madam.WriteModulo);
+
+        madam.Poke(0x130, 0x00000002);
+        Assert.Equal(512 * 4, madam.ReadModulo);
+        Assert.Equal(0, madam.WriteModulo);
+
+        madam.Poke(0x130, 0x00000080);
+        Assert.Equal(1024 * 4, madam.ReadModulo);
     }
 
     [Fact]

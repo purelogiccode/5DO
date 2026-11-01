@@ -224,7 +224,7 @@ public sealed class ArmDataProcessingTests
     }
 
     [Fact]
-    public void ImmediateMovs_KeepsStaleShifterCarry()
+    public void ImmediateMovs_ZeroRotate_PreservesCarry()
     {
         var rig = new ArmTestRig();
         rig.Cpu.Cpsr = 0x20000013;
@@ -232,7 +232,20 @@ public sealed class ArmDataProcessingTests
 
         rig.Cpu.Step();
 
-        Assert.Equal(0u, (rig.Cpu.Cpsr >> 29) & 1);
+        Assert.Equal(1u, (rig.Cpu.Cpsr >> 29) & 1);
+    }
+
+    [Fact]
+    public void ImmediateMovs_RotatedImmediate_SetsCarryFromResultBit31()
+    {
+        var rig = new ArmTestRig();
+        rig.Cpu.Cpsr = 0x00000013;
+        rig.LoadProgram(ArmTestAssembler.DpImmediate(13, 0, 0, 0x80000000u, setFlags: true));
+
+        rig.Cpu.Step();
+
+        Assert.Equal(0x80000000u, rig.Cpu.ReadRegister(0));
+        Assert.Equal(1u, (rig.Cpu.Cpsr >> 29) & 1);
     }
 
     [Fact]

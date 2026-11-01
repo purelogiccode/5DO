@@ -1051,9 +1051,11 @@ public sealed class Dsp : IDsp, IStateSection
             case >= 0xf0 and <= 0xfc:
                 if (_cpuSupply[address - 0xf0])
                 {
+                    // Opera: return the CPU-supplied coefficient from the mirrored
+                    // 0x70-0x7C window. The old FreeDO path consumed the PRNG here,
+                    // which turned CPU-supplied DSP FIFO values into noise.
                     _cpuSupply[address - 0xf0] = false;
-                    _ = FastRandom();
-                    return unchecked((ushort)FastRandom());
+                    return _imem[address - 0x80];
                 }
 
                 return Host?.ReadInputFifo((ushort)(address & 0x0f)) ?? 0;

@@ -198,12 +198,35 @@ public sealed class ClioTests
         memory.Ram.Write16(0x2002, 0xabcd);
 
         var clio = new ClioChip { Ram = memory.Ram };
+        clio.Poke(0x304, 1); // enable input channel 0 reload
         clio.SetFifo(0x400, 0x1000);
         clio.SetFifo(0x404, 0);
         clio.SetFifo(0x408, 0x2000);
         clio.SetFifo(0x40c, 0);
 
         Assert.Equal(0xabcd, clio.ReadInputFifo(0));
+        Assert.Equal(1u << 16, clio.Peek(0x40) & (1u << 16));
+    }
+
+    [Fact]
+    public void Fifo_InputCompletesImmediatelyAfterLastWord()
+    {
+        var memory = new FiveDoMemory();
+        memory.Ram.Write16(0x1002, 0x1111);
+        memory.Ram.Write16(0x1000, 0x2222);
+        memory.Ram.Write16(0x1006, 0x3333);
+        memory.Ram.Write16(0x1004, 0x4444);
+
+        var clio = new ClioChip { Ram = memory.Ram };
+        clio.SetFifo(0x400, 0x1000);
+        clio.SetFifo(0x404, 4); // 8 bytes: four 16-bit words
+
+        Assert.Equal(0x1111, clio.ReadInputFifo(0));
+        Assert.Equal(0x2222, clio.ReadInputFifo(0));
+        Assert.Equal(0x3333, clio.ReadInputFifo(0));
+        Assert.Equal(0x4444, clio.ReadInputFifo(0));
+
+        Assert.Equal(0u, clio.FifoStruct(0x400));
         Assert.Equal(1u << 16, clio.Peek(0x40) & (1u << 16));
     }
 

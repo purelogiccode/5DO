@@ -585,6 +585,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
                 case 0:
                     fifo.StartAddress = value;
                     fifo.NextAddress = 0;
+                    _inputPointers[index] = 0;
                     break;
                 case 4:
                     fifo.StartLength = value == 0 ? 0 : unchecked((int)value + 4);
@@ -677,36 +678,49 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         }
 
         ref FifoDescriptor fifo = ref _inputFifos[channel];
+
+        // Opera: complete a restored/queued transfer before the CPU can observe
+        // the end address, then read from the (possibly reloaded) current buffer.
+        if (fifo.StartAddress != 0 && _inputPointers[channel] >= fifo.StartLength)
+        {
+            CompleteInputFifo(channel);
+        }
+
         if (fifo.StartAddress == 0)
         {
             return 0;
         }
 
-        ushort value;
-        if (fifo.StartLength - _inputPointers[channel] > 0)
+        var value = Ram?.Read16((fifo.StartAddress + (uint)_inputPointers[channel]) ^ 2) ?? 0;
+        _inputPointers[channel] += 2;
+
+        // Complete immediately after the final word so the next read sees the
+        // reloaded buffer instead of the stale end address.
+        if (_inputPointers[channel] >= fifo.StartLength)
         {
-            value = Ram?.Read16((fifo.StartAddress + (uint)_inputPointers[channel]) ^ 2) ?? 0;
-            _inputPointers[channel] += 2;
-        }
-        else
-        {
-            _inputPointers[channel] = 0;
-            GenerateFiq(1u << (channel + 16), 0);
-            if (fifo.NextAddress != 0)
-            {
-                fifo.StartAddress = fifo.NextAddress;
-                fifo.StartLength = fifo.NextLength;
-                value = Ram?.Read16((fifo.StartAddress + (uint)_inputPointers[channel]) ^ 2) ?? 0;
-                _inputPointers[channel] += 2;
-            }
-            else
-            {
-                fifo.StartAddress = 0;
-                value = 0;
-            }
+            CompleteInputFifo(channel);
         }
 
         return value;
+    }
+
+    private void CompleteInputFifo(ushort channel)
+    {
+        ref FifoDescriptor fifo = ref _inputFifos[channel];
+        _inputPointers[channel] = 0;
+        GenerateFiq(1u << (channel + 16), 0);
+
+        // Opera: reload is enabled by the channel request bit. A disabled
+        // channel leaves the FIFO detached even when a next descriptor exists.
+        if (fifo.NextAddress != 0 && (_registers[0x304] & (1u << channel)) != 0)
+        {
+            fifo.StartAddress = fifo.NextAddress;
+            fifo.StartLength = fifo.NextLength;
+        }
+        else
+        {
+            fifo.StartAddress = 0;
+        }
     }
 
     /// <summary>Reads one word from an input FIFO without advancing. FreeDO: <c>_clio_EIFIFONI</c>.</summary>

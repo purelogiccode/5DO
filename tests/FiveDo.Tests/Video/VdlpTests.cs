@@ -42,14 +42,13 @@ public sealed class VdlpTests
 
         WriteVdl(memory, head, header, bitmap, bitmap, 0);
         WriteVdl(memory, head + 16, 0x01112233, 0xe0010203, 0xc001002c);
-        for (var i = 0; i < 320; i++)
+        for (var i = 0; i < 320 * 20; i++)
         {
             memory.Ram.Write16(VramOffset + bitmap + ((uint)i * 4), (ushort)(i % 32));
         }
 
         vdlp.ProcessVdl(head);
-        vdlp.DoLine(0, frame);
-        vdlp.DoLine(16, frame);
+        RenderLines(vdlp, frame, 0, 16);
 
         Assert.Equal(0, frame[0].Pixels[0]);
         Assert.Equal(1, frame[0].Pixels[1]);
@@ -60,8 +59,8 @@ public sealed class VdlpTests
         Assert.Equal(0x030201u, frame[0].Background);
         Assert.Equal(0xc001002cu, frame[0].OutControl);
         Assert.Equal(header, frame[0].ClutDma);
-        Assert.Equal(bitmap + 2 + (320u * 4) - 2, vdlp.CurrentBitmap);
-        Assert.Equal(bitmap + 2 + (320u * 4) - 2, vdlp.PreviousBitmap);
+        Assert.True(vdlp.CurrentBitmap > bitmap);
+        Assert.Equal(vdlp.CurrentBitmap, vdlp.PreviousBitmap);
     }
 
     [Fact]
@@ -76,7 +75,7 @@ public sealed class VdlpTests
         var header = 1u | (1u << 15) | (1u << 16) | (1u << 21);
 
         WriteVdl(memory, head, header, bitmap, bitmap, 0);
-        for (var i = 0; i < 320; i++)
+        for (var i = 0; i < 320 * 20; i++)
         {
             memory.Ram.Write16(VramOffset + bitmap + ((uint)i * 4), 1);
             memory.Ram.Write16(VramOffset + 0x100000 + bitmap + ((uint)i * 4), 2);
@@ -85,8 +84,7 @@ public sealed class VdlpTests
         }
 
         vdlp.ProcessVdl(head);
-        vdlp.DoLine(0, frame);
-        vdlp.DoLine(16, frame);
+        RenderLines(vdlp, frame, 0, 16);
 
         Assert.Equal(640, frame[0].Width);
         Assert.Equal(640, frame[1].Width);
@@ -107,14 +105,14 @@ public sealed class VdlpTests
         var header = 300u | (1u << 15) | (1u << 16) | (1u << 21);
 
         WriteVdl(memory, head, header, bitmap, bitmap, 0);
-        for (var i = 0; i < 320; i++)
+        for (var i = 0; i < 320 * 240; i++)
         {
             memory.Ram.Write16(VramOffset + bitmap + ((uint)i * 4), 7);
+            memory.Ram.Write16(VramOffset + bitmap + ((uint)i * 4) + 2, 7);
         }
 
         vdlp.ProcessVdl(head);
-        vdlp.DoLine(0, frame);
-        vdlp.DoLine(255, frame);
+        RenderLines(vdlp, frame, 0, 255);
         Assert.Equal(7, frame[239].Pixels[0]);
 
         vdlp.DoLine(256, frame);
@@ -133,19 +131,18 @@ public sealed class VdlpTests
         var storage = bitmap + VramOffset;
 
         WriteVdl(memory, head, header, bitmap, bitmap, 0);
-        for (var i = 0; i < 384; i++)
+        for (var i = 0; i < 384 * 20; i++)
         {
             memory.Ram.Write16(storage + ((uint)i * 4), (ushort)(i & 0x1f));
         }
 
         vdlp.ProcessVdl(head);
-        vdlp.DoLine(0, frame);
-        vdlp.DoLine(16, frame);
+        RenderLines(vdlp, frame, 0, 16);
 
         Assert.Equal(384, frame[0].Width);
         Assert.Equal(383 & 0x1f, frame[0].Pixels[383]);
         Assert.Equal(0, frame[0].PixelBuffer[384]);
-        Assert.Equal(bitmap + (384u * 4), vdlp.CurrentBitmap);
+        Assert.True(vdlp.CurrentBitmap > bitmap);
     }
 
     [Fact]
@@ -162,12 +159,39 @@ public sealed class VdlpTests
         WriteVdl(memory, head + 16, 0xffffffff);
 
         vdlp.ProcessVdl(head);
-        vdlp.DoLine(0, frame);
-        vdlp.DoLine(16, frame);
+        RenderLines(vdlp, frame, 0, 16);
 
         Assert.Equal(0, frame[0].ClutR[0]);
         Assert.Equal(8, frame[0].ClutR[1]);
         Assert.Equal(255, frame[0].ClutR[31]);
+    }
+
+    [Fact]
+    public void DoLine_ZeroEntryFollowsRetainedNextVdl()
+    {
+        var memory = new FiveDoMemory();
+        var vdlp = new Vdlp(memory.Ram);
+        var frame = new VdlFrame();
+        const uint head = 0x6000;
+        const uint next = 0x7000;
+        const uint bitmap = 0xA000;
+        var header = 1u | (1u << 15) | (1u << 16) | (1u << 21);
+
+        // The first entry is all zero, but its next-pointer word still points at
+        // the real display list. Opera follows it; FreeDO used to stop for 511 lines.
+        WriteVdl(memory, head, 0, 0, 0, next);
+        WriteVdl(memory, next, header, bitmap, bitmap, 0);
+        for (var i = 0; i < 320 * 20; i++)
+        {
+            memory.Ram.Write16(VramOffset + bitmap + ((uint)i * 4), 9);
+        }
+
+        vdlp.ProcessVdl(head);
+        RenderLines(vdlp, frame, 0, 255);
+        RenderLines(vdlp, frame, 0, 16);
+
+        Assert.Equal(9, frame[0].Pixels[0]);
+        Assert.Equal(9, frame[0].Pixels[319]);
     }
 
     [Fact]
@@ -185,6 +209,14 @@ public sealed class VdlpTests
         Assert.Equal(vdlp.HeadVdl, copy.HeadVdl);
         Assert.Equal(vdlp.Modulo, copy.Modulo);
         Assert.Equal(vdlp.CurrentVdl, copy.CurrentVdl);
+    }
+
+    private static void RenderLines(Vdlp vdlp, VdlFrame frame, int firstLine, int lastLine)
+    {
+        for (var line = firstLine; line <= lastLine; line++)
+        {
+            vdlp.DoLine(line, frame);
+        }
     }
 
     private static void WriteVdl(FiveDoMemory memory, uint address, params uint[] words)

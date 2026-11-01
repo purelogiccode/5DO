@@ -21,7 +21,6 @@ namespace FiveDo.Madam;
 /// </remarks>
 internal sealed class CelRasterizer
 {
-    private const int FixedOne = 0x10000;
     private static readonly int[] BppTable = { 1, 1, 2, 4, 6, 8, 16, 1 };
 
     private readonly CelEngine _engine;
@@ -84,6 +83,7 @@ internal sealed class CelRasterizer
         var rowCount = (int)((_engine.Pre0 & 0xffc0u) >> 6);
         var bpp = BppTable[(int)(_engine.Pre0 & 0x7u)];
         var offsetLength = bpp < 8 ? 1 : 2;
+        var skipX = (int)((_engine.Pre0 >> 24) & 0xfu);
         int pixcount;
 
         geometry.SpriteHeight = rowCount + 1;
@@ -106,6 +106,7 @@ internal sealed class CelRasterizer
             for (var currentRow = 0; currentRow < geometry.TextureHeightLimit; currentRow++)
             {
                 _engine.BitReader.AttachBuffer(unchecked((uint)start));
+                var sourceSkip = skipX;
                 var offset = (int)_engine.BitReader.Read((byte)(offsetLength << 3));
                 var lastaddr = unchecked(start + ((offset + 2) << 2));
                 var eor = false;
@@ -132,6 +133,15 @@ internal sealed class CelRasterizer
                     }
 
                     pixcount = (int)_engine.BitReader.Read(6) + 1;
+
+                    if (sourceSkip != 0)
+                    {
+                        pixcount = SkipPackedPixels(type, pixcount, ref sourceSkip, bpp);
+                        if (pixcount == 0)
+                        {
+                            continue;
+                        }
+                    }
 
                     if (scipw != 0)
                     {
@@ -255,15 +265,10 @@ internal sealed class CelRasterizer
         {
             compatibility.UnknownFlag11 = 100_000;
 
-            var drawHeight = geometry.Vdy1616;
-            if ((_ccbFlags & CcbControl.Maria) != CcbControl.None && drawHeight > FixedOne)
-            {
-                drawHeight = FixedOne;
-            }
-
             for (var currentRow = 0; currentRow < geometry.SpriteHeight; currentRow++)
             {
                 _engine.BitReader.AttachBuffer(unchecked((uint)start));
+                var sourceSkip = skipX;
                 var offset = (int)_engine.BitReader.Read((byte)(offsetLength << 3));
                 var lastaddr = unchecked(start + ((offset + 2) << 2));
                 var eor = false;
@@ -284,6 +289,15 @@ internal sealed class CelRasterizer
 
                     remaining = (int)_engine.BitReader.Read(6) + 1;
 
+                    if (sourceSkip != 0)
+                    {
+                        remaining = SkipPackedPixels(type, remaining, ref sourceSkip, bpp);
+                        if (remaining == 0)
+                        {
+                            continue;
+                        }
+                    }
+
                     switch (type)
                     {
                         case 0:
@@ -302,7 +316,7 @@ internal sealed class CelRasterizer
                                             xcur >> 16,
                                             ycur >> 16,
                                             (xcur + geometry.Hdx1616 + geometry.Vdx1616) >> 16,
-                                            (ycur + geometry.Hdy1616 + drawHeight) >> 16) != 0)
+                                            (ycur + geometry.Hdy1616 + geometry.Vdy1616) >> 16) != 0)
                                     {
                                         break;
                                     }
@@ -328,7 +342,7 @@ internal sealed class CelRasterizer
                                         xcur >> 16,
                                         ycur >> 16,
                                         (xcur + (geometry.Hdx1616 * remaining) + geometry.Vdx1616) >> 16,
-                                        (ycur + (geometry.Hdy1616 * remaining) + drawHeight) >> 16) != 0)
+                                        (ycur + (geometry.Hdy1616 * remaining) + geometry.Vdy1616) >> 16) != 0)
                                 {
                                     break;
                                 }
@@ -359,6 +373,7 @@ internal sealed class CelRasterizer
             for (var currentRow = 0; currentRow < geometry.SpriteHeight; currentRow++)
             {
                 _engine.BitReader.AttachBuffer(unchecked((uint)start));
+                var sourceSkip = skipX;
                 var offset = (int)_engine.BitReader.Read((byte)(offsetLength << 3));
                 var lastaddr = unchecked(start + ((offset + 2) << 2));
                 var eor = false;
@@ -386,6 +401,15 @@ internal sealed class CelRasterizer
                     }
 
                     remaining = (int)_engine.BitReader.Read(6) + 1;
+
+                    if (sourceSkip != 0)
+                    {
+                        remaining = SkipPackedPixels(type, remaining, ref sourceSkip, bpp);
+                        if (remaining == 0)
+                        {
+                            continue;
+                        }
+                    }
 
                     switch (type)
                     {
@@ -503,8 +527,15 @@ internal sealed class CelRasterizer
             : (int)((_engine.Pre1 & 0x03ff0000u) >> 16);
 
         var spriteWidth = 1 + (int)(_engine.Pre1 & 0x7ffu);
+        var lrForm = (_engine.Pre1 & (uint)CcbPreamble1.LrForm) != 0;
         geometry.SpriteWidth = spriteWidth;
         geometry.SpriteHeight = (int)((_engine.Pre0 & 0xffc0u) >> 6) + 1;
+        if (lrForm)
+        {
+            // Opera: LRFORM describes a source row-pair layout. A 1-bpp LRFORM
+            // CEL is used as a priority mask over LR-format bitmap data.
+            geometry.SpriteHeight <<= 1;
+        }
 
         if (!PrepareGeometry(false))
         {
@@ -518,7 +549,8 @@ internal sealed class CelRasterizer
         var xcur = xvert;
         var ycur = yvert;
         var skipX = (int)((_engine.Pre0 >> 24) & 0xfu);
-        var data = unchecked((int)_engine.DataAddress);
+        var rowBytes = (offset + 2) << 2;
+        var sourceBase = unchecked((int)_engine.DataAddress);
 
         if (geometry.TexelFunction == TexelFunction.Line)
         {
@@ -527,8 +559,6 @@ internal sealed class CelRasterizer
             geometry.SpriteWidth = spriteWidth;
             xvert = unchecked(xvert + (geometry.TextureHeightStart * geometry.Vdx1616));
             yvert = unchecked(yvert + (geometry.TextureHeightStart * geometry.Vdy1616));
-            data = unchecked(data + (((offset + 2) << 2) * geometry.TextureHeightStart));
-
             if (spriteWidth > geometry.TextureWidthLimit)
             {
                 spriteWidth = geometry.TextureWidthLimit;
@@ -537,7 +567,10 @@ internal sealed class CelRasterizer
 
             for (var i = geometry.TextureHeightStart; i < geometry.TextureHeightLimit; i++)
             {
-                _engine.BitReader.AttachBuffer(unchecked((uint)data));
+                var rowAddress = lrForm
+                    ? sourceBase + Xy2Off(0, i, rowBytes)
+                    : sourceBase + (rowBytes * i);
+                _engine.BitReader.AttachBuffer(unchecked((uint)rowAddress));
                 xcur = unchecked(xvert + (geometry.TextureWidthStart * geometry.Hdx1616));
                 ycur = unchecked(yvert + (geometry.TextureWidthStart * geometry.Hdy1616));
                 _engine.BitReader.Skip((uint)(bpp * skipX));
@@ -551,7 +584,7 @@ internal sealed class CelRasterizer
 
                 for (var j = geometry.TextureWidthStart; j < spriteWidth; j++)
                 {
-                    PixelDecodeResult decoded = DecodePixel(bpp);
+                    PixelDecodeResult decoded = lrForm ? DecodePixelLr(bpp) : DecodePixel(bpp);
                     if (!decoded.Transparent)
                     {
                         DrawPixel(decoded, xcur, ycur, (compatibility.FixMode & FixMode.BitTiming6) != FixMode.None);
@@ -560,8 +593,6 @@ internal sealed class CelRasterizer
                     xcur = unchecked(xcur + geometry.Hdx1616);
                     ycur = unchecked(ycur + geometry.Hdy1616);
                 }
-
-                data = unchecked(data + ((offset + 2) << 2));
             }
         }
         else if (geometry.TexelFunction == TexelFunction.Scale)
@@ -569,15 +600,12 @@ internal sealed class CelRasterizer
             spriteWidth -= skipX;
             geometry.SpriteWidth = spriteWidth;
 
-            var drawHeight = geometry.Vdy1616;
-            if ((_ccbFlags & CcbControl.Maria) != CcbControl.None && drawHeight > FixedOne)
-            {
-                drawHeight = FixedOne;
-            }
-
             for (var i = 0; i < geometry.SpriteHeight; i++)
             {
-                _engine.BitReader.AttachBuffer(unchecked((uint)data));
+                var rowAddress = lrForm
+                    ? sourceBase + Xy2Off(0, i, rowBytes)
+                    : sourceBase + (rowBytes * i);
+                _engine.BitReader.AttachBuffer(unchecked((uint)rowAddress));
                 xcur = xvert;
                 ycur = yvert;
                 xvert = unchecked(xvert + geometry.Vdx1616);
@@ -586,7 +614,7 @@ internal sealed class CelRasterizer
 
                 for (var j = 0; j < spriteWidth; j++)
                 {
-                    PixelDecodeResult decoded = DecodePixel(bpp);
+                    PixelDecodeResult decoded = lrForm ? DecodePixelLr(bpp) : DecodePixel(bpp);
                     if (!decoded.Transparent)
                     {
                         if (TexelDrawScale(
@@ -595,7 +623,7 @@ internal sealed class CelRasterizer
                                 xcur >> 16,
                                 ycur >> 16,
                                 (xcur + geometry.Hdx1616 + geometry.Vdx1616) >> 16,
-                                (ycur + geometry.Hdy1616 + drawHeight) >> 16) != 0)
+                                (ycur + geometry.Hdy1616 + geometry.Vdy1616) >> 16) != 0)
                         {
                             break;
                         }
@@ -604,8 +632,6 @@ internal sealed class CelRasterizer
                     xcur = unchecked(xcur + geometry.Hdx1616);
                     ycur = unchecked(ycur + geometry.Hdy1616);
                 }
-
-                data = unchecked(data + ((offset + 2) << 2));
             }
         }
         else
@@ -617,7 +643,10 @@ internal sealed class CelRasterizer
             var trace = _engine.TraceWriter is not null;
             for (var i = 0; i < geometry.SpriteHeight; i++)
             {
-                _engine.BitReader.AttachBuffer(unchecked((uint)data));
+                var rowAddress = lrForm
+                    ? sourceBase + Xy2Off(0, i, rowBytes)
+                    : sourceBase + (rowBytes * i);
+                _engine.BitReader.AttachBuffer(unchecked((uint)rowAddress));
                 xcur = xvert;
                 ycur = yvert;
                 var hdx = geometry.Hdx1616;
@@ -639,7 +668,7 @@ internal sealed class CelRasterizer
                         _engine.TraceProgress(texels, i, j);
                     }
 
-                    PixelDecodeResult decoded = DecodePixel(bpp);
+                    PixelDecodeResult decoded = lrForm ? DecodePixelLr(bpp) : DecodePixel(bpp);
                     if (!decoded.Transparent)
                     {
                         if (TexelDrawArbitrary(
@@ -671,8 +700,6 @@ internal sealed class CelRasterizer
                     xdown = unchecked(xdown + geometry.Hdx1616);
                     ydown = unchecked(ydown + geometry.Hdy1616);
                 }
-
-                data = unchecked(data + ((offset + 2) << 2));
             }
         }
 
@@ -731,7 +758,7 @@ internal sealed class CelRasterizer
                     var raw = _engine.Memory.ReadHalfword(Address(
                         unchecked((uint)data),
                         Xy2Off(j << 2, i, offset << 2)));
-                    PixelDecodeResult decoded = _engine.Decoder.DecodeFast(raw, _pre0, _flagsRaw, _plut);
+                    PixelDecodeResult decoded = _engine.Decoder.DecodeFast(raw, _pre0, _flagsRaw, _plut, _pre1, _control0);
                     if (!decoded.Transparent)
                     {
                         DrawPixel(decoded, xcur, ycur, false);
@@ -744,12 +771,6 @@ internal sealed class CelRasterizer
         }
         else if (geometry.TexelFunction == TexelFunction.Scale)
         {
-            var drawHeight = geometry.Vdy1616;
-            if ((_ccbFlags & CcbControl.Maria) != CcbControl.None && drawHeight > FixedOne)
-            {
-                drawHeight = FixedOne;
-            }
-
             for (var i = 0; i < geometry.SpriteHeight; i++)
             {
                 xcur = xvert;
@@ -762,7 +783,7 @@ internal sealed class CelRasterizer
                     var raw = _engine.Memory.ReadHalfword(Address(
                         unchecked((uint)data),
                         Xy2Off(j << 2, i, offset << 2)));
-                    PixelDecodeResult decoded = _engine.Decoder.DecodeFast(raw, _pre0, _flagsRaw, _plut);
+                    PixelDecodeResult decoded = _engine.Decoder.DecodeFast(raw, _pre0, _flagsRaw, _plut, _pre1, _control0);
                     if (!decoded.Transparent)
                     {
                         if (TexelDrawScale(
@@ -771,7 +792,7 @@ internal sealed class CelRasterizer
                                 xcur >> 16,
                                 ycur >> 16,
                                 (xcur + geometry.Hdx1616 + geometry.Vdx1616) >> 16,
-                                (ycur + geometry.Hdy1616 + drawHeight) >> 16) != 0)
+                                (ycur + geometry.Hdy1616 + geometry.Vdy1616) >> 16) != 0)
                         {
                             break;
                         }
@@ -802,7 +823,7 @@ internal sealed class CelRasterizer
                     var raw = _engine.Memory.ReadHalfword(Address(
                         unchecked((uint)data),
                         Xy2Off(j << 2, i, offset << 2)));
-                    PixelDecodeResult decoded = _engine.Decoder.DecodeFast(raw, _pre0, _flagsRaw, _plut);
+                    PixelDecodeResult decoded = _engine.Decoder.DecodeFast(raw, _pre0, _flagsRaw, _plut, _pre1, _control0);
                     if (!decoded.Transparent)
                     {
                         if (TexelDrawArbitrary(
@@ -830,6 +851,28 @@ internal sealed class CelRasterizer
         }
 
         FinalizeVisualPosition(xcur, ycur);
+    }
+
+    private int SkipPackedPixels(int type, int pixelCount, ref int skipPixels, int bpp)
+    {
+        if (skipPixels == 0 || pixelCount == 0 || type == 0)
+        {
+            return pixelCount;
+        }
+
+        var skipped = Math.Min(skipPixels, pixelCount);
+        if (type == 1)
+        {
+            _engine.BitReader.Skip((uint)(bpp * skipped));
+        }
+        else if (type == 3 && skipped == pixelCount)
+        {
+            // A repeat packet stores one source pixel for the whole run.
+            _engine.BitReader.Skip((uint)bpp);
+        }
+
+        skipPixels -= skipped;
+        return pixelCount - skipped;
     }
 
     /// <summary>Draws one texel row segment. FreeDO: <c>TexelDraw_Line</c>.</summary>
@@ -946,6 +989,13 @@ internal sealed class CelRasterizer
                             _engine.AddPixels(1);
                         }
                         pixels++;
+
+                        if ((_ccbFlags & CcbControl.Maria) != CcbControl.None)
+                        {
+                            // The early return still consumed one read/write pair.
+                            _engine.Memory.AddCycles(3);
+                            return 0;
+                        }
                     }
 
                     readAddress = unchecked(readAddress + geometry.TexelIncrementX);
@@ -975,6 +1025,10 @@ internal sealed class CelRasterizer
                     _pre1,
                     _celOriginVh);
                 WritePixel(_frameBufferTarget, j >> 2, i, pixel, _writeModulo);
+                if ((_ccbFlags & CcbControl.Maria) != CcbControl.None)
+                {
+                    return 0;
+                }
             }
         }
 
@@ -1204,13 +1258,19 @@ internal sealed class CelRasterizer
                     j = 0;
                 }
 
-                maxx = xpoints[3];
+                // Opera: the span endpoint is inclusive. FreeDO stopped one
+                // texel short, which clipped the last column of arbitrary CELs.
+                maxx = xpoints[3] + 1;
                 if (maxx > maxXt)
                 {
                     maxx = maxXt;
                 }
 
                 FillArbitrarySpan(curPix, lamv, i, j, maxx, ref currentFramePixel, ref pixel);
+                if ((_ccbFlags & CcbControl.Maria) != CcbControl.None)
+                {
+                    return 0;
+                }
             }
 
             if (((_ccbFlags & CcbControl.Clockwise) != CcbControl.None && updowns[0] == 0)
@@ -1222,13 +1282,17 @@ internal sealed class CelRasterizer
                     j = 0;
                 }
 
-                maxx = xpoints[1];
+                maxx = xpoints[1] + 1;
                 if (maxx > maxXt)
                 {
                     maxx = maxXt;
                 }
 
                 FillArbitrarySpan(curPix, lamv, i, j, maxx, ref currentFramePixel, ref pixel);
+                if ((_ccbFlags & CcbControl.Maria) != CcbControl.None)
+                {
+                    return 0;
+                }
             }
         }
 
@@ -1274,6 +1338,11 @@ internal sealed class CelRasterizer
                     _engine.AddPixels(1);
                 }
 
+                if ((_ccbFlags & CcbControl.Maria) != CcbControl.None)
+                {
+                    return;
+                }
+
                 readAddress += 4;
                 writeAddress += 4;
             }
@@ -1299,6 +1368,10 @@ internal sealed class CelRasterizer
             }
 
             WritePixel(_frameBufferTarget, x, y, (ushort)pixel);
+            if ((_ccbFlags & CcbControl.Maria) != CcbControl.None)
+            {
+                return;
+            }
         }
     }
 
@@ -1346,7 +1419,13 @@ internal sealed class CelRasterizer
     private PixelDecodeResult DecodePixel(int bpp)
     {
         var raw = _engine.BitReader.Read((byte)bpp);
-        return _engine.Decoder.DecodeFast(raw, _pre0, _flagsRaw, _plut);
+        return _engine.Decoder.DecodeFast(raw, _pre0, _flagsRaw, _plut, _pre1, _control0);
+    }
+
+    private PixelDecodeResult DecodePixelLr(int bpp)
+    {
+        var raw = _engine.BitReader.ReadLrForm((byte)bpp);
+        return _engine.Decoder.DecodeFast(raw, _pre0, _flagsRaw, _plut, _pre1, _control0);
     }
 
     private ushort ProcessPixel(ushort pixel, ushort amv, ushort framePixel)

@@ -22,6 +22,22 @@ public sealed class PixelDecoderTests
     }
 
     [Fact]
+    public void Decode_ZeroBppUsesTheOneBppGroup()
+    {
+        var decoder = new PixelDecoder();
+        var plut = CreatePlut();
+        plut[0] = 0x1234;
+        plut[1] = 0x5678;
+
+        PixelDecodeResult first = decoder.Decode(0, 0, 0, plut);
+        PixelDecodeResult second = decoder.Decode(1, 0, 0, plut);
+
+        Assert.Equal(0x1234, first.Pixel);
+        Assert.Equal(0x5678, second.Pixel);
+        Assert.Equal(0x49, first.Amv);
+    }
+
+    [Fact]
     public void Decode_TwoAndFourBppUsePlutEntries()
     {
         var decoder = new PixelDecoder();
@@ -30,7 +46,7 @@ public sealed class PixelDecoderTests
         plut[15] = 0x3333;
 
         Assert.Equal(0x2222, decoder.Decode(2, 2, 0, plut).Pixel);
-        Assert.Equal(0x3333, decoder.Decode(15, 3, 0, plut).Pixel);
+        Assert.Equal(0x3332, decoder.Decode(15, 3, 0, plut).Pixel);
     }
 
     [Fact]
@@ -53,7 +69,7 @@ public sealed class PixelDecoderTests
 
         PixelDecodeResult result = decoder.Decode(0x12, 5 | 0x10, 0, CreatePlut());
 
-        Assert.Equal(0x255, result.Pixel);
+        Assert.Equal(0x254, result.Pixel);
         Assert.Equal(0x49, result.Amv);
     }
 
@@ -77,7 +93,7 @@ public sealed class PixelDecoderTests
 
         PixelDecodeResult result = decoder.Decode(0xabcd, 6 | 0x10, 0, CreatePlut());
 
-        Assert.Equal(0xabcd, result.Pixel);
+        Assert.Equal(0xabcc, result.Pixel);
         Assert.Equal(0x49, result.Amv);
     }
 
@@ -115,8 +131,8 @@ public sealed class PixelDecoderTests
         plut[31] = 0x5555;
 
         Assert.Equal(0x4444, decoder.Decode(0, 3, 0x8, plut).Pixel);
-        Assert.Equal(0x5555, decoder.Decode(3, 2, 0xe, plut).Pixel);
-        Assert.Equal(0x5555, decoder.Decode(1, 1, 0xf, plut).Pixel);
+        Assert.Equal(0x5554, decoder.Decode(3, 2, 0xe, plut).Pixel);
+        Assert.Equal(0x5554, decoder.Decode(1, 1, 0xf, plut).Pixel);
     }
 
     private static ushort[] CreatePlut()

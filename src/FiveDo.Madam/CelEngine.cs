@@ -265,7 +265,10 @@ internal sealed class CelEngine
             _pre1 = header.Pre1;
 
             var bppIndex = (int)(_pre0 & 0x7u);
-            if (bppIndex is 0 or 7)
+
+            // Opera: BPP 0 is part of the 1-bpp low-depth group, not a no-op.
+            // Only BPP 7 remains reserved.
+            if (bppIndex == 7)
             {
                 continue;
             }
@@ -274,7 +277,7 @@ internal sealed class CelEngine
             {
                 var count = bppIndex switch
                 {
-                    1 => 2,
+                    0 or 1 => 2,
                     2 => 4,
                     3 => 16,
                     _ => 32,

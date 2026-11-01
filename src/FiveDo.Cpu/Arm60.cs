@@ -460,13 +460,17 @@ public sealed class Arm60 : ICpuBackend, IStateSection
         uint op2;
         if ((instruction & (1u << 25)) != 0)
         {
-            op2 = instruction & 0xff;
-            var rotate = (int)((instruction >> 7) & 0x1e);
-            if (rotate != 0)
-            {
-                op2 = ArmBarrelShifter.RotateRight(op2, rotate);
-            }
-
+            // Opera: ARM_SHIFT_NSC(op2, rotate, ARM_SHIFT_TYPE_ROR). A rotate of
+            // zero preserves the old carry; a non-zero rotate produces bit 31 of
+            // the rotated result. The old FreeDO path rotated the value but left
+            // the shifter carry stale, so MOVS/TSTS with a rotated immediate could
+            // set CPSR.C from an unrelated previous instruction.
+            op2 = ArmBarrelShifter.ShiftNoCarry(
+                state,
+                instruction & 0xff,
+                (byte)((instruction >> 7) & 0x1e),
+                3,
+                out _carryOut);
             op1 = state.User[(int)((instruction >> 16) & 0xf)];
         }
         else

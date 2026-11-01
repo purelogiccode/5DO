@@ -5,7 +5,8 @@ namespace FiveDo.Tests.Madam;
 
 public sealed class PixelProcessorTests
 {
-    // Expected values generated from FreeDO's PPROC with signed-char component arithmetic.
+    // Expected values generated from the reference PPROC with signed-char component
+    // arithmetic. The ms=3 vectors follow Opera's PDC_MFONLY behavior.
     public static IEnumerable<object[]> ReferenceVectors()
     {
         yield return new object[] { 0x0000u, 0x0000u, 0x0049u, 0x00000000u, CcbControl.None, 0x0400u };
@@ -34,9 +35,11 @@ public sealed class PixelProcessorTests
         yield return new object[] { 0x7fffu, 0x0000u, 0x0049u, 0x00004000u, CcbControl.UseAv, 0x7fffu };
         yield return new object[] { 0x7fffu, 0x0000u, 0x0049u, 0x00008000u, CcbControl.UseAv, 0x0400u };
         yield return new object[] { 0x0000u, 0x7fffu, 0x0049u, 0x00008000u, CcbControl.UseAv, 0x0421u };
-        yield return new object[] { 0xffffu, 0xffffu, 0xffffu, 0xffffffffu, CcbControl.UseAv, 0x2108u };
-        yield return new object[] { 0x5555u, 0xaaaau, 0x003fu, 0x0000ffffu, CcbControl.UseAv, 0x08c2u };
-        yield return new object[] { 0xaaaau, 0x5555u, 0x007fu, 0xffff0000u, CcbControl.UseAv, 0x1846u };
+        // ms=3 (PDC_MFONLY) intentionally follows Opera's decoded multiplier bits,
+        // so these three vectors differ from the historical FreeDO values.
+        yield return new object[] { 0xffffu, 0xffffu, 0xffffu, 0xffffffffu, CcbControl.UseAv, 0x39ceu };
+        yield return new object[] { 0x5555u, 0xaaaau, 0x003fu, 0x0000ffffu, CcbControl.UseAv, 0x0862u };
+        yield return new object[] { 0xaaaau, 0x5555u, 0x007fu, 0xffff0000u, CcbControl.UseAv, 0x0c43u };
     }
 
     [Theory]
@@ -97,10 +100,20 @@ public sealed class PixelProcessorTests
     }
 
     [Fact]
+    public void Process_PdcMfOnlyUsesPixelComponentMultiplier()
+    {
+        // PIXC ms=3 selects PDC_MFONLY. With all components at 31, the high
+        // three bits are 7, so the scale index is 7 rather than FreeDO's fixed 4.
+        var actual = PixelProcessor.Process(0x7fff, 0, 0x49, 0x00006000, CcbControl.None);
+
+        Assert.Equal(0x3def, actual);
+    }
+
+    [Fact]
     public void Process_MatchesReferenceGridHash()
     {
-        // Differential hash over the FreeDO PPROC input grid. The expected value was
-        // generated from the reference C++ implementation with signed-char arithmetic.
+        // Differential hash over the PPROC input grid. The expected value follows
+        // Opera's PDC_MFONLY multiplier behavior for ms=3.
         var hash = 2166136261u;
         for (uint flags = 0; flags < 0x1000; flags += 0x1f)
         {
@@ -121,7 +134,7 @@ public sealed class PixelProcessorTests
             }
         }
 
-        Assert.Equal(0x87bbce2fu, hash);
+        Assert.Equal(0xdfeef9ffu, hash);
     }
 
     internal static uint Mix(uint hash, uint value)
