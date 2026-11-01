@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 10 done · 17 partial · 93 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 11 done · 16 partial · 93 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -182,7 +182,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[VID-02](#feat-vid-02)** 2x/4x supersampling — P2 · L · depends on: VID-01 — **Pending**
 - [ ] **[VID-03](#feat-vid-03)** GPU CEL compositing — P3 · XL · depends on: VID-01 — **Pending**
 - [ ] **[VID-04](#feat-vid-04)** 480i/240p detection, deinterlacing, field blending — P1 · M · depends on: SYS-03 — **Pending**
-- [ ] **[VID-05](#feat-vid-05)** PAL output timing — P1 · M · depends on: SYS-03 — **Pending**
+- [x] **[VID-05](#feat-vid-05)** PAL output timing — P1 · M · depends on: SYS-03 — **Done**
 - [ ] **[VID-06](#feat-vid-06)** Auto-crop, overscan, void area, gray border — P1 · M · depends on: FND-06 — **Pending**
 - [ ] **[VID-07](#feat-vid-07)** Shader preset system — P1 · L · depends on: FND-06 — **Pending**
 - [ ] **[VID-08](#feat-vid-08)** NTSC composite/S-Video/RF, HDR, gamma — P2 · L · depends on: VID-07 — **Pending**
@@ -2977,7 +2977,7 @@ A feature is done only when:
 | SYS-12 | SWI HLE for Portfolio OS | P2 | L | CORE-01 | Pending |
 | SYS-13 | VDLP bypass CLUT | P1 | S | FND-01 | Pending |
 | SYS-14 | Per-game NVRAM and versions | P1 | M | FND-02 | Done |
-| SYS-15 | Mouse/lightgun/arcade lightgun/flightstick/trackball | P0 | L | FND-01 | Pending |
+| SYS-15 | Mouse/lightgun/arcade lightgun/flightstick/trackball | P0 | L | FND-01 | Partial |
 | SYS-16 | Six-player/multi-tap verification | P1 | S | SYS-15 | Pending |
 | SYS-17 | Game database expansion and community DB | P1 | M | FND-02 | Pending |
 | SYS-18 | Auto per-game profile | P0 | L | SYS-04, SYS-17 | Pending |
@@ -2994,7 +2994,7 @@ A feature is done only when:
 | VID-02 | 2x/4x supersampling | P2 | L | VID-01 | Pending |
 | VID-03 | GPU CEL compositing | P3 | XL | VID-01 | Pending |
 | VID-04 | 480i/240p detection, deinterlacing, field blending | P1 | M | SYS-03 | Pending |
-| VID-05 | PAL output timing | P1 | M | SYS-03 | Pending |
+| VID-05 | PAL output timing | P1 | M | SYS-03 | Done |
 | VID-06 | Auto-crop, overscan, void area, gray border | P1 | M | FND-06 | Pending |
 | VID-07 | Shader preset system | P1 | L | FND-06 | Pending |
 | VID-08 | NTSC composite/S-Video/RF, HDR, gamma | P2 | L | VID-07 | Pending |
@@ -4175,23 +4175,25 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
 <a id="feat-sys-15"></a>
 ### SYS-15 - Mouse/lightgun/arcade lightgun/flightstick/trackball
 
-**Priority:** P0 | **Effort:** L | **Depends on:** FND-01 | **Status:** Pending
+**Priority:** P0 | **Effort:** L | **Depends on:** FND-01 | **Status:** Partial (2026-11-01)
 
-**Problem.** 5DO is joypad-only. Arcade CD-ROM titles and mouse/flightstick titles are unplayable.
+**Problem.** 5DO was joypad-only. Arcade CD-ROM titles and mouse/flightstick titles are unplayable.
 
-**Add.**
-- `IControllerDevice` abstraction with `DeviceType`, `BuildPbusPacket`, `Reset`, `Save/Load`.
-- Implement joypad, flightstick, mouse, lightgun, arcade lightgun, Orbatak trackball.
-- Per-port device selection.
-- Mouse capture (relative/absolute, sensitivity).
-- Lightgun crosshair, calibration, off-screen reload.
-- Arcade buttons (start/coin/service).
-- UI/CLI `--input-device 1=lightgun`.
-- Tests for packet bytes and representative titles.
+**Implemented.**
+- `InputDeviceSet` and `PbusChainEncoder` emit Opera's exact daisy-chain records for joypad, flightstick, mouse, lightgun, arcade lightgun, Orbatak trackball, and none; the legacy 4DO packet is preserved for all-joypad configurations.
+- Six per-port devices are selectable in Settings > Emulation > Input devices and with `--input-device 1=mouse,3=lightgun`; `--pbus-format opera` forces the chain layout and `run --json` reports `inputDevices`.
+- The desktop pointer drives the first mouse/lightgun/arcade-lightgun/Orbatak port, including relative mouse/trackball motion, off-screen lightgun reload mapping, arcade start/coin/service buttons, and a lightgun crosshair.
+- Packet tests cover every device and the Orbatak record; Crime Patrol, Mad Dog II, Orbatak, and Shootout at Old Tucson boot and detect the selected device.
+
+**Remaining.**
+- Per-device calibration and crosshair configuration.
+- Multiplayer pointer routing (multiple pointer ports).
+- Scripted gameplay validation for each device.
+- A six-player title pass (tracked by SYS-16).
 
 **Files.** `src/FiveDo.Input/`, `src/FiveDo.Madam/Madam.cs`, UI/CLI.
 
-**Tests.** Each device packet; Orbatak; lightgun titles; mouse title; six joypads.
+**Tests.** Device packet tests, Orbatak tests, boot detection for the four named lightgun/arcade titles, and six-joypad regression.
 
 **Done when.** Every device works in a representative title and is selectable per port.
 
@@ -4446,19 +4448,21 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
 <a id="feat-vid-05"></a>
 ### VID-05 - PAL output timing
 
-**Priority:** P1 | **Effort:** M | **Depends on:** SYS-03 | **Status:** Pending
+**Priority:** P1 | **Effort:** M | **Depends on:** SYS-03 | **Status:** Done (2026-11-01)
 
 **Problem.** PAL mode needs 288-line output and 50 Hz presentation.
 
-**Add.**
-- PAL output size/aspect.
-- 50 Hz frame pacing.
-- UI/renderer handling.
-- Tests.
+**Implemented.**
+- `Vdlp` fills 288 PAL lines from scanline 21/22 and `FiveDoMachine` reports `SourceWidth`/`SourceHeight` of 320x288 or 384x288.
+- The frame store, mailbox, uploader, CPU renderer, screenshots, and save-state frame section use the dynamic source height; high-resolution storage grows to 576 lines.
+- `CoreRunner` paces from the audio-derived 50 Hz cadence, and the status/overlay target reports 50 fps.
+- The existing 4:3 aspect policy stretches the 320-wide PAL frame to the correct display aspect without a separate viewport path.
+- `VideoRegionTests` covers PAL geometry and frame timing; a 300-frame PAL capture produced exactly 6.000 seconds of audio.
+- `Battle Chess (Europe)` renders a correct 320x288 3DO logo at 50 Hz with no NTSC regression.
 
-**Files.** `Vdlp.cs`, `FiveDoMachine.cs`, `ViewportCalculator.cs`.
+**Files.** `Vdlp.cs`, `FiveDoMachine.cs`, `CoreRunner.cs`, `VdlFrameMailbox.cs`, `VdlFrameUploader.cs`.
 
-**Tests.** PAL titles; no NTSC regression.
+**Tests.** `VideoRegionTests`; PAL Battle Chess capture; full NTSC suite.
 
 **Done when.** PAL titles look correct at 50 Hz.
 
@@ -6649,7 +6653,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [ ] **VID-02** | 2x/4x supersampling | Research Option C; improves geometry/texture edges without changing guest VRAM. | 2x prototype within budget; deterministic downsample; comparison screenshots. | L |
 | [ ] **VID-03** | GPU CEL compositing | Long-term Option D; true high-res independent of 1MB VRAM. | A parity prototype for packed/literal CELs; go/no-go note. | XL |
 | [ ] **VID-04** | 480i/240p detection, deinterlacing, field blending | 3DO titles mix 240p/480i; current output assumes 240 lines. | Correct field handling; bob/weave/blend options; test patterns. | M |
-| [ ] **VID-05** | PAL output timing | Needed with SYS-03; 288 lines at 50Hz. | PAL titles render at the right size/rate; no NTSC regression. | M |
+| [x] **VID-05** | PAL output timing | Needed with SYS-03; 288 lines at 50Hz. | PAL titles render at the right size/rate; no NTSC regression. **Done 2026-11-01:** 320/384x288 at 50 Hz through VDLP, frame store, uploader, screenshots, and pacing; Battle Chess Europe verified. | M |
 | [ ] **VID-06** | Auto-crop, overscan, void area, gray border | 4DO has these; 5DO always uses the full frame. | Per-game crop/overscan presets; 4DO-style void patterns; UI. | M |
 | [ ] **VID-07** | Shader preset system | RetroArch `.slang`/`.glslp`; 5DO has fixed filters. | Load popular presets; hot reload; per-game; fallback. | L |
 | [ ] **VID-08** | NTSC composite/S-Video/RF, CRT Royale, HDR, gamma | Best-in-class video quality. | Presets and controls; visual validation; performance. | L |
