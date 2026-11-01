@@ -375,7 +375,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] CD-DA is mixed into the DSP output at 44.1 kHz (`FiveDoMachine.CdAudioVolume`); CD section v3 stores sector size, block flags, and audio position.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, and `disc tracks --json`.
-- [x] Verification: **1,361 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**.
+- [x] Verification: **1,361 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining: known CD-DA title evidence, a DSP+CD-DA WAV, and persisted volume/mute UI.
 
 ### 2026-11-01 — FND-02 settings schema versioning

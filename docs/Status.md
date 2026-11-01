@@ -18,8 +18,8 @@ PLAY_AUDIO position tracking, and 2352-byte digital-audio reads. CD-DA is mixed 
 the 44.1 kHz DSP output (`CdAudioVolume`) and CD state v3 stores the mode/audio
 position. `disc tracks` reports every track. FND-02 adds settings schema versioning,
 legacy normalization, malformed-file backup, and load validation. Remaining CD work is
-known-title CD-DA evidence, persisted volume/mute UI, `disc tracks --json`, read-ahead,
-and subcode. **1361 tests pass.**
+known-title CD-DA evidence and persisted volume/mute UI. A 10-disc Release smoke after
+the TOC change reported 10/10 Loadable/Rendered. **1361 tests pass.**
 The five not-loadable rows are resolved or explained: Mirai Shounen Conan now runs
 (transient CHD read error), and the four Arcade CD-ROM titles load with
 `panafz10-patched.bin` plus the default headless pad. The 12,000-frame rerun shows that six of the

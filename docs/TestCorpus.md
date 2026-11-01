@@ -613,8 +613,10 @@ validated:
 - `AppSettingsStoreTests` covers FND-02 legacy migration, malformed-file backup,
   version roundtrip, and invalid-value normalization.
 
-The full suite is **1,361 tests** in Debug. A real CD-DA title and a 10-second
-DSP+CD-DA WAV capture are still required for SYS-01 completion.
+The full suite is **1,361 tests** in Debug. A Release 10-disc smoke after the
+track/TOC change (`tools/compat-sweep.ps1 -Limit 10 -Frames 3000`) reported
+**10/10 Loadable/Rendered**, so the data-track path is unchanged. A real CD-DA title
+and a 10-second DSP+CD-DA WAV capture are still required for SYS-01 completion.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 
