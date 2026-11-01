@@ -688,7 +688,7 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,450 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,453 tests pass with no changed NTSC hashes.
 
 ### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
 
@@ -809,6 +809,16 @@ UX-23 coverage is compile/status level:
   `--json`.
 - The desktop editor is build-validated; its Save/Import/Export paths use the same
   `GameProfileJson` and settings APIs.
+
+### 1.1z Parser fuzzing (2026-11-01)
+
+- `ParserFuzzTests.StateLoader_MutatedStatesFailWithTypedErrors` performs 80 seeded
+  mutations and accepts only `InvalidStateException` (or a successful benign load).
+- `IsoAndChdOpeners_RejectRandomHeadersWithoutCrashing` feeds 20 random 8 KB images to
+  each container opener.
+- `CueParser_MutatedTextNeverEscapesTypedErrors` mutates a valid CUE 80 times and
+  requires successful parses to expose a non-negative sector count.
+- The suite runs in normal `dotnet test` (~8 s) and is deterministic.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

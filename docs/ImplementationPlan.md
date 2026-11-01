@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,450 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,453 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,450** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,453** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 18 done · 22 partial · 80 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 18 done · 23 partial · 79 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -145,7 +145,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[CORE-09](#feat-core-09)** 4DO/Opera fix parity audit — P0 · M · depends on: SYS-17 — **Pending**
 - [ ] **[CORE-10](#feat-core-10)** Hardware test ROM suite — P0 · L — **Pending**
 - [ ] **[CORE-11](#feat-core-11)** Full-collection differential harness — P0 · L · depends on: FND-05 — **Partial** — remaining: differential harness and five-title showcase exist; full 594-disc manifest, nightly dashboard, and PC-delta triage remain
-- [ ] **[CORE-12](#feat-core-12)** Fuzzing and parser security — P0 · M · depends on: FND-05 — **Pending**
+- [ ] **[CORE-12](#feat-core-12)** Fuzzing and parser security — P0 · M · depends on: FND-05 — **Partial** — deterministic mutation fuzz tests cover states, ISO/CHD headers, and CUE text; a dedicated fuzz project, nightly run, command-stream fuzzing, and Opera FS targets remain
 - [ ] **[CORE-13](#feat-core-13)** Remaining compatibility failures — P0 · L · depends on: CORE-11 — **Pending**
 - [x] **[CORE-14](#feat-core-14)** Save-state format v3 — P0 · M · depends on: FND-03 — **Done**
 - [x] **[CORE-15](#feat-core-15)** State diff and verification tooling — P1 · M · depends on: CORE-14 — **Done**
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,450 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,453 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,450**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,453**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -2896,6 +2896,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | VID-09 | GIF recording | Added `GifRecorder` (GIF89a, 3-3-2 palette, looping, 2-50 fps accumulator), CLI `--record-gif/--record-fps/--record-frames` with JSON fields, and **File > Record GIF...** with live start/stop and frame-skip restoration. A 40-frame PAL capture produced a 20-frame 320x288 GIF that Pillow decoded fully; VID-09 is partial for MP4/WebM/audio/replay; 1,444 tests pass |
 | 2026-11-01 | AUD-02 | Desktop WAV recording | Added `TeeAudioSink`, **File > Record Audio...** with start/stop and finalize-on-stop, WAV naming/duration reporting, and keeping the recorder attached across audio-device changes. AUD-02 is partial for mixer/spectrum/format options; 1,447 tests pass |
 | 2026-11-01 | SYS-18, UX-20, FND-06 | Per-game profile editor | Added `GameProfileJson` with normalization, `AppSettings.CreateEffectiveForGame`, machine-creation application, Settings > Emulation save/delete/import/export, and CLI `run/trace --game-profile`. SYS-18/UX-20/FND-06 remain partial for BIOS/fix/filter/high-res fields and inherit/reset; 1,450 tests pass |
+| 2026-11-01 | CORE-12 | Parser fuzzing | Added `ParserFuzzTests` with deterministic state mutations, random ISO/CHD headers, and CUE text mutations; all failures stay within the documented exception types. CORE-12 is partial for a nightly fuzz project and command/Opera-FS targets; 1,453 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -2981,7 +2982,7 @@ A feature is done only when:
 | CORE-09 | 4DO/Opera fix parity audit | P0 | M | SYS-17 | Pending |
 | CORE-10 | Hardware test ROM suite | P0 | L | none | Pending |
 | CORE-11 | Full-collection differential harness | P0 | L | FND-05 | Partial |
-| CORE-12 | Fuzzing and parser security | P0 | M | FND-05 | Pending |
+| CORE-12 | Fuzzing and parser security | P0 | M | FND-05 | Partial |
 | CORE-13 | Remaining compatibility failures | P0 | L | CORE-11 | Pending |
 | CORE-14 | Save-state format v3 | P0 | M | FND-03 | Done |
 | CORE-15 | State diff and verification tooling | P1 | M | CORE-14 | Done |
@@ -3704,16 +3705,20 @@ while a full CD transcript still requires a reference-side export. See
 <a id="feat-core-12"></a>
 ### CORE-12 - Fuzzing and parser security
 
-**Priority:** P0 | **Effort:** M | **Depends on:** FND-05 | **Status:** Pending
+**Priority:** P0 | **Effort:** M | **Depends on:** FND-05 | **Status:** Partial (2026-11-01)
 
 **Problem.** Disc/state/CUE/CHD/Opera-FS parsers handle untrusted files. A malformed file must never crash or read out of bounds.
 
-**Add.**
-- Fuzz targets for CPU instruction streams, CD commands, save states, CUE sheets, CHD metadata, Opera FS.
-- Deterministic seeds and corpus.
-- Nightly fuzz run.
-- Clean typed errors.
-- Bounds/overflow review.
+**Implemented.**
+- `ParserFuzzTests` mutates a valid save state 80 times and requires only `InvalidStateException` from the loader; section length caps and CRC checks reject the rest.
+- Random 8 KB ISO and CHD headers are opened 20 times each and must fail with `DiscImageException`, `InvalidDataException`, `IOException`, or another documented typed error.
+- A valid CUE is text-mutated 80 times; any successful parse must expose a non-negative sector count.
+- Deterministic seeds make the suite reproducible in normal `dotnet test`.
+
+**Remaining.**
+- A dedicated `tests/FiveDo.Fuzz/` project with a corpus and nightly run.
+- CPU instruction-stream, CD command, and Opera FS targets.
+- A long-running bounds/overflow campaign.
 
 **Files.** New `tests/FiveDo.Fuzz/`, `src/FiveDo.Storage/`, `src/FiveDo.Cdrom/`, CI.
 
@@ -6538,7 +6543,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [ ] **CORE-09** | 4DO/Opera fix parity audit | 5DO ports the 4DO fix bits; Opera has additional game-specific behavior. | Every known fix ID mapped; unknown games documented; tests. | M |
 | [ ] **CORE-10** | Hardware test ROM suite and CPU conformance | Unit tests are strong but not a hardware oracle. | Test ROMs for CPU, MADAM, VDLP, DSP, CD, SPORT, CLIO; pass/fail report. | L |
 | [~] **CORE-11** | Full-collection differential harness | `ReferenceStrategy.md` still lists the differential harness as pending. | Nightly run of 594 discs against Opera; frame/audio/state hashes; dashboard. **Partial 2026-10-31:** `tools/FiveDo.DiffHarness` runs 5DO and the bundled OperaCore with staged BIOS/ISO, compares checkpoint frame hashes, applies manifest allowances, and writes JSON/Markdown/HTML reports; the Lemmings 300-frame smoke matches (`0x110E7DC5`), the five-title showcase records two video matches and three video divergences, with the strict PC gate showing 0/5 matches (large PC deltas on the video-matched titles), and `manifest` generated the 594-title `benchmarks/diff/full.json`. The full run and nightly dashboard remain. | L |
-| [ ] **CORE-12** | Fuzzing and parser security | Disc/state/CUE/CHD parsers handle untrusted files. | Fuzz targets; no crashes/OOB; clean `InvalidStateException`/`DiscImageException`. | M |
+| [~] **CORE-12** | Fuzzing and parser security | Disc/state/CUE/CHD parsers handle untrusted files. | Fuzz targets; no crashes/OOB; clean `InvalidStateException`/`DiscImageException`. **Partial 2026-11-01:** deterministic mutation tests cover states, ISO/CHD headers, and CUE text; a dedicated fuzz project, nightly corpus, and command/Opera-FS targets remain. | M |
 | [ ] **CORE-13** | Remaining compatibility failures | Crash 'n Burn JP and WorldCup Super Stadium are stuck; several titles are BIOS-sensitive. | Every local disc classified; known failures documented with evidence. | L |
 | [ ] **CORE-14** | Save-state format v3 and forward compatibility | v2 is compressed but not feature-flagged; future options need graceful rejection. | v3 with feature flags; v1/v2 still load; unknown sections preserved or rejected cleanly. | M |
 | [ ] **CORE-15** | State diff and verification tooling | Debugging timing/state issues is manual. | `state diff`, section hashes, RAM/VRAM diff; CLI + UI. | M |

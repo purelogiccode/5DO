@@ -71,6 +71,10 @@ still change.
   illegal-request status instead of silently doing nothing, the guest RESET command
   restores the default transfer state and sector size, and `PrefetchingDiscSource`
   read-aheads native track sectors so CD-DA does not decompress on the sample clock.
+- CORE-12 parser fuzzing: deterministic mutation tests cover save states, random ISO/CHD
+  headers, and CUE text. Mutated states report `InvalidStateException`; random disc
+  headers report `DiscImageException` or another documented typed error. A dedicated
+  fuzz project and nightly corpus remain.
 - SYS-18/UX-20 per-game profile editor: `GameProfileJson` exports/imports timing,
   region, CD speed, CPU multiplier, and CD-DA settings with value normalization.
   Settings > Emulation saves, deletes, imports, and exports the current disc's profile;
