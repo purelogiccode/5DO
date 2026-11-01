@@ -64,7 +64,7 @@ still change.
   FIFOs complete before the end address is observed, reload only when the channel is
   enabled, and reset the pointer on a new start address. The Lemmings 300-frame
   differential still matches; the five-title showcase hashes are unchanged. See
-  `Make5doTheBestOfAll.md` 13.11/13.12 and `docs/TestCorpus.md` 1.1g.
+  `docs/ImplementationPlan.md` Part III §13.11/§13.12 and `docs/TestCorpus.md` 1.1g.
 
 - CD-ROM accuracy mode now models Opera's poll register: `POLREMASK` local reset,
   `POLRE` write-one-to-clear media access, reset gating for commands/status/data,
@@ -101,7 +101,7 @@ still change.
   publisher, release year, and automatic fix mask. The desktop shell adds File >
   Disc Browser... (extract selected/all, open folder) and File > Disc Info...
   Tests cover synthetic trees, extraction, sanitization, real ISO opening, and
-  missing images. See `Make5doTheBestOfAll.md` 13.23.
+  missing images. See `docs/ImplementationPlan.md` Part III §13.23.
 
 - TAS movies (UX-06). The new `FiveDo.Tas` project writes versioned `.5domovie`
   containers with one raw PBUS packet per frame, an optional starting save state, a

@@ -90,8 +90,8 @@ Windows x64 is the validated platform; the local Linux validation target is the
 | [`ReferenceStrategy.md`](ReferenceStrategy.md) | Opera/libopera as primary behavioral reference, FreeDO/4DO hierarchy, differential procedure. |
 | [`DifferentialHarness.md`](DifferentialHarness.md) | 5DO vs OperaCore manifests, checkpoint hashes, reports, allowlists, baseline gate, and current limitations. |
 | [`Trimming.md`](Trimming.md) | Trim-safe JSON, trimmed CLI/frontend publishes, NativeAOT audit, remaining warnings. |
-| [`ImplementationPlan.md`](ImplementationPlan.md) | Full milestone plan, acceptance criteria, risk register, progress log. |
-| [`NextSession.md`](NextSession.md) | Handoff notes, ordered next steps, evidence, useful commands. |
+| [`ImplementationPlan.md`](ImplementationPlan.md) | **Single source of truth:** master checklist, current status, top next actions, full feature backlog, milestones, acceptance criteria, risk register, Opera parity audit, evidence, progress log. |
+| [`NextSession.md`](NextSession.md) | Redirect only; the handoff now lives in `ImplementationPlan.md` Part IV. |
 | [`TestCorpus.md`](TestCorpus.md) | Machine-specific BIOS/disc corpus, per-title hashes, real-content validation commands. |
 
 ### Release and legal

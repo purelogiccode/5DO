@@ -93,7 +93,7 @@ failure: the ReadySoft player's audio task copied a decoded buffer to a null
 working the copy no longer starts at address 0, and the title runs past 10,000
 frames.
 
-See [`Status.md`](Status.md) and [`NextSession.md`](NextSession.md).
+See [`Status.md`](Status.md) and [`ImplementationPlan.md`](ImplementationPlan.md).
 
 ---
 
@@ -519,8 +519,8 @@ the bundled Windows OperaCore (`References/CPP_SimpleGui`) and the same
 `panafz1.bin` BIOS. Opera rendered Road Rash, Wolfenstein, Alone, and Space Ace for
 60 s. After the 2026-10-24 DSP fixes the C# port also renders all five titles and
 produces non-silent audio. The comparison method and commands are in
-[`ReferenceStrategy.md`](ReferenceStrategy.md); the next-session plan is in
-[`NextSession.md`](NextSession.md).
+[`ReferenceStrategy.md`](ReferenceStrategy.md); the master plan and next actions are in
+[`ImplementationPlan.md`](ImplementationPlan.md).
 
 The 2026-10-24 pass added the diagnostics needed to make the comparison mechanical:
 `--watch-lowmem`, `--dump-ram`, `--dump-dsp`, `--dsp-trace`, the `disasm` command,

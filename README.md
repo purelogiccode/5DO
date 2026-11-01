@@ -185,18 +185,17 @@ Work through [`docs/ReleaseChecklist.md`](docs/ReleaseChecklist.md). Per-title
 save-state, PNG, and WAV evidence is recorded
 in [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. See
 [`docs/Status.md`](docs/Status.md) for the completion estimate and
-[`docs/NextSession.md`](docs/NextSession.md) for the next-session plan. The
-implementation plan and architecture are in:
+[`docs/ImplementationPlan.md`](docs/ImplementationPlan.md) for the master plan,
+feature checklist, and next actions. The plan and architecture are in:
 
 - [`docs/README.md`](docs/README.md) - documentation index and reading paths.
 - [`docs/Status.md`](docs/Status.md) - current position, completion estimate, and next steps.
 - [`docs/ReleaseChecklist.md`](docs/ReleaseChecklist.md) - v1.0 release scope, gates, and sign-off.
 - [`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.md) - attribution audit and remaining distribution decisions.
 - [`docs/OpenALSoft.md`](docs/OpenALSoft.md) - OpenAL Soft LGPL notice, source offer, and relinking rights.
-- [`docs/NextSession.md`](docs/NextSession.md) - first task, commands, and acceptance criteria for the next session.
 - [`docs/ReferenceStrategy.md`](docs/ReferenceStrategy.md) - Opera/FreeDO reference hierarchy and differential procedure.
 - [`docs/DifferentialHarness.md`](docs/DifferentialHarness.md) - 5DO vs OperaCore manifests, checkpoint hashes, reports, allowlists, and baseline gate.
-- [`docs/ImplementationPlan.md`](docs/ImplementationPlan.md) - milestones, tasks, acceptance criteria, risks.
+- [`docs/ImplementationPlan.md`](docs/ImplementationPlan.md) - master implementation plan, feature checklist, milestones, next actions, acceptance criteria, risks, and progress log.
 - [`docs/Architecture.md`](docs/Architecture.md) - project layout, dependency rules, runtime composition.
 - [`docs/DeveloperGuide.md`](docs/DeveloperGuide.md) - source map, subsystem invariants, extension points, conventions, and architectural debt.
 - [`docs/BuildAndTest.md`](docs/BuildAndTest.md) - prerequisites, build/test/format, benchmarks, GPU probe, publish/trim/AOT, CI.

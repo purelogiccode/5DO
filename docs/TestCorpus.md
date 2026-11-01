@@ -649,7 +649,7 @@ memory; the stable observations are:
 audio; four of them have been driven through menus and into gameplay. The remaining
 gameplay milestone is a scripted race/level completion, plus the Lemmings passcode
 confirm and an Alone movement/inventory script. See [`Status.md`](Status.md) and
-[`NextSession.md`](NextSession.md).
+[`ImplementationPlan.md`](ImplementationPlan.md).
 
 ### 1.3 Third pass: gameplay loop and high-resolution rendering (2026-10-24)
 
@@ -1224,8 +1224,8 @@ Controls:
 - The DSP immediate-shift bug was the common cause of SAudio `-6996` and the Space
   Ace null-buffer copy. See [`Compatibility.md`](Compatibility.md).
 
-The full method, reference hierarchy, and next-session plan are in
-[`ReferenceStrategy.md`](ReferenceStrategy.md) and [`NextSession.md`](NextSession.md).
+The full method, reference hierarchy, and next actions are in
+[`ReferenceStrategy.md`](ReferenceStrategy.md) and [`ImplementationPlan.md`](ImplementationPlan.md).
 
 The DSP produces roughly 738 samples per frame (44.1 kHz at 60 fps) for all five
 titles, and WAV capture is non-silent (Road Rash peaks around 8,800; Space Ace
