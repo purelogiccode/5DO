@@ -27,8 +27,11 @@ public readonly record struct CoreStatus(
     /// <summary>Gets the effective auto frame-skip cadence (1 = every frame).</summary>
     public int FrameSkipCadence { get; init; } = 1;
 
-    /// <summary>Gets the player-1 controller state from the most recent frame.</summary>
+    /// <summary>Gets the selected controller state from the most recent frame.</summary>
     public ControllerState Player1 { get; init; }
+
+    /// <summary>Gets the one-based controller port shown by the input display.</summary>
+    public int InputPlayer { get; init; } = 1;
 
     /// <summary>Gets the number of frames whose presentation was skipped.</summary>
     public long SkippedFrames { get; init; }
@@ -38,4 +41,10 @@ public readonly record struct CoreStatus(
 
     /// <summary>Gets a value indicating whether the drive reports a disc.</summary>
     public bool DiscPresent { get; init; }
+
+    /// <summary>Gets the number of frames without a guest controller poll.</summary>
+    public long LagFrames { get; init; }
+
+    /// <summary>Gets a value indicating whether the most recent frame was a lag frame.</summary>
+    public bool IsLagFrame { get; init; }
 }

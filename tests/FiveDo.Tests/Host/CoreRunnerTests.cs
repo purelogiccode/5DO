@@ -273,7 +273,46 @@ public sealed class CoreRunnerTests
         Assert.NotNull(last);
         Assert.InRange(last.Value.TargetFramesPerSecond, 59.5, 60.5);
         Assert.True(last.Value.SkippedFrames >= 0);
+        Assert.True(last.Value.LagFrames >= 0);
+        Assert.Equal(1, last.Value.InputPlayer);
         Assert.Equal(ControllerState.Empty, last.Value.Player1);
+    }
+
+    [Fact]
+    public void InputPlayer_RejectsPortsOutsideOneToSix()
+    {
+        FiveDoMachine machine = CreateMachine();
+        using var runner = new CoreRunner(machine);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => runner.InputPlayer = 0);
+        Assert.Throws<ArgumentOutOfRangeException>(() => runner.InputPlayer = 7);
+        runner.InputPlayer = 6;
+        Assert.Equal(6, runner.InputPlayer);
+    }
+
+    [Fact]
+    public void LagFrames_CountFramesWithoutAGuestControllerPoll()
+    {
+        FiveDoMachine machine = CreateMachine();
+        using var runner = new CoreRunner(machine);
+        machine.BeforeFrame = () => PollController(machine);
+        runner.StepFrame();
+        runner.StepFrame();
+        Assert.False(runner.LastFrameWasLag);
+        Assert.True(runner.LagFrames <= 1);
+
+        machine.BeforeFrame = null;
+        long before = runner.LagFrames;
+        runner.StepFrame();
+        Assert.True(runner.LastFrameWasLag);
+        Assert.Equal(before + 1, runner.LagFrames);
+    }
+
+    private static void PollController(FiveDoMachine machine)
+    {
+        machine.Madam.Poke(0x570, 0x1000);
+        machine.Madam.Poke(0x574, 8);
+        machine.Madam.Poke(0x008, 0x8000);
     }
 
     [Fact]

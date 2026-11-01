@@ -98,7 +98,8 @@ every serialized property in `AppSettings`.
 | `Renderer` | enum string | `"OpenGl"` | Presentation backend: `OpenGl`, `Vulkan`, or `Software`. |
 | `OutputResolution` | enum string | `"Window"` | Final output size: `Window`, `Native`, `Scale2X`, `Scale3X`, `Scale4X`, `Hd720`, `FullHd1080`, `Qhd1440`, or `Uhd2160`. |
 | `ShowOverlay` | bool | `false` | Show the FPS/status overlay. |
-| `ShowInputDisplay` | bool | `false` | Show the frame/skip counters and player-1 buttons over the game. |
+| `ShowInputDisplay` | bool | `false` | Show the frame/skip/lag counters and controller buttons over the game. |
+| `InputDisplayPlayer` | int | `1` | Controller port (1-6) shown by the input display. |
 | `OsdEnabled` | bool | `true` | Show transient on-screen notifications. |
 | `OsdPosition` | enum string | `"TopRight"` | Notification anchor: `TopLeft`, `TopCenter`, `TopRight`, `BottomLeft`, `BottomCenter`, or `BottomRight`. |
 | `OsdOpacity` | double | `0.9` | Notification opacity, 0.1..1. |

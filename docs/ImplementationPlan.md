@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,387 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,390 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,387** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,390** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 9 done · 18 partial · 93 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 10 done · 17 partial · 93 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -225,7 +225,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[UX-20](#feat-ux-20)** Per-game settings UI — P1 · M · depends on: SYS-18 — **Pending**
 - [ ] **[UX-21](#feat-ux-21)** Debugger UI — P2 · L · depends on: CORE-15 — **Pending**
 - [ ] **[UX-22](#feat-ux-22)** Trace viewer and performance profiler — P2 · M · depends on: UX-21 — **Pending**
-- [ ] **[UX-23](#feat-ux-23)** Input display and lag counter — P1 · S · depends on: UX-06 — **Partial** — F2/View toggles a frame/skip counter and player-1 button overlay; TAS-style lag detection and a configurable layout remain
+- [x] **[UX-23](#feat-ux-23)** Input display and lag counter — P1 · S · depends on: UX-06 — **Done**
 - [ ] **[UX-24](#feat-ux-24)** Lua scripting and automation — P3 · L · depends on: UX-06 — **Pending**
 
 ### Ecosystem and platforms
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,387 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,390 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,387**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,390**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -2863,6 +2863,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | SYS-02 | Multi-disc playlist and live swap | Added `DiscPlaylist` (M3U/M3U8, `#EXTINF`, relative paths), persisted playlist path, File > Swap Disc and F3, one-off swap without reset, guest inject `0x07`, `disc playlist`, and `run --playlist/--swap-at/--swap-disc`. SYS-02 is partial; 1,376 tests pass |
 | 2026-11-01 | SYS-02 | ODE eject handling and playlist editor | Added `GuestEjectCount`/`TrayOpen`/`DiscPresent`, a core-thread `GuestDiscEjected` callback, `AutoSwapOnEject`, ODE playlist auto-advance, guest-eject ODE behavior, a playlist editor with save/import/reorder, drag-and-drop playlist import, `DiscPlaylist.Create/Add/RemoveAt/MoveEntryUp/MoveEntryDown/Save`, and a swap/state roundtrip test. A `D (USA, Europe)` playlist swap at frame 300 ran to frame 600 with a new disc hash. SYS-02 remains partial pending a real in-game swap; 1,381 tests pass |
 | 2026-11-01 | SYS-03 | PAL/NTSC region modes | Added `VideoRegion`/`VideoRegionProfile` (NTSC 320x240@60, PAL1 320x288@50, PAL2 384x288@50), PAL VDL timing and 576-line frame storage, VDLP start-line mapping, region-aware machine frame cycles and source size, 50 Hz CoreRunner pacing, Settings/CLI region options with BIOS auto-selection, GameProfile snapshot, and state options v6 with region warning. Battle Chess Europe renders 320x288 at 50 Hz, and a 300-frame PAL capture is exactly 6.000 s. SYS-03 is partial (desktop auto-detection/per-game override remain); 1,387 tests pass |
+| 2026-11-01 | UX-23 | Input display completion | Added `Madam.PbusReadCount`, per-frame lag detection, `CoreStatus.LagFrames`/`IsLagFrame`, selected controller port `InputDisplayPlayer`/`CoreRunner.InputPlayer`, Settings > Video port selector, and overlay lag/player text. UX-23 is done; 1,390 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -3036,7 +3037,7 @@ A feature is done only when:
 | UX-20 | Per-game settings UI | P1 | M | SYS-18 | Pending |
 | UX-21 | Debugger UI | P2 | L | CORE-15 | Pending |
 | UX-22 | Trace viewer and performance profiler | P2 | M | UX-21 | Pending |
-| UX-23 | Input display and lag counter | P1 | S | UX-06 | Partial |
+| UX-23 | Input display and lag counter | P1 | S | UX-06 | Done |
 | UX-24 | Lua scripting and automation | P3 | L | UX-06 | Pending |
 
 ### 1.6 Ecosystem and platforms
@@ -5331,24 +5332,20 @@ hotkey roundtrip.
 <a id="feat-ux-23"></a>
 ### UX-23 - Input display and lag counter
 
-**Priority:** P1 | **Effort:** S | **Depends on:** UX-06 | **Status:** Partial (2026-11-01)
+**Priority:** P1 | **Effort:** S | **Depends on:** UX-06 | **Status:** Done (2026-11-01)
 
 **Problem.** No input display/lag counter.
 
 **Implemented.**
-- The game view has a bottom-left overlay with the emulated frame count, presentation-skip count, and player-1 buttons decoded from the current PBUS packet.
+- The game view has a bottom-left overlay with the emulated frame count, lag-frame count, presentation-skip count, disc state, and controller buttons decoded from the current PBUS packet.
+- Lag semantics follow TAS tooling: a frame is a lag frame when the guest does not perform a PBUS DMA read during that frame.
 - **F2** or **View > Input Display** toggles it; the choice persists in `ShowInputDisplay`.
-- `CoreRunner` captures player 1 every frame and includes it plus the skip count in `CoreStatus`.
-- The overlay uses the existing monospace styling and does not affect emulation or input.
+- **Settings > Video > Input display player** selects controller port 1-6; `InputDisplayPlayer` persists and updates a running core.
+- `CoreRunner` captures the selected controller plus lag/skip counts in `CoreStatus`; the display has no effect on emulation or input.
 
-**Remaining.**
-- TAS-style lag-frame detection (frames where the game does not poll input).
-- Configurable layout, player selection, and button glyphs/images.
-- Automated screenshot comparison for the overlay.
+**Files.** Frontend, `CoreRunner`, `CoreStatus`, `AppSettings`, `Madam`.
 
-**Files.** Frontend, `CoreRunner`, `CoreStatus`, `AppSettings`.
-
-**Tests.** `CoreRunnerTests` checks the new status fields; the display is compile-validated and manual.
+**Tests.** `CoreRunnerTests` covers lag frames, selected-player status, and port bounds; `MadamTests` covers PBUS read counts; `AppSettingsStoreTests` covers player clamping. The overlay is compile-validated and manually checked; automated screenshot comparison remains a future polish item.
 
 **Done when.** TAS/streaming users can see input/lag.
 
@@ -6750,7 +6747,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [ ] **UX-20** | Per-game settings UI | Only fix/filter overrides today. | BIOS/region/input/clock/CD speed/shader/cheats per game. | M |
 | [ ] **UX-21** | Debugger UI | CLI traces only. | CPU, memory, disasm, breakpoints, watchpoints, call stack, MADAM/CEL, DSP, CD, VDLP, VRAM. | L |
 | [ ] **UX-22** | Trace viewer and performance profiler | Traces are text files. | Timeline; filters; frame/CPU/CEL/DSP charts; export. | M |
-| [~] **UX-23** | Input display and lag counter | TAS/streaming. | On-screen buttons; frame/lag counters. **Partial 2026-11-01:** F2/View toggles a frame/skip counter and player-1 button overlay; TAS lag semantics and layout options remain. | S |
+| [x] **UX-23** | Input display and lag counter | TAS/streaming. | On-screen buttons; frame/lag counters. **Done 2026-11-01:** F2/View toggles frame, lag, skip, disc, and selected-player button overlays; lag means no PBUS DMA read; port 1-6 is configurable. | S |
 | [ ] **UX-24** | Lua scripting and automation | Power users/TAS. | Script API; input/state/memory; sandbox; examples. | L |
 
 #### UX-01 deep dive: rewind

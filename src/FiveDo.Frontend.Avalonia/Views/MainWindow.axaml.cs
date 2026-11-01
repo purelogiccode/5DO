@@ -2938,6 +2938,11 @@ public partial class MainWindow : Window, IDisposable
         }
 
         AppSettingsStore.Save(_settings);
+        if (_runner is not null)
+        {
+            _runner.InputPlayer = _settings.InputDisplayPlayer;
+        }
+
         if (!string.Equals(
                 previousLibraryMetadataPath,
                 _settings.ResolveLibraryMetadataPath(),
@@ -3577,8 +3582,11 @@ public partial class MainWindow : Window, IDisposable
                 ? "disc"
                 : status.TrayOpen ? "tray open" : "no disc";
             InputFrameText.Text =
-                $"frame {status.Frames} · skip {status.SkippedFrames} · {disc}";
-            InputButtonsText.Text = $"P1 {PbusDecoder.FormatButtons(status.Player1)}";
+                $"frame {status.Frames} · lag {status.LagFrames}"
+                + (status.IsLagFrame ? " LAG" : string.Empty)
+                + $" · skip {status.SkippedFrames} · {disc}";
+            InputButtonsText.Text =
+                $"P{status.InputPlayer} {PbusDecoder.FormatButtons(status.Player1)}";
         }
     }
 
@@ -4044,6 +4052,7 @@ public partial class MainWindow : Window, IDisposable
                 CreateRewindOptions())
             {
                 FrameSkip = _settings.FrameSkip,
+                InputPlayer = _settings.InputDisplayPlayer,
             };
             _runner.Faulted += (_, args) => Dispatcher.UIThread.Post(() =>
             {

@@ -1,6 +1,7 @@
 using System;
 using System.Buffers.Binary;
 using System.IO;
+using System.Threading;
 using FiveDo.Core;
 
 namespace FiveDo.Madam;
@@ -46,6 +47,7 @@ public sealed class Madam : IMadamBus, IStateSection
     private ulong _celBusyCyclesRemaining;
     private ulong _celBusyCyclesTotal;
     private bool _mctlWritten;
+    private long _pbusReadCount;
 
     private const uint MctlClutXen = 0x00002000;
     private const uint MctlVsctXen = 0x00004000;
@@ -180,6 +182,10 @@ public sealed class Madam : IMadamBus, IStateSection
 
     /// <summary>Gets the last PBUS controller packet. FreeDO: <c>PBUSQueue</c>.</summary>
     public ReadOnlySpan<byte> PbusQueue => _pbusQueue;
+
+    /// <summary>Gets the number of guest PBUS DMA reads since the machine started.</summary>
+    /// <remarks>Used by TAS-style lag detection: a frame with no new read did not poll input.</remarks>
+    public long PbusReadCount => Interlocked.Read(ref _pbusReadCount);
 
     /// <summary>Gets the save-state section identifier.</summary>
     public uint Id => StateSectionIds.Madam;
@@ -590,6 +596,7 @@ public sealed class Madam : IMadamBus, IStateSection
             return;
         }
 
+        Interlocked.Increment(ref _pbusReadCount);
         _registers[0x574] -= 4;
         _registers[0x570] += 4;
         _registers[0x578] += 4;

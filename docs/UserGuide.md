@@ -177,8 +177,9 @@ is widened.
 - **F12** captures a screenshot.
 - **F3** swaps to the next disc in an M3U playlist or opens a disc picker; see
   **File > Swap Disc**.
-- **F2** toggles the input display (frame/skip counters and player-1 buttons) or use
-  **View > Input Display**.
+- **F2** toggles the input display (frame, lag, skip counters, and the selected
+  controller's buttons) or use **View > Input Display**. Choose the controller port in
+  **Settings > Video > Input display player**.
 - **Escape** pauses emulation; in fullscreen it exits fullscreen first.
 - **Save State**, **Load State**, **Screenshot**, **Reset**, slot changes, and
   fullscreen are also available from the toolbar and the **Emulation** menu.

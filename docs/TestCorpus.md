@@ -656,8 +656,10 @@ UX-23 coverage is compile/status level:
 - `CoreRunnerTests.Status_ReportsTheAudioDerivedTargetFrameRate` also asserts the new
   `SkippedFrames` and `Player1` fields are populated.
 - `PbusDecoderTests` already cover the button formatting used by the overlay.
-- The Avalonia overlay is build-validated; a screenshot comparison and TAS lag semantics
-  remain.
+- The Avalonia overlay is build-validated. Lag detection counts frames without a PBUS
+  DMA read (`CoreRunnerTests.LagFrames_...`, `MadamTests.PbusDma_...`), and the selected
+  controller port is covered by `InputPlayer_RejectsPortsOutsideOneToSix`. A screenshot
+  comparison remains optional future polish.
 
 ### 1.1n ODE eject and playlist editing (2026-11-01)
 
@@ -684,7 +686,7 @@ UX-23 coverage is compile/status level:
 - `--bios-auto bios --region auto` selected `Panasonic FZ-10E (Anvil)` and PAL1.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,387 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,390 tests pass with no changed NTSC hashes.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

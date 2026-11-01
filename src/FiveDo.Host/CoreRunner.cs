@@ -50,6 +50,10 @@ public sealed class CoreRunner : IDisposable
     private bool _trayOpen;
     private bool _discPresent;
     private int _guestEjectCount;
+    private long _lagFrames;
+    private long _lastPbusReadCount;
+    private bool _lastFrameWasLag;
+    private int _inputPlayer = 1;
 
     /// <summary>Initializes a new instance of the <see cref="CoreRunner"/> class.</summary>
     /// <param name="machine">Machine to run. The runner does not own it.</param>
@@ -80,6 +84,27 @@ public sealed class CoreRunner : IDisposable
     /// marshal UI work to the UI thread and return promptly.
     /// </remarks>
     public event EventHandler? GuestDiscEjected;
+
+    /// <summary>Gets the number of frames whose guest did not poll the controller.</summary>
+    public long LagFrames => Interlocked.Read(ref _lagFrames);
+
+    /// <summary>Gets a value indicating whether the most recent frame was a lag frame.</summary>
+    public bool LastFrameWasLag => _lastFrameWasLag;
+
+    /// <summary>Gets or sets the one-based controller port captured for the input display.</summary>
+    public int InputPlayer
+    {
+        get => _inputPlayer;
+        set
+        {
+            if (value is < 1 or > 6)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), value, "The input display player must be 1-6.");
+            }
+
+            _inputPlayer = value;
+        }
+    }
 
     /// <summary>Gets a value indicating whether the core thread is running.</summary>
     public bool IsRunning
@@ -493,7 +518,10 @@ public sealed class CoreRunner : IDisposable
                         FrameSkipMode = mode,
                         FrameSkipCadence = mode == FrameSkipMode.Auto ? _autoSkipLevel + 1 : FrameSkipPolicy.Cadence(mode),
                         Player1 = _lastPlayer1,
+                        InputPlayer = _inputPlayer,
                         SkippedFrames = Frames - PresentedFrames,
+                        LagFrames = LagFrames,
+                        IsLagFrame = _lastFrameWasLag,
                         TrayOpen = _trayOpen,
                         DiscPresent = _discPresent,
                     });
@@ -522,7 +550,10 @@ public sealed class CoreRunner : IDisposable
                 0)
             {
                 Player1 = _lastPlayer1,
+                InputPlayer = _inputPlayer,
                 SkippedFrames = Frames - PresentedFrames,
+                LagFrames = LagFrames,
+                IsLagFrame = _lastFrameWasLag,
                 TrayOpen = _trayOpen,
                 DiscPresent = _discPresent,
             });
@@ -537,7 +568,15 @@ public sealed class CoreRunner : IDisposable
 
     private void CaptureFrameState()
     {
-        _lastPlayer1 = PbusDecoder.DecodeController(_machine.Madam.PbusQueue, 0);
+        _lastPlayer1 = PbusDecoder.DecodeController(_machine.Madam.PbusQueue, _inputPlayer - 1);
+        long pbusReads = _machine.Madam.PbusReadCount;
+        _lastFrameWasLag = pbusReads == _lastPbusReadCount;
+        _lastPbusReadCount = pbusReads;
+        if (_lastFrameWasLag)
+        {
+            Interlocked.Increment(ref _lagFrames);
+        }
+
         bool wasTrayOpen = _trayOpen;
         _trayOpen = _machine.Cdrom.TrayOpen;
         _discPresent = _machine.Cdrom.DiscPresent;

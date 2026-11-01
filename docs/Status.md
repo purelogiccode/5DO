@@ -26,11 +26,11 @@ region-aware VDLP/machine timing. Battle Chess Europe renders correctly at 320x2
 FND-02 is complete with settings schema v2, legacy normalization, malformed-file backup,
 per-game profiles, and `settings validate|migrate`. UX-15 adds portable mode:
 `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR` redirects settings, NVRAM, cheats,
-library state, and logs. **F2** toggles the new frame/skip and player-1 input overlay.
+library state, and logs. **F2** toggles the frame/lag/skip and selected-player input overlay.
 Remaining disc work is known-title
 CD-DA evidence and a real in-game multi-disc swap, plus read-ahead/subcode. A 10-disc
 Release smoke after the
-TOC change reported 10/10 Loadable/Rendered. **1387 tests pass.**
+TOC change reported 10/10 Loadable/Rendered. **1390 tests pass.**
 The five not-loadable rows are resolved or explained: Mirai Shounen Conan now runs
 (transient CHD read error), and the four Arcade CD-ROM titles load with
 `panafz10-patched.bin` plus the default headless pad. The 12,000-frame rerun shows that six of the

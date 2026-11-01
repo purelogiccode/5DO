@@ -199,6 +199,7 @@ public sealed class MadamTests
         madam.Poke(0x08, 0x8000);
 
         Assert.Equal(0x44332211u, memory.Ram.Read32(0x1004));
+        Assert.Equal(1, madam.PbusReadCount);
         Assert.Equal(1, interrupts.GenerateCount);
         Assert.Equal(1u, interrupts.LastReason2);
         Assert.Equal(0xfffffffeu, madam.Peek(0x574) + 2);
@@ -238,6 +239,7 @@ public sealed class MadamTests
         madam.Poke(0x08, 0x8000);
 
         Assert.Equal(0u, memory.Ram.Read32(0x1000));
+        Assert.Equal(0, madam.PbusReadCount);
         Assert.Equal(1, interrupts.GenerateCount);
         Assert.Equal(0xfffffffeu, madam.Peek(0x574) + 2);
         Assert.Equal(0u, madam.Peek(0x08) & 0x8000u);

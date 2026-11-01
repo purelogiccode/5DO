@@ -193,6 +193,9 @@ public sealed class AppSettings
     /// <summary>Gets or sets a value indicating whether the frame/input display is shown.</summary>
     public bool ShowInputDisplay { get; set; }
 
+    /// <summary>Gets or sets the controller port (1-6) shown by the input display.</summary>
+    public int InputDisplayPlayer { get; set; } = 1;
+
     /// <summary>Gets or sets a value indicating whether on-screen notifications are shown.</summary>
     public bool OsdEnabled { get; set; } = true;
 

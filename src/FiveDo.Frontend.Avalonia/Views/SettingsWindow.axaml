@@ -10,7 +10,7 @@
             <TabItem Header="Video" ToolTip.Tip="Renderer, output resolution, filter, aspect ratio, scaling, overlay, OSD notifications, quick menu, bloom, and FSR options.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <Grid ColumnDefinitions="170,*"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                           Margin="8">
                         <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Renderer"
                                    FontWeight="SemiBold" Margin="0,0,0,4" />
@@ -106,6 +106,12 @@
                                    Text="Notifications confirm save/load, rewind, fast-forward, screenshots, resets, and settings changes. The quick menu pauses the game while it is open and resumes when it closes."
                                    Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"
                                    ToolTip.Tip="OSD and quick-menu behaviour." />
+                        <TextBlock Grid.Row="25" Grid.Column="0" Text="Input display player"
+                                   VerticalAlignment="Center" Margin="0,8,0,0"
+                                   ToolTip.Tip="Controller port shown in the F2 input display." />
+                        <ComboBox x:Name="InputPlayerCombo" Grid.Row="25" Grid.Column="1"
+                                  HorizontalAlignment="Left" Width="100" Margin="0,8,0,0"
+                                  ToolTip.Tip="Choose controller port 1-6 for the input display." />
                     </Grid>
                 </ScrollViewer>
             </TabItem>

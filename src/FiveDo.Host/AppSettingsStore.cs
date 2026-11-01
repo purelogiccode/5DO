@@ -200,6 +200,8 @@ public static class AppSettingsStore
                 settings.Region = VideoRegion.Ntsc;
             }
 
+            settings.InputDisplayPlayer = Math.Clamp(settings.InputDisplayPlayer, 1, 6);
+
             if (!Enum.IsDefined(settings.ArmTiming))
             {
                 settings.ArmTiming = ArmTimingMode.FreeDoCompatible;

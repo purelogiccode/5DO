@@ -126,6 +126,18 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void Load_ClampsTheInputDisplayPlayer()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        AppSettingsStore.Save(new AppSettings { InputDisplayPlayer = 12 }, path);
+        Assert.Equal(6, AppSettingsStore.Load(path).InputDisplayPlayer);
+
+        AppSettingsStore.Save(new AppSettings { InputDisplayPlayer = -3 }, path);
+        Assert.Equal(1, AppSettingsStore.Load(path).InputDisplayPlayer);
+    }
+
+    [Fact]
     public void InspectAndMigrate_ReportAndRewriteTheSchemaVersion()
     {
         using var temp = new TemporaryDirectory();

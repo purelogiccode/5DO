@@ -5,7 +5,7 @@ emulator for the Panasonic 3DO Interactive Multiplayer. The desktop app is Avalo
 headless tool is `FiveDo.Cli`; the emulation core is split into one assembly per console
 subsystem.
 
-**Current snapshot:** `1.0.0-rc.1` source tree, 1,387 tests passing (2026-11-01), with
+**Current snapshot:** `1.0.0-rc.1` source tree, 1,390 tests passing (2026-11-01), with
 the v1.0 release deliberately deferred. The first full-collection loadability sweep is
 complete: **594 discs tested, 576 rendered, 13 black/blank, 5 not loadable**. The
 2026-10-31 performance pass brings the Road Rash 3D race to 4.20 ms/frame (p99 7.40 ms),

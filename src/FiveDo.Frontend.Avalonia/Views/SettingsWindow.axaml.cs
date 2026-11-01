@@ -175,6 +175,8 @@ public partial class SettingsWindow : Window
         FrameSkipCombo.SelectedItem = _frameSkipOptions.FirstOrDefault(option => option.Value == settings.FrameSkip)
             ?? _frameSkipOptions[0];
         OverlayCheck.IsChecked = settings.ShowOverlay;
+        InputPlayerCombo.ItemsSource = new[] { 1, 2, 3, 4, 5, 6 };
+        InputPlayerCombo.SelectedItem = Math.Clamp(settings.InputDisplayPlayer, 1, 6);
         OsdCheck.IsChecked = settings.OsdEnabled;
         OsdPositionCombo.ItemsSource = _osdPositionOptions;
         OsdPositionCombo.SelectedItem = _osdPositionOptions.FirstOrDefault(option => option.Value == settings.OsdPosition)
@@ -357,6 +359,9 @@ public partial class SettingsWindow : Window
             ? frameSkip.Value
             : FrameSkipMode.Auto;
         settings.ShowOverlay = OverlayCheck.IsChecked == true;
+        settings.InputDisplayPlayer = InputPlayerCombo.SelectedItem is int inputPlayer
+            ? inputPlayer
+            : 1;
         settings.OsdEnabled = OsdCheck.IsChecked == true;
         settings.OsdPosition = OsdPositionCombo.SelectedItem is OsdPositionOption osdPosition
             ? osdPosition.Value
