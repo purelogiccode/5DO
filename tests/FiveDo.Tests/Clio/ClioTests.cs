@@ -350,5 +350,71 @@ public sealed class ClioTests
         Assert.Equal(clio.Peek(0x40), copy.Peek(0x40));
         Assert.Equal(clio.NeedFiq, copy.NeedFiq);
     }
+
+    [Fact]
+    public void Dipir_MediaAccessLatchesFirstTwoDevicesAndRaisesFiq()
+    {
+        var clio = new ClioChip(new EmulatorTuning
+        {
+            ClioTimers = ClioTimerMode.OperaScheduler,
+            OperaDipir = true,
+        });
+        clio.Poke(0x68, 1u << 1);
+
+        clio.XbusMediaAccess(0);
+        Assert.Equal(0x8000u, clio.Peek(0x410));
+        Assert.True(clio.NeedFiq);
+
+        clio.XbusMediaAccess(0);
+        Assert.Equal(0x8000u, clio.Peek(0x410));
+        Assert.Equal(0u, clio.Peek(0x414));
+
+        clio.XbusMediaAccess(1);
+        Assert.Equal(0x8001u, clio.Peek(0x414));
+    }
+
+    [Fact]
+    public void Dipir_AccessAbortsFollowTheLatchRules()
+    {
+        var clio = new ClioChip(new EmulatorTuning
+        {
+            ClioTimers = ClioTimerMode.OperaScheduler,
+            OperaDipir = true,
+        });
+
+        clio.XbusMediaAccess(0);
+        Assert.False(clio.XbusAccessAborts(0, 0x540));
+        Assert.True(clio.XbusAccessAborts(0, 0x580));
+        Assert.False(clio.XbusAccessAborts(1, 0x580));
+
+        clio.XbusMediaAccess(1);
+        Assert.True(clio.XbusAccessAborts(2, 0x580));
+        Assert.True(clio.XbusAccessAborts(2, 0x540));
+        Assert.False(clio.XbusAccessAborts(0, 0x540));
+        Assert.False(clio.XbusAccessAborts(1, 0x540));
+    }
+
+    [Fact]
+    public void Dipir_ClearOnSoftResetPreservesDeviceWithBeforeResetBit()
+    {
+        var clio = new ClioChip(new EmulatorTuning
+        {
+            ClioTimers = ClioTimerMode.OperaScheduler,
+            OperaDipir = true,
+        });
+        clio.XbusMediaAccess(0);
+
+        clio.ClearDipirOnSoftReset();
+
+        Assert.Equal(0x4000u, clio.Peek(0x410));
+    }
+
+    [Fact]
+    public void Dipir_FreeDoModeKeepsTheReferenceConstant()
+    {
+        var clio = new ClioChip();
+
+        Assert.Equal(0x4000u, clio.Peek(0x414));
+    }
 }
 

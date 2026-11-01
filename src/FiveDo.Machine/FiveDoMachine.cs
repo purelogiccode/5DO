@@ -73,7 +73,13 @@ public sealed class FiveDoMachine
         Madam.Compatibility = Compatibility;
         Vdlp.ClutDmaEnabled = () => Madam.ClutDmaEnabled;
         Vdlp.VideoDmaEnabled = () => Madam.VideoDmaEnabled;
-        Xbus = new XbusChip { Interrupts = Clio };
+        Clio.OperaDipirEnabled = Tuning.OperaDipir;
+        Xbus = new XbusChip
+        {
+            Interrupts = Clio,
+            OperaSemantics = Tuning.ClioTimers == ClioTimerMode.OperaScheduler,
+            MediaAccess = Tuning.OperaDipir ? Clio.XbusMediaAccess : null,
+        };
         Cdrom = new CdromChip
         {
             TimingMode = Tuning.CdromTiming,

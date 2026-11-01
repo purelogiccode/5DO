@@ -73,6 +73,12 @@ public sealed record EmulatorTuning
         Justification = "Reserved public tuning flag for the future high-resolution mode.")]
     public bool HighResolution { get; init; }
 
+    /// <summary>
+    /// Gets a value indicating whether CLIO DIPIR latches and XBUS access aborts are
+    /// enabled. Opt-in until OP-SYS-03 supplies the matching soft-reset path.
+    /// </summary>
+    public bool OperaDipir { get; init; }
+
     /// <summary>Validates the tuning values.</summary>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when a clock or size is invalid.</exception>
     public void Validate()

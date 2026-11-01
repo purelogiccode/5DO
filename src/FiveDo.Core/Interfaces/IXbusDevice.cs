@@ -22,6 +22,12 @@ public interface IXbusDevice
     /// <summary>Gets a value indicating whether the device has a pending FIQ.</summary>
     bool FiqPending { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether poll/command writes latch a media-access event.
+    /// Opera: <c>XBP_GET_MEDIA_ACCESS</c>. Only the CD-ROM drive reports true.
+    /// </summary>
+    bool HasMediaAccess => false;
+
     /// <summary>Passes one data word to the device.</summary>
     /// <param name="value">Data word.</param>
     void SetData(uint value);

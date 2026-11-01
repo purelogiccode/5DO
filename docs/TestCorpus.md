@@ -447,8 +447,20 @@ access-abort rules, and XBUS media access remain.
 - Differential smoke (Lemmings, 300 frames): **PASS**, `0x110E7DC5`.
 - Five-title showcase: unchanged; all 5DO hashes identical to the pre-batch baseline.
 
-The next batch is the DIPIR/access-abort part of OP-SYS-01, then OP-SYS-03 (CSTAT
-soft reset).
+**OP-SYS-01 DIPIR/XBUS (2026-10-31):** CLIO now has DIPIR1/DIPIR2 latches, the
+before-reset conversion, the DIPIR FIQ, and XBUS access-abort rules. The XBUS
+selected-device address is available to CLIO, Opera mode stops masking the poll
+high nibble, and poll/command writes can latch media access when the CD reports
+`POLRE`. The DIPIR/abort path is opt-in (`EmulatorTuning.OperaDipir`) because
+enabling it before OP-SYS-03's soft-reset/clear-DIPIR path changes the Lemmings
+boot; the default and accuracy profiles leave it off.
+
+- `dotnet test 5DO.sln`: **1,154 passed**, 0 failed.
+- Differential smoke (Lemmings, 300 frames): **PASS**, `0x110E7DC5`.
+- Five-title showcase: unchanged; all 5DO hashes identical to the pre-batch baseline.
+
+The next batch is OP-SYS-03 (CSTAT soft reset and DIPIR-clear propagation), then
+re-enable `OperaDipir` and validate the boot transcript.
 
 **Opera-parity title probes (2026-10-31):** 5DO completed 3,000 frames for
 Samurai Shodown (USA/EU), DinoPark Tycoon, Alone in the Dark, Johnny Bazookatone,

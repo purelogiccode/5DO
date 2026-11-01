@@ -371,6 +371,9 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         }
     }
 
+    /// <summary>Gets whether a media-access event is latched. Opera: <c>poll &amp; POLRE</c>.</summary>
+    public bool HasMediaAccess => (_poll & PollReset) != 0;
+
     /// <inheritdoc />
     public bool FiqPending =>
         (((_poll & PollStatus) != 0) && ((_poll & PollStatusMask) != 0))

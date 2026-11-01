@@ -9,6 +9,12 @@ public interface IClioXbus
     /// <summary>Gets the currently selected device slot.</summary>
     int SelectedDevice { get; }
 
+    /// <summary>
+    /// Gets the device address used by the DIPIR latches: the low slot plus the
+    /// high select bit. Opera: <c>opera_xbus_selected_device_address</c>.
+    /// </summary>
+    uint SelectedDeviceAddress => (uint)SelectedDevice;
+
     /// <summary>Selects a device. FreeDO: <c>_xbus_SetSEL</c>.</summary>
     /// <param name="value">Select register value.</param>
     void SetSelect(uint value);

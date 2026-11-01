@@ -942,5 +942,11 @@ M1 implements the section primitive used by all later chips:
 - `Reset()` reasserts the overlay. The memory state section is version 2 and saves the
   flag; version-1 states load as post-boot (overlay cleared).
 - The CPU still starts at `0x03000000`; the overlay covers low-address reads until the
-  BIOS's first DRAM write. DIPIR latches, access aborts, and XBUS media-access
-  propagation remain for the next OP-SYS-01 increment.
+  BIOS's first DRAM write.
+- CLIO now implements DIPIR1/DIPIR2 latches, the before-reset conversion, the DIPIR
+  FIQ, and XBUS access-abort rules. The XBUS selected-device address includes the high
+  select bit, Opera mode returns the full poll high nibble, and poll/command writes
+  latch media access when the CD reports `POLRE`.
+- DIPIR/aborts are opt-in via `EmulatorTuning.OperaDipir`. Enabling them before
+  OP-SYS-03's soft-reset/clear-DIPIR path makes Lemmings stall after the first CD
+  command burst, so the default and accuracy profiles leave the flag off.

@@ -28,6 +28,13 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     private const uint Reload = 0x2;
     private const uint Cascade = 0x4;
 
+    private const uint Dipir1Address = 0x410;
+    private const uint Dipir2Address = 0x414;
+    private const uint DipirCurrent = 0x8000;
+    private const uint DipirBeforeReset = 0x4000;
+    private const uint DipirDeviceMask = 0x00ff;
+    private const uint DipirFiq = 1u << 1;
+
     private readonly EmulatorTuning _tuning;
     private readonly uint[] _registers = new uint[RegisterCount];
     private readonly int[] _inputPointers = new int[InputFifoCount];
@@ -49,11 +56,17 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     {
         _tuning = tuning ?? EmulatorTuning.Default;
         _tuning.Validate();
+        OperaDipirEnabled = _tuning.OperaDipir;
         Reset();
     }
 
     /// <summary>Gets the machine tuning.</summary>
     public EmulatorTuning Tuning => _tuning;
+
+    /// <summary>Gets or sets whether Opera's DIPIR latches and access aborts are active.</summary>
+    public bool OperaDipirEnabled { get; set; }
+
+    private bool UseOperaDipir => OperaDipirEnabled;
 
     /// <summary>Gets or sets the raw RAM accessor used by FIFO and DMA transfers.</summary>
     public IRam? Ram { get; set; }
@@ -165,8 +178,11 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
                 return _registers[0x208];
             case 0x308:
                 return _registers[0x304];
+            case 0x410:
             case 0x414:
-                return 0x4000;
+                return UseOperaDipir
+                    ? _registers[address]
+                    : (address == 0x414 ? DipirBeforeReset : 0u);
             case 0x0:
                 return 0x02020000;
             case 0x17F0:
@@ -178,6 +194,13 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         if (address is >= 0x500 and < 0x540)
         {
             return Xbus?.GetResult() ?? 0;
+        }
+
+        if (address is >= 0x540 and < 0x600
+            && UseOperaDipir
+            && XbusAccessAborts(Xbus?.SelectedDeviceAddress ?? 0, address))
+        {
+            return 0;
         }
 
         if (address is >= 0x540 and < 0x580)
@@ -226,7 +249,9 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
 
         if (TraceWriter is not null
             && (address is 0x200 or 0x204 or 0x208 or 0x20c or 0x220
+                or 0x28 or 0x410 or 0x414
                 || address is >= 0x100 and <= 0x17c
+                || address is >= 0x540 and < 0x600
                 || address == 0x304))
         {
             TraceWriter.WriteLine(
@@ -337,6 +362,11 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
                 return false;
             case 0x28:
                 _registers[address] = value;
+                if (UseOperaDipir && (value & 0x30) == 0x30)
+                {
+                    ClearDipirOnSoftReset();
+                }
+
                 return value == 0x30;
             case 0x17e8:
                 Dsp?.Reset();
@@ -372,6 +402,13 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         if (address is >= 0x500 and < 0x540)
         {
             Xbus?.SetSelect(value);
+            return false;
+        }
+
+        if (address is >= 0x540 and < 0x600
+            && UseOperaDipir
+            && XbusAccessAborts(Xbus?.SelectedDeviceAddress ?? 0, address))
+        {
             return false;
         }
 
@@ -449,6 +486,106 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         {
             _registers[0x40] |= 0x80000000;
         }
+    }
+
+    /// <summary>
+    /// Latches an XBUS media-access event in DIPIR1 or DIPIR2. Opera:
+    /// <c>opera_clio_xbus_media_access</c>.
+    /// </summary>
+    /// <param name="unit">Selected XBUS device address.</param>
+    public void XbusMediaAccess(uint unit)
+    {
+        if (!UseOperaDipir)
+        {
+            return;
+        }
+
+        var latch = DipirCurrent | (unit & DipirDeviceMask);
+        var dipir1 = _registers[Dipir1Address];
+        var dipir2 = _registers[Dipir2Address];
+
+        if (((dipir1 & DipirCurrent) != 0
+             && (dipir1 & DipirDeviceMask) == (latch & DipirDeviceMask))
+            || ((dipir2 & DipirCurrent) != 0
+                && (dipir2 & DipirDeviceMask) == (latch & DipirDeviceMask)))
+        {
+            return;
+        }
+
+        if ((dipir1 & DipirCurrent) == 0)
+        {
+            _registers[Dipir1Address] = latch;
+            GenerateFiq(0, DipirFiq);
+        }
+        else if ((dipir2 & DipirCurrent) == 0)
+        {
+            _registers[Dipir2Address] = latch;
+        }
+    }
+
+    /// <summary>
+    /// Gets whether an XBUS register access is blocked by the DIPIR latches. Opera:
+    /// <c>opera_clio_xbus_access_aborts</c>.
+    /// </summary>
+    /// <param name="unit">Selected XBUS device address.</param>
+    /// <param name="address">CLIO register offset.</param>
+    /// <returns><see langword="true"/> when the access must be ignored.</returns>
+    public bool XbusAccessAborts(uint unit, uint address)
+    {
+        if (!UseOperaDipir)
+        {
+            return false;
+        }
+
+        var dipir1 = _registers[Dipir1Address];
+        var dipir2 = _registers[Dipir2Address];
+        if ((dipir1 & DipirCurrent) == 0 && (dipir2 & DipirCurrent) == 0)
+        {
+            return false;
+        }
+
+        var isPoll = address is >= 0x540 and < 0x580;
+        unit &= DipirDeviceMask;
+
+        if ((dipir1 & DipirCurrent) != 0 && (dipir2 & DipirCurrent) == 0)
+        {
+            return !isPoll && (dipir1 & DipirDeviceMask) == unit;
+        }
+
+        if ((dipir2 & DipirCurrent) != 0 && (dipir1 & DipirCurrent) == 0)
+        {
+            return !isPoll && (dipir2 & DipirDeviceMask) == unit;
+        }
+
+        if (!isPoll)
+        {
+            return true;
+        }
+
+        return (dipir1 & DipirDeviceMask) != unit
+            && (dipir2 & DipirDeviceMask) != unit;
+    }
+
+    /// <summary>Converts current DIPIR latches to their before-reset form. Opera: <c>clio_dipir_latch_after_reset</c>.</summary>
+    public void ClearDipirOnSoftReset()
+    {
+        _registers[Dipir1Address] = DipirLatchAfterReset(_registers[Dipir1Address]);
+        _registers[Dipir2Address] = DipirLatchAfterReset(_registers[Dipir2Address]);
+    }
+
+    private static uint DipirLatchAfterReset(uint latch)
+    {
+        var result = 0u;
+        for (var shift = 0; shift < 32; shift += 16)
+        {
+            var field = (latch >> shift) & 0xffff;
+            if ((field & DipirCurrent) != 0)
+            {
+                result |= (DipirBeforeReset | (field & DipirDeviceMask)) << shift;
+            }
+        }
+
+        return result;
     }
 
     /// <summary>Updates the video line counter. FreeDO: <c>_clio_UpdateVCNT</c>.</summary>

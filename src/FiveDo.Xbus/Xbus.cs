@@ -35,6 +35,15 @@ public sealed class Xbus : IClioXbus, IStateSection
     private byte _commandPointer;
     private IInterruptSink? _interrupts;
 
+    /// <summary>
+    /// Gets or sets a value indicating whether Opera's poll/media-access behavior is
+    /// active. The default keeps FreeDO's high-nibble masking and no media latch.
+    /// </summary>
+    public bool OperaSemantics { get; set; }
+
+    /// <summary>Gets or sets the media-access latch callback. Opera: <c>opera_clio_xbus_media_access</c>.</summary>
+    public Action<uint>? MediaAccess { get; set; }
+
     /// <summary>Initializes a new instance of the <see cref="Xbus"/> class.</summary>
     public Xbus()
     {
@@ -50,6 +59,9 @@ public sealed class Xbus : IClioXbus, IStateSection
 
     /// <summary>Gets the currently selected device slot.</summary>
     public int SelectedDevice => _select;
+
+    /// <inheritdoc />
+    public uint SelectedDeviceAddress => (uint)((_selectHigh & 0x80) | _select);
 
     /// <summary>Gets the save-state section identifier.</summary>
     public uint Id => StateSectionIds.Xbus;
@@ -118,10 +130,19 @@ public sealed class Xbus : IClioXbus, IStateSection
             return;
         }
 
+        LatchMediaAccess(device);
         device.SetPoll(value);
         if (device.FiqPending)
         {
             _interrupts?.GenerateFiq(4, 0);
+        }
+    }
+
+    private void LatchMediaAccess(IXbusDevice? device)
+    {
+        if (OperaSemantics && device is not null && device.HasMediaAccess)
+        {
+            MediaAccess?.Invoke(SelectedDeviceAddress);
         }
     }
 
@@ -131,6 +152,7 @@ public sealed class Xbus : IClioXbus, IStateSection
         IXbusDevice? device = GetSelectedDevice();
         if (device is not null)
         {
+            LatchMediaAccess(device);
             device.SetCommand((byte)value);
             if (device.FiqPending)
             {
@@ -184,7 +206,7 @@ public sealed class Xbus : IClioXbus, IStateSection
             result = device?.GetPoll() ?? 0x30;
         }
 
-        if ((_selectHigh & 0x80) != 0)
+        if (!OperaSemantics && (_selectHigh & 0x80) != 0)
         {
             result &= 0xf;
         }

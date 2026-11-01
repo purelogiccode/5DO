@@ -31,8 +31,12 @@ still change.
   remain for SYS-01.
 - The memory bus now models the low-ROM overlay: low reads return the active BIOS
   until the first CPU write to DRAM, VRAM writes do not clear it, reset reasserts it,
-  and memory state version 2 saves/migrates the flag. DIPIR latches and access aborts
-  remain for the next OP-SYS-01 increment.
+  and memory state version 2 saves/migrates the flag.
+- CLIO now implements DIPIR1/DIPIR2 latches, before-reset conversion, the DIPIR FIQ,
+  and XBUS access-abort rules. XBUS exposes the selected-device address, Opera mode
+  returns the full poll high nibble, and poll/command writes can latch CD media
+  access. The DIPIR/abort path is opt-in via `EmulatorTuning.OperaDipir` until
+  OP-SYS-03 adds the soft-reset/clear-DIPIR path.
 
 ### Added
 
