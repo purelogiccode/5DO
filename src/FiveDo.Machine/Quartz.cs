@@ -225,7 +225,7 @@ public sealed class Quartz : IStateSection
         }
 
         var ticks = _timerInGap ? TimerSlotTicks + slack : TimerSlotTicks;
-        var threshold = (((ulong)(uint)_armClock * ticks) << 16) / (uint)EmulatorConstants.TimerClock;
+        var threshold = (((ulong)(uint)_armClock * ticks) << 16) / EmulatorConstants.TimerClock;
         if (threshold == 0)
         {
             threshold = 1;

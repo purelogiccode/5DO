@@ -79,7 +79,6 @@ public partial class DonationEmailWindow : Window
         }
 
         return MailAddress.TryCreate(email, out MailAddress? address)
-            && address is not null
             && string.Equals(address.Address, email, StringComparison.OrdinalIgnoreCase);
     }
 }

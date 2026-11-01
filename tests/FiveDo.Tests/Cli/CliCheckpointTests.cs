@@ -73,7 +73,7 @@ public sealed class CliCheckpointTests
             Console.SetOut(output);
             Console.SetError(error);
             var code = global::FiveDo.Cli.Program.Main(args);
-            return new CliResult(code, output.ToString(), error.ToString());
+            return new CliResult(code, output.ToString());
         }
         finally
         {
@@ -82,5 +82,5 @@ public sealed class CliCheckpointTests
         }
     }
 
-    private readonly record struct CliResult(int Code, string Output, string Error);
+    private readonly record struct CliResult(int Code, string Output);
 }

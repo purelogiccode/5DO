@@ -11,7 +11,6 @@ namespace FiveDo.Storage;
 public static class BiosGameRequirements
 {
     /// <summary>Gets the preferred primary BIOS MD5 for a disc, if one is known.</summary>
-    /// <param name="game">Game metadata, or <see langword="null"/>.</param>
     /// <param name="discName">Disc path or file name, or <see langword="null"/>.</param>
     /// <returns>A lowercase MD5, or <see langword="null"/> when no title-specific rule applies.</returns>
     /// <remarks>
@@ -19,7 +18,7 @@ public static class BiosGameRequirements
     /// needs <c>panafz10</c> for its title menu at 60,000 frames; Powers Kingdom (Europe)
     /// reaches its live-action intro with the Anvil FZ-10E. See docs/Compatibility.md.
     /// </remarks>
-    public static string? PreferredMd5(GameRecord? game, string? discName)
+    public static string? PreferredMd5(string? discName)
     {
         var fileName = string.IsNullOrWhiteSpace(discName)
             ? string.Empty
@@ -40,13 +39,8 @@ public static class BiosGameRequirements
             return "a48e6746bd7edec0f40cff078f0bb19f";
         }
 
-        if (game?.Name.Contains("Arcade", StringComparison.OrdinalIgnoreCase) == true)
-        {
-            // Arcade discs use the patched image; region scoring selects the patched
-            // US/EU image and the selector never uses a patch for a non-arcade disc.
-            return null;
-        }
-
+        // Arcade discs use the patched image; region scoring selects the patched
+        // US/EU image and the selector never uses a patch for a non-arcade disc.
         return null;
     }
 }

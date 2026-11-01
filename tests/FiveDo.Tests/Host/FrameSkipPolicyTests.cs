@@ -57,7 +57,7 @@ public sealed class FrameSkipPolicyTests
     public void Describe_LabelsFixedAndAutoModes()
     {
         Assert.Equal("off", FrameSkipPolicy.Describe(FrameSkipMode.Off));
-        Assert.Equal("auto", FrameSkipPolicy.Describe(FrameSkipMode.Auto, 1));
+        Assert.Equal("auto", FrameSkipPolicy.Describe(FrameSkipMode.Auto));
         Assert.Equal("auto x2", FrameSkipPolicy.Describe(FrameSkipMode.Auto, 2));
         Assert.Equal("1 of 3", FrameSkipPolicy.Describe(FrameSkipMode.OneInThree));
     }

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -44,12 +43,12 @@ internal static class FiveDoCaptureRunner
 
         if (!File.Exists(disc))
         {
-            return Failed(title, disc, bios, frames, "disc image not found: " + disc);
+            return Failed(disc, bios, frames, "disc image not found: " + disc);
         }
 
         if (!File.Exists(bios))
         {
-            return Failed(title, disc, bios, frames, "BIOS not found: " + bios);
+            return Failed(disc, bios, frames, "BIOS not found: " + bios);
         }
 
         var arguments = new List<string>(cli.Prefix)
@@ -105,7 +104,6 @@ internal static class FiveDoCaptureRunner
         catch (JsonException exception)
         {
             return Failed(
-                title,
                 disc,
                 bios,
                 frames,
@@ -117,7 +115,6 @@ internal static class FiveDoCaptureRunner
         if (!process.TimedOut && process.ExitCode != 0)
         {
             return Failed(
-                title,
                 disc,
                 bios,
                 frames,
@@ -129,7 +126,6 @@ internal static class FiveDoCaptureRunner
         if (process.TimedOut || run is null || !run.Ok)
         {
             return Failed(
-                title,
                 disc,
                 bios,
                 frames,
@@ -148,7 +144,6 @@ internal static class FiveDoCaptureRunner
                 if (requiredFrames.Contains(checkpoint))
                 {
                     return Failed(
-                        title,
                         disc,
                         bios,
                         frames,
@@ -243,7 +238,6 @@ internal static class FiveDoCaptureRunner
     }
 
     private static CaptureResult Failed(
-        DiffTitle title,
         string disc,
         string bios,
         int frames,

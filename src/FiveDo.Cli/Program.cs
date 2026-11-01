@@ -810,7 +810,7 @@ internal static class Program
             BiosSource: biosLoad.Source,
             NvramPath: nvramSelection.Path,
             NvramMode: nvramSelection.Mode,
-            NvramVersion: nvramSelection.Version,
+            NvramVersion: nvramSelection.NvramVersion,
             AudioHash: audio.Hash,
             Checkpoints: checkpointResults,
             Warnings: machine.StateWarnings);
@@ -1920,7 +1920,7 @@ internal static class Program
     private sealed record NvramSelection(
         string? Path,
         string Mode,
-        int Version,
+        int NvramVersion,
         IReadOnlyList<string> Fallbacks);
 
     private static int AudioCommand(string[] args)

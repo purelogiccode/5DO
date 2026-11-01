@@ -8,7 +8,7 @@ namespace FiveDo.Tests.Machine;
 /// <summary>
 /// Integration coverage for the CD-ROM timing option. The machine drives the device clock
 /// from the CPU cycle batches, so a scheduled sector becomes visible only after
-/// <see cref="FiveDoMachine.RunFrame"/> has advanced far enough.
+/// <see cref="FiveDoMachine.RunFrame()"/> has advanced far enough.
 /// </summary>
 public sealed class CdromTimingTests
 {
@@ -23,13 +23,13 @@ public sealed class CdromTimingTests
         machine.Cdrom.InsertDisc(new MemoryDisc(2));
         Send(machine.Cdrom, 0x10, 0x00, 0x02, 0x00, 0x00, 0x00, 0x01);
 
-        Assert.Equal(0, (int)machine.Cdrom.Poll & 0x20);
+        Assert.Equal(0, machine.Cdrom.Poll & 0x20);
         Assert.Equal(0UL, machine.Cdrom.Cycles);
 
         machine.RunFrame();
 
         Assert.True(machine.Cdrom.Cycles > machine.Cdrom.DataSectorCycles);
-        Assert.NotEqual(0, (int)machine.Cdrom.Poll & 0x20);
+        Assert.NotEqual(0, machine.Cdrom.Poll & 0x20);
     }
 
     [Fact]
@@ -56,9 +56,9 @@ public sealed class CdromTimingTests
         machine.Cdrom.InsertDisc(new MemoryDisc(2));
         Send(machine.Cdrom, 0x10, 0x00, 0x02, 0x00, 0x00, 0x00, 0x01);
 
-        Assert.NotEqual(0, (int)machine.Cdrom.Poll & 0x20);
+        Assert.NotEqual(0, machine.Cdrom.Poll & 0x20);
         machine.RunFrame();
-        Assert.NotEqual(0, (int)machine.Cdrom.Poll & 0x20);
+        Assert.NotEqual(0, machine.Cdrom.Poll & 0x20);
     }
 
     private static void LoadLoopRom(FiveDoMachine machine)

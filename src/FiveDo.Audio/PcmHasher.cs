@@ -50,7 +50,7 @@ public sealed class PcmHasher
 
         for (var i = 0; i < samples.Length; i += 2)
         {
-            var packed = (uint)(ushort)samples[i] | ((uint)(ushort)samples[i + 1] << 16);
+            var packed = (ushort)samples[i] | ((uint)(ushort)samples[i + 1] << 16);
             Add(packed);
         }
     }

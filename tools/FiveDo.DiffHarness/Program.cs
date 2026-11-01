@@ -108,7 +108,7 @@ internal static class Program
             Console.WriteLine(fiveDo.Ok ? $"ok ({fiveDo.FramesRun} frames, {fiveDo.ElapsedSeconds:F1}s)" : "failed");
             SaveCapture(fiveDoPath, fiveDo);
 
-            CaptureResult? opera = null;
+            CaptureResult? opera;
             if (harness.NoOpera)
             {
                 results.Add(new DiffTitleResult

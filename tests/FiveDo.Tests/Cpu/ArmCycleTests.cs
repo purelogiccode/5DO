@@ -193,7 +193,7 @@ public sealed class ArmCycleTests
         Assert.Equal(ldr, Step(timing, ArmTestAssembler.LdrImmediate(0, 1)));
         Assert.Equal(ldrToPc, Step(timing, ArmTestAssembler.LdrImmediate(15, 1)));
         Assert.Equal(str, Step(timing, ArmTestAssembler.StrImmediate(0, 1)));
-        Assert.Equal(branch, Step(timing, ArmTestAssembler.Branch(0x1010, 0x1000), 0x1000));
+        Assert.Equal(branch, Step(timing, ArmTestAssembler.Branch(0x1010, 0x1000)));
         Assert.Equal(ldm, Step(timing, ArmTestAssembler.Block(true, 0, 0x6, preIndex: false, add: true)));
         Assert.Equal(
             ldmWithPc,

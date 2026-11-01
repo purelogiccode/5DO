@@ -104,8 +104,8 @@ internal sealed class CelRasterizer
 
         var xvert = geometry.XPosition1616;
         var yvert = geometry.YPosition1616;
-        var xcur = xvert;
-        var ycur = yvert;
+        int xcur;
+        int ycur;
 
         if (geometry.TexelFunction == TexelFunction.Line)
         {
@@ -575,8 +575,8 @@ internal sealed class CelRasterizer
         _engine.TraceCel("literal", spriteWidth, geometry.SpriteHeight, bpp);
         var xvert = geometry.XPosition1616;
         var yvert = geometry.YPosition1616;
-        var xcur = xvert;
-        var ycur = yvert;
+        int xcur;
+        int ycur;
         var rowBytes = (offset + 2) << 2;
         var sourceBase = unchecked((int)_engine.DataAddress);
 
@@ -769,8 +769,8 @@ internal sealed class CelRasterizer
         var data = unchecked((int)_engine.DataAddress);
         var xvert = geometry.XPosition1616;
         var yvert = geometry.YPosition1616;
-        var xcur = xvert;
-        var ycur = yvert;
+        int xcur;
+        int ycur;
 
         if (geometry.TexelFunction == TexelFunction.Line)
         {

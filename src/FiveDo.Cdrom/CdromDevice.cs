@@ -1124,24 +1124,24 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             && (_xbusStatus & CdstSpin) != 0;
     }
 
-    private bool TryLoadSector()
+    private void TryLoadSector()
     {
         if (UseOperaPollSemantics && (_poll & PollResetMask) != 0)
         {
             _poll &= unchecked((byte)~PollData);
-            return false;
+            return;
         }
 
         if (_requested <= 0)
         {
             _poll &= unchecked((byte)~PollData);
-            return false;
+            return;
         }
 
         if (_timingMode == CdromTimingMode.OperaCycleBased && _cycles < _nextReadyCycle)
         {
             _poll &= unchecked((byte)~PollData);
-            return false;
+            return;
         }
 
         ReadSectorIntoData();
@@ -1159,8 +1159,6 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
                 InterruptRequested?.Invoke();
             }
         }
-
-        return true;
     }
 
     private void ReadSectorIntoData()

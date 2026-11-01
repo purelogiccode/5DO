@@ -65,7 +65,7 @@ public partial class MainWindow : Window, IDisposable
     private string _nvramGameId = string.Empty;
     private NvramStorageMode _nvramMode;
     private int _nvramVersion;
-    private string _nvramDirectory = string.Empty;
+    private string _nvramDirectory;
     private CpuVideoRenderer? _cpuVideo;
     private VideoRendererKind _rendererKind;
     private volatile bool _vulkanPresenter;
@@ -85,7 +85,7 @@ public partial class MainWindow : Window, IDisposable
     private int _lastLogEntryCount = -1;
     private int _scanGeneration;
     private CancellationTokenSource? _libraryScanCts;
-    private DateTime _lastDonationCheckUtc = DateTime.MinValue;
+    private DateTime _lastDonationCheckUtc;
     private string? _donationBannerMessage;
     private bool _donationCheckInProgress;
     private bool _donationBannerDismissed;
@@ -272,7 +272,7 @@ public partial class MainWindow : Window, IDisposable
     {
         var startupBios = Program.StartupBiosPath;
         ResolvedBios resolved = startupBios is not null
-            ? new ResolvedBios(startupBios, string.Empty, "startup", "Using the --bios startup path.", null, null, [])
+            ? new ResolvedBios(startupBios, string.Empty, "startup", "Using the --bios startup path.", [])
             : BiosResolver.Resolve(_settings, null, null);
         if (resolved.HasPrimary && File.Exists(resolved.PrimaryPath))
         {
@@ -1297,7 +1297,7 @@ public partial class MainWindow : Window, IDisposable
         // Returning from the library can leave its search box focused. The key
         // handlers intentionally ignore TextBox input, so move focus back to the
         // window before the game starts receiving pad input.
-        FocusManager?.Focus(this, NavigationMethod.Unspecified, KeyModifiers.None);
+        FocusManager.Focus(this);
     }
 
     private void UpdateEmulationHeader()

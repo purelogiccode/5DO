@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Security.Cryptography;
@@ -229,14 +228,14 @@ public sealed class BiosLibraryTests
     {
         Assert.Equal(
             "f47264dd47fe30f73ab3c010015c155b",
-            BiosGameRequirements.PreferredMd5(null, "Slayer (Europe).chd"));
+            BiosGameRequirements.PreferredMd5("Slayer (Europe).chd"));
         Assert.Equal(
             "51f2f43ae2f3508a14d9f56597e2d3ce",
-            BiosGameRequirements.PreferredMd5(null, "Slayer (USA).chd"));
+            BiosGameRequirements.PreferredMd5("Slayer (USA).chd"));
         Assert.Equal(
             "a48e6746bd7edec0f40cff078f0bb19f",
-            BiosGameRequirements.PreferredMd5(null, "Powers Kingdom (Europe).chd"));
-        Assert.Null(BiosGameRequirements.PreferredMd5(null, "Lemmings (USA).chd"));
+            BiosGameRequirements.PreferredMd5("Powers Kingdom (Europe).chd"));
+        Assert.Null(BiosGameRequirements.PreferredMd5("Lemmings (USA).chd"));
     }
 
     private static GameRecord Game(string name, string regions)

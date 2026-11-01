@@ -489,7 +489,7 @@ public partial class SettingsWindow : Window
             Title = title,
             AllowMultiple = false,
         };
-        if (!string.IsNullOrWhiteSpace(current) && System.IO.Directory.Exists(current))
+        if (!string.IsNullOrWhiteSpace(current) && Directory.Exists(current))
         {
             IStorageFolder? start = await StorageProvider.TryGetFolderFromPathAsync(current).ConfigureAwait(true);
             if (start is not null)

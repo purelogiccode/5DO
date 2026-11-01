@@ -118,13 +118,13 @@ public sealed class BiosLibrary
         var fileName = Path.GetFileName(resolved);
         var md5 = Convert.ToHexStringLower(MD5.HashData(bytes));
         var knownCatalog = catalog ?? BiosCatalog.Default;
-        var isKnown = knownCatalog.TryGet(md5, out BiosDescriptor? descriptor);
+        var isKnown = knownCatalog.TryGet(md5, out BiosDescriptor descriptor);
 
         if (bytes.Length == EmulatorConstants.RomBankSize)
         {
             BiosImage image = BiosImage.FromBytes(bytes);
             var heuristic = ClassifyFileName(fileName, image.IsAnvil);
-            if (isKnown && descriptor is not null)
+            if (isKnown)
             {
                 return CreateProfile(
                     resolved,
@@ -156,7 +156,7 @@ public sealed class BiosLibrary
         if (bytes.Length > 0 && bytes.Length < EmulatorConstants.RomBankSize)
         {
             var heuristic = ClassifyFileName(fileName, isAnvil: false);
-            if (isKnown && descriptor is not null)
+            if (isKnown)
             {
                 return CreateProfile(
                     resolved,
@@ -243,7 +243,7 @@ public sealed class BiosLibrary
             }
         }
 
-        var knownMd5 = BiosGameRequirements.PreferredMd5(game, options.DiscName);
+        var knownMd5 = BiosGameRequirements.PreferredMd5(options.DiscName);
         if (!string.IsNullOrWhiteSpace(knownMd5))
         {
             BiosProfile? knownProfile = FindPrimary(knownMd5);

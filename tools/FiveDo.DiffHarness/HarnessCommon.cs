@@ -13,7 +13,7 @@ using FiveDo.Storage;
 namespace FiveDo.DiffHarness;
 
 /// <summary>Shared filesystem, hashing, and process helpers.</summary>
-internal static partial class HarnessCommon
+internal static class HarnessCommon
 {
     /// <summary>Runs a process and captures stdout/stderr.</summary>
     public static ProcessResult RunProcess(

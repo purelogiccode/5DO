@@ -415,7 +415,6 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
                     // The reset handler sets the PC directly; do not also apply the
                     // normal CLIO four-byte PC adjustment for this write.
                     SoftResetRequested?.Invoke((value & ResetClearDipir) != 0);
-                    return false;
                 }
 
                 return false;

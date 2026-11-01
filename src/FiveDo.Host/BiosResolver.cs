@@ -12,16 +12,12 @@ namespace FiveDo.Host;
 /// <param name="SecondaryPath">Selected BIOS2/font path, or an empty string.</param>
 /// <param name="Source">Selection source: <c>override</c>, <c>auto</c>, <c>configured</c>, or <c>none</c>.</param>
 /// <param name="Reason">Human-readable selection explanation.</param>
-/// <param name="Primary">Primary profile metadata when the image came from a library.</param>
-/// <param name="Secondary">Secondary profile metadata when the image came from a library.</param>
 /// <param name="Warnings">Non-fatal selection problems, such as a missing override or folder.</param>
 public sealed record ResolvedBios(
     string? PrimaryPath,
     string SecondaryPath,
     string Source,
     string Reason,
-    BiosProfile? Primary,
-    BiosProfile? Secondary,
     IReadOnlyList<string> Warnings)
 {
     /// <summary>Gets a value indicating whether a primary BIOS was resolved.</summary>
@@ -34,7 +30,7 @@ public sealed record ResolvedBios(
     public static ResolvedBios None(string reason, IReadOnlyList<string>? warnings = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(reason);
-        return new ResolvedBios(null, string.Empty, "none", reason, null, null, warnings ?? []);
+        return new ResolvedBios(null, string.Empty, "none", reason, warnings ?? []);
     }
 }
 
@@ -95,8 +91,6 @@ public static class BiosResolver
                     selection.Secondary?.Path ?? ResolveConfiguredSecondary(settings),
                     "override",
                     selection.Reason,
-                    selection.Primary ?? overridePrimary,
-                    selection.Secondary,
                     warnings);
             }
 
@@ -115,8 +109,6 @@ public static class BiosResolver
                     selection.Secondary?.Path ?? string.Empty,
                     "auto",
                     selection.Reason,
-                    selection.Primary,
-                    selection.Secondary,
                     warnings);
             }
 
@@ -130,8 +122,6 @@ public static class BiosResolver
                 ResolveConfiguredSecondary(settings),
                 "configured",
                 "Using the configured BIOS.",
-                Primary: null,
-                Secondary: null,
                 warnings);
         }
 

@@ -235,14 +235,6 @@ public sealed class VdlpTests
         Assert.Equal(3, copy.LineDelay);
     }
 
-    private static void RenderLines(Vdlp vdlp, VdlFrame frame, int firstLine, int lastLine)
-    {
-        for (var line = firstLine; line <= lastLine; line++)
-        {
-            vdlp.DoLine(line, frame);
-        }
-    }
-
     private static void WriteVdl(FiveDoMemory memory, uint address, params uint[] words)
     {
         for (var i = 0; i < words.Length; i++)

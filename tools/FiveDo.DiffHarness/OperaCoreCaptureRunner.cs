@@ -51,17 +51,17 @@ internal static class OperaCoreCaptureRunner
 
         if (!File.Exists(corePath))
         {
-            return Failed(title, disc, bios, frames, "OperaCore not found: " + corePath);
+            return Failed(disc, bios, frames, "OperaCore not found: " + corePath);
         }
 
         if (!File.Exists(bios))
         {
-            return Failed(title, disc, bios, frames, "BIOS not found: " + bios);
+            return Failed(disc, bios, frames, "BIOS not found: " + bios);
         }
 
         if (!File.Exists(disc) && string.IsNullOrWhiteSpace(title.Iso))
         {
-            return Failed(title, disc, bios, frames, "disc image not found: " + disc);
+            return Failed(disc, bios, frames, "disc image not found: " + disc);
         }
 
         var workRoot = DiffManifestLoader.ResolvePath(
@@ -140,7 +140,7 @@ internal static class OperaCoreCaptureRunner
             File.Copy(biosPath, stagedBios, overwrite: true);
         }
 
-        return new OperaRuntime(stagedCore, stagedBios);
+        return new OperaRuntime(stagedCore);
     }
 
     private static string StageIso(
@@ -183,7 +183,6 @@ internal static class OperaCoreCaptureRunner
     }
 
     private static CaptureResult Failed(
-        DiffTitle title,
         string disc,
         string bios,
         int frames,
@@ -200,7 +199,7 @@ internal static class OperaCoreCaptureRunner
         };
     }
 
-    private sealed record OperaRuntime(string CorePath, string BiosPath);
+    private sealed record OperaRuntime(string CorePath);
 }
 
 /// <summary>A loaded OperaCore library and its run loop.</summary>
@@ -245,7 +244,6 @@ internal sealed class OperaCoreHost : IDisposable
     private readonly SetInputState _setInputState;
     private readonly SetLog _setLog;
     private readonly DebugUInt32? _debugArmPc;
-    private readonly DebugUInt32? _debugArmCpsr;
     private readonly DebugUInt32? _debugArmStateHash;
     private readonly DebugUInt8? _debugCdStatus;
     private readonly DebugUInt32? _debugCdPoll;
@@ -305,7 +303,6 @@ internal sealed class OperaCoreHost : IDisposable
         _setInputState = Load<SetInputState>("sg_set_input_state");
         _setLog = Load<SetLog>("sg_set_log");
         _debugArmPc = TryLoad<DebugUInt32>("sg_debug_arm_pc");
-        _debugArmCpsr = TryLoad<DebugUInt32>("sg_debug_arm_cpsr");
         _debugArmStateHash = TryLoad<DebugUInt32>("sg_debug_arm_state_hash");
         _debugCdStatus = TryLoad<DebugUInt8>("sg_debug_cd_status");
         _debugCdPoll = TryLoad<DebugUInt32>("sg_debug_cd_poll");
@@ -353,8 +350,7 @@ internal sealed class OperaCoreHost : IDisposable
                 Marshal.FreeCoTaskMem(pathPointer);
             }
 
-            var video = new SgAvInfo();
-            _getAvInfo(out video);
+            _getAvInfo(out SgAvInfo video);
             _lastWidth = (int)video.BaseWidth;
             _lastHeight = (int)video.BaseHeight;
 

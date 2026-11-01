@@ -163,7 +163,7 @@ public sealed class DiffComparerTests : IDisposable
 
         DiffReport report = DiffComparer.BuildReport(
             manifest,
-            WriteManifest(manifest),
+            WriteManifest(),
             [match, allowed, diverged],
             provenance);
 
@@ -242,7 +242,7 @@ public sealed class DiffComparerTests : IDisposable
         };
     }
 
-    private string WriteManifest(DiffManifest manifest)
+    private string WriteManifest()
     {
         var path = Path.Combine(_directory, "manifest.json");
         File.WriteAllText(path, "{}");

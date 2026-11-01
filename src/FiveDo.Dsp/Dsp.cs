@@ -1128,16 +1128,8 @@ public sealed class Dsp : IDsp, IStateSection
                 _imem[address] = value;
                 break;
             default:
-                {
-                    if (address < 0x100)
-                    {
-                        return;
-                    }
-
-                    var offset = address - 0x100;
-                    _imem[offset < 0x200 ? offset | 0x100 : offset + 0x100] = value;
-                    break;
-                }
+                _imem[address] = value;
+                break;
         }
     }
 
