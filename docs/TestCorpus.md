@@ -408,9 +408,16 @@ full unit suite and the differential harness:
 - VDLP save states are now version 2; version-1 states migrate by restarting
   traversal from the saved active cursor.
 
-The remaining parity items are OP-06 (literal LRFORM), OP-10 (MADAM CTL DMA
-flags), OP-09 finish (raw VH bits through the projector), OP-15 (literal SKIPX
-clamp), and OP-14 (YOXY/CEL origin).
+The remaining parity item is the legacy-hack retirement pass for OP-14
+(`GraphicsStepY`/`BitTiming6`), followed by the CD/XBUS/DIPIR/reset system batch.
+
+**Opera-parity title probes (2026-10-31):** 5DO completed 3,000 frames for
+Samurai Shodown (USA/EU), DinoPark Tycoon, Alone in the Dark, Johnny Bazookatone,
+AutoBahn Tokio, and Primal Rage with the accuracy profile. The stock OperaCore
+crashed on Samurai Shodown (`0xC0000005`) inside the harness; the other probes
+diverged at frame 3000, consistent with the existing PC/timing gap. A Johnny
+Bazookatone checkpoint image shows the game scene without the issue #291
+horizontal-line artifact.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 
