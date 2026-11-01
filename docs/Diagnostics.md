@@ -192,6 +192,23 @@ polling a static state. With `--cd-timing opera`, `cd read sector <lba>` appears
 the scheduled sector deadline expires rather than at command time, so the gap between
 the command and the read line is the modeled 2x drive time.
 
+## 5.1 Support bundle
+
+**Help > Save Diagnostics Bundle...** writes a privacy-scrubbed zip for bug reports. The
+zip contains `manifest.json`, `environment.txt`, sanitized `settings.json`, the most
+recent log files, and, when a game is running, `state.bin` and `frame.png`. The CLI
+produces the same archive:
+
+```powershell
+dotnet run --project src/FiveDo.Cli -- diagnostics bundle --out artifacts/support.zip
+dotnet run --project src/FiveDo.Cli -- diagnostics bundle --state save.state --frame shot.png --movie input.replay
+```
+
+Paths for the home folder, executable directory, and temp directory are replaced with
+`<home>`, `<app>`, and `<temp>`, and the account name becomes `<user>`. Settings keys
+that contain user paths (`DiscPath`, `RecentDiscs`, `BiosFolder`, and similar) are
+removed. The manifest records the scrub count and included evidence.
+
 `--cd-transcript <path>` writes the richer command/status record used for parity work:
 
 ```text

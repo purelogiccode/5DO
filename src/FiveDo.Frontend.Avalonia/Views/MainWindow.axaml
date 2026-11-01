@@ -136,6 +136,8 @@
                           ToolTip.Tip="Open the first-run guide for BIOS and disc setup." />
                 <MenuItem Header="About 5DO" Click="OnAbout"
                           ToolTip.Tip="Show version, renderer, audio, and license information." />
+                <MenuItem Header="Save Diagnostics Bundle..." Click="OnDiagnosticsBundleAsync"
+                          ToolTip.Tip="Write a privacy-scrubbed zip with logs, settings, environment, a save state, and the current frame." />
                 <Separator />
                 <MenuItem Header="Donation Status..." Click="OnDonationStatus"
                           ToolTip.Tip="Enter the email used for a donation and check whether it was recognized." />

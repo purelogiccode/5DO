@@ -688,7 +688,7 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,425 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,427 tests pass with no changed NTSC hashes.
 
 ### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
 
@@ -722,6 +722,16 @@ UX-23 coverage is compile/status level:
   Battle Chess run with `--audio openal --audio-buffer 20 --audio-device
   "OpenAL Soft on Headphones (JBL DUET NC)"` completed with `ok: true`, 52,921
   samples, and frame hash `0x88883E88`.
+
+### 1.1r Diagnostics bundle (2026-11-01)
+
+- `DiagnosticsBundleTests.Create_WritesScrubbedSettingsLogsAndManifest` builds a
+  settings file and log containing the home path and account name, then verifies the
+  zip entries, removed settings keys, placeholder scrubbing, and manifest fields.
+- `Create_WorksWithoutOptionalEvidence` covers a minimal bundle.
+- Manual evidence: `5do diagnostics bundle --out artifacts/diag-test.zip --json` wrote
+  `environment.txt`, sanitized `settings.json`, five logs, and `manifest.json` with 22
+  scrub replacements; the archive contained no `DiscPath` or raw user path.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

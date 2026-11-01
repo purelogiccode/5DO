@@ -444,6 +444,13 @@ checking a donation. A confirmed donation hides the banner; the close button hid
 until the next launch. The same actions are available under **Help > Donation Status...**
 and **Help > Support 5DO...**.
 
+## Support bundles
+
+**Help > Save Diagnostics Bundle...** writes a zip with the current save state, frame,
+logs, sanitized settings, and environment details. Use it when reporting a bug; paths
+and the account name are replaced with placeholders. The CLI equivalent is
+`5do diagnostics bundle --out support.zip`.
+
 ## Audio
 
 The desktop app ships the OpenAL Soft 1.23.1 runtime, so live stereo output works

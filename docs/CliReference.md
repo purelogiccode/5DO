@@ -66,6 +66,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `cheat list\|add\|enable\|disable\|remove\|import\|export` | Manage per-game RAM cheat files. |
 | `movie info\|record\|play\|verify\|branch` | Inspect, record, replay, verify, or branch `.5domovie` TAS movies. |
 | `audio devices [--json]` | List OpenAL playback devices. |
+| `diagnostics bundle [--out path]` | Write a privacy-scrubbed support zip. Options: `--state`, `--frame`, `--movie`, `--settings`, `--logs`, `--notes`, `--json`. |
 | `audio analyze <wav>` | WAV format, peak, RMS, clipping, silence, DC offset. |
 | `state inspect <path>` | Save-state header and section table (full CRC validation, including Brotli sections). |
 | `state slots <dir>` | List numbered save slots and metadata. |

@@ -7,8 +7,8 @@ engine, the TAS-movie pass, the disc browser, the input-device pass, the
 OSD/quick-menu pass, the library metadata/favorites/playtime pass, the
 multi-track/CD-DA pass, the CD-DA volume/settings pass, the multi-disc swap pass, the
 portable-mode pass, the input-display pass, the ODE/playlist-editor pass, the
-PAL/NTSC pass, the isolation/CD-transcript pass, the pointer-routing pass, and the
-audio-latency pass. Road Rash's
+PAL/NTSC pass, the isolation/CD-transcript pass, the pointer-routing pass, the
+audio-latency pass, and the diagnostics-bundle pass. Road Rash's
 100k-state race now measures
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
@@ -34,11 +34,13 @@ per-game profiles, and `settings validate|migrate`. UX-15 adds portable mode:
 NVRAM, cheats, library state, and logs; `InstanceLock` prevents two desktop processes
 from writing the same directory. **F2** toggles the frame/lag/skip and selected-player
 input overlay. AUD-01 adds OpenAL device selection and a 20-500 ms buffer target with
-live output recreation; `audio devices` lists playback devices.
+live output recreation; `audio devices` lists playback devices. FND-08/UX-17 add
+`diagnostics bundle` and **Help > Save Diagnostics Bundle...** with path/account
+scrubbing.
 Remaining disc work is known-title
 CD-DA evidence and a real in-game multi-disc swap, plus subcode. A 10-disc
 Release smoke after the
-TOC change reported 10/10 Loadable/Rendered. **1425 tests pass.**
+TOC change reported 10/10 Loadable/Rendered. **1427 tests pass.**
 The five not-loadable rows are resolved or explained: Mirai Shounen Conan now runs
 (transient CHD read error), and the four Arcade CD-ROM titles load with
 `panafz10-patched.bin` plus the default headless pad. The 12,000-frame rerun shows that six of the

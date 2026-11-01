@@ -71,6 +71,13 @@ still change.
   illegal-request status instead of silently doing nothing, the guest RESET command
   restores the default transfer state and sector size, and `PrefetchingDiscSource`
   read-aheads native track sectors so CD-DA does not decompress on the sample clock.
+- FND-08/UX-17 diagnostics bundle: `DiagnosticsBundle` writes a privacy-scrubbed zip
+  with a versioned manifest, environment, sanitized settings, recent logs, and optional
+  state/frame/replay evidence. **Help > Save Diagnostics Bundle...** captures the live
+  state and frame; `diagnostics bundle` exposes the same archive with `--out`, `--state`,
+  `--frame`, `--movie`, `--settings`, `--logs`, and `--notes`. Home/app/temp paths, the
+  account name, and path-valued settings keys are removed. Typed error codes and the
+  compatibility-report form/upload remain.
 - AUD-01 audio device and buffer latency: `OpenAlAudioOutput` enumerates OpenAL Soft
   playback devices, accepts a selected device name and a 20-500 ms buffer target, and
   derives buffer count, prefill, and ring capacity from that target. Settings > Audio

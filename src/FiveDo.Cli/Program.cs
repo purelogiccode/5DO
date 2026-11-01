@@ -90,6 +90,7 @@ internal static class Program
                     "nvram" => NvramCommand(args),
                     "movie" => MovieCommand(args),
                     "audio" => AudioCommand(args),
+                    "diagnostics" => DiagnosticsCommand(args),
                     "state" => State(args),
                     "bench" => Bench(args),
                     "selftest" => SelfTest(args),
@@ -2854,6 +2855,55 @@ internal static class Program
             Console.WriteLine($"clipped:     {result.ClippedFrames}");
             Console.WriteLine($"silent:      {result.SilentFrames}");
             Console.WriteLine($"dc offset:   L {result.DcOffsetLeft:F2}, R {result.DcOffsetRight:F2}");
+        }
+
+        return 0;
+    }
+
+    private static int DiagnosticsCommand(string[] args)
+    {
+        if (args.Length < 2 || !string.Equals(args[1], "bundle", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("diagnostics needs the 'bundle' subcommand.", nameof(args));
+        }
+
+        ParsedOptions options = Parse(args, startIndex: 2);
+        var outputPath = options.Get("--out")
+            ?? Path.Combine(
+                PortablePaths.DataDirectory,
+                "diagnostics",
+                $"5do-diagnostics-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}.zip");
+        var result = DiagnosticsBundle.Create(
+            outputPath,
+            new DiagnosticsBundleOptions
+            {
+                SettingsPath = options.Get("--settings") ?? AppSettingsStore.DefaultPath,
+                LogDirectory = options.Get("--logs") ?? LogPaths.GetLogDirectory(),
+                StatePath = options.Get("--state"),
+                FramePath = options.Get("--frame"),
+                MoviePath = options.Get("--movie"),
+                Notes = options.Get("--notes"),
+            });
+        var cliResult = new CliDiagnosticsBundleResult(
+            Ok: true,
+            Path: result.Path,
+            Entries: result.Entries,
+            ScrubHits: result.ScrubHits);
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(
+                cliResult,
+                CliJsonContext.Default.CliDiagnosticsBundleResult));
+        }
+        else
+        {
+            Console.WriteLine($"bundle:      {cliResult.Path}");
+            Console.WriteLine($"entries:     {cliResult.Entries.Count}");
+            Console.WriteLine($"scrubbed:    {cliResult.ScrubHits}");
+            foreach (var entry in cliResult.Entries)
+            {
+                Console.WriteLine($"  {entry}");
+            }
         }
 
         return 0;

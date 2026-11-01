@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,425 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,427 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,425** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,427** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -124,13 +124,13 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[FND-05](#feat-fnd-05)** Differential harness and golden corpus — P0 · L — **Partial**: harness, checkpoints, audio/state hashes, smoke + showcase done; full 594-disc manifest, nightly trend dashboard, and PC/state/CD transcript comparison remain.
 - [ ] **[FND-06](#feat-fnd-06)** UI settings and per-game profile framework — P0 · M — **Partial**: Video/Audio/Emulation/Paths tabs exist; per-game editor, search/filter, reset, and localized labels remain.
 - [ ] **[FND-07](#feat-fnd-07)** Localization resource pipeline — P1 · S — **Pending**: resource files, `ILocalizer`, pseudo-locale, language selector, translator guide.
-- [ ] **[FND-08](#feat-fnd-08)** Diagnostics, errors, and crash-bundle contracts — P1 · M — **Partial**: Serilog, in-app log viewer, bug reporting, and CLI diagnostics exist; typed error codes, privacy-scrubbed crash bundle, and `diagnostics bundle` remain.
+- [ ] **[FND-08](#feat-fnd-08)** Diagnostics, errors, and crash-bundle contracts — P1 · M — **Partial**: Serilog, in-app log viewer, bug reporting, CLI diagnostics, and the privacy-scrubbed `diagnostics bundle` exist; typed error codes and a compatibility-report form remain.
 
 ---
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 13 done · 15 partial · 92 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 13 done · 16 partial · 91 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -219,7 +219,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[UX-14](#feat-ux-14)** Auto-update and release channels — P1 · M · depends on: ENG-10 — **Pending**
 - [ ] **[UX-15](#feat-ux-15)** Portable mode, multi-instance, config profiles — P1 · S · depends on: FND-02 — **Partial** — `portable.flag`, `--portable`, `FIVEDO_DATA_DIR`, named profiles, and the per-instance desktop lock are implemented; a profile selector/import-export UI remains
 - [ ] **[UX-16](#feat-ux-16)** Installers, signing, notarization, file associations — P1 · L · depends on: ENG-10 — **Pending**
-- [ ] **[UX-17](#feat-ux-17)** Crash report, compatibility report, log bundle — P1 · M · depends on: FND-08 — **Pending**
+- [ ] **[UX-17](#feat-ux-17)** Crash report, compatibility report, log bundle — P1 · M · depends on: FND-08 — **Partial** — one-click desktop and CLI bundles include logs, scrubbed settings, environment, state, and frame evidence; upload and the compatibility-report form remain
 - [ ] **[UX-18](#feat-ux-18)** Onboarding and verification — P1 · M · depends on: SYS-20 — **Pending**
 - [x] **[UX-19](#feat-ux-19)** OSD, notifications, quick menu — P1 · S · depends on: FND-06 — **Done**
 - [ ] **[UX-20](#feat-ux-20)** Per-game settings UI — P1 · M · depends on: SYS-18 — **Pending**
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,425 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,427 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,425**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,427**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -2888,6 +2888,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | UX-15 | Per-instance write lock | Added `InstanceLock`, an exclusive `5do.instance.lock` in the resolved data directory, desktop conflict handling, and `FIVEDO_ALLOW_MULTIPLE=1`. Separate profiles/directories still run together. UX-15 remains partial for the profile selector/import-export UI; 1,415 tests pass |
 | 2026-11-01 | SYS-15 | Pointer routing and calibration | Added `PointerPort` (all or port 1-6), `PointerScale`/`PointerOffsetX`/`PointerOffsetY` with clamping, `AppSettings.MapPointer`/`RoutesPointerTo`, Settings > Emulation pointer controls, and native-resolution mapping for mouse, lightgun, arcade lightgun, and trackball input. SYS-15 remains partial only for scripted gameplay validation; 1,417 tests pass |
 | 2026-11-01 | AUD-01 | Audio device and buffer latency | Added OpenAL device enumeration and selection, 20-500 ms buffer targets with derived queue/prefill/ring sizing, live output recreation without resetting the machine, Settings > Audio device/buffer controls, `--audio-device`/`--audio-buffer`, `audio devices`, and latency in the status/JSON output. AUD-01 is partial for resampler quality/exclusive/sync; 1,425 tests pass |
+| 2026-11-01 | FND-08, UX-17 | Diagnostics bundle | Added `DiagnosticsBundle` with scrubbed settings/logs/environment/manifest and optional state/frame/replay, `diagnostics bundle` CLI options, and **Help > Save Diagnostics Bundle...** with live state/frame capture. FND-08 and UX-17 are partial for typed errors, compatibility report/upload, and automatic crash capture; 1,427 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -3055,7 +3056,7 @@ A feature is done only when:
 | UX-14 | Auto-update and release channels | P1 | M | ENG-10 | Pending |
 | UX-15 | Portable mode, multi-instance, config profiles | P1 | S | FND-02 | Partial |
 | UX-16 | Installers, signing, notarization, file associations | P1 | L | ENG-10 | Pending |
-| UX-17 | Crash report, compatibility report, log bundle | P1 | M | FND-08 | Pending |
+| UX-17 | Crash report, compatibility report, log bundle | P1 | M | FND-08 | Partial |
 | UX-18 | Onboarding and verification | P1 | M | SYS-20 | Pending |
 | UX-19 | OSD, notifications, quick menu | P1 | S | FND-06 | Done |
 | UX-20 | Per-game settings UI | P1 | M | SYS-18 | Pending |
@@ -3327,20 +3328,24 @@ full 594-disc manifest, and the nightly trend dashboard. See
 <a id="feat-fnd-08"></a>
 ### FND-08 - Diagnostics, errors, and crash-bundle contracts
 
-**Priority:** P1 | **Effort:** M | **Depends on:** none
+**Priority:** P1 | **Effort:** M | **Depends on:** none | **Status:** Partial (2026-11-01)
 
 **Problem.** Diagnostics are strong but spread across Serilog, CLI flags, and ad-hoc dialogs. New features need consistent errors and support bundles.
 
-**Add.**
-- Typed error codes for BIOS/disc/state/audio/video/netplay.
-- User-facing message + technical detail + log category.
-- Crash/compatibility bundle: state, input replay, logs, hashes, screenshot, settings, build info.
-- Privacy scrub and opt-in.
-- CLI `diagnostics bundle`.
+**Implemented.**
+- `DiagnosticsBundle` writes a zip with `manifest.json` (schema version, build/platform, selected evidence), `environment.txt`, sanitized `settings.json`, recent `logs/`, and optional `state.bin`, `frame.png`, and input replay.
+- Settings sanitization removes path-valued keys and replaces the home, app, and temp paths plus the account name with placeholders. Text logs and notes are scrubbed the same way.
+- `--out`, `--state`, `--frame`, `--movie`, `--settings`, `--logs`, and `--notes` control the CLI bundle; **Help > Save Diagnostics Bundle...** captures the live state and current frame from the desktop.
+- Manifest and settings JSON are emitted with `Utf8JsonWriter` so the trimmed CLI keeps working with reflection-free JSON.
+
+**Remaining.**
+- Typed error codes and a user-facing message/technical-detail contract for BIOS/disc/state/audio/video/netplay failures.
+- A compatibility-report form and upload flow.
+- Input-replay capture from the live desktop recorder (the CLI accepts an existing replay path).
 
 **Files.** `src/FiveDo.Diagnostics/`, `src/FiveDo.Cli/Program.cs`, `src/FiveDo.Frontend.Avalonia/`, `docs/Diagnostics.md`.
 
-**Tests.** Bundle contents, scrub, error mapping, log category.
+**Tests.** `DiagnosticsBundleTests` covers bundle contents, missing evidence, settings key removal, path/user scrubbing, and manifest fields.
 
 **Done when.** A user can produce one file that lets a developer reproduce a bug.
 
@@ -5232,19 +5237,23 @@ metadata providers/import, screenshots/manuals/videos, a metadata editor, and th
 <a id="feat-ux-17"></a>
 ### UX-17 - Crash report, compatibility report, log bundle
 
-**Priority:** P1 | **Effort:** M | **Depends on:** FND-08 | **Status:** Pending
+**Priority:** P1 | **Effort:** M | **Depends on:** FND-08 | **Status:** Partial (2026-11-01)
 
 **Problem.** Bug reporting exists; compatibility evidence is manual.
 
-**Add.**
-- One-click bundle: state, replay, logs, hashes, screenshot, settings.
-- Compatibility report form.
-- Privacy scrub.
-- Upload/save.
+**Implemented.**
+- **Help > Save Diagnostics Bundle...** captures the live save state and CPU frame, then writes a scrubbed zip with settings, logs, environment, and manifest.
+- CLI `diagnostics bundle [--out path] [--state path] [--frame path] [--movie path]` produces the same archive headlessly.
+- Privacy scrub removes home/app/temp paths, the account name, and path-valued settings keys; the manifest records the scrub count.
+
+**Remaining.**
+- Live input-replay capture in the desktop bundle.
+- Compatibility report form and optional upload.
+- A one-click crash handler that writes the bundle automatically.
 
 **Files.** Diagnostics/frontend/CLI.
 
-**Tests.** Bundle contents; scrub; upload failure.
+**Tests.** Bundle contents; scrub; missing evidence.
 
 **Done when.** A user can submit a reproducible report in one action.
 

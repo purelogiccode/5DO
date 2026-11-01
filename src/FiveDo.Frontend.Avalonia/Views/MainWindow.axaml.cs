@@ -1470,6 +1470,91 @@ public partial class MainWindow : Window, IDisposable
         SlotText.Text = $"Slot {_slots.CurrentSlot + 1}/{_slots.SlotCount}";
     }
 
+    private void OnDiagnosticsBundleAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(SaveDiagnosticsBundleAsync, "saving a diagnostics bundle");
+    }
+
+    private async Task SaveDiagnosticsBundleAsync()
+    {
+        var files = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Save 5DO diagnostics bundle",
+            SuggestedFileName = $"5do-diagnostics-{DateTime.Now:yyyyMMdd-HHmmss}.zip",
+            DefaultExtension = "zip",
+            FileTypeChoices =
+            [
+                new FilePickerFileType("Zip archive") { Patterns = ["*.zip"] },
+            ],
+        }).ConfigureAwait(true);
+        var path = files?.TryGetLocalPath();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        string? statePath = null;
+        string? framePath = null;
+        try
+        {
+            if (_machine is not null)
+            {
+                var prefix = Path.Combine(Path.GetTempPath(), $"5do-diagnostics-{Guid.NewGuid():N}");
+                statePath = prefix + ".state";
+                framePath = prefix + ".png";
+                _runner?.Invoke(() => _machine.SaveStateToFile(statePath, _gameId));
+                SaveNativeScreenshot(framePath);
+            }
+
+            DiagnosticsBundleResult result = DiagnosticsBundle.Create(
+                path,
+                new DiagnosticsBundleOptions
+                {
+                    SettingsPath = AppSettingsStore.DefaultPath,
+                    LogDirectory = LogPaths.GetLogDirectory(),
+                    StatePath = statePath,
+                    FramePath = framePath,
+                    Notes = $"game={_gameName}; id={_gameId}; running={_running}; "
+                        + $"frames={_machine?.FramesExecuted}; version={FiveDoVersion.Version}",
+                });
+            StatusText.Text =
+                $"Diagnostics bundle: {result.Path} ({result.Entries.Count} entries, {result.ScrubHits} scrubbed).";
+            ShowOsd(
+                $"Diagnostics bundle saved: {Path.GetFileName(result.Path)}",
+                OsdSeverity.Success);
+            _logger.ForCategory(LogCategory.Host).Information(
+                "Diagnostics bundle written: {Path} ({Entries} entries, {Scrubs} scrubs).",
+                result.Path,
+                result.Entries.Count,
+                result.ScrubHits);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            StatusText.Text = $"Diagnostics bundle failed: {exception.Message}";
+            _logger.ForCategory(LogCategory.Host).Error(exception, "Diagnostics bundle failed.");
+            ShowError("Diagnostics bundle", exception.Message);
+        }
+        finally
+        {
+            foreach (var temporary in new[] { statePath, framePath })
+            {
+                if (string.IsNullOrWhiteSpace(temporary))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    File.Delete(temporary);
+                }
+                catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+                {
+                    // Temporary evidence cleanup is best-effort.
+                }
+            }
+        }
+    }
+
     private void OnScreenshot(object? sender, RoutedEventArgs e)
     {
         CaptureScreenshot();
