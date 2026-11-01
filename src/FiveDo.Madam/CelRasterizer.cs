@@ -87,9 +87,15 @@ internal sealed class CelRasterizer
         int pixcount;
 
         geometry.SpriteHeight = rowCount + 1;
+        var originX = geometry.XPosition1616;
+        var originY = geometry.YPosition1616;
+        var originVdx = geometry.Vdx1616;
+        var originVdy = geometry.Vdy1616;
+        var originHeight = geometry.SpriteHeight;
 
         if (!PrepareGeometry(true))
         {
+            _engine.StoreXYPosFromDrawHeight(originX, originY, originVdx, originVdy, originHeight);
             return;
         }
 
@@ -514,7 +520,7 @@ internal sealed class CelRasterizer
         }
 
         geometry.SpriteWidth++;
-        FinalizeVisualPosition(xcur, ycur);
+        _engine.StoreXYPosFromDrawHeight(originX, originY, originVdx, originVdy, originHeight);
     }
 
     /// <summary>Renders a literal CEL. FreeDO: <c>DrawLiteralCel_New</c>.</summary>
@@ -542,6 +548,12 @@ internal sealed class CelRasterizer
             geometry.SpriteHeight <<= 1;
         }
 
+        var originX = geometry.XPosition1616;
+        var originY = geometry.YPosition1616;
+        var originVdx = geometry.Vdx1616;
+        var originVdy = geometry.Vdy1616;
+        var originHeight = geometry.SpriteHeight;
+
         if (skipX >= spriteWidth)
         {
             // Opera: SKIPX that exhausts the span draws nothing but still
@@ -549,13 +561,13 @@ internal sealed class CelRasterizer
             var height = geometry.SpriteHeight;
             geometry.Hdx1616 = unchecked(geometry.Hdx1616 + (geometry.Hddx1616 * height));
             geometry.Hdy1616 = unchecked(geometry.Hdy1616 + (geometry.Hddy1616 * height));
-            geometry.XPosition1616 = unchecked(geometry.XPosition1616 + (geometry.Vdx1616 * height));
-            geometry.YPosition1616 = unchecked(geometry.YPosition1616 + (geometry.Vdy1616 * height));
+            _engine.StoreXYPosFromDrawHeight(originX, originY, originVdx, originVdy, originHeight);
             return;
         }
 
         if (!PrepareGeometry(false))
         {
+            _engine.StoreXYPosFromDrawHeight(originX, originY, originVdx, originVdy, originHeight);
             return;
         }
 
@@ -721,7 +733,7 @@ internal sealed class CelRasterizer
             }
         }
 
-        FinalizeVisualPosition(xcur, ycur);
+        _engine.StoreXYPosFromDrawHeight(originX, originY, originVdx, originVdy, originHeight);
     }
 
     /// <summary>Renders a 16-bit LR-form CEL. FreeDO: <c>DrawLRCel_New</c>.</summary>
@@ -740,9 +752,15 @@ internal sealed class CelRasterizer
         var spriteWidth = 1 + (int)(_engine.Pre1 & 0x7ffu);
         geometry.SpriteWidth = spriteWidth;
         geometry.SpriteHeight = (((int)((_engine.Pre0 & 0xffc0u) >> 6)) << 1) + 2;
+        var originX = geometry.XPosition1616;
+        var originY = geometry.YPosition1616;
+        var originVdx = geometry.Vdx1616;
+        var originVdy = geometry.Vdy1616;
+        var originHeight = geometry.SpriteHeight;
 
         if (!PrepareGeometry(false))
         {
+            _engine.StoreXYPosFromDrawHeight(originX, originY, originVdx, originVdy, originHeight);
             return;
         }
 
@@ -870,7 +888,7 @@ internal sealed class CelRasterizer
             }
         }
 
-        FinalizeVisualPosition(xcur, ycur);
+        _engine.StoreXYPosFromDrawHeight(originX, originY, originVdx, originVdy, originHeight);
     }
 
     private int SkipPackedPixels(int type, int pixelCount, ref int skipPixels, int bpp)
@@ -1555,19 +1573,6 @@ internal sealed class CelRasterizer
             && clipX <= (maxX << 16)
             && clipY >= 0
             && clipY <= (maxY << 16);
-    }
-
-    private void FinalizeVisualPosition(int xcur, int ycur)
-    {
-        CelGeometry geometry = _engine.Geometry;
-        if ((_engine.Compatibility.FixMode & FixMode.GraphicsStepY) != FixMode.None)
-        {
-            geometry.YPosition1616 = ycur;
-        }
-        else
-        {
-            geometry.XPosition1616 = xcur;
-        }
     }
 
     private static int Xy2Off(int a, int b, int c)

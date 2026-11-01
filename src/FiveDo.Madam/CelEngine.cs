@@ -99,6 +99,37 @@ internal sealed class CelEngine
 
     internal int ClipY => (int)((_madam.ReadRegister(ClipRegister) >> 16) & 0x3ff);
 
+    /// <summary>Loads the CEL origin from the XYPOSH/XYPOSL registers. Opera: <c>LoadXYPosFromRegisters</c>.</summary>
+    internal void LoadXYPosFromRegisters()
+    {
+        var high = _madam.ReadRegister(0x140);
+        var low = _madam.ReadRegister(0x144);
+        _geometry.XPosition1616 = unchecked((int)((high & 0xffff0000u) | ((low >> 16) & 0xffffu)));
+        _geometry.YPosition1616 = unchecked((int)(((high & 0xffffu) << 16) | (low & 0xffffu)));
+    }
+
+    /// <summary>Stores the CEL origin into XYPOSH/XYPOSL. Opera: <c>StoreXYPosToRegisters</c>.</summary>
+    internal void StoreXYPosToRegisters(int x, int y)
+    {
+        var high = ((uint)x & 0xffff0000u) | (((uint)y >> 16) & 0xffffu);
+        var low = (((uint)x & 0xffffu) << 16) | ((uint)y & 0xffffu);
+        _madam.WriteRegister(0x140, high);
+        _madam.WriteRegister(0x144, low);
+        _geometry.XPosition1616 = x;
+        _geometry.YPosition1616 = y;
+    }
+
+    /// <summary>
+    /// Advances the CEL origin by the vertical delta and sprite height. Opera:
+    /// <c>StoreXYPosFromDrawHeight</c>.
+    /// </summary>
+    internal void StoreXYPosFromDrawHeight(int x, int y, int vdx, int vdy, int height)
+    {
+        StoreXYPosToRegisters(
+            unchecked(x + (vdx * height)),
+            unchecked(y + (vdy * height)));
+    }
+
     /// <summary>Gets or sets an optional diagnostic writer for CEL commands.</summary>
     internal TextWriter? TraceWriter { get; set; }
 
@@ -234,8 +265,14 @@ internal sealed class CelEngine
 
             if ((_flags & CcbControl.HasPosition) != CcbControl.None)
             {
-                _geometry.XPosition1616 = header.XPosition;
-                _geometry.YPosition1616 = header.YPosition;
+                // Opera: YOXY set means the header supplies a new origin. When
+                // it is clear, the CEL continues from the hardware XY position
+                // registers, which the previous CEL advanced by VDX/VDY * height.
+                StoreXYPosToRegisters(header.XPosition, header.YPosition);
+            }
+            else
+            {
+                LoadXYPosFromRegisters();
             }
 
             // FreeDO: CEL_ORIGIN_VH_VALUE = (XPOS1616 & 1) | ((YPOS1616 & 1) << 15).

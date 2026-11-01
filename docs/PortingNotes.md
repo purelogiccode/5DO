@@ -899,6 +899,10 @@ M1 implements the section primitive used by all later chips:
   REGCTL stride with the Opera byte groups, uses the decoded pixel's high components
   for `PDC_MFONLY`, and gates CLUT/video DMA on the MADAM MCTL enable bits. A literal
   `SKIPX` that exhausts the span draws nothing and still advances the origin.
+- CEL origins use the Opera XYPOSH/XYPOSL model. YOXY=0 continues from the hardware
+  origin, and every CEL (including culled/empty draws) advances it by VDX/VDY times
+  sprite height. The legacy `GraphicsStepY`/`BitTiming6` flags remain for old states
+  until the title retirement pass is complete.
 - CLIO input FIFOs complete before the CPU observes the end address, reload only when
   the channel request bit is enabled, and reset the pointer when a new start address is
   written.

@@ -90,6 +90,62 @@ public sealed class CelLiteralRasterizerTests
     }
 
     [Fact]
+    public void LiteralChain_YoxyZeroUsesAdvancedOrigin()
+    {
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
+        const uint secondCcb = 0x180;
+
+        CcbControl firstFlags = CcbControl.NextPointerAbsolute
+                                | CcbControl.SourcePointerAbsolute
+                                | CcbControl.PlutPointerAbsolute
+                                | CcbControl.LoadPlut
+                                | CcbControl.LoadSize
+                                | CcbControl.LoadPixelProcessor
+                                | CcbControl.HasPosition
+                                | CcbControl.Clockwise;
+        memory.Ram.Write32(Ccb, (uint)firstFlags);
+        memory.Ram.Write32(Ccb + 4, secondCcb);
+        memory.Ram.Write32(Ccb + 8, SourceData);
+        memory.Ram.Write32(Ccb + 12, PlutData);
+        memory.Ram.Write32(Ccb + 16, 0);
+        memory.Ram.Write32(Ccb + 20, 0);
+        memory.Ram.Write32(Ccb + 24, 0x00100000);
+        memory.Ram.Write32(Ccb + 28, 0);
+        memory.Ram.Write32(Ccb + 32, 0);
+        memory.Ram.Write32(Ccb + 36, 0x00010000);
+        memory.Ram.Write32(Ccb + 40, 0x00001f00);
+        memory.Ram.Write32(SourceData, 1);
+        memory.Ram.Write32(SourceData + 4, 0);
+        WriteBytes(memory, SourceData + 8, 0x80);
+        WritePlut(memory, 0, 0x7fff);
+
+        CcbControl secondFlags = CcbControl.NextPointerAbsolute
+                                 | CcbControl.SourcePointerAbsolute
+                                 | CcbControl.LoadSize
+                                 | CcbControl.LoadPixelProcessor
+                                 | CcbControl.Clockwise
+                                 | CcbControl.Last;
+        memory.Ram.Write32(secondCcb, (uint)secondFlags);
+        memory.Ram.Write32(secondCcb + 4, 0);
+        memory.Ram.Write32(secondCcb + 8, 0x240);
+        memory.Ram.Write32(secondCcb + 12, 0);
+        memory.Ram.Write32(secondCcb + 24, 0x00100000);
+        memory.Ram.Write32(secondCcb + 28, 0);
+        memory.Ram.Write32(secondCcb + 32, 0);
+        memory.Ram.Write32(secondCcb + 36, 0x00010000);
+        memory.Ram.Write32(secondCcb + 40, 0x00001f00);
+        memory.Ram.Write32(0x240, 1);
+        memory.Ram.Write32(0x244, 0);
+        WriteBytes(memory, 0x248, 0x80);
+
+        _ = RunCel(madam);
+
+        // First CEL at y=0, second CEL has YOXY clear and must continue at y=1.
+        Assert.Equal(0x7ffe, memory.Ram.Read16(FrameBuffer + 2));
+        Assert.Equal(0x7ffe, memory.Ram.Read16(FrameBuffer + 0));
+    }
+
+    [Fact]
     public void LiteralLine_ExhaustedSkipXDrawsNothing()
     {
         (FiveDoMemory memory, MadamChip madam) = CreateScene();
