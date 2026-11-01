@@ -933,3 +933,14 @@ M1 implements the section primitive used by all later chips:
   restored.
 - CD-DA read-ahead (48 sectors) and audio burst scheduling remain with SYS-01. The
   `0x40` READ_ID idle heuristic remains until command transcripts replace it.
+
+### 12.24 OP-SYS-01 ROM overlay (2026-10-31)
+
+- `FiveDoMemory` starts with the BIOS overlaid at address zero. While the overlay is
+  active, CPU low reads return the active ROM bank and low DRAM writes clear it. The
+  clear limit is the 2 MB DRAM size, so a write to VRAM alone does not clear it.
+- `Reset()` reasserts the overlay. The memory state section is version 2 and saves the
+  flag; version-1 states load as post-boot (overlay cleared).
+- The CPU still starts at `0x03000000`; the overlay covers low-address reads until the
+  BIOS's first DRAM write. DIPIR latches, access aborts, and XBUS media-access
+  propagation remain for the next OP-SYS-01 increment.

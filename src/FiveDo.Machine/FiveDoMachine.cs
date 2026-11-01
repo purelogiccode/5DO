@@ -398,6 +398,7 @@ public sealed class FiveDoMachine
         while (reader.TryReadSection(out StateSectionReader? section))
         {
             var supportedVersion = section.Version == 1
+                || (section.Id == StateSectionIds.Memory && section.Version == 2)
                 || (section.Id == StateSectionIds.Cdrom && section.Version == 2)
                 || (section.Id == StateSectionIds.Quartz && section.Version <= 3)
                 || (section.Id == StateSectionIds.Clio && section.Version == 2)

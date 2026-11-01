@@ -437,8 +437,18 @@ runs the same reset. CD-DA read-ahead and the READ_ID heuristic remain for SYS-0
 - Differential smoke (Lemmings, 300 frames): **PASS**, `0x110E7DC5`.
 - Five-title showcase: unchanged; all 5DO hashes identical to the pre-batch baseline.
 
-The next batch is OP-SYS-01 (ROM overlay/DIPIR/XBUS), then OP-SYS-03 (CSTAT soft
-reset).
+**OP-SYS-01 ROM overlay (2026-10-31):** the memory bus now starts with the BIOS
+overlaid at address zero. Low reads return the active ROM bank; the first CPU write
+to DRAM clears the overlay; VRAM writes do not; reset reasserts it; and memory state
+version 2 saves/migrates the flag (v1 states load as post-boot). DIPIR latches,
+access-abort rules, and XBUS media access remain.
+
+- `dotnet test 5DO.sln`: **1,147 passed**, 0 failed.
+- Differential smoke (Lemmings, 300 frames): **PASS**, `0x110E7DC5`.
+- Five-title showcase: unchanged; all 5DO hashes identical to the pre-batch baseline.
+
+The next batch is the DIPIR/access-abort part of OP-SYS-01, then OP-SYS-03 (CSTAT
+soft reset).
 
 **Opera-parity title probes (2026-10-31):** 5DO completed 3,000 frames for
 Samurai Shodown (USA/EU), DinoPark Tycoon, Alone in the Dark, Johnny Bazookatone,

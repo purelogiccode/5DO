@@ -29,6 +29,10 @@ still change.
   media-access FIQ, Opera-style eject status, and state-load local reset. The default
   FreeDO-compatible mode is unchanged. CD-DA read-ahead and the READ_ID heuristic
   remain for SYS-01.
+- The memory bus now models the low-ROM overlay: low reads return the active BIOS
+  until the first CPU write to DRAM, VRAM writes do not clear it, reset reasserts it,
+  and memory state version 2 saves/migrates the flag. DIPIR latches and access aborts
+  remain for the next OP-SYS-01 increment.
 
 ### Added
 

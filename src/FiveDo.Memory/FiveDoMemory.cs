@@ -26,6 +26,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     private readonly byte[] _nvram = new byte[EmulatorConstants.NvramSize];
     private int _romBank;
     private bool _pcAdjustPending;
+    private bool _romOverlay;
 
     /// <summary>Initializes a new instance of the <see cref="FiveDoMemory"/> class.</summary>
     /// <param name="tuning">Machine tuning. Defaults to <see cref="EmulatorTuning.Default"/>.</param>
@@ -47,6 +48,12 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     /// <summary>Gets the active ROM bank (0 or 1).</summary>
     public int RomBank => _romBank;
 
+    /// <summary>
+    /// Gets a value indicating whether the BIOS is overlaid at address zero. Opera:
+    /// <c>g_ROM_OVERLAY</c>. The overlay clears on the first CPU write to DRAM.
+    /// </summary>
+    public bool RomOverlay => _romOverlay;
+
     /// <summary>Gets a value indicating whether a CLIO write requested a four-byte PC advance.</summary>
     public bool PcAdjustPending => _pcAdjustPending;
 
@@ -54,7 +61,8 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     public uint Id => StateSectionIds.Memory;
 
     /// <summary>Gets the save-state section version.</summary>
-    public ushort Version => 1;
+    /// <remarks>Version 2 adds the low-ROM overlay flag.</remarks>
+    public ushort Version => 2;
 
     /// <summary>Gets the RAM/VRAM raw accessor.</summary>
     public IRam Ram => this;
@@ -178,6 +186,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
         ArgumentNullException.ThrowIfNull(writer);
         writer.WriteByte((byte)_romBank);
         writer.WriteBoolean(_pcAdjustPending);
+        writer.WriteBoolean(_romOverlay);
         writer.WriteBytes(ToStateBytes(_ram));
         writer.WriteBytes(ToStateBytes(_rom));
         writer.WriteBytes(_nvram);
@@ -196,6 +205,16 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
 
         _romBank = bank;
         _pcAdjustPending = reader.ReadBoolean();
+        if (reader is not StateSectionReader sectionReader || sectionReader.Version >= 2)
+        {
+            _romOverlay = reader.ReadBoolean();
+        }
+        else
+        {
+            // Version-1 states were written after the guest had already booted.
+            _romOverlay = false;
+        }
+
         reader.ReadBytes(ToStateBytes(_ram));
         reader.ReadBytes(ToStateBytes(_rom));
         reader.ReadBytes(_nvram);
@@ -257,6 +276,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     {
         _romBank = 0;
         _pcAdjustPending = false;
+        _romOverlay = true;
     }
 
     byte IRam.Read8(uint offset)
@@ -410,6 +430,11 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     /// <inheritdoc />
     public byte Read8(uint address)
     {
+        if (_romOverlay && address < EmulatorConstants.RomBase)
+        {
+            return ReadRom8(address ^ 3);
+        }
+
         if (address < EmulatorConstants.RamSize)
         {
             return ReadRam8(address ^ 3);
@@ -433,6 +458,11 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     /// <inheritdoc />
     public ushort Read16(uint address)
     {
+        if (_romOverlay && address < EmulatorConstants.RomBase)
+        {
+            return ReadRom16(address ^ 2);
+        }
+
         if (address < EmulatorConstants.RamSize)
         {
             return ReadRam16(address ^ 2);
@@ -455,6 +485,11 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     public uint Read32(uint address)
     {
         address &= ~3u;
+
+        if (_romOverlay && address < EmulatorConstants.RomBase)
+        {
+            return ReadRom32(address);
+        }
 
         if (address < EmulatorConstants.RamSize)
         {
@@ -510,6 +545,11 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     /// <inheritdoc />
     public void Write8(uint address, byte value)
     {
+        if (_romOverlay && address < EmulatorConstants.VramBase)
+        {
+            _romOverlay = false;
+        }
+
         if (address < EmulatorConstants.RamSize)
         {
             WriteRam8(address ^ 3, value);
@@ -526,6 +566,11 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     /// <inheritdoc />
     public void Write16(uint address, ushort value)
     {
+        if (_romOverlay && address < EmulatorConstants.VramBase)
+        {
+            _romOverlay = false;
+        }
+
         if (address < EmulatorConstants.RamSize)
         {
             WriteRam16(address ^ 2, value);
@@ -542,6 +587,11 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     public void Write32(uint address, uint value)
     {
         address &= ~3u;
+
+        if (_romOverlay && address < EmulatorConstants.VramBase)
+        {
+            _romOverlay = false;
+        }
 
         if (address < EmulatorConstants.RamSize)
         {

@@ -180,6 +180,71 @@ public sealed class MemoryByteOrderTests
     }
 
     [Fact]
+    public void RomOverlay_LowReadsReturnBiosUntilDramWrite()
+    {
+        var memory = new FiveDoMemory();
+        var bios = new byte[EmulatorConstants.RomBankSize];
+        bios[0] = 0x01;
+        bios[1] = 0x02;
+        bios[2] = 0x03;
+        bios[3] = 0x04;
+        memory.LoadBios(bios);
+        memory.Reset();
+
+        Assert.True(memory.RomOverlay);
+        Assert.Equal(0x01020304u, memory.Read32(0));
+        Assert.Equal(0x0102, memory.Read16(0));
+        Assert.Equal(0x01, memory.Read8(0));
+
+        memory.Write32(0x100, 0xCAFEBABE);
+
+        Assert.False(memory.RomOverlay);
+        Assert.Equal(0u, memory.Read32(0));
+        Assert.Equal(0xCAFEBABEu, memory.Read32(0x100));
+    }
+
+    [Fact]
+    public void RomOverlay_VramWriteKeepsOverlay()
+    {
+        var memory = new FiveDoMemory();
+        memory.Reset();
+
+        memory.Write32(EmulatorConstants.VramBase, 0x11223344);
+        Assert.True(memory.RomOverlay);
+
+        memory.Write32(0x100, 1);
+        Assert.False(memory.RomOverlay);
+    }
+
+    [Fact]
+    public void RomOverlay_ResetReasserts()
+    {
+        var memory = new FiveDoMemory();
+        memory.Write32(0x100, 1);
+        Assert.False(memory.RomOverlay);
+
+        memory.Reset();
+
+        Assert.True(memory.RomOverlay);
+    }
+
+    [Fact]
+    public void RomOverlay_SaveLoadRoundtrips()
+    {
+        var memory = new FiveDoMemory();
+        memory.Reset();
+        Assert.True(memory.RomOverlay);
+
+        var writer = new StateWriter();
+        memory.Save(writer);
+
+        var copy = new FiveDoMemory();
+        copy.Load(new StateReader(writer.ToArray()));
+
+        Assert.True(copy.RomOverlay);
+    }
+
+    [Fact]
     public void RomBankSelect_SwitchesVisibleBank()
     {
         var memory = new FiveDoMemory();
