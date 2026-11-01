@@ -34,14 +34,17 @@ ROM, NVRAM, device state, and the derived VDL frame, plus hashes for diagnostics
 +---------------------------------------------------------------+
 | Header                                                        |
 |   magic           u32   "TDO1" (0x314F4454 little-endian)      |
-|   version         u16   2 (v1 is still readable)              |
-|   reserved        u16   0                                     |
+|   version         u16   3 (v1/v2 are still readable)          |
+|   headerFlags     u16   featureFlags and sectionTable bits    |
 |   emulatorVersion string (i32 byte count + UTF-8 bytes)       |
 |   armClock        i32   12,500,000                            |
 |   fixMode         u32   FixMode flags                         |
 |   biosHash        string (lowercase MD5 hex)                  |
 |   discHash        string (game ID, lowercase MD5 hex)         |
 |   framesExecuted  i64                                         |
+|   featureFlags    u32   (v3; feature bits)                    |
+|   sectionCount    u32   (v3; number of table entries)         |
+|   section table   [id:u32][version:u16][flags:u16] * count    |
 +---------------------------------------------------------------+
 | Section 1                                                     |
 |   id              u32                                         |
@@ -59,14 +62,22 @@ ROM, NVRAM, device state, and the derived VDL frame, plus hashes for diagnostics
 - Strings are a signed 32-bit UTF-8 byte count followed by exactly that many bytes.
   Invalid UTF-8 is rejected.
 - `magic` is `TDO1` as ASCII; the little-endian `u32` is `0x314F4454`.
-- `version` is `2` for new states. The reader also accepts version `1` (raw
-  sections) for backward compatibility.
+- `version` is `3` for new states. The reader also accepts versions `1` and `2` for
+  backward compatibility; those headers have a zero `headerFlags` word and no feature
+  word or section table.
 - `armClock` is the tuning clock used when the state was written.
 - `fixMode` is the applied compatibility mask.
 - `biosHash` is the MD5 of BIOS bank 0 as restored from memory.
 - `discHash` is the host-supplied game ID (MD5 of the first two disc sectors) or empty.
   It is **recorded**, not used to reject a load.
 - `framesExecuted` is the machine's frame counter at save time.
+- `headerFlags` bit 0 declares the feature word; bit 1 declares the section table.
+  Unknown header bits produce a warning instead of rejecting a newer state.
+- `featureFlags` records the options snapshot, section table, Brotli eligibility, and
+  video-region snapshot. Unknown feature bits are warned about and ignored.
+- The section table lists every section ID/version up front. Duplicate IDs, more than
+  4096 entries, non-zero entry flags, and declared-versus-actual version mismatches are
+  rejected. Declared sections that are absent produce a warning.
 
 ### Section framing
 
@@ -108,7 +119,7 @@ Machine; the table below is sorted by ID. Never renumber an existing section.
 | 9 | CD-ROM | 4 | `CdromDevice` | Poll/status, status/data buffers, command buffer, requested count, MEI status, current sector, disc state (tracks/MSF/TOC), cycle clock, next-ready cycle, pending read-status flag, MODE SET sector size/block flags, PLAY_AUDIO position, CD-DA sample cursor, volume, and mute. Version 1 is accepted with a zeroed clock and pending flag; v2 adds the cycle clock; v3 adds MODE SET and audio position; v4 adds the CD-DA mix. Older versions use the documented defaults. The timing mode itself is recorded in the Options section. |
 | 10 | Quartz | 3 | `Quartz` | ARM/VDL/timer accumulators, exact DSP cycle remainder, VDL line counter, Opera timer slot/gap flag and 16.16 slot accumulator. Versions 1-2 are accepted with a reset timer scheduler. |
 | 11 | Machine | 1 | `FiveDoMachine` | Compatibility flags (fix mode, Anvil, speed fixes, sf/sdf, unknown flag 11, jw, cnbfix, high-res), frame source dimensions, and all 960 `VdlLine` objects (width, control words, CLUT, 1280 pixels each). |
-| 12 | Options | 5 | `FiveDoMachine` | ARM timing mode, CLIO timer mode, MADAM CEL timing mode, CD-ROM timing mode, and CD-ROM speed. Version 1 records only ARM timing; version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing. Loading a lower version leaves the missing options at the machine default (including the stock 2x CD speed). |
+| 12 | Options | 6 | `FiveDoMachine` | ARM timing mode, CLIO timer mode, MADAM CEL timing mode, CD-ROM timing mode, CD-ROM speed, and the live video region. Version 1 records only ARM timing; version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing; version 5 adds CD speed; version 6 adds the region. Loading a lower version leaves missing options at the machine default. |
 
 ### Why the state is large
 
@@ -117,16 +128,16 @@ The memory section stores the **entire RAM backing array**, including the 16 res
 their full 1280-pixel buffers. The uncompressed state is therefore about **24.9 MB**
 (observed 24,902,560-24,902,597 bytes across the local corpus).
 
-Version 2 writes large sections with Brotli. On the local corpus the state shrinks to
+Version 3 keeps the v2 Brotli policy. On the local corpus the state shrinks to
 roughly **0.6-2.0 MB** (a 300-frame Gex state measured 647,647 bytes, a 14,900-frame
 state 2,001,229 bytes), so ten slots use a few megabytes instead of ~250 MB. Small
 sections (under 4 KiB) and incompressible payloads stay raw. The CRC is always over the
 uncompressed payload, and the state inspector reads the section table without
 decompressing the payloads.
 
-Version-1 states are read unchanged; they remain uncompressed and ~25 MB. Loading a
-version-2 state in a build that only understands version 1 is rejected with
-`Unsupported save-state version 2.`
+Version-1 and v2 states are read unchanged; v1 remains uncompressed and ~25 MB.
+Loading a state written by a newer format version is rejected with
+`Unsupported save-state version N.`
 
 ### Section version compatibility
 

@@ -203,6 +203,12 @@ public sealed class FiveDoMachine
     /// <summary>Gets warnings produced by the most recent state load.</summary>
     public IReadOnlyList<string> StateWarnings => _stateWarnings;
 
+    /// <summary>
+    /// Gets or sets how unknown state sections are handled. The default skips them with a
+    /// warning; <see cref="StateUnknownSectionPolicy.Reject"/> refuses the state.
+    /// </summary>
+    public StateUnknownSectionPolicy UnknownSectionPolicy { get; set; } = StateUnknownSectionPolicy.Warn;
+
     /// <summary>Gets or sets the frame sink. The frame is reused after the callback returns.</summary>
     public IFrameSink? FrameSink { get; set; }
 
@@ -349,28 +355,47 @@ public sealed class FiveDoMachine
     {
         ArgumentNullException.ThrowIfNull(destination);
         var writer = new StateWriter { CompressionEnabled = compress };
+        IStateSection[] sections =
+        [
+            Cpu,
+            Memory,
+            Madam,
+            Clio,
+            Dsp,
+            Sport,
+            Vdlp,
+            Xbus,
+            Cdrom,
+            Quartz,
+            new MachineOptionsSection(Tuning, RegionProfile.Region),
+            new MachineFrameSection(_frame, Compatibility),
+        ];
+        uint features = StateFormat.FeatureOptionsSnapshot
+            | StateFormat.FeatureSectionTable
+            | StateFormat.FeatureVideoRegion
+            | (compress ? StateFormat.FeatureCompressedSections : 0u);
         writer.WriteUInt32(StateFormat.Magic);
         writer.WriteUInt16(StateFormat.Version);
-        writer.WriteUInt16(0);
+        writer.WriteUInt16(StateFormat.HeaderFlagFeatureFlags | StateFormat.HeaderFlagSectionTable);
         writer.WriteString(FiveDoVersion.Version);
         writer.WriteInt32(Tuning.ArmClock);
         writer.WriteUInt32((uint)Compatibility.FixMode);
         writer.WriteString(ComputeBiosHash());
         writer.WriteString(discHash ?? string.Empty);
         writer.WriteInt64(_framesExecuted);
+        writer.WriteUInt32(features);
+        writer.WriteUInt32((uint)sections.Length);
+        foreach (IStateSection section in sections)
+        {
+            writer.WriteUInt32(section.Id);
+            writer.WriteUInt16(section.Version);
+            writer.WriteUInt16(0);
+        }
 
-        writer.WriteSection(Cpu);
-        writer.WriteSection(Memory);
-        writer.WriteSection(Madam);
-        writer.WriteSection(Clio);
-        writer.WriteSection(Dsp);
-        writer.WriteSection(Sport);
-        writer.WriteSection(Vdlp);
-        writer.WriteSection(Xbus);
-        writer.WriteSection(Cdrom);
-        writer.WriteSection(Quartz);
-        writer.WriteSection(new MachineOptionsSection(Tuning, RegionProfile.Region));
-        writer.WriteSection(new MachineFrameSection(_frame, Compatibility));
+        foreach (IStateSection section in sections)
+        {
+            writer.WriteSection(section);
+        }
 
         var bytes = writer.ToArray();
         destination.Write(bytes, 0, bytes.Length);
@@ -425,13 +450,62 @@ public sealed class FiveDoMachine
             throw new InvalidStateException($"Unsupported save-state version {version}.");
         }
 
-        _ = reader.ReadUInt16();
+        var headerFlags = reader.ReadUInt16();
         var emulatorVersion = reader.ReadString();
         var armClock = reader.ReadInt32();
         var fixMode = reader.ReadUInt32();
         var biosHash = reader.ReadString();
         var discHash = reader.ReadString();
         var frames = reader.ReadInt64();
+
+        Dictionary<uint, (ushort Version, ushort Flags)>? declaredSections = null;
+        if (version >= 3)
+        {
+            if ((headerFlags & ~StateFormat.HeaderFlagAll) != 0)
+            {
+                _stateWarnings.Add($"State header has unknown flags 0x{headerFlags:X4}.");
+            }
+
+            if ((headerFlags & StateFormat.HeaderFlagFeatureFlags) != 0)
+            {
+                var features = reader.ReadUInt32();
+                if ((features & ~StateFormat.FeatureAll) != 0)
+                {
+                    _stateWarnings.Add($"State declares unknown features 0x{features & ~StateFormat.FeatureAll:X8}.");
+                }
+            }
+
+            if ((headerFlags & StateFormat.HeaderFlagSectionTable) != 0)
+            {
+                var count = reader.ReadUInt32();
+                if (count > StateFormat.MaxSectionTableEntries)
+                {
+                    throw new InvalidStateException($"The state declares {count} sections, which is too many.");
+                }
+
+                declaredSections = new Dictionary<uint, (ushort Version, ushort Flags)>((int)count);
+                for (var i = 0; i < count; i++)
+                {
+                    var id = reader.ReadUInt32();
+                    var sectionVersion = reader.ReadUInt16();
+                    var sectionFlags = reader.ReadUInt16();
+                    if (!declaredSections.TryAdd(id, (sectionVersion, sectionFlags)))
+                    {
+                        throw new InvalidStateException($"Section 0x{id:X8} appears twice in the state table.");
+                    }
+
+                    if (sectionFlags != 0)
+                    {
+                        throw new InvalidStateException(
+                            $"Section 0x{id:X8} has unsupported table flags 0x{sectionFlags:X4}.");
+                    }
+                }
+            }
+        }
+        else if (headerFlags != 0)
+        {
+            _stateWarnings.Add($"Legacy state header has non-zero flags 0x{headerFlags:X4}.");
+        }
 
         if (!string.Equals(emulatorVersion, FiveDoVersion.Version, StringComparison.Ordinal))
         {
@@ -477,8 +551,25 @@ public sealed class FiveDoMachine
         CelTimingMode? stateCelTiming = null;
         CdromTimingMode? stateCdromTiming = null;
         CdSpeed? stateCdSpeed = null;
+        var seenSections = new HashSet<uint>();
         while (reader.TryReadSection(out StateSectionReader? section))
         {
+            seenSections.Add(section.Id);
+            if (declaredSections is not null)
+            {
+                if (!declaredSections.TryGetValue(section.Id, out var declared))
+                {
+                    throw new InvalidStateException(
+                        $"Section 0x{section.Id:X8} is not declared in the state table.");
+                }
+
+                if (declared.Version != section.Version)
+                {
+                    throw new InvalidStateException(
+                        $"Section 0x{section.Id:X8} version {section.Version} does not match the declared version {declared.Version}.");
+                }
+            }
+
             var supportedVersion = section.Version == 1
                 || (section.Id == StateSectionIds.Memory && section.Version == 2)
                 || (section.Id == StateSectionIds.Cdrom && section.Version <= 4)
@@ -546,6 +637,11 @@ public sealed class FiveDoMachine
                     new MachineFrameSection(_frame, Compatibility).Load(section);
                     break;
                 default:
+                    if (UnknownSectionPolicy == StateUnknownSectionPolicy.Reject)
+                    {
+                        throw new InvalidStateException($"Unknown state section 0x{section.Id:X8}.");
+                    }
+
                     _stateWarnings.Add($"Ignored unknown state section {section.Id}.");
                     break;
             }
@@ -556,6 +652,17 @@ public sealed class FiveDoMachine
         if (required.Count > 0)
         {
             throw new InvalidStateException($"The save state is missing sections: {string.Join(", ", required)}.");
+        }
+
+        if (declaredSections is not null)
+        {
+            foreach (var id in declaredSections.Keys)
+            {
+                if (!seenSections.Contains(id))
+                {
+                    _stateWarnings.Add($"The state table declares section 0x{id:X8}, but it was not present.");
+                }
+            }
         }
 
         if (stateArmTiming is { } savedTiming && savedTiming != Tuning.ArmTiming)

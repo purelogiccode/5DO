@@ -379,18 +379,31 @@ public sealed class SaveStateTests
     }
 
     [Fact]
-    public void LoadState_AcceptsVersionOneStates()
+    public void LoadState_AcceptsVersionTwoStates()
     {
         FiveDoMachine machine = CreateMachine();
         machine.RunFrames(2);
         using var state = new MemoryStream();
         machine.SaveState(state);
-        var bytes = state.ToArray();
-        bytes[4] = 1;
-        bytes[5] = 0;
+        byte[] legacy = StateTestHelper.DowngradeToVersion(state.ToArray(), version: 2);
 
         FiveDoMachine loaded = CreateMachine();
-        loaded.LoadState(new MemoryStream(bytes));
+        loaded.LoadState(new MemoryStream(legacy));
+
+        Assert.Equal(machine.Cpu.ProgramCounter, loaded.Cpu.ProgramCounter);
+    }
+
+    [Fact]
+    public void LoadState_AcceptsVersionOneStates()
+    {
+        FiveDoMachine machine = CreateMachine();
+        machine.RunFrames(2);
+        using var state = new MemoryStream();
+        machine.SaveState(state, compress: false);
+        byte[] legacy = StateTestHelper.DowngradeToVersion(state.ToArray(), version: 1);
+
+        FiveDoMachine loaded = CreateMachine();
+        loaded.LoadState(new MemoryStream(legacy));
 
         Assert.Equal(machine.Cpu.ProgramCounter, loaded.Cpu.ProgramCounter);
     }
@@ -403,10 +416,48 @@ public sealed class SaveStateTests
         using var state = new MemoryStream();
         machine.SaveState(state);
         var bytes = state.ToArray();
-        bytes[4] = 3;
+        bytes[4] = 4;
         bytes[5] = 0;
 
         Assert.Throws<InvalidStateException>(() => machine.LoadState(new MemoryStream(bytes)));
+    }
+
+    [Fact]
+    public void SaveState_WritesVersionThreeFeatureFlagsAndSectionTable()
+    {
+        FiveDoMachine machine = CreateMachine();
+        machine.RunFrames(2);
+        using var state = new MemoryStream();
+        machine.SaveState(state);
+        state.Position = 0;
+
+        StateInfo info = StateInspector.ReadHeader(state);
+
+        Assert.Equal(StateFormat.Version, info.Version);
+        Assert.Equal(12, info.Sections.Count);
+        Assert.Contains(info.Sections, section => section.Id == StateSectionIds.Options);
+        Assert.Contains(info.Sections, section => section.Id == StateSectionIds.Machine);
+    }
+
+    [Fact]
+    public void LoadState_UnknownSectionPolicyWarnsOrRejects()
+    {
+        FiveDoMachine machine = CreateMachine();
+        machine.RunFrames(2);
+        using var state = new MemoryStream();
+        machine.SaveState(state);
+        byte[] combined = StateTestHelper.AppendDeclaredSection(state.ToArray(), new UnknownSection());
+
+        FiveDoMachine rejecting = CreateMachine();
+        rejecting.UnknownSectionPolicy = StateUnknownSectionPolicy.Reject;
+        Assert.Throws<InvalidStateException>(() => rejecting.LoadState(new MemoryStream(combined)));
+
+        FiveDoMachine warning = CreateMachine();
+        warning.LoadState(new MemoryStream(combined));
+
+        Assert.Contains(
+            warning.StateWarnings,
+            message => message.Contains("unknown state section", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -451,6 +502,17 @@ public sealed class SaveStateTests
         }
 
         return (hash, machine.Cpu.ProgramCounter, machine.FramesExecuted);
+    }
+
+    private sealed class UnknownSection : IStateSection
+    {
+        public uint Id => 0xDEADBEEF;
+
+        public ushort Version => 1;
+
+        public void Save(IStateWriter writer) => writer.WriteByte(0x5A);
+
+        public void Load(IStateReader reader) => _ = reader.ReadByte();
     }
 
     private sealed class FakeDisc : IDiscSource

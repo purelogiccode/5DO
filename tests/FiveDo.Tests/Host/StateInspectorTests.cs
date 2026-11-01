@@ -81,14 +81,27 @@ public sealed class StateInspectorTests
         FiveDoMachine machine = CreateMachine();
         machine.RunFrames(3);
         using var stream = new MemoryStream();
-        machine.SaveState(stream);
-        var bytes = stream.ToArray();
-        bytes[4] = 1;
-        bytes[5] = 0;
+        machine.SaveState(stream, compress: false);
+        byte[] legacy = StateTestHelper.DowngradeToVersion(stream.ToArray(), version: 1);
 
-        StateInfo info = StateInspector.Read(new MemoryStream(bytes));
+        StateInfo info = StateInspector.Read(new MemoryStream(legacy));
 
         Assert.Equal(1, info.Version);
+    }
+
+    [Fact]
+    public void Inspect_AcceptsVersionTwoStates()
+    {
+        FiveDoMachine machine = CreateMachine();
+        machine.RunFrames(3);
+        using var stream = new MemoryStream();
+        machine.SaveState(stream);
+        byte[] legacy = StateTestHelper.DowngradeToVersion(stream.ToArray(), version: 2);
+
+        StateInfo info = StateInspector.Read(new MemoryStream(legacy));
+
+        Assert.Equal(2, info.Version);
+        Assert.True(info.Sections.Count > 0);
     }
 
     [Fact]
@@ -98,9 +111,7 @@ public sealed class StateInspectorTests
         machine.RunFrames(3);
         using var stream = new MemoryStream();
         machine.SaveState(stream, compress: false);
-        var bytes = stream.ToArray();
-        bytes[4] = 1;
-        bytes[5] = 0;
+        byte[] bytes = StateTestHelper.DowngradeToVersion(stream.ToArray(), version: 1);
 
         StateInfo info = StateInspector.ReadHeader(new MemoryStream(bytes));
 

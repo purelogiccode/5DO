@@ -688,7 +688,7 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,429 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,433 tests pass with no changed NTSC hashes.
 
 ### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
 
@@ -742,6 +742,19 @@ UX-23 coverage is compile/status level:
   Orbatak seeding, idempotence, unknown titles, and the `AutoInputDevices` switch.
 - The local `Crime Patrol (USA)` and `Orbatak (USA)` names match the prefix table; the
   auto override is written on first disc open and shown in the OSD.
+
+### 1.1t Save-state format v3 (2026-11-01)
+
+- `SaveState_WritesVersionThreeFeatureFlagsAndSectionTable` checks the v3 version, all
+  twelve sections, and the Options/Machine entries.
+- `LoadState_AcceptsVersionTwoStates` and `LoadState_AcceptsVersionOneStates` rewrite a
+  v3 header as v2/v1 through `StateTestHelper.DowngradeToVersion` and confirm a
+  deterministic load.
+- `LoadState_UnknownSectionPolicyWarnsOrRejects` appends a declared unknown section and
+  checks both `Warn` and `Reject`.
+- `StateInspectorTests` covers v1, v2, and v3 headers, including the uncompressed v1
+  path; `FrameSkipStateTests` still proves skip presentation changes only the Machine
+  section.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

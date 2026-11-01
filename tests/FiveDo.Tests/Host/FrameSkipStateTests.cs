@@ -45,13 +45,28 @@ public sealed class FrameSkipStateTests
         var reader = new StateReader(stream.ToArray());
         _ = reader.ReadUInt32();
         _ = reader.ReadUInt16();
-        _ = reader.ReadUInt16();
+        var headerFlags = reader.ReadUInt16();
         _ = reader.ReadString();
         _ = reader.ReadInt32();
         _ = reader.ReadUInt32();
         _ = reader.ReadString();
         _ = reader.ReadString();
         _ = reader.ReadInt64();
+        if ((headerFlags & StateFormat.HeaderFlagFeatureFlags) != 0)
+        {
+            _ = reader.ReadUInt32();
+        }
+
+        if ((headerFlags & StateFormat.HeaderFlagSectionTable) != 0)
+        {
+            var count = reader.ReadUInt32();
+            for (var i = 0; i < count; i++)
+            {
+                _ = reader.ReadUInt32();
+                _ = reader.ReadUInt16();
+                _ = reader.ReadUInt16();
+            }
+        }
 
         var result = new Dictionary<uint, byte[]>();
         while (reader.TryReadSection(out var section))

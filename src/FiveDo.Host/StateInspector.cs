@@ -48,13 +48,36 @@ public static class StateInspector
             throw new InvalidStateException($"Unsupported save-state version {version}.");
         }
 
-        _ = reader.ReadUInt16();
+        var headerFlags = reader.ReadUInt16();
         var emulatorVersion = reader.ReadString();
         var armClock = reader.ReadInt32();
         var fixMode = reader.ReadUInt32();
         var biosHash = reader.ReadString();
         var discHash = reader.ReadString();
         var frames = reader.ReadInt64();
+        if (version >= 3)
+        {
+            if ((headerFlags & StateFormat.HeaderFlagFeatureFlags) != 0)
+            {
+                _ = reader.ReadUInt32();
+            }
+
+            if ((headerFlags & StateFormat.HeaderFlagSectionTable) != 0)
+            {
+                var count = reader.ReadUInt32();
+                if (count > StateFormat.MaxSectionTableEntries)
+                {
+                    throw new InvalidStateException($"The state declares {count} sections, which is too many.");
+                }
+
+                for (var i = 0; i < count; i++)
+                {
+                    _ = reader.ReadUInt32();
+                    _ = reader.ReadUInt16();
+                    _ = reader.ReadUInt16();
+                }
+            }
+        }
 
         var sections = new List<StateSectionInfo>();
         var compressed = false;
@@ -129,13 +152,36 @@ public static class StateInspector
             throw new InvalidStateException($"Unsupported save-state version {version}.");
         }
 
-        _ = reader.ReadUInt16();
+        var headerFlags = reader.ReadUInt16();
         var emulatorVersion = ReadString(reader);
         var armClock = reader.ReadInt32();
         var fixMode = reader.ReadUInt32();
         var biosHash = ReadString(reader);
         var discHash = ReadString(reader);
         var frames = reader.ReadInt64();
+        if (version >= 3)
+        {
+            if ((headerFlags & StateFormat.HeaderFlagFeatureFlags) != 0)
+            {
+                _ = reader.ReadUInt32();
+            }
+
+            if ((headerFlags & StateFormat.HeaderFlagSectionTable) != 0)
+            {
+                var count = reader.ReadUInt32();
+                if (count > StateFormat.MaxSectionTableEntries)
+                {
+                    throw new InvalidStateException($"The state declares {count} sections, which is too many.");
+                }
+
+                for (var i = 0; i < count; i++)
+                {
+                    _ = reader.ReadUInt32();
+                    _ = reader.ReadUInt16();
+                    _ = reader.ReadUInt16();
+                }
+            }
+        }
 
         var sections = new List<StateSectionInfo>();
         var compressed = false;

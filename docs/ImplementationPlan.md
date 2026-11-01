@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,429 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,433 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,429** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,433** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -119,7 +119,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 - [ ] **[FND-01](#feat-fnd-01)** Feature flags, tuning, and profiles — P0 · M — **Partial**: `EmulationProfile`/`EmulatorTuning` exist; every machine option is not yet centralized, validated, and recorded in state.
 - [x] **[FND-02](#feat-fnd-02)** Settings schema versioning and migration — P0 · S — **Done** — `SettingsVersion` 2, legacy migration, malformed-file backup, validation, atomic writes, per-game timing/CD-DA profiles, and `settings validate|migrate` are implemented.
-- [ ] **[FND-03](#feat-fnd-03)** Save-state format v3 — P0 · M — **Pending**: feature flags, machine-option snapshot, section version table, unknown-section policy, v1/v2 loaders.
+- [x] **[FND-03](#feat-fnd-03)** Save-state format v3 — P0 · M — **Done**
 - [ ] **[FND-04](#feat-fnd-04)** CLI option and JSON contract conventions — P0 · S — **Partial**: source-generated JSON and conventions exist; formal option table, help generation, and backward-compatibility policy remain.
 - [ ] **[FND-05](#feat-fnd-05)** Differential harness and golden corpus — P0 · L — **Partial**: harness, checkpoints, audio/state hashes, smoke + showcase done; full 594-disc manifest, nightly trend dashboard, and PC/state/CD transcript comparison remain.
 - [ ] **[FND-06](#feat-fnd-06)** UI settings and per-game profile framework — P0 · M — **Partial**: Video/Audio/Emulation/Paths tabs exist; per-game editor, search/filter, reset, and localized labels remain.
@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 13 done · 18 partial · 89 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 15 done · 18 partial · 87 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -147,7 +147,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[CORE-11](#feat-core-11)** Full-collection differential harness — P0 · L · depends on: FND-05 — **Partial** — remaining: differential harness and five-title showcase exist; full 594-disc manifest, nightly dashboard, and PC-delta triage remain
 - [ ] **[CORE-12](#feat-core-12)** Fuzzing and parser security — P0 · M · depends on: FND-05 — **Pending**
 - [ ] **[CORE-13](#feat-core-13)** Remaining compatibility failures — P0 · L · depends on: CORE-11 — **Pending**
-- [ ] **[CORE-14](#feat-core-14)** Save-state format v3 — P0 · M · depends on: FND-03 — **Pending**
+- [x] **[CORE-14](#feat-core-14)** Save-state format v3 — P0 · M · depends on: FND-03 — **Done**
 - [ ] **[CORE-15](#feat-core-15)** State diff and verification tooling — P1 · M · depends on: CORE-14 — **Pending**
 - [ ] **[CORE-16](#feat-core-16)** Frame/audio hash regression suite — P0 · M · depends on: CORE-11 — **Partial** — remaining: frame/audio hash regression suite is partial; full-collection coverage remains
 
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,429 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,433 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,429**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,433**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -2890,6 +2890,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | AUD-01 | Audio device and buffer latency | Added OpenAL device enumeration and selection, 20-500 ms buffer targets with derived queue/prefill/ring sizing, live output recreation without resetting the machine, Settings > Audio device/buffer controls, `--audio-device`/`--audio-buffer`, `audio devices`, and latency in the status/JSON output. AUD-01 is partial for resampler quality/exclusive/sync; 1,425 tests pass |
 | 2026-11-01 | FND-08, UX-17 | Diagnostics bundle | Added `DiagnosticsBundle` with scrubbed settings/logs/environment/manifest and optional state/frame/replay, `diagnostics bundle` CLI options, and **Help > Save Diagnostics Bundle...** with live state/frame capture. FND-08 and UX-17 are partial for typed errors, compatibility report/upload, and automatic crash capture; 1,427 tests pass |
 | 2026-11-01 | SYS-18, UX-07 | Per-game input devices | Added `InputDeviceOverrides`, `AutoInputDevices`, `GameControlDefaults` for known lightgun/trackball titles, `ResolveInputDevices`/`ApplyInputDevices(input, gameId)`, auto seeding at disc open, and the Settings > Emulation per-game override checkbox. SYS-18 and UX-07 are partial for full timing/filter profiles and named bindings; 1,429 tests pass |
+| 2026-11-01 | FND-03, CORE-14 | Save-state format v3 | Added header feature flags, an up-front section table with duplicate/version validation, `UnknownSectionPolicy` warn/reject, v1/v2 downgrade tests, and v3 inspector support. The options section records the live region. FND-03 and CORE-14 are done; 1,433 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -2977,7 +2978,7 @@ A feature is done only when:
 | CORE-11 | Full-collection differential harness | P0 | L | FND-05 | Partial |
 | CORE-12 | Fuzzing and parser security | P0 | M | FND-05 | Pending |
 | CORE-13 | Remaining compatibility failures | P0 | L | CORE-11 | Pending |
-| CORE-14 | Save-state format v3 | P0 | M | FND-03 | Pending |
+| CORE-14 | Save-state format v3 | P0 | M | FND-03 | Done |
 | CORE-15 | State diff and verification tooling | P1 | M | CORE-14 | Pending |
 | CORE-16 | Frame/audio hash regression suite | P0 | M | CORE-11 | Partial |
 
@@ -3202,23 +3203,22 @@ These are not user-visible features, but most other work depends on them. Build 
 <a id="feat-fnd-03"></a>
 ### FND-03 - Save-state format v3
 
-**Priority:** P0 | **Effort:** M | **Depends on:** FND-01
+**Priority:** P0 | **Effort:** M | **Depends on:** FND-01 | **Status:** Done (2026-11-01)
 
 **Problem.** State format v2 is compressed but has no feature flags or option snapshot. New options (region, memory size, input devices, CD-DA position, rewind) need forward-compatible state.
 
-**Add.**
-- Header feature flags.
-- Machine option snapshot (region, clock, memory, CD speed, etc.).
-- Section version table.
-- Unknown-section policy: preserve or reject with a clear error.
-- Optional delta/rewind sections.
-- Keep v1/v2 loaders.
+**Implemented.**
+- `StateFormat.Version` is 3. The header uses the old reserved word for `HeaderFlagFeatureFlags`/`HeaderFlagSectionTable`, followed by a feature word and an up-front section table (`id`, `version`, `flags`).
+- Feature flags record the options snapshot, section table, compression, and video region. Unknown feature bits and header flags produce warnings rather than rejecting a newer state.
+- `FiveDoMachine.UnknownSectionPolicy` selects `Warn` (skip and warn) or `Reject` (clear `InvalidStateException`).
+- The section table is validated for duplicates, count bounds, unsupported entry flags, membership, and declared-vs-actual versions.
+- v1 and v2 states are still accepted; their reserved header word is zero and the table/feature fields are absent.
+- The options section records the live video region and the section version is 6.
+- Rewind continues to use its own keyframe buffer rather than delta state sections.
 
-**Files.** `src/FiveDo.Core/StateFormat.cs`, `StateWriter.cs`, `StateReader.cs`, `StateSectionIds.cs`, `src/FiveDo.Machine/FiveDoMachine.cs`, `docs/SaveStates.md`.
+**Files.** `src/FiveDo.Core/StateFormat.cs`, `StateUnknownSectionPolicy.cs`, `src/FiveDo.Machine/FiveDoMachine.cs`, `src/FiveDo.Host/StateInspector.cs`, `docs/SaveStates.md`.
 
-**Tests.** v1/v2/v3 load, unknown section, feature mismatch warning, roundtrip, compression.
-
-**Done when.** v3 states are self-describing, forward-compatible, and every new subsystem can add a section without breaking old states.
+**Tests.** `SaveStateTests` covers v2/v1 downgrades, the v3 header/table, and warn-vs-reject unknown sections; `StateInspectorTests` covers v1/v2 inspection. **Done when.** v3 states are self-describing, forward-compatible, and every new subsystem can add a section without breaking old states.
 
 ---
 
@@ -3741,22 +3741,11 @@ while a full CD transcript still requires a reference-side export. See
 <a id="feat-core-14"></a>
 ### CORE-14 - Save-state format v3
 
-**Priority:** P0 | **Effort:** M | **Depends on:** FND-03 | **Status:** Pending
+**Priority:** P0 | **Effort:** M | **Depends on:** FND-03 | **Status:** Done (2026-11-01)
 
 **Problem.** v2 has no feature flags or option snapshot. New subsystems need forward-compatible state.
 
-**Add.**
-- Feature flags and option snapshot.
-- Section version table.
-- Unknown-section policy.
-- Optional delta/rewind sections.
-- v1/v2 loaders.
-
-**Files.** `StateFormat.cs`, `StateWriter.cs`, `StateReader.cs`, `StateSectionIds.cs`, `FiveDoMachine.cs`, `docs/SaveStates.md`.
-
-**Tests.** v1/v2/v3, unknown section, feature mismatch, roundtrip, compression.
-
-**Done when.** v3 is self-describing, forward-compatible, and documented.
+**Implemented.** Format v3 adds header feature flags and an up-front section table, keeps v1/v2 loaders, records the options snapshot and live video region, and exposes a warn/reject unknown-section policy. Rewind uses its own keyframe buffer instead of delta sections. See FND-03 and [`docs/SaveStates.md`](SaveStates.md).
 
 ---
 

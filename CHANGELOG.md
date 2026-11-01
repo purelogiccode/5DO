@@ -71,6 +71,11 @@ still change.
   illegal-request status instead of silently doing nothing, the guest RESET command
   restores the default transfer state and sector size, and `PrefetchingDiscSource`
   read-aheads native track sectors so CD-DA does not decompress on the sample clock.
+- FND-03/CORE-14 save-state format v3: the header now declares feature flags and an
+  up-front section table (id, version, flags), with duplicate/version/entry validation.
+  `FiveDoMachine.UnknownSectionPolicy` selects warn-and-skip or reject for unknown
+  sections. v1 and v2 states remain readable, and the options section records the live
+  video region. The inspector understands both legacy and v3 headers.
 - FND-08/UX-17 diagnostics bundle: `DiagnosticsBundle` writes a privacy-scrubbed zip
   with a versioned manifest, environment, sanitized settings, recent logs, and optional
   state/frame/replay evidence. **Help > Save Diagnostics Bundle...** captures the live
