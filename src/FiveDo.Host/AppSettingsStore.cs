@@ -23,9 +23,11 @@ public sealed record SettingsFileInfo(bool Exists, bool Valid, int Version, stri
 public static class AppSettingsStore
 {
     /// <summary>Gets the default settings directory under the user's local application data.</summary>
-    public static string DefaultDirectory => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "5DO");
+    /// <remarks>
+    /// Portable mode and <c>FIVEDO_DATA_DIR</c> are resolved by
+    /// <see cref="PortablePaths.DataDirectory"/>.
+    /// </remarks>
+    public static string DefaultDirectory => PortablePaths.DataDirectory;
 
     /// <summary>Gets the default settings file path.</summary>
     public static string DefaultPath => Path.Combine(DefaultDirectory, "settings.json");

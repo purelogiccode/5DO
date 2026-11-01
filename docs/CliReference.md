@@ -29,6 +29,9 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
   `--dump-ram-offset`, `--base`) are parsed as **hexadecimal even without `0x`**.
 - Paths may be absolute or relative to the current directory. Output directories are
   created when the command writes files.
+- `--portable` stores the default settings/NVRAM/cheat/log directory beside the
+  executable. `FIVEDO_DATA_DIR` overrides the data directory even when `--portable` is
+  not used.
 - `--json` is accepted by commands that have structured output. It is ignored by
   `trace` and `disasm`, which are text-only.
 - JSON field casing is mixed by design: most command results are camelCase

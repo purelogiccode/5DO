@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using FiveDo.Core;
 
 namespace FiveDo.Diagnostics.Logging;
 
@@ -15,6 +16,11 @@ public static class LogPaths
     public static string GetLogDirectory(string applicationName = "5DO")
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(applicationName);
+        if (PortablePaths.IsPortable || PortablePaths.DataDirectoryOverride is not null)
+        {
+            return Path.Combine(PortablePaths.DataDirectory, "logs");
+        }
+
         if (OperatingSystem.IsWindows())
         {
             return Path.Combine(

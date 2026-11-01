@@ -66,6 +66,12 @@ internal static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        if (Array.Exists(args, arg => string.Equals(arg, "--portable", StringComparison.OrdinalIgnoreCase)))
+        {
+            Environment.SetEnvironmentVariable("FIVEDO_PORTABLE", "1");
+            args = Array.FindAll(args, arg => !string.Equals(arg, "--portable", StringComparison.OrdinalIgnoreCase));
+        }
+
         try
         {
             AppLogging.Initialize(new LoggingOptions
@@ -247,6 +253,7 @@ internal static class Program
         Console.WriteLine("  --disc <path>           Same as the positional disc path.");
         Console.WriteLine("  --bios <path>           Use this BIOS image for this launch.");
         Console.WriteLine("  -f, --fullscreen        Start in fullscreen.");
+        Console.WriteLine("  --portable              Store settings, NVRAM, cheats, and logs beside the executable.");
         Console.WriteLine("  --gl-backend <backend>  auto (default), wgl, angle, software, or vulkan.");
         Console.WriteLine("  --version               Print the version and exit.");
         Console.WriteLine("  -h, --help              Show this help and exit.");

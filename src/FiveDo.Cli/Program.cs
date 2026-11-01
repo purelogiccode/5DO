@@ -28,6 +28,12 @@ internal static class Program
 {
     public static int Main(string[] args)
     {
+        if (Array.Exists(args, arg => string.Equals(arg, "--portable", StringComparison.OrdinalIgnoreCase)))
+        {
+            Environment.SetEnvironmentVariable("FIVEDO_PORTABLE", "1");
+            args = Array.FindAll(args, arg => !string.Equals(arg, "--portable", StringComparison.OrdinalIgnoreCase));
+        }
+
         try
         {
             AppLogging.Initialize(new LoggingOptions
@@ -3782,6 +3788,7 @@ internal static class Program
         Console.WriteLine("                                       Check settings.json syntax and schema version.");
         Console.WriteLine("  settings migrate [path] [--path path] [--json]");
         Console.WriteLine("                                       Normalize and rewrite settings at the current version.");
+        Console.WriteLine("  --portable                           Store settings, NVRAM, cheats, and logs beside the executable.");
         Console.WriteLine("  cheat list|add|enable|disable|remove|import|export --game ID [--dir path] [--json]");
         Console.WriteLine("                                       Manage per-game cheats. add needs --name and --code;");
         Console.WriteLine("                                       import/export use --in/--out. See docs/Cheats.md.");

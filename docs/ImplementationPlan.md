@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,373 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,376 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **589 load**, **576 render**; 13 loadable/no video; 5 not loadable | M13 triage, 12,000-frame in-game review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,373** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,376** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 9 done · 15 partial · 96 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 9 done · 16 partial · 95 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -217,7 +217,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[UX-12](#feat-ux-12)** BIOS/NVRAM manager UI — P1 · M · depends on: SYS-04, SYS-14 — **Partial** — remaining: inventory helpers, manager window, menu wiring, import, assignment, backup, reset, and delete are done; per-game NVRAM assignment from the list and drag-and-drop import remain
 - [ ] **[UX-13](#feat-ux-13)** Library metadata, favorites, playtime — P1 · L · depends on: SYS-17 — **Partial** — remaining: favorites, playtime, launch history, offline metadata, filters, and sorts are done; external Redump/No-Intro/IGDB/LaunchBox providers, screenshots/manuals/videos, metadata editor, and >=90% rich metadata remain
 - [ ] **[UX-14](#feat-ux-14)** Auto-update and release channels — P1 · M · depends on: ENG-10 — **Pending**
-- [ ] **[UX-15](#feat-ux-15)** Portable mode, multi-instance, config profiles — P1 · S · depends on: FND-02 — **Pending**
+- [ ] **[UX-15](#feat-ux-15)** Portable mode, multi-instance, config profiles — P1 · S · depends on: FND-02 — **Partial** — `portable.flag`, `--portable`, and `FIVEDO_DATA_DIR` redirect settings/NVRAM/cheats/logs/library state; named profile UI and per-instance locking remain
 - [ ] **[UX-16](#feat-ux-16)** Installers, signing, notarization, file associations — P1 · L · depends on: ENG-10 — **Pending**
 - [ ] **[UX-17](#feat-ux-17)** Crash report, compatibility report, log bundle — P1 · M · depends on: FND-08 — **Pending**
 - [ ] **[UX-18](#feat-ux-18)** Onboarding and verification — P1 · M · depends on: SYS-20 — **Pending**
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,373 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,376 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -397,13 +397,21 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] CLI `settings validate` reports syntax/version and `settings migrate` normalizes and rewrites the file.
 - [x] Tests cover legacy migration, malformed-file backup, version roundtrip, invalid-value normalization, profile roundtrip, and CLI validation/migration.
 
+### 2026-11-01 — UX-15 portable mode (core)
+
+- [x] `PortablePaths` resolves the data directory from `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`.
+- [x] Settings, NVRAM, states, cheats, library state, and logs all use the resolved directory.
+- [x] Desktop and CLI strip `--portable` before dispatch; the CLI reports the portable settings path.
+- [x] Tests cover portable, per-user, and explicit-override resolution.
+- [ ] Remaining: named configuration profiles, per-instance locking, and installer integration.
+
 ### 2026-11-01 — ReSharper inspectcode cleanup
 
 - [x] Ran `jb inspectcode 5DO.sln`: **0 errors, 50 warnings**.
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,373**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,376**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -743,7 +751,13 @@ per-game timing/CD-DA profiles and the `settings validate|migrate` commands, com
 FND-02. SYS-02 moves to partial with an M3U/M3U8 `DiscPlaylist`, persisted playlist
 path, File > Swap Disc plus **F3**, one-off disc replacement without reset, guest
 inject status, `disc playlist`, and `run --playlist/--swap-at/--swap-disc`. **1373
-tests pass**; build, format, and inspectcode are clean.
+tests passed** at that pass; build, format, and inspectcode were clean.
+
+**Portable-mode pass (2026-11-01, forty-first pass):** UX-15 moves to partial.
+`PortablePaths` resolves settings, NVRAM, states, cheats, library state, and logs from
+`portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; the CLI and desktop strip the flag
+before dispatch. A portable USB-stick run no longer touches `%LOCALAPPDATA%`. Named
+configuration profiles and a per-instance write lock remain. **1376 tests pass.**
 
 **Last updated:** 2026-11-01
 
@@ -2813,8 +2827,9 @@ Suggested parallelization with two developers:
 | 2026-11-01 | Quality | ReSharper inspectcode warning cleanup | Ran `jb inspectcode 5DO.sln`: 0 errors, 50 warnings. Fixed all 50 across 18 files (disposed/modified closures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, XML doc reference). `jb inspectcode --severity=WARNING` reports 0 results; build 0 warnings/0 errors; 1,350 tests pass; `dotnet format --verify-no-changes` clean; commit `26aad8b` |
 | 2026-11-01 | SYS-01/AUD-05 | Multi-track and CD-DA core | Added `ITrackedDiscSource`, `CueDiscImage` (MAME-compatible multi-track CUE), CHD track/audio exposure, multi-track TOC and lead-out, READ SUB-Q, MODE SET/MODE SENSE, 24-bit READ_DATA counts, PLAY_AUDIO tracking, 2352-byte digital-audio reads, 44.1 kHz CD-DA mixing, CD state v3, and multi-track `disc tracks` text/JSON. 7 new CD/storage tests; 1,361 tests pass |
 | 2026-11-01 | FND-02 | Settings schema versioning and migration | Added `SettingsVersion`/`CurrentVersion`, legacy normalization, malformed-file backup, renderer/value validation, and version roundtrip. 4 new tests; 1,361 tests pass |
-| 2026-11-01 | AUD-05, FND-02 | CD-DA volume and settings completion | Persisted `CdAudioVolume`/`CdAudioMuted` in Settings v2, added the Audio-tab slider/mute check, `--cd-volume`/`--mute-cd`, CD state v4, mix-level tests, per-game `GameProfiles`, and `settings validate|migrate`. AUD-05 and FND-02 are done; 1,373 tests pass |
-| 2026-11-01 | SYS-02 | Multi-disc playlist and live swap | Added `DiscPlaylist` (M3U/M3U8, `#EXTINF`, relative paths), persisted playlist path, File > Swap Disc and F3, one-off swap without reset, guest inject `0x07`, `disc playlist`, and `run --playlist/--swap-at/--swap-disc`. SYS-02 is partial; 1,373 tests pass |
+| 2026-11-01 | AUD-05, FND-02 | CD-DA volume and settings completion | Persisted `CdAudioVolume`/`CdAudioMuted` in Settings v2, added the Audio-tab slider/mute check, `--cd-volume`/`--mute-cd`, CD state v4, mix-level tests, per-game `GameProfiles`, and `settings validate|migrate`. AUD-05 and FND-02 are done; 1,376 tests pass |
+| 2026-11-01 | SYS-02 | Multi-disc playlist and live swap | Added `DiscPlaylist` (M3U/M3U8, `#EXTINF`, relative paths), persisted playlist path, File > Swap Disc and F3, one-off swap without reset, guest inject `0x07`, `disc playlist`, and `run --playlist/--swap-at/--swap-disc`. SYS-02 is partial; 1,376 tests pass |
+| 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 
 ---
 
@@ -2978,7 +2993,7 @@ A feature is done only when:
 | UX-12 | BIOS/NVRAM manager UI | P1 | M | SYS-04, SYS-14 | Done 2026-11-01 |
 | UX-13 | Library metadata, favorites, playtime | P1 | L | SYS-17 | Partial |
 | UX-14 | Auto-update and release channels | P1 | M | ENG-10 | Pending |
-| UX-15 | Portable mode, multi-instance, config profiles | P1 | S | FND-02 | Pending |
+| UX-15 | Portable mode, multi-instance, config profiles | P1 | S | FND-02 | Partial |
 | UX-16 | Installers, signing, notarization, file associations | P1 | L | ENG-10 | Pending |
 | UX-17 | Crash report, compatibility report, log bundle | P1 | M | FND-08 | Pending |
 | UX-18 | Onboarding and verification | P1 | M | SYS-20 | Pending |
@@ -5083,15 +5098,21 @@ metadata providers/import, screenshots/manuals/videos, a metadata editor, and th
 <a id="feat-ux-15"></a>
 ### UX-15 - Portable mode, multi-instance, config profiles
 
-**Priority:** P1 | **Effort:** S | **Depends on:** FND-02 | **Status:** Pending
+**Priority:** P1 | **Effort:** S | **Depends on:** FND-02 | **Status:** Partial (2026-11-01)
 
 **Problem.** No portable mode; single config.
 
-**Add.**
-- `portable.flag`/`--portable`.
-- Config next to executable.
-- Per-instance config.
-- Named profiles.
+**Implemented.**
+- `PortablePaths` resolves the data directory from `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`.
+- A portable run keeps `settings.json`, NVRAM, `states/`, cheats, library state, and logs beside the executable.
+- `FIVEDO_DATA_DIR` provides separate per-instance configurations without environment-specific code.
+- The desktop and CLI strip `--portable` before command dispatch and log the resolved directory.
+- Tests cover portable, per-user, and explicit-override resolution.
+
+**Remaining.**
+- Named configuration profiles with a selector/import/export.
+- A per-instance lock to prevent two processes from writing the same settings/NVRAM files.
+- Installer integration for creating/removing `portable.flag`.
 
 **Files.** `AppSettingsStore`, `Program.cs`.
 
@@ -6667,7 +6688,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [x] **UX-12** | BIOS/NVRAM manager UI | Needed with SYS-04/SYS-14. | List/import/assign/reset/backup. **Done 2026-11-01:** `BiosInventory`/`NvramInventory` scan, validate, import, assign, back up, reset, and delete BIOS/NVRAM files with atomic writes; **File > BIOS / NVRAM Manager...** provides a two-tab BIOS and NVRAM window with per-game assignment, layout-wide backup, validation state, and second-click confirmation for destructive actions. Unit tests cover import reuse/collisions, invalid images, layout backup, reset, delete, and naming. | M |
 | [~] **UX-13** | Library metadata, favorites, playtime | 5DO has covers + 4DO metadata. | Redump/No-Intro/IGDB/LaunchBox; screenshots; manuals; favorites; playtime. **Partial 2026-11-01:** `LibraryState`/`LibraryStateStore` persist favorites, launch counts, last-played timestamps, and play time; `LibraryPlaytimeTracker` measures running sessions; `LibraryMetadata`/`LibraryMetadataStore` add an offline JSON overlay for title/developer/publisher/year/genre/region/players/description; `LibraryQuery` adds All/Favorites/Played/Unplayed filters and title/recent/most-played/year/publisher sorts; the game list shows star toggles, metadata, and play time, and Settings > Paths chooses the metadata file. External Redump/No-Intro/IGDB/LaunchBox providers, screenshots/manuals/videos, and the >=90% rich-metadata target remain. | L |
 | [ ] **UX-14** | Auto-update and release channels | Modern distribution. | Check/download/verify/install; stable/beta; rollback. | M |
-| [ ] **UX-15** | Portable mode, multi-instance, config profiles | 4DO portable; 5DO not. | `portable.flag`/`--portable`; per-instance config; profiles. | S |
+| [~] **UX-15** | Portable mode, multi-instance, config profiles | 4DO portable; 5DO not. | `portable.flag`/`--portable`; per-instance config; profiles. **Partial 2026-11-01:** `portable.flag`, `--portable`, and `FIVEDO_DATA_DIR` redirect settings/NVRAM/cheats/logs/library state; named profile UI and instance locking remain. | S |
 | [ ] **UX-16** | Installers, signing, notarization, file associations | 5DO ships archives only. | MSIX/Inno/dmg/AppImage/Flatpak/Snap/AUR; signed; associations. | L |
 | [ ] **UX-17** | Crash report, compatibility report, log bundle | Bug reporting exists; compatibility evidence is manual. | One-click bundle: state, replay, logs, hashes, screenshot, settings. | M |
 | [ ] **UX-18** | Onboarding and verification | First-run guide exists; no disc/BIOS verification. | Guided setup; BIOS/disc health; redump check; clear errors. | M |
@@ -6827,7 +6848,7 @@ These are already recorded in the repo's docs; keep them visible so the new road
 | [ ] **BAK-14** | 4DO `.4dosav` import/export | `docs/Compatibility.md` §8 | SYS-19 |
 | [ ] **BAK-15** | PAL, CD-DA, netplay, rewind, debugger UI, additional peripherals | `docs/ImplementationPlan.md` M11.7 | SYS-01/03/15, UX-01/03/21 |
 | [ ] **BAK-16** | Windows/macOS file associations | `docs/ReleaseChecklist.md` | UX-16 |
-| [ ] **BAK-17** | Portable mode | `docs/Configuration.md` | UX-15 |
+| [x] **BAK-17** | Portable mode (`portable.flag`, `--portable`, `FIVEDO_DATA_DIR`) | `docs/Configuration.md` | UX-15 |
 | [ ] **BAK-18** | macOS gamepad backend | `docs/KnownIssues.md` | ECO-04 |
 | [ ] **BAK-19** | Vulkan X11/Wayland/Metal surfaces | `docs/Vulkan.md` | VID-11 |
 

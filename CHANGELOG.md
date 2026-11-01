@@ -33,6 +33,10 @@ still change.
   used, and renderer/timing/NVRAM/OSD/clock/CD-DA values are validated. `GameProfiles`
   stores per-game timing/CD-DA snapshots keyed by game ID. CLI `settings validate` and
   `settings migrate` inspect or normalize the file. Atomic writes are unchanged.
+- UX-15 portable mode: `PortablePaths` resolves the data directory from `portable.flag`,
+  `--portable`, or `FIVEDO_DATA_DIR`. A portable run keeps settings, NVRAM, states,
+  cheats, library state, and logs beside the executable; the explicit data directory
+  enables separate instances. Named configuration profiles remain pending.
 - UX-13 library metadata, favorites, and playtime: `LibraryState`/`LibraryStateStore`
   persist favorites, launch counts, last-played timestamps, and play time in
   `library-state.json`; path-keyed records migrate to game-ID keys. `LibraryPlaytimeTracker`

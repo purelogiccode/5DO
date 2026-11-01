@@ -387,6 +387,11 @@ Settings persist under the user local application data folder:
 - Windows: `%LOCALAPPDATA%\5DO\settings.json`
 - Linux/macOS: the equivalent local application data directory.
 - Library metadata cache: `%LOCALAPPDATA%\5DO\library-cache.json`.
+
+For a USB stick or self-contained folder, place an empty `portable.flag` next to the
+executable or start with `--portable`. Settings, NVRAM, save states, cheats, library
+state, and logs then stay beside the executable. `FIVEDO_DATA_DIR` selects an explicit
+data folder for separate instances.
 - Library favorites/play time: `%LOCALAPPDATA%\5DO\library-state.json`.
 - Optional offline library metadata: `%LOCALAPPDATA%\5DO\library-metadata.json`.
 

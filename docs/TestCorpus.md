@@ -617,7 +617,7 @@ validated:
   version roundtrip, invalid-value normalization, per-game profile roundtrip/apply, and
   `Inspect`/`Migrate`; the CLI tests cover `settings validate|migrate`.
 
-The full suite is **1,373 tests** in Debug. A Release 10-disc smoke after the
+The full suite is **1,376 tests** in Debug. A Release 10-disc smoke after the
 track/TOC change (`tools/compat-sweep.ps1 -Limit 10 -Frames 3000`) reported
 **10/10 Loadable/Rendered**, so the data-track path is unchanged. A real CD-DA title
 and a 10-second DSP+CD-DA WAV capture are still required for SYS-01 completion.
@@ -636,6 +636,18 @@ SYS-02 coverage is synthetic and command-level:
 - A manual Release run also swapped from `Road Rash (USA).chd` to `Space Ace (USA).chd`
   at frame 0; the run completed and reported the new disc hash. A known multi-disc title
   roundtrip remains.
+
+### 1.1l Portable mode (2026-11-01)
+
+UX-15 coverage is path-resolution level:
+
+- `PortablePathsTests` verifies that portable mode resolves to the application
+  directory, non-portable mode resolves to `<LocalApplicationData>/5DO`, and an explicit
+  `FIVEDO_DATA_DIR` override wins.
+- A manual CLI run of `settings validate --portable --json` reported
+  `<CLI output directory>/settings.json`, proving the flag is stripped before command
+  dispatch and the default path follows the portable directory.
+- Named profiles and a per-instance write lock remain.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

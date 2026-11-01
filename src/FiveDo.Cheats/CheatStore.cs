@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using FiveDo.Core;
 
 namespace FiveDo.Cheats;
 
@@ -17,10 +18,11 @@ namespace FiveDo.Cheats;
 public static class CheatStore
 {
     /// <summary>Gets the default per-user cheat directory.</summary>
-    public static string DefaultDirectory => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "5DO",
-        "cheats");
+    /// <remarks>
+    /// Portable mode and <c>FIVEDO_DATA_DIR</c> are resolved by
+    /// <see cref="PortablePaths.DataDirectory"/>.
+    /// </remarks>
+    public static string DefaultDirectory => Path.Combine(PortablePaths.DataDirectory, "cheats");
 
     /// <summary>Resolves the configured cheat directory.</summary>
     /// <param name="configuredDirectory">Configured directory, or an empty value for the default.</param>

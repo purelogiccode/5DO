@@ -40,10 +40,13 @@ the exact path rather than hard-coding one.
 
 The screenshot directory defaults to the user's **Pictures** folder when
 `ScreenshotDirectory` is empty. The save directory defaults to
-`<LocalApplicationData>/5DO/states` when empty.
+`<data-directory>/states` when empty.
 
-**Portable mode is not implemented.** A `portable.flag` file has no effect in the
-current code, despite an older architecture note. Do not rely on it.
+**Portable mode.** Place a `portable.flag` file next to the executable (or pass
+`--portable`) to keep `settings.json`, NVRAM, `states/`, cheats, library state, and logs
+beside the executable. `FIVEDO_DATA_DIR` overrides the data directory and is useful for
+separate instances or named configurations. Portable mode never writes to
+`%LOCALAPPDATA%`; the executable directory must be writable.
 
 Settings are written atomically (temporary file + replace) and carry
 `"SettingsVersion": 2`. An unversioned or v1 file is migrated in place on the next load.
@@ -652,6 +655,9 @@ See [`Audio.md`](Audio.md) for the full pipeline and diagnostics.
 | Variable | Used by | Meaning |
 |---|---|---|
 | `FIVEDO_AUDIO_TAP` | OpenAL output (CLI `--audio openal`/desktop) | Path prefix for `<prefix>.wav` (exact queued PCM) and `<prefix>.csv` (per-buffer timing). |
+| `FIVEDO_DATA_DIR` | Desktop/CLI | Override the data directory for settings, NVRAM, cheats, library state, and logs. |
+| `FIVEDO_PORTABLE` | Desktop/CLI | Set to `1` to behave as if `portable.flag` is next to the executable. |
+| `FIVEDO_LOG_DIR` | Desktop/CLI | Override the rolling log directory. |
 | `ALSOFT_DRIVERS` | OpenAL Soft | Set to `null` to use OpenAL's null backend for headless tests. |
 | `FIVEDO_BIOS` | Tests | Path to a 1 MB BIOS for real-BIOS tests. |
 | `FIVEDO_FRAME_DUMP` | Tests | Directory for boot-frame PNGs. |
