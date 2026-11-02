@@ -122,7 +122,7 @@ The docs site is built with MkDocs Material:
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements-docs.txt
+python -m pip install --require-hashes -r requirements-docs.txt
 mkdocs build --strict
 ```
 

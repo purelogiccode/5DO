@@ -50,7 +50,7 @@ CI publishes `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, and
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements-docs.txt
+python -m pip install --require-hashes -r requirements-docs.txt
 mkdocs build --strict
 ```
 
