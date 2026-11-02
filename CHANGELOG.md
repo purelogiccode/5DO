@@ -71,6 +71,12 @@ still change.
   illegal-request status instead of silently doing nothing, the guest RESET command
   restores the default transfer state and sector size, and `PrefetchingDiscSource`
   read-aheads native track sectors so CD-DA does not decompress on the sample clock.
+- SYS-20 Redump DAT matching: `RedumpDat` parses the Redump/No-Intro XML
+  `<datafile><game><rom>` format and normalizes/validates CRC-32, MD5, and SHA-1.
+  `DiscHealth` hashes each native track and requires size plus every supplied DAT hash.
+  `disc verify --dat <path>` adds `dat.knownDump`/`dat.gameName`/per-track hashes to the
+  JSON result and exits 1 on a mismatch. A synthetic ISO/DAT match and a one-byte
+  mismatch were verified.
 - CORE-09 fix parity audit: [`docs/FixParity.md`](docs/FixParity.md) inventories every
   4DO `FIX_BIT_*`, its IDs, and the 5DO mapping. Timing-6 (Alone in the Dark) and
   GraphicsStepY (Samurai Shodown) are explicitly retired in favor of the generic CEL

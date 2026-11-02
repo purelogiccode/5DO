@@ -688,7 +688,7 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,466 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,472 tests pass with no changed NTSC hashes.
 
 ### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
 
@@ -876,7 +876,7 @@ UX-23 coverage is compile/status level:
 - Final loadability table: 594 discs, **593 Loadable/Rendered**, **1 Loadable/No video**
   (known boot failure), **0 Not Loadable**. Evidence is in `artifacts/compat-20k-10/`,
   `artifacts/compat-known/`, and the merged `artifacts/compat-full/summary-merged.csv`.
-- No emulator regression: the full suite remains **1,466 tests**, build 0 warnings/0
+- No emulator regression: the full suite remains **1,472 tests**, build 0 warnings/0
   errors, format clean, inspectcode 0 results.
 
 ### 1.1af Overscan crop (2026-11-01)
@@ -887,7 +887,7 @@ UX-23 coverage is compile/status level:
   0/32 px clamp.
 - The desktop path applies the crop before OpenGL/Vulkan/software presentation and in
   `SaveNativeScreenshot`; it is presentation-only, so frame hashes and save states do
-  not change. The full suite is **1,466 tests**.
+  not change. The full suite is **1,472 tests**.
 
 ### 1.1ag 4DO/Opera fix parity (2026-11-01)
 
@@ -900,7 +900,18 @@ UX-23 coverage is compile/status level:
   in the Dark (`0x175B8FE4`) or GraphicsStepY on Samurai Shodown (`0x86C04E50`) is
   byte-identical.
 - `GameCompatibilityTests` covers every mapped ID, case-insensitive/full-MD5 lookups,
-  unknown IDs, collisions, and explicit overrides. **1,466 tests pass.**
+  unknown IDs, collisions, and explicit overrides. **1,472 tests pass.**
+
+### 1.1ah Redump DAT matching (2026-11-01)
+
+- `DiscHealthTests` parses a synthetic Redump DAT, checks hash normalization, matches a
+  single track by MD5, reports a changed track as a mismatch, and matches two tracks.
+- `disc verify artifacts/dat-test.iso --dat artifacts/dat-test.dat --json` returned
+  `knownDump: true`, game `DAT Test Game`, CRC-32 `013C6AE4`, MD5
+  `3224F6D33D1FB002DEAE06DD6BEBA153`, SHA-1
+  `4EA34675DFFF1D66C21EC9052B387A3C82AAF7BE`. A one-byte change produced
+  `knownDump: false` and exit 1.
+- The full suite is **1,472 tests**.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

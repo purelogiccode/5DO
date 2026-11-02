@@ -1623,6 +1623,57 @@ public sealed class CliProcessTests
         }
     }
 
+    [Fact]
+    public void DiscVerify_DatMatchReportsTheGameAndMismatchReturnsOne()
+    {
+        var isoPath = Path.Combine(Path.GetTempPath(), $"fivedo-dat-{Guid.NewGuid():N}.iso");
+        var datPath = Path.Combine(Path.GetTempPath(), $"fivedo-dat-{Guid.NewGuid():N}.dat");
+        try
+        {
+            var data = new byte[4096];
+            for (var sector = 0; sector < 2; sector++)
+            {
+                for (var i = 0; i < 2048; i++)
+                {
+                    data[(sector * 2048) + i] = (byte)((sector * 31) + (i * 7));
+                }
+            }
+
+            File.WriteAllBytes(isoPath, data);
+            File.WriteAllText(
+                datPath,
+                """
+                <?xml version="1.0"?>
+                <datafile>
+                  <game name="DAT Test Game">
+                    <description>Synthetic CLI test</description>
+                    <rom name="dat-test.iso" size="4096" crc="013C6AE4" md5="3224F6D33D1FB002DEAE06DD6BEBA153" sha1="4EA34675DFFF1D66C21EC9052B387A3C82AAF7BE"/>
+                  </game>
+                </datafile>
+                """);
+
+            CliResult match = Invoke(
+                "disc", "verify", isoPath, "--dat", datPath, "--json");
+
+            Assert.Equal(0, match.Code);
+            Assert.Contains("\"knownDump\": true", match.Output, StringComparison.Ordinal);
+            Assert.Contains("DAT Test Game", match.Output, StringComparison.Ordinal);
+
+            data[100] ^= 0xFF;
+            File.WriteAllBytes(isoPath, data);
+            CliResult mismatch = Invoke(
+                "disc", "verify", isoPath, "--dat", datPath, "--json");
+
+            Assert.Equal(1, mismatch.Code);
+            Assert.Contains("\"knownDump\": false", mismatch.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(isoPath);
+            File.Delete(datPath);
+        }
+    }
+
     private static CliResult Invoke(params string[] args)
     {
         TextWriter previousOut = Console.Out;

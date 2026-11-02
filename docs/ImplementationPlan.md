@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,466 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,472 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **594 load**, **593 render**; 1 known boot failure (Crash 'n Burn Japan); 0 not loadable | 12,000-frame in-game/visual review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,466** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,472** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -172,7 +172,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[SYS-17](#feat-sys-17)** Game database expansion and community DB — P1 · M · depends on: FND-02 — **Pending**
 - [ ] **[SYS-18](#feat-sys-18)** Auto per-game profile — P0 · L · depends on: SYS-04, SYS-17 — **Partial** — auto BIOS/region/fixes/NVRAM, known-title input seeding, a timing/CD-DA profile editor with import/export, machine-creation application, and CLI `--game-profile` are implemented; full BIOS/fix/filter/high-res fields and DB-driven auto profiles remain
 - [ ] **[SYS-19](#feat-sys-19)** Save-state interoperability with 4DO/Opera — P2 · L · depends on: CORE-14 — **Pending**
-- [ ] **[SYS-20](#feat-sys-20)** Disc health / Redump DAT / CHD integrity — P2 · M · depends on: SYS-22 — **Partial** — `disc verify` reads every native sector and reports CHD/CUE/BIN errors and a stable hash; Redump/No-Intro DAT parsing and a known-dump badge remain
+- [ ] **[SYS-20](#feat-sys-20)** Disc health / Redump DAT / CHD integrity — P2 · M · depends on: SYS-22 — **Partial** — `disc verify` reads every native sector, reports CHD/CUE/BIN errors, hashes the content, and matches Redump/No-Intro DATs with `--dat`; the library known-dump badge and 4DO/Opera hash comparison remain
 - [ ] **[SYS-21](#feat-sys-21)** Physical CD drive support — P2 · M — **Pending**
 - [ ] **[SYS-22](#feat-sys-22)** Disc image conversion/repair — P2 · M · depends on: SYS-01 — **Pending**
 
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,466 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,472 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,466**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,472**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -816,21 +816,27 @@ BIOS and 65,000 frames; WorldCup Super Stadium needs the FZ-10J BIOS plus its Ka
 ROM (BIOS2). The BIOS library now classifies 1 MB Kanji font images as secondary ROMs.
 The final loadability table is 594 discs, 593 rendered, 1 known failure
 (`Crash 'n Burn Japan`), and 0 not loadable. `-RetryFrames`
-keeps this retry reproducible for future sweeps. **1466 tests pass.**
+keeps this retry reproducible for future sweeps. **1472 tests pass.**
 
 **Overscan pass (2026-11-01):** VID-06 moves to partial. `AppSettings.OverscanPixels`
 crops 0-32 pixels from every edge before presentation and native screenshots,
 `VdlFrame.CopyCroppedFrom` preserves the palette/background/output-control metadata,
 and Settings > Video exposes None/4/8/12/16/24 px. The crop is presentation-only:
 frame hashes, input, audio, and save states are unchanged, while CLI evidence keeps the
-full frame. Per-game presets and void-area patterns remain. **1466 tests pass.**
+full frame. Per-game presets and void-area patterns remain. **1472 tests pass.**
 
 **Fix-parity pass (2026-11-01):** CORE-09 is done. [`docs/FixParity.md`](FixParity.md)
 inventories every 4DO `FIX_BIT_*` and maps it to `FixMode`. DinoPark's scale-Y fix is
 visibly active; Microcosm, Super Street Fighter II Turbo, Alone in the Dark, and Samurai
 Shodown retain correct output at 3,000 frames, and forcing the retired timing-6/
 graphics-step-Y bits produces byte-identical frames. `GameCompatibilityTests` locks the
-mapping. **1466 tests pass.**
+mapping. **1472 tests pass.**
+
+**DAT health pass (2026-11-01):** SYS-20 adds a Redump/No-Intro XML parser and
+native-track matching. `DiscHealth` hashes each track with CRC-32, MD5, and SHA-1 and
+requires size plus every supplied DAT hash. `disc verify --dat` prints the matched
+game/ROM and exits 1 on a mismatch; a synthetic ISO matched its DAT and a one-byte
+change failed. The library badge and 4DO/Opera comparison remain. **1472 tests pass.**
 
 **Last updated:** 2026-11-01
 
@@ -2924,10 +2930,11 @@ Suggested parallelization with two developers:
 | 2026-11-01 | UX-06 | Movie frame editor | Extended `MovieEditor` with per-frame set/button/insert/remove and added **File > Movie Editor...** (frame list, player-1 button checkboxes, insert/delete/trim, Save As). UX-06 remains partial for Lua, an input timeline, and multiplayer display; 1,457 tests pass |
 | 2026-11-01 | UX-13 | Game metadata editor | Added `LibraryMetadataStore.Upsert`/`Remove` and **File > Game Metadata...** for the current disc (title, developer, publisher, year, genre, regions, players, description), with a library rescan after saving. UX-13 remains partial for external providers and media; 1,458 tests pass |
 | 2026-11-01 | UX-15 | Profile selector and import/export UI | Added `default-profile.txt` resolution, Settings > Paths profile selector, Set default, Create, Open folder, Import, and Export actions. UX-15 is done; installer integration belongs to UX-16; 1,459 tests pass |
-| 2026-11-01 | SYS-20 | Disc integrity verifier | Added `DiscVerifier` and `disc verify` (native-sector reads, LBA errors, FNV-1a hash, JSON). Battle Chess verified 143,810 sectors / 338,241,120 bytes with no errors. SYS-20 is partial for Redump DAT matching and the UI badge; 1,466 tests pass |
-| 2026-11-01 | CORE-13 | Extended-boot compatibility retry | Reran all 18 non-rendered discs: 5 former not-loadable rows and 12 black/blank titles now render. Powers Kingdom (Europe) reaches its live-action intro at 65,000 frames with the Anvil BIOS; WorldCup Super Stadium renders with the FZ-10J BIOS plus its Kanji font ROM. Only Crash 'n Burn (Japan) remains a known boot failure. Added `-Files`/`-RetryFrames` and `-Bios2` to the sweep; 1,466 tests pass |
-| 2026-11-01 | VID-06 | Overscan crop | Added `AppSettings.OverscanPixels` (0-32), `VdlFrame.CopyCroppedFrom`, presentation/native-screenshot crop, and Settings > Video > **Overscan crop**. The crop is presentation-only and keeps frame hashes/input/states unchanged. VID-06 is partial for per-game presets, void patterns, and custom per-edge crops; 1,466 tests pass |
-| 2026-11-01 | CORE-09 | 4DO/Opera fix parity audit | Added `docs/FixParity.md`: every 4DO `FIX_BIT_*` is mapped or explicitly retired. Timing-6 (Alone in the Dark) and GraphicsStepY (Samurai Shodown) are replaced by generic CEL models, with byte-identical forced-bit evidence. `GameCompatibilityTests` locks every ID; 1,466 tests pass |
+| 2026-11-01 | SYS-20 | Disc integrity verifier | Added `DiscVerifier` and `disc verify` (native-sector reads, LBA errors, FNV-1a hash, JSON). Battle Chess verified 143,810 sectors / 338,241,120 bytes with no errors. SYS-20 is partial for Redump DAT matching and the UI badge; 1,472 tests pass |
+| 2026-11-01 | CORE-13 | Extended-boot compatibility retry | Reran all 18 non-rendered discs: 5 former not-loadable rows and 12 black/blank titles now render. Powers Kingdom (Europe) reaches its live-action intro at 65,000 frames with the Anvil BIOS; WorldCup Super Stadium renders with the FZ-10J BIOS plus its Kanji font ROM. Only Crash 'n Burn (Japan) remains a known boot failure. Added `-Files`/`-RetryFrames` and `-Bios2` to the sweep; 1,472 tests pass |
+| 2026-11-01 | VID-06 | Overscan crop | Added `AppSettings.OverscanPixels` (0-32), `VdlFrame.CopyCroppedFrom`, presentation/native-screenshot crop, and Settings > Video > **Overscan crop**. The crop is presentation-only and keeps frame hashes/input/states unchanged. VID-06 is partial for per-game presets, void patterns, and custom per-edge crops; 1,472 tests pass |
+| 2026-11-01 | CORE-09 | 4DO/Opera fix parity audit | Added `docs/FixParity.md`: every 4DO `FIX_BIT_*` is mapped or explicitly retired. Timing-6 (Alone in the Dark) and GraphicsStepY (Samurai Shodown) are replaced by generic CEL models, with byte-identical forced-bit evidence. `GameCompatibilityTests` locks every ID; 1,472 tests pass |
+| 2026-11-01 | SYS-20 | Redump DAT matching | Added `RedumpDat` (Redump/No-Intro XML parser with hash normalization) and `DiscHealth` (native-track CRC-32/MD5/SHA-1 matching). `disc verify --dat <path>` reports the matched game/ROM and exits 1 on a mismatch. Synthetic ISO/DAT evidence matched and a one-byte change failed; 1,472 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -4374,14 +4381,16 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
 
 **Implemented.**
 - `DiscVerifier` reads every native track sector (audio and data), reports the first errors with LBA, verifies sector counts, and computes an FNV-1a 64-bit content hash.
-- CLI `disc verify <path> [--json] [--max-errors N]` exits 1 on a read error or an incomplete read.
-- `DiscVerifierTests` covers a clean disc, a mid-disc failure that continues to the end, and a mixed data/audio track table.
-- A real Battle Chess (Europe) CHD verified 143,810/143,810 sectors and 338,241,120 bytes with no errors.
+- `RedumpDat` parses the Redump/No-Intro XML `<datafile><game><rom>` format, normalizes/validates CRC-32, MD5, and SHA-1, and ignores unusable entries.
+- `DiscHealth` hashes each native track (CRC-32, MD5, SHA-1) and matches size plus every supplied DAT hash. Multi-track discs match each track independently.
+- CLI `disc verify <path> [--json] [--max-errors N] [--dat path]` exits 1 on a read error, an incomplete read, or a DAT mismatch. The JSON result adds the per-track hashes and the matched game/ROM.
+- `DiscVerifierTests`, `DiscHealthTests`, and a synthetic ISO/DAT CLI check cover clean reads, errors, DAT parsing, single/multi-track matches, mismatches, and malformed DATs.
+- A real Battle Chess (Europe) CHD verified 143,810/143,810 sectors and 338,241,120 bytes with no errors; a synthetic two-sector ISO matched its DAT with CRC-32 `013C6AE4`, MD5 `3224F6D3...`, and SHA-1 `4EA34675...` and returned exit 1 after a one-byte change.
 
 **Remaining.**
-- Redump/No-Intro DAT parsing and known-dump matching.
 - A library "known dump" badge and health summary.
-- 4DO/Opera hash comparison.
+- 4DO/Opera hash comparison and DAT-driven expenses in the desktop.
+- Full Redump/No-Intro DAT coverage (the parser accepts user-supplied files).
 
 **Files.** New `DiscHealth.cs`, `DiscImageFactory.cs`, UI/CLI.
 
@@ -6690,7 +6699,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [ ] **SYS-17** | Game database expansion and community compatibility DB | 5DO has 518 records and a 241-title 4DO reference list; the local collection has 594 images. | >=95% local images have metadata; region/revision/fix/BIOS fields; contribution workflow. | M |
 | [ ] **SYS-18** | Auto per-game profile ("just works") | Best-in-class means no manual BIOS/region/fix/input selection. | Every local disc gets a profile; known problem titles boot without manual steps. | L |
 | [ ] **SYS-19** | Save-state interoperability with 4DO/Opera | Users should be able to migrate saves; preservation value. | Import/export 4DO `.4dosav` and Opera states; roundtrip tests. | L |
-| [~] **SYS-20** | Disc health / Redump DAT / CHD integrity | Bad dumps cause false compatibility failures. | Verify against DAT; clear warnings; no silent corruption. **Partial 2026-11-01:** `disc verify` reads every native sector, reports errors, and hashes the content; DAT matching and the UI badge remain. | M |
+| [~] **SYS-20** | Disc health / Redump DAT / CHD integrity | Bad dumps cause false compatibility failures. | Verify against DAT; clear warnings; no silent corruption. **Partial 2026-11-01:** `disc verify` reads every native sector, hashes CRC-32/MD5/SHA-1, matches Redump/No-Intro DATs with `--dat`, and exits 1 on mismatch; the UI badge and 4DO/Opera comparison remain. | M |
 | [ ] **SYS-21** | Physical CD drive support | 4DO can boot from a CD drive; 5DO is file-only. | Drive selection; same `IDiscSource` path; tests. | M |
 | [ ] **SYS-22** | Disc image conversion/repair | Users need CUE/BIN/ISO/CHD conversion and repair. | CLI/UI convert; preserve tracks; verify output. | M |
 

@@ -1713,6 +1713,30 @@ internal static class Program
             DiscVerificationResult verification = DiscVerifier.Verify(
                 source,
                 options.GetInt("--max-errors", 32));
+            var datPath = options.Get("--dat");
+            CliDiscDatResult? datResult = null;
+            if (datPath is not null)
+            {
+                RedumpDat dat = RedumpDat.Load(datPath);
+                DiscDatResult match = DiscHealth.Verify(source, dat);
+                datResult = new CliDiscDatResult(
+                    Path.GetFullPath(datPath),
+                    match.KnownDump,
+                    match.GameName,
+                    match.MatchedTracks,
+                    match.Tracks
+                        .Select(track => new CliDatTrackResult(
+                            track.Track,
+                            track.Size,
+                            track.Crc32,
+                            track.Md5,
+                            track.Sha1,
+                            track.Matched,
+                            track.Game,
+                            track.Rom))
+                        .ToArray());
+            }
+
             var result = new CliDiscVerifyResult(
                 verification.Ok,
                 verifyPath,
@@ -1721,7 +1745,8 @@ internal static class Program
                 verification.Tracks,
                 verification.BytesVerified,
                 $"0x{verification.Hash:x16}",
-                verification.Errors);
+                verification.Errors,
+                datResult);
             if (options.Json)
             {
                 Console.WriteLine(JsonSerializer.Serialize(
@@ -1740,9 +1765,23 @@ internal static class Program
                 {
                     Console.WriteLine($"error:       {error}");
                 }
+
+                if (result.Dat is not null)
+                {
+                    Console.WriteLine(
+                        $"dat:         {(result.Dat.KnownDump ? "match" : "no match")}"
+                        + (result.Dat.GameName.Length == 0 ? string.Empty : $" {result.Dat.GameName}"));
+                    Console.WriteLine($"dat tracks:  {result.Dat.MatchedTracks}/{result.Dat.Tracks.Count}");
+                    foreach (CliDatTrackResult track in result.Dat.Tracks)
+                    {
+                        Console.WriteLine(
+                            $"  track {track.Track}: {(track.Matched ? "match" : "no match")} "
+                            + $"{track.Size} bytes crc={track.Crc32} md5={track.Md5} sha1={track.Sha1}");
+                    }
+                }
             }
 
-            return result.Ok ? 0 : 1;
+            return result.Ok && (result.Dat is null || result.Dat.KnownDump) ? 0 : 1;
         }
 
         if (string.Equals(args[1], "tracks", StringComparison.OrdinalIgnoreCase))

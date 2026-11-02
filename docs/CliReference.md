@@ -53,7 +53,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `disc dump <disc>` | Write raw 2048-byte sectors. |
 | `disc tracks <disc>` | List the CUE/CHD track table (data and audio), or one data track for ISO/BIN. |
 | `disc playlist <m3u>` | List multi-disc playlist entries and the selected disc. |
-| `disc verify <disc> [--json] [--max-errors N]` | Read every native sector, report the first LBA errors, verified count, bytes, and content hash. Exits 1 on failure. |
+| `disc verify <disc> [--json] [--max-errors N] [--dat <path>]` | Read every native sector, report the first LBA errors, verified count, bytes, and content hash; with `--dat`, match the native track hashes against a Redump/No-Intro DAT. Exits 1 on a read error or DAT mismatch. |
 | `fs list <disc>` | List the 3DO file tree (ISO, BIN, CUE, or CHD). |
 | `fs extract <disc>` | Extract files from a 3DO disc image (ISO, BIN, CUE, or CHD). |
 | `bios info <path>` | BIOS size, MD5, region, Kanji, and Anvil detection. |
@@ -493,6 +493,11 @@ corruption surfaces without booting. The report includes the declared and verifi
 sector counts, tracks, native bytes read, an FNV-1a content hash, and up to
 `--max-errors` failures with LBA numbers. The command exits 1 when any sector cannot be
 read or the verified count is short.
+
+With `--dat <path>`, the command also parses a Redump/No-Intro XML DAT and hashes each
+native track with CRC-32, MD5, and SHA-1. A track matches when its size and every hash
+present in the DAT entry agree. The JSON result adds `dat.knownDump`, `dat.gameName`,
+`dat.matchedTracks`, and the per-track hashes; the command exits 1 on a mismatch.
 
 ### `disc playlist`
 
