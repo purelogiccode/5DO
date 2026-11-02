@@ -113,8 +113,9 @@ configured BIOS.
 
 ## CI
 
-`.github/workflows/build-bundle.yml` builds the three bundles on matching native
-runners and runs the CLI/frontend smoke tests. The runners install .NET 10, which also
+`.github/workflows/build-bundle.yml` builds the Windows and Linux bundles on their
+native runners and cross-publishes the macOS x64 bundle on Ubuntu; the macOS bundle is
+validated as Mach-O x86_64 rather than executed. The runners install .NET 10, which also
 proves the framework-dependent apphosts work. `.github/workflows/release.yml` publishes
 the bundles and `SHA256SUMS.txt` to the GitHub release. The docs workflow publishes the
 documentation site and the wiki.

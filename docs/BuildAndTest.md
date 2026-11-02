@@ -413,7 +413,7 @@ The workflow is [`.github/workflows/ci.yml`](https://github.com/purelogiccode/5D
 | `build-test` | Windows, Ubuntu, macOS | Restore, Release build, all tests. Ubuntu also runs format check, benchmark smoke + gate, allocation gate, and uploads the baseline. Windows runs trimmed CLI and frontend publish smoke tests. |
 | `aot-cli` | Windows | NativeAOT win-x64 CLI publish, `--version`/`selftest`/`bench`, artifact upload. |
 | `aot-frontend` | Windows | NativeAOT win-x64 frontend publish, smoke test, artifact upload. |
-| `bundle` | Windows, Ubuntu, macOS | Builds the unified Windows/Linux/macOS x64 bundles with framework-dependent single-file apphosts; the .NET 10 runtime is required on the host and not bundled. Runs CLI/frontend smoke tests and uploads the bundle. |
+| `bundle` | Windows, Ubuntu | Builds the unified Windows/Linux/macOS x64 bundles with framework-dependent single-file apphosts; the .NET 10 runtime is required on the host and not bundled. The macOS x64 bundle is cross-published on Ubuntu and validated as Mach-O x86_64. Runs CLI/frontend smoke tests and uploads the bundle. |
 | `ci-complete` | Ubuntu | Aggregate gate that fails if any required CI job fails or is cancelled. |
 
 Separate workflows add:

@@ -27,7 +27,11 @@ jobs:
           - os: ubuntu-latest
             rid: linux-x64
             archive: 5do-linux-x64.tar.gz
-          - os: macos-latest
+          # Cross-publish the macOS x64 bundle on Linux. The macOS x64 apphost
+          # and native assets are resolved from NuGet; the bundle is validated
+          # as Mach-O x86_64 instead of being executed. This avoids depending on
+          # the hosted macOS runner, which was cancelled before starting steps.
+          - os: ubuntu-latest
             rid: osx-x64
             archive: 5do-osx-x64.tar.gz
 
@@ -125,28 +129,27 @@ jobs:
             throw 'Frontend smoke marker is missing.'
           }
 
-      - name: CLI and frontend smoke test (Linux/macOS)
-        if: matrix.rid != 'win-x64'
+      - name: Verify macOS bundle architecture
+        if: matrix.rid == 'osx-x64'
         shell: bash
         run: |
           set -euo pipefail
-          if [ "$(uname -m)" = "arm64" ] && [ "${{ matrix.rid }}" = "osx-x64" ]; then
-            echo "osx-x64 bundle built on an arm64 runner; checking the Mach-O architecture instead of executing it."
-            file artifacts/bundle-smoke/FiveDo.Cli
-            file artifacts/bundle-smoke/FiveDo.Frontend.Avalonia
-            exit 0
-          fi
+          file artifacts/bundle-smoke/FiveDo.Cli
+          file artifacts/bundle-smoke/FiveDo.Frontend.Avalonia
+          file artifacts/bundle-smoke/FiveDo.Cli | grep -q 'Mach-O 64-bit x86_64'
+          file artifacts/bundle-smoke/FiveDo.Frontend.Avalonia | grep -q 'Mach-O 64-bit x86_64'
+
+      - name: CLI and frontend smoke test (Linux)
+        if: matrix.rid == 'linux-x64'
+        shell: bash
+        run: |
+          set -euo pipefail
           ./artifacts/bundle-smoke/FiveDo.Cli --version
           ./artifacts/bundle-smoke/FiveDo.Cli selftest --json
-          if [ "${{ matrix.rid }}" = "linux-x64" ]; then
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq xvfb
-            xvfb-run -a ./artifacts/bundle-smoke/FiveDo.Frontend.Avalonia \
-              --smoke-test --smoke-output artifacts/bundle-smoke/frontend-smoke.txt
-          else
-            ./artifacts/bundle-smoke/FiveDo.Frontend.Avalonia \
-              --smoke-test --smoke-output artifacts/bundle-smoke/frontend-smoke.txt
-          fi
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb
+          xvfb-run -a ./artifacts/bundle-smoke/FiveDo.Frontend.Avalonia \
+            --smoke-test --smoke-output artifacts/bundle-smoke/frontend-smoke.txt
           cat artifacts/bundle-smoke/frontend-smoke.txt
           grep -q 'FRONTEND SMOKE OK' artifacts/bundle-smoke/frontend-smoke.txt
 

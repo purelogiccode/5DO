@@ -32,8 +32,8 @@ are **post-1.0**.
 library deduplication by 3DO game ID, moves the OpenAL license text to
 `docs/OpenAL-Soft-COPYING.txt`, removes the frame/PC/cycle counter from the desktop
 status bar, and completes the Serilog catch-block coverage and launch-statistics
-wiring. The bundle layout is unchanged: framework-dependent single-file apphosts, no
-bundled .NET runtime, no PDB/XML files.
+wiring. The full suite is **1,475/1,475** passing. The bundle layout is unchanged:
+framework-dependent single-file apphosts, no bundled .NET runtime, no PDB/XML files.
 
 SYS-01 and AUD-05 now expose multi-track CUE/CHD tables and CD-DA: `ITrackedDiscSource`
 carries native 2048/2336/2352-byte sectors, `CueDiscImage` handles multi-file/multi-track

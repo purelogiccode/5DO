@@ -151,8 +151,9 @@ checksums are attached, and legal/attribution sign-off is recorded.
 ## Packaging and platforms
 
 - CI builds three x64 bundles: Windows, Linux, and macOS. Windows and Linux run the CLI
-  and frontend smoke tests; the macOS x64 bundle is built but not executed on the arm64
-  runner, so macOS runtime validation is post-1.0.
+  and frontend smoke tests; the macOS x64 bundle is cross-published on Linux and
+  validated as Mach-O x86_64, but it is not executed, so macOS runtime validation is
+  post-1.0.
 - arm64 (Windows/Linux/macOS) is not hardware-validated.
 - **Release bundles are framework-dependent and not trimmed.** The CLI and desktop app
   publish as single-file apphosts (`PublishTrimmed=false`); the .NET 10 runtime must be

@@ -36,8 +36,8 @@ This is documented compatibility, not full-library compatibility. See
 
 **Windows x64 is the validated target.** Linux x64 passed the full test suite and
 CLI/frontend smoke tests, with GPU presentation documented as preview/best-effort.
-macOS x64 is built and published; runtime validation is post-1.0. arm64 and Raspberry
-Pi are post-1.0.
+macOS x64 is cross-published on Linux and validated as Mach-O x86_64; runtime
+validation is post-1.0. arm64 and Raspberry Pi are post-1.0.
 
 ## Why is it called 5DO?
 

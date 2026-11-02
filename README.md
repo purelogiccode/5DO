@@ -68,7 +68,7 @@ test harness designed for reproducible compatibility evidence.
 | Version | `1.1.0` release (GitHub Releases) |
 | Validated platform | **Windows x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 |
-| Automated tests | **1,473 tests** in the current test assembly |
+| Automated tests | **1,475 tests** in the current test assembly |
 | Loadability sweep | **594 disc images** tested; after triage **593 loadable/rendered**, 1 known no-video case, 0 not loadable |
 | First pass | 576 rendered, 13 black/blank, 5 not loadable; triage resolved the failures and the blank/black set |
 | Desktop presentation | OpenGL/GLES required; Vulkan optional; CPU fallback available |

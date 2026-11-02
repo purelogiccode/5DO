@@ -25,9 +25,13 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] CLI and desktop logging route through Serilog; warning-and-higher events reach
       the bug-report API with environment, error, and exception blocks.
 - [x] CLI and desktop launch statistics call the ApplicationStats endpoint.
+- [x] Full suite **1,475/1,475**, `dotnet format --verify-no-changes`, and
+      `jb inspectcode --severity=WARNING` are clean.
+- [x] CI cross-publishes the macOS x64 bundle on Linux and validates its Mach-O
+      architecture, avoiding the unavailable hosted macOS runner.
 - [x] Build the three bundles. Windows and Linux bundles passed CLI `selftest` and
-      desktop `--smoke-test`; the macOS x64 bundle is built but not executed on the
-      arm64 CI runner, matching the v1.0.0 validation scope.
+      desktop `--smoke-test`; the macOS x64 bundle is cross-published on Linux and
+      validated as Mach-O x86_64, matching the v1.0.0 runtime-validation scope.
 - [ ] Publish `v1.1.0` and verify `SHA256SUMS.txt`.
 
 ---
@@ -273,9 +277,10 @@ source-only tag or GitHub release is not a complete release.
 - [x] No runtime folder, PDBs, XML docs, or copyrighted content in release bundles.
 - [x] Extract each bundle to a clean folder and run the CLI/frontend smoke test.
 - [x] SHA-256 checksums generated for every bundle.
-- [x] CI builds the bundles on matching native runners, verifies that no runtime or
-      XML files are present, and publishes them with the checksums; the docs workflow
-      updates GitHub Pages and the wiki.
+- [x] CI builds the Windows/Linux bundles on their native runners, cross-publishes the
+      macOS x64 bundle on Linux, verifies that no runtime or XML files are present, and
+      publishes them with the checksums; the docs workflow updates GitHub Pages and the
+      wiki.
 - [x] Local copies are written to `src/FiveDo.Frontend.Avalonia/bin/Release`.
 
 ### 5.1 Single-file decision

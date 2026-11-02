@@ -81,7 +81,7 @@
 
 **2026-11-02, v1.1.0 release (GitHub Releases).**
 
-- **1,473 tests** are present in the current test assembly.
+- **1,475 tests** are present in the current test assembly.
 - The first full-collection loadability sweep covered **594 disc images**: **576
   rendered**, **13 black/blank**, and **5 not loadable** on the first pass.
 - After triage: **593 loadable/rendered**, **1 known no-video case**

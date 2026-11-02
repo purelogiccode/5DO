@@ -54,10 +54,10 @@ Useful direct links:
 - **v1.1.0** documented-compatibility release, published on GitHub.
 - 594 disc images swept; after triage, 593 loadable/rendered, 1 known no-video case,
   0 not-loadable rows.
-- 1,473 tests in the current test assembly.
+- 1,475 tests in the current test assembly.
 - Windows x64 validated; Linux x64 full suite and CLI/frontend smoke passed (GPU
-  presentation preview/best-effort); macOS x64 bundle is built and runtime validation
-  is post-1.0.
+  presentation preview/best-effort); macOS x64 bundle is cross-published and its
+  Mach-O architecture is validated, but runtime validation is post-1.0.
 
 See [Status](https://purelogiccode.github.io/5DO/Status.html),
 [What's new](https://purelogiccode.github.io/5DO/WhatsNew.html), and
