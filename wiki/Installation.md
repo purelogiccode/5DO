@@ -4,7 +4,7 @@
 
 - A legally obtained 3DO BIOS (1 MB; optional second 1 MB ROM for BIOS2/Kanji).
 - A legally obtained disc image: ISO, BIN, CUE+BIN, or CHD.
-- .NET SDK **10.0.100+** for source builds. Published self-contained builds do not
+- .NET SDK **10.0.301** (pinned by `global.json`) for source builds. Published self-contained builds do not
   need a separate runtime.
 - Windows 10+, a current Linux desktop, or macOS 12+.
 - OpenGL 3.3 or GLES 3.0/3.1 for GPU presentation; a CPU fallback exists.

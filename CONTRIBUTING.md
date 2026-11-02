@@ -21,7 +21,7 @@ By participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 Requirements:
 
-- .NET SDK **10.0.100** or newer (`global.json` rolls forward within .NET 10).
+- .NET SDK **10.0.301** (pinned by `global.json`).
 - Git.
 - Optional: PowerShell 7 for packaging/soak scripts and Python 3.12+ for the docs site.
 - Optional: a legally obtained BIOS and disc images for real-content validation.

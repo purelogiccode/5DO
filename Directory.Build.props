@@ -45,6 +45,9 @@
     <FiveDoOpenAlNativeRid Condition="'$(FiveDoOpenAlNativeRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</FiveDoOpenAlNativeRid>
     <IsPackable>false</IsPackable>
     <EnablePackageValidation>false</EnablePackageValidation>
+    <!-- Keep restore lock files RID-agnostic. CI publishes with an explicit -r RID;
+         without this, PublishTrimmed adds the host RID to every executable lock file. -->
+    <UseDefaultPublishRuntimeIdentifier>false</UseDefaultPublishRuntimeIdentifier>
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GenerateDocumentationFile Condition="$(MSBuildProjectName.Contains('.Tests'))">false</GenerateDocumentationFile>

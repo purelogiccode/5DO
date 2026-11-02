@@ -244,7 +244,7 @@ See [`SaveStates.md`](SaveStates.md).
 
 | Symptom | Cause / action |
 |---|---|
-| `NETSDK1045` | Install .NET 10 SDK 10.0.100+. |
+| `NETSDK1045` | Install .NET 10 SDK 10.0.301 (the version pinned by `global.json`). |
 | Restore fails | Check NuGet connectivity/proxy; run `dotnet restore 5DO.sln`. |
 | Warnings are errors | The build uses `TreatWarningsAsErrors`; fix the warning or suppress with justification. |
 | GPU test fails headless | `FIVEDO_GPU_TESTS` is opt-in; do not set it without a desktop GL/ANGLE context. |

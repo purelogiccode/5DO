@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- .NET SDK **10.0.100+**
+- .NET SDK **10.0.301** (pinned by `global.json`)
 - Git
 - Optional: PowerShell 7 for packaging/soak scripts
 - Optional: Python 3.12+ for the documentation site

@@ -11,7 +11,7 @@ NativeAOT details, see [`Trimming.md`](Trimming.md). For packaging contents, see
 
 | Requirement | Version / notes |
 |---|---|
-| .NET SDK | **10.0.100** or newer. `global.json` rolls forward to the latest 10.0 feature band. |
+| .NET SDK | **10.0.301** (pinned by `global.json` with `rollForward: disable`). |
 | OS | Windows 10+ (validated), current Linux desktop, macOS 12+ (publish outputs only for the latter two in the current release scope). |
 | GPU | OpenGL 3.3 desktop or OpenGL ES 3.0/3.1 for the GPU presenter. The CPU fallback runs without one. |
 | Audio | No system OpenAL install is required. OpenAL Soft 1.23.1 is bundled by the build. |
@@ -482,7 +482,7 @@ The 3DO Opera file-system reader used by `5do fs` is first-party
 
 | Symptom | Cause / fix |
 |---|---|
-| `dotnet` not found or wrong SDK | Install .NET 10 SDK 10.0.100+; `global.json` requires the 10.0 feature band. |
+| `dotnet` not found or wrong SDK | Install .NET 10 SDK 10.0.301; `global.json` pins that version with `rollForward: disable`. |
 | `NETSDK1045` | The installed SDK is older than .NET 10. |
 | Restore fails behind a proxy | Configure NuGet proxy/credentials; CI uses the standard NuGet feed. |
 | `OpenAL32.dll` missing at runtime | Rebuild so `Directory.Build.targets` copies OpenAL Soft; or copy the package's `soft_oal.dll` as `OpenAL32.dll` beside the executable. |

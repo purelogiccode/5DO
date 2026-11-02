@@ -137,7 +137,7 @@ and [known issues](https://purelogiccode.github.io/5DO/KnownIssues.html).
 
 ### Requirements
 
-- **.NET SDK 10.0.100 or newer** (`global.json` rolls forward within .NET 10).
+- **.NET SDK 10.0.301** (pinned by `global.json`).
 - A legally obtained 3DO BIOS ROM (1 MB; an optional second ROM for BIOS2/Kanji).
 - Legally obtained 3DO disc images in ISO, BIN, CUE+BIN, or CHD format.
 - For the desktop app: Windows 10+, a current Linux desktop, or macOS 12+.
