@@ -2,9 +2,12 @@
 
 ## From the release bundle
 
-1. Download the bundle for your system from
-   [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0).
-2. Extract the whole bundle. Keep `runtime/` next to the executables.
+1. Install the **.NET 10 Runtime** from
+   <https://dotnet.microsoft.com/download/dotnet/10.0>. It is not included in the
+   bundle.
+2. Download the bundle for your system from
+   [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0) and
+   extract it.
 3. Start the desktop app:
 
    ```powershell

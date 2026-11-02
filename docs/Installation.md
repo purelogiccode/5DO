@@ -9,7 +9,7 @@ include a BIOS ROM or any game images. You must supply legally obtained files.
 |---|---|
 | 3DO BIOS | A 1 MB BIOS image such as `panafz1.bin`. An optional second 1 MB ROM can be used as BIOS2/Kanji. |
 | Disc image | ISO (2048-byte sectors), BIN (2352-byte sectors), CUE+BIN, or CHD. |
-| .NET | .NET SDK **10.0.301** (pinned by `global.json`) for source builds. The published bundles include a private .NET 10 runtime; no separate install is required. |
+| .NET | The **.NET 10 Runtime** must be installed on the host; the published bundles are framework-dependent and do **not** include the runtime. The .NET 10 SDK is only needed for source builds. |
 | Desktop | Windows 10+, a current Linux desktop, or macOS 12+. |
 | GPU | OpenGL 3.3 or OpenGL ES 3.0/3.1 for GPU presentation. A CPU fallback is available. |
 | Audio | No system OpenAL installation is required; OpenAL Soft 1.23.1 is bundled. |
@@ -25,9 +25,9 @@ Download the bundle for your system from
 | Linux x64 | `5do-linux-x64.tar.gz` |
 | macOS x64 | `5do-osx-x64.tar.gz` |
 
-Each bundle contains both the desktop app and the CLI, plus a shared private .NET 10
-runtime under `runtime/`. Extract the whole bundle and keep `runtime/` next to the
-executables.
+Each bundle contains both the desktop app and the CLI. Install the .NET 10 Runtime
+first from <https://dotnet.microsoft.com/download/dotnet/10.0>; the bundle does not
+contain a .NET runtime. Extract the bundle and run the executables.
 
 ## Build from source
 
@@ -132,11 +132,11 @@ Named profiles live under `profiles/<name>/` and can be selected with
   group.
 - The local validation target is a Linux Mint virtual machine. Full distribution
   coverage is still post-1.0 work.
-- Self-contained `linux-x64` and `linux-arm64` archives are produced by CI.
+- The framework-dependent `linux-x64` bundle is produced by CI; arm64 is post-1.0.
 
 ### macOS
 
-- Self-contained `osx-x64` and `osx-arm64` archives are produced by CI.
+- The framework-dependent `osx-x64` bundle is produced by CI; arm64 is post-1.0.
 - There is no platform gamepad backend yet; use the keyboard.
 - Runtime validation is post-1.0 work. Please report platform-specific findings with
   a [diagnostics bundle](Diagnostics.md).

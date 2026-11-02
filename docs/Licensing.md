@@ -72,7 +72,7 @@ Suggested About text:
 The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NOTICES.md` as they are added:
 
 - Avalonia UI (MIT)
-- .NET 10 runtime (MIT; shipped once under `runtime/` in the release bundles)
+- .NET 10 runtime (MIT; required on the host and **not bundled** in the release artifacts)
 - CommunityToolkit.Mvvm (MIT)
 - Microsoft.Extensions.* (MIT)
 - xUnit (Apache-2.0)

@@ -62,8 +62,8 @@ A positional disc path or `--disc <path>` opens and auto-starts the game. See
 Yes - **v1.0.0** is available on
 [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0). There is one
 bundle per system (Windows x64, Linux x64, macOS x64), and each bundle contains both
-the desktop app and the CLI plus a shared private .NET 10 runtime. You can also build
-from source.
+the desktop app and the CLI. Install the **.NET 10 Runtime** first; the bundles do not
+include it. You can also build from source.
 
 ## Compatibility
 
@@ -148,9 +148,10 @@ and the `cheat` CLI. See [Cheats](Cheats.md).
 
 ### Does 5DO run on Linux and macOS?
 
-Builds and self-contained publish outputs are produced for Windows, Linux, and macOS
-on x64 and arm64. **Windows x64 is the validated target.** Linux and macOS runtime
-validation is ongoing; please report issues with a diagnostics bundle.
+Builds are published for Windows, Linux, and macOS on x64 as framework-dependent
+bundles; users install the .NET 10 runtime. **Windows x64 is the validated target.**
+Linux and macOS runtime validation is ongoing; please report issues with a diagnostics
+bundle.
 
 ### What are the performance targets?
 

@@ -37,12 +37,15 @@ GitHub release without the built artifacts is not a complete release.
 
 - One bundle per system: `5do-win-x64.zip`, `5do-linux-x64.tar.gz`,
   `5do-osx-x64.tar.gz`.
-- Each bundle contains the single-file CLI and desktop apphosts, one shared private
-  .NET 10 runtime under `runtime/`, `README.md`, `LICENSE`,
-  `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, and the release/legal docs.
+- Each bundle contains the framework-dependent single-file CLI and desktop apphosts,
+  `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, and the
+  release/legal docs. **No .NET runtime is bundled**; users must install the .NET 10
+  runtime on their machine.
 - Build with `packaging/package-bundle.ps1`. `build-bundle.yml` validates the bundles
   in CI and `release.yml` publishes them with `SHA256SUMS.txt`.
 - Keep a local copy of each bundle in `src/FiveDo.Frontend.Avalonia/bin/Release`.
+- Remove PDB and XML documentation files from the bundles; they are not runtime
+  dependencies.
 - Run `jb inspectcode` at warning severity and fix every warning/error before release.
 
 ## Documentation rules

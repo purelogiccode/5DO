@@ -174,15 +174,16 @@ license position; it adds another upstream project to the attribution list.
 
 ### Distribution
 
-The release bundles contain only first-party compiled output, the private .NET runtime,
-documentation, and license/notice files. Nothing from `References/` (FreeDO, 4DO,
-Opera/libopera, SimpleGui/OperaCore, or Docs3) is copied into a bundle. Opera remains a
-behavioral reference; it is not a shipped dependency.
+The release bundles contain only first-party compiled output, documentation, and
+license/notice files. Nothing from `References/` (FreeDO, 4DO, Opera/libopera,
+SimpleGui/OperaCore, or Docs3) is copied into a bundle. Opera remains a behavioral
+reference; it is not a shipped dependency. The .NET 10 runtime is a host prerequisite
+and is **not** bundled.
 
 The bundle layout does not change the reference hierarchy or the licensing position:
-the CLI and desktop app are single-file apphosts built from this repository, and the
-OpenAL Soft native runtime stays beside them so its LGPL replacement rights remain
-practical.
+the CLI and desktop app are framework-dependent single-file apphosts built from this
+repository, and the OpenAL Soft native runtime stays beside them so its LGPL replacement
+rights remain practical.
 
 ---
 

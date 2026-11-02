@@ -19,9 +19,9 @@ both the desktop app and the CLI. You can also build from source.
 
 ## Do I need .NET installed?
 
-No for the downloaded bundles. Each bundle includes a private .NET 10 runtime under
-`runtime/`, shared by the two single-file apphosts. Keep the `runtime/` folder next to
-`FiveDo.Cli` and `FiveDo.Frontend.Avalonia`.
+Yes. The downloaded bundles are framework-dependent and require the **.NET 10
+Runtime** installed on your machine. The runtime is not included in the bundle. Get it
+from <https://dotnet.microsoft.com/download/dotnet/10.0>.
 
 The .NET 10 SDK is only required to build from source.
 

@@ -90,8 +90,9 @@
   presentation is preview/best-effort. macOS and arm64 validation are post-1.0.
 - v1.0.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0)
   as one bundle per system (Windows/Linux/macOS x64), each with the CLI, desktop app,
-  shared private .NET runtime, and SHA-256 checksums. M13.5/M13.6 visual/high-resolution
-  review and M14 research are post-1.0. See [What's new](WhatsNew.md).
+  and SHA-256 checksums. The .NET 10 runtime is required on the host and is not bundled.
+  M13.5/M13.6 visual/high-resolution review and M14 research are post-1.0. See
+  [What's new](WhatsNew.md).
 
 See [Status](Status.md) and [Known issues](KnownIssues.md) for the current position and
 the remaining work.

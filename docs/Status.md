@@ -379,11 +379,11 @@ This is the short, current answer to "where are we?" The documentation index is
   extraction), and BIOS catalog/scan/selection/override tests.
 - **Packaging:** CI builds/tests/formats and publishes one bundle per system
   (`5do-win-x64.zip`, `5do-linux-x64.tar.gz`, `5do-osx-x64.tar.gz`). Each bundle
-  contains the CLI and desktop app as framework-dependent single-file apphosts, one
-  private .NET 10 runtime under `runtime/`, the README/license/notices/whatsnew, and a
-  generated `PACKAGE.txt`. The runtime is shared by both apps and is not embedded in
-  either executable. Native OpenAL Soft/Skia/ANGLE libraries stay beside the apphosts
-  for LGPL replacement. The CLI also has an opt-in NativeAOT win-x64 publish
+  contains the CLI and desktop app as framework-dependent single-file apphosts, the
+  README/license/notices/whatsnew, and a generated `PACKAGE.txt`. The .NET 10 runtime
+  is required on the host and is **not** bundled; PDB and XML documentation files are
+  removed. Native OpenAL Soft/Skia/ANGLE libraries stay beside the apphosts for LGPL
+  replacement. The CLI also has an opt-in NativeAOT win-x64 publish
   (`-p:FiveDoNativeAot=true`) that is CI-smoke-tested with `--version`, `selftest`,
   `bench`, `info`, `fs list`, a golden 3,000-frame boot, and live OpenAL audio. The
   frontend has an opt-in NativeAOT single-file publish that passes `--smoke-test` and
@@ -610,7 +610,7 @@ artifacts and checksums are attached to the GitHub release.
 | M9 Avalonia frontend | Feature-complete for the tested workflow | 0 (optional polish is post-1.0) |
 | M9R OpenGL presenter | Windows WGL + ANGLE validated; CPU fallback, filters, parity, 4K probe | 0 on Windows; Linux x64 full suite passed, GL probe timed out under llvmpipe |
 | M9P performance/pacing | Tier A measured, zero-allocation steady state, CI gate | 0 (Tier B/Pi and hot-path are post-1.0) |
-| M10 packaging | Unified Windows/Linux/macOS x64 bundles, single-file apps + shared runtime, optional NativeAOT | 0 (installers post-1.0) |
+| M10 packaging | Unified Windows/Linux/macOS x64 bundles, framework-dependent single-file apps, optional NativeAOT | 0 (installers post-1.0) |
 | M11 compatibility | 12 titles boot/render; five have scripted gameplay evidence; matrix and known issues documented | 0 |
 | **M13 compatibility sweep** | **Loadability complete: 594 tested, 593 render, 1 known boot failure** | M13.5/M13.6 post-1.0; Linux x64 full suite passed |
 | **M14 high-res CEL research** | **Research plan written; post-1.0** | **Not a v1.0 gate** |

@@ -11,7 +11,8 @@ see [`CliReference.md`](CliReference.md); for settings and paths, see
 
 ## Quick start
 
-1. Install the .NET 10 runtime (or use a self-contained build).
+1. Install the .NET 10 runtime from <https://dotnet.microsoft.com/download/dotnet/10.0>.
+   The release bundles do not include it.
 2. Start the desktop app:
 
    ```powershell

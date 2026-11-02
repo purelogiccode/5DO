@@ -57,8 +57,9 @@ test harness designed for reproducible compatibility evidence.
   NVRAM/cheat/movie/state commands, JSON output, watchpoints, dumps, and differential
   harnesses.
 - **One bundle per system.** Windows, Linux, and macOS x64 bundles contain both the
-  single-file CLI and desktop app, one shared private .NET 10 runtime, and the docs/
-  notices. Optional NativeAOT CLI builds remain available for developers.
+  framework-dependent single-file CLI and desktop app, plus the docs/notices. The
+  .NET 10 runtime is a prerequisite and is **not** bundled. Optional NativeAOT CLI
+  builds remain available for developers.
 
 ## Status at a glance
 
@@ -88,10 +89,10 @@ One bundle per system, each containing both the desktop app and the CLI:
 | Linux x64 | [`5do-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.0.0/5do-linux-x64.tar.gz) |
 | macOS x64 | [`5do-osx-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.0.0/5do-osx-x64.tar.gz) |
 
-The apps are single-file executables. A private .NET 10 runtime is included once under
-`runtime/` and shared by both apps, so no separate .NET install is required. See the
-[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0) for
-`SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
+The apps are single-file executables. **Install the .NET 10 Runtime first** from
+<https://dotnet.microsoft.com/download/dotnet/10.0>; the bundles do **not** contain a
+.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0)
+for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
 ## Features
 
@@ -162,8 +163,9 @@ The apps are single-file executables. A private .NET 10 runtime is included once
 
 > [!NOTE]
 > v1.0.0 is published on GitHub Releases as one bundle per system (Windows, Linux,
-> macOS x64), each with the CLI, desktop app, shared private runtime, and SHA-256
-> checksums. Build from source below if you prefer.
+> macOS x64), each with the CLI, desktop app, and SHA-256 checksums. The .NET 10
+> runtime is required on the host and is not bundled. Build from source below if you
+> prefer.
 > BIOS and game files are never distributed by this repository.
 
 ### Build and test

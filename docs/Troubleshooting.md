@@ -27,7 +27,7 @@ are in [`KnownIssues.md`](KnownIssues.md).
 | Symptom | Cause / action |
 |---|---|
 | Nothing happens / console closes | Launch from a terminal to see the error: `dotnet run --project src/FiveDo.Frontend.Avalonia`. |
-| `You must install .NET` | The published package is self-contained; a source build needs the .NET 10 SDK/runtime. |
+| `You must install .NET` | The published bundle is framework-dependent; install the .NET 10 runtime from <https://dotnet.microsoft.com/download/dotnet/10.0>. |
 | `--gl-backend does not recognize ...` | Use `auto`, `wgl`, `angle`, or `software`. |
 | Crash before the window appears | Rename `settings.json` (see [`Configuration.md`](Configuration.md)); a malformed file normally falls back to defaults, but a bad custom path can still fail. |
 | Crash on close | Known Silk.NET/Avalonia shutdown ordering issue; the shell intentionally does not dispose the GL surface during close. If it persists, capture the stack trace. |

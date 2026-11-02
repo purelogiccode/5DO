@@ -21,10 +21,13 @@ app and the headless CLI:
 Every bundle also contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
 `whatsnew.md`, the release notes, and the legal/OpenAL notices.
 
-The apps are **single-file** executables. A private .NET 10 runtime is included once
-under `runtime/` and shared by both apps; it is **not** embedded in either executable.
-No separate .NET install is required. The OpenAL Soft runtime stays beside the apps so
-it can be replaced as required by its LGPL license.
+The apps are **framework-dependent single-file** executables. You must install the
+**.NET 10 Runtime** from <https://dotnet.microsoft.com/download/dotnet/10.0>; no .NET
+runtime is embedded in the executables or copied into the bundle. The OpenAL Soft
+runtime stays beside the apps so it can be replaced as required by its LGPL license.
+
+PDB and XML documentation files are omitted from the bundles; they are build outputs,
+not runtime dependencies.
 
 ## Highlights
 
@@ -43,6 +46,7 @@ it can be replaced as required by its LGPL license.
 
 ## Requirements
 
+- The **.NET 10 Runtime** installed on the host. It is not included in the bundle.
 - A legally obtained 1 MB 3DO BIOS ROM (for example `panafz1.bin`).
 - Legally obtained 3DO disc images in ISO, BIN, CUE+BIN, or CHD format.
 - Windows 10+, a current Linux desktop, or macOS 12+.

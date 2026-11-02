@@ -2,17 +2,12 @@
 
 ## The app says it cannot find the .NET runtime
 
-The release bundles include a private runtime under `runtime/`. Keep the whole bundle
-together:
+The release bundles are **framework-dependent** and require the **.NET 10 Runtime**
+installed on your machine. The runtime is not included in the bundle. Install it from
+<https://dotnet.microsoft.com/download/dotnet/10.0> and start the app again.
 
-```text
-FiveDo.Cli[.exe]
-FiveDo.Frontend.Avalonia[.exe]
-runtime/
-```
-
-Do not move an executable out of the bundle by itself. If the `runtime/` folder is
-missing, download the bundle again. On Linux/macOS, make the apphosts executable:
+If you installed .NET in a non-standard location on Linux/macOS, set `DOTNET_ROOT` to
+that directory before running 5DO. On Linux/macOS, also make the apphosts executable:
 
 ```sh
 chmod +x FiveDo.Cli FiveDo.Frontend.Avalonia

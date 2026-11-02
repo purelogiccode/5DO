@@ -19,8 +19,9 @@ the CLI:
 | Linux x64 | `5do-linux-x64.tar.gz` |
 | macOS x64 | `5do-osx-x64.tar.gz` |
 
-The apps are single-file executables. A private .NET 10 runtime is included once under
-`runtime/` and shared by both apps, so no separate .NET install is required.
+The apps are framework-dependent single-file executables. Install the **.NET 10
+Runtime** first from <https://dotnet.microsoft.com/download/dotnet/10.0>; the bundles do
+**not** include the runtime.
 
 ## Start here
 

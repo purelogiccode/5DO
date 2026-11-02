@@ -26,108 +26,6 @@ New-Item -ItemType Directory -Path $outputPath -Force | Out-Null
 
 $staging = Join-Path ([System.IO.Path]::GetTempPath()) ("5do-bundle-" + [guid]::NewGuid().ToString('N'))
 
-function Stage-DotNetRuntime {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $TargetRid,
-
-        [Parameter(Mandatory = $true)]
-        [string] $Destination
-    )
-
-    # Build a tiny self-contained app to materialize the runtime files for the
-    # target RID. The apphosts are framework-dependent single files and point at
-    # this one private runtime with AppHostRelativeDotNet=runtime.
-    $hostRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("5do-runtime-host-" + [guid]::NewGuid().ToString('N'))
-    try {
-        New-Item -ItemType Directory -Path $hostRoot -Force | Out-Null
-        $project = @'
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <PublishSingleFile>false</PublishSingleFile>
-    <PublishTrimmed>false</PublishTrimmed>
-    <InvariantGlobalization>true</InvariantGlobalization>
-  </PropertyGroup>
-</Project>
-'@
-        Set-Content -LiteralPath (Join-Path $hostRoot 'RuntimeHost.csproj') -Value $project -Encoding utf8NoBOM
-        Set-Content -LiteralPath (Join-Path $hostRoot 'Program.cs') `
-            -Value 'System.Console.WriteLine("5DO runtime host");' -Encoding utf8NoBOM
-
-        $publishDirectory = Join-Path $hostRoot 'out'
-        & dotnet publish (Join-Path $hostRoot 'RuntimeHost.csproj') `
-            -c Release -r $TargetRid --self-contained true `
-            -p:PublishSingleFile=false -p:PublishTrimmed=false -m:1 `
-            -o $publishDirectory
-        if ($LASTEXITCODE -ne 0) {
-            throw "Runtime host publish failed with exit code $LASTEXITCODE."
-        }
-
-        $runtimeConfigPath = Join-Path $publishDirectory 'RuntimeHost.runtimeconfig.json'
-        $runtimeConfig = Get-Content -LiteralPath $runtimeConfigPath -Raw | ConvertFrom-Json
-        $runtimeVersion = $runtimeConfig.runtimeOptions.includedFrameworks[0].version
-        if ([string]::IsNullOrWhiteSpace($runtimeVersion)) {
-            throw 'Could not determine the .NET runtime version from RuntimeHost.runtimeconfig.json.'
-        }
-
-        $fxrDirectory = Join-Path $Destination "host/fxr/$runtimeVersion"
-        $sharedDirectory = Join-Path $Destination "shared/Microsoft.NETCore.App/$runtimeVersion"
-        New-Item -ItemType Directory -Path $fxrDirectory -Force | Out-Null
-        New-Item -ItemType Directory -Path $sharedDirectory -Force | Out-Null
-
-        foreach ($file in Get-ChildItem -LiteralPath $publishDirectory -File -Force) {
-            if ($file.Name -like 'RuntimeHost*') {
-                continue
-            }
-
-            if ($file.Name -like '*hostfxr*') {
-                Copy-Item -LiteralPath $file.FullName -Destination $fxrDirectory -Force
-            }
-            else {
-                Copy-Item -LiteralPath $file.FullName -Destination $sharedDirectory -Force
-            }
-        }
-
-        # A self-contained publish does not emit the framework manifests that a
-        # dotnet root needs; take them from the restored runtime pack.
-        $packagesRoot = $env:NUGET_PACKAGES
-        if ([string]::IsNullOrWhiteSpace($packagesRoot)) {
-            $homeDirectory = if ($env:HOME) { $env:HOME } else { $env:USERPROFILE }
-            $packagesRoot = Join-Path $homeDirectory '.nuget/packages'
-        }
-
-        $runtimePack = Join-Path $packagesRoot "microsoft.netcore.app.runtime.$TargetRid/$runtimeVersion/runtimes/$TargetRid/lib/net10.0"
-        foreach ($manifest in @('Microsoft.NETCore.App.deps.json', 'Microsoft.NETCore.App.runtimeconfig.json')) {
-            $source = Join-Path $runtimePack $manifest
-            if (-not (Test-Path -LiteralPath $source)) {
-                throw "Runtime manifest not found: $source"
-            }
-
-            Copy-Item -LiteralPath $source -Destination $sharedDirectory -Force
-        }
-
-        $dotnet = Get-Command dotnet -ErrorAction SilentlyContinue
-        if ($dotnet) {
-            $dotnetRoot = Split-Path -Parent $dotnet.Source
-            foreach ($name in @('LICENSE.txt', 'ThirdPartyNotices.txt')) {
-                $source = Join-Path $dotnetRoot $name
-                if (Test-Path -LiteralPath $source) {
-                    Copy-Item -LiteralPath $source -Destination $Destination -Force
-                }
-            }
-        }
-    }
-    finally {
-        if (Test-Path -LiteralPath $hostRoot) {
-            Remove-Item -LiteralPath $hostRoot -Recurse -Force -ErrorAction SilentlyContinue
-        }
-    }
-}
-
 function Copy-PublishTree {
     param(
         [Parameter(Mandatory = $true)]
@@ -161,14 +59,15 @@ function Copy-PublishTree {
 try {
     New-Item -ItemType Directory -Path $staging -Force | Out-Null
 
-    # Both apps share one private runtime. Copy the CLI first, then add the
-    # frontend-only files; shared files must be byte-identical.
+    # Both apps are framework-dependent single files. No .NET runtime is copied
+    # into the bundle; users install the .NET 10 runtime on their machine.
     Copy-PublishTree -Source $cliPath -Destination $staging
     Copy-PublishTree -Source $frontendPath -Destination $staging
 
-    Stage-DotNetRuntime -TargetRid $Rid -Destination (Join-Path $staging 'runtime')
-
+    # PDBs and XML documentation are build outputs, not runtime dependencies.
     Get-ChildItem -LiteralPath $staging -Recurse -File -Force -Filter '*.pdb' |
+        Remove-Item -Force
+    Get-ChildItem -LiteralPath $staging -Recurse -File -Force -Filter '*.xml' |
         Remove-Item -Force
 
     foreach ($file in @('README.md', 'LICENSE', 'THIRD-PARTY-NOTICES.md')) {
@@ -249,8 +148,9 @@ try {
         "version: $Version"
         "commit: $commit"
         "built: $([DateTimeOffset]::UtcNow.ToString('u'))"
-        'runtime: private shared .NET 10 runtime in runtime/ (not embedded in the apps)'
-        'apps: FiveDo.Cli and FiveDo.Frontend.Avalonia (single-file framework-dependent apphosts)'
+        'runtime: none bundled; requires the .NET 10 runtime installed on the host'
+        'runtime-download: https://dotnet.microsoft.com/download/dotnet/10.0'
+        'apps: FiveDo.Cli and FiveDo.Frontend.Avalonia (framework-dependent single-file apphosts)'
         "launch: $launch"
         ''
         'BIOS ROMs and game images are not included.'

@@ -337,25 +337,25 @@ See [`Video.md`](Video.md) and [`Performance.md`](Performance.md) for interpreta
 
 ## 6. Publish
 
-### Trimmed self-contained single file (default release shape)
+### Framework-dependent single file (release shape)
 
 ```powershell
 dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r win-x64 `
-  --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -m:1 `
+  --self-contained false -p:PublishSingleFile=true -p:PublishTrimmed=false -m:1 `
   -o artifacts/cli/win-x64
 
 dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj -c Release -r win-x64 `
-  --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -m:1 `
+  --self-contained false -p:PublishSingleFile=true -p:PublishTrimmed=false -m:1 `
   -o artifacts/frontend/win-x64
 ```
 
-Supported RIDs in CI:
+Release bundles are produced for `win-x64`, `linux-x64`, and `osx-x64`. They contain
+no .NET runtime; users must install the .NET 10 runtime on their machine.
 
-`win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`.
-
-Both executables publish trimmed by default. The frontend also ships native
-Skia/HarfBuzz/ANGLE assets. OpenAL Soft is copied as `OpenAL32.dll` on Windows by
-`Directory.Build.targets`; Linux/macOS use the package's native names.
+Both executables are single-file framework-dependent apphosts. The frontend also ships
+native Skia/HarfBuzz/ANGLE assets. OpenAL Soft is copied as `OpenAL32.dll` on Windows
+by `Directory.Build.targets`; Linux/macOS use the package's native names. PDB and XML
+documentation files are removed by `packaging/package-bundle.ps1`.
 
 ### NativeAOT (opt-in, win-x64)
 
@@ -386,17 +386,21 @@ artifacts/frontend/win-x64/FiveDo.Frontend.Avalonia.exe `
 The frontend smoke test opens the real window, runs one UI pass (GL hidden for headless
 CI), writes `FRONTEND SMOKE OK <version>`, and exits 0.
 
-### Portable archives
+### Portable bundles
 
 ```powershell
-pwsh -File packaging/package.ps1 -Component cli -Rid win-x64 `
-  -PublishDirectory artifacts/cli/win-x64 -OutputDirectory artifacts/packages
+pwsh -File packaging/package-bundle.ps1 -Rid win-x64 `
+  -CliPublishDirectory artifacts/cli/win-x64 `
+  -FrontendPublishDirectory artifacts/frontend/win-x64 `
+  -OutputDirectory artifacts/bundles
 ```
 
-The archive contains the publish output (minus PDBs), `README.md`, `LICENSE`,
-`THIRD-PARTY-NOTICES.md`, `docs/Licensing.md`, `docs/ReleaseLegalReview.md`, the latest
+The bundle contains both framework-dependent apphosts and their native libraries,
+`README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`, `whatsnew.md`,
+`docs/Licensing.md`, `docs/ReleaseLegalReview.md`, the latest
 `docs/ReleaseNotes-*.md`, and a generated `PACKAGE.txt` with component, RID, version,
-commit, and build time. Linux archives also include `5do.desktop`.
+commit, and build time. Linux bundles also include `5do.desktop`. PDB and XML
+documentation files are removed, and no .NET runtime is copied into the bundle.
 
 ---
 
@@ -409,7 +413,7 @@ The workflow is [`.github/workflows/ci.yml`](https://github.com/purelogiccode/5D
 | `build-test` | Windows, Ubuntu, macOS | Restore, Release build, all tests. Ubuntu also runs format check, benchmark smoke + gate, allocation gate, and uploads the baseline. Windows runs trimmed CLI and frontend publish smoke tests. |
 | `aot-cli` | Windows | NativeAOT win-x64 CLI publish, `--version`/`selftest`/`bench`, artifact upload. |
 | `aot-frontend` | Windows | NativeAOT win-x64 frontend publish, smoke test, artifact upload. |
-| `bundle` | Windows, Ubuntu, macOS | Builds the unified Windows/Linux/macOS x64 bundles with single-file apphosts and one shared private runtime; runs CLI/frontend smoke tests and uploads the bundle. |
+| `bundle` | Windows, Ubuntu, macOS | Builds the unified Windows/Linux/macOS x64 bundles with framework-dependent single-file apphosts; the .NET 10 runtime is required on the host and not bundled. Runs CLI/frontend smoke tests and uploads the bundle. |
 | `ci-complete` | Ubuntu | Aggregate gate that fails if any required CI job fails or is cancelled. |
 
 Separate workflows add:

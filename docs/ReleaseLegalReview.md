@@ -17,8 +17,8 @@ what was verified, and the decisions recorded for the public v1.0 release.
 The release is **one bundle per system**: `5do-win-x64.zip`,
 `5do-linux-x64.tar.gz`, and `5do-osx-x64.tar.gz`. Each bundle contains only:
 
-- the single-file CLI and desktop apphosts and their native dependencies,
-- one private .NET 10 runtime under `runtime/` (not embedded in either apphost),
+- the framework-dependent single-file CLI and desktop apphosts and their native
+  dependencies,
 - `README.md`,
 - `whatsnew.md`,
 - `LICENSE`,
@@ -28,12 +28,11 @@ The release is **one bundle per system**: `5do-win-x64.zip`,
 - `docs/licenses/OpenAL-Soft-COPYING.txt` (the LGPL-2.0 license text),
 - `PACKAGE.txt`,
 - the release notes,
-- `runtime/LICENSE.txt` and `runtime/ThirdPartyNotices.txt` for the .NET runtime,
 - the Linux `.desktop` entry for the Linux bundle.
 
 They do **not** contain `References/`, `artifacts/`, `bios/`, test corpora, disc
-images, BIOS ROMs, extracted assets, screenshots, WAV captures, or any FreeDO/4DO/
-Opera reference binary.
+images, BIOS ROMs, extracted assets, screenshots, WAV captures, the .NET runtime, PDB
+files, XML documentation files, or any FreeDO/4DO/Opera reference binary.
 
 ## 2. Verification performed
 
@@ -59,17 +58,17 @@ Opera reference binary.
       LGPL-2.0 text. Both files are copied into every bundle by
       `packaging/package-bundle.ps1`. The native library stays outside the single-file
       apphosts, so users can replace it.
-- [x] The private .NET 10 runtime is staged once under `runtime/` and shared by both
-      apphosts; it is not embedded in either executable. The bundle includes the
-      runtime's `LICENSE.txt` and `ThirdPartyNotices.txt`. The .NET runtime is MIT
-      licensed and is listed in `THIRD-PARTY-NOTICES.md`.
+- [x] The .NET 10 runtime is a **host prerequisite** and is not redistributed in the
+      bundles. Users install it from Microsoft; the .NET runtime is MIT licensed and is
+      listed in `THIRD-PARTY-NOTICES.md`.
 - [x] The desktop About dialog reports the version, renderer state, and the
       FreeDO modified GNU LGPL notice, and states that no BIOS ROMs or game images are
       included.
 - [x] The CLI prints the product/version and does not bundle BIOS/disc content.
 - [x] FreeDO/4DO/Opera source headers and attribution remain in the repository.
-- [x] The bundles contain no `References/` file, no FreeDO/4DO/Opera binary, and no
-      BIOS ROM, disc image, extracted asset, screenshot, or WAV capture.
+- [x] The bundles contain no `References/` file, no FreeDO/4DO/Opera binary, no .NET
+      runtime, no PDB or XML documentation files, and no BIOS ROM, disc image, extracted
+      asset, screenshot, or WAV capture.
 
 ## 3. Decisions and residual risks
 
@@ -117,8 +116,8 @@ Owner/legal review is signed off (2026-11-02). Keep the following practices:
   commercial rights,
 - keep full FreeDO/4DO/Opera attribution in the README, About box, and release notes,
 - ship the unified bundles only, with no installers or store listings,
-- keep the private .NET runtime's license files and the OpenAL Soft notice in every
-  bundle,
+- document that the .NET 10 runtime is a host prerequisite and do **not** bundle it,
+- keep the OpenAL Soft notice and license text in every bundle,
 - do not describe the build as an officially licensed 3DO product.
 
 The engineering side of the release gate is tracked in
@@ -131,5 +130,5 @@ attribution portion.
 |---|---|---|
 | Release owner | Project owner (purelogiccode) | 2026-11-02 |
 | Legal / distribution | Approved: FreeDO modified GNU LGPL, donationware | 2026-11-02 |
-| Attribution check | FreeDO/4DO/Opera, OpenAL Soft, .NET, CHDSharp, HQx, and NuGet notices shipped | 2026-11-02 |
-| Bundle layout | Single-file CLI + desktop app, one shared private runtime | 2026-11-02 |
+| Attribution check | FreeDO/4DO/Opera, OpenAL Soft, CHDSharp, HQx, and NuGet notices shipped; .NET is a host prerequisite | 2026-11-02 |
+| Bundle layout | Framework-dependent single-file CLI + desktop app; no bundled .NET runtime | 2026-11-02 |

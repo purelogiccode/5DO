@@ -9,9 +9,11 @@ release.
 
 - Replaced the per-component CLI/frontend archives with one bundle per system:
   `5do-win-x64.zip`, `5do-linux-x64.tar.gz`, and `5do-osx-x64.tar.gz`.
-- The CLI and desktop app now publish as framework-dependent single-file apphosts and
-  share one private .NET 10 runtime under `runtime/`; the runtime is not embedded in
-  either executable.
+- The CLI and desktop app publish as framework-dependent single-file apphosts. The
+  .NET 10 runtime is a documented prerequisite and is **not** bundled; users install it
+  on their machine.
+- Bundles omit PDB and XML documentation files, which are build outputs rather than
+  runtime dependencies.
 - Added `packaging/package-bundle.ps1` and `packaging/make-tar.py`, a reusable
   `build-bundle.yml` CI workflow, and a `release.yml` workflow that publishes the
   bundles and removes obsolete per-component assets.

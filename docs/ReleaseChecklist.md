@@ -27,7 +27,7 @@ been validated.**
 | Compatibility set | 12 boot-validated titles, with 5 showcase titles | Per-title status must be honest |
 | Disc formats | ISO, BIN, CUE+BIN, CHD | Already implemented and tested |
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
-| Packages | One bundle per system | `5do-win-x64.zip`, `5do-linux-x64.tar.gz`, `5do-osx-x64.tar.gz`; each contains the CLI, desktop app, shared private runtime, README/license/notices/whatsnew |
+| Packages | One bundle per system | `5do-win-x64.zip`, `5do-linux-x64.tar.gz`, `5do-osx-x64.tar.gz`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 10 runtime is a host prerequisite and is not bundled |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
 | Version | **`v1.0.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; rc.1 is historical |
 | Release timing | **Released** | v1.0.0 published on GitHub; unified bundles and checksums attached |
@@ -236,38 +236,39 @@ A new crash, silent corruption, or save-state regression is not.
 source-only tag or GitHub release is not a complete release.
 
 - [x] Publish the CLI and desktop app as framework-dependent single-file apphosts
-      (`PublishSingleFile=true`, `PublishTrimmed=false`,
-      `AppHostRelativeDotNet=runtime`).
-- [x] Stage one private .NET 10 runtime under `runtime/` and share it between both
-      apps; the runtime is not embedded in either executable.
+      (`PublishSingleFile=true`, `PublishTrimmed=false`).
+- [x] Do **not** copy the .NET runtime into the bundle. Users must install the .NET 10
+      runtime on their machine; `PACKAGE.txt` and the README record the requirement.
 - [x] Build one bundle per system with `packaging/package-bundle.ps1`:
       `5do-win-x64.zip`, `5do-linux-x64.tar.gz`, `5do-osx-x64.tar.gz`.
-- [x] Each bundle contains both executables, `runtime/`, `README.md`, `LICENSE`,
+- [x] Each bundle contains both executables, `README.md`, `LICENSE`,
       `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, `docs/Licensing.md`,
       `docs/ReleaseLegalReview.md`, `docs/OpenALSoft.md`,
       `docs/licenses/OpenAL-Soft-COPYING.txt`, the release notes, and `PACKAGE.txt`.
+- [x] Remove PDB and XML documentation files; they are build outputs, not runtime
+      dependencies.
 - [x] Keep the native OpenAL Soft/Skia/ANGLE libraries beside the apphosts so the
       LGPL replacement rights remain practical.
 - [x] `PACKAGE.txt` records component `bundle`, RID, version, commit, UTC build time,
-      runtime mode, launch commands, and the no-BIOS/no-disc notice.
-- [x] No PDBs or copyrighted content in release bundles.
+      the .NET 10 runtime requirement, launch commands, and the no-BIOS/no-disc notice.
+- [x] No runtime folder, PDBs, XML docs, or copyrighted content in release bundles.
 - [x] Extract each bundle to a clean folder and run the CLI/frontend smoke test.
 - [x] SHA-256 checksums generated for every bundle.
-- [x] CI builds the bundles on matching native runners and publishes them with the
-      checksums; the docs workflow updates GitHub Pages and the wiki.
+- [x] CI builds the bundles on matching native runners, verifies that no runtime or
+      XML files are present, and publishes them with the checksums; the docs workflow
+      updates GitHub Pages and the wiki.
 - [x] Local copies are written to `src/FiveDo.Frontend.Avalonia/bin/Release`.
 
 ### 5.1 Single-file decision
 
 A self-contained single-file publish embeds a complete .NET runtime in **each**
-executable (roughly 70 MB per app before compression) and duplicates it. A
-framework-dependent single file without a private runtime is small but requires a
-system .NET 10 install.
+executable (roughly 70 MB per app before compression) and duplicates it. The release
+therefore uses **framework-dependent single-file apphosts**: each app is one executable,
+the .NET runtime is not embedded, and the bundle contains no runtime folder. Users must
+install the .NET 10 runtime on their machine.
 
-The release uses framework-dependent single-file apphosts plus one shared `runtime/`
-directory: each app is a single executable, the runtime is staged once, and the bundle
-runs without a system .NET install. This is the closest layout that satisfies both
-"single binaries" and "do not embed the .NET runtime in each binary".
+This is the required distribution model for v1.0.0: no .NET runtime in the binaries or
+inside the bundle.
 
 ---
 
@@ -292,7 +293,7 @@ runs without a system .NET install. This is the closest layout that satisfies bo
 | Release owner | Project owner (purelogiccode) | 2026-11-02 |
 | Legal / distribution | Approved: FreeDO modified GNU LGPL, donationware | 2026-11-02 |
 | Compatibility / QA | Documented-compatibility scope: 593/594 render, 12-title matrix; Linux x64 full suite | 2026-11-02 |
-| Packaging / CI | Unified bundles, shared private runtime, release workflow | 2026-11-02 |
+| Packaging / CI | Unified framework-dependent bundles, no bundled runtime, release workflow | 2026-11-02 |
 
 ---
 

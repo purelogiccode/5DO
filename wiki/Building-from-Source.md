@@ -20,20 +20,20 @@ dotnet format 5DO.sln --verify-no-changes
 
 ## Publish
 
-The release layout is one bundle per system, containing both apps and a shared private
-runtime. Publish the two apphosts as framework-dependent single files:
+The release layout is one bundle per system, containing both apps. The bundles are
+framework-dependent: users must install the .NET 10 Runtime. Publish the two apphosts
+as framework-dependent single files:
 
 ```powershell
 $rid = 'win-x64'
 
 dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r $rid `
   --self-contained false -p:PublishSingleFile=true -p:PublishTrimmed=false `
-  -p:AppHostRelativeDotNet=runtime -m:1 -o "artifacts/bundle/$rid/cli"
+  -m:1 -o "artifacts/bundle/$rid/cli"
 
 dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj `
   -c Release -r $rid --self-contained false -p:PublishSingleFile=true `
-  -p:PublishTrimmed=false -p:AppHostRelativeDotNet=runtime -m:1 `
-  -o "artifacts/bundle/$rid/frontend"
+  -p:PublishTrimmed=false -m:1 -o "artifacts/bundle/$rid/frontend"
 
 pwsh -NoProfile -File packaging/package-bundle.ps1 `
   -Rid $rid `
@@ -42,8 +42,9 @@ pwsh -NoProfile -File packaging/package-bundle.ps1 `
   -OutputDirectory "artifacts/bundles"
 ```
 
-The script stages one private .NET 10 runtime, copies the README/license/notices/
-whatsnew/release notes, and writes `PACKAGE.txt` and `SHA256SUMS.txt`.
+The script removes PDB and XML documentation files, copies the README/license/notices/
+whatsnew/release notes, and writes `PACKAGE.txt` and `SHA256SUMS.txt`. It does not copy
+the .NET runtime.
 
 Optional NativeAOT CLI:
 

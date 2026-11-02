@@ -11,19 +11,22 @@ Download the bundle for your system from
 | Linux x64 | `5do-linux-x64.tar.gz` |
 | macOS x64 | `5do-osx-x64.tar.gz` |
 
-Each bundle contains both the desktop app and the CLI, plus a private .NET 10 runtime
-under `runtime/`. No separate .NET install is required.
+Each bundle contains both the desktop app and the CLI. The bundles are
+framework-dependent: install the **.NET 10 Runtime** from
+<https://dotnet.microsoft.com/download/dotnet/10.0> before running them. No .NET
+runtime is included in the bundle.
 
-Extract the whole bundle and keep `runtime/` next to the executables.
+Extract the bundle and run the executables.
 
 ## Requirements
 
+- The **.NET 10 Runtime** installed on the host. The .NET 10 SDK is only needed for
+  source builds.
 - A legally obtained 3DO BIOS (1 MB; optional second 1 MB ROM for BIOS2/Kanji).
 - A legally obtained disc image: ISO, BIN, CUE+BIN, or CHD.
 - Windows 10+, a current Linux desktop, or macOS 12+.
 - OpenGL 3.3 or GLES 3.0/3.1 for GPU presentation; a CPU fallback exists.
 - No system OpenAL install is required; OpenAL Soft 1.23.1 is bundled.
-- The .NET 10 SDK is only needed for source builds.
 
 ## Run the downloaded bundle
 

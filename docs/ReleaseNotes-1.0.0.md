@@ -75,9 +75,9 @@ boot failure (`Crash 'n Burn` Japan), 0 not loadable**. See
 
 ## Requirements
 
-- .NET 10 SDK for source builds. The published bundles include a private .NET 10
-  runtime under `runtime/`, shared by the single-file CLI and desktop apps; no separate
-  .NET install is required.
+- The **.NET 10 Runtime** must be installed on the host; the published bundles are
+  framework-dependent and do **not** include the runtime. The .NET 10 SDK is only
+  needed for source builds.
 - A legally obtained 1 MB 3DO BIOS ROM (for example `panafz1.bin`).
 - Legally obtained 3DO disc images in ISO, BIN, CUE+BIN, or CHD format.
 - Windows 10+ for the validated desktop bundle.
@@ -104,7 +104,8 @@ The release checklist is in [`ReleaseChecklist.md`](ReleaseChecklist.md).
       120-frame continuations are identical.
 - [x] WGL and ANGLE/GLES 3.0 Accurate parity: 0 different pixels; 0 renderer
       allocations per frame.
-- [x] Unified win-x64/linux-x64/osx-x64 bundles with README/notices/licensing/whatsnew.
+- [x] Unified win-x64/linux-x64/osx-x64 bundles with README/notices/licensing/
+      whatsnew; no bundled .NET runtime, PDB, or XML docs.
 - [x] Linux x64 validation: full test suite **1,473/1,473**, `selftest`, `bench`, `info`,
       `bios info`, a 3,000-frame Wolfenstein boot, non-silent audio, and the frontend
       `--smoke-test` on Linux Mint 22.3. The GL probe timed out under llvmpipe, so GPU
@@ -160,11 +161,10 @@ Sizes and SHA-256 checksums are recorded in `SHA256SUMS.txt` next to the bundles
 Each bundle contains both the desktop app and the CLI, `README.md`, `LICENSE`,
 `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, `docs/Licensing.md`,
 `docs/ReleaseLegalReview.md`, `docs/OpenALSoft.md`,
-`docs/licenses/OpenAL-Soft-COPYING.txt`, these release notes, `PACKAGE.txt`, and the
-private shared .NET 10 runtime under `runtime/`.
+`docs/licenses/OpenAL-Soft-COPYING.txt`, these release notes, and `PACKAGE.txt`.
 
-The apps are single-file framework-dependent executables with an app-relative runtime.
-The runtime is staged once and shared by both apps; it is not embedded in either
-executable. This keeps each app a single binary while avoiding a duplicate runtime
-copy. Native libraries (OpenAL Soft, Skia, and ANGLE) stay beside the apps so the LGPL
-replacement rights remain practical.
+The apps are **framework-dependent single-file executables** and require the .NET 10
+runtime on the host. No .NET runtime is embedded in the executables or copied into the
+bundle. PDB and XML documentation files are omitted because they are build outputs, not
+runtime dependencies. Native libraries (OpenAL Soft, Skia, and ANGLE) stay beside the
+apps so the LGPL replacement rights remain practical.

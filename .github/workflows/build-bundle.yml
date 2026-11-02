@@ -46,7 +46,7 @@ jobs:
       - name: Restore
         run: dotnet restore 5DO.sln --locked-mode
 
-      - name: Publish CLI (single file, shared runtime)
+      - name: Publish CLI (single file, system runtime)
         run: >
           dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj
           -c Release
@@ -54,11 +54,10 @@ jobs:
           --self-contained false
           -p:PublishSingleFile=true
           -p:PublishTrimmed=false
-          -p:AppHostRelativeDotNet=runtime
           -m:1
           -o artifacts/bundle/${{ matrix.rid }}/cli
 
-      - name: Publish frontend (single file, shared runtime)
+      - name: Publish frontend (single file, system runtime)
         run: >
           dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj
           -c Release
@@ -66,7 +65,6 @@ jobs:
           --self-contained false
           -p:PublishSingleFile=true
           -p:PublishTrimmed=false
-          -p:AppHostRelativeDotNet=runtime
           -m:1
           -o artifacts/bundle/${{ matrix.rid }}/frontend
 
@@ -88,6 +86,17 @@ jobs:
           }
           else {
             tar -xzf 'artifacts/bundles/${{ matrix.archive }}' -C artifacts/bundle-smoke
+          }
+
+      - name: Verify bundle has no runtime or XML docs
+        shell: pwsh
+        run: |
+          if (Test-Path 'artifacts/bundle-smoke/runtime') {
+            throw 'The bundle must not contain a .NET runtime folder.'
+          }
+          $xml = Get-ChildItem 'artifacts/bundle-smoke' -Recurse -File -Filter '*.xml'
+          if ($xml) {
+            throw "The bundle must not contain XML documentation files: $($xml.Name -join ', ')"
           }
 
       - name: CLI smoke test (Windows)

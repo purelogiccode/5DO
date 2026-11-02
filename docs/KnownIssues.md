@@ -154,11 +154,11 @@ checksums are attached, and legal/attribution sign-off is recorded.
   and frontend smoke tests; the macOS x64 bundle is built but not executed on the arm64
   runner, so macOS runtime validation is post-1.0.
 - arm64 (Windows/Linux/macOS) is not hardware-validated.
-- **Release bundles are not trimmed.** The CLI and desktop app publish as
-  framework-dependent single-file apphosts (`PublishTrimmed=false`) and share one
-  private .NET 10 runtime under `runtime/`. Trimming remains available for developer and
-  NativeAOT experiments; the release bundles favor predictable startup and shared
-  assemblies. See
+- **Release bundles are framework-dependent and not trimmed.** The CLI and desktop app
+  publish as single-file apphosts (`PublishTrimmed=false`); the .NET 10 runtime must be
+  installed on the host and is **not** bundled. PDB and XML documentation files are
+  removed from the bundles. Trimming remains available for developer and NativeAOT
+  experiments. See
   [`packaging/README.md`](https://github.com/purelogiccode/5DO/blob/master/packaging/README.md).
 - NativeAOT, installers, signing, and notarization are not complete. The opt-in
   win-x64 CLI AOT build is validated, including live OpenAL; the frontend AOT build

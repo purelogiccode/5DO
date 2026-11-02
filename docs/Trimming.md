@@ -7,18 +7,18 @@ emulation feature.
 ## Current status (2026-11-02)
 
 The **v1.0.0 release bundles are not trimmed.** Both apps publish as framework-dependent
-single-file apphosts (`PublishSingleFile=true`, `PublishTrimmed=false`) and share one
-private .NET 10 runtime under `runtime/`. This keeps the CLI and desktop app as single
-executables without embedding a runtime copy in each one, and it avoids the per-app
-trimming divergence that would make a merged bundle unsafe.
+single-file apphosts (`PublishSingleFile=true`, `PublishTrimmed=false`) and require the
+.NET 10 runtime on the host. No runtime is embedded or copied into the bundle. This
+keeps the CLI and desktop app as single executables and avoids the per-app trimming
+divergence that would make a merged bundle unsafe.
 
 Trimming and NativeAOT remain opt-in developer/audit paths:
 
 | Component | Release bundle | Opt-in trimming / AOT |
 |---|---|---|
-| `FiveDo.Cli` | Single-file, untrimmed, shared runtime | `PublishTrimmed=true`; NativeAOT win-x64 audit passed (`-p:FiveDoNativeAot=true`) |
-| `FiveDo.Frontend.Avalonia` | Single-file, untrimmed, shared runtime | `PublishTrimmed=true`; NativeAOT win-x64 audit passed (`-p:FiveDoNativeAot=true`); Silk.NET loader warnings remain |
-| Core/host assemblies | Shared runtime + single-file apphosts | Trimmed/AOT as dependencies of the opt-in builds |
+| `FiveDo.Cli` | Single-file, untrimmed, system runtime | `PublishTrimmed=true`; NativeAOT win-x64 audit passed (`-p:FiveDoNativeAot=true`) |
+| `FiveDo.Frontend.Avalonia` | Single-file, untrimmed, system runtime | `PublishTrimmed=true`; NativeAOT win-x64 audit passed (`-p:FiveDoNativeAot=true`); Silk.NET loader warnings remain |
+| Core/host assemblies | System runtime + single-file apphosts | Trimmed/AOT as dependencies of the opt-in builds |
 
 The CI `build-test` job still exercises trimmed win-x64 CLI/frontend publishes and
 NativeAOT win-x64 builds. The `bundle` job builds the actual release bundles with
@@ -52,7 +52,7 @@ file) plus the bundled `OpenAL32.dll`. The audit covered:
   3DO data-track path.
 
 The CLI AOT executable does not replace the release bundles (untrimmed single-file
-apphosts with a shared runtime): NativeAOT cross-compilation is limited (for example,
+apphosts with the system runtime): NativeAOT cross-compilation is limited (for example,
 osx-arm64 AOT is not produced from a Linux runner). The frontend has a separate opt-in
 AOT audit below.
 
