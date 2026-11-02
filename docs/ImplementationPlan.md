@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,462 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,464 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -26,9 +26,9 @@
 | Renderer | Two-stage OpenGL/GLES, optional Vulkan, 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR | M9R/M9P core complete; Pi/GLES 3.1, Tier B, and GPU CI remain |
 | Audio | Exact 44.1 kHz DSP clock, OpenAL Soft, WAV capture, tap, analysis, audio-driven pacing | AUD-01/02/04/05 remain for full settings/mixer/golden coverage |
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
-| Compatibility sweep | 594 discs: **594 load**, **592 render**; 2 known Anvil boot-screen hangs (Crash 'n Burn Japan, WorldCup Super Stadium); 0 not loadable | 12,000-frame in-game/visual review, high-res pass, Linux VM validation |
+| Compatibility sweep | 594 discs: **594 load**, **593 render**; 1 known boot failure (Crash 'n Burn Japan); 0 not loadable | 12,000-frame in-game/visual review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,462** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,464** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -109,7 +109,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **M10 — Packaging, CI, performance, arm64.** **Partial:** six RIDs, trimming, NativeAOT, portable archives done; arm64 hardware, installers, final performance report remain.
 - [ ] **M11 — Compatibility hardening and release.** **In progress:** gameplay hardening, high-resolution decision, legal/attribution, release docs.
 - [ ] **M12 — Optional guest ARM JIT.** **Pending:** only if profiling shows the interpreter is the remaining bottleneck.
-- [ ] **M13 - Full-collection compatibility sweep.** **Partial:** first 594-disc pass plus the 2026-11-01 extended-boot retry complete (592 render, 2 known boot hangs); 12k in-game review, high-res pass, Linux validation remain.
+- [ ] **M13 - Full-collection compatibility sweep.** **Partial:** first 594-disc pass plus the 2026-11-01 extended-boot retry complete (593 render, 1 known boot failure); 12k in-game review, high-res pass, Linux validation remain.
 - [ ] **M14 — High-resolution CEL research.** **Pending:** true 640x480, 2x/4x supersampling, GPU CEL feasibility.
 - [ ] **M15 — Differential harness and regression baseline.** **Partial:** harness + smoke + five-title showcase done; full-collection manifest, PC-delta triage, nightly dashboard remain.
 
@@ -146,7 +146,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[CORE-10](#feat-core-10)** Hardware test ROM suite — P0 · L — **Pending**
 - [ ] **[CORE-11](#feat-core-11)** Full-collection differential harness — P0 · L · depends on: FND-05 — **Partial** — remaining: differential harness and five-title showcase exist; full 594-disc manifest, nightly dashboard, and PC-delta triage remain
 - [ ] **[CORE-12](#feat-core-12)** Fuzzing and parser security — P0 · M · depends on: FND-05 — **Partial** — deterministic mutation fuzz tests cover states, ISO/CHD headers, and CUE text; a dedicated fuzz project, nightly run, command-stream fuzzing, and Opera FS targets remain
-- [ ] **[CORE-13](#feat-core-13)** Remaining compatibility failures - P0 - L - depends on: CORE-11 - **Partial** - the BIOS-aware extended-boot retry renders 592 of 594 discs; 5 former not-loadable rows and 11 black/blank titles are resolved; Crash 'n Burn (Japan) and WorldCup Super Stadium remain known boot hangs
+- [ ] **[CORE-13](#feat-core-13)** Remaining compatibility failures - P0 - L - depends on: CORE-11 - **Partial** - the BIOS-aware extended-boot retry renders 593 of 594 discs; 5 former not-loadable rows and 12 black/blank titles are resolved; only Crash 'n Burn (Japan) remains a known boot failure
 - [x] **[CORE-14](#feat-core-14)** Save-state format v3 — P0 · M · depends on: FND-03 — **Done**
 - [x] **[CORE-15](#feat-core-15)** State diff and verification tooling — P1 · M · depends on: CORE-14 — **Done**
 - [ ] **[CORE-16](#feat-core-16)** Frame/audio hash regression suite — P0 · M · depends on: CORE-11 — **Partial** — remaining: frame/audio hash regression suite is partial; full-collection coverage remains
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,462 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,464 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,462**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,464**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -811,11 +811,12 @@ the selected device at a 20 ms target. **1425 tests pass.**
 **Extended-boot compatibility pass (2026-11-01):** CORE-13 moves to partial. The 18
 discs that were black or not loadable in the 3,000-frame sweep were rerun with
 `tools/compat-sweep.ps1 -Files ... -Frames 20000`; all five former not-loadable rows and
-11 of the 13 black/blank rows render with `panafz10`. Powers Kingdom (Europe) needs the
-European Anvil BIOS and renders its live-action intro at 65,000 frames. The final
-loadability table is 594 discs, 592 rendered, 2 known Anvil boot-screen hangs
-(`Crash 'n Burn Japan`, `WorldCup Super Stadium`), and 0 not loadable. `-RetryFrames`
-keeps this retry reproducible for future sweeps. **1462 tests pass.**
+12 of the 13 black/blank rows render. Powers Kingdom (Europe) needs the European Anvil
+BIOS and 65,000 frames; WorldCup Super Stadium needs the FZ-10J BIOS plus its Kanji font
+ROM (BIOS2). The BIOS library now classifies 1 MB Kanji font images as secondary ROMs.
+The final loadability table is 594 discs, 593 rendered, 1 known failure
+(`Crash 'n Burn Japan`), and 0 not loadable. `-RetryFrames`
+keeps this retry reproducible for future sweeps. **1464 tests pass.**
 
 **Last updated:** 2026-11-01
 
@@ -2909,8 +2910,8 @@ Suggested parallelization with two developers:
 | 2026-11-01 | UX-06 | Movie frame editor | Extended `MovieEditor` with per-frame set/button/insert/remove and added **File > Movie Editor...** (frame list, player-1 button checkboxes, insert/delete/trim, Save As). UX-06 remains partial for Lua, an input timeline, and multiplayer display; 1,457 tests pass |
 | 2026-11-01 | UX-13 | Game metadata editor | Added `LibraryMetadataStore.Upsert`/`Remove` and **File > Game Metadata...** for the current disc (title, developer, publisher, year, genre, regions, players, description), with a library rescan after saving. UX-13 remains partial for external providers and media; 1,458 tests pass |
 | 2026-11-01 | UX-15 | Profile selector and import/export UI | Added `default-profile.txt` resolution, Settings > Paths profile selector, Set default, Create, Open folder, Import, and Export actions. UX-15 is done; installer integration belongs to UX-16; 1,459 tests pass |
-| 2026-11-01 | SYS-20 | Disc integrity verifier | Added `DiscVerifier` and `disc verify` (native-sector reads, LBA errors, FNV-1a hash, JSON). Battle Chess verified 143,810 sectors / 338,241,120 bytes with no errors. SYS-20 is partial for Redump DAT matching and the UI badge; 1,462 tests pass |
-| 2026-11-01 | CORE-13 | Extended-boot compatibility retry | Reran all 18 non-rendered discs: 5 former not-loadable rows and 11 black/blank titles now render at 20,000 frames, and Powers Kingdom (Europe) reaches its live-action intro at 65,000 frames with the Anvil BIOS. Only Crash 'n Burn (Japan) and WorldCup Super Stadium remain known Anvil boot-screen hangs. Added `-Files`/`-RetryFrames` to the sweep; 1,462 tests pass |
+| 2026-11-01 | SYS-20 | Disc integrity verifier | Added `DiscVerifier` and `disc verify` (native-sector reads, LBA errors, FNV-1a hash, JSON). Battle Chess verified 143,810 sectors / 338,241,120 bytes with no errors. SYS-20 is partial for Redump DAT matching and the UI badge; 1,464 tests pass |
+| 2026-11-01 | CORE-13 | Extended-boot compatibility retry | Reran all 18 non-rendered discs: 5 former not-loadable rows and 12 black/blank titles now render. Powers Kingdom (Europe) reaches its live-action intro at 65,000 frames with the Anvil BIOS; WorldCup Super Stadium renders with the FZ-10J BIOS plus its Kanji font ROM. Only Crash 'n Burn (Japan) remains a known boot failure. Added `-Files`/`-RetryFrames` and `-Bios2` to the sweep; 1,464 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -3747,17 +3748,19 @@ while a full CD transcript still requires a reference-side export. See
 
 **Priority:** P0 | **Effort:** L | **Depends on:** CORE-11 | **Status:** Partial (2026-11-01)
 
-**Problem.** Crash 'n Burn (Japan) and WorldCup Super Stadium are still stuck; the
-2026-10-30 baseline also had 13 black/blank titles and 5 timeouts at 3,000 frames.
+**Problem.** Crash 'n Burn (Japan) is still stuck; WorldCup Super Stadium needed the
+FZ-10J BIOS plus its Kanji font ROM and now renders. The 2026-10-30 baseline also had
+13 black/blank titles and 5 timeouts at 3,000 frames.
 
 **Implemented.**
 - `tools/compat-sweep.ps1` gains `-Files` (explicit disc paths) and `-RetryFrames` (rerun a blank row at a deeper boot frame count, keeping the rendered result).
-- The 2026-11-01 extended-boot retry reran all 18 non-rendered rows. All five former not-loadable rows and 11 of the 13 black/blank rows render at 20,000 frames with `panafz10`; Powers Kingdom (Europe) renders its live-action intro at 65,000 frames with `panafz10e-anvil`.
-- `docs/GameCompatibilityResults.md` now records 592 rendered and 2 known boot hangs, with the BIOS and frame count in each retried row.
+- The 2026-11-01 extended-boot retry reran all 18 non-rendered rows. All five former not-loadable rows and 12 of the 13 black/blank rows render: 20,000 frames with `panafz10` covers most; Powers Kingdom (Europe) needs 65,000 frames with `panafz10e-anvil`, and WorldCup Super Stadium needs the FZ-10J BIOS plus its Kanji font ROM (BIOS2).
+- `BiosCatalog`/`BiosLibrary` now recognize 1 MB Kanji font images by their 3DO volume-header signature and classify them as secondary ROMs, so a font ROM can no longer be selected as a primary BIOS. The FZ-1J, FZ-1J (no RSA), FZ-10J, and FZ-1J Kanji font hashes are catalogued, and secondary selection prefers the matching FZ-1/FZ-10 family.
+- `docs/GameCompatibilityResults.md` now records 593 rendered and 1 known failure, with the BIOS/BIOS2 and frame count in each retried row.
 - `docs/Compatibility.md` 13.2 records the BIOS-aware triage, including the patched FZ-10 requirement for the Arcade CD-ROM titles, the Anvil requirement for Europe, and the regional Slayer split.
 
 **Remaining.**
-- `Crash 'n Burn (Japan)` and `WorldCup Super Stadium` stay on the Anvil boot screen at 65,000 frames with every local BIOS; root-cause the boot path (both share the same purple Anvil frame and invalid-PC behavior).
+- `Crash 'n Burn (Japan)` stays black or on the Anvil boot screen at 65,000 frames with every local BIOS/font pairing; it needs a bootable Japanese FZ-1/FZ-10 BIOS or a better dump. Root-cause the boot path if a suitable image appears.
 - Run the 12,000-frame in-game/visual review for the rendered titles.
 - Add scripted gameplay evidence for the 18 retried titles.
 
@@ -6572,7 +6575,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [ ] **CORE-10** | Hardware test ROM suite and CPU conformance | Unit tests are strong but not a hardware oracle. | Test ROMs for CPU, MADAM, VDLP, DSP, CD, SPORT, CLIO; pass/fail report. | L |
 | [~] **CORE-11** | Full-collection differential harness | `ReferenceStrategy.md` still lists the differential harness as pending. | Nightly run of 594 discs against Opera; frame/audio/state hashes; dashboard. **Partial 2026-10-31:** `tools/FiveDo.DiffHarness` runs 5DO and the bundled OperaCore with staged BIOS/ISO, compares checkpoint frame hashes, applies manifest allowances, and writes JSON/Markdown/HTML reports; the Lemmings 300-frame smoke matches (`0x110E7DC5`), the five-title showcase records two video matches and three video divergences, with the strict PC gate showing 0/5 matches (large PC deltas on the video-matched titles), and `manifest` generated the 594-title `benchmarks/diff/full.json`. The full run and nightly dashboard remain. | L |
 | [~] **CORE-12** | Fuzzing and parser security | Disc/state/CUE/CHD parsers handle untrusted files. | Fuzz targets; no crashes/OOB; clean `InvalidStateException`/`DiscImageException`. **Partial 2026-11-01:** deterministic mutation tests cover states, ISO/CHD headers, and CUE text; a dedicated fuzz project, nightly corpus, and command/Opera-FS targets remain. | M |
-| [ ] **CORE-13** | Remaining compatibility failures | Crash 'n Burn JP and WorldCup Super Stadium are stuck; several titles are BIOS-sensitive. | Every local disc classified; known failures documented with evidence. | L |
+| [~] **CORE-13** | Remaining compatibility failures | Crash 'n Burn JP is stuck; several titles are BIOS-sensitive. | Every local disc classified; known failures documented with evidence. **Partial 2026-11-01:** 593 of 594 discs render; only Crash 'n Burn (Japan) remains, blocked on a bootable Japanese BIOS/dump. | L |
 | [ ] **CORE-14** | Save-state format v3 and forward compatibility | v2 is compressed but not feature-flagged; future options need graceful rejection. | v3 with feature flags; v1/v2 still load; unknown sections preserved or rejected cleanly. | M |
 | [ ] **CORE-15** | State diff and verification tooling | Debugging timing/state issues is manual. | `state diff`, section hashes, RAM/VRAM diff; CLI + UI. | M |
 | [~] **CORE-16** | Frame/audio hash regression suite | Golden hashes exist for a few titles; not full-collection. | Per-title checkpoint hashes; CI gate; visual diff artifacts. **Partial 2026-10-31:** `run --checkpoints` emits frame/audio/state hashes and DSP/CD state; `FiveDo.DiffHarness baseline` compares report fields and fails on changes; the smoke report is reproducible. The first showcase baseline and nightly gate remain. | M |
@@ -8353,7 +8356,9 @@ MHTML in `References/4DO-master/`.
   show the same Anvil boot screen and are still stuck at 60,000 frames.
 - Headless `run`/`trace` now attach a default player-1 pad. Olympic Summer Games
   proceeds past its controller check. The 3,000-frame corpus keys were re-baselined in
-  [`TestCorpus.md`](TestCorpus.md) 1.1. **954 tests pass.**
+  [`TestCorpus.md`](TestCorpus.md) 1.1. **954 tests pass.** (Superseded by the
+  2026-11-01 extended-boot retry: WorldCup Super Stadium renders with the FZ-10J BIOS
+  plus its Kanji font ROM; only Crash 'n Burn Japan remains.)
 
 **Ordered tasks:**
 
@@ -8363,9 +8368,10 @@ MHTML in `References/4DO-master/`.
    `tools/bios-probe.ps1` or `--bios-auto bios`, recording which BIOS each disc needs.
    `bios select <disc> --folder bios` prints the chosen image and reason. Use a separate
    output directory; do not overwrite the `panafz1` baseline.
-3. Investigate Crash 'n Burn (Japan) and WorldCup Super Stadium, which still stop on
-   the Anvil boot screen at 60,000 frames. Keep the smallest repro and a trace; compare
-   the Japan revision with the working Crash USA/Korea revisions.
+3. Investigate Crash 'n Burn (Japan), which still stops on the Anvil boot screen at
+   65,000 frames. Keep the smallest repro and a trace; compare the Japan revision with
+   the working Crash USA/Korea revisions. WorldCup Super Stadium is resolved with the
+   FZ-10J BIOS plus its Kanji font ROM.
 4. Inspect the rendered 12,000-frame captures and fill the 5DO status/notes in
    [`GameCompatibilityList.md`](GameCompatibilityList.md), including the BIOS used.
 5. Run the high-resolution subset with `-HighRes -OutDir artifacts/compat-highres`.

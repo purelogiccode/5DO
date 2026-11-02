@@ -71,6 +71,13 @@ still change.
   illegal-request status instead of silently doing nothing, the guest RESET command
   restores the default transfer state and sector size, and `PrefetchingDiscSource`
   read-aheads native track sectors so CD-DA does not decompress on the sample clock.
+- SYS-04/CORE-13 Japanese BIOS and Kanji font classification: `BiosLibrary` now
+  recognizes 1 MB Kanji font ROMs by their 3DO volume-header signature and classifies
+  them as secondary BIOS2 images, so a font can no longer be selected as a primary
+  BIOS. `BiosCatalog` adds the FZ-1J, FZ-1J (no RSA), FZ-10J, and FZ-1J Kanji font
+  hashes, and secondary selection prefers the matching FZ-1/FZ-10 family. WorldCup
+  Super Stadium now renders with the FZ-10J BIOS plus its Kanji font ROM; Crash 'n Burn
+  (Japan) remains the only known boot failure.
 - SYS-20 disc integrity verifier: `DiscVerifier` reads every native data/audio sector,
   reports the first LBA errors, verifies the sector count, and computes an FNV-1a
   content hash. CLI `disc verify <path> [--json]` exits 1 on failure. Redump DAT

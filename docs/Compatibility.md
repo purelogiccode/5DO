@@ -597,8 +597,8 @@ non-rendered rows; the table below reflects the retried counts:
 
 | Result | Count |
 |---|---:|
-| `Loadable/Rendered` | **592** |
-| `Loadable/No video` | **2** |
+| `Loadable/Rendered` | **593** |
+| `Loadable/No video` | **1** |
 | `Not Loadable` | **0** |
 
 The per-disc table is [`GameCompatibilityResults.md`](GameCompatibilityResults.md).
@@ -619,7 +619,7 @@ several failures are BIOS-selection problems rather than emulator defects:
 | Powers Kingdom (Europe) | solid blue | solid blue | live-action intro by 65,000 | Anvil BIOS required, matching the 4DO note |
 | Battle Chess (Europe) | "This is not a PAL TV system!" | same message | title screen at 6,000, board at 30,000 | European BIOS required; USA/Japan discs use `panafz10` |
 | Slayer (USA) | black | title menu at 60,000 | black | `panafz10`/GoldStar/Sanyo required |
-| WorldCup Super Stadium (Japan) | solid blue | solid blue | purple boot screen, still stuck at 65,000 | No tested BIOS reaches the game |
+| WorldCup Super Stadium (Japan) | solid blue | solid blue | renders the "Story of the World Cup" screen with `panafz10j` + Kanji font (BIOS2) | Needs the Kanji font ROM as BIOS2; the library now classifies 1 MB Kanji images as secondary |
 | Olympic Summer Games (USA) | "Insert a controller" | not tested | not tested | Fixed by the default headless pad; high-jump screen and A/P input reach the credits |
 
 The Arcade CD-ROM rows need the **patched** BIOS; unpatched `panafz10` reaches the
@@ -645,7 +645,8 @@ Olympic Summer Games, all three Slayer discs, the four Arcade CD-ROM titles, and
 Shounen Conan render. Powers Kingdom (Europe) renders its live-action intro at 65,000
 frames with `panafz10e-anvil`. Only `Crash 'n Burn (Japan)` and `WorldCup Super
 Stadium (Japan)` remain on the Anvil boot screen at 65,000 frames. The final counts
-are 592 rendered and 2 known boot hangs; no title is `Not Loadable`.
+are 593 rendered and 1 known failure (Crash 'n Burn Japan); WorldCup Super Stadium
+renders with the FZ-10J BIOS and its Kanji font ROM, and no title is `Not Loadable`.
 
 Consequences for the sweep:
 

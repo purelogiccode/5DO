@@ -97,6 +97,30 @@ public sealed class BiosCatalog
                 Notes: "Retail Panasonic FZ-1 BIOS. The default 4DO/5DO compatibility baseline.",
                 Preference: 30));
         catalog.Add(
+            "a496cfdded3da562759be3561317b605",
+            new BiosDescriptor(
+                "Panasonic FZ-1J",
+                BiosImageKind.Primary,
+                BiosTerritory.Japan,
+                BiosVideoStandard.Ntsc,
+                IsKanji: false,
+                IsAnvil: false,
+                IsPatched: false,
+                Notes: "Japanese FZ-1 retail BIOS. Pair with the FZ-1J Kanji font ROM when text needs Kanji.",
+                Preference: 42));
+        catalog.Add(
+            "f6c71de7470d16abe4f71b1444883dc8",
+            new BiosDescriptor(
+                "Panasonic FZ-1J (no RSA)",
+                BiosImageKind.Primary,
+                BiosTerritory.Japan,
+                BiosVideoStandard.Ntsc,
+                IsKanji: false,
+                IsAnvil: false,
+                IsPatched: false,
+                Notes: "Japanese FZ-1J image without the RSA signature check. Use only when the retail image is unavailable.",
+                Preference: 41));
+        catalog.Add(
             "51f2f43ae2f3508a14d9f56597e2d3ce",
             new BiosDescriptor(
                 "Panasonic FZ-10",
@@ -108,6 +132,18 @@ public sealed class BiosCatalog
                 IsPatched: false,
                 Notes: "Retail Panasonic FZ-10 BIOS. Preferred for some US titles that need the newer ROM.",
                 Preference: 40));
+        catalog.Add(
+            "20706f726c22d79d3c385e215d7428e2",
+            new BiosDescriptor(
+                "Panasonic FZ-10J",
+                BiosImageKind.Primary,
+                BiosTerritory.Japan,
+                BiosVideoStandard.Ntsc,
+                IsKanji: false,
+                IsAnvil: false,
+                IsPatched: false,
+                Notes: "Japanese FZ-10 retail BIOS. Pair with the FZ-10J Kanji font ROM when text needs Kanji.",
+                Preference: 44));
         catalog.Add(
             "a48e6746bd7edec0f40cff078f0bb19f",
             new BiosDescriptor(
@@ -123,15 +159,15 @@ public sealed class BiosCatalog
         catalog.Add(
             "428577250f43edc902ea239c50d2240d",
             new BiosDescriptor(
-                "Panasonic FZ-10JA (Anvil, Kanji)",
-                BiosImageKind.Primary,
+                "Panasonic FZ-10JA Kanji font (Anvil)",
+                BiosImageKind.Secondary,
                 BiosTerritory.Japan,
                 BiosVideoStandard.Ntsc,
                 IsKanji: true,
                 IsAnvil: true,
                 IsPatched: false,
-                Notes: "Japanese FZ-10JA BIOS with built-in Kanji support and the Anvil workaround.",
-                Preference: 45));
+                Notes: "Japanese FZ-10JA Kanji font ROM (BIOS2) for the Anvil/Japanese BIOS. Not a bootable primary image.",
+                Preference: 35));
         catalog.Add(
             "8639fd5e549bd6238cfee79e3e749114",
             new BiosDescriptor(
@@ -180,6 +216,18 @@ public sealed class BiosCatalog
                 IsPatched: true,
                 Notes: "Patched European FZ-10E image for Arcade CD-ROM titles. Not a general-purpose default.",
                 Preference: 50));
+        catalog.Add(
+            "c23fb5d5e6bb1c240d02cf968972be37",
+            new BiosDescriptor(
+                "Panasonic FZ-1J Kanji font",
+                BiosImageKind.Secondary,
+                BiosTerritory.Japan,
+                BiosVideoStandard.Ntsc,
+                IsKanji: true,
+                IsAnvil: false,
+                IsPatched: false,
+                Notes: "Japanese FZ-1J Kanji font ROM (BIOS2). Pair with the FZ-1J BIOS.",
+                Preference: 36));
         catalog.Add(
             "b8dc97f778a6245c58e064b0312e8281",
             new BiosDescriptor(

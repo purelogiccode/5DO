@@ -71,10 +71,12 @@ def main() -> int:
         "visual and input review before it becomes `Playable` or `Good`. The base sweep "
         "ran 3,000 frames. The 18 titles that were black, solid-color, or not loadable "
         "were rerun at 20,000 frames with `panafz10`; the Anvil-dependent or suspected "
-        "boot-hang titles were rerun at 65,000 frames with `panafz10e-anvil`. That retry "
-        "leaves **592 rendered and 2 known boot hangs** (Crash 'n Burn Japan and "
-        "WorldCup Super Stadium). The 12,000-frame and BIOS triage remains in "
-        "[`Compatibility.md`](Compatibility.md) 13.2."
+        "boot-hang titles were rerun at 65,000 frames with `panafz10e-anvil`. WorldCup "
+        "Super Stadium also needs the FZ-10J BIOS plus its Kanji font ROM (BIOS2); the "
+        "library now classifies 1 MB Kanji font images as secondary ROMs. That retry "
+        "leaves **593 rendered and 1 known failure** (Crash 'n Burn Japan, which needs a "
+        "working bootable Japanese BIOS or a better dump). The 12,000-frame and BIOS "
+        "triage remains in [`Compatibility.md`](Compatibility.md) 13.2."
     )
     lines.append("")
     lines.append("## Summary")
@@ -123,7 +125,9 @@ def main() -> int:
             escape(row.get("Root")),
         ]
         if has_bios:
-            cells.append(escape(row.get("Bios")))
+            bios = row.get("Bios") or ""
+            bios2 = row.get("Bios2") or ""
+            cells.append(escape(f"{bios} + {bios2}" if bios2 else bios))
         cells.extend(
             [
                 escape(row.get("Frames")),

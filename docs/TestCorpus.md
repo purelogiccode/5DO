@@ -688,7 +688,7 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,462 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,464 tests pass with no changed NTSC hashes.
 
 ### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
 
@@ -865,12 +865,18 @@ UX-23 coverage is compile/status level:
     Olympic Summer Games, and all three Slayer discs render at 20,000 frames.
   - Powers Kingdom (Europe) renders its live-action intro at 65,000 frames with
     `panafz10e-anvil` (3,404 colors, 86,442 non-black pixels).
-  - Crash 'n Burn (Japan) and WorldCup Super Stadium remain on the Anvil boot screen at
-    65,000 frames with every local BIOS.
-- Final loadability table: 594 discs, **592 Loadable/Rendered**, **2 Loadable/No video**
-  (known boot hangs), **0 Not Loadable**. Evidence is in `artifacts/compat-20k-10/`,
+  - WorldCup Super Stadium renders its "Story of the World Cup" screen with
+    `panafz10j` plus the FZ-10JA Kanji font ROM as BIOS2 (2,425 colors at 20,000 frames).
+  - Crash 'n Burn (Japan) remains black or on the Anvil boot screen at 65,000 frames
+    with every local BIOS/font pairing.
+- `BiosLibrary` now recognizes 1 MB Kanji font images by their 3DO volume-header
+  signature and classifies them as secondary ROMs; the FZ-1J, FZ-1J (no RSA), FZ-10J,
+  and FZ-1J Kanji font hashes are catalogued, and secondary selection prefers the
+  matching FZ-1/FZ-10 family.
+- Final loadability table: 594 discs, **593 Loadable/Rendered**, **1 Loadable/No video**
+  (known boot failure), **0 Not Loadable**. Evidence is in `artifacts/compat-20k-10/`,
   `artifacts/compat-known/`, and the merged `artifacts/compat-full/summary-merged.csv`.
-- No emulator regression: the full suite remains **1,462 tests**, build 0 warnings/0
+- No emulator regression: the full suite remains **1,464 tests**, build 0 warnings/0
   errors, format clean, inspectcode 0 results.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)

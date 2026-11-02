@@ -124,7 +124,7 @@ The automated loadability pass uses three intermediate labels before a human ass
 | Main list | Club 3DO - Station Invasion | 100 | Good | 1.2.0.3 | — | Club 3DO - Station Invasion (USA).chd | No data | Not tested yet |
 | Main list | Corpse Killer | 100 | Good | 1.3.0.1 | — | Corpse Killer (Japan).chd<br>Corpse Killer (USA).chd | No data | Not tested yet |
 | Main list | Cowboy Casino - Interactive Poker | 100 | Good | 1.3.0.1 | — | cowboy casino (usa).chd<br>Cowboy Casino (USA).chd | No data | Not tested yet |
-| Main list | Crash 'n Burn | 90 | Good | 1.3.0.1 | (Fixed in 1.3.0.0) See Detailed Note | Crash 'n Burn (Japan).chd<br>Crash 'n Burn (USA) (Not for Resale).chd<br>Crash 'n Burn (USA, Korea).chd | Playable | USA/Korea revisions render with panafz1; Japan revision still stuck on the Anvil boot screen at 65,000 frames (2026-11-01 retry). |
+| Main list | Crash 'n Burn | 90 | Good | 1.3.0.1 | (Fixed in 1.3.0.0) See Detailed Note | Crash 'n Burn (Japan).chd<br>Crash 'n Burn (USA) (Not for Resale).chd<br>Crash 'n Burn (USA, Korea).chd | Playable | USA/Korea revisions render with panafz1; Japan revision still black with FZ-1J + FZ-1J Kanji font at 65,000 frames (2026-11-01 retry); needs a bootable Japanese BIOS or a better dump. |
 | Main list | Crayon Shin-chan - Puzzle Daimaou no Nazo | 100 | Good | 1.3.0.1 | — | Crayon Shin-chan - Puzzle Daimaou no Nazo (Japan).chd | No data | Not tested yet |
 | Main list | Creature Shock | 100 | Good | 1.3.0.1 | — | Creature Shock (USA) (Disc 1).chd<br>Creature Shock (USA) (Disc 2).chd | No data | Not tested yet |
 | Main list | Crime Patrol | 100 | Good | 1.2.0.2 | — | Crime Patrol (USA) (Arcade CD-ROM).chd<br>Crime Patrol (USA).chd | Playable | Arcade CD-ROM: panafz10-patched; regular USA: panafz1. Input reaches live-action/credits. |
@@ -284,7 +284,7 @@ The automated loadability pass uses three intermediate labels before a human ass
 | Multimedia | Woody Woodpecker and Friends - Volume 1 | 100 | Good | 1.3.0.1 | — | Woody Woodpecker and Friends - Volume One (USA) (RE-1).chd<br>Woody Woodpecker and Friends - Volume Three (USA).chd<br>Woody Woodpecker and Friends - Volume Two (USA).chd | No data | Not tested yet |
 | Multimedia | Woody Woodpecker and Friends - Volume 2 | 100 | Good | 1.3.0.1 | — | Woody Woodpecker and Friends - Volume One (USA) (RE-1).chd<br>Woody Woodpecker and Friends - Volume Three (USA).chd<br>Woody Woodpecker and Friends - Volume Two (USA).chd | No data | Not tested yet |
 | Multimedia | Woody Woodpecker and Friends - Volume 3 | 100 | Good | 1.3.0.1 | — | Woody Woodpecker and Friends - Volume One (USA) (RE-1).chd<br>Woody Woodpecker and Friends - Volume Three (USA).chd<br>Woody Woodpecker and Friends - Volume Two (USA).chd | No data | Not tested yet |
-| Multimedia | Worldcup Super Stadium | - | No data | - | - | WorldCup Super Stadium (Japan).chd | Unplayable | Still stuck on the Anvil boot screen at 65,000 frames; no tested BIOS reaches the game. |
+| Multimedia | Worldcup Super Stadium | - | No data | - | - | WorldCup Super Stadium (Japan).chd | Playable | Renders the "Story of the World Cup" screen with `panafz10j` plus the FZ-10JA Kanji font ROM (BIOS2); confirmed by the 2026-11-01 extended-boot retry. |
 
 ## Local images without a 4DO reference entry
 

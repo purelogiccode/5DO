@@ -1,12 +1,12 @@
 # Game Compatibility Results
 
-Automated output of `tools/compat-sweep.ps1`. These are **loadability** results, not final compatibility grades: `Loadable/Rendered` still needs a visual and input review before it becomes `Playable` or `Good`. The base sweep ran 3,000 frames. The 18 titles that were black, solid-color, or not loadable were rerun at 20,000 frames with `panafz10`; the Anvil-dependent or suspected boot-hang titles were rerun at 65,000 frames with `panafz10e-anvil`. That retry leaves **592 rendered and 2 known boot hangs** (Crash 'n Burn Japan and WorldCup Super Stadium). The 12,000-frame and BIOS triage remains in [`Compatibility.md`](Compatibility.md) 13.2.
+Automated output of `tools/compat-sweep.ps1`. These are **loadability** results, not final compatibility grades: `Loadable/Rendered` still needs a visual and input review before it becomes `Playable` or `Good`. The base sweep ran 3,000 frames. The 18 titles that were black, solid-color, or not loadable were rerun at 20,000 frames with `panafz10`; the Anvil-dependent or suspected boot-hang titles were rerun at 65,000 frames with `panafz10e-anvil`. WorldCup Super Stadium also needs the FZ-10J BIOS plus its Kanji font ROM (BIOS2); the library now classifies 1 MB Kanji font images as secondary ROMs. That retry leaves **593 rendered and 1 known failure** (Crash 'n Burn Japan, which needs a working bootable Japanese BIOS or a better dump). The 12,000-frame and BIOS triage remains in [`Compatibility.md`](Compatibility.md) 13.2.
 
 ## Summary
 
 - Discs tested: **594**
-- Loadable/Rendered: **592**
-- Loadable/No video: **2**
+- Loadable/Rendered: **593**
+- Loadable/No video: **1**
 - Not Loadable: **0**
 
 Status definitions and triage guidance are in [`CompatibilitySweep.md`](CompatibilitySweep.md). The 4DO reference list is in [`GameCompatibilityList.md`](GameCompatibilityList.md).
@@ -15,8 +15,7 @@ Status definitions and triage guidance are in [`CompatibilitySweep.md`](Compatib
 
 | Status | Disc | Root | BIOS | Frames | Elapsed (s) | PC | Frame hash | Non-black | Colors | Reason | Evidence |
 |---|---|---|---|---:|---:|---|---|---:|---:|---|---|
-| Loadable/No video | Crash 'n Burn (Japan).chd | J: | panafz10e-anvil | 65000 | 121.69 | 124040 | 2771974085 | 17120 | 2 | stuck on the Anvil boot screen after 65,000 frames (known boot hang) | artifacts/compat-known/Crash_n_Burn_Japan-d903e470/frame.png |
-| Loadable/No video | WorldCup Super Stadium (Japan).chd | J: | panafz10e-anvil | 65000 | 62.27 | 165108 | 2771974085 | 17120 | 2 | stuck on the Anvil boot screen after 65,000 frames (known boot hang) | artifacts/compat-known/WorldCup_Super_Stadium_Japan-7e981d52/frame.png |
+| Loadable/No video | Crash 'n Burn (Japan).chd | J: | panafz1j.bin + panafz1j-kanji.bin | 65000 | 81.53 | 91700 | 286162373 | 0 | 1 | Japan revision still black with FZ-1J + FZ-1J Kanji font at 65,000 frames; needs a working bootable Japanese BIOS or dump | artifacts/compat-crashjp/Crash_n_Burn_Japan-d903e470/frame.png |
 | Loadable/Rendered | 20th Century Video Almanac (USA).chd | J: |  | 3000 | 6.62 | 103148 | 1292555099 | 19050 | 1775 | completed and final frame is non-black | artifacts/compat-full/20th_Century_Video_Almanac_USA-8e3d2dc8/frame.png |
 | Loadable/Rendered | 3D Atlas (Europe).chd | J: |  | 3000 | 6.78 | 830892 | 2023269397 | 10202 | 371 | completed and final frame is non-black | artifacts/compat-full/3D_Atlas_Europe-9fb18ae5/frame.png |
 | Loadable/Rendered | 3D Atlas (USA).chd | J: |  | 3000 | 6.61 | 830832 | 2023269397 | 10202 | 371 | completed and final frame is non-black | artifacts/compat-full/3D_Atlas_USA-b4c9dcb2/frame.png |
@@ -602,6 +601,7 @@ Status definitions and triage guidance are in [`CompatibilitySweep.md`](Compatib
 | Loadable/Rendered | World Cup Golf - Hyatt Dorado Beach (Europe).chd | J: |  | 3000 | 7.12 | 102484 | 2992279162 | 1835 | 193 | completed and final frame is non-black | artifacts/compat-full/World_Cup_Golf_-_Hyatt_Dorado_Beach_Europe-0d427ba0/frame.png |
 | Loadable/Rendered | World Cup Golf - Hyatt Dorado Beach (USA, Europe).chd | J: |  | 3000 | 7.19 | 102484 | 2992279162 | 1835 | 193 | completed and final frame is non-black | artifacts/compat-full/World_Cup_Golf_-_Hyatt_Dorado_Beach_USA_Europe-54fada3d/frame.png |
 | Loadable/Rendered | World Cup Special (Japan).chd | J: |  | 3000 | 6.41 | 165108 | 2874474486 | 5703 | 352 | completed and final frame is non-black | artifacts/compat-full/World_Cup_Special_Japan-2e32c477/frame.png |
+| Loadable/Rendered | WorldCup Super Stadium (Japan).chd | J: | panafz10j.bin + panafz10ja-anvil-kanji.bin | 65000 | 118.68 | 165104 | 1996807666 | 19128 | 1278 | completed and final frame is non-black (FZ-10J + FZ-10JA Kanji font) | artifacts/compat-worldcup/WorldCup_Super_Stadium_Japan-7e981d52/frame.png |
 | Loadable/Rendered | Yakyuuken Special, The (Japan).chd | J: |  | 3000 | 7.98 | 132680 | 2820627894 | 19200 | 4370 | completed and final frame is non-black | artifacts/compat-full/Yakyuuken_Special_The_Japan-823eadbe/frame.png |
 | Loadable/Rendered | Yamada Kamachi Bijutsukan - Kamachi's Museum (Japan).chd | J: |  | 3000 | 5.38 | 165104 | 1145534610 | 579 | 31 | completed and final frame is non-black | artifacts/compat-full/Yamada_Kamachi_Bijutsukan_-_Kamachi_s_Museum_Japan-ad6f942f/frame.png |
 | Loadable/Rendered | Yamamura Misa Suspense - Kyoto Kurama Sansou Satsujin Jiken (Japan) (Disc 1).chd | J: |  | 3000 | 6.55 | 923344 | 238765777 | 16238 | 834 | completed and final frame is non-black | artifacts/compat-full/Yamamura_Misa_Suspense_-_Kyoto_Kurama_Sansou_Satsujin_Jiken_Japan_Disc_1-b505303e/frame.png |

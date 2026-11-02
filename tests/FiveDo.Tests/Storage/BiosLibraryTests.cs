@@ -28,6 +28,38 @@ public sealed class BiosLibraryTests
         Assert.True(BiosCatalog.Default.TryGet("428577250F43EDC902EA239C50D2240D", out BiosDescriptor fz10ja));
         Assert.True(fz10ja.IsKanji);
         Assert.Equal(BiosTerritory.Japan, fz10ja.Territory);
+        Assert.Equal(BiosImageKind.Secondary, fz10ja.Kind);
+
+        Assert.True(BiosCatalog.Default.TryGet("A496CFDDED3DA562759BE3561317B605", out BiosDescriptor fz1j));
+        Assert.Equal(BiosImageKind.Primary, fz1j.Kind);
+        Assert.Equal(BiosTerritory.Japan, fz1j.Territory);
+
+        Assert.True(BiosCatalog.Default.TryGet("C23FB5D5E6BB1C240D02CF968972BE37", out BiosDescriptor fz1jKanji));
+        Assert.Equal(BiosImageKind.Secondary, fz1jKanji.Kind);
+        Assert.True(fz1jKanji.IsKanji);
+    }
+
+    [Fact]
+    public void Describe_ClassifiesAOneMegabyteKanjiFontAsSecondary()
+    {
+        using var folder = new TempFolder();
+        var font = new byte[EmulatorConstants.RomBankSize];
+        font[0] = 0x01;
+        for (var i = 1; i <= 5; i++)
+        {
+            font[i] = 0x5A;
+        }
+
+        font[6] = 0x01;
+        folder.Write("panafz1j-kanji.bin", font);
+
+        BiosProfile profile = BiosLibrary.Describe(
+            folder.Path + Path.DirectorySeparatorChar + "panafz1j-kanji.bin");
+
+        Assert.Equal(BiosImageKind.Secondary, profile.Kind);
+        Assert.True(profile.IsKanji);
+        Assert.Equal(BiosTerritory.Japan, profile.Territory);
+        Assert.Contains("BIOS2", profile.Notes, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -184,6 +216,38 @@ public sealed class BiosLibraryTests
         Assert.NotNull(selection.Primary);
         Assert.NotNull(selection.Secondary);
         Assert.True(selection.Secondary!.IsKanji);
+    }
+
+    [Fact]
+    public void SelectForGame_PrefersTheMatchingKanjiFontFamily()
+    {
+        using var folder = new TempFolder();
+        byte[] primary = CreateBios();
+        byte[] fz1Font = CreateSecondary();
+        byte[] fz10Font = CreateSecondary();
+        fz10Font[0] ^= 0xFF;
+        folder.Write("fz10.bin", primary);
+        folder.Write("fz1-kanji.bin", fz1Font);
+        folder.Write("fz10-kanji.bin", fz10Font);
+        BiosCatalog catalog = CreateCatalog(
+            primary,
+            "Test FZ-10",
+            BiosImageKind.Primary,
+            BiosTerritory.Japan,
+            BiosVideoStandard.Ntsc,
+            isKanji: false);
+        catalog.Add(
+            Md5(fz1Font),
+            Descriptor("Test FZ-1 Kanji font", BiosTerritory.Japan, BiosVideoStandard.Ntsc, isKanji: true, isAnvil: false, preference: 30, kind: BiosImageKind.Secondary));
+        catalog.Add(
+            Md5(fz10Font),
+            Descriptor("Test FZ-10 Kanji font", BiosTerritory.Japan, BiosVideoStandard.Ntsc, isKanji: true, isAnvil: false, preference: 20, kind: BiosImageKind.Secondary));
+        BiosLibrary library = BiosLibrary.Scan(folder.Path, catalog);
+
+        BiosSelection selection = library.SelectForGame(Game("Japanese title", "JP"));
+
+        Assert.Equal("Test FZ-10", selection.Primary?.Name);
+        Assert.Equal("Test FZ-10 Kanji font", selection.Secondary?.Name);
     }
 
     [Fact]

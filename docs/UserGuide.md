@@ -42,6 +42,12 @@ Current Game...** to pin a specific image to the current game, or **Clear Game B
 Assignment** to return it to automatic selection. The status line and log show which BIOS
 was selected and why.
 
+Japanese font ROMs are BIOS2 images, not bootable BIOSes. The scanner detects the 3DO
+volume-header signature and classifies 1 MB Kanji fonts as secondary, so a font can no
+longer be selected as the primary BIOS. Auto-selection pairs the matching FZ-1/FZ-10
+font with the primary; for example, WorldCup Super Stadium uses the FZ-10J BIOS plus the
+FZ-10JA Kanji font ROM.
+
 From the CLI, `--bios-auto <folder>` performs the same selection for `run`/`trace`, and
 `bios list`, `bios scan`, and `bios select` expose the catalog directly. `--bios2` loads
 an explicit secondary ROM.

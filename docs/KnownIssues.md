@@ -13,13 +13,14 @@ high-resolution CEL decision (M14) are complete.
 
 - The 12 titles in the matrix below are validated. The first full loadability sweep
   (`J:\Panasonic 3DO`, 589 CHDs, plus `G:\MAME\MAME Software List CHDs\3do`, 5 CHDs)
-  completed on 2026-10-30 and was extended on 2026-11-01: **592 rendered, 2 known
-  Anvil boot-screen hangs, 0 not loadable** out of 594.
+  completed on 2026-10-30 and was extended on 2026-11-01: **593 rendered, 1 known
+  boot failure, 0 not loadable** out of 594.
   The procedure is in [`CompatibilitySweep.md`](CompatibilitySweep.md); the per-disc
   table is [`GameCompatibilityResults.md`](GameCompatibilityResults.md).
 - The 2026-11-01 extended-boot retry reran all 18 non-rendered rows. The five former
-  not-loadable rows and 11 black/blank titles now render; only Crash 'n Burn (Japan)
-  and WorldCup Super Stadium remain. The old triage notes are kept below.
+  not-loadable rows and 12 black/blank titles now render; only Crash 'n Burn (Japan)
+  remains. WorldCup Super Stadium renders with the FZ-10J BIOS plus its Kanji font
+  ROM, which is now classified as BIOS2. The old triage notes are kept below.
 - The five not-loadable rows were triaged on 2026-10-30:
   - `Mirai Shounen Conan - Digital Library` reported a CHD sector-read error at LBA 1
     once during the sweep. Repeated 3,000-frame runs now complete with a stable menu

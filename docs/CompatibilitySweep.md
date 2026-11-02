@@ -99,8 +99,9 @@ first pass leaves a title at a black or static screen.
 
 The base pass is only a screening tool. The 2026-11-01 retry of the 18 non-rendered
 rows used 20,000 frames with `panafz10` and 65,000 frames with `panafz10e-anvil` for
-Anvil-dependent titles. It rendered 16 of the 18; the two remaining rows are known
-Anvil boot-screen hangs (`Crash 'n Burn Japan`, `WorldCup Super Stadium`).
+Anvil-dependent titles. It rendered 18 of the 18 after WorldCup Super Stadium was retried with the FZ-10J
+BIOS plus its Kanji font ROM (BIOS2). Only Crash 'n Burn Japan remains a known boot
+failure; the BIOS library now classifies 1 MB Kanji font images as secondary ROMs.
 
 ### 3.3.1 Retry only the blank rows
 

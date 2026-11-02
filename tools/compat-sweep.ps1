@@ -24,7 +24,11 @@ image metrics tell you whether the final frame actually rendered something.
 Collection roots. Defaults to the two local collections.
 
 .PARAMETER Bios
-BIOS path. Defaults to bios/panafz1.bin.
+Primary BIOS path. Defaults to bios/panafz1.bin.
+
+.PARAMETER Bios2
+Optional BIOS2/Kanji font path. Japanese font ROMs must be paired with their
+primary BIOS; the sweep passes this through to the CLI.
 
 .PARAMETER Frames
 Frames per disc. Defaults to 3000 (50 seconds at 60 Hz), enough for most boot/menu
@@ -72,6 +76,7 @@ param(
         'G:\MAME\MAME Software List CHDs\3do'
     ),
     [string]$Bios = 'bios/panafz1.bin',
+    [string]$Bios2 = '',
     [int]$Frames = 3000,
     [int]$TimeoutSeconds = 180,
     [string]$OutDir = 'artifacts/compat',
@@ -99,6 +104,7 @@ Set-StrictMode -Version Latest
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $outPath = if ([System.IO.Path]::IsPathRooted($OutDir)) { $OutDir } else { Join-Path $repoRoot $OutDir }
 $biosPath = if ([System.IO.Path]::IsPathRooted($Bios)) { $Bios } else { Join-Path $repoRoot $Bios }
+$bios2Path = if ([string]::IsNullOrWhiteSpace($Bios2)) { '' } elseif ([System.IO.Path]::IsPathRooted($Bios2)) { $Bios2 } else { Join-Path $repoRoot $Bios2 }
 
 function Write-Step([string]$Message) {
     Write-Host "[compat] $Message"
@@ -240,6 +246,10 @@ function Invoke-OneDisc {
     $arguments.Add($Disc)
     $arguments.Add('--bios')
     $arguments.Add($biosPath)
+    if ($bios2Path) {
+        $arguments.Add('--bios2')
+        $arguments.Add($bios2Path)
+    }
     $arguments.Add('--frames')
     $arguments.Add([string]$Frames)
     $arguments.Add('--json')
@@ -333,6 +343,8 @@ function Invoke-OneDisc {
         File = [System.IO.Path]::GetFileName($Disc)
         Path = $Disc
         SafeName = $SafeName
+        Bios = [System.IO.Path]::GetFileName($biosPath)
+        Bios2 = if ($bios2Path) { [System.IO.Path]::GetFileName($bios2Path) } else { '' }
         SizeMB = [Math]::Round((Get-Item -LiteralPath $Disc).Length / 1MB, 2)
         Status = $status
         Reason = $reason
@@ -366,6 +378,9 @@ if ($Build) {
 
 if (-not (Test-Path -LiteralPath $biosPath)) {
     throw "BIOS not found: $biosPath"
+}
+if ($bios2Path -and -not (Test-Path -LiteralPath $bios2Path)) {
+    throw "BIOS2 not found: $bios2Path"
 }
 
 $cliCommand = Get-CliCommand $Cli

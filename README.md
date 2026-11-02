@@ -12,7 +12,7 @@ A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from F
 M0-M8 are functionally complete. The
 M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
 thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **1462 tests pass.** The first Opera parity batch (VDLP, ARM carry, DSP FIFO, MADAM span/MARIA/BPP0/SKIPX/LRFORM/blue-LSB/REGCTL/PIXC, CLIO FIFO), OP-14 (generic CEL origin, retired legacy CEL hacks), OP-SYS-02 (Opera CD poll/local reset), OP-SYS-01/03's ROM overlay, DIPIR, XBUS, and CSTAT soft-reset work, and OP-SYS-06's separate CLIO PRNG are complete (the DIPIR/soft-reset path remains opt-in pending a boot transcript). SYS-15 adds joypad, flightstick, mouse, lightgun, arcade lightgun, and Orbatak trackball devices on six PBUS ports, with Opera's exact daisy-chain records and the legacy 4DO packet preserved for all-joypad configurations. Rewind and fast-forward (UX-01/UX-02) are implemented: `RewindBuffer` keeps compressed keyframes plus the per-frame PBUS packet and replays input deterministically; `R`/`Shift+F9` rewind and hold-`Tab` fast-forwards with muted audio. UX-13 adds persistent favorites, play time, launch history, and an offline metadata overlay (`library-state.json`/`library-metadata.json`), plus All/Favorites/Played/Unplayed filters and title/recent/most-played/year/publisher sorts in the game list. Per-game cheats
+prototype. **1464 tests pass.** The first Opera parity batch (VDLP, ARM carry, DSP FIFO, MADAM span/MARIA/BPP0/SKIPX/LRFORM/blue-LSB/REGCTL/PIXC, CLIO FIFO), OP-14 (generic CEL origin, retired legacy CEL hacks), OP-SYS-02 (Opera CD poll/local reset), OP-SYS-01/03's ROM overlay, DIPIR, XBUS, and CSTAT soft-reset work, and OP-SYS-06's separate CLIO PRNG are complete (the DIPIR/soft-reset path remains opt-in pending a boot transcript). SYS-15 adds joypad, flightstick, mouse, lightgun, arcade lightgun, and Orbatak trackball devices on six PBUS ports, with Opera's exact daisy-chain records and the legacy 4DO packet preserved for all-joypad configurations. Rewind and fast-forward (UX-01/UX-02) are implemented: `RewindBuffer` keeps compressed keyframes plus the per-frame PBUS packet and replays input deterministically; `R`/`Shift+F9` rewind and hold-`Tab` fast-forwards with muted audio. UX-13 adds persistent favorites, play time, launch history, and an offline metadata overlay (`library-state.json`/`library-metadata.json`), plus All/Favorites/Played/Unplayed filters and title/recent/most-played/year/publisher sorts in the game list. Per-game cheats
 (UX-04) add raw/typed/conditional/button RAM codes, a desktop manager, and the
 `cheat` CLI command. TAS movies (UX-06) add the versioned `.5domovie` container,
 deterministic record/replay/verify, branching, CLI `movie` commands, and desktop
@@ -27,10 +27,11 @@ colour-coded toasts for save/load, rewind, fast-forward, screenshots, reset, and
 settings, plus an `F4`/Select+Start menu with resume/pause, save/load, rewind,
 fast-forward, screenshot, reset, cheats, settings, and stop actions. The 594-disc
 baseline found 576 rendered, 13 black/blank,
-and 5 not-loadable images. The 2026-11-01 extended-boot retry now renders **592 of
-594** discs: the five former not-loadable rows boot, 11 black/blank titles render at
-20,000 frames or with the right BIOS, and only Crash 'n Burn (Japan) and WorldCup
-Super Stadium remain known Anvil boot-screen hangs. Headless
+and 5 not-loadable images. The 2026-11-01 extended-boot retry now renders **593 of
+594** discs: the five former not-loadable rows boot, 12 black/blank titles render at
+20,000 frames or with the right BIOS, and only Crash 'n Burn (Japan) remains a known
+boot failure. WorldCup Super Stadium needs the FZ-10J BIOS plus its Kanji font ROM
+(BIOS2), which the BIOS library now classifies correctly. Headless
 `run`/`trace` now attach a default player-1 pad. The BIOS manager (SYS-04) scans a BIOS
 folder, classifies region/Kanji/Anvil/patch metadata, and auto-selects a BIOS from the
 game database region, known title requirements, or a per-game MD5 override; the

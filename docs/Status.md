@@ -12,7 +12,7 @@ audio-latency pass, the diagnostics-bundle pass, and the save-state-v3 pass. Roa
 100k-state race now measures
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
-**594 discs tested: 592 Loadable/Rendered, 2 Loadable/No video (known boot hangs), 0 Not Loadable.**
+**594 discs tested: 593 Loadable/Rendered, 1 Loadable/No video (known boot failure), 0 Not Loadable.**
 SYS-01 and AUD-05 now expose multi-track CUE/CHD tables and CD-DA: `ITrackedDiscSource`
 carries native 2048/2336/2352-byte sectors, `CueDiscImage` handles multi-file/multi-track
 `INDEX`/`PREGAP`/`POSTGAP` layouts, `ChdDiscImage` exposes audio tracks, and
@@ -41,12 +41,13 @@ v1/v2 readable, records the live region, and supports warn/reject unknown sectio
 Remaining disc work is known-title
 CD-DA evidence and a real in-game multi-disc swap, plus subcode. A 10-disc
 Release smoke after the
-TOC change reported 10/10 Loadable/Rendered. **1462 tests pass.**
+TOC change reported 10/10 Loadable/Rendered. **1464 tests pass.**
 The five not-loadable rows are resolved or explained: Mirai Shounen Conan now runs
 (transient CHD read error), and the four Arcade CD-ROM titles load with
 `panafz10-patched.bin` plus the default headless pad. The extended-boot retry renders
-all but two of the 18 former failures: 592 of 594 discs now render, and Crash 'n Burn
-(Japan) / WorldCup Super Stadium remain known Anvil boot-screen hangs. Headless
+all 18 former failures except one: 593 of 594 discs now render, and Crash 'n Burn
+(Japan) remains a known boot failure. WorldCup Super Stadium needs the FZ-10J BIOS
+plus its Kanji font ROM (BIOS2), which the BIOS library now classifies correctly. Headless
 `run`/`trace` now attach a default player-1 pad,
 fixing Olympic Summer Games' controller check. Fifteen triaged titles now have a
 reviewed 5DO status in [`GameCompatibilityList.md`](GameCompatibilityList.md); the
@@ -389,8 +390,8 @@ The committed summary is [`GameCompatibilityResults.md`](GameCompatibilityResult
 
 | Result | Count | Meaning |
 |---|---:|---|
-| `Loadable/Rendered` | **592** | Completed 3,000 frames (18 rows retried at 20,000-65,000 frames); final frame is non-black. |
-| `Loadable/No video` | **2** | Completed 65,000 frames; still stuck on the Anvil boot screen. |
+| `Loadable/Rendered` | **593** | Completed 3,000 frames (18 rows retried at 20,000-65,000 frames); final frame is non-black. |
+| `Loadable/No video` | **1** | Completed 65,000 frames; still stuck on a boot screen. |
 | `Not Loadable` | **0** | No CLI error or timeout remains. |
 | **Total** | **594** | 589 main collection + 5 MAME software-list images. |
 
@@ -399,14 +400,14 @@ five former `Not Loadable` rows (`Crime Patrol`, `Mad Dog II`, `Mirai Shounen Co
 `Orbatak`, and `Shootout at Old Tucson RE3`) now complete and render at 20,000 frames
 with `panafz10`, and 11 of the 13 former black/blank rows render at 20,000 frames or at
 65,000 with the Anvil BIOS. The two remaining rows are known Anvil boot-screen hangs:
-`Crash 'n Burn (Japan)` and `WorldCup Super Stadium (Japan)`.
+`Crash 'n Burn (Japan)`. WorldCup Super Stadium now renders when the FZ-10J BIOS is paired with its Kanji font ROM (BIOS2).
 
 The 2026-11-01 retry reran all 13 former `Loadable/No video` titles. Ishida Yoshio
 Kudan no Igo Seiha, both Konpeki no Kantai discs, all three Myst discs, Olympic Summer
 Games, and all three Slayer discs render at 20,000 frames with `panafz10`; Powers
 Kingdom (Europe) renders its live-action intro at 65,000 frames with
-`panafz10e-anvil`. Only `Crash 'n Burn (Japan)` and `WorldCup Super Stadium (Japan)`
-remain on the Anvil boot screen at 65,000 frames.
+`panafz10e-anvil`. Only `Crash 'n Burn (Japan)` remains on the Anvil boot screen at 65,000 frames;
+WorldCup Super Stadium renders with the FZ-10J BIOS and its Kanji font ROM.
 
 `Loadable/Rendered` is **not** a final compatibility grade; it still needs the visual
 and input review described in [`CompatibilitySweep.md`](CompatibilitySweep.md).
@@ -636,9 +637,8 @@ current gates are the M13 collection sweep and the M14 high-resolution decision.
 
 ### P0 - active work
 
-1. **M13 loadability sweep: complete.** 594 discs tested: 592 `Loadable/Rendered`,
-   2 known `Loadable/No video` boot hangs (`Crash 'n Burn Japan`, `WorldCup Super
-   Stadium`), 0 `Not Loadable`. See
+1. **M13 loadability sweep: complete.** 594 discs tested: 593 `Loadable/Rendered`,
+   1 known `Loadable/No video` failure (`Crash 'n Burn Japan`), 0 `Not Loadable`. See
    [`GameCompatibilityResults.md`](GameCompatibilityResults.md).
 2. **Failure triage: first pass complete (2026-10-30).**
    - `Mirai Shounen Conan` no longer reproduces its LBA 1 CHD error; repeated
@@ -652,8 +652,8 @@ current gates are the M13 collection sweep and the M14 high-resolution decision.
      BIOS-sensitive. Crash/Powers/WorldCup change their boot screens with the Anvil
      BIOS; Powers reaches a live-action intro with Anvil, Slayer Europe renders with
      `panafz1`, and Slayer USA reaches its title menu at 60,000 frames with `panafz10`.
-     Crash and WorldCup are still stuck at 60,000, so the Anvil BIOS is not a fix for
-     them.
+     WorldCup renders its "Story of the World Cup" screen with `panafz10j` plus the
+     FZ-10JA Kanji font ROM; Crash 'n Burn Japan remains the only boot failure.
    - Olympic Summer Games was blocked by the headless PBUS bug, now fixed by the
      default player-1 pad.
 3. **Run the BIOS-aware sweep and fill the status columns.** Rerun the `Not Loadable`
@@ -661,7 +661,8 @@ current gates are the M13 collection sweep and the M14 high-resolution decision.
    (`panafz10-patched` and the Anvil BIOS), record the BIOS used per disc, then assign
    `Unplayable`/`Playable`/`Good` in
    [`GameCompatibilityList.md`](GameCompatibilityList.md). Keep Crash 'n Burn (Japan)
-   and WorldCup Super Stadium on the investigation list.
+   on the investigation list; it needs a bootable Japanese FZ-1/FZ-10 BIOS or a better
+   dump.
 4. **Run the high-resolution pass.** Repeat the sweep with `-HighRes`, compare
    screenshots and speed, and feed the results into M14.
 5. **Validate Linux.** Build/test/smoke the CLI in the `LinuxMint` Hyper-V VM, run a
@@ -684,8 +685,9 @@ current gates are the M13 collection sweep and the M14 high-resolution decision.
 
 ## 6. Next session
 
-The BIOS-aware retry is complete: **592 of 594 discs render**, and only Crash 'n Burn
-(Japan) and WorldCup Super Stadium remain stuck on the Anvil boot screen. The next
+The BIOS-aware retry is complete: **593 of 594 discs render**, and only Crash 'n Burn
+(Japan) remains stuck on the Anvil boot screen. WorldCup Super Stadium renders with
+the FZ-10J BIOS plus its Kanji font ROM. The next
 session is the **in-game/visual review**, not release prep:
 
 1. Read [`CompatibilitySweep.md`](CompatibilitySweep.md),

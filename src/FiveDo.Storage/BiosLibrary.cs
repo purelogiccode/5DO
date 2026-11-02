@@ -122,6 +122,38 @@ public sealed class BiosLibrary
 
         if (bytes.Length == EmulatorConstants.RomBankSize)
         {
+            if (IsKanjiFontImage(bytes))
+            {
+                if (isKnown)
+                {
+                    return CreateProfile(
+                        resolved,
+                        fileName,
+                        md5,
+                        bytes.Length,
+                        descriptor,
+                        descriptor.IsAnvil);
+                }
+
+                var fontHeuristic = ClassifyFileName(fileName, isAnvil: false);
+                return CreateProfile(
+                    resolved,
+                    fileName,
+                    md5,
+                    bytes.Length,
+                    new BiosDescriptor(
+                        Path.GetFileNameWithoutExtension(fileName),
+                        BiosImageKind.Secondary,
+                        BiosTerritory.Japan,
+                        BiosVideoStandard.Ntsc,
+                        IsKanji: true,
+                        IsAnvil: fontHeuristic.IsAnvil,
+                        IsPatched: false,
+                        "Unrecognized 1 MB Kanji font ROM (volume-header signature). Treat as BIOS2, not a primary BIOS.",
+                        Preference: 0),
+                    isAnvil: false);
+            }
+
             BiosImage image = BiosImage.FromBytes(bytes);
             var heuristic = ClassifyFileName(fileName, image.IsAnvil);
             if (isKnown)
@@ -521,19 +553,32 @@ public sealed class BiosLibrary
 
     private static string FamilyToken(string name)
     {
-        if (name.Contains("fz-1", StringComparison.OrdinalIgnoreCase)
-            || name.Contains("fz1", StringComparison.OrdinalIgnoreCase))
-        {
-            return "fz1";
-        }
-
+        // FZ-10 contains the substring FZ-1, so check the longer model first.
         if (name.Contains("fz-10", StringComparison.OrdinalIgnoreCase)
             || name.Contains("fz10", StringComparison.OrdinalIgnoreCase))
         {
             return "fz10";
         }
 
+        if (name.Contains("fz-1", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("fz1", StringComparison.OrdinalIgnoreCase))
+        {
+            return "fz1";
+        }
+
         return string.Empty;
+    }
+
+    private static bool IsKanjiFontImage(ReadOnlySpan<byte> bytes)
+    {
+        return bytes.Length >= 7
+            && bytes[0] == 0x01
+            && bytes[1] == 0x5A
+            && bytes[2] == 0x5A
+            && bytes[3] == 0x5A
+            && bytes[4] == 0x5A
+            && bytes[5] == 0x5A
+            && bytes[6] == 0x01;
     }
 
     private static FileNameClassification ClassifyFileName(string fileName, bool isAnvil)
