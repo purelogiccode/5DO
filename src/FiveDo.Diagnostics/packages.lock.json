@@ -44,7 +44,7 @@
       "fivedo.cpu": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.0.0, )"
+          "FiveDo.Core": "[1.1.0, )"
         }
       }
     }

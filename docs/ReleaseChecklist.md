@@ -25,7 +25,9 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] CLI and desktop logging route through Serilog; warning-and-higher events reach
       the bug-report API with environment, error, and exception blocks.
 - [x] CLI and desktop launch statistics call the ApplicationStats endpoint.
-- [ ] Build and smoke-test the three bundles.
+- [x] Build the three bundles. Windows and Linux bundles passed CLI `selftest` and
+      desktop `--smoke-test`; the macOS x64 bundle is built but not executed on the
+      arm64 CI runner, matching the v1.0.0 validation scope.
 - [ ] Publish `v1.1.0` and verify `SHA256SUMS.txt`.
 
 ---
