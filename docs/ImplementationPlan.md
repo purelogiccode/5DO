@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,464 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,466 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **594 load**, **593 render**; 1 known boot failure (Crash 'n Burn Japan); 0 not loadable | 12,000-frame in-game/visual review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,464** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,466** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 19 done · 24 partial · 77 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 19 done · 25 partial · 76 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -183,7 +183,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[VID-03](#feat-vid-03)** GPU CEL compositing — P3 · XL · depends on: VID-01 — **Pending**
 - [ ] **[VID-04](#feat-vid-04)** 480i/240p detection, deinterlacing, field blending — P1 · M · depends on: SYS-03 — **Pending**
 - [x] **[VID-05](#feat-vid-05)** PAL output timing — P1 · M · depends on: SYS-03 — **Done**
-- [ ] **[VID-06](#feat-vid-06)** Auto-crop, overscan, void area, gray border — P1 · M · depends on: FND-06 — **Pending**
+- [ ] **[VID-06](#feat-vid-06)** Auto-crop, overscan, void area, gray border — P1 · M · depends on: FND-06 — **Partial** — uniform 0-32 px overscan crop is implemented for presentation and native screenshots with a Settings > Video control; per-game presets, void-area/gray-border patterns, and custom per-edge crops remain
 - [ ] **[VID-07](#feat-vid-07)** Shader preset system — P1 · L · depends on: FND-06 — **Pending**
 - [ ] **[VID-08](#feat-vid-08)** NTSC composite/S-Video/RF, HDR, gamma — P2 · L · depends on: VID-07 — **Pending**
 - [ ] **[VID-09](#feat-vid-09)** Video recording — P1 · M · depends on: FND-06 — **Partial** — animated GIF recording is implemented in the CLI and desktop with a 3-3-2 palette and configurable frame rate; MP4/WebM, audio, and the replay buffer remain
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,464 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,466 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,464**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,466**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -816,7 +816,14 @@ BIOS and 65,000 frames; WorldCup Super Stadium needs the FZ-10J BIOS plus its Ka
 ROM (BIOS2). The BIOS library now classifies 1 MB Kanji font images as secondary ROMs.
 The final loadability table is 594 discs, 593 rendered, 1 known failure
 (`Crash 'n Burn Japan`), and 0 not loadable. `-RetryFrames`
-keeps this retry reproducible for future sweeps. **1464 tests pass.**
+keeps this retry reproducible for future sweeps. **1466 tests pass.**
+
+**Overscan pass (2026-11-01):** VID-06 moves to partial. `AppSettings.OverscanPixels`
+crops 0-32 pixels from every edge before presentation and native screenshots,
+`VdlFrame.CopyCroppedFrom` preserves the palette/background/output-control metadata,
+and Settings > Video exposes None/4/8/12/16/24 px. The crop is presentation-only:
+frame hashes, input, audio, and save states are unchanged, while CLI evidence keeps the
+full frame. Per-game presets and void-area patterns remain. **1466 tests pass.**
 
 **Last updated:** 2026-11-01
 
@@ -2910,8 +2917,9 @@ Suggested parallelization with two developers:
 | 2026-11-01 | UX-06 | Movie frame editor | Extended `MovieEditor` with per-frame set/button/insert/remove and added **File > Movie Editor...** (frame list, player-1 button checkboxes, insert/delete/trim, Save As). UX-06 remains partial for Lua, an input timeline, and multiplayer display; 1,457 tests pass |
 | 2026-11-01 | UX-13 | Game metadata editor | Added `LibraryMetadataStore.Upsert`/`Remove` and **File > Game Metadata...** for the current disc (title, developer, publisher, year, genre, regions, players, description), with a library rescan after saving. UX-13 remains partial for external providers and media; 1,458 tests pass |
 | 2026-11-01 | UX-15 | Profile selector and import/export UI | Added `default-profile.txt` resolution, Settings > Paths profile selector, Set default, Create, Open folder, Import, and Export actions. UX-15 is done; installer integration belongs to UX-16; 1,459 tests pass |
-| 2026-11-01 | SYS-20 | Disc integrity verifier | Added `DiscVerifier` and `disc verify` (native-sector reads, LBA errors, FNV-1a hash, JSON). Battle Chess verified 143,810 sectors / 338,241,120 bytes with no errors. SYS-20 is partial for Redump DAT matching and the UI badge; 1,464 tests pass |
-| 2026-11-01 | CORE-13 | Extended-boot compatibility retry | Reran all 18 non-rendered discs: 5 former not-loadable rows and 12 black/blank titles now render. Powers Kingdom (Europe) reaches its live-action intro at 65,000 frames with the Anvil BIOS; WorldCup Super Stadium renders with the FZ-10J BIOS plus its Kanji font ROM. Only Crash 'n Burn (Japan) remains a known boot failure. Added `-Files`/`-RetryFrames` and `-Bios2` to the sweep; 1,464 tests pass |
+| 2026-11-01 | SYS-20 | Disc integrity verifier | Added `DiscVerifier` and `disc verify` (native-sector reads, LBA errors, FNV-1a hash, JSON). Battle Chess verified 143,810 sectors / 338,241,120 bytes with no errors. SYS-20 is partial for Redump DAT matching and the UI badge; 1,466 tests pass |
+| 2026-11-01 | CORE-13 | Extended-boot compatibility retry | Reran all 18 non-rendered discs: 5 former not-loadable rows and 12 black/blank titles now render. Powers Kingdom (Europe) reaches its live-action intro at 65,000 frames with the Anvil BIOS; WorldCup Super Stadium renders with the FZ-10J BIOS plus its Kanji font ROM. Only Crash 'n Burn (Japan) remains a known boot failure. Added `-Files`/`-RetryFrames` and `-Bios2` to the sweep; 1,466 tests pass |
+| 2026-11-01 | VID-06 | Overscan crop | Added `AppSettings.OverscanPixels` (0-32), `VdlFrame.CopyCroppedFrom`, presentation/native-screenshot crop, and Settings > Video > **Overscan crop**. The crop is presentation-only and keeps frame hashes/input/states unchanged. VID-06 is partial for per-game presets, void patterns, and custom per-edge crops; 1,466 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -3039,7 +3047,7 @@ A feature is done only when:
 | VID-03 | GPU CEL compositing | P3 | XL | VID-01 | Pending |
 | VID-04 | 480i/240p detection, deinterlacing, field blending | P1 | M | SYS-03 | Pending |
 | VID-05 | PAL output timing | P1 | M | SYS-03 | Done |
-| VID-06 | Auto-crop, overscan, void area, gray border | P1 | M | FND-06 | Pending |
+| VID-06 | Auto-crop, overscan, void area, gray border | P1 | M | FND-06 | Partial |
 | VID-07 | Shader preset system | P1 | L | FND-06 | Pending |
 | VID-08 | NTSC composite/S-Video/RF, HDR, gamma | P2 | L | VID-07 | Pending |
 | VID-09 | Video recording | P1 | M | FND-06 | Partial |
@@ -4538,17 +4546,23 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
 <a id="feat-vid-06"></a>
 ### VID-06 - Auto-crop, overscan, void area, gray border
 
-**Priority:** P1 | **Effort:** M | **Depends on:** FND-06 | **Status:** Pending
+**Priority:** P1 | **Effort:** M | **Depends on:** FND-06 | **Status:** Partial (2026-11-01)
 
-**Problem.** 4DO has these; 5DO always shows the full frame.
+**Problem.** 4DO has these; 5DO always showed the full frame.
 
-**Add.**
-- Per-game crop/overscan presets.
-- Void-area patterns and gray border.
-- UI settings.
-- Screenshot/presentation consistency.
+**Implemented.**
+- `AppSettings.OverscanPixels` (0-32) crops every edge before presentation and native screenshots. Settings > Video > **Overscan crop** offers None/4/8/12/16/24 px.
+- `VdlFrame.CopyCroppedFrom` keeps each line's palette, background, output-control word, and DMA flag, so the cropped frame renders exactly like a full frame.
+- The game view applies the crop before OpenGL/Vulkan/software presentation; `SaveNativeScreenshot` applies the same crop, so native and filtered captures match.
+- The crop is presentation-only: frame hashes, input, audio, and save states are unchanged. CLI evidence (`--frame-out`, checkpoints) deliberately keeps the full frame.
 
-**Files.** `ViewportCalculator.cs`, `RendererSettings.cs`, UI.
+**Remaining.**
+- Per-game crop presets and automatic title-specific overscan.
+- Void-area patterns and the gray border outside the visible image.
+- Custom per-edge crop (the current control is uniform).
+- A live settings preview.
+
+**Files.** `VdlFrame.cs`, `AppSettings.cs`, `MainWindow.axaml.cs`, `SettingsWindow.*`.
 
 **Tests.** Crop math; per-game override; screenshot parity.
 
@@ -6755,7 +6769,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [ ] **VID-03** | GPU CEL compositing | Long-term Option D; true high-res independent of 1MB VRAM. | A parity prototype for packed/literal CELs; go/no-go note. | XL |
 | [ ] **VID-04** | 480i/240p detection, deinterlacing, field blending | 3DO titles mix 240p/480i; current output assumes 240 lines. | Correct field handling; bob/weave/blend options; test patterns. | M |
 | [x] **VID-05** | PAL output timing | Needed with SYS-03; 288 lines at 50Hz. | PAL titles render at the right size/rate; no NTSC regression. **Done 2026-11-01:** 320/384x288 at 50 Hz through VDLP, frame store, uploader, screenshots, and pacing; Battle Chess Europe verified. | M |
-| [ ] **VID-06** | Auto-crop, overscan, void area, gray border | 4DO has these; 5DO always uses the full frame. | Per-game crop/overscan presets; 4DO-style void patterns; UI. | M |
+| [~] **VID-06** | Auto-crop, overscan, void area, gray border | 4DO has these; 5DO always uses the full frame. | Per-game crop/overscan presets; 4DO-style void patterns; UI. **Partial 2026-11-01:** uniform 0-32 px overscan crop for presentation/native screenshots and a Settings > Video control; per-game presets and void patterns remain. | M |
 | [ ] **VID-07** | Shader preset system | RetroArch `.slang`/`.glslp`; 5DO has fixed filters. | Load popular presets; hot reload; per-game; fallback. | L |
 | [ ] **VID-08** | NTSC composite/S-Video/RF, CRT Royale, HDR, gamma | Best-in-class video quality. | Presets and controls; visual validation; performance. | L |
 | [ ] **VID-09** | Video recording (MP4/WebM/GIF) with audio | Modern UX; share clips; TAS evidence. | Record/stop; audio sync; file naming; UI/CLI. | M |

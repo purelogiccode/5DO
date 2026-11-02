@@ -88,6 +88,7 @@ public partial class MainWindow : Window, IDisposable
     private FileStream? _gifStream;
     private string? _gifPath;
     private FrameSkipMode _gifPreviousFrameSkip;
+    private VdlFrame? _overscanFrame;
     private WavAudioSink? _audioRecorder;
     private string? _audioRecordingPath;
     private float _meterPeak;
@@ -2235,8 +2236,19 @@ public partial class MainWindow : Window, IDisposable
 
         _runner!.Invoke(() =>
         {
-            var frame = new FrameBuffer(_machine.Frame.SourceWidth, _machine.Frame.SourceHeight);
-            FrameAssembler.Assemble(_machine.Frame, frame, frame.Width, frame.Height);
+            VdlFrame source = _machine.Frame;
+            int crop = _settings.OverscanPixels;
+            int width = source.SourceWidth - (crop * 2);
+            int height = source.SourceHeight - (crop * 2);
+            if (crop > 0 && width >= 16 && height >= 16)
+            {
+                var cropped = new VdlFrame();
+                cropped.CopyCroppedFrom(source, crop, crop, width, height);
+                source = cropped;
+            }
+
+            var frame = new FrameBuffer(source.SourceWidth, source.SourceHeight);
+            FrameAssembler.Assemble(source, frame, frame.Width, frame.Height);
             PngDumper.Write(frame, path);
         });
     }
@@ -4510,14 +4522,35 @@ public partial class MainWindow : Window, IDisposable
 
     private void SubmitFrameToActiveRenderer(VdlFrame frame)
     {
+        VdlFrame presented = ApplyOverscan(frame);
         if (_vulkanPresenter)
         {
-            VulkanVideo.SubmitFrame(frame);
+            VulkanVideo.SubmitFrame(presented);
         }
         else
         {
-            Video.SubmitFrame(frame);
+            Video.SubmitFrame(presented);
         }
+    }
+
+    private VdlFrame ApplyOverscan(VdlFrame frame)
+    {
+        int crop = _settings.OverscanPixels;
+        if (crop <= 0)
+        {
+            return frame;
+        }
+
+        int width = frame.SourceWidth - (crop * 2);
+        int height = frame.SourceHeight - (crop * 2);
+        if (width < 16 || height < 16)
+        {
+            return frame;
+        }
+
+        _overscanFrame ??= new VdlFrame();
+        _overscanFrame.CopyCroppedFrom(frame, crop, crop, width, height);
+        return _overscanFrame;
     }
 
     private NvramStore CreateNvramStore(string? gameId)

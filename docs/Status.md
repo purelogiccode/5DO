@@ -8,7 +8,8 @@ OSD/quick-menu pass, the library metadata/favorites/playtime pass, the
 multi-track/CD-DA pass, the CD-DA volume/settings pass, the multi-disc swap pass, the
 portable-mode pass, the input-display pass, the ODE/playlist-editor pass, the
 PAL/NTSC pass, the isolation/CD-transcript pass, the pointer-routing pass, the
-audio-latency pass, the diagnostics-bundle pass, and the save-state-v3 pass. Road Rash's
+audio-latency pass, the diagnostics-bundle pass, the save-state-v3 pass, and the overscan
+pass. Road Rash's
 100k-state race now measures
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
@@ -41,7 +42,7 @@ v1/v2 readable, records the live region, and supports warn/reject unknown sectio
 Remaining disc work is known-title
 CD-DA evidence and a real in-game multi-disc swap, plus subcode. A 10-disc
 Release smoke after the
-TOC change reported 10/10 Loadable/Rendered. **1464 tests pass.**
+TOC change reported 10/10 Loadable/Rendered. **1466 tests pass.**
 The five not-loadable rows are resolved or explained: Mirai Shounen Conan now runs
 (transient CHD read error), and the four Arcade CD-ROM titles load with
 `panafz10-patched.bin` plus the default headless pad. The extended-boot retry renders

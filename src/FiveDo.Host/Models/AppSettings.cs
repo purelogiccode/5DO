@@ -165,6 +165,16 @@ public sealed class AppSettings
     /// </summary>
     public FrameSkipMode FrameSkip { get; set; } = FrameSkipMode.Auto;
 
+    /// <summary>
+    /// Gets or sets the number of pixels cropped from every edge before presentation and
+    /// native screenshots. Zero shows the full frame.
+    /// </summary>
+    /// <remarks>
+    /// Overscan is a presentation option: it hides the outer pixels but does not change
+    /// emulated state, input, frame hashes, or save states.
+    /// </remarks>
+    public int OverscanPixels { get; set; }
+
     /// <summary>Gets or sets the aspect policy.</summary>
     public AspectMode Aspect { get; set; } = AspectMode.FourThree;
 

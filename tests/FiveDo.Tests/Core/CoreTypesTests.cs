@@ -258,6 +258,46 @@ public sealed class CoreTypesTests
     }
 
     [Fact]
+    public void VdlFrame_CopyCroppedFromShiftsPixelsAndMetadata()
+    {
+        var source = new VdlFrame { SourceWidth = 8, SourceHeight = 4 };
+        for (var line = 0; line < 4; line++)
+        {
+            VdlLine sourceLine = source[line];
+            sourceLine.Width = 8;
+            sourceLine.Background = (uint)(line + 1);
+            sourceLine.OutControl = (uint)(0x100 + line);
+            sourceLine.ClutDma = (uint)line;
+            sourceLine.ClutB[0] = (byte)(10 + line);
+            sourceLine.ClutG[0] = (byte)(20 + line);
+            sourceLine.ClutR[0] = (byte)(30 + line);
+            for (var x = 0; x < 8; x++)
+            {
+                sourceLine.PixelBuffer[x] = (ushort)((line * 10) + x);
+            }
+        }
+
+        var destination = new VdlFrame();
+        destination.CopyCroppedFrom(source, left: 2, top: 1, width: 4, height: 2);
+
+        Assert.Equal(4, destination.SourceWidth);
+        Assert.Equal(2, destination.SourceHeight);
+        Assert.Equal(12, destination[0].PixelBuffer[0]);
+        Assert.Equal(15, destination[0].PixelBuffer[3]);
+        Assert.Equal(22, destination[1].PixelBuffer[0]);
+        Assert.Equal(2u, destination[0].Background);
+        Assert.Equal(0x101u, destination[0].OutControl);
+        Assert.Equal(1u, destination[0].ClutDma);
+        Assert.Equal(11, destination[0].ClutB[0]);
+        Assert.Equal(21, destination[0].ClutG[0]);
+        Assert.Equal(31, destination[0].ClutR[0]);
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => destination.CopyCroppedFrom(source, left: 5, top: 0, width: 4, height: 1));
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => destination.CopyCroppedFrom(source, left: 0, top: 0, width: 0, height: 1));
+    }
+
+    [Fact]
     public void AudioSample_PackedRoundtrip()
     {
         var sample = new AudioSample(-1234, 5678);

@@ -10,7 +10,7 @@
             <TabItem Header="Video" ToolTip.Tip="Renderer, output resolution, filter, aspect ratio, scaling, overlay, OSD notifications, quick menu, bloom, and FSR options.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <Grid ColumnDefinitions="170,*"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                           Margin="8">
                         <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Renderer"
                                    FontWeight="SemiBold" Margin="0,0,0,4" />
@@ -112,6 +112,12 @@
                         <ComboBox x:Name="InputPlayerCombo" Grid.Row="25" Grid.Column="1"
                                   HorizontalAlignment="Left" Width="100" Margin="0,8,0,0"
                                   ToolTip.Tip="Choose controller port 1-6 for the input display." />
+                        <TextBlock Grid.Row="26" Grid.Column="0" Text="Overscan crop"
+                                   VerticalAlignment="Center" Margin="0,8,0,0"
+                                   ToolTip.Tip="Hide the outer pixels of the frame without changing emulation." />
+                        <ComboBox x:Name="OverscanCombo" Grid.Row="26" Grid.Column="1"
+                                  HorizontalAlignment="Left" Width="160" Margin="0,8,0,0"
+                                  ToolTip.Tip="Crop 0-24 pixels from every edge for presentation and native screenshots." />
                     </Grid>
                 </ScrollViewer>
             </TabItem>

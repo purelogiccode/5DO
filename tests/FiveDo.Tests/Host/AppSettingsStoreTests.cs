@@ -189,6 +189,25 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void Overscan_RoundtripsAndClamps()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        var settings = new AppSettings { OverscanPixels = 8 };
+
+        AppSettingsStore.Save(settings, path);
+        Assert.Equal(8, AppSettingsStore.Load(path).OverscanPixels);
+
+        settings.OverscanPixels = 99;
+        AppSettingsStore.Save(settings, path);
+        Assert.Equal(32, AppSettingsStore.Load(path).OverscanPixels);
+
+        settings.OverscanPixels = -5;
+        AppSettingsStore.Save(settings, path);
+        Assert.Equal(0, AppSettingsStore.Load(path).OverscanPixels);
+    }
+
+    [Fact]
     public void AudioDeviceAndBuffer_RoundtripAndClamp()
     {
         using var temp = new TemporaryDirectory();

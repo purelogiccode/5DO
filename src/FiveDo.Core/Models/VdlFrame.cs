@@ -43,6 +43,60 @@ public sealed class VdlFrame
     /// <param name="index">Zero-based line index.</param>
     public VdlLine this[int index] => _lines[index];
 
+    /// <summary>
+    /// Copies a rectangular crop from another frame into this frame.
+    /// </summary>
+    /// <param name="source">Source frame.</param>
+    /// <param name="left">Left pixel column to keep.</param>
+    /// <param name="top">First visible line to keep.</param>
+    /// <param name="width">Number of pixel columns to keep.</param>
+    /// <param name="height">Number of visible lines to keep.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="source"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when the crop is negative, wider than the source, or larger than the frame store.
+    /// </exception>
+    /// <remarks>
+    /// The destination keeps each source line's palette, background, output-control word,
+    /// and DMA flag, so it can be presented or assembled exactly like a full frame.
+    /// </remarks>
+    public void CopyCroppedFrom(VdlFrame source, int left, int top, int width, int height)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentOutOfRangeException.ThrowIfNegative(left);
+        ArgumentOutOfRangeException.ThrowIfNegative(top);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
+        if (left + width > source.SourceWidth || top + height > source.SourceHeight)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(width),
+                string.Create(
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    $"Crop ({left},{top},{width}x{height}) exceeds the {source.SourceWidth}x{source.SourceHeight} source."));
+        }
+
+        if (width > VdlLine.MaxPixels || height > MaxLines)
+        {
+            throw new ArgumentOutOfRangeException(nameof(width), "Crop exceeds the frame store.");
+        }
+
+        SourceWidth = width;
+        SourceHeight = height;
+        for (var line = 0; line < height; line++)
+        {
+            VdlLine sourceLine = source[top + line];
+            VdlLine destinationLine = _lines[line];
+            destinationLine.Width = width;
+            destinationLine.OutControl = sourceLine.OutControl;
+            destinationLine.ClutDma = sourceLine.ClutDma;
+            destinationLine.Background = sourceLine.Background;
+            sourceLine.ClutB.CopyTo(destinationLine.ClutB);
+            sourceLine.ClutG.CopyTo(destinationLine.ClutG);
+            sourceLine.ClutR.CopyTo(destinationLine.ClutR);
+            sourceLine.PixelBuffer.Slice(left, width).CopyTo(destinationLine.PixelBuffer);
+        }
+    }
+
     /// <summary>Clears every line and restores the default source dimensions.</summary>
     public void Clear()
     {

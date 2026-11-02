@@ -241,6 +241,7 @@ public static class AppSettingsStore
                 : 1.0;
             settings.PointerOffsetX = Math.Clamp(settings.PointerOffsetX, -160, 160);
             settings.PointerOffsetY = Math.Clamp(settings.PointerOffsetY, -120, 120);
+            settings.OverscanPixels = Math.Clamp(settings.OverscanPixels, 0, 32);
 
             // JSON can deserialize null despite the non-nullable annotation.
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract

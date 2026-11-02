@@ -43,6 +43,16 @@ public partial class SettingsWindow : Window
         new(FrameSkipMode.OneInFive, "Skip 4 of 5 (12 fps)"),
     ];
 
+    private static readonly OverscanOption[] _overscanOptions =
+    [
+        new(0, "None (full frame)"),
+        new(4, "4 px"),
+        new(8, "8 px (recommended)"),
+        new(12, "12 px"),
+        new(16, "16 px"),
+        new(24, "24 px"),
+    ];
+
     private static readonly PointerPortOption[] _pointerPortOptions =
     [
         new(0, "All pointer devices"),
@@ -196,6 +206,9 @@ public partial class SettingsWindow : Window
         FrameSkipCombo.ItemsSource = _frameSkipOptions;
         FrameSkipCombo.SelectedItem = _frameSkipOptions.FirstOrDefault(option => option.Value == settings.FrameSkip)
             ?? _frameSkipOptions[0];
+        OverscanCombo.ItemsSource = _overscanOptions;
+        OverscanCombo.SelectedItem = _overscanOptions.FirstOrDefault(option => option.Value == settings.OverscanPixels)
+            ?? _overscanOptions[0];
         OverlayCheck.IsChecked = settings.ShowOverlay;
         InputPlayerCombo.ItemsSource = new[] { 1, 2, 3, 4, 5, 6 };
         InputPlayerCombo.SelectedItem = Math.Clamp(settings.InputDisplayPlayer, 1, 6);
@@ -783,6 +796,9 @@ public partial class SettingsWindow : Window
         settings.FrameSkip = FrameSkipCombo.SelectedItem is FrameSkipOption frameSkip
             ? frameSkip.Value
             : FrameSkipMode.Auto;
+        settings.OverscanPixels = OverscanCombo.SelectedItem is OverscanOption overscan
+            ? overscan.Value
+            : 0;
         settings.ShowOverlay = OverlayCheck.IsChecked == true;
         settings.InputDisplayPlayer = InputPlayerCombo.SelectedItem is int inputPlayer
             ? inputPlayer
@@ -1401,6 +1417,11 @@ public partial class SettingsWindow : Window
         {
             return Label;
         }
+    }
+
+    private sealed record OverscanOption(int Value, string Label)
+    {
+        public override string ToString() => Label;
     }
 
     private sealed record FrameSkipOption(FrameSkipMode Value, string Label)

@@ -71,6 +71,11 @@ still change.
   illegal-request status instead of silently doing nothing, the guest RESET command
   restores the default transfer state and sector size, and `PrefetchingDiscSource`
   read-aheads native track sectors so CD-DA does not decompress on the sample clock.
+- VID-06 overscan crop: `AppSettings.OverscanPixels` (0-32) crops every edge before
+  presentation and native screenshots. `VdlFrame.CopyCroppedFrom` preserves each line's
+  palette, background, output-control word, and DMA flag. Settings > Video > **Overscan
+  crop** offers None/4/8/12/16/24 px. The crop is presentation-only: frame hashes,
+  input, audio, and save states are unchanged. Per-game presets and void patterns remain.
 - SYS-04/CORE-13 Japanese BIOS and Kanji font classification: `BiosLibrary` now
   recognizes 1 MB Kanji font ROMs by their 3DO volume-header signature and classifies
   them as secondary BIOS2 images, so a font can no longer be selected as a primary

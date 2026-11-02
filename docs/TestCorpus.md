@@ -688,7 +688,7 @@ UX-23 coverage is compile/status level:
   verifies the 250,000-cycle PAL field and the return to the 208,333-cycle NTSC field.
 - A 300-frame `--audio wav` run produced 264,609 samples = 6.0002 seconds at 44.1 kHz,
   confirming the 50 Hz audio/frame cadence.
-- Full NTSC suite: 1,464 tests pass with no changed NTSC hashes.
+- Full NTSC suite: 1,466 tests pass with no changed NTSC hashes.
 
 ### 1.1p Region overrides, instance lock, and CD transcripts (2026-11-01)
 
@@ -876,8 +876,18 @@ UX-23 coverage is compile/status level:
 - Final loadability table: 594 discs, **593 Loadable/Rendered**, **1 Loadable/No video**
   (known boot failure), **0 Not Loadable**. Evidence is in `artifacts/compat-20k-10/`,
   `artifacts/compat-known/`, and the merged `artifacts/compat-full/summary-merged.csv`.
-- No emulator regression: the full suite remains **1,464 tests**, build 0 warnings/0
+- No emulator regression: the full suite remains **1,466 tests**, build 0 warnings/0
   errors, format clean, inspectcode 0 results.
+
+### 1.1af Overscan crop (2026-11-01)
+
+- `CoreTypesTests.VdlFrame_CopyCroppedFromShiftsPixelsAndMetadata` verifies the pixel
+  shift, palette/background/output-control/DMA metadata, and bounds checks.
+- `AppSettingsStoreTests.Overscan_RoundtripsAndClamps` covers persistence and the
+  0/32 px clamp.
+- The desktop path applies the crop before OpenGL/Vulkan/software presentation and in
+  `SaveNativeScreenshot`; it is presentation-only, so frame hashes and save states do
+  not change. The full suite is **1,466 tests**.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

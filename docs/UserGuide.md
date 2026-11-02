@@ -352,7 +352,10 @@ the emulated and presented rates. The **Graphics API** list selects **OpenGL**,
 **Vulkan**, or **Software (CPU)**; changing it recreates the presenter without restarting
 emulation. **Output resolution** selects the final presentation size: match the window,
 native 320x240, 2x/3x/4x, 720p, 1080p, 1440p, or 4K. This is output upscaling, not
-internal CEL rendering. The renderer falls back to the CPU `WriteableBitmap` presenter
+internal CEL rendering. **Overscan crop** (Settings > Video) hides 4-24 pixels from every edge for TVs and
+captures that show the outer frame; native screenshots use the same crop. It changes
+presentation only, not emulation, input, audio, or save states. The renderer falls back
+to the CPU `WriteableBitmap` presenter
 when OpenGL initialization or context recovery fails; the status line and **Logs** report
 the reason.
 

@@ -106,6 +106,7 @@ every serialized property in `AppSettings`.
 | `CustomAspect` | double | `1.3333` | Width/height ratio used when `Aspect` is `Custom`. |
 | `Vsync` | bool | `true` | Request platform vsync (where supported). |
 | `IntegerScale` | bool | `true` | Prefer integer scaling for 4:3/integer modes. |
+| `OverscanPixels` | int | `0` | Crop this many pixels from every edge before presentation and native screenshots (0-32). Presentation-only; frame hashes, input, and save states are unchanged. |
 | `Renderer` | enum string | `"OpenGl"` | Presentation backend: `OpenGl`, `Vulkan`, or `Software`. |
 | `OutputResolution` | enum string | `"Window"` | Final output size: `Window`, `Native`, `Scale2X`, `Scale3X`, `Scale4X`, `Hd720`, `FullHd1080`, `Qhd1440`, or `Uhd2160`. |
 | `ShowOverlay` | bool | `false` | Show the FPS/status overlay. |
@@ -257,6 +258,7 @@ player-1 defaults. See section 3 for the full input structure.
   "CustomAspect": 1.3333,
   "Vsync": true,
   "IntegerScale": true,
+  "OverscanPixels": 0,
   "Renderer": "OpenGl",
   "OutputResolution": "Window",
   "ShowOverlay": false,
