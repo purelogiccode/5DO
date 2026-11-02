@@ -85,7 +85,7 @@ dotnet build 5DO.sln -c Release
 dotnet test 5DO.sln -c Release
 ```
 
-The current suite is **1,589 tests** (verified 2026-11-02) and completes in a few seconds
+The current suite is **1,592 tests** (verified 2026-11-02) and completes in a few seconds
 on the development machine. The build treats warnings as errors and runs the .NET
 analyzers plus Meziantou and Roslynator analyzers.
 

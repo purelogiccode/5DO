@@ -1,3 +1,4 @@
+using System.IO;
 using FiveDo.Core;
 using FiveDo.Machine;
 
@@ -49,5 +50,28 @@ public sealed class FiqLatencyTests
         Assert.Equal(0, machine.FiqLatency.Requests);
         Assert.Equal(0, machine.FiqLatency.Entries);
         Assert.Equal(0, machine.Cpu.CyclesExecuted);
+    }
+
+    [Fact]
+    public void LoadState_ResetsTelemetryAndDoesNotSynthesizeARequest()
+    {
+        var source = new FiveDoMachine();
+        source.Clio.Poke(0x48, 1u << 9);
+        source.Clio.GenerateFiq(1u << 9, 0);
+        Assert.Equal(1, source.FiqLatency.Requests);
+        using var state = new MemoryStream();
+        source.SaveState(state);
+
+        var loaded = new FiveDoMachine();
+        state.Position = 0;
+        loaded.LoadState(state);
+
+        Assert.Equal(0, loaded.FiqLatency.Requests);
+        Assert.Equal(0, loaded.FiqLatency.Entries);
+
+        loaded.RunFrame();
+
+        Assert.Equal(0, loaded.FiqLatency.Requests);
+        Assert.Equal(1, loaded.FiqLatency.UnmatchedEntries);
     }
 }

@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-02  
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,589 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,592 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **594 load**, **593 render**; 1 known boot failure (Crash 'n Burn Japan); 0 not loadable | v1.0 ships with this documented evidence; 12,000-frame in-game/visual review and high-res pass are post-1.0; Linux x64 full suite passed (GL preview) |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,589** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,592** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5, all-filter 4K60 budgets remain |
 | Platforms | Windows x64 validated; Linux x64 full suite **1,473/1,473** passed (GL preview); three unified x64 bundles (Windows/Linux/macOS) with framework-dependent single-file apphosts; .NET 10 runtime required (not bundled); opt-in NativeAOT | macOS/Pi/installers are post-1.0; Linux GPU presentation is unvalidated under llvmpipe |
 | Release | **v1.1.0 released (GitHub)** | Documented-compatibility scope; legal/attribution sign-off recorded; M13 loadability evidence complete; M14 is post-1.0 research; Linux x64 full suite passed; tags `v1.0.0`/`v1.1.0` and GitHub releases published |
@@ -43,7 +43,7 @@ configurable void border, and VID-14's gallery filters, side-by-side compare, ex
 and settings sidecars are landed. **CORE-07** now measures FIQ request-to-vector
 latency and traces requests/entries, **CORE-06** closes the output-FIFO reload,
 DIPIR-protected XBUS DMA, MADAM MCTL persistence, and XBUS Opera poll/state gaps, and
-**CORE-05** exposes DSP per-tick timing metrics. The suite is **1,589 tests**; build,
+**CORE-05** exposes DSP per-tick timing metrics. The suite is **1,592 tests**; build,
 format, and inspectcode are clean.
 
 ---
@@ -100,7 +100,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **9. Land the disc/peripheral P0 batch.** SYS-01 multi-track TOC, raw CD-DA sectors, and mixing are implemented; AUD-05 persists CD-DA volume/mute in settings, UI, CLI, and state. SYS-02 now has an M3U playlist, live host swap, F3/UI swap, guest inject, and CLI swap. Finish known-title CD-DA evidence, ODE prompts, then SYS-03 PAL/NTSC, SYS-15 calibration/multiplayer pointer, SYS-18 auto profiles. See Part II.
 - [ ] **10. Polish the shipped UX.** UX-06 Lua/frame editor/lag counter, UX-12 per-game NVRAM/drag-drop, UX-13 external metadata/media/editor, UX-19 gamepad quick-menu navigation. See Part II.
 - [ ] **11. Post-1.0 platform and packaging work.** macOS/Pi validation, installers/signing/notarization, and the "best in the world" gates in §8.2.
-- [x] **12. Land the CORE-05/06/07 audit increment (2026-11-02).** FIQ request-to-vector latency telemetry and traces, the CLIO/DIPIR/FIFO/MCTL/XBUS audit fixes and tests, and DSP per-tick statistics are implemented. Evidence: **1,589 tests**, clean build/format/inspectcode, and a 3,000-frame Gex/Lemmings boot with the documented frame hashes intact. See section 9 and [`Diagnostics.md`](Diagnostics.md) section 7.
+- [x] **12. Land the CORE-05/06/07 audit increment (2026-11-02).** FIQ request-to-vector latency telemetry and traces, the CLIO/DIPIR/FIFO/MCTL/XBUS audit fixes and tests, and DSP per-tick statistics are implemented. Evidence: **1,592 tests**, clean build/format/inspectcode, and a 3,000-frame Gex/Lemmings boot with the documented frame hashes intact. See section 9 and [`Diagnostics.md`](Diagnostics.md) section 7.
 
 ---
 
@@ -428,7 +428,7 @@ These are **post-1.0 goals**, not v1.0 blockers. A release can be called “the 
   documented key), 21,183 FIQ requests / 14,345 entries / max 859,234 cycles, and
   88,955,550 DSP instructions over 2,205,094 ticks (735 ticks/frame, max 106, mean 51.7).
   CLIO tracing recorded 4,714 XBUS DMA transfers with paired start/done lines.
-- [x] Verification: **1,589 tests pass**; build **0 warnings / 0 errors**;
+- [x] Verification: **1,592 tests pass**; build **0 warnings / 0 errors**;
   `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**.
 
 ### 2026-11-02 — VID-14 screenshot filters, compare, export, and sidecars

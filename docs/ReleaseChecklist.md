@@ -126,7 +126,7 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - [x] `dotnet build 5DO.sln -c Release` passes with 0 warnings and 0 errors
       (1.0.0).
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release` passes:
-      **1,473/1,473** with the current tree.
+      **1,592/1,592** with the current tree.
 - [x] `dotnet format 5DO.sln --verify-no-changes` passes.
 - [x] `jb inspectcode 5DO.sln --severity=WARNING` reports 0 warnings and 0 errors
       (2026-11-02).

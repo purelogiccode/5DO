@@ -110,4 +110,27 @@ public sealed class ClioFiqTelemetryTests
 
         Assert.Equal(2, count);
     }
+
+    [Fact]
+    public void Load_DoesNotSynthesizeARequestForTheRestoredLevel()
+    {
+        var source = new ClioChip();
+        source.Poke(0x48, 1u << 9);
+        source.GenerateFiq(1u << 9, 0);
+        var writer = new StateWriter();
+        source.Save(writer);
+
+        var target = new ClioChip();
+        var count = 0;
+        target.FiqRequested = _ => count++;
+        target.Load(new StateReader(writer.ToArray()));
+
+        Assert.Equal(0, count);
+        Assert.True(target.NeedFiq);
+
+        target.Poke(0x44, 1u << 9);
+        target.GenerateFiq(1u << 9, 0);
+
+        Assert.Equal(1, count);
+    }
 }

@@ -1,4 +1,5 @@
 using System.IO;
+using FiveDo.Core;
 using FiveDo.Machine;
 using FiveDo.Memory;
 using FiveDo.Tests.TestUtilities;
@@ -53,6 +54,21 @@ public sealed class MadamDmaAuditTests
 
         Assert.False(copy.Madam.ClutDmaEnabled);
         Assert.False(copy.Madam.VideoDmaEnabled);
+    }
+
+    [Fact]
+    public void DirectMadamStateRoundtrip_PreservesTheMctlWrittenGate()
+    {
+        var madam = new MadamChip();
+        madam.Poke(0x008, 0);
+        var writer = new StateWriter();
+        madam.Save(writer);
+
+        var copy = new MadamChip();
+        copy.Load(new StateReader(writer.ToArray()));
+
+        Assert.False(copy.ClutDmaEnabled);
+        Assert.False(copy.VideoDmaEnabled);
     }
 
     [Fact]
