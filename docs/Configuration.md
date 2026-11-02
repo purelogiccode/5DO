@@ -99,14 +99,20 @@ every serialized property in `AppSettings`.
 | `AutoGameFixes` | bool | `true` | Apply the 4DO per-game fix-mode mapping automatically. |
 | `FixModeOverrides` | object | `{}` | Per-game fix-mode overrides, keyed by game ID. |
 | `FilterOverrides` | object | `{}` | Per-game filter overrides, keyed by game ID. |
-| `GameProfiles` | object | `{}` | Per-game profile snapshots, keyed by game ID. Each entry holds `Profile`, `Region`, `ArmTiming`, `ClioTimers`, `CelTiming`, `CdromTiming`, `CdSpeed`, `CpuClockMultiplier`, `CdAudioVolume`, `CdAudioMuted`, `BiosMd5`, `FixMode`, `Filter`, `HighResolution`, `InputDevices`, `NvramStorageMode`, and `NvramVersion`. |
+| `GameProfiles` | object | `{}` | Per-game profile snapshots, keyed by game ID. Each entry holds `Profile`, `Region`, `ArmTiming`, `ClioTimers`, `CelTiming`, `CdromTiming`, `CdSpeed`, `CpuClockMultiplier`, `CdAudioVolume`, `CdAudioMuted`, `BiosMd5`, `FixMode`, `Filter`, `HighResolution`, `Overscan`, `InputDevices`, `NvramStorageMode`, and `NvramVersion`. |
 | `Filter` | enum string | `"SharpBilinear"` | Global presentation filter. |
 | `FrameSkip` | enum string | `"Auto"` | Presentation frame-skip policy: `Off`, `Auto`, `OneInTwo`, `OneInThree`, `OneInFour`, or `OneInFive`. Only presentation is skipped; emulation and audio always run every frame. |
 | `Aspect` | enum string | `"FourThree"` | Aspect policy. |
 | `CustomAspect` | double | `1.3333` | Width/height ratio used when `Aspect` is `Custom`. |
 | `Vsync` | bool | `true` | Request platform vsync (where supported). |
 | `IntegerScale` | bool | `true` | Prefer integer scaling for 4:3/integer modes. |
-| `OverscanPixels` | int | `0` | Crop this many pixels from every edge before presentation and native screenshots (0-32). Presentation-only; frame hashes, input, and save states are unchanged. |
+| `OverscanPixels` | int | `0` | Legacy uniform crop applied to every edge when the per-edge values are all zero (0-32). Presentation-only. |
+| `OverscanLeft` | int | `0` | Left-edge crop in native pixels (0-32). Takes precedence over `OverscanPixels` when any per-edge value is nonzero. |
+| `OverscanTop` | int | `0` | Top-edge crop in native pixels (0-32). |
+| `OverscanRight` | int | `0` | Right-edge crop in native pixels (0-32). |
+| `OverscanBottom` | int | `0` | Bottom-edge crop in native pixels (0-32). |
+| `VideoBorderPixels` | int | `0` | Gray/void border around the presented image in screen pixels (0-64). Presentation-only. |
+| `VoidAreaColor` | string | `"#FF101010"` | Void-area and border color as `#RRGGBB` or `#AARRGGBB`. Invalid values fall back to the default. |
 | `Renderer` | enum string | `"OpenGl"` | Presentation backend: `OpenGl`, `Vulkan`, or `Software`. |
 | `OutputResolution` | enum string | `"Window"` | Final output size: `Window`, `Native`, `Scale2X`, `Scale3X`, `Scale4X`, `Hd720`, `FullHd1080`, `Qhd1440`, or `Uhd2160`. |
 | `ShowOverlay` | bool | `false` | Show the FPS/status overlay. |
@@ -259,6 +265,12 @@ player-1 defaults. See section 3 for the full input structure.
   "Vsync": true,
   "IntegerScale": true,
   "OverscanPixels": 0,
+  "OverscanLeft": 0,
+  "OverscanTop": 0,
+  "OverscanRight": 0,
+  "OverscanBottom": 0,
+  "VideoBorderPixels": 0,
+  "VoidAreaColor": "#FF101010",
   "Renderer": "OpenGl",
   "OutputResolution": "Window",
   "ShowOverlay": false,

@@ -219,6 +219,11 @@ public static class AppSettingsStore
                 settings.Renderer = VideoRendererKind.OpenGl;
             }
 
+            if (settings.Renderer == VideoRendererKind.Direct3D11 && !OperatingSystem.IsWindows())
+            {
+                settings.Renderer = VideoRendererKind.OpenGl;
+            }
+
             if (!Enum.IsDefined(settings.Profile))
             {
                 settings.Profile = EmulationProfile.Compatible;
@@ -242,6 +247,17 @@ public static class AppSettingsStore
             settings.PointerOffsetX = Math.Clamp(settings.PointerOffsetX, -160, 160);
             settings.PointerOffsetY = Math.Clamp(settings.PointerOffsetY, -120, 120);
             settings.OverscanPixels = Math.Clamp(settings.OverscanPixels, 0, 32);
+            settings.OverscanLeft = Math.Clamp(settings.OverscanLeft, 0, CropInsets.MaxPixels);
+            settings.OverscanTop = Math.Clamp(settings.OverscanTop, 0, CropInsets.MaxPixels);
+            settings.OverscanRight = Math.Clamp(settings.OverscanRight, 0, CropInsets.MaxPixels);
+            settings.OverscanBottom = Math.Clamp(settings.OverscanBottom, 0, CropInsets.MaxPixels);
+            settings.VideoBorderPixels = Math.Clamp(settings.VideoBorderPixels, 0, 64);
+            // JSON can deserialize null despite the non-nullable annotation.
+            // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+            settings.VoidAreaColor ??= AppSettings.DefaultVoidAreaColor;
+            settings.VoidAreaColor = AppSettings.IsValidColor(settings.VoidAreaColor)
+                ? settings.VoidAreaColor
+                : AppSettings.DefaultVoidAreaColor;
 
             // JSON can deserialize null despite the non-nullable annotation.
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract

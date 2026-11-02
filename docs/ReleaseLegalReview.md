@@ -14,8 +14,8 @@ what was verified, and the decisions recorded for the public v1.0 release.
 
 ## 1. What the release contains
 
-The release is **one bundle per system**: `5do-win-x64.zip`,
-`5do-linux-x64.tar.gz`, and `5do-osx-x64.tar.gz`. Each bundle contains only:
+The release is **one bundle per system**: `5do-<version>-win-x64.zip`,
+`5do-<version>-linux-x64.tar.gz`, and `5do-<version>-osx-x64.tar.gz`. Each bundle contains only:
 
 - the framework-dependent single-file CLI and desktop apphosts and their native
   dependencies,

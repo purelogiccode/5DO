@@ -3,17 +3,28 @@
         xmlns:local="using:FiveDo.Frontend.Avalonia.Views"
         x:Class="FiveDo.Frontend.Avalonia.Views.ScreenshotGalleryWindow"
         Title="Screenshot Gallery"
-        Width="820" Height="560"
-        MinWidth="620" MinHeight="420"
+        Width="900" Height="620"
+        MinWidth="680" MinHeight="460"
         WindowStartupLocation="CenterOwner">
 
-    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
-        <TextBlock Grid.Row="0" x:Name="DirectoryText" Opacity="0.7" FontSize="11"
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="16">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,0,0,8">
+            <TextBox Grid.Column="0" x:Name="GameFilterBox"
+                     PlaceholderText="Filter by game"
+                     ToolTip.Tip="Show only screenshots whose game name contains this text." />
+            <ComboBox Grid.Column="1" x:Name="DateFilterCombo" Width="150"
+                      ToolTip.Tip="Limit screenshots by capture date." />
+            <Button Grid.Column="2" Content="Clear" Click="OnClearFiltersClick"
+                    ToolTip.Tip="Clear the game and date filters." />
+        </Grid>
+
+        <TextBlock Grid.Row="1" x:Name="DirectoryText" Opacity="0.7" FontSize="11"
                    TextTrimming="CharacterEllipsis" Margin="0,0,0,10"
                    ToolTip.Tip="Screenshot directory. Change it in Settings > Paths." />
 
-        <ListBox Grid.Row="1" x:Name="ScreenshotList" SelectionChanged="OnSelectionChanged" DoubleTapped="OnDoubleTapped"
-                 ToolTip.Tip="Captured PNG screenshots, newest first. Double-click to open.">
+        <ListBox Grid.Row="2" x:Name="ScreenshotList" SelectionMode="Multiple"
+                 SelectionChanged="OnSelectionChanged" DoubleTapped="OnDoubleTapped"
+                 ToolTip.Tip="Captured PNG screenshots, newest first. Select two to compare.">
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="local:ScreenshotRow">
                     <Grid ColumnDefinitions="180,*" Margin="4" ColumnSpacing="10">
@@ -34,11 +45,15 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,14,0,0">
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="0,14,0,0">
             <TextBlock Grid.Column="0" x:Name="StatusText" VerticalAlignment="Center"
                        Opacity="0.8" TextWrapping="Wrap"
                        ToolTip.Tip="Selection and file operation status." />
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <Button x:Name="CompareButton" Content="Compare" Click="OnCompareClick" IsEnabled="False"
+                        ToolTip.Tip="Open two selected screenshots side by side." />
+                <Button x:Name="ExportButton" Content="Export..." Click="OnExportClickAsync" IsEnabled="False"
+                        ToolTip.Tip="Copy the selected screenshot to another folder or name." />
                 <Button x:Name="OpenButton" Content="Open" Click="OnOpenClick" IsEnabled="False"
                         ToolTip.Tip="Open the selected screenshot in the default image viewer." />
                 <Button x:Name="CopyPathButton" Content="Copy Path" Click="OnCopyPathClick" IsEnabled="False"

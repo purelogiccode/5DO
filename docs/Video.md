@@ -1,4 +1,4 @@
-# Video and the OpenGL Presenter
+# Video and GPU Presenters
 
 This document describes how 5DO turns MADAM/VDLP output into a window image: the
 frame data model, the CPU accuracy oracle, the two-stage GPU presenter, every filter
@@ -18,7 +18,8 @@ Source map:
 | CPU fallback | `src/FiveDo.Video/CpuVideoRenderer.cs` |
 | GPU presenter | `src/FiveDo.Video.OpenGL/OpenGlRenderer.cs`, `Shaders.cs` |
 | Optional Vulkan presenter | `src/FiveDo.Video.Vulkan/VulkanOffscreenRenderer.cs`, `Frame.vert`, `Palette.frag`, `Scale.frag`, `Xbr.frag`, `FsrEasu.frag`, `FsrRcas.frag` |
-| Filters | `src/FiveDo.Video/HqxFilter.cs`, `HqxPatterns*.cs`, xBR/FSR shader bodies (OpenGL and Vulkan) |
+| Optional Direct3D 11 presenter | `src/FiveDo.Video.Direct3D/Direct3D11Renderer.cs`, `Shaders.cs` |
+| Filters | `src/FiveDo.Video/HqxFilter.cs`, `HqxPatterns*.cs`, xBR/FSR shader bodies (OpenGL, Vulkan, and Direct3D 11) |
 | Capabilities/vsync | `OpenGlCapabilities.cs`, `SwapInterval.cs` |
 | Avalonia surface | `src/FiveDo.Frontend.Avalonia/Controls/VideoSurface.cs` |
 | GPU probes | `src/FiveDo.Frontend.Avalonia/GlProbeWindow.cs`, `GlProbeOptions.cs`, `VkProbeRunner.cs`, `VkProbeOptions.cs` |
@@ -279,7 +280,8 @@ frame into a fixed output buffer.
 | Desktop GL | OpenGL 3.3 core / GLSL 330 | Windows WGL, Linux GLX/EGL, macOS 4.1 core | Primary desktop path; `R16UI`, `usampler2D`, `texelFetch`. |
 | GLES | OpenGL ES 3.0/3.1 / GLSL ES 300 | Windows ANGLE, Raspberry Pi 4/5, other GLES | Same two-stage pipeline. |
 | Vulkan | Vulkan 1.0 / SPIR-V 1.0 | Windows/Linux/macOS with a Vulkan loader and device | Optional offscreen backend and probe; embedded Win32 child surface for the desktop path; CPU readback fallback. |
-| CPU | `WriteableBitmap` + `FrameAssembler` | Any | Fallback when no usable GL/GLES/Vulkan context; accuracy oracle. |
+| Direct3D 11 | Direct3D 11 / HLSL SM 5.0 | Windows 10/11 with feature level 11_0 | Optional Windows backend and probe; embedded Win32 child swapchain; OpenGL remains the default. |
+| CPU | `WriteableBitmap` + `FrameAssembler` | Any | Fallback when no usable GL/GLES/Vulkan/Direct3D context; accuracy oracle. |
 
 On Windows, `--gl-backend auto|wgl|angle|software|vulkan` selects the Avalonia rendering
 mode:
@@ -290,9 +292,11 @@ mode:
 - `software`: force Avalonia software rendering (no GL surface).
 - `vulkan`: hide the OpenGL surface and use the optional embedded Vulkan Win32 child
   surface; platforms without a Win32 surface fall back to the offscreen/readback path.
+- `d3d11` (Windows): hide the OpenGL surface and use the optional embedded Direct3D 11
+  Win32 child swapchain. Other platforms normalize this selection to OpenGL.
 
 `GlBackendOption` also accepts aliases: `default`, `desktop`, `gl`, `angleegl`, `egl`,
-`gles`, `cpu`, `vk`. The option is wired through `Win32PlatformOptions.RenderingMode`;
+`gles`, `cpu`, `vk`, `dx11`, `directx`, and `d3d`. The option is wired through `Win32PlatformOptions.RenderingMode`;
 on non-Windows platforms the platform's default context selection applies.
 
 `OpenGlCapabilities.Detect` parses `GL_VERSION` and reports:
@@ -355,6 +359,41 @@ present and 0.075/0.091 ms GPU time, with 0 managed bytes/frame; 4K xBR measured
 0.21/0.38 ms, and 1080p FSR 0.27/0.78 ms. GPU time excludes the optional per-frame
 readback. See [`Vulkan.md`](Vulkan.md) for the full report and limitations.
 
+### Optional Direct3D 11 backend
+
+`FiveDo.Video.Direct3D` is an optional Windows backend. It mirrors the same two-stage
+pipeline with HLSL shaders compiled at runtime:
+
+```text
+VdlFrame
+  -> R16_UINT pixel texture / R8G8B8A8 CLUT / R32G32_UINT line params
+  -> palette pass at native resolution
+  -> optional xBR 4x pass or FSR EASU pass
+  -> scale/filter pass (or FSR RCAS) at output resolution
+  -> B8G8R8A8 output target
+  -> DXGI flip-model swapchain (desktop) or staging readback (probe)
+```
+
+Select it with `--gl-backend d3d11` or **Settings > Video > Graphics API > DirectX 11
+(Windows)**. The option is Windows-only; a persisted selection is normalized to OpenGL
+on other platforms. If Direct3D initialization or presentation fails, the shell tries
+OpenGL and then the CPU presenter. OpenGL remains the fresh-install default.
+
+The offscreen probe validates device timing and CPU parity:
+
+```powershell
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
+  --d3d-probe artifacts/d3d-probe/4k-sharp.json `
+  --d3d-probe-size 3840x2160 --d3d-probe-frames 30 --d3d-probe-warmup 10 `
+  --d3d-probe-filter sharp-bilinear
+```
+
+`--d3d-window-probe` presents through the native flip-model swapchain and reports
+`vsyncBackend: "fifo"` when vsync is active. On the development RTX 4070, 4K
+sharp-bilinear measured present p99 0.23 ms and GPU p99 0.07 ms; a 320x240 Accurate
+capture matched the CPU oracle with 0 different pixels. See
+[`Direct3D.md`](Direct3D.md) for the full report and limitations.
+
 ---
 
 ## 7. Vsync and presentation
@@ -382,8 +421,8 @@ run at 4 Hz.
 
 ## 8. Screenshots
 
-**Screenshot** writes a PNG from the OpenGL output when available, otherwise from the
-CPU frame:
+**Screenshot** writes a PNG from the OpenGL output when available, from the Direct3D 11
+readback when that presenter is active, otherwise from the CPU frame:
 
 ```text
 <game>-<yyyyMMdd-HHmmss>-f<frames:D6>.png
@@ -406,7 +445,9 @@ flips bottom-up rows to top-down, and converts to BGRA. The native screenshot us
 The OpenGL probe is a developer/validation tool that opens the real Avalonia GL surface,
 presents synthetic 320x240 VDL frames, and writes JSON. It never loads a BIOS or disc.
 The Vulkan probe runs the optional offscreen backend headlessly and writes the same
-report shape with `RequestedBackend: "Vulkan"`.
+report shape with `RequestedBackend: "Vulkan"`. The Direct3D probe runs the optional
+Direct3D 11 backend headlessly (or through a Win32 swapchain with
+`--d3d-window-probe`) and reports `RequestedBackend: "Direct3D11"`.
 
 ```powershell
 dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
@@ -514,6 +555,10 @@ See [`Performance.md`](Performance.md) for the full budget and methodology.
 | `VulkanRendererTests` (opt-in `FIVEDO_VULKAN_TESTS=1`) | CPU parity, fixed/background CLUTs, source/output size changes, xBR/FSR/HQx split-frame orientation. |
 | `VulkanProbeIntegrationTests` (opt-in `FIVEDO_VULKAN_TESTS=1`) | Real Vulkan 320x240 parity, a 4K probe pass, and 640x480 xBR/FSR/HQx passes. |
 | `VkProbeOptionsTests` | Vulkan probe option parsing and defaults. |
+| `Direct3D11ShaderTests` | All six HLSL modules compile for shader model 5.0. |
+| `Direct3D11RendererTests` (opt-in `FIVEDO_D3D_TESTS=1`) | CPU parity, source/output size changes, letterboxing, xBR/FSR/HQx orientation. |
+| `D3dProbeIntegrationTests` (opt-in `FIVEDO_D3D_TESTS=1`) | Real probe parity report. |
+| `D3dProbeOptionsTests` | Direct3D probe option parsing and defaults. |
 
 ---
 
@@ -531,6 +576,9 @@ See [`Performance.md`](Performance.md) for the full budget and methodology.
   surface and no vsync; HQx uses the shared CPU expansion and is CPU-bound. OpenGL
   remains the required desktop presenter. Vulkan device/driver validation outside the
   development machine is pending.
+- The Direct3D 11 backend is Windows-only for desktop presentation. It is optional and
+  OpenGL remains the default; non-Windows settings normalize to OpenGL. Device removal
+  falls back through OpenGL to the CPU presenter.
 - No GPU CEL compositing; CEL rendering remains software at native resolution.
 - No PAL video modes; high-resolution is the opt-in 640x480 mode, not a general 4K
   internal renderer.

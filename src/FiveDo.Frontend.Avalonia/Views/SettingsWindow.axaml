@@ -10,16 +10,16 @@
             <TabItem Header="Video" ToolTip.Tip="Renderer, output resolution, filter, aspect ratio, scaling, overlay, OSD notifications, quick menu, bloom, and FSR options.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <Grid ColumnDefinitions="170,*"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                           Margin="8">
                         <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Renderer"
                                    FontWeight="SemiBold" Margin="0,0,0,4" />
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Graphics API" VerticalAlignment="Center"
                                    ToolTip.Tip="Choose the presentation backend." />
                         <ComboBox x:Name="RendererCombo" Grid.Row="1" Grid.Column="1" Margin="0,0,0,4"
-                                  ToolTip.Tip="OpenGL is the fastest path. Vulkan renders offscreen with CPU readback. Software uses the CPU renderer." />
+                                  ToolTip.Tip="OpenGL is the fastest path. DirectX 11 is optional on Windows. Vulkan renders offscreen with CPU readback. Software uses the CPU renderer." />
                         <TextBlock Grid.Row="2" Grid.Column="1"
-                                   Text="OpenGL is recommended. Vulkan is optional and presents through a CPU readback. Software is the compatibility fallback."
+                                   Text="OpenGL is recommended. DirectX 11 is available on Windows. Vulkan is optional and presents through a CPU readback. Software is the compatibility fallback."
                                    Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
                                    ToolTip.Tip="Renderer notes. Changing the backend recreates the current presenter without restarting emulation." />
 
@@ -112,12 +112,40 @@
                         <ComboBox x:Name="InputPlayerCombo" Grid.Row="25" Grid.Column="1"
                                   HorizontalAlignment="Left" Width="100" Margin="0,8,0,0"
                                   ToolTip.Tip="Choose controller port 1-6 for the input display." />
-                        <TextBlock Grid.Row="26" Grid.Column="0" Text="Overscan crop"
+                        <TextBlock Grid.Row="26" Grid.Column="0" Text="Overscan crop L/T/R/B"
                                    VerticalAlignment="Center" Margin="0,8,0,0"
-                                   ToolTip.Tip="Hide the outer pixels of the frame without changing emulation." />
-                        <ComboBox x:Name="OverscanCombo" Grid.Row="26" Grid.Column="1"
-                                  HorizontalAlignment="Left" Width="160" Margin="0,8,0,0"
-                                  ToolTip.Tip="Crop 0-24 pixels from every edge for presentation and native screenshots." />
+                                   ToolTip.Tip="Hide outer pixels from each edge without changing emulation." />
+                        <StackPanel Grid.Row="26" Grid.Column="1" Orientation="Horizontal" Spacing="4"
+                                    Margin="0,8,0,0">
+                            <TextBox x:Name="OverscanLeftBox" Width="52"
+                                     ToolTip.Tip="Left crop in native pixels (0-32)." />
+                            <TextBox x:Name="OverscanTopBox" Width="52"
+                                     ToolTip.Tip="Top crop in native pixels (0-32)." />
+                            <TextBox x:Name="OverscanRightBox" Width="52"
+                                     ToolTip.Tip="Right crop in native pixels (0-32)." />
+                            <TextBox x:Name="OverscanBottomBox" Width="52"
+                                     ToolTip.Tip="Bottom crop in native pixels (0-32)." />
+                            <TextBlock Text="px" VerticalAlignment="Center" Opacity="0.7" />
+                        </StackPanel>
+                        <TextBlock Grid.Row="27" Grid.Column="0" Text="Void border"
+                                   VerticalAlignment="Center" Margin="0,8,0,0"
+                                   ToolTip.Tip="Draw a border outside the presented image." />
+                        <StackPanel Grid.Row="27" Grid.Column="1" Orientation="Horizontal" Spacing="4"
+                                    Margin="0,8,0,0">
+                            <TextBox x:Name="VideoBorderBox" Width="52"
+                                     ToolTip.Tip="Border thickness in screen pixels (0-64)." />
+                            <TextBox x:Name="VoidAreaColorBox" Width="110"
+                                     ToolTip.Tip="Void-area and border color as #RRGGBB or #AARRGGBB." />
+                            <TextBlock Text="px / color" VerticalAlignment="Center" Opacity="0.7" />
+                        </StackPanel>
+                        <TextBlock Grid.Row="28" Grid.Column="1"
+                                   Text="The crop is presentation-only. Per-game profiles can store their own crop; the border and void color are global."
+                                   Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
+                                   ToolTip.Tip="Crop values do not affect frame hashes, input, audio, or save states." />
+                        <CheckBox x:Name="CheckUpdatesCheck" Grid.Row="29" Grid.Column="1"
+                                  Content="Check for updates when 5DO starts"
+                                  Margin="0,8,0,0"
+                                  ToolTip.Tip="Ask GitHub's public release feed whether a newer 5DO version exists. Only the release URL is requested; no personal data is sent." />
                     </Grid>
                 </ScrollViewer>
             </TabItem>

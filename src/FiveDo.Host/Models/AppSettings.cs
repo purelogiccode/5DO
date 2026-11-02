@@ -38,6 +38,12 @@ public sealed class AppSettings
     /// <summary>Gets or sets a value indicating whether the first-run guide has been shown.</summary>
     public bool FirstRunCompleted { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the desktop shell checks GitHub for a newer
+    /// release when it starts. The check sends only the public release request.
+    /// </summary>
+    public bool CheckForUpdates { get; set; } = true;
+
     /// <summary>Gets or sets the last primary BIOS path.</summary>
     public string BiosPath { get; set; } = string.Empty;
 
@@ -174,6 +180,92 @@ public sealed class AppSettings
     /// emulated state, input, frame hashes, or save states.
     /// </remarks>
     public int OverscanPixels { get; set; }
+
+    /// <summary>Gets or sets the left-edge crop in native pixels (0-32).</summary>
+    /// <remarks>
+    /// The four per-edge values take precedence over <see cref="OverscanPixels"/> when any
+    /// of them is nonzero. <see cref="SetOverscan"/> clears the legacy uniform value.
+    /// </remarks>
+    public int OverscanLeft { get; set; }
+
+    /// <summary>Gets or sets the top-edge crop in native pixels (0-32).</summary>
+    public int OverscanTop { get; set; }
+
+    /// <summary>Gets or sets the right-edge crop in native pixels (0-32).</summary>
+    public int OverscanRight { get; set; }
+
+    /// <summary>Gets or sets the bottom-edge crop in native pixels (0-32).</summary>
+    public int OverscanBottom { get; set; }
+
+    /// <summary>Gets or sets the gray/void border drawn around the presented image (0-64 pixels).</summary>
+    /// <remarks>
+    /// The border is presentation-only. It is drawn outside the filtered image and does not
+    /// change the emulated frame or native screenshots.
+    /// </remarks>
+    public int VideoBorderPixels { get; set; }
+
+    /// <summary>Gets or sets the color of the void area and border.</summary>
+    /// <remarks>
+    /// Accepts <c>#RRGGBB</c> or <c>#AARRGGBB</c>. Invalid values fall back to
+    /// <see cref="DefaultVoidAreaColor"/>.
+    /// </remarks>
+    public string VoidAreaColor { get; set; } = DefaultVoidAreaColor;
+
+    /// <summary>Gets the default void-area color.</summary>
+    public const string DefaultVoidAreaColor = "#FF101010";
+
+    /// <summary>Gets the effective per-edge crop, honoring the legacy uniform value.</summary>
+    /// <returns>A clamped crop.</returns>
+    public CropInsets ResolveOverscan()
+    {
+        var crop = new CropInsets(OverscanLeft, OverscanTop, OverscanRight, OverscanBottom);
+        return crop.IsEmpty ? CropInsets.Uniform(OverscanPixels) : crop.Clamp();
+    }
+
+    /// <summary>Stores a per-edge crop and clears the legacy uniform value.</summary>
+    /// <param name="crop">Crop to store.</param>
+    public void SetOverscan(CropInsets crop)
+    {
+        CropInsets normalized = crop.Clamp();
+        OverscanLeft = normalized.Left;
+        OverscanTop = normalized.Top;
+        OverscanRight = normalized.Right;
+        OverscanBottom = normalized.Bottom;
+        OverscanPixels = 0;
+    }
+
+    /// <summary>Gets a validated void-area color string.</summary>
+    /// <returns>A <c>#RRGGBB</c> or <c>#AARRGGBB</c> string.</returns>
+    public string ResolveVoidAreaColor()
+    {
+        return IsValidColor(VoidAreaColor) ? VoidAreaColor : DefaultVoidAreaColor;
+    }
+
+    /// <summary>Gets whether a string is a supported hex color.</summary>
+    /// <param name="value">Candidate color.</param>
+    /// <returns><see langword="true"/> for <c>#RRGGBB</c> or <c>#AARRGGBB</c>.</returns>
+    public static bool IsValidColor(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value[0] != '#')
+        {
+            return false;
+        }
+
+        if (value.Length is not 7 and not 9)
+        {
+            return false;
+        }
+
+        for (var index = 1; index < value.Length; index++)
+        {
+            if (!Uri.IsHexDigit(value[index]))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     /// <summary>Gets or sets the aspect policy.</summary>
     public AspectMode Aspect { get; set; } = AspectMode.FourThree;

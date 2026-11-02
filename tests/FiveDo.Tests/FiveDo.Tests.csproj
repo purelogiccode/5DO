@@ -46,9 +46,11 @@
     <ProjectReference Include="..\..\src\FiveDo.Host\FiveDo.Host.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Video.OpenGL\FiveDo.Video.OpenGL.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Video.Vulkan\FiveDo.Video.Vulkan.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Video.Direct3D\FiveDo.Video.Direct3D.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Cli\FiveDo.Cli.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Frontend.Avalonia\FiveDo.Frontend.Avalonia.csproj" />
     <ProjectReference Include="..\..\tools\FiveDo.DiffHarness\FiveDo.DiffHarness.csproj" />
+    <ProjectReference Include="..\..\tools\FiveDo.Fuzz\FiveDo.Fuzz.csproj" />
   </ItemGroup>
 
 </Project>

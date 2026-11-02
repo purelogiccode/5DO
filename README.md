@@ -51,11 +51,11 @@ test harness designed for reproducible compatibility evidence.
   recording, screenshots, GIF/WAV capture, a disc browser, controller mapping, and a
   diagnostics bundle.
 - **Modern presentation.** Two-stage OpenGL/GLES presenter with accurate, nearest,
-  sharp-bilinear, CRT, xBR-lv2, FSR 1.0, and HQx filters. An optional Vulkan 1.0
-  backend mirrors the pipeline and is available for desktop and headless probes.
+  sharp-bilinear, CRT, xBR-lv2, FSR 1.0, and HQx filters. Optional Vulkan 1.0 and
+  Direct3D 11 backends mirror the pipeline for desktop and headless probes.
 - **Powerful automation.** Headless `run`, `trace`, `bench`, `selftest`, disc/BIOS/
   NVRAM/cheat/movie/state commands, JSON output, watchpoints, dumps, and differential
-  harnesses.
+  harnesses. Startup and `5do update` check the public GitHub release feed.
 - **One bundle per system.** Windows, Linux, and macOS x64 bundles contain both the
   framework-dependent single-file CLI and desktop app, plus the docs/notices. The
   .NET 10 runtime is a prerequisite and is **not** bundled. Optional NativeAOT CLI
@@ -68,10 +68,10 @@ test harness designed for reproducible compatibility evidence.
 | Version | `1.1.0` release (GitHub Releases) |
 | Validated platform | **Windows x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 |
-| Automated tests | **1,475 tests** in the current test assembly |
+| Automated tests | **1,533 tests** in the current test assembly |
 | Loadability sweep | **594 disc images** tested; after triage **593 loadable/rendered**, 1 known no-video case, 0 not loadable |
 | First pass | 576 rendered, 13 black/blank, 5 not loadable; triage resolved the failures and the blank/black set |
-| Desktop presentation | OpenGL/GLES required; Vulkan optional; CPU fallback available |
+| Desktop presentation | OpenGL/GLES required; Vulkan and Direct3D 11 optional; CPU fallback available |
 | Audio | Exact 44.1 kHz DSP clock; bundled OpenAL Soft 1.23.1 |
 
 The full compatibility picture, per-title evidence, and remaining limitations live in
@@ -93,6 +93,9 @@ The apps are single-file executables. **Install the .NET 10 Runtime first** from
 <https://dotnet.microsoft.com/download/dotnet/10.0>; the bundles do **not** contain a
 .NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.1.0)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
+
+New bundles produced after v1.1.0 include the product version in the filename, for
+example `5do-1.2.0-win-x64.zip`.
 
 ## Features
 

@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>FiveDo.Video.Direct3D</RootNamespace>
+    <AssemblyName>FiveDo.Video.Direct3D</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>$(NoWarn);MA0048</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Meziantou.Analyzer">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Roslynator.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Vortice.Direct3D11" />
+    <PackageReference Include="Vortice.D3DCompiler" />
+    <PackageReference Include="Vortice.DXGI" />
+    <PackageReference Include="Serilog" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="FiveDo.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FiveDo.Core\FiveDo.Core.csproj" />
+    <ProjectReference Include="..\FiveDo.Video\FiveDo.Video.csproj" />
+  </ItemGroup>
+
+</Project>

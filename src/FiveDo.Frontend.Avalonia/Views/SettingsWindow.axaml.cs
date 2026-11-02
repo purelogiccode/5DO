@@ -26,12 +26,25 @@ namespace FiveDo.Frontend.Avalonia.Views;
 /// </summary>
 public partial class SettingsWindow : Window
 {
-    private static readonly RendererOption[] _rendererOptions =
-    [
-        new(VideoRendererKind.OpenGl, "OpenGL (recommended)"),
-        new(VideoRendererKind.Vulkan, "Vulkan (offscreen)"),
-        new(VideoRendererKind.Software, "Software (CPU)"),
-    ];
+    private static readonly RendererOption[] _rendererOptions = CreateRendererOptions();
+
+    private static RendererOption[] CreateRendererOptions()
+    {
+        return OperatingSystem.IsWindows()
+            ?
+            [
+                new(VideoRendererKind.OpenGl, "OpenGL (recommended)"),
+                new(VideoRendererKind.Direct3D11, "DirectX 11 (Windows)"),
+                new(VideoRendererKind.Vulkan, "Vulkan (offscreen)"),
+                new(VideoRendererKind.Software, "Software (CPU)"),
+            ]
+            :
+            [
+                new(VideoRendererKind.OpenGl, "OpenGL (recommended)"),
+                new(VideoRendererKind.Vulkan, "Vulkan (offscreen)"),
+                new(VideoRendererKind.Software, "Software (CPU)"),
+            ];
+    }
 
     private static readonly FrameSkipOption[] _frameSkipOptions =
     [
@@ -41,16 +54,6 @@ public partial class SettingsWindow : Window
         new(FrameSkipMode.OneInThree, "Skip 2 of 3 (20 fps)"),
         new(FrameSkipMode.OneInFour, "Skip 3 of 4 (15 fps)"),
         new(FrameSkipMode.OneInFive, "Skip 4 of 5 (12 fps)"),
-    ];
-
-    private static readonly OverscanOption[] _overscanOptions =
-    [
-        new(0, "None (full frame)"),
-        new(4, "4 px"),
-        new(8, "8 px (recommended)"),
-        new(12, "12 px"),
-        new(16, "16 px"),
-        new(24, "24 px"),
     ];
 
     private static readonly PointerPortOption[] _pointerPortOptions =
@@ -206,9 +209,13 @@ public partial class SettingsWindow : Window
         FrameSkipCombo.ItemsSource = _frameSkipOptions;
         FrameSkipCombo.SelectedItem = _frameSkipOptions.FirstOrDefault(option => option.Value == settings.FrameSkip)
             ?? _frameSkipOptions[0];
-        OverscanCombo.ItemsSource = _overscanOptions;
-        OverscanCombo.SelectedItem = _overscanOptions.FirstOrDefault(option => option.Value == settings.OverscanPixels)
-            ?? _overscanOptions[0];
+        CropInsets overscan = settings.ResolveOverscan();
+        OverscanLeftBox.Text = overscan.Left.ToString(CultureInfo.InvariantCulture);
+        OverscanTopBox.Text = overscan.Top.ToString(CultureInfo.InvariantCulture);
+        OverscanRightBox.Text = overscan.Right.ToString(CultureInfo.InvariantCulture);
+        OverscanBottomBox.Text = overscan.Bottom.ToString(CultureInfo.InvariantCulture);
+        VideoBorderBox.Text = settings.VideoBorderPixels.ToString(CultureInfo.InvariantCulture);
+        VoidAreaColorBox.Text = settings.ResolveVoidAreaColor();
         OverlayCheck.IsChecked = settings.ShowOverlay;
         InputPlayerCombo.ItemsSource = new[] { 1, 2, 3, 4, 5, 6 };
         InputPlayerCombo.SelectedItem = Math.Clamp(settings.InputDisplayPlayer, 1, 6);
@@ -220,6 +227,7 @@ public partial class SettingsWindow : Window
         OsdDurationBox.Text = settings.OsdDurationMilliseconds.ToString(CultureInfo.InvariantCulture);
         QuickMenuCheck.IsChecked = settings.QuickMenuEnabled;
         NativeScreenshotCheck.IsChecked = settings.SaveNativeScreenshot;
+        CheckUpdatesCheck.IsChecked = settings.CheckForUpdates;
         BloomSlider.Value = settings.Bloom;
         FsrSharpnessSlider.Value = settings.FsrSharpness;
         AudioCheck.IsChecked = settings.AudioEnabled;
@@ -887,6 +895,40 @@ public partial class SettingsWindow : Window
         }
     }
 
+    private static int ParseCrop(TextBox box, string label)
+    {
+        var text = box.Text?.Trim();
+        if (string.IsNullOrEmpty(text))
+        {
+            return 0;
+        }
+
+        if (!int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value)
+            || value is < 0 or > CropInsets.MaxPixels)
+        {
+            throw new FormatException($"{label} must be between 0 and {CropInsets.MaxPixels} pixels.");
+        }
+
+        return value;
+    }
+
+    private static int ParseBorder(TextBox box)
+    {
+        var text = box.Text?.Trim();
+        if (string.IsNullOrEmpty(text))
+        {
+            return 0;
+        }
+
+        if (!int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value)
+            || value is < 0 or > 64)
+        {
+            throw new FormatException("The void border must be between 0 and 64 pixels.");
+        }
+
+        return value;
+    }
+
     /// <summary>Copies the edited values into a settings object.</summary>
     /// <param name="settings">Destination settings.</param>
     /// <exception cref="FormatException">Thrown when the fix-mode override is not hexadecimal.</exception>
@@ -918,9 +960,19 @@ public partial class SettingsWindow : Window
         settings.FrameSkip = FrameSkipCombo.SelectedItem is FrameSkipOption frameSkip
             ? frameSkip.Value
             : FrameSkipMode.Auto;
-        settings.OverscanPixels = OverscanCombo.SelectedItem is OverscanOption overscan
-            ? overscan.Value
-            : 0;
+        settings.SetOverscan(new CropInsets(
+            ParseCrop(OverscanLeftBox, "Left overscan"),
+            ParseCrop(OverscanTopBox, "Top overscan"),
+            ParseCrop(OverscanRightBox, "Right overscan"),
+            ParseCrop(OverscanBottomBox, "Bottom overscan")));
+        settings.VideoBorderPixels = ParseBorder(VideoBorderBox);
+        var voidColor = VoidAreaColorBox.Text?.Trim();
+        if (!AppSettings.IsValidColor(voidColor))
+        {
+            throw new FormatException("The void color must be #RRGGBB or #AARRGGBB.");
+        }
+
+        settings.VoidAreaColor = voidColor!;
         settings.ShowOverlay = OverlayCheck.IsChecked == true;
         settings.InputDisplayPlayer = InputPlayerCombo.SelectedItem is int inputPlayer
             ? inputPlayer
@@ -948,6 +1000,7 @@ public partial class SettingsWindow : Window
 
         settings.QuickMenuEnabled = QuickMenuCheck.IsChecked == true;
         settings.SaveNativeScreenshot = NativeScreenshotCheck.IsChecked == true;
+        settings.CheckForUpdates = CheckUpdatesCheck.IsChecked == true;
         settings.Bloom = (float)BloomSlider.Value;
         settings.FsrSharpness = (float)FsrSharpnessSlider.Value;
         settings.AudioEnabled = AudioCheck.IsChecked == true;
@@ -1540,11 +1593,6 @@ public partial class SettingsWindow : Window
         {
             return Label;
         }
-    }
-
-    private sealed record OverscanOption(int Value, string Label)
-    {
-        public override string ToString() => Label;
     }
 
     private sealed record FrameSkipOption(FrameSkipMode Value, string Label)

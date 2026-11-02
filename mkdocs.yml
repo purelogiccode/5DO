@@ -131,7 +131,7 @@ nav:
       - Audio: Audio.md
       - Video: Video.md
       - Vulkan: Vulkan.md
-      - Direct3D 11 (planned): Direct3D.md
+      - Direct3D 11: Direct3D.md
       - Performance: Performance.md
       - Diagnostics: Diagnostics.md
       - Glossary: Glossary.md
@@ -143,6 +143,7 @@ nav:
       - Porting notes: PortingNotes.md
       - Reference strategy: ReferenceStrategy.md
       - Differential harness: DifferentialHarness.md
+      - Fuzzing: Fuzzing.md
       - Fix parity audit: FixParity.md
       - Trimming and AOT: Trimming.md
       - Documentation guide: Documentation.md

@@ -53,3 +53,22 @@ internal sealed partial class LibraryStateJsonContext : JsonSerializerContext;
     PropertyNameCaseInsensitive = true)]
 [JsonSerializable(typeof(LibraryMetadata))]
 internal sealed partial class LibraryMetadataJsonContext : JsonSerializerContext;
+
+/// <summary>
+/// Source-generated JSON metadata for the update-check cache.
+/// </summary>
+[JsonSourceGenerationOptions(
+    WriteIndented = true,
+    PropertyNameCaseInsensitive = true)]
+[JsonSerializable(typeof(UpdateCacheEntry))]
+internal sealed partial class UpdateCacheJsonContext : JsonSerializerContext;
+
+/// <summary>
+/// Source-generated JSON metadata for screenshot sidecars.
+/// </summary>
+[JsonSourceGenerationOptions(
+    WriteIndented = true,
+    PropertyNameCaseInsensitive = true,
+    UseStringEnumConverter = true)]
+[JsonSerializable(typeof(ScreenshotMetadata))]
+internal sealed partial class ScreenshotMetadataJsonContext : JsonSerializerContext;

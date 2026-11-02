@@ -68,6 +68,68 @@ public sealed class ScreenshotLibraryTests
     }
 
     [Fact]
+    public void List_FiltersByGameAndCaptureTime()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-shots-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string gex = Path.Combine(directory, "Gex (USA)-20261101-120000-f000010.png");
+            string roadRash = Path.Combine(directory, "Road Rash (USA)-20261031-090000-f000020.png");
+            string gexNative = Path.Combine(directory, "Gex (USA)-20261101-120000-f000010-native.png");
+            File.WriteAllBytes(gex, [1]);
+            File.WriteAllBytes(roadRash, [1]);
+            File.WriteAllBytes(gexNative, [1]);
+
+            var gexOnly = ScreenshotLibrary.List(directory, "gex");
+            Assert.Equal(2, gexOnly.Count);
+            Assert.All(gexOnly, entry => Assert.Equal("Gex (USA)", entry.GameName));
+
+            var from = new DateTimeOffset(2026, 11, 1, 0, 0, 0, TimeSpan.Zero);
+            var recent = ScreenshotLibrary.List(directory, null, from);
+            Assert.Equal(2, recent.Count);
+            Assert.All(recent, entry => Assert.Equal("Gex (USA)", entry.GameName));
+
+            var to = new DateTimeOffset(2026, 10, 31, 23, 59, 59, TimeSpan.Zero);
+            var older = ScreenshotLibrary.List(directory, null, null, to);
+            Assert.Single(older);
+            Assert.Equal("Road Rash (USA)", older[0].GameName);
+
+            Assert.Equal(
+                ["Gex (USA)", "Road Rash (USA)"],
+                ScreenshotLibrary.ListGames(directory));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Export_CopiesToADestinationDirectory()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-shots-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string path = Path.Combine(directory, "Gex (USA)-20261101-120000-f000010.png");
+            File.WriteAllBytes(path, [1, 2, 3]);
+            string destination = Path.Combine(directory, "exported", "capture.png");
+
+            string result = ScreenshotLibrary.Export(path, destination);
+
+            Assert.Equal(Path.GetFullPath(destination), result);
+            Assert.Equal([1, 2, 3], File.ReadAllBytes(destination));
+            Assert.Throws<FileNotFoundException>(
+                () => ScreenshotLibrary.Export(Path.Combine(directory, "missing.png"), destination));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void Delete_RemovesTheFileAndListHandlesMissingDirectories()
     {
         var directory = Path.Combine(Path.GetTempPath(), $"fivedo-shots-{Guid.NewGuid():N}");

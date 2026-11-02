@@ -49,6 +49,7 @@ public sealed class AppSettingsStoreTests
             CpuClockMultiplier = 1.5,
             CdAudioVolume = 0.35f,
             CdAudioMuted = true,
+            CheckForUpdates = false,
         };
 
         AppSettingsStore.Save(settings, path);
@@ -61,6 +62,7 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(1.5, loaded.CpuClockMultiplier);
         Assert.Equal(0.35, loaded.CdAudioVolume, 3);
         Assert.True(loaded.CdAudioMuted);
+        Assert.False(loaded.CheckForUpdates);
     }
 
     [Fact]
@@ -209,6 +211,40 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void PerEdgeOverscanAndVoidBorder_RoundtripAndClamp()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        var settings = new AppSettings
+        {
+            OverscanLeft = 2,
+            OverscanTop = 4,
+            OverscanRight = 6,
+            OverscanBottom = 8,
+            VideoBorderPixels = 12,
+            VoidAreaColor = "#ff202020",
+        };
+
+        AppSettingsStore.Save(settings, path);
+        AppSettings loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal(new CropInsets(2, 4, 6, 8), loaded.ResolveOverscan());
+        Assert.Equal(12, loaded.VideoBorderPixels);
+        Assert.Equal("#ff202020", loaded.VoidAreaColor);
+
+        settings.OverscanLeft = 99;
+        settings.OverscanTop = -4;
+        settings.VideoBorderPixels = 500;
+        settings.VoidAreaColor = "bad";
+        AppSettingsStore.Save(settings, path);
+        loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal(new CropInsets(32, 0, 6, 8), loaded.ResolveOverscan());
+        Assert.Equal(64, loaded.VideoBorderPixels);
+        Assert.Equal(AppSettings.DefaultVoidAreaColor, loaded.VoidAreaColor);
+    }
+
+    [Fact]
     public void AudioDeviceAndBuffer_RoundtripAndClamp()
     {
         using var temp = new TemporaryDirectory();
@@ -301,6 +337,7 @@ public sealed class AppSettingsStoreTests
             FixMode = FixMode.BitTiming5,
             Filter = VideoFilter.Crt,
             HighResolution = true,
+            Overscan = new CropInsets(2, 3, 4, 5),
             InputDevices = ["Mouse", "Lightgun", "Joypad", "Joypad", "Joypad", "Joypad"],
             NvramStorageMode = NvramStorageMode.PerGame,
             NvramVersion = 3,
@@ -316,6 +353,7 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(1.5, loaded.CpuClockMultiplier);
         Assert.Equal(0.4f, loaded.CdAudioVolume);
         Assert.True(loaded.CdAudioMuted);
+        Assert.Equal(new CropInsets(2, 3, 4, 5), loaded.Overscan);
         Assert.Equal("0123456789ABCDEF0123456789ABCDEF", loaded.BiosMd5);
         Assert.Equal(FixMode.BitTiming5, loaded.FixMode);
         Assert.Equal(VideoFilter.Crt, loaded.Filter);
@@ -357,6 +395,10 @@ public sealed class AppSettingsStoreTests
             HighResolution = true,
             NvramStorageMode = NvramStorageMode.PerGame,
             NvramVersion = 4,
+            OverscanLeft = 1,
+            OverscanTop = 2,
+            OverscanRight = 3,
+            OverscanBottom = 4,
         };
         settings.SetBiosOverride("A1B2C3D4", "0123456789ABCDEF0123456789ABCDEF");
         settings.SetFixModeOverride("A1B2C3D4", FixMode.BitTiming5);
@@ -374,6 +416,7 @@ public sealed class AppSettingsStoreTests
         Assert.Equal("Mouse", profile.InputDevices[0]);
         Assert.Equal(NvramStorageMode.PerGame, profile.NvramStorageMode);
         Assert.Equal(4, profile.NvramVersion);
+        Assert.Equal(new CropInsets(1, 2, 3, 4), profile.Overscan);
     }
 
     [Fact]
@@ -403,6 +446,7 @@ public sealed class AppSettingsStoreTests
                 InputDevices = ["Mouse", "Lightgun", "Joypad", "Joypad", "Joypad", "Joypad"],
                 NvramStorageMode = NvramStorageMode.PerGame,
                 NvramVersion = 2,
+                Overscan = new CropInsets(3, 5, 7, 9),
             });
 
         AppSettings effective = settings.CreateEffectiveForGame("a1b2c3d4");
@@ -412,6 +456,8 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(CdSpeed.X4, effective.CdSpeed);
         Assert.Equal(0.25f, effective.CdAudioVolume);
         Assert.True(effective.CdAudioMuted);
+        Assert.Equal(new CropInsets(3, 5, 7, 9), effective.ResolveOverscan());
+        Assert.Equal(CropInsets.None, settings.ResolveOverscan());
         Assert.Equal(
             "0123456789abcdef0123456789abcdef",
             effective.GetBiosOverride("a1b2c3d4"));

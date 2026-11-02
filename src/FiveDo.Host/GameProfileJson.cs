@@ -139,6 +139,11 @@ public static class GameProfileJson
             profile.NvramVersion = null;
         }
 
+        if (profile.Overscan is { } overscan)
+        {
+            profile.Overscan = overscan.Clamp();
+        }
+
         profile.InputDevices = profile.InputDevices.Count == 0
             ? []
             : AppSettings.NormalizeInputDevices(profile.InputDevices).ToList();

@@ -5,9 +5,12 @@ Each bundle contains both the desktop app and the headless CLI:
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-win-x64.zip` |
-| Linux x64 | `5do-linux-x64.tar.gz` |
-| macOS x64 | `5do-osx-x64.tar.gz` |
+| Windows x64 | `5do-<version>-win-x64.zip` |
+| Linux x64 | `5do-<version>-linux-x64.tar.gz` |
+| macOS x64 | `5do-<version>-osx-x64.tar.gz` |
+
+For example, version `1.1.0` produces `5do-1.1.0-win-x64.zip`. The version is read from
+`Directory.Build.props` by default; pass `-Version` to `package-bundle.ps1` to override it.
 
 ## Requirements
 
@@ -85,7 +88,7 @@ pwsh -NoProfile -File packaging/package-bundle.ps1 `
 
 The script merges the two publish outputs, verifies that shared files are identical,
 removes PDB/XML files, copies the README/license/notices/whatsnew/release notes, and
-writes `PACKAGE.txt` and `SHA256SUMS.txt`.
+writes `PACKAGE.txt`, the versioned bundle, and `SHA256SUMS.txt`.
 
 For local release copies, use:
 

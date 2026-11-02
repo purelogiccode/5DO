@@ -21,6 +21,10 @@ public sealed class GlBackendOptionTests
     [InlineData("cpu", GlBackend.Software)]
     [InlineData("vulkan", GlBackend.Vulkan)]
     [InlineData("vk", GlBackend.Vulkan)]
+    [InlineData("d3d11", GlBackend.Direct3D11)]
+    [InlineData("dx11", GlBackend.Direct3D11)]
+    [InlineData("directx", GlBackend.Direct3D11)]
+    [InlineData("d3d", GlBackend.Direct3D11)]
     public void TryParse_AcceptsAliases(string? text, GlBackend expected)
     {
         Assert.True(GlBackendOption.TryParse(text, out GlBackend backend));
@@ -43,6 +47,7 @@ public sealed class GlBackendOptionTests
         Assert.Equal([Win32RenderingMode.AngleEgl], GlBackendOption.ToRenderingModes(GlBackend.Angle));
         Assert.Equal([Win32RenderingMode.Software], GlBackendOption.ToRenderingModes(GlBackend.Software));
         Assert.Equal([Win32RenderingMode.Software], GlBackendOption.ToRenderingModes(GlBackend.Vulkan));
+        Assert.Equal([Win32RenderingMode.Software], GlBackendOption.ToRenderingModes(GlBackend.Direct3D11));
         Assert.Equal(
             [Win32RenderingMode.Wgl, Win32RenderingMode.AngleEgl, Win32RenderingMode.Software],
             GlBackendOption.ToRenderingModes(GlBackend.Auto));

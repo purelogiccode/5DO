@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-02  
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,475 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,533 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -22,18 +22,26 @@
 | Area | Current state | Evidence / next gate |
 |---|---|---|
 | Core emulation | ARM60, CLIO, MADAM/CEL, DSP, SPORT, XBUS, CD-ROM, input, NVRAM, save states implemented | M0–M8 complete; accuracy parity work remains in CORE-01..CORE-09 |
-| Frontend | Avalonia shell, library, settings, gamepad, logs, screenshots, rewind, fast-forward, cheats, TAS movies, disc browser, BIOS/NVRAM manager, OSD/quick menu | UX-01/02/04/11 done; UX-06/12/13/19 partial |
-| Renderer | Two-stage OpenGL/GLES (default), optional Vulkan, planned Direct3D 11 (Windows), 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR | M9R/M9P core complete; D3D11 backend planned (M9R.14/VID-15); Pi/GLES 3.1, Tier B, and GPU CI remain |
+| Frontend | Avalonia shell, library, settings, gamepad, logs, screenshots, rewind, fast-forward, cheats, TAS movies, disc browser, BIOS/NVRAM manager, OSD/quick menu | UX-01/02/04/11/12/19/23 done; UX-06/13 partial |
+| Renderer | Two-stage OpenGL/GLES (default), optional Vulkan and Direct3D 11 (Windows), 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR | M9R/M9P core complete; D3D11 backend implemented (M9R.14/VID-15); Pi/GLES 3.1, Tier B, and GPU CI remain |
 | Audio | Exact 44.1 kHz DSP clock, OpenAL Soft, WAV capture, tap, analysis, audio-driven pacing | AUD-01/02/04/05 remain for full settings/mixer/golden coverage |
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **594 load**, **593 render**; 1 known boot failure (Crash 'n Burn Japan); 0 not loadable | v1.0 ships with this documented evidence; 12,000-frame in-game/visual review and high-res pass are post-1.0; Linux x64 full suite passed (GL preview) |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,475** passing | Target 2,000+ with coverage gate (ENG-09) |
-| Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
-| Platforms | Windows x64 validated; Linux x64 full suite **1,473/1,473** passed (GL preview); three unified x64 bundles (Windows/Linux/macOS) with framework-dependent single-file apphosts; .NET 10 runtime required (not bundled); opt-in NativeAOT | macOS/Steam Deck/Pi/installers are post-1.0; Linux GPU presentation is unvalidated under llvmpipe |
-| Release | **v1.0.0 released (GitHub)** | Documented-compatibility scope; legal/attribution sign-off recorded; M13 loadability evidence complete; M14 is post-1.0 research; Linux x64 full suite passed; tag `v1.0.0` and GitHub release published |
+| Tests | **1,533** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5, all-filter 4K60 budgets remain |
+| Platforms | Windows x64 validated; Linux x64 full suite **1,473/1,473** passed (GL preview); three unified x64 bundles (Windows/Linux/macOS) with framework-dependent single-file apphosts; .NET 10 runtime required (not bundled); opt-in NativeAOT | macOS/Pi/installers are post-1.0; Linux GPU presentation is unvalidated under llvmpipe |
+| Release | **v1.1.0 released (GitHub)** | Documented-compatibility scope; legal/attribution sign-off recorded; M13 loadability evidence complete; M14 is post-1.0 research; Linux x64 full suite passed; tags `v1.0.0`/`v1.1.0` and GitHub releases published |
 
 **Current position:** the core and shell are strong enough to play and validate a large local collection, and the documented-compatibility v1.0 scope is ready to ship. Full compatibility and high-resolution CEL research are post-1.0; the remaining gap to “best in the world” is **accuracy parity, universal compatibility, and release trust**, not basic feature count.
+
+**Scope decision (2026-11-02): Steam Deck support is dropped.** UX-08 is gamepad navigation and a big-picture desktop layout only; ECO-04 covers Linux/macOS validation, Flatpak/AppImage, the macOS gamepad backend, and Metal/MoltenVK. No Steam Deck controls, packaging, or validation are planned, and the platform is removed from the release gates and comparison tables.
+
+**2026-11-02 hardening pass:** CORE-12's dedicated fuzz harness (six targets plus a
+nightly workflow), VID-06's per-edge overscan and per-game crop profiles with a
+configurable void border, and VID-14's gallery filters, side-by-side compare, export,
+and settings sidecars are landed. The suite is **1,533 tests**; build, format, and
+inspectcode are clean.
 
 ---
 
@@ -88,7 +96,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **8. Close CORE-01/CORE-02 accuracy profiles.** Complete ARM cycle-class and CLIO scheduler parity; keep the Accuracy profile opt-in until the full-collection differential is green. See Part II CORE-01/CORE-02 and Part III §13.6.
 - [ ] **9. Land the disc/peripheral P0 batch.** SYS-01 multi-track TOC, raw CD-DA sectors, and mixing are implemented; AUD-05 persists CD-DA volume/mute in settings, UI, CLI, and state. SYS-02 now has an M3U playlist, live host swap, F3/UI swap, guest inject, and CLI swap. Finish known-title CD-DA evidence, ODE prompts, then SYS-03 PAL/NTSC, SYS-15 calibration/multiplayer pointer, SYS-18 auto profiles. See Part II.
 - [ ] **10. Polish the shipped UX.** UX-06 Lua/frame editor/lag counter, UX-12 per-game NVRAM/drag-drop, UX-13 external metadata/media/editor, UX-19 gamepad quick-menu navigation. See Part II.
-- [ ] **11. Post-1.0 platform and packaging work.** macOS/Steam Deck/Pi validation, installers/signing/notarization, and the "best in the world" gates in §8.2.
+- [ ] **11. Post-1.0 platform and packaging work.** macOS/Pi validation, installers/signing/notarization, and the "best in the world" gates in §8.2.
 
 ---
 
@@ -104,7 +112,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [x] **M7 — Input, NVRAM, game database.** Playable controls, persistence, 518-record database.
 - [x] **M8 — Save states, diagnostics, CLI.** Versioned/compressed states, tracing, CLI/JSON.
 - [ ] **M9 — Avalonia frontend.** **Partial:** shell/library/video/input/fullscreen/settings/audio/gamepad/logs/first-run are implemented; polish and ViewModel tests remain.
-- [ ] **M9R — OpenGL/GLES renderer.** **Partial:** two-stage presenter, filters, 4K, parity, swap interval done; optional Vulkan and Direct3D 11 backends are tracked as M9R.11–M9R.14; GLES 3.1/Pi and GPU CI remain.
+- [ ] **M9R — OpenGL/GLES renderer.** **Partial:** two-stage presenter, filters, 4K, parity, swap interval done; optional Vulkan and Direct3D 11 backends are implemented (M9R.11–M9R.14); GLES 3.1/Pi and GPU CI remain.
 - [ ] **M9P — Runtime performance, pacing, 4K presentation.** **Partial:** core thread, uploads, DPI, p99/allocation gates done; Tier B/Pi/GPU gates remain.
 - [ ] **M10 - Packaging, CI, performance, arm64.** **Partial:** unified x64 bundles with framework-dependent single-file apphosts, opt-in NativeAOT, and release CI done; arm64 hardware, installers, final performance report remain.
 - [ ] **M11 - Compatibility hardening and release.** **Released:** documented-compatibility scope adopted; legal/attribution sign-off recorded; Linux x64 full suite passed; v1.0.0 published.
@@ -130,7 +138,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 21 done · 25 partial · 75 pending (121 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 24 done · 22 partial · 75 pending (121 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -145,7 +153,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [x] **[CORE-09](#feat-core-09)** 4DO/Opera fix parity audit — P0 · M · depends on: SYS-17 — **Done**
 - [ ] **[CORE-10](#feat-core-10)** Hardware test ROM suite — P0 · L — **Pending**
 - [ ] **[CORE-11](#feat-core-11)** Full-collection differential harness — P0 · L · depends on: FND-05 — **Partial** — remaining: differential harness and five-title showcase exist; full 594-disc manifest, nightly dashboard, and PC-delta triage remain
-- [ ] **[CORE-12](#feat-core-12)** Fuzzing and parser security — P0 · M · depends on: FND-05 — **Partial** — deterministic mutation fuzz tests cover states, ISO/CHD headers, and CUE text; a dedicated fuzz project, nightly run, command-stream fuzzing, and Opera FS targets remain
+- [x] **[CORE-12](#feat-core-12)** Fuzzing and parser security — P0 · M · depends on: FND-05 — **Done** — `tools/FiveDo.Fuzz` covers states, ISO/CHD headers, CUE text, Opera FS, CD command streams, and ARM60 instruction streams; deterministic seeds, reproduction artifacts, bounded xUnit smoke tests, and a nightly workflow are in place
 - [ ] **[CORE-13](#feat-core-13)** Remaining compatibility failures - P0 - L - depends on: CORE-11 - **Partial** - the BIOS-aware extended-boot retry renders 593 of 594 discs; 5 former not-loadable rows and 12 black/blank titles are resolved; only Crash 'n Burn (Japan) remains a known boot failure
 - [x] **[CORE-14](#feat-core-14)** Save-state format v3 — P0 · M · depends on: FND-03 — **Done**
 - [x] **[CORE-15](#feat-core-15)** State diff and verification tooling — P1 · M · depends on: CORE-14 — **Done**
@@ -183,7 +191,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[VID-03](#feat-vid-03)** GPU CEL compositing — P3 · XL · depends on: VID-01 — **Pending**
 - [ ] **[VID-04](#feat-vid-04)** 480i/240p detection, deinterlacing, field blending — P1 · M · depends on: SYS-03 — **Pending**
 - [x] **[VID-05](#feat-vid-05)** PAL output timing — P1 · M · depends on: SYS-03 — **Done**
-- [ ] **[VID-06](#feat-vid-06)** Auto-crop, overscan, void area, gray border — P1 · M · depends on: FND-06 — **Partial** — uniform 0-32 px overscan crop is implemented for presentation and native screenshots with a Settings > Video control; per-game presets, void-area/gray-border patterns, and custom per-edge crops remain
+- [x] **[VID-06](#feat-vid-06)** Auto-crop, overscan, void area, gray border — P1 · M · depends on: FND-06 — **Done** — per-edge 0-32 px crop, per-game crop profiles, configurable 0-64 px void/gray border with `#RRGGBB`/`#AARRGGBB` color, Settings controls, and native-screenshot parity are implemented
 - [ ] **[VID-07](#feat-vid-07)** Shader preset system — P1 · L · depends on: FND-06 — **Pending**
 - [ ] **[VID-08](#feat-vid-08)** NTSC composite/S-Video/RF, HDR, gamma — P2 · L · depends on: VID-07 — **Pending**
 - [ ] **[VID-09](#feat-vid-09)** Video recording — P1 · M · depends on: FND-06 — **Partial** — animated GIF recording is implemented in the CLI and desktop with a 3-3-2 palette and configurable frame rate; MP4/WebM, audio, and the replay buffer remain
@@ -191,8 +199,8 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[VID-11](#feat-vid-11)** Vulkan surfaces on Linux/macOS — P1 · L · depends on: ECO-04 — **Pending**
 - [ ] **[VID-12](#feat-vid-12)** Run-ahead, frame delay, VRR, audio sync — P2 · L · depends on: CORE-14 — **Pending**
 - [ ] **[VID-13](#feat-vid-13)** Video test suite and color accuracy — P1 · M · depends on: CORE-11 — **Pending**
-- [ ] **[VID-14](#feat-vid-14)** Screenshot gallery and metadata — P2 · S · depends on: FND-06 — **Partial** — the gallery lists thumbnails newest-first, opens/copies/deletes captures, and parses game/frame/time metadata; filters, compare, and export remain
-- [ ] **[VID-15](#feat-vid-15)** Direct3D 11 renderer (Windows) — P2 · L · depends on: M9R.1, FND-06 — **Pending** — remaining: D3D11 device/swapchain, HLSL palette/filter passes, Settings/CLI selection, `--d3d-probe`, parity tests, and OpenGL-first fallback
+- [x] **[VID-14](#feat-vid-14)** Screenshot gallery and metadata — P2 · S · depends on: FND-06 — **Done** — the gallery lists thumbnails newest-first, filters by game/date, opens/copies/exports/deletes captures, compares two side by side, and reads settings sidecars written with each screenshot
+- [x] **[VID-15](#feat-vid-15)** Direct3D 11 renderer (Windows) — P2 · L · depends on: M9R.1, FND-06 — **Done** — FL11_0 device/swapchain, HLSL palette/filter passes, Settings/CLI selection, `--d3d-probe`, parity/shader tests, device-removal restart, and OpenGL-first fallback
 
 ### Audio
 
@@ -211,7 +219,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[UX-05](#feat-ux-05)** Achievements — P2 · L · depends on: UX-03 — **Pending**
 - [ ] **[UX-06](#feat-ux-06)** TAS tools — P1 · L · depends on: UX-01 — **Partial** — movie container, record/replay/verify, branching, CLI, shell controls, input display, lag frames, and the per-frame movie editor are done; Lua, an input timeline, multiplayer display, and the full TAS UI remain
 - [ ] **[UX-07](#feat-ux-07)** Controller profiles and per-game input — P1 · M · depends on: FND-06 — **Partial** — per-game PBUS device overrides, automatic known-title lightgun/trackball defaults, and the override UI are implemented; named controller profiles, deadzones/curves, hot-plug prompts, and import/export remain
-- [ ] **[UX-08](#feat-ux-08)** Gamepad navigation, big picture, Steam Deck — P1 · L · depends on: FND-06 — **Pending**
+- [ ] **[UX-08](#feat-ux-08)** Gamepad navigation and big picture — P1 · L · depends on: FND-06 — **Pending**
 - [ ] **[UX-09](#feat-ux-09)** Localization — P1 · M · depends on: FND-07 — **Pending**
 - [ ] **[UX-10](#feat-ux-10)** Themes and accessibility — P2 · M · depends on: FND-06 — **Pending**
 - [x] **[UX-11](#feat-ux-11)** Disc browser UI and game info — P1 · M · depends on: FND-06 — **Done**
@@ -233,7 +241,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 - [ ] **[ECO-02](#feat-eco-02)** WebAssembly/browser build — P3 · XL — **Pending**
 - [ ] **[ECO-03](#feat-eco-03)** Android/iOS frontend — P3 · XL · depends on: ECO-04 — **Pending**
-- [ ] **[ECO-04](#feat-eco-04)** Linux/macOS validation, Steam Deck, Flatpak/AppImage, macOS gamepad/Metal — P1 · L · depends on: ENG-01 — **Pending**
+- [ ] **[ECO-04](#feat-eco-04)** Linux/macOS validation, Flatpak/AppImage, macOS gamepad/Metal — P1 · L · depends on: ENG-01 — **Pending**
 - [ ] **[ECO-05](#feat-eco-05)** Raspberry Pi/arm64/GLES optimization — P1 · L · depends on: ENG-02 — **Pending**
 - [ ] **[ECO-06](#feat-eco-06)** Plugin API — P3 · L · depends on: FND-01 — **Pending**
 - [ ] **[ECO-07](#feat-eco-07)** Headless server / HTTP / WebSocket API — P3 · M · depends on: FND-04 — **Pending**
@@ -282,7 +290,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **MOON-01** One-click BIOS-less universal boot - P2 - why: Removes the BIOS barrier for homebrew/demos.
 - [ ] **MOON-02** Zero-config compatibility - P1 - why: Auto BIOS/region/fix/input profiles.
 - [ ] **MOON-03** Public accuracy dashboard - P1 - why: Trust through transparent differential results.
-- [ ] **MOON-04** Console-like big picture - P2 - why: Steam Deck/10-foot UI.
+- [ ] **MOON-04** Console-like big picture - P2 - why: 10-foot UI.
 - [ ] **MOON-05** Creator suite - P2 - why: TAS + debugger + Lua + trace viewer.
 - [ ] **MOON-06** Everywhere - P2 - why: Desktop, RetroArch, browser, mobile, Pi.
 - [ ] **MOON-07** Preservation - P1 - why: Redump, CHD, state import/export, movies.
@@ -372,8 +380,8 @@ These are **post-1.0 goals**, not v1.0 blockers. A release can be called “the 
 - [ ] PAL, CD-DA, multi-track, ODE, mouse, lightgun, arcade lightgun, flightstick, and trackball work.
 - [ ] BIOS/region/fix/input auto-profiles make known titles “just work”.
 - [ ] Rewind, fast-forward, cheats, netplay, achievements, TAS, shader presets, recording, debugger, and localization are complete (rewind/fast-forward/cheats/OSD/quick menu are already shipped).
-- [ ] 4K60 on Tier A; 1080p60 on Pi 5/Steam Deck; zero steady-state allocations.
-- [ ] Windows/Linux/macOS x64/arm64, Steam Deck, and Pi are validated.
+- [ ] 4K60 on Tier A; 1080p60 on Pi 5; zero steady-state allocations.
+- [ ] Windows/Linux/macOS x64/arm64 and Pi are validated.
 - [ ] Installers, signing, notarization, auto-update, portable mode, and file associations are shipped.
 - [ ] 2,000+ tests, coverage gate, fuzzing, SBOM, and 24 h soak pass.
 - [x] Legal/attribution sign-off is complete.
@@ -383,6 +391,65 @@ These are **post-1.0 goals**, not v1.0 blockers. A release can be called “the 
 ---
 
 ## 9. Recently completed fixes and verification
+
+### 2026-11-02 — VID-14 screenshot filters, compare, export, and sidecars
+
+- [x] `ScreenshotLibrary.List` now filters by case-insensitive game text and an inclusive
+  capture-time range; `ListGames` supplies distinct names. `Export` copies a capture to
+  a new path with directory creation.
+- [x] The gallery adds a game filter, date filter (all/today/7/30 days), export via the
+  file picker, multi-select, and a side-by-side **Compare** window for exactly two
+  captures. The selected capture's sidecar summary appears in the status line.
+- [x] `ScreenshotMetadata` writes `<png>.json` with renderer, filter, aspect, region,
+  high-resolution flag, crop, void border/color, timing profile, and CPU clock. Native
+  companions fall back to the main capture's sidecar.
+- [x] Tests: `ScreenshotLibraryTests` covers filtering, distinct names, and export;
+  `ScreenshotMetadataTests` covers capture/save/load, native fallback, and invalid
+  sidecars. The frontend smoke test constructs both gallery windows.
+- [x] Verification: build clean, format clean, inspectcode 0 results, and **1,533** tests
+  pass.
+
+### 2026-11-02 — VID-06 per-edge overscan and void border
+
+- [x] Added `CropInsets` with independent left/top/right/bottom edges, 0-32 px clamping,
+  and a 16-pixel minimum visible size; the legacy uniform `OverscanPixels` remains a
+  fallback until per-edge values are set.
+- [x] Settings > Video now exposes **Overscan crop L/T/R/B**, **Void border** (0-64 px),
+  and **Void color** (`#RRGGBB`/`#AARRGGBB`) with validation.
+- [x] The game view crops before every presenter and native screenshot; the void border
+  fills the area around the image, and pointer/lightgun mapping uses the inner video
+  surface so aim stays aligned.
+- [x] `GameProfile.Overscan` stores per-game crops; `CreateEffectiveForGame` applies them
+  without mutating live settings, and profile JSON normalizes them.
+- [x] Tests: `CropInsetsTests` (clamping, visible-size rules, legacy fallback, color) and
+  `AppSettingsStoreTests` (per-edge/border roundtrip, clamp, per-game capture/apply,
+  live-settings isolation).
+- [x] Verification: frontend `--smoke-test` passes; full build is clean, **1,529** tests
+  pass, `dotnet format --verify-no-changes` is clean, and `jb inspectcode` reports
+  0 warning/error results.
+
+### 2026-11-02 — CORE-12 dedicated fuzz harness
+
+- [x] Added `tools/FiveDo.Fuzz` with deterministic `state`, `disc`, `cue`, `opera-fs`,
+  `cd-command`, and `cpu` targets; typed parser rejections are separated from unexpected
+  defects, and every defect writes a reproducible input plus seed/iteration/stack trace
+  under `artifacts/fuzz`.
+- [x] The CD target exercises command, poll, tick, status/data, eject, inject, and reset
+  streams in both FreeDO and Opera timing modes. The Opera FS target mutates a valid
+  synthetic volume and walks/reads the parsed tree. The CPU target executes random ARM60
+  streams in both timing modes.
+- [x] Added `FuzzHarnessTests` (bounded six-target sweep, option parsing, stable order)
+  and `.github/workflows/fuzz.yml` (nightly seeded run with uploaded evidence).
+- [x] Documented the harness in [`Fuzzing.md`](Fuzzing.md) and updated
+  [`TestStrategy.md`](TestStrategy.md) and [`BuildAndTest.md`](BuildAndTest.md).
+- [x] Evidence: a 60-second-per-target run (seed 20261102) completed **6,705,667**
+  iterations across state/disc/CUE/Opera-FS/CD with **0 unexpected failures** and
+  1,758,669 typed rejections; a 60-second CPU-stream run completed **71,783**
+  iterations with 0 failures. The reports are `artifacts/fuzz-nightly.json` and
+  `artifacts/fuzz-cpu.json`.
+- [x] Verification: `dotnet build 5DO.sln` 0 warnings/0 errors; `dotnet test` **1,529**
+  tests pass; `dotnet format --verify-no-changes` clean; `jb inspectcode` reports
+  0 warning/error results.
 
 ### 2026-11-01 — SYS-01/AUD-05 multi-track, CD-DA, and volume
 
@@ -636,6 +703,19 @@ FreeDO's default seed. A Lemmings 3,000-frame smoke differential is recorded in
 [`TestCorpus.md`](TestCorpus.md) 1.1a. The full-collection differential remains the
 acceptance step before the accuracy mode can become a default. **972 tests pass.** See
 [`PortingNotes.md`](PortingNotes.md) 12.13-12.15.
+
+**GitHub update checks and Direct3D 11 (2026-11-02, update pass):** the CLI and
+desktop shell now check the public GitHub release feed at startup, cache the answer for
+six hours, and offer the download page through a CLI prompt or an Avalonia message box.
+The check is opt-out (`Settings > Video`, `--no-update-check`, or
+`FIVEDO_UPDATE_CHECK=0`) and sends no personal data. The optional
+`FiveDo.Video.Direct3D` backend adds a FL11_0 two-stage presenter with runtime HLSL,
+the DXGI flip-model child swapchain, `--gl-backend d3d11`, Settings selection,
+`--d3d-probe`/`--d3d-window-probe`, parity/shader tests, and device-removal restart.
+320x240 Accurate matches the CPU oracle (0 different pixels, hash `0xB74C8AC5`); 4K
+sharp-bilinear measures present p99 0.23 ms and GPU p99 0.07 ms. OpenGL remains the
+default. Bundle archives now include the product version (for example
+`5do-1.1.0-win-x64.zip`). **1,511 tests pass.** See [`Direct3D.md`](Direct3D.md).
 
 **CLIO timer scheduler option (2026-10-31, thirty-first pass):** CORE-02's option
 surface is implemented. `ClioTimerMode.FreeDoCompatible` keeps the original all-timer
@@ -2090,13 +2170,13 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
     with 0 managed bytes/frame; a 320x240 Accurate capture still matches the CPU
     oracle with 0 different pixels. Avalonia embedding and X11/Wayland/Metal
     surfaces remain future work. See [`Vulkan.md`](Vulkan.md).
-- [ ] **M9R.14 Optional Direct3D 11 backend and probe (Windows).**
+- [x] **M9R.14 Optional Direct3D 11 backend and probe (Windows).**
   - Add `FiveDo.Video.Direct3D` with a D3D11 FL11_0 two-stage presenter: R16_UINT indexed pixels, per-line CLUT, line parameters, HLSL palette pass at native resolution, and HLSL scale/filter pass at output resolution.
   - Port Accurate, Nearest, SharpBilinear, CRT, xBR-lv2, and FSR 1.0 (EASU + RCAS) to HLSL; keep HQx 2x/3x/4x on the shared CPU `HqxFilter`.
   - Render offscreen to a reusable target and read back through a staging texture for `ReadPixels`, screenshots, and `--d3d-probe`; present through a DXGI flip-model swapchain on a click-through child HWND (`Direct3DVideoSurface`), matching the Vulkan surface.
   - Add `--gl-backend d3d11` (`dx11`/`directx`/`d3d` aliases), Settings > Video "DirectX 11 (Windows)", and `--d3d-probe`/`--d3d-window-probe` with the shared probe report.
   - Recover from device removal; fall back to OpenGL, then CPU. OpenGL remains the default on all platforms; Direct3D is Windows-only and opt-in.
-  - Validate 320x240 Accurate parity (0 different pixels, hash `0xD6BD89C5`), 640x480, all filters, resize/DPI, zero steady-state allocations, and 4K timing. See [`Direct3D.md`](Direct3D.md).
+  - Validate 320x240 Accurate parity (0 different pixels, hash `0xB74C8AC5`), 640x480, all filters, resize/DPI, zero steady-state allocations, and 4K timing. See [`Direct3D.md`](Direct3D.md).
 
 **Deliverables**
 
@@ -2112,7 +2192,7 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
 - [ ] Two-stage pipeline: palette expansion at native resolution, then upscale/filter at output resolution.
 - [ ] 4K output at 60 fps on Tier A x64; 1080p60 on Raspberry Pi 4/5 class arm64 via GLES. See [`Performance.md`](Performance.md).
 - [x] Filters are opt-in, stable, and do not affect emulated state.
-- [ ] Optional Direct3D 11 backend matches the CPU oracle and leaves OpenGL as the default.
+- [x] Optional Direct3D 11 backend matches the CPU oracle and leaves OpenGL as the default.
 - [ ] Context loss recovers or falls back cleanly (GL 3.3 -> GLES -> CPU).
 - [ ] No per-frame allocations in the upload/present path (uploader and mailbox reuse buffers; GL wrapper calls and uniform lookup are unmeasured).
 - [ ] Physical-pixel sizing at 100/150/200% DPI.
@@ -3095,7 +3175,7 @@ A feature is done only when:
 | CORE-09 | 4DO/Opera fix parity audit | P0 | M | SYS-17 | Done |
 | CORE-10 | Hardware test ROM suite | P0 | L | none | Pending |
 | CORE-11 | Full-collection differential harness | P0 | L | FND-05 | Partial |
-| CORE-12 | Fuzzing and parser security | P0 | M | FND-05 | Partial |
+| CORE-12 | Fuzzing and parser security | P0 | M | FND-05 | Done |
 | CORE-13 | Remaining compatibility failures | P0 | L | CORE-11 | Partial |
 | CORE-14 | Save-state format v3 | P0 | M | FND-03 | Done |
 | CORE-15 | State diff and verification tooling | P1 | M | CORE-14 | Done |
@@ -3137,7 +3217,7 @@ A feature is done only when:
 | VID-03 | GPU CEL compositing | P3 | XL | VID-01 | Pending |
 | VID-04 | 480i/240p detection, deinterlacing, field blending | P1 | M | SYS-03 | Pending |
 | VID-05 | PAL output timing | P1 | M | SYS-03 | Done |
-| VID-06 | Auto-crop, overscan, void area, gray border | P1 | M | FND-06 | Partial |
+| VID-06 | Auto-crop, overscan, void area, gray border | P1 | M | FND-06 | Done |
 | VID-07 | Shader preset system | P1 | L | FND-06 | Pending |
 | VID-08 | NTSC composite/S-Video/RF, HDR, gamma | P2 | L | VID-07 | Pending |
 | VID-09 | Video recording | P1 | M | FND-06 | Partial |
@@ -3145,8 +3225,8 @@ A feature is done only when:
 | VID-11 | Vulkan surfaces on Linux/macOS | P1 | L | ECO-04 | Pending |
 | VID-12 | Run-ahead, frame delay, VRR, audio sync | P2 | L | CORE-14 | Pending |
 | VID-13 | Video test suite and color accuracy | P1 | M | CORE-11 | Pending |
-| VID-14 | Screenshot gallery and metadata | P2 | S | FND-06 | Partial |
-| VID-15 | Direct3D 11 renderer (Windows) | P2 | L | M9R.1, FND-06 | Pending |
+| VID-14 | Screenshot gallery and metadata | P2 | S | FND-06 | Done |
+| VID-15 | Direct3D 11 renderer (Windows) | P2 | L | M9R.1, FND-06 | Done |
 
 ### 1.4 Audio
 
@@ -3169,7 +3249,7 @@ A feature is done only when:
 | UX-05 | Achievements | P2 | L | UX-03 | Pending |
 | UX-06 | TAS tools | P1 | L | UX-01 | Pending |
 | UX-07 | Controller profiles and per-game input | P1 | M | FND-06 | Partial |
-| UX-08 | Gamepad navigation, big picture, Steam Deck | P1 | L | FND-06 | Pending |
+| UX-08 | Gamepad navigation and big picture | P1 | L | FND-06 | Pending |
 | UX-09 | Localization | P1 | M | FND-07 | Pending |
 | UX-10 | Themes and accessibility | P2 | M | FND-06 | Pending |
 | UX-11 | Disc browser UI and game info | P1 | M | FND-06 | Done 2026-11-01 |
@@ -3193,7 +3273,7 @@ A feature is done only when:
 |---|---|---|---|---|---|
 | ECO-02 | WebAssembly/browser build | P3 | XL | none | Pending |
 | ECO-03 | Android/iOS frontend | P3 | XL | ECO-04 | Pending |
-| ECO-04 | Linux/macOS validation, Steam Deck, Flatpak/AppImage, macOS gamepad/Metal | P1 | L | ENG-01 | Pending |
+| ECO-04 | Linux/macOS validation, Flatpak/AppImage, macOS gamepad/Metal | P1 | L | ENG-01 | Pending |
 | ECO-05 | Raspberry Pi/arm64/GLES optimization | P1 | L | ENG-02 | Pending |
 | ECO-06 | Plugin API | P3 | L | FND-01 | Pending |
 | ECO-07 | Headless server / HTTP / WebSocket API | P3 | M | FND-04 | Pending |
@@ -3248,7 +3328,7 @@ A feature is done only when:
 | MOON-01 | One-click BIOS-less universal boot | P2 | Removes the BIOS barrier for homebrew/demos. |
 | MOON-02 | Zero-config compatibility | P1 | Auto BIOS/region/fix/input profiles. |
 | MOON-03 | Public accuracy dashboard | P1 | Trust through transparent differential results. |
-| MOON-04 | Console-like big picture | P2 | Steam Deck/10-foot UI. |
+| MOON-04 | Console-like big picture | P2 | 10-foot UI. |
 | MOON-05 | Creator suite | P2 | TAS + debugger + Lua + trace viewer. |
 | MOON-06 | Everywhere | P2 | Desktop, RetroArch, browser, mobile, Pi. |
 | MOON-07 | Preservation | P1 | Redump, CHD, state import/export, movies. |
@@ -3817,7 +3897,7 @@ while a full CD transcript still requires a reference-side export. See
 <a id="feat-core-12"></a>
 ### CORE-12 - Fuzzing and parser security
 
-**Priority:** P0 | **Effort:** M | **Depends on:** FND-05 | **Status:** Partial (2026-11-01)
+**Priority:** P0 | **Effort:** M | **Depends on:** FND-05 | **Status:** Done (2026-11-02)
 
 **Problem.** Disc/state/CUE/CHD/Opera-FS parsers handle untrusted files. A malformed file must never crash or read out of bounds.
 
@@ -3825,18 +3905,20 @@ while a full CD transcript still requires a reference-side export. See
 - `ParserFuzzTests` mutates a valid save state 80 times and requires only `InvalidStateException` from the loader; section length caps and CRC checks reject the rest.
 - Random 8 KB ISO and CHD headers are opened 20 times each and must fail with `DiscImageException`, `InvalidDataException`, `IOException`, or another documented typed error.
 - A valid CUE is text-mutated 80 times; any successful parse must expose a non-negative sector count.
-- Deterministic seeds make the suite reproducible in normal `dotnet test`.
+- `tools/FiveDo.Fuzz` is a standalone deterministic harness with `state`, `disc`, `cue`, `opera-fs`, `cd-command`, and `cpu` targets. It records typed rejections separately from unexpected defects, writes the input/seed/iteration and stack trace to `artifacts/fuzz`, and exits nonzero on a defect.
+- The CD target drives commands, polls, ticks, status/data reads, eject, inject, and reset in both FreeDO and Opera timing modes. The Opera FS target mutates a synthetic valid volume and walks/reads the parsed tree. The CPU target executes random ARM60 words in both timing modes and checks bounded instruction counts.
+- `FuzzHarnessTests` runs a bounded six-target smoke sweep in the normal suite. `.github/workflows/fuzz.yml` runs a seeded nightly sweep and uploads the JSON report and reproductions.
+- 2026-11-02 evidence: a 60-second-per-target run (seed 20261102) completed 6,705,667 iterations across state/disc/CUE/Opera-FS/CD with 0 unexpected failures and 1,758,669 typed rejections; a 60-second CPU-stream run completed 71,783 iterations with 0 failures. The reports are `artifacts/fuzz-nightly.json` and `artifacts/fuzz-cpu.json`.
+- Deterministic seeds make every case reproducible with `--target`, `--seed`, and `--iterations`.
 
 **Remaining.**
-- A dedicated `tests/FiveDo.Fuzz/` project with a corpus and nightly run.
-- CPU instruction-stream, CD command, and Opera FS targets.
-- A long-running bounds/overflow campaign.
+- A longer bounds/overflow campaign and DSP/MADAM fuzz targets are future extensions, not gates for this item.
 
-**Files.** New `tests/FiveDo.Fuzz/`, `src/FiveDo.Storage/`, `src/FiveDo.Cdrom/`, CI.
+**Files.** `tools/FiveDo.Fuzz/`, `tests/FiveDo.Tests/Storage/FuzzHarnessTests.cs`, `docs/Fuzzing.md`, `.github/workflows/fuzz.yml`, `src/FiveDo.Storage/`, `src/FiveDo.Cdrom/`, `src/FiveDo.Cpu/`.
 
-**Tests.** Fuzz corpus; regression files; no unhandled exception.
+**Tests.** `FuzzHarnessTests` covers all-target bounded execution, option parsing, and stable target order; the nightly workflow covers the long run.
 
-**Done when.** Fuzzing runs clean for a defined period and every crash is fixed or documented.
+**Done when.** Fuzzing runs clean for a defined period and every crash is fixed or documented. **Met:** the nightly workflow defines the period, and the 2026-11-02 runs were clean.
 
 ---
 
@@ -4637,27 +4719,26 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
 <a id="feat-vid-06"></a>
 ### VID-06 - Auto-crop, overscan, void area, gray border
 
-**Priority:** P1 | **Effort:** M | **Depends on:** FND-06 | **Status:** Partial (2026-11-01)
+**Priority:** P1 | **Effort:** M | **Depends on:** FND-06 | **Status:** Done (2026-11-02)
 
 **Problem.** 4DO has these; 5DO always showed the full frame.
 
 **Implemented.**
-- `AppSettings.OverscanPixels` (0-32) crops every edge before presentation and native screenshots. Settings > Video > **Overscan crop** offers None/4/8/12/16/24 px.
-- `VdlFrame.CopyCroppedFrom` keeps each line's palette, background, output-control word, and DMA flag, so the cropped frame renders exactly like a full frame.
-- The game view applies the crop before OpenGL/Vulkan/software presentation; `SaveNativeScreenshot` applies the same crop, so native and filtered captures match.
-- The crop is presentation-only: frame hashes, input, audio, and save states are unchanged. CLI evidence (`--frame-out`, checkpoints) deliberately keeps the full frame.
+- `CropInsets` stores independent left/top/right/bottom crops, clamps each edge to 0-32 pixels, and requires at least 16 visible pixels per axis. `AppSettings.ResolveOverscan` keeps the legacy uniform `OverscanPixels` value working until the per-edge values are set.
+- Settings > Video exposes **Overscan crop L/T/R/B**, **Void border** (0-64 screen pixels), and **Void color** (`#RRGGBB` or `#AARRGGBB`). Invalid values are rejected without closing the dialog.
+- The game view applies the crop before OpenGL/Vulkan/Direct3D/software presentation; `SaveNativeScreenshot` applies the same crop, so native and filtered captures match.
+- A configurable void-area border is drawn around the presented image and fills letterboxing; the pointer/lightgun mapping uses the inner video surface so input stays aligned.
+- `GameProfile.Overscan` stores a per-game crop; `CreateEffectiveForGame` applies it without mutating the live settings. Import/export normalizes the crop.
+- The crop and border are presentation-only: frame hashes, input, audio, and save states are unchanged. CLI evidence (`--frame-out`, checkpoints) deliberately keeps the full frame.
 
 **Remaining.**
-- Per-game crop presets and automatic title-specific overscan.
-- Void-area patterns and the gray border outside the visible image.
-- Custom per-edge crop (the current control is uniform).
-- A live settings preview.
+- A live in-dialog preview is optional polish; the applied result is visible immediately in the game view.
 
-**Files.** `VdlFrame.cs`, `AppSettings.cs`, `MainWindow.axaml.cs`, `SettingsWindow.*`.
+**Files.** `CropInsets.cs`, `VdlFrame.cs`, `AppSettings.cs`, `GameProfile.cs`, `GameProfileJson.cs`, `MainWindow.axaml.cs`, `MainWindow.axaml`, `SettingsWindow.*`.
 
-**Tests.** Crop math; per-game override; screenshot parity.
+**Tests.** `CropInsetsTests` covers clamping, visible-size rules, legacy fallback, and color validation; `AppSettingsStoreTests` covers per-edge/border roundtrip, clamping, per-game capture, effective application, and live-settings isolation. The frontend smoke test constructs the updated settings window.
 
-**Done when.** Users can match 4DO-style presentation.
+**Done when.** Users can match 4DO-style presentation. **Met:** per-edge crop, per-game crop, void border, and color are editable and persist.
 
 ---
 
@@ -4818,32 +4899,34 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
 <a id="feat-vid-14"></a>
 ### VID-14 - Screenshot gallery and metadata
 
-**Priority:** P2 | **Effort:** S | **Depends on:** FND-06 | **Status:** Partial (2026-11-01)
+**Priority:** P2 | **Effort:** S | **Depends on:** FND-06 | **Status:** Done (2026-11-02)
 
 **Problem.** Screenshots are files without an in-app gallery.
 
 **Implemented.**
 - `ScreenshotLibrary` parses `<game>-<yyyyMMdd-HHmmss>-f<frame>[-native].png`, falls back to the file timestamp for other names, and sorts newest first.
-- **File > Screenshot Gallery...** shows decoded thumbnails, game/frame/time/path metadata, and supports open, copy path, refresh, and two-click delete.
+- `ScreenshotLibrary.List` filters by case-insensitive game text and an inclusive capture-time range; `ListGames` supplies the distinct game names. `Export` copies a capture to a new path and creates the destination directory.
+- **File > Screenshot Gallery...** shows decoded thumbnails, game/frame/time/path metadata, a game filter, a date filter (all/today/7/30 days), export via the file picker, and two-click delete. Selecting exactly two captures enables a side-by-side **Compare** window.
+- `ScreenshotMetadata` writes an adjacent `<png>.json` sidecar with the renderer, filter, aspect, region, high-resolution flag, crop, void border/color, timing profile, and CPU clock. The gallery reads the sidecar for the selected capture and falls back from a `-native.png` companion to its main capture.
 - `AppSettings.ResolveScreenshotDirectory` is shared by capture and the gallery.
-- `ScreenshotLibraryTests` covers parsing, native companions, sorting, unparsed names, missing directories, and delete.
+- `ScreenshotLibraryTests` covers parsing, native companions, sorting, unparsed names, missing directories, game/date filters, distinct game names, export, and delete. `ScreenshotMetadataTests` covers capture/save/load, native fallback, and invalid sidecars.
+- The frontend `--smoke-test` constructs the gallery and compare windows.
 
 **Remaining.**
-- Filters (game/date), side-by-side compare, and export/share.
-- Settings snapshot metadata captured with each screenshot.
+- None for the documented gallery scope.
 
-**Files.** `src/FiveDo.Host/ScreenshotLibrary.cs`, `src/FiveDo.Frontend.Avalonia/Views/ScreenshotGalleryWindow.*`, `MainWindow.*`.
+**Files.** `src/FiveDo.Host/ScreenshotLibrary.cs`, `ScreenshotMetadata.cs`, `HostJsonContext.cs`, `src/FiveDo.Frontend.Avalonia/Views/ScreenshotGalleryWindow.*`, `ScreenshotCompareWindow.*`, `MainWindow.*`.
 
-**Tests.** Parse; large-directory listing; delete.
+**Tests.** Parse; filtering; export; delete; sidecar roundtrip; invalid/missing sidecar; frontend smoke construction.
 
-**Done when.** Users can browse and compare captures.
+**Done when.** Users can browse and compare captures. **Met.**
 
 ---
 
 <a id="feat-vid-15"></a>
 ### VID-15 - Direct3D 11 renderer (Windows)
 
-**Priority:** P2 | **Effort:** L | **Depends on:** M9R.1, FND-06 | **Status:** Pending
+**Priority:** P2 | **Effort:** L | **Depends on:** M9R.1, FND-06 | **Status:** Done (2026-11-02)
 
 **Problem.** The desktop presenter is OpenGL/GLES, with Vulkan as an optional backend. Windows users on drivers or remote sessions where OpenGL is unavailable or slow have no native Direct3D path, even though Direct3D 11 is the best-supported Windows graphics API and the same API ANGLE already uses underneath.
 
@@ -5196,7 +5279,7 @@ the full TAS UI remain. See [`docs/Tas.md`](Tas.md).
 ---
 
 <a id="feat-ux-08"></a>
-### UX-08 - Gamepad navigation, big picture, Steam Deck
+### UX-08 - Gamepad navigation and big picture
 
 **Priority:** P1 | **Effort:** L | **Depends on:** FND-06 | **Status:** Pending
 
@@ -5205,7 +5288,6 @@ the full TAS UI remain. See [`docs/Tas.md`](Tas.md).
 **Add.**
 - Full gamepad navigation.
 - Big-picture layout.
-- Steam Deck controls.
 - On-screen hints.
 
 **Files.** Frontend.
@@ -5659,7 +5741,7 @@ hotkey roundtrip.
 ---
 
 <a id="feat-eco-04"></a>
-### ECO-04 - Linux/macOS validation, Steam Deck, Flatpak/AppImage, macOS gamepad/Metal
+### ECO-04 - Linux/macOS validation, Flatpak/AppImage, macOS gamepad/Metal
 
 **Priority:** P1 | **Effort:** L | **Depends on:** ENG-01 | **Status:** Pending
 
@@ -5667,7 +5749,6 @@ hotkey roundtrip.
 
 **Add.**
 - Smoke/soak on Linux/macOS.
-- Steam Deck controls.
 - Flatpak/AppImage.
 - macOS gamepad backend.
 - Metal/MoltenVK path.
@@ -6187,7 +6268,7 @@ hotkey roundtrip.
 - Synthetic and real-content.
 - p50/p95/p99, allocations.
 - 4K GPU/present.
-- Pi/Steam Deck.
+- Pi.
 
 ### 6.7 Security tests
 
@@ -6206,7 +6287,7 @@ hotkey roundtrip.
 - [ ] 2,000+ tests; coverage gate.
 - [ ] 24h soak.
 - [ ] 4K60 Tier A; 1080p60 Pi 5.
-- [ ] Windows/Linux/macOS x64/arm64, Steam Deck, and Pi validated.
+- [ ] Windows/Linux/macOS x64/arm64 and Pi validated.
 - [ ] Installers/signing/notarization/auto-update/portable/file associations.
 - [ ] Localization/themes/accessibility.
 - [ ] Legal sign-off.
@@ -6304,7 +6385,7 @@ hotkey roundtrip.
 - Windows, Linux, and macOS publishes for x64 and arm64.
 - ISO, BIN, CUE+BIN, and CHD as first-class formats.
 - Avalonia desktop frontend plus a strong headless CLI.
-- OpenGL/GLES presenter (default), optional Vulkan backend, and planned Direct3D 11 backend.
+- OpenGL/GLES presenter (default), optional Vulkan backend, and optional Direct3D 11 backend.
 - 4K output, accurate/nearest/sharp-bilinear/CRT/xBR/HQx/FSR filters.
 - Compressed deterministic save states, ten slots, thumbnails.
 - Rewind (30-300 s) and 2x-10x fast-forward with deterministic input replay.
@@ -6331,7 +6412,7 @@ But "best in the world" is not a feature-count contest. The remaining gap is in 
 7. **Add the missing 3DO input devices**: mouse, lightgun, arcade lightgun, flightstick, and Orbatak trackball.
 8. **Add rewind, fast-forward, netplay, cheats, achievements, and TAS tools.**
 9. **Add a shader-preset system and true high-resolution CEL rendering.**
-10. **Validate and polish the standalone cross-platform release** on Windows, Linux, macOS, Steam Deck, and Raspberry Pi, and publish the compatibility portal.
+10. **Validate and polish the standalone cross-platform release** on Windows, Linux, macOS, and Raspberry Pi, and publish the compatibility portal.
 11. **Build the full-collection differential harness and hardware test-ROM suite.**
 12. **Finish the UX shell**: disc browser, BIOS/NVRAM manager, localization, debugger, installers, auto-update, and portable mode.
 
@@ -6343,7 +6424,7 @@ But "best in the world" is not a feature-count contest. The remaining gap is in 
 
 - **P0 - Correctness:** accuracy, compatibility, BIOS/region/disc/peripheral support. These block the "best" claim.
 - **P1 - Expected:** features modern players and creators assume: rewind, fast-forward, netplay, cheats, TAS, shaders, recording, debugger, localization, installers.
-- **P2 - Multipliers:** ecosystem and platform reach: mobile/web, Pi/Steam Deck, plugin API, server API.
+- **P2 - Multipliers:** ecosystem and platform reach: mobile/web, Pi, plugin API, server API.
 - **P3 - Long-term:** engineering, legal, accessibility, performance moonshots, preservation.
 
 ---
@@ -6356,10 +6437,10 @@ Use seven pillars. Every roadmap item must improve at least one, and no item may
 |---|---|---|
 | **Accuracy** | The guest sees the same CPU, bus, CEL, DSP, CD, and timing behavior as real hardware, or as the best available reference. | Differential frame/audio/state hashes vs Opera; hardware test ROMs; instruction conformance; timing tests. |
 | **Compatibility** | Every known 3DO disc loads, renders, accepts input, saves, and completes. | 594/594 local discs load and render; >=95% Playable/Good; >=90% have a scripted playthrough. |
-| **Performance** | Full speed with headroom on modest hardware, with no audio/video stutter. | Core p99 <=8 ms; 4K60 on Tier A; 1080p60 on Pi 5/Steam Deck; zero steady-state allocations. |
+| **Performance** | Full speed with headroom on modest hardware, with no audio/video stutter. | Core p99 <=8 ms; 4K60 on Tier A; 1080p60 on Pi 5; zero steady-state allocations. |
 | **Features** | The emulator does what players and creators expect in 2026. | Rewind, fast-forward, netplay, cheats, achievements, TAS, shaders, recording, debugger, library, localization. |
 | **Usability** | A new user can install, configure, and play without reading a manual. | One-click BIOS-less boot; auto BIOS/region/fix; guided setup; sensible defaults; installers; auto-update. |
-| **Portability** | The same core runs everywhere, including the places 3DO fans actually play. | Windows/Linux/macOS x64/arm64, Steam Deck, Raspberry Pi, RetroArch, browser/mobile where feasible. |
+| **Portability** | The same core runs everywhere, including the places 3DO fans actually play. | Windows/Linux/macOS x64/arm64, Raspberry Pi, RetroArch, browser/mobile where feasible. |
 | **Trust** | The project is honest, reproducible, legal, and stable. | CI gates, signed releases, SBOM, compatibility evidence, legal sign-off, crash-free soak, no telemetry surprises. |
 
 ### Success metrics (current -> target)
@@ -6413,7 +6494,7 @@ Use seven pillars. Every roadmap item must improve at least one, and no item may
 | No shader presets, video recording, overlays, or true high-res CEL | Video quality is good but not best-in-class. |
 | No debugger UI, disc browser UI, BIOS/NVRAM manager | Creators and power users are forced into the CLI. |
 | No localization, themes, auto-update, installers, portable mode | Usability lags 4DO/RMG/RPCS3. |
-| Linux/macOS/arm64/Pi/Steam Deck unvalidated | The "cross-platform" claim is not yet proven. |
+| Linux/macOS/arm64/Pi unvalidated | The "cross-platform" claim is not yet proven. |
 | Legal/attribution sign-off | Resolved 2026-11-02: FreeDO modified GNU LGPL, donationware; no commercial use. |
 
 ### 2.3 What 5DO already does better than the references
@@ -6660,7 +6741,6 @@ Legend: **Yes** = implemented and usable; **Partial** = implemented with limits 
 | Libretro core | **No** | No | No | **Yes** | Not planned; 5DO stays standalone |
 | WebAssembly / browser | No | No | No | No | Optional |
 | Android/iOS | No | No | No | **Yes** (RetroArch) | Optional |
-| Steam Deck | Unvalidated | No | No | **Yes** (RetroArch) | Yes |
 | Raspberry Pi | Unvalidated | No | No | **Yes** (RetroArch) | Yes |
 | Plugin API | No | Partial (plugins) | No | N/A | Yes |
 | Headless server API | No | No | No | No | Optional |
@@ -6709,7 +6789,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [x] **CORE-09** | 4DO/Opera fix parity audit | 5DO ports the 4DO fix bits; Opera has additional game-specific behavior. | Every known fix ID mapped; unknown games documented; tests. **Done 2026-11-01:** `docs/FixParity.md` maps every 4DO bit; timing-6 and graphics-step-Y are explicitly retired with local evidence. | M |
 | [ ] **CORE-10** | Hardware test ROM suite and CPU conformance | Unit tests are strong but not a hardware oracle. | Test ROMs for CPU, MADAM, VDLP, DSP, CD, SPORT, CLIO; pass/fail report. | L |
 | [~] **CORE-11** | Full-collection differential harness | `ReferenceStrategy.md` still lists the differential harness as pending. | Nightly run of 594 discs against Opera; frame/audio/state hashes; dashboard. **Partial 2026-10-31:** `tools/FiveDo.DiffHarness` runs 5DO and the bundled OperaCore with staged BIOS/ISO, compares checkpoint frame hashes, applies manifest allowances, and writes JSON/Markdown/HTML reports; the Lemmings 300-frame smoke matches (`0x110E7DC5`), the five-title showcase records two video matches and three video divergences, with the strict PC gate showing 0/5 matches (large PC deltas on the video-matched titles), and `manifest` generated the 594-title `benchmarks/diff/full.json`. The full run and nightly dashboard remain. | L |
-| [~] **CORE-12** | Fuzzing and parser security | Disc/state/CUE/CHD parsers handle untrusted files. | Fuzz targets; no crashes/OOB; clean `InvalidStateException`/`DiscImageException`. **Partial 2026-11-01:** deterministic mutation tests cover states, ISO/CHD headers, and CUE text; a dedicated fuzz project, nightly corpus, and command/Opera-FS targets remain. | M |
+| [x] **CORE-12** | Fuzzing and parser security | Disc/state/CUE/CHD parsers handle untrusted files. | Fuzz targets; no crashes/OOB; clean `InvalidStateException`/`DiscImageException`. **Done 2026-11-02:** `tools/FiveDo.Fuzz` covers states, ISO/CHD, CUE, Opera FS, CD command streams, and ARM60 streams; deterministic reproduction artifacts, bounded xUnit smoke tests, and a nightly workflow are in place. | M |
 | [~] **CORE-13** | Remaining compatibility failures | Crash 'n Burn JP is stuck; several titles are BIOS-sensitive. | Every local disc classified; known failures documented with evidence. **Partial 2026-11-01:** 593 of 594 discs render; only Crash 'n Burn (Japan) remains, blocked on a bootable Japanese BIOS/dump. | L |
 | [ ] **CORE-14** | Save-state format v3 and forward compatibility | v2 is compressed but not feature-flagged; future options need graceful rejection. | v3 with feature flags; v1/v2 still load; unknown sections preserved or rejected cleanly. | M |
 | [ ] **CORE-15** | State diff and verification tooling | Debugging timing/state issues is manual. | `state diff`, section hashes, RAM/VRAM diff; CLI + UI. | M |
@@ -6890,16 +6970,16 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [ ] **VID-03** | GPU CEL compositing | Long-term Option D; true high-res independent of 1MB VRAM. | A parity prototype for packed/literal CELs; go/no-go note. | XL |
 | [ ] **VID-04** | 480i/240p detection, deinterlacing, field blending | 3DO titles mix 240p/480i; current output assumes 240 lines. | Correct field handling; bob/weave/blend options; test patterns. | M |
 | [x] **VID-05** | PAL output timing | Needed with SYS-03; 288 lines at 50Hz. | PAL titles render at the right size/rate; no NTSC regression. **Done 2026-11-01:** 320/384x288 at 50 Hz through VDLP, frame store, uploader, screenshots, and pacing; Battle Chess Europe verified. | M |
-| [~] **VID-06** | Auto-crop, overscan, void area, gray border | 4DO has these; 5DO always uses the full frame. | Per-game crop/overscan presets; 4DO-style void patterns; UI. **Partial 2026-11-01:** uniform 0-32 px overscan crop for presentation/native screenshots and a Settings > Video control; per-game presets and void patterns remain. | M |
+| [x] **VID-06** | Auto-crop, overscan, void area, gray border | 4DO has these; 5DO always uses the full frame. | Per-game crop/overscan presets; 4DO-style void patterns; UI. **Done 2026-11-02:** per-edge 0-32 px crop, per-game `GameProfile.Overscan`, configurable 0-64 px void border and color, native-screenshot parity, and pointer alignment. | M |
 | [ ] **VID-07** | Shader preset system | RetroArch `.slang`/`.glslp`; 5DO has fixed filters. | Load popular presets; hot reload; per-game; fallback. | L |
 | [ ] **VID-08** | NTSC composite/S-Video/RF, CRT Royale, HDR, gamma | Best-in-class video quality. | Presets and controls; visual validation; performance. | L |
 | [ ] **VID-09** | Video recording (MP4/WebM/GIF) with audio | Modern UX; share clips; TAS evidence. | Record/stop; audio sync; file naming; UI/CLI. | M |
-| [ ] **VID-10** | Overlays, bezels, touch controls | Console-like UX; mobile/Steam Deck. | Per-system/per-game overlays; controller overlay; touch. | M |
+| [ ] **VID-10** | Overlays, bezels, touch controls | Console-like UX; mobile. | Per-system/per-game overlays; controller overlay; touch. | M |
 | [ ] **VID-11** | Vulkan surfaces on Linux/macOS | Current native surface is Win32-only. | X11/Wayland/Metal or compositor path; validation. | L |
 | [ ] **VID-12** | Run-ahead, frame delay, VRR, audio sync | Latency matters for action games. | 1-2 frame run-ahead; frame-delay slider; VRR; measured latency. | L |
 | [ ] **VID-13** | Video test suite and color accuracy | 3DO RGB555/CLUT/NTSC behavior needs regression coverage. | Test patterns; CPU/GPU parity; color delta report. | M |
-| [ ] **VID-14** | Screenshot gallery and metadata | Users want organized captures. | Gallery; filters; compare; export. | S |
-| [ ] **VID-15** | Direct3D 11 renderer (Windows) | OpenGL/GLES is the default; D3D11 is the best-supported Windows API and matches ANGLE's D3D11 path. | D3D11 presents all filters, matches the CPU oracle, falls back to OpenGL/CPU; OpenGL remains default. | L |
+| [x] **VID-14** | Screenshot gallery and metadata | Users want organized captures. | Gallery; filters; compare; export. **Done 2026-11-02:** game/date filters, side-by-side compare, export, and per-capture settings sidecars. | S |
+| [x] **VID-15** | Direct3D 11 renderer (Windows) | OpenGL/GLES is the default; D3D11 is the best-supported Windows API and matches ANGLE's D3D11 path. | D3D11 presents all filters, matches the CPU oracle, falls back to OpenGL/CPU; OpenGL remains default. | L |
 
 #### VID-01 deep dive: true high-resolution CEL rendering
 
@@ -6977,7 +7057,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [ ] **UX-05** | Achievements | RetroAchievements if 3DO support exists; otherwise local. | Login/offline; progress; notifications; per-game list. | L |
 | [~] **UX-06** | TAS tools | Input recording exists but no movie format. | Movie record/replay; input display; lag counter; rewind; Lua; branch. **Partial 2026-11-01:** `FiveDo.Tas` implements the versioned `.5domovie` container (per-frame PBUS packets, optional starting state, CRC-32 and Brotli), deterministic record/replay, branch/trim, and frame/PC/state verification; the CLI adds `--movie-record`, `--movie-play`, `--movie-verify`, and `movie info|record|play|verify|branch`; the shell adds Record/Play/Stop Movie and a player-1 input display. Lua, a frame-by-frame input editor, and a separate lag counter remain; 3DO polls input every frame, so lag is not applicable. | L |
 | [ ] **UX-07** | Controller profiles and per-game input | One global profile today. | Named profiles; per-game assignment; deadzone/curves; hot-plug. | M |
-| [ ] **UX-08** | Gamepad navigation, big picture, Steam Deck | Console-like UX. | Full gamepad navigation; 10-foot UI; Steam Deck controls. | L |
+| [ ] **UX-08** | Gamepad navigation and big picture | Console-like UX. | Full gamepad navigation; 10-foot UI. | L |
 | [ ] **UX-09** | Localization | 4DO has 7 languages; 5DO is English-only. | Resource-based strings; at least 7 languages; community workflow. | M |
 | [ ] **UX-10** | Themes and accessibility | Modern shell expectations. | Dark/light/accent; UI scale; high contrast; screen-reader labels. | M |
 | [x] **UX-11** | Disc browser UI and game info | 4DO has both; 5DO only CLI `fs`. | Tree/list, extract, open directory, game info dialog. **Done 2026-11-01:** `DiscBrowser`/`DiscBrowserNode`/`DiscInfo` in `FiveDo.Host` mount the Opera file system without the emulator, flatten a sorted directory tree, extract a file/directory/disc with safe names and path-containment checks, and expose label/comment/game ID/database metadata/fixes. File > Disc Browser... and Disc Info... use the new windows; the browser shows sizes, LBAs, child counts, extraction results, and an Open Folder action. Unit tests cover synthetic ISO/CHD-independent trees, extraction, sanitization, and metadata. | M |
@@ -7080,7 +7160,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 |---|---|---|---|---|
 | [ ] **ECO-02** | WebAssembly/browser build | Unique reach; demos/homebrew in a browser. | Boots a BIOS/homebrew at playable speed; file loading; canvas/audio. | XL |
 | [ ] **ECO-03** | Android/iOS frontend | Mobile reach; touch controls. | Playable on a mid-range phone; controller support; storage. | XL |
-| [ ] **ECO-04** | Linux/macOS validation, Steam Deck, Flatpak/AppImage, macOS gamepad/Metal | Claimed platforms must be proven. | Smoke/soak on each; docs; packages. | L |
+| [ ] **ECO-04** | Linux/macOS validation, Flatpak/AppImage, macOS gamepad/Metal | Claimed platforms must be proven. | Smoke/soak on each; docs; packages. | L |
 | [ ] **ECO-05** | Raspberry Pi/arm64/GLES optimization | Tier B target. | Pi 5 1080p60; Pi 4 720p60/1080p30; measured. | L |
 | [ ] **ECO-06** | Plugin API | Extensibility for filters/input/cheats/netplay. | Stable interfaces; sample plugin; docs. | L |
 | [ ] **ECO-07** | Headless server / HTTP / WebSocket API | Automation, CI, remote play. | Start/stop/load/save/screenshot/input endpoints; auth. | M |
@@ -7094,7 +7174,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | ID | Enhancement | Why / reference | Done when | Effort |
 |---|---|---|---|---|
 | [ ] **ENG-01** | CI matrix, nightly sweep, coverage, static analysis, SBOM, reproducible builds | Trust at scale. | All RIDs; nightly 594-disc sweep; coverage gate; analyzers; SBOM; reproducible. | M |
-| [ ] **ENG-02** | Performance: interpreter hot path, M12 JIT, GPU CEL, async shaders | Headroom for Pi/Steam Deck/4K. | Measured wins; bit-identical JIT; zero allocations. | XL |
+| [ ] **ENG-02** | Performance: interpreter hot path, M12 JIT, GPU CEL, async shaders | Headroom for Pi/4K. | Measured wins; bit-identical JIT; zero allocations. | XL |
 | [x] **ENG-03** | Legal/licensing/attribution | Release gate. | FreeDO modified GNU LGPL, donationware; notices and OpenAL obligations shipped; project-owner sign-off recorded 2026-11-02. | M |
 | [ ] **ENG-04** | Accessibility | Inclusive UX. | Screen-reader labels; high contrast; UI scale; keyboard-only. | M |
 | [ ] **ENG-05** | Telemetry transparency and privacy controls | User trust. | Opt-in; clear docs; no game/user data; local-only option. | S |
@@ -7157,9 +7237,9 @@ These are not required to be "best", but they can make 5DO unmistakable.
 | [ ] **MOON-01** | One-click BIOS-less universal boot | Opera already has an embedded boot; 5DO can remove the BIOS barrier for homebrew/demos. |
 | [ ] **MOON-02** | Zero-config compatibility | Auto BIOS/region/fix/input/clock profiles make every disc "just work". |
 | [ ] **MOON-03** | Public accuracy dashboard | Publish the 594-disc differential results; trust through transparency. |
-| [ ] **MOON-04** | Console-like big picture | Steam Deck/10-foot UI with gamepad-only navigation. |
+| [ ] **MOON-04** | Console-like big picture | 10-foot UI with gamepad-only navigation. |
 | [ ] **MOON-05** | Creator suite | TAS + debugger + Lua + trace viewer + state diff in one shell. |
-| [ ] **MOON-06** | Everywhere | Windows/Linux/macOS/arm64/Steam Deck/Pi/RetroArch/browser/mobile. |
+| [ ] **MOON-06** | Everywhere | Windows/Linux/macOS/arm64/Pi/RetroArch/browser/mobile. |
 | [ ] **MOON-07** | Preservation | Redump verification, CHD, state import/export, movies, metadata. |
 | [ ] **MOON-08** | Video quality | True high-res CEL, shader presets, HDR, NTSC, 4K60. |
 | [ ] **MOON-09** | Performance leader | 4K60 on mid-range, 1080p60 on Pi 5, low latency. |
@@ -7215,7 +7295,7 @@ Timelines are indicative and assume a focused developer or small team. They are 
 
 **Exit criteria**
 - True high-res CEL.
-- Browser/mobile/Pi 5/Steam Deck.
+- Browser/mobile/Pi 5.
 - Debugger/TAS/Lua suite.
 - Public compatibility dashboard.
 - Signed releases.
@@ -7399,8 +7479,8 @@ These are **post-1.0 goals**, not v1.0 release blockers. A release can be called
 - [ ] PAL, CD-DA, multi-track, ODE, mouse, lightgun, arcade lightgun, flightstick, and trackball work.
 - [ ] BIOS/region/fix/input auto-profiles make known titles "just work".
 - [~] Rewind, fast-forward, and per-game cheats are shipped (2026-11-01); OSD notifications and the in-game quick menu are shipped (2026-11-01); netplay, achievements, TAS, shader presets, recording, and debugger UI remain.
-- [ ] 4K60 on Tier A; 1080p60 on Pi 5/Steam Deck; zero steady-state allocations.
-- [ ] Windows/Linux/macOS x64/arm64, Steam Deck, and Pi are validated.
+- [ ] 4K60 on Tier A; 1080p60 on Pi 5; zero steady-state allocations.
+- [ ] Windows/Linux/macOS x64/arm64 and Pi are validated.
 - [ ] Installers, signing, notarization, auto-update, portable mode, and file associations are shipped.
 - [ ] 2,000+ tests, coverage gate, fuzzing, SBOM, and 24h soak pass.
 - [x] Legal/attribution sign-off is complete (2026-11-02).

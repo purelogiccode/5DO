@@ -144,6 +144,8 @@
             <MenuItem Header="Help" ToolTip.Tip="Open the welcome guide or application information.">
                 <MenuItem Header="Welcome..." Click="OnWelcome"
                           ToolTip.Tip="Open the first-run guide for BIOS and disc setup." />
+                <MenuItem Header="Check for Updates..." Click="OnCheckForUpdates"
+                          ToolTip.Tip="Check the public GitHub release feed for a newer 5DO version." />
                 <MenuItem Header="About 5DO" Click="OnAbout"
                           ToolTip.Tip="Show version, renderer, audio, and license information." />
                 <MenuItem Header="Save Diagnostics Bundle..." Click="OnDiagnosticsBundleAsync"
@@ -571,21 +573,28 @@
                   PointerPressed="OnVideoPointerPressed"
                   PointerReleased="OnVideoPointerReleased"
                   PointerExited="OnVideoPointerExited">
-                <ctrl:VideoSurface x:Name="Video" HorizontalAlignment="Stretch"
-                                   VerticalAlignment="Stretch" IsHitTestVisible="False"
-                                   ToolTip.Tip="Emulated 3DO video output rendered by OpenGL." />
-                <Image x:Name="CpuVideo" Stretch="Uniform" IsVisible="False" IsHitTestVisible="False"
-                       ToolTip.Tip="CPU fallback frame shown when OpenGL is unavailable." />
-                <ctrl:VulkanVideoSurface x:Name="VulkanVideo" HorizontalAlignment="Stretch"
-                                         VerticalAlignment="Stretch" IsVisible="False" IsHitTestVisible="False"
-                                         ToolTip.Tip="Emulated 3DO video output rendered by Vulkan." />
-                <Canvas x:Name="LightgunOverlay" IsHitTestVisible="False" IsVisible="False">
-                    <Line x:Name="LightgunHorizontal" Stroke="#E0FF4040" StrokeThickness="1"
-                          StartPoint="0,0" EndPoint="0,0" />
-                    <Line x:Name="LightgunVertical" Stroke="#E0FF4040" StrokeThickness="1"
-                          StartPoint="0,0" EndPoint="0,0" />
-                    <Ellipse x:Name="LightgunDot" Width="6" Height="6" Fill="#E0FF4040" />
-                </Canvas>
+                <Border x:Name="VideoFrameBorder" Background="Transparent" Padding="0">
+                    <Grid x:Name="VideoSurfaceHost">
+                        <ctrl:VideoSurface x:Name="Video" HorizontalAlignment="Stretch"
+                                           VerticalAlignment="Stretch" IsHitTestVisible="False"
+                                           ToolTip.Tip="Emulated 3DO video output rendered by OpenGL." />
+                        <Image x:Name="CpuVideo" Stretch="Uniform" IsVisible="False" IsHitTestVisible="False"
+                               ToolTip.Tip="CPU fallback frame shown when OpenGL is unavailable." />
+                        <ctrl:VulkanVideoSurface x:Name="VulkanVideo" HorizontalAlignment="Stretch"
+                                                 VerticalAlignment="Stretch" IsVisible="False" IsHitTestVisible="False"
+                                                 ToolTip.Tip="Emulated 3DO video output rendered by Vulkan." />
+                        <ctrl:Direct3DVideoSurface x:Name="Direct3DVideo" HorizontalAlignment="Stretch"
+                                                   VerticalAlignment="Stretch" IsVisible="False" IsHitTestVisible="False"
+                                                   ToolTip.Tip="Emulated 3DO video output rendered by Direct3D 11." />
+                        <Canvas x:Name="LightgunOverlay" IsHitTestVisible="False" IsVisible="False">
+                            <Line x:Name="LightgunHorizontal" Stroke="#E0FF4040" StrokeThickness="1"
+                                  StartPoint="0,0" EndPoint="0,0" />
+                            <Line x:Name="LightgunVertical" Stroke="#E0FF4040" StrokeThickness="1"
+                                  StartPoint="0,0" EndPoint="0,0" />
+                            <Ellipse x:Name="LightgunDot" Width="6" Height="6" Fill="#E0FF4040" />
+                        </Canvas>
+                    </Grid>
+                </Border>
                 <Border x:Name="OverlayPanel" IsVisible="False" HorizontalAlignment="Left"
                         VerticalAlignment="Top" Margin="8" Padding="6,3"
                         Background="#A0000000" CornerRadius="3">

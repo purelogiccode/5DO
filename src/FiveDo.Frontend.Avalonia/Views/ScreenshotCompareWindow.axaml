@@ -1,0 +1,35 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="FiveDo.Frontend.Avalonia.Views.ScreenshotCompareWindow"
+        Title="Compare Screenshots"
+        Width="1120" Height="720"
+        MinWidth="720" MinHeight="480"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="*,Auto" Margin="14">
+        <Grid Grid.Row="0" ColumnDefinitions="*,*" ColumnSpacing="12">
+            <Grid Grid.Column="0" RowDefinitions="*,Auto">
+                <Border Grid.Row="0" Background="#20000000" CornerRadius="3">
+                    <Image x:Name="LeftImage" Stretch="Uniform" />
+                </Border>
+                <TextBlock Grid.Row="1" x:Name="LeftCaption" Margin="0,8,0,0"
+                           TextWrapping="Wrap" Opacity="0.8" FontSize="11" />
+            </Grid>
+            <Grid Grid.Column="1" RowDefinitions="*,Auto">
+                <Border Grid.Row="0" Background="#20000000" CornerRadius="3">
+                    <Image x:Name="RightImage" Stretch="Uniform" />
+                </Border>
+                <TextBlock Grid.Row="1" x:Name="RightCaption" Margin="0,8,0,0"
+                           TextWrapping="Wrap" Opacity="0.8" FontSize="11" />
+            </Grid>
+        </Grid>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,14,0,0">
+            <TextBlock Grid.Column="0" x:Name="StatusText" VerticalAlignment="Center"
+                       Opacity="0.7" TextWrapping="Wrap"
+                       ToolTip.Tip="Compare two captures side by side." />
+            <Button Grid.Column="1" Content="Close" Click="OnCloseClick"
+                    ToolTip.Tip="Close the comparison." />
+        </Grid>
+    </Grid>
+</Window>

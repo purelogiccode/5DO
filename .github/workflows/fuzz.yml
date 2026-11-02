@@ -1,0 +1,66 @@
+name: Fuzz
+
+on:
+  schedule:
+    # Nightly parser and command-stream fuzzing. The harness is deterministic for a
+    # given seed, so a failure is reproducible from the uploaded artifact.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      seconds:
+        description: Seconds per target
+        required: false
+        default: '120'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz-${{ github.workflow }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  fuzz:
+    name: Parser and command-stream fuzzing
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.301
+
+      - name: Restore
+        run: dotnet restore 5DO.sln --locked-mode
+
+      - name: Build fuzz harness
+        run: dotnet build tools/FiveDo.Fuzz/FiveDo.Fuzz.csproj -c Release --no-restore
+
+      - name: Run fuzzing
+        run: |
+          mkdir -p artifacts
+          dotnet run --project tools/FiveDo.Fuzz -c Release --no-build -- \
+            --seconds "${{ inputs.seconds || '120' }}" \
+            --target all --seed "${{ github.run_number }}" \
+            --json --out artifacts/fuzz > artifacts/fuzz-report.json
+          cat artifacts/fuzz-report.json
+
+      - name: Upload fuzz evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fuzz-report
+          path: |
+            artifacts/fuzz-report.json
+            artifacts/fuzz
+          if-no-files-found: ignore

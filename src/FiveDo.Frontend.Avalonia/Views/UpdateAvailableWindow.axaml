@@ -1,0 +1,37 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="FiveDo.Frontend.Avalonia.Views.UpdateAvailableWindow"
+        Title="5DO Update Available"
+        Width="540"
+        SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="20" Spacing="12">
+        <TextBlock x:Name="HeadingText" FontSize="20" FontWeight="SemiBold"
+                   Text="A newer 5DO release is available."
+                   ToolTip.Tip="A newer release was found on GitHub." />
+        <TextBlock x:Name="VersionText" TextWrapping="Wrap" Opacity="0.9"
+                   ToolTip.Tip="Installed and available versions." />
+        <TextBlock x:Name="ReleaseText" TextWrapping="Wrap" Opacity="0.75" FontSize="12"
+                   ToolTip.Tip="Release title reported by GitHub." />
+        <TextBlock TextWrapping="Wrap" Opacity="0.75" FontSize="11"
+                   Text="Open the GitHub release page to download the bundle for your platform. Your current version and settings stay untouched until you replace the files."
+                   ToolTip.Tip="5DO does not install updates automatically." />
+        <TextBlock x:Name="UrlText" TextWrapping="Wrap" Opacity="0.7" FontSize="11"
+                   ToolTip.Tip="Download URL." />
+
+        <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,4,0,0">
+            <TextBlock Grid.Column="0" Classes="caption" VerticalAlignment="Center"
+                       Text="You can disable this check in Settings or with --no-update-check."
+                       ToolTip.Tip="5DO stores the setting locally." />
+            <Button Grid.Column="1" Content="Later" Click="OnLater" IsCancel="True"
+                    Margin="8,0,6,0"
+                    ToolTip.Tip="Keep using this version." />
+            <Button Grid.Column="2" Classes="accent" Content="Open Download Page"
+                    Click="OnDownload" IsDefault="True"
+                    ToolTip.Tip="Open the GitHub release page in your browser." />
+        </Grid>
+    </StackPanel>
+</Window>

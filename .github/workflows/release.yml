@@ -84,11 +84,11 @@ jobs:
             gh release create "$tag" --verify-tag --title "5DO $version" --notes-file "$notes"
           fi
 
-          # Remove the old per-component archives so the release has one bundle
-          # per system.
+          # Remove the old per-component archives and unversioned bundle names so
+          # the release has one versioned bundle per system.
           for name in $(gh release view "$tag" --json assets --jq '.assets[].name'); do
             case "$name" in
-              5do-cli-*|5do-frontend-*)
+              5do-cli-*|5do-frontend-*|5do-win-x64.zip|5do-linux-x64.tar.gz|5do-osx-x64.tar.gz)
                 echo "Removing obsolete asset $name"
                 gh release delete-asset "$tag" "$name" -y
                 ;;
@@ -96,9 +96,8 @@ jobs:
           done
 
           gh release upload "$tag" \
-            dist/5do-win-x64.zip \
-            dist/5do-linux-x64.tar.gz \
-            dist/5do-osx-x64.tar.gz \
+            dist/5do-*.zip \
+            dist/5do-*.tar.gz \
             dist/SHA256SUMS.txt \
             --clobber
 

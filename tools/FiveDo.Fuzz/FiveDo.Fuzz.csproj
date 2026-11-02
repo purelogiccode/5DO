@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>FiveDo.Fuzz</RootNamespace>
+    <AssemblyName>FiveDo.Fuzz</AssemblyName>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Meziantou.Analyzer">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Roslynator.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\FiveDo.Core\FiveDo.Core.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Cpu\FiveDo.Cpu.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Memory\FiveDo.Memory.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Cdrom\FiveDo.Cdrom.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Machine\FiveDo.Machine.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Storage\FiveDo.Storage.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="FiveDo.Tests" />
+  </ItemGroup>
+
+</Project>

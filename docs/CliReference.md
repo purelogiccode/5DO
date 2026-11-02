@@ -35,6 +35,10 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
   an isolated named configuration; `FIVEDO_PROFILE` is the environment equivalent.
 - `--json` is accepted by commands that have structured output. It is ignored by
   `trace` and `disasm`, which are text-only.
+- On startup, an interactive CLI run without `--json` checks GitHub's public release feed
+  and offers to open the download page when a newer release exists. Use
+  `--no-update-check` or `FIVEDO_UPDATE_CHECK=0` to skip it; `5do update` checks on
+  demand.
 - JSON field casing is mixed by design: most command results are camelCase
   (`run`, `info`, `bios`, `audio`, `bench`, `selftest`, `fs`); `state inspect` and
   `state slots` preserve PascalCase property names for historical compatibility.
@@ -75,6 +79,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `disasm <file>` | Disassemble raw little-endian ARM words. |
 | `bench` | Synthetic-ROM frame benchmark (or real content with options). |
 | `selftest` | Determinism and state roundtrip checks. |
+| `update` | Check GitHub for a newer 5DO release. |
 | `--version`, `--help` | Identity/help. |
 
 ---
@@ -797,6 +802,28 @@ Checks:
 4. the loaded state has no warnings.
 
 Exit code is 1 if any check fails. JSON: `{ "ok": true, "checks": [{ "name", "ok" }] }`.
+
+---
+
+## 12a. `update`
+
+```powershell
+5do update
+5do update --json
+5do update --force
+```
+
+Checks the public GitHub release feed for `purelogiccode/5DO`. Successful responses are
+cached under the 5DO data directory for six hours; `--force` bypasses the cache. The
+command exits 0 when the feed was read (whether or not an update exists) and 1 when the
+request failed.
+
+JSON fields: `ok`, `error`, `currentVersion`, `latestVersion`, `updateAvailable`,
+`releaseName`, `releasePageUrl`, `downloadUrl`, `publishedAtUtc`, `fromCache`.
+
+The interactive startup check prints a one-line notice, asks `Open the download page now?
+[y/N]`, and uses the system browser only after confirmation. `--json`, redirected
+output, CI, `--no-update-check`, and `FIVEDO_UPDATE_CHECK=0` skip the prompt.
 
 ---
 

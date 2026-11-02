@@ -108,6 +108,7 @@ public partial class MainWindow : Window, IDisposable
     private CpuVideoRenderer? _cpuVideo;
     private VideoRendererKind _rendererKind;
     private volatile bool _vulkanPresenter;
+    private volatile bool _direct3DPresenter;
     private bool _openGlDisabled;
     private WriteableBitmap? _cpuBitmap;
     private DispatcherTimer? _cpuTimer;
@@ -172,6 +173,7 @@ public partial class MainWindow : Window, IDisposable
             QuickMenuCloseButton,
         ];
         ApplyOsdSettings();
+        ApplyVideoPresentationSettings();
         if (string.IsNullOrWhiteSpace(_settings.SaveDirectory))
         {
             _settings.SaveDirectory = Path.Combine(AppSettingsStore.DefaultDirectory, "states");
@@ -224,7 +226,9 @@ public partial class MainWindow : Window, IDisposable
             StartCpuFallback(new NotSupportedException(
                 _rendererKind == VideoRendererKind.Vulkan
                     ? "Vulkan renderer selected."
-                    : "Software renderer selected."));
+                    : _rendererKind == VideoRendererKind.Direct3D11
+                        ? "Direct3D 11 renderer selected."
+                        : "Software renderer selected."));
         }
 
         if (Program.SmokeTest)
@@ -242,6 +246,8 @@ public partial class MainWindow : Window, IDisposable
             _ = new DiscBrowserWindow();
             _ = new DiscInfoWindow();
             _ = new BiosNvramManagerWindow();
+            _ = new ScreenshotGalleryWindow(Path.Combine(Path.GetTempPath(), "5do-smoke-shots"));
+            _ = new ScreenshotCompareWindow();
         }
 
         GridLibraryList.ItemsSource = _visibleGames;
@@ -279,6 +285,8 @@ public partial class MainWindow : Window, IDisposable
         Video.OpenGlFailed += OnOpenGlFailed;
         VulkanVideo.Failed += OnVulkanFailed;
         VulkanVideo.Started += OnVulkanStarted;
+        Direct3DVideo.Failed += OnDirect3DFailed;
+        Direct3DVideo.Started += OnDirect3DStarted;
         Deactivated += (_, _) => _input.Keyboard.Reset();
         Closing += (_, _) =>
         {
@@ -315,6 +323,78 @@ public partial class MainWindow : Window, IDisposable
         LoadConfiguredPaths();
         EnterFullscreenIfRequested();
         AsyncEvent.Run(RefreshLibraryAsync, "refreshing the game library");
+        StartUpdateCheck();
+    }
+
+    /// <summary>
+    /// Runs the startup GitHub release check off the UI thread and offers the download
+    /// page when a newer release exists. The check is best-effort and never blocks startup.
+    /// </summary>
+    private void StartUpdateCheck()
+    {
+        if (Program.SmokeTest
+            || Program.SkipUpdateCheck
+            || !_settings.CheckForUpdates
+            || !UpdateChecker.IsEnabled)
+        {
+            return;
+        }
+
+        AsyncEvent.Run(() => CheckForUpdatesAsync(), "checking for a newer 5DO release");
+    }
+
+    private void OnCheckForUpdates(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(
+            () => CheckForUpdatesAsync(force: true, manual: true),
+            "checking for a newer 5DO release");
+    }
+
+    private async Task CheckForUpdatesAsync(bool force = false, bool manual = false)
+    {
+        try
+        {
+            UpdateCheckResult result = await Task.Run(() => UpdateChecker.CheckAsync(force)).ConfigureAwait(true);
+            if (_shuttingDown)
+            {
+                return;
+            }
+
+            if (result.Info is not { UpdateAvailable: true } info)
+            {
+                if (result.Error is not null)
+                {
+                    _logger.ForCategory(LogCategory.Host).Debug(
+                        "Update check did not complete: {Error}",
+                        result.Error);
+                    if (manual)
+                    {
+                        StatusText.Text = $"Update check failed: {result.Error}";
+                    }
+                }
+                else if (manual)
+                {
+                    StatusText.Text = result.Info?.Summary ?? "5DO is up to date.";
+                }
+
+                return;
+            }
+
+            _logger.ForCategory(LogCategory.Host).Information(
+                "Update available: {Latest} (running {Current}).",
+                info.LatestVersion,
+                info.CurrentVersion);
+            await UpdateAvailableWindow.ShowAsync(this, info).ConfigureAwait(true);
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            // Update checks must never interrupt emulation or startup.
+            _logger.ForCategory(LogCategory.Host).Debug(exception, "Update check failed.");
+            if (manual)
+            {
+                StatusText.Text = $"Update check failed: {exception.Message}";
+            }
+        }
     }
 
     private void ShowWelcome(bool firstRun)
@@ -348,6 +428,7 @@ public partial class MainWindow : Window, IDisposable
 
                 EnterFullscreenIfRequested();
                 AsyncEvent.Run(RefreshLibraryAsync, "refreshing the game library");
+                StartUpdateCheck();
             };
             IsEnabled = false;
             welcome.Show(this);
@@ -1284,6 +1365,10 @@ public partial class MainWindow : Window, IDisposable
         {
             Video.RequestRedraw();
         }
+        else if (_direct3DPresenter)
+        {
+            Direct3DVideo.RequestRedraw();
+        }
         else if (_vulkanPresenter)
         {
             VulkanVideo.RequestRedraw();
@@ -1877,6 +1962,21 @@ public partial class MainWindow : Window, IDisposable
         var stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss", System.Globalization.CultureInfo.InvariantCulture);
         var path = Path.Combine(directory, $"{name}-{stamp}-f{_machine.FramesExecuted:D6}.png");
         var nativePath = Path.Combine(directory, $"{name}-{stamp}-f{_machine.FramesExecuted:D6}-native.png");
+        if (_direct3DPresenter && Direct3DVideo.TryCapture(out byte[]? direct3DPixels, out int direct3DWidth, out int direct3DHeight))
+        {
+            PngDumper.WriteBgra(direct3DPixels, direct3DWidth, direct3DHeight, path);
+            WriteScreenshotMetadata(path);
+            if (_settings.SaveNativeScreenshot)
+            {
+                SaveNativeScreenshot(nativePath);
+            }
+
+            StatusText.Text = $"Screenshot: {path}";
+            ShowOsd($"Screenshot: {Path.GetFileName(path)}", OsdSeverity.Success);
+            _logger.ForCategory(LogCategory.Host).Information("Screenshot written: {Path}.", path);
+            return;
+        }
+
         if (Video.IsOpenGlAvailable)
         {
             Video.CaptureCompleted += OnCaptured;
@@ -1888,6 +1988,7 @@ public partial class MainWindow : Window, IDisposable
             {
                 Video.CaptureCompleted -= OnCaptured;
                 PngDumper.WriteBgra(e.Pixels, e.Width, e.Height, path);
+                WriteScreenshotMetadata(path);
                 if (_settings.SaveNativeScreenshot)
                 {
                     SaveNativeScreenshot(nativePath);
@@ -2248,20 +2349,46 @@ public partial class MainWindow : Window, IDisposable
         _runner!.Invoke(() =>
         {
             VdlFrame source = _machine.Frame;
-            int crop = _settings.OverscanPixels;
-            int width = source.SourceWidth - (crop * 2);
-            int height = source.SourceHeight - (crop * 2);
-            if (crop > 0 && width >= 16 && height >= 16)
+            CropInsets crop = _settings.ResolveOverscan();
+            if (!crop.IsEmpty && crop.Fits(source.SourceWidth, source.SourceHeight))
             {
                 var cropped = new VdlFrame();
-                cropped.CopyCroppedFrom(source, crop, crop, width, height);
+                cropped.CopyCroppedFrom(
+                    source,
+                    crop.Left,
+                    crop.Top,
+                    source.SourceWidth - crop.Horizontal,
+                    source.SourceHeight - crop.Vertical);
                 source = cropped;
             }
 
             var frame = new FrameBuffer(source.SourceWidth, source.SourceHeight);
             FrameAssembler.Assemble(source, frame, frame.Width, frame.Height);
             PngDumper.Write(frame, path);
+            WriteScreenshotMetadata(path);
         });
+    }
+
+    private void WriteScreenshotMetadata(string path)
+    {
+        try
+        {
+            ScreenshotMetadata.Capture(
+                    _settings,
+                    _gameName,
+                    _gameId,
+                    _machine?.FramesExecuted ?? -1)
+                .Save(path);
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or ArgumentException)
+        {
+            _logger.ForCategory(LogCategory.Host).Warning(
+                exception,
+                "Screenshot metadata could not be written for {Path}.",
+                path);
+        }
     }
 
     private static string SanitizeFileName(string value)
@@ -2387,6 +2514,7 @@ public partial class MainWindow : Window, IDisposable
         Title = "5DO";
         EmulationView.IsVisible = false;
         VulkanVideo.SetPresentationVisible(false);
+        Direct3DVideo.SetPresentationVisible(false);
         LibraryView.IsVisible = true;
         _input.Keyboard.Reset();
         ApplyLibraryFilter();
@@ -2404,7 +2532,29 @@ public partial class MainWindow : Window, IDisposable
         UpdateEmulationHeader();
         LibraryView.IsVisible = false;
         EmulationView.IsVisible = true;
-        if (_vulkanPresenter)
+        if (_direct3DPresenter)
+        {
+            if (!Direct3DVideo.IsRunning)
+            {
+                try
+                {
+                    _logger.ForCategory(LogCategory.Video).Information(
+                        "Direct3D surface was stopped; restarting it for the game view.");
+                    Direct3DVideo.Start();
+                }
+                catch (Exception exception) when (exception is not OutOfMemoryException)
+                {
+                    _logger.ForCategory(LogCategory.Video).Debug(
+                        exception,
+                        "Direct3D surface restart failed for the game view.");
+                    OnDirect3DFailed(this, new Direct3D11FailedEventArgs(exception));
+                }
+            }
+
+            Direct3DVideo.SetPresentationVisible(true);
+            Direct3DVideo.RequestRedraw();
+        }
+        else if (_vulkanPresenter)
         {
             // Hiding the emulation view can stop the embedded surface. Bring it back
             // before presenting the first frame of the restarted game.
@@ -3386,6 +3536,7 @@ public partial class MainWindow : Window, IDisposable
         InputDisplayPanel.IsVisible = _settings.ShowInputDisplay;
         InputDisplayMenuItem.IsChecked = _settings.ShowInputDisplay;
         ApplyOsdSettings();
+        ApplyVideoPresentationSettings();
 
         ApplyAudioSettings();
         ApplyRendererSelection();
@@ -3993,8 +4144,12 @@ public partial class MainWindow : Window, IDisposable
         FpsText.Text = $"{status.FramesPerSecond,5:F1} fps{skip}";
         if (OverlayPanel.IsVisible)
         {
-            var gpu = _vulkanPresenter ? VulkanVideo.GpuMilliseconds : Video.GpuMilliseconds;
-            var present = _vulkanPresenter ? VulkanVideo.PresentMilliseconds : Video.PresentMilliseconds;
+            var gpu = _direct3DPresenter
+                ? Direct3DVideo.GpuMilliseconds
+                : _vulkanPresenter ? VulkanVideo.GpuMilliseconds : Video.GpuMilliseconds;
+            var present = _direct3DPresenter
+                ? Direct3DVideo.PresentMilliseconds
+                : _vulkanPresenter ? VulkanVideo.PresentMilliseconds : Video.PresentMilliseconds;
             var timing = gpu is null
                 ? $"present {present:F2} ms"
                 : $"gpu {gpu.Value:F2} ms  present {present:F2} ms";
@@ -4061,7 +4216,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnOpenGlReady(object? sender, OpenGlReadyEventArgs e)
     {
-        if (_rendererKind != VideoRendererKind.OpenGl || _vulkanPresenter || _openGlDisabled)
+        if (_rendererKind != VideoRendererKind.OpenGl || _vulkanPresenter || _direct3DPresenter || _openGlDisabled)
         {
             return;
         }
@@ -4110,7 +4265,48 @@ public partial class MainWindow : Window, IDisposable
         _vulkanPresenter = false;
         VulkanVideo.Stop();
         VulkanVideo.IsVisible = false;
-        StartCpuFallback(exception, allowVulkan: false);
+        StartCpuFallback(exception, allowGpuPresenters: false);
+    }
+
+    private void OnDirect3DStarted(object? sender, EventArgs e)
+    {
+        if (_rendererKind != VideoRendererKind.Direct3D11 || !_direct3DPresenter)
+        {
+            return;
+        }
+
+        _logger.ForCategory(LogCategory.Video).Information(
+            "Direct3D 11 renderer ready: {Device}.",
+            Direct3DVideo.DeviceName);
+        if (!_running)
+        {
+            StatusText.Text = "Direct3D 11 renderer ready.";
+        }
+    }
+
+    private void OnDirect3DFailed(object? sender, Direct3D11FailedEventArgs e)
+    {
+        if (_rendererKind != VideoRendererKind.Direct3D11 || !_direct3DPresenter)
+        {
+            return;
+        }
+
+        var exception = e.Exception;
+        _logger.ForCategory(LogCategory.Video).Warning(
+            exception,
+            "Direct3D 11 surface failed; trying the OpenGL presenter.");
+        _direct3DPresenter = false;
+        Direct3DVideo.Stop();
+        Direct3DVideo.IsVisible = false;
+
+        // OpenGL remains the default and the first fallback. If it also fails,
+        // OnOpenGlFailed switches to the CPU presenter.
+        _rendererKind = VideoRendererKind.OpenGl;
+        _openGlDisabled = false;
+        Video.IsVisible = true;
+        ReattachOpenGlSurface();
+        RendererText.Text = "OpenGL";
+        StatusText.Text = $"Direct3D 11 unavailable ({exception.Message}); trying OpenGL.";
     }
 
     private void OnOpenGlFailed(object? sender, OpenGlFailedEventArgs e)
@@ -4132,6 +4328,9 @@ public partial class MainWindow : Window, IDisposable
         return Program.RequestedGlBackend switch
         {
             GlBackend.Vulkan => VideoRendererKind.Vulkan,
+            GlBackend.Direct3D11 => OperatingSystem.IsWindows()
+                ? VideoRendererKind.Direct3D11
+                : VideoRendererKind.OpenGl,
             GlBackend.Software => VideoRendererKind.Software,
             GlBackend.Wgl or GlBackend.Angle => VideoRendererKind.OpenGl,
             _ => _settings.Renderer,
@@ -4145,7 +4344,7 @@ public partial class MainWindow : Window, IDisposable
         Video.Settings = _settings.ToRendererSettings(_gameId);
         if (_rendererKind == VideoRendererKind.OpenGl)
         {
-            var hadCpuPresenter = _cpuVideo is not null || _vulkanPresenter;
+            var hadCpuPresenter = _cpuVideo is not null || _vulkanPresenter || _direct3DPresenter;
             if (hadCpuPresenter)
             {
                 StopCpuFallback();
@@ -4153,7 +4352,9 @@ public partial class MainWindow : Window, IDisposable
 
             _openGlDisabled = false;
             _vulkanPresenter = false;
+            _direct3DPresenter = false;
             VulkanVideo.IsVisible = false;
+            Direct3DVideo.IsVisible = false;
             Video.IsVisible = true;
             if (previousRenderer != VideoRendererKind.OpenGl || hadCpuPresenter)
             {
@@ -4169,7 +4370,8 @@ public partial class MainWindow : Window, IDisposable
         _openGlDisabled = true;
         Video.IsVisible = false;
         VulkanVideo.IsVisible = false;
-        if (_cpuVideo is not null || _vulkanPresenter)
+        Direct3DVideo.IsVisible = false;
+        if (_cpuVideo is not null || _vulkanPresenter || _direct3DPresenter)
         {
             StopCpuFallback(showVideo: false);
         }
@@ -4177,7 +4379,9 @@ public partial class MainWindow : Window, IDisposable
         StartCpuFallback(new NotSupportedException(
             _rendererKind == VideoRendererKind.Vulkan
                 ? "Vulkan renderer selected in settings."
-                : "Software renderer selected in settings."));
+                : _rendererKind == VideoRendererKind.Direct3D11
+                    ? "Direct3D 11 renderer selected in settings."
+                    : "Software renderer selected in settings."));
     }
 
     private void ReattachOpenGlSurface()
@@ -4193,9 +4397,9 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void StartCpuFallback(Exception exception, bool allowVulkan = true)
+    private void StartCpuFallback(Exception exception, bool allowGpuPresenters = true)
     {
-        if (_cpuVideo is not null || _vulkanPresenter || _shuttingDown)
+        if (_cpuVideo is not null || _vulkanPresenter || _direct3DPresenter || _shuttingDown)
         {
             return;
         }
@@ -4209,7 +4413,60 @@ public partial class MainWindow : Window, IDisposable
         var (width, height) = ResolveOutputSize(sourceWidth, sourceHeight);
         RendererSettings rendererSettings = _settings.ToRendererSettings(_gameId);
 
-        if (allowVulkan && _rendererKind == VideoRendererKind.Vulkan)
+        if (allowGpuPresenters && _rendererKind == VideoRendererKind.Direct3D11)
+        {
+            try
+            {
+                Direct3DVideo.Settings = rendererSettings;
+                if (!Direct3DVideo.Start())
+                {
+                    throw new InvalidOperationException("The embedded Direct3D 11 surface is unavailable.");
+                }
+
+                _direct3DPresenter = true;
+                _vulkanPresenter = false;
+                _cpuVideo = null;
+                _cpuBitmap = null;
+                _cpuPixels = null;
+                CpuVideo.IsVisible = false;
+                Video.IsVisible = false;
+                VulkanVideo.IsVisible = false;
+                Direct3DVideo.IsVisible = true;
+                Direct3DVideo.SetPresentationVisible(EmulationView.IsVisible);
+                RendererText.Text = "Direct3D 11";
+                StatusText.Text = "Direct3D 11 renderer active.";
+                if (Direct3DVideo.DeviceName is { } deviceName)
+                {
+                    _logger.ForCategory(LogCategory.Video).Information(
+                        "Direct3D 11 renderer ready: {Device}.",
+                        deviceName);
+                }
+                else
+                {
+                    _logger.ForCategory(LogCategory.Video).Information(
+                        "Direct3D surface initializing; waiting for the control to attach.");
+                }
+
+                return;
+            }
+            catch (Exception direct3DException) when (direct3DException is not OutOfMemoryException)
+            {
+                Direct3DVideo.Stop();
+                Direct3DVideo.IsVisible = false;
+                _logger.ForCategory(LogCategory.Video).Warning(
+                    direct3DException,
+                    "Direct3D 11 is unavailable; trying OpenGL.");
+                _rendererKind = VideoRendererKind.OpenGl;
+                _openGlDisabled = false;
+                Video.IsVisible = true;
+                ReattachOpenGlSurface();
+                RendererText.Text = "OpenGL";
+                StatusText.Text = $"Direct3D 11 unavailable ({direct3DException.Message}); trying OpenGL.";
+                return;
+            }
+        }
+
+        if (allowGpuPresenters && _rendererKind == VideoRendererKind.Vulkan)
         {
             try
             {
@@ -4220,12 +4477,14 @@ public partial class MainWindow : Window, IDisposable
                 }
 
                 _vulkanPresenter = true;
+                _direct3DPresenter = false;
                 _cpuVideo = null;
                 _cpuBitmap = null;
                 _cpuPixels = null;
                 CpuVideo.IsVisible = false;
                 Video.IsVisible = false;
                 VulkanVideo.IsVisible = true;
+                Direct3DVideo.IsVisible = false;
                 VulkanVideo.SetPresentationVisible(EmulationView.IsVisible);
                 RendererText.Text = "Vulkan";
                 StatusText.Text = "Vulkan renderer active.";
@@ -4263,6 +4522,7 @@ public partial class MainWindow : Window, IDisposable
         CpuVideo.IsVisible = true;
         Video.IsVisible = false;
         VulkanVideo.IsVisible = false;
+        Direct3DVideo.IsVisible = false;
         _cpuTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
         _cpuTimer.Tick += (_, _) => RenderCpuFrame();
         _cpuTimer.Start();
@@ -4273,27 +4533,34 @@ public partial class MainWindow : Window, IDisposable
                 : exception.Message);
         var softwareSelected = _rendererKind == VideoRendererKind.Software;
         var vulkanSelected = _rendererKind == VideoRendererKind.Vulkan;
+        var direct3DSelected = _rendererKind == VideoRendererKind.Direct3D11;
         RendererText.Text = softwareSelected ? "Software (CPU)" : "CPU fallback";
         StatusText.Text = softwareSelected
             ? "Software renderer active (CPU)."
-            : vulkanSelected
-                ? $"Vulkan unavailable ({exception.Message}); using the CPU renderer."
-                : $"OpenGL unavailable ({exception.Message}); using the CPU renderer.";
+            : direct3DSelected
+                ? $"Direct3D 11 unavailable ({exception.Message}); using the CPU renderer."
+                : vulkanSelected
+                    ? $"Vulkan unavailable ({exception.Message}); using the CPU renderer."
+                    : $"OpenGL unavailable ({exception.Message}); using the CPU renderer.";
     }
 
     private void StopCpuFallback(bool showVideo = true)
     {
-        var hadPresenter = _cpuVideo is not null || _vulkanPresenter;
+        var hadPresenter = _cpuVideo is not null || _vulkanPresenter || _direct3DPresenter;
         _cpuTimer?.Stop();
         _cpuTimer = null;
         CpuVideo.IsVisible = false;
         VulkanVideo.SetPresentationVisible(false);
         VulkanVideo.IsVisible = false;
         VulkanVideo.Stop();
+        Direct3DVideo.SetPresentationVisible(false);
+        Direct3DVideo.IsVisible = false;
+        Direct3DVideo.Stop();
         Video.IsVisible = showVideo;
         _cpuVideo?.Dispose();
         _cpuVideo = null;
         _vulkanPresenter = false;
+        _direct3DPresenter = false;
         _cpuBitmap = null;
         _cpuPixels = null;
         if (hadPresenter && showVideo)
@@ -4539,7 +4806,11 @@ public partial class MainWindow : Window, IDisposable
     private void SubmitFrameToActiveRenderer(VdlFrame frame)
     {
         VdlFrame presented = ApplyOverscan(frame);
-        if (_vulkanPresenter)
+        if (_direct3DPresenter)
+        {
+            Direct3DVideo.SubmitFrame(presented);
+        }
+        else if (_vulkanPresenter)
         {
             VulkanVideo.SubmitFrame(presented);
         }
@@ -4551,22 +4822,35 @@ public partial class MainWindow : Window, IDisposable
 
     private VdlFrame ApplyOverscan(VdlFrame frame)
     {
-        int crop = _settings.OverscanPixels;
-        if (crop <= 0)
+        CropInsets crop = _settings.ResolveOverscan();
+        if (crop.IsEmpty || !crop.Fits(frame.SourceWidth, frame.SourceHeight))
         {
             return frame;
         }
 
-        int width = frame.SourceWidth - (crop * 2);
-        int height = frame.SourceHeight - (crop * 2);
-        if (width < 16 || height < 16)
-        {
-            return frame;
-        }
-
+        int width = frame.SourceWidth - crop.Horizontal;
+        int height = frame.SourceHeight - crop.Vertical;
         _overscanFrame ??= new VdlFrame();
-        _overscanFrame.CopyCroppedFrom(frame, crop, crop, width, height);
+        _overscanFrame.CopyCroppedFrom(frame, crop.Left, crop.Top, width, height);
         return _overscanFrame;
+    }
+
+    private void ApplyVideoPresentationSettings()
+    {
+        int border = Math.Clamp(_settings.VideoBorderPixels, 0, 64);
+        IBrush brush;
+        try
+        {
+            brush = Brush.Parse(_settings.ResolveVoidAreaColor());
+        }
+        catch (FormatException)
+        {
+            brush = Brush.Parse(AppSettings.DefaultVoidAreaColor);
+        }
+
+        VideoFrameBorder.Padding = new Thickness(border);
+        VideoFrameBorder.Background = brush;
+        VideoHost.Background = brush;
     }
 
     private NvramStore CreateNvramStore(string? gameId)
@@ -4653,6 +4937,7 @@ public partial class MainWindow : Window, IDisposable
         _cpuVideo?.Dispose();
         _cpuVideo = null;
         VulkanVideo.Dispose();
+        Direct3DVideo.Dispose();
         // VideoSurface owns GL resources until Avalonia detaches it. Disposing it from
         // Closing runs before the GL context is current and crashes in Silk.NET.
         _nvramStore.Dispose();
@@ -4669,7 +4954,7 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        UpdatePointerState(e.GetPosition(VideoHost));
+        UpdatePointerState(e.GetPosition(VideoSurfaceHost));
     }
 
     private void OnVideoPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -4679,11 +4964,11 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        PointerPointProperties properties = e.GetCurrentPoint(VideoHost).Properties;
+        PointerPointProperties properties = e.GetCurrentPoint(VideoSurfaceHost).Properties;
         _pointerLeftDown = properties.IsLeftButtonPressed;
         _pointerMiddleDown = properties.IsMiddleButtonPressed;
         _pointerRightDown = properties.IsRightButtonPressed;
-        UpdatePointerState(e.GetPosition(VideoHost));
+        UpdatePointerState(e.GetPosition(VideoSurfaceHost));
         e.Handled = true;
     }
 
@@ -4694,11 +4979,11 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        PointerPointProperties properties = e.GetCurrentPoint(VideoHost).Properties;
+        PointerPointProperties properties = e.GetCurrentPoint(VideoSurfaceHost).Properties;
         _pointerLeftDown = properties.IsLeftButtonPressed;
         _pointerMiddleDown = properties.IsMiddleButtonPressed;
         _pointerRightDown = properties.IsRightButtonPressed;
-        UpdatePointerState(e.GetPosition(VideoHost));
+        UpdatePointerState(e.GetPosition(VideoSurfaceHost));
         e.Handled = true;
     }
 
@@ -4733,8 +5018,8 @@ public partial class MainWindow : Window, IDisposable
 
     private void UpdatePointerState(Point position)
     {
-        double width = VideoHost.Bounds.Width;
-        double height = VideoHost.Bounds.Height;
+        double width = VideoSurfaceHost.Bounds.Width;
+        double height = VideoSurfaceHost.Bounds.Height;
         if (width <= 0 || height <= 0)
         {
             return;

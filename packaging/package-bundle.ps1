@@ -122,6 +122,14 @@ try {
         }
     }
 
+    # Normalize a leading tag-style v and keep the version safe for a file name.
+    $Version = $Version.Trim() -replace '^[vV]', ''
+    if ([string]::IsNullOrWhiteSpace($Version)) {
+        $Version = '0.0.0'
+    }
+
+    $safeVersion = $Version -replace '[^0-9A-Za-z._+-]', '_'
+
     $commit = 'unknown'
     try {
         $commit = (& git -C $repoRoot rev-parse --short HEAD 2>$null)
@@ -158,7 +166,7 @@ try {
     )
     Set-Content -LiteralPath (Join-Path $staging 'PACKAGE.txt') -Value $manifest -Encoding utf8NoBOM
 
-    $name = "5do-$Rid"
+    $name = "5do-$safeVersion-$Rid"
     if ($Rid -like 'win-*') {
         $archive = Join-Path $outputPath "$name.zip"
         if (Test-Path -LiteralPath $archive) {

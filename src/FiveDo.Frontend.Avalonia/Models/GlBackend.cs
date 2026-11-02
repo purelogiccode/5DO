@@ -22,4 +22,7 @@ public enum GlBackend
 
     /// <summary>Use the optional offscreen Vulkan presenter with CPU readback.</summary>
     Vulkan,
+
+    /// <summary>Use the optional Direct3D 11 presenter on Windows.</summary>
+    Direct3D11,
 }

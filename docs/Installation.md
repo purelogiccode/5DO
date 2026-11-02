@@ -29,6 +29,9 @@ Each bundle contains both the desktop app and the CLI. Install the .NET 10 Runti
 first from <https://dotnet.microsoft.com/download/dotnet/10.0>; the bundle does not
 contain a .NET runtime. Extract the bundle and run the executables.
 
+Newer bundles include the version in the filename, for example
+`5do-1.2.0-win-x64.zip`; the v1.1.0 assets linked above keep their original names.
+
 ## Build from source
 
 ```powershell

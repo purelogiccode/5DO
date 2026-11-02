@@ -3,6 +3,29 @@
 All notable changes are recorded here. The project is at v1.1.0, a documented-compatibility
 release.
 
+## [Unreleased]
+
+### Added
+
+- Startup GitHub release checks in the CLI and desktop app. A newer release prints a
+  console notice or opens a message box with the download page; `5do update` checks on
+  demand and `--json` is available for scripts.
+- Optional Direct3D 11 presenter (`FiveDo.Video.Direct3D`) for Windows with runtime HLSL
+  palette/filter passes, DXGI flip-model swapchain, `--gl-backend d3d11`, Settings
+  selection, and `--d3d-probe`/`--d3d-window-probe`. OpenGL remains the default.
+- Startup update checks can be disabled with **Settings > Video**,
+  `--no-update-check`, or `FIVEDO_UPDATE_CHECK=0`.
+- Release bundle filenames now include the product version, for example
+  `5do-1.2.0-win-x64.zip`, `5do-1.2.0-linux-x64.tar.gz`, and
+  `5do-1.2.0-osx-x64.tar.gz`.
+- `tools/FiveDo.Fuzz` provides deterministic state, disc, CUE, Opera-FS, CD
+  command-stream, and ARM60 fuzz targets with reproduction artifacts; a nightly
+  workflow runs the longer sweep.
+- Per-edge overscan (0-32 px on each edge), per-game crop profiles, and a configurable
+  0-64 px void/gray border with `#RRGGBB`/`#AARRGGBB` color.
+- The screenshot gallery adds game/date filters, side-by-side compare, export, and a
+  settings sidecar written beside every capture.
+
 ## [1.1.0] - 2026-11-02
 
 ### Added

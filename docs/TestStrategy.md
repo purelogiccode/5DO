@@ -460,15 +460,23 @@ reference implementation.
 
 ## 8. Fuzzing
 
-Use `System.Random` with fixed seeds (deterministic) or a fuzzing harness:
+The standalone [`FiveDo.Fuzz`](Fuzzing.md) harness covers the untrusted parsers and
+the guest-driven CD command boundary:
 
-- **CPU:** random 32-bit instruction streams in a small memory; assert no unhandled exception, PC stays in range, step count bounded.
-- **CD:** random 7-byte commands; assert no crash and bounded status/data.
-- **Save states:** random truncation/corruption; assert clean `InvalidStateException`, no out-of-bounds.
-- **CEL:** random CCB/preamble/data streams; assert no crash and bounded CEL cycles.
-- **CUE:** random text; assert parser errors are clean.
+- **Save states:** mutate a valid state and random bytes; require clean
+  `InvalidStateException`/`InvalidDataException` rejections and no out-of-bounds reads.
+- **Disc containers:** mutate ISO images and random CHD headers; require typed
+  `DiscImageException`/`InvalidDataException` failures.
+- **CUE:** mutate valid text and companion BIN data; require clean parser errors.
+- **Opera file system:** mutate a synthetic valid volume; require bounded directory
+  traversal, cycle/depth limits, and typed rejections.
+- **CD:** random command/poll/tick/data streams in both FreeDO and Opera timing modes;
+  require bounded status/data values and no unhandled exception.
 
-Fuzz tests are not part of the default suite if slow; run them nightly or on demand.
+The bounded xUnit smoke run is part of the default suite; the nightly workflow runs the
+longer time-limited sweep and uploads any reproduction. CPU, CEL, DSP, and GPU fuzzing
+remain future targets because their deterministic conformance and golden suites already
+cover the instruction/rendering boundaries.
 
 ---
 

@@ -2,22 +2,35 @@ using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using FiveDo.Host;
 
 namespace FiveDo.Frontend.Avalonia.Views;
 
 /// <summary>
-/// Browses screenshots in the configured directory with thumbnails and file actions.
+/// Browses screenshots in the configured directory with filters, thumbnails, compare,
+/// export, and file actions.
 /// </summary>
 public partial class ScreenshotGalleryWindow : Window
 {
+    private static readonly DateFilterOption[] DateFilters =
+    [
+        new("All dates", null),
+        new("Today", 0),
+        new("Last 7 days", 7),
+        new("Last 30 days", 30),
+    ];
+
     private readonly ObservableCollection<ScreenshotRow> _rows = [];
     private readonly string _directory;
+    private readonly DispatcherTimer _filterTimer;
     private string? _pendingDeletePath;
 
     /// <summary>Creates the window for the default screenshot directory.</summary>
@@ -34,7 +47,42 @@ public partial class ScreenshotGalleryWindow : Window
         InitializeComponent();
         _directory = directory;
         ScreenshotList.ItemsSource = _rows;
-        Closed += (_, _) => DisposeRows();
+        DateFilterCombo.ItemsSource = DateFilters;
+        DateFilterCombo.SelectedIndex = 0;
+        GameFilterBox.TextChanged += OnGameFilterChanged;
+        DateFilterCombo.SelectionChanged += OnDateFilterChanged;
+        _filterTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+        _filterTimer.Tick += (_, _) =>
+        {
+            _filterTimer.Stop();
+            Refresh(ScreenshotList.SelectedItem is ScreenshotRow row ? row.Entry.Path : null);
+        };
+        Closed += (_, _) =>
+        {
+            _filterTimer.Stop();
+            DisposeRows();
+        };
+        Refresh();
+    }
+
+    private void OnGameFilterChanged(object? sender, TextChangedEventArgs e)
+    {
+        _filterTimer.Stop();
+        _filterTimer.Start();
+    }
+
+    private void OnDateFilterChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (DateFilterCombo.SelectedItem is DateFilterOption)
+        {
+            Refresh();
+        }
+    }
+
+    private void OnClearFiltersClick(object? sender, RoutedEventArgs e)
+    {
+        GameFilterBox.Text = string.Empty;
+        DateFilterCombo.SelectedIndex = 0;
         Refresh();
     }
 
@@ -47,13 +95,18 @@ public partial class ScreenshotGalleryWindow : Window
     private void OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         _pendingDeletePath = null;
-        bool selected = ScreenshotList.SelectedItem is ScreenshotRow;
-        OpenButton.IsEnabled = selected;
-        CopyPathButton.IsEnabled = selected;
-        DeleteButton.IsEnabled = selected;
-        if (selected)
+        UpdateSelectionButtons();
+        ScreenshotRow[] selected = SelectedRows();
+        if (selected.Length == 1)
         {
-            StatusText.Text = "Selected. The first Delete click asks for confirmation.";
+            ScreenshotMetadata? metadata = ScreenshotMetadata.Load(selected[0].Entry.Path);
+            StatusText.Text = metadata is null
+                ? "Selected. The first Delete click asks for confirmation."
+                : $"Selected. {metadata.Summary()}";
+        }
+        else if (selected.Length > 1)
+        {
+            StatusText.Text = $"{selected.Length} selected. Select exactly two to compare.";
         }
     }
 
@@ -63,7 +116,7 @@ public partial class ScreenshotGalleryWindow : Window
 
     private void OpenSelected()
     {
-        if (ScreenshotList.SelectedItem is not ScreenshotRow row)
+        if (SelectedRows().FirstOrDefault() is not { } row)
         {
             return;
         }
@@ -82,7 +135,7 @@ public partial class ScreenshotGalleryWindow : Window
 
     private void OnCopyPathClick(object? sender, RoutedEventArgs e)
     {
-        if (ScreenshotList.SelectedItem is not ScreenshotRow row)
+        if (SelectedRows().FirstOrDefault() is not { } row)
         {
             return;
         }
@@ -101,9 +154,60 @@ public partial class ScreenshotGalleryWindow : Window
         }
     }
 
+    private async void OnExportClickAsync(object? sender, RoutedEventArgs e)
+    {
+        if (SelectedRows().FirstOrDefault() is not { } row)
+        {
+            return;
+        }
+
+        try
+        {
+            IStorageFile? file = await StorageProvider.SaveFilePickerAsync(
+                new FilePickerSaveOptions
+                {
+                    Title = "Export screenshot",
+                    SuggestedFileName = row.Entry.FileName,
+                    DefaultExtension = "png",
+                    FileTypeChoices =
+                    [
+                        new FilePickerFileType("PNG image") { Patterns = ["*.png"] },
+                    ],
+                }).ConfigureAwait(true);
+            var destination = file?.TryGetLocalPath();
+            if (string.IsNullOrWhiteSpace(destination))
+            {
+                return;
+            }
+
+            string exported = ScreenshotLibrary.Export(row.Entry.Path, destination);
+            StatusText.Text = $"Exported to {exported}.";
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or NotSupportedException)
+        {
+            Serilog.Log.Debug(exception, "Screenshot export failed.");
+            StatusText.Text = $"Could not export the screenshot: {exception.Message}";
+        }
+    }
+
+    private async void OnCompareClick(object? sender, RoutedEventArgs e)
+    {
+        ScreenshotRow[] selected = SelectedRows();
+        if (selected.Length != 2)
+        {
+            return;
+        }
+
+        var window = new ScreenshotCompareWindow(selected[0].Entry, selected[1].Entry);
+        await window.ShowDialog(this).ConfigureAwait(true);
+    }
+
     private void OnDeleteClick(object? sender, RoutedEventArgs e)
     {
-        if (ScreenshotList.SelectedItem is not ScreenshotRow row)
+        if (SelectedRows().FirstOrDefault() is not { } row)
         {
             return;
         }
@@ -135,7 +239,19 @@ public partial class ScreenshotGalleryWindow : Window
     private void Refresh(string? selectPath = null)
     {
         DisposeRows();
-        foreach (ScreenshotEntry entry in ScreenshotLibrary.List(_directory))
+        var option = DateFilterCombo.SelectedItem as DateFilterOption ?? DateFilters[0];
+        DateTimeOffset? from = option.Days switch
+        {
+            null => null,
+            0 => new DateTimeOffset(DateTime.Today),
+            var days => DateTimeOffset.Now.AddDays(-days.Value),
+        };
+
+        foreach (ScreenshotEntry entry in ScreenshotLibrary.List(
+                     _directory,
+                     GameFilterBox.Text,
+                     from,
+                     to: null))
         {
             _rows.Add(new ScreenshotRow(entry));
         }
@@ -143,7 +259,7 @@ public partial class ScreenshotGalleryWindow : Window
         DirectoryText.Text = _directory;
         StatusText.Text = _rows.Count switch
         {
-            0 => "No screenshots yet. Press the screenshot hotkey while a game is running.",
+            0 => "No screenshots match the current filters.",
             1 => "1 screenshot.",
             _ => $"{_rows.Count} screenshots.",
         };
@@ -159,12 +275,23 @@ public partial class ScreenshotGalleryWindow : Window
             }
         }
 
-        if (ScreenshotList.SelectedItem is null)
-        {
-            OpenButton.IsEnabled = false;
-            CopyPathButton.IsEnabled = false;
-            DeleteButton.IsEnabled = false;
-        }
+        UpdateSelectionButtons();
+    }
+
+    private void UpdateSelectionButtons()
+    {
+        ScreenshotRow[] selected = SelectedRows();
+        bool any = selected.Length > 0;
+        OpenButton.IsEnabled = any;
+        CopyPathButton.IsEnabled = any;
+        ExportButton.IsEnabled = any;
+        DeleteButton.IsEnabled = any;
+        CompareButton.IsEnabled = selected.Length == 2;
+    }
+
+    private ScreenshotRow[] SelectedRows()
+    {
+        return ScreenshotList.SelectedItems?.OfType<ScreenshotRow>().ToArray() ?? [];
     }
 
     private void DisposeRows()
@@ -175,6 +302,11 @@ public partial class ScreenshotGalleryWindow : Window
         }
 
         _rows.Clear();
+    }
+
+    private sealed record DateFilterOption(string Label, int? Days)
+    {
+        public override string ToString() => Label;
     }
 }
 
@@ -191,7 +323,10 @@ public sealed class ScreenshotRow : IDisposable
             using FileStream stream = File.OpenRead(entry.Path);
             Thumbnail = Bitmap.DecodeToWidth(stream, 320);
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or NotSupportedException)
         {
             Serilog.Log.Debug(exception, "Screenshot thumbnail {Path} could not be decoded.", entry.Path);
             Thumbnail = null;

@@ -42,8 +42,34 @@ public static class ScreenshotLibrary
 
     /// <summary>Lists screenshots in a directory, newest first.</summary>
     /// <param name="directory">Screenshot directory.</param>
+    /// <param name="gameFilter">Optional case-insensitive game-name substring.</param>
+    /// <param name="from">Optional inclusive lower capture-time bound.</param>
+    /// <param name="to">Optional inclusive upper capture-time bound.</param>
     /// <returns>Entries sorted by capture time and file name; empty when the directory is absent.</returns>
-    public static IReadOnlyList<ScreenshotEntry> List(string directory)
+    public static IReadOnlyList<ScreenshotEntry> List(
+        string directory,
+        string? gameFilter = null,
+        DateTimeOffset? from = null,
+        DateTimeOffset? to = null)
+    {
+        if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
+        {
+            return [];
+        }
+
+        var normalizedGame = gameFilter?.Trim();
+        return Directory.GetFiles(directory, "*.png")
+            .Select(Parse)
+            .Where(entry => Matches(entry, normalizedGame, from, to))
+            .OrderByDescending(entry => entry.CapturedAt)
+            .ThenBy(entry => entry.FileName, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    /// <summary>Lists the distinct game names present in a directory.</summary>
+    /// <param name="directory">Screenshot directory.</param>
+    /// <returns>Game names sorted case-insensitively; empty when the directory is absent.</returns>
+    public static IReadOnlyList<string> ListGames(string directory)
     {
         if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
         {
@@ -52,9 +78,57 @@ public static class ScreenshotLibrary
 
         return Directory.GetFiles(directory, "*.png")
             .Select(Parse)
-            .OrderByDescending(entry => entry.CapturedAt)
-            .ThenBy(entry => entry.FileName, StringComparer.OrdinalIgnoreCase)
+            .Select(entry => entry.GameName)
+            .Where(name => name.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
             .ToArray();
+    }
+
+    /// <summary>Copies a screenshot to a new path, creating the destination directory.</summary>
+    /// <param name="path">Source screenshot path.</param>
+    /// <param name="destination">Destination file path.</param>
+    /// <returns>The absolute destination path.</returns>
+    /// <exception cref="FileNotFoundException">Thrown when the source does not exist.</exception>
+    public static string Export(string path, string destination)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        ArgumentException.ThrowIfNullOrWhiteSpace(destination);
+        var source = Path.GetFullPath(path);
+        if (!File.Exists(source))
+        {
+            throw new FileNotFoundException("The screenshot does not exist.", source);
+        }
+
+        var target = Path.GetFullPath(destination);
+        var directory = Path.GetDirectoryName(target);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        File.Copy(source, target, overwrite: true);
+        return target;
+    }
+
+    private static bool Matches(
+        ScreenshotEntry entry,
+        string? gameFilter,
+        DateTimeOffset? from,
+        DateTimeOffset? to)
+    {
+        if (!string.IsNullOrEmpty(gameFilter)
+            && entry.GameName.IndexOf(gameFilter, StringComparison.OrdinalIgnoreCase) < 0)
+        {
+            return false;
+        }
+
+        if (from is { } lower && entry.CapturedAt < lower)
+        {
+            return false;
+        }
+
+        return to is not { } upper || entry.CapturedAt <= upper;
     }
 
     /// <summary>Parses a screenshot file name.</summary>

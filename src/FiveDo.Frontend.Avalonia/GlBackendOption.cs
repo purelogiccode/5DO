@@ -42,6 +42,12 @@ internal static class GlBackendOption
             case "VK":
                 backend = GlBackend.Vulkan;
                 return true;
+            case "D3D11":
+            case "DX11":
+            case "DIRECTX":
+            case "D3D":
+                backend = GlBackend.Direct3D11;
+                return true;
             default:
                 return false;
         }
@@ -58,6 +64,7 @@ internal static class GlBackendOption
             GlBackend.Angle => [global::Avalonia.Win32RenderingMode.AngleEgl],
             GlBackend.Software => [global::Avalonia.Win32RenderingMode.Software],
             GlBackend.Vulkan => [global::Avalonia.Win32RenderingMode.Software],
+            GlBackend.Direct3D11 => [global::Avalonia.Win32RenderingMode.Software],
             _ => [global::Avalonia.Win32RenderingMode.Wgl, global::Avalonia.Win32RenderingMode.AngleEgl, global::Avalonia.Win32RenderingMode.Software],
         };
     }

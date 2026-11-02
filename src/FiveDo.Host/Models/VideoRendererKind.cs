@@ -11,4 +11,7 @@ public enum VideoRendererKind
 
     /// <summary>Use the software CPU presenter.</summary>
     Software,
+
+    /// <summary>Use the optional Direct3D 11 presenter on Windows.</summary>
+    Direct3D11,
 }

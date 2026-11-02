@@ -16,4 +16,7 @@ public enum RendererApi
 
     /// <summary>Vulkan (optional headless/validation backend).</summary>
     Vulkan,
+
+    /// <summary>Direct3D 11 (optional Windows presentation backend).</summary>
+    Direct3D11,
 }

@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="FiveDo.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\FiveDo.Cheats\FiveDo.Cheats.csproj" />
     <ProjectReference Include="..\FiveDo.Core\FiveDo.Core.csproj" />
     <ProjectReference Include="..\FiveDo.Machine\FiveDo.Machine.csproj" />

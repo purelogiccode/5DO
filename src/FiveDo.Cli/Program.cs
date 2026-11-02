@@ -40,6 +40,12 @@ internal static class Program
             args = configArgs;
         }
 
+        var skipUpdateCheck = HasFlag(args, "--no-update-check");
+        if (skipUpdateCheck)
+        {
+            args = Array.FindAll(args, arg => !string.Equals(arg, "--no-update-check", StringComparison.OrdinalIgnoreCase));
+        }
+
         try
         {
             AppLogging.Initialize(new LoggingOptions
@@ -65,6 +71,8 @@ internal static class Program
                 PrintUsage();
                 return 0;
             }
+
+            CheckForUpdatesAtStartup(args, skipUpdateCheck);
 
             var json = HasFlag(args, "--json");
             var logger = Serilog.Log.ForContext("SourceContext", "FiveDo.Cli.Program");
@@ -95,6 +103,7 @@ internal static class Program
                     "bench" => Bench(args),
                     "selftest" => SelfTest(args),
                     "disasm" => Disassemble(args),
+                    "update" => UpdateCommand(args),
                     _ => Unknown(args[0], json),
                 };
             }
@@ -147,7 +156,7 @@ internal static class Program
 
     private static bool IsDiagnosticCommand(string command)
     {
-        return command is "--version" or "-v" or "--help" or "-h" or "help" or "bench" or "selftest";
+        return command is "--version" or "-v" or "--help" or "-h" or "help" or "bench" or "selftest" or "update";
     }
 
     private sealed record BiosLoadResult(
@@ -195,6 +204,120 @@ internal static class Program
     {
         Console.WriteLine($"{FiveDoVersion.ProductName} {FiveDoVersion.Version} ({FiveDoVersion.NamespacePrefix})");
         Console.WriteLine("License: FreeDO modified GNU LGPL (see LICENSE)");
+        return 0;
+    }
+
+    /// <summary>
+    /// Checks GitHub for a newer release on interactive command startup and offers to
+    /// open the download page. Failures are logged at Debug and never block the command.
+    /// </summary>
+    private static void CheckForUpdatesAtStartup(string[] args, bool skipUpdateCheck)
+    {
+        if (skipUpdateCheck
+            || args.Length == 0
+            || HasFlag(args, "--json")
+            || string.Equals(args[0], "update", StringComparison.OrdinalIgnoreCase)
+            || IsDiagnosticCommand(args[0])
+            || !UpdateChecker.IsEnabled
+            || Console.IsInputRedirected
+            || Console.IsOutputRedirected
+            || Console.IsErrorRedirected)
+        {
+            return;
+        }
+
+        UpdateCheckResult result;
+        try
+        {
+            result = UpdateChecker.CheckAsync().GetAwaiter().GetResult();
+        }
+        catch (Exception exception)
+        {
+            Serilog.Log.Debug(exception, "Startup update check failed.");
+            return;
+        }
+
+        if (result.Info is not { UpdateAvailable: true } info)
+        {
+            return;
+        }
+
+        Console.Error.WriteLine();
+        Console.Error.WriteLine($"Update: {info.Summary}");
+        Console.Error.WriteLine($"        {info.DownloadUrl}");
+        Console.Error.Write("Open the download page now? [y/N] ");
+        var answer = Console.ReadLine();
+        if (answer is not null
+            && (string.Equals(answer.Trim(), "y", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(answer.Trim(), "yes", StringComparison.OrdinalIgnoreCase)))
+        {
+            if (!UpdateLauncher.TryOpen(info.DownloadUrl))
+            {
+                Console.Error.WriteLine("Could not open a browser; open the URL above manually.");
+            }
+        }
+
+        Console.Error.WriteLine();
+    }
+
+    private static int UpdateCommand(string[] args)
+    {
+        var json = HasFlag(args, "--json");
+        var force = HasFlag(args, "--force");
+        UpdateCheckResult result = UpdateChecker.CheckAsync(force).GetAwaiter().GetResult();
+        if (result.Info is not { } info)
+        {
+            if (json)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(
+                    new CliUpdateResult(
+                        false,
+                        result.Error ?? "The update check failed.",
+                        FiveDoVersion.Version,
+                        null,
+                        false,
+                        null,
+                        null,
+                        null,
+                        null,
+                        result.FromCache),
+                    CliJsonContext.Default.CliUpdateResult));
+            }
+            else
+            {
+                Console.Error.WriteLine($"error: update check failed: {result.Error ?? "unknown error"}");
+            }
+
+            return 1;
+        }
+
+        if (json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(
+                new CliUpdateResult(
+                    true,
+                    null,
+                    info.CurrentVersion,
+                    info.LatestVersion,
+                    info.UpdateAvailable,
+                    info.ReleaseName,
+                    info.ReleasePageUrl,
+                    info.DownloadUrl,
+                    info.PublishedAtUtc,
+                    result.FromCache),
+                CliJsonContext.Default.CliUpdateResult));
+            return 0;
+        }
+
+        Console.WriteLine(info.Summary);
+        Console.WriteLine($"Latest release: {info.ReleaseName}");
+        Console.WriteLine($"Release page:   {info.ReleasePageUrl}");
+        if (info.UpdateAvailable)
+        {
+            Console.WriteLine($"Download:       {info.DownloadUrl}");
+            Console.WriteLine("Use 'update --force' to bypass the local cache.");
+        }
+
         return 0;
     }
 
@@ -4217,10 +4340,12 @@ internal static class Program
         Console.WriteLine("                                       Disassemble raw little-endian ARM words.");
         Console.WriteLine("  bench [--frames N] [--json]          Synthetic-ROM frame benchmark.");
         Console.WriteLine("  selftest [--json]                    Determinism and state roundtrip checks.");
+        Console.WriteLine("  update [--force] [--json]            Check GitHub for a newer 5DO release.");
         Console.WriteLine();
         Console.WriteLine("Options:");
         Console.WriteLine("  -v, --version  Show version");
         Console.WriteLine("  -h, --help     Show help");
+        Console.WriteLine("  --no-update-check  Skip the interactive startup update check.");
     }
 
     /// <summary>Requests 1 ms timer resolution while a real-time CLI run is active.</summary>

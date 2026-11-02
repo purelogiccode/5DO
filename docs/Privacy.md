@@ -1,7 +1,19 @@
 # Privacy
 
-5DO is a local desktop application. It does not include telemetry, analytics, crash
-reporting, advertising, or an automatic update service.
+5DO is a local desktop application. It does not include analytics, crash reporting,
+advertising, or an automatic update service.
+
+## Update checks
+
+The desktop shell and CLI check GitHub's public release feed once at startup (cached for
+several hours). The request contains only the public repository URL and a client user
+agent; no user, machine, game, settings, or diagnostics data is sent. GitHub receives the
+usual HTTP metadata (IP address, user agent, and requested URL) under its privacy policy.
+
+The update check is enabled by default and can be disabled with **Settings > Video >
+Check for updates when 5DO starts**, `--no-update-check`, or `FIVEDO_UPDATE_CHECK=0`.
+Opening the download page uses the system browser. 5DO never downloads or installs an
+update automatically.
 
 ## What stays on your machine
 
@@ -13,8 +25,9 @@ The desktop app stores its state in the local 5DO data directory:
 - `cheats/` — per-game cheat files.
 - `library-state.json` and `library-metadata.json` — favorites, play time, and offline
   library metadata.
-- `library-cache.json` — scanned game metadata.
-- `logs/` — rolling diagnostic logs.
+- `library-cache.json` - scanned game metadata.
+- `update-check.json` - the last successful GitHub release check.
+- `logs/` - rolling diagnostic logs.
 
 Use **Settings > Paths** or **About** to see the exact directory. Portable mode keeps
 the same data beside the executable.
@@ -43,10 +56,12 @@ game content, and a log can contain a title or path that the scrubber did not re
 
 ## Network access
 
-The emulator itself does not make network requests. The documentation site is a static
-GitHub Pages site. GitHub may collect standard web-server logs according to GitHub's
-privacy statement. The docs theme may load web fonts from Google Fonts; the emulator
-does not.
+The emulator and game rendering run locally and do not need a network connection. The
+startup update check and the optional launch-statistics request are the only requests
+made by the application itself; both are best-effort and can be disabled. The
+documentation site is a static GitHub Pages site. GitHub may collect standard web-server
+logs according to GitHub's privacy statement. The docs theme may load web fonts from
+Google Fonts; the emulator does not.
 
 Bug reports, discussions, and pull requests are hosted by GitHub and are subject to
 GitHub's terms and privacy policy.

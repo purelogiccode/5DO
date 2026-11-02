@@ -59,6 +59,9 @@ public sealed class GameProfile
     /// <summary>Gets or sets the per-game high-resolution mode, or <see langword="null"/> for the global mode.</summary>
     public bool? HighResolution { get; set; }
 
+    /// <summary>Gets or sets the per-game presentation crop, or <see langword="null"/> for the global crop.</summary>
+    public CropInsets? Overscan { get; set; }
+
     /// <summary>Gets or sets the six per-game PBUS devices, or an empty list for the global list.</summary>
     public IList<string> InputDevices { get; set; } = new List<string>();
 
@@ -88,6 +91,7 @@ public sealed class GameProfile
             CdAudioVolume = settings.CdAudioVolume,
             CdAudioMuted = settings.CdAudioMuted,
             HighResolution = settings.HighResolution,
+            Overscan = settings.ResolveOverscan(),
             NvramStorageMode = settings.NvramStorageMode,
             NvramVersion = settings.NvramVersion,
         };
@@ -131,6 +135,11 @@ public sealed class GameProfile
         if (HighResolution is { } highResolution)
         {
             settings.HighResolution = highResolution;
+        }
+
+        if (Overscan is { } overscan)
+        {
+            settings.SetOverscan(overscan);
         }
 
         settings.SetInputDeviceOverride(

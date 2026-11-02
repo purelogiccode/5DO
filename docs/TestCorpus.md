@@ -889,6 +889,32 @@ UX-23 coverage is compile/status level:
   `SaveNativeScreenshot`; it is presentation-only, so frame hashes and save states do
   not change. The full suite is **1,473 tests**.
 
+### 1.1ai Screenshot gallery filters, compare, export, and sidecars (2026-11-02)
+
+- `ScreenshotLibraryTests.List_FiltersByGameAndCaptureTime` covers case-insensitive
+  game text, inclusive time bounds, native companions, and distinct game names.
+- `ScreenshotLibraryTests.Export_CopiesToADestinationDirectory` covers directory
+  creation, content copy, and a missing source.
+- `ScreenshotMetadataTests` covers capture/save/load of renderer, filter, aspect,
+  region, high-resolution, crop, border, profile, and CPU-clock fields; native-companion
+  fallback; invalid JSON; and missing sidecars.
+- The frontend `--smoke-test` constructs the updated gallery and the new compare window.
+  **1,533 tests pass.**
+
+### 1.1ah Per-edge overscan and void border (2026-11-02)
+
+- `CropInsetsTests` covers uniform clamping, the 16-pixel visible-size rule, legacy
+  `OverscanPixels` fallback, per-edge precedence, `SetOverscan` clearing the legacy
+  value, and `#RRGGBB`/`#AARRGGBB` validation.
+- `AppSettingsStoreTests.PerEdgeOverscanAndVoidBorder_RoundtripAndClamp` verifies the
+  four edges, border 0-64 clamp, invalid-color fallback, and persistence.
+- `AppSettingsStoreTests.GameProfile_FromSettingsCapturesPerGameOverrides` and
+  `CreateEffectiveForGame_AppliesProfileWithoutChangingLiveSettings` verify per-game
+  crop capture/application and live-settings isolation.
+- The frontend `--smoke-test` constructs the updated Settings window. The crop is
+  presentation-only; `CoreTypesTests.VdlFrame_CopyCroppedFromShiftsPixelsAndMetadata`
+  keeps the frame-copy contract covered. **1,529 tests pass.**
+
 ### 1.1ag 4DO/Opera fix parity (2026-11-01)
 
 - [`FixParity.md`](FixParity.md) maps every 4DO `FIX_BIT_*`: timing 1/2/3/5 are active;

@@ -56,10 +56,23 @@ internal static class Program
     public static VkProbeOptions? VkProbe { get; private set; }
 
     /// <summary>
+    /// Gets the optional Direct3D 11 probe request. When set, the process runs the
+    /// offscreen pipeline (or the native Win32 swapchain for <c>--d3d-window-probe</c>)
+    /// and exits without initializing Avalonia.
+    /// </summary>
+    public static D3dProbeOptions? D3dProbe { get; private set; }
+
+    /// <summary>
     /// Gets the renderer backend requested with <c>--gl-backend</c> (or the probe alias
     /// <c>--gl-probe-backend</c>). The default is <see cref="GlBackend.Auto"/>.
     /// </summary>
     public static GlBackend RequestedGlBackend { get; private set; } = GlBackend.Auto;
+
+    /// <summary>
+    /// Gets a value indicating whether the startup GitHub update check was disabled with
+    /// <c>--no-update-check</c>.
+    /// </summary>
+    public static bool SkipUpdateCheck { get; private set; }
 
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
@@ -139,10 +152,11 @@ internal static class Program
 
             var backendText = FindOptionValue(args, "--gl-backend")
                 ?? FindOptionValue(args, "--gl-probe-backend");
+            SkipUpdateCheck = HasFlag(args, "--no-update-check");
             if (!GlBackendOption.TryParse(backendText, out GlBackend backend))
             {
                 Serilog.Log.Warning(
-                    "Unrecognized --gl-backend value {Backend}; use auto, wgl, angle, software, or vulkan.",
+                    "Unrecognized --gl-backend value {Backend}; use auto, wgl, angle, software, vulkan, or d3d11.",
                     backendText);
                 Environment.ExitCode = 1;
                 return;
@@ -178,6 +192,34 @@ internal static class Program
                 return;
             }
 
+            if (HasFlag(args, "--d3d-window-probe"))
+            {
+                if (!D3dProbeOptions.TryParseWindow(args, out D3dProbeOptions? windowProbe, out var windowProbeError))
+                {
+                    Serilog.Log.Warning("Invalid Direct3D window probe options: {Error}.", windowProbeError);
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                D3dProbe = windowProbe;
+                Environment.ExitCode = D3dProbeRunner.Run(windowProbe!);
+                return;
+            }
+
+            if (HasFlag(args, "--d3d-probe"))
+            {
+                if (!D3dProbeOptions.TryParse(args, out D3dProbeOptions? d3dProbe, out var d3dProbeError))
+                {
+                    Serilog.Log.Warning("Invalid Direct3D probe options: {Error}.", d3dProbeError);
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                D3dProbe = d3dProbe;
+                Environment.ExitCode = D3dProbeRunner.Run(d3dProbe!);
+                return;
+            }
+
             SmokeTest = HasFlag(args, "--smoke-test");
             SmokeOutputPath = FindOptionValue(args, "--smoke-output");
             if (HasFlag(args, "--gl-probe"))
@@ -203,7 +245,7 @@ internal static class Program
                 return;
             }
 
-            if (GlProbe is null && VkProbe is null && !SmokeTest)
+            if (GlProbe is null && VkProbe is null && D3dProbe is null && !SmokeTest)
             {
                 ApplicationStatsClient.TrackLaunch();
             }
@@ -264,13 +306,15 @@ internal static class Program
         Console.WriteLine("  -f, --fullscreen        Start in fullscreen.");
         Console.WriteLine("  --portable              Store settings, NVRAM, cheats, and logs beside the executable.");
         Console.WriteLine("  --config-profile <name> Use profiles/<name> for settings, NVRAM, cheats, and logs.");
-        Console.WriteLine("  --gl-backend <backend>  auto (default), wgl, angle, software, or vulkan.");
+        Console.WriteLine("  --gl-backend <backend>  auto (default), wgl, angle, software, vulkan, or d3d11.");
+        Console.WriteLine("  --no-update-check       Skip the startup GitHub release check.");
         Console.WriteLine("  --version               Print the version and exit.");
         Console.WriteLine("  -h, --help              Show this help and exit.");
         Console.WriteLine();
         Console.WriteLine("Developer GPU probes (see docs/Performance.md):");
         Console.WriteLine("  --gl-probe <json> [--gl-probe-size WxH] [--gl-probe-frames N] ...");
         Console.WriteLine("  --vk-probe <json> | --vk-window-probe <json> ...");
+        Console.WriteLine("  --d3d-probe <json> | --d3d-window-probe <json> ...");
         Console.WriteLine("  --smoke-test [--smoke-output <path>]");
     }
 
@@ -298,7 +342,9 @@ internal static class Program
         return HasFlag(args, "--smoke-test")
                || HasFlag(args, "--gl-probe")
                || HasFlag(args, "--vk-probe")
-               || HasFlag(args, "--vk-window-probe");
+               || HasFlag(args, "--vk-window-probe")
+               || HasFlag(args, "--d3d-probe")
+               || HasFlag(args, "--d3d-window-probe");
     }
 
     internal static string? FindOptionValue(string[] args, string option)
@@ -387,7 +433,21 @@ internal static class Program
             || string.Equals(previous, "--vk-window-probe-frames", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--vk-window-probe-warmup", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--vk-window-probe-filter", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(previous, "--vk-window-probe-timeout", StringComparison.OrdinalIgnoreCase);
+            || string.Equals(previous, "--vk-window-probe-timeout", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--d3d-probe", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--d3d-window-probe", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--d3d-probe-capture", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--d3d-probe-size", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--d3d-probe-frames", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--d3d-probe-warmup", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--d3d-probe-filter", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--d3d-probe-timeout", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--d3d-window-probe-capture", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--d3d-window-probe-size", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--d3d-window-probe-frames", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--d3d-window-probe-warmup", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--d3d-window-probe-filter", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--d3d-window-probe-timeout", StringComparison.OrdinalIgnoreCase);
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.

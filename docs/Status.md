@@ -33,8 +33,21 @@ are **post-1.0**.
 library deduplication by 3DO game ID, moves the OpenAL license text to
 `docs/OpenAL-Soft-COPYING.txt`, removes the frame/PC/cycle counter from the desktop
 status bar, and completes the Serilog catch-block coverage and launch-statistics
-wiring. The full suite is **1,475/1,475** passing. The bundle layout is unchanged:
+wiring. The full suite is **1,533/1,533** passing. The bundle layout is unchanged:
 framework-dependent single-file apphosts, no bundled .NET runtime, no PDB/XML files.
+
+**Latest work (2026-11-02):** the CLI and desktop shell check the public GitHub release
+feed at startup (cached, opt-out) and offer the download page; `5do update` exposes the
+same check. The optional `FiveDo.Video.Direct3D` Windows backend adds a FL11_0
+two-stage presenter, runtime HLSL, a DXGI flip-model child swapchain,
+`--gl-backend d3d11`, Settings selection, and `--d3d-probe`/`--d3d-window-probe`.
+320x240 Accurate matches the CPU oracle (0 different pixels); 4K sharp-bilinear
+measures present p99 0.23 ms and GPU p99 0.07 ms. OpenGL remains the default.
+
+The 2026-11-02 hardening pass added `tools/FiveDo.Fuzz` (state, disc, CUE, Opera-FS,
+CD command-stream, and ARM60 targets plus a nightly workflow), per-edge overscan and
+per-game crop profiles with a configurable void border, and screenshot gallery filters,
+side-by-side compare, export, and settings sidecars. The suite is **1,533 tests**.
 
 SYS-01 and AUD-05 now expose multi-track CUE/CHD tables and CD-DA: `ITrackedDiscSource`
 carries native 2048/2336/2352-byte sectors, `CueDiscImage` handles multi-file/multi-track
@@ -189,7 +202,7 @@ voluntary donations only). See
 [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 **Release definition:** documented compatibility, not full compatibility; see
 [`ReleaseChecklist.md`](ReleaseChecklist.md).
-**Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, optional Vulkan backend, CLI, and deterministic tests.
+**Scope:** pure C# 3DO emulator, desktop GL/GLES presenter, optional Vulkan and Direct3D 11 backends, CLI, and deterministic tests.
 **Reference:** `References/opera-libretro-master/libopera` is now the primary
 behavioral reference for new compatibility work; see
 [`ReferenceStrategy.md`](ReferenceStrategy.md).

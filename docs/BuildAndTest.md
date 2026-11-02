@@ -48,6 +48,8 @@ src/
   FiveDo.Sport/              # VRAM fill/copy engine
   FiveDo.Video/              # VDLP, frame assembly, mailbox, CPU presenter
   FiveDo.Video.OpenGL/       # OpenGL/GLES presenter, filters, shaders
+  FiveDo.Video.Vulkan/       # optional Vulkan presenter and probes
+  FiveDo.Video.Direct3D/     # optional Direct3D 11 presenter (Windows)
   FiveDo.Xbus/               # XBUS controller and devices
   FiveDo.Cdrom/              # MEI CD-ROM device
   FiveDo.Storage/            # ISO/BIN/CUE/CHD, BIOS/NVRAM, game database
@@ -83,7 +85,7 @@ dotnet build 5DO.sln -c Release
 dotnet test 5DO.sln -c Release
 ```
 
-The current suite is **1014 tests** (verified 2026-10-31) and completes in a few seconds
+The current suite is **1,533 tests** (verified 2026-11-02) and completes in a few seconds
 on the development machine. The build treats warnings as errors and runs the .NET
 analyzers plus Meziantou and Roslynator analyzers.
 
@@ -116,6 +118,12 @@ dotnet format 5DO.sln --verify-no-changes --no-restore
 
 # Apply formatting locally
 dotnet format 5DO.sln
+
+# Parser and CD command-stream fuzzing (deterministic)
+dotnet run --project tools/FiveDo.Fuzz -c Release -- --seconds 30 --target all --json
+
+# Reproduce one reported fuzz case
+dotnet run --project tools/FiveDo.Fuzz -c Release -- --target state --seed 397 --iterations 43
 ```
 
 ### Test project layout
@@ -153,6 +161,8 @@ The suite is one xUnit project with subsystem folders:
 | `FIVEDO_FRAME_DUMP=<dir>` | Writes boot-frame PNGs when a real BIOS is used. |
 | `FIVEDO_GPU_TESTS=1` | Runs the real WGL + ANGLE probe integration test. Requires a desktop GL/ANGLE context and a built frontend. |
 | `FIVEDO_VULKAN_TESTS=1` | Runs the in-process Vulkan parity/source-size and xBR/FSR orientation tests plus the Vulkan probe integration test. Requires a Vulkan device and a built frontend. |
+| `FIVEDO_D3D_TESTS=1` | Runs the opt-in Direct3D 11 parity/source-size, letterbox, and xBR/FSR/HQx orientation tests. Requires Windows and a Direct3D 11 device. |
+| `FIVEDO_UPDATE_CHECK=0` | Disables the CLI/frontend startup GitHub release check (also set automatically in CI/tests). |
 | `FIVEDO_AUDIO_TESTS=1` | Opens a real OpenAL device and plays a short tone. On headless machines set `ALSOFT_DRIVERS=null` to use OpenAL's null backend. |
 | `FIVEDO_AUDIO_TAP=<prefix>` | Not a test switch; enables the live PCM/timing tap for manual audio diagnosis. |
 | `FIVEDO_GAMES=<dir>` | Used by `tools/release-soak.ps1`, not by `dotnet test`. |
@@ -299,7 +309,7 @@ Options:
 | `--gl-probe-offscreen` | off | Render to an offscreen FBO at the requested size. |
 | `--gl-probe-capture <path>` | none | Write a PNG of the presented frame. |
 | `--gl-probe-timeout N` | 30 | Overall timeout in seconds, 1..600. |
-| `--gl-backend auto|wgl|angle|software|vulkan` | `auto` | Renderer backend. `--gl-probe-backend` is an alias. |
+| `--gl-backend auto|wgl|angle|software|vulkan|d3d11` | `auto` | Renderer backend. `--gl-probe-backend` is an alias. Direct3D 11 is Windows-only. |
 
 A 1:1 `accurate` capture at 320x240 triggers an automatic CPU/GPU parity comparison
 against `FrameAssembler`; the report includes `Parity.Compared`, `Matches`,
@@ -330,6 +340,33 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
 Set `FIVEDO_VULKAN_TESTS=1` to run the opt-in in-process parity/source-size and
 xBR/FSR orientation tests plus the probe integration test. See [`Vulkan.md`](Vulkan.md)
 for the measured results and limitations.
+
+### Direct3D 11 probe
+
+The optional Direct3D 11 backend has a headless probe and a native Win32 swapchain probe.
+It requires Windows and Direct3D 11 feature level 11_0.
+
+```powershell
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
+  --d3d-probe artifacts/d3d-probe/4k-sharp.json `
+  --d3d-probe-size 3840x2160 --d3d-probe-frames 30 --d3d-probe-warmup 10 `
+  --d3d-probe-filter sharp-bilinear
+```
+
+| Option | Default | Meaning |
+|---|---:|---|
+| `--d3d-probe <path>` | required | Output JSON path. |
+| `--d3d-probe-size WxH` | 1920x1080 | Output size, 16x16..16384x16384. |
+| `--d3d-probe-frames N` | 60 | Measured frames, 1..100000. |
+| `--d3d-probe-warmup N` | 10 | Unmeasured warm-up frames, 0..10000. |
+| `--d3d-probe-filter <name>` | `accurate` | Same filter names as the OpenGL/Vulkan probes. |
+| `--d3d-probe-capture <path>` | none | Write a PNG of the rendered frame. |
+| `--d3d-probe-timeout N` | 30 | Overall timeout in seconds, 1..600. |
+| `--d3d-window-probe <path>` | - | Native Win32 flip-model swapchain probe; accepts the matching `--d3d-window-probe-*` options. |
+
+Set `FIVEDO_D3D_TESTS=1` to run the opt-in parity, size-change, letterbox, and
+xBR/FSR/HQx orientation tests. The HLSL compile test runs on Windows without an opt-in
+flag. See [`Direct3D.md`](Direct3D.md) for measured results and limitations.
 
 See [`Video.md`](Video.md) and [`Performance.md`](Performance.md) for interpretation.
 
@@ -400,7 +437,10 @@ The bundle contains both framework-dependent apphosts and their native libraries
 `docs/Licensing.md`, `docs/ReleaseLegalReview.md`, the latest
 `docs/ReleaseNotes-*.md`, and a generated `PACKAGE.txt` with component, RID, version,
 commit, and build time. Linux bundles also include `5do.desktop`. PDB and XML
-documentation files are removed, and no .NET runtime is copied into the bundle.
+documentation files are removed, and no .NET runtime is copied into the bundle. The
+archive name includes the product version, for example
+`5do-1.1.0-win-x64.zip` or `5do-1.1.0-linux-x64.tar.gz`; the version is read from
+`Directory.Build.props` unless `-Version` is supplied.
 
 ---
 
@@ -469,7 +509,7 @@ Key properties in `Directory.Build.props`:
 | `ImplicitUsings` | `disable` |
 | `TreatWarningsAsErrors` | `true` |
 | `Deterministic` | `true` |
-| `Version` | `1.0.0` |
+| `Version` | `1.1.0` |
 | `InvariantGlobalization` | `true` |
 | `EnableNETAnalyzers` | `true` |
 | `AnalysisLevel` | `latest-recommended` |

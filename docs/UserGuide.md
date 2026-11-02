@@ -97,8 +97,9 @@ FiveDo.Frontend.Avalonia.exe "D:\Games\Road Rash (USA).chd" `
 | `--disc <path>` | Explicit disc path; same behavior as the positional form. |
 | `--bios <path>` | BIOS image for this launch; overrides the saved BIOS path. A missing file prints an error and exits with code 1. |
 | `-f`, `--fullscreen` | Start in fullscreen. Works with a disc or with the library view. Escape/F11 leaves fullscreen. |
-| `--gl-backend <mode>` | `auto` (default), `wgl`, `angle`, `software`, or `vulkan`. |
+| `--gl-backend <mode>` | `auto` (default), `wgl`, `angle`, `software`, `vulkan`, or `d3d11`. Direct3D is Windows-only. |
 | `--gl-probe-backend <mode>` | Alias for `--gl-backend` retained for the GPU probe. |
+| `--no-update-check` | Skip the startup GitHub release check for this launch. |
 | `--version` | Print the version and exit. |
 | `-h`, `--help` | Print frontend usage and exit. |
 
@@ -115,9 +116,12 @@ Developer/CI options already supported by the frontend:
 | `--gl-probe <json>` | OpenGL presentation probe with `--gl-probe-size`, `--gl-probe-frames`, `--gl-probe-warmup`, `--gl-probe-filter`, `--gl-probe-vsync`, `--gl-probe-offscreen`, `--gl-probe-capture`, and `--gl-probe-timeout`. |
 | `--vk-probe <json>` | Headless Vulkan probe with `--vk-probe-size`, `--vk-probe-frames`, `--vk-probe-warmup`, `--vk-probe-filter`, `--vk-probe-capture`, and `--vk-probe-timeout`. |
 | `--vk-window-probe <json>` | Native Win32 Vulkan swapchain probe with the matching `--vk-window-probe-*` options. |
+| `--d3d-probe <json>` | Headless Direct3D 11 probe with `--d3d-probe-size`, `--d3d-probe-frames`, `--d3d-probe-warmup`, `--d3d-probe-filter`, `--d3d-probe-capture`, and `--d3d-probe-timeout`. Windows only. |
+| `--d3d-window-probe <json>` | Native Win32 Direct3D 11 swapchain probe with the matching `--d3d-window-probe-*` options. Windows only. |
 | `--smoke-test [--smoke-output <path>]` | Startup smoke test used by CI; exits after the first UI pass. |
 
-See [`Performance.md`](Performance.md), [`Vulkan.md`](Vulkan.md), and
+See [`Performance.md`](Performance.md), [`Vulkan.md`](Vulkan.md),
+[`Direct3D.md`](Direct3D.md), and
 [`BuildAndTest.md`](BuildAndTest.md) for the probe reports and commands.
 
 ## Controls
@@ -350,13 +354,15 @@ default and only drops presentation frames when the host misses its deadline; fi
 modes present one of every 2/3/4/5 frames. Emulation, input, audio, and save states still
 run at full speed in every mode, so this is not fast-forward. Use Auto for normal play;
 a fixed mode is useful on a slow GPU or when recording. The status overlay shows both
-the emulated and presented rates. The **Graphics API** list selects **OpenGL**,
-**Vulkan**, or **Software (CPU)**; changing it recreates the presenter without restarting
+the emulated and presented rates. The **Graphics API** list selects **OpenGL**, **DirectX
+11** (Windows only), **Vulkan**, or **Software (CPU)**; changing it recreates the presenter without restarting
 emulation. **Output resolution** selects the final presentation size: match the window,
 native 320x240, 2x/3x/4x, 720p, 1080p, 1440p, or 4K. This is output upscaling, not
-internal CEL rendering. **Overscan crop** (Settings > Video) hides 4-24 pixels from every edge for TVs and
-captures that show the outer frame; native screenshots use the same crop. It changes
-presentation only, not emulation, input, audio, or save states. The renderer falls back
+internal CEL rendering. **Overscan crop L/T/R/B** (Settings > Video) hides 0-32 pixels
+from each edge for TVs and captures that show the outer frame; native screenshots use
+the same crop, and per-game profiles can store their own crop. **Void border** draws a
+0-64 pixel border in the selected `#RRGGBB`/`#AARRGGBB` color around the presented image.
+Both options change presentation only, not emulation, input, audio, or save states. The renderer falls back
 to the CPU `WriteableBitmap` presenter
 when OpenGL initialization or context recovery fails; the status line and **Logs** report
 the reason.
@@ -367,11 +373,18 @@ skip. If a title still misses 60 fps, use `Nearest`, a lower output resolution, 
 off expensive filters first. The emulation core is also optimized in Debug builds, so
 starting the app from the IDE should stay near Release speed.
 
-On Windows, the frontend accepts `--gl-backend auto|wgl|angle|software|vulkan` to force
-a renderer backend for troubleshooting or validation. `auto` is the default (desktop
-WGL, then ANGLE/GLES, then software). The developer `--gl-probe` tool uses the same
-option and can capture a 1:1 Accurate frame for CPU/GPU parity; see
+On Windows, the frontend accepts `--gl-backend auto|wgl|angle|software|vulkan|d3d11` to
+force a renderer backend for troubleshooting or validation. `auto` is the default
+(desktop WGL, then ANGLE/GLES, then software). The developer probes use the same option
+and can capture a 1:1 Accurate frame for CPU/GPU parity; see
 [`Performance.md`](Performance.md).
+
+5DO checks GitHub's public release feed once at startup (at most every few hours). If a
+newer version exists, the desktop shell opens a message box with the release page, and
+the CLI prints the download URL and asks before opening a browser. The check sends no
+personal data. Turn it off with **Settings > Video > Check for updates when 5DO starts**,
+`--no-update-check`, or `FIVEDO_UPDATE_CHECK=0`. `5do update --json` prints the same
+information for scripts.
 
 The opt-in **Hi-Res** mode renders 640x480 CELs and restarts the machine when toggled.
 It is off by default because 320x240 titles must not be upscaled.
@@ -385,9 +398,12 @@ atomic. Format version 2 compresses large sections with Brotli, so a state is ty
 0.6-2.0 MB on disk (the uncompressed payload is ~25 MB). Version-1 states still load;
 see [`SaveStates.md`](SaveStates.md) for the format and limits.
 
-**Screenshot** writes a PNG named `<game>-<timestamp>-f<frames>.png`. **File > Screenshot
-Gallery...** lists captures with thumbnails and supports open, copy path, refresh, and
-delete (the first Delete click asks for confirmation). **File > Record GIF...** records
+**Screenshot** writes a PNG named `<game>-<timestamp>-f<frames>.png` plus a
+`<png>.json` sidecar with the renderer, filter, region, crop, border, and timing profile
+used for the capture. **File > Screenshot Gallery...** lists captures with thumbnails,
+filters by game text and date, and supports open, copy path, export, side-by-side compare
+(select exactly two), refresh, and delete (the first Delete click asks for confirmation).
+The selected capture's sidecar summary appears in the status line. **File > Record GIF...** records
 emulated frames to an animated GIF at 30 fps and asks for a destination; click it again
 (or stop emulation) to finish the file. The gallery writes from the OpenGL
 output (or the CPU frame when GL is unavailable). Enable **Also save the native CPU

@@ -44,6 +44,7 @@ namespace FiveDo.Cli;
 [JsonSerializable(typeof(CliCheatActionResult))]
 [JsonSerializable(typeof(CliMovieInfoResult))]
 [JsonSerializable(typeof(CliMovieActionResult))]
+[JsonSerializable(typeof(CliUpdateResult))]
 internal sealed partial class CliJsonContext : JsonSerializerContext;
 
 /// <summary>

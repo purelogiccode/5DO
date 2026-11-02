@@ -50,7 +50,7 @@ been validated.**
 | Compatibility set | 12 boot-validated titles, with 5 showcase titles | Per-title status must be honest |
 | Disc formats | ISO, BIN, CUE+BIN, CHD | Already implemented and tested |
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
-| Packages | One bundle per system | `5do-win-x64.zip`, `5do-linux-x64.tar.gz`, `5do-osx-x64.tar.gz`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 10 runtime is a host prerequisite and is not bundled |
+| Packages | One bundle per system | `5do-<version>-win-x64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-osx-x64.tar.gz`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 10 runtime is a host prerequisite and is not bundled |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
 | Version | **`v1.1.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0 and rc.1 are historical |
 | Release timing | **Released** | v1.1.0 bundles and checksums are attached to the GitHub release |
@@ -263,7 +263,8 @@ source-only tag or GitHub release is not a complete release.
 - [x] Do **not** copy the .NET runtime into the bundle. Users must install the .NET 10
       runtime on their machine; `PACKAGE.txt` and the README record the requirement.
 - [x] Build one bundle per system with `packaging/package-bundle.ps1`:
-      `5do-win-x64.zip`, `5do-linux-x64.tar.gz`, `5do-osx-x64.tar.gz`.
+      `5do-<version>-win-x64.zip`, `5do-<version>-linux-x64.tar.gz`,
+      `5do-<version>-osx-x64.tar.gz`.
 - [x] Each bundle contains both executables, `README.md`, `LICENSE`,
       `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, `docs/Licensing.md`,
       `docs/ReleaseLegalReview.md`, `docs/OpenALSoft.md`,

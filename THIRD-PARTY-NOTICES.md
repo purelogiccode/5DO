@@ -32,7 +32,8 @@ This file records the projects and licenses that influence or ship with 5DO. It 
   libretro `glsl-shaders` collection.
 - License: MIT.
 - Use: the opt-in `VideoFilter.Xbr` 4x edge-directed pass in
-  `FiveDo.Video.OpenGL/Shaders.cs`. The shader was adapted to the emulator's
+  `FiveDo.Video.OpenGL/Shaders.cs`, `FiveDo.Video.Vulkan/Xbr.frag`, and
+  `FiveDo.Video.Direct3D/Shaders.cs`. The shader was adapted to the emulator's
   native-resolution palette output and uniform layout; the copyright and permission
   notice is preserved in the shader comments.
 
@@ -41,9 +42,10 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 - Source algorithm: Advanced Micro Devices, Inc., FidelityFX FSR 1.0 (`ffx_fsr1.h`,
   v1.20210629).
 - License: MIT.
-- Use: the opt-in `VideoFilter.Fsr` presenter path in `FiveDo.Video.OpenGL/Shaders.cs`.
-  The EASU and RCAS passes are adapted to the emulator's two-stage presenter (GLSL
-  3.30 / ES 3.00) and use integer `texelFetch` taps. The AMD copyright and MIT
+- Use: the opt-in `VideoFilter.Fsr` presenter path in
+  `FiveDo.Video.OpenGL/Shaders.cs`, `FiveDo.Video.Vulkan/FsrEasu.frag`/`FsrRcas.frag`,
+  and `FiveDo.Video.Direct3D/Shaders.cs`. The EASU and RCAS passes are adapted to the
+  emulator's two-stage presenter and use integer texel taps. The AMD copyright and MIT
   permission notice is preserved in the shader comments. FSR 2/3 and DLSS are not
   used because they require motion vectors and engine integration that a 3DO
   framebuffer does not provide.
@@ -105,6 +107,7 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 | coverlet.collector | Coverage | MIT |
 | BenchmarkDotNet | Benchmarks | MIT |
 | Silk.NET.Vulkan 2.23.0 + Silk.NET.Vulkan.Extensions.KHR 2.23.0 | Optional offscreen Vulkan backend, native Win32 swapchain probe, and `--vk-probe`/`--vk-window-probe` | MIT |
+| Vortice.Direct3D11 3.8.3 + Vortice.DXGI 3.8.3 + Vortice.D3DCompiler 3.8.3 | Optional Direct3D 11 presenter, DXGI swapchain, and runtime HLSL compilation; SharpGen.Runtime is a transitive dependency | MIT |
 | XenoAtom.ShaderCompiler.Build 1.2.2 | Build-time GLSL-to-SPIR-V compilation for the Vulkan backend; not distributed at runtime | BSD-2-Clause |
 | Silk.NET.OpenAL 2.23.0 | Desktop audio bindings | MIT |
 | Silk.NET.OpenAL.Soft.Native 1.23.1 | Native OpenAL Soft runtime bundled beside the CLI/frontend (win-x64/win-arm64/win-x86, linux-x64/linux-arm64, osx-x64/osx-arm64); `soft_oal.dll` is copied as `OpenAL32.dll` on Windows | MIT wrapper for OpenAL Soft; OpenAL Soft itself is LGPL-2.0-or-later. The notice, source offer, relinking rights, and license text ship in [`docs/OpenALSoft.md`](docs/OpenALSoft.md) and [`docs/OpenAL-Soft-COPYING.txt`](docs/OpenAL-Soft-COPYING.txt). |
