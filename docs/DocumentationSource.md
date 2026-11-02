@@ -20,6 +20,9 @@ python -m pip install --require-hashes -r requirements-docs.txt
 mkdocs serve
 ```
 
+`requirements-docs.txt` is generated from `requirements-docs.in` with
+`uv pip compile --generate-hashes`; keep the hashes when updating dependencies.
+
 Open <http://127.0.0.1:8000/>. To validate the production build:
 
 ```powershell
