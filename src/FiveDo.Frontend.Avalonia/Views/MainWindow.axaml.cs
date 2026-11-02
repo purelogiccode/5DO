@@ -530,6 +530,7 @@ public partial class MainWindow : Window, IDisposable
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
+            _logger.ForCategory(LogCategory.Storage).Debug(exception, "NVRAM export failed for {Path}.", path);
             StatusText.Text = $"NVRAM export failed: {exception.Message}";
             ShowError("NVRAM export failed", exception.Message);
         }
@@ -587,6 +588,7 @@ public partial class MainWindow : Window, IDisposable
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException or UnauthorizedAccessException)
         {
+            _logger.ForCategory(LogCategory.Storage).Debug(exception, "NVRAM import failed for {Path}.", path);
             StatusText.Text = $"NVRAM import failed: {exception.Message}";
             ShowError("NVRAM import failed", exception.Message);
         }
@@ -893,6 +895,10 @@ public partial class MainWindow : Window, IDisposable
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
             {
+                _logger.ForCategory(LogCategory.Storage).Debug(
+                    exception,
+                    "Dropped playlist import failed for {Path}.",
+                    path);
                 ShowOsd(
                     $"Could not import {Path.GetFileName(path)}: {exception.Message}",
                     OsdSeverity.Warning);
@@ -1575,6 +1581,10 @@ public partial class MainWindow : Window, IDisposable
                 catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
                 {
                     // Temporary evidence cleanup is best-effort.
+                    _logger.ForCategory(LogCategory.Host).Debug(
+                        exception,
+                        "Temporary diagnostics file {Path} could not be removed.",
+                        temporary);
                 }
             }
         }
@@ -2408,6 +2418,9 @@ public partial class MainWindow : Window, IDisposable
                 }
                 catch (Exception exception) when (exception is not OutOfMemoryException)
                 {
+                    _logger.ForCategory(LogCategory.Video).Debug(
+                        exception,
+                        "Vulkan surface restart failed for the game view.");
                     OnVulkanFailed(this, new VulkanFailedEventArgs(exception));
                 }
             }
@@ -3128,10 +3141,11 @@ public partial class MainWindow : Window, IDisposable
                     return;
                 }
 
-                finalEntries = initial.Entries
-                    .Where(entry => !entry.Pending)
-                    .Concat(enriched)
-                    .ToList();
+                finalEntries = GameLibraryScanner.Deduplicate(
+                    initial.Entries
+                        .Where(entry => !entry.Pending)
+                        .Concat(enriched)
+                        .ToList());
                 ReplaceLibraryEntries(finalEntries);
             }
         }
@@ -3848,10 +3862,13 @@ public partial class MainWindow : Window, IDisposable
         {
             multiplier = _settings.ResolveFastForwardMultiplier();
         }
-        catch (ArgumentOutOfRangeException)
+        catch (ArgumentOutOfRangeException exception)
         {
             // A hand-edited settings file can carry an invalid multiplier; the quick
             // menu still opens and StartFastForward falls back to the same value.
+            _logger.ForCategory(LogCategory.Host).Debug(
+                exception,
+                "Fast-forward multiplier in settings is invalid; using the default.");
         }
 
         QuickMenuResumeButton.Content = _running ? "Pause" : "Resume";
@@ -3973,8 +3990,6 @@ public partial class MainWindow : Window, IDisposable
         var skip = status.FrameSkipMode == FrameSkipMode.Off && status.FrameSkipCadence <= 1
             ? string.Empty
             : $" ({FrameSkipPolicy.Describe(status.FrameSkipMode, status.FrameSkipCadence)})";
-        StatsText.Text =
-            $"frame {status.Frames} · PC 0x{status.ProgramCounter:x8} · {status.Cycles} cyc";
         FpsText.Text = $"{status.FramesPerSecond,5:F1} fps{skip}";
         if (OverlayPanel.IsVisible)
         {
@@ -4560,10 +4575,13 @@ public partial class MainWindow : Window, IDisposable
         {
             return _settings.CreateEffectiveForGame(gameId).CreateNvramStore(gameId);
         }
-        catch (ArgumentException)
+        catch (ArgumentException exception)
         {
             // Per-game mode without a selected game: keep the shared image as the
             // placeholder until a disc supplies a game ID.
+            _logger.ForCategory(LogCategory.Storage).Debug(
+                exception,
+                "Per-game NVRAM store requested without a game ID; using the shared image.");
             return new NvramStore(
                 Path.Combine(_settings.ResolveNvramDirectory(), NvramLayout.LegacyFileName));
         }
@@ -5021,8 +5039,11 @@ public partial class MainWindow : Window, IDisposable
         {
             _runner.SpeedMultiplier = _settings.ResolveFastForwardMultiplier();
         }
-        catch (ArgumentOutOfRangeException)
+        catch (ArgumentOutOfRangeException exception)
         {
+            _logger.ForCategory(LogCategory.Host).Debug(
+                exception,
+                "Fast-forward multiplier in settings is invalid; using 4x.");
             _runner.SpeedMultiplier = 4;
         }
 

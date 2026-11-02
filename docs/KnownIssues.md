@@ -169,7 +169,7 @@ checksums are attached, and legal/attribution sign-off is recorded.
   distribution obligation to the release. The notice, complete license text,
   three-year written source offer, and relinking instructions ship in
   [`OpenALSoft.md`](OpenALSoft.md) and
-  [`licenses/OpenAL-Soft-COPYING.txt`](licenses/OpenAL-Soft-COPYING.txt); the
+  [`OpenAL-Soft-COPYING.txt`](OpenAL-Soft-COPYING.txt); the
   project-owner legal sign-off is recorded in
   [`ReleaseLegalReview.md`](ReleaseLegalReview.md) (2026-11-02).
 

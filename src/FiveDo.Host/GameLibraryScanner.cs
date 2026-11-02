@@ -88,7 +88,7 @@ public static class GameLibraryScanner
         }
 
         SortEntries(entries);
-        return new GameLibraryScanResult(entries, pending);
+        return new GameLibraryScanResult(Deduplicate(entries), pending);
     }
 
     /// <summary>
@@ -183,7 +183,7 @@ public static class GameLibraryScanner
 
         var result = entries.ToList();
         SortEntries(result);
-        return result;
+        return Deduplicate(result);
     }
 
     /// <summary>Scans one or more folders, recursively, and returns fully inspected entries.</summary>
@@ -229,7 +229,83 @@ public static class GameLibraryScanner
             .Concat(inspected)
             .ToList();
         SortEntries(all);
-        return all;
+        return Deduplicate(all);
+    }
+
+    /// <summary>
+    /// Removes duplicate copies of the same disc. Two folders can contain the same game
+    /// (for example the same library on two drives); the 4DO game ID identifies those
+    /// copies, so the library lists the game once.
+    /// </summary>
+    /// <param name="entries">Entries to deduplicate.</param>
+    /// <returns>The entries in their original order with one entry per known game ID.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="entries"/> is null.</exception>
+    public static IReadOnlyList<GameLibraryEntry> Deduplicate(IReadOnlyList<GameLibraryEntry> entries)
+    {
+        ArgumentNullException.ThrowIfNull(entries);
+        var byGameId = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var result = new List<GameLibraryEntry>(entries.Count);
+        var duplicates = 0;
+        foreach (GameLibraryEntry entry in entries)
+        {
+            if (string.IsNullOrWhiteSpace(entry.GameId))
+            {
+                result.Add(entry);
+                continue;
+            }
+
+            if (!byGameId.TryGetValue(entry.GameId, out var index))
+            {
+                byGameId[entry.GameId] = result.Count;
+                result.Add(entry);
+                continue;
+            }
+
+            duplicates++;
+            if (Prefer(entry, result[index]))
+            {
+                result[index] = entry;
+            }
+        }
+
+        if (duplicates > 0)
+        {
+            Serilog.Log.Debug(
+                "Library deduplicated {DuplicateCount} disc(s) that share a 3DO game ID.",
+                duplicates);
+        }
+
+        return result;
+    }
+
+    private static bool Prefer(GameLibraryEntry candidate, GameLibraryEntry existing)
+    {
+        if (candidate.Error.Length == 0 && existing.Error.Length > 0)
+        {
+            return true;
+        }
+
+        if (candidate.Error.Length > 0 && existing.Error.Length == 0)
+        {
+            return false;
+        }
+
+        if (!candidate.Pending && existing.Pending)
+        {
+            return true;
+        }
+
+        if (candidate.Pending && !existing.Pending)
+        {
+            return false;
+        }
+
+        if (candidate.CoverPath.Length > 0 && existing.CoverPath.Length == 0)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>Builds a library entry for one disc, or returns null for an unsupported file.</summary>

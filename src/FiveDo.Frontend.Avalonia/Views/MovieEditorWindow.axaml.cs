@@ -76,6 +76,7 @@ public partial class MovieEditorWindow : Window
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException or NotSupportedException or ArgumentException)
         {
+            Serilog.Log.Debug(exception, "Movie load failed for {Path}.", path);
             StatusText.Text = $"Could not load the movie: {exception.Message}";
         }
     }
@@ -119,6 +120,7 @@ public partial class MovieEditorWindow : Window
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
         {
+            Serilog.Log.Debug(exception, "Movie save failed for {Path}.", path);
             StatusText.Text = $"Could not save the movie: {exception.Message}";
         }
     }

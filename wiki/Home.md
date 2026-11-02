@@ -4,8 +4,8 @@
 Interactive Multiplayer**. It combines a deterministic managed emulation core with an
 Avalonia desktop app, a headless CLI, and a reproducible test harness.
 
-> **v1.0.0 is released.** Download the Windows, Linux, or macOS bundle from
-> [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0).
+> **v1.1.0 is released.** Download the Windows, Linux, or macOS bundle from
+> [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.1.0).
 > No BIOS ROMs or game images are included. Supply legally obtained files.
 
 ## Download
@@ -51,7 +51,7 @@ Useful direct links:
 
 ## Project status
 
-- **v1.0.0** documented-compatibility release, published on GitHub.
+- **v1.1.0** documented-compatibility release, published on GitHub.
 - 594 disc images swept; after triage, 593 loadable/rendered, 1 known no-video case,
   0 not-loadable rows.
 - 1,473 tests in the current test assembly.

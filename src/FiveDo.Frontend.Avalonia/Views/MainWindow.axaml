@@ -724,17 +724,15 @@
         <Border Grid.Row="4" x:Name="StatusBarBorder" Padding="10,4"
                 Background="{DynamicResource StatusBarBrush}"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
-            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
                 <Ellipse Width="6" Height="6" Margin="0,0,7,0" VerticalAlignment="Center"
                          Fill="{DynamicResource AccentBrush}" />
                 <TextBlock x:Name="StatusText" Grid.Column="1" Classes="status"
                            Text="Ready." TextTrimming="CharacterEllipsis"
                            ToolTip.Tip="Current status message." />
-                <TextBlock x:Name="StatsText" Grid.Column="2" Classes="status" Margin="12,0"
-                           ToolTip.Tip="Frame count, program counter, and cycle counters." />
-                <TextBlock x:Name="RendererText" Grid.Column="3" Classes="status" Margin="12,0"
+                <TextBlock x:Name="RendererText" Grid.Column="2" Classes="status" Margin="12,0"
                            ToolTip.Tip="Active graphics renderer and version." />
-                <TextBlock x:Name="FpsText" Grid.Column="4" Classes="statusStrong"
+                <TextBlock x:Name="FpsText" Grid.Column="3" Classes="statusStrong"
                            MinWidth="60" TextAlignment="Right"
                            ToolTip.Tip="Measured and target frame rate." />
             </Grid>

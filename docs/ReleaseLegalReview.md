@@ -25,7 +25,7 @@ The release is **one bundle per system**: `5do-win-x64.zip`,
 - `THIRD-PARTY-NOTICES.md`,
 - `docs/Licensing.md`,
 - `docs/OpenALSoft.md` (OpenAL Soft notice, source offer, and relinking rights),
-- `docs/licenses/OpenAL-Soft-COPYING.txt` (the LGPL-2.0 license text),
+- `docs/OpenAL-Soft-COPYING.txt` (the LGPL-2.0 license text),
 - `PACKAGE.txt`,
 - the release notes,
 - the Linux `.desktop` entry for the Linux bundle.
@@ -54,7 +54,7 @@ files, XML documentation files, or any FreeDO/4DO/Opera reference binary.
       `OpenAL32.dll`. This adds an LGPL-2.0-or-later binary-distribution obligation to
       the release. `docs/OpenALSoft.md` records the notice, the exact upstream 1.23.1
       source, the three-year written source offer, and the relinking/replacement
-      instructions; `docs/licenses/OpenAL-Soft-COPYING.txt` contains the complete
+      instructions; `docs/OpenAL-Soft-COPYING.txt` contains the complete
       LGPL-2.0 text. Both files are copied into every bundle by
       `packaging/package-bundle.ps1`. The native library stays outside the single-file
       apphosts, so users can replace it.
@@ -103,7 +103,7 @@ files, XML documentation files, or any FreeDO/4DO/Opera reference binary.
       complete: notice and copyright, the complete LGPL-2.0 text, the upstream 1.23.1
       source location, a three-year written source offer, and relinking/replacement
       instructions are in `docs/OpenALSoft.md` and
-      `docs/licenses/OpenAL-Soft-COPYING.txt`, and both files are packaged. Accepted
+      `docs/OpenAL-Soft-COPYING.txt`, and both files are packaged. Accepted
       as part of the project-owner sign-off on 2026-11-02.
 
 ## 4. Recommendation

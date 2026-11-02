@@ -81,6 +81,7 @@ public partial class GameMetadataWindow : Window
         }
         catch (Exception exception) when (exception is ArgumentException or System.IO.IOException or UnauthorizedAccessException)
         {
+            Serilog.Log.Debug(exception, "Game metadata save failed for {Path}.", _metadataPath);
             StatusText.Text = $"Could not save metadata: {exception.Message}";
         }
     }
@@ -94,6 +95,7 @@ public partial class GameMetadataWindow : Window
         }
         catch (Exception exception) when (exception is System.IO.IOException or UnauthorizedAccessException)
         {
+            Serilog.Log.Debug(exception, "Game metadata clear failed for {Path}.", _metadataPath);
             StatusText.Text = $"Could not clear metadata: {exception.Message}";
         }
     }

@@ -54,7 +54,7 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 - Version: 1.23.1, bundled through `Silk.NET.OpenAL.Soft.Native` 1.23.1.
 - License: GNU Library General Public License 2.0 or later
   (LGPL-2.0-or-later); the complete text is in
-  [`docs/licenses/OpenAL-Soft-COPYING.txt`](docs/licenses/OpenAL-Soft-COPYING.txt).
+  [`docs/OpenAL-Soft-COPYING.txt`](docs/OpenAL-Soft-COPYING.txt).
 - Copyright: OpenAL Soft is Copyright (C) 1999-2007 by authors and is
   distributed under the LGPL-2.0-or-later.
 - Use: the native OpenAL runtime loaded by `FiveDo.Audio` for live playback.
@@ -107,7 +107,7 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 | Silk.NET.Vulkan 2.23.0 + Silk.NET.Vulkan.Extensions.KHR 2.23.0 | Optional offscreen Vulkan backend, native Win32 swapchain probe, and `--vk-probe`/`--vk-window-probe` | MIT |
 | XenoAtom.ShaderCompiler.Build 1.2.2 | Build-time GLSL-to-SPIR-V compilation for the Vulkan backend; not distributed at runtime | BSD-2-Clause |
 | Silk.NET.OpenAL 2.23.0 | Desktop audio bindings | MIT |
-| Silk.NET.OpenAL.Soft.Native 1.23.1 | Native OpenAL Soft runtime bundled beside the CLI/frontend (win-x64/win-arm64/win-x86, linux-x64/linux-arm64, osx-x64/osx-arm64); `soft_oal.dll` is copied as `OpenAL32.dll` on Windows | MIT wrapper for OpenAL Soft; OpenAL Soft itself is LGPL-2.0-or-later. The notice, source offer, relinking rights, and license text ship in [`docs/OpenALSoft.md`](docs/OpenALSoft.md) and [`docs/licenses/OpenAL-Soft-COPYING.txt`](docs/licenses/OpenAL-Soft-COPYING.txt). |
+| Silk.NET.OpenAL.Soft.Native 1.23.1 | Native OpenAL Soft runtime bundled beside the CLI/frontend (win-x64/win-arm64/win-x86, linux-x64/linux-arm64, osx-x64/osx-arm64); `soft_oal.dll` is copied as `OpenAL32.dll` on Windows | MIT wrapper for OpenAL Soft; OpenAL Soft itself is LGPL-2.0-or-later. The notice, source offer, relinking rights, and license text ship in [`docs/OpenALSoft.md`](docs/OpenALSoft.md) and [`docs/OpenAL-Soft-COPYING.txt`](docs/OpenAL-Soft-COPYING.txt). |
 | OS XInput / Linux evdev | Gamepad input (optional, no bundled native library) | OS API; no third-party runtime dependency |
 | CHDSharp 1.5.2 | CHD disc images (v1) | MIT + LGPL-2.1 component; pure C#, no native dependency. Verify the package LICENSE before release. |
 | 4DO game database | Game IDs and fix flags | Ported with attribution from `References/4DO-master`. The 4DO tree has no LICENSE file or source headers; permission or replacement is required before release. |

@@ -4,7 +4,7 @@
 **Used by:** `FiveDo.Audio`, the CLI, and the Avalonia frontend
 **License:** GNU Library General Public License, version 2, or later
 (LGPL-2.0-or-later). The full license text is in
-[`licenses/OpenAL-Soft-COPYING.txt`](licenses/OpenAL-Soft-COPYING.txt).
+[`OpenAL-Soft-COPYING.txt`](OpenAL-Soft-COPYING.txt).
 
 This notice is an engineering compliance record, not legal advice. The project
 owner/legal reviewer remains responsible for the final distribution decision; see
@@ -42,7 +42,7 @@ version. The upstream source headers carry the following notice:
 > PARTICULAR PURPOSE. See the GNU Library General Public License for more details.
 
 The complete LGPL-2.0 text is reproduced in
-[`licenses/OpenAL-Soft-COPYING.txt`](licenses/OpenAL-Soft-COPYING.txt). It is
+[`OpenAL-Soft-COPYING.txt`](OpenAL-Soft-COPYING.txt). It is
 copied into every release bundle by `packaging/package-bundle.ps1`.
 
 ## 3. Corresponding source offer
@@ -91,7 +91,7 @@ emulator does not ship a statically linked OpenAL implementation.
 Every release bundle built by `packaging/package-bundle.ps1` includes:
 
 - `docs/OpenALSoft.md` (this notice and source offer),
-- `docs/licenses/OpenAL-Soft-COPYING.txt` (the LGPL-2.0 text),
+- `docs/OpenAL-Soft-COPYING.txt` (the LGPL-2.0 text),
 - `THIRD-PARTY-NOTICES.md` and `docs/Licensing.md` (the dependency summary).
 
 The `PACKAGE.txt` manifest lists the component, RID, version, commit, and build

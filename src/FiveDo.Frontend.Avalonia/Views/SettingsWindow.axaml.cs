@@ -356,6 +356,7 @@ public partial class SettingsWindow : Window
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
         {
+            Serilog.Log.Debug(exception, "Could not set the default profile {Profile}.", option.Name);
             ProfileStatusText.Text = $"Could not set the default profile: {exception.Message}";
         }
     }
@@ -379,6 +380,7 @@ public partial class SettingsWindow : Window
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
         {
+            Serilog.Log.Debug(exception, "Could not create profile {Profile}.", name);
             ProfileStatusText.Text = $"Could not create the profile: {exception.Message}";
         }
     }
@@ -392,6 +394,7 @@ public partial class SettingsWindow : Window
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
         {
+            Serilog.Log.Debug(exception, "Could not open the profiles folder.");
             ProfileStatusText.Text = $"Could not open the profiles folder: {exception.Message}";
         }
     }
@@ -433,6 +436,7 @@ public partial class SettingsWindow : Window
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
         {
+            Serilog.Log.Debug(exception, "Profile settings import failed for {Path}.", path);
             ProfileStatusText.Text = $"Import failed: {exception.Message}";
         }
     }
@@ -467,6 +471,7 @@ public partial class SettingsWindow : Window
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
         {
+            Serilog.Log.Debug(exception, "Profile settings export failed for {Path}.", path);
             ProfileStatusText.Text = $"Export failed: {exception.Message}";
         }
     }
@@ -531,6 +536,7 @@ public partial class SettingsWindow : Window
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or ArgumentException)
         {
+            Serilog.Log.Debug(exception, "Game profile import failed for {Path}.", path);
             GameProfileText.Text = $"Import failed: {exception.Message}";
         }
     }
@@ -571,6 +577,7 @@ public partial class SettingsWindow : Window
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
+            Serilog.Log.Debug(exception, "Game profile export failed for {Path}.", path);
             GameProfileText.Text = $"Export failed: {exception.Message}";
         }
     }
@@ -1468,6 +1475,7 @@ public partial class SettingsWindow : Window
             or UnauthorizedAccessException
             or ArgumentException)
         {
+            Serilog.Log.Debug(exception, "BIOS scan failed in the settings dialog.");
             BiosScanText.Text = $"Scan failed: {exception.Message}";
         }
         finally

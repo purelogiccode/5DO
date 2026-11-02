@@ -102,6 +102,7 @@ public partial class CheatsWindow : Window
         }
         catch (Exception exception) when (exception is ArgumentException or FormatException)
         {
+            Serilog.Log.Debug(exception, "Cheat add validation failed.");
             StatusText.Text = exception.Message;
         }
     }
@@ -136,6 +137,7 @@ public partial class CheatsWindow : Window
         }
         catch (Exception exception) when (exception is ArgumentException or FormatException)
         {
+            Serilog.Log.Debug(exception, "Cheat update validation failed.");
             StatusText.Text = exception.Message;
         }
     }
@@ -183,6 +185,7 @@ public partial class CheatsWindow : Window
             or ArgumentException
             or NotSupportedException)
         {
+            Serilog.Log.Debug(exception, "Cheat save failed for {Path}.", _path);
             StatusText.Text = $"Cheat save failed: {exception.Message}";
             return false;
         }

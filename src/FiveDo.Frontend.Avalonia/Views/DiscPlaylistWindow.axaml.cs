@@ -91,6 +91,7 @@ public partial class DiscPlaylistWindow : Window
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
             {
+                Serilog.Log.Debug(exception, "Disc playlist import failed for {Path}.", path);
                 StatusText.Text = $"Could not import {Path.GetFileName(path)}: {exception.Message}";
             }
         }
@@ -172,6 +173,7 @@ public partial class DiscPlaylistWindow : Window
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException)
         {
+            Serilog.Log.Debug(exception, "Disc playlist save failed for {Path}.", path);
             StatusText.Text = $"Save failed: {exception.Message}";
         }
     }

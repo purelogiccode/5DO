@@ -6,7 +6,7 @@
     <AssemblyName>FiveDo.Frontend.Avalonia</AssemblyName>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>Assets\fivedo.ico</ApplicationIcon>
+    <ApplicationIcon>icon2.ico</ApplicationIcon>
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>full</TrimMode>
     <!-- Opt-in NativeAOT publish: -p:FiveDoNativeAot=true.

@@ -247,12 +247,13 @@ public partial class GameLibraryWindow : Window
                     return;
                 }
 
-                finalEntries = initial.Entries
-                    .Where(entry => !entry.Pending)
-                    .Concat(enriched)
-                    .OrderBy(entry => entry.Name, StringComparer.OrdinalIgnoreCase)
-                    .ThenBy(entry => entry.Path, StringComparer.OrdinalIgnoreCase)
-                    .ToList();
+                finalEntries = GameLibraryScanner.Deduplicate(
+                    initial.Entries
+                        .Where(entry => !entry.Pending)
+                        .Concat(enriched)
+                        .OrderBy(entry => entry.Name, StringComparer.OrdinalIgnoreCase)
+                        .ThenBy(entry => entry.Path, StringComparer.OrdinalIgnoreCase)
+                        .ToList());
                 List<GameLibraryEntry> decorated = finalEntries.Select(DecorateEntry).ToList();
                 LibraryList.ItemsSource = decorated;
                 if (!string.IsNullOrWhiteSpace(selectedPath))

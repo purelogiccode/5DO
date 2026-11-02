@@ -75,6 +75,7 @@ public partial class ScreenshotGalleryWindow : Window
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException or System.ComponentModel.Win32Exception)
         {
+            Serilog.Log.Debug(exception, "Screenshot {Path} could not be opened.", row.Entry.Path);
             StatusText.Text = $"Could not open the screenshot: {exception.Message}";
         }
     }
@@ -123,6 +124,7 @@ public partial class ScreenshotGalleryWindow : Window
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
+            Serilog.Log.Debug(exception, "Screenshot {Path} could not be deleted.", row.Entry.Path);
             _pendingDeletePath = null;
             StatusText.Text = $"Could not delete the screenshot: {exception.Message}";
         }
@@ -191,6 +193,7 @@ public sealed class ScreenshotRow : IDisposable
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
         {
+            Serilog.Log.Debug(exception, "Screenshot thumbnail {Path} could not be decoded.", entry.Path);
             Thumbnail = null;
         }
     }

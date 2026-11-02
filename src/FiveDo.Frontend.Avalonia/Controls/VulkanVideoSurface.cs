@@ -263,6 +263,7 @@ public sealed class VulkanVideoSurface : Control, IDisposable
             }
             catch (Exception exception) when (exception is not OutOfMemoryException)
             {
+                Serilog.Log.Debug(exception, "Vulkan surface start failed during attachment.");
                 Stop();
                 Failed?.Invoke(this, new VulkanFailedEventArgs(exception));
             }
@@ -298,6 +299,7 @@ public sealed class VulkanVideoSurface : Control, IDisposable
             }
             catch (Exception exception) when (exception is not OutOfMemoryException)
             {
+                Serilog.Log.Debug(exception, "Vulkan surface start failed during layout.");
                 Stop();
                 Failed?.Invoke(this, new VulkanFailedEventArgs(exception));
             }
@@ -351,6 +353,7 @@ public sealed class VulkanVideoSurface : Control, IDisposable
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
+            Serilog.Log.Debug(exception, "Vulkan frame presentation failed.");
             Stop();
             Failed?.Invoke(this, new VulkanFailedEventArgs(exception));
         }

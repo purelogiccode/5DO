@@ -28,6 +28,13 @@ open-source donationware (non-commercial; voluntary donations only). M13 loadabi
 complete; M13.5/M13.6 visual/high-resolution review and M14 high-resolution CEL research
 are **post-1.0**.
 
+**Maintenance update (2026-11-02):** **v1.1.0** is the current release. It adds game
+library deduplication by 3DO game ID, moves the OpenAL license text to
+`docs/OpenAL-Soft-COPYING.txt`, removes the frame/PC/cycle counter from the desktop
+status bar, and completes the Serilog catch-block coverage and launch-statistics
+wiring. The bundle layout is unchanged: framework-dependent single-file apphosts, no
+bundled .NET runtime, no PDB/XML files.
+
 SYS-01 and AUD-05 now expose multi-track CUE/CHD tables and CD-DA: `ITrackedDiscSource`
 carries native 2048/2336/2352-byte sectors, `CueDiscImage` handles multi-file/multi-track
 `INDEX`/`PREGAP`/`POSTGAP` layouts, `ChdDiscImage` exposes audio tracks, and
@@ -620,7 +627,7 @@ artifacts and checksums are attached to the GitHub release.
 release scope. v1.0.0 is published on GitHub with the release artifacts.
 
 **Release decisions (2026-11-02):** Windows x64 is validated; Linux x64 CLI/frontend
-smoke and the full test suite passed (GPU presentation is preview/best-effort); the release version is `1.0.0`;
+smoke and the full test suite passed (GPU presentation is preview/best-effort); the current release version is `1.1.0`;
 installers, signing, and notarization are post-1.0; the compatibility set is the 12
 documented titles, with five showcase titles carrying scripted gameplay evidence. The
 distribution model is recorded as **donationware** (non-commercial, source-available).
@@ -632,7 +639,7 @@ sign-off is recorded in [`ReleaseLegalReview.md`](ReleaseLegalReview.md). The Op
 LGPL-2.0-or-later binary-distribution obligation is handled: the notice, complete
 license text, three-year source offer, and relinking instructions ship in
 [`OpenALSoft.md`](OpenALSoft.md) and
-[`licenses/OpenAL-Soft-COPYING.txt`](licenses/OpenAL-Soft-COPYING.txt). See
+[`OpenAL-Soft-COPYING.txt`](OpenAL-Soft-COPYING.txt). See
 [`Licensing.md`](Licensing.md), [`ReleaseLegalReview.md`](ReleaseLegalReview.md), and
 [`THIRD-PARTY-NOTICES.md`](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md).
 

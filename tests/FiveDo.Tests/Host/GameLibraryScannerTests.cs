@@ -177,6 +177,51 @@ public sealed class GameLibraryScannerTests
     }
 
     [Fact]
+    public void Scan_DeduplicatesTheSameGameFoundInMultipleFolders()
+    {
+        using var first = new TempDirectory();
+        using var second = new TempDirectory();
+        var firstPath = Path.Combine(first.Path, "game.iso");
+        WriteIso(firstPath, sectors: 3);
+        WriteIso(Path.Combine(second.Path, "game (copy).iso"), sectors: 3);
+
+        IReadOnlyList<GameLibraryEntry> entries = GameLibraryScanner.Scan([first.Path, second.Path]);
+
+        GameLibraryEntry entry = Assert.Single(entries);
+        Assert.Equal(firstPath, entry.Path);
+        Assert.Equal(3, entry.SectorCount);
+        Assert.Equal(string.Empty, entry.Error);
+    }
+
+    [Fact]
+    public void Deduplicate_PrefersAReadableCopyOfTheSameGame()
+    {
+        const string gameId = "0123456789abcdef0123456789abcdef";
+        var unreadable = new GameLibraryEntry(
+            "bad.iso",
+            "ISO",
+            0,
+            gameId,
+            "Game",
+            false,
+            "broken image");
+        var readable = new GameLibraryEntry(
+            "good.iso",
+            "ISO",
+            3,
+            gameId,
+            "Game",
+            true,
+            string.Empty);
+
+        IReadOnlyList<GameLibraryEntry> entries = GameLibraryScanner.Deduplicate([unreadable, readable]);
+
+        GameLibraryEntry entry = Assert.Single(entries);
+        Assert.Equal("good.iso", entry.Path);
+        Assert.Equal(string.Empty, entry.Error);
+    }
+
+    [Fact]
     public void Scan_RebuildsACorruptCache()
     {
         using var directory = new TempDirectory();

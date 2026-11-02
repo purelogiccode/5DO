@@ -74,12 +74,12 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.0.0.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.1.0.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-02, v1.0.0 release (GitHub Releases).**
+**2026-11-02, v1.1.0 release (GitHub Releases).**
 
 - **1,473 tests** are present in the current test assembly.
 - The first full-collection loadability sweep covered **594 disc images**: **576
@@ -88,7 +88,7 @@
   (`Crash 'n Burn` Japan), and **0 not-loadable rows**.
 - Windows x64 is the validated target. Linux x64 full suite passed; GPU
   presentation is preview/best-effort. macOS and arm64 validation are post-1.0.
-- v1.0.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0)
+- v1.1.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.1.0)
   as one bundle per system (Windows/Linux/macOS x64), each with the CLI, desktop app,
   and SHA-256 checksums. The .NET 10 runtime is required on the host and is not bundled.
   M13.5/M13.6 visual/high-resolution review and M14 research are post-1.0. See

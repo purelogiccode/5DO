@@ -17,7 +17,7 @@ include a BIOS ROM or any game images. You must supply legally obtained files.
 ## Download
 
 Download the bundle for your system from
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0):
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.1.0):
 
 | System | Bundle |
 |---|---|

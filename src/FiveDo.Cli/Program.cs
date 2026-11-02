@@ -1366,10 +1366,12 @@ internal static class Program
         }
         catch (TraceStopException)
         {
+            Serilog.Log.Debug("Trace stopped at the requested instruction or output limit.");
             stopped = true;
         }
         catch (TraceLimitReachedException)
         {
+            Serilog.Log.Debug("Trace stopped after reaching the configured frame limit.");
             stopped = true;
         }
         finally
@@ -1886,6 +1888,10 @@ internal static class Program
         }
         catch (InvalidDataException exception)
         {
+            Serilog.Log.Debug(
+                exception,
+                "The 3DO file system in {DiscPath} could not be parsed.",
+                discPath);
             throw new InvalidDataException(
                 $"Cannot parse the 3DO file system in '{discPath}': {exception.Message}",
                 exception);

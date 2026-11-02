@@ -6,7 +6,7 @@ This is the short public roadmap. The authoritative maintainer checklist is
 
 ## Current phase
 
-The project is at the **v1.0.0 documented-compatibility release** (published on GitHub).
+The project is at the **v1.1.0 documented-compatibility release** (published on GitHub).
 
 **M13 — compatibility sweep and status merge**
 
@@ -24,8 +24,8 @@ The project is at the **v1.0.0 documented-compatibility release** (published on 
 
 ## Release status
 
-v1.0.0 is published on
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0) as one
+v1.1.0 is published on
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.1.0) as one
 bundle per system (Windows/Linux/macOS x64) with the CLI and desktop app. The .NET 10
 runtime is required on the host and is not bundled.
 

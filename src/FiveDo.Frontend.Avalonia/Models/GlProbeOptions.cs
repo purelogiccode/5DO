@@ -64,6 +64,7 @@ internal sealed record GlProbeOptions(
         }
         catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
         {
+            Serilog.Log.Debug(exception, "Invalid --gl-probe output path {Path}.", output);
             error = $"--gl-probe output path is invalid: {exception.Message}";
             return false;
         }
@@ -78,6 +79,7 @@ internal sealed record GlProbeOptions(
             }
             catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
             {
+                Serilog.Log.Debug(exception, "Invalid --gl-probe-capture path {Path}.", capture);
                 error = $"--gl-probe-capture path is invalid: {exception.Message}";
                 return false;
             }

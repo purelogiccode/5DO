@@ -155,5 +155,5 @@ The win-x64 release artifacts are:
 Sizes and SHA-256 checksums are recorded in `SHA256SUMS.txt` next to the packages.
 Each archive contains the executable, `README.md`, `LICENSE`,
 `THIRD-PARTY-NOTICES.md`, `docs/Licensing.md`, `docs/ReleaseLegalReview.md`,
-`docs/OpenALSoft.md`, `docs/licenses/OpenAL-Soft-COPYING.txt`, these release
+`docs/OpenALSoft.md`, `docs/OpenAL-Soft-COPYING.txt`, these release
 notes, and `PACKAGE.txt`.

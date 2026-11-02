@@ -154,6 +154,7 @@ nav:
       - Implementation plan: ImplementationPlan.md
       - Compatibility sweep: CompatibilitySweep.md
       - High-resolution CEL research: HighResolutionCelResearch.md
+      - Release notes 1.1.0: ReleaseNotes-1.1.0.md
       - Release notes 1.0.0: ReleaseNotes-1.0.0.md
       - Release notes 1.0.0-rc.1 (historical): ReleaseNotes-1.0.0-rc.1.md
       - Release checklist: ReleaseChecklist.md

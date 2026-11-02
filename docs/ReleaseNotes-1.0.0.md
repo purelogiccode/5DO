@@ -161,7 +161,7 @@ Sizes and SHA-256 checksums are recorded in `SHA256SUMS.txt` next to the bundles
 Each bundle contains both the desktop app and the CLI, `README.md`, `LICENSE`,
 `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, `docs/Licensing.md`,
 `docs/ReleaseLegalReview.md`, `docs/OpenALSoft.md`,
-`docs/licenses/OpenAL-Soft-COPYING.txt`, these release notes, and `PACKAGE.txt`.
+`docs/OpenAL-Soft-COPYING.txt`, these release notes, and `PACKAGE.txt`.
 
 The apps are **framework-dependent single-file executables** and require the .NET 10
 runtime on the host. No .NET runtime is embedded in the executables or copied into the

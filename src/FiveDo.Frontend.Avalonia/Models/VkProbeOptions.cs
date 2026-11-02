@@ -85,6 +85,7 @@ internal sealed record VkProbeOptions(
         }
         catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
         {
+            Serilog.Log.Debug(exception, "Invalid {Option} output path {Path}.", optionName, output);
             error = $"{optionName} output path is invalid: {exception.Message}";
             return false;
         }
@@ -99,6 +100,7 @@ internal sealed record VkProbeOptions(
             }
             catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
             {
+                Serilog.Log.Debug(exception, "Invalid {Option}-capture path {Path}.", optionName, capture);
                 error = $"{optionName}-capture path is invalid: {exception.Message}";
                 return false;
             }

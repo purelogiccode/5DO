@@ -2325,7 +2325,7 @@ harness. See [`Performance.md`](Performance.md).
   - `packaging/package.ps1` creates `5do-<component>-<rid>.zip` for Windows and `.tar.gz` for Linux/macOS, with README/notices/licensing, a generated `PACKAGE.txt`, and the Linux desktop entry. CI publishes and uploads both the raw folders and the portable archives for all six RIDs.
   - **DONE (2026-10-29):** the portable archives include the OpenAL Soft LGPL
      notice/source offer (`docs/OpenALSoft.md`) and the complete LGPL-2.0 text
-     (`docs/licenses/OpenAL-Soft-COPYING.txt`), and `PACKAGE.txt` names them.
+     (`docs/OpenAL-Soft-COPYING.txt`), and `PACKAGE.txt` names them.
      Remaining: MSIX/dmg/AppImage packaging, signing/notarization, Windows/macOS
      file associations, and installer smoke tests.
 
@@ -2407,7 +2407,7 @@ backlog, not release gates; the release gate is
   - User guide, compatibility list, known issues, and changelog are implemented in `docs/UserGuide.md`, `docs/Compatibility.md`, `docs/KnownIssues.md`, and `CHANGELOG.md`.
   - **DONE (2026-10-29):** the OpenAL Soft LGPL notice/source offer/relinking
     record is in `docs/OpenALSoft.md` with the full license text in
-    `docs/licenses/OpenAL-Soft-COPYING.txt`; the release review and checklist
+    `docs/OpenAL-Soft-COPYING.txt`; the release review and checklist
     record it as complete on the engineering side.
   - **DONE (2026-11-02):** project-owner legal/attribution sign-off recorded under the FreeDO modified GNU LGPL as free, open-source donationware. The stability soak and release notes are complete. Linux x64 full suite passed. v1.0.0 is published on GitHub with the artifacts attached; work through [`ReleaseChecklist.md`](ReleaseChecklist.md).
 - [-] **M11.7 Post-release backlog.**
@@ -3011,6 +3011,7 @@ Suggested parallelization with two developers:
 | 2026-11-02 | M13.7 | Linux x64 validation | Validated the self-contained `linux-x64` CLI and frontend on the Hyper-V `LinuxMint` VM (Linux Mint 22.3, x86_64, Mesa 25.2.8 llvmpipe) and ran the full test suite: **1,473/1,473 passed** with .NET SDK 10.0.301 plus the .NET 8 runtime required by the shader compiler. CLI `selftest` 4/4, `bench` 466 fps, `info`/`bios info` on Wolfenstein 3D, a 3,000-frame boot (PC `0x00028190`, frame hash `0x9A3B5131`, 2,205,093 samples, non-silent 50 s audio), and frontend `--smoke-test` passed. The GL probe timed out under the VM's SSH/llvmpipe session, so Linux GPU presentation is preview/best-effort. Adjusted the diagnostics bundle test to skip user-name assertions for two-character names (`vm`), matching the scrubber's documented minimum length. Superseded by the v1.0.0 release row. |
 | 2026-11-02 | M10.7 | Unified single-file bundles | Replaced the per-component CLI/frontend archives with one bundle per system (`5do-win-x64.zip`, `5do-linux-x64.tar.gz`, `5do-osx-x64.tar.gz`). Each bundle contains framework-dependent single-file CLI and desktop apphosts (`PublishSingleFile=true`, `PublishTrimmed=false`), the OpenAL/Skia/ANGLE native libraries, README/license/notices/whatsnew/release notes, and `PACKAGE.txt`. The .NET 10 runtime is required on the host and is not bundled. PDB and XML documentation files are removed. Added `packaging/package-bundle.ps1` and `packaging/make-tar.py`, a reusable `build-bundle.yml` workflow, a `release.yml` workflow that publishes the bundles and removes obsolete per-component assets, and wiki publishing in `docs.yml`. Fixed the CI `--locked-mode` restore by regenerating RID-agnostic `packages.lock.json` files. Local bundles are written to `src/FiveDo.Frontend.Avalonia/bin/Release`. |
 | 2026-11-02 | M10.7 | System .NET runtime only | Removed the private `runtime/` folder from the release bundles. The apphosts now resolve the .NET 10 runtime from the host installation, and the bundles contain no runtime binaries. Removed all PDB and XML documentation files from the archives; only runtime dependencies and docs remain. Updated README/FAQ/Installation/ReleaseChecklist/ReleaseLegalReview/wiki and the CI bundle checks to enforce the no-runtime and no-XML rules. |
+| 2026-11-02 | M10.8 | v1.1.0 maintenance update | Bumped the version to `1.1.0`. Moved `docs/licenses/OpenAL-Soft-COPYING.txt` to `docs/OpenAL-Soft-COPYING.txt` and removed the nested folder; the bundle script copies the file into the bundle's `docs/` root. Fixed duplicate game-library rows by deduplicating scanner results by 3DO game ID (preferring readable copies). Removed the frame/PC/cycle counter from the desktop status bar. Added Serilog calls to the remaining CLI/frontend catch blocks. Verified the existing Serilog warning+ bug-report sink, environment/exception formatting, and ApplicationStats launch calls in both hosts. |
 
 ---
 
@@ -9292,7 +9293,7 @@ runtime or move the context-current call back to the UI thread.
   cover ISO and raw BIN images.
 - **OpenAL Soft LGPL packaging.** `docs/OpenALSoft.md` records the LGPL notice,
   copyright, exact upstream 1.23.1 source, a three-year written source offer, and
-  relinking/replacement instructions. `docs/licenses/OpenAL-Soft-COPYING.txt`
+  relinking/replacement instructions. `docs/OpenAL-Soft-COPYING.txt`
   contains the complete LGPL-2.0 text. `packaging/package.ps1` copies both into
   every portable archive and names them in `PACKAGE.txt`; the win-x64 archive was
   inspected and the extracted CLI passed `--version` and `selftest --json`.

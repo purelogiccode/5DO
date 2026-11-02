@@ -1,6 +1,27 @@
-# What's new in 5DO 1.0.0
+# What's new in 5DO 1.1.0
 
 **Released:** 2026-11-02
+
+5DO 1.1.0 is a maintenance and diagnostics update on top of the documented-compatibility
+1.0.0 release.
+
+## Changes in 1.1.0
+
+- **Game library deduplication.** The same game found in more than one scanned folder is
+  now listed once, matched by its 3DO game ID.
+- **Simpler status bar.** The `frame ... PC ... cyc` counter was removed; the optional
+  in-game overlay still shows detailed frame, PC, renderer, and audio timings.
+- **OpenAL license location.** The LGPL text now lives at
+  `docs/OpenAL-Soft-COPYING.txt`; the nested `docs/licenses/` folder was removed from the
+  repository and from every bundle.
+- **Serilog everywhere.** Both hosts use Serilog for all logging. Warning-and-higher
+  events are forwarded to the bug-report API with the required environment, error, and
+  exception blocks.
+- **Launch statistics.** The CLI and desktop app record the application id and version
+  with ApplicationStats at launch. Only those two fields are sent; CI/test runs and
+  `FIVEDO_STATS=0` disable it.
+
+## The 1.0.0 release
 
 5DO 1.0.0 is the first **documented-compatibility** release of the C#/.NET 10 3DO
 Interactive Multiplayer emulator. The release is backed by the full test suite
@@ -66,7 +87,7 @@ BIOS ROMs and game images are **not** included.
 - macOS and arm64 validation, M13.5/M13.6 visual review, M14 high-resolution CEL
   research, and installers are post-1.0.
 
-See [`ReleaseNotes-1.0.0.md`](ReleaseNotes-1.0.0.md) and
+See [`ReleaseNotes-1.1.0.md`](ReleaseNotes-1.1.0.md) and
 [`KnownIssues.md`](KnownIssues.md) for the full lists.
 
 ## Licensing

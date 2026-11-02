@@ -31,7 +31,11 @@ README.md
 whatsnew.md
 LICENSE
 THIRD-PARTY-NOTICES.md
-docs/...
+docs/Licensing.md
+docs/ReleaseLegalReview.md
+docs/OpenALSoft.md
+docs/OpenAL-Soft-COPYING.txt
+docs/ReleaseNotes-*.md
 PACKAGE.txt
 ```
 

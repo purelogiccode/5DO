@@ -90,7 +90,7 @@ The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NO
   bundles through `Silk.NET.OpenAL.Soft.Native`, including Windows `OpenAL32.dll`). The
   LGPL notice, complete license text, written source offer, and relinking
   instructions ship in [`OpenALSoft.md`](OpenALSoft.md) and
-  [`licenses/OpenAL-Soft-COPYING.txt`](licenses/OpenAL-Soft-COPYING.txt); the
+  [`OpenAL-Soft-COPYING.txt`](OpenAL-Soft-COPYING.txt); the
   release review is tracked in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - CHDSharp (MIT plus an LGPL-2.1 component; pure C#; verify the package LICENSE before release)
 - 4DO game database (derive with attribution; verify terms)

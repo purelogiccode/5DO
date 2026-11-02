@@ -1,15 +1,32 @@
-# v1.0 Release Checklist
+# Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.0.0 released**; unified Windows/Linux/macOS x64 bundles published
+**Release timing:** **v1.1.0 in progress**; unified Windows/Linux/macOS x64 bundles are
+built from the same gates used for v1.0.0.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
-full-compatibility one. Ship the platforms and titles that are validated, publish an
-honest per-title matrix and known issues, and move everything else to the post-1.0
-backlog.
+full-compatibility one. v1.1.0 is a maintenance and diagnostics update on top of it.
+Ship the platforms and titles that are validated, publish an honest per-title matrix
+and known issues, and move everything else to the post-1.0 backlog.
 
 This checklist is the release gate. A checked box must have evidence (a command, CI
 run, screenshot, or recorded hash), not just an intention. Update `docs/Status.md`,
 `docs/Compatibility.md`, `docs/KnownIssues.md`, and `CHANGELOG.md` as items complete.
+
+---
+
+## 1.1.0 maintenance gate
+
+- [x] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.1.0`.
+- [x] Move the OpenAL Soft license text to `docs/OpenAL-Soft-COPYING.txt` and remove
+      the nested `docs/licenses/` folder.
+- [x] Every bundle copies the license to `docs/OpenAL-Soft-COPYING.txt`.
+- [x] Game library deduplicates copies of the same game by 3DO game ID.
+- [x] Desktop status bar no longer shows the `frame ... PC ... cyc` counter.
+- [x] CLI and desktop logging route through Serilog; warning-and-higher events reach
+      the bug-report API with environment, error, and exception blocks.
+- [x] CLI and desktop launch statistics call the ApplicationStats endpoint.
+- [ ] Build and smoke-test the three bundles.
+- [ ] Publish `v1.1.0` and verify `SHA256SUMS.txt`.
 
 ---
 
@@ -29,8 +46,8 @@ been validated.**
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
 | Packages | One bundle per system | `5do-win-x64.zip`, `5do-linux-x64.tar.gz`, `5do-osx-x64.tar.gz`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 10 runtime is a host prerequisite and is not bundled |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
-| Version | **`v1.0.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; rc.1 is historical |
-| Release timing | **Released** | v1.0.0 published on GitHub; unified bundles and checksums attached |
+| Version | **`v1.1.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0 and rc.1 are historical |
+| Release timing | **In progress** | v1.1.0 bundles are built from the v1.0 gates; publish and verify checksums |
 
 ---
 
@@ -81,7 +98,7 @@ Recommended title statuses:
       offer, relinking rights) are included in the release decision. The runtime is
       bundled in the Windows/Linux/macOS x64 bundles. Evidence: `docs/OpenALSoft.md`
       records the notice, the exact upstream 1.23.1 source, the three-year written
-      source offer, and relinking instructions; `docs/licenses/OpenAL-Soft-COPYING.txt`
+      source offer, and relinking instructions; `docs/OpenAL-Soft-COPYING.txt`
       contains the complete LGPL-2.0 text; `packaging/package-bundle.ps1` copies both
       into every bundle, and the win-x64 bundle was inspected after packaging.
 - [x] About dialog and CLI `--version`/license output are current.
@@ -244,7 +261,7 @@ source-only tag or GitHub release is not a complete release.
 - [x] Each bundle contains both executables, `README.md`, `LICENSE`,
       `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, `docs/Licensing.md`,
       `docs/ReleaseLegalReview.md`, `docs/OpenALSoft.md`,
-      `docs/licenses/OpenAL-Soft-COPYING.txt`, the release notes, and `PACKAGE.txt`.
+      `docs/OpenAL-Soft-COPYING.txt`, the release notes, and `PACKAGE.txt`.
 - [x] Remove PDB and XML documentation files; they are build outputs, not runtime
       dependencies.
 - [x] Keep the native OpenAL Soft/Skia/ANGLE libraries beside the apphosts so the

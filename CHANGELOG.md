@@ -1,12 +1,27 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.0.0, a documented-compatibility
+All notable changes are recorded here. The project is at v1.1.0, a documented-compatibility
 release.
 
-## [Unreleased]
+## [1.1.0] - 2026-11-02
+
+### Added
+
+- Application launch statistics: the CLI and desktop app record the application id and
+  version with the ApplicationStats service at launch. CI/test runs and
+  `FIVEDO_STATS=0` disable it.
+- Serilog is the single logging pipeline for both hosts. Warning-and-higher events are
+  forwarded to the bug-report API with the required environment, error, and exception
+  blocks; expected user errors are marked so they do not create reports.
 
 ### Changed
 
+- Moved the OpenAL Soft license text to `docs/OpenAL-Soft-COPYING.txt` (the nested
+  `docs/licenses/` folder is gone) and updated every bundle and documentation link.
+- Removed the frame/PC/cycle counter from the desktop status bar. The in-game overlay
+  still exposes the detailed counters when enabled.
+- Added Serilog logging to the remaining CLI/frontend catch blocks and to the
+  top-level host entry points.
 - Replaced the per-component CLI/frontend archives with one bundle per system:
   `5do-win-x64.zip`, `5do-linux-x64.tar.gz`, and `5do-osx-x64.tar.gz`.
 - The CLI and desktop app publish as framework-dependent single-file apphosts. The
@@ -20,6 +35,13 @@ release.
 - The docs workflow now publishes the curated wiki alongside GitHub Pages.
 - Fixed the CI `--locked-mode` restore by regenerating RID-agnostic
   `packages.lock.json` files.
+
+### Fixed
+
+- The game library no longer lists the same game twice when the same disc exists in
+  more than one scanned folder. Duplicate copies are collapsed by their 3DO game ID,
+  preferring a readable copy and keeping the deterministic first path.
+- The desktop status bar no longer shows the `frame ... PC ... cyc` counter.
 
 ## [1.0.0] - 2026-11-02
 
@@ -578,7 +600,7 @@ release.
   longer requires a CHD container.
 - OpenAL Soft LGPL compliance: `docs/OpenALSoft.md` records the notice, exact
   upstream 1.23.1 source, three-year written source offer, and relinking/
-  replacement instructions; `docs/licenses/OpenAL-Soft-COPYING.txt` contains the
+  replacement instructions; `docs/OpenAL-Soft-COPYING.txt` contains the
   complete LGPL-2.0 text. `packaging/package.ps1` copies both into every portable
   archive and lists them in `PACKAGE.txt`.
 - Root `LICENSE`: the project is now distributed under the FreeDO modified GNU LGPL,

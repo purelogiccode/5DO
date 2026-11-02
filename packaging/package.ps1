@@ -47,11 +47,10 @@ try {
         }
     }
 
-    $licensesStaging = Join-Path $docsStaging 'licenses'
-    $openAlLicense = Join-Path $repoRoot 'docs/licenses/OpenAL-Soft-COPYING.txt'
+    $openAlLicense = Join-Path $repoRoot 'docs/OpenAL-Soft-COPYING.txt'
     if (Test-Path -LiteralPath $openAlLicense) {
-        New-Item -ItemType Directory -Path $licensesStaging -Force | Out-Null
-        Copy-Item -LiteralPath $openAlLicense -Destination $licensesStaging -Force
+        New-Item -ItemType Directory -Path $docsStaging -Force | Out-Null
+        Copy-Item -LiteralPath $openAlLicense -Destination $docsStaging -Force
     }
 
     $releaseNotes = Get-ChildItem -LiteralPath (Join-Path $repoRoot 'docs') `
@@ -98,7 +97,7 @@ try {
         ''
         'BIOS ROMs and game images are not included.'
         'See README.md, LICENSE, THIRD-PARTY-NOTICES.md, docs/Licensing.md, and docs/OpenALSoft.md.'
-        'The bundled OpenAL Soft runtime is LGPL-2.0-or-later; the license text is in docs/licenses/OpenAL-Soft-COPYING.txt.'
+        'The bundled OpenAL Soft runtime is LGPL-2.0-or-later; the license text is in docs/OpenAL-Soft-COPYING.txt.'
     )
     Set-Content -LiteralPath (Join-Path $staging 'PACKAGE.txt') -Value $manifest -Encoding utf8NoBOM
 
