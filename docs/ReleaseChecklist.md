@@ -1,7 +1,7 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.1.0 in progress**; unified Windows/Linux/macOS x64 bundles are
+**Release timing:** **v1.1.0 released**; unified Windows/Linux/macOS x64 bundles are
 built from the same gates used for v1.0.0.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
 full-compatibility one. v1.1.0 is a maintenance and diagnostics update on top of it.
@@ -32,7 +32,7 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] Build the three bundles. Windows and Linux bundles passed CLI `selftest` and
       desktop `--smoke-test`; the macOS x64 bundle is cross-published on Linux and
       validated as Mach-O x86_64, matching the v1.0.0 runtime-validation scope.
-- [ ] Publish `v1.1.0` and verify `SHA256SUMS.txt`.
+- [x] Publish `v1.1.0` and verify `SHA256SUMS.txt`.
 
 ---
 
@@ -53,7 +53,7 @@ been validated.**
 | Packages | One bundle per system | `5do-win-x64.zip`, `5do-linux-x64.tar.gz`, `5do-osx-x64.tar.gz`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 10 runtime is a host prerequisite and is not bundled |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
 | Version | **`v1.1.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0 and rc.1 are historical |
-| Release timing | **In progress** | v1.1.0 bundles are built from the v1.0 gates; publish and verify checksums |
+| Release timing | **Released** | v1.1.0 bundles and checksums are attached to the GitHub release |
 
 ---
 

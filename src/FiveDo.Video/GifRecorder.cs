@@ -229,23 +229,6 @@ public sealed class GifRecorder : IFrameSink, IDisposable
         int bitCount = 0;
         var blocks = new List<byte>(indices.Length / 2);
 
-        void WriteCode(int code)
-        {
-            bitBuffer |= code << bitCount;
-            bitCount += codeSize;
-            while (bitCount >= 8)
-            {
-                blocks.Add((byte)bitBuffer);
-                bitBuffer >>= 8;
-                bitCount -= 8;
-            }
-
-            if (nextCode > (1 << codeSize) - 1 && codeSize < 12)
-            {
-                codeSize++;
-            }
-        }
-
         WriteCode(clearCode);
         int prefix = indices[0];
         for (var i = 1; i < indices.Length; i++)
@@ -291,6 +274,24 @@ public sealed class GifRecorder : IFrameSink, IDisposable
         }
 
         output.WriteByte(0);
+        return;
+
+        void WriteCode(int code)
+        {
+            bitBuffer |= code << bitCount;
+            bitCount += codeSize;
+            while (bitCount >= 8)
+            {
+                blocks.Add((byte)bitBuffer);
+                bitBuffer >>= 8;
+                bitCount -= 8;
+            }
+
+            if (nextCode > (1 << codeSize) - 1 && codeSize < 12)
+            {
+                codeSize++;
+            }
+        }
     }
 
     private static void WriteUInt16(Stream output, ushort value)

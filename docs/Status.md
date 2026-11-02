@@ -28,7 +28,8 @@ open-source donationware (non-commercial; voluntary donations only). M13 loadabi
 complete; M13.5/M13.6 visual/high-resolution review and M14 high-resolution CEL research
 are **post-1.0**.
 
-**Maintenance update (2026-11-02):** **v1.1.0** is the current release. It adds game
+**Maintenance update (2026-11-02):** **v1.1.0** is the current release, published at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.1.0>. It adds game
 library deduplication by 3DO game ID, moves the OpenAL license text to
 `docs/OpenAL-Soft-COPYING.txt`, removes the frame/PC/cycle counter from the desktop
 status bar, and completes the Serilog catch-block coverage and launch-statistics
