@@ -68,10 +68,13 @@ def main() -> int:
     lines.append(
         "Automated output of `tools/compat-sweep.ps1`. These are **loadability** "
         "results, not final compatibility grades: `Loadable/Rendered` still needs a "
-        "visual and input review before it becomes `Playable` or `Good`. This is the "
-        "pre-2026-10-30 baseline: it predates the headless default pad and the 3%/8-color "
-        "rendered threshold. The 12,000-frame and BIOS triage is in "
-        "[`Compatibility.md`](Compatibility.md) §13.2."
+        "visual and input review before it becomes `Playable` or `Good`. The base sweep "
+        "ran 3,000 frames. The 18 titles that were black, solid-color, or not loadable "
+        "were rerun at 20,000 frames with `panafz10`; the Anvil-dependent or suspected "
+        "boot-hang titles were rerun at 65,000 frames with `panafz10e-anvil`. That retry "
+        "leaves **592 rendered and 2 known boot hangs** (Crash 'n Burn Japan and "
+        "WorldCup Super Stadium). The 12,000-frame and BIOS triage remains in "
+        "[`Compatibility.md`](Compatibility.md) 13.2."
     )
     lines.append("")
     lines.append("## Summary")
@@ -141,10 +144,11 @@ def main() -> int:
     lines.append(
         "For each `Loadable/Rendered` row, inspect the PNG and run a short input smoke "
         "test. Record the final `Unplayable`/`Playable`/`Good` status in "
-        "[`GameCompatibilityList.md`](GameCompatibilityList.md) with the BIOS used. For "
-        "`Loadable/No video`, rerun at 12,000 frames and inspect intermediate captures; "
-        "if it is still black or a solid color, retry with `tools/bios-probe.ps1` using "
-        "`panafz10-patched` and the Anvil BIOS."
+        "[`GameCompatibilityList.md`](GameCompatibilityList.md) with the BIOS used. The "
+        "two remaining `Loadable/No video` rows are known Anvil boot-screen hangs; a "
+        "future sweep should retry them only after the boot path changes. For any new "
+        "blank row, use `-RetryFrames 20000` in `tools/compat-sweep.ps1`, then retry with "
+        "`tools/bios-probe.ps1` using `panafz10-patched` and the Anvil BIOS."
     )
     lines.append("")
 

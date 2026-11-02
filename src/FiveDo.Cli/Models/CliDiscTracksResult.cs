@@ -7,7 +7,8 @@ internal sealed record CliDiscTrackResult(
     string Type,
     int DataSize,
     int Frames,
-    int Start);
+    int Start,
+    int PayloadOffset);
 
 internal sealed record CliDiscTracksResult(
     bool Ok,

@@ -124,7 +124,7 @@ The automated loadability pass uses three intermediate labels before a human ass
 | Main list | Club 3DO - Station Invasion | 100 | Good | 1.2.0.3 | — | Club 3DO - Station Invasion (USA).chd | No data | Not tested yet |
 | Main list | Corpse Killer | 100 | Good | 1.3.0.1 | — | Corpse Killer (Japan).chd<br>Corpse Killer (USA).chd | No data | Not tested yet |
 | Main list | Cowboy Casino - Interactive Poker | 100 | Good | 1.3.0.1 | — | cowboy casino (usa).chd<br>Cowboy Casino (USA).chd | No data | Not tested yet |
-| Main list | Crash 'n Burn | 90 | Good | 1.3.0.1 | (Fixed in 1.3.0.0) See Detailed Note | Crash 'n Burn (Japan).chd<br>Crash 'n Burn (USA) (Not for Resale).chd<br>Crash 'n Burn (USA, Korea).chd | Playable | USA/Korea revisions render with panafz1; Japan revision stuck on the Anvil boot screen (2026-10-30). |
+| Main list | Crash 'n Burn | 90 | Good | 1.3.0.1 | (Fixed in 1.3.0.0) See Detailed Note | Crash 'n Burn (Japan).chd<br>Crash 'n Burn (USA) (Not for Resale).chd<br>Crash 'n Burn (USA, Korea).chd | Playable | USA/Korea revisions render with panafz1; Japan revision still stuck on the Anvil boot screen at 65,000 frames (2026-11-01 retry). |
 | Main list | Crayon Shin-chan - Puzzle Daimaou no Nazo | 100 | Good | 1.3.0.1 | — | Crayon Shin-chan - Puzzle Daimaou no Nazo (Japan).chd | No data | Not tested yet |
 | Main list | Creature Shock | 100 | Good | 1.3.0.1 | — | Creature Shock (USA) (Disc 1).chd<br>Creature Shock (USA) (Disc 2).chd | No data | Not tested yet |
 | Main list | Crime Patrol | 100 | Good | 1.2.0.2 | — | Crime Patrol (USA) (Arcade CD-ROM).chd<br>Crime Patrol (USA).chd | Playable | Arcade CD-ROM: panafz10-patched; regular USA: panafz1. Input reaches live-action/credits. |
@@ -284,7 +284,7 @@ The automated loadability pass uses three intermediate labels before a human ass
 | Multimedia | Woody Woodpecker and Friends - Volume 1 | 100 | Good | 1.3.0.1 | — | Woody Woodpecker and Friends - Volume One (USA) (RE-1).chd<br>Woody Woodpecker and Friends - Volume Three (USA).chd<br>Woody Woodpecker and Friends - Volume Two (USA).chd | No data | Not tested yet |
 | Multimedia | Woody Woodpecker and Friends - Volume 2 | 100 | Good | 1.3.0.1 | — | Woody Woodpecker and Friends - Volume One (USA) (RE-1).chd<br>Woody Woodpecker and Friends - Volume Three (USA).chd<br>Woody Woodpecker and Friends - Volume Two (USA).chd | No data | Not tested yet |
 | Multimedia | Woody Woodpecker and Friends - Volume 3 | 100 | Good | 1.3.0.1 | — | Woody Woodpecker and Friends - Volume One (USA) (RE-1).chd<br>Woody Woodpecker and Friends - Volume Three (USA).chd<br>Woody Woodpecker and Friends - Volume Two (USA).chd | No data | Not tested yet |
-| Multimedia | Worldcup Super Stadium | — | No data | — | — | WorldCup Super Stadium (Japan).chd | Unplayable | Still stuck on the Anvil boot screen at 60,000 frames; no tested BIOS reaches the game. |
+| Multimedia | Worldcup Super Stadium | - | No data | - | - | WorldCup Super Stadium (Japan).chd | Unplayable | Still stuck on the Anvil boot screen at 65,000 frames; no tested BIOS reaches the game. |
 
 ## Local images without a 4DO reference entry
 
@@ -416,7 +416,7 @@ These images still belong in the loadability sweep. Add a 4DO/5DO row when the t
 | Perfect World - Combat in a Digital World (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Peter Frankl - Puzzle no Tou (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Policenauts - Pilot Disk (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
-| Powers Kingdom (Europe).chd | J:\Panasonic 3DO | Playable | Anvil BIOS required; live-action intro at 60,000 frames. |
+| Powers Kingdom (Europe).chd | J:\Panasonic 3DO | Playable | Anvil BIOS required; live-action intro at 65,000 frames (2026-11-01 retry). |
 | Powers Kingdom (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Powerslide (USA) (Unl).chd | J:\Panasonic 3DO | No data | Not tested yet |
 | Pretty Soldier SailorMoon S (Japan).chd | J:\Panasonic 3DO | No data | Not tested yet |

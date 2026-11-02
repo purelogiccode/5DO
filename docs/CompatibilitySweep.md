@@ -97,6 +97,28 @@ pwsh -File tools/compat-sweep.ps1 `
 most discs. Use `-Frames 12000` (about 3.3 minutes) for a deeper boot check when the
 first pass leaves a title at a black or static screen.
 
+The base pass is only a screening tool. The 2026-11-01 retry of the 18 non-rendered
+rows used 20,000 frames with `panafz10` and 65,000 frames with `panafz10e-anvil` for
+Anvil-dependent titles. It rendered 16 of the 18; the two remaining rows are known
+Anvil boot-screen hangs (`Crash 'n Burn Japan`, `WorldCup Super Stadium`).
+
+### 3.3.1 Retry only the blank rows
+
+`-RetryFrames` reruns a disc once when the first pass completes with a blank frame, and
+keeps the retried row only if it renders. `-Files` targets explicit paths instead of
+scanning the roots:
+
+```powershell
+pwsh -File tools/compat-sweep.ps1 `
+  -Files "J:\Panasonic 3DO\Myst (USA).chd","J:\Panasonic 3DO\Powers Kingdom (Europe).chd" `
+  -Bios bios/panafz10.bin -Frames 20000 -RetryFrames 65000 `
+  -TimeoutSeconds 600 -OutDir artifacts/compat-retry
+```
+
+For a per-title BIOS, run a second pass with `-Bios bios/panafz10e-anvil.bin` and merge
+the better row. Record the BIOS in the report row; a result is only meaningful for the
+BIOS that produced it.
+
 The sweep:
 
 - starts a fresh CLI process for every disc,
@@ -134,7 +156,7 @@ Useful options:
 The rendered test rejects the 3DO boot starfield, which has many colors but only about
 2% non-black sampled pixels. Adjust the thresholds only when a known title needs it.
 
-### 3.3.1 BIOS selection
+### 3.3.2 BIOS selection
 
 `panafz1.bin` is the baseline BIOS, not a universal reference. The 2026-10-30 triage
 found that the four Arcade CD-ROM rows need `panafz10-patched.bin` plus the default

@@ -591,17 +591,19 @@ same disc revision.
 
 ### 13.1 First sweep results
 
-The first 594-disc pass completed on 2026-10-30:
+The first 594-disc pass completed on 2026-10-30 and found 576 rendered, 13
+black/blank, and 5 not loadable. The 2026-11-01 extended-boot retry reran all 18
+non-rendered rows; the table below reflects the retried counts:
 
 | Result | Count |
 |---|---:|
-| `Loadable/Rendered` | **576** |
-| `Loadable/No video` | **13** |
-| `Not Loadable` | **5** |
+| `Loadable/Rendered` | **592** |
+| `Loadable/No video` | **2** |
+| `Not Loadable` | **0** |
 
 The per-disc table is [`GameCompatibilityResults.md`](GameCompatibilityResults.md).
 
-### 13.2 Triage results (2026-10-30)
+### 13.2 Triage results (2026-10-30, extended 2026-11-01)
 
 The baseline used `panafz1.bin`. Reruns with the other local BIOS images show that
 several failures are BIOS-selection problems rather than emulator defects:
@@ -613,11 +615,11 @@ several failures are BIOS-selection problems rather than emulator defects:
 | Orbatak (Arcade CD-ROM) | starfield / no game | 3,000 frames, gameplay | not needed | Loadable with `panafz10-patched` |
 | Shootout at Old Tucson RE3 | starfield / no game | 3,000 frames, text screen | not needed | Loadable with `panafz10-patched` |
 | Mirai Shounen Conan | transient CHD read error; 3,000 frames now stable | not tested | not tested | Loadable with `panafz1` |
-| Crash 'n Burn (Japan) | invalid PC / black | invalid PC / black | purple boot screen, still stuck at 60,000 | Japan revision stuck; USA/Korea revisions render with `panafz1` |
-| Powers Kingdom (Europe) | solid blue | solid blue | live-action intro by 60,000 | Anvil BIOS required, matching the 4DO note |
+| Crash 'n Burn (Japan) | invalid PC / black | invalid PC / black | purple boot screen, still stuck at 65,000 | Japan revision stuck; USA/Korea revisions render with `panafz1` |
+| Powers Kingdom (Europe) | solid blue | solid blue | live-action intro by 65,000 | Anvil BIOS required, matching the 4DO note |
 | Battle Chess (Europe) | "This is not a PAL TV system!" | same message | title screen at 6,000, board at 30,000 | European BIOS required; USA/Japan discs use `panafz10` |
 | Slayer (USA) | black | title menu at 60,000 | black | `panafz10`/GoldStar/Sanyo required |
-| WorldCup Super Stadium (Japan) | solid blue | solid blue | purple boot screen, still stuck at 60,000 | No tested BIOS reaches the game |
+| WorldCup Super Stadium (Japan) | solid blue | solid blue | purple boot screen, still stuck at 65,000 | No tested BIOS reaches the game |
 | Olympic Summer Games (USA) | "Insert a controller" | not tested | not tested | Fixed by the default headless pad; high-jump screen and A/P input reach the credits |
 
 The Arcade CD-ROM rows need the **patched** BIOS; unpatched `panafz10` reaches the
@@ -637,19 +639,23 @@ screen appears at 6,000 frames and the board at 30,000 frames. 5DO still emits N
 320x240 timing, so this is a region/OS check, not proof of PAL 50 Hz emulation. The
 USA and Japan discs boot with `panafz10`.
 
-The 12,000-frame rerun also shows that Ishida Yoshio Kudan no Igo Seiha, both Konpeki
-no Kantai discs, and all three Myst discs render between 6,000 and 9,000 frames; their
-3,000-frame `Loadable/No video` label was a false negative caused by a long black
-transition.
+The 2026-11-01 retry reran all 18 non-rendered rows. At 20,000 frames with `panafz10`,
+Ishida Yoshio Kudan no Igo Seiha, both Konpeki no Kantai discs, all three Myst discs,
+Olympic Summer Games, all three Slayer discs, the four Arcade CD-ROM titles, and Mirai
+Shounen Conan render. Powers Kingdom (Europe) renders its live-action intro at 65,000
+frames with `panafz10e-anvil`. Only `Crash 'n Burn (Japan)` and `WorldCup Super
+Stadium (Japan)` remain on the Anvil boot screen at 65,000 frames. The final counts
+are 592 rendered and 2 known boot hangs; no title is `Not Loadable`.
 
 Consequences for the sweep:
 
 - The four Arcade CD-ROM rows are not timeouts. They are loadable with the patched
   BIOS plus the default headless pad, and should be recorded with that BIOS in their
   notes.
-- The `Loadable/No video` set is not a stable failure class. Some titles need 12,000
-  frames, and some need a different BIOS. Do not convert these rows to `Unplayable`
-  without a BIOS-aware rerun.
+- The `Loadable/No video` set is not a stable failure class. Some titles need 20,000
+  frames, and some need a different BIOS. The retry used `-RetryFrames 20000` in
+  `tools/compat-sweep.ps1`; do not convert a row to `Unplayable` without a
+  BIOS-aware extended-boot rerun.
 - The final 5DO status must record the BIOS used, because a result is only meaningful
   for the BIOS that was tested.
 

@@ -1761,7 +1761,8 @@ internal static class Program
                         track.IsAudio ? "audio" : "data",
                         track.SectorSize,
                         track.SectorCount,
-                        track.StartLba));
+                        track.StartLba,
+                        track.PayloadOffset));
                 }
             }
             else
@@ -1771,6 +1772,7 @@ internal static class Program
                     "data",
                     source.SectorSize,
                     source.SectorCount,
+                    0,
                     0));
             }
 
@@ -1796,7 +1798,7 @@ internal static class Program
 
                 Console.WriteLine(
                     $"track {track.Number}: type={track.Type} format={(format.Length == 0 ? "raw" : format)} "
-                    + $"dataSize={dataSize} frames={track.Frames} start={track.Start}");
+                    + $"dataSize={dataSize} frames={track.Frames} start={track.Start} payload={track.PayloadOffset}");
             }
 
             return 0;

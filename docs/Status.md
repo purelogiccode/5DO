@@ -12,7 +12,7 @@ audio-latency pass, the diagnostics-bundle pass, and the save-state-v3 pass. Roa
 100k-state race now measures
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
-**594 discs tested: 576 Loadable/Rendered, 13 Loadable/No video, 5 Not Loadable.**
+**594 discs tested: 592 Loadable/Rendered, 2 Loadable/No video (known boot hangs), 0 Not Loadable.**
 SYS-01 and AUD-05 now expose multi-track CUE/CHD tables and CD-DA: `ITrackedDiscSource`
 carries native 2048/2336/2352-byte sectors, `CueDiscImage` handles multi-file/multi-track
 `INDEX`/`PREGAP`/`POSTGAP` layouts, `ChdDiscImage` exposes audio tracks, and
@@ -44,9 +44,10 @@ Release smoke after the
 TOC change reported 10/10 Loadable/Rendered. **1462 tests pass.**
 The five not-loadable rows are resolved or explained: Mirai Shounen Conan now runs
 (transient CHD read error), and the four Arcade CD-ROM titles load with
-`panafz10-patched.bin` plus the default headless pad. The 12,000-frame rerun shows that six of the
-13 black/blank discs render by 6,000-9,000 frames; the rest are BIOS-sensitive or
-still under investigation. Headless `run`/`trace` now attach a default player-1 pad,
+`panafz10-patched.bin` plus the default headless pad. The extended-boot retry renders
+all but two of the 18 former failures: 592 of 594 discs now render, and Crash 'n Burn
+(Japan) / WorldCup Super Stadium remain known Anvil boot-screen hangs. Headless
+`run`/`trace` now attach a default player-1 pad,
 fixing Olympic Summer Games' controller check. Fifteen triaged titles now have a
 reviewed 5DO status in [`GameCompatibilityList.md`](GameCompatibilityList.md); the
 rest remain `No data`. The CORE-01 ARM timing option (`--arm-timing freedo|arm60`), its
@@ -388,29 +389,24 @@ The committed summary is [`GameCompatibilityResults.md`](GameCompatibilityResult
 
 | Result | Count | Meaning |
 |---|---:|---|
-| `Loadable/Rendered` | **576** | Completed 3,000 frames; final frame is non-black. |
-| `Loadable/No video` | **13** | Completed 3,000 frames; final frame is black/blank. |
-| `Not Loadable` | **5** | CLI error or 90-second timeout. |
+| `Loadable/Rendered` | **592** | Completed 3,000 frames (18 rows retried at 20,000-65,000 frames); final frame is non-black. |
+| `Loadable/No video` | **2** | Completed 65,000 frames; still stuck on the Anvil boot screen. |
+| `Not Loadable` | **0** | No CLI error or timeout remains. |
 | **Total** | **594** | 589 main collection + 5 MAME software-list images. |
 
-The five `Not Loadable` results:
+The 2026-11-01 extended-boot retry reran every one of the 18 non-rendered rows. The
+five former `Not Loadable` rows (`Crime Patrol`, `Mad Dog II`, `Mirai Shounen Conan`,
+`Orbatak`, and `Shootout at Old Tucson RE3`) now complete and render at 20,000 frames
+with `panafz10`, and 11 of the 13 former black/blank rows render at 20,000 frames or at
+65,000 with the Anvil BIOS. The two remaining rows are known Anvil boot-screen hangs:
+`Crash 'n Burn (Japan)` and `WorldCup Super Stadium (Japan)`.
 
-- `Crime Patrol (USA) (Arcade CD-ROM)` — 90-second timeout.
-- `Mad Dog II - The Lost Gold (USA) (Arcade CD-ROM)` — 90-second timeout.
-- `Mirai Shounen Conan - Digital Library (Japan)` — CHD decompression failure at LBA 1.
-- `Orbatak (USA) (Arcade CD-ROM)` — 90-second timeout.
-- `Shootout at Old Tucson (USA) (RE3) (Arcade CD-ROM)` — 90-second timeout.
-
-The four arcade CD-ROM timeouts match the 4DO notes that these titles need a patched
-BIOS and have control limitations. They need a longer-timeout rerun and a reference
-comparison before being called unplayable. The Mirai Shounen Conan image needs a CHD
-integrity check or re-acquisition.
-
-The 13 `Loadable/No video` titles need the 12,000-frame in-game rerun: `Crash 'n Burn
-(Japan)`, `Ishida Yoshio Kudan no Igo Seiha (Japan)`, `Konpeki no Kantai (Japan)`
-(original and Rev 1), `Myst` (Japan, Japan Rev A, USA), `Olympic Summer Games (USA)`,
-`Powers Kingdom (Europe)`, `Slayer` (Europe, USA, USA Action Pak), and `WorldCup Super
-Stadium (Japan)`.
+The 2026-11-01 retry reran all 13 former `Loadable/No video` titles. Ishida Yoshio
+Kudan no Igo Seiha, both Konpeki no Kantai discs, all three Myst discs, Olympic Summer
+Games, and all three Slayer discs render at 20,000 frames with `panafz10`; Powers
+Kingdom (Europe) renders its live-action intro at 65,000 frames with
+`panafz10e-anvil`. Only `Crash 'n Burn (Japan)` and `WorldCup Super Stadium (Japan)`
+remain on the Anvil boot screen at 65,000 frames.
 
 `Loadable/Rendered` is **not** a final compatibility grade; it still needs the visual
 and input review described in [`CompatibilitySweep.md`](CompatibilitySweep.md).
@@ -640,8 +636,9 @@ current gates are the M13 collection sweep and the M14 high-resolution decision.
 
 ### P0 - active work
 
-1. **M13 loadability sweep: complete.** 594 discs tested: 576 `Loadable/Rendered`,
-   13 `Loadable/No video`, 5 `Not Loadable`. See
+1. **M13 loadability sweep: complete.** 594 discs tested: 592 `Loadable/Rendered`,
+   2 known `Loadable/No video` boot hangs (`Crash 'n Burn Japan`, `WorldCup Super
+   Stadium`), 0 `Not Loadable`. See
    [`GameCompatibilityResults.md`](GameCompatibilityResults.md).
 2. **Failure triage: first pass complete (2026-10-30).**
    - `Mirai Shounen Conan` no longer reproduces its LBA 1 CHD error; repeated
@@ -687,21 +684,21 @@ current gates are the M13 collection sweep and the M14 high-resolution decision.
 
 ## 6. Next session
 
-The next session is the **BIOS-aware compatibility pass**, not release prep:
+The BIOS-aware retry is complete: **592 of 594 discs render**, and only Crash 'n Burn
+(Japan) and WorldCup Super Stadium remain stuck on the Anvil boot screen. The next
+session is the **in-game/visual review**, not release prep:
 
 1. Read [`CompatibilitySweep.md`](CompatibilitySweep.md),
-   [`GameCompatibilityList.md`](GameCompatibilityList.md), and the triage results in
+   [`GameCompatibilityList.md`](GameCompatibilityList.md), and
    [`Compatibility.md`](Compatibility.md) 13.2.
-2. Rerun the `Not Loadable` and `Loadable/No video` subsets with
-   `-Bios bios/panafz10-patched.bin` and `-Bios bios/panafz10e-anvil.bin`. Record
-   which BIOS each title needs; do not assume `panafz1` is the compatibility
-   reference.
-3. Investigate Crash 'n Burn and WorldCup Super Stadium, which still stop on a boot
-   screen with the Anvil BIOS at 12,000 frames.
-4. Fill the 5DO status columns from the BIOS-aware results and the 12,000-frame
-   screenshots. Mark the BIOS used in the notes.
-5. Run the high-resolution subset with `-HighRes` and record the comparison.
-6. Start the M14 measurement work from
+2. Run the 12,000-frame in-game pass over the 18 retried titles and record intermediate
+   captures; promote the ones that accept input and reach gameplay to `Playable` or
+   `Good`.
+3. Investigate Crash 'n Burn (Japan) and WorldCup Super Stadium, which still stop on a
+   boot screen with the Anvil BIOS at 65,000 frames. Both share the same purple Anvil
+   frame; trace the boot path before adding any title-specific workaround.
+4. Run the high-resolution subset with `-HighRes` and record the comparison.
+5. Start the M14 measurement work from
    [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 
 Do not re-enable the null audio-sink short-circuit, do not change the XBUS DMA byte

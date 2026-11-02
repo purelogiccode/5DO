@@ -27,9 +27,10 @@ colour-coded toasts for save/load, rewind, fast-forward, screenshots, reset, and
 settings, plus an `F4`/Select+Start menu with resume/pause, save/load, rewind,
 fast-forward, screenshot, reset, cheats, settings, and stop actions. The 594-disc
 baseline found 576 rendered, 13 black/blank,
-and 5 not-loadable images. Triage resolved the five not-loadable rows (Mirai Shounen
-Conan was a transient CHD read error; the four Arcade CD-ROM titles boot with
-`panafz10`), and six of the 13 black/blank titles render by 6,000-9,000 frames. Headless
+and 5 not-loadable images. The 2026-11-01 extended-boot retry now renders **592 of
+594** discs: the five former not-loadable rows boot, 11 black/blank titles render at
+20,000 frames or with the right BIOS, and only Crash 'n Burn (Japan) and WorldCup
+Super Stadium remain known Anvil boot-screen hangs. Headless
 `run`/`trace` now attach a default player-1 pad. The BIOS manager (SYS-04) scans a BIOS
 folder, classifies region/Kanji/Anvil/patch metadata, and auto-selects a BIOS from the
 game database region, known title requirements, or a per-game MD5 override; the

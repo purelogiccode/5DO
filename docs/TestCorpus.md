@@ -853,6 +853,26 @@ UX-23 coverage is compile/status level:
 - Manual evidence: `disc verify` on Battle Chess (Europe) read 143,810/143,810 sectors,
   338,241,120 bytes, hash `0x9147e756840bc269`, with no errors.
 
+### 1.1ae Extended-boot compatibility retry (2026-11-01)
+
+- `tools/compat-sweep.ps1` gained `-Files` (explicit disc paths) and `-RetryFrames`
+  (rerun a blank row at a deeper frame count and keep the rendered result).
+- The 18 non-rendered rows from the 3,000-frame sweep were rerun:
+  - All five former `Not Loadable` rows (`Crime Patrol`, `Mad Dog II`, Mirai Shounen
+    Conan, `Orbatak`, `Shootout at Old Tucson RE3`) complete and render at 20,000 frames
+    with `panafz10`.
+  - Ishida Yoshio Kudan no Igo Seiha, both Konpeki no Kantai discs, all three Myst discs,
+    Olympic Summer Games, and all three Slayer discs render at 20,000 frames.
+  - Powers Kingdom (Europe) renders its live-action intro at 65,000 frames with
+    `panafz10e-anvil` (3,404 colors, 86,442 non-black pixels).
+  - Crash 'n Burn (Japan) and WorldCup Super Stadium remain on the Anvil boot screen at
+    65,000 frames with every local BIOS.
+- Final loadability table: 594 discs, **592 Loadable/Rendered**, **2 Loadable/No video**
+  (known boot hangs), **0 Not Loadable**. Evidence is in `artifacts/compat-20k-10/`,
+  `artifacts/compat-known/`, and the merged `artifacts/compat-full/summary-merged.csv`.
+- No emulator regression: the full suite remains **1,462 tests**, build 0 warnings/0
+  errors, format clean, inspectcode 0 results.
+
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 
 All runs use the Release build, `panafz1.bin`, and a fresh NVRAM. The 3,000-frame

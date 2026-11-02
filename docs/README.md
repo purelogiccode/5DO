@@ -7,7 +7,7 @@ subsystem.
 
 **Current snapshot:** `1.0.0-rc.1` source tree, 1,462 tests passing (2026-11-01), with
 the v1.0 release deliberately deferred. The first full-collection loadability sweep is
-complete: **594 discs tested, 576 rendered, 13 black/blank, 5 not loadable**. The
+complete: **594 discs tested, 592 rendered, 2 known boot hangs, 0 not loadable**. The
 2026-10-31 performance pass brings the Road Rash 3D race to 4.20 ms/frame (p99 7.40 ms),
 keeps Debug core builds optimized, and adds Auto presentation frame skip. The
 2026-11-01 rewind/fast-forward pass adds deterministic 30-300 second rewind and
@@ -58,7 +58,7 @@ Windows x64 is the validated platform; the local Linux validation target is the
 | [`Tas.md`](Tas.md) | `.5domovie` container, deterministic record/replay/verify, CLI commands, desktop controls, branching, and current limits. |
 | [`Compatibility.md`](Compatibility.md) | BIOS/disc/input compatibility, game-specific fixes, high-resolution mode, compatibility matrix and soak evidence. |
 | [`GameCompatibilityList.md`](GameCompatibilityList.md) | 241-title 4DO reference list, local collection matches, and the working 5DO status columns. |
-| [`GameCompatibilityResults.md`](GameCompatibilityResults.md) | Automated 594-disc loadability results: 576 rendered, 13 black/blank, 5 not loadable, with per-disc evidence paths. |
+| [`GameCompatibilityResults.md`](GameCompatibilityResults.md) | Automated 594-disc loadability results after the extended-boot retry: 592 rendered, 2 known Anvil boot-screen hangs, 0 not loadable, with per-disc evidence paths. |
 | [`CompatibilitySweep.md`](CompatibilitySweep.md) | Full-collection loadability/in-game sweep procedure, status definitions, triage, and Linux VM validation. |
 | [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md) | True internal high-resolution CEL research: current mode, options, experiments, and decision criteria. |
 | [`KnownIssues.md`](KnownIssues.md) | Current game, renderer, audio, packaging, emulation, and legal limitations. |

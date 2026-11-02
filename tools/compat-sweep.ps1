@@ -45,6 +45,13 @@ Test at most N discs (useful for a smoke run).
 .PARAMETER Filter
 Only test files whose name matches this wildcard.
 
+.PARAMETER Files
+Explicit disc paths to test instead of scanning the roots. Takes precedence over Roots.
+
+.PARAMETER RetryFrames
+When a disc completes but its final frame is blank, rerun it once with this frame count.
+Defaults to 0 (no retry). Slow loaders such as Myst need around 20,000 frames.
+
 .PARAMETER NoFrameCapture
 Do not write frame.png. This makes the sweep faster but disables image metrics.
 
@@ -73,6 +80,8 @@ param(
     [switch]$Resume,
     [int]$Limit = 0,
     [string]$Filter = '*.chd',
+    [string[]]$Files = @(),
+    [int]$RetryFrames = 0,
     [switch]$NoFrameCapture,
     [switch]$NoPrefetch,
     [int]$MinNonBlackPercent = 3,
@@ -202,7 +211,8 @@ function Invoke-OneDisc {
     param(
         [string]$Disc,
         [string]$SafeName,
-        [hashtable]$CliCommand
+        [hashtable]$CliCommand,
+        [int]$Frames
     )
 
     $gameDir = Join-Path $outPath $SafeName
@@ -360,13 +370,26 @@ if (-not (Test-Path -LiteralPath $biosPath)) {
 
 $cliCommand = Get-CliCommand $Cli
 $discs = [System.Collections.Generic.List[string]]::new()
-foreach ($root in $Roots) {
-    if (-not (Test-Path -LiteralPath $root)) {
-        Write-Warning "Collection root not found: $root"
-        continue
+if ($Files.Count -gt 0) {
+    foreach ($file in $Files) {
+        $resolved = if (Test-Path -LiteralPath $file) { (Resolve-Path -LiteralPath $file).Path } else { '' }
+        if ($resolved) {
+            $discs.Add($resolved)
+        }
+        else {
+            Write-Warning "Disc not found: $file"
+        }
     }
-    foreach ($file in Get-ChildItem -LiteralPath $root -Recurse -File -Filter $Filter -ErrorAction SilentlyContinue) {
-        $discs.Add($file.FullName)
+}
+else {
+    foreach ($root in $Roots) {
+        if (-not (Test-Path -LiteralPath $root)) {
+            Write-Warning "Collection root not found: $root"
+            continue
+        }
+        foreach ($file in Get-ChildItem -LiteralPath $root -Recurse -File -Filter $Filter -ErrorAction SilentlyContinue) {
+            $discs.Add($file.FullName)
+        }
     }
 }
 $discs = @($discs | Sort-Object)
@@ -398,7 +421,15 @@ foreach ($disc in $discs) {
     $label = "[$index/$($discs.Count)] $([System.IO.Path]::GetFileName($disc))"
     Write-Step $label
 
-    $row = Invoke-OneDisc -Disc $disc -SafeName $safeName -CliCommand $cliCommand
+    $row = Invoke-OneDisc -Disc $disc -SafeName $safeName -CliCommand $cliCommand -Frames $Frames
+    if ($null -ne $row -and $RetryFrames -gt $Frames -and $row.Status -eq 'Loadable/No video') {
+        Write-Step "         retrying with $RetryFrames frames"
+        $retry = Invoke-OneDisc -Disc $disc -SafeName $safeName -CliCommand $cliCommand -Frames $RetryFrames
+        if ($null -ne $retry -and $retry.Status -eq 'Loadable/Rendered') {
+            $row = $retry
+        }
+    }
+
     if ($null -ne $row) {
         $results.Add($row)
         Write-Host ("         {0}: {1} ({2:0.0}s)" -f $row.Status, $row.Reason, $row.ElapsedSeconds)
