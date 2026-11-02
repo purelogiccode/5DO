@@ -416,16 +416,17 @@ internal static class Program
 
         BiosLoadResult biosLoad = LoadBios(biosPath, bios2Path, biosAutoFolder, gameRecord, discPath);
 
-        FixMode fixMode = ResolveFixMode(options, args, gameId);
+        GameProfile? gameProfile = LoadGameProfile(options.Get("--game-profile"));
+        FixMode fixMode = ResolveFixMode(options, args, gameId, gameProfile?.FixMode);
         EmulatorTuning profileTuning = EmulationProfiles.Apply(
             ParseEmulationProfile(options.Get("--profile")));
-        profileTuning = ApplyGameProfile(profileTuning, options.Get("--game-profile"));
+        profileTuning = ApplyGameProfile(profileTuning, gameProfile);
         VideoRegion fallbackRegion = biosLoad.Selection?.Primary?.VideoStandard == BiosVideoStandard.Pal
             ? VideoRegion.Pal1
             : profileTuning.Region;
         var machine = new FiveDoMachine(new EmulatorTuning
         {
-            HighResolution = HasFlag(args, "--high-res"),
+            HighResolution = HasFlag(args, "--high-res") || gameProfile?.HighResolution == true,
             Region = ParseRegion(options.Get("--region"), fallbackRegion),
             ArmTiming = ParseArmTiming(options.Get("--arm-timing"), profileTuning.ArmTiming),
             ClioTimers = ParseClioTimers(options.Get("--clio-timers"), profileTuning.ClioTimers),
@@ -1229,16 +1230,17 @@ internal static class Program
 
         BiosLoadResult biosLoad = LoadBios(biosPath, bios2Path, biosAutoFolder, gameRecord, discPath);
 
-        FixMode fixMode = ResolveFixMode(options, args, gameId);
+        GameProfile? gameProfile = LoadGameProfile(options.Get("--game-profile"));
+        FixMode fixMode = ResolveFixMode(options, args, gameId, gameProfile?.FixMode);
         EmulatorTuning profileTuning = EmulationProfiles.Apply(
             ParseEmulationProfile(options.Get("--profile")));
-        profileTuning = ApplyGameProfile(profileTuning, options.Get("--game-profile"));
+        profileTuning = ApplyGameProfile(profileTuning, gameProfile);
         VideoRegion fallbackRegion = biosLoad.Selection?.Primary?.VideoStandard == BiosVideoStandard.Pal
             ? VideoRegion.Pal1
             : profileTuning.Region;
         var machine = new FiveDoMachine(new EmulatorTuning
         {
-            HighResolution = HasFlag(args, "--high-res"),
+            HighResolution = HasFlag(args, "--high-res") || gameProfile?.HighResolution == true,
             Region = ParseRegion(options.Get("--region"), fallbackRegion),
             ArmTiming = ParseArmTiming(options.Get("--arm-timing"), profileTuning.ArmTiming),
             ClioTimers = ParseClioTimers(options.Get("--clio-timers"), profileTuning.ClioTimers),
@@ -3531,7 +3533,11 @@ internal static class Program
         return string.Join(" <- ", parts);
     }
 
-    private static FixMode ResolveFixMode(ParsedOptions options, string[] args, string? gameId)
+    private static FixMode ResolveFixMode(
+        ParsedOptions options,
+        string[] args,
+        string? gameId,
+        FixMode? profileFixMode = null)
     {
         var explicitMode = options.Get("--fix-mode");
         if (explicitMode is not null)
@@ -3544,7 +3550,17 @@ internal static class Program
             return FixMode.None;
         }
 
-        return GameCompatibility.ForGameId(gameId).FixMode;
+        return profileFixMode ?? GameCompatibility.ForGameId(gameId).FixMode;
+    }
+
+    private static GameProfile? LoadGameProfile(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        return GameProfileJson.Deserialize(File.ReadAllText(path));
     }
 
     private static EmulationProfile ParseEmulationProfile(string? value)
@@ -3604,14 +3620,13 @@ internal static class Program
             nameof(value));
     }
 
-    private static EmulatorTuning ApplyGameProfile(EmulatorTuning tuning, string? path)
+    private static EmulatorTuning ApplyGameProfile(EmulatorTuning tuning, GameProfile? profile)
     {
-        if (string.IsNullOrWhiteSpace(path))
+        if (profile is null)
         {
             return tuning;
         }
 
-        GameProfile profile = GameProfileJson.Deserialize(File.ReadAllText(path));
         return tuning with
         {
             Region = profile.Region,

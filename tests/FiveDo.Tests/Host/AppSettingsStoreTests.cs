@@ -3,6 +3,7 @@ using System.IO;
 using FiveDo.Core;
 using FiveDo.Host;
 using FiveDo.Input;
+using FiveDo.Video;
 
 namespace FiveDo.Tests.Host;
 
@@ -296,6 +297,13 @@ public sealed class AppSettingsStoreTests
             CpuClockMultiplier = 1.5,
             CdAudioVolume = 0.4f,
             CdAudioMuted = true,
+            BiosMd5 = "0123456789ABCDEF0123456789ABCDEF",
+            FixMode = FixMode.BitTiming5,
+            Filter = VideoFilter.Crt,
+            HighResolution = true,
+            InputDevices = ["Mouse", "Lightgun", "Joypad", "Joypad", "Joypad", "Joypad"],
+            NvramStorageMode = NvramStorageMode.PerGame,
+            NvramVersion = 3,
         };
 
         var json = GameProfileJson.Serialize(profile);
@@ -308,13 +316,64 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(1.5, loaded.CpuClockMultiplier);
         Assert.Equal(0.4f, loaded.CdAudioVolume);
         Assert.True(loaded.CdAudioMuted);
+        Assert.Equal("0123456789ABCDEF0123456789ABCDEF", loaded.BiosMd5);
+        Assert.Equal(FixMode.BitTiming5, loaded.FixMode);
+        Assert.Equal(VideoFilter.Crt, loaded.Filter);
+        Assert.True(loaded.HighResolution);
+        Assert.Equal("Mouse", loaded.InputDevices[0]);
+        Assert.Equal(NvramStorageMode.PerGame, loaded.NvramStorageMode);
+        Assert.Equal(3, loaded.NvramVersion);
 
-        var invalid = json
-            .Replace("\"CpuClockMultiplier\": 1.5", "\"CpuClockMultiplier\": 99")
-            .Replace("\"CdAudioVolume\": 0.4", "\"CdAudioVolume\": 9");
-        GameProfile normalized = GameProfileJson.Deserialize(invalid);
+        var invalidProfile = new GameProfile
+        {
+            CpuClockMultiplier = 99,
+            CdAudioVolume = 9,
+            BiosMd5 = "not-an-md5",
+            FixMode = (FixMode)999,
+            Filter = (VideoFilter)999,
+            InputDevices = ["Mouse", "bogus", "Joypad"],
+            NvramStorageMode = (NvramStorageMode)99,
+            NvramVersion = 99,
+        };
+        GameProfile normalized = GameProfileJson.Deserialize(
+            GameProfileJson.Serialize(invalidProfile));
         Assert.Equal(1.0, normalized.CpuClockMultiplier);
         Assert.Equal(0.8f, normalized.CdAudioVolume);
+        Assert.Equal(string.Empty, normalized.BiosMd5);
+        Assert.Null(normalized.FixMode);
+        Assert.Null(normalized.Filter);
+        Assert.Equal(6, normalized.InputDevices.Count);
+        Assert.Equal("Mouse", normalized.InputDevices[0]);
+        Assert.Equal("Joypad", normalized.InputDevices[1]);
+        Assert.Null(normalized.NvramStorageMode);
+        Assert.Null(normalized.NvramVersion);
+    }
+
+    [Fact]
+    public void GameProfile_FromSettingsCapturesPerGameOverrides()
+    {
+        var settings = new AppSettings
+        {
+            HighResolution = true,
+            NvramStorageMode = NvramStorageMode.PerGame,
+            NvramVersion = 4,
+        };
+        settings.SetBiosOverride("A1B2C3D4", "0123456789ABCDEF0123456789ABCDEF");
+        settings.SetFixModeOverride("A1B2C3D4", FixMode.BitTiming5);
+        settings.SetFilterOverride("A1B2C3D4", VideoFilter.Crt);
+        settings.SetInputDeviceOverride(
+            "A1B2C3D4",
+            ["Mouse", "Lightgun", "Joypad", "Joypad", "Joypad", "Joypad"]);
+
+        GameProfile profile = GameProfile.FromSettings(settings, "a1b2c3d4");
+
+        Assert.Equal("0123456789abcdef0123456789abcdef", profile.BiosMd5);
+        Assert.Equal(FixMode.BitTiming5, profile.FixMode);
+        Assert.Equal(VideoFilter.Crt, profile.Filter);
+        Assert.True(profile.HighResolution);
+        Assert.Equal("Mouse", profile.InputDevices[0]);
+        Assert.Equal(NvramStorageMode.PerGame, profile.NvramStorageMode);
+        Assert.Equal(4, profile.NvramVersion);
     }
 
     [Fact]
@@ -337,6 +396,13 @@ public sealed class AppSettingsStoreTests
                 CdSpeed = CdSpeed.X4,
                 CdAudioVolume = 0.25f,
                 CdAudioMuted = true,
+                BiosMd5 = "0123456789ABCDEF0123456789ABCDEF",
+                FixMode = FixMode.BitTiming5,
+                Filter = VideoFilter.Crt,
+                HighResolution = true,
+                InputDevices = ["Mouse", "Lightgun", "Joypad", "Joypad", "Joypad", "Joypad"],
+                NvramStorageMode = NvramStorageMode.PerGame,
+                NvramVersion = 2,
             });
 
         AppSettings effective = settings.CreateEffectiveForGame("a1b2c3d4");
@@ -346,12 +412,27 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(CdSpeed.X4, effective.CdSpeed);
         Assert.Equal(0.25f, effective.CdAudioVolume);
         Assert.True(effective.CdAudioMuted);
+        Assert.Equal(
+            "0123456789abcdef0123456789abcdef",
+            effective.GetBiosOverride("a1b2c3d4"));
+        Assert.Equal(FixMode.BitTiming5, effective.GetFixModeOverride("a1b2c3d4"));
+        Assert.Equal(VideoFilter.Crt, effective.GetFilterOverride("a1b2c3d4"));
+        Assert.True(effective.HighResolution);
+        Assert.Equal("Mouse", effective.ResolveInputDevices("a1b2c3d4")[0]);
+        Assert.Equal(NvramStorageMode.PerGame, effective.NvramStorageMode);
+        Assert.Equal(2, effective.NvramVersion);
 
         Assert.Equal(VideoRegion.Ntsc, settings.Region);
         Assert.Equal(ArmTimingMode.FreeDoCompatible, settings.ArmTiming);
         Assert.Equal(CdSpeed.X2, settings.CdSpeed);
         Assert.Equal(1f, settings.CdAudioVolume);
         Assert.False(settings.CdAudioMuted);
+        Assert.Null(settings.GetBiosOverride("a1b2c3d4"));
+        Assert.Null(settings.GetFixModeOverride("a1b2c3d4"));
+        Assert.Null(settings.GetFilterOverride("a1b2c3d4"));
+        Assert.False(settings.HighResolution);
+        Assert.Equal(NvramStorageMode.Global, settings.NvramStorageMode);
+        Assert.Equal(0, settings.NvramVersion);
 
         AppSettings noProfile = settings.CreateEffectiveForGame("other");
         Assert.Equal(VideoRegion.Ntsc, noProfile.Region);

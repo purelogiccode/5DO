@@ -71,6 +71,12 @@ still change.
   illegal-request status instead of silently doing nothing, the guest RESET command
   restores the default transfer state and sector size, and `PrefetchingDiscSource`
   read-aheads native track sectors so CD-DA does not decompress on the sample clock.
+- SYS-18/UX-20 full per-game profile: `GameProfile` now carries BIOS MD5, fix mask,
+  video filter, high-resolution mode, six PBUS devices, and NVRAM mode/version in
+  addition to timing/region/CD-DA. `CreateEffectiveForGame` deep-copies the override
+  maps so applying a profile cannot mutate live settings; the desktop uses the effective
+  BIOS/fix/input/filter/high-resolution/NVRAM values and the CLI applies profile
+  fix/high-resolution. Cheat fields, inherit/reset, and live application remain.
 - SYS-20 Redump DAT matching: `RedumpDat` parses the Redump/No-Intro XML
   `<datafile><game><rom>` format and normalizes/validates CRC-32, MD5, and SHA-1.
   `DiscHealth` hashes each native track and requires size plus every supplied DAT hash.

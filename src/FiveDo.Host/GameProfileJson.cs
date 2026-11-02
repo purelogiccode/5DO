@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using FiveDo.Core;
@@ -43,6 +44,30 @@ public static class GameProfileJson
 
         Normalize(profile);
         return profile;
+    }
+
+    private static string NormalizeMd5(string? md5)
+    {
+        if (string.IsNullOrWhiteSpace(md5))
+        {
+            return string.Empty;
+        }
+
+        var normalized = md5.Trim().ToUpperInvariant();
+        if (normalized.Length != 32)
+        {
+            return string.Empty;
+        }
+
+        foreach (var character in normalized)
+        {
+            if (!char.IsAsciiHexDigit(character))
+            {
+                return string.Empty;
+            }
+        }
+
+        return normalized;
     }
 
     private static void Normalize(GameProfile profile)
@@ -92,5 +117,30 @@ public static class GameProfileJson
         {
             profile.CdAudioVolume = 0.8f;
         }
+
+        profile.BiosMd5 = NormalizeMd5(profile.BiosMd5);
+        if (profile.FixMode is { } fixMode && !Enum.IsDefined(fixMode))
+        {
+            profile.FixMode = null;
+        }
+
+        if (profile.Filter is { } filter && !Enum.IsDefined(filter))
+        {
+            profile.Filter = null;
+        }
+
+        if (profile.NvramStorageMode is { } nvramMode && !Enum.IsDefined(nvramMode))
+        {
+            profile.NvramStorageMode = null;
+        }
+
+        if (profile.NvramVersion is { } nvramVersion && nvramVersion is < 0 or > 9)
+        {
+            profile.NvramVersion = null;
+        }
+
+        profile.InputDevices = profile.InputDevices.Count == 0
+            ? []
+            : AppSettings.NormalizeInputDevices(profile.InputDevices).ToList();
     }
 }

@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-01  
 **Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,472 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,473 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **594 load**, **593 render**; 1 known boot failure (Crash 'n Burn Japan); 0 not loadable | 12,000-frame in-game/visual review, high-res pass, Linux VM validation |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,472** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,473** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
 | Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
@@ -170,7 +170,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[SYS-15](#feat-sys-15)** Mouse/lightgun/arcade lightgun/flightstick/trackball — P0 · L · depends on: FND-01 — **Partial** — remaining: device models, encoder, CLI/settings, pointer input, crosshair, pointer-port routing, and pointer calibration are done; scripted gameplay validation remains
 - [ ] **[SYS-16](#feat-sys-16)** Six-player/multi-tap verification — P1 · S · depends on: SYS-15 — **Pending**
 - [ ] **[SYS-17](#feat-sys-17)** Game database expansion and community DB — P1 · M · depends on: FND-02 — **Pending**
-- [ ] **[SYS-18](#feat-sys-18)** Auto per-game profile — P0 · L · depends on: SYS-04, SYS-17 — **Partial** — auto BIOS/region/fixes/NVRAM, known-title input seeding, a timing/CD-DA profile editor with import/export, machine-creation application, and CLI `--game-profile` are implemented; full BIOS/fix/filter/high-res fields and DB-driven auto profiles remain
+- [ ] **[SYS-18](#feat-sys-18)** Auto per-game profile — P0 · L · depends on: SYS-04, SYS-17 — **Partial** — auto BIOS/region/fixes/NVRAM, known-title input seeding, and a profile covering timing, region, BIOS, fix, filter, high-res, input devices, and NVRAM with import/export and machine-creation application are implemented; cheat fields, full DB-driven population, and live application remain
 - [ ] **[SYS-19](#feat-sys-19)** Save-state interoperability with 4DO/Opera — P2 · L · depends on: CORE-14 — **Pending**
 - [ ] **[SYS-20](#feat-sys-20)** Disc health / Redump DAT / CHD integrity — P2 · M · depends on: SYS-22 — **Partial** — `disc verify` reads every native sector, reports CHD/CUE/BIN errors, hashes the content, and matches Redump/No-Intro DATs with `--dat`; the library known-dump badge and 4DO/Opera hash comparison remain
 - [ ] **[SYS-21](#feat-sys-21)** Physical CD drive support — P2 · M — **Pending**
@@ -222,7 +222,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[UX-17](#feat-ux-17)** Crash report, compatibility report, log bundle — P1 · M · depends on: FND-08 — **Partial** — one-click desktop and CLI bundles include logs, scrubbed settings, environment, state, and frame evidence; upload and the compatibility-report form remain
 - [ ] **[UX-18](#feat-ux-18)** Onboarding and verification — P1 · M · depends on: SYS-20 — **Pending**
 - [x] **[UX-19](#feat-ux-19)** OSD, notifications, quick menu — P1 · S · depends on: FND-06 — **Done**
-- [ ] **[UX-20](#feat-ux-20)** Per-game settings UI — P1 · M · depends on: SYS-18 — **Partial** — the timing/CD-DA profile editor (save/delete/import/export) is implemented; BIOS/fix/filter/high-res/shader/cheat fields and inherit/reset remain
+- [ ] **[UX-20](#feat-ux-20)** Per-game settings UI — P1 · M · depends on: SYS-18 — **Partial** — the profile editor (save/delete/import/export) now covers timing, region, BIOS, fix, filter, high-res, input devices, and NVRAM; cheat/shader-chain fields and inherit/reset remain
 - [ ] **[UX-21](#feat-ux-21)** Debugger UI — P2 · L · depends on: CORE-15 — **Pending**
 - [ ] **[UX-22](#feat-ux-22)** Trace viewer and performance profiler — P2 · M · depends on: UX-21 — **Pending**
 - [x] **[UX-23](#feat-ux-23)** Input display and lag counter — P1 · S · depends on: UX-06 — **Done**
@@ -376,7 +376,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] AUD-05 persists `CdAudioVolume`/`CdAudioMuted`; Settings > Audio adds a CD-DA slider and mute check; `run --cd-volume` and `--mute-cd` control the mix.
 - [x] `disc tracks` reports CUE and CHD tracks (text and `--json`) instead of a single synthetic data track.
 - [x] Tests: multi-track CUE, CHD audio, TOC/lead-out, MODE SET, raw audio reads, Sub-Q, audio position, CD-DA sample extraction, mix level/mute, audio settings, state roundtrip, and `disc tracks --json`.
-- [x] Verification: **1,472 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
+- [x] Verification: **1,473 tests pass**; build **0 warnings / 0 errors**; `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**; Release 10-disc smoke **10/10 Loadable/Rendered**.
 - [ ] Remaining (SYS-01): known CD-DA title evidence, a DSP+CD-DA WAV, read-ahead, and subcode.
 
 ### 2026-11-01 — SYS-02 multi-disc playlist and live swap
@@ -418,7 +418,7 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [x] Fixed all 50 warnings across 18 files: disposed/modified closure captures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, and an XML doc reference.
 - [x] `jb inspectcode --severity=WARNING`: **0 results**.
 - [x] `dotnet build 5DO.sln`: **0 warnings, 0 errors**.
-- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,472**).
+- [x] `dotnet test 5DO.sln`: **1,350 passed, 0 failed** at that commit (now **1,473**).
 - [x] `dotnet format 5DO.sln --verify-no-changes`: clean.
 - [x] Commit `26aad8b` — `Fix all ReSharper inspectcode warnings`.
 
@@ -816,27 +816,35 @@ BIOS and 65,000 frames; WorldCup Super Stadium needs the FZ-10J BIOS plus its Ka
 ROM (BIOS2). The BIOS library now classifies 1 MB Kanji font images as secondary ROMs.
 The final loadability table is 594 discs, 593 rendered, 1 known failure
 (`Crash 'n Burn Japan`), and 0 not loadable. `-RetryFrames`
-keeps this retry reproducible for future sweeps. **1472 tests pass.**
+keeps this retry reproducible for future sweeps. **1473 tests pass.**
 
 **Overscan pass (2026-11-01):** VID-06 moves to partial. `AppSettings.OverscanPixels`
 crops 0-32 pixels from every edge before presentation and native screenshots,
 `VdlFrame.CopyCroppedFrom` preserves the palette/background/output-control metadata,
 and Settings > Video exposes None/4/8/12/16/24 px. The crop is presentation-only:
 frame hashes, input, audio, and save states are unchanged, while CLI evidence keeps the
-full frame. Per-game presets and void-area patterns remain. **1472 tests pass.**
+full frame. Per-game presets and void-area patterns remain. **1473 tests pass.**
 
 **Fix-parity pass (2026-11-01):** CORE-09 is done. [`docs/FixParity.md`](FixParity.md)
 inventories every 4DO `FIX_BIT_*` and maps it to `FixMode`. DinoPark's scale-Y fix is
 visibly active; Microcosm, Super Street Fighter II Turbo, Alone in the Dark, and Samurai
 Shodown retain correct output at 3,000 frames, and forcing the retired timing-6/
 graphics-step-Y bits produces byte-identical frames. `GameCompatibilityTests` locks the
-mapping. **1472 tests pass.**
+mapping. **1473 tests pass.**
 
 **DAT health pass (2026-11-01):** SYS-20 adds a Redump/No-Intro XML parser and
 native-track matching. `DiscHealth` hashes each track with CRC-32, MD5, and SHA-1 and
 requires size plus every supplied DAT hash. `disc verify --dat` prints the matched
 game/ROM and exits 1 on a mismatch; a synthetic ISO matched its DAT and a one-byte
-change failed. The library badge and 4DO/Opera comparison remain. **1472 tests pass.**
+change failed. The library badge and 4DO/Opera comparison remain. **1473 tests pass.**
+
+**Profile-coverage pass (2026-11-01):** SYS-18/UX-20 gain BIOS, fix, filter,
+high-resolution, input-device, and NVRAM fields. `CreateEffectiveForGame` now
+deep-copies the override maps before applying a profile, so live settings are not
+mutated. The desktop uses the effective settings for BIOS selection, fix mode, input
+devices, the renderer filter, high-resolution, and the NVRAM store; the CLI applies
+profile fix/high-resolution. Cheat fields, inherit/reset, and live application remain.
+**1473 tests pass.**
 
 **Last updated:** 2026-11-01
 
@@ -2930,11 +2938,12 @@ Suggested parallelization with two developers:
 | 2026-11-01 | UX-06 | Movie frame editor | Extended `MovieEditor` with per-frame set/button/insert/remove and added **File > Movie Editor...** (frame list, player-1 button checkboxes, insert/delete/trim, Save As). UX-06 remains partial for Lua, an input timeline, and multiplayer display; 1,457 tests pass |
 | 2026-11-01 | UX-13 | Game metadata editor | Added `LibraryMetadataStore.Upsert`/`Remove` and **File > Game Metadata...** for the current disc (title, developer, publisher, year, genre, regions, players, description), with a library rescan after saving. UX-13 remains partial for external providers and media; 1,458 tests pass |
 | 2026-11-01 | UX-15 | Profile selector and import/export UI | Added `default-profile.txt` resolution, Settings > Paths profile selector, Set default, Create, Open folder, Import, and Export actions. UX-15 is done; installer integration belongs to UX-16; 1,459 tests pass |
-| 2026-11-01 | SYS-20 | Disc integrity verifier | Added `DiscVerifier` and `disc verify` (native-sector reads, LBA errors, FNV-1a hash, JSON). Battle Chess verified 143,810 sectors / 338,241,120 bytes with no errors. SYS-20 is partial for Redump DAT matching and the UI badge; 1,472 tests pass |
-| 2026-11-01 | CORE-13 | Extended-boot compatibility retry | Reran all 18 non-rendered discs: 5 former not-loadable rows and 12 black/blank titles now render. Powers Kingdom (Europe) reaches its live-action intro at 65,000 frames with the Anvil BIOS; WorldCup Super Stadium renders with the FZ-10J BIOS plus its Kanji font ROM. Only Crash 'n Burn (Japan) remains a known boot failure. Added `-Files`/`-RetryFrames` and `-Bios2` to the sweep; 1,472 tests pass |
-| 2026-11-01 | VID-06 | Overscan crop | Added `AppSettings.OverscanPixels` (0-32), `VdlFrame.CopyCroppedFrom`, presentation/native-screenshot crop, and Settings > Video > **Overscan crop**. The crop is presentation-only and keeps frame hashes/input/states unchanged. VID-06 is partial for per-game presets, void patterns, and custom per-edge crops; 1,472 tests pass |
-| 2026-11-01 | CORE-09 | 4DO/Opera fix parity audit | Added `docs/FixParity.md`: every 4DO `FIX_BIT_*` is mapped or explicitly retired. Timing-6 (Alone in the Dark) and GraphicsStepY (Samurai Shodown) are replaced by generic CEL models, with byte-identical forced-bit evidence. `GameCompatibilityTests` locks every ID; 1,472 tests pass |
-| 2026-11-01 | SYS-20 | Redump DAT matching | Added `RedumpDat` (Redump/No-Intro XML parser with hash normalization) and `DiscHealth` (native-track CRC-32/MD5/SHA-1 matching). `disc verify --dat <path>` reports the matched game/ROM and exits 1 on a mismatch. Synthetic ISO/DAT evidence matched and a one-byte change failed; 1,472 tests pass |
+| 2026-11-01 | SYS-20 | Disc integrity verifier | Added `DiscVerifier` and `disc verify` (native-sector reads, LBA errors, FNV-1a hash, JSON). Battle Chess verified 143,810 sectors / 338,241,120 bytes with no errors. SYS-20 is partial for Redump DAT matching and the UI badge; 1,473 tests pass |
+| 2026-11-01 | CORE-13 | Extended-boot compatibility retry | Reran all 18 non-rendered discs: 5 former not-loadable rows and 12 black/blank titles now render. Powers Kingdom (Europe) reaches its live-action intro at 65,000 frames with the Anvil BIOS; WorldCup Super Stadium renders with the FZ-10J BIOS plus its Kanji font ROM. Only Crash 'n Burn (Japan) remains a known boot failure. Added `-Files`/`-RetryFrames` and `-Bios2` to the sweep; 1,473 tests pass |
+| 2026-11-01 | VID-06 | Overscan crop | Added `AppSettings.OverscanPixels` (0-32), `VdlFrame.CopyCroppedFrom`, presentation/native-screenshot crop, and Settings > Video > **Overscan crop**. The crop is presentation-only and keeps frame hashes/input/states unchanged. VID-06 is partial for per-game presets, void patterns, and custom per-edge crops; 1,473 tests pass |
+| 2026-11-01 | CORE-09 | 4DO/Opera fix parity audit | Added `docs/FixParity.md`: every 4DO `FIX_BIT_*` is mapped or explicitly retired. Timing-6 (Alone in the Dark) and GraphicsStepY (Samurai Shodown) are replaced by generic CEL models, with byte-identical forced-bit evidence. `GameCompatibilityTests` locks every ID; 1,473 tests pass |
+| 2026-11-01 | SYS-20 | Redump DAT matching | Added `RedumpDat` (Redump/No-Intro XML parser with hash normalization) and `DiscHealth` (native-track CRC-32/MD5/SHA-1 matching). `disc verify --dat <path>` reports the matched game/ROM and exits 1 on a mismatch. Synthetic ISO/DAT evidence matched and a one-byte change failed; 1,473 tests pass |
+| 2026-11-01 | SYS-18, UX-20 | Full per-game profile fields | Extended `GameProfile` with BIOS MD5, fix mask, filter, high-resolution, six input devices, and NVRAM mode/version. `CreateEffectiveForGame` deep-copies overrides before applying; the desktop uses effective BIOS/fix/input/filter/high-res/NVRAM and the CLI applies profile fix/high-res. SYS-18/UX-20 remain partial for cheats, inherit/reset, and live application; 1,473 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -4332,13 +4341,13 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
 - Auto BIOS selection (SYS-04), BIOS-driven region selection (SYS-03), automatic fix masks, and per-game NVRAM (SYS-14) already cover the default path.
 - `GameControlDefaults` seeds a per-game PBUS device override for known lightgun/arcade titles (Crime Patrol, Mad Dog II, Who Shot Johnny Rock, The Last Bounty Hunter, Shootout at Old Tucson, Space Pirates, Drug Wars) and Orbatak trackball titles when `AutoInputDevices` is on.
 - `InputDeviceOverrides` persists six-device lists per game ID; `ResolveInputDevices`/`ApplyInputDevices(input, gameId)` honor them, and Settings > Emulation has a **Override input devices for this game** control.
-- `GameProfile` stores timing, region, CD speed, CPU multiplier, and CD-DA volume/mute. Settings > Emulation can save/delete/import/export the profile for the current disc.
-- `AppSettings.CreateEffectiveForGame` applies a stored profile at machine creation without mutating the live settings.
-- CLI `run/trace --game-profile <json>` uses the profile as the timing/region baseline before explicit flags.
+- `GameProfile` stores timing, region, CD speed, CPU multiplier, CD-DA volume/mute, BIOS MD5, fix mask, video filter, high-resolution mode, six PBUS devices, and NVRAM mode/version. Settings > Emulation can save/delete/import/export the profile for the current disc.
+- `AppSettings.CreateEffectiveForGame` deep-copies the override maps and applies the profile at machine creation without mutating the live settings. The desktop uses the effective settings for BIOS selection, fix mode, input devices, the renderer filter, high-resolution mode, and the NVRAM store.
+- CLI `run/trace --game-profile <json>` uses the profile as the timing/region/fix/high-resolution baseline before explicit flags.
 - Auto seeding is user-replaceable: an existing override or profile is never replaced.
 
 **Remaining.**
-- Extend `GameProfile` with BIOS/fix/filter/high-resolution/cheat fields and automatic DB-driven population.
+- Cheat fields/list in the profile and automatic DB-driven population.
 - Apply profile changes to an already-running machine (or prompt for restart).
 - Game-database fields for region/revision/fix/BIOS (SYS-17).
 
@@ -5403,13 +5412,13 @@ hotkey roundtrip.
 **Problem.** Only fix/filter overrides.
 
 **Implemented.**
-- Settings > Emulation edits a stored timing/CD-DA profile for the current game: ARM/CLIO/CEL/CD timing, CD speed, CPU multiplier, region, profile label, and CD-DA volume/mute.
+- Settings > Emulation edits a stored profile for the current game: ARM/CLIO/CEL/CD timing, CD speed, CPU multiplier, region, profile label, CD-DA volume/mute, BIOS MD5, fix mask, video filter, high-resolution mode, six PBUS devices, and NVRAM mode/version.
 - Save, Delete, Import JSON, and Export JSON actions; imported values populate the controls and are normalized/clamped.
-- `run/trace --game-profile <json>` applies the same profile headlessly before explicit options.
+- `run/trace --game-profile <json>` applies the timing/region/fix/high-resolution values headlessly before explicit options; the desktop applies the full profile at machine creation.
 - The profile is used when the machine is created; the dialog states that a restart is required for an already-running machine.
 
 **Remaining.**
-- BIOS/fix/filter/high-resolution/shader/cheat fields in the profile.
+- Cheat/shader-chain fields in the profile.
 - Inherit/reset controls per field.
 - Applying a changed profile to the current machine without a restart.
 

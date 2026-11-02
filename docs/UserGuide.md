@@ -449,8 +449,9 @@ instance. `FIVEDO_ALLOW_MULTIPLE=1` bypasses the lock for automation.
 - Optional offline library metadata: `%LOCALAPPDATA%\5DO\library-metadata.json`.
 
 **Settings > Emulation > Game profile** saves the current timing, CPU clock, region,
-and CD-DA options for the disc, or imports/exports the profile as JSON. A stored profile
-is applied the next time the machine is created. Per-game fix-mode overrides, automatic
+CD-DA, BIOS, fix, filter, high-resolution, input-device, and NVRAM choices for the disc,
+or imports/exports the profile as JSON. A stored profile is applied the next time the
+machine is created; the dialog states when a restart is required. Per-game fix-mode overrides, automatic
 4DO fixes, audio enable/volume, high-resolution
 mode, the timing profile, ARM/CLIO/CEL/CD timing, CD speed, NVRAM storage/version,
 save/screenshot paths, input bindings, and the current slot are stored there.

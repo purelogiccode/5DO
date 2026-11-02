@@ -99,7 +99,7 @@ every serialized property in `AppSettings`.
 | `AutoGameFixes` | bool | `true` | Apply the 4DO per-game fix-mode mapping automatically. |
 | `FixModeOverrides` | object | `{}` | Per-game fix-mode overrides, keyed by game ID. |
 | `FilterOverrides` | object | `{}` | Per-game filter overrides, keyed by game ID. |
-| `GameProfiles` | object | `{}` | Per-game timing and CD-DA profile snapshots, keyed by game ID. Each entry holds `Profile`, `Region`, `ArmTiming`, `ClioTimers`, `CelTiming`, `CdromTiming`, `CdSpeed`, `CpuClockMultiplier`, `CdAudioVolume`, and `CdAudioMuted`. |
+| `GameProfiles` | object | `{}` | Per-game profile snapshots, keyed by game ID. Each entry holds `Profile`, `Region`, `ArmTiming`, `ClioTimers`, `CelTiming`, `CdromTiming`, `CdSpeed`, `CpuClockMultiplier`, `CdAudioVolume`, `CdAudioMuted`, `BiosMd5`, `FixMode`, `Filter`, `HighResolution`, `InputDevices`, `NvramStorageMode`, and `NvramVersion`. |
 | `Filter` | enum string | `"SharpBilinear"` | Global presentation filter. |
 | `FrameSkip` | enum string | `"Auto"` | Presentation frame-skip policy: `Off`, `Auto`, `OneInTwo`, `OneInThree`, `OneInFour`, or `OneInFive`. Only presentation is skipped; emulation and audio always run every frame. |
 | `Aspect` | enum string | `"FourThree"` | Aspect policy. |
@@ -477,13 +477,16 @@ Filter resolution:
 matches the first eight uppercase characters; see
 [`Compatibility.md`](Compatibility.md) section 5 for the known titles.
 
-`GameProfiles` stores a per-game timing/CD-DA snapshot keyed by game ID. `GetGameProfile`
-and `SetGameProfile` normalize the key case-insensitively; `ApplyGameProfile(gameId)`
-copies the snapshot into the live settings, and `CreateEffectiveForGame(gameId)` returns
-a copy for machine creation without mutating live settings. Settings > Emulation edits,
-saves, deletes, imports, and exports the current game's profile; `run/trace
---game-profile` applies one headlessly. `RegionOverrides` pins a disc to
-NTSC/PAL1/PAL2 and wins over the automatic/global region choice. `settings validate [path]` reports syntax and schema version;
+`GameProfiles` stores a per-game snapshot keyed by game ID. `GetGameProfile` and
+`SetGameProfile` normalize the key case-insensitively; `ApplyGameProfile(gameId)` copies
+the snapshot into the live settings, and `CreateEffectiveForGame(gameId)` deep-copies the
+override maps and returns a machine-creation snapshot without mutating live settings. The
+snapshot covers timing, region, CD speed, CPU clock, CD-DA, BIOS MD5, fix mask, video
+filter, high-resolution mode, six PBUS devices, and NVRAM mode/version. Settings >
+Emulation edits, saves, deletes, imports, and exports the current game's profile;
+`run/trace --game-profile` applies the timing/region/fix/high-resolution values
+headlessly. `RegionOverrides` pins a disc to NTSC/PAL1/PAL2 and wins over the
+automatic/global region choice. `settings validate [path]` reports syntax and schema version;
 `settings migrate [path]` normalizes a file and rewrites it at the current version.
 
 The Settings dialog's **Emulation** page edits:

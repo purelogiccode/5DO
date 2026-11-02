@@ -577,7 +577,35 @@ public partial class SettingsWindow : Window
 
     private GameProfile CaptureProfile()
     {
-        GameProfile profile = GameProfile.FromSettings(_settings);
+        GameProfile profile = GameProfile.FromSettings(_settings, _gameId);
+        profile.BiosMd5 = BiosOverrideCombo.SelectedItem is BiosOverrideOption { Md5: { } biosMd5 }
+            ? biosMd5
+            : string.Empty;
+        profile.FixMode = null;
+        var fixText = FixModeBox.Text?.Trim();
+        if (!string.IsNullOrWhiteSpace(fixText) && TryParseFixMode(fixText, out FixMode fixMode))
+        {
+            profile.FixMode = fixMode;
+        }
+
+        profile.Filter = FilterOverrideCombo.SelectedItem is VideoFilter filter ? filter : null;
+        profile.HighResolution = HighResCheck.IsChecked;
+        profile.InputDevices = PerGameInputCheck.IsChecked == true
+            ? GetInputDeviceNames()
+            : [];
+        profile.NvramStorageMode = NvramStorageCombo.SelectedItem is NvramStorageOption nvramStorage
+            ? nvramStorage.Value
+            : null;
+        if (int.TryParse(
+                NvramVersionBox.Text?.Trim(),
+                NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out var nvramVersion)
+            && nvramVersion is >= NvramLayout.MinVersion and <= NvramLayout.MaxVersion)
+        {
+            profile.NvramVersion = nvramVersion;
+        }
+
         profile.Profile = ProfileCombo.SelectedItem is ProfileOption profileOption
             ? profileOption.Value
             : EmulationProfile.Custom;
@@ -639,11 +667,98 @@ public partial class SettingsWindow : Window
             CpuClockBox.Text = profile.CpuClockMultiplier.ToString("0.###", CultureInfo.InvariantCulture);
             CdVolumeSlider.Value = Math.Clamp(profile.CdAudioVolume, 0, 1);
             CdMuteCheck.IsChecked = profile.CdAudioMuted;
+            SelectBiosOverride(profile.BiosMd5);
+            FixModeBox.Text = profile.FixMode is { } fix
+                ? $"0x{(uint)fix:x}"
+                : string.Empty;
+            FilterOverrideCombo.SelectedItem = profile.Filter is { } filter
+                ? filter
+                : "Automatic";
+            HighResCheck.IsChecked = profile.HighResolution ?? _settings.HighResolution;
+            if (profile.InputDevices.Count > 0)
+            {
+                SetInputDevices(profile.InputDevices.ToArray());
+            }
+            else
+            {
+                PopulateInputDevices(_settings, _gameId);
+            }
+
+            NvramStorageCombo.SelectedItem = _nvramStorageOptions.FirstOrDefault(
+                    option => option.Value == (profile.NvramStorageMode ?? _settings.NvramStorageMode))
+                ?? _nvramStorageOptions[0];
+            NvramVersionBox.Text = (profile.NvramVersion ?? _settings.NvramVersion)
+                .ToString(CultureInfo.InvariantCulture);
         }
         finally
         {
             _initializing = false;
         }
+    }
+
+    private void SelectBiosOverride(string? md5)
+    {
+        var options = (BiosOverrideCombo.ItemsSource as IEnumerable<BiosOverrideOption>)?.ToList()
+            ?? [new BiosOverrideOption(null, "Automatic (region-based)")];
+        if (!string.IsNullOrWhiteSpace(md5)
+            && !options.Exists(option => string.Equals(option.Md5, md5, StringComparison.OrdinalIgnoreCase)))
+        {
+            options.Add(new BiosOverrideOption(md5, $"Saved override ({md5[..Math.Min(8, md5.Length)]})"));
+        }
+
+        BiosOverrideCombo.ItemsSource = options;
+        BiosOverrideCombo.SelectedItem = options.FirstOrDefault(
+                option => string.Equals(option.Md5, md5, StringComparison.OrdinalIgnoreCase))
+            ?? options[0];
+    }
+
+    private string[] GetInputDeviceNames()
+    {
+        ComboBox[] combos =
+        [
+            InputDevice1Combo,
+            InputDevice2Combo,
+            InputDevice3Combo,
+            InputDevice4Combo,
+            InputDevice5Combo,
+            InputDevice6Combo,
+        ];
+        var devices = new string[combos.Length];
+        for (var i = 0; i < combos.Length; i++)
+        {
+            devices[i] = (combos[i].SelectedItem is InputDeviceOption option
+                    ? option.Value
+                    : InputDeviceType.Joypad)
+                .ToString();
+        }
+
+        return devices;
+    }
+
+    private void SetInputDevices(string[] devices)
+    {
+        ComboBox[] combos =
+        [
+            InputDevice1Combo,
+            InputDevice2Combo,
+            InputDevice3Combo,
+            InputDevice4Combo,
+            InputDevice5Combo,
+            InputDevice6Combo,
+        ];
+        for (var i = 0; i < combos.Length; i++)
+        {
+            InputDeviceType device = i < devices.Length
+                && Enum.TryParse(devices[i], ignoreCase: true, out InputDeviceType parsed)
+                    ? parsed
+                    : InputDeviceType.Joypad;
+            combos[i].ItemsSource = _inputDeviceOptions;
+            combos[i].SelectedItem = _inputDeviceOptions.FirstOrDefault(option => option.Value == device)
+                ?? _inputDeviceOptions[0];
+        }
+
+        PerGameInputCheck.IsChecked = true;
+        PerGameInputCheck.IsEnabled = !string.IsNullOrWhiteSpace(_gameId);
     }
 
     private void UpdateGameProfileStatus()

@@ -884,9 +884,16 @@ public sealed class AppSettings
     public AppSettings CreateEffectiveForGame(string? gameId)
     {
         var copy = (AppSettings)MemberwiseClone();
+        // MemberwiseClone shares the override dictionaries. Applying a profile updates
+        // those dictionaries, so give the copy its own maps before touching them.
+        copy.BiosOverrides = new Dictionary<string, string>(BiosOverrides, StringComparer.Ordinal);
+        copy.FixModeOverrides = new Dictionary<string, FixMode>(FixModeOverrides, StringComparer.Ordinal);
+        copy.FilterOverrides = new Dictionary<string, VideoFilter>(FilterOverrides, StringComparer.Ordinal);
+        copy.RegionOverrides = new Dictionary<string, VideoRegion>(RegionOverrides, StringComparer.Ordinal);
+        copy.InputDeviceOverrides = new Dictionary<string, IList<string>>(InputDeviceOverrides, StringComparer.Ordinal);
         if (GetGameProfile(gameId) is { } profile)
         {
-            profile.ApplyTo(copy);
+            profile.ApplyTo(copy, gameId);
         }
 
         return copy;
@@ -946,7 +953,7 @@ public sealed class AppSettings
             return false;
         }
 
-        profile.ApplyTo(this);
+        profile.ApplyTo(this, gameId);
         return true;
     }
 
@@ -1021,9 +1028,10 @@ public sealed class AppSettings
     /// <returns>A validated renderer settings record.</returns>
     public RendererSettings ToRendererSettings(string? gameId = null)
     {
+        AppSettings effective = CreateEffectiveForGame(gameId);
         var settings = new RendererSettings
         {
-            Filter = ResolveFilter(gameId),
+            Filter = effective.ResolveFilter(gameId),
             Aspect = Aspect,
             CustomAspect = CustomAspect,
             Vsync = Vsync,

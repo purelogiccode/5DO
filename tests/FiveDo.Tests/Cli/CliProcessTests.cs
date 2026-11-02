@@ -501,7 +501,9 @@ public sealed class CliProcessTests
                   "CdSpeed": "X8",
                   "CpuClockMultiplier": 1.5,
                   "CdAudioVolume": 0.8,
-                  "CdAudioMuted": false
+                  "CdAudioMuted": false,
+                  "FixMode": "BitTiming5",
+                  "HighResolution": true
                 }
                 """);
 
@@ -510,7 +512,7 @@ public sealed class CliProcessTests
                 "--bios",
                 biosPath,
                 "--frames",
-                "0",
+                "1",
                 "--game-profile",
                 profilePath,
                 "--json");
@@ -521,6 +523,8 @@ public sealed class CliProcessTests
             Assert.Contains("\"cdSpeed\": \"X8\"", result.Output, StringComparison.Ordinal);
             Assert.Contains("\"cpuClock\": 18750000", result.Output, StringComparison.Ordinal);
             Assert.Contains("\"region\": \"Pal1\"", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"fixMode\": 16", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"sourceHeight\": 576", result.Output, StringComparison.Ordinal);
         }
         finally
         {

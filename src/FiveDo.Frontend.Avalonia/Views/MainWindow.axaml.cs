@@ -1038,27 +1038,28 @@ public partial class MainWindow : Window, IDisposable
             var disc = DiscImageFactory.Open(path);
             var gameId = disc.SectorCount >= 2 ? GameId.Compute(disc) : string.Empty;
             var record = gameId.Length == 0 ? null : GameDatabase.Default.FindByChecksum(gameId);
-            var machine = _machine ?? CreateMachine(gameId);
             var autoDevices = gameId.Length > 0
                 && _settings.EnsureAutoInputDeviceOverride(
                     gameId,
                     record?.Name ?? Path.GetFileNameWithoutExtension(path));
+            AppSettings effective = _settings.CreateEffectiveForGame(gameId);
+            var machine = _machine ?? CreateMachine(gameId);
             if (gameId.Length > 0)
             {
-                _settings.ApplyInputDevices(_input, gameId);
+                effective.ApplyInputDevices(_input, gameId);
             }
 
             if (autoDevices)
             {
                 ShowOsd(
-                    $"Auto input: {Path.GetFileNameWithoutExtension(path)} uses {_settings.ResolveInputDevices(gameId)[0]}.");
+                    $"Auto input: {Path.GetFileNameWithoutExtension(path)} uses {effective.ResolveInputDevices(gameId)[0]}.");
             }
 
-            var fixMode = _settings.ResolveFixMode(gameId);
+            var fixMode = effective.ResolveFixMode(gameId);
             ResolvedBios resolved;
             try
             {
-                resolved = BiosResolver.Resolve(_settings, gameId, record, path);
+                resolved = BiosResolver.Resolve(effective, gameId, record, path);
             }
             catch
             {
@@ -3678,7 +3679,7 @@ public partial class MainWindow : Window, IDisposable
         }
         var discPath = _settings.DiscPath;
         GameRecord? record = _gameId.Length == 0 ? null : GameDatabase.Default.FindByChecksum(_gameId);
-        ResolvedBios resolved = BiosResolver.Resolve(_settings, _gameId, record, discPath);
+        ResolvedBios resolved = BiosResolver.Resolve(_settings.CreateEffectiveForGame(_gameId), _gameId, record, discPath);
         if (!resolved.HasPrimary || !File.Exists(resolved.PrimaryPath))
         {
             StatusText.Text = $"Reload the BIOS to apply the emulation mode: {resolved.Reason}";
@@ -4557,7 +4558,7 @@ public partial class MainWindow : Window, IDisposable
     {
         try
         {
-            return _settings.CreateNvramStore(gameId);
+            return _settings.CreateEffectiveForGame(gameId).CreateNvramStore(gameId);
         }
         catch (ArgumentException)
         {
