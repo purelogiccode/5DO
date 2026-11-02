@@ -84,8 +84,9 @@ The repository is public. The following protections are enabled:
 - **No secrets or copyrighted disc data** are committed to the repository.
 - **Builds and packaging** run in GitHub Actions from the repository source.
 
-Repository administrators should keep branch protection or a ruleset on `master`
-requiring the CI, docs, CodeQL, and dependency-review checks before merge.
+Branch protection on `master` requires the CI, docs, CodeQL, and dependency-review
+checks before merge, requires an approving review, and blocks force-pushes and branch
+deletion. Repository administrators retain a bypass for emergency maintenance.
 
 ## Supported platforms
 
