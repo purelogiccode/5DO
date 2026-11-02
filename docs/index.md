@@ -16,8 +16,8 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "v1.0 documented compatibility"
-    5DO is at the v1.0 documented-compatibility release stage. Windows x64 is the
+!!! important "v1.1 documented compatibility"
+    5DO is at the v1.1 documented-compatibility release stage. Windows x64 is the
     validated platform; Linux x64 full suite passed (GPU presentation is
     preview/best-effort). No BIOS ROMs, game images, or extracted game assets are
     distributed here; supply legally obtained files.
@@ -138,7 +138,7 @@ the remaining work.
 - [Status](Status.md) — current position, completion estimate, and next steps.
 - [Roadmap](Roadmap.md) — concise milestone summary.
 - [Implementation plan](ImplementationPlan.md) — master maintainer checklist and progress log.
-- [Release checklist](ReleaseChecklist.md) — v1.0 scope and gates.
+- [Release checklist](ReleaseChecklist.md) — v1.1 scope and gates.
 - [Release legal review](ReleaseLegalReview.md) — attribution and distribution decisions.
 - [OpenAL Soft notice](OpenALSoft.md) — LGPL notice, source offer, and relinking rights.
 - [Test corpus](TestCorpus.md) — machine-specific BIOS/disc evidence commands (not committed assets).
