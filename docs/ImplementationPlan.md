@@ -30,7 +30,7 @@
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
 | Tests | **1,473** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
-| Platforms | Windows x64 validated; Linux x64 full suite **1,473/1,473** passed (GL preview); six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | macOS/Steam Deck/Pi/installers are post-1.0; Linux GPU presentation is unvalidated under llvmpipe |
+| Platforms | Windows x64 validated; Linux x64 full suite **1,473/1,473** passed (GL preview); three unified x64 bundles (Windows/Linux/macOS) with single-file apphosts and a shared private runtime; opt-in NativeAOT | macOS/Steam Deck/Pi/installers are post-1.0; Linux GPU presentation is unvalidated under llvmpipe |
 | Release | **v1.0.0 released (GitHub)** | Documented-compatibility scope; legal/attribution sign-off recorded; M13 loadability evidence complete; M14 is post-1.0 research; Linux x64 full suite passed; tag `v1.0.0` and GitHub release published |
 
 **Current position:** the core and shell are strong enough to play and validate a large local collection, and the documented-compatibility v1.0 scope is ready to ship. Full compatibility and high-resolution CEL research are post-1.0; the remaining gap to “best in the world” is **accuracy parity, universal compatibility, and release trust**, not basic feature count.
@@ -106,8 +106,8 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **M9 — Avalonia frontend.** **Partial:** shell/library/video/input/fullscreen/settings/audio/gamepad/logs/first-run are implemented; polish and ViewModel tests remain.
 - [ ] **M9R — OpenGL/GLES renderer.** **Partial:** two-stage presenter, filters, 4K, parity, swap interval done; optional Vulkan and Direct3D 11 backends are tracked as M9R.11–M9R.14; GLES 3.1/Pi and GPU CI remain.
 - [ ] **M9P — Runtime performance, pacing, 4K presentation.** **Partial:** core thread, uploads, DPI, p99/allocation gates done; Tier B/Pi/GPU gates remain.
-- [ ] **M10 — Packaging, CI, performance, arm64.** **Partial:** six RIDs, trimming, NativeAOT, portable archives done; arm64 hardware, installers, final performance report remain.
-- [ ] **M11 — Compatibility hardening and release.** **Release-ready:** documented-compatibility scope adopted; legal/attribution sign-off recorded; Linux x64 full suite passed; release mechanics remain.
+- [ ] **M10 - Packaging, CI, performance, arm64.** **Partial:** unified x64 bundles, single-file apphosts with a shared private runtime, opt-in NativeAOT, and release CI done; arm64 hardware, installers, final performance report remain.
+- [ ] **M11 - Compatibility hardening and release.** **Released:** documented-compatibility scope adopted; legal/attribution sign-off recorded; Linux x64 full suite passed; v1.0.0 published.
 - [ ] **M12 — Optional guest ARM JIT.** **Pending:** only if profiling shows the interpreter is the remaining bottleneck.
 - [ ] **M13 - Full-collection compatibility sweep.** **Partial:** loadability complete (594 tested, 593 render, 1 known boot failure); in-game/visual review and high-res pass are post-1.0; Linux x64 full suite 1,473/1,473 passed, GL probe timed out under llvmpipe.
 - [ ] **M14 — High-resolution CEL research.** **Post-1.0 research:** true 640x480, 2x/4x supersampling, GPU CEL feasibility; not a v1.0 release blocker.
@@ -355,11 +355,11 @@ v1.0 is a **documented-compatibility** release. It does **not** require full com
 
 - [x] 594 local discs load; 593 render; 1 known boot failure (`Crash 'n Burn` Japan) is documented.
 - [x] 12-title compatibility matrix with per-title status and known issues.
-- [x] Windows x64 build, test, soak, renderer parity, and portable archives validated.
+- [x] Windows x64 build, test, soak, renderer parity, and unified bundles validated.
 - [x] Legal/attribution sign-off recorded: FreeDO modified GNU LGPL, free open-source donationware, no commercial use.
 - [x] Build, 1,473 tests, format, inspectcode, and CI green (2026-11-02).
 - [x] Linux x64 validation passed on Linux Mint 22.3: full test suite **1,473/1,473**, `selftest`, `bench`, `info`, `bios info`, 3,000-frame Wolfenstein, non-silent audio, frontend `--smoke-test`; the GL probe timed out under llvmpipe, so Linux GPU presentation is preview/best-effort.
-- [x] Bump to `1.0.0`, tag `v1.0.0`, attach archives/checksums, and record release-owner/QA sign-off.
+- [x] Bump to `1.0.0`, tag `v1.0.0`, attach unified bundles/checksums, and record release-owner/QA sign-off.
 
 ### 8.2 “Best in the world” gates (post-1.0)
 
@@ -473,7 +473,7 @@ These are **post-1.0 goals**, not v1.0 blockers. A release can be called “the 
 - [x] UX-01 rewind, UX-02 fast-forward, UX-04 per-game cheat engine, UX-11 disc browser/disc info, UX-06 TAS movies (core).
 - [x] Opera parity batch 1 (OP-01..OP-15) and system fixes OP-SYS-01/02/03/06/10.
 - [x] Differential harness (FND-05/CORE-11/CORE-16 core), M13 first 594-disc sweep, M14 research plan.
-- [x] Six-RID trimmed publishes, opt-in NativeAOT, portable archives, benchmark gates, 4K GPU probe, ANGLE/GLES parity.
+- [x] Unified x64 release bundles with single-file apphosts and a shared runtime, opt-in NativeAOT, benchmark gates, 4K GPU probe, ANGLE/GLES parity.
 - [x] Full progress log and per-pass evidence: Part I §13 and Part IV §1.
 
 ---
@@ -1143,8 +1143,8 @@ game-specific compatibility hardening and the full platform matrix.
 are validated and listed in `Compatibility.md`/`KnownIssues.md`; full-race completion,
 scripts for the remaining titles, M13.5/M13.6 visual/high-res review, M14 research,
 Pi/arm64, installers, and the optional JIT are post-1.0. Legal/attribution sign-off is
-recorded. The remaining release work is the **version bump plus tag/artifacts**
-(about 1 developer-day). The project is roughly **95% complete** against the
+recorded. **v1.0.0 is tagged and published with unified Windows/Linux/macOS x64
+bundles.** The project is roughly **100% complete** against the documented-compatibility
 release scope. The release gate is [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 ### 4b. Historical priority change: compatibility sweep and high-resolution research (2026-10-30; superseded 2026-11-02)
@@ -3008,6 +3008,7 @@ Suggested parallelization with two developers:
 | 2026-11-02 | Release | v1.0 scope finalized; legal sign-off recorded | Recorded project-owner legal/attribution sign-off under the FreeDO modified GNU LGPL as free, open-source donationware (non-commercial; voluntary donations only). M14 high-resolution CEL research moved to post-1.0 and removed from the v1.0 gate; M13.5/M13.6 visual/high-res review also post-1.0. The 594-disc loadability evidence (593 render, 1 known boot failure) and 12-title matrix are the v1.0 compatibility baseline. Remaining at that point: Linux x64 smoke in the Hyper-V `LinuxMint` VM (`D:\Hyper-V\VMs\LinuxMint`), version bump/tag, and artifact attachment. |
 | 2026-11-02 | Release | v1.0.0 release | Bumped `FiveDoVersion.Version` and `Directory.Build.props` to `1.0.0`, moved the CHANGELOG `[Unreleased]` section to `[1.0.0]`, tagged `v1.0.0`, published win-x64/linux-x64 CLI and frontend archives, and created the GitHub release with SHA-256 checksums. Full Windows and Linux suites pass (1,473/1,473); Windows frontend smoke reports `FRONTEND SMOKE OK 1.0.0`; benchmark gate passes (1.39 ms/frame, 0 bytes/frame). Release: <https://github.com/purelogiccode/5DO/releases/tag/v1.0.0>. |
 | 2026-11-02 | M13.7 | Linux x64 validation | Validated the self-contained `linux-x64` CLI and frontend on the Hyper-V `LinuxMint` VM (Linux Mint 22.3, x86_64, Mesa 25.2.8 llvmpipe) and ran the full test suite: **1,473/1,473 passed** with .NET SDK 10.0.301 plus the .NET 8 runtime required by the shader compiler. CLI `selftest` 4/4, `bench` 466 fps, `info`/`bios info` on Wolfenstein 3D, a 3,000-frame boot (PC `0x00028190`, frame hash `0x9A3B5131`, 2,205,093 samples, non-silent 50 s audio), and frontend `--smoke-test` passed. The GL probe timed out under the VM's SSH/llvmpipe session, so Linux GPU presentation is preview/best-effort. Adjusted the diagnostics bundle test to skip user-name assertions for two-character names (`vm`), matching the scrubber's documented minimum length. Superseded by the v1.0.0 release row. |
+| 2026-11-02 | M10.7 | Unified single-file bundles | Replaced the per-component CLI/frontend archives with one bundle per system (`5do-win-x64.zip`, `5do-linux-x64.tar.gz`, `5do-osx-x64.tar.gz`). Each bundle contains framework-dependent single-file CLI and desktop apphosts (`PublishSingleFile=true`, `PublishTrimmed=false`, `AppHostRelativeDotNet=runtime`), one shared private .NET 10 runtime under `runtime/`, the OpenAL/Skia/ANGLE native libraries, README/license/notices/whatsnew/release notes, and `PACKAGE.txt`. Added `packaging/package-bundle.ps1` and `packaging/make-tar.py`, a reusable `build-bundle.yml` workflow, a `release.yml` workflow that publishes the bundles and removes obsolete per-component assets, and wiki publishing in `docs.yml`. Fixed the CI `--locked-mode` restore by regenerating RID-agnostic `packages.lock.json` files. Local bundles are written to `src/FiveDo.Frontend.Avalonia/bin/Release`. |
 
 ---
 

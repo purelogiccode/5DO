@@ -14,48 +14,62 @@ what was verified, and the decisions recorded for the public v1.0 release.
 
 ## 1. What the release contains
 
-The portable archives contain only:
+The release is **one bundle per system**: `5do-win-x64.zip`,
+`5do-linux-x64.tar.gz`, and `5do-osx-x64.tar.gz`. Each bundle contains only:
 
-- the published CLI or frontend binaries and their runtime dependencies,
+- the single-file CLI and desktop apphosts and their native dependencies,
+- one private .NET 10 runtime under `runtime/` (not embedded in either apphost),
 - `README.md`,
+- `whatsnew.md`,
 - `LICENSE`,
 - `THIRD-PARTY-NOTICES.md`,
 - `docs/Licensing.md`,
 - `docs/OpenALSoft.md` (OpenAL Soft notice, source offer, and relinking rights),
 - `docs/licenses/OpenAL-Soft-COPYING.txt` (the LGPL-2.0 license text),
 - `PACKAGE.txt`,
-- the Linux `.desktop` entry for Linux packages.
+- the release notes,
+- `runtime/LICENSE.txt` and `runtime/ThirdPartyNotices.txt` for the .NET runtime,
+- the Linux `.desktop` entry for the Linux bundle.
 
 They do **not** contain `References/`, `artifacts/`, `bios/`, test corpora, disc
-images, BIOS ROMs, extracted assets, screenshots, or WAV captures.
+images, BIOS ROMs, extracted assets, screenshots, WAV captures, or any FreeDO/4DO/
+Opera reference binary.
 
 ## 2. Verification performed
 
 - [x] `git ls-files` contains no `.bin`, `.chd`, `.iso`, `.cue`, `.wav`, `.rom`,
       `.3do`, `.png`, or `.jpg` files.
 - [x] `bios/` and `artifacts/` are ignored by `.gitignore` and are not copied by
-      `packaging/package.ps1`.
+      `packaging/package-bundle.ps1`.
 - [x] The root `LICENSE` records the FreeDO modified GNU LGPL: the FreeDO notice is
       reproduced verbatim, the GNU LGPL 2.1 text is included, and the additional terms
-      are carried forward. `packaging/package.ps1` copies `LICENSE` into each archive.
+      are carried forward. `packaging/package-bundle.ps1` copies `LICENSE` into each
+      bundle.
 - [x] `THIRD-PARTY-NOTICES.md` covers FreeDO, 4DO, Opera/libopera, xBR-lv2, HQx,
       CHDSharp, Avalonia, CommunityToolkit.Mvvm,
       Microsoft.Extensions.*, System.CommandLine, Silk.NET/OpenAL/Vulkan,
-      XenoAtom.ShaderCompiler.Build, xUnit, BenchmarkDotNet, and the now-bundled
-      OpenAL Soft 1.23.1 runtime.
-- [x] The OpenAL Soft native runtime is included for all six RIDs through
-      `Silk.NET.OpenAL.Soft.Native`; Windows copies `soft_oal.dll` as `OpenAL32.dll`.
-      This adds an LGPL-2.0-or-later binary-distribution obligation to the release.
-      `docs/OpenALSoft.md` records the notice, the exact upstream 1.23.1 source,
-      the three-year written source offer, and the relinking/replacement
+      XenoAtom.ShaderCompiler.Build, xUnit, BenchmarkDotNet, the .NET 10 runtime, and
+      the bundled OpenAL Soft 1.23.1 runtime.
+- [x] The OpenAL Soft native runtime is included in the Windows, Linux, and macOS x64
+      bundles through `Silk.NET.OpenAL.Soft.Native`; Windows copies `soft_oal.dll` as
+      `OpenAL32.dll`. This adds an LGPL-2.0-or-later binary-distribution obligation to
+      the release. `docs/OpenALSoft.md` records the notice, the exact upstream 1.23.1
+      source, the three-year written source offer, and the relinking/replacement
       instructions; `docs/licenses/OpenAL-Soft-COPYING.txt` contains the complete
-      LGPL-2.0 text. Both files are copied into every portable archive by
-      `packaging/package.ps1`.
+      LGPL-2.0 text. Both files are copied into every bundle by
+      `packaging/package-bundle.ps1`. The native library stays outside the single-file
+      apphosts, so users can replace it.
+- [x] The private .NET 10 runtime is staged once under `runtime/` and shared by both
+      apphosts; it is not embedded in either executable. The bundle includes the
+      runtime's `LICENSE.txt` and `ThirdPartyNotices.txt`. The .NET runtime is MIT
+      licensed and is listed in `THIRD-PARTY-NOTICES.md`.
 - [x] The desktop About dialog reports the version, renderer state, and the
       FreeDO modified GNU LGPL notice, and states that no BIOS ROMs or game images are
       included.
 - [x] The CLI prints the product/version and does not bundle BIOS/disc content.
 - [x] FreeDO/4DO/Opera source headers and attribution remain in the repository.
+- [x] The bundles contain no `References/` file, no FreeDO/4DO/Opera binary, and no
+      BIOS ROM, disc image, extracted asset, screenshot, or WAV capture.
 
 ## 3. Decisions and residual risks
 
@@ -102,7 +116,9 @@ Owner/legal review is signed off (2026-11-02). Keep the following practices:
   (non-commercial, source-available) builds; donations are voluntary and do not grant
   commercial rights,
 - keep full FreeDO/4DO/Opera attribution in the README, About box, and release notes,
-- ship the portable archives only, with no installers or store listings,
+- ship the unified bundles only, with no installers or store listings,
+- keep the private .NET runtime's license files and the OpenAL Soft notice in every
+  bundle,
 - do not describe the build as an officially licensed 3DO product.
 
 The engineering side of the release gate is tracked in
@@ -115,4 +131,5 @@ attribution portion.
 |---|---|---|
 | Release owner | Project owner (purelogiccode) | 2026-11-02 |
 | Legal / distribution | Approved: FreeDO modified GNU LGPL, donationware | 2026-11-02 |
-| Attribution check | FreeDO/4DO/Opera, OpenAL Soft, CHDSharp, HQx, and NuGet notices shipped | 2026-11-02 |
+| Attribution check | FreeDO/4DO/Opera, OpenAL Soft, .NET, CHDSharp, HQx, and NuGet notices shipped | 2026-11-02 |
+| Bundle layout | Single-file CLI + desktop app, one shared private runtime | 2026-11-02 |

@@ -43,7 +43,7 @@ version. The upstream source headers carry the following notice:
 
 The complete LGPL-2.0 text is reproduced in
 [`licenses/OpenAL-Soft-COPYING.txt`](licenses/OpenAL-Soft-COPYING.txt). It is
-copied into every portable archive by `packaging/package.ps1`.
+copied into every release bundle by `packaging/package-bundle.ps1`.
 
 ## 3. Corresponding source offer
 
@@ -74,8 +74,7 @@ The OpenAL Soft library is a separate shared library, not statically linked into
 the 5DO executable. A user may replace the bundled library with a compatible
 OpenAL Soft build (including a modified build) without rebuilding 5DO:
 
-1. Locate the runtime file listed in section 1 beside the CLI or frontend
-   executable.
+1. Locate the runtime file listed in section 1 beside the CLI and desktop apphosts.
 2. Replace it with a compatible build of OpenAL Soft (same ABI and major/minor
    library name).
 3. Start 5DO normally. The loader resolves the replacement at process startup.
@@ -89,7 +88,7 @@ emulator does not ship a statically linked OpenAL implementation.
 
 ## 5. Package contents
 
-Every portable archive built by `packaging/package.ps1` includes:
+Every release bundle built by `packaging/package-bundle.ps1` includes:
 
 - `docs/OpenALSoft.md` (this notice and source offer),
 - `docs/licenses/OpenAL-Soft-COPYING.txt` (the LGPL-2.0 text),

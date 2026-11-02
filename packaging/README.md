@@ -1,17 +1,102 @@
 # Desktop packaging
 
-The CI publish jobs produce self-contained `FiveDo.Frontend.Avalonia` folders for
-the six supported RIDs. This directory holds the small desktop-integration files
-that an installer or a Linux package would install alongside the executable.
+The release artifacts are **one bundle per system**, not one archive per component.
+Each bundle contains both the desktop app and the headless CLI:
+
+| System | Bundle |
+|---|---|
+| Windows x64 | `5do-win-x64.zip` |
+| Linux x64 | `5do-linux-x64.tar.gz` |
+| macOS x64 | `5do-osx-x64.tar.gz` |
+
+## Layout
+
+The bundle is designed so each app is a single executable without embedding a
+separate copy of the .NET runtime in each one:
+
+```text
+FiveDo.Cli[.exe]              single-file apphost
+FiveDo.Frontend.Avalonia[.exe] single-file apphost
+OpenAL32.dll / soft_oal.dll   native OpenAL Soft (Windows)
+libopenal.so / libopenal.dylib
+libSkiaSharp.*, av_libglesv2.dll, ...
+runtime/                      one private .NET 10 runtime
+  host/fxr/<version>/
+  shared/Microsoft.NETCore.App/<version>/
+README.md
+whatsnew.md
+LICENSE
+THIRD-PARTY-NOTICES.md
+docs/...
+PACKAGE.txt
+```
+
+The apphosts are published with:
+
+```text
+--self-contained false
+-p:PublishSingleFile=true
+-p:PublishTrimmed=false
+-p:AppHostRelativeDotNet=runtime
+```
+
+`AppHostRelativeDotNet` makes the apphost load the private runtime from the bundle's
+`runtime/` directory, so users do not need a system .NET install. The runtime is
+staged once and shared by both apps.
+
+### Why not self-contained single-file?
+
+A self-contained single-file publish embeds a complete .NET runtime in **each**
+executable (roughly 70 MB per app before compression). That duplicates the runtime
+and contradicts the requirement that the .NET runtime not be embedded in each binary.
+A framework-dependent single file without a private runtime is smaller, but requires a
+system .NET 10 install. The bundle therefore uses framework-dependent single-file
+apphosts plus one shared private runtime.
+
+### Why native libraries stay outside the single file
+
+OpenAL Soft is LGPL-2.0-or-later and must remain replaceable. Skia and ANGLE also ship
+as native assets. Keeping them beside the apphosts preserves relinking/replacement
+rights and avoids extraction to a temporary directory.
+
+## Build a bundle
+
+```powershell
+$rid = 'win-x64'
+
+dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r $rid `
+  --self-contained false -p:PublishSingleFile=true -p:PublishTrimmed=false `
+  -p:AppHostRelativeDotNet=runtime -m:1 -o "artifacts/bundle/$rid/cli"
+
+dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj `
+  -c Release -r $rid --self-contained false -p:PublishSingleFile=true `
+  -p:PublishTrimmed=false -p:AppHostRelativeDotNet=runtime -m:1 `
+  -o "artifacts/bundle/$rid/frontend"
+
+pwsh -NoProfile -File packaging/package-bundle.ps1 `
+  -Rid $rid `
+  -CliPublishDirectory "artifacts/bundle/$rid/cli" `
+  -FrontendPublishDirectory "artifacts/bundle/$rid/frontend" `
+  -OutputDirectory "artifacts/bundles"
+```
+
+The script merges the two publish outputs, verifies that shared files are identical,
+stages the private runtime, copies the README/license/notices/whatsnew/release notes,
+and writes `PACKAGE.txt` and `SHA256SUMS.txt`.
+
+For local release copies, use:
+
+```powershell
+-OutputDirectory src/FiveDo.Frontend.Avalonia/bin/Release
+```
 
 ## Linux file association
 
-1. Publish or copy the frontend so `FiveDo.Frontend.Avalonia` is on `PATH`.
+1. Extract the bundle and put `FiveDo.Frontend.Avalonia` on `PATH`.
 2. Install the desktop entry:
 
    ```sh
-   install -Dm644 packaging/5do.desktop \
-     ~/.local/share/applications/5do.desktop
+   install -Dm644 5do.desktop ~/.local/share/applications/5do.desktop
    update-desktop-database ~/.local/share/applications
    ```
 
@@ -23,26 +108,12 @@ The application accepts a positional disc path or `--disc <path>`; opening a
 `.iso`, `.bin`, `.cue`, or `.chd` file with the desktop entry loads it after the
 configured BIOS.
 
-## Portable archives
+## CI
 
-CI packages each published CLI and frontend folder with
-`packaging/package.ps1`. The archives are named
-`5do-<component>-<rid>.zip` for Windows and `.tar.gz` for Linux/macOS.
-They contain the publish output, `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
-`docs/Licensing.md`, and a generated `PACKAGE.txt` with the component, RID, version,
-commit, and build time. Linux archives also include `5do.desktop`.
+`.github/workflows/build-bundle.yml` builds the three bundles on matching native
+runners and runs the CLI/frontend smoke tests. `.github/workflows/release.yml`
+publishes the bundles and `SHA256SUMS.txt` to the GitHub release. The docs workflow
+publishes the documentation site and the wiki.
 
-Build one locally:
-
-```powershell
-dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r win-x64 `
-  --self-contained true -p:PublishSingleFile=true -o artifacts/cli/win-x64
-pwsh -File packaging/package.ps1 -Component cli -Rid win-x64 `
-  -PublishDirectory artifacts/cli/win-x64 -OutputDirectory artifacts/packages
-```
-
-The archives are portable folders, not installers. MSIX/dmg/AppImage packaging,
-signing, and notarization remain release work.
-
-Windows file associations are registered by the installer (M10.7), and macOS
-associations come from the app bundle's `Info.plist`. Both remain release work.
+The archives are portable bundles, not installers. MSIX/dmg/AppImage packaging,
+signing, and notarization remain post-1.0 work.

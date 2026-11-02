@@ -1,5 +1,28 @@
 # Quick Start
 
+## From the release bundle
+
+1. Download the bundle for your system from
+   [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0).
+2. Extract the whole bundle. Keep `runtime/` next to the executables.
+3. Start the desktop app:
+
+   ```powershell
+   .\FiveDo.Frontend.Avalonia.exe
+   ```
+
+   Linux/macOS:
+
+   ```sh
+   ./FiveDo.Frontend.Avalonia
+   ```
+
+4. Choose **Open BIOS** and select your legally obtained 3DO BIOS.
+5. Choose **Open Disc** and select an ISO, BIN, CUE+BIN, or CHD.
+6. Press **Play**.
+
+## From source
+
 1. Install the .NET 10 SDK.
 2. Clone and build:
 
@@ -14,10 +37,6 @@
    ```powershell
    dotnet run -c Release --project src/FiveDo.Frontend.Avalonia
    ```
-
-4. Choose **Open BIOS** and select your legally obtained 3DO BIOS.
-5. Choose **Open Disc** and select an ISO, BIN, CUE+BIN, or CHD.
-6. Press **Play**.
 
 Default player-1 controls: arrows for the D-pad, `Z` = A, `X` = B, `C` = C,
 `A` = L, `S` = R, `Enter` = P, `Backspace` = X.

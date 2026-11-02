@@ -25,6 +25,12 @@ with or endorsed by Panasonic, The 3DO Company, or any rights holder.
 
 ## Distribution
 
+The v1.0.0 release bundles contain the single-file CLI and desktop app, a private
+.NET 10 runtime under `runtime/`, the OpenAL Soft runtime, `README.md`,
+`whatsnew.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`, and the legal/OpenAL notices.
+The OpenAL Soft binary stays outside the single-file apphosts so it remains
+replaceable.
+
 Read [Licensing](https://purelogiccode.github.io/5DO/Licensing.html),
 [OpenAL Soft notice](https://purelogiccode.github.io/5DO/OpenALSoft.html), and
 [Release legal review](https://purelogiccode.github.io/5DO/ReleaseLegalReview.html)

@@ -43,6 +43,9 @@ jobs:
       - name: Restore
         run: dotnet restore 5DO.sln --locked-mode
 
+      - name: Verify lock files are RID-agnostic
+        run: git diff --exit-code -- "**/packages.lock.json"
+
       - name: Build
         run: dotnet build 5DO.sln -c Release --no-restore
 
@@ -190,108 +193,9 @@ jobs:
           path: artifacts/frontend-aot
           if-no-files-found: error
 
-  publish-cli:
-    name: Publish CLI (${{ matrix.rid }})
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        rid: [ win-x64, win-arm64, linux-x64, linux-arm64, osx-x64, osx-arm64 ]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          dotnet-version: 10.0.301
-
-      - name: Publish
-        run: >
-          dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj
-          -c Release
-          -r ${{ matrix.rid }}
-          --self-contained true
-          -p:PublishSingleFile=true
-          -p:PublishTrimmed=true
-          -m:1
-          -o artifacts/cli/${{ matrix.rid }}
-
-      - name: Package
-        run: >
-          pwsh -NoProfile -File packaging/package.ps1
-          -Component cli
-          -Rid ${{ matrix.rid }}
-          -PublishDirectory artifacts/cli/${{ matrix.rid }}
-          -OutputDirectory artifacts/packages
-
-      - name: Upload package
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: 5do-cli-package-${{ matrix.rid }}
-          path: artifacts/packages/*
-          if-no-files-found: error
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: 5do-cli-${{ matrix.rid }}
-          path: artifacts/cli/${{ matrix.rid }}
-          if-no-files-found: error
-  publish-frontend:
-    name: Publish frontend (${{ matrix.rid }})
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        rid: [ win-x64, win-arm64, linux-x64, linux-arm64, osx-x64, osx-arm64 ]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          dotnet-version: 10.0.301
-
-      - name: Publish
-        run: >
-          dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj
-          -c Release
-          -r ${{ matrix.rid }}
-          --self-contained true
-          -p:PublishSingleFile=true
-          -p:PublishTrimmed=true
-          -m:1
-          -o artifacts/frontend/${{ matrix.rid }}
-
-      - name: Package
-        run: >
-          pwsh -NoProfile -File packaging/package.ps1
-          -Component frontend
-          -Rid ${{ matrix.rid }}
-          -PublishDirectory artifacts/frontend/${{ matrix.rid }}
-          -OutputDirectory artifacts/packages
-
-      - name: Upload package
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: 5do-frontend-package-${{ matrix.rid }}
-          path: artifacts/packages/*
-          if-no-files-found: error
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: 5do-frontend-${{ matrix.rid }}
-          path: artifacts/frontend/${{ matrix.rid }}
-          if-no-files-found: error
+  bundle:
+    name: Release bundles
+    uses: ./.github/workflows/build-bundle.yml
 
   ci-complete:
     name: CI complete
@@ -300,8 +204,7 @@ jobs:
       - build-test
       - aot-cli
       - aot-frontend
-      - publish-cli
-      - publish-frontend
+      - bundle
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -311,8 +214,7 @@ jobs:
           echo "build-test: ${{ needs.build-test.result }}"
           echo "aot-cli: ${{ needs.aot-cli.result }}"
           echo "aot-frontend: ${{ needs.aot-frontend.result }}"
-          echo "publish-cli: ${{ needs.publish-cli.result }}"
-          echo "publish-frontend: ${{ needs.publish-frontend.result }}"
+          echo "bundle: ${{ needs.bundle.result }}"
           if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ]; then
             echo "One or more required CI jobs failed." >&2
             exit 1

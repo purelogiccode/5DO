@@ -12,8 +12,18 @@ and M3U/M3U8 playlists for multi-disc games.
 
 ## Is there a download?
 
-Not yet. The project is pre-1.0. Build from source or use the portable archives from a
-successful [CI run](https://github.com/purelogiccode/5DO/actions/workflows/ci.yml).
+Yes. **v1.0.0** is available on
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0). There is
+one bundle per system (Windows x64, Linux x64, macOS x64), and each bundle contains
+both the desktop app and the CLI. You can also build from source.
+
+## Do I need .NET installed?
+
+No for the downloaded bundles. Each bundle includes a private .NET 10 runtime under
+`runtime/`, shared by the two single-file apphosts. Keep the `runtime/` folder next to
+`FiveDo.Cli` and `FiveDo.Frontend.Avalonia`.
+
+The .NET 10 SDK is only required to build from source.
 
 ## How compatible is it?
 
@@ -24,8 +34,10 @@ This is documented compatibility, not full-library compatibility. See
 
 ## Does it run on Linux and macOS?
 
-Builds are published for Windows, Linux, and macOS on x64/arm64. **Windows x64 is the
-validated target**; Linux/macOS runtime validation is ongoing.
+**Windows x64 is the validated target.** Linux x64 passed the full test suite and
+CLI/frontend smoke tests, with GPU presentation documented as preview/best-effort.
+macOS x64 is built and published; runtime validation is post-1.0. arm64 and Raspberry
+Pi are post-1.0.
 
 ## Why is it called 5DO?
 

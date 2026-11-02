@@ -35,9 +35,10 @@ relative links, missing pages, and invalid anchors rather than suppressing them.
 ## Publishing
 
 The docs site deploys automatically from `master` through
-`.github/workflows/docs.yml`. Pull requests build the site without deploying it.
+`.github/workflows/docs.yml`. Pull requests build the site without deploying it. The
+same workflow publishes the wiki from `wiki/`.
 
-The wiki is versioned in `wiki/` and published with:
+The wiki is versioned in `wiki/` and can also be published locally with:
 
 ```powershell
 pwsh -File tools/publish-wiki.ps1

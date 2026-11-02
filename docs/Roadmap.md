@@ -25,8 +25,9 @@ The project is at the **v1.0.0 documented-compatibility release** (published on 
 ## Release status
 
 v1.0.0 is published on
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0) with the
-portable win-x64/linux-x64 archives and SHA-256 checksums.
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0) as one
+bundle per system (Windows/Linux/macOS x64) with the CLI, desktop app, shared private
+runtime, and SHA-256 checksums.
 
 Full compatibility and M14 research are **not** v1.0 gates. CI is green, the soak is
 complete, and the legal/attribution sign-off is recorded.

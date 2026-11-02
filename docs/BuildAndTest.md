@@ -61,7 +61,7 @@ src/
   FiveDo.Frontend.Avalonia/  # desktop shell and GPU probe
 tests/FiveDo.Tests/          # xUnit tests, one folder per subsystem
 benchmarks/FiveDo.Benchmarks # stopwatch frame benchmark and CI gate
-packaging/                   # portable archive script and Linux desktop entry
+packaging/                   # bundle/archive scripts and Linux desktop entry
 tools/                       # release soak and HQx generation
 docs/                        # this documentation set
 ```
@@ -409,15 +409,15 @@ The workflow is [`.github/workflows/ci.yml`](https://github.com/purelogiccode/5D
 | `build-test` | Windows, Ubuntu, macOS | Restore, Release build, all tests. Ubuntu also runs format check, benchmark smoke + gate, allocation gate, and uploads the baseline. Windows runs trimmed CLI and frontend publish smoke tests. |
 | `aot-cli` | Windows | NativeAOT win-x64 CLI publish, `--version`/`selftest`/`bench`, artifact upload. |
 | `aot-frontend` | Windows | NativeAOT win-x64 frontend publish, smoke test, artifact upload. |
-| `publish-cli` | Ubuntu | Six-RID trimmed single-file CLI publish, portable archive, uploads folder + archive. |
-| `publish-frontend` | Ubuntu | Six-RID trimmed single-file frontend publish, portable archive, uploads folder + archive. |
+| `bundle` | Windows, Ubuntu, macOS | Builds the unified Windows/Linux/macOS x64 bundles with single-file apphosts and one shared private runtime; runs CLI/frontend smoke tests and uploads the bundle. |
 | `ci-complete` | Ubuntu | Aggregate gate that fails if any required CI job fails or is cancelled. |
 
 Separate workflows add:
 
 | Workflow | Trigger | What it does |
 |---|---|---|
-| `docs.yml` | Push/PR touching docs, manual | Strict MkDocs build and GitHub Pages deployment from `master`. |
+| `docs.yml` | Push/PR touching docs or the wiki, manual | Strict MkDocs build, GitHub Pages deployment from `master`, and curated wiki publishing. |
+| `release.yml` | Tag push or manual | Builds the three bundles, writes `SHA256SUMS.txt`, updates the GitHub release, and removes obsolete per-component assets. |
 | `codeql.yml` | Push/PR, weekly, manual | CodeQL analysis for C#, GitHub Actions, and Python. |
 | `dependency-review.yml` | Pull request | Blocks high-severity dependency changes and comments on the PR. |
 | `scorecard.yml` | Push, weekly, manual | OpenSSF Scorecard analysis, SARIF upload, and published results. |

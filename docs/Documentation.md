@@ -53,7 +53,8 @@ The site deploys automatically on every push to `master` through
 GitHub Pages is configured to deploy from GitHub Actions, not from a branch.
 
 The workflow uses `actions/upload-pages-artifact` and `actions/deploy-pages`, so no
-generated `site/` directory is committed.
+generated `site/` directory is committed. The same workflow publishes the curated wiki
+from `wiki/` with `tools/publish-wiki.ps1` and the workflow's `GITHUB_TOKEN`.
 
 ## Wiki
 

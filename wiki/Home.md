@@ -4,19 +4,34 @@
 Interactive Multiplayer**. It combines a deterministic managed emulation core with an
 Avalonia desktop app, a headless CLI, and a reproducible test harness.
 
-> **Pre-1.0:** Windows x64 is the validated platform. No BIOS ROMs or game images are
-> included. Supply legally obtained files.
+> **v1.0.0 is released.** Download the Windows, Linux, or macOS bundle from
+> [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0).
+> No BIOS ROMs or game images are included. Supply legally obtained files.
+
+## Download
+
+There is **one bundle per system**, and each bundle contains both the desktop app and
+the CLI:
+
+| System | Bundle |
+|---|---|
+| Windows x64 | `5do-win-x64.zip` |
+| Linux x64 | `5do-linux-x64.tar.gz` |
+| macOS x64 | `5do-osx-x64.tar.gz` |
+
+The apps are single-file executables. A private .NET 10 runtime is included once under
+`runtime/` and shared by both apps, so no separate .NET install is required.
 
 ## Start here
 
-- [[Installation]] — requirements, first run, data folders.
-- [[Quick-Start]] — the shortest path from clone to gameplay.
-- [[FAQ]] — BIOS, discs, releases, saves, platforms, and licensing.
-- [[Troubleshooting]] — common failures and fixes.
-- [[Compatibility]] — the 594-disc sweep and known limitations.
-- [[Building-from-Source]] — build, test, and publish commands.
-- [[Contributing]] — issues, pull requests, and evidence.
-- [[Legal]] — license, donationware, and trademark rules.
+- [[Installation]] - requirements, first run, data folders.
+- [[Quick-Start]] - the shortest path from download to gameplay.
+- [[FAQ]] - BIOS, discs, releases, saves, platforms, and licensing.
+- [[Troubleshooting]] - common failures and fixes.
+- [[Compatibility]] - the 594-disc sweep and known limitations.
+- [[Building-from-Source]] - build, test, and publish commands.
+- [[Contributing]] - issues, pull requests, and evidence.
+- [[Legal]] - license, donationware, and trademark rules.
 
 ## Full documentation
 
@@ -30,18 +45,21 @@ Useful direct links:
 - [Configuration](https://purelogiccode.github.io/5DO/Configuration.html)
 - [Compatibility notes](https://purelogiccode.github.io/5DO/Compatibility.html)
 - [Known issues](https://purelogiccode.github.io/5DO/KnownIssues.html)
+- [What's new](https://purelogiccode.github.io/5DO/WhatsNew.html)
 - [Developer guide](https://purelogiccode.github.io/5DO/DeveloperGuide.html)
 
 ## Project status
 
-- `1.0.0-rc.1` source tree; the v1.0 release is deliberately deferred.
+- **v1.0.0** documented-compatibility release, published on GitHub.
 - 594 disc images swept; after triage, 593 loadable/rendered, 1 known no-video case,
   0 not-loadable rows.
 - 1,473 tests in the current test assembly.
-- Windows x64 validated; Linux and macOS publish outputs are produced but not fully
-  runtime-validated.
+- Windows x64 validated; Linux x64 full suite and CLI/frontend smoke passed (GPU
+  presentation preview/best-effort); macOS x64 bundle is built and runtime validation
+  is post-1.0.
 
-See [Status](https://purelogiccode.github.io/5DO/Status.html) and
+See [Status](https://purelogiccode.github.io/5DO/Status.html),
+[What's new](https://purelogiccode.github.io/5DO/WhatsNew.html), and
 [Roadmap](https://purelogiccode.github.io/5DO/Roadmap.html).
 
 ## Community

@@ -5,6 +5,20 @@ release.
 
 ## [Unreleased]
 
+### Changed
+
+- Replaced the per-component CLI/frontend archives with one bundle per system:
+  `5do-win-x64.zip`, `5do-linux-x64.tar.gz`, and `5do-osx-x64.tar.gz`.
+- The CLI and desktop app now publish as framework-dependent single-file apphosts and
+  share one private .NET 10 runtime under `runtime/`; the runtime is not embedded in
+  either executable.
+- Added `packaging/package-bundle.ps1` and `packaging/make-tar.py`, a reusable
+  `build-bundle.yml` CI workflow, and a `release.yml` workflow that publishes the
+  bundles and removes obsolete per-component assets.
+- The docs workflow now publishes the curated wiki alongside GitHub Pages.
+- Fixed the CI `--locked-mode` restore by regenerating RID-agnostic
+  `packages.lock.json` files.
+
 ## [1.0.0] - 2026-11-02
 
 ### Release

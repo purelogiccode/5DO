@@ -9,14 +9,25 @@ include a BIOS ROM or any game images. You must supply legally obtained files.
 |---|---|
 | 3DO BIOS | A 1 MB BIOS image such as `panafz1.bin`. An optional second 1 MB ROM can be used as BIOS2/Kanji. |
 | Disc image | ISO (2048-byte sectors), BIN (2352-byte sectors), CUE+BIN, or CHD. |
-| .NET | .NET SDK **10.0.301** (pinned by `global.json`) for source builds. Published self-contained builds do not need a separate runtime. |
+| .NET | .NET SDK **10.0.301** (pinned by `global.json`) for source builds. The published bundles include a private .NET 10 runtime; no separate install is required. |
 | Desktop | Windows 10+, a current Linux desktop, or macOS 12+. |
 | GPU | OpenGL 3.3 or OpenGL ES 3.0/3.1 for GPU presentation. A CPU fallback is available. |
 | Audio | No system OpenAL installation is required; OpenAL Soft 1.23.1 is bundled. |
 
-!!! note "No stable binary release yet"
-    Build from source or use the portable archives attached to a successful CI run.
-    See the [CI workflow](https://github.com/purelogiccode/5DO/actions/workflows/ci.yml).
+## Download
+
+Download the bundle for your system from
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0):
+
+| System | Bundle |
+|---|---|
+| Windows x64 | `5do-win-x64.zip` |
+| Linux x64 | `5do-linux-x64.tar.gz` |
+| macOS x64 | `5do-osx-x64.tar.gz` |
+
+Each bundle contains both the desktop app and the CLI, plus a shared private .NET 10
+runtime under `runtime/`. Extract the whole bundle and keep `runtime/` next to the
+executables.
 
 ## Build from source
 

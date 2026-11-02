@@ -16,8 +16,8 @@ Debug core builds are optimized, and Auto presentation frame skip is the default
 **594 discs tested: 593 Loadable/Rendered, 1 Loadable/No video (known boot failure), 0 Not Loadable.**
 
 **Release status (2026-11-02):** **v1.0.0 is released** as a documented-compatibility
-release. The version is bumped, the source is tagged `v1.0.0`, and the win-x64/linux-x64
-portable archives plus checksums are attached to the
+release. The version is bumped, the source is tagged `v1.0.0`, and one unified bundle
+per system (Windows, Linux, macOS x64) plus checksums is attached to the
 [GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0). Linux x64
 validation passed on Linux Mint 22.3: the full test suite
 (**1,473/1,473**), `selftest`, `bench`, a 3,000-frame Wolfenstein boot, non-silent
@@ -377,23 +377,17 @@ This is the short, current answer to "where are we?" The documentation index is
   routing, input-recorder coalescing/roundtrip, ISO/BIN `disc tracks`, Opera FS parsing
   (multi-block directories, `burst`/`gap` reads, invalid headers, and CLI ISO
   extraction), and BIOS catalog/scan/selection/override tests.
-- **Packaging:** CI builds/tests/formats and publishes CLI/frontend for six RIDs.
-  Both executables are self-contained, single-file, and trimmed (`PublishTrimmed=true`,
-  `TrimMode=full`). The CLI also has an opt-in NativeAOT win-x64 publish
-  (`-p:FiveDoNativeAot=true`): 10.54 MB, CI-smoke-tested with `--version`, `selftest`,
+- **Packaging:** CI builds/tests/formats and publishes one bundle per system
+  (`5do-win-x64.zip`, `5do-linux-x64.tar.gz`, `5do-osx-x64.tar.gz`). Each bundle
+  contains the CLI and desktop app as framework-dependent single-file apphosts, one
+  private .NET 10 runtime under `runtime/`, the README/license/notices/whatsnew, and a
+  generated `PACKAGE.txt`. The runtime is shared by both apps and is not embedded in
+  either executable. Native OpenAL Soft/Skia/ANGLE libraries stay beside the apphosts
+  for LGPL replacement. The CLI also has an opt-in NativeAOT win-x64 publish
+  (`-p:FiveDoNativeAot=true`) that is CI-smoke-tested with `--version`, `selftest`,
   `bench`, `info`, `fs list`, a golden 3,000-frame boot, and live OpenAL audio. The
-  frontend has an opt-in NativeAOT single-file publish (28.8 MB executable plus native
-  assets) that passes `--smoke-test` and the WGL/ANGLE parity probes; the bundled
-  OpenAL path was validated with `ALSOFT_DRIVERS=null`, and Silk.NET.Core loader
-  warnings remain. A Windows CI smoke test runs the trimmed
-  CLI and starts the trimmed frontend (`--smoke-test`); the win-x64 packages were
-  validated with synthetic/ISO/CHD runs, state roundtrips, `fs list`, and a real
-  window/render pass.
-  CI also creates portable `5do-<component>-<rid>.zip`/`.tar.gz` archives
-  with README/notices/licensing, the OpenAL Soft LGPL notice/source offer
-  (`docs/OpenALSoft.md`), the full LGPL-2.0 text
-  (`docs/licenses/OpenAL-Soft-COPYING.txt`), and a generated `PACKAGE.txt` via
-  `packaging/package.ps1`. See [`Trimming.md`](Trimming.md) and
+  frontend has an opt-in NativeAOT single-file publish that passes `--smoke-test` and
+  the WGL/ANGLE parity probes. See
   [`packaging/README.md`](https://github.com/purelogiccode/5DO/blob/master/packaging/README.md).
 
 ---
@@ -616,11 +610,11 @@ artifacts and checksums are attached to the GitHub release.
 | M9 Avalonia frontend | Feature-complete for the tested workflow | 0 (optional polish is post-1.0) |
 | M9R OpenGL presenter | Windows WGL + ANGLE validated; CPU fallback, filters, parity, 4K probe | 0 on Windows; Linux x64 full suite passed, GL probe timed out under llvmpipe |
 | M9P performance/pacing | Tier A measured, zero-allocation steady state, CI gate | 0 (Tier B/Pi and hot-path are post-1.0) |
-| M10 packaging | Six-RID CI, trimmed/AOT builds, portable archives | 0-1 dd for final release packaging |
-| M11 compatibility | 12 titles boot/render; five have scripted gameplay evidence; matrix and known issues documented | Tag/artifacts |
+| M10 packaging | Unified Windows/Linux/macOS x64 bundles, single-file apps + shared runtime, optional NativeAOT | 0 (installers post-1.0) |
+| M11 compatibility | 12 titles boot/render; five have scripted gameplay evidence; matrix and known issues documented | 0 |
 | **M13 compatibility sweep** | **Loadability complete: 594 tested, 593 render, 1 known boot failure** | M13.5/M13.6 post-1.0; Linux x64 full suite passed |
 | **M14 high-res CEL research** | **Research plan written; post-1.0** | **Not a v1.0 gate** |
-| M11 release/legal | OpenAL notice/source offer/relinking record and license text ship in every archive; FreeDO modified GNU LGPL, donationware | Legal sign-off recorded 2026-11-02; tag/artifacts |
+| M11 release/legal | OpenAL notice/source offer/relinking record and license text ship in every bundle; FreeDO modified GNU LGPL, donationware | Legal sign-off recorded 2026-11-02 |
 
 **Current estimate:** roughly **100% complete** against the documented-compatibility
 release scope. v1.0.0 is published on GitHub with the release artifacts.
@@ -666,8 +660,8 @@ v1.0 gate is release mechanics (version bump, tag, and artifacts).
    Mint 22.3. The GL probe timed out under llvmpipe, so Linux GPU presentation is
    preview/best-effort. See [`Compatibility.md`](Compatibility.md) §10.3.
 4. **Release v1.0.0: complete (2026-11-02).** The version is bumped, the source is
-   tagged `v1.0.0`, the win-x64/linux-x64 portable archives and checksums are attached
-   to the [GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0),
+   tagged `v1.0.0`, the unified Windows/Linux/macOS x64 bundles and checksums are
+   attached to the [GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0),
    and the release-owner/QA sign-off is recorded.
 5. **M13.5/M13.6 visual and high-resolution review (post-1.0).** Inspect every rendered
    final frame, record `Unplayable`/`Playable`/`Good`, and run the `-HighRes` comparison.
@@ -690,11 +684,11 @@ v1.0 gate is release mechanics (version bump, tag, and artifacts).
 
 ## 6. Next session
 
-**v1.0.0 is published on GitHub** (source tag `v1.0.0`, win-x64/linux-x64 portable
-archives and checksums attached). Linux x64 validation passed on Linux Mint 22.3: the
-full test suite (**1,473/1,473**), CLI `selftest`/`bench`/`info`, a 3,000-frame
-Wolfenstein boot, non-silent audio, and the frontend `--smoke-test`. The GL probe timed
-out under llvmpipe and is a documented preview/best-effort limitation. The BIOS-aware
+**v1.0.0 is published on GitHub** (source tag `v1.0.0`, unified
+Windows/Linux/macOS x64 bundles and checksums attached). Linux x64 validation passed on
+Linux Mint 22.3: the full test suite (**1,473/1,473**), CLI `selftest`/`bench`/`info`,
+a 3,000-frame Wolfenstein boot, non-silent audio, and the frontend `--smoke-test`. The
+GL probe timed out under llvmpipe and is a documented preview/best-effort limitation. The BIOS-aware
 retry is complete: **593 of 594 discs render**, and only Crash 'n Burn (Japan) remains
 stuck on the Anvil boot screen. The next session is **post-1.0**:
 

@@ -172,6 +172,18 @@ prohibition on commercial use without the rights holders' approval. See
 [`Licensing.md`](Licensing.md). The reference change does not change the project's
 license position; it adds another upstream project to the attribution list.
 
+### Distribution
+
+The release bundles contain only first-party compiled output, the private .NET runtime,
+documentation, and license/notice files. Nothing from `References/` (FreeDO, 4DO,
+Opera/libopera, SimpleGui/OperaCore, or Docs3) is copied into a bundle. Opera remains a
+behavioral reference; it is not a shipped dependency.
+
+The bundle layout does not change the reference hierarchy or the licensing position:
+the CLI and desktop app are single-file apphosts built from this repository, and the
+OpenAL Soft native runtime stays beside them so its LGPL replacement rights remain
+practical.
+
 ---
 
 ## 5. Differential test procedure
@@ -284,6 +296,7 @@ recorded.
 - [x] Decision recorded and linked from the plan, status, porting notes, and README.
 - [x] Empirical comparison recorded for the five local titles.
 - [x] Differential harness documented and reproducible.
+- [x] Release bundles contain no reference binaries or copyrighted content.
 - [ ] First targeted port (CD-ROM read/status semantics) merged with tests.
 - [ ] SAudio `-6996` root cause identified and fixed.
 - [ ] Space Ace low-memory writer identified and fixed.

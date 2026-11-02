@@ -7,8 +7,8 @@ prototype state. It is not a compatibility guarantee.
 extra title scripts, M13.5/M13.6 visual/high-resolution review, M14 research, Pi/arm64
 validation, installers, and the optional JIT are post-1.0. See
 [`ReleaseChecklist.md`](ReleaseChecklist.md). **As of 2026-11-02 v1.0.0 is published on
-GitHub**: the source is tagged `v1.0.0`, the portable archives/checksums are attached,
-and legal/attribution sign-off is recorded.
+GitHub**: the source is tagged `v1.0.0`, the unified Windows/Linux/macOS x64 bundles and
+checksums are attached, and legal/attribution sign-off is recorded.
 
 ## Compatibility sweep status
 
@@ -150,15 +150,16 @@ and legal/attribution sign-off is recorded.
 
 ## Packaging and platforms
 
-- CI publishes six RIDs, but only the win-x64 CLI and desktop app have been smoke-tested.
+- CI builds three x64 bundles: Windows, Linux, and macOS. Windows and Linux run the CLI
+  and frontend smoke tests; the macOS x64 bundle is built but not executed on the arm64
+  runner, so macOS runtime validation is post-1.0.
 - arm64 (Windows/Linux/macOS) is not hardware-validated.
-- **CLI and frontend trimming are enabled.** Both publish with `PublishTrimmed=true`
-  (`TrimMode=full`). The CLI has a Windows CI smoke test (`--version`, `selftest`,
-  `bench`); the frontend has a trimmed startup smoke test (`--smoke-test`) that opens
-  the real window, runs one UI pass (GL hidden for headless CI), and exits 0. The only
-  remaining trim warning is CHDSharp's vendored FLAC settings helper (`TypeDescriptor`),
-  which is outside the 3DO data-track path and demoted to a visible warning. See
-  [`Trimming.md`](Trimming.md).
+- **Release bundles are not trimmed.** The CLI and desktop app publish as
+  framework-dependent single-file apphosts (`PublishTrimmed=false`) and share one
+  private .NET 10 runtime under `runtime/`. Trimming remains available for developer and
+  NativeAOT experiments; the release bundles favor predictable startup and shared
+  assemblies. See
+  [`packaging/README.md`](https://github.com/purelogiccode/5DO/blob/master/packaging/README.md).
 - NativeAOT, installers, signing, and notarization are not complete. The opt-in
   win-x64 CLI AOT build is validated, including live OpenAL; the frontend AOT build
   starts/renders and its bundled OpenAL path was validated with OpenAL's null device

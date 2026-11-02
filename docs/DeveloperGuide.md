@@ -36,7 +36,7 @@ src/
   FiveDo.Frontend.Avalonia/  desktop shell, video surface, dialogs, GPU probe
 tests/FiveDo.Tests/          xUnit suite, one folder per subsystem
 benchmarks/FiveDo.Benchmarks custom frame benchmark and CI gate
-packaging/                   portable archive script and Linux desktop entry
+packaging/                   bundle/archive scripts and Linux desktop entry
 tools/                       release soak, collection compatibility sweep, 4DO reference/result generators, HQx generation, differential harness
 docs/                        this documentation set
 ```

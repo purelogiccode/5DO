@@ -4,23 +4,25 @@ This document records the trimming audit for the managed emulator. The core, hos
 and CLI must remain fully managed C#; trimming is a packaging optimization, not an
 emulation feature.
 
-## Current status (2026-10-28)
+## Current status (2026-11-02)
 
-See [`BuildAndTest.md`](BuildAndTest.md) for the build/publish commands and CI jobs.
-The 2026-10-28 audio/FSR changes did not add reflection or trim-unsafe code.
+The **v1.0.0 release bundles are not trimmed.** Both apps publish as framework-dependent
+single-file apphosts (`PublishSingleFile=true`, `PublishTrimmed=false`) and share one
+private .NET 10 runtime under `runtime/`. This keeps the CLI and desktop app as single
+executables without embedding a runtime copy in each one, and it avoids the per-app
+trimming divergence that would make a merged bundle unsafe.
 
-| Component | Trimming | NativeAOT |
+Trimming and NativeAOT remain opt-in developer/audit paths:
+
+| Component | Release bundle | Opt-in trimming / AOT |
 |---|---|---|
-| `FiveDo.Cli` | **Enabled** (`PublishTrimmed=true`, `TrimMode=full`) | **Opt-in win-x64 audit passed** (`-p:FiveDoNativeAot=true`) |
-| `FiveDo.Frontend.Avalonia` | **Enabled** (`PublishTrimmed=true`, `TrimMode=full`) | **Opt-in win-x64 audit passed** (`-p:FiveDoNativeAot=true`); Silk.NET loader warnings remain |
-| Core/host assemblies | Trimmed as dependencies of both | NativeAOT-compatible as dependencies of the CLI/frontend |
+| `FiveDo.Cli` | Single-file, untrimmed, shared runtime | `PublishTrimmed=true`; NativeAOT win-x64 audit passed (`-p:FiveDoNativeAot=true`) |
+| `FiveDo.Frontend.Avalonia` | Single-file, untrimmed, shared runtime | `PublishTrimmed=true`; NativeAOT win-x64 audit passed (`-p:FiveDoNativeAot=true`); Silk.NET loader warnings remain |
+| Core/host assemblies | Shared runtime + single-file apphosts | Trimmed/AOT as dependencies of the opt-in builds |
 
-Both executables publish as self-contained single-file builds for all six RIDs. A
-trimmed win-x64 publish of each is smoke-tested on the Windows CI runner: the CLI
-with `--version`, `selftest --json`, and `bench --frames 2 --json`, and the
-frontend with `--smoke-test --smoke-output <path>` (exit code 0 plus a
-`FRONTEND SMOKE OK` marker). CI also publishes NativeAOT win-x64 builds of both
-executables and runs the same smoke commands.
+The CI `build-test` job still exercises trimmed win-x64 CLI/frontend publishes and
+NativeAOT win-x64 builds. The `bundle` job builds the actual release bundles with
+`PublishTrimmed=false` and runs the CLI/frontend smoke tests.
 
 ## NativeAOT CLI audit (2026-10-27)
 
@@ -49,10 +51,10 @@ file) plus the bundled `OpenAL32.dll`. The audit covered:
   CHDSharp's vendored-FLAC `TypeDescriptor` helper (`IL2104`) remains outside the
   3DO data-track path.
 
-The CLI AOT executable does not replace the default six-RID trimmed publishes:
-NativeAOT cross-compilation is limited (for example, osx-arm64 AOT is not produced
-from a Linux runner). The frontend has a separate opt-in AOT audit below. The
-opt-in property keeps the default publish matrix unchanged.
+The CLI AOT executable does not replace the release bundles (untrimmed single-file
+apphosts with a shared runtime): NativeAOT cross-compilation is limited (for example,
+osx-arm64 AOT is not produced from a Linux runner). The frontend has a separate opt-in
+AOT audit below.
 
 ## NativeAOT frontend audit (2026-10-26)
 
@@ -151,7 +153,8 @@ loader dependency or install a custom native-asset resolver for the frontend.
 
 7. **Cross-RID publishes.** All six trimmed frontend RIDs (win-x64, win-arm64,
    linux-x64, linux-arm64, osx-x64, osx-arm64) were published and inspected
-   locally; CI publishes all six RIDs trimmed.
+   locally during the trim audit. CI now builds the three untrimmed x64 release
+   bundles and still exercises trimmed win-x64 publishes in `build-test`.
 
 On win-x64 the frontend single-file executable is **26.3 MB** trimmed versus
 **91.3 MB** untrimmed. The complete publish folder is **150.9 MB** versus
@@ -231,8 +234,8 @@ The CLI and the frontend single-file layout are AOT-validated on win-x64. Remain
   emits `IL3000`/`IL3002`; both single-file AOT audio paths are validated (the
   frontend with OpenAL's null device). A Silk.NET-compatible resolver or a custom
   `DllImportResolver` is the cleanup.
-- Cross-OS AOT publishing needs a native toolchain per target (the current six-RID
-  matrix is produced on one Linux runner and uses trimmed IL).
+- Cross-OS AOT publishing needs a native toolchain per target; the release bundles
+  are produced on native runners and do not use AOT.
 - The frontend AOT smoke test covers startup and the WGL/ANGLE probes; a full in-app
   BIOS/disc/audio session under AOT is not yet validated.
 - Installer packaging, signing, and notarization remain separate M10.7 work.

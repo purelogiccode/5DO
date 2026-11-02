@@ -1,3 +1,5 @@
+# Legacy per-component packaging. Release artifacts use package-bundle.ps1,
+# which builds one bundle per system with both apps and a shared runtime.
 param(
     [Parameter(Mandatory = $true)]
     [ValidateSet('cli', 'frontend')]

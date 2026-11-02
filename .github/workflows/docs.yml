@@ -5,6 +5,8 @@ on:
     branches: [ master ]
     paths:
       - 'docs/**'
+      - 'wiki/**'
+      - 'tools/publish-wiki.ps1'
       - 'mkdocs.yml'
       - 'requirements-docs.in'
       - 'requirements-docs.txt'
@@ -78,3 +80,25 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  wiki:
+    name: Publish wiki
+    if: github.ref == 'refs/heads/master'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Publish curated wiki pages
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+          pwsh -NoProfile -File tools/publish-wiki.ps1 -Message "Update 5DO wiki from ${GITHUB_SHA::7}"

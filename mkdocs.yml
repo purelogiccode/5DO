@@ -149,6 +149,7 @@ nav:
       - Documentation source: DocumentationSource.md
   - Project:
       - Status: Status.md
+      - What's new: WhatsNew.md
       - Roadmap: Roadmap.md
       - Implementation plan: ImplementationPlan.md
       - Compatibility sweep: CompatibilitySweep.md

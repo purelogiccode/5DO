@@ -1,5 +1,23 @@
 # Troubleshooting
 
+## The app says it cannot find the .NET runtime
+
+The release bundles include a private runtime under `runtime/`. Keep the whole bundle
+together:
+
+```text
+FiveDo.Cli[.exe]
+FiveDo.Frontend.Avalonia[.exe]
+runtime/
+```
+
+Do not move an executable out of the bundle by itself. If the `runtime/` folder is
+missing, download the bundle again. On Linux/macOS, make the apphosts executable:
+
+```sh
+chmod +x FiveDo.Cli FiveDo.Frontend.Avalonia
+```
+
 ## The app opens but the game does not start
 
 - Confirm a BIOS is selected and the disc is a supported 3DO image.

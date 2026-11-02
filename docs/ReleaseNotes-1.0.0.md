@@ -3,9 +3,9 @@
 **Release date:** 2026-11-02 (GitHub release `v1.0.0`)
 **Status:** v1.0.0 documented-compatibility release, published on GitHub. The Windows x64
 engineering gates pass; Linux x64 full test suite and CLI/frontend smoke passed, with
-GPU presentation documented as preview/best-effort. The portable win-x64/linux-x64
-archives and SHA-256 checksums are attached to the GitHub release. See
-[`ReleaseChecklist.md`](ReleaseChecklist.md).
+GPU presentation documented as preview/best-effort. One unified bundle per system
+(Windows, Linux, macOS x64) and SHA-256 checksums are attached to the GitHub release.
+See [`ReleaseChecklist.md`](ReleaseChecklist.md) and [`WhatsNew.md`](WhatsNew.md).
 
 This is a **documented-compatibility** release: the emulator is supported on the
 validated platform and against the tested title set, with known issues listed below.
@@ -75,10 +75,12 @@ boot failure (`Crash 'n Burn` Japan), 0 not loadable**. See
 
 ## Requirements
 
-- .NET 10 SDK for source builds. The published packages are self-contained.
+- .NET 10 SDK for source builds. The published bundles include a private .NET 10
+  runtime under `runtime/`, shared by the single-file CLI and desktop apps; no separate
+  .NET install is required.
 - A legally obtained 1 MB 3DO BIOS ROM (for example `panafz1.bin`).
 - Legally obtained 3DO disc images in ISO, BIN, CUE+BIN, or CHD format.
-- Windows 10+ for the validated desktop package.
+- Windows 10+ for the validated desktop bundle.
 - An OpenGL 3.3 or OpenGL ES 3.0/3.1 context for the GPU presenter; the CPU
   `WriteableBitmap` fallback is used when OpenGL is unavailable.
 
@@ -102,14 +104,14 @@ The release checklist is in [`ReleaseChecklist.md`](ReleaseChecklist.md).
       120-frame continuations are identical.
 - [x] WGL and ANGLE/GLES 3.0 Accurate parity: 0 different pixels; 0 renderer
       allocations per frame.
-- [x] Portable win-x64 CLI and frontend archives with README/notices/licensing.
+- [x] Unified win-x64/linux-x64/osx-x64 bundles with README/notices/licensing/whatsnew.
 - [x] Linux x64 validation: full test suite **1,473/1,473**, `selftest`, `bench`, `info`,
       `bios info`, a 3,000-frame Wolfenstein boot, non-silent audio, and the frontend
       `--smoke-test` on Linux Mint 22.3. The GL probe timed out under llvmpipe, so GPU
       presentation is preview/best-effort.
 - [x] Legal/attribution sign-off: FreeDO modified GNU LGPL, donationware (2026-11-02).
-- [x] Tag `v1.0.0` and GitHub release created; portable win-x64/linux-x64 archives and
-      SHA-256 checksums attached.
+- [x] Tag `v1.0.0` and GitHub release created; unified win-x64/linux-x64/osx-x64
+      bundles and SHA-256 checksums attached.
 
 The per-title soak hashes and roundtrip evidence are in
 [`Compatibility.md`](Compatibility.md) §10.2.
@@ -149,13 +151,20 @@ project is not affiliated with or endorsed by them.
 
 The v1.0.0 release artifacts are attached to the GitHub release:
 
-- `5do-cli-win-x64.zip`
-- `5do-frontend-win-x64.zip`
-- `5do-cli-linux-x64.tar.gz`
-- `5do-frontend-linux-x64.tar.gz`
+- `5do-win-x64.zip`
+- `5do-linux-x64.tar.gz`
+- `5do-osx-x64.tar.gz`
 
-Sizes and SHA-256 checksums are recorded in `SHA256SUMS.txt` next to the packages.
-Each archive contains the executable, `README.md`, `LICENSE`,
-`THIRD-PARTY-NOTICES.md`, `docs/Licensing.md`, `docs/ReleaseLegalReview.md`,
-`docs/OpenALSoft.md`, `docs/licenses/OpenAL-Soft-COPYING.txt`, these release
-notes, and `PACKAGE.txt`.
+Sizes and SHA-256 checksums are recorded in `SHA256SUMS.txt` next to the bundles.
+
+Each bundle contains both the desktop app and the CLI, `README.md`, `LICENSE`,
+`THIRD-PARTY-NOTICES.md`, `whatsnew.md`, `docs/Licensing.md`,
+`docs/ReleaseLegalReview.md`, `docs/OpenALSoft.md`,
+`docs/licenses/OpenAL-Soft-COPYING.txt`, these release notes, `PACKAGE.txt`, and the
+private shared .NET 10 runtime under `runtime/`.
+
+The apps are single-file framework-dependent executables with an app-relative runtime.
+The runtime is staged once and shared by both apps; it is not embedded in either
+executable. This keeps each app a single binary while avoiding a duplicate runtime
+copy. Native libraries (OpenAL Soft, Skia, and ANGLE) stay beside the apps so the LGPL
+replacement rights remain practical.

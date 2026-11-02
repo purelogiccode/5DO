@@ -20,20 +20,30 @@ dotnet format 5DO.sln --verify-no-changes
 
 ## Publish
 
-Trimmed, self-contained CLI:
+The release layout is one bundle per system, containing both apps and a shared private
+runtime. Publish the two apphosts as framework-dependent single files:
 
 ```powershell
-dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r win-x64 `
-  --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true
-```
+$rid = 'win-x64'
 
-Trimmed desktop frontend:
+dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r $rid `
+  --self-contained false -p:PublishSingleFile=true -p:PublishTrimmed=false `
+  -p:AppHostRelativeDotNet=runtime -m:1 -o "artifacts/bundle/$rid/cli"
 
-```powershell
 dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj `
-  -c Release -r win-x64 --self-contained true `
-  -p:PublishSingleFile=true -p:PublishTrimmed=true
+  -c Release -r $rid --self-contained false -p:PublishSingleFile=true `
+  -p:PublishTrimmed=false -p:AppHostRelativeDotNet=runtime -m:1 `
+  -o "artifacts/bundle/$rid/frontend"
+
+pwsh -NoProfile -File packaging/package-bundle.ps1 `
+  -Rid $rid `
+  -CliPublishDirectory "artifacts/bundle/$rid/cli" `
+  -FrontendPublishDirectory "artifacts/bundle/$rid/frontend" `
+  -OutputDirectory "artifacts/bundles"
 ```
+
+The script stages one private .NET 10 runtime, copies the README/license/notices/
+whatsnew/release notes, and writes `PACKAGE.txt` and `SHA256SUMS.txt`.
 
 Optional NativeAOT CLI:
 
@@ -42,8 +52,8 @@ dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r win-x64 `
   --self-contained true -p:FiveDoNativeAot=true -p:PublishSingleFile=true
 ```
 
-CI publishes `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, and
-`osx-arm64` portable archives.
+CI builds `5do-win-x64.zip`, `5do-linux-x64.tar.gz`, and `5do-osx-x64.tar.gz` and
+publishes them to the GitHub release.
 
 ## Documentation
 

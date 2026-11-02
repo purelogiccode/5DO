@@ -56,8 +56,9 @@ test harness designed for reproducible compatibility evidence.
 - **Powerful automation.** Headless `run`, `trace`, `bench`, `selftest`, disc/BIOS/
   NVRAM/cheat/movie/state commands, JSON output, watchpoints, dumps, and differential
   harnesses.
-- **Cross-platform publishing.** Self-contained, single-file, trimmed builds for
-  Windows, Linux, and macOS on x64 and arm64, plus optional NativeAOT CLI builds.
+- **One bundle per system.** Windows, Linux, and macOS x64 bundles contain both the
+  single-file CLI and desktop app, one shared private .NET 10 runtime, and the docs/
+  notices. Optional NativeAOT CLI builds remain available for developers.
 
 ## Status at a glance
 
@@ -76,6 +77,21 @@ The full compatibility picture, per-title evidence, and remaining limitations li
 the [compatibility documentation](https://purelogiccode.github.io/5DO/Compatibility.html),
 [game compatibility list](https://purelogiccode.github.io/5DO/GameCompatibilityList.html),
 and [known issues](https://purelogiccode.github.io/5DO/KnownIssues.html).
+
+## Download
+
+One bundle per system, each containing both the desktop app and the CLI:
+
+| System | Bundle |
+|---|---|
+| Windows x64 | [`5do-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.0.0/5do-win-x64.zip) |
+| Linux x64 | [`5do-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.0.0/5do-linux-x64.tar.gz) |
+| macOS x64 | [`5do-osx-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.0.0/5do-osx-x64.tar.gz) |
+
+The apps are single-file executables. A private .NET 10 runtime is included once under
+`runtime/` and shared by both apps, so no separate .NET install is required. See the
+[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0) for
+`SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
 ## Features
 
@@ -145,8 +161,9 @@ and [known issues](https://purelogiccode.github.io/5DO/KnownIssues.html).
 - No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
 
 > [!NOTE]
-> v1.0.0 is published on GitHub Releases with portable win-x64/linux-x64 archives and
-> SHA-256 checksums. Build from source below if you prefer.
+> v1.0.0 is published on GitHub Releases as one bundle per system (Windows, Linux,
+> macOS x64), each with the CLI, desktop app, shared private runtime, and SHA-256
+> checksums. Build from source below if you prefer.
 > BIOS and game files are never distributed by this repository.
 
 ### Build and test
@@ -317,8 +334,8 @@ dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r win-x64 `
 ```
 
 CI runs build/test on Windows, Linux, and macOS, format checks, benchmark budget gates,
-trimmed CLI/frontend smoke tests, NativeAOT smoke tests, six-RID publishing, and
-portable archive packaging. See [Build and Test](https://purelogiccode.github.io/5DO/BuildAndTest.html)
+NativeAOT smoke tests, unified bundle builds, and the release/wiki/docs deployment.
+See [Build and Test](https://purelogiccode.github.io/5DO/BuildAndTest.html)
 and [`packaging/README.md`](packaging/README.md).
 
 ## Contributing

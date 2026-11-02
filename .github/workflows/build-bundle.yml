@@ -1,0 +1,149 @@
+name: Build bundle
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref or tag to build
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    name: Bundle (${{ matrix.rid }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            archive: 5do-win-x64.zip
+          - os: ubuntu-latest
+            rid: linux-x64
+            archive: 5do-linux-x64.tar.gz
+          - os: macos-latest
+            rid: osx-x64
+            archive: 5do-osx-x64.tar.gz
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          persist-credentials: false
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.301
+
+      - name: Restore
+        run: dotnet restore 5DO.sln --locked-mode
+
+      - name: Publish CLI (single file, shared runtime)
+        run: >
+          dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained false
+          -p:PublishSingleFile=true
+          -p:PublishTrimmed=false
+          -p:AppHostRelativeDotNet=runtime
+          -m:1
+          -o artifacts/bundle/${{ matrix.rid }}/cli
+
+      - name: Publish frontend (single file, shared runtime)
+        run: >
+          dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained false
+          -p:PublishSingleFile=true
+          -p:PublishTrimmed=false
+          -p:AppHostRelativeDotNet=runtime
+          -m:1
+          -o artifacts/bundle/${{ matrix.rid }}/frontend
+
+      - name: Package bundle
+        run: >
+          pwsh -NoProfile -File packaging/package-bundle.ps1
+          -Rid ${{ matrix.rid }}
+          -CliPublishDirectory artifacts/bundle/${{ matrix.rid }}/cli
+          -FrontendPublishDirectory artifacts/bundle/${{ matrix.rid }}/frontend
+          -OutputDirectory artifacts/bundles
+
+      - name: Extract bundle for smoke tests
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path artifacts/bundle-smoke -Force | Out-Null
+          if ('${{ matrix.rid }}' -like 'win-*') {
+            Expand-Archive -LiteralPath 'artifacts/bundles/${{ matrix.archive }}' `
+              -DestinationPath artifacts/bundle-smoke -Force
+          }
+          else {
+            tar -xzf 'artifacts/bundles/${{ matrix.archive }}' -C artifacts/bundle-smoke
+          }
+
+      - name: CLI smoke test (Windows)
+        if: matrix.rid == 'win-x64'
+        shell: pwsh
+        run: |
+          artifacts/bundle-smoke/FiveDo.Cli.exe --version
+          artifacts/bundle-smoke/FiveDo.Cli.exe selftest --json
+
+      - name: Frontend smoke test (Windows)
+        if: matrix.rid == 'win-x64'
+        shell: pwsh
+        run: |
+          $process = Start-Process -FilePath artifacts/bundle-smoke/FiveDo.Frontend.Avalonia.exe `
+            -ArgumentList '--smoke-test', '--smoke-output', 'artifacts/bundle-smoke/frontend-smoke.txt' `
+            -PassThru
+          if (-not $process.WaitForExit(60000)) {
+            $process.Kill()
+            throw 'Frontend smoke test timed out.'
+          }
+          if ($process.ExitCode -ne 0) {
+            throw "Frontend smoke test failed with exit code $($process.ExitCode)."
+          }
+          Get-Content artifacts/bundle-smoke/frontend-smoke.txt
+          if (-not (Select-String -Path artifacts/bundle-smoke/frontend-smoke.txt -Pattern 'FRONTEND SMOKE OK' -Quiet)) {
+            throw 'Frontend smoke marker is missing.'
+          }
+
+      - name: CLI and frontend smoke test (Linux/macOS)
+        if: matrix.rid != 'win-x64'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$(uname -m)" = "arm64" ] && [ "${{ matrix.rid }}" = "osx-x64" ]; then
+            echo "osx-x64 bundle built on an arm64 runner; checking the Mach-O architecture instead of executing it."
+            file artifacts/bundle-smoke/FiveDo.Cli
+            file artifacts/bundle-smoke/FiveDo.Frontend.Avalonia
+            exit 0
+          fi
+          ./artifacts/bundle-smoke/FiveDo.Cli --version
+          ./artifacts/bundle-smoke/FiveDo.Cli selftest --json
+          if [ "${{ matrix.rid }}" = "linux-x64" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq xvfb
+            xvfb-run -a ./artifacts/bundle-smoke/FiveDo.Frontend.Avalonia \
+              --smoke-test --smoke-output artifacts/bundle-smoke/frontend-smoke.txt
+          else
+            ./artifacts/bundle-smoke/FiveDo.Frontend.Avalonia \
+              --smoke-test --smoke-output artifacts/bundle-smoke/frontend-smoke.txt
+          fi
+          cat artifacts/bundle-smoke/frontend-smoke.txt
+          grep -q 'FRONTEND SMOKE OK' artifacts/bundle-smoke/frontend-smoke.txt
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: 5do-bundle-${{ matrix.rid }}
+          path: artifacts/bundles/${{ matrix.archive }}
+          if-no-files-found: error

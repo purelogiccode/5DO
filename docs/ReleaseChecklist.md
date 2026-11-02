@@ -1,7 +1,7 @@
 # v1.0 Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.0.0 release-ready**; M13 loadability complete, M14 is post-1.0 research
+**Release timing:** **v1.0.0 released**; unified Windows/Linux/macOS x64 bundles published
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
 full-compatibility one. Ship the platforms and titles that are validated, publish an
 honest per-title matrix and known issues, and move everything else to the post-1.0
@@ -27,10 +27,10 @@ been validated.**
 | Compatibility set | 12 boot-validated titles, with 5 showcase titles | Per-title status must be honest |
 | Disc formats | ISO, BIN, CUE+BIN, CHD | Already implemented and tested |
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
-| Packages | Portable zip/tar.gz | Installers/signing/notarization are post-1.0 |
+| Packages | One bundle per system | `5do-win-x64.zip`, `5do-linux-x64.tar.gz`, `5do-osx-x64.tar.gz`; each contains the CLI, desktop app, shared private runtime, README/license/notices/whatsnew |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
 | Version | **`v1.0.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; rc.1 is historical |
-| Release timing | **Released** | v1.0.0 published on GitHub; win-x64/linux-x64 artifacts and checksums attached |
+| Release timing | **Released** | v1.0.0 published on GitHub; unified bundles and checksums attached |
 
 ---
 
@@ -79,11 +79,11 @@ Recommended title statuses:
       [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - [x] OpenAL Soft LGPL-2.0-or-later obligations (notice, corresponding source
       offer, relinking rights) are included in the release decision. The runtime is
-      bundled for all six RIDs. Evidence: `docs/OpenALSoft.md` records the notice,
-      the exact upstream 1.23.1 source, the three-year written source offer, and
-      relinking instructions; `docs/licenses/OpenAL-Soft-COPYING.txt` contains the
-      complete LGPL-2.0 text; `packaging/package.ps1` copies both into every
-      archive, and the win-x64 archive was inspected after repackaging.
+      bundled in the Windows/Linux/macOS x64 bundles. Evidence: `docs/OpenALSoft.md`
+      records the notice, the exact upstream 1.23.1 source, the three-year written
+      source offer, and relinking instructions; `docs/licenses/OpenAL-Soft-COPYING.txt`
+      contains the complete LGPL-2.0 text; `packaging/package-bundle.ps1` copies both
+      into every bundle, and the win-x64 bundle was inspected after packaging.
 - [x] About dialog and CLI `--version`/license output are current.
 - [x] No BIOS ROM, disc image, extracted asset, WAV capture, or copyrighted game
       content is tracked in the repository; packaging uses only publish output plus
@@ -101,24 +101,24 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 ## 3. Build, test, and CI
 
 - [x] `dotnet build 5DO.sln -c Release` passes with 0 warnings and 0 errors
-      (1.0.0-rc.1).
+      (1.0.0).
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release` passes:
       **1,473/1,473** with the current tree.
 - [x] `dotnet format 5DO.sln --verify-no-changes` passes.
 - [x] CI is green on the supported runners (2026-11-02): Windows, Linux, macOS,
-      NativeAOT CLI/frontend, six-RID publishes, CodeQL, docs, and dependency review.
+      NativeAOT CLI/frontend, unified bundle builds, CodeQL, docs, and dependency review.
 - [x] Synthetic benchmark `--gate` passes: 2.28 ms/frame core mean, 4.03 ms core
       p99, 4.66 ms total p99, 0 bytes/frame.
-- [x] Trimmed CLI smoke test passes: `--version`, `selftest --json`,
+- [x] Bundle CLI smoke test passes: `--version`, `selftest --json`,
       `bench --frames 2 --json`, `info`, and a 300-frame disc run.
-- [x] Trimmed frontend smoke test passes (`--smoke-test`).
+- [x] Bundle frontend smoke test passes (`--smoke-test`).
 - [x] Linux x64 smoke test passes (2026-11-02): the full test suite **1,473/1,473**,
       CLI `selftest`, `bench`, `info`, `bios info`, a 3,000-frame Wolfenstein boot,
       non-silent audio, and the frontend `--smoke-test` on Linux Mint 22.3. The GL probe
       timed out under llvmpipe, so Linux GPU presentation is preview/best-effort; see
       [`Compatibility.md`](Compatibility.md) §10.3.
 - [x] NativeAOT CLI/frontend smoke tests are not shipped in 1.0.0; the
-      trimmed IL artifacts are the release artifacts.
+      framework-dependent single-file bundles are the release artifacts.
 
 Suggested commands:
 
@@ -162,8 +162,8 @@ and [`GameCompatibilityList.md`](GameCompatibilityList.md).
       preview/best-effort.
 
 M13.5/M13.6 (in-game/visual and high-resolution review) are **post-1.0** and do not
-block v1.0. Linux x64 full suite and CLI/frontend smoke passed; the remaining v1.0 work
-is the tag and artifact attachment. Linux GPU presentation remains preview/best-effort.
+block v1.0. Linux x64 full suite and CLI/frontend smoke passed; the unified bundles are
+built and published by CI. Linux GPU presentation remains preview/best-effort.
 
 ### 4.2 High-resolution CEL decision (M14 — post-1.0 research)
 
@@ -229,19 +229,39 @@ A new crash, silent corruption, or save-state regression is not.
 
 ## 5. Packaging and artifacts
 
-- [x] Publish each supported RID with the release version (win-x64 validated).
-- [x] Build portable archives with `packaging/package.ps1`.
-- [x] Each archive contains the executable, `README.md`, `LICENSE`,
-      `THIRD-PARTY-NOTICES.md`, `docs/Licensing.md`, `docs/ReleaseLegalReview.md`,
-      `docs/OpenALSoft.md`, `docs/licenses/OpenAL-Soft-COPYING.txt`, the release
-      notes, and `PACKAGE.txt`.
-- [x] `PACKAGE.txt` records component, RID, version, commit, and UTC build time
-      (repackaged after the release commit so the commit field is final).
-- [x] No PDBs or copyrighted content in release archives.
-- [x] Extract each archive to a clean folder and run the CLI/frontend smoke test.
-- [x] SHA-256 checksums generated for every archive.
-- [x] Archive sizes and checksums recorded in `SHA256SUMS.txt` next to the packages
-      after the release commit and repackaging.
+- [x] Publish the CLI and desktop app as framework-dependent single-file apphosts
+      (`PublishSingleFile=true`, `PublishTrimmed=false`,
+      `AppHostRelativeDotNet=runtime`).
+- [x] Stage one private .NET 10 runtime under `runtime/` and share it between both
+      apps; the runtime is not embedded in either executable.
+- [x] Build one bundle per system with `packaging/package-bundle.ps1`:
+      `5do-win-x64.zip`, `5do-linux-x64.tar.gz`, `5do-osx-x64.tar.gz`.
+- [x] Each bundle contains both executables, `runtime/`, `README.md`, `LICENSE`,
+      `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, `docs/Licensing.md`,
+      `docs/ReleaseLegalReview.md`, `docs/OpenALSoft.md`,
+      `docs/licenses/OpenAL-Soft-COPYING.txt`, the release notes, and `PACKAGE.txt`.
+- [x] Keep the native OpenAL Soft/Skia/ANGLE libraries beside the apphosts so the
+      LGPL replacement rights remain practical.
+- [x] `PACKAGE.txt` records component `bundle`, RID, version, commit, UTC build time,
+      runtime mode, launch commands, and the no-BIOS/no-disc notice.
+- [x] No PDBs or copyrighted content in release bundles.
+- [x] Extract each bundle to a clean folder and run the CLI/frontend smoke test.
+- [x] SHA-256 checksums generated for every bundle.
+- [x] CI builds the bundles on matching native runners and publishes them with the
+      checksums; the docs workflow updates GitHub Pages and the wiki.
+- [x] Local copies are written to `src/FiveDo.Frontend.Avalonia/bin/Release`.
+
+### 5.1 Single-file decision
+
+A self-contained single-file publish embeds a complete .NET runtime in **each**
+executable (roughly 70 MB per app before compression) and duplicates it. A
+framework-dependent single file without a private runtime is small but requires a
+system .NET 10 install.
+
+The release uses framework-dependent single-file apphosts plus one shared `runtime/`
+directory: each app is a single executable, the runtime is staged once, and the bundle
+runs without a system .NET install. This is the closest layout that satisfies both
+"single binaries" and "do not embed the .NET runtime in each binary".
 
 ---
 
@@ -253,10 +273,12 @@ A new crash, silent corruption, or save-state regression is not.
 - [x] Write release notes: feature summary, supported platforms, supported titles,
       known issues, BIOS/disc requirements, license.
 - [x] Tag the release (`v1.0.0`).
-- [x] Attach archives and checksums to the release (published on GitHub:
+- [x] Attach the unified bundles and checksums to the release (published on GitHub:
       <https://github.com/purelogiccode/5DO/releases/tag/v1.0.0>).
+- [x] CI release workflow builds the bundles, writes `SHA256SUMS.txt`, updates the
+      release, and removes obsolete per-component assets.
 - [x] Update README, `docs/Status.md`, `docs/Compatibility.md`,
-      `docs/KnownIssues.md`, and the release docs.
+      `docs/KnownIssues.md`, `docs/WhatsNew.md`, and the release docs.
 - [x] Record the post-1.0 backlog in `docs/ImplementationPlan.md`.
 
 | Sign-off | Name | Date |
@@ -264,6 +286,7 @@ A new crash, silent corruption, or save-state regression is not.
 | Release owner | Project owner (purelogiccode) | 2026-11-02 |
 | Legal / distribution | Approved: FreeDO modified GNU LGPL, donationware | 2026-11-02 |
 | Compatibility / QA | Documented-compatibility scope: 593/594 render, 12-title matrix; Linux x64 full suite | 2026-11-02 |
+| Packaging / CI | Unified bundles, shared private runtime, release workflow | 2026-11-02 |
 
 ---
 
