@@ -5,6 +5,32 @@ still change.
 
 ## [Unreleased]
 
+### Documentation
+
+- Added the MkDocs Material documentation site at
+  <https://purelogiccode.github.io/5DO/> with a dark theme, left navigation, search,
+  strict link validation, and GitHub Pages deployment.
+- Added the curated [5DO wiki](https://github.com/purelogiccode/5DO/wiki) with
+  installation, quick-start, FAQ, troubleshooting, compatibility, build, contributing,
+  and legal pages.
+- Added installation, FAQ, privacy, roadmap, and documentation-maintainer guides.
+- Rewrote the README with badges, a feature overview, platform support, quick start,
+  compatibility/performance snapshots, documentation links, and legal notes.
+- Added `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SUPPORT.md`, issue forms, and a pull
+  request template.
+
+### Build and CI
+
+- Fixed the missing embedded game database in CI by tracking
+  `src/FiveDo.Storage/Data/GameDatabase.xml` and anchoring user-data ignore rules.
+- Fixed trimming warnings in the diagnostics bundle.
+- Fixed cross-platform instance locking on Linux and macOS.
+- Pinned the .NET SDK to 10.0.301 and added NuGet lock files with locked-mode restore.
+- Added a CI aggregate gate, CodeQL, dependency review, docs deployment, and
+  OpenSSF Scorecard publishing.
+- Enabled secret scanning with push protection, private vulnerability reporting, and
+  branch protection on `master`.
+
 ### Added
 
 - SYS-01 multi-track discs and CD-DA: `ITrackedDiscSource` exposes the CUE/CHD
