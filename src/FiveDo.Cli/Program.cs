@@ -652,10 +652,11 @@ internal static class Program
             }
 
             fiqTraceWriter = new StreamWriter(fiqTrace);
-            machine.Clio.FiqObserver = (reason1, reason2) =>
+            machine.FiqRequested += request =>
                 fiqTraceWriter.WriteLine(
-                    $"f={machine.FramesExecuted} pc={machine.Cpu.ProgramCounter:x8} "
-                    + $"reason1={reason1:x8} reason2={reason2:x8}");
+                    FormatFiqRequest(machine.FramesExecuted, machine.Cpu.ProgramCounter, request));
+            machine.FiqEntered += entry =>
+                fiqTraceWriter.WriteLine(FormatFiqEntry(machine.FramesExecuted, entry));
         }
 
         StreamWriter? clioTraceWriter = null;
@@ -1277,7 +1278,23 @@ internal static class Program
             MovieFailures: movieVerification?.Failures,
             InputDevices: FormatInputDevices(inputDevices),
             GifPath: gifRecorder is null ? null : Path.GetFullPath(recordGifPath!),
-            GifFrames: gifRecorder?.CapturedFrames);
+            GifFrames: gifRecorder?.CapturedFrames,
+            Fiq: new CliFiqResult(
+                machine.FiqLatency.Requests,
+                machine.FiqLatency.Entries,
+                machine.FiqLatency.MatchedEntries,
+                machine.FiqLatency.UnmatchedEntries,
+                machine.FiqLatency.CoalescedRequests,
+                machine.FiqLatency.LastLatencyCycles,
+                machine.FiqLatency.MaxLatencyCycles,
+                machine.FiqLatency.AverageLatencyCycles),
+            DspStats: new CliDspResult(
+                machine.Dsp.InstructionsExecuted,
+                machine.Dsp.LoopCalls,
+                machine.Dsp.RunningLoops,
+                machine.Dsp.SleepingLoops,
+                machine.Dsp.MaxInstructionsPerLoop,
+                machine.Dsp.AverageInstructionsPerLoop));
 
         SaveNvramIfRequested(machine, nvramSelection);
 
@@ -3534,6 +3551,20 @@ internal static class Program
         };
     }
 
+    internal static string FormatFiqRequest(long frame, uint programCounter, FiqRequest request)
+    {
+        return $"f={frame} cycle={request.Cycle} kind=request "
+            + $"pc={programCounter:x8} reason1={request.ActiveReason1:x8} "
+            + $"reason2={request.ActiveReason2:x8}";
+    }
+
+    internal static string FormatFiqEntry(long frame, FiqEntry entry)
+    {
+        return $"f={frame} cycle={entry.Cycle} kind=entry pc={entry.ReturnAddress:x8} "
+            + $"reason1={entry.ActiveReason1:x8} reason2={entry.ActiveReason2:x8} "
+            + $"latency={entry.LatencyCycles} matched={(entry.MatchedRequest ? 1 : 0)}";
+    }
+
     private static void WriteRunResult(CliRunResult result, bool json)
     {
         if (json)
@@ -3551,6 +3582,20 @@ internal static class Program
         Console.WriteLine($"pc:          0x{result.Pc:x8}");
         Console.WriteLine($"frame hash:  0x{result.FrameHash:x8}");
         Console.WriteLine($"samples:     {result.Samples}");
+        if (result.Fiq is { } fiq && fiq.Requests > 0)
+        {
+            Console.WriteLine(
+                $"fiq:         {fiq.Requests} request(s), {fiq.Entries} entries, "
+                + $"max latency {fiq.MaxLatencyCycles} cycles, "
+                + $"avg {fiq.AverageLatencyCycles:F1}");
+        }
+        if (result.DspStats is { } dspStats && dspStats.LoopCalls > 0)
+        {
+            Console.WriteLine(
+                $"dsp:         {dspStats.Instructions} instructions over "
+                + $"{dspStats.LoopCalls} tick(s), max {dspStats.MaxInstructionsPerLoop}/tick, "
+                + $"avg {dspStats.AverageInstructionsPerLoop:F1}");
+        }
         if (result.GifPath is not null)
         {
             Console.WriteLine($"gif:         {result.GifPath} ({result.GifFrames} frames)");

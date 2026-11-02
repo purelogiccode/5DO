@@ -953,6 +953,25 @@ UX-23 coverage is compile/status level:
   `HighResolution`; the CLI reports `fixMode: 16` and a 576-line PAL high-res frame.
 - The full suite is **1,473 tests**.
 
+### 1.1aj Interrupt, DMA, and DSP telemetry (2026-11-02)
+
+The CORE-05/06/07 increment was checked with the Debug CLI, `panafz1.bin`, fresh NVRAM,
+`--frames 3000 --audio null`, and the disc named in each row.
+
+| Title | Frame hash | FIQ requests | FIQ entries | Matched | Unmatched | Coalesced | Mean latency | Max latency | DSP instructions | DSP ticks | Peak/tick | Mean/tick |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Gex (USA, Europe) | `0x05F38B50` | 21,183 | 14,345 | 13,855 | 490 | 7,328 | 7,429.8 | 859,234 | 88,955,550 | 2,205,094 | 106 | 51.7 |
+
+The Gex frame hash matches the 3,000-frame key recorded in section 1.1b. A second
+3,000-frame Gex run with `--clio-trace artifacts/clio-gex.txt` recorded **4,714** XBUS
+DMA transfers, each with a paired `clio dma` start and `clio dma-done` line; no
+`clio dma-blocked` line appears on the default FreeDO path, as expected.
+
+Lemmings (USA) also booted 3,000 frames to the documented `0x9C2E3236` frame hash with
+27,845 FIQ requests / 27,764 entries and a 257,935-cycle maximum latency. These runs are
+smoke evidence only: the latency distribution still needs an Opera-side timeline before
+CORE-07 can be marked complete.
+
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 
 All runs use the Release build, `panafz1.bin`, and a fresh NVRAM. The 3,000-frame

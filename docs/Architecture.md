@@ -131,6 +131,7 @@ machine = new FiveDoMachine(cpu, memory, madam, clio, dsp, sport, vdlp, xbus, cd
 ### Wiring rules
 
 - **Interrupts:** every device that can raise a FIQ depends on `IInterruptSink`, implemented by `Clio`. No chip calls `Clio` directly.
+- **Interrupt timing:** `Clio` stamps a request when the active and enable masks first intersect; `Arm60` reports the vector-entry cycle through `FiqEntered`; `FiveDoMachine.FiqLatency` matches the two and exposes request/entry/latency counters for `--fiq-trace` and `run --json`. The 3DO has no separate IRQ line, and vector entry costs no extra cycles.
 - **CEL memory:** `Madam` receives the `Ram` object directly because the original C++ uses raw RAM reads/writes (`mread`, `mwrite`) that bypass the MMIO map.
 - **VDLP memory:** `Vdlp` receives `Ram` directly and reads VRAM at the +2 MB offset, matching `_mem_read32((addr & 0xFFFFF) + 2 MB)`.
 - **SPORT memory:** `Sport` receives `Ram` directly, matching the original `VRAM` pointer.

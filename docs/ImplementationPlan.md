@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-02  
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,533 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,589 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **594 load**, **593 render**; 1 known boot failure (Crash 'n Burn Japan); 0 not loadable | v1.0 ships with this documented evidence; 12,000-frame in-game/visual review and high-res pass are post-1.0; Linux x64 full suite passed (GL preview) |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,533** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,589** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5, all-filter 4K60 budgets remain |
 | Platforms | Windows x64 validated; Linux x64 full suite **1,473/1,473** passed (GL preview); three unified x64 bundles (Windows/Linux/macOS) with framework-dependent single-file apphosts; .NET 10 runtime required (not bundled); opt-in NativeAOT | macOS/Pi/installers are post-1.0; Linux GPU presentation is unvalidated under llvmpipe |
 | Release | **v1.1.0 released (GitHub)** | Documented-compatibility scope; legal/attribution sign-off recorded; M13 loadability evidence complete; M14 is post-1.0 research; Linux x64 full suite passed; tags `v1.0.0`/`v1.1.0` and GitHub releases published |
@@ -40,8 +40,11 @@
 **2026-11-02 hardening pass:** CORE-12's dedicated fuzz harness (six targets plus a
 nightly workflow), VID-06's per-edge overscan and per-game crop profiles with a
 configurable void border, and VID-14's gallery filters, side-by-side compare, export,
-and settings sidecars are landed. The suite is **1,533 tests**; build, format, and
-inspectcode are clean.
+and settings sidecars are landed. **CORE-07** now measures FIQ request-to-vector
+latency and traces requests/entries, **CORE-06** closes the output-FIFO reload,
+DIPIR-protected XBUS DMA, MADAM MCTL persistence, and XBUS Opera poll/state gaps, and
+**CORE-05** exposes DSP per-tick timing metrics. The suite is **1,589 tests**; build,
+format, and inspectcode are clean.
 
 ---
 
@@ -97,6 +100,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **9. Land the disc/peripheral P0 batch.** SYS-01 multi-track TOC, raw CD-DA sectors, and mixing are implemented; AUD-05 persists CD-DA volume/mute in settings, UI, CLI, and state. SYS-02 now has an M3U playlist, live host swap, F3/UI swap, guest inject, and CLI swap. Finish known-title CD-DA evidence, ODE prompts, then SYS-03 PAL/NTSC, SYS-15 calibration/multiplayer pointer, SYS-18 auto profiles. See Part II.
 - [ ] **10. Polish the shipped UX.** UX-06 Lua/frame editor/lag counter, UX-12 per-game NVRAM/drag-drop, UX-13 external metadata/media/editor, UX-19 gamepad quick-menu navigation. See Part II.
 - [ ] **11. Post-1.0 platform and packaging work.** macOS/Pi validation, installers/signing/notarization, and the "best in the world" gates in §8.2.
+- [x] **12. Land the CORE-05/06/07 audit increment (2026-11-02).** FIQ request-to-vector latency telemetry and traces, the CLIO/DIPIR/FIFO/MCTL/XBUS audit fixes and tests, and DSP per-tick statistics are implemented. Evidence: **1,589 tests**, clean build/format/inspectcode, and a 3,000-frame Gex/Lemmings boot with the documented frame hashes intact. See section 9 and [`Diagnostics.md`](Diagnostics.md) section 7.
 
 ---
 
@@ -138,7 +142,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 24 done · 22 partial · 75 pending (121 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 25 done · 25 partial · 71 pending (121 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -146,9 +150,9 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[CORE-02](#feat-core-02)** CLIO timer scheduler parity — P0 · M · depends on: FND-01 — **Partial** — remaining: CLIO timer scheduler option is implemented; parity validation remains
 - [ ] **[CORE-03](#feat-core-03)** MADAM CEL busy timing — P0 · L · depends on: FND-01 — **Partial** — remaining: MADAM CEL busy option is implemented; full timing parity remains
 - [ ] **[CORE-04](#feat-core-04)** CD-ROM timing and command parity — P0 · XL · depends on: FND-01, CORE-11 — **Partial** — remaining: cycle-based data timing, the CD-DA/TOC/Sub-Q path, command/status transcripts, and CD-DA read-ahead are implemented; full command latency, subcode, DIPIR tagging, and raw-vs-Opera transcript diffs remain
-- [ ] **[CORE-05](#feat-core-05)** DSP timing and optional threading — P0 · M · depends on: FND-01 — **Pending**
-- [ ] **[CORE-06](#feat-core-06)** SPORT/XBUS/DMA timing audit — P0 · M · depends on: CORE-11 — **Pending**
-- [ ] **[CORE-07](#feat-core-07)** Interrupt latency / FIQ/IRQ audit — P0 · M · depends on: CORE-11 — **Pending**
+- [ ] **[CORE-05](#feat-core-05)** DSP timing and optional threading — P0 · M · depends on: FND-01 — **Partial** — remaining: per-tick instructions, loop/sleep counts, average and peak instructions, and `run --json` DSP statistics are implemented; the optional bit-identical DSP worker thread remains
+- [ ] **[CORE-06](#feat-core-06)** SPORT/XBUS/DMA timing audit — P0 · M · depends on: CORE-11 — **Partial** — remaining: output-FIFO reload gating, DIPIR-protected XBUS DMA, MADAM MCTL state persistence, XBUS Opera poll/FIFO semantics, DMA start/completion trace, and the PBUS/SPORT/XBUS audit tests are implemented; full Opera trace diffs remain
+- [ ] **[CORE-07](#feat-core-07)** Interrupt latency / FIQ/IRQ audit — P0 · M · depends on: CORE-11 — **Partial** — remaining: request/entry cycle stamps, `FiqLatencyTracker`, `--fiq-trace` request/entry/latency lines, `run --json` FIQ statistics, masked/nested/return/re-entry tests, and CLIO/DIPIR/XBUS ordering tests are implemented; Opera differential traces remain
 - [ ] **[CORE-08](#feat-core-08)** Accuracy/performance profiles — P0 · S · depends on: FND-01 — **Partial** — remaining: EmulationProfile/EmulatorTuning exist; full profile coverage and validation remain
 - [x] **[CORE-09](#feat-core-09)** 4DO/Opera fix parity audit — P0 · M · depends on: SYS-17 — **Done**
 - [ ] **[CORE-10](#feat-core-10)** Hardware test ROM suite — P0 · L — **Pending**
@@ -171,7 +175,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[SYS-08](#feat-sys-08)** CPU overclock/underclock — P1 · S · depends on: FND-01 — **Partial** — remaining: CPU clock option exists; broader validation remains
 - [x] **[SYS-09](#feat-sys-09)** CD speed control — P1 · M · depends on: CORE-04 — **Done**
 - [x] **[SYS-10](#feat-sys-10)** Random seed control — P1 · S · depends on: FND-01 — **Done**
-- [ ] **[SYS-11](#feat-sys-11)** MADAM matrix hardware/software — P1 · S · depends on: FND-01 — **Pending**
+- [x] **[SYS-11](#feat-sys-11)** MADAM matrix hardware/software — P1 · S · depends on: FND-01 — **Done** — the VDL display-control `clut_bypass` bit selects the fixed grayscale CLUT exactly as Opera does; the frame assembler, OpenGL palette shader, and Vulkan `Palette.frag` share the branch
 - [ ] **[SYS-12](#feat-sys-12)** SWI HLE for Portfolio OS — P2 · L · depends on: CORE-01 — **Pending**
 - [x] **[SYS-13](#feat-sys-13)** VDLP bypass CLUT — P1 · S · depends on: FND-01 — **Done**
 - [x] **[SYS-14](#feat-sys-14)** Per-game NVRAM and versions — P1 · M · depends on: FND-02 — **Done**
@@ -391,6 +395,41 @@ These are **post-1.0 goals**, not v1.0 blockers. A release can be called “the 
 ---
 
 ## 9. Recently completed fixes and verification
+
+### 2026-11-02 — CORE-05/06/07 interrupt, DMA, and DSP audit increment
+
+- [x] **CORE-07 telemetry.** `FiqLatencyTracker` records the cycle at which CLIO's active
+  and enable masks first intersect, the CPU vector-entry cycle, the matched latency, and
+  unmatched/coalesced requests. `Arm60.CyclesExecuted` and `FiqEntered` provide the CPU
+  side; `Clio.CycleProvider`, `FiqRequested`, and active-reason properties provide the
+  controller side; `FiveDoMachine.FiqLatency` exposes the counters.
+- [x] `--fiq-trace` now writes separate `kind=request` and `kind=entry` lines with cycle,
+  PC/return address, active reasons, `latency`, and `matched`; `run --json` adds a `fiq`
+  object (requests, entries, matched/unmatched, coalesced, last/max/average latency).
+- [x] Tests cover masked/unmasked entry, instruction-cycle latency, request matching,
+  level-triggered re-entry, FIQ return/bank restoration, CLIO request transitions,
+  timer requests, and a full machine request-to-entry round trip.
+- [x] **CORE-06 fixes.** The CLIO output FIFO now gates next-descriptor reload on the
+  `0x304` channel request bit (OP-11). A DIPIR-protected XBUS DMA leaves the enable bit
+  set and makes no progress under `OperaDipir`. MADAM persists the MCTL-written gate
+  (section version 3), so reset/state load no longer flips CLUT/video DMA gating. XBUS
+  device-15 Opera semantics expose the pending status nibble, honor `POLREMASK`/`POLRE`,
+  store only the interrupt-enable bits, use the MEI/CD/OK status layout, and raise the
+  poll FIQ from the combined poll register. XBUS state load now rejects a state whose
+  attached-device slots do not match instead of misaligning the stream.
+- [x] CLIO DMA tracing adds a `clio dma-blocked` line and a `clio dma-done` line with the
+  final target and FIQ reason. Tests lock the FreeDO PBUS DMA length/progress/byte-order
+  behavior, all SPORT mask/high-resolution paths, CLIO DMA lengths and DIPIR blocking,
+  output FIFO gating, XBUS built-in poll/status/FIQ behavior, and MADAM MCTL round trips.
+- [x] **CORE-05 metrics.** `Dsp` reports loop calls, running/sleeping ticks, peak and mean
+  instructions per tick; `run --json` adds `dspStats` and the text result prints a `dsp:`
+  summary. The optional threaded DSP remains open.
+- [x] Evidence: Gex (USA, Europe) 3,000 frames reports `0x05F38B50` (matching the
+  documented key), 21,183 FIQ requests / 14,345 entries / max 859,234 cycles, and
+  88,955,550 DSP instructions over 2,205,094 ticks (735 ticks/frame, max 106, mean 51.7).
+  CLIO tracing recorded 4,714 XBUS DMA transfers with paired start/done lines.
+- [x] Verification: **1,589 tests pass**; build **0 warnings / 0 errors**;
+  `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**.
 
 ### 2026-11-02 — VID-14 screenshot filters, compare, export, and sidecars
 
@@ -3721,7 +3760,14 @@ SYS-09 adds the CD speed selector.
 <a id="feat-core-05"></a>
 ### CORE-05 - DSP timing and optional threading
 
-**Priority:** P0 | **Effort:** M | **Depends on:** FND-01 | **Status:** Pending
+**Priority:** P0 | **Effort:** M | **Depends on:** FND-01 | **Status:** Partial (2026-11-02)
+
+**Implemented (2026-11-02).** `Dsp` now reports `LoopCalls`, `RunningLoops`,
+`SleepingLoops`, `MaxInstructionsPerLoop`, and `AverageInstructionsPerLoop` alongside the
+existing instruction counter. `run --json` exposes a `dspStats` object and the text
+result prints a one-line summary. Tests cover running and sleeping ticks and the
+per-tick peak/mean. The optional bit-identical `DspWorker` thread and its save-state
+handshake remain open.
 
 **Problem.** 5DO runs one DSP sample per scheduler event on the core thread. Opera offers an experimental threaded DSP. 5DO has no DSP timing/thread option.
 
@@ -3748,7 +3794,29 @@ SYS-09 adds the CD speed selector.
 <a id="feat-core-06"></a>
 ### CORE-06 - SPORT/XBUS/DMA timing audit
 
-**Priority:** P0 | **Effort:** M | **Depends on:** CORE-11 | **Status:** Pending
+**Priority:** P0 | **Effort:** M | **Depends on:** CORE-11 | **Status:** Partial (2026-11-02)
+
+**Implemented (2026-11-02).** The audit closed four concrete gaps and locked the
+remaining reference behavior with tests:
+
+- CLIO output-FIFO next-descriptor reload now requires the `0x304` channel request bit
+  (`OP-11`), matching Opera's `dma_channel_enabled`.
+- CLIO XBUS DMA checks `XbusAccessAborts` before clearing `0x304` under `OperaDipir`; a
+  protected transfer stays enabled and makes no progress.
+- MADAM persists the MCTL-written gate in section version 3, so cold reset re-enables
+  the default gates and state load preserves the guest's disabled gates.
+- XBUS device-15 Opera semantics expose `_pollDevice` in `GetPoll`, honor `POLREMASK`
+  and `POLRE`, store only the interrupt-enable bits, use Opera's MEI/CD/OK status
+  layout, and raise the poll FIQ from the combined poll register.
+- XBUS state load rejects a state whose attached-device slot set does not match the
+  live controller instead of misaligning the remaining sections.
+- CLIO tracing adds `clio dma-blocked` and `clio dma-done` lines.
+
+Tests cover FreeDO PBUS DMA lengths, DEST/PROGRESS, the untouched FreeDO control
+slot, CPU-visible byte order, negative lengths, SPORT masks and high-resolution planes,
+CLIO DMA lengths/DIPIR blocking, output FIFO gating, and the XBUS built-in responder
+and state mismatch. Remaining: full Opera PBUS/SPORT trace diffs on DMA-heavy titles
+and a decision on whether an Opera-compatible PBUS layout becomes an opt-in mode.
 
 **Problem.** 5DO ports FreeDO's DMA behavior; Opera has additional DMA8/PBUS control-port semantics. DMA/PBUS bugs can corrupt VRAM or stall CD loads.
 
@@ -3769,7 +3837,31 @@ SYS-09 adds the CD speed selector.
 <a id="feat-core-07"></a>
 ### CORE-07 - Interrupt latency / FIQ/IRQ audit
 
-**Priority:** P0 | **Effort:** M | **Depends on:** CORE-11 | **Status:** Pending
+**Priority:** P0 | **Effort:** M | **Depends on:** CORE-11 | **Status:** Partial (2026-11-02)
+
+**Implemented (2026-11-02).** The 3DO wires every device interrupt to CLIO's FIQ
+controller; there is no separate IRQ line, and both FreeDO and Opera check only FIQ
+after each instruction. 5DO now measures that path end to end:
+
+- `Arm60.CyclesExecuted` counts ARM clock cycles; `Arm60.FiqEntered` reports the entry
+  cycle and the value written to `LR_fiq`. Vector entry charges no extra cycles, matching
+  both references.
+- `Clio.CycleProvider`, `FiqRequested`, and active-reason properties report the cycle at
+  which the active and enable masks first intersect. Repeated level-triggered raises
+  while pending are coalesced; enable-mask writes can start a request.
+- `FiqLatencyTracker` records requests, entries, matched/unmatched entries, coalesced
+  requests, last/max/average latency, and the pending request cycle.
+- `--fiq-trace` writes `kind=request` and `kind=entry` lines with cycle, PC/return
+  address, active reasons, `latency`, and `matched`; `run --json` adds a `fiq` object.
+- Tests cover masked/unmasked entry, instruction-cycle latency, request matching,
+  level-triggered re-entry, return/bank restoration, CLIO transitions, timer requests,
+  and a machine-level request-to-entry round trip. CLIO/DIPIR/XBUS ordering is covered by
+  the `ClioFiqTelemetryTests` and existing DIPIR latch tests.
+
+Observed on Gex 3,000 frames: 21,183 requests, 14,345 entries (13,855 matched, 490
+unmatched), 7,328 coalesced, mean 7,430 cycles, max 859,234 cycles. Remaining: compare
+the request/entry timeline against an Opera trace and classify the long masked windows
+(they are candidates for CORE-04/CORE-13).
 
 **Problem.** Timing-sensitive titles depend on FIQ entry latency and CLIO/DIPIR ordering. 5DO has no explicit latency tests.
 

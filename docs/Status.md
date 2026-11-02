@@ -33,7 +33,7 @@ are **post-1.0**.
 library deduplication by 3DO game ID, moves the OpenAL license text to
 `docs/OpenAL-Soft-COPYING.txt`, removes the frame/PC/cycle counter from the desktop
 status bar, and completes the Serilog catch-block coverage and launch-statistics
-wiring. The full suite is **1,533/1,533** passing. The bundle layout is unchanged:
+wiring. The full suite is **1,589/1,589** passing. The bundle layout is unchanged:
 framework-dependent single-file apphosts, no bundled .NET runtime, no PDB/XML files.
 
 **Latest work (2026-11-02):** the CLI and desktop shell check the public GitHub release
@@ -47,7 +47,10 @@ measures present p99 0.23 ms and GPU p99 0.07 ms. OpenGL remains the default.
 The 2026-11-02 hardening pass added `tools/FiveDo.Fuzz` (state, disc, CUE, Opera-FS,
 CD command-stream, and ARM60 targets plus a nightly workflow), per-edge overscan and
 per-game crop profiles with a configurable void border, and screenshot gallery filters,
-side-by-side compare, export, and settings sidecars. The suite is **1,533 tests**.
+side-by-side compare, export, and settings sidecars. The same pass added FIQ
+request-to-vector latency telemetry and `--fiq-trace` request/entry lines, closed the
+CLIO output-FIFO/DIPIR/MADAM-MCTL/XBUS poll audit gaps, and exposed DSP per-tick
+statistics in `run --json`. The suite is **1,589 tests**.
 
 SYS-01 and AUD-05 now expose multi-track CUE/CHD tables and CD-DA: `ITrackedDiscSource`
 carries native 2048/2336/2352-byte sectors, `CueDiscImage` handles multi-file/multi-track

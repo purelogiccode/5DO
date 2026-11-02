@@ -288,6 +288,32 @@ public sealed class DspTests
     }
 
     [Fact]
+    public void Loop_TracksPerTickInstructionMetrics()
+    {
+        var dsp = new DspCore();
+        var program = new ProgramBuilder();
+        program.Word(Alu(0, muxA: 1, muxB: 0, numOps: 1));
+        program.Word(NonRegister(0x3EE, writeBack: true));
+        program.Word(Sleep);
+        for (var i = 0; i < program.Words.Count; i++)
+        {
+            dsp.WriteMemory(i, program.Words[i]);
+        }
+
+        dsp.SetRunning(true);
+        _ = dsp.Loop();
+        dsp.SetRunning(false);
+        _ = dsp.Loop();
+
+        Assert.Equal(2, dsp.LoopCalls);
+        Assert.Equal(1, dsp.RunningLoops);
+        Assert.Equal(1, dsp.SleepingLoops);
+        Assert.True(dsp.InstructionsExecuted > 0);
+        Assert.Equal(dsp.InstructionsExecuted, dsp.MaxInstructionsPerLoop);
+        Assert.Equal(dsp.InstructionsExecuted, dsp.AverageInstructionsPerLoop);
+    }
+
+    [Fact]
     public void Loop_GeneratesAudioFiqWhenDspWritesInterruptRegister()
     {
         var host = new RecordingDspHost();

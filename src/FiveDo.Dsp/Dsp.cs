@@ -71,6 +71,10 @@ public sealed class Dsp : IDsp, IStateSection
     private bool _running;
     private bool _genFiq;
     private long _instructionsExecuted;
+    private long _loopCalls;
+    private long _runningLoops;
+    private long _sleepingLoops;
+    private long _maxInstructionsPerLoop;
     private readonly Queue<DspTraceEntry> _dspTrace = new();
 
     private uint _rbaseX4;
@@ -126,6 +130,22 @@ public sealed class Dsp : IDsp, IStateSection
 
     /// <summary>Gets the number of DSP instructions executed since startup (diagnostics).</summary>
     public long InstructionsExecuted => _instructionsExecuted;
+
+    /// <summary>Gets the number of <see cref="Loop"/> calls (host sample ticks).</summary>
+    public long LoopCalls => _loopCalls;
+
+    /// <summary>Gets the number of loop calls that executed DSP instructions.</summary>
+    public long RunningLoops => _runningLoops;
+
+    /// <summary>Gets the number of loop calls that returned while the DSP was asleep.</summary>
+    public long SleepingLoops => _sleepingLoops;
+
+    /// <summary>Gets the largest instruction count observed in one loop call.</summary>
+    public long MaxInstructionsPerLoop => _maxInstructionsPerLoop;
+
+    /// <summary>Gets the mean instructions per running loop call.</summary>
+    public double AverageInstructionsPerLoop =>
+        _runningLoops == 0 ? 0 : (double)_instructionsExecuted / _runningLoops;
 
     /// <summary>Gets or sets a value indicating whether DSP instructions are recorded.</summary>
     public bool DspTraceEnabled { get; set; }
@@ -340,11 +360,15 @@ public sealed class Dsp : IDsp, IStateSection
     /// <inheritdoc />
     public uint Loop()
     {
+        _loopCalls++;
         if (!_running)
         {
+            _sleepingLoops++;
             return ((uint)_imem[0x3ff] << 16) | _imem[0x3fe];
         }
 
+        _runningLoops++;
+        var instructionStart = _instructionsExecuted;
         Reset();
 
         var flags = new DspFlags();
@@ -686,6 +710,12 @@ public sealed class Dsp : IDsp, IStateSection
         if (_dspPcnt <= 0)
         {
             _dspPcnt = unchecked((short)(_dspPcnt + _dspPrld));
+        }
+
+        var loopInstructions = _instructionsExecuted - instructionStart;
+        if (loopInstructions > _maxInstructionsPerLoop)
+        {
+            _maxInstructionsPerLoop = loopInstructions;
         }
 
         return ((uint)_imem[0x3ff] << 16) | _imem[0x3fe];

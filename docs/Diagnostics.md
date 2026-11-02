@@ -245,21 +245,31 @@ dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin `
   --frames 3000 --clio-trace artifacts/clio.txt --fiq-trace artifacts/fiq.txt
 ```
 
-`--clio-trace` records selected register writes and DMA starts:
+`--clio-trace` records selected register writes and DMA activity:
 
 ```text
 clio f=<frame> write <addr:x3>=<value:x8> delay=<n>
 clio dma f=<frame> select=<device> target=<addr> len=<n> first=<4 bytes>
+clio dma-blocked f=<frame> select=<device> dipir=1
+clio dma-done f=<frame> select=<device> target=<end addr> fiq=29
 ```
 
 The trace covers timer/FIQ registers (`0x200`-`0x20C`, `0x220`), the timer block
-(`0x100`-`0x17C`), and `0x304`. `--fiq-trace` records:
+(`0x100`-`0x17C`), and `0x304`. `--fiq-trace` records both sides of the interrupt
+path with an ARM-cycle timestamp:
 
 ```text
-f=<frame> pc=<pc> reason1=<hex> reason2=<hex>
+f=<frame> cycle=<cycles> kind=request pc=<pc> reason1=<hex> reason2=<hex>
+f=<frame> cycle=<cycles> kind=entry pc=<lr_fiq> reason1=<hex> reason2=<hex> latency=<cycles> matched=<0|1>
 ```
 
-FIQ reason bit 0 is V0, bit 1 is V1, and other bits come from CLIO/DSP/CD sources.
+A request is reported when CLIO's active and enable masks first intersect; repeated
+level-triggered raises while the level stays pending are coalesced. An entry with
+`matched=0` is a level-triggered re-entry or a test-hook entry with no tracked request.
+FIQ entry charges no extra cycles, matching FreeDO and Opera, so `latency` is measured
+from the request to the end of the instruction that observes it. FIQ reason bit 0 is V0,
+bit 1 is V1, and other bits come from CLIO/DSP/CD sources. `run --json` reports the same
+counters in its `fiq` object and DSP per-tick instruction statistics in `dspStats`.
 Use these when the guest hangs waiting for an interrupt or a DMA completion.
 
 ---

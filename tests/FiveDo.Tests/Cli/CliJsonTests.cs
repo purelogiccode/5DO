@@ -81,7 +81,23 @@ public sealed class CliJsonTests
             Warnings: [],
             CheatCount: 2,
             CheatWrites: 1234,
-            CheatPath: "/data/cheats/ABCD1234.json");
+            CheatPath: "/data/cheats/ABCD1234.json",
+            Fiq: new CliFiqResult(
+                Requests: 10,
+                Entries: 10,
+                MatchedEntries: 9,
+                UnmatchedEntries: 1,
+                CoalescedRequests: 2,
+                LastLatencyCycles: 6,
+                MaxLatencyCycles: 11,
+                AverageLatencyCycles: 5.5),
+            DspStats: new CliDspResult(
+                Instructions: 900,
+                LoopCalls: 300,
+                RunningLoops: 280,
+                SleepingLoops: 20,
+                MaxInstructionsPerLoop: 7,
+                AverageInstructionsPerLoop: 3.2));
 
         var json = JsonSerializer.Serialize(result, CliJsonContext.Default.CliRunResult);
 
@@ -112,6 +128,13 @@ public sealed class CliJsonTests
         Assert.Contains("\"cheatCount\": 2", json, StringComparison.Ordinal);
         Assert.Contains("\"cheatWrites\": 1234", json, StringComparison.Ordinal);
         Assert.Contains("\"cheatPath\": \"/data/cheats/ABCD1234.json\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"fiq\": {", json, StringComparison.Ordinal);
+        Assert.Contains("\"requests\": 10", json, StringComparison.Ordinal);
+        Assert.Contains("\"maxLatencyCycles\": 11", json, StringComparison.Ordinal);
+        Assert.Contains("\"averageLatencyCycles\": 5.5", json, StringComparison.Ordinal);
+        Assert.Contains("\"dspStats\": {", json, StringComparison.Ordinal);
+        Assert.Contains("\"maxInstructionsPerLoop\": 7", json, StringComparison.Ordinal);
+        Assert.Contains("\"averageInstructionsPerLoop\": 3.2", json, StringComparison.Ordinal);
         Assert.DoesNotContain("\"moviePath\"", json, StringComparison.Ordinal);
         Assert.DoesNotContain("\"movieVerification\"", json, StringComparison.Ordinal);
     }

@@ -366,6 +366,12 @@ All fields are camelCase. Nullable fields are omitted or `null` when not applica
 | `movieFrames` | int? | Frames recorded or played by the movie. |
 | `movieVerification` | string? | `pass` or `fail` when `--movie-verify` ran. |
 | `movieFailures` | string[]? | Recorded evidence that differed during verification. |
+| `fiq` | object | Request/entry telemetry: `requests`, `entries`, `matchedEntries`, `unmatchedEntries`, `coalescedRequests`, `lastLatencyCycles`, `maxLatencyCycles`, `averageLatencyCycles`. |
+| `dspStats` | object | DSP sample-loop telemetry: `instructions`, `loopCalls`, `runningLoops`, `sleepingLoops`, `maxInstructionsPerLoop`, `averageInstructionsPerLoop`. |
+
+`--fiq-trace` writes request and entry lines with ARM-cycle timestamps and matched
+latency; see [`Diagnostics.md`](Diagnostics.md) §7 for the format and the measurement
+invariants.
 
 `cdStatus=0xE1` and `cdPoll=0x0C` is the historical static READ_ID-only wait signature.
 

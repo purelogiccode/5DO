@@ -961,3 +961,56 @@ M1 implements the section primitive used by all later chips:
 - CHDSharp 1.6.0 supports Zstd (`ChdCodec.Zstd`/`Cdzstd`) and ships `VendoredZSTD.dll`.
   All 589 local CHDs use CDLZMA/CDZLIB/CDFLAC, so no zstd fixture is present; no native
   dependency or code change is required.
+
+### 12.25 FIQ latency telemetry (2026-11-02)
+
+- The 3DO has one interrupt path: every device raises CLIO's FIQ; there is no IRQ line.
+  `Arm60.Step` checks `!CPSR.F && NeedFiq` after the instruction, exactly like FreeDO's
+  `_arm_Execute` and Opera's `opera_arm_execute`. Vector entry charges no extra cycles in
+  either reference; do not "fix" that without a differential trace.
+- `Arm60.CyclesExecuted` is telemetry only. It is not serialized, is not reset by
+  `SoftReset`, and continues across state loads. `Arm60.FiqEntered` reports the cycle at
+  the end of the interrupted instruction and the `LR_fiq` value.
+- CLIO reports a request when `NeedFiq` changes from false to true. The observer also
+  runs after writes to `0x40/0x44/0x48/0x4C/0x60/0x64/0x68/0x6C`, because enabling an
+  already-active reason is when the request actually becomes pending. Repeated
+  `GenerateFiq` calls while pending are level-triggered duplicates, not new requests.
+- `FiqLatencyTracker` keeps at most one pending request (coalescing later reasons) and
+  records the matched latency. Entries with no tracked request are counted as unmatched
+  and reported with `matched=0`; this is how level-triggered re-entries after a guest
+  clears F remain visible.
+- `--fiq-trace` and `run --json` consume the same counters. The maximum observed on a
+  3,000-frame Gex boot is 859,234 cycles; treat long windows as candidates for CD/BIOS
+  analysis, not as a reason to add artificial latency.
+
+### 12.26 DMA, FIFO, and XBUS audit decisions (2026-11-02)
+
+- CLIO output FIFOs reload a next descriptor only when the `0x304` channel request bit is
+  set. The input FIFO already had this gate; `OP-11` is now complete for both directions.
+- A DIPIR-protected XBUS DMA returns before clearing `0x304` bit 20. The transfer remains
+  enabled, matching Opera's `clio_handle_dma`, and the trace writes `clio dma-blocked`.
+- MADAM's `_mctlWritten` flag is guest-visible state: it decides whether an unwritten MCTL
+  defaults the CLUT/video DMA gates to enabled. It is cleared by cold `Reset`, kept by
+  `SoftReset` (which does not clear MCTL), and serialized in MADAM section version 3.
+  Version-2 states infer it from a non-zero MCTL register.
+- XBUS device 15 under `OperaSemantics` now matches Opera's poll register: the status
+  nibble comes from `_pollDevice`, `POLREMASK` clears the built-in status/command FIFOs,
+  `POLRE` clears the ready bit, only `0x07` is stored as interrupt enables, and the READ_ID
+  status is `[0x83,0,0x10,0,0x01,...,0xE1]`. The FreeDO path keeps the historical raw poll
+  and `0x83`/`0x01` status layout.
+- XBUS state load rejects an attached-device slot that the live controller does not have.
+  The old code skipped the payload and left the section stream misaligned.
+- PBUS DMA stays on the FreeDO layout: packet words begin at `DEST + 4`, `LEN` is
+  decremented before the first word, and the first control word is untouched. Opera writes
+  a `0xFFFFFFFF` control-port sludge word at the original `DEST` and writes packet bytes in
+  the opposite order. The FreeDO layout is the shipped default and is locked by tests; an
+  Opera PBUS mode needs full-collection evidence before it can be offered.
+
+### 12.27 DSP per-tick telemetry (2026-11-02)
+
+- `Dsp.Loop` counts every host sample tick, separates running from sleeping ticks, and
+  records the peak and mean DSP instructions per running tick. The counters are telemetry
+  only and are not serialized.
+- The observed 3,000-frame Gex cadence is 2,205,094 ticks (735 per frame, matching
+  44.1 kHz / 60 Hz), 88,955,550 instructions, mean 51.7 and peak 106 per tick. Use this as
+  the baseline for CORE-05's optional worker thread and for spotting DSP hot loops.

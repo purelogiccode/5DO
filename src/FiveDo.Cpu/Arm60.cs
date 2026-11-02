@@ -44,6 +44,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
     private int _cycles;
     private uint _carryOut;
     private long _instructionsExecuted;
+    private long _cyclesExecuted;
     private int _ldmAddress;
     private int _ldmValue;
     private int _ldmInUse;
@@ -100,6 +101,25 @@ public sealed class Arm60 : ICpuBackend, IStateSection
     /// <summary>Gets the number of instructions executed since the last reset.</summary>
     public long InstructionsExecuted => _instructionsExecuted;
 
+    /// <summary>Gets the number of ARM clock cycles consumed since the last cold reset.</summary>
+    /// <remarks>
+    /// The counter is telemetry, not architectural state: it is not saved, is not advanced by
+    /// <see cref="SoftReset"/>, and continues across save-state loads. CLIO uses it to stamp
+    /// FIQ requests for <see cref="FiqLatencyTracker"/>.
+    /// </remarks>
+    public long CyclesExecuted => _cyclesExecuted;
+
+    /// <summary>
+    /// Gets or sets a callback invoked after a FIQ has been taken, with the cycle at which the
+    /// vector was entered and the value written to <c>LR_fiq</c>.
+    /// </summary>
+    /// <remarks>
+    /// The callback fires after the interrupted instruction has completed, matching FreeDO's
+    /// <c>_arm_Execute</c> and Opera's <c>opera_arm_execute</c>. Vector entry charges no
+    /// additional cycles in either reference.
+    /// </remarks>
+    public Action<long, uint>? FiqEntered { get; set; }
+
     /// <summary>Gets or sets a value indicating whether a fast interrupt is pending.</summary>
     public bool FiqPending
     {
@@ -141,6 +161,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
         _cycles = 0;
         _carryOut = 0;
         _instructionsExecuted = 0;
+        _cyclesExecuted = 0;
         _ldmAddress = 0;
         _ldmValue = 0;
         _ldmInUse = 0;
@@ -203,7 +224,9 @@ public sealed class Arm60 : ICpuBackend, IStateSection
             EnterFiq();
         }
 
-        return -_cycles;
+        var cycles = -_cycles;
+        _cyclesExecuted += cycles;
+        return cycles;
     }
 
     /// <summary>Reads a user-visible register (R0-R15).</summary>
@@ -956,6 +979,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
         state.SetMode(0x11);
         state.Load(14, state.ProgramCounter + 4);
         state.ProgramCounter = 0x0000001c;
+        FiqEntered?.Invoke(_cyclesExecuted + (-_cycles), state.User[14]);
     }
 
     private uint ReadWord(uint address)

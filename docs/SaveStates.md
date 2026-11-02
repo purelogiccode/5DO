@@ -111,8 +111,8 @@ Machine; the table below is sorted by ID. Never renumber an existing section.
 |---:|---|---:|---|---|
 | 1 | CPU | 1 | `Arm60` | R0-R15, banked SVC/ABT/FIQ/IRQ/UND/SPSR register sets, CPSR, FIQ pending, second-ROM select, data-abort pending, carry-out, LDM scratch. |
 | 2 | Memory | 1 | `FiveDoMemory` | ROM bank, PC-adjust flag, the full 19 MB RAM backing (3 MB visible + 16 x 1 MB high-res mirrors), 2 MB ROM, 32 KB NVRAM. |
-| 3 | MADAM | 2 | `Madam` | 2048+64 register file, 32-entry PLUT, PBUS queue, read/write modulo, CEL FSM, matrix result temporaries, pending CEL draw, and busy-cycle deadline. Version 1 is accepted with the pending flag derived from the FSM and no busy deadline. |
-| 4 | CLIO | 2 | `Clio` | 65536-word register file, DSP window words, timer/line state, Opera cascade carry, input/output FIFOs and pointers, DMA state. Version 1 is accepted with a cleared carry. |
+| 3 | MADAM | 3 | `Madam` | 2048+64 register file, 32-entry PLUT, PBUS queue, read/write modulo, CEL FSM, matrix result temporaries, pending CEL draw, busy-cycle deadline, and the MCTL-written gate. Version 1 is accepted with the pending flag derived from the FSM and no busy deadline; version 2 adds the busy deadline; version 3 adds the MCTL gate and infers it from MCTL for older states. |
+| 4 | CLIO | 3 | `Clio` | 65536-word register file, DSP window words, timer/line state, Opera cascade carry, input/output FIFOs and pointers, DMA state, and the separate 32-bit PRNG. Version 1 is accepted with a cleared carry; version 2 adds the carry; version 3 adds the CLIO PRNG. |
 | 5 | DSP | 1 | `Dsp` | PC, noise/audio status, semaphore status/data, counters, interrupt/multiplier/ALU/shifter state, masks, running/FIQ flags, base/seed, IMem/DMem. |
 | 6 | SPORT | 1 | `Sport` | Color, source, and destination registers. |
 | 7 | VDLP | 1 | `Vdlp` | CLUT B/G/R, background, head/current VDL, modulo, current/previous bitmap, out-control, CLUT DMA, line delay. |

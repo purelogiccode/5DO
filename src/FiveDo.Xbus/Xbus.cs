@@ -134,7 +134,28 @@ public sealed class Xbus : IClioXbus, IStateSection
     {
         if (_select == BuiltInDevice)
         {
-            _poll = (byte)((_poll & 0xf0) | (int)(value & 0xf));
+            if (OperaSemantics)
+            {
+                if ((value & 0x08) != 0)
+                {
+                    ClearBuiltInFifos();
+                }
+
+                if ((value & 0x80) != 0)
+                {
+                    _pollDevice &= unchecked((byte)~0x80);
+                }
+
+                _poll = (byte)((_poll & 0xf0) | (int)(value & 0x07));
+                if (PollFiqPending())
+                {
+                    _interrupts?.GenerateFiq(4, 0);
+                }
+            }
+            else
+            {
+                _poll = (byte)((_poll & 0xf0) | (int)(value & 0xf));
+            }
         }
 
         IXbusDevice? device = GetSelectedDevice();
@@ -149,6 +170,23 @@ public sealed class Xbus : IClioXbus, IStateSection
         {
             _interrupts?.GenerateFiq(4, 0);
         }
+    }
+
+    private void ClearBuiltInFifos()
+    {
+        _statusLength = 0;
+        _commandPointer = 0;
+        Array.Clear(_statusFifo);
+        Array.Clear(_commandFifo);
+        _pollDevice &= unchecked((byte)~(PolStatus | PolData | 0x40));
+    }
+
+    private bool PollFiqPending()
+    {
+        var poll = (byte)(_poll | (_pollDevice & 0xf0));
+        return ((poll & PolStatus) != 0 && (poll & PolStatusMask) != 0) ||
+            ((poll & PolData) != 0 && (poll & PolDataMask) != 0) ||
+            ((poll & 0x40) != 0 && (poll & 0x04) != 0);
     }
 
     private void LatchMediaAccess(IXbusDevice? device)
@@ -211,7 +249,7 @@ public sealed class Xbus : IClioXbus, IStateSection
         uint result;
         if (_select == BuiltInDevice)
         {
-            result = _poll;
+            result = OperaSemantics ? (uint)(_poll | (_pollDevice & 0xf0)) : _poll;
         }
         else
         {
@@ -301,7 +339,13 @@ public sealed class Xbus : IClioXbus, IStateSection
             var attached = reader.ReadBoolean();
             if (attached)
             {
-                _devices[i]?.LoadState(reader);
+                if (_devices[i] is not { } device)
+                {
+                    throw new InvalidStateException(
+                        $"XBUS state contains device slot {i}, but no device is attached.");
+                }
+
+                device.LoadState(reader);
             }
         }
     }
@@ -319,13 +363,36 @@ public sealed class Xbus : IClioXbus, IStateSection
         }
 
         _statusLength = 12;
-        _statusFifo[0] = 0x83;
-        for (var i = 1; i < 12; i++)
+        if (OperaSemantics)
         {
-            _statusFifo[i] = 0x01;
+            // Opera: MEI manufacturer ID at byte 2, CD device number at byte 4, and
+            // the OK status at byte 11.
+            Array.Clear(_statusFifo);
+            _statusFifo[0] = 0x83;
+            _statusFifo[2] = 0x10;
+            _statusFifo[4] = 0x01;
+            _statusFifo[11] = 0xe1;
+        }
+        else
+        {
+            _statusFifo[0] = 0x83;
+            for (var i = 1; i < 12; i++)
+            {
+                _statusFifo[i] = 0x01;
+            }
         }
 
         _pollDevice |= PolStatus;
+        if (OperaSemantics)
+        {
+            if (PollFiqPending())
+            {
+                _interrupts?.GenerateFiq(4, 0);
+            }
+
+            return;
+        }
+
         if (((_pollDevice & PolStatus) != 0 && (_pollDevice & PolStatusMask) != 0) ||
             ((_pollDevice & PolData) != 0 && (_pollDevice & PolDataMask) != 0))
         {

@@ -133,9 +133,13 @@ Instruction groups:
 - **Branch:** B/BL, signed offset, link register.
 - **SWI:** mode switch, SPSR save, PC vector.
 - **Undefined:** vector and mode.
-- **FIQ:** pending FIQ entry/exit, banked registers, CPSR I/F bits.
+- **FIQ:** pending FIQ entry/exit, banked registers, CPSR I/F bits, entry cycle
+  timestamp, matched request-to-vector latency, level-triggered re-entry, and return.
 - **Memory interface:** `0xBADACCE5` reads, ignored writes, unaligned word behavior.
-- **Cycle counts:** each instruction class returns the same count as FreeDOCore.
+- **Cycle counts:** each instruction class returns the same count as FreeDOCore; vector
+  entry itself charges no extra cycles (matching FreeDO and Opera).
+- **Interrupt telemetry:** request/entry counters, coalescing, unmatched re-entry, and
+  the CLI trace line shape.
 
 CPU test harness:
 
@@ -149,7 +153,7 @@ cpu.Step();
 Assert.Equal(1u, cpu.ReadRegister(0));
 ```
 
-Implemented CPU suites: `Arm60StateTests`, `ArmBarrelShifterTests`, `ArmConditionTests`, `ArmDataProcessingTests`, `ArmMultiplySwapTests`, `ArmMemoryTests`, `ArmBlockTransferTests`, `ArmControlFlowTests`, `ArmModeBankTests`, `ArmCycleTests`, `ArmDisassemblerTests`, and `ArmSyntheticBootTests`. The synthetic boot test builds a 1 MB ROM, runs one million instructions, and checks the computed checksum in RAM.
+Implemented CPU suites: `Arm60StateTests`, `ArmBarrelShifterTests`, `ArmConditionTests`, `ArmDataProcessingTests`, `ArmMultiplySwapTests`, `ArmMemoryTests`, `ArmBlockTransferTests`, `ArmControlFlowTests`, `ArmModeBankTests`, `ArmCycleTests`, `ArmInterruptLatencyTests`, `ArmDisassemblerTests`, and `ArmSyntheticBootTests`. The synthetic boot test builds a 1 MB ROM, runs one million instructions, and checks the computed checksum in RAM.
 
 Implemented M3 suites: `ClioTests`, `MadamTests`, `SportTests`, `VdlpTests`, `FrameAssemblerTests`, `BiosImageTests`, `NvramImageTests`, and `FiveDoMachineTests`. The machine suite covers the synthetic VDL/SPORT program, frame determinism, the reference cycle budget, zero steady-state allocations, and an optional 300-frame real-BIOS smoke test gated by `FIVEDO_BIOS`.
 
@@ -170,7 +174,8 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
 - `TexelDraw_Line`, `TexelDraw_Scale`, `TexelDraw_Arbitrary`: known coordinates, clipping, write masks.
 - Packed/literal/LR CEL streams: hand-built CCB + preamble + data; assert VRAM pixels and CEL cycles.
 - `LoadPLUT` address math.
-- PBUS DMA and FIQ.
+- PBUS DMA and FIQ; FreeDO length/DEST/PROGRESS/byte-order behavior, MCTL gate reset and
+  state round trip.
 - `FIX_BIT_TIMING_3/5/6`, `FIX_BIT_GRAPHICS_STEP_Y` behavior.
 - Golden VRAM hashes for a small set of CEL scenes.
 
@@ -180,8 +185,12 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
 - Interrupt mask/active/high behavior; `NeedFiq`.
 - Timer modes: decrement, reload, cascade, odd-only FIQ, stop on zero without reload.
 - Timer reload values and cycle counts.
-- FIFO input/output: start/next address, length, wrap, FIQ, status.
-- DMA: source/length, XBUS data FIFO, word order, `len` sentinel, FIQ 29.
+- FIFO input/output: start/next address, length, wrap, FIQ, status, and reload gated by
+  the `0x304` channel request bit.
+- DMA: source/length, XBUS data FIFO, word order, `len` sentinel, FIQ 29, DIPIR blocking,
+  start/blocked/done trace lines.
+- FIQ request transitions: active/enable intersection, repeated level raises, re-raise
+  after clear, timer source, and cycle stamping.
 - DSP windows: 2-word/1-word writes and reads at all four windows.
 - ROM select.
 - VCNT update.
@@ -201,13 +210,15 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
 - Reset/running.
 - PRNG sequence.
 - Sample output: known IMem values -> packed uint; 567-cycle cadence.
+- Per-tick metrics: running/sleeping loop counts, peak and mean instructions per tick.
 - Golden DSP program trace: instruction-by-instruction PC/accumulator/flags.
 
 ### 4.7 SPORT
 
 - Set color, fill 512 words, masked fill, page copy, masked copy.
-- Source/destination index masking.
-- High-res mirroring (later).
+- Source/destination index masking; unknown write offsets are ignored.
+- High-res mirroring for full/masked fill and copy across all four planes.
+- FreeDO XOR-mask semantics for zero/full masks (locked against the Opera alternative).
 - Save/load state.
 
 ### 4.8 Video / VDLP
@@ -226,9 +237,11 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
 
 - 16 device slots; attach/detach.
 - Device 0xF built-in responder: command `0x83`, 12-byte status, poll behavior.
+- FreeDO status/poll shape and Opera MEI/CD/OK status, pending status nibble,
+  `POLREMASK`/`POLRE`, interrupt-enable storage, and poll FIQ.
 - Select/poll/command/data register routing.
 - FIQ generation when a device reports it.
-- Device save/load section.
+- Device save/load section; missing attached-device slots are rejected.
 - Unknown device returns zero/`0x30`.
 
 ### 4.10 CD-ROM

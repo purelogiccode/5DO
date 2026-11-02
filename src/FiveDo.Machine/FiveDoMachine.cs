@@ -112,6 +112,10 @@ public sealed class FiveDoMachine
         Cpu = new Arm60(Memory.Bus, Clio, Tuning, Compatibility);
         Quartz = new Quartz(Tuning, () => Clio.TimerDelay);
 
+        Clio.CycleProvider = () => Cpu.CyclesExecuted;
+        Clio.FiqRequested = HandleFiqRequest;
+        Cpu.FiqEntered = HandleFiqEntry;
+
         Cdrom.ProgramCounterProvider = () => Cpu.ProgramCounter;
         Cdrom.FrameProvider = () => _framesExecuted;
 
@@ -202,6 +206,35 @@ public sealed class FiveDoMachine
 
     /// <summary>Gets warnings produced by the most recent state load.</summary>
     public IReadOnlyList<string> StateWarnings => _stateWarnings;
+
+    /// <summary>Gets the FIQ request-to-vector latency telemetry for this machine.</summary>
+    /// <remarks>
+    /// Counters are diagnostics only and are reset by <see cref="Reset"/>. They are deliberately
+    /// not part of the save-state payload.
+    /// </remarks>
+    public FiqLatencyTracker FiqLatency { get; } = new();
+
+    /// <summary>Gets or sets the observer for a FIQ becoming pending.</summary>
+    public Action<FiqRequest>? FiqRequested { get; set; }
+
+    /// <summary>Gets or sets the observer for a FIQ vector entry.</summary>
+    public Action<FiqEntry>? FiqEntered { get; set; }
+
+    private void HandleFiqRequest(FiqRequest request)
+    {
+        FiqLatency.OnRequested(request);
+        FiqRequested?.Invoke(request);
+    }
+
+    private void HandleFiqEntry(long cycle, uint returnAddress)
+    {
+        FiqEntry entry = FiqLatency.OnEntered(
+            cycle,
+            returnAddress,
+            Clio.ActiveFiqReason1,
+            Clio.ActiveFiqReason2);
+        FiqEntered?.Invoke(entry);
+    }
 
     /// <summary>
     /// Gets or sets how unknown state sections are handled. The default skips them with a
@@ -335,6 +368,7 @@ public sealed class FiveDoMachine
         _frame.Clear();
         _framesExecuted = 0;
         _audioSamplesProduced = 0;
+        FiqLatency.Reset();
         AudioSink?.Reset();
 
         if (Compatibility.IsAnvil == 30)
@@ -433,6 +467,7 @@ public sealed class FiveDoMachine
         var bytes = buffer.ToArray();
         var reader = new StateReader(bytes);
         _stateWarnings.Clear();
+        FiqLatency.Reset();
 
         if (reader.Remaining < 8)
         {
@@ -575,7 +610,7 @@ public sealed class FiveDoMachine
                 || (section.Id == StateSectionIds.Cdrom && section.Version <= 4)
                 || (section.Id == StateSectionIds.Quartz && section.Version <= 3)
                 || (section.Id == StateSectionIds.Clio && section.Version <= 3)
-                || (section.Id == StateSectionIds.Madam && section.Version == 2)
+                || (section.Id == StateSectionIds.Madam && section.Version <= 3)
                 || (section.Id == StateSectionIds.Vdlp && section.Version <= 3)
                 || (section.Id == StateSectionIds.Options && section.Version <= 6);
             if (!supportedVersion)

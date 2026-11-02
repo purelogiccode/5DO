@@ -191,8 +191,11 @@ public sealed class Madam : IMadamBus, IStateSection
     public uint Id => StateSectionIds.Madam;
 
     /// <summary>Gets the save-state section version.</summary>
-    /// <remarks>Version 2 adds the CEL busy deadline and pending-draw flag.</remarks>
-    public ushort Version => 2;
+    /// <remarks>
+    /// Version 2 adds the CEL busy deadline and pending-draw flag. Version 3 persists the
+    /// MCTL-written flag so the CLUT/video DMA gates survive a state round trip.
+    /// </remarks>
+    public ushort Version => 3;
 
     /// <summary>Resets the MADAM register file and CEL state. FreeDO: <c>_madam_Init</c>.</summary>
     public void Reset()
@@ -203,6 +206,7 @@ public sealed class Madam : IMadamBus, IStateSection
         _readModulo = 0;
         _writeModulo = 0;
         _fsm = CelFsmState.Idle;
+        _mctlWritten = false;
         _celDrawPending = false;
         _celBusyCyclesRemaining = 0;
         _celBusyCyclesTotal = 0;
@@ -497,6 +501,7 @@ public sealed class Madam : IMadamBus, IStateSection
         writer.WriteUInt32(_celDrawPending ? 1u : 0u);
         writer.WriteUInt64(_celBusyCyclesRemaining);
         writer.WriteUInt64(_celBusyCyclesTotal);
+        writer.WriteBoolean(_mctlWritten);
     }
 
     /// <summary>Reads the MADAM save-state payload. FreeDO: <c>_madam_Load</c>.</summary>
@@ -533,26 +538,43 @@ public sealed class Madam : IMadamBus, IStateSection
             _celDrawPending = _fsm is CelFsmState.InProcess or CelFsmState.Suspended;
             _celBusyCyclesRemaining = 0;
             _celBusyCyclesTotal = 0;
-            return;
         }
-
-        var pending = reader.ReadUInt32();
-        if (pending > 1)
+        else
         {
-            throw new InvalidStateException($"Invalid CEL pending-draw flag {pending}.");
+            var pending = reader.ReadUInt32();
+            if (pending > 1)
+            {
+                throw new InvalidStateException($"Invalid CEL pending-draw flag {pending}.");
+            }
+
+            var busyRemaining = reader.ReadUInt64();
+            var busyTotal = reader.ReadUInt64();
+            if (busyRemaining > busyTotal)
+            {
+                throw new InvalidStateException(
+                    $"Invalid CEL busy deadline: {busyRemaining} of {busyTotal} cycles remain.");
+            }
+
+            _celDrawPending = pending != 0;
+            _celBusyCyclesRemaining = busyRemaining;
+            _celBusyCyclesTotal = busyTotal;
         }
 
-        var busyRemaining = reader.ReadUInt64();
-        var busyTotal = reader.ReadUInt64();
-        if (busyRemaining > busyTotal)
+        if (reader is StateSectionReader { Version: < 3 })
         {
-            throw new InvalidStateException(
-                $"Invalid CEL busy deadline: {busyRemaining} of {busyTotal} cycles remain.");
+            // Version 2 and older states cannot distinguish "MCTL never written" from
+            // "MCTL written as zero". A non-zero MCTL means the guest has written it;
+            // otherwise keep the pre-write gate behavior.
+            _mctlWritten = _registers[0x008] != 0;
         }
-
-        _celDrawPending = pending != 0;
-        _celBusyCyclesRemaining = busyRemaining;
-        _celBusyCyclesTotal = busyTotal;
+        else if (reader.Remaining > 0)
+        {
+            _mctlWritten = reader.ReadBoolean();
+        }
+        else
+        {
+            _mctlWritten = _registers[0x008] != 0;
+        }
     }
 
     /// <summary>

@@ -57,6 +57,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     private int _lineSize;
     private int _flagTime;
     private bool _timerCarry;
+    private bool _fiqWasPending;
     private uint _prng32State = 0xDEADBEEF;
 
     /// <summary>Initializes a new instance of the <see cref="Clio"/> class.</summary>
@@ -119,8 +120,23 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     /// <summary>Gets or sets the frame provider used to stamp diagnostic trace lines.</summary>
     public Func<long>? FrameProvider { get; set; }
 
-    /// <summary>Gets or sets an optional observer for generated FIQ reason masks (diagnostics only).</summary>
-    public Action<uint, uint>? FiqObserver { get; set; }
+    /// <summary>
+    /// Gets or sets the ARM cycle provider used to stamp FIQ requests. The machine points this
+    /// at <c>Arm60.CyclesExecuted</c>; unit tests may leave it null, which stamps cycle zero.
+    /// </summary>
+    public Func<long>? CycleProvider { get; set; }
+
+    /// <summary>
+    /// Gets or sets the observer for a FIQ becoming pending (the active and enable masks first
+    /// intersect). Repeated level-triggered raises while pending are not reported.
+    /// </summary>
+    public Action<FiqRequest>? FiqRequested { get; set; }
+
+    /// <summary>Gets the active-low FIQ reason register (<c>0x40</c>).</summary>
+    public uint ActiveFiqReason1 => _registers[0x40];
+
+    /// <summary>Gets the active-high FIQ reason register (<c>0x60</c>).</summary>
+    public uint ActiveFiqReason2 => _registers[0x60];
 
     /// <summary>Gets the timer-dependent value used by register <c>0x120</c>. FreeDO: <c>TIMER_VAL</c>.</summary>
     public int TimerValue => _timerValue;
@@ -151,6 +167,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         _lineSize = 0;
         _flagTime = 0;
         _timerCarry = false;
+        _fiqWasPending = false;
 
         _registers[0x0028] = unchecked((uint)resetReason);
         _registers[0x0400] = 0x80;
@@ -309,6 +326,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
                         _registers[0x40] |= 0x80000000;
                     }
 
+                    EvaluateFiqRequest();
                     return false;
                 case 0x44:
                     _registers[0x40] &= ~value;
@@ -317,13 +335,16 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
                         _registers[0x40] &= ~0x80000000;
                     }
 
+                    EvaluateFiqRequest();
                     return false;
                 case 0x48:
                     _registers[0x48] |= value;
+                    EvaluateFiqRequest();
                     return false;
                 case 0x4c:
                     _registers[0x48] &= ~value;
                     _registers[0x48] |= 0x80000000;
+                    EvaluateFiqRequest();
                     return false;
                 case 0x60:
                     _registers[0x60] |= value;
@@ -332,6 +353,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
                         _registers[0x40] |= 0x80000000;
                     }
 
+                    EvaluateFiqRequest();
                     return false;
                 case 0x64:
                     _registers[0x60] &= ~value;
@@ -340,12 +362,15 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
                         _registers[0x40] &= ~0x80000000;
                     }
 
+                    EvaluateFiqRequest();
                     return false;
                 case 0x68:
                     _registers[0x68] |= value;
+                    EvaluateFiqRequest();
                     return false;
                 case 0x6c:
                     _registers[0x68] &= ~value;
+                    EvaluateFiqRequest();
                     return false;
             }
         }
@@ -529,13 +554,38 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     /// <param name="reason2">High interrupt mask.</param>
     public void GenerateFiq(uint reason1, uint reason2)
     {
-        FiqObserver?.Invoke(reason1, reason2);
         _registers[0x40] |= reason1;
         _registers[0x60] |= reason2;
         if (_registers[0x60] != 0)
         {
             _registers[0x40] |= 0x80000000;
         }
+
+        EvaluateFiqRequest();
+    }
+
+    /// <summary>
+    /// Reports a request when the active and enable masks first intersect. Repeated raises
+    /// while the level remains pending are intentionally ignored.
+    /// </summary>
+    private void EvaluateFiqRequest()
+    {
+        if (!NeedFiq)
+        {
+            _fiqWasPending = false;
+            return;
+        }
+
+        if (_fiqWasPending)
+        {
+            return;
+        }
+
+        _fiqWasPending = true;
+        FiqRequested?.Invoke(new FiqRequest(
+            CycleProvider?.Invoke() ?? 0,
+            _registers[0x40],
+            _registers[0x60]));
     }
 
     /// <summary>
@@ -949,7 +999,10 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         {
             _outputPointers[channel] = 0;
             GenerateFiq(1u << (channel + 12), 0);
-            if (fifo.NextAddress != 0)
+
+            // Opera: reload is enabled by the channel request bit. Without it the
+            // output FIFO detaches even when a next descriptor is present.
+            if (fifo.NextAddress != 0 && (_registers[0x304] & (1u << channel)) != 0)
             {
                 fifo.StartAddress = fifo.NextAddress;
                 fifo.StartLength = fifo.NextLength;
@@ -1070,6 +1123,9 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
             _outputPointers[i] = reader.ReadInt32();
             _outputFifos[i] = ReadFifo(reader);
         }
+
+        // The restored level is the new baseline; do not synthesize a request for it.
+        _fiqWasPending = NeedFiq;
     }
 
     private static void WriteFifo(IStateWriter writer, FifoDescriptor fifo)
@@ -1128,6 +1184,15 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
             return;
         }
 
+        // Opera: a DIPIR-protected XBus DMA stays enabled but makes no progress.
+        if (UseOperaDipir && XbusAccessAborts(Xbus?.SelectedDeviceAddress ?? 0, 0x5C0))
+        {
+            TraceWriter?.WriteLine(
+                $"clio dma-blocked f={FrameProvider?.Invoke() ?? -1} "
+                + $"select={Xbus?.SelectedDevice ?? -1:x} dipir=1");
+            return;
+        }
+
         _registers[0x304] &= ~0x00100000u;
         var source = Madam?.Peek(0x540) ?? 0;
         var target = source;
@@ -1164,6 +1229,9 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
 
         _registers[0x400] |= 0x80;
         Madam?.Poke(0x544, 0xFFFFFFFC);
+        TraceWriter?.WriteLine(
+            $"clio dma-done f={FrameProvider?.Invoke() ?? -1} "
+            + $"select={(Xbus?.SelectedDevice ?? -1):x} target={target:x8} fiq=29");
         GenerateFiq(1u << 29, 0);
     }
 
