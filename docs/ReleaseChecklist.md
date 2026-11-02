@@ -105,6 +105,8 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release` passes:
       **1,473/1,473** with the current tree.
 - [x] `dotnet format 5DO.sln --verify-no-changes` passes.
+- [x] `jb inspectcode 5DO.sln --severity=WARNING` reports 0 warnings and 0 errors
+      (2026-11-02).
 - [x] CI is green on the supported runners (2026-11-02): Windows, Linux, macOS,
       NativeAOT CLI/frontend, unified bundle builds, CodeQL, docs, and dependency review.
 - [x] Synthetic benchmark `--gate` passes: 2.28 ms/frame core mean, 4.03 ms core
@@ -126,6 +128,7 @@ Suggested commands:
 dotnet build 5DO.sln -c Release
 dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release
 dotnet format 5DO.sln --verify-no-changes
+jb inspectcode 5DO.sln --severity=WARNING --no-updates
 dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- --frames 600 --gate
 ```
 
@@ -228,6 +231,9 @@ A new crash, silent corruption, or save-state regression is not.
 ---
 
 ## 5. Packaging and artifacts
+
+**Hard gate:** a release must **produce and publish runnable bundles/binaries**. A
+source-only tag or GitHub release is not a complete release.
 
 - [x] Publish the CLI and desktop app as framework-dependent single-file apphosts
       (`PublishSingleFile=true`, `PublishTrimmed=false`,

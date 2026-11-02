@@ -25,9 +25,25 @@ is documented as preview/best-effort. Record new Linux evidence in
 dotnet build 5DO.sln -c Debug
 dotnet test 5DO.sln -c Debug --no-build --no-restore
 dotnet format 5DO.sln --verify-no-changes --no-restore
+jb inspectcode 5DO.sln --severity=WARNING --no-updates
 ```
 
 Run the release gate commands from `docs/ReleaseChecklist.md` before tagging a release.
+
+## Release artifacts
+
+Every release must **produce and publish runnable bundles/binaries**. A source tag or
+GitHub release without the built artifacts is not a complete release.
+
+- One bundle per system: `5do-win-x64.zip`, `5do-linux-x64.tar.gz`,
+  `5do-osx-x64.tar.gz`.
+- Each bundle contains the single-file CLI and desktop apphosts, one shared private
+  .NET 10 runtime under `runtime/`, `README.md`, `LICENSE`,
+  `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, and the release/legal docs.
+- Build with `packaging/package-bundle.ps1`. `build-bundle.yml` validates the bundles
+  in CI and `release.yml` publishes them with `SHA256SUMS.txt`.
+- Keep a local copy of each bundle in `src/FiveDo.Frontend.Avalonia/bin/Release`.
+- Run `jb inspectcode` at warning severity and fix every warning/error before release.
 
 ## Documentation rules
 

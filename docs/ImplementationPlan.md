@@ -358,6 +358,7 @@ v1.0 is a **documented-compatibility** release. It does **not** require full com
 - [x] Windows x64 build, test, soak, renderer parity, and unified bundles validated.
 - [x] Legal/attribution sign-off recorded: FreeDO modified GNU LGPL, free open-source donationware, no commercial use.
 - [x] Build, 1,473 tests, format, inspectcode, and CI green (2026-11-02).
+- [x] Produce and publish one runnable bundle per system (Windows/Linux/macOS x64) with the CLI and desktop app; a source-only tag is not a release.
 - [x] Linux x64 validation passed on Linux Mint 22.3: full test suite **1,473/1,473**, `selftest`, `bench`, `info`, `bios info`, 3,000-frame Wolfenstein, non-silent audio, frontend `--smoke-test`; the GL probe timed out under llvmpipe, so Linux GPU presentation is preview/best-effort.
 - [x] Bump to `1.0.0`, tag `v1.0.0`, attach unified bundles/checksums, and record release-owner/QA sign-off.
 

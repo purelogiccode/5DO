@@ -41,7 +41,7 @@ public sealed class InstanceLock : IDisposable
     public string Path { get; private set; }
 
     /// <summary>Gets the owner record written by this process.</summary>
-    public string Owner { get; private set; } = string.Empty;
+    public string Owner { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether the current process should skip the lock check.
