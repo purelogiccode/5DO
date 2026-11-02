@@ -18,13 +18,11 @@ public sealed class InstanceLockTests
             Assert.NotNull(first);
             Assert.Null(conflict);
             Assert.True(File.Exists(first.Path));
-            var owner = InstanceLock.ReadOwner(first.Path);
-            Assert.NotNull(owner);
             Assert.Contains(
                 Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                owner,
+                first.Owner,
                 StringComparison.Ordinal);
-            Assert.Contains(FiveDoVersion.Version, owner, StringComparison.Ordinal);
+            Assert.Contains(FiveDoVersion.Version, first.Owner, StringComparison.Ordinal);
 
             Assert.False(InstanceLock.TryAcquire(directory, out second, out conflict));
             Assert.Null(second);

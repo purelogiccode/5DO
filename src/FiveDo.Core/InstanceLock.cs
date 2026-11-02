@@ -30,14 +30,18 @@ public sealed class InstanceLock : IDisposable
     private FileStream? _stream;
     private bool _disposed;
 
-    private InstanceLock(FileStream stream, string path)
+    private InstanceLock(FileStream stream, string path, string owner)
     {
         _stream = stream;
         Path = path;
+        Owner = owner;
     }
 
     /// <summary>Gets the full lock file path.</summary>
     public string Path { get; private set; }
+
+    /// <summary>Gets the owner record written by this process.</summary>
+    public string Owner { get; private set; } = string.Empty;
 
     /// <summary>
     /// Gets a value indicating whether the current process should skip the lock check.
@@ -63,20 +67,25 @@ public sealed class InstanceLock : IDisposable
         try
         {
             Directory.CreateDirectory(fullDirectory);
+            // Windows enforces FileShare.Read by blocking a second writer while still
+            // allowing ReadOwner. Unix enforces FileShare.None through an OS lock, so
+            // use it there; FileStream.Lock is not supported on macOS.
+            var share = OperatingSystem.IsWindows() ? FileShare.Read : FileShare.None;
             var stream = new FileStream(
                 path,
                 FileMode.OpenOrCreate,
                 FileAccess.ReadWrite,
-                FileShare.Read,
+                share,
                 bufferSize: 128,
                 FileOptions.WriteThrough);
+            string owner;
             try
             {
                 stream.SetLength(0);
-                var text = string.Create(
+                owner = string.Create(
                     CultureInfo.InvariantCulture,
                     $"{Environment.ProcessId}|{DateTimeOffset.UtcNow:O}|{FiveDoVersion.Version}");
-                var bytes = Encoding.UTF8.GetBytes(text);
+                var bytes = Encoding.UTF8.GetBytes(owner);
                 stream.Write(bytes);
                 stream.Flush(flushToDisk: true);
             }
@@ -87,7 +96,7 @@ public sealed class InstanceLock : IDisposable
             }
 
             conflict = null;
-            instanceLock = new InstanceLock(stream, path);
+            instanceLock = new InstanceLock(stream, path, owner);
             return true;
         }
         catch (IOException exception)
