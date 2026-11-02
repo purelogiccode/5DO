@@ -1,6 +1,10 @@
 # Game Compatibility Results
 
+**Last updated:** 2026-11-01
+
 Automated output of `tools/compat-sweep.ps1`. These are **loadability** results, not final compatibility grades: `Loadable/Rendered` still needs a visual and input review before it becomes `Playable` or `Good`. The base sweep ran 3,000 frames. The 18 titles that were black, solid-color, or not loadable were rerun at 20,000 frames with `panafz10`; the Anvil-dependent or suspected boot-hang titles were rerun at 65,000 frames with `panafz10e-anvil`. WorldCup Super Stadium also needs the FZ-10J BIOS plus its Kanji font ROM (BIOS2); the library now classifies 1 MB Kanji font images as secondary ROMs. That retry leaves **593 rendered and 1 known failure** (Crash 'n Burn Japan, which needs a working bootable Japanese BIOS or a better dump). The 12,000-frame and BIOS triage remains in [`Compatibility.md`](Compatibility.md) 13.2.
+
+For a filterable per-game view with screenshots, open the [compatibility browser](CompatibilityBrowser.md).
 
 ## Summary
 

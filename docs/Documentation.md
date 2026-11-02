@@ -35,6 +35,17 @@ mkdocs build --strict
 `--strict` turns MkDocs warnings into errors. Broken relative links, missing pages, and
 invalid anchors must be fixed rather than ignored.
 
+The compatibility browser reads `docs/data/compatibility.json`, which is generated from the
+committed compatibility Markdown. Regenerate it after changing
+`GameCompatibilityResults.md` or `GameCompatibilityList.md`:
+
+```powershell
+python tools/generate-compat-site.py
+```
+
+Use `--import-screenshots` when the sweep artifacts contain new final-frame PNGs. The docs
+CI job runs `--check` and fails if the committed JSON is stale.
+
 ## Publishing
 
 The site deploys automatically on every push to `master` through

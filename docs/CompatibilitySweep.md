@@ -41,6 +41,17 @@ The generator uses only the Python standard library and rewrites
 [`GameCompatibilityList.md`](GameCompatibilityList.md). It matches titles by normalized
 filename, not by disc hash, so verify a match before treating it as the same revision.
 
+After updating [`GameCompatibilityResults.md`](GameCompatibilityResults.md) or the reference
+list, rebuild the data used by the [compatibility browser](CompatibilityBrowser.md):
+
+```powershell
+python tools/generate-compat-site.py
+```
+
+Add `--import-screenshots` when the sweep artifacts contain new final-frame PNGs; the script
+copies them into `docs/assets/compat/` and records their paths in
+`docs/data/compatibility.json`. The docs CI job runs `--check` and fails if the JSON is stale.
+
 ---
 
 ## 2. Status definitions

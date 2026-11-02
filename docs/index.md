@@ -53,9 +53,11 @@
 
     ---
 
-    The 594-disc loadability sweep, tested titles, and honest limitations.
+    Browse the 594-disc loadability sweep, filter by status and region, and open
+    per-disc evidence.
 
-    [:octicons-arrow-right-24: Compatibility notes](Compatibility.md)
+    [:octicons-arrow-right-24: Compatibility browser](CompatibilityBrowser.md)
+    · [:octicons-arrow-right-24: Compatibility notes](Compatibility.md)
 
 </div>
 
@@ -97,6 +99,7 @@ the remaining work.
 - [Installation](Installation.md) — source builds, CI artifacts, platform notes, data folders.
 - [User guide](UserGuide.md) — desktop shell, controls, filters, saves, library, audio, logs.
 - [FAQ](FAQ.md) — common questions and short answers.
+- [Compatibility browser](CompatibilityBrowser.md) — filterable per-game sweep results with screenshots and evidence.
 - [Compatibility notes](Compatibility.md) — BIOS, disc, input, and game-fix compatibility.
 - [Game compatibility list](GameCompatibilityList.md) — 241-title 4DO reference and 5DO status.
 - [Game compatibility results](GameCompatibilityResults.md) — per-disc sweep evidence.

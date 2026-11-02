@@ -14,6 +14,10 @@ still change.
   installation, quick-start, FAQ, troubleshooting, compatibility, build, contributing,
   and legal pages.
 - Added installation, FAQ, privacy, roadmap, and documentation-maintainer guides.
+- Added a filterable compatibility browser with per-game grouping, status, region,
+  category, and A–Z filters, final-frame screenshots, per-disc evidence, and manual
+  grade badges. The page data is generated from the committed compatibility Markdown
+  by `tools/generate-compat-site.py`, and the docs CI job checks that it is current.
 - Rewrote the README with badges, a feature overview, platform support, quick start,
   compatibility/performance snapshots, documentation links, and legal notes.
 - Added `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SUPPORT.md`, issue forms, and a pull

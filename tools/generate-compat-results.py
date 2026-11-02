@@ -5,11 +5,12 @@ from __future__ import annotations
 
 import argparse
 import csv
+import datetime as dt
 from collections import Counter
 from pathlib import Path
 
 
-DEFAULT_RESULTS = "artifacts/compat-full/summary.csv"
+DEFAULT_RESULTS = "artifacts/compat-full/summary-merged.csv"
 DEFAULT_OUT = "docs/GameCompatibilityResults.md"
 
 STATUS_ORDER = {
@@ -42,8 +43,17 @@ def relative_evidence(value: str | None) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--results", default=DEFAULT_RESULTS, help="Sweep summary.csv")
+    parser.add_argument(
+        "--results",
+        default=DEFAULT_RESULTS,
+        help="Sweep summary CSV (use summary-merged.csv for the curated retry merge)",
+    )
     parser.add_argument("--out", default=DEFAULT_OUT, help="Markdown output")
+    parser.add_argument(
+        "--date",
+        default=dt.date.today().isoformat(),
+        help="Results date written to the page (YYYY-MM-DD)",
+    )
     args = parser.parse_args()
 
     results_path = Path(args.results)
@@ -65,6 +75,8 @@ def main() -> int:
     lines: list[str] = []
     lines.append("# Game Compatibility Results")
     lines.append("")
+    lines.append(f"**Last updated:** {args.date}")
+    lines.append("")
     lines.append(
         "Automated output of `tools/compat-sweep.ps1`. These are **loadability** "
         "results, not final compatibility grades: `Loadable/Rendered` still needs a "
@@ -77,6 +89,11 @@ def main() -> int:
         "leaves **593 rendered and 1 known failure** (Crash 'n Burn Japan, which needs a "
         "working bootable Japanese BIOS or a better dump). The 12,000-frame and BIOS "
         "triage remains in [`Compatibility.md`](Compatibility.md) 13.2."
+    )
+    lines.append("")
+    lines.append(
+        "For a filterable per-game view with screenshots, open the "
+        "[compatibility browser](CompatibilityBrowser.md)."
     )
     lines.append("")
     lines.append("## Summary")

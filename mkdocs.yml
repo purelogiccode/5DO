@@ -80,6 +80,10 @@ markdown_extensions:
 
 extra_css:
   - stylesheets/extra.css
+  - stylesheets/compatibility.css
+
+extra_javascript:
+  - javascripts/compatibility.js
 
 extra:
   generator: false
@@ -112,7 +116,8 @@ nav:
       - User guide: UserGuide.md
       - FAQ: FAQ.md
   - Using 5DO:
-      - Compatibility: Compatibility.md
+      - Compatibility browser: CompatibilityBrowser.md
+      - Compatibility notes: Compatibility.md
       - Game compatibility list: GameCompatibilityList.md
       - Game compatibility results: GameCompatibilityResults.md
       - Cheats: Cheats.md
