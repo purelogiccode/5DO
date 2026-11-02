@@ -1,11 +1,11 @@
 # 5DO 1.0.0
 
-**Release date:** 2026-11-02 (tagged `v1.0.0`; local artifacts prepared)
-**Status:** v1.0.0 documented-compatibility release, tagged locally. The Windows x64
+**Release date:** 2026-11-02 (GitHub release `v1.0.0`)
+**Status:** v1.0.0 documented-compatibility release, published on GitHub. The Windows x64
 engineering gates pass; Linux x64 full test suite and CLI/frontend smoke passed, with
 GPU presentation documented as preview/best-effort. The portable win-x64/linux-x64
-archives and checksums are prepared locally; no public GitHub release was published in
-this session. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
+archives and SHA-256 checksums are attached to the GitHub release. See
+[`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 This is a **documented-compatibility** release: the emulator is supported on the
 validated platform and against the tested title set, with known issues listed below.
@@ -108,8 +108,8 @@ The release checklist is in [`ReleaseChecklist.md`](ReleaseChecklist.md).
       `--smoke-test` on Linux Mint 22.3. The GL probe timed out under llvmpipe, so GPU
       presentation is preview/best-effort.
 - [x] Legal/attribution sign-off: FreeDO modified GNU LGPL, donationware (2026-11-02).
-- [x] Tag `v1.0.0` created; portable win-x64/linux-x64 archives and SHA-256 checksums
-      prepared locally.
+- [x] Tag `v1.0.0` and GitHub release created; portable win-x64/linux-x64 archives and
+      SHA-256 checksums attached.
 
 The per-title soak hashes and roundtrip evidence are in
 [`Compatibility.md`](Compatibility.md) §10.2.
@@ -147,7 +147,7 @@ project is not affiliated with or endorsed by them.
 
 ## Artifacts
 
-The v1.0.0 release artifacts are prepared locally:
+The v1.0.0 release artifacts are attached to the GitHub release:
 
 - `5do-cli-win-x64.zip`
 - `5do-frontend-win-x64.zip`

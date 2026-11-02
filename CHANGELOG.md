@@ -1,7 +1,7 @@
 # Changelog
 
-All notable changes are recorded here. The project is at the v1.0
-documented-compatibility release stage.
+All notable changes are recorded here. The project is at v1.0.0, a documented-compatibility
+release.
 
 ## [Unreleased]
 
@@ -14,7 +14,8 @@ documented-compatibility release stage.
   visual/high-resolution review and M14 high-resolution CEL research are post-1.0.
 - Recorded project-owner legal/attribution sign-off under the FreeDO modified GNU LGPL
   as free, open-source donationware (non-commercial; voluntary donations only).
-- Remaining v1.0 work: the `1.0.0` version bump, tag, and artifacts.
+- Published the `v1.0.0` GitHub release with portable win-x64/linux-x64 archives and
+  SHA-256 checksums: <https://github.com/purelogiccode/5DO/releases/tag/v1.0.0>.
 - Linux x64 validation (2026-11-02): full test suite **1,473/1,473**, CLI smoke,
   a 3,000-frame Wolfenstein boot, non-silent audio, and the frontend `--smoke-test`
   on Linux Mint 22.3. The GL probe timed out under llvmpipe, so Linux GPU presentation

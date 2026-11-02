@@ -6,8 +6,7 @@ This is the short public roadmap. The authoritative maintainer checklist is
 
 ## Current phase
 
-The project is at the **v1.0.0 documented-compatibility release** (tagged locally;
-artifacts prepared).
+The project is at the **v1.0.0 documented-compatibility release** (published on GitHub).
 
 **M13 — compatibility sweep and status merge**
 
@@ -25,8 +24,9 @@ artifacts prepared).
 
 ## Release status
 
-The v1.0.0 tag is created locally and the artifacts/checksums are prepared. No public
-GitHub release was published in this session.
+v1.0.0 is published on
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0) with the
+portable win-x64/linux-x64 archives and SHA-256 checksums.
 
 Full compatibility and M14 research are **not** v1.0 gates. CI is green, the soak is
 complete, and the legal/attribution sign-off is recorded.

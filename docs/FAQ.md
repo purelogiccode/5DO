@@ -59,10 +59,9 @@ A positional disc path or `--disc <path>` opens and auto-starts the game. See
 
 ### Is there a download?
 
-Not yet as a public GitHub download. **v1.0.0** artifacts are prepared locally and the
-source is tagged `v1.0.0`; no public release has been published yet. Build from source,
-or use the portable archives produced by a successful
-[CI run](https://github.com/purelogiccode/5DO/actions/workflows/ci.yml).
+Yes — **v1.0.0** is available on
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0) with portable
+win-x64/linux-x64 archives and SHA-256 checksums. You can also build from source.
 
 ## Compatibility
 

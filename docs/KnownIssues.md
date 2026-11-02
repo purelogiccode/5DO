@@ -6,10 +6,9 @@ prototype state. It is not a compatibility guarantee.
 **Release scope:** v1.0.0 ships with these known issues documented; full-race completion,
 extra title scripts, M13.5/M13.6 visual/high-resolution review, M14 research, Pi/arm64
 validation, installers, and the optional JIT are post-1.0. See
-[`ReleaseChecklist.md`](ReleaseChecklist.md). **As of 2026-11-02 v1.0.0 is released
-locally**: the source is tagged `v1.0.0`, the artifacts/checksums are prepared, and
-legal/attribution sign-off is recorded. No public GitHub release was published in this
-session.
+[`ReleaseChecklist.md`](ReleaseChecklist.md). **As of 2026-11-02 v1.0.0 is published on
+GitHub**: the source is tagged `v1.0.0`, the portable archives/checksums are attached,
+and legal/attribution sign-off is recorded.
 
 ## Compatibility sweep status
 

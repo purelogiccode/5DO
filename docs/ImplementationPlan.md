@@ -31,7 +31,7 @@
 | Tests | **1,473** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows x64 validated; Linux x64 full suite **1,473/1,473** passed (GL preview); six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | macOS/Steam Deck/Pi/installers are post-1.0; Linux GPU presentation is unvalidated under llvmpipe |
-| Release | **v1.0.0 released (local)** | Documented-compatibility scope; legal/attribution sign-off recorded; M13 loadability evidence complete; M14 is post-1.0 research; Linux x64 full suite passed; tag `v1.0.0` created and artifacts prepared locally |
+| Release | **v1.0.0 released (GitHub)** | Documented-compatibility scope; legal/attribution sign-off recorded; M13 loadability evidence complete; M14 is post-1.0 research; Linux x64 full suite passed; tag `v1.0.0` and GitHub release published |
 
 **Current position:** the core and shell are strong enough to play and validate a large local collection, and the documented-compatibility v1.0 scope is ready to ship. Full compatibility and high-resolution CEL research are post-1.0; the remaining gap to “best in the world” is **accuracy parity, universal compatibility, and release trust**, not basic feature count.
 
@@ -536,7 +536,7 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --gl-backend d3d
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
 **Current status (2026-11-02):** **1,473 tests pass**; the **v1.0 documented-compatibility
-release is tagged locally** and the artifacts are prepared. Linux x64 validation passed on Linux Mint
+release is published on GitHub** with the artifacts attached. Linux x64 validation passed on Linux Mint
 22.3: the full test suite (**1,473/1,473**), `selftest`, `bench`, a 3,000-frame
 Wolfenstein boot, non-silent audio, and the frontend `--smoke-test`; the GL probe timed
 out under llvmpipe, so Linux GPU presentation is preview/best-effort. The **M13
@@ -742,7 +742,7 @@ the docs/tools added no runtime tests.**
 documented-compatibility release: 593/594 discs render, the 12-title matrix and known
 issues are the supported set, and full compatibility/M14 are post-1.0. Legal/attribution
 sign-off is recorded under the FreeDO modified GNU LGPL as free, open-source
-donationware. Linux x64 full suite passed; v1.0.0 is tagged and the artifacts are prepared.
+donationware. Linux x64 full suite passed; v1.0.0 is published on GitHub with the artifacts attached.
 
 **OSD and quick-menu pass (2026-11-01, thirty-seventh pass):** UX-19 is implemented.
 `FiveDo.Host.Osd` adds `OsdOptions`, `OsdPosition`, `OsdSeverity`, `OsdMessage`, and
@@ -1097,7 +1097,7 @@ project/type layout is unchanged.
 | **M13** | **Full-collection compatibility sweep** | Loadability + in-game/visual status for every local disc; 4DO comparison; Linux VM validation | Every image classified; failures triaged; docs updated | 10-15 dd |
 | **M14** | **High-resolution CEL research** | Determine whether true internal 640x480 / 2x supersampling / GPU CEL is feasible | Prototype evidence and a recorded decision | 10-20 dd research |
 
-**Total:** ~157 developer-days of focused work plus 30% contingency (~204 dd), excluding the optional M12 JIT and the new M13/M14 work. This is the **full-compatibility plan**. The adopted v1 release scope (2026-10-26) ships a documented compatibility set and defers the remaining M11 hardening, Tier B/Pi, installers, and the optional JIT to post-1.0. **As of 2026-11-02, M13 loadability is complete (593/594 render); M14 is post-1.0 research. Linux x64 full suite passed; v1.0.0 is tagged and the artifacts are prepared locally.** See [`ReleaseChecklist.md`](ReleaseChecklist.md), [`CompatibilitySweep.md`](CompatibilitySweep.md), and [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+**Total:** ~157 developer-days of focused work plus 30% contingency (~204 dd), excluding the optional M12 JIT and the new M13/M14 work. This is the **full-compatibility plan**. The adopted v1 release scope (2026-10-26) ships a documented compatibility set and defers the remaining M11 hardening, Tier B/Pi, installers, and the optional JIT to post-1.0. **As of 2026-11-02, M13 loadability is complete (593/594 render); M14 is post-1.0 research. Linux x64 full suite passed; v1.0.0 is published on GitHub with the artifacts attached.** See [`ReleaseChecklist.md`](ReleaseChecklist.md), [`CompatibilitySweep.md`](CompatibilitySweep.md), and [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 
 ### 4a. Current position vs. the plan (2026-10-26)
 
@@ -1161,7 +1161,7 @@ The project is **donationware**: non-commercial, source-available, and funded by
 voluntary donations rather than sales. Legal/attribution sign-off is recorded. The
 Linux validation target is the Hyper-V VM `LinuxMint`
 (`D:\Hyper-V\VMs\LinuxMint`). The release checklist is the v1.0 gate; Linux x64 full
-suite passed; v1.0.0 is tagged and the artifacts are prepared locally.
+suite passed; v1.0.0 is published on GitHub with the artifacts attached.
 
 Supporting documents:
 
@@ -2408,7 +2408,7 @@ backlog, not release gates; the release gate is
     record is in `docs/OpenALSoft.md` with the full license text in
     `docs/licenses/OpenAL-Soft-COPYING.txt`; the release review and checklist
     record it as complete on the engineering side.
-  - **DONE (2026-11-02):** project-owner legal/attribution sign-off recorded under the FreeDO modified GNU LGPL as free, open-source donationware. The stability soak and release notes are complete. Linux x64 full suite passed. v1.0.0 is tagged and the artifacts are prepared; work through [`ReleaseChecklist.md`](ReleaseChecklist.md).
+  - **DONE (2026-11-02):** project-owner legal/attribution sign-off recorded under the FreeDO modified GNU LGPL as free, open-source donationware. The stability soak and release notes are complete. Linux x64 full suite passed. v1.0.0 is published on GitHub with the artifacts attached; work through [`ReleaseChecklist.md`](ReleaseChecklist.md).
 - [-] **M11.7 Post-release backlog.**
   - Netplay, rewind, debugger UI, CD-DA, PAL, additional peripherals.
 - [-] **M11.8 Optional GPU CEL compositing experiment.**
@@ -2861,7 +2861,7 @@ These need a decision before the relevant milestone; the plan assumes the defaul
 The 25+ day M11 line is the full-compatibility plan. The adopted v1 scope replaces
 most of it with the release gate (soak, compatibility docs, legal review) and moves
 the remaining gameplay work, Tier B/Pi, installers, and the JIT to post-1.0. Legal
-sign-off is recorded; v1.0.0 is tagged and the artifacts are prepared. See
+sign-off is recorded; v1.0.0 is published on GitHub with the artifacts attached. See
 [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
 M13 loadability is complete (593/594 render). M13.5/M13.6 visual/high-res review and
@@ -3006,7 +3006,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 | 2026-11-02 | Release | v1.0 scope finalized; legal sign-off recorded | Recorded project-owner legal/attribution sign-off under the FreeDO modified GNU LGPL as free, open-source donationware (non-commercial; voluntary donations only). M14 high-resolution CEL research moved to post-1.0 and removed from the v1.0 gate; M13.5/M13.6 visual/high-res review also post-1.0. The 594-disc loadability evidence (593 render, 1 known boot failure) and 12-title matrix are the v1.0 compatibility baseline. Remaining at that point: Linux x64 smoke in the Hyper-V `LinuxMint` VM (`D:\Hyper-V\VMs\LinuxMint`), version bump/tag, and artifact attachment. |
-| 2026-11-02 | Release | v1.0.0 release | Bumped `FiveDoVersion.Version` and `Directory.Build.props` to `1.0.0`, moved the CHANGELOG `[Unreleased]` section to `[1.0.0]`, tagged `v1.0.0`, published win-x64/linux-x64 CLI and frontend archives, and prepared local SHA-256 checksums. Full Windows and Linux suites pass (1,473/1,473); Windows frontend smoke reports `FRONTEND SMOKE OK 1.0.0`; benchmark gate passes (1.39 ms/frame, 0 bytes/frame). No GitHub release was published in this session. |
+| 2026-11-02 | Release | v1.0.0 release | Bumped `FiveDoVersion.Version` and `Directory.Build.props` to `1.0.0`, moved the CHANGELOG `[Unreleased]` section to `[1.0.0]`, tagged `v1.0.0`, published win-x64/linux-x64 CLI and frontend archives, and created the GitHub release with SHA-256 checksums. Full Windows and Linux suites pass (1,473/1,473); Windows frontend smoke reports `FRONTEND SMOKE OK 1.0.0`; benchmark gate passes (1.39 ms/frame, 0 bytes/frame). Release: <https://github.com/purelogiccode/5DO/releases/tag/v1.0.0>. |
 | 2026-11-02 | M13.7 | Linux x64 validation | Validated the self-contained `linux-x64` CLI and frontend on the Hyper-V `LinuxMint` VM (Linux Mint 22.3, x86_64, Mesa 25.2.8 llvmpipe) and ran the full test suite: **1,473/1,473 passed** with .NET SDK 10.0.301 plus the .NET 8 runtime required by the shader compiler. CLI `selftest` 4/4, `bench` 466 fps, `info`/`bios info` on Wolfenstein 3D, a 3,000-frame boot (PC `0x00028190`, frame hash `0x9A3B5131`, 2,205,093 samples, non-silent 50 s audio), and frontend `--smoke-test` passed. The GL probe timed out under the VM's SSH/llvmpipe session, so Linux GPU presentation is preview/best-effort. Adjusted the diagnostics bundle test to skip user-name assertions for two-character names (`vm`), matching the scrubber's documented minimum length. Superseded by the v1.0.0 release row. |
 
 ---
@@ -8456,7 +8456,7 @@ considering it the default. **1003 tests pass.**
 **Goal (2026-10-30; superseded 2026-11-02):** finish the BIOS-aware compatibility
 triage, fill the 5DO statuses, and then start high-resolution CEL research. The
 2026-11-02 release decision supersedes the "do not cut a release yet" instruction:
-Linux x64 full suite passed; v1.0.0 is tagged and the artifacts are prepared.
+Linux x64 full suite passed; v1.0.0 is published on GitHub with the artifacts attached.
 M13.5/M13.6 and M14 remain post-1.0.
 
 **Read first:**
@@ -8531,8 +8531,8 @@ render-request coalescing, Auto frame skip). Do not treat full-race completion, 
 scripting, Pi/arm64 validation, or installers as current gates.
 
 **Project position:** donationware, non-commercial, source-available. Legal/attribution
-sign-off and CI reliability are recorded; Linux x64 full suite passed. v1.0.0 is tagged
-and the artifacts are prepared.
+sign-off and CI reliability are recorded; Linux x64 full suite passed. v1.0.0 is
+published on GitHub with the artifacts attached.
 
 ---
 

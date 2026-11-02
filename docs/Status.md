@@ -17,8 +17,9 @@ Debug core builds are optimized, and Auto presentation frame skip is the default
 
 **Release status (2026-11-02):** **v1.0.0 is released** as a documented-compatibility
 release. The version is bumped, the source is tagged `v1.0.0`, and the win-x64/linux-x64
-portable archives plus checksums are prepared locally; no GitHub release was published
-in this session. Linux x64 validation passed on Linux Mint 22.3: the full test suite
+portable archives plus checksums are attached to the
+[GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0). Linux x64
+validation passed on Linux Mint 22.3: the full test suite
 (**1,473/1,473**), `selftest`, `bench`, a 3,000-frame Wolfenstein boot, non-silent
 audio, and the frontend `--smoke-test`. The GL probe timed out under the VM's
 llvmpipe/SSH session, so Linux GPU presentation is a **preview/best-effort** limitation.
@@ -601,13 +602,13 @@ Ship the platforms and titles that are validated, publish the per-title matrix a
 known issues, and move the rest to the post-1.0 backlog. Most emulators release this
 way; full compatibility is not a v1 requirement.
 
-**As of 2026-11-02 the v1.0.0 documented-compatibility release is tagged locally.**
-M13 loadability is complete (594 tested, 593 render, 1 known boot failure, 0 not
-loadable), legal/attribution sign-off is recorded, and M14 is post-1.0 research. Linux
-x64 CLI/frontend smoke and the full test suite passed (see
-[`Compatibility.md`](Compatibility.md) §10.3); the GL probe timed out under llvmpipe, so
-Linux GPU presentation is preview/best-effort. The release artifacts and checksums are
-prepared locally; no public GitHub release was published in this session.
+**As of 2026-11-02 the v1.0.0 documented-compatibility release is published on
+[GitHub](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0).** M13 loadability is
+complete (594 tested, 593 render, 1 known boot failure, 0 not loadable), legal/attribution
+sign-off is recorded, and M14 is post-1.0 research. Linux x64 CLI/frontend smoke and the
+full test suite passed (see [`Compatibility.md`](Compatibility.md) §10.3); the GL probe
+timed out under llvmpipe, so Linux GPU presentation is preview/best-effort. The release
+artifacts and checksums are attached to the GitHub release.
 
 | Release workstream | State | Remaining |
 |---|---|---:|
@@ -622,7 +623,7 @@ prepared locally; no public GitHub release was published in this session.
 | M11 release/legal | OpenAL notice/source offer/relinking record and license text ship in every archive; FreeDO modified GNU LGPL, donationware | Legal sign-off recorded 2026-11-02; tag/artifacts |
 
 **Current estimate:** roughly **100% complete** against the documented-compatibility
-release scope. v1.0.0 is tagged locally and the release artifacts are prepared.
+release scope. v1.0.0 is published on GitHub with the release artifacts.
 
 **Release decisions (2026-11-02):** Windows x64 is validated; Linux x64 CLI/frontend
 smoke and the full test suite passed (GPU presentation is preview/best-effort); the release version is `1.0.0`;
@@ -665,9 +666,9 @@ v1.0 gate is release mechanics (version bump, tag, and artifacts).
    Mint 22.3. The GL probe timed out under llvmpipe, so Linux GPU presentation is
    preview/best-effort. See [`Compatibility.md`](Compatibility.md) §10.3.
 4. **Release v1.0.0: complete (2026-11-02).** The version is bumped, the source is
-   tagged `v1.0.0`, the win-x64/linux-x64 portable archives and checksums are prepared
-   locally, and the release-owner/QA sign-off is recorded. No GitHub release was
-   published in this session.
+   tagged `v1.0.0`, the win-x64/linux-x64 portable archives and checksums are attached
+   to the [GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0),
+   and the release-owner/QA sign-off is recorded.
 5. **M13.5/M13.6 visual and high-resolution review (post-1.0).** Inspect every rendered
    final frame, record `Unplayable`/`Playable`/`Good`, and run the `-HighRes` comparison.
 
@@ -681,7 +682,7 @@ v1.0 gate is release mechanics (version bump, tag, and artifacts).
    inventory, and add input scripts for the other seven titles.
 9. **Platforms/performance/packaging (post-1.0):** Pi/GLES 3.1, arm64 hardware, DPI,
    Tier B timing, installers/signing, file associations, and the optional M12 JIT.
-10. **Release status:** v1.0.0 is tagged locally and the artifacts are prepared.
+10. **Release status:** v1.0.0 is published on GitHub with the artifacts attached.
     Legal/attribution sign-off is recorded, CI is green, and Linux x64 full suite
     passed. Post-1.0 work remains.
 
@@ -689,16 +690,15 @@ v1.0 gate is release mechanics (version bump, tag, and artifacts).
 
 ## 6. Next session
 
-**v1.0.0 is released locally** (source tag `v1.0.0`, win-x64/linux-x64 portable
-archives and checksums prepared; no GitHub release was published in this session).
-Linux x64 validation passed on Linux Mint 22.3: the full test suite (**1,473/1,473**),
-CLI `selftest`/`bench`/`info`, a 3,000-frame Wolfenstein boot, non-silent audio, and
-the frontend `--smoke-test`. The GL probe timed out under llvmpipe and is a documented
-preview/best-effort limitation. The BIOS-aware retry is complete: **593 of 594 discs
-render**, and only Crash 'n Burn (Japan) remains stuck on the Anvil boot screen. The
-next session is **post-1.0**:
+**v1.0.0 is published on GitHub** (source tag `v1.0.0`, win-x64/linux-x64 portable
+archives and checksums attached). Linux x64 validation passed on Linux Mint 22.3: the
+full test suite (**1,473/1,473**), CLI `selftest`/`bench`/`info`, a 3,000-frame
+Wolfenstein boot, non-silent audio, and the frontend `--smoke-test`. The GL probe timed
+out under llvmpipe and is a documented preview/best-effort limitation. The BIOS-aware
+retry is complete: **593 of 594 discs render**, and only Crash 'n Burn (Japan) remains
+stuck on the Anvil boot screen. The next session is **post-1.0**:
 
-1. Publish the prepared `v1.0.0` archives/checksums to a GitHub release when ready.
+1. The v1.0.0 GitHub release is published; collect feedback and compatibility reports.
 2. Run the M13.5/M13.6 in-game/visual and high-resolution review.
 3. Start M14 from [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 

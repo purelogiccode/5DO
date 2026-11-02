@@ -63,7 +63,7 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.0.0` release (local artifacts; GitHub release not yet published) |
+| Version | `1.0.0` release (GitHub Releases) |
 | Validated platform | **Windows x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 |
 | Automated tests | **1,473 tests** in the current test assembly |
@@ -145,9 +145,8 @@ and [known issues](https://purelogiccode.github.io/5DO/KnownIssues.html).
 - No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
 
 > [!NOTE]
-> v1.0.0 artifacts are prepared locally; no public GitHub release has been published
-> yet. Build from source below, or use the portable archives produced by the
-> [CI workflow](https://github.com/purelogiccode/5DO/actions/workflows/ci.yml).
+> v1.0.0 is published on GitHub Releases with portable win-x64/linux-x64 archives and
+> SHA-256 checksums. Build from source below if you prefer.
 > BIOS and game files are never distributed by this repository.
 
 ### Build and test

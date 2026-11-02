@@ -30,7 +30,7 @@ been validated.**
 | Packages | Portable zip/tar.gz | Installers/signing/notarization are post-1.0 |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
 | Version | **`v1.0.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; rc.1 is historical |
-| Release timing | **Released** | v1.0.0 tagged locally; win-x64/linux-x64 artifacts and checksums prepared |
+| Release timing | **Released** | v1.0.0 published on GitHub; win-x64/linux-x64 artifacts and checksums attached |
 
 ---
 
@@ -253,8 +253,8 @@ A new crash, silent corruption, or save-state regression is not.
 - [x] Write release notes: feature summary, supported platforms, supported titles,
       known issues, BIOS/disc requirements, license.
 - [x] Tag the release (`v1.0.0`).
-- [x] Attach archives and checksums to the release (local artifacts; no remote release
-      was published in this session).
+- [x] Attach archives and checksums to the release (published on GitHub:
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.0.0>).
 - [x] Update README, `docs/Status.md`, `docs/Compatibility.md`,
       `docs/KnownIssues.md`, and the release docs.
 - [x] Record the post-1.0 backlog in `docs/ImplementationPlan.md`.

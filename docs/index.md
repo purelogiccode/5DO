@@ -79,7 +79,7 @@
 
 ## Current snapshot
 
-**2026-11-02, v1.0.0 release (local artifacts).**
+**2026-11-02, v1.0.0 release (GitHub Releases).**
 
 - **1,473 tests** are present in the current test assembly.
 - The first full-collection loadability sweep covered **594 disc images**: **576
@@ -88,9 +88,9 @@
   (`Crash 'n Burn` Japan), and **0 not-loadable rows**.
 - Windows x64 is the validated target. Linux x64 full suite passed; GPU
   presentation is preview/best-effort. macOS and arm64 validation are post-1.0.
-- v1.0.0 is tagged locally and the artifacts/checksums are prepared; no public GitHub
-  release was published in this session. M13.5/M13.6 visual/high-resolution review and
-  M14 research are post-1.0.
+- v1.0.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.0.0)
+  with portable win-x64/linux-x64 archives and SHA-256 checksums. M13.5/M13.6
+  visual/high-resolution review and M14 research are post-1.0.
 
 See [Status](Status.md) and [Known issues](KnownIssues.md) for the current position and
 the remaining work.
