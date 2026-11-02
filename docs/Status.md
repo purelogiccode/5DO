@@ -42,7 +42,7 @@ v1/v2 readable, records the live region, and supports warn/reject unknown sectio
 Remaining disc work is known-title
 CD-DA evidence and a real in-game multi-disc swap, plus subcode. A 10-disc
 Release smoke after the
-TOC change reported 10/10 Loadable/Rendered. **1473 tests pass.**
+TOC change reported 10/10 Loadable/Rendered. **1,473 tests pass.**
 The five not-loadable rows are resolved or explained: Mirai Shounen Conan now runs
 (transient CHD read error), and the four Arcade CD-ROM titles load with
 `panafz10-patched.bin` plus the default headless pad. The extended-boot retry renders
@@ -184,7 +184,7 @@ behavioral reference for new compatibility work; see
 > [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 
 This is the short, current answer to "where are we?" The documentation index is
-[`README.md`](README.md). The detailed task list is in
+[documentation index](index.md). The detailed task list is in
 [`ImplementationPlan.md`](ImplementationPlan.md), the performance contract in
 [`Performance.md`](Performance.md), the local game corpus in
 [`TestCorpus.md`](TestCorpus.md), the release gate in
@@ -379,7 +379,7 @@ This is the short, current answer to "where are we?" The documentation index is
   (`docs/OpenALSoft.md`), the full LGPL-2.0 text
   (`docs/licenses/OpenAL-Soft-COPYING.txt`), and a generated `PACKAGE.txt` via
   `packaging/package.ps1`. See [`Trimming.md`](Trimming.md) and
-  [`../packaging/README.md`](../packaging/README.md).
+  [`packaging/README.md`](https://github.com/purelogiccode/5DO/blob/master/packaging/README.md).
 
 ---
 
@@ -615,7 +615,7 @@ are deferred; the compatibility set is the 12 documented titles, with five showc
 titles carrying scripted gameplay evidence. The distribution model is now recorded as
 **donationware** (non-commercial, source-available).
 
-The project license is recorded in [`../LICENSE`](../LICENSE) as the FreeDO modified
+The project license is recorded in [`LICENSE`](https://github.com/purelogiccode/5DO/blob/master/LICENSE) as the FreeDO modified
 GNU LGPL, so release builds are **donationware**: non-commercial, source-available, and
 funded by voluntary donations rather than sales. The remaining hard blocker is
 rights-holder clarification and commercial-use sign-off: FreeDO/4DO carry a modified
@@ -625,7 +625,7 @@ on the engineering side: the notice, complete license text, three-year source of
 and relinking instructions ship in [`OpenALSoft.md`](OpenALSoft.md) and
 [`licenses/OpenAL-Soft-COPYING.txt`](licenses/OpenAL-Soft-COPYING.txt). See
 [`Licensing.md`](Licensing.md), [`ReleaseLegalReview.md`](ReleaseLegalReview.md), and
-[`../THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md).
+[`THIRD-PARTY-NOTICES.md`](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md).
 
 Gameplay-depth and full-compatibility work is **post-release**, not a current gate:
 finishing Road Rash's 5.5-mile race, scripting Alone's inventory, adding gameplay

@@ -25,11 +25,11 @@ coverage/
 *.coverage
 *.coveragexml
 
-# Emulator user data (never commit)
-Data/
-Saves/
-Screenshots/
-Logs/
+# Emulator user data (never commit; root-anchored so source data folders stay tracked)
+/Data/
+/Saves/
+/Screenshots/
+/Logs/
 *.tdos
 *.4dosav
 *.ram
@@ -54,6 +54,10 @@ desktop.ini
 # Logs
 *.log
 
-# Python tooling cache
+# Python tooling cache and documentation build output
 __pycache__/
 *.pyc
+.venv/
+venv/
+site/
+.cache/

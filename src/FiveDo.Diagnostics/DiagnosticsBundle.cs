@@ -147,7 +147,7 @@ public static class DiagnosticsBundle
                     var entryName = "logs/" + Path.GetFileName(log);
                     var text = ReadTail(log, options.MaxLogBytes);
                     AddTextEntry(archive, entries, entryName, ScrubText(text, ref scrubHits));
-                    logFiles.Add(JsonValue.Create(entryName));
+                    logFiles.Add((JsonNode?)JsonValue.Create(entryName));
                 }
 
                 manifest["logFiles"] = logFiles;
@@ -306,7 +306,7 @@ public static class DiagnosticsBundle
         }
 
         entries.Add(entryName);
-        manifest.Add(JsonValue.Create(entryName));
+        manifest.Add((JsonNode?)JsonValue.Create(entryName));
         hits++;
     }
 

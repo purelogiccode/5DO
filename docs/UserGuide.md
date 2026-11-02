@@ -3,7 +3,7 @@
 This guide covers the desktop application and the headless CLI. The emulator does not
 include a BIOS ROM or any game images; you must supply legally obtained files.
 
-For the complete documentation map, see [`README.md`](README.md). For every CLI option,
+For the complete documentation map, see the [documentation index](index.md). For every CLI option,
 see [`CliReference.md`](CliReference.md); for settings and paths, see
 [`Configuration.md`](Configuration.md); for save-state details, see
 [`SaveStates.md`](SaveStates.md); for symptom-driven fixes, see
@@ -617,9 +617,9 @@ For traces, dumps, and probes, see [`Diagnostics.md`](Diagnostics.md).
 
 ## Legal
 
-5DO is distributed under the FreeDO modified GNU LGPL; see [`../LICENSE`](../LICENSE).
+5DO is distributed under the FreeDO modified GNU LGPL; see [`LICENSE`](https://github.com/purelogiccode/5DO/blob/master/LICENSE).
 FreeDO/4DO are not standard OSI-licensed projects. Read
-[`../THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md) and
+[`THIRD-PARTY-NOTICES.md`](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) and
 [`Licensing.md`](Licensing.md) before distributing builds. "3DO" and "Panasonic" are
 trademarks of their respective owners; this project is not affiliated with or endorsed
 by them.

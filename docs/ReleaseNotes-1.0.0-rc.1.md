@@ -16,7 +16,7 @@ F6/F7 slot selection and F9 frame advance), desktop input recording, ISO/BIN
 `disc tracks`, the OpenAL Soft LGPL notice/source offer, the optional offscreen Vulkan
 backend, Vulkan xBR/FSR GPU filters, a native Win32 Vulkan swapchain probe, explicit
 `PreferOpenGl` handling, custom aspect editing, frontend AOT audio validation, and
-bug-report hygiene. See [`../CHANGELOG.md`](../CHANGELOG.md) and
+bug-report hygiene. See [`CHANGELOG.md`](https://github.com/purelogiccode/5DO/blob/master/CHANGELOG.md) and
 [`Status.md`](Status.md).
 
 This is a **documented-compatibility** release: the emulator is supported on the
@@ -137,10 +137,10 @@ See [`KnownIssues.md`](KnownIssues.md). The main limitations are:
 
 This project is a C# port/derivative of FreeDO/4DO and uses Opera/libopera as a
 behavioral reference. It is distributed under the FreeDO modified GNU LGPL; see
-[`LICENSE`](../LICENSE). 5DO is **donationware** (non-commercial, source-available;
+[`LICENSE`](https://github.com/purelogiccode/5DO/blob/master/LICENSE). 5DO is **donationware** (non-commercial, source-available;
 voluntary donations only). FreeDO/4DO are not standard OSI-licensed projects; their
 modified LGPL includes a non-commercial restriction. Read
-[`THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md) and
+[`THIRD-PARTY-NOTICES.md`](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) and
 [`Licensing.md`](Licensing.md) before distributing builds.
 
 "3DO", "Panasonic", and "GoldStar" are trademarks of their respective owners. This

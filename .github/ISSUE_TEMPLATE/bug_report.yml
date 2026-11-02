@@ -1,0 +1,100 @@
+name: Bug report
+description: Report a reproducible defect in 5DO.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Search existing issues first, and read the
+        [troubleshooting guide](https://purelogiccode.github.io/5DO/Troubleshooting.html)
+        and [FAQ](https://purelogiccode.github.io/5DO/FAQ.html).
+
+        **Do not attach BIOS ROMs, game images, or extracted game assets.** A
+        privacy-scrubbed diagnostics bundle is preferred.
+
+  - type: input
+    id: version
+    attributes:
+      label: 5DO version
+      description: Output of `FiveDo.Cli --version` or the About dialog.
+      placeholder: "1.0.0-rc.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Desktop frontend (Avalonia)
+        - CLI
+        - CPU / memory
+        - CLIO / XBUS / input
+        - MADAM / CEL / video
+        - VDLP / presentation
+        - DSP / audio
+        - CD-ROM / storage / disc images
+        - Save states / rewind
+        - Cheats / TAS / library
+        - Documentation
+        - Build / packaging / CI
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      description: OS, version, architecture, GPU, and renderer backend.
+      placeholder: "Windows 11 x64, RTX 4070, OpenGL WGL; or Linux Mint x64, llvmpipe"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Exact command line or UI steps. Include BIOS name/hash and disc format, but never upload the files.
+      placeholder: |
+        1. Launch with `...`
+        2. Open disc `...` with BIOS `...`
+        3. Press ...
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the full error text, frame number, and relevant log lines.
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Attach a privacy-scrubbed diagnostics bundle, state, frame hash, input script, or TAS movie when possible.
+      placeholder: "Diagnostics bundle, `--json` output, frame hash, or a minimal reproducer"
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I searched existing issues and the documentation.
+          required: true
+        - label: I have not attached a BIOS ROM, game image, or extracted copyrighted asset.
+          required: true
+        - label: This is not a security vulnerability (those go through private reporting).
+          required: true

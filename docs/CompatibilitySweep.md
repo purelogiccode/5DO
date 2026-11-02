@@ -1,9 +1,10 @@
 # Full-Collection Compatibility Sweep
 
 **Status:** first loadability pass complete (2026-10-30): **594 discs tested, 576
-rendered, 13 black/blank, 5 not loadable**. The 12,000-frame rerun resolved six of the
-13 black/blank titles, and BIOS cross-testing showed that the four Arcade CD-ROM
-timeouts and several black-screen titles are BIOS-sensitive. See
+rendered, 13 black/blank, 5 not loadable**. After the extended-boot and BIOS cross-test
+triage: **593 loadable/rendered, 1 known no-video case (`Crash 'n Burn` Japan), 0
+not-loadable rows**. The four Arcade CD-ROM titles require `panafz10`-class BIOS
+behavior, and several black-screen titles are BIOS- or region-sensitive. See
 [`GameCompatibilityResults.md`](GameCompatibilityResults.md) and
 [`Compatibility.md`](Compatibility.md) §13.2.
 **Goal:** give every disc in the local 3DO collection a recorded 5DO status, starting

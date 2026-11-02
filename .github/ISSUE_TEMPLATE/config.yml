@@ -1,5 +1,14 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
 contact_links:
+  - name: Documentation
+    url: https://purelogiccode.github.io/5DO/
+    about: Installation, user guide, CLI reference, compatibility, and troubleshooting.
+  - name: FAQ
+    url: https://purelogiccode.github.io/5DO/FAQ.html
+    about: BIOS, discs, releases, platforms, saves, and licensing.
+  - name: Questions and ideas
+    url: https://github.com/purelogiccode/5DO/discussions
+    about: Ask for help or discuss a feature before opening an issue.
   - name: Report a security vulnerability
-    url: https://github.com/purelogiccode/5DO/security
-    about: Please report security issues privately; do not open a public issue.
+    url: https://github.com/purelogiccode/5DO/security/advisories/new
+    about: Report security issues privately; do not open a public issue.

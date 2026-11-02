@@ -649,7 +649,7 @@ These are real, current limitations. Do not "fix" them casually without tests.
 14. **Platform validation gaps.** Windows x64 is validated; Linux/macOS launch, arm64,
     Raspberry Pi/GLES 3.1, Tier B timing, and DPI are incomplete.
 15. **Old docs drift.** If a doc disagrees with code, fix the doc in the same change;
-    this guide and [`docs/README.md`](README.md) are the entry points.
+    this guide and the [documentation index](index.md) are the entry points.
 
 ---
 

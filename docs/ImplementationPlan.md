@@ -2,7 +2,7 @@
 # 5DO — Master Implementation Plan, Feature Backlog, and World-Best Roadmap
 
 **Snapshot:** 2026-11-01  
-**Repository:** `C:\Users\HomePC\Dropbox\source\repos\CSharp_5DO`  
+**Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master` (latest code commit on `master`)<br>
 **Status:** **1,473 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
@@ -31,7 +31,7 @@
 | Tests | **1,473** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
 | Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
-| Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, CI billing, installers |
+| Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, green CI, installers |
 
 **Current position:** the core and shell are strong enough to play and validate a large local collection. The remaining gap to “best in the world” is **accuracy parity, universal compatibility, and release trust**, not basic feature count.
 
@@ -88,7 +88,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **8. Close CORE-01/CORE-02 accuracy profiles.** Complete ARM cycle-class and CLIO scheduler parity; keep the Accuracy profile opt-in until the full-collection differential is green. See Part II CORE-01/CORE-02 and Part III §13.6.
 - [ ] **9. Land the disc/peripheral P0 batch.** SYS-01 multi-track TOC, raw CD-DA sectors, and mixing are implemented; AUD-05 persists CD-DA volume/mute in settings, UI, CLI, and state. SYS-02 now has an M3U playlist, live host swap, F3/UI swap, guest inject, and CLI swap. Finish known-title CD-DA evidence, ODE prompts, then SYS-03 PAL/NTSC, SYS-15 calibration/multiplayer pointer, SYS-18 auto profiles. See Part II.
 - [ ] **10. Polish the shipped UX.** UX-06 Lua/frame editor/lag counter, UX-12 per-game NVRAM/drag-drop, UX-13 external metadata/media/editor, UX-19 gamepad quick-menu navigation. See Part II.
-- [ ] **11. Clear the release blockers.** Legal/attribution sign-off, GitHub Actions billing, Linux/macOS runtime validation, installers/signing/notarization. See Part I M11 and Part III Appendix B.
+- [ ] **11. Clear the release blockers.** Legal/attribution sign-off, green CI, Linux/macOS runtime validation, installers/signing/notarization. See Part I M11 and Part III Appendix B.
 
 ---
 
@@ -267,7 +267,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **BAK-09** ViewModel tests and UI polish — P2 · related: ENG-09 — **Pending**
 - [ ] **BAK-10** Optional M12 managed ARM JIT — P2 · related: ENG-02 — **Pending**
 - [ ] **BAK-11** M14 high-resolution CEL research — P1 · related: VID-01..03 — **Pending**
-- [ ] **BAK-12** Legal/attribution sign-off; GitHub Actions billing — P1 · related: ENG-03, ENG-01 — **Pending**
+- [ ] **BAK-12** Legal/attribution sign-off; green CI — P1 · related: ENG-03, ENG-01 — **Pending**
 - [ ] **BAK-13** BIOS-aware sweep and 5DO status merge — P1 · related: CORE-13, SYS-17/18 — **Pending**
 - [ ] **BAK-14** 4DO `.4dosav` import/export — P2 · related: SYS-19 — **Pending**
 - [ ] **BAK-15** PAL, CD-DA, netplay, rewind, debugger UI, peripherals — P1 · related: SYS-01/03/15, UX-01/03/21 — **Pending**
@@ -526,7 +526,7 @@ is deferred. The project is **donationware** (non-commercial, source-available,
 voluntary donations only). See §4b,
 [`GameCompatibilityResults.md`](GameCompatibilityResults.md), and
 [`CompatibilitySweep.md`](CompatibilitySweep.md).
-**Historical status (2026-10-26, fifteenth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five golden-corpus titles plus seven additional discs boot, load their own OS, and render real frames; six of the seven additional titles produce non-silent 44.1 kHz stereo DSP audio (Theme Park's menu is silent). Road Rash's 3D race renders correctly; a CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait and the game now advances through `BUSTED`/race select to a new race. Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room, Begin/Resume menu, and intro; Lemmings types the Fun 4 passcode entirely with the D-pad, starts gameplay at 23,000 frames, and its 640x480 high-resolution title matches the reference; Space Ace plays its demo and starts its interactive scene (X menu, A play). **775 tests passed at that pass; 845 tests pass after the 2026-10-29 release-hardening pass.** The fifteenth pass added an explicit `--gl-backend` selector and validated the Windows ANGLE/GLES 3.0 path: 4K present p99 0.47 ms with zero renderer allocations, all filters compile, and a 320x240 Accurate capture is pixel-identical to the CPU oracle. It also added opt-in NativeAOT win-x64 publishes: a 9.97 MB CLI that passes the smoke suite, `info`/`fs list`, and a 3,000-frame golden boot, and a 28.8 MB frontend that passes the smoke and WGL/ANGLE parity probes. The fourteenth pass wired the platform swap interval (WGL/GLX/EGL) and added a `--gl-probe` offscreen 4K presentation probe: on the RTX 4070 development machine, sharp-bilinear 4K measures GPU p99 0.089 ms, present p99 0.208 ms, and zero renderer/mailbox allocations per frame after warm-up. The thirteenth pass enabled `PublishTrimmed` for the Avalonia frontend, removed the reflection-based `ViewLocator`, added a trimmed-frontend startup smoke test, and now publishes both executables trimmed for all six RIDs. The twelfth pass made settings, input profiles, save-slot metadata, and every CLI `--json` response source-generated and trim-safe, enabled `PublishTrimmed` for the CLI, added a trimmed-CLI CI smoke test, and added a same-machine benchmark baseline comparison; see [`Trimming.md`](Trimming.md) and [`Performance.md`](Performance.md). The eleventh pass added HQx 3x/4x and the benchmark budget gate. The tenth pass added the pure D-pad passcode script and CRT bloom. The ninth pass recorded per-title save-state/PNG/WAV evidence, fixed the CD wait, and added autopilot A pulses for post-race menus. The eighth pass fixed the real-content GPU palette expansion (independent R/G/B CLUT indices), added the opt-in xBR-lv2 filter, Windows XInput/Linux evdev gamepad backends with a binding UI, an in-app log viewer, save-state thumbnails, a first-run guide, and error dialogs. Remaining work: finish a full Road Rash race without wrecking, Raspberry Pi/GLES 3.1 and DPI validation, Tier B timing, frontend AOT audio/installers, the M0.8 legal/attribution review (including the bundled OpenAL Soft LGPL runtime), and release documentation. See [`Status.md`](Status.md) and [Part IV](#part-iv--session-handoff-evidence-and-historical-fixes) for the completion estimate and next-session plan.
+**Historical status (2026-10-26, fifteenth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five golden-corpus titles plus seven additional discs boot, load their own OS, and render real frames; six of the seven additional titles produce non-silent 44.1 kHz stereo DSP audio (Theme Park's menu is silent). Road Rash's 3D race renders correctly; a CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait and the game now advances through `BUSTED`/race select to a new race. Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room, Begin/Resume menu, and intro; Lemmings types the Fun 4 passcode entirely with the D-pad, starts gameplay at 23,000 frames, and its 640x480 high-resolution title matches the reference; Space Ace plays its demo and starts its interactive scene (X menu, A play). **775 tests passed at that pass; 845 tests pass after the 2026-10-29 release-hardening pass.** The fifteenth pass added an explicit `--gl-backend` selector and validated the Windows ANGLE/GLES 3.0 path: 4K present p99 0.47 ms with zero renderer allocations, all filters compile, and a 320x240 Accurate capture is pixel-identical to the CPU oracle. It also added opt-in NativeAOT win-x64 publishes: a 9.97 MB CLI that passes the smoke suite, `info`/`fs list`, and a 3,000-frame golden boot, and a 28.8 MB frontend that passes the smoke and WGL/ANGLE parity probes. The fourteenth pass wired the platform swap interval (WGL/GLX/EGL) and added a `--gl-probe` offscreen 4K presentation probe: on the RTX 4070 development machine, sharp-bilinear 4K measures GPU p99 0.089 ms, present p99 0.208 ms, and zero renderer/mailbox allocations per frame after warm-up. The thirteenth pass enabled `PublishTrimmed` for the Avalonia frontend, removed the reflection-based `ViewLocator`, added a trimmed-frontend startup smoke test, and now publishes both executables trimmed for all six RIDs. The twelfth pass made settings, input profiles, save-slot metadata, and every CLI `--json` response source-generated and trim-safe, enabled `PublishTrimmed` for the CLI, added a trimmed-CLI CI smoke test, and added a same-machine benchmark baseline comparison; see [`Trimming.md`](Trimming.md) and [`Performance.md`](Performance.md). The eleventh pass added HQx 3x/4x and the benchmark budget gate. The tenth pass added the pure D-pad passcode script and CRT bloom. The ninth pass recorded per-title save-state/PNG/WAV evidence, fixed the CD wait, and added autopilot A pulses for post-race menus. The eighth pass fixed the real-content GPU palette expansion (independent R/G/B CLUT indices), added the opt-in xBR-lv2 filter, Windows XInput/Linux evdev gamepad backends with a binding UI, an in-app log viewer, save-state thumbnails, a first-run guide, and error dialogs. Remaining work: finish a full Road Rash race without wrecking, Raspberry Pi/GLES 3.1 and DPI validation, Tier B timing, frontend AOT audio/installers, the M0.8 legal/attribution review (including the bundled OpenAL Soft LGPL runtime), and release documentation. See [`Status.md`](Status.md) and [Part IV](#part-iv-session-handoff-evidence-and-historical-fixes) for the completion estimate and next-session plan.
 **Audio update (2026-10-27, sixteenth pass):** exact 44.1 kHz DSP sample clock
 (600 frames = 10.000 s, 441,015-441,020 samples), Quartz state v2 with v1
 conversion, bundled OpenAL Soft 1.23.1 live output, audio-thread context-current
@@ -1147,7 +1147,7 @@ The port has since fixed the DSP execution/immediate/rounding, CCB field-order, 
 and arbitrary-CEL transposition blockers, and all five corpus titles now boot and
 produce audio. Opera remains the behavioral reference for the remaining CD/CLIO/MADAM/
 ARM timing work. See [`ReferenceStrategy.md`](ReferenceStrategy.md) and
-[Part IV](#part-iv--session-handoff-evidence-and-historical-fixes).
+[Part IV](#part-iv-session-handoff-evidence-and-historical-fixes).
 
 ---
 
@@ -2318,7 +2318,7 @@ backlog, not release gates; the release gate is
   - The adoption-time comparison showed Opera running Road Rash, Wolfenstein, Alone,
     and Space Ace past our then-current stop points with the same BIOS and disc data;
     the port has since fixed those blockers and all five titles boot.
-  - First-session plan and acceptance criteria in [Part IV](#part-iv--session-handoff-evidence-and-historical-fixes).
+  - First-session plan and acceptance criteria in [Part IV](#part-iv-session-handoff-evidence-and-historical-fixes).
 - [~] **M11.1 Compatibility corpus.**
   - Test the matrix in `docs/Compatibility.md`.
   - Five-title golden corpus boots and produces audio; Wolfenstein, Lemmings, Road
@@ -2566,7 +2566,7 @@ vertical high-resolution rendering. See
 
 **Goal:** make accuracy changes measurable without manual side-by-side runs. This
 implements FND-05, CORE-11, and CORE-16 from
-[Part II — Feature Specification and Backlog](#part-ii--feature-specification-and-backlog).
+[Part II — Feature Specification and Backlog](#part-ii-feature-specification-and-backlog).
 
 **Delivered:**
 
@@ -2838,7 +2838,7 @@ Suggested parallelization with two developers:
 16. **Start M14 research.** Measure the current `--high-res` mode, prototype true 640x480 and 2x supersampling, and write the GPU CEL feasibility note.
 17. **Refresh the compatibility docs.** Merge the 5DO status/evidence into [`GameCompatibilityList.md`](GameCompatibilityList.md), [`Compatibility.md`](Compatibility.md), and [`KnownIssues.md`](KnownIssues.md).
 18. **Keep the differential harness green.** Run `benchmarks/diff/showcase.json`, record the baseline, and extend the manifest to the full collection (M15). Do not allowlist an early-frame divergence without a reason.
-19. **Keep the release deferred until M13/M14 complete.** The legal/attribution review and CI billing issue remain release blockers; do not cut a release before the compatibility and video-quality baseline exists.
+19. **Keep the release deferred until M13/M14 complete.** The legal/attribution review and CI reliability remain release blockers; do not cut a release before the compatibility and video-quality baseline exists.
 20. **Post-release backlog, not current work:** Road Rash full race, Alone inventory, gameplay scripts for the other seven titles, CD/CLIO/MADAM/ARM timing triage, Raspberry Pi/GLES 3.1, arm64 hardware, DPI, installers/signing, frontend AOT audio, ViewModel tests, hot-path optimization, and the optional M12 JIT.
 
 ---
@@ -2956,7 +2956,7 @@ Suggested parallelization with two developers:
 
 **Status:** detailed build specification, 2026-10-31  
 **Purpose:** tell a developer exactly what to add to 5DO, where to add it, how to test it, and when it is done.  
-**Companion:** [Part III — Best-in-the-World Strategy and Gap Analysis](#part-iii--best-in-the-world-strategy-and-gap-analysis) contains the comparison, scorecard, and phased roadmap. This document is the implementation-level breakdown.
+**Companion:** [Part III — Best-in-the-World Strategy and Gap Analysis](#part-iii-best-in-the-world-strategy-and-gap-analysis) contains the comparison, scorecard, and phased roadmap. This document is the implementation-level breakdown.
 
 ---
 
@@ -3165,7 +3165,7 @@ A feature is done only when:
 | BAK-09 | ViewModel tests and UI polish | P2 | ENG-09 | Pending |
 | BAK-10 | Optional M12 managed ARM JIT | P2 | ENG-02 | Pending |
 | BAK-11 | M14 high-resolution CEL research | P1 | VID-01..03 | Pending |
-| BAK-12 | Legal/attribution sign-off; GitHub Actions billing | P1 | ENG-03, ENG-01 | Pending |
+| BAK-12 | Legal/attribution sign-off; green CI | P1 | ENG-03, ENG-01 | Pending |
 | BAK-13 | BIOS-aware sweep and 5DO status merge | P1 | CORE-13, SYS-17/18 | Pending |
 | BAK-14 | 4DO `.4dosav` import/export | P2 | SYS-19 | Pending |
 | BAK-15 | PAL, CD-DA, netplay, rewind, debugger UI, peripherals | P1 | SYS-01/03/15, UX-01/03/21 | Pending |
@@ -6193,8 +6193,8 @@ hotkey roundtrip.
 **Status:** living roadmap and gap analysis  
 **Snapshot:** 2026-11-01  
 **Scope:** every pending enhancement that matters for 3DO emulation quality, compatibility, features, platforms, and trust  
-**Detailed build spec:** [Part II — Feature Specification and Backlog](#part-ii--feature-specification-and-backlog) - implementation-level feature sheets, files, tests, and acceptance criteria  
-**Companion docs:** [`README.md`](../README.md), [`docs/Status.md`](Status.md), [`docs/ImplementationPlan.md`](#master-dashboard), [`docs/ReferenceStrategy.md`](ReferenceStrategy.md), [`docs/Compatibility.md`](Compatibility.md), [`docs/HighResolutionCelResearch.md`](HighResolutionCelResearch.md)
+**Detailed build spec:** [Part II - Feature Specification and Backlog](#part-ii-feature-specification-and-backlog) - implementation-level feature sheets, files, tests, and acceptance criteria<br>
+**Companion docs:** [`README.md`](https://github.com/purelogiccode/5DO/blob/master/README.md), [`docs/Status.md`](Status.md), [`docs/ImplementationPlan.md`](#master-dashboard), [`docs/ReferenceStrategy.md`](ReferenceStrategy.md), [`docs/Compatibility.md`](Compatibility.md), [`docs/HighResolutionCelResearch.md`](HighResolutionCelResearch.md)
 
 ---
 
@@ -7040,7 +7040,7 @@ These are already recorded in the repo's docs; keep them visible so the new road
 | [ ] **BAK-09** | ViewModel tests and UI polish | `docs/ImplementationPlan.md` | ENG-09 |
 | [ ] **BAK-10** | Optional M12 managed ARM JIT | `docs/ImplementationPlan.md` | ENG-02 |
 | [ ] **BAK-11** | M14 high-resolution CEL research | `docs/HighResolutionCelResearch.md` | VID-01..03 |
-| [ ] **BAK-12** | Legal/attribution sign-off; GitHub Actions billing | `docs/ReleaseLegalReview.md` | ENG-03, ENG-01 |
+| [ ] **BAK-12** | Legal/attribution sign-off; green CI | `docs/ReleaseLegalReview.md` | ENG-03, ENG-01 |
 | [ ] **BAK-13** | BIOS-aware sweep and 5DO status merge | `docs/CompatibilitySweep.md` | CORE-13, SYS-17/18 |
 | [ ] **BAK-14** | 4DO `.4dosav` import/export | `docs/Compatibility.md` §8 | SYS-19 |
 | [ ] **BAK-15** | PAL, CD-DA, netplay, rewind, debugger UI, additional peripherals | `docs/ImplementationPlan.md` M11.7 | SYS-01/03/15, UX-01/03/21 |
@@ -8433,7 +8433,7 @@ render-request coalescing, Auto frame skip). Do not treat full-race completion, 
 scripting, Pi/arm64 validation, or installers as current gates.
 
 **Project position:** donationware, non-commercial, source-available. The legal
-sign-off and the GitHub Actions billing issue remain release blockers, but release is
+sign-off and CI reliability remain release blockers, but release is
 deferred until M13/M14 complete.
 
 ---

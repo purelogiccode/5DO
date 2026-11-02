@@ -101,12 +101,11 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - [x] `dotnet build 5DO.sln -c Release` passes with 0 warnings and 0 errors
       (1.0.0-rc.1).
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release` passes:
-      926/926 with 1.0.0-rc.1 (after the 2026-10-30 Vulkan-surface/core-runner pass).
+      **1,473/1,473** with the current tree.
 - [x] `dotnet format 5DO.sln --verify-no-changes` passes.
-- [ ] CI is green on the supported runners. (Local gates pass. GitHub Actions jobs
-      currently fail before starting with a GitHub billing/spending-limit annotation;
-      this is an external account action, not a code failure. The workflow was re-run
-      on 2026-10-29 and every job reported the same annotation.)
+- [ ] CI is green on the supported runners. The 2026-11-02 pass fixes the missing
+      embedded game database and the trimming warnings; re-check the public Actions
+      matrix before release.
 - [x] Synthetic benchmark `--gate` passes: 2.28 ms/frame core mean, 4.03 ms core
       p99, 4.66 ms total p99, 0 bytes/frame.
 - [x] Trimmed CLI smoke test passes: `--version`, `selftest --json`,

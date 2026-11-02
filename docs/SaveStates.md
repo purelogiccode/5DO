@@ -164,8 +164,9 @@ Loading a state written by a newer format version is rejected with
 - All eleven core sections are required. The Options section is optional for
   backward compatibility. A missing required section throws
   `The save state is missing sections: ...`.
-- The outer state version is 2. Version 1 is accepted; version 2 adds Brotli section
-  flags. A future outer version is rejected.
+- The outer state version is 3. Versions 1 and 2 are accepted; version 2 adds Brotli
+  section flags; version 3 adds feature flags and the section table. A future outer
+  version is rejected.
 
 ---
 
@@ -173,9 +174,9 @@ Loading a state written by a newer format version is rejected with
 
 `FiveDoMachine.LoadState`:
 
-1. Reads the whole stream into memory (a version-2 state is typically under 2 MB;
+1. Reads the whole stream into memory (a version-2/3 state is typically under 2 MB;
    a version-1 state is ~25 MB).
-2. Verifies the magic and format version. Versions 1 and 2 are accepted.
+2. Verifies the magic and format version. Versions 1, 2, and 3 are accepted.
 3. Reads the header strings and frame count.
 4. Adds a warning when the writer's emulator version differs from the current
    `FiveDoVersion.Version`.
@@ -335,11 +336,12 @@ Not included:
 - Screenshot/log metadata.
 - Host settings (`settings.json`).
 
-A state written by a future format version (header version other than 1 or 2) is
+A state written by a future format version (header version other than 1, 2, or 3) is
 rejected. A state written by a future section version (other than the supported set)
 is rejected. Version-1 states load unchanged; version-2 states use Brotli section
-compression. Keep states with the emulator version that wrote them; the version
-warning exists to make cross-version loads visible, not to guarantee compatibility.
+compression; version-3 states add feature flags and a section table. Keep states with
+the emulator version that wrote them; the version warning exists to make
+cross-version loads visible, not to guarantee compatibility.
 
 ---
 

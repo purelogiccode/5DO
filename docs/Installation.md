@@ -1,0 +1,155 @@
+# Installation
+
+This page covers getting 5DO running on Windows, Linux, and macOS. 5DO does **not**
+include a BIOS ROM or any game images. You must supply legally obtained files.
+
+## Before you start
+
+| Requirement | Details |
+|---|---|
+| 3DO BIOS | A 1 MB BIOS image such as `panafz1.bin`. An optional second 1 MB ROM can be used as BIOS2/Kanji. |
+| Disc image | ISO (2048-byte sectors), BIN (2352-byte sectors), CUE+BIN, or CHD. |
+| .NET | .NET SDK **10.0.100** or newer for source builds. Published self-contained builds do not need a separate runtime. |
+| Desktop | Windows 10+, a current Linux desktop, or macOS 12+. |
+| GPU | OpenGL 3.3 or OpenGL ES 3.0/3.1 for GPU presentation. A CPU fallback is available. |
+| Audio | No system OpenAL installation is required; OpenAL Soft 1.23.1 is bundled. |
+
+!!! note "No stable binary release yet"
+    Build from source or use the portable archives attached to a successful CI run.
+    See the [CI workflow](https://github.com/purelogiccode/5DO/actions/workflows/ci.yml).
+
+## Build from source
+
+```powershell
+git clone https://github.com/purelogiccode/5DO.git
+cd 5DO
+dotnet build 5DO.sln -c Release
+dotnet test 5DO.sln -c Release
+```
+
+Start the desktop app:
+
+```powershell
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia
+```
+
+Start the CLI:
+
+```powershell
+dotnet run --project src/FiveDo.Cli -- --help
+```
+
+## First run
+
+1. Start the desktop app.
+2. Choose **Open BIOS** and select a 3DO BIOS such as `panafz1.bin`.
+3. Choose **Open Disc** and select an ISO, BIN, CUE+BIN, or CHD image.
+4. Press **Play**.
+5. Configure controllers in **Input** and video/audio in **Settings** if needed.
+
+The first-run guide appears once. **About** always shows the current BIOS, disc,
+renderer, machine state, and paths.
+
+You can skip the open dialogs on later launches:
+
+```powershell
+FiveDo.Frontend.Avalonia.exe "D:\Games\Road Rash (USA).chd" `
+  --bios "D:\BIOS\panafz1.bin" --fullscreen
+```
+
+The CLI accepts the same files directly:
+
+```powershell
+dotnet run --project src/FiveDo.Cli -- run "game.chd" --bios "panafz1.bin" `
+  --frames 600 --frame-out frame.png
+```
+
+## BIOS management
+
+The desktop **File > BIOS / NVRAM Manager...** dialog scans a folder, validates images,
+shows region/Kanji/Anvil/patch metadata, imports without overwriting a different image,
+and assigns BIOS1/BIOS2. With auto-selection enabled, 5DO chooses a BIOS from the disc's
+game database region, known title requirements, or a per-game override, then falls back
+to the configured primary BIOS.
+
+The CLI exposes the same catalog:
+
+```powershell
+dotnet run --project src/FiveDo.Cli -- bios scan bios --json
+dotnet run --project src/FiveDo.Cli -- bios select game.chd --folder bios --json
+dotnet run --project src/FiveDo.Cli -- run game.chd --bios-auto bios --frames 600
+```
+
+## Data locations
+
+The desktop app stores settings, NVRAM, save states, cheats, library state, and logs
+under the .NET local application data folder:
+
+```text
+Windows: %LOCALAPPDATA%\5DO\
+Linux:   ~/.local/share/5DO/   (XDG data directory)
+macOS:   the .NET LocalApplicationData location for the current user
+```
+
+Use **Settings > Paths** or **About** to see the exact paths on your machine.
+
+### Portable mode
+
+Place an empty `portable.flag` next to the executable, or start with `--portable`, to
+keep settings, NVRAM, save states, cheats, library state, and logs beside the
+executable. `FIVEDO_DATA_DIR` selects an explicit data directory.
+
+Named profiles live under `profiles/<name>/` and can be selected with
+`--config-profile <name>` or `FIVEDO_PROFILE`. See
+[Configuration](Configuration.md) for the full path and profile rules.
+
+## Platform notes
+
+### Windows
+
+- Windows x64 is the validated target.
+- XInput controllers are supported (`xinput1_4`, `xinput1_3`, or `xinput9_1_0`).
+- The desktop uses WGL by default and can force ANGLE/GLES with
+  `--gl-backend angle`.
+- A Linux `.desktop` association file and portable packaging scripts are in
+  [`packaging/`](https://github.com/purelogiccode/5DO/tree/master/packaging).
+
+### Linux
+
+- Use a current desktop with OpenGL 3.3 or GLES 3.0/3.1 drivers.
+- evdev gamepads are supported; the user normally needs membership in the `input`
+  group.
+- The local validation target is a Linux Mint virtual machine. Full distribution
+  coverage is still post-1.0 work.
+- Self-contained `linux-x64` and `linux-arm64` archives are produced by CI.
+
+### macOS
+
+- Self-contained `osx-x64` and `osx-arm64` archives are produced by CI.
+- There is no platform gamepad backend yet; use the keyboard.
+- Runtime validation is post-1.0 work. Please report platform-specific findings with
+  a [diagnostics bundle](Diagnostics.md).
+
+### Raspberry Pi and arm64
+
+GLES 3.1 presentation and 1080p60 on Raspberry Pi 4/5 are performance targets, not
+validated v1 guarantees. See [Performance](Performance.md) for the current status.
+
+## GPU and audio troubleshooting
+
+- If OpenGL initialization fails, 5DO falls back to the CPU presenter automatically.
+  Force a backend with `--gl-backend auto|wgl|angle|software|vulkan`.
+- If audio is silent, check **Settings > Audio**, the selected OpenAL device, and the
+  volume/mute state. `audio devices` lists playback devices.
+- Use **Help > Save Diagnostics Bundle...** before reporting a rendering or audio
+  problem. The bundle scrubs user paths and account names.
+
+See [Troubleshooting](Troubleshooting.md) for symptom-specific fixes.
+
+## Next steps
+
+- [User guide](UserGuide.md)
+- [Configuration](Configuration.md)
+- [Compatibility](Compatibility.md)
+- [FAQ](FAQ.md)
+- [CLI reference](CliReference.md)

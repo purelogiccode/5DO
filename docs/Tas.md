@@ -5,10 +5,10 @@ speedruns, regression evidence, and bug reports. A movie stores the exact PBUS
 packet sampled for every emulated frame plus an optional starting save state and a
 JSON metadata header.
 
-This is the first TAS increment (UX-06). It covers the movie container,
-record/replay/verify, branching, CLI commands, and desktop shell controls. Input
-display is shown in the status bar while a movie plays. Lua scripting, frame-by-frame
-input editing, and a separate lag counter remain future work.
+This is the TAS increment (UX-06). It covers the movie container,
+record/replay/verify, branching, CLI commands, desktop shell controls, and a
+per-frame movie editor. Input display is shown in the status bar while a movie plays.
+Lua scripting, a full input timeline, and a separate lag counter remain future work.
 
 ## 1. Why per-frame PBUS packets
 
@@ -180,8 +180,8 @@ them without the same care as screenshots or save states.
 ## 7. Current limits
 
 - No Lua scripting API yet.
-- No frame-by-frame input editor or on-screen input timeline; use `movie branch`
-  plus a new recording for now.
+- The per-frame movie editor supports player-1 button edits, set/insert/remove, trim,
+  and Save As. A graphical input timeline and multi-player editing remain future work.
 - No multi-player input display beyond the decoded packet; the movie itself records
   all six slots and future devices.
 - A separate lag counter is not applicable because 3DO input is sampled every

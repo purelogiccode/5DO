@@ -292,3 +292,32 @@ jobs:
           name: 5do-frontend-${{ matrix.rid }}
           path: artifacts/frontend/${{ matrix.rid }}
           if-no-files-found: error
+
+  ci-complete:
+    name: CI complete
+    if: always()
+    needs:
+      - build-test
+      - aot-cli
+      - aot-frontend
+      - publish-cli
+      - publish-frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify every required job succeeded
+        shell: bash
+        run: |
+          echo "build-test: ${{ needs.build-test.result }}"
+          echo "aot-cli: ${{ needs.aot-cli.result }}"
+          echo "aot-frontend: ${{ needs.aot-frontend.result }}"
+          echo "publish-cli: ${{ needs.publish-cli.result }}"
+          echo "publish-frontend: ${{ needs.publish-frontend.result }}"
+          if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ]; then
+            echo "One or more required CI jobs failed." >&2
+            exit 1
+          fi
+          if [ "${{ contains(needs.*.result, 'cancelled') }}" = "true" ]; then
+            echo "One or more required CI jobs were cancelled." >&2
+            exit 1
+          fi

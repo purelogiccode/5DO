@@ -3,7 +3,7 @@
 This document is the practical build/test/publish guide for the repository. For the
 test design rationale, see [`TestStrategy.md`](TestStrategy.md). For trimming and
 NativeAOT details, see [`Trimming.md`](Trimming.md). For packaging contents, see
-[`../packaging/README.md`](../packaging/README.md).
+[`packaging/README.md`](https://github.com/purelogiccode/5DO/blob/master/packaging/README.md).
 
 ---
 
@@ -402,7 +402,7 @@ commit, and build time. Linux archives also include `5do.desktop`.
 
 ## 7. CI jobs
 
-The workflow is [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
+The workflow is [`.github/workflows/ci.yml`](https://github.com/purelogiccode/5DO/blob/master/.github/workflows/ci.yml).
 
 | Job | Runner | What it does |
 |---|---|---|
@@ -411,9 +411,21 @@ The workflow is [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
 | `aot-frontend` | Windows | NativeAOT win-x64 frontend publish, smoke test, artifact upload. |
 | `publish-cli` | Ubuntu | Six-RID trimmed single-file CLI publish, portable archive, uploads folder + archive. |
 | `publish-frontend` | Ubuntu | Six-RID trimmed single-file frontend publish, portable archive, uploads folder + archive. |
+| `ci-complete` | Ubuntu | Aggregate gate that fails if any required CI job fails or is cancelled. |
+
+Separate workflows add:
+
+| Workflow | Trigger | What it does |
+|---|---|---|
+| `docs.yml` | Push/PR touching docs, manual | Strict MkDocs build and GitHub Pages deployment from `master`. |
+| `codeql.yml` | Push/PR, weekly, manual | CodeQL analysis for C#, GitHub Actions, and Python. |
+| `dependency-review.yml` | Pull request | Blocks high-severity dependency changes and comments on the PR. |
+| `scorecard.yml` | Push, weekly, manual | OpenSSF Scorecard analysis, SARIF upload, and published results. |
 
 CI does not download BIOS ROMs or game images. GPU tests and real-audio tests are
-opt-in and not part of the default matrix.
+opt-in and not part of the default matrix. The repository is public; secret scanning
+with push protection and private vulnerability reporting are enabled in GitHub
+settings.
 
 ### 7.1 Local Linux VM validation
 

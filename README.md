@@ -1,316 +1,155 @@
-# 5DO
+<p align="center">
+  <img src="assets/logo2.png" alt="5DO — 3DO Emulator" width="720">
+</p>
 
-A clean-room-style, **pure C# / .NET 10** 3DO emulator, originally ported from FreeDO/4DO, with **Opera/libopera as the primary behavioral reference** for new compatibility work, a cross-platform Avalonia frontend, a headless CLI, and a deterministic test harness.
+<h1 align="center">5DO</h1>
 
-> **Documentation:** start at [`docs/README.md`](docs/README.md) for the full documentation map, or go directly to the [user guide](docs/UserGuide.md), [CLI reference](docs/CliReference.md), [configuration reference](docs/Configuration.md), [developer guide](docs/DeveloperGuide.md), and [troubleshooting guide](docs/Troubleshooting.md).
+<p align="center">
+  A modern, source-available <strong>C# / .NET 10</strong> emulator for the
+  <strong>3DO Interactive Multiplayer</strong>.
+</p>
 
-> **Naming:** The emulator is called **5DO**. The solution is `5DO.sln`; source projects and namespaces use the `FiveDo` prefix because C# identifiers cannot begin with a digit.
+<p align="center">
+  <a href="https://github.com/purelogiccode/5DO/actions/workflows/ci.yml"><img src="https://github.com/purelogiccode/5DO/actions/workflows/ci.yml/badge.svg?branch=master" alt="CI status"></a>
+  <a href="https://github.com/purelogiccode/5DO/actions/workflows/docs.yml"><img src="https://github.com/purelogiccode/5DO/actions/workflows/docs.yml/badge.svg?branch=master" alt="Documentation build"></a>
+  <a href="https://github.com/purelogiccode/5DO/actions/workflows/codeql.yml"><img src="https://github.com/purelogiccode/5DO/actions/workflows/codeql.yml/badge.svg?branch=master" alt="CodeQL"></a>
+  <a href="https://securityscorecards.dev/viewer/?uri=github.com/purelogiccode/5DO"><img src="https://api.securityscorecards.dev/projects/github.com/purelogiccode/5DO/badge" alt="OpenSSF Scorecard"></a>
+  <a href="https://purelogiccode.github.io/5DO/"><img src="https://img.shields.io/badge/docs-5DO%20documentation-2ea44f" alt="Documentation"></a>
+  <a href="https://github.com/purelogiccode/5DO/wiki"><img src="https://img.shields.io/badge/wiki-community%20guides-0366d6" alt="Wiki"></a>
+</p>
 
-## Status
+<p align="center">
+  <img src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white" alt=".NET 10">
+  <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.0.0--rc.1-orange" alt="Version 1.0.0-rc.1"></a>
+</p>
 
-**Current position (2026-11-01, after the first full-collection sweep, triage, the ARM/CLIO/CEL/CD timing, CD speed, timing-profile, BIOS manager, rewind/fast-forward, cheat-engine, TAS-movie, disc-browser, input-device, OSD/quick-menu, and library-metadata/favorites/playtime passes):**
-M0-M8 are functionally complete. The
-M9 Avalonia shell, the M9R two-stage OpenGL presenter, the M9P dedicated core
-thread/frame pacer, and the M10 CI/publish pipeline are implemented as a working
-prototype. **1473 tests pass.** The first Opera parity batch (VDLP, ARM carry, DSP FIFO, MADAM span/MARIA/BPP0/SKIPX/LRFORM/blue-LSB/REGCTL/PIXC, CLIO FIFO), OP-14 (generic CEL origin, retired legacy CEL hacks), OP-SYS-02 (Opera CD poll/local reset), OP-SYS-01/03's ROM overlay, DIPIR, XBUS, and CSTAT soft-reset work, and OP-SYS-06's separate CLIO PRNG are complete (the DIPIR/soft-reset path remains opt-in pending a boot transcript). SYS-15 adds joypad, flightstick, mouse, lightgun, arcade lightgun, and Orbatak trackball devices on six PBUS ports, with Opera's exact daisy-chain records and the legacy 4DO packet preserved for all-joypad configurations. Rewind and fast-forward (UX-01/UX-02) are implemented: `RewindBuffer` keeps compressed keyframes plus the per-frame PBUS packet and replays input deterministically; `R`/`Shift+F9` rewind and hold-`Tab` fast-forwards with muted audio. UX-13 adds persistent favorites, play time, launch history, and an offline metadata overlay (`library-state.json`/`library-metadata.json`), plus All/Favorites/Played/Unplayed filters and title/recent/most-played/year/publisher sorts in the game list. Per-game cheats
-(UX-04) add raw/typed/conditional/button RAM codes, a desktop manager, and the
-`cheat` CLI command. TAS movies (UX-06) add the versioned `.5domovie` container,
-deterministic record/replay/verify, branching, CLI `movie` commands, and desktop
-Record/Play/Stop controls with a player-1 input display. The disc browser (UX-11)
-mounts the Opera file system without starting the machine and adds
-**File > Disc Browser...** with file/directory/disc extraction plus
-**File > Disc Info...** with volume, game-database, and fix metadata. The BIOS/NVRAM
-manager (UX-12) adds **File > BIOS / NVRAM Manager...** with BIOS scanning, validated
-import, BIOS1/BIOS2 selection, per-game MD5 assignment, and NVRAM listing, backup,
-import, reset, and delete. OSD notifications and the in-game quick menu (UX-19) add
-colour-coded toasts for save/load, rewind, fast-forward, screenshots, reset, and
-settings, plus an `F4`/Select+Start menu with resume/pause, save/load, rewind,
-fast-forward, screenshot, reset, cheats, settings, and stop actions. The 594-disc
-baseline found 576 rendered, 13 black/blank,
-and 5 not-loadable images. The 2026-11-01 extended-boot retry now renders **593 of
-594** discs: the five former not-loadable rows boot, 12 black/blank titles render at
-20,000 frames or with the right BIOS, and only Crash 'n Burn (Japan) remains a known
-boot failure. WorldCup Super Stadium needs the FZ-10J BIOS plus its Kanji font ROM
-(BIOS2), which the BIOS library now classifies correctly. Headless
-`run`/`trace` now attach a default player-1 pad. The BIOS manager (SYS-04) scans a BIOS
-folder, classifies region/Kanji/Anvil/patch metadata, and auto-selects a BIOS from the
-game database region, known title requirements, or a per-game MD5 override; the
-configured BIOS remains the fallback. `--bios2`, `--bios-auto`, `bios list|scan|select`,
-Settings > Paths > BIOS folder, and File > Assign BIOS to Current Game are available.
-Per-game NVRAM (SYS-14) adds shared/versioned/per-game images, Settings > Emulation >
-NVRAM storage/version, `--nvram-mode|--nvram-version|--nvram-dir`, and
-`nvram path|list|export|import|reset`.
-The v1.0 release is deliberately
-deferred: the next work is a BIOS-aware sweep and 5DO status merge (M13), then
-high-resolution CEL research (M14). The project is **donationware** (non-commercial,
-source-available; voluntary donations only). See
-[`docs/CompatibilitySweep.md`](docs/CompatibilitySweep.md),
-[`docs/GameCompatibilityList.md`](docs/GameCompatibilityList.md), and
-[`docs/HighResolutionCelResearch.md`](docs/HighResolutionCelResearch.md). The
-twenty-seventh pass embedded the Vulkan surface and fixed the CoreRunner stop/start
-race; the twenty-sixth pass added renderer selection and fixed output-resolution
-presets; the twenty-fifth pass added F6/F7 slot selection, F9 single-frame advance,
-and desktop input recording. The twenty-fourth pass added a first-party Opera
-file-system reader, so `fs list`/`fs extract` now work on ISO, BIN, CUE+BIN, and CHD
-images (multi-block directories and `burst`/`gap` layouts included). The twenty-third
-pass added native Win32 Vulkan swapchain presentation and `--vk-window-probe`, honored
-the renderer setting, added custom aspect editing, validated frontend NativeAOT audio
-with OpenAL's null device, and stopped expected environmental warnings from filing bug
-reports. The twenty-second pass added state-format version 2 with
-per-section Brotli compression (a 24.9 MB state becomes roughly 0.6-2.0 MB while
-version-1 states still load), plus stored/compressed sizes in `state inspect`. The
-twenty-first pass added the optional Vulkan xBR and
-FSR GPU filters and removed the CPU palette-upload workaround from the OpenGL xBR
-path. The twentieth pass added the optional offscreen Vulkan
-backend and `--vk-probe` (see [`docs/Vulkan.md`](docs/Vulkan.md)). The nineteenth pass added save-state disc-identity
-warnings, console hotkey dispatch, ISO/BIN/CUE `disc tracks`, and the OpenAL Soft
-LGPL notice/source offer in the portable archives. The seventeenth pass fixed the remaining live OpenAL
-crackle (buffer ownership), added the `FIVEDO_AUDIO_TAP` PCM/timing tap and overlay
-peak meter, added the opt-in AMD FSR 1.0 EASU/RCAS filter, and measured Road Rash's 3D
-race at 5.46 ms/frame total (p99 13.14 ms, 0 bytes/frame). The 2026-10-31 performance
-pass reduced the same race to **4.20 ms/frame total (p99 7.40 ms)** with an unchanged
-frame hash, optimized the core projects in Debug builds (Road Rash went from ~40 fps to
-~240 fps CPU headroom in the race benchmark), coalesced UI render requests, and added
-presentation-only frame skipping (`Off|Auto|OneInTwo..OneInFive`; **Auto** is the new
-default). The sixteenth pass corrected the DSP sample clock to
-an exact 44,100 samples per emulated second (the FreeDO 8.24 scheduler ran ~0.7%
-fast), fixed live OpenAL output by bundling OpenAL Soft 1.23.1 and making the
-context current on the audio thread, added audio-driven frame pacing, and added
-WAV/audio statistics plus `audio analyze`. The fifteenth pass added an explicit
-`--gl-backend auto|wgl|angle|software` selector and validated the Windows
-ANGLE/GLES 3.0 path: all filters compile, 4K sharp-bilinear presents in 0.14 ms
-mean / 0.47 ms p99 with zero renderer allocations, and a 320x240 Accurate capture
-matches the CPU oracle pixel-for-pixel on both WGL and ANGLE. The fourteenth pass wired the platform swap interval
-(WGL/GLX/EGL) and added a true-4K `--gl-probe`; on the RTX 4070 development machine,
-4K sharp-bilinear measures GPU p99 0.089 ms and present p99 0.208 ms with zero
-renderer/mailbox allocations per frame after warm-up. The shell now has fullscreen,
-GL screenshots, an About
-dialog, a Hi-Res toggle, automatic CPU fallback when OpenGL init or the context fails,
-a game library browser with cover art, a disc browser with extraction and a disc-info dialog, a settings dialog (video/audio/emulation/paths), six-player
-keyboard and gamepad binding, ten numbered save slots with PNG thumbnails, PNG
-screenshots named by game/frame/time, an optional FPS/status overlay, a first-run
-guide, error dialogs, and a Serilog-backed in-app diagnostic log viewer with rolling
-daily files and asynchronous bug reporting. The app also accepts a
-positional disc path or `--disc <path>` (a Linux `.desktop` association file is in
-`packaging/`). Settings include per-game fix-mode and filter overrides. Windows XInput and Linux
-evdev gamepads are supported. The CLI applies the 4DO per-game fixes automatically and
-accepts `--fix-mode`/`--no-game-fixes` overrides. The benchmark reports p50/p95/p99 and
-zero steady-state allocations, and `--gate` enforces the CPU-side budgets in CI; an
-opt-in bounded disc prefetch cache is available via `--prefetch`.
+> [!IMPORTANT]
+> 5DO is **pre-1.0**. Windows x64 is the validated target; Linux and macOS
+> publish outputs are produced but are not yet fully runtime-validated. No BIOS ROMs,
+> game images, or extracted game assets are included. You must supply legally obtained
+> files.
 
-**Audio (2026-10-27):** the DSP now produces exactly 44,100 samples per emulated
-second (441,015-441,020 samples per 600 frames = 10.000 s), matching Opera's 44.1 kHz
-reference within the 59.94/60 Hz field-rate difference. Live playback uses the
-bundled OpenAL Soft 1.23.1 runtime (no system OpenAL install required), the core
-thread paces frames against the audio clock with a 60 Hz fallback, and the CLI
-supports `--audio openal [--volume 0..1] [--realtime]` plus
-`audio analyze <wav> --json` for peak/RMS/clipping/DC reports. The opt-in
-NativeAOT CLI also opens the live backend. Audio content is unchanged: a
-6,000-frame Road Rash capture has the same spectral peaks before/after; only the
-timebase was corrected.
+**5DO** is an accuracy-focused C# port of the FreeDO 3DO emulation core, with
+[Opera/libopera](https://github.com/libretro/opera-libretro) as the primary behavioral
+reference for new compatibility work. It combines a deterministic managed emulation
+core with a cross-platform **Avalonia** desktop frontend, a headless **CLI**, and a
+test harness designed for reproducible compatibility evidence.
 
-The renderer now has an opt-in **AMD FSR 1.0 (EASU + RCAS)** filter, an opt-in
-**xBR-lv2** edge-directed 4x filter, **HQx 2x/3x/4x** filters, and **CRT bloom**
-alongside accurate, nearest, sharp-bilinear, and CRT modes.
-The HQx 3x/4x patterns match the C++ `hq3x_32_rb`/`hq4x_32_rb` reference hashes. The
-twelfth pass made settings, input profiles, save-slot metadata, and every CLI `--json`
-response source-generated and trim-safe, enabled `PublishTrimmed` for the CLI,
-added a trimmed-CLI CI smoke test, and added a same-machine benchmark baseline
-comparison; see [`docs/Trimming.md`](docs/Trimming.md). The thirteenth pass enabled
-`PublishTrimmed` for the Avalonia frontend, removed the reflection-based
-`ViewLocator`, and added a trimmed-frontend CI smoke test (`--smoke-test`); both
-executables now publish trimmed for all six RIDs. The
-eleventh pass made the benchmark a CI gate (0 bytes/frame, core p99 <= 8 ms,
-total mean <= 8 ms, total p99 <= 16.667 ms). The tenth pass committed a pure D-pad
-Lemmings Fun 4 passcode script (`docs/scripts/lem-fun4-dpad.txt`): the game accepts
-`HNLHCIOECW`, shows the Fun 4 briefing, and starts gameplay at 23,000 frames with a
-deterministic save/load roundtrip. The eighth pass fixed a real-content **GPU palette
-bug** from the previous session: the shader now applies the red, green, and blue CLUT
-indices independently, matching the CPU `FrameAssembler`; Lemmings gameplay was
-captured through both sharp-bilinear and xBR with correct colors.
+## Why 5DO?
 
-The ninth pass recorded per-title save-state, PNG, and WAV evidence (zero-frame and
-120-frame hashes, deterministic roundtrips, 600-frame audio captures) in
-[`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. It also fixed the old Road Rash
-~42,000/~92,000 READ_ID-only wait with a CD media-access pulse; the game now advances
-to `BUSTED`, race select, and a new race. Space Ace's interactive path is validated
-(`X` menu, `A` play) and roundtrips at 15,000 frames. The autopilot now cycles
-race -> wreck -> menu -> new race to 100k, but a full 5.5-mile race is still not
-finished.
+- **Managed from top to bottom.** The ARM60 CPU, CLIO, MADAM/CEL, DSP, SPORT, VDLP,
+  XBUS, CD-ROM, storage, audio, and input paths are pure C#. No native emulator DLL,
+  no C++/CLI, and no P/Invoke into FreeDOCore.
+- **Built for determinism.** Fixed timesteps, explicit state serialization, seeded
+  options, and per-frame PBUS recording make frames, audio, save states, and TAS
+  movies reproducible.
+- **A real desktop emulator.** Avalonia shell with a game library, cover art, BIOS and
+  NVRAM managers, save slots with thumbnails, rewind/fast-forward, cheats, TAS
+  recording, screenshots, GIF/WAV capture, a disc browser, controller mapping, and a
+  diagnostics bundle.
+- **Modern presentation.** Two-stage OpenGL/GLES presenter with accurate, nearest,
+  sharp-bilinear, CRT, xBR-lv2, FSR 1.0, and HQx filters. An optional Vulkan 1.0
+  backend mirrors the pipeline and is available for desktop and headless probes.
+- **Powerful automation.** Headless `run`, `trace`, `bench`, `selftest`, disc/BIOS/
+  NVRAM/cheat/movie/state commands, JSON output, watchpoints, dumps, and differential
+  harnesses.
+- **Cross-platform publishing.** Self-contained, single-file, trimmed builds for
+  Windows, Linux, and macOS on x64 and arm64, plus optional NativeAOT CLI builds.
 
-Real-content status with `panafz1.bin`: the five golden-corpus titles boot, load their
-own OS, render real frames, and produce non-silent 44.1 kHz stereo DSP audio. Seven
-additional titles (Gex, Need for Speed, Super Street Fighter II Turbo, Total Eclipse,
-Killing Time, Theme Park, and Return Fire) were also booted, rendered, and
-save-state-roundtripped on 2026-10-26. Gex, Total Eclipse, and Super Street Fighter II
-Turbo show gameplay/attract scenes; the others render menus. Six produce non-silent
-44.1 kHz stereo audio; Theme Park's captured menu is silent. Hashes and commands are
-in [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.7.
+## Status at a glance
 
-- **Road Rash** renders its 3D race correctly (matching the Opera reference) and runs
-  past 60,000 frames. A CD media-access pulse fixes the old ~42k/~92k READ_ID-only
-  wait: those screens now advance to `BUSTED`, the race-select menu, and a new race.
-  The autopilot passes `GAME LOADING`/`Get ready` and cycles race -> wreck -> menu ->
-  new race to 100k, but still does not finish a full 5.5-mile race.
-- **Wolfenstein 3D** starts a fresh game at FLOOR 1-1 from its preview menu, walks,
-  turns, fires, and roundtrips a live gameplay save state. A pulses every 300 frames
-  also advance the long fresh-game load through character select to FLOOR 1-1.
-- **Alone in the Dark** reaches its in-game staircase/room with an upright character;
-  the D-pad/A open the Begin/Resume menu and start the intro scene. A pulses every
-  300 frames leave the intro's static READ_ID-only wait, and a scripted
-  Up/Left/A/Down/Right sequence moves the character around the room with a
-  save/load roundtrip.
-- **Lemmings** reaches its title and passcode screens; the Fun 4 passcode
-  (`HNLHCIOECW`) is now typed entirely with the D-pad/A by
-  `docs/scripts/lem-fun4-dpad.txt`, starting gameplay at 23,000 frames with a
-  deterministic roundtrip, and the 640x480 high-resolution title matches the
-  reference.
-- **Space Ace** plays its animated demo and its interactive scene: `X` returns to the
-  title/menu and `A` starts the scene; the 15,000-frame state roundtrips and audio was
-  captured.
+| Area | Current state |
+|---|---|
+| Version | `1.0.0-rc.1` source tree; v1.0 release deliberately deferred |
+| Validated platform | **Windows x64** |
+| Build/publish targets | Windows, Linux, macOS — x64 and arm64 |
+| Automated tests | **1,473 tests** in the current test assembly |
+| Loadability sweep | **594 disc images** tested; after triage **593 loadable/rendered**, 1 known no-video case, 0 not loadable |
+| First pass | 576 rendered, 13 black/blank, 5 not loadable; triage resolved the failures and the blank/black set |
+| Desktop presentation | OpenGL/GLES required; Vulkan optional; CPU fallback available |
+| Audio | Exact 44.1 kHz DSP clock; bundled OpenAL Soft 1.23.1 |
 
-The 2026-10-24/25 passes fixed DSP execution/immediates/rounding, the CCB field order,
-the CLI NVRAM initialization, a **transposed arbitrary-CEL X/Y write** that corrupted
-Road Rash's VRAM allocator and drew Alone horizontally, and VDLP bitmap widths for
-384/512/640/1024-wide modes. The opt-in 640x480 high-resolution CEL/VDLP path was
-added; save-state loads restore the VDL picture immediately.
+The full compatibility picture, per-title evidence, and remaining limitations live in
+the [compatibility documentation](https://purelogiccode.github.io/5DO/Compatibility.html),
+[game compatibility list](https://purelogiccode.github.io/5DO/GameCompatibilityList.html),
+and [known issues](https://purelogiccode.github.io/5DO/KnownIssues.html).
 
-**Release scope (2026-10-26):** v1.0 is a **documented-compatibility release**, not a
-full-compatibility one. Windows x64 is the validated target; the 12 boot-validated
-titles are listed with honest per-title status in
-[`docs/Compatibility.md`](docs/Compatibility.md), and known limitations ship in
-[`docs/KnownIssues.md`](docs/KnownIssues.md). Remaining release work is the
-legal/attribution review, a stability soak, release notes/packaging, and optional
-Linux/macOS launch validation. Full-race completion, scripts for the other seven
-titles, Raspberry Pi/arm64 validation, installers, and the optional JIT are post-1.0.
-Work through [`docs/ReleaseChecklist.md`](docs/ReleaseChecklist.md). Per-title
-save-state, PNG, and WAV evidence is recorded
-in [`docs/TestCorpus.md`](docs/TestCorpus.md) 1.5a. See
-[`docs/Status.md`](docs/Status.md) for the completion estimate and
-[`docs/ImplementationPlan.md`](docs/ImplementationPlan.md) for the master plan,
-feature checklist, and next actions. The plan and architecture are in:
+## Features
 
-- [`docs/README.md`](docs/README.md) - documentation index and reading paths.
-- [`docs/Status.md`](docs/Status.md) - current position, completion estimate, and next steps.
-- [`docs/ReleaseChecklist.md`](docs/ReleaseChecklist.md) - v1.0 release scope, gates, and sign-off.
-- [`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.md) - attribution audit and remaining distribution decisions.
-- [`docs/OpenALSoft.md`](docs/OpenALSoft.md) - OpenAL Soft LGPL notice, source offer, and relinking rights.
-- [`docs/ReferenceStrategy.md`](docs/ReferenceStrategy.md) - Opera/FreeDO reference hierarchy and differential procedure.
-- [`docs/DifferentialHarness.md`](docs/DifferentialHarness.md) - 5DO vs OperaCore manifests, checkpoint hashes, reports, allowlists, and baseline gate.
-- [`docs/ImplementationPlan.md`](docs/ImplementationPlan.md) - master implementation plan, feature checklist, milestones, next actions, acceptance criteria, risks, and progress log.
-- [`docs/Architecture.md`](docs/Architecture.md) - project layout, dependency rules, runtime composition.
-- [`docs/DeveloperGuide.md`](docs/DeveloperGuide.md) - source map, subsystem invariants, extension points, conventions, and architectural debt.
-- [`docs/BuildAndTest.md`](docs/BuildAndTest.md) - prerequisites, build/test/format, benchmarks, GPU probe, publish/trim/AOT, CI.
-- [`docs/CliReference.md`](docs/CliReference.md) - every CLI command, option, exit code, JSON response, and diagnostic file format.
-- [`docs/Configuration.md`](docs/Configuration.md) - settings.json schema, input profiles, NVRAM, paths, environment variables.
-- [`docs/SaveStates.md`](docs/SaveStates.md) - .tdos binary layout, section table, slots, validation, roundtrip workflow.
-- [`docs/Audio.md`](docs/Audio.md) - DSP clock, OpenAL output, WAV capture, tap, analysis, pacing.
-- [`docs/Video.md`](docs/Video.md) - VDLP/frame assembly, two-stage presenter, all filters including FSR, backends, probes.
-- [`docs/Vulkan.md`](docs/Vulkan.md) - optional Vulkan backend, probe, filters, measured results, and limitations.
-- [`docs/Diagnostics.md`](docs/Diagnostics.md) - logs, traces, watchpoints, dumps, KPRINT, input scripts, tap, probe.
-- [`docs/Troubleshooting.md`](docs/Troubleshooting.md) - symptom-driven diagnosis and fixes.
-- [`docs/Glossary.md`](docs/Glossary.md) - hardware, emulator, renderer, audio, and release terms.
-- [`docs/PortingNotes.md`](docs/PortingNotes.md) - C++ to C# porting rules and reference quirks.
-- [`docs/TestStrategy.md`](docs/TestStrategy.md) - unit, integration, golden, differential, and performance testing.
-- [`docs/Compatibility.md`](docs/Compatibility.md) - BIOS, disc, input, and game-fix compatibility notes.
-- [`docs/TestCorpus.md`](docs/TestCorpus.md) - local BIOS/disc corpus and real-content validation commands (not committed).
-- [`tools/release-soak.ps1`](tools/release-soak.ps1) - per-machine release soak: discovers present discs, reports missing titles, and records summaries.
-- [`docs/Performance.md`](docs/Performance.md) - 4K60 budgets, presentation pipeline, and measurement plan.
-- [`docs/Trimming.md`](docs/Trimming.md) - trim-safe JSON, trimmed CLI/frontend publishes, smoke tests, and the NativeAOT audit.
-- [`docs/UserGuide.md`](docs/UserGuide.md) - quick start, controls, display filters, save states, logs, and CLI.
-- [`docs/KnownIssues.md`](docs/KnownIssues.md) - current game/renderer/platform limitations.
-- [`CHANGELOG.md`](CHANGELOG.md) - recent user-visible changes.
+### Emulation core
 
-## Goals
+- ARM60 interpreter with deterministic timing, banked registers, and a disassembler.
+- 3 MB RAM, 2 MB ROM, NVRAM, memory mirrors, and word-swapped storage.
+- CLIO timers, interrupts, FIFOs, DMA, XBUS, and diagnostic port.
+- MADAM CEL engine, matrix engine, pixel bus, CCB parsing, and pixel decoding.
+- 3DO DSP with exact 44.1 kHz output, CD-DA mixing, and WAV analysis.
+- SPORT VRAM fill/copy, VDLP display-list parsing, and CPU frame assembly.
+- Mitsumi/MEI CD-ROM state machine with TOC, Sub-Q, CD-DA, multi-track CUE/CHD,
+  M3U playlists, and ODE-style disc swapping.
+- ISO, BIN, CUE+BIN, and CHD images, including parent/child CHDs and bounded
+  read-ahead prefetch.
 
-- Emulate the Panasonic 3DO Interactive Multiplayer accurately enough to boot the BIOS and run real software.
-- Keep the emulation core **100% managed C#**; no C++/CLI, no native emulator DLL, no P/Invoke into FreeDOCore.
-- Run on **Windows, Linux, and macOS**, on **x64 and arm64**.
-- Provide an **Avalonia** desktop frontend and a **headless CLI** for automation, CI, and debugging.
-- Be **deterministic**: same BIOS + disc + input sequence + options produces the same frames and state.
-- Keep the codebase modular: one project per console subsystem, one class per major responsibility.
+### Desktop experience
 
-## Disc formats
+- Avalonia game library with covers, favorites, play time, metadata filters and sorts.
+- BIOS manager with region/Kanji/Anvil/patch detection, auto-selection, and per-game
+  overrides.
+- Shared and per-game NVRAM with backup, import, reset, and delete.
+- Ten save slots with PNG thumbnails, state inspection, state diffing, and format v3.
+- Compressed rewind history (30–300 seconds) and 2×–10× fast-forward.
+- Per-game cheats with raw/typed/conditional/button codes and a desktop manager.
+- Deterministic `.5domovie` TAS recording, replay, verification, branching, and a
+  per-frame movie editor.
+- Disc browser with file/directory extraction, disc info, track listing, and integrity
+  verification.
+- Screenshots, screenshot gallery, GIF recording, WAV recording, and a live FPS/input
+  overlay.
+- Six-player keyboard and gamepad mapping; XInput on Windows and evdev on Linux;
+  joypad, flightstick, mouse, lightgun, arcade lightgun, and Orbatak trackball devices.
+- Portable mode, named configuration profiles, per-game profiles, and an instance lock.
+- Privacy-scrubbed diagnostics bundles and an in-app log viewer.
 
-- ISO (2048-byte sectors)
-- BIN (2352-byte sectors)
-- CUE+BIN (single data track)
-- **CHD** via the pure C# **CHDSharp** library, including parent/child images and read-ahead decompression
+### Presentation
 
-CHD is a first-class v1 format. The storage layer presents every container through the same `IDiscSource` 2048-byte-sector interface, so the CD-ROM emulation is identical regardless of file format.
+- OpenGL 3.3 desktop and OpenGL ES 3.0/3.1 paths, including ANGLE on Windows.
+- Accurate pixel-for-pixel mode matching the CPU frame assembler.
+- Nearest, sharp-bilinear, CRT (scanlines, aperture mask, curvature, vignette, bloom),
+  xBR-lv2 4x, FSR 1.0 (EASU + RCAS), and HQx 2x/3x/4x.
+- Integer scaling, custom aspect ratios, fullscreen, vsync, and 4K output.
+- Optional Vulkan 1.0 backend with build-time SPIR-V shaders and a native Win32
+  swapchain path.
 
-## Differentiator: OpenGL/GLES presentation
+## Platform support
 
-The desktop frontend uses **Silk.NET.OpenGL/OpenGLES** through Avalonia's OpenGL control as the **required** presentation path:
+| Platform | Desktop | CLI | Status |
+|---|:---:|:---:|---|
+| Windows x64 | ✅ | ✅ | **Validated target** |
+| Windows arm64 | ✅ | ✅ | Published; runtime validation pending |
+| Linux x64 | ✅ | ✅ | Published; local VM smoke validation |
+| Linux arm64 | ✅ | ✅ | Published; runtime validation pending |
+| macOS x64 / arm64 | ✅ | ✅ | Published; runtime validation pending |
+| Raspberry Pi 4/5 (GLES 3.1) | — | — | Post-1.0 target |
 
-- Two-stage pipeline: palette expansion at native resolution (320x240), then GPU upscaling/filtering at output resolution.
-- Pixel-accurate "Accurate" mode that matches the CPU frame assembler.
-- High-quality GPU upscaling to 1080p/1440p/4K: nearest, sharp-bilinear, CRT (scanlines, aperture mask, curvature, vignette, bloom), xBR-lv2 4x, and HQx 2x/3x/4x.
-- Integer scaling, aspect-ratio control, fullscreen, vsync, and screenshots.
-- Desktop GL 3.3 (WGL/GLX/EGL/macOS) and GLES 3.0/3.1 (ANGLE, Raspberry Pi) variants.
-- CPU `WriteableBitmap` fallback only when neither GL 3.3 nor GLES 3.0/3.1 is available.
+## Quick start
 
-The emulation core still renders CELs in software for accuracy. The GPU accelerates presentation, palette expansion, scaling, and filters; it does not change emulated state.
+### Requirements
 
-An optional **Vulkan 1.0 backend** (`FiveDo.Video.Vulkan`) mirrors the
-two-stage pipeline with build-time SPIR-V shaders, supports accurate, nearest,
-sharp-bilinear, CRT, xBR-lv2, FSR 1.0 (EASU + RCAS), and HQx 2x/3x/4x modes, and can
-be selected for the desktop with `--gl-backend vulkan`, where it hosts a native Win32
-child surface inside the Avalonia window with no CPU readback. It is also exposed
-as a headless probe (`--vk-probe`) and a native Win32 swapchain probe
-(`--vk-window-probe`). The Vulkan path matches the CPU oracle
-pixel-for-pixel at 320x240 (`0xD6BD89C5`), measures 0.24 ms mean / 1.06 ms p99 at 4K
-sharp-bilinear, 0.32/0.80 ms at 4K xBR, 0.60/1.30 ms at 4K FSR, and 6.82/10.93 ms at
-4K HQx 2x (CPU-bound), with 0 managed bytes/frame on the RTX 4070. The native window
-probe presents 4K sharp-bilinear through a FIFO swapchain at 0.077 ms mean / 0.088 ms
-p99 GPU time (present includes the 165 Hz display wait) with 0 managed bytes/frame.
-It remains optional: OpenGL/GLES is still the required desktop presenter. See
-[`docs/Vulkan.md`](docs/Vulkan.md).
-
-## Performance target
-
-- **4K (3840x2160) 60 fps output** on a mid-range x64 desktop (Tier A) with nearest or sharp-bilinear filtering.
-- **1080p 60 fps** on Raspberry Pi 4/5 class arm64 using the GLES 3.1 path.
-- Native 320x240 emulation; 4K is **output upscaling**, not 4K internal CEL rendering.
-- Core frame budget ≤ 8 ms p99 on Tier A, zero managed allocations per frame, and core cost independent of output resolution.
-- CRT/xBR filters are opt-in and may require faster hardware.
-
-The CPU side currently runs at ~1.25-1.6 ms/frame (core + pack + mailbox + read copy;
-600-frame benchmark, p99 1.6-4.6 ms depending on high-res), leaving ~15 ms of headroom
-at 60 Hz on the development machine. The synthetic steady state is allocation-free.
-The new `--gl-probe` measures the real Avalonia/OpenGL presentation path: on Windows
-11 with an RTX 4070, 4K sharp-bilinear is GPU p99 0.089 ms and present p99 0.208 ms,
-with zero renderer/mailbox allocations per frame after warm-up. The same probe forces
-ANGLE/GLES 3.0 (`--gl-backend angle`): 4K sharp-bilinear presents in 0.14 ms mean /
-0.47 ms p99 with zero renderer allocations, and a 320x240 Accurate capture matches
-the CPU oracle on both WGL and ANGLE. Tier B numbers, Raspberry Pi/GLES 3.1, DPI,
-and the CI relative gate are not measured yet; see
-[`docs/Performance.md`](docs/Performance.md) for the pipeline, measurement method,
-and the remaining M9P work items.
-
-## Optional guest CPU JIT
-
-.NET already JIT-compiles the C# core. If profiling ever shows the ARM60 interpreter is a bottleneck, a **pure managed IL JIT** for guest ARM basic blocks can be added behind `ICpuBackend`. It is optional, disabled by default, and must be bit-identical to the interpreter. At ~12.5 MHz, the 3DO CPU is not expected to require it for 60 fps.
-
-## Non-goals for the first release
-
-- Native or JIT CPU backends. The ARM60 interpreter is the reference implementation.
-- Netplay, achievements, or a full debugger UI.
-- Guest ODE swap prompts, CD-DA read-ahead/subcode, and PAL (multi-track TOC, CD-DA volume/mute, and M3U playlists are implemented).
-- PAL video modes. High-resolution CEL rendering is available as an opt-in (`--high-res`), not as the default v1 mode.
-- 4K *internal* CEL rendering; v1 targets 4K output upscaling only.
-- Shipping BIOS ROMs, game discs, or any copyrighted 3DO material.
-
-## Requirements
-
-- .NET SDK **10.0.100** or newer (`global.json` rolls forward to the latest 10.0 feature band).
-- A legally obtained 3DO BIOS ROM (1 MB, optionally a second 1 MB ROM).
-- Legally obtained 3DO disc images in ISO (2048-byte sectors), BIN (2352-byte sectors), CUE+BIN, or CHD format. CHD support uses the pure C# CHDSharp library.
+- **.NET SDK 10.0.100 or newer** (`global.json` rolls forward within .NET 10).
+- A legally obtained 3DO BIOS ROM (1 MB; an optional second ROM for BIOS2/Kanji).
+- Legally obtained 3DO disc images in ISO, BIN, CUE+BIN, or CHD format.
 - For the desktop app: Windows 10+, a current Linux desktop, or macOS 12+.
-- Desktop audio uses the OpenAL Soft 1.23.1 runtime bundled by the build; no system
-  OpenAL installation is required.
+- OpenGL 3.3 or OpenGL ES 3.0/3.1 for GPU presentation; the CPU fallback needs no GPU.
+- No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
 
-## Build
+> [!NOTE]
+> There is no stable binary release yet. Build from source below, or use the portable
+> archives produced by the [CI workflow](https://github.com/purelogiccode/5DO/actions/workflows/ci.yml).
+> BIOS and game files are never distributed by this repository.
+
+### Build and test
 
 ```powershell
 git clone https://github.com/purelogiccode/5DO.git
@@ -319,124 +158,212 @@ dotnet build 5DO.sln
 dotnet test 5DO.sln
 ```
 
-## Run
-
-Headless CLI:
+### Run the desktop app
 
 ```powershell
-dotnet run --project src/FiveDo.Cli -- run game.cue --bios panafz1.bin --frames 600 --frame-out frame.png
-dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin --frames 600 --audio wav --wav-out capture.wav
-dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin --frames 600 --audio openal --volume 0.5 --realtime
-dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin --frames 600 --prefetch --high-res
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia
+
+# Open a disc directly (also used by file associations)
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- "game.chd"
+
+# Override the BIOS and start fullscreen
+dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
+  "game.chd" --bios "bios/panafz1.bin" --fullscreen
+```
+
+On first run, choose **Open BIOS**, select a BIOS such as `panafz1.bin`, choose
+**Open Disc**, and press **Play**. See the [installation guide](https://purelogiccode.github.io/5DO/Installation.html)
+for platform notes and data locations.
+
+### Run headless
+
+```powershell
+# Render 600 frames and write a PNG
+dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin `
+  --frames 600 --frame-out frame.png
+
+# Capture 10 seconds of 44.1 kHz audio
+dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin `
+  --frames 600 --audio wav --wav-out capture.wav
+
+# Inspect a disc and verify every sector
 dotnet run --project src/FiveDo.Cli -- info game.chd --json
-dotnet run --project src/FiveDo.Cli -- audio analyze capture.wav --json
-dotnet run --project src/FiveDo.Cli -- bios info panafz1.bin
-dotnet run --project src/FiveDo.Cli -- bios scan bios --json
-dotnet run --project src/FiveDo.Cli -- run game.chd --bios-auto bios --frames 600
-dotnet run --project src/FiveDo.Cli -- state inspect quick.tdos
+dotnet run --project src/FiveDo.Cli -- disc verify game.chd --json
+
+# Run the deterministic benchmark and self-test
 dotnet run --project src/FiveDo.Cli -- bench --frames 600
 dotnet run --project src/FiveDo.Cli -- selftest
-dotnet run --project src/FiveDo.Cli -- disasm artifacts/ram.bin --offset 0x12380 --count 64
 ```
 
-Diagnostics: `run` accepts `--watch-lowmem`, `--dump-ram`, and `--dump-dsp`;
-`trace` adds `--dsp-trace` and the existing CPU ring buffer. See
-[`docs/TestCorpus.md`](docs/TestCorpus.md) for the full command set.
+The complete command surface is documented in the [CLI reference](https://purelogiccode.github.io/5DO/CliReference.html).
 
-GPU presentation probe (developer/validation tool, requires a desktop GL context):
+## Default controls
 
-```powershell
-dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
-  --gl-probe artifacts/gl-probe/4k-sharp.json `
-  --gl-probe-size 3840x2160 --gl-probe-frames 120 --gl-probe-warmup 30 `
-  --gl-probe-filter sharp-bilinear --gl-probe-offscreen
-
-# Force ANGLE/GLES 3.0, and capture a 1:1 Accurate frame for CPU/GPU parity
-dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
-  --gl-backend angle --gl-probe artifacts/gl-probe/4k-angle.json `
-  --gl-probe-size 3840x2160 --gl-probe-filter sharp-bilinear --gl-probe-offscreen
-
-dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
-  --gl-backend angle --gl-probe artifacts/gl-probe/parity-angle.json `
-  --gl-probe-size 320x240 --gl-probe-filter accurate --gl-probe-offscreen `
-  --gl-probe-capture artifacts/gl-probe/parity-angle.png
-```
-
-Optional Vulkan probe (headless, no Avalonia window):
-
-```powershell
-dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
-  --vk-probe artifacts/vk-probe/parity.json `
-  --vk-probe-size 320x240 --vk-probe-frames 20 --vk-probe-warmup 5 `
-  --vk-probe-filter accurate --vk-probe-capture artifacts/vk-probe/parity.png
-```
-
-Optional native Win32 Vulkan swapchain probe (opens a window and presents through
-FIFO vsync):
-
-```powershell
-dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
-  --vk-window-probe artifacts/vk-probe/window-4k.json `
-  --vk-window-probe-size 3840x2160 --vk-window-probe-frames 60 `
-  --vk-window-probe-warmup 15 --vk-window-probe-filter sharp-bilinear
-```
-
-The probes write per-frame present/GPU percentiles, capabilities, allocations, and
-optional CPU/GPU parity as JSON. `--gl-backend auto|wgl|angle|software|vulkan` also
-works for a normal desktop launch. See [`docs/Performance.md`](docs/Performance.md)
-and [`docs/Vulkan.md`](docs/Vulkan.md) for the measured results.
-
-Both the CLI and the Avalonia frontend publish trimmed by default
-(`PublishTrimmed=true`). Settings/input/save-slot JSON and all CLI `--json` responses
-use source-generated metadata, the frontend has no reflection-based view locator, and
-CI runs a trimmed-frontend startup smoke test. The CLI also has an opt-in NativeAOT
-publish (`-p:FiveDoNativeAot=true`): the win-x64 AOT single file is 9.97 MB and CI
-runs the CLI smoke commands against it. The frontend has an opt-in NativeAOT
-single-file publish (28.8 MB executable plus native Skia/HarfBuzz/ANGLE assets) that
-passes the smoke test and the WGL/ANGLE parity probes; Silk.NET loader warnings remain
-and frontend AOT audio is not yet validated. The CLI AOT path opens the bundled
-OpenAL backend. See
-[`docs/Trimming.md`](docs/Trimming.md) for the audit and the remaining AOT work.
-
-CI also packages each published CLI/frontend folder as a portable archive:
-`5do-<component>-<rid>.zip` on Windows and `.tar.gz` on Linux/macOS, with
-README/notices/licensing and a generated `PACKAGE.txt`. See
-[`packaging/README.md`](packaging/README.md).
-
-Desktop app:
-
-```powershell
-dotnet run --project src/FiveDo.Frontend.Avalonia
-dotnet run --project src/FiveDo.Frontend.Avalonia -- "game.chd"
-dotnet run --project src/FiveDo.Frontend.Avalonia -- "game.chd" --bios "bios/panafz1.bin" --fullscreen
-```
-
-Desktop frontend arguments for file associations and external frontends:
-
-| Argument | Meaning |
+| 3DO button | Player 1 keyboard |
 |---|---|
-| `"<disc>"` | Positional disc path (ISO, BIN, CUE, CHD); opens and auto-starts it. |
-| `--disc <path>` | Explicit disc path; same behavior as the positional form. |
-| `--bios <path>` | BIOS image for this launch; overrides the saved BIOS path. A missing file exits with code 1. |
-| `-f`, `--fullscreen` | Start fullscreen, including when a disc is auto-started. |
-| `--gl-backend <mode>` | `auto` (default), `wgl`, `angle`, `software`, or `vulkan`. |
-| `--version` | Print the version and exit. |
-| `-h`, `--help` | Print frontend usage and exit. |
+| D-pad | Arrow keys |
+| A | `Z` |
+| B | `X` |
+| C | `C` |
+| L | `A` |
+| R | `S` |
+| P (play/pause) | `Enter` |
+| X (stop) | `Backspace` |
 
-Typical launcher command template:
+Useful desktop shortcuts: `F5` save state, `F8` load state, `F6`/`F7` change slots,
+`F9` advance one frame while paused, `Shift+F9` rewind one frame, `R` rewind one
+second, hold `Tab` to fast-forward, `F10` reset, `F11` fullscreen, `F12` screenshot,
+`F3` swap disc, and `F4` open the quick menu. Bindings are configurable for six
+players in **Input**.
+
+## Documentation
+
+| Start here | What it covers |
+|---|---|
+| [Documentation site](https://purelogiccode.github.io/5DO/) | Complete user, reference, developer, and maintainer documentation |
+| [User guide](https://purelogiccode.github.io/5DO/UserGuide.html) | Install, controls, settings, saves, library, recording, cheats, and CLI overview |
+| [Installation](https://purelogiccode.github.io/5DO/Installation.html) | Platform setup, BIOS/disc placement, data folders, portable mode |
+| [FAQ](https://purelogiccode.github.io/5DO/FAQ.html) | BIOS, discs, releases, performance, platforms, saves, and licensing |
+| [CLI reference](https://purelogiccode.github.io/5DO/CliReference.html) | Every command, option, exit code, and JSON response |
+| [Configuration](https://purelogiccode.github.io/5DO/Configuration.html) | `settings.json`, profiles, paths, input, NVRAM, environment variables |
+| [Compatibility](https://purelogiccode.github.io/5DO/Compatibility.html) | BIOS/disc compatibility, per-title status, and sweep evidence |
+| [Troubleshooting](https://purelogiccode.github.io/5DO/Troubleshooting.html) | Symptom-driven diagnosis and fixes |
+| [Developer guide](https://purelogiccode.github.io/5DO/DeveloperGuide.html) | Source map, invariants, extension points, and conventions |
+| [Wiki](https://github.com/purelogiccode/5DO/wiki) | Concise community guides and links into the full documentation |
+
+The documentation source lives in [`docs/`](docs/), and the site is built with
+MkDocs Material. See [`docs/Documentation.md`](docs/Documentation.md) if you want to
+build it locally or publish the wiki.
+
+## Compatibility snapshot
+
+The first full-collection loadability sweep covered **594 disc images**:
+
+- **576** loaded and rendered on the first pass.
+- **13** loaded but produced a black/blank first frame.
+- **5** were not loadable on the first pass.
+
+After triage, **593 are loadable/rendered** with **one known no-video case**
+(`Crash 'n Burn` Japan), and **zero not-loadable rows** remain. The four Arcade CD-ROM
+titles require `panafz10`-class BIOS behavior; the remaining blank/black titles render
+by 6,000–9,000 frames or with the correct BIOS/region.
+
+The 12 boot-validated titles, per-disc evidence, and honest per-title limitations are
+in the [compatibility documentation](https://purelogiccode.github.io/5DO/Compatibility.html)
+and [results table](https://purelogiccode.github.io/5DO/GameCompatibilityResults.html).
+Full compatibility with the entire 3DO library is **not** claimed.
+
+## Performance
+
+The core is designed for 60 fps at 4K output with presentation-only scaling:
+
+- Native 320×240 emulation; 4K is **output upscaling**, not internal CEL resolution.
+- Road Rash's 3D race measures **4.20 ms/frame total (p99 7.40 ms)** on the reference
+  machine after the 2026-10-31 performance pass, with an unchanged frame hash.
+- 4K sharp-bilinear measures **GPU p99 0.089 ms** and **present p99 0.208 ms** on an
+  RTX 4070 through the OpenGL path, with zero renderer/mailbox allocations per frame
+  after warm-up.
+- The synthetic benchmark gate enforces zero managed bytes/frame, core p99 ≤ 8 ms,
+  total mean ≤ 8 ms, and total p99 ≤ 16.667 ms in CI.
+- Presentation-only frame skipping (`Off`, `Auto`, `OneInTwo`–`OneInFive`) is
+  available; `Auto` is the default.
+
+See [Performance](https://purelogiccode.github.io/5DO/Performance.html) and
+[Vulkan](https://purelogiccode.github.io/5DO/Vulkan.html) for the full measurements.
+
+## Architecture
+
+5DO keeps one console subsystem per assembly and a strict downward dependency rule:
 
 ```text
-FiveDo.Frontend.Avalonia.exe "{rom}" --bios "{bios}" --fullscreen
+Frontends        FiveDo.Frontend.Avalonia        FiveDo.Cli
+                        │                            │
+Host             FiveDo.Host (settings, library, save slots, profiles, diagnostics)
+                        │
+Machine          FiveDo.Machine (composition, Quartz scheduler, frame loop)
+                        │
+Chips            CPU · Memory · MADAM · CLIO · DSP · SPORT · VDLP · XBUS · CD-ROM
+                        │
+Contracts        FiveDo.Core (interfaces, value types, state contracts, constants)
 ```
 
-The developer GPU probes (`--gl-probe`, `--vk-probe`, `--vk-window-probe`) and
-`--smoke-test` retain their existing options; see [`docs/Performance.md`](docs/Performance.md)
-and [`docs/BuildAndTest.md`](docs/BuildAndTest.md).
+The core is platform-neutral and deterministic. The host owns files, devices, windows,
+and settings. The Avalonia frontend and CLI are replaceable consumers of the same host
+layer. See [Architecture](https://purelogiccode.github.io/5DO/Architecture.html) and
+[Developer Guide](https://purelogiccode.github.io/5DO/DeveloperGuide.html).
 
-Use **Open BIOS** and **Open Disc**, then **Play**. The default keyboard bindings are the arrow keys, Z (A), X (B), C (C), A (L), S (R), Enter (P), and Backspace (X). **Save State**/**Load State** use the selected slot; the **<**/**>** buttons change slots, and F6/F7 select the previous/next slot. F9 advances one frame while paused; F5/F8/F10/F11/F12 and Escape are the save/load/reset/fullscreen/screenshot/pause hotkeys. **Emulation > Record Input** writes a replayable input script. **Screenshot** writes a PNG from the OpenGL output (or the CPU frame when GL is unavailable), named by game, time, and frame. **Library** scans configured folders through the 4DO database, **Settings** edits video/audio/emulation/paths (including the BIOS folder, auto-select, primary/secondary BIOS, and per-game BIOS override), and **Input** captures keyboard bindings for all six players. **Fullscreen** toggles F11/Escape; **Hi-Res** restarts the machine in the opt-in 640x480 mode. Settings persist under the user local application data folder, including per-game fix-mode overrides.
+## Build, test, and publish
+
+```powershell
+# Full solution
+dotnet build 5DO.sln -c Release
+dotnet test 5DO.sln -c Release
+
+# Formatting
+dotnet format 5DO.sln --verify-no-changes
+
+# Trimmed, self-contained CLI for a target runtime
+dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r win-x64 `
+  --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true
+
+# Trimmed desktop frontend
+dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj `
+  -c Release -r win-x64 --self-contained true `
+  -p:PublishSingleFile=true -p:PublishTrimmed=true
+
+# Optional NativeAOT CLI
+dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r win-x64 `
+  --self-contained true -p:FiveDoNativeAot=true -p:PublishSingleFile=true
+```
+
+CI runs build/test on Windows, Linux, and macOS, format checks, benchmark budget gates,
+trimmed CLI/frontend smoke tests, NativeAOT smoke tests, six-RID publishing, and
+portable archive packaging. See [Build and Test](https://purelogiccode.github.io/5DO/BuildAndTest.html)
+and [`packaging/README.md`](packaging/README.md).
+
+## Contributing
+
+Contributions are welcome. Start with [`CONTRIBUTING.md`](CONTRIBUTING.md), then read
+the [Developer Guide](https://purelogiccode.github.io/5DO/DeveloperGuide.html),
+[Test Strategy](https://purelogiccode.github.io/5DO/TestStrategy.html), and
+[Build and Test](https://purelogiccode.github.io/5DO/BuildAndTest.html).
+
+- Use [GitHub Discussions](https://github.com/purelogiccode/5DO/discussions) for
+  questions and ideas, and [SUPPORT.md](SUPPORT.md) for the support map.
+- Use the issue forms for reproducible bugs, feature requests, and compatibility
+  reports.
+- Follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+- Report security vulnerabilities privately through the
+  [security policy](SECURITY.md); do not open a public issue.
+- Do not include BIOS ROMs, game images, or extracted copyrighted assets in issues,
+  pull requests, or test fixtures.
 
 ## Legal and attribution
 
-5DO is distributed under the FreeDO modified GNU LGPL; see [`LICENSE`](LICENSE). FreeDO/4DO are **not** standard OSI-licensed projects. The FreeDO source headers contain a modified LGPL with additional restrictions, including a prohibition on commercial use without the owners' approval. 5DO is **donationware**: non-commercial, source-available, and funded by voluntary donations rather than sales; donations do not grant commercial rights. This repository does **not** include BIOS ROMs or game images. Read [`LICENSE`](LICENSE), [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md), and [`docs/Licensing.md`](docs/Licensing.md) before distributing builds.
+5DO is **donationware**: non-commercial, source-available software funded by voluntary
+donations rather than sales. It is distributed under the **FreeDO modified GNU LGPL**;
+the FreeDO additional terms take precedence where they conflict with the LGPL. See
+[`LICENSE`](LICENSE), [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md), and
+[`docs/Licensing.md`](docs/Licensing.md).
 
-"3DO" and "Panasonic" are trademarks of their respective owners. This project is not affiliated with or endorsed by them.
+FreeDO, 4DO, and Opera/libopera are upstream projects with their own copyright notices
+and terms. This repository does not include BIOS ROMs, game images, or extracted game
+assets. Donations do not grant commercial rights.
+
+"3DO" and "Panasonic" are trademarks of their respective owners. 5DO is not affiliated
+with or endorsed by Panasonic, The 3DO Company, or any rights holder.
+
+## Acknowledgements
+
+- **FreeDO** and **4DO** for the original emulation core and game database.
+- **Opera/libopera** for the behavioral reference used by modern compatibility work.
+- **Avalonia**, **Silk.NET**, **CHDSharp**, **Serilog**, and **OpenAL Soft** for the
+  platform, presentation, storage, diagnostics, and audio foundations.
+- Every contributor who has recorded a frame hash, a save-state roundtrip, or a
+  compatibility result.
+
+---
+
+<p align="center">
+  <sub>Made with C# and .NET 10. Bring your own BIOS and discs.</sub>
+</p>

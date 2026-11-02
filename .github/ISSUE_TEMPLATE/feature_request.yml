@@ -1,0 +1,63 @@
+name: Feature request
+description: Propose a concrete enhancement to 5DO.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the [roadmap](https://purelogiccode.github.io/5DO/Roadmap.html) and
+        [implementation plan](https://purelogiccode.github.io/5DO/ImplementationPlan.html)
+        before proposing a feature. Large changes should start as a discussion.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user or developer problem does this solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the expected behavior, UI, CLI surface, or file format.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Existing workarounds, related emulators, or simpler options.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Emulation accuracy
+        - Desktop UI
+        - CLI / automation
+        - Video / presentation
+        - Audio
+        - Input / controllers
+        - Save states / rewind
+        - Cheats / TAS
+        - Library / metadata
+        - Diagnostics
+        - Documentation
+        - Build / packaging / CI
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I searched existing issues and discussions.
+          required: true
+        - label: This proposal does not require distributing BIOS ROMs, game images, or copyrighted assets.
+          required: true

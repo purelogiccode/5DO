@@ -1,6 +1,6 @@
 # 5DO Architecture
 
-**Status:** implemented through M9P desktop (M0-M8 complete; M9/M9R/M9P/M10 implemented as a working prototype). The dedicated core thread, two-stage presenter, persistent upload, physical-pixel sizing, FSR/xBR/HQx filters, and render-on-demand described below are implemented. Raspberry Pi/GLES 3.1, DPI, Tier B timing, and the remaining M9P items are pending. See [`Status.md`](Status.md) for the current position, [`DeveloperGuide.md`](DeveloperGuide.md) for the source map, and [`docs/README.md`](README.md) for the documentation index.
+**Status:** implemented through M9P desktop (M0-M8 complete; M9/M9R/M9P/M10 implemented as a working prototype). The dedicated core thread, two-stage presenter, persistent upload, physical-pixel sizing, FSR/xBR/HQx filters, and render-on-demand described below are implemented. Raspberry Pi/GLES 3.1, DPI, Tier B timing, and the remaining M9P items are pending. See [`Status.md`](Status.md) for the current position, [`DeveloperGuide.md`](DeveloperGuide.md) for the source map, and [documentation index](index.md) for the documentation map.
 **Reference:** the C# port was originally derived from FreeDOCore; since 2026-10-23, `References/opera-libretro-master/libopera` is the primary behavioral reference for new compatibility work. See [`ReferenceStrategy.md`](ReferenceStrategy.md).
 **Scope:** the emulator core, host layer, CLI, Avalonia frontend, tests, and build layout.
 

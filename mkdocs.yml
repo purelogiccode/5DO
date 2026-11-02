@@ -1,0 +1,168 @@
+site_name: 5DO
+site_description: A modern, source-available C#/.NET 10 emulator for the 3DO Interactive Multiplayer.
+site_url: https://purelogiccode.github.io/5DO/
+repo_url: https://github.com/purelogiccode/5DO
+repo_name: purelogiccode/5DO
+edit_uri: edit/master/docs/
+docs_dir: docs
+site_dir: site
+use_directory_urls: false
+
+copyright: >-
+  Copyright &copy; 2026 5DO contributors. Source-available under the FreeDO
+  modified GNU LGPL. 3DO and Panasonic are trademarks of their respective owners.
+
+theme:
+  name: material
+  language: en
+  logo: assets/icon.png
+  favicon: assets/favicon.ico
+  custom_dir: docs/overrides
+  font: false
+  palette:
+    - scheme: slate
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+    - scheme: default
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+    - toc.follow
+
+plugins:
+  - search
+  - git-revision-date-localized:
+      type: date
+      enable_creation_date: false
+      fallback_to_build_date: true
+  - minify:
+      minify_html: true
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/purelogiccode/5DO
+      name: 5DO on GitHub
+    - icon: fontawesome/solid/comments
+      link: https://github.com/purelogiccode/5DO/discussions
+      name: GitHub Discussions
+    - icon: fontawesome/solid/book
+      link: https://github.com/purelogiccode/5DO/wiki
+      name: 5DO wiki
+
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+    absolute_links: warn
+  links:
+    not_found: warn
+    absolute_links: info
+    unrecognized_links: warn
+    anchors: warn
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - Installation: Installation.md
+      - User guide: UserGuide.md
+      - FAQ: FAQ.md
+  - Using 5DO:
+      - Compatibility: Compatibility.md
+      - Game compatibility list: GameCompatibilityList.md
+      - Game compatibility results: GameCompatibilityResults.md
+      - Cheats: Cheats.md
+      - TAS movies: Tas.md
+      - Troubleshooting: Troubleshooting.md
+      - Known issues: KnownIssues.md
+  - Reference:
+      - CLI reference: CliReference.md
+      - Configuration: Configuration.md
+      - Save states: SaveStates.md
+      - Audio: Audio.md
+      - Video: Video.md
+      - Vulkan: Vulkan.md
+      - Performance: Performance.md
+      - Diagnostics: Diagnostics.md
+      - Glossary: Glossary.md
+  - Development:
+      - Architecture: Architecture.md
+      - Developer guide: DeveloperGuide.md
+      - Build and test: BuildAndTest.md
+      - Test strategy: TestStrategy.md
+      - Porting notes: PortingNotes.md
+      - Reference strategy: ReferenceStrategy.md
+      - Differential harness: DifferentialHarness.md
+      - Fix parity audit: FixParity.md
+      - Trimming and AOT: Trimming.md
+      - Documentation guide: Documentation.md
+      - Documentation source: DocumentationSource.md
+  - Project:
+      - Status: Status.md
+      - Roadmap: Roadmap.md
+      - Implementation plan: ImplementationPlan.md
+      - Compatibility sweep: CompatibilitySweep.md
+      - High-resolution CEL research: HighResolutionCelResearch.md
+      - Release notes 1.0.0-rc.1: ReleaseNotes-1.0.0-rc.1.md
+      - Release checklist: ReleaseChecklist.md
+      - Release legal review: ReleaseLegalReview.md
+      - Test corpus: TestCorpus.md
+      - Session handoff: NextSession.md
+      - Privacy: Privacy.md
+      - Licensing: Licensing.md
+      - OpenAL Soft notice: OpenALSoft.md
+  - Community:
+      - Contributing: https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md
+      - Code of conduct: https://github.com/purelogiccode/5DO/blob/master/CODE_OF_CONDUCT.md
+      - Support: https://github.com/purelogiccode/5DO/blob/master/SUPPORT.md
+      - Security policy: https://github.com/purelogiccode/5DO/blob/master/SECURITY.md
+      - Changelog: https://github.com/purelogiccode/5DO/blob/master/CHANGELOG.md
+      - Project license: https://github.com/purelogiccode/5DO/blob/master/LICENSE
+      - Third-party notices: https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md
+      - Wiki: https://github.com/purelogiccode/5DO/wiki
+      - Discussions: https://github.com/purelogiccode/5DO/discussions
+      - Issues: https://github.com/purelogiccode/5DO/issues

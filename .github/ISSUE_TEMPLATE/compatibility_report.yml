@@ -1,0 +1,99 @@
+name: Compatibility report
+description: Report a specific disc/BIOS compatibility result.
+title: "[Compatibility]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Compatibility reports are most useful when they include exact hashes, frame
+        counts, and evidence. Read the
+        [compatibility documentation](https://purelogiccode.github.io/5DO/Compatibility.html)
+        and [known issues](https://purelogiccode.github.io/5DO/KnownIssues.html) first.
+
+        **Never upload BIOS ROMs or game images.** Use hashes, `info --json`, frame
+        captures, and a privacy-scrubbed diagnostics bundle.
+
+  - type: input
+    id: title
+    attributes:
+      label: Game title and region
+      placeholder: "Road Rash (USA)"
+    validations:
+      required: true
+
+  - type: input
+    id: disc
+    attributes:
+      label: Disc format and game ID
+      description: ISO/BIN/CUE/CHD plus the `info --json` game ID or first-sector MD5.
+      placeholder: "CHD; game ID 0x..."
+    validations:
+      required: true
+
+  - type: input
+    id: bios
+    attributes:
+      label: BIOS image
+      description: File name, region, and MD5. Do not attach the ROM.
+      placeholder: "panafz1.bin, MD5 ..."
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: 5DO version and options
+      description: Version, renderer, region, timing/profile, and any overrides.
+      placeholder: "1.0.0-rc.1, OpenGL WGL, auto region, compatible profile"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      options:
+        - Loadable / rendered
+        - Loadable / black or blank video
+        - Loadable / audio only
+        - Not loadable
+        - Boots but gameplay is broken
+        - Regression from a previous build
+    validations:
+      required: true
+
+  - type: input
+    id: frames
+    attributes:
+      label: Frames executed
+      placeholder: "3000, 6000, or 12000"
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Reproduction command
+      description: The exact CLI command or UI steps.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Frame hash, screenshot, state roundtrip, trace, diagnostics bundle, or comparison with 4DO/Opera.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I have not attached a BIOS ROM, game image, or extracted copyrighted asset.
+          required: true
+        - label: The report includes a legally obtained disc/BIOS result rather than a request for files.
+          required: true

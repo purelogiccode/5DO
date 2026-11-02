@@ -4,11 +4,13 @@
 
 | Version | Supported          |
 |---------|--------------------|
-| 1.0.x   | :white_check_mark: |
-| < 1.0   | :x:                |
+| `1.0.0-rc.1` pre-release | :white_check_mark: |
+| Older pre-release builds | :x: |
 
-Only the latest 1.0.x release receives security fixes. The desktop frontend and CLI
-ship for Windows, Linux, and macOS (x64/arm64).
+There is no stable 1.0 release yet. Security fixes target the current pre-release
+source tree and the latest published pre-release artifacts. The desktop frontend and
+CLI publish for Windows, Linux, and macOS (x64/arm64); Windows x64 is the validated
+platform.
 
 ## Reporting a vulnerability
 
@@ -61,26 +63,32 @@ Out of scope:
 
 ## Security measures in this repository
 
-- **Dependabot** alerts and automated security updates are enabled.
-- **Dependabot version updates** cover NuGet packages and GitHub Actions weekly
-  (`.github/dependabot.yml`).
+The repository is public. The following protections are enabled:
+
+- **Private vulnerability reporting** through GitHub Security Advisories.
+- **Dependabot alerts** and automated security updates.
+- **Dependabot version updates** for NuGet, GitHub Actions, and documentation Python
+  packages (`.github/dependabot.yml`).
 - **NuGet audit** checks direct and transitive packages during restore/build
   (`NuGetAuditMode=all` in `Directory.Build.props`); a known vulnerable package fails
   the build.
-- **Least-privilege CI**: the workflow token is restricted to `contents: read`, and
-  checkouts do not persist credentials.
+- **CodeQL code scanning** for C#, GitHub Actions, and Python
+  (`.github/workflows/codeql.yml`).
+- **Secret scanning** with push protection.
+- **Dependency review** on pull requests (`.github/workflows/dependency-review.yml`).
+- **OpenSSF Scorecard** analysis with published results and SARIF upload
+  (`.github/workflows/scorecard.yml`).
+- **Least-privilege CI**: workflow tokens are restricted to the permissions each job
+  needs, and checkouts do not persist credentials.
 - **Pinned actions**: GitHub Actions are pinned to full commit SHAs.
 - **No secrets or copyrighted disc data** are committed to the repository.
 - **Builds and packaging** run in GitHub Actions from the repository source.
 
-## Repository settings note
+Repository administrators should keep branch protection or a ruleset on `master`
+requiring the CI, docs, CodeQL, and dependency-review checks before merge.
 
-This repository is currently private. GitHub code scanning, secret scanning,
-dependency review, and branch protection require GitHub Advanced Security, a paid
-plan, or a public repository. Enable them when the repository is made public or
-upgraded:
+## Supported platforms
 
-- CodeQL code scanning (default setup or a `.github/workflows/codeql.yml` workflow);
-- secret scanning with push protection;
-- dependency review on pull requests;
-- a branch protection rule or ruleset for `master` requiring CI and review.
+Windows x64 is the validated platform. Linux and macOS builds are published but are
+not yet fully runtime-validated. A security report that only affects an unvalidated
+platform is still welcome; include the exact platform, runtime, and renderer.
