@@ -57,6 +57,7 @@ Windows x64 is the validated platform; the local Linux validation target is the
 | [`Cheats.md`](Cheats.md) | Per-game cheat files, raw/typed/conditional code syntax, CLI commands, desktop manager, and legal scope. |
 | [`Tas.md`](Tas.md) | `.5domovie` container, deterministic record/replay/verify, CLI commands, desktop controls, branching, and current limits. |
 | [`Compatibility.md`](Compatibility.md) | BIOS/disc/input compatibility, game-specific fixes, high-resolution mode, compatibility matrix and soak evidence. |
+| [`FixParity.md`](FixParity.md) | 4DO/Opera fix-bit inventory, 5DO mapping, retired bits, and local frame-hash evidence. |
 | [`GameCompatibilityList.md`](GameCompatibilityList.md) | 241-title 4DO reference list, local collection matches, and the working 5DO status columns. |
 | [`GameCompatibilityResults.md`](GameCompatibilityResults.md) | Automated 594-disc loadability results after the extended-boot retry: 593 rendered, 1 known boot failure, 0 not loadable, with per-disc evidence paths. |
 | [`CompatibilitySweep.md`](CompatibilitySweep.md) | Full-collection loadability/in-game sweep procedure, status definitions, triage, and Linux VM validation. |

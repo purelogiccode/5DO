@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 19 done · 25 partial · 76 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 20 done · 25 partial · 75 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -142,7 +142,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[CORE-06](#feat-core-06)** SPORT/XBUS/DMA timing audit — P0 · M · depends on: CORE-11 — **Pending**
 - [ ] **[CORE-07](#feat-core-07)** Interrupt latency / FIQ/IRQ audit — P0 · M · depends on: CORE-11 — **Pending**
 - [ ] **[CORE-08](#feat-core-08)** Accuracy/performance profiles — P0 · S · depends on: FND-01 — **Partial** — remaining: EmulationProfile/EmulatorTuning exist; full profile coverage and validation remain
-- [ ] **[CORE-09](#feat-core-09)** 4DO/Opera fix parity audit — P0 · M · depends on: SYS-17 — **Pending**
+- [x] **[CORE-09](#feat-core-09)** 4DO/Opera fix parity audit — P0 · M · depends on: SYS-17 — **Done**
 - [ ] **[CORE-10](#feat-core-10)** Hardware test ROM suite — P0 · L — **Pending**
 - [ ] **[CORE-11](#feat-core-11)** Full-collection differential harness — P0 · L · depends on: FND-05 — **Partial** — remaining: differential harness and five-title showcase exist; full 594-disc manifest, nightly dashboard, and PC-delta triage remain
 - [ ] **[CORE-12](#feat-core-12)** Fuzzing and parser security — P0 · M · depends on: FND-05 — **Partial** — deterministic mutation fuzz tests cover states, ISO/CHD headers, and CUE text; a dedicated fuzz project, nightly run, command-stream fuzzing, and Opera FS targets remain
@@ -824,6 +824,13 @@ crops 0-32 pixels from every edge before presentation and native screenshots,
 and Settings > Video exposes None/4/8/12/16/24 px. The crop is presentation-only:
 frame hashes, input, audio, and save states are unchanged, while CLI evidence keeps the
 full frame. Per-game presets and void-area patterns remain. **1466 tests pass.**
+
+**Fix-parity pass (2026-11-01):** CORE-09 is done. [`docs/FixParity.md`](FixParity.md)
+inventories every 4DO `FIX_BIT_*` and maps it to `FixMode`. DinoPark's scale-Y fix is
+visibly active; Microcosm, Super Street Fighter II Turbo, Alone in the Dark, and Samurai
+Shodown retain correct output at 3,000 frames, and forcing the retired timing-6/
+graphics-step-Y bits produces byte-identical frames. `GameCompatibilityTests` locks the
+mapping. **1466 tests pass.**
 
 **Last updated:** 2026-11-01
 
@@ -2920,6 +2927,7 @@ Suggested parallelization with two developers:
 | 2026-11-01 | SYS-20 | Disc integrity verifier | Added `DiscVerifier` and `disc verify` (native-sector reads, LBA errors, FNV-1a hash, JSON). Battle Chess verified 143,810 sectors / 338,241,120 bytes with no errors. SYS-20 is partial for Redump DAT matching and the UI badge; 1,466 tests pass |
 | 2026-11-01 | CORE-13 | Extended-boot compatibility retry | Reran all 18 non-rendered discs: 5 former not-loadable rows and 12 black/blank titles now render. Powers Kingdom (Europe) reaches its live-action intro at 65,000 frames with the Anvil BIOS; WorldCup Super Stadium renders with the FZ-10J BIOS plus its Kanji font ROM. Only Crash 'n Burn (Japan) remains a known boot failure. Added `-Files`/`-RetryFrames` and `-Bios2` to the sweep; 1,466 tests pass |
 | 2026-11-01 | VID-06 | Overscan crop | Added `AppSettings.OverscanPixels` (0-32), `VdlFrame.CopyCroppedFrom`, presentation/native-screenshot crop, and Settings > Video > **Overscan crop**. The crop is presentation-only and keeps frame hashes/input/states unchanged. VID-06 is partial for per-game presets, void patterns, and custom per-edge crops; 1,466 tests pass |
+| 2026-11-01 | CORE-09 | 4DO/Opera fix parity audit | Added `docs/FixParity.md`: every 4DO `FIX_BIT_*` is mapped or explicitly retired. Timing-6 (Alone in the Dark) and GraphicsStepY (Samurai Shodown) are replaced by generic CEL models, with byte-identical forced-bit evidence. `GameCompatibilityTests` locks every ID; 1,466 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
 
@@ -3002,7 +3010,7 @@ A feature is done only when:
 | CORE-06 | SPORT/XBUS/DMA timing audit | P0 | M | CORE-11 | Pending |
 | CORE-07 | Interrupt latency / FIQ/IRQ audit | P0 | M | CORE-11 | Pending |
 | CORE-08 | Accuracy/performance profiles | P0 | S | FND-01 | Partial |
-| CORE-09 | 4DO/Opera fix parity audit | P0 | M | SYS-17 | Pending |
+| CORE-09 | 4DO/Opera fix parity audit | P0 | M | SYS-17 | Done |
 | CORE-10 | Hardware test ROM suite | P0 | L | none | Pending |
 | CORE-11 | Full-collection differential harness | P0 | L | FND-05 | Partial |
 | CORE-12 | Fuzzing and parser security | P0 | M | FND-05 | Partial |
@@ -3652,22 +3660,20 @@ per-profile benchmark deltas and a full-collection accuracy-profile run.
 <a id="feat-core-09"></a>
 ### CORE-09 - 4DO/Opera fix parity audit
 
-**Priority:** P0 | **Effort:** M | **Depends on:** SYS-17 | **Status:** Pending
+**Priority:** P0 | **Effort:** M | **Depends on:** SYS-17 | **Status:** Done (2026-11-01)
 
 **Problem.** 5DO ports the 4DO fix bits; Opera has additional game-specific behavior and IDs.
 
-**Add.**
-- Inventory every fix bit and game ID in 4DO/Opera.
-- Map to 5DO `FixMode`.
-- Add missing behavior only with evidence.
-- Add tests for each fix.
-- Document unknown/unmapped IDs.
+**Implemented.**
+- [`docs/FixParity.md`](FixParity.md) inventories every 4DO `FIX_BIT_*` value, the IDs that use it, and the 5DO mapping.
+- `FIX_BIT_TIMING_1/2/3/5` map to the matching `FixMode` bits. `FIX_BIT_TIMING_6` (Alone in the Dark) and `FIX_BIT_GRAPHICS_STEP_Y` (Samurai Shodown) are explicitly retired because the generic CEL origin/literal-row models replaced them.
+- Local evidence: DinoPark's fix changes the rendered title scene; Microcosm and Super Street Fighter II Turbo retain their mappings without a 3,000-frame regression; forcing the retired Alone/Samurai bits produces byte-identical frames.
+- Opera has no per-game fix table; its generic accuracy models are the reference for the retired bits.
+- `GameCompatibilityTests` covers every mapped ID, case-insensitive/full-MD5 lookups, unknown IDs, collisions, and explicit overrides.
 
-**Files.** `src/FiveDo.Host/GameCompatibility.cs`, `src/FiveDo.Storage/Data/GameDatabase.xml`, `src/FiveDo.Madam/`, tests.
+**Files.** `src/FiveDo.Host/GameCompatibility.cs`, `docs/FixParity.md`, tests.
 
 **Tests.** Per-fix frame hash, unknown game, collision handling.
-
-**Done when.** Every known fix is mapped or explicitly rejected; no silent mismatch.
 
 ---
 
@@ -5961,7 +5967,6 @@ hotkey roundtrip.
 - CORE-06 SPORT/XBUS/DMA.
 - CORE-07 interrupts.
 - CORE-08 profiles.
-- CORE-09 fix parity.
 - CORE-11 differential harness.
 - CORE-13 compatibility failures.
 - CORE-16 regression suite.
@@ -6585,7 +6590,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [ ] **CORE-06** | SPORT/XBUS/DMA timing audit | 5DO ports FreeDO's DMA behavior; Opera has additional DMA8/PBUS control-port semantics. | DMA/PBUS trace parity; no allocator or CD regressions; tests. | M |
 | [ ] **CORE-07** | Interrupt latency / FIQ/IRQ audit | Timing-sensitive titles depend on FIQ entry latency and CLIO/DIPIR ordering. | Latency tests; differential traces; documented invariants. | M |
 | [~] **CORE-08** | Accuracy vs performance profiles | Users need a "compatible" default and an "accuracy" option; deterministic behavior must be explicit. | Two profiles; docs; benchmark deltas; state warnings. **Partial 2026-10-31:** `EmulationProfile` (`Compatible`, `Accuracy`, `Performance`, `Custom`), CLI `--profile`, Settings > Emulation > Timing profile, derived `run --json` profile, and mapping tests are implemented; per-profile benchmark deltas and a full-collection accuracy-profile run remain. | S |
-| [ ] **CORE-09** | 4DO/Opera fix parity audit | 5DO ports the 4DO fix bits; Opera has additional game-specific behavior. | Every known fix ID mapped; unknown games documented; tests. | M |
+| [x] **CORE-09** | 4DO/Opera fix parity audit | 5DO ports the 4DO fix bits; Opera has additional game-specific behavior. | Every known fix ID mapped; unknown games documented; tests. **Done 2026-11-01:** `docs/FixParity.md` maps every 4DO bit; timing-6 and graphics-step-Y are explicitly retired with local evidence. | M |
 | [ ] **CORE-10** | Hardware test ROM suite and CPU conformance | Unit tests are strong but not a hardware oracle. | Test ROMs for CPU, MADAM, VDLP, DSP, CD, SPORT, CLIO; pass/fail report. | L |
 | [~] **CORE-11** | Full-collection differential harness | `ReferenceStrategy.md` still lists the differential harness as pending. | Nightly run of 594 discs against Opera; frame/audio/state hashes; dashboard. **Partial 2026-10-31:** `tools/FiveDo.DiffHarness` runs 5DO and the bundled OperaCore with staged BIOS/ISO, compares checkpoint frame hashes, applies manifest allowances, and writes JSON/Markdown/HTML reports; the Lemmings 300-frame smoke matches (`0x110E7DC5`), the five-title showcase records two video matches and three video divergences, with the strict PC gate showing 0/5 matches (large PC deltas on the video-matched titles), and `manifest` generated the 594-title `benchmarks/diff/full.json`. The full run and nightly dashboard remain. | L |
 | [~] **CORE-12** | Fuzzing and parser security | Disc/state/CUE/CHD parsers handle untrusted files. | Fuzz targets; no crashes/OOB; clean `InvalidStateException`/`DiscImageException`. **Partial 2026-11-01:** deterministic mutation tests cover states, ISO/CHD headers, and CUE text; a dedicated fuzz project, nightly corpus, and command/Opera-FS targets remain. | M |

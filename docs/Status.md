@@ -8,8 +8,8 @@ OSD/quick-menu pass, the library metadata/favorites/playtime pass, the
 multi-track/CD-DA pass, the CD-DA volume/settings pass, the multi-disc swap pass, the
 portable-mode pass, the input-display pass, the ODE/playlist-editor pass, the
 PAL/NTSC pass, the isolation/CD-transcript pass, the pointer-routing pass, the
-audio-latency pass, the diagnostics-bundle pass, the save-state-v3 pass, and the overscan
-pass. Road Rash's
+audio-latency pass, the diagnostics-bundle pass, the save-state-v3 pass, the overscan
+pass, and the fix-parity pass. Road Rash's
 100k-state race now measures
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.

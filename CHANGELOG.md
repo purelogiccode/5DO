@@ -71,6 +71,11 @@ still change.
   illegal-request status instead of silently doing nothing, the guest RESET command
   restores the default transfer state and sector size, and `PrefetchingDiscSource`
   read-aheads native track sectors so CD-DA does not decompress on the sample clock.
+- CORE-09 fix parity audit: [`docs/FixParity.md`](docs/FixParity.md) inventories every
+  4DO `FIX_BIT_*`, its IDs, and the 5DO mapping. Timing-6 (Alone in the Dark) and
+  GraphicsStepY (Samurai Shodown) are explicitly retired in favor of the generic CEL
+  models, with byte-identical forced-bit evidence; DinoPark, Microcosm, and Super Street
+  Fighter II Turbo retain their mappings. `GameCompatibilityTests` locks every ID.
 - VID-06 overscan crop: `AppSettings.OverscanPixels` (0-32) crops every edge before
   presentation and native screenshots. `VdlFrame.CopyCroppedFrom` preserves each line's
   palette, background, output-control word, and DMA flag. Settings > Video > **Overscan

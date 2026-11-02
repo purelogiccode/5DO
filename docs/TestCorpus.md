@@ -889,6 +889,19 @@ UX-23 coverage is compile/status level:
   `SaveNativeScreenshot`; it is presentation-only, so frame hashes and save states do
   not change. The full suite is **1,466 tests**.
 
+### 1.1ag 4DO/Opera fix parity (2026-11-01)
+
+- [`FixParity.md`](FixParity.md) maps every 4DO `FIX_BIT_*`: timing 1/2/3/5 are active;
+  timing-6 (Alone in the Dark) and GraphicsStepY (Samurai Shodown) are retired in favor
+  of the generic CEL origin/literal-row model.
+- Local 3,000-frame evidence: DinoPark changes its title scene with the scale-Y fix
+  (`0xA1F3E800` vs `0xF2607174`); Microcosm (`0x4E6A4651`) and Super Street Fighter II
+  Turbo (`0x1FFBE3FA`) are unchanged with/without their bits; forcing timing-6 on Alone
+  in the Dark (`0x175B8FE4`) or GraphicsStepY on Samurai Shodown (`0x86C04E50`) is
+  byte-identical.
+- `GameCompatibilityTests` covers every mapped ID, case-insensitive/full-MD5 lookups,
+  unknown IDs, collisions, and explicit overrides. **1,466 tests pass.**
+
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 
 All runs use the Release build, `panafz1.bin`, and a fresh NVRAM. The 3,000-frame
