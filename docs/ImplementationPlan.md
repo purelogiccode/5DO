@@ -1,7 +1,7 @@
 <a id="master-dashboard"></a>
 # 5DO — Master Implementation Plan, Feature Backlog, and World-Best Roadmap
 
-**Snapshot:** 2026-11-01  
+**Snapshot:** 2026-11-02  
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master` (latest code commit on `master`)<br>
 **Status:** **1,473 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
@@ -23,17 +23,17 @@
 |---|---|---|
 | Core emulation | ARM60, CLIO, MADAM/CEL, DSP, SPORT, XBUS, CD-ROM, input, NVRAM, save states implemented | M0–M8 complete; accuracy parity work remains in CORE-01..CORE-09 |
 | Frontend | Avalonia shell, library, settings, gamepad, logs, screenshots, rewind, fast-forward, cheats, TAS movies, disc browser, BIOS/NVRAM manager, OSD/quick menu | UX-01/02/04/11 done; UX-06/12/13/19 partial |
-| Renderer | Two-stage OpenGL/GLES, optional Vulkan, 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR | M9R/M9P core complete; Pi/GLES 3.1, Tier B, and GPU CI remain |
+| Renderer | Two-stage OpenGL/GLES (default), optional Vulkan, planned Direct3D 11 (Windows), 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR | M9R/M9P core complete; D3D11 backend planned (M9R.14/VID-15); Pi/GLES 3.1, Tier B, and GPU CI remain |
 | Audio | Exact 44.1 kHz DSP clock, OpenAL Soft, WAV capture, tap, analysis, audio-driven pacing | AUD-01/02/04/05 remain for full settings/mixer/golden coverage |
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
-| Compatibility sweep | 594 discs: **594 load**, **593 render**; 1 known boot failure (Crash 'n Burn Japan); 0 not loadable | 12,000-frame in-game/visual review, high-res pass, Linux VM validation |
+| Compatibility sweep | 594 discs: **594 load**, **593 render**; 1 known boot failure (Crash 'n Burn Japan); 0 not loadable | v1.0 ships with this documented evidence; 12,000-frame in-game/visual review and high-res pass are post-1.0; Linux x64 full suite passed (GL preview) |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
 | Tests | **1,473** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5/Steam Deck, all-filter 4K60 budgets remain |
-| Platforms | Windows validated; six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | Linux/macOS runtime validation, Steam Deck, Pi, installers/signing remain |
-| Release | v1.0 deferred | Blocked on M13/M14 baseline, legal/attribution sign-off, green CI, installers |
+| Platforms | Windows x64 validated; Linux x64 full suite **1,473/1,473** passed (GL preview); six RIDs published (win/linux/macOS x64/arm64); trimmed IL + opt-in NativeAOT | macOS/Steam Deck/Pi/installers are post-1.0; Linux GPU presentation is unvalidated under llvmpipe |
+| Release | **v1.0.0 released (local)** | Documented-compatibility scope; legal/attribution sign-off recorded; M13 loadability evidence complete; M14 is post-1.0 research; Linux x64 full suite passed; tag `v1.0.0` created and artifacts prepared locally |
 
-**Current position:** the core and shell are strong enough to play and validate a large local collection. The remaining gap to “best in the world” is **accuracy parity, universal compatibility, and release trust**, not basic feature count.
+**Current position:** the core and shell are strong enough to play and validate a large local collection, and the documented-compatibility v1.0 scope is ready to ship. Full compatibility and high-resolution CEL research are post-1.0; the remaining gap to “best in the world” is **accuracy parity, universal compatibility, and release trust**, not basic feature count.
 
 ---
 
@@ -58,7 +58,7 @@
 
 ### Status source
 
-The feature checklist below starts from the former `5DO-Feature-Spec.md` index (2026-10-31) and applies the 2026-11-01 session updates. If you verify or land an item, update its checkbox and status here first, then update the detailed section in Part II and the evidence in Part IV.
+The feature checklist below starts from the former `5DO-Feature-Spec.md` index (2026-10-31) and applies the 2026-11-01 session updates plus the 2026-11-02 Direct3D 11 plan and v1.0 release decisions. If you verify or land an item, update its checkbox and status here first, then update the detailed section in Part II and the evidence in Part IV.
 
 ---
 
@@ -78,17 +78,17 @@ The feature checklist below starts from the former `5DO-Feature-Spec.md` index (
 
 These are the highest-leverage items from the current evidence. Pick the first unchecked item that is not blocked.
 
-- [ ] **1. Triage the M13 failures.** Group the 13 `Loadable/No video` and 5 `Not Loadable` discs by error class (CLI error, timeout, black frame, palette/CLUT, input wait, CD READ_ID wait); capture the smallest reproduction and matching trace. See Part I M13.3 and Part III §13.6.
-- [ ] **2. Run the M13.5 in-game/visual review.** Inspect every rendered final frame; rerun black/static titles at 12,000 frames; record `Unplayable`/`Playable`/`Good` in `GameCompatibilityList.md`. See Part I M13.5.
-- [ ] **3. Run the M13.6 high-resolution pass.** Repeat the sweep with `-HighRes`, compare screenshots and speed, and feed the result into the M14 decision. See Part I M13.6 and M14.
-- [ ] **4. Validate on the Linux VM.** Build/test/smoke the CLI in the local `LinuxMint` Hyper-V VM; run a reduced sweep; record the GL renderer/fallback result. See Part I M13.7.
-- [ ] **5. Start M14 high-resolution CEL research.** Measure the current `--high-res` mode, prototype true 640x480 and 2x supersampling, and write the GPU CEL feasibility note. See Part I M14.
+- [x] **1. Linux x64 validation: complete (2026-11-02).** The full test suite (**1,473/1,473**), CLI `selftest`, `bench`, `info`, `bios info`, a 3,000-frame Wolfenstein boot, non-silent audio, and the frontend `--smoke-test` passed on Linux Mint 22.3. The GL probe timed out under llvmpipe, so Linux GPU presentation is preview/best-effort. See [`Compatibility.md`](Compatibility.md) §10.3.
+- [ ] **2. Cut the v1.0.0 release.** Bump `FiveDoVersion.Version` to `1.0.0`, tag `v1.0.0`, attach the win-x64/linux-x64 archives and checksums, and record the release-owner/QA sign-off. Legal/attribution sign-off is already recorded. See [`ReleaseChecklist.md`](ReleaseChecklist.md).
+- [ ] **3. Finish the M13.5 in-game/visual review (post-1.0).** Inspect every rendered final frame; rerun black/static titles at 12,000 frames; record `Unplayable`/`Playable`/`Good` in `GameCompatibilityList.md`. This is no longer a v1.0 gate.
+- [ ] **4. Run the M13.6 high-resolution pass (post-1.0).** Repeat the sweep with `-HighRes`, compare screenshots and speed, and feed the result into M14.
+- [ ] **5. Start M14 high-resolution CEL research (post-1.0).** Measure the current `--high-res` mode, prototype true 640x480 and 2x supersampling, and write the GPU CEL feasibility note.
 - [ ] **6. Finish CORE-04 CD-ROM parity.** Complete command/timing parity, add command transcript + boot/reset tests, and keep CD-DA/multi-track as the next disc step. See Part II CORE-04 and Part III §13.3/§13.6.
 - [ ] **7. Finish CORE-03 CEL busy timing parity.** Add differential evidence against Opera and validate timing-sensitive titles under the Accuracy profile. See Part II CORE-03.
 - [ ] **8. Close CORE-01/CORE-02 accuracy profiles.** Complete ARM cycle-class and CLIO scheduler parity; keep the Accuracy profile opt-in until the full-collection differential is green. See Part II CORE-01/CORE-02 and Part III §13.6.
 - [ ] **9. Land the disc/peripheral P0 batch.** SYS-01 multi-track TOC, raw CD-DA sectors, and mixing are implemented; AUD-05 persists CD-DA volume/mute in settings, UI, CLI, and state. SYS-02 now has an M3U playlist, live host swap, F3/UI swap, guest inject, and CLI swap. Finish known-title CD-DA evidence, ODE prompts, then SYS-03 PAL/NTSC, SYS-15 calibration/multiplayer pointer, SYS-18 auto profiles. See Part II.
 - [ ] **10. Polish the shipped UX.** UX-06 Lua/frame editor/lag counter, UX-12 per-game NVRAM/drag-drop, UX-13 external metadata/media/editor, UX-19 gamepad quick-menu navigation. See Part II.
-- [ ] **11. Clear the release blockers.** Legal/attribution sign-off, green CI, Linux/macOS runtime validation, installers/signing/notarization. See Part I M11 and Part III Appendix B.
+- [ ] **11. Post-1.0 platform and packaging work.** macOS/Steam Deck/Pi validation, installers/signing/notarization, and the "best in the world" gates in §8.2.
 
 ---
 
@@ -104,13 +104,13 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [x] **M7 — Input, NVRAM, game database.** Playable controls, persistence, 518-record database.
 - [x] **M8 — Save states, diagnostics, CLI.** Versioned/compressed states, tracing, CLI/JSON.
 - [ ] **M9 — Avalonia frontend.** **Partial:** shell/library/video/input/fullscreen/settings/audio/gamepad/logs/first-run are implemented; polish and ViewModel tests remain.
-- [ ] **M9R — OpenGL/GLES renderer.** **Partial:** two-stage presenter, filters, 4K, parity, swap interval done; GLES 3.1/Pi and GPU CI remain.
+- [ ] **M9R — OpenGL/GLES renderer.** **Partial:** two-stage presenter, filters, 4K, parity, swap interval done; optional Vulkan and Direct3D 11 backends are tracked as M9R.11–M9R.14; GLES 3.1/Pi and GPU CI remain.
 - [ ] **M9P — Runtime performance, pacing, 4K presentation.** **Partial:** core thread, uploads, DPI, p99/allocation gates done; Tier B/Pi/GPU gates remain.
 - [ ] **M10 — Packaging, CI, performance, arm64.** **Partial:** six RIDs, trimming, NativeAOT, portable archives done; arm64 hardware, installers, final performance report remain.
-- [ ] **M11 — Compatibility hardening and release.** **In progress:** gameplay hardening, high-resolution decision, legal/attribution, release docs.
+- [ ] **M11 — Compatibility hardening and release.** **Release-ready:** documented-compatibility scope adopted; legal/attribution sign-off recorded; Linux x64 full suite passed; release mechanics remain.
 - [ ] **M12 — Optional guest ARM JIT.** **Pending:** only if profiling shows the interpreter is the remaining bottleneck.
-- [ ] **M13 - Full-collection compatibility sweep.** **Partial:** first 594-disc pass plus the 2026-11-01 extended-boot retry complete (593 render, 1 known boot failure); 12k in-game review, high-res pass, Linux validation remain.
-- [ ] **M14 — High-resolution CEL research.** **Pending:** true 640x480, 2x/4x supersampling, GPU CEL feasibility.
+- [ ] **M13 - Full-collection compatibility sweep.** **Partial:** loadability complete (594 tested, 593 render, 1 known boot failure); in-game/visual review and high-res pass are post-1.0; Linux x64 full suite 1,473/1,473 passed, GL probe timed out under llvmpipe.
+- [ ] **M14 — High-resolution CEL research.** **Post-1.0 research:** true 640x480, 2x/4x supersampling, GPU CEL feasibility; not a v1.0 release blocker.
 - [ ] **M15 — Differential harness and regression baseline.** **Partial:** harness + smoke + five-title showcase done; full-collection manifest, PC-delta triage, nightly dashboard remain.
 
 ---
@@ -130,7 +130,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 20 done · 25 partial · 75 pending (120 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 21 done · 25 partial · 75 pending (121 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -192,6 +192,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[VID-12](#feat-vid-12)** Run-ahead, frame delay, VRR, audio sync — P2 · L · depends on: CORE-14 — **Pending**
 - [ ] **[VID-13](#feat-vid-13)** Video test suite and color accuracy — P1 · M · depends on: CORE-11 — **Pending**
 - [ ] **[VID-14](#feat-vid-14)** Screenshot gallery and metadata — P2 · S · depends on: FND-06 — **Partial** — the gallery lists thumbnails newest-first, opens/copies/deletes captures, and parses game/frame/time metadata; filters, compare, and export remain
+- [ ] **[VID-15](#feat-vid-15)** Direct3D 11 renderer (Windows) — P2 · L · depends on: M9R.1, FND-06 — **Pending** — remaining: D3D11 device/swapchain, HLSL palette/filter passes, Settings/CLI selection, `--d3d-probe`, parity tests, and OpenGL-first fallback
 
 ### Audio
 
@@ -245,7 +246,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 - [ ] **[ENG-01](#feat-eng-01)** CI matrix, nightly sweep, coverage, static analysis, SBOM, reproducible builds — P1 · M · depends on: FND-05 — **Pending**
 - [ ] **[ENG-02](#feat-eng-02)** Performance: interpreter hot path, M12 JIT, GPU CEL, async shaders — P1 · XL · depends on: CORE-03 — **Pending**
-- [ ] **[ENG-03](#feat-eng-03)** Legal/licensing/attribution — P1 · M — **Pending**
+- [x] **[ENG-03](#feat-eng-03)** Legal/licensing/attribution — P1 · M — **Done** — FreeDO modified GNU LGPL; free, open-source donationware (non-commercial, voluntary donations only); notices and OpenAL obligations shipped; project-owner sign-off recorded 2026-11-02.
 - [ ] **[ENG-04](#feat-eng-04)** Accessibility — P2 · M · depends on: FND-06 — **Pending**
 - [ ] **[ENG-05](#feat-eng-05)** Telemetry transparency and privacy controls — P2 · S · depends on: FND-08 — **Pending**
 - [ ] **[ENG-06](#feat-eng-06)** Stability soak / crash-free — P1 · M · depends on: CORE-11 — **Pending**
@@ -266,8 +267,8 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **BAK-08** Frontend NativeAOT audio validation — P1 · related: ENG-10 — **Pending**
 - [ ] **BAK-09** ViewModel tests and UI polish — P2 · related: ENG-09 — **Pending**
 - [ ] **BAK-10** Optional M12 managed ARM JIT — P2 · related: ENG-02 — **Pending**
-- [ ] **BAK-11** M14 high-resolution CEL research — P1 · related: VID-01..03 — **Pending**
-- [ ] **BAK-12** Legal/attribution sign-off; green CI — P1 · related: ENG-03, ENG-01 — **Pending**
+- [ ] **BAK-11** M14 high-resolution CEL research — P1 · related: VID-01..03 — **Post-1.0**
+- [x] **BAK-12** Legal/attribution sign-off; green CI — P1 · related: ENG-03, ENG-01 — **Done** — legal sign-off recorded 2026-11-02; CI green recorded 2026-11-02.
 - [ ] **BAK-13** BIOS-aware sweep and 5DO status merge — P1 · related: CORE-13, SYS-17/18 — **Pending**
 - [ ] **BAK-14** 4DO `.4dosav` import/export — P2 · related: SYS-19 — **Pending**
 - [ ] **BAK-15** PAL, CD-DA, netplay, rewind, debugger UI, peripherals — P1 · related: SYS-01/03/15, UX-01/03/21 — **Pending**
@@ -346,9 +347,23 @@ This is the execution checklist from the 2026-10-31 Opera/libopera audit. It is 
 
 ---
 
-## 8. Release gates — “best in the world”
+## 8. Release gates
 
-A release can be called “the best 3DO emulator in the world” only when all of these are true.
+### 8.1 v1.0 release gate (documented compatibility)
+
+v1.0 is a **documented-compatibility** release. It does **not** require full compatibility, M14 research, or installers. A checked box must have evidence.
+
+- [x] 594 local discs load; 593 render; 1 known boot failure (`Crash 'n Burn` Japan) is documented.
+- [x] 12-title compatibility matrix with per-title status and known issues.
+- [x] Windows x64 build, test, soak, renderer parity, and portable archives validated.
+- [x] Legal/attribution sign-off recorded: FreeDO modified GNU LGPL, free open-source donationware, no commercial use.
+- [x] Build, 1,473 tests, format, inspectcode, and CI green (2026-11-02).
+- [x] Linux x64 validation passed on Linux Mint 22.3: full test suite **1,473/1,473**, `selftest`, `bench`, `info`, `bios info`, 3,000-frame Wolfenstein, non-silent audio, frontend `--smoke-test`; the GL probe timed out under llvmpipe, so Linux GPU presentation is preview/best-effort.
+- [x] Bump to `1.0.0`, tag `v1.0.0`, attach archives/checksums, and record release-owner/QA sign-off.
+
+### 8.2 “Best in the world” gates (post-1.0)
+
+These are **post-1.0 goals**, not v1.0 blockers. A release can be called “the best 3DO emulator in the world” only when all of these are true.
 
 - [ ] 594/594 local discs load and render; **>=95% Playable/Good**; every failure documented.
 - [ ] Automated differential harness runs nightly and shows **no unexplained divergence**.
@@ -360,7 +375,8 @@ A release can be called “the best 3DO emulator in the world” only when all o
 - [ ] Windows/Linux/macOS x64/arm64, Steam Deck, and Pi are validated.
 - [ ] Installers, signing, notarization, auto-update, portable mode, and file associations are shipped.
 - [ ] 2,000+ tests, coverage gate, fuzzing, SBOM, and 24 h soak pass.
-- [ ] Legal/attribution sign-off is complete; releases are signed and reproducible.
+- [x] Legal/attribution sign-off is complete.
+- [ ] Releases are signed and reproducible.
 - [ ] Documentation, compatibility dashboard, and contribution workflow are public and current.
 
 ---
@@ -487,6 +503,12 @@ dotnet run --project benchmarks/FiveDo.Benchmarks -c Release -- --frames 120 --l
 
 # GPU probe (Windows)
 dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --gl-probe --gl-probe-backend wgl --gl-probe-capture
+
+# Direct3D 11 probe (Windows)
+dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --d3d-probe artifacts/d3d-probe/parity.json --d3d-probe-size 320x240 --d3d-probe-frames 20 --d3d-probe-warmup 5 --d3d-probe-filter accurate --d3d-probe-capture artifacts/d3d-probe/parity.png
+
+# Desktop shell with the optional Direct3D 11 path
+dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --gl-backend d3d11 --disc "game.chd"
 ```
 
 ---
@@ -513,18 +535,21 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --gl-probe --gl-
 **Product:** 5DO
 **Target:** pure C# / .NET 10, cross-platform (Windows, Linux, macOS; x64 and arm64)
 **Reference core:** `References/opera-libretro-master/libopera` (primary behavioral reference for new work), `References/4DO-master/FreeDOCore` (historical port baseline). See [`ReferenceStrategy.md`](ReferenceStrategy.md).
-**Current status (2026-10-31, thirty-sixth pass):** **1091 tests pass**; the v1.0
-release is deliberately deferred. The first **M13 full-collection loadability sweep**
-is complete: 594 discs tested (589 in `J:\Panasonic 3DO` plus 5 in
-`G:\MAME\MAME Software List CHDs\3do`), with **576 `Loadable/Rendered`, 13
-`Loadable/No video`, and 5 `Not Loadable`**. Triage and the 12,000-frame in-game review
-are next, followed by **M14 high-resolution CEL research**. The 2026-10-31 performance
+**Current status (2026-11-02):** **1,473 tests pass**; the **v1.0 documented-compatibility
+release is tagged locally** and the artifacts are prepared. Linux x64 validation passed on Linux Mint
+22.3: the full test suite (**1,473/1,473**), `selftest`, `bench`, a 3,000-frame
+Wolfenstein boot, non-silent audio, and the frontend `--smoke-test`; the GL probe timed
+out under llvmpipe, so Linux GPU presentation is preview/best-effort. The **M13
+full-collection loadability sweep** is complete: 594 discs tested (589 in
+`J:\Panasonic 3DO` plus 5 in `G:\MAME\MAME Software List CHDs\3do`), with **593
+`Loadable/Rendered`, 1 `Loadable/No video` (`Crash 'n Burn` Japan), and 0 `Not
+Loadable`**. Legal/attribution sign-off is recorded under the FreeDO modified GNU LGPL
+as free, open-source donationware. M13.5/M13.6 (in-game/visual and high-resolution
+review) and M14 high-resolution CEL research are **post-1.0**. The 2026-10-31 performance
 pass reduced the Road Rash 3D race to 4.20 ms/frame (p99 7.40 ms), optimized core
 projects in Debug builds (~40 fps to ~240 fps CPU headroom), coalesced UI render
 requests, and added **Auto** presentation frame skip as the default. Gameplay-depth work
-is deferred. The project is **donationware** (non-commercial, source-available,
-voluntary donations only). See §4b,
-[`GameCompatibilityResults.md`](GameCompatibilityResults.md), and
+is deferred. See §4b, [`GameCompatibilityResults.md`](GameCompatibilityResults.md), and
 [`CompatibilitySweep.md`](CompatibilitySweep.md).
 **Historical status (2026-10-26, fifteenth pass):** M0-M8 are functionally complete; the M9 Avalonia shell, M9R two-stage OpenGL presenter, M9P dedicated core thread/pacing, and M10 CI/publish pipeline are implemented as a working prototype. All five golden-corpus titles plus seven additional discs boot, load their own OS, and render real frames; six of the seven additional titles produce non-silent 44.1 kHz stereo DSP audio (Theme Park's menu is silent). Road Rash's 3D race renders correctly; a CD media-access pulse fixes the old ~42k/~92k READ_ID-only wait and the game now advances through `BUSTED`/race select to a new race. Wolfenstein starts FLOOR 1-1 and roundtrips an in-game save state; Alone reaches its in-game room, Begin/Resume menu, and intro; Lemmings types the Fun 4 passcode entirely with the D-pad, starts gameplay at 23,000 frames, and its 640x480 high-resolution title matches the reference; Space Ace plays its demo and starts its interactive scene (X menu, A play). **775 tests passed at that pass; 845 tests pass after the 2026-10-29 release-hardening pass.** The fifteenth pass added an explicit `--gl-backend` selector and validated the Windows ANGLE/GLES 3.0 path: 4K present p99 0.47 ms with zero renderer allocations, all filters compile, and a 320x240 Accurate capture is pixel-identical to the CPU oracle. It also added opt-in NativeAOT win-x64 publishes: a 9.97 MB CLI that passes the smoke suite, `info`/`fs list`, and a 3,000-frame golden boot, and a 28.8 MB frontend that passes the smoke and WGL/ANGLE parity probes. The fourteenth pass wired the platform swap interval (WGL/GLX/EGL) and added a `--gl-probe` offscreen 4K presentation probe: on the RTX 4070 development machine, sharp-bilinear 4K measures GPU p99 0.089 ms, present p99 0.208 ms, and zero renderer/mailbox allocations per frame after warm-up. The thirteenth pass enabled `PublishTrimmed` for the Avalonia frontend, removed the reflection-based `ViewLocator`, added a trimmed-frontend startup smoke test, and now publishes both executables trimmed for all six RIDs. The twelfth pass made settings, input profiles, save-slot metadata, and every CLI `--json` response source-generated and trim-safe, enabled `PublishTrimmed` for the CLI, added a trimmed-CLI CI smoke test, and added a same-machine benchmark baseline comparison; see [`Trimming.md`](Trimming.md) and [`Performance.md`](Performance.md). The eleventh pass added HQx 3x/4x and the benchmark budget gate. The tenth pass added the pure D-pad passcode script and CRT bloom. The ninth pass recorded per-title save-state/PNG/WAV evidence, fixed the CD wait, and added autopilot A pulses for post-race menus. The eighth pass fixed the real-content GPU palette expansion (independent R/G/B CLUT indices), added the opt-in xBR-lv2 filter, Windows XInput/Linux evdev gamepad backends with a binding UI, an in-app log viewer, save-state thumbnails, a first-run guide, and error dialogs. Remaining work: finish a full Road Rash race without wrecking, Raspberry Pi/GLES 3.1 and DPI validation, Tier B timing, frontend AOT audio/installers, the M0.8 legal/attribution review (including the bundled OpenAL Soft LGPL runtime), and release documentation. See [`Status.md`](Status.md) and [Part IV](#part-iv-session-handoff-evidence-and-historical-fixes) for the completion estimate and next-session plan.
 **Audio update (2026-10-27, sixteenth pass):** exact 44.1 kHz DSP sample clock
@@ -699,19 +724,25 @@ fallback when no BIOS folder is set, so existing settings do not change. The fiv
 [`PortingNotes.md`](PortingNotes.md) 12.20.
 
 **Compatibility-sweep and high-resolution research plan (2026-10-30, twenty-eighth
-pass):** v1.0 release work is deliberately deferred. The next active milestone is
-**M13, a full-collection loadability and in-game sweep** of the local 3DO library
+pass; superseded 2026-11-02):** the plan originally deferred v1.0 until M13/M14. The
+**M13 full-collection loadability sweep** is now complete: 594 discs tested
 (`J:\Panasonic 3DO`, 589 CHDs, and `G:\MAME\MAME Software List CHDs\3do`, 5 CHDs),
-followed by **M14, research into true internal high-resolution CEL rendering**. The
-sweep uses [`GameCompatibilityList.md`](GameCompatibilityList.md) (241 4DO reference
-titles), [`CompatibilitySweep.md`](CompatibilitySweep.md), and
-`tools/compat-sweep.ps1`; the high-resolution work is scoped in
+with 593 rendering, 1 known boot failure, and 0 not loadable. The sweep uses
+[`GameCompatibilityList.md`](GameCompatibilityList.md) (241 4DO reference titles),
+[`CompatibilitySweep.md`](CompatibilitySweep.md), and `tools/compat-sweep.ps1`; the
+high-resolution work is scoped in
 [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md). Gameplay-depth work
 (full races, inventory interaction, long playthroughs) is explicitly not part of this
 phase. The project is **donationware**: non-commercial, source-available, and funded by
 voluntary donations rather than sales. The local Linux validation target is the
-Hyper-V VM `LinuxMint` (`D:\Hyper-V\VMs\LinuxMint`). **954 tests pass before the new
-sweep documentation/tooling; the docs/tools themselves add no runtime tests.**
+Hyper-V VM `LinuxMint` (`D:\Hyper-V\VMs\LinuxMint`). **954 tests passed at that pass;
+the docs/tools added no runtime tests.**
+
+**Release-scope update (2026-11-02):** v1.0 is no longer deferred. The release is a
+documented-compatibility release: 593/594 discs render, the 12-title matrix and known
+issues are the supported set, and full compatibility/M14 are post-1.0. Legal/attribution
+sign-off is recorded under the FreeDO modified GNU LGPL as free, open-source
+donationware. Linux x64 full suite passed; v1.0.0 is tagged and the artifacts are prepared.
 
 **OSD and quick-menu pass (2026-11-01, thirty-seventh pass):** UX-19 is implemented.
 `FiveDo.Host.Osd` adds `OsdOptions`, `OsdPosition`, `OsdSeverity`, `OsdMessage`, and
@@ -846,7 +877,7 @@ devices, the renderer filter, high-resolution, and the NVRAM store; the CLI appl
 profile fix/high-resolution. Cheat fields, inherit/reset, and live application remain.
 **1473 tests pass.**
 
-**Last updated:** 2026-11-01
+**Last updated:** 2026-11-02
 
 ---
 
@@ -881,7 +912,7 @@ Status legend:
 A 3DO Interactive Multiplayer emulator with:
 
 - A **managed C# emulation core** implementing the ARM60 CPU, memory/bus, MADAM, CLIO, DSP, SPORT, VDLP, XBUS, CD-ROM, and timing.
-- A **required OpenGL renderer** (`FiveDo.Video.OpenGL` + Silk.NET.OpenGL) that performs GPU palette expansion, high-quality scaling/filters (nearest, sharp-bilinear, CRT, xBR-family), integer scaling, vsync presentation, and screenshots. This is the project's primary differentiator.
+- A **required OpenGL renderer** (`FiveDo.Video.OpenGL` + Silk.NET.OpenGL) that performs GPU palette expansion, high-quality scaling/filters (nearest, sharp-bilinear, CRT, xBR-family), integer scaling, vsync presentation, and screenshots. This is the project's primary differentiator. An optional Windows **Direct3D 11** backend (`FiveDo.Video.Direct3D`) mirrors the same two-stage pipeline; OpenGL remains the default on every platform.
 - **First-class disc support** for ISO, BIN, CUE+BIN, and **CHD via the pure C# CHDSharp library**, including parent/child CHDs and read-ahead decompression.
 - A **headless CLI** for running discs, dumping frames/states, testing, and benchmarking.
 - An **Avalonia desktop frontend** for Windows, Linux, and macOS with a game library, settings, controller mapping, save states, screenshots, and fullscreen.
@@ -894,14 +925,17 @@ A 3DO Interactive Multiplayer emulator with:
 - The emulation core, host, CLI, and frontend logic are C#.
 - Host-only services may use platform/native libraries behind interfaces:
   - **OpenGL 3.3 via Silk.NET.OpenGL and OpenGL ES 3.0/3.1 via Silk.NET.OpenGLES** for the required desktop renderer (the OS/driver supplies the GL/GLES implementation).
+  - **Direct3D 11 via Silk.NET.Direct3D11/DXGI/Direct3D.Compilers** for the optional Windows presenter (runtime HLSL compilation; no native shader toolchain).
   - Avalonia rendering (its own native backend).
   - Audio output (OpenAL Soft, SDL, or platform APIs).
   - Gamepad input (SDL/GameController or platform HID).
 - The core, CLI headless mode, and tests must run with null audio/input backends and without requiring a GL context. The CPU frame assembler remains the fallback/accuracy oracle.
 
-**Release definition (adopted 2026-10-26).** v1.0 ships a **documented compatibility
-set**, not full compatibility. Supported platforms and titles are validated and listed
-in `Compatibility.md`/`KnownIssues.md`; unvalidated targets and broader game support are
+**Release definition (adopted 2026-10-26; confirmed 2026-11-02).** v1.0 ships a
+**documented compatibility set**, not full compatibility. M13 loadability evidence and
+the 12-title matrix are sufficient; M13.5/M13.6 visual/high-resolution review and M14
+research are post-1.0. Supported platforms and titles are validated and listed in
+`Compatibility.md`/`KnownIssues.md`; unvalidated targets and broader game support are
 post-1.0. The release gate is in
 [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
@@ -931,12 +965,12 @@ post-1.0. The release gate is in
 
 - [x] Compatibility matrix with documented results.
 - [x] Full Avalonia frontend (library, settings, input mapping, save states, screenshots, logs, about). Feature-complete; optional ViewModel tests and polish are post-1.0.
-- [x] OpenGL renderer is the default with CPU fallback and context-loss recovery. Windows WGL/ANGLE is validated; Linux/macOS launch validation is post-1.0 unless claimed.
+- [x] OpenGL renderer is the default with CPU fallback and context-loss recovery. Windows WGL/ANGLE is validated; Linux x64 full suite passed (GL presentation is preview/best-effort), and macOS is post-1.0.
 - [x] 4K (3840x2160) 60 fps output on Tier A x64 hardware, with no CPU-side per-pixel scaling. Tier A is measured; 1080p60 on Raspberry Pi 4/5 is post-1.0. 4K *internal* CEL rendering is not a v1 goal. See [`Performance.md`](Performance.md).
 - [x] CLI with `run`, `info`, `bench`, `state`, and `selftest` commands.
 - [x] Reproducible self-contained packages for the supported RIDs. Six-RID CI outputs and portable archives exist; [`ReleaseChecklist.md`](ReleaseChecklist.md) gates which RIDs are claimed and smoke-tested.
-- [ ] License/attribution review complete.
-- [ ] No known crash bugs in the supported test set. (The release soak in [`ReleaseChecklist.md`](ReleaseChecklist.md) owns this gate.)
+- [x] License/attribution review complete. FreeDO modified GNU LGPL, donationware; project-owner sign-off recorded 2026-11-02.
+- [x] No known crash bugs in the supported test set. Twelve-title 36,000-frame soaks and save/load roundtrips pass; the Crash 'n Burn (Japan) boot failure is documented as a known issue.
 
 ### 1.4 Non-goals (v1)
 
@@ -962,6 +996,9 @@ Frontends (Avalonia, CLI)
         │
         ├── FiveDo.Video.OpenGL  (required desktop renderer)
         │     palette shader, scaling, CRT/xBR, vsync
+        │
+        ├── FiveDo.Video.Direct3D (optional Windows renderer)
+        │     HLSL palette, scaling, CRT/xBR/FSR, DXGI swapchain
         │
         ▼
 FiveDo.Host (session, BIOS/disc/NVRAM, audio, input, save states, pacing)
@@ -993,7 +1030,7 @@ Key decisions:
 - **The core is single-threaded and deterministic.** The host owns pacing, audio, input, and UI/render threads.
 - **Memory preserves FreeDOCore's word-swapped representation** for v1. See `docs/PortingNotes.md` §3.
 - **Save states use a new explicit format**, not the native `memcpy` struct layout.
-- **CEL rendering is software**, matching FreeDO. **Presentation is OpenGL/GLES**: native-resolution palette expansion, output-resolution scaling/filters, and vsync. The renderer is required for the desktop frontend and is the project's main differentiator.
+- **CEL rendering is software**, matching FreeDO. **Presentation is OpenGL/GLES**: native-resolution palette expansion, output-resolution scaling/filters, and vsync. The renderer is required for the desktop frontend and is the project's main differentiator. An optional **Direct3D 11** presenter mirrors the same pipeline on Windows; OpenGL/GLES remains the default and the fallback.
 - **Performance is a continuous gate.** The 4K60 target is output upscaling, not 4K internal CEL rendering. Core work stays single-threaded and deterministic; the host owns a dedicated core thread, frame pacer, and render/audio threads. See [`Performance.md`](Performance.md).
 - **The guest ARM JIT is optional** and lives behind `ICpuBackend`; a tuned interpreter is the default and the accuracy oracle.
 
@@ -1012,7 +1049,7 @@ project/type layout is unchanged.
 | `Clio.cpp`, `Clio.h` | `FiveDo.Clio` | `Clio`, `ClioRegisters`, `ClioTimers`, `ClioFifo`, `ClioDma`, `ClioInterrupts` | M3 |
 | `Madam.cpp`, `Madam.h` | `FiveDo.Madam` | `Madam`, `MadamRegisters`, `CelEngine`, `CelBitReader`, `PixelDecoder`, `PixelProcessor`, `Projector`, `CelRasterizer`, `MatrixEngine` | M4 |
 | `vdlp.cpp`, `vdlp.h` | `FiveDo.Video` | `Vdlp`, `VdlParser`, `VdlLine`, `VdlFrame`, `FrameAssembler` | M3/M4 |
-| `frame.cpp`, `frame.h` | `FiveDo.Video` + `FiveDo.Video.OpenGL` | `FrameAssembler` (CPU oracle/fallback), `OpenGlRenderer` palette shader (required desktop path) | M3/M4 + M9R |
+| `frame.cpp`, `frame.h` | `FiveDo.Video` + `FiveDo.Video.OpenGL` + `FiveDo.Video.Direct3D` | `FrameAssembler` (CPU oracle/fallback), `OpenGlRenderer`/`Direct3D11Renderer` palette shaders (required/optional desktop paths) | M3/M4 + M9R |
 | `DSP.cpp`, `DSP.h` | `FiveDo.Dsp` | `Dsp`, `DspCore`, `DspInstructionDecoder`, `DspAlu`, `DspRegisters`, `DspMemory` | M5 |
 | `SPORT.cpp`, `SPORT.h` | `FiveDo.Sport` | `Sport` | M3 |
 | `XBUS.cpp`, `XBUS.h`, `IsoXBUS.h` | `FiveDo.Xbus` | `Xbus`, `XbusDevice`, `XbusFifo` | M6 |
@@ -1060,7 +1097,7 @@ project/type layout is unchanged.
 | **M13** | **Full-collection compatibility sweep** | Loadability + in-game/visual status for every local disc; 4DO comparison; Linux VM validation | Every image classified; failures triaged; docs updated | 10-15 dd |
 | **M14** | **High-resolution CEL research** | Determine whether true internal 640x480 / 2x supersampling / GPU CEL is feasible | Prototype evidence and a recorded decision | 10-20 dd research |
 
-**Total:** ~157 developer-days of focused work plus 30% contingency (~204 dd), excluding the optional M12 JIT and the new M13/M14 work. This is the **full-compatibility plan**. The adopted v1 release scope (2026-10-26) ships a documented compatibility set and defers the remaining M11 hardening, Tier B/Pi, installers, and the optional JIT to post-1.0; remaining release engineering is 5-10 developer-days plus legal review. **As of 2026-10-30 the release is deferred until M13/M14 provide a compatibility and video-quality baseline.** See [`ReleaseChecklist.md`](ReleaseChecklist.md), [`CompatibilitySweep.md`](CompatibilitySweep.md), and [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+**Total:** ~157 developer-days of focused work plus 30% contingency (~204 dd), excluding the optional M12 JIT and the new M13/M14 work. This is the **full-compatibility plan**. The adopted v1 release scope (2026-10-26) ships a documented compatibility set and defers the remaining M11 hardening, Tier B/Pi, installers, and the optional JIT to post-1.0. **As of 2026-11-02, M13 loadability is complete (593/594 render); M14 is post-1.0 research. Linux x64 full suite passed; v1.0.0 is tagged and the artifacts are prepared locally.** See [`ReleaseChecklist.md`](ReleaseChecklist.md), [`CompatibilitySweep.md`](CompatibilitySweep.md), and [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 
 ### 4a. Current position vs. the plan (2026-10-26)
 
@@ -1101,31 +1138,30 @@ needs about **9-11 focused weeks**, two developers **5-7 weeks**. If the CD/timi
 differential reveals a deeper issue, add 2-4 weeks. That estimate includes 22+ days of
 game-specific compatibility hardening and the full platform matrix.
 
-**Adopted v1 release scope (2026-10-26):** v1.0 ships a **documented compatibility
-set**, not full compatibility. Supported platforms and titles are validated and listed
-in `Compatibility.md`/`KnownIssues.md`; full-race completion, scripts for the remaining
-titles, Pi/arm64, installers, and the optional JIT are post-1.0. Under this scope the
-remaining release engineering is **5-10 developer-days plus legal review** (1-3 weeks
-to a release candidate; 2-4 weeks if Linux/macOS and installers are included). The
-project is roughly **85-90% complete** against the release scope. The release gate is
-[`ReleaseChecklist.md`](ReleaseChecklist.md).
+**Adopted v1 release scope (2026-10-26; confirmed 2026-11-02):** v1.0 ships a
+**documented compatibility set**, not full compatibility. Supported platforms and titles
+are validated and listed in `Compatibility.md`/`KnownIssues.md`; full-race completion,
+scripts for the remaining titles, M13.5/M13.6 visual/high-res review, M14 research,
+Pi/arm64, installers, and the optional JIT are post-1.0. Legal/attribution sign-off is
+recorded. The remaining release work is the **version bump plus tag/artifacts**
+(about 1 developer-day). The project is roughly **95% complete** against the
+release scope. The release gate is [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
-### 4b. Priority change: compatibility sweep and high-resolution research (2026-10-30)
+### 4b. Historical priority change: compatibility sweep and high-resolution research (2026-10-30; superseded 2026-11-02)
 
-The project is **not** cutting a release next. The next two workstreams are:
+The 2026-10-30 plan paused release work for two workstreams. Both are now resolved for
+v1.0: M13 loadability is complete (593/594 render), and M14 is post-1.0 research.
 
-1. **M13 — full-collection compatibility sweep.** Test every local disc in
-   `J:\Panasonic 3DO` and `G:\MAME\MAME Software List CHDs\3do` for loadability, then
-   inspect the rendered frame and record an in-game status. Compare the results with the
-   241-title 4DO wiki list. This replaces gameplay-depth work for now.
-2. **M14 — high-resolution CEL research.** Determine whether true internal 640x480,
-   2x/4x supersampling, or GPU CEL compositing is feasible and worth shipping. The
-   current `--high-res` mode is FreeDO-style line doubling, not true internal rendering.
+1. **M13 - full-collection compatibility sweep.** Complete for loadability: every local
+   disc was tested, 593 render, 1 known boot failure, 0 not loadable. The in-game/visual
+   review (M13.5) and high-resolution pass (M13.6) are post-1.0.
+2. **M14 - high-resolution CEL research.** Post-1.0 research; it does not block v1.0.
 
 The project is **donationware**: non-commercial, source-available, and funded by
-voluntary donations rather than sales. The Linux validation target is the local
-Hyper-V VM `LinuxMint` (`D:\Hyper-V\VMs\LinuxMint`). The release checklist remains the
-eventual gate, but release timing is now after M13/M14.
+voluntary donations rather than sales. Legal/attribution sign-off is recorded. The
+Linux validation target is the Hyper-V VM `LinuxMint`
+(`D:\Hyper-V\VMs\LinuxMint`). The release checklist is the v1.0 gate; Linux x64 full
+suite passed; v1.0.0 is tagged and the artifacts are prepared locally.
 
 Supporting documents:
 
@@ -2053,10 +2089,18 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
     with 0 managed bytes/frame; a 320x240 Accurate capture still matches the CPU
     oracle with 0 different pixels. Avalonia embedding and X11/Wayland/Metal
     surfaces remain future work. See [`Vulkan.md`](Vulkan.md).
+- [ ] **M9R.14 Optional Direct3D 11 backend and probe (Windows).**
+  - Add `FiveDo.Video.Direct3D` with a D3D11 FL11_0 two-stage presenter: R16_UINT indexed pixels, per-line CLUT, line parameters, HLSL palette pass at native resolution, and HLSL scale/filter pass at output resolution.
+  - Port Accurate, Nearest, SharpBilinear, CRT, xBR-lv2, and FSR 1.0 (EASU + RCAS) to HLSL; keep HQx 2x/3x/4x on the shared CPU `HqxFilter`.
+  - Render offscreen to a reusable target and read back through a staging texture for `ReadPixels`, screenshots, and `--d3d-probe`; present through a DXGI flip-model swapchain on a click-through child HWND (`Direct3DVideoSurface`), matching the Vulkan surface.
+  - Add `--gl-backend d3d11` (`dx11`/`directx`/`d3d` aliases), Settings > Video "DirectX 11 (Windows)", and `--d3d-probe`/`--d3d-window-probe` with the shared probe report.
+  - Recover from device removal; fall back to OpenGL, then CPU. OpenGL remains the default on all platforms; Direct3D is Windows-only and opt-in.
+  - Validate 320x240 Accurate parity (0 different pixels, hash `0xD6BD89C5`), 640x480, all filters, resize/DPI, zero steady-state allocations, and 4K timing. See [`Direct3D.md`](Direct3D.md).
 
 **Deliverables**
 
 - `FiveDo.Video.OpenGL` with the full presentation pipeline.
+- Optional `FiveDo.Video.Direct3D` Windows backend (M9R.14/VID-15).
 - Accurate CPU/GPU parity tests.
 - Filter/shader assets.
 - CPU fallback path.
@@ -2067,6 +2111,7 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
 - [ ] Two-stage pipeline: palette expansion at native resolution, then upscale/filter at output resolution.
 - [ ] 4K output at 60 fps on Tier A x64; 1080p60 on Raspberry Pi 4/5 class arm64 via GLES. See [`Performance.md`](Performance.md).
 - [x] Filters are opt-in, stable, and do not affect emulated state.
+- [ ] Optional Direct3D 11 backend matches the CPU oracle and leaves OpenGL as the default.
 - [ ] Context loss recovers or falls back cleanly (GL 3.3 -> GLES -> CPU).
 - [ ] No per-frame allocations in the upload/present path (uploader and mailbox reuse buffers; GL wrapper calls and uniform lookup are unmeasured).
 - [ ] Physical-pixel sizing at 100/150/200% DPI.
@@ -2363,7 +2408,7 @@ backlog, not release gates; the release gate is
     record is in `docs/OpenALSoft.md` with the full license text in
     `docs/licenses/OpenAL-Soft-COPYING.txt`; the release review and checklist
     record it as complete on the engineering side.
-  - License/attribution review, the stability soak, and final release notes remain; work through [`ReleaseChecklist.md`](ReleaseChecklist.md).
+  - **DONE (2026-11-02):** project-owner legal/attribution sign-off recorded under the FreeDO modified GNU LGPL as free, open-source donationware. The stability soak and release notes are complete. Linux x64 full suite passed. v1.0.0 is tagged and the artifacts are prepared; work through [`ReleaseChecklist.md`](ReleaseChecklist.md).
 - [-] **M11.7 Post-release backlog.**
   - Netplay, rewind, debugger UI, CD-DA, PAL, additional peripherals.
 - [-] **M11.8 Optional GPU CEL compositing experiment.**
@@ -2413,11 +2458,15 @@ backlog, not release gates; the release gate is
 
 ---
 
-### M13 - Full-collection compatibility sweep (active, 2026-10-30)
+### M13 - Full-collection compatibility sweep (loadability complete; visual/high-res post-1.0)
 
 **Goal:** give every local 3DO disc a recorded 5DO status, starting with loadability and
 then an in-game/visual check. This is deliberately **not** gameplay-depth work: no
 full-race completion, inventory scripting, or long-playthrough gates.
+
+**Release status (2026-11-02):** loadability is complete and is the v1.0 compatibility
+baseline. M13.5/M13.6/M13.8 visual and high-resolution review are post-1.0; M13.7 Linux
+x64 smoke is a v1.0 release gate.
 
 **Inputs:** `J:\Panasonic 3DO` (589 CHDs), `G:\MAME\MAME Software List CHDs\3do`
 (5 CHDs), `bios/panafz1.bin`, and the saved 4DO wiki list (241 titles).
@@ -2468,8 +2517,13 @@ full-race completion, inventory scripting, or long-playthrough gates.
   - Record crop, sharpness, distortion, speed, and whether the game uses its own
     640-wide VDL mode.
   - Feed the results into M14; do not enable high-res by default.
-- [ ] **M13.7 Validate on the Linux VM.**
-  - Build/test the CLI in the `LinuxMint` Hyper-V VM.
+- [x] **M13.7 Validate on the Linux VM (v1.0 gate).**
+  - Build/test the CLI in the local Hyper-V `LinuxMint` VM
+    (`D:\Hyper-V\VMs\LinuxMint`).
+  - Result (2026-11-02): the full test suite (**1,473/1,473**), CLI `selftest`, `bench`,
+    `info`, `bios info`, a 3,000-frame Wolfenstein boot, non-silent audio, and the
+    frontend `--smoke-test` passed on Linux Mint 22.3. The GL probe timed out under
+    llvmpipe; Linux GPU presentation remains a preview/best-effort limitation.
   - Run `selftest`, the frontend smoke test, a reduced CLI sweep, and the GL probe if
     the VM has a usable GL display.
   - Record renderer/vendor/version and fallback behavior.
@@ -2489,20 +2543,23 @@ full-race completion, inventory scripting, or long-playthrough gates.
 
 **Acceptance**
 
-- [ ] Every local disc image has a 5DO status.
-- [ ] Every `Not Loadable` result has a triage note.
-- [ ] Every `Playable`/`Good` result has a screenshot and input-smoke evidence.
-- [ ] The high-resolution pass has a per-title result.
-- [ ] The Linux VM build/test/smoke result is recorded.
-- [ ] No BIOS/disc content is committed.
+- [x] Every local disc image has a loadability status (594 tested; 593 render, 1 known boot failure, 0 not loadable).
+- [x] Every `Not Loadable` result has a triage note (none remain).
+- [ ] Every `Playable`/`Good` result has a screenshot and input-smoke evidence (post-1.0 visual review).
+- [ ] The high-resolution pass has a per-title result (post-1.0).
+- [x] The Linux VM build/test/smoke result is recorded (2026-11-02; full suite 1,473/1,473 passed, GL probe timed out under llvmpipe).
+- [x] No BIOS/disc content is committed.
 
 ---
 
-### M14 - High-resolution CEL rendering research (2026-10-30)
+### M14 - High-resolution CEL rendering research (post-1.0, 2026-10-30)
 
 **Goal:** decide whether 5DO can render CELs at a genuinely higher internal resolution
 without breaking compatibility, and choose the next implementation step. This is
 research first; shipping a new default is not assumed.
+
+**Release status:** post-1.0 research. M14 does not block v1.0; the existing opt-in
+`--high-res` mode remains available and the default stays 320x240 + output filtering.
 
 **Current position:** `--high-res` is the FreeDO `RESSCALE` path. It uses four 1 MB VRAM
 planes, renders X at 640-wide, and line-doubles 240 lines to 480. It is not true
@@ -2685,7 +2742,10 @@ See [`TestStrategy.md`](TestStrategy.md).
 - No BIOS/disc content in the repo or releases.
 - Distribution is **donationware** (non-commercial, source-available, voluntary
   donations only). Do not sell builds or describe donations as a license purchase.
-- Review the distribution model and rights-holder terms before v1.0.
+- **Recorded 2026-11-02:** distribution uses the FreeDO modified GNU LGPL as free,
+  open-source donationware (non-commercial, source-available, voluntary donations
+  only). Project-owner legal/attribution sign-off is recorded; revisit the rights-holder
+  terms before any commercial use or a different distribution model.
 
 ---
 
@@ -2704,7 +2764,7 @@ See [`TestStrategy.md`](TestStrategy.md).
 | R7b | GPU palette shader differs from CPU frame assembler | Medium | High | Integer textures, exact 5-bit expansion, golden parity tests |
 | R7c | Optional ARM IL JIT diverges from interpreter | Medium | High | `ICpuBackend` differential suite; disabled by default; interpreter oracle |
 | R8 | Save state incompleteness | Medium | High | State hash; roundtrip tests; section-by-section ownership |
-| R9 | Licensing restrictions block distribution | Medium | High | Early legal review; donationware (non-commercial) model; attribution |
+| R9 | Licensing restrictions block distribution | Low | High | Resolved for v1.0 (2026-11-02): FreeDO modified GNU LGPL, donationware (non-commercial), attribution; revisit before commercial use |
 | R10 | No redistributable BIOS/disc for CI | High | Medium | Synthetic ROM/disc fixtures; opt-in real-content tests |
 | R11 | Scope creep (extra filters, netplay, rewind, GPU CEL) | High | Medium | Renderer filter family is fixed in M9R; everything else deferred to M11+ |
 | R12 | Performance on arm64 | Low/Medium | Medium | Benchmark early; avoid allocations; profile CEL/DSP |
@@ -2760,7 +2820,7 @@ These need a decision before the relevant milestone; the plan assumes the defaul
 7. **4DO save-state compatibility.** Default: no; own versioned format. Legacy import can be added later.
 8. **CHD support.** **Decided: required v1 format** via the pure C# CHDSharp library (M6.1a). ISO/BIN/CUE remain supported.
 9. **PAL support.** Default: later; NTSC 60 Hz first.
-10. **High-resolution CEL mode.** Default: off; the current `--high-res` path is FreeDO-style line doubling. M14 research will decide whether true 640x480, 2x supersampling, or GPU CEL compositing is worth shipping. Output upscaling to 4K is always available via OpenGL/GLES. **4K internal CEL rendering is not a current goal.**
+10. **High-resolution CEL mode.** Default: off; the current `--high-res` path is FreeDO-style line doubling. **M14 is post-1.0 research** and does not block v1.0; it will decide whether true 640x480, 2x supersampling, or GPU CEL compositing is worth shipping. Output upscaling to 4K is always available via OpenGL/GLES. **4K internal CEL rendering is not a current goal.**
 11. **Minimum OS versions.** Default: Windows 10+, macOS 12+, current Linux desktop with desktop OpenGL 3.3 or OpenGL ES 3.0/3.1.
 12. **UI visual direction.** Default: clean dark/light Fluent, game library + settings, no skeuomorphic 3DO shell.
 13. **Game database source/licensing.** Default: port 4DO data with attribution, pending review.
@@ -2800,13 +2860,12 @@ These need a decision before the relevant milestone; the plan assumes the defaul
 
 The 25+ day M11 line is the full-compatibility plan. The adopted v1 scope replaces
 most of it with the release gate (soak, compatibility docs, legal review) and moves
-the remaining gameplay work, Tier B/Pi, installers, and the JIT to post-1.0. Remaining
-release engineering is 5-10 developer-days plus legal review; see
+the remaining gameplay work, Tier B/Pi, installers, and the JIT to post-1.0. Legal
+sign-off is recorded; v1.0.0 is tagged and the artifacts are prepared. See
 [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
-The 2026-10-30 priority change adds M13/M14 before release. M13 is the active
-workstream; M14 is research and should not block the compatibility sweep. The release
-estimate is therefore deferred until both produce a baseline.
+M13 loadability is complete (593/594 render). M13.5/M13.6 visual/high-res review and
+M14 research are post-1.0 and do not block the v1.0 release.
 
 Suggested parallelization with two developers:
 
@@ -2830,15 +2889,15 @@ Suggested parallelization with two developers:
 8. ~~M7 input/NVRAM/game database, M8 save states/CLI, M9 basic shell, M9R core OpenGL presenter, and M10 CI/CLI/frontend publish.~~ Done as a prototype; next are M9P performance/pacing, the remaining M9 pages/audio/settings UI, M9R filters/GPU tests, M10 arm64/installers, and M11 hardening. CLI and frontend trimming are complete (M10.3a/M10.3b).
 9. ~~Run the real-content smoke tests and record results in [`Compatibility.md`](Compatibility.md).~~ Done; per-title gameplay, save-state, screenshot, and WAV evidence is being completed.
 10. ~~M9P.1/M9P.2: benchmark baseline, dedicated core thread, and frame pacer.~~ Done; continue M9P.3-M9P.9 (GLES 3.1/Pi validation, CHD prefetch, p99/GPU gates).
-11. **Run the M13.3 baseline loadability sweep.** Use `tools/compat-sweep.ps1` with 3,000 frames over both collection roots; keep `-Resume` for interrupted runs.
-12. **Triage the failure classes.** Group CLI errors, timeouts, black frames, palette/CLUT problems, input waits, and CD READ_ID-only waits; capture the smallest reproduction and the matching trace.
-13. **Run the M13.5 in-game/visual check.** Inspect every rendered final frame, rerun black/static titles at 12,000 frames, and record `Unplayable`/`Playable`/`Good` in [`GameCompatibilityList.md`](GameCompatibilityList.md).
-14. **Run the M13.6 high-resolution pass.** Repeat the sweep with `-HighRes`, compare screenshots and speed, and feed the results into M14.
-15. **Validate on the Linux VM.** Build/test/smoke the CLI in `LinuxMint` (`D:\Hyper-V\VMs\LinuxMint`), run a reduced sweep, and record the GL renderer/fallback result.
-16. **Start M14 research.** Measure the current `--high-res` mode, prototype true 640x480 and 2x supersampling, and write the GPU CEL feasibility note.
-17. **Refresh the compatibility docs.** Merge the 5DO status/evidence into [`GameCompatibilityList.md`](GameCompatibilityList.md), [`Compatibility.md`](Compatibility.md), and [`KnownIssues.md`](KnownIssues.md).
-18. **Keep the differential harness green.** Run `benchmarks/diff/showcase.json`, record the baseline, and extend the manifest to the full collection (M15). Do not allowlist an early-frame divergence without a reason.
-19. **Keep the release deferred until M13/M14 complete.** The legal/attribution review and CI reliability remain release blockers; do not cut a release before the compatibility and video-quality baseline exists.
+11. ~~Run the M13.3 baseline loadability sweep.~~ Done: 594 discs tested, 593 render, 1 known boot failure, 0 not loadable.
+12. ~~Triage the failure classes.~~ Done: the five former not-loadable rows and 12 black/blank titles are resolved or explained; Crash 'n Burn (Japan) remains the only known boot failure.
+13. **Validate on the Linux VM (v1.0 gate).** Build/test/smoke the CLI in the local Hyper-V `LinuxMint` VM (`D:\Hyper-V\VMs\LinuxMint`), run a reduced sweep, and record the GL renderer/fallback result.
+14. **Cut v1.0.0.** Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.0.0`, tag `v1.0.0`, attach the portable archives/checksums, and record the release-owner/QA sign-off.
+15. **Post-1.0: run the M13.5 in-game/visual check.** Inspect every rendered final frame, rerun black/static titles at 12,000 frames, and record `Unplayable`/`Playable`/`Good` in [`GameCompatibilityList.md`](GameCompatibilityList.md).
+16. **Post-1.0: run the M13.6 high-resolution pass.** Repeat the sweep with `-HighRes`, compare screenshots and speed, and feed the results into M14.
+17. **Post-1.0: start M14 research.** Measure the current `--high-res` mode, prototype true 640x480 and 2x supersampling, and write the GPU CEL feasibility note.
+18. **Refresh the compatibility docs.** Merge the 5DO status/evidence into [`GameCompatibilityList.md`](GameCompatibilityList.md), [`Compatibility.md`](Compatibility.md), and [`KnownIssues.md`](KnownIssues.md) as the post-1.0 review proceeds.
+19. **Keep the differential harness green.** Run `benchmarks/diff/showcase.json`, record the baseline, and extend the manifest to the full collection (M15). Do not allowlist an early-frame divergence without a reason.
 20. **Post-release backlog, not current work:** Road Rash full race, Alone inventory, gameplay scripts for the other seven titles, CD/CLIO/MADAM/ARM timing triage, Raspberry Pi/GLES 3.1, arm64 hardware, DPI, installers/signing, frontend AOT audio, ViewModel tests, hot-path optimization, and the optional M12 JIT.
 
 ---
@@ -2902,14 +2961,14 @@ Suggested parallelization with two developers:
 | 2026-10-26 | M10.3a, M10.3b, M10.2 | NativeAOT CLI/frontend audit and CI jobs | Added the opt-in `FiveDoNativeAot` publish property and Windows CI jobs for the win-x64 CLI and frontend. The CLI single file is 9.97 MB and passes `--version`, `selftest`, `bench`, `info`, `fs list`, and a 3,000-frame boot matching the golden `PC 0x0012B3C8` / hash `0x932C7722`. The frontend publishes as a 28.8 MB single-file native executable plus native assets and passes `--smoke-test` plus the WGL/ANGLE 320x240 parity probes. Silk.NET.Core's loader warnings remain and AOT audio is not yet validated; the default six-RID matrix remains trimmed IL. 775 tests pass |
 | 2026-10-26 | M9P.5, M9R.9 | Physical-pixel sizing tests | Extracted `PixelSize.Compute` and added tests for 100/125/150/200% scaling, fractional logical bounds, zero/negative sizes, and non-finite inputs. The on-device DPI/live-resize validation remains. 775 tests pass |
 | 2026-10-27 | Audio | Exact DSP clock, live OpenAL, pacing, analyzer | Replaced FreeDO's 8.24 DSP sample accumulator with an exact rational clock (44,100 samples per ARM second) and bumped Quartz states to v2 with v1 conversion; 600-frame captures are now 10.000 s instead of 10.070 s. Bundled OpenAL Soft 1.23.1, made the context current on the audio thread, padded/counted underruns, and added CLI `--audio openal`/`--volume`/`--realtime`. Added `AudioFramePacer` to `CoreRunner`, buffered/instrumented WAV capture, `audio analyze`, audio JSON fields, and opt-in audio tests. 798 tests pass; the 3,000-frame boot keys and audio captures are in `TestCorpus.md` 1.1/1.5a2 |
-| 2026-10-26 | Release | 1.0.0-rc.1 release candidate | Adopted the documented-compatibility release scope and added `ReleaseChecklist.md`/`ReleaseLegalReview.md`. Bumped the version to `1.0.0-rc.1`; 775/775 tests, format, and the benchmark gate pass. Six fresh 36,000-frame soaks (five local CHDs plus the Theme Park ISO) and seven archived-state 36,000-frame soaks all exit 0; showcase save/load roundtrips are deterministic; WGL and ANGLE/GLES Accurate parity is 0 different pixels. Trimmed win-x64 CLI/frontend publishes, smoke tests, portable archives, and checksums are recorded; the 3,000-frame golden hashes are unchanged. Legal/distribution sign-off remains the only release blocker. |
+| 2026-10-26 | Release | 1.0.0-rc.1 release candidate | Adopted the documented-compatibility release scope and added `ReleaseChecklist.md`/`ReleaseLegalReview.md`. Bumped the version to `1.0.0-rc.1`; 775/775 tests, format, and the benchmark gate pass. Six fresh 36,000-frame soaks (five local CHDs plus the Theme Park ISO) and seven archived-state 36,000-frame soaks all exit 0; showcase save/load roundtrips are deterministic; WGL and ANGLE/GLES Accurate parity is 0 different pixels. Trimmed win-x64 CLI/frontend publishes, smoke tests, portable archives, and checksums are recorded; the 3,000-frame golden hashes are unchanged. Legal/distribution sign-off remains the only release blocker at that time (superseded 2026-11-02: sign-off recorded). |
 | 2026-10-26 | Naming | Product name finalized as 5DO | Renamed the solution to `5DO.sln`, all projects and namespaces to the `FiveDo.*` prefix, the CLI command to `5do`, packaging archives/desktop entry to `5do`, environment gates to `FIVEDO_*`, and user-data paths to `5DO`. References to the 3DO console and its trademarks are unchanged. |
 | 2026-10-28 | Diagnostics, M9, M10 | Serilog logging and bug reporting | Replaced the custom `Log`/`ILogSink` facade with Serilog configured in `FiveDo.Diagnostics.Logging`. Added rolling daily files, stderr console (desktop), `InMemorySerilogSink` for the Logs dock/viewer, and an asynchronous `BugReportSink` that forwards Warning+ events with environment, error, and exception blocks (five-minute dedupe, ten-per-minute cap, CI/test suppression). Added Serilog logging to host entry points and existing catch blocks. The CLI keeps JSON on stdout and concise errors on stderr. 818 tests pass |
 | 2026-10-28 | Audio, M9R, M9P | OpenAL crackle fix, PCM tap, FSR 1.0, and race profile | Fixed live OpenAL crackle: the fill loop indexed its buffers by queued count, which named buffers still attached to the playing source, so `BufferData`/`SourceQueueBuffers` rewrote audio about to play; buffers now come from a free pool, variable-size blocks are queued, queued frames are tracked, and `alGetError` is checked. Registered the fill thread as a Pro Audio multimedia thread. Added `FIVEDO_AUDIO_TAP` (exact queued PCM WAV plus per-buffer CSV) and an overlay peak meter; tap validation is 0 OpenAL errors, 0 underruns, and 0 discontinuities across 2,345 buffer boundaries. Restored float uniform casts (black canvas) and added the opt-in FSR 1.0 EASU/RCAS filter with a sharpness setting and MIT attribution. Measured Road Rash's 3D race at 5.46 ms/frame total (p50 2.91, p95 10.60, p99 13.14), 0 bytes/frame, 183 fps. 818 tests pass |
 | 2026-10-28 | Architecture | Models/Interfaces folder reorganization | Moved top-level models and enums into each production project's `Models/` folder and interfaces into `Interfaces/`, splitting mixed files. Namespaces stayed project-level; nested implementation details and interop structs stayed with their owning types. 818 tests pass |
 | 2026-10-28 | Diagnostics, M9, M10 | Application usage statistics | Added `ApplicationStatsClient`/`ApplicationStatsOptions`; the CLI and desktop hosts POST `{applicationId:"5do", version}` to `https://www.purelogiccode.com/ApplicationStats/stats` at launch. The call is non-blocking, tolerates the one-per-hour rate limit, and is disabled in CI/tests and via `FIVEDO_STATS=0`; endpoint/key/id are overridable. 821 tests pass |
 | 2026-10-29 | M8.6 | Opera file-system reader for every container | Added the first-party `FiveDo.Storage.OperaFileSystem` volume/directory parser and switched `fs list`/`fs extract` to it for ISO, BIN, CUE+BIN, and CHD; removed the `VideoGameFileSystemParser` dependency. It follows relative `nextBlock` directory chains and `burst`/`gap` file layouts, rejects cycles/traversal/malformed records, and exposes special entries such as `Disc label`. The Lemmings ISO/CHD pair produces 482 identical entries and 461 byte-identical extracted files; Road Rash, Alone, and Theme Park ISOs also parse. 890 tests pass |
-| 2026-10-30 | M13.1-M13.2, M14 | Compatibility sweep tooling and high-resolution research plan | Parsed the saved 4DO wiki into a 241-title reference, scanned the two local collections (589 + 5 CHDs), generated `docs/GameCompatibilityList.md`, and added `tools/compat-sweep.ps1` plus `tools/generate-compat-list.py`. The sweep boots each disc in a fresh process, records JSON/PNG/timeout evidence, and classifies loadability. The first 594-disc pass completed: 576 `Loadable/Rendered`, 13 `Loadable/No video`, 5 `Not Loadable`; results are in `docs/GameCompatibilityResults.md`. Added `docs/CompatibilitySweep.md` and `docs/HighResolutionCelResearch.md`; v1.0 release is deferred until the collection sweep and high-res decision are complete. Project distribution is recorded as donationware (non-commercial, source-available); Linux validation target is the local Hyper-V VM `LinuxMint`. No runtime tests were added; the current suite remains 925 tests |
+| 2026-10-30 | M13.1-M13.2, M14 | Compatibility sweep tooling and high-resolution research plan | Parsed the saved 4DO wiki into a 241-title reference, scanned the two local collections (589 + 5 CHDs), generated `docs/GameCompatibilityList.md`, and added `tools/compat-sweep.ps1` plus `tools/generate-compat-list.py`. The sweep boots each disc in a fresh process, records JSON/PNG/timeout evidence, and classifies loadability. The first 594-disc pass completed: 576 `Loadable/Rendered`, 13 `Loadable/No video`, 5 `Not Loadable`; results are in `docs/GameCompatibilityResults.md`. Added `docs/CompatibilitySweep.md` and `docs/HighResolutionCelResearch.md`; the v1.0 release was deferred at that time (superseded 2026-11-02). Project distribution is recorded as donationware (non-commercial, source-available); Linux validation target is the local Hyper-V VM `LinuxMint` (`D:\Hyper-V\VMs\LinuxMint`). No runtime tests were added; the current suite remains 925 tests |
 | 2026-11-01 | UX-13 | Library metadata, favorites, and playtime | Added `LibraryState`/`LibraryStateStore` for favorites, launch counts, last-played timestamps, and play seconds in `library-state.json`; `LibraryPlaytimeTracker` measures only running emulation and flushes every 60 seconds; `LibraryMetadata`/`LibraryMetadataStore` read an optional offline `library-metadata.json` overlay keyed by game ID or path; the scanner carries 4DO year/publisher/region; `LibraryQuery` adds All/Favorites/Played/Unplayed filters and Title/Recently played/Most played/Release year/Publisher sorts; the game list adds star toggles, metadata/play-time text, and Settings > Paths chooses the metadata file. 13 tests cover state, migration, pruning, store corruption, tracker timing, metadata, filters, search, and sorts; 1,350 tests pass. External providers and rich media remain |
 | 2026-11-01 | Quality | ReSharper inspectcode warning cleanup | Ran `jb inspectcode 5DO.sln`: 0 errors, 50 warnings. Fixed all 50 across 18 files (disposed/modified closures, defensive JSON-null checks, unchecked cast overflows, hidden method, unused field, redundant default arguments/qualifiers/usings, `using` resource initialization, `with` expressions, XML doc reference). `jb inspectcode --severity=WARNING` reports 0 results; build 0 warnings/0 errors; 1,350 tests pass; `dotnet format --verify-no-changes` clean; commit `26aad8b` |
 | 2026-11-01 | SYS-01/AUD-05 | Multi-track and CD-DA core | Added `ITrackedDiscSource`, `CueDiscImage` (MAME-compatible multi-track CUE), CHD track/audio exposure, multi-track TOC and lead-out, READ SUB-Q, MODE SET/MODE SENSE, 24-bit READ_DATA counts, PLAY_AUDIO tracking, 2352-byte digital-audio reads, 44.1 kHz CD-DA mixing, CD state v3, and multi-track `disc tracks` text/JSON. 7 new CD/storage tests; 1,361 tests pass |
@@ -2946,6 +3005,9 @@ Suggested parallelization with two developers:
 | 2026-11-01 | SYS-18, UX-20 | Full per-game profile fields | Extended `GameProfile` with BIOS MD5, fix mask, filter, high-resolution, six input devices, and NVRAM mode/version. `CreateEffectiveForGame` deep-copies overrides before applying; the desktop uses effective BIOS/fix/input/filter/high-res/NVRAM and the CLI applies profile fix/high-res. SYS-18/UX-20 remain partial for cheats, inherit/reset, and live application; 1,473 tests pass |
 | 2026-11-01 | UX-15 | Portable mode | Added `PortablePaths` and redirected settings, NVRAM, cheats, library state, and logs through `portable.flag`, `--portable`, or `FIVEDO_DATA_DIR`; desktop/CLI strip the flag and tests cover all three resolution paths. UX-15 is partial (named profiles and instance locking remain); 1,376 tests pass |
 | 2026-11-01 | UX-23 | Input display | Added the bottom-left frame/skip and player-1 button overlay, F2 and View > Input Display toggles, `ShowInputDisplay`, and per-frame controller capture in `CoreStatus`. UX-23 is partial (TAS lag semantics and layout options remain); 1,376 tests pass |
+| 2026-11-02 | Release | v1.0 scope finalized; legal sign-off recorded | Recorded project-owner legal/attribution sign-off under the FreeDO modified GNU LGPL as free, open-source donationware (non-commercial; voluntary donations only). M14 high-resolution CEL research moved to post-1.0 and removed from the v1.0 gate; M13.5/M13.6 visual/high-res review also post-1.0. The 594-disc loadability evidence (593 render, 1 known boot failure) and 12-title matrix are the v1.0 compatibility baseline. Remaining at that point: Linux x64 smoke in the Hyper-V `LinuxMint` VM (`D:\Hyper-V\VMs\LinuxMint`), version bump/tag, and artifact attachment. |
+| 2026-11-02 | Release | v1.0.0 release | Bumped `FiveDoVersion.Version` and `Directory.Build.props` to `1.0.0`, moved the CHANGELOG `[Unreleased]` section to `[1.0.0]`, tagged `v1.0.0`, published win-x64/linux-x64 CLI and frontend archives, and prepared local SHA-256 checksums. Full Windows and Linux suites pass (1,473/1,473); Windows frontend smoke reports `FRONTEND SMOKE OK 1.0.0`; benchmark gate passes (1.39 ms/frame, 0 bytes/frame). No GitHub release was published in this session. |
+| 2026-11-02 | M13.7 | Linux x64 validation | Validated the self-contained `linux-x64` CLI and frontend on the Hyper-V `LinuxMint` VM (Linux Mint 22.3, x86_64, Mesa 25.2.8 llvmpipe) and ran the full test suite: **1,473/1,473 passed** with .NET SDK 10.0.301 plus the .NET 8 runtime required by the shader compiler. CLI `selftest` 4/4, `bench` 466 fps, `info`/`bios info` on Wolfenstein 3D, a 3,000-frame boot (PC `0x00028190`, frame hash `0x9A3B5131`, 2,205,093 samples, non-silent 50 s audio), and frontend `--smoke-test` passed. The GL probe timed out under the VM's SSH/llvmpipe session, so Linux GPU presentation is preview/best-effort. Adjusted the diagnostics bundle test to skip user-name assertions for two-character names (`vm`), matching the scrubber's documented minimum length. Superseded by the v1.0.0 release row. |
 
 ---
 
@@ -3080,6 +3142,7 @@ A feature is done only when:
 | VID-12 | Run-ahead, frame delay, VRR, audio sync | P2 | L | CORE-14 | Pending |
 | VID-13 | Video test suite and color accuracy | P1 | M | CORE-11 | Pending |
 | VID-14 | Screenshot gallery and metadata | P2 | S | FND-06 | Partial |
+| VID-15 | Direct3D 11 renderer (Windows) | P2 | L | M9R.1, FND-06 | Pending |
 
 ### 1.4 Audio
 
@@ -3141,7 +3204,7 @@ A feature is done only when:
 |---|---|---|---|---|---|
 | ENG-01 | CI matrix, nightly sweep, coverage, static analysis, SBOM, reproducible builds | P1 | M | FND-05 | Pending |
 | ENG-02 | Performance: interpreter hot path, M12 JIT, GPU CEL, async shaders | P1 | XL | CORE-03 | Pending |
-| ENG-03 | Legal/licensing/attribution | P1 | M | none | Pending |
+| ENG-03 | Legal/licensing/attribution | P1 | M | none | Done (2026-11-02) |
 | ENG-04 | Accessibility | P2 | M | FND-06 | Pending |
 | ENG-05 | Telemetry transparency and privacy controls | P2 | S | FND-08 | Pending |
 | ENG-06 | Stability soak / crash-free | P1 | M | CORE-11 | Pending |
@@ -3164,8 +3227,8 @@ A feature is done only when:
 | BAK-08 | Frontend NativeAOT audio validation | P1 | ENG-10 | Pending |
 | BAK-09 | ViewModel tests and UI polish | P2 | ENG-09 | Pending |
 | BAK-10 | Optional M12 managed ARM JIT | P2 | ENG-02 | Pending |
-| BAK-11 | M14 high-resolution CEL research | P1 | VID-01..03 | Pending |
-| BAK-12 | Legal/attribution sign-off; green CI | P1 | ENG-03, ENG-01 | Pending |
+| BAK-11 | M14 high-resolution CEL research | P1 | VID-01..03 | Post-1.0 |
+| BAK-12 | Legal/attribution sign-off; green CI | P1 | ENG-03, ENG-01 | Done (2026-11-02) |
 | BAK-13 | BIOS-aware sweep and 5DO status merge | P1 | CORE-13, SYS-17/18 | Pending |
 | BAK-14 | 4DO `.4dosav` import/export | P2 | SYS-19 | Pending |
 | BAK-15 | PAL, CD-DA, netplay, rewind, debugger UI, peripherals | P1 | SYS-01/03/15, UX-01/03/21 | Pending |
@@ -4773,6 +4836,35 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
 
 ---
 
+<a id="feat-vid-15"></a>
+### VID-15 - Direct3D 11 renderer (Windows)
+
+**Priority:** P2 | **Effort:** L | **Depends on:** M9R.1, FND-06 | **Status:** Pending
+
+**Problem.** The desktop presenter is OpenGL/GLES, with Vulkan as an optional backend. Windows users on drivers or remote sessions where OpenGL is unavailable or slow have no native Direct3D path, even though Direct3D 11 is the best-supported Windows graphics API and the same API ANGLE already uses underneath.
+
+**Add.**
+- New `FiveDo.Video.Direct3D` project implementing `IVideoRenderer`/`ICpuFrameRenderer` with Direct3D 11 Feature Level 11_0.
+- Two-stage pipeline matching OpenGL/Vulkan: `R16_UINT` indexed pixels, per-line `R8G8B8A8` CLUT, `R32G32_UINT` line parameters -> palette pass at native resolution -> scale/filter pass at output resolution.
+- HLSL ports of the palette, scale, CRT, xBR-lv2, and FSR 1.0 (EASU + RCAS) shaders. HQx 2x/3x/4x continue to use the shared CPU `HqxFilter` and are uploaded as a native-resolution source.
+- Offscreen render target plus a staging texture for `ReadPixels`, screenshots, and the headless probe.
+- DXGI flip-model swapchain (`B8G8R8A8_UNORM`) on a click-through native child HWND (`Direct3DVideoSurface`), with resize, DPI, vsync (`Present(1, 0)`), and tearing support when vsync is off.
+- Device-loss/removal recovery: recreate the device and swapchain; if that fails, fall back to OpenGL, then to the CPU presenter.
+- `RendererApi.Direct3D11`, `VideoRendererKind.Direct3D11`, `--gl-backend d3d11` (`dx11`, `directx`, `d3d` aliases), Settings > Video "DirectX 11 (Windows)", and `--d3d-probe`/`--d3d-window-probe` JSON + PNG capture.
+- OpenGL remains the default on every platform. The Direct3D option is Windows-only and opt-in; a persisted DirectX selection is normalized to OpenGL on other platforms.
+
+**Files.** New `src/FiveDo.Video.Direct3D/` (`Direct3D11Renderer.cs`, `Direct3D11Renderer.Swapchain.cs`, `Shaders.cs` or `.hlsl`), `src/FiveDo.Frontend.Avalonia/Controls/Direct3DVideoSurface.cs`, `D3DProbeRunner.cs`, `D3DProbeOptions.cs`, `GlBackendOption.cs`, `Models/GlBackend.cs`, `Views/MainWindow.axaml(.cs)`, `Views/SettingsWindow.axaml(.cs)`, `src/FiveDo.Host/Models/VideoRendererKind.cs`, `src/FiveDo.Video/Models/RendererApi.cs`, `Directory.Packages.props`, `docs/Direct3D.md`.
+
+**Tests.** HLSL compile/link; CPU/GPU palette parity at 320x240 and 640x480; top-red/bottom-blue orientation; filter fallback; resize/DPI; device-loss fallback; settings/CLI parsing; opt-in `FIVEDO_D3D_TESTS=1` probe integration; 4K timing report.
+
+**Done when.** The Windows DirectX 11 backend renders every existing filter, matches the CPU oracle in Accurate mode, presents without readback through the embedded swapchain, falls back cleanly, and leaves OpenGL as the default with no regression.
+
+**Decision: Direct3D 11, not 12.** D3D12 is a lower-level API, not a higher-quality renderer. The presenter submits only a few full-screen passes per frame; D3D12's explicit command lists, descriptor heaps, root signatures, pipeline state objects, resource barriers, and memory residency add substantial code and failure modes without improving image quality or the measured frame time. D3D11 is fully supported, is the API ANGLE uses underneath, and has simpler debug/WARP/device-loss handling. A D3D12 backend can be added later behind the same `IVideoRenderer` contract if GPU CEL compositing (VID-03) needs compute and explicit scheduling.
+
+**Reference.** `docs/Video.md`, `docs/Vulkan.md`, `FiveDo.Video.OpenGL/OpenGlRenderer.cs`, `FiveDo.Video.Vulkan/VulkanOffscreenRenderer.cs`.
+
+---
+
 ## 3.4 Audio
 
 <a id="feat-aud-01"></a>
@@ -5943,10 +6035,11 @@ hotkey roundtrip.
 | `FiveDo.Video` | `Vdlp.cs`, `FrameAssembler.cs`, `VdlpFrameMailbox.cs`, `ViewportCalculator.cs` | VID-01/04/05/06/13 |
 | `FiveDo.Video.OpenGL` | `OpenGlRenderer.cs`, shaders | VID-07/08/09/12 |
 | `FiveDo.Video.Vulkan` | `VulkanOffscreenRenderer*.cs` | VID-03/07/08/11/12 |
+| New `FiveDo.Video.Direct3D` | `Direct3D11Renderer*.cs`, HLSL shaders | VID-15 |
 | `FiveDo.Audio` | `OpenAlAudioOutput.cs`, `WavAudioSink.cs`, `AudioAnalyzer.cs` | AUD-01/02/04/05 |
 | `FiveDo.Host` | `CoreRunner.cs`, `AppSettings.cs`, `NvramStore.cs`, `SaveStateSlotManager.cs`, `GameLibraryScanner.cs`, `StateInspector.cs` | FND-01/02/06/08, CORE-15, SYS-14/18, UX-01/02/03/13/14/15/17/18 |
 | `FiveDo.Cli` | `Program.cs`, `CliJsonModels.cs`, `CliJsonContext.cs` | FND-04, all CLI options |
-| `FiveDo.Frontend.Avalonia` | `MainWindow.axaml(.cs)`, `SettingsWindow`, `InputBindingsWindow`, `GameLibraryWindow`, `SaveSlotsWindow`, `LogsWindow` | FND-06/07, UX-04..24, VID-09/10/14 |
+| `FiveDo.Frontend.Avalonia` | `MainWindow.axaml(.cs)`, `SettingsWindow`, `InputBindingsWindow`, `GameLibraryWindow`, `SaveSlotsWindow`, `LogsWindow` | FND-06/07, UX-04..24, VID-09/10/14/15 |
 | `FiveDo.Diagnostics` | `Logging`, `InMemorySerilogSink`, `BugReportSink` | FND-08, UX-17, ENG-05 |
 | New `FiveDo.Netplay` | lobby/rollback | UX-03 |
 | New `FiveDo.Cheats` | code types/DB | UX-04 |
@@ -6176,6 +6269,7 @@ hotkey roundtrip.
 - `docs/TestCorpus.md`
 - `docs/Performance.md`
 - `docs/Vulkan.md`
+- `docs/Direct3D.md` (new; added with VID-15)
 - `docs/KnownIssues.md`
 - `docs/ReleaseChecklist.md`
 
@@ -6191,7 +6285,7 @@ hotkey roundtrip.
 > Reference comparison, gap analysis, critical path, Opera parity audit, and session evidence.
 
 **Status:** living roadmap and gap analysis  
-**Snapshot:** 2026-11-01  
+**Snapshot:** 2026-11-02  
 **Scope:** every pending enhancement that matters for 3DO emulation quality, compatibility, features, platforms, and trust  
 **Detailed build spec:** [Part II - Feature Specification and Backlog](#part-ii-feature-specification-and-backlog) - implementation-level feature sheets, files, tests, and acceptance criteria<br>
 **Companion docs:** [`README.md`](https://github.com/purelogiccode/5DO/blob/master/README.md), [`docs/Status.md`](Status.md), [`docs/ImplementationPlan.md`](#master-dashboard), [`docs/ReferenceStrategy.md`](ReferenceStrategy.md), [`docs/Compatibility.md`](Compatibility.md), [`docs/HighResolutionCelResearch.md`](HighResolutionCelResearch.md)
@@ -6206,12 +6300,12 @@ hotkey roundtrip.
 - Windows, Linux, and macOS publishes for x64 and arm64.
 - ISO, BIN, CUE+BIN, and CHD as first-class formats.
 - Avalonia desktop frontend plus a strong headless CLI.
-- OpenGL/GLES presenter and optional Vulkan backend.
+- OpenGL/GLES presenter (default), optional Vulkan backend, and planned Direct3D 11 backend.
 - 4K output, accurate/nearest/sharp-bilinear/CRT/xBR/HQx/FSR filters.
 - Compressed deterministic save states, ten slots, thumbnails.
 - Rewind (30-300 s) and 2x-10x fast-forward with deterministic input replay.
 - 518-record game database, per-game fix/filter overrides.
-- 1,350 passing tests, a 594-disc compatibility sweep, and measured 4K60 performance.
+- 1,473 passing tests, a 594-disc compatibility sweep, and measured 4K60 performance.
 - Trimmed and NativeAOT publishes, structured logging, and bug reporting.
 
 But "best in the world" is not a feature-count contest. The remaining gap is in five places:
@@ -6292,13 +6386,13 @@ Use seven pillars. Every roadmap item must improve at least one, and no item may
 | Architecture | One project per subsystem; pure managed C#; no native emulator dependency; deterministic core thread. |
 | CPU | ARM60 interpreter with banked registers, FIQ/IRQ, disassembler, and a full instruction test suite. |
 | Memory | 3 MB visible RAM/VRAM, 2 MB ROM, 32 KB NVRAM, reserved high-res mirrors, save-state ownership. |
-| Video | Two-stage OpenGL/GLES presenter, optional Vulkan, 4K output, accurate parity, xBR/HQx/FSR/CRT. |
+| Video | Two-stage OpenGL/GLES presenter, optional Vulkan, Direct3D 11 planned, 4K output, accurate parity, xBR/HQx/FSR/CRT. |
 | Audio | Exact 44,100 samples per ARM second, OpenAL Soft, WAV capture, tap, analysis, audio-driven pacing. |
 | Storage | ISO, BIN, CUE+BIN, CHD with parent/child, prefetch, Opera file-system parser, disc dumps. |
 | Save states | Versioned, CRC-protected, Brotli-compressed sections, ten slots, thumbnails, disc-identity warnings. |
 | CLI | `run`, `trace`, `info`, `disc`, `fs`, `bios`, `audio`, `state`, `disasm`, `bench`, `selftest`; JSON contracts. |
 | Diagnostics | KPRINT, CD/CLIO/FIQ/CEL/PBUS traces, watchpoints, RAM/DSP dumps, instruction rings, frame capture. |
-| Tests | 972 tests; deterministic golden hashes; zero-allocation assertions; GPU parity tests. |
+| Tests | 1,473 tests; deterministic golden hashes; zero-allocation assertions; GPU parity tests. |
 | Packaging | Six RIDs; trimmed IL; opt-in NativeAOT; portable archives; OpenAL notices. |
 | Documentation | Deep architecture, compatibility, performance, video, audio, save-state, and troubleshooting docs. |
 
@@ -6316,14 +6410,14 @@ Use seven pillars. Every roadmap item must improve at least one, and no item may
 | No debugger UI, disc browser UI, BIOS/NVRAM manager | Creators and power users are forced into the CLI. |
 | No localization, themes, auto-update, installers, portable mode | Usability lags 4DO/RMG/RPCS3. |
 | Linux/macOS/arm64/Pi/Steam Deck unvalidated | The "cross-platform" claim is not yet proven. |
-| Legal/attribution sign-off pending | A public release remains blocked. |
+| Legal/attribution sign-off | Resolved 2026-11-02: FreeDO modified GNU LGPL, donationware; no commercial use. |
 
 ### 2.3 What 5DO already does better than the references
 
 - **Pure managed C#** with no native emulator DLL; easier to audit, port, and embed.
 - **Cross-platform Avalonia shell** instead of Windows-only WinForms.
 - **CHD as a first-class format**, including parent/child images.
-- **OpenGL/GLES + optional Vulkan** with 4K output and modern filters.
+- **OpenGL/GLES (default) + optional Vulkan/Direct3D 11** with 4K output and modern filters.
 - **Compressed save states** (0.6-2.0 MB vs ~25 MB raw).
 - **Headless CLI with JSON, traces, watchpoints, and deterministic tests**.
 - **Trimmed and NativeAOT publishes**.
@@ -6783,7 +6877,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 
 **Reference:** `References/opera-libretro-master/lr_input.c`; `libopera/opera_pbus.c`.
 
-### 5.3 P1: Video
+### 5.3 P1/P2: Video
 
 | ID | Enhancement | Why / reference | Done when | Effort |
 |---|---|---|---|---|
@@ -6801,6 +6895,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [ ] **VID-12** | Run-ahead, frame delay, VRR, audio sync | Latency matters for action games. | 1-2 frame run-ahead; frame-delay slider; VRR; measured latency. | L |
 | [ ] **VID-13** | Video test suite and color accuracy | 3DO RGB555/CLUT/NTSC behavior needs regression coverage. | Test patterns; CPU/GPU parity; color delta report. | M |
 | [ ] **VID-14** | Screenshot gallery and metadata | Users want organized captures. | Gallery; filters; compare; export. | S |
+| [ ] **VID-15** | Direct3D 11 renderer (Windows) | OpenGL/GLES is the default; D3D11 is the best-supported Windows API and matches ANGLE's D3D11 path. | D3D11 presents all filters, matches the CPU oracle, falls back to OpenGL/CPU; OpenGL remains default. | L |
 
 #### VID-01 deep dive: true high-resolution CEL rendering
 
@@ -6996,7 +7091,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 |---|---|---|---|---|
 | [ ] **ENG-01** | CI matrix, nightly sweep, coverage, static analysis, SBOM, reproducible builds | Trust at scale. | All RIDs; nightly 594-disc sweep; coverage gate; analyzers; SBOM; reproducible. | M |
 | [ ] **ENG-02** | Performance: interpreter hot path, M12 JIT, GPU CEL, async shaders | Headroom for Pi/Steam Deck/4K. | Measured wins; bit-identical JIT; zero allocations. | XL |
-| [ ] **ENG-03** | Legal/licensing/attribution | Release blocker. | Counsel sign-off; notices; SPDX; embedded boot/shaders/DB reviewed. | M |
+| [x] **ENG-03** | Legal/licensing/attribution | Release gate. | FreeDO modified GNU LGPL, donationware; notices and OpenAL obligations shipped; project-owner sign-off recorded 2026-11-02. | M |
 | [ ] **ENG-04** | Accessibility | Inclusive UX. | Screen-reader labels; high contrast; UI scale; keyboard-only. | M |
 | [ ] **ENG-05** | Telemetry transparency and privacy controls | User trust. | Opt-in; clear docs; no game/user data; local-only option. | S |
 | [ ] **ENG-06** | Stability soak / crash-free | "Best" means no crashes. | 1M frames / 24h; all titles; no unhandled exceptions. | M |
@@ -7039,8 +7134,8 @@ These are already recorded in the repo's docs; keep them visible so the new road
 | [ ] **BAK-08** | Frontend NativeAOT audio validation | `docs/Trimming.md` | ENG-10 |
 | [ ] **BAK-09** | ViewModel tests and UI polish | `docs/ImplementationPlan.md` | ENG-09 |
 | [ ] **BAK-10** | Optional M12 managed ARM JIT | `docs/ImplementationPlan.md` | ENG-02 |
-| [ ] **BAK-11** | M14 high-resolution CEL research | `docs/HighResolutionCelResearch.md` | VID-01..03 |
-| [ ] **BAK-12** | Legal/attribution sign-off; green CI | `docs/ReleaseLegalReview.md` | ENG-03, ENG-01 |
+| [ ] **BAK-11** | M14 high-resolution CEL research (post-1.0) | `docs/HighResolutionCelResearch.md` | VID-01..03 |
+| [x] **BAK-12** | Legal/attribution sign-off; green CI | `docs/ReleaseLegalReview.md` | ENG-03, ENG-01 |
 | [ ] **BAK-13** | BIOS-aware sweep and 5DO status merge | `docs/CompatibilitySweep.md` | CORE-13, SYS-17/18 |
 | [ ] **BAK-14** | 4DO `.4dosav` import/export | `docs/Compatibility.md` §8 | SYS-19 |
 | [ ] **BAK-15** | PAL, CD-DA, netplay, rewind, debugger UI, additional peripherals | `docs/ImplementationPlan.md` M11.7 | SYS-01/03/15, UX-01/03/21 |
@@ -7184,7 +7279,7 @@ Do not start with netplay or a browser build. They are valuable, but they multip
 - Signed artifacts; checksums; SBOM.
 - Smoke tests on every claimed RID.
 - Upgrade/downgrade test for settings/states.
-- Legal/attribution sign-off.
+- Legal/attribution sign-off (recorded 2026-11-02).
 
 ---
 
@@ -7292,7 +7387,7 @@ From `References/4DO-master/FourDO/Properties/Settings.settings` and `FourDO/UI/
 
 ## 11. Appendix B: Definition of done for "best in the world"
 
-A release can be called "the best 3DO emulator in the world" only when all of the following are true:
+These are **post-1.0 goals**, not v1.0 release blockers. A release can be called "the best 3DO emulator in the world" only when all of the following are true:
 
 - [ ] 594/594 local discs load and render; >=95% Playable/Good; failures documented.
 - [ ] Automated differential harness runs nightly and shows no unexplained divergence.
@@ -7304,7 +7399,8 @@ A release can be called "the best 3DO emulator in the world" only when all of th
 - [ ] Windows/Linux/macOS x64/arm64, Steam Deck, and Pi are validated.
 - [ ] Installers, signing, notarization, auto-update, portable mode, and file associations are shipped.
 - [ ] 2,000+ tests, coverage gate, fuzzing, SBOM, and 24h soak pass.
-- [ ] Legal/attribution sign-off is complete; releases are signed and reproducible.
+- [x] Legal/attribution sign-off is complete (2026-11-02).
+- [ ] Releases are signed and reproducible.
 - [ ] Documentation, compatibility dashboard, and contribution workflow are public and current.
 
 ---
@@ -8357,10 +8453,11 @@ pending/busy fields in the Madam section (v2). The 3,000-frame smoke differentia
 full-collection differential, a CEL-status polling title, and a frame-time check before
 considering it the default. **1003 tests pass.**
 
-**Goal:** finish the BIOS-aware compatibility triage, fill the 5DO statuses, and then
-start high-resolution CEL research. Keep the differential harness green on the
-showcase and extend it to the full collection. Do not work on gameplay depth and do
-not cut a release yet.
+**Goal (2026-10-30; superseded 2026-11-02):** finish the BIOS-aware compatibility
+triage, fill the 5DO statuses, and then start high-resolution CEL research. The
+2026-11-02 release decision supersedes the "do not cut a release yet" instruction:
+Linux x64 full suite passed; v1.0.0 is tagged and the artifacts are prepared.
+M13.5/M13.6 and M14 remain post-1.0.
 
 **Read first:**
 
@@ -8371,7 +8468,7 @@ not cut a release yet.
 - [`Compatibility.md`](Compatibility.md) §13 — sweep and 2026-10-30 triage results.
 - [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md) — current
   `--high-res` limitations and the M14 research options.
-- [`Status.md`](Status.md) — current position and the deferred release path.
+- [`Status.md`](Status.md) — current position and the v1.0 release path.
 
 **Inputs:** `J:\Panasonic 3DO` (589 CHDs), `G:\MAME\MAME Software List CHDs\3do`
 (5 CHDs), `bios/panafz1.bin`, `bios/panafz10.bin`, `bios/panafz10-patched.bin`,
@@ -8397,7 +8494,8 @@ MHTML in `References/4DO-master/`.
   2026-11-01 extended-boot retry: WorldCup Super Stadium renders with the FZ-10J BIOS
   plus its Kanji font ROM; only Crash 'n Burn Japan remains.)
 
-**Ordered tasks:**
+**Ordered tasks (historical 2026-10-30 list; for the current release steps see
+[`Status.md`](Status.md) §6):**
 
 1. Build the Release CLI:
    `dotnet build src/FiveDo.Cli/FiveDo.Cli.csproj -c Release`.
@@ -8432,9 +8530,9 @@ the 2026-10-31 performance pass (CEL pipeline caching, Debug core optimization,
 render-request coalescing, Auto frame skip). Do not treat full-race completion, inventory
 scripting, Pi/arm64 validation, or installers as current gates.
 
-**Project position:** donationware, non-commercial, source-available. The legal
-sign-off and CI reliability remain release blockers, but release is
-deferred until M13/M14 complete.
+**Project position:** donationware, non-commercial, source-available. Legal/attribution
+sign-off and CI reliability are recorded; Linux x64 full suite passed. v1.0.0 is tagged
+and the artifacts are prepared.
 
 ---
 

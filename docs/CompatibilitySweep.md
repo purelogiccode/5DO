@@ -7,6 +7,9 @@ not-loadable rows**. The four Arcade CD-ROM titles require `panafz10`-class BIOS
 behavior, and several black-screen titles are BIOS- or region-sensitive. See
 [`GameCompatibilityResults.md`](GameCompatibilityResults.md) and
 [`Compatibility.md`](Compatibility.md) §13.2.
+**Release status (2026-11-02):** loadability is complete and is the v1.0 compatibility
+baseline. M13.5/M13.6 visual and high-resolution review are post-1.0; the M13.7 Linux
+x64 smoke test is the remaining v1.0 platform gate.
 **Goal:** give every disc in the local 3DO collection a recorded 5DO status, starting
 with loadability and then an in-game/visual check. Gameplay-depth scripts (full races,
 inventory interaction, long playthroughs) are deliberately deferred.
@@ -308,7 +311,8 @@ and the 4DO/Opera reference confirms it.
 ## 7. Linux validation in the local Hyper-V VM
 
 The local VM is `LinuxMint` in `D:\Hyper-V\VMs\LinuxMint` (Hyper-V generation 2,
-8 GB assigned). The VM is a validation target, not a CI replacement.
+8 GB assigned). The VM is a validation target, not a CI replacement. It is reachable
+over SSH; machine-specific credentials are in the gitignored `AGENTS.local.md`.
 
 Suggested procedure:
 
@@ -328,18 +332,28 @@ Suggested procedure:
 The Linux pass should use the same BIOS/disc set as the Windows pass for a meaningful
 comparison. Do not commit BIOS or disc images.
 
+**Result (2026-11-02):** the full test suite (**1,473/1,473**) passed. The self-contained
+`linux-x64` CLI passed `selftest` (4/4), `bench` (466 fps), `info`/`bios info`, and a
+3,000-frame Wolfenstein boot (frame hash `0x9A3B5131`, non-silent 50 s audio). The
+frontend `--smoke-test` passed with OpenAL ready. The GL probe timed out under the VM's
+llvmpipe/SSH session, so Linux GPU presentation is preview/best-effort. See
+[`Compatibility.md`](Compatibility.md) §10.3.
+
 ---
 
 ## 8. Completion criteria
 
-The compatibility sweep is complete for a release candidate when:
+The **loadability sweep** is complete for v1.0 when:
 
-- every local disc image has a row/status in
+- every local disc image has a loadability status in
   [`GameCompatibilityList.md`](GameCompatibilityList.md),
 - every `Not Loadable` result has a triage note and a reproduction command,
-- every `Playable`/`Good` result has a screenshot and a short input check,
-- the high-resolution pass has a recorded decision per tested title,
-- Linux VM build/test/smoke results are recorded,
+- the Linux x64 build/test/smoke result is recorded.
+
+The **post-1.0 visual review** adds:
+
+- a screenshot and a short input check for every `Playable`/`Good` result,
+- a high-resolution pass with a recorded decision per tested title,
 - the top failure classes have either a fix or a documented known issue.
 
 Full gameplay completion, long-play scripts, and netplay/rewind remain post-release

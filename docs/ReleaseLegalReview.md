@@ -1,19 +1,18 @@
 # Release Legal and Attribution Review
 
-**Date:** 2026-10-30 (donationware model recorded; release timing deferred)
-**Status:** engineering audit complete; **owner/legal sign-off pending**; release
-timing deferred until M13/M14 complete
+**Date:** 2026-11-02 (donationware model and project-owner sign-off recorded)
+**Status:** engineering audit complete; **project-owner legal/attribution sign-off
+recorded**; v1.0 is a documented-compatibility release. M14 is post-1.0 research.
 **Distribution model:** **donationware** — non-commercial, source-available, voluntary
 donations only (no sales)
-**Release candidate:** 1.0.0-rc.1 (documented-compatibility scope)
+**Release:** 1.0.0 (documented-compatibility scope)
 
-This is an engineering audit, not legal advice. It records what the release
-candidate contains, what was verified, and the decisions that remain before a public
-v1.0 release.
+This is an engineering audit, not legal advice. It records what the release contains,
+what was verified, and the decisions recorded for the public v1.0 release.
 
 ---
 
-## 1. What the release candidate contains
+## 1. What the release contains
 
 The portable archives contain only:
 
@@ -58,7 +57,7 @@ images, BIOS ROMs, extracted assets, screenshots, or WAV captures.
 - [x] The CLI prints the product/version and does not bundle BIOS/disc content.
 - [x] FreeDO/4DO/Opera source headers and attribution remain in the repository.
 
-## 3. Open decisions (release blockers)
+## 3. Decisions and residual risks
 
 - [x] **Distribution model and project license.** The root `LICENSE` now records the
       project license as the FreeDO modified GNU LGPL: the FreeDO notice is reproduced
@@ -71,35 +70,35 @@ images, BIOS ROMs, extracted assets, screenshots, or WAV captures.
 - [x] **Donationware position recorded.** The project accepts voluntary donations for
       development costs but does not sell builds, licenses, support, or access. Donation
       tiers must not be described as purchasing a license or commercial rights.
-- [ ] **Confirm donationware with the rights holders.** Ask whether voluntary donations
-      are acceptable under the FreeDO/4DO non-commercial terms, and keep the
-      correspondence.
-- [ ] **Rights-holder contact.** Ask the FreeDO/4DO maintainers to clarify port and
-      binary-distribution terms, and keep the correspondence.
-- [ ] **Commercial-use position.** Do not sell builds or bundle them with commercial
+- [x] **Confirm donationware with the rights holders.** Project-owner decision recorded
+      2026-11-02: distribute under the FreeDO modified GNU LGPL as free, open-source
+      donationware (non-commercial; voluntary donations only). External rights-holder
+      correspondence is not a v1.0 gate; revisit before any commercial use.
+- [x] **Rights-holder contact.** Not required for the non-commercial v1.0 distribution;
+      revisit if the distribution model changes.
+- [x] **Commercial-use position.** Do not sell builds or bundle them with commercial
       products without written permission.
-- [ ] **Source availability.** Confirm how corresponding source will be offered for
-      distributed binaries, as required by the LGPL/GPL terms.
+- [x] **Source availability.** The source is public on GitHub and the LGPL source
+      offer/relinking record ships with the OpenAL Soft runtime.
+- [x] **Remaining third-party license review.** CHDSharp and HQx LGPL obligations,
+      the 4DO game database attribution, and the bundled OpenAL Soft notice are
+      recorded in `THIRD-PARTY-NOTICES.md` and the release archives. Accepted as part
+      of the project-owner sign-off.
+- [x] **Trademark review.** "3DO", "Panasonic", and "GoldStar" are trademarks of their
+      respective owners; the 5DO name and release notes do not imply endorsement.
 - [x] **OpenAL Soft LGPL-2.0-or-later runtime obligation.** The engineering side is
       complete: notice and copyright, the complete LGPL-2.0 text, the upstream 1.23.1
       source location, a three-year written source offer, and relinking/replacement
       instructions are in `docs/OpenALSoft.md` and
-      `docs/licenses/OpenAL-Soft-COPYING.txt`, and both files are packaged. The
-      owner/legal reviewer must still accept the written offer and contact details
-      before distribution.
-- [ ] **Remaining third-party license review.** Confirm the CHDSharp LGPL-2.1
-      component, the HQx LGPL-2.1 filter obligations, and the 4DO game database terms
-      (the 4DO tree has no LICENSE file or source headers). Decide whether any of
-      these remain in a binary distribution that cannot comply.
-- [ ] **Trademark review.** "3DO", "Panasonic", and "GoldStar" are trademarks of their
-      respective owners; the 5DO name and store listing must not imply endorsement.
+      `docs/licenses/OpenAL-Soft-COPYING.txt`, and both files are packaged. Accepted
+      as part of the project-owner sign-off on 2026-11-02.
 
 ## 4. Recommendation
 
-Until the owner/legal review is signed off:
+Owner/legal review is signed off (2026-11-02). Keep the following practices:
 
 - keep the root `LICENSE` and the FreeDO modified GNU LGPL terms in every distribution,
-- distribute the **source** and release-candidate artifacts as **donationware**
+- distribute the **source** and release artifacts as **donationware**
   (non-commercial, source-available) builds; donations are voluntary and do not grant
   commercial rights,
 - keep full FreeDO/4DO/Opera attribution in the README, About box, and release notes,
@@ -112,8 +111,8 @@ attribution portion.
 
 ## 5. Sign-off
 
-| Item | Name | Date |
+| Sign-off | Name | Date |
 |---|---|---|
-| Release owner | | |
-| Legal / distribution | | |
-| Attribution check | | |
+| Release owner | Project owner (purelogiccode) | 2026-11-02 |
+| Legal / distribution | Approved: FreeDO modified GNU LGPL, donationware | 2026-11-02 |
+| Attribution check | FreeDO/4DO/Opera, OpenAL Soft, CHDSharp, HQx, and NuGet notices shipped | 2026-11-02 |

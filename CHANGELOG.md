@@ -1,9 +1,24 @@
 # Changelog
 
-All notable changes are recorded here. The project is pre-1.0; formats and behavior may
-still change.
+All notable changes are recorded here. The project is at the v1.0
+documented-compatibility release stage.
 
 ## [Unreleased]
+
+## [1.0.0] - 2026-11-02
+
+### Release
+
+- Finalized the **v1.0 documented-compatibility** scope: 593 of 594 local discs render,
+  1 known boot failure (`Crash 'n Burn` Japan), 0 not-loadable rows. M13.5/M13.6
+  visual/high-resolution review and M14 high-resolution CEL research are post-1.0.
+- Recorded project-owner legal/attribution sign-off under the FreeDO modified GNU LGPL
+  as free, open-source donationware (non-commercial; voluntary donations only).
+- Remaining v1.0 work: the `1.0.0` version bump, tag, and artifacts.
+- Linux x64 validation (2026-11-02): full test suite **1,473/1,473**, CLI smoke,
+  a 3,000-frame Wolfenstein boot, non-silent audio, and the frontend `--smoke-test`
+  on Linux Mint 22.3. The GL probe timed out under llvmpipe, so Linux GPU presentation
+  is preview/best-effort.
 
 ### Documentation
 
@@ -29,6 +44,10 @@ still change.
   `src/FiveDo.Storage/Data/GameDatabase.xml` and anchoring user-data ignore rules.
 - Fixed trimming warnings in the diagnostics bundle.
 - Fixed cross-platform instance locking on Linux and macOS.
+- Adjusted the diagnostics bundle test to skip user-name assertions when
+  `Environment.UserName` is shorter than three characters; the scrubber intentionally
+  ignores short names to avoid replacing common substrings. This lets the full suite
+  pass on the Linux `vm` test account (1,473/1,473).
 - Pinned the .NET SDK to 10.0.301 and added NuGet lock files with locked-mode restore.
 - Added a CI aggregate gate, CodeQL, dependency review, docs deployment, and
   OpenSSF Scorecard publishing.
@@ -696,9 +715,10 @@ still change.
   match-window output, sharp-bilinear filtering, vsync on, integer scaling, and Auto
   frame skip.
 - Recorded the distribution model as **donationware**: non-commercial,
-  source-available, voluntary donations only. The v1.0 release is deferred until the
-  full-collection compatibility sweep (M13) and high-resolution CEL research (M14)
-  produce a baseline.
+  source-available, voluntary donations only. The v1.0 release was deferred at that
+  time (superseded 2026-11-02: M14 is post-1.0 research and the documented-compatibility
+  release is ready pending final release mechanics; Linux x64 full suite passed
+  and GPU presentation is preview/best-effort).
 - Removed the `VideoGameFileSystemParser` dependency. The `5do fs` command now uses
   the first-party `FiveDo.Storage.OperaFileSystem` reader for every container, so
   ISO, BIN, CUE+BIN, and CHD share one parser and one output contract. `fs list`

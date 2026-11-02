@@ -431,7 +431,8 @@ settings.
 
 The local Linux validation target is the Hyper-V VM `LinuxMint`
 (`D:\Hyper-V\VMs\LinuxMint`, generation 2, 8 GB assigned). It is a manual validation
-target, not a CI replacement.
+target, not a CI replacement. The guest is reachable over SSH; machine-specific
+credentials are in the gitignored `AGENTS.local.md`.
 
 Suggested flow:
 
@@ -464,7 +465,7 @@ Key properties in `Directory.Build.props`:
 | `ImplicitUsings` | `disable` |
 | `TreatWarningsAsErrors` | `true` |
 | `Deterministic` | `true` |
-| `Version` | `1.0.0-rc.1` |
+| `Version` | `1.0.0` |
 | `InvariantGlobalization` | `true` |
 | `EnableNETAnalyzers` | `true` |
 | `AnalysisLevel` | `latest-recommended` |

@@ -703,7 +703,7 @@ needed. JSON is PascalCase:
 ```json
 {
   "Version": 2,
-  "EmulatorVersion": "1.0.0-rc.1",
+  "EmulatorVersion": "1.0.0",
   "ArmClock": 12500000,
   "FixMode": 0,
   "BiosHash": "....",

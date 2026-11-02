@@ -11,6 +11,6 @@ public static class FiveDoVersion
     /// <summary>The namespace prefix used by source projects; C# identifiers cannot begin with a digit.</summary>
     public const string NamespacePrefix = "FiveDo";
 
-    /// <summary>The current release-candidate version.</summary>
-    public const string Version = "1.0.0-rc.1";
+    /// <summary>The current release version.</summary>
+    public const string Version = "1.0.0";
 }

@@ -61,3 +61,6 @@ __pycache__/
 venv/
 site/
 .cache/
+
+# Local agent credentials and machine-specific notes
+AGENTS.local.md

@@ -59,20 +59,20 @@ A positional disc path or `--disc <path>` opens and auto-starts the game. See
 
 ### Is there a download?
 
-Not yet. The project is pre-1.0 and the v1.0 release is deliberately deferred. Build
-from source, or use the portable archives produced by a successful
-[CI run](https://github.com/purelogiccode/5DO/actions/workflows/ci.yml). A stable
-release will be published only after the compatibility and legal gates pass.
+Not yet as a public GitHub download. **v1.0.0** artifacts are prepared locally and the
+source is tagged `v1.0.0`; no public release has been published yet. Build from source,
+or use the portable archives produced by a successful
+[CI run](https://github.com/purelogiccode/5DO/actions/workflows/ci.yml).
 
 ## Compatibility
 
 ### How compatible is 5DO?
 
-The first full-collection loadability sweep covered **594 disc images**: 576 rendered
-on the first pass, 13 were black/blank, and 5 were not loadable. Triage resolved or
-explained all five not-loadable rows, and six of the 13 black/blank titles render by
-6,000–9,000 frames. This is a **documented-compatibility** project, not a claim of full
-3DO library compatibility.
+The full-collection loadability sweep covered **594 disc images**: **593 render**,
+**1 known boot failure** (`Crash 'n Burn` Japan), and **0 not-loadable rows**. The
+12-title compatibility matrix and known issues are the supported v1.0 set; full visual
+review and high-resolution CEL research are post-1.0. This is a
+**documented-compatibility** project, not a claim of full 3DO library compatibility.
 
 See [Compatibility](Compatibility.md), [Game compatibility list](GameCompatibilityList.md),
 and [Known issues](KnownIssues.md).

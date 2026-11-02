@@ -1,6 +1,9 @@
 # High-Resolution CEL Rendering Research
 
-**Status:** research plan (2026-10-30)
+**Status:** post-1.0 research plan (2026-10-30; release scope updated 2026-11-02)
+**Release status:** M14 is **not a v1.0 release blocker**. v1.0 ships the existing
+opt-in `--high-res` mode and 320x240 + output filtering as the default. This document
+tracks future research.
 **Question:** can 5DO render CELs internally at a higher resolution than the native
 320x240 framebuffer, without breaking game compatibility or the deterministic software
 renderer?

@@ -20,9 +20,10 @@
       "fivedo.input": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.0.0-rc.1, )"
+          "FiveDo.Core": "[1.0.0, )"
         }
       }
-    }
+    },
+    "net10.0/linux-x64": {}
   }
 }

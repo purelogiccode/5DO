@@ -9,7 +9,7 @@ are in [`KnownIssues.md`](KnownIssues.md).
 ## 0. First response
 
 1. **Check the version.** `5do --version` or **Help > About**. This documentation
-   describes `1.0.0-rc.1`.
+   describes the `1.0.0` documented-compatibility release.
 2. **Check the Logs.** The desktop **Logs** dock and **Log Viewer** show renderer
    initialization/fallback, BIOS/disc loads, save/load, screenshots, input changes, and
    faults.

@@ -166,7 +166,7 @@ public sealed class LogTests
         BugReportPayload payload = BugReportFormatter.Create(logEvent, "CLI");
 
         Assert.Equal("5DO", payload.ApplicationName);
-        Assert.Equal("1.0.0-rc.1", payload.Version);
+        Assert.Equal(FiveDoVersion.Version, payload.Version);
         Assert.Contains(" / CLI", payload.Environment, StringComparison.Ordinal);
         Assert.Contains("=== Environment Details ===", payload.Message, StringComparison.Ordinal);
         Assert.Contains("Date:", payload.Message, StringComparison.Ordinal);

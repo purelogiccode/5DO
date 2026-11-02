@@ -131,6 +131,7 @@ nav:
       - Audio: Audio.md
       - Video: Video.md
       - Vulkan: Vulkan.md
+      - Direct3D 11 (planned): Direct3D.md
       - Performance: Performance.md
       - Diagnostics: Diagnostics.md
       - Glossary: Glossary.md
@@ -152,7 +153,8 @@ nav:
       - Implementation plan: ImplementationPlan.md
       - Compatibility sweep: CompatibilitySweep.md
       - High-resolution CEL research: HighResolutionCelResearch.md
-      - Release notes 1.0.0-rc.1: ReleaseNotes-1.0.0-rc.1.md
+      - Release notes 1.0.0: ReleaseNotes-1.0.0.md
+      - Release notes 1.0.0-rc.1 (historical): ReleaseNotes-1.0.0-rc.1.md
       - Release checklist: ReleaseChecklist.md
       - Release legal review: ReleaseLegalReview.md
       - Test corpus: TestCorpus.md

@@ -16,9 +16,11 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "Pre-1.0"
-    5DO is pre-1.0. Windows x64 is the validated platform. No BIOS ROMs, game images,
-    or extracted game assets are distributed here; supply legally obtained files.
+!!! important "v1.0 documented compatibility"
+    5DO is at the v1.0 documented-compatibility release stage. Windows x64 is the
+    validated platform; Linux x64 full suite passed (GPU presentation is
+    preview/best-effort). No BIOS ROMs, game images, or extracted game assets are
+    distributed here; supply legally obtained files.
 
 ## Start here
 
@@ -72,22 +74,23 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.0.0-rc.1.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.0.0.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-01, `1.0.0-rc.1` source tree.**
+**2026-11-02, v1.0.0 release (local artifacts).**
 
 - **1,473 tests** are present in the current test assembly.
 - The first full-collection loadability sweep covered **594 disc images**: **576
   rendered**, **13 black/blank**, and **5 not loadable** on the first pass.
 - After triage: **593 loadable/rendered**, **1 known no-video case**
   (`Crash 'n Burn` Japan), and **0 not-loadable rows**.
-- Windows x64 is the validated target. Linux and macOS publishes are produced, but
-  full runtime validation remains post-1.0 work.
-- The v1.0 release is deliberately deferred while the BIOS-aware sweep/status merge
-  (M13) and high-resolution CEL research (M14) finish.
+- Windows x64 is the validated target. Linux x64 full suite passed; GPU
+  presentation is preview/best-effort. macOS and arm64 validation are post-1.0.
+- v1.0.0 is tagged locally and the artifacts/checksums are prepared; no public GitHub
+  release was published in this session. M13.5/M13.6 visual/high-resolution review and
+  M14 research are post-1.0.
 
 See [Status](Status.md) and [Known issues](KnownIssues.md) for the current position and
 the remaining work.

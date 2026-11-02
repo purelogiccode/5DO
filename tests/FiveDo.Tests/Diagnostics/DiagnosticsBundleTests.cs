@@ -73,10 +73,19 @@ public sealed class DiagnosticsBundleTests
 
             var log = ReadText(archive, "logs/5do-01.log");
             Assert.DoesNotContain(root, log, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Environment.UserName, log, StringComparison.Ordinal);
+            // ScrubText deliberately ignores user names shorter than three characters
+            // to avoid replacing common substrings; the Linux test VM uses "vm".
+            if (Environment.UserName.Length >= 3)
+            {
+                Assert.DoesNotContain(Environment.UserName, log, StringComparison.Ordinal);
+            }
 
             var environment = ReadText(archive, "environment.txt");
-            Assert.DoesNotContain(Environment.UserName, environment, StringComparison.Ordinal);
+            if (Environment.UserName.Length >= 3)
+            {
+                Assert.DoesNotContain(Environment.UserName, environment, StringComparison.Ordinal);
+            }
+
             Assert.Contains("Application Version:", environment, StringComparison.Ordinal);
 
             var manifest = ReadText(archive, "manifest.json");

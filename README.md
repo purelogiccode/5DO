@@ -23,14 +23,14 @@
   <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.0.0--rc.1-orange" alt="Version 1.0.0-rc.1"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.0.0-orange" alt="Version 1.0.0"></a>
 </p>
 
 > [!IMPORTANT]
-> 5DO is **pre-1.0**. Windows x64 is the validated target; Linux and macOS
-> publish outputs are produced but are not yet fully runtime-validated. No BIOS ROMs,
-> game images, or extracted game assets are included. You must supply legally obtained
-> files.
+> 5DO is at **v1.0.0**, a documented-compatibility release. Windows x64 is the validated
+> target; Linux x64 full suite passed (GPU presentation is preview/best-effort), and
+> macOS/arm64 validation is post-1.0. No BIOS ROMs, game images, or extracted game
+> assets are included. You must supply legally obtained files.
 
 **5DO** is an accuracy-focused C# port of the FreeDO 3DO emulation core, with
 [Opera/libopera](https://github.com/libretro/opera-libretro) as the primary behavioral
@@ -63,7 +63,7 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.0.0-rc.1` source tree; v1.0 release deliberately deferred |
+| Version | `1.0.0` release (local artifacts; GitHub release not yet published) |
 | Validated platform | **Windows x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 |
 | Automated tests | **1,473 tests** in the current test assembly |
@@ -145,8 +145,9 @@ and [known issues](https://purelogiccode.github.io/5DO/KnownIssues.html).
 - No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
 
 > [!NOTE]
-> There is no stable binary release yet. Build from source below, or use the portable
-> archives produced by the [CI workflow](https://github.com/purelogiccode/5DO/actions/workflows/ci.yml).
+> v1.0.0 artifacts are prepared locally; no public GitHub release has been published
+> yet. Build from source below, or use the portable archives produced by the
+> [CI workflow](https://github.com/purelogiccode/5DO/actions/workflows/ci.yml).
 > BIOS and game files are never distributed by this repository.
 
 ### Build and test

@@ -1,14 +1,13 @@
 # 5DO 1.0.0-rc.1
 
-> **Historical draft — release deferred (2026-10-30).** The v1.0 release is not being
-> cut now. The next work is the full-collection compatibility sweep (M13) and
-> high-resolution CEL research (M14). See [`Status.md`](Status.md),
-> [`CompatibilitySweep.md`](CompatibilitySweep.md), and
-> [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+> **Historical release candidate.** The current release is **1.0.0**; see
+> [`ReleaseNotes-1.0.0.md`](ReleaseNotes-1.0.0.md). M13 loadability is complete,
+> M14 high-resolution CEL research is post-1.0, and legal/attribution sign-off is
+> recorded (2026-11-02).
 
 **Release date:** 2026-10-27
-**Status:** release candidate. The local engineering release gates pass; CI and the
-distribution/attribution sign-off are still pending. See
+**Status:** historical release candidate, superseded by 1.0.0. The engineering gates
+passed; legal/attribution sign-off was recorded on 2026-11-02. See
 [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 **Post-rc.1:** the 2026-10-28 pass added the OpenAL crackle fix, PCM tap, and FSR 1.0;
 the 2026-10-29 passes added the save-state disc warning, console hotkeys (including

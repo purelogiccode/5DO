@@ -6,30 +6,30 @@ This is the short public roadmap. The authoritative maintainer checklist is
 
 ## Current phase
 
-The project is pre-1.0 and the v1.0 release is deliberately deferred.
+The project is at the **v1.0.0 documented-compatibility release** (tagged locally;
+artifacts prepared).
 
 **M13 — compatibility sweep and status merge**
 
-- The first full-collection loadability sweep is complete: 594 images tested.
-- After triage, 593 are loadable/rendered, with one known no-video case
-  (`Crash 'n Burn` Japan) and zero not-loadable rows.
-- Remaining work: BIOS-aware reruns, high-resolution sweep evidence, Linux VM
-  validation, and a reviewed per-title status column in the compatibility list.
+- Loadability is complete: 594 images tested, **593 render**, 1 known no-video case
+  (`Crash 'n Burn` Japan), and zero not-loadable rows.
+- The in-game/visual review (M13.5) and high-resolution pass (M13.6) are post-1.0.
+- Linux x64 full suite passed; GPU presentation is preview/best-effort.
+- The remaining v1.0 work is the tag and artifact attachment.
 
-**M14 — high-resolution CEL research**
+**M14 — high-resolution CEL research (post-1.0)**
 
 - Measure the current opt-in 640×480 mode.
 - Prototype true internal high-resolution and 2× supersampling approaches.
 - Decide whether the feature ships, remains opt-in, or moves to the post-1.0 backlog.
 
-## Release blockers
+## Release status
 
-A stable release is not cut until:
+The v1.0.0 tag is created locally and the artifacts/checksums are prepared. No public
+GitHub release was published in this session.
 
-1. The compatibility sweep and high-resolution decision are complete.
-2. The legal/attribution review and distribution model are signed off.
-3. CI is green on the supported matrix and the release artifacts pass the soak.
-4. Known issues and supported-platform claims are accurate.
+Full compatibility and M14 research are **not** v1.0 gates. CI is green, the soak is
+complete, and the legal/attribution sign-off is recorded.
 
 ## Post-1.0
 

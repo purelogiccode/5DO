@@ -3,11 +3,13 @@
 **Snapshot:** 2026-11-01. This list covers the supported local corpus and the current
 prototype state. It is not a compatibility guarantee.
 
-**Release scope:** v1.0 ships with these known issues documented; full-race completion,
-extra title scripts, Pi/arm64 validation, installers, and the optional JIT are
-post-1.0. See [`ReleaseChecklist.md`](ReleaseChecklist.md). **As of 2026-10-30 the
-release is deferred** until the full-collection compatibility sweep (M13) and the
-high-resolution CEL decision (M14) are complete.
+**Release scope:** v1.0.0 ships with these known issues documented; full-race completion,
+extra title scripts, M13.5/M13.6 visual/high-resolution review, M14 research, Pi/arm64
+validation, installers, and the optional JIT are post-1.0. See
+[`ReleaseChecklist.md`](ReleaseChecklist.md). **As of 2026-11-02 v1.0.0 is released
+locally**: the source is tagged `v1.0.0`, the artifacts/checksums are prepared, and
+legal/attribution sign-off is recorded. No public GitHub release was published in this
+session.
 
 ## Compatibility sweep status
 
@@ -65,12 +67,17 @@ high-resolution CEL decision (M14) are complete.
   the same behavior.
 - `--high-res` is FreeDO-style line doubling, not true internal 640x480 rendering. The
   vertical detail remains 240 lines. See
-  [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
-- Linux/macOS OpenGL launch validation is pending. The local Linux target is the
-  `LinuxMint` Hyper-V VM (`D:\Hyper-V\VMs\LinuxMint`); results are not yet recorded.
+  [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md). M14 is post-1.0.
+- Linux x64 validation (2026-11-02): the full test suite (**1,473/1,473**), CLI
+  `selftest`, `bench`, `info`, `bios info`, a 3,000-frame Wolfenstein boot, non-silent
+  audio, and the frontend `--smoke-test` pass on Linux Mint 22.3 (Mesa llvmpipe). The GL
+  probe timed out in the VM's SSH/llvmpipe session, so GPU presentation on Linux is
+  unvalidated; the CLI/frontend ship as a **preview/best-effort** build. macOS
+  validation is post-1.0. The local Linux target is the Hyper-V `LinuxMint` VM
+  (`D:\Hyper-V\VMs\LinuxMint`).
 - The project is **donationware** (non-commercial, source-available). Legal/attribution
-  sign-off remains a release blocker; donations do not change the upstream
-  non-commercial restriction.
+  sign-off is recorded (2026-11-02); donations do not change the upstream non-commercial
+  restriction.
 
 ## Real-game status
 
@@ -163,7 +170,8 @@ high-resolution CEL decision (M14) are complete.
   three-year written source offer, and relinking instructions ship in
   [`OpenALSoft.md`](OpenALSoft.md) and
   [`licenses/OpenAL-Soft-COPYING.txt`](licenses/OpenAL-Soft-COPYING.txt); the
-  owner/legal sign-off remains in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
+  project-owner legal sign-off is recorded in
+  [`ReleaseLegalReview.md`](ReleaseLegalReview.md) (2026-11-02).
 
 ## Audio
 

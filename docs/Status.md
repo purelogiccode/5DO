@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-01, after the first full-collection sweep, the performance pass,
+**Snapshot:** 2026-11-02, after the first full-collection sweep, the performance pass,
 the ARM/CLIO/CEL/CD timing-option pass, the CD speed/timing-profile pass, the BIOS
 manager, the per-game NVRAM pass, the rewind/fast-forward pass, the per-game cheat
 engine, the TAS-movie pass, the disc browser, the input-device pass, the
@@ -14,6 +14,19 @@ pass, and the fix-parity pass. Road Rash's
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
 **594 discs tested: 593 Loadable/Rendered, 1 Loadable/No video (known boot failure), 0 Not Loadable.**
+
+**Release status (2026-11-02):** **v1.0.0 is released** as a documented-compatibility
+release. The version is bumped, the source is tagged `v1.0.0`, and the win-x64/linux-x64
+portable archives plus checksums are prepared locally; no GitHub release was published
+in this session. Linux x64 validation passed on Linux Mint 22.3: the full test suite
+(**1,473/1,473**), `selftest`, `bench`, a 3,000-frame Wolfenstein boot, non-silent
+audio, and the frontend `--smoke-test`. The GL probe timed out under the VM's
+llvmpipe/SSH session, so Linux GPU presentation is a **preview/best-effort** limitation.
+Legal/attribution sign-off is recorded under the FreeDO modified GNU LGPL as free,
+open-source donationware (non-commercial; voluntary donations only). M13 loadability is
+complete; M13.5/M13.6 visual/high-resolution review and M14 high-resolution CEL research
+are **post-1.0**.
+
 SYS-01 and AUD-05 now expose multi-track CUE/CHD tables and CD-DA: `ITrackedDiscSource`
 carries native 2048/2336/2352-byte sectors, `CueDiscImage` handles multi-file/multi-track
 `INDEX`/`PREGAP`/`POSTGAP` layouts, `ChdDiscImage` exposes audio tracks, and
@@ -158,9 +171,10 @@ evidence. The `manifest` command generated the portable 594-title
 [`DifferentialHarness.md`](DifferentialHarness.md) and
 [`TestCorpus.md`](TestCorpus.md) 1.1g. The remaining work is the full-collection
 run, state/CD transcript fields, and the nightly baseline.
-The v1.0 release is deliberately deferred: the next work is a BIOS-aware sweep and
-5DO status merge (M13), then high-resolution CEL research (M14). The project is
-**donationware** (non-commercial, source-available, voluntary donations only). See
+The v1.0 documented-compatibility release is ready: M13 loadability is complete
+(593/594 render), legal/attribution sign-off is recorded, and M13.5/M13.6 plus M14
+are post-1.0. The project is **donationware** (non-commercial, source-available,
+voluntary donations only). See
 [`CompatibilitySweep.md`](CompatibilitySweep.md),
 [`GameCompatibilityList.md`](GameCompatibilityList.md), and
 [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
@@ -171,15 +185,15 @@ The v1.0 release is deliberately deferred: the next work is a BIOS-aware sweep a
 behavioral reference for new compatibility work; see
 [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-> **2026-10-30 priority change:** the v1.0 release is deliberately deferred. The next
-> active work is **M13, a full-collection loadability and in-game sweep** of
-> `J:\Panasonic 3DO` (589 CHDs) and `G:\MAME\MAME Software List CHDs\3do` (5 CHDs),
-> followed by **M14, research into true internal high-resolution CEL rendering**.
-> Gameplay-depth work (full races, inventory interaction, long playthroughs) is not
-> part of this phase. The project is **donationware**: non-commercial,
-> source-available, and funded by voluntary donations rather than sales. The Linux
-> validation target is the local Hyper-V VM `LinuxMint`
-> (`D:\Hyper-V\VMs\LinuxMint`). See [`CompatibilitySweep.md`](CompatibilitySweep.md),
+> **2026-10-30 priority change (superseded 2026-11-02):** the v1.0 release was
+> deferred for the **M13 full-collection loadability and in-game sweep** and **M14
+> high-resolution CEL research**. M13 loadability is now complete (594 tested, 593
+> render, 1 known boot failure, 0 not loadable); M13.5/M13.6 and M14 are post-1.0.
+> Gameplay-depth work (full races, inventory interaction, long playthroughs) remains
+> post-1.0. The project is **donationware**: non-commercial, source-available, and
+> funded by voluntary donations rather than sales. The Linux validation target is the
+> local Hyper-V VM `LinuxMint` (`D:\Hyper-V\VMs\LinuxMint`). See
+> [`CompatibilitySweep.md`](CompatibilitySweep.md),
 > [`GameCompatibilityList.md`](GameCompatibilityList.md), and
 > [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 
@@ -587,122 +601,106 @@ Ship the platforms and titles that are validated, publish the per-title matrix a
 known issues, and move the rest to the post-1.0 backlog. Most emulators release this
 way; full compatibility is not a v1 requirement.
 
-**As of 2026-10-30 the release is deferred.** The project is not cutting a candidate
-until M13 gives every local disc a loadability/in-game status and M14 records a
-high-resolution CEL decision. The old 5-10 day release estimate is therefore historical;
-the current work is compatibility and video quality, not release mechanics.
+**As of 2026-11-02 the v1.0.0 documented-compatibility release is tagged locally.**
+M13 loadability is complete (594 tested, 593 render, 1 known boot failure, 0 not
+loadable), legal/attribution sign-off is recorded, and M14 is post-1.0 research. Linux
+x64 CLI/frontend smoke and the full test suite passed (see
+[`Compatibility.md`](Compatibility.md) §10.3); the GL probe timed out under llvmpipe, so
+Linux GPU presentation is preview/best-effort. The release artifacts and checksums are
+prepared locally; no public GitHub release was published in this session.
 
 | Release workstream | State | Remaining |
 |---|---|---:|
 | M0-M8 core, CPU, boot, MADAM, DSP, CD, input, save states | Functionally complete | 0 |
 | M9 Avalonia frontend | Feature-complete for the tested workflow | 0 (optional polish is post-1.0) |
-| M9R OpenGL presenter | Windows WGL + ANGLE validated; CPU fallback, filters, parity, 4K probe | 0 on Windows; Linux VM validation in M13.7 |
+| M9R OpenGL presenter | Windows WGL + ANGLE validated; CPU fallback, filters, parity, 4K probe | 0 on Windows; Linux x64 full suite passed, GL probe timed out under llvmpipe |
 | M9P performance/pacing | Tier A measured, zero-allocation steady state, CI gate | 0 (Tier B/Pi and hot-path are post-1.0) |
-| M10 packaging | Six-RID CI, trimmed/AOT builds, portable archives | 0-1 dd for release packaging |
-| M11 compatibility | 12 titles boot/render; five have scripted gameplay evidence; matrix and known issues documented | Full-collection sweep in M13 |
-| **M13 compatibility sweep** | **Tooling + 241-title reference list ready** | **10-15 dd: sweep, triage, visual check, Linux VM** |
-| **M14 high-res CEL research** | **Research plan written** | **10-20 dd: measure, prototype, decide** |
-| M11 release/legal | OpenAL notice/source offer/relinking record and license text ship in every archive; distribution model decided | Rights-holder/owner legal sign-off |
+| M10 packaging | Six-RID CI, trimmed/AOT builds, portable archives | 0-1 dd for final release packaging |
+| M11 compatibility | 12 titles boot/render; five have scripted gameplay evidence; matrix and known issues documented | Tag/artifacts |
+| **M13 compatibility sweep** | **Loadability complete: 594 tested, 593 render, 1 known boot failure** | M13.5/M13.6 post-1.0; Linux x64 full suite passed |
+| **M14 high-res CEL research** | **Research plan written; post-1.0** | **Not a v1.0 gate** |
+| M11 release/legal | OpenAL notice/source offer/relinking record and license text ship in every archive; FreeDO modified GNU LGPL, donationware | Legal sign-off recorded 2026-11-02; tag/artifacts |
 
-**Historical estimate:** 5-10 developer-days plus legal review for the old release
-scope, i.e. 1-3 weeks to a v1.0 candidate. Against that scope the project was roughly
-**85-90% done**. That estimate no longer sets the schedule; M13/M14 are the active
-workstreams.
+**Current estimate:** roughly **100% complete** against the documented-compatibility
+release scope. v1.0.0 is tagged locally and the release artifacts are prepared.
 
-**Release-candidate decisions (2026-10-26, deferred):** Windows x64 is the validated
-target; the candidate version is `1.0.0-rc.1`; installers, signing, and notarization
-are deferred; the compatibility set is the 12 documented titles, with five showcase
-titles carrying scripted gameplay evidence. The distribution model is now recorded as
-**donationware** (non-commercial, source-available).
+**Release decisions (2026-11-02):** Windows x64 is validated; Linux x64 CLI/frontend
+smoke and the full test suite passed (GPU presentation is preview/best-effort); the release version is `1.0.0`;
+installers, signing, and notarization are post-1.0; the compatibility set is the 12
+documented titles, with five showcase titles carrying scripted gameplay evidence. The
+distribution model is recorded as **donationware** (non-commercial, source-available).
 
 The project license is recorded in [`LICENSE`](https://github.com/purelogiccode/5DO/blob/master/LICENSE) as the FreeDO modified
 GNU LGPL, so release builds are **donationware**: non-commercial, source-available, and
-funded by voluntary donations rather than sales. The remaining hard blocker is
-rights-holder clarification and commercial-use sign-off: FreeDO/4DO carry a modified
-LGPL with restrictions, including a prohibition on commercial use without owner
-approval. The OpenAL Soft LGPL-2.0-or-later binary-distribution obligation is handled
-on the engineering side: the notice, complete license text, three-year source offer,
-and relinking instructions ship in [`OpenALSoft.md`](OpenALSoft.md) and
+funded by voluntary donations rather than sales. The project-owner legal/attribution
+sign-off is recorded in [`ReleaseLegalReview.md`](ReleaseLegalReview.md). The OpenAL Soft
+LGPL-2.0-or-later binary-distribution obligation is handled: the notice, complete
+license text, three-year source offer, and relinking instructions ship in
+[`OpenALSoft.md`](OpenALSoft.md) and
 [`licenses/OpenAL-Soft-COPYING.txt`](licenses/OpenAL-Soft-COPYING.txt). See
 [`Licensing.md`](Licensing.md), [`ReleaseLegalReview.md`](ReleaseLegalReview.md), and
 [`THIRD-PARTY-NOTICES.md`](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md).
 
 Gameplay-depth and full-compatibility work is **post-release**, not a current gate:
 finishing Road Rash's 5.5-mile race, scripting Alone's inventory, adding gameplay
-scripts for the other seven titles, and further CD/CLIO/MADAM/ARM timing triage. The
-current gates are the M13 collection sweep and the M14 high-resolution decision.
+scripts for the other seven titles, and further CD/CLIO/MADAM/ARM timing triage.
+M13.5/M13.6 visual/high-resolution review and M14 research are post-1.0. The current
+v1.0 gate is release mechanics (version bump, tag, and artifacts).
 
 ---
 
 ## 5. Current path (compatibility and video quality)
 
-### P0 - active work
+### P0 - v1.0 release work
 
 1. **M13 loadability sweep: complete.** 594 discs tested: 593 `Loadable/Rendered`,
    1 known `Loadable/No video` failure (`Crash 'n Burn Japan`), 0 `Not Loadable`. See
    [`GameCompatibilityResults.md`](GameCompatibilityResults.md).
-2. **Failure triage: first pass complete (2026-10-30).**
-   - `Mirai Shounen Conan` no longer reproduces its LBA 1 CHD error; repeated
-     3,000-frame runs reach the menu with hash `0xBE2A023B`.
-   - The four Arcade CD-ROM rows are not timeouts: they render game content with
-     `panafz10-patched.bin` and the default pad. Unpatched `panafz1`/`panafz10` reach
-     only a starfield or the 3DO storage-manager shell.
-   - The 12,000-frame rerun shows Ishida, both Konpeki no Kantai discs, and all three
-     Myst discs rendering by 6,000-9,000 frames.
-   - Crash 'n Burn, Powers Kingdom (Europe), Slayer, and WorldCup Super Stadium are
-     BIOS-sensitive. Crash/Powers/WorldCup change their boot screens with the Anvil
-     BIOS; Powers reaches a live-action intro with Anvil, Slayer Europe renders with
-     `panafz1`, and Slayer USA reaches its title menu at 60,000 frames with `panafz10`.
-     WorldCup renders its "Story of the World Cup" screen with `panafz10j` plus the
-     FZ-10JA Kanji font ROM; Crash 'n Burn Japan remains the only boot failure.
-   - Olympic Summer Games was blocked by the headless PBUS bug, now fixed by the
-     default player-1 pad.
-3. **Run the BIOS-aware sweep and fill the status columns.** Rerun the `Not Loadable`
-   and `Loadable/No video` subsets with `tools/bios-probe.ps1` or `--bios-auto bios`
-   (`panafz10-patched` and the Anvil BIOS), record the BIOS used per disc, then assign
-   `Unplayable`/`Playable`/`Good` in
-   [`GameCompatibilityList.md`](GameCompatibilityList.md). Keep Crash 'n Burn (Japan)
-   on the investigation list; it needs a bootable Japanese FZ-1/FZ-10 BIOS or a better
-   dump.
-4. **Run the high-resolution pass.** Repeat the sweep with `-HighRes`, compare
-   screenshots and speed, and feed the results into M14.
-5. **Validate Linux.** Build/test/smoke the CLI in the `LinuxMint` Hyper-V VM, run a
-   reduced sweep, and record the GL renderer/fallback result.
+2. **Failure triage: complete.** The five former not-loadable rows and 12 black/blank
+   titles are resolved or explained; Crash 'n Burn (Japan) remains the only known boot
+   failure. WorldCup Super Stadium renders with the FZ-10J BIOS plus its Kanji font ROM.
+3. **Linux x64 validation: complete (2026-11-02).** The full test suite
+   (**1,473/1,473**), CLI `selftest`, `bench`, `info`, `bios info`, a 3,000-frame
+   Wolfenstein boot, non-silent audio, and the frontend `--smoke-test` passed on Linux
+   Mint 22.3. The GL probe timed out under llvmpipe, so Linux GPU presentation is
+   preview/best-effort. See [`Compatibility.md`](Compatibility.md) §10.3.
+4. **Release v1.0.0: complete (2026-11-02).** The version is bumped, the source is
+   tagged `v1.0.0`, the win-x64/linux-x64 portable archives and checksums are prepared
+   locally, and the release-owner/QA sign-off is recorded. No GitHub release was
+   published in this session.
+5. **M13.5/M13.6 visual and high-resolution review (post-1.0).** Inspect every rendered
+   final frame, record `Unplayable`/`Playable`/`Good`, and run the `-HighRes` comparison.
 
 ### P1 - research and later work
 
-6. **M14 high-resolution CEL research:** measure the current mode, prototype true
-   640x480 and 2x supersampling, and write the GPU CEL feasibility note.
+6. **M14 high-resolution CEL research (post-1.0):** measure the current mode, prototype
+   true 640x480 and 2x supersampling, and write the GPU CEL feasibility note.
 7. **Compatibility fixes:** only after the failure classes are triaged and compared
    with the 4DO/Opera reference.
 8. **Gameplay depth (deferred):** finish a full Road Rash race, script Alone's
    inventory, and add input scripts for the other seven titles.
-9. **Platforms/performance/packaging:** Pi/GLES 3.1, arm64 hardware, DPI, Tier B
-   timing, installers/signing, file associations, and the optional M12 JIT.
-10. **Release blockers remain:** legal/attribution sign-off and green CI. Do not cut a
-    release until M13/M14 are complete and the distribution model is signed off.
+9. **Platforms/performance/packaging (post-1.0):** Pi/GLES 3.1, arm64 hardware, DPI,
+   Tier B timing, installers/signing, file associations, and the optional M12 JIT.
+10. **Release status:** v1.0.0 is tagged locally and the artifacts are prepared.
+    Legal/attribution sign-off is recorded, CI is green, and Linux x64 full suite
+    passed. Post-1.0 work remains.
 
 ---
 
 ## 6. Next session
 
-The BIOS-aware retry is complete: **593 of 594 discs render**, and only Crash 'n Burn
-(Japan) remains stuck on the Anvil boot screen. WorldCup Super Stadium renders with
-the FZ-10J BIOS plus its Kanji font ROM. The next
-session is the **in-game/visual review**, not release prep:
+**v1.0.0 is released locally** (source tag `v1.0.0`, win-x64/linux-x64 portable
+archives and checksums prepared; no GitHub release was published in this session).
+Linux x64 validation passed on Linux Mint 22.3: the full test suite (**1,473/1,473**),
+CLI `selftest`/`bench`/`info`, a 3,000-frame Wolfenstein boot, non-silent audio, and
+the frontend `--smoke-test`. The GL probe timed out under llvmpipe and is a documented
+preview/best-effort limitation. The BIOS-aware retry is complete: **593 of 594 discs
+render**, and only Crash 'n Burn (Japan) remains stuck on the Anvil boot screen. The
+next session is **post-1.0**:
 
-1. Read [`CompatibilitySweep.md`](CompatibilitySweep.md),
-   [`GameCompatibilityList.md`](GameCompatibilityList.md), and
-   [`Compatibility.md`](Compatibility.md) 13.2.
-2. Run the 12,000-frame in-game pass over the 18 retried titles and record intermediate
-   captures; promote the ones that accept input and reach gameplay to `Playable` or
-   `Good`.
-3. Investigate Crash 'n Burn (Japan) and WorldCup Super Stadium, which still stop on a
-   boot screen with the Anvil BIOS at 65,000 frames. Both share the same purple Anvil
-   frame; trace the boot path before adding any title-specific workaround.
-4. Run the high-resolution subset with `-HighRes` and record the comparison.
-5. Start the M14 measurement work from
-   [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+1. Publish the prepared `v1.0.0` archives/checksums to a GitHub release when ready.
+2. Run the M13.5/M13.6 in-game/visual and high-resolution review.
+3. Start M14 from [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 
 Do not re-enable the null audio-sink short-circuit, do not change the XBUS DMA byte
 order (the raw `IRam` order is correct), do not port `opera_cdrom.c` wholesale, and do

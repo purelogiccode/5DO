@@ -215,7 +215,7 @@ The game database is ported with attribution. Unknown game IDs get the first 8 h
 | 1080p/1440p/4K output | Yes (GPU scaling); 4K60 on Tier A hardware | |
 | Fullscreen | Yes | |
 | 384/512/640/1024-wide VDLP modes | Parsed, may crop | Full presentation |
-| High-resolution CEL (`RESSCALE`) | Opt-in `--high-res`; line-doubled 640x480 output | True internal 640x480 / supersampling research in M14 |
+| High-resolution CEL (`RESSCALE`) | Opt-in `--high-res`; line-doubled 640x480 output | True internal 640x480 / supersampling research in M14 (post-1.0) |
 | PAL | No | Later if needed |
 | CPU fallback renderer | Yes (no GL context) | |
 | Screenshots | Yes (GL readback or CPU frame) | |
@@ -237,7 +237,8 @@ uploader all carry the larger frame.
 the vertical detail is still 240 lines. The mode improves horizontal CEL sampling and
 matches 640-wide titles such as Lemmings, but it does not add true vertical geometry.
 See [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md) for the M14 research
-options (true 640x480, 2x supersampling, and GPU CEL compositing).
+options (true 640x480, 2x supersampling, and GPU CEL compositing). M14 is post-1.0 and
+does not block v1.0.
 
 Evidence: from a fresh Lemmings boot, the 640x480 title screen shows all four buttons
 and the full logo and matches the reference screenshot; the five 3,000-frame low-res
@@ -515,6 +516,32 @@ Scripted gameplay evidence: Wolfenstein's fresh-boot path reaches FLOOR 1-1
 15,000-frame interactive state renders the scene; a long no-input continuation
 reaches a black wait screen, which is documented in
 [`KnownIssues.md`](KnownIssues.md).
+
+### 10.3 Linux x64 validation (2026-11-02)
+
+Validated on the local Hyper-V `LinuxMint` VM: Linux Mint 22.3, x86_64, kernel
+`7.0.0-34-generic`, Mesa 25.2.8 `llvmpipe`, OpenGL 4.5 core / GLES 3.2, 1920x1080.
+The guest has no .NET SDK; the self-contained `linux-x64` publish was copied into the
+VM and run from `/home/vm/linux-smoke`.
+
+| Check | Result |
+|---|---|
+| `5do --version` | `5DO 1.0.0-rc.1` |
+| Full test suite | `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`: **1,473/1,473 passed** on Linux Mint 22.3 with .NET SDK 10.0.301 (plus the .NET 8 runtime required by the shader compiler) |
+| `selftest --json` | 4/4 checks true (deterministic frame, non-empty frame, state roundtrip, no state warnings) |
+| `bench --frames 120` | 466 fps, frame hash `0x6CDFBDC5` |
+| `info "Wolfenstein 3D (USA).chd"` | 56,702 sectors, game ID `3dfcdbbff14ffb59e157e27f18d9df7b`, known, Interplay 1994 US |
+| `bios info panafz1.bin` | MD5 `f47264dd47fe30f73ab3c010015c155b`, Panasonic FZ-1, USA NTSC |
+| 3,000-frame run | 6.21 s, 320x240, PC `0x00028190`, frame hash `0x9A3B5131`, 2,205,093 samples |
+| Audio | 50.0 s WAV, peak 29,951, RMS 4,808, 0 clipped frames, DSP running |
+| Frontend `--smoke-test` | `FRONTEND SMOKE OK 1.0.0-rc.1`; OpenAL ready (44.1 kHz stereo) |
+| GL probe | Timed out (backend null, 0 frames) under the VM's SSH/llvmpipe session; Windows WGL/ANGLE remains the validated GL path |
+
+The 3,000-frame Wolfenstein capture shows the Interplay logo (non-black), confirming
+disc boot and rendering on Linux x64. The full test suite also passes. Linux x64 is
+shipped as a **preview/best-effort** build: the CLI, frontend launch, and audio path are
+validated, while GPU presentation should be re-tested on a hardware-accelerated Linux
+desktop before claiming full GL support. See [`KnownIssues.md`](KnownIssues.md).
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 

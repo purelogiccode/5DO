@@ -1,7 +1,7 @@
 # v1.0 Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **deferred 2026-10-30** until M13/M14 complete
+**Release timing:** **v1.0.0 release-ready**; M13 loadability complete, M14 is post-1.0 research
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
 full-compatibility one. Ship the platforms and titles that are validated, publish an
 honest per-title matrix and known issues, and move everything else to the post-1.0
@@ -22,32 +22,32 @@ been validated.**
 | Item | Recommended v1 scope | Notes |
 |---|---|---|
 | Validated desktop platform | **Windows x64** | WGL and ANGLE/GLES validated; CPU fallback works |
-| Secondary desktop builds | Linux x64 / macOS x64 only after launch/render smoke | Otherwise label as preview/best-effort or omit |
+| Secondary desktop builds | **Linux x64** (full suite and CLI/frontend smoke passed; GL preview); macOS x64 post-1.0 | Linux GPU presentation is unvalidated under llvmpipe; Windows GL remains the validated renderer |
 | arm64 / Raspberry Pi | **Post-1.0** | GLES 3.1, Pi timing, and DPI are unvalidated |
 | Compatibility set | 12 boot-validated titles, with 5 showcase titles | Per-title status must be honest |
 | Disc formats | ISO, BIN, CUE+BIN, CHD | Already implemented and tested |
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
 | Packages | Portable zip/tar.gz | Installers/signing/notarization are post-1.0 |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
-| Version | `v1.0.0-rc.1` for the candidate; `v1.0.0` after legal sign-off | Bump `FiveDoVersion.Version` and `Directory.Build.props` |
-| Release timing | **Deferred** | Do not cut a candidate until M13/M14 complete |
+| Version | **`v1.0.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; rc.1 is historical |
+| Release timing | **Released** | v1.0.0 tagged locally; win-x64/linux-x64 artifacts and checksums prepared |
 
 ---
 
 ## 1. Scope and decisions
 
 - [x] Confirm supported RIDs and which one is the **validated** target:
-      **Windows x64** is the validated target for 1.0.0-rc.1; the other RIDs are
-      build artifacts only unless separately smoke-tested.
+      **Windows x64** is the validated target for 1.0.0; Linux x64 full suite and CLI/frontend smoke
+      passed and GPU presentation is preview/best-effort. The other RIDs are build
+      artifacts only unless separately smoke-tested.
 - [x] Confirm the supported title list and each title's status:
       **Playable**, **Boots/menus**, or **Known issues** (12 documented titles; five
       showcase titles with scripted gameplay evidence).
-- [x] Confirm the release version: **1.0.0-rc.1** for this candidate; 1.0.0 after
-      legal/distribution sign-off.
+- [x] Confirm the release version: **1.0.0**; legal/distribution sign-off is recorded.
 - [x] Confirm the distribution model and license in `docs/Licensing.md`:
       FreeDO modified GNU LGPL, **donationware** (non-commercial/source-available;
       voluntary donations, no sales), recorded in the root `LICENSE`.
-- [x] Confirm installers/signing/notarization are **out of scope** for 1.0.0-rc.1.
+- [x] Confirm installers/signing/notarization are **out of scope** for 1.0.0.
 - [x] Record the decisions in this file and in `docs/Status.md`.
 
 Recommended title statuses:
@@ -88,7 +88,9 @@ Recommended title statuses:
 - [x] No BIOS ROM, disc image, extracted asset, WAV capture, or copyrighted game
       content is tracked in the repository; packaging uses only publish output plus
       README/notices/licensing.
-- [ ] Release owner/legal sign-off recorded in section 6.
+- [x] Release owner/legal sign-off recorded in section 6: project owner approved
+      distribution under the FreeDO modified GNU LGPL as free, open-source
+      donationware (non-commercial; voluntary donations only), 2026-11-02.
 
 This is the only item that can block the release independently of engineering. Start
 it first. The engineering audit and the remaining owner/legal decisions are recorded
@@ -110,7 +112,12 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - [x] Trimmed CLI smoke test passes: `--version`, `selftest --json`,
       `bench --frames 2 --json`, `info`, and a 300-frame disc run.
 - [x] Trimmed frontend smoke test passes (`--smoke-test`).
-- [x] NativeAOT CLI/frontend smoke tests are not shipped in 1.0.0-rc.1; the
+- [x] Linux x64 smoke test passes (2026-11-02): the full test suite **1,473/1,473**,
+      CLI `selftest`, `bench`, `info`, `bios info`, a 3,000-frame Wolfenstein boot,
+      non-silent audio, and the frontend `--smoke-test` on Linux Mint 22.3. The GL probe
+      timed out under llvmpipe, so Linux GPU presentation is preview/best-effort; see
+      [`Compatibility.md`](Compatibility.md) §10.3.
+- [x] NativeAOT CLI/frontend smoke tests are not shipped in 1.0.0; the
       trimmed IL artifacts are the release artifacts.
 
 Suggested commands:
@@ -137,25 +144,37 @@ writes `summary.md`/`summary.json` for the release evidence.
 
 ### 4.1 Full-collection compatibility sweep (M13)
 
-The release candidate must not be cut until the full local collection has a recorded
-status. See [`CompatibilitySweep.md`](CompatibilitySweep.md) and
-[`GameCompatibilityList.md`](GameCompatibilityList.md).
+The v1.0 release uses the full local collection's recorded loadability status; the
+post-1.0 visual review continues from it. See [`CompatibilitySweep.md`](CompatibilitySweep.md)
+and [`GameCompatibilityList.md`](GameCompatibilityList.md).
 
-- [ ] Run the 3,000-frame loadability sweep over `J:\Panasonic 3DO` (589 CHDs) and
-      `G:\MAME\MAME Software List CHDs\3do` (5 CHDs).
-- [ ] Every image has a 5DO status (No data / Not Loadable / Unplayable / Playable /
-      Good) and an evidence path.
-- [ ] Every `Not Loadable` result has a triage note and reproduction command.
-- [ ] Rendered titles have a screenshot and a short input smoke test.
-- [ ] The high-resolution pass has a per-title result.
-- [ ] Linux VM build/test/smoke results are recorded.
+- [x] Run the 3,000-frame loadability sweep over `J:\Panasonic 3DO` (589 CHDs) and
+      `G:\MAME\MAME Software List CHDs\3do` (5 CHDs): 594 tested, 593 render,
+      1 known boot failure (`Crash 'n Burn` Japan), 0 not loadable.
+- [x] Every image has a loadability status and an evidence path.
+- [x] Every `Not Loadable` result has a triage note and reproduction command (none remain).
+- [ ] Rendered titles have a screenshot and a short input smoke test (post-1.0 visual review).
+- [ ] The high-resolution pass has a per-title result (post-1.0).
+- [x] Linux x64 build/test/smoke results are recorded (2026-11-02): the full test
+      suite **1,473/1,473**, CLI `selftest`/`bench`/`info`, a 3,000-frame Wolfenstein
+      boot, non-silent audio, and the frontend `--smoke-test` passed on Linux Mint
+      22.3. The GL probe timed out under llvmpipe, so GPU presentation is
+      preview/best-effort.
 
-### 4.2 High-resolution CEL decision (M14)
+M13.5/M13.6 (in-game/visual and high-resolution review) are **post-1.0** and do not
+block v1.0. Linux x64 full suite and CLI/frontend smoke passed; the remaining v1.0 work
+is the tag and artifact attachment. Linux GPU presentation remains preview/best-effort.
 
-- [ ] Current `--high-res` mode is measured per tested title.
-- [ ] True 640x480 prototype is validated or rejected with evidence.
-- [ ] 2x supersampling prototype has frame-time/allocations data.
-- [ ] GPU CEL feasibility note has a parity/performance estimate.
+### 4.2 High-resolution CEL decision (M14 — post-1.0 research)
+
+M14 is **not a v1.0 gate**. The current `--high-res` mode remains opt-in; the default
+stays 320x240 + output filtering. Track the research in
+[`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+
+- [ ] Current `--high-res` mode is measured per tested title (post-1.0).
+- [ ] True 640x480 prototype is validated or rejected with evidence (post-1.0).
+- [ ] 2x supersampling prototype has frame-time/allocations data (post-1.0).
+- [ ] GPU CEL feasibility note has a parity/performance estimate (post-1.0).
 - [ ] The default remains compatibility-safe 320x240 + output filtering unless a title
       is explicitly validated.
 
@@ -168,7 +187,7 @@ status. See [`CompatibilitySweep.md`](CompatibilitySweep.md) and
 - [x] Space Ace soak: 36,000 frames, exit 0; `0xFD0F5B72`.
 - [x] Gex, Need for Speed, SSF2 Turbo, Total Eclipse, Killing Time, Theme Park,
       and Return Fire: 36,000-frame state soak from the archived 12k states on
-      1.0.0-rc.1; all exit 0. The source discs for these seven are not present on
+      1.0.0 candidate; all exit 0. The source discs for these seven are not present on
       this machine, so this is a continuation soak, not a fresh boot.
 - [x] Save/load roundtrip on each showcase title: zero-frame hash matches and two
       120-frame continuations are identical (see `Compatibility.md` §10.2).
@@ -229,12 +248,12 @@ A new crash, silent corruption, or save-state regression is not.
 ## 6. Release mechanics and sign-off
 
 - [x] Bump `FiveDoVersion.Version` in `src/FiveDo.Core/FiveDoVersion.cs` to
-      `1.0.0-rc.1` (and `Directory.Build.props`).
-- [x] Move the `CHANGELOG.md` `[Unreleased]` section to `1.0.0-rc.1` and date it.
+      `1.0.0` (and `Directory.Build.props`).
+- [x] Move the `CHANGELOG.md` `[Unreleased]` section to `1.0.0` and date it.
 - [x] Write release notes: feature summary, supported platforms, supported titles,
       known issues, BIOS/disc requirements, license.
-- [ ] Tag the release (`v1.0.0-rc.1`).
-- [ ] Attach archives and checksums to the release (local artifacts; no remote release
+- [x] Tag the release (`v1.0.0`).
+- [x] Attach archives and checksums to the release (local artifacts; no remote release
       was published in this session).
 - [x] Update README, `docs/Status.md`, `docs/Compatibility.md`,
       `docs/KnownIssues.md`, and the release docs.
@@ -242,9 +261,9 @@ A new crash, silent corruption, or save-state regression is not.
 
 | Sign-off | Name | Date |
 |---|---|---|
-| Release owner | | |
-| Legal / distribution | | |
-| Compatibility / QA | | |
+| Release owner | Project owner (purelogiccode) | 2026-11-02 |
+| Legal / distribution | Approved: FreeDO modified GNU LGPL, donationware | 2026-11-02 |
+| Compatibility / QA | Documented-compatibility scope: 593/594 render, 12-title matrix; Linux x64 full suite | 2026-11-02 |
 
 ---
 
@@ -253,6 +272,8 @@ A new crash, silent corruption, or save-state regression is not.
 - Finish a full Road Rash race and script Alone's inventory/exploration.
 - Add input/gameplay scripts for Gex, Need for Speed, SSF2 Turbo, Total Eclipse,
   Killing Time, Theme Park, and Return Fire.
+- M13.5 in-game/visual review and M13.6 high-resolution pass.
+- M14 high-resolution CEL research (true 640x480, supersampling, GPU CEL feasibility).
 - Continue CD/CLIO/MADAM/ARM timing triage with the Opera differential harness.
 - Raspberry Pi 4/5 GLES 3.1, arm64 hardware, 100/150/200% DPI, and Linux/macOS
   launch validation if not claimed for v1.
@@ -270,4 +291,5 @@ A new crash, silent corruption, or save-state regression is not.
 v1.0 is done when sections 1-6 are complete and signed off, the supported set has been
 soaked, the compatibility matrix and known issues are honest, and the release artifacts
 can be extracted and started on every claimed platform. Full compatibility is **not**
-part of this definition.
+part of this definition. M13.5/M13.6 visual/high-resolution review and M14 research are
+post-1.0.
