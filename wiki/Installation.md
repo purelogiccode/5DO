@@ -36,7 +36,8 @@ Windows:
 Linux/macOS:
 
 ```sh
-tar -xzf 5do-linux-x64.tar.gz      # or 5do-osx-x64.tar.gz
+mkdir 5do-linux-x64
+tar -xzf 5do-linux-x64.tar.gz -C 5do-linux-x64   # or 5do-osx-x64.tar.gz
 cd 5do-linux-x64
 ./FiveDo.Frontend.Avalonia
 ```
