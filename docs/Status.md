@@ -25,13 +25,16 @@ open-source donationware (non-commercial; voluntary donations only). M13 loadabi
 complete; M13.5/M13.6 visual/high-resolution review and M14 high-resolution CEL research
 are **post-1.0**.
 
-**Feature update (2026-11-03):** **v1.2.0** is the current release. It adds the optional
+**Feature update (2026-11-03):** **v1.2.0** is the current release, published at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.2.0>. It adds the optional
 Windows Direct3D 11 presenter, startup GitHub release checks, deterministic fuzzing,
 per-edge overscan/void border, screenshot gallery filters/compare/export, display-refresh
 control, flat 2048-byte CHD and raw `.iso` detection, FIQ request-to-vector latency
 telemetry, DSP per-tick statistics, and the CLIO/DIPIR/FIFO/MCTL/XBUS audit fixes. The
 full suite is **1,597/1,597** passing. WebAssembly/browser, Android/iOS, and Raspberry Pi
-were removed from the roadmap; desktop Windows/Linux/macOS remain supported.
+were removed from the roadmap; desktop Windows/Linux/macOS remain supported. The three
+versioned bundles and `SHA256SUMS.txt` are attached to the release; every checksum was
+verified after publication.
 
 **Maintenance update (2026-11-02):** **v1.1.0** remains available at
 <https://github.com/purelogiccode/5DO/releases/tag/v1.1.0>. It adds game

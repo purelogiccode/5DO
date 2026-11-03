@@ -63,6 +63,10 @@ apps so the LGPL replacement rights remain practical.
 - `jb inspectcode 5DO.sln --severity=WARNING`: **0 results**
 - Windows and Linux bundle smoke tests (CLI `selftest` and desktop `--smoke-test`)
 - Bundle checks confirm no `runtime/`, `*.xml`, or `*.pdb` files are present
+- Release workflow
+  <https://github.com/purelogiccode/5DO/actions/runs/41581528432> passed all bundle jobs
+  and published <https://github.com/purelogiccode/5DO/releases/tag/v1.2.0>; every
+  `SHA256SUMS.txt` entry verifies
 - 3,000-frame regression hashes for Gex (`0x05F38B50`), Lemmings (`0x9C2E3236`), and
   Road Rash (`0x5E9EE515`) remain at their documented values.
 

@@ -48,11 +48,15 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] Full suite **1,597/1,597** passes; `dotnet format --verify-no-changes` is clean.
 - [x] `jb inspectcode --severity=WARNING` reports 0 results before producing bundles.
 - [x] Build the Windows, Linux, and macOS x64 bundles.
-- [ ] Windows/Linux bundle CLI `selftest` and desktop `--smoke-test` pass; the macOS
-      bundle is validated as Mach-O x86_64.
+- [x] Windows/Linux bundle CLI `selftest` and desktop `--smoke-test` pass; the macOS
+      bundle is validated as Mach-O x86_64. CI run
+      <https://github.com/purelogiccode/5DO/actions/runs/41581528432> passed all three
+      bundle jobs and the publish job.
 - [x] Keep local bundle copies under `src/FiveDo.Frontend.Avalonia/bin/Release`.
-- [ ] Create and push tag `v1.2.0`; the release workflow publishes the bundles,
-      checksums, and release notes.
+- [x] Create and push tag `v1.2.0`; the release workflow published the bundles,
+      checksums, and release notes:
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.2.0>. All three
+      `SHA256SUMS.txt` entries verify.
 
 ---
 
