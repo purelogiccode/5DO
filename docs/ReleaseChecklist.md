@@ -1,10 +1,11 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.1.0 released**; unified Windows/Linux/macOS x64 bundles are
-built from the same gates used for v1.0.0.
+**Release timing:** **v1.2.0 is the current release**; unified Windows/Linux/macOS x64
+bundles are built from the same gates used for v1.0.0 and v1.1.0.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
-full-compatibility one. v1.1.0 is a maintenance and diagnostics update on top of it.
+full-compatibility one. v1.1.0 was a maintenance update; v1.2.0 adds features,
+accuracy telemetry, and broader disc support.
 Ship the platforms and titles that are validated, publish an honest per-title matrix
 and known issues, and move everything else to the post-1.0 backlog.
 
@@ -36,6 +37,25 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 
 ---
 
+## 1.2.0 feature gate
+
+- [x] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.2.0`.
+- [x] Update `CHANGELOG.md`, `docs/WhatsNew.md`, `docs/ReleaseNotes-1.2.0.md`,
+      `README.md`, `docs/Status.md`, and `docs/index.md`.
+- [x] Verify the Direct3D 11 backend, startup release checks, fuzz harness,
+      per-edge overscan/void border, screenshot gallery, refresh-rate setting, flat
+      CHD/raw ISO support, and FIQ/DMA/DSP audit changes are documented.
+- [x] Full suite **1,597/1,597** passes; `dotnet format --verify-no-changes` is clean.
+- [x] `jb inspectcode --severity=WARNING` reports 0 results before producing bundles.
+- [x] Build the Windows, Linux, and macOS x64 bundles.
+- [ ] Windows/Linux bundle CLI `selftest` and desktop `--smoke-test` pass; the macOS
+      bundle is validated as Mach-O x86_64.
+- [x] Keep local bundle copies under `src/FiveDo.Frontend.Avalonia/bin/Release`.
+- [ ] Create and push tag `v1.2.0`; the release workflow publishes the bundles,
+      checksums, and release notes.
+
+---
+
 ## 0. Recommended v1 scope
 
 These are recommendations; the release owner confirms or changes them in section 1.
@@ -52,8 +72,8 @@ been validated.**
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
 | Packages | One bundle per system | `5do-<version>-win-x64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-osx-x64.tar.gz`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 10 runtime is a host prerequisite and is not bundled |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
-| Version | **`v1.1.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0 and rc.1 are historical |
-| Release timing | **Released** | v1.1.0 bundles and checksums are attached to the GitHub release |
+| Version | **`v1.2.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, and rc.1 are historical |
+| Release timing | **Released** | v1.2.0 bundles and checksums are attached to the GitHub release |
 
 ---
 
@@ -126,7 +146,7 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - [x] `dotnet build 5DO.sln -c Release` passes with 0 warnings and 0 errors
       (1.0.0).
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release` passes:
-      **1,592/1,592** with the current tree.
+      **1,597/1,597** with the current tree.
 - [x] `dotnet format 5DO.sln --verify-no-changes` passes.
 - [x] `jb inspectcode 5DO.sln --severity=WARNING` reports 0 warnings and 0 errors
       (2026-11-02).

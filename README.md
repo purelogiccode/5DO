@@ -23,11 +23,11 @@
   <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.1.0-orange" alt="Version 1.1.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.2.0-orange" alt="Version 1.2.0"></a>
 </p>
 
 > [!IMPORTANT]
-> 5DO is at **v1.1.0**, a documented-compatibility release. Windows x64 is the validated
+> 5DO is at **v1.2.0**, a documented-compatibility release. Windows x64 is the validated
 > target; Linux x64 full suite passed (GPU presentation is preview/best-effort), and
 > macOS/arm64 validation is post-1.0. No BIOS ROMs, game images, or extracted game
 > assets are included. You must supply legally obtained files.
@@ -65,10 +65,10 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.1.0` release (GitHub Releases) |
+| Version | `1.2.0` release (GitHub Releases) |
 | Validated platform | **Windows x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 |
-| Automated tests | **1,533 tests** in the current test assembly |
+| Automated tests | **1,597 tests** in the current test assembly |
 | Loadability sweep | **594 disc images** tested; after triage **593 loadable/rendered**, 1 known no-video case, 0 not loadable |
 | First pass | 576 rendered, 13 black/blank, 5 not loadable; triage resolved the failures and the blank/black set |
 | Desktop presentation | OpenGL/GLES required; Vulkan and Direct3D 11 optional; CPU fallback available |
@@ -85,17 +85,16 @@ One bundle per system, each containing both the desktop app and the CLI:
 
 | System | Bundle |
 |---|---|
-| Windows x64 | [`5do-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.1.0/5do-win-x64.zip) |
-| Linux x64 | [`5do-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.1.0/5do-linux-x64.tar.gz) |
-| macOS x64 | [`5do-osx-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.1.0/5do-osx-x64.tar.gz) |
+| Windows x64 | [`5do-1.2.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.2.0/5do-1.2.0-win-x64.zip) |
+| Linux x64 | [`5do-1.2.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.2.0/5do-1.2.0-linux-x64.tar.gz) |
+| macOS x64 | [`5do-1.2.0-osx-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.2.0/5do-1.2.0-osx-x64.tar.gz) |
 
 The apps are single-file executables. **Install the .NET 10 Runtime first** from
 <https://dotnet.microsoft.com/download/dotnet/10.0>; the bundles do **not** contain a
-.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.1.0)
+.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.2.0)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
-New bundles produced after v1.1.0 include the product version in the filename, for
-example `5do-1.2.0-win-x64.zip`.
+Bundles are versioned, for example `5do-1.2.0-win-x64.zip`.
 
 ## Features
 
@@ -165,7 +164,7 @@ example `5do-1.2.0-win-x64.zip`.
 - No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
 
 > [!NOTE]
-> v1.1.0 is published on GitHub Releases as one bundle per system (Windows, Linux,
+> v1.2.0 is published on GitHub Releases as one bundle per system (Windows, Linux,
 > macOS x64), each with the CLI, desktop app, and SHA-256 checksums. The .NET 10
 > runtime is required on the host and is not bundled. Build from source below if you
 > prefer.

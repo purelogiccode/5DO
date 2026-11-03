@@ -1,15 +1,12 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-02, after the first full-collection sweep, the performance pass,
-the ARM/CLIO/CEL/CD timing-option pass, the CD speed/timing-profile pass, the BIOS
-manager, the per-game NVRAM pass, the rewind/fast-forward pass, the per-game cheat
-engine, the TAS-movie pass, the disc browser, the input-device pass, the
-OSD/quick-menu pass, the library metadata/favorites/playtime pass, the
-multi-track/CD-DA pass, the CD-DA volume/settings pass, the multi-disc swap pass, the
-portable-mode pass, the input-display pass, the ODE/playlist-editor pass, the
-PAL/NTSC pass, the isolation/CD-transcript pass, the pointer-routing pass, the
-audio-latency pass, the diagnostics-bundle pass, the save-state-v3 pass, the overscan
-pass, and the fix-parity pass. Road Rash's
+**Snapshot:** 2026-11-03, after the 1.2.0 feature/accuracy update: Direct3D 11,
+startup release checks, the fuzz harness, per-edge overscan/void border, screenshot
+gallery filters, FIQ/DMA/DSP telemetry, flat CHD/raw ISO support, and display-refresh
+control. The earlier first full-collection sweep, performance, timing-option, BIOS,
+NVRAM, rewind, cheat, TAS, disc-browser, input, OSD/quick-menu, library, CD-DA,
+multi-disc, portable, PAL/NTSC, diagnostics, save-state, overscan, and fix-parity
+passes are retained below. Road Rash's
 100k-state race now measures
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
@@ -28,12 +25,20 @@ open-source donationware (non-commercial; voluntary donations only). M13 loadabi
 complete; M13.5/M13.6 visual/high-resolution review and M14 high-resolution CEL research
 are **post-1.0**.
 
-**Maintenance update (2026-11-02):** **v1.1.0** is the current release, published at
+**Feature update (2026-11-03):** **v1.2.0** is the current release. It adds the optional
+Windows Direct3D 11 presenter, startup GitHub release checks, deterministic fuzzing,
+per-edge overscan/void border, screenshot gallery filters/compare/export, display-refresh
+control, flat 2048-byte CHD and raw `.iso` detection, FIQ request-to-vector latency
+telemetry, DSP per-tick statistics, and the CLIO/DIPIR/FIFO/MCTL/XBUS audit fixes. The
+full suite is **1,597/1,597** passing. WebAssembly/browser, Android/iOS, and Raspberry Pi
+were removed from the roadmap; desktop Windows/Linux/macOS remain supported.
+
+**Maintenance update (2026-11-02):** **v1.1.0** remains available at
 <https://github.com/purelogiccode/5DO/releases/tag/v1.1.0>. It adds game
 library deduplication by 3DO game ID, moves the OpenAL license text to
 `docs/OpenAL-Soft-COPYING.txt`, removes the frame/PC/cycle counter from the desktop
 status bar, and completes the Serilog catch-block coverage and launch-statistics
-wiring. The full suite is **1,592/1,592** passing. The bundle layout is unchanged:
+wiring. The full suite is **1,597/1,597** passing. The bundle layout is unchanged:
 framework-dependent single-file apphosts, no bundled .NET runtime, no PDB/XML files.
 
 **Latest work (2026-11-02):** the CLI and desktop shell check the public GitHub release
@@ -50,7 +55,7 @@ per-game crop profiles with a configurable void border, and screenshot gallery f
 side-by-side compare, export, and settings sidecars. The same pass added FIQ
 request-to-vector latency telemetry and `--fiq-trace` request/entry lines, closed the
 CLIO output-FIFO/DIPIR/MADAM-MCTL/XBUS poll audit gaps, and exposed DSP per-tick
-statistics in `run --json`. The suite is **1,592 tests**.
+statistics in `run --json`. The suite is **1,597 tests**.
 
 SYS-01 and AUD-05 now expose multi-track CUE/CHD tables and CD-DA: `ITrackedDiscSource`
 carries native 2048/2336/2352-byte sectors, `CueDiscImage` handles multi-file/multi-track
@@ -645,7 +650,7 @@ artifacts and checksums are attached to the GitHub release.
 release scope. v1.0.0 is published on GitHub with the release artifacts.
 
 **Release decisions (2026-11-02):** Windows x64 is validated; Linux x64 CLI/frontend
-smoke and the full test suite passed (GPU presentation is preview/best-effort); the current release version is `1.1.0`;
+smoke and the full test suite passed (GPU presentation is preview/best-effort); the current release version is `1.2.0`;
 installers, signing, and notarization are post-1.0; the compatibility set is the 12
 documented titles, with five showcase titles carrying scripted gameplay evidence. The
 distribution model is recorded as **donationware** (non-commercial, source-available).

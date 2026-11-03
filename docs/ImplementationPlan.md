@@ -1,10 +1,10 @@
 <a id="master-dashboard"></a>
 # 5DO — Master Implementation Plan, Feature Backlog, and World-Best Roadmap
 
-**Snapshot:** 2026-11-02  
+**Snapshot:** 2026-11-03
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,592 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,597 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,10 +28,10 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **594 load**, **593 render**; 1 known boot failure (Crash 'n Burn Japan); 0 not loadable | v1.0 ships with this documented evidence; 12,000-frame in-game/visual review and high-res pass are post-1.0; Linux x64 full suite passed (GL preview) |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,592** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,597** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, all-filter 4K60 budgets remain |
 | Platforms | Windows x64 validated; Linux x64 full suite **1,473/1,473** passed (GL preview); three unified x64 bundles (Windows/Linux/macOS) with framework-dependent single-file apphosts; .NET 10 runtime required (not bundled); opt-in NativeAOT | macOS/installers are post-1.0; Linux GPU presentation is unvalidated under llvmpipe. WebAssembly, Android/iOS, and Raspberry Pi are out of scope |
-| Release | **v1.1.0 released (GitHub)** | Documented-compatibility scope; legal/attribution sign-off recorded; M13 loadability evidence complete; M14 is post-1.0 research; Linux x64 full suite passed; tags `v1.0.0`/`v1.1.0` and GitHub releases published |
+| Release | **v1.2.0 released (GitHub)** | Documented-compatibility scope; legal/attribution sign-off recorded; M13 loadability evidence complete; M14 is post-1.0 research; Linux x64 full suite passed; tags `v1.0.0`, `v1.1.0`, and `v1.2.0` and GitHub releases published |
 
 **Current position:** the core and shell are strong enough to play and validate a large local collection, and the documented-compatibility v1.0 scope is ready to ship. Full compatibility and high-resolution CEL research are post-1.0; the remaining gap to “best in the world” is **accuracy parity, universal compatibility, and release trust**, not basic feature count.
 
@@ -52,7 +52,7 @@ configurable void border, and VID-14's gallery filters, side-by-side compare, ex
 and settings sidecars are landed. **CORE-07** now measures FIQ request-to-vector
 latency and traces requests/entries, **CORE-06** closes the output-FIFO reload,
 DIPIR-protected XBUS DMA, MADAM MCTL persistence, and XBUS Opera poll/state gaps, and
-**CORE-05** exposes DSP per-tick timing metrics. The suite is **1,592 tests**; build,
+**CORE-05** exposes DSP per-tick timing metrics. The suite is **1,597 tests**; build,
 format, and inspectcode are clean.
 
 ---
@@ -109,7 +109,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **9. Land the disc/peripheral P0 batch.** SYS-01 multi-track TOC, raw CD-DA sectors, and mixing are implemented; AUD-05 persists CD-DA volume/mute in settings, UI, CLI, and state. SYS-02 now has an M3U playlist, live host swap, F3/UI swap, guest inject, and CLI swap. Finish known-title CD-DA evidence, ODE prompts, then SYS-03 PAL/NTSC, SYS-15 calibration/multiplayer pointer, SYS-18 auto profiles. See Part II.
 - [ ] **10. Polish the shipped UX.** UX-06 Lua/frame editor/lag counter, UX-12 per-game NVRAM/drag-drop, UX-13 external metadata/media/editor, UX-19 gamepad quick-menu navigation. See Part II.
 - [ ] **11. Post-1.0 platform and packaging work.** macOS validation, installers/signing/notarization, and the "best in the world" gates in §8.2. WebAssembly, Android/iOS, and Raspberry Pi are out of scope.
-- [x] **12. Land the CORE-05/06/07 audit increment (2026-11-02).** FIQ request-to-vector latency telemetry and traces, the CLIO/DIPIR/FIFO/MCTL/XBUS audit fixes and tests, and DSP per-tick statistics are implemented. Evidence: **1,592 tests**, clean build/format/inspectcode, and a 3,000-frame Gex/Lemmings boot with the documented frame hashes intact. See section 9 and [`Diagnostics.md`](Diagnostics.md) section 7.
+- [x] **12. Land the CORE-05/06/07 audit increment (2026-11-02).** FIQ request-to-vector latency telemetry and traces, the CLIO/DIPIR/FIFO/MCTL/XBUS audit fixes and tests, and DSP per-tick statistics are implemented. Evidence: **1,597 tests**, clean build/format/inspectcode, and a 3,000-frame Gex/Lemmings boot with the documented frame hashes intact. See section 9 and [`Diagnostics.md`](Diagnostics.md) section 7.
 
 ---
 
@@ -439,7 +439,7 @@ These are **post-1.0 goals**, not v1.0 blockers. A release can be called “the 
   documented key), 21,183 FIQ requests / 14,345 entries / max 859,234 cycles, and
   88,955,550 DSP instructions over 2,205,094 ticks (735 ticks/frame, max 106, mean 51.7).
   CLIO tracing recorded 4,714 XBUS DMA transfers with paired start/done lines.
-- [x] Verification: **1,592 tests pass**; build **0 warnings / 0 errors**;
+- [x] Verification: **1,597 tests pass**; build **0 warnings / 0 errors**;
   `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**.
 
 ### 2026-11-02 — VID-14 screenshot filters, compare, export, and sidecars
@@ -3143,6 +3143,7 @@ Suggested parallelization with two developers:
 | 2026-11-02 | M10.7 | System .NET runtime only | Removed the private `runtime/` folder from the release bundles. The apphosts now resolve the .NET 10 runtime from the host installation, and the bundles contain no runtime binaries. Removed all PDB and XML documentation files from the archives; only runtime dependencies and docs remain. Updated README/FAQ/Installation/ReleaseChecklist/ReleaseLegalReview/wiki and the CI bundle checks to enforce the no-runtime and no-XML rules. |
 | 2026-11-02 | M10.8 | v1.1.0 maintenance update | Bumped the version to `1.1.0`. Moved `docs/licenses/OpenAL-Soft-COPYING.txt` to `docs/OpenAL-Soft-COPYING.txt` and removed the nested folder; the bundle script copies the file into the bundle's `docs/` root. Fixed duplicate game-library rows by deduplicating scanner results by 3DO game ID (preferring readable copies). Removed the frame/PC/cycle counter from the desktop status bar. Added Serilog calls to the remaining CLI/frontend catch blocks. Verified the existing Serilog warning+ bug-report sink, environment/exception formatting, and ApplicationStats launch calls in both hosts. |
 | 2026-11-03 | M9R | Display refresh rate | Added `DisplayRefreshRate` (Settings > Video, default 60 Hz, `0` = match display). Above 60 Hz the desktop re-presents the latest mailbox frame on a `DispatcherTimer` (or on the compositor's animation frames for match-display) so the swap chain runs at the requested rate; the CPU fallback retimes its render timer. The 3DO still produces 60 fields per second (50 for PAL), so the setting lowers presentation latency but does not add motion. The status bar and overlay report the measured display rate when the setting is not 60. Added settings validation, load clamping, a schema version bump to 3, and tests. |
+| 2026-11-03 | Release | v1.2.0 feature release | Bumped the version to `1.2.0` and prepared the Windows/Linux/macOS x64 bundles. The release includes the optional Windows Direct3D 11 presenter, startup GitHub release checks, the six-target fuzz harness, per-edge overscan/void border, screenshot gallery filters/compare/export/sidecars, FIQ request-to-vector telemetry, DSP per-tick statistics, CLIO/DIPIR/FIFO/MCTL/XBUS audit fixes, flat 2048-byte CHD and raw `.iso` support, and display-refresh control. WebAssembly/browser, Android/iOS, and Raspberry Pi were removed from scope. Full suite **1,597 tests**. |
 
 ---
 

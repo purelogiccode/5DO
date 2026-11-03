@@ -1,9 +1,9 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.1.0, a documented-compatibility
+All notable changes are recorded here. The project is at v1.2.0, a documented-compatibility
 release.
 
-## [Unreleased]
+## [1.2.0] - 2026-11-03
 
 ### Added
 
@@ -25,6 +25,35 @@ release.
   0-64 px void/gray border with `#RRGGBB`/`#AARRGGBB` color.
 - The screenshot gallery adds game/date filters, side-by-side compare, export, and a
   settings sidecar written beside every capture.
+- FIQ request-to-vector latency telemetry: `FiqLatencyTracker`, `--fiq-trace`
+  request/entry lines with cycle and latency fields, and `fiq` statistics in
+  `run --json`.
+- DSP per-tick timing metrics (`dspStats`): loop calls, running/sleeping ticks, and
+  peak/mean instructions per tick.
+- Flat CHDs with 2048-byte cooked-ISO units are accepted as a single data track, and
+  raw 2352-byte disc images named `.iso` are detected by their CD sync header.
+- A configurable **Display refresh** setting (30-480 Hz, or match display) re-presents
+  the latest frame above 60 Hz. Presentation-only: emulation speed, audio, and save
+  states are unchanged. Settings schema version 3 validates and clamps the value.
+
+### Changed
+
+- Closed the CORE-06 DMA/FIFO audit gaps: output-FIFO reload now requires the `0x304`
+  channel request bit, DIPIR-protected XBUS DMA stays enabled without progress, MADAM
+  persists the MCTL-written gate (state version 3), and XBUS device-15 Opera semantics
+  expose the pending poll bits and use Opera's status layout.
+- CLIO DMA tracing now reports `dma-blocked` and `dma-done` with the final target.
+- MADAM state version 3 and CLIO/FIQ state-load behavior preserve the interrupt level
+  without synthesizing a request; XBUS state load rejects mismatched device slots.
+- Scope was reduced: WebAssembly/browser, Android/iOS, and Raspberry Pi are out of
+  scope. Tier B performance targets now refer to desktop hardware.
+
+### Fixed
+
+- XBUS state loading no longer silently misaligns the stream when a saved device slot
+  is missing.
+- The MADAM CLUT/video DMA gates no longer flip after cold reset or state load.
+- FIQ telemetry is reset on state load and no longer reports stale pending requests.
 
 ## [1.1.0] - 2026-11-02
 

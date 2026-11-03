@@ -85,7 +85,7 @@ dotnet build 5DO.sln -c Release
 dotnet test 5DO.sln -c Release
 ```
 
-The current suite is **1,592 tests** (verified 2026-11-02) and completes in a few seconds
+The current suite is **1,597 tests** (verified 2026-11-03) and completes in a few seconds
 on the development machine. The build treats warnings as errors and runs the .NET
 analyzers plus Meziantou and Roslynator analyzers.
 
@@ -439,7 +439,7 @@ The bundle contains both framework-dependent apphosts and their native libraries
 commit, and build time. Linux bundles also include `5do.desktop`. PDB and XML
 documentation files are removed, and no .NET runtime is copied into the bundle. The
 archive name includes the product version, for example
-`5do-1.1.0-win-x64.zip` or `5do-1.1.0-linux-x64.tar.gz`; the version is read from
+`5do-1.2.0-win-x64.zip` or `5do-1.2.0-linux-x64.tar.gz`; the version is read from
 `Directory.Build.props` unless `-Version` is supplied.
 
 ---
@@ -509,7 +509,7 @@ Key properties in `Directory.Build.props`:
 | `ImplicitUsings` | `disable` |
 | `TreatWarningsAsErrors` | `true` |
 | `Deterministic` | `true` |
-| `Version` | `1.1.0` |
+| `Version` | `1.2.0` |
 | `InvariantGlobalization` | `true` |
 | `EnableNETAnalyzers` | `true` |
 | `AnalysisLevel` | `latest-recommended` |
