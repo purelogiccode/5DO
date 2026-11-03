@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -254,22 +255,40 @@ public static class UpdateChecker
         return (null, null);
     }
 
-    private static string? PlatformAssetToken
+    internal static string? PlatformAssetToken => GetPlatformAssetToken(
+        OperatingSystem.IsWindows(),
+        OperatingSystem.IsLinux(),
+        OperatingSystem.IsMacOS(),
+        RuntimeInformation.ProcessArchitecture);
+
+    internal static string? GetPlatformAssetToken(
+        bool isWindows,
+        bool isLinux,
+        bool isMacOs,
+        Architecture architecture)
     {
-        get
+        var architectureToken = architecture switch
         {
-            if (OperatingSystem.IsWindows())
-            {
-                return "win-x64";
-            }
-
-            if (OperatingSystem.IsLinux())
-            {
-                return "linux-x64";
-            }
-
-            return OperatingSystem.IsMacOS() ? "osx-x64" : null;
+            Architecture.X64 => "x64",
+            Architecture.Arm64 => "arm64",
+            _ => null,
+        };
+        if (architectureToken is null)
+        {
+            return null;
         }
+
+        if (isWindows)
+        {
+            return "win-" + architectureToken;
+        }
+
+        if (isLinux)
+        {
+            return "linux-" + architectureToken;
+        }
+
+        return isMacOs ? "osx-" + architectureToken : null;
     }
 
     private static string GetString(JsonElement element, string property)

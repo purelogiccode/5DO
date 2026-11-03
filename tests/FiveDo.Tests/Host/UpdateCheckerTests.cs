@@ -1,8 +1,10 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,6 +51,27 @@ public sealed class UpdateCheckerTests
         Assert.Equal(0, stable.CompareTo(ReleaseVersion.TryParse("v1.2.0", out var parsed) ? parsed : default));
     }
 
+    [Theory]
+    [InlineData(true, false, false, Architecture.X64, "win-x64")]
+    [InlineData(true, false, false, Architecture.Arm64, "win-arm64")]
+    [InlineData(false, true, false, Architecture.X64, "linux-x64")]
+    [InlineData(false, true, false, Architecture.Arm64, "linux-arm64")]
+    [InlineData(false, false, true, Architecture.X64, "osx-x64")]
+    [InlineData(false, false, true, Architecture.Arm64, "osx-arm64")]
+    [InlineData(false, false, false, Architecture.X64, null)]
+    [InlineData(true, false, false, Architecture.X86, null)]
+    public void PlatformAssetToken_SelectsTheBundleForTheRunningPlatform(
+        bool isWindows,
+        bool isLinux,
+        bool isMacOs,
+        Architecture architecture,
+        string? expected)
+    {
+        Assert.Equal(
+            expected,
+            UpdateChecker.GetPlatformAssetToken(isWindows, isLinux, isMacOs, architecture));
+    }
+
     [Fact]
     public async Task CheckAsync_ReportsANewerReleaseAndSelectsThePlatformAsset()
     {
@@ -58,7 +81,12 @@ public sealed class UpdateCheckerTests
             "v1.2.0",
             "5DO 1.2.0",
             "https://github.com/purelogiccode/5DO/releases/tag/v1.2.0",
-            "win-x64")));
+            "win-x64",
+            "win-arm64",
+            "linux-x64",
+            "linux-arm64",
+            "osx-x64",
+            "osx-arm64")));
 
         UpdateCheckResult result = await UpdateChecker.CheckAsync(
             new UpdateCheckOptions
@@ -77,8 +105,10 @@ public sealed class UpdateCheckerTests
         Assert.True(result.Info.UpdateAvailable);
         Assert.Equal("1.2.0", result.Info.LatestVersion);
         Assert.Equal("5DO 1.2.0", result.Info.ReleaseName);
-        Assert.Contains("win-x64", result.Info.AssetName);
-        Assert.Contains("5do-1.2.0-win-x64.zip", result.Info.DownloadUrl);
+        var assetToken = UpdateChecker.PlatformAssetToken;
+        Assert.NotNull(assetToken);
+        Assert.Contains(assetToken, result.Info.AssetName);
+        Assert.Contains($"5do-1.2.0-{assetToken}.zip", result.Info.DownloadUrl);
         Assert.True(File.Exists(cachePath));
     }
 
@@ -193,9 +223,13 @@ public sealed class UpdateCheckerTests
         Assert.False(result.Info.UpdateAvailable);
     }
 
-    private static string ReleaseJson(string tag, string name, string url, string assetToken)
+    private static string ReleaseJson(string tag, string name, string url, params string[] assetTokens)
     {
         var version = tag.TrimStart('v');
+        var assets = string.Join(
+            ", ",
+            assetTokens.Select(assetToken =>
+                $$"""{ "name": "5do-{{version}}-{{assetToken}}.zip", "browser_download_url": "https://github.com/purelogiccode/5DO/releases/download/{{tag}}/5do-{{version}}-{{assetToken}}.zip" }"""));
         return $$"""
             {
               "tag_name": "{{tag}}",
@@ -203,7 +237,7 @@ public sealed class UpdateCheckerTests
               "html_url": "{{url}}",
               "published_at": "2026-11-02T10:00:00Z",
               "assets": [
-                { "name": "5do-{{version}}-{{assetToken}}.zip", "browser_download_url": "https://github.com/purelogiccode/5DO/releases/download/{{tag}}/5do-{{version}}-{{assetToken}}.zip" }
+                {{assets}}
               ]
             }
             """;
