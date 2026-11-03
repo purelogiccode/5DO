@@ -16,21 +16,23 @@ include a BIOS ROM or any game images. You must supply legally obtained files.
 
 ## Download
 
-Download the bundle for your system from
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.1.0):
+Download the bundle for your system and architecture from
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.2.1):
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-win-x64.zip` |
-| Linux x64 | `5do-linux-x64.tar.gz` |
-| macOS x64 | `5do-osx-x64.tar.gz` |
+| Windows x64 | `5do-1.2.1-win-x64.zip` |
+| Windows arm64 | `5do-1.2.1-win-arm64.zip` |
+| Linux x64 | `5do-1.2.1-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.2.1-linux-arm64.tar.gz` |
+| macOS x64 | `5do-1.2.1-osx-x64.tar.gz` |
+| macOS arm64 | `5do-1.2.1-osx-arm64.tar.gz` |
 
 Each bundle contains both the desktop app and the CLI. Install the .NET 10 Runtime
 first from <https://dotnet.microsoft.com/download/dotnet/10.0>; the bundle does not
 contain a .NET runtime. Extract the bundle and run the executables.
 
-Newer bundles include the version in the filename, for example
-`5do-1.2.0-win-x64.zip`; the v1.1.0 assets linked above keep their original names.
+Bundles are versioned, for example `5do-1.2.1-win-arm64.zip`.
 
 ## Build from source
 
@@ -135,19 +137,20 @@ Named profiles live under `profiles/<name>/` and can be selected with
   group.
 - The local validation target is a Linux Mint virtual machine. Full distribution
   coverage is still post-1.0 work.
-- The framework-dependent `linux-x64` bundle is produced by CI; arm64 is post-1.0.
+- The framework-dependent `linux-x64` and `linux-arm64` bundles are produced by CI.
 
 ### macOS
 
-- The framework-dependent `osx-x64` bundle is produced by CI; arm64 is post-1.0.
+- The framework-dependent `osx-x64` and `osx-arm64` bundles are produced by CI.
 - There is no platform gamepad backend yet; use the keyboard.
 - Runtime validation is post-1.0 work. Please report platform-specific findings with
   a [diagnostics bundle](Diagnostics.md).
 
 ### arm64
 
-Desktop arm64 builds (Windows/Linux/macOS) are supported targets but runtime validation
-is post-1.0. Raspberry Pi, Android/iOS, and WebAssembly are out of scope. See
+Windows, Linux, and macOS arm64 bundles are produced and architecture-verified by CI.
+Runtime validation on arm64 hardware is post-1.0; report findings with a diagnostics
+bundle. Raspberry Pi, Android/iOS, and WebAssembly are out of scope. See
 [Performance](Performance.md) for the current status.
 
 ## GPU and audio troubleshooting

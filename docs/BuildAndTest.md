@@ -386,8 +386,9 @@ dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj -c R
   -o artifacts/frontend/win-x64
 ```
 
-Release bundles are produced for `win-x64`, `linux-x64`, and `osx-x64`. They contain
-no .NET runtime; users must install the .NET 10 runtime on their machine.
+Release bundles are produced for `win-x64`, `win-arm64`, `linux-x64`,
+`linux-arm64`, `osx-x64`, and `osx-arm64`. They contain no .NET runtime; users must
+install the .NET 10 runtime on their machine.
 
 Both executables are single-file framework-dependent apphosts. The frontend also ships
 native Skia/HarfBuzz/ANGLE assets. OpenAL Soft is copied as `OpenAL32.dll` on Windows
@@ -439,7 +440,7 @@ The bundle contains both framework-dependent apphosts and their native libraries
 commit, and build time. Linux bundles also include `5do.desktop`. PDB and XML
 documentation files are removed, and no .NET runtime is copied into the bundle. The
 archive name includes the product version, for example
-`5do-1.2.0-win-x64.zip` or `5do-1.2.0-linux-x64.tar.gz`; the version is read from
+`5do-1.2.1-win-x64.zip`, `5do-1.2.1-win-arm64.zip`, or `5do-1.2.1-linux-arm64.tar.gz`; the version is read from
 `Directory.Build.props` unless `-Version` is supplied.
 
 ---
@@ -461,7 +462,7 @@ Separate workflows add:
 | Workflow | Trigger | What it does |
 |---|---|---|
 | `docs.yml` | Push/PR touching docs or the wiki, manual | Strict MkDocs build, GitHub Pages deployment from `master`, and curated wiki publishing. |
-| `release.yml` | Tag push or manual | Builds the three bundles, writes `SHA256SUMS.txt`, updates the GitHub release, and removes obsolete per-component assets. |
+| `release.yml` | Tag push or manual | Builds the six x64/arm64 bundles, writes `SHA256SUMS.txt`, updates the GitHub release, and removes obsolete per-component assets. |
 | `codeql.yml` | Push/PR, weekly, manual | CodeQL analysis for C#, GitHub Actions, and Python. |
 | `dependency-review.yml` | Pull request | Blocks high-severity dependency changes and comments on the PR. |
 | `scorecard.yml` | Push, weekly, manual | OpenSSF Scorecard analysis, SARIF upload, and published results. |
@@ -509,7 +510,7 @@ Key properties in `Directory.Build.props`:
 | `ImplicitUsings` | `disable` |
 | `TreatWarningsAsErrors` | `true` |
 | `Deterministic` | `true` |
-| `Version` | `1.2.0` |
+| `Version` | `1.2.1` |
 | `InvariantGlobalization` | `true` |
 | `EnableNETAnalyzers` | `true` |
 | `AnalysisLevel` | `latest-recommended` |

@@ -25,8 +25,14 @@ open-source donationware (non-commercial; voluntary donations only). M13 loadabi
 complete; M13.5/M13.6 visual/high-resolution review and M14 high-resolution CEL research
 are **post-1.0**.
 
-**Feature update (2026-11-03):** **v1.2.0** is the current release, published at
-<https://github.com/purelogiccode/5DO/releases/tag/v1.2.0>. It adds the optional
+**Arm64 packaging update (2026-11-03):** **v1.2.1** is the current release, published at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.2.1>. It adds
+framework-dependent Windows arm64, Linux arm64, and macOS arm64 bundles alongside the
+x64 bundles, for six versioned archives plus `SHA256SUMS.txt`. CI verifies each arm64
+apphost's PE/ELF/Mach-O machine type; the x64 bundles keep their runtime smoke tests.
+No emulator behavior changed.
+
+**Feature update (2026-11-03):** **v1.2.0** added the optional
 Windows Direct3D 11 presenter, startup GitHub release checks, deterministic fuzzing,
 per-edge overscan/void border, screenshot gallery filters/compare/export, display-refresh
 control, flat 2048-byte CHD and raw `.iso` detection, FIQ request-to-vector latency
@@ -653,7 +659,7 @@ artifacts and checksums are attached to the GitHub release.
 release scope. v1.0.0 is published on GitHub with the release artifacts.
 
 **Release decisions (2026-11-02):** Windows x64 is validated; Linux x64 CLI/frontend
-smoke and the full test suite passed (GPU presentation is preview/best-effort); the current release version is `1.2.0`;
+smoke and the full test suite passed (GPU presentation is preview/best-effort); the current release version is `1.2.1`;
 installers, signing, and notarization are post-1.0; the compatibility set is the 12
 documented titles, with five showcase titles carrying scripted gameplay evidence. The
 distribution model is recorded as **donationware** (non-commercial, source-available).

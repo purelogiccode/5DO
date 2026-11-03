@@ -23,14 +23,26 @@ jobs:
         include:
           - os: windows-latest
             rid: win-x64
+            arch: x64
+          - os: windows-latest
+            rid: win-arm64
+            arch: arm64
           - os: ubuntu-latest
             rid: linux-x64
-          # Cross-publish the macOS x64 bundle on Linux. The macOS x64 apphost
-          # and native assets are resolved from NuGet; the bundle is validated
-          # as Mach-O x86_64 instead of being executed. This avoids depending on
-          # the hosted macOS runner, which was cancelled before starting steps.
+            arch: x64
+          - os: ubuntu-latest
+            rid: linux-arm64
+            arch: arm64
+          # Cross-publish the macOS bundles on Linux. The macOS apphosts and
+          # native assets are resolved from NuGet; each bundle is validated as
+          # Mach-O instead of being executed. This avoids depending on the
+          # hosted macOS runner, which was cancelled before starting steps.
           - os: ubuntu-latest
             rid: osx-x64
+            arch: x86_64
+          - os: ubuntu-latest
+            rid: osx-arm64
+            arch: arm64
 
     steps:
       - name: Checkout
@@ -115,6 +127,22 @@ jobs:
             throw "The bundle must not contain XML documentation files: $($xml.Name -join ', ')"
           }
 
+      - name: Verify Windows bundle architecture
+        if: startsWith(matrix.rid, 'win-')
+        shell: pwsh
+        run: |
+          $expected = if ('${{ matrix.arch }}' -eq 'arm64') { 0xAA64 } else { 0x8664 }
+          foreach ($name in @('FiveDo.Cli.exe', 'FiveDo.Frontend.Avalonia.exe')) {
+            $path = Join-Path 'artifacts/bundle-smoke' $name
+            $bytes = [System.IO.File]::ReadAllBytes($path)
+            $peOffset = [BitConverter]::ToInt32($bytes, 0x3c)
+            $machine = [BitConverter]::ToUInt16($bytes, $peOffset + 4)
+            if ($machine -ne $expected) {
+              throw "$name has PE machine 0x$($machine.ToString('X4')); expected 0x$($expected.ToString('X4'))."
+            }
+            Write-Host "$name PE machine=0x$($machine.ToString('X4'))"
+          }
+
       - name: CLI smoke test (Windows)
         if: matrix.rid == 'win-x64'
         shell: pwsh
@@ -142,14 +170,27 @@ jobs:
           }
 
       - name: Verify macOS bundle architecture
-        if: matrix.rid == 'osx-x64'
+        if: startsWith(matrix.rid, 'osx-')
         shell: bash
         run: |
           set -euo pipefail
           file artifacts/bundle-smoke/FiveDo.Cli
           file artifacts/bundle-smoke/FiveDo.Frontend.Avalonia
-          file artifacts/bundle-smoke/FiveDo.Cli | grep -q 'Mach-O 64-bit x86_64'
-          file artifacts/bundle-smoke/FiveDo.Frontend.Avalonia | grep -q 'Mach-O 64-bit x86_64'
+          file artifacts/bundle-smoke/FiveDo.Cli | grep -q 'Mach-O 64-bit ${{ matrix.arch }}'
+          file artifacts/bundle-smoke/FiveDo.Frontend.Avalonia | grep -q 'Mach-O 64-bit ${{ matrix.arch }}'
+
+      - name: Verify Linux bundle architecture
+        if: startsWith(matrix.rid, 'linux-')
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ '${{ matrix.arch }}' = 'x64' ]; then
+            expected='x86-64'
+          else
+            expected='ARM aarch64'
+          fi
+          file artifacts/bundle-smoke/FiveDo.Cli | grep -q "$expected"
+          file artifacts/bundle-smoke/FiveDo.Frontend.Avalonia | grep -q "$expected"
 
       - name: CLI and frontend smoke test (Linux)
         if: matrix.rid == 'linux-x64'

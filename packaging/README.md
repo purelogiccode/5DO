@@ -1,15 +1,18 @@
 # Desktop packaging
 
-The release artifacts are **one bundle per system**, not one archive per component.
-Each bundle contains both the desktop app and the headless CLI:
+The release artifacts are **one bundle per system and architecture**, not one archive
+per component. Each bundle contains both the desktop app and the headless CLI:
 
 | System | Bundle |
 |---|---|
 | Windows x64 | `5do-<version>-win-x64.zip` |
+| Windows arm64 | `5do-<version>-win-arm64.zip` |
 | Linux x64 | `5do-<version>-linux-x64.tar.gz` |
+| Linux arm64 | `5do-<version>-linux-arm64.tar.gz` |
 | macOS x64 | `5do-<version>-osx-x64.tar.gz` |
+| macOS arm64 | `5do-<version>-osx-arm64.tar.gz` |
 
-For example, version `1.1.0` produces `5do-1.1.0-win-x64.zip`. The version is read from
+For example, version `1.2.1` produces `5do-1.2.1-win-arm64.zip`. The version is read from
 `Directory.Build.props` by default; pass `-Version` to `package-bundle.ps1` to override it.
 
 ## Requirements

@@ -88,7 +88,7 @@ jobs:
           # the release has one versioned bundle per system.
           for name in $(gh release view "$tag" --json assets --jq '.assets[].name'); do
             case "$name" in
-              5do-cli-*|5do-frontend-*|5do-win-x64.zip|5do-linux-x64.tar.gz|5do-osx-x64.tar.gz)
+              5do-cli-*|5do-frontend-*|5do-win-x64.zip|5do-win-arm64.zip|5do-linux-x64.tar.gz|5do-linux-arm64.tar.gz|5do-osx-x64.tar.gz|5do-osx-arm64.tar.gz)
                 echo "Removing obsolete asset $name"
                 gh release delete-asset "$tag" "$name" -y
                 ;;

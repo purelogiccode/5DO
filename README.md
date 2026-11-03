@@ -23,11 +23,11 @@
   <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.2.0-orange" alt="Version 1.2.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.2.1-orange" alt="Version 1.2.1"></a>
 </p>
 
 > [!IMPORTANT]
-> 5DO is at **v1.2.0**, a documented-compatibility release. Windows x64 is the validated
+> 5DO is at **v1.2.1**, a documented-compatibility release. Windows x64 is the validated
 > target; Linux x64 full suite passed (GPU presentation is preview/best-effort), and
 > macOS/arm64 validation is post-1.0. No BIOS ROMs, game images, or extracted game
 > assets are included. You must supply legally obtained files.
@@ -65,7 +65,7 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.2.0` release (GitHub Releases) |
+| Version | `1.2.1` release (GitHub Releases) |
 | Validated platform | **Windows x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 |
 | Automated tests | **1,597 tests** in the current test assembly |
@@ -81,20 +81,23 @@ and [known issues](https://purelogiccode.github.io/5DO/KnownIssues.html).
 
 ## Download
 
-One bundle per system, each containing both the desktop app and the CLI:
+One bundle per system and architecture, each containing both the desktop app and the CLI:
 
 | System | Bundle |
 |---|---|
-| Windows x64 | [`5do-1.2.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.2.0/5do-1.2.0-win-x64.zip) |
-| Linux x64 | [`5do-1.2.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.2.0/5do-1.2.0-linux-x64.tar.gz) |
-| macOS x64 | [`5do-1.2.0-osx-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.2.0/5do-1.2.0-osx-x64.tar.gz) |
+| Windows x64 | [`5do-1.2.1-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.2.1/5do-1.2.1-win-x64.zip) |
+| Windows arm64 | [`5do-1.2.1-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.2.1/5do-1.2.1-win-arm64.zip) |
+| Linux x64 | [`5do-1.2.1-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.2.1/5do-1.2.1-linux-x64.tar.gz) |
+| Linux arm64 | [`5do-1.2.1-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.2.1/5do-1.2.1-linux-arm64.tar.gz) |
+| macOS x64 | [`5do-1.2.1-osx-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.2.1/5do-1.2.1-osx-x64.tar.gz) |
+| macOS arm64 | [`5do-1.2.1-osx-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.2.1/5do-1.2.1-osx-arm64.tar.gz) |
 
 The apps are single-file executables. **Install the .NET 10 Runtime first** from
 <https://dotnet.microsoft.com/download/dotnet/10.0>; the bundles do **not** contain a
-.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.2.0)
+.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.2.1)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
-Bundles are versioned, for example `5do-1.2.0-win-x64.zip`.
+Bundles are versioned and published for x64 and arm64, for example `5do-1.2.1-win-arm64.zip`.
 
 ## Features
 
@@ -164,8 +167,8 @@ Bundles are versioned, for example `5do-1.2.0-win-x64.zip`.
 - No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
 
 > [!NOTE]
-> v1.2.0 is published on GitHub Releases as one bundle per system (Windows, Linux,
-> macOS x64), each with the CLI, desktop app, and SHA-256 checksums. The .NET 10
+> v1.2.1 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
+> macOS; x64 and arm64), each with the CLI, desktop app, and SHA-256 checksums. The .NET 10
 > runtime is required on the host and is not bundled. Build from source below if you
 > prefer.
 > BIOS and game files are never distributed by this repository.

@@ -35,8 +35,9 @@ Run the release gate commands from `docs/ReleaseChecklist.md` before tagging a r
 Every release must **produce and publish runnable bundles/binaries**. A source tag or
 GitHub release without the built artifacts is not a complete release.
 
-- One bundle per system: `5do-win-x64.zip`, `5do-linux-x64.tar.gz`,
-  `5do-osx-x64.tar.gz`.
+- One bundle per system and architecture: `5do-win-x64.zip`, `5do-win-arm64.zip`,
+  `5do-linux-x64.tar.gz`, `5do-linux-arm64.tar.gz`, `5do-osx-x64.tar.gz`, and
+  `5do-osx-arm64.tar.gz`.
 - Each bundle contains the framework-dependent single-file CLI and desktop apphosts,
   `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, and the
   release/legal docs. **No .NET runtime is bundled**; users must install the .NET 10

@@ -1,11 +1,11 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.2.0 is the current release**; unified Windows/Linux/macOS x64
+**Release timing:** **v1.2.1 is the current release**; unified Windows/Linux/macOS x64/arm64
 bundles are built from the same gates used for v1.0.0 and v1.1.0.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
-full-compatibility one. v1.1.0 was a maintenance update; v1.2.0 adds features,
-accuracy telemetry, and broader disc support.
+full-compatibility one. v1.1.0 was a maintenance update; v1.2.0 added features,
+accuracy telemetry, and broader disc support; v1.2.1 adds arm64 bundles.
 Ship the platforms and titles that are validated, publish an honest per-title matrix
 and known issues, and move everything else to the post-1.0 backlog.
 
@@ -34,6 +34,19 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       desktop `--smoke-test`; the macOS x64 bundle is cross-published on Linux and
       validated as Mach-O x86_64, matching the v1.0.0 runtime-validation scope.
 - [x] Publish `v1.1.0` and verify `SHA256SUMS.txt`.
+
+---
+
+## 1.2.1 arm64 packaging gate
+
+- [x] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.2.1`.
+- [x] Add `win-arm64`, `linux-arm64`, and `osx-arm64` to the bundle script and CI matrix.
+- [x] Verify PE ARM64, ELF aarch64, and Mach-O arm64 apphosts.
+- [x] Full suite **1,597/1,597** passes; format and inspectcode are clean.
+- [x] Build all six bundles and keep local copies in
+      `src/FiveDo.Frontend.Avalonia/bin/Release`.
+- [ ] Create and push tag `v1.2.1`; the release workflow publishes six versioned
+      bundles and checksums.
 
 ---
 
@@ -74,10 +87,10 @@ been validated.**
 | Compatibility set | 12 boot-validated titles, with 5 showcase titles | Per-title status must be honest |
 | Disc formats | ISO, BIN, CUE+BIN, CHD | Already implemented and tested |
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
-| Packages | One bundle per system | `5do-<version>-win-x64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-osx-x64.tar.gz`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 10 runtime is a host prerequisite and is not bundled |
+| Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-x64.tar.gz`, `5do-<version>-osx-arm64.tar.gz`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 10 runtime is a host prerequisite and is not bundled |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
-| Version | **`v1.2.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, and rc.1 are historical |
-| Release timing | **Released** | v1.2.0 bundles and checksums are attached to the GitHub release |
+| Version | **`v1.2.1`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, and rc.1 are historical |
+| Release timing | **Released** | v1.2.1 bundles and checksums are attached to the GitHub release |
 
 ---
 

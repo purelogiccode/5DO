@@ -1,13 +1,30 @@
-# What's new in 5DO 1.2.0
+# What's new in 5DO 1.2.1
 
 **Released:** 2026-11-03
+
+5DO 1.2.1 adds **arm64 bundles** for Windows, Linux, and macOS. It is a packaging
+update on top of the 1.2.0 feature and accuracy release.
+
+## Changes in 1.2.1
+
+- **Windows arm64 bundle.** `5do-1.2.1-win-arm64.zip` contains the framework-dependent
+  single-file CLI and desktop app plus the arm64 OpenAL/Skia/HarfBuzz assets.
+- **Linux arm64 bundle.** `5do-1.2.1-linux-arm64.tar.gz` contains the arm64 CLI and
+  desktop app with the matching native libraries.
+- **macOS arm64 bundle.** `5do-1.2.1-osx-arm64.tar.gz` contains the arm64 CLI and
+  desktop app.
+- **Six-bundle CI.** The release workflow now builds `win-x64`, `win-arm64`,
+  `linux-x64`, `linux-arm64`, `osx-x64`, and `osx-arm64`, and verifies each apphost's
+  PE/ELF/Mach-O machine type. The x64 bundles keep their runtime smoke tests; arm64
+  bundles are architecture-validated build artifacts because no arm64 runner is
+  available.
+
+## Changes in 1.2.0
 
 5DO 1.2.0 is a feature and accuracy update on top of the documented-compatibility
 1.0.0 release and the 1.1.0 maintenance update. It adds a Windows Direct3D 11
 presenter, a fuzz harness, display-refresh control, broader disc support, and a
 substantial interrupt/DMA/DSP telemetry pass.
-
-## Changes in 1.2.0
 
 - **Direct3D 11 presenter (Windows).** Optional FL11_0 backend with runtime HLSL
   palette/filter passes, a DXGI flip-model child swapchain, `--gl-backend d3d11`,
@@ -41,16 +58,19 @@ substantial interrupt/DMA/DSP telemetry pass.
   from the roadmap and release gates. Windows, Linux, and macOS desktop remain the
   supported platforms.
 
-## One bundle per system
+## Six bundles
 
-The download is a single versioned bundle per system. Each bundle contains **both** the
-desktop app and the headless CLI:
+The download is a versioned bundle per system and architecture. Each bundle contains
+**both** the desktop app and the headless CLI:
 
 | System | Download |
 |---|---|
-| Windows x64 | `5do-1.2.0-win-x64.zip` |
-| Linux x64 | `5do-1.2.0-linux-x64.tar.gz` |
-| macOS x64 | `5do-1.2.0-osx-x64.tar.gz` |
+| Windows x64 | `5do-1.2.1-win-x64.zip` |
+| Windows arm64 | `5do-1.2.1-win-arm64.zip` |
+| Linux x64 | `5do-1.2.1-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.2.1-linux-arm64.tar.gz` |
+| macOS x64 | `5do-1.2.1-osx-x64.tar.gz` |
+| macOS arm64 | `5do-1.2.1-osx-arm64.tar.gz` |
 
 Every bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`, `whatsnew.md`,
 the release notes, and the legal/OpenAL notices. SHA-256 checksums are attached as
@@ -81,8 +101,8 @@ BIOS ROMs and game images are **not** included.
 - `dotnet build` reports 0 warnings and 0 errors.
 - `dotnet format --verify-no-changes` is clean.
 - `jb inspectcode --severity=WARNING` reports 0 results.
-- CLI `selftest` and desktop `--smoke-test` pass; the three platform bundles are
-  built and smoke-tested by CI.
+- CLI `selftest` and desktop `--smoke-test` pass for the x64 bundles; all six bundles
+  are built by CI and the arm64 apphosts are architecture-verified.
 - 3,000-frame regression hashes for Gex, Lemmings, and Road Rash remain at their
   documented values.
 

@@ -1,7 +1,22 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.2.0, a documented-compatibility
+All notable changes are recorded here. The project is at v1.2.1, a documented-compatibility
 release.
+
+## [1.2.1] - 2026-11-03
+
+### Added
+
+- Windows arm64 (`win-arm64`), Linux arm64 (`linux-arm64`), and macOS arm64 (`osx-arm64`)
+  framework-dependent single-file bundles. Each contains the same CLI, desktop app,
+  docs, and native OpenAL/Skia/HarfBuzz assets as the x64 bundles.
+- The release workflow now builds all six RIDs and verifies PE, ELF, and Mach-O machine
+  types for the arm64 bundles. x64 bundles keep their runtime smoke tests; arm64 bundles
+  are architecture-validated build artifacts because no arm64 runner is available.
+
+### Changed
+
+- Release bundles are now six versioned archives plus `SHA256SUMS.txt`.
 
 ## [1.2.0] - 2026-11-03
 
