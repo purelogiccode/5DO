@@ -354,8 +354,14 @@ default and only drops presentation frames when the host misses its deadline; fi
 modes present one of every 2/3/4/5 frames. Emulation, input, audio, and save states still
 run at full speed in every mode, so this is not fast-forward. Use Auto for normal play;
 a fixed mode is useful on a slow GPU or when recording. The status overlay shows both
-the emulated and presented rates. The **Graphics API** list selects **OpenGL**, **DirectX
-11** (Windows only), **Vulkan**, or **Software (CPU)**; changing it recreates the presenter without restarting
+the emulated and presented rates. **Display refresh** (Settings > Video, default **60 Hz**)
+selects the rate used to present the latest frame. **60 Hz** keeps render-on-demand;
+higher values (75/90/120/144/165/240 Hz) re-present the latest frame at that rate, and
+**Match display** follows the compositor. The 3DO outputs 60 fields per second (50 for
+PAL), so a higher rate reduces presentation latency but does not create extra motion;
+emulation speed, audio, and save states are unchanged. The **Graphics API** list selects
+**OpenGL**, **DirectX 11** (Windows only), **Vulkan**, or **Software (CPU)**; changing it
+recreates the presenter without restarting
 emulation. **Output resolution** selects the final presentation size: match the window,
 native 320x240, 2x/3x/4x, 720p, 1080p, 1440p, or 4K. This is output upscaling, not
 internal CEL rendering. **Overscan crop L/T/R/B** (Settings > Video) hides 0-32 pixels

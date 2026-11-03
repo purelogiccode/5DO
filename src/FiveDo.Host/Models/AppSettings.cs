@@ -24,10 +24,10 @@ public sealed class AppSettings
 {
     /// <summary>The settings schema version written by this build.</summary>
     /// <remarks>
-    /// Version 2 adds the CD-DA mix volume and mute flag. Version 1 files load with the
-    /// documented defaults for new properties.
+    /// Version 2 adds the CD-DA mix volume and mute flag. Version 3 adds the presentation
+    /// refresh rate. Version 1 files load with the documented defaults for new properties.
     /// </remarks>
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
 
     /// <summary>
     /// Gets or sets the settings schema version. Zero or missing means a pre-versioned file
@@ -278,6 +278,26 @@ public sealed class AppSettings
 
     /// <summary>Gets or sets a value indicating whether integer scaling is used.</summary>
     public bool IntegerScale { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the presentation refresh rate in hertz. 60 keeps render-on-demand,
+    /// values above 60 re-present the latest frame at that rate, and 0 matches the display.
+    /// </summary>
+    /// <remarks>
+    /// The 3DO outputs 60 fields per second (50 for PAL). A rate above 60 does not create
+    /// new emulated frames; it presents the latest frame more often so the compositor and
+    /// swap chain run at the requested rate. Presentation is always bounded by the host.
+    /// </remarks>
+    public int DisplayRefreshRate { get; set; } = DefaultDisplayRefreshRate;
+
+    /// <summary>Gets the refresh rate used when the setting is absent.</summary>
+    public const int DefaultDisplayRefreshRate = 60;
+
+    /// <summary>Gets the lowest refresh rate that can be configured explicitly.</summary>
+    public const int MinDisplayRefreshRate = 30;
+
+    /// <summary>Gets the highest refresh rate that can be configured explicitly.</summary>
+    public const int MaxDisplayRefreshRate = 480;
 
     /// <summary>Gets or sets the desktop presentation renderer.</summary>
     public VideoRendererKind Renderer { get; set; } = VideoRendererKind.OpenGl;
@@ -727,6 +747,27 @@ public sealed class AppSettings
         }
 
         return FastForwardMultiplier;
+    }
+
+    /// <summary>Validates and returns the presentation refresh rate.</summary>
+    /// <returns>The configured rate in hertz, where 0 means "match the display".</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when the rate is nonzero and outside
+    /// <see cref="MinDisplayRefreshRate"/>-<see cref="MaxDisplayRefreshRate"/>.
+    /// </exception>
+    public int ResolveDisplayRefreshRate()
+    {
+        if (DisplayRefreshRate != 0
+            && DisplayRefreshRate is < MinDisplayRefreshRate or > MaxDisplayRefreshRate)
+        {
+            throw new ArgumentOutOfRangeException(
+                paramName: null,
+                actualValue: DisplayRefreshRate,
+                message: $"The display refresh rate must be 0 (match display) or between "
+                    + $"{MinDisplayRefreshRate} and {MaxDisplayRefreshRate} Hz.");
+        }
+
+        return DisplayRefreshRate;
     }
 
     /// <summary>Gets or sets player input bindings.</summary>

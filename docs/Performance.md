@@ -391,6 +391,9 @@ renderer cost itself is far below the 16.67 ms budget, so a 4K60 presentation is
 GPU-headroom-bound, not renderer-bound. The probe also validates the platform
 swap-interval path: on Windows WGL it resolves `WGL_EXT_swap_control` and reports
 `VsyncActive: true` when requested; the compositor may still pace independently.
+`DisplayRefreshRate` (Settings > Video) can re-present the latest frame above 60 Hz
+(default 60). It lowers presentation latency but does not add motion, because the
+3DO still produces 60 fields per second (50 for PAL).
 The renderer/mailbox present path reports **0 managed bytes/frame** after warm-up.
 The residual probe allocation (~2.3 KB/frame) is outside `OpenGlRenderer.Present`
 and comes from the Avalonia UI/compositor loop; it is a host-side follow-up, not

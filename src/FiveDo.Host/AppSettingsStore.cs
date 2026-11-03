@@ -252,6 +252,12 @@ public static class AppSettingsStore
             settings.OverscanRight = Math.Clamp(settings.OverscanRight, 0, CropInsets.MaxPixels);
             settings.OverscanBottom = Math.Clamp(settings.OverscanBottom, 0, CropInsets.MaxPixels);
             settings.VideoBorderPixels = Math.Clamp(settings.VideoBorderPixels, 0, 64);
+            if (settings.DisplayRefreshRate != 0
+                && settings.DisplayRefreshRate is < AppSettings.MinDisplayRefreshRate
+                    or > AppSettings.MaxDisplayRefreshRate)
+            {
+                settings.DisplayRefreshRate = AppSettings.DefaultDisplayRefreshRate;
+            }
             // JSON can deserialize null despite the non-nullable annotation.
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             settings.VoidAreaColor ??= AppSettings.DefaultVoidAreaColor;

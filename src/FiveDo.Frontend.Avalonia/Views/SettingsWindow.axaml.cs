@@ -56,6 +56,19 @@ public partial class SettingsWindow : Window
         new(FrameSkipMode.OneInFive, "Skip 4 of 5 (12 fps)"),
     ];
 
+    private static readonly DisplayRefreshRateOption[] _displayRefreshRateOptions =
+    [
+        new(AppSettings.MinDisplayRefreshRate, "30 Hz"),
+        new(AppSettings.DefaultDisplayRefreshRate, "60 Hz (default)"),
+        new(75, "75 Hz"),
+        new(90, "90 Hz"),
+        new(120, "120 Hz"),
+        new(144, "144 Hz"),
+        new(165, "165 Hz"),
+        new(240, "240 Hz"),
+        new(0, "Match display (unlimited)"),
+    ];
+
     private static readonly PointerPortOption[] _pointerPortOptions =
     [
         new(0, "All pointer devices"),
@@ -209,6 +222,11 @@ public partial class SettingsWindow : Window
         FrameSkipCombo.ItemsSource = _frameSkipOptions;
         FrameSkipCombo.SelectedItem = _frameSkipOptions.FirstOrDefault(option => option.Value == settings.FrameSkip)
             ?? _frameSkipOptions[0];
+        DisplayRefreshRateCombo.ItemsSource = _displayRefreshRateOptions;
+        DisplayRefreshRateCombo.SelectedItem = _displayRefreshRateOptions.FirstOrDefault(
+                option => option.Value == settings.DisplayRefreshRate)
+            ?? _displayRefreshRateOptions.First(
+                option => option.Value == AppSettings.DefaultDisplayRefreshRate);
         CropInsets overscan = settings.ResolveOverscan();
         OverscanLeftBox.Text = overscan.Left.ToString(CultureInfo.InvariantCulture);
         OverscanTopBox.Text = overscan.Top.ToString(CultureInfo.InvariantCulture);
@@ -960,6 +978,9 @@ public partial class SettingsWindow : Window
         settings.FrameSkip = FrameSkipCombo.SelectedItem is FrameSkipOption frameSkip
             ? frameSkip.Value
             : FrameSkipMode.Auto;
+        settings.DisplayRefreshRate = DisplayRefreshRateCombo.SelectedItem is DisplayRefreshRateOption refreshRate
+            ? refreshRate.Value
+            : AppSettings.DefaultDisplayRefreshRate;
         settings.SetOverscan(new CropInsets(
             ParseCrop(OverscanLeftBox, "Left overscan"),
             ParseCrop(OverscanTopBox, "Top overscan"),
@@ -1596,6 +1617,14 @@ public partial class SettingsWindow : Window
     }
 
     private sealed record FrameSkipOption(FrameSkipMode Value, string Label)
+    {
+        public override string ToString()
+        {
+            return Label;
+        }
+    }
+
+    private sealed record DisplayRefreshRateOption(int Value, string Label)
     {
         public override string ToString()
         {

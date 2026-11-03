@@ -113,6 +113,12 @@ checksums are attached, and legal/attribution sign-off is recorded.
   accepted the request. The Avalonia compositor paces the window independently, so a
   requested vsync may not cap presentation at 60 Hz; the probe reports the renderer
   cost separately.
+- **Display refresh above 60 Hz is re-presentation, not interpolation.** The 3DO outputs
+  60 fields per second (50 for PAL), so `DisplayRefreshRate` (Settings > Video) re-presents
+  the latest frame more often and lowers presentation latency, but motion stays at the
+  console rate. The achieved rate is also bounded by the platform compositor (Avalonia 12
+  raises its render timer to the monitor frequency on Windows; other platforms may stay
+  at 60). Frame interpolation is not implemented.
 - The GPU probe's residual ~2.3 KB/frame allocation is outside `OpenGlRenderer.Present`
   and comes from the Avalonia UI/compositor loop; the renderer/mailbox path itself is
   zero-allocation after warm-up.

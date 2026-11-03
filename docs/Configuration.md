@@ -106,6 +106,7 @@ every serialized property in `AppSettings`.
 | `CustomAspect` | double | `1.3333` | Width/height ratio used when `Aspect` is `Custom`. |
 | `Vsync` | bool | `true` | Request platform vsync (where supported). |
 | `IntegerScale` | bool | `true` | Prefer integer scaling for 4:3/integer modes. |
+| `DisplayRefreshRate` | int | `60` | Presentation refresh rate in hertz. `60` keeps render-on-demand, `30`-`480` re-present the latest frame at that rate, and `0` follows the compositor. The 3DO still produces 60 fields per second (50 for PAL). |
 | `OverscanPixels` | int | `0` | Legacy uniform crop applied to every edge when the per-edge values are all zero (0-32). Presentation-only. |
 | `OverscanLeft` | int | `0` | Left-edge crop in native pixels (0-32). Takes precedence over `OverscanPixels` when any per-edge value is nonzero. |
 | `OverscanTop` | int | `0` | Top-edge crop in native pixels (0-32). |
@@ -761,9 +762,12 @@ accepted; `settings.json` is written immediately. Changes to high-resolution mod
 restart the machine. Changes to audio settings recreate the OpenAL output if needed.
 Changing `Renderer` recreates the active presenter without restarting emulation.
 Changes to `OutputResolution`, filters, aspect, and vsync apply to the current renderer
-without restarting the machine. Frame-skip changes apply immediately to the running core
-loop. OSD enable/position/opacity/duration and the quick-menu toggle apply immediately;
-notification lifetime changes affect new messages.
+without restarting the machine. `DisplayRefreshRate` applies immediately: a value above
+60 re-presents the latest frame on a timer, and `0` follows the compositor's animation
+frames. The 3DO only produces 60 fields per second (50 for PAL), so a higher rate lowers
+presentation latency but does not add motion. Frame-skip changes apply immediately to the
+running core loop. OSD enable/position/opacity/duration and the quick-menu toggle apply
+immediately; notification lifetime changes affect new messages.
 
 ### Performance defaults
 

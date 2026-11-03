@@ -743,7 +743,7 @@
                            ToolTip.Tip="Active graphics renderer and version." />
                 <TextBlock x:Name="FpsText" Grid.Column="3" Classes="statusStrong"
                            MinWidth="60" TextAlignment="Right"
-                           ToolTip.Tip="Measured and target frame rate." />
+                           ToolTip.Tip="Measured emulated frame rate and, when configured above 60 Hz, the measured display rate." />
             </Grid>
         </Border>
     </Grid>

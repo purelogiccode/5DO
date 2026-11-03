@@ -131,6 +131,11 @@ public partial class MainWindow : Window, IDisposable
     private string? _donationBannerMessage;
     private bool _donationCheckInProgress;
     private bool _donationBannerDismissed;
+    private DispatcherTimer? _displayTimer;
+    private bool _displayFrameLoop;
+    private int _displayFrameGeneration;
+    private long _displayPresents;
+    private long _presentRateStartTicks = Stopwatch.GetTimestamp();
 
     public MainWindow()
     {
@@ -139,6 +144,19 @@ public partial class MainWindow : Window, IDisposable
         AddHandler(DragDrop.DragOverEvent, OnWindowDragOver);
         AddHandler(DragDrop.DropEvent, OnWindowDrop);
         Deactivated += (_, _) => CancelFastForward();
+        Activated += (_, _) =>
+        {
+            if (_displayFrameLoop)
+            {
+                // Restart the chain with a fresh generation so a stale callback that
+                // stalled while the window was minimized cannot duplicate it.
+                int generation = ++_displayFrameGeneration;
+                RequestDisplayFrame(generation);
+            }
+        };
+        Video.FramePresented += OnFramePresented;
+        Direct3DVideo.FramePresented += OnFramePresented;
+        VulkanVideo.FramePresented += OnFramePresented;
         _settings = AppSettingsStore.Load();
         _libraryState = LibraryStateStore.Load();
         _libraryMetadata = LibraryMetadataCatalog.Load(_settings.ResolveLibraryMetadataPath());
@@ -1356,6 +1374,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         SetPlayState(running: true);
+        ApplyDisplayRefreshRate();
         if (showGameView)
         {
             ShowEmulationView();
@@ -1385,6 +1404,7 @@ public partial class MainWindow : Window, IDisposable
         {
             _running = false;
             CancelFastForward();
+            StopDisplayRefresh();
             _runner?.Pause();
             _playtime.Stop();
             RefreshLibraryDecorations();
@@ -1426,6 +1446,7 @@ public partial class MainWindow : Window, IDisposable
         _machine?.Memory.ClearRam();
         _machine?.Reset();
         _running = false;
+        StopDisplayRefresh();
         SetPlayState(running: false);
         ShowLibraryView();
         StatusText.Text = "Emulation stopped.";
@@ -3532,6 +3553,8 @@ public partial class MainWindow : Window, IDisposable
             _runner.FrameSkip = _settings.FrameSkip;
         }
 
+        ApplyDisplayRefreshRate();
+
         OverlayPanel.IsVisible = _settings.ShowOverlay;
         InputDisplayPanel.IsVisible = _settings.ShowInputDisplay;
         InputDisplayMenuItem.IsChecked = _settings.ShowInputDisplay;
@@ -4138,10 +4161,18 @@ public partial class MainWindow : Window, IDisposable
             UpdateQuickMenuState();
         }
 
+        long presents = _displayPresents;
+        _displayPresents = 0;
+        long presentNow = Stopwatch.GetTimestamp();
+        double presentSeconds = (presentNow - _presentRateStartTicks) / (double)Stopwatch.Frequency;
+        _presentRateStartTicks = presentNow;
+        var display = _settings.DisplayRefreshRate == AppSettings.DefaultDisplayRefreshRate
+            ? string.Empty
+            : $"  display {(presentSeconds > 0 ? presents / presentSeconds : 0):F0} Hz";
         var skip = status.FrameSkipMode == FrameSkipMode.Off && status.FrameSkipCadence <= 1
             ? string.Empty
             : $" ({FrameSkipPolicy.Describe(status.FrameSkipMode, status.FrameSkipCadence)})";
-        FpsText.Text = $"{status.FramesPerSecond,5:F1} fps{skip}";
+        FpsText.Text = $"{status.FramesPerSecond,5:F1} fps{display}{skip}";
         if (OverlayPanel.IsVisible)
         {
             var gpu = _direct3DPresenter
@@ -4161,7 +4192,7 @@ public partial class MainWindow : Window, IDisposable
                 ? $"  shown {status.PresentedFramesPerSecond:F1}"
                 : string.Empty;
             OverlayText.Text =
-                $"{status.FramesPerSecond,5:F1}/{status.TargetFramesPerSecond:F2} fps{shown}{skip}  "
+                $"{status.FramesPerSecond,5:F1}/{status.TargetFramesPerSecond:F2} fps{display}{shown}{skip}  "
                 + $"{status.Cycles,6} cyc  PC 0x{status.ProgramCounter:x8}  {timing}{audio}";
         }
 
@@ -4526,6 +4557,7 @@ public partial class MainWindow : Window, IDisposable
         _cpuTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
         _cpuTimer.Tick += (_, _) => RenderCpuFrame();
         _cpuTimer.Start();
+        ApplyDisplayRefreshRate();
         _logger.ForCategory(LogCategory.Video).Information(
             "CPU presenter active ({Reason}).",
             _rendererKind == VideoRendererKind.Software
@@ -4566,6 +4598,7 @@ public partial class MainWindow : Window, IDisposable
         if (hadPresenter && showVideo)
         {
             _logger.ForCategory(LogCategory.Video).Information("OpenGL presenter restored.");
+            ApplyDisplayRefreshRate();
         }
     }
 
@@ -4853,6 +4886,112 @@ public partial class MainWindow : Window, IDisposable
         VideoHost.Background = brush;
     }
 
+    private void OnFramePresented(object? sender, FramePresentedEventArgs e)
+    {
+        _displayPresents++;
+    }
+
+    /// <summary>
+    /// Applies the configured presentation refresh rate.
+    /// </summary>
+    /// <remarks>
+    /// The default 60 Hz leaves the render-on-demand path untouched. Higher rates
+    /// re-present the latest mailbox frame on a timer so the swap chain runs at the
+    /// requested rate even though the 3DO only produces 60 fields per second. Zero
+    /// follows the compositor's animation frames instead of a fixed interval.
+    /// </remarks>
+    private void ApplyDisplayRefreshRate()
+    {
+        StopDisplayRefresh();
+
+        int rate;
+        try
+        {
+            rate = _settings.ResolveDisplayRefreshRate();
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            rate = AppSettings.DefaultDisplayRefreshRate;
+        }
+
+        if (_cpuTimer is not null)
+        {
+            // The CPU fallback owns its render loop; retime it instead of stacking a
+            // second timer on top. It stays at the 60 Hz cadence by default.
+            _cpuTimer.Interval = rate > AppSettings.DefaultDisplayRefreshRate
+                ? TimeSpan.FromSeconds(1.0 / rate)
+                : TimeSpan.FromMilliseconds(16);
+            return;
+        }
+
+        if (!_running)
+        {
+            return;
+        }
+
+        if (rate == 0)
+        {
+            _displayFrameLoop = true;
+            int generation = ++_displayFrameGeneration;
+            RequestDisplayFrame(generation);
+            _logger.ForCategory(LogCategory.Video).Information(
+                "Presentation refresh rate follows the compositor.");
+            return;
+        }
+
+        if (rate <= AppSettings.DefaultDisplayRefreshRate)
+        {
+            return;
+        }
+
+        _displayTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1.0 / rate) };
+        _displayTimer.Tick += (_, _) => PresentLatestFrame();
+        _displayTimer.Start();
+        _logger.ForCategory(LogCategory.Video).Information(
+            "Presentation refresh rate set to {Rate} Hz.",
+            rate);
+    }
+
+    private void RequestDisplayFrame(int generation)
+    {
+        if (!_displayFrameLoop || generation != _displayFrameGeneration)
+        {
+            return;
+        }
+
+        PresentLatestFrame();
+        GetTopLevel(this)?.RequestAnimationFrame(_ => RequestDisplayFrame(generation));
+    }
+
+    private void PresentLatestFrame()
+    {
+        if (!_running)
+        {
+            return;
+        }
+
+        if (_direct3DPresenter)
+        {
+            Direct3DVideo.RequestRedraw();
+        }
+        else if (_vulkanPresenter)
+        {
+            VulkanVideo.RequestRedraw();
+        }
+        else if (Video.IsVisible)
+        {
+            Video.RequestRedraw();
+        }
+    }
+
+    private void StopDisplayRefresh()
+    {
+        _displayTimer?.Stop();
+        _displayTimer = null;
+        _displayFrameLoop = false;
+        _displayFrameGeneration++;
+    }
+
     private NvramStore CreateNvramStore(string? gameId)
     {
         try
@@ -4906,6 +5045,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         _shuttingDown = true;
+        StopDisplayRefresh();
         _libraryScanCts?.Cancel();
         _playtime.Stop();
         StopInputRecording(save: true);

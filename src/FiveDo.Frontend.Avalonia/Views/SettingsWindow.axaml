@@ -7,10 +7,10 @@
 
     <Grid RowDefinitions="*,Auto" Margin="12">
         <TabControl Grid.Row="0" ToolTip.Tip="Video, audio, emulation, and path settings.">
-            <TabItem Header="Video" ToolTip.Tip="Renderer, output resolution, filter, aspect ratio, scaling, overlay, OSD notifications, quick menu, bloom, and FSR options.">
+            <TabItem Header="Video" ToolTip.Tip="Renderer, output resolution, display refresh, filter, aspect ratio, scaling, overlay, OSD notifications, quick menu, bloom, and FSR options.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <Grid ColumnDefinitions="170,*"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                           Margin="8">
                         <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Renderer"
                                    FontWeight="SemiBold" Margin="0,0,0,4" />
@@ -52,70 +52,78 @@
                                   ToolTip.Tip="Restrict scaling to whole-number multiples for uniform pixels." />
                         <CheckBox x:Name="VsyncCheck" Grid.Row="10" Grid.Column="1" Content="VSync (where supported)"
                                   ToolTip.Tip="Request vertical sync from the platform where the backend supports it." />
-                        <TextBlock Grid.Row="11" Grid.Column="0" Text="Frame skip" VerticalAlignment="Center"
-                                   ToolTip.Tip="Skip presentation frames when the emulator falls behind. Emulation and audio keep full speed." />
-                        <ComboBox x:Name="FrameSkipCombo" Grid.Row="11" Grid.Column="1" Margin="0,0,0,4"
-                                  ToolTip.Tip="Auto is recommended. Fixed modes present one of every 2-5 frames; emulation still runs every frame." />
+                        <TextBlock Grid.Row="11" Grid.Column="0" Text="Display refresh" VerticalAlignment="Center"
+                                   ToolTip.Tip="Refresh rate used to present the latest emulated frame." />
+                        <ComboBox x:Name="DisplayRefreshRateCombo" Grid.Row="11" Grid.Column="1" Margin="0,0,0,4"
+                                  ToolTip.Tip="60 Hz keeps render-on-demand. Higher rates re-present the latest frame more often for lower latency. The game still runs at normal speed." />
                         <TextBlock Grid.Row="12" Grid.Column="1"
+                                   Text="The 3DO outputs 60 fields per second (50 for PAL). Rates above 60 re-present the latest frame; they do not create extra motion."
+                                   Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
+                                   ToolTip.Tip="Presentation-only. Emulation speed, audio, and save states are unchanged." />
+                        <TextBlock Grid.Row="13" Grid.Column="0" Text="Frame skip" VerticalAlignment="Center"
+                                   ToolTip.Tip="Skip presentation frames when the emulator falls behind. Emulation and audio keep full speed." />
+                        <ComboBox x:Name="FrameSkipCombo" Grid.Row="13" Grid.Column="1" Margin="0,0,0,4"
+                                  ToolTip.Tip="Auto is recommended. Fixed modes present one of every 2-5 frames; emulation still runs every frame." />
+                        <TextBlock Grid.Row="14" Grid.Column="1"
                                    Text="Auto only drops presentation frames when the loop misses its deadline. The game still runs at full speed, so input, audio, and save states are unchanged."
                                    Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
                                    ToolTip.Tip="Frame skipping is presentation-only." />
-                        <CheckBox x:Name="OverlayCheck" Grid.Row="13" Grid.Column="1" Content="Show FPS/status overlay"
+                        <CheckBox x:Name="OverlayCheck" Grid.Row="15" Grid.Column="1" Content="Show FPS/status overlay"
                                   ToolTip.Tip="Show frame rate, renderer timing, and audio queue counters over the game." />
-                        <CheckBox x:Name="NativeScreenshotCheck" Grid.Row="14" Grid.Column="1"
+                        <CheckBox x:Name="NativeScreenshotCheck" Grid.Row="16" Grid.Column="1"
                                   Content="Also save the native CPU frame with screenshots"
                                   ToolTip.Tip="Write a second, unfiltered PNG of the native CPU frame beside the filtered capture." />
-                        <TextBlock Grid.Row="15" Grid.Column="0" Text="CRT bloom" VerticalAlignment="Center"
+                        <TextBlock Grid.Row="17" Grid.Column="0" Text="CRT bloom" VerticalAlignment="Center"
                                    ToolTip.Tip="Adjust the glow around bright areas in the CRT filter." />
-                        <Slider x:Name="BloomSlider" Grid.Row="15" Grid.Column="1"
+                        <Slider x:Name="BloomSlider" Grid.Row="17" Grid.Column="1"
                                 Minimum="0" Maximum="1" TickFrequency="0.05"
                                 ToolTip.Tip="CRT bloom strength from 0 (off) to 1 (strongest)." />
-                        <TextBlock Grid.Row="16" Grid.Column="0" Text="FSR sharpness" VerticalAlignment="Center"
+                        <TextBlock Grid.Row="18" Grid.Column="0" Text="FSR sharpness" VerticalAlignment="Center"
                                    ToolTip.Tip="Adjust RCAS sharpening when the FSR filter is selected." />
-                        <Slider x:Name="FsrSharpnessSlider" Grid.Row="16" Grid.Column="1"
+                        <Slider x:Name="FsrSharpnessSlider" Grid.Row="18" Grid.Column="1"
                                 Minimum="0" Maximum="1" TickFrequency="0.05"
                                 ToolTip.Tip="FSR RCAS sharpness from 0 (soft) to 1 (maximum)." />
-                        <TextBlock Grid.Row="17" Grid.Column="1"
+                        <TextBlock Grid.Row="19" Grid.Column="1"
                                    Text="xBR runs an edge-directed 4x pass; HQx runs a 2x/3x/4x CPU pixel-art pass; FSR runs AMD FidelityFX Super Resolution 1.0 (EASU + RCAS) at the output. CRT bloom adds a glow around bright areas. All of them cost more CPU/GPU time at 4K; HQx 3x/4x are the most expensive."
                                    Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"
                                    ToolTip.Tip="Filter notes: xBR and HQx are CPU-heavy; FSR and CRT bloom run on the GPU." />
 
-                        <TextBlock Grid.Row="18" Grid.Column="0" Grid.ColumnSpan="2" Text="On-screen display"
+                        <TextBlock Grid.Row="20" Grid.Column="0" Grid.ColumnSpan="2" Text="On-screen display"
                                    FontWeight="SemiBold" Margin="0,12,0,4" />
-                        <CheckBox x:Name="OsdCheck" Grid.Row="19" Grid.Column="1"
+                        <CheckBox x:Name="OsdCheck" Grid.Row="21" Grid.Column="1"
                                   Content="Show OSD notifications"
                                   ToolTip.Tip="Show save, load, rewind, fast-forward, screenshot, and reset confirmations over the game." />
-                        <TextBlock Grid.Row="20" Grid.Column="0" Text="Notification position"
+                        <TextBlock Grid.Row="22" Grid.Column="0" Text="Notification position"
                                    VerticalAlignment="Center" ToolTip.Tip="Choose where notifications appear over the game." />
-                        <ComboBox x:Name="OsdPositionCombo" Grid.Row="20" Grid.Column="1" Margin="0,0,0,4"
+                        <ComboBox x:Name="OsdPositionCombo" Grid.Row="22" Grid.Column="1" Margin="0,0,0,4"
                                   ToolTip.Tip="Top or bottom, left, center, or right." />
-                        <TextBlock Grid.Row="21" Grid.Column="0" Text="Notification opacity"
+                        <TextBlock Grid.Row="23" Grid.Column="0" Text="Notification opacity"
                                    VerticalAlignment="Center" ToolTip.Tip="Fade notifications so they do not cover the game." />
-                        <Slider x:Name="OsdOpacitySlider" Grid.Row="21" Grid.Column="1"
+                        <Slider x:Name="OsdOpacitySlider" Grid.Row="23" Grid.Column="1"
                                 Minimum="0.1" Maximum="1" TickFrequency="0.05"
                                 ToolTip.Tip="Notification opacity from 0.1 (nearly transparent) to 1 (opaque)." />
-                        <TextBlock Grid.Row="22" Grid.Column="0" Text="Notification duration (ms)"
+                        <TextBlock Grid.Row="24" Grid.Column="0" Text="Notification duration (ms)"
                                    VerticalAlignment="Center" ToolTip.Tip="How long each notification stays visible." />
-                        <TextBox x:Name="OsdDurationBox" Grid.Row="22" Grid.Column="1" Width="100"
+                        <TextBox x:Name="OsdDurationBox" Grid.Row="24" Grid.Column="1" Width="100"
                                  HorizontalAlignment="Left"
                                  ToolTip.Tip="500-10000 milliseconds." />
-                        <CheckBox x:Name="QuickMenuCheck" Grid.Row="23" Grid.Column="1"
+                        <CheckBox x:Name="QuickMenuCheck" Grid.Row="25" Grid.Column="1"
                                   Content="Enable the in-game quick menu (F4 or Select+Start)"
                                   ToolTip.Tip="Open a keyboard/gamepad quick menu for save, load, rewind, fast-forward, screenshot, reset, cheats, and settings." />
-                        <TextBlock Grid.Row="24" Grid.Column="1"
+                        <TextBlock Grid.Row="26" Grid.Column="1"
                                    Text="Notifications confirm save/load, rewind, fast-forward, screenshots, resets, and settings changes. The quick menu pauses the game while it is open and resumes when it closes."
                                    Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"
                                    ToolTip.Tip="OSD and quick-menu behaviour." />
-                        <TextBlock Grid.Row="25" Grid.Column="0" Text="Input display player"
+                        <TextBlock Grid.Row="27" Grid.Column="0" Text="Input display player"
                                    VerticalAlignment="Center" Margin="0,8,0,0"
                                    ToolTip.Tip="Controller port shown in the F2 input display." />
-                        <ComboBox x:Name="InputPlayerCombo" Grid.Row="25" Grid.Column="1"
+                        <ComboBox x:Name="InputPlayerCombo" Grid.Row="27" Grid.Column="1"
                                   HorizontalAlignment="Left" Width="100" Margin="0,8,0,0"
                                   ToolTip.Tip="Choose controller port 1-6 for the input display." />
-                        <TextBlock Grid.Row="26" Grid.Column="0" Text="Overscan crop L/T/R/B"
+                        <TextBlock Grid.Row="28" Grid.Column="0" Text="Overscan crop L/T/R/B"
                                    VerticalAlignment="Center" Margin="0,8,0,0"
                                    ToolTip.Tip="Hide outer pixels from each edge without changing emulation." />
-                        <StackPanel Grid.Row="26" Grid.Column="1" Orientation="Horizontal" Spacing="4"
+                        <StackPanel Grid.Row="28" Grid.Column="1" Orientation="Horizontal" Spacing="4"
                                     Margin="0,8,0,0">
                             <TextBox x:Name="OverscanLeftBox" Width="52"
                                      ToolTip.Tip="Left crop in native pixels (0-32)." />
@@ -127,10 +135,10 @@
                                      ToolTip.Tip="Bottom crop in native pixels (0-32)." />
                             <TextBlock Text="px" VerticalAlignment="Center" Opacity="0.7" />
                         </StackPanel>
-                        <TextBlock Grid.Row="27" Grid.Column="0" Text="Void border"
+                        <TextBlock Grid.Row="29" Grid.Column="0" Text="Void border"
                                    VerticalAlignment="Center" Margin="0,8,0,0"
                                    ToolTip.Tip="Draw a border outside the presented image." />
-                        <StackPanel Grid.Row="27" Grid.Column="1" Orientation="Horizontal" Spacing="4"
+                        <StackPanel Grid.Row="29" Grid.Column="1" Orientation="Horizontal" Spacing="4"
                                     Margin="0,8,0,0">
                             <TextBox x:Name="VideoBorderBox" Width="52"
                                      ToolTip.Tip="Border thickness in screen pixels (0-64)." />
@@ -138,11 +146,11 @@
                                      ToolTip.Tip="Void-area and border color as #RRGGBB or #AARRGGBB." />
                             <TextBlock Text="px / color" VerticalAlignment="Center" Opacity="0.7" />
                         </StackPanel>
-                        <TextBlock Grid.Row="28" Grid.Column="1"
+                        <TextBlock Grid.Row="30" Grid.Column="1"
                                    Text="The crop is presentation-only. Per-game profiles can store their own crop; the border and void color are global."
                                    Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
                                    ToolTip.Tip="Crop values do not affect frame hashes, input, audio, or save states." />
-                        <CheckBox x:Name="CheckUpdatesCheck" Grid.Row="29" Grid.Column="1"
+                        <CheckBox x:Name="CheckUpdatesCheck" Grid.Row="31" Grid.Column="1"
                                   Content="Check for updates when 5DO starts"
                                   Margin="0,8,0,0"
                                   ToolTip.Tip="Ask GitHub's public release feed whether a newer 5DO version exists. Only the release URL is requested; no personal data is sent." />

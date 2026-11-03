@@ -546,6 +546,51 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void DisplayRefreshRate_RoundtripsAndFallsBackWhenOutOfRange()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        var settings = new AppSettings { DisplayRefreshRate = 144 };
+
+        AppSettingsStore.Save(settings, path);
+        Assert.Equal(144, AppSettingsStore.Load(path).DisplayRefreshRate);
+
+        settings.DisplayRefreshRate = 0;
+        AppSettingsStore.Save(settings, path);
+        Assert.Equal(0, AppSettingsStore.Load(path).DisplayRefreshRate);
+
+        settings.DisplayRefreshRate = 9000;
+        AppSettingsStore.Save(settings, path);
+        Assert.Equal(AppSettings.DefaultDisplayRefreshRate, AppSettingsStore.Load(path).DisplayRefreshRate);
+
+        settings.DisplayRefreshRate = 5;
+        AppSettingsStore.Save(settings, path);
+        Assert.Equal(AppSettings.DefaultDisplayRefreshRate, AppSettingsStore.Load(path).DisplayRefreshRate);
+    }
+
+    [Fact]
+    public void DisplayRefreshRate_ValidationAcceptsZeroAndTheSupportedRange()
+    {
+        var settings = new AppSettings();
+        Assert.Equal(AppSettings.DefaultDisplayRefreshRate, settings.ResolveDisplayRefreshRate());
+
+        settings.DisplayRefreshRate = 0;
+        Assert.Equal(0, settings.ResolveDisplayRefreshRate());
+
+        settings.DisplayRefreshRate = AppSettings.MinDisplayRefreshRate;
+        Assert.Equal(AppSettings.MinDisplayRefreshRate, settings.ResolveDisplayRefreshRate());
+
+        settings.DisplayRefreshRate = AppSettings.MaxDisplayRefreshRate;
+        Assert.Equal(AppSettings.MaxDisplayRefreshRate, settings.ResolveDisplayRefreshRate());
+
+        settings.DisplayRefreshRate = 1;
+        Assert.Throws<ArgumentOutOfRangeException>(() => settings.ResolveDisplayRefreshRate());
+
+        settings.DisplayRefreshRate = AppSettings.MaxDisplayRefreshRate + 1;
+        Assert.Throws<ArgumentOutOfRangeException>(() => settings.ResolveDisplayRefreshRate());
+    }
+
+    [Fact]
     public void InspectAndMigrate_ReportAndRewriteTheSchemaVersion()
     {
         using var temp = new TemporaryDirectory();

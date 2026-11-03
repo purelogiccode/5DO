@@ -590,7 +590,9 @@ The platform swap interval is wired through `SwapInterval.TryCreate` (WGL/GLX/EG
 the Windows WGL path resolves `WGL_EXT_swap_control` and reports `vsyncActive: true`
 when requested. The Avalonia compositor paces the window independently, so the probe
 reports ~64 fps throughput even when vsync is requested; the renderer cost itself is
-far below the 16.67 ms budget.
+far below the 16.67 ms budget. `DisplayRefreshRate` (Settings > Video, default 60)
+re-presents the latest frame above 60 Hz when the user wants a faster swap rate; it
+does not add motion because the emulated 3DO still outputs 60 fields per second.
 
 ### 4K60 feasibility
 
