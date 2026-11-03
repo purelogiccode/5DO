@@ -57,6 +57,10 @@ apps so the LGPL replacement rights remain practical.
 - Six bundle builds; x64 CLI `selftest` and desktop `--smoke-test` pass
 - arm64 apphost machine types verified: PE ARM64, ELF aarch64, Mach-O arm64
 - Bundle checks confirm no `runtime/`, `*.xml`, or `*.pdb` files are present
+- Release workflow
+  <https://github.com/purelogiccode/5DO/actions/runs/41583317988> passed all six
+  bundle jobs and published <https://github.com/purelogiccode/5DO/releases/tag/v1.2.1>;
+  all six `SHA256SUMS.txt` entries verify
 - 3,000-frame regression hashes for Gex, Lemmings, and Road Rash remain unchanged
 
 ## Known issues

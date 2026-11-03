@@ -45,8 +45,11 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] Full suite **1,597/1,597** passes; format and inspectcode are clean.
 - [x] Build all six bundles and keep local copies in
       `src/FiveDo.Frontend.Avalonia/bin/Release`.
-- [ ] Create and push tag `v1.2.1`; the release workflow publishes six versioned
-      bundles and checksums.
+- [x] Create and push tag `v1.2.1`; the release workflow published six versioned
+      bundles and checksums:
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.2.1>. CI run
+      <https://github.com/purelogiccode/5DO/actions/runs/41583317988> passed all six
+      bundle jobs and the publish job; all six `SHA256SUMS.txt` entries verify.
 
 ---
 

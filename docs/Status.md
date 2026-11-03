@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-03, after the 1.2.0 feature/accuracy update: Direct3D 11,
+**Snapshot:** 2026-11-03, after the 1.2.1 arm64 packaging update and the 1.2.0 feature/accuracy update: Direct3D 11,
 startup release checks, the fuzz harness, per-edge overscan/void border, screenshot
 gallery filters, FIQ/DMA/DSP telemetry, flat CHD/raw ISO support, and display-refresh
 control. The earlier first full-collection sweep, performance, timing-option, BIOS,
@@ -30,7 +30,9 @@ are **post-1.0**.
 framework-dependent Windows arm64, Linux arm64, and macOS arm64 bundles alongside the
 x64 bundles, for six versioned archives plus `SHA256SUMS.txt`. CI verifies each arm64
 apphost's PE/ELF/Mach-O machine type; the x64 bundles keep their runtime smoke tests.
-No emulator behavior changed.
+No emulator behavior changed. Release workflow
+<https://github.com/purelogiccode/5DO/actions/runs/41583317988> passed all six bundle
+jobs; every checksum was verified after publication.
 
 **Feature update (2026-11-03):** **v1.2.0** added the optional
 Windows Direct3D 11 presenter, startup GitHub release checks, deterministic fuzzing,
