@@ -50,6 +50,7 @@ public sealed class AppSettingsStoreTests
             CdAudioVolume = 0.35f,
             CdAudioMuted = true,
             CheckForUpdates = false,
+            LibraryCardSize = 256,
         };
 
         AppSettingsStore.Save(settings, path);
@@ -63,6 +64,7 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(0.35, loaded.CdAudioVolume, 3);
         Assert.True(loaded.CdAudioMuted);
         Assert.False(loaded.CheckForUpdates);
+        Assert.Equal(256, loaded.LibraryCardSize);
     }
 
     [Fact]
@@ -72,7 +74,7 @@ public sealed class AppSettingsStoreTests
         var path = Path.Combine(temp.Path, "settings.json");
         File.WriteAllText(
             path,
-            """{"SettingsVersion":1,"Renderer":9999,"CpuClockMultiplier":-1,"OsdOpacity":5.0,"OsdDurationMilliseconds":1,"CdAudioVolume":5.0}""");
+            """{"SettingsVersion":1,"Renderer":9999,"CpuClockMultiplier":-1,"OsdOpacity":5.0,"OsdDurationMilliseconds":1,"CdAudioVolume":5.0,"LibraryCardSize":999}""");
 
         AppSettings settings = AppSettingsStore.Load(path);
 
@@ -81,6 +83,7 @@ public sealed class AppSettingsStoreTests
         Assert.InRange(settings.OsdOpacity, 0.1, 1.0);
         Assert.InRange(settings.OsdDurationMilliseconds, 250, 30_000);
         Assert.Equal(0.8, settings.CdAudioVolume, 3);
+        Assert.Equal(AppSettings.DefaultLibraryCardSize, settings.LibraryCardSize);
     }
 
     [Fact]

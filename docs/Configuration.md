@@ -60,7 +60,7 @@ shows the owner and exits. `FIVEDO_ALLOW_MULTIPLE=1` disables that guard. Differ
 profiles or data directories use different lock files and may run together.
 
 Settings are written atomically (temporary file + replace) and carry
-`"SettingsVersion": 2`. An unversioned or v1 file is migrated in place on the next load.
+`"SettingsVersion": 4`. An older file is migrated in place on the next load.
 A malformed `settings.json` is copied to `settings.json.invalid-<timestamp>.bak`
 before defaults are used, so the original bytes are never silently lost. Back up or
 delete the file to reset the desktop configuration.
@@ -77,7 +77,7 @@ every serialized property in `AppSettings`.
 
 | Property | Type | Default | Meaning |
 |---|---|---|---|
-| `SettingsVersion` | int | `2` | Settings schema version. Unversioned files are migrated on load. |
+| `SettingsVersion` | int | `4` | Settings schema version. Unversioned files are migrated on load. |
 | `FirstRunCompleted` | bool | `false` | Whether the first-run guide has been shown. |
 | `BiosPath` | string | `""` | Last primary BIOS path; fallback when auto-selection is off or unavailable. |
 | `Bios2Path` | string | `""` | Optional BIOS2/Kanji font path. |
@@ -95,6 +95,7 @@ every serialized property in `AppSettings`.
 | `SaveSlot` | int | `0` | Selected zero-based slot. Clamped to the slot count on load. |
 | `SaveSlotCount` | int | `10` | Number of slots. Clamped to 1..100 on load. |
 | `LibraryFolders` | string[] | `[]` | Folders scanned by the game library. |
+| `LibraryCardSize` | double | `176` | Game-card width in device-independent pixels for the grid library (128-384). Invalid values fall back to the default. |
 | `LibraryMetadataPath` | string | `""` | Optional offline metadata JSON; empty means `<LocalApplicationData>/5DO/library-metadata.json`. |
 | `AutoGameFixes` | bool | `true` | Apply the 4DO per-game fix-mode mapping automatically. |
 | `FixModeOverrides` | object | `{}` | Per-game fix-mode overrides, keyed by game ID. |
@@ -231,7 +232,7 @@ player-1 defaults. See section 3 for the full input structure.
 
 ```json
 {
-  "SettingsVersion": 2,
+  "SettingsVersion": 4,
   "FirstRunCompleted": true,
   "BiosPath": "C:\\3DO\\panafz1.bin",
   "Bios2Path": "",
@@ -256,6 +257,7 @@ player-1 defaults. See section 3 for the full input structure.
     "C:\\3DO"
   ],
   "LibraryMetadataPath": "",
+  "LibraryCardSize": 176,
   "AutoGameFixes": true,
   "FixModeOverrides": {},
   "FilterOverrides": {},

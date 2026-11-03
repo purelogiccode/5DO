@@ -158,6 +158,12 @@ public partial class MainWindow : Window, IDisposable
         Direct3DVideo.FramePresented += OnFramePresented;
         VulkanVideo.FramePresented += OnFramePresented;
         _settings = AppSettingsStore.Load();
+        IconSizeSlider.Value = Math.Clamp(
+            _settings.LibraryCardSize,
+            AppSettings.MinLibraryCardSize,
+            AppSettings.MaxLibraryCardSize);
+        ApplyLibraryCardSize(IconSizeSlider.Value);
+        IconSizeSlider.ValueChanged += OnIconSizeChanged;
         _libraryState = LibraryStateStore.Load();
         _libraryMetadata = LibraryMetadataCatalog.Load(_settings.ResolveLibraryMetadataPath());
         _playtime = new LibraryPlaytimeTracker(
@@ -2988,7 +2994,13 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnIconSizeChanged(object? sender, RangeBaseValueChangedEventArgs e)
     {
-        var width = Math.Round(e.NewValue);
+        ApplyLibraryCardSize(e.NewValue);
+        _settings.LibraryCardSize = Math.Round(e.NewValue);
+    }
+
+    private void ApplyLibraryCardSize(double value)
+    {
+        var width = Math.Round(value);
         Resources["LibraryCardWidth"] = width;
         Resources["LibraryCardImageHeight"] = Math.Max(80, width - 14);
     }

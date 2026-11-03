@@ -326,9 +326,9 @@
                             <ComboBoxItem Content="Publisher" Tag="Publisher" />
                         </ComboBox>
                         <TextBlock Text="Icon size" Classes="caption" VerticalAlignment="Center" />
-                        <Slider x:Name="IconSizeSlider" Width="110" Minimum="128" Maximum="240"
+                        <Slider x:Name="IconSizeSlider" Width="150" Minimum="128" Maximum="384"
                                 Value="176" TickFrequency="8" IsSnapToTickEnabled="True"
-                                ValueChanged="OnIconSizeChanged" VerticalAlignment="Center"
+                                VerticalAlignment="Center"
                                 ToolTip.Tip="Adjust the size of game cards in the grid view." />
                     </StackPanel>
                 </Grid>

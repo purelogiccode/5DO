@@ -25,9 +25,10 @@ public sealed class AppSettings
     /// <summary>The settings schema version written by this build.</summary>
     /// <remarks>
     /// Version 2 adds the CD-DA mix volume and mute flag. Version 3 adds the presentation
-    /// refresh rate. Version 1 files load with the documented defaults for new properties.
+    /// refresh rate. Version 4 adds the game-library card size. Version 1 files load with
+    /// the documented defaults for new properties.
     /// </remarks>
-    public const int CurrentVersion = 3;
+    public const int CurrentVersion = 4;
 
     /// <summary>
     /// Gets or sets the settings schema version. Zero or missing means a pre-versioned file
@@ -110,6 +111,18 @@ public sealed class AppSettings
 
     /// <summary>Gets folders scanned by the game library.</summary>
     public IList<string> LibraryFolders { get; set; } = new List<string>();
+
+    /// <summary>Gets or sets the width in device-independent pixels of a game card in the grid library.</summary>
+    public double LibraryCardSize { get; set; } = DefaultLibraryCardSize;
+
+    /// <summary>Gets the default width of a game card in the grid library.</summary>
+    public const double DefaultLibraryCardSize = 176;
+
+    /// <summary>Gets the smallest selectable width of a game card in the grid library.</summary>
+    public const double MinLibraryCardSize = 128;
+
+    /// <summary>Gets the largest selectable width of a game card in the grid library.</summary>
+    public const double MaxLibraryCardSize = 384;
 
     /// <summary>
     /// Gets or sets the optional offline library metadata file. An empty value uses

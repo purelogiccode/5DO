@@ -153,7 +153,8 @@ public sealed class LibraryItem : IDisposable, INotifyPropertyChanged
 /// </summary>
 internal static class CoverCache
 {
-    private const int DecodeHeight = 256;
+    // Matches the largest card the grid library can show so big covers stay sharp.
+    private const int DecodeHeight = (int)AppSettings.MaxLibraryCardSize;
     private static readonly Dictionary<string, Bitmap> Covers = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Loads and caches a cover image.</summary>

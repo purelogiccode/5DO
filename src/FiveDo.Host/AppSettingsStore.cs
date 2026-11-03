@@ -252,6 +252,12 @@ public static class AppSettingsStore
             settings.OverscanRight = Math.Clamp(settings.OverscanRight, 0, CropInsets.MaxPixels);
             settings.OverscanBottom = Math.Clamp(settings.OverscanBottom, 0, CropInsets.MaxPixels);
             settings.VideoBorderPixels = Math.Clamp(settings.VideoBorderPixels, 0, 64);
+            if (!double.IsFinite(settings.LibraryCardSize)
+                || settings.LibraryCardSize is < AppSettings.MinLibraryCardSize
+                    or > AppSettings.MaxLibraryCardSize)
+            {
+                settings.LibraryCardSize = AppSettings.DefaultLibraryCardSize;
+            }
             if (settings.DisplayRefreshRate != 0
                 && settings.DisplayRefreshRate is < AppSettings.MinDisplayRefreshRate
                     or > AppSettings.MaxDisplayRefreshRate)

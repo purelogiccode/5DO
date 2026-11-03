@@ -37,7 +37,7 @@
     <Color x:Key="SystemAccentColorDark3">#155A7D</Color>
 
     <x:Double x:Key="LibraryCardWidth">176</x:Double>
-    <x:Double x:Key="LibraryCardImageHeight">176</x:Double>
+    <x:Double x:Key="LibraryCardImageHeight">162</x:Double>
 
     <!-- Toolbar / game-list icons. -->
     <StreamGeometry x:Key="IconOpen">M10 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z</StreamGeometry>

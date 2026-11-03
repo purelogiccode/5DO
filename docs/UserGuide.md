@@ -429,6 +429,8 @@ reuse `library-cache.json` and only reopen files whose size or timestamp changed
 Use the star button on a card or list row to mark a favorite. The filter selector
 switches between **All games**, **Favorites**, **Played**, and **Unplayed**; the sort
 selector orders by title, recently played, most played, release year, or publisher.
+The **Icon size** slider resizes the cover cards from 128 to 384 pixels, and the chosen
+size is remembered between sessions.
 The library records play time while emulation is running and flushes it every minute
 to `library-state.json`, so a crash loses at most about a minute. Launch counts and
 last-played timestamps are stored in the same file.
