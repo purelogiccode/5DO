@@ -510,7 +510,7 @@ JSON and a 60 Hz budget comparison. BenchmarkDotNet microbenchmarks are planned 
 - `VdlFrameUploader`/`OpenGlRenderer` upload/present (MB/s, CPU ms, GPU time).
 - Output scaling cost at 1080p/1440p/4K (CPU should stay flat; GPU scales).
 
-Targets (Tier A = mid-range x64; Tier B = Raspberry Pi 4/5 class arm64):
+Targets (Tier A = mid-range x64; Tier B = integrated x64 GPU/older desktop CPU):
 
 | Metric | Target |
 |---|---|

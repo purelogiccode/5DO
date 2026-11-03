@@ -107,7 +107,7 @@ checksums are attached, and legal/attribution sign-off is recorded.
 - Tier A 4K presentation is measured with `--gl-probe` (RTX 4070: sharp-bilinear GPU
   p99 0.089 ms, present p99 0.208 ms, zero renderer/mailbox allocations per frame).
   Windows ANGLE/GLES 3.0 is validated (4K present p99 0.47 ms, pixel parity with the
-  CPU oracle); Raspberry Pi 4/5/GLES 3.1, Tier B timing, and 100/150/200% DPI
+  CPU oracle); GLES 3.1, Tier B desktop timing, and 100/150/200% DPI
   validation are not complete.
 - The platform swap interval is wired (WGL/GLX/EGL) and reports whether the extension
   accepted the request. The Avalonia compositor paces the window independently, so a

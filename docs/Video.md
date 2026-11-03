@@ -278,7 +278,7 @@ frame into a fixed output buffer.
 | Backend | API / shader | Platforms | Notes |
 |---|---|---|---|
 | Desktop GL | OpenGL 3.3 core / GLSL 330 | Windows WGL, Linux GLX/EGL, macOS 4.1 core | Primary desktop path; `R16UI`, `usampler2D`, `texelFetch`. |
-| GLES | OpenGL ES 3.0/3.1 / GLSL ES 300 | Windows ANGLE, Raspberry Pi 4/5, other GLES | Same two-stage pipeline. |
+| GLES | OpenGL ES 3.0/3.1 / GLSL ES 300 | Windows ANGLE, other desktop GLES contexts | Same two-stage pipeline. |
 | Vulkan | Vulkan 1.0 / SPIR-V 1.0 | Windows/Linux/macOS with a Vulkan loader and device | Optional offscreen backend and probe; embedded Win32 child surface for the desktop path; CPU readback fallback. |
 | Direct3D 11 | Direct3D 11 / HLSL SM 5.0 | Windows 10/11 with feature level 11_0 | Optional Windows backend and probe; embedded Win32 child swapchain; OpenGL remains the default. |
 | CPU | `WriteableBitmap` + `FrameAssembler` | Any | Fallback when no usable GL/GLES/Vulkan/Direct3D context; accuracy oracle. |
@@ -513,8 +513,8 @@ On Windows 11, Ryzen 9 7900, RTX 4070 (OpenGL 4.0):
 - 4K sharp-bilinear ANGLE/GLES 3.0: present p99 0.47 ms, 0 renderer allocations.
 - 320x240 Accurate parity: pixel-identical to the CPU oracle on both backends.
 
-These are development-machine numbers, not a hardware guarantee. Tier B (Raspberry Pi
-4/5, GLES 3.1), 100/150/200% DPI, and macOS/Linux GL launch validation remain open.
+These are development-machine numbers, not a hardware guarantee. Tier B desktop,
+100/150/200% DPI, and macOS/Linux GL launch validation remain open.
 
 ---
 
@@ -564,7 +564,7 @@ See [`Performance.md`](Performance.md) for the full budget and methodology.
 
 ## 12. Limitations
 
-- Raspberry Pi 4/5 GLES 3.1, Tier B timing, and DPI validation are not complete.
+- GLES 3.1, Tier B desktop timing, and DPI validation are not complete. Raspberry Pi is out of scope.
 - Linux/macOS OpenGL launch validation is not complete.
 - The Avalonia compositor may pace presentation independently of the requested vsync.
 - The GPU probe's residual ~2.3 KB/frame allocation is outside

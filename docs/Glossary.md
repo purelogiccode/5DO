@@ -361,7 +361,7 @@ Lemmings, Road Rash, Alone in the Dark, Space Ace.
 stability, DSP liveness, and deterministic state.
 
 **Tier A / B / C** - Performance hardware classes: A = mid-range x64 desktop; B =
-Raspberry Pi 4/5/integrated x64; C = older/low-power. See [`Performance.md`](Performance.md).
+Integrated x64 GPUs and older desktop CPUs; C = older/low-power. See [`Performance.md`](Performance.md).
 
 **Validated vs implemented** - Implemented means the code path exists and is tested;
 validated means it was exercised on the stated hardware/content with recorded evidence.

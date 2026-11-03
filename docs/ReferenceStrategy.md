@@ -286,8 +286,8 @@ recorded.
 - The CPU side is ~2.1-2.3 ms/frame, leaving ~14 ms at 60 Hz.
 - 4K output is a single fullscreen quad after the native-resolution palette pass; it
   is not 4K internal CEL rendering.
-- Desktop 4K60 is high confidence. Pi 5 is likely; Pi 4 is more realistically
-  1080p60. Measure GPU time, p99, allocations, and present-to-present before claiming
+- Desktop 4K60 is high confidence. Tier B desktop 1080p60 is plausible but unmeasured.
+  Measure GPU time, p99, allocations, and present-to-present before claiming
   the target.
 
 ---

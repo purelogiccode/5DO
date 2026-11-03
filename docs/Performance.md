@@ -10,16 +10,15 @@ p50/p95/p99 and per-stage allocations. CPU-side frame cost is ~1.25-1.6 ms, leav
 ~15 ms of headroom at 60 Hz; the synthetic steady state is allocation-free. The GPU
 probe now records true 4K offscreen timings: sharp-bilinear GPU p99 0.089 ms and
 present p99 0.208 ms on the RTX 4070 development machine. Manual DPI validation, the
-GLES/Raspberry Pi path, and Tier B timing remain open; see §9 and M9P in
+GLES path, and Tier B timing remain open; see §9 and M9P in
 [`ImplementationPlan.md`](ImplementationPlan.md). The overall project position is
 summarized in [`Status.md`](Status.md).
 
 **Feasibility assessment:** desktop 4K60 is high confidence because the CPU has
 ~15 ms of headroom and the 4K pass is one fullscreen textured quad after the
-native-resolution palette expansion. Pi 5 is likely but unmeasured; Pi 4 is more
-realistically 1080p60. The remaining risk is frame pacing, the Avalonia/WGL
-compositor, and p99 spikes, not raw GPU fill rate. 4K internal CEL rendering is not
-a v1 goal.
+native-resolution palette expansion. Tier B desktop 1080p60 is plausible but
+unmeasured. The remaining risk is frame pacing, the Avalonia/WGL compositor, and p99
+spikes, not raw GPU fill rate. 4K internal CEL rendering is not a v1 goal.
 
 This document is the performance contract for the emulator. It defines what "4K60"
 means, the frame budget, the presentation pipeline, the supported renderer backends,
@@ -49,12 +48,11 @@ they may require a faster GPU and must show a performance warning at 4K.
 | Tier | Example hardware | Target |
 |---|---|---|
 | A | Mid-range x64 desktop/laptop from ~2020 or newer (GTX 1650 / RX 6400 / Iris Xe / Apple M1 class) | 4K60 with nearest/sharp-bilinear; 1080p60 with CRT/xBR |
-| B | Raspberry Pi 4/5 class arm64, integrated x64 GPUs | 1080p60 with nearest/sharp-bilinear |
+| B | Integrated x64 GPUs and older desktop CPUs | 1080p60 with nearest/sharp-bilinear |
 | C | Older/low-power devices | Native 320x240 or 720p60; CPU fallback allowed |
 
-Tier B requires the OpenGL ES 3.0/3.1 path described in §6. Do not promise desktop
-OpenGL 3.3 on Raspberry Pi 4: its conformant API is OpenGL ES 3.1 (Mesa V3D exposes
-desktop OpenGL 3.1, not 3.3).
+Tier B requires the OpenGL ES 3.0/3.1 path described in §6. Raspberry Pi is out of
+scope; the GLES path remains for Windows ANGLE and other desktop GLES contexts.
 
 ---
 
@@ -69,7 +67,7 @@ stated otherwise:
 | Presenter CPU (mailbox copy, upload, draw submission) | ≤ 2 ms p99 | No per-frame allocations |
 | GPU filter/upscale at 4K | ≤ 8 ms | Nearest/sharp-bilinear; CRT/xBR may exceed this |
 | Total frame | ≤ 16.67 ms p99 | No persistent overrun after warm-up |
-| Core on Tier B (Pi 4/5) | ≤ 12 ms p99 | 1080p output; CHD streaming must not stall |
+| Core on Tier B desktop | ≤ 12 ms p99 | 1080p output; CHD streaming must not stall |
 | DSP | ≤ 1 ms/frame | 44.1 kHz stereo |
 | Indexed upload | ≤ 0.5 ms CPU | ~175 KB/frame at 320x240 |
 | Allocations | 0 bytes/frame | Core and presenter, steady state |
@@ -242,7 +240,7 @@ The renderer must support two shader/API variants behind one contract:
 | Backend | API / shader | Platforms | Notes |
 |---|---|---|---|
 | Desktop GL | OpenGL 3.3 core, GLSL 330 | Windows via WGL, Linux GLX/EGL, macOS 4.1 core | Primary desktop path; integer textures and `texelFetch`. Validated on Windows 11 / RTX 4070 (OpenGL 4.0) with `--gl-backend wgl`. |
-| GLES | OpenGL ES 3.0/3.1, GLSL ES 300 | Windows ANGLE, Raspberry Pi 4/5, other GLES devices | Same two-stage pipeline; `R16UI` + `usampler2D`. Validated on Windows 11 / RTX 4070 via ANGLE (OpenGL ES 3.0) with `--gl-backend angle`; Pi remains open. |
+| GLES | OpenGL ES 3.0/3.1, GLSL ES 300 | Windows ANGLE, other desktop GLES contexts | Same two-stage pipeline; `R16UI` + `usampler2D`. Validated on Windows 11 / RTX 4070 via ANGLE (OpenGL ES 3.0) with `--gl-backend angle`. |
 | Vulkan (optional) | Vulkan 1.0, SPIR-V | Windows/Linux/macOS with a Vulkan loader | Offscreen two-stage pipeline with optional CPU readback and `--vk-probe`; a native Win32 swapchain probe (`--vk-window-probe`) presents through FIFO vsync. 4K sharp-bilinear measured 0.24 ms mean / 1.06 ms p99 present and 0.075/0.091 ms GPU, 4K xBR 0.32/0.80 ms present and 0.13/0.14 ms GPU, 4K FSR 0.60/1.30 ms present and 0.40/0.42 ms GPU, and 4K HQx 2x 6.82/10.93 ms (CPU-bound), all with 0 managed bytes/frame on the RTX 4070. The 4K window probe measures 0.077/0.088 ms GPU and 5.96/6.53 ms present including the 165 Hz FIFO wait. The desktop `--gl-backend vulkan` path hosts the swapchain in a native Win32 child window inside the Avalonia window, so it does not copy the frame back; non-Windows platforms fall back to offscreen/readback. |
 
 Implementation requirements:
@@ -497,7 +495,7 @@ Vulkan backend measures present 0.604/1.303 ms and GPU 0.404/0.415 ms (excluding
 optional per-frame readback). Use `--gl-probe-filter fsr` or `--vk-probe-filter fsr` to
 reproduce on the target GPU.
 
-The Raspberry Pi and 100/150/200% DPI validation remain open. Headless CI keeps the
+The 100/150/200% DPI validation remains open. Headless CI keeps the
 CPU renderer and allocation tests.
 
 **HQx CPU cost (2026-10-26).** The opt-in HQx filters run on the CPU at native
@@ -587,10 +585,9 @@ Still open:
    validation at 100/150/200% DPI and live resize remains.
 2. The renderer selects GLSL ES 300 sources when the context reports OpenGL ES.
    The Windows frontend now prefers WGL and can force WGL/ANGLE/software with
-   `--gl-backend`. ANGLE/GLES 3.0 is validated on Windows, including pixel parity;
-   Raspberry Pi 4/5 (GLES 3.1) remains open.
+   `--gl-backend`. ANGLE/GLES 3.0 is validated on Windows, including pixel parity.
 3. The 4K GPU percentile run is recorded for WGL and ANGLE/GLES (see the GPU
-   presentation probe above). Raspberry Pi and 100/150/200% DPI validation remain.
+   presentation probe above). 100/150/200% DPI validation remains.
 4. `PrefetchingDiscSource` is implemented as an opt-in bounded worker/cache, but
    Tier B timing and the default policy are not measured.
 5. Real-game compatibility is partial: all five corpus titles boot and render, and

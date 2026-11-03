@@ -23,19 +23,28 @@
 |---|---|---|
 | Core emulation | ARM60, CLIO, MADAM/CEL, DSP, SPORT, XBUS, CD-ROM, input, NVRAM, save states implemented | M0–M8 complete; accuracy parity work remains in CORE-01..CORE-09 |
 | Frontend | Avalonia shell, library, settings, gamepad, logs, screenshots, rewind, fast-forward, cheats, TAS movies, disc browser, BIOS/NVRAM manager, OSD/quick menu | UX-01/02/04/11/12/19/23 done; UX-06/13 partial |
-| Renderer | Two-stage OpenGL/GLES (default), optional Vulkan and Direct3D 11 (Windows), 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR | M9R/M9P core complete; D3D11 backend implemented (M9R.14/VID-15); Pi/GLES 3.1, Tier B, and GPU CI remain |
+| Renderer | Two-stage OpenGL/GLES (default), optional Vulkan and Direct3D 11 (Windows), 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR | M9R/M9P core complete; D3D11 backend implemented (M9R.14/VID-15); GLES 3.1, Tier B, and GPU CI remain |
 | Audio | Exact 44.1 kHz DSP clock, OpenAL Soft, WAV capture, tap, analysis, audio-driven pacing | AUD-01/02/04/05 remain for full settings/mixer/golden coverage |
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **594 load**, **593 render**; 1 known boot failure (Crash 'n Burn Japan); 0 not loadable | v1.0 ships with this documented evidence; 12,000-frame in-game/visual review and high-res pass are post-1.0; Linux x64 full suite passed (GL preview) |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
 | Tests | **1,592** passing | Target 2,000+ with coverage gate (ENG-09) |
-| Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, Pi 5, all-filter 4K60 budgets remain |
-| Platforms | Windows x64 validated; Linux x64 full suite **1,473/1,473** passed (GL preview); three unified x64 bundles (Windows/Linux/macOS) with framework-dependent single-file apphosts; .NET 10 runtime required (not bundled); opt-in NativeAOT | macOS/Pi/installers are post-1.0; Linux GPU presentation is unvalidated under llvmpipe |
+| Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, all-filter 4K60 budgets remain |
+| Platforms | Windows x64 validated; Linux x64 full suite **1,473/1,473** passed (GL preview); three unified x64 bundles (Windows/Linux/macOS) with framework-dependent single-file apphosts; .NET 10 runtime required (not bundled); opt-in NativeAOT | macOS/installers are post-1.0; Linux GPU presentation is unvalidated under llvmpipe. WebAssembly, Android/iOS, and Raspberry Pi are out of scope |
 | Release | **v1.1.0 released (GitHub)** | Documented-compatibility scope; legal/attribution sign-off recorded; M13 loadability evidence complete; M14 is post-1.0 research; Linux x64 full suite passed; tags `v1.0.0`/`v1.1.0` and GitHub releases published |
 
 **Current position:** the core and shell are strong enough to play and validate a large local collection, and the documented-compatibility v1.0 scope is ready to ship. Full compatibility and high-resolution CEL research are post-1.0; the remaining gap to “best in the world” is **accuracy parity, universal compatibility, and release trust**, not basic feature count.
 
 **Scope decision (2026-11-02): Steam Deck support is dropped.** UX-08 is gamepad navigation and a big-picture desktop layout only; ECO-04 covers Linux/macOS validation, Flatpak/AppImage, the macOS gamepad backend, and Metal/MoltenVK. No Steam Deck controls, packaging, or validation are planned, and the platform is removed from the release gates and comparison tables.
+
+**Scope decision (2026-11-02): WebAssembly, Android/iOS, and Raspberry Pi are dropped.**
+ECO-02 (WebAssembly/browser), ECO-03 (Android/iOS frontend), and ECO-05
+(Raspberry Pi/arm64/GLES optimization) are removed from the active feature checklist and
+release gates. Their specifications remain in Part II for history. Desktop Windows,
+Linux, and macOS (x64/arm64) remain supported; Pi-specific performance, packaging, and
+validation are not planned. MOON-06 is narrowed to desktop platforms, and Pi 5 is removed
+from the performance gates. Historical progress logs may still mention these platforms;
+those entries are retained as history, not as current commitments.
 
 **2026-11-02 hardening pass:** CORE-12's dedicated fuzz harness (six targets plus a
 nightly workflow), VID-06's per-edge overscan and per-game crop profiles with a
@@ -99,7 +108,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **8. Close CORE-01/CORE-02 accuracy profiles.** Complete ARM cycle-class and CLIO scheduler parity; keep the Accuracy profile opt-in until the full-collection differential is green. See Part II CORE-01/CORE-02 and Part III §13.6.
 - [ ] **9. Land the disc/peripheral P0 batch.** SYS-01 multi-track TOC, raw CD-DA sectors, and mixing are implemented; AUD-05 persists CD-DA volume/mute in settings, UI, CLI, and state. SYS-02 now has an M3U playlist, live host swap, F3/UI swap, guest inject, and CLI swap. Finish known-title CD-DA evidence, ODE prompts, then SYS-03 PAL/NTSC, SYS-15 calibration/multiplayer pointer, SYS-18 auto profiles. See Part II.
 - [ ] **10. Polish the shipped UX.** UX-06 Lua/frame editor/lag counter, UX-12 per-game NVRAM/drag-drop, UX-13 external metadata/media/editor, UX-19 gamepad quick-menu navigation. See Part II.
-- [ ] **11. Post-1.0 platform and packaging work.** macOS/Pi validation, installers/signing/notarization, and the "best in the world" gates in §8.2.
+- [ ] **11. Post-1.0 platform and packaging work.** macOS validation, installers/signing/notarization, and the "best in the world" gates in §8.2. WebAssembly, Android/iOS, and Raspberry Pi are out of scope.
 - [x] **12. Land the CORE-05/06/07 audit increment (2026-11-02).** FIQ request-to-vector latency telemetry and traces, the CLIO/DIPIR/FIFO/MCTL/XBUS audit fixes and tests, and DSP per-tick statistics are implemented. Evidence: **1,592 tests**, clean build/format/inspectcode, and a 3,000-frame Gex/Lemmings boot with the documented frame hashes intact. See section 9 and [`Diagnostics.md`](Diagnostics.md) section 7.
 
 ---
@@ -116,8 +125,8 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [x] **M7 — Input, NVRAM, game database.** Playable controls, persistence, 518-record database.
 - [x] **M8 — Save states, diagnostics, CLI.** Versioned/compressed states, tracing, CLI/JSON.
 - [ ] **M9 — Avalonia frontend.** **Partial:** shell/library/video/input/fullscreen/settings/audio/gamepad/logs/first-run are implemented; polish and ViewModel tests remain.
-- [ ] **M9R — OpenGL/GLES renderer.** **Partial:** two-stage presenter, filters, 4K, parity, swap interval done; optional Vulkan and Direct3D 11 backends are implemented (M9R.11–M9R.14); GLES 3.1/Pi and GPU CI remain.
-- [ ] **M9P — Runtime performance, pacing, 4K presentation.** **Partial:** core thread, uploads, DPI, p99/allocation gates done; Tier B/Pi/GPU gates remain.
+- [ ] **M9R — OpenGL/GLES renderer.** **Partial:** two-stage presenter, filters, 4K, parity, swap interval done; optional Vulkan and Direct3D 11 backends are implemented (M9R.11–M9R.14); GLES 3.1 and GPU CI remain.
+- [ ] **M9P — Runtime performance, pacing, 4K presentation.** **Partial:** core thread, uploads, DPI, p99/allocation gates done; Tier B and GPU gates remain.
 - [ ] **M10 - Packaging, CI, performance, arm64.** **Partial:** unified x64 bundles with framework-dependent single-file apphosts, opt-in NativeAOT, and release CI done; arm64 hardware, installers, final performance report remain.
 - [ ] **M11 - Compatibility hardening and release.** **Released:** documented-compatibility scope adopted; legal/attribution sign-off recorded; Linux x64 full suite passed; v1.0.0 published.
 - [ ] **M12 — Optional guest ARM JIT.** **Pending:** only if profiling shows the interpreter is the remaining bottleneck.
@@ -142,7 +151,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ## 6. Full feature checklist
 
-**Indexed feature status:** 25 done · 25 partial · 71 pending (121 tracked features; 10 optional moonshots are listed separately below). Foundations are listed separately above.
+**Indexed feature status:** 25 done · 26 partial · 66 pending · 1 post-1.0 (118 active tracked features; 3 dropped-scope items are noted separately below; 10 optional moonshots are listed separately below). Foundations are listed separately above.
 
 ### Core accuracy
 
@@ -243,16 +252,18 @@ These are the highest-leverage items from the current evidence. Pick the first u
 
 ### Ecosystem and platforms
 
-- [ ] **[ECO-02](#feat-eco-02)** WebAssembly/browser build — P3 · XL — **Pending**
-- [ ] **[ECO-03](#feat-eco-03)** Android/iOS frontend — P3 · XL · depends on: ECO-04 — **Pending**
 - [ ] **[ECO-04](#feat-eco-04)** Linux/macOS validation, Flatpak/AppImage, macOS gamepad/Metal — P1 · L · depends on: ENG-01 — **Pending**
-- [ ] **[ECO-05](#feat-eco-05)** Raspberry Pi/arm64/GLES optimization — P1 · L · depends on: ENG-02 — **Pending**
 - [ ] **[ECO-06](#feat-eco-06)** Plugin API — P3 · L · depends on: FND-01 — **Pending**
 - [ ] **[ECO-07](#feat-eco-07)** Headless server / HTTP / WebSocket API — P3 · M · depends on: FND-04 — **Pending**
 - [ ] **[ECO-08](#feat-eco-08)** 3DO modem/network emulation — P3 · L · depends on: CORE-04 — **Pending**
 - [ ] **[ECO-09](#feat-eco-09)** 3DO CD player / Video CD — P3 · M · depends on: SYS-01 — **Pending**
 - [ ] **[ECO-10](#feat-eco-10)** Documentation wiki and compatibility portal — P1 · M · depends on: SYS-17 — **Pending**
 - [ ] **[ECO-11](#feat-eco-11)** Community workflow — P1 · S · depends on: ENG-10 — **Pending**
+
+**Dropped scope (2026-11-02):** ECO-02 WebAssembly/browser, ECO-03 Android/iOS,
+and ECO-05 Raspberry Pi/arm64/GLES are removed from the active roadmap. Their
+specifications remain in Part II for history and are excluded from the completion
+percentages.
 
 ### Engineering, legal, and trust
 
@@ -273,7 +284,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **BAK-02** Script Alone in the Dark inventory/exploration — P1 · related: UX-06, CORE-09 — **Pending**
 - [ ] **BAK-03** Input/gameplay scripts for seven titles — P1 · related: UX-06, CORE-11 — **Pending**
 - [ ] **BAK-04** CD/CLIO/MADAM/ARM timing triage with Opera — P0 · related: CORE-01..04 — **Pending**
-- [ ] **BAK-05** Pi/arm64/DPI/Linux/macOS validation — P1 · related: ECO-04, ECO-05 — **Pending**
+- [ ] **BAK-05** arm64/DPI/Linux/macOS validation - P1 · related: ECO-04 - **Pending**
 - [ ] **BAK-06** Tier B 1080p60, 3D CEL profiling, hot-path optimization, relative gate — P1 · related: ENG-02, ENG-09 — **Pending**
 - [ ] **BAK-07** MSIX/dmg/AppImage installers, signing/notarization, file associations — P1 · related: UX-16 — **Pending**
 - [ ] **BAK-08** Frontend NativeAOT audio validation — P1 · related: ENG-10 — **Pending**
@@ -296,10 +307,10 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **MOON-03** Public accuracy dashboard - P1 - why: Trust through transparent differential results.
 - [ ] **MOON-04** Console-like big picture - P2 - why: 10-foot UI.
 - [ ] **MOON-05** Creator suite - P2 - why: TAS + debugger + Lua + trace viewer.
-- [ ] **MOON-06** Everywhere - P2 - why: Desktop, RetroArch, browser, mobile, Pi.
+- [ ] **MOON-06** Desktop everywhere - P2 - why: Windows, Linux, and macOS only; browser/mobile/Pi are out of scope.
 - [ ] **MOON-07** Preservation - P1 - why: Redump, CHD, state import/export, movies.
 - [ ] **MOON-08** Video quality - P2 - why: True high-res, shaders, HDR, NTSC, 4K60.
-- [ ] **MOON-09** Performance leader - P1 - why: 4K60 mid-range, 1080p60 Pi 5.
+- [ ] **MOON-09** Performance leader - P1 - why: 4K60 on mid-range desktop, 1080p60 on Tier B desktop.
 - [ ] **MOON-10** Community - P1 - why: Compatibility DB, plugins, docs, localization.
 
 
@@ -384,8 +395,8 @@ These are **post-1.0 goals**, not v1.0 blockers. A release can be called “the 
 - [ ] PAL, CD-DA, multi-track, ODE, mouse, lightgun, arcade lightgun, flightstick, and trackball work.
 - [ ] BIOS/region/fix/input auto-profiles make known titles “just work”.
 - [ ] Rewind, fast-forward, cheats, netplay, achievements, TAS, shader presets, recording, debugger, and localization are complete (rewind/fast-forward/cheats/OSD/quick menu are already shipped).
-- [ ] 4K60 on Tier A; 1080p60 on Pi 5; zero steady-state allocations.
-- [ ] Windows/Linux/macOS x64/arm64 and Pi are validated.
+- [ ] 4K60 on Tier A; 1080p60 on Tier B desktop; zero steady-state allocations.
+- [ ] Windows/Linux/macOS x64/arm64 are validated. WebAssembly, Android/iOS, and Raspberry Pi are out of scope.
 - [ ] Installers, signing, notarization, auto-update, portable mode, and file associations are shipped.
 - [ ] 2,000+ tests, coverage gate, fuzzing, SBOM, and 24 h soak pass.
 - [x] Legal/attribution sign-off is complete.
@@ -1217,7 +1228,7 @@ project/type layout is unchanged.
 | **M13** | **Full-collection compatibility sweep** | Loadability + in-game/visual status for every local disc; 4DO comparison; Linux VM validation | Every image classified; failures triaged; docs updated | 10-15 dd |
 | **M14** | **High-resolution CEL research** | Determine whether true internal 640x480 / 2x supersampling / GPU CEL is feasible | Prototype evidence and a recorded decision | 10-20 dd research |
 
-**Total:** ~157 developer-days of focused work plus 30% contingency (~204 dd), excluding the optional M12 JIT and the new M13/M14 work. This is the **full-compatibility plan**. The adopted v1 release scope (2026-10-26) ships a documented compatibility set and defers the remaining M11 hardening, Tier B/Pi, installers, and the optional JIT to post-1.0. **As of 2026-11-02, M13 loadability is complete (593/594 render); M14 is post-1.0 research. Linux x64 full suite passed; v1.0.0 is published on GitHub with the artifacts attached.** See [`ReleaseChecklist.md`](ReleaseChecklist.md), [`CompatibilitySweep.md`](CompatibilitySweep.md), and [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+**Total:** ~157 developer-days of focused work plus 30% contingency (~204 dd), excluding the optional M12 JIT and the new M13/M14 work. This is the **full-compatibility plan**. The adopted v1 release scope (2026-10-26) ships a documented compatibility set and defers the remaining M11 hardening, Tier B, installers, and the optional JIT to post-1.0. **As of 2026-11-02, M13 loadability is complete (593/594 render); M14 is post-1.0 research. Linux x64 full suite passed; v1.0.0 is published on GitHub with the artifacts attached.** See [`ReleaseChecklist.md`](ReleaseChecklist.md), [`CompatibilitySweep.md`](CompatibilitySweep.md), and [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 
 ### 4a. Current position vs. the plan (2026-10-26)
 
@@ -1247,7 +1258,7 @@ adopted release-scope estimate follows it.
 |---|---|---:|---:|
 | M0-M8 | Functionally complete; M0.8 legal review is tracked in M11.6 and minor M8 follow-ups are non-blocking | 90 | 0 |
 | M9 | Partial: shell/library/video/input/fullscreen/About/Hi-Res/settings/audio/gamepad/logs/first-run; polish and ViewModel tests | 13 | 3 |
-| M9R | Partial: two-stage, sharp-bilinear/CRT/xBR/bloom/HQx 2x/3x/4x, CPU fallback, screenshots, swap interval, 4K Tier A timing, WGL/ANGLE parity; GLES 3.1/Pi and GPU CI | 10 | 0 |
+| M9R | Partial: two-stage, sharp-bilinear/CRT/xBR/bloom/HQx 2x/3x/4x, CPU fallback, screenshots, swap interval, 4K Tier A timing, WGL/ANGLE parity; GLES 3.1 and GPU CI | 10 | 0 |
 | M9P | Partial: core thread, two-stage, uploads, DPI, p99/allocations, prefetch, 4K GPU probe; hot-path and Tier B/GPU gates | 6.5 | 3.5 |
 | M10 | Partial: CI + six-RID publish + trimmed CLI/frontend + portable archives; arm64, installers, perf report | 4.5 | 1.5 |
 | M11 | In progress: M11.0 done; gameplay, high-resolution, and release docs underway | 3 | 22+ |
@@ -1262,7 +1273,7 @@ game-specific compatibility hardening and the full platform matrix.
 **documented compatibility set**, not full compatibility. Supported platforms and titles
 are validated and listed in `Compatibility.md`/`KnownIssues.md`; full-race completion,
 scripts for the remaining titles, M13.5/M13.6 visual/high-res review, M14 research,
-Pi/arm64, installers, and the optional JIT are post-1.0. Legal/attribution sign-off is
+arm64, installers, and the optional JIT are post-1.0. Legal/attribution sign-off is
 recorded. **v1.0.0 is tagged and published with unified Windows/Linux/macOS x64
 bundles.** The project is roughly **100% complete** against the documented-compatibility
 release scope. The release gate is [`ReleaseChecklist.md`](ReleaseChecklist.md).
@@ -2147,7 +2158,7 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
   - Measure upload bandwidth, CPU present time, GPU shader time, and p50/p95/p99 frame time.
   - Desktop GL uses a `GL_TIME_ELAPSED` query around the palette/xBR/scale pipeline; the shell overlay reports GPU and CPU-present milliseconds.
   - **DONE (2026-10-26):** `--gl-probe` presents synthetic frames through the real Avalonia OpenGL surface and writes per-frame JSON. It supports a true 4K offscreen target, a warm-up phase, per-stage allocation counters, and both window/offscreen modes. On Windows 11 (Ryzen 9 7900, RTX 4070, GL 4.0), 4K sharp-bilinear measured GPU mean 0.086 ms / p99 0.089 ms and present mean 0.080 ms / p99 0.208 ms, with 0 renderer/mailbox allocations per frame after 30 warm-up frames. 4K accurate/CRT/xBR and 1080p results are in [`Performance.md`](Performance.md).
-  - Target: 4K60 with nearest/sharp-bilinear on Tier A x64; 1080p60 on Raspberry Pi 4/5 class arm64 with the GLES path. Tier A render cost is measured for WGL and ANGLE/GLES 3.0; GLES 3.1/Pi and Tier B remain.
+  - Target: 4K60 with nearest/sharp-bilinear on Tier A x64; 1080p60 on Tier B desktop with the GLES path. Tier A render cost is measured for WGL and ANGLE/GLES 3.0; GLES 3.1 and Tier B remain.
   - Zero CPU per-pixel scaling; palette expansion at native resolution on the GPU.
   - Prove core/presenter CPU cost is independent of output resolution (1080p vs 4K).
   - Budgets and hardware definitions: [`Performance.md`](Performance.md).
@@ -2229,7 +2240,7 @@ This milestone is intentionally separate from the Avalonia shell. It can start o
 
 - [x] Accurate mode matches the CPU `FrameAssembler` pixel-for-pixel on synthetic frames (CPU reference parity; GPU not executed in CI).
 - [ ] Two-stage pipeline: palette expansion at native resolution, then upscale/filter at output resolution.
-- [ ] 4K output at 60 fps on Tier A x64; 1080p60 on Raspberry Pi 4/5 class arm64 via GLES. See [`Performance.md`](Performance.md).
+- [ ] 4K output at 60 fps on Tier A x64; 1080p60 on Tier B desktop via GLES. See [`Performance.md`](Performance.md).
 - [x] Filters are opt-in, stable, and do not affect emulated state.
 - [x] Optional Direct3D 11 backend matches the CPU oracle and leaves OpenGL as the default.
 - [ ] Context loss recovers or falls back cleanly (GL 3.3 -> GLES -> CPU).
@@ -2367,7 +2378,7 @@ harness. See [`Performance.md`](Performance.md).
 
 **Acceptance**
 
-- [ ] 4K60 with nearest/sharp-bilinear on Tier A; 1080p60 on Raspberry Pi 4/5 class.
+- [ ] 4K60 with nearest/sharp-bilinear on Tier A; 1080p60 on Tier B desktop.
 - [ ] Core frame time p99 ≤ 8 ms on Tier A and independent of output resolution.
 - [ ] Presenter CPU ≤ 2 ms p99; zero managed allocations per frame in steady state.
 - [ ] Physical-pixel sizing at 100/150/200% DPI.
@@ -2438,7 +2449,7 @@ harness. See [`Performance.md`](Performance.md).
   - Verify core/presenter CPU cost is independent of output resolution and allocations are zero/frame.
   - Publish the performance report and update [`Performance.md`](Performance.md).
 - [ ] **M10.6 arm64 validation.**
-  - Run on Windows arm64 (if available), Linux arm64 (Raspberry Pi 4/5), macOS arm64.
+  - Run on Windows arm64 (if available), Linux arm64, macOS arm64. Raspberry Pi is out of scope.
   - Verify audio/gamepad backends.
 - [~] **M10.7 Portable archives and installers.**
   - `packaging/package.ps1` creates `5do-<component>-<rid>.zip` for Windows and `.tar.gz` for Linux/macOS, with README/notices/licensing, a generated `PACKAGE.txt`, and the Linux desktop entry. CI publishes and uploads both the raw folders and the portable archives for all six RIDs.
@@ -2933,7 +2944,7 @@ These need a decision before the relevant milestone; the plan assumes the defaul
 
 1. **Final product name and namespace prefix.** **Decided:** product `5DO`, solution `5DO.sln`, namespace prefix `FiveDo`.
 2. **Distribution license.** **Decided: FreeDO modified GNU LGPL, donationware** — non-commercial, source-available, voluntary donations only. Recorded in the root `LICENSE`; see `docs/Licensing.md` and `docs/ReleaseLegalReview.md`.
-3. **Renderer.** **Decided: OpenGL is required for the desktop frontend**, with two variants behind one contract: desktop GL 3.3/GLSL 330 via Silk.NET.OpenGL, and GLES 3.0/3.1/GLSL ES 300 via Silk.NET.OpenGLES. Windows uses WGL or ANGLE/GLES; Pi 4/5 uses GLES. The CPU `WriteableBitmap` path is only a fallback/oracle.
+3. **Renderer.** **Decided: OpenGL is required for the desktop frontend**, with two variants behind one contract: desktop GL 3.3/GLSL 330 via Silk.NET.OpenGL, and GLES 3.0/3.1/GLSL ES 300 via Silk.NET.OpenGLES. Windows uses WGL or ANGLE/GLES; Tier B desktop uses GLES where needed. The CPU `WriteableBitmap` path is only a fallback/oracle.
 4. **Default filter.** Default: sharp-bilinear for enhanced mode; "Accurate" (nearest/integer) must be available and pixel-identical to the CPU assembler.
 5. **Audio backend.** Default: OpenAL Soft via Silk.NET.OpenAL, with null/WAV fallbacks. Alternative: SDL2 audio.
 6. **Gamepad backend.** Default: evaluate Avalonia 12 built-in; fall back to Silk.NET.Input/SDL2.
@@ -2980,7 +2991,7 @@ These need a decision before the relevant milestone; the plan assumes the defaul
 
 The 25+ day M11 line is the full-compatibility plan. The adopted v1 scope replaces
 most of it with the release gate (soak, compatibility docs, legal review) and moves
-the remaining gameplay work, Tier B/Pi, installers, and the JIT to post-1.0. Legal
+the remaining gameplay work, Tier B, installers, and the JIT to post-1.0. Legal
 sign-off is recorded; v1.0.0 is published on GitHub with the artifacts attached. See
 [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
@@ -3008,7 +3019,7 @@ Suggested parallelization with two developers:
 7. ~~M5 DSP/audio and M6 XBUS/CD-ROM/storage.~~ Done. Cores, sinks, disc containers, CHD parent/child, volume header, command transcripts, and real-disc boot are validated; remaining CD timing/seek differential is M11.4.
 8. ~~M7 input/NVRAM/game database, M8 save states/CLI, M9 basic shell, M9R core OpenGL presenter, and M10 CI/CLI/frontend publish.~~ Done as a prototype; next are M9P performance/pacing, the remaining M9 pages/audio/settings UI, M9R filters/GPU tests, M10 arm64/installers, and M11 hardening. CLI and frontend trimming are complete (M10.3a/M10.3b).
 9. ~~Run the real-content smoke tests and record results in [`Compatibility.md`](Compatibility.md).~~ Done; per-title gameplay, save-state, screenshot, and WAV evidence is being completed.
-10. ~~M9P.1/M9P.2: benchmark baseline, dedicated core thread, and frame pacer.~~ Done; continue M9P.3-M9P.9 (GLES 3.1/Pi validation, CHD prefetch, p99/GPU gates).
+10. ~~M9P.1/M9P.2: benchmark baseline, dedicated core thread, and frame pacer.~~ Done; continue M9P.3-M9P.9 (GLES 3.1/DPI validation, CHD prefetch, p99/GPU gates).
 11. ~~Run the M13.3 baseline loadability sweep.~~ Done: 594 discs tested, 593 render, 1 known boot failure, 0 not loadable.
 12. ~~Triage the failure classes.~~ Done: the five former not-loadable rows and 12 black/blank titles are resolved or explained; Crash 'n Burn (Japan) remains the only known boot failure.
 13. **Validate on the Linux VM (v1.0 gate).** Build/test/smoke the CLI in the local Hyper-V `LinuxMint` VM (`D:\Hyper-V\VMs\LinuxMint`), run a reduced sweep, and record the GL renderer/fallback result.
@@ -3018,7 +3029,7 @@ Suggested parallelization with two developers:
 17. **Post-1.0: start M14 research.** Measure the current `--high-res` mode, prototype true 640x480 and 2x supersampling, and write the GPU CEL feasibility note.
 18. **Refresh the compatibility docs.** Merge the 5DO status/evidence into [`GameCompatibilityList.md`](GameCompatibilityList.md), [`Compatibility.md`](Compatibility.md), and [`KnownIssues.md`](KnownIssues.md) as the post-1.0 review proceeds.
 19. **Keep the differential harness green.** Run `benchmarks/diff/showcase.json`, record the baseline, and extend the manifest to the full collection (M15). Do not allowlist an early-frame divergence without a reason.
-20. **Post-release backlog, not current work:** Road Rash full race, Alone inventory, gameplay scripts for the other seven titles, CD/CLIO/MADAM/ARM timing triage, Raspberry Pi/GLES 3.1, arm64 hardware, DPI, installers/signing, frontend AOT audio, ViewModel tests, hot-path optimization, and the optional M12 JIT.
+20. **Post-release backlog, not current work:** Road Rash full race, Alone inventory, gameplay scripts for the other seven titles, CD/CLIO/MADAM/ARM timing triage, arm64/DPI validation, Tier B timing, installers/signing, frontend AOT audio, ViewModel tests, hot-path optimization, and the optional M12 JIT. WebAssembly, Android/iOS, and Raspberry Pi are out of scope.
 
 ---
 
@@ -3310,10 +3321,10 @@ A feature is done only when:
 
 | ID | Feature | Priority | Effort | Depends on | Status |
 |---|---|---|---|---|---|
-| ECO-02 | WebAssembly/browser build | P3 | XL | none | Pending |
-| ECO-03 | Android/iOS frontend | P3 | XL | ECO-04 | Pending |
+| ECO-02 | WebAssembly/browser build | P3 | XL | none | Out of scope (2026-11-02) |
+| ECO-03 | Android/iOS frontend | P3 | XL | ECO-04 | Out of scope (2026-11-02) |
 | ECO-04 | Linux/macOS validation, Flatpak/AppImage, macOS gamepad/Metal | P1 | L | ENG-01 | Pending |
-| ECO-05 | Raspberry Pi/arm64/GLES optimization | P1 | L | ENG-02 | Pending |
+| ECO-05 | Raspberry Pi/arm64/GLES optimization | P1 | L | ENG-02 | Out of scope (2026-11-02) |
 | ECO-06 | Plugin API | P3 | L | FND-01 | Pending |
 | ECO-07 | Headless server / HTTP / WebSocket API | P3 | M | FND-04 | Pending |
 | ECO-08 | 3DO modem/network emulation | P3 | L | CORE-04 | Pending |
@@ -3344,7 +3355,7 @@ A feature is done only when:
 | BAK-02 | Script Alone in the Dark inventory/exploration | P1 | UX-06, CORE-09 | Pending |
 | BAK-03 | Input/gameplay scripts for seven titles | P1 | UX-06, CORE-11 | Pending |
 | BAK-04 | CD/CLIO/MADAM/ARM timing triage with Opera | P0 | CORE-01..04 | Pending |
-| BAK-05 | Pi/arm64/DPI/Linux/macOS validation | P1 | ECO-04, ECO-05 | Pending |
+| BAK-05 | arm64/DPI/Linux/macOS validation | P1 | ECO-04 | Pending |
 | BAK-06 | Tier B 1080p60, 3D CEL profiling, hot-path optimization, relative gate | P1 | ENG-02, ENG-09 | Pending |
 | BAK-07 | MSIX/dmg/AppImage installers, signing/notarization, file associations | P1 | UX-16 | Pending |
 | BAK-08 | Frontend NativeAOT audio validation | P1 | ENG-10 | Pending |
@@ -3369,10 +3380,10 @@ A feature is done only when:
 | MOON-03 | Public accuracy dashboard | P1 | Trust through transparent differential results. |
 | MOON-04 | Console-like big picture | P2 | 10-foot UI. |
 | MOON-05 | Creator suite | P2 | TAS + debugger + Lua + trace viewer. |
-| MOON-06 | Everywhere | P2 | Desktop, RetroArch, browser, mobile, Pi. |
+| MOON-06 | Desktop everywhere | P2 | Windows, Linux, and macOS desktop; browser/mobile/Pi are out of scope. |
 | MOON-07 | Preservation | P1 | Redump, CHD, state import/export, movies. |
 | MOON-08 | Video quality | P2 | True high-res, shaders, HDR, NTSC, 4K60. |
-| MOON-09 | Performance leader | P1 | 4K60 mid-range, 1080p60 Pi 5. |
+| MOON-09 | Performance leader | P1 | 4K60 desktop, 1080p60 Tier B desktop. |
 | MOON-10 | Community | P1 | Compatibility DB, plugins, docs, localization. |
 
 ---
@@ -5793,7 +5804,10 @@ hotkey roundtrip.
 <a id="feat-eco-02"></a>
 ### ECO-02 - WebAssembly/browser build
 
-**Priority:** P3 | **Effort:** XL | **Depends on:** none | **Status:** Pending
+**Priority:** P3 | **Effort:** XL | **Depends on:** none | **Status:** Out of scope (2026-11-02)
+
+**Dropped.** WebAssembly/browser support is not planned. The specification below is
+retained for history only.
 
 **Problem.** No browser build.
 
@@ -5814,7 +5828,10 @@ hotkey roundtrip.
 <a id="feat-eco-03"></a>
 ### ECO-03 - Android/iOS frontend
 
-**Priority:** P3 | **Effort:** XL | **Depends on:** ECO-04 | **Status:** Pending
+**Priority:** P3 | **Effort:** XL | **Depends on:** ECO-04 | **Status:** Out of scope (2026-11-02)
+
+**Dropped.** Android and iOS are not planned. The specification below is retained for
+history only.
 
 **Problem.** No mobile app.
 
@@ -5856,7 +5873,11 @@ hotkey roundtrip.
 <a id="feat-eco-05"></a>
 ### ECO-05 - Raspberry Pi/arm64/GLES optimization
 
-**Priority:** P1 | **Effort:** L | **Depends on:** ENG-02 | **Status:** Pending
+**Priority:** P1 | **Effort:** L | **Depends on:** ENG-02 | **Status:** Out of scope (2026-11-02)
+
+**Dropped.** Raspberry Pi and Pi-specific GLES optimization are not planned. Desktop
+arm64 coverage remains under ECO-04/M10. The specification below is retained for history
+only.
 
 **Problem.** Tier B unmeasured.
 
@@ -6033,9 +6054,9 @@ hotkey roundtrip.
 
 **Files.** CPU/Madam/renderer/benchmarks.
 
-**Tests.** p99; allocations; Pi.
+**Tests.** p99; allocations; Tier B desktop.
 
-**Done when.** Tier A 4K60; Pi 5 1080p60; no regressions.
+**Done when.** Tier A 4K60; Tier B desktop 1080p60; no regressions.
 
 ---
 
@@ -6304,9 +6325,9 @@ hotkey roundtrip.
 
 ### Phase 5 - Ecosystem (8-16 weeks)
 
-- ECO-04/05 platform/Pi.
+- ECO-04 platform (Linux/macOS).
 - ECO-10/11 docs/community.
-- ECO-02/03/06/07/08/09 optional.
+- ECO-06/07/08/09 optional; ECO-02/03/05 dropped (2026-11-02).
 
 **Exit:** RetroArch core; validated platforms; public compatibility portal.
 
@@ -6378,7 +6399,7 @@ hotkey roundtrip.
 - [ ] Differential harness green.
 - [ ] 2,000+ tests; coverage gate.
 - [ ] 24h soak.
-- [ ] 4K60 Tier A; 1080p60 Pi 5.
+- [ ] 4K60 Tier A; 1080p60 Tier B desktop.
 - [ ] Windows/Linux/macOS x64/arm64 and Pi validated.
 - [ ] Installers/signing/notarization/auto-update/portable/file associations.
 - [ ] Localization/themes/accessibility.
@@ -6504,7 +6525,7 @@ But "best in the world" is not a feature-count contest. The remaining gap is in 
 7. **Add the missing 3DO input devices**: mouse, lightgun, arcade lightgun, flightstick, and Orbatak trackball.
 8. **Add rewind, fast-forward, netplay, cheats, achievements, and TAS tools.**
 9. **Add a shader-preset system and true high-resolution CEL rendering.**
-10. **Validate and polish the standalone cross-platform release** on Windows, Linux, macOS, and Raspberry Pi, and publish the compatibility portal.
+10. **Validate and polish the standalone cross-platform release** on Windows, Linux, and macOS, and publish the compatibility portal.
 11. **Build the full-collection differential harness and hardware test-ROM suite.**
 12. **Finish the UX shell**: disc browser, BIOS/NVRAM manager, localization, debugger, installers, auto-update, and portable mode.
 
@@ -6516,7 +6537,7 @@ But "best in the world" is not a feature-count contest. The remaining gap is in 
 
 - **P0 - Correctness:** accuracy, compatibility, BIOS/region/disc/peripheral support. These block the "best" claim.
 - **P1 - Expected:** features modern players and creators assume: rewind, fast-forward, netplay, cheats, TAS, shaders, recording, debugger, localization, installers.
-- **P2 - Multipliers:** ecosystem and platform reach: mobile/web, Pi, plugin API, server API.
+- **P2 - Multipliers:** ecosystem and platform reach: plugin API, server API, docs/community.
 - **P3 - Long-term:** engineering, legal, accessibility, performance moonshots, preservation.
 
 ---
@@ -6529,10 +6550,10 @@ Use seven pillars. Every roadmap item must improve at least one, and no item may
 |---|---|---|
 | **Accuracy** | The guest sees the same CPU, bus, CEL, DSP, CD, and timing behavior as real hardware, or as the best available reference. | Differential frame/audio/state hashes vs Opera; hardware test ROMs; instruction conformance; timing tests. |
 | **Compatibility** | Every known 3DO disc loads, renders, accepts input, saves, and completes. | 594/594 local discs load and render; >=95% Playable/Good; >=90% have a scripted playthrough. |
-| **Performance** | Full speed with headroom on modest hardware, with no audio/video stutter. | Core p99 <=8 ms; 4K60 on Tier A; 1080p60 on Pi 5; zero steady-state allocations. |
+| **Performance** | Full speed with headroom on modest hardware, with no audio/video stutter. | Core p99 <=8 ms; 4K60 on Tier A; 1080p60 on Tier B desktop; zero steady-state allocations. |
 | **Features** | The emulator does what players and creators expect in 2026. | Rewind, fast-forward, netplay, cheats, achievements, TAS, shaders, recording, debugger, library, localization. |
 | **Usability** | A new user can install, configure, and play without reading a manual. | One-click BIOS-less boot; auto BIOS/region/fix; guided setup; sensible defaults; installers; auto-update. |
-| **Portability** | The same core runs everywhere, including the places 3DO fans actually play. | Windows/Linux/macOS x64/arm64, Raspberry Pi, RetroArch, browser/mobile where feasible. |
+| **Portability** | The same core runs on the desktop platforms 3DO fans actually use. | Windows/Linux/macOS x64/arm64; no browser/mobile/Pi target. |
 | **Trust** | The project is honest, reproducible, legal, and stable. | CI gates, signed releases, SBOM, compatibility evidence, legal sign-off, crash-free soak, no telemetry surprises. |
 
 ### Success metrics (current -> target)
@@ -6547,7 +6568,7 @@ Use seven pillars. Every roadmap item must improve at least one, and no item may
 | Tests | 1,350 | **2,000+ with coverage gate** |
 | Core p99 (worst title) | 7.40 ms (Road Rash race) | **<=8 ms all titles** |
 | 4K60 on Tier A | Measured | **Sustained, all filters within budget** |
-| 1080p60 on Pi 5 | Unmeasured | **Measured and documented** |
+| 1080p60 on Tier B desktop | Unmeasured | **Measured and documented** |
 | Platforms claimed | Windows validated; 6 RIDs published | **All claimed platforms validated** |
 | UX feature set | Rewind/fast-forward/cheats done; no netplay/TAS/shaders | **All P1 UX items complete** |
 | Crash-free soak | 36,000 frames | **1,000,000+ frames / 24 h** |
@@ -6586,7 +6607,7 @@ Use seven pillars. Every roadmap item must improve at least one, and no item may
 | No shader presets, video recording, overlays, or true high-res CEL | Video quality is good but not best-in-class. |
 | No debugger UI, disc browser UI, BIOS/NVRAM manager | Creators and power users are forced into the CLI. |
 | No localization, themes, auto-update, installers, portable mode | Usability lags 4DO/RMG/RPCS3. |
-| Linux/macOS/arm64/Pi unvalidated | The "cross-platform" claim is not yet proven. |
+| Linux/macOS/arm64 unvalidated | The "cross-platform" claim is not yet proven. |
 | Legal/attribution sign-off | Resolved 2026-11-02: FreeDO modified GNU LGPL, donationware; no commercial use. |
 
 ### 2.3 What 5DO already does better than the references
@@ -7250,10 +7271,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 
 | ID | Enhancement | Why / reference | Done when | Effort |
 |---|---|---|---|---|
-| [ ] **ECO-02** | WebAssembly/browser build | Unique reach; demos/homebrew in a browser. | Boots a BIOS/homebrew at playable speed; file loading; canvas/audio. | XL |
-| [ ] **ECO-03** | Android/iOS frontend | Mobile reach; touch controls. | Playable on a mid-range phone; controller support; storage. | XL |
 | [ ] **ECO-04** | Linux/macOS validation, Flatpak/AppImage, macOS gamepad/Metal | Claimed platforms must be proven. | Smoke/soak on each; docs; packages. | L |
-| [ ] **ECO-05** | Raspberry Pi/arm64/GLES optimization | Tier B target. | Pi 5 1080p60; Pi 4 720p60/1080p30; measured. | L |
 | [ ] **ECO-06** | Plugin API | Extensibility for filters/input/cheats/netplay. | Stable interfaces; sample plugin; docs. | L |
 | [ ] **ECO-07** | Headless server / HTTP / WebSocket API | Automation, CI, remote play. | Start/stop/load/save/screenshot/input endpoints; auth. | M |
 | [ ] **ECO-08** | 3DO modem/network emulation | Optional preservation of network-capable software. | Documented scope; a test title; no core regression. | L |
@@ -7261,12 +7279,15 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 | [ ] **ECO-10** | Documentation wiki and compatibility portal | Community trust and discoverability. | Public docs; per-title pages; search; contribution guide. | M |
 | [ ] **ECO-11** | Community workflow | Discord, issue templates, contribution guide, bounties. | Templates; triage; release notes; contributor docs. | S |
 
+ECO-02 (WebAssembly/browser), ECO-03 (Android/iOS), and ECO-05 (Raspberry Pi) were
+dropped on 2026-11-02.
+
 ### 5.7 P3: Engineering, legal, and trust
 
 | ID | Enhancement | Why / reference | Done when | Effort |
 |---|---|---|---|---|
 | [ ] **ENG-01** | CI matrix, nightly sweep, coverage, static analysis, SBOM, reproducible builds | Trust at scale. | All RIDs; nightly 594-disc sweep; coverage gate; analyzers; SBOM; reproducible. | M |
-| [ ] **ENG-02** | Performance: interpreter hot path, M12 JIT, GPU CEL, async shaders | Headroom for Pi/4K. | Measured wins; bit-identical JIT; zero allocations. | XL |
+| [ ] **ENG-02** | Performance: interpreter hot path, M12 JIT, GPU CEL, async shaders | Headroom for Tier B/4K. | Measured wins; bit-identical JIT; zero allocations. | XL |
 | [x] **ENG-03** | Legal/licensing/attribution | Release gate. | FreeDO modified GNU LGPL, donationware; notices and OpenAL obligations shipped; project-owner sign-off recorded 2026-11-02. | M |
 | [ ] **ENG-04** | Accessibility | Inclusive UX. | Screen-reader labels; high contrast; UI scale; keyboard-only. | M |
 | [ ] **ENG-05** | Telemetry transparency and privacy controls | User trust. | Opt-in; clear docs; no game/user data; local-only option. | S |
@@ -7278,7 +7299,7 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 
 #### ENG-02 deep dive: performance roadmap
 
-**Current:** Road Rash race 4.20 ms/frame (p99 7.40 ms), synthetic 1.25 ms, 4K GPU p99 0.089 ms. The interpreter is fast enough for Tier A; Tier B/Pi is unmeasured.
+**Current:** Road Rash race 4.20 ms/frame (p99 7.40 ms), synthetic 1.25 ms, 4K GPU p99 0.089 ms. The interpreter is fast enough for Tier A; Tier B is unmeasured.
 
 **Order of work**
 1. Profile the interpreter and CEL/DSP hot paths on x64 and arm64.
@@ -7286,11 +7307,11 @@ These are the items that decide whether 5DO is *correct*, not just pleasant.
 3. Add the optional managed IL JIT (M12) only if profiling demands it.
 4. Add GPU CEL compositing only after software parity and a clear budget.
 5. Add async shader compilation and pipeline caching.
-6. Gate on p99, allocations, and 4K/Pi targets.
+6. Gate on p99, allocations, and 4K/Tier B targets.
 
 **Done when**
 - Tier A: 4K60 all filters within budget.
-- Pi 5: 1080p60; Pi 4: 720p60 or 1080p30.
+- Tier B desktop: 1080p60.
 - JIT (if built) is bit-identical and optional.
 - No steady-state allocations.
 
@@ -7304,7 +7325,7 @@ These are already recorded in the repo's docs; keep them visible so the new road
 | [ ] **BAK-02** | Script Alone in the Dark inventory/exploration | `docs/KnownIssues.md` | UX-06, CORE-09 |
 | [ ] **BAK-03** | Input/gameplay scripts for Gex, NFS, SSF2T, Total Eclipse, Killing Time, Theme Park, Return Fire | `docs/ReleaseChecklist.md` | UX-06, CORE-11 |
 | [ ] **BAK-04** | CD/CLIO/MADAM/ARM timing triage with Opera | `docs/ImplementationPlan.md` | CORE-01..04 |
-| [ ] **BAK-05** | Pi/arm64/DPI/Linux/macOS validation | `docs/Status.md` | ECO-04, ECO-05 |
+| [ ] **BAK-05** | arm64/DPI/Linux/macOS validation | `docs/Status.md` | ECO-04 |
 | [ ] **BAK-06** | Tier B 1080p60, 3D CEL profiling, hot-path optimization, relative benchmark gate | `docs/Performance.md` | ENG-02, ENG-09 |
 | [ ] **BAK-07** | MSIX/dmg/AppImage installers, signing/notarization, file associations | `docs/ReleaseChecklist.md` | UX-16 |
 | [ ] **BAK-08** | Frontend NativeAOT audio validation | `docs/Trimming.md` | ENG-10 |
@@ -7331,10 +7352,10 @@ These are not required to be "best", but they can make 5DO unmistakable.
 | [ ] **MOON-03** | Public accuracy dashboard | Publish the 594-disc differential results; trust through transparency. |
 | [ ] **MOON-04** | Console-like big picture | 10-foot UI with gamepad-only navigation. |
 | [ ] **MOON-05** | Creator suite | TAS + debugger + Lua + trace viewer + state diff in one shell. |
-| [ ] **MOON-06** | Everywhere | Windows/Linux/macOS/arm64/Pi/RetroArch/browser/mobile. |
+| [ ] **MOON-06** | Desktop everywhere | Windows/Linux/macOS desktop; no browser/mobile/Pi target. |
 | [ ] **MOON-07** | Preservation | Redump verification, CHD, state import/export, movies, metadata. |
 | [ ] **MOON-08** | Video quality | True high-res CEL, shader presets, HDR, NTSC, 4K60. |
-| [ ] **MOON-09** | Performance leader | 4K60 on mid-range, 1080p60 on Pi 5, low latency. |
+| [ ] **MOON-09** | Performance leader | 4K60 on mid-range desktop, 1080p60 on Tier B desktop, low latency. |
 | [ ] **MOON-10** | Community | Compatibility DB, plugins, docs, localization, transparent roadmap. |
 
 ---
@@ -7381,13 +7402,12 @@ Timelines are indicative and assume a focused developer or small team. They are 
 
 - VID-01..03, VID-10..12
 - SYS-05..06, SYS-19..22
-- ECO-02..03, ECO-05..07
+- ECO-06..07
 - UX-21..24
 - ENG-04..05, ENG-09..10
 
 **Exit criteria**
 - True high-res CEL.
-- Browser/mobile/Pi 5.
 - Debugger/TAS/Lua suite.
 - Public compatibility dashboard.
 - Signed releases.
@@ -7440,8 +7460,8 @@ Do not start with netplay or a browser build. They are valuable, but they multip
 ### 8.3 Performance
 
 - **Per-PR:** synthetic benchmark, zero allocations, core p99 <=8 ms, total p99 <=16.667 ms.
-- **Nightly:** real-content Road Rash/Lemmings, 4K GPU probe, Tier B/Pi.
-- **Release:** 4K60 all filters; 1080p60 Pi 5; 24h soak.
+- **Nightly:** real-content Road Rash/Lemmings, 4K GPU probe, Tier B.
+- **Release:** 4K60 all filters; 1080p60 Tier B desktop; 24h soak.
 
 ### 8.4 Security and robustness
 
@@ -7469,7 +7489,7 @@ Do not start with netplay or a browser build. They are valuable, but they multip
 | Netplay/rewind destabilize the core | High | Deterministic state; hashes; optional features; soak tests. |
 | Feature creep delays accuracy | High | Accuracy-first sequencing; explicit non-goals. |
 | Legal restrictions block distribution | High | Counsel review; no BIOS/game content; attribution; donationware. |
-| Pi/arm64 performance disappoints | Medium | Measure early; GLES path; JIT/GPU CEL only if needed. |
+| Tier B/arm64 performance disappoints | Medium | Measure early; JIT/GPU CEL only if needed. |
 | Localization/UI work balloons | Medium | Resource pipeline; community translations; incremental. |
 
 ### 9.2 Non-goals
@@ -7571,8 +7591,8 @@ These are **post-1.0 goals**, not v1.0 release blockers. A release can be called
 - [ ] PAL, CD-DA, multi-track, ODE, mouse, lightgun, arcade lightgun, flightstick, and trackball work.
 - [ ] BIOS/region/fix/input auto-profiles make known titles "just work".
 - [~] Rewind, fast-forward, and per-game cheats are shipped (2026-11-01); OSD notifications and the in-game quick menu are shipped (2026-11-01); netplay, achievements, TAS, shader presets, recording, and debugger UI remain.
-- [ ] 4K60 on Tier A; 1080p60 on Pi 5; zero steady-state allocations.
-- [ ] Windows/Linux/macOS x64/arm64 and Pi are validated.
+- [ ] 4K60 on Tier A; 1080p60 on Tier B desktop; zero steady-state allocations.
+- [ ] Windows/Linux/macOS x64/arm64 are validated. WebAssembly, Android/iOS, and Raspberry Pi are out of scope.
 - [ ] Installers, signing, notarization, auto-update, portable mode, and file associations are shipped.
 - [ ] 2,000+ tests, coverage gate, fuzzing, SBOM, and 24h soak pass.
 - [x] Legal/attribution sign-off is complete (2026-11-02).
@@ -8704,7 +8724,7 @@ CLI/shell surface, the OSD notification model or the quick menu/chord/settings
 surface, or
 the 2026-10-31 performance pass (CEL pipeline caching, Debug core optimization,
 render-request coalescing, Auto frame skip). Do not treat full-race completion, inventory
-scripting, Pi/arm64 validation, or installers as current gates.
+scripting, arm64 validation, or installers as current gates.
 
 **Project position:** donationware, non-commercial, source-available. Legal/attribution
 sign-off and CI reliability are recorded; Linux x64 full suite passed. v1.0.0 is
@@ -8781,7 +8801,7 @@ pass. The remaining
 packaging/notes, and optional Linux/macOS launch validation. GitHub Actions is
 currently blocked before job start by a billing/spending-limit annotation; that is an
 external account action, not a code failure. Full-race completion,
-extra title scripts, GLES 3.1/Pi/DPI, Tier B timing, arm64/installers, and the
+extra title scripts, GLES 3.1/DPI, Tier B timing, arm64/installers, and the
 optional JIT are post-1.0. See
 [`ReleaseChecklist.md`](ReleaseChecklist.md).
 
@@ -9900,7 +9920,7 @@ save/load proof.
   evidence only; do not replace it with a reflection-based JSON path.
 - Do not redo the fifteenth-pass `--gl-backend` selection, `--gl-probe-capture`
   parity path, or the measured WGL/ANGLE/GLES 3.0 results. Extend them with
-  GLES 3.1/Pi/DPI evidence only.
+  GLES 3.1/DPI evidence only.
 - Do not redo the twentieth-pass Vulkan backend or `--vk-probe`: the offscreen
   two-stage pipeline, build-time SPIR-V shaders, 320x240 CPU parity, 4K/1080p probe
   results, and optional `--gl-backend vulkan` desktop path are implemented. Do not

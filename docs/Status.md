@@ -560,7 +560,7 @@ allocation, core p99 > 8 ms, total mean > 8 ms, or total p99 > 16.667 ms, and up
 the JSON result as the baseline artifact. The benchmark's `--baseline` option also
 implements the same-machine >10% relative comparison (core p99, total mean, total
 p99; exit code 4); wiring it to CI awaits a stable/self-hosted runner. **Tier B
-(Pi 4/5) numbers and GLES timing are not measured yet.** CHD decode allocations are
+desktop numbers and GLES timing are not measured yet.** CHD decode allocations are
 host-side and are attributed to the core stage; the synthetic
 core/pack/mailbox/read path is allocation-free in steady state.
 
@@ -599,16 +599,15 @@ far below the 16.67 ms budget.
   The RTX 4070 measured GPU p99 0.089 ms and present p99 0.208 ms for sharp-bilinear,
   leaving ample headroom for 60 Hz. The remaining risk is the Avalonia/WGL compositor
   and frame pacing, not the emulator core.
-- **Pi 5: likely, but unmeasured.** The presenter should handle 4K60 via GLES; the
-  ARM CPU core may be the limiting factor in complex scenes.
-- **Pi 4: 1080p60 is the realistic target.** 4K60 output is not assumed.
+- **Tier B desktops: unmeasured.** The presenter should handle 1080p60; integrated
+  GPUs and older CPUs may be the limiting factor in complex scenes.
 - **4K internal CEL rendering is not a v1 goal.** The target is 4K output, not 4K
   internal rendering.
 
 CPU p99 and per-stage allocations are measured, and Tier A 4K GPU/present p99 is now
-recorded. Remaining performance work is post-1.0: Raspberry Pi/GLES 3.1 and DPI
-validation, Tier B timing, and the CI relative gate. See
-[`Performance.md`](Performance.md).
+recorded. Remaining performance work is post-1.0: GLES 3.1 and DPI validation,
+Tier B timing, and the CI relative gate. WebAssembly, Android/iOS, and Raspberry Pi
+are out of scope. See [`Performance.md`](Performance.md).
 
 ---
 

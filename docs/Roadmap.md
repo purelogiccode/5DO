@@ -35,7 +35,7 @@ complete, and the legal/attribution sign-off is recorded.
 ## Post-1.0
 
 - Full-race and long-playthrough evidence for the remaining scripted titles.
-- Raspberry Pi 4/5 and GLES 3.1 validation; arm64 hardware coverage.
+- GLES 3.1 and desktop arm64 validation. WebAssembly, Android/iOS, and Raspberry Pi are out of scope.
 - Tier B performance timing, DPI validation, and presentation polish.
 - Installers, signing, and file associations.
 - Optional managed IL JIT for guest ARM blocks.

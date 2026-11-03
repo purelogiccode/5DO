@@ -144,10 +144,11 @@ Named profiles live under `profiles/<name>/` and can be selected with
 - Runtime validation is post-1.0 work. Please report platform-specific findings with
   a [diagnostics bundle](Diagnostics.md).
 
-### Raspberry Pi and arm64
+### arm64
 
-GLES 3.1 presentation and 1080p60 on Raspberry Pi 4/5 are performance targets, not
-validated v1 guarantees. See [Performance](Performance.md) for the current status.
+Desktop arm64 builds (Windows/Linux/macOS) are supported targets but runtime validation
+is post-1.0. Raspberry Pi, Android/iOS, and WebAssembly are out of scope. See
+[Performance](Performance.md) for the current status.
 
 ## GPU and audio troubleshooting
 

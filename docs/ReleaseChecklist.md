@@ -46,7 +46,7 @@ been validated.**
 |---|---|---|
 | Validated desktop platform | **Windows x64** | WGL and ANGLE/GLES validated; CPU fallback works |
 | Secondary desktop builds | **Linux x64** (full suite and CLI/frontend smoke passed; GL preview); macOS x64 post-1.0 | Linux GPU presentation is unvalidated under llvmpipe; Windows GL remains the validated renderer |
-| arm64 / Raspberry Pi | **Post-1.0** | GLES 3.1, Pi timing, and DPI are unvalidated |
+| Desktop arm64 | **Post-1.0** | GLES 3.1, Tier B timing, and DPI are unvalidated; Raspberry Pi is out of scope |
 | Compatibility set | 12 boot-validated titles, with 5 showcase titles | Per-title status must be honest |
 | Disc formats | ISO, BIN, CUE+BIN, CHD | Already implemented and tested |
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
@@ -330,8 +330,9 @@ inside the bundle.
 - M13.5 in-game/visual review and M13.6 high-resolution pass.
 - M14 high-resolution CEL research (true 640x480, supersampling, GPU CEL feasibility).
 - Continue CD/CLIO/MADAM/ARM timing triage with the Opera differential harness.
-- Raspberry Pi 4/5 GLES 3.1, arm64 hardware, 100/150/200% DPI, and Linux/macOS
-  launch validation if not claimed for v1.
+- GLES 3.1, desktop arm64 hardware, 100/150/200% DPI, and Linux/macOS
+  launch validation if not claimed for v1. Raspberry Pi, Android/iOS, and WebAssembly
+  are out of scope.
 - Tier B 1080p60 timing, 3D CEL profiling, hot-path optimization, and the
   same-machine relative benchmark gate on stable CI hardware.
 - MSIX/dmg/AppImage installers, signing/notarization, and file associations.

@@ -1,6 +1,6 @@
 # 5DO Architecture
 
-**Status:** implemented through M9P desktop (M0-M8 complete; M9/M9R/M9P/M10 implemented as a working prototype). The dedicated core thread, two-stage presenter, persistent upload, physical-pixel sizing, FSR/xBR/HQx filters, and render-on-demand described below are implemented. Raspberry Pi/GLES 3.1, DPI, Tier B timing, and the remaining M9P items are pending. See [`Status.md`](Status.md) for the current position, [`DeveloperGuide.md`](DeveloperGuide.md) for the source map, and [documentation index](index.md) for the documentation map.
+**Status:** implemented through M9P desktop (M0-M8 complete; M9/M9R/M9P/M10 implemented as a working prototype). The dedicated core thread, two-stage presenter, persistent upload, physical-pixel sizing, FSR/xBR/HQx filters, and render-on-demand described below are implemented. GLES 3.1, DPI, Tier B timing, and the remaining M9P items are pending. Raspberry Pi, Android/iOS, and WebAssembly are out of scope. See [`Status.md`](Status.md) for the current position, [`DeveloperGuide.md`](DeveloperGuide.md) for the source map, and [documentation index](index.md) for the documentation map.
 **Reference:** the C# port was originally derived from FreeDOCore; since 2026-10-23, `References/opera-libretro-master/libopera` is the primary behavioral reference for new compatibility work. See [`ReferenceStrategy.md`](ReferenceStrategy.md).
 **Scope:** the emulator core, host layer, CLI, Avalonia frontend, tests, and build layout.
 
@@ -14,7 +14,7 @@
 4. **The frontend is replaceable.** The CLI and Avalonia app both consume `FiveDo.Host`; neither is referenced by the core.
 5. **The port is traceable.** Every ported C++ unit has a named C# counterpart and a comment pointing back to the FreeDOCore file/function.
 6. **Determinism by construction.** Fixed timestep, integer scheduler, explicit state serialization, no hidden globals, no wall-clock reads inside the core.
-7. **Performance is a first-class requirement.** The v1 target is 4K (3840x2160) 60 fps output on Tier A hardware and 1080p60 on Raspberry Pi 4/5 class devices, with core cost independent of output resolution. See [`Performance.md`](Performance.md).
+7. **Performance is a first-class requirement.** The v1 target is 4K (3840x2160) 60 fps output on Tier A hardware and 1080p60 on Tier B desktop hardware, with core cost independent of output resolution. Raspberry Pi and mobile targets are out of scope. See [`Performance.md`](Performance.md).
 
 ---
 
@@ -357,12 +357,12 @@ The renderer contract is API-neutral; the host selects a shader/API variant:
 | Variant | API / shader | Typical host |
 |---|---|---|
 | Desktop GL | OpenGL 3.3 core / GLSL 330 | Windows WGL, Linux GLX/EGL, macOS 4.1 core |
-| GLES | OpenGL ES 3.0/3.1 / GLSL ES 300 | Windows ANGLE (Avalonia default), Raspberry Pi 4/5 |
+| GLES | OpenGL ES 3.0/3.1 / GLSL ES 300 | Windows ANGLE (Avalonia default), other desktop GLES contexts |
 
 Avalonia's Windows default is ANGLE (OpenGL ES), so a desktop-only `#version 330
 core` path is not portable. The frontend must either prefer `Win32RenderingMode.Wgl`
-with an ANGLE fallback or provide the GLES path. Raspberry Pi 4 exposes conformant
-OpenGL ES 3.1, not desktop GL 3.3, so Tier B uses the GLES variant.
+with an ANGLE fallback or provide the GLES path. Tier B desktop hardware may expose
+GLES 3.x rather than desktop GL 3.3, so it uses the GLES variant.
 
 Frame pacing and threading are host responsibilities:
 
