@@ -189,7 +189,7 @@ Supported containers:
 | ISO | `IsoImage` | 2048-byte sectors, direct LBA mapping |
 | BIN | `BinImage` | 2352-byte sectors, payload at `0x10` |
 | CUE+BIN | `CueSheet` + `BinImage` | Single data track; pregap-aware |
-| **CHD** | `ChdDiscImage` | MAME CHD via **CHDSharp** (pure C#); CD/GD-ROM track table; 2048-byte payload extracted from raw 2352-byte sectors |
+| **CHD** | `ChdDiscImage` | MAME CHD via **CHDSharp** (pure C#); CD/GD-ROM track table; flat 2048-byte ISO CHDs; 2048-byte payload extracted from raw 2352-byte sectors |
 
 CHD details:
 
@@ -201,7 +201,7 @@ CHD details:
 - `SectorCount` comes from the first data track's `Frames`; the 3DO volume header remains the authoritative sector count for the emulated CD device.
 - Differential parent/child CHDs are supported via an optional parent path (`ChdFile.Open(path, parentPath, ...)`). Standalone CHDs are the common case.
 - `ConfigureReadAhead(n)` is enabled by default (4 hunks) because 3DO games stream data sequentially. The core reads on one thread; the CHD reader is not shared across threads.
-- DVD, HDD, raw, and audio-only CHDs are rejected with a clear `InvalidDataException`; 3DO software is CD-ROM based.
+- Flat CHDs with 2048-byte units (cooked ISOs converted with `chdman createdvd`, or `createhd` with 2048-byte units) have no track table; they are exposed as a single data track. DVD/HDD/raw CHDs with other unit sizes and audio-only CHDs are rejected with a clear `InvalidDataException`.
 - CHD is a **first-class v1 format**, not a later optional add-on. The game library scans `.chd` alongside `.iso`, `.bin`, and `.cue`.
 
 ---

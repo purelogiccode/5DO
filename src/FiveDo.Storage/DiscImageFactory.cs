@@ -40,7 +40,7 @@ public static class DiscImageFactory
         {
             ".cue" => CueSheet.Open(path),
             ".chd" => ChdDiscImage.Open(path, chdParentPath, chdReadAheadHunks),
-            ".iso" => new IsoImage(path),
+            ".iso" => OpenIso(path),
             ".bin" => OpenBin(path),
             _ => OpenByHeader(path, chdParentPath, chdReadAheadHunks),
         };
@@ -86,6 +86,29 @@ public static class DiscImageFactory
             && header[9] == 0xFF
             && header[10] == 0xFF
             && header[11] == 0x00;
+    }
+
+    private static IDiscSource OpenIso(string path)
+    {
+        var length = new FileInfo(path).Length;
+
+        // Raw 2352-byte-sector dumps are often named .iso. Check the CD sync pattern before
+        // the cooked-sector length, since an exact multiple of 2352 can also divide by 2048.
+        if (length % BinImage.RawSectorBytes == 0 && HasCdSyncHeader(path))
+        {
+            var mode = ReadModeByte(path);
+            return new BinImage(path, payloadOffset: mode == 2 ? 24 : 16);
+        }
+
+        if (length % IsoImage.SectorBytes == 0)
+        {
+            return new IsoImage(path);
+        }
+
+        throw new DiscImageException(
+            $"ISO file '{path}' is {length:N0} bytes, which is not a whole number of 2048-byte "
+            + $"3DO sectors (remainder {length % IsoImage.SectorBytes:N0}). It may be a raw "
+            + "2352-byte-sector dump without a complete CD sync header, or an incomplete download.");
     }
 
     private static IDiscSource OpenBin(string path)

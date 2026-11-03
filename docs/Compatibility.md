@@ -122,7 +122,7 @@ The BIOS manager scans a folder, reports file name, size, MD5, region, video sta
 | ISO, 2048-byte sectors | v1 | Most common 3DO image format |
 | BIN, 2352-byte sectors | v1 | Payload starts at offset `0x10` |
 | CUE + BIN | v1 | Multi-file/multi-track CUE, MODE1/2048, MODE1/2352, audio tracks, `INDEX`/`PREGAP`/`POSTGAP` |
-| **CHD** | **v1** | **MAME CHD via pure C# CHDSharp; CD/GD-ROM track table incl. audio; parent/child supported** |
+| **CHD** | **v1** | **MAME CHD via pure C# CHDSharp; CD/GD-ROM track table incl. audio; flat 2048-byte ISO CHDs; parent/child supported** |
 | Multi-track / CD-DA | Partial (2026-11-01) | Track table, raw CD-DA sectors, PLAY_AUDIO position, DSP mixing, persisted volume/mute, and M3U multi-disc swap are implemented; read-ahead/subcode and known-title evidence remain |
 | ZIP/7z archives | Later | Prefer extracting first |
 
@@ -136,7 +136,10 @@ CHD specifics:
   - raw Mode2/Form1 -> offset 24
   - audio/2352 -> raw sector bytes (byte-swapped from CHD's Red Book order)
 - Standalone and parent/child CHDs are supported; an optional parent path can be configured.
-- DVD, HDD, raw, and audio-only CHDs are rejected; 3DO software is CD-ROM based.
+- Flat CHDs with 2048-byte units are also supported and exposed as one data track. This covers
+  cooked ISOs converted with `chdman createdvd` (or `createhd` with 2048-byte units), which
+  have no CD track table. CD audio is unavailable for these data-only images.
+- DVD/HDD/raw CHDs with other unit sizes and audio-only CHDs are rejected; 3DO software is CD-ROM based.
 - Read-ahead is enabled by default (4 hunks) for sequential streaming.
 
 Game ID is the MD5 of the first two 2048-byte sectors (4096 bytes), matching 4DO. This ID keys save states, screenshots, and optional per-game settings. It must never change, or existing save data will be orphaned.
@@ -307,7 +310,7 @@ does not need a separate high-resolution input path.
 - No cycle-exact ARM bus timing yet. The interpreter preserves FreeDOCore's `Ncycle = 4`; Opera uses `Ncycle = 2` with datasheet references. The difference is under evaluation and must not be changed by default until a differential test proves the impact.
 - No guarantee of 4DO save-state compatibility.
 - The primary renderer requires desktop OpenGL 3.3 or OpenGL ES 3.0/3.1 (see `docs/Performance.md`); systems without either use the CPU fallback.
-- CHD is supported for CD/GD-ROM images; DVD/HDD/raw CHDs are not 3DO discs.
+- CHD is supported for CD/GD-ROM images and for flat 2048-byte-unit CHDs made from cooked ISOs; DVD/HDD/raw CHDs with other unit sizes are not 3DO discs.
 - CHD decompression is pure managed code and may be slower than ISO on low-end arm64 devices; read-ahead/cache mitigates this.
 
 ---

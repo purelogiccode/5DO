@@ -160,6 +160,69 @@ public sealed class DiscImageTests
     }
 
     [Fact]
+    public void ChdImage_OpensFlat2048ByteIsoChd()
+    {
+        using var fixture = new DiscFixture(sectorCount: 24);
+        ChdEncoder.EncodeRaw(fixture.IsoPath, fixture.FlatChdPath, hunkBytes: 4096, unitBytes: 2048);
+
+        using var chd = FiveDo.Storage.Chd.ChdDiscImage.Open(fixture.FlatChdPath);
+        Assert.Equal(24, chd.SectorCount);
+        DiscTrack track = Assert.Single(chd.Tracks);
+        Assert.Equal(DiscTrackKind.Data, track.Kind);
+        Assert.Equal(2048, track.SectorSize);
+        Assert.Equal(0, track.PayloadOffset);
+
+        for (var lba = 0; lba < chd.SectorCount; lba++)
+        {
+            var sector = new byte[2048];
+            chd.ReadSector(lba, sector);
+            Assert.Equal(DiscFixture.Expected(lba), sector);
+
+            var native = new byte[2048];
+            Assert.Equal(2048, chd.ReadTrackSector(lba, native));
+            Assert.Equal(DiscFixture.Expected(lba), native);
+        }
+    }
+
+    [Fact]
+    public void Factory_OpensRaw2352ImageNamedIso()
+    {
+        using var fixture = new DiscFixture(sectorCount: 8);
+        string rawIsoPath = Path.Combine(Path.GetTempPath(), $"fivedo-raw-{Guid.NewGuid():N}.iso");
+        try
+        {
+            File.Copy(fixture.BinPath, rawIsoPath);
+            using IDiscSource image = DiscImageFactory.Open(rawIsoPath);
+
+            Assert.IsType<BinImage>(image);
+            Assert.Equal(8, image.SectorCount);
+            var sector = new byte[2048];
+            image.ReadSector(3, sector);
+            Assert.Equal(DiscFixture.Expected(3), sector);
+        }
+        finally
+        {
+            File.Delete(rawIsoPath);
+        }
+    }
+
+    [Fact]
+    public void Factory_RejectsIsoWithPartialSector()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"fivedo-bad-{Guid.NewGuid():N}.iso");
+        try
+        {
+            File.WriteAllBytes(path, new byte[2048 + 17]);
+            DiscImageException exception = Assert.Throws<DiscImageException>(() => DiscImageFactory.Open(path));
+            Assert.Contains("not a whole number", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
     public void ChdImage_RejectsNonCdImage()
     {
         using var fixture = new DiscFixture(sectorCount: 4);
@@ -181,6 +244,7 @@ public sealed class DiscImageTests
             BinPath = Path.Combine(_directory, "disc.bin");
             CuePath = Path.Combine(_directory, "disc.cue");
             ChdPath = Path.Combine(_directory, "disc.chd");
+            FlatChdPath = Path.Combine(_directory, "flat.chd");
             HddPath = Path.Combine(_directory, "hdd.chd");
             MultiTrackBinPath = Path.Combine(_directory, "multi.bin");
             MultiTrackCuePath = Path.Combine(_directory, "multi.cue");
@@ -263,6 +327,8 @@ public sealed class DiscImageTests
         internal string CuePath { get; }
 
         internal string ChdPath { get; }
+
+        internal string FlatChdPath { get; }
 
         internal string HddPath { get; }
 

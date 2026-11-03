@@ -265,7 +265,8 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
   - Mode2/Form1 payload offset
   - ISO/BIN/CUE/CHD sector-stream parity for the same disc
   - parent/child CHD opening
-  - non-CD (DVD/HDD/raw) and audio-only CHD rejection
+  - flat 2048-byte ISO CHD acceptance
+  - non-3DO (DVD/HDD/raw with other unit sizes) and audio-only CHD rejection
   - invalid/missing/truncated CHD errors
   - read-ahead/cache behavior
 - Extension/size/header auto-detection.
