@@ -40,7 +40,8 @@ internal static class FiveDoCaptureRunner
         var options = DiffManifestLoader.MergeOptions(
             manifest.Defaults?.Options,
             title.Options,
-            harness.ClioTimers);
+            harness.ClioTimers,
+            harness.Profile);
         var titleDirectory = Path.Combine(outputDirectory, HarnessCommon.SafeName(title.Id));
         Directory.CreateDirectory(titleDirectory);
 

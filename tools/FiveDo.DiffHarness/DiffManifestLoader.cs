@@ -345,18 +345,19 @@ internal static class DiffManifestLoader
     public static DiffMachineOptions MergeOptions(
         DiffMachineOptions? defaults,
         DiffMachineOptions? title,
-        string? clioTimersOverride = null)
+        string? clioTimersOverride = null,
+        string? profileOverride = null)
     {
         defaults ??= new DiffMachineOptions();
         if (title is null)
         {
-            return clioTimersOverride is null
+            return clioTimersOverride is null && profileOverride is null
                 ? defaults
                 : new DiffMachineOptions
                 {
-                    Profile = defaults.Profile,
+                    Profile = profileOverride ?? defaults.Profile,
                     ArmTiming = defaults.ArmTiming,
-                    ClioTimers = clioTimersOverride,
+                    ClioTimers = clioTimersOverride ?? defaults.ClioTimers,
                     CelTiming = defaults.CelTiming,
                     CdTiming = defaults.CdTiming,
                     CdSpeed = defaults.CdSpeed,
@@ -372,7 +373,7 @@ internal static class DiffManifestLoader
 
         return new DiffMachineOptions
         {
-            Profile = title.Profile ?? defaults.Profile,
+            Profile = profileOverride ?? title.Profile ?? defaults.Profile,
             ArmTiming = title.ArmTiming ?? defaults.ArmTiming,
             ClioTimers = clioTimersOverride ?? title.ClioTimers ?? defaults.ClioTimers,
             CelTiming = title.CelTiming ?? defaults.CelTiming,

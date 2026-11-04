@@ -3487,7 +3487,9 @@ internal static class Program
     {
         ParsedOptions options = Parse(args);
         var frames = options.GetInt("--frames", 600);
-        FiveDoMachine machine = CreateSyntheticMachine();
+        EmulationProfile profile = ParseEmulationProfile(options.Get("--profile"));
+        EmulatorTuning tuning = EmulationProfiles.Apply(profile);
+        FiveDoMachine machine = CreateSyntheticMachine(tuning);
         machine.RunFrames(10);
 
         var stopwatch = Stopwatch.StartNew();
@@ -3502,7 +3504,13 @@ internal static class Program
             FramesPerSecond: seconds > 0 ? frames / seconds : 0,
             CyclesPerFrame: machine.LastFrameCycles,
             Instructions: machine.Cpu.InstructionsExecuted,
-            FrameHash: FrameHash(machine));
+            FrameHash: FrameHash(machine),
+            Profile: EmulationProfiles.Detect(machine.Tuning).ToString(),
+            ArmTiming: machine.Tuning.ArmTiming.ToString(),
+            ClioTimers: machine.Tuning.ClioTimers.ToString(),
+            CelTiming: machine.Tuning.CelTiming.ToString(),
+            CdromTiming: machine.Tuning.CdromTiming.ToString(),
+            CpuClock: machine.Tuning.ArmClock);
 
         if (options.Json)
         {
@@ -3510,6 +3518,12 @@ internal static class Program
         }
         else
         {
+            Console.WriteLine($"profile:     {result.Profile}");
+            Console.WriteLine($"arm timing:  {result.ArmTiming}");
+            Console.WriteLine($"clio timers: {result.ClioTimers}");
+            Console.WriteLine($"cel timing:  {result.CelTiming}");
+            Console.WriteLine($"cd timing:   {result.CdromTiming}");
+            Console.WriteLine($"cpu clock:   {result.CpuClock / 1_000_000.0:0.###} MHz");
             Console.WriteLine($"frames:      {result.Frames}");
             Console.WriteLine($"time:        {result.Seconds:F3}s");
             Console.WriteLine($"fps:         {result.FramesPerSecond:F1}");
@@ -3523,28 +3537,16 @@ internal static class Program
     private static int SelfTest(string[] args)
     {
         ParsedOptions options = Parse(args);
-        FiveDoMachine first = CreateSyntheticMachine();
-        first.RunFrames(30);
-        var hash1 = FrameHash(first);
-
-        FiveDoMachine second = CreateSyntheticMachine();
-        second.RunFrames(30);
-        var hash2 = FrameHash(second);
-
-        using var state = new MemoryStream();
-        first.SaveState(state);
-        FiveDoMachine loaded = CreateSyntheticMachine();
-        state.Position = 0;
-        loaded.LoadState(state);
-        loaded.RunFrames(30);
-
-        var checks = new List<CliSelfTestCheck>
+        var checks = new List<CliSelfTestCheck>();
+        foreach (EmulationProfile profile in new[]
+                 {
+                     EmulationProfile.Compatible,
+                     EmulationProfile.Accuracy,
+                     EmulationProfile.Performance,
+                 })
         {
-            new("deterministic frame", hash1 == hash2),
-            new("frame non-empty", hash1 != 0),
-            new("state roundtrip", FrameHash(loaded) == FrameHash(RunThirtyMore(first))),
-            new("state warnings empty", loaded.StateWarnings.Count == 0),
-        };
+            checks.AddRange(RunProfileSelfTest(profile));
+        }
 
         var ok = checks.TrueForAll(check => check.Ok);
         if (options.Json)
@@ -3564,13 +3566,42 @@ internal static class Program
         return ok ? 0 : 1;
     }
 
+    private static IReadOnlyList<CliSelfTestCheck> RunProfileSelfTest(EmulationProfile profile)
+    {
+        var label = profile.ToString().ToLowerInvariant();
+        EmulatorTuning tuning = EmulationProfiles.Apply(profile);
+        FiveDoMachine first = CreateSyntheticMachine(tuning);
+        first.RunFrames(30);
+        var hash1 = FrameHash(first);
+
+        FiveDoMachine second = CreateSyntheticMachine(tuning);
+        second.RunFrames(30);
+        var hash2 = FrameHash(second);
+
+        using var state = new MemoryStream();
+        first.SaveState(state);
+        FiveDoMachine loaded = CreateSyntheticMachine(tuning);
+        state.Position = 0;
+        loaded.LoadState(state);
+        loaded.RunFrames(30);
+
+        return
+        [
+            new($"{label} profile detected", EmulationProfiles.Detect(tuning) == profile),
+            new($"{label} deterministic frame", hash1 == hash2),
+            new($"{label} frame non-empty", hash1 != 0),
+            new($"{label} state roundtrip", FrameHash(loaded) == FrameHash(RunThirtyMore(first))),
+            new($"{label} state warnings empty", loaded.StateWarnings.Count == 0),
+        ];
+    }
+
     private static FiveDoMachine RunThirtyMore(FiveDoMachine machine)
     {
         machine.RunFrames(30);
         return machine;
     }
 
-    private static FiveDoMachine CreateSyntheticMachine()
+    private static FiveDoMachine CreateSyntheticMachine(EmulatorTuning? tuning = null)
     {
         var program = new[]
         {
@@ -3594,7 +3625,7 @@ internal static class Program
             rom[(i * 4) + 3] = (byte)word;
         }
 
-        var machine = new FiveDoMachine();
+        var machine = new FiveDoMachine(tuning);
         machine.LoadBios(rom);
         machine.Reset();
         return machine;
@@ -4700,8 +4731,9 @@ internal static class Program
         Console.WriteLine("                                       List numbered save slots and metadata.");
         Console.WriteLine("  disasm <file> [--offset N] [--count N] [--base 0xADDR]");
         Console.WriteLine("                                       Disassemble raw little-endian ARM words.");
-        Console.WriteLine("  bench [--frames N] [--json]          Synthetic-ROM frame benchmark.");
-        Console.WriteLine("  selftest [--json]                    Determinism and state roundtrip checks.");
+        Console.WriteLine("  bench [--frames N] [--profile P] [--json]");
+        Console.WriteLine("                                       Synthetic-ROM frame benchmark.");
+        Console.WriteLine("  selftest [--json]                    Determinism and state roundtrip checks for every named profile.");
         Console.WriteLine("  update [--force] [--json]            Check GitHub for a newer 5DO release.");
         Console.WriteLine();
         Console.WriteLine("Options:");

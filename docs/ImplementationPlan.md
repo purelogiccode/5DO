@@ -97,7 +97,7 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
 
 - [ ] **CORE-08 — Accuracy/performance profile coverage**
   **Status:** Partial · **Priority:** P0 · **Effort:** S · **Tracks:** CORE-08
-  **Remaining:** complete profile coverage; profile validation across the full collection; decide when the Accuracy profile can become the default.
+  **Remaining:** profile validation across the full collection; decide when the Accuracy profile can become the default. The 2026-11-04 increment completed the remaining CLI surfaces: `bench --profile` reports the derived profile and timing modes, `selftest` validates determinism and state round-trip for every named profile, and the differential harness accepts `--profile` for a full-collection A/B. The Accuracy profile stays opt-in until the A/B report shows no regression against the Compatible baseline.
   **Done when:** every profile round-trips through CLI/Settings/state and the Accuracy profile can be enabled by default after evidence is green.
 
 - [ ] **SYS-08 — CPU overclock/underclock validation**

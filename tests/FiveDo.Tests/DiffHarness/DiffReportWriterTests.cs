@@ -21,6 +21,8 @@ public sealed class DiffReportWriterTests : IDisposable
         Assert.Contains("Diverged", markdown, StringComparison.Ordinal);
         Assert.Contains("0x00000002", markdown, StringComparison.Ordinal);
         Assert.Contains("test reason", markdown, StringComparison.Ordinal);
+        Assert.Contains("CLIO override: `freedo`", markdown, StringComparison.Ordinal);
+        Assert.Contains("Profile override: `accuracy`", markdown, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -61,6 +63,8 @@ public sealed class DiffReportWriterTests : IDisposable
                 CliPath = "cli",
                 OperaCorePath = "core",
                 OperaCoreMd5 = "md5",
+                ClioTimersOverride = "freedo",
+                ProfileOverride = "accuracy",
                 Host = "test",
                 Runtime = "test",
             },

@@ -73,14 +73,19 @@ Outputs:
 - `artifacts/diff/<run>/report.html`
 
 Useful run flags: `--resume`, `--force`, `--title <filter>`, `--limit N`,
-`--no-images`, `--cleanup-iso`, `--compare-pc`, `--pc-tolerance <bytes>`, and
-`--clio-timers freedo|opera`. `--clio-timers` overrides the manifest option for every
-5DO capture, so one manifest can drive both sides of a CLIO timer A/B run without
-editing the manifest. Use a fresh `--out` directory (or `--force`) when changing the
-override, because cached 5DO captures are reused by `--resume` without re-reading the
-machine options. `--compare-pc` requires a reference core with the optional debug
-exports; without them the PC field is reported as unavailable rather than silently
-passing.
+`--no-images`, `--cleanup-iso`, `--compare-pc`, `--pc-tolerance <bytes>`,
+`--clio-timers freedo|opera`, and `--profile compatible|accuracy|performance|custom`.
+`--clio-timers` and `--profile` override the manifest option for every 5DO capture, so
+one manifest can drive both sides of a timer or profile A/B run without editing the
+manifest. Use a fresh `--out` directory (or `--force`) when changing either override,
+because cached 5DO captures are reused by `--resume` without re-reading the machine
+options. For a profile A/B, keep the manifest's `cdSpeed: "unbounded"` (the reference
+core runs unbounded); the resulting 5DO `profile` field is `Custom` because the drive
+speed differs, but the ARM/CLIO/CEL/CD timing modes follow the selected profile. Both
+overrides are recorded in the report provenance (`clioTimersOverride`,
+`profileOverride`) so an A/B report is self-describing. `--compare-pc` requires a
+reference core with the optional debug exports; without them the PC field is reported
+as unavailable rather than silently passing.
 
 Exit codes:
 
@@ -274,9 +279,17 @@ the reference core or the local discs.
   PC deltas of 184,696 and 739,184 bytes. See `docs/TestCorpus.md` 1.1g for the
   hashes, PCs, and images.
 - `benchmarks/diff/sample40.json`: first 40 full-collection titles, 300 frames,
-  one checkpoint, accuracy profile, no game fixes. Result: **18 match, 22
-  diverged, 0 error**. This is the current broad post-parity baseline; the full
+  one checkpoint, accuracy timing, no game fixes. The 2026-11-04 CLIO timer A/B
+  (same build and Opera captures, `--clio-timers freedo` on the second run)
+  produced **17 match, 23 diverged, 0 error** in both modes. All 40 final frame
+  hashes were identical; 37 checkpoint PCs moved. The baseline is 17 rather than
+  the previously recorded 18 because the CEL pixel-accounting fix changed the 5DO
+  accuracy hashes. This is the current broad post-parity baseline; the full
   594-title run remains runner-bound.
+- CORE-08 profile A/B: `--profile compatible` and `--profile accuracy` over the same
+  manifest produce separate reports for the default decision. The override is covered
+  by `MergeOptions_ProfileOverrideWinsOverDefaultsAndTitle`; the full-collection A/B
+  remains the gate before Accuracy can become the default.
 - A six-title CEL-heavy accuracy-profile run on 2026-11-04 (3,000 frames; Road
   Rash, Gex, AutoBahn Tokio, Johnny Bazookatone, Primal Rage, and DinoPark Tycoon)
   completed both engines with **0 errors and 6 divergences**. The CEL busy

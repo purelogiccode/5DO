@@ -376,8 +376,8 @@ public sealed class ClioTimerSchedulerParityTests
 
         private void Recalculate()
         {
-            _cyclesPerTimerSlot = (int)(((ulong)(uint)_armClock * 4UL << 16) / 25_000_000UL);
-            _cyclesPerTimerGap = (int)(((ulong)(uint)_armClock * (4UL + _slack) << 16) / 25_000_000UL);
+            _cyclesPerTimerSlot = (int)(((ulong)_armClock * 4UL << 16) / 25_000_000UL);
+            _cyclesPerTimerGap = (int)(((ulong)_armClock * (4UL + _slack) << 16) / 25_000_000UL);
             _cyclesUntilTimer = _inGap ? _cyclesPerTimerGap : _cyclesPerTimerSlot;
         }
     }

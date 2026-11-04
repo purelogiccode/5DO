@@ -149,6 +149,37 @@ All six runs completed and rendered. This is a smoke differential, not the full 
 report required to change the default. The Lemmings and Road Rash FreeDO hashes match
 the section 1.1 keys, confirming that the new option did not alter the default path.
 
+#### 1.1b1 40-title CLIO timer A/B (2026-11-04)
+
+The 40-title sample (`benchmarks/diff/sample40.json`, 300 frames, one checkpoint,
+accuracy timing, `--no-game-fixes`, `cdSpeed: unbounded`) was captured twice with the
+same build and the same Opera reference captures. Only the CLIO mode changed: the
+accuracy timing selects `OperaScheduler`; the second run used the new harness override
+`--clio-timers freedo`, which is forwarded to every 5DO capture.
+
+| CLIO mode | Matched | Diverged | Errors |
+|---|---:|---:|---:|
+| `OperaScheduler` | 17 | 23 | 0 |
+| `FreeDoCompatible` | 17 | 23 | 0 |
+
+The same 17 titles match in both modes, and all 40 final frame hashes are identical.
+The mode changes the checkpoint PC for 37 of the 40 titles but not the rendered frame at
+300 frames, so the CLIO scheduler alone neither closes nor regresses a title in this
+boot sample. The accuracy baseline is 17/40 rather than the previously recorded 18/40
+because the CEL pixel-accounting fix changed the 5DO accuracy hashes; the Opera
+reference captures are unchanged. The mode stays opt-in pending the full 594-disc
+3,000-frame run.
+
+Timer ledger and trace evidence: a 300-frame Lemmings boot with `--clio-timers opera
+--clio-timer-stats --clio-timer-trace` reports timer 0 (141,814 ticks, 2 reloads),
+timer 3 (70,688 ticks, 55 stops and 55 FIQs), and timer 4 (37,600 ticks, 93 reloads).
+The trace shows timer 14 reloading `0x3d` every ~12,400 ARM cycles at slack `0x150`:
+one scan is 15 two-cycle slots plus the `(4 + 336)` M25M-tick gap, or 200 ARM cycles,
+so 62 executions take 12,400 cycles. The same title with `--clio-timers freedo` reports
+183,177 timer-0 and 95,104 timer-3 ticks. That is the expected FreeDO all-timer scan
+rate: 25 MHz/64 = 390.6 kHz per timer, versus Opera's 195.3 kHz at the default slack of
+64 (62.5 kHz once the guest writes the `0x150` slack used by this title).
+
 ### 1.1c CEL busy timing differential (2026-10-31)
 
 The CORE-03 option was checked on the 3,000-frame boot with the same `panafz1.bin`,
@@ -1037,6 +1068,36 @@ Lemmings (USA) also booted 3,000 frames to the documented `0x9C2E3236` frame has
 27,845 FIQ requests / 27,764 entries and a 257,935-cycle maximum latency. These runs are
 smoke evidence only: the latency distribution still needs an Opera-side timeline before
 CORE-07 can be marked complete.
+
+### 1.1ak Profile coverage in bench and selftest (2026-11-04)
+
+The CORE-08 increment closes the remaining CLI surfaces. `5do selftest --json` now runs
+the profile-detection, determinism, non-empty frame, state round-trip, and empty-warning
+checks for every named profile. The run passed **15/15 checks** on the Debug build:
+
+| Profile | Checks | State round-trip |
+|---|---|---:|
+| `compatible` | 5/5 | PASS |
+| `accuracy` | 5/5 | PASS |
+| `performance` | 5/5 | PASS |
+
+`5do bench --frames 600 --profile <name> --json` reports the derived profile and timing
+modes. The synthetic program produces the same final frame hash (`0x6CDFBDC5`) in all
+three profiles; the deterministic counters differ as expected:
+
+| Profile | Profile reported | ARM timing | Cycles/frame | Instructions | CPU clock |
+|---|---|---|---:|---:|---:|
+| `--profile compatible` | `Compatible` | `FreeDoCompatible` | 208,336 | 127,084,960 | 12.5 MHz |
+| `--profile accuracy` | `Accuracy` | `Arm60Datasheet` | 208,336 | 127,084,960 | 12.5 MHz |
+| `--profile performance` | `Performance` | `FreeDoCompatible` | 312,512 | 190,632,320 | 18.75 MHz |
+
+The measured frames-per-second values are host- and build-dependent and are not a gate;
+use a Release build with `benchmarks/FiveDo.Benchmarks` for comparative performance.
+The accuracy profile does not change this synthetic program's instruction count because
+it does not poll CLIO timers or CEL status; the timing model is nevertheless active and
+reported. The profile override in the differential harness is covered by
+`MergeOptions_ProfileOverrideWinsOverDefaultsAndTitle`, and the CLI round-trip by
+`Bench_ProfileOptionReportsTiming` and `SelfTest_CoversEveryNamedProfile`.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

@@ -7,6 +7,13 @@ release.
 
 ### Added
 
+- `bench --profile` applies a timing profile to the synthetic benchmark and reports the
+  derived profile, ARM/CLIO/CEL/CD timing modes, and CPU clock in text and JSON, so the
+  Accuracy and Performance profiles can be measured with one command. `selftest` now
+  validates determinism, non-empty output, state round-trip, and empty state warnings for
+  every named profile. The differential harness accepts a `--profile` override
+  (`compatible`, `accuracy`, `performance`, or `custom`) for a full-collection A/B run.
+
 - `run --clio-timer-stats` reports a per-timer CLIO ledger (`timerStats` in `run --json`)
   with executions, wraps, reloads, stops, and odd-timer FIQs, and
   `run --clio-timer-trace <path>` writes a bounded trace of state-changing timer

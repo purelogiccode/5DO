@@ -130,7 +130,9 @@ warning, and the three-title 3,000-frame smoke differential in `TestCorpus.md` 1
 CORE-08 adds `EmulationProfile` (`Compatible`, `Accuracy`, `Performance`, `Custom`),
 `--profile`, and Settings > Emulation > Timing profile; the accuracy profile enables the
 ARM60, Opera timer, CEL busy, and CD cycle options together, and `run --json` reports the
-profile derived from the actual options.
+profile derived from the actual options. `bench --profile` measures any named profile and
+reports its timing modes, `selftest` checks determinism plus state round-trip for every
+named profile, and the differential harness accepts `--profile` for a full-collection A/B.
 SYS-14 adds per-game NVRAM and versions. `NvramStorageMode` (`Global`, `PerGame`),
 `NvramVersion` (0-9), and `NvramDirectory` select shared `nvram.ram`, versioned
 `nvram.<n>.ram`, or `nvram/per-game/<gameId>.<n>.ram` images. The store reads migration

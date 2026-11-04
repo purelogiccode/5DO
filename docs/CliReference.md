@@ -80,8 +80,8 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `state inspect <path>` | Save-state header and section table (full CRC validation, including Brotli sections). |
 | `state slots <dir>` | List numbered save slots and metadata. |
 | `disasm <file>` | Disassemble raw little-endian ARM words. |
-| `bench` | Synthetic-ROM frame benchmark (or real content with options). |
-| `selftest` | Determinism and state roundtrip checks. |
+| `bench` | Synthetic-ROM frame benchmark (or real content with options); `--profile` selects the timing bundle. |
+| `selftest` | Determinism and state roundtrip checks for every named timing profile. |
 | `update` | Check GitHub for a newer 5DO release. |
 | `--version`, `--help` | Identity/help. |
 
@@ -817,12 +817,17 @@ No JSON.
 
 ```powershell
 5do bench --frames 600
-5do bench --frames 600 --json
+5do bench --frames 600 --profile accuracy --json
 ```
 
 Runs a synthetic ARM program (MADAM/SPORT writes and a branch loop), warms up 10
-frames, then measures `--frames` frames. Fields: `ok`, `frames`, `seconds`,
-`framesPerSecond`, `cyclesPerFrame`, `instructions`, `frameHash`.
+frames, then measures `--frames` frames. `--profile` accepts `compatible`, `accuracy`,
+`performance`, or `custom` and applies the same timing bundle as `run`; the default is
+`compatible`. Fields:
+`ok`, `frames`, `seconds`, `framesPerSecond`, `cyclesPerFrame`, `instructions`,
+`frameHash`, `profile` (derived from the active options), `armTiming`, `clioTimers`,
+`celTiming`, `cdromTiming`, and `cpuClock`. Run the compatible and accuracy profiles
+back to back to measure the accuracy cost before changing the default.
 
 The separate benchmark project (`benchmarks/FiveDo.Benchmarks`) adds p50/p95/p99,
 per-stage timings/allocations, the CI gate, and baseline comparison. See
@@ -835,13 +840,15 @@ per-stage timings/allocations, the CI gate, and baseline comparison. See
 5do selftest --json
 ```
 
-Checks:
+Checks for each named profile (`compatible`, `accuracy`, `performance`):
 
-1. two synthetic machines produce the same frame hash;
-2. the frame hash is non-zero;
-3. a save/load roundtrip then 30 frames matches the uninterrupted machine;
-4. the loaded state has no warnings.
+1. the applied options detect as that profile;
+2. two synthetic machines produce the same frame hash;
+3. the frame hash is non-zero;
+4. a save/load roundtrip then 30 frames matches the uninterrupted machine;
+5. the loaded state has no warnings.
 
+Check names are prefixed with the profile, for example `accuracy state roundtrip`.
 Exit code is 1 if any check fails. JSON: `{ "ok": true, "checks": [{ "name", "ok" }] }`.
 
 ---

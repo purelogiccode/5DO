@@ -48,6 +48,16 @@ internal static class DiffReportWriter
         text.Append("CLI: `").Append(report.Provenance.CliPath ?? "unknown").AppendLine("`");
         text.Append("OperaCore: `").Append(report.Provenance.OperaCorePath ?? "unknown")
             .Append("` (").Append(report.Provenance.OperaCoreMd5 ?? "no md5").AppendLine(")");
+        if (report.Provenance.ClioTimersOverride is not null)
+        {
+            text.Append("CLIO override: `").Append(report.Provenance.ClioTimersOverride).AppendLine("`");
+        }
+
+        if (report.Provenance.ProfileOverride is not null)
+        {
+            text.Append("Profile override: `").Append(report.Provenance.ProfileOverride).AppendLine("`");
+        }
+
         text.AppendLine();
         text.AppendLine("## Summary");
         text.AppendLine();
@@ -192,7 +202,22 @@ internal static class DiffReportWriter
             .Append("</code><br>CLI <code>").Append(WebUtility.HtmlEncode(report.Provenance.CliPath ?? "unknown"))
             .Append("</code> &middot; OperaCore <code>").Append(WebUtility.HtmlEncode(report.Provenance.OperaCorePath ?? "unknown"))
             .Append("</code> (").Append(WebUtility.HtmlEncode(report.Provenance.OperaCoreMd5 ?? "no md5"))
-            .AppendLine(")</div>");
+            .Append(')');
+        if (report.Provenance.ClioTimersOverride is not null)
+        {
+            html.Append(" &middot; CLIO override <code>")
+                .Append(WebUtility.HtmlEncode(report.Provenance.ClioTimersOverride))
+                .Append("</code>");
+        }
+
+        if (report.Provenance.ProfileOverride is not null)
+        {
+            html.Append(" &middot; profile override <code>")
+                .Append(WebUtility.HtmlEncode(report.Provenance.ProfileOverride))
+                .Append("</code>");
+        }
+
+        html.AppendLine("</div>");
 
         html.AppendLine("<div class=\"cards\">");
         foreach ((var label, var value) in new[]

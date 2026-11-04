@@ -33,7 +33,19 @@ tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
 
 The reference core is paced to 60 Hz, so 3,000 frames take about 50 seconds per
 title. Use `--resume` to reuse captures. `--force` is required after changing
-frame counts, checkpoints, options, or the image/offset diagnostics.
+frame counts, checkpoints, options, or the image/offset diagnostics. For a
+CORE-08 profile A/B, use fresh output directories so cached captures from the
+other profile are not reused:
+
+```powershell
+tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+  run benchmarks/diff/full.json --out artifacts/diff/full-compatible `
+  --profile compatible --no-images --cleanup-iso --resume
+
+tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+  run benchmarks/diff/full.json --out artifacts/diff/full-accuracy `
+  --profile accuracy --no-images --cleanup-iso --resume
+```
 
 Regenerate the full manifest after changing the collection:
 

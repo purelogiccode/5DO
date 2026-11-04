@@ -109,6 +109,31 @@ public sealed class DiffManifestTests : IDisposable
     }
 
     [Fact]
+    public void MergeOptions_ProfileOverrideWinsOverDefaultsAndTitle()
+    {
+        var defaults = new DiffMachineOptions
+        {
+            Profile = "accuracy",
+            CdSpeed = "unbounded",
+        };
+        var title = new DiffMachineOptions
+        {
+            Profile = "performance",
+            ArmTiming = "freedo",
+        };
+
+        DiffMachineOptions merged = DiffManifestLoader.MergeOptions(
+            defaults,
+            title,
+            clioTimersOverride: null,
+            profileOverride: "compatible");
+
+        Assert.Equal("compatible", merged.Profile);
+        Assert.Equal("freedo", merged.ArmTiming);
+        Assert.Equal("unbounded", merged.CdSpeed);
+    }
+
+    [Fact]
     public void Load_RejectsDuplicateIds()
     {
         var path = Write(

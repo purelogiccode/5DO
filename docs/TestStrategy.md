@@ -323,6 +323,9 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
 - Multitask `skipFrame` path.
 - Save/load roundtrip: state hash before/after.
 - Determinism: run the same 120 frames twice; compare frame hashes and state hash.
+- Timing profiles: `bench --profile` reports the derived profile and timing modes;
+  `selftest` checks determinism and state round-trip for every named profile; the
+  differential-harness profile override is unit-tested.
 
 ### 4.15 Host
 

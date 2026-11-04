@@ -844,6 +844,34 @@ public sealed class CliProcessTests
     }
 
     [Fact]
+    public void Bench_ProfileOptionReportsTiming()
+    {
+        CliResult result = Invoke("bench", "--frames", "2", "--profile", "accuracy", "--json");
+
+        Assert.Equal(0, result.Code);
+        Assert.Contains("\"profile\": \"Accuracy\"", result.Output, StringComparison.Ordinal);
+        Assert.Contains("\"armTiming\": \"Arm60Datasheet\"", result.Output, StringComparison.Ordinal);
+        Assert.Contains("\"clioTimers\": \"OperaScheduler\"", result.Output, StringComparison.Ordinal);
+        Assert.Contains("\"celTiming\": \"OperaBusy\"", result.Output, StringComparison.Ordinal);
+        Assert.Contains("\"cdromTiming\": \"OperaCycleBased\"", result.Output, StringComparison.Ordinal);
+        Assert.Contains("\"cpuClock\": 12500000", result.Output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SelfTest_CoversEveryNamedProfile()
+    {
+        CliResult result = Invoke("selftest", "--json");
+
+        Assert.Equal(0, result.Code);
+        Assert.Contains("compatible profile detected", result.Output, StringComparison.Ordinal);
+        Assert.Contains("compatible state roundtrip", result.Output, StringComparison.Ordinal);
+        Assert.Contains("accuracy profile detected", result.Output, StringComparison.Ordinal);
+        Assert.Contains("accuracy state roundtrip", result.Output, StringComparison.Ordinal);
+        Assert.Contains("performance profile detected", result.Output, StringComparison.Ordinal);
+        Assert.Contains("performance state roundtrip", result.Output, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void DiscPlaylist_ListsEntriesInOrder()
     {
         var directory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-playlist-{Guid.NewGuid():N}");
