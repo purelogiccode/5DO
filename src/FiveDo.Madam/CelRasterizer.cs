@@ -955,6 +955,7 @@ internal sealed class CelRasterizer
                         _frameBufferTarget,
                         Xy2Off(unchecked(xcur << 2), ycur, _writeModulo)),
                     (ushort)pixel);
+                _engine.AddPixels(1);
             }
         }
 
@@ -1517,6 +1518,7 @@ internal sealed class CelRasterizer
                     _frameBufferTarget,
                     Xy2Off(unchecked(x << 2), writeY, _writeModulo)),
                 pixel);
+            _engine.AddPixels(1);
         }
     }
 

@@ -18,6 +18,11 @@ release.
 
 ### Fixed
 
+- CEL busy timing now counts pixels written by the 320x240 literal-line and
+  packed-repeat rasterizer paths. Those paths bypass the shared `WritePixel`
+  helper, so the Accuracy profile previously underestimated Opera's
+  `g_CEL_PIXELS_DRAWN` workload and expired the CEL busy deadline too early.
+  The default FreeDO timing path is unchanged.
 - Opening a disc before a BIOS is configured now asks for the BIOS first instead of
   reporting a disc-open failure. The missing-BIOS message points to **File > Open BIOS**
   and **Settings > Paths**, and expected BIOS selection warnings no longer create bug

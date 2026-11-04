@@ -79,6 +79,54 @@ public sealed class CelRasterizerTests
     }
 
     [Fact]
+    public void PackedLine_CountsDrawnPixelsForOperaBusy()
+    {
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
+        madam.CelTiming = CelTimingMode.OperaBusy;
+        WritePackedCcb(
+            memory,
+            loadPlut: true,
+            hdx: 0x10000,
+            hdy: 0,
+            vdx: 0,
+            vdy: 0x10000,
+            flags: CcbControl.Clockwise);
+        WritePlut(memory, 0, 0x7fff);
+        WriteBytes(memory, SourceData + 4, 0x00, 0x40, 0x80);
+
+        madam.Poke(0x5a4, Ccb);
+        madam.Poke(0x100, 0);
+
+        Assert.True(madam.TickCel(0));
+        Assert.Equal(1, madam.CelPixelsDrawn);
+        Assert.Equal(65UL, madam.CelBusyCyclesRemaining);
+    }
+
+    [Fact]
+    public void PackedRepeatLine_CountsEveryRetainedPixelForOperaBusy()
+    {
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
+        madam.CelTiming = CelTimingMode.OperaBusy;
+        WritePackedCcb(
+            memory,
+            loadPlut: true,
+            hdx: 0x10000,
+            hdy: 0,
+            vdx: 0,
+            vdy: 0x10000,
+            flags: CcbControl.Clockwise);
+        WritePlut(memory, 0, 0x7fff);
+        WriteBytes(memory, SourceData + 4, 0x00, 0xc1, 0x80);
+
+        madam.Poke(0x5a4, Ccb);
+        madam.Poke(0x100, 0);
+
+        Assert.True(madam.TickCel(0));
+        Assert.Equal(2, madam.CelPixelsDrawn);
+        Assert.Equal(66UL, madam.CelBusyCyclesRemaining);
+    }
+
+    [Fact]
     public void PackedLine_SkipXSkipsSourcePixels()
     {
         (FiveDoMemory memory, MadamChip madam) = CreateScene();

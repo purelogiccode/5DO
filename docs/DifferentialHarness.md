@@ -272,6 +272,11 @@ the reference core or the local discs.
   one checkpoint, accuracy profile, no game fixes. Result: **18 match, 22
   diverged, 0 error**. This is the current broad post-parity baseline; the full
   594-title run remains runner-bound.
+- A six-title CEL-heavy accuracy-profile run on 2026-11-04 (3,000 frames; Road
+  Rash, Gex, AutoBahn Tokio, Johnny Bazookatone, Primal Rage, and DinoPark Tycoon)
+  completed both engines with **0 errors and 6 divergences**. The CEL busy
+  work-accounting fix changes the 5DO hashes but does not close the differential;
+  see `TestCorpus.md` 1.1c1.
 - `benchmarks/diff/full.json`: generated from the 594-disc collection on
   2026-10-31 (589 main + 5 MAME) and validated with `--strict`. A two-title
   300-frame smoke (`--limit 2 --frames 300 --no-images --cleanup-iso`) ran both

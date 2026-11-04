@@ -183,6 +183,51 @@ Lemmings and Road Rash also completed 12,000 frames with the Opera model
 (`0xCE7E7A74` and `0xAEE9963B` respectively), so the deferred draw and busy deadline do
 not stall those boot paths.
 
+#### 1.1c1 CEL busy work accounting (2026-11-04)
+
+The 2026-10-31 runs used a work ledger that missed the 320x240 literal-line and
+packed-repeat rasterizer paths: those paths wrote through `CelMemory.WriteHalfword`
+without calling `CelEngine.AddPixels`, while the high-resolution paths went through
+`WritePixel` and were counted. Opera counts every `process_pixel` call and its direct
+`TexelDraw_Line` writes, so the busy deadline was too short for those lists.
+
+After the fix, a 3,000-frame Road Rash boot with `--cel-timing opera --cel-trace` reports
+five full-screen lists as `cels=1 pixels=76800 busy=106730` (two of them) and
+`cels=2 pixels=153600 busy=213461`; the literal-line lists previously reported zero
+pixels. The FreeDO path still produces the remembered golden frame hash `0x5E9EE515`
+(PC `0x000BA0F0` on this fresh-NVRAM run; instruction totals vary with the initial NVRAM
+bytes, so the frame hash is the regression key). The Opera path is now:
+
+| Title | Mode | Final PC | Frame hash | Instructions |
+|---|---|---|---:|---:|
+| Road Rash | `--cel-timing opera` | `0x000B9D54` | `0x9512219E` | 170,818,687 |
+| Lemmings | `--cel-timing opera` | `0x0012B324` | `0x9C2E3236` | 194,135,071 |
+| Gex | `--cel-timing opera` | `0x001105C4` | `0x05F38B50` | 209,334,014 |
+
+Road Rash also completed 12,000 frames in both modes (PC `0x00020640` for each):
+FreeDO retained `0x2D05A53C` and Opera produced `0x81BDF30F`, so the longer busy
+periods do not stall the boot. Lemmings and Gex do not poll CEL status in their early
+boot, so they remain pixel-identical to the FreeDO path. The 300-frame accuracy-profile
+smoke still matches the reference (`0x110E7DC5` on both engines). The work-accounting
+change is covered by
+`PackedLine_CountsDrawnPixelsForOperaBusy`,
+`PackedRepeatLine_CountsEveryRetainedPixelForOperaBusy`, and
+`LiteralLine_CountsDrawnPixelsForOperaBusy`.
+
+A six-title, 3,000-frame, accuracy-profile differential on 2026-11-04 completed both
+engines with no capture errors; all six still diverged at the final checkpoint. The
+accounting fix changes 5DO's CEL timing but does not by itself close the remaining
+scheduling/render gap, so the Opera busy mode stays opt-in.
+
+| Title | 5DO frame hash | Opera frame hash |
+|---|---|---|
+| Road Rash | `0xACFEC90C` | `0x3F570FC0` |
+| Gex | `0xD92DBD3C` | `0xBED174BD` |
+| AutoBahn Tokio | `0x04C4738C` | `0x32A050A8` |
+| Johnny Bazookatone | `0x5796BF92` | `0xA29AD2D1` |
+| Primal Rage | `0xCD9812F9` | `0x8E116314` |
+| DinoPark Tycoon | `0x266F986F` | `0xB45E532B` |
+
 ### 1.1d CD-ROM cycle timing differential (2026-10-31)
 
 The CORE-04 option was checked with `panafz1.bin`, fresh NVRAM, and the same discs.

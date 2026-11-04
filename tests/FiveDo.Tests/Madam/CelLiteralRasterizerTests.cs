@@ -27,6 +27,23 @@ public sealed class CelLiteralRasterizerTests
     }
 
     [Fact]
+    public void LiteralLine_CountsDrawnPixelsForOperaBusy()
+    {
+        (FiveDoMemory memory, MadamChip madam) = CreateScene();
+        madam.CelTiming = CelTimingMode.OperaBusy;
+        WriteLiteralCcb(memory, vcnt: 0, widthMinusOne: 0, pre0: 1, pre1: 0, loadPlut: true);
+        WritePlut(memory, 0, 0x7fff);
+        WriteBytes(memory, SourceData + 8, 0x80);
+
+        madam.Poke(0x5a4, Ccb);
+        madam.Poke(0x100, 0);
+
+        Assert.True(madam.TickCel(0));
+        Assert.Equal(1, madam.CelPixelsDrawn);
+        Assert.Equal(65UL, madam.CelBusyCyclesRemaining);
+    }
+
+    [Fact]
     public void LiteralLine_HonorsBackgroundFlagForZeroPixel()
     {
         (FiveDoMemory memory, MadamChip madam) = CreateScene();

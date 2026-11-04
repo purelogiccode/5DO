@@ -1062,3 +1062,31 @@ M1 implements the section primitive used by all later chips:
   still reports three video divergences under the accuracy profile, and the 594-title
   differential has not been run, so plan rule 7 (no default timing change without
   full-collection evidence) still blocks promoting ARM60 to the default.
+
+### 12.29 CEL busy work accounting (2026-11-04)
+
+- CORE-03 follow-up: Opera paces the CEL engine at 9 million rendered pixels per second
+  plus 64 setup cycles per SCoB, using the larger of `g_CEL_PIXELS_DRAWN` and
+  `g_CEL_TEXELS_WALKED`. 5DO already used that formula, but two 320x240 rasterizer paths
+  wrote pixels through `CelMemory.WriteHalfword` without calling `AddPixels`:
+  `DrawPixel` (literal-line and packed-literal packets) and `TexelDrawLine`
+  (packed-repeat packets). The high-resolution branches went through `WritePixel`, which
+  counted, so the error only affected the normal 320x240 path and understated busy time.
+- Both direct-write branches now call `CelEngine.AddPixels(1)`. The remaining writers
+  already count: `TexelDrawScale` and `FillArbitrarySpan` count in their low-resolution
+  loops, and `WritePixel` counts for high resolution. `AddPixels` is still gated by
+  `TrackWork`, which is only enabled in `CelTimingMode.OperaBusy`, so the FreeDO-compatible
+  default is untouched.
+- The deadline remains Opera's integer formula:
+  `work * ArmClock / 9,000,000 + cels * 64`, with `work = max(pixels, texels)`.
+  `TickCel` subtracts instruction cycles before each ARM instruction, matching Opera's
+  cycle-count comparison in `opera_madam_cel_tick`.
+- Regression tests: `CelRasterizerTests.PackedLine_CountsDrawnPixelsForOperaBusy`,
+  `CelRasterizerTests.PackedRepeatLine_CountsEveryRetainedPixelForOperaBusy`, and
+  `CelLiteralRasterizerTests.LiteralLine_CountsDrawnPixelsForOperaBusy`.
+- Evidence: a 3,000-frame Road Rash boot with `--cel-timing opera --cel-trace` now reports
+  full-screen lists as `cels=1 pixels=76800 busy=106730` (previously those pixels were not
+  counted). The FreeDO path still produces the remembered golden frame hash `0x5E9EE515`.
+  On the same fresh-NVRAM run the Opera path ended at PC `0x000B9D54`, hash `0x9512219E`,
+  170,818,687 instructions. The CEL busy mode remains opt-in until a full-collection
+  differential shows a net accuracy gain.
