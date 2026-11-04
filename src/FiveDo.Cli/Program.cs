@@ -477,6 +477,7 @@ internal static class Program
         var captureFrames = ParseCheckpoints(options.Get("--capture-frames"));
         var stateHashEnabled = HasFlag(args, "--state-hash");
         var audioHashEnabled = HasFlag(args, "--audio-hash") || checkpointFrames.Length > 0;
+        var cycleClasses = HasFlag(args, "--cycle-classes");
         var pokeSpec = options.Get("--poke");
         var cheatPath = options.Get("--cheat");
         var cheatCode = options.Get("--cheat-code");
@@ -595,6 +596,8 @@ internal static class Program
         {
             machine.LoadBios(biosLoad.Image.Bios1.Span, biosLoad.Image.Bios2.Span);
         }
+
+        machine.Cpu.CycleClassTelemetryEnabled = cycleClasses;
 
         using AudioOutput audio = CreateAudio(options, audioHashEnabled);
         if (disc is not null)
@@ -1328,7 +1331,16 @@ internal static class Program
                 machine.Dsp.RunningLoops,
                 machine.Dsp.SleepingLoops,
                 machine.Dsp.MaxInstructionsPerLoop,
-                machine.Dsp.AverageInstructionsPerLoop));
+                machine.Dsp.AverageInstructionsPerLoop),
+            CycleClasses: cycleClasses
+                ? machine.Cpu.GetCycleClassUsage()
+                    .Select(usage => new CliCycleClassResult(
+                        usage.InstructionClass.ToString(),
+                        usage.Instructions,
+                        usage.Cycles,
+                        usage.CyclesPerInstruction))
+                    .ToArray()
+                : null);
 
         SaveNvramIfRequested(machine, nvramSelection);
 
@@ -3794,6 +3806,16 @@ internal static class Program
                 + $"{dspStats.LoopCalls} tick(s), max {dspStats.MaxInstructionsPerLoop}/tick, "
                 + $"avg {dspStats.AverageInstructionsPerLoop:F1}");
         }
+        if (result.CycleClasses is { Count: > 0 } cycleClasses)
+        {
+            Console.WriteLine("arm classes:");
+            foreach (CliCycleClassResult usage in cycleClasses)
+            {
+                Console.WriteLine(
+                    $"  {usage.InstructionClass,-18} {usage.Instructions,12} insn "
+                    + $"{usage.Cycles,15} cycles {usage.CyclesPerInstruction,6:F2} c/i");
+            }
+        }
         if (result.GifPath is not null)
         {
             Console.WriteLine($"gif:         {result.GifPath} ({result.GifFrames} frames)");
@@ -4572,7 +4594,7 @@ internal static class Program
         Console.WriteLine("             [--opera-dipir] [--opera-soft-reset]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--realtime] [--json]");
         Console.WriteLine("             [--cheat path] [--cheat-code code] [--cheat-auto] [--cheats-dir path]");
-        Console.WriteLine("             [--checkpoints 3000,6000,12000] [--audio-hash] [--state-hash]");
+        Console.WriteLine("             [--checkpoints 3000,6000,12000] [--audio-hash] [--state-hash] [--cycle-classes]");
         Console.WriteLine("             [--capture-frames 3000,6000] [--capture-dir path]");
         Console.WriteLine("             [--movie-record path] [--movie-play path] [--movie-verify] [--movie-no-state]");
         Console.WriteLine("             [--playlist path] [--swap-at N --swap-disc path]");

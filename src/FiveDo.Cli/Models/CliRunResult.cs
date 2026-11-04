@@ -97,4 +97,6 @@ internal sealed record CliRunResult(
     bool OperaSoftReset = false,
     string CpuBackend = "Interpreter",
     uint? RandomSeed = null,
-    bool HighResolution = false);
+    bool HighResolution = false,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    IReadOnlyList<CliCycleClassResult>? CycleClasses = null);

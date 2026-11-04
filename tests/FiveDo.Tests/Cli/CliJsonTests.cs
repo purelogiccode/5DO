@@ -97,7 +97,11 @@ public sealed class CliJsonTests
                 RunningLoops: 280,
                 SleepingLoops: 20,
                 MaxInstructionsPerLoop: 7,
-                AverageInstructionsPerLoop: 3.2));
+                AverageInstructionsPerLoop: 3.2),
+            CycleClasses:
+            [
+                new CliCycleClassResult("Multiply", 3, 9, 3.0),
+            ]);
 
         var json = JsonSerializer.Serialize(result, CliJsonContext.Default.CliRunResult);
 
@@ -135,6 +139,9 @@ public sealed class CliJsonTests
         Assert.Contains("\"dspStats\": {", json, StringComparison.Ordinal);
         Assert.Contains("\"maxInstructionsPerLoop\": 7", json, StringComparison.Ordinal);
         Assert.Contains("\"averageInstructionsPerLoop\": 3.2", json, StringComparison.Ordinal);
+        Assert.Contains("\"cycleClasses\": [", json, StringComparison.Ordinal);
+        Assert.Contains("\"instructionClass\": \"Multiply\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"cyclesPerInstruction\": 3", json, StringComparison.Ordinal);
         Assert.DoesNotContain("\"moviePath\"", json, StringComparison.Ordinal);
         Assert.DoesNotContain("\"movieVerification\"", json, StringComparison.Ordinal);
     }

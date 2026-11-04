@@ -241,6 +241,7 @@ With `--state-in`, a script starting at `0` applies its last entry immediately u
 | `--checkpoints N,N,...` | none | Emit deterministic samples at the listed frames. Forces the frame-by-frame run path and enables audio hashing. |
 | `--audio-hash` | off | Hash every DSP sample with FNV-1a and report `audioHash`. |
 | `--state-hash` | off | Serialize and hash the machine state at every checkpoint (`stateHash`). |
+| `--cycle-classes` | off | Record instructions and ARM cycles per instruction class and report `cycleClasses`. |
 | `--json` | off | Emit a structured result instead of text. |
 
 `--frame-out` and `--capture-dir` use the CPU `FrameAssembler`, so the image is the
@@ -375,6 +376,7 @@ All fields are camelCase. Nullable fields are omitted or `null` when not applica
 | `movieFailures` | string[]? | Recorded evidence that differed during verification. |
 | `fiq` | object | Request/entry telemetry: `requests`, `entries`, `matchedEntries`, `unmatchedEntries`, `coalescedRequests`, `lastLatencyCycles`, `maxLatencyCycles`, `averageLatencyCycles`. |
 | `dspStats` | object | DSP sample-loop telemetry: `instructions`, `loopCalls`, `runningLoops`, `sleepingLoops`, `maxInstructionsPerLoop`, `averageInstructionsPerLoop`. |
+| `cycleClasses` | object[]? | Per-class ARM cycle ledger, present only with `--cycle-classes`. Each entry has `instructionClass`, `instructions`, `cycles`, and `cyclesPerInstruction`. |
 
 `--fiq-trace` writes request and entry lines with ARM-cycle timestamps and matched
 latency; see [`Diagnostics.md`](Diagnostics.md) §7 for the format and the measurement

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using FiveDo.Core;
 
 namespace FiveDo.Cpu;
@@ -25,6 +26,8 @@ public sealed class Arm60 : ICpuBackend, IStateSection
     private const int Scycle = 1;
     private const int Icycle = 1;
 
+    private static readonly int InstructionClassCount = Enum.GetValues<ArmInstructionClass>().Length;
+
     private readonly int _nCycle;
 
     private static readonly bool[] IsLogic =
@@ -40,6 +43,8 @@ public sealed class Arm60 : ICpuBackend, IStateSection
     private readonly EmulatorTuning _tuning;
     private readonly CompatibilityState _compatibility;
     private readonly Arm60State _state = new();
+    private readonly long[] _classInstructions = new long[InstructionClassCount];
+    private readonly long[] _classCycles = new long[InstructionClassCount];
 
     private int _cycles;
     private uint _carryOut;
@@ -79,6 +84,43 @@ public sealed class Arm60 : ICpuBackend, IStateSection
 
     /// <summary>Gets the N-cycle length in ARM clock cycles selected by <see cref="EmulatorTuning.ArmTiming"/>.</summary>
     public int NCycle => _nCycle;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether per-instruction-class cycle telemetry is collected.
+    /// </summary>
+    /// <remarks>
+    /// Disabled by default so the hot interpreter loop stays unchanged. Enable it for
+    /// cycle-class diagnostics and differential evidence; see <see cref="GetCycleClassUsage"/>.
+    /// </remarks>
+    public bool CycleClassTelemetryEnabled { get; set; }
+
+    /// <summary>Gets the current per-class instruction and cycle totals.</summary>
+    /// <returns>One row per <see cref="ArmInstructionClass"/>, in enum order.</returns>
+    /// <remarks>
+    /// The snapshot allocates a small array. The counters are telemetry only, are not
+    /// serialized, and are cleared by <see cref="Reset"/> and <see cref="LoadState(IStateReader)"/>
+    /// but not by <see cref="SoftReset"/>.
+    /// </remarks>
+    public IReadOnlyList<ArmCycleClassUsage> GetCycleClassUsage()
+    {
+        var result = new ArmCycleClassUsage[InstructionClassCount];
+        for (var i = 0; i < result.Length; i++)
+        {
+            result[i] = new ArmCycleClassUsage(
+                (ArmInstructionClass)i,
+                _classInstructions[i],
+                _classCycles[i]);
+        }
+
+        return result;
+    }
+
+    /// <summary>Clears the per-class cycle ledger without changing the CPU state.</summary>
+    public void ResetCycleClassUsage()
+    {
+        Array.Clear(_classInstructions);
+        Array.Clear(_classCycles);
+    }
 
     /// <summary>Gets the shared compatibility state.</summary>
     public CompatibilityState Compatibility => _compatibility;
@@ -165,6 +207,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
         _ldmAddress = 0;
         _ldmValue = 0;
         _ldmInUse = 0;
+        ResetCycleClassUsage();
     }
 
     /// <summary>
@@ -225,6 +268,13 @@ public sealed class Arm60 : ICpuBackend, IStateSection
         }
 
         var cycles = -_cycles;
+        if (CycleClassTelemetryEnabled)
+        {
+            var instructionClass = (int)ArmDecoder.Classify(instruction);
+            _classInstructions[instructionClass]++;
+            _classCycles[instructionClass] += cycles;
+        }
+
         _cyclesExecuted += cycles;
         return cycles;
     }
@@ -309,6 +359,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
         _ldmInUse = reader.ReadInt32();
         _cycles = 0;
         _instructionsExecuted = 0;
+        ResetCycleClassUsage();
     }
 
     /// <summary>Writes the CPU save-state section payload. FreeDO: <c>_arm_Save</c>.</summary>

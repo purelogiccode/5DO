@@ -7,6 +7,10 @@ release.
 
 ### Added
 
+- `run --cycle-classes` reports a per-instruction-class ARM instruction and cycle ledger
+  in text and in `run --json` (`cycleClasses`). The exact ARM60 N=2 and FreeDO N=4 class
+  costs are documented and regression-tested for every instruction class.
+
 - Library disc-health checks: **File > Verify Library Discs...** reads every library image,
   matches it against a Redump/No-Intro DAT, and shows known-dump, not-in-DAT, or read-error
   badges with a status summary. `5do library verify` runs the same check headlessly. Results

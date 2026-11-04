@@ -93,7 +93,7 @@ fix. Do not use the older keys after this date. The PBUS fix changes input-sensi
 hashes because games now see a connected pad; re-record longer-run hashes before
 using them as regression keys.
 
-### 1.1a ARM timing differential (2026-10-31)
+### 1.1a ARM timing differential (2026-10-31; class ledger 2026-11-04)
 
 The CORE-01 option was checked on the Lemmings boot with the same BIOS, disc, frame
 count, and fresh NVRAM. The FreeDO-compatible default is unchanged; the ARM60
@@ -107,6 +107,27 @@ instead of four, so the guest reaches a different point at 3,000 frames.
 
 Both modes completed the boot and produced a rendered frame. This is a single-title
 smoke differential, not the full-collection report required to change the default.
+
+The same pair of runs was repeated with `--cycle-classes` to audit the per-class ledger
+introduced for CORE-01. The final frame hashes match the 2026-10-31 table above
+(`0x9C2E3236` and `0xFBED38D3`), and the class averages show the expected N=2 reductions:
+
+| Class | `freedo` cycles/instruction | `arm60` cycles/instruction |
+|---|---:|---:|
+| Multiply | 8.21 | 7.87 |
+| Swap | 10.00 | 6.00 |
+| DataProcessing | 1.06 | 1.03 |
+| SingleDataTransfer | 6.38 | 3.98 |
+| BlockTransfer | 10.07 | 7.42 |
+| Branch | 4.18 | 3.11 |
+| SoftwareInterrupt | 6.00 | 4.00 |
+
+`Undefined` and `Coprocessor` did not occur during this boot. Every executed class is
+within the exact per-instruction table in `PortingNotes.md` 12.28; the averages move only
+because of operand-dependent multiply cost and condition-failed one-cycle slots. The
+differential smoke (`benchmarks/diff/smoke.json`, 300 frames, accuracy profile) was
+re-run after the ledger change and still reports **Match** with frame hash `0x110E7DC5`
+on both engines.
 
 ### 1.1b CLIO timer scheduler differential (2026-10-31)
 

@@ -301,5 +301,5 @@ recorded.
 - [ ] First targeted port (CD-ROM read/status semantics) merged with tests.
 - [ ] SAudio `-6996` root cause identified and fixed.
 - [ ] Space Ace low-memory writer identified and fixed.
-- [ ] ARM cycle-class change evaluated behind a test/option.
+- [x] ARM cycle-class change evaluated behind a test/option (`--arm-timing`, `--cycle-classes`, exact class-cost tests).
 - [ ] 4K GPU/p99 measurements recorded on Tier A and Tier B.

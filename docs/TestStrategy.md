@@ -136,8 +136,11 @@ Instruction groups:
 - **FIQ:** pending FIQ entry/exit, banked registers, CPSR I/F bits, entry cycle
   timestamp, matched request-to-vector latency, level-triggered re-entry, and return.
 - **Memory interface:** `0xBADACCE5` reads, ignored writes, unaligned word behavior.
-- **Cycle counts:** each instruction class returns the same count as FreeDOCore; vector
-  entry itself charges no extra cycles (matching FreeDO and Opera).
+- **Cycle counts:** each instruction class returns the same count as FreeDOCore at N=4
+  and Opera at the ARM60 N=2 class; the exact table is in `PortingNotes.md` 12.28 and is
+  regression-tested by `ArmCycleClassTelemetryTests`. The optional per-class ledger is
+  covered for both modes. Vector entry itself charges no extra cycles (matching FreeDO and
+  Opera).
 - **Interrupt telemetry:** request/entry counters, coalescing, unmatched re-entry, and
   the CLI trace line shape.
 

@@ -1014,3 +1014,51 @@ M1 implements the section primitive used by all later chips:
 - The observed 3,000-frame Gex cadence is 2,205,094 ticks (735 per frame, matching
   44.1 kHz / 60 Hz), 88,955,550 instructions, mean 51.7 and peak 106 per tick. Use this as
   the baseline for CORE-05's optional worker thread and for spotting DSP hot loops.
+
+### 12.28 ARM cycle-class ledger (2026-11-04)
+
+- CORE-01 follow-up: `Arm60.CycleClassTelemetryEnabled` records instructions and cycles
+  per `ArmInstructionClass`. It is disabled by default so the hot loop is unchanged.
+  `run --cycle-classes` enables it, `run --json` emits `cycleClasses`, and the text output
+  prints an `arm classes:` table.
+- The ledger follows the interpreter's decode order: `Multiply`, `Swap`,
+  `DataProcessing`, `Undefined`, `SingleDataTransfer`, `BlockTransfer`, `Branch`,
+  `SoftwareInterrupt`, and `Coprocessor`. A condition-failed slot is counted in its
+  decoded class with the one-S fetch cost, matching the reference's
+  `CYCLES = -SCYCLE` entry.
+- The documented parity tolerance is **zero cycles per instruction class**. The exact
+  costs at N=2 (ARM60 datasheet) and N=4 (FreeDO-compatible) are:
+
+  | Class | N=2 | N=4 |
+  |---|---|---|
+  | Multiply | `1 + min(16, ((bits + 5) >> 1) - 1)` on Rs | same |
+  | Swap | 6 | 10 |
+  | Data processing (immediate/register) | 1 | 1 |
+  | Data processing (register-shifted operand) | 2 | 2 |
+  | Data processing to PC (unshifted operand) | 4 | 6 |
+  | Single data transfer LDR | 4 | 6 |
+  | Single data transfer LDR to PC | 7 | 11 |
+  | Single data transfer STR | 4 | 8 |
+  | Block load, `n` registers | `n + 3` | `n + 5` |
+  | Block load with PC in the list | `n + 6` | `n + 10` |
+  | Block store, `n` registers | `n + 3` | `n + 7` |
+  | Branch, SWI, undefined, coprocessor | 4 | 6 |
+  | FIQ vector entry | 0 extra | 0 extra |
+
+  The `n + k` rows apply the reference's wrap when `n` is zero; an empty LDM is 3/5 and
+  an empty STM is 3/7.
+- The ledger is telemetry only. It is not serialized, is cleared by cold reset and state
+  load (when enabled from that point it sums exactly to
+  `InstructionsExecuted`/`CyclesExecuted`), and `SoftReset` leaves it alone.
+- Evidence: a 3,000-frame Lemmings boot with `--cycle-classes` reproduces the recorded
+  ARM60 hash `0xFBED38D3` and 272,410,816 instructions. The measured averages show the
+  expected N=2 reduction: SingleDataTransfer 3.98 cycles/instruction versus 6.38,
+  BlockTransfer 7.42 versus 10.07, Swap exactly 6 versus 10, and SWI exactly 4 versus 6.
+  See `TestCorpus.md` 1.1a.
+- The ARM60 mode remains opt-in. This increment makes every class auditable and locks the
+  class costs with tests; the full 594-title differential and the default decision remain
+  open.
+- **Decision (2026-11-04): keep the FreeDO-compatible default.** The five-title showcase
+  still reports three video divergences under the accuracy profile, and the 594-title
+  differential has not been run, so plan rule 7 (no default timing change without
+  full-collection evidence) still blocks promoting ARM60 to the default.

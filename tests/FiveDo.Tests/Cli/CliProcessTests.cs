@@ -86,6 +86,56 @@ public sealed class CliProcessTests
     }
 
     [Fact]
+    public void Run_CycleClassesOption_IsReportedInJson()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--cycle-classes",
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"cycleClasses\": [", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"instructionClass\": \"Multiply\"", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void Run_WithoutCycleClassesOption_OmitsTheField()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.DoesNotContain("\"cycleClasses\"", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
     public void Run_ClioTimersOption_IsReportedInJson()
     {
         var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
