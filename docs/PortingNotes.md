@@ -1090,3 +1090,39 @@ M1 implements the section primitive used by all later chips:
   On the same fresh-NVRAM run the Opera path ended at PC `0x000B9D54`, hash `0x9512219E`,
   170,818,687 instructions. The CEL busy mode remains opt-in until a full-collection
   differential shows a net accuracy gain.
+
+### 12.30 CLIO timer scheduler parity (2026-11-04)
+
+- CORE-02 follow-up. The per-slot scheduler, slack gap, and cascade carry were already
+  implemented behind `ClioTimerMode.OperaScheduler`; this pass closes the remaining
+  register-width and observability gaps and adds a reference-model conformance test.
+- Opera masks every aligned write to the timer counter/reload block (`0x100..0x17C`) to
+  16 bits and reads it back masked (`opera_clio.c`, `clio_timer_reg_addr` and
+  `opera_clio_peek`). 5DO stored the raw 32-bit write, so a guest that wrote a timer
+  register with upper bits set could read them back. The mask now applies in
+  `OperaScheduler` mode. The FreeDO-compatible default keeps FreeDO's raw `cregs`
+  behavior, including the `0x120` `TIMER_VAL` compatibility write; in Opera mode `0x120`
+  is timer 4's counter and follows the timer-register rule. Unaligned writes fall through
+  to the plain register store in both modes, matching `clio_timer_reg_addr`.
+- `Clio.TimerTelemetryEnabled` and `Clio.GetTimerUsage()` record per-timer executions,
+  underflows, reloads, stops, and odd-timer FIQs for both the FreeDO `DoTimers()` scan
+  and the Opera `DoTimers(int)` slot. `Clio.TimerTraceWriter` records only state-changing
+  events (counter/control/slack writes, wraps, reloads, stops, and FIQs); logging every
+  slot scan would emit about 3.1 million lines per emulated second at the stock clock.
+- CLI: `run --clio-timer-stats` adds `timerStats` to `run --json`; `run
+  --clio-timer-trace <path>` writes the bounded trace. The differential harness gained
+  `--clio-timers freedo|opera` so one manifest can drive both sides of an A/B run.
+- `ClioTimerSchedulerParityTests` transcribes `opera_clock_timer_queued` and
+  `opera_clio_timer_execute`, including the int32 timer accumulator, slack
+  recalculation, slot/gap thresholds, cascade carry, and FIQ masks. It drives both
+  engines through 6,000 randomized cycle batches, timer/control writes, and slack
+  changes, and requires the slot sequence, every timer/control register, the carry, and
+  the telemetry ledger to match at every event (more than 50,000 slots exercised).
+- Evidence: the FreeDO default still produces the Lemmings 3,000-frame golden frame hash
+  `0x9C2E3236` (PC `0x00128550`, 194,135,071 instructions), identical to the
+  pre-change build. A 300-frame Lemmings run with `--clio-timers opera
+  --clio-timer-stats --clio-timer-trace` reports timer 14 reloading `0x3d` every
+  ~12,400 ARM cycles at slack `0x150`: one scan is 15 two-cycle slots plus the
+  `(4 + 336)` M25M-tick gap (200 ARM cycles), so 62 executions take 12,400 cycles.
+  The mode remains opt-in until the full 594-disc differential is green; see
+  `TestCorpus.md` 1.1b for the 40-title A/B result.

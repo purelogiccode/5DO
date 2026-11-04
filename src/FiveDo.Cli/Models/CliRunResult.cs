@@ -99,4 +99,6 @@ internal sealed record CliRunResult(
     uint? RandomSeed = null,
     bool HighResolution = false,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    IReadOnlyList<CliCycleClassResult>? CycleClasses = null);
+    IReadOnlyList<CliCycleClassResult>? CycleClasses = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    IReadOnlyList<CliTimerStatResult>? TimerStats = null);

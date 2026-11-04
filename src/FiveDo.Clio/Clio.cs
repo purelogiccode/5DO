@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using FiveDo.Core;
 
@@ -23,6 +24,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     private const int InputFifoCount = 13;
     private const int OutputFifoCount = 4;
     private const int RegisterCount = 65536;
+    private const int TimerCount = 16;
 
     private const uint Decrement = 0x1;
     private const uint Reload = 0x2;
@@ -49,6 +51,11 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     private readonly int[] _outputPointers = new int[OutputFifoCount];
     private readonly FifoDescriptor[] _inputFifos = new FifoDescriptor[InputFifoCount];
     private readonly FifoDescriptor[] _outputFifos = new FifoDescriptor[OutputFifoCount];
+    private readonly long[] _timerExecutions = new long[TimerCount];
+    private readonly long[] _timerUnderflows = new long[TimerCount];
+    private readonly long[] _timerReloads = new long[TimerCount];
+    private readonly long[] _timerStops = new long[TimerCount];
+    private readonly long[] _timerFiqs = new long[TimerCount];
 
     private int _dspWord1;
     private int _dspWord2;
@@ -117,7 +124,22 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     /// <summary>Gets or sets an optional diagnostic writer for timer register traffic.</summary>
     public System.IO.TextWriter? TraceWriter { get; set; }
 
-    /// <summary>Gets or sets the frame provider used to stamp diagnostic trace lines.</summary>
+    /// <summary>Gets or sets an optional diagnostic writer for state-changing timer events.</summary>
+    /// <remarks>
+    /// Slot scans are not logged because the Opera scheduler walks one slot per two ARM
+    /// cycles at the stock clock. Only counter/control/slack writes, underflows, reloads,
+    /// and stops are written, which keeps the trace bounded and diffable.
+    /// </remarks>
+    public System.IO.TextWriter? TimerTraceWriter { get; set; }
+
+    /// <summary>Gets or sets whether the per-timer event ledger is collected.</summary>
+    /// <remarks>
+    /// The ledger is diagnostic telemetry for CLIO timer parity work. It is not part of
+    /// the architectural state and is not serialized.
+    /// </remarks>
+    public bool TimerTelemetryEnabled { get; set; }
+
+    /// <summary>Gets the frame provider used to stamp diagnostic trace lines.</summary>
     public Func<long>? FrameProvider { get; set; }
 
     /// <summary>
@@ -168,6 +190,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         _flagTime = 0;
         _timerCarry = false;
         _fiqWasPending = false;
+        ResetTimerTelemetry();
 
         _registers[0x0028] = unchecked((uint)resetReason);
         _registers[0x0400] = 0x80;
@@ -188,6 +211,44 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     public void SetRandomSeed(uint seed)
     {
         _prng32State = seed;
+    }
+
+    /// <summary>Gets the per-timer event ledger collected since the last reset.</summary>
+    /// <returns>One row per timer that has recorded an event, ordered by timer index.</returns>
+    public IReadOnlyList<ClioTimerUsage> GetTimerUsage()
+    {
+        var result = new List<ClioTimerUsage>(TimerCount);
+        for (var timer = 0; timer < TimerCount; timer++)
+        {
+            if (_timerExecutions[timer] == 0
+                && _timerUnderflows[timer] == 0
+                && _timerReloads[timer] == 0
+                && _timerStops[timer] == 0
+                && _timerFiqs[timer] == 0)
+            {
+                continue;
+            }
+
+            result.Add(new ClioTimerUsage(
+                timer,
+                _timerExecutions[timer],
+                _timerUnderflows[timer],
+                _timerReloads[timer],
+                _timerStops[timer],
+                _timerFiqs[timer]));
+        }
+
+        return result;
+    }
+
+    /// <summary>Clears the per-timer event ledger.</summary>
+    public void ResetTimerTelemetry()
+    {
+        Array.Clear(_timerExecutions);
+        Array.Clear(_timerUnderflows);
+        Array.Clear(_timerReloads);
+        Array.Clear(_timerStops);
+        Array.Clear(_timerFiqs);
     }
 
     /// <summary>Gets the CLIO 32-bit PRNG state. Opera: <c>prng32_state_get</c>.</summary>
@@ -285,6 +346,13 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
             _dspAddress &= 0xff;
             _dspAddress += 0x300;
             return Dsp?.ReadInstructionMemory(_dspAddress) ?? 0;
+        }
+
+        if (address is >= 0x100 and <= 0x17c
+            && (address & 3) == 0
+            && _tuning.ClioTimers == ClioTimerMode.OperaScheduler)
+        {
+            return _registers[address] & 0xffff;
         }
 
         return _registers[address];
@@ -454,24 +522,51 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
                 return false;
             case 0x200:
                 _registers[0x200] |= value;
+                TraceTimerControl(0x200);
                 return false;
             case 0x204:
                 _registers[0x200] &= ~value;
+                TraceTimerControl(0x200);
                 return false;
             case 0x208:
                 _registers[0x208] |= value;
+                TraceTimerControl(0x208);
                 return false;
             case 0x20c:
                 _registers[0x208] &= ~value;
+                TraceTimerControl(0x208);
                 return false;
             case 0x220:
                 _registers[address] = value & 0x3ff;
+                TimerTraceWriter?.WriteLine(
+                    $"{TimerTracePrefix()} event=slack write={value:x8} value={_registers[address]:x}");
                 return false;
             case 0x120:
+                if (_tuning.ClioTimers == ClioTimerMode.OperaScheduler)
+                {
+                    StoreTimerRegister(address, value);
+                    return false;
+                }
+
                 _registers[address] = _timerValue > 800
                     ? unchecked((uint)_timerValue + (value / 0x30))
                     : value;
                 return false;
+        }
+
+        if (address is >= 0x100 and <= 0x17c && (address & 3) == 0)
+        {
+            if (_tuning.ClioTimers == ClioTimerMode.OperaScheduler)
+            {
+                StoreTimerRegister(address, value);
+            }
+            else
+            {
+                _registers[address] = value;
+                TraceTimerRegister(address, value, value);
+            }
+
+            return false;
         }
 
         if (address is >= 0x500 and < 0x540)
@@ -700,7 +795,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     public void DoTimers()
     {
         var needDecrementNextTimer = true;
-        for (var timer = 0; timer < 16; timer++)
+        for (var timer = 0; timer < TimerCount; timer++)
         {
             var flag = _registers[timer < 8 ? 0x200 : 0x208] >> ((timer * 4) & 31);
             if ((flag & Cascade) == 0)
@@ -710,29 +805,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
 
             if (needDecrementNextTimer && (flag & Decrement) != 0)
             {
-                var counter = unchecked((ushort)_registers[0x100 + (timer * 8)]);
-                var wrapped = counter == 0;
-                counter--;
-                needDecrementNextTimer = wrapped;
-
-                if (wrapped)
-                {
-                    if ((timer & 1) != 0)
-                    {
-                        GenerateFiq(1u << (10 - (timer / 2)), 0);
-                    }
-
-                    if ((flag & Reload) != 0)
-                    {
-                        counter = unchecked((ushort)_registers[0x100 + (timer * 8) + 4]);
-                    }
-                    else
-                    {
-                        _registers[timer < 8 ? 0x200 : 0x208] &= ~(Decrement << ((timer * 4) & 31));
-                    }
-                }
-
-                _registers[0x100 + (timer * 8)] = counter;
+                needDecrementNextTimer = DecrementTimer(timer, flag);
             }
             else
             {
@@ -771,18 +844,45 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
             return;
         }
 
+        _timerCarry = DecrementTimer(timer, flags);
+    }
+
+    /// <summary>
+    /// Decrements one timer and applies the shared Opera/FreeDO underflow rules.
+    /// </summary>
+    /// <param name="timer">Timer index, 0-15.</param>
+    /// <param name="flags">The 4-bit timer control field.</param>
+    /// <returns><see langword="true"/> when the counter wrapped.</returns>
+    private bool DecrementTimer(int timer, uint flags)
+    {
+        if (TimerTelemetryEnabled)
+        {
+            _timerExecutions[timer]++;
+        }
+
         var counterAddress = 0x100 + (timer * 8);
         var counter = unchecked((ushort)_registers[counterAddress]);
-        var underflow = counter == 0;
-
-        if (underflow)
+        var wrapped = counter == 0;
+        if (!wrapped)
         {
+            counter--;
+        }
+        else
+        {
+            var fiq = 0u;
             if ((timer & 1) != 0)
             {
-                GenerateFiq(1u << (10 - (timer / 2)), 0);
+                fiq = 1u << (10 - (timer / 2));
+                if (TimerTelemetryEnabled)
+                {
+                    _timerFiqs[timer]++;
+                }
+
+                GenerateFiq(fiq, 0);
             }
 
-            if ((flags & Reload) != 0)
+            var reload = (flags & Reload) != 0;
+            if (reload)
             {
                 counter = unchecked((ushort)_registers[counterAddress + 4]);
             }
@@ -791,14 +891,61 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
                 counter = 0xffff;
                 _registers[timer < 8 ? 0x200 : 0x208] &= ~(Decrement << ((timer * 4) & 31));
             }
-        }
-        else
-        {
-            counter--;
+
+            if (TimerTelemetryEnabled)
+            {
+                _timerUnderflows[timer]++;
+                if (reload)
+                {
+                    _timerReloads[timer]++;
+                }
+                else
+                {
+                    _timerStops[timer]++;
+                }
+            }
+
+            if (TimerTraceWriter is not null)
+            {
+                var detail = reload
+                    ? $"event=underflow reload={counter:x4}"
+                    : "event=underflow stop=1 value=ffff";
+                if (fiq != 0)
+                {
+                    detail += $" fiq={fiq:x}";
+                }
+
+                TimerTraceWriter.WriteLine($"{TimerTracePrefix()} slot={timer} {detail} carry=1");
+            }
         }
 
         _registers[counterAddress] = counter;
-        _timerCarry = underflow;
+        return wrapped;
+    }
+
+    private string TimerTracePrefix()
+    {
+        return $"clio-timer f={FrameProvider?.Invoke() ?? -1} cyc={CycleProvider?.Invoke() ?? 0}";
+    }
+
+    private void TraceTimerControl(uint address)
+    {
+        TimerTraceWriter?.WriteLine(
+            $"{TimerTracePrefix()} event=control register={address:x3} value={_registers[address]:x8}");
+    }
+
+    private void StoreTimerRegister(uint address, uint value)
+    {
+        var stored = value & 0xffff;
+        _registers[address] = stored;
+        TraceTimerRegister(address, value, stored);
+    }
+
+    private void TraceTimerRegister(uint address, uint write, uint stored)
+    {
+        TimerTraceWriter?.WriteLine(
+            $"{TimerTracePrefix()} slot={(int)((address - 0x100) / 8)} "
+            + $"event=counter write={write:x8} value={stored:x4}");
     }
 
     /// <summary>Writes a FIFO descriptor. FreeDO: <c>_clio_SetFIFO</c>.</summary>

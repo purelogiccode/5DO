@@ -112,7 +112,9 @@ tests. `run --cycle-classes` adds a per-instruction-class instruction/cycle ledg
 (`cycleClasses` in `run --json`), and the exact N=2/N=4 class-cost table is documented in
 `PortingNotes.md` 12.28. The CORE-02 CLIO timer option (`--clio-timers freedo|opera`) now implements
 Opera's per-slot scan and cascade carry behind the safe FreeDO-compatible default, with
-a state snapshot and a 3,000-frame smoke differential in `TestCorpus.md` 1.1b.
+a state snapshot, 16-bit timer-register masking in Opera mode, a reference-model
+conformance test, per-timer telemetry (`--clio-timer-stats`), a bounded
+`--clio-timer-trace`, and the smoke/A-B differentials in `TestCorpus.md` 1.1b.
 The CORE-03 CEL option (`--cel-timing freedo|opera`) now implements Opera's deferred
 draw and pixel/texel busy deadline behind the unchanged synchronous default, with a
 Madam section v2 busy snapshot, an Options v3 mode snapshot, and a three-title

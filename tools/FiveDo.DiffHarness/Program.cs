@@ -475,6 +475,9 @@ internal static class Program
                 case "--force":
                     harness.Force = true;
                     break;
+                case "--clio-timers":
+                    harness.ClioTimers = NextValue(args, ref i);
+                    break;
                 case "--timeout":
                     harness.TimeoutSeconds = int.Parse(NextValue(args, ref i), CultureInfo.InvariantCulture);
                     break;
@@ -617,6 +620,7 @@ internal static class Program
         Console.WriteLine("  --limit <n>        Run at most n titles");
         Console.WriteLine("  --resume           Reuse existing capture JSON");
         Console.WriteLine("  --force            Ignore existing captures");
+        Console.WriteLine("  --clio-timers <m>  Override the CLIO timer mode for every 5DO capture (freedo|opera)");
         Console.WriteLine("  --no-opera         Capture 5DO only");
         Console.WriteLine("  --no-images        Skip checkpoint BMP/PNG captures");
         Console.WriteLine("  --cleanup-iso      Delete the staged ISO after a successful Opera capture");

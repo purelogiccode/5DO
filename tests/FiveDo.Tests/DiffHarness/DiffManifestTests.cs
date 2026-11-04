@@ -88,6 +88,27 @@ public sealed class DiffManifestTests : IDisposable
     }
 
     [Fact]
+    public void MergeOptions_ClioTimersOverrideWinsOverDefaultsAndTitle()
+    {
+        var defaults = new DiffMachineOptions
+        {
+            Profile = "accuracy",
+            ClioTimers = "opera",
+        };
+        var title = new DiffMachineOptions
+        {
+            ArmTiming = "freedo",
+            ClioTimers = "opera",
+        };
+
+        DiffMachineOptions merged = DiffManifestLoader.MergeOptions(defaults, title, "freedo");
+
+        Assert.Equal("accuracy", merged.Profile);
+        Assert.Equal("freedo", merged.ArmTiming);
+        Assert.Equal("freedo", merged.ClioTimers);
+    }
+
+    [Fact]
     public void Load_RejectsDuplicateIds()
     {
         var path = Write(

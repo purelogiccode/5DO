@@ -242,6 +242,7 @@ With `--state-in`, a script starting at `0` applies its last entry immediately u
 | `--audio-hash` | off | Hash every DSP sample with FNV-1a and report `audioHash`. |
 | `--state-hash` | off | Serialize and hash the machine state at every checkpoint (`stateHash`). |
 | `--cycle-classes` | off | Record instructions and ARM cycles per instruction class and report `cycleClasses`. |
+| `--clio-timer-stats` | off | Record the per-timer execution/wrap/reload/stop/FIQ ledger and report `timerStats`. |
 | `--json` | off | Emit a structured result instead of text. |
 
 `--frame-out` and `--capture-dir` use the CPU `FrameAssembler`, so the image is the
@@ -262,6 +263,7 @@ accuracy oracle, not the filtered GPU output.
 | `--watch-start N` | First watched address. Parsed as hex even without `0x`. |
 | `--watch-end N` | One-past-last watched address. Parsed as hex even without `0x`. |
 | `--cel-trace <path>` | CEL command/geometry/progress trace. |
+| `--clio-timer-trace <path>` | State-changing CLIO timer trace: counter/control/slack writes, wraps, reloads, stops, and FIQs. Slot scans are not logged. |
 | `--pbus-trace <path>` | One PBUS packet per frame. |
 
 File formats are documented in [`Diagnostics.md`](Diagnostics.md) and summarized in
@@ -377,6 +379,7 @@ All fields are camelCase. Nullable fields are omitted or `null` when not applica
 | `fiq` | object | Request/entry telemetry: `requests`, `entries`, `matchedEntries`, `unmatchedEntries`, `coalescedRequests`, `lastLatencyCycles`, `maxLatencyCycles`, `averageLatencyCycles`. |
 | `dspStats` | object | DSP sample-loop telemetry: `instructions`, `loopCalls`, `runningLoops`, `sleepingLoops`, `maxInstructionsPerLoop`, `averageInstructionsPerLoop`. |
 | `cycleClasses` | object[]? | Per-class ARM cycle ledger, present only with `--cycle-classes`. Each entry has `instructionClass`, `instructions`, `cycles`, and `cyclesPerInstruction`. |
+| `timerStats` | object[]? | Per-timer CLIO ledger, present only with `--clio-timer-stats`. Each entry has `timer`, `executions`, `underflows`, `reloads`, `stops`, and `fiqs`. |
 
 `--fiq-trace` writes request and entry lines with ARM-cycle timestamps and matched
 latency; see [`Diagnostics.md`](Diagnostics.md) §7 for the format and the measurement
@@ -872,6 +875,7 @@ output, CI, `--no-update-check`, and `FIVEDO_UPDATE_CHECK=0` skip the prompt.
 | `--cd-trace` | `cd f=<frame> pc=<pc> cmd <7 hex bytes>`; `cd read sector <n>`. |
 | `--cd-transcript` | `f=<frame> cmd=<op> ... status=<hex> poll=<hex> drive=<hex>`; captures every command/status exchange. |
 | `--clio-trace` | `clio f=<frame> write <addr:x3>=<value:x8> delay=<n>`; `clio dma f=... select=... target=... len=... first=...`. |
+| `--clio-timer-trace` | `clio-timer f=<frame> cyc=<cycles> [slot=<n>] event=<slack\|control\|counter\|underflow> ...`; slot scans are omitted, wraps add `reload=` or `stop=1`, `fiq=<mask>`, and `carry=1`. |
 | `--fiq-trace` | `f=<frame> pc=<pc> reason1=<hex> reason2=<hex>`. |
 | `--kprint` | Decoded characters; CR/LF become newlines; control characters below space are skipped. |
 | `--kprint-pc` | `<pc> <byte> lr=<lr> sp=<sp> <8 stack words>`. |

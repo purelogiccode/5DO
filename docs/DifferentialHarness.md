@@ -73,9 +73,14 @@ Outputs:
 - `artifacts/diff/<run>/report.html`
 
 Useful run flags: `--resume`, `--force`, `--title <filter>`, `--limit N`,
-`--no-images`, `--cleanup-iso`, `--compare-pc`, and `--pc-tolerance <bytes>`.
-`--compare-pc` requires a reference core with the optional debug exports; without
-them the PC field is reported as unavailable rather than silently passing.
+`--no-images`, `--cleanup-iso`, `--compare-pc`, `--pc-tolerance <bytes>`, and
+`--clio-timers freedo|opera`. `--clio-timers` overrides the manifest option for every
+5DO capture, so one manifest can drive both sides of a CLIO timer A/B run without
+editing the manifest. Use a fresh `--out` directory (or `--force`) when changing the
+override, because cached 5DO captures are reused by `--resume` without re-reading the
+machine options. `--compare-pc` requires a reference core with the optional debug
+exports; without them the PC field is reported as unavailable rather than silently
+passing.
 
 Exit codes:
 

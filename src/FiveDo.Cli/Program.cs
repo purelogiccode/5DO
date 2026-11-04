@@ -466,6 +466,8 @@ internal static class Program
         var autopilotMode = options.Get("--autopilot");
         var progressEvery = options.GetInt("--progress", 0);
         var celTrace = options.Get("--cel-trace");
+        var clioTimerTrace = options.Get("--clio-timer-trace");
+        var clioTimerStats = HasFlag(args, "--clio-timer-stats");
         var pbusTrace = options.Get("--pbus-trace");
         var nvramPathOption = options.Get("--nvram");
         var nvramModeOption = options.Get("--nvram-mode");
@@ -598,6 +600,7 @@ internal static class Program
         }
 
         machine.Cpu.CycleClassTelemetryEnabled = cycleClasses;
+        machine.Clio.TimerTelemetryEnabled = clioTimerStats;
 
         using AudioOutput audio = CreateAudio(options, audioHashEnabled);
         if (disc is not null)
@@ -744,6 +747,20 @@ internal static class Program
 
             celTraceWriter = new StreamWriter(celTrace) { AutoFlush = true };
             machine.Madam.CelTraceWriter = celTraceWriter;
+        }
+
+        StreamWriter? clioTimerTraceWriter = null;
+        if (clioTimerTrace is not null)
+        {
+            var directory = Path.GetDirectoryName(Path.GetFullPath(clioTimerTrace));
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            clioTimerTraceWriter = new StreamWriter(clioTimerTrace) { AutoFlush = true };
+            machine.Clio.TimerTraceWriter = clioTimerTraceWriter;
+            machine.Clio.FrameProvider = () => machine.FramesExecuted;
         }
 
         StreamWriter? pbusTraceWriter = null;
@@ -1157,6 +1174,7 @@ internal static class Program
             cdTranscriptWriter.Dispose();
         }
         celTraceWriter?.Dispose();
+        clioTimerTraceWriter?.Dispose();
         pbusTraceWriter?.Dispose();
         kprintWriter?.Dispose();
         kprintPcWriter?.Dispose();
@@ -1339,6 +1357,17 @@ internal static class Program
                         usage.Instructions,
                         usage.Cycles,
                         usage.CyclesPerInstruction))
+                    .ToArray()
+                : null,
+            TimerStats: clioTimerStats
+                ? machine.Clio.GetTimerUsage()
+                    .Select(usage => new CliTimerStatResult(
+                        usage.Timer,
+                        usage.Executions,
+                        usage.Underflows,
+                        usage.Reloads,
+                        usage.Stops,
+                        usage.Fiqs))
                     .ToArray()
                 : null);
 
@@ -3816,6 +3845,17 @@ internal static class Program
                     + $"{usage.Cycles,15} cycles {usage.CyclesPerInstruction,6:F2} c/i");
             }
         }
+        if (result.TimerStats is { Count: > 0 } timerStats)
+        {
+            Console.WriteLine("clio timers:");
+            foreach (CliTimerStatResult usage in timerStats)
+            {
+                Console.WriteLine(
+                    $"  timer {usage.Timer,2} {usage.Executions,12} tick(s) "
+                    + $"{usage.Underflows,10} wrap(s) {usage.Reloads,10} reload(s) "
+                    + $"{usage.Stops,8} stop(s) {usage.Fiqs,8} fiq(s)");
+            }
+        }
         if (result.GifPath is not null)
         {
             Console.WriteLine($"gif:         {result.GifPath} ({result.GifFrames} frames)");
@@ -4583,7 +4623,7 @@ internal static class Program
         Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
-        Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--script-base absolute|state] [--autopilot road] [--progress N] [--cel-trace path] [--pbus-trace path]");
+        Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--script-base absolute|state] [--autopilot road] [--progress N] [--cel-trace path] [--clio-timer-trace path] [--pbus-trace path]");
         Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--prefetch]");
         Console.WriteLine("             [--nvram-mode global|per-game] [--nvram-version 0-9] [--nvram-dir path]");
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
@@ -4594,7 +4634,7 @@ internal static class Program
         Console.WriteLine("             [--opera-dipir] [--opera-soft-reset]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--realtime] [--json]");
         Console.WriteLine("             [--cheat path] [--cheat-code code] [--cheat-auto] [--cheats-dir path]");
-        Console.WriteLine("             [--checkpoints 3000,6000,12000] [--audio-hash] [--state-hash] [--cycle-classes]");
+        Console.WriteLine("             [--checkpoints 3000,6000,12000] [--audio-hash] [--state-hash] [--cycle-classes] [--clio-timer-stats]");
         Console.WriteLine("             [--capture-frames 3000,6000] [--capture-dir path]");
         Console.WriteLine("             [--movie-record path] [--movie-play path] [--movie-verify] [--movie-no-state]");
         Console.WriteLine("             [--playlist path] [--swap-at N --swap-disc path]");

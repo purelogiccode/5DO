@@ -531,6 +531,9 @@ internal sealed class HarnessOptions
     /// <summary>Gets or sets whether existing captures are overwritten.</summary>
     public bool Force { get; set; }
 
+    /// <summary>Gets or sets an explicit CLIO timer-mode override for every 5DO capture.</summary>
+    public string? ClioTimers { get; set; }
+
     /// <summary>Gets or sets the per-run timeout override.</summary>
     public int? TimeoutSeconds { get; set; }
 

@@ -37,7 +37,10 @@ internal static class FiveDoCaptureRunner
         var bios = harness.BiosPath ?? DiffManifestLoader.ResolveBios(repoRoot, manifestDirectory, manifest, title);
         var disc = DiffManifestLoader.ResolvePath(repoRoot, manifestDirectory, title.Disc);
         var inputScript = DiffManifestLoader.ResolveInputScript(repoRoot, manifestDirectory, manifest, title);
-        var options = DiffManifestLoader.MergeOptions(manifest.Defaults?.Options, title.Options);
+        var options = DiffManifestLoader.MergeOptions(
+            manifest.Defaults?.Options,
+            title.Options,
+            harness.ClioTimers);
         var titleDirectory = Path.Combine(outputDirectory, HarnessCommon.SafeName(title.Id));
         Directory.CreateDirectory(titleDirectory);
 

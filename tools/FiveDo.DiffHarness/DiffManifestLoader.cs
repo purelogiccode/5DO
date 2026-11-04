@@ -342,19 +342,39 @@ internal static class DiffManifestLoader
     }
 
     /// <summary>Merges title options over manifest defaults.</summary>
-    public static DiffMachineOptions MergeOptions(DiffMachineOptions? defaults, DiffMachineOptions? title)
+    public static DiffMachineOptions MergeOptions(
+        DiffMachineOptions? defaults,
+        DiffMachineOptions? title,
+        string? clioTimersOverride = null)
     {
         defaults ??= new DiffMachineOptions();
         if (title is null)
         {
-            return defaults;
+            return clioTimersOverride is null
+                ? defaults
+                : new DiffMachineOptions
+                {
+                    Profile = defaults.Profile,
+                    ArmTiming = defaults.ArmTiming,
+                    ClioTimers = clioTimersOverride,
+                    CelTiming = defaults.CelTiming,
+                    CdTiming = defaults.CdTiming,
+                    CdSpeed = defaults.CdSpeed,
+                    CpuClock = defaults.CpuClock,
+                    RandomSeed = defaults.RandomSeed,
+                    HighResolution = defaults.HighResolution,
+                    FixMode = defaults.FixMode,
+                    NoGameFixes = defaults.NoGameFixes,
+                    StateHash = defaults.StateHash,
+                    ExtraArgs = defaults.ExtraArgs,
+                };
         }
 
         return new DiffMachineOptions
         {
             Profile = title.Profile ?? defaults.Profile,
             ArmTiming = title.ArmTiming ?? defaults.ArmTiming,
-            ClioTimers = title.ClioTimers ?? defaults.ClioTimers,
+            ClioTimers = clioTimersOverride ?? title.ClioTimers ?? defaults.ClioTimers,
             CelTiming = title.CelTiming ?? defaults.CelTiming,
             CdTiming = title.CdTiming ?? defaults.CdTiming,
             CdSpeed = title.CdSpeed ?? defaults.CdSpeed,

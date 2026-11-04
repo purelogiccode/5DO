@@ -7,6 +7,12 @@ release.
 
 ### Added
 
+- `run --clio-timer-stats` reports a per-timer CLIO ledger (`timerStats` in `run --json`)
+  with executions, wraps, reloads, stops, and odd-timer FIQs, and
+  `run --clio-timer-trace <path>` writes a bounded trace of state-changing timer
+  events. The differential harness accepts `--clio-timers freedo|opera` so one manifest
+  can drive both sides of a timer A/B run.
+
 - `run --cycle-classes` reports a per-instruction-class ARM instruction and cycle ledger
   in text and in `run --json` (`cycleClasses`). The exact ARM60 N=2 and FreeDO N=4 class
   costs are documented and regression-tested for every instruction class.
@@ -18,6 +24,10 @@ release.
 
 ### Fixed
 
+- The Opera CLIO timer scheduler now masks the timer counter/reload registers
+  (`0x100..0x17C`, including timer 4's `0x120`) to 16 bits on read and write, matching
+  `opera_clio.c`. The FreeDO-compatible default keeps the historical raw-register and
+  `TIMER_VAL` behavior.
 - CEL busy timing now counts pixels written by the 320x240 literal-line and
   packed-repeat rasterizer paths. Those paths bypass the shared `WritePixel`
   helper, so the Accuracy profile previously underestimated Opera's
