@@ -25,8 +25,9 @@ see [`CliReference.md`](CliReference.md); for settings and paths, see
 4. Choose **Open Disc** and select an ISO, BIN, CUE+BIN, or CHD image.
 5. Press **Play**. The status line shows the frame count, PC, cycles, and FPS.
 
-The first-run guide is shown only once. **About** always shows the current BIOS, disc,
-renderer, machine state, and paths.
+If you choose **Open Disc** before a BIOS is loaded, 5DO asks for the BIOS first and then
+continues to the disc picker. The first-run guide is shown only once. **About** always
+shows the current BIOS, disc, renderer, machine state, and paths.
 
 ### BIOS manager and automatic selection
 

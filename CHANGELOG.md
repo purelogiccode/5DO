@@ -3,6 +3,18 @@
 All notable changes are recorded here. The project is at v1.2.1, a documented-compatibility
 release.
 
+## [Unreleased]
+
+### Fixed
+
+- Opening a disc before a BIOS is configured now asks for the BIOS first instead of
+  reporting a disc-open failure. The missing-BIOS message points to **File > Open BIOS**
+  and **Settings > Paths**, and expected BIOS selection warnings no longer create bug
+  reports.
+- The CLI now explains that a `TypeLoadException`/missing-member failure usually means
+  stale or mixed build output and prints the clean-rebuild instruction instead of a
+  generic fatal error.
+
 ## [1.2.1] - 2026-11-03
 
 ### Added

@@ -40,6 +40,7 @@ are in [`KnownIssues.md`](KnownIssues.md).
 | Symptom | Cause / action |
 |---|---|
 | "Load a BIOS first" | Open a BIOS before Play. |
+| "No usable BIOS was configured or selected" | Choose a BIOS before opening a disc. The desktop asks for one when needed; use **File > Open BIOS**, or set a BIOS folder in **Settings > Paths**. |
 | `BIOS1 must be exactly 1048576 bytes` | The file is not a 1 MB 3DO BIOS. Check the size; do not truncate/pad unless you know the image is valid. |
 | `bios info` shows an unexpected MD5 | Verify the dump. The MD5 is the identity used in save states. |
 | Game hangs at boot | Try a known-good BIOS (for example `panafz1.bin`). Check the game's required BIOS/region. |

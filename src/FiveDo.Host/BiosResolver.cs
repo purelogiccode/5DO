@@ -130,7 +130,10 @@ public static class BiosResolver
             warnings.Add($"The configured BIOS '{settings.BiosPath}' does not exist.");
         }
 
-        return ResolvedBios.None("No usable BIOS was configured or selected.", warnings);
+        return ResolvedBios.None(
+            "No usable BIOS was configured or selected. Open a 3DO BIOS (for example "
+            + "panafz1.bin) from File > Open BIOS, or set a BIOS folder in Settings > Paths.",
+            warnings);
     }
 
     private static string? ResolveBiosFolder(AppSettings settings)

@@ -538,7 +538,8 @@ The 3DO Opera file-system reader used by `5do fs` is first-party
 | Benchmark gate fails on a busy machine | Close background work; the gate is wall-clock and intended for a quiet CI runner. |
 | `dotnet format` reports changes | Run `dotnet format 5DO.sln`, then rebuild/test. |
 | Long-path errors on Windows | Enable long paths or clone to a shorter path. |
-| CHD test fails | CHDSharp only reads valid MAME CD CHDs; DVD/HDD/raw CHDs are rejected by design. |
+| `TypeLoadException`/`MissingMethodException` after switching branches or pulling | Stale `bin`/`obj` output from an earlier build. Delete `bin`/`obj` and rebuild. |
+| CHD test fails | CHDSharp reads valid MAME CD CHDs and flat 2048-byte cooked-ISO CHDs; DVD/HDD/raw CHDs with other unit sizes are rejected by design. |
 
 If a failure is emulation-related rather than build-related, see
 [`Troubleshooting.md`](Troubleshooting.md) and [`Diagnostics.md`](Diagnostics.md).

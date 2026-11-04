@@ -438,16 +438,25 @@ public partial class MainWindow : Window, IDisposable
                 switch (welcome.Action)
                 {
                     case WelcomeAction.OpenBios:
-                        OnOpenBiosAsync(null, new RoutedEventArgs());
+                        AsyncEvent.Run(async () =>
+                        {
+                            await OpenBiosAsync().ConfigureAwait(true);
+                            if (Program.StartupDiscPath is not null && _disc is null)
+                            {
+                                LoadConfiguredPaths();
+                            }
+                        }, "opening a BIOS");
                         break;
                     case WelcomeAction.OpenDisc:
                         OnOpenDiscAsync(null, new RoutedEventArgs());
                         break;
-                }
+                    default:
+                        if (Program.StartupDiscPath is not null && _disc is null)
+                        {
+                            LoadConfiguredPaths();
+                        }
 
-                if (Program.StartupDiscPath is not null && _disc is null)
-                {
-                    LoadConfiguredPaths();
+                        break;
                 }
 
                 EnterFullscreenIfRequested();
@@ -472,33 +481,76 @@ public partial class MainWindow : Window, IDisposable
 
     private void LoadConfiguredPaths()
     {
-        var startupBios = Program.StartupBiosPath;
-        ResolvedBios resolved = startupBios is not null
-            ? new ResolvedBios(startupBios, string.Empty, "startup", "Using the --bios startup path.", [])
-            : BiosResolver.Resolve(_settings, null, null);
-        if (resolved.HasPrimary && File.Exists(resolved.PrimaryPath))
-        {
-            OpenBiosPath(resolved.PrimaryPath!, resolved.SecondaryPath, persist: false, resolved.Reason);
-        }
+        TryLoadConfiguredBios();
 
         var startupDisc = Program.StartupDiscPath;
         var discPath = startupDisc ?? _settings.DiscPath;
         if (File.Exists(discPath))
         {
+            if (!_biosLoaded)
+            {
+                // A disc cannot boot without a BIOS. Keep the message actionable and do
+                // not treat this expected first-run state as a bug report.
+                StatusText.Text = "Open a 3DO BIOS before loading a disc.";
+                _logger.ForCategory(LogCategory.Storage).Information(
+                    "Skipped opening disc '{Disc}' because no BIOS is loaded.",
+                    discPath);
+                return;
+            }
+
             OpenDiscPath(discPath, autoStart: startupDisc is not null);
         }
     }
 
-    private void OnOpenBiosAsync(object? sender, RoutedEventArgs e)
+    /// <summary>
+    /// Loads the configured or startup BIOS when one is available. Returns whether a
+    /// BIOS is now loaded so callers can ask the user to choose one before using a disc.
+    /// </summary>
+    private bool TryLoadConfiguredBios()
     {
-        AsyncEvent.Run(OpenBiosAsync, "opening a BIOS");
+        if (_biosLoaded)
+        {
+            return true;
+        }
+
+        try
+        {
+            var startupBios = Program.StartupBiosPath;
+            ResolvedBios resolved = startupBios is not null
+                ? new ResolvedBios(startupBios, string.Empty, "startup", "Using the --bios startup path.", [])
+                : BiosResolver.Resolve(_settings, null, null);
+            foreach (var warning in resolved.Warnings)
+            {
+                _logger.ForCategory(LogCategory.Storage).WithoutBugReport().Warning(
+                    "BIOS selection: {Warning}",
+                    warning);
+            }
+
+            if (resolved.HasPrimary && File.Exists(resolved.PrimaryPath))
+            {
+                OpenBiosPath(resolved.PrimaryPath!, resolved.SecondaryPath, persist: false, resolved.Reason);
+            }
+        }
+        catch (Exception exception) when (exception is IOException or InvalidDataException or ArgumentException)
+        {
+            _logger.ForCategory(LogCategory.Storage).WithoutBugReport().Warning(
+                exception,
+                "The configured BIOS could not be loaded.");
+        }
+
+        return _biosLoaded;
     }
 
-    private async Task OpenBiosAsync()
+    private void OnOpenBiosAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(() => OpenBiosAsync(), "opening a BIOS");
+    }
+
+    private async Task OpenBiosAsync(string title = "Open 3DO BIOS")
     {
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Open 3DO BIOS",
+            Title = title,
             AllowMultiple = false,
             FileTypeFilter = [new FilePickerFileType("BIOS ROM") { Patterns = ["*.bin", "*.rom"] }],
         }).ConfigureAwait(true);
@@ -736,6 +788,17 @@ public partial class MainWindow : Window, IDisposable
 
     private async Task OpenDiscAsync()
     {
+        if (!TryLoadConfiguredBios())
+        {
+            StatusText.Text = "A 3DO BIOS is required before a disc can be loaded. Choose a BIOS first.";
+            await OpenBiosAsync("Open 3DO BIOS (required for discs)").ConfigureAwait(true);
+            if (!_biosLoaded)
+            {
+                StatusText.Text = "No BIOS loaded; the disc was not opened.";
+                return;
+            }
+        }
+
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = "Open 3DO disc",
@@ -865,7 +928,9 @@ public partial class MainWindow : Window, IDisposable
         catch (Exception exception) when (exception is IOException or InvalidDataException or ArgumentException)
         {
             StatusText.Text = $"BIOS error: {exception.Message}";
-            _logger.ForCategory(LogCategory.Storage).Error(exception, "BIOS load failed.");
+            _logger.ForCategory(LogCategory.Storage).WithoutBugReport().Warning(
+                exception,
+                "BIOS load failed.");
             ShowError("BIOS error", exception.Message);
         }
     }
@@ -1180,7 +1245,9 @@ public partial class MainWindow : Window, IDisposable
 
             foreach (var warning in resolved.Warnings)
             {
-                _logger.ForCategory(LogCategory.Storage).Warning("BIOS selection: {Warning}", warning);
+                _logger.ForCategory(LogCategory.Storage).WithoutBugReport().Warning(
+                    "BIOS selection: {Warning}",
+                    warning);
             }
 
             BiosImage? selectedBios = null;
@@ -1193,10 +1260,19 @@ public partial class MainWindow : Window, IDisposable
                         resolved.PrimaryPath!,
                         string.IsNullOrWhiteSpace(resolved.SecondaryPath) ? null : resolved.SecondaryPath);
                 }
-                catch
+                catch (Exception exception) when (exception is IOException
+                    or InvalidDataException
+                    or ArgumentException)
                 {
+                    // An invalid BIOS file is a user-configuration problem, not an
+                    // emulator fault; report it in the UI without filing a bug.
                     disc.Dispose();
-                    throw;
+                    StatusText.Text = $"BIOS error: {exception.Message}";
+                    _logger.ForCategory(LogCategory.Storage).WithoutBugReport().Warning(
+                        exception,
+                        "The selected BIOS could not be loaded.");
+                    ShowError("BIOS error", exception.Message);
+                    return false;
                 }
 
                 biosChanged = !_biosLoaded
@@ -1205,8 +1281,15 @@ public partial class MainWindow : Window, IDisposable
             }
             else if (!_biosLoaded)
             {
+                // Missing BIOS is an expected user-configuration state, not an emulator
+                // fault. Show the actionable guidance without submitting a bug report.
                 disc.Dispose();
-                throw new InvalidDataException(resolved.Reason);
+                StatusText.Text = resolved.Reason;
+                _logger.ForCategory(LogCategory.Storage).WithoutBugReport().Warning(
+                    "Disc open requires a BIOS: {Reason}",
+                    resolved.Reason);
+                ShowError("BIOS required", resolved.Reason);
+                return false;
             }
 
             VideoRegion region = ResolveRegionForBios(resolved.PrimaryPath, gameId);

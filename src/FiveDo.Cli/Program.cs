@@ -130,6 +130,33 @@ internal static class Program
 
                 return 1;
             }
+            catch (Exception exception) when (exception is TypeLoadException
+                or MissingMethodException
+                or MissingFieldException)
+            {
+                // Mixed or stale build outputs leave the 5DO assemblies out of sync. That
+                // is a deployment/build problem rather than an emulator fault, so give
+                // the user a clean-rebuild instruction and keep it out of bug reports.
+                logger.WithoutBugReport().Error(
+                    exception,
+                    "CLI command {Command} could not load a required 5DO type.",
+                    args[0]);
+                const string guidance =
+                    "The 5DO assemblies are inconsistent (usually stale build output). "
+                    + "Delete bin/obj and rebuild, or re-extract the release bundle.";
+                if (json)
+                {
+                    Console.WriteLine(JsonSerializer.Serialize(
+                        new CliErrorResult(false, guidance),
+                        CliJsonContext.Default.CliErrorResult));
+                }
+                else
+                {
+                    Console.Error.WriteLine($"fatal: {guidance}");
+                }
+
+                return 1;
+            }
             catch (Exception exception)
             {
                 logger.Fatal(exception, "CLI command {Command} terminated unexpectedly.", args[0]);

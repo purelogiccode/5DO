@@ -125,6 +125,8 @@ public sealed class BiosResolverTests
         Assert.False(result.HasPrimary);
         Assert.Equal("none", result.Source);
         Assert.Contains("No usable BIOS", result.Reason, StringComparison.Ordinal);
+        Assert.Contains("File > Open BIOS", result.Reason, StringComparison.Ordinal);
+        Assert.Contains("Settings > Paths", result.Reason, StringComparison.Ordinal);
     }
 
     [Fact]

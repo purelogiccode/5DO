@@ -207,6 +207,30 @@ public sealed class DiscImageTests
     }
 
     [Fact]
+    public void Factory_PrefersRaw2352WhenLengthAlsoDividesBy2048()
+    {
+        // 128 raw sectors is 301,056 bytes, which is also a whole number of 2048-byte
+        // sectors. The CD sync header must win so the payload offset stays correct.
+        using var fixture = new DiscFixture(sectorCount: 128);
+        string rawIsoPath = Path.Combine(Path.GetTempPath(), $"fivedo-raw-{Guid.NewGuid():N}.iso");
+        try
+        {
+            File.Copy(fixture.BinPath, rawIsoPath);
+            using IDiscSource image = DiscImageFactory.Open(rawIsoPath);
+
+            Assert.IsType<BinImage>(image);
+            Assert.Equal(128, image.SectorCount);
+            var sector = new byte[2048];
+            image.ReadSector(127, sector);
+            Assert.Equal(DiscFixture.Expected(127), sector);
+        }
+        finally
+        {
+            File.Delete(rawIsoPath);
+        }
+    }
+
+    [Fact]
     public void Factory_RejectsIsoWithPartialSector()
     {
         string path = Path.Combine(Path.GetTempPath(), $"fivedo-bad-{Guid.NewGuid():N}.iso");
