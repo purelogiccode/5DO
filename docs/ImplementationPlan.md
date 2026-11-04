@@ -433,11 +433,6 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
   **Remaining:** formal option table; generated `--help`; JSON schema; deprecation policy; contract tests.
   **Done when:** help/JSON are generated from one source and a documented compatibility policy is enforced.
 
-- [ ] **ENG-05 — Telemetry transparency and privacy controls**
-  **Status:** Pending · **Priority:** P2 · **Effort:** S · **Tracks:** ENG-05
-  **Remaining:** opt-in telemetry; data catalog; delete/export; privacy dashboard; docs; tests.
-  **Done when:** users can inspect, export, and delete all telemetry, and no data is sent without consent.
-
 ### 3.4 Future research features
 
 - [ ] **VID-01 + BAK-11 — True 640x480/480i internal rendering**
