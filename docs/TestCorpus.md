@@ -1922,6 +1922,19 @@ compatibility pass.
 | Performance | Native, 1080p, and 4K output; record p50/p95/p99 frame time and GPU time |
 | Lifecycle | Pause/resume, reset, open/replace disc, close during play, reopen |
 
+### 1.1af Library disc-health verification (2026-11-04)
+
+- `DiscHealthCacheTests` covers the persistent cache roundtrip, malformed files, stale
+  size/timestamp records, badge text for every status, summary counts, missing files,
+  unreadable images, DAT matches and mismatches, and progress reporting.
+- `CliLibraryVerifyTests` runs `library verify` in-process with a synthetic ISO and DAT:
+  the JSON report says `verified`, the cache file is written, a corrupt image reports
+  `ReadError` and exits 1, and an empty folder returns the documented error.
+- Manual evidence: `5do library verify --folder "D:\Samples\3DO" --cache <temp>` read all
+  five local CHDs (Alone in the Dark, Lemmings, Road Rash, Space Ace, Wolfenstein 3D;
+  1.19 GB) in 91 seconds with 0 read errors and wrote a `NoDat` record for each; no DAT is
+  available locally, so the DAT path is covered by the synthetic tests.
+
 ---
 
 ## 5. Rules
