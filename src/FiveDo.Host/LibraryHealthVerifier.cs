@@ -101,13 +101,10 @@ public static class LibraryHealthVerifier
         {
             throw;
         }
-        catch (Exception exception) when (exception is DiscImageException
-            or IOException
-            or UnauthorizedAccessException
-            or ArgumentException
-            or NotSupportedException
-            or InvalidDataException)
+        catch (Exception exception) when (exception is not OutOfMemoryException)
         {
+            // Corrupt images can surface arbitrary container errors; the library must
+            // report them instead of terminating the scan.
             Serilog.Log.Debug(exception, "Disc health check failed for {Path}.", discPath);
             return Fail(discPath, info, exception.Message);
         }
