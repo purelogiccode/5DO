@@ -113,6 +113,7 @@ public sealed class DiscHealthCacheTests
         Assert.Equal(5, summary.Total);
         Assert.False(summary.Complete);
         Assert.Contains("1 known dump(s)", summary.Text, StringComparison.Ordinal);
+        return;
 
         void AddEntry(DiscHealthStatus status)
         {
