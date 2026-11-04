@@ -23,6 +23,14 @@ public class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        Dispatcher.UIThread.UnhandledException += (_, eventArgs) =>
+        {
+            // Exceptions raised by async void event handlers surface on the dispatcher.
+            // Log them and keep the process alive instead of letting it terminate.
+            Serilog.Log.Error(eventArgs.Exception, "Unhandled UI thread exception.");
+            eventArgs.Handled = true;
+        };
+
         try
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

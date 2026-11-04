@@ -14,6 +14,9 @@ release.
 - The CLI now explains that a `TypeLoadException`/missing-member failure usually means
   stale or mixed build output and prints the clean-rebuild instruction instead of a
   generic fatal error.
+- Desktop `async void` event handlers (screenshot export and compare) now catch every
+  exception instead of letting it escape the dispatcher, and unhandled UI-thread
+  exceptions are logged and handled rather than terminating the process.
 
 ## [1.2.1] - 2026-11-03
 

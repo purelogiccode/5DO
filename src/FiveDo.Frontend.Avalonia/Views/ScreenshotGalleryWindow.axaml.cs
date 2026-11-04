@@ -99,7 +99,7 @@ public partial class ScreenshotGalleryWindow : Window
         ScreenshotRow[] selected = SelectedRows();
         if (selected.Length == 1)
         {
-            ScreenshotMetadata? metadata = ScreenshotMetadata.Load(selected[0].Entry.Path);
+            var metadata = ScreenshotMetadata.Load(selected[0].Entry.Path);
             StatusText.Text = metadata is null
                 ? "Selected. The first Delete click asks for confirmation."
                 : $"Selected. {metadata.Summary()}";
@@ -156,53 +156,78 @@ public partial class ScreenshotGalleryWindow : Window
 
     private async void OnExportClickAsync(object? sender, RoutedEventArgs e)
     {
-        if (SelectedRows().FirstOrDefault() is not { } row)
-        {
-            return;
-        }
-
         try
         {
-            IStorageFile? file = await StorageProvider.SaveFilePickerAsync(
-                new FilePickerSaveOptions
-                {
-                    Title = "Export screenshot",
-                    SuggestedFileName = row.Entry.FileName,
-                    DefaultExtension = "png",
-                    FileTypeChoices =
-                    [
-                        new FilePickerFileType("PNG image") { Patterns = ["*.png"] },
-                    ],
-                }).ConfigureAwait(true);
-            var destination = file?.TryGetLocalPath();
-            if (string.IsNullOrWhiteSpace(destination))
+            if (SelectedRows().FirstOrDefault() is not { } row)
             {
                 return;
             }
 
-            string exported = ScreenshotLibrary.Export(row.Entry.Path, destination);
-            StatusText.Text = $"Exported to {exported}.";
+            try
+            {
+                IStorageFile? file = await StorageProvider.SaveFilePickerAsync(
+                    new FilePickerSaveOptions
+                    {
+                        Title = "Export screenshot",
+                        SuggestedFileName = row.Entry.FileName,
+                        DefaultExtension = "png",
+                        FileTypeChoices =
+                        [
+                            new FilePickerFileType("PNG image") { Patterns = ["*.png"] },
+                        ],
+                    }).ConfigureAwait(true);
+                var destination = file?.TryGetLocalPath();
+                if (string.IsNullOrWhiteSpace(destination))
+                {
+                    return;
+                }
+
+                var exported = ScreenshotLibrary.Export(row.Entry.Path, destination);
+                StatusText.Text = $"Exported to {exported}.";
+            }
+            catch (Exception exception)
+            {
+                // An exception escaping an async void handler terminates the process, so
+                // every failure (including picker and platform errors) must be contained.
+                Serilog.Log.Error(exception, "Screenshot export failed.");
+                StatusText.Text = $"Could not export the screenshot: {exception.Message}";
+            }
         }
-        catch (Exception exception) when (exception is IOException
-            or UnauthorizedAccessException
-            or ArgumentException
-            or NotSupportedException)
+        catch (Exception ex)
         {
-            Serilog.Log.Debug(exception, "Screenshot export failed.");
-            StatusText.Text = $"Could not export the screenshot: {exception.Message}";
+            Serilog.Log.Error(ex, "Screenshot export failed.");
+            StatusText.Text = $"Could not export the screenshot: {ex.Message}";
         }
     }
 
     private async void OnCompareClick(object? sender, RoutedEventArgs e)
     {
-        ScreenshotRow[] selected = SelectedRows();
-        if (selected.Length != 2)
+        try
         {
-            return;
-        }
+            ScreenshotRow[] selected = SelectedRows();
+            if (selected.Length != 2)
+            {
+                return;
+            }
 
-        var window = new ScreenshotCompareWindow(selected[0].Entry, selected[1].Entry);
-        await window.ShowDialog(this).ConfigureAwait(true);
+            try
+            {
+                var window = new ScreenshotCompareWindow(selected[0].Entry, selected[1].Entry);
+                await window.ShowDialog(this).ConfigureAwait(true);
+            }
+            catch (Exception exception)
+            {
+                // An exception escaping an async void handler terminates the process, so
+                // every failure (including window lifetime errors) must be contained.
+                Serilog.Log.Error(exception, "Screenshot comparison failed.");
+                StatusText.Text = $"Could not compare the screenshots: {exception.Message}";
+            }
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Screenshot comparison failed.");
+            StatusText.Text = $"Could not compare the screenshots: {ex.Message}";
+        }
     }
 
     private void OnDeleteClick(object? sender, RoutedEventArgs e)
@@ -281,7 +306,7 @@ public partial class ScreenshotGalleryWindow : Window
     private void UpdateSelectionButtons()
     {
         ScreenshotRow[] selected = SelectedRows();
-        bool any = selected.Length > 0;
+        var any = selected.Length > 0;
         OpenButton.IsEnabled = any;
         CopyPathButton.IsEnabled = any;
         ExportButton.IsEnabled = any;
