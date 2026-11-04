@@ -82,6 +82,15 @@ public sealed class LibraryItem : IDisposable, INotifyPropertyChanged
     /// <summary>Gets the detailed tooltip text.</summary>
     public string DetailText => Entry.DetailText;
 
+    /// <summary>Gets a value indicating whether the disc has a current health result.</summary>
+    public bool HasDumpBadge => Entry.HasDumpBadge;
+
+    /// <summary>Gets the compact disc-health badge text.</summary>
+    public string DumpBadge => Entry.DumpBadge;
+
+    /// <summary>Gets the disc-health tooltip text.</summary>
+    public string DumpTip => Entry.DumpTip;
+
     /// <summary>Gets the decoded cover art, or <see langword="null"/> when none exists.</summary>
     public Bitmap? Cover { get; }
 
@@ -109,6 +118,11 @@ public sealed class LibraryItem : IDisposable, INotifyPropertyChanged
                 tip += $"{Environment.NewLine}Last played {LastPlayedText}";
             }
 
+            if (DumpTip.Length > 0)
+            {
+                tip += $"{Environment.NewLine}{DumpTip}";
+            }
+
             return string.IsNullOrWhiteSpace(Entry.Error)
                 ? tip
                 : $"{tip}{Environment.NewLine}{Entry.Error}";
@@ -129,6 +143,9 @@ public sealed class LibraryItem : IDisposable, INotifyPropertyChanged
         OnPropertyChanged(nameof(PlaytimeText));
         OnPropertyChanged(nameof(LastPlayedText));
         OnPropertyChanged(nameof(DetailText));
+        OnPropertyChanged(nameof(HasDumpBadge));
+        OnPropertyChanged(nameof(DumpBadge));
+        OnPropertyChanged(nameof(DumpTip));
         OnPropertyChanged(nameof(Tip));
     }
 

@@ -306,6 +306,7 @@ public partial class SettingsWindow : Window
         CoverDirectoryBox.Text = settings.CoverDirectory;
         CheatsDirectoryBox.Text = settings.CheatsDirectory;
         LibraryMetadataPathBox.Text = settings.LibraryMetadataPath;
+        DiscDatPathBox.Text = settings.DiscDatPath;
         PopulateConfigProfiles(PortablePaths.ProfileName);
         BiosFolderBox.Text = settings.BiosFolder;
         BiosPathBox.Text = settings.BiosPath;
@@ -1201,6 +1202,7 @@ public partial class SettingsWindow : Window
         settings.CoverDirectory = CoverDirectoryBox.Text?.Trim() ?? string.Empty;
         settings.CheatsDirectory = CheatsDirectoryBox.Text?.Trim() ?? string.Empty;
         settings.LibraryMetadataPath = LibraryMetadataPathBox.Text?.Trim() ?? string.Empty;
+        settings.DiscDatPath = DiscDatPathBox.Text?.Trim() ?? string.Empty;
         settings.BiosFolder = BiosFolderBox.Text?.Trim() ?? string.Empty;
         settings.BiosPath = BiosPathBox.Text?.Trim() ?? string.Empty;
         settings.Bios2Path = Bios2PathBox.Text?.Trim() ?? string.Empty;
@@ -1311,6 +1313,24 @@ public partial class SettingsWindow : Window
     private void OnBrowseLibraryMetadataAsync(object? sender, RoutedEventArgs e)
     {
         AsyncEvent.Run(BrowseLibraryMetadataAsync, "selecting the library metadata file");
+    }
+
+    private void OnBrowseDiscDatAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(BrowseDiscDatAsync, "selecting the disc DAT file");
+    }
+
+    private async Task BrowseDiscDatAsync()
+    {
+        var path = await PickFileAsync(
+            "Select a Redump/No-Intro DAT",
+            DiscDatPathBox.Text,
+            "DAT or XML",
+            ["*.dat", "*.xml"]).ConfigureAwait(true);
+        if (path is not null)
+        {
+            DiscDatPathBox.Text = path;
+        }
     }
 
     private async Task BrowseLibraryMetadataAsync()

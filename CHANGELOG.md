@@ -5,6 +5,13 @@ release.
 
 ## [Unreleased]
 
+### Added
+
+- Library disc-health checks: **File > Verify Library Discs...** reads every library image,
+  matches it against a Redump/No-Intro DAT, and shows known-dump, not-in-DAT, or read-error
+  badges with a status summary. Results are cached in `library-health.json` and invalidated
+  when an image changes.
+
 ### Fixed
 
 - Opening a disc before a BIOS is configured now asks for the BIOS first instead of

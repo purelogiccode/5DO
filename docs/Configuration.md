@@ -97,6 +97,7 @@ every serialized property in `AppSettings`.
 | `LibraryFolders` | string[] | `[]` | Folders scanned by the game library. |
 | `LibraryCardSize` | double | `176` | Game-card width in device-independent pixels for the grid library (128-384). Invalid values fall back to the default. |
 | `LibraryMetadataPath` | string | `""` | Optional offline metadata JSON; empty means `<LocalApplicationData>/5DO/library-metadata.json`. |
+| `DiscDatPath` | string | `""` | Optional Redump/No-Intro DAT used by the library disc-health check; empty disables the known-dump match. |
 | `AutoGameFixes` | bool | `true` | Apply the 4DO per-game fix-mode mapping automatically. |
 | `FixModeOverrides` | object | `{}` | Per-game fix-mode overrides, keyed by game ID. |
 | `FilterOverrides` | object | `{}` | Per-game filter overrides, keyed by game ID. |
@@ -257,6 +258,7 @@ player-1 defaults. See section 3 for the full input structure.
     "C:\\3DO"
   ],
   "LibraryMetadataPath": "",
+  "DiscDatPath": "",
   "LibraryCardSize": 176,
   "AutoGameFixes": true,
   "FixModeOverrides": {},
@@ -603,6 +605,7 @@ written after the run when supplied.
 | `CheatsDirectory` | Per-game cheat JSON folder; empty means `.../5DO/cheats`. |
 | `LibraryFolders` | Scanned recursively to depth 4 for `.iso`, `.bin`, `.cue`, `.chd`. |
 | `LibraryMetadataPath` | Optional offline metadata overlay; empty means `.../5DO/library-metadata.json`. |
+| `DiscDatPath` | Optional Redump/No-Intro DAT for the library disc-health badge; empty asks on first verification. |
 
 Library entries are sorted by title then path. Cover art is matched by file name: a
 sibling image with the same base name and an extension of `.png`, `.jpg`, `.jpeg`, or

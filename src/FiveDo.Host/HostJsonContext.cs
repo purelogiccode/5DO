@@ -37,6 +37,16 @@ internal sealed partial class SaveStateSlotJsonContext : JsonSerializerContext;
 internal sealed partial class LibraryCacheJsonContext : JsonSerializerContext;
 
 /// <summary>
+/// Source-generated JSON metadata for the persistent disc-health cache.
+/// </summary>
+[JsonSourceGenerationOptions(
+    WriteIndented = true,
+    PropertyNameCaseInsensitive = true,
+    UseStringEnumConverter = true)]
+[JsonSerializable(typeof(DiscHealthCache))]
+internal sealed partial class DiscHealthCacheJsonContext : JsonSerializerContext;
+
+/// <summary>
 /// Source-generated JSON metadata for persistent library user state.
 /// </summary>
 [JsonSourceGenerationOptions(

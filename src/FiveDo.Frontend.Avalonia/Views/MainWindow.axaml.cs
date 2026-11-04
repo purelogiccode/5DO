@@ -56,6 +56,7 @@ public partial class MainWindow : Window, IDisposable
     private readonly List<LibraryItem> _allGames = [];
     private readonly LibraryState _libraryState;
     private LibraryMetadataCatalog _libraryMetadata;
+    private DiscHealthCache _discHealth;
     private readonly LibraryPlaytimeTracker _playtime;
     private readonly DispatcherTimer _logTimer;
     private InputManager _input;
@@ -166,6 +167,7 @@ public partial class MainWindow : Window, IDisposable
         IconSizeSlider.ValueChanged += OnIconSizeChanged;
         _libraryState = LibraryStateStore.Load();
         _libraryMetadata = LibraryMetadataCatalog.Load(_settings.ResolveLibraryMetadataPath());
+        _discHealth = DiscHealthCacheStore.Load();
         _playtime = new LibraryPlaytimeTracker(
             _libraryState,
             () => LibraryStateStore.Save(_libraryState));
@@ -3065,6 +3067,94 @@ public partial class MainWindow : Window, IDisposable
         AsyncEvent.Run(RefreshLibraryAsync, "refreshing the game library");
     }
 
+    private void OnVerifyLibraryHealthAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(VerifyLibraryHealthAsync, "verifying library disc health");
+    }
+
+    private async Task VerifyLibraryHealthAsync()
+    {
+        List<GameLibraryEntry> entries = _allGames
+            .Select(item => item.Entry)
+            .Where(entry => !entry.Pending)
+            .ToList();
+        if (entries.Count == 0)
+        {
+            StatusText.Text = "Add a game folder before verifying discs.";
+            return;
+        }
+
+        RedumpDat? dat = null;
+        var datPath = _settings.ResolveDiscDatPath();
+        if (datPath.Length == 0)
+        {
+            IReadOnlyList<IStorageFile> files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "Choose a Redump/No-Intro DAT (cancel to check readability only)",
+                AllowMultiple = false,
+                FileTypeFilter =
+                [
+                    new FilePickerFileType("DAT or XML") { Patterns = ["*.dat", "*.xml"] },
+                ],
+            }).ConfigureAwait(true);
+            var chosen = files.Count > 0 ? files[0].TryGetLocalPath() : null;
+            if (!string.IsNullOrWhiteSpace(chosen))
+            {
+                _settings.DiscDatPath = chosen;
+                AppSettingsStore.Save(_settings);
+                datPath = chosen;
+            }
+        }
+
+        if (datPath.Length > 0)
+        {
+            try
+            {
+                dat = await Task.Run(() => RedumpDat.Load(datPath)).ConfigureAwait(true);
+            }
+            catch (Exception exception) when (exception is IOException
+                or UnauthorizedAccessException
+                or InvalidDataException
+                or ArgumentException
+                or NotSupportedException)
+            {
+                StatusText.Text = $"The DAT could not be read: {exception.Message}";
+                return;
+            }
+        }
+
+        var progress = new Progress<LibraryHealthProgress>(value =>
+        {
+            StatusText.Text = $"Verifying discs... {value.Completed} of {value.Total}: {Path.GetFileName(value.Path)}";
+        });
+        try
+        {
+            IReadOnlyList<DiscHealthRecord> records = await Task.Run(
+                () => LibraryHealthVerifier.VerifyAll(entries, dat, progress),
+                CancellationToken.None).ConfigureAwait(true);
+            foreach (DiscHealthRecord record in records)
+            {
+                _discHealth.Set(record);
+            }
+
+            _discHealth.RemoveMissingFiles();
+            DiscHealthCacheStore.Save(_discHealth);
+            RefreshLibraryDecorations();
+            var summary = _discHealth.Summarize(entries);
+            StatusText.Text = dat is null
+                ? $"Health check complete without a DAT: {summary.Text}."
+                : $"Health check complete: {summary.Text}.";
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or InvalidDataException)
+        {
+            Serilog.Log.Debug(exception, "Disc health verification failed.");
+            StatusText.Text = $"Disc health verification failed: {exception.Message}";
+        }
+    }
+
     private void OnExit(object? sender, RoutedEventArgs e)
     {
         Close();
@@ -3316,7 +3406,7 @@ public partial class MainWindow : Window, IDisposable
 
     private GameLibraryEntry DecorateEntry(GameLibraryEntry entry)
     {
-        return _libraryMetadata.Apply(_libraryState.Apply(entry));
+        return _discHealth.Apply(_libraryMetadata.Apply(_libraryState.Apply(entry)));
     }
 
     private void RefreshLibraryDecorations()
@@ -3345,6 +3435,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         _libraryMetadata = LibraryMetadataCatalog.Load(_settings.ResolveLibraryMetadataPath());
+        _discHealth = DiscHealthCacheStore.Load();
         var generation = ++_scanGeneration;
         _libraryScanCts?.Cancel();
         _libraryScanCts?.Dispose();

@@ -365,7 +365,7 @@
             </TabItem>
 
             <TabItem Header="Paths" ToolTip.Tip="Save-state, screenshot, cover-art, cheat, BIOS, and library-metadata settings.">
-                <Grid ColumnDefinitions="170,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Save states" VerticalAlignment="Center"
                                ToolTip.Tip="Folder used for numbered save slots and thumbnails." />
                     <TextBox x:Name="SaveDirectoryBox" Grid.Row="0" Grid.Column="1" Margin="0,0,6,8"
@@ -425,25 +425,31 @@
                              ToolTip.Tip="Leave empty to use library-metadata.json in the 5DO settings folder." />
                     <Button Grid.Row="9" Grid.Column="2" Content="Browse" Click="OnBrowseLibraryMetadataAsync" Margin="0,8,0,0"
                             ToolTip.Tip="Choose a library-metadata.json file." />
-                    <TextBlock Grid.Row="10" Grid.Column="0" Text="Configuration profile" VerticalAlignment="Center" Margin="0,8,0,0"
+                    <TextBlock Grid.Row="10" Grid.Column="0" Text="Disc DAT" VerticalAlignment="Center" Margin="0,8,0,0"
+                               ToolTip.Tip="Optional Redump/No-Intro DAT used by File > Verify Library Discs." />
+                    <TextBox x:Name="DiscDatPathBox" Grid.Row="10" Grid.Column="1" Margin="0,8,6,0"
+                             ToolTip.Tip="Leave empty to be asked when verifying the library. The DAT is user-supplied and never written." />
+                    <Button Grid.Row="10" Grid.Column="2" Content="Browse" Click="OnBrowseDiscDatAsync" Margin="0,8,0,0"
+                            ToolTip.Tip="Choose a Redump/No-Intro DAT file." />
+                    <TextBlock Grid.Row="11" Grid.Column="0" Text="Configuration profile" VerticalAlignment="Center" Margin="0,8,0,0"
                                ToolTip.Tip="Named data directories for isolated settings, NVRAM, cheats, and logs." />
-                    <ComboBox x:Name="ConfigProfileCombo" Grid.Row="10" Grid.Column="1" Margin="0,8,6,0"
+                    <ComboBox x:Name="ConfigProfileCombo" Grid.Row="11" Grid.Column="1" Margin="0,8,6,0"
                               ToolTip.Tip="Select a profile to make the next launch use it." />
-                    <Button x:Name="SetDefaultProfileButton" Grid.Row="10" Grid.Column="2" Content="Set default"
+                    <Button x:Name="SetDefaultProfileButton" Grid.Row="11" Grid.Column="2" Content="Set default"
                             Click="OnSetDefaultProfileClick" Margin="0,8,0,0"
                             ToolTip.Tip="Store default-profile.txt so the next launch uses the selected profile. The current process is unchanged." />
-                    <TextBlock Grid.Row="11" Grid.Column="0" Text="New profile" VerticalAlignment="Center" Margin="0,8,0,0"
+                    <TextBlock Grid.Row="12" Grid.Column="0" Text="New profile" VerticalAlignment="Center" Margin="0,8,0,0"
                                ToolTip.Tip="Create a named profile and copy the current settings into it." />
-                    <TextBox x:Name="NewProfileBox" Grid.Row="11" Grid.Column="1" Margin="0,8,6,0"
+                    <TextBox x:Name="NewProfileBox" Grid.Row="12" Grid.Column="1" Margin="0,8,6,0"
                              PlaceholderText="profile name"
                              ToolTip.Tip="Letters, digits, dash, underscore, and dot are kept; other characters become underscores." />
-                    <Button x:Name="CreateProfileButton" Grid.Row="11" Grid.Column="2" Content="Create"
+                    <Button x:Name="CreateProfileButton" Grid.Row="12" Grid.Column="2" Content="Create"
                             Click="OnCreateProfileClick" Margin="0,8,0,0"
                             ToolTip.Tip="Create the profile directory and copy the saved settings into it." />
-                    <TextBlock Grid.Row="12" Grid.Column="1" x:Name="ProfileStatusText" VerticalAlignment="Center"
+                    <TextBlock Grid.Row="13" Grid.Column="1" x:Name="ProfileStatusText" VerticalAlignment="Center"
                                Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,8,6,0"
                                ToolTip.Tip="Current profile and the next-launch selection." />
-                    <StackPanel Grid.Row="12" Grid.Column="2" Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
+                    <StackPanel Grid.Row="13" Grid.Column="2" Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
                         <Button Content="Open folder" Click="OnOpenProfilesFolderClick"
                                 ToolTip.Tip="Open the profiles directory." />
                         <Button Content="Import..." Click="OnImportProfileSettingsAsync"

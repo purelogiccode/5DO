@@ -54,6 +54,8 @@
                           ToolTip.Tip="Add, remove, reorder, and save multi-disc M3U playlists. Drop M3U or disc files on the window to import them." />
                 <MenuItem Header="Add Game Folder..." Click="OnAddFolderAsync"
                           ToolTip.Tip="Add a folder that the library scans for disc images." />
+                <MenuItem Header="Verify Library Discs..." Click="OnVerifyLibraryHealthAsync"
+                          ToolTip.Tip="Read every library disc and check it against a Redump/No-Intro DAT. Results appear as badges." />
                 <MenuItem x:Name="RecentMenu" Header="Boot Recent"
                           ToolTip.Tip="Boot a disc that was opened recently." />
                 <Separator />
@@ -373,12 +375,18 @@
                                         <TextBlock Text="{Binding GameIdText}" Classes="caption" />
                                         <TextBlock Text="{Binding PlaytimeText}" Classes="caption" />
                                     </StackPanel>
-                                    <Border Grid.Column="1" Classes="badge known" IsVisible="{Binding Known}">
-                                        <TextBlock Text="4DO DB" />
-                                    </Border>
-                                    <Border Grid.Column="1" Classes="badge" IsVisible="{Binding IsUnknown}">
-                                        <TextBlock Text="Unknown" />
-                                    </Border>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                                        <Border Classes="badge" IsVisible="{Binding HasDumpBadge}"
+                                                ToolTip.Tip="{Binding DumpTip}">
+                                            <TextBlock Text="{Binding DumpBadge}" />
+                                        </Border>
+                                        <Border Classes="badge known" IsVisible="{Binding Known}">
+                                            <TextBlock Text="4DO DB" />
+                                        </Border>
+                                        <Border Classes="badge" IsVisible="{Binding IsUnknown}">
+                                            <TextBlock Text="Unknown" />
+                                        </Border>
+                                    </StackPanel>
                                 </Grid>
                             </StackPanel>
                         </Border>
@@ -423,14 +431,19 @@
                                 <TextBlock Grid.Column="4" Text="{Binding PlaytimeText}" Classes="caption"
                                            VerticalAlignment="Center" HorizontalAlignment="Right"
                                            Margin="0,0,12,0" />
-                                <Border Grid.Column="5" Classes="badge known" IsVisible="{Binding Known}"
-                                        VerticalAlignment="Center" HorizontalAlignment="Right">
-                                    <TextBlock Text="4DO DB" />
-                                </Border>
-                                <Border Grid.Column="5" Classes="badge" IsVisible="{Binding IsUnknown}"
-                                        VerticalAlignment="Center" HorizontalAlignment="Right">
-                                    <TextBlock Text="Unknown" />
-                                </Border>
+                                <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="4"
+                                            VerticalAlignment="Center" HorizontalAlignment="Right">
+                                    <Border Classes="badge" IsVisible="{Binding HasDumpBadge}"
+                                            ToolTip.Tip="{Binding DumpTip}">
+                                        <TextBlock Text="{Binding DumpBadge}" />
+                                    </Border>
+                                    <Border Classes="badge known" IsVisible="{Binding Known}">
+                                        <TextBlock Text="4DO DB" />
+                                    </Border>
+                                    <Border Classes="badge" IsVisible="{Binding IsUnknown}">
+                                        <TextBlock Text="Unknown" />
+                                    </Border>
+                                </StackPanel>
                             </Grid>
                         </Border>
                     </DataTemplate>

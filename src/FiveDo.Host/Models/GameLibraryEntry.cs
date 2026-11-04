@@ -109,6 +109,45 @@ public sealed record GameLibraryEntry(
         }
     }
 
+    /// <summary>Gets the cached disc-health status, or <see cref="DiscHealthStatus.Unknown"/>.</summary>
+    public DiscHealthStatus DumpStatus { get; init; }
+
+    /// <summary>Gets the matched DAT game name, or an empty string.</summary>
+    public string DumpGameName { get; init; } = string.Empty;
+
+    /// <summary>Gets the disc-health detail (hashes, DAT match, or read error).</summary>
+    public string DumpDetail { get; init; } = string.Empty;
+
+    /// <summary>Gets a value indicating whether the disc has a current health result.</summary>
+    public bool HasDumpBadge => DumpStatus != DiscHealthStatus.Unknown;
+
+    /// <summary>Gets the compact disc-health badge text.</summary>
+    public string DumpBadge => DumpStatus switch
+    {
+        DiscHealthStatus.Verified => "Known dump",
+        DiscHealthStatus.Mismatch => "Not in DAT",
+        DiscHealthStatus.ReadError => "Read error",
+        DiscHealthStatus.NoDat => "Checked",
+        _ => string.Empty,
+    };
+
+    /// <summary>Gets the disc-health tooltip text.</summary>
+    public string DumpTip
+    {
+        get
+        {
+            if (DumpStatus == DiscHealthStatus.Unknown)
+            {
+                return string.Empty;
+            }
+
+            var parts = new List<string>(2) { DumpBadge };
+            Add(parts, DumpGameName);
+            Add(parts, DumpDetail);
+            return string.Join(" · ", parts);
+        }
+    }
+
     private static void Add(List<string> parts, string value)
     {
         if (!string.IsNullOrWhiteSpace(value))

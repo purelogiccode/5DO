@@ -1,10 +1,10 @@
 <a id="master-dashboard"></a>
 # 5DO — Master Implementation Plan, Feature Backlog, and World-Best Roadmap
 
-**Snapshot:** 2026-11-03
+**Snapshot:** 2026-11-04
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,597 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,619 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **594 load**, **593 render**; 1 known boot failure (Crash 'n Burn Japan); 0 not loadable | v1.0 ships with this documented evidence; 12,000-frame in-game/visual review and high-res pass are post-1.0; Linux x64 full suite passed (GL preview) |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,597** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,619** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, all-filter 4K60 budgets remain |
 | Platforms | Windows x64 validated; Linux x64 full suite **1,473/1,473** passed (GL preview); six unified x64/arm64 bundles (Windows/Linux/macOS) with framework-dependent single-file apphosts; .NET 10 runtime required (not bundled); opt-in NativeAOT | macOS/installers are post-1.0; Linux GPU presentation is unvalidated under llvmpipe. WebAssembly, Android/iOS, and Raspberry Pi are out of scope |
 | Release | **v1.2.1 released (GitHub)** | Documented-compatibility scope; legal/attribution sign-off recorded; M13 loadability evidence complete; M14 is post-1.0 research; Linux x64 full suite passed; six x64/arm64 bundles published; tags `v1.0.0`, `v1.1.0`, `v1.2.0`, and `v1.2.1` |
@@ -52,7 +52,7 @@ configurable void border, and VID-14's gallery filters, side-by-side compare, ex
 and settings sidecars are landed. **CORE-07** now measures FIQ request-to-vector
 latency and traces requests/entries, **CORE-06** closes the output-FIFO reload,
 DIPIR-protected XBUS DMA, MADAM MCTL persistence, and XBUS Opera poll/state gaps, and
-**CORE-05** exposes DSP per-tick timing metrics. The suite is **1,597 tests**; build,
+**CORE-05** exposes DSP per-tick timing metrics. The suite is **1,619 tests**; build,
 format, and inspectcode are clean.
 
 ---
@@ -124,13 +124,10 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [x] **M6 — XBUS, CD-ROM, storage.** ISO/BIN/CUE/CHD, command state machine, disc boot.
 - [x] **M7 — Input, NVRAM, game database.** Playable controls, persistence, 518-record database.
 - [x] **M8 — Save states, diagnostics, CLI.** Versioned/compressed states, tracing, CLI/JSON.
-- [ ] **M9 — Avalonia frontend.** **Partial:** shell/library/video/input/fullscreen/settings/audio/gamepad/logs/first-run are implemented; polish and ViewModel tests remain.
 - [ ] **M9R — OpenGL/GLES renderer.** **Partial:** two-stage presenter, filters, 4K, parity, swap interval done; optional Vulkan and Direct3D 11 backends are implemented (M9R.11–M9R.14); GLES 3.1 and GPU CI remain.
 - [ ] **M9P — Runtime performance, pacing, 4K presentation.** **Partial:** core thread, uploads, DPI, p99/allocation gates done; Tier B and GPU gates remain.
-- [ ] **M10 - Packaging, CI, performance, arm64.** **Partial:** unified x64 bundles with framework-dependent single-file apphosts, opt-in NativeAOT, and release CI done; arm64 hardware, installers, final performance report remain.
-- [ ] **M11 - Compatibility hardening and release.** **Released:** documented-compatibility scope adopted; legal/attribution sign-off recorded; Linux x64 full suite passed; v1.0.0 published.
-- [ ] **M12 — Optional guest ARM JIT.** **Pending:** only if profiling shows the interpreter is the remaining bottleneck.
-- [ ] **M13 - Full-collection compatibility sweep.** **Partial:** loadability complete (594 tested, 593 render, 1 known boot failure); in-game/visual review and high-res pass are post-1.0; Linux x64 full suite 1,473/1,473 passed, GL probe timed out under llvmpipe.
+- [ ] **M10 - NativeAOT
+- [ ] **M12 — guest ARM JIT.
 - [ ] **M14 — High-resolution CEL research.** **Post-1.0 research:** true 640x480, 2x/4x supersampling, GPU CEL feasibility; not a v1.0 release blocker.
 - [ ] **M15 — Differential harness and regression baseline.** **Partial:** harness + smoke + five-title showcase done; full-collection manifest, PC-delta triage, nightly dashboard remain.
 
@@ -193,9 +190,7 @@ These are the highest-leverage items from the current evidence. Pick the first u
 - [ ] **[SYS-17](#feat-sys-17)** Game database expansion and community DB — P1 · M · depends on: FND-02 — **Pending**
 - [ ] **[SYS-18](#feat-sys-18)** Auto per-game profile — P0 · L · depends on: SYS-04, SYS-17 — **Partial** — auto BIOS/region/fixes/NVRAM, known-title input seeding, and a profile covering timing, region, BIOS, fix, filter, high-res, input devices, and NVRAM with import/export and machine-creation application are implemented; cheat fields, full DB-driven population, and live application remain
 - [ ] **[SYS-19](#feat-sys-19)** Save-state interoperability with 4DO/Opera — P2 · L · depends on: CORE-14 — **Pending**
-- [ ] **[SYS-20](#feat-sys-20)** Disc health / Redump DAT / CHD integrity — P2 · M · depends on: SYS-22 — **Partial** — `disc verify` reads every native sector, reports CHD/CUE/BIN errors, hashes the content, and matches Redump/No-Intro DATs with `--dat`; the library known-dump badge and 4DO/Opera hash comparison remain
-- [ ] **[SYS-21](#feat-sys-21)** Physical CD drive support — P2 · M — **Pending**
-- [ ] **[SYS-22](#feat-sys-22)** Disc image conversion/repair — P2 · M · depends on: SYS-01 — **Pending**
+- [ ] **[SYS-20](#feat-sys-20)** Disc health / Redump DAT / CHD integrity — P2 · M · depends on: SYS-22 — **Partial** — `disc verify` reads every native sector, reports CHD/CUE/BIN errors, hashes the content, and matches Redump/No-Intro DATs with `--dat`; the library now keeps a self-invalidating health cache, shows known-dump/read-error badges and a health summary, and lets the desktop verify the whole library against a chosen DAT; 4DO/Opera hash comparison remains
 
 ### Video
 
@@ -280,11 +275,6 @@ percentages.
 
 ### Carried-forward backlog
 
-- [ ] **BAK-01** Finish a full Road Rash 5.5-mile race — P1 · related: UX-06, CORE-04 — **Pending**
-- [ ] **BAK-02** Script Alone in the Dark inventory/exploration — P1 · related: UX-06, CORE-09 — **Pending**
-- [ ] **BAK-03** Input/gameplay scripts for seven titles — P1 · related: UX-06, CORE-11 — **Pending**
-- [ ] **BAK-04** CD/CLIO/MADAM/ARM timing triage with Opera — P0 · related: CORE-01..04 — **Pending**
-- [ ] **BAK-05** arm64/DPI/Linux/macOS validation - P1 · related: ECO-04 - **Pending**
 - [ ] **BAK-06** Tier B 1080p60, 3D CEL profiling, hot-path optimization, relative gate — P1 · related: ENG-02, ENG-09 — **Pending**
 - [ ] **BAK-07** MSIX/dmg/AppImage installers, signing/notarization, file associations — P1 · related: UX-16 — **Pending**
 - [ ] **BAK-08** Frontend NativeAOT audio validation — P1 · related: ENG-10 — **Pending**
@@ -439,7 +429,7 @@ These are **post-1.0 goals**, not v1.0 blockers. A release can be called “the 
   documented key), 21,183 FIQ requests / 14,345 entries / max 859,234 cycles, and
   88,955,550 DSP instructions over 2,205,094 ticks (735 ticks/frame, max 106, mean 51.7).
   CLIO tracing recorded 4,714 XBUS DMA transfers with paired start/done lines.
-- [x] Verification: **1,597 tests pass**; build **0 warnings / 0 errors**;
+- [x] Verification: **1,619 tests pass**; build **0 warnings / 0 errors**;
   `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**.
 
 ### 2026-11-02 — VID-14 screenshot filters, compare, export, and sidecars
@@ -3145,6 +3135,7 @@ Suggested parallelization with two developers:
 | 2026-11-03 | M9R | Display refresh rate | Added `DisplayRefreshRate` (Settings > Video, default 60 Hz, `0` = match display). Above 60 Hz the desktop re-presents the latest mailbox frame on a `DispatcherTimer` (or on the compositor's animation frames for match-display) so the swap chain runs at the requested rate; the CPU fallback retimes its render timer. The 3DO still produces 60 fields per second (50 for PAL), so the setting lowers presentation latency but does not add motion. The status bar and overlay report the measured display rate when the setting is not 60. Added settings validation, load clamping, a schema version bump to 3, and tests. |
 | 2026-11-03 | Release | v1.2.0 feature release | Bumped the version to `1.2.0` and built the Windows/Linux/macOS x64 bundles. The release includes the optional Windows Direct3D 11 presenter, startup GitHub release checks, the six-target fuzz harness, per-edge overscan/void border, screenshot gallery filters/compare/export/sidecars, FIQ request-to-vector telemetry, DSP per-tick statistics, CLIO/DIPIR/FIFO/MCTL/XBUS audit fixes, flat 2048-byte CHD and raw `.iso` support, and display-refresh control. WebAssembly/browser, Android/iOS, and Raspberry Pi were removed from scope. Full suite **1,597 tests**; release workflow <https://github.com/purelogiccode/5DO/actions/runs/41581528432> passed all bundles and published <https://github.com/purelogiccode/5DO/releases/tag/v1.2.0>; all `SHA256SUMS.txt` entries verify. |
 | 2026-11-03 | Release | v1.2.1 arm64 bundles | Added `win-arm64`, `linux-arm64`, and `osx-arm64` to the packaging script and CI matrix, producing six versioned bundles. CI verifies PE ARM64, ELF aarch64, and Mach-O arm64 apphosts; x64 bundles keep runtime smoke tests. No emulator behavior changed. Release workflow <https://github.com/purelogiccode/5DO/actions/runs/41583317988> passed and published <https://github.com/purelogiccode/5DO/releases/tag/v1.2.1>; all six `SHA256SUMS.txt` entries verify. |
+| 2026-11-04 | SYS-20 | Library disc-health badge | Added `DiscHealthCache`/`DiscHealthCacheStore` (`library-health.json`, self-invalidating by size/timestamp), `LibraryHealthVerifier` (full read plus optional Redump/No-Intro DAT match), `DumpStatus`/`DumpBadge`/`DumpTip` on library entries, badges in the grid and list views, **File > Verify Library Discs...** with progress and DAT selection, a Settings > Paths **Disc DAT** field, and the same **Verify Health**/**DAT...** actions in the Game Library window. `DiscHealthCacheTests` covers cache roundtrip/staleness/badges/summaries plus verifier matches, mismatches, missing files, unreadable images, and progress. SYS-20 remains partial for 4DO/Opera hash comparison; 1,619 tests pass and the frontend smoke test reports `FRONTEND SMOKE OK 1.2.1`. |
 
 ---
 
@@ -4651,9 +4642,27 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
 - `DiscVerifierTests`, `DiscHealthTests`, and a synthetic ISO/DAT CLI check cover clean reads, errors, DAT parsing, single/multi-track matches, mismatches, and malformed DATs.
 - A real Battle Chess (Europe) CHD verified 143,810/143,810 sectors and 338,241,120 bytes with no errors; a synthetic two-sector ISO matched its DAT with CRC-32 `013C6AE4`, MD5 `3224F6D3...`, and SHA-1 `4EA34675...` and returned exit 1 after a one-byte change.
 
+**Implemented (2026-11-04).**
+- `DiscHealthCache` persists one self-invalidating record per disc (path, length, last-write
+  time, status, matched DAT game/ROM, first-track CRC-32/MD5/SHA-1, track counts, detail)
+  in `library-health.json`; `DiscHealthCacheStore` writes it atomically and ignores stale
+  or malformed files.
+- `LibraryHealthVerifier` reads every sector through `DiscVerifier`, then matches the disc
+  against an optional `RedumpDat`. Results are `Verified`, `Mismatch`, `ReadError`, or
+  `NoDat`; open/read failures are recorded instead of thrown.
+- The library entry carries `DumpStatus`, `DumpBadge`, and `DumpTip`; both the grid and
+  list library views show a badge next to the 4DO database badge, and the tooltip includes
+  the matched game and hashes.
+- **File > Verify Library Discs...** verifies every library entry on a background task with
+  progress in the status bar, prompts for a DAT when none is configured (cancel to check
+  readability only), saves the DAT path in settings, updates the cache, and refreshes the
+  badges. The Game Library window has the same **Verify Health** and **DAT...** actions and
+  a health summary in its status line.
+- `DiscHealthCacheTests` covers store roundtrip, invalid files, stale records, badge text,
+  status counts, missing files, unreadable images, DAT matches/mismatches, and progress.
+
 **Remaining.**
-- A library "known dump" badge and health summary.
-- 4DO/Opera hash comparison and DAT-driven expenses in the desktop.
+- 4DO/Opera hash comparison and DAT-driven exports in the desktop.
 - Full Redump/No-Intro DAT coverage (the parser accepts user-supplied files).
 
 **Files.** New `DiscHealth.cs`, `DiscImageFactory.cs`, UI/CLI.

@@ -14,6 +14,10 @@
                     ToolTip.Tip="Rescan the configured game folders." />
             <Button x:Name="OpenButton" Content="Open Selected" Click="OnOpenSelected"
                     ToolTip.Tip="Boot the selected disc in the main window." />
+            <Button x:Name="VerifyHealthButton" Content="Verify Health" Click="OnVerifyHealthAsync"
+                    ToolTip.Tip="Read every disc and check it against the configured Redump/No-Intro DAT." />
+            <Button x:Name="ChooseDatButton" Content="DAT..." Click="OnChooseDatAsync"
+                    ToolTip.Tip="Choose the Redump/No-Intro DAT used for the known-dump badge." />
         </StackPanel>
 
         <Grid Grid.Row="1" ColumnDefinitions="*,260" Margin="0,8">
@@ -22,7 +26,7 @@
                      ToolTip.Tip="Select a disc. Double-click to boot it.">
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="host:GameLibraryEntry">
-                        <Grid ColumnDefinitions="Auto,2*,Auto,Auto,Auto,*" Margin="4"
+                        <Grid ColumnDefinitions="Auto,2*,Auto,Auto,Auto,Auto,*" Margin="4"
                               ToolTip.Tip="{Binding DetailText}">
                             <Button Classes="favorite small" Grid.Column="0" Content="{Binding FavoriteGlyph}"
                                     Tag="{Binding Path}" Click="OnToggleFavorite" Margin="0,0,8,0"
@@ -35,16 +39,21 @@
                                            TextTrimming="CharacterEllipsis"
                                            ToolTip.Tip="Release year, publisher, developer, genre, and region." />
                             </StackPanel>
-                            <TextBlock Grid.Column="2" Text="{Binding Format}" Margin="10,0" Opacity="0.8"
+                            <Border Grid.Column="2" Classes="badge" IsVisible="{Binding HasDumpBadge}"
+                                    Margin="0,0,8,0" VerticalAlignment="Center"
+                                    ToolTip.Tip="{Binding DumpTip}">
+                                <TextBlock Text="{Binding DumpBadge}" />
+                            </Border>
+                            <TextBlock Grid.Column="3" Text="{Binding Format}" Margin="10,0" Opacity="0.8"
                                        VerticalAlignment="Center"
                                        ToolTip.Tip="Disc image format." />
-                            <TextBlock Grid.Column="3" Text="{Binding SectorCount}" Margin="0,0,10,0" Opacity="0.8"
+                            <TextBlock Grid.Column="4" Text="{Binding SectorCount}" Margin="0,0,10,0" Opacity="0.8"
                                        VerticalAlignment="Center"
                                        ToolTip.Tip="Number of 2048-byte sectors on the data track." />
-                            <TextBlock Grid.Column="4" Text="{Binding PlaytimeText}" Margin="0,0,10,0" Opacity="0.8"
+                            <TextBlock Grid.Column="5" Text="{Binding PlaytimeText}" Margin="0,0,10,0" Opacity="0.8"
                                        VerticalAlignment="Center"
                                        ToolTip.Tip="Accumulated play time." />
-                            <TextBlock Grid.Column="5" Text="{Binding Path}" Opacity="0.65"
+                            <TextBlock Grid.Column="6" Text="{Binding Path}" Opacity="0.65"
                                        TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
                                        ToolTip.Tip="Full path to the disc image." />
                         </Grid>

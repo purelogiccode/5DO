@@ -149,6 +149,31 @@ public sealed class AppSettings
         }
     }
 
+    /// <summary>
+    /// Gets or sets the optional Redump/No-Intro DAT used by the library disc-health
+    /// check. An empty value disables the known-dump match.
+    /// </summary>
+    public string DiscDatPath { get; set; } = string.Empty;
+
+    /// <summary>Resolves the absolute DAT path, or an empty string when none is configured.</summary>
+    /// <returns>The configured path, or an empty string.</returns>
+    public string ResolveDiscDatPath()
+    {
+        if (string.IsNullOrWhiteSpace(DiscDatPath))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            return Path.GetFullPath(DiscDatPath);
+        }
+        catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return string.Empty;
+        }
+    }
+
     /// <summary>Gets or sets a value indicating whether database fixes are applied automatically.</summary>
     public bool AutoGameFixes { get; set; } = true;
 

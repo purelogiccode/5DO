@@ -444,6 +444,14 @@ by full `Path`, or both and may set `Title`, `Developer`, `Publisher`, `ReleaseY
 time and works completely offline; see [`Configuration.md`](Configuration.md) for the
 schema.
 
+**File > Verify Library Discs...** reads every library image and checks it against a
+Redump/No-Intro DAT. If no DAT is configured, the command asks for one; cancel to check
+readability only. A **Known dump** badge means every track matched, **Not in DAT** means
+the image is readable but did not match, and **Read error** means at least one sector or
+track could not be read. Results are cached in `library-health.json` and invalidated
+automatically when an image's size or timestamp changes. The Game Library window exposes
+the same check as **Verify Health** and **DAT...**.
+
 **File > Disc Browser...** mounts the current disc's Opera file system without
 stopping emulation. The list is sorted directories-first and shows each entry's
 depth, size, and LBA. **Extract Selected...** writes a file or directory,
@@ -459,6 +467,7 @@ Settings persist under the user local application data folder:
 - Windows: `%LOCALAPPDATA%\5DO\settings.json`
 - Linux/macOS: the equivalent local application data directory.
 - Library metadata cache: `%LOCALAPPDATA%\5DO\library-cache.json`.
+- Library disc-health cache: `%LOCALAPPDATA%\5DO\library-health.json`.
 
 For a USB stick or self-contained folder, place an empty `portable.flag` next to the
 executable or start with `--portable`. Settings, NVRAM, save states, cheats, library

@@ -10,6 +10,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using FiveDo.Host;
+using FiveDo.Storage;
 
 namespace FiveDo.Frontend.Avalonia.Views;
 
@@ -21,8 +22,10 @@ public partial class GameLibraryWindow : Window
     private readonly AppSettings _settings;
     private readonly LibraryState _libraryState;
     private LibraryMetadataCatalog _libraryMetadata;
+    private DiscHealthCache _discHealth;
     private CancellationTokenSource? _scanCts;
     private int _scanGeneration;
+    private bool _verifying;
 
     /// <summary>Creates the window with the persisted settings.</summary>
     public GameLibraryWindow()
@@ -39,6 +42,7 @@ public partial class GameLibraryWindow : Window
         _settings = settings;
         _libraryState = LibraryStateStore.Load();
         _libraryMetadata = LibraryMetadataCatalog.Load(_settings.ResolveLibraryMetadataPath());
+        _discHealth = DiscHealthCacheStore.Load();
         Closed += (_, _) =>
         {
             _scanCts?.Cancel();
@@ -92,6 +96,123 @@ public partial class GameLibraryWindow : Window
         OpenSelected();
     }
 
+    private void OnChooseDatAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ChooseDatAsync, "choosing a Redump/No-Intro DAT");
+    }
+
+    private async Task ChooseDatAsync()
+    {
+        IReadOnlyList<IStorageFile> files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Choose a Redump/No-Intro DAT",
+            AllowMultiple = false,
+            FileTypeFilter =
+            [
+                new FilePickerFileType("DAT or XML") { Patterns = ["*.dat", "*.xml"] },
+            ],
+        }).ConfigureAwait(true);
+        var path = files.Count > 0 ? files[0].TryGetLocalPath() : null;
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        _settings.DiscDatPath = path;
+        AppSettingsStore.Save(_settings);
+        StatusText.Text = $"DAT set to {Path.GetFileName(path)}. Select Verify Health to check the library.";
+    }
+
+    private void OnVerifyHealthAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(VerifyHealthAsync, "verifying disc health");
+    }
+
+    private async Task VerifyHealthAsync()
+    {
+        if (_verifying)
+        {
+            return;
+        }
+
+        List<GameLibraryEntry> entries = LibraryList.ItemsSource?
+            .OfType<GameLibraryEntry>()
+            .Where(entry => !entry.Pending)
+            .ToList() ?? [];
+        if (entries.Count == 0)
+        {
+            StatusText.Text = "Scan the library before verifying disc health.";
+            return;
+        }
+
+        RedumpDat? dat = null;
+        var datPath = _settings.ResolveDiscDatPath();
+        if (datPath.Length > 0)
+        {
+            try
+            {
+                dat = await Task.Run(() => RedumpDat.Load(datPath)).ConfigureAwait(true);
+            }
+            catch (Exception exception) when (exception is IOException
+                or UnauthorizedAccessException
+                or InvalidDataException
+                or ArgumentException
+                or NotSupportedException)
+            {
+                StatusText.Text = $"The DAT could not be read: {exception.Message}";
+                return;
+            }
+        }
+
+        _verifying = true;
+        VerifyHealthButton.IsEnabled = false;
+        var selectedPath = (LibraryList.SelectedItem as GameLibraryEntry)?.Path;
+        var progress = new Progress<LibraryHealthProgress>(value =>
+        {
+            StatusText.Text = $"Verifying disc health... {value.Completed} of {value.Total}: {Path.GetFileName(value.Path)}";
+        });
+
+        try
+        {
+            IReadOnlyList<DiscHealthRecord> records = await Task.Run(
+                () => LibraryHealthVerifier.VerifyAll(entries, dat, progress),
+                CancellationToken.None).ConfigureAwait(true);
+            foreach (DiscHealthRecord record in records)
+            {
+                _discHealth.Set(record);
+            }
+
+            _discHealth.RemoveMissingFiles();
+            DiscHealthCacheStore.Save(_discHealth);
+            List<GameLibraryEntry> decorated = entries.Select(DecorateEntry).ToList();
+            LibraryList.ItemsSource = decorated;
+            if (!string.IsNullOrWhiteSpace(selectedPath))
+            {
+                LibraryList.SelectedItem = decorated.FirstOrDefault(entry =>
+                    string.Equals(entry.Path, selectedPath, StringComparison.OrdinalIgnoreCase));
+            }
+
+            UpdateCover();
+            var summary = _discHealth.Summarize(decorated);
+            StatusText.Text = dat is null
+                ? $"Health check complete without a DAT: {summary.Text}."
+                : $"Health check complete: {summary.Text}.";
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or InvalidDataException)
+        {
+            Serilog.Log.Debug(exception, "Disc health verification failed.");
+            StatusText.Text = $"Disc health verification failed: {exception.Message}";
+        }
+        finally
+        {
+            _verifying = false;
+            VerifyHealthButton.IsEnabled = true;
+        }
+    }
+
     private void OnDoubleTapped(object? sender, TappedEventArgs e)
     {
         OpenSelected();
@@ -140,7 +261,7 @@ public partial class GameLibraryWindow : Window
 
     private GameLibraryEntry DecorateEntry(GameLibraryEntry entry)
     {
-        return _libraryMetadata.Apply(_libraryState.Apply(entry));
+        return _discHealth.Apply(_libraryMetadata.Apply(_libraryState.Apply(entry)));
     }
 
     private void UpdateCover()
@@ -307,7 +428,9 @@ public partial class GameLibraryWindow : Window
             }
         }
 
-        StatusText.Text = $"{finalEntries.Count} disc(s), {known} recognized by the 4DO database.";
+        var summary = $"{finalEntries.Count} disc(s), {known} recognized by the 4DO database.";
+        var health = _discHealth.Summarize(finalEntries);
+        StatusText.Text = health.Text.Length > 0 ? $"{summary} {health.Text}." : summary;
     }
 
     private static string CountLabel(int count)
