@@ -129,6 +129,44 @@ differential smoke (`benchmarks/diff/smoke.json`, 300 frames, accuracy profile) 
 re-run after the ledger change and still reports **Match** with frame hash `0x110E7DC5`
 on both engines.
 
+#### 1.1a1 40-title ARM timing A/B (2026-11-04)
+
+The CORE-01 option was measured across the 40-title sample
+(`benchmarks/diff/sample40.json`, 300 frames, one checkpoint, `--no-game-fixes`,
+`cdSpeed: unbounded`). Both 5DO runs used the same staged ISO that the Opera reference
+captured from, the same BIOS, and a fresh NVRAM. The accuracy profile supplied the
+CLIO/CEL/CD timing; only the ARM mode changed, selected by the new harness override
+`--arm-timing freedo|arm60`.
+
+| ARM mode | Matched | Diverged | Errors |
+|---|---:|---:|---:|
+| `freedo` (N=4) | 15 | 25 | 0 |
+| `arm60` (N=2) | 17 | 23 | 0 |
+
+Only two of the 40 final frame hashes changed, and both moved from Diverged to Match:
+
+| Title | `freedo` hash | `arm60` hash | Opera hash |
+|---|---|---|---|
+| 20th Century Video Almanac (USA) | `0x6CDFBDC5` | `0x110E7DC5` | `0x110E7DC5` |
+| Battle Chess (USA) | `0x6CDFBDC5` | `0x110E7DC5` | `0x110E7DC5` |
+
+The other 38 hashes were identical. This is a 300-frame boot sample, not the 3,000-frame
+594-disc report, so the 2026-11-04 decision keeps ARM60 opt-in. It does show that the
+N=2 mode is not a regression risk on this sample and improves parity where the ARM
+instruction stream reaches the frame boundary first. Command:
+
+```powershell
+tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+  run artifacts/diff/sample40-iso.json --out artifacts/diff/sample40-arm60 `
+  --arm-timing arm60 --no-images --resume
+```
+
+`sample40-iso.json` is the local sample40 manifest with each `disc`/`iso` pointing at the
+staged ISO under `artifacts/diff/work/discs`; it is not committed because the paths are
+machine-specific. The staged ISO is the data-sector image used by the reference core, so
+CD-DA and subchannel behavior are outside this boot sample. The Opera captures are reused
+by `--resume`, so the second run differs only in the 5DO ARM mode.
+
 ### 1.1b CLIO timer scheduler differential (2026-10-31)
 
 The CORE-02 option was checked on the 3,000-frame boot with the same `panafz1.bin`,
@@ -1098,6 +1136,20 @@ it does not poll CLIO timers or CEL status; the timing model is nevertheless act
 reported. The profile override in the differential harness is covered by
 `MergeOptions_ProfileOverrideWinsOverDefaultsAndTitle`, and the CLI round-trip by
 `Bench_ProfileOptionReportsTiming` and `SelfTest_CoversEveryNamedProfile`.
+
+#### 1.1ak1 40-title Compatible vs Accuracy profile A/B (2026-11-04)
+
+The CORE-08 profile A/B used the same 40-title, 300-frame staged-ISO sample and cached
+Opera captures as the ARM timing A/B. Only `--profile` changed:
+
+| Profile | Matched | Diverged | Errors |
+|---|---:|---:|---:|
+| `compatible` | 17 | 23 | 0 |
+| `accuracy` | 17 | 23 | 0 |
+
+Every title had the same status in both runs, so the Accuracy profile neither closed nor
+regressed a title in this boot sample. The 594-title, 3,000-frame A/B is still required
+before the profile can become the default, so Accuracy remains opt-in.
 
 ### 1.2 Second pass: renderer-correct gameplay (2026-10-24)
 

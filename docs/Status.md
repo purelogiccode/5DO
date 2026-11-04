@@ -110,7 +110,10 @@ rest remain `No data`. The CORE-01 ARM timing option (`--arm-timing freedo|arm60
 save-state snapshot, `--cpu-clock 0.5x-4x`, and `--random-seed` are implemented with
 tests. `run --cycle-classes` adds a per-instruction-class instruction/cycle ledger
 (`cycleClasses` in `run --json`), and the exact N=2/N=4 class-cost table is documented in
-`PortingNotes.md` 12.28. The CORE-02 CLIO timer option (`--clio-timers freedo|opera`) now implements
+`PortingNotes.md` 12.28. A 40-title A/B reports 17/40 matches with ARM60 versus 15/40
+with FreeDO (`TestCorpus.md` 1.1a1); the differential harness now accepts
+`--arm-timing`, `--cel-timing`, and `--cd-timing` alongside `--clio-timers` and
+`--profile`. The CORE-02 CLIO timer option (`--clio-timers freedo|opera`) now implements
 Opera's per-slot scan and cascade carry behind the safe FreeDO-compatible default, with
 a state snapshot, 16-bit timer-register masking in Opera mode, a reference-model
 conformance test, per-timer telemetry (`--clio-timer-stats`), a bounded
@@ -133,6 +136,8 @@ ARM60, Opera timer, CEL busy, and CD cycle options together, and `run --json` re
 profile derived from the actual options. `bench --profile` measures any named profile and
 reports its timing modes, `selftest` checks determinism plus state round-trip for every
 named profile, and the differential harness accepts `--profile` for a full-collection A/B.
+A 40-title A/B reports 17/40 matches for both `compatible` and `accuracy` with identical
+per-title statuses (`TestCorpus.md` 1.1ak1); the 594-title A/B remains.
 SYS-14 adds per-game NVRAM and versions. `NvramStorageMode` (`Global`, `PerGame`),
 `NvramVersion` (0-9), and `NvramDirectory` select shared `nvram.ram`, versioned
 `nvram.<n>.ram`, or `nvram/per-game/<gameId>.<n>.ram` images. The store reads migration

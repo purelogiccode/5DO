@@ -48,9 +48,24 @@ internal static class DiffReportWriter
         text.Append("CLI: `").Append(report.Provenance.CliPath ?? "unknown").AppendLine("`");
         text.Append("OperaCore: `").Append(report.Provenance.OperaCorePath ?? "unknown")
             .Append("` (").Append(report.Provenance.OperaCoreMd5 ?? "no md5").AppendLine(")");
+        if (report.Provenance.ArmTimingOverride is not null)
+        {
+            text.Append("ARM override: `").Append(report.Provenance.ArmTimingOverride).AppendLine("`");
+        }
+
         if (report.Provenance.ClioTimersOverride is not null)
         {
             text.Append("CLIO override: `").Append(report.Provenance.ClioTimersOverride).AppendLine("`");
+        }
+
+        if (report.Provenance.CelTimingOverride is not null)
+        {
+            text.Append("CEL override: `").Append(report.Provenance.CelTimingOverride).AppendLine("`");
+        }
+
+        if (report.Provenance.CdTimingOverride is not null)
+        {
+            text.Append("CD override: `").Append(report.Provenance.CdTimingOverride).AppendLine("`");
         }
 
         if (report.Provenance.ProfileOverride is not null)
@@ -203,10 +218,31 @@ internal static class DiffReportWriter
             .Append("</code> &middot; OperaCore <code>").Append(WebUtility.HtmlEncode(report.Provenance.OperaCorePath ?? "unknown"))
             .Append("</code> (").Append(WebUtility.HtmlEncode(report.Provenance.OperaCoreMd5 ?? "no md5"))
             .Append(')');
+        if (report.Provenance.ArmTimingOverride is not null)
+        {
+            html.Append(" &middot; ARM override <code>")
+                .Append(WebUtility.HtmlEncode(report.Provenance.ArmTimingOverride))
+                .Append("</code>");
+        }
+
         if (report.Provenance.ClioTimersOverride is not null)
         {
             html.Append(" &middot; CLIO override <code>")
                 .Append(WebUtility.HtmlEncode(report.Provenance.ClioTimersOverride))
+                .Append("</code>");
+        }
+
+        if (report.Provenance.CelTimingOverride is not null)
+        {
+            html.Append(" &middot; CEL override <code>")
+                .Append(WebUtility.HtmlEncode(report.Provenance.CelTimingOverride))
+                .Append("</code>");
+        }
+
+        if (report.Provenance.CdTimingOverride is not null)
+        {
+            html.Append(" &middot; CD override <code>")
+                .Append(WebUtility.HtmlEncode(report.Provenance.CdTimingOverride))
                 .Append("</code>");
         }
 

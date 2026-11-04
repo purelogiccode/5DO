@@ -41,7 +41,10 @@ internal static class FiveDoCaptureRunner
             manifest.Defaults?.Options,
             title.Options,
             harness.ClioTimers,
-            harness.Profile);
+            harness.Profile,
+            harness.ArmTiming,
+            harness.CelTiming,
+            harness.CdTiming);
         var titleDirectory = Path.Combine(outputDirectory, HarnessCommon.SafeName(title.Id));
         Directory.CreateDirectory(titleDirectory);
 

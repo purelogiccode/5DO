@@ -109,6 +109,62 @@ public sealed class DiffManifestTests : IDisposable
     }
 
     [Fact]
+    public void MergeOptions_TimingOverridesWinOverDefaultsAndTitle()
+    {
+        var defaults = new DiffMachineOptions
+        {
+            Profile = "accuracy",
+            ArmTiming = "freedo",
+            ClioTimers = "opera",
+            CelTiming = "freedo",
+            CdTiming = "freedo",
+        };
+        var title = new DiffMachineOptions
+        {
+            ArmTiming = "arm60",
+            CelTiming = "opera",
+            CdTiming = "opera",
+        };
+
+        DiffMachineOptions merged = DiffManifestLoader.MergeOptions(
+            defaults,
+            title,
+            clioTimersOverride: null,
+            profileOverride: null,
+            armTimingOverride: "freedo",
+            celTimingOverride: "freedo",
+            cdTimingOverride: "freedo");
+
+        Assert.Equal("accuracy", merged.Profile);
+        Assert.Equal("freedo", merged.ArmTiming);
+        Assert.Equal("opera", merged.ClioTimers);
+        Assert.Equal("freedo", merged.CelTiming);
+        Assert.Equal("freedo", merged.CdTiming);
+    }
+
+    [Fact]
+    public void MergeOptions_TimingOverridesApplyWithoutTitleOptions()
+    {
+        var defaults = new DiffMachineOptions
+        {
+            ArmTiming = "freedo",
+            CelTiming = "freedo",
+            CdTiming = "freedo",
+        };
+
+        DiffMachineOptions merged = DiffManifestLoader.MergeOptions(
+            defaults,
+            title: null,
+            armTimingOverride: "arm60",
+            celTimingOverride: "opera",
+            cdTimingOverride: "opera");
+
+        Assert.Equal("arm60", merged.ArmTiming);
+        Assert.Equal("opera", merged.CelTiming);
+        Assert.Equal("opera", merged.CdTiming);
+    }
+
+    [Fact]
     public void MergeOptions_ProfileOverrideWinsOverDefaultsAndTitle()
     {
         var defaults = new DiffMachineOptions

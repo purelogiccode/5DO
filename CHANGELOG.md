@@ -7,6 +7,11 @@ release.
 
 ### Added
 
+- The differential harness accepts `--arm-timing`, `--cel-timing`, and `--cd-timing`
+  overrides for every 5DO capture, completing the timing A/B surface alongside
+  `--clio-timers` and `--profile`. The selected overrides are recorded in the report
+  provenance and in the Markdown/HTML headers.
+
 - `bench --profile` applies a timing profile to the synthetic benchmark and reports the
   derived profile, ARM/CLIO/CEL/CD timing modes, and CPU clock in text and JSON, so the
   Accuracy and Performance profiles can be measured with one command. `selftest` now

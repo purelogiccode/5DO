@@ -346,20 +346,27 @@ internal static class DiffManifestLoader
         DiffMachineOptions? defaults,
         DiffMachineOptions? title,
         string? clioTimersOverride = null,
-        string? profileOverride = null)
+        string? profileOverride = null,
+        string? armTimingOverride = null,
+        string? celTimingOverride = null,
+        string? cdTimingOverride = null)
     {
         defaults ??= new DiffMachineOptions();
         if (title is null)
         {
-            return clioTimersOverride is null && profileOverride is null
+            return clioTimersOverride is null
+                && profileOverride is null
+                && armTimingOverride is null
+                && celTimingOverride is null
+                && cdTimingOverride is null
                 ? defaults
                 : new DiffMachineOptions
                 {
                     Profile = profileOverride ?? defaults.Profile,
-                    ArmTiming = defaults.ArmTiming,
+                    ArmTiming = armTimingOverride ?? defaults.ArmTiming,
                     ClioTimers = clioTimersOverride ?? defaults.ClioTimers,
-                    CelTiming = defaults.CelTiming,
-                    CdTiming = defaults.CdTiming,
+                    CelTiming = celTimingOverride ?? defaults.CelTiming,
+                    CdTiming = cdTimingOverride ?? defaults.CdTiming,
                     CdSpeed = defaults.CdSpeed,
                     CpuClock = defaults.CpuClock,
                     RandomSeed = defaults.RandomSeed,
@@ -374,10 +381,10 @@ internal static class DiffManifestLoader
         return new DiffMachineOptions
         {
             Profile = profileOverride ?? title.Profile ?? defaults.Profile,
-            ArmTiming = title.ArmTiming ?? defaults.ArmTiming,
+            ArmTiming = armTimingOverride ?? title.ArmTiming ?? defaults.ArmTiming,
             ClioTimers = clioTimersOverride ?? title.ClioTimers ?? defaults.ClioTimers,
-            CelTiming = title.CelTiming ?? defaults.CelTiming,
-            CdTiming = title.CdTiming ?? defaults.CdTiming,
+            CelTiming = celTimingOverride ?? title.CelTiming ?? defaults.CelTiming,
+            CdTiming = cdTimingOverride ?? title.CdTiming ?? defaults.CdTiming,
             CdSpeed = title.CdSpeed ?? defaults.CdSpeed,
             CpuClock = title.CpuClock ?? defaults.CpuClock,
             RandomSeed = title.RandomSeed ?? defaults.RandomSeed,

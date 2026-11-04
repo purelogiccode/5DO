@@ -47,6 +47,12 @@ tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
   --profile accuracy --no-images --cleanup-iso --resume
 ```
 
+For an isolated timing-mode A/B, use the same fresh-output pattern with
+`--arm-timing freedo|arm60`, `--clio-timers freedo|opera`,
+`--cel-timing freedo|opera`, or `--cd-timing freedo|opera`. The override is applied to
+every 5DO capture and recorded in report provenance; the reference captures are reused
+by `--resume`.
+
 Regenerate the full manifest after changing the collection:
 
 ```powershell

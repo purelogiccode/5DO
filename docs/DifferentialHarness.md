@@ -74,18 +74,21 @@ Outputs:
 
 Useful run flags: `--resume`, `--force`, `--title <filter>`, `--limit N`,
 `--no-images`, `--cleanup-iso`, `--compare-pc`, `--pc-tolerance <bytes>`,
-`--clio-timers freedo|opera`, and `--profile compatible|accuracy|performance|custom`.
-`--clio-timers` and `--profile` override the manifest option for every 5DO capture, so
-one manifest can drive both sides of a timer or profile A/B run without editing the
-manifest. Use a fresh `--out` directory (or `--force`) when changing either override,
-because cached 5DO captures are reused by `--resume` without re-reading the machine
-options. For a profile A/B, keep the manifest's `cdSpeed: "unbounded"` (the reference
-core runs unbounded); the resulting 5DO `profile` field is `Custom` because the drive
-speed differs, but the ARM/CLIO/CEL/CD timing modes follow the selected profile. Both
-overrides are recorded in the report provenance (`clioTimersOverride`,
-`profileOverride`) so an A/B report is self-describing. `--compare-pc` requires a
-reference core with the optional debug exports; without them the PC field is reported
-as unavailable rather than silently passing.
+`--arm-timing freedo|arm60`, `--clio-timers freedo|opera`,
+`--cel-timing freedo|opera`, `--cd-timing freedo|opera`, and
+`--profile compatible|accuracy|performance|custom`.
+The timing and profile overrides replace the manifest option for every 5DO capture, so
+one manifest can drive both sides of an ARM, CLIO, CEL, CD, or profile A/B run without
+editing the manifest. Use a fresh `--out` directory (or `--force`) when changing an
+override, because cached 5DO captures are reused by `--resume` without re-reading the
+machine options. For a profile A/B, keep the manifest's `cdSpeed: "unbounded"` (the
+reference core runs unbounded); the resulting 5DO `profile` field is `Custom` because
+the drive speed differs, but the ARM/CLIO/CEL/CD timing modes follow the selected
+profile. Every override is recorded in the report provenance (`armTimingOverride`,
+`clioTimersOverride`, `celTimingOverride`, `cdTimingOverride`, `profileOverride`) so an
+A/B report is self-describing. `--compare-pc` requires a reference core with the
+optional debug exports; without them the PC field is reported as unavailable rather
+than silently passing.
 
 Exit codes:
 
@@ -286,10 +289,16 @@ the reference core or the local discs.
   the previously recorded 18 because the CEL pixel-accounting fix changed the 5DO
   accuracy hashes. This is the current broad post-parity baseline; the full
   594-title run remains runner-bound.
-- CORE-08 profile A/B: `--profile compatible` and `--profile accuracy` over the same
-  manifest produce separate reports for the default decision. The override is covered
-  by `MergeOptions_ProfileOverrideWinsOverDefaultsAndTitle`; the full-collection A/B
-  remains the gate before Accuracy can become the default.
+- CORE-01 ARM timing A/B on the same 40-title sample (identical Opera captures):
+  `--arm-timing freedo` produced **15 match, 25 diverged**, and
+  `--arm-timing arm60` produced **17 match, 23 diverged**, with 0 errors. Only two
+  frame hashes changed, both from Diverged to Match. The full 594-title run remains
+  the gate; see `TestCorpus.md` 1.1a1.
+- CORE-08 profile A/B over the same 40-title sample: `--profile compatible` and
+  `--profile accuracy` both produced **17 match, 23 diverged, 0 error**, with identical
+  per-title statuses. The override is covered by
+  `MergeOptions_ProfileOverrideWinsOverDefaultsAndTitle`; the full-collection A/B
+  remains the gate before Accuracy can become the default; see `TestCorpus.md` 1.1ak1.
 - A six-title CEL-heavy accuracy-profile run on 2026-11-04 (3,000 frames; Road
   Rash, Gex, AutoBahn Tokio, Johnny Bazookatone, Primal Rage, and DinoPark Tycoon)
   completed both engines with **0 errors and 6 divergences**. The CEL busy

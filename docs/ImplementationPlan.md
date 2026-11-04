@@ -5,7 +5,7 @@
 **Current release:** `1.2.1`
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master`<br>
-**Status:** **1,676 tests pass** (last recorded); `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,681 tests pass** (last recorded); `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Goal:** implement **every Opera core feature**, match or exceed Opera's accuracy, and ship the best standalone 3DO emulator on Windows, Linux, and macOS.
 
 > **This is the single source of truth.** It replaces the former 8,000-line dashboard, milestone log, feature spec, parity audit, and session handoff. Historical evidence stays in the linked docs; this file is the canonical backlog.
@@ -79,7 +79,7 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
 
 - [ ] **CORE-01 — ARM60 cycle-class accuracy mode**
   **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** CORE-01
-  **Remaining:** run the full-collection differential on timing-sensitive titles; the 2026-11-04 decision keeps the ARM60 mode opt-in until that evidence is green. Per-class costs and the `--cycle-classes` ledger are complete and regression-tested.
+  **Remaining:** run the full-collection differential on timing-sensitive titles; the 2026-11-04 40-title A/B found ARM60 17/40 matches versus FreeDO 15/40 with identical Opera captures, and the decision keeps the ARM60 mode opt-in until the 594-disc evidence is green. Per-class costs and the `--cycle-classes` ledger are complete and regression-tested.
   **Done when:** cycle counts match Opera within documented tolerances; golden hashes are unchanged or improved; no full-collection regression.
   **Ref:** `opera_arm.c`, `opera_clock.c`.
 
@@ -97,7 +97,7 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
 
 - [ ] **CORE-08 — Accuracy/performance profile coverage**
   **Status:** Partial · **Priority:** P0 · **Effort:** S · **Tracks:** CORE-08
-  **Remaining:** profile validation across the full collection; decide when the Accuracy profile can become the default. The 2026-11-04 increment completed the remaining CLI surfaces: `bench --profile` reports the derived profile and timing modes, `selftest` validates determinism and state round-trip for every named profile, and the differential harness accepts `--profile` for a full-collection A/B. The Accuracy profile stays opt-in until the A/B report shows no regression against the Compatible baseline.
+  **Remaining:** profile validation across the full collection; decide when the Accuracy profile can become the default. The 2026-11-04 increment completed the remaining CLI surfaces: `bench --profile` reports the derived profile and timing modes, `selftest` validates determinism and state round-trip for every named profile, and the differential harness accepts `--profile` for a full-collection A/B. A 40-title, 300-frame A/B reports 17/40 matches for both `compatible` and `accuracy` with identical per-title statuses; the 594-title A/B remains. The Accuracy profile stays opt-in until that full A/B report shows no regression against the Compatible baseline.
   **Done when:** every profile round-trips through CLI/Settings/state and the Accuracy profile can be enabled by default after evidence is green.
 
 - [ ] **SYS-08 — CPU overclock/underclock validation**

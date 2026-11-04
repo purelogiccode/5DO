@@ -340,8 +340,17 @@ internal sealed class DiffProvenance
     /// <summary>Gets the manifest BIOS MD5.</summary>
     public string? BiosMd5 { get; init; }
 
+    /// <summary>Gets the ARM timing-mode override applied to every 5DO capture, when any.</summary>
+    public string? ArmTimingOverride { get; init; }
+
     /// <summary>Gets the CLIO timer-mode override applied to every 5DO capture, when any.</summary>
     public string? ClioTimersOverride { get; init; }
+
+    /// <summary>Gets the CEL timing-mode override applied to every 5DO capture, when any.</summary>
+    public string? CelTimingOverride { get; init; }
+
+    /// <summary>Gets the CD-ROM timing-mode override applied to every 5DO capture, when any.</summary>
+    public string? CdTimingOverride { get; init; }
 
     /// <summary>Gets the emulation-profile override applied to every 5DO capture, when any.</summary>
     public string? ProfileOverride { get; init; }
@@ -537,8 +546,17 @@ internal sealed class HarnessOptions
     /// <summary>Gets or sets whether existing captures are overwritten.</summary>
     public bool Force { get; set; }
 
+    /// <summary>Gets or sets an explicit ARM timing-mode override for every 5DO capture.</summary>
+    public string? ArmTiming { get; set; }
+
     /// <summary>Gets or sets an explicit CLIO timer-mode override for every 5DO capture.</summary>
     public string? ClioTimers { get; set; }
+
+    /// <summary>Gets or sets an explicit CEL timing-mode override for every 5DO capture.</summary>
+    public string? CelTiming { get; set; }
+
+    /// <summary>Gets or sets an explicit CD-ROM timing-mode override for every 5DO capture.</summary>
+    public string? CdTiming { get; set; }
 
     /// <summary>Gets or sets an explicit emulation-profile override for every 5DO capture.</summary>
     public string? Profile { get; set; }

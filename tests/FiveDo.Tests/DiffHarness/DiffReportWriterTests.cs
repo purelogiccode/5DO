@@ -21,7 +21,10 @@ public sealed class DiffReportWriterTests : IDisposable
         Assert.Contains("Diverged", markdown, StringComparison.Ordinal);
         Assert.Contains("0x00000002", markdown, StringComparison.Ordinal);
         Assert.Contains("test reason", markdown, StringComparison.Ordinal);
+        Assert.Contains("ARM override: `arm60`", markdown, StringComparison.Ordinal);
         Assert.Contains("CLIO override: `freedo`", markdown, StringComparison.Ordinal);
+        Assert.Contains("CEL override: `opera`", markdown, StringComparison.Ordinal);
+        Assert.Contains("CD override: `opera`", markdown, StringComparison.Ordinal);
         Assert.Contains("Profile override: `accuracy`", markdown, StringComparison.Ordinal);
     }
 
@@ -63,7 +66,10 @@ public sealed class DiffReportWriterTests : IDisposable
                 CliPath = "cli",
                 OperaCorePath = "core",
                 OperaCoreMd5 = "md5",
+                ArmTimingOverride = "arm60",
                 ClioTimersOverride = "freedo",
+                CelTimingOverride = "opera",
+                CdTimingOverride = "opera",
                 ProfileOverride = "accuracy",
                 Host = "test",
                 Runtime = "test",

@@ -1058,6 +1058,11 @@ M1 implements the section primitive used by all later chips:
 - The ARM60 mode remains opt-in. This increment makes every class auditable and locks the
   class costs with tests; the full 594-title differential and the default decision remain
   open.
+- The 2026-11-04 40-title A/B (300 frames, accuracy CLIO/CEL/CD timing, identical Opera
+  captures) reports 17/40 matches with `--arm-timing arm60` versus 15/40 with
+  `--arm-timing freedo`. Only two frame hashes changed, both from Diverged to Match
+  (20th Century Video Almanac and Battle Chess USA, both `0x6CDFBDC5` -> `0x110E7DC5`);
+  the other 38 were identical. See `TestCorpus.md` 1.1a1.
 - **Decision (2026-11-04): keep the FreeDO-compatible default.** The five-title showcase
   still reports three video divergences under the accuracy profile, and the 594-title
   differential has not been run, so plan rule 7 (no default timing change without
@@ -1126,3 +1131,18 @@ M1 implements the section primitive used by all later chips:
   `(4 + 336)` M25M-tick gap (200 ARM cycles), so 62 executions take 12,400 cycles.
   The mode remains opt-in until the full 594-disc differential is green; see
   `TestCorpus.md` 1.1b for the 40-title A/B result.
+
+### 12.31 Differential timing-mode overrides (2026-11-04)
+
+- The differential harness now accepts `--arm-timing freedo|arm60`,
+  `--cel-timing freedo|opera`, and `--cd-timing freedo|opera` in addition to
+  `--clio-timers` and `--profile`. Each override replaces the manifest option for every
+  5DO capture, so one manifest drives both sides of a timing A/B; the Opera side is
+  unchanged. Use a fresh `--out` directory (or `--force`) when changing an override,
+  because `--resume` reuses cached 5DO captures without re-reading the machine options.
+- Every override is recorded in report provenance (`armTimingOverride`,
+  `clioTimersOverride`, `celTimingOverride`, `cdTimingOverride`, `profileOverride`) and
+  in the Markdown/HTML headers, so an A/B report is self-describing.
+- The 2026-11-04 CORE-08 A/B on the same 40-title, 300-frame sample reports 17/40
+  matches for both `compatible` and `accuracy`, with identical per-title statuses. The
+  Accuracy profile remains opt-in pending the 594-title run; see `TestCorpus.md` 1.1ak1.

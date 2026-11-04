@@ -164,7 +164,10 @@ internal static class Program
                 : null,
             BiosPath = defaultBios,
             BiosMd5 = File.Exists(defaultBios) ? HarnessCommon.Md5File(defaultBios) : null,
+            ArmTimingOverride = harness.ArmTiming,
             ClioTimersOverride = harness.ClioTimers,
+            CelTimingOverride = harness.CelTiming,
+            CdTimingOverride = harness.CdTiming,
             ProfileOverride = harness.Profile,
             Host = RuntimeInformation.OSDescription,
             Runtime = RuntimeInformation.FrameworkDescription,
@@ -477,8 +480,17 @@ internal static class Program
                 case "--force":
                     harness.Force = true;
                     break;
+                case "--arm-timing":
+                    harness.ArmTiming = NextValue(args, ref i);
+                    break;
                 case "--clio-timers":
                     harness.ClioTimers = NextValue(args, ref i);
+                    break;
+                case "--cel-timing":
+                    harness.CelTiming = NextValue(args, ref i);
+                    break;
+                case "--cd-timing":
+                    harness.CdTiming = NextValue(args, ref i);
                     break;
                 case "--profile":
                     harness.Profile = NextValue(args, ref i);
@@ -625,7 +637,10 @@ internal static class Program
         Console.WriteLine("  --limit <n>        Run at most n titles");
         Console.WriteLine("  --resume           Reuse existing capture JSON");
         Console.WriteLine("  --force            Ignore existing captures");
+        Console.WriteLine("  --arm-timing <m>   Override the ARM timing mode for every 5DO capture (freedo|arm60)");
         Console.WriteLine("  --clio-timers <m>  Override the CLIO timer mode for every 5DO capture (freedo|opera)");
+        Console.WriteLine("  --cel-timing <m>   Override the CEL busy mode for every 5DO capture (freedo|opera)");
+        Console.WriteLine("  --cd-timing <m>    Override the CD-ROM timing mode for every 5DO capture (freedo|opera)");
         Console.WriteLine("  --profile <name>   Override the emulation profile for every 5DO capture (compatible|accuracy|performance|custom)");
         Console.WriteLine("  --no-opera         Capture 5DO only");
         Console.WriteLine("  --no-images        Skip checkpoint BMP/PNG captures");
