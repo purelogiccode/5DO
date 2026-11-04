@@ -297,6 +297,8 @@ public partial class SettingsWindow : Window
         NvramVersionBox.Text = settings.NvramVersion.ToString(CultureInfo.InvariantCulture);
         CpuClockBox.Text = settings.CpuClockMultiplier.ToString("0.###", CultureInfo.InvariantCulture);
         RandomSeedBox.Text = settings.RandomSeed is { } seed ? $"0x{seed:x8}" : string.Empty;
+        OperaDipirCheck.IsChecked = settings.OperaDipir;
+        OperaSoftResetCheck.IsChecked = settings.OperaSoftReset;
         RewindCheck.IsChecked = settings.RewindEnabled;
         RewindSecondsBox.Text = settings.RewindSeconds.ToString(CultureInfo.InvariantCulture);
         FastForwardBox.Text = settings.FastForwardMultiplier.ToString(CultureInfo.InvariantCulture);
@@ -672,6 +674,19 @@ public partial class SettingsWindow : Window
             profile.CpuClockMultiplier = clock;
         }
 
+        try
+        {
+            profile.RandomSeed = ParseRandomSeedText(RandomSeedBox.Text);
+        }
+        catch (FormatException)
+        {
+            // Saving a profile must not crash on an unfinished seed edit; the main
+            // settings save reports the validation error.
+            profile.RandomSeed = _settings.RandomSeed;
+        }
+
+        profile.OperaDipir = OperaDipirCheck.IsChecked == true;
+        profile.OperaSoftReset = OperaSoftResetCheck.IsChecked == true;
         profile.CdAudioVolume = (float)Math.Clamp(CdVolumeSlider.Value, 0, 1);
         profile.CdAudioMuted = CdMuteCheck.IsChecked == true;
         return profile;
@@ -699,6 +714,9 @@ public partial class SettingsWindow : Window
             CdSpeedCombo.SelectedItem = _cdSpeedOptions.First(
                 option => option.Value == profile.CdSpeed);
             CpuClockBox.Text = profile.CpuClockMultiplier.ToString("0.###", CultureInfo.InvariantCulture);
+            RandomSeedBox.Text = profile.RandomSeed is { } seed ? $"0x{seed:x8}" : string.Empty;
+            OperaDipirCheck.IsChecked = profile.OperaDipir;
+            OperaSoftResetCheck.IsChecked = profile.OperaSoftReset;
             CdVolumeSlider.Value = Math.Clamp(profile.CdAudioVolume, 0, 1);
             CdMuteCheck.IsChecked = profile.CdAudioMuted;
             SelectBiosOverride(profile.BiosMd5);
@@ -1179,23 +1197,9 @@ public partial class SettingsWindow : Window
             && settings.DetectProfile() == selectedProfile
                 ? selectedProfile
                 : EmulationProfile.Custom;
-        var seedText = RandomSeedBox.Text?.Trim();
-        if (string.IsNullOrEmpty(seedText))
-        {
-            settings.RandomSeed = null;
-        }
-        else
-        {
-            var seedValue = seedText.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
-                ? seedText[2..]
-                : seedText;
-            if (!uint.TryParse(seedValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var seed))
-            {
-                throw new FormatException("The random seed must be a 32-bit hexadecimal value such as 0x1234, or blank.");
-            }
-
-            settings.RandomSeed = seed;
-        }
+        settings.RandomSeed = ParseRandomSeedText(RandomSeedBox.Text);
+        settings.OperaDipir = OperaDipirCheck.IsChecked == true;
+        settings.OperaSoftReset = OperaSoftResetCheck.IsChecked == true;
 
         settings.SaveDirectory = SaveDirectoryBox.Text?.Trim() ?? string.Empty;
         settings.ScreenshotDirectory = ScreenshotDirectoryBox.Text?.Trim() ?? string.Empty;
@@ -1605,6 +1609,25 @@ public partial class SettingsWindow : Window
 
         IReadOnlyList<IStorageFile> files = await StorageProvider.OpenFilePickerAsync(options).ConfigureAwait(true);
         return files.Count > 0 ? files[0].TryGetLocalPath() : null;
+    }
+
+    private static uint? ParseRandomSeedText(string? text)
+    {
+        var seedText = text?.Trim();
+        if (string.IsNullOrEmpty(seedText))
+        {
+            return null;
+        }
+
+        var seedValue = seedText.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+            ? seedText[2..]
+            : seedText;
+        if (!uint.TryParse(seedValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var seed))
+        {
+            throw new FormatException("The random seed must be a 32-bit hexadecimal value such as 0x1234, or blank.");
+        }
+
+        return seed;
     }
 
     private static bool TryParseFixMode(string text, out FixMode mode)

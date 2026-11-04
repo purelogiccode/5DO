@@ -120,7 +120,7 @@ Machine; the table below is sorted by ID. Never renumber an existing section.
 | 9 | CD-ROM | 4 | `CdromDevice` | Poll/status, status/data buffers, command buffer, requested count, MEI status, current sector, disc state (tracks/MSF/TOC), cycle clock, next-ready cycle, pending read-status flag, MODE SET sector size/block flags, PLAY_AUDIO position, CD-DA sample cursor, volume, and mute. Version 1 is accepted with a zeroed clock and pending flag; v2 adds the cycle clock; v3 adds MODE SET and audio position; v4 adds the CD-DA mix. Older versions use the documented defaults. The timing mode itself is recorded in the Options section. |
 | 10 | Quartz | 3 | `Quartz` | ARM/VDL/timer accumulators, exact DSP cycle remainder, VDL line counter, Opera timer slot/gap flag and 16.16 slot accumulator. Versions 1-2 are accepted with a reset timer scheduler. |
 | 11 | Machine | 1 | `FiveDoMachine` | Compatibility flags (fix mode, Anvil, speed fixes, sf/sdf, unknown flag 11, jw, cnbfix, high-res), frame source dimensions, and all 960 `VdlLine` objects (width, control words, CLUT, 1280 pixels each). |
-| 12 | Options | 6 | `FiveDoMachine` | ARM timing mode, CLIO timer mode, MADAM CEL timing mode, CD-ROM timing mode, CD-ROM speed, and the live video region. Version 1 records only ARM timing; version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing; version 5 adds CD speed; version 6 adds the region. Loading a lower version leaves missing options at the machine default. |
+| 12 | Options | 7 | `FiveDoMachine` | Every registered machine option: ARM timing mode, CLIO timer mode, MADAM CEL timing mode, CD-ROM timing mode, CD-ROM speed, live video region, ARM clock, random seed (including whether the default was recorded), high-resolution mode, Opera DIPIR, Opera soft reset, fix mask, and CPU backend. Version 1 records only ARM timing; version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing; version 5 adds CD speed; version 6 adds the region; version 7 adds the remaining registry entries. Loading a lower version leaves missing options at the machine default. |
 
 ### Why the state is large
 
@@ -153,10 +153,15 @@ Loading a state written by a newer format version is rejected with
   mute) and accepts versions 1-3. Version 1 uses a zeroed clock and pending flag;
   versions 1-2 default the MODE SET/audio fields; version 3 defaults the CD-DA mix. The
   timing mode itself is in the Options section.
-- Options writes version 5 (ARM timing, CLIO timer mode, CEL timing, CD-ROM timing, and
-  CD-ROM speed) and accepts versions 1-4 with the missing options left at the machine
-  default. Timing profiles are a host-side shortcut over these options and are derived
-  from them rather than stored separately.
+- Options writes version 7 and accepts versions 1-6. Version 1 records ARM timing only;
+  version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing;
+  version 5 adds CD speed; version 6 adds the video region; version 7 adds the ARM clock,
+  random seed, high-resolution mode, Opera DIPIR, Opera soft reset, fix mask, and CPU
+  backend. Missing fields stay at the machine default. Every registered machine option is
+  covered, and loading a state whose value differs from the running machine adds a
+  `State <option> <saved> differs from the machine <current>` warning. Timing profiles
+  are a host-side shortcut over these options and are derived from them rather than
+  stored separately.
 - Any other section version is rejected with
   `Unsupported section <id> version <n>.`
 - Unknown section IDs are ignored and recorded as a warning:
@@ -188,7 +193,9 @@ Loading a state written by a newer format version is rejected with
    owner, and removes it from the required set.
 7. Throws if any required section is missing.
 8. Restores `Compatibility.HighResolution` from the Machine section; an explicit
-   `--high-res` tuning flag is OR-ed in.
+   `--high-res` tuning flag is OR-ed in. Compares every Options entry with the running
+   machine and adds mismatch warnings; a differing video region switches the machine and
+   clears the stale frame before the Machine section restores it.
 9. Sets `_framesExecuted` from the header and clears `LastFrameCycles`.
 10. Calls `AudioSink.Reset()` so live audio drops the old timeline.
 

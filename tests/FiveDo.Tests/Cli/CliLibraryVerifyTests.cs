@@ -7,6 +7,7 @@ using System.Text.Json;
 
 namespace FiveDo.Tests.Cli;
 
+[Collection("Console")]
 public sealed class CliLibraryVerifyTests
 {
     [Fact]

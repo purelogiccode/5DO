@@ -5,7 +5,7 @@
 **Current release:** `1.2.1`
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master`<br>
-**Status:** **1,622 tests pass** (last recorded); `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,634 tests pass** (last recorded); `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Goal:** implement **every Opera core feature**, match or exceed Opera's accuracy, and ship the best standalone 3DO emulator on Windows, Linux, and macOS.
 
 > **This is the single source of truth.** It replaces the former 8,000-line dashboard, milestone log, feature spec, parity audit, and session handoff. Historical evidence stays in the linked docs; this file is the canonical backlog.
@@ -44,7 +44,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing, M3U multi-disc playlist, live swap, guest inject, Opera file system, prefetch, DAT health | Full CD command/timing parity, subcode, read-ahead, known-title CD-DA evidence, real in-game multi-disc swap, ODE prompts, physical drive, image conversion |
 | Compatibility | 594 discs: **594 load**, **593 render**, 1 known boot failure (Crash 'n Burn Japan), 0 not loadable | 594/594 render; visual/in-game review; per-game auto-profiles; game database expansion |
 | Differential harness | FiveDO.DiffHarness, checkpoints, audio/state hashes, smoke + five-title showcase, 594-title manifest generator | Full 594-title run, PC-delta triage, CD/state transcripts, nightly dashboard |
-| Tests | **1,622** passing; fuzz harness for six parsers; build/format/inspectcode clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
+| Tests | **1,634** passing; fuzz harness for six parsers; build/format/inspectcode clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K Tier A measured; zero-allocation synthetic path | Tier B 1080p60, GLES 3.1/ANGLE, arm64 tuning, threaded DSP, managed JIT, zero allocations on all real paths |
 | Platforms | Six bundles: Windows/Linux/macOS × x64/arm64, framework-dependent single-file apphosts; Windows x64 validated; Linux x64 tests/smoke pass (GPU preview under llvmpipe); macOS and arm64 cross-published but not hardware-validated | macOS runtime validation, arm64 hardware validation, Linux/macOS GPU presentation, macOS gamepad, Flatpak/AppImage, installers/signing |
 | Release | **v1.2.1** published with six versioned bundles and `SHA256SUMS.txt`; .NET 10 runtime required (not bundled); legal/attribution sign-off recorded | Signing, notarization, auto-update, reproducible builds, SBOM |
@@ -65,7 +65,7 @@ These are done and must not regress. They are listed here once; the backlog belo
 | CLI | `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks/verify/playlist`, `library verify`, `fs`, `bios`, `nvram`, `cheat`, `movie`, `settings`, `audio`, `state`, `disasm`, `update` |
 | Release | v1.2.1 six bundles; versioned archives; checksums; legal/attribution sign-off; OpenAL LGPL obligations |
 
-**Completed IDs (traceability only):** FND-02, FND-03, CORE-09, CORE-12, CORE-14, CORE-15, SYS-04, SYS-09, SYS-10, SYS-11, SYS-13, SYS-14, VID-05, VID-06, VID-14, VID-15, AUD-05, UX-01, UX-02, UX-04, UX-11, UX-12, UX-15, UX-19, UX-23, ENG-03, BAK-12, BAK-17.
+**Completed IDs (traceability only):** FND-01, FND-02, FND-03, CORE-09, CORE-12, CORE-14, CORE-15, SYS-04, SYS-09, SYS-10, SYS-11, SYS-13, SYS-14, VID-05, VID-06, VID-14, VID-15, AUD-05, UX-01, UX-02, UX-04, UX-11, UX-12, UX-15, UX-19, UX-23, ENG-03, BAK-12, BAK-17.
 
 **Milestone aliases:** M9R/M9P → P3/P6/TEST-04; M10 → PERF-02; M12 → PERF-08; M13.5/M13.6 → TEST-06; M14 → VID-01/02/03; M15 → CORE-11/16 + FND-05.
 
@@ -76,11 +76,6 @@ These are done and must not regress. They are listed here once; the backlog belo
 Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` field preserves legacy IDs. **No feature appears in more than one category.** A few legacy aliases (`BAK-04`, `BAK-05`, `BAK-13`, `BAK-18`) intentionally have no separate checkbox; they are covered by the canonical items listed in Appendix B.
 
 ### 3.1 Priority — urgent
-
-- [ ] **FND-01 — Machine option registry, validation, and state coverage**
-  **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** FND-01
-  **Remaining:** centralize every machine option in one validated registry; remove CLI-only or Settings-only options; record every option in save states; add range validation, profile round-trips, mismatch warnings, and generated documentation.
-  **Done when:** every option is reachable from CLI, Settings, and per-game profiles; invalid values are rejected with typed errors; state save/load round-trips every option.
 
 - [ ] **CORE-01 — ARM60 cycle-class accuracy mode**
   **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** CORE-01
@@ -551,7 +546,7 @@ Testing items are cross-cutting suites and gates. Feature-specific test evidence
 
 This is an ID-only sequence; descriptions live in the canonical entries above.
 
-1. **Foundation:** FND-01, TEST-01, CORE-10.
+1. **Foundation:** TEST-01, CORE-10.
 2. **Accuracy:** CORE-01, CORE-02, CORE-03, CORE-08, SYS-08, CORE-04, CORE-06, CORE-07.
 3. **Disc and platform:** SYS-01, SYS-02, SYS-03, SYS-05, SYS-06, SYS-07, ECO-04.
 4. **Opera parity and “just works”:** SYS-12, SYS-15, SYS-16, SYS-17, SYS-18, CORE-13.
@@ -666,7 +661,8 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
 
-- **2026-11-04 — Plan rewrite.** Consolidated the former dashboard, parts I–IV, feature spec, parity audit, and handoff into this single backlog; retired duplicate `BAK-*`/`MOON-*` trackers.
+- **2026-11-04 - FND-01 machine option registry.** Added `MachineOptionRegistry` (13 validated options with CLI/Settings/profile/state mappings), typed `MachineOptionValidationException`/`UnknownMachineOptionException`, Opera DIPIR and soft-reset controls, `--opera-dipir`/`--opera-soft-reset`/`--cpu-backend`, `settings options` generated documentation, `docs/MachineOptions.md`, save-state Options v7 coverage for every option, mismatch warnings, and CLI/Settings/profile parity tests.
+- **2026-11-04 - Plan rewrite.** Consolidated the former dashboard, parts I-IV, feature spec, parity audit, and handoff into this single backlog; retired duplicate `BAK-*`/`MOON-*` trackers.
 - **2026-11-03 — v1.2.1.** Six x64/arm64 bundles plus `SHA256SUMS.txt`; CI verified every apphost machine type and every checksum.
 - **2026-11-03 — v1.2.0.** Direct3D 11 presenter, startup release checks, deterministic fuzz harness, per-edge overscan/void border, screenshot gallery filters/compare/export, display-refresh control, flat CHD/raw ISO detection, FIQ/DSP telemetry, CLIO/DIPIR/FIFO/MCTL/XBUS audit fixes.
 - **2026-11-02 — Hardening pass.** Fuzz harness, overscan profiles, gallery features, FIQ request-to-vector latency, DSP per-tick statistics, 1,622 tests.

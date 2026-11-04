@@ -577,7 +577,7 @@ internal static class Program
             : profileTuning.Region;
         var machine = new FiveDoMachine(new EmulatorTuning
         {
-            HighResolution = HasFlag(args, "--high-res") || gameProfile?.HighResolution == true,
+            HighResolution = HasFlag(args, "--high-res") || profileTuning.HighResolution,
             Region = ParseRegion(options.Get("--region"), fallbackRegion),
             ArmTiming = ParseArmTiming(options.Get("--arm-timing"), profileTuning.ArmTiming),
             ClioTimers = ParseClioTimers(options.Get("--clio-timers"), profileTuning.ClioTimers),
@@ -585,10 +585,11 @@ internal static class Program
             CdromTiming = ParseCdromTiming(options.Get("--cd-timing"), profileTuning.CdromTiming),
             CdSpeed = ParseCdSpeed(options.Get("--cd-speed"), profileTuning.CdSpeed),
             ArmClock = ParseCpuClock(options.Get("--cpu-clock"), profileTuning.ArmClock),
-            OperaDipir = profileTuning.OperaDipir,
-            OperaSoftReset = profileTuning.OperaSoftReset,
-            RandomSeed = ParseRandomSeed(options.Get("--random-seed")),
+            OperaDipir = HasFlag(args, "--opera-dipir") || profileTuning.OperaDipir,
+            OperaSoftReset = HasFlag(args, "--opera-soft-reset") || profileTuning.OperaSoftReset,
+            RandomSeed = ParseRandomSeed(options.Get("--random-seed"), profileTuning.RandomSeed),
             FixMode = fixMode,
+            CpuBackend = ParseCpuBackend(options.Get("--cpu-backend"), profileTuning.CpuBackend),
         });
         if (biosLoad.Image is not null)
         {
@@ -1239,6 +1240,11 @@ internal static class Program
             CdSpeed: machine.Tuning.CdSpeed.ToString(),
             CpuClock: machine.Tuning.ArmClock,
             FixMode: (uint)machine.Compatibility.FixMode,
+            OperaDipir: machine.Tuning.OperaDipir,
+            OperaSoftReset: machine.Tuning.OperaSoftReset,
+            CpuBackend: machine.Tuning.CpuBackend.ToString(),
+            RandomSeed: machine.Tuning.RandomSeed,
+            HighResolution: machine.Tuning.HighResolution,
             DspRunning: machine.Dsp.IsRunning,
             DspPc: machine.Dsp.ProgramCounter,
             DspSema: ((uint)machine.Dsp.SemaphoreStatus << 16) | machine.Dsp.SemaphoreData,
@@ -1408,7 +1414,7 @@ internal static class Program
             : profileTuning.Region;
         var machine = new FiveDoMachine(new EmulatorTuning
         {
-            HighResolution = HasFlag(args, "--high-res") || gameProfile?.HighResolution == true,
+            HighResolution = HasFlag(args, "--high-res") || profileTuning.HighResolution,
             Region = ParseRegion(options.Get("--region"), fallbackRegion),
             ArmTiming = ParseArmTiming(options.Get("--arm-timing"), profileTuning.ArmTiming),
             ClioTimers = ParseClioTimers(options.Get("--clio-timers"), profileTuning.ClioTimers),
@@ -1416,10 +1422,11 @@ internal static class Program
             CdromTiming = ParseCdromTiming(options.Get("--cd-timing"), profileTuning.CdromTiming),
             CdSpeed = ParseCdSpeed(options.Get("--cd-speed"), profileTuning.CdSpeed),
             ArmClock = ParseCpuClock(options.Get("--cpu-clock"), profileTuning.ArmClock),
-            OperaDipir = profileTuning.OperaDipir,
-            OperaSoftReset = profileTuning.OperaSoftReset,
-            RandomSeed = ParseRandomSeed(options.Get("--random-seed")),
+            OperaDipir = HasFlag(args, "--opera-dipir") || profileTuning.OperaDipir,
+            OperaSoftReset = HasFlag(args, "--opera-soft-reset") || profileTuning.OperaSoftReset,
+            RandomSeed = ParseRandomSeed(options.Get("--random-seed"), profileTuning.RandomSeed),
             FixMode = fixMode,
+            CpuBackend = ParseCpuBackend(options.Get("--cpu-backend"), profileTuning.CpuBackend),
         });
         if (biosLoad.Image is not null)
         {
@@ -1765,6 +1772,39 @@ internal static class Program
                 {
                     Console.WriteLine($"  {profile.Name} (v{profile.Version})  {profile.Path}");
                 }
+            }
+
+            return 0;
+        }
+
+        if (string.Equals(args[1], "options", StringComparison.OrdinalIgnoreCase))
+        {
+            var entries = MachineOptionRegistry.Options.Select(definition => new CliMachineOptionResult(
+                definition.Key,
+                definition.CliOption,
+                definition.SettingsProperty,
+                definition.ProfileProperty,
+                definition.DefaultValue,
+                definition.Range,
+                definition.RecordedInState,
+                definition.Description)).ToArray();
+            if (options.Json)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(
+                    new CliMachineOptionsResult(true, entries),
+                    CliJsonContext.Default.CliMachineOptionsResult));
+            }
+            else if (string.Equals(options.Get("--format"), "text", StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (CliMachineOptionResult entry in entries)
+                {
+                    Console.WriteLine(
+                        $"{entry.Key,-16} {entry.Cli,-21} {entry.Default,-22} {entry.Range}");
+                }
+            }
+            else
+            {
+                Console.Write(MachineOptionRegistry.ToMarkdown());
             }
 
             return 0;
@@ -3947,9 +3987,10 @@ internal static class Program
             return ArmTimingMode.Arm60Datasheet;
         }
 
-        throw new ArgumentException(
-            $"Invalid --arm-timing value '{value}'; expected freedo or arm60.",
-            nameof(value));
+        throw new MachineOptionValidationException(
+            "armTiming",
+            value,
+            $"Invalid --arm-timing value '{value}'; expected freedo or arm60.");
     }
 
     private static EmulatorTuning ApplyGameProfile(EmulatorTuning tuning, GameProfile? profile)
@@ -3970,6 +4011,11 @@ internal static class Program
             ArmClock = (int)Math.Round(
                 EmulatorConstants.ArmClock * profile.CpuClockMultiplier,
                 MidpointRounding.AwayFromZero),
+            RandomSeed = profile.RandomSeed,
+            HighResolution = profile.HighResolution ?? tuning.HighResolution,
+            OperaDipir = profile.OperaDipir,
+            OperaSoftReset = profile.OperaSoftReset,
+            CpuBackend = profile.CpuBackend,
         };
     }
 
@@ -3997,9 +4043,10 @@ internal static class Program
             return VideoRegion.Pal2;
         }
 
-        throw new ArgumentException(
-            $"Invalid --region value '{value}'; expected auto, ntsc, pal1, or pal2.",
-            nameof(value));
+        throw new MachineOptionValidationException(
+            "region",
+            value,
+            $"Invalid --region value '{value}'; expected auto, ntsc, pal1, or pal2.");
     }
 
     private static ClioTimerMode ParseClioTimers(
@@ -4023,9 +4070,10 @@ internal static class Program
             return ClioTimerMode.OperaScheduler;
         }
 
-        throw new ArgumentException(
-            $"Invalid --clio-timers value '{value}'; expected freedo or opera.",
-            nameof(value));
+        throw new MachineOptionValidationException(
+            "clioTimers",
+            value,
+            $"Invalid --clio-timers value '{value}'; expected freedo or opera.");
     }
 
     private static CelTimingMode ParseCelTiming(
@@ -4051,9 +4099,10 @@ internal static class Program
             return CelTimingMode.OperaBusy;
         }
 
-        throw new ArgumentException(
-            $"Invalid --cel-timing value '{value}'; expected freedo or opera.",
-            nameof(value));
+        throw new MachineOptionValidationException(
+            "celTiming",
+            value,
+            $"Invalid --cel-timing value '{value}'; expected freedo or opera.");
     }
 
     private static CdromTimingMode ParseCdromTiming(
@@ -4078,9 +4127,10 @@ internal static class Program
             return CdromTimingMode.OperaCycleBased;
         }
 
-        throw new ArgumentException(
-            $"Invalid --cd-timing value '{value}'; expected freedo or opera.",
-            nameof(value));
+        throw new MachineOptionValidationException(
+            "cdromTiming",
+            value,
+            $"Invalid --cd-timing value '{value}'; expected freedo or opera.");
     }
 
     private static CdSpeed ParseCdSpeed(string? value, CdSpeed fallback = CdSpeed.X2)
@@ -4112,9 +4162,10 @@ internal static class Program
             "16" => CdSpeed.X16,
             "24" => CdSpeed.X24,
             "32" => CdSpeed.X32,
-            _ => throw new ArgumentException(
-                $"Invalid --cd-speed value '{value}'; expected unbounded or 1x, 2x, 4x, 8x, 16x, 24x, 32x.",
-                nameof(value)),
+            _ => throw new MachineOptionValidationException(
+                "cdSpeed",
+                value,
+                $"Invalid --cd-speed value '{value}'; expected unbounded or 1x, 2x, 4x, 8x, 16x, 24x, 32x."),
         };
     }
 
@@ -4315,9 +4366,10 @@ internal static class Program
             || !double.IsFinite(number)
             || number <= 0)
         {
-            throw new ArgumentException(
-                $"Invalid --cpu-clock value '{value}'; expected a multiplier such as 2x or a clock such as 25MHz.",
-                nameof(value));
+            throw new MachineOptionValidationException(
+                "cpuClock",
+                value,
+                $"Invalid --cpu-clock value '{value}'; expected a multiplier such as 2x or a clock such as 25MHz.");
         }
 
         var clock = isMegahertz
@@ -4325,17 +4377,23 @@ internal static class Program
             : (int)Math.Round(number * EmulatorConstants.ArmClock);
         if (clock < EmulatorConstants.ArmClock / 2 || clock > EmulatorConstants.ArmClock * 4)
         {
-            throw new ArgumentException(
+            throw new MachineOptionValidationException(
+                "cpuClock",
+                value,
                 $"Invalid --cpu-clock value '{value}'; the clock must be between 0.5x and 4x "
-                + $"({EmulatorConstants.ArmClock / 2_000_000.0:0.##}-{EmulatorConstants.ArmClock * 4 / 1_000_000.0:0.##} MHz).",
-                nameof(value));
+                + $"({EmulatorConstants.ArmClock / 2_000_000.0:0.##}-{EmulatorConstants.ArmClock * 4 / 1_000_000.0:0.##} MHz).");
         }
 
         return clock;
     }
 
-    private static uint? ParseRandomSeed(string? value)
+    private static uint? ParseRandomSeed(string? value, uint? fallback = null)
     {
+        if (value is null)
+        {
+            return fallback;
+        }
+
         if (string.IsNullOrWhiteSpace(value)
             || string.Equals(value, "default", StringComparison.OrdinalIgnoreCase))
         {
@@ -4354,12 +4412,42 @@ internal static class Program
                 CultureInfo.InvariantCulture,
                 out var seed))
         {
-            throw new ArgumentException(
-                $"Invalid --random-seed value '{value}'; expected default, random, or a 32-bit seed.",
-                nameof(value));
+            throw new MachineOptionValidationException(
+                "randomSeed",
+                value,
+                $"Invalid --random-seed value '{value}'; expected default, random, or a 32-bit seed.");
         }
 
         return seed;
+    }
+
+    private static CpuBackendKind ParseCpuBackend(
+        string? value,
+        CpuBackendKind fallback = CpuBackendKind.Interpreter)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return fallback;
+        }
+
+        if (string.Equals(value, "interpreter", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "int", StringComparison.OrdinalIgnoreCase))
+        {
+            return CpuBackendKind.Interpreter;
+        }
+
+        if (string.Equals(value, "jit", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new MachineOptionValidationException(
+                "cpuBackend",
+                value,
+                "Invalid --cpu-backend value 'jit'; the managed IL JIT backend is not implemented until M12. Use interpreter.");
+        }
+
+        throw new MachineOptionValidationException(
+            "cpuBackend",
+            value,
+            $"Invalid --cpu-backend value '{value}'; expected interpreter.");
     }
 
     private static FixMode ParseFixMode(string value)
@@ -4367,7 +4455,10 @@ internal static class Program
         var text = value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? value[2..] : value;
         if (!uint.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var bits))
         {
-            throw new ArgumentException($"Invalid --fix-mode value '{value}'; expected hexadecimal bits such as 0x20.", nameof(value));
+            throw new MachineOptionValidationException(
+                "fixMode",
+                value,
+                $"Invalid --fix-mode value '{value}'; expected hexadecimal bits such as 0x20.");
         }
 
         return (FixMode)bits;
@@ -4477,7 +4568,8 @@ internal static class Program
         Console.WriteLine("             [--game-profile path] [--region auto|ntsc|pal1|pal2] [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
         Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
         Console.WriteLine("             [--input-device 1=joypad,2=mouse,...] [--pbus-format legacy|opera]");
-        Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz]");
+        Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz] [--cpu-backend interpreter]");
+        Console.WriteLine("             [--opera-dipir] [--opera-soft-reset]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--realtime] [--json]");
         Console.WriteLine("             [--cheat path] [--cheat-code code] [--cheat-auto] [--cheats-dir path]");
         Console.WriteLine("             [--checkpoints 3000,6000,12000] [--audio-hash] [--state-hash]");
@@ -4494,7 +4586,8 @@ internal static class Program
         Console.WriteLine("             [--game-profile path] [--region auto|ntsc|pal1|pal2] [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
         Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
         Console.WriteLine("             [--input-device 1=joypad,2=mouse,...] [--pbus-format legacy|opera]");
-        Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz]");
+        Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz] [--cpu-backend interpreter]");
+        Console.WriteLine("             [--opera-dipir] [--opera-soft-reset]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--fix-mode 0xMASK] [--no-game-fixes]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             Runs the machine and records a diagnostic instruction ring buffer.");
@@ -4523,6 +4616,8 @@ internal static class Program
         Console.WriteLine("  settings migrate [path] [--path path] [--json]");
         Console.WriteLine("                                       Normalize and rewrite settings at the current version.");
         Console.WriteLine("  settings profiles [--json]           List named configuration profiles under the data directory.");
+        Console.WriteLine("  settings options [--format markdown|text] [--json]");
+        Console.WriteLine("                                       List the validated machine-option registry.");
         Console.WriteLine("  --config-profile <name>              Use profiles/<name> for settings, NVRAM, cheats, and logs.");
         Console.WriteLine("  --portable                           Store settings, NVRAM, cheats, and logs beside the executable.");
         Console.WriteLine("  cheat list|add|enable|disable|remove|import|export --game ID [--dir path] [--json]");

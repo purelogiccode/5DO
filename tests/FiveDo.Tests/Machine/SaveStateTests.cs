@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using FiveDo.Core;
 using FiveDo.Host;
 using FiveDo.Machine;
@@ -376,6 +377,60 @@ public sealed class SaveStateTests
             stock.StateWarnings,
             warning => warning.Contains("CD-ROM speed", StringComparison.Ordinal)
                 && warning.Contains("X8", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void SaveState_RoundTripsEveryRegisteredMachineOption()
+    {
+        var tuning = new EmulatorTuning
+        {
+            ArmClock = 25_000_000,
+            Region = VideoRegion.Pal1,
+            ArmTiming = ArmTimingMode.Arm60Datasheet,
+            ClioTimers = ClioTimerMode.OperaScheduler,
+            CelTiming = CelTimingMode.OperaBusy,
+            CdromTiming = CdromTimingMode.OperaCycleBased,
+            CdSpeed = CdSpeed.X8,
+            RandomSeed = 0x1234_5678,
+            FixMode = FixMode.BitTiming5,
+            HighResolution = true,
+            OperaDipir = true,
+            OperaSoftReset = true,
+        };
+        FiveDoMachine machine = CreateMachine(tuning: tuning);
+        machine.RunFrames(2);
+        using var state = new MemoryStream();
+        machine.SaveState(state);
+
+        FiveDoMachine matching = CreateMachine(tuning: tuning);
+        state.Position = 0;
+        matching.LoadState(state);
+        Assert.DoesNotContain(
+            matching.StateWarnings,
+            warning => warning.Contains("differs from the machine", StringComparison.Ordinal));
+
+        // The default machine differs in every non-default option. Every registry entry
+        // must therefore produce exactly one options warning or region-switch warning.
+        FiveDoMachine defaults = CreateMachine();
+        state.Position = 0;
+        defaults.LoadState(state);
+        foreach (MachineOptionDefinition definition in MachineOptionRegistry.Options)
+        {
+            // The interpreter is the only supported backend, so that value cannot differ.
+            // The fix mask is already stored in the state header and the Machine section;
+            // loading it makes the options-section value match by construction.
+            if (string.Equals(definition.Key, "cpuBackend", StringComparison.Ordinal)
+                || string.Equals(definition.Key, "fixMode", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            Assert.True(
+                defaults.StateWarnings.Any(warning =>
+                    warning.Contains(definition.DisplayName, StringComparison.Ordinal)),
+                $"No warning for {definition.Key} ({definition.DisplayName}): "
+                    + string.Join(" | ", defaults.StateWarnings));
+        }
     }
 
     [Fact]

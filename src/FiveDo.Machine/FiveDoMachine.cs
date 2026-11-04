@@ -401,7 +401,7 @@ public sealed class FiveDoMachine
             Xbus,
             Cdrom,
             Quartz,
-            new MachineOptionsSection(Tuning, RegionProfile.Region),
+            new MachineOptionsSection(Tuning, RegionProfile.Region, Compatibility.FixMode),
             new MachineFrameSection(_frame, Compatibility),
         ];
         uint features = StateFormat.FeatureOptionsSnapshot
@@ -581,11 +581,8 @@ public sealed class FiveDoMachine
             StateSectionIds.Machine,
         };
 
-        ArmTimingMode? stateArmTiming = null;
-        ClioTimerMode? stateClioTimers = null;
-        CelTimingMode? stateCelTiming = null;
-        CdromTimingMode? stateCdromTiming = null;
-        CdSpeed? stateCdSpeed = null;
+        MachineOptionSnapshot? stateOptions = null;
+        var machineFixMode = Compatibility.FixMode;
         var seenSections = new HashSet<uint>();
         while (reader.TryReadSection(out StateSectionReader? section))
         {
@@ -612,7 +609,7 @@ public sealed class FiveDoMachine
                 || (section.Id == StateSectionIds.Clio && section.Version <= 3)
                 || (section.Id == StateSectionIds.Madam && section.Version <= 3)
                 || (section.Id == StateSectionIds.Vdlp && section.Version <= 3)
-                || (section.Id == StateSectionIds.Options && section.Version <= 6);
+                || (section.Id == StateSectionIds.Options && section.Version <= 7);
             if (!supportedVersion)
             {
                 throw new InvalidStateException($"Unsupported section {section.Id} version {section.Version}.");
@@ -653,12 +650,8 @@ public sealed class FiveDoMachine
                 case StateSectionIds.Options:
                     var options = new MachineOptionsSection(Tuning);
                     options.Load(section);
-                    stateArmTiming = options.LoadedArmTiming;
-                    stateClioTimers = options.LoadedClioTimers;
-                    stateCelTiming = options.LoadedCelTiming;
-                    stateCdromTiming = options.LoadedCdromTiming;
-                    stateCdSpeed = options.LoadedCdSpeed;
-                    if (options.LoadedRegion is { } savedRegion && savedRegion != RegionProfile.Region)
+                    stateOptions = options.Snapshot;
+                    if (stateOptions?.Region is { } savedRegion && savedRegion != RegionProfile.Region)
                     {
                         // The frame section is written after the options section, so
                         // switching here clears the stale frame before it is restored.
@@ -700,36 +693,20 @@ public sealed class FiveDoMachine
             }
         }
 
-        if (stateArmTiming is { } savedTiming && savedTiming != Tuning.ArmTiming)
+        if (stateOptions is not null)
         {
-            _stateWarnings.Add(
-                $"State ARM timing {savedTiming} differs from the machine timing {Tuning.ArmTiming}.");
+            EmulatorTuning machineOptions = Tuning with { FixMode = machineFixMode };
+            foreach (MachineOptionMismatch mismatch in MachineOptionRegistry.Compare(machineOptions, stateOptions))
+            {
+                // The region warning above already reports the switch, and the header
+                // ARM-clock warning already covers the clock; avoid duplicate messages.
+                if (!string.Equals(mismatch.Key, "region", StringComparison.Ordinal)
+                    && !string.Equals(mismatch.Key, "cpuClock", StringComparison.Ordinal))
+                {
+                    _stateWarnings.Add(mismatch.Message);
+                }
+            }
         }
-
-        if (stateClioTimers is { } savedClioTimers && savedClioTimers != Tuning.ClioTimers)
-        {
-            _stateWarnings.Add(
-                $"State CLIO timer mode {savedClioTimers} differs from the machine mode {Tuning.ClioTimers}.");
-        }
-
-        if (stateCelTiming is { } savedCelTiming && savedCelTiming != Tuning.CelTiming)
-        {
-            _stateWarnings.Add(
-                $"State CEL timing mode {savedCelTiming} differs from the machine mode {Tuning.CelTiming}.");
-        }
-
-        if (stateCdromTiming is { } savedCdromTiming && savedCdromTiming != Tuning.CdromTiming)
-        {
-            _stateWarnings.Add(
-                $"State CD-ROM timing mode {savedCdromTiming} differs from the machine mode {Tuning.CdromTiming}.");
-        }
-
-        if (stateCdSpeed is { } savedCdSpeed && savedCdSpeed != Tuning.CdSpeed)
-        {
-            _stateWarnings.Add(
-                $"State CD-ROM speed {savedCdSpeed} differs from the machine speed {Tuning.CdSpeed}.");
-        }
-
 
         // A command-line/front-end override survives loads of states written before the
         // high-resolution flag was recorded as enabled.

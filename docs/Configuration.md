@@ -101,7 +101,7 @@ every serialized property in `AppSettings`.
 | `AutoGameFixes` | bool | `true` | Apply the 4DO per-game fix-mode mapping automatically. |
 | `FixModeOverrides` | object | `{}` | Per-game fix-mode overrides, keyed by game ID. |
 | `FilterOverrides` | object | `{}` | Per-game filter overrides, keyed by game ID. |
-| `GameProfiles` | object | `{}` | Per-game profile snapshots, keyed by game ID. Each entry holds `Profile`, `Region`, `ArmTiming`, `ClioTimers`, `CelTiming`, `CdromTiming`, `CdSpeed`, `CpuClockMultiplier`, `CdAudioVolume`, `CdAudioMuted`, `BiosMd5`, `FixMode`, `Filter`, `HighResolution`, `Overscan`, `InputDevices`, `NvramStorageMode`, and `NvramVersion`. |
+| `GameProfiles` | object | `{}` | Per-game profile snapshots, keyed by game ID. Each entry holds `Profile`, `Region`, `ArmTiming`, `ClioTimers`, `CelTiming`, `CdromTiming`, `CdSpeed`, `CpuClockMultiplier`, `RandomSeed`, `OperaDipir`, `OperaSoftReset`, `CpuBackend`, `CdAudioVolume`, `CdAudioMuted`, `BiosMd5`, `FixMode`, `Filter`, `HighResolution`, `Overscan`, `InputDevices`, `NvramStorageMode`, and `NvramVersion`. |
 | `Filter` | enum string | `"SharpBilinear"` | Global presentation filter. |
 | `FrameSkip` | enum string | `"Auto"` | Presentation frame-skip policy: `Off`, `Auto`, `OneInTwo`, `OneInThree`, `OneInFour`, or `OneInFive`. Only presentation is skipped; emulation and audio always run every frame. |
 | `Aspect` | enum string | `"FourThree"` | Aspect policy. |
@@ -140,6 +140,9 @@ every serialized property in `AppSettings`.
 | `CdSpeed` | enum string | `"X2"` | Effective read speed for `OperaCycleBased`: `Unbounded`, `X1`, `X2` (stock), `X4`, `X8`, `X16`, `X24`, or `X32`. Ignored by `FreeDoCompatible`. |
 | `CpuClockMultiplier` | double | `1.0` | ARM clock multiplier, 0.5..4.0 (6.25-50 MHz). 1.0 is the stock 12.5 MHz. |
 | `RandomSeed` | uint? | `null` | Optional initial DSP PRNG seed; `null` uses FreeDO's `0xa5a5a5a5`. |
+| `OperaDipir` | bool | `false` | Opt-in CLIO DIPIR latches and XBUS access aborts. Recorded in save states and included in per-game profiles. |
+| `OperaSoftReset` | bool | `false` | Opt-in Opera ARM/MADAM/DSP soft-reset path for CLIO CSTAT resets. Recorded in save states and included in per-game profiles. |
+| `CpuBackend` | enum string | `"Interpreter"` | Guest ARM60 backend. `Interpreter` is the only implemented value; `Jit` is reserved for M12 and is rejected by validation. |
 | `NvramStorageMode` | enum string | `"Global"` | `Global` keeps one shared image; `PerGame` keeps a separate image per 4DO game ID. |
 | `NvramVersion` | int | `0` | Independent NVRAM version slot, 0-9. |
 | `NvramDirectory` | string | `""` | Directory that owns the NVRAM layout; empty means the resolved data directory (portable-aware). |
@@ -197,6 +200,8 @@ machine after changing it.
 `CdromTiming` (string): `FreeDoCompatible`, `OperaCycleBased`.
 
 `CdSpeed` (string): `Unbounded`, `X1`, `X2`, `X4`, `X8`, `X16`, `X24`, `X32`.
+
+`CpuBackend` (string): `Interpreter` (only supported value; `Jit` is reserved).
 
 `NvramStorageMode` (string): `Global`, `PerGame`.
 
@@ -498,13 +503,21 @@ matches the first eight uppercase characters; see
 `SetGameProfile` normalize the key case-insensitively; `ApplyGameProfile(gameId)` copies
 the snapshot into the live settings, and `CreateEffectiveForGame(gameId)` deep-copies the
 override maps and returns a machine-creation snapshot without mutating live settings. The
-snapshot covers timing, region, CD speed, CPU clock, CD-DA, BIOS MD5, fix mask, video
-filter, high-resolution mode, six PBUS devices, and NVRAM mode/version. Settings >
+snapshot covers every registered machine option (timing, region, clock, random seed,
+Opera DIPIR/soft reset, CPU backend, fix mask), plus CD-DA, BIOS MD5, video filter,
+high-resolution mode, six PBUS devices, and NVRAM mode/version. Settings >
 Emulation edits, saves, deletes, imports, and exports the current game's profile;
-`run/trace --game-profile` applies the timing/region/fix/high-resolution values
-headlessly. `RegionOverrides` pins a disc to NTSC/PAL1/PAL2 and wins over the
-automatic/global region choice. `settings validate [path]` reports syntax and schema version;
-`settings migrate [path]` normalizes a file and rewrites it at the current version.
+`run/trace --game-profile` applies the machine options headlessly. `RegionOverrides` pins
+a disc to NTSC/PAL1/PAL2 and wins over the automatic/global region choice.
+`settings validate [path]` reports syntax and schema version; `settings migrate [path]`
+normalizes a file and rewrites it at the current version.
+
+`MachineOptionRegistry` is the single source of truth for machine options. It defines the
+CLI flag, settings property, per-game profile property, default, range, validation, and
+save-state coverage for every option. `settings options` prints the generated table, and
+[`MachineOptions.md`](MachineOptions.md) is generated from the same registry. Invalid
+values throw `MachineOptionValidationException` with the failing registry key; unknown
+keys throw `UnknownMachineOptionException`.
 
 The Settings dialog's **Emulation** page edits:
 
@@ -528,14 +541,19 @@ The Settings dialog's **Emulation** page edits:
 - `CdSpeed` combo: unbounded or 1x-32x for the cycle-based model; 2x is the stock drive speed (restarts the machine when changed).
 - `CpuClockMultiplier` field: 0.5..4.0 (restarts the machine when changed).
 - `RandomSeed` field: blank for the FreeDO default, or a 32-bit hexadecimal value.
+- `OperaDipir` checkbox: opt-in CLIO DIPIR latches and XBUS access aborts (restarts the machine).
+- `OperaSoftReset` checkbox: opt-in Opera ARM/MADAM/DSP soft-reset path (restarts the machine).
 - Current game display and fix-mode override (`0x...` hex mask, blank = automatic).
 - Per-game filter override (`Automatic` or an explicit filter).
 
+`CpuBackend` remains `Interpreter`; the JIT value is reserved for M12 and is rejected by
+the registry until it is implemented.
+
 Changing high-resolution mode, ARM timing, the CLIO timer mode, the CEL timing mode, the
-CD-ROM timing mode, or the CD-ROM speed recreates the machine and reopens the current
-BIOS/disc; the state is not preserved. Save states record all four timing modes and the CD
-speed, and loading a state written with another value reports a warning instead of
-rejecting it.
+CD-ROM timing mode, the CD-ROM speed, the ARM clock, the random seed, Opera DIPIR, Opera
+soft reset, or the CPU backend recreates the machine and reopens the current BIOS/disc;
+the state is not preserved. Save states record every registered machine option, and
+loading a state written with another value reports a warning instead of rejecting it.
 
 ---
 

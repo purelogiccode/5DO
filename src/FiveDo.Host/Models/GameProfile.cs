@@ -41,6 +41,18 @@ public sealed class GameProfile
     /// <summary>Gets or sets the CPU clock multiplier (0.5-4).</summary>
     public double CpuClockMultiplier { get; set; } = 1.0;
 
+    /// <summary>Gets or sets the optional initial DSP PRNG seed, or <see langword="null"/> for the FreeDO default.</summary>
+    public uint? RandomSeed { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether CLIO DIPIR semantics are enabled.</summary>
+    public bool OperaDipir { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether Opera's soft-reset path is enabled.</summary>
+    public bool OperaSoftReset { get; set; }
+
+    /// <summary>Gets or sets the guest CPU backend.</summary>
+    public CpuBackendKind CpuBackend { get; set; } = CpuBackendKind.Interpreter;
+
     /// <summary>Gets or sets the CD-DA mix level (0-1).</summary>
     public float CdAudioVolume { get; set; } = 0.8f;
 
@@ -88,6 +100,10 @@ public sealed class GameProfile
             CdromTiming = settings.CdromTiming,
             CdSpeed = settings.CdSpeed,
             CpuClockMultiplier = settings.CpuClockMultiplier,
+            RandomSeed = settings.RandomSeed,
+            OperaDipir = settings.OperaDipir,
+            OperaSoftReset = settings.OperaSoftReset,
+            CpuBackend = settings.CpuBackend,
             CdAudioVolume = settings.CdAudioVolume,
             CdAudioMuted = settings.CdAudioMuted,
             HighResolution = settings.HighResolution,
@@ -121,6 +137,10 @@ public sealed class GameProfile
         settings.CdromTiming = CdromTiming;
         settings.CdSpeed = CdSpeed;
         settings.CpuClockMultiplier = CpuClockMultiplier;
+        settings.RandomSeed = RandomSeed;
+        settings.OperaDipir = OperaDipir;
+        settings.OperaSoftReset = OperaSoftReset;
+        settings.CpuBackend = CpuBackend;
         settings.CdAudioVolume = CdAudioVolume;
         settings.CdAudioMuted = CdAudioMuted;
 

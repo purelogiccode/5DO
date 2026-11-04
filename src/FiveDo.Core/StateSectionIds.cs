@@ -41,7 +41,7 @@ public static class StateSectionIds
     /// <summary>Machine-level state.</summary>
     public const uint Machine = 11;
 
-    /// <summary>Machine option snapshot (ARM timing and future accuracy options).</summary>
+    /// <summary>Machine option snapshot (every registry entry).</summary>
     public const uint Options = 12;
 
     /// <summary>Returns a human-readable name for a section identifier.</summary>

@@ -477,6 +477,25 @@ public sealed class AppSettings
     public uint? RandomSeed { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether CLIO DIPIR latches and XBUS access aborts
+    /// are enabled. This is an opt-in accuracy option and restarts the machine.
+    /// </summary>
+    public bool OperaDipir { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether CLIO CSTAT soft resets use Opera's
+    /// ARM/MADAM/DSP reset path. This is an opt-in accuracy option and restarts the
+    /// machine.
+    /// </summary>
+    public bool OperaSoftReset { get; set; }
+
+    /// <summary>
+    /// Gets or sets the guest CPU backend. The interpreter is the reference and the only
+    /// implemented backend.
+    /// </summary>
+    public CpuBackendKind CpuBackend { get; set; } = CpuBackendKind.Interpreter;
+
+    /// <summary>
     /// Gets the PBUS device type for each of the six ports. Values are the
     /// <see cref="InputDeviceType"/> names; missing or invalid entries use a joypad.
     /// </summary>
@@ -1151,6 +1170,31 @@ public sealed class AppSettings
         }
 
         return (int)Math.Round(EmulatorConstants.ArmClock * CpuClockMultiplier);
+    }
+
+    /// <summary>Creates a machine tuning record from the configured machine options.</summary>
+    /// <returns>A validated tuning record with the configured level; the caller adds per-game fixes.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the CPU clock multiplier is outside 0.5x-4x.</exception>
+    /// <exception cref="MachineOptionValidationException">Thrown when a machine option is unknown.</exception>
+    public EmulatorTuning CreateEmulatorTuning()
+    {
+        var tuning = new EmulatorTuning
+        {
+            ArmClock = ResolveArmClock(),
+            Region = Region,
+            ArmTiming = ArmTiming,
+            ClioTimers = ClioTimers,
+            CelTiming = CelTiming,
+            CdromTiming = CdromTiming,
+            CdSpeed = CdSpeed,
+            RandomSeed = RandomSeed,
+            CpuBackend = CpuBackend,
+            HighResolution = HighResolution,
+            OperaDipir = OperaDipir,
+            OperaSoftReset = OperaSoftReset,
+        };
+        tuning.Validate();
+        return tuning;
     }
 
     /// <summary>Applies a timing profile to the individual emulation options.</summary>

@@ -127,6 +127,7 @@ nav:
   - Reference:
       - CLI reference: CliReference.md
       - Configuration: Configuration.md
+      - Machine options: MachineOptions.md
       - Save states: SaveStates.md
       - Audio: Audio.md
       - Video: Video.md

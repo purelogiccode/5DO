@@ -334,6 +334,10 @@ public sealed class AppSettingsStoreTests
             CdromTiming = CdromTimingMode.OperaCycleBased,
             CdSpeed = CdSpeed.X8,
             CpuClockMultiplier = 1.5,
+            RandomSeed = 0x1234_5678,
+            OperaDipir = true,
+            OperaSoftReset = true,
+            CpuBackend = CpuBackendKind.Interpreter,
             CdAudioVolume = 0.4f,
             CdAudioMuted = true,
             BiosMd5 = "0123456789ABCDEF0123456789ABCDEF",
@@ -354,6 +358,10 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(ArmTimingMode.Arm60Datasheet, loaded.ArmTiming);
         Assert.Equal(CdSpeed.X8, loaded.CdSpeed);
         Assert.Equal(1.5, loaded.CpuClockMultiplier);
+        Assert.Equal(0x1234_5678u, loaded.RandomSeed);
+        Assert.True(loaded.OperaDipir);
+        Assert.True(loaded.OperaSoftReset);
+        Assert.Equal(CpuBackendKind.Interpreter, loaded.CpuBackend);
         Assert.Equal(0.4f, loaded.CdAudioVolume);
         Assert.True(loaded.CdAudioMuted);
         Assert.Equal(new CropInsets(2, 3, 4, 5), loaded.Overscan);
@@ -371,6 +379,7 @@ public sealed class AppSettingsStoreTests
             CdAudioVolume = 9,
             BiosMd5 = "not-an-md5",
             FixMode = (FixMode)999,
+            CpuBackend = (CpuBackendKind)99,
             Filter = (VideoFilter)999,
             InputDevices = ["Mouse", "bogus", "Joypad"],
             NvramStorageMode = (NvramStorageMode)99,
@@ -382,6 +391,7 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(0.8f, normalized.CdAudioVolume);
         Assert.Equal(string.Empty, normalized.BiosMd5);
         Assert.Null(normalized.FixMode);
+        Assert.Equal(CpuBackendKind.Interpreter, normalized.CpuBackend);
         Assert.Null(normalized.Filter);
         Assert.Equal(6, normalized.InputDevices.Count);
         Assert.Equal("Mouse", normalized.InputDevices[0]);
@@ -396,6 +406,10 @@ public sealed class AppSettingsStoreTests
         var settings = new AppSettings
         {
             HighResolution = true,
+            RandomSeed = 0xCAFE_F00D,
+            OperaDipir = true,
+            OperaSoftReset = true,
+            CpuBackend = CpuBackendKind.Interpreter,
             NvramStorageMode = NvramStorageMode.PerGame,
             NvramVersion = 4,
             OverscanLeft = 1,
@@ -416,6 +430,10 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(FixMode.BitTiming5, profile.FixMode);
         Assert.Equal(VideoFilter.Crt, profile.Filter);
         Assert.True(profile.HighResolution);
+        Assert.Equal(0xCAFE_F00Du, profile.RandomSeed);
+        Assert.True(profile.OperaDipir);
+        Assert.True(profile.OperaSoftReset);
+        Assert.Equal(CpuBackendKind.Interpreter, profile.CpuBackend);
         Assert.Equal("Mouse", profile.InputDevices[0]);
         Assert.Equal(NvramStorageMode.PerGame, profile.NvramStorageMode);
         Assert.Equal(4, profile.NvramVersion);
@@ -440,6 +458,10 @@ public sealed class AppSettingsStoreTests
                 Region = VideoRegion.Pal1,
                 ArmTiming = ArmTimingMode.Arm60Datasheet,
                 CdSpeed = CdSpeed.X4,
+                RandomSeed = 0x0BAD_F00D,
+                OperaDipir = true,
+                OperaSoftReset = true,
+                CpuBackend = CpuBackendKind.Interpreter,
                 CdAudioVolume = 0.25f,
                 CdAudioMuted = true,
                 BiosMd5 = "0123456789ABCDEF0123456789ABCDEF",
@@ -457,6 +479,10 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(VideoRegion.Pal1, effective.Region);
         Assert.Equal(ArmTimingMode.Arm60Datasheet, effective.ArmTiming);
         Assert.Equal(CdSpeed.X4, effective.CdSpeed);
+        Assert.Equal(0x0BAD_F00Du, effective.RandomSeed);
+        Assert.True(effective.OperaDipir);
+        Assert.True(effective.OperaSoftReset);
+        Assert.Equal(CpuBackendKind.Interpreter, effective.CpuBackend);
         Assert.Equal(0.25f, effective.CdAudioVolume);
         Assert.True(effective.CdAudioMuted);
         Assert.Equal(new CropInsets(3, 5, 7, 9), effective.ResolveOverscan());

@@ -3779,7 +3779,10 @@ public partial class MainWindow : Window, IDisposable
                 || _settings.CdromTiming != _machine.Tuning.CdromTiming
                 || _settings.CdSpeed != _machine.Tuning.CdSpeed
                 || _settings.ResolveArmClock() != _machine.Tuning.ArmClock
-                || _settings.RandomSeed != _machine.Tuning.RandomSeed))
+                || _settings.RandomSeed != _machine.Tuning.RandomSeed
+                || _settings.OperaDipir != _machine.Tuning.OperaDipir
+                || _settings.OperaSoftReset != _machine.Tuning.OperaSoftReset
+                || _settings.CpuBackend != _machine.Tuning.CpuBackend))
         {
             RecreateMachine();
             ShowOsd("Settings saved; machine restarted.", OsdSeverity.Success);
@@ -4977,17 +4980,9 @@ public partial class MainWindow : Window, IDisposable
         if (_machine is null)
         {
             AppSettings effective = _settings.CreateEffectiveForGame(gameId);
-            _machine = new FiveDoMachine(new EmulatorTuning
+            _machine = new FiveDoMachine(effective.CreateEmulatorTuning() with
             {
-                HighResolution = effective.HighResolution,
-                Region = effective.Region,
-                ArmTiming = effective.ArmTiming,
-                ClioTimers = effective.ClioTimers,
-                CelTiming = effective.CelTiming,
-                CdromTiming = effective.CdromTiming,
-                CdSpeed = effective.CdSpeed,
-                ArmClock = effective.ResolveArmClock(),
-                RandomSeed = effective.RandomSeed,
+                FixMode = effective.ResolveFixMode(gameId),
             })
             {
                 PbusSource = _input,

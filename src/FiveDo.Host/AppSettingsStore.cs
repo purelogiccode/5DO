@@ -202,6 +202,11 @@ public static class AppSettingsStore
                     profile.CdSpeed = CdSpeed.X2;
                 }
 
+                if (!Enum.IsDefined(profile.CpuBackend))
+                {
+                    profile.CpuBackend = CpuBackendKind.Interpreter;
+                }
+
                 if (!double.IsFinite(profile.CpuClockMultiplier)
                     || profile.CpuClockMultiplier is < 0.5 or > 4.0)
                 {
@@ -304,6 +309,11 @@ public static class AppSettingsStore
             if (!Enum.IsDefined(settings.CdSpeed))
             {
                 settings.CdSpeed = CdSpeed.X2;
+            }
+
+            if (!Enum.IsDefined(settings.CpuBackend))
+            {
+                settings.CpuBackend = CpuBackendKind.Interpreter;
             }
 
             if (!Enum.IsDefined(settings.NvramStorageMode))

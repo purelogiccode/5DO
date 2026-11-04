@@ -23,3 +23,17 @@ internal sealed record CliSettingsProfilesResult(
     bool Ok,
     string Directory,
     IReadOnlyList<CliSettingsProfile> Profiles);
+
+internal sealed record CliMachineOptionResult(
+    string Key,
+    string Cli,
+    string Settings,
+    string Profile,
+    string Default,
+    string Range,
+    bool RecordedInState,
+    string Description);
+
+internal sealed record CliMachineOptionsResult(
+    bool Ok,
+    IReadOnlyList<CliMachineOptionResult> Options);

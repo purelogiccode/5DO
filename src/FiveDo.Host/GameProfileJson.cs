@@ -107,6 +107,11 @@ public static class GameProfileJson
             profile.CdSpeed = CdSpeed.X2;
         }
 
+        if (!Enum.IsDefined(profile.CpuBackend))
+        {
+            profile.CpuBackend = CpuBackendKind.Interpreter;
+        }
+
         if (!double.IsFinite(profile.CpuClockMultiplier)
             || profile.CpuClockMultiplier is < 0.5 or > 4.0)
         {

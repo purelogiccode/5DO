@@ -92,4 +92,9 @@ internal sealed record CliRunResult(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     CliFiqResult? Fiq = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    CliDspResult? DspStats = null);
+    CliDspResult? DspStats = null,
+    bool OperaDipir = false,
+    bool OperaSoftReset = false,
+    string CpuBackend = "Interpreter",
+    uint? RandomSeed = null,
+    bool HighResolution = false);

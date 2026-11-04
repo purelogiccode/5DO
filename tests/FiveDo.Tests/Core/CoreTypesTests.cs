@@ -34,7 +34,7 @@ public sealed class CoreTypesTests
     {
         var tuning = new EmulatorTuning { ArmTiming = (ArmTimingMode)99 };
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => tuning.Validate());
+        Assert.Throws<MachineOptionValidationException>(() => tuning.Validate());
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public sealed class CoreTypesTests
     {
         var tuning = new EmulatorTuning { ClioTimers = (ClioTimerMode)99 };
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => tuning.Validate());
+        Assert.Throws<MachineOptionValidationException>(() => tuning.Validate());
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public sealed class CoreTypesTests
     {
         var tuning = new EmulatorTuning { CelTiming = (CelTimingMode)99 };
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => tuning.Validate());
+        Assert.Throws<MachineOptionValidationException>(() => tuning.Validate());
     }
 
     [Fact]
@@ -79,7 +79,7 @@ public sealed class CoreTypesTests
     {
         var tuning = new EmulatorTuning { CdromTiming = (CdromTimingMode)99 };
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => tuning.Validate());
+        Assert.Throws<MachineOptionValidationException>(() => tuning.Validate());
     }
 
     [Fact]
@@ -96,7 +96,7 @@ public sealed class CoreTypesTests
     {
         var tuning = new EmulatorTuning { CdSpeed = (CdSpeed)3 };
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => tuning.Validate());
+        Assert.Throws<MachineOptionValidationException>(() => tuning.Validate());
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public sealed class CoreTypesTests
     {
         var tuning = new EmulatorTuning { CpuBackend = CpuBackendKind.Jit };
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => tuning.Validate());
+        Assert.Throws<MachineOptionValidationException>(() => tuning.Validate());
     }
 
     [Fact]
@@ -112,7 +112,7 @@ public sealed class CoreTypesTests
     {
         var tuning = new EmulatorTuning { ArmClock = 0 };
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => tuning.Validate());
+        Assert.Throws<MachineOptionValidationException>(() => tuning.Validate());
     }
 
     [Fact]

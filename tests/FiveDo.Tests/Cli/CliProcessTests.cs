@@ -481,6 +481,72 @@ public sealed class CliProcessTests
     }
 
     [Fact]
+    public void Run_OperaAccuracyOptions_AreReportedInJson()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--opera-dipir",
+                "--opera-soft-reset",
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"operaDipir\": true", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"operaSoftReset\": true", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void Run_InvalidCpuBackend_ReturnsOne()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--cpu-backend",
+                "jit");
+
+            Assert.Equal(1, result.Code);
+            Assert.Contains("--cpu-backend", result.Error, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void SettingsOptions_PrintsTheMachineOptionRegistry()
+    {
+        CliResult markdown = Invoke("settings", "options");
+        CliResult json = Invoke("settings", "options", "--json");
+
+        Assert.Equal(0, markdown.Code);
+        Assert.Contains("| armTiming | --arm-timing |", markdown.Output, StringComparison.Ordinal);
+        Assert.Contains("| operaDipir | --opera-dipir |", markdown.Output, StringComparison.Ordinal);
+        Assert.Equal(0, json.Code);
+        Assert.Contains("\"key\": \"cpuClock\"", json.Output, StringComparison.Ordinal);
+        Assert.Contains("\"key\": \"operaSoftReset\"", json.Output, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Run_GameProfileOption_AppliesTimingAndRegion()
     {
         var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");

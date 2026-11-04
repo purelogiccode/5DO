@@ -1,5 +1,3 @@
-using System;
-
 namespace FiveDo.Core;
 
 /// <summary>
@@ -93,106 +91,9 @@ public sealed record EmulatorTuning
     public bool OperaSoftReset { get; init; }
 
     /// <summary>Validates the tuning values.</summary>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when a clock or size is invalid.</exception>
+    /// <exception cref="MachineOptionValidationException">Thrown when an option is invalid.</exception>
     public void Validate()
     {
-        ValidateArmClock(ArmClock);
-        ValidateRegion(Region);
-        ValidateArmTiming(ArmTiming);
-        ValidateClioTimers(ClioTimers);
-        ValidateCelTiming(CelTiming);
-        ValidateCdromTiming(CdromTiming);
-        ValidateCdSpeed(CdSpeed);
-        ValidateCpuBackend(CpuBackend);
-    }
-
-    private static void ValidateArmClock(int armClock)
-    {
-        if (armClock <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(armClock), armClock, "The ARM clock must be positive.");
-        }
-    }
-
-    private static void ValidateRegion(VideoRegion region)
-    {
-        if (region is not VideoRegion.Ntsc and not VideoRegion.Pal1 and not VideoRegion.Pal2)
-        {
-            throw new ArgumentOutOfRangeException(nameof(region), region, "Unknown video region.");
-        }
-    }
-
-    private static void ValidateArmTiming(ArmTimingMode armTiming)
-    {
-        if (armTiming is not ArmTimingMode.FreeDoCompatible and not ArmTimingMode.Arm60Datasheet)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(armTiming),
-                armTiming,
-                "Unknown ARM timing mode.");
-        }
-    }
-
-    private static void ValidateClioTimers(ClioTimerMode clioTimers)
-    {
-        if (clioTimers is not ClioTimerMode.FreeDoCompatible and not ClioTimerMode.OperaScheduler)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(clioTimers),
-                clioTimers,
-                "Unknown CLIO timer mode.");
-        }
-    }
-
-    private static void ValidateCelTiming(CelTimingMode celTiming)
-    {
-        if (celTiming is not CelTimingMode.FreeDoCompatible and not CelTimingMode.OperaBusy)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(celTiming),
-                celTiming,
-                "Unknown CEL timing mode.");
-        }
-    }
-
-    private static void ValidateCdromTiming(CdromTimingMode cdromTiming)
-    {
-        if (cdromTiming is not CdromTimingMode.FreeDoCompatible
-            and not CdromTimingMode.OperaCycleBased)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(cdromTiming),
-                cdromTiming,
-                "Unknown CD-ROM timing mode.");
-        }
-    }
-
-    private static void ValidateCdSpeed(CdSpeed cdSpeed)
-    {
-        if (cdSpeed is not CdSpeed.Unbounded
-            and not CdSpeed.X1
-            and not CdSpeed.X2
-            and not CdSpeed.X4
-            and not CdSpeed.X8
-            and not CdSpeed.X16
-            and not CdSpeed.X24
-            and not CdSpeed.X32)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(cdSpeed),
-                cdSpeed,
-                "Unknown CD-ROM speed.");
-        }
-    }
-
-    private static void ValidateCpuBackend(CpuBackendKind cpuBackend)
-    {
-        if (cpuBackend != CpuBackendKind.Interpreter)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(cpuBackend),
-                cpuBackend,
-                "The managed IL JIT backend is not implemented until M12.");
-        }
+        MachineOptionRegistry.Validate(this);
     }
 }
