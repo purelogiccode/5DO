@@ -91,6 +91,7 @@ internal static class Program
                     "trace" => TraceCommand(args),
                     "info" => Info(args),
                     "disc" => DiscCommand(args),
+                    "library" => LibraryCommand(args),
                     "settings" => SettingsCommand(args),
                     "fs" => FsCommand(args),
                     "bios" => Bios(args),
@@ -1828,6 +1829,136 @@ internal static class Program
         }
 
         throw new ArgumentException($"Unknown settings subcommand '{args[1]}'.", nameof(args));
+    }
+
+    private static int LibraryCommand(string[] args)
+    {
+        if (args.Length < 2 || !string.Equals(args[1], "verify", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("library needs the 'verify' subcommand.", nameof(args));
+        }
+
+        ParsedOptions options = Parse(args, startIndex: 2);
+        AppSettings settings = AppSettingsStore.Load();
+        var folder = options.Get("--folder");
+        List<string> folders = string.IsNullOrWhiteSpace(folder)
+            ? settings.LibraryFolders.Where(path => !string.IsNullOrWhiteSpace(path)).ToList()
+            : [folder];
+        if (folders.Count == 0)
+        {
+            throw new ArgumentException(
+                "library verify needs --folder or at least one configured library folder.",
+                nameof(args));
+        }
+
+        var datPath = options.Get("--dat") ?? settings.ResolveDiscDatPath();
+        RedumpDat? dat = null;
+        if (!string.IsNullOrWhiteSpace(datPath))
+        {
+            dat = RedumpDat.Load(datPath);
+            datPath = Path.GetFullPath(datPath);
+        }
+
+        GameLibraryScanResult scan = GameLibraryScanner.BeginScan(folders);
+        List<GameLibraryEntry> entries = scan.Entries
+            .Where(entry => !string.IsNullOrWhiteSpace(entry.Path))
+            .ToList();
+        if (entries.Count == 0)
+        {
+            throw new ArgumentException("No supported disc images were found in the library folders.", nameof(args));
+        }
+
+        if (!options.Json)
+        {
+            Console.WriteLine($"library:     {string.Join(", ", folders)}");
+            Console.WriteLine($"dat:         {(datPath.Length > 0 ? datPath : "(none)")}");
+            Console.WriteLine($"discs:       {entries.Count}");
+        }
+
+        var verified = 0;
+        var mismatch = 0;
+        var readErrors = 0;
+        var noDat = 0;
+        var progress = new InlineProgress<LibraryHealthProgress>(value =>
+        {
+            if (!options.Json)
+            {
+                Console.Error.WriteLine($"[{value.Completed}/{value.Total}] {Path.GetFileName(value.Path)}");
+            }
+        });
+        IReadOnlyList<DiscHealthRecord> records = LibraryHealthVerifier.VerifyAll(entries, dat, progress);
+
+        var cachePath = options.Get("--cache");
+        DiscHealthCache cache = DiscHealthCacheStore.Load(cachePath);
+        var results = new List<CliLibraryVerifyEntry>(records.Count);
+        foreach (DiscHealthRecord record in records)
+        {
+            cache.Set(record);
+            switch (record.Status)
+            {
+                case DiscHealthStatus.Verified:
+                    verified++;
+                    break;
+                case DiscHealthStatus.Mismatch:
+                    mismatch++;
+                    break;
+                case DiscHealthStatus.ReadError:
+                    readErrors++;
+                    break;
+                case DiscHealthStatus.NoDat:
+                    noDat++;
+                    break;
+            }
+
+            results.Add(new CliLibraryVerifyEntry(
+                record.Path,
+                record.Status.ToString(),
+                record.GameName,
+                record.RomName,
+                record.TrackCount,
+                record.MatchedTracks,
+                record.Crc32,
+                record.Md5,
+                record.Sha1,
+                record.Detail));
+        }
+
+        cache.RemoveMissingFiles();
+        DiscHealthCacheStore.Save(cache, cachePath);
+
+        var result = new CliLibraryVerifyResult(
+            readErrors == 0,
+            datPath,
+            records.Count,
+            verified,
+            mismatch,
+            readErrors,
+            noDat,
+            results);
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(
+                result,
+                CliJsonContext.Default.CliLibraryVerifyResult));
+        }
+        else
+        {
+            foreach (CliLibraryVerifyEntry entry in results)
+            {
+                Console.WriteLine($"[{entry.Status}] {entry.Path}");
+                if (entry.Detail.Length > 0)
+                {
+                    Console.WriteLine($"    {entry.Detail}");
+                }
+            }
+
+            Console.WriteLine($"known dumps: {verified}");
+            Console.WriteLine($"not in DAT:  {mismatch}");
+            Console.WriteLine($"read errors: {readErrors}");
+            Console.WriteLine($"no DAT:      {noDat}");
+        }
+
+        return result.Ok ? 0 : 1;
     }
 
     private static int DiscCommand(string[] args)
@@ -4372,6 +4503,8 @@ internal static class Program
         Console.WriteLine("  disc playlist <m3u> [--json]        List multi-disc playlist entries.");
         Console.WriteLine("  disc dump <disc> --out path [--sector N] [--count N]");
         Console.WriteLine("                                       Write raw 2048-byte sectors for diagnostics.");
+        Console.WriteLine("  library verify [--folder dir] [--dat path] [--cache path] [--json]");
+        Console.WriteLine("                                       Verify every library disc and update the health cache.");
         Console.WriteLine("  fs list <disc> [--json]              List the 3DO (Opera FS) file tree.");
         Console.WriteLine("  fs extract <disc> --out dir [--filter prefix]");
         Console.WriteLine("                                       Extract files from a 3DO disc image.");
@@ -4456,6 +4589,11 @@ internal static class Program
 
         [DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
         private static extern uint timeEndPeriod(uint period);
+    }
+
+    private sealed class InlineProgress<T>(Action<T> report) : IProgress<T>
+    {
+        public void Report(T value) => report(value);
     }
 
     private sealed class ParsedOptions

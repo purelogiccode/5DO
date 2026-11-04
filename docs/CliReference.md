@@ -58,6 +58,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `disc tracks <disc>` | List the CUE/CHD track table (data and audio), or one data track for ISO/BIN. |
 | `disc playlist <m3u>` | List multi-disc playlist entries and the selected disc. |
 | `disc verify <disc> [--json] [--max-errors N] [--dat <path>]` | Read every native sector, report the first LBA errors, verified count, bytes, and content hash; with `--dat`, match the native track hashes against a Redump/No-Intro DAT. Exits 1 on a read error or DAT mismatch. |
+| `library verify [--folder <dir>] [--dat <path>] [--cache <path>] [--json]` | Verify every disc in a library folder (or the configured library folders) and update the desktop known-dump cache. Exits 1 on a read error. |
 | `fs list <disc>` | List the 3DO file tree (ISO, BIN, CUE, or CHD). |
 | `fs extract <disc>` | Extract files from a 3DO disc image (ISO, BIN, CUE, or CHD). |
 | `bios info <path>` | BIOS size, MD5, region, Kanji, and Anvil detection. |
@@ -520,6 +521,20 @@ Loads an M3U/M3U8 playlist and lists each entry with its title (from `#EXTINF`),
 path, and one-based position. Relative paths resolve against the playlist directory. The
 text output marks the selected entry with `*`; `--json` returns `path`, `current`,
 `count`, and an `entries` array of `index`, `path`, `title`, and `displayName`.
+
+### `library verify`
+
+```powershell
+5do library verify --folder "D:\Samples\3DO" --cache artifacts\library-health.json
+5do library verify --folder "D:\Samples\3DO" --dat 3do.dat --json
+```
+
+Reads every supported image in a library folder (or the configured `LibraryFolders` when
+`--folder` is omitted), reports `Verified`, `Mismatch`, `ReadError`, or `NoDat` per disc,
+and updates the same `library-health.json` cache the desktop uses for its known-dump
+badges. `--cache` redirects the cache for CI or a portable run. `--dat` matches each disc
+against a Redump/No-Intro DAT; when omitted, the configured `DiscDatPath` is used. The
+command exits 1 when any disc has a read error.
 
 ---
 

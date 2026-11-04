@@ -4,7 +4,7 @@
 **Snapshot:** 2026-11-04
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master` (latest code commit on `master`)<br>
-**Status:** **1,619 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,622 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Purpose:** one source of truth for what is done, what is missing, what to work on next, and how each feature is specified and tested.
 
 > **This file consolidates and supersedes:**
@@ -28,7 +28,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing/volume, M3U multi-disc playlist and live swap, Opera file system, prefetch, disc browser | ODE guest injection, known-title CD-DA evidence, read-ahead/subcode, PAL remain (SYS-01/02/03) |
 | Compatibility sweep | 594 discs: **594 load**, **593 render**; 1 known boot failure (Crash 'n Burn Japan); 0 not loadable | v1.0 ships with this documented evidence; 12,000-frame in-game/visual review and high-res pass are post-1.0; Linux x64 full suite passed (GL preview) |
 | Differential harness | 5DO vs OperaCore harness, checkpoints, audio/state hashes, smoke + five-title showcase | Full 594-disc manifest and nightly dashboard remain (CORE-11/FND-05) |
-| Tests | **1,619** passing | Target 2,000+ with coverage gate (ENG-09) |
+| Tests | **1,622** passing | Target 2,000+ with coverage gate (ENG-09) |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K GPU probe measured | Tier B, all-filter 4K60 budgets remain |
 | Platforms | Windows x64 validated; Linux x64 full suite **1,473/1,473** passed (GL preview); six unified x64/arm64 bundles (Windows/Linux/macOS) with framework-dependent single-file apphosts; .NET 10 runtime required (not bundled); opt-in NativeAOT | macOS/installers are post-1.0; Linux GPU presentation is unvalidated under llvmpipe. WebAssembly, Android/iOS, and Raspberry Pi are out of scope |
 | Release | **v1.2.1 released (GitHub)** | Documented-compatibility scope; legal/attribution sign-off recorded; M13 loadability evidence complete; M14 is post-1.0 research; Linux x64 full suite passed; six x64/arm64 bundles published; tags `v1.0.0`, `v1.1.0`, `v1.2.0`, and `v1.2.1` |
@@ -52,7 +52,7 @@ configurable void border, and VID-14's gallery filters, side-by-side compare, ex
 and settings sidecars are landed. **CORE-07** now measures FIQ request-to-vector
 latency and traces requests/entries, **CORE-06** closes the output-FIFO reload,
 DIPIR-protected XBUS DMA, MADAM MCTL persistence, and XBUS Opera poll/state gaps, and
-**CORE-05** exposes DSP per-tick timing metrics. The suite is **1,619 tests**; build,
+**CORE-05** exposes DSP per-tick timing metrics. The suite is **1,622 tests**; build,
 format, and inspectcode are clean.
 
 ---
@@ -429,7 +429,7 @@ These are **post-1.0 goals**, not v1.0 blockers. A release can be called “the 
   documented key), 21,183 FIQ requests / 14,345 entries / max 859,234 cycles, and
   88,955,550 DSP instructions over 2,205,094 ticks (735 ticks/frame, max 106, mean 51.7).
   CLIO tracing recorded 4,714 XBUS DMA transfers with paired start/done lines.
-- [x] Verification: **1,619 tests pass**; build **0 warnings / 0 errors**;
+- [x] Verification: **1,622 tests pass**; build **0 warnings / 0 errors**;
   `dotnet format --verify-no-changes` clean; `jb inspectcode --severity=WARNING` **0 results**.
 
 ### 2026-11-02 — VID-14 screenshot filters, compare, export, and sidecars
@@ -3135,7 +3135,7 @@ Suggested parallelization with two developers:
 | 2026-11-03 | M9R | Display refresh rate | Added `DisplayRefreshRate` (Settings > Video, default 60 Hz, `0` = match display). Above 60 Hz the desktop re-presents the latest mailbox frame on a `DispatcherTimer` (or on the compositor's animation frames for match-display) so the swap chain runs at the requested rate; the CPU fallback retimes its render timer. The 3DO still produces 60 fields per second (50 for PAL), so the setting lowers presentation latency but does not add motion. The status bar and overlay report the measured display rate when the setting is not 60. Added settings validation, load clamping, a schema version bump to 3, and tests. |
 | 2026-11-03 | Release | v1.2.0 feature release | Bumped the version to `1.2.0` and built the Windows/Linux/macOS x64 bundles. The release includes the optional Windows Direct3D 11 presenter, startup GitHub release checks, the six-target fuzz harness, per-edge overscan/void border, screenshot gallery filters/compare/export/sidecars, FIQ request-to-vector telemetry, DSP per-tick statistics, CLIO/DIPIR/FIFO/MCTL/XBUS audit fixes, flat 2048-byte CHD and raw `.iso` support, and display-refresh control. WebAssembly/browser, Android/iOS, and Raspberry Pi were removed from scope. Full suite **1,597 tests**; release workflow <https://github.com/purelogiccode/5DO/actions/runs/41581528432> passed all bundles and published <https://github.com/purelogiccode/5DO/releases/tag/v1.2.0>; all `SHA256SUMS.txt` entries verify. |
 | 2026-11-03 | Release | v1.2.1 arm64 bundles | Added `win-arm64`, `linux-arm64`, and `osx-arm64` to the packaging script and CI matrix, producing six versioned bundles. CI verifies PE ARM64, ELF aarch64, and Mach-O arm64 apphosts; x64 bundles keep runtime smoke tests. No emulator behavior changed. Release workflow <https://github.com/purelogiccode/5DO/actions/runs/41583317988> passed and published <https://github.com/purelogiccode/5DO/releases/tag/v1.2.1>; all six `SHA256SUMS.txt` entries verify. |
-| 2026-11-04 | SYS-20 | Library disc-health badge | Added `DiscHealthCache`/`DiscHealthCacheStore` (`library-health.json`, self-invalidating by size/timestamp), `LibraryHealthVerifier` (full read plus optional Redump/No-Intro DAT match), `DumpStatus`/`DumpBadge`/`DumpTip` on library entries, badges in the grid and list views, **File > Verify Library Discs...** with progress and DAT selection, a Settings > Paths **Disc DAT** field, and the same **Verify Health**/**DAT...** actions in the Game Library window. `DiscHealthCacheTests` covers cache roundtrip/staleness/badges/summaries plus verifier matches, mismatches, missing files, unreadable images, and progress. SYS-20 remains partial for 4DO/Opera hash comparison; 1,619 tests pass and the frontend smoke test reports `FRONTEND SMOKE OK 1.2.1`. |
+| 2026-11-04 | SYS-20 | Library disc-health badge | Added `DiscHealthCache`/`DiscHealthCacheStore` (`library-health.json`, self-invalidating by size/timestamp), `LibraryHealthVerifier` (full read plus optional Redump/No-Intro DAT match), `DumpStatus`/`DumpBadge`/`DumpTip` on library entries, badges in the grid and list views, **File > Verify Library Discs...** with progress and DAT selection, a Settings > Paths **Disc DAT** field, and the same **Verify Health**/**DAT...** actions in the Game Library window. `DiscHealthCacheTests` covers cache roundtrip/staleness/badges/summaries plus verifier matches, mismatches, missing files, unreadable images, and progress. SYS-20 remains partial for 4DO/Opera hash comparison; 1,622 tests pass and the frontend smoke test reports `FRONTEND SMOKE OK 1.2.1`. |
 
 ---
 
@@ -4658,6 +4658,8 @@ images, and import/export/reset. Documentation is updated in `Configuration.md`,
   readability only), saves the DAT path in settings, updates the cache, and refreshes the
   badges. The Game Library window has the same **Verify Health** and **DAT...** actions and
   a health summary in its status line.
+- `5do library verify --folder <dir> [--dat <path>] [--cache <path>] [--json]` runs the same
+  check headlessly, writes the shared cache, and exits 1 when a disc has a read error.
 - `DiscHealthCacheTests` covers store roundtrip, invalid files, stale records, badge text,
   status counts, missing files, unreadable images, DAT matches/mismatches, and progress.
 

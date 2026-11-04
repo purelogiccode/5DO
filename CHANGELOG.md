@@ -9,8 +9,8 @@ release.
 
 - Library disc-health checks: **File > Verify Library Discs...** reads every library image,
   matches it against a Redump/No-Intro DAT, and shows known-dump, not-in-DAT, or read-error
-  badges with a status summary. Results are cached in `library-health.json` and invalidated
-  when an image changes.
+  badges with a status summary. `5do library verify` runs the same check headlessly. Results
+  are cached in `library-health.json` and invalidated when an image changes.
 
 ### Fixed
 
