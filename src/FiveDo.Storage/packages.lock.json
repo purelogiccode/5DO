@@ -4,9 +4,9 @@
     "net10.0": {
       "CHDSharp": {
         "type": "Direct",
-        "requested": "[1.6.0, )",
-        "resolved": "1.6.0",
-        "contentHash": "NF7YacKL/5ERBWxcrljrpufH61M4j+XYmtUBzjtO7PKRtZpmb1wdU4jKyqi6KmAK1K/yAhkTxlo1iDPkNkSUNg==",
+        "requested": "[1.6.3, )",
+        "resolved": "1.6.3",
+        "contentHash": "kNUP5vjkPW3WflLErLvgKgZz8uY5nm/d6JzFm6+dRspNvyUbujnHZRygoGdIVSnQ0hmx0W7sygH/7tq/5hqSGQ==",
         "dependencies": {
           "Microsoft.Extensions.Logging.Abstractions": "10.0.14",
           "System.IO.Hashing": "10.0.14"
