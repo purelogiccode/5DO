@@ -135,5 +135,5 @@ in the title.
   lightgun or trackball title needs data rather than code.
 - `info --json` exposes `revision`, `discNumber`, `discTotal`, `bios`, `bios2`,
   `inputDevices`, `nvram`, and `cheats`.
-- `nvram` and `cheats` are parsed, exported, and displayed but are not yet used to seed a
-  profile automatically; that is SYS-18 follow-up work.
+- `nvram` and `cheats` are parsed, exported, and displayed. `GameProfile.CheatBundle`
+  carries a user-supplied bundle name; no cheat data is bundled with 5DO.

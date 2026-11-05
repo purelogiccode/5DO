@@ -57,7 +57,7 @@ records and added `gamedb stats|scan|export|merge`, `docs/GameDatabase.md`, and 
 filename parser for Redump/GoodTools/No-Intro layouts. The schema now carries revision,
 disc number, BIOS/BIOS2, fix mode, input devices, NVRAM, and cheat fields; fix, BIOS, and
 input values are consumed at runtime. `gamedb stats --folder "J:\Panasonic 3DO"` reports
-1,363 readable images, 650 unique IDs, and 100% metadata coverage of readable images
+1,366 readable images, 653 unique IDs, and 100% metadata coverage with no errors
 (the three exceptions are audio-only `[CD-Audio]` CHDs). SYS-08 added the five-title
 0.5x-1x-2x-4x A/B in `Performance.md` §8.3 and kept the stock 12.5 MHz default; every
 non-stock clock changed guest behavior. The suite is **1,778 tests**.

@@ -167,7 +167,7 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
 
 - [x] **SYS-17 — Game database expansion and community DB**
   **Status:** Complete · **Priority:** P0 · **Effort:** M · **Tracks:** SYS-17
-  **Remaining:** none for the local-collection gate. NVRAM/cheat seeding is SYS-18 follow-up work.
+  **Remaining:** none for the local-collection gate. NVRAM/cheat seeding is not enabled; users supply their own cheat bundles.
   **Done when:** at least 95% of local images have metadata and the DB has a repeatable contribution path.
   **Evidence:** the embedded database grew from 518 to 653 records. `gamedb stats --folder "J:\Panasonic 3DO"` reports 1,366 images found, 1,366 readable, 653 unique IDs, 1,366 matched images, 100% coverage, and no errors; the three former exceptions were audio-only `[CD-Audio]` CHDs, which now open and get TOC-derived IDs. The schema now carries `revision`, `discNumber`/`discTotal`, `bios`/`bios2`, `fixMode`, `inputDevices`, `nvram`, and `cheats`; `fixMode` drives `GameCompatibility`, `bios`/`bios2` drive `BiosLibrary`, and `inputDevices` drives `GameControlDefaults`. `gamedb scan|export|merge` provide the repeatable import/export workflow, and 12 new storage/host/CLI tests cover the parser, merge/save roundtrip, device spec, audio-only IDs, CHD audio-only open, and commands. See `docs/GameDatabase.md`.
 

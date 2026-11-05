@@ -2209,8 +2209,8 @@ a legacy version-2 memory section.
   `BiosLibrary.SelectForGame` reads `bios`/`bios2` (per-game override still wins); and
   `GameControlDefaults` reads `inputDevices`. `info --json` exposes the new fields.
 - Local coverage: `gamedb stats --folder "J:\Panasonic 3DO"` reports 1,366 images found,
-  1,363 readable, 650 unique IDs, 1,363 matched, 100% coverage of readable images. The
-  three unreadable images are audio-only `[CD-Audio]` CHDs with no data track.
+  1,366 readable, 653 unique IDs, 1,366 matched, 100% coverage, and no errors. The three
+  former exceptions were audio-only `[CD-Audio]` CHDs, which now open with TOC-derived IDs.
 - Embedded database: 518 original 4DO records + 135 local records = 653. Known BIOS
   requirements (Powers Kingdom Europe, WorldCup Super Stadium Japan + Kanji), fix masks
   (Crash 'n Burn, Street Fighter II, DinoPark Tycoon, Microcosm), and lightgun/Orbatak
