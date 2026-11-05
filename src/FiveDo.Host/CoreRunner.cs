@@ -392,6 +392,7 @@ public sealed class CoreRunner : IDisposable
 
         _disposed = true;
         Stop();
+        _rewind.Dispose();
     }
 
     private void Run()

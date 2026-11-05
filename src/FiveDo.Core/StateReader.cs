@@ -48,7 +48,7 @@ public class StateReader : IStateReader
             throw new InvalidStateException($"Section 0x{id:X8} has an invalid payload length.");
         }
 
-        if ((flags & ~StateFormat.SectionFlagCompressed) != 0)
+        if ((flags & ~(StateFormat.SectionFlagCompressed | StateFormat.SectionFlagUnchecked)) != 0)
         {
             throw new InvalidStateException($"Section 0x{id:X8} has unsupported flags 0x{flags:X4}.");
         }
@@ -63,6 +63,7 @@ public class StateReader : IStateReader
         _position += storedLength;
         var expectedCrc = ReadUInt32();
         var compressed = (flags & StateFormat.SectionFlagCompressed) != 0;
+        var uncheckedPayload = (flags & StateFormat.SectionFlagUnchecked) != 0;
         ReadOnlyMemory<byte> payload;
         if (compressed)
         {
@@ -73,10 +74,21 @@ public class StateReader : IStateReader
             payload = storedPayload;
         }
 
-        var actualCrc = StateCrc32.Compute(payload.Span);
-        if (expectedCrc != actualCrc)
+        if (uncheckedPayload)
         {
-            throw new InvalidStateException($"Section 0x{id:X8} failed its CRC check.");
+            if (expectedCrc != 0)
+            {
+                throw new InvalidStateException(
+                    $"Section 0x{id:X8} is marked unchecked but carries a nonzero CRC.");
+            }
+        }
+        else
+        {
+            var actualCrc = StateCrc32.Compute(payload.Span);
+            if (expectedCrc != actualCrc)
+            {
+                throw new InvalidStateException($"Section 0x{id:X8} failed its CRC check.");
+            }
         }
 
         section = new StateSectionReader(id, version, payload, storedLength, compressed);

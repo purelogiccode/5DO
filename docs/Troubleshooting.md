@@ -183,7 +183,7 @@ See [`Audio.md`](Audio.md) for metric definitions and the tap workflow.
 
 | Symptom | Cause / action |
 |---|---|
-| Save is slow / disk fills | Format version 2 compresses large sections with Brotli; a typical state is 0.6-2.0 MB on disk (the uncompressed payload is ~28 MB: 22 MB maximum RAM backing + 2 MB ROM + VDL frame + devices). Version-1 states are ~25 MB each. Ten compressed slots use a few MB; the 100-slot maximum stays well under 1 GB. |
+| Save is slow / disk fills | Large sections are Brotli-compressed; a typical state is 0.6-2.0 MB on disk (the uncompressed payload is ~10 MB for the stock layout: live RAM/VRAM range + 2 MB ROM + VDL frame + devices; the largest layout is ~26 MB). Version-1 states are ~25 MB each. Ten compressed slots use a few MB; the 100-slot maximum stays well under 1 GB. |
 | `invalid magic value` | Not a `.tdos`, or corrupted/truncated. |
 | `failed its CRC check` | Corruption/partial copy; restore from backup. |
 | `missing sections` | Truncated/incomplete state. |

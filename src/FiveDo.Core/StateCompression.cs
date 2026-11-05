@@ -15,33 +15,44 @@ namespace FiveDo.Core;
 /// </remarks>
 internal static class StateCompression
 {
-    /// <summary>Compresses a payload when it is large enough and the result is smaller.</summary>
+    /// <summary>Compresses a payload into a reusable scratch stream.</summary>
     /// <param name="payload">Uncompressed section payload.</param>
-    /// <param name="stored">Receives the compressed framing when the method returns true.</param>
+    /// <param name="compressionLevel">Brotli compression level to use.</param>
+    /// <param name="scratch">
+    /// Reusable buffer. When the method returns <see langword="true"/>, it contains the
+    /// four-byte uncompressed length followed by the Brotli stream.
+    /// </param>
+    /// <param name="storedLength">Number of bytes written to <paramref name="scratch"/>.</param>
     /// <returns><see langword="true"/> when the payload should be stored compressed.</returns>
-    internal static bool TryCompress(ReadOnlySpan<byte> payload, out byte[] stored)
+    internal static bool TryCompress(
+        ReadOnlySpan<byte> payload,
+        CompressionLevel compressionLevel,
+        MemoryStream scratch,
+        out int storedLength)
     {
-        stored = [];
+        storedLength = 0;
         if (payload.Length < StateFormat.CompressionThreshold)
         {
             return false;
         }
 
-        using var compressed = new MemoryStream();
-        using (var brotli = new BrotliStream(compressed, CompressionLevel.Optimal, leaveOpen: true))
+        scratch.SetLength(0);
+        scratch.Position = 0;
+        Span<byte> prefix = stackalloc byte[StateFormat.CompressedSectionPrefixSize];
+        scratch.Write(prefix);
+
+        using (var brotli = new BrotliStream(scratch, compressionLevel, leaveOpen: true))
         {
             brotli.Write(payload);
         }
 
-        if (compressed.Length + StateFormat.CompressedSectionPrefixSize >= payload.Length)
+        if (scratch.Length >= payload.Length)
         {
             return false;
         }
 
-        stored = new byte[StateFormat.CompressedSectionPrefixSize + (int)compressed.Length];
-        BinaryPrimitives.WriteInt32LittleEndian(stored, payload.Length);
-        compressed.Position = 0;
-        compressed.ReadExactly(stored.AsSpan(StateFormat.CompressedSectionPrefixSize));
+        BinaryPrimitives.WriteInt32LittleEndian(scratch.GetBuffer(), payload.Length);
+        storedLength = checked((int)scratch.Length);
         return true;
     }
 

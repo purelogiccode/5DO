@@ -241,6 +241,35 @@ public sealed class MemoryConfigurationTests
     }
 
     [Fact]
+    public void MemorySection_StoresOnlyTheLiveBackingRange()
+    {
+        var memory = new FiveDoMemory();
+        memory.Reset();
+        memory.Bus.Write32(0x0010_0000, 0x1234_5678);
+
+        // Bytes above the high-resolution backing range are not addressable and must not
+        // be serialized.
+        var tailOffset = (uint)(memory.Layout.HiresRamSize + 0x1000);
+        memory.Ram.Write32(tailOffset, 0xDEAD_BEEF);
+        Assert.Equal(0xDEAD_BEEFu, memory.Ram.Read32(tailOffset));
+
+        var writer = new StateWriter();
+        memory.Save(writer);
+        var expectedLength = 12
+            + memory.Layout.HiresRamSize
+            + EmulatorConstants.RomSize
+            + EmulatorConstants.NvramSize;
+        Assert.Equal(expectedLength, writer.Length);
+        Assert.True(writer.Length < memory.Size);
+
+        var copy = new FiveDoMemory();
+        copy.Load(new StateReader(writer.ToArray()));
+
+        Assert.Equal(0x1234_5678u, copy.Bus.Read32(0x0010_0000));
+        Assert.Equal(0u, copy.Ram.Read32(tailOffset));
+    }
+
+    [Fact]
     public void SaveState_RestoresExpandedMemoryContentsAndLayout()
     {
         var direct = new FiveDoMemory(new EmulatorTuning

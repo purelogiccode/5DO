@@ -1,6 +1,8 @@
 using System;
 using System.Buffers;
 using System.Buffers.Binary;
+using System.IO;
+using System.IO.Compression;
 using System.Text;
 
 namespace FiveDo.Core;
@@ -13,14 +15,46 @@ namespace FiveDo.Core;
 /// <c>[id:u32][version:u16][reserved:u16][length:u32][payload][crc32:u32]</c>.
 /// The outer state-file header is added by the machine in M8.
 /// </remarks>
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "Design",
+    "CA1001:Types that own disposable fields should be disposable",
+    Justification = "The reusable compression scratch is a MemoryStream over managed memory; it holds no unmanaged resources.")]
 public sealed class StateWriter : IStateWriter
 {
-    private readonly ArrayBufferWriter<byte> _buffer = new();
+    private readonly ArrayBufferWriter<byte> _buffer;
+    private StateWriter? _payloadWriter;
+    private MemoryStream? _compressionScratch;
+
+    /// <summary>Initializes a new instance of the <see cref="StateWriter"/> class.</summary>
+    /// <param name="initialCapacity">
+    /// Optional initial buffer size in bytes. Pre-sizing avoids repeated large copies when the
+    /// caller already knows the expected state size (for example a rewind snapshot).
+    /// </param>
+    public StateWriter(int initialCapacity = 0)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(initialCapacity);
+        _buffer = initialCapacity > 0
+            ? new ArrayBufferWriter<byte>(initialCapacity)
+            : new ArrayBufferWriter<byte>();
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether large section payloads are Brotli-compressed.
     /// </summary>
     public bool CompressionEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the Brotli compression level used for large section payloads.
+    /// <see cref="CompressionLevel.Fastest"/> trades a slightly larger state for a much
+    /// shorter capture, which matters for the in-memory rewind history.
+    /// </summary>
+    public CompressionLevel CompressionLevel { get; set; } = CompressionLevel.Optimal;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether each section trailer contains a CRC-32 of the
+    /// uncompressed payload. Disable only for transient snapshots that are never persisted.
+    /// </summary>
+    public bool ChecksumsEnabled { get; set; } = true;
 
     /// <summary>Gets the number of bytes written so far.</summary>
     public int Length => _buffer.WrittenCount;
@@ -117,19 +151,40 @@ public sealed class StateWriter : IStateWriter
             throw new ArgumentException("A state section identifier must not be zero.", nameof(section));
         }
 
-        var payloadWriter = new StateWriter();
+        // Reuse the payload writer across sections and captures. The memory payload is
+        // several megabytes, so allocating a fresh buffer for every section on every
+        // rewind snapshot creates avoidable large-object-heap churn.
+        StateWriter payloadWriter = _payloadWriter ??= new StateWriter();
+        payloadWriter.Reset();
         section.Save(payloadWriter);
         ReadOnlySpan<byte> payload = payloadWriter.WrittenSpan;
-        byte[] storedPayload = [];
-        var compressed = CompressionEnabled && StateCompression.TryCompress(payload, out storedPayload);
-        ReadOnlySpan<byte> framedPayload = compressed ? storedPayload : payload;
+        MemoryStream? compressedBuffer = null;
+        var storedLength = 0;
+        var compressed = false;
+        if (CompressionEnabled && payload.Length >= StateFormat.CompressionThreshold)
+        {
+            // Reuse the compression scratch buffer across sections and captures. This is
+            // what keeps a multi-megabyte rewind snapshot from allocating on the emulation
+            // thread every couple of seconds.
+            compressedBuffer = _compressionScratch ??= new MemoryStream();
+            compressed = StateCompression.TryCompress(
+                payload,
+                CompressionLevel,
+                compressedBuffer,
+                out storedLength);
+        }
 
+        var frameLength = compressed ? storedLength : payload.Length;
+        var flags = (ushort)((compressed ? StateFormat.SectionFlagCompressed : (ushort)0)
+            | (ChecksumsEnabled ? (ushort)0 : StateFormat.SectionFlagUnchecked));
         WriteUInt32(section.Id);
         WriteUInt16(section.Version);
-        WriteUInt16(compressed ? StateFormat.SectionFlagCompressed : (ushort)0);
-        WriteUInt32(checked((uint)framedPayload.Length));
-        WriteBytes(framedPayload);
-        WriteUInt32(StateCrc32.Compute(payload));
+        WriteUInt16(flags);
+        WriteUInt32(checked((uint)frameLength));
+        WriteBytes(compressed
+            ? compressedBuffer!.GetBuffer().AsSpan(0, storedLength)
+            : payload);
+        WriteUInt32(ChecksumsEnabled ? StateCrc32.Compute(payload) : 0);
     }
 
     /// <summary>Returns the written bytes as a new array.</summary>
@@ -137,5 +192,11 @@ public sealed class StateWriter : IStateWriter
     public byte[] ToArray()
     {
         return _buffer.WrittenSpan.ToArray();
+    }
+
+    /// <summary>Clears the written data while keeping the allocated capacity.</summary>
+    public void Reset()
+    {
+        _buffer.ResetWrittenCount();
     }
 }

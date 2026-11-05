@@ -74,8 +74,9 @@ ROM, NVRAM, device state, and the derived VDL frame, plus hashes for diagnostics
 - `framesExecuted` is the machine's frame counter at save time.
 - `headerFlags` bit 0 declares the feature word; bit 1 declares the section table.
   Unknown header bits produce a warning instead of rejecting a newer state.
-- `featureFlags` records the options snapshot, section table, Brotli eligibility, and
-  video-region snapshot. Unknown feature bits are warned about and ignored.
+- `featureFlags` records the options snapshot, section table, Brotli eligibility,
+  video-region snapshot, and unchecked-section eligibility. Unknown feature bits are
+  warned about and ignored.
 - The section table lists every section ID/version up front. Duplicate IDs, more than
   4096 entries, non-zero entry flags, and declared-versus-actual version mismatches are
   rejected. Declared sections that are absent produce a warning.
@@ -96,8 +97,10 @@ before exposing it. A truncated section, oversized length, or CRC mismatch throw
 `flags` is `0` for a raw payload and `1` for Brotli. A compressed payload starts with a
 little-endian `i32` uncompressed length followed by the Brotli stream; `length` counts
 the prefix plus the Brotli bytes. The writer compresses payloads of at least 4 KiB when
-the result is smaller, and leaves small or incompressible payloads raw. Unknown flag
-bits and malformed compressed payloads are rejected.
+the result is smaller, and leaves small or incompressible payloads raw. Flag `2` marks an
+unchecked section whose CRC trailer is zero and is not validated. The writer emits it only
+for transient in-memory rewind snapshots; persisted `.tdos` files always carry and verify
+a CRC. Unknown flag bits and malformed compressed payloads are rejected.
 
 ---
 
@@ -110,7 +113,7 @@ Machine; the table below is sorted by ID. Never renumber an existing section.
 | ID | Name | Version | Owner | Payload summary |
 |---:|---|---:|---|---|
 | 1 | CPU | 1 | `Arm60` | R0-R15, banked SVC/ABT/FIQ/IRQ/UND/SPSR register sets, CPSR, FIQ pending, second-ROM select, data-abort pending, carry-out, LDM scratch. |
-| 2 | Memory | 3 | `FiveDoMemory` | ROM bank, PC-adjust flag, ROM overlay, the DRAM/VRAM configuration, and the full 22 MB RAM backing (largest 14 MB DRAM + four 2 MB VRAM planes), 2 MB ROM, 32 KB NVRAM. Version 1-2 states use the historical 19 MB stock backing and load with the stock layout. |
+| 2 | Memory | 4 | `FiveDoMemory` | ROM bank, PC-adjust flag, ROM overlay, the DRAM/VRAM configuration, the RAM backing allocation size, the live high-resolution RAM range, 2 MB ROM, 32 KB NVRAM. Version 3 and older store the full 22 MB backing; version 4 stores only the live DRAM plus high-resolution VRAM planes and clears the unused tail on load. Version 1-2 states use the historical 19 MB stock backing and load with the stock layout. |
 | 3 | MADAM | 4 | `Madam` | 2048+64 register file, 32-entry PLUT, 256-byte PBUS queue, read/write modulo, CEL FSM, matrix result temporaries, pending CEL draw, busy-cycle deadline, and the MCTL-written gate. Version 1 is accepted with the pending flag derived from the FSM and no busy deadline; version 2 adds the busy deadline; version 3 adds the MCTL gate and infers it from MCTL for older states; version 4 expands the PBUS queue from 20 to 256 bytes (older states read 20 and fill the tail with `0xFF`). |
 | 4 | CLIO | 3 | `Clio` | 65536-word register file, DSP window words, timer/line state, Opera cascade carry, input/output FIFOs and pointers, DMA state, and the separate 32-bit PRNG. Version 1 is accepted with a cleared carry; version 2 adds the carry; version 3 adds the CLIO PRNG. |
 | 5 | DSP | 1 | `Dsp` | PC, noise/audio status, semaphore status/data, counters, interrupt/multiplier/ALU/shifter state, masks, running/FIQ flags, base/seed, IMem/DMem. |
@@ -124,17 +127,20 @@ Machine; the table below is sorted by ID. Never renumber an existing section.
 
 ### Why the state is large
 
-The memory section stores the **entire RAM backing array**, including every
-high-resolution VRAM plane for the largest 14 MB DRAM + 2 MB VRAM layout, and the machine
-section stores all 960 VDL lines with their full 1280-pixel buffers. The uncompressed state
-is therefore about **28 MB** (the former 24.9 MB plus the 3 MB backing growth).
+The memory section stores the live RAM backing, including every high-resolution VRAM
+plane that the active layout can address, and the machine section stores all 960 VDL
+lines with their full 1280-pixel buffers. Version 4 writes only the live range: the stock
+2 MB DRAM / 1 MB VRAM layout produces a roughly **10 MB** uncompressed state, while the
+largest 14 MB DRAM / 2 MB VRAM layout reaches about **26 MB**.
 
 Version 3 keeps the v2 Brotli policy. On the local corpus the state shrinks to
 roughly **0.6-2.0 MB** (a 300-frame Gex state measured 647,647 bytes, a 14,900-frame
 state 2,001,229 bytes), so ten slots use a few megabytes instead of ~250 MB. Small
 sections (under 4 KiB) and incompressible payloads stay raw. The CRC is always over the
 uncompressed payload, and the state inspector reads the section table without
-decompressing the payloads.
+decompressing the payloads. The rewind history uses `CompressionLevel.Fastest` and skips
+the CRC because each snapshot is consumed by the same process within seconds; persisted
+files always use `CompressionLevel.Optimal` and validate every section.
 
 Version-1 and v2 states are read unchanged; v1 remains uncompressed and ~25 MB. Their
 memory section is the historical 19 MB stock backing, so the missing 3 MB is cleared and
@@ -158,9 +164,10 @@ Loading a state written by a newer format version is rejected with
   mute) and accepts versions 1-3. Version 1 uses a zeroed clock and pending flag;
   versions 1-2 default the MODE SET/audio fields; version 3 defaults the CD-DA mix. The
   timing mode itself is in the Options section.
-- Memory writes version 3 and accepts versions 1-2. Version 3 adds the DRAM/VRAM
-  configuration and the 22 MB allocation size. Older states carry the historical 19 MB
-  stock backing and load with the stock layout.
+- Memory writes version 4 and accepts versions 1-3. Version 3 adds the DRAM/VRAM
+  configuration and the 22 MB allocation size. Version 4 stores only the live
+  high-resolution backing range and clears the unused tail on load. Older states carry
+  the historical 19 MB stock backing and load with the stock layout.
 - Options writes version 9 and accepts versions 1-8. Version 1 records ARM timing only;
   version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing;
   version 5 adds CD speed; version 6 adds the video region; version 7 adds the ARM clock,

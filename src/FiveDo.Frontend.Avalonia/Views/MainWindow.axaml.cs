@@ -1214,7 +1214,10 @@ public partial class MainWindow : Window, IDisposable
                     path = _playlist.Current.Path;
                 }
             }
-            var disc = DiscImageFactory.Open(path);
+            // The host-side read-ahead cache keeps CHD decompression and slow storage
+            // off the emulation thread. It does not change the emulated CD model: a
+            // cache miss performs the same read that a direct open would perform.
+            var disc = DiscImageFactory.Open(path, prefetch: true);
             var gameId = disc.SectorCount >= 2 ? GameId.Compute(disc) : string.Empty;
             var record = gameId.Length == 0 ? null : GameDatabase.Default.FindByChecksum(gameId);
             var autoDevices = gameId.Length > 0

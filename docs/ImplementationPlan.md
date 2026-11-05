@@ -5,7 +5,7 @@
 **Current release:** `1.2.1`
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master`<br>
-**Status:** **1,795 tests pass** (last recorded); `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,802 tests pass** (last recorded); `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Goal:** implement **every Opera core feature**, match or exceed Opera's accuracy, and ship the best standalone 3DO emulator on Windows, Linux, and macOS.
 
 > **This is the single source of truth.** It replaces the former 8,000-line dashboard, milestone log, feature spec, parity audit, and session handoff. Historical evidence stays in the linked docs; this file is the canonical backlog.
@@ -44,7 +44,7 @@
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing, M3U multi-disc playlist, live swap, guest inject, Opera file system, prefetch, DAT health | Full CD command/timing parity, subcode, read-ahead, known-title CD-DA evidence, real in-game multi-disc swap, ODE prompts, physical drive, image conversion |
 | Compatibility | 594 discs: **594 load**, **593 render**, 1 known boot failure (Crash 'n Burn Japan), 0 not loadable | 594/594 render; visual/in-game review; per-game auto-profiles |
 | Differential harness | FiveDO.DiffHarness, checkpoints, audio/state hashes, smoke + five-title showcase, 594-title manifest generator | Full 594-title run, PC-delta triage, CD/state transcripts, nightly dashboard |
-| Tests | **1,795** passing; fuzz harness for six parsers; build/format/inspectcode clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
+| Tests | **1,802** passing; fuzz harness for six parsers; build/format/inspectcode clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K Tier A measured; zero-allocation synthetic path | Tier B 1080p60, GLES 3.1/ANGLE, arm64 tuning, threaded DSP, managed JIT, zero allocations on all real paths |
 | Platforms | Six bundles: Windows/Linux/macOS × x64/arm64, framework-dependent single-file apphosts; Windows x64 validated; Linux x64 tests/smoke pass (GPU preview under llvmpipe); macOS and arm64 cross-published but not hardware-validated | macOS runtime validation, arm64 hardware validation, Linux/macOS GPU presentation, macOS gamepad, Flatpak/AppImage, installers/signing |
 | Release | **v1.2.1** published with six versioned bundles and `SHA256SUMS.txt`; .NET 10 runtime required (not bundled); legal/attribution sign-off recorded | Signing, notarization, auto-update, reproducible builds, SBOM |
@@ -224,6 +224,7 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
 - [ ] **PERF-01 — Zero-allocation steady state on every real path**
   **Status:** Partial · **Priority:** P1 · **Effort:** M
   **Remaining:** eliminate the ~2.3 KB/frame Avalonia/compositor residual; remove CHD decode allocations from the core stage; prove zero allocations for uploads, readback, audio, and gallery/OSD paths.
+  **Evidence:** The 2026-11-05 rewind fix pools the capture stream, keyframe arrays, payload buffer, and Brotli scratch, cutting rewind capture allocations from ~75 MB per keyframe to ~1.6 MB with no gen2 collections in a 1,200-frame run.
   **Done when:** synthetic and representative real titles report 0 managed bytes/frame after warm-up; CI enforces the gate.
 
 - [ ] **PERF-02 + BAK-08 — NativeAOT/trimming startup, size, and audio validation**
@@ -238,7 +239,7 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
 
 - [ ] **PERF-04 — Host disc streaming and CHD decompression**
   **Status:** Partial · **Priority:** P2 · **Effort:** M
-  **Remaining:** allocation-free CHD/ISO prefetch under continuous streaming; decompression buffers; cache sizing; read-ahead tuning; avoid frame spikes while keeping the emulated CD model unchanged. The 2026-11-05 increment pools prefetched sector/audio buffers, reuses the worker read buffers, and adds an allocation gate for cached reads; cache hits do not allocate per read (one-time runtime allocation tolerated), but continuous miss/eviction streaming still needs an end-to-end allocation gate.
+  **Remaining:** allocation-free CHD/ISO prefetch under continuous streaming; decompression buffers; cache sizing; read-ahead tuning; avoid frame spikes while keeping the emulated CD model unchanged. The 2026-11-05 increment pools prefetched sector/audio buffers, reuses the worker read buffers, adds an allocation gate for cached reads, and enables the prefetch cache for frontend disc loads. Cache hits do not allocate per read (one-time runtime allocation tolerated), but continuous miss/eviction streaming still needs an end-to-end allocation gate. Random CHD reads still allocate ~12.6 KB per read inside the container reader (5,000 reads allocated 63 MB).
   **Done when:** disc streaming does not allocate in steady state or stall presentation; emulated CD timing is unaffected.
   **Note:** emulated CD read-ahead/subcode is tracked in the CD items above; this item is host-side only.
 
@@ -518,6 +519,7 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
 
+- **2026-11-05 - Rewind capture stall and state-size increment.** Fixed the sub-second gameplay freezes caused by the default rewind history capturing a keyframe on the emulation thread every 120 frames. Rewind keyframes now use `CompressionLevel.Fastest` and unchecked transient CRCs, the memory section (version 4) stores only the live high-resolution RAM range, `StateCrc32` is slicing-by-8, and `RewindBuffer`/`StateWriter` pool their capture stream, state arrays, payload buffer, and compression scratch. The BIOS MD5 in the header is cached, and the frontend opens discs through the prefetch cache. On Lemmings the worst keyframe capture fell from **139.3 ms** to **7.4-9.2 ms** (one 14.1 ms outlier), allocations fell from ~1.5 GB to 16 MB per 1,200 frames, and the uncompressed stock-layout state fell from ~26 MB to ~10 MB. See `Performance.md` §8.5 and `SaveStates.md`.
 - **2026-11-04 - SYS-07 memory capacity options.** Added the eight Opera DRAM/VRAM layouts (`21`, `22`, `41`, `42`, `81`, `82`, `E2`, `F1`) through `MemoryConfiguration`/`MemoryLayout`, dynamic RAM/VRAM decode, VRAM base and masks for VDLP/SPORT/CEL, capacity-derived MADAM RED SYSBITS, `--memory`/Settings/profile/state plumbing, memory state section v3, Options section v8, a homebrew probe ROM that uses 4 MB DRAM + 2 MB VRAM, and 34 memory tests. Stock hashes are unchanged; expanded memory is documented as homebrew-only.
 - **2026-11-04 - SYS-08 clock matrix increment.** `bench --cpu-clock`/`--memory` measure the supported clock range; the 0.5x-4x matrix and unchanged stock default are recorded in `Performance.md` §8.1.
 - **2026-11-05 - Library duplicate visibility.** The library identifies discs by the MD5 of their first two data sectors (the 4DO game ID), so renamed copies and GoodTools/Redump/No-Intro variants collapse to one entry. The header now reports `653 games · 1,366 images`, and **Settings > Paths > Show duplicate disc images** lists every file. `GameLibraryScanner.BeginScan`/`InspectPending`/`Scan` accept `deduplicate`, and `library verify` checks every image. Added scanner tests for duplicate listing and `ImageCount`.

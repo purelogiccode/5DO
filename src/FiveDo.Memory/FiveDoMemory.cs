@@ -86,9 +86,11 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     /// <summary>Gets the save-state section version.</summary>
     /// <remarks>
     /// Version 2 adds the low-ROM overlay flag. Version 3 records the DRAM/VRAM
-    /// configuration and the maximum backing size.
+    /// configuration and the maximum backing size. Version 4 stores only the live
+    /// high-resolution backing range (<see cref="MemoryLayout.HiresRamSize"/>) instead of
+    /// the full 22 MB allocation; the unused tail is cleared on load.
     /// </remarks>
-    public ushort Version => 3;
+    public ushort Version => 4;
 
     /// <summary>Gets the RAM/VRAM raw accessor.</summary>
     public IRam Ram => this;
@@ -215,7 +217,11 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
         writer.WriteBoolean(_romOverlay);
         writer.WriteByte((byte)_layout.Configuration);
         writer.WriteInt32(Size);
-        writer.WriteBytes(ToStateBytes(_ram));
+        // Only the live DRAM plus the high-resolution VRAM planes can be addressed. The
+        // remainder of the fixed backing allocation is unused and stays zero.
+        var storedSize = _layout.HiresRamSize;
+        writer.WriteInt32(storedSize);
+        writer.WriteBytes(ToStateBytes(_ram.AsSpan(0, storedSize / sizeof(uint))));
         writer.WriteBytes(ToStateBytes(_rom));
         writer.WriteBytes(_nvram);
     }
@@ -233,7 +239,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
 
         _romBank = bank;
         _pcAdjustPending = reader.ReadBoolean();
-        var version = reader is StateSectionReader sectionReader ? sectionReader.Version : 3;
+        var version = reader is StateSectionReader sectionReader ? sectionReader.Version : 4;
         if (version >= 2)
         {
             _romOverlay = reader.ReadBoolean();
@@ -261,7 +267,23 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
             }
 
             _layout = MemoryLayout.For(configuration);
-            reader.ReadBytes(ToStateBytes(_ram));
+            if (version >= 4)
+            {
+                var storedSize = reader.ReadInt32();
+                if (storedSize < 0 || storedSize > Size || (storedSize & 3) != 0)
+                {
+                    throw new InvalidStateException(
+                        $"Memory state stored size {storedSize} is invalid for the {Size}-byte allocation.");
+                }
+
+                Span<byte> ram = ToStateBytes(_ram);
+                ram[storedSize..].Clear();
+                reader.ReadBytes(ram[..storedSize]);
+            }
+            else
+            {
+                reader.ReadBytes(ToStateBytes(_ram));
+            }
         }
         else
         {
@@ -300,9 +322,9 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
         return pending;
     }
 
-    private static Span<byte> ToStateBytes(uint[] words)
+    private static Span<byte> ToStateBytes(Span<uint> words)
     {
-        return MemoryMarshal.AsBytes(words.AsSpan());
+        return MemoryMarshal.AsBytes(words);
     }
 
     /// <summary>Selects the active ROM bank through the bus contract. FreeDO: <c>SelectROM</c>.</summary>

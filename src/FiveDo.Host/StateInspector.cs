@@ -201,7 +201,7 @@ public static class StateInspector
                 throw new InvalidStateException($"Section 0x{id:X8} has an invalid payload length.");
             }
 
-            if ((flags & ~StateFormat.SectionFlagCompressed) != 0)
+            if ((flags & ~(StateFormat.SectionFlagCompressed | StateFormat.SectionFlagUnchecked)) != 0)
             {
                 throw new InvalidStateException($"Section 0x{id:X8} has unsupported flags 0x{flags:X4}.");
             }

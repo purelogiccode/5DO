@@ -267,10 +267,10 @@ configurations use the Opera daisy-chain records within the 20-byte MADAM DMA wi
 
 ## S
 
-**Save state (.tdos)** - Native versioned machine snapshot with CRC'd sections. Format
-version 2 compresses large sections with Brotli, so a typical file is 0.6-2.0 MB on disk
-(the uncompressed payload is ~25 MB because it includes the full RAM backing and VDL
-frame). Version-1 states remain uncompressed.
+**Save state (.tdos)** - Native versioned machine snapshot with CRC'd sections. Large
+sections are Brotli-compressed, so a typical file is 0.6-2.0 MB on disk (the uncompressed
+payload is ~10 MB for the stock layout and ~26 MB for the largest layout, which includes
+the live RAM/VRAM range and the VDL frame). Version-1 states remain uncompressed.
 
 **Sharp-bilinear** - The default enhanced filter: integer prescale plus bilinear
 sub-texel blending.

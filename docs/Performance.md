@@ -757,3 +757,42 @@ experimental, opt-in backend; it is bit-identical on the evidence above and fall
 safely, but it does not meet the 1.5x end-to-end gate (local boot results are 1.17-1.85x slower). The remaining work is trace or
 superblock chaining across conditional branches, helper inlining for `SetZn`/`SetCv`/
 condition checks, and reducing JIT code-cache pressure. PERF-08 stays **Partial**.
+
+### 8.5 Rewind capture stall (2026-11-05)
+
+**Symptom.** Gameplay showed sub-second freezes every two seconds. The rewind history was
+enabled by default (`RewindOptions.Enabled = true`, keyframe every 120 frames) and captured
+its keyframe with `SaveState` on the emulation thread. The capture used
+`CompressionLevel.Optimal`, a byte-at-a-time CRC over the whole payload, and wrote the
+entire 22 MB RAM backing.
+
+**Measured before (Lemmings, Release).** `RewindBuffer.Capture` p50 was 0 ms (input copy
+only), but each keyframe took **139.3 ms** and allocated about 75 MB. Twenty captures
+allocated 1.5 GB and forced 12 gen2 collections. An uncompressed `SaveState` still needed
+about 67 ms because the CRC alone cost ~55 ms for 26 MB.
+
+**Changes.**
+
+1. `StateCrc32` now uses a slicing-by-8 table. The value is unchanged, and a
+   reference-implementation test covers it.
+2. Memory state section version 4 writes only the live `HiresRamSize` range instead of the
+   full 22 MB backing. The unused tail is cleared on load. A stock 2 MB DRAM / 1 MB VRAM
+   state drops from ~26 MB to ~10 MB uncompressed.
+3. Rewind snapshots use `CompressionLevel.Fastest` and skip the per-section CRC
+   (`SectionFlagUnchecked`); persisted `.tdos` files keep `Optimal` compression and
+   always validate CRCs.
+4. `RewindBuffer` reuses its capture stream, state buffers, `StateWriter`, payload buffer,
+   and compression scratch; trimmed keyframes return their arrays to a pool.
+5. The BIOS MD5 used in the state header is cached instead of hashing 1 MB every capture.
+6. The frontend opens discs through the host-side prefetch cache (PERF-04) so CHD
+   decompression does not run on the emulation thread.
+
+**Measured after (same 1,200-frame run).** Keyframe captures fell to **7.4-9.2 ms**
+(one 14.1 ms outlier) and the run allocated **16 MB** instead of 1.5 GB with no gen0/gen2
+collections. End-to-end frame work was p50 **1.34 ms**, p95 **2.13 ms**, p99 **6.85 ms**,
+max **14.76 ms** for Lemmings with the mailbox and rewind active. The per-frame rewind
+input copy remains p50 0 ms / p99 0.006 ms.
+
+**Remaining.** The snapshot still serializes the ROM and the full VDL frame. Skipping the
+ROM for same-session rewind snapshots would remove another ~2 MB and ~1 ms per keyframe;
+continuous CHD allocation (PERF-04) still needs an allocation gate.

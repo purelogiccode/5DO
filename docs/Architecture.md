@@ -553,8 +553,9 @@ v4 records the expanded buffer.
 | macOS | .NET `LocalApplicationData/5DO` (verify in About/Settings) | `<that>/states` | Pictures |
 
 `AppSettingsStore.DefaultDirectory` is `Path.Combine(LocalApplicationData, "5DO")`;
-`nvram.ram` and `settings.json` live there. A version-2 save state is typically
-0.6-2.0 MB on disk (the uncompressed payload is ~25 MB: full RAM backing + VDL frame).
+`nvram.ram` and `settings.json` live there. A save state is typically 0.6-2.0 MB on disk
+(the uncompressed payload is ~10 MB for the stock layout: live RAM/VRAM range, ROM, and
+VDL frame).
 **Portable mode is not implemented**; a `portable.flag` file has no effect.
 See [`Configuration.md`](Configuration.md) and [`SaveStates.md`](SaveStates.md).
 
@@ -581,10 +582,11 @@ See [`Configuration.md`](Configuration.md) and [`SaveStates.md`](SaveStates.md).
 | Input state | host | no |
 | Derived `FrameBuffer` / audio queue | host | no; regenerated/cleared |
 
-A typical `.tdos` is 0.6-2.0 MB on disk in format version 2 because the memory section
-stores the full RAM backing and the machine section stores all 960 VDL lines, then the
-writer Brotli-compresses large sections. The uncompressed payload is ~25 MB; version-1
-states remain uncompressed. See [`SaveStates.md`](SaveStates.md).
+A typical `.tdos` is 0.6-2.0 MB on disk because the memory section stores the live
+DRAM/high-resolution VRAM range and the machine section stores all 960 VDL lines, then
+the writer Brotli-compresses large sections. The uncompressed payload is ~10 MB for the
+stock layout and ~26 MB for the largest layout; version-1 states remain uncompressed.
+See [`SaveStates.md`](SaveStates.md).
 
 ---
 

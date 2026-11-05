@@ -45,15 +45,30 @@ public static class StateFormat
     /// <summary>The options section records the video region.</summary>
     public const uint FeatureVideoRegion = 8;
 
+    /// <summary>At least one section is marked unchecked (transient rewind snapshots only).</summary>
+    public const uint FeatureUncheckedSections = 16;
+
     /// <summary>All feature flags understood by this build.</summary>
     public const uint FeatureAll =
-        FeatureOptionsSnapshot | FeatureSectionTable | FeatureCompressedSections | FeatureVideoRegion;
+        FeatureOptionsSnapshot
+        | FeatureSectionTable
+        | FeatureCompressedSections
+        | FeatureVideoRegion
+        | FeatureUncheckedSections;
 
     /// <summary>Upper bound on declared sections accepted from a state header.</summary>
     public const int MaxSectionTableEntries = 4096;
 
     /// <summary>Section flag that marks a Brotli-compressed payload.</summary>
     public const ushort SectionFlagCompressed = 1;
+
+    /// <summary>Section flag that marks a payload whose CRC trailer is zero and not validated.</summary>
+    /// <remarks>
+    /// Used only for transient in-memory snapshots (the rewind history), where the payload is
+    /// written and read by the same process and the CRC cost would be paid on the emulation
+    /// thread. Persisted states always carry and validate a CRC.
+    /// </remarks>
+    public const ushort SectionFlagUnchecked = 2;
 
     /// <summary>Payload size at or above which the writer attempts compression.</summary>
     public const int CompressionThreshold = 4096;

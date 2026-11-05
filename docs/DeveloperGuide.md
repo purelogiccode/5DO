@@ -612,12 +612,12 @@ These are real, current limitations. Do not "fix" them casually without tests.
 1. **Word-swapped memory representation.** RAM/ROM words match a little-endian C++
    build; byte/halfword accesses apply lane XORs. A clean big-endian refactor would
    touch hundreds of places and must be guarded by the full suite/state compatibility.
-2. **Large save states.** The Memory section writes the entire 22 MB RAM backing,
-   including high-res mirrors; the Machine section writes all 960 VDL lines. Format
-   version 2 compresses large sections with Brotli (typically 0.6-2.0 MB), but the
-   in-memory state and the uncompressed payloads remain ~25 MB. Version-1 states are
-   still readable. Further reductions (trimming duplicate mirrors) are a format
-   change.
+2. **Large save states.** The Memory section writes the live RAM/VRAM range in the
+   backing, including high-res mirrors; the Machine section writes all 960 VDL lines.
+   Large sections are Brotli-compressed (typically 0.6-2.0 MB), but the in-memory state
+   and the uncompressed payloads remain ~10 MB for the stock layout and ~26 MB for the
+   largest. Version-1 states are still readable. Further reductions (trimming duplicate
+   mirrors or the ROM) are a format change.
 3. **Disc hash is warned, not enforced.** Loading a state from a different disc adds
    a `StateWarnings` entry but still loads; the CLI and desktop surface the warning.
 4. **`Renderer` and `OutputResolution` are honored at startup and when Settings is

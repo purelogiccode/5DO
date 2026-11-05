@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Threading;
 using FiveDo.Core;
 using FiveDo.Machine;
@@ -24,11 +25,26 @@ namespace FiveDo.Host.Rewind;
 /// core is paused.
 /// </para>
 /// </remarks>
-public sealed class RewindBuffer
+public sealed class RewindBuffer : IDisposable
 {
+    private static readonly StateSaveOptions FastCaptureOptions = new()
+    {
+        // Rewind snapshots are transient and captured on the emulation thread. Fastest
+        // Brotli cuts the capture cost by roughly six times while keeping the history
+        // within the memory budget.
+        CompressionLevel = CompressionLevel.Fastest,
+        // The snapshot is consumed by the same process immediately, so the per-section
+        // CRC pass (several megabytes) is not worth its cost on the emulation thread.
+        ChecksumsEnabled = false,
+        InitialCapacity = 1024 * 1024,
+    };
+
     private readonly FiveDoMachine _machine;
     private readonly RewindOptions _options;
     private readonly List<Keyframe> _keyframes = new();
+    private readonly Stack<byte[]> _statePool = new();
+    private readonly MemoryStream _captureStream = new(1024 * 1024);
+    private readonly StateWriter _stateWriter = new(1024 * 1024);
     private readonly byte[] _inputs;
     private readonly int _inputCapacity;
     private readonly int _inputPacketSize;
@@ -273,7 +289,7 @@ public sealed class RewindBuffer
 
     private void LoadKeyframe(Keyframe keyframe)
     {
-        using var stream = new MemoryStream(keyframe.State, writable: false);
+        using var stream = new MemoryStream(keyframe.State, 0, keyframe.Length, writable: false);
         _machine.LoadState(stream);
     }
 
@@ -286,12 +302,34 @@ public sealed class RewindBuffer
 
     private void AddKeyframe(long frame)
     {
-        using var stream = new MemoryStream();
-        _machine.SaveState(stream);
-        byte[] state = stream.ToArray();
-        _keyframes.Add(new Keyframe(frame, state));
-        _memoryUsage += state.Length;
+        _captureStream.SetLength(0);
+        _captureStream.Position = 0;
+        _machine.SaveState(_captureStream, FastCaptureOptions, reusableWriter: _stateWriter);
+        var length = checked((int)_captureStream.Length);
+        byte[] state = RentStateBuffer(length);
+        _captureStream.GetBuffer().AsSpan(0, length).CopyTo(state);
+        _keyframes.Add(new Keyframe(frame, state, length));
+        _memoryUsage += length;
         _lastKeyframeFrame = frame;
+    }
+
+    private byte[] RentStateBuffer(int length)
+    {
+        while (_statePool.Count > 0)
+        {
+            byte[] buffer = _statePool.Pop();
+            if (buffer.Length >= length)
+            {
+                return buffer;
+            }
+        }
+
+        return GC.AllocateUninitializedArray<byte>(length);
+    }
+
+    private void ReturnStateBuffer(byte[] buffer)
+    {
+        _statePool.Push(buffer);
     }
 
     private void TrimCore()
@@ -314,7 +352,8 @@ public sealed class RewindBuffer
         {
             Keyframe removed = _keyframes[^1];
             _keyframes.RemoveAt(_keyframes.Count - 1);
-            _memoryUsage -= removed.State.Length;
+            _memoryUsage -= removed.Length;
+            ReturnStateBuffer(removed.State);
         }
 
         _newestFrame = targetFrame;
@@ -326,7 +365,8 @@ public sealed class RewindBuffer
     {
         Keyframe removed = _keyframes[0];
         _keyframes.RemoveAt(0);
-        _memoryUsage -= removed.State.Length;
+        _memoryUsage -= removed.Length;
+        ReturnStateBuffer(removed.State);
     }
 
     private Keyframe FindKeyframe(long targetFrame)
@@ -352,8 +392,23 @@ public sealed class RewindBuffer
         return result;
     }
 
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        lock (_gate)
+        {
+            ClearCore();
+            _captureStream.Dispose();
+        }
+    }
+
     private void ClearCore()
     {
+        foreach (Keyframe keyframe in _keyframes)
+        {
+            ReturnStateBuffer(keyframe.State);
+        }
+
         _keyframes.Clear();
         _memoryUsage = 0;
         _newestFrame = -1;
@@ -363,15 +418,18 @@ public sealed class RewindBuffer
 
     private sealed class Keyframe
     {
-        internal Keyframe(long frame, byte[] state)
+        internal Keyframe(long frame, byte[] state, int length)
         {
             Frame = frame;
             State = state;
+            Length = length;
         }
 
         internal long Frame { get; }
 
         internal byte[] State { get; }
+
+        internal int Length { get; }
     }
 
     private sealed class ReplayPbusSource : IPbusSource

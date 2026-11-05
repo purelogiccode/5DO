@@ -305,11 +305,104 @@ public sealed class StateWriterReaderTests
         var writer = new StateWriter { CompressionEnabled = false };
         writer.WriteSection(new TestStateSection { Value = 1 });
         var state = writer.ToArray();
-        BinaryPrimitives.WriteUInt16LittleEndian(state.AsSpan(6), 0x0002);
+        BinaryPrimitives.WriteUInt16LittleEndian(state.AsSpan(6), 0x0004);
 
         var reader = new StateReader(state);
 
         Assert.Throws<InvalidStateException>(() => reader.TryReadSection(out _));
+    }
+
+    [Fact]
+    public void UncheckedSection_RoundtripsWithoutACrc()
+    {
+        var writer = new StateWriter { ChecksumsEnabled = false };
+        writer.WriteSection(new TestStateSection { Value = 42, Text = "no crc" });
+        var state = writer.ToArray();
+
+        var flags = BinaryPrimitives.ReadUInt16LittleEndian(state.AsSpan(6, 2));
+        Assert.Equal(StateFormat.SectionFlagUnchecked, flags);
+        Assert.Equal(0u, BinaryPrimitives.ReadUInt32LittleEndian(state.AsSpan(state.Length - 4, 4)));
+
+        var reader = new StateReader(state);
+        Assert.True(reader.TryReadSection(out StateSectionReader? section));
+        Assert.NotNull(section);
+        var restored = new TestStateSection();
+        restored.Load(section);
+        Assert.Equal(42, restored.Value);
+        Assert.Equal("no crc", restored.Text);
+    }
+
+    [Fact]
+    public void UncheckedSection_WithNonzeroCrc_Throws()
+    {
+        var writer = new StateWriter { ChecksumsEnabled = false };
+        writer.WriteSection(new TestStateSection { Value = 1 });
+        var state = writer.ToArray();
+        BinaryPrimitives.WriteUInt32LittleEndian(state.AsSpan(state.Length - 4, 4), 1);
+
+        var reader = new StateReader(state);
+
+        Assert.Throws<InvalidStateException>(() => reader.TryReadSection(out _));
+    }
+
+    [Fact]
+    public void Crc32_MatchesKnownVectorAndReferenceImplementation()
+    {
+        Assert.Equal(0xCBF43926u, StateCrc32.Compute("123456789"u8));
+
+        var random = new Random(12345);
+        foreach (var length in new[] { 0, 1, 7, 8, 9, 31, 32, 33, 4096, 65537 })
+        {
+            var data = new byte[length];
+            random.NextBytes(data);
+            Assert.Equal(ReferenceCrc32(data), StateCrc32.Compute(data));
+        }
+    }
+
+    [Fact]
+    public void Reset_ClearsWrittenDataAndKeepsBuffersUsable()
+    {
+        var writer = new StateWriter(1024);
+        writer.WriteUInt32(0xDEADBEEF);
+        Assert.Equal(4, writer.Length);
+
+        writer.Reset();
+        Assert.Equal(0, writer.Length);
+
+        writer.WriteUInt16(0x1234);
+        Assert.Equal(new byte[] { 0x34, 0x12 }, writer.ToArray());
+    }
+
+    [Fact]
+    public void FastCompressionLevel_RoundtripsLargeSection()
+    {
+        var source = new LargeTestSection { Payload = CreatePayload(64 * 1024) };
+        var writer = new StateWriter { CompressionLevel = System.IO.Compression.CompressionLevel.Fastest };
+        writer.WriteSection(source);
+        var state = writer.ToArray();
+
+        var reader = new StateReader(state);
+        Assert.True(reader.TryReadSection(out StateSectionReader? sectionReader));
+        Assert.NotNull(sectionReader);
+
+        var restored = new LargeTestSection();
+        restored.Load(sectionReader);
+        Assert.Equal(source.Payload.ToArray(), restored.Payload.ToArray());
+    }
+
+    private static uint ReferenceCrc32(ReadOnlySpan<byte> data)
+    {
+        var crc = 0xFFFFFFFFu;
+        foreach (var value in data)
+        {
+            crc ^= value;
+            for (var bit = 0; bit < 8; bit++)
+            {
+                crc = (crc & 1) != 0 ? 0xEDB88320u ^ (crc >> 1) : crc >> 1;
+            }
+        }
+
+        return ~crc;
     }
 
     private static byte[] CreateIncompressiblePayload(int length)

@@ -141,12 +141,11 @@ checksums are attached, and legal/attribution sign-off is recorded.
   user-data track.
 - CLI JSON casing is split: `state inspect`/`state slots` are PascalCase for historical
   compatibility; other commands are camelCase.
-- Save-state format version 2 compresses large sections with Brotli, so a state is
-  typically 0.6-2.0 MB instead of the ~28 MB uncompressed size. Version-1 states still
-  load and remain ~25 MB. The state still contains the 22 MB maximum RAM backing and the
-  VDL frame before compression; ten compressed slots use a few MB. Older builds that
-  only understand version 1 reject new states with
-  `Unsupported save-state version 2.`
+- Save states Brotli-compress large sections, so a state is typically 0.6-2.0 MB instead
+  of the ~10 MB stock-layout uncompressed size (the largest layout is ~26 MB). Version-1
+  states still load and remain ~25 MB. Ten compressed slots use a few MB. Older builds
+  that only understand version 1 reject section versions they do not know with
+  `Unsupported section N version M.`
 - The save-state header records the disc hash. Loading with a different disc now adds
   a warning to `StateWarnings` (surfaced by the CLI and the desktop status line) but
   still loads; only BIOS/emulator-version mismatches are otherwise warned about.

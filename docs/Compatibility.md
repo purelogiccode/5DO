@@ -292,10 +292,11 @@ does not need a separate high-resolution input path.
 ## 8. Save states
 
 - Native C# format, versioned, explicit little-endian, CRC-protected.
-- Includes CPU, the full 22 MB RAM backing (largest DRAM/VRAM layout plus four VRAM planes), ROM,
-  NVRAM, MADAM, CLIO, DSP, SPORT, VDLP, XBUS, CD, Quartz, compatibility flags, and the
-  parsed VDL frame. Format version 2 compresses large sections with Brotli; a typical
-  state is 0.6-2.0 MB on disk (the uncompressed payload is ~28 MB). Version-1 states
+- Includes CPU, the live RAM/VRAM backing range (stock 2 MB DRAM + four 1 MB VRAM planes;
+  the largest layout is 14 MB DRAM + four 2 MB VRAM planes), ROM, NVRAM, MADAM, CLIO, DSP,
+  SPORT, VDLP, XBUS, CD, Quartz, compatibility flags, and the parsed VDL frame. Large
+  sections are Brotli-compressed; a typical state is 0.6-2.0 MB on disk (the uncompressed
+  payload is ~10 MB for the stock layout and ~26 MB for the largest). Version-1 states
   still load.
 - Does not include disc contents or input state.
 - Includes the parsed VDL frame lines, so a zero-frame load is pixel-identical to the

@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-05, after the 1.2.1 arm64 packaging update, the 1.2.0 feature/accuracy update, SYS-12 SWI HLE, SYS-17 game-database expansion, SYS-08 clock validation, and the partial PERF-08 managed JIT: Direct3D 11,
+**Snapshot:** 2026-11-05, after the 1.2.1 arm64 packaging update, the 1.2.0 feature/accuracy update, the rewind-capture stall fix, SYS-12 SWI HLE, SYS-17 game-database expansion, SYS-08 clock validation, and the partial PERF-08 managed JIT: Direct3D 11,
 startup release checks, the fuzz harness, per-edge overscan/void border, screenshot
 gallery filters, FIQ/DMA/DSP telemetry, flat CHD/raw ISO support, and display-refresh
 control. The earlier first full-collection sweep, performance, timing-option, BIOS,
@@ -11,6 +11,15 @@ passes are retained below. Road Rash's
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
 **594 discs tested: 593 Loadable/Rendered, 1 Loadable/No video (known boot failure), 0 Not Loadable.**
+
+**Performance increment (2026-11-05):** the default rewind history no longer stalls the
+emulation thread. Keyframe capture on Lemmings fell from **139.3 ms** to **7.4-9.2 ms**
+(one 14.1 ms outlier), per-1,200-frame allocations fell from ~1.5 GB to 16 MB with no
+gen0/gen2 collections, and the frame loop measured p50 **1.34 ms** / p99 **6.85 ms** /
+max **14.76 ms** with the mailbox and rewind active. The memory save-state section
+(version 4) now stores only the live RAM/VRAM range, cutting a stock-layout uncompressed
+state from ~26 MB to ~10 MB, and the frontend opens discs through the prefetch cache.
+See [`Performance.md`](Performance.md) 8.5. The suite is **1,802 tests**.
 
 **Release status (2026-11-02):** **v1.0.0 is released** as a documented-compatibility
 release. The version is bumped, the source is tagged `v1.0.0`, and one unified bundle
@@ -68,7 +77,7 @@ input values are consumed at runtime. `gamedb stats --folder "J:\Panasonic 3DO"`
 1,366 readable images, 653 unique IDs, and 100% metadata coverage with no errors
 (the three exceptions are audio-only `[CD-Audio]` CHDs). SYS-08 added the five-title
 0.5x-1x-2x-4x A/B in `Performance.md` §8.3 and kept the stock 12.5 MHz default; every
-non-stock clock changed guest behavior. The suite is **1,795 tests**.
+non-stock clock changed guest behavior. The suite is **1,802 tests**.
 
 **SYS-12 (2026-11-04):** Portfolio OS SWI HLE is available behind `--swi-hle`,
 Settings > Emulation, and per-game profiles. It handles Opera's 14 fixed-point math SWIs
@@ -88,7 +97,7 @@ DRAM, VDLP/SPORT/CEL use the live layout, and MADAM RED SYSBITS reports the capa
 the BIOS. A homebrew probe ROM uses 4 MB DRAM + 2 MB VRAM; retail titles remain on the
 stock 2 MB/1 MB default because Opera documents expanded memory as homebrew-only. The
 CPU-clock matrix (0.5x-4x) and `bench --cpu-clock`/`--memory` were also added; the suite
-is **1,795 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al, 1.1an, 1.1ao, 1.1aq, 1.1ar, 1.1as, 1.1at, and
+is **1,802 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al, 1.1an, 1.1ao, 1.1aq, 1.1ar, 1.1as, 1.1at, and
 [`Performance.md`](Performance.md) 8.1.
 
 **Latest work (2026-11-02):** the CLI and desktop shell check the public GitHub release

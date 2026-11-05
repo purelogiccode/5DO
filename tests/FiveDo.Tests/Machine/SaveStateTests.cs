@@ -242,6 +242,34 @@ public sealed class SaveStateTests
     }
 
     [Fact]
+    public void SaveState_FastCompressionWithReusableWriterRoundtrips()
+    {
+        FiveDoMachine machine = CreateMachine();
+        machine.RunFrames(3);
+        var options = new StateSaveOptions
+        {
+            CompressionLevel = System.IO.Compression.CompressionLevel.Fastest,
+            InitialCapacity = 64 * 1024,
+        };
+        var writer = new StateWriter();
+
+        using var state = new MemoryStream();
+        machine.SaveState(state, options, reusableWriter: writer);
+        var firstLength = state.Length;
+
+        // A second capture through the same writer must produce the same bytes and must
+        // not leave stale data from the previous snapshot.
+        state.SetLength(0);
+        machine.SaveState(state, options, reusableWriter: writer);
+        Assert.Equal(firstLength, state.Length);
+
+        FiveDoMachine loaded = CreateMachine();
+        state.Position = 0;
+        loaded.LoadState(state);
+        Assert.Equal(machine.Cpu.ProgramCounter, loaded.Cpu.ProgramCounter);
+    }
+
+    [Fact]
     public void Machine_AppliesConfiguredRandomSeed()
     {
         FiveDoMachine machine = CreateMachine(tuning: new EmulatorTuning { RandomSeed = 0x1234 });

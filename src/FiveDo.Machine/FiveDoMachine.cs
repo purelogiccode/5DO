@@ -38,6 +38,7 @@ public sealed class FiveDoMachine
 
     private readonly List<string> _stateWarnings = [];
     private long _framesExecuted;
+    private string? _biosHash;
     private long _audioSamplesProduced;
     private int _lastFrameCycles;
 
@@ -297,6 +298,7 @@ public sealed class FiveDoMachine
         }
 
         Memory.LoadBios(bios1);
+        _biosHash = null;
         if (!bios2.IsEmpty)
         {
             var bank = new byte[EmulatorConstants.RomBankSize];
@@ -387,8 +389,39 @@ public sealed class FiveDoMachine
         Justification = "MD5 is the 3DO BIOS/game identifier used by 4DO.")]
     public void SaveState(Stream destination, string? discHash = null, bool compress = true)
     {
+        SaveState(
+            destination,
+            new StateSaveOptions { CompressionEnabled = compress },
+            discHash);
+    }
+
+    /// <summary>Saves the complete machine state with explicit serialization options.</summary>
+    /// <param name="destination">Destination stream.</param>
+    /// <param name="options">Serialization options.</param>
+    /// <param name="discHash">Optional game/disc hash stored in the state header.</param>
+    /// <param name="reusableWriter">
+    /// Optional writer whose buffers are kept between calls. The rewind history passes a
+    /// long-lived writer so a multi-megabyte snapshot does not allocate large buffers every
+    /// time.
+    /// </param>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Security",
+        "CA5351:Do Not Use Broken Cryptographic Algorithms",
+        Justification = "MD5 is the 3DO BIOS/game identifier used by 4DO.")]
+    public void SaveState(
+        Stream destination,
+        StateSaveOptions options,
+        string? discHash = null,
+        StateWriter? reusableWriter = null)
+    {
         ArgumentNullException.ThrowIfNull(destination);
-        var writer = new StateWriter { CompressionEnabled = compress };
+        ArgumentNullException.ThrowIfNull(options);
+        var compress = options.CompressionEnabled;
+        StateWriter writer = reusableWriter ?? new StateWriter(options.InitialCapacity);
+        writer.Reset();
+        writer.CompressionEnabled = compress;
+        writer.CompressionLevel = options.CompressionLevel;
+        writer.ChecksumsEnabled = options.ChecksumsEnabled;
         IStateSection[] sections =
         [
             Cpu,
@@ -411,7 +444,8 @@ public sealed class FiveDoMachine
         uint features = StateFormat.FeatureOptionsSnapshot
             | StateFormat.FeatureSectionTable
             | StateFormat.FeatureVideoRegion
-            | (compress ? StateFormat.FeatureCompressedSections : 0u);
+            | (compress ? StateFormat.FeatureCompressedSections : 0u)
+            | (options.ChecksumsEnabled ? 0u : StateFormat.FeatureUncheckedSections);
         writer.WriteUInt32(StateFormat.Magic);
         writer.WriteUInt16(StateFormat.Version);
         writer.WriteUInt16(StateFormat.HeaderFlagFeatureFlags | StateFormat.HeaderFlagSectionTable);
@@ -435,8 +469,7 @@ public sealed class FiveDoMachine
             writer.WriteSection(section);
         }
 
-        var bytes = writer.ToArray();
-        destination.Write(bytes, 0, bytes.Length);
+        destination.Write(writer.WrittenSpan);
     }
 
     /// <summary>Saves the machine state atomically to a file.</summary>
@@ -608,7 +641,7 @@ public sealed class FiveDoMachine
             }
 
             var supportedVersion = section.Version == 1
-                || (section.Id == StateSectionIds.Memory && section.Version <= 3)
+                || (section.Id == StateSectionIds.Memory && section.Version <= 4)
                 || (section.Id == StateSectionIds.Cdrom && section.Version <= 4)
                 || (section.Id == StateSectionIds.Quartz && section.Version <= 3)
                 || (section.Id == StateSectionIds.Clio && section.Version <= 3)
@@ -771,9 +804,17 @@ public sealed class FiveDoMachine
         Justification = "MD5 is the 3DO BIOS identifier used by 4DO.")]
     private string ComputeBiosHash()
     {
+        // The ROM only changes through LoadBios, so a rewind snapshot does not need to
+        // re-hash a megabyte of BIOS data every time.
+        if (_biosHash is not null)
+        {
+            return _biosHash;
+        }
+
         var bios = new byte[EmulatorConstants.RomBankSize];
         Memory.CopyRomBank(0, bios);
-        return Convert.ToHexStringLower(MD5.HashData(bios));
+        _biosHash = Convert.ToHexStringLower(MD5.HashData(bios));
+        return _biosHash;
     }
 
     /// <summary>Runs one emulated frame in single-threaded mode. FreeDO: <c>_3do_Frame</c>.</summary>
