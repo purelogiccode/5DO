@@ -7,6 +7,15 @@ release.
 
 ### Added
 
+- Settings > Paths now edits the game library folders directly. Type or paste one or
+  more folder paths (semicolon separated), press Enter or click **Add**, or use
+  **Browse...**; select a folder and click **Remove** to stop scanning it. The list is
+  saved to `LibraryFolders` and refreshes the library when it changes. The scanner now
+  indexes cover images once per folder instead of probing every cover extension for every
+  disc, and the library decodes covers on bounded background tasks at 256 px instead of
+  blocking the list. On a 2,732-image local collection the cached listing fell from 2.8 s
+  to 0.33 s, and a cold listing shows all entries in 17 ms before game IDs, titles, and
+  cover art are resolved in the background.
 - SYS-07 memory capacity options: all eight Opera DRAM/VRAM layouts (2/4/8/14/15 MB
   DRAM and 1/2 MB VRAM) are selectable with `--memory`, Settings > Emulation > Memory,
   per-game profiles, and save states. VRAM is decoded directly above DRAM, VDLP/SPORT/CEL

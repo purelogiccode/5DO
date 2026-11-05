@@ -65,6 +65,7 @@ public static class GameLibraryScanner
 
         var entries = new List<GameLibraryEntry>(files.Count);
         var pending = new List<string>();
+        var coverIndex = new CoverIndex(coverDirectory);
         foreach (var file in files)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -73,11 +74,11 @@ public static class GameLibraryScanner
                 var info = new FileInfo(file);
                 if (cachedByPath.TryGetValue(file, out CachedLibraryEntry? cached) && cached.Matches(info))
                 {
-                    entries.Add(CreateEntry(cached, coverDirectory));
+                    entries.Add(CreateEntry(cached, coverIndex));
                 }
                 else
                 {
-                    entries.Add(CreatePlaceholder(file, coverDirectory));
+                    entries.Add(CreatePlaceholder(file, coverIndex));
                     pending.Add(file);
                 }
             }
@@ -117,6 +118,7 @@ public static class GameLibraryScanner
 
         var entries = new ConcurrentBag<GameLibraryEntry>();
         var inspected = new ConcurrentDictionary<string, CachedLibraryEntry>(StringComparer.OrdinalIgnoreCase);
+        var coverIndex = new CoverIndex(coverDirectory);
         var found = 0;
         var options = new ParallelOptions
         {
@@ -129,7 +131,7 @@ public static class GameLibraryScanner
             try
             {
                 var info = new FileInfo(file);
-                GameLibraryEntry? entry = Inspect(file, chdReadAheadHunks: 0, coverDirectory: coverDirectory);
+                GameLibraryEntry? entry = Inspect(file, chdReadAheadHunks: 0, coverIndex);
                 if (entry is null)
                 {
                     return;
@@ -322,13 +324,21 @@ public static class GameLibraryScanner
         int chdReadAheadHunks = 0,
         string? coverDirectory = null)
     {
+        return Inspect(path, chdReadAheadHunks, new CoverIndex(coverDirectory));
+    }
+
+    private static GameLibraryEntry? Inspect(
+        string path,
+        int chdReadAheadHunks,
+        CoverIndex coverIndex)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         if (!IsDiscPath(path))
         {
             return null;
         }
 
-        var coverPath = FindCover(path, coverDirectory);
+        var coverPath = coverIndex.Find(path);
         try
         {
             using IDiscSource disc = DiscImageFactory.Open(path, chdReadAheadHunks: chdReadAheadHunks);
@@ -377,48 +387,42 @@ public static class GameLibraryScanner
     public static string FindCover(string discPath, string? coverDirectory = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(discPath);
-        var baseName = Path.GetFileNameWithoutExtension(discPath);
-        var directory = Path.GetDirectoryName(Path.GetFullPath(discPath));
-        if (string.IsNullOrEmpty(directory))
-        {
-            return string.Empty;
-        }
-
-        var sibling = FindCoverIn(directory, baseName);
-        if (sibling.Length > 0)
-        {
-            return sibling;
-        }
-
-        if (string.IsNullOrWhiteSpace(coverDirectory))
-        {
-            return string.Empty;
-        }
-
-        try
-        {
-            var covers = Path.GetFullPath(coverDirectory);
-            return Directory.Exists(covers) ? FindCoverIn(covers, baseName) : string.Empty;
-        }
-        catch (Exception exception) when (exception is ArgumentException or IOException or UnauthorizedAccessException)
-        {
-            Serilog.Log.Debug(exception, "Cover directory {Directory} could not be searched.", coverDirectory);
-            return string.Empty;
-        }
+        return new CoverIndex(coverDirectory).Find(discPath);
     }
 
-    private static string FindCoverIn(string directory, string baseName)
+    private static GameLibraryEntry CreateEntry(CachedLibraryEntry cached, CoverIndex coverIndex)
     {
-        foreach (var extension in CoverExtensions)
+        GameRecord? record = cached.GameId.Length == 0
+            ? null
+            : GameDatabase.Default.FindByChecksum(cached.GameId);
+        return new GameLibraryEntry(
+            cached.Path,
+            cached.Format,
+            cached.SectorCount,
+            cached.GameId,
+            record?.Name ?? Path.GetFileNameWithoutExtension(cached.Path),
+            record is not null,
+            cached.Error,
+            coverIndex.Find(cached.Path))
         {
-            var candidate = Path.Combine(directory, baseName + extension);
-            if (File.Exists(candidate))
-            {
-                return candidate;
-            }
-        }
+            ReleaseYear = record?.ReleaseYear ?? string.Empty,
+            Publisher = record?.Publisher ?? string.Empty,
+            Regions = record?.Regions ?? string.Empty,
+        };
+    }
 
-        return string.Empty;
+    private static GameLibraryEntry CreatePlaceholder(string path, CoverIndex coverIndex)
+    {
+        return new GameLibraryEntry(
+            path,
+            FormatFor(path),
+            0,
+            string.Empty,
+            Path.GetFileNameWithoutExtension(path),
+            false,
+            string.Empty,
+            coverIndex.Find(path),
+            Pending: true);
     }
 
     private static HashSet<string> CollectFolders(
@@ -438,41 +442,6 @@ public static class GameLibraryScanner
         }
 
         return files;
-    }
-
-    private static GameLibraryEntry CreateEntry(CachedLibraryEntry cached, string? coverDirectory)
-    {
-        GameRecord? record = cached.GameId.Length == 0
-            ? null
-            : GameDatabase.Default.FindByChecksum(cached.GameId);
-        return new GameLibraryEntry(
-            cached.Path,
-            cached.Format,
-            cached.SectorCount,
-            cached.GameId,
-            record?.Name ?? Path.GetFileNameWithoutExtension(cached.Path),
-            record is not null,
-            cached.Error,
-            FindCover(cached.Path, coverDirectory))
-        {
-            ReleaseYear = record?.ReleaseYear ?? string.Empty,
-            Publisher = record?.Publisher ?? string.Empty,
-            Regions = record?.Regions ?? string.Empty,
-        };
-    }
-
-    private static GameLibraryEntry CreatePlaceholder(string path, string? coverDirectory)
-    {
-        return new GameLibraryEntry(
-            path,
-            FormatFor(path),
-            0,
-            string.Empty,
-            Path.GetFileNameWithoutExtension(path),
-            false,
-            string.Empty,
-            FindCover(path, coverDirectory),
-            Pending: true);
     }
 
     private static string FormatFor(string path)
@@ -546,5 +515,134 @@ public static class GameLibraryScanner
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Indexes cover images once per directory instead of probing every possible cover path
+    /// for every disc. A cold scan of thousands of discs otherwise spends most of its time in
+    /// <see cref="File.Exists(string)"/>.
+    /// </summary>
+    private sealed class CoverIndex
+    {
+        private readonly Lock _gate = new();
+        private readonly string? _coverDirectory;
+        private readonly Dictionary<string, Dictionary<string, string>> _directoryIndexes =
+            new(StringComparer.OrdinalIgnoreCase);
+        private Dictionary<string, string>? _coverIndex;
+
+        internal CoverIndex(string? coverDirectory)
+        {
+            if (string.IsNullOrWhiteSpace(coverDirectory))
+            {
+                return;
+            }
+
+            try
+            {
+                _coverDirectory = Path.GetFullPath(coverDirectory);
+            }
+            catch (Exception exception) when (exception is ArgumentException or IOException or NotSupportedException)
+            {
+                Serilog.Log.Debug(exception, "Cover directory {Directory} could not be resolved.", coverDirectory);
+            }
+        }
+
+        internal string Find(string discPath)
+        {
+            var baseName = Path.GetFileNameWithoutExtension(discPath);
+            if (baseName.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            string? directory;
+            try
+            {
+                directory = Path.GetDirectoryName(Path.GetFullPath(discPath));
+            }
+            catch (Exception exception) when (exception is ArgumentException or IOException or NotSupportedException)
+            {
+                Serilog.Log.Debug(exception, "Disc path {Path} could not be resolved for cover lookup.", discPath);
+                return string.Empty;
+            }
+
+            lock (_gate)
+            {
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    Dictionary<string, string> siblings = GetIndex(directory);
+                    if (siblings.TryGetValue(baseName, out var sibling))
+                    {
+                        return sibling;
+                    }
+                }
+
+                if (_coverDirectory is not null)
+                {
+                    _coverIndex ??= BuildIndex(_coverDirectory);
+                    if (_coverIndex.TryGetValue(baseName, out var cover))
+                    {
+                        return cover;
+                    }
+                }
+            }
+
+            return string.Empty;
+        }
+
+        private Dictionary<string, string> GetIndex(string directory)
+        {
+            if (!_directoryIndexes.TryGetValue(directory, out Dictionary<string, string>? index))
+            {
+                index = BuildIndex(directory);
+                _directoryIndexes[directory] = index;
+            }
+
+            return index;
+        }
+
+        private static Dictionary<string, string> BuildIndex(string directory)
+        {
+            var index = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                foreach (var file in Directory.EnumerateFiles(directory))
+                {
+                    var rank = CoverRank(Path.GetExtension(file));
+                    if (rank < 0)
+                    {
+                        continue;
+                    }
+
+                    var baseName = Path.GetFileNameWithoutExtension(file);
+                    if (index.TryGetValue(baseName, out var existing)
+                        && CoverRank(Path.GetExtension(existing)) <= rank)
+                    {
+                        continue;
+                    }
+
+                    index[baseName] = file;
+                }
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                Serilog.Log.Debug(exception, "Cover directory {Directory} could not be searched.", directory);
+            }
+
+            return index;
+        }
+
+        private static int CoverRank(string extension)
+        {
+            for (var i = 0; i < CoverExtensions.Length; i++)
+            {
+                if (string.Equals(CoverExtensions[i], extension, StringComparison.OrdinalIgnoreCase))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
     }
 }

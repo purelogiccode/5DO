@@ -420,12 +420,17 @@ change it in **Settings > Paths**.
 
 ## Library and settings
 
-**Library** scans the folders configured in **Settings > Paths** for ISO/BIN/CUE/CHD
-files and resolves titles through the embedded 4DO game database. Select a title to
-open it. A sibling image with the same base name (for example `game.png` beside
-`game.chd`) is shown as cover art. Scanning is recursive to depth 4. Discs are listed
-immediately; game IDs and database titles are resolved in the background. Later scans
-reuse `library-cache.json` and only reopen files whose size or timestamp changed.
+**Library** scans the folders configured in **Settings > Paths > Game folders** for
+ISO/BIN/CUE/CHD files and resolves titles through the embedded 4DO game database.
+Type or paste a folder path and click **Add** (or press Enter), or use **Browse...**.
+Multiple paths can be pasted at once when separated by semicolons. **Remove** stops
+scanning the selected folder. The same folders can be added from **File > Add Game
+Folder...**. Select a title to open it. A sibling image with the same base name (for
+example `game.png` beside `game.chd`) is shown as cover art. Scanning is recursive to
+depth 4. Discs are listed immediately; game IDs and database titles are resolved in the
+background. Later scans reuse `library-cache.json` and only reopen files whose size or
+timestamp changed. Cover images are indexed once per folder instead of being probed for
+every disc, so the list appears quickly even with a large cover collection.
 
 Use the star button on a card or list row to mark a favorite. The filter selector
 switches between **All games**, **Favorites**, **Played**, and **Unplayed**; the sort

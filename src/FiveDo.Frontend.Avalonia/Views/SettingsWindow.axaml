@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="FiveDo.Frontend.Avalonia.Views.SettingsWindow"
         Title="Settings"
-        Width="680" Height="640"
+        Width="700" Height="720"
         WindowStartupLocation="CenterOwner">
 
     <Grid RowDefinitions="*,Auto" Margin="12">
@@ -392,92 +392,116 @@
                 </ScrollViewer>
             </TabItem>
 
-            <TabItem Header="Paths" ToolTip.Tip="Save-state, screenshot, cover-art, cheat, BIOS, and library-metadata settings.">
-                <Grid ColumnDefinitions="170,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Save states" VerticalAlignment="Center"
+            <TabItem Header="Paths" ToolTip.Tip="Game folders, save-state, screenshot, cover-art, cheat, BIOS, and library-metadata settings.">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <Grid ColumnDefinitions="170,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="Game folders"
+                               FontWeight="SemiBold" Margin="0,0,0,4"
+                               ToolTip.Tip="Folders scanned for ISO, BIN, CUE, and CHD disc images." />
+                    <ListBox x:Name="LibraryFoldersList" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                             Height="96" Margin="0,0,0,6"
+                             ToolTip.Tip="Folders scanned for disc images. Select a folder and click Remove to stop scanning it." />
+                    <TextBox x:Name="LibraryFolderBox" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                             Margin="0,0,6,0"
+                             PlaceholderText="Type or paste a folder path, then click Add"
+                             KeyDown="OnLibraryFolderKeyDown"
+                             ToolTip.Tip="Enter a folder path. Separate multiple paths with semicolons. Press Enter or click Add." />
+                    <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="6">
+                        <Button Content="Add" Click="OnAddLibraryFolderClick"
+                                ToolTip.Tip="Add the typed folder to the game library." />
+                        <Button Content="Browse..." Click="OnBrowseLibraryFolderAsync"
+                                ToolTip.Tip="Choose a folder to add to the game library." />
+                        <Button Content="Remove" Click="OnRemoveLibraryFolderClick"
+                                ToolTip.Tip="Remove the selected folder from the game library." />
+                    </StackPanel>
+                    <TextBlock Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
+                               Text="The library scans these folders recursively (up to four levels) for ISO, BIN, CUE, and CHD images. Disc titles and metadata are hashed after the list appears."
+                               Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,8"
+                               ToolTip.Tip="Add every folder that contains disc images. Unchanged files are reused from the library cache." />
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Save states" VerticalAlignment="Center"
                                ToolTip.Tip="Folder used for numbered save slots and thumbnails." />
-                    <TextBox x:Name="SaveDirectoryBox" Grid.Row="0" Grid.Column="1" Margin="0,0,6,8"
+                    <TextBox x:Name="SaveDirectoryBox" Grid.Row="4" Grid.Column="1" Margin="0,0,6,8"
                              ToolTip.Tip="Path to the save-state folder." />
-                    <Button Grid.Row="0" Grid.Column="2" Content="Browse" Click="OnBrowseSaveDirectoryAsync" Margin="0,0,0,8"
+                    <Button Grid.Row="4" Grid.Column="2" Content="Browse" Click="OnBrowseSaveDirectoryAsync" Margin="0,0,0,8"
                             ToolTip.Tip="Choose the save-state folder." />
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Screenshots" VerticalAlignment="Center"
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Screenshots" VerticalAlignment="Center"
                                ToolTip.Tip="Folder used for PNG screenshots." />
-                    <TextBox x:Name="ScreenshotDirectoryBox" Grid.Row="1" Grid.Column="1" Margin="0,0,6,8"
+                    <TextBox x:Name="ScreenshotDirectoryBox" Grid.Row="5" Grid.Column="1" Margin="0,0,6,8"
                              ToolTip.Tip="Path to the screenshot folder." />
-                    <Button Grid.Row="1" Grid.Column="2" Content="Browse" Click="OnBrowseScreenshotDirectoryAsync" Margin="0,0,0,8"
+                    <Button Grid.Row="5" Grid.Column="2" Content="Browse" Click="OnBrowseScreenshotDirectoryAsync" Margin="0,0,0,8"
                             ToolTip.Tip="Choose the screenshot folder." />
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Game covers" VerticalAlignment="Center"
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Game covers" VerticalAlignment="Center"
                                ToolTip.Tip="Folder containing cover images named after the disc files." />
-                    <TextBox x:Name="CoverDirectoryBox" Grid.Row="2" Grid.Column="1" Margin="0,0,6,0"
+                    <TextBox x:Name="CoverDirectoryBox" Grid.Row="6" Grid.Column="1" Margin="0,0,6,0"
                              ToolTip.Tip="Cover images use the disc filename with an image extension, for example Battle Chess (Europe).png." />
-                    <Button Grid.Row="2" Grid.Column="2" Content="Browse" Click="OnBrowseCoverDirectoryAsync"
+                    <Button Grid.Row="6" Grid.Column="2" Content="Browse" Click="OnBrowseCoverDirectoryAsync"
                             ToolTip.Tip="Choose the folder containing game cover images." />
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="BIOS folder" VerticalAlignment="Center" Margin="0,8,0,0"
+                    <TextBlock Grid.Row="7" Grid.Column="0" Text="BIOS folder" VerticalAlignment="Center" Margin="0,8,0,0"
                                ToolTip.Tip="Folder scanned for 1 MB BIOS images and optional BIOS2/Kanji fonts." />
-                    <TextBox x:Name="BiosFolderBox" Grid.Row="3" Grid.Column="1" Margin="0,8,6,0"
+                    <TextBox x:Name="BiosFolderBox" Grid.Row="7" Grid.Column="1" Margin="0,8,6,0"
                              ToolTip.Tip="Folder containing BIOS files. Auto-select scans this folder for a region-appropriate image." />
-                    <Button Grid.Row="3" Grid.Column="2" Content="Browse" Click="OnBrowseBiosFolderAsync" Margin="0,8,0,0"
+                    <Button Grid.Row="7" Grid.Column="2" Content="Browse" Click="OnBrowseBiosFolderAsync" Margin="0,8,0,0"
                             ToolTip.Tip="Choose the BIOS folder." />
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Auto-select BIOS" VerticalAlignment="Center" Margin="0,8,0,0"
+                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Auto-select BIOS" VerticalAlignment="Center" Margin="0,8,0,0"
                                ToolTip.Tip="Pick a region-appropriate BIOS for each disc." />
-                    <CheckBox x:Name="AutoBiosCheck" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,8,0,0"
+                    <CheckBox x:Name="AutoBiosCheck" Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,8,0,0"
                               Content="Choose the best BIOS for each disc (region, Kanji, arcade)"
                               ToolTip.Tip="Uses the disc's game database region and known title requirements. The configured BIOS remains the fallback." />
-                    <TextBlock Grid.Row="5" Grid.Column="0" Text="BIOS1" VerticalAlignment="Center" Margin="0,8,0,0"
+                    <TextBlock Grid.Row="9" Grid.Column="0" Text="BIOS1" VerticalAlignment="Center" Margin="0,8,0,0"
                                ToolTip.Tip="Fallback primary BIOS image." />
-                    <TextBox x:Name="BiosPathBox" Grid.Row="5" Grid.Column="1" Margin="0,8,6,0"
+                    <TextBox x:Name="BiosPathBox" Grid.Row="9" Grid.Column="1" Margin="0,8,6,0"
                              ToolTip.Tip="Path to the 1 MB primary BIOS used when auto-selection is off or unavailable." />
-                    <Button Grid.Row="5" Grid.Column="2" Content="Browse" Click="OnBrowseBiosPathAsync" Margin="0,8,0,0"
+                    <Button Grid.Row="9" Grid.Column="2" Content="Browse" Click="OnBrowseBiosPathAsync" Margin="0,8,0,0"
                             ToolTip.Tip="Choose the primary BIOS file." />
-                    <TextBlock Grid.Row="6" Grid.Column="0" Text="BIOS2 / font" VerticalAlignment="Center" Margin="0,8,0,0"
+                    <TextBlock Grid.Row="10" Grid.Column="0" Text="BIOS2 / font" VerticalAlignment="Center" Margin="0,8,0,0"
                                ToolTip.Tip="Optional BIOS2 or Kanji font ROM." />
-                    <TextBox x:Name="Bios2PathBox" Grid.Row="6" Grid.Column="1" Margin="0,8,6,0"
+                    <TextBox x:Name="Bios2PathBox" Grid.Row="10" Grid.Column="1" Margin="0,8,6,0"
                              ToolTip.Tip="Optional secondary ROM, such as a Kanji font, loaded into ROM bank 2." />
-                    <Button Grid.Row="6" Grid.Column="2" Content="Browse" Click="OnBrowseBios2PathAsync" Margin="0,8,0,0"
+                    <Button Grid.Row="10" Grid.Column="2" Content="Browse" Click="OnBrowseBios2PathAsync" Margin="0,8,0,0"
                             ToolTip.Tip="Choose the optional BIOS2/font file." />
-                    <Button x:Name="ScanBiosButton" Grid.Row="7" Grid.Column="0" Content="Scan BIOS folder"
+                    <Button x:Name="ScanBiosButton" Grid.Row="11" Grid.Column="0" Content="Scan BIOS folder"
                             Click="OnScanBiosAsync" Margin="0,8,0,0"
                             ToolTip.Tip="Validate every BIOS file in the folder and show the recognized profiles." />
-                    <TextBlock x:Name="BiosScanText" Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2"
+                    <TextBlock x:Name="BiosScanText" Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="2"
                                VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,8,0,0"
                                ToolTip.Tip="BIOS scan result." />
-                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Cheats" VerticalAlignment="Center" Margin="0,8,0,0"
+                    <TextBlock Grid.Row="12" Grid.Column="0" Text="Cheats" VerticalAlignment="Center" Margin="0,8,0,0"
                                ToolTip.Tip="Folder containing per-game cheat JSON files." />
-                    <TextBox x:Name="CheatsDirectoryBox" Grid.Row="8" Grid.Column="1" Margin="0,8,6,0"
+                    <TextBox x:Name="CheatsDirectoryBox" Grid.Row="12" Grid.Column="1" Margin="0,8,6,0"
                              ToolTip.Tip="Per-game cheat files use the 4DO game ID as the file name." />
-                    <Button Grid.Row="8" Grid.Column="2" Content="Browse" Click="OnBrowseCheatsDirectoryAsync" Margin="0,8,0,0"
+                    <Button Grid.Row="12" Grid.Column="2" Content="Browse" Click="OnBrowseCheatsDirectoryAsync" Margin="0,8,0,0"
                             ToolTip.Tip="Choose the cheat folder." />
-                    <TextBlock Grid.Row="9" Grid.Column="0" Text="Library metadata" VerticalAlignment="Center" Margin="0,8,0,0"
+                    <TextBlock Grid.Row="13" Grid.Column="0" Text="Library metadata" VerticalAlignment="Center" Margin="0,8,0,0"
                                ToolTip.Tip="Optional offline JSON metadata for titles, developers, genres, and descriptions." />
-                    <TextBox x:Name="LibraryMetadataPathBox" Grid.Row="9" Grid.Column="1" Margin="0,8,6,0"
+                    <TextBox x:Name="LibraryMetadataPathBox" Grid.Row="13" Grid.Column="1" Margin="0,8,6,0"
                              ToolTip.Tip="Leave empty to use library-metadata.json in the 5DO settings folder." />
-                    <Button Grid.Row="9" Grid.Column="2" Content="Browse" Click="OnBrowseLibraryMetadataAsync" Margin="0,8,0,0"
+                    <Button Grid.Row="13" Grid.Column="2" Content="Browse" Click="OnBrowseLibraryMetadataAsync" Margin="0,8,0,0"
                             ToolTip.Tip="Choose a library-metadata.json file." />
-                    <TextBlock Grid.Row="10" Grid.Column="0" Text="Disc DAT" VerticalAlignment="Center" Margin="0,8,0,0"
+                    <TextBlock Grid.Row="14" Grid.Column="0" Text="Disc DAT" VerticalAlignment="Center" Margin="0,8,0,0"
                                ToolTip.Tip="Optional Redump/No-Intro DAT used by File > Verify Library Discs." />
-                    <TextBox x:Name="DiscDatPathBox" Grid.Row="10" Grid.Column="1" Margin="0,8,6,0"
+                    <TextBox x:Name="DiscDatPathBox" Grid.Row="14" Grid.Column="1" Margin="0,8,6,0"
                              ToolTip.Tip="Leave empty to be asked when verifying the library. The DAT is user-supplied and never written." />
-                    <Button Grid.Row="10" Grid.Column="2" Content="Browse" Click="OnBrowseDiscDatAsync" Margin="0,8,0,0"
+                    <Button Grid.Row="14" Grid.Column="2" Content="Browse" Click="OnBrowseDiscDatAsync" Margin="0,8,0,0"
                             ToolTip.Tip="Choose a Redump/No-Intro DAT file." />
-                    <TextBlock Grid.Row="11" Grid.Column="0" Text="Configuration profile" VerticalAlignment="Center" Margin="0,8,0,0"
+                    <TextBlock Grid.Row="15" Grid.Column="0" Text="Configuration profile" VerticalAlignment="Center" Margin="0,8,0,0"
                                ToolTip.Tip="Named data directories for isolated settings, NVRAM, cheats, and logs." />
-                    <ComboBox x:Name="ConfigProfileCombo" Grid.Row="11" Grid.Column="1" Margin="0,8,6,0"
+                    <ComboBox x:Name="ConfigProfileCombo" Grid.Row="15" Grid.Column="1" Margin="0,8,6,0"
                               ToolTip.Tip="Select a profile to make the next launch use it." />
-                    <Button x:Name="SetDefaultProfileButton" Grid.Row="11" Grid.Column="2" Content="Set default"
+                    <Button x:Name="SetDefaultProfileButton" Grid.Row="15" Grid.Column="2" Content="Set default"
                             Click="OnSetDefaultProfileClick" Margin="0,8,0,0"
                             ToolTip.Tip="Store default-profile.txt so the next launch uses the selected profile. The current process is unchanged." />
-                    <TextBlock Grid.Row="12" Grid.Column="0" Text="New profile" VerticalAlignment="Center" Margin="0,8,0,0"
+                    <TextBlock Grid.Row="16" Grid.Column="0" Text="New profile" VerticalAlignment="Center" Margin="0,8,0,0"
                                ToolTip.Tip="Create a named profile and copy the current settings into it." />
-                    <TextBox x:Name="NewProfileBox" Grid.Row="12" Grid.Column="1" Margin="0,8,6,0"
+                    <TextBox x:Name="NewProfileBox" Grid.Row="16" Grid.Column="1" Margin="0,8,6,0"
                              PlaceholderText="profile name"
                              ToolTip.Tip="Letters, digits, dash, underscore, and dot are kept; other characters become underscores." />
-                    <Button x:Name="CreateProfileButton" Grid.Row="12" Grid.Column="2" Content="Create"
+                    <Button x:Name="CreateProfileButton" Grid.Row="16" Grid.Column="2" Content="Create"
                             Click="OnCreateProfileClick" Margin="0,8,0,0"
                             ToolTip.Tip="Create the profile directory and copy the saved settings into it." />
-                    <TextBlock Grid.Row="13" Grid.Column="1" x:Name="ProfileStatusText" VerticalAlignment="Center"
+                    <TextBlock Grid.Row="17" Grid.Column="1" x:Name="ProfileStatusText" VerticalAlignment="Center"
                                Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,8,6,0"
                                ToolTip.Tip="Current profile and the next-launch selection." />
-                    <StackPanel Grid.Row="13" Grid.Column="2" Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
+                    <StackPanel Grid.Row="17" Grid.Column="2" Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
                         <Button Content="Open folder" Click="OnOpenProfilesFolderClick"
                                 ToolTip.Tip="Open the profiles directory." />
                         <Button Content="Import..." Click="OnImportProfileSettingsAsync"
@@ -486,6 +510,7 @@
                                 ToolTip.Tip="Save the current settings as a JSON file." />
                     </StackPanel>
                 </Grid>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
 

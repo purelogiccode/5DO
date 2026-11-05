@@ -3447,7 +3447,7 @@ public partial class MainWindow : Window, IDisposable
             : RecentFolders();
         var coverDirectory = _settings.CoverDirectory;
         StatusText.Text = folders.Count == 0
-            ? "No game folders configured. Use File > Add Game Folder."
+            ? "No game folders configured. Use File > Add Game Folder or Settings > Paths > Game folders."
             : "Scanning game folders...";
 
         var scanToken = scanCts.Token;
@@ -3686,6 +3686,7 @@ public partial class MainWindow : Window, IDisposable
     {
         var previousCoverDirectory = _settings.CoverDirectory;
         var previousLibraryMetadataPath = _settings.ResolveLibraryMetadataPath();
+        var previousLibraryFolders = _settings.LibraryFolders.ToArray();
         var previousBiosPath = _settings.BiosPath;
         var previousBios2Path = _settings.Bios2Path;
         var previousBiosFolder = _settings.BiosFolder;
@@ -3711,6 +3712,13 @@ public partial class MainWindow : Window, IDisposable
         }
 
         AppSettingsStore.Save(_settings);
+        if (!previousLibraryFolders.SequenceEqual(
+                _settings.LibraryFolders,
+                StringComparer.OrdinalIgnoreCase))
+        {
+            AsyncEvent.Run(RefreshLibraryAsync, "refreshing the game library");
+        }
+
         AppSettings effective = _settings.CreateEffectiveForGame(_gameId);
         if (_runner is not null)
         {

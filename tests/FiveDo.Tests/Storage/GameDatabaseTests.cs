@@ -174,7 +174,7 @@ public sealed class GameDatabaseTests
     [Theory]
     [InlineData(@"J:\Panasonic 3DO\Foes of Ali (USA).chd")]
     [InlineData("J:/Panasonic 3DO/Foes of Ali (USA).chd")]
-    [InlineData(@"Foes of Ali (USA).chd")]
+    [InlineData("Foes of Ali (USA).chd")]
     public void Describe_HandlesEitherPathSeparator(string path)
     {
         GameRecord record = GameDatabaseNameParser.Describe(

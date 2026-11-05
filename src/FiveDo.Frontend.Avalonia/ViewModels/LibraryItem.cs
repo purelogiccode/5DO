@@ -4,7 +4,10 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using FiveDo.Host;
 
 namespace FiveDo.Frontend.Avalonia.ViewModels;
@@ -15,18 +18,16 @@ namespace FiveDo.Frontend.Avalonia.ViewModels;
 /// </summary>
 public sealed class LibraryItem : IDisposable, INotifyPropertyChanged
 {
-    /// <summary>Creates the item and loads its cover art when one is available.</summary>
+    /// <summary>Creates the item. Cover art is decoded on first access in the background.</summary>
     /// <param name="entry">Scanner result for the disc.</param>
     public LibraryItem(GameLibraryEntry entry)
     {
         ArgumentNullException.ThrowIfNull(entry);
         Entry = entry;
-
-        if (!entry.Pending && !string.IsNullOrWhiteSpace(entry.CoverPath))
-        {
-            Cover = CoverCache.GetOrLoad(entry.CoverPath);
-        }
     }
+
+    private Bitmap? _cover;
+    private bool _coverRequested;
 
     /// <inheritdoc />
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -92,10 +93,48 @@ public sealed class LibraryItem : IDisposable, INotifyPropertyChanged
     public string DumpTip => Entry.DumpTip;
 
     /// <summary>Gets the decoded cover art, or <see langword="null"/> when none exists.</summary>
-    public Bitmap? Cover { get; }
+    /// <remarks>
+    /// The first read starts a bounded background decode and returns <see langword="null"/>.
+    /// The binding is notified when the bitmap is ready, so the library list is never blocked
+    /// while hundreds of covers are decoded.
+    /// </remarks>
+    public Bitmap? Cover
+    {
+        get
+        {
+            if (!_coverRequested)
+            {
+                _coverRequested = true;
+                if (!Entry.Pending && !string.IsNullOrWhiteSpace(Entry.CoverPath))
+                {
+                    _ = LoadCoverAsync(Entry.CoverPath);
+                }
+            }
+
+            return _cover;
+        }
+    }
 
     /// <summary>Gets a value indicating whether cover art was loaded.</summary>
-    public bool HasCover => Cover is not null;
+    public bool HasCover => _cover is not null;
+
+    private async Task LoadCoverAsync(string path)
+    {
+        Bitmap? cover = await CoverCache.LoadAsync(path).ConfigureAwait(false);
+        if (cover is null)
+        {
+            return;
+        }
+
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                _cover = cover;
+                OnPropertyChanged(nameof(Cover));
+                OnPropertyChanged(nameof(HasCover));
+            },
+            DispatcherPriority.Background);
+    }
 
     /// <summary>Gets the hover tooltip with full path and image details.</summary>
     public string Tip
@@ -165,47 +204,99 @@ public sealed class LibraryItem : IDisposable, INotifyPropertyChanged
 }
 
 /// <summary>
-/// Decodes cover art once per file. Duplicate discs in different library folders share
-/// the same bitmap instead of decoding a separate copy for each entry.
+/// Decodes cover art once per file on background threads. Duplicate discs in different
+/// library folders share the same bitmap instead of decoding a separate copy for each entry.
 /// </summary>
 internal static class CoverCache
 {
-    // Matches the largest card the grid library can show so big covers stay sharp.
-    private const int DecodeHeight = (int)AppSettings.MaxLibraryCardSize;
+    // Covers are decoded at a bounded height so a large library does not keep hundreds of
+    // near-full-resolution bitmaps alive. 256 px is still sharp for the default card size
+    // and keeps background decoding and memory well below the 384 px maximum card size.
+    private const int DecodeHeight = 256;
+    private static readonly Lock Gate = new();
     private static readonly Dictionary<string, Bitmap> Covers = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<string, Task<Bitmap?>> Pending = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly SemaphoreSlim DecodeGate =
+        new(Math.Clamp(Environment.ProcessorCount / 2, 1, 4));
+    private static int _generation;
 
-    /// <summary>Loads and caches a cover image.</summary>
+    /// <summary>Starts or joins a background cover decode.</summary>
     /// <param name="path">Cover image path.</param>
     /// <returns>The shared bitmap, or <see langword="null"/> when the image cannot be decoded.</returns>
-    internal static Bitmap? GetOrLoad(string path)
+    internal static Task<Bitmap?> LoadAsync(string path)
     {
-        if (Covers.TryGetValue(path, out Bitmap? cached))
+        lock (Gate)
         {
-            return cached;
-        }
+            if (Covers.TryGetValue(path, out Bitmap? cached))
+            {
+                return Task.FromResult<Bitmap?>(cached);
+            }
 
+            if (Pending.TryGetValue(path, out Task<Bitmap?>? pending))
+            {
+                return pending;
+            }
+
+            var generation = _generation;
+            Task<Bitmap?> task = Task.Run(() => LoadAsyncCore(path, generation));
+            Pending[path] = task;
+            return task;
+        }
+    }
+
+    private static async Task<Bitmap?> LoadAsyncCore(string path, int generation)
+    {
+        await DecodeGate.WaitAsync().ConfigureAwait(false);
         try
         {
-            using FileStream stream = File.OpenRead(path);
-            Bitmap bitmap = Bitmap.DecodeToHeight(stream, DecodeHeight);
-            Covers[path] = bitmap;
-            return bitmap;
+            Bitmap bitmap;
+            using (FileStream stream = File.OpenRead(path))
+            {
+                bitmap = Bitmap.DecodeToHeight(stream, DecodeHeight);
+            }
+
+            lock (Gate)
+            {
+                Pending.Remove(path);
+                if (generation != _generation)
+                {
+                    bitmap.Dispose();
+                    return null;
+                }
+
+                Covers[path] = bitmap;
+                return bitmap;
+            }
         }
         catch (Exception exception) when (exception is IOException or ArgumentException or UnauthorizedAccessException)
         {
             Serilog.Log.Debug(exception, "Cover art could not be decoded for {Path}.", path);
+            lock (Gate)
+            {
+                Pending.Remove(path);
+            }
+
             return null;
+        }
+        finally
+        {
+            DecodeGate.Release();
         }
     }
 
     /// <summary>Disposes every cached cover. Call when the library items are replaced.</summary>
     internal static void Clear()
     {
-        foreach (Bitmap cover in Covers.Values)
+        lock (Gate)
         {
-            cover.Dispose();
-        }
+            _generation++;
+            foreach (Bitmap cover in Covers.Values)
+            {
+                cover.Dispose();
+            }
 
-        Covers.Clear();
+            Covers.Clear();
+            Pending.Clear();
+        }
     }
 }

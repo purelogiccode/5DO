@@ -112,6 +112,44 @@ public sealed class GameLibraryScannerTests
     }
 
     [Fact]
+    public void FindCover_PrefersPngOverJpgInConfiguredDirectory()
+    {
+        using var discs = new TempDirectory();
+        using var covers = new TempDirectory();
+        var isoPath = Path.Combine(discs.Path, "game.iso");
+        WriteIso(isoPath, sectors: 1);
+        var pngPath = Path.Combine(covers.Path, "game.png");
+        File.WriteAllBytes(pngPath, [0x89, 0x50, 0x4E, 0x47]);
+        File.WriteAllBytes(Path.Combine(covers.Path, "game.jpg"), [0xFF, 0xD8, 0xFF, 0xD9]);
+
+        Assert.Equal(pngPath, GameLibraryScanner.FindCover(isoPath, covers.Path));
+    }
+
+    [Fact]
+    public void BeginScan_AppliesCoversToCachedEntries()
+    {
+        using var discs = new TempDirectory();
+        using var covers = new TempDirectory();
+        var isoPath = Path.Combine(discs.Path, "game.iso");
+        WriteIso(isoPath, sectors: 1);
+        var coverPath = Path.Combine(covers.Path, "game.png");
+        File.WriteAllBytes(coverPath, [0x89, 0x50, 0x4E, 0x47]);
+        var cachePath = Path.Combine(discs.Path, "library-cache.json");
+
+        GameLibraryEntry first = Assert.Single(
+            GameLibraryScanner.Scan([discs.Path], cachePath: cachePath, coverDirectory: covers.Path));
+        Assert.Equal(coverPath, first.CoverPath);
+
+        GameLibraryScanResult cached = GameLibraryScanner.BeginScan(
+            [discs.Path],
+            cachePath: cachePath,
+            coverDirectory: covers.Path);
+        GameLibraryEntry cachedEntry = Assert.Single(cached.Entries);
+        Assert.False(cachedEntry.Pending);
+        Assert.Equal(coverPath, cachedEntry.CoverPath);
+    }
+
+    [Fact]
     public void Scan_UsesCachedMetadataForUnchangedFiles()
     {
         using var directory = new TempDirectory();

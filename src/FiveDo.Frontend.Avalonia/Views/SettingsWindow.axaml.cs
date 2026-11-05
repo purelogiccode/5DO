@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using FiveDo.Audio;
@@ -209,6 +210,7 @@ public partial class SettingsWindow : Window
 
     private readonly string? _gameId;
     private readonly AppSettings _settings;
+    private readonly List<string> _libraryFolders = [];
     private bool _initializing = true;
 
     /// <summary>Creates the dialog with the persisted settings.</summary>
@@ -227,6 +229,7 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         _gameId = gameId;
         _settings = settings;
+        _libraryFolders.AddRange(settings.LibraryFolders);
 
         RendererCombo.ItemsSource = _rendererOptions;
         RendererCombo.SelectedItem = _rendererOptions.FirstOrDefault(option => option.Value == settings.Renderer)
@@ -343,6 +346,7 @@ public partial class SettingsWindow : Window
         CheatsDirectoryBox.Text = settings.CheatsDirectory;
         LibraryMetadataPathBox.Text = settings.LibraryMetadataPath;
         DiscDatPathBox.Text = settings.DiscDatPath;
+        RefreshLibraryFoldersList();
         PopulateConfigProfiles(PortablePaths.ProfileName);
         BiosFolderBox.Text = settings.BiosFolder;
         BiosPathBox.Text = settings.BiosPath;
@@ -1257,6 +1261,11 @@ public partial class SettingsWindow : Window
         settings.CheatsDirectory = CheatsDirectoryBox.Text?.Trim() ?? string.Empty;
         settings.LibraryMetadataPath = LibraryMetadataPathBox.Text?.Trim() ?? string.Empty;
         settings.DiscDatPath = DiscDatPathBox.Text?.Trim() ?? string.Empty;
+        settings.LibraryFolders.Clear();
+        foreach (var folder in _libraryFolders)
+        {
+            settings.LibraryFolders.Add(folder);
+        }
         settings.BiosFolder = BiosFolderBox.Text?.Trim() ?? string.Empty;
         settings.BiosPath = BiosPathBox.Text?.Trim() ?? string.Empty;
         settings.Bios2Path = Bios2PathBox.Text?.Trim() ?? string.Empty;
@@ -1289,6 +1298,15 @@ public partial class SettingsWindow : Window
 
     private void OnOk(object? sender, RoutedEventArgs e)
     {
+        if (!string.IsNullOrWhiteSpace(LibraryFolderBox.Text))
+        {
+            AddLibraryFoldersFromBox();
+            if (!string.IsNullOrWhiteSpace(LibraryFolderBox.Text))
+            {
+                return;
+            }
+        }
+
         try
         {
             ApplyTo(new AppSettings());
@@ -1306,6 +1324,114 @@ public partial class SettingsWindow : Window
     private void OnCancel(object? sender, RoutedEventArgs e)
     {
         Close(false);
+    }
+
+    private void RefreshLibraryFoldersList()
+    {
+        LibraryFoldersList.ItemsSource = null;
+        LibraryFoldersList.ItemsSource = _libraryFolders.ToArray();
+    }
+
+    private void OnAddLibraryFolderClick(object? sender, RoutedEventArgs e)
+    {
+        AddLibraryFoldersFromBox();
+    }
+
+    private void OnLibraryFolderKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter)
+        {
+            return;
+        }
+
+        AddLibraryFoldersFromBox();
+        e.Handled = true;
+    }
+
+    private void OnRemoveLibraryFolderClick(object? sender, RoutedEventArgs e)
+    {
+        if (LibraryFoldersList.SelectedItem is not string selected)
+        {
+            ValidationText.Text = "Select a game folder to remove.";
+            return;
+        }
+
+        _libraryFolders.RemoveAll(folder =>
+            string.Equals(folder, selected, StringComparison.OrdinalIgnoreCase));
+        RefreshLibraryFoldersList();
+        ValidationText.Text = "Game folder removed.";
+    }
+
+    private void OnBrowseLibraryFolderAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(BrowseLibraryFolderAsync, "selecting a game folder");
+    }
+
+    private async Task BrowseLibraryFolderAsync()
+    {
+        var start = _libraryFolders.Count > 0 ? _libraryFolders[0] : LibraryFolderBox.Text;
+        var path = await PickFolderAsync("Add a game folder", start).ConfigureAwait(true);
+        if (path is null)
+        {
+            return;
+        }
+
+        LibraryFolderBox.Text = path;
+        AddLibraryFoldersFromBox();
+    }
+
+    private void AddLibraryFoldersFromBox()
+    {
+        var text = LibraryFolderBox.Text;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            ValidationText.Text = "Enter a folder path before adding it.";
+            return;
+        }
+
+        var invalid = new List<string>();
+        var added = 0;
+        foreach (var candidate in text.Split(
+                     [';', '\r', '\n'],
+                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            try
+            {
+                var normalized = Path.TrimEndingDirectorySeparator(
+                    Path.GetFullPath(candidate.Trim().Trim('"')));
+                if (!Directory.Exists(normalized))
+                {
+                    invalid.Add(candidate);
+                    continue;
+                }
+
+                if (_libraryFolders.Exists(folder =>
+                        string.Equals(folder, normalized, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
+                _libraryFolders.Add(normalized);
+                added++;
+            }
+            catch (Exception exception) when (exception is ArgumentException or IOException or NotSupportedException)
+            {
+                Serilog.Log.Debug(exception, "Game folder {Folder} could not be resolved.", candidate);
+                invalid.Add(candidate);
+            }
+        }
+
+        if (added > 0)
+        {
+            LibraryFolderBox.Text = string.Empty;
+            RefreshLibraryFoldersList();
+            ValidationText.Text = added == 1 ? "Game folder added." : $"{added} game folders added.";
+        }
+
+        if (invalid.Count > 0)
+        {
+            ValidationText.Text = $"Folder not found: {string.Join(", ", invalid)}";
+        }
     }
 
     private void OnBrowseSaveDirectoryAsync(object? sender, RoutedEventArgs e)

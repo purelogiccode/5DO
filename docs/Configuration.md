@@ -627,7 +627,7 @@ written after the run when supplied.
 | `ScreenshotDirectory` | Empty means Pictures; screenshots are named `<game>-<yyyyMMdd-HHmmss>-f<frame>.png`. |
 | `CoverDirectory` | Optional shared folder for cover art named after the disc files. |
 | `CheatsDirectory` | Per-game cheat JSON folder; empty means `.../5DO/cheats`. |
-| `LibraryFolders` | Scanned recursively to depth 4 for `.iso`, `.bin`, `.cue`, `.chd`. |
+| `LibraryFolders` | Scanned recursively to depth 4 for `.iso`, `.bin`, `.cue`, `.chd`; edited in **Settings > Paths > Game folders** or **File > Add Game Folder...**. |
 | `LibraryMetadataPath` | Optional offline metadata overlay; empty means `.../5DO/library-metadata.json`. |
 | `DiscDatPath` | Optional Redump/No-Intro DAT for the library disc-health badge; empty asks on first verification. |
 
@@ -637,12 +637,15 @@ sibling image with the same base name and an extension of `.png`, `.jpg`, `.jpeg
 exists, `CoverDirectory` is searched for `<disc base name>.<ext>`; the folder is set
 under **Configuration > Settings > Paths > Game covers**. Unknown discs use the file
 name as the title and show `Unknown`; known discs use the embedded 4DO database
-metadata. Covers are decoded once per file at a bounded height and shared by path, so
-duplicate discs in different library folders reuse the same bitmap.
+metadata. Covers are decoded once per file at a bounded height on background threads and
+shared by path, so the game list appears before cover art finishes loading and duplicate
+discs in different library folders reuse the same bitmap.
 
-Discs are listed immediately from the folder enumeration. Game IDs and sector counts are
-then computed in the background with bounded parallelism, and the list updates as titles
-resolve. Results are cached in `<LocalApplicationData>/5DO/library-cache.json`; later
+Discs are listed immediately from the folder enumeration. Cover lookup enumerates each
+disc and cover directory once and indexes image base names, rather than probing every
+cover extension for every disc; this keeps cold scans fast with large libraries. Game IDs
+and sector counts are then computed in the background with bounded parallelism, and the
+list updates as titles resolve. Results are cached in `<LocalApplicationData>/5DO/library-cache.json`; later
 scans reuse the cache for files whose length and last-write time are unchanged. The
 status bar reports metadata-scan progress.
 
