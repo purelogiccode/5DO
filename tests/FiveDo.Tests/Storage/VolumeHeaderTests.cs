@@ -1,6 +1,8 @@
 using System;
 using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using CHDSharp.Encoder;
 using CHDSharp.Encoder.Models;
@@ -44,6 +46,86 @@ public sealed class VolumeHeaderTests
 
         var expected = Convert.ToHexStringLower(MD5.HashData([.. disc.Sectors[0], .. disc.Sectors[1]]));
         Assert.Equal(expected, GameId.Compute(disc));
+    }
+
+    [Fact]
+    public void GameId_AudioOnlyDiscUsesTheToc()
+    {
+        var first = new AudioOnlyDisc(
+        [
+            new FiveDo.Core.DiscTrack(1, FiveDo.Core.DiscTrackKind.Audio, 0, 100, 2352),
+            new FiveDo.Core.DiscTrack(2, FiveDo.Core.DiscTrackKind.Audio, 100, 200, 2352),
+        ]);
+        var second = new AudioOnlyDisc(
+        [
+            new FiveDo.Core.DiscTrack(1, FiveDo.Core.DiscTrackKind.Audio, 0, 100, 2352),
+            new FiveDo.Core.DiscTrack(2, FiveDo.Core.DiscTrackKind.Audio, 100, 201, 2352),
+        ]);
+
+        string firstId = GameId.Compute(first);
+        Assert.Equal(32, firstId.Length);
+        Assert.Equal(firstId, GameId.Compute(first), StringComparer.Ordinal);
+        Assert.False(string.Equals(firstId, GameId.Compute(second), StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void ChdAudioOnly_OpensAndListsTracks()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-chd-audio-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var binPath = Path.Combine(directory, "audio.bin");
+            var cuePath = Path.Combine(directory, "audio.cue");
+            var chdPath = Path.Combine(directory, "audio.chd");
+            File.WriteAllBytes(binPath, new byte[2352 * 8]);
+            File.WriteAllText(
+                cuePath,
+                $"FILE \"{Path.GetFileName(binPath)}\" BINARY\n  TRACK 01 AUDIO\n    INDEX 01 00:00:00\n");
+
+            ChdEncoder.EncodeCd(cuePath, chdPath);
+
+            using var disc = FiveDo.Storage.Chd.ChdDiscImage.Open(chdPath);
+            Assert.Equal(8, disc.TotalSectorCount);
+            Assert.All(disc.Tracks, track => Assert.True(track.IsAudio));
+            Assert.Equal(2352, disc.ReadTrackSector(0, new byte[2352]));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    private sealed class AudioOnlyDisc : FiveDo.Core.ITrackedDiscSource
+    {
+        internal AudioOnlyDisc(IReadOnlyList<FiveDo.Core.DiscTrack> tracks)
+        {
+            Tracks = tracks;
+            TotalSectorCount = tracks.Sum(track => track.SectorCount);
+        }
+
+        public IReadOnlyList<FiveDo.Core.DiscTrack> Tracks { get; }
+
+        public int TotalSectorCount { get; }
+
+        public int SectorCount => TotalSectorCount;
+
+        public int SectorSize => 2048;
+
+        public void ReadSector(int lba, Span<byte> destination)
+        {
+            throw new InvalidDataException("Audio-only disc has no data sectors.");
+        }
+
+        public int ReadTrackSector(int lba, Span<byte> destination)
+        {
+            destination[..2352].Clear();
+            return 2352;
+        }
+
+        public void Dispose()
+        {
+        }
     }
 
     [Fact]

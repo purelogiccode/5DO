@@ -52,7 +52,7 @@ status bar, and completes the Serilog catch-block coverage and launch-statistics
 wiring. The full suite is **1,597/1,597** passing. The bundle layout is unchanged:
 framework-dependent single-file apphosts, no bundled .NET runtime, no PDB/XML files.
 
-**Latest work (2026-11-05):** SYS-17 expanded the game database from 518 to 650
+**Latest work (2026-11-05):** SYS-17 expanded the game database from 518 to 653
 records and added `gamedb stats|scan|export|merge`, `docs/GameDatabase.md`, and a
 filename parser for Redump/GoodTools/No-Intro layouts. The schema now carries revision,
 disc number, BIOS/BIOS2, fix mode, input devices, NVRAM, and cheat fields; fix, BIOS, and
@@ -60,7 +60,7 @@ input values are consumed at runtime. `gamedb stats --folder "J:\Panasonic 3DO"`
 1,363 readable images, 650 unique IDs, and 100% metadata coverage of readable images
 (the three exceptions are audio-only `[CD-Audio]` CHDs). SYS-08 added the five-title
 0.5x-1x-2x-4x A/B in `Performance.md` §8.3 and kept the stock 12.5 MHz default; every
-non-stock clock changed guest behavior. The suite is **1,773 tests**.
+non-stock clock changed guest behavior. The suite is **1,775 tests**.
 
 **SYS-12 (2026-11-04):** Portfolio OS SWI HLE is available behind `--swi-hle`,
 Settings > Emulation, and per-game profiles. It handles Opera's 14 fixed-point math SWIs
@@ -80,7 +80,7 @@ DRAM, VDLP/SPORT/CEL use the live layout, and MADAM RED SYSBITS reports the capa
 the BIOS. A homebrew probe ROM uses 4 MB DRAM + 2 MB VRAM; retail titles remain on the
 stock 2 MB/1 MB default because Opera documents expanded memory as homebrew-only. The
 CPU-clock matrix (0.5x-4x) and `bench --cpu-clock`/`--memory` were also added; the suite
-is **1,773 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al, 1.1an, 1.1ao, and
+is **1,775 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al, 1.1an, 1.1ao, and
 [`Performance.md`](Performance.md) 8.1.
 
 **Latest work (2026-11-02):** the CLI and desktop shell check the public GitHub release

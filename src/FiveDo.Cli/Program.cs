@@ -1768,7 +1768,9 @@ internal static class Program
         ParsedOptions options = Parse(args);
         var path = options.Positional ?? throw new ArgumentException("info needs a disc path.", nameof(args));
         using IDiscSource disc = DiscImageFactory.Open(path);
-        VolumeHeader? header = VolumeHeader.TryRead(disc);
+        bool audioCd = disc is ITrackedDiscSource { Tracks.Count: > 0 } tracked
+                       && tracked.Tracks.All(static track => track.IsAudio);
+        VolumeHeader? header = audioCd ? null : VolumeHeader.TryRead(disc);
         var gameId = GameId.Compute(disc);
         GameRecord? record = GameDatabase.Default.FindByChecksum(gameId);
         FixMode fixMode = GameCompatibility.ForGameId(gameId).FixMode;
@@ -1794,7 +1796,9 @@ internal static class Program
             Bios2: record?.Bios2 ?? string.Empty,
             InputDevices: record?.InputDevices ?? string.Empty,
             Nvram: record?.Nvram ?? string.Empty,
-            Cheats: record?.Cheats ?? string.Empty);
+            Cheats: record?.Cheats ?? string.Empty,
+            AudioCd: audioCd,
+            TrackCount: disc is ITrackedDiscSource trackedDisc ? trackedDisc.Tracks.Count : 0);
 
         if (options.Json)
         {
@@ -1806,6 +1810,10 @@ internal static class Program
             Console.WriteLine($"sectors:     {result.SectorCount}");
             Console.WriteLine($"label:       {result.VolumeLabel}");
             Console.WriteLine($"blocks:      {result.VolumeBlockCount} x {result.BlockSize}");
+            if (result.AudioCd)
+            {
+                Console.WriteLine($"audio CD:    {result.TrackCount} track(s), no data track");
+            }
             Console.WriteLine($"game id:     {result.GameId}");
             Console.WriteLine($"fix mode:    0x{result.FixMode:x8}");
             Console.WriteLine($"game:        {(result.Known ? $"{result.Name} ({result.ReleaseYear}, {result.Publisher}, {result.Regions})" : "unknown")}");

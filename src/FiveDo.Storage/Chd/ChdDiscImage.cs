@@ -99,13 +99,8 @@ public sealed class ChdDiscImage : ITrackedDiscSource
             }
 
             ChdTrackInfo? dataTrack = tracks.FirstOrDefault(track => track.TrackType != ChdTrackType.Audio);
-            if (dataTrack is null)
-            {
-                throw new InvalidDataException($"CHD has no data track: '{path}'.");
-            }
-
-            int dataOffset = GetUserDataOffset(dataTrack);
-            if (dataTrack.Frames <= 0)
+            int dataOffset = dataTrack is null ? 0 : GetUserDataOffset(dataTrack);
+            if (dataTrack is not null && dataTrack.Frames <= 0)
             {
                 throw new InvalidDataException($"CHD data track has no sectors: '{path}'.");
             }

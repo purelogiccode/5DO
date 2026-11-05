@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using FiveDo.Core;
 
 namespace FiveDo.Storage;
@@ -19,6 +21,21 @@ public static class GameId
     public static string Compute(IDiscSource disc)
     {
         ArgumentNullException.ThrowIfNull(disc);
+
+        // Audio-only discs have no data sectors to hash. Use a stable TOC-derived ID
+        // so the disc still gets save-state, cheat, and NVRAM keys.
+        if (disc is ITrackedDiscSource { Tracks.Count: > 0 } tracked
+            && tracked.Tracks.All(static track => track.IsAudio))
+        {
+            var toc = new StringBuilder("audio-cd");
+            foreach (DiscTrack track in tracked.Tracks)
+            {
+                toc.Append('|').Append(track.Number).Append(':').Append(track.SectorCount);
+            }
+
+            return Convert.ToHexStringLower(MD5.HashData(Encoding.UTF8.GetBytes(toc.ToString())));
+        }
+
         if (disc.SectorCount < 2)
         {
             throw new DiscImageException("A 3DO disc needs at least two sectors for a game ID.");

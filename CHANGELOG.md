@@ -28,13 +28,17 @@ release.
   14 math SWIs (`0x50000`-`0x50012`) on the host. `--swi-comments` reports which SWIs a
   title calls. It is an opt-in performance mode; default-off hashes are unchanged, and
   titles that poll cycle-sensitive hardware around matrix calls can change behavior.
-- SYS-17 game database expansion: the embedded database grew from 518 to 650 records.
+- SYS-17 game database expansion: the embedded database grew from 518 to 653 records.
   New `revision`, `discNumber`/`discTotal`, `bios`/`bios2`, `fixMode`, `inputDevices`,
   `nvram`, and `cheats` fields are parsed and written; fix, BIOS, and input values are
   consumed by the runtime. `5do gamedb stats|scan|export|merge` provide a repeatable
   import/export workflow, and `docs/GameDatabase.md` documents the schema and
-  contribution process. On the local 1,366-image collection, 1,363 images are readable
-  and all 1,363 have metadata; the three exceptions are audio-only `[CD-Audio]` CHDs.
+  contribution process. On the local 1,366-image collection, all 1,366 images now have
+  metadata, including the three audio-only `[CD-Audio]` discs.
+- Audio-only CHD support: `ChdDiscImage` now opens a CHD with no data track, `GameId`
+  derives a stable TOC-based ID for it, and `info` reports `audioCd`/`trackCount`. This
+  catalogues the local `[CD-Audio]` bonus discs; in-emulator CD-DA playback still needs a
+  data-track boot path (SYS-01).
 - SYS-08 per-title CPU clock evidence: `Performance.md` §8.3 records a five-title
   0.5x/1x/2x/4x A/B. Every non-stock clock changed the frame hash, so the stock 12.5 MHz
   default remains the only supported compatibility clock and no per-title clock override

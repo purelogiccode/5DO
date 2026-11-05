@@ -2437,6 +2437,14 @@
     <regions>CA-US</regions>
   </game>
   <game>
+    <id>74041755</id>
+    <checkSum>740417551E8B6C1156726078CD3B0D9D</checkSum>
+    <name>D's Diner - The Director's Cut</name>
+    <releaseYear>1996</releaseYear>
+    <publisher>Warp</publisher>
+    <regions>JP</regions>
+  </game>
+  <game>
     <id>74334385</id>
     <checkSum>7433438527108C3E7794B93639A31D4D</checkSum>
     <name>Live! 3DO Magazine CD-ROM #05</name>
@@ -4364,6 +4372,14 @@
     <regions>JP</regions>
   </game>
   <game>
+    <id>D9C56461</id>
+    <checkSum>D9C56461A14B4F483C1E19C886F95770</checkSum>
+    <name>Oyaji Hunter Mahjong</name>
+    <releaseYear>1995</releaseYear>
+    <publisher>Warp</publisher>
+    <regions>JP</regions>
+  </game>
+  <game>
     <id>D9C961A3</id>
     <checkSum>D9C961A3986B1D5025CAB9FCFBAD21F1</checkSum>
     <name>Puppet Tale</name>
@@ -5158,6 +5174,14 @@
     <releaseYear>1995</releaseYear>
     <publisher>Transpegasus</publisher>
     <regions>JP</regions>
+  </game>
+  <game>
+    <id>FFB0443A</id>
+    <checkSum>FFB0443A5F99F2658D5993852852D1CD</checkSum>
+    <name>A&amp;M Music Sampler</name>
+    <releaseYear>1994</releaseYear>
+    <publisher>A&amp;M</publisher>
+    <regions>US</regions>
   </game>
   <game>
     <id>FFC95FB4</id>

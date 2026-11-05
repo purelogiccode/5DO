@@ -23,4 +23,6 @@ internal sealed record CliInfoResult(
     string Bios2 = "",
     string InputDevices = "",
     string Nvram = "",
-    string Cheats = "");
+    string Cheats = "",
+    bool AudioCd = false,
+    int TrackCount = 0);

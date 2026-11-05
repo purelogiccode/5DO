@@ -2211,7 +2211,7 @@ a legacy version-2 memory section.
 - Local coverage: `gamedb stats --folder "J:\Panasonic 3DO"` reports 1,366 images found,
   1,363 readable, 650 unique IDs, 1,363 matched, 100% coverage of readable images. The
   three unreadable images are audio-only `[CD-Audio]` CHDs with no data track.
-- Embedded database: 518 original 4DO records + 132 local records = 650. Known BIOS
+- Embedded database: 518 original 4DO records + 135 local records = 653. Known BIOS
   requirements (Powers Kingdom Europe, WorldCup Super Stadium Japan + Kanji), fix masks
   (Crash 'n Burn, Street Fighter II, DinoPark Tycoon, Microcosm), and lightgun/Orbatak
   input defaults are stored as data.
@@ -2224,3 +2224,19 @@ a legacy version-2 memory section.
   271.7 s at 4x for the same 3,000 frames.
 - The stock 12.5 MHz default, the synthetic clock-invariant benchmark, and the decision
   not to seed per-title clock overrides are recorded in `Performance.md` §8.3.
+
+
+#### 1.1aq SYS-01 audio-only CHD increment (2026-11-05)
+
+- `ChdDiscImage` now opens a CHD whose track table has no data track. `ReadTrackSector`
+  returns the native 2352-byte audio sectors; `ReadSector` still rejects data reads from
+  an audio track.
+- `GameId.Compute` gives an audio-only disc a stable MD5 derived from its track table of
+  contents (`audio-cd|track:sectors|...`) instead of failing on the missing data sectors.
+  The same TOC yields the same ID; a changed track length yields a different ID.
+- `info` reports `audioCd = true` and `trackCount` and skips the volume-header read. The
+  three local `[CD-Audio]` discs (`A&M Music Sampler`, `D's Diner - The Director's Cut`,
+  `Oyaji Hunter Mahjong`) are now catalogued in the game database.
+- The BIOS still requires a data track to boot, so the audio-only discs are not yet
+  playable in-emulator; `PLAY_AUDIO_TRACK` and the CD-DA mix remain covered by the
+  synthetic `CdromMultiTrackTests`/`CdAudioMixTests`.
