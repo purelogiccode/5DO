@@ -80,7 +80,7 @@ DRAM, VDLP/SPORT/CEL use the live layout, and MADAM RED SYSBITS reports the capa
 the BIOS. A homebrew probe ROM uses 4 MB DRAM + 2 MB VRAM; retail titles remain on the
 stock 2 MB/1 MB default because Opera documents expanded memory as homebrew-only. The
 CPU-clock matrix (0.5x-4x) and `bench --cpu-clock`/`--memory` were also added; the suite
-is **1,779 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al, 1.1an, 1.1ao, and
+is **1,779 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al, 1.1an, 1.1ao, 1.1aq, 1.1ar, 1.1as, and
 [`Performance.md`](Performance.md) 8.1.
 
 **Latest work (2026-11-02):** the CLI and desktop shell check the public GitHub release
