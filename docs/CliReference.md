@@ -55,6 +55,10 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `run [disc]` | Boot a BIOS/disc or load a state, run frames, capture output. |
 | `trace [disc]` | Run with a diagnostic instruction ring and stop conditions. |
 | `info <disc>` | Disc geometry, volume header, game ID, database metadata, fixes. |
+| `gamedb stats [folder]` | Embedded game-database count and, with a folder, image/unique/match coverage. |
+| `gamedb scan <folder> --out <file>` | Derive XML records from disc IDs and filenames. |
+| `gamedb export --out <file>` | Export the embedded database. |
+| `gamedb merge <file> --out <file>` | Merge a fragment into the embedded database for review. |
 | `disc dump <disc>` | Write raw 2048-byte sectors. |
 | `disc tracks <disc>` | List the CUE/CHD track table (data and audio), or one data track for ISO/BIN. |
 | `disc playlist <m3u>` | List multi-disc playlist entries and the selected disc. |
@@ -557,6 +561,27 @@ and updates the same `library-health.json` cache the desktop uses for its known-
 badges. `--cache` redirects the cache for CI or a portable run. `--dat` matches each disc
 against a Redump/No-Intro DAT; when omitted, the configured `DiscDatPath` is used. The
 command exits 1 when any disc has a read error.
+
+### `gamedb` commands
+
+```powershell
+5do gamedb stats --folder "D:\3DO" --json
+5do gamedb scan "D:\3DO" --out local-gamedb.xml
+5do gamedb export --out GameDatabase.xml
+5do gamedb merge local-gamedb.xml --out src/FiveDo.Storage/Data/GameDatabase.xml
+```
+
+`stats` reports the embedded record count and image/unique/match coverage. `scan`
+computes the 4DO ID for every `.chd`, `.cue`, or `.iso` below the folder, derives metadata
+from the filename, and writes a fragment for records that are not already present.
+`--include-known` writes every scanned record, and `--max-parallel N` caps the readers.
+`export` writes the complete embedded database. `merge` combines a fragment with the
+embedded database; existing records win unless `--overwrite` is supplied. The merged file
+is written to `--out` so it can be reviewed before replacing the embedded XML. See
+[`GameDatabase.md`](GameDatabase.md) for the schema and contribution workflow.
+
+`info --json` includes the same optional metadata (`revision`, `discNumber`, `discTotal`,
+`bios`, `bios2`, `inputDevices`, `nvram`, `cheats`) when the database provides it.
 
 ---
 

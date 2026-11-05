@@ -8,6 +8,7 @@ using FiveDo.Core;
 using FiveDo.Host.Osd;
 using FiveDo.Host.Rewind;
 using FiveDo.Input;
+using FiveDo.Storage;
 using FiveDo.Video;
 
 namespace FiveDo.Host;
@@ -661,7 +662,9 @@ public sealed class AppSettings
             return false;
         }
 
-        IReadOnlyList<string>? devices = GameControlDefaults.TryGetInputDevices(title);
+        IReadOnlyList<string>? devices = GameControlDefaults.TryGetInputDevices(
+            title,
+            GameDatabase.Default.FindById(gameId)?.InputDevices);
         if (devices is null)
         {
             return false;

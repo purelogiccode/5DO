@@ -18,6 +18,12 @@ public sealed class GameDatabaseTests
         Assert.Equal("Out of this World", record.Name);
         Assert.Equal("00256A21", record.Id);
         Assert.Equal(record, database.FindById("00256a21"));
+
+        Assert.Equal(0x00000001u, database.FindById("F3AF1B13")?.FixMode);
+        Assert.Equal("1=lightgun", database.FindById("E8FBE61C")?.InputDevices);
+        Assert.Equal("a48e6746bd7edec0f40cff078f0bb19f", database.FindById("14F7638D")?.Bios);
+        Assert.Equal("20706f726c22d79d3c385e215d7428e2", database.FindById("56927592")?.Bios);
+        Assert.Equal("c23fb5d5e6bb1c240d02cf968972be37", database.FindById("56927592")?.Bios2);
     }
 
     [Fact]
@@ -39,6 +45,15 @@ public sealed class GameDatabaseTests
                 <releaseYear>1994</releaseYear>
                 <publisher>Publisher</publisher>
                 <regions>US</regions>
+                <revision>Rev 1</revision>
+                <discNumber>2</discNumber>
+                <discTotal>3</discTotal>
+                <bios>abc123</bios>
+                <bios2>def456</bios2>
+                <fixMode>0x00000001</fixMode>
+                <inputDevices>1=lightgun</inputDevices>
+                <nvram>per-game</nvram>
+                <cheats>starter-pack</cheats>
               </game>
             </database>
             """;
@@ -47,8 +62,115 @@ public sealed class GameDatabaseTests
         var database = GameDatabase.Load(stream);
 
         Assert.Equal(1, database.Count);
-        Assert.Equal("Test Game", database.FindByChecksum("ABC123")?.Name);
+        GameRecord? record = database.FindByChecksum("ABC123");
+        Assert.Equal("Test Game", record?.Name);
+        Assert.Equal("Rev 1", record?.Revision);
+        Assert.Equal(2, record?.DiscNumber);
+        Assert.Equal(3, record?.DiscTotal);
+        Assert.Equal("abc123", record?.Bios);
+        Assert.Equal("def456", record?.Bios2);
+        Assert.Equal(1u, record?.FixMode);
+        Assert.Equal("1=lightgun", record?.InputDevices);
+        Assert.Equal("per-game", record?.Nvram);
+        Assert.Equal("starter-pack", record?.Cheats);
     }
+
+    [Fact]
+    public void Save_RoundTripsOptionalFields()
+    {
+        var record = new GameRecord(
+            "AABBCCDD",
+            "AABBCCDD000000000000000000000000",
+            "Round Trip",
+            "1995",
+            "Publisher",
+            "US-EU")
+        {
+            Revision = "Beta",
+            DiscNumber = 1,
+            DiscTotal = 2,
+            Bios = "0123456789abcdef0123456789abcdef",
+            Bios2 = "fedcba9876543210fedcba9876543210",
+            FixMode = 0x00000010,
+            InputDevices = "1=arcade-lightgun,2=mouse",
+            Nvram = "per-game",
+            Cheats = "test",
+        };
+        GameDatabase database = GameDatabase.FromRecords([record]);
+        using var stream = new MemoryStream();
+
+        database.Save(stream);
+        stream.Position = 0;
+        GameDatabase loaded = GameDatabase.Load(stream);
+
+        Assert.Equal(record, Assert.Single(loaded.Records));
+    }
+
+    [Fact]
+    public void Merge_PreservesCuratedRecordsUnlessOverwriteIsSet()
+    {
+        var curated = new GameRecord("AABBCCDD", "AABBCCDD000000000000000000000000", "Curated", "1994", "A", "US");
+        var incoming = new GameRecord("AABBCCDD", "AABBCCDD000000000000000000000000", "Incoming", "1995", "B", "EU");
+        GameDatabase database = GameDatabase.FromRecords([curated]);
+
+        GameDatabase merged = database.Merge([incoming]);
+        Assert.Equal("Curated", Assert.Single(merged.Records).Name);
+
+        GameDatabase overwritten = database.Merge([incoming], overwrite: true);
+        Assert.Equal("Incoming", Assert.Single(overwritten.Records).Name);
+    }
+
+    [Theory]
+    [InlineData(
+        "3DO Game Guru (1995)(3DO Company)(EU-US)[!].chd",
+        "3DO Game Guru",
+        "1995",
+        "3DO Company",
+        "EU-US")]
+    [InlineData(
+        "Daedalus Encounter, The (1995)(Panasonic)(US)(Disc 3 of 4)[!].chd",
+        "Daedalus Encounter, The",
+        "1995",
+        "Panasonic",
+        "US")]
+    [InlineData(
+        "Crash 'n Burn (USA, Korea).chd",
+        "Crash 'n Burn",
+        "",
+        "",
+        "US-KR")]
+    public void Describe_ParsesGoodToolsAndRedumpNames(
+        string fileName,
+        string expectedName,
+        string expectedYear,
+        string expectedPublisher,
+        string expectedRegions)
+    {
+        GameRecord record = GameDatabaseNameParser.Describe(
+            Path.Combine("discs", fileName),
+            "AABBCCDD000000000000000000000000");
+
+        Assert.Equal(expectedName, record.Name);
+        Assert.Equal(expectedYear, record.ReleaseYear);
+        Assert.Equal(expectedPublisher, record.Publisher);
+        Assert.Equal(expectedRegions, record.Regions);
+    }
+
+    [Fact]
+    public void Describe_ParsesDatesDiscNumbersAndReleaseTypes()
+    {
+        GameRecord record = GameDatabaseNameParser.Describe(
+            @"J:\Panasonic 3DO\Foes of Ali (USA) (Beta) (1995-11-07) (Disc 2 of 3).chd",
+            "AABBCCDD000000000000000000000000");
+
+        Assert.Equal("Foes of Ali", record.Name);
+        Assert.Equal("1995", record.ReleaseYear);
+        Assert.Equal("US", record.Regions);
+        Assert.Equal("Beta", record.Revision);
+        Assert.Equal(2, record.DiscNumber);
+        Assert.Equal(3, record.DiscTotal);
+    }
+
 }
 
 public sealed class InputProfileTests

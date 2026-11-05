@@ -37,6 +37,14 @@ public static class GameCompatibility
             normalized = normalized[..8];
         }
 
+        // The game database can carry a curated fix mask; it wins over the built-in
+        // fallback table so adding a title needs data, not a code change.
+        GameRecord? record = GameDatabase.Default.FindById(normalized);
+        if (record?.FixMode is { } databaseFixMode)
+        {
+            return new GameQuirks((FixMode)databaseFixMode);
+        }
+
         return normalized switch
         {
             // Crash 'n Burn (JP/US): LDM value/PC timing.

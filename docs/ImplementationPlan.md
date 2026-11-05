@@ -5,7 +5,7 @@
 **Current release:** `1.2.1`
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master`<br>
-**Status:** **1,759 tests pass** (last recorded); `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,773 tests pass** (last recorded); `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Goal:** implement **every Opera core feature**, match or exceed Opera's accuracy, and ship the best standalone 3DO emulator on Windows, Linux, and macOS.
 
 > **This is the single source of truth.** It replaces the former 8,000-line dashboard, milestone log, feature spec, parity audit, and session handoff. Historical evidence stays in the linked docs; this file is the canonical backlog.
@@ -42,9 +42,9 @@
 | Renderer | Two-stage OpenGL/GLES (default), optional Vulkan (Windows surface), optional Direct3D 11 (Windows), 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR, per-edge overscan, void border, screenshot gallery | True 640x480/480i CEL rendering, supersampling, GPU CEL, shader presets, NTSC/HDR, recording, overlays/bezels, Linux/macOS Vulkan surfaces, 480i deinterlacing |
 | Audio | Exact 44.1 kHz DSP clock, OpenAL Soft output, WAV capture, `audio analyze`, CD-DA mixing/volume/mute | Resampler quality/exclusive mode/sync offset, mixer/spectrum, DSP debugger, audio golden corpus |
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing, M3U multi-disc playlist, live swap, guest inject, Opera file system, prefetch, DAT health | Full CD command/timing parity, subcode, read-ahead, known-title CD-DA evidence, real in-game multi-disc swap, ODE prompts, physical drive, image conversion |
-| Compatibility | 594 discs: **594 load**, **593 render**, 1 known boot failure (Crash 'n Burn Japan), 0 not loadable | 594/594 render; visual/in-game review; per-game auto-profiles; game database expansion |
+| Compatibility | 594 discs: **594 load**, **593 render**, 1 known boot failure (Crash 'n Burn Japan), 0 not loadable | 594/594 render; visual/in-game review; per-game auto-profiles |
 | Differential harness | FiveDO.DiffHarness, checkpoints, audio/state hashes, smoke + five-title showcase, 594-title manifest generator | Full 594-title run, PC-delta triage, CD/state transcripts, nightly dashboard |
-| Tests | **1,759** passing; fuzz harness for six parsers; build/format/inspectcode clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
+| Tests | **1,773** passing; fuzz harness for six parsers; build/format/inspectcode clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K Tier A measured; zero-allocation synthetic path | Tier B 1080p60, GLES 3.1/ANGLE, arm64 tuning, threaded DSP, managed JIT, zero allocations on all real paths |
 | Platforms | Six bundles: Windows/Linux/macOS × x64/arm64, framework-dependent single-file apphosts; Windows x64 validated; Linux x64 tests/smoke pass (GPU preview under llvmpipe); macOS and arm64 cross-published but not hardware-validated | macOS runtime validation, arm64 hardware validation, Linux/macOS GPU presentation, macOS gamepad, Flatpak/AppImage, installers/signing |
 | Release | **v1.2.1** published with six versioned bundles and `SHA256SUMS.txt`; .NET 10 runtime required (not bundled); legal/attribution sign-off recorded | Signing, notarization, auto-update, reproducible builds, SBOM |
@@ -100,10 +100,11 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
   **Remaining:** profile validation across the full collection; decide when the Accuracy profile can become the default. The 2026-11-04 increment completed the remaining CLI surfaces: `bench --profile` reports the derived profile and timing modes, `selftest` validates determinism and state round-trip for every named profile, and the differential harness accepts `--profile` for a full-collection A/B. A 40-title, 300-frame A/B reports 17/40 matches for both `compatible` and `accuracy` with identical per-title statuses; the 594-title A/B remains. The Accuracy profile stays opt-in until that full A/B report shows no regression against the Compatible baseline.
   **Done when:** every profile round-trips through CLI/Settings/state and the Accuracy profile can be enabled by default after evidence is green.
 
-- [ ] **SYS-08 — CPU overclock/underclock validation**
-  **Status:** Partial · **Priority:** P0 · **Effort:** S · **Tracks:** SYS-08
-  **Remaining:** per-title behavior notes and a documented compatibility decision for non-stock clocks. The 2026-11-04 increment added `bench --cpu-clock`/`--memory`, the 0.5x-4x matrix with identical synthetic frame hashes at every clock (Performance.md §8.1), and documented that the stock 12.5 MHz default is unchanged.
+- [x] **SYS-08 — CPU overclock/underclock validation**
+  **Status:** Complete · **Priority:** P0 · **Effort:** S · **Tracks:** SYS-08
+  **Remaining:** none. Non-stock clocks remain experimental and are not seeded into profiles.
   **Done when:** the clock matrix is documented and the stock 12.5 MHz default is unchanged.
+  **Evidence:** `Performance.md` §8.1 records the 0.5x-4x synthetic matrix; §8.3 adds the 2026-11-05 five-title A/B (Road Rash, Lemmings, Alone in the Dark, Ballz, AutoBahn Tokio). Every non-stock clock changed the frame hash, and AutoBahn Tokio slowed from 9.1 s at 1x to 84.4 s at 2x and 271.7 s at 4x, confirming that non-stock clocks are a compatibility variable rather than a speed switch. The stock 12.5 MHz default is unchanged.
 
 - [ ] **CORE-04 — CD-ROM command and timing parity**
   **Status:** Partial · **Priority:** P0 · **Effort:** XL · **Tracks:** CORE-04
@@ -164,10 +165,11 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
   **Remaining:** six-player test ROM/title; hardware multi-tap trace. The 2026-11-04 increment added eight PBUS ports, the Opera chain for ports 7-8, a 256-byte MADAM queue, and an eight-player packet test through `FiveDoMachine` (`EightPlayerPacket_ReachesTheMadamPbusQueue`).
   **Done when:** six pads and multi-tap are verified on hardware or a test ROM.
 
-- [ ] **SYS-17 — Game database expansion and community DB**
-  **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** SYS-17
-  **Remaining:** expand the database to cover the local collection; region/revision/BIOS/fix/input/NVRAM/cheat fields; community DB workflow; import/export; tests.
+- [x] **SYS-17 — Game database expansion and community DB**
+  **Status:** Complete · **Priority:** P0 · **Effort:** M · **Tracks:** SYS-17
+  **Remaining:** none for the local-collection gate. NVRAM/cheat seeding is SYS-18 follow-up work.
   **Done when:** at least 95% of local images have metadata and the DB has a repeatable contribution path.
+  **Evidence:** the embedded database grew from 518 to 650 records. `gamedb stats --folder "J:\Panasonic 3DO"` reports 1,363 readable images, 650 unique IDs, 1,363 matched images, and 100% coverage of readable images; the three unreadable images are audio-only `[CD-Audio]` CHDs with no data track. The schema now carries `revision`, `discNumber`/`discTotal`, `bios`/`bios2`, `fixMode`, `inputDevices`, `nvram`, and `cheats`; `fixMode` drives `GameCompatibility`, `bios`/`bios2` drive `BiosLibrary`, and `inputDevices` drives `GameControlDefaults`. `gamedb scan|export|merge` provide the repeatable import/export workflow, and 10 new storage/host/CLI tests cover the parser, merge/save roundtrip, device spec, and commands. See `docs/GameDatabase.md`.
 
 - [ ] **SYS-18 — Auto per-game profile completion**
   **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** SYS-18
@@ -516,6 +518,8 @@ Append new entries here; do not delete history. Each entry is a completed canoni
 
 - **2026-11-04 - SYS-07 memory capacity options.** Added the eight Opera DRAM/VRAM layouts (`21`, `22`, `41`, `42`, `81`, `82`, `E2`, `F1`) through `MemoryConfiguration`/`MemoryLayout`, dynamic RAM/VRAM decode, VRAM base and masks for VDLP/SPORT/CEL, capacity-derived MADAM RED SYSBITS, `--memory`/Settings/profile/state plumbing, memory state section v3, Options section v8, a homebrew probe ROM that uses 4 MB DRAM + 2 MB VRAM, and 34 memory tests. Stock hashes are unchanged; expanded memory is documented as homebrew-only.
 - **2026-11-04 - SYS-08 clock matrix increment.** `bench --cpu-clock`/`--memory` measure the supported clock range; the 0.5x-4x matrix and unchanged stock default are recorded in `Performance.md` §8.1.
+- **2026-11-05 - SYS-17 game database expansion.** Grew `GameDatabase.xml` from 518 to 650 records, added `revision`, `discNumber`/`discTotal`, `bios`/`bios2`, `fixMode`, `inputDevices`, `nvram`, and `cheats`, and wired `fixMode` into `GameCompatibility`, BIOS fields into `BiosLibrary`, and input fields into `GameControlDefaults`. Added `gamedb stats|scan|export|merge`, the filename parser, serial retry for transient CHD read failures, and `docs/GameDatabase.md`. `gamedb stats --folder "J:\Panasonic 3DO"` reports 1,363 readable images, 650 unique IDs, and 100% metadata coverage of readable images; the three unreadable images are audio-only `[CD-Audio]` CHDs.
+- **2026-11-05 - SYS-08 CPU clock validation.** Recorded the five-title 0.5x/1x/2x/4x A/B in `Performance.md` §8.3. Every non-stock clock changed the frame hash, and AutoBahn Tokio's wall time rose from 9.1 s at 1x to 84.4 s at 2x and 271.7 s at 4x. The stock 12.5 MHz default and the no-per-title-clock decision are unchanged.
 - **2026-11-04 - SYS-12 Portfolio OS SWI HLE.** Ported Opera's 14 fixed-point math SWIs (`0x50000`-`0x50012`, with the object/Dot4 cases left to the guest), added `--swi-hle`/Settings/profile/state v9 plumbing, `--swi-comments` histograms, 33 CPU/machine tests that match `opera_fixedpoint_math.c`, and a real-BIOS synthetic 4x4 benchmark. Default-off hashes are unchanged; HLE is an opt-in performance mode and intentionally skips the guest handler's cycles and register clobbers, so some titles (AutoBahn Tokio, Ballz) change frame hashes.
 - **2026-11-04 - FND-01 machine option registry.** Added `MachineOptionRegistry` (13 validated options with CLI/Settings/profile/state mappings), typed `MachineOptionValidationException`/`UnknownMachineOptionException`, Opera DIPIR and soft-reset controls, `--opera-dipir`/`--opera-soft-reset`/`--cpu-backend`, `settings options` generated documentation, `docs/MachineOptions.md`, save-state Options v7 coverage for every option, mismatch warnings, and CLI/Settings/profile parity tests.
 - **2026-11-04 - Plan rewrite.** Consolidated the former dashboard, parts I-IV, feature spec, parity audit, and handoff into this single backlog; retired duplicate `BAK-*`/`MOON-*` trackers.

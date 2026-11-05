@@ -247,6 +247,46 @@ public sealed class BiosLibrary
             .FirstOrDefault();
     }
 
+    /// <summary>Finds a primary image by MD5 or file name, preferring the highest-ranked duplicate.</summary>
+    /// <param name="value">MD5 or basename.</param>
+    /// <returns>The matching profile, or <see langword="null"/>.</returns>
+    public BiosProfile? FindPrimaryByMd5OrName(string value)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(value);
+        BiosProfile? byMd5 = FindPrimary(value);
+        if (byMd5 is not null)
+        {
+            return byMd5;
+        }
+
+        var fileName = Path.GetFileName(value);
+        return Primaries
+            .Where(profile => string.Equals(Path.GetFileName(profile.Path), fileName, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(profile => profile.Preference)
+            .ThenBy(profile => profile.Path, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault();
+    }
+
+    /// <summary>Finds a secondary image by MD5 or file name, preferring the highest-ranked duplicate.</summary>
+    /// <param name="value">MD5 or basename.</param>
+    /// <returns>The matching profile, or <see langword="null"/>.</returns>
+    public BiosProfile? FindSecondaryByMd5OrName(string value)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(value);
+        BiosProfile? byMd5 = FindSecondary(value);
+        if (byMd5 is not null)
+        {
+            return byMd5;
+        }
+
+        var fileName = Path.GetFileName(value);
+        return Secondaries
+            .Where(profile => string.Equals(Path.GetFileName(profile.Path), fileName, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(profile => profile.Preference)
+            .ThenBy(profile => profile.Path, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault();
+    }
+
     /// <summary>Selects a primary BIOS and optional secondary ROM for a game.</summary>
     /// <param name="game">Game metadata, or <see langword="null"/> for an unknown disc.</param>
     /// <param name="options">Optional selection overrides.</param>
@@ -272,6 +312,21 @@ public sealed class BiosLibrary
                     overrideProfile,
                     overrideSecondary,
                     $"Using the per-game BIOS override {overrideProfile.Name} ({overrideProfile.Md5[..8]}).");
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(game?.Bios))
+        {
+            BiosProfile? databaseProfile = FindPrimaryByMd5OrName(game.Bios);
+            if (databaseProfile is not null)
+            {
+                BiosProfile? databaseSecondary = string.IsNullOrWhiteSpace(game.Bios2)
+                    ? ChooseSecondary(databaseProfile, desired, options)
+                    : FindSecondaryByMd5OrName(game.Bios2) ?? ChooseSecondary(databaseProfile, desired, options);
+                return new BiosSelection(
+                    databaseProfile,
+                    databaseSecondary,
+                    $"Using the game database BIOS requirement for {game.Name}: {databaseProfile.Name}. {databaseProfile.Notes}");
             }
         }
 

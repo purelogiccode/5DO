@@ -208,6 +208,16 @@ The 4DO game database also maps:
 
 The game database is ported with attribution. Unknown game IDs get the first 8 hex characters of the MD5, with collision avoidance, matching 4DO. `GameCompatibility` applies the mapping automatically when the CLI or desktop shell opens a disc; `--fix-mode`/`--no-game-fixes` and the per-game override in Settings provide explicit control. The 3,000-frame Alone boot hash is unchanged with `FIX_BIT_TIMING_6` applied.
 
+The database grew from 518 to 650 records in SYS-17. Record-level `fixMode`, `bios`,
+`bios2`, and `inputDevices` fields now feed `GameCompatibility`, `BiosLibrary`, and
+`GameControlDefaults`; `revision`, `discNumber`/`discTotal`, `nvram`, and `cheats` are
+carried for profile seeding and diagnostics. On the local 1,366-image collection,
+`gamedb stats --folder "J:\Panasonic 3DO"` reports 1,363 readable images and 100%
+metadata coverage of those images. The three exceptions are audio-only `[CD-Audio]`
+bonus discs with no data track, not game images. See
+[`GameDatabase.md`](GameDatabase.md) for the schema and the `gamedb` contribution
+workflow.
+
 ---
 
 ## 6. Video

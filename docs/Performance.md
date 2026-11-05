@@ -674,3 +674,28 @@ with `--swi-hle`, but their frame hashes differ from the default run; both match
 when the affected SWI is left to the guest. Default-off behavior is unchanged and the
 Lemmings differential smoke remains an exact match. Use `--swi-comments` to see which
 SWIs a title calls, and prefer per-game profiles over enabling HLE globally.
+
+### 8.3 Per-title CPU clock behavior (2026-11-05)
+
+`run --cpu-clock` is an experimental override, not a compatibility mode. Five
+representative titles were run for 3,000 frames at 0.5x, 1x, 2x, and 4x on the
+development machine (Release build, `--audio null`). Every title produced a different
+frame hash at every non-stock clock because the guest observes the changed cycle budget:
+
+| Title | 0.5x hash | 1x hash (stock) | 2x hash | 4x hash |
+|---|---|---|---|---|
+| Road Rash (USA) | `0xA76F3CA3` | `0x5E9EE515` | `0x2D0CC941` | `0xA34F62A6` |
+| Lemmings (USA) | `0xD1E79432` | `0x9C2E3236` | `0xB1CE635A` | `0x9B1B6AB5` |
+| Alone in the Dark (USA) | `0x53F35D1D` | `0xF4AC018A` | `0x175B8FE4` | `0xF81EDFC5` |
+| Ballz (World) | `0x010AAC8D` | `0x66240BDD` | `0x580166F1` | `0x0A7D8B13` |
+| AutoBahn Tokio (Japan) | `0x61933B4B` | `0x03AD517A` | `0x7EF31876` | `0x4E42604F` |
+
+The 1x hashes match the current golden runs. Two titles also showed a large wall-time
+change at high clocks: AutoBahn Tokio took 9.1 s at 1x, 84.4 s at 2x, and 271.7 s at 4x
+for the same 3,000 frames, which is consistent with a guest timing loop that spins for a
+fixed wall-clock interval. That is a compatibility signal, not a speed win.
+
+**Decision:** the stock 12.5 MHz clock remains the default and the only supported
+compatibility clock. Non-stock clocks are available for experiments and per-game
+profiles, but no per-title clock override ships in the database. The synthetic benchmark
+matrix in §8.1 remains the performance reference because its hashes are clock-invariant.

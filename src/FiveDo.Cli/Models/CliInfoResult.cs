@@ -15,4 +15,12 @@ internal sealed record CliInfoResult(
     string Name,
     string Publisher,
     string ReleaseYear,
-    string Regions);
+    string Regions,
+    string Revision = "",
+    int? DiscNumber = null,
+    int? DiscTotal = null,
+    string Bios = "",
+    string Bios2 = "",
+    string InputDevices = "",
+    string Nvram = "",
+    string Cheats = "");

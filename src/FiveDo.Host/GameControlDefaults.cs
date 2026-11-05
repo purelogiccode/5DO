@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using FiveDo.Input;
 
 namespace FiveDo.Host;
@@ -30,9 +32,16 @@ public static class GameControlDefaults
 
     /// <summary>Resolves the automatic device list for a title.</summary>
     /// <param name="title">Game title, with or without a region suffix.</param>
+    /// <param name="databaseSpec">Optional game-database device list such as <c>1=lightgun</c>.</param>
     /// <returns>Eight device names, or <see langword="null"/> when the title needs no override.</returns>
-    public static IReadOnlyList<string>? TryGetInputDevices(string? title)
+    public static IReadOnlyList<string>? TryGetInputDevices(string? title, string? databaseSpec = null)
     {
+        IReadOnlyList<string>? fromDatabase = ParseDeviceSpec(databaseSpec);
+        if (fromDatabase is not null)
+        {
+            return fromDatabase;
+        }
+
         if (string.IsNullOrWhiteSpace(title))
         {
             return null;
@@ -57,5 +66,58 @@ public static class GameControlDefaults
         }
 
         return null;
+    }
+
+    /// <summary>Parses a compact per-port device list from the game database.</summary>
+    /// <param name="spec">Spec such as <c>1=lightgun,2=mouse</c>; ports are one-based.</param>
+    /// <returns>Eight device names, or <see langword="null"/> when the spec is empty or invalid.</returns>
+    public static IReadOnlyList<string>? ParseDeviceSpec(string? spec)
+    {
+        if (string.IsNullOrWhiteSpace(spec))
+        {
+            return null;
+        }
+
+        var devices = new string[PbusEncoder.MaxPorts];
+        Array.Fill(devices, InputDeviceType.Joypad.ToString());
+        var assigned = false;
+        foreach (string entry in spec.Split(
+                     [',', ';'],
+                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            string[] parts = entry.Split('=', 2, StringSplitOptions.TrimEntries);
+            if (parts.Length != 2
+                || !int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int port)
+                || port < 1
+                || port > devices.Length
+                || !TryParseDevice(parts[1], out InputDeviceType device))
+            {
+                continue;
+            }
+
+            devices[port - 1] = device.ToString();
+            assigned = true;
+        }
+
+        return assigned ? devices : null;
+    }
+
+    private static bool TryParseDevice(string value, out InputDeviceType device)
+    {
+        var normalized = new string(value.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+        foreach (InputDeviceType candidate in Enum.GetValues<InputDeviceType>())
+        {
+            if (string.Equals(
+                    new string(candidate.ToString().Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant(),
+                    normalized,
+                    StringComparison.Ordinal))
+            {
+                device = candidate;
+                return true;
+            }
+        }
+
+        device = InputDeviceType.Joypad;
+        return false;
     }
 }

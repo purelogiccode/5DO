@@ -90,6 +90,7 @@ internal static class Program
                     "run" => Run(args),
                     "trace" => TraceCommand(args),
                     "info" => Info(args),
+                    "gamedb" => GameDbCommand(args),
                     "disc" => DiscCommand(args),
                     "library" => LibraryCommand(args),
                     "settings" => SettingsCommand(args),
@@ -184,7 +185,7 @@ internal static class Program
 
     private static bool IsDiagnosticCommand(string command)
     {
-        return command is "--version" or "-v" or "--help" or "-h" or "help" or "bench" or "selftest" or "update";
+        return command is "--version" or "-v" or "--help" or "-h" or "help" or "bench" or "selftest" or "update" or "gamedb";
     }
 
     private sealed record BiosLoadResult(
@@ -1785,7 +1786,15 @@ internal static class Program
             Name: record?.Name ?? string.Empty,
             Publisher: record?.Publisher ?? string.Empty,
             ReleaseYear: record?.ReleaseYear ?? string.Empty,
-            Regions: record?.Regions ?? string.Empty);
+            Regions: record?.Regions ?? string.Empty,
+            Revision: record?.Revision ?? string.Empty,
+            DiscNumber: record?.DiscNumber,
+            DiscTotal: record?.DiscTotal,
+            Bios: record?.Bios ?? string.Empty,
+            Bios2: record?.Bios2 ?? string.Empty,
+            InputDevices: record?.InputDevices ?? string.Empty,
+            Nvram: record?.Nvram ?? string.Empty,
+            Cheats: record?.Cheats ?? string.Empty);
 
         if (options.Json)
         {
@@ -1800,12 +1809,252 @@ internal static class Program
             Console.WriteLine($"game id:     {result.GameId}");
             Console.WriteLine($"fix mode:    0x{result.FixMode:x8}");
             Console.WriteLine($"game:        {(result.Known ? $"{result.Name} ({result.ReleaseYear}, {result.Publisher}, {result.Regions})" : "unknown")}");
+            if (result.Revision.Length > 0)
+            {
+                Console.WriteLine($"revision:    {result.Revision}");
+            }
+
+            if (result.DiscNumber is { } discNumber)
+            {
+                Console.WriteLine(result.DiscTotal is { } discTotal
+                    ? $"disc:        {discNumber} of {discTotal}"
+                    : $"disc:        {discNumber}");
+            }
+
+            if (result.Bios.Length > 0)
+            {
+                Console.WriteLine($"bios:        {result.Bios}");
+            }
+
+            if (result.Bios2.Length > 0)
+            {
+                Console.WriteLine($"bios2:       {result.Bios2}");
+            }
+
+            if (result.InputDevices.Length > 0)
+            {
+                Console.WriteLine($"inputs:      {result.InputDevices}");
+            }
+
+            if (result.Nvram.Length > 0)
+            {
+                Console.WriteLine($"nvram:       {result.Nvram}");
+            }
+
+            if (result.Cheats.Length > 0)
+            {
+                Console.WriteLine($"cheats:      {result.Cheats}");
+            }
         }
 
         return 0;
     }
 
+    private static int GameDbCommand(string[] args)
+    {
+        if (args.Length < 2)
+        {
+            throw new ArgumentException(
+                "gamedb needs the 'stats', 'scan', 'export', or 'merge' subcommand.",
+                nameof(args));
+        }
+
+        ParsedOptions options = Parse(args, startIndex: 2);
+        var subcommand = args[1].ToLowerInvariant();
+        return subcommand switch
+        {
+            "stats" => GameDbStats(args, options),
+            "scan" => GameDbScan(args, options),
+            "export" => GameDbExport(options),
+            "merge" or "import" => GameDbMerge(args, options, subcommand),
+            _ => throw new ArgumentException($"Unknown gamedb subcommand '{args[1]}'.", nameof(args)),
+        };
+    }
+
+    private static int GameDbStats(string[] args, ParsedOptions options)
+    {
+        var folder = options.Positional ?? options.Get("--folder");
+        GameDatabase database = GameDatabase.Default;
+        var result = new CliGameDbResult(
+            Ok: true,
+            Command: "stats",
+            DatabaseRecords: database.Count,
+            Path: folder ?? string.Empty);
+
+        if (folder is not null)
+        {
+            bool recursive = !HasFlag(args, "--no-recursive");
+            int maxParallelism = options.GetInt("--max-parallel", 0);
+            IReadOnlyList<string> paths = GameDatabaseScanner.FindDiscs(folder, recursive);
+            GameDatabaseScanResult scan = GameDatabaseScanner.Scan(paths, database, maxParallelism);
+            int unique = scan.UniqueCount;
+            int known = scan.KnownCount;
+            result = result with
+            {
+                Found = paths.Count,
+                FoundUnique = paths.Distinct(StringComparer.OrdinalIgnoreCase).Count(),
+                Scanned = scan.DiscCount,
+                ScannedUnique = scan.UniqueEntryPaths,
+                Unique = unique,
+                Known = known,
+                Matched = scan.KnownImageCount,
+                Missing = scan.MissingCount,
+                Coverage = scan.DiscCount == 0 ? 0 : (double)scan.KnownImageCount / scan.DiscCount,
+                Duplicates = scan.DuplicatePaths,
+                Errors = scan.Failures,
+            };
+        }
+
+        WriteGameDbResult(result, options.Json);
+        return 0;
+    }
+
+    private static int GameDbScan(string[] args, ParsedOptions options)
+    {
+        var folder = options.Positional ?? options.Get("--folder")
+            ?? throw new ArgumentException("gamedb scan needs a folder.", nameof(args));
+        var outPath = options.Get("--out") ?? "gamedb-scan.xml";
+        int maxParallelism = options.GetInt("--max-parallel", 0);
+        bool includeKnown = HasFlag(args, "--include-known");
+
+        GameDatabase database = GameDatabase.Default;
+        bool recursive = !HasFlag(args, "--no-recursive");
+        IReadOnlyList<string> paths = GameDatabaseScanner.FindDiscs(folder, recursive);
+        GameDatabaseScanResult scan = GameDatabaseScanner.Scan(paths, database, maxParallelism);
+        List<GameRecord> records = scan.Entries
+            .Where(entry => includeKnown || !entry.Known)
+            .Select(entry => entry.Record)
+            .ToList();
+        GameDatabase output = GameDatabase.FromRecords(records);
+        output.Save(outPath);
+
+        var result = new CliGameDbResult(
+            Ok: true,
+            Command: "scan",
+            Path: folder,
+            OutPath: Path.GetFullPath(outPath),
+            DatabaseRecords: database.Count,
+            Found: paths.Count,
+            FoundUnique: paths.Distinct(StringComparer.OrdinalIgnoreCase).Count(),
+            Scanned: scan.DiscCount,
+            Unique: scan.UniqueCount,
+            Known: scan.KnownCount,
+            Matched: scan.KnownImageCount,
+            Missing: scan.MissingCount,
+            Coverage: scan.DiscCount == 0 ? 0 : (double)scan.KnownImageCount / scan.DiscCount,
+            Written: output.Count,
+            Errors: scan.Failures);
+        WriteGameDbResult(result, options.Json);
+        return 0;
+    }
+
+    private static int GameDbExport(ParsedOptions options)
+    {
+        var outPath = options.Get("--out") ?? "GameDatabase.xml";
+        GameDatabase.Default.Save(outPath);
+        var result = new CliGameDbResult(
+            Ok: true,
+            Command: "export",
+            OutPath: Path.GetFullPath(outPath),
+            DatabaseRecords: GameDatabase.Default.Count,
+            Written: GameDatabase.Default.Count);
+        WriteGameDbResult(result, options.Json);
+        return 0;
+    }
+
+    private static int GameDbMerge(string[] args, ParsedOptions options, string command)
+    {
+        var inPath = options.Positional ?? options.Get("--in")
+            ?? throw new ArgumentException("gamedb merge needs an input XML file.", nameof(args));
+        var outPath = options.Get("--out") ?? "GameDatabase.xml";
+        bool overwrite = HasFlag(args, "--overwrite");
+
+        GameDatabase fragment;
+        using (FileStream stream = File.OpenRead(inPath))
+        {
+            fragment = GameDatabase.Load(stream);
+        }
+
+        GameDatabase database = GameDatabase.Default;
+        int added = fragment.Records.Count(record => database.FindByChecksum(record.CheckSum) is null);
+        int updated = fragment.Records.Count - added;
+        GameDatabase merged = database.Merge(fragment.Records, overwrite);
+        merged.Save(outPath);
+
+        var result = new CliGameDbResult(
+            Ok: true,
+            Command: command,
+            Path: Path.GetFullPath(inPath),
+            OutPath: Path.GetFullPath(outPath),
+            DatabaseRecords: database.Count,
+            Added: added,
+            Updated: updated,
+            Written: merged.Count);
+        WriteGameDbResult(result, options.Json);
+        return 0;
+    }
+
+    private static void WriteGameDbResult(CliGameDbResult result, bool json)
+    {
+        if (json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(result, CliJsonContext.Default.CliGameDbResult));
+            return;
+        }
+
+        if (string.Equals(result.Command, "stats", StringComparison.Ordinal))
+        {
+            Console.WriteLine($"database records: {result.DatabaseRecords}");
+            if (result.Path.Length > 0)
+            {
+                Console.WriteLine($"discovered:       {result.Found}");
+                Console.WriteLine($"scanned discs:    {result.Scanned}");
+                Console.WriteLine($"unique checksums: {result.Unique}");
+                Console.WriteLine($"known unique:     {result.Known}");
+                Console.WriteLine($"matched images:   {result.Matched}");
+                Console.WriteLine($"missing unique:   {result.Missing}");
+                Console.WriteLine($"coverage:         {result.Coverage:P1}");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"database records: {result.DatabaseRecords}");
+            if (result.Scanned > 0)
+            {
+                Console.WriteLine($"discovered:       {result.Found}");
+                Console.WriteLine($"scanned discs:    {result.Scanned}");
+                Console.WriteLine($"unique checksums: {result.Unique}");
+                Console.WriteLine($"known unique:     {result.Known}");
+                Console.WriteLine($"matched images:   {result.Matched}");
+                Console.WriteLine($"missing unique:   {result.Missing}");
+                Console.WriteLine($"coverage:         {result.Coverage:P1}");
+            }
+
+            if (string.Equals(result.Command, "merge", StringComparison.Ordinal)
+                || string.Equals(result.Command, "import", StringComparison.Ordinal))
+            {
+                Console.WriteLine($"added:            {result.Added}");
+                Console.WriteLine($"updated:          {result.Updated}");
+            }
+
+            if (result.OutPath.Length > 0)
+            {
+                Console.WriteLine($"written:          {result.Written} records to {result.OutPath}");
+            }
+        }
+
+        if (result.Errors is { Count: > 0 } errors)
+        {
+            Console.WriteLine($"errors:           {errors.Count}");
+            foreach (string error in errors.Take(20))
+            {
+                Console.WriteLine($"  {error}");
+            }
+        }
+    }
+
     private static int SettingsCommand(string[] args)
+
     {
         if (args.Length < 2)
         {
@@ -4775,6 +5024,10 @@ internal static class Program
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             Runs the machine and records a diagnostic instruction ring buffer.");
         Console.WriteLine("  info <disc> [--json]                 Disc geometry, volume header, and game ID.");
+        Console.WriteLine("  gamedb stats [folder] [--json]       Embedded game-database count and local coverage.");
+        Console.WriteLine("  gamedb scan <folder> --out path      Derive XML records from disc IDs and filenames.");
+        Console.WriteLine("  gamedb export --out path             Export the embedded game database.");
+        Console.WriteLine("  gamedb merge <path> --out path       Merge a fragment into the embedded database.");
         Console.WriteLine("  disc tracks <disc> [--json]          List every CUE/CHD track (data and audio).");
         Console.WriteLine("  disc playlist <m3u> [--json]        List multi-disc playlist entries.");
         Console.WriteLine("  disc dump <disc> --out path [--sector N] [--count N]");

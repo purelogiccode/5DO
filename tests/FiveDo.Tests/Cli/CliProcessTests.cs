@@ -1996,6 +1996,104 @@ public sealed class CliProcessTests
         }
     }
 
+    [Fact]
+    public void GameDbStats_ReportsTheEmbeddedDatabase()
+    {
+        CliResult result = Invoke("gamedb", "stats", "--json");
+
+        Assert.Equal(0, result.Code);
+        Assert.Contains("\"command\": \"stats\"", result.Output, StringComparison.Ordinal);
+        Assert.Contains("\"databaseRecords\":", result.Output, StringComparison.Ordinal);
+        Assert.Contains("\"coverage\": 0", result.Output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void GameDbScan_WritesDerivedRecords()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-gamedb-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        var isoPath = Path.Combine(directory, "My Test Game (USA).iso");
+        var outPath = Path.Combine(directory, "scan.xml");
+        try
+        {
+            var data = new byte[2048 * 4];
+            for (var i = 0; i < data.Length; i++)
+            {
+                data[i] = (byte)(0x5A ^ (i & 0xFF));
+            }
+
+            File.WriteAllBytes(isoPath, data);
+
+            CliResult result = Invoke(
+                "gamedb", "scan", directory, "--out", outPath, "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"scanned\": 1", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"written\": 1", result.Output, StringComparison.Ordinal);
+            Assert.True(File.Exists(outPath));
+            string xml = File.ReadAllText(outPath);
+            Assert.Contains("<name>My Test Game</name>", xml, StringComparison.Ordinal);
+            Assert.Contains("<regions>US</regions>", xml, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void GameDbExport_WritesAFullDatabase()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fivedo-gamedb-{Guid.NewGuid():N}.xml");
+        try
+        {
+            CliResult result = Invoke("gamedb", "export", "--out", path, "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.True(File.Exists(path));
+            Assert.Contains("<database>", File.ReadAllText(path), StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void GameDbMerge_AddsTheFragment()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-gamedb-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        var fragment = Path.Combine(directory, "fragment.xml");
+        var output = Path.Combine(directory, "merged.xml");
+        try
+        {
+            File.WriteAllText(
+                fragment,
+                """
+                <?xml version="1.0"?>
+                <database>
+                  <game>
+                    <id>FEEDFACE</id>
+                    <checkSum>FEEDFACE000000000000000000000000</checkSum>
+                    <name>Fragment Game</name>
+                  </game>
+                </database>
+                """);
+
+            CliResult result = Invoke(
+                "gamedb", "merge", fragment, "--out", output, "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"added\": 1", result.Output, StringComparison.Ordinal);
+            Assert.Contains("Fragment Game", File.ReadAllText(output), StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     private static CliResult Invoke(params string[] args)
     {
         TextWriter previousOut = Console.Out;

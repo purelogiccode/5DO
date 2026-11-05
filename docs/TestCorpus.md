@@ -2191,3 +2191,36 @@ a legacy version-2 memory section.
   the guest handler's cycles/register clobbers; leaving the affected SWI to the guest
   restores the hash. Lemmings has no HLE calls and the differential smoke is an exact
   match. Default-off behavior is unchanged.
+
+#### 1.1ao SYS-17 game database expansion (2026-11-05)
+
+- `GameDatabaseNameParser` parses Redump, GoodTools, and No-Intro filenames, including
+  release dates, compound `… & …` titles, region lists, language lists, disc numbers
+  (`Disc 2 of 3`, `Disk B`), revisions (`Rev 1`, `RE2`, `v2.2`), and dump/edition tags.
+  Unknown parenthetical groups stay in the title; uncertain fields stay empty.
+- `GameDatabase` now parses and writes `revision`, `discNumber`, `discTotal`, `bios`,
+  `bios2`, `fixMode`, `inputDevices`, `nvram`, and `cheats`. `Save`/`Load` roundtrip the
+  full record, and `Merge` preserves curated records unless `--overwrite` is supplied.
+- `gamedb stats|scan|export|merge` are covered by CLI tests. `scan` computes IDs for
+  `.chd`/`.cue`/`.iso` files and writes a fragment; `merge` adds it to the embedded
+  database and writes the reviewed result. Transient CHDSharp open failures are retried
+  serially.
+- Runtime integration: `GameCompatibility.ForGameId` reads the database `fixMode`;
+  `BiosLibrary.SelectForGame` reads `bios`/`bios2` (per-game override still wins); and
+  `GameControlDefaults` reads `inputDevices`. `info --json` exposes the new fields.
+- Local coverage: `gamedb stats --folder "J:\Panasonic 3DO"` reports 1,366 images found,
+  1,363 readable, 650 unique IDs, 1,363 matched, 100% coverage of readable images. The
+  three unreadable images are audio-only `[CD-Audio]` CHDs with no data track.
+- Embedded database: 518 original 4DO records + 132 local records = 650. Known BIOS
+  requirements (Powers Kingdom Europe, WorldCup Super Stadium Japan + Kanji), fix masks
+  (Crash 'n Burn, Street Fighter II, DinoPark Tycoon, Microcosm), and lightgun/Orbatak
+  input defaults are stored as data.
+
+#### 1.1ap SYS-08 per-title CPU clock behavior (2026-11-05)
+
+- Five titles were run for 3,000 frames at 0.5x, 1x, 2x, and 4x with `--audio null`.
+  Every non-stock clock produced a different frame hash, so the clock is a compatibility
+  variable rather than a speed switch. AutoBahn Tokio took 9.1 s at 1x, 84.4 s at 2x, and
+  271.7 s at 4x for the same 3,000 frames.
+- The stock 12.5 MHz default, the synthetic clock-invariant benchmark, and the decision
+  not to seed per-title clock overrides are recorded in `Performance.md` §8.3.

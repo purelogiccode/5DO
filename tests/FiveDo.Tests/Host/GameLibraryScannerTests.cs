@@ -12,10 +12,7 @@ public sealed class GameLibraryScannerTests
     {
         using var directory = new TempDirectory();
         var isoPath = Path.Combine(directory.Path, "game.iso");
-        using (FileStream file = File.Create(isoPath))
-        {
-            file.Write(new byte[2048 * 3]);
-        }
+        WriteIso(isoPath, sectors: 3);
 
         File.WriteAllBytes(Path.Combine(directory.Path, "broken.iso"), new byte[100]);
         File.WriteAllText(Path.Combine(directory.Path, "notes.txt"), "ignore me");
@@ -49,10 +46,7 @@ public sealed class GameLibraryScannerTests
     {
         using var directory = new TempDirectory();
         var isoPath = Path.Combine(directory.Path, "game.iso");
-        using (FileStream file = File.Create(isoPath))
-        {
-            file.Write(new byte[2048 * 3]);
-        }
+        WriteIso(isoPath, sectors: 3);
 
         var coverPath = Path.Combine(directory.Path, "game.png");
         File.WriteAllBytes(coverPath, [0x89, 0x50, 0x4E, 0x47]);
@@ -239,7 +233,13 @@ public sealed class GameLibraryScannerTests
 
     private static void WriteIso(string path, int sectors)
     {
-        File.WriteAllBytes(path, new byte[2048 * sectors]);
+        var data = new byte[2048 * sectors];
+        for (var i = 0; i < data.Length; i++)
+        {
+            data[i] = (byte)(0xA5 ^ (i & 0xFF));
+        }
+
+        File.WriteAllBytes(path, data);
     }
 
     private sealed class TempDirectory : IDisposable
