@@ -131,6 +131,19 @@ public static class GameDatabaseScanner
                 : Math.Min(Environment.ProcessorCount, 8),
         };
 
+        Parallel.ForEach(paths, options, ScanOne);
+
+        // CHDSharp occasionally reports a transient "parameter is incorrect" when many
+        // CHDs are opened at once. Retry failures serially so a large scan is stable.
+        foreach (string path in failures.Keys.ToArray())
+        {
+            ScanOne(path);
+        }
+
+        return new GameDatabaseScanResult(
+            entries.Values.OrderBy(entry => entry.Path, StringComparer.OrdinalIgnoreCase).ToList(),
+            failures.Values.OrderBy(failure => failure, StringComparer.OrdinalIgnoreCase).ToList());
+
         void ScanOne(string path)
         {
             try
@@ -153,19 +166,6 @@ public static class GameDatabaseScanner
                 failures[path] = $"{path}: {exception.Message}";
             }
         }
-
-        Parallel.ForEach(paths, options, ScanOne);
-
-        // CHDSharp occasionally reports a transient "parameter is incorrect" when many
-        // CHDs are opened at once. Retry failures serially so a large scan is stable.
-        foreach (string path in failures.Keys.ToArray())
-        {
-            ScanOne(path);
-        }
-
-        return new GameDatabaseScanResult(
-            entries.Values.OrderBy(entry => entry.Path, StringComparer.OrdinalIgnoreCase).ToList(),
-            failures.Values.OrderBy(failure => failure, StringComparer.OrdinalIgnoreCase).ToList());
     }
 
     private static GameRecord Enrich(GameRecord derived, Dictionary<string, GameRecord> byName)
@@ -302,7 +302,7 @@ public static class GameDatabaseNameParser
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         ArgumentException.ThrowIfNullOrWhiteSpace(checkSum);
 
-        string name = Path.GetFileNameWithoutExtension(path).Replace('_', ' ').Trim();
+        string name = FileNameWithoutExtension(path).Replace('_', ' ').Trim();
         string year = string.Empty;
         string publisher = string.Empty;
         string regions = string.Empty;
@@ -409,7 +409,7 @@ public static class GameDatabaseNameParser
         title = CleanTitle(title);
         if (title.Length == 0)
         {
-            title = Path.GetFileNameWithoutExtension(path).Trim();
+            title = FileNameWithoutExtension(path).Trim();
         }
 
         return new GameRecord(
@@ -637,6 +637,16 @@ public static class GameDatabaseNameParser
         string cleaned = WhitespaceRegex.Replace(title, " ");
         cleaned = cleaned.Trim(' ', '-', ',', ';', ':');
         return cleaned;
+    }
+
+    private static string FileNameWithoutExtension(string path)
+    {
+        // The scanner can receive a Windows path on a Unix host (tests and imported
+        // fragments), so do not rely on the platform's directory separator.
+        int separator = Math.Max(path.LastIndexOf('\\'), path.LastIndexOf('/'));
+        string fileName = separator >= 0 ? path[(separator + 1)..] : path;
+        int dot = fileName.LastIndexOf('.');
+        return dot > 0 ? fileName[..dot] : fileName;
     }
 
     private static readonly Regex YearRegex = new(

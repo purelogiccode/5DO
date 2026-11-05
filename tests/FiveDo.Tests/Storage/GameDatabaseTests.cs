@@ -171,6 +171,20 @@ public sealed class GameDatabaseTests
         Assert.Equal(3, record.DiscTotal);
     }
 
+    [Theory]
+    [InlineData(@"J:\Panasonic 3DO\Foes of Ali (USA).chd")]
+    [InlineData("J:/Panasonic 3DO/Foes of Ali (USA).chd")]
+    [InlineData(@"Foes of Ali (USA).chd")]
+    public void Describe_HandlesEitherPathSeparator(string path)
+    {
+        GameRecord record = GameDatabaseNameParser.Describe(
+            path,
+            "AABBCCDD000000000000000000000000");
+
+        Assert.Equal("Foes of Ali", record.Name);
+        Assert.Equal("US", record.Regions);
+    }
+
 }
 
 public sealed class InputProfileTests
