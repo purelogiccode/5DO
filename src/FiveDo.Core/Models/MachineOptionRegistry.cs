@@ -196,6 +196,18 @@ public static class MachineOptionRegistry
             nameof(EmulatorTuning.OperaSoftReset),
             MachineOptionKind.Boolean,
             comparisonLabel: "setting"),
+        new(
+            "swiHle",
+            "Portfolio OS SWI HLE",
+            "Handle Portfolio OS fixed-point math SWIs on the host instead of running the guest implementation.",
+            "disabled",
+            "enabled, disabled",
+            "--swi-hle",
+            "SwiHle",
+            "SwiHle",
+            nameof(EmulatorTuning.SwiHle),
+            MachineOptionKind.Boolean,
+            comparisonLabel: "setting"),
     ];
 
     private static readonly Dictionary<string, MachineOptionDefinition> ByKey =
@@ -268,6 +280,7 @@ public static class MachineOptionRegistry
             "highResolution" => FormatFlag(tuning.HighResolution),
             "operaDipir" => FormatFlag(tuning.OperaDipir),
             "operaSoftReset" => FormatFlag(tuning.OperaSoftReset),
+            "swiHle" => FormatFlag(tuning.SwiHle),
             _ => throw new UnknownMachineOptionException(key),
         };
     }
@@ -385,6 +398,7 @@ public static class MachineOptionRegistry
                 : null,
             "operaDipir" => snapshot.OperaDipir is { } operaDipir ? FormatFlag(operaDipir) : null,
             "operaSoftReset" => snapshot.OperaSoftReset is { } softReset ? FormatFlag(softReset) : null,
+            "swiHle" => snapshot.SwiHle is { } swiHle ? FormatFlag(swiHle) : null,
             _ => throw new UnknownMachineOptionException(key),
         };
     }

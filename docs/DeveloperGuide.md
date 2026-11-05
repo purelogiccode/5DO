@@ -13,7 +13,7 @@ for porting rules, see [`PortingNotes.md`](PortingNotes.md); for tests, see
 ```text
 src/
   FiveDo.Core/               contracts, value types, constants, state primitives, logging
-  FiveDo.Cpu/                ARM60 interpreter, decoder, ALU, shifter, disassembler
+  FiveDo.Cpu/                ARM60 interpreter, decoder, ALU, shifter, disassembler, SWI HLE
   FiveDo.Memory/             DRAM/VRAM, ROM banks, NVRAM, CPU address bus
   FiveDo.Madam/              registers, CEL engine, pixel decode/process/project, matrix
   FiveDo.Clio/               registers, timers, FIFOs, DMA, interrupts, XBUS/DSP windows
@@ -98,7 +98,7 @@ FiveDo.Cdrom --------------> Core
 | Project | Responsibility | Key types | References |
 |---|---|---|---|
 | `FiveDo.Core` | Contracts, shared types, constants, fix mode, logging, state primitives | `IAddressBus`, `IRam`, `ICpuBackend`, `IInterruptSink`, `IFrameSink`, `IAudioSink`, `IPbusSource`, `IDiscSource`, `IXbusDevice`, `IVdlp`, `IMadamBus`, `VdlFrame`, `VdlLine`, `FrameBuffer`, `FixMode`, `EmulatorTuning`, `IStateReader/Writer`, `StateFormat`, `StateSectionIds` | none |
-| `FiveDo.Cpu` | ARM60 interpreter, decoder, ALU, shifter, disassembler | `Arm60`, `Arm60State`, `ArmDecoder`, `ArmAlu`, `ArmBarrelShifter`, `ArmDisassembler` | Core |
+| `FiveDo.Cpu` | ARM60 interpreter, decoder, ALU, shifter, disassembler, Portfolio OS SWI HLE | `Arm60`, `Arm60State`, `ArmDecoder`, `ArmAlu`, `ArmBarrelShifter`, `ArmDisassembler`, `ArmSwiHle` | Core |
 | `FiveDo.Memory` | RAM/ROM/NVRAM, word-swapped representation, mirrors, bus decode | `FiveDoMemory`, `Ram`, `RomBank`, `Nvram` | Core |
 | `FiveDo.Madam` | MADAM registers, CEL engine, pixel decoder/processor/projector, matrix, PLUT, PBUS | `Madam`, `CelEngine`, `CelBitReader`, `PixelDecoder`, `PixelProcessor`, `Projector`, `CelRasterizer`, `CelGeometry`, `CcbParser` | Core |
 | `FiveDo.Clio` | CLIO registers, timers, FIFOs, DMA, interrupts, DSP interface, XBUS window, ROM select, diag port | `Clio`, `DiagPort` | Core |

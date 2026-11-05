@@ -172,6 +172,14 @@ The 3DO pad has: **A, B, C, P, X, L, R**, plus D-pad directions. P is the pause 
 PBUS encoding is documented in `docs/Architecture.md`. The legacy packet is ported
 from 4DO's `JohnnyInputPlugin`; the device records follow `libopera/opera_pbus.c`.
 
+Portfolio OS fixed-point math SWIs (`0x50000`-`0x50012`) can be handled on the host with
+`--swi-hle` or Settings > Emulation > **Portfolio OS SWI HLE**. This is an opt-in
+performance mode: the host routines match `opera_fixedpoint_math.c`, but HLE skips the
+guest handler's cycles and register clobbers. Titles that poll cycle-sensitive hardware
+around matrix calls can therefore change behavior; `AutoBahn Tokio` and `Ballz` boot and
+run with HLE but produce different frame hashes. Leave it off for compatibility, or use a
+per-game profile when a specific title benefits. See `docs/Performance.md` §8.2.
+
 ---
 
 ## 5. Game-specific fixes

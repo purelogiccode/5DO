@@ -3789,6 +3789,7 @@ public partial class MainWindow : Window, IDisposable
                 || _settings.RandomSeed != _machine.Tuning.RandomSeed
                 || _settings.OperaDipir != _machine.Tuning.OperaDipir
                 || _settings.OperaSoftReset != _machine.Tuning.OperaSoftReset
+                || _settings.SwiHle != _machine.Tuning.SwiHle
                 || _settings.CpuBackend != _machine.Tuning.CpuBackend))
         {
             RecreateMachine();

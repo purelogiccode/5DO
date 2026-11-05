@@ -699,11 +699,13 @@ public sealed class CliProcessTests
                 "0",
                 "--opera-dipir",
                 "--opera-soft-reset",
+                "--swi-hle",
                 "--json");
 
             Assert.Equal(0, result.Code);
             Assert.Contains("\"operaDipir\": true", result.Output, StringComparison.Ordinal);
             Assert.Contains("\"operaSoftReset\": true", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"swiHle\": true", result.Output, StringComparison.Ordinal);
         }
         finally
         {

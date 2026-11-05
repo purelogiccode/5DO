@@ -210,7 +210,7 @@
 
             <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, ARM, CLIO, CEL, and CD timing, CD speed, CPU clock, random seed, Opera DIPIR/soft reset, NVRAM storage, high-resolution mode, rewind/fast-forward, and overrides.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <CheckBox x:Name="AutoFixesCheck" Grid.Row="0" Grid.Column="1"
                               Content="Apply the 4DO per-game fixes automatically"
                               ToolTip.Tip="Apply the compatibility fix mask from the built-in game database when a disc opens." />
@@ -376,6 +376,9 @@
                     <CheckBox x:Name="HideLightgunCrosshairCheck" Grid.Row="34" Grid.Column="1" Margin="0,12,0,0"
                                Content="Hide the lightgun crosshair"
                                ToolTip.Tip="Hide the desktop crosshair while the emulated lightgun still receives the pointer. Useful when the game draws its own reticle or when recording." />
+                    <CheckBox x:Name="SwiHleCheck" Grid.Row="37" Grid.Column="1" Margin="0,12,0,0"
+                               Content="Portfolio OS SWI HLE (performance, opt-in)"
+                               ToolTip.Tip="Handle Portfolio OS fixed-point math SWIs on the host. This mirrors Opera's opera_swi_hle option, is disabled by default, and restarts the machine when changed." />
                     <TextBlock Grid.Row="27" Grid.Column="0" Text="Pointer calibration" VerticalAlignment="Center" Margin="0,12,0,0"
                                ToolTip.Tip="Scale and offset applied to the host pointer before it reaches the emulated device." />
                     <StackPanel Grid.Row="27" Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="0,12,0,0">

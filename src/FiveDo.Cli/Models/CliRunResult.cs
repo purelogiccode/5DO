@@ -95,6 +95,10 @@ internal sealed record CliRunResult(
     CliDspResult? DspStats = null,
     bool OperaDipir = false,
     bool OperaSoftReset = false,
+    bool SwiHle = false,
+    long SwiInstructions = 0,
+    long SwiHleInstructions = 0,
+    uint LastSwiComment = 0,
     string CpuBackend = "Interpreter",
     uint? RandomSeed = null,
     bool HighResolution = false,
@@ -102,4 +106,11 @@ internal sealed record CliRunResult(
     IReadOnlyList<CliCycleClassResult>? CycleClasses = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     IReadOnlyList<CliTimerStatResult>? TimerStats = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    IReadOnlyList<CliSwiCommentResult>? SwiComments = null,
     string Memory = "Dram2MbVram1Mb");
+
+/// <summary>One SWI comment observed during a diagnostic run.</summary>
+/// <param name="Comment">The 24-bit SWI comment.</param>
+/// <param name="Count">Number of SWIs with that comment.</param>
+internal sealed record CliSwiCommentResult(uint Comment, long Count);

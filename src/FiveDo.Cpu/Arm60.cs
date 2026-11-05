@@ -39,17 +39,22 @@ public sealed class Arm60 : ICpuBackend, IStateSection
     };
 
     private readonly IAddressBus _bus;
+    private readonly IRam? _ram;
     private readonly IInterruptSink? _interrupts;
     private readonly EmulatorTuning _tuning;
     private readonly CompatibilityState _compatibility;
     private readonly Arm60State _state = new();
     private readonly long[] _classInstructions = new long[InstructionClassCount];
     private readonly long[] _classCycles = new long[InstructionClassCount];
+    private readonly Dictionary<uint, long> _swiCommentCounts = [];
 
     private int _cycles;
     private uint _carryOut;
     private long _instructionsExecuted;
     private long _cyclesExecuted;
+    private long _swiInstructions;
+    private long _swiHleInstructions;
+    private uint _lastSwiComment;
     private int _ldmAddress;
     private int _ldmValue;
     private int _ldmInUse;
@@ -59,20 +64,24 @@ public sealed class Arm60 : ICpuBackend, IStateSection
     /// <param name="interrupts">Optional FIQ source. May be null in unit tests.</param>
     /// <param name="tuning">Machine tuning. Defaults to <see cref="EmulatorTuning.Default"/>.</param>
     /// <param name="compatibility">Optional shared compatibility state.</param>
+    /// <param name="ram">Optional raw RAM accessor used by Portfolio OS SWI HLE.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="bus"/> is null.</exception>
     public Arm60(
         IAddressBus bus,
         IInterruptSink? interrupts = null,
         EmulatorTuning? tuning = null,
-        CompatibilityState? compatibility = null)
+        CompatibilityState? compatibility = null,
+        IRam? ram = null)
     {
         ArgumentNullException.ThrowIfNull(bus);
         _bus = bus;
+        _ram = ram;
         _interrupts = interrupts;
         _tuning = tuning ?? EmulatorTuning.Default;
         _tuning.Validate();
         _nCycle = _tuning.ArmTiming == ArmTimingMode.Arm60Datasheet ? 2 : 4;
         _compatibility = compatibility ?? new CompatibilityState { FixMode = _tuning.FixMode };
+        SwiHleEnabled = _tuning.SwiHle;
         Reset();
     }
 
@@ -93,6 +102,58 @@ public sealed class Arm60 : ICpuBackend, IStateSection
     /// cycle-class diagnostics and differential evidence; see <see cref="GetCycleClassUsage"/>.
     /// </remarks>
     public bool CycleClassTelemetryEnabled { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether Portfolio OS fixed-point math SWIs are
+    /// handled on the host. Opera: <c>opera_arm_swi_hle_set</c>.
+    /// </summary>
+    /// <remarks>
+    /// The option is initialized from <see cref="EmulatorTuning.SwiHle"/> and has no effect
+    /// unless an <see cref="IRam"/> accessor was supplied to the constructor. SWIs outside
+    /// Opera's HLE set always trap to the guest vector.
+    /// </remarks>
+    public bool SwiHleEnabled { get; set; }
+
+    /// <summary>Gets the number of SWIs executed by the guest, including HLE calls.</summary>
+    /// <remarks>Telemetry only; cleared by <see cref="Reset"/> and not serialized.</remarks>
+    public long SwiInstructions => _swiInstructions;
+
+    /// <summary>Gets the number of SWIs handled by the Portfolio OS HLE.</summary>
+    /// <remarks>Telemetry only; cleared by <see cref="Reset"/> and not serialized.</remarks>
+    public long SwiHleInstructions => _swiHleInstructions;
+
+    /// <summary>Gets the 24-bit comment of the most recent SWI.</summary>
+    /// <remarks>Telemetry only; cleared by <see cref="Reset"/> and not serialized.</remarks>
+    public uint LastSwiComment => _lastSwiComment;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether per-comment SWI telemetry is collected.
+    /// </summary>
+    /// <remarks>
+    /// Disabled by default so normal runs do not allocate a dictionary entry for every SWI.
+    /// Enable it for HLE coverage diagnostics; see <see cref="GetSwiCommentUsage"/>.
+    /// </remarks>
+    public bool SwiCommentTelemetryEnabled { get; set; }
+
+    /// <summary>Gets the SWI comment histogram collected since the last reset.</summary>
+    /// <returns>Rows ordered by descending count, then ascending comment.</returns>
+    /// <remarks>Returns an empty list when <see cref="SwiCommentTelemetryEnabled"/> is off.</remarks>
+    public IReadOnlyList<ArmSwiCommentUsage> GetSwiCommentUsage()
+    {
+        var result = new ArmSwiCommentUsage[_swiCommentCounts.Count];
+        var index = 0;
+        foreach (KeyValuePair<uint, long> entry in _swiCommentCounts)
+        {
+            result[index++] = new ArmSwiCommentUsage(entry.Key, entry.Value);
+        }
+
+        Array.Sort(result, static (left, right) =>
+        {
+            var count = right.Count.CompareTo(left.Count);
+            return count != 0 ? count : left.Comment.CompareTo(right.Comment);
+        });
+        return result;
+    }
 
     /// <summary>Gets the current per-class instruction and cycle totals.</summary>
     /// <returns>One row per <see cref="ArmInstructionClass"/>, in enum order.</returns>
@@ -204,6 +265,10 @@ public sealed class Arm60 : ICpuBackend, IStateSection
         _carryOut = 0;
         _instructionsExecuted = 0;
         _cyclesExecuted = 0;
+        _swiInstructions = 0;
+        _swiHleInstructions = 0;
+        _lastSwiComment = 0;
+        _swiCommentCounts.Clear();
         _ldmAddress = 0;
         _ldmValue = 0;
         _ldmInUse = 0;
@@ -359,6 +424,10 @@ public sealed class Arm60 : ICpuBackend, IStateSection
         _ldmInUse = reader.ReadInt32();
         _cycles = 0;
         _instructionsExecuted = 0;
+        _swiInstructions = 0;
+        _swiHleInstructions = 0;
+        _lastSwiComment = 0;
+        _swiCommentCounts.Clear();
         ResetCycleClassUsage();
     }
 
@@ -449,7 +518,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
                 ExecuteBranch(instruction);
                 break;
             case 0xf:
-                EnterSwi();
+                EnterSwi(instruction);
                 break;
             default:
                 EnterUndefined();
@@ -998,15 +1067,33 @@ public sealed class Arm60 : ICpuBackend, IStateSection
         _cycles -= Scycle + _nCycle;
     }
 
-    private void EnterSwi()
+    private void EnterSwi(uint instruction)
     {
+        _cycles -= Scycle + _nCycle;
+        _swiInstructions++;
+        _lastSwiComment = instruction & 0x00FFFFFF;
+        if (SwiCommentTelemetryEnabled)
+        {
+            _swiCommentCounts.TryGetValue(_lastSwiComment, out var commentCount);
+            _swiCommentCounts[_lastSwiComment] = commentCount + 1;
+        }
+
+        // Opera subtracts the SWI cycles before attempting HLE and leaves the next PC in
+        // place when the call is handled. Unknown comments fall through to the guest vector.
+        if (SwiHleEnabled
+            && _ram is not null
+            && ArmSwiHle.TryExecute(instruction, _state.User, _ram))
+        {
+            _swiHleInstructions++;
+            return;
+        }
+
         Arm60State state = _state;
         state.Spsr[ArmModes.Table[0x13]] = state.Cpsr;
         state.SetI(true);
         state.SetMode(0x13);
         state.Load(14, state.ProgramCounter);
         state.ProgramCounter = 0x00000008;
-        _cycles -= Scycle + _nCycle;
     }
 
     private void EnterUndefined()

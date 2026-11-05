@@ -109,7 +109,7 @@ public sealed class FiveDoMachine
         Memory.Sport = Sport;
         Memory.DiagPort = Diag;
 
-        Cpu = new Arm60(Memory.Bus, Clio, Tuning, Compatibility);
+        Cpu = new Arm60(Memory.Bus, Clio, Tuning, Compatibility, Memory.Ram);
         Quartz = new Quartz(Tuning, () => Clio.TimerDelay);
 
         Clio.CycleProvider = () => Cpu.CyclesExecuted;
@@ -614,7 +614,7 @@ public sealed class FiveDoMachine
                 || (section.Id == StateSectionIds.Clio && section.Version <= 3)
                 || (section.Id == StateSectionIds.Madam && section.Version <= 4)
                 || (section.Id == StateSectionIds.Vdlp && section.Version <= 3)
-                || (section.Id == StateSectionIds.Options && section.Version <= 8);
+                || (section.Id == StateSectionIds.Options && section.Version <= 9);
             if (!supportedVersion)
             {
                 throw new InvalidStateException($"Unsupported section {section.Id} version {section.Version}.");

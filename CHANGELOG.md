@@ -23,6 +23,11 @@ release.
   and Settings > Emulation > **Active input devices** cap the polled ports at 0-8
   (automatic by default). The MADAM PBUS queue grew from 20 to 256 bytes so long chains
   are not truncated; MADAM state section v4 records it and v1-v3 states still load.
+- Portfolio OS fixed-point math SWI HLE: `--swi-hle`, Settings > Emulation >
+  **Portfolio OS SWI HLE**, per-game profiles, and save-state Options v9 handle Opera's
+  14 math SWIs (`0x50000`-`0x50012`) on the host. `--swi-comments` reports which SWIs a
+  title calls. It is an opt-in performance mode; default-off hashes are unchanged, and
+  titles that poll cycle-sensitive hardware around matrix calls can change behavior.
 
 - The differential harness accepts `--arm-timing`, `--cel-timing`, and `--cd-timing`
   overrides for every 5DO capture, completing the timing A/B surface alongside

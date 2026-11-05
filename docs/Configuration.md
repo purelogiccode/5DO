@@ -101,7 +101,7 @@ every serialized property in `AppSettings`.
 | `AutoGameFixes` | bool | `true` | Apply the 4DO per-game fix-mode mapping automatically. |
 | `FixModeOverrides` | object | `{}` | Per-game fix-mode overrides, keyed by game ID. |
 | `FilterOverrides` | object | `{}` | Per-game filter overrides, keyed by game ID. |
-| `GameProfiles` | object | `{}` | Per-game profile snapshots, keyed by game ID. Each entry holds `Profile`, `Region`, `ArmTiming`, `ClioTimers`, `CelTiming`, `CdromTiming`, `CdSpeed`, `CpuClockMultiplier`, `RandomSeed`, `OperaDipir`, `OperaSoftReset`, `CpuBackend`, `CdAudioVolume`, `CdAudioMuted`, `BiosMd5`, `FixMode`, `Filter`, `HighResolution`, `Overscan`, `InputDevices`, `NvramStorageMode`, and `NvramVersion`. |
+| `GameProfiles` | object | `{}` | Per-game profile snapshots, keyed by game ID. Each entry holds `Profile`, `Region`, `ArmTiming`, `ClioTimers`, `CelTiming`, `CdromTiming`, `CdSpeed`, `CpuClockMultiplier`, `RandomSeed`, `OperaDipir`, `OperaSoftReset`, `SwiHle`, `CpuBackend`, `CdAudioVolume`, `CdAudioMuted`, `BiosMd5`, `FixMode`, `Filter`, `HighResolution`, `Overscan`, `InputDevices`, `NvramStorageMode`, and `NvramVersion`. |
 | `Filter` | enum string | `"SharpBilinear"` | Global presentation filter. |
 | `FrameSkip` | enum string | `"Auto"` | Presentation frame-skip policy: `Off`, `Auto`, `OneInTwo`, `OneInThree`, `OneInFour`, or `OneInFive`. Only presentation is skipped; emulation and audio always run every frame. |
 | `Aspect` | enum string | `"FourThree"` | Aspect policy. |
@@ -143,6 +143,7 @@ every serialized property in `AppSettings`.
 | `RandomSeed` | uint? | `null` | Optional initial DSP PRNG seed; `null` uses FreeDO's `0xa5a5a5a5`. |
 | `OperaDipir` | bool | `false` | Opt-in CLIO DIPIR latches and XBUS access aborts. Recorded in save states and included in per-game profiles. |
 | `OperaSoftReset` | bool | `false` | Opt-in Opera ARM/MADAM/DSP soft-reset path for CLIO CSTAT resets. Recorded in save states and included in per-game profiles. |
+| `SwiHle` | bool | `false` | Opt-in Portfolio OS fixed-point math SWI HLE (`0x50000`-`0x50012`). Recorded in save states and included in per-game profiles. It is a performance mode that skips the guest handler's cycles and register clobbers, so some titles change behavior. |
 | `CpuBackend` | enum string | `"Interpreter"` | Guest ARM60 backend. `Interpreter` is the only implemented value; `Jit` is reserved for M12 and is rejected by validation. |
 | `NvramStorageMode` | enum string | `"Global"` | `Global` keeps one shared image; `PerGame` keeps a separate image per 4DO game ID. |
 | `NvramVersion` | int | `0` | Independent NVRAM version slot, 0-9. |
@@ -546,6 +547,7 @@ The Settings dialog's **Emulation** page edits:
 - `RandomSeed` field: blank for the FreeDO default, or a 32-bit hexadecimal value.
 - `OperaDipir` checkbox: opt-in CLIO DIPIR latches and XBUS access aborts (restarts the machine).
 - `OperaSoftReset` checkbox: opt-in Opera ARM/MADAM/DSP soft-reset path (restarts the machine).
+- `SwiHle` checkbox: opt-in Portfolio OS fixed-point math SWI HLE (restarts the machine; per-game profiles can override it).
 - Current game display and fix-mode override (`0x...` hex mask, blank = automatic).
 - Per-game filter override (`Automatic` or an explicit filter).
 

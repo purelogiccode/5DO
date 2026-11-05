@@ -120,7 +120,7 @@ Machine; the table below is sorted by ID. Never renumber an existing section.
 | 9 | CD-ROM | 4 | `CdromDevice` | Poll/status, status/data buffers, command buffer, requested count, MEI status, current sector, disc state (tracks/MSF/TOC), cycle clock, next-ready cycle, pending read-status flag, MODE SET sector size/block flags, PLAY_AUDIO position, CD-DA sample cursor, volume, and mute. Version 1 is accepted with a zeroed clock and pending flag; v2 adds the cycle clock; v3 adds MODE SET and audio position; v4 adds the CD-DA mix. Older versions use the documented defaults. The timing mode itself is recorded in the Options section. |
 | 10 | Quartz | 3 | `Quartz` | ARM/VDL/timer accumulators, exact DSP cycle remainder, VDL line counter, Opera timer slot/gap flag and 16.16 slot accumulator. Versions 1-2 are accepted with a reset timer scheduler. |
 | 11 | Machine | 1 | `FiveDoMachine` | Compatibility flags (fix mode, Anvil, speed fixes, sf/sdf, unknown flag 11, jw, cnbfix, high-res), frame source dimensions, and all 960 `VdlLine` objects (width, control words, CLUT, 1280 pixels each). |
-| 12 | Options | 8 | `FiveDoMachine` | Every registered machine option: ARM timing mode, CLIO timer mode, MADAM CEL timing mode, CD-ROM timing mode, CD-ROM speed, DRAM/VRAM capacity, live video region, ARM clock, random seed (including whether the default was recorded), high-resolution mode, Opera DIPIR, Opera soft reset, fix mask, and CPU backend. Version 1 records only ARM timing; version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing; version 5 adds CD speed; version 6 adds the region; version 7 adds the remaining registry entries; version 8 adds the memory capacity. Loading a lower version leaves missing options at the machine default. |
+| 12 | Options | 9 | `FiveDoMachine` | Every registered machine option: ARM timing mode, CLIO timer mode, MADAM CEL timing mode, CD-ROM timing mode, CD-ROM speed, DRAM/VRAM capacity, live video region, ARM clock, random seed (including whether the default was recorded), high-resolution mode, Opera DIPIR, Opera soft reset, Portfolio OS SWI HLE, fix mask, and CPU backend. Version 1 records only ARM timing; version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing; version 5 adds CD speed; version 6 adds the region; version 7 adds the remaining registry entries; version 8 adds the memory capacity; version 9 adds the SWI HLE flag. Loading a lower version leaves missing options at the machine default. |
 
 ### Why the state is large
 
@@ -161,12 +161,13 @@ Loading a state written by a newer format version is rejected with
 - Memory writes version 3 and accepts versions 1-2. Version 3 adds the DRAM/VRAM
   configuration and the 22 MB allocation size. Older states carry the historical 19 MB
   stock backing and load with the stock layout.
-- Options writes version 8 and accepts versions 1-7. Version 1 records ARM timing only;
+- Options writes version 9 and accepts versions 1-8. Version 1 records ARM timing only;
   version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing;
   version 5 adds CD speed; version 6 adds the video region; version 7 adds the ARM clock,
   random seed, high-resolution mode, Opera DIPIR, Opera soft reset, fix mask, and CPU
-  backend; version 8 adds the DRAM/VRAM capacity. Missing fields stay at the machine
-  default. Every registered machine option is covered, and loading a state whose value
+  backend; version 8 adds the DRAM/VRAM capacity; version 9 adds the Portfolio OS SWI HLE
+  flag. Missing fields stay at the machine default. Every registered machine option is
+  covered, and loading a state whose value
   differs from the running machine adds a
   `State <option> <saved> differs from the machine <current>` warning. A differing video
   region or memory layout is applied to the machine; VRAM is located above DRAM, so the

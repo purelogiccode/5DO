@@ -649,3 +649,28 @@ Per-title clock behavior is a compatibility question, not a speed switch: a titl
 relies on a fixed cycle budget for CD/CLIO/CEL polling can time out or run faster at
 another clock. Use the stock clock unless a specific title has documented evidence in
 [`Compatibility.md`](Compatibility.md).
+
+### 8.2 Portfolio OS SWI HLE benchmark (2026-11-04)
+
+The SWI HLE replaces the guest Portfolio OS fixed-point math handler with the host
+routines in `ArmSwiHle`. A synthetic benchmark booted the real `bios/panafz1.bin`,
+wrote a loop calling `SWI #0x50008` (`MulMat44Mat44_F16`) 4,096 times into RAM, and
+stepped the CPU until the loop returned. The same 4x4 matrix was used for both runs.
+Release build, development machine:
+
+| Mode | CPU steps | ARM cycles | Wall time |
+|---|---:|---:|---:|
+| Guest handler (`--swi-hle` off) | 847,860 | 4,054,999 | 0.025 s |
+| Host HLE (`--swi-hle` on) | 24,578 | 65,538 | 0.002 s |
+
+The HLE removes ~97% of the interpreted instructions and ~12x the CPU wall time for this
+math-heavy loop. The result matrix is bit-identical for the benchmark inputs.
+
+HLE is intentionally not a timing model: it charges only the SWI instruction, not the
+guest handler's ~990 cycles or its register clobbers. Titles that poll cycle-sensitive
+hardware around matrix calls can therefore change behavior. In the local collection,
+`AutoBahn Tokio` (3,891 HLE calls in 3,000 frames) and `Ballz` (2,880 calls) boot and run
+with `--swi-hle`, but their frame hashes differ from the default run; both match again
+when the affected SWI is left to the guest. Default-off behavior is unchanged and the
+Lemmings differential smoke remains an exact match. Use `--swi-comments` to see which
+SWIs a title calls, and prefer per-game profiles over enabling HLE globally.

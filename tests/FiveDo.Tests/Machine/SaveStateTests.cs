@@ -397,6 +397,7 @@ public sealed class SaveStateTests
             HighResolution = true,
             OperaDipir = true,
             OperaSoftReset = true,
+            SwiHle = true,
         };
         FiveDoMachine machine = CreateMachine(tuning: tuning);
         machine.RunFrames(2);

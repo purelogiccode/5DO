@@ -53,6 +53,9 @@ public sealed class GameProfile
     /// <summary>Gets or sets a value indicating whether Opera's soft-reset path is enabled.</summary>
     public bool OperaSoftReset { get; set; }
 
+    /// <summary>Gets or sets a value indicating whether Portfolio OS SWI HLE is enabled.</summary>
+    public bool SwiHle { get; set; }
+
     /// <summary>Gets or sets the guest CPU backend.</summary>
     public CpuBackendKind CpuBackend { get; set; } = CpuBackendKind.Interpreter;
 
@@ -107,6 +110,7 @@ public sealed class GameProfile
             RandomSeed = settings.RandomSeed,
             OperaDipir = settings.OperaDipir,
             OperaSoftReset = settings.OperaSoftReset,
+            SwiHle = settings.SwiHle,
             CpuBackend = settings.CpuBackend,
             CdAudioVolume = settings.CdAudioVolume,
             CdAudioMuted = settings.CdAudioMuted,
@@ -145,6 +149,7 @@ public sealed class GameProfile
         settings.RandomSeed = RandomSeed;
         settings.OperaDipir = OperaDipir;
         settings.OperaSoftReset = OperaSoftReset;
+        settings.SwiHle = SwiHle;
         settings.CpuBackend = CpuBackend;
         settings.CdAudioVolume = CdAudioVolume;
         settings.CdAudioMuted = CdAudioMuted;

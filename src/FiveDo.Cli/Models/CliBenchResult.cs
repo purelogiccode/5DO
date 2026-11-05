@@ -18,4 +18,6 @@ internal sealed record CliBenchResult(
     string CelTiming = "FreeDoCompatible",
     string CdromTiming = "FreeDoCompatible",
     int CpuClock = EmulatorConstants.ArmClock,
-    string Memory = "21");
+    string Memory = "21",
+    bool SwiHle = false,
+    long SwiHleInstructions = 0);

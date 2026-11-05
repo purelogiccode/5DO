@@ -238,6 +238,7 @@ See [`SaveStates.md`](SaveStates.md).
 | Frame pacing oscillates | Check audio samples/frame; the pacer clamps 50-70 fps and falls back to 60 Hz. |
 | Auto frame skip does not raise the presented rate | Auto is presentation-only. If the emulated CPU/CEL/DSP is the bottleneck, reducing filter cost or output resolution will not help either; use a Release/optimized build and check the benchmark core time. Fixed frame-skip modes are available when the GPU/presenter is the bottleneck. |
 | Memory grows | Check for per-frame allocations with the benchmark/probe; steady state should be 0 bytes/frame. |
+| A game behaves differently with `--swi-hle` | HLE is an opt-in performance mode; it skips the guest math handler's cycles and register clobbers. Disable it or use a per-game profile. `--swi-comments` shows which SWIs the title calls. |
 
 ---
 

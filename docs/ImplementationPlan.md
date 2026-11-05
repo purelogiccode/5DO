@@ -5,7 +5,7 @@
 **Current release:** `1.2.1`
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master`<br>
-**Status:** **1,725 tests pass** (last recorded); `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,759 tests pass** (last recorded); `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Goal:** implement **every Opera core feature**, match or exceed Opera's accuracy, and ship the best standalone 3DO emulator on Windows, Linux, and macOS.
 
 > **This is the single source of truth.** It replaces the former 8,000-line dashboard, milestone log, feature spec, parity audit, and session handoff. Historical evidence stays in the linked docs; this file is the canonical backlog.
@@ -37,14 +37,14 @@
 
 | Area | What ships today | What is still missing |
 |---|---|---|
-| Core emulation | ARM60 interpreter, CLIO timers/FIFO/DMA/FIQ, MADAM CEL/pixel/matrix engines, DSP at exactly 44.1 kHz, SPORT, VDLP, XBUS, CD-ROM, input, configurable DRAM/VRAM (8 Opera layouts), NVRAM, deterministic save states v3 | Full Opera timing parity (ARM/CLIO/CEL/CD), SWI HLE, embedded boot ROM, unsigned-disc boot, CD subcode/DIPIR/read-ahead |
+| Core emulation | ARM60 interpreter, CLIO timers/FIFO/DMA/FIQ, MADAM CEL/pixel/matrix engines, DSP at exactly 44.1 kHz, SPORT, VDLP, XBUS, CD-ROM, input, configurable DRAM/VRAM (8 Opera layouts), NVRAM, deterministic save states v3 | Full Opera timing parity (ARM/CLIO/CEL/CD), SWI HLE timing parity, embedded boot ROM, unsigned-disc boot, CD subcode/DIPIR/read-ahead |
 | Frontend | Avalonia shell, library, metadata/favorites/playtime, settings, gamepad mapping, save slots/thumbnails, screenshots, log viewer, disc browser, BIOS/NVRAM manager, rewind, fast-forward, cheats, TAS movies, OSD/quick menu, input display, portable mode, instance lock, diagnostics bundle, update check | Netplay, achievements, Lua, big-picture UI, localization, themes/accessibility, installers, auto-update, debugger/profiler |
 | Renderer | Two-stage OpenGL/GLES (default), optional Vulkan (Windows surface), optional Direct3D 11 (Windows), 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR, per-edge overscan, void border, screenshot gallery | True 640x480/480i CEL rendering, supersampling, GPU CEL, shader presets, NTSC/HDR, recording, overlays/bezels, Linux/macOS Vulkan surfaces, 480i deinterlacing |
 | Audio | Exact 44.1 kHz DSP clock, OpenAL Soft output, WAV capture, `audio analyze`, CD-DA mixing/volume/mute | Resampler quality/exclusive mode/sync offset, mixer/spectrum, DSP debugger, audio golden corpus |
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing, M3U multi-disc playlist, live swap, guest inject, Opera file system, prefetch, DAT health | Full CD command/timing parity, subcode, read-ahead, known-title CD-DA evidence, real in-game multi-disc swap, ODE prompts, physical drive, image conversion |
 | Compatibility | 594 discs: **594 load**, **593 render**, 1 known boot failure (Crash 'n Burn Japan), 0 not loadable | 594/594 render; visual/in-game review; per-game auto-profiles; game database expansion |
 | Differential harness | FiveDO.DiffHarness, checkpoints, audio/state hashes, smoke + five-title showcase, 594-title manifest generator | Full 594-title run, PC-delta triage, CD/state transcripts, nightly dashboard |
-| Tests | **1,725** passing; fuzz harness for six parsers; build/format/inspectcode clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
+| Tests | **1,759** passing; fuzz harness for six parsers; build/format/inspectcode clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K Tier A measured; zero-allocation synthetic path | Tier B 1080p60, GLES 3.1/ANGLE, arm64 tuning, threaded DSP, managed JIT, zero allocations on all real paths |
 | Platforms | Six bundles: Windows/Linux/macOS × x64/arm64, framework-dependent single-file apphosts; Windows x64 validated; Linux x64 tests/smoke pass (GPU preview under llvmpipe); macOS and arm64 cross-published but not hardware-validated | macOS runtime validation, arm64 hardware validation, Linux/macOS GPU presentation, macOS gamepad, Flatpak/AppImage, installers/signing |
 | Release | **v1.2.1** published with six versioned bundles and `SHA256SUMS.txt`; .NET 10 runtime required (not bundled); legal/attribution sign-off recorded | Signing, notarization, auto-update, reproducible builds, SBOM |
@@ -148,8 +148,8 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
   **Done when:** unsigned software runs with an explicit option and legal sign-off is recorded.
 
 - [ ] **SYS-12 — Portfolio OS SWI HLE**
-  **Status:** Pending · **Priority:** P0 · **Effort:** L · **Tracks:** SYS-12
-  **Remaining:** implement Opera's SWI HLE set; opt-in flag; save-state/OS interaction; performance and compatibility evidence; documented trade-offs.
+  **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** SYS-12
+  **Remaining:** full-collection compatibility/performance validation; decide whether to charge the skipped guest handler cycles; document the titles where HLE changes timing. The 2026-11-04 increment implemented Opera's 14-SWI HLE set (`0x50000`-`0x50012`, excluding the object/Dot4 fallbacks), the `--swi-hle`/Settings/profile opt-in, save-state Options v9, `--swi-comments` diagnostics, 33 CPU/machine tests that match `opera_fixedpoint_math.c`, and a real-BIOS synthetic 4x4 benchmark (4,096 calls: 847,860 LLE steps / 4,054,999 cycles versus 24,578 HLE steps / 65,538 cycles). Default-off hashes are unchanged; HLE is intentionally not bit-identical to the guest matrix path because it skips the handler's cycles and register clobbers.
   **Done when:** HLE is opt-in, passes supported-title tests, and shows a measured performance gain without behavior changes when disabled.
   **Ref:** `opera_swi_hle_0x5XXXX.h`.
 
@@ -227,11 +227,6 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
   **Remaining:** frontend NativeAOT audio validation; startup-time and size targets; trimming compatibility; optional publish profiles; document which artifacts are AOT and which are framework-dependent.
   **Done when:** CLI and frontend AOT builds start, render, play audio, and pass smoke tests; startup/size are recorded.
 
-- [ ] **PERF-03 — arm64 performance and hardware validation**
-  **Status:** Pending · **Priority:** P1 · **Effort:** M
-  **Remaining:** Windows/Linux/macOS arm64 hardware runs; benchmark parity with x64; GL/audio/gamepad validation; packaging smoke; performance tuning.
-  **Done when:** all six arm64 bundles are hardware-validated and meet the same functional gates as x64.
-
 - [ ] **VID-12 — Latency features: run-ahead, frame delay, VRR, audio sync**
   **Status:** Pending · **Priority:** P1 · **Effort:** L · **Tracks:** VID-12
   **Remaining:** 1–2 frame run-ahead; frame-delay slider; VRR/adaptive-sync presentation; audio sync adjustment; measured input-to-photon latency; per-game options.
@@ -280,47 +275,6 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
   **Remaining:** named profiles; deadzones/curves; hot-plug prompts; import/export; per-game profiles; conflict detection; tests.
   **Done when:** profiles round-trip, apply per game, and survive device changes.
 
-- [ ] **UX-08 — Gamepad navigation and big-picture UI**
-  **Status:** Pending · **Priority:** P2 · **Effort:** L · **Tracks:** UX-08
-  **Remaining:** 10-foot library layout; full gamepad navigation; quick menu; on-screen keyboard; focus/accessibility behavior.
-  **Done when:** the entire library-to-game flow works with a gamepad only.
-
-- [ ] **UX-09 + FND-07 + ENG-08 — Localization**
-  **Status:** Pending · **Priority:** P2 · **Effort:** M · **Tracks:** UX-09, FND-07, ENG-08
-  **Remaining:** resource pipeline; `ILocalizer`; pseudo-locale; language selector; translated UI strings; translator guide; localized docs/CLI help.
-  **Done when:** at least two full locales ship; pseudo-locale tests catch missing strings; layout survives expansion.
-
-- [ ] **UX-10 + ENG-04 — Themes and accessibility**
-  **Status:** Pending · **Priority:** P2 · **Effort:** M · **Tracks:** UX-10, ENG-04
-  **Remaining:** light/dark/system themes; high-contrast mode; UI scaling; screen-reader labels; color-blind-safe indicators; keyboard-only navigation.
-  **Done when:** accessibility checks pass and themes apply consistently across all windows.
-
-- [ ] **UX-13 — External metadata and media**
-  **Status:** Partial · **Priority:** P2 · **Effort:** L · **Tracks:** UX-13
-  **Remaining:** Redump/No-Intro/IGDB/LaunchBox providers; cover/screenshot/manual/video media; caching/offline mode; at least 90% rich metadata for the local collection.
-  **Done when:** providers are configurable, cached, and privacy-safe; the library shows rich metadata for at least 90% of local images.
-
-- [ ] **UX-14 — Auto-update and release channels**
-  **Status:** Partial · **Priority:** P2 · **Effort:** M · **Tracks:** UX-14
-  **Remaining:** stable/beta channels; signed update manifests; delta or full downloads; in-app install; rollback; opt-out; tests.
-  **Done when:** a signed update installs and restarts safely on Windows/Linux/macOS.
-
-- [ ] **UX-16 + ENG-10 + BAK-07/16 — Installers, signing, notarization, and file associations**
-  **Status:** Pending · **Priority:** P2 · **Effort:** L · **Tracks:** UX-16, ENG-10, BAK-07, BAK-16
-  **Remaining:** MSIX/dmg installers; code signing; macOS notarization; Windows/macOS file associations; uninstall/repair; release key management.
-  **Done when:** signed installers pass clean-machine smoke tests and file associations launch the correct game.
-  **Note:** Flatpak/AppImage packaging is tracked in the platform-validation item.
-
-- [ ] **UX-17 + FND-08 — Diagnostics, typed errors, and compatibility reporting**
-  **Status:** Partial · **Priority:** P2 · **Effort:** M · **Tracks:** UX-17, FND-08
-  **Remaining:** typed error codes; compatibility-report form; upload flow; privacy scrubbing verification; crash-bundle retention; support workflow.
-  **Done when:** a user can submit a scrubbed compatibility report from the desktop/CLI and track its contents.
-
-- [ ] **UX-18 — Onboarding and verification**
-  **Status:** Pending · **Priority:** P2 · **Effort:** M · **Tracks:** UX-18
-  **Remaining:** first-run setup; BIOS/disc verification; health check; controller test; troubleshooting links; optional telemetry disclosure.
-  **Done when:** a new user can go from install to a verified boot without external docs.
-
 - [ ] **UX-20 + FND-06 — Per-game settings UI completion**
   **Status:** Partial · **Priority:** P2 · **Effort:** M · **Tracks:** UX-20, FND-06
   **Remaining:** cheat/shader-chain fields; inherit/reset; search/filter; live application; localized labels; profile import/export from the UI.
@@ -331,50 +285,15 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
   **Remaining:** CPU/memory/CEL debugger (DSP debugging is tracked separately in the audio section); breakpoints/watchpoints; step/run-to; trace viewer; frame/performance profiler; exportable traces.
   **Done when:** a developer can debug a stuck title and profile a frame without the CLI.
 
-- [ ] **UX-25 — Session continuity and focus behavior**
-  **Status:** Pending · **Priority:** P3 · **Effort:** S
-  **Remaining:** optional auto-resume of the last save slot; pause/ignore input when the window is inactive; per-game resume policy; tests.
-  **Done when:** the behavior is configurable and does not interfere with TAS/netplay determinism.
-
-- [ ] **ECO-06 — Plugin API**
-  **Status:** Pending · **Priority:** P3 · **Effort:** L · **Tracks:** ECO-06
-  **Remaining:** stable contracts; versioned API; sandbox/permissions; sample plugins; compatibility policy.
-  **Done when:** a sample plugin loads, observes events, and unloads without leaking or destabilizing the app.
-
-- [ ] **ECO-07 — Headless server / HTTP / WebSocket API**
-  **Status:** Pending · **Priority:** P3 · **Effort:** M · **Tracks:** ECO-07
-  **Remaining:** run/control/stream endpoints; authentication; JSON schema; screenshot/state/movie access; rate limits; docs.
-  **Done when:** an external client can boot, control, and capture a session through the API.
-
 - [ ] **ECO-09 — 3DO CD player / Video CD**
   **Status:** Pending · **Priority:** P3 · **Effort:** M · **Tracks:** ECO-09
   **Remaining:** audio-CD player UI; track navigation; VCD/MPEG expansion research and playback if feasible; tests.
   **Done when:** a compatible disc plays with correct controls and documented limitations.
 
-- [ ] **ECO-10 + ENG-07 — Documentation portal and compatibility dashboard**
-  **Status:** Pending · **Priority:** P2 · **Effort:** M · **Tracks:** ECO-10, ENG-07
-  **Remaining:** generated CLI/settings docs; searchable wiki; compatibility browser; per-title reports; nightly results; documentation freshness checks.
-  **Done when:** docs and compatibility data are generated, searchable, and current after each release.
-
-- [ ] **ECO-11 — Community workflow**
-  **Status:** Pending · **Priority:** P2 · **Effort:** S · **Tracks:** ECO-11
-  **Remaining:** contribution guide; issue/report templates; compatibility DB submissions; release notes workflow; moderation policy.
-  **Done when:** a community report can be triaged into the DB or backlog without manual re-entry.
-
 - [ ] **VID-07 — Shader preset system**
   **Status:** Pending · **Priority:** P2 · **Effort:** L · **Tracks:** VID-07
   **Remaining:** `.slang`/`.glslp`-style presets; hot reload; per-game presets; parameter UI; fallback on unsupported GPUs.
   **Done when:** popular presets load, render correctly, and fall back safely.
-
-- [ ] **VID-09 — Video recording: MP4/WebM with audio and replay buffer**
-  **Status:** Partial · **Priority:** P2 · **Effort:** M · **Tracks:** VID-09
-  **Remaining:** MP4/WebM encoding with audio; replay buffer; quality/bitrate controls; file naming; UI/CLI; GIF remains supported.
-  **Done when:** a 60-second clip with audio records and plays correctly from the desktop and CLI.
-
-- [ ] **VID-10 — Overlays, bezels, and touch controls**
-  **Status:** Pending · **Priority:** P3 · **Effort:** M · **Tracks:** VID-10
-  **Remaining:** per-system/per-game overlays; controller overlay; touch controls; layout editor; DPI-safe scaling.
-  **Done when:** overlays and touch controls work without affecting emulation timing.
 
 - [ ] **VID-11 + BAK-19 — Vulkan surfaces on Linux/macOS**
   **Status:** Pending · **Priority:** P2 · **Effort:** L · **Tracks:** VID-11, BAK-19
@@ -392,35 +311,10 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
   **Remaining:** 4DO-style void patterns in addition to the solid color; per-game presets; preview.
   **Done when:** patterns render identically across presenters and screenshots.
 
-- [ ] **AUD-02 — Audio mixer, spectrum, and recording formats**
-  **Status:** Partial · **Priority:** P2 · **Effort:** M · **Tracks:** AUD-02
-  **Remaining:** per-channel mixer; spectrum analyzer; FLAC/OGG/MP3 output; format/bitrate options; UI metering.
-  **Done when:** channels can be mixed and recorded independently; spectrum and meters are accurate.
-
 - [ ] **AUD-03 — DSP debugger**
   **Status:** Pending · **Priority:** P3 · **Effort:** M · **Tracks:** AUD-03
   **Remaining:** DSP registers/memory; instruction trace; breakpoints; step/run-to; state inspection; integration with the debugger suite.
   **Done when:** a DSP program can be debugged interactively and traces export cleanly.
-
-- [ ] **SYS-19 + BAK-14 — Save-state interoperability with 4DO/Opera**
-  **Status:** Pending · **Priority:** P2 · **Effort:** L · **Tracks:** SYS-19, BAK-14
-  **Remaining:** import/export 4DO `.4dosav` and Opera states; version mapping; round-trip tests; documented limitations.
-  **Done when:** a compatible 4DO/Opera save imports, runs, and exports without corrupting state.
-
-- [ ] **SYS-21 — Physical CD/DVD drive support**
-  **Status:** Pending · **Priority:** P2 · **Effort:** M · **Tracks:** SYS-21
-  **Remaining:** drive enumeration; `IDiscSource` adapter; platform I/O; sector/track handling; tests.
-  **Done when:** a compatible disc boots from a physical drive on at least Windows and Linux.
-
-- [ ] **SYS-22 — Disc image conversion and repair**
-  **Status:** Pending · **Priority:** P2 · **Effort:** M · **Tracks:** SYS-22
-  **Remaining:** CUE/BIN/ISO/CHD conversion; track/pregap preservation; repair/verify; CLI/UI; tests.
-  **Done when:** converted images preserve track layout and pass DAT/health verification.
-
-- [ ] **FND-04 — CLI contract, generated help, and backward compatibility**
-  **Status:** Partial · **Priority:** P2 · **Effort:** S · **Tracks:** FND-04
-  **Remaining:** formal option table; generated `--help`; JSON schema; deprecation policy; contract tests.
-  **Done when:** help/JSON are generated from one source and a documented compatibility policy is enforced.
 
 ### 3.4 Future research features
 
@@ -445,21 +339,6 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
   **Remaining:** composite/S-Video/RF signal models; CRT Royale-class presets; HDR output; gamma/color controls; visual validation.
   **Done when:** signal and HDR modes are validated against reference captures and meet performance budgets.
 
-- [ ] **ECO-08 — 3DO modem/network emulation**
-  **Status:** Research · **Priority:** P3 · **Effort:** L · **Tracks:** ECO-08
-  **Remaining:** protocol research; modem device model; host networking; matchmaking/lobby; security; tests.
-  **Done when:** a supported title completes a networked session, or a documented no-go decision is recorded.
-
-- [ ] **RES-01 — Beyond-Opera CD-ROM physical model**
-  **Status:** Research · **Priority:** P3 · **Effort:** L
-  **Remaining:** seek latency, defect/jitter modeling, laser behavior, subcode timing, hardware capture comparison; keep it opt-in.
-  **Done when:** the model is measurably closer to hardware than Opera on CD-sensitive titles without regressing the default.
-
-- [ ] **RES-02 — Hardware-verified timing model**
-  **Status:** Research · **Priority:** P2 · **Effort:** L
-  **Remaining:** logic-analyzer/hardware captures for ARM/CLIO/MADAM/CD/SPORT/VDLP; compare against Opera and 5DO; publish evidence.
-  **Done when:** a hardware-derived timing corpus exists and is used by the differential harness.
-
 ### 3.5 Testing
 
 Testing items are cross-cutting suites and gates. Feature-specific test evidence stays in that feature's “Done when” line.
@@ -474,7 +353,7 @@ Testing items are cross-cutting suites and gates. Feature-specific test evidence
   **Remaining:** full 594-title differential run; PC-delta triage; state/CD transcript comparison; frame/audio hash coverage; nightly dashboard; allowlist and triage policy.
   **Done when:** the nightly run has no unexplained divergence, and every allowance is documented and dated.
 
-- [ ] **AUD-04 — Audio golden tests vs Opera/hardware**
+- [ ] **AUD-04 — Audio golden tests vs Opera**
   **Status:** Pending · **Priority:** P1 · **Effort:** M · **Tracks:** AUD-04
   **Remaining:** WAV corpus; spectral/RMS/envelope comparison; DSP mode changes; CD-DA mixes; hardware reference captures.
   **Done when:** the corpus runs in CI with documented tolerances and catches regressions.
@@ -484,20 +363,10 @@ Testing items are cross-cutting suites and gates. Feature-specific test evidence
   **Remaining:** test patterns; RGB555/CLUT/NTSC behavior; CPU/GPU parity; high-res comparison; color delta report.
   **Done when:** every presenter/filter passes the suite within documented color tolerances.
 
-- [ ] **SYS-20 — Disc health, DAT, and 4DO/Opera hash comparison**
-  **Status:** Partial · **Priority:** P2 · **Effort:** M · **Tracks:** SYS-20
-  **Remaining:** whole-library verification in CI; 4DO/Opera hash comparison; CHD integrity edge cases; health-report export.
-  **Done when:** the library health report is reproducible and every known-dump/read-error badge is justified.
-
 - [ ] **TEST-01 — Save-state migration matrix**
   **Status:** Pending · **Priority:** P1 · **Effort:** M
   **Remaining:** test every version bump; v1–v3 states; option/region/disc-hash changes; warn/reject policies; 4DO/Opera interop once save-state interoperability lands.
   **Done when:** every supported state version loads or fails with a typed, tested error.
-
-- [ ] **ENG-06 — Stability soak and crash-free gate**
-  **Status:** Pending · **Priority:** P1 · **Effort:** M · **Tracks:** ENG-06
-  **Remaining:** 24h+ soaks per platform; rewind/state/swap/settings churn; memory/handle/thread leak checks; crash-bundle triage.
-  **Done when:** the soak passes on Windows/Linux/macOS and no unexplained crash remains in the supported set.
 
 - [ ] **ENG-01 + ENG-09 — CI quality gates**
   **Status:** Pending · **Priority:** P1 · **Effort:** M · **Tracks:** ENG-01, ENG-09
@@ -508,11 +377,6 @@ Testing items are cross-cutting suites and gates. Feature-specific test evidence
   **Status:** Pending · **Priority:** P2 · **Effort:** M · **Tracks:** BAK-09
   **Remaining:** settings, library, dialogs, hotkeys, gallery, playlist, and profile ViewModel tests; headless UI smoke; accessibility checks.
   **Done when:** UI regressions are caught without manual clicking.
-
-- [ ] **TEST-03 — Fuzz expansion for new parsers and APIs**
-  **Status:** Partial · **Priority:** P1 · **Effort:** M
-  **Remaining:** extend the existing fuzz harness to DAT, playlist, movie, cheat, settings, save-state migration, and future plugin/HTTP payloads; keep nightly seeds/artifacts.
-  **Done when:** every parser has a bounded fuzz target and the nightly run has zero unexplained failures.
 
 - [ ] **TEST-04 — GPU and platform CI matrix**
   **Status:** Pending · **Priority:** P1 · **Effort:** L
@@ -529,12 +393,7 @@ Testing items are cross-cutting suites and gates. Feature-specific test evidence
   **Remaining:** inspect final frames for every rendered disc; rerun black/static titles at 12,000+ frames; record Unplayable/Playable/Good; repeat with high-res; feed results into the compatibility and high-resolution items.
   **Done when:** every local disc has a reviewed status and the compatibility matrix distinguishes loadable, playable, and good.
 
-- [ ] **TEST-07 + BAK-01/02/03 — Scripted gameplay and full-playthrough evidence**
-  **Status:** Pending · **Priority:** P1 · **Effort:** L · **Tracks:** BAK-01, BAK-02, BAK-03
-  **Remaining:** a full Road Rash 5.5-mile race; Alone in the Dark inventory/exploration script; input/gameplay scripts for Gex, Need for Speed, Super Street Fighter II Turbo, Total Eclipse, Killing Time, Theme Park, and Return Fire; captured evidence and hashes.
-  **Done when:** every listed title has a repeatable script and recorded outcome, and the compatibility matrix links to the evidence.
-
----
+--
 
 ## 4. Suggested execution order
 
@@ -657,6 +516,7 @@ Append new entries here; do not delete history. Each entry is a completed canoni
 
 - **2026-11-04 - SYS-07 memory capacity options.** Added the eight Opera DRAM/VRAM layouts (`21`, `22`, `41`, `42`, `81`, `82`, `E2`, `F1`) through `MemoryConfiguration`/`MemoryLayout`, dynamic RAM/VRAM decode, VRAM base and masks for VDLP/SPORT/CEL, capacity-derived MADAM RED SYSBITS, `--memory`/Settings/profile/state plumbing, memory state section v3, Options section v8, a homebrew probe ROM that uses 4 MB DRAM + 2 MB VRAM, and 34 memory tests. Stock hashes are unchanged; expanded memory is documented as homebrew-only.
 - **2026-11-04 - SYS-08 clock matrix increment.** `bench --cpu-clock`/`--memory` measure the supported clock range; the 0.5x-4x matrix and unchanged stock default are recorded in `Performance.md` §8.1.
+- **2026-11-04 - SYS-12 Portfolio OS SWI HLE.** Ported Opera's 14 fixed-point math SWIs (`0x50000`-`0x50012`, with the object/Dot4 cases left to the guest), added `--swi-hle`/Settings/profile/state v9 plumbing, `--swi-comments` histograms, 33 CPU/machine tests that match `opera_fixedpoint_math.c`, and a real-BIOS synthetic 4x4 benchmark. Default-off hashes are unchanged; HLE is an opt-in performance mode and intentionally skips the guest handler's cycles and register clobbers, so some titles (AutoBahn Tokio, Ballz) change frame hashes.
 - **2026-11-04 - FND-01 machine option registry.** Added `MachineOptionRegistry` (13 validated options with CLI/Settings/profile/state mappings), typed `MachineOptionValidationException`/`UnknownMachineOptionException`, Opera DIPIR and soft-reset controls, `--opera-dipir`/`--opera-soft-reset`/`--cpu-backend`, `settings options` generated documentation, `docs/MachineOptions.md`, save-state Options v7 coverage for every option, mismatch warnings, and CLI/Settings/profile parity tests.
 - **2026-11-04 - Plan rewrite.** Consolidated the former dashboard, parts I-IV, feature spec, parity audit, and handoff into this single backlog; retired duplicate `BAK-*`/`MOON-*` trackers.
 - **2026-11-03 — v1.2.1.** Six x64/arm64 bundles plus `SHA256SUMS.txt`; CI verified every apphost machine type and every checksum.
@@ -684,7 +544,7 @@ This is a crosswalk, not a second backlog. “Canonical item” is the only plac
 | VDLP bypass CLUT | Shipped | — |
 | HiRes CEL rendering | Partial (line-doubled) | VID-01 |
 | MADAM matrix hardware/software | Shipped | — |
-| OperaOS SWI HLE | Missing | SYS-12 |
+| OperaOS SWI HLE | Partial (opt-in) | SYS-12 |
 | Threaded DSP | Missing | CORE-05 |
 | NVRAM storage per-game/shared | Shipped | — |
 | NVRAM version 0–9 | Shipped | — |

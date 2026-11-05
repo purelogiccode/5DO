@@ -106,6 +106,7 @@ public sealed class MachineOptionRegistryTests
             HighResolution = false,
             OperaDipir = false,
             OperaSoftReset = false,
+            SwiHle = false,
         };
 
         IReadOnlyList<MachineOptionMismatch> mismatches = MachineOptionRegistry.Compare(changed, snapshot);
@@ -144,6 +145,7 @@ public sealed class MachineOptionRegistryTests
         Assert.Equal(settings.HighResolution, applied.HighResolution);
         Assert.Equal(settings.OperaDipir, applied.OperaDipir);
         Assert.Equal(settings.OperaSoftReset, applied.OperaSoftReset);
+        Assert.Equal(settings.SwiHle, applied.SwiHle);
         Assert.Equal(FixMode.BitTiming5, applied.GetFixModeOverride("a1b2c3d4"));
         Assert.Equal(settings.CreateEmulatorTuning(), applied.CreateEmulatorTuning());
     }
@@ -174,6 +176,7 @@ public sealed class MachineOptionRegistryTests
             Assert.Equal(settings.HighResolution, loaded.HighResolution);
             Assert.Equal(settings.OperaDipir, loaded.OperaDipir);
             Assert.Equal(settings.OperaSoftReset, loaded.OperaSoftReset);
+            Assert.Equal(settings.SwiHle, loaded.SwiHle);
         }
         finally
         {
@@ -202,6 +205,7 @@ public sealed class MachineOptionRegistryTests
             HighResolution = true,
             OperaDipir = true,
             OperaSoftReset = true,
+            SwiHle = true,
         };
     }
 
@@ -224,6 +228,7 @@ public sealed class MachineOptionRegistryTests
             HighResolution = tuning.HighResolution,
             OperaDipir = tuning.OperaDipir,
             OperaSoftReset = tuning.OperaSoftReset,
+            SwiHle = tuning.SwiHle,
         };
     }
 
@@ -244,6 +249,7 @@ public sealed class MachineOptionRegistryTests
             HighResolution = true,
             OperaDipir = true,
             OperaSoftReset = true,
+            SwiHle = true,
         };
     }
 }

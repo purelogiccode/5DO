@@ -496,6 +496,12 @@ public sealed class AppSettings
     public bool OperaSoftReset { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether Portfolio OS fixed-point math SWIs are
+    /// handled on the host. This is an opt-in performance option and restarts the machine.
+    /// </summary>
+    public bool SwiHle { get; set; }
+
+    /// <summary>
     /// Gets or sets the guest CPU backend. The interpreter is the reference and the only
     /// implemented backend.
     /// </summary>
@@ -1223,6 +1229,7 @@ public sealed class AppSettings
             HighResolution = HighResolution,
             OperaDipir = OperaDipir,
             OperaSoftReset = OperaSoftReset,
+            SwiHle = SwiHle,
         };
         tuning.Validate();
         return tuning;

@@ -48,6 +48,9 @@ public sealed class MachineOptionSnapshot
     /// <summary>Gets a value indicating whether Opera soft reset was enabled, or <see langword="null"/> when absent.</summary>
     public bool? OperaSoftReset { get; init; }
 
+    /// <summary>Gets a value indicating whether Portfolio OS SWI HLE was enabled, or <see langword="null"/> when absent.</summary>
+    public bool? SwiHle { get; init; }
+
     /// <summary>Gets the fix-mode mask, or <see langword="null"/> when absent.</summary>
     public FixMode? FixMode { get; init; }
 

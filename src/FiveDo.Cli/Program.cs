@@ -593,6 +593,7 @@ internal static class Program
             ArmClock = ParseCpuClock(options.Get("--cpu-clock"), profileTuning.ArmClock),
             OperaDipir = HasFlag(args, "--opera-dipir") || profileTuning.OperaDipir,
             OperaSoftReset = HasFlag(args, "--opera-soft-reset") || profileTuning.OperaSoftReset,
+            SwiHle = HasFlag(args, "--swi-hle") || profileTuning.SwiHle,
             RandomSeed = ParseRandomSeed(options.Get("--random-seed"), profileTuning.RandomSeed),
             FixMode = fixMode,
             CpuBackend = ParseCpuBackend(options.Get("--cpu-backend"), profileTuning.CpuBackend),
@@ -603,6 +604,7 @@ internal static class Program
         }
 
         machine.Cpu.CycleClassTelemetryEnabled = cycleClasses;
+        machine.Cpu.SwiCommentTelemetryEnabled = HasFlag(args, "--swi-comments");
         machine.Clio.TimerTelemetryEnabled = clioTimerStats;
 
         using AudioOutput audio = CreateAudio(options, audioHashEnabled);
@@ -1270,6 +1272,10 @@ internal static class Program
             FixMode: (uint)machine.Compatibility.FixMode,
             OperaDipir: machine.Tuning.OperaDipir,
             OperaSoftReset: machine.Tuning.OperaSoftReset,
+            SwiHle: machine.Tuning.SwiHle,
+            SwiInstructions: machine.Cpu.SwiInstructions,
+            SwiHleInstructions: machine.Cpu.SwiHleInstructions,
+            LastSwiComment: machine.Cpu.LastSwiComment,
             CpuBackend: machine.Tuning.CpuBackend.ToString(),
             RandomSeed: machine.Tuning.RandomSeed,
             HighResolution: machine.Tuning.HighResolution,
@@ -1376,6 +1382,11 @@ internal static class Program
                         usage.Stops,
                         usage.Fiqs))
                     .ToArray()
+                : null,
+            SwiComments: machine.Cpu.SwiCommentTelemetryEnabled
+                ? machine.Cpu.GetSwiCommentUsage()
+                    .Select(static usage => new CliSwiCommentResult(usage.Comment, usage.Count))
+                    .ToArray()
                 : null);
 
         SaveNvramIfRequested(machine, nvramSelection);
@@ -1475,6 +1486,7 @@ internal static class Program
             ArmClock = ParseCpuClock(options.Get("--cpu-clock"), profileTuning.ArmClock),
             OperaDipir = HasFlag(args, "--opera-dipir") || profileTuning.OperaDipir,
             OperaSoftReset = HasFlag(args, "--opera-soft-reset") || profileTuning.OperaSoftReset,
+            SwiHle = HasFlag(args, "--swi-hle") || profileTuning.SwiHle,
             RandomSeed = ParseRandomSeed(options.Get("--random-seed"), profileTuning.RandomSeed),
             FixMode = fixMode,
             CpuBackend = ParseCpuBackend(options.Get("--cpu-backend"), profileTuning.CpuBackend),
@@ -3508,6 +3520,7 @@ internal static class Program
             MemoryConfiguration = ParseMemoryConfiguration(
                 options.Get("--memory"),
                 profileTuning.MemoryConfiguration),
+            SwiHle = HasFlag(args, "--swi-hle") || profileTuning.SwiHle,
         };
         FiveDoMachine machine = CreateSyntheticMachine(tuning);
         machine.RunFrames(10);
@@ -3531,7 +3544,9 @@ internal static class Program
             CelTiming: machine.Tuning.CelTiming.ToString(),
             CdromTiming: machine.Tuning.CdromTiming.ToString(),
             CpuClock: machine.Tuning.ArmClock,
-            Memory: MemoryLayout.FormatCode(machine.Memory.Layout.Configuration));
+            Memory: MemoryLayout.FormatCode(machine.Memory.Layout.Configuration),
+            SwiHle: machine.Tuning.SwiHle,
+            SwiHleInstructions: machine.Cpu.SwiHleInstructions);
 
         if (options.Json)
         {
@@ -3546,6 +3561,7 @@ internal static class Program
             Console.WriteLine($"cd timing:   {result.CdromTiming}");
             Console.WriteLine($"cpu clock:   {result.CpuClock / 1_000_000.0:0.###} MHz");
             Console.WriteLine($"memory:      {result.Memory}");
+            Console.WriteLine($"swi hle:     {(result.SwiHle ? "enabled" : "disabled")} ({result.SwiHleInstructions} calls)");
             Console.WriteLine($"frames:      {result.Frames}");
             Console.WriteLine($"time:        {result.Seconds:F3}s");
             Console.WriteLine($"fps:         {result.FramesPerSecond:F1}");
@@ -3841,6 +3857,7 @@ internal static class Program
             ["highResolution"] = tuning.HighResolution.ToString(),
             ["operaDipir"] = tuning.OperaDipir.ToString(),
             ["operaSoftReset"] = tuning.OperaSoftReset.ToString(),
+            ["swiHle"] = tuning.SwiHle.ToString(),
         };
     }
 
@@ -4132,6 +4149,7 @@ internal static class Program
             HighResolution = profile.HighResolution ?? tuning.HighResolution,
             OperaDipir = profile.OperaDipir,
             OperaSoftReset = profile.OperaSoftReset,
+            SwiHle = profile.SwiHle,
             CpuBackend = profile.CpuBackend,
         };
     }
@@ -4733,7 +4751,7 @@ internal static class Program
         Console.WriteLine("             [--memory 21|22|41|42|81|82|E2|F1|DRAM/VRAM]");
         Console.WriteLine("             [--input-device 1=joypad,2=mouse,...] [--active-devices 0-8] [--pbus-format legacy|opera]");
         Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz] [--cpu-backend interpreter]");
-        Console.WriteLine("             [--opera-dipir] [--opera-soft-reset]");
+        Console.WriteLine("             [--opera-dipir] [--opera-soft-reset] [--swi-hle] [--swi-comments]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--realtime] [--json]");
         Console.WriteLine("             [--cheat path] [--cheat-code code] [--cheat-auto] [--cheats-dir path]");
         Console.WriteLine("             [--checkpoints 3000,6000,12000] [--audio-hash] [--state-hash] [--cycle-classes] [--clio-timer-stats]");
@@ -4752,7 +4770,7 @@ internal static class Program
         Console.WriteLine("             [--memory 21|22|41|42|81|82|E2|F1|DRAM/VRAM]");
         Console.WriteLine("             [--input-device 1=joypad,2=mouse,...] [--active-devices 0-8] [--pbus-format legacy|opera]");
         Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz] [--cpu-backend interpreter]");
-        Console.WriteLine("             [--opera-dipir] [--opera-soft-reset]");
+        Console.WriteLine("             [--opera-dipir] [--opera-soft-reset] [--swi-hle]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--fix-mode 0xMASK] [--no-game-fixes]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             Runs the machine and records a diagnostic instruction ring buffer.");
@@ -4803,7 +4821,7 @@ internal static class Program
         Console.WriteLine("                                       List numbered save slots and metadata.");
         Console.WriteLine("  disasm <file> [--offset N] [--count N] [--base 0xADDR]");
         Console.WriteLine("                                       Disassemble raw little-endian ARM words.");
-        Console.WriteLine("  bench [--frames N] [--profile P] [--cpu-clock C] [--memory M] [--json]");
+        Console.WriteLine("  bench [--frames N] [--profile P] [--cpu-clock C] [--memory M] [--swi-hle] [--json]");
         Console.WriteLine("                                       Synthetic-ROM frame benchmark.");
         Console.WriteLine("  selftest [--json]                    Determinism and state roundtrip checks for every named profile.");
         Console.WriteLine("  update [--force] [--json]            Check GitHub for a newer 5DO release.");

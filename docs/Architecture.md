@@ -396,6 +396,40 @@ ICpuBackend
 - Any JIT backend must produce bit-identical architectural state and cycle counts to the interpreter for the same program. It is enabled only after differential tests pass.
 - Native executable-memory JITs (x86/ARM code emission) are out of scope for the pure C# core.
 
+## 7b. Portfolio OS SWI HLE
+
+`Arm60` can intercept the Portfolio OS fixed-point math SWIs before they trap to the
+guest vector. The set is a direct port of Opera's `opera_swi_hle_0x5XXXX.h` and
+`opera_fixedpoint_math.c`:
+
+| SWI | Function |
+|---|---|
+| `0x50000` | `MulVec3Mat33_F16` |
+| `0x50001` | `MulMat33Mat33_F16` |
+| `0x50002` | `MulManyVec3Mat33_F16` |
+| `0x50005` | `MulManyF16` |
+| `0x50006` | `MulScalerF16` |
+| `0x50007` | `MulVec4Mat44_F16` |
+| `0x50008` | `MulMat44Mat44_F16` |
+| `0x50009` | `MulManyVec4Mat44_F16` |
+| `0x5000C` | `Dot3_F16` |
+| `0x5000E` | `Cross3_F16` |
+| `0x5000F` | `AbsVec3_F16` |
+| `0x50010` | `AbsVec4_F16` |
+| `0x50011` | `MulVec3Mat33DivZ_F16` |
+| `0x50012` | `MulManyVec3Mat33DivZ_F16` |
+
+Opera leaves `0x50003`, `0x50004`, `0x5000A`, `0x5000B`, and `0x5000D` to the guest,
+so `ArmSwiHle.TryExecute` returns false for them and the normal SWI trap runs. The host
+routines use `IRam` (the same byte-addressed representation as the guest) and mirror the
+reference's 64-bit fixed-point math, including `sqrt_frac16`'s restoring loop.
+
+The option is `EmulatorTuning.SwiHle` (`--swi-hle`, Settings, per-game profile, Options
+state v9). It is disabled by default. HLE charges only the SWI instruction, not the
+guest handler's cycles or register clobbers, so it is a performance mode rather than a
+cycle-accurate model. `Arm60.SwiInstructions`, `SwiHleInstructions`, `LastSwiComment`,
+and `--swi-comments` provide coverage diagnostics.
+
 ---
 
 ## 8. Audio pipeline

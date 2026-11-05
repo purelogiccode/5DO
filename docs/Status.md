@@ -52,10 +52,16 @@ status bar, and completes the Serilog catch-block coverage and launch-statistics
 wiring. The full suite is **1,597/1,597** passing. The bundle layout is unchanged:
 framework-dependent single-file apphosts, no bundled .NET runtime, no PDB/XML files.
 
-**Latest work (2026-11-04):** Input devices now support eight PBUS ports. Ports 7-8 use
-the Opera daisy chain, `--active-devices`/Settings caps the polled ports at 0-8, and the
-MADAM PBUS buffer matches Opera's 256 bytes (state section v4). The hide-lightgun-crosshair
-option is also available.
+**Latest work (2026-11-04):** Portfolio OS SWI HLE is available behind `--swi-hle`,
+Settings > Emulation, and per-game profiles. It handles Opera's 14 fixed-point math SWIs
+on the host, records the option in save-state Options v9, and reports per-comment
+coverage with `--swi-comments`. The host routines match `opera_fixedpoint_math.c`; a
+real-BIOS 4x4 benchmark cuts 847,860 guest steps to 24,578. HLE is an opt-in performance
+mode and skips the guest handler's cycles/register clobbers, so some titles change
+behavior. Default-off hashes are unchanged. Input devices also support eight PBUS ports:
+ports 7-8 use the Opera daisy chain, `--active-devices`/Settings caps the polled ports at
+0-8, and the MADAM PBUS buffer matches Opera's 256 bytes (state section v4). The
+hide-lightgun-crosshair option is also available.
 
 **SYS-07 (2026-11-04):** all eight Opera DRAM/VRAM layouts
 (2/4/8/14/15 MB DRAM and 1/2 MB VRAM) are selectable behind `--memory`, Settings > Emulation >
@@ -64,7 +70,7 @@ DRAM, VDLP/SPORT/CEL use the live layout, and MADAM RED SYSBITS reports the capa
 the BIOS. A homebrew probe ROM uses 4 MB DRAM + 2 MB VRAM; retail titles remain on the
 stock 2 MB/1 MB default because Opera documents expanded memory as homebrew-only. The
 CPU-clock matrix (0.5x-4x) and `bench --cpu-clock`/`--memory` were also added; the suite
-is **1,725 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al and
+is **1,759 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al, 1.1an, and
 [`Performance.md`](Performance.md) 8.1.
 
 **Latest work (2026-11-02):** the CLI and desktop shell check the public GitHub release

@@ -2166,3 +2166,28 @@ a legacy version-2 memory section.
   queue; `KeyPressed_PreservesAnEightDeviceChain` checks the tail fill.
 - Hardware/test-ROM six-player and multi-tap verification remains; this is model-level
   packet and machine-path evidence, not a hardware capture.
+
+#### 1.1an SYS-12 Portfolio OS SWI HLE (2026-11-04)
+
+- `ArmSwiHle` ports Opera's 14 intercepted SWIs. `0x50003`, `0x50004`, `0x5000A`,
+  `0x5000B`, and `0x5000D` return false so the normal guest trap runs.
+- Tests: `ArmSwiHleTests` covers every intercepted function, the matrix/vector layouts,
+  perspective divide, the `sqrt_frac16` restoring loop, unsupported-SWI fallback, the
+  disabled trap, equal cycle cost for the SWI itself, and telemetry reset. The expected
+  values for `MulVec3Mat33`, `MulMat33Mat33`, `MulVec3Mat33DivZ`, `MulVec4Mat44`,
+  `MulManyVec4Mat44`, and `MulMat44Mat44` were generated with
+  `References/opera-libretro-master/libopera/opera_fixedpoint_math.c` and match bit-for-bit.
+- `SwiHle_IsWiredToMachineRam` executes `SWI #0x50000` through `FiveDoMachine` and checks
+  the result at the guest destination.
+- Options: `swiHle` is registered in `MachineOptionRegistry`, round-trips through
+  Settings, per-game profiles, and save-state Options v9, and appears in
+  `docs/MachineOptions.md`.
+- CLI: `--swi-hle` enables the mode; `--swi-comments` emits a per-comment histogram.
+- Real-BIOS benchmark (4,096 `MulMat44Mat44_F16` calls): 847,860 LLE steps /
+  4,054,999 cycles / 0.025 s versus 24,578 HLE steps / 65,538 cycles / 0.002 s. See
+  `Performance.md` §8.2.
+- Title evidence: AutoBahn Tokio (3,891 calls in 3,000 frames) and Ballz (2,880 calls)
+  boot and run with HLE. Their frame hashes differ from the default because HLE skips
+  the guest handler's cycles/register clobbers; leaving the affected SWI to the guest
+  restores the hash. Lemmings has no HLE calls and the differential smoke is an exact
+  match. Default-off behavior is unchanged.

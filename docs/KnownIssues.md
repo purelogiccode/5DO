@@ -220,6 +220,11 @@ checksums are attached, and legal/attribution sign-off is recorded.
   peripherals are out of scope for v1. Multi-track TOC, raw CD-DA sectors with
   volume/mute, and M3U multi-disc playlists are implemented; known-title disc audio
   evidence remains pending.
+- Portfolio OS SWI HLE (`--swi-hle`) is an opt-in performance mode, not a timing model.
+  The host math matches `opera_fixedpoint_math.c`, but HLE skips the guest handler's
+  cycles and register clobbers. AutoBahn Tokio and Ballz boot and run with HLE but
+  produce different frame hashes; leave it off for compatibility or use a per-game
+  profile. `--swi-comments` shows which SWIs a title calls.
 
 ## Logging and bug reports
 

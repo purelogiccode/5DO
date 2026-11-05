@@ -332,6 +332,7 @@ public partial class SettingsWindow : Window
         RandomSeedBox.Text = settings.RandomSeed is { } seed ? $"0x{seed:x8}" : string.Empty;
         OperaDipirCheck.IsChecked = settings.OperaDipir;
         OperaSoftResetCheck.IsChecked = settings.OperaSoftReset;
+        SwiHleCheck.IsChecked = settings.SwiHle;
         RewindCheck.IsChecked = settings.RewindEnabled;
         RewindSecondsBox.Text = settings.RewindSeconds.ToString(CultureInfo.InvariantCulture);
         FastForwardBox.Text = settings.FastForwardMultiplier.ToString(CultureInfo.InvariantCulture);
@@ -723,6 +724,7 @@ public partial class SettingsWindow : Window
 
         profile.OperaDipir = OperaDipirCheck.IsChecked == true;
         profile.OperaSoftReset = OperaSoftResetCheck.IsChecked == true;
+        profile.SwiHle = SwiHleCheck.IsChecked == true;
         profile.CdAudioVolume = (float)Math.Clamp(CdVolumeSlider.Value, 0, 1);
         profile.CdAudioMuted = CdMuteCheck.IsChecked == true;
         return profile;
@@ -755,6 +757,7 @@ public partial class SettingsWindow : Window
             RandomSeedBox.Text = profile.RandomSeed is { } seed ? $"0x{seed:x8}" : string.Empty;
             OperaDipirCheck.IsChecked = profile.OperaDipir;
             OperaSoftResetCheck.IsChecked = profile.OperaSoftReset;
+            SwiHleCheck.IsChecked = profile.SwiHle;
             CdVolumeSlider.Value = Math.Clamp(profile.CdAudioVolume, 0, 1);
             CdMuteCheck.IsChecked = profile.CdAudioMuted;
             SelectBiosOverride(profile.BiosMd5);
@@ -1246,6 +1249,7 @@ public partial class SettingsWindow : Window
         settings.RandomSeed = ParseRandomSeedText(RandomSeedBox.Text);
         settings.OperaDipir = OperaDipirCheck.IsChecked == true;
         settings.OperaSoftReset = OperaSoftResetCheck.IsChecked == true;
+        settings.SwiHle = SwiHleCheck.IsChecked == true;
 
         settings.SaveDirectory = SaveDirectoryBox.Text?.Trim() ?? string.Empty;
         settings.ScreenshotDirectory = ScreenshotDirectoryBox.Text?.Trim() ?? string.Empty;

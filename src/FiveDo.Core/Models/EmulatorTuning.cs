@@ -97,6 +97,18 @@ public sealed record EmulatorTuning
     /// </summary>
     public bool OperaSoftReset { get; init; }
 
+    /// <summary>
+    /// Gets a value indicating whether Portfolio OS fixed-point math SWIs are handled on
+    /// the host instead of running the guest OS implementation.
+    /// </summary>
+    /// <remarks>
+    /// This is Opera's <c>opera_swi_hle</c> option. It is a performance optimization and is
+    /// disabled by default; the host routines mirror <c>opera_fixedpoint_math.c</c>
+    /// bit-for-bit, including Opera's <c>sqrt_frac16</c> restoring loop. SWIs outside the
+    /// Opera HLE set still trap to the guest vector.
+    /// </remarks>
+    public bool SwiHle { get; init; }
+
     /// <summary>Validates the tuning values.</summary>
     /// <exception cref="MachineOptionValidationException">Thrown when an option is invalid.</exception>
     public void Validate()

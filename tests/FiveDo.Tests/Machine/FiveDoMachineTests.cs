@@ -29,6 +29,45 @@ public sealed class FiveDoMachineTests
     }
 
     [Fact]
+    public void SwiHle_IsWiredToMachineRam()
+    {
+        var machine = new FiveDoMachine(new EmulatorTuning { SwiHle = true });
+        uint[] program =
+        [
+            ArmTestAssembler.Mov(0, 0x2200),
+            ArmTestAssembler.Mov(1, 0x2000),
+            ArmTestAssembler.Mov(2, 0x2100),
+            ArmTestAssembler.Swi(0x50000),
+            ArmTestAssembler.Nop(),
+        ];
+        var rom = new byte[EmulatorConstants.RomBankSize];
+        for (var i = 0; i < program.Length; i++)
+        {
+            uint word = program[i];
+            rom[i * 4] = (byte)(word >> 24);
+            rom[(i * 4) + 1] = (byte)(word >> 16);
+            rom[(i * 4) + 2] = (byte)(word >> 8);
+            rom[(i * 4) + 3] = (byte)word;
+        }
+
+        machine.LoadBios(rom);
+        machine.Reset();
+        machine.Memory.Ram.Write32(0x2000, 0x10000);
+        machine.Memory.Ram.Write32(0x2100, 0x10000);
+        machine.Memory.Ram.Write32(0x2114, 0x10000);
+        machine.Memory.Ram.Write32(0x2128, 0x10000);
+
+        for (var i = 0; i < 4; i++)
+        {
+            machine.Cpu.Step();
+        }
+
+        Assert.True(machine.Cpu.SwiHleEnabled);
+        Assert.Equal(1, machine.Cpu.SwiHleInstructions);
+        Assert.Equal(0x10000u, machine.Memory.Ram.Read32(0x2200));
+    }
+
+    [Fact]
     public void EightPlayerPacket_ReachesTheMadamPbusQueue()
     {
         var machine = new FiveDoMachine();

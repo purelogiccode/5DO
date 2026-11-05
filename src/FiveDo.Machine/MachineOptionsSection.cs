@@ -41,10 +41,10 @@ internal sealed class MachineOptionsSection : IStateSection
     /// version 4 adds the CD-ROM timing mode; version 5 adds the CD-ROM speed; version 6
     /// adds the video region; version 7 records every registered machine option (ARM clock,
     /// random seed, high-resolution mode, Opera DIPIR, Opera soft reset, fix mask, and CPU
-    /// backend); version 8 adds the DRAM/VRAM capacity. Older states default the missing
-    /// fields to the machine default.
+    /// backend); version 8 adds the DRAM/VRAM capacity; version 9 adds the Portfolio OS
+    /// SWI HLE flag. Older states default the missing fields to the machine default.
     /// </remarks>
-    public ushort Version => 8;
+    public ushort Version => 9;
 
     /// <summary>Gets the option snapshot read from a state.</summary>
     internal MachineOptionSnapshot? Snapshot { get; private set; }
@@ -69,6 +69,7 @@ internal sealed class MachineOptionsSection : IStateSection
         writer.WriteUInt32((uint)_fixMode);
         writer.WriteUInt32((uint)_tuning.CpuBackend);
         writer.WriteUInt32((uint)_memoryConfiguration);
+        writer.WriteBoolean(_tuning.SwiHle);
     }
 
     /// <summary>Reads the option snapshot.</summary>
@@ -219,6 +220,12 @@ internal sealed class MachineOptionsSection : IStateSection
             memoryConfiguration = memory;
         }
 
+        bool? swiHle = null;
+        if (version >= 9)
+        {
+            swiHle = reader.ReadBoolean();
+        }
+
         Snapshot = new MachineOptionSnapshot
         {
             ArmTiming = armTiming,
@@ -236,6 +243,7 @@ internal sealed class MachineOptionsSection : IStateSection
             FixMode = fixMode,
             CpuBackend = cpuBackend,
             MemoryConfiguration = memoryConfiguration,
+            SwiHle = swiHle,
         };
     }
 }

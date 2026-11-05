@@ -1173,3 +1173,27 @@ M1 implements the section primitive used by all later chips:
 - Retail titles are not expected to boot with expanded memory (Opera documents the
   option as homebrew-only); the `MemoryConfigurationTests.HomebrewProbe_*` test ROM
   verifies that a guest sees and uses 4 MB DRAM plus 2 MB VRAM.
+
+### 12.33 Portfolio OS SWI HLE (2026-11-04)
+
+- `ArmSwiHle` is a direct port of `opera_swi_hle_0x5XXXX.h` and
+  `opera_fixedpoint_math.c`. The SWI comment is masked with `0x000FFFFF` exactly as
+  Opera's `decode_swi_hle`; unknown comments fall through to the normal `0x08` trap.
+- Opera's switch leaves `0x50003`, `0x50004`, `0x5000A`, `0x5000B`, and `0x5000D` to
+  the guest. Do not add no-op HLE cases for them: the reference `break`s out to
+  `decode_swi_lle`, so the guest handler must run.
+- The host routines use `IRam.Read32`/`Write32` rather than the CPU bus. The guest
+  pointers are byte addresses into the same little-endian RAM representation, and
+  `IRam` handles unaligned accesses the way the C reference's byte pointers do.
+- All arithmetic is 64-bit intermediate, arithmetic `>> 16`, and truncating division,
+  matching the C reference and `MulSF16` ("lower bits are truncated"). `sqrt_frac16`
+  intentionally keeps the reference's 17-iteration `do/while` and signed shifts; it is
+  not a general-purpose square root.
+- `Arm60` charges the same SWI instruction cost as the trap (`Scycle + NCycle`) and
+  then returns with the next PC in place. It does not charge the skipped guest
+  handler's cycles or reproduce its register clobbers. That is why HLE is a
+  performance mode, not a timing model.
+- Evidence: the C reference and 5DO agree on `MulVec3Mat33`, `MulMat33Mat33`,
+  `MulVec3Mat33DivZ`, `MulVec4Mat44`, `MulManyVec4Mat44`, and `MulMat44Mat44` for
+  non-trivial signed inputs. The real-BIOS 4,096-call benchmark is in
+  `Performance.md` §8.2.

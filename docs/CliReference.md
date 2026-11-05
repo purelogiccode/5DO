@@ -17,8 +17,8 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 ## 1. Argument rules
 
 - Options are `--name value`. Boolean flags are bare (`--json`, `--realtime`,
-  `--high-res`, `--opera-dipir`, `--opera-soft-reset`, `--prefetch`,
-  `--no-game-fixes`).
+  `--high-res`, `--opera-dipir`, `--opera-soft-reset`, `--swi-hle`, `--swi-comments`,
+  `--prefetch`, `--no-game-fixes`).
 - A flag followed by a non-`--` token consumes that token as its value. Put boolean
   flags last or before another `--option` to avoid ambiguity.
 - The first non-option token is the positional path for `run`, `trace`, `info`,
@@ -112,7 +112,8 @@ frame.
 3. Apply `--profile` (if any), then create the machine with `--high-res`,
    `--arm-timing`, `--clio-timers`, `--cel-timing`, `--cd-timing`, `--cd-speed`,
    `--memory`, `--cpu-clock`, `--random-seed`, `--opera-dipir`, `--opera-soft-reset`,
-   `--cpu-backend`, and the resolved fix mode. Explicit options override the profile.
+   `--swi-hle`, `--cpu-backend`, and the resolved fix mode. Explicit options override the
+   profile.
 4. Resolve `--bios`/`--bios-auto` and load BIOS1/BIOS2 (unless `--state-in`).
 5. Create the audio backend and insert the disc.
 6. Reset the machine.
@@ -160,6 +161,8 @@ frame.
 | `--random-seed default\|random\|SEED` | `default` | Initial DSP PRNG seed. `default` keeps `0xa5a5a5a5`, `random` picks a fresh 32-bit value, and a decimal or `0x` value fixes the seed. |
 | `--opera-dipir` | off | Enable CLIO DIPIR latches and XBUS access aborts. Recorded in save states; a per-game profile can also enable it. |
 | `--opera-soft-reset` | off | Use Opera's ARM/MADAM/DSP reset path for CLIO CSTAT soft resets. Recorded in save states. |
+| `--swi-hle` | off | Handle Opera's 14 Portfolio OS fixed-point math SWIs (`0x50000`-`0x50012`) on the host. Opt-in performance mode; it skips the guest handler's cycles and register clobbers, so some titles change behavior. Recorded in save states and per-game profiles. |
+| `--swi-comments` | off | Collect a per-comment SWI histogram and include it as `swiComments` in `--json`. Use it to discover which math SWIs a title calls. Diagnostic only. |
 | `--cpu-backend interpreter` | `interpreter` | Guest ARM60 backend. The managed IL JIT is not implemented; any other value fails. |
 | `--prefetch` | off | Enable the bounded disc read-ahead cache (32 sectors ahead, 128-sector capacity). |
 | `--playlist <m3u>` | none | Open the first entry of an M3U/M3U8 playlist. Cannot be combined with a positional disc. A positional `.m3u`/`.m3u8` is also detected. |
@@ -444,6 +447,7 @@ instruction ring buffer. It stops early on a stop condition or `--count` limit.
 | `--cpu-clock 0.5x-4x\|6.25-50MHz` | 1x | As in `run`. |
 | `--random-seed default\|random\|SEED` | `default` | As in `run`. |
 | `--opera-dipir`, `--opera-soft-reset` | off | As in `run`. |
+| `--swi-hle` | off | As in `run`. `--swi-comments` is only meaningful for `run --json`. |
 | `--cpu-backend interpreter` | `interpreter` | As in `run`. |
 | `--fix-mode`, `--no-game-fixes` | database | As in `run`. |
 

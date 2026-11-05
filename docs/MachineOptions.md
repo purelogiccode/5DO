@@ -21,3 +21,4 @@ Each option is validated by the machine, reachable from the CLI, desktop setting
 | highResolution | --high-res | HighResolution | HighResolution | boolean | disabled | enabled, disabled | yes | Opt-in 640x480 CEL/VDLP rendering. |
 | operaDipir | --opera-dipir | OperaDipir | OperaDipir | boolean | disabled | enabled, disabled | yes | CLIO DIPIR latches and XBUS access aborts. |
 | operaSoftReset | --opera-soft-reset | OperaSoftReset | OperaSoftReset | boolean | disabled | enabled, disabled | yes | CLIO CSTAT soft resets use Opera's ARM/MADAM/DSP reset path. |
+| swiHle | --swi-hle | SwiHle | SwiHle | boolean | disabled | enabled, disabled | yes | Handle Portfolio OS fixed-point math SWIs on the host instead of running the guest implementation. |
