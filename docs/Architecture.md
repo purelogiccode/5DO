@@ -72,7 +72,7 @@
 | Project | Responsibility | Key types | References |
 |---|---|---|---|
 | `FiveDo.Core` | Contracts, shared value types, constants, compatibility flags, logging abstraction, state reader/writer interfaces | `IAddressBus`, `IRam`, `ICpuBackend`, `IPcAdjustSource`, `IInterruptSink`, `IFrameSink`, `IAudioSink`, `IPbusSource`, `IDiscSource`, `IXbusDevice`, `IVdlp`, `IMadamBus`, `VdlFrame`, `VdlLine`, `FrameBuffer`, `FixMode`, `EmulatorTuning`, `CompatibilityState`, `StateFormat`, `StateSectionIds`, `IStateReader/Writer` | none |
-| `FiveDo.Cpu` | ARM60 interpreter, condition codes, banked registers, cycle accounting, disassembler | `Arm60`, `Arm60State`, `ArmDecoder`, `ArmAlu`, `ArmBarrelShifter`, `ArmDisassembler` | Core |
+| `FiveDo.Cpu` | ARM60 interpreter, optional managed IL JIT, condition codes, banked registers, cycle accounting, disassembler | `Arm60`, `Arm60State`, `ArmDecoder`, `ArmAlu`, `ArmBarrelShifter`, `ArmDisassembler` | Core |
 | `FiveDo.Memory` | Physical RAM/ROM/NVRAM, word-swapped representation, mirrors, byte/halfword/word helpers | `FiveDoMemory` | Core |
 | `FiveDo.Madam` | MADAM registers, CEL engine, pixel decoder/processor/projector, matrix engine, pixel bus, DMA | `Madam`, `CelEngine`, `CelBitReader`, `CelRasterizer`, `CelGeometry`, `CelMemory`, `CcbParser`, `PixelDecoder`, `PixelProcessor`, `Projector` | Core |
 | `FiveDo.Clio` | CLIO registers, timers, FIFOs, DMA, interrupts, DSP interface, XBUS register window, ROM select, diagnostic port | `Clio`, `DiagPort` | Core |
@@ -384,16 +384,22 @@ The full budget table, measurement methodology, and current gaps are in
 
 ```text
 ICpuBackend
-  ├── Arm60            (default, reference behavior)
-  └── (optional future IL JIT backend)
+  └── Arm60            (interpreter; optional managed IL JIT execution strategy)
 ```
 
 - `ICpuBackend` exposes `Step()`, `Reset()`, `Save/LoadState`, and the register/state surface.
 - The interpreter is the compatibility oracle and the default backend.
-- Optimize the interpreter before adding a JIT: fast RAM path, direct dispatch/decode cache, fewer interface calls per instruction, and no per-instruction allocations. Measure on the benchmark corpus first.
-- An optional IL JIT can compile ARM basic blocks into `DynamicMethod` delegates using pure managed `System.Reflection.Emit`. This stays within the "pure C#" rule.
-- The 3DO ARM60 runs at ~12.5 MHz, so a tuned interpreter is expected to be fast enough. The JIT is a long-term optimization, not a prerequisite for 60 fps.
-- Any JIT backend must produce bit-identical architectural state and cycle counts to the interpreter for the same program. It is enabled only after differential tests pass.
+- `Arm60.Jit.cs` adds an optional managed IL JIT behind `CpuBackendKind.Jit`. It compiles
+  hot straight-line blocks into `DynamicMethod` delegates and keeps the same
+  `Arm60State`, save-state section, cycle counters, and FIQ path.
+- Compiled instructions are verified against current memory before they execute; stores
+  and branches terminate a block, and unsupported instructions, SWIs, mode changes, and
+  runtimes without dynamic code fall back to `Step()`.
+- The JIT stops at the frame loop's 16-cycle batch boundary so CLIO/CD/DSP/VDLP event
+  timing matches the interpreter.
+- Any JIT backend must produce bit-identical architectural state and cycle counts to the
+  interpreter for the same program. `ArmJitTests` and the lockstep evidence in
+  `Performance.md` §8.4 cover this.
 - Native executable-memory JITs (x86/ARM code emission) are out of scope for the pure C# core.
 
 ## 7b. Portfolio OS SWI HLE

@@ -21,7 +21,7 @@ namespace FiveDo.Cpu;
 /// parallel. The bus is the only external dependency.
 /// </para>
 /// </remarks>
-public sealed class Arm60 : ICpuBackend, IStateSection
+public sealed partial class Arm60 : ICpuBackend, IStateSection
 {
     private const int Scycle = 1;
     private const int Icycle = 1;
@@ -273,6 +273,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
         _ldmValue = 0;
         _ldmInUse = 0;
         ResetCycleClassUsage();
+        ClearJitCache();
     }
 
     /// <summary>
@@ -429,6 +430,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
         _lastSwiComment = 0;
         _swiCommentCounts.Clear();
         ResetCycleClassUsage();
+        ClearJitCache();
     }
 
     /// <summary>Writes the CPU save-state section payload. FreeDO: <c>_arm_Save</c>.</summary>
@@ -767,7 +769,7 @@ public sealed class Arm60 : ICpuBackend, IStateSection
             uint value;
             if ((instruction & (1u << 22)) != 0)
             {
-                value = _bus.Read8(transferBase);
+                value = ReadByte(transferBase);
             }
             else
             {
@@ -1123,6 +1125,11 @@ public sealed class Arm60 : ICpuBackend, IStateSection
     private uint ReadWord(uint address)
     {
         return _bus.Read32(address);
+    }
+
+    private byte ReadByte(uint address)
+    {
+        return _bus.Read8(address);
     }
 
     private void WriteWord(uint address, uint value)

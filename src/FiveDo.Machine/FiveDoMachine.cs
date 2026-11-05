@@ -804,6 +804,9 @@ public sealed class FiveDoMachine
         var batch = 0;
         var frameCycles = RegionProfile.GetFrameCycles(Tuning.ArmClock);
         var celBusyTiming = Tuning.CelTiming == CelTimingMode.OperaBusy;
+        var useJit = Tuning.CpuBackend == CpuBackendKind.Jit
+            && instructionObserver is null
+            && !celBusyTiming;
         uint celElapsedCycles = 0;
 
         while (total < frameCycles)
@@ -829,7 +832,7 @@ public sealed class FiveDoMachine
                 instructionObserver(pc, Cpu.Cpsr, Memory.Bus.Read32(pc));
             }
 
-            var stepCycles = Cpu.Step();
+            var stepCycles = useJit ? Cpu.RunJitBlock(batch) : Cpu.Step();
             batch += stepCycles;
             if (celBusyTiming)
             {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 using FiveDo.Audio;
 using FiveDo.Core;
 using FiveDo.Storage;
@@ -714,6 +715,35 @@ public sealed class CliProcessTests
     }
 
     [Fact]
+    public void Run_CpuBackendJit_MatchesInterpreterHash()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult interpreter = Invoke(
+                "run", "--bios", biosPath, "--frames", "10", "--cpu-backend", "interpreter", "--json");
+            CliResult jit = Invoke(
+                "run", "--bios", biosPath, "--frames", "10", "--cpu-backend", "jit", "--json");
+
+            Assert.Equal(0, interpreter.Code);
+            Assert.Equal(0, jit.Code);
+            using JsonDocument interpreterJson = JsonDocument.Parse(interpreter.Output);
+            using JsonDocument jitJson = JsonDocument.Parse(jit.Output);
+            Assert.Equal(
+                interpreterJson.RootElement.GetProperty("frameHash").GetUInt32(),
+                jitJson.RootElement.GetProperty("frameHash").GetUInt32());
+            Assert.Equal(
+                interpreterJson.RootElement.GetProperty("instructions").GetInt64(),
+                jitJson.RootElement.GetProperty("instructions").GetInt64());
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
     public void Run_InvalidCpuBackend_ReturnsOne()
     {
         var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
@@ -727,7 +757,7 @@ public sealed class CliProcessTests
                 "--frames",
                 "0",
                 "--cpu-backend",
-                "jit");
+                "banana");
 
             Assert.Equal(1, result.Code);
             Assert.Contains("--cpu-backend", result.Error, StringComparison.Ordinal);

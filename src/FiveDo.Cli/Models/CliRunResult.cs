@@ -108,6 +108,28 @@ internal sealed record CliRunResult(
     IReadOnlyList<CliTimerStatResult>? TimerStats = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     IReadOnlyList<CliSwiCommentResult>? SwiComments = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    long JitBlocksCompiled = 0,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    long JitBlocksExecuted = 0,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    int JitBlockCount = 0,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    bool JitCompileFailed = false,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    double JitCompileSeconds = 0,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    long JitCompiledDataProcessing = 0,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    long JitCompiledLoads = 0,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    long JitCompiledStores = 0,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    long JitCompiledBranches = 0,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    bool JitFallback = false,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? JitLastFailure = null,
     string Memory = "Dram2MbVram1Mb");
 
 /// <summary>One SWI comment observed during a diagnostic run.</summary>

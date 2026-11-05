@@ -144,7 +144,7 @@ every serialized property in `AppSettings`.
 | `OperaDipir` | bool | `false` | Opt-in CLIO DIPIR latches and XBUS access aborts. Recorded in save states and included in per-game profiles. |
 | `OperaSoftReset` | bool | `false` | Opt-in Opera ARM/MADAM/DSP soft-reset path for CLIO CSTAT resets. Recorded in save states and included in per-game profiles. |
 | `SwiHle` | bool | `false` | Opt-in Portfolio OS fixed-point math SWI HLE (`0x50000`-`0x50012`). Recorded in save states and included in per-game profiles. It is a performance mode that skips the guest handler's cycles and register clobbers, so some titles change behavior. |
-| `CpuBackend` | enum string | `"Interpreter"` | Guest ARM60 backend. `Interpreter` is the only implemented value; `Jit` is reserved for M12 and is rejected by validation. |
+| `CpuBackend` | enum string | `"Interpreter"` | Guest ARM60 backend. `Interpreter` is the reference; `Jit` compiles hot blocks and falls back safely. |
 | `NvramStorageMode` | enum string | `"Global"` | `Global` keeps one shared image; `PerGame` keeps a separate image per 4DO game ID. |
 | `NvramVersion` | int | `0` | Independent NVRAM version slot, 0-9. |
 | `NvramDirectory` | string | `""` | Directory that owns the NVRAM layout; empty means the resolved data directory (portable-aware). |
@@ -205,7 +205,7 @@ machine after changing it.
 
 `CdSpeed` (string): `Unbounded`, `X1`, `X2`, `X4`, `X8`, `X16`, `X24`, `X32`.
 
-`CpuBackend` (string): `Interpreter` (only supported value; `Jit` is reserved).
+`CpuBackend` (string): `Interpreter`, `Jit`. The JIT is experimental and remains slower than the interpreter on the local boot test; the interpreter is the default.
 
 `NvramStorageMode` (string): `Global`, `PerGame`.
 
@@ -551,8 +551,9 @@ The Settings dialog's **Emulation** page edits:
 - Current game display and fix-mode override (`0x...` hex mask, blank = automatic).
 - Per-game filter override (`Automatic` or an explicit filter).
 
-`CpuBackend` remains `Interpreter`; the JIT value is reserved for M12 and is rejected by
-the registry until it is implemented.
+`CpuBackend` defaults to `Interpreter`. `Jit` is accepted on runtimes with dynamic code
+support; it falls back to the interpreter for unsupported instructions or when dynamic code
+is unavailable.
 
 Changing high-resolution mode, ARM timing, the CLIO timer mode, the CEL timing mode, the
 CD-ROM timing mode, the CD-ROM speed, the ARM clock, the random seed, Opera DIPIR, Opera

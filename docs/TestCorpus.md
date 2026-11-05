@@ -2276,3 +2276,27 @@ a legacy version-2 memory section.
   1,000 cache-hit reads, asserting `GC.GetAllocatedBytesForCurrentThread()` stays below 128 bytes (a one-time runtime allocation is tolerated).
 - This is an increment, not completion: continuous miss/eviction streaming still needs
   an end-to-end allocation gate and frame-spike measurement.
+
+#### 1.1at PERF-08 managed IL JIT (2026-11-05, partial)
+
+- `Arm60.Jit.cs` compiles hot straight-line ARM60 blocks into `DynamicMethod` IL. Only
+  data-processing, immediate-offset load/store, and branch instructions are compiled;
+  multiply, swap, block transfer, SWI, MRS/MSR, mode changes, PC writes, and
+  register-specified shifts stay on the interpreter.
+- Stores and branches terminate a block. Every compiled instruction is verified against
+  the current code word before it executes; a changed first word returns a stale sentinel
+  and a changed later word returns the committed cycles so the next call recompiles or
+  falls back. This covers self-modifying code, DMA, ROM-bank switches, and state loads.
+- Blocks stop at the frame loop's 16-cycle batch boundary using the machine's current
+  `batch`, so CLIO/CD/DSP/VDLP event timing matches the interpreter. Blocks compile only
+  after 8,192 executions to keep one-shot boot/decompression code on the interpreter.
+- `ArmJitTests` covers data processing, conditions, loads/stores, branches, link branches,
+  LSL carry-out, stale-code refresh, synthetic boot, and a machine-level frame/RAM parity
+  test. The CLI test compares interpreter/JIT `frameHash` and instruction counts.
+- Lockstep evidence: 100,000,000 Lemmings instructions with identical PC, CPSR, registers,
+  cycles, and instruction count. Full-frame hashes match for Lemmings 3,000 frames
+  (`0x9C2D31F6`), Road Rash 1,000 frames (`0x41D2AC9A`), and Powers Kingdom Europe 1,000
+  frames (`0xDCEB4C05`).
+- Performance is a partial result: ALU/load microbenchmarks are 1.9-3.3x faster, but
+  end-to-end boot is 1.17-1.85x slower because short blocks, CEL/VDLP work, and JIT code-cache
+  pressure dominate. The interpreter remains the default. See `Performance.md` §8.4.

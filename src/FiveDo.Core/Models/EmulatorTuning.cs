@@ -75,6 +75,11 @@ public sealed record EmulatorTuning
     public FixMode FixMode { get; init; } = FixMode.None;
 
     /// <summary>Gets the guest CPU backend. The interpreter is the default and the reference implementation.</summary>
+    /// <remarks>
+    /// The managed IL JIT is an optional accelerator for hot straight-line blocks. It
+    /// preserves architectural state and cycle counts, and falls back to the interpreter
+    /// for unsupported instructions, self-modifying code, and runtimes without dynamic code.
+    /// </remarks>
     public CpuBackendKind CpuBackend { get; init; } = CpuBackendKind.Interpreter;
 
     /// <summary>Gets a value indicating whether the future high-resolution CEL mode is enabled.</summary>

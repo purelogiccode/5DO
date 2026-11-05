@@ -167,7 +167,7 @@ frame.
 | `--opera-soft-reset` | off | Use Opera's ARM/MADAM/DSP reset path for CLIO CSTAT soft resets. Recorded in save states. |
 | `--swi-hle` | off | Handle Opera's 14 Portfolio OS fixed-point math SWIs (`0x50000`-`0x50012`) on the host. Opt-in performance mode; it skips the guest handler's cycles and register clobbers, so some titles change behavior. Recorded in save states and per-game profiles. |
 | `--swi-comments` | off | Collect a per-comment SWI histogram and include it as `swiComments` in `--json`. Use it to discover which math SWIs a title calls. Diagnostic only. |
-| `--cpu-backend interpreter` | `interpreter` | Guest ARM60 backend. The managed IL JIT is not implemented; any other value fails. |
+| `--cpu-backend interpreter\|jit` | `interpreter` | Guest ARM60 backend. `jit` compiles hot blocks and falls back safely when dynamic code or a supported block is unavailable. |
 | `--prefetch` | off | Enable the bounded disc read-ahead cache (32 sectors ahead, 128-sector capacity). |
 | `--playlist <m3u>` | none | Open the first entry of an M3U/M3U8 playlist. Cannot be combined with a positional disc. A positional `.m3u`/`.m3u8` is also detected. |
 | `--swap-at N` | none | With `--swap-disc`, replace the disc at emulated frame N without resetting the machine. |
@@ -452,7 +452,7 @@ instruction ring buffer. It stops early on a stop condition or `--count` limit.
 | `--random-seed default\|random\|SEED` | `default` | As in `run`. |
 | `--opera-dipir`, `--opera-soft-reset` | off | As in `run`. |
 | `--swi-hle` | off | As in `run`. `--swi-comments` is only meaningful for `run --json`. |
-| `--cpu-backend interpreter` | `interpreter` | As in `run`. |
+| `--cpu-backend interpreter\|jit` | `interpreter` | As in `run`. |
 | `--fix-mode`, `--no-game-fixes` | database | As in `run`. |
 
 ### Output format

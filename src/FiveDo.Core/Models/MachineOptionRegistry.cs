@@ -150,9 +150,9 @@ public static class MachineOptionRegistry
         new(
             "cpuBackend",
             "CPU backend",
-            "Guest ARM60 backend. The interpreter is the reference and the only implemented backend.",
+            "Guest ARM60 backend. Interpreter is the reference; JIT compiles hot blocks and falls back safely.",
             "Interpreter",
-            "Interpreter",
+            "Interpreter, Jit",
             "--cpu-backend",
             "CpuBackend",
             "CpuBackend",
@@ -247,13 +247,6 @@ public static class MachineOptionRegistry
         ValidateEnum("cdSpeed", tuning.CdSpeed);
         ValidateEnum("memory", tuning.MemoryConfiguration);
         ValidateEnum("cpuBackend", tuning.CpuBackend);
-        if (tuning.CpuBackend != CpuBackendKind.Interpreter)
-        {
-            throw Invalid(
-                "cpuBackend",
-                tuning.CpuBackend,
-                "The managed IL JIT backend is not implemented until M12.");
-        }
     }
 
     /// <summary>Formats one option from a tuning record using the canonical text form.</summary>

@@ -699,3 +699,61 @@ fixed wall-clock interval. That is a compatibility signal, not a speed win.
 compatibility clock. Non-stock clocks are available for experiments and per-game
 profiles, but no per-title clock override ships in the database. The synthetic benchmark
 matrix in §8.1 remains the performance reference because its hashes are clock-invariant.
+
+### 8.4 Managed IL JIT (2026-11-05, PERF-08 Partial)
+
+The `Jit` backend (`--cpu-backend jit`) compiles hot straight-line ARM60 blocks into
+`DynamicMethod` delegates. It is an execution strategy behind the existing `ICpuBackend`
+contract, not a second CPU model:
+
+- Only data-processing, immediate-offset load/store, and branch instructions are compiled.
+  Multiply, swap, multi-register transfers, SWIs, MRS/MSR, mode changes, PC writes, and
+  register-specified shifts remain on the interpreter.
+- Stores and branches terminate a block. A store terminator returns to the machine so the
+  CEL FSM is checked before the next instruction.
+- Every compiled instruction is verified against the current code word before it executes.
+  A changed first word returns a stale sentinel; a changed later word returns the cycles
+  already committed. The next call recompiles or falls back. This keeps self-modifying code,
+  DMA, ROM-bank switches, and save-state loads correct.
+- The block stops at the frame loop's 16-cycle batch boundary using the machine's current
+  `batch` value, so CLIO/CD/DSP/VDLP event timing matches the interpreter.
+- Blocks compile only after 8,192 executions. The threshold keeps one-shot boot and
+  decompression code on the interpreter and bounds the JIT code footprint.
+
+**Correctness.** The interpreter and JIT were stepped in lockstep for 100,000,000
+instructions of Lemmings (USA), with the same PC, CPSR, registers, cycle count, and
+instruction count after every block. Full-machine hashes also match:
+
+| Title | Frames | Interpreter hash | JIT hash | Instructions |
+|---|---:|---|---|---:|
+| Lemmings (USA) | 3,000 | `0x9C2D31F6` | `0x9C2D31F6` | 194,135,071 |
+| Road Rash (USA) | 1,000 | `0x41D2AC9A` | `0x41D2AC9A` | 60,055,006 |
+| Powers Kingdom (Europe) | 1,000 | `0xDCEB4C05` | `0xDCEB4C05` | 57,545,603 |
+
+**Microbenchmarks (Release, 20M instructions per loop).** The JIT is substantially faster
+on the instruction classes it compiles:
+
+| Loop | Interpreter | JIT | Speedup |
+|---|---:|---:|---:|
+| ALU register chain (9 DP + branch) | 50.3 M/s | 167.8 M/s | 3.3x |
+| S-bit ALU chain | 72.4 M/s | 134.4 M/s | 1.9x |
+| Compare chain | 68.9 M/s | 151.4 M/s | 2.2x |
+| Load loop | 72.9 M/s | 137.4 M/s | 1.9x |
+| Store loop | 52.0 M/s | 42.5 M/s | 0.82x |
+| Branch-only loop | 131.4 M/s | 106.3 M/s | 0.81x |
+
+**End-to-end boot results.** The frame loop, CEL/VDLP work, and short block boundaries
+still dominate, so the JIT is **not yet faster than the interpreter** on real boot code:
+
+| Title | Frames | Interpreter | JIT | Result |
+|---|---:|---:|---:|---|
+| Lemmings (USA) | 300 | 0.48 s | 0.87 s | 1.8x slower |
+| Lemmings (USA) | 3,000 | 4.31 s | 5.04 s | 1.17x slower |
+| Road Rash (USA) | 1,000 | 1.40 s | 2.05 s | 1.46x slower |
+| Powers Kingdom (Europe) | 1,000 | 1.52 s | 2.13 s | 1.40x slower |
+
+**Decision.** The interpreter remains the default and the accuracy oracle. `Jit` is an
+experimental, opt-in backend; it is bit-identical on the evidence above and falls back
+safely, but it does not meet the 1.5x end-to-end gate (local boot results are 1.17-1.85x slower). The remaining work is trace or
+superblock chaining across conditional branches, helper inlining for `SetZn`/`SetCv`/
+condition checks, and reducing JIT code-cache pressure. PERF-08 stays **Partial**.

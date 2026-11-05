@@ -9,8 +9,9 @@ public enum CpuBackendKind
     Interpreter = 0,
 
     /// <summary>
-    /// The optional managed IL JIT. Reserved for M12; selecting it before the JIT exists is
-    /// rejected by <see cref="EmulatorTuning.Validate"/>.
+    /// The optional managed IL JIT. It compiles hot straight-line blocks into IL, verifies
+    /// each instruction against the current code, and falls back to the interpreter for
+    /// unsupported instructions or when dynamic code is unavailable.
     /// </summary>
     Jit = 1,
 }

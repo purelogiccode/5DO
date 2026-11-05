@@ -100,11 +100,11 @@ public sealed class CoreTypesTests
     }
 
     [Fact]
-    public void EmulatorTuning_JitBackend_IsRejectedUntilImplemented()
+    public void EmulatorTuning_JitBackend_Validates()
     {
         var tuning = new EmulatorTuning { CpuBackend = CpuBackendKind.Jit };
 
-        Assert.Throws<MachineOptionValidationException>(() => tuning.Validate());
+        tuning.Validate();
     }
 
     [Fact]

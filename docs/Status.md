@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-05, after the 1.2.1 arm64 packaging update, the 1.2.0 feature/accuracy update, SYS-12 SWI HLE, SYS-17 game-database expansion, and SYS-08 clock validation: Direct3D 11,
+**Snapshot:** 2026-11-05, after the 1.2.1 arm64 packaging update, the 1.2.0 feature/accuracy update, SYS-12 SWI HLE, SYS-17 game-database expansion, SYS-08 clock validation, and the partial PERF-08 managed JIT: Direct3D 11,
 startup release checks, the fuzz harness, per-edge overscan/void border, screenshot
 gallery filters, FIQ/DMA/DSP telemetry, flat CHD/raw ISO support, and display-refresh
 control. The earlier first full-collection sweep, performance, timing-option, BIOS,
@@ -52,7 +52,7 @@ status bar, and completes the Serilog catch-block coverage and launch-statistics
 wiring. The full suite is **1,597/1,597** passing. The bundle layout is unchanged:
 framework-dependent single-file apphosts, no bundled .NET runtime, no PDB/XML files.
 
-**Latest work (2026-11-05):** SYS-17 expanded the game database from 518 to 653
+**Latest work (2026-11-05):** PERF-08 added an opt-in managed IL JIT (`--cpu-backend jit`) for hot data-processing, load/store, and branch blocks. It is bit-identical in 100M-instruction lockstep and on 3,000-frame Lemmings plus 1,000-frame Road Rash/Powers Kingdom hashes, but end-to-end boot is 1.17-1.85x slower than the interpreter, so PERF-08 remains Partial and the interpreter remains the default. SYS-17 expanded the game database from 518 to 653
 records and added `gamedb stats|scan|export|merge`, `docs/GameDatabase.md`, and a
 filename parser for Redump/GoodTools/No-Intro layouts. The schema now carries revision,
 disc number, BIOS/BIOS2, fix mode, input devices, NVRAM, and cheat fields; fix, BIOS, and
@@ -60,7 +60,7 @@ input values are consumed at runtime. `gamedb stats --folder "J:\Panasonic 3DO"`
 1,366 readable images, 653 unique IDs, and 100% metadata coverage with no errors
 (the three exceptions are audio-only `[CD-Audio]` CHDs). SYS-08 added the five-title
 0.5x-1x-2x-4x A/B in `Performance.md` §8.3 and kept the stock 12.5 MHz default; every
-non-stock clock changed guest behavior. The suite is **1,779 tests**.
+non-stock clock changed guest behavior. The suite is **1,792 tests**.
 
 **SYS-12 (2026-11-04):** Portfolio OS SWI HLE is available behind `--swi-hle`,
 Settings > Emulation, and per-game profiles. It handles Opera's 14 fixed-point math SWIs
@@ -80,7 +80,7 @@ DRAM, VDLP/SPORT/CEL use the live layout, and MADAM RED SYSBITS reports the capa
 the BIOS. A homebrew probe ROM uses 4 MB DRAM + 2 MB VRAM; retail titles remain on the
 stock 2 MB/1 MB default because Opera documents expanded memory as homebrew-only. The
 CPU-clock matrix (0.5x-4x) and `bench --cpu-clock`/`--memory` were also added; the suite
-is **1,779 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al, 1.1an, 1.1ao, 1.1aq, 1.1ar, 1.1as, and
+is **1,792 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al, 1.1an, 1.1ao, 1.1aq, 1.1ar, 1.1as, 1.1at, and
 [`Performance.md`](Performance.md) 8.1.
 
 **Latest work (2026-11-02):** the CLI and desktop shell check the public GitHub release

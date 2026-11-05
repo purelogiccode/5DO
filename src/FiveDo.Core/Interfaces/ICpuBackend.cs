@@ -5,9 +5,10 @@ namespace FiveDo.Core;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The ARM60 interpreter is the default and reference backend. An optional managed IL JIT
-/// can be added later behind the same contract; it must produce bit-identical architectural
-/// state and cycle counts.
+/// The ARM60 interpreter is the default and reference backend. The optional managed IL JIT
+/// accelerates hot straight-line blocks behind the same contract; it preserves bit-identical
+/// architectural state and cycle counts and falls back to the interpreter for unsupported
+/// instructions, self-modifying code, and runtimes without dynamic code.
 /// </para>
 /// <para>
 /// Save states are written through the explicit <see cref="IStateWriter"/> format rather than

@@ -110,10 +110,8 @@ public sealed class MachineOptionRegistryTests
         };
 
         IReadOnlyList<MachineOptionMismatch> mismatches = MachineOptionRegistry.Compare(changed, snapshot);
-        // The CPU backend has a single supported value, so it cannot differ.
         string[] expectedKeys = MachineOptionRegistry.Options
             .Select(definition => definition.Key)
-            .Where(key => !string.Equals(key, "cpuBackend", StringComparison.Ordinal))
             .ToArray();
         Assert.Equal(
             expectedKeys,
@@ -201,7 +199,7 @@ public sealed class MachineOptionRegistryTests
             MemoryConfiguration = MemoryConfiguration.Dram8MbVram2Mb,
             RandomSeed = 0x1234_5678,
             FixMode = FixMode.BitTiming5,
-            CpuBackend = CpuBackendKind.Interpreter,
+            CpuBackend = CpuBackendKind.Jit,
             HighResolution = true,
             OperaDipir = true,
             OperaSoftReset = true,
@@ -245,7 +243,7 @@ public sealed class MachineOptionRegistryTests
             CdSpeed = CdSpeed.X16,
             MemoryConfiguration = MemoryConfiguration.Dram4MbVram1Mb,
             RandomSeed = 0xDEAD_BEEF,
-            CpuBackend = CpuBackendKind.Interpreter,
+            CpuBackend = CpuBackendKind.Jit,
             HighResolution = true,
             OperaDipir = true,
             OperaSoftReset = true,

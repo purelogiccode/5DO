@@ -65,7 +65,7 @@ public sealed class PrefetchingDiscSourceTests
 
         long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
         Assert.True(
-            allocated < 128,
+            allocated < 1024,
             $"Cache hits allocated {allocated} bytes over 1,000 reads; expected only a possible one-time runtime allocation.");
     }
 

@@ -43,7 +43,9 @@ release.
   0.5x/1x/2x/4x A/B. Every non-stock clock changed the frame hash, so the stock 12.5 MHz
   default remains the only supported compatibility clock and no per-title clock override
   ships in the database.
-- PERF-04 prefetch increment: PrefetchingDiscSource pools evicted sector buffers and reuses the worker data/audio read buffers, so cache hits do not allocate per read and full-cache eviction reuses arrays instead of allocating. A 1,000-read allocation test covers the hit path.\n- SYS-18 auto per-game profiles: database `inputDevices` now drive the input manager and
+- PERF-04 prefetch increment: PrefetchingDiscSource pools evicted sector buffers and reuses the worker data/audio read buffers, so cache hits do not allocate per read and full-cache eviction reuses arrays instead of allocating. A 1,000-read allocation test covers the hit path.
+- PERF-08 managed IL JIT (partial): `--cpu-backend jit` compiles hot straight-line blocks into `DynamicMethod` IL for data-processing, load/store, and branch instructions. The JIT verifies each instruction against current memory, stops at the 16-cycle frame-loop batch boundary, returns at stores/branches, and falls back for unsupported instructions, self-modifying code, SWIs, mode changes, and runtimes without dynamic code. It is bit-identical in 100M-instruction lockstep and on 3,000-frame Lemmings plus 1,000-frame Road Rash/Powers Kingdom hashes. Per-class microbenchmarks are 1.9-3.3x faster, but end-to-end boot is 1.17-1.85x slower, so the interpreter remains the default and PERF-08 stays Partial.
+- SYS-18 auto per-game profiles: database `inputDevices` now drive the input manager and
   CLI `run`/`trace` when `--input-device` is omitted. Profiles apply through one effective
   snapshot; input, filter, and high-resolution changes apply live, while BIOS/NVRAM/fix/
   timing changes restart the machine. `GameProfile` carries a `CheatBundle` and can be

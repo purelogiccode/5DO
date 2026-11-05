@@ -1392,7 +1392,19 @@ internal static class Program
                 ? machine.Cpu.GetSwiCommentUsage()
                     .Select(static usage => new CliSwiCommentResult(usage.Comment, usage.Count))
                     .ToArray()
-                : null);
+                : null,
+            JitBlocksCompiled: machine.Cpu.JitBlocksCompiled,
+            JitBlocksExecuted: machine.Cpu.JitBlocksExecuted,
+            JitBlockCount: machine.Cpu.JitBlockCount,
+            JitCompileFailed: machine.Cpu.JitCompileFailed,
+            JitCompileSeconds: machine.Cpu.JitCompileTime.TotalSeconds,
+            JitCompiledDataProcessing: machine.Cpu.JitCompiledDataProcessing,
+            JitCompiledLoads: machine.Cpu.JitCompiledLoads,
+            JitCompiledStores: machine.Cpu.JitCompiledStores,
+            JitCompiledBranches: machine.Cpu.JitCompiledBranches,
+            JitFallback: machine.Tuning.CpuBackend == CpuBackendKind.Jit
+                && !System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported,
+            JitLastFailure: machine.Cpu.JitLastFailure);
 
         SaveNvramIfRequested(machine, nvramSelection);
 
@@ -4232,6 +4244,21 @@ internal static class Program
         Console.WriteLine($"disc hash:   {result.DiscHash}");
         Console.WriteLine($"game id:     {result.GameId}");
         Console.WriteLine($"profile:     {result.Profile}");
+        Console.WriteLine($"cpu backend: {result.CpuBackend}");
+        if (string.Equals(result.CpuBackend, "Jit", StringComparison.Ordinal))
+        {
+            if (result.JitFallback)
+            {
+                Console.WriteLine("jit:         dynamic code unavailable; using interpreter");
+            }
+            else
+            {
+                Console.WriteLine(
+                    $"jit:         {result.JitBlockCount} cached, {result.JitBlocksCompiled} compiled, "
+                    + $"{result.JitBlocksExecuted} block calls, {result.JitCompileSeconds:F3} s compiling");
+            }
+        }
+
         Console.WriteLine($"arm timing:  {result.ArmTiming}");
         Console.WriteLine($"clio timers: {result.ClioTimers}");
         Console.WriteLine($"cel timing:  {result.CelTiming}");
@@ -4884,16 +4911,13 @@ internal static class Program
 
         if (string.Equals(value, "jit", StringComparison.OrdinalIgnoreCase))
         {
-            throw new MachineOptionValidationException(
-                "cpuBackend",
-                value,
-                "Invalid --cpu-backend value 'jit'; the managed IL JIT backend is not implemented until M12. Use interpreter.");
+            return CpuBackendKind.Jit;
         }
 
         throw new MachineOptionValidationException(
             "cpuBackend",
             value,
-            $"Invalid --cpu-backend value '{value}'; expected interpreter.");
+            $"Invalid --cpu-backend value '{value}'; expected interpreter or jit.");
     }
 
     private static FixMode ParseFixMode(string value)
@@ -5015,7 +5039,7 @@ internal static class Program
         Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
         Console.WriteLine("             [--memory 21|22|41|42|81|82|E2|F1|DRAM/VRAM]");
         Console.WriteLine("             [--input-device 1=joypad,2=mouse,...] [--active-devices 0-8] [--pbus-format legacy|opera]");
-        Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz] [--cpu-backend interpreter]");
+        Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz] [--cpu-backend interpreter|jit]");
         Console.WriteLine("             [--opera-dipir] [--opera-soft-reset] [--swi-hle] [--swi-comments]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--realtime] [--json]");
         Console.WriteLine("             [--cheat path] [--cheat-code code] [--cheat-auto] [--cheats-dir path]");
@@ -5034,7 +5058,7 @@ internal static class Program
         Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
         Console.WriteLine("             [--memory 21|22|41|42|81|82|E2|F1|DRAM/VRAM]");
         Console.WriteLine("             [--input-device 1=joypad,2=mouse,...] [--active-devices 0-8] [--pbus-format legacy|opera]");
-        Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz] [--cpu-backend interpreter]");
+        Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz] [--cpu-backend interpreter|jit]");
         Console.WriteLine("             [--opera-dipir] [--opera-soft-reset] [--swi-hle]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--fix-mode 0xMASK] [--no-game-fixes]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");

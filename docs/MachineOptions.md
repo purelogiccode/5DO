@@ -17,7 +17,7 @@ Each option is validated by the machine, reachable from the CLI, desktop setting
 | memory | --memory | MemoryConfiguration | MemoryConfiguration | enum (MemoryConfiguration) | 2 MB DRAM / 1 MB VRAM (21) | 21, 22, 41, 42, 81, 82, E2, F1 (DRAM/VRAM in MB) | yes | DRAM/VRAM capacity. The stock machine has 2 MB DRAM and 1 MB VRAM; expanded layouts change the RAM boundary and VRAM base. |
 | randomSeed | --random-seed | RandomSeed | RandomSeed | seed | default (0xa5a5a5a5) | default or a 32-bit value | yes | Initial DSP PRNG seed. Blank uses FreeDO's default 0xa5a5a5a5. |
 | fixMode | --fix-mode | FixModeOverrides | FixMode | flags | None | 0x00000000-0xFFFFFFFF | yes | Per-game 4DO compatibility fix mask. |
-| cpuBackend | --cpu-backend | CpuBackend | CpuBackend | enum (CpuBackendKind) | Interpreter | Interpreter | yes | Guest ARM60 backend. The interpreter is the reference and the only implemented backend. |
+| cpuBackend | --cpu-backend | CpuBackend | CpuBackend | enum (CpuBackendKind) | Interpreter | Interpreter, Jit | yes | Guest ARM60 backend. Interpreter is the reference; JIT compiles hot blocks and falls back safely. |
 | highResolution | --high-res | HighResolution | HighResolution | boolean | disabled | enabled, disabled | yes | Opt-in 640x480 CEL/VDLP rendering. |
 | operaDipir | --opera-dipir | OperaDipir | OperaDipir | boolean | disabled | enabled, disabled | yes | CLIO DIPIR latches and XBUS access aborts. |
 | operaSoftReset | --opera-soft-reset | OperaSoftReset | OperaSoftReset | boolean | disabled | enabled, disabled | yes | CLIO CSTAT soft resets use Opera's ARM/MADAM/DSP reset path. |

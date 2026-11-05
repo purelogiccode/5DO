@@ -226,6 +226,13 @@ exact DSP audio clock but predate the 2026-10-30 headless PBUS fix; see
 project references generate dependency files in parallel during a trimmed
 publish. The CI publish steps use the same switch.
 
+## Managed IL JIT and NativeAOT
+
+The optional PERF-08 JIT uses `DynamicMethod`/`System.Reflection.Emit`. NativeAOT
+runtimes do not support dynamic code, so `RuntimeFeature.IsDynamicCodeSupported` is
+false and `--cpu-backend jit` falls back to the interpreter without affecting the
+default path. The AOT smoke tests use the interpreter.
+
 ## Remaining NativeAOT work
 
 The CLI and the frontend single-file layout are AOT-validated on win-x64. Remaining:
