@@ -43,6 +43,13 @@ release.
   0.5x/1x/2x/4x A/B. Every non-stock clock changed the frame hash, so the stock 12.5 MHz
   default remains the only supported compatibility clock and no per-title clock override
   ships in the database.
+- SYS-18 auto per-game profiles: database `inputDevices` now drive the input manager and
+  CLI `run`/`trace` when `--input-device` is omitted. Profiles apply through one effective
+  snapshot; input, filter, and high-resolution changes apply live, while BIOS/NVRAM/fix/
+  timing changes restart the machine. `GameProfile` carries a `CheatBundle` and can be
+  cloned independently. With `--bios-auto` and no manual overrides, WorldCup Super
+  Stadium (JP) selected FZ-10J + Kanji, Powers Kingdom Europe selected Anvil/PAL1,
+  Crash 'n Burn USA applied its fix bit, and Crime Patrol selected the lightgun.
 
 - The differential harness accepts `--arm-timing`, `--cel-timing`, and `--cd-timing`
   overrides for every 5DO capture, completing the timing A/B surface alongside

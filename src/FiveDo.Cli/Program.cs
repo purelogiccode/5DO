@@ -550,6 +550,10 @@ internal static class Program
             disc = DiscImageFactory.Open(discPath, prefetch: HasFlag(args, "--prefetch"));
             gameId = GameId.Compute(disc);
             gameRecord = GameDatabase.Default.FindByChecksum(gameId);
+            if (options.Get("--input-device") is null && !string.IsNullOrWhiteSpace(gameRecord?.InputDevices))
+            {
+                inputDevices = ParseInputDevices(gameRecord.InputDevices);
+            }
         }
 
         var discHash = disc is null ? string.Empty : GameId.Compute(disc);
@@ -1453,6 +1457,10 @@ internal static class Program
             disc = DiscImageFactory.Open(discPath, prefetch: HasFlag(args, "--prefetch"));
             gameId = GameId.Compute(disc);
             gameRecord = GameDatabase.Default.FindByChecksum(gameId);
+            if (options.Get("--input-device") is null && !string.IsNullOrWhiteSpace(gameRecord?.InputDevices))
+            {
+                inputDevices = ParseInputDevices(gameRecord.InputDevices);
+            }
         }
 
         NvramSelection nvramSelection = ResolveNvramSelection(

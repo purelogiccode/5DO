@@ -3691,8 +3691,8 @@ public partial class MainWindow : Window, IDisposable
         var previousBiosFolder = _settings.BiosFolder;
         var previousCheatsDirectory = _settings.ResolveCheatsDirectory();
         var previousAutoBios = _settings.AutoBios;
-        var previousBiosOverride = _settings.GetBiosOverride(_gameId);
-        var previousInputDevices = string.Join(",", _settings.InputDevices);
+        AppSettings previousEffective = _settings.CreateEffectiveForGame(_gameId);
+        var previousInputDevices = string.Join(",", previousEffective.ResolveInputDevices(_gameId));
         var window = new SettingsWindow(_settings, _gameId, _gameName);
         if (!await window.ShowDialog<bool>(this).ConfigureAwait(true))
         {
@@ -3711,6 +3711,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         AppSettingsStore.Save(_settings);
+        AppSettings effective = _settings.CreateEffectiveForGame(_gameId);
         if (_runner is not null)
         {
             _runner.InputPlayer = _settings.InputDisplayPlayer;
@@ -3725,7 +3726,15 @@ public partial class MainWindow : Window, IDisposable
             RefreshLibraryDecorations();
         }
 
-        _settings.ApplyInputDevices(_input, _gameId);
+        if (string.IsNullOrWhiteSpace(_gameId))
+        {
+            _settings.ApplyInputDevices(_input);
+        }
+        else
+        {
+            effective.ApplyInputDevices(_input, _gameId);
+        }
+
         if (_settings.HideLightgunCrosshair)
         {
             LightgunOverlay.IsVisible = false;
@@ -3733,13 +3742,13 @@ public partial class MainWindow : Window, IDisposable
 
         if (!string.Equals(
                 previousInputDevices,
-                string.Join(",", _settings.InputDevices),
+                string.Join(",", effective.ResolveInputDevices(_gameId)),
                 StringComparison.Ordinal))
         {
             _runner?.ResetRewind();
         }
 
-        Video.Settings = _settings.ToRendererSettings(_gameId);
+        Video.Settings = effective.ToRendererSettings(_gameId);
         if (_runner is not null)
         {
             _runner.FrameSkip = _settings.FrameSkip;
@@ -3755,7 +3764,7 @@ public partial class MainWindow : Window, IDisposable
 
         ApplyAudioSettings();
         ApplyRendererSelection();
-        HighResMenuItem.IsChecked = _settings.HighResolution;
+        HighResMenuItem.IsChecked = effective.HighResolution;
         UpdateEmulationHeader();
         if (!string.Equals(
                 previousCoverDirectory,
@@ -3766,31 +3775,32 @@ public partial class MainWindow : Window, IDisposable
         }
 
         var biosSettingsChanged =
-            !string.Equals(previousBiosPath, _settings.BiosPath, StringComparison.OrdinalIgnoreCase)
-            || !string.Equals(previousBios2Path, _settings.Bios2Path, StringComparison.OrdinalIgnoreCase)
-            || !string.Equals(previousBiosFolder, _settings.BiosFolder, StringComparison.OrdinalIgnoreCase)
-            || previousAutoBios != _settings.AutoBios
-            || !string.Equals(previousBiosOverride, _settings.GetBiosOverride(_gameId), StringComparison.OrdinalIgnoreCase);
+            !string.Equals(previousBiosPath, effective.BiosPath, StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(previousBios2Path, effective.Bios2Path, StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(previousBiosFolder, effective.BiosFolder, StringComparison.OrdinalIgnoreCase)
+            || previousAutoBios != effective.AutoBios
+            || !string.Equals(previousEffective.GetBiosOverride(_gameId), effective.GetBiosOverride(_gameId), StringComparison.OrdinalIgnoreCase);
         var nvramSettingsChanged =
-            _settings.NvramStorageMode != _nvramMode
-            || _settings.NvramVersion != _nvramVersion
-            || !string.Equals(_settings.NvramDirectory, _nvramDirectory, StringComparison.OrdinalIgnoreCase);
+            effective.NvramStorageMode != _nvramMode
+            || effective.NvramVersion != _nvramVersion
+            || !string.Equals(effective.NvramDirectory, _nvramDirectory, StringComparison.OrdinalIgnoreCase);
         if (_machine is not null
             && (biosSettingsChanged
                 || nvramSettingsChanged
-                || _settings.HighResolution != _machine.Tuning.HighResolution
-                || _settings.ArmTiming != _machine.Tuning.ArmTiming
-                || _settings.ClioTimers != _machine.Tuning.ClioTimers
-                || _settings.CelTiming != _machine.Tuning.CelTiming
-                || _settings.CdromTiming != _machine.Tuning.CdromTiming
-                || _settings.CdSpeed != _machine.Tuning.CdSpeed
-                || _settings.MemoryConfiguration != _machine.Tuning.MemoryConfiguration
-                || _settings.ResolveArmClock() != _machine.Tuning.ArmClock
-                || _settings.RandomSeed != _machine.Tuning.RandomSeed
-                || _settings.OperaDipir != _machine.Tuning.OperaDipir
-                || _settings.OperaSoftReset != _machine.Tuning.OperaSoftReset
-                || _settings.SwiHle != _machine.Tuning.SwiHle
-                || _settings.CpuBackend != _machine.Tuning.CpuBackend))
+                || effective.ResolveFixMode(_gameId) != _machine.Compatibility.FixMode
+                || effective.HighResolution != _machine.Tuning.HighResolution
+                || effective.ArmTiming != _machine.Tuning.ArmTiming
+                || effective.ClioTimers != _machine.Tuning.ClioTimers
+                || effective.CelTiming != _machine.Tuning.CelTiming
+                || effective.CdromTiming != _machine.Tuning.CdromTiming
+                || effective.CdSpeed != _machine.Tuning.CdSpeed
+                || effective.MemoryConfiguration != _machine.Tuning.MemoryConfiguration
+                || effective.ResolveArmClock() != _machine.Tuning.ArmClock
+                || effective.RandomSeed != _machine.Tuning.RandomSeed
+                || effective.OperaDipir != _machine.Tuning.OperaDipir
+                || effective.OperaSoftReset != _machine.Tuning.OperaSoftReset
+                || effective.SwiHle != _machine.Tuning.SwiHle
+                || effective.CpuBackend != _machine.Tuning.CpuBackend))
         {
             RecreateMachine();
             ShowOsd("Settings saved; machine restarted.", OsdSeverity.Success);

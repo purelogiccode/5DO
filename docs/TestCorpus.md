@@ -2240,3 +2240,27 @@ a legacy version-2 memory section.
 - The BIOS still requires a data track to boot, so the audio-only discs are not yet
   playable in-emulator; `PLAY_AUDIO_TRACK` and the CD-DA mix remain covered by the
   synthetic `CdromMultiTrackTests`/`CdAudioMixTests`.
+
+#### 1.1ar SYS-18 auto per-game profiles (2026-11-05)
+
+- `AppSettings.ResolveInputDevices` resolves a per-game override, then the game-database
+  `inputDevices` spec, then the global list. CLI `run`/`trace` apply the database spec
+  when `--input-device` is absent. `EnsureAutoInputDeviceOverride` skips database titles
+  so a generated override cannot shadow future database updates.
+- `SettingsWindow` changes flow through one `CreateEffectiveForGame` snapshot. Input,
+  filter, and high-resolution changes apply live; BIOS, NVRAM, fix, and timing changes
+  recreate the machine. `GameProfile.Clone` copies the device list, and the profile
+  carries a `CheatBundle` name.
+- Tests: database input resolution for Crime Patrol (`E8FBE61C`) and Orbatak
+  (`B6B3F5B2`), no shadow override, profile clone independence, and immediate
+  effective-profile changes for filter/input/fix/BIOS.
+- Manual evidence, all with `--bios-auto bios` and no manual BIOS/region/fix/input flags:
+  - WorldCup Super Stadium (Japan): selected `Panasonic FZ-10J` + Kanji ROM
+    (`c23fb5d5e6bb1c240d02cf968972be37`) and rendered the "Story of the World Cup" screen
+    at 3,000 frames.
+  - Powers Kingdom (Europe): selected `Panasonic FZ-10E (Anvil)`, `region=Pal1`,
+    `fieldRate=50`, `sourceHeight=288`.
+  - Slayer (USA): selected `Panasonic FZ-10`.
+  - Crash 'n Burn (USA): applied `fixMode=1` (`FIX_BIT_TIMING_1`).
+  - Crime Patrol (USA): selected `1=lightgun` from the database and rendered its
+    live-action intro at 3,000 frames.

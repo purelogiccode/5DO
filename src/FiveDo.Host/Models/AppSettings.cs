@@ -644,11 +644,18 @@ public sealed class AppSettings
         }
     }
 
-    /// <summary>Resolves the devices for a game, honoring per-game overrides.</summary>
+    /// <summary>Resolves the devices for a game, honoring per-game overrides and the database.</summary>
     /// <param name="gameId">4DO game ID, or <see langword="null"/> for the global list.</param>
-    /// <returns>Six normalized device names.</returns>
-    public IReadOnlyList<string> ResolveInputDevices(string? gameId) =>
-        GetInputDeviceOverride(gameId) ?? NormalizeInputDevices(InputDevices);
+    /// <returns>The resolved device names.</returns>
+    public IReadOnlyList<string> ResolveInputDevices(string? gameId)
+    {
+        GameRecord? record = string.IsNullOrWhiteSpace(gameId)
+            ? null
+            : GameDatabase.Default.FindById(gameId);
+        IReadOnlyList<string>? devices = GetInputDeviceOverride(gameId)
+            ?? GameControlDefaults.ParseDeviceSpec(record?.InputDevices);
+        return devices ?? NormalizeInputDevices(InputDevices);
+    }
 
     /// <summary>Creates the known-title input override when none exists.</summary>
     /// <param name="gameId">4DO game ID.</param>
@@ -662,9 +669,14 @@ public sealed class AppSettings
             return false;
         }
 
-        IReadOnlyList<string>? devices = GameControlDefaults.TryGetInputDevices(
-            title,
-            GameDatabase.Default.FindById(gameId)?.InputDevices);
+        // The game database already drives ResolveInputDevices; do not persist a copy
+        // that would shadow future database updates.
+        if (GameControlDefaults.ParseDeviceSpec(GameDatabase.Default.FindById(gameId)?.InputDevices) is not null)
+        {
+            return false;
+        }
+
+        IReadOnlyList<string>? devices = GameControlDefaults.TryGetInputDevices(title);
         if (devices is null)
         {
             return false;

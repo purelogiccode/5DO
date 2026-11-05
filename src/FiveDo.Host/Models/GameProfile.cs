@@ -89,6 +89,18 @@ public sealed class GameProfile
     /// <summary>Gets or sets the per-game NVRAM version (0-9), or <see langword="null"/> for the global version.</summary>
     public int? NvramVersion { get; set; }
 
+    /// <summary>Gets or sets the named cheat bundle for the game, or an empty string.</summary>
+    public string CheatBundle { get; set; } = string.Empty;
+
+    /// <summary>Creates an independent copy of the profile.</summary>
+    /// <returns>A profile with its own device list.</returns>
+    public GameProfile Clone()
+    {
+        var clone = (GameProfile)MemberwiseClone();
+        clone.InputDevices = new List<string>(InputDevices);
+        return clone;
+    }
+
     /// <summary>Captures the current global timing, CD-DA, and presentation options.</summary>
     /// <param name="settings">Source settings.</param>
     /// <param name="gameId">Optional game ID used to snapshot per-game overrides.</param>

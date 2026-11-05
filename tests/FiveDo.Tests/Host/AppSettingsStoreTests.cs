@@ -111,6 +111,7 @@ public sealed class AppSettingsStoreTests
                 CpuClockMultiplier = 1.25,
                 CdAudioVolume = 0.4f,
                 CdAudioMuted = true,
+                CheatBundle = "starter",
             });
 
         AppSettingsStore.Save(settings, path);
@@ -122,6 +123,7 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(ArmTimingMode.Arm60Datasheet, profile.ArmTiming);
         Assert.Equal(CdSpeed.X4, profile.CdSpeed);
         Assert.True(profile.CdAudioMuted);
+        Assert.Equal("starter", profile.CheatBundle);
 
         Assert.True(loaded.ApplyGameProfile("a1b2c3d4"));
         Assert.Equal(VideoRegion.Pal1, loaded.Region);
@@ -132,6 +134,69 @@ public sealed class AppSettingsStoreTests
 
         loaded.SetGameProfile("A1B2C3D4", null);
         Assert.Null(loaded.GetGameProfile("a1b2c3d4"));
+    }
+
+    [Fact]
+    public void ResolveInputDevices_UsesDatabaseDefaults()
+    {
+        var settings = new AppSettings();
+
+        Assert.Equal("Lightgun", settings.ResolveInputDevices("E8FBE61C")[0]);
+        Assert.Equal("Joypad", settings.ResolveInputDevices("E8FBE61C")[1]);
+        Assert.Equal("OrbatakTrackball", settings.ResolveInputDevices("B6B3F5B2")[0]);
+        Assert.False(settings.EnsureAutoInputDeviceOverride("E8FBE61C", "Crime Patrol"));
+        Assert.Null(settings.GetInputDeviceOverride("E8FBE61C"));
+    }
+
+    [Fact]
+    public void GameProfileClone_IsIndependent()
+    {
+        var profile = new GameProfile
+        {
+            InputDevices = ["Lightgun", "Joypad"],
+            CheatBundle = "starter",
+        };
+
+        GameProfile clone = profile.Clone();
+        clone.InputDevices[0] = "Mouse";
+        clone.CheatBundle = "other";
+
+        Assert.Equal("Lightgun", profile.InputDevices[0]);
+        Assert.Equal("starter", profile.CheatBundle);
+    }
+
+    [Fact]
+    public void GameProfileChanges_ApplyToEffectiveSettingsImmediately()
+    {
+        var settings = new AppSettings();
+        settings.SetGameProfile(
+            "a1b2c3d4",
+            new GameProfile
+            {
+                Filter = VideoFilter.Crt,
+                InputDevices = ["Mouse", "Joypad"],
+                FixMode = FixMode.BitTiming1,
+                BiosMd5 = "0123456789abcdef0123456789abcdef",
+            });
+
+        AppSettings first = settings.CreateEffectiveForGame("A1B2C3D4");
+        Assert.Equal(VideoFilter.Crt, first.ResolveFilter("A1B2C3D4"));
+        Assert.Equal("Mouse", first.ResolveInputDevices("A1B2C3D4")[0]);
+        Assert.Equal(FixMode.BitTiming1, first.ResolveFixMode("A1B2C3D4"));
+        Assert.Equal("0123456789abcdef0123456789abcdef", first.GetBiosOverride("A1B2C3D4"));
+
+        settings.SetGameProfile(
+            "A1B2C3D4",
+            new GameProfile
+            {
+                Filter = VideoFilter.Accurate,
+                InputDevices = ["Lightgun", "Joypad"],
+            });
+
+        AppSettings second = settings.CreateEffectiveForGame("A1B2C3D4");
+        Assert.Equal(VideoFilter.Accurate, second.ResolveFilter("A1B2C3D4"));
+        Assert.Equal("Lightgun", second.ResolveInputDevices("A1B2C3D4")[0]);
+        Assert.Null(second.GetBiosOverride("A1B2C3D4"));
     }
 
     [Fact]
