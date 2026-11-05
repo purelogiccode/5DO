@@ -628,6 +628,7 @@ written after the run when supplied.
 | `CoverDirectory` | Optional shared folder for cover art named after the disc files. |
 | `CheatsDirectory` | Per-game cheat JSON folder; empty means `.../5DO/cheats`. |
 | `LibraryFolders` | Scanned recursively to depth 4 for `.iso`, `.bin`, `.cue`, `.chd`; edited in **Settings > Paths > Game folders** or **File > Add Game Folder...**. |
+| `ShowDuplicateLibraryEntries` | When false (default), disc images that share a 3DO game ID are listed once. When true, every image file is listed. |
 | `LibraryMetadataPath` | Optional offline metadata overlay; empty means `.../5DO/library-metadata.json`. |
 | `DiscDatPath` | Optional Redump/No-Intro DAT for the library disc-health badge; empty asks on first verification. |
 
@@ -648,6 +649,15 @@ and sector counts are then computed in the background with bounded parallelism, 
 list updates as titles resolve. Results are cached in `<LocalApplicationData>/5DO/library-cache.json`; later
 scans reuse the cache for files whose length and last-write time are unchanged. The
 status bar reports metadata-scan progress.
+
+A disc's **game ID** is the lowercase MD5 of its first two 2048-byte data sectors
+(4,096 bytes), the identifier used by 4DO's `GameDatabase.xml`. It is content-based, so
+renamed copies of the same disc, or GoodTools/Redump/No-Intro variants of one release,
+share an ID. By default the library shows one entry per game ID and reports the total image
+count (for example `653 games · 1,366 images`). Enable
+**Settings > Paths > Show duplicate disc images** to list every file. When duplicates are
+collapsed, a readable image with cover art is preferred. Audio-only CD-DA discs with no data
+track use a stable table-of-contents-derived ID instead.
 
 The **Library** view supports grid/list modes, search by title/path/game ID/format/
 metadata, an icon-size slider, All/Favorites/Played/Unplayed filters, and

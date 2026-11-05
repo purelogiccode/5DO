@@ -6,6 +6,11 @@
 2048-byte data sectors. The same ID drives game titles, per-game fixes, BIOS selection,
 input defaults, library deduplication, cheats, save states, and NVRAM paths.
 
+Because the ID is content-based, renamed copies and GoodTools/Redump/No-Intro variants of
+the same release share one ID. The desktop library collapses those copies by default and
+shows the total image count; **Settings > Paths > Show duplicate disc images** lists every
+file instead.
+
 The embedded database is `src/FiveDo.Storage/Data/GameDatabase.xml`. It contains metadata
 facts only; it does not contain disc data or copyrighted assets.
 

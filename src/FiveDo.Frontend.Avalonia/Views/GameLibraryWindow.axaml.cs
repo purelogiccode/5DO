@@ -317,6 +317,7 @@ public partial class GameLibraryWindow : Window
             ? _settings.LibraryFolders
             : RecentFolders();
         var coverDirectory = _settings.CoverDirectory;
+        var deduplicate = !_settings.ShowDuplicateLibraryEntries;
         StatusText.Text = folders.Count == 0
             ? "Add a folder that contains ISO, BIN, CUE, or CHD images."
             : "Scanning game folders...";
@@ -332,7 +333,8 @@ public partial class GameLibraryWindow : Window
                         folders,
                         cachePath: GameLibraryScanner.DefaultCachePath,
                         cancellationToken: scanToken,
-                        coverDirectory: coverDirectory),
+                        coverDirectory: coverDirectory,
+                        deduplicate: deduplicate),
                     scanToken).ConfigureAwait(true);
             if (generation != _scanGeneration)
             {
@@ -361,20 +363,23 @@ public partial class GameLibraryWindow : Window
                         cachePath: GameLibraryScanner.DefaultCachePath,
                         progress: metadataProgress,
                         coverDirectory: coverDirectory,
-                        cancellationToken: scanToken),
+                        cancellationToken: scanToken,
+                        deduplicate: deduplicate),
                     scanToken).ConfigureAwait(true);
                 if (generation != _scanGeneration)
                 {
                     return;
                 }
 
-                finalEntries = GameLibraryScanner.Deduplicate(
-                    initial.Entries
-                        .Where(entry => !entry.Pending)
-                        .Concat(enriched)
-                        .OrderBy(entry => entry.Name, StringComparer.OrdinalIgnoreCase)
-                        .ThenBy(entry => entry.Path, StringComparer.OrdinalIgnoreCase)
-                        .ToList());
+                var combined = initial.Entries
+                    .Where(entry => !entry.Pending)
+                    .Concat(enriched)
+                    .OrderBy(entry => entry.Name, StringComparer.OrdinalIgnoreCase)
+                    .ThenBy(entry => entry.Path, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                finalEntries = deduplicate
+                    ? GameLibraryScanner.Deduplicate(combined)
+                    : combined;
                 List<GameLibraryEntry> decorated = finalEntries.Select(DecorateEntry).ToList();
                 LibraryList.ItemsSource = decorated;
                 if (!string.IsNullOrWhiteSpace(selectedPath))

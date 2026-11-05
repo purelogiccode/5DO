@@ -414,10 +414,14 @@
                         <Button Content="Remove" Click="OnRemoveLibraryFolderClick"
                                 ToolTip.Tip="Remove the selected folder from the game library." />
                     </StackPanel>
-                    <TextBlock Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
-                               Text="The library scans these folders recursively (up to four levels) for ISO, BIN, CUE, and CHD images. Disc titles and metadata are hashed after the list appears."
-                               Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,8"
-                               ToolTip.Tip="Add every folder that contains disc images. Unchanged files are reused from the library cache." />
+                    <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,6,0,8">
+                        <TextBlock Text="The library scans these folders recursively (up to four levels) for ISO, BIN, CUE, and CHD images. Disc titles and metadata are hashed after the list appears."
+                                   Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,4"
+                                   ToolTip.Tip="Add every folder that contains disc images. Unchanged files are reused from the library cache." />
+                        <CheckBox x:Name="ShowDuplicateLibraryEntriesCheck"
+                                  Content="Show duplicate disc images (different files with the same game ID)"
+                                  ToolTip.Tip="Discs are identified by the MD5 of their first two sectors, so renamed copies of the same disc share a game ID. Enable this to list every image instead of one entry per game." />
+                    </StackPanel>
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="Save states" VerticalAlignment="Center"
                                ToolTip.Tip="Folder used for numbered save slots and thumbnails." />
                     <TextBox x:Name="SaveDirectoryBox" Grid.Row="4" Grid.Column="1" Margin="0,0,6,8"

@@ -113,6 +113,12 @@ public sealed class AppSettings
     /// <summary>Gets folders scanned by the game library.</summary>
     public IList<string> LibraryFolders { get; set; } = new List<string>();
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the library lists every disc image instead of
+    /// collapsing copies that share a 3DO game ID.
+    /// </summary>
+    public bool ShowDuplicateLibraryEntries { get; set; }
+
     /// <summary>Gets or sets the width in device-independent pixels of a game card in the grid library.</summary>
     public double LibraryCardSize { get; set; } = DefaultLibraryCardSize;
 

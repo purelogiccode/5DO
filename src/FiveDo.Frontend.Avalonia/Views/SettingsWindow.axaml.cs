@@ -346,6 +346,7 @@ public partial class SettingsWindow : Window
         CheatsDirectoryBox.Text = settings.CheatsDirectory;
         LibraryMetadataPathBox.Text = settings.LibraryMetadataPath;
         DiscDatPathBox.Text = settings.DiscDatPath;
+        ShowDuplicateLibraryEntriesCheck.IsChecked = settings.ShowDuplicateLibraryEntries;
         RefreshLibraryFoldersList();
         PopulateConfigProfiles(PortablePaths.ProfileName);
         BiosFolderBox.Text = settings.BiosFolder;
@@ -1261,6 +1262,7 @@ public partial class SettingsWindow : Window
         settings.CheatsDirectory = CheatsDirectoryBox.Text?.Trim() ?? string.Empty;
         settings.LibraryMetadataPath = LibraryMetadataPathBox.Text?.Trim() ?? string.Empty;
         settings.DiscDatPath = DiscDatPathBox.Text?.Trim() ?? string.Empty;
+        settings.ShowDuplicateLibraryEntries = ShowDuplicateLibraryEntriesCheck.IsChecked == true;
         settings.LibraryFolders.Clear();
         foreach (var folder in _libraryFolders)
         {

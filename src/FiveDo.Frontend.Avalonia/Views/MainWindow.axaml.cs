@@ -127,6 +127,7 @@ public partial class MainWindow : Window, IDisposable
     private DateTime _lastPlaytimeFlushUtc = DateTime.UtcNow;
     private int _scanGeneration;
     private bool _libraryReady;
+    private int _libraryImageCount;
     private CancellationTokenSource? _libraryScanCts;
     private DateTime _lastDonationCheckUtc;
     private string? _donationBannerMessage;
@@ -3382,7 +3383,9 @@ public partial class MainWindow : Window, IDisposable
             ? "0 games"
             : narrowed
                 ? $"{_visibleGames.Count} of {CountLabel(_allGames.Count)}"
-                : CountLabel(_allGames.Count);
+                : _libraryImageCount > _allGames.Count
+                    ? $"{CountLabel(_allGames.Count)} \u00b7 {_libraryImageCount:N0} images"
+                    : CountLabel(_allGames.Count);
     }
 
     private LibraryFilter CurrentLibraryFilter()
@@ -3446,6 +3449,8 @@ public partial class MainWindow : Window, IDisposable
             ? _settings.LibraryFolders.ToList()
             : RecentFolders();
         var coverDirectory = _settings.CoverDirectory;
+        var deduplicate = !_settings.ShowDuplicateLibraryEntries;
+        _libraryImageCount = 0;
         StatusText.Text = folders.Count == 0
             ? "No game folders configured. Use File > Add Game Folder or Settings > Paths > Game folders."
             : "Scanning game folders...";
@@ -3462,18 +3467,21 @@ public partial class MainWindow : Window, IDisposable
                         folders,
                         cachePath: GameLibraryScanner.DefaultCachePath,
                         cancellationToken: scanToken,
-                        coverDirectory: coverDirectory),
+                        coverDirectory: coverDirectory,
+                        deduplicate: deduplicate),
                     scanToken).ConfigureAwait(true);
             if (_shuttingDown || generation != _scanGeneration)
             {
                 return;
             }
 
+            _libraryImageCount = initial.ImageCount;
             ReplaceLibraryEntries(initial.Entries);
             finalEntries = initial.Entries;
             _logger.ForCategory(LogCategory.Storage).Information(
-                "Library listed: {Count} entries in {ElapsedMs} ms ({Pending} pending metadata).",
+                "Library listed: {Count} entries from {Images} images in {ElapsedMs} ms ({Pending} pending metadata).",
                 initial.Entries.Count,
+                initial.ImageCount,
                 stopwatch.ElapsedMilliseconds,
                 initial.PendingPaths.Count);
             if (initial.PendingPaths.Count > 0)
@@ -3492,18 +3500,21 @@ public partial class MainWindow : Window, IDisposable
                         cachePath: GameLibraryScanner.DefaultCachePath,
                         progress: metadataProgress,
                         coverDirectory: coverDirectory,
-                        cancellationToken: scanToken),
+                        cancellationToken: scanToken,
+                        deduplicate: deduplicate),
                     scanToken).ConfigureAwait(true);
                 if (_shuttingDown || generation != _scanGeneration)
                 {
                     return;
                 }
 
-                finalEntries = GameLibraryScanner.Deduplicate(
-                    initial.Entries
-                        .Where(entry => !entry.Pending)
-                        .Concat(enriched)
-                        .ToList());
+                var combined = initial.Entries
+                    .Where(entry => !entry.Pending)
+                    .Concat(enriched)
+                    .ToList();
+                finalEntries = deduplicate
+                    ? GameLibraryScanner.Deduplicate(combined)
+                    : combined;
                 ReplaceLibraryEntries(finalEntries);
             }
         }
@@ -3535,7 +3546,10 @@ public partial class MainWindow : Window, IDisposable
 
         StatusText.Text = finalEntries.Count == 0
             ? "No discs found. Add a game folder from the File menu."
-            : $"{CountLabel(finalEntries.Count)} in the library.";
+            : _libraryImageCount > finalEntries.Count
+                ? $"{CountLabel(finalEntries.Count)} in the library "
+                  + $"({_libraryImageCount:N0} images; {_libraryImageCount - finalEntries.Count:N0} duplicate copies hidden)."
+                : $"{CountLabel(finalEntries.Count)} in the library.";
     }
 
     private void ReplaceLibraryEntries(IReadOnlyList<GameLibraryEntry> entries)
@@ -3687,6 +3701,7 @@ public partial class MainWindow : Window, IDisposable
         var previousCoverDirectory = _settings.CoverDirectory;
         var previousLibraryMetadataPath = _settings.ResolveLibraryMetadataPath();
         var previousLibraryFolders = _settings.LibraryFolders.ToArray();
+        var previousShowDuplicateLibraryEntries = _settings.ShowDuplicateLibraryEntries;
         var previousBiosPath = _settings.BiosPath;
         var previousBios2Path = _settings.Bios2Path;
         var previousBiosFolder = _settings.BiosFolder;
@@ -3714,7 +3729,8 @@ public partial class MainWindow : Window, IDisposable
         AppSettingsStore.Save(_settings);
         if (!previousLibraryFolders.SequenceEqual(
                 _settings.LibraryFolders,
-                StringComparer.OrdinalIgnoreCase))
+                StringComparer.OrdinalIgnoreCase)
+            || previousShowDuplicateLibraryEntries != _settings.ShowDuplicateLibraryEntries)
         {
             AsyncEvent.Run(RefreshLibraryAsync, "refreshing the game library");
         }

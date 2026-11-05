@@ -2242,7 +2242,7 @@ internal static class Program
             datPath = Path.GetFullPath(datPath);
         }
 
-        GameLibraryScanResult scan = GameLibraryScanner.BeginScan(folders);
+        GameLibraryScanResult scan = GameLibraryScanner.BeginScan(folders, deduplicate: false);
         List<GameLibraryEntry> entries = scan.Entries
             .Where(entry => !string.IsNullOrWhiteSpace(entry.Path))
             .ToList();

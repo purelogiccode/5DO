@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using FiveDo.Host;
 
 namespace FiveDo.Tests.Host;
@@ -206,6 +207,30 @@ public sealed class GameLibraryScannerTests
         Assert.False(cachedEntry.Pending);
         Assert.Equal(3, cachedEntry.SectorCount);
         Assert.Empty(cached.PendingPaths);
+    }
+
+    [Fact]
+    public void Scan_CanListDuplicateCopiesWhenDeduplicationIsDisabled()
+    {
+        using var directory = new TempDirectory();
+        WriteIso(Path.Combine(directory.Path, "game (GoodTools).iso"), sectors: 3);
+        WriteIso(Path.Combine(directory.Path, "game (Redump).iso"), sectors: 3);
+
+        GameLibraryEntry deduplicated = Assert.Single(GameLibraryScanner.Scan([directory.Path]));
+        Assert.Equal(3, deduplicated.SectorCount);
+
+        IReadOnlyList<GameLibraryEntry> all = GameLibraryScanner.Scan(
+            [directory.Path],
+            deduplicate: false);
+        Assert.Equal(2, all.Count);
+        Assert.All(all, entry => Assert.Equal(3, entry.SectorCount));
+        Assert.Single(all.Select(entry => entry.GameId).Distinct(StringComparer.OrdinalIgnoreCase));
+
+        GameLibraryScanResult listed = GameLibraryScanner.BeginScan(
+            [directory.Path],
+            deduplicate: false);
+        Assert.Equal(2, listed.ImageCount);
+        Assert.Equal(2, listed.Entries.Count);
     }
 
     [Fact]

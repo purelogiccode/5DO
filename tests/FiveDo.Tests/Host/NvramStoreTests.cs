@@ -371,6 +371,7 @@ public sealed class NvramStoreTests
         settings.Input.Players[0].Keyboard["Q"] = FiveDo.Input.ControllerButton.C;
         settings.RecentDiscs.Add("game.iso");
         settings.LibraryFolders.Add("games");
+        settings.ShowDuplicateLibraryEntries = true;
         settings.FixModeOverrides["9F7D72BC"] = FixMode.BitTiming6;
         settings.SetFilterOverride("9F7D72BC", VideoFilter.Hqx);
 
@@ -417,6 +418,7 @@ public sealed class NvramStoreTests
         Assert.Equal(FiveDo.Input.ControllerButton.C, loaded.Input.Players[0].Keyboard["Q"]);
         Assert.Equal("game.iso", Assert.Single(loaded.RecentDiscs));
         Assert.Equal("games", Assert.Single(loaded.LibraryFolders));
+        Assert.True(loaded.ShowDuplicateLibraryEntries);
         Assert.Equal(FixMode.BitTiming6, loaded.GetFixModeOverride("9F7D72BC"));
         Assert.Equal(VideoFilter.Crt, loaded.Filter);
         Assert.Equal(VideoFilter.Hqx, loaded.ResolveFilter("9F7D72BC"));

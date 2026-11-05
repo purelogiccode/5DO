@@ -13,9 +13,13 @@ namespace FiveDo.Host;
 /// <summary>An initial library listing plus files whose metadata still needs inspection.</summary>
 /// <param name="Entries">Entries available immediately, including pending placeholders.</param>
 /// <param name="PendingPaths">Disc paths that still need a game ID and sector count.</param>
+/// <param name="ImageCount">
+/// Number of disc image files found, before duplicate copies were collapsed by game ID.
+/// </param>
 public sealed record GameLibraryScanResult(
     IReadOnlyList<GameLibraryEntry> Entries,
-    IReadOnlyList<string> PendingPaths);
+    IReadOnlyList<string> PendingPaths,
+    int ImageCount = 0);
 
 /// <summary>
 /// Scans folders for ISO/BIN/CUE/CHD images and resolves titles through the 4DO game database.
@@ -39,6 +43,9 @@ public static class GameLibraryScanner
     /// <param name="coverDirectory">
     /// Optional directory containing cover images named after the disc files.
     /// </param>
+    /// <param name="deduplicate">
+    /// When true, disc images that share a 3DO game ID are collapsed to one entry.
+    /// </param>
     /// <returns>
     /// Cached/full entries plus placeholders for files that need <see cref="InspectPending"/>.
     /// </returns>
@@ -47,6 +54,7 @@ public static class GameLibraryScanner
         int maximumDepth = 4,
         string? cachePath = null,
         string? coverDirectory = null,
+        bool deduplicate = true,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(folders);
@@ -89,7 +97,8 @@ public static class GameLibraryScanner
         }
 
         SortEntries(entries);
-        return new GameLibraryScanResult(Deduplicate(entries), pending);
+        IReadOnlyList<GameLibraryEntry> listed = deduplicate ? Deduplicate(entries) : entries;
+        return new GameLibraryScanResult(listed, pending, files.Count);
     }
 
     /// <summary>
@@ -102,12 +111,16 @@ public static class GameLibraryScanner
     /// <param name="coverDirectory">
     /// Optional directory containing cover images named after the disc files.
     /// </param>
+    /// <param name="deduplicate">
+    /// When true, disc images that share a 3DO game ID are collapsed to one entry.
+    /// </param>
     /// <returns>The enriched entries, sorted by title then path.</returns>
     public static IReadOnlyList<GameLibraryEntry> InspectPending(
         IReadOnlyList<string> paths,
         string? cachePath = null,
         IProgress<int>? progress = null,
         string? coverDirectory = null,
+        bool deduplicate = true,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(paths);
@@ -185,7 +198,7 @@ public static class GameLibraryScanner
 
         var result = entries.ToList();
         SortEntries(result);
-        return Deduplicate(result);
+        return deduplicate ? Deduplicate(result) : result;
     }
 
     /// <summary>Scans one or more folders, recursively, and returns fully inspected entries.</summary>
@@ -200,6 +213,9 @@ public static class GameLibraryScanner
     /// <param name="coverDirectory">
     /// Optional directory containing cover images named after the disc files.
     /// </param>
+    /// <param name="deduplicate">
+    /// When true, disc images that share a 3DO game ID are collapsed to one entry.
+    /// </param>
     /// <returns>Entries sorted by title then path.</returns>
     public static IReadOnlyList<GameLibraryEntry> Scan(
         IEnumerable<string> folders,
@@ -207,6 +223,7 @@ public static class GameLibraryScanner
         string? cachePath = null,
         IProgress<int>? progress = null,
         string? coverDirectory = null,
+        bool deduplicate = true,
         CancellationToken cancellationToken = default)
     {
         GameLibraryScanResult initial = BeginScan(
@@ -214,6 +231,7 @@ public static class GameLibraryScanner
             maximumDepth,
             cachePath,
             coverDirectory,
+            deduplicate,
             cancellationToken);
         if (initial.PendingPaths.Count == 0)
         {
@@ -225,13 +243,14 @@ public static class GameLibraryScanner
             cachePath,
             progress,
             coverDirectory,
+            deduplicate,
             cancellationToken);
         var all = initial.Entries
             .Where(entry => !entry.Pending)
             .Concat(inspected)
             .ToList();
         SortEntries(all);
-        return Deduplicate(all);
+        return deduplicate ? Deduplicate(all) : all;
     }
 
     /// <summary>

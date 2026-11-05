@@ -16,6 +16,12 @@ release.
   blocking the list. On a 2,732-image local collection the cached listing fell from 2.8 s
   to 0.33 s, and a cold listing shows all entries in 17 ms before game IDs, titles, and
   cover art are resolved in the background.
+- Library duplicate visibility: the library identifies discs by the MD5 of their first two
+  2048-byte data sectors (the 4DO game ID), so renamed copies and GoodTools/Redump/No-Intro
+  variants of one release collapse to a single entry. The library header now reports both
+  counts, for example `653 games · 1,366 images`, and **Settings > Paths > Show duplicate
+  disc images** lists every file when needed. `5do library verify` checks every image,
+  including duplicate copies.
 - SYS-07 memory capacity options: all eight Opera DRAM/VRAM layouts (2/4/8/14/15 MB
   DRAM and 1/2 MB VRAM) are selectable with `--memory`, Settings > Emulation > Memory,
   per-game profiles, and save states. VRAM is decoded directly above DRAM, VDLP/SPORT/CEL

@@ -432,6 +432,13 @@ background. Later scans reuse `library-cache.json` and only reopen files whose s
 timestamp changed. Cover images are indexed once per folder instead of being probed for
 every disc, so the list appears quickly even with a large cover collection.
 
+Each disc is identified by a **game ID**: the MD5 of its first two 2048-byte data sectors,
+the same identifier used by 4DO's game database. Renaming a disc or keeping GoodTools and
+Redump/No-Intro copies of the same release does not create a second game, because the ID
+comes from the disc contents. The library shows one entry per game ID by default and
+displays the image count, for example `653 games · 1,366 images`. To list every file
+instead, enable **Settings > Paths > Show duplicate disc images**.
+
 Use the star button on a card or list row to mark a favorite. The filter selector
 switches between **All games**, **Favorites**, **Played**, and **Unplayed**; the sort
 selector orders by title, recently played, most played, release year, or publisher.
