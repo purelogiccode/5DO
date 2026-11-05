@@ -60,7 +60,7 @@ input values are consumed at runtime. `gamedb stats --folder "J:\Panasonic 3DO"`
 1,366 readable images, 653 unique IDs, and 100% metadata coverage with no errors
 (the three exceptions are audio-only `[CD-Audio]` CHDs). SYS-08 added the five-title
 0.5x-1x-2x-4x A/B in `Performance.md` §8.3 and kept the stock 12.5 MHz default; every
-non-stock clock changed guest behavior. The suite is **1,778 tests**.
+non-stock clock changed guest behavior. The suite is **1,779 tests**.
 
 **SYS-12 (2026-11-04):** Portfolio OS SWI HLE is available behind `--swi-hle`,
 Settings > Emulation, and per-game profiles. It handles Opera's 14 fixed-point math SWIs
@@ -80,7 +80,7 @@ DRAM, VDLP/SPORT/CEL use the live layout, and MADAM RED SYSBITS reports the capa
 the BIOS. A homebrew probe ROM uses 4 MB DRAM + 2 MB VRAM; retail titles remain on the
 stock 2 MB/1 MB default because Opera documents expanded memory as homebrew-only. The
 CPU-clock matrix (0.5x-4x) and `bench --cpu-clock`/`--memory` were also added; the suite
-is **1,778 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al, 1.1an, 1.1ao, and
+is **1,779 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al, 1.1an, 1.1ao, and
 [`Performance.md`](Performance.md) 8.1.
 
 **Latest work (2026-11-02):** the CLI and desktop shell check the public GitHub release

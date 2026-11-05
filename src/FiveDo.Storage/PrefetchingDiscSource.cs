@@ -31,11 +31,14 @@ public sealed class PrefetchingDiscSource : ITrackedDiscSource
     private readonly Queue<int> _cacheOrder = new();
     private readonly Dictionary<int, byte[]> _trackCache = new();
     private readonly Queue<int> _trackOrder = new();
+    private readonly Stack<byte[]> _bufferPool = new();
     private readonly AutoResetEvent _wake = new(false);
     private readonly Thread _worker;
     private volatile bool _stop;
     private bool _disposed;
     private int _next;
+    private byte[]? _workerSectorBuffer;
+    private byte[]? _workerTrackBuffer;
 
     /// <summary>Initializes a new prefetching disc source.</summary>
     /// <param name="inner">Wrapped source. The wrapper owns and disposes it.</param>
@@ -230,6 +233,12 @@ public sealed class PrefetchingDiscSource : ITrackedDiscSource
         _ = _worker.Join(TimeSpan.FromSeconds(2));
         _wake.Dispose();
         _inner.Dispose();
+        lock (_gate)
+        {
+            _cache.Clear();
+            _trackCache.Clear();
+            _bufferPool.Clear();
+        }
     }
 
     private void Advance(int lba)
@@ -252,11 +261,56 @@ public sealed class PrefetchingDiscSource : ITrackedDiscSource
         if (_trackCache.Count >= _capacity)
         {
             var oldest = _trackOrder.Dequeue();
+            ReturnBuffer(_trackCache[oldest]);
             _trackCache.Remove(oldest);
         }
 
-        _trackCache[lba] = data.ToArray();
+        byte[] buffer = RentBuffer(data.Length);
+        data.CopyTo(buffer);
+        _trackCache[lba] = buffer;
         _trackOrder.Enqueue(lba);
+    }
+
+    private void StoreData(int lba, ReadOnlySpan<byte> data)
+    {
+        if (_cache.ContainsKey(lba))
+        {
+            return;
+        }
+
+        if (_cache.Count >= _capacity)
+        {
+            var oldest = _cacheOrder.Dequeue();
+            ReturnBuffer(_cache[oldest]);
+            _cache.Remove(oldest);
+        }
+
+        byte[] buffer = RentBuffer(data.Length);
+        data.CopyTo(buffer);
+        _cache[lba] = buffer;
+        _cacheOrder.Enqueue(lba);
+    }
+
+    private byte[] RentBuffer(int length)
+    {
+        while (_bufferPool.Count > 0)
+        {
+            byte[] buffer = _bufferPool.Pop();
+            if (buffer.Length >= length)
+            {
+                return buffer;
+            }
+        }
+
+        return new byte[length];
+    }
+
+    private void ReturnBuffer(byte[] buffer)
+    {
+        if (buffer.Length <= 2352)
+        {
+            _bufferPool.Push(buffer);
+        }
     }
 
     private DiscTrack? TryFindTrack(int lba)
@@ -300,7 +354,14 @@ public sealed class PrefetchingDiscSource : ITrackedDiscSource
 
                 if (TryFindTrack(lba) is { IsAudio: true } audioTrack)
                 {
-                    var trackBuffer = new byte[audioTrack.SectorSize];
+                    int trackSize = audioTrack.SectorSize;
+                    byte[] trackBuffer = _workerTrackBuffer ??= new byte[trackSize];
+                    if (trackBuffer.Length < trackSize)
+                    {
+                        trackBuffer = new byte[trackSize];
+                        _workerTrackBuffer = trackBuffer;
+                    }
+
                     try
                     {
                         int read;
@@ -327,7 +388,14 @@ public sealed class PrefetchingDiscSource : ITrackedDiscSource
                     continue;
                 }
 
-                var buffer = new byte[SectorSize];
+                int sectorSize = SectorSize;
+                byte[] buffer = _workerSectorBuffer ??= new byte[sectorSize];
+                if (buffer.Length < sectorSize)
+                {
+                    buffer = new byte[sectorSize];
+                    _workerSectorBuffer = buffer;
+                }
+
                 try
                 {
                     lock (_innerGate)
@@ -343,14 +411,7 @@ public sealed class PrefetchingDiscSource : ITrackedDiscSource
 
                 lock (_gate)
                 {
-                    if (_cache.Count >= _capacity)
-                    {
-                        var oldest = _cacheOrder.Dequeue();
-                        _cache.Remove(oldest);
-                    }
-
-                    _cache[lba] = buffer;
-                    _cacheOrder.Enqueue(lba);
+                    StoreData(lba, buffer);
                 }
             }
         }

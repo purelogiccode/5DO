@@ -41,6 +41,35 @@ public sealed class PrefetchingDiscSourceTests
     }
 
     [Fact]
+    public void CacheHits_DoNotAllocateOnTheCallerThread()
+    {
+        using var inner = new FakeDiscSource(64);
+        using var source = new PrefetchingDiscSource(inner, ahead: 1, capacity: 8);
+        var destination = new byte[2048];
+        source.ReadSector(0, destination);
+        Assert.True(
+            WaitForCache(source, minimum: 1, TimeSpan.FromSeconds(2)),
+            "The prefetch worker did not cache a sector.");
+
+        // JIT/tiered compilation can make the first few calls allocate; warm them first.
+        for (var i = 0; i < 100; i++)
+        {
+            source.ReadSector(0, destination);
+        }
+
+        long before = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < 1_000; i++)
+        {
+            source.ReadSector(0, destination);
+        }
+
+        long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+        Assert.True(
+            allocated < 128,
+            $"Cache hits allocated {allocated} bytes over 1,000 reads; expected only a possible one-time runtime allocation.");
+    }
+
+    [Fact]
     public void Cache_IsBoundedByCapacity()
     {
         using var inner = new FakeDiscSource(256);

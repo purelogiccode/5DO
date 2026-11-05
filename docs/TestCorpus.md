@@ -2264,3 +2264,15 @@ a legacy version-2 memory section.
   - Crash 'n Burn (USA): applied `fixMode=1` (`FIX_BIT_TIMING_1`).
   - Crime Patrol (USA): selected `1=lightgun` from the database and rendered its
     live-action intro at 3,000 frames.
+
+#### 1.1as PERF-04 prefetch buffer increment (2026-11-05)
+
+- `PrefetchingDiscSource` keeps a bounded pool of evicted sector buffers, so a full
+  cache reuses its arrays instead of allocating a new `byte[]` per stored sector. The
+  worker also reuses one 2048-byte data buffer and one 2352-byte audio buffer.
+- `StoreData`/`StoreTrack` copy into pooled buffers; eviction returns the old array to
+  the pool; `Dispose` clears the cache and pool.
+- `CacheHits_DoNotAllocateOnTheCallerThread` warms a cached sector and then performs
+  1,000 cache-hit reads, asserting `GC.GetAllocatedBytesForCurrentThread()` stays below 128 bytes (a one-time runtime allocation is tolerated).
+- This is an increment, not completion: continuous miss/eviction streaming still needs
+  an end-to-end allocation gate and frame-spike measurement.

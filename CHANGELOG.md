@@ -43,7 +43,7 @@ release.
   0.5x/1x/2x/4x A/B. Every non-stock clock changed the frame hash, so the stock 12.5 MHz
   default remains the only supported compatibility clock and no per-title clock override
   ships in the database.
-- SYS-18 auto per-game profiles: database `inputDevices` now drive the input manager and
+- PERF-04 prefetch increment: PrefetchingDiscSource pools evicted sector buffers and reuses the worker data/audio read buffers, so cache hits do not allocate per read and full-cache eviction reuses arrays instead of allocating. A 1,000-read allocation test covers the hit path.\n- SYS-18 auto per-game profiles: database `inputDevices` now drive the input manager and
   CLI `run`/`trace` when `--input-device` is omitted. Profiles apply through one effective
   snapshot; input, filter, and high-resolution changes apply live, while BIOS/NVRAM/fix/
   timing changes restart the machine. `GameProfile` carries a `CheatBundle` and can be
