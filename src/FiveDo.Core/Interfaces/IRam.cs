@@ -14,6 +14,12 @@ public interface IRam
     /// <summary>Gets the total backing size in bytes, including reserved high-resolution mirrors.</summary>
     int Size { get; }
 
+    /// <summary>
+    /// Gets the active DRAM/VRAM layout. The default is the stock 2 MB DRAM / 1 MB VRAM
+    /// layout so test doubles remain simple; the machine memory overrides it.
+    /// </summary>
+    MemoryLayout Layout => MemoryLayout.Stock;
+
     /// <summary>Reads one byte at a raw RAM offset.</summary>
     /// <param name="offset">Byte offset.</param>
     /// <returns>The byte, or zero when the offset is outside the allocation.</returns>

@@ -14,6 +14,7 @@ Each option is validated by the machine, reachable from the CLI, desktop setting
 | celTiming | --cel-timing | CelTiming | CelTiming | enum (CelTimingMode) | FreeDoCompatible | FreeDoCompatible, OperaBusy | yes | MADAM CEL timing: synchronous FreeDO draws or Opera's pixel/texel busy deadline. |
 | cdromTiming | --cd-timing | CdromTiming | CdromTiming | enum (CdromTimingMode) | FreeDoCompatible | FreeDoCompatible, OperaCycleBased | yes | CD-ROM data-sector timing: immediate FreeDO transfers or Opera's cycle-based readiness. |
 | cdSpeed | --cd-speed | CdSpeed | CdSpeed | enum (CdSpeed) | X2 | Unbounded, X1, X2, X4, X8, X16, X24, X32 | yes | Effective read speed for the cycle-based CD-ROM model. The stock 3DO drive is 2x. |
+| memory | --memory | MemoryConfiguration | MemoryConfiguration | enum (MemoryConfiguration) | 2 MB DRAM / 1 MB VRAM (21) | 21, 22, 41, 42, 81, 82, E2, F1 (DRAM/VRAM in MB) | yes | DRAM/VRAM capacity. The stock machine has 2 MB DRAM and 1 MB VRAM; expanded layouts change the RAM boundary and VRAM base. |
 | randomSeed | --random-seed | RandomSeed | RandomSeed | seed | default (0xa5a5a5a5) | default or a 32-bit value | yes | Initial DSP PRNG seed. Blank uses FreeDO's default 0xa5a5a5a5. |
 | fixMode | --fix-mode | FixModeOverrides | FixMode | flags | None | 0x00000000-0xFFFFFFFF | yes | Per-game 4DO compatibility fix mask. |
 | cpuBackend | --cpu-backend | CpuBackend | CpuBackend | enum (CpuBackendKind) | Interpreter | Interpreter | yes | Guest ARM60 backend. The interpreter is the reference and the only implemented backend. |

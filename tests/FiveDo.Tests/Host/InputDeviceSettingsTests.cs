@@ -6,12 +6,13 @@ namespace FiveDo.Tests.Host;
 public sealed class InputDeviceSettingsTests
 {
     [Fact]
-    public void Defaults_UseSixJoypads()
+    public void Defaults_UseEightJoypads()
     {
         var settings = new AppSettings();
 
-        Assert.Equal(PbusEncoder.MaxControllers, settings.InputDevices.Count);
-        for (var i = 0; i < PbusEncoder.MaxControllers; i++)
+        Assert.Equal(PbusEncoder.MaxPorts, settings.InputDevices.Count);
+        Assert.Null(settings.ActiveInputDevices);
+        for (var i = 0; i < PbusEncoder.MaxPorts; i++)
         {
             Assert.Equal(InputDeviceType.Joypad, settings.GetInputDevice(i));
         }
@@ -70,6 +71,46 @@ public sealed class InputDeviceSettingsTests
         Assert.Equal(InputDeviceType.Flightstick, input.Devices.GetDevice(1));
         Assert.Equal(InputDeviceType.Lightgun, input.Devices.GetDevice(2));
         Assert.True(input.Devices.HasPeripheral);
+    }
+
+    [Fact]
+    public void ApplyInputDevices_ActiveCountControlsPolledPorts()
+    {
+        var settings = new AppSettings();
+        settings.SetInputDevice(7, InputDeviceType.Lightgun);
+        var input = new InputManager(InputProfile.CreateDefault());
+
+        settings.ActiveInputDevices = 3;
+        settings.ApplyInputDevices(input);
+        Assert.Equal(3, input.ControllerCount);
+        Assert.Equal(InputDeviceType.Lightgun, input.Devices.GetDevice(7));
+
+        settings.ActiveInputDevices = 0;
+        settings.ApplyInputDevices(input);
+        Assert.Equal(0, input.ControllerCount);
+
+        settings.ActiveInputDevices = 8;
+        settings.ApplyInputDevices(input);
+        Assert.Equal(8, input.ControllerCount);
+    }
+
+    [Fact]
+    public void EightJoypads_UseTheOperaDaisyChain()
+    {
+        var settings = new AppSettings
+        {
+            ActiveInputDevices = 8,
+        };
+        var input = new InputManager(InputProfile.CreateDefault());
+        var packet = new byte[PbusChainEncoder.MaxPacketSize];
+
+        settings.ApplyInputDevices(input);
+        var length = input.GetPbusData(packet);
+
+        Assert.Equal(8, input.ControllerCount);
+        Assert.Equal(20, length);
+        Assert.Equal(0x80, packet[0]);
+        Assert.NotEqual(0x00, packet[0]);
     }
 
     [Fact]

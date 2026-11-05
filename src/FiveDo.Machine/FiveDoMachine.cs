@@ -401,7 +401,11 @@ public sealed class FiveDoMachine
             Xbus,
             Cdrom,
             Quartz,
-            new MachineOptionsSection(Tuning, RegionProfile.Region, Compatibility.FixMode),
+            new MachineOptionsSection(
+                Tuning,
+                RegionProfile.Region,
+                Compatibility.FixMode,
+                Memory.Layout.Configuration),
             new MachineFrameSection(_frame, Compatibility),
         ];
         uint features = StateFormat.FeatureOptionsSnapshot
@@ -583,6 +587,7 @@ public sealed class FiveDoMachine
 
         MachineOptionSnapshot? stateOptions = null;
         var machineFixMode = Compatibility.FixMode;
+        MemoryConfiguration machineMemory = Memory.Layout.Configuration;
         var seenSections = new HashSet<uint>();
         while (reader.TryReadSection(out StateSectionReader? section))
         {
@@ -603,13 +608,13 @@ public sealed class FiveDoMachine
             }
 
             var supportedVersion = section.Version == 1
-                || (section.Id == StateSectionIds.Memory && section.Version == 2)
+                || (section.Id == StateSectionIds.Memory && section.Version <= 3)
                 || (section.Id == StateSectionIds.Cdrom && section.Version <= 4)
                 || (section.Id == StateSectionIds.Quartz && section.Version <= 3)
                 || (section.Id == StateSectionIds.Clio && section.Version <= 3)
-                || (section.Id == StateSectionIds.Madam && section.Version <= 3)
+                || (section.Id == StateSectionIds.Madam && section.Version <= 4)
                 || (section.Id == StateSectionIds.Vdlp && section.Version <= 3)
-                || (section.Id == StateSectionIds.Options && section.Version <= 7);
+                || (section.Id == StateSectionIds.Options && section.Version <= 8);
             if (!supportedVersion)
             {
                 throw new InvalidStateException($"Unsupported section {section.Id} version {section.Version}.");
@@ -660,6 +665,27 @@ public sealed class FiveDoMachine
                             $"State video region {savedRegion} differs from the machine region; switched to {savedRegion}.");
                     }
 
+                    if (stateOptions?.MemoryConfiguration is { } savedMemory
+                        && savedMemory != machineMemory)
+                    {
+                        // VRAM is located directly above DRAM, so the state's memory contents
+                        // only decode correctly with the layout that produced them. Apply the
+                        // options value again in case a hand-built state disagrees with its
+                        // memory section.
+                        Memory.SetMemoryConfiguration(savedMemory);
+                        Madam.RefreshMemoryConfiguration();
+                        _stateWarnings.Add(
+                            $"State memory capacity {MemoryLayout.FormatDescription(savedMemory)} differs from the machine layout {MemoryLayout.FormatDescription(machineMemory)}; switched to {MemoryLayout.FormatDescription(savedMemory)}.");
+                    }
+                    else if (stateOptions is not null
+                        && stateOptions.MemoryConfiguration is null
+                        && machineMemory != Memory.Layout.Configuration)
+                    {
+                        Madam.RefreshMemoryConfiguration();
+                        _stateWarnings.Add(
+                            $"State does not record memory capacity; using the stock {MemoryLayout.FormatDescription(Memory.Layout.Configuration)} layout instead of the machine {MemoryLayout.FormatDescription(machineMemory)} layout.");
+                    }
+
                     break;
                 case StateSectionIds.Machine:
                     new MachineFrameSection(_frame, Compatibility).Load(section);
@@ -695,18 +721,27 @@ public sealed class FiveDoMachine
 
         if (stateOptions is not null)
         {
-            EmulatorTuning machineOptions = Tuning with { FixMode = machineFixMode };
+            EmulatorTuning machineOptions = Tuning with
+            {
+                FixMode = machineFixMode,
+                MemoryConfiguration = Memory.Layout.Configuration,
+            };
             foreach (MachineOptionMismatch mismatch in MachineOptionRegistry.Compare(machineOptions, stateOptions))
             {
-                // The region warning above already reports the switch, and the header
-                // ARM-clock warning already covers the clock; avoid duplicate messages.
+                // The region and memory warnings above already report the switch, and the
+                // header ARM-clock warning already covers the clock; avoid duplicate messages.
                 if (!string.Equals(mismatch.Key, "region", StringComparison.Ordinal)
+                    && !string.Equals(mismatch.Key, "memory", StringComparison.Ordinal)
                     && !string.Equals(mismatch.Key, "cpuClock", StringComparison.Ordinal))
                 {
                     _stateWarnings.Add(mismatch.Message);
                 }
             }
         }
+
+        // The memory section may have switched the layout; keep the read-only RED
+        // SYSBITS register consistent even when the Options section is missing.
+        Madam.RefreshMemoryConfiguration();
 
         // A command-line/front-end override survives loads of states written before the
         // high-resolution flag was recorded as enabled.
@@ -906,7 +941,7 @@ public sealed class FiveDoMachine
 
         Clio.GenerateFiq(1u << 1, 0);
 
-        Span<byte> pbus = stackalloc byte[64];
+        Span<byte> pbus = stackalloc byte[256];
         var length = PbusSource?.GetPbusData(pbus) ?? 0;
         if (length < 0)
         {

@@ -8,16 +8,17 @@ namespace FiveDo.Madam;
 /// <c>Madam.cpp: _madam_HandleCEL</c>.
 /// </summary>
 /// <remarks>
-/// Pointers are masked to 24 bits and validated against the 3 MB VRAM window. Relative
+/// Pointers are masked to 24 bits and validated against the active RAM/VRAM window. Relative
 /// pointers are added to the address of the pointer word plus four, matching the reference.
 /// </remarks>
 public sealed class CcbParser
 {
     private const uint PointerMask = 0xffffff;
-    private const uint MaximumVramAddress = 0x2fffff;
 
     private readonly IRam _ram;
     private readonly CelMemory? _celMemory;
+
+    private uint MaximumVramAddress => (uint)(_ram.Layout.RamSize - 1);
 
     /// <summary>Initializes a new instance of the <see cref="CcbParser"/> class.</summary>
     /// <param name="ram">Raw RAM/VRAM accessor.</param>

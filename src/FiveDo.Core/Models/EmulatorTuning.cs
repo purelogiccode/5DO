@@ -58,6 +58,13 @@ public sealed record EmulatorTuning
     public CdSpeed CdSpeed { get; init; } = CdSpeed.X2;
 
     /// <summary>
+    /// Gets the DRAM/VRAM capacity layout. The default is the stock 2 MB DRAM / 1 MB VRAM
+    /// machine. Expanded layouts change the CPU-visible RAM boundary and the VRAM base and
+    /// are reported to the BIOS through the MADAM RED SYSBITS register.
+    /// </summary>
+    public MemoryConfiguration MemoryConfiguration { get; init; } = MemoryConfiguration.Dram2MbVram1Mb;
+
+    /// <summary>
     /// Gets the optional initial DSP PRNG seed. <see langword="null"/> keeps FreeDO's
     /// default seed (<c>0xa5a5a5a5</c>); a value makes fresh runs reproducible from a
     /// known seed.

@@ -625,3 +625,27 @@ changes and belong in M9P before release polish.
 - [ ] Render-on-demand and frame pacing verified with a 60 Hz and a 144 Hz display.
 - [ ] Real-content smoke and performance results recorded with BIOS, disc, commit,
       and hardware.
+
+### 8.1 CPU clock compatibility matrix (2026-11-04)
+
+`5do bench --cpu-clock` measures the synthetic machine at the supported multipliers.
+Release build, 300 frames, development machine, `--frames 300 --json`:
+
+| Clock | Cycles/frame | Instructions | Wall time | Frames/s | Frame hash |
+|---|---:|---:|---:|---:|---|
+| 0.5x (6.25 MHz) | 104,176 | 32,294,560 | 0.440 s | 682 | `0x6CDFBDC5` |
+| 1x (12.5 MHz, stock) | 208,336 | 64,584,160 | 0.560 s | 536 | `0x6CDFBDC5` |
+| 2x (25 MHz) | 416,672 | 129,168,320 | 0.988 s | 304 | `0x6CDFBDC5` |
+| 4x (50 MHz) | 833,344 | 258,336,640 | 2.990 s | 100 | `0x6CDFBDC5` |
+
+The hash is identical at every clock, confirming that the clock changes the cycle budget
+rather than guest behavior for this synthetic program. Cost scales linearly with the
+emulated clock (about 1.7x from 1x to 2x and 3.0x from 2x to 4x), so a 4x clock still
+leaves ~10 ms/frame at 60 Hz on this machine but is not a compatibility guarantee. The
+supported range is 0.5x-4x; the stock 12.5 MHz default is unchanged. Save states record
+the clock in the header and warn when it differs from the running machine.
+
+Per-title clock behavior is a compatibility question, not a speed switch: a title that
+relies on a fixed cycle budget for CD/CLIO/CEL polling can time out or run faster at
+another clock. Use the stock clock unless a specific title has documented evidence in
+[`Compatibility.md`](Compatibility.md).

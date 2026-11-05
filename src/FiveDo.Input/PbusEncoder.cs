@@ -17,8 +17,14 @@ public static class PbusEncoder
     /// <summary>Required destination size in bytes.</summary>
     public const int PacketSize = 16;
 
-    /// <summary>Maximum number of controllers in a packet.</summary>
+    /// <summary>Maximum number of controllers in the legacy fixed 16-byte packet.</summary>
     public const int MaxControllers = 6;
+
+    /// <summary>
+    /// Maximum number of PBUS ports in the daisy-chain layout. Opera polls up to eight
+    /// devices; the legacy 4DO packet only carries six.
+    /// </summary>
+    public const int MaxPorts = 8;
 
     /// <summary>Encodes controller states into a PBUS packet.</summary>
     /// <param name="controllers">Controller states, player 1 first.</param>
@@ -107,7 +113,7 @@ public sealed class PbusSource : IPbusSource
     public InputDeviceSet Devices => _devices;
 
     /// <summary>Gets a controller state by zero-based player index.</summary>
-    /// <param name="player">Player index, 0-5.</param>
+    /// <param name="player">Player index, 0-7.</param>
     /// <returns>The controller state.</returns>
     public ControllerState this[int player]
     {
@@ -115,7 +121,7 @@ public sealed class PbusSource : IPbusSource
         set
         {
             ArgumentOutOfRangeException.ThrowIfNegative(player);
-            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(player, PbusEncoder.MaxControllers);
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(player, PbusEncoder.MaxPorts);
             _devices.SetJoypad(player, value);
             if (player >= ControllerCount)
             {
@@ -139,11 +145,11 @@ public sealed class PbusSource : IPbusSource
     public InputDeviceType GetDevice(int port) => _devices.GetDevice(port);
 
     /// <summary>Sets the connected controller count.</summary>
-    /// <param name="count">Count, 1-6.</param>
+    /// <param name="count">Count, 0-8. Zero reports an empty PBUS chain.</param>
     public void SetControllerCount(int count)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(count, 1);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(count, PbusEncoder.MaxControllers);
+        ArgumentOutOfRangeException.ThrowIfLessThan(count, 0);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(count, PbusEncoder.MaxPorts);
         ControllerCount = count;
     }
 
@@ -151,18 +157,20 @@ public sealed class PbusSource : IPbusSource
     /// <param name="controllers">Controller states, player 1 first.</param>
     public void SetControllers(ReadOnlySpan<ControllerState> controllers)
     {
-        for (var i = 0; i < PbusEncoder.MaxControllers; i++)
+        for (var i = 0; i < PbusEncoder.MaxPorts; i++)
         {
             _devices.SetJoypad(i, i < controllers.Length ? controllers[i] : ControllerState.Empty);
         }
 
-        ControllerCount = Math.Clamp(controllers.Length, 1, PbusEncoder.MaxControllers);
+        ControllerCount = Math.Clamp(controllers.Length, 0, PbusEncoder.MaxPorts);
     }
 
     /// <inheritdoc />
     public int GetPbusData(Span<byte> destination)
     {
-        if (Format == PbusFormat.OperaChain || _devices.HasPeripheral)
+        if (Format == PbusFormat.OperaChain
+            || _devices.HasPeripheral
+            || _devices.PortCount > PbusEncoder.MaxControllers)
         {
             return PbusChainEncoder.Encode(_devices, destination);
         }

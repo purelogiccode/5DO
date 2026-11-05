@@ -21,7 +21,7 @@ public sealed class KeyboardInputMapper
     /// <param name="profiles">Player profiles, up to six.</param>
     public KeyboardInputMapper(ReadOnlySpan<PlayerProfile> profiles)
     {
-        _states = new ControllerState[PbusEncoder.MaxControllers];
+        _states = new ControllerState[PbusEncoder.MaxPorts];
         _profiles = new PlayerProfile[_states.Length];
         for (var i = 0; i < _profiles.Length; i++)
         {
@@ -177,14 +177,14 @@ public sealed class InputManager : IPbusSource
         set => Volatile.Write(ref _frameProvider, value);
     }
 
-    /// <summary>Gets or sets the connected controller count.</summary>
+    /// <summary>Gets or sets the connected controller count, 0-8.</summary>
     public int ControllerCount
     {
         get => Volatile.Read(ref _controllerCount);
         set
         {
-            ArgumentOutOfRangeException.ThrowIfLessThan(value, 1);
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(value, PbusEncoder.MaxControllers);
+            ArgumentOutOfRangeException.ThrowIfLessThan(value, 0);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(value, PbusEncoder.MaxPorts);
             _devices.SetPortCount(value);
             Volatile.Write(ref _controllerCount, value);
         }
@@ -194,7 +194,7 @@ public sealed class InputManager : IPbusSource
     public void Update()
     {
         _gamepad.Poll();
-        for (var player = 0; player < PbusEncoder.MaxControllers; player++)
+        for (var player = 0; player < PbusEncoder.MaxPorts; player++)
         {
             ControllerState pad = player < _gamepad.ControllerCount ? _gamepad.GetState(player) : ControllerState.Empty;
             ControllerState state = new(_keyboard.GetState(player).Buttons | pad.Buttons);
@@ -225,6 +225,7 @@ public sealed class InputManager : IPbusSource
         }
 
         var length = _devices.HasPeripheral
+            || _devices.PortCount > PbusEncoder.MaxControllers
             ? PbusChainEncoder.Encode(_devices, destination)
             : LegacyPacket(destination);
         _devices.ClearTransientMotion();

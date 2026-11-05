@@ -86,6 +86,57 @@ public sealed class CliProcessTests
     }
 
     [Fact]
+    public void Run_MemoryOption_IsReportedInJson()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--memory",
+                "42",
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"memory\": \"42\"", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void Run_InvalidMemoryOption_ReturnsTwo()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--memory",
+                "31");
+
+            Assert.Equal(1, result.Code);
+            Assert.Contains("--memory", result.Error, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
     public void Run_CycleClassesOption_IsReportedInJson()
     {
         var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
@@ -384,9 +435,63 @@ public sealed class CliProcessTests
 
             Assert.Equal(0, result.Code);
             Assert.Contains(
-                "\"inputDevices\": \"1=mouse,2=joypad,3=lightgun,4=arcade-lightgun,5=flightstick,6=orbatak-trackball\"",
+                "\"inputDevices\": \"1=mouse,2=joypad,3=lightgun,4=arcade-lightgun,5=flightstick,6=orbatak-trackball,7=joypad,8=joypad\"",
                 result.Output,
                 StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void Run_EightPortInputDeviceAndActiveCount_AreAccepted()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--input-device",
+                "8=lightgun",
+                "--active-devices",
+                "8",
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"inputDevices\":", result.Output, StringComparison.Ordinal);
+            Assert.Contains("8=lightgun", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(biosPath);
+        }
+    }
+
+    [Fact]
+    public void Run_InvalidActiveDevices_ReturnsOne()
+    {
+        var biosPath = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(biosPath, new byte[1_048_576]);
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--active-devices",
+                "9");
+
+            Assert.Equal(1, result.Code);
+            Assert.Contains("--active-devices", result.Error, StringComparison.Ordinal);
         }
         finally
         {
@@ -855,6 +960,24 @@ public sealed class CliProcessTests
         Assert.Contains("\"celTiming\": \"OperaBusy\"", result.Output, StringComparison.Ordinal);
         Assert.Contains("\"cdromTiming\": \"OperaCycleBased\"", result.Output, StringComparison.Ordinal);
         Assert.Contains("\"cpuClock\": 12500000", result.Output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Bench_CpuClockAndMemoryOptionsAreReported()
+    {
+        CliResult result = Invoke(
+            "bench",
+            "--frames",
+            "2",
+            "--cpu-clock",
+            "2x",
+            "--memory",
+            "42",
+            "--json");
+
+        Assert.Equal(0, result.Code);
+        Assert.Contains("\"cpuClock\": 25000000", result.Output, StringComparison.Ordinal);
+        Assert.Contains("\"memory\": \"42\"", result.Output, StringComparison.Ordinal);
     }
 
     [Fact]

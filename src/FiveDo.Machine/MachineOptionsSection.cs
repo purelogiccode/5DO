@@ -17,13 +17,19 @@ internal sealed class MachineOptionsSection : IStateSection
     private readonly EmulatorTuning _tuning;
     private readonly VideoRegion _region;
     private readonly FixMode _fixMode;
+    private readonly MemoryConfiguration _memoryConfiguration;
 
-    internal MachineOptionsSection(EmulatorTuning tuning, VideoRegion? region = null, FixMode? fixMode = null)
+    internal MachineOptionsSection(
+        EmulatorTuning tuning,
+        VideoRegion? region = null,
+        FixMode? fixMode = null,
+        MemoryConfiguration? memoryConfiguration = null)
     {
         ArgumentNullException.ThrowIfNull(tuning);
         _tuning = tuning;
         _region = region ?? tuning.Region;
         _fixMode = fixMode ?? tuning.FixMode;
+        _memoryConfiguration = memoryConfiguration ?? tuning.MemoryConfiguration;
     }
 
     /// <summary>Gets the save-state section identifier.</summary>
@@ -35,9 +41,10 @@ internal sealed class MachineOptionsSection : IStateSection
     /// version 4 adds the CD-ROM timing mode; version 5 adds the CD-ROM speed; version 6
     /// adds the video region; version 7 records every registered machine option (ARM clock,
     /// random seed, high-resolution mode, Opera DIPIR, Opera soft reset, fix mask, and CPU
-    /// backend). Older states default the missing fields to the machine default.
+    /// backend); version 8 adds the DRAM/VRAM capacity. Older states default the missing
+    /// fields to the machine default.
     /// </remarks>
-    public ushort Version => 7;
+    public ushort Version => 8;
 
     /// <summary>Gets the option snapshot read from a state.</summary>
     internal MachineOptionSnapshot? Snapshot { get; private set; }
@@ -61,6 +68,7 @@ internal sealed class MachineOptionsSection : IStateSection
         writer.WriteBoolean(_tuning.OperaSoftReset);
         writer.WriteUInt32((uint)_fixMode);
         writer.WriteUInt32((uint)_tuning.CpuBackend);
+        writer.WriteUInt32((uint)_memoryConfiguration);
     }
 
     /// <summary>Reads the option snapshot.</summary>
@@ -198,6 +206,19 @@ internal sealed class MachineOptionsSection : IStateSection
             throw new InvalidStateException($"Unknown CPU backend {(uint)cpuBackend} in the save state.");
         }
 
+        MemoryConfiguration? memoryConfiguration = null;
+        if (version >= 8)
+        {
+            var memory = (MemoryConfiguration)reader.ReadUInt32();
+            if (!Enum.IsDefined(memory))
+            {
+                throw new InvalidStateException(
+                    $"Unknown memory configuration 0x{(uint)memory:X2} in the save state.");
+            }
+
+            memoryConfiguration = memory;
+        }
+
         Snapshot = new MachineOptionSnapshot
         {
             ArmTiming = armTiming,
@@ -214,6 +235,7 @@ internal sealed class MachineOptionsSection : IStateSection
             OperaSoftReset = operaSoftReset,
             FixMode = fixMode,
             CpuBackend = cpuBackend,
+            MemoryConfiguration = memoryConfiguration,
         };
     }
 }

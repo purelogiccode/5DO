@@ -54,11 +54,11 @@ public sealed class GameDatabaseTests
 public sealed class InputProfileTests
 {
     [Fact]
-    public void DefaultProfile_HasSixPlayersAndNoConflicts()
+    public void DefaultProfile_HasEightPlayersAndNoConflicts()
     {
         var profile = InputProfile.CreateDefault();
 
-        Assert.Equal(6, profile.Players.Length);
+        Assert.Equal(PbusEncoder.MaxPorts, profile.Players.Length);
         Assert.Empty(profile.FindConflicts());
         Assert.Equal(ControllerButton.A, profile.Players[0].Keyboard["Z"]);
     }
@@ -118,7 +118,7 @@ public sealed class InputProfileTests
         var path = Path.Combine(Path.GetTempPath(), $"fivedo-profile-{Guid.NewGuid():N}", "input.json");
         InputProfile profile = InputProfileStore.Load(path);
 
-        Assert.Equal(6, profile.Players.Length);
+        Assert.Equal(PbusEncoder.MaxPorts, profile.Players.Length);
         Assert.True(File.Exists(path));
         Directory.Delete(Path.GetDirectoryName(path)!, recursive: true);
     }

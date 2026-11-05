@@ -108,7 +108,7 @@ public sealed class InputProfile
 
     private static PlayerProfile[] CreateDefaultPlayers()
     {
-        var players = new PlayerProfile[6];
+        var players = new PlayerProfile[PbusEncoder.MaxPorts];
         for (var i = 0; i < players.Length; i++)
         {
             players[i] = PlayerProfile.CreateDefault(i + 1);

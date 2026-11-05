@@ -465,6 +465,12 @@ public sealed class AppSettings
     public CdSpeed CdSpeed { get; set; } = CdSpeed.X2;
 
     /// <summary>
+    /// Gets or sets the DRAM/VRAM capacity layout. The default is the stock 2 MB DRAM /
+    /// 1 MB VRAM machine. Changing it restarts the machine.
+    /// </summary>
+    public MemoryConfiguration MemoryConfiguration { get; set; } = MemoryConfiguration.Dram2MbVram1Mb;
+
+    /// <summary>
     /// Gets or sets the ARM clock multiplier. 1.0 is the stock 12.5 MHz clock; the
     /// supported range is 0.5x to 4x (6.25-50 MHz).
     /// </summary>
@@ -507,7 +513,20 @@ public sealed class AppSettings
         "Joypad",
         "Joypad",
         "Joypad",
+        "Joypad",
+        "Joypad",
     };
+
+    /// <summary>
+    /// Gets or sets the maximum number of active input devices, 0-8, or <see langword="null"/>
+    /// for automatic selection.
+    /// </summary>
+    /// <remarks>
+    /// This is Opera's <c>opera_active_devices</c> cap. Zero reports an empty PBUS chain;
+    /// eight allows every daisy-chain port. Automatic keeps 5DO's historical behavior:
+    /// one joypad, growing to the highest configured non-joypad port.
+    /// </remarks>
+    public int? ActiveInputDevices { get; set; }
 
     /// <summary>Resolves the configured device for a zero-based port.</summary>
     /// <param name="port">Zero-based port index.</param>
@@ -515,7 +534,7 @@ public sealed class AppSettings
     public InputDeviceType GetInputDevice(int port)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(port);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxControllers);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxPorts);
         // JSON can deserialize null despite the non-nullable annotation.
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (InputDevices is null || port >= InputDevices.Count)
@@ -535,7 +554,7 @@ public sealed class AppSettings
     public void SetInputDevice(int port, InputDeviceType device)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(port);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxControllers);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxPorts);
         while (InputDevices.Count <= port)
         {
             InputDevices.Add(nameof(InputDeviceType.Joypad));
@@ -560,7 +579,7 @@ public sealed class AppSettings
         ArgumentNullException.ThrowIfNull(input);
         IReadOnlyList<string> devices = ResolveInputDevices(gameId);
         var count = 1;
-        for (var port = 0; port < PbusEncoder.MaxControllers; port++)
+        for (var port = 0; port < PbusEncoder.MaxPorts; port++)
         {
             InputDeviceType device = ParseDevice(devices[port]);
             input.Devices.SetDevice(port, device);
@@ -570,7 +589,9 @@ public sealed class AppSettings
             }
         }
 
-        input.ControllerCount = count;
+        input.ControllerCount = ActiveInputDevices is { } active
+            ? Math.Clamp(active, 0, PbusEncoder.MaxPorts)
+            : count;
     }
 
     /// <summary>Gets the per-game input-device override, if one is configured.</summary>
@@ -650,7 +671,7 @@ public sealed class AppSettings
     public static IReadOnlyList<string> NormalizeInputDevices(IEnumerable<string>? devices)
     {
         var source = devices as IList<string> ?? (devices is null ? null : new List<string>(devices));
-        var normalized = new string[PbusEncoder.MaxControllers];
+        var normalized = new string[PbusEncoder.MaxPorts];
         for (var port = 0; port < normalized.Length; port++)
         {
             string? name = source is not null && port < source.Count ? source[port] : null;
@@ -741,6 +762,15 @@ public sealed class AppSettings
     /// cannot aim two guns at the same place.
     /// </remarks>
     public int PointerPort { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the desktop lightgun crosshair is hidden.
+    /// </summary>
+    /// <remarks>
+    /// This is a presentation-only option. The pointer still drives the emulated lightgun;
+    /// hiding the crosshair is useful when the game draws its own reticle or for recording.
+    /// </remarks>
+    public bool HideLightgunCrosshair { get; set; }
 
     /// <summary>Gets or sets the pointer calibration scale (0.5-2.0).</summary>
     public double PointerScale { get; set; } = 1.0;
@@ -1187,6 +1217,7 @@ public sealed class AppSettings
             CelTiming = CelTiming,
             CdromTiming = CdromTiming,
             CdSpeed = CdSpeed,
+            MemoryConfiguration = MemoryConfiguration,
             RandomSeed = RandomSeed,
             CpuBackend = CpuBackend,
             HighResolution = HighResolution,

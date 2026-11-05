@@ -142,8 +142,8 @@ checksums are attached, and legal/attribution sign-off is recorded.
 - CLI JSON casing is split: `state inspect`/`state slots` are PascalCase for historical
   compatibility; other commands are camelCase.
 - Save-state format version 2 compresses large sections with Brotli, so a state is
-  typically 0.6-2.0 MB instead of the 24.9 MB uncompressed size. Version-1 states still
-  load and remain ~25 MB. The state still contains the full 19 MB RAM backing and the
+  typically 0.6-2.0 MB instead of the ~28 MB uncompressed size. Version-1 states still
+  load and remain ~25 MB. The state still contains the 22 MB maximum RAM backing and the
   VDL frame before compression; ten compressed slots use a few MB. Older builds that
   only understand version 1 reject new states with
   `Unsupported save-state version 2.`
@@ -246,3 +246,18 @@ checksums are attached, and legal/attribution sign-off is recorded.
   That license includes a prohibition on commercial use without the owners' approval.
   A distribution/attribution review is still pending before any public build.
 - The repository does not include BIOS ROMs, game images, or extracted assets.
+
+## Memory capacity and CPU clock options
+
+- Expanded DRAM/VRAM layouts (41, 42, 81, 82, E2, F1) are implemented and validated by
+  unit tests plus a homebrew probe ROM, but retail titles are not expected to boot with
+  them. Opera documents the memory-capacity option as homebrew-only, and the local
+  Lemmings (USA) test stops on the boot screen with more than 2 MB of DRAM. The stock 21
+  layout remains the default and its golden hashes are unchanged.
+- A 2 MB VRAM layout (22) keeps the stock DRAM amount and still runs, but changes the
+  VRAM base the guest sees and therefore the rendered frame; do not use it for
+  compatibility captures.
+- The CPU clock option supports 0.5x-4x. It is a timing override, not a performance
+  switch with a compatibility guarantee. The stock 12.5 MHz clock is unchanged and is
+  the only validated setting for the compatibility matrix. Save states record the clock
+  and warn on a mismatch.

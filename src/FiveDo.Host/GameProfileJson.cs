@@ -107,6 +107,11 @@ public static class GameProfileJson
             profile.CdSpeed = CdSpeed.X2;
         }
 
+        if (!Enum.IsDefined(profile.MemoryConfiguration))
+        {
+            profile.MemoryConfiguration = MemoryConfiguration.Dram2MbVram1Mb;
+        }
+
         if (!Enum.IsDefined(profile.CpuBackend))
         {
             profile.CpuBackend = CpuBackendKind.Interpreter;

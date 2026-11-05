@@ -110,6 +110,20 @@ public static class MachineOptionRegistry
             typeof(CdSpeed),
             comparisonLabel: "speed"),
         new(
+            "memory",
+            "memory capacity",
+            "DRAM/VRAM capacity. The stock machine has 2 MB DRAM and 1 MB VRAM; expanded "
+                + "layouts change the RAM boundary and VRAM base.",
+            "2 MB DRAM / 1 MB VRAM (21)",
+            "21, 22, 41, 42, 81, 82, E2, F1 (DRAM/VRAM in MB)",
+            "--memory",
+            "MemoryConfiguration",
+            "MemoryConfiguration",
+            nameof(EmulatorTuning.MemoryConfiguration),
+            MachineOptionKind.Enum,
+            typeof(MemoryConfiguration),
+            comparisonLabel: "layout"),
+        new(
             "randomSeed",
             "random seed",
             "Initial DSP PRNG seed. Blank uses FreeDO's default 0xa5a5a5a5.",
@@ -219,6 +233,7 @@ public static class MachineOptionRegistry
         ValidateEnum("celTiming", tuning.CelTiming);
         ValidateEnum("cdromTiming", tuning.CdromTiming);
         ValidateEnum("cdSpeed", tuning.CdSpeed);
+        ValidateEnum("memory", tuning.MemoryConfiguration);
         ValidateEnum("cpuBackend", tuning.CpuBackend);
         if (tuning.CpuBackend != CpuBackendKind.Interpreter)
         {
@@ -246,6 +261,7 @@ public static class MachineOptionRegistry
             "celTiming" => tuning.CelTiming.ToString(),
             "cdromTiming" => tuning.CdromTiming.ToString(),
             "cdSpeed" => tuning.CdSpeed.ToString(),
+            "memory" => FormatMemory(tuning.MemoryConfiguration),
             "randomSeed" => FormatSeed(tuning.RandomSeed),
             "fixMode" => FormatFixMode(tuning.FixMode),
             "cpuBackend" => tuning.CpuBackend.ToString(),
@@ -360,6 +376,7 @@ public static class MachineOptionRegistry
             "celTiming" => snapshot.CelTiming?.ToString(),
             "cdromTiming" => snapshot.CdromTiming?.ToString(),
             "cdSpeed" => snapshot.CdSpeed?.ToString(),
+            "memory" => snapshot.MemoryConfiguration is { } memory ? FormatMemory(memory) : null,
             "randomSeed" => snapshot.RandomSeedSpecified ? FormatSeed(snapshot.RandomSeed) : null,
             "fixMode" => snapshot.FixMode is { } fixMode ? FormatFixMode(fixMode) : null,
             "cpuBackend" => snapshot.CpuBackend?.ToString(),
@@ -376,6 +393,9 @@ public static class MachineOptionRegistry
     {
         return new MachineOptionValidationException(key, value, message);
     }
+
+    private static string FormatMemory(MemoryConfiguration configuration) =>
+        $"{MemoryLayout.FormatDescription(configuration)} ({MemoryLayout.FormatCode(configuration)})";
 
     private static string FormatSeed(uint? seed) =>
         seed is { } value ? $"0x{value:x8}" : "default";

@@ -110,8 +110,8 @@ Machine; the table below is sorted by ID. Never renumber an existing section.
 | ID | Name | Version | Owner | Payload summary |
 |---:|---|---:|---|---|
 | 1 | CPU | 1 | `Arm60` | R0-R15, banked SVC/ABT/FIQ/IRQ/UND/SPSR register sets, CPSR, FIQ pending, second-ROM select, data-abort pending, carry-out, LDM scratch. |
-| 2 | Memory | 1 | `FiveDoMemory` | ROM bank, PC-adjust flag, the full 19 MB RAM backing (3 MB visible + 16 x 1 MB high-res mirrors), 2 MB ROM, 32 KB NVRAM. |
-| 3 | MADAM | 3 | `Madam` | 2048+64 register file, 32-entry PLUT, PBUS queue, read/write modulo, CEL FSM, matrix result temporaries, pending CEL draw, busy-cycle deadline, and the MCTL-written gate. Version 1 is accepted with the pending flag derived from the FSM and no busy deadline; version 2 adds the busy deadline; version 3 adds the MCTL gate and infers it from MCTL for older states. |
+| 2 | Memory | 3 | `FiveDoMemory` | ROM bank, PC-adjust flag, ROM overlay, the DRAM/VRAM configuration, and the full 22 MB RAM backing (largest 14 MB DRAM + four 2 MB VRAM planes), 2 MB ROM, 32 KB NVRAM. Version 1-2 states use the historical 19 MB stock backing and load with the stock layout. |
+| 3 | MADAM | 4 | `Madam` | 2048+64 register file, 32-entry PLUT, 256-byte PBUS queue, read/write modulo, CEL FSM, matrix result temporaries, pending CEL draw, busy-cycle deadline, and the MCTL-written gate. Version 1 is accepted with the pending flag derived from the FSM and no busy deadline; version 2 adds the busy deadline; version 3 adds the MCTL gate and infers it from MCTL for older states; version 4 expands the PBUS queue from 20 to 256 bytes (older states read 20 and fill the tail with `0xFF`). |
 | 4 | CLIO | 3 | `Clio` | 65536-word register file, DSP window words, timer/line state, Opera cascade carry, input/output FIFOs and pointers, DMA state, and the separate 32-bit PRNG. Version 1 is accepted with a cleared carry; version 2 adds the carry; version 3 adds the CLIO PRNG. |
 | 5 | DSP | 1 | `Dsp` | PC, noise/audio status, semaphore status/data, counters, interrupt/multiplier/ALU/shifter state, masks, running/FIQ flags, base/seed, IMem/DMem. |
 | 6 | SPORT | 1 | `Sport` | Color, source, and destination registers. |
@@ -120,14 +120,14 @@ Machine; the table below is sorted by ID. Never renumber an existing section.
 | 9 | CD-ROM | 4 | `CdromDevice` | Poll/status, status/data buffers, command buffer, requested count, MEI status, current sector, disc state (tracks/MSF/TOC), cycle clock, next-ready cycle, pending read-status flag, MODE SET sector size/block flags, PLAY_AUDIO position, CD-DA sample cursor, volume, and mute. Version 1 is accepted with a zeroed clock and pending flag; v2 adds the cycle clock; v3 adds MODE SET and audio position; v4 adds the CD-DA mix. Older versions use the documented defaults. The timing mode itself is recorded in the Options section. |
 | 10 | Quartz | 3 | `Quartz` | ARM/VDL/timer accumulators, exact DSP cycle remainder, VDL line counter, Opera timer slot/gap flag and 16.16 slot accumulator. Versions 1-2 are accepted with a reset timer scheduler. |
 | 11 | Machine | 1 | `FiveDoMachine` | Compatibility flags (fix mode, Anvil, speed fixes, sf/sdf, unknown flag 11, jw, cnbfix, high-res), frame source dimensions, and all 960 `VdlLine` objects (width, control words, CLUT, 1280 pixels each). |
-| 12 | Options | 7 | `FiveDoMachine` | Every registered machine option: ARM timing mode, CLIO timer mode, MADAM CEL timing mode, CD-ROM timing mode, CD-ROM speed, live video region, ARM clock, random seed (including whether the default was recorded), high-resolution mode, Opera DIPIR, Opera soft reset, fix mask, and CPU backend. Version 1 records only ARM timing; version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing; version 5 adds CD speed; version 6 adds the region; version 7 adds the remaining registry entries. Loading a lower version leaves missing options at the machine default. |
+| 12 | Options | 8 | `FiveDoMachine` | Every registered machine option: ARM timing mode, CLIO timer mode, MADAM CEL timing mode, CD-ROM timing mode, CD-ROM speed, DRAM/VRAM capacity, live video region, ARM clock, random seed (including whether the default was recorded), high-resolution mode, Opera DIPIR, Opera soft reset, fix mask, and CPU backend. Version 1 records only ARM timing; version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing; version 5 adds CD speed; version 6 adds the region; version 7 adds the remaining registry entries; version 8 adds the memory capacity. Loading a lower version leaves missing options at the machine default. |
 
 ### Why the state is large
 
-The memory section stores the **entire RAM backing array**, including the 16 reserved
-1 MB high-resolution mirrors, and the machine section stores all 960 VDL lines with
-their full 1280-pixel buffers. The uncompressed state is therefore about **24.9 MB**
-(observed 24,902,560-24,902,597 bytes across the local corpus).
+The memory section stores the **entire RAM backing array**, including every
+high-resolution VRAM plane for the largest 14 MB DRAM + 2 MB VRAM layout, and the machine
+section stores all 960 VDL lines with their full 1280-pixel buffers. The uncompressed state
+is therefore about **28 MB** (the former 24.9 MB plus the 3 MB backing growth).
 
 Version 3 keeps the v2 Brotli policy. On the local corpus the state shrinks to
 roughly **0.6-2.0 MB** (a 300-frame Gex state measured 647,647 bytes, a 14,900-frame
@@ -136,7 +136,9 @@ sections (under 4 KiB) and incompressible payloads stay raw. The CRC is always o
 uncompressed payload, and the state inspector reads the section table without
 decompressing the payloads.
 
-Version-1 and v2 states are read unchanged; v1 remains uncompressed and ~25 MB.
+Version-1 and v2 states are read unchanged; v1 remains uncompressed and ~25 MB. Their
+memory section is the historical 19 MB stock backing, so the missing 3 MB is cleared and
+the stock 2 MB DRAM / 1 MB VRAM layout is used.
 Loading a state written by a newer format version is rejected with
 `Unsupported save-state version N.`
 
@@ -144,8 +146,11 @@ Loading a state written by a newer format version is rejected with
 
 - Most sections still write version 1.
 - CLIO writes version 2 (Opera cascade carry) and accepts version 1 with a cleared carry.
-- MADAM writes version 2 (pending CEL draw and busy deadline) and accepts version 1 with
-  the pending flag derived from the FSM and no busy deadline.
+- MADAM writes version 4 and accepts versions 1-3. Version 2 adds the pending CEL draw
+  and busy deadline; version 3 adds the MCTL-written gate; version 4 expands the PBUS
+  queue from 20 to 256 bytes. Version 1 derives the pending flag from the FSM and has no
+  busy deadline; versions 1-3 read the historical 20-byte queue and fill the tail with
+  `0xFF`.
 - Quartz writes version 3 (exact rational DSP clock plus Opera timer slot state) and
   accepts versions 1-2. Version 1 converts the legacy 8.24 fractional sample position
   to ARM cycles; versions 1-2 default the timer slot state to a reset scheduler.
@@ -153,15 +158,21 @@ Loading a state written by a newer format version is rejected with
   mute) and accepts versions 1-3. Version 1 uses a zeroed clock and pending flag;
   versions 1-2 default the MODE SET/audio fields; version 3 defaults the CD-DA mix. The
   timing mode itself is in the Options section.
-- Options writes version 7 and accepts versions 1-6. Version 1 records ARM timing only;
+- Memory writes version 3 and accepts versions 1-2. Version 3 adds the DRAM/VRAM
+  configuration and the 22 MB allocation size. Older states carry the historical 19 MB
+  stock backing and load with the stock layout.
+- Options writes version 8 and accepts versions 1-7. Version 1 records ARM timing only;
   version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing;
   version 5 adds CD speed; version 6 adds the video region; version 7 adds the ARM clock,
   random seed, high-resolution mode, Opera DIPIR, Opera soft reset, fix mask, and CPU
-  backend. Missing fields stay at the machine default. Every registered machine option is
-  covered, and loading a state whose value differs from the running machine adds a
-  `State <option> <saved> differs from the machine <current>` warning. Timing profiles
-  are a host-side shortcut over these options and are derived from them rather than
-  stored separately.
+  backend; version 8 adds the DRAM/VRAM capacity. Missing fields stay at the machine
+  default. Every registered machine option is covered, and loading a state whose value
+  differs from the running machine adds a
+  `State <option> <saved> differs from the machine <current>` warning. A differing video
+  region or memory layout is applied to the machine; VRAM is located above DRAM, so the
+  state's RAM contents only decode correctly with the layout that produced them. Timing
+  profiles are a host-side shortcut over these options and are derived from them rather
+  than stored separately.
 - Any other section version is rejected with
   `Unsupported section <id> version <n>.`
 - Unknown section IDs are ignored and recorded as a warning:
@@ -195,7 +206,9 @@ Loading a state written by a newer format version is rejected with
 8. Restores `Compatibility.HighResolution` from the Machine section; an explicit
    `--high-res` tuning flag is OR-ed in. Compares every Options entry with the running
    machine and adds mismatch warnings; a differing video region switches the machine and
-   clears the stale frame before the Machine section restores it.
+   clears the stale frame before the Machine section restores it. A differing memory
+   capacity re-applies the state layout after the Memory section has loaded, so DRAM/VRAM
+   contents keep their original addresses.
 9. Sets `_framesExecuted` from the header and clears `LastFrameCycles`.
 10. Calls `AudioSink.Reset()` so live audio drops the old timeline.
 

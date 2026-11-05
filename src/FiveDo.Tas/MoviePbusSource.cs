@@ -16,7 +16,7 @@ public sealed class MoviePbusSource : IPbusSource
 {
     private static readonly byte[] EmptyPacket = [];
     private readonly Movie _movie;
-    private readonly ControllerState[] _controllers = new ControllerState[PbusEncoder.MaxControllers];
+    private readonly ControllerState[] _controllers = new ControllerState[PbusEncoder.MaxPorts];
     private int _position;
 
     /// <summary>Initializes a new instance of the <see cref="MoviePbusSource"/> class.</summary>

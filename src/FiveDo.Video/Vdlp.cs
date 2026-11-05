@@ -12,15 +12,16 @@ namespace FiveDo.Video;
 /// indexed pixels, the per-line CLUT, the output-control word, and the background color.
 /// </para>
 /// <para>
-/// The reference reads VRAM through <c>_mem_read32((addr &amp; 0xFFFFF) + 2 MB)</c>; this
-/// class does the same through <see cref="IRam"/>. High-resolution (<c>RESSCALE</c>) is not
-/// part of M3 and is left for M11.
+/// The reference reads VRAM through <c>_mem_read32((addr &amp; VRAM_SIZE_MASK) + VRAM)</c>;
+/// this class does the same through <see cref="IRam"/>, using the active
+/// <see cref="MemoryLayout"/> so expanded DRAM/VRAM layouts decode correctly.
 /// </para>
 /// </remarks>
 public sealed class Vdlp : IVdlp, IStateSection
 {
-    private const int VramOffset = EmulatorConstants.VramBase;
-    private const int VramPlaneSize = EmulatorConstants.VramSize;
+    private uint VramOffset => (uint)_ram.Layout.VramBase;
+    private uint VramPlaneSize => (uint)_ram.Layout.VramSize;
+    private uint VramMask => _ram.Layout.VramSizeMask;
     private const uint VdlControl = 0x80000000;
     private const uint VdlBackground = 0xe0000000;
     private const uint VdlRgbControlMask = 0x60000000;
@@ -231,7 +232,7 @@ public sealed class Vdlp : IVdlp, IStateSection
                     }
 
                     Span<ushort> destination = target.PixelBuffer;
-                    var source = ((_previousBitmap ^ 2) & 0xfffff) + VramOffset;
+                    var source = ((_previousBitmap ^ 2) & VramMask) + VramOffset;
 
                     // A 3DO scanline stores one 16-bit pixel in each 32-bit VRAM word.
                     // The two halves of a word belong to an adjacent-line pair, so the
@@ -286,7 +287,7 @@ public sealed class Vdlp : IVdlp, IStateSection
     /// FreeDO: <c>_vdl_DoLineNew</c> with <c>RESSCALE</c> set.
     /// </summary>
     /// <remarks>
-    /// The 3DO stores a 640x480 frame in four 1 MB VRAM planes. Each low-resolution
+    /// The 3DO stores a 640x480 frame in four VRAM planes sized by the active VRAM capacity. Each low-resolution
     /// bitmap line supplies the even/odd columns of two adjacent high-resolution
     /// scanlines: planes 0/1 form the even line and planes 2/3 form the odd line.
     /// </remarks>
@@ -305,7 +306,7 @@ public sealed class Vdlp : IVdlp, IStateSection
 
             Span<ushort> destination0 = target0.PixelBuffer;
             Span<ushort> destination1 = target1.PixelBuffer;
-            var source = ((_previousBitmap ^ 2) & 0xfffff) + VramOffset;
+            var source = ((_previousBitmap ^ 2) & VramMask) + VramOffset;
             for (var i = 0; i < lineWidth; i++)
             {
                 var x = i * 2;
@@ -425,7 +426,7 @@ public sealed class Vdlp : IVdlp, IStateSection
 
     private uint ReadVram(uint address)
     {
-        return _ram.Read32((address & 0xfffff) + VramOffset);
+        return _ram.Read32((address & VramMask) + VramOffset);
     }
 
     private void ExecuteVdl()

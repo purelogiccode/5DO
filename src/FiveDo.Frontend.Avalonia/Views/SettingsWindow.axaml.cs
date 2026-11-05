@@ -78,6 +78,8 @@ public partial class SettingsWindow : Window
         new(4, "Port 4"),
         new(5, "Port 5"),
         new(6, "Port 6"),
+        new(7, "Port 7"),
+        new(8, "Port 8"),
     ];
 
     private static readonly RegionOverrideOption[] _regionOverrideOptions =
@@ -137,6 +139,32 @@ public partial class SettingsWindow : Window
         new(CdSpeed.X16, "16x (~2400 KB/s)"),
         new(CdSpeed.X24, "24x (~3600 KB/s)"),
         new(CdSpeed.X32, "32x (~4800 KB/s)"),
+    ];
+
+    private static readonly MemoryOption[] _memoryOptions =
+    [
+        new(MemoryConfiguration.Dram2MbVram1Mb, "2 MB DRAM / 1 MB VRAM (stock, 21)"),
+        new(MemoryConfiguration.Dram2MbVram2Mb, "2 MB DRAM / 2 MB VRAM (22)"),
+        new(MemoryConfiguration.Dram4MbVram1Mb, "4 MB DRAM / 1 MB VRAM (41)"),
+        new(MemoryConfiguration.Dram4MbVram2Mb, "4 MB DRAM / 2 MB VRAM (42)"),
+        new(MemoryConfiguration.Dram8MbVram1Mb, "8 MB DRAM / 1 MB VRAM (81)"),
+        new(MemoryConfiguration.Dram8MbVram2Mb, "8 MB DRAM / 2 MB VRAM (82)"),
+        new(MemoryConfiguration.Dram14MbVram2Mb, "14 MB DRAM / 2 MB VRAM (E2)"),
+        new(MemoryConfiguration.Dram15MbVram1Mb, "15 MB DRAM / 1 MB VRAM (F1)"),
+    ];
+
+    private static readonly ActiveDevicesOption[] _activeDeviceOptions =
+    [
+        new(null, "Automatic (configured ports)"),
+        new(0, "0 (no devices)"),
+        new(1, "1"),
+        new(2, "2"),
+        new(3, "3"),
+        new(4, "4"),
+        new(5, "5"),
+        new(6, "6"),
+        new(7, "7"),
+        new(8, "8 (all ports)"),
     ];
 
     private static readonly InputDeviceOption[] _inputDeviceOptions =
@@ -265,6 +293,7 @@ public partial class SettingsWindow : Window
         PointerPortCombo.SelectedItem = _pointerPortOptions.FirstOrDefault(
                 option => option.Value == settings.PointerPort)
             ?? _pointerPortOptions[0];
+        HideLightgunCrosshairCheck.IsChecked = settings.HideLightgunCrosshair;
         PointerScaleBox.Text = settings.PointerScale.ToString("0.00", CultureInfo.InvariantCulture);
         PointerOffsetXBox.Text = settings.PointerOffsetX.ToString(CultureInfo.InvariantCulture);
         PointerOffsetYBox.Text = settings.PointerOffsetY.ToString(CultureInfo.InvariantCulture);
@@ -291,6 +320,10 @@ public partial class SettingsWindow : Window
         CdSpeedCombo.ItemsSource = _cdSpeedOptions;
         CdSpeedCombo.SelectedItem = _cdSpeedOptions.FirstOrDefault(option => option.Value == settings.CdSpeed)
             ?? _cdSpeedOptions[2];
+        MemoryCombo.ItemsSource = _memoryOptions;
+        MemoryCombo.SelectedItem = _memoryOptions.FirstOrDefault(
+                option => option.Value == settings.MemoryConfiguration)
+            ?? _memoryOptions[0];
         NvramStorageCombo.ItemsSource = _nvramStorageOptions;
         NvramStorageCombo.SelectedItem = _nvramStorageOptions.FirstOrDefault(option => option.Value == settings.NvramStorageMode)
             ?? _nvramStorageOptions[0];
@@ -663,6 +696,9 @@ public partial class SettingsWindow : Window
         profile.CdSpeed = CdSpeedCombo.SelectedItem is CdSpeedOption cdSpeed
             ? cdSpeed.Value
             : CdSpeed.X2;
+        profile.MemoryConfiguration = MemoryCombo.SelectedItem is MemoryOption memory
+            ? memory.Value
+            : MemoryConfiguration.Dram2MbVram1Mb;
         if (double.TryParse(
                 CpuClockBox.Text?.Trim(),
                 NumberStyles.Float,
@@ -713,6 +749,8 @@ public partial class SettingsWindow : Window
                 option => option.Value == profile.CdromTiming);
             CdSpeedCombo.SelectedItem = _cdSpeedOptions.First(
                 option => option.Value == profile.CdSpeed);
+            MemoryCombo.SelectedItem = _memoryOptions.First(
+                option => option.Value == profile.MemoryConfiguration);
             CpuClockBox.Text = profile.CpuClockMultiplier.ToString("0.###", CultureInfo.InvariantCulture);
             RandomSeedBox.Text = profile.RandomSeed is { } seed ? $"0x{seed:x8}" : string.Empty;
             OperaDipirCheck.IsChecked = profile.OperaDipir;
@@ -774,6 +812,8 @@ public partial class SettingsWindow : Window
             InputDevice4Combo,
             InputDevice5Combo,
             InputDevice6Combo,
+            InputDevice7Combo,
+            InputDevice8Combo,
         ];
         var devices = new string[combos.Length];
         for (var i = 0; i < combos.Length; i++)
@@ -797,6 +837,8 @@ public partial class SettingsWindow : Window
             InputDevice4Combo,
             InputDevice5Combo,
             InputDevice6Combo,
+            InputDevice7Combo,
+            InputDevice8Combo,
         ];
         for (var i = 0; i < combos.Length; i++)
         {
@@ -1087,6 +1129,9 @@ public partial class SettingsWindow : Window
         settings.CdSpeed = CdSpeedCombo.SelectedItem is CdSpeedOption cdSpeed
             ? cdSpeed.Value
             : CdSpeed.X2;
+        settings.MemoryConfiguration = MemoryCombo.SelectedItem is MemoryOption memory
+            ? memory.Value
+            : MemoryConfiguration.Dram2MbVram1Mb;
         SaveInputDevices(settings);
         settings.NvramStorageMode = NvramStorageCombo.SelectedItem is NvramStorageOption nvramStorage
             ? nvramStorage.Value
@@ -1154,6 +1199,7 @@ public partial class SettingsWindow : Window
         settings.PointerPort = PointerPortCombo.SelectedItem is PointerPortOption pointerPort
             ? pointerPort.Value
             : 0;
+        settings.HideLightgunCrosshair = HideLightgunCrosshairCheck.IsChecked == true;
         settings.PointerScale = ParsePointerNumber(
             PointerScaleBox.Text,
             "pointer scale",
@@ -1380,6 +1426,8 @@ public partial class SettingsWindow : Window
             InputDevice4Combo,
             InputDevice5Combo,
             InputDevice6Combo,
+            InputDevice7Combo,
+            InputDevice8Combo,
         ];
         IReadOnlyList<string> devices = settings.ResolveInputDevices(gameId);
         for (var i = 0; i < combos.Length; i++)
@@ -1392,6 +1440,10 @@ public partial class SettingsWindow : Window
                 ?? _inputDeviceOptions[0];
         }
 
+        ActiveInputDevicesCombo.ItemsSource = _activeDeviceOptions;
+        ActiveInputDevicesCombo.SelectedItem = _activeDeviceOptions.FirstOrDefault(
+                option => option.Value == settings.ActiveInputDevices)
+            ?? _activeDeviceOptions[0];
         PerGameInputCheck.IsChecked = settings.GetInputDeviceOverride(gameId) is not null;
         PerGameInputCheck.IsEnabled = !string.IsNullOrWhiteSpace(gameId);
     }
@@ -1406,6 +1458,8 @@ public partial class SettingsWindow : Window
             InputDevice4Combo,
             InputDevice5Combo,
             InputDevice6Combo,
+            InputDevice7Combo,
+            InputDevice8Combo,
         ];
         var devices = new string[combos.Length];
         for (var i = 0; i < combos.Length; i++)
@@ -1416,6 +1470,9 @@ public partial class SettingsWindow : Window
                 .ToString();
         }
 
+        settings.ActiveInputDevices = ActiveInputDevicesCombo.SelectedItem is ActiveDevicesOption active
+            ? active.Value
+            : null;
         if (!string.IsNullOrWhiteSpace(_gameId) && PerGameInputCheck.IsChecked == true)
         {
             settings.SetInputDeviceOverride(_gameId, devices);
@@ -1768,7 +1825,23 @@ public partial class SettingsWindow : Window
         }
     }
 
+    private sealed record MemoryOption(MemoryConfiguration Value, string Label)
+    {
+        public override string ToString()
+        {
+            return Label;
+        }
+    }
+
     private sealed record CdSpeedOption(CdSpeed Value, string Label)
+    {
+        public override string ToString()
+        {
+            return Label;
+        }
+    }
+
+    private sealed record ActiveDevicesOption(int? Value, string Label)
     {
         public override string ToString()
         {

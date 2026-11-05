@@ -15,8 +15,9 @@ namespace FiveDo.Memory;
 /// the same lane convention as the reference.
 /// </para>
 /// <para>
-/// The backing RAM allocation includes sixteen reserved 1 MB mirrors for the future
-/// high-resolution mode. Only the first 3 MB are CPU-visible in v1.
+/// The backing array is always the maximum 22 MB layout (14 MB DRAM plus four 2 MB VRAM
+/// planes). CPU-visible DRAM/VRAM, the VRAM base, and the high-resolution plane stride
+/// come from <see cref="Layout"/>.
 /// </para>
 /// </remarks>
 public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelector, IStateSection
@@ -24,6 +25,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     private readonly uint[] _ram = new uint[EmulatorConstants.RamAllocationSize / sizeof(uint)];
     private readonly uint[] _rom = new uint[EmulatorConstants.RomSize / sizeof(uint)];
     private readonly byte[] _nvram = new byte[EmulatorConstants.NvramSize];
+    private MemoryLayout _layout;
     private int _romBank;
     private bool _pcAdjustPending;
     private bool _romOverlay;
@@ -34,16 +36,37 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     {
         Tuning = tuning ?? EmulatorTuning.Default;
         Tuning.Validate();
+        _layout = MemoryLayout.For(Tuning.MemoryConfiguration);
     }
 
     /// <summary>Gets the machine tuning.</summary>
     public EmulatorTuning Tuning { get; }
 
-    /// <summary>Gets the CPU-visible RAM/VRAM size in bytes.</summary>
+    /// <summary>Gets the active DRAM/VRAM layout.</summary>
+    public MemoryLayout Layout => _layout;
+
+    /// <summary>Gets the CPU-visible RAM/VRAM size in bytes for the active layout.</summary>
+    public int RamSize => _layout.RamSize;
+
+    /// <summary>Gets the stock CPU-visible RAM/VRAM size in bytes.</summary>
     public static int VisibleSize => EmulatorConstants.RamSize;
 
-    /// <summary>Gets the total RAM backing size in bytes, including reserved mirrors.</summary>
+    /// <summary>Gets the total RAM backing size in bytes, including every high-resolution plane.</summary>
     public int Size => _ram.Length * sizeof(uint);
+
+    /// <summary>
+    /// Switches the active DRAM/VRAM layout without reloading the machine.
+    /// </summary>
+    /// <param name="configuration">New memory configuration.</param>
+    /// <remarks>
+    /// Save-state loads call this when the state records a layout that differs from the
+    /// running machine. RAM contents are preserved because the backing array always holds
+    /// the largest supported layout.
+    /// </remarks>
+    public void SetMemoryConfiguration(MemoryConfiguration configuration)
+    {
+        _layout = MemoryLayout.For(configuration);
+    }
 
     /// <summary>Gets the active ROM bank (0 or 1).</summary>
     public int RomBank => _romBank;
@@ -61,8 +84,11 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     public uint Id => StateSectionIds.Memory;
 
     /// <summary>Gets the save-state section version.</summary>
-    /// <remarks>Version 2 adds the low-ROM overlay flag.</remarks>
-    public ushort Version => 2;
+    /// <remarks>
+    /// Version 2 adds the low-ROM overlay flag. Version 3 records the DRAM/VRAM
+    /// configuration and the maximum backing size.
+    /// </remarks>
+    public ushort Version => 3;
 
     /// <summary>Gets the RAM/VRAM raw accessor.</summary>
     public IRam Ram => this;
@@ -187,6 +213,8 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
         writer.WriteByte((byte)_romBank);
         writer.WriteBoolean(_pcAdjustPending);
         writer.WriteBoolean(_romOverlay);
+        writer.WriteByte((byte)_layout.Configuration);
+        writer.WriteInt32(Size);
         writer.WriteBytes(ToStateBytes(_ram));
         writer.WriteBytes(ToStateBytes(_rom));
         writer.WriteBytes(_nvram);
@@ -205,7 +233,8 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
 
         _romBank = bank;
         _pcAdjustPending = reader.ReadBoolean();
-        if (reader is not StateSectionReader sectionReader || sectionReader.Version >= 2)
+        var version = reader is StateSectionReader sectionReader ? sectionReader.Version : 3;
+        if (version >= 2)
         {
             _romOverlay = reader.ReadBoolean();
         }
@@ -215,7 +244,36 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
             _romOverlay = false;
         }
 
-        reader.ReadBytes(ToStateBytes(_ram));
+        if (version >= 3)
+        {
+            var configuration = (MemoryConfiguration)reader.ReadByte();
+            if (!Enum.IsDefined(configuration))
+            {
+                throw new InvalidStateException(
+                    $"Invalid memory configuration 0x{(byte)configuration:X2} in memory state.");
+            }
+
+            var backingSize = reader.ReadInt32();
+            if (backingSize != Size)
+            {
+                throw new InvalidStateException(
+                    $"Memory state backing size {backingSize} does not match the machine allocation {Size}.");
+            }
+
+            _layout = MemoryLayout.For(configuration);
+            reader.ReadBytes(ToStateBytes(_ram));
+        }
+        else
+        {
+            // Version-1 and version-2 states use the stock 2 MB DRAM / 1 MB VRAM layout
+            // and the historical 19 MB allocation. Keep the tail clear so a later
+            // expanded layout starts from a defined state.
+            Span<byte> ram = ToStateBytes(_ram);
+            ram[EmulatorConstants.StockHiresRamSize..].Clear();
+            reader.ReadBytes(ram[..EmulatorConstants.StockHiresRamSize]);
+            _layout = MemoryLayout.Stock;
+        }
+
         reader.ReadBytes(ToStateBytes(_rom));
         reader.ReadBytes(_nvram);
     }
@@ -435,7 +493,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
             return ReadRom8(address ^ 3);
         }
 
-        if (address < EmulatorConstants.RamSize)
+        if (address < _layout.RamSize)
         {
             return ReadRam8(address ^ 3);
         }
@@ -463,7 +521,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
             return ReadRom16(address ^ 2);
         }
 
-        if (address < EmulatorConstants.RamSize)
+        if (address < _layout.RamSize)
         {
             return ReadRam16(address ^ 2);
         }
@@ -491,7 +549,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
             return ReadRom32(address);
         }
 
-        if (address < EmulatorConstants.RamSize)
+        if (address < _layout.RamSize)
         {
             return ReadRam32(address);
         }
@@ -545,12 +603,12 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     /// <inheritdoc />
     public void Write8(uint address, byte value)
     {
-        if (_romOverlay && address < EmulatorConstants.VramBase)
+        if (_romOverlay && address < (uint)_layout.DramSize)
         {
             _romOverlay = false;
         }
 
-        if (address < EmulatorConstants.RamSize)
+        if (address < _layout.RamSize)
         {
             WriteRam8(address ^ 3, value);
             return;
@@ -566,12 +624,12 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     /// <inheritdoc />
     public void Write16(uint address, ushort value)
     {
-        if (_romOverlay && address < EmulatorConstants.VramBase)
+        if (_romOverlay && address < (uint)_layout.DramSize)
         {
             _romOverlay = false;
         }
 
-        if (address < EmulatorConstants.RamSize)
+        if (address < _layout.RamSize)
         {
             WriteRam16(address ^ 2, value);
             return;
@@ -588,12 +646,12 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     {
         address &= ~3u;
 
-        if (_romOverlay && address < EmulatorConstants.VramBase)
+        if (_romOverlay && address < (uint)_layout.DramSize)
         {
             _romOverlay = false;
         }
 
-        if (address < EmulatorConstants.RamSize)
+        if (address < _layout.RamSize)
         {
             WriteRam32(address, value);
             return;

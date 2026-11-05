@@ -104,7 +104,7 @@ Bundles are versioned and published for x64 and arm64, for example `5do-1.2.1-wi
 ### Emulation core
 
 - ARM60 interpreter with deterministic timing, banked registers, and a disassembler.
-- 3 MB RAM, 2 MB ROM, NVRAM, memory mirrors, and word-swapped storage.
+- Configurable 2-15 MB DRAM / 1-2 MB VRAM (stock 2 MB/1 MB), 2 MB ROM, NVRAM, high-resolution VRAM planes, and word-swapped storage.
 - CLIO timers, interrupts, FIFOs, DMA, XBUS, and diagnostic port.
 - MADAM CEL engine, matrix engine, pixel bus, CCB parsing, and pixel decoding.
 - 3DO DSP with exact 44.1 kHz output, CD-DA mixing, and WAV analysis.
@@ -237,7 +237,7 @@ The complete command surface is documented in the [CLI reference](https://purelo
 Useful desktop shortcuts: `F5` save state, `F8` load state, `F6`/`F7` change slots,
 `F9` advance one frame while paused, `Shift+F9` rewind one frame, `R` rewind one
 second, hold `Tab` to fast-forward, `F10` reset, `F11` fullscreen, `F12` screenshot,
-`F3` swap disc, and `F4` open the quick menu. Bindings are configurable for six
+`F3` swap disc, and `F4` open the quick menu. Bindings are configurable for eight
 players in **Input**.
 
 ## Documentation

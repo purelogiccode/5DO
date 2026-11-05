@@ -587,6 +587,9 @@ internal static class Program
             CelTiming = ParseCelTiming(options.Get("--cel-timing"), profileTuning.CelTiming),
             CdromTiming = ParseCdromTiming(options.Get("--cd-timing"), profileTuning.CdromTiming),
             CdSpeed = ParseCdSpeed(options.Get("--cd-speed"), profileTuning.CdSpeed),
+            MemoryConfiguration = ParseMemoryConfiguration(
+                options.Get("--memory"),
+                profileTuning.MemoryConfiguration),
             ArmClock = ParseCpuClock(options.Get("--cpu-clock"), profileTuning.ArmClock),
             OperaDipir = HasFlag(args, "--opera-dipir") || profileTuning.OperaDipir,
             OperaSoftReset = HasFlag(args, "--opera-soft-reset") || profileTuning.OperaSoftReset,
@@ -674,7 +677,10 @@ internal static class Program
         // Headless runs must still report a connected player-1 pad. Some titles
         // (for example Olympic Summer Games) reject the boot when PBUS is empty.
         machine.PbusSource ??= new PbusSource();
-        ApplyInputDevices(machine.PbusSource, inputDevices);
+        ApplyInputDevices(
+            machine.PbusSource,
+            inputDevices,
+            ParseActiveDevices(options.Get("--active-devices")));
         ApplyPbusFormat(machine.PbusSource, pbusFormat);
 
         StreamWriter? fiqTraceWriter = null;
@@ -1259,6 +1265,7 @@ internal static class Program
             CelBusyCycles: machine.Madam.CelBusyCyclesRemaining,
             CdromTiming: machine.Tuning.CdromTiming.ToString(),
             CdSpeed: machine.Tuning.CdSpeed.ToString(),
+            Memory: MemoryLayout.FormatCode(machine.Memory.Layout.Configuration),
             CpuClock: machine.Tuning.ArmClock,
             FixMode: (uint)machine.Compatibility.FixMode,
             OperaDipir: machine.Tuning.OperaDipir,
@@ -1462,6 +1469,9 @@ internal static class Program
             CelTiming = ParseCelTiming(options.Get("--cel-timing"), profileTuning.CelTiming),
             CdromTiming = ParseCdromTiming(options.Get("--cd-timing"), profileTuning.CdromTiming),
             CdSpeed = ParseCdSpeed(options.Get("--cd-speed"), profileTuning.CdSpeed),
+            MemoryConfiguration = ParseMemoryConfiguration(
+                options.Get("--memory"),
+                profileTuning.MemoryConfiguration),
             ArmClock = ParseCpuClock(options.Get("--cpu-clock"), profileTuning.ArmClock),
             OperaDipir = HasFlag(args, "--opera-dipir") || profileTuning.OperaDipir,
             OperaSoftReset = HasFlag(args, "--opera-soft-reset") || profileTuning.OperaSoftReset,
@@ -1507,7 +1517,10 @@ internal static class Program
 
         // Match the run command: trace output should see the same player-1 pad.
         machine.PbusSource ??= new PbusSource();
-        ApplyInputDevices(machine.PbusSource, inputDevices);
+        ApplyInputDevices(
+            machine.PbusSource,
+            inputDevices,
+            ParseActiveDevices(options.Get("--active-devices")));
         ApplyPbusFormat(machine.PbusSource, pbusFormat);
 
         machine.RunFrames(frames);
@@ -3488,7 +3501,14 @@ internal static class Program
         ParsedOptions options = Parse(args);
         var frames = options.GetInt("--frames", 600);
         EmulationProfile profile = ParseEmulationProfile(options.Get("--profile"));
-        EmulatorTuning tuning = EmulationProfiles.Apply(profile);
+        EmulatorTuning profileTuning = EmulationProfiles.Apply(profile);
+        EmulatorTuning tuning = profileTuning with
+        {
+            ArmClock = ParseCpuClock(options.Get("--cpu-clock"), profileTuning.ArmClock),
+            MemoryConfiguration = ParseMemoryConfiguration(
+                options.Get("--memory"),
+                profileTuning.MemoryConfiguration),
+        };
         FiveDoMachine machine = CreateSyntheticMachine(tuning);
         machine.RunFrames(10);
 
@@ -3510,7 +3530,8 @@ internal static class Program
             ClioTimers: machine.Tuning.ClioTimers.ToString(),
             CelTiming: machine.Tuning.CelTiming.ToString(),
             CdromTiming: machine.Tuning.CdromTiming.ToString(),
-            CpuClock: machine.Tuning.ArmClock);
+            CpuClock: machine.Tuning.ArmClock,
+            Memory: MemoryLayout.FormatCode(machine.Memory.Layout.Configuration));
 
         if (options.Json)
         {
@@ -3524,6 +3545,7 @@ internal static class Program
             Console.WriteLine($"cel timing:  {result.CelTiming}");
             Console.WriteLine($"cd timing:   {result.CdromTiming}");
             Console.WriteLine($"cpu clock:   {result.CpuClock / 1_000_000.0:0.###} MHz");
+            Console.WriteLine($"memory:      {result.Memory}");
             Console.WriteLine($"frames:      {result.Frames}");
             Console.WriteLine($"time:        {result.Seconds:F3}s");
             Console.WriteLine($"fps:         {result.FramesPerSecond:F1}");
@@ -3812,6 +3834,7 @@ internal static class Program
             ["celTiming"] = tuning.CelTiming.ToString(),
             ["cdromTiming"] = tuning.CdromTiming.ToString(),
             ["cdSpeed"] = tuning.CdSpeed.ToString(),
+            ["memory"] = MemoryLayout.FormatCode(tuning.MemoryConfiguration),
             ["cpuClock"] = tuning.ArmClock.ToString(CultureInfo.InvariantCulture),
             ["randomSeed"] = tuning.RandomSeed?.ToString(CultureInfo.InvariantCulture) ?? "default",
             ["fixMode"] = $"0x{(uint)tuning.FixMode:x8}",
@@ -3933,6 +3956,7 @@ internal static class Program
         Console.WriteLine($"cel busy:    {result.CelBusyCycles} cycles");
         Console.WriteLine($"cd timing:   {result.CdromTiming}");
         Console.WriteLine($"cd speed:    {result.CdSpeed}");
+        Console.WriteLine($"memory:      {result.Memory}");
         Console.WriteLine($"cpu clock:   {result.CpuClock / 1_000_000.0:0.###} MHz");
         Console.WriteLine($"fix mode:    0x{result.FixMode:x8}");
         if (result.BiosMd5 is not null)
@@ -4262,6 +4286,27 @@ internal static class Program
         };
     }
 
+    private static MemoryConfiguration ParseMemoryConfiguration(
+        string? value,
+        MemoryConfiguration fallback = MemoryConfiguration.Dram2MbVram1Mb)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return fallback;
+        }
+
+        if (MemoryLayout.TryParse(value, out MemoryConfiguration configuration))
+        {
+            return configuration;
+        }
+
+        throw new MachineOptionValidationException(
+            "memory",
+            value,
+            $"Invalid --memory value '{value}'; expected 21, 22, 41, 42, 81, 82, E2, or F1 "
+                + "(two-digit hexadecimal DRAM/VRAM megabytes), or a pair such as 4/2.");
+    }
+
     private static PbusFormat? ParsePbusFormat(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -4299,7 +4344,7 @@ internal static class Program
 
     private static InputDeviceType[] ParseInputDevices(string? value)
     {
-        var devices = new InputDeviceType[PbusEncoder.MaxControllers];
+        var devices = new InputDeviceType[PbusEncoder.MaxPorts];
         Array.Fill(devices, InputDeviceType.Joypad);
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -4318,10 +4363,10 @@ internal static class Program
 
             if (!int.TryParse(item[..separator], NumberStyles.Integer, CultureInfo.InvariantCulture, out var port)
                 || port < 1
-                || port > PbusEncoder.MaxControllers)
+                || port > PbusEncoder.MaxPorts)
             {
                 throw new ArgumentException(
-                    $"Invalid --input-device port '{item[..separator]}'; expected 1-{PbusEncoder.MaxControllers}.",
+                    $"Invalid --input-device port '{item[..separator]}'; expected 1-{PbusEncoder.MaxPorts}.",
                     nameof(value));
             }
 
@@ -4329,6 +4374,25 @@ internal static class Program
         }
 
         return devices;
+    }
+
+    private static int? ParseActiveDevices(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var count)
+            || count < 0
+            || count > PbusEncoder.MaxPorts)
+        {
+            throw new ArgumentException(
+                $"Invalid --active-devices value '{value}'; expected 0-{PbusEncoder.MaxPorts}.",
+                nameof(value));
+        }
+
+        return count;
     }
 
     private static InputDeviceType ParseInputDevice(string value)
@@ -4373,7 +4437,10 @@ internal static class Program
         };
     }
 
-    private static void ApplyInputDevices(IPbusSource source, InputDeviceType[] devices)
+    private static void ApplyInputDevices(
+        IPbusSource source,
+        InputDeviceType[] devices,
+        int? activeDevices = null)
     {
         var count = 1;
         for (var i = 0; i < devices.Length; i++)
@@ -4384,6 +4451,9 @@ internal static class Program
             }
         }
 
+        count = activeDevices is { } active
+            ? Math.Clamp(active, 0, PbusEncoder.MaxPorts)
+            : count;
         switch (source)
         {
             case PbusSource pbus:
@@ -4660,7 +4730,8 @@ internal static class Program
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
         Console.WriteLine("             [--game-profile path] [--region auto|ntsc|pal1|pal2] [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
         Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
-        Console.WriteLine("             [--input-device 1=joypad,2=mouse,...] [--pbus-format legacy|opera]");
+        Console.WriteLine("             [--memory 21|22|41|42|81|82|E2|F1|DRAM/VRAM]");
+        Console.WriteLine("             [--input-device 1=joypad,2=mouse,...] [--active-devices 0-8] [--pbus-format legacy|opera]");
         Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz] [--cpu-backend interpreter]");
         Console.WriteLine("             [--opera-dipir] [--opera-soft-reset]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--poke ADDR=HEX] [--fix-mode 0xMASK] [--no-game-fixes] [--realtime] [--json]");
@@ -4678,7 +4749,8 @@ internal static class Program
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
         Console.WriteLine("             [--game-profile path] [--region auto|ntsc|pal1|pal2] [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
         Console.WriteLine("             [--cd-timing freedo|opera] [--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x]");
-        Console.WriteLine("             [--input-device 1=joypad,2=mouse,...] [--pbus-format legacy|opera]");
+        Console.WriteLine("             [--memory 21|22|41|42|81|82|E2|F1|DRAM/VRAM]");
+        Console.WriteLine("             [--input-device 1=joypad,2=mouse,...] [--active-devices 0-8] [--pbus-format legacy|opera]");
         Console.WriteLine("             [--cpu-clock 0.5x-4x|6.25-50MHz] [--cpu-backend interpreter]");
         Console.WriteLine("             [--opera-dipir] [--opera-soft-reset]");
         Console.WriteLine("             [--random-seed default|random|SEED] [--fix-mode 0xMASK] [--no-game-fixes]");
@@ -4731,7 +4803,7 @@ internal static class Program
         Console.WriteLine("                                       List numbered save slots and metadata.");
         Console.WriteLine("  disasm <file> [--offset N] [--count N] [--base 0xADDR]");
         Console.WriteLine("                                       Disassemble raw little-endian ARM words.");
-        Console.WriteLine("  bench [--frames N] [--profile P] [--json]");
+        Console.WriteLine("  bench [--frames N] [--profile P] [--cpu-clock C] [--memory M] [--json]");
         Console.WriteLine("                                       Synthetic-ROM frame benchmark.");
         Console.WriteLine("  selftest [--json]                    Determinism and state roundtrip checks for every named profile.");
         Console.WriteLine("  update [--force] [--json]            Check GitHub for a newer 5DO release.");

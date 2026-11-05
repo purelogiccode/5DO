@@ -38,6 +38,9 @@ public sealed class GameProfile
     /// <summary>Gets or sets the CD-ROM speed.</summary>
     public CdSpeed CdSpeed { get; set; } = CdSpeed.X2;
 
+    /// <summary>Gets or sets the DRAM/VRAM capacity layout.</summary>
+    public MemoryConfiguration MemoryConfiguration { get; set; } = MemoryConfiguration.Dram2MbVram1Mb;
+
     /// <summary>Gets or sets the CPU clock multiplier (0.5-4).</summary>
     public double CpuClockMultiplier { get; set; } = 1.0;
 
@@ -99,6 +102,7 @@ public sealed class GameProfile
             CelTiming = settings.CelTiming,
             CdromTiming = settings.CdromTiming,
             CdSpeed = settings.CdSpeed,
+            MemoryConfiguration = settings.MemoryConfiguration,
             CpuClockMultiplier = settings.CpuClockMultiplier,
             RandomSeed = settings.RandomSeed,
             OperaDipir = settings.OperaDipir,
@@ -136,6 +140,7 @@ public sealed class GameProfile
         settings.CelTiming = CelTiming;
         settings.CdromTiming = CdromTiming;
         settings.CdSpeed = CdSpeed;
+        settings.MemoryConfiguration = MemoryConfiguration;
         settings.CpuClockMultiplier = CpuClockMultiplier;
         settings.RandomSeed = RandomSeed;
         settings.OperaDipir = OperaDipir;

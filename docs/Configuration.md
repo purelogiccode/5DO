@@ -138,6 +138,7 @@ every serialized property in `AppSettings`.
 | `CelTiming` | enum string | `"FreeDoCompatible"` | MADAM CEL timing: `FreeDoCompatible` (synchronous draw) or `OperaBusy` (deferred draw with a pixel/texel busy deadline). |
 | `CdromTiming` | enum string | `"FreeDoCompatible"` | CD-ROM data timing: `FreeDoCompatible` (immediate transfers) or `OperaCycleBased` (cycle-based sector readiness with delayed status/FIQ). |
 | `CdSpeed` | enum string | `"X2"` | Effective read speed for `OperaCycleBased`: `Unbounded`, `X1`, `X2` (stock), `X4`, `X8`, `X16`, `X24`, or `X32`. Ignored by `FreeDoCompatible`. |
+| `MemoryConfiguration` | enum string | `"Dram2MbVram1Mb"` | DRAM/VRAM capacity: `Dram2MbVram1Mb` (stock 21), `Dram2MbVram2Mb` (22), `Dram4MbVram1Mb` (41), `Dram4MbVram2Mb` (42), `Dram8MbVram1Mb` (81), `Dram8MbVram2Mb` (82), `Dram14MbVram2Mb` (E2), or `Dram15MbVram1Mb` (F1). Recorded in save states; changing it restarts the machine. |
 | `CpuClockMultiplier` | double | `1.0` | ARM clock multiplier, 0.5..4.0 (6.25-50 MHz). 1.0 is the stock 12.5 MHz. |
 | `RandomSeed` | uint? | `null` | Optional initial DSP PRNG seed; `null` uses FreeDO's `0xa5a5a5a5`. |
 | `OperaDipir` | bool | `false` | Opt-in CLIO DIPIR latches and XBUS access aborts. Recorded in save states and included in per-game profiles. |
@@ -152,15 +153,17 @@ every serialized property in `AppSettings`.
 | `CdAudioMuted` | bool | `false` | Keep CD-DA playback running but remove it from the mixed output. |
 | `AudioDevice` | string | `""` | OpenAL playback device name; empty uses the system default. |
 | `AudioBufferMilliseconds` | int | `100` | Target OpenAL buffer latency, 20-500 ms. |
-| `PointerPort` | int | `0` | `0` sends host pointer input to every pointer device; `1`-`6` routes it to that controller port. |
+| `PointerPort` | int | `0` | `0` sends host pointer input to every pointer device; `1`-`8` routes it to that controller port. |
+| `HideLightgunCrosshair` | bool | `false` | Hide the desktop lightgun crosshair. The pointer still drives the emulated lightgun; useful when the game draws its own reticle or when recording. |
 | `PointerScale` | float | `1.0` | Pointer calibration scale (0.5-2.0). |
 | `PointerOffsetX`, `PointerOffsetY` | int | `0` | Pointer calibration offset in native pixels. |
 | `AutoSwapOnEject` | bool | `true` | Advance to the next playlist entry when the guest ejects the disc (ODE-style). Without a playlist, **F3** opens a disc picker. |
 | `RewindEnabled` | bool | `true` | Record compressed keyframes and input for rewind. |
 | `RewindSeconds` | int | `60` | Rewind history length in seconds, 30..300. |
 | `FastForwardMultiplier` | int | `4` | Fast-forward speed, 2..10. Audio is muted while active. |
-| `InputDevices` | string[] | six `"Joypad"` entries | PBUS device per port: `Joypad`, `Flightstick`, `Mouse`, `Lightgun`, `ArcadeLightgun`, `OrbatakTrackball`, or `None`. |
-| `InputDeviceOverrides` | object | `{}` | Per-game six-device lists keyed by game ID. An override wins over `InputDevices`. |
+| `InputDevices` | string[] | eight `"Joypad"` entries | PBUS device per port: `Joypad`, `Flightstick`, `Mouse`, `Lightgun`, `ArcadeLightgun`, `OrbatakTrackball`, or `None`. Ports 7-8 use the Opera daisy chain; the legacy 4DO packet carries six. |
+| `ActiveInputDevices` | int? | `null` (automatic) | Maximum polled PBUS devices, 0-8. `0` reports no devices; `8` allows every port. Automatic keeps one joypad and grows to the highest configured peripheral port. |
+| `InputDeviceOverrides` | object | `{}` | Per-game eight-device lists keyed by game ID. An override wins over `InputDevices`. |
 | `AutoInputDevices` | bool | `true` | Seed a lightgun or Orbatak trackball override for known titles when the game has no override. |
 | `Input` | object | defaults | Six-player keyboard/gamepad bindings plus hotkeys. |
 
@@ -503,8 +506,8 @@ matches the first eight uppercase characters; see
 `SetGameProfile` normalize the key case-insensitively; `ApplyGameProfile(gameId)` copies
 the snapshot into the live settings, and `CreateEffectiveForGame(gameId)` deep-copies the
 override maps and returns a machine-creation snapshot without mutating live settings. The
-snapshot covers every registered machine option (timing, region, clock, random seed,
-Opera DIPIR/soft reset, CPU backend, fix mask), plus CD-DA, BIOS MD5, video filter,
+snapshot covers every registered machine option (timing, region, memory capacity, clock,
+random seed, Opera DIPIR/soft reset, CPU backend, fix mask), plus CD-DA, BIOS MD5, video filter,
 high-resolution mode, six PBUS devices, and NVRAM mode/version. Settings >
 Emulation edits, saves, deletes, imports, and exports the current game's profile;
 `run/trace --game-profile` applies the machine options headlessly. `RegionOverrides` pins

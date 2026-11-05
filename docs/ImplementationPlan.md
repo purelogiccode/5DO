@@ -5,7 +5,7 @@
 **Current release:** `1.2.1`
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master`<br>
-**Status:** **1,681 tests pass** (last recorded); `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,725 tests pass** (last recorded); `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Goal:** implement **every Opera core feature**, match or exceed Opera's accuracy, and ship the best standalone 3DO emulator on Windows, Linux, and macOS.
 
 > **This is the single source of truth.** It replaces the former 8,000-line dashboard, milestone log, feature spec, parity audit, and session handoff. Historical evidence stays in the linked docs; this file is the canonical backlog.
@@ -37,14 +37,14 @@
 
 | Area | What ships today | What is still missing |
 |---|---|---|
-| Core emulation | ARM60 interpreter, CLIO timers/FIFO/DMA/FIQ, MADAM CEL/pixel/matrix engines, DSP at exactly 44.1 kHz, SPORT, VDLP, XBUS, CD-ROM, input, NVRAM, deterministic save states v3 | Full Opera timing parity (ARM/CLIO/CEL/CD), SWI HLE, memory capacity, embedded boot ROM, unsigned-disc boot, CD subcode/DIPIR/read-ahead |
+| Core emulation | ARM60 interpreter, CLIO timers/FIFO/DMA/FIQ, MADAM CEL/pixel/matrix engines, DSP at exactly 44.1 kHz, SPORT, VDLP, XBUS, CD-ROM, input, configurable DRAM/VRAM (8 Opera layouts), NVRAM, deterministic save states v3 | Full Opera timing parity (ARM/CLIO/CEL/CD), SWI HLE, embedded boot ROM, unsigned-disc boot, CD subcode/DIPIR/read-ahead |
 | Frontend | Avalonia shell, library, metadata/favorites/playtime, settings, gamepad mapping, save slots/thumbnails, screenshots, log viewer, disc browser, BIOS/NVRAM manager, rewind, fast-forward, cheats, TAS movies, OSD/quick menu, input display, portable mode, instance lock, diagnostics bundle, update check | Netplay, achievements, Lua, big-picture UI, localization, themes/accessibility, installers, auto-update, debugger/profiler |
 | Renderer | Two-stage OpenGL/GLES (default), optional Vulkan (Windows surface), optional Direct3D 11 (Windows), 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR, per-edge overscan, void border, screenshot gallery | True 640x480/480i CEL rendering, supersampling, GPU CEL, shader presets, NTSC/HDR, recording, overlays/bezels, Linux/macOS Vulkan surfaces, 480i deinterlacing |
 | Audio | Exact 44.1 kHz DSP clock, OpenAL Soft output, WAV capture, `audio analyze`, CD-DA mixing/volume/mute | Resampler quality/exclusive mode/sync offset, mixer/spectrum, DSP debugger, audio golden corpus |
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing, M3U multi-disc playlist, live swap, guest inject, Opera file system, prefetch, DAT health | Full CD command/timing parity, subcode, read-ahead, known-title CD-DA evidence, real in-game multi-disc swap, ODE prompts, physical drive, image conversion |
 | Compatibility | 594 discs: **594 load**, **593 render**, 1 known boot failure (Crash 'n Burn Japan), 0 not loadable | 594/594 render; visual/in-game review; per-game auto-profiles; game database expansion |
 | Differential harness | FiveDO.DiffHarness, checkpoints, audio/state hashes, smoke + five-title showcase, 594-title manifest generator | Full 594-title run, PC-delta triage, CD/state transcripts, nightly dashboard |
-| Tests | **1,676** passing; fuzz harness for six parsers; build/format/inspectcode clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
+| Tests | **1,725** passing; fuzz harness for six parsers; build/format/inspectcode clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K Tier A measured; zero-allocation synthetic path | Tier B 1080p60, GLES 3.1/ANGLE, arm64 tuning, threaded DSP, managed JIT, zero allocations on all real paths |
 | Platforms | Six bundles: Windows/Linux/macOS × x64/arm64, framework-dependent single-file apphosts; Windows x64 validated; Linux x64 tests/smoke pass (GPU preview under llvmpipe); macOS and arm64 cross-published but not hardware-validated | macOS runtime validation, arm64 hardware validation, Linux/macOS GPU presentation, macOS gamepad, Flatpak/AppImage, installers/signing |
 | Release | **v1.2.1** published with six versioned bundles and `SHA256SUMS.txt`; .NET 10 runtime required (not bundled); legal/attribution sign-off recorded | Signing, notarization, auto-update, reproducible builds, SBOM |
@@ -65,7 +65,7 @@ These are done and must not regress. They are listed here once; the backlog belo
 | CLI | `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks/verify/playlist`, `library verify`, `fs`, `bios`, `nvram`, `cheat`, `movie`, `settings`, `audio`, `state`, `disasm`, `update` |
 | Release | v1.2.1 six bundles; versioned archives; checksums; legal/attribution sign-off; OpenAL LGPL obligations |
 
-**Completed IDs (traceability only):** FND-01, FND-02, FND-03, CORE-09, CORE-12, CORE-14, CORE-15, SYS-04, SYS-09, SYS-10, SYS-11, SYS-13, SYS-14, VID-05, VID-06, VID-14, VID-15, AUD-05, UX-01, UX-02, UX-04, UX-11, UX-12, UX-15, UX-19, UX-23, ENG-03, BAK-12, BAK-17.
+**Completed IDs (traceability only):** FND-01, FND-02, FND-03, CORE-09, CORE-12, CORE-14, CORE-15, SYS-04, SYS-07, SYS-09, SYS-10, SYS-11, SYS-13, SYS-14, VID-05, VID-06, VID-14, VID-15, AUD-05, UX-01, UX-02, UX-04, UX-11, UX-12, UX-15, UX-19, UX-23, ENG-03, BAK-12, BAK-17.
 
 **Milestone aliases:** M9R/M9P → P3/P6/TEST-04; M10 → PERF-02; M12 → PERF-08; M13.5/M13.6 → TEST-06; M14 → VID-01/02/03; M15 → CORE-11/16 + FND-05.
 
@@ -102,7 +102,7 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
 
 - [ ] **SYS-08 — CPU overclock/underclock validation**
   **Status:** Partial · **Priority:** P0 · **Effort:** S · **Tracks:** SYS-08
-  **Remaining:** CPU clock compatibility matrix; per-title behavior notes; benchmark measurements; save-state warning coverage.
+  **Remaining:** per-title behavior notes and a documented compatibility decision for non-stock clocks. The 2026-11-04 increment added `bench --cpu-clock`/`--memory`, the 0.5x-4x matrix with identical synthetic frame hashes at every clock (Performance.md §8.1), and documented that the stock 12.5 MHz default is unchanged.
   **Done when:** the clock matrix is documented and the stock 12.5 MHz default is unchanged.
 
 - [ ] **CORE-04 — CD-ROM command and timing parity**
@@ -147,12 +147,6 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
   **Remaining:** explicit unsigned-disc support (prefer a documented `norsa` BIOS or user-provided patch); legal review; CLI/Settings/state; tests.
   **Done when:** unsigned software runs with an explicit option and legal sign-off is recorded.
 
-- [ ] **SYS-07 — Memory capacity options**
-  **Status:** Pending · **Priority:** P0 · **Effort:** M · **Tracks:** SYS-07
-  **Remaining:** 2/4/8/14/15 MB DRAM and 1/2 MB VRAM; BIOS/software compatibility; CLI/Settings/state; homebrew validation; stock default unchanged.
-  **Done when:** every capacity is selectable and validated; a compatible homebrew image uses expanded memory; stock behavior is unchanged.
-  **Ref:** `opera_mem.c`; `libretro_core_options.c` (`opera_mem_capacity`).
-
 - [ ] **SYS-12 — Portfolio OS SWI HLE**
   **Status:** Pending · **Priority:** P0 · **Effort:** L · **Tracks:** SYS-12
   **Remaining:** implement Opera's SWI HLE set; opt-in flag; save-state/OS interaction; performance and compatibility evidence; documented trade-offs.
@@ -161,13 +155,13 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
 
 - [ ] **SYS-15 — Input devices, calibration, and options**
   **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** SYS-15
-  **Remaining:** active input-device count 0–8; hide-lightgun-crosshair option; per-device calibration; multiplayer pointer routing; scripted gameplay evidence for mouse, lightgun, arcade lightgun, flightstick, and Orbatak trackball; arcade start/coin/service mapping.
+  **Remaining:** per-device calibration; scripted gameplay evidence for mouse, lightgun, arcade lightgun, flightstick, and Orbatak trackball; arcade start/coin/service mapping. The 2026-11-04 increment added the hide-lightgun-crosshair option, eight PBUS ports, an active-device cap of 0-8 (`--active-devices`/Settings), and a 256-byte PBUS chain buffer.
   **Done when:** a representative title works for each device; calibration and crosshair options are documented and tested.
   **Ref:** `lr_input.c`, `opera_pbus.c`, `libretro_core_options.c` (`opera_active_devices`, `opera_hide_lightgun_crosshairs`).
 
 - [ ] **SYS-16 — Six-player and multi-tap verification**
   **Status:** Pending · **Priority:** P0 · **Effort:** S · **Tracks:** SYS-16
-  **Remaining:** six-player test ROM/title; multi-tap PBUS trace; per-port mapping evidence; documented limits.
+  **Remaining:** six-player test ROM/title; hardware multi-tap trace. The 2026-11-04 increment added eight PBUS ports, the Opera chain for ports 7-8, a 256-byte MADAM queue, and an eight-player packet test through `FiveDoMachine` (`EightPlayerPacket_ReachesTheMadamPbusQueue`).
   **Done when:** six pads and multi-tap are verified on hardware or a test ROM.
 
 - [ ] **SYS-17 — Game database expansion and community DB**
@@ -661,6 +655,8 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
 
+- **2026-11-04 - SYS-07 memory capacity options.** Added the eight Opera DRAM/VRAM layouts (`21`, `22`, `41`, `42`, `81`, `82`, `E2`, `F1`) through `MemoryConfiguration`/`MemoryLayout`, dynamic RAM/VRAM decode, VRAM base and masks for VDLP/SPORT/CEL, capacity-derived MADAM RED SYSBITS, `--memory`/Settings/profile/state plumbing, memory state section v3, Options section v8, a homebrew probe ROM that uses 4 MB DRAM + 2 MB VRAM, and 34 memory tests. Stock hashes are unchanged; expanded memory is documented as homebrew-only.
+- **2026-11-04 - SYS-08 clock matrix increment.** `bench --cpu-clock`/`--memory` measure the supported clock range; the 0.5x-4x matrix and unchanged stock default are recorded in `Performance.md` §8.1.
 - **2026-11-04 - FND-01 machine option registry.** Added `MachineOptionRegistry` (13 validated options with CLI/Settings/profile/state mappings), typed `MachineOptionValidationException`/`UnknownMachineOptionException`, Opera DIPIR and soft-reset controls, `--opera-dipir`/`--opera-soft-reset`/`--cpu-backend`, `settings options` generated documentation, `docs/MachineOptions.md`, save-state Options v7 coverage for every option, mismatch warnings, and CLI/Settings/profile parity tests.
 - **2026-11-04 - Plan rewrite.** Consolidated the former dashboard, parts I-IV, feature spec, parity audit, and handoff into this single backlog; retired duplicate `BAK-*`/`MOON-*` trackers.
 - **2026-11-03 — v1.2.1.** Six x64/arm64 bundles plus `SHA256SUMS.txt`; CI verified every apphost machine type and every checksum.
@@ -680,7 +676,7 @@ This is a crosswalk, not a second backlog. “Canonical item” is the only plac
 | BIOS (rom1), including embedded Opera Boot | Partial | SYS-05, SYS-06 |
 | Font/Kanji ROM (rom2) | Shipped | — |
 | CPU overclock 0.5×–4× | Partial | SYS-08 |
-| Memory capacity 2/4/8/14/15 MB DRAM, 1/2 MB VRAM | Missing | SYS-07 |
+| Memory capacity 2/4/8/14/15 MB DRAM, 1/2 MB VRAM | Shipped (SYS-07) | — |
 | Random-number seed | Shipped | — |
 | CD speed unbounded/1×–32× | Shipped | — |
 | Region NTSC/PAL1/PAL2 | Partial | SYS-03 |

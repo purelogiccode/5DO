@@ -205,25 +205,25 @@ public readonly record struct OrbatakButtonsState(
 /// </remarks>
 public sealed class InputDeviceSet
 {
-    private readonly InputDeviceType[] _devices = new InputDeviceType[PbusEncoder.MaxControllers];
-    private readonly ControllerState[] _joypads = new ControllerState[PbusEncoder.MaxControllers];
-    private readonly FlightstickState[] _flightsticks = new FlightstickState[PbusEncoder.MaxControllers];
-    private readonly MouseState[] _mice = new MouseState[PbusEncoder.MaxControllers];
-    private readonly LightgunState[] _lightguns = new LightgunState[PbusEncoder.MaxControllers];
-    private readonly ArcadeLightgunState[] _arcadeLightguns = new ArcadeLightgunState[PbusEncoder.MaxControllers];
-    private readonly OrbatakTrackballState[] _trackballs = new OrbatakTrackballState[PbusEncoder.MaxControllers];
-    private readonly OrbatakButtonsState[] _trackballButtons = new OrbatakButtonsState[PbusEncoder.MaxControllers];
+    private readonly InputDeviceType[] _devices = new InputDeviceType[PbusEncoder.MaxPorts];
+    private readonly ControllerState[] _joypads = new ControllerState[PbusEncoder.MaxPorts];
+    private readonly FlightstickState[] _flightsticks = new FlightstickState[PbusEncoder.MaxPorts];
+    private readonly MouseState[] _mice = new MouseState[PbusEncoder.MaxPorts];
+    private readonly LightgunState[] _lightguns = new LightgunState[PbusEncoder.MaxPorts];
+    private readonly ArcadeLightgunState[] _arcadeLightguns = new ArcadeLightgunState[PbusEncoder.MaxPorts];
+    private readonly OrbatakTrackballState[] _trackballs = new OrbatakTrackballState[PbusEncoder.MaxPorts];
+    private readonly OrbatakButtonsState[] _trackballButtons = new OrbatakButtonsState[PbusEncoder.MaxPorts];
     private int _portCount = 1;
 
-    /// <summary>Gets the number of active ports, 1-6.</summary>
+    /// <summary>Gets the number of active ports, 0-8.</summary>
     public int PortCount => _portCount;
 
     /// <summary>Sets the number of active ports.</summary>
-    /// <param name="count">Port count, 1-6.</param>
+    /// <param name="count">Port count, 0-8. Zero reports an empty chain.</param>
     public void SetPortCount(int count)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(count, 1);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(count, PbusEncoder.MaxControllers);
+        ArgumentOutOfRangeException.ThrowIfLessThan(count, 0);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(count, PbusEncoder.MaxPorts);
         _portCount = count;
     }
 
@@ -236,7 +236,7 @@ public sealed class InputDeviceSet
     public InputDeviceType GetDevice(int port)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(port);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxControllers);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxPorts);
         return _devices[port];
     }
 
@@ -246,7 +246,7 @@ public sealed class InputDeviceSet
     public void SetDevice(int port, InputDeviceType device)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(port);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxControllers);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxPorts);
         _devices[port] = device;
         _portCount = Math.Max(_portCount, port + 1);
     }
@@ -262,7 +262,7 @@ public sealed class InputDeviceSet
     public ControllerState GetJoypad(int port)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(port);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxControllers);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxPorts);
         return _joypads[port];
     }
 
@@ -272,7 +272,7 @@ public sealed class InputDeviceSet
     public void SetJoypad(int port, ControllerState state)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(port);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxControllers);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxPorts);
         _joypads[port] = state;
     }
 
@@ -409,7 +409,7 @@ public sealed class InputDeviceSet
     private static int ValidatePort(int port)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(port);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxControllers);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxPorts);
         return port;
     }
 }

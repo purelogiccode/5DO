@@ -37,7 +37,12 @@ public sealed class Madam : IMadamBus, IStateSection
 
     private readonly uint[] _registers = new uint[RegisterCount];
     private readonly ushort[] _plut = new ushort[32];
-    private readonly byte[] _pbusQueue = new byte[20];
+
+    /// <summary>
+    /// PBUS packet buffer. Opera: <c>PBUS_BUF_SIZE</c> (256 bytes). The old 20-byte
+    /// buffer truncated eight-device chains and even some mixed six-device chains.
+    /// </summary>
+    private readonly byte[] _pbusQueue = new byte[256];
 
     private CelEngine? _cel;
     private IRam? _celRam;
@@ -80,6 +85,17 @@ public sealed class Madam : IMadamBus, IStateSection
 
     /// <summary>Gets or sets the raw RAM accessor used by PLUT loads.</summary>
     public IRam? Ram { get; set; }
+
+    /// <summary>Gets the active DRAM/VRAM layout.</summary>
+    public MemoryLayout Layout => Ram?.Layout ?? MemoryLayout.Stock;
+
+    /// <summary>
+    /// Rewrites the read-only RED SYSBITS register after the DRAM/VRAM layout changes.
+    /// </summary>
+    public void RefreshMemoryConfiguration()
+    {
+        _registers[0x004] = Layout.MadamRedSysBits;
+    }
 
     /// <summary>Gets or sets the CPU bus used by PBUS DMA writes.</summary>
     public IAddressBus? Bus { get; set; }
@@ -193,9 +209,11 @@ public sealed class Madam : IMadamBus, IStateSection
     /// <summary>Gets the save-state section version.</summary>
     /// <remarks>
     /// Version 2 adds the CEL busy deadline and pending-draw flag. Version 3 persists the
-    /// MCTL-written flag so the CLUT/video DMA gates survive a state round trip.
+    /// MCTL-written flag so the CLUT/video DMA gates survive a state round trip. Version 4
+    /// expands the PBUS buffer from 20 to 256 bytes so an eight-device daisy chain is not
+    /// truncated.
     /// </remarks>
-    public ushort Version => 3;
+    public ushort Version => 4;
 
     /// <summary>Resets the MADAM register file and CEL state. FreeDO: <c>_madam_Init</c>.</summary>
     public void Reset()
@@ -218,7 +236,7 @@ public sealed class Madam : IMadamBus, IStateSection
         _result2Temp = 0;
         _result3Temp = 0;
 
-        _registers[0x004] = 0x29;
+        _registers[0x004] = Layout.MadamRedSysBits;
         _registers[0x574] = 0xfffffffc;
         _registers[0x000] = 0x01020000;
     }
@@ -275,7 +293,8 @@ public sealed class Madam : IMadamBus, IStateSection
         switch (address)
         {
             case 0x004:
-                _registers[address] = 0x29;
+                // RED SYSBITS is read-only; keep the capacity-derived value.
+                _registers[address] = Layout.MadamRedSysBits;
                 return;
             case 0x008:
                 _registers[address] = value;
@@ -519,7 +538,18 @@ public sealed class Madam : IMadamBus, IStateSection
             _plut[i] = reader.ReadUInt16();
         }
 
-        reader.ReadBytes(_pbusQueue);
+        var version = reader is StateSectionReader section ? section.Version : 4;
+        if (version >= 4)
+        {
+            reader.ReadBytes(_pbusQueue);
+        }
+        else
+        {
+            // Version 1-3 states stored the historical 20-byte queue.
+            reader.ReadBytes(_pbusQueue.AsSpan(0, 20));
+            _pbusQueue.AsSpan(20).Fill(0xFF);
+        }
+
         _readModulo = reader.ReadInt32();
         _writeModulo = reader.ReadInt32();
         _fsm = (CelFsmState)reader.ReadUInt32();

@@ -29,7 +29,7 @@ without a GPU CEL compositor or a large compatibility break.
 |---|---|
 | Mode flag | `EmulatorTuning.HighResolution`, `CompatibilityState.HighResolution`, CLI `--high-res`, Settings > Emulation > Hi-Res. |
 | Frame size | `EmulatorConstants.HighResolutionWidth = 640`, `HighResolutionHeight = 480`. |
-| VRAM | Four 1 MB planes in the reserved RAM mirrors (`HighResolutionVramPlanes = 4`). Plane 0/1 hold even/odd X columns; planes 2/3 mirror the second interlace field. |
+| VRAM | Four planes sized by the active VRAM capacity (`HighResolutionVramPlanes = 4`; `4 * VramSize`). Plane 0/1 hold even/odd X columns; planes 2/3 mirror the second interlace field. |
 | CEL rasterizer | `CelRasterizer.ResScale` is 0 or 1. `ReadPixel`/`WritePixel` shift X by `ResScale` and select the plane with `x & 1`; Y remains a 240-line coordinate. |
 | Clipping | `TestClip` doubles the clip rectangle with `(ClipX + 1) << ResScale`. |
 | VDLP | `Vdlp.RenderHighResolutionLine` reads all four planes, interleaves even/odd X, and writes two output lines for each low-resolution line. |

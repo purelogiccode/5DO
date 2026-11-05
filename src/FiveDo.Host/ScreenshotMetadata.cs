@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
+using FiveDo.Core;
 
 namespace FiveDo.Host;
 
@@ -80,6 +81,9 @@ public sealed class ScreenshotMetadata
     /// <summary>Gets or sets the CD-ROM speed.</summary>
     public string CdSpeed { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the DRAM/VRAM capacity code.</summary>
+    public string Memory { get; set; } = string.Empty;
+
     /// <summary>Gets or sets the CPU clock multiplier.</summary>
     public double CpuClockMultiplier { get; set; } = 1.0;
 
@@ -121,6 +125,7 @@ public sealed class ScreenshotMetadata
             CelTiming = settings.CelTiming.ToString(),
             CdromTiming = settings.CdromTiming.ToString(),
             CdSpeed = settings.CdSpeed.ToString(),
+            Memory = MemoryLayout.FormatCode(settings.MemoryConfiguration),
             CpuClockMultiplier = settings.CpuClockMultiplier,
         };
     }

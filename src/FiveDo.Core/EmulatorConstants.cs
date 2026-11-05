@@ -30,14 +30,33 @@ public static class EmulatorConstants
     /// <summary>ARM cycles in one 60 Hz frame. FreeDO uses integer division: <c>12_500_000 / 60</c>.</summary>
     public const int FrameCycles = ArmClock / 60;
 
-    /// <summary>Size of the CPU-visible DRAM/VRAM region in bytes.</summary>
+    /// <summary>Size of the stock CPU-visible DRAM/VRAM region in bytes.</summary>
+    /// <remarks>
+    /// Expanded <see cref="MemoryConfiguration"/> layouts are larger. Runtime address
+    /// decoding uses <see cref="MemoryLayout.RamSize"/>, not this stock constant.
+    /// </remarks>
     public const int RamSize = 3 * 1024 * 1024;
 
-    /// <summary>Number of extra 1 MB VRAM mirrors reserved for the future high-resolution mode.</summary>
+    /// <summary>Number of extra 1 MB VRAM mirrors reserved by the stock high-resolution layout.</summary>
     public const int RamMirrorCount = 16;
 
-    /// <summary>Total backing size of the RAM array, including reserved high-resolution mirrors.</summary>
-    public const int RamAllocationSize = RamSize + (RamMirrorCount * 1024 * 1024);
+    /// <summary>Backing size required by the stock 2 MB DRAM / 1 MB VRAM layout.</summary>
+    public const int StockHiresRamSize = RamSize + (RamMirrorCount * 1024 * 1024);
+
+    /// <summary>Largest supported DRAM size in bytes (15 MB).</summary>
+    public const int MaxDramSize = 15 * 1024 * 1024;
+
+    /// <summary>Largest supported VRAM size in bytes (2 MB).</summary>
+    public const int MaxVramSize = 2 * 1024 * 1024;
+
+    /// <summary>
+    /// Total backing size of the RAM array for the largest high-resolution layout:
+    /// 14 MB DRAM plus four 2 MB VRAM planes.
+    /// </summary>
+    public const int MaxHiresRamSize = (14 * 1024 * 1024) + (4 * MaxVramSize);
+
+    /// <summary>Total backing size of the RAM array, including every high-resolution plane.</summary>
+    public const int RamAllocationSize = MaxHiresRamSize;
 
     /// <summary>Size of one BIOS ROM bank in bytes.</summary>
     public const int RomBankSize = 1 * 1024 * 1024;

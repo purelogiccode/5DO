@@ -111,7 +111,7 @@ frame.
    database mapping for the game ID.
 3. Apply `--profile` (if any), then create the machine with `--high-res`,
    `--arm-timing`, `--clio-timers`, `--cel-timing`, `--cd-timing`, `--cd-speed`,
-   `--cpu-clock`, `--random-seed`, `--opera-dipir`, `--opera-soft-reset`,
+   `--memory`, `--cpu-clock`, `--random-seed`, `--opera-dipir`, `--opera-soft-reset`,
    `--cpu-backend`, and the resolved fix mode. Explicit options override the profile.
 4. Resolve `--bios`/`--bios-auto` and load BIOS1/BIOS2 (unless `--state-in`).
 5. Create the audio backend and insert the disc.
@@ -152,8 +152,10 @@ frame.
 | `--cel-timing freedo\|opera` | `freedo` | MADAM CEL timing model. `freedo` draws synchronously and returns the FSM to idle; `opera` defers the draw to the next CPU tick and keeps the status register busy until the pixel/texel deadline (nine million pixels per second plus 64 setup cycles per list entry). |
 | `--cd-timing freedo\|opera` | `freedo` | CD-ROM data-sector timing. `freedo` transfers each sector immediately; `opera` schedules each 2048-byte sector at the configured speed, clears the data/status poll bits while waiting, publishes status after the transfer drains, and raises the XBUS CD FIQ when ready. |
 | `--cd-speed unbounded\|1x\|2x\|4x\|8x\|16x\|24x\|32x` | `2x` | Effective read speed for the `opera` timing model. `unbounded` publishes sectors immediately; `1x` is the slowest and `32x` the fastest. The option has no effect with `--cd-timing freedo`. |
-| `--input-device 1=joypad,2=mouse,...` | all joypads | PBUS device on each of the six ports. Devices: `joypad`, `flightstick`, `mouse`, `lightgun`, `arcade-lightgun`, `orbatak-trackball`, `none`. Selecting a peripheral switches the packet to the Opera chain format; the legacy 4DO packet is kept while every port is a joypad. |
-| `--pbus-format legacy\|opera` | automatic | Force the PBUS packet layout. `opera` emits the 3DO daisy-chain records and is useful for differential tests; the chain is selected automatically when a peripheral is present. |
+| `--memory 21\|22\|41\|42\|81\|82\|E2\|F1` | `21` | DRAM/VRAM capacity. Codes are two hexadecimal nibbles (DRAM MB, then VRAM MB); `4/2` and `4MB/2MB` are also accepted. `21` is the stock 2 MB DRAM / 1 MB VRAM layout. Expanded layouts move the VRAM base above DRAM and report the capacity through MADAM RED SYSBITS. Recorded in save states. |
+| `--input-device 1=joypad,2=mouse,...` | all joypads | PBUS device on each of the eight ports. Devices: `joypad`, `flightstick`, `mouse`, `lightgun`, `arcade-lightgun`, `orbatak-trackball`, `none`. Selecting a peripheral or a port above six switches the packet to the Opera chain format; the legacy 4DO packet is kept while ports 1-6 are all joypads. |
+| `--active-devices 0-8` | automatic | Maximum polled PBUS devices. `0` reports an empty chain; `8` allows every port. Omit it to keep 5DO's automatic behavior (one joypad, growing to the highest configured peripheral port). |
+| `--pbus-format legacy\|opera` | automatic | Force the PBUS packet layout. `opera` emits the 3DO daisy-chain records and is useful for differential tests; the chain is selected automatically when a peripheral is present or ports 7-8 are active. |
 | `--cpu-clock 0.5x-4x\|6.25-50MHz` | 1x (12.5 MHz) | ARM clock multiplier or absolute MHz. Values outside 0.5x-4x (6.25-50 MHz) fail. |
 | `--random-seed default\|random\|SEED` | `default` | Initial DSP PRNG seed. `default` keeps `0xa5a5a5a5`, `random` picks a fresh 32-bit value, and a decimal or `0x` value fixes the seed. |
 | `--opera-dipir` | off | Enable CLIO DIPIR latches and XBUS access aborts. Recorded in save states; a per-game profile can also enable it. |
@@ -324,6 +326,7 @@ All fields are camelCase. Nullable fields are omitted or `null` when not applica
 | `celBusyCycles` | ulong | CEL busy cycles remaining at the end of the run. |
 | `cdromTiming` | string | `FreeDoCompatible` or `OperaCycleBased`. |
 | `cdSpeed` | string | `Unbounded`, `X1`, `X2`, `X4`, `X8`, `X16`, `X24`, or `X32`. |
+| `memory` | string | Active DRAM/VRAM capacity code: `21`, `22`, `41`, `42`, `81`, `82`, `E2`, or `F1`. |
 | `inputDevices` | string | Per-port device list, for example `1=joypad,2=mouse,3=lightgun,4=joypad,5=joypad,6=joypad`. |
 | `cpuClock` | int | ARM clock in hertz (12,500,000 at the stock 1x setting). |
 | `fixMode` | uint | Applied fix-mode bits. |
@@ -434,7 +437,9 @@ instruction ring buffer. It stops early on a stop condition or `--count` limit.
 | `--cel-timing freedo\|opera` | `freedo` | As in `run`. |
 | `--cd-timing freedo\|opera` | `freedo` | As in `run`. |
 | `--cd-speed unbounded\|1x\|2x\|4x\|8x\|16x\|24x\|32x` | `2x` | As in `run`. |
+| `--memory 21\|22\|41\|42\|81\|82\|E2\|F1` | `21` | As in `run`. |
 | `--input-device 1=joypad,2=mouse,...` | all joypads | As in `run`. |
+| `--active-devices 0-8` | automatic | As in `run`. |
 | `--pbus-format legacy\|opera` | automatic | As in `run`. |
 | `--cpu-clock 0.5x-4x\|6.25-50MHz` | 1x | As in `run`. |
 | `--random-seed default\|random\|SEED` | `default` | As in `run`. |
@@ -823,11 +828,13 @@ No JSON.
 Runs a synthetic ARM program (MADAM/SPORT writes and a branch loop), warms up 10
 frames, then measures `--frames` frames. `--profile` accepts `compatible`, `accuracy`,
 `performance`, or `custom` and applies the same timing bundle as `run`; the default is
-`compatible`. Fields:
+`compatible`. `--cpu-clock` and `--memory` accept the same values as `run` for the clock
+matrix and capacity checks. Fields:
 `ok`, `frames`, `seconds`, `framesPerSecond`, `cyclesPerFrame`, `instructions`,
 `frameHash`, `profile` (derived from the active options), `armTiming`, `clioTimers`,
-`celTiming`, `cdromTiming`, and `cpuClock`. Run the compatible and accuracy profiles
-back to back to measure the accuracy cost before changing the default.
+`celTiming`, `cdromTiming`, `cpuClock`, and `memory`. Run the compatible and accuracy
+profiles back to back to measure the accuracy cost before changing the default; the
+clock matrix is recorded in [`Performance.md`](Performance.md) §8.1.
 
 The separate benchmark project (`benchmarks/FiveDo.Benchmarks`) adds p50/p95/p99,
 per-stage timings/allocations, the CI gate, and baseline comparison. See

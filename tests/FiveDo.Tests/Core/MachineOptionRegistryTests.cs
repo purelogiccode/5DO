@@ -99,6 +99,7 @@ public sealed class MachineOptionRegistryTests
             CelTiming = CelTimingMode.FreeDoCompatible,
             CdromTiming = CdromTimingMode.FreeDoCompatible,
             CdSpeed = CdSpeed.X32,
+            MemoryConfiguration = MemoryConfiguration.Dram15MbVram1Mb,
             RandomSeed = null,
             FixMode = FixMode.None,
             CpuBackend = CpuBackendKind.Interpreter,
@@ -135,6 +136,7 @@ public sealed class MachineOptionRegistryTests
         Assert.Equal(settings.CelTiming, applied.CelTiming);
         Assert.Equal(settings.CdromTiming, applied.CdromTiming);
         Assert.Equal(settings.CdSpeed, applied.CdSpeed);
+        Assert.Equal(settings.MemoryConfiguration, applied.MemoryConfiguration);
         Assert.Equal(settings.CpuClockMultiplier, applied.CpuClockMultiplier);
         Assert.Equal(settings.Region, applied.Region);
         Assert.Equal(settings.RandomSeed, applied.RandomSeed);
@@ -165,6 +167,7 @@ public sealed class MachineOptionRegistryTests
             Assert.Equal(settings.CelTiming, loaded.CelTiming);
             Assert.Equal(settings.CdromTiming, loaded.CdromTiming);
             Assert.Equal(settings.CdSpeed, loaded.CdSpeed);
+            Assert.Equal(settings.MemoryConfiguration, loaded.MemoryConfiguration);
             Assert.Equal(settings.Region, loaded.Region);
             Assert.Equal(settings.RandomSeed, loaded.RandomSeed);
             Assert.Equal(settings.CpuBackend, loaded.CpuBackend);
@@ -192,6 +195,7 @@ public sealed class MachineOptionRegistryTests
             CelTiming = CelTimingMode.OperaBusy,
             CdromTiming = CdromTimingMode.OperaCycleBased,
             CdSpeed = CdSpeed.X8,
+            MemoryConfiguration = MemoryConfiguration.Dram8MbVram2Mb,
             RandomSeed = 0x1234_5678,
             FixMode = FixMode.BitTiming5,
             CpuBackend = CpuBackendKind.Interpreter,
@@ -212,6 +216,7 @@ public sealed class MachineOptionRegistryTests
             CelTiming = tuning.CelTiming,
             CdromTiming = tuning.CdromTiming,
             CdSpeed = tuning.CdSpeed,
+            MemoryConfiguration = tuning.MemoryConfiguration,
             RandomSeed = tuning.RandomSeed,
             RandomSeedSpecified = true,
             FixMode = tuning.FixMode,
@@ -233,6 +238,7 @@ public sealed class MachineOptionRegistryTests
             CelTiming = CelTimingMode.OperaBusy,
             CdromTiming = CdromTimingMode.OperaCycleBased,
             CdSpeed = CdSpeed.X16,
+            MemoryConfiguration = MemoryConfiguration.Dram4MbVram1Mb,
             RandomSeed = 0xDEAD_BEEF,
             CpuBackend = CpuBackendKind.Interpreter,
             HighResolution = true,

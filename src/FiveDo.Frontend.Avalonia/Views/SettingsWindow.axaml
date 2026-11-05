@@ -210,7 +210,7 @@
 
             <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, ARM, CLIO, CEL, and CD timing, CD speed, CPU clock, random seed, Opera DIPIR/soft reset, NVRAM storage, high-resolution mode, rewind/fast-forward, and overrides.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <CheckBox x:Name="AutoFixesCheck" Grid.Row="0" Grid.Column="1"
                               Content="Apply the 4DO per-game fixes automatically"
                               ToolTip.Tip="Apply the compatibility fix mask from the built-in game database when a disc opens." />
@@ -351,12 +351,31 @@
                     <TextBlock Grid.Row="30" Grid.Column="1" x:Name="GameProfileText"
                                Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
                                ToolTip.Tip="Whether this game has a stored profile." />
+                    <TextBlock Grid.Row="32" Grid.Column="0" Text="Memory" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="DRAM/VRAM capacity reported to the BIOS through MADAM RED SYSBITS." />
+                    <ComboBox x:Name="MemoryCombo" Grid.Row="32" Grid.Column="1" Margin="0,12,0,0"
+                              ToolTip.Tip="Stock is 2 MB DRAM / 1 MB VRAM. Expanded layouts change the RAM boundary and VRAM base; changing it restarts the machine." />
                     <CheckBox x:Name="OperaDipirCheck" Grid.Row="31" Grid.Column="1" Margin="0,12,0,0"
                               Content="Opera DIPIR semantics (accuracy, opt-in)"
                               ToolTip.Tip="Enable CLIO DIPIR latches and XBUS access aborts. Save states record the setting and warn on a mismatch; changing it restarts the machine." />
-                    <CheckBox x:Name="OperaSoftResetCheck" Grid.Row="32" Grid.Column="1" Margin="0,12,0,0"
+                    <CheckBox x:Name="OperaSoftResetCheck" Grid.Row="33" Grid.Column="1" Margin="0,12,0,0"
                               Content="Opera soft-reset path (accuracy, opt-in)"
                               ToolTip.Tip="Use Opera's ARM/MADAM/DSP reset sequence for CLIO CSTAT soft resets. Save states record the setting and warn on a mismatch; changing it restarts the machine." />
+                    <TextBlock Grid.Row="35" Grid.Column="0" Text="Input devices 7-8" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Choose the PBUS device on ports 7-8. The Opera daisy chain supports eight devices; the legacy 4DO packet carries six." />
+                    <StackPanel Grid.Row="35" Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="0,12,0,0">
+                        <ComboBox x:Name="InputDevice7Combo" Width="132"
+                                  ToolTip.Tip="Port 7 device." />
+                        <ComboBox x:Name="InputDevice8Combo" Width="132"
+                                  ToolTip.Tip="Port 8 device." />
+                    </StackPanel>
+                    <TextBlock Grid.Row="36" Grid.Column="0" Text="Active input devices" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Opera's opera_active_devices cap: 0 reports no devices, 8 allows every port." />
+                    <ComboBox x:Name="ActiveInputDevicesCombo" Grid.Row="36" Grid.Column="1" HorizontalAlignment="Left" Width="220" Margin="0,12,0,0"
+                              ToolTip.Tip="Caps how many configured PBUS ports are polled. One can work around titles that misbehave with multiple controllers." />
+                    <CheckBox x:Name="HideLightgunCrosshairCheck" Grid.Row="34" Grid.Column="1" Margin="0,12,0,0"
+                               Content="Hide the lightgun crosshair"
+                               ToolTip.Tip="Hide the desktop crosshair while the emulated lightgun still receives the pointer. Useful when the game draws its own reticle or when recording." />
                     <TextBlock Grid.Row="27" Grid.Column="0" Text="Pointer calibration" VerticalAlignment="Center" Margin="0,12,0,0"
                                ToolTip.Tip="Scale and offset applied to the host pointer before it reaches the emulated device." />
                     <StackPanel Grid.Row="27" Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="0,12,0,0">

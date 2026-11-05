@@ -52,6 +52,21 @@ status bar, and completes the Serilog catch-block coverage and launch-statistics
 wiring. The full suite is **1,597/1,597** passing. The bundle layout is unchanged:
 framework-dependent single-file apphosts, no bundled .NET runtime, no PDB/XML files.
 
+**Latest work (2026-11-04):** Input devices now support eight PBUS ports. Ports 7-8 use
+the Opera daisy chain, `--active-devices`/Settings caps the polled ports at 0-8, and the
+MADAM PBUS buffer matches Opera's 256 bytes (state section v4). The hide-lightgun-crosshair
+option is also available.
+
+**SYS-07 (2026-11-04):** all eight Opera DRAM/VRAM layouts
+(2/4/8/14/15 MB DRAM and 1/2 MB VRAM) are selectable behind `--memory`, Settings > Emulation >
+Memory, per-game profiles, CLI JSON, and save states. VRAM is decoded directly above
+DRAM, VDLP/SPORT/CEL use the live layout, and MADAM RED SYSBITS reports the capacity to
+the BIOS. A homebrew probe ROM uses 4 MB DRAM + 2 MB VRAM; retail titles remain on the
+stock 2 MB/1 MB default because Opera documents expanded memory as homebrew-only. The
+CPU-clock matrix (0.5x-4x) and `bench --cpu-clock`/`--memory` were also added; the suite
+is **1,725 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al and
+[`Performance.md`](Performance.md) 8.1.
+
 **Latest work (2026-11-02):** the CLI and desktop shell check the public GitHub release
 feed at startup (cached, opt-out) and offer the download page; `5do update` exposes the
 same check. The optional `FiveDo.Video.Direct3D` Windows backend adds a FL11_0
@@ -261,7 +276,7 @@ This is the short, current answer to "where are we?" The documentation index is
 
 ## 1. What works today
 
-- **Core:** ARM60 interpreter, 3 MB RAM/2 MB ROM, shared/per-game NVRAM, CLIO timers/FIQ/FIFO/DMA,
+- **Core:** ARM60 interpreter, configurable 2-15 MB DRAM / 1-2 MB VRAM (stock 3 MB total) with 2 MB ROM, shared/per-game NVRAM, CLIO timers/FIQ/FIFO/DMA,
   MADAM CEL/pixel/matrix engines, VDLP, SPORT, DSP, Quartz scheduler, XBUS, CD-ROM,
   ISO/BIN/CUE/CHD storage, input/PBUS, game database, deterministic save states.
 - **Save states:** state format version 2 compresses large section payloads with Brotli

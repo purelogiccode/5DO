@@ -391,6 +391,7 @@ public sealed class SaveStateTests
             CelTiming = CelTimingMode.OperaBusy,
             CdromTiming = CdromTimingMode.OperaCycleBased,
             CdSpeed = CdSpeed.X8,
+            MemoryConfiguration = MemoryConfiguration.Dram8MbVram2Mb,
             RandomSeed = 0x1234_5678,
             FixMode = FixMode.BitTiming5,
             HighResolution = true,

@@ -548,7 +548,7 @@ These notes record decisions made while implementing the core/memory/scheduler m
 
 ### 12.1 Memory allocation and lanes
 
-- `FiveDoMemory` backs RAM/VRAM with a `uint[]` sized to `3 MB + 16 MB` (19 MB total). Only the first 3 MB are CPU-visible; the extra 1 MB planes are reserved for the future `RESSCALE` mirrors (M11). `IRam.Size` reports the full backing size; `FiveDoMemory.VisibleSize` reports the 3 MB window.
+- `FiveDoMemory` backs RAM/VRAM with a `uint[]`. (Superseded by 12.32: the backing is now the maximum 22 MB and the CPU-visible window comes from the active `MemoryLayout`.) `IRam.Size` reports the full backing size; `FiveDoMemory.VisibleSize` reports the stock 3 MB window.
 - Raw RAM/ROM helpers use the reference's little-endian word representation. `IRam.Read8(offset)` returns lane `offset & 3`; unaligned `Read16`/`Read32` compose lanes across words.
 - The CPU bus applies the reference XOR conventions: `Read8/Write8` use `addr ^ 3`; `Read16/Write16` use `addr ^ 2` for RAM/ROM; `Read32/Write32` align to four bytes. FreeDO has no halfword bus access, but the contract is defined consistently for future devices and tests.
 - Unmapped byte/halfword reads return the low byte/halfword of `0xBADACCE5`, matching the value callers see after the reference's usual `& 0xFF`/`& 0xFFFF` masking.
@@ -609,7 +609,7 @@ M1 implements the section primitive used by all later chips:
 - The pixel processor and projector were differential-tested against a standalone build of FreeDO's `PPROC`/`PPROJ_OUTPUT` (2.29M PPROC vectors plus a deterministic grid hash). The test constants are generated from the reference C++ with signed-char semantics.
 - `CelGeometry` ports `TestInitVisual`, `Init_Line_Map`, `Init_Scale_Map`, `Init_Arbitrary_Map`, `QuardCCWTest`, and `TexelCCWTest`. It keeps the reference's 16.16 arithmetic, arithmetic shifts, half-pixel origin adjustment, and the retained `TEXTURE_WI_LIM` quirk. The `CCB_ACW`/`CCB_ACCW` flags are exposed as `CcbControl.Clockwise`/`CounterClockwise`. A 300k-case differential run against the reference matched every field.
 - `XY2OFF` is intentionally left as a small helper in the rasterizer (`((y >> 1) * modulo) + ((y & 1) << 1) + x`) rather than a public API; the address math is shared by the CEL and SPORT paths.
-- High-resolution rendering stays off in v1 (`RESSCALE = 0`). The 16 MB VRAM mirror, VDLP line duplication, SPORT copies, CEL stepping, and frame extraction needed for `RESSCALE = 1` are tracked as M11.2; the current code paths use the reference's low-resolution layout.
+- High-resolution rendering was initially left off (`RESSCALE = 0`); the opt-in line-doubled mode now uses four `VramSize` planes (see 12.32). True vertical 640x480 remains VID-01 research.
 - `CelMemory` ports the CEL memory-access cycle costs (`mread` +1, `mwrite` +2, `mreadh` +1, `mwriteh` +2, `readPLUTDATA` +4) and the `GetCELCycles` take-and-clear behavior. The rasterizers route all CCB and pixel access through this class, so the cycle total reported by `Madam.HandleCel` matches the reference.
 - `CelEngine` ports `_madam_HandleCEL`: CCB walking, last-CCB handling, applying the parsed position/size/perspective/pixel-control fields, PLUT loading, packed/literal/LR dispatch, and the `SPRON` status bit. `CcbParser` accepts an optional `CelMemory` so header reads are charged to the CEL cycle accumulator; `CcbHeader` is a struct to keep the steady-state path allocation-free. The parsed fields live on the engine instead of file-scope globals.
 - `CelRasterizer` ports `DrawPackedCel_New`, `DrawLiteralCel_New`, `DrawLRCel_New`, and their three texel paths. The packed raster's run types (`literal`, `transparent`, `repeat`), width clipping, skipped rows, per-row data offsets, and `SPRWI` carry-over match the reference. The literal and LR paths preserve the `PRE1` width/offset fields, the LR `offset += 2` tile bias, and `SPRHI = (vcnt << 1) + 2`.
@@ -1146,3 +1146,30 @@ M1 implements the section primitive used by all later chips:
 - The 2026-11-04 CORE-08 A/B on the same 40-title, 300-frame sample reports 17/40
   matches for both `compatible` and `accuracy`, with identical per-title statuses. The
   Accuracy profile remains opt-in pending the 594-title run; see `TestCorpus.md` 1.1ak1.
+
+### 12.32 DRAM/VRAM capacity configurations (2026-11-04)
+
+- `MemoryConfiguration` mirrors Opera's `opera_mem_cfg_t` nibble encoding and exposes
+  only the eight supported layouts: 21, 22, 41, 42, 81, 82, E2, and F1. `MemoryLayout`
+  derives the DRAM size, VRAM size, VRAM base (`DramSize`), VRAM mask, and the
+  high-resolution backing size.
+- VRAM sits directly above DRAM, as in Portfolio OS `FindRamSize` and Opera
+  `_setup_dram_vram`. Address decoding uses `Layout.RamSize` instead of the historical
+  fixed 3 MB boundary. VDLP, SPORT, CEL pointer validation, and the CEL high-resolution
+  plane stride all read the live layout.
+- MADAM register 0x004 (RED SYSBITS) is capacity-derived and read-only. The values match
+  `opera_mem_madam_red_sysbits(MADAM_SYSBITS_RED)`: 21→0x29, 22→0x2A, 41→0x31,
+  42→0x32, 81→0x71, 82→0x72, E2→0x62, F1→0x61. The BIOS/Portfolio `FindMemSize`
+  routine reads this register, so no BIOS patch is required for a homebrew program to
+  discover expanded memory.
+- The RAM backing is always the maximum 22 MB (14 MB DRAM plus four 2 MB VRAM planes).
+  The memory state section is version 3 and records the layout plus the allocation size.
+  Version-1/2 sections carry the historical 19 MB stock backing and load with the stock
+  layout. The Options section version 8 records the capacity; loading a state with a
+  different layout switches the machine after the memory payload is restored.
+- The ROM overlay clear limit stays at `DramSize`, matching Opera's
+  `g_ROM_OVERLAY_CLEAR_LIMIT`. For the stock layout this is still 2 MB, so existing
+  golden hashes are unchanged.
+- Retail titles are not expected to boot with expanded memory (Opera documents the
+  option as homebrew-only); the `MemoryConfigurationTests.HomebrewProbe_*` test ROM
+  verifies that a guest sees and uses 4 MB DRAM plus 2 MB VRAM.

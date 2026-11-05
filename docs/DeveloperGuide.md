@@ -167,7 +167,7 @@ Wiring rules:
 - **XBUS:** device 0 is the CD-ROM; up to 16 slots.
 - **DSP:** CLIO owns the register windows; DSP raises audio FIQ through CLIO.
 - **Frame:** VDLP writes `VdlFrame`; `FiveDoMachine` calls `IFrameSink.OnFrame` at V1.
-- **Input:** `FiveDoMachine` asks `IPbusSource` for the PBUS packet at V1 (16-byte legacy joypad layout or the Opera device chain, up to the 20-byte MADAM DMA window).
+- **Input:** `FiveDoMachine` asks `IPbusSource` for the PBUS packet at V1 (16-byte legacy joypad layout or the Opera device chain, up to the 256-byte MADAM PBUS buffer).
 
 ---
 
@@ -320,7 +320,7 @@ lines from the current VDLP state for the optional multitask path.
 ### Input
 
 - `ControllerButton` flags map to the two PBUS bytes.
-- PBUS order is 1, 3, 2, 5, 4, 6; active high byte has bit 7 set.
+- Legacy PBUS order is 1, 3, 2, 5, 4, 6; active high byte has bit 7 set. Ports 7-8 and mixed peripherals use the Opera daisy chain.
 - `InputScript` frames are absolute; `--script-base state` offsets.
 - `InputRecorder` coalesces unchanged player-1 states into the same script format;
   `InputManager.Recorder` is called on the emulation thread and `FrameProvider`
@@ -412,7 +412,7 @@ last millisecond; a >100 ms stall resyncs rather than chasing the past.
 | State | Owner | In `.tdos`? |
 |---|---|---|
 | CPU registers/CPSR/banked registers/FIQ/ROM select/data abort | `Arm60` | yes |
-| Full RAM backing (3 MB visible + 16 x 1 MB mirrors) | `FiveDoMemory` | yes |
+| Full RAM backing (largest layout: 14 MB DRAM + four 2 MB VRAM planes) | `FiveDoMemory` | yes |
 | ROM banks | `FiveDoMemory` | yes |
 | NVRAM | `FiveDoMemory` | yes |
 | MADAM registers/PLUT/PBUS/CEL FSM/matrix temps | `Madam` | yes |
@@ -612,7 +612,7 @@ These are real, current limitations. Do not "fix" them casually without tests.
 1. **Word-swapped memory representation.** RAM/ROM words match a little-endian C++
    build; byte/halfword accesses apply lane XORs. A clean big-endian refactor would
    touch hundreds of places and must be guarded by the full suite/state compatibility.
-2. **Large save states.** The Memory section writes the entire 19 MB RAM backing,
+2. **Large save states.** The Memory section writes the entire 22 MB RAM backing,
    including high-res mirrors; the Machine section writes all 960 VDL lines. Format
    version 2 compresses large sections with Brotli (typically 0.6-2.0 MB), but the
    in-memory state and the uncompressed payloads remain ~25 MB. Version-1 states are

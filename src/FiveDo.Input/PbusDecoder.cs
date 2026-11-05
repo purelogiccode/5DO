@@ -29,7 +29,7 @@ public static class PbusDecoder
     /// <returns>Six controller states; slots outside the packet are empty.</returns>
     public static ControllerState[] Decode(ReadOnlySpan<byte> packet)
     {
-        var states = new ControllerState[PbusEncoder.MaxControllers];
+        var states = new ControllerState[PbusEncoder.MaxPorts];
         Decode(packet, states);
         return states;
     }
@@ -40,16 +40,16 @@ public static class PbusDecoder
     /// <exception cref="ArgumentException">Thrown when the destination is too small.</exception>
     public static void Decode(ReadOnlySpan<byte> packet, Span<ControllerState> destination)
     {
-        if (destination.Length < PbusEncoder.MaxControllers)
+        if (destination.Length < PbusEncoder.MaxPorts)
         {
             throw new ArgumentException(
-                $"The decoder needs {PbusEncoder.MaxControllers} controller slots.",
+                $"The decoder needs {PbusEncoder.MaxPorts} controller slots.",
                 nameof(destination));
         }
 
         if (packet.Length >= 2 && packet[0] == 0x00 && packet[1] == 0x48)
         {
-            for (var slot = 0; slot < PbusEncoder.MaxControllers; slot++)
+            for (var slot = 0; slot < PbusEncoder.MaxPorts; slot++)
             {
                 destination[slot] = DecodeController(packet, slot);
             }
@@ -62,10 +62,10 @@ public static class PbusDecoder
 
     private static void DecodeChain(ReadOnlySpan<byte> packet, Span<ControllerState> destination)
     {
-        destination[..PbusEncoder.MaxControllers].Clear();
+        destination[..PbusEncoder.MaxPorts].Clear();
         var slot = 0;
         var offset = 0;
-        while (offset < packet.Length && slot < PbusEncoder.MaxControllers)
+        while (offset < packet.Length && slot < PbusEncoder.MaxPorts)
         {
             byte id = packet[offset];
             if (id == 0xFF)
@@ -123,16 +123,22 @@ public static class PbusDecoder
 
     /// <summary>Decodes one controller slot.</summary>
     /// <param name="packet">Packet bytes.</param>
-    /// <param name="slot">Zero-based controller slot, 0-5.</param>
+    /// <param name="slot">Zero-based controller slot, 0-7.</param>
     /// <returns>The controller state, or an empty state when the slot is absent.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when the slot is outside 0-5.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the slot is outside 0-7.</exception>
     public static ControllerState DecodeController(ReadOnlySpan<byte> packet, int slot)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(slot);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, PbusEncoder.MaxControllers);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, PbusEncoder.MaxPorts);
         if (packet.Length < 2 || packet[0] != 0x00 || packet[1] != 0x48)
         {
             return DecodeChainController(packet, slot);
+        }
+
+        if (slot >= PbusEncoder.MaxControllers)
+        {
+            // The legacy 16-byte packet has no slots 7-8.
+            return ControllerState.Empty;
         }
 
         var offset = OffsetForSlot(slot);
@@ -232,7 +238,7 @@ public static class PbusDecoder
     public static bool IsConnected(ReadOnlySpan<byte> packet, int slot)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(slot);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, PbusEncoder.MaxControllers);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, PbusEncoder.MaxPorts);
         var offset = OffsetForSlot(slot);
         return packet.Length >= offset + 2 && (packet[offset + 1] & 0x80) != 0;
     }

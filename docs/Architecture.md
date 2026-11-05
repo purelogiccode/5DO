@@ -138,7 +138,7 @@ machine = new FiveDoMachine(cpu, memory, madam, clio, dsp, sport, vdlp, xbus, cd
 - **XBUS devices:** `Xbus` owns up to 16 `IXbusDevice` slots; device 0 is the CD-ROM.
 - **DSP interface:** `Clio` owns the DSP register windows and calls `IDsp` methods; `Dsp` raises audio FIQ through `IInterruptSink`.
 - **Frame sink:** `Vdlp` writes into a `VdlFrame`; `FiveDoMachine` calls `IFrameSink.OnFrame` at the VDL swap point.
-- **Input:** `FiveDoMachine` asks `IPbusSource` for the PBUS packet once per frame at the V1 line, exactly as FreeDOCore does. The legacy packet is 16 bytes; the Opera device chain can use up to the 20-byte MADAM DMA window.
+- **Input:** `FiveDoMachine` asks `IPbusSource` for the PBUS packet once per frame at the V1 line, exactly as FreeDOCore does. The legacy packet is 16 bytes; the Opera device chain can use the 256-byte MADAM PBUS buffer.
 
 ---
 
@@ -439,7 +439,7 @@ Keyboard / gamepad
         ▼
 FiveDo.Input.InputManager (host)
   - maps physical inputs to `ControllerState`
-  - supports 1-6 controllers
+  - supports 1-8 controllers (six in the legacy packet, eight in the Opera chain)
         │
         ▼
 PbusEncoder.Encode(controllers) -> 16 bytes
@@ -473,15 +473,14 @@ A joypad is `[A][Left][Right][Up][Down][ID2][ID1][ID0]` followed by
 `[Tail1][Tail0][L][R][X][P][C][B]`; the flightstick, mouse, lightgun, arcade
 lightgun, and Orbatak trackball/buttons use their self-identifying records. Records
 are written in port order and padded with `0xFF` to a four-byte boundary. The legacy
-4DO layout remains the default while every port is a joypad; selecting any peripheral
-switches the packet to the chain format automatically. `--pbus-format opera` forces
-the chain layout for differential testing.
+4DO layout remains the default while ports 1-6 are all joypads; selecting any peripheral
+or activating ports 7-8 switches the packet to the chain format automatically.
+`--pbus-format opera` forces the chain layout for differential testing.
 
-The existing MADAM PBUS DMA path carries a 20-byte queue (five words), matching
-FreeDO. A chain longer than 20 bytes is therefore truncated by the core; keep mixed
-peripheral chains within that window (for example, one flightstick plus four joypads)
-until the DMA length is widened. The queue is padded with `0xFF`, so truncation still
-terminates cleanly.
+The MADAM PBUS path now carries Opera's 256-byte queue. The old 20-byte FreeDO window
+truncated long mixed chains; eight joypads (16 bytes plus the terminator) and mixed
+peripheral chains now fit. The queue is padded with `0xFF`, and the MADAM state section
+v4 records the expanded buffer.
 
 ---
 
@@ -526,7 +525,7 @@ See [`Configuration.md`](Configuration.md) and [`SaveStates.md`](SaveStates.md).
 | State | Owner | Included in save state? |
 |---|---|---|
 | CPU registers, CPSR, banked registers, FIQ pending, ROM select, data abort | `Arm60` | yes |
-| Full RAM backing (3 MB visible + 16 x 1 MB high-res mirrors) | `FiveDoMemory` | yes |
+| Full RAM backing (largest layout: 14 MB DRAM + four 2 MB VRAM planes) | `FiveDoMemory` | yes |
 | ROM banks | `FiveDoMemory` | yes (for exact restore) |
 | NVRAM | `FiveDoMemory` | yes |
 | MADAM registers, CEL FSM, PLUT, PBUS queue, matrix results | `Madam` | yes |

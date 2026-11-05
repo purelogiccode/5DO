@@ -162,10 +162,10 @@ The 3DO pad has: **A, B, C, P, X, L, R**, plus D-pad directions. P is the pause 
 
 | Item | Support |
 |---|---|
-| 1-6 controllers | v1 |
+| 1-8 controllers | v1 (six in the legacy packet; eight in the Opera chain) |
 | Keyboard mapping | v1 |
 | Gamepad mapping | v1 target; backend selected in M7/M9 |
-| PBUS packet | Legacy 16-byte 4DO layout (device order 1,3,2,5,4,6) for all-joypad configurations; Opera daisy-chain records when a peripheral is selected |
+| PBUS packet | Legacy 16-byte 4DO layout (device order 1,3,2,5,4,6) for all-joypad configurations on ports 1-6; Opera daisy-chain records when a peripheral is selected or ports 7-8 are active |
 | Input devices | Joypad, flightstick, mouse, lightgun, arcade lightgun, Orbatak trackball, and none |
 | Console hotkeys | Save/load state, slot next/previous, fullscreen, screenshot, pause, frame advance, reset |
 
@@ -230,8 +230,8 @@ The game database is ported with attribution. Unknown game IDs get the first 8 h
 pixels address the 640-wide X coordinate and the 240-line Y coordinate; the even/odd
 X column is stored in plane 0/1 (and mirrored to planes 2/3 for the second interlace
 field). The VDLP interleaves planes 0/1 and 2/3 into two 640-wide scanlines and the
-frame source becomes 640x480. The extra planes live in the reserved RAM mirrors and
-are not CPU-visible. SPORT fill/copy operations mirror the source page into the extra
+frame source becomes 640x480. The extra planes follow the active VRAM capacity
+(`4 * VramSize`) and are not CPU-visible. SPORT fill/copy operations mirror the source page into the extra
 planes. Save states, frame hashes, screenshots, the CPU assembler, and the OpenGL
 uploader all carry the larger frame.
 
@@ -274,10 +274,10 @@ does not need a separate high-resolution input path.
 ## 8. Save states
 
 - Native C# format, versioned, explicit little-endian, CRC-protected.
-- Includes CPU, the full 19 MB RAM backing (3 MB visible + 16 high-res mirrors), ROM,
+- Includes CPU, the full 22 MB RAM backing (largest DRAM/VRAM layout plus four VRAM planes), ROM,
   NVRAM, MADAM, CLIO, DSP, SPORT, VDLP, XBUS, CD, Quartz, compatibility flags, and the
   parsed VDL frame. Format version 2 compresses large sections with Brotli; a typical
-  state is 0.6-2.0 MB on disk (the uncompressed payload is ~25 MB). Version-1 states
+  state is 0.6-2.0 MB on disk (the uncompressed payload is ~28 MB). Version-1 states
   still load.
 - Does not include disc contents or input state.
 - Includes the parsed VDL frame lines, so a zero-frame load is pixel-identical to the
@@ -304,8 +304,8 @@ does not need a separate high-resolution input path.
   [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 - No GPU CEL compositing in v1; CEL rendering is software, matching FreeDO. The OpenGL renderer accelerates presentation, palette expansion, scaling, and filters.
 - Mouse, light gun, arcade light gun, flightstick, and Orbatak trackball devices are
-  implemented on the PBUS ports; per-device calibration and scripted gameplay
-  validation remain.
+  implemented on the eight PBUS ports with an active-device cap of 0-8 and a 256-byte
+  chain buffer; per-device calibration and scripted gameplay validation remain.
 - No 3DO modem/network emulation.
 - No cycle-exact ARM bus timing yet. The interpreter preserves FreeDOCore's `Ncycle = 4`; Opera uses `Ncycle = 2` with datasheet references. The difference is under evaluation and must not be changed by default until a differential test proves the impact.
 - No guarantee of 4DO save-state compatibility.

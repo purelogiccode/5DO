@@ -2125,3 +2125,44 @@ compatibility pass.
   observed behavior in `docs/Compatibility.md`.
 - Real-content tests stay opt-in. CI must continue to pass with synthetic ROMs and
   discs when `FIVEDO_BIOS`/`FIVEDO_DISC` are unset.
+
+#### 1.1al SYS-07 memory capacity configurations (2026-11-04)
+
+`MemoryConfiguration` and `MemoryLayout` cover the eight Opera layouts (21, 22, 41, 42,
+81, 82, E2, F1). `MemoryConfigurationTests` (34 cases) covers the derived geometry, the
+MADAM RED SYSBITS values, all eight DRAM/VRAM windows, byte/halfword/word decoding at the
+new boundaries, the stock 3 MB boundary, `TryParse`, CLI reporting, state round-trip, and
+a legacy version-2 memory section.
+
+- **Homebrew probe:** a synthetic ARM ROM writes `0x11`, `0x22`, `0x33`, and `0x44` to
+  the top of DRAM (`0x003F0000`), the VRAM base (`0x00410000`), and the top of the second
+  VRAM bank (`0x005F0000`), reads them back, and stores them at `0x1000`. It also records
+  MADAM RED SYSBITS at `0x2004`. With `--memory 42` the results are the four values,
+  marker `0xA5` at `0x2000`, and SYSBITS `0x32`.
+- **State:** a 4 MB DRAM / 2 MB VRAM machine stores `0xDEADBEEF` at `0x00500000`; the
+  state reloads that value and the layout into a stock machine, with the
+  `State memory capacity ... switched to ...` warning.
+- **Retail compatibility:** Lemmings (USA) boots unchanged with the stock layout
+  (20,000-frame hash `0xE84356D0`). The 2 MB DRAM / 2 MB VRAM layout still runs and keeps
+  the DSP active. Layouts with more than 2 MB of DRAM (4/1, 4/2, 8/1, 8/2) stop on the
+  boot screen, which matches Opera's documentation that expanded memory is a homebrew
+  option and can break retail software. The stock layout remains the default and its
+  golden hashes are unchanged.
+
+#### 1.1am SYS-15/SYS-16 eight-port PBUS (2026-11-04)
+
+- `PbusEncoder.MaxPorts` is 8; `MaxControllers` remains 6 for the legacy 4DO packet.
+  `InputDeviceSet`, `PbusSource`, `InputManager`, the chain encoder/decoder, settings,
+  and the CLI accept ports 1-8. Ports 7-8, or any peripheral, select the Opera chain.
+- `--active-devices 0-8` and Settings > Emulation > **Active input devices** cap the
+  polled ports. Automatic (the default) keeps the historical one-joypad packet and grows
+  to the highest configured peripheral port; `0` reports an empty chain.
+- `Madam` now uses Opera's 256-byte PBUS buffer. The state section is version 4; v1-v3
+  states read the historical 20-byte queue and fill the tail with `0xFF`.
+- Tests: `EightPlayerPacket_ReachesTheMadamPbusQueue` sends eight joypads through
+  `FiveDoMachine` and checks the eighth record at queue offset 14; `EightJoypads_UseTheOperaDaisyChain`
+  checks the 20-byte chain packet; `ApplyInputDevices_ActiveCountControlsPolledPorts`
+  covers 0, 3, and 8; `SaveState_RoundTripsTheExpandedPbusQueue` covers the 256-byte
+  queue; `KeyPressed_PreservesAnEightDeviceChain` checks the tail fill.
+- Hardware/test-ROM six-player and multi-tap verification remains; this is model-level
+  packet and machine-path evidence, not a hardware capture.

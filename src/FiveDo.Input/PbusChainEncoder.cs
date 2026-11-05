@@ -53,7 +53,7 @@ public static class PbusChainEncoder
         }
 
         var length = 0;
-        var count = Math.Min(controllers.Length, PbusEncoder.MaxControllers);
+        var count = Math.Min(controllers.Length, PbusEncoder.MaxPorts);
         for (var i = 0; i < count; i++)
         {
             WriteJoypad(controllers[i], destination, ref length);
@@ -108,7 +108,7 @@ public static class PbusChainEncoder
         OrbatakButtonsState trackballButtons = default)
     {
         var set = new InputDeviceSet();
-        for (var i = 0; i < devices.Length && i < PbusEncoder.MaxControllers; i++)
+        for (var i = 0; i < devices.Length && i < PbusEncoder.MaxPorts; i++)
         {
             set.SetDevice(i, devices[i]);
             set.SetJoypad(i, joypad);

@@ -22,11 +22,15 @@ public sealed class PbusDecoderTests
         PbusEncoder.Encode(states, packet);
         ControllerState[] decoded = PbusDecoder.Decode(packet);
 
-        for (var i = 0; i < decoded.Length; i++)
+        for (var i = 0; i < PbusEncoder.MaxControllers; i++)
         {
             Assert.Equal(all, decoded[i].Buttons);
             Assert.True(PbusDecoder.IsConnected(packet, i));
         }
+
+        // The legacy packet carries six controllers; ports 7-8 are chain-only.
+        Assert.Equal(ControllerButton.None, decoded[6].Buttons);
+        Assert.Equal(ControllerButton.None, decoded[7].Buttons);
     }
 
     [Fact]
@@ -102,8 +106,8 @@ public sealed class PbusDecoderTests
         var packet = new byte[PbusEncoder.PacketSize];
 
         Assert.Throws<ArgumentOutOfRangeException>(() => PbusDecoder.DecodeController(packet, -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => PbusDecoder.DecodeController(packet, 6));
-        Assert.Throws<ArgumentOutOfRangeException>(() => PbusDecoder.IsConnected(packet, 6));
+        Assert.Throws<ArgumentOutOfRangeException>(() => PbusDecoder.DecodeController(packet, 8));
+        Assert.Throws<ArgumentOutOfRangeException>(() => PbusDecoder.IsConnected(packet, 8));
     }
 
     [Fact]

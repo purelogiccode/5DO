@@ -16,7 +16,8 @@ namespace FiveDo.Madam;
 /// </para>
 /// <para>
 /// <c>RESSCALE</c> is the runtime high-resolution mode flag (0 or 1). When it is set,
-/// the CEL engine addresses the four 1 MB VRAM planes that make up a 640x480 frame.
+/// the CEL engine addresses four VRAM planes (each <c>VramSize</c> bytes) that make up a
+/// 640x480 frame.
 /// </para>
 /// </remarks>
 internal sealed class CelRasterizer
@@ -1534,7 +1535,7 @@ internal sealed class CelRasterizer
         {
             // Field 0 uses planes 0/1; the odd X column is in plane 1.
             var address = unchecked((source + (uint)offset) ^ 2);
-            return _ram.Read16(address + (uint)((x & 1) * EmulatorConstants.VramSize));
+            return _ram.Read16(address + (uint)((x & 1) * _ram.Layout.VramSize));
         }
 
         return _ram.Read16(unchecked(source + (uint)offset) ^ 2);
@@ -1559,8 +1560,8 @@ internal sealed class CelRasterizer
             // line-doubles. Write both interlace fields so both output lines match.
             var plane = x & 1;
             var address = unchecked((target + (uint)offset) ^ 2);
-            _ram.Write16(address + (uint)(plane * EmulatorConstants.VramSize), value);
-            _ram.Write16(address + (uint)((plane + 2) * EmulatorConstants.VramSize), value);
+            _ram.Write16(address + (uint)(plane * _ram.Layout.VramSize), value);
+            _ram.Write16(address + (uint)((plane + 2) * _ram.Layout.VramSize), value);
             return;
         }
 

@@ -409,6 +409,41 @@ public sealed class MadamTests
     }
 
     [Fact]
+    public void KeyPressed_PreservesAnEightDeviceChain()
+    {
+        var madam = new MadamChip();
+        var packet = new byte[64];
+        for (var i = 0; i < packet.Length; i++)
+        {
+            packet[i] = (byte)i;
+        }
+
+        madam.KeyPressed(packet);
+
+        Assert.Equal(256, madam.PbusQueue.Length);
+        Assert.Equal(63, madam.PbusQueue[63]);
+        Assert.Equal(0xFF, madam.PbusQueue[64]);
+        Assert.Equal(0xFF, madam.PbusQueue[255]);
+    }
+
+    [Fact]
+    public void SaveState_RoundTripsTheExpandedPbusQueue()
+    {
+        var madam = new MadamChip();
+        var packet = new byte[256];
+        packet[255] = 0x5A;
+        madam.KeyPressed(packet);
+
+        var writer = new StateWriter();
+        writer.WriteSection(madam);
+        var reader = new StateReader(writer.ToArray());
+        var copy = new MadamChip();
+        copy.Load(reader.ReadSection());
+
+        Assert.Equal(0x5A, copy.PbusQueue[255]);
+    }
+
+    [Fact]
     public void LoadVersionOneState_DerivesThePendingFlagFromTheFsm()
     {
         (FiveDoMemory memory, MadamChip madam) = CreatePackedCelScene();
@@ -514,12 +549,45 @@ public sealed class MadamTests
 
         public void Save(IStateWriter writer)
         {
-            _madam.Save(writer);
+            // Version-1 MADAM sections stored the historical 20-byte PBUS queue. Wrap the
+            // current writer so the payload keeps the old queue length while the versions
+            // of the other fields stay current.
+            var payload = new StateWriter();
+            _madam.Save(new LegacyQueueWriter(payload));
+            writer.WriteBytes(payload.ToArray());
         }
 
         public void Load(IStateReader reader)
         {
             throw new NotSupportedException();
         }
+    }
+
+    private sealed class LegacyQueueWriter(IStateWriter inner) : IStateWriter
+    {
+        public int Length => inner.Length;
+
+        public void WriteByte(byte value) => inner.WriteByte(value);
+
+        public void WriteUInt16(ushort value) => inner.WriteUInt16(value);
+
+        public void WriteUInt32(uint value) => inner.WriteUInt32(value);
+
+        public void WriteUInt64(ulong value) => inner.WriteUInt64(value);
+
+        public void WriteInt32(int value) => inner.WriteInt32(value);
+
+        public void WriteInt64(long value) => inner.WriteInt64(value);
+
+        public void WriteSingle(float value) => inner.WriteSingle(value);
+
+        public void WriteDouble(double value) => inner.WriteDouble(value);
+
+        public void WriteBoolean(bool value) => inner.WriteBoolean(value);
+
+        public void WriteBytes(ReadOnlySpan<byte> value) =>
+            inner.WriteBytes(value.Length >= 256 ? value[..20] : value);
+
+        public void WriteString(string value) => inner.WriteString(value);
     }
 }

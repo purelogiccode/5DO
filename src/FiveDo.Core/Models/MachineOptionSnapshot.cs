@@ -24,6 +24,9 @@ public sealed class MachineOptionSnapshot
     /// <summary>Gets the CD-ROM speed, or <see langword="null"/> when absent.</summary>
     public CdSpeed? CdSpeed { get; init; }
 
+    /// <summary>Gets the DRAM/VRAM capacity, or <see langword="null"/> when absent.</summary>
+    public MemoryConfiguration? MemoryConfiguration { get; init; }
+
     /// <summary>Gets the video region, or <see langword="null"/> when absent.</summary>
     public VideoRegion? Region { get; init; }
 

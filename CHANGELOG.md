@@ -7,6 +7,23 @@ release.
 
 ### Added
 
+- SYS-07 memory capacity options: all eight Opera DRAM/VRAM layouts (2/4/8/14/15 MB
+  DRAM and 1/2 MB VRAM) are selectable with `--memory`, Settings > Emulation > Memory,
+  per-game profiles, and save states. VRAM is decoded directly above DRAM, VDLP/SPORT/CEL
+  use the live layout, and MADAM RED SYSBITS reports the capacity to the BIOS. The stock
+  2 MB DRAM / 1 MB VRAM default and its frame hashes are unchanged; expanded memory is
+  documented as homebrew-only.
+- `bench --cpu-clock` and `bench --memory` measure the CPU clock matrix and memory
+  capacity. The 0.5x-4x matrix is recorded in `Performance.md` §8.1.
+- Settings > Emulation > **Hide the lightgun crosshair** hides the desktop reticle while
+  the emulated lightgun keeps receiving the pointer. It is a presentation-only option and
+  is stored in `settings.json`.
+- Input devices now support eight PBUS ports. Ports 7-8 use the Opera daisy-chain
+  packet; ports 1-6 keep the legacy 4DO packet when all are joypads. `--active-devices`
+  and Settings > Emulation > **Active input devices** cap the polled ports at 0-8
+  (automatic by default). The MADAM PBUS queue grew from 20 to 256 bytes so long chains
+  are not truncated; MADAM state section v4 records it and v1-v3 states still load.
+
 - The differential harness accepts `--arm-timing`, `--cel-timing`, and `--cd-timing`
   overrides for every 5DO capture, completing the timing A/B surface alongside
   `--clio-timers` and `--profile`. The selected overrides are recorded in the report

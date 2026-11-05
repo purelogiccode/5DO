@@ -202,6 +202,11 @@ public static class AppSettingsStore
                     profile.CdSpeed = CdSpeed.X2;
                 }
 
+                if (!Enum.IsDefined(profile.MemoryConfiguration))
+                {
+                    profile.MemoryConfiguration = MemoryConfiguration.Dram2MbVram1Mb;
+                }
+
                 if (!Enum.IsDefined(profile.CpuBackend))
                 {
                     profile.CpuBackend = CpuBackendKind.Interpreter;
@@ -245,7 +250,11 @@ public static class AppSettingsStore
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             settings.AudioDevice ??= string.Empty;
             settings.AudioDevice = settings.AudioDevice.Trim();
-            settings.PointerPort = Math.Clamp(settings.PointerPort, 0, 6);
+            settings.PointerPort = Math.Clamp(settings.PointerPort, 0, PbusEncoder.MaxPorts);
+            if (settings.ActiveInputDevices is { } activeDevices)
+            {
+                settings.ActiveInputDevices = Math.Clamp(activeDevices, 0, PbusEncoder.MaxPorts);
+            }
             settings.PointerScale = double.IsFinite(settings.PointerScale)
                 ? Math.Clamp(settings.PointerScale, 0.5, 2.0)
                 : 1.0;
@@ -309,6 +318,11 @@ public static class AppSettingsStore
             if (!Enum.IsDefined(settings.CdSpeed))
             {
                 settings.CdSpeed = CdSpeed.X2;
+            }
+
+            if (!Enum.IsDefined(settings.MemoryConfiguration))
+            {
+                settings.MemoryConfiguration = MemoryConfiguration.Dram2MbVram1Mb;
             }
 
             if (!Enum.IsDefined(settings.CpuBackend))

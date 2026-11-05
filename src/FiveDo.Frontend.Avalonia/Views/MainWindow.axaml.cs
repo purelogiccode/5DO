@@ -2442,6 +2442,7 @@ public partial class MainWindow : Window, IDisposable
             ["celTiming"] = tuning.CelTiming.ToString(),
             ["cdromTiming"] = tuning.CdromTiming.ToString(),
             ["cdSpeed"] = tuning.CdSpeed.ToString(),
+            ["memory"] = MemoryLayout.FormatCode(tuning.MemoryConfiguration),
             ["cpuClock"] = tuning.ArmClock.ToString(System.Globalization.CultureInfo.InvariantCulture),
             ["randomSeed"] = tuning.RandomSeed?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "default",
             ["fixMode"] = $"0x{(uint)tuning.FixMode:x8}",
@@ -3725,6 +3726,11 @@ public partial class MainWindow : Window, IDisposable
         }
 
         _settings.ApplyInputDevices(_input, _gameId);
+        if (_settings.HideLightgunCrosshair)
+        {
+            LightgunOverlay.IsVisible = false;
+        }
+
         if (!string.Equals(
                 previousInputDevices,
                 string.Join(",", _settings.InputDevices),
@@ -3778,6 +3784,7 @@ public partial class MainWindow : Window, IDisposable
                 || _settings.CelTiming != _machine.Tuning.CelTiming
                 || _settings.CdromTiming != _machine.Tuning.CdromTiming
                 || _settings.CdSpeed != _machine.Tuning.CdSpeed
+                || _settings.MemoryConfiguration != _machine.Tuning.MemoryConfiguration
                 || _settings.ResolveArmClock() != _machine.Tuning.ArmClock
                 || _settings.RandomSeed != _machine.Tuning.RandomSeed
                 || _settings.OperaDipir != _machine.Tuning.OperaDipir
@@ -5365,7 +5372,7 @@ public partial class MainWindow : Window, IDisposable
 
         _lastPointerPosition = position;
         var lightgunVisible = false;
-        for (var port = 0; port < PbusEncoder.MaxControllers; port++)
+        for (var port = 0; port < PbusEncoder.MaxPorts; port++)
         {
             if (!_settings.RoutesPointerTo(port + 1))
             {
@@ -5423,7 +5430,7 @@ public partial class MainWindow : Window, IDisposable
             }
         }
 
-        if (lightgunVisible)
+        if (lightgunVisible && !_settings.HideLightgunCrosshair)
         {
             LightgunOverlay.IsVisible = true;
             Canvas.SetLeft(LightgunDot, position.X - 3);

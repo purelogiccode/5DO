@@ -13,8 +13,9 @@ namespace FiveDo.Sport;
 /// </remarks>
 public sealed class Sport : ISportBus, IStateSection
 {
-    private const uint VramOffset = EmulatorConstants.VramBase;
-    private const int VramPlaneSize = EmulatorConstants.VramSize;
+    private uint VramOffset => (uint)_ram.Layout.VramBase;
+    private int VramPlaneSize => _ram.Layout.VramSize;
+    private uint VramWordsMask => (uint)((_ram.Layout.VramSize / sizeof(uint)) - 1);
 
     private readonly IRam _ram;
     private readonly CompatibilityState? _compatibility;
@@ -64,7 +65,7 @@ public sealed class Sport : ISportBus, IStateSection
     /// <returns>Always zero.</returns>
     public uint SetSource(uint offset)
     {
-        _source = unchecked(offset << 7);
+        _source = unchecked(offset << 7) & VramWordsMask;
         return 0;
     }
 
@@ -75,7 +76,7 @@ public sealed class Sport : ISportBus, IStateSection
     {
         if ((offset & ~0x1fffu) == 0x4000)
         {
-            var page = (offset & 0x7ffu) << 7;
+            var page = ((offset & 0x7ffu) << 7) & VramWordsMask;
             if (value == 0xffffffff)
             {
                 for (var i = 0u; i < 512; i++)
@@ -119,7 +120,7 @@ public sealed class Sport : ISportBus, IStateSection
 
         if ((offset & ~0x1fffu) == 0)
         {
-            _destination = (offset & 0x7ffu) << 7;
+            _destination = ((offset & 0x7ffu) << 7) & VramWordsMask;
             if (value == 0xffffffff)
             {
                 CopyPage(_destination, _source, 0);

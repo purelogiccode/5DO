@@ -30,7 +30,7 @@ public static class GameControlDefaults
 
     /// <summary>Resolves the automatic device list for a title.</summary>
     /// <param name="title">Game title, with or without a region suffix.</param>
-    /// <returns>Six device names, or <see langword="null"/> when the title needs no override.</returns>
+    /// <returns>Eight device names, or <see langword="null"/> when the title needs no override.</returns>
     public static IReadOnlyList<string>? TryGetInputDevices(string? title)
     {
         if (string.IsNullOrWhiteSpace(title))
@@ -46,7 +46,7 @@ public static class GameControlDefaults
                 continue;
             }
 
-            var devices = new string[6];
+            var devices = new string[PbusEncoder.MaxPorts];
             devices[0] = device.ToString();
             for (var i = 1; i < devices.Length; i++)
             {

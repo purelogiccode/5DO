@@ -51,6 +51,7 @@ public sealed class AppSettingsStoreTests
             CdAudioMuted = true,
             CheckForUpdates = false,
             LibraryCardSize = 256,
+            HideLightgunCrosshair = true,
         };
 
         AppSettingsStore.Save(settings, path);
@@ -65,6 +66,7 @@ public sealed class AppSettingsStoreTests
         Assert.True(loaded.CdAudioMuted);
         Assert.False(loaded.CheckForUpdates);
         Assert.Equal(256, loaded.LibraryCardSize);
+        Assert.True(loaded.HideLightgunCrosshair);
     }
 
     [Fact]
@@ -315,7 +317,7 @@ public sealed class AppSettingsStoreTests
         AppSettingsStore.Save(settings, path);
         AppSettings loaded = AppSettingsStore.Load(path);
 
-        Assert.Equal(6, loaded.PointerPort);
+        Assert.Equal(PbusEncoder.MaxPorts, loaded.PointerPort);
         Assert.Equal(2.0, loaded.PointerScale);
         Assert.Equal(160, loaded.PointerOffsetX);
         Assert.Equal(-120, loaded.PointerOffsetY);
@@ -393,7 +395,7 @@ public sealed class AppSettingsStoreTests
         Assert.Null(normalized.FixMode);
         Assert.Equal(CpuBackendKind.Interpreter, normalized.CpuBackend);
         Assert.Null(normalized.Filter);
-        Assert.Equal(6, normalized.InputDevices.Count);
+        Assert.Equal(PbusEncoder.MaxPorts, normalized.InputDevices.Count);
         Assert.Equal("Mouse", normalized.InputDevices[0]);
         Assert.Equal("Joypad", normalized.InputDevices[1]);
         Assert.Null(normalized.NvramStorageMode);

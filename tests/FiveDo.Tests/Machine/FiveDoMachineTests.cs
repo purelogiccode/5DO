@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using FiveDo.Core;
+using FiveDo.Input;
 using FiveDo.Machine;
 using FiveDo.Tests.TestUtilities;
 using FiveDo.Video;
@@ -25,6 +26,28 @@ public sealed class FiveDoMachineTests
         Assert.Equal(0xb0000u, machine.Vdlp.HeadVdl);
         Assert.Equal(320, machine.Frame.SourceWidth);
         Assert.Equal(240, machine.Frame.SourceHeight);
+    }
+
+    [Fact]
+    public void EightPlayerPacket_ReachesTheMadamPbusQueue()
+    {
+        var machine = new FiveDoMachine();
+        var pbus = new PbusSource();
+        pbus.SetControllerCount(PbusEncoder.MaxPorts);
+        for (var port = 0; port < PbusEncoder.MaxPorts; port++)
+        {
+            pbus[port] = port == 7
+                ? new ControllerState(ControllerButton.A)
+                : ControllerState.Empty;
+        }
+
+        machine.PbusSource = pbus;
+        machine.RunFrame();
+
+        // Eight two-byte joypad records; the eighth record starts at offset 14.
+        Assert.Equal(0x80, machine.Madam.PbusQueue[0]);
+        Assert.Equal(0x81, machine.Madam.PbusQueue[14]);
+        Assert.Equal(0x00, machine.Madam.PbusQueue[15]);
     }
 
     [Fact]
