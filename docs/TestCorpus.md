@@ -2392,6 +2392,18 @@ a legacy version-2 memory section.
   59.94 Hz reference field rate and 60 Hz 5DO field rate produce a systematic
   sample-count offset (43 samples at f=60, 212 at f=300), so the streams must be
   aligned or resampled before the hash is comparable.
+- **3,000-frame follow-up (`samples5-long.json`):** same five titles, 3,000
+  frames, checkpoints 60/300/1000/3000, no images. Lemmings matched the frame
+  hash at all four checkpoints despite PC drift. Wolfenstein and Alone had
+  transient frame-hash mismatches (Wolfenstein f=300; Alone f=1000) and recovered
+  by f=3000. **Road Rash and Space Ace stayed visibly divergent**: f=1000 and
+  f=3000 images show different animation frames/scenes, not a rendering error.
+  A ±60-frame offset probe on Road Rash found **no neighboring hash match**, so
+  the divergence is larger than one second of fields or the frame selection
+  differs. CD command counts stayed close but not exact (Road Rash 611/598 at
+  f=1000; 851/836 at f=3000). This is the first evidence that separates
+  "PC drift with matching video" from "visible divergence" and gives CORE-04 and
+  CORE-13 a concrete lead.
 - **Panel generator:** `panel --from benchmarks/diff/full.json --out
   benchmarks/diff/panel50.json --count 50` generated a 50-title panel from the
   594-disc manifest. It selects evenly spaced titles (first and last included),

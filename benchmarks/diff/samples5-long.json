@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "name": "5DO sample corpus long panel (5 titles, 3000 frames)",
+  "defaults": {
+    "bios": "bios/panafz1.bin",
+    "frames": 3000,
+    "checkpoints": [
+      60,
+      300,
+      1000,
+      3000
+    ],
+    "inputScript": null,
+    "options": {
+      "profile": "accuracy",
+      "armTiming": null,
+      "clioTimers": null,
+      "celTiming": null,
+      "cdTiming": null,
+      "cdSpeed": "unbounded",
+      "cpuClock": null,
+      "randomSeed": null,
+      "highResolution": null,
+      "fixMode": null,
+      "noGameFixes": true,
+      "stateHash": false,
+      "extraArgs": []
+    },
+    "cli": null,
+    "operaCore": "artifacts/diff/opera-build-current/OperaCore.dll",
+    "timeoutSeconds": 180,
+    "compare": {
+      "compareAudio": false,
+      "comparePc": true,
+      "compareCpsr": true,
+      "compareCd": true,
+      "compareSamples": true,
+      "sampleTolerance": 512,
+      "pcTolerance": 0,
+      "frameWindow": 2
+    },
+    "workDirectory": "artifacts/diff/work-samples5-long"
+  },
+  "roots": {
+    "samples": "D:/Samples/3DO"
+  },
+  "titles": [
+    {
+      "id": "alone-in-the-dark-usa",
+      "name": "Alone in the Dark (USA)",
+      "disc": "${samples}/Alone in the Dark (USA).chd"
+    },
+    {
+      "id": "lemmings-usa",
+      "name": "Lemmings (USA)",
+      "disc": "${samples}/Lemmings (USA).chd"
+    },
+    {
+      "id": "road-rash-usa",
+      "name": "Road Rash (USA)",
+      "disc": "${samples}/Road Rash (USA).chd"
+    },
+    {
+      "id": "space-ace-usa",
+      "name": "Space Ace (USA)",
+      "disc": "${samples}/Space Ace (USA).chd"
+    },
+    {
+      "id": "wolfenstein-3d-usa",
+      "name": "Wolfenstein 3D (USA)",
+      "disc": "${samples}/Wolfenstein 3D (USA).chd"
+    }
+  ]
+}

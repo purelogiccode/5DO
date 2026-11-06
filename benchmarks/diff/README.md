@@ -18,6 +18,9 @@ not product configuration.
 - `samples5.json` - the local `D:/Samples/3DO` five-title TEST-07 panel:
   300 frames, checkpoints 60/120/300, fixed seed 1488, PC/CPSR/CD comparison,
   and a 512-sample tolerance for the 59.94/60 Hz field-rate offset.
+- `samples5-long.json` - the same five local titles at 3,000 frames with
+  checkpoints 60/300/1000/3000. Use it to separate boot-time PC drift from
+  visible in-game divergence.
 - `panel50.json` - the generated 50-title TEST-07 accuracy panel: evenly spaced
   titles from `full.json`, 300 frames, checkpoints 60/120/300, PC/CPSR/CD
   comparison, sample tolerance 512. Run it on a machine with the full corpus.

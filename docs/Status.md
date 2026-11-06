@@ -23,7 +23,10 @@ frame 300, and its CPSR differs at frame 60 by the FIQ-disable bit. The cumulati
 audio hash is recorded but not gated because the 59.94/60 Hz field-rate offset
 leaves a systematic sample-count delta. The `panel` command generated
 `benchmarks/diff/panel50.json` (50 evenly spaced titles from the 594-disc
-manifest). The suite is **1,879 tests**. See
+manifest). A 3,000-frame follow-up separates PC drift from visible divergence:
+Lemmings matches the frame hash at every checkpoint, while Road Rash and Space
+Ace show different animation frames/scenes and no ±60-frame hash match. The suite
+is **1,879 tests**. See
 [`DifferentialHarness.md`](DifferentialHarness.md) 8 and
 [`TestCorpus.md`](TestCorpus.md) 1.1aw.
 

@@ -347,6 +347,15 @@ the reference core or the local discs.
   - Maximum absolute PC delta across the five titles: Alone in the Dark 21,020;
     Road Rash 7,644; Space Ace 6,084; Wolfenstein 3D 3,172; Lemmings 320 bytes.
   This is the first TEST-07 panel; see `TestCorpus.md` 1.1aw.
+- `benchmarks/diff/samples5-long.json` (2026-11-06): the same five titles at
+  3,000 frames with checkpoints 60/300/1000/3000. Lemmings matched the frame hash
+  at all four checkpoints despite PC drift; Wolfenstein and Alone recovered after
+  transient mismatches; **Road Rash and Space Ace stayed visibly divergent**
+  (f=1000/3000 images show different animation frames/scenes). A ±60-frame
+  offset probe on Road Rash found no neighboring hash match, so this is not a
+  small scheduling offset. CD command counts stayed close but not exact
+  (Road Rash 611/598 at f=1000). This is the first long-run evidence that
+  separates PC drift from visible divergence.
 - `benchmarks/diff/smoke.json`: Lemmings (USA), 300 frames, checkpoint 300.
   Result: **Match** (`frameHash 0x110e7dc5` on both engines; first pass
   2026-10-31).
