@@ -36,6 +36,22 @@
   TOC-based ID, and report `audioCd`/`trackCount`, so bonus audio discs appear in the
   library. In-emulator CD-DA playback still needs a data-track boot path.
 
+## Bug fixes
+
+The post-1.2.1 audit fixed eight concrete issues:
+
+- JIT register-shift PC-relative operands now read `instruction+12` for `Rn` and `Rm`
+  (`Rs` still reads `instruction+8`), matching the interpreter.
+- ROM-bank switches, BIOS reloads, low-memory overlay changes, and soft resets now
+  invalidate compiled blocks.
+- JIT FIQ entry telemetry includes the current block's cycles, so `--fiq-trace` and
+  FIQ latency are no longer short by one batch.
+- Prefetched track sectors keep their actual byte count, so a 2048-byte data sector
+  cannot return a 2352-byte length or stale tail bytes.
+- Legacy 16-byte PBUS packets report slots 7-8 as disconnected.
+- Pointer exit clears lightgun and mouse state for all eight PBUS ports.
+- The central machine-option validator enforces the documented 0.5x-4x ARM clock range.
+
 ## Requirements
 
 - The **.NET 10 Runtime** installed on the host. The bundles are framework-dependent and
