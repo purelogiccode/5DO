@@ -76,6 +76,8 @@ internal static class FiveDoCaptureRunner
             "--json",
             "--random-seed",
             seed.ToString(CultureInfo.InvariantCulture),
+            "--cd-commands",
+            Path.Combine(titleDirectory, "fivedo.cd.txt"),
             "--nvram",
             Path.Combine(titleDirectory, "nvram.ram"),
         };
@@ -204,7 +206,32 @@ internal static class FiveDoCaptureRunner
             Warnings = run.Warnings ?? [],
             LogPath = stderrPath,
             Seed = seed,
+            CdCommands = ReadCdCommands(Path.Combine(titleDirectory, "fivedo.cd.txt")),
         };
+    }
+
+    private static byte[] ReadCdCommands(string path)
+    {
+        if (!File.Exists(path))
+        {
+            return [];
+        }
+
+        var lines = File.ReadAllLines(path);
+        var commands = new byte[lines.Length];
+        for (var i = 0; i < lines.Length; i++)
+        {
+            if (!byte.TryParse(
+                    lines[i],
+                    NumberStyles.HexNumber,
+                    CultureInfo.InvariantCulture,
+                    out commands[i]))
+            {
+                return [];
+            }
+        }
+
+        return commands;
     }
 
     private static string? ImagePath(string imageDirectory, long frame)

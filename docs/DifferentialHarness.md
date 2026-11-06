@@ -20,6 +20,7 @@ shipped emulator.
 | ARM PC | `run --json` | Optional debug export | No; enable with `--compare-pc` |
 | ARM CPSR | `run --json` | Optional debug export | No; `--compare-pc` also compares CPSR when both sides expose it |
 | CD command count/hash | `CdromCommandTranscript` issue-time counters | Optional debug export | No; enable with `--compare-cd` |
+| CD command sequence | Full opcode list at the final checkpoint | Optional debug export | No; included with `--compare-cd` at the final checkpoint |
 | Save-state hash | Optional `--state-hash` | ARM-only optional debug hash | No |
 
 The frame hash is the same algorithm as the emulator's `run --json` `frameHash`.
@@ -212,7 +213,9 @@ Rules:
   `compare.pcTolerance` allows a small absolute PC delta in bytes.
 - `compare.compareCd` gates the CD command count and cumulative opcode hash.
   `--compare-cd` forces it on. The count is issue-time on both sides; a command in
-  flight at a checkpoint can still differ by 1-3 commands.
+  flight at a checkpoint can still differ by 1-3 commands. At the final checkpoint
+  it also compares the full opcode sequence and reports the first divergent
+  command index with a seven-opcode context window.
 - `compare.compareSamples` gates the DSP sample count; `compare.sampleTolerance`
   allows the systematic 59.94/60 Hz field-rate offset (43 samples at frame 60,
   212 at frame 300). `compare.compareAudio` gates the cumulative audio hash; keep
@@ -354,7 +357,12 @@ the reference core or the local discs.
   (f=1000/3000 images show different animation frames/scenes). A ±60-frame
   offset probe on Road Rash found no neighboring hash match, so this is not a
   small scheduling offset. CD command counts stayed close but not exact
-  (Road Rash 611/598 at f=1000). This is the first long-run evidence that
+  (Road Rash 611/598 at f=1000). The full sequence comparison localizes the first
+  command divergence: Lemmings command 105, Road Rash 559, and Wolfenstein 389
+  show 5DO issuing `0x10` (READ_DATA) where Opera issues `0x83` (READ_ID); Alone
+  diverges at command 433 with equal counts; Space Ace's first 348 commands match
+  and 5DO has one extra `0x10`. This is a READ_DATA completion/read-ahead
+  difference, not a random divergence. This is the first long-run evidence that
   separates PC drift from visible divergence.
 - `benchmarks/diff/smoke.json`: Lemmings (USA), 300 frames, checkpoint 300.
   Result: **Match** (`frameHash 0x110e7dc5` on both engines; first pass

@@ -258,6 +258,52 @@ public sealed class DiffComparerTests : IDisposable
     }
 
     [Fact]
+    public void Compare_CdCommandSequence_ReportsFirstDivergentCommand()
+    {
+        DiffManifest manifest = Manifest(new DiffCompareOptions
+        {
+            CompareSamples = false,
+            CompareCd = true,
+        });
+        DiffTitleResult result = DiffComparer.Compare(
+            manifest,
+            Title(),
+            CaptureWithCdCommands([0x83, 0x85], 2, 0x11111111),
+            CaptureWithCdCommands([0x83, 0x86], 2, 0x11111111),
+            100);
+
+        Assert.Equal("Diverged", result.Status);
+        Assert.NotNull(result.FirstDivergence);
+        Assert.Equal("cdCommands", result.FirstDivergence!.Field);
+        Assert.Contains("command 1", result.FirstDivergence.Diagnostic, StringComparison.Ordinal);
+        Assert.Contains("0x85", result.FirstDivergence.Diagnostic, StringComparison.Ordinal);
+        Assert.Contains("0x86", result.FirstDivergence.Diagnostic, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Compare_CdCommandSequence_ReportsPrefixDifference()
+    {
+        DiffManifest manifest = Manifest(new DiffCompareOptions
+        {
+            CompareSamples = false,
+            CompareCd = true,
+        });
+        DiffTitleResult result = DiffComparer.Compare(
+            manifest,
+            Title(),
+            CaptureWithCdCommands([0x83], 1, 0x11111111),
+            CaptureWithCdCommands([0x83, 0x85], 2, 0x11111111),
+            100);
+
+        DiffFieldResult field = result.Checkpoints[0].Fields
+            .Single(item => string.Equals(item.Field, "cdCommands", StringComparison.Ordinal));
+        Assert.False(field.Match);
+        Assert.Contains("prefixes match", field.Diagnostic, StringComparison.Ordinal);
+        Assert.Contains("5DO has 1", field.Diagnostic, StringComparison.Ordinal);
+        Assert.Contains("Opera has 2", field.Diagnostic, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void BuildReport_AggregatesStatuses()
     {
         DiffManifest manifest = Manifest();
@@ -369,6 +415,27 @@ public sealed class DiffComparerTests : IDisposable
                     Samples = 100,
                     Pc = pc,
                     Cpsr = cpsr,
+                },
+            ],
+        };
+    }
+
+    private static CaptureResult CaptureWithCdCommands(byte[] commands, int count, uint hash)
+    {
+        return new CaptureResult
+        {
+            Engine = "capture",
+            Ok = true,
+            CdCommands = commands,
+            Checkpoints =
+            [
+                new CaptureSample
+                {
+                    Frame = 100,
+                    FrameHash = 1,
+                    Samples = 100,
+                    CdCommandCount = count,
+                    CdCommandHash = hash,
                 },
             ],
         };

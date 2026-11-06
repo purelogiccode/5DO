@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 
 namespace FiveDo.DiffHarness;
 
@@ -207,6 +208,26 @@ internal static class DiffComparer
                 }
             }
 
+            if ((compare.CompareCd || compareCd)
+                && frame == framesToCompare[^1]
+                && fiveDo.CdCommands.Length > 0
+                && opera.CdCommands.Length > 0)
+            {
+                var sequence = CompareCdCommandSequence(fiveDo.CdCommands, opera.CdCommands);
+                if (AddField(
+                    fields,
+                    "cdCommands",
+                    sequence.FiveDo,
+                    sequence.Opera,
+                    sequence.Match,
+                    title, frame, ref allowedCount, ref divergedCount,
+                    missing: false,
+                    diagnostic: sequence.Diagnostic))
+                {
+                    nonOffsetDivergedCount++;
+                }
+            }
+
             checkpoints.Add(new DiffCheckpointResult
             {
                 Frame = frame,
@@ -292,6 +313,64 @@ internal static class DiffComparer
             Titles = titles,
             Summary = summary,
         };
+    }
+
+    private static (bool Match, string FiveDo, string Opera, string? Diagnostic)
+        CompareCdCommandSequence(byte[] fiveDo, byte[] opera)
+    {
+        var common = Math.Min(fiveDo.Length, opera.Length);
+        for (var i = 0; i < common; i++)
+        {
+            if (fiveDo[i] != opera[i])
+            {
+                return (
+                    false,
+                    $"{fiveDo.Length} opcodes; {DescribeCdCommands(fiveDo, i)}",
+                    $"{opera.Length} opcodes; {DescribeCdCommands(opera, i)}",
+                    $"first sequence divergence at command {i}: "
+                    + $"5DO 0x{fiveDo[i]:x2}, Opera 0x{opera[i]:x2}");
+            }
+        }
+
+        if (fiveDo.Length == opera.Length)
+        {
+            return (
+                true,
+                $"{fiveDo.Length} opcodes",
+                $"{opera.Length} opcodes",
+                null);
+        }
+
+        return (
+            false,
+            $"{fiveDo.Length} opcodes; {DescribeCdCommands(fiveDo, common)}",
+            $"{opera.Length} opcodes; {DescribeCdCommands(opera, common)}",
+            $"sequence prefixes match for {common} commands; "
+            + $"5DO has {fiveDo.Length}, Opera has {opera.Length}");
+    }
+
+    private static string DescribeCdCommands(byte[] commands, int index)
+    {
+        if (commands.Length == 0)
+        {
+            return "[]";
+        }
+
+        var start = Math.Max(0, index - 3);
+        var end = Math.Min(commands.Length, index + 4);
+        var builder = new StringBuilder();
+        builder.Append('[').Append(start).Append("..").Append(end - 1).Append("] ");
+        for (var i = start; i < end; i++)
+        {
+            if (i > start)
+            {
+                builder.Append(' ');
+            }
+
+            builder.Append(commands[i].ToString("x2", CultureInfo.InvariantCulture));
+        }
+
+        return builder.ToString();
     }
 
     private static DiffFirstDivergence? FindFirstDivergence(

@@ -25,8 +25,10 @@ leaves a systematic sample-count delta. The `panel` command generated
 `benchmarks/diff/panel50.json` (50 evenly spaced titles from the 594-disc
 manifest). A 3,000-frame follow-up separates PC drift from visible divergence:
 Lemmings matches the frame hash at every checkpoint, while Road Rash and Space
-Ace show different animation frames/scenes and no ±60-frame hash match. The suite
-is **1,879 tests**. See
+Ace show different animation frames/scenes and no ±60-frame hash match. The full
+CD command sequence localizes the first command divergence to READ_DATA (`0x10`)
+versus READ_ID (`0x83`) transitions, giving CORE-04 a concrete next target. The
+suite is **1,881 tests**. See
 [`DifferentialHarness.md`](DifferentialHarness.md) 8 and
 [`TestCorpus.md`](TestCorpus.md) 1.1aw.
 

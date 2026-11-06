@@ -115,6 +115,7 @@ internal static class OperaCoreCaptureRunner
             Warnings = result.Warnings,
             LogPath = result.LogPath,
             Seed = seed,
+            CdCommands = result.CdCommands,
         };
     }
 
@@ -254,6 +255,7 @@ internal sealed class OperaCoreHost : IDisposable
     private readonly DebugUInt32? _debugCdPoll;
     private readonly DebugUInt32? _debugCdCommandCount;
     private readonly DebugUInt32? _debugCdCommandHash;
+    private readonly DebugUInt32Index? _debugCdCommandAt;
     private readonly SetSeed? _debugSetSeed;
 
     private readonly VideoCallback _videoCallback;
@@ -319,6 +321,7 @@ internal sealed class OperaCoreHost : IDisposable
         _debugCdPoll = TryLoad<DebugUInt32>("sg_debug_cd_poll");
         _debugCdCommandCount = TryLoad<DebugUInt32>("sg_debug_cd_command_count");
         _debugCdCommandHash = TryLoad<DebugUInt32>("sg_debug_cd_command_hash");
+        _debugCdCommandAt = TryLoad<DebugUInt32Index>("sg_debug_cd_command_at");
         _debugSetSeed = TryLoad<SetSeed>("sg_debug_set_seed");
 
         _videoCallback = OnVideo;
@@ -395,6 +398,7 @@ internal sealed class OperaCoreHost : IDisposable
             }
 
             FinalizePending();
+            var cdCommands = ReadCdCommands();
 
             clock.Stop();
             var samples = _checkpoints
@@ -427,6 +431,7 @@ internal sealed class OperaCoreHost : IDisposable
                 Checkpoints = samples,
                 Warnings = SnapshotLog(),
                 LogPath = _logPath,
+                CdCommands = cdCommands,
             };
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
@@ -663,6 +668,28 @@ internal sealed class OperaCoreHost : IDisposable
         };
     }
 
+    private byte[] ReadCdCommands()
+    {
+        if (_debugCdCommandAt is null || _debugCdCommandCount is null)
+        {
+            return [];
+        }
+
+        var count = _debugCdCommandCount();
+        if (count == 0)
+        {
+            return [];
+        }
+
+        var commands = new byte[count];
+        for (uint index = 0; index < count; index++)
+        {
+            commands[index] = _debugCdCommandAt(index);
+        }
+
+        return commands;
+    }
+
     private string[] SnapshotLog()
     {
         lock (_logLock)
@@ -789,6 +816,9 @@ internal sealed class OperaCoreHost : IDisposable
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate void SetSeed(uint seed);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate byte DebugUInt32Index(uint index);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate byte DebugUInt8();

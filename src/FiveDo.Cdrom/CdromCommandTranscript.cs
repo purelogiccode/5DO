@@ -56,6 +56,7 @@ public sealed class CdromCommandTranscript
     private const uint FnvPrime = 16777619u;
 
     private readonly List<CdromCommandEntry> _entries = [];
+    private readonly List<byte> _issuedOpcodes = [];
     private CdromDevice? _device;
     private uint _hash = FnvOffsetBasis;
     private uint _issuedHash = FnvOffsetBasis;
@@ -79,6 +80,13 @@ public sealed class CdromCommandTranscript
 
     /// <summary>Gets the cumulative FNV-1a hash of command opcodes at issue time.</summary>
     public uint IssuedHash => _issuedHash;
+
+    /// <summary>Gets the command opcodes in issue order.</summary>
+    /// <remarks>
+    /// The reference core exposes the same sequence. The differential harness uses
+    /// this list to report the first divergent command, not just count/hash drift.
+    /// </remarks>
+    public IReadOnlyList<byte> IssuedOpcodes => _issuedOpcodes;
 
     /// <summary>
     /// Gets the cumulative FNV-1a hash of completed command opcodes in execution order.
@@ -131,6 +139,7 @@ public sealed class CdromCommandTranscript
     public void Clear()
     {
         _entries.Clear();
+        _issuedOpcodes.Clear();
         _hash = FnvOffsetBasis;
         _issuedHash = FnvOffsetBasis;
         _issuedCount = 0;
@@ -156,6 +165,7 @@ public sealed class CdromCommandTranscript
 
     private void CaptureIssued(byte opcode)
     {
+        _issuedOpcodes.Add(opcode);
         _issuedCount++;
         _issuedHash = (_issuedHash ^ opcode) * FnvPrime;
     }

@@ -14,8 +14,12 @@ internal static class DiffManifestLoader
         "frameHash",
         "audioHash",
         "pc",
+        "cpsr",
         "samples",
         "stateHash",
+        "cdCommandCount",
+        "cdCommandHash",
+        "cdCommands",
     };
 
     /// <summary>Loads a manifest from disk.</summary>

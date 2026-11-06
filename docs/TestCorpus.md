@@ -2404,6 +2404,18 @@ a legacy version-2 memory section.
   f=1000; 851/836 at f=3000). This is the first evidence that separates
   "PC drift with matching video" from "visible divergence" and gives CORE-04 and
   CORE-13 a concrete lead.
+- **Full CD command sequence (`cdCommands`):** the final-checkpoint opcode
+  sequence localizes the first divergence beyond count drift:
+  - Lemmings command 105: 5DO `0x10` (READ_DATA) vs Opera `0x83` (READ_ID);
+    5DO 364 opcodes, Opera 352.
+  - Road Rash command 559: same pattern; 851/836.
+  - Wolfenstein command 389: same pattern; 862/861.
+  - Alone command 433: equal counts (932/932) but a shifted `0x10`/`0x83`.
+  - Space Ace: prefixes match for 348 commands; 5DO has one extra `0x10`.
+  This localizes CORE-04 to READ_DATA completion/read-ahead: after a few
+  READ_DATA commands, Opera returns to READ_ID polling while 5DO keeps issuing
+  READ_DATA. The earlier transcript-only build used a 7x byte count; the current
+  export counts one opcode per seven-byte packet.
 - **Panel generator:** `panel --from benchmarks/diff/full.json --out
   benchmarks/diff/panel50.json --count 50` generated a 50-title panel from the
   594-disc manifest. It selects evenly spaced titles (first and last included),
@@ -2411,11 +2423,12 @@ a legacy version-2 memory section.
   allowlists, and applies the TEST-07 comparison policy. `validate` accepts it.
   The full panel has not been run because the `J:`/`G:` corpus is not mounted on
   every machine.
-- **Tests:** 1,879 pass. New coverage: `HarnessCommonTests` (default seed, manifest
+- **Tests:** 1,881 pass. New coverage: `HarnessCommonTests` (default seed, manifest
   hex seed, override precedence, random rejection), `DiffComparerTests`
-  (CPSR gate, CD count/hash gate, sample tolerance, earliest first divergence),
-  `CdromTranscriptTests` (issue-time hash/count and reset), and
-  `DiffManifestBuilderTests` (panel selection, policy, and count edge cases).
+  (CPSR gate, CD count/hash gate, full CD sequence divergence/prefix, sample
+  tolerance, earliest first divergence), `CdromTranscriptTests` (issue-time
+  hash/count, opcode list, and reset), and `DiffManifestBuilderTests` (panel
+  selection, policy, and count edge cases).
 - **Limitations:** five titles, not the 50-title panel; no scripted input yet; the
   audio hash is informational. See `DifferentialHarness.md` §8/§9 and
   `ImplementationPlan.md` TEST-07.

@@ -103,6 +103,7 @@ public sealed class CdromTranscriptTests
 
         Assert.Equal(2, transcript.Count);
         Assert.Equal(2, transcript.IssuedCount);
+        Assert.Equal(new byte[] { 0x83, 0x85 }, transcript.IssuedOpcodes);
         Assert.NotEqual(2166136261u, transcript.Hash);
         Assert.Equal(transcript.Hash, transcript.IssuedHash);
 
@@ -110,6 +111,7 @@ public sealed class CdromTranscriptTests
         transcript.Clear();
         Assert.Equal(0, transcript.Count);
         Assert.Equal(0, transcript.IssuedCount);
+        Assert.Empty(transcript.IssuedOpcodes);
         Assert.Equal(2166136261u, transcript.Hash);
         Assert.Equal(2166136261u, transcript.IssuedHash);
 
@@ -117,6 +119,7 @@ public sealed class CdromTranscriptTests
         DrainStatus(cd, 8);
         Send(cd, 0x83);
         DrainStatus(cd, 12);
+        Assert.Equal(new byte[] { 0x85, 0x83 }, transcript.IssuedOpcodes);
         Assert.NotEqual(first, transcript.Hash);
     }
 

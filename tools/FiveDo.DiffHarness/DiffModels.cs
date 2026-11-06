@@ -252,6 +252,9 @@ internal sealed class CaptureResult
 
     /// <summary>Gets the deterministic PRNG seed used for this capture, when one was applied.</summary>
     public uint? Seed { get; init; }
+
+    /// <summary>Gets the CD command opcodes in issue order, when the engine exposes them.</summary>
+    public byte[] CdCommands { get; init; } = [];
 }
 
 /// <summary>One checkpoint sample.</summary>
