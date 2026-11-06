@@ -1,59 +1,83 @@
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan and Missing-Feature Backlog
 
-**Snapshot:** 2026-11-06
+**Snapshot:** 2026-11-06 (focused rewrite)
 **Current release:** `1.3.0`
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master`<br>
-**Status:** **1,866 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports no warnings in changed files (seven pre-existing warnings remain in the managed JIT and state writer).<br>
-**Goal:** implement **every Opera core feature**, match or exceed Opera's accuracy, and ship the best standalone 3DO emulator on Windows, Linux, and macOS.
+**Status:** **1,879 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports no warnings in changed files (seven pre-existing warnings remain in the managed JIT and state writer). **594 discs load, 593 render, 12 visually validated**; the top-100 playability audit and the reference-oracle upgrade are the next gates.<br>
+**Goal:** beat 4DO and Opera-libretro on **measured in-game compatibility and accuracy**, and remain the best standalone desktop 3DO emulator on Windows, Linux, and macOS.<br>
+**Plan shape:** four phases, **measurement first**. Product and research work is deferred until the compatibility gate is green.
 
-> **This is the single source of truth.** It replaces the former 8,000-line dashboard, milestone log, feature spec, parity audit, and session handoff. Historical evidence stays in the linked docs; this file is the canonical backlog.
+> **2026-11-06 rewrite.** This revision keeps every stable ID, every completed-log entry, and the five anchors other documents link to. It changes the order of work: truth first, disc and timing second, playability proof third, product and research last. `TEST-07` is the only new ID. `TEST-06` is promoted to P0. `SYS-05` is blocked on licensing rather than engineering. `PERF-08` and `CORE-05` are **closed with measured negative evidence**. The six completed items that were still sitting in the backlog moved to §2.5.
+
+> **This is the single source of truth.** It replaces the former dashboard, milestone log, feature spec, parity audit, and session handoff. Historical evidence stays in the linked docs; this file is the canonical backlog.
 
 ---
 
 ## 1. How to use this plan
 
-1. **Start with the urgent list.** Pick the first unchecked item that is not blocked. Do not start optional or research work while a P0 accuracy/compatibility item is open.
+1. **Work the phases in order.** Do not start Phase 2 before Phase 0 has produced a trustworthy oracle. Do not start product or research work while any Phase 0-3 P0 item is open.
 2. **One feature per change.** Do not mix core accuracy, rendering, and UX work in one pull request.
 3. **Tests first.** Every behavior change needs a unit, golden, differential, or scripted manual test.
 4. **One reference per change.** State whether the behavior comes from Opera, 4DO/FreeDO, hardware documentation, or a 5DO-specific decision. Port behavior, not code.
-5. **Mark it done only when its “Done when” line is satisfied.** Then move the entry to the completed log at the end of this file.
-6. **No duplicate tracking.** Each feature has one canonical entry below. IDs are stable. `BAK-*` and `MOON-*` are retired aliases (see Appendix B); do not recreate them.
-7. **No default timing change without full-collection differential evidence.**
+5. **Evidence before checkbox.** Mark an item done only when its "Done when" line is satisfied and the evidence is committed or linked.
+6. **A frame-hash match is not accuracy evidence.** Record PC, state, CD, and audio evidence, or state explicitly which fields were unavailable.
+7. **No duplicate tracking.** Each feature has one canonical entry below. IDs are stable. `BAK-*` and `MOON-*` are retired aliases (see Appendix B); do not recreate them.
+8. **No default timing change without panel evidence.** A 40-title, 300-frame sample is a smoke test, not a gate.
 
 ### Legend
 
 - `[ ]` — remaining work. `[x]` is used only in the completed log.
 - **Pending** — not started, or research/design only.
 - **Partial** — a usable subset ships; the remaining scope is listed in the item.
+- **Conditional** — work only if the measurement panel proves it changes a game-visible outcome.
 - **Blocked** — depends on another item, legal review, or hardware.
-- **Priority** — **P0** correctness/compatibility, **P1** expected best-in-class, **P2** ecosystem multiplier, **P3** long-term.
-- **Effort** — **S** under 3 developer-days, **M** 3–10, **L** 10–30, **XL** 30–90+.
+- **Closed** — a recorded decision not to pursue the work; it is not "done".
+- **Priority** — **P0** correctness/compatibility, **P1** expected best-in-class evidence, **P2** ecosystem multiplier, **P3** long-term.
+- **Effort** — **S** under 3 developer-days, **M** 3-10, **L** 10-30, **XL** 30-90+.
 
 ---
 
 ## 2. Current state
 
-| Area | What ships today | What is still missing |
-|---|---|---|
-| Core emulation | ARM60 interpreter, CLIO timers/FIFO/DMA/FIQ, MADAM CEL/pixel/matrix engines, DSP at exactly 44.1 kHz, SPORT, VDLP, XBUS, CD-ROM, input, configurable DRAM/VRAM (8 Opera layouts), NVRAM, deterministic save states v3, opt-in unsigned-disc/No-RSA BIOS support | Full Opera timing parity (ARM/CLIO/CEL/CD), SWI HLE timing parity, embedded boot ROM, CD subcode/DIPIR/read-ahead |
-| Frontend | Avalonia shell, library, metadata/favorites/playtime, settings, gamepad mapping, save slots/thumbnails, screenshots, log viewer, disc browser, BIOS/NVRAM manager, rewind, fast-forward, cheats, TAS movies, OSD/quick menu, input display, portable mode, instance lock, diagnostics bundle, update check, run-ahead/frame-delay/VRR/audio-sync controls and input-latency overlay | Netplay, achievements, Lua, big-picture UI, localization, themes/accessibility, installers, auto-update, debugger/profiler |
-| Renderer | Two-stage OpenGL/GLES (default), optional Vulkan (Windows surface), optional Direct3D 11 (Windows), 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR, per-edge overscan, void border, 480i/240p detection with bob/weave/blend field handling, screenshot gallery, presentation frame delay and VRR-friendly compositor cadence | True 640x480/480i CEL rendering, supersampling, GPU CEL, shader presets, NTSC/HDR, recording, overlays/bezels, Linux/macOS Vulkan surfaces |
-| Audio | Exact 44.1 kHz DSP clock, OpenAL Soft output, WAV capture, `audio analyze`, CD-DA mixing/volume/mute, −250…250 ms audio sync offset, queue-latency and underrun telemetry | Resampler quality/exclusive mode, mixer/spectrum, DSP debugger, audio golden corpus |
-| Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing, M3U multi-disc playlist, live swap, guest inject, Opera file system, prefetch, DAT health | Full CD command/timing parity, subcode, read-ahead, known-title CD-DA evidence, real in-game multi-disc swap, ODE prompts, physical drive, image conversion |
-| Compatibility | 594-disc sweep: **594 load**, **593 render**, 1 known boot failure (Crash 'n Burn Japan), 0 not loadable; library catalogues **653 games across 1,366 images** | 594/594 render; visual/in-game review; per-game auto-profiles |
-| Differential harness | FiveDO.DiffHarness, checkpoints, audio/state hashes, smoke + five-title showcase, 594-title manifest generator | Full 594-title run, PC-delta triage, CD/state transcripts, nightly dashboard |
-| Tests | **1,866** passing; fuzz harness for six parsers; build/format clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
-| Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K Tier A measured; zero-allocation synthetic path | Tier B 1080p60, GLES 3.1/ANGLE, arm64 tuning, threaded DSP, managed JIT, zero allocations on all real paths |
-| Platforms | Six bundles: Windows/Linux/macOS × x64/arm64, framework-dependent single-file apphosts; Windows x64 validated; Linux x64 tests/smoke pass (GPU preview under llvmpipe); macOS and arm64 cross-published but not hardware-validated | macOS runtime validation, arm64 hardware validation, Linux/macOS GPU presentation, macOS gamepad, Flatpak/AppImage, installers/signing |
-| Release | **v1.3.0** published with six versioned bundles and `SHA256SUMS.txt`; .NET 10 runtime required (not bundled); legal/attribution sign-off recorded | Signing, notarization, auto-update, reproducible builds, SBOM |
+### 2.1 Verified snapshot (2026-11-06)
 
-**Scope decisions (unchanged):** WebAssembly/browser, Android/iOS, Raspberry Pi, and Steam Deck are **out of scope**. Desktop Windows, Linux, and macOS (x64/arm64) remain the supported targets. 4K *internal* CEL rendering is research, not a release blocker; 4K *output* upscaling is supported. Distribution remains free, open-source **donationware** under the FreeDO modified GNU LGPL (non-commercial; voluntary donations only).
+| Gate | Result |
+|---|---|
+| Build | `dotnet build 5DO.sln -c Debug` — **0 warnings, 0 errors** |
+| Tests | **1,879 / 1,879 passed** in 19 s |
+| Format | `dotnet format --verify-no-changes` — clean |
+| CLI | `5DO 1.3.0 (FiveDo)`; `selftest --json` — all checks `ok: true` |
+| Synthetic benchmark | 240 frames in 0.816 s — **294 fps (~3.4 ms/frame)** |
+| Real-title benchmark | Road Rash race **4.20 ms/frame**, p99 **7.40 ms** (`Performance.md` §8.5) |
+| Reference oracle | `OperaCore.dll` and the optional debug core are built and staged |
+| 40-title differential | **18 matched / 22 diverged** at frame 300 (`artifacts/diff/sample40-run/report.json`) |
+| 5-title TEST-07 panel | Deterministic captures; first divergence **PC at frame 60**; CD commands 9/9 at f=60; samples 44,101/44,144 |
+| 5-title showcase | **2/5 video matches**, **0/5** with PC comparison; Lemmings PC delta 11,076 bytes |
+| Compatibility sweep | **594 load, 593 render, 1 known boot failure** (Crash 'n Burn Japan) |
+| Visual/input validation | **12 titles** in the curated matrix; a handful have scripted gameplay |
 
-### 2.1 Shipped baseline
+The real-title and sweep numbers come from the local corpus and the linked docs; the `J:` corpus is not mounted in every session. Re-run the commands in §7 before quoting them.
 
-These are done and must not regress. They are listed here once; the backlog below contains only missing work.
+### 2.2 What "better than 4DO and Opera" means
+
+"Better" is not a feature list. It is measured on the **same BIOS, same disc images, and same input scripts**:
+
+| Claim | Evidence required |
+|---|---|
+| Better compatibility | Top 100 titles: **100% reach gameplay**, **≥95% Good or Playable**, every exception with a root cause and workaround. |
+| Better accuracy | On the 50-title panel: **no divergence before gameplay**; after gameplay, PC/CPSR/state/CD/audio deltas are triaged and documented. |
+| Fewer regressions | **Zero regressions** against 4DO and Opera on a curated known-issues list; every 4DO/Opera failure is fixed or explained. |
+| Better disc support | CD-DA, multi-track, multi-disc, subcode/read-ahead, PAL, and ODE behavior verified on real titles. |
+| Better input | Mouse, lightgun, arcade lightgun, flightstick, trackball, and six-player titles verified. |
+| Better product | Save states/rewind, CHD, library, per-game profiles, 4K output, six-platform packaging. |
+
+A **Good** title boots, reaches gameplay, survives 10 minutes of scripted input without a hang or crash, and has no visible or audio defect a player would notice. **Playable** means it runs but has a documented defect. **Unplayable** means it does not reach or sustain gameplay.
+
+### 2.3 Shipped baseline
+
+These are done and must not regress. They are listed here once; the backlog contains only missing work.
 
 | Area | Shipped capabilities |
 |---|---|
@@ -65,7 +89,29 @@ These are done and must not regress. They are listed here once; the backlog belo
 | CLI | `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks/verify/playlist`, `library verify`, `fs`, `bios`, `nvram`, `cheat`, `movie`, `settings`, `audio`, `state`, `disasm`, `update` |
 | Release | v1.3.0 six bundles; versioned archives; checksums; legal/attribution sign-off; OpenAL LGPL obligations |
 
-**Completed IDs (traceability only):** FND-01, FND-02, FND-03, CORE-09, CORE-12, CORE-14, CORE-15, SYS-04, SYS-06, SYS-07, SYS-09, SYS-10, SYS-11, SYS-13, SYS-14, VID-04, VID-05, VID-06, VID-14, VID-15, AUD-05, UX-01, UX-02, UX-04, UX-11, UX-12, UX-15, UX-19, UX-23, ENG-03, PERF-02, VID-12, SYS-12, BAK-12, BAK-17.
+**Scope decisions (unchanged):** WebAssembly/browser, Android/iOS, Raspberry Pi, and Steam Deck are **out of scope**. Desktop Windows, Linux, and macOS (x64/arm64) remain the supported targets. 4K *internal* CEL rendering is research, not a release blocker; 4K *output* upscaling is supported. Distribution remains free, open-source **donationware** under the FreeDO modified GNU LGPL (non-commercial; voluntary donations only).
+
+### 2.4 Evidence gaps that block the claim
+
+1. **The oracle is too weak.** The differential harness compares frame hashes at 300 frames by default. Opera's PRNG is seeded from `time()`, OperaCore is real-time paced, and PC/CD/audio fields are not compared. The stored 40-title report is 18/40. That number can move because a boot screen appears two fields earlier, not because accuracy improved.
+2. **"Renders" is not "plays".** The 594-disc sweep only proves a non-black final frame. Only 12 titles have visual/input validation. The plan's own gate asks for ≥95% Good/Playable across 594 titles; that audit has not been done.
+3. **Matching video does not mean matching execution.** In the showcase run, 2/5 titles match on video, but 0/5 match on PC when the debug core is used; Lemmings' PC delta is 11,076 bytes at frame 3000.
+4. **Evidence is thin where it matters.** The 40-title sample stops at 5 seconds of emulated time. Real divergence appears in menus, FMV, streaming, and gameplay.
+
+**Honest current claim:** 5DO is a better *product* than 4DO today, and a credible challenger to Opera, but it is **not yet a proven accuracy win**. The next two quarters should be spent closing that gap.
+
+### 2.5 Completed IDs (traceability only)
+
+| ID | What shipped | Evidence |
+|---|---|---|
+| SYS-06 | RSA/unsigned-disc option; two-site in-memory patch; no BIOS or game content bundled | `BiosRsaPatch`; known No-RSA MD5s reproduced; signed-title hashes unchanged. Log 2026-11-06. |
+| SYS-08 | CPU clock matrix 0.5x-4x; stock 12.5 MHz default unchanged; non-stock clocks are a compatibility variable | `Performance.md` §8.1/§8.3; five-title A/B. Log 2026-11-05. |
+| SYS-12 | Portfolio OS SWI HLE (14 SWIs, opt-in); per-comment histograms | `ArmSwiHleTests`; 847,860 LLE steps vs 24,578 HLE; default-off hashes unchanged. Log 2026-11-04. |
+| SYS-17 | Game database 653 records; 1,366 images; 100% metadata coverage; `gamedb scan/export/merge` | `GameDatabase.md`; 12 storage/host/CLI tests. Log 2026-11-05. |
+| SYS-18 | Auto per-game profile; BIOS/region/fix/input applied with zero manual steps | Five-title evidence (WorldCup, Powers Kingdom, Slayer, Crash 'n Burn, Crime Patrol). Log 2026-11-05. |
+| VID-04 | 480i/240p detection; bob/weave/blend; interlace-aware geometry; screenshots/GIF | `InterlaceProcessor`; 16 tests; five-title bob-vs-auto hashes. Log 2026-11-06. |
+
+**Full completed-ID index (including the six above):** FND-01, FND-02, FND-03, CORE-09, CORE-12, CORE-14, CORE-15, SYS-04, SYS-06, SYS-07, SYS-08, SYS-09, SYS-10, SYS-11, SYS-12, SYS-13, SYS-14, VID-04, VID-05, VID-06, VID-14, VID-15, AUD-05, UX-01, UX-02, UX-04, UX-11, UX-12, UX-15, UX-19, UX-23, ENG-03, PERF-02, VID-12, BAK-12, BAK-17.
 
 **Milestone aliases:** M9R/M9P → P3/P6/TEST-04; M10 → PERF-02; M12 → PERF-08; M13.5/M13.6 → TEST-06; M14 → VID-01/02/03; M15 → CORE-11/16 + FND-05.
 
@@ -73,44 +119,56 @@ These are done and must not regress. They are listed here once; the backlog belo
 
 ## 3. Missing features — canonical backlog
 
-Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` field preserves legacy IDs. **No feature appears in more than one category.** A few legacy aliases (`BAK-04`, `BAK-05`, `BAK-13`, `BAK-18`) intentionally have no separate checkbox; they are covered by the canonical items listed in Appendix B.
+Each entry is a single feature or a tightly-scoped bundle. The `Tracks` field preserves legacy IDs. **No feature appears in more than one category.** A few legacy aliases (`BAK-04`, `BAK-05`, `BAK-13`, `BAK-18`) intentionally have no separate checkbox; they are covered by the canonical items listed in Appendix B.
 
-### 3.1 Priority — urgent
+The sections below are ordered by **what moves the compatibility claim**, not by subsystem.
 
-- [ ] **CORE-01 — ARM60 cycle-class accuracy mode**
-  **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** CORE-01
-  **Remaining:** run the full-collection differential on timing-sensitive titles; the 2026-11-04 40-title A/B found ARM60 17/40 matches versus FreeDO 15/40 with identical Opera captures, and the decision keeps the ARM60 mode opt-in until the 594-disc evidence is green. Per-class costs and the `--cycle-classes` ledger are complete and regression-tested.
-  **Done when:** cycle counts match Opera within documented tolerances; golden hashes are unchanged or improved; no full-collection regression.
-  **Ref:** `opera_arm.c`, `opera_clock.c`.
+### 3.1 P0 — Measurement, oracle, and proof
 
-- [ ] **CORE-02 — CLIO timer scheduler parity**
-  **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** CORE-02
-  **Remaining:** validate Opera's per-slot scheduler, slack gap, and cascade carry across the full collection; add differential timer evidence; decide whether the Opera scheduler can become the default. The 2026-11-04 increment added 16-bit timer-register masking in Opera mode, per-timer telemetry (`--clio-timer-stats`), a bounded `--clio-timer-trace`, a reference-model conformance test, and a `--clio-timers` A/B override in the differential harness; the mode stays opt-in pending the full 594-disc run.
-  **Done when:** timer traces match Opera within documented tolerances; no golden-corpus regression.
-  **Ref:** `opera_clio.c`, `opera_clock.c`.
+- [ ] **TEST-07 — Reference oracle instrumentation and first-divergence metric**
+  **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** BAK-01, BAK-02, BAK-03
+  **Remaining:** run the generated `benchmarks/diff/panel50.json` on the full corpus; align or resample the audio streams so the cumulative audio hash is comparable; add a CD command-tail/sequence comparison; add scripted input to the panel; keep the fixed seed and first-divergence reporting wired into the nightly run.
+  **Done when:** the same manifest produces deterministic reference captures twice; PC/CD/audio fields are populated on both sides; a 50-title report shows the first-divergence frame and a triaged reason for every divergence.
+  **Evidence (2026-11-06):** the debug core now exports `sg_debug_set_seed`, `sg_debug_arm_cpsr`, `sg_debug_cd_command_count`, and `sg_debug_cd_command_hash`; the harness applies a fixed seed (default 1488), compares PC/CPSR/CD, and records `firstDivergence` in JSON, Markdown, and the console. `benchmarks/diff/samples5.json` runs five local titles at 300 frames with checkpoints 60/120/300. Two consecutive runs produced **identical checkpoint arrays for both engines**. Result: **0 match, 5 diverged, 0 error**; the first divergence was the **ARM PC at frame 60** on all five. Lemmings: CD commands **9/9 at f=60** and **50/50 at f=120**, then 108/105 at f=300; CPSR `0x600000d3` vs `0x800000d3` at f=60 (FIQ-disable bit); samples 44,101/44,144, 88,202/88,288, 220,508/220,720. Added the `panel` generator and produced `benchmarks/diff/panel50.json` (50 evenly spaced titles from the 594-disc manifest; `validate` passes). See `DifferentialHarness.md` §8 and `TestCorpus.md` 1.1aw. 1,879 tests pass.
+  **Why first:** every accuracy claim in this plan depends on this item. Without it, `CORE-01`/`CORE-02`/`CORE-03`/`CORE-04` cannot be judged.
+  **Ref:** `tools/FiveDo.DiffHarness/OperaCoreCaptureRunner.cs`, `References/CPP_SimpleGui/Cores/OperaCore`, `docs/DifferentialHarness.md` §5/§9.
 
-- [ ] **CORE-03 — MADAM CEL busy timing parity**
-  **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** CORE-03
-  **Remaining:** validate the deferred draw and pixel/texel busy deadline against Opera across CEL-status polling titles; tune the busy budget. The 2026-11-04 increment fixed line-rendered literal/packed pixel accounting and locked the 9M-pixel/s plus 64-cycle-per-CEL formula with tests.
-  **Done when:** CEL busy traces match Opera within documented tolerances; timing-sensitive titles behave correctly; no frame-time regression.
-  **Ref:** `opera_madam.c`.
+- [ ] **TEST-06 — In-game playability and visual review**
+  **Status:** Pending · **Priority:** P0 · **Effort:** L
+  **Remaining:** audit the **top 100 titles first** with scripted 10-minute runs; record `Good`/`Playable`/`Unplayable` with a reason and a checkpoint screenshot; then extend to the full local set; rerun the black/static titles at 12,000+ frames; repeat with high-resolution only after the base audit; feed results into `GameCompatibilityList.md` and the per-game database.
+  **Done when:** the top 100 have a reviewed status and evidence; then every local disc has one; the compatibility matrix distinguishes loadable, playable, and good.
+  **Why first:** this is the only evidence that answers "better than 4DO and Opera" for a player. A 594-title "renders" count does not.
+  **Ref:** `docs/Compatibility.md` §10/§13; `docs/GameCompatibilityResults.md`.
 
-- [ ] **CORE-08 — Accuracy/performance profile coverage**
-  **Status:** Partial · **Priority:** P0 · **Effort:** S · **Tracks:** CORE-08
-  **Remaining:** profile validation across the full collection; decide when the Accuracy profile can become the default. The 2026-11-04 increment completed the remaining CLI surfaces: `bench --profile` reports the derived profile and timing modes, `selftest` validates determinism and state round-trip for every named profile, and the differential harness accepts `--profile` for a full-collection A/B. A 40-title, 300-frame A/B reports 17/40 matches for both `compatible` and `accuracy` with identical per-title statuses; the 594-title A/B remains. The Accuracy profile stays opt-in until that full A/B report shows no regression against the Compatible baseline.
-  **Done when:** every profile round-trips through CLI/Settings/state and the Accuracy profile can be enabled by default after evidence is green.
+- [ ] **CORE-11/16 + FND-05 — Full-collection differential and hash regression**
+  **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** CORE-11, CORE-16, FND-05
+  **Remaining:** run the `TEST-07` metric on the 50-title panel, then the full 594; PC-delta triage; state/CD transcript comparison; frame/audio hash coverage; nightly dashboard; allowlist and triage policy.
+  **Done when:** the nightly run has no unexplained divergence, and every allowance is documented and dated; the 50-title panel is green before the full run.
+  **Rule:** a frame-hash match without PC/CD/audio evidence is a smoke result, not a pass.
 
-- [x] **SYS-08 — CPU overclock/underclock validation**
-  **Status:** Complete · **Priority:** P0 · **Effort:** S · **Tracks:** SYS-08
-  **Remaining:** none. Non-stock clocks remain experimental and are not seeded into profiles.
-  **Done when:** the clock matrix is documented and the stock 12.5 MHz default is unchanged.
-  **Evidence:** `Performance.md` §8.1 records the 0.5x-4x synthetic matrix; §8.3 adds the 2026-11-05 five-title A/B (Road Rash, Lemmings, Alone in the Dark, Ballz, AutoBahn Tokio). Every non-stock clock changed the frame hash, and AutoBahn Tokio slowed from 9.1 s at 1x to 84.4 s at 2x and 271.7 s at 4x, confirming that non-stock clocks are a compatibility variable rather than a speed switch. The stock 12.5 MHz default is unchanged.
+### 3.2 P0 — Accuracy and compatibility
 
 - [ ] **CORE-04 — CD-ROM command and timing parity**
   **Status:** Partial · **Priority:** P0 · **Effort:** XL · **Tracks:** CORE-04
-  **Remaining:** command latency table; per-command sector readiness; TOC/Sub-Q/raw-sector behavior; data-sector subcode and read-ahead; CD-side tagged status/chunks; retire the READ_ID media-access heuristic; raw-vs-Opera command/status/boot/reset transcripts.
-  **Done when:** fixed command transcripts match Opera or have documented, tested divergences; the 594-disc sweep has no CD regression; CD-DA and ODE layer cleanly on the same model.
+  **Remaining:** command latency table; per-command sector readiness; TOC/Sub-Q/raw-sector behavior; data-sector subcode and read-ahead; CD-side tagged status/chunks; retire the READ_ID media-access heuristic; raw-vs-Opera command/status/boot/reset transcripts; CD-DA read-ahead and multi-disc layering on the same model.
+  **Done when:** fixed command transcripts match Opera or have documented, tested divergences; the 594-disc sweep has no CD regression; CD-DA and ODE layer cleanly on the same model; streaming/FMV titles (Road Rash and Need for Speed are already in the corpus) show no regression.
+  **Why first in Phase 1:** this is the largest behavioral gap between 5DO (~1.9k lines of CD model) and Opera (~3.8k) and the most likely cause of real-game failures.
+  **Evidence (2026-11-06):** the CD command count/opcode hash matches the reference at frame 60 on all five sample titles (Lemmings 9/9) and at frame 120 (50/50); Lemmings has 108/105 by frame 300, so the first sequence divergence is between frames 120 and 300.
   **Ref:** `opera_cdrom.c`; `docs/ReferenceStrategy.md` §6.
+
+- [ ] **CORE-03 — MADAM CEL busy timing parity**
+  **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** CORE-03
+  **Remaining:** validate the deferred draw and pixel/texel busy deadline against Opera across CEL-status polling titles; tune the busy budget; record CEL busy traces.
+  **Done when:** CEL busy traces match Opera within documented tolerances; timing-sensitive titles behave correctly; no frame-time regression.
+  **Evidence:** the 2026-11-04 increment fixed line-rendered literal/packed pixel accounting and locked the 9M-pixel/s plus 64-cycle-per-CEL formula with tests.
+  **Ref:** `opera_madam.c`.
+
+- [ ] **CORE-02 — CLIO timer scheduler parity**
+  **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** CORE-02
+  **Remaining:** validate Opera's per-slot scheduler, slack gap, and cascade carry on the panel; add differential timer evidence; decide whether the Opera scheduler can become the default.
+  **Done when:** timer traces match Opera within documented tolerances; no golden-corpus regression.
+  **Evidence:** 16-bit timer-register masking in Opera mode, per-timer telemetry (`--clio-timer-stats`), bounded `--clio-timer-trace`, a reference-model conformance test, and a `--clio-timers` A/B override. The mode stays opt-in until panel evidence is green.
+  **Ref:** `opera_clio.c`, `opera_clock.c`.
 
 - [ ] **CORE-06 — SPORT/XBUS/DIPIR timing and DMA audit**
   **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** CORE-06
@@ -121,11 +179,26 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
   **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** CORE-07
   **Remaining:** Opera differential traces for masked/nested/return/re-entry interrupts; request-to-vector latency distributions; CLIO/DIPIR/XBUS ordering; timer and FIQ edge cases; document telemetry fields.
   **Done when:** latency metrics match Opera within tolerance; traces and `run --json` statistics are documented and regression-tested.
+  **Evidence (2026-11-06):** the five-title TEST-07 panel makes this the first divergence: PC differs at frame 60 on all five titles, and Lemmings' CPSR is `0x600000d3` (5DO) vs `0x800000d3` (Opera), a FIQ-disable-bit difference. Use the frame-60 trace as the starting point.
+
+- [ ] **CORE-01 — ARM60 cycle-class accuracy mode**
+  **Status:** Conditional · **Priority:** P0 · **Effort:** M · **Tracks:** CORE-01
+  **Remaining:** do **not** start until the 50-title panel shows ARM timing changes a game-visible outcome. The 2026-11-04 40-title A/B found ARM60 17/40 matches versus FreeDO 15/40 with identical Opera captures: a two-title delta on a frame-hash metric is not sufficient evidence. Per-class costs and the `--cycle-classes` ledger are complete and regression-tested.
+  **Done when:** the panel shows a reproducible game-visible difference; cycle counts match Opera within documented tolerances; golden hashes are unchanged or improved; no full-collection regression.
+  **Ref:** `opera_arm.c`, `opera_clock.c`.
+
+- [ ] **CORE-13 — Remaining compatibility failures**
+  **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** CORE-13
+  **Remaining:** Crash 'n Burn (Japan); any 12k/65k-frame black/static titles; BIOS-aware sweep status merge; title-specific fixes; regression tests and compatibility notes. Use the 4DO game database and its fix flags as the first source for known-bad titles.
+  **Done when:** every remaining exception has a root cause and a documented workaround, or 594/594 render; `GameCompatibilityList.md` is current; the top-100 audit is clean.
+  **Ref:** `References/4DO-master/FourDO/Emulation/GameSource/GameDatabase.xml`; `docs/GameCompatibilityResults.md`.
 
 - [ ] **SYS-01 — CD-DA and multi-track completion**
   **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** SYS-01
-  **Remaining:** CD-DA read-ahead and subcode; a known-title in-emulator CD-DA capture; a 10-second DSP+CD-DA WAV; multi-track edge cases. The 2026-11-05 increment lets `ChdDiscImage` open audio-only CHDs, gives them a stable TOC-derived game ID, reports them through `info` (`audioCd`/`trackCount`), and includes their metadata in the game database. The BIOS still needs a data track to boot, so the three local `[CD-Audio]` bonus discs are catalogued but not playable in-emulator yet; the CD device's `PLAY_AUDIO_TRACK`/mix path remains covered by synthetic tests.
+  **Remaining:** CD-DA read-ahead and subcode; a known-title in-emulator CD-DA capture; a 10-second DSP+CD-DA WAV; multi-track edge cases.
   **Done when:** a known CD-DA title plays its audio; a 10-second mixed WAV contains both DSP and CD-DA; data-track titles keep identical hashes.
+  **Evidence:** `ChdDiscImage` opens audio-only CHDs, gives them a stable TOC-derived game ID, and reports `audioCd`/`trackCount`; the three local `[CD-Audio]` bonus discs are catalogued but not playable in-emulator because the BIOS still needs a data track.
+  **Ref:** `opera_cdrom.c`; `docs/Audio.md`.
 
 - [ ] **SYS-02 — ODE and multi-disc completion**
   **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** SYS-02
@@ -137,230 +210,58 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
   **Remaining:** PAL2 title evidence; automatic region/profile application; full PAL library validation; 50 Hz audio/pacing evidence; region-aware screenshots, saves, and CLI output.
   **Done when:** PAL1/PAL2 titles render and pace correctly; NTSC behavior is unchanged; per-game region selection applies automatically.
 
-- [ ] **SYS-05 — Embedded open-source boot ROM**
-  **Status:** Pending · **Priority:** P0 · **Effort:** M · **Tracks:** SYS-05
-  **Remaining:** a legally cleared embedded open-source Opera Boot ROM; default/fallback selection; no-BIOS homebrew boot; CLI/Settings/state/tests.
-  **Done when:** homebrew/demos boot without a user BIOS and legal sign-off is recorded.
-  **Ref:** `opera_boot.h`, `opera_bios.c`.
-
-- [x] **SYS-06 — RSA/unsigned-disc option**
-  **Status:** Complete · **Priority:** P0 · **Effort:** M · **Tracks:** SYS-06
-  **Remaining:** none. The option is explicit and opt-in; no BIOS or game content is bundled, and the user supplies a legally obtained ROM.
-  **Done when:** unsigned software can run with an explicit option; the option is opt-in, does not distribute BIOS or game content, and the user supplies a legally obtained ROM.
-  **Evidence:** `BiosRsaPatch` implements the documented two-site media-RSA bypass in memory. Applying it to retail `panafz10.bin` and `panafz10e-anvil.bin` reproduces the known No-RSA MD5s `1477bda8...` and `cf11bbb5...` exactly. The catalog identifies the No-RSA FZ-1J/FZ-10/FZ-10E images; automatic selection prefers them when `--allow-unsigned-discs`/Settings > Paths is enabled and otherwise patches a compatible retail image. `run`/`trace` report `biosRsaPatched`/`biosRsaDisabled`, `bios info` reports `rsaDisabled`/`rsaPatchSites`, and `bios select` accepts `--allow-unsigned-discs`. Signed Wolfenstein 3D and Road Rash 600-frame hashes are unchanged with patched and unpatched BIOSes. The option never writes the BIOS file. See `TestCorpus.md` 1.1au.
-  **Ref:** `opera_bios.c` (known No-RSA hashes); community-documented two-site BIOS patch.
-
-- [x] **SYS-12 — Portfolio OS SWI HLE**
-  **Status:** Complete · **Priority:** P0 · **Effort:** L · **Tracks:** SYS-12
-  **Remaining:** none for the opt-in HLE gate. The mode intentionally skips the guest handler's cycles and register clobbers, so titles that call the HLE set can change frame hashes when it is enabled.
-  **Done when:** HLE is opt-in, passes supported-title tests, and shows a measured performance gain without behavior changes when disabled.
-  **Evidence:** Opera's 14-SWI HLE set (`0x50000`-`0x50012`, excluding the object/Dot4 fallbacks) is wired through `--swi-hle`, Settings, per-game profiles, and save-state Options v9. `ArmSwiHleTests` covers every intercepted function bit-for-bit against `opera_fixedpoint_math.c`, the SWI cycle cost, fallback, disabled trap, and telemetry; `SwiHle_IsWiredToMachineRam` exercises the machine path. `--swi-comments` reports per-call histograms. A real-BIOS 4,096-call `MulMat44Mat44_F16` benchmark measured 847,860 LLE steps / 4,054,999 cycles versus 24,578 HLE steps / 65,538 cycles. AutoBahn Tokio and Ballz boot and run with HLE; default-off hashes are unchanged and leaving an affected SWI to the guest restores its hash. See `TestCorpus.md` 1.1an and `Performance.md` §8.2.
-  **Ref:** `opera_swi_hle_0x5XXXX.h`.
-
 - [ ] **SYS-15 — Input devices, calibration, and options**
   **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** SYS-15
-  **Remaining:** per-device calibration; scripted gameplay evidence for mouse, lightgun, arcade lightgun, flightstick, and Orbatak trackball; arcade start/coin/service mapping. The 2026-11-04 increment added the hide-lightgun-crosshair option, eight PBUS ports, an active-device cap of 0-8 (`--active-devices`/Settings), and a 256-byte PBUS chain buffer.
+  **Remaining:** per-device calibration; scripted gameplay evidence for mouse, lightgun, arcade lightgun, flightstick, and Orbatak trackball; arcade start/coin/service mapping.
   **Done when:** a representative title works for each device; calibration and crosshair options are documented and tested.
-  **Ref:** `lr_input.c`, `opera_pbus.c`, `libretro_core_options.c` (`opera_active_devices`, `opera_hide_lightgun_crosshairs`).
+  **Evidence:** the 2026-11-04 increment added the hide-lightgun-crosshair option, eight PBUS ports, an active-device cap of 0-8 (`--active-devices`/Settings), and a 256-byte PBUS chain buffer.
+  **Ref:** `lr_input.c`, `opera_pbus.c`, `libretro_core_options.c`.
 
 - [ ] **SYS-16 — Six-player and multi-tap verification**
   **Status:** Pending · **Priority:** P0 · **Effort:** S · **Tracks:** SYS-16
-  **Remaining:** six-player test ROM/title; hardware multi-tap trace. The 2026-11-04 increment added eight PBUS ports, the Opera chain for ports 7-8, a 256-byte MADAM queue, and an eight-player packet test through `FiveDoMachine` (`EightPlayerPacket_ReachesTheMadamPbusQueue`).
+  **Remaining:** six-player test ROM/title; hardware multi-tap trace.
   **Done when:** six pads and multi-tap are verified on hardware or a test ROM.
+  **Evidence:** eight PBUS ports, the Opera chain for ports 7-8, a 256-byte MADAM queue, and an eight-player packet test through `FiveDoMachine` (`EightPlayerPacket_ReachesTheMadamPbusQueue`).
 
-- [x] **SYS-17 — Game database expansion and community DB**
-  **Status:** Complete · **Priority:** P0 · **Effort:** M · **Tracks:** SYS-17
-  **Remaining:** none for the local-collection gate. NVRAM/cheat seeding is not enabled; users supply their own cheat bundles.
-  **Done when:** at least 95% of local images have metadata and the DB has a repeatable contribution path.
-  **Evidence:** the embedded database grew from 518 to 653 records. `gamedb stats --folder "J:\Panasonic 3DO"` reports 1,366 images found, 1,366 readable, 653 unique IDs, 1,366 matched images, 100% coverage, and no errors; the three former exceptions were audio-only `[CD-Audio]` CHDs, which now open and get TOC-derived IDs. The schema now carries `revision`, `discNumber`/`discTotal`, `bios`/`bios2`, `fixMode`, `inputDevices`, `nvram`, and `cheats`; `fixMode` drives `GameCompatibility`, `bios`/`bios2` drive `BiosLibrary`, and `inputDevices` drives `GameControlDefaults`. `gamedb scan|export|merge` provide the repeatable import/export workflow, and 12 new storage/host/CLI tests cover the parser, merge/save roundtrip, device spec, audio-only IDs, CHD audio-only open, and commands. See `docs/GameDatabase.md`.
-
-- [x] **SYS-18 — Auto per-game profile completion**
-  **Status:** Complete · **Priority:** P0 · **Effort:** L · **Tracks:** SYS-18
-  **Remaining:** none for the auto-profile gate. `nvram` and `cheats` database fields are carried in profiles but no bundled cheat bundle ships; users supply their own bundle names.
-  **Done when:** known problem titles boot with zero manual BIOS/region/fix/input steps and profile changes apply live.
-  **Evidence:** `AppSettings.ResolveInputDevices` now falls back to the database `inputDevices` spec, and the CLI applies it when `--input-device` is absent. `EnsureAutoInputDeviceOverride` no longer persists a shadowing override for database titles. `ShowSettingsAsync` builds one effective profile snapshot, applies input/filter/high-resolution changes live, and restarts only when BIOS, NVRAM, fix, or timing fields change. `GameProfile` carries `CheatBundle`, and `Clone` makes profile edits independent. Five-title evidence with `--bios-auto` and no manual overrides: WorldCup Super Stadium (Japan) selected FZ-10J + Kanji and reached the "Story of the World Cup" screen; Powers Kingdom Europe selected the Anvil BIOS and PAL1 288-line output; Slayer USA selected FZ-10; Crash 'n Burn USA applied `FIX_BIT_TIMING_1`; Crime Patrol selected the lightgun default and reached its live-action intro. The suite includes 5 new profile/input tests.
-
-- [ ] **CORE-13 — Remaining compatibility failures**
-  **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** CORE-13
-  **Remaining:** Crash 'n Burn (Japan); any 12k/65k-frame black/static titles; BIOS-aware sweep status merge; title-specific fixes; regression tests and compatibility notes.
-  **Done when:** 594/594 discs render, or every remaining exception has a root cause and documented workaround; `GameCompatibilityList.md` is current.
-
-- [x] **VID-04 — 480i/240p detection, deinterlacing, and field blending**
-  **Status:** Complete · **Priority:** P0 · **Effort:** M · **Tracks:** VID-04
-  **Remaining:** none for the presentation gate. `Auto` is a content-based heuristic; explicit `bob`/`weave`/`blend` modes and per-game profiles cover titles that still comb or flicker.
-  **Done when:** 480i titles render with correct field handling; 240p output is unchanged; options are documented and tested.
-  **Evidence:** `InterlaceProcessor` retains the previous field and supports bob, weave (480/576-line composite with `PixelAspect = 0.5`), and RGB555 direct-color blend, plus a conservative 12/30-field detector. The mode is wired through `FiveDoMachine`, `AppSettings`/`GameProfile`, Settings > Video, screenshot/GIF paths, and `--deinterlace auto|bob|weave|blend`; `run --json` reports `deinterlace`, `interlaced`, and `interlaceDetected`. Sixteen processor tests cover bob identity, weave line/palette/control copying, blend precision, detection hysteresis, PAL 288→576, high-res fallback, CPU presentation, and 4:3 pixel-aspect scaling. On 2026-11-06, 3,000-frame bob-vs-auto runs of Road Rash, Space Ace, and Alone in the Dark produced identical hashes with `interlaced=false`; 300-frame runs of Wolfenstein 3D and Lemmings were also identical. Forced weave produced a 320x480 frame on Road Rash and forced blend stayed at 320x240. No local title is confirmed 480i, so complementary-field test patterns are the 480i evidence and the heuristic remains overridable per game. See `Video.md` §1.
+- [ ] **CORE-08 — Accuracy/performance profile coverage**
+  **Status:** Partial · **Priority:** P0 · **Effort:** S · **Tracks:** CORE-08
+  **Remaining:** profile validation on the 50-title panel and then the full collection; decide when the Accuracy profile can become the default.
+  **Done when:** every profile round-trips through CLI/Settings/state and the Accuracy profile can be enabled by default after panel + full A/B evidence.
+  **Evidence:** `bench --profile` reports the derived profile and timing modes; `selftest` validates determinism and state round-trip for every named profile; the differential harness accepts `--profile`. A 40-title, 300-frame A/B reports 17/40 matches for both `compatible` and `accuracy` with identical per-title statuses; the panel A/B remains.
 
 - [ ] **AUD-01 — Audio output quality: resampler, exclusive mode, and sync offset**
   **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** AUD-01
-  **Remaining:** resampler quality options; exclusive-mode output; long-session device-change/drift validation on every platform. Audio sync offset, queue-latency reporting, OpenAL device recreation, underrun/drop counters, and documentation are complete.
+  **Remaining:** resampler quality options; exclusive-mode output; long-session device-change/drift validation on Windows and Linux (macOS after hardware). Audio sync offset, queue-latency reporting, OpenAL device recreation, underrun/drop counters, and documentation are complete.
   **Done when:** audio quality/latency targets are met on Windows/Linux/macOS; device switching is safe; no crackle or drift in extended runs.
-  **Evidence:** `AudioSyncMilliseconds` (−250…250 ms) applies a fixed host offset by inserting silence or dropping leading samples and reserves ring capacity for positive offsets. `OpenAlAudioOutput` recreates output safely on device/buffer/sync changes, exposes dropped-sample/underrun/queued-frame/latency counters, and the desktop overlay/Audio tab surface them. AOT CLI realtime Lemmings runs with `--audio openal --audio-sync 40` under `ALSOFT_DRIVERS=null` reported 0 dropped samples and 0 underruns over 240 frames. See `Audio.md` §3 and `Trimming.md`.
+  **Evidence:** `AudioSyncMilliseconds` (−250…250 ms) applies a fixed host offset by inserting silence or dropping leading samples and reserves ring capacity for positive offsets. `OpenAlAudioOutput` recreates output safely on device/buffer/sync changes and exposes dropped-sample/underrun/queued-frame/latency counters. AOT CLI realtime Lemmings with `--audio openal --audio-sync 40` under `ALSOFT_DRIVERS=null` reported 0 dropped samples and 0 underruns over 240 frames. See `Audio.md` §3 and `Trimming.md`.
+
+### 3.3 Release blockers (not accuracy blockers)
 
 - [ ] **ECO-04 — Linux/macOS platform validation and packaging**
-  **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** ECO-04
+  **Status:** Partial · **Priority:** P1 for release · **Effort:** L · **Tracks:** ECO-04
   **Remaining:** validate OpenGL/GLES on real Linux and macOS GPUs plus llvmpipe fallback; macOS runtime validation; macOS gamepad backend; Flatpak/AppImage packaging and desktop integration; platform smoke evidence.
   **Done when:** full suite + frontend smoke pass on Linux and macOS hardware; Flatpak/AppImage installs and runs; gamepad works on macOS.
+  **Note:** this blocks the six-platform release gate, not the "better than 4DO/Opera" accuracy claim. 4DO is Windows-only; Opera's platform coverage is not the comparison that matters.
 
-### 3.2 Increase performance
+- [ ] **SYS-05 — Embedded open-source boot ROM**
+  **Status:** Blocked · **Priority:** P2 · **Effort:** M · **Tracks:** SYS-05
+  **Remaining:** legal review of the **GPL-2.0-only** Opera Boot ROM (`trapexit/opera-boot`, embedded via `opera_boot.h`); decide whether to ship it as an optional separate component or not at all. It is a homebrew boot ROM, not a retail BIOS: retail titles still need a user-supplied BIOS. No engineering blocker.
+  **Done when:** legal sign-off is recorded and homebrew/demos boot without a user BIOS, or the item is closed as not distributable.
+  **Ref:** `opera_boot.h`, `opera_bios.c`.
 
-- [ ] **CORE-05 — Optional threaded DSP**
-  **Status:** Pending · **Priority:** P1 · **Effort:** M · **Tracks:** CORE-05
-  **Remaining:** bit-identical DSP worker thread; deterministic synchronization with the CPU/audio clock; save-state/rewind compatibility; performance measurement; disabled by default.
-  **Done when:** threaded and single-threaded runs produce identical audio/state hashes; a measured speed gain exists; fallback is automatic.
-  **Analysis (2026-11-06):** measured the DSP share on Lemmings (USA): 112.8 ms over 800 frames = **0.141 ms/frame** versus ~1.0 ms/frame total (~14%), with 3.2M DSP instructions, 441k loop calls, and ~16.8 instructions per running loop. A per-sample worker handoff (wakeup, state snapshot, validation) costs more than the ~0.19 µs of DSP work per sample, so a synchronous worker would be slower. A one-sample-ahead speculative pipeline is the only way to overlap; it must validate every ARM write to the input FIFO buffers, FIFO descriptors/pointers, semaphore, DSP program/data memory, and CPU-supplied coefficients, and replay on any change. No threaded path was shipped because it would be slower on the measured workload and risks FIQ/FIFO timing. The next step is to batch speculative samples and measure the invalidation rate on real titles before committing to the worker.
-  **Ref:** `opera_lr_dsp.c`, `opera_lr_dsp_regular.ic`, `opera_lr_dsp_threaded.ic`.
+### 3.4 P1 — Evidence and robustness
 
-- [ ] **ENG-02 — Interpreter hot-path optimization**
-  **Status:** Partial · **Priority:** P1 · **Effort:** L · **Tracks:** ENG-02
-  **Remaining:** the real-title boot path is still dominated by machine events, DSP, and memory-mapped I/O, so the measured Lemmings gain is inside noise; a decoded block cache, a batched interpreter loop that preserves the per-instruction CEL FSM check, and further single-data-transfer specialization remain.
-  **Done when:** hot-path improvements deliver a documented speedup with no accuracy or state change.
-  **Evidence:** 2026-11-05: direct DRAM/ROM instruction fetch (`IAddressBus.ReadInstruction`), inline LSL#0 and rotated-immediate operand paths, flag-preserving data-processing dispatch without the generic `ArmAlu` call, `BitOperations.PopCount`/`TrailingZeroCount` for LDM/STM, and a cached PC-adjust source. An interleaved same-host A/B (600 frames, both builds using the corrected synthetic fixture) measured synthetic **1.58 → 1.33 ms/frame (about 16% faster)** and Lemmings (USA) **1.43 → 1.13 ms/frame (about 21% faster)** with unchanged frame hashes. See `Performance.md` §8.6.
-
-- [ ] **PERF-08 — Managed ARM JIT**
-  **Status:** Partial · **Priority:** P2 · **Effort:** XL · **Tracks:** BAK-10
-  **Remaining:** end-to-end throughput is still below the current interpreter on Lemmings boot (about 1.23-1.37 vs 1.00-1.02 ms/frame, ~1.25x slower) despite the synthetic win; about 24% of executed instructions still fall back to the interpreter and the average compiled block covers only ~2.5 instructions. The 16-cycle event boundary, cold-code fallbacks, and the remaining unsupported forms (multiply, LDM/STM, register-offset loads, MSR/MRS) are the next targets. The interpreter remains the default and the accuracy oracle.
-  **Done when:** JIT output is bit-identical to the interpreter on the test corpus, delivers at least a 1.5× speedup on hot titles, and falls back safely.
-  **Evidence:** 2026-11-06 third pass: compiled blocks share a PC/CPSR/cycle/instruction context through `ref` parameters, so a chain of blocks inside one 16-cycle batch no longer reloads and flushes the architectural state per block. The FIQ exit now stores the post-vector context, fixing a frame-loop rewind to the interrupted PC. Register-specified data-processing shifts are compiled with the interpreter's extra internal cycle and have a dedicated parity test. The compile-hit counter is an 8,192-entry direct-mapped table; 4,096 hits remains the best threshold. Interleaved A/B (600 frames after 200 warm-up): Lemmings improved from 1.60-1.66 ms/frame with the previous JIT to **1.23-1.37 ms/frame** (~20% faster than the old JIT), versus 1.00-1.02 ms/frame for the interpreter; the synthetic loop is 0.89-0.99 ms/frame versus 1.20-1.30 for the interpreter (~1.3x faster). Hashes match exactly on the 600-frame Lemmings checkpoint (`0x2A53D449`) and on 500-frame CLI runs for Road Rash, Powers Kingdom, and Lemmings with identical instruction/cycle counts. See `Performance.md` §8.4.
-
-- [ ] **PERF-07 — Tier B 1080p60 budgets and profiling**
-  **Status:** Pending · **Priority:** P1 · **Effort:** M · **Tracks:** BAK-06
-  **Remaining:** profile integrated GPUs and older CPUs; 1080p60 per-filter budgets; p99 and allocation targets; reference-machine matrix; documented tuning guidance.
-  **Done when:** Tier B desktop sustains 1080p60 with p99 under budget; allocation-free behavior is tracked by the zero-allocation item.
-
-- [ ] **PERF-01 — Zero-allocation steady state on every real path**
-  **Status:** Partial · **Priority:** P1 · **Effort:** M
-  **Remaining:** eliminate the ~2.3 KB/frame Avalonia/compositor residual; remove CHD decode allocations from the core stage; prove zero allocations for uploads, readback, audio, and gallery/OSD paths.
-  **Evidence:** The 2026-11-05 rewind fix pools the capture stream, keyframe arrays, payload buffer, and Brotli scratch, cutting rewind capture allocations from ~75 MB per keyframe to ~1.6 MB with no gen2 collections in a 1,200-frame run.
-  **Done when:** synthetic and representative real titles report 0 managed bytes/frame after warm-up; CI enforces the gate.
-
-- [ ] **PERF-04 — Host disc streaming and CHD decompression**
-  **Status:** Partial · **Priority:** P2 · **Effort:** M
-  **Remaining:** allocation-free CHD/ISO prefetch under continuous streaming; decompression buffers; cache sizing; read-ahead tuning; avoid frame spikes while keeping the emulated CD model unchanged. The 2026-11-05 increment pools prefetched sector/audio buffers, reuses the worker read buffers, adds an allocation gate for cached reads, and enables the prefetch cache for frontend disc loads. Cache hits do not allocate per read (one-time runtime allocation tolerated), but continuous miss/eviction streaming still needs an end-to-end allocation gate. Random CHD reads still allocate ~12.6 KB per read inside the container reader (5,000 reads allocated 63 MB).
-  **Done when:** disc streaming does not allocate in steady state or stall presentation; emulated CD timing is unaffected.
-  **Note:** emulated CD read-ahead/subcode is tracked in the CD items above; this item is host-side only.
-
-- [ ] **PERF-05 — High-resolution CEL performance**
-  **Status:** Partial · **Priority:** P2 · **Effort:** M
-  **Remaining:** the VDLP plane copy is now direct word access, but the CEL rasterizer still writes four times the pixels and the high-res mode remains opt-in; per-title fallback and a 60 fps Tier B measurement remain.
-  **Done when:** high-res mode meets its documented frame-time budget and degrades gracefully on slower hardware.
-  **Evidence:** 2026-11-05: `Vdlp.RenderHighResolutionLine` and the low-res DMA copy now read the raw word backing span instead of four `IRam.Read16` interface calls per pixel. An interleaved same-host A/B on Lemmings (USA) measured high-res **3.30-3.89 → 1.32-1.92 ms/frame** (about 2x faster) with an identical high-res frame hash. The synthetic CEL/rasterizer tests and the full suite still pass. See `Performance.md` §8.6.
-
-- [ ] **PERF-06 — GLES 3.1/ANGLE renderer performance**
-  **Status:** Partial · **Priority:** P2 · **Effort:** M
-  **Remaining:** GLES 3.1 feature path; real-hardware ANGLE/Tier B percentile runs; further state-change reduction; shader/pipeline-cache measurement; mobile-desktop GPU validation.
-  **Done when:** GLES 3.1 and ANGLE match the desktop GL output and meet 1080p60 budgets.
-  **Evidence:** 2026-11-05 revalidation on Windows 11 / RTX 4070: ANGLE D3D11 reports OpenGL ES 3.0, integer textures, and EGL_KHR_swap_interval; the 4K offscreen sharp-bilinear probe measured present mean **0.67 ms** / p99 **1.29 ms** over 120 frames with **0 B/frame** in the renderer. See `Performance.md` §8.
-
-### 3.3 Optional features
-
-- [ ] **UX-03 — Netplay**
-  **Status:** Pending · **Priority:** P2 · **Effort:** XL · **Tracks:** UX-03
-  **Remaining:** lobby/direct connect; lockstep or rollback; NAT/tunneling guidance; desync detection; state handoff; chat/ready flow; tests.
-  **Done when:** two clients complete a 10-minute session with no unexplained desync; reconnect and state handoff work.
-
-- [ ] **UX-05 — Achievements**
-  **Status:** Pending · **Priority:** P2 · **Effort:** L · **Tracks:** UX-05
-  **Remaining:** provider integration (RetroAchievements or equivalent); offline cache; unlock UI; per-game progress; privacy controls; tests.
-  **Done when:** achievements unlock and persist across sessions; offline behavior is documented.
-
-- [ ] **UX-06 — TAS tooling completion**
-  **Status:** Partial · **Priority:** P2 · **Effort:** L · **Tracks:** UX-06
-  **Remaining:** full TAS UI; input timeline; multiplayer display; lag detection; movie library; branch comparison; deterministic replay evidence.
-  **Done when:** a complete TAS workflow (record, edit, branch, verify, share) works from the desktop and CLI.
-
-- [ ] **UX-24 — Lua scripting and automation**
-  **Status:** Pending · **Priority:** P3 · **Effort:** L · **Tracks:** UX-24
-  **Remaining:** sandboxed Lua host; memory/input/state/screenshot APIs; per-game scripts; CLI hooks; examples and documentation.
-  **Done when:** example scripts automate a test run and a gameplay sequence without destabilizing the core.
-
-- [ ] **UX-07 — Controller profiles and input polish**
-  **Status:** Partial · **Priority:** P2 · **Effort:** M · **Tracks:** UX-07
-  **Remaining:** named profiles; deadzones/curves; hot-plug prompts; import/export; per-game profiles; conflict detection; tests.
-  **Done when:** profiles round-trip, apply per game, and survive device changes.
-
-- [ ] **UX-20 + FND-06 — Per-game settings UI completion**
-  **Status:** Partial · **Priority:** P2 · **Effort:** M · **Tracks:** UX-20, FND-06
-  **Remaining:** cheat/shader-chain fields; inherit/reset; search/filter; live application; localized labels; profile import/export from the UI.
-  **Done when:** every shipped option is editable per game, with inherit/reset and immediate effect.
-
-- [ ] **UX-21/22 — Debugger and profiler suite**
-  **Status:** Pending · **Priority:** P2 · **Effort:** L · **Tracks:** UX-21, UX-22
-  **Remaining:** CPU/memory/CEL debugger (DSP debugging is tracked separately in the audio section); breakpoints/watchpoints; step/run-to; trace viewer; frame/performance profiler; exportable traces.
-  **Done when:** a developer can debug a stuck title and profile a frame without the CLI.
-
-- [ ] **ECO-09 — 3DO CD player / Video CD**
-  **Status:** Pending · **Priority:** P3 · **Effort:** M · **Tracks:** ECO-09
-  **Remaining:** audio-CD player UI; track navigation; VCD/MPEG expansion research and playback if feasible; tests.
-  **Done when:** a compatible disc plays with correct controls and documented limitations.
-
-- [ ] **VID-07 — Shader preset system**
-  **Status:** Pending · **Priority:** P2 · **Effort:** L · **Tracks:** VID-07
-  **Remaining:** `.slang`/`.glslp`-style presets; hot reload; per-game presets; parameter UI; fallback on unsupported GPUs.
-  **Done when:** popular presets load, render correctly, and fall back safely.
-
-- [ ] **VID-11 + BAK-19 — Vulkan surfaces on Linux/macOS**
-  **Status:** Pending · **Priority:** P2 · **Effort:** L · **Tracks:** VID-11, BAK-19
-  **Remaining:** X11/Wayland surface; macOS Metal/MoltenVK path or compositor embedding; no CPU readback; validation.
-  **Done when:** the optional Vulkan backend presents natively on Linux and macOS with parity and no readback.
-
-- [ ] **VID-16 — VDLP output pixel format selection**
-  **Status:** Pending · **Priority:** P3 · **Effort:** S
-  **Remaining:** select 0RGB1555/RGB565/XRGB8888 output; document behavior; parity tests.
-  **Done when:** the format option changes only host conversion, not emulated output, and is covered by tests.
-  **Ref:** `libretro_core_options.c` (`opera_vdlp_pixel_format`).
-
-- [ ] **VID-17 — Void-area patterns**
-  **Status:** Pending · **Priority:** P3 · **Effort:** S
-  **Remaining:** 4DO-style void patterns in addition to the solid color; per-game presets; preview.
-  **Done when:** patterns render identically across presenters and screenshots.
-
-- [ ] **AUD-03 — DSP debugger**
-  **Status:** Pending · **Priority:** P3 · **Effort:** M · **Tracks:** AUD-03
-  **Remaining:** DSP registers/memory; instruction trace; breakpoints; step/run-to; state inspection; integration with the debugger suite.
-  **Done when:** a DSP program can be debugged interactively and traces export cleanly.
-
-### 3.4 Future research features
-
-- [ ] **VID-01 + BAK-11 — True 640x480/480i internal rendering**
-  **Status:** Research · **Priority:** P1 · **Effort:** XL · **Tracks:** VID-01, BAK-11
-  **Remaining:** measure the current line-doubled mode; prototype true vertical 640x480; scale CEL/VDLP/clipping; independent 480-line output; per-title fallback; performance and visual comparison.
-  **Done when:** true vertical detail is visible on a 640x480 title and a 3D title, 60 fps is met on Tier A, and the default remains 320x240 + filter.
-  **Ref:** `docs/HighResolutionCelResearch.md`.
-
-- [ ] **VID-02 — 2x/4x supersampling**
-  **Status:** Research · **Priority:** P2 · **Effort:** L · **Tracks:** VID-02
-  **Remaining:** 2x/4x supersampling prototype; deterministic downsample; geometry/texture comparison; performance budget.
-  **Done when:** supersampling improves edges without changing guest VRAM semantics, and a go/no-go decision is recorded.
-
-- [ ] **VID-03 — GPU CEL compositing**
-  **Status:** Research · **Priority:** P3 · **Effort:** XL · **Tracks:** VID-03
-  **Remaining:** parity prototype for packed/literal CELs; GPU CEL architecture; VRAM semantics; fallback; feasibility note.
-  **Done when:** a prototype matches the software renderer on representative CELs, with a recorded go/no-go decision.
-
-- [ ] **VID-08 — NTSC composite/S-Video/RF, HDR, and gamma**
-  **Status:** Research · **Priority:** P2 · **Effort:** L · **Tracks:** VID-08
-  **Remaining:** composite/S-Video/RF signal models; CRT Royale-class presets; HDR output; gamma/color controls; visual validation.
-  **Done when:** signal and HDR modes are validated against reference captures and meet performance budgets.
-
-### 3.5 Testing
-
-Testing items are cross-cutting suites and gates. Feature-specific test evidence stays in that feature's “Done when” line.
+These items strengthen the claim after the Phase 0-3 work is green. They are not a reason to delay `TEST-07` or `CORE-04`.
 
 - [ ] **CORE-10 — Hardware test ROM suite**
   **Status:** Pending · **Priority:** P1 · **Effort:** L · **Tracks:** CORE-10
   **Remaining:** test ROMs for CPU, CLIO, MADAM, DSP, SPORT, VDLP, CD, input; golden outputs; CI integration; documentation.
   **Done when:** the suite runs in CI and catches timing/behavior regressions without a copyrighted BIOS.
 
-- [ ] **CORE-11/16 + FND-05 — Full-collection differential and hash regression**
-  **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** CORE-11, CORE-16, FND-05
-  **Remaining:** full 594-title differential run; PC-delta triage; state/CD transcript comparison; frame/audio hash coverage; nightly dashboard; allowlist and triage policy.
-  **Done when:** the nightly run has no unexplained divergence, and every allowance is documented and dated.
-
 - [ ] **AUD-04 — Audio golden tests vs Opera**
   **Status:** Pending · **Priority:** P1 · **Effort:** M · **Tracks:** AUD-04
   **Remaining:** WAV corpus; spectral/RMS/envelope comparison; DSP mode changes; CD-DA mixes; hardware reference captures.
-  **Done when:** the corpus runs in CI with documented tolerances and catches regressions.
+  **Done when:** the corpus runs in CI with documented tolerances and catches regressions. Requires the fixed seed from `TEST-07`.
 
 - [ ] **VID-13 — Video test suite and color accuracy**
   **Status:** Pending · **Priority:** P1 · **Effort:** M · **Tracks:** VID-13
@@ -369,18 +270,13 @@ Testing items are cross-cutting suites and gates. Feature-specific test evidence
 
 - [ ] **TEST-01 — Save-state migration matrix**
   **Status:** Pending · **Priority:** P1 · **Effort:** M
-  **Remaining:** test every version bump; v1–v3 states; option/region/disc-hash changes; warn/reject policies; 4DO/Opera interop once save-state interoperability lands.
+  **Remaining:** test every version bump; v1-v3 states; option/region/disc-hash changes; warn/reject policies; 4DO/Opera interop once save-state interoperability lands.
   **Done when:** every supported state version loads or fails with a typed, tested error.
 
 - [ ] **ENG-01 + ENG-09 — CI quality gates**
   **Status:** Pending · **Priority:** P1 · **Effort:** M · **Tracks:** ENG-01, ENG-09
   **Remaining:** full OS/arch matrix; coverage gate; static analysis; benchmark regression; SBOM; reproducible builds; six-bundle smoke; artifact checksums.
   **Done when:** every release candidate passes all gates and publishes signed, reproducible evidence.
-
-- [ ] **TEST-02 + BAK-09 — ViewModel and UI tests**
-  **Status:** Pending · **Priority:** P2 · **Effort:** M · **Tracks:** BAK-09
-  **Remaining:** settings, library, dialogs, hotkeys, gallery, playlist, and profile ViewModel tests; headless UI smoke; accessibility checks.
-  **Done when:** UI regressions are caught without manual clicking.
 
 - [ ] **TEST-04 — GPU and platform CI matrix**
   **Status:** Pending · **Priority:** P1 · **Effort:** L
@@ -389,48 +285,111 @@ Testing items are cross-cutting suites and gates. Feature-specific test evidence
 
 - [ ] **TEST-05 — Performance regression matrix**
   **Status:** Pending · **Priority:** P1 · **Effort:** M
-  **Remaining:** Tier A/B and arm64 baselines; filters; high-res; threaded DSP/JIT; relative >10% gate; published trend.
+  **Remaining:** Tier A/B and arm64 baselines; filters; high-res; interpreter and opt-in JIT; relative >10% gate; published trend.
   **Done when:** regressions fail the gate and the trend is visible to maintainers.
 
-- [ ] **TEST-06 — In-game/visual and high-resolution compatibility review**
-  **Status:** Pending · **Priority:** P1 · **Effort:** L
-  **Remaining:** inspect final frames for every rendered disc; rerun black/static titles at 12,000+ frames; record Unplayable/Playable/Good; repeat with high-res; feed results into the compatibility and high-resolution items.
-  **Done when:** every local disc has a reviewed status and the compatibility matrix distinguishes loadable, playable, and good.
+### 3.5 Deferred — performance and product
 
---
+Deferred until Gate 3 is green. These do not make the emulator more accurate, and most of them do not matter to a player choosing between 5DO, 4DO, and Opera. Most are Partial or Pending; the full status and evidence stay in the canonical ID history. Gate 5 in §5 pulls the specific performance items it needs after compatibility is proven.
 
-## 4. Suggested execution order
+**Performance (only if a measured gate fails):**
 
-This is an ID-only sequence; descriptions live in the canonical entries above.
+- [ ] **PERF-07 — Tier B 1080p60 budgets and profiling** · P1 · M
+  **Remaining:** profile integrated GPUs and older CPUs; 1080p60 per-filter budgets; p99 and allocation targets; reference-machine matrix. **Done when:** Tier B sustains 1080p60 with p99 under budget.
+- [ ] **PERF-01 — Zero-allocation steady state on every real path** · P1 · M
+  **Remaining:** the ~2.3 KB/frame Avalonia/compositor residual; CHD decode allocations in the core stage; uploads, readback, audio, gallery/OSD. **Done when:** 0 managed bytes/frame after warm-up; CI gate.
+- [ ] **PERF-04 — Host disc streaming and CHD decompression** · P2 · M
+  **Remaining:** allocation-free CHD/ISO prefetch under continuous streaming; decompression buffers; cache sizing; read-ahead tuning. **Done when:** no steady-state allocation or presentation stall; emulated CD timing unchanged.
+- [ ] **PERF-05 — High-resolution CEL performance** · P2 · M
+  **Remaining:** the CEL rasterizer still writes four times the pixels; per-title fallback and a 60 fps Tier B measurement. **Done when:** high-res meets its frame-time budget and degrades gracefully.
+- [ ] **PERF-06 — GLES 3.1/ANGLE renderer performance** · P2 · M
+  **Remaining:** GLES 3.1 feature path; real-hardware ANGLE/Tier B percentile runs; state-change reduction; pipeline-cache measurement. **Done when:** GLES 3.1/ANGLE match desktop GL and meet 1080p60 budgets.
+- [ ] **ENG-02 — Interpreter hot-path optimization** · P1 · L
+  **Remaining:** the real-title boot path is dominated by machine events, DSP, and memory-mapped I/O, so the measured Lemmings gain is inside noise; a decoded block cache, a batched interpreter loop that preserves the per-instruction CEL FSM check, and further single-data-transfer specialization remain. **Done when:** a documented speedup with no accuracy or state change. The 2026-11-05 increment measured synthetic 1.58→1.33 ms/frame and Lemmings 1.43→1.13 ms/frame.
 
-1. **Foundation:** TEST-01, CORE-10.
-2. **Accuracy:** CORE-01, CORE-02, CORE-03, CORE-08, SYS-08, CORE-04, CORE-06, CORE-07.
-3. **Disc and platform:** SYS-01, SYS-02, SYS-03, SYS-05, SYS-06, SYS-07, ECO-04.
-4. **Opera parity and “just works”:** SYS-12, SYS-15, SYS-16, SYS-17, SYS-18, CORE-13.
-5. **Visual/audio correctness:** AUD-01, CORE-11/16 + FND-05, AUD-04, VID-13.
-6. **Performance:** CORE-05, ENG-02, PERF-08, PERF-07, PERF-01, TEST-05.
-7. **Product polish:** UX-03..UX-25, ECO-06..ECO-11, VID-07..VID-17, AUD-02/03, SYS-19/21/22, ENG-05.
-8. **Research:** VID-01/02/03, VID-08, ECO-08, RES-01/02.
+**Product (after compatibility is proven):**
 
-**Rule:** do not start step 7 or 8 while a step 2–5 P0 item is open, unless the work is independent and explicitly marked as such.
+- [ ] **UX-03 — Netplay** · P2 · XL — lobby/direct connect; lockstep or rollback; NAT guidance; desync detection; state handoff. **Done when:** two clients complete a 10-minute session with no unexplained desync.
+- [ ] **UX-05 — Achievements** · P2 · L — provider integration; offline cache; unlock UI; per-game progress; privacy. **Done when:** unlocks persist and offline behavior is documented.
+- [ ] **UX-06 — TAS tooling completion** · P2 · L — full TAS UI; input timeline; multiplayer display; lag detection; movie library; branch comparison. **Done when:** record/edit/branch/verify/share works from desktop and CLI.
+- [ ] **UX-07 — Controller profiles and input polish** · P2 · M — named profiles; deadzones/curves; hot-plug prompts; import/export; per-game profiles; conflict detection. **Done when:** profiles round-trip and survive device changes.
+- [ ] **UX-20 + FND-06 — Per-game settings UI completion** · P2 · M — cheat/shader-chain fields; inherit/reset; search/filter; live application; localization. **Done when:** every shipped option is editable per game with inherit/reset.
+- [ ] **UX-21/22 — Debugger and profiler suite** · P2 · L — CPU/memory/CEL debugger; breakpoints/watchpoints; step/run-to; trace viewer; frame profiler. **Done when:** a developer can debug a stuck title without the CLI.
+- [ ] **UX-24 — Lua scripting and automation** · P3 · L — sandboxed host; memory/input/state/screenshot APIs; per-game scripts; CLI hooks. **Done when:** example scripts automate a test run and a gameplay sequence.
+- [ ] **ECO-09 — 3DO CD player / Video CD** · P3 · M — audio-CD player UI; track navigation; VCD/MPEG research. **Done when:** a compatible disc plays with documented limitations.
+- [ ] **VID-07 — Shader preset system** · P2 · L — `.slang`/`.glslp` presets; hot reload; per-game presets; parameter UI. **Done when:** popular presets load and fall back safely.
+- [ ] **VID-11 + BAK-19 — Vulkan surfaces on Linux/macOS** · P2 · L — X11/Wayland; macOS Metal/MoltenVK or compositor embedding; no CPU readback. **Done when:** native presentation with parity.
+- [ ] **VID-16 — VDLP output pixel format selection** · P3 · S — 0RGB1555/RGB565/XRGB8888; host-only conversion. **Done when:** the option changes only host conversion and is covered by tests.
+- [ ] **VID-17 — Void-area patterns** · P3 · S — 4DO-style void patterns; per-game presets; preview. **Done when:** patterns match across presenters and screenshots.
+- [ ] **AUD-03 — DSP debugger** · P3 · M — registers/memory; instruction trace; breakpoints; step/run-to; integration with the debugger suite. **Done when:** a DSP program can be debugged interactively.
+- [ ] **TEST-02 + BAK-09 — ViewModel and UI tests** · P2 · M — settings, library, dialogs, hotkeys, gallery, playlist, profiles; headless UI smoke; accessibility. **Done when:** UI regressions are caught without manual clicking.
+
+### 3.6 Research — only after Gate 3
+
+- [ ] **VID-01 + BAK-11 — True 640x480/480i internal rendering** · P1 · XL
+  **Remaining:** measure the current line-doubled mode; prototype true vertical 640x480; scale CEL/VDLP/clipping; independent 480-line output; per-title fallback. **Done when:** true vertical detail is visible on a 640x480 title and a 3D title, 60 fps on Tier A, default remains 320x240 + filter.
+  **Note:** 4DO and Opera do not do this; it is not needed to win the comparison. `docs/HighResolutionCelResearch.md`.
+- [ ] **VID-02 — 2x/4x supersampling** · P2 · L — prototype; deterministic downsample; geometry/texture comparison; performance budget. **Done when:** edges improve without changing guest VRAM semantics, with a go/no-go.
+- [ ] **VID-03 — GPU CEL compositing** · P3 · XL — parity prototype for packed/literal CELs; VRAM semantics; fallback. **Done when:** the prototype matches the software renderer, with a go/no-go.
+- [ ] **VID-08 — NTSC composite/S-Video/RF, HDR, and gamma** · P2 · L — signal models; CRT Royale-class presets; HDR; gamma/color controls. **Done when:** validated against reference captures and performance budgets.
+
+### 3.7 Closed decisions (not backlog)
+
+These are recorded decisions, not completed work. Do not reopen them without new measurement.
+
+| ID | Decision | Evidence | Revisit only if |
+|---|---|---|---|
+| PERF-08 | **Stop investment** in the managed ARM JIT. Keep `--cpu-backend jit` as an experimental, opt-in backend; the interpreter remains the default and the accuracy oracle. | Three passes. Best result: Lemmings **1.23-1.37 ms/frame** vs **1.00-1.02** for the interpreter (~1.25x slower), despite a synthetic win (0.89-0.99 vs 1.20-1.30). ~24% of instructions still fall back; average block ~2.5 instructions. Hashes/instructions match. `Performance.md` §8.4. | A measured 1.5x end-to-end win on a real title, or a platform where the interpreter cannot hit 60 fps. |
+| CORE-05 | **Do not implement** the threaded DSP. The handoff and validation cost exceeds the work it would offload. | DSP share on Lemmings: 112.8 ms / 800 frames = **0.141 ms/frame (~14%)**; ~0.19 µs of DSP work per sample. A per-sample worker is slower; a speculative pipeline must validate every ARM write to FIFO/DSP state and replay on change. `Performance.md` §8.5. | A title where DSP exceeds ~30% of frame time, or a bit-identical speculative pipeline measures a real win. |
 
 ---
 
-## 5. “Best 3DO emulator” gates
+## 4. Suggested execution order
 
-These are the release/quality gates for the goal, not a second backlog. They reference canonical IDs only.
+This is the phased order. The IDs are the canonical entries in §3.
+
+| Phase | Window | IDs | Exit gate |
+|---|---|---|---|
+| **0 — Truth** | Weeks 1-3 | TEST-07, CORE-11/16 | Two byte-identical reference captures; PC/CD/audio fields populated; 50-title first-divergence report. |
+| **1 — Disc** | Weeks 4-13 | CORE-04, SYS-01, SYS-02 | CD transcripts match or have documented divergences; CD-DA and multi-disc pass; no 594 regression. |
+| **2 — Timing** | Weeks 14-21 | CORE-03, CORE-02, CORE-06, CORE-07; CORE-01 only if the panel proves it | CEL/CLIO/SPORT/FIQ traces within tolerance; timing-sensitive titles fixed. |
+| **3 — Proof** | Weeks 22-33 | TEST-06, CORE-13, SYS-03, SYS-15, SYS-16, CORE-08, AUD-01 | Top-100 audit: 100% reach gameplay, ≥95% Good/Playable; 4DO/Opera head-to-head; zero unexplained regressions. |
+| **4 — Release** | Weeks 34-40 | ECO-04, §3.4 evidence items | Six-platform release gate; audio/video golden suites; CI matrix; 24h soak. |
+| **5 — Product/research** | After Gate 3 | §3.5-3.6 | Separate roadmap; no accuracy trade-off. |
+
+**If you only do three things:** `TEST-07`, `CORE-04`, `TEST-06`. Those three produce the oracle, the biggest behavioral fix, and the proof that the emulator is actually better.
+
+**Rule:** do not start Phase 5 while any Phase 0-3 P0 item is open. The repo's history shows product and performance work landing while `CORE-01`-`CORE-04` stayed partial; that is the pattern this rewrite exists to break.
+
+### 4.1 Effort reality
+
+By the plan's own S/M/L/XL scale, the **full backlog is roughly 800-850 developer-days** (~3.4 years solo). The focused path through Gate 3 is roughly **240 developer-days** (~12 months at a traditional solo pace), but the critical path is validation, not typing:
+
+- OperaCore is real-time paced: a 3,000-frame capture is ~50 s per title, so a full 594-title pass is ~8-9 hours. The 50-title panel is ~1 hour per pass.
+- The top-100 audit is 100 × 10-minute scripted runs plus visual review; budget 3-5 weeks even with automation.
+- If you are driving implementation with AI agents, the coding half compresses; the capture, audit, hardware, and legal half does not.
+
+A realistic wall-clock target for Gate 3 is **5-7 months at the project's recent AI-assisted velocity** (the 240 developer-days above are the traditional-effort estimate), with the top-100 audit as the bottleneck. The full plan remains a multi-year program; that is acceptable only if it is treated as post-compatibility product work.
+
+---
+
+## 5. "Best 3DO emulator" gates
+
+These are the release/quality gates for the goal, not a second backlog. They reference canonical IDs only. A gate is green only when the evidence is committed, reproducible, and dated.
 
 | Gate | Required evidence | Required IDs |
 |---|---|---|
-| Compatibility | 594/594 discs load and render; ≥95% Playable/Good; every exception documented | CORE-13, TEST-06, SYS-17, SYS-18 |
-| Accuracy | No unexplained differential divergence; ARM/CLIO/CEL/CD/SPORT/FIQ parity | CORE-01, CORE-02, CORE-03, CORE-08, SYS-08, CORE-04, CORE-06, CORE-07, CORE-11/16 + FND-05 |
-| Opera feature parity | All core options implemented or explicitly scoped | SYS-05, SYS-06, SYS-07, SYS-12, SYS-15, SYS-16, VID-16, CORE-05 |
-| Disc/peripherals | CD-DA, multi-track, ODE, PAL, mouse, lightgun, flightstick, trackball, six-player | SYS-01, SYS-02, SYS-03, SYS-15, SYS-16, CORE-04 |
-| Performance | 4K60 Tier A; 1080p60 Tier B; zero steady-state allocations; arm64 parity | PERF-07, PERF-01, PERF-03, PERF-06, TEST-05 |
-| Platforms | Windows/Linux/macOS x64/arm64 validated; installers/signing | ECO-04, UX-16, PERF-03 |
-| Trust | 2,000+ tests; nightly differential; coverage/benchmark gates; fuzzing; SBOM; 24h soak | CORE-10, CORE-11/16 + FND-05, AUD-04, VID-13, ENG-06, ENG-01 + ENG-09, TEST-03 |
-| Product | Rewind, fast-forward, cheats, netplay, achievements, TAS, shaders, recording, debugger, localization | UX-03, UX-05, UX-06, UX-24, VID-07, VID-09, UX-21/22, UX-09 + FND-07 + ENG-08 |
-| Release | Signed, reproducible bundles; auto-update; docs/compatibility portal current | UX-14, UX-16 + ENG-10, ECO-10 + ENG-07, ECO-11 |
+| **0. Oracle** | Deterministic reference captures; PC/CPSR/state/CD/audio fields on both sides; first-divergence report for 50 titles | TEST-07, CORE-11/16 |
+| **1. Disc** | Command transcripts match or have documented divergences; CD-DA, multi-track, multi-disc, read-ahead; no 594 regression | CORE-04, SYS-01, SYS-02 |
+| **2. Timing** | CEL/CLIO/SPORT/FIQ traces within tolerance; timing-sensitive titles fixed | CORE-02, CORE-03, CORE-06, CORE-07; CORE-01 conditional |
+| **3. Compatibility** | Top 100: 100% reach gameplay, ≥95% Good/Playable; 4DO/Opera head-to-head; every exception documented | TEST-06, CORE-13, SYS-03, SYS-15, SYS-16, CORE-08 |
+| **4. Audio** | No crackle/drift in extended runs; CD-DA mix; audio golden corpus | AUD-01, AUD-04 |
+| **5. Performance** | 4K60 Tier A; 1080p60 Tier B; p99 and allocation budgets | PERF-07, PERF-01, TEST-05 |
+| **6. Platforms** | Windows/Linux/macOS x64/arm64 validated; installers/signing | ECO-04 |
+| **7. Trust** | 2,000+ tests; nightly differential; coverage/benchmark gates; fuzzing; SBOM; 24h soak | ENG-01/09, CORE-10, TEST-01, TEST-04, TEST-05, VID-13 |
+| **8. Product** | Netplay, achievements, TAS, shaders, debugger, localization | §3.5 (deferred) |
+
+**Release rule:** Gates 0-7 must be green. Gate 8 is not a release blocker for the compatibility claim, and must not delay it.
 
 ---
 
@@ -440,15 +399,16 @@ These are the release/quality gates for the goal, not a second backlog. They ref
 
 | Reference | Role | Use it for |
 |---|---|---|
-| `References/opera-libretro-master` | **Primary behavioral reference** | Core options, CD-ROM, DSP, peripherals, SWI HLE, boot ROM, accuracy fixes |
-| `References/4DO-master` | Historical port baseline | 4DO behavior, fixes, game DB, UI features |
+| `References/opera-libretro-master` | **Timing/behavior oracle** | CD-ROM, DSP, peripherals, SWI HLE, boot ROM, accuracy fixes |
+| `References/4DO-master` | **Compatibility oracle** | Game database, fix flags, known-bad titles, UI behavior |
 | `References/fourdo-code-r389-trunk` | Historical 4DO snapshot | Older behavior and regression comparisons |
 | `References/FourDO Ported` | Porting notes/code | 4DO-to-C# mapping and conventions |
 | `References/freedo-master`, `References/freedo-master (1)` | Original core reference | FreeDO quirks, ARM/CLIO/MADAM/DSP baseline |
 | `References/CPP_SimpleGui` | Opera test harness | Differential runs and reference captures |
 | `References/Docs`, `References/Docs2`, `References/Docs3` | Hardware/SDK documentation | ARM60, 3DO, CD-ROM, VDLP, and Portfolio details |
-| `References/RMG-master` | Modern emulator UX benchmark | Library, netplay lobby, controller profiles, packaging |
-| `References/rpcs3-0.0.43` | Modern emulator product benchmark | Per-game config, debugger, compatibility list, release polish |
+| `References/RMG-master`, `References/rpcs3-0.0.43` | **UX benchmarks only** | Library, netplay, controller profiles, packaging, per-game config, debugger |
+
+**Reference hierarchy:** Opera wins on timing where it is measurable; 4DO wins on known game-specific fixes; hardware documentation wins when the two disagree. RMG and rpcs3 are product inspiration, not accuracy references.
 
 ### 6.2 Rules
 
@@ -456,9 +416,10 @@ These are the release/quality gates for the goal, not a second backlog. They ref
 2. **One reference per change.** Record the source in the commit/PR and in `docs/PortingNotes.md` if the behavior diverges.
 3. **Tests first.** Add the failing test or differential fixture before the fix.
 4. **Preserve determinism.** No wall clock, unordered iteration, or environment-dependent seeds in emulated state.
-5. **Keep the core single-threaded by default.** Threaded DSP/JIT must be opt-in and bit-identical.
-6. **Do not ship copyrighted BIOS/game content.** Embedded boot ROM work needs legal review.
-7. **Document intentional divergence** in `docs/PortingNotes.md` and `docs/Compatibility.md`.
+5. **Keep the core single-threaded by default.** Threaded work must be opt-in and bit-identical; `CORE-05` is closed.
+6. **Do not anchor to Opera's bugs.** Opera is a reference, not ground truth. If the hardware documentation is clear, follow the hardware and record why.
+7. **Do not ship copyrighted BIOS/game content.** Embedded boot ROM work needs legal review; `SYS-05` is blocked until then.
+8. **Document intentional divergence** in `docs/PortingNotes.md` and `docs/Compatibility.md`.
 
 ---
 
@@ -478,9 +439,13 @@ jb inspectcode 5DO.sln -o=inspectcode.sarif -f=Sarif --severity=WARNING --no-bui
 # Compatibility sweep
 pwsh -NoProfile -File tools/compat-sweep.ps1 -Roots "J:\Panasonic 3DO","G:\MAME\MAME Software List CHDs\3do" -Frames 3000 -Resume
 
-# Differential smoke and showcase
+# Differential smoke and showcase (current oracle)
 dotnet run --project tools/FiveDo.DiffHarness -c Release -- --manifest benchmarks/diff/smoke.json
 dotnet run --project tools/FiveDo.DiffHarness -c Release -- --manifest benchmarks/diff/showcase.json
+dotnet run --project tools/FiveDo.DiffHarness -c Release -- --manifest benchmarks/diff/showcase.json --compare-pc --core artifacts/diff/opera-build/out/OperaCore.dll
+
+# After TEST-07: the 50-title accuracy panel
+dotnet run --project tools/FiveDo.DiffHarness -c Release -- --manifest benchmarks/diff/panel50.json --strict --compare-pc --core artifacts/diff/opera-build/out/OperaCore.dll
 
 # Benchmark gate
 dotnet run --project benchmarks/FiveDo.Benchmarks -c Release -- --frames 120 --label ci --json --gate
@@ -494,7 +459,9 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --vk-probe
 dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test
 ```
 
-**Linux validation:** use the local Hyper-V VM `LinuxMint` (`D:\Hyper-V\VMs\LinuxMint`). Read `AGENTS.local.md` for credentials. Publish `linux-x64` on the host and copy the output into the guest, or install the .NET SDK in the guest. Record evidence in `docs/Compatibility.md` §10.3 and `docs/KnownIssues.md`.
+**Differential rule:** attach the report (manifest hash, BIOS hash, disc hash, frame count, build) to any accuracy claim. A frame-hash match alone is not evidence of accuracy.
+
+**Linux validation:** use the local Hyper-V VM `LinuxMint` (`D:\Hyper-V\VMs\LinuxMint`). Read `AGENTS.local.md` for credentials. Publish `linux-x64` on the host and copy the output into the guest, or install the SDK in the guest. Record evidence in `docs/Compatibility.md` §10.3 and `docs/KnownIssues.md`.
 
 **Release:** run the commands in [`ReleaseChecklist.md`](ReleaseChecklist.md); build bundles with `packaging/package-bundle.ps1`; keep a local copy in `src/FiveDo.Frontend.Avalonia/bin/Release`; remove PDB/XML files; publish `SHA256SUMS.txt`.
 
@@ -505,12 +472,15 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test
 1. **This file is the single source of truth.** Do not recreate separate plan, backlog, handoff, or roadmap files.
 2. **One canonical entry per feature.** Do not add a second checklist for the same work. Reference IDs instead.
 3. **Retire duplicates.** `BAK-*` and `MOON-*` are aliases only; see Appendix B. Do not reintroduce them.
-4. **Check the box only when “Done when” is satisfied.** Include behavior, tests, docs, and no regressions.
-5. **Move completed items to the completed log.** Do not leave them in the missing-feature category.
+4. **Check the box only when "Done when" is satisfied.** Include behavior, tests, docs, and no regressions.
+5. **Move completed items to §2.5 and the completed log.** Do not leave them in the missing-feature category.
 6. **One feature per pull request.** No mixed accuracy/rendering/UX changes.
-7. **No default timing change without full-collection evidence.**
+7. **No default timing change without panel evidence.** A 40-title, 300-frame sample is a smoke test, not a gate.
 8. **Keep evidence current.** Update `TestCorpus.md`, `Compatibility.md`, `PortingNotes.md`, and `KnownIssues.md` when behavior changes.
-9. **Refresh the snapshot monthly** or after every release: version, test count, compatibility counts, performance numbers, and platform validation status.
+9. **Keep the plan readable.** Keep §§1-8 lean; the completed log is append-only history and the appendices are reference material. Put long evidence in the linked docs; keep the decision and the number here.
+10. **Record closures.** A "won't do" decision needs a measurement and a revisit condition, like §3.7.
+11. **Refresh the snapshot monthly** or after every release: version, test count, compatibility counts, performance numbers, and platform validation status.
+12. **Keep the cross-document anchors stable.** `#2-current-state`, `#3-missing-features-canonical-backlog`, `#4-suggested-execution-order`, `#7-verification-commands`, and `#9-completed-log` are linked from `NextSession.md`.
 
 ---
 
@@ -518,16 +488,13 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
 
+- **2026-11-06 — TEST-07 oracle increment.** Added `sg_debug_set_seed`, `sg_debug_arm_cpsr`, `sg_debug_cd_command_count`, and `sg_debug_cd_command_hash` to the debug reference core; added fixed-seed plumbing (default 1488), CPSR and CD command comparison, `sampleTolerance`, and `firstDivergence` reporting to `FiveDo.DiffHarness`; added issue-time command counters to `CdromCommandTranscript` and `CdromDevice`. `benchmarks/diff/samples5.json` runs five local titles at 300 frames. Two consecutive runs produced identical checkpoint arrays for both engines. Result: 0 match / 5 diverged / 0 error; first divergence is PC at frame 60 on all five; Lemmings CD commands match 9/9 at f=60 and 50/50 at f=120, then 108/105 at f=300; CPSR differs at f=60 by the FIQ-disable bit. Added the `panel` generator and produced `benchmarks/diff/panel50.json` (50 evenly spaced titles from the 594-disc manifest). 1,879 tests pass. See `DifferentialHarness.md` §8 and `TestCorpus.md` 1.1aw.
+- **2026-11-06 — Plan rewrite (focused execution plan).** Reorganized the backlog around the compatibility claim. Added `TEST-07` (reference oracle instrumentation and first-divergence metric), promoted `TEST-06` to P0 as a staged top-100 playability audit, moved performance and product work to §3.5, moved research to §3.6, and closed `PERF-08`/`CORE-05` with their measured negative evidence. `SYS-05` is blocked on GPL-2.0 licensing, not engineering. No IDs were retired; `SYS-06`, `SYS-08`, `SYS-12`, `SYS-17`, `SYS-18`, and `VID-04` moved to §2.5. The plan retains the five anchors other docs link to.
 - **2026-11-06 - VID-12 latency features.** Added 0-2 frame run-ahead and 0-8 frame presentation delay in `CoreRunner`, VRR/adaptive-sync presentation, and a −250…250 ms audio sync offset. Run-ahead uses a reusable uncompressed `MachineStateSnapshot`; hidden frames suppress audio/host submission but still render through `Vdlp.DoLine` so visible hashes match the normal timeline. State frame section v2 writes only visible lines and the RAM loader clears only the previously addressable tail. Each depth step removes one field of emulator-side input delay (16.7 ms at 60 Hz, 20 ms at 50 Hz PAL). `bench --latency` measured a 9,348,438-byte snapshot, ~3.6-3.9 ms capture, and ~1.6-2.0 ms restore; one-frame run-ahead stays inside the 60 Hz budget on a typical title, and the runner auto-disables after 45 overruns or a rejected snapshot. `LatencyTests` covers snapshot round-trip, 1-/2-frame timeline parity, visible-only audio, frame-delay holding, range validation, and telemetry. Settings, per-game profiles, the FPS overlay, and `--audio-sync` expose the options. Real AOT frontend run: Lemmings booted with run-ahead 1, frame delay 1, VRR, and audio sync 40 ms; OpenAL initialized at 44.1 kHz through the null device with no fault. Full optical input-to-photon measurement and real adaptive-sync hardware confirmation remain validation caveats documented in `Performance.md` §8.7 and `KnownIssues.md`. See `Audio.md` §3 and `Video.md` §7.
-
 - **2026-11-06 - PERF-02/BAK-08 NativeAOT, trimming, and audio validation.** CLI and frontend AOT win-x64 single-file publishes build and start. The CLI AOT executable passes `--version`, `selftest --json`, `bench --frames 2 --json`, and `bench --latency`; a 3,000-frame Lemmings boot and a 240-frame realtime OpenAL run with `--audio openal --audio-sync 40` under `ALSOFT_DRIVERS=null` completed with 0 dropped samples and 0 underruns. The AOT frontend `--smoke-test` returns `FRONTEND SMOKE OK 1.3.0`, opens the real OpenGL 4.0 surface, boots Lemmings, and logs `OpenAL audio ready (44100 Hz stereo, 100 ms, sync 40 ms)` with run-ahead 1, frame delay 1, and VRR enabled. Sizes: CLI AOT 16.6 MB exe / 18.7 MB runtime folder; frontend AOT 34.5 MB exe / 54.6 MB runtime folder; trimmed frontend 27.9 MB exe / 48.0 MB folder; trimmed CLI 19.4 MB. Startup: CLI AOT `--version` 69 ms, `bench --frames 2` 65 ms; AOT frontend `--version` 70 ms and smoke 1.2 s; trimmed frontend smoke 3.2 s. Added four opt-in `.pubxml` profiles. Artifacts remain framework-dependent by default; AOT/trimming stay opt-in. Silk.NET `IL3000`/`IL3002` and CHDSharp/SharpGen `IL2104` warnings remain visible but non-fatal. See `Trimming.md`.
-
 - **2026-11-06 - SYS-06 RSA/unsigned-disc option.** Added `BiosRsaPatch`, the documented two-site media-RSA bypass, applied only in memory. Applying it to retail `panafz10.bin` and `panafz10e-anvil.bin` reproduces the known No-RSA MD5s `1477bda8...` and `cf11bbb5...` exactly. The BIOS catalog now identifies the No-RSA FZ-1J/FZ-10/FZ-10E images, automatic selection prefers them when `--allow-unsigned-discs`/Settings > Paths is enabled, and a compatible retail image is patched otherwise. `run`/`trace` report `biosRsaPatched`/`biosRsaDisabled`, `bios info` reports `rsaDisabled`/`rsaPatchSites`, and `bios select` accepts `--allow-unsigned-discs`. Signed Wolfenstein 3D and Road Rash 600-frame hashes are unchanged; the option never writes the BIOS file and no BIOS/game content is bundled. See `TestCorpus.md` 1.1au.
-
 - **2026-11-06 - v1.3.0.** Six framework-dependent single-file bundles plus `SHA256SUMS.txt`; 480i/240p field handling (auto detection, bob, weave, blend), interlace-aware viewport geometry, screenshot/GIF support, per-game and CLI mode selection, and 1,833 tests. The release is presentation-only over 1.2.2: default bob hashes and save states are unchanged. Release workflow <https://github.com/purelogiccode/5DO/actions/runs/42235476257>; docs/wiki workflow <https://github.com/purelogiccode/5DO/actions/runs/42235456021>.
-
 - **2026-11-06 - VID-04 480i/240p field handling.** Added `InterlaceProcessor` with bob, weave, blend, and content-based auto detection; wired it through `FiveDoMachine`, `AppSettings`/`GameProfile`, Settings > Video, screenshots/GIF, and `--deinterlace`; added `VdlFrame.PixelAspect` and interlace-aware viewport scaling so a woven 320x480 frame keeps its display geometry and integer scaling. Sixteen processor tests plus bob-vs-auto hashes on five local titles (3,000 frames for Road Rash, Space Ace, and Alone in the Dark) are unchanged. See `Video.md` §1.
-
 - **2026-11-05 - PERF-06 ANGLE revalidation.** Re-ran the 4K offscreen probe through ANGLE/D3D11 on the RTX 4070: OpenGL ES 3.0, integer textures, sharp-bilinear present mean 0.67 ms / p99 1.29 ms over 120 measured frames, with 0 B/frame in the renderer. Real GLES 3.1 hardware and Tier B percentile runs remain open, so PERF-06 stays Partial. See `Performance.md` §8.
 - **2026-11-05 - ENG-02 interpreter hot-path increment.** Added a direct DRAM/ROM instruction fetch (`IAddressBus.ReadInstruction`), inline LSL#0 and rotated-immediate operand handling, a flag-preserving data-processing dispatch that avoids the generic `ArmAlu` call, `BitOperations.PopCount`/`TrailingZeroCount` LDM/STM iteration, and a cached PC-adjust source. Interleaved same-host A/B: synthetic 1.58→1.33 ms/frame and Lemmings 1.43→1.13 ms/frame, with unchanged hashes. ENG-02 stays Partial pending a decoded block cache; see `Performance.md` §8.6.
 - **2026-11-05 - PERF-08 managed IL JIT second pass.** Replaced per-instruction verification with exact RAM-write invalidation, kept PC/CPSR/operands/flags in block locals, compiled through RAM stores and conditional-branch fallthroughs, added direct `IRam` load/store fast paths, and fixed R15 operands to use the block-local PC. Correctness: 1,000-frame CLI hashes match the interpreter on Road Rash `0x41D2A1DA`, Powers Kingdom `0xDCE31DC5`, and Lemmings `0x110E7DC5`, with identical instructions/cycles. On the synthetic ALU/store loop the old JIT measured 1.32-1.36 ms/frame and the new JIT 0.78 ms/frame (1.7x faster); Lemmings improved from 1.58-2.60 to 1.40-1.78 ms/frame but remains slower than the 1.08-1.25 ms/frame interpreter, so the interpreter remains the default and PERF-08 stays Partial. See `Performance.md` §8.4.
@@ -559,35 +526,35 @@ Append new entries here; do not delete history. Each entry is a completed canoni
 
 ## Appendix A — Opera option coverage
 
-This is a crosswalk, not a second backlog. “Canonical item” is the only place the remaining work is tracked.
+This is a crosswalk, not a second backlog. "Canonical item" is the only place the remaining work is tracked. Rows updated in the 2026-11-06 rewrite reflect the plan's own completed evidence.
 
 | Opera feature/option | 5DO status | Canonical item |
 |---|---|---|
-| BIOS (rom1), including embedded Opera Boot | Partial | SYS-05, SYS-06 |
+| BIOS (rom1), including embedded Opera Boot | Partial (retail BIOS); embedded boot blocked on licensing | SYS-05 |
 | Font/Kanji ROM (rom2) | Shipped | — |
-| CPU overclock 0.5×–4× | Partial | SYS-08 |
-| Memory capacity 2/4/8/14/15 MB DRAM, 1/2 MB VRAM | Shipped (SYS-07) | — |
+| CPU overclock 0.5×-4× | Shipped (experimental; not seeded into profiles) | SYS-08 (done) |
+| Memory capacity 2/4/8/14/15 MB DRAM, 1/2 MB VRAM | Shipped | SYS-07 (done) |
 | Random-number seed | Shipped | — |
-| CD speed unbounded/1×–32× | Shipped | — |
+| CD speed unbounded/1×-32× | Shipped | — |
 | Region NTSC/PAL1/PAL2 | Partial | SYS-03 |
 | VDLP pixel format 0RGB1555/RGB565/XRGB8888 | Missing | VID-16 |
 | VDLP bypass CLUT | Shipped | — |
 | HiRes CEL rendering | Partial (line-doubled) | VID-01 |
 | MADAM matrix hardware/software | Shipped | — |
-| OperaOS SWI HLE | Shipped (opt-in) | — |
-| Threaded DSP | Missing | CORE-05 |
+| OperaOS SWI HLE | Shipped (opt-in) | SYS-12 (done) |
 | NVRAM storage per-game/shared | Shipped | — |
-| NVRAM version 0–9 | Shipped | — |
-| Active input devices 0–8 | Missing | SYS-15 |
-| Hide lightgun crosshairs | Missing | SYS-15 |
+| NVRAM version 0-9 | Shipped | — |
+| Active input devices 0-8 | Shipped (device cap); per-device evidence partial | SYS-15 |
+| Hide lightgun crosshairs | Shipped | SYS-15 |
 | Debug output (KPRINT) | Shipped | — |
 | Joypad/flightstick/mouse/lightgun/arcade lightgun/trackball | Partial | SYS-15 |
-| Up to eight input ports | Partial | SYS-15 |
+| Up to eight input ports | Partial (ports 7-8 chain; six-player verification) | SYS-15, SYS-16 |
 | Cycle-based CD timing, read-ahead, DIPIR, tagged status, chunks, subcode | Partial | CORE-04 |
 | CD-DA/Red Book, ODE, multi-track TOC | Partial | SYS-01, SYS-02 |
-| ARM N=2 cycle model | Partial | CORE-01 |
+| ARM N=2 cycle model | Conditional | CORE-01 |
 | CEL busy pacing | Partial | CORE-03 |
 | Per-timer CLIO scheduling | Partial | CORE-02 |
+| Threaded DSP | Closed — not pursuing | CORE-05 |
 | Deterministic PRNG | Shipped | — |
 | Versioned state chunks | Shipped | — |
 | Headless test harness | Shipped | — |
@@ -630,6 +597,18 @@ This is a crosswalk, not a second backlog. “Canonical item” is the only plac
 | MOON-09 | PERF-07, ENG-02, PERF-08 |
 | MOON-10 | SYS-17, SYS-18, ECO-10 + ENG-07, ECO-11, UX-09 |
 
+**Priority changes in the 2026-11-06 rewrite (traceability):**
+
+| ID | Before | After | Reason |
+|---|---|---|---|
+| TEST-07 | (did not exist; BAK-01/02/03 were dangling aliases) | P0, Phase 0 | The oracle is the prerequisite for every accuracy claim. |
+| TEST-06 | P1 | P0, Phase 3 | The playability audit is the proof of "better than 4DO/Opera". |
+| SYS-05 | P0 | Blocked, P2 | GPL-2.0 licensing; homebrew-only; no retail impact. |
+| CORE-01 | P0 | Conditional P0 | The 17/40 vs 15/40 result is a two-title delta on a weak metric. |
+| PERF-08 | P2 | Closed | Three passes; still ~1.25x slower than the interpreter on real titles. |
+| CORE-05 | P1 | Closed | DSP is ~14% of frame time; handoff cost exceeds the work. |
+| §3.5 | P1/P2/P3 backlog | Deferred | Product/performance work does not move the compatibility claim. |
+
 **Dropped scope (do not add checkboxes):** WebAssembly/browser (ECO-02), Android/iOS (ECO-03), Raspberry Pi/arm64 GLES optimization (ECO-05), Steam Deck. The libretro core wrapper is not planned; 5DO stays standalone.
 
 ---
@@ -638,11 +617,12 @@ This is a crosswalk, not a second backlog. “Canonical item” is the only plac
 
 - [Status](Status.md) — short current answer.
 - [Compatibility](Compatibility.md) — supported set and platform evidence.
+- [Game compatibility results](GameCompatibilityResults.md) — per-disc sweep table.
 - [Known issues](KnownIssues.md) — current limitations.
 - [Performance](Performance.md) — budgets and measurements.
 - [Test strategy](TestStrategy.md) and [Test corpus](TestCorpus.md) — test evidence.
 - [Differential harness](DifferentialHarness.md) — Opera comparison.
+- [Reference strategy](ReferenceStrategy.md) — Opera/4DO mapping.
 - [High-resolution CEL research](HighResolutionCelResearch.md) — VID-01/02/03.
 - [Release checklist](ReleaseChecklist.md) — release gate.
 - [Porting notes](PortingNotes.md) — intentional divergences.
-- [Reference strategy](ReferenceStrategy.md) — Opera/4DO mapping.
