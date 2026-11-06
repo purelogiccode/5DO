@@ -321,7 +321,7 @@ substitute for a Tier B percentile run.
 > through into zero-filled ROM, so the old 1.250 ms/172 MIPS row measured
 > condition-failed NOPs rather than the intended ALU/store loop. The loop now returns to
 > its first instruction. Interleaved A/B runs measure the current interpreter at
-> **1.32-1.36 ms/frame** and the current JIT at **0.78 ms/frame**, with identical
+> **1.20-1.30 ms/frame** and the current JIT at **0.89-0.99 ms/frame**, with identical
 > instructions and frame hash. See §8.4 and §8.6.
 
 **Road Rash 3D race (2026-10-28).** The state-driven benchmark loads the archived
@@ -798,6 +798,31 @@ each entry pays the prologue, cache lookup, delegate call, and flush. A self-loo
 experiment reduced synthetic block calls by about a quarter but did not improve Lemmings and
 was reverted. The next step is a batched trace that keeps the block locals across event
 callbacks, not more per-instruction optimization.
+
+**Third pass (2026-11-06).** Compiled blocks now share a PC/CPSR/cycle/instruction context
+through `ref` parameters, so a chain of blocks inside one 16-cycle batch no longer reloads
+and flushes the architectural state at every block boundary. The FIQ exit stores the
+post-vector context, which fixes a frame-loop rewind to the interrupted PC. Register-specified
+data-processing shifts (`LSL`/`LSR`/`ASR`/`ROR` by `Rs`) are compiled with the interpreter's
+extra internal cycle, and a new parity test covers register shifts including counts above
+32. The compile-hit counter is now an 8,192-entry direct-mapped table; the old dictionary
+could be cleared by cold code and keep a hot loop below the threshold. The 4,096-hit
+threshold remains the best measured point (2,048 and 8,192 were both slower).
+
+Interleaved same-host A/B, 600 frames after 200 warm-up:
+
+| Case | Previous JIT (HEAD) | Current JIT | Current interpreter | Result |
+|---|---:|---:|---:|---|
+| Synthetic ALU/store loop | 1.60-1.66 ms/frame | **0.89-0.99 ms/frame** | 1.20-1.30 ms/frame | **~1.3x faster than the interpreter** |
+| Lemmings (USA) boot | 1.60-1.66 ms/frame | **1.23-1.37 ms/frame** | 1.00-1.02 ms/frame | ~20% faster than the old JIT, still ~1.25x slower than the interpreter |
+
+The 600-frame Lemmings checkpoint hash is unchanged (`0x2A53D449`). A separate 500-frame CLI
+A/B also matched exactly on Road Rash (USA), Powers Kingdom (Europe), and Lemmings (USA),
+with identical instruction and cycle counts. The JIT still loses on real code because about
+24% of executed instructions fall back to the interpreter and the average compiled block
+covers only ~2.5 instructions; the 16-cycle event boundary and cold-code fallbacks dominate
+the remaining gap. The interpreter remains the default and the accuracy oracle. PERF-08
+stays **Partial**.
 
 ### 8.5 Rewind capture stall (2026-11-05)
 

@@ -27,6 +27,25 @@ public sealed class ArmJitTests
     }
 
     [Fact]
+    public void Jit_MatchesInterpreter_ForRegisterSpecifiedShifts()
+    {
+        JitPair pair = JitPair.Create(
+            ArmTestAssembler.Mov(0, 0x1200),
+            ArmTestAssembler.Mov(1, 4),
+            ArmTestAssembler.DpRegisterShiftedByRegister(13, 2, 0, 0, 1, shiftType: 0),
+            ArmTestAssembler.DpRegisterShiftedByRegister(13, 3, 0, 0, 1, shiftType: 1, setFlags: true),
+            ArmTestAssembler.DpRegisterShiftedByRegister(13, 4, 0, 0, 1, shiftType: 2),
+            ArmTestAssembler.DpRegisterShiftedByRegister(13, 5, 0, 0, 1, shiftType: 3),
+            ArmTestAssembler.Mov(6, 40),
+            ArmTestAssembler.DpRegisterShiftedByRegister(13, 7, 0, 0, 6, shiftType: 0),
+            ArmTestAssembler.DpRegisterShiftedByRegister(13, 8, 0, 0, 6, shiftType: 1),
+            ArmTestAssembler.DpRegisterShiftedByRegister(13, 9, 0, 0, 6, shiftType: 2),
+            ArmTestAssembler.DpRegisterShiftedByRegister(13, 10, 0, 0, 6, shiftType: 3));
+
+        pair.RunBlocks(11);
+    }
+
+    [Fact]
     public void Jit_MatchesInterpreter_ForLslCarryOut()
     {
         JitPair pair = JitPair.Create(

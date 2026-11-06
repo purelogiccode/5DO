@@ -20,6 +20,25 @@ public static class ArmBarrelShifter
     /// <returns>The shifted value.</returns>
     public static uint ShiftNoCarry(Arm60State state, uint value, byte shift, byte type, out uint carryOut)
     {
+        return ShiftNoCarry(value, shift, type, ArmAlu.GetCarry(state), out carryOut);
+    }
+
+    /// <summary>
+    /// Shifts a value without touching CPU state, using an explicit carry input.
+    /// </summary>
+    /// <param name="value">Value to shift.</param>
+    /// <param name="shift">Shift count, 0-255.</param>
+    /// <param name="type">Shift type, 0-4.</param>
+    /// <param name="carryIn">Carry input for shift count zero and RRX.</param>
+    /// <param name="carryOut">Carry produced by the shift.</param>
+    /// <returns>The shifted value.</returns>
+    /// <remarks>
+    /// The JIT keeps CPSR in a block-local while it runs, so it cannot use the
+    /// <see cref="Arm60State"/> overload without flushing first. This overload is the
+    /// exact same arithmetic with the carry supplied directly.
+    /// </remarks>
+    public static uint ShiftNoCarry(uint value, byte shift, byte type, uint carryIn, out uint carryOut)
+    {
         switch (type)
         {
             case 0:
@@ -29,7 +48,7 @@ public static class ArmBarrelShifter
                 }
                 else
                 {
-                    carryOut = ArmAlu.GetCarry(state);
+                    carryOut = carryIn;
                 }
 
                 if (shift == 0)
@@ -46,7 +65,7 @@ public static class ArmBarrelShifter
                 }
                 else
                 {
-                    carryOut = ArmAlu.GetCarry(state);
+                    carryOut = carryIn;
                 }
 
                 if (shift == 0)
@@ -65,7 +84,7 @@ public static class ArmBarrelShifter
                 }
                 else
                 {
-                    carryOut = ArmAlu.GetCarry(state);
+                    carryOut = carryIn;
                 }
 
                 if (shift == 0)
@@ -86,7 +105,7 @@ public static class ArmBarrelShifter
                 }
                 else
                 {
-                    carryOut = ArmAlu.GetCarry(state);
+                    carryOut = carryIn;
                 }
 
                 shift &= 31;
@@ -94,7 +113,7 @@ public static class ArmBarrelShifter
 
             case 4:
                 carryOut = value & 1u;
-                return (value >> 1) | (ArmAlu.GetCarry(state) << 31);
+                return (value >> 1) | (carryIn << 31);
 
             default:
                 carryOut = 0;

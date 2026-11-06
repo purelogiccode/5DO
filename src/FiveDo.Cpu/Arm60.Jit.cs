@@ -32,12 +32,6 @@ public sealed partial class Arm60
     private const int JitCompileThreshold = 4096;
     private const int JitPageShift = 8;
 
-    private static readonly FieldInfo JitStateField =
-        typeof(Arm60).GetField("_state", BindingFlags.Instance | BindingFlags.NonPublic)!;
-
-    private static readonly FieldInfo JitUserField =
-        typeof(Arm60State).GetField("User", BindingFlags.Instance | BindingFlags.NonPublic)!;
-
     private static readonly FieldInfo JitInterruptsField =
         typeof(Arm60).GetField("_interrupts", BindingFlags.Instance | BindingFlags.NonPublic)!;
 
@@ -46,15 +40,6 @@ public sealed partial class Arm60
 
     private static readonly FieldInfo JitReturnToMachineField =
         typeof(Arm60).GetField("_jitReturnToMachine", BindingFlags.Instance | BindingFlags.NonPublic)!;
-
-    private static readonly FieldInfo JitCyclesField =
-        typeof(Arm60).GetField("_cycles", BindingFlags.Instance | BindingFlags.NonPublic)!;
-
-    private static readonly FieldInfo JitCyclesExecutedField =
-        typeof(Arm60).GetField("_cyclesExecuted", BindingFlags.Instance | BindingFlags.NonPublic)!;
-
-    private static readonly FieldInfo JitInstructionsField =
-        typeof(Arm60).GetField("_instructionsExecuted", BindingFlags.Instance | BindingFlags.NonPublic)!;
 
     private static readonly MethodInfo JitCpsrSet =
         typeof(Arm60State).GetProperty(nameof(Arm60State.Cpsr))!.GetSetMethod(nonPublic: true)!;
@@ -75,6 +60,14 @@ public sealed partial class Arm60
 
     private static readonly MethodInfo JitRotateRight =
         typeof(ArmBarrelShifter).GetMethod("RotateRight", BindingFlags.Static | BindingFlags.NonPublic)!;
+
+    private static readonly MethodInfo JitShiftNoCarry =
+        typeof(ArmBarrelShifter).GetMethod(
+            nameof(ArmBarrelShifter.ShiftNoCarry),
+            BindingFlags.Static | BindingFlags.Public,
+            binder: null,
+            [typeof(uint), typeof(byte), typeof(byte), typeof(uint), typeof(uint).MakeByRefType()],
+            modifiers: null)!;
 
     private static readonly MethodInfo JitLoadUser =
         typeof(Arm60State).GetMethod("LoadUser", BindingFlags.Instance | BindingFlags.NonPublic)!;
@@ -108,7 +101,8 @@ public sealed partial class Arm60
 
     private readonly Dictionary<uint, JitBlock> _jitBlocks = [];
     private readonly List<JitBlock>?[] _jitPages = new List<JitBlock>?[1 << 16];
-    private readonly Dictionary<uint, int> _jitHits = [];
+    private readonly uint[] _jitHitTags = new uint[8192];
+    private readonly int[] _jitHitCounts = new int[8192];
     private readonly HashSet<uint> _jitBadBlocks = [];
     private readonly JitBlock?[] _jitFastCache = new JitBlock?[8192];
     private bool _jitCompileFailed;
@@ -120,9 +114,23 @@ public sealed partial class Arm60
     private long _jitCompiledLoad;
     private long _jitCompiledStore;
     private long _jitCompiledBranch;
+    private long _jitFallbackSteps;
+    private long _jitStaticBlockInstructions;
+    private long _jitInvalidations;
+    private long _jitBadBlockHits;
+    private long _jitThresholdHits;
+    private long _jitCompileNullHits;
     private string? _jitLastFailure;
 
-    private delegate int JitBlockDelegate(Arm60 cpu, int remainingBatch);
+    private delegate int JitBlockDelegate(
+        Arm60 cpu,
+        Arm60State state,
+        uint[] user,
+        ref uint pc,
+        ref uint cpsr,
+        ref int cycles,
+        ref int instructions,
+        int remainingBatch);
 
     private enum JitInstructionKind
     {
@@ -168,6 +176,24 @@ public sealed partial class Arm60
     /// <summary>Gets the number of branch instructions in compiled blocks.</summary>
     public long JitCompiledBranches => _jitCompiledBranch;
 
+    /// <summary>Gets the number of interpreter fallback steps taken from the JIT loop.</summary>
+    public long JitFallbackSteps => _jitFallbackSteps;
+
+    /// <summary>Gets the static instruction count of every executed JIT block entry.</summary>
+    public long JitStaticBlockInstructions => _jitStaticBlockInstructions;
+
+    /// <summary>Gets the number of compiled blocks removed by a guest write.</summary>
+    public long JitInvalidations => _jitInvalidations;
+
+    /// <summary>Gets fallback counts by reason.</summary>
+    public long JitBadBlockHits => _jitBadBlockHits;
+
+    /// <summary>Gets threshold fallback count.</summary>
+    public long JitThresholdHits => _jitThresholdHits;
+
+    /// <summary>Gets compile-null fallback count.</summary>
+    public long JitCompileNullHits => _jitCompileNullHits;
+
     /// <summary>
     /// Invalidates compiled blocks whose instruction bytes overlap a guest RAM write.
     /// </summary>
@@ -210,6 +236,7 @@ public sealed partial class Arm60
                 JitBlock block = blocks[index];
                 if (block.Pc < end && offset < block.CodeEnd)
                 {
+                    _jitInvalidations++;
                     RemoveBlock(block);
                 }
             }
@@ -226,8 +253,10 @@ public sealed partial class Arm60
     /// <returns>The ARM clock cycles consumed by the executed instructions.</returns>
     /// <remarks>
     /// The machine calls this instead of <see cref="Step"/> when the JIT backend is selected.
-    /// The block returns as soon as the accumulated batch would reach 16, matching the frame
-    /// loop's batching threshold, and after every branch or store.
+    /// PC, CPSR, cycle, and instruction counters live in a context shared by every block in
+    /// the call, so a chain of blocks does not reload or flush the architectural state between
+    /// them. The loop stops at the same 16-cycle boundary as the interpreter and on branches,
+    /// stores, FIQs, or MMIO traffic.
     /// </remarks>
     public int RunJitBlock(int cyclesSinceEvent)
     {
@@ -241,46 +270,57 @@ public sealed partial class Arm60
         }
 
         var remainingBatch = Math.Max(16 - cyclesSinceEvent, 1);
-        var total = 0;
+        uint pc = _state.ProgramCounter;
+        uint cpsr = _state.Cpsr;
+        int cycles = 0;
+        int instructions = 0;
         _jitReturnToMachine = false;
-        while (total < remainingBatch)
+
+        while (cycles < remainingBatch)
         {
-            uint pc = _state.ProgramCounter;
             var index = FastIndex(pc);
             JitBlock? block = _jitFastCache[index];
             if (block is null || block.Pc != pc)
             {
                 if (_jitBadBlocks.Contains(pc))
                 {
-                    total += Step();
-                    break;
+                    _jitBadBlockHits++;
+                    NoteFallback();
+                    return FlushAndStep(ref pc, ref cpsr, ref cycles, ref instructions);
                 }
 
                 if (!_jitBlocks.TryGetValue(pc, out block))
                 {
                     // Compile only blocks that are actually hot. BIOS decompression and
                     // one-shot boot paths touch thousands of addresses; compiling them
-                    // costs far more than interpreting them once or twice.
-                    _jitHits.TryGetValue(pc, out var hits);
-                    if (hits + 1 < JitCompileThreshold)
+                    // costs far more than interpreting them once or twice. A direct-mapped
+                    // saturating counter avoids the old dictionary's global clear, which
+                    // could keep a hot loop below the threshold when cold code filled it.
+                    var hitIndex = FastIndex(pc);
+                    if (_jitHitTags[hitIndex] != pc)
                     {
-                        if (_jitHits.Count >= JitMaxCachedBlocks)
-                        {
-                            _jitHits.Clear();
-                        }
-
-                        _jitHits[pc] = hits + 1;
-                        total += Step();
-                        break;
+                        _jitHitTags[hitIndex] = pc;
+                        _jitHitCounts[hitIndex] = 1;
+                        _jitThresholdHits++;
+                        NoteFallback();
+                        return FlushAndStep(ref pc, ref cpsr, ref cycles, ref instructions);
                     }
 
-                    _jitHits.Remove(pc);
+                    if (++_jitHitCounts[hitIndex] < JitCompileThreshold)
+                    {
+                        _jitThresholdHits++;
+                        NoteFallback();
+                        return FlushAndStep(ref pc, ref cpsr, ref cycles, ref instructions);
+                    }
+
+                    _jitHitCounts[hitIndex] = 0;
                     block = TryCompileBlock(pc);
                     if (block is null)
                     {
                         _jitBadBlocks.Add(pc);
-                        total += Step();
-                        break;
+                        _jitCompileNullHits++;
+                        NoteFallback();
+                        return FlushAndStep(ref pc, ref cpsr, ref cycles, ref instructions);
                     }
 
                     if (_jitBlocks.Count >= JitMaxCachedBlocks)
@@ -296,19 +336,43 @@ public sealed partial class Arm60
             }
 
             _jitBlocksExecuted++;
+            _jitStaticBlockInstructions += block.InstructionCount;
+            uint beforePc = pc;
+            int beforeCycles = cycles;
             try
             {
-                int cycles = block.Execute(this, remainingBatch - total);
-                total += cycles;
+                int blockCycles = block.Execute(
+                    this,
+                    _state,
+                    _state.User,
+                    ref pc,
+                    ref cpsr,
+                    ref cycles,
+                    ref instructions,
+                    remainingBatch);
                 if (_jitReturnToMachine)
                 {
                     _jitReturnToMachine = false;
-                    break;
+                    int result = cycles;
+                    FlushJitContext(ref pc, ref cpsr, ref cycles, ref instructions);
+                    return result;
                 }
 
-                if (cycles <= 0)
+                if (cycles == beforeCycles && pc == beforePc)
                 {
-                    break;
+                    _jitLastFailure = $"No progress at 0x{pc:X8}.";
+                    _jitBadBlocks.Add(pc);
+                    FlushJitContext(ref pc, ref cpsr, ref cycles, ref instructions);
+                    return cycles + Step();
+                }
+
+                if (blockCycles <= 0 && cycles == 0)
+                {
+                    // A compiled block must always make progress. If it does not, fall
+                    // back to one interpreter instruction instead of returning zero and
+                    // spinning the frame loop.
+                    FlushJitContext(ref pc, ref cpsr, ref cycles, ref instructions);
+                    return Step();
                 }
             }
             catch (Exception exception) when (exception is InvalidProgramException
@@ -317,15 +381,39 @@ public sealed partial class Arm60
                                                   or TypeLoadException
                                                   or NotSupportedException)
             {
-                total += FailJitBlock(pc, exception);
-                break;
+                int result = cycles;
+                FlushJitContext(ref pc, ref cpsr, ref cycles, ref instructions);
+                return result + FailJitBlock(pc, exception);
             }
         }
 
+        int total = cycles;
+        FlushJitContext(ref pc, ref cpsr, ref cycles, ref instructions);
         return total;
     }
 
+    private int FlushAndStep(ref uint pc, ref uint cpsr, ref int cycles, ref int instructions)
+    {
+        int total = cycles;
+        FlushJitContext(ref pc, ref cpsr, ref cycles, ref instructions);
+        return total + Step();
+    }
+
+    private void FlushJitContext(ref uint pc, ref uint cpsr, ref int cycles, ref int instructions)
+    {
+        _state.ProgramCounter = pc;
+        _state.Cpsr = cpsr;
+        _cyclesExecuted += cycles;
+        _instructionsExecuted += instructions;
+        _cycles = 0;
+    }
+
     private static int FastIndex(uint pc) => (int)((pc >> 2) & 0x1fff);
+
+    private void NoteFallback()
+    {
+        _jitFallbackSteps++;
+    }
 
     /// <summary>Runs one JIT block at a batch boundary.</summary>
     /// <returns>The ARM clock cycles consumed by the executed instructions.</returns>
@@ -346,7 +434,8 @@ public sealed partial class Arm60
     private void ClearJitCache()
     {
         ClearBlockCache();
-        _jitHits.Clear();
+        Array.Clear(_jitHitTags);
+        Array.Clear(_jitHitCounts);
         _jitBadBlocks.Clear();
         _jitBlocksCompiled = 0;
         _jitBlocksExecuted = 0;
@@ -355,6 +444,12 @@ public sealed partial class Arm60
         _jitCompiledLoad = 0;
         _jitCompiledStore = 0;
         _jitCompiledBranch = 0;
+        _jitFallbackSteps = 0;
+        _jitStaticBlockInstructions = 0;
+        _jitInvalidations = 0;
+        _jitBadBlockHits = 0;
+        _jitThresholdHits = 0;
+        _jitCompileNullHits = 0;
         _jitCompileFailed = false;
         _jitLastFailure = null;
     }
@@ -498,7 +593,7 @@ public sealed partial class Arm60
             var ramSize = _ram?.Layout.RamSize ?? 0;
             JitBlockDelegate execute = CompileBlock(pc, codeEnd, ramSize, instructions);
             _jitCompileTicks += Stopwatch.GetTimestamp() - compileStart;
-            return new JitBlock(pc, codeEnd, execute);
+            return new JitBlock(pc, codeEnd, execute, instructions.Count);
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
@@ -551,8 +646,10 @@ public sealed partial class Arm60
 
             if ((instruction & (1u << 25)) == 0 && (instruction & (1u << 4)) != 0)
             {
-                // Register-specified shifts stay on the interpreter path for now.
-                return false;
+                // Register-specified shifts take an extra internal cycle.
+                kind = JitInstructionKind.DataProcessing;
+                cost = 1 + Icycle;
+                return true;
             }
 
             kind = JitInstructionKind.DataProcessing;
@@ -621,7 +718,16 @@ public sealed partial class Arm60
         var method = new DynamicMethod(
             $"ArmJit_{pc:X8}",
             typeof(int),
-            [typeof(Arm60), typeof(int)],
+            [
+                typeof(Arm60),
+                typeof(Arm60State),
+                typeof(uint[]),
+                typeof(uint).MakeByRefType(),
+                typeof(uint).MakeByRefType(),
+                typeof(int).MakeByRefType(),
+                typeof(int).MakeByRefType(),
+                typeof(int),
+            ],
             typeof(Arm60),
             skipVisibility: true);
         ILGenerator il = method.GetILGenerator();
@@ -634,26 +740,21 @@ public sealed partial class Arm60
         LocalBuilder instructionsExecuted = il.DeclareLocal(typeof(int));
         LocalBuilder forceExit = il.DeclareLocal(typeof(int));
 
-        il.Emit(OpCodes.Ldarg_0);
-        il.Emit(OpCodes.Ldfld, JitStateField);
+        il.Emit(OpCodes.Ldarg_1);
         il.Emit(OpCodes.Stloc, state);
-
-        il.Emit(OpCodes.Ldloc, state);
-        il.Emit(OpCodes.Ldfld, JitUserField);
+        il.Emit(OpCodes.Ldarg_2);
         il.Emit(OpCodes.Stloc, user);
-
-        il.Emit(OpCodes.Ldloc, user);
-        il.Emit(OpCodes.Ldc_I4, 15);
-        il.Emit(OpCodes.Ldelem_U4);
+        il.Emit(OpCodes.Ldarg_3);
+        il.Emit(OpCodes.Ldind_U4);
         il.Emit(OpCodes.Stloc, pcLocal);
-
-        il.Emit(OpCodes.Ldloc, state);
-        il.Emit(OpCodes.Callvirt, JitCpsrGet);
+        il.Emit(OpCodes.Ldarg_S, (byte)4);
+        il.Emit(OpCodes.Ldind_U4);
         il.Emit(OpCodes.Stloc, cpsr);
-
-        il.Emit(OpCodes.Ldc_I4_0);
+        il.Emit(OpCodes.Ldarg_S, (byte)5);
+        il.Emit(OpCodes.Ldind_I4);
         il.Emit(OpCodes.Stloc, cycles);
-        il.Emit(OpCodes.Ldc_I4_0);
+        il.Emit(OpCodes.Ldarg_S, (byte)6);
+        il.Emit(OpCodes.Ldind_I4);
         il.Emit(OpCodes.Stloc, instructionsExecuted);
         il.Emit(OpCodes.Ldc_I4_0);
         il.Emit(OpCodes.Stloc, forceExit);
@@ -676,7 +777,7 @@ public sealed partial class Arm60
                 isLast: i == instructions.Count - 1);
         }
 
-        EmitFlush(il, state, user, pcLocal, cpsr, cycles, instructionsExecuted);
+        EmitStoreContext(il, pcLocal, cpsr, cycles, instructionsExecuted);
         il.Emit(OpCodes.Ldloc, cycles);
         il.Emit(OpCodes.Ret);
         return method.CreateDelegate<JitBlockDelegate>();
@@ -782,9 +883,18 @@ public sealed partial class Arm60
         Label noFiq = il.DefineLabel();
         EmitFiqCheck(il, state, cpsr, takeFiq, noFiq);
         il.MarkLabel(takeFiq);
-        EmitFlush(il, state, user, pc, cpsr, cycles, instructionsExecuted);
+        EmitStoreState(il, state, user, pc, cpsr);
         il.Emit(OpCodes.Ldarg_0);
         il.Emit(OpCodes.Call, JitEnterFiq);
+        il.Emit(OpCodes.Ldc_I4, 0x1c);
+        il.Emit(OpCodes.Stloc, pc);
+        il.Emit(OpCodes.Ldloc, state);
+        il.Emit(OpCodes.Callvirt, JitCpsrGet);
+        il.Emit(OpCodes.Stloc, cpsr);
+        EmitStoreContext(il, pc, cpsr, cycles, instructionsExecuted);
+        il.Emit(OpCodes.Ldarg_0);
+        il.Emit(OpCodes.Ldc_I4_1);
+        il.Emit(OpCodes.Stfld, JitReturnToMachineField);
         il.Emit(OpCodes.Ldloc, cycles);
         il.Emit(OpCodes.Ret);
         il.MarkLabel(noFiq);
@@ -792,14 +902,14 @@ public sealed partial class Arm60
         Label noForcedExit = il.DefineLabel();
         il.Emit(OpCodes.Ldloc, forceExit);
         il.Emit(OpCodes.Brfalse, noForcedExit);
-        EmitFlush(il, state, user, pc, cpsr, cycles, instructionsExecuted);
+        EmitStoreContext(il, pc, cpsr, cycles, instructionsExecuted);
         il.Emit(OpCodes.Ldloc, cycles);
         il.Emit(OpCodes.Ret);
         il.MarkLabel(noForcedExit);
 
         if (isLast)
         {
-            EmitFlush(il, state, user, pc, cpsr, cycles, instructionsExecuted);
+            EmitStoreContext(il, pc, cpsr, cycles, instructionsExecuted);
             il.Emit(OpCodes.Ldloc, cycles);
             il.Emit(OpCodes.Ret);
             return;
@@ -808,48 +918,47 @@ public sealed partial class Arm60
         // Stop at the frame loop's 16-cycle batching boundary.
         Label belowBatch = il.DefineLabel();
         il.Emit(OpCodes.Ldloc, cycles);
-        il.Emit(OpCodes.Ldarg_1);
+        il.Emit(OpCodes.Ldarg_S, (byte)7);
         il.Emit(OpCodes.Blt, belowBatch);
-        EmitFlush(il, state, user, pc, cpsr, cycles, instructionsExecuted);
+        EmitStoreContext(il, pc, cpsr, cycles, instructionsExecuted);
         il.Emit(OpCodes.Ldloc, cycles);
         il.Emit(OpCodes.Ret);
         il.MarkLabel(belowBatch);
     }
 
-    private static void EmitFlush(
+    private static void EmitStoreContext(
         ILGenerator il,
-        LocalBuilder state,
-        LocalBuilder user,
         LocalBuilder pc,
         LocalBuilder cpsr,
         LocalBuilder cycles,
         LocalBuilder instructionsExecuted)
+    {
+        il.Emit(OpCodes.Ldarg_3);
+        il.Emit(OpCodes.Ldloc, pc);
+        il.Emit(OpCodes.Stind_I4);
+        il.Emit(OpCodes.Ldarg_S, (byte)4);
+        il.Emit(OpCodes.Ldloc, cpsr);
+        il.Emit(OpCodes.Stind_I4);
+        il.Emit(OpCodes.Ldarg_S, (byte)5);
+        il.Emit(OpCodes.Ldloc, cycles);
+        il.Emit(OpCodes.Stind_I4);
+        il.Emit(OpCodes.Ldarg_S, (byte)6);
+        il.Emit(OpCodes.Ldloc, instructionsExecuted);
+        il.Emit(OpCodes.Stind_I4);
+    }
+
+    private static void EmitStoreState(
+        ILGenerator il,
+        LocalBuilder state,
+        LocalBuilder user,
+        LocalBuilder pc,
+        LocalBuilder cpsr)
     {
         EmitStoreUserRegister(il, user, 15, pc);
 
         il.Emit(OpCodes.Ldloc, state);
         il.Emit(OpCodes.Ldloc, cpsr);
         il.Emit(OpCodes.Callvirt, JitCpsrSet);
-
-        il.Emit(OpCodes.Ldarg_0);
-        il.Emit(OpCodes.Dup);
-        il.Emit(OpCodes.Ldfld, JitCyclesExecutedField);
-        il.Emit(OpCodes.Ldloc, cycles);
-        il.Emit(OpCodes.Conv_I8);
-        il.Emit(OpCodes.Add);
-        il.Emit(OpCodes.Stfld, JitCyclesExecutedField);
-
-        il.Emit(OpCodes.Ldarg_0);
-        il.Emit(OpCodes.Dup);
-        il.Emit(OpCodes.Ldfld, JitInstructionsField);
-        il.Emit(OpCodes.Ldloc, instructionsExecuted);
-        il.Emit(OpCodes.Conv_I8);
-        il.Emit(OpCodes.Add);
-        il.Emit(OpCodes.Stfld, JitInstructionsField);
-
-        il.Emit(OpCodes.Ldarg_0);
-        il.Emit(OpCodes.Ldc_I4_0);
-        il.Emit(OpCodes.Stfld, JitCyclesField);
     }
 
     private static void EmitFiqCheck(
@@ -1139,6 +1248,7 @@ public sealed partial class Arm60
         var op1 = il.DeclareLocal(typeof(uint));
         var op2 = il.DeclareLocal(typeof(uint));
         var source = il.DeclareLocal(typeof(uint));
+        var shiftAmount = il.DeclareLocal(typeof(uint));
         var carry = il.DeclareLocal(typeof(uint));
         var result = il.DeclareLocal(typeof(uint));
         var temp = il.DeclareLocal(typeof(uint));
@@ -1174,8 +1284,30 @@ public sealed partial class Arm60
             EmitLoadUserRelative(il, user, rm, pc, 8, source);
 
             var shiftType = (int)((instruction >> 5) & 3);
-            var shift = (int)((instruction >> 7) & 0x1f);
-            EmitImmediateShift(il, cpsr, source, op2, carry, temp, shiftType, shift);
+            if ((instruction & (1u << 4)) != 0)
+            {
+                // Register-specified shift: the low byte of Rs is the count. The
+                // interpreter adds one internal cycle for this form.
+                var rs = (int)((instruction >> 8) & 0xf);
+                EmitLoadUserRelative(il, user, rs, pc, 8, shiftAmount);
+                il.Emit(OpCodes.Ldloc, source);
+                il.Emit(OpCodes.Ldloc, shiftAmount);
+                il.Emit(OpCodes.Ldc_I4, 0xff);
+                il.Emit(OpCodes.And);
+                il.Emit(OpCodes.Conv_U1);
+                il.Emit(OpCodes.Ldc_I4, shiftType);
+                il.Emit(OpCodes.Conv_U1);
+                EmitCpsrCarry(il, cpsr, temp);
+                il.Emit(OpCodes.Ldloc, temp);
+                il.Emit(OpCodes.Ldloca, carry);
+                il.Emit(OpCodes.Call, JitShiftNoCarry);
+                il.Emit(OpCodes.Stloc, op2);
+            }
+            else
+            {
+                var shift = (int)((instruction >> 7) & 0x1f);
+                EmitImmediateShift(il, cpsr, source, op2, carry, temp, shiftType, shift);
+            }
         }
 
         if (setFlags && IsLogicOpcode(baseOpcode))
@@ -1699,11 +1831,12 @@ public sealed partial class Arm60
 
     private sealed class JitBlock
     {
-        internal JitBlock(uint pc, uint codeEnd, JitBlockDelegate execute)
+        internal JitBlock(uint pc, uint codeEnd, JitBlockDelegate execute, int instructionCount)
         {
             Pc = pc;
             CodeEnd = codeEnd;
             Execute = execute;
+            InstructionCount = instructionCount;
         }
 
         internal uint Pc { get; }
@@ -1711,5 +1844,7 @@ public sealed partial class Arm60
         internal uint CodeEnd { get; }
 
         internal JitBlockDelegate Execute { get; }
+
+        internal int InstructionCount { get; }
     }
 }
