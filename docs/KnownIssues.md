@@ -10,6 +10,16 @@ validation, installers, and the optional JIT are post-1.0. See
 GitHub**: the source is tagged `v1.0.0`, the unified Windows/Linux/macOS x64 bundles and
 checksums are attached, and legal/attribution sign-off is recorded.
 
+## Differential parity (2026-11-06)
+
+The five-title TEST-07 panel is deterministic and Lemmings matches the reference
+frame hash at 60/300/1000/3000 frames. Road Rash and Space Ace still show
+different intro animation frames/scenes from Opera at 1,000/3,000 frames; a
+±60-frame window finds no matching neighboring frame. The first CD
+command-sequence divergence is a READ_DATA (`0x10`) versus READ_ID (`0x83`)
+transition. These are accuracy gaps against the reference core, not crashes;
+tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
+
 ## Compatibility sweep status
 
 - The 12 titles in the matrix below are validated. The first full loadability sweep

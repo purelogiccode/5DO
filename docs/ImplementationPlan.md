@@ -5,7 +5,7 @@
 **Current release:** `1.3.0`
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master`<br>
-**Status:** **1,881 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports no warnings in changed files (seven pre-existing warnings remain in the managed JIT and state writer). **594 discs load, 593 render, 12 visually validated**; the top-100 playability audit and the reference-oracle upgrade are the next gates.<br>
+**Status:** **1,881 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports no warnings in changed files (seven pre-existing warnings remain in the managed JIT and state writer). **594 discs load, 593 render, 12 visually validated**; the top-100 playability audit and the 50-title panel run are the next gates.<br>
 **Goal:** beat 4DO and Opera-libretro on **measured in-game compatibility and accuracy**, and remain the best standalone desktop 3DO emulator on Windows, Linux, and macOS.<br>
 **Plan shape:** four phases, **measurement first**. Product and research work is deferred until the compatibility gate is green.
 
@@ -54,6 +54,9 @@
 | Reference oracle | `OperaCore.dll` and the optional debug core are built and staged |
 | 40-title differential | **18 matched / 22 diverged** at frame 300 (`artifacts/diff/sample40-run/report.json`) |
 | 5-title TEST-07 panel | Deterministic captures; first divergence **PC at frame 60**; CD commands 9/9 at f=60; samples 44,101/44,144 |
+| 3,000-frame TEST-07 panel | Lemmings matches the frame hash at 60/300/1000/3000; Road Rash and Space Ace visibly diverge; no ±60-frame match |
+| CD command sequence | First divergence localized to READ_DATA (`0x10`) vs READ_ID (`0x83`): Lemmings 105, Road Rash 559, Wolfenstein 389 |
+| 50-title panel | `benchmarks/diff/panel50.json` generated and validated; full run pending the mounted corpus |
 | 5-title showcase | **2/5 video matches**, **0/5** with PC comparison; Lemmings PC delta 11,076 bytes |
 | Compatibility sweep | **594 load, 593 render, 1 known boot failure** (Crash 'n Burn Japan) |
 | Visual/input validation | **12 titles** in the curated matrix; a handful have scripted gameplay |

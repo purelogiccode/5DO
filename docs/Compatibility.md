@@ -582,6 +582,18 @@ frame-stamped CLIO traces, DSP state in the run JSON, and `--input-script` for
 repeatable controller taps. The DSP trace and memory dumps identified the exact
 `Sema4Status & 8` test that was being mis-decoded.
 
+**2026-11-06 differential oracle.** `FiveDo.DiffHarness` now applies a fixed seed
+to both engines and compares ARM PC/CPSR and the CD command sequence, not just
+frame hashes. The five-title panel is deterministic across runs. At 3,000 frames
+Lemmings matches the reference frame hash at 60/300/1000/3000; Road Rash and
+Space Ace still show different intro animation frames/scenes, and a ±60-frame
+window finds no matching neighboring frame. The first command-sequence divergence
+is a READ_DATA (`0x10`) versus READ_ID (`0x83`) transition (Lemmings command 105,
+Road Rash 559, Wolfenstein 389). These are tracked as `CORE-04`, `CORE-07`, and
+`CORE-13` in [`ImplementationPlan.md`](ImplementationPlan.md); details are in
+[`DifferentialHarness.md`](DifferentialHarness.md) §8 and
+[`TestCorpus.md`](TestCorpus.md) 1.1aw.
+
 Local corpus (user-provided, not distributed; see [`TestCorpus.md`](TestCorpus.md)):
 
 - BIOS-only boot and menu navigation: `panafz1.bin`.
