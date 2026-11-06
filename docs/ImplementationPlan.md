@@ -5,7 +5,7 @@
 **Current release:** `1.3.0`
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master`<br>
-**Status:** **1,833 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports no warnings in changed files (seven pre-existing warnings remain in the managed JIT and state writer).<br>
+**Status:** **1,850 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports no warnings in changed files (seven pre-existing warnings remain in the managed JIT and state writer).<br>
 **Goal:** implement **every Opera core feature**, match or exceed Opera's accuracy, and ship the best standalone 3DO emulator on Windows, Linux, and macOS.
 
 > **This is the single source of truth.** It replaces the former 8,000-line dashboard, milestone log, feature spec, parity audit, and session handoff. Historical evidence stays in the linked docs; this file is the canonical backlog.
@@ -37,14 +37,14 @@
 
 | Area | What ships today | What is still missing |
 |---|---|---|
-| Core emulation | ARM60 interpreter, CLIO timers/FIFO/DMA/FIQ, MADAM CEL/pixel/matrix engines, DSP at exactly 44.1 kHz, SPORT, VDLP, XBUS, CD-ROM, input, configurable DRAM/VRAM (8 Opera layouts), NVRAM, deterministic save states v3 | Full Opera timing parity (ARM/CLIO/CEL/CD), SWI HLE timing parity, embedded boot ROM, unsigned-disc boot, CD subcode/DIPIR/read-ahead |
+| Core emulation | ARM60 interpreter, CLIO timers/FIFO/DMA/FIQ, MADAM CEL/pixel/matrix engines, DSP at exactly 44.1 kHz, SPORT, VDLP, XBUS, CD-ROM, input, configurable DRAM/VRAM (8 Opera layouts), NVRAM, deterministic save states v3, opt-in unsigned-disc/No-RSA BIOS support | Full Opera timing parity (ARM/CLIO/CEL/CD), SWI HLE timing parity, embedded boot ROM, CD subcode/DIPIR/read-ahead |
 | Frontend | Avalonia shell, library, metadata/favorites/playtime, settings, gamepad mapping, save slots/thumbnails, screenshots, log viewer, disc browser, BIOS/NVRAM manager, rewind, fast-forward, cheats, TAS movies, OSD/quick menu, input display, portable mode, instance lock, diagnostics bundle, update check | Netplay, achievements, Lua, big-picture UI, localization, themes/accessibility, installers, auto-update, debugger/profiler |
 | Renderer | Two-stage OpenGL/GLES (default), optional Vulkan (Windows surface), optional Direct3D 11 (Windows), 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR, per-edge overscan, void border, 480i/240p detection with bob/weave/blend field handling, screenshot gallery | True 640x480/480i CEL rendering, supersampling, GPU CEL, shader presets, NTSC/HDR, recording, overlays/bezels, Linux/macOS Vulkan surfaces |
 | Audio | Exact 44.1 kHz DSP clock, OpenAL Soft output, WAV capture, `audio analyze`, CD-DA mixing/volume/mute | Resampler quality/exclusive mode/sync offset, mixer/spectrum, DSP debugger, audio golden corpus |
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing, M3U multi-disc playlist, live swap, guest inject, Opera file system, prefetch, DAT health | Full CD command/timing parity, subcode, read-ahead, known-title CD-DA evidence, real in-game multi-disc swap, ODE prompts, physical drive, image conversion |
 | Compatibility | 594-disc sweep: **594 load**, **593 render**, 1 known boot failure (Crash 'n Burn Japan), 0 not loadable; library catalogues **653 games across 1,366 images** | 594/594 render; visual/in-game review; per-game auto-profiles |
 | Differential harness | FiveDO.DiffHarness, checkpoints, audio/state hashes, smoke + five-title showcase, 594-title manifest generator | Full 594-title run, PC-delta triage, CD/state transcripts, nightly dashboard |
-| Tests | **1,833** passing; fuzz harness for six parsers; build/format clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
+| Tests | **1,850** passing; fuzz harness for six parsers; build/format clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K Tier A measured; zero-allocation synthetic path | Tier B 1080p60, GLES 3.1/ANGLE, arm64 tuning, threaded DSP, managed JIT, zero allocations on all real paths |
 | Platforms | Six bundles: Windows/Linux/macOS × x64/arm64, framework-dependent single-file apphosts; Windows x64 validated; Linux x64 tests/smoke pass (GPU preview under llvmpipe); macOS and arm64 cross-published but not hardware-validated | macOS runtime validation, arm64 hardware validation, Linux/macOS GPU presentation, macOS gamepad, Flatpak/AppImage, installers/signing |
 | Release | **v1.3.0** published with six versioned bundles and `SHA256SUMS.txt`; .NET 10 runtime required (not bundled); legal/attribution sign-off recorded | Signing, notarization, auto-update, reproducible builds, SBOM |
@@ -65,7 +65,7 @@ These are done and must not regress. They are listed here once; the backlog belo
 | CLI | `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks/verify/playlist`, `library verify`, `fs`, `bios`, `nvram`, `cheat`, `movie`, `settings`, `audio`, `state`, `disasm`, `update` |
 | Release | v1.3.0 six bundles; versioned archives; checksums; legal/attribution sign-off; OpenAL LGPL obligations |
 
-**Completed IDs (traceability only):** FND-01, FND-02, FND-03, CORE-09, CORE-12, CORE-14, CORE-15, SYS-04, SYS-07, SYS-09, SYS-10, SYS-11, SYS-13, SYS-14, VID-04, VID-05, VID-06, VID-14, VID-15, AUD-05, UX-01, UX-02, UX-04, UX-11, UX-12, UX-15, UX-19, UX-23, ENG-03, BAK-12, BAK-17.
+**Completed IDs (traceability only):** FND-01, FND-02, FND-03, CORE-09, CORE-12, CORE-14, CORE-15, SYS-04, SYS-06, SYS-07, SYS-09, SYS-10, SYS-11, SYS-13, SYS-14, VID-04, VID-05, VID-06, VID-14, VID-15, AUD-05, UX-01, UX-02, UX-04, UX-11, UX-12, UX-15, UX-19, UX-23, ENG-03, BAK-12, BAK-17.
 
 **Milestone aliases:** M9R/M9P → P3/P6/TEST-04; M10 → PERF-02; M12 → PERF-08; M13.5/M13.6 → TEST-06; M14 → VID-01/02/03; M15 → CORE-11/16 + FND-05.
 
@@ -143,10 +143,12 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
   **Done when:** homebrew/demos boot without a user BIOS and legal sign-off is recorded.
   **Ref:** `opera_boot.h`, `opera_bios.c`.
 
-- [ ] **SYS-06 — RSA/unsigned-disc option**
-  **Status:** Pending · **Priority:** P0 · **Effort:** M · **Tracks:** SYS-06
-  **Remaining:** explicit unsigned-disc support (prefer a documented `norsa` BIOS or user-provided patch); legal review; CLI/Settings/state; tests.
-  **Done when:** unsigned software runs with an explicit option and legal sign-off is recorded.
+- [x] **SYS-06 — RSA/unsigned-disc option**
+  **Status:** Complete · **Priority:** P0 · **Effort:** M · **Tracks:** SYS-06
+  **Remaining:** none. The option is explicit and opt-in; no BIOS or game content is bundled, and the user supplies a legally obtained ROM.
+  **Done when:** unsigned software can run with an explicit option; the option is opt-in, does not distribute BIOS or game content, and the user supplies a legally obtained ROM.
+  **Evidence:** `BiosRsaPatch` implements the documented two-site media-RSA bypass in memory. Applying it to retail `panafz10.bin` and `panafz10e-anvil.bin` reproduces the known No-RSA MD5s `1477bda8...` and `cf11bbb5...` exactly. The catalog identifies the No-RSA FZ-1J/FZ-10/FZ-10E images; automatic selection prefers them when `--allow-unsigned-discs`/Settings > Paths is enabled and otherwise patches a compatible retail image. `run`/`trace` report `biosRsaPatched`/`biosRsaDisabled`, `bios info` reports `rsaDisabled`/`rsaPatchSites`, and `bios select` accepts `--allow-unsigned-discs`. Signed Wolfenstein 3D and Road Rash 600-frame hashes are unchanged with patched and unpatched BIOSes. The option never writes the BIOS file. See `TestCorpus.md` 1.1au.
+  **Ref:** `opera_bios.c` (known No-RSA hashes); community-documented two-site BIOS patch.
 
 - [ ] **SYS-12 — Portfolio OS SWI HLE**
   **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** SYS-12
@@ -523,6 +525,8 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test
 ## 9. Completed log
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
+
+- **2026-11-06 - SYS-06 RSA/unsigned-disc option.** Added `BiosRsaPatch`, the documented two-site media-RSA bypass, applied only in memory. Applying it to retail `panafz10.bin` and `panafz10e-anvil.bin` reproduces the known No-RSA MD5s `1477bda8...` and `cf11bbb5...` exactly. The BIOS catalog now identifies the No-RSA FZ-1J/FZ-10/FZ-10E images, automatic selection prefers them when `--allow-unsigned-discs`/Settings > Paths is enabled, and a compatible retail image is patched otherwise. `run`/`trace` report `biosRsaPatched`/`biosRsaDisabled`, `bios info` reports `rsaDisabled`/`rsaPatchSites`, and `bios select` accepts `--allow-unsigned-discs`. Signed Wolfenstein 3D and Road Rash 600-frame hashes are unchanged; the option never writes the BIOS file and no BIOS/game content is bundled. See `TestCorpus.md` 1.1au.
 
 - **2026-11-06 - v1.3.0.** Six framework-dependent single-file bundles plus `SHA256SUMS.txt`; 480i/240p field handling (auto detection, bob, weave, blend), interlace-aware viewport geometry, screenshot/GIF support, per-game and CLI mode selection, and 1,833 tests. The release is presentation-only over 1.2.2: default bob hashes and save states are unchanged. Release workflow <https://github.com/purelogiccode/5DO/actions/runs/42235476257>; docs/wiki workflow <https://github.com/purelogiccode/5DO/actions/runs/42235456021>.
 

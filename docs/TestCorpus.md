@@ -2300,3 +2300,33 @@ a legacy version-2 memory section.
 - Performance is a partial result: ALU/load microbenchmarks are 1.9-3.3x faster, but
   end-to-end boot is 1.17-1.85x slower because short blocks, CEL/VDLP work, and JIT code-cache
   pressure dominate. The interpreter remains the default. See `Performance.md` §8.4.
+
+#### 1.1au SYS-06 RSA/unsigned-disc option (2026-11-06)
+
+- `BiosRsaPatch` implements the community documented two-site media-RSA bypass:
+  each `000313A0000111A0` sequence becomes `000313A0000011A0`; the
+  `000213A0000111A0` guard sequence is left unchanged.
+- Local verification with the retail images:
+  - `panafz10.bin` (`51f2f43ae2f3508a14d9f56597e2d3ce`) + patch ->
+    `1477bda80dc33731a65468c1f5bcbee9`, exactly `panafz10-patched.bin`.
+  - `panafz10e-anvil.bin` (`a48e6746bd7edec0f40cff078f0bb19f`) + patch ->
+    `cf11bbb5a16d7af9875cca9de9a15e09`, exactly
+    `panafz10e-anvil-patched.bin`.
+- `run --bios bios/panafz10.bin --allow-unsigned-discs --frames 0 --json` reports
+  `biosMd5: 1477bda80dc33731a65468c1f5bcbee9`, `biosRsaPatched: true`, and
+  `biosRsaDisabled: true`; the source BIOS file is unchanged.
+- A 600-frame Wolfenstein 3D (USA) run produced the same frame hash
+  `0x16B5C318` (381,025,496) with the retail BIOS and with the runtime-patched BIOS;
+  a 600-frame Road Rash (USA) run produced the same hash `0x6CDB8B35` (1,826,602,437)
+  with the retail FZ-1 and the runtime-patched FZ-1, so signed software is unaffected.
+- `bios select "Wolfenstein 3D (USA).chd" --folder bios --allow-unsigned-discs`
+  selects `Panasonic FZ-10 (No RSA)` (`1477bda8...`); the same command without the
+  flag selects retail `Panasonic FZ-10` (`51f2f43a...`).
+- Unit tests cover patch counting/idempotence, the guard sequence, in-memory-only
+  patching, the no-site error, known-No-RSA catalog flags, a No-RSA file-name
+  fallback, BIOS selection preference, settings round-trip, CLI JSON reporting, and
+  `bios info` patch-site reporting. `bios/` local-file tests skip when the images are
+  absent.
+- The feature is complete: the BIOS patch is explicit and opt-in, the source image is
+  never modified, known No-RSA images are preferred, and a compatible retail image is
+  patched only when requested. No BIOS or game content is bundled.

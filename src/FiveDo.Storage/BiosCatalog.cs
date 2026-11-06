@@ -15,6 +15,7 @@ namespace FiveDo.Storage;
 /// <param name="IsPatched">Whether the image carries an arcade/unsigned-disc patch.</param>
 /// <param name="Notes">Compatibility notes.</param>
 /// <param name="Preference">Higher values win when two profiles are otherwise equivalent.</param>
+/// <param name="IsRsaDisabled">Whether the image has the media RSA signature check disabled.</param>
 public sealed record BiosDescriptor(
     string Name,
     BiosImageKind Kind,
@@ -24,7 +25,8 @@ public sealed record BiosDescriptor(
     bool IsAnvil,
     bool IsPatched,
     string Notes,
-    int Preference);
+    int Preference,
+    bool IsRsaDisabled = false);
 
 /// <summary>
 /// A lookup table of known 3DO BIOS MD5 hashes and their metadata.
@@ -111,15 +113,16 @@ public sealed class BiosCatalog
         catalog.Add(
             "f6c71de7470d16abe4f71b1444883dc8",
             new BiosDescriptor(
-                "Panasonic FZ-1J (no RSA)",
+                "Panasonic FZ-1J (No RSA)",
                 BiosImageKind.Primary,
                 BiosTerritory.Japan,
                 BiosVideoStandard.Ntsc,
                 IsKanji: false,
                 IsAnvil: false,
-                IsPatched: false,
-                Notes: "Japanese FZ-1J image without the RSA signature check. Use only when the retail image is unavailable.",
-                Preference: 41));
+                IsPatched: true,
+                Notes: "Japanese FZ-1J image without the RSA signature check. Use only when unsigned-disc support is explicitly needed.",
+                Preference: 41,
+                IsRsaDisabled: true));
         catalog.Add(
             "51f2f43ae2f3508a14d9f56597e2d3ce",
             new BiosDescriptor(
@@ -195,27 +198,29 @@ public sealed class BiosCatalog
         catalog.Add(
             "1477bda80dc33731a65468c1f5bcbee9",
             new BiosDescriptor(
-                "Panasonic FZ-10 (patched)",
+                "Panasonic FZ-10 (No RSA)",
                 BiosImageKind.Primary,
                 BiosTerritory.Usa,
                 BiosVideoStandard.Ntsc,
                 IsKanji: false,
                 IsAnvil: false,
                 IsPatched: true,
-                Notes: "FZ-10 image patched for Arcade CD-ROM titles. Not a general-purpose default.",
-                Preference: 50));
+                Notes: "FZ-10 image with the RSA signature check disabled. Used for unsigned, homebrew, and Arcade CD-ROM titles. Not a general-purpose default.",
+                Preference: 50,
+                IsRsaDisabled: true));
         catalog.Add(
             "cf11bbb5a16d7af9875cca9de9a15e09",
             new BiosDescriptor(
-                "Panasonic FZ-10E (Anvil, patched)",
+                "Panasonic FZ-10E (Anvil, No RSA)",
                 BiosImageKind.Primary,
                 BiosTerritory.Europe,
                 BiosVideoStandard.Pal,
                 IsKanji: false,
                 IsAnvil: true,
                 IsPatched: true,
-                Notes: "Patched European FZ-10E image for Arcade CD-ROM titles. Not a general-purpose default.",
-                Preference: 50));
+                Notes: "European FZ-10E image with the Anvil workaround and the RSA signature check disabled. Used for unsigned, homebrew, and Arcade CD-ROM titles. Not a general-purpose default.",
+                Preference: 50,
+                IsRsaDisabled: true));
         catalog.Add(
             "c23fb5d5e6bb1c240d02cf968972be37",
             new BiosDescriptor(

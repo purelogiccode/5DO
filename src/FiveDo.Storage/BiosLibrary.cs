@@ -181,7 +181,8 @@ public sealed class BiosLibrary
                     heuristic.IsAnvil,
                     heuristic.IsPatched,
                     "Unrecognized 1 MB BIOS. Metadata was inferred from the file name; verify the image before use.",
-                    Preference: 0),
+                    Preference: 0,
+                    IsRsaDisabled: heuristic.IsRsaDisabled),
                 image.IsAnvil);
         }
 
@@ -213,7 +214,8 @@ public sealed class BiosLibrary
                     heuristic.IsAnvil,
                     heuristic.IsPatched,
                     "Unrecognized secondary ROM. Verify that it is a 3DO BIOS2, Kanji font, or arcade support image.",
-                    Preference: 0),
+                    Preference: 0,
+                    IsRsaDisabled: heuristic.IsRsaDisabled),
                 isAnvil: false);
         }
 
@@ -301,6 +303,7 @@ public sealed class BiosLibrary
         var isArcade = game?.Name.Contains("Arcade", StringComparison.OrdinalIgnoreCase) == true
             || discFileName?.Contains("Arcade", StringComparison.OrdinalIgnoreCase) == true;
         var allowPatched = options.AllowPatched || isArcade;
+        var allowUnsignedDiscs = options.AllowUnsignedDiscs;
 
         if (!string.IsNullOrWhiteSpace(options.PreferredMd5))
         {
@@ -345,7 +348,10 @@ public sealed class BiosLibrary
         }
 
         var candidates = Primaries
-            .Where(profile => (allowPatched || !profile.IsPatched) && (!options.RequireKanji || profile.IsKanji))
+            .Where(profile => (allowPatched
+                    || (allowUnsignedDiscs && profile.IsRsaDisabled)
+                    || !profile.IsPatched)
+                && (!options.RequireKanji || profile.IsKanji))
             .ToList();
         var fallback = false;
         if (candidates.Count == 0)
@@ -483,7 +489,8 @@ public sealed class BiosLibrary
             descriptor.IsPatched,
             descriptor.Name,
             descriptor.Notes,
-            descriptor.Preference);
+            descriptor.Preference,
+            descriptor.IsRsaDisabled);
     }
 
     private BiosProfile? ChooseSecondary(BiosProfile primary, IReadOnlyList<BiosTerritory> desired, BiosSelectionOptions options)
@@ -560,9 +567,14 @@ public sealed class BiosLibrary
                 score += 400;
             }
         }
-        else if (profile.IsPatched)
+        else if (profile.IsPatched && !(options.AllowUnsignedDiscs && profile.IsRsaDisabled))
         {
             score -= 2000;
+        }
+
+        if (options.AllowUnsignedDiscs && profile.IsRsaDisabled)
+        {
+            score += 600;
         }
 
         if (profile.IsKanji && desired.Contains(BiosTerritory.Japan))
@@ -643,6 +655,18 @@ public sealed class BiosLibrary
             || lower.Contains("font", StringComparison.Ordinal);
         var patched = lower.Contains("patch", StringComparison.Ordinal)
             || lower.Contains("arcade", StringComparison.Ordinal);
+        var rsaDisabled = lower.Contains("norsa", StringComparison.Ordinal)
+            || lower.Contains("no-rsa", StringComparison.Ordinal)
+            || lower.Contains("no_rsa", StringComparison.Ordinal)
+            || lower.Contains("no rsa", StringComparison.Ordinal)
+            || lower.Contains("rsa disabled", StringComparison.Ordinal)
+            || lower.Contains("rsa-disabled", StringComparison.Ordinal)
+            || lower.Contains("rsa_disabled", StringComparison.Ordinal)
+            || lower.Contains("rsa patched", StringComparison.Ordinal)
+            || lower.Contains("rsa-patched", StringComparison.Ordinal)
+            || lower.Contains("rsa_patched", StringComparison.Ordinal)
+            || lower.Contains("unsigned", StringComparison.Ordinal);
+        patched |= rsaDisabled;
         isAnvil |= lower.Contains("anvil", StringComparison.Ordinal);
 
         if (lower.Contains("fz10e", StringComparison.Ordinal)
@@ -650,7 +674,7 @@ public sealed class BiosLibrary
             || lower.Contains("europe", StringComparison.Ordinal)
             || lower.Contains("pal", StringComparison.Ordinal))
         {
-            return new FileNameClassification(BiosTerritory.Europe, BiosVideoStandard.Pal, kanji, isAnvil, patched);
+            return new FileNameClassification(BiosTerritory.Europe, BiosVideoStandard.Pal, kanji, isAnvil, patched, rsaDisabled);
         }
 
         if (lower.Contains("fz10ja", StringComparison.Ordinal)
@@ -658,7 +682,7 @@ public sealed class BiosLibrary
             || lower.Contains("sanyo", StringComparison.Ordinal)
             || kanji)
         {
-            return new FileNameClassification(BiosTerritory.Japan, BiosVideoStandard.Ntsc, kanji, isAnvil, patched);
+            return new FileNameClassification(BiosTerritory.Japan, BiosVideoStandard.Ntsc, kanji, isAnvil, patched, rsaDisabled);
         }
 
         if (lower.Contains("fz1", StringComparison.Ordinal)
@@ -667,16 +691,16 @@ public sealed class BiosLibrary
             || lower.Contains("usa", StringComparison.Ordinal)
             || lower.Contains("ntsc", StringComparison.Ordinal))
         {
-            return new FileNameClassification(BiosTerritory.Usa, BiosVideoStandard.Ntsc, kanji, isAnvil, patched);
+            return new FileNameClassification(BiosTerritory.Usa, BiosVideoStandard.Ntsc, kanji, isAnvil, patched, rsaDisabled);
         }
 
         if (lower.Contains("arcade", StringComparison.Ordinal)
             || lower.Contains("saot", StringComparison.Ordinal))
         {
-            return new FileNameClassification(BiosTerritory.Arcade, BiosVideoStandard.Ntsc, kanji, isAnvil, patched);
+            return new FileNameClassification(BiosTerritory.Arcade, BiosVideoStandard.Ntsc, kanji, isAnvil, patched, rsaDisabled);
         }
 
-        return new FileNameClassification(BiosTerritory.Unknown, BiosVideoStandard.Unknown, kanji, isAnvil, patched);
+        return new FileNameClassification(BiosTerritory.Unknown, BiosVideoStandard.Unknown, kanji, isAnvil, patched, rsaDisabled);
     }
 
     private readonly record struct FileNameClassification(
@@ -684,5 +708,6 @@ public sealed class BiosLibrary
         BiosVideoStandard VideoStandard,
         bool IsKanji,
         bool IsAnvil,
-        bool IsPatched);
+        bool IsPatched,
+        bool IsRsaDisabled);
 }

@@ -1318,6 +1318,89 @@ public sealed class CliProcessTests
     }
 
     [Fact]
+    public void Run_AllowUnsignedDiscsPatchesTheBiosInMemory()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fivedo-cli-rsa-{Guid.NewGuid():N}.bin");
+        try
+        {
+            byte[] retail = CreateBiosWithRsaSites();
+            File.WriteAllBytes(path, retail);
+            var expected = BiosImage.FromBytes(retail, allowUnsignedDiscs: true).Md5;
+
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                path,
+                "--allow-unsigned-discs",
+                "--frames",
+                "0",
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"biosRsaPatched\": true", result.Output, StringComparison.Ordinal);
+            Assert.Contains($"\"biosMd5\": \"{expected}\"", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Run_AllowUnsignedDiscsWithoutAPatchSite_ReturnsOne()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fivedo-cli-rsa-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(path, new byte[1_048_576]);
+
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                path,
+                "--allow-unsigned-discs",
+                "--frames",
+                "0");
+
+            Assert.Equal(1, result.Code);
+            Assert.Contains("RSA check patch site", result.Error, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void BiosInfo_ReportsRsaPatchSites()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fivedo-cli-rsa-{Guid.NewGuid():N}.bin");
+        try
+        {
+            File.WriteAllBytes(path, CreateBiosWithRsaSites());
+
+            CliResult result = Invoke("bios", "info", path, "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"rsaPatchSites\": 2", result.Output, StringComparison.Ordinal);
+            Assert.Contains("\"rsaDisabled\": false", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    private static byte[] CreateBiosWithRsaSites()
+    {
+        byte[] search = [0x00, 0x03, 0x13, 0xA0, 0x00, 0x01, 0x11, 0xA0];
+        var bios = new byte[1_048_576];
+        search.CopyTo(bios, 0x100);
+        search.CopyTo(bios, 0x200);
+        return bios;
+    }
+
+    [Fact]
     public void Run_BiosAndBiosAuto_ReturnsOne()
     {
         var folder = Path.Combine(Path.GetTempPath(), $"fivedo-cli-bios-conflict-{Guid.NewGuid():N}");

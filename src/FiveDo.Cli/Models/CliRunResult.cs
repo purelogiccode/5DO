@@ -133,7 +133,11 @@ internal sealed record CliRunResult(
     string Memory = "Dram2MbVram1Mb",
     string Deinterlace = "Bob",
     bool Interlaced = false,
-    bool InterlaceDetected = false);
+    bool InterlaceDetected = false,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    bool BiosRsaPatched = false,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    bool BiosRsaDisabled = false);
 
 /// <summary>One SWI comment observed during a diagnostic run.</summary>
 /// <param name="Comment">The 24-bit SWI comment.</param>

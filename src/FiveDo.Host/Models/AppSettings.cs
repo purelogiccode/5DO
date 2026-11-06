@@ -26,10 +26,11 @@ public sealed class AppSettings
     /// <summary>The settings schema version written by this build.</summary>
     /// <remarks>
     /// Version 2 adds the CD-DA mix volume and mute flag. Version 3 adds the presentation
-    /// refresh rate. Version 4 adds the game-library card size. Version 1 files load with
-    /// the documented defaults for new properties.
+    /// refresh rate. Version 4 adds the game-library card size. Version 5 adds the
+    /// unsigned-disc/RSA-patch option. Older files load with the documented defaults for
+    /// new properties.
     /// </remarks>
-    public const int CurrentVersion = 4;
+    public const int CurrentVersion = 5;
 
     /// <summary>
     /// Gets or sets the settings schema version. Zero or missing means a pre-versioned file
@@ -60,6 +61,18 @@ public sealed class AppSettings
     /// from <see cref="BiosFolder"/> for each disc. The configured BIOS remains the fallback.
     /// </summary>
     public bool AutoBios { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the media RSA signature check is patched in
+    /// memory so unsigned, homebrew, and arcade discs can boot. The BIOS file is never modified.
+    /// </summary>
+    /// <remarks>
+    /// This is an explicit opt-in. A recognized No-RSA BIOS is preferred when available;
+    /// otherwise a compatible retail image is patched with the documented two-site bypass.
+    /// Save states record the effective BIOS MD5, so loading a state with a different
+    /// patched/unpatched BIOS reports the usual BIOS-hash mismatch warning.
+    /// </remarks>
+    public bool AllowUnsignedDiscs { get; set; }
 
     /// <summary>Gets per-game BIOS overrides keyed by 4DO game ID. Values are BIOS MD5 hashes.</summary>
     public IDictionary<string, string> BiosOverrides { get; set; } = new Dictionary<string, string>(StringComparer.Ordinal);

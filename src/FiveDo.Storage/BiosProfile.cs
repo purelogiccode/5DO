@@ -72,6 +72,7 @@ public enum BiosVideoStandard
 /// <param name="Name">Human-readable profile name.</param>
 /// <param name="Notes">Selection and compatibility notes.</param>
 /// <param name="Preference">Higher values win when two profiles are otherwise equivalent.</param>
+/// <param name="IsRsaDisabled">Whether the image has the media RSA signature check disabled.</param>
 public sealed record BiosProfile(
     string Path,
     string FileName,
@@ -85,7 +86,8 @@ public sealed record BiosProfile(
     bool IsPatched,
     string Name,
     string Notes,
-    int Preference)
+    int Preference,
+    bool IsRsaDisabled = false)
 {
     /// <summary>Gets a value indicating whether this is a primary BIOS image.</summary>
     public bool IsPrimary => Kind == BiosImageKind.Primary;

@@ -16,6 +16,8 @@ internal sealed record CliBiosInfoResult(
     string Region,
     bool Kanji,
     bool Patched,
+    bool RsaDisabled,
+    int RsaPatchSites,
     int Preference,
     string Notes,
     string Md5Bios2);

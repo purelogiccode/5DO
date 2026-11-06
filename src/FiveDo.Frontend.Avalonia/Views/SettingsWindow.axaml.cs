@@ -365,6 +365,7 @@ public partial class SettingsWindow : Window
         BiosPathBox.Text = settings.BiosPath;
         Bios2PathBox.Text = settings.Bios2Path;
         AutoBiosCheck.IsChecked = settings.AutoBios;
+        AllowUnsignedDiscsCheck.IsChecked = settings.AllowUnsignedDiscs;
         BiosOverrideCombo.IsEnabled = !string.IsNullOrWhiteSpace(gameId);
         var biosFolder = settings.BiosFolder;
         if (string.IsNullOrWhiteSpace(biosFolder) && !string.IsNullOrWhiteSpace(settings.BiosPath))
@@ -1293,6 +1294,7 @@ public partial class SettingsWindow : Window
         settings.BiosPath = BiosPathBox.Text?.Trim() ?? string.Empty;
         settings.Bios2Path = Bios2PathBox.Text?.Trim() ?? string.Empty;
         settings.AutoBios = AutoBiosCheck.IsChecked == true;
+        settings.AllowUnsignedDiscs = AllowUnsignedDiscsCheck.IsChecked == true;
 
         if (!string.IsNullOrWhiteSpace(_gameId))
         {

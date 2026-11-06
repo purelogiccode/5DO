@@ -66,9 +66,9 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `library verify [--folder <dir>] [--dat <path>] [--cache <path>] [--json]` | Verify every disc in a library folder (or the configured library folders) and update the desktop known-dump cache. Exits 1 on a read error. |
 | `fs list <disc>` | List the 3DO file tree (ISO, BIN, CUE, or CHD). |
 | `fs extract <disc>` | Extract files from a 3DO disc image (ISO, BIN, CUE, or CHD). |
-| `bios info <path>` | BIOS size, MD5, region, Kanji, and Anvil detection. |
+| `bios info <path>` | BIOS size, MD5, region, Kanji, Anvil, and RSA-patch detection. |
 | `bios list\|scan <folder>` | Scan and validate a BIOS folder. |
-| `bios select <disc> --folder <dir>` | Choose a region-appropriate BIOS for a disc. |
+| `bios select <disc> --folder <dir>` | Choose a region-appropriate BIOS for a disc; `--allow-unsigned-discs` prefers No-RSA images. |
 | `nvram path [disc]` | Resolve the shared or per-game NVRAM image. |
 | `nvram list` | List global and per-game NVRAM images. |
 | `nvram export\|import\|reset` | Back up, restore, or clear an NVRAM image. |
@@ -106,7 +106,9 @@ A disc is optional for a BIOS-only boot. `--bios-auto` scans the folder, compute
 game ID/region, and selects a primary BIOS plus an optional Kanji/BIOS2 image; explicit
 `--bios2` overrides the selected secondary. `--bios` and `--bios-auto` are mutually
 exclusive. `--state-in` restores ROM, RAM, NVRAM, device state, and the current VDL
-frame.
+frame. `--allow-unsigned-discs` disables the BIOS media RSA check in memory for unsigned,
+homebrew, and arcade discs; it is independent of `--bios`/`--bios-auto` and never modifies
+the BIOS file.
 
 ### Order of operations
 
@@ -141,6 +143,7 @@ frame.
 | `--bios <path>` | none | BIOS1 path (exactly 1 MB). Required unless `--bios-auto` or `--state-in`. |
 | `--bios2 <path>` | none | Optional BIOS2/Kanji font path. Requires `--bios` or `--bios-auto`. |
 | `--bios-auto <folder>` | none | Scan a folder and select a region-appropriate BIOS for the disc. |
+| `--allow-unsigned-discs` | off | Patch the media RSA check in memory so unsigned, homebrew, and arcade discs can boot. A known No-RSA BIOS is preferred by `--bios-auto`; otherwise a compatible retail 1 MB BIOS is patched with the documented two-site bypass. The BIOS file is not modified. The effective ROM hash is reported as `biosMd5` and `biosRsaPatched`. |
 | `--frames N` | 600 | Number of frames to run. Decimal or `0x`. |
 | `--state-in <path>` | none | Load a `.tdos` state instead of booting. |
 | `--state-out <path>` | none | Save a `.tdos` state after the run. |
@@ -372,7 +375,9 @@ All fields are camelCase. Nullable fields are omitted or `null` when not applica
 | `audioLatencyMilliseconds` | double? | `(queuedFrames + bufferedFrames) * 1000 / 44100`. |
 | `biosPath` | string? | Primary BIOS path used for the run. |
 | `bios2Path` | string? | BIOS2/font path used for the run, if any. |
-| `biosMd5`, `bios2Md5` | string? | Lowercase MD5 hashes of the loaded BIOS images. |
+| `biosMd5`, `bios2Md5` | string? | Lowercase MD5 hashes of the loaded BIOS images. With unsigned-disc support, `biosMd5` is the effective patched hash. |
+| `biosRsaPatched` | bool | Whether the in-memory RSA check patch was applied to this run. Omitted when false. |
+| `biosRsaDisabled` | bool | Whether the effective BIOS has the RSA check disabled, including known No-RSA images. Omitted when false. |
 | `biosName` | string? | Human-readable BIOS profile name. |
 | `biosRegion` | string? | Region label such as `USA (NTSC)` or `Europe (PAL)`. |
 | `biosSelection` | string? | Why automatic selection chose this image. |
@@ -421,6 +426,7 @@ instruction ring buffer. It stops early on a stop condition or `--count` limit.
 | `--bios <path>` | none | BIOS1. Required unless `--bios-auto` or `--state-in`. |
 | `--bios2 <path>` | none | Optional BIOS2/Kanji font path. |
 | `--bios-auto <folder>` | none | Auto-select a region-appropriate BIOS for the disc. |
+| `--allow-unsigned-discs` | off | Patch the media RSA check in memory, as in `run`. |
 | `--state-in <path>` | none | Load a state before tracing. |
 | `--frames N` | 0 | Frames to run before tracing. |
 | `--trace-frames N` | 1 | Frames to trace. |
@@ -622,9 +628,11 @@ read with the gaps skipped.
 ```
 
 `bios info` reports `path`, `size`, `md5`, `anvil`, `anvilKind`, `name`, `kind`,
-`territory`, `videoStandard`, `region`, `kanji`, `patched`, `preference`, `notes`, and
-`md5Bios2`. BIOS1 must be exactly 1 MB; a smaller file is classified as a BIOS2/Kanji
-font or arcade support ROM. Anvil is detected by `byte[28] == 234`.
+`territory`, `videoStandard`, `region`, `kanji`, `patched`, `rsaDisabled`,
+`rsaPatchSites`, `preference`, `notes`, and `md5Bios2`. BIOS1 must be exactly 1 MB; a
+smaller file is classified as a BIOS2/Kanji font or arcade support ROM. Anvil is detected
+by `byte[28] == 234`. `rsaPatchSites` is the number of documented RSA check sites found in
+the image; zero means the image is already No-RSA or has an unsupported layout.
 
 `bios list`/`bios scan` scan `.bin` and `.rom` files, classify known MD5 hashes from the
 built-in catalog, validate sizes, and report skipped files. Add `--recursive` to include
@@ -633,15 +641,17 @@ subfolders. JSON fields: `folder`, `primaryCount`, `secondaryCount`, `errorCount
 
 `bios select` opens a disc, computes its game ID/region, and prints the selected primary
 and optional BIOS2 with the reason. Options: `--folder <dir>` (required),
-`--recursive`, `--allow-patched`, `--require-kanji`, `--prefer-anvil`, and
-`--md5 <hash>`. Known title requirements currently cover Slayer Europe/USA, Powers
-Kingdom (Europe), and Arcade CD-ROM discs; other titles use region matching plus
-per-game overrides.
+`--recursive`, `--allow-patched`, `--allow-unsigned-discs`, `--require-kanji`,
+`--prefer-anvil`, and `--md5 <hash>`. `--allow-unsigned-discs` permits No-RSA images for
+non-arcade discs and prefers them when they match the region. Known title requirements
+currently cover Slayer Europe/USA, Powers Kingdom (Europe), and Arcade CD-ROM discs;
+other titles use region matching plus per-game overrides.
 
 Known BIOS hashes include Panasonic FZ-1/FZ-10/FZ-10E/FZ-10JA, GoldStar, Sanyo TRY, the
-patched FZ-10/FZ-10E arcade images, the FZ-1 Kanji font, and the 3DO arcade support ROM.
+No-RSA FZ-1J/FZ-10/FZ-10E images, the FZ-1 Kanji font, and the 3DO arcade support ROM.
 Unknown images are still accepted, but their metadata is inferred from the file name and
-marked unverified in `notes`.
+marked unverified in `notes`. File names containing `norsa`, `no-rsa`, `rsa disabled`, or
+`unsigned` are treated as No-RSA candidates for `--allow-unsigned-discs`.
 
 ---
 

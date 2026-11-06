@@ -68,7 +68,9 @@ ROM, NVRAM, device state, and the derived VDL frame, plus hashes for diagnostics
   word or section table.
 - `armClock` is the tuning clock used when the state was written.
 - `fixMode` is the applied compatibility mask.
-- `biosHash` is the MD5 of BIOS bank 0 as restored from memory.
+- `biosHash` is the MD5 of BIOS bank 0 as restored from memory. When
+  `AllowUnsignedDiscs` applies the in-memory RSA patch, this is the effective patched
+  hash; loading the state with an unpatched BIOS reports the normal BIOS-hash warning.
 - `discHash` is the host-supplied game ID (MD5 of the first two disc sectors) or empty.
   It is **recorded**, not used to reject a load.
 - `framesExecuted` is the machine's frame counter at save time.

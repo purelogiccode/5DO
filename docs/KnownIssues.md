@@ -256,6 +256,12 @@ checksums are attached, and legal/attribution sign-off is recorded.
   That license includes a prohibition on commercial use without the owners' approval.
   A distribution/attribution review is still pending before any public build.
 - The repository does not include BIOS ROMs, game images, or extracted assets.
+- Unsigned-disc support (`--allow-unsigned-discs` / Settings > Paths) is an explicit
+  in-memory RSA-check bypass. It does not bundle or distribute a BIOS, a patched BIOS, or
+  game images. The user must supply a legally obtained BIOS and is responsible for
+  ensuring that the software they boot may lawfully be run. The patch is the community
+  documented two-site change and reproduces the known No-RSA FZ-10/FZ-10E images exactly;
+  the source BIOS file is never modified.
 
 ## Memory capacity and CPU clock options
 

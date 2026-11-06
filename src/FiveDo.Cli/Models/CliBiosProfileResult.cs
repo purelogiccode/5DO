@@ -16,6 +16,7 @@ internal sealed record CliBiosProfileResult(
     bool Kanji,
     bool Anvil,
     bool Patched,
+    bool RsaDisabled,
     int Preference,
     string Notes)
 {
@@ -34,6 +35,7 @@ internal sealed record CliBiosProfileResult(
             profile.IsKanji,
             profile.IsAnvil,
             profile.IsPatched,
+            profile.IsRsaDisabled,
             profile.Preference,
             profile.Notes);
     }

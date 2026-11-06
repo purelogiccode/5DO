@@ -854,6 +854,7 @@ M1 implements the section primitive used by all later chips:
 - `run --json` adds `biosPath`, `bios2Path`, `biosMd5`, `bios2Md5`, `biosName`,
   `biosRegion`, `biosSelection`, and `biosSource`. `bios select` uses the same selector;
   `bios list/scan` validates a folder. The smoke evidence is in `TestCorpus.md` 1.1f.
+  SYS-06 later added `biosRsaPatched`/`biosRsaDisabled`; see 12.34.
 - Save-state BIOS mismatch warnings already cover the primary BIOS hash. A BIOS2 hash is
   not in the v2 header; adding one would require a state-format change.
 
@@ -1197,3 +1198,23 @@ M1 implements the section primitive used by all later chips:
   `MulVec3Mat33DivZ`, `MulVec4Mat44`, `MulManyVec4Mat44`, and `MulMat44Mat44` for
   non-trivial signed inputs. The real-BIOS 4,096-call benchmark is in
   `Performance.md` §8.2.
+
+### 12.34 RSA/unsigned-disc BIOS patch (2026-11-06)
+
+- The retail BIOS checks the media RSA signature at two sites. The community documented
+  patch changes each site's second word from `000111A0` to `000011A0`; the similar
+  `000213A0000111A0` sequence is a guard and must not be changed. `BiosRsaPatch` searches
+  and patches only the first pattern. Reference: Boojakascha's FZ-1 RSA-check writeup.
+- Applying the patch to retail `panafz10.bin` and `panafz10e-anvil.bin` reproduces
+  `1477bda80dc33731a65468c1f5bcbee9` and `cf11bbb5a16d7af9875cca9de9a15e09`, the
+  known No-RSA images catalogued by Opera/libretro. This is checked by local-file tests
+  when the images are present.
+- 5DO never writes the BIOS file. The patch is applied to the in-memory copy only when
+  `--allow-unsigned-discs` or Settings > Paths > Allow unsigned discs is enabled. The
+  effective ROM MD5 is what `FiveDoMachine` hashes into save states, so a state saved with
+  a patched BIOS and loaded with an unpatched one reports the normal BIOS-hash mismatch
+  warning.
+- Selection prefers a recognized No-RSA image for `--bios-auto`/`bios select` when the
+  option is on. Unknown file names containing `norsa`, `no-rsa`, `rsa disabled`, or
+  `unsigned` are accepted as already No-RSA; a retail image with no patch site is
+  rejected with an explicit error rather than silently claiming support.

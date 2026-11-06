@@ -60,7 +60,7 @@ shows the owner and exits. `FIVEDO_ALLOW_MULTIPLE=1` disables that guard. Differ
 profiles or data directories use different lock files and may run together.
 
 Settings are written atomically (temporary file + replace) and carry
-`"SettingsVersion": 4`. An older file is migrated in place on the next load.
+`"SettingsVersion": 5`. An older file is migrated in place on the next load.
 A malformed `settings.json` is copied to `settings.json.invalid-<timestamp>.bak`
 before defaults are used, so the original bytes are never silently lost. Back up or
 delete the file to reset the desktop configuration.
@@ -77,12 +77,13 @@ every serialized property in `AppSettings`.
 
 | Property | Type | Default | Meaning |
 |---|---|---|---|
-| `SettingsVersion` | int | `4` | Settings schema version. Unversioned files are migrated on load. |
+| `SettingsVersion` | int | `5` | Settings schema version. Unversioned files are migrated on load. |
 | `FirstRunCompleted` | bool | `false` | Whether the first-run guide has been shown. |
 | `BiosPath` | string | `""` | Last primary BIOS path; fallback when auto-selection is off or unavailable. |
 | `Bios2Path` | string | `""` | Optional BIOS2/Kanji font path. |
 | `BiosFolder` | string | `""` | Folder scanned for automatic region/BIOS selection. |
 | `AutoBios` | bool | `true` | Select a region-appropriate BIOS when `BiosFolder` is set. |
+| `AllowUnsignedDiscs` | bool | `false` | Explicitly allow unsigned, homebrew, and arcade discs by disabling the BIOS media RSA check in memory. A known No-RSA BIOS is preferred when available; otherwise a compatible retail 1 MB image is patched with the documented two-site bypass. The BIOS file is never modified. |
 | `BiosOverrides` | object | `{}` | Per-game BIOS MD5 overrides keyed by 4DO game ID. |
 | `DonationEmail` | string | `""` | Optional email used to recognize a 5DO donation. |
 | `HasDonated` | bool | `false` | Cached confirmation for `DonationEmail`. |
@@ -243,12 +244,13 @@ player-1 defaults. See section 3 for the full input structure.
 
 ```json
 {
-  "SettingsVersion": 4,
+  "SettingsVersion": 5,
   "FirstRunCompleted": true,
   "BiosPath": "C:\\3DO\\panafz1.bin",
   "Bios2Path": "",
   "BiosFolder": "C:\\3DO\\bios",
   "AutoBios": true,
+  "AllowUnsignedDiscs": false,
   "BiosOverrides": {
     "6B1A7FED": "51F2F43AE2F3508A14D9F56597E2D3CE"
   },

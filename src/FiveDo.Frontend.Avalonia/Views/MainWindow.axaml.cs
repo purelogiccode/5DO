@@ -891,7 +891,10 @@ public partial class MainWindow : Window, IDisposable
 
         try
         {
-            var bios = BiosImage.Load(path, string.IsNullOrWhiteSpace(bios2Path) ? null : bios2Path);
+            var bios = BiosImage.Load(
+                path,
+                string.IsNullOrWhiteSpace(bios2Path) ? null : bios2Path,
+                _settings.AllowUnsignedDiscs);
             var machine = CreateMachine(_gameId);
             VideoRegion region = ResolveRegionForBios(path, _gameId);
             _runner!.Invoke(() =>
@@ -919,13 +922,15 @@ public partial class MainWindow : Window, IDisposable
             var secondary = string.IsNullOrWhiteSpace(bios2Path)
                 ? string.Empty
                 : $" + BIOS2 {bios.Md5Bios2[..Math.Min(8, bios.Md5Bios2.Length)]}";
+            var rsaPatch = bios.RsaPatched ? " + unsigned-disc RSA patch" : string.Empty;
             StatusText.Text =
-                $"BIOS {bios.Md5[..8]}{secondary} loaded{(bios.IsAnvil ? " (Anvil)" : string.Empty)}.";
+                $"BIOS {bios.Md5[..8]}{secondary} loaded{(bios.IsAnvil ? " (Anvil)" : string.Empty)}{rsaPatch}.";
             _logger.ForCategory(LogCategory.Storage).Information(
-                "BIOS loaded: {Path} ({Md5}, {Kind}){Reason}.",
+                "BIOS loaded: {Path} ({Md5}, {Kind}){Rsa}{Reason}.",
                 path,
                 bios.Md5,
                 bios.IsAnvil ? "Anvil" : "retail",
+                bios.RsaPatched ? " [unsigned-disc RSA patch]" : string.Empty,
                 string.IsNullOrWhiteSpace(reason) ? string.Empty : $" [{reason}]");
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException or ArgumentException)
@@ -1264,7 +1269,8 @@ public partial class MainWindow : Window, IDisposable
                 {
                     selectedBios = BiosImage.Load(
                         resolved.PrimaryPath!,
-                        string.IsNullOrWhiteSpace(resolved.SecondaryPath) ? null : resolved.SecondaryPath);
+                        string.IsNullOrWhiteSpace(resolved.SecondaryPath) ? null : resolved.SecondaryPath,
+                        effective.AllowUnsignedDiscs);
                 }
                 catch (Exception exception) when (exception is IOException
                     or InvalidDataException
@@ -3726,6 +3732,7 @@ public partial class MainWindow : Window, IDisposable
         var previousBiosFolder = _settings.BiosFolder;
         var previousCheatsDirectory = _settings.ResolveCheatsDirectory();
         var previousAutoBios = _settings.AutoBios;
+        var previousAllowUnsignedDiscs = _settings.AllowUnsignedDiscs;
         AppSettings previousEffective = _settings.CreateEffectiveForGame(_gameId);
         var previousInputDevices = string.Join(",", previousEffective.ResolveInputDevices(_gameId));
         var window = new SettingsWindow(_settings, _gameId, _gameName);
@@ -3824,6 +3831,7 @@ public partial class MainWindow : Window, IDisposable
             || !string.Equals(previousBios2Path, effective.Bios2Path, StringComparison.OrdinalIgnoreCase)
             || !string.Equals(previousBiosFolder, effective.BiosFolder, StringComparison.OrdinalIgnoreCase)
             || previousAutoBios != effective.AutoBios
+            || previousAllowUnsignedDiscs != effective.AllowUnsignedDiscs
             || !string.Equals(previousEffective.GetBiosOverride(_gameId), effective.GetBiosOverride(_gameId), StringComparison.OrdinalIgnoreCase);
         var nvramSettingsChanged =
             effective.NvramStorageMode != _nvramMode

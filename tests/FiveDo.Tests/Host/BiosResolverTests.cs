@@ -76,6 +76,43 @@ public sealed class BiosResolverTests
     }
 
     [Fact]
+    public void Resolve_AllowUnsignedDiscsPrefersTheNoRsaImage()
+    {
+        using var folder = new TempFolder();
+        folder.Write("panafz10.bin", CreateBios(anvil: false));
+        folder.Write("panafz10-norsa.bin", CreateBios(anvil: false));
+        var settings = new AppSettings
+        {
+            BiosFolder = folder.Path,
+            AutoBios = true,
+            AllowUnsignedDiscs = true,
+        };
+
+        ResolvedBios result = BiosResolver.Resolve(settings, "TEST0001", Game("Test", "US"));
+
+        Assert.True(result.HasPrimary);
+        Assert.EndsWith("panafz10-norsa.bin", result.PrimaryPath, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Resolve_WithoutUnsignedDiscsKeepsTheRetailImage()
+    {
+        using var folder = new TempFolder();
+        folder.Write("panafz10.bin", CreateBios(anvil: false));
+        folder.Write("panafz10-norsa.bin", CreateBios(anvil: false));
+        var settings = new AppSettings
+        {
+            BiosFolder = folder.Path,
+            AutoBios = true,
+        };
+
+        ResolvedBios result = BiosResolver.Resolve(settings, "TEST0001", Game("Test", "US"));
+
+        Assert.True(result.HasPrimary);
+        Assert.EndsWith("panafz10.bin", result.PrimaryPath, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Resolve_UsesAPerGameOverride()
     {
         using var folder = new TempFolder();

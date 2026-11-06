@@ -52,6 +52,7 @@ public sealed class AppSettingsStoreTests
             CheckForUpdates = false,
             LibraryCardSize = 256,
             HideLightgunCrosshair = true,
+            AllowUnsignedDiscs = true,
         };
 
         AppSettingsStore.Save(settings, path);
@@ -67,6 +68,7 @@ public sealed class AppSettingsStoreTests
         Assert.False(loaded.CheckForUpdates);
         Assert.Equal(256, loaded.LibraryCardSize);
         Assert.True(loaded.HideLightgunCrosshair);
+        Assert.True(loaded.AllowUnsignedDiscs);
     }
 
     [Fact]

@@ -215,7 +215,7 @@ public partial class BiosNvramManagerWindow : Window
             {
                 profile.IsKanji ? "Kanji" : null,
                 profile.IsAnvil ? "Anvil" : null,
-                profile.IsPatched ? "Patched/arcade" : null,
+                profile.IsRsaDisabled ? "No RSA" : profile.IsPatched ? "Patched/arcade" : null,
             }.Where(flag => flag is not null));
         if (string.IsNullOrEmpty(DetailBiosFlags.Text))
         {

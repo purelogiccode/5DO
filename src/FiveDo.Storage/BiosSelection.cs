@@ -10,12 +10,16 @@ namespace FiveDo.Storage;
 /// <param name="PreferAnvil">Prefer an Anvil image when the region match is otherwise equal.</param>
 /// <param name="PreferredMd5">A per-game BIOS override; takes precedence over region matching.</param>
 /// <param name="DiscName">Optional disc file name used for known-title requirements.</param>
+/// <param name="AllowUnsignedDiscs">
+/// Allow No-RSA BIOS images and prefer them when choosing a BIOS for an unsigned disc.
+/// </param>
 public sealed record BiosSelectionOptions(
     bool AllowPatched = false,
     bool RequireKanji = false,
     bool PreferAnvil = false,
     string? PreferredMd5 = null,
-    string? DiscName = null);
+    string? DiscName = null,
+    bool AllowUnsignedDiscs = false);
 
 /// <summary>
 /// The result of choosing a BIOS set for a game.

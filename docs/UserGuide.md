@@ -34,8 +34,18 @@ shows the current BIOS, disc, renderer, machine state, and paths.
 Settings > Paths now edits a BIOS folder, a primary BIOS, an optional BIOS2/Kanji font,
 and the **Auto-select BIOS** option. **Scan BIOS folder** validates every `.bin`/`.rom`
 file and reports primary/secondary/error counts. The scanner recognizes the common
-Panasonic FZ-1/FZ-10/FZ-10E/FZ-10JA, GoldStar, Sanyo, patched arcade, Kanji font, and
-arcade support ROM hashes; unknown images are accepted with file-name-derived metadata.
+Panasonic FZ-1/FZ-10/FZ-10E/FZ-10JA, GoldStar, Sanyo, No-RSA FZ-1J/FZ-10/FZ-10E,
+Kanji font, and arcade support ROM hashes; unknown images are accepted with
+file-name-derived metadata.
+
+**Allow unsigned discs** (Settings > Paths) is an explicit opt-in for unsigned, homebrew,
+and arcade discs. A recognized No-RSA BIOS is preferred when auto-selection is on;
+otherwise 5DO patches the documented two media-RSA check sites in the selected retail
+1 MB BIOS in memory. The BIOS file is never modified. The status line reports the
+effective BIOS hash, and save states record that hash, so loading a state with a
+patched/unpatched BIOS mismatch produces the usual warning. From the CLI, add
+`--allow-unsigned-discs` to `run` or `trace`; `bios select --allow-unsigned-discs`
+prefers a No-RSA image.
 
 When a BIOS folder is set and auto-selection is enabled, 5DO chooses a BIOS from the
 disc's game database region, known title requirements, and the image's Kanji/Anvil/patch

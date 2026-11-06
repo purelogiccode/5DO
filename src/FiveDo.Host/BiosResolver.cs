@@ -85,7 +85,10 @@ public static class BiosResolver
             {
                 BiosSelection selection = library!.SelectForGame(
                     game,
-                    new BiosSelectionOptions(PreferredMd5: overrideMd5, DiscName: discName));
+                    new BiosSelectionOptions(
+                        PreferredMd5: overrideMd5,
+                        DiscName: discName,
+                        AllowUnsignedDiscs: settings.AllowUnsignedDiscs));
                 return new ResolvedBios(
                     selection.Primary?.Path ?? overridePrimary.Path,
                     selection.Secondary?.Path ?? ResolveConfiguredSecondary(settings),
@@ -101,7 +104,9 @@ public static class BiosResolver
         {
             BiosSelection selection = library.SelectForGame(
                 game,
-                new BiosSelectionOptions(DiscName: discName));
+                new BiosSelectionOptions(
+                    DiscName: discName,
+                    AllowUnsignedDiscs: settings.AllowUnsignedDiscs));
             if (selection.HasBios)
             {
                 return new ResolvedBios(

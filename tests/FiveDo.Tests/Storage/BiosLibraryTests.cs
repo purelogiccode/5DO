@@ -302,6 +302,42 @@ public sealed class BiosLibraryTests
         Assert.Null(BiosGameRequirements.PreferredMd5("Lemmings (USA).chd"));
     }
 
+    [Fact]
+    public void SelectForGame_AllowUnsignedDiscsPrefersTheNoRsaImage()
+    {
+        using var folder = new TempFolder();
+        folder.Write("panafz10.bin", CreateBios());
+        folder.Write("panafz10-norsa.bin", CreateBios(marker: 2));
+        BiosLibrary library = BiosLibrary.Scan(folder.Path, new BiosCatalog());
+
+        BiosSelection normal = library.SelectForGame(Game("Unsigned test", "US"));
+        BiosSelection unsigned = library.SelectForGame(
+            Game("Unsigned test", "US"),
+            new BiosSelectionOptions(AllowUnsignedDiscs: true));
+
+        Assert.Equal("panafz10", normal.Primary?.Name);
+        Assert.False(normal.Primary?.IsRsaDisabled);
+
+        Assert.Equal("panafz10-norsa", unsigned.Primary?.Name);
+        Assert.True(unsigned.Primary?.IsRsaDisabled);
+        Assert.True(unsigned.Primary?.IsPatched);
+    }
+
+    [Fact]
+    public void SelectForGame_AllowUnsignedDiscsDoesNotRequireAllowPatched()
+    {
+        using var folder = new TempFolder();
+        folder.Write("panafz10.bin", CreateBios());
+        folder.Write("panafz10-norsa.bin", CreateBios(marker: 2));
+        BiosLibrary library = BiosLibrary.Scan(folder.Path, new BiosCatalog());
+
+        BiosSelection selection = library.SelectForGame(
+            Game("Unsigned test", "US"),
+            new BiosSelectionOptions(AllowUnsignedDiscs: true, AllowPatched: false));
+
+        Assert.Equal("panafz10-norsa", selection.Primary?.Name);
+    }
+
     private static GameRecord Game(string name, string regions)
     {
         return new GameRecord("TEST0001", "checksum", name, "1994", "Publisher", regions);

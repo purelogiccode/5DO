@@ -45,6 +45,8 @@ are in [`KnownIssues.md`](KnownIssues.md).
 | `bios info` shows an unexpected MD5 | Verify the dump. The MD5 is the identity used in save states. |
 | Game hangs at boot | Try a known-good BIOS (for example `panafz1.bin`). Check the game's required BIOS/region. |
 | Anvil detection | `bios info` reports `anvil`/`anvilKind`; the core applies the Anvil workaround automatically. |
+| Unsigned, homebrew, or arcade disc is rejected | Enable **Settings > Paths > Allow unsigned discs** or add `--allow-unsigned-discs` to `run`/`trace`. 5DO prefers a known No-RSA BIOS and otherwise patches a compatible retail 1 MB image in memory. |
+| `Unsigned-disc support is enabled, but the RSA check patch site was not found` | The selected image is neither a recognized No-RSA image nor a compatible retail layout. Use a known No-RSA BIOS or a standard 1 MB Panasonic/GoldStar/Sanyo image. The BIOS file is never modified. |
 | BIOS2 | The desktop opens one BIOS; the CLI `BiosImage.Load` supports BIOS2 only through the API, not a CLI option in this release. |
 
 BIOS ROMs are not included. Use a legally obtained image.

@@ -108,10 +108,11 @@ The 3DO boot ROM is **1 MB**. 4DO also accepts an optional second 1 MB ROM (BIOS
 | BIOS shorter than 1 MB | Rejected |
 | BIOS larger than 1 MB | Rejected |
 | Anvil BIOS detection (`byte[28] == 234`) | Supported; applies the FreeDO PC-skip workaround |
+| Unsigned-disc / No-RSA boot | Opt-in `--allow-unsigned-discs` / Settings > Paths; a known No-RSA BIOS is preferred, otherwise the documented two media-RSA check sites are patched in memory. The BIOS file is never modified. |
 | Region-specific BIOS files | Loaded as-is; no region lock emulation |
 | BIOS distribution | Not included; user must provide |
 
-The BIOS manager scans a folder, reports file name, size, MD5, region, video standard, Kanji, Anvil, and patch state, and stores the selected primary/secondary paths. Auto-selection uses the game database region, known title requirements, and per-game MD5 overrides; the configured BIOS remains the fallback. A missing/invalid BIOS prevents starting a session with a clear error. See [`UserGuide.md`](UserGuide.md) and [`Configuration.md`](Configuration.md).
+The BIOS manager scans a folder, reports file name, size, MD5, region, video standard, Kanji, Anvil, patch state, and No-RSA state, and stores the selected primary/secondary paths. Auto-selection uses the game database region, known title requirements, and per-game MD5 overrides; the configured BIOS remains the fallback. A missing/invalid BIOS prevents starting a session with a clear error. With unsigned-disc support enabled, auto-selection prefers a No-RSA image and otherwise patches a compatible retail image in memory. See [`UserGuide.md`](UserGuide.md) and [`Configuration.md`](Configuration.md).
 
 ---
 

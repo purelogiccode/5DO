@@ -200,14 +200,17 @@ internal static class Program
         string? bios2Path,
         string? biosAutoFolder,
         GameRecord? game,
-        string? discPath)
+        string? discPath,
+        bool allowUnsignedDiscs)
     {
         if (biosAutoFolder is not null)
         {
             BiosLibrary library = BiosLibrary.Scan(biosAutoFolder);
             BiosSelection selection = library.SelectForGame(
                 game,
-                new BiosSelectionOptions(DiscName: discPath));
+                new BiosSelectionOptions(
+                    DiscName: discPath,
+                    AllowUnsignedDiscs: allowUnsignedDiscs));
             if (!selection.HasBios)
             {
                 throw new ArgumentException(
@@ -216,13 +219,13 @@ internal static class Program
             }
 
             var secondary = string.IsNullOrWhiteSpace(bios2Path) ? selection.Secondary?.Path : bios2Path;
-            BiosImage image = BiosImage.Load(selection.Primary!.Path, secondary);
+            BiosImage image = BiosImage.Load(selection.Primary!.Path, secondary, allowUnsignedDiscs);
             return new BiosLoadResult(image, selection.Primary.Path, secondary, selection, "auto");
         }
 
         if (biosPath is not null)
         {
-            BiosImage image = BiosImage.Load(biosPath, bios2Path);
+            BiosImage image = BiosImage.Load(biosPath, bios2Path, allowUnsignedDiscs);
             return new BiosLoadResult(image, biosPath, bios2Path, null, "configured");
         }
 
@@ -437,6 +440,7 @@ internal static class Program
         var biosPath = options.Get("--bios");
         var bios2Path = options.Get("--bios2");
         var biosAutoFolder = options.Get("--bios-auto");
+        var allowUnsignedDiscs = HasFlag(args, "--allow-unsigned-discs");
         var stateIn = options.Get("--state-in");
         var stateOut = options.Get("--state-out");
         var frameOut = options.Get("--frame-out");
@@ -573,7 +577,7 @@ internal static class Program
             nvramDirectoryOption,
             gameId);
 
-        BiosLoadResult biosLoad = LoadBios(biosPath, bios2Path, biosAutoFolder, gameRecord, discPath);
+        BiosLoadResult biosLoad = LoadBios(biosPath, bios2Path, biosAutoFolder, gameRecord, discPath, allowUnsignedDiscs);
 
         GameProfile? gameProfile = LoadGameProfile(options.Get("--game-profile"));
         FixMode fixMode = ResolveFixMode(options, args, gameId, gameProfile?.FixMode);
@@ -1410,7 +1414,9 @@ internal static class Program
             JitCompiledBranches: machine.Cpu.JitCompiledBranches,
             JitFallback: machine.Tuning.CpuBackend == CpuBackendKind.Jit
                 && !System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported,
-            JitLastFailure: machine.Cpu.JitLastFailure);
+            JitLastFailure: machine.Cpu.JitLastFailure,
+            BiosRsaPatched: biosLoad.Image?.RsaPatched ?? false,
+            BiosRsaDisabled: biosLoad.Image?.RsaDisabled ?? false);
 
         SaveNvramIfRequested(machine, nvramSelection);
 
@@ -1425,6 +1431,7 @@ internal static class Program
         var biosPath = options.Get("--bios");
         var bios2Path = options.Get("--bios2");
         var biosAutoFolder = options.Get("--bios-auto");
+        var allowUnsignedDiscs = HasFlag(args, "--allow-unsigned-discs");
         var stateIn = options.Get("--state-in");
         var discPath = options.Positional;
         var frames = options.GetInt("--frames", 0);
@@ -1488,7 +1495,7 @@ internal static class Program
             nvramDirectoryOption,
             gameId);
 
-        BiosLoadResult biosLoad = LoadBios(biosPath, bios2Path, biosAutoFolder, gameRecord, discPath);
+        BiosLoadResult biosLoad = LoadBios(biosPath, bios2Path, biosAutoFolder, gameRecord, discPath, allowUnsignedDiscs);
 
         GameProfile? gameProfile = LoadGameProfile(options.Get("--game-profile"));
         FixMode fixMode = ResolveFixMode(options, args, gameId, gameProfile?.FixMode);
@@ -2720,6 +2727,8 @@ internal static class Program
             Region: profile.RegionLabel,
             Kanji: profile.IsKanji,
             Patched: profile.IsPatched,
+            RsaDisabled: profile.IsRsaDisabled,
+            RsaPatchSites: image?.RsaPatchSites ?? 0,
             Preference: profile.Preference,
             Notes: profile.Notes,
             Md5Bios2: image?.Md5Bios2 ?? string.Empty);
@@ -2739,6 +2748,7 @@ internal static class Program
             Console.WriteLine($"kanji:    {result.Kanji}");
             Console.WriteLine($"anvil:    {result.Anvil} (kind {result.AnvilKind})");
             Console.WriteLine($"patched:  {result.Patched}");
+            Console.WriteLine($"no rsa:   {result.RsaDisabled} (patch sites {result.RsaPatchSites})");
             Console.WriteLine($"md5 bios2: {result.Md5Bios2}");
             Console.WriteLine($"notes:    {result.Notes}");
         }
@@ -2776,10 +2786,10 @@ internal static class Program
             {
                 Console.WriteLine(
                     $"{profile.Kind,-9} {profile.Md5}  {profile.Region,-18} {profile.Name}  ({profile.Path})");
-                if (profile.Kanji || profile.Anvil || profile.Patched)
+                if (profile.Kanji || profile.Anvil || profile.Patched || profile.RsaDisabled)
                 {
                     Console.WriteLine(
-                        $"          kanji={profile.Kanji} anvil={profile.Anvil} patched={profile.Patched}");
+                        $"          kanji={profile.Kanji} anvil={profile.Anvil} patched={profile.Patched} noRsa={profile.RsaDisabled}");
                 }
             }
 
@@ -2810,7 +2820,8 @@ internal static class Program
                 RequireKanji: HasFlag(args, "--require-kanji"),
                 PreferAnvil: HasFlag(args, "--prefer-anvil"),
                 PreferredMd5: options.Get("--md5"),
-                DiscName: discPath));
+                DiscName: discPath,
+                AllowUnsignedDiscs: HasFlag(args, "--allow-unsigned-discs")));
         var result = new CliBiosSelectionResult(
             Ok: selection.HasBios,
             GameId: gameId,
@@ -4281,6 +4292,14 @@ internal static class Program
         {
             Console.WriteLine($"bios:        {result.BiosName} ({result.BiosMd5})");
             Console.WriteLine($"bios region: {result.BiosRegion} [{result.BiosSource}]");
+            if (result.BiosRsaPatched)
+            {
+                Console.WriteLine("bios rsa:    patched in memory for unsigned discs");
+            }
+            else if (result.BiosRsaDisabled)
+            {
+                Console.WriteLine("bios rsa:    disabled");
+            }
             if (result.Bios2Md5 is not null)
             {
                 Console.WriteLine($"bios2:       {result.Bios2Md5}");
@@ -5073,7 +5092,7 @@ internal static class Program
         Console.WriteLine("Usage: 5do <command> [options]");
         Console.WriteLine();
         Console.WriteLine("Commands:");
-        Console.WriteLine("  run [disc] [--bios path] [--bios2 path] [--bios-auto folder] [--frames N] [--state-in path] [--state-out path]");
+        Console.WriteLine("  run [disc] [--bios path] [--bios2 path] [--bios-auto folder] [--allow-unsigned-discs] [--frames N] [--state-in path] [--state-out path]");
         Console.WriteLine("             [--frame-out path] [--audio null|wav|openal] [--audio-device name] [--audio-buffer 20..500] [--wav-out path] [--volume 0..1] [--cd-volume 0..1] [--mute-cd] [--cd-trace path] [--cd-transcript path]");
         Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
@@ -5095,7 +5114,7 @@ internal static class Program
         Console.WriteLine("             [--movie-record path] [--movie-play path] [--movie-verify] [--movie-no-state]");
         Console.WriteLine("             [--playlist path] [--swap-at N --swap-disc path]");
         Console.WriteLine("                                       Emit deterministic checkpoint samples and optional frame images.");
-        Console.WriteLine("  trace [disc] --bios path [--bios2 path] [--bios-auto folder] [--frames N] [--trace-frames N] [--ring N]");
+        Console.WriteLine("  trace [disc] --bios path [--bios2 path] [--bios-auto folder] [--allow-unsigned-discs] [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
         Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path] [--high-res] [--deinterlace auto|bob|weave|blend] [--prefetch]");
@@ -5126,7 +5145,7 @@ internal static class Program
         Console.WriteLine("                                       Extract files from a 3DO disc image.");
         Console.WriteLine("  bios info <path> [--json]            BIOS size, MD5, region, and Anvil detection.");
         Console.WriteLine("  bios list|scan <folder> [--recursive] [--json]  List and validate BIOS images.");
-        Console.WriteLine("  bios select <disc> --folder <dir> [--json]      Auto-select a BIOS for a disc.");
+        Console.WriteLine("  bios select <disc> --folder <dir> [--allow-unsigned-discs] [--json]      Auto-select a BIOS for a disc.");
         Console.WriteLine("  nvram path [disc] [--mode global|per-game] [--version 0-9] [--dir path] [--json]");
         Console.WriteLine("                                       Resolve the NVRAM image for a game.");
         Console.WriteLine("  nvram list [--dir path] [--json]    List global and per-game NVRAM images.");

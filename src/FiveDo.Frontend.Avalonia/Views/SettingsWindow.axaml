@@ -404,7 +404,7 @@
 
             <TabItem Header="Paths" ToolTip.Tip="Game folders, save-state, screenshot, cover-art, cheat, BIOS, and library-metadata settings.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <Grid ColumnDefinitions="170,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="Game folders"
                                FontWeight="SemiBold" Margin="0,0,0,4"
                                ToolTip.Tip="Folders scanned for ISO, BIN, CUE, and CHD disc images." />
@@ -523,6 +523,12 @@
                         <Button Content="Export..." Click="OnExportProfileSettingsAsync"
                                 ToolTip.Tip="Save the current settings as a JSON file." />
                     </StackPanel>
+                    <TextBlock Grid.Row="18" Grid.Column="0" Text="Unsigned discs" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Patch the media RSA signature check in memory so unsigned, homebrew, and arcade discs can boot." />
+                    <CheckBox x:Name="AllowUnsignedDiscsCheck" Grid.Row="18" Grid.Column="1" Grid.ColumnSpan="2"
+                              Margin="0,12,0,0"
+                              Content="Allow unsigned discs (patch the RSA check in memory)"
+                              ToolTip.Tip="The BIOS file is never modified. A known No-RSA BIOS is preferred when available; otherwise a compatible retail 1 MB BIOS is patched with the documented two-site bypass. This is an explicit opt-in and may affect compatibility with signed discs." />
                 </Grid>
                 </ScrollViewer>
             </TabItem>
