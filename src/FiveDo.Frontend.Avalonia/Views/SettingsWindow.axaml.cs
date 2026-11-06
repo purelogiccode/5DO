@@ -57,6 +57,14 @@ public partial class SettingsWindow : Window
         new(FrameSkipMode.OneInFive, "Skip 4 of 5 (12 fps)"),
     ];
 
+    private static readonly DeinterlaceOption[] _deinterlaceOptions =
+    [
+        new(DeinterlaceMode.Auto, "Auto (detect 480i)"),
+        new(DeinterlaceMode.Bob, "Bob - show each field"),
+        new(DeinterlaceMode.Weave, "Weave - combine fields"),
+        new(DeinterlaceMode.Blend, "Blend - average fields"),
+    ];
+
     private static readonly DisplayRefreshRateOption[] _displayRefreshRateOptions =
     [
         new(AppSettings.MinDisplayRefreshRate, "30 Hz"),
@@ -239,6 +247,10 @@ public partial class SettingsWindow : Window
             ?? _resolutionOptions[0];
         FilterCombo.ItemsSource = Enum.GetValues<VideoFilter>();
         FilterCombo.SelectedItem = settings.Filter;
+        DeinterlaceCombo.ItemsSource = _deinterlaceOptions;
+        DeinterlaceCombo.SelectedItem = _deinterlaceOptions.FirstOrDefault(
+                option => option.Value == settings.Deinterlace)
+            ?? _deinterlaceOptions[0];
         FilterOverrideCombo.ItemsSource = new object[] { "Automatic" }
             .Concat(Enum.GetValues<VideoFilter>().Cast<object>())
             .ToArray();
@@ -664,6 +676,9 @@ public partial class SettingsWindow : Window
         }
 
         profile.Filter = FilterOverrideCombo.SelectedItem is VideoFilter filter ? filter : null;
+        profile.Deinterlace = DeinterlaceCombo.SelectedItem is DeinterlaceOption deinterlace
+            ? deinterlace.Value
+            : _settings.Deinterlace;
         profile.HighResolution = HighResCheck.IsChecked;
         profile.InputDevices = PerGameInputCheck.IsChecked == true
             ? GetInputDeviceNames()
@@ -772,6 +787,9 @@ public partial class SettingsWindow : Window
             FilterOverrideCombo.SelectedItem = profile.Filter is { } filter
                 ? filter
                 : "Automatic";
+            DeinterlaceCombo.SelectedItem = _deinterlaceOptions.FirstOrDefault(
+                    option => option.Value == (profile.Deinterlace ?? _settings.Deinterlace))
+                ?? _deinterlaceOptions[0];
             HighResCheck.IsChecked = profile.HighResolution ?? _settings.HighResolution;
             if (profile.InputDevices.Count > 0)
             {
@@ -1023,6 +1041,9 @@ public partial class SettingsWindow : Window
     {
         ArgumentNullException.ThrowIfNull(settings);
         settings.Filter = FilterCombo.SelectedItem is VideoFilter filter ? filter : VideoFilter.SharpBilinear;
+        settings.Deinterlace = DeinterlaceCombo.SelectedItem is DeinterlaceOption deinterlace
+            ? deinterlace.Value
+            : DeinterlaceMode.Auto;
         settings.Aspect = AspectCombo.SelectedItem is AspectMode aspect ? aspect : AspectMode.FourThree;
         if (!double.TryParse(
                 CustomAspectBox.Text?.Trim(),
@@ -1849,6 +1870,14 @@ public partial class SettingsWindow : Window
     }
 
     private sealed record FrameSkipOption(FrameSkipMode Value, string Label)
+    {
+        public override string ToString()
+        {
+            return Label;
+        }
+    }
+
+    private sealed record DeinterlaceOption(DeinterlaceMode Value, string Label)
     {
         public override string ToString()
         {

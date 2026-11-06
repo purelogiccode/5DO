@@ -427,13 +427,23 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
 
         var sourceWidth = _presentFrame.SourceWidth > 0 ? _presentFrame.SourceWidth : width;
         var sourceHeight = _presentFrame.SourceHeight > 0 ? _presentFrame.SourceHeight : height;
-        ViewportRect sourceRect = ViewportCalculator.Compute(sourceWidth, sourceHeight, width, height, _settings);
+        var pixelAspect = double.IsFinite(_presentFrame.PixelAspect) && _presentFrame.PixelAspect > 0
+            ? _presentFrame.PixelAspect
+            : 1.0;
+        ViewportRect sourceRect = ViewportCalculator.Compute(
+            sourceWidth,
+            sourceHeight,
+            width,
+            height,
+            _settings,
+            pixelAspect);
         ViewportRect destinationRect = ViewportCalculator.Compute(
             sourceWidth,
             sourceHeight,
             windowWidth,
             windowHeight,
-            _settings);
+            _settings,
+            pixelAspect);
 
         GL gl = _adapter.Gl;
         gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, _outputTarget.Framebuffer);

@@ -112,6 +112,7 @@ public sealed class AppSettingsStoreTests
                 CdAudioVolume = 0.4f,
                 CdAudioMuted = true,
                 CheatBundle = "starter",
+                Deinterlace = DeinterlaceMode.Weave,
             });
 
         AppSettingsStore.Save(settings, path);
@@ -124,6 +125,7 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(CdSpeed.X4, profile.CdSpeed);
         Assert.True(profile.CdAudioMuted);
         Assert.Equal("starter", profile.CheatBundle);
+        Assert.Equal(DeinterlaceMode.Weave, profile.Deinterlace);
 
         Assert.True(loaded.ApplyGameProfile("a1b2c3d4"));
         Assert.Equal(VideoRegion.Pal1, loaded.Region);
@@ -131,6 +133,7 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(ClioTimerMode.OperaScheduler, loaded.ClioTimers);
         Assert.Equal(1.25, loaded.CpuClockMultiplier);
         Assert.Equal(0.4, loaded.CdAudioVolume, 3);
+        Assert.Equal(DeinterlaceMode.Weave, loaded.Deinterlace);
 
         loaded.SetGameProfile("A1B2C3D4", null);
         Assert.Null(loaded.GetGameProfile("a1b2c3d4"));
@@ -448,6 +451,7 @@ public sealed class AppSettingsStoreTests
             FixMode = (FixMode)999,
             CpuBackend = (CpuBackendKind)99,
             Filter = (VideoFilter)999,
+            Deinterlace = (DeinterlaceMode)99,
             InputDevices = ["Mouse", "bogus", "Joypad"],
             NvramStorageMode = (NvramStorageMode)99,
             NvramVersion = 99,
@@ -460,6 +464,7 @@ public sealed class AppSettingsStoreTests
         Assert.Null(normalized.FixMode);
         Assert.Equal(CpuBackendKind.Interpreter, normalized.CpuBackend);
         Assert.Null(normalized.Filter);
+        Assert.Null(normalized.Deinterlace);
         Assert.Equal(PbusEncoder.MaxPorts, normalized.InputDevices.Count);
         Assert.Equal("Mouse", normalized.InputDevices[0]);
         Assert.Equal("Joypad", normalized.InputDevices[1]);
@@ -483,6 +488,7 @@ public sealed class AppSettingsStoreTests
             OverscanTop = 2,
             OverscanRight = 3,
             OverscanBottom = 4,
+            Deinterlace = DeinterlaceMode.Weave,
         };
         settings.SetBiosOverride("A1B2C3D4", "0123456789ABCDEF0123456789ABCDEF");
         settings.SetFixModeOverride("A1B2C3D4", FixMode.BitTiming5);
@@ -505,6 +511,7 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(NvramStorageMode.PerGame, profile.NvramStorageMode);
         Assert.Equal(4, profile.NvramVersion);
         Assert.Equal(new CropInsets(1, 2, 3, 4), profile.Overscan);
+        Assert.Equal(DeinterlaceMode.Weave, profile.Deinterlace);
     }
 
     [Fact]
@@ -534,6 +541,7 @@ public sealed class AppSettingsStoreTests
                 BiosMd5 = "0123456789ABCDEF0123456789ABCDEF",
                 FixMode = FixMode.BitTiming5,
                 Filter = VideoFilter.Crt,
+                Deinterlace = DeinterlaceMode.Blend,
                 HighResolution = true,
                 InputDevices = ["Mouse", "Lightgun", "Joypad", "Joypad", "Joypad", "Joypad"],
                 NvramStorageMode = NvramStorageMode.PerGame,
@@ -559,6 +567,7 @@ public sealed class AppSettingsStoreTests
             effective.GetBiosOverride("a1b2c3d4"));
         Assert.Equal(FixMode.BitTiming5, effective.GetFixModeOverride("a1b2c3d4"));
         Assert.Equal(VideoFilter.Crt, effective.GetFilterOverride("a1b2c3d4"));
+        Assert.Equal(DeinterlaceMode.Blend, effective.Deinterlace);
         Assert.True(effective.HighResolution);
         Assert.Equal("Mouse", effective.ResolveInputDevices("a1b2c3d4")[0]);
         Assert.Equal(NvramStorageMode.PerGame, effective.NvramStorageMode);
@@ -572,6 +581,7 @@ public sealed class AppSettingsStoreTests
         Assert.Null(settings.GetBiosOverride("a1b2c3d4"));
         Assert.Null(settings.GetFixModeOverride("a1b2c3d4"));
         Assert.Null(settings.GetFilterOverride("a1b2c3d4"));
+        Assert.Equal(DeinterlaceMode.Auto, settings.Deinterlace);
         Assert.False(settings.HighResolution);
         Assert.Equal(NvramStorageMode.Global, settings.NvramStorageMode);
         Assert.Equal(0, settings.NvramVersion);

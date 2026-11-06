@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-06, after the 1.2.2 performance/library update, the 1.2.1 arm64 packaging update, the 1.2.0 feature/accuracy update, the rewind-capture stall fix, SYS-12 SWI HLE, SYS-17 game-database expansion, SYS-08 clock validation, the third PERF-08 JIT pass, the ENG-02 interpreter hot-path increment, and the PERF-05 high-resolution VDLP copy: Direct3D 11,
+**Snapshot:** 2026-11-06, after the 1.3.0 field-handling update, the 1.2.2 performance/library update, the 1.2.1 arm64 packaging update, the 1.2.0 feature/accuracy update, the rewind-capture stall fix, SYS-12 SWI HLE, SYS-17 game-database expansion, SYS-08 clock validation, the third PERF-08 JIT pass, the ENG-02 interpreter hot-path increment, and the PERF-05 high-resolution VDLP copy: Direct3D 11,
 startup release checks, the fuzz harness, per-edge overscan/void border, screenshot
 gallery filters, FIQ/DMA/DSP telemetry, flat CHD/raw ISO support, and display-refresh
 control. The earlier first full-collection sweep, performance, timing-option, BIOS,
@@ -48,7 +48,18 @@ open-source donationware (non-commercial; voluntary donations only). M13 loadabi
 complete; M13.5/M13.6 visual/high-resolution review and M14 high-resolution CEL research
 are **post-1.0**.
 
-**Performance and library update (2026-11-06):** **v1.2.2** is the current release,
+**Field-handling update (2026-11-06):** **v1.3.0** is the current release,
+published at <https://github.com/purelogiccode/5DO/releases/tag/v1.3.0>. It adds
+`InterlaceProcessor` with auto 480i detection, bob, weave, and blend modes; per-game and
+`--deinterlace` selection; interlace-aware viewport geometry; screenshot/GIF capture of
+the presented frame; and `run --json` mode/detection fields. The suite is **1,833 tests**.
+Bob-vs-auto hashes match on five local titles (3,000 frames for Road Rash, Space Ace, and
+Alone in the Dark; 300 for Wolfenstein 3D and Lemmings), forced weave produces a 320x480
+frame, and high-resolution output remains 640x480. The CLI and core default to bob; the
+desktop defaults to auto. No local title is confirmed 480i, so synthetic complementary
+field tests are the current 480i evidence.
+
+**Performance and library update (2026-11-06):** **v1.2.2** was the previous release,
 published at <https://github.com/purelogiccode/5DO/releases/tag/v1.2.2>. It adds the
 interpreter, high-resolution VDLP, and rewind performance work; the opt-in managed JIT;
 the expanded game database and library health/DAT verification; eight Opera memory
@@ -748,7 +759,7 @@ artifacts and checksums are attached to the GitHub release.
 release scope. v1.0.0 is published on GitHub with the release artifacts.
 
 **Release decisions (2026-11-02):** Windows x64 is validated; Linux x64 CLI/frontend
-smoke and the full test suite passed (GPU presentation is preview/best-effort); the current release version is `1.2.2`;
+smoke and the full test suite passed (GPU presentation is preview/best-effort); the current release version is `1.3.0`;
 installers, signing, and notarization are post-1.0; the compatibility set is the 12
 documented titles, with five showcase titles carrying scripted gameplay evidence. The
 distribution model is recorded as **donationware** (non-commercial, source-available).

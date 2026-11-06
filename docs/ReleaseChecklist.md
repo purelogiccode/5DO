@@ -1,13 +1,14 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.2.2 is the current release**; unified Windows/Linux/macOS x64/arm64
-bundles are built from the same gates used for v1.0.0 and v1.1.0.
+**Release timing:** **v1.3.0 is the current release**; unified Windows/Linux/macOS x64/arm64
+bundles are built from the same gates used for v1.0.0, v1.1.0, and v1.2.x.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
 full-compatibility one. v1.1.0 was a maintenance update; v1.2.0 added features,
-accuracy telemetry, and broader disc support; v1.2.1 added arm64 bundles; v1.2.2 adds
+accuracy telemetry, and broader disc support; v1.2.1 added arm64 bundles; v1.2.2 added
 interpreter/high-res/rewind performance, the opt-in managed JIT, library health and
-database work, memory capacity options, and eight PBUS ports.
+database work, memory capacity options, and eight PBUS ports; v1.3.0 adds
+480i/240p detection, deinterlacing, and field blending.
 Ship the platforms and titles that are validated, publish an honest per-title matrix
 and known issues, and move everything else to the post-1.0 backlog.
 
@@ -36,6 +37,31 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       desktop `--smoke-test`; the macOS x64 bundle is cross-published on Linux and
       validated as Mach-O x86_64, matching the v1.0.0 runtime-validation scope.
 - [x] Publish `v1.1.0` and verify `SHA256SUMS.txt`.
+
+---
+
+## 1.3.0 field-handling gate
+
+- [x] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.3.0`.
+- [x] Update `CHANGELOG.md`, `docs/WhatsNew.md`, `docs/ReleaseNotes-1.3.0.md`,
+      `README.md`, `docs/Status.md`, `docs/index.md`, and `docs/Installation.md`.
+- [x] Update the MkDocs navigation and the curated wiki sidebar with the 1.3.0 pages.
+- [x] Full suite **1,833/1,833** passes in Debug and Release;
+      `dotnet format --verify-no-changes` is clean.
+- [x] Verify VID-04: bob/weave/blend, auto detection, PAL 288→576, high-res fallback,
+      aspect-aware viewports, per-game/CLI selection, and screenshot/GIF behavior.
+- [x] Verify 240p hashes are unchanged: 3,000-frame bob-vs-auto runs of Road Rash,
+      Space Ace, and Alone in the Dark, plus 300-frame Wolfenstein 3D and Lemmings.
+- [x] Build all six framework-dependent single-file bundles and keep local copies in
+      `src/FiveDo.Frontend.Avalonia/bin/Release` without deleting older artifacts.
+- [x] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
+      `whatsnew.md`, the release notes, and the legal notices, and contains no
+      `runtime/`, `*.pdb`, or `*.xml` files.
+- [x] Verify the x64 CLI `selftest` and desktop `--smoke-test`; verify arm64 apphost
+      machine types.
+- [ ] Create and push tag `v1.3.0`; the release workflow publishes six versioned
+      bundles and `SHA256SUMS.txt`.
+- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki.
 
 ---
 
@@ -125,8 +151,8 @@ been validated.**
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
 | Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-x64.tar.gz`, `5do-<version>-osx-arm64.tar.gz`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 10 runtime is a host prerequisite and is not bundled |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
-| Version | **`v1.2.2`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, v1.2.0, v1.2.1, and rc.1 are historical |
-| Release timing | **Prepared 2026-11-06** | v1.2.2 bundles and checksums are attached to the GitHub release |
+| Version | **`v1.3.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, v1.2.0, v1.2.1, v1.2.2, and rc.1 are historical |
+| Release timing | **Prepared 2026-11-06** | v1.3.0 bundles and checksums are attached to the GitHub release |
 
 ---
 

@@ -346,6 +346,14 @@ The Settings dialog's **Emulation** page can override the filter for the current
 game. **Automatic** uses the global filter; an explicit choice is stored by game ID
 in `settings.json`.
 
+**480i handling** (Settings > Video) controls how the two fields of an interlaced title
+are combined. **Auto** (the desktop default) detects complementary 480i fields and
+weaves them into one 480-line image while leaving 240p titles byte-identical to **Bob**.
+**Bob** presents each field as-is, **Weave** always combines two fields, and **Blend**
+averages them into a flicker-free 240-line frame. The mode is presentation-only and is
+stored in per-game profiles; the CLI defaults to `bob` so diagnostic frame hashes stay
+reference-compatible and accepts `--deinterlace auto|bob|weave|blend`.
+
 Aspect, custom aspect ratio, integer scaling, vsync preference (applied through
 WGL/GLX/EGL where the platform exposes a swap-interval extension), CRT bloom, FSR
 sharpness, fullscreen
@@ -406,8 +414,9 @@ atomic. Large sections are Brotli-compressed, so a state is typically 0.6-2.0 MB
 see [`SaveStates.md`](SaveStates.md) for the format and limits.
 
 **Screenshot** writes a PNG named `<game>-<timestamp>-f<frames>.png` plus a
-`<png>.json` sidecar with the renderer, filter, region, crop, border, and timing profile
-used for the capture. **File > Screenshot Gallery...** lists captures with thumbnails,
+`<png>.json` sidecar with the renderer, filter, region, crop, border, field handling,
+and timing profile used for the capture. **File > Screenshot Gallery...** lists
+captures with thumbnails,
 filters by game text and date, and supports open, copy path, export, side-by-side compare
 (select exactly two), refresh, and delete (the first Delete click asks for confirmation).
 The selected capture's sidecar summary appears in the status line. **File > Record GIF...** records

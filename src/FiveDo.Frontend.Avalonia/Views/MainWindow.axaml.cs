@@ -1362,6 +1362,7 @@ public partial class MainWindow : Window, IDisposable
 
             _gameId = gameId;
             _gameName = record?.Name ?? Path.GetFileNameWithoutExtension(path);
+            ApplyFieldHandling(effective.Deinterlace);
             _libraryState.RecordLaunch(gameId, path);
             LibraryStateStore.Save(_libraryState);
             RefreshLibraryDecorations();
@@ -2490,11 +2491,26 @@ public partial class MainWindow : Window, IDisposable
     {
         try
         {
+            var frame = _machine?.FramesExecuted ?? -1;
+            DeinterlaceMode? mode = _machine?.Deinterlace;
+            var woven = _machine?.IsWovenFrame ?? false;
+            if (_runner is not null && _machine is not null)
+            {
+                _runner.Invoke(() =>
+                {
+                    frame = _machine.FramesExecuted;
+                    mode = _machine.Deinterlace;
+                    woven = _machine.IsWovenFrame;
+                });
+            }
+
             ScreenshotMetadata.Capture(
                     _settings,
                     _gameName,
                     _gameId,
-                    _machine?.FramesExecuted ?? -1)
+                    frame,
+                    mode,
+                    woven)
                 .Save(path);
         }
         catch (Exception exception) when (exception is IOException
@@ -3776,6 +3792,8 @@ public partial class MainWindow : Window, IDisposable
         }
 
         Video.Settings = effective.ToRendererSettings(_gameId);
+        ApplyFieldHandling(effective.Deinterlace);
+
         if (_runner is not null)
         {
             _runner.FrameSkip = _settings.FrameSkip;
@@ -5035,6 +5053,7 @@ public partial class MainWindow : Window, IDisposable
                 BeforeFrame = ApplyCheats,
                 CdAudioVolume = effective.CdAudioVolume,
                 CdAudioMuted = effective.CdAudioMuted,
+                Deinterlace = effective.Deinterlace,
             };
             _runner = new CoreRunner(
                 _machine,
@@ -5060,6 +5079,23 @@ public partial class MainWindow : Window, IDisposable
         }
 
         return _machine;
+    }
+
+    private void ApplyFieldHandling(DeinterlaceMode mode)
+    {
+        if (_machine is null)
+        {
+            return;
+        }
+
+        if (_runner is null)
+        {
+            _machine.Deinterlace = mode;
+            return;
+        }
+
+        // The mode setter discards the retained field, so run it on the core thread.
+        _runner.Invoke(() => _machine.Deinterlace = mode);
     }
 
     private void SubmitFrameToActiveRenderer(VdlFrame frame)

@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using FiveDo.Core;
+using FiveDo.Video;
 
 namespace FiveDo.Host;
 
@@ -41,6 +42,12 @@ public sealed class ScreenshotMetadata
 
     /// <summary>Gets or sets a value indicating whether high-resolution CEL mode was active.</summary>
     public bool HighResolution { get; set; }
+
+    /// <summary>Gets or sets the active 480i/240p field handling mode.</summary>
+    public string Deinterlace { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets a value indicating whether the active frame was woven from interlaced fields.</summary>
+    public bool Interlaced { get; set; }
 
     /// <summary>Gets or sets the video region.</summary>
     public string Region { get; set; } = string.Empty;
@@ -92,12 +99,19 @@ public sealed class ScreenshotMetadata
     /// <param name="gameName">Game title.</param>
     /// <param name="gameId">4DO game ID, or an empty string.</param>
     /// <param name="frame">Emulated frame number.</param>
+    /// <param name="activeDeinterlace">
+    /// Mode used by the machine for the captured frame, or <see langword="null"/> to use the
+    /// configured setting.
+    /// </param>
+    /// <param name="interlaced">Whether the captured frame was woven from interlaced fields.</param>
     /// <returns>A metadata snapshot.</returns>
     public static ScreenshotMetadata Capture(
         AppSettings settings,
         string gameName,
         string gameId,
-        long frame)
+        long frame,
+        DeinterlaceMode? activeDeinterlace = null,
+        bool interlaced = false)
     {
         ArgumentNullException.ThrowIfNull(settings);
         CropInsets crop = settings.ResolveOverscan();
@@ -112,6 +126,8 @@ public sealed class ScreenshotMetadata
             Filter = settings.ResolveFilter(gameId).ToString(),
             Aspect = settings.Aspect.ToString(),
             HighResolution = settings.HighResolution,
+            Deinterlace = (activeDeinterlace ?? settings.Deinterlace).ToString(),
+            Interlaced = interlaced,
             Region = settings.Region.ToString(),
             OverscanLeft = crop.Left,
             OverscanTop = crop.Top,

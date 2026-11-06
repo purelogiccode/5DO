@@ -1,7 +1,36 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.2.2, a documented-compatibility
+All notable changes are recorded here. The project is at v1.3.0, a documented-compatibility
 release.
+
+## [1.3.0] - 2026-11-06
+
+### Added
+
+- VID-04 480i/240p field handling. `InterlaceProcessor` supports **Auto**, **Bob**,
+  **Weave**, and **Blend** modes. Auto detects complementary fields with a 12-field
+  confirm / 30-field release hysteresis and weaves them into a 480-line (PAL 576-line)
+  frame; Bob presents each field unchanged; Blend averages consecutive fields into one
+  frame using RGB555 direct color. Settings > Video, per-game profiles, and
+  `--deinterlace auto|bob|weave|blend` expose the mode. The CLI defaults to bob for
+  reference-compatible frame hashes; the desktop defaults to auto.
+- `VdlFrame.PixelAspect` and interlace-aware viewport scaling. Woven frames carry a
+  half-height pixel aspect so OpenGL, Vulkan, Direct3D 11, and the CPU presenter keep the
+  source display geometry and integer scaling works in display space.
+- `run --json` reports `deinterlace`, `interlaced` (the presented frame was woven), and
+  `interlaceDetected` (the detector verdict).
+- Screenshot sidecars record `deinterlace` and `interlaced`. Screenshots and GIFs capture
+  the presented frame, and the GIF recorder rescales a mid-recording 240↔480 change
+  instead of dropping frames.
+
+### Validation
+
+- Full suite **1,833/1,833** passes in Debug and Release; `dotnet format
+  --verify-no-changes` is clean; the frontend `--smoke-test` passes.
+- 3,000-frame bob-vs-auto hashes are identical on Road Rash, Space Ace, and Alone in the
+  Dark; 300-frame hashes are identical on Wolfenstein 3D and Lemmings. Forced weave
+  produced a 320x480 frame, forced blend stayed at 320x240, and high-resolution Lemmings
+  stayed at 640x480.
 
 ## [1.2.2] - 2026-11-06
 

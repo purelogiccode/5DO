@@ -36,6 +36,17 @@ public sealed class VdlFrame
     /// <summary>Gets or sets the height of the visible source image. FreeDO: <c>srch</c>.</summary>
     public int SourceHeight { get; set; }
 
+    /// <summary>
+    /// Gets or sets the height of one source row relative to a square output pixel.
+    /// </summary>
+    /// <remarks>
+    /// A normal 240p/288p field uses 1.0. A woven 480i/576i frame uses 0.5 because each
+    /// stored row represents half a scanline period; presenters use this to keep the
+    /// displayed geometry stable and to apply integer scaling in display space.
+    /// The value is presentation state and is not part of a save state.
+    /// </remarks>
+    public double PixelAspect { get; set; } = 1.0;
+
     /// <summary>Gets all frame lines.</summary>
     public Span<VdlLine> Lines => _lines;
 
@@ -82,6 +93,7 @@ public sealed class VdlFrame
 
         SourceWidth = width;
         SourceHeight = height;
+        PixelAspect = source.PixelAspect;
         for (var line = 0; line < height; line++)
         {
             VdlLine sourceLine = source[top + line];
@@ -97,6 +109,39 @@ public sealed class VdlFrame
         }
     }
 
+    /// <summary>
+    /// Copies the visible portion of another frame, including its palettes and control words.
+    /// </summary>
+    /// <param name="source">Source frame. It may be reused after this call.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="source"/> is null.</exception>
+    /// <remarks>
+    /// This is the cheap frame snapshot used by <c>VdlFrameMailbox</c> and the
+    /// interlace processor. It copies <see cref="SourceHeight"/> lines, clamped to the
+    /// frame store, and reuses every destination line object.
+    /// </remarks>
+    public void CopyFrom(VdlFrame source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        SourceWidth = source.SourceWidth;
+        SourceHeight = source.SourceHeight;
+        PixelAspect = source.PixelAspect;
+        var height = Math.Min(source.SourceHeight, MaxLines);
+        for (var i = 0; i < height; i++)
+        {
+            VdlLine sourceLine = source[i];
+            VdlLine destinationLine = _lines[i];
+            destinationLine.Width = sourceLine.Width;
+            destinationLine.OutControl = sourceLine.OutControl;
+            destinationLine.ClutDma = sourceLine.ClutDma;
+            destinationLine.Background = sourceLine.Background;
+            sourceLine.ClutB.CopyTo(destinationLine.ClutB);
+            sourceLine.ClutG.CopyTo(destinationLine.ClutG);
+            sourceLine.ClutR.CopyTo(destinationLine.ClutR);
+            var pixels = Math.Clamp(sourceLine.Width, 0, VdlLine.MaxPixels);
+            sourceLine.PixelBuffer[..pixels].CopyTo(destinationLine.PixelBuffer);
+        }
+    }
+
     /// <summary>Clears every line and restores the default source dimensions.</summary>
     public void Clear()
     {
@@ -107,5 +152,6 @@ public sealed class VdlFrame
 
         SourceWidth = EmulatorConstants.VideoWidth;
         SourceHeight = EmulatorConstants.VideoHeight;
+        PixelAspect = 1.0;
     }
 }

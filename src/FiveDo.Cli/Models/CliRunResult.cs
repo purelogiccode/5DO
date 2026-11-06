@@ -130,7 +130,10 @@ internal sealed record CliRunResult(
     bool JitFallback = false,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     string? JitLastFailure = null,
-    string Memory = "Dram2MbVram1Mb");
+    string Memory = "Dram2MbVram1Mb",
+    string Deinterlace = "Bob",
+    bool Interlaced = false,
+    bool InterlaceDetected = false);
 
 /// <summary>One SWI comment observed during a diagnostic run.</summary>
 /// <param name="Comment">The 24-bit SWI comment.</param>

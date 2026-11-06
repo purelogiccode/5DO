@@ -13,6 +13,11 @@ public static class ViewportCalculator
     /// <param name="outputWidth">Output width.</param>
     /// <param name="outputHeight">Output height.</param>
     /// <param name="settings">Renderer settings.</param>
+    /// <param name="pixelAspect">
+    /// Height of one source row relative to a square output pixel. Defaults to 1. Woven
+    /// 480i/576i frames use 0.5 so the displayed geometry stays stable and integer scaling
+    /// is applied in display space.
+    /// </param>
     /// <returns>The centered destination rectangle.</returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when a dimension is not positive.</exception>
     public static ViewportRect Compute(
@@ -20,7 +25,8 @@ public static class ViewportCalculator
         int sourceHeight,
         int outputWidth,
         int outputHeight,
-        RendererSettings settings)
+        RendererSettings settings,
+        double pixelAspect = 1.0)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(sourceWidth, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(sourceHeight, 1);
@@ -28,6 +34,13 @@ public static class ViewportCalculator
         ArgumentOutOfRangeException.ThrowIfLessThan(outputHeight, 1);
         ArgumentNullException.ThrowIfNull(settings);
         settings.Validate();
+
+        if (!double.IsFinite(pixelAspect) || pixelAspect <= 0)
+        {
+            pixelAspect = 1.0;
+        }
+
+        var logicalHeight = Math.Max(1, (int)Math.Round(sourceHeight * pixelAspect));
 
         if (settings.Aspect == AspectMode.Stretch)
         {
@@ -38,7 +51,7 @@ public static class ViewportCalculator
         {
             AspectMode.FourThree => 4.0 / 3.0,
             AspectMode.Custom => settings.CustomAspect,
-            _ => (double)sourceWidth / sourceHeight,
+            _ => (double)sourceWidth / logicalHeight,
         };
 
         var maxWidth = outputWidth;
@@ -55,10 +68,10 @@ public static class ViewportCalculator
         if (settings.Aspect == AspectMode.Integer || (settings.IntegerScale && settings.Aspect == AspectMode.FourThree))
         {
             var scaleX = maxWidth / (double)sourceWidth;
-            var scaleY = maxHeight / (double)sourceHeight;
+            var scaleY = maxHeight / (double)logicalHeight;
             var scale = Math.Max(1, (int)Math.Floor(Math.Min(scaleX, scaleY)));
             var integerWidth = sourceWidth * scale;
-            var integerHeight = sourceHeight * scale;
+            var integerHeight = logicalHeight * scale;
             if (integerWidth <= maxWidth && integerHeight <= maxHeight)
             {
                 maxWidth = integerWidth;

@@ -77,6 +77,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     private int _outputHeight;
     private int _sourceWidth;
     private int _sourceHeight;
+    private double _sourcePixelAspect = 1.0;
     private int _uPaletteSource;
     private int _uPaletteRect;
     private int _uPaletteOutput;
@@ -316,6 +317,10 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             _sourceHeight = height;
         }
 
+        _sourcePixelAspect = double.IsFinite(frame.PixelAspect) && frame.PixelAspect > 0
+            ? frame.PixelAspect
+            : 1.0;
+
         GL gl = _adapter.Gl;
         var measureGpu = false;
         if (_supportsGpuTiming)
@@ -356,7 +361,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
         // Stage 2: optionally run the edge-directed xBR pass at 4x source resolution,
         // then scale/filter into the output framebuffer.
-        ViewportRect viewport = ViewportCalculator.Compute(width, height, _outputWidth, _outputHeight, _settings);
+        ViewportRect viewport = ViewportCalculator.Compute(width, height, _outputWidth, _outputHeight, _settings, _sourcePixelAspect);
         var useXbr = _settings.Filter == VideoFilter.Xbr
             && width * 4 <= _capabilities.MaxTextureSize
             && height * 4 <= _capabilities.MaxTextureSize;

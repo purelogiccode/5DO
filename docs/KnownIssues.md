@@ -215,6 +215,12 @@ checksums are attached, and legal/attribution sign-off is recorded.
   240 lines to 480; it is not true vertical high-resolution rendering. A true 640x240
   non-interlaced mode has not been identified. Research options are in
   [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+- 480i field handling is a presentation feature, not a new VDLP field model. `auto`
+  detects complementary fields by content (12-field confirm, 30-field release) and can
+  be overridden with `weave`/`blend`; no local title is confirmed 480i, so the synthetic
+  processor tests and bob-vs-auto hash comparison are the current evidence. A woven capture
+  is 320x480 (PAL 320x576) with half-height pixels, and the settings dialog and CLI
+  report the configured mode and detector verdict.
 - PAL video, guest ODE prompts, CD-DA read-ahead/subcode, netplay, and additional
   peripherals are out of scope for v1. Multi-track TOC, raw CD-DA sectors with
   volume/mute, and M3U multi-disc playlists are implemented; known-title disc audio

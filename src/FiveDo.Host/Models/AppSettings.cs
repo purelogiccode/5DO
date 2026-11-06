@@ -209,6 +209,14 @@ public sealed class AppSettings
     /// <summary>Gets or sets the presentation filter.</summary>
     public VideoFilter Filter { get; set; } = VideoFilter.SharpBilinear;
 
+    /// <summary>Gets or sets the 480i/240p field handling mode.</summary>
+    /// <remarks>
+    /// Auto detects complementary fields and weaves them, Bob presents every field
+    /// unchanged, Weave always combines two fields, and Blend averages them. This is a
+    /// presentation option: emulated state, input, audio, and save states are unchanged.
+    /// </remarks>
+    public DeinterlaceMode Deinterlace { get; set; } = DeinterlaceMode.Auto;
+
     /// <summary>
     /// Gets or sets the presentation frame-skip policy. The default <see cref="FrameSkipMode.Auto"/>
     /// only skips presentation when the core loop cannot hold its deadline; emulation and

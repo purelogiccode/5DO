@@ -82,6 +82,7 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
     private int _outputHeight;
     private int _sourceWidth;
     private int _sourceHeight;
+    private double _sourcePixelAspect = 1.0;
     private bool _initialized;
     private bool _disposed;
     private bool _filterFallback;
@@ -207,6 +208,10 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
             CreateSourceTextures();
             RecreateExpandedTarget();
         }
+
+        _sourcePixelAspect = double.IsFinite(frame.PixelAspect) && frame.PixelAspect > 0
+            ? frame.PixelAspect
+            : 1.0;
 
         if (IsHqxFilter)
         {
@@ -584,7 +589,8 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
                 _sourceHeight,
                 _outputWidth,
                 _outputHeight,
-                _settings);
+                _settings,
+                _sourcePixelAspect);
             if (viewport.Width <= MaxTextureSize && viewport.Height <= MaxTextureSize)
             {
                 EnsureFsrTarget(Math.Max(1, viewport.Width), Math.Max(1, viewport.Height));
@@ -679,7 +685,8 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
             _sourceHeight,
             _outputWidth,
             _outputHeight,
-            _settings);
+            _settings,
+            _sourcePixelAspect);
         SetPipeline(_scaleShader!, _outputWidth, _outputHeight);
         UpdateConstants(
             new Vector4(

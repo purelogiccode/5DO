@@ -603,6 +603,9 @@ internal static class Program
             FixMode = fixMode,
             CpuBackend = ParseCpuBackend(options.Get("--cpu-backend"), profileTuning.CpuBackend),
         });
+        machine.Deinterlace = ParseDeinterlace(
+            options.Get("--deinterlace"),
+            gameProfile?.Deinterlace ?? DeinterlaceMode.Bob);
         if (biosLoad.Image is not null)
         {
             machine.LoadBios(biosLoad.Image.Bios1.Span, biosLoad.Image.Bios2.Span);
@@ -1085,7 +1088,7 @@ internal static class Program
 
                     if (roadAutopilot is not null)
                     {
-                        autopilotInput![0] = roadAutopilot.Update(machine.Frame, machine.FramesExecuted);
+                        autopilotInput![0] = roadAutopilot.Update(machine.FieldFrame, machine.FramesExecuted);
                     }
 
                     if (progressEvery > 0 && machine.FramesExecuted % progressEvery == 0)
@@ -1352,6 +1355,9 @@ internal static class Program
             InputDevices: FormatInputDevices(inputDevices),
             GifPath: gifRecorder is null ? null : Path.GetFullPath(recordGifPath!),
             GifFrames: gifRecorder?.CapturedFrames,
+            Deinterlace: machine.Deinterlace.ToString(),
+            Interlaced: machine.IsWovenFrame,
+            InterlaceDetected: machine.IsInterlacedFieldContent,
             Fiq: new CliFiqResult(
                 machine.FiqLatency.Requests,
                 machine.FiqLatency.Entries,
@@ -1512,6 +1518,9 @@ internal static class Program
             FixMode = fixMode,
             CpuBackend = ParseCpuBackend(options.Get("--cpu-backend"), profileTuning.CpuBackend),
         });
+        machine.Deinterlace = ParseDeinterlace(
+            options.Get("--deinterlace"),
+            gameProfile?.Deinterlace ?? DeinterlaceMode.Bob);
         if (biosLoad.Image is not null)
         {
             machine.LoadBios(biosLoad.Image.Bios1.Span, biosLoad.Image.Bios2.Span);
@@ -4476,6 +4485,44 @@ internal static class Program
             $"Invalid --region value '{value}'; expected auto, ntsc, pal1, or pal2.");
     }
 
+    private static DeinterlaceMode ParseDeinterlace(
+        string? value,
+        DeinterlaceMode fallback = DeinterlaceMode.Bob)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return fallback;
+        }
+
+        if (string.Equals(value, "auto", StringComparison.OrdinalIgnoreCase))
+        {
+            return DeinterlaceMode.Auto;
+        }
+
+        if (string.Equals(value, "bob", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "off", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "none", StringComparison.OrdinalIgnoreCase))
+        {
+            return DeinterlaceMode.Bob;
+        }
+
+        if (string.Equals(value, "weave", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "interlaced", StringComparison.OrdinalIgnoreCase))
+        {
+            return DeinterlaceMode.Weave;
+        }
+
+        if (string.Equals(value, "blend", StringComparison.OrdinalIgnoreCase))
+        {
+            return DeinterlaceMode.Blend;
+        }
+
+        throw new MachineOptionValidationException(
+            "deinterlace",
+            value,
+            $"Invalid --deinterlace value '{value}'; expected auto, bob, weave, or blend.");
+    }
+
     private static ClioTimerMode ParseClioTimers(
         string? value,
         ClioTimerMode fallback = ClioTimerMode.FreeDoCompatible)
@@ -5032,7 +5079,7 @@ internal static class Program
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--script-base absolute|state] [--autopilot road] [--progress N] [--cel-trace path] [--clio-timer-trace path] [--pbus-trace path]");
-        Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--prefetch]");
+        Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--deinterlace auto|bob|weave|blend] [--prefetch]");
         Console.WriteLine("             [--nvram-mode global|per-game] [--nvram-version 0-9] [--nvram-dir path]");
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
         Console.WriteLine("             [--game-profile path] [--region auto|ntsc|pal1|pal2] [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
@@ -5051,7 +5098,7 @@ internal static class Program
         Console.WriteLine("  trace [disc] --bios path [--bios2 path] [--bios-auto folder] [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
-        Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path] [--high-res] [--prefetch]");
+        Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path] [--high-res] [--deinterlace auto|bob|weave|blend] [--prefetch]");
         Console.WriteLine("             [--nvram-mode global|per-game] [--nvram-version 0-9] [--nvram-dir path]");
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
         Console.WriteLine("             [--game-profile path] [--region auto|ntsc|pal1|pal2] [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");

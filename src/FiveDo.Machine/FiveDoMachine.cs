@@ -35,6 +35,8 @@ namespace FiveDo.Machine;
 public sealed class FiveDoMachine
 {
     private readonly VdlFrame _frame = new();
+    private readonly InterlaceProcessor _interlace = new();
+    private VdlFrame _presentedFrame;
 
     private readonly List<string> _stateWarnings = [];
     private long _framesExecuted;
@@ -122,6 +124,8 @@ public sealed class FiveDoMachine
         Cdrom.ProgramCounterProvider = () => Cpu.ProgramCounter;
         Cdrom.FrameProvider = () => _framesExecuted;
 
+        _presentedFrame = _frame;
+        _interlace.Mode = DeinterlaceMode.Bob;
         Reset();
     }
 
@@ -183,6 +187,8 @@ public sealed class FiveDoMachine
         Vdlp.Region = profile;
         Quartz.SetRegion(region);
         _frame.Clear();
+        _interlace.Reset();
+        _presentedFrame = _frame;
     }
 
     /// <summary>Gets the diagnostic port.</summary>
@@ -191,8 +197,47 @@ public sealed class FiveDoMachine
     /// <summary>Gets the Quartz scheduler.</summary>
     public Quartz Quartz { get; }
 
-    /// <summary>Gets the reusable frame produced by the VDLP.</summary>
-    public VdlFrame Frame => _frame;
+    /// <summary>
+    /// Gets the reusable frame produced by the VDLP after the configured field handling.
+    /// </summary>
+    /// <remarks>
+    /// With <see cref="DeinterlaceMode.Bob"/> this is the raw 240-line field. With weave it
+    /// is a 480-line composite, and with blend it is a 240-line averaged frame. The buffer
+    /// is reused, so callers must copy it before handing it to another thread
+    /// (<see cref="FiveDo.Video.VdlFrameMailbox"/> does this).
+    /// </remarks>
+    public VdlFrame Frame => _presentedFrame;
+
+    /// <summary>Gets the raw VDLP field before field handling.</summary>
+    public VdlFrame FieldFrame => _frame;
+
+    /// <summary>Gets or sets the presentation-side interlace handling mode.</summary>
+    /// <remarks>
+    /// This is a presentation option: it does not change guest state, input, audio, or save
+    /// states. The default is <see cref="DeinterlaceMode.Bob"/> so headless runs and
+    /// differential captures keep the historical field output. Desktop profiles select
+    /// <see cref="DeinterlaceMode.Auto"/> by default. Weave and blend change the presented
+    /// frame (and therefore the frame hash), but not the emulated machine.
+    /// </remarks>
+    public DeinterlaceMode Deinterlace
+    {
+        get => _interlace.Mode;
+        set => _interlace.Mode = value;
+    }
+
+    /// <summary>Gets a value indicating whether the detector currently sees interlaced content.</summary>
+    public bool IsInterlacedFieldContent => _interlace.IsInterlaced;
+
+    /// <summary>Gets a value indicating whether the presented frame combines two fields.</summary>
+    /// <remarks>
+    /// This is true for a detected weave and for an explicit <see cref="DeinterlaceMode.Weave"/>.
+    /// Blend produces a normal-height frame even though it consumes two fields.
+    /// </remarks>
+    public bool IsWovenFrame => !ReferenceEquals(_presentedFrame, _frame)
+        && _presentedFrame.SourceHeight == _frame.SourceHeight * 2;
+
+    /// <summary>Gets the share of information samples that looked interlaced in the last detection pass.</summary>
+    public double InterlaceDetectionFraction => _interlace.DetectionFraction;
 
     /// <summary>Gets the number of frames executed since the last reset.</summary>
     public long FramesExecuted => _framesExecuted;
@@ -370,6 +415,8 @@ public sealed class FiveDoMachine
         Diag.Reset(-1);
         Quartz.Reset();
         _frame.Clear();
+        _interlace.Reset();
+        _presentedFrame = _frame;
         _framesExecuted = 0;
         _audioSamplesProduced = 0;
         FiqLatency.Reset();
@@ -724,6 +771,8 @@ public sealed class FiveDoMachine
                     break;
                 case StateSectionIds.Machine:
                     new MachineFrameSection(_frame, Compatibility).Load(section);
+                    _interlace.Reset();
+                    _presentedFrame = _frame;
                     break;
                 default:
                     if (UnknownSectionPolicy == StateUnknownSectionPolicy.Reject)
@@ -1019,7 +1068,8 @@ public sealed class FiveDoMachine
 
         if (!skipFrame)
         {
-            FrameSink?.OnFrame(_frame);
+            _presentedFrame = _interlace.Process(_frame, Quartz.VdHalfFrame != 0);
+            FrameSink?.OnFrame(_presentedFrame);
         }
     }
 
@@ -1083,6 +1133,7 @@ public sealed class FiveDoMachine
             _compatibility.HighResolution = reader.ReadBoolean();
             _frame.SourceWidth = reader.ReadInt32();
             _frame.SourceHeight = reader.ReadInt32();
+            _frame.PixelAspect = 1.0;
             foreach (VdlLine line in _frame.Lines)
             {
                 var width = reader.ReadInt32();

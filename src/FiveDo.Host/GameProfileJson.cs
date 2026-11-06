@@ -139,6 +139,11 @@ public static class GameProfileJson
             profile.Filter = null;
         }
 
+        if (profile.Deinterlace is { } deinterlace && !Enum.IsDefined(deinterlace))
+        {
+            profile.Deinterlace = null;
+        }
+
         if (profile.NvramStorageMode is { } nvramMode && !Enum.IsDefined(nvramMode))
         {
             profile.NvramStorageMode = null;

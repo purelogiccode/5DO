@@ -29,6 +29,21 @@ public sealed class FiveDoMachineTests
     }
 
     [Fact]
+    public void Deinterlace_DefaultsToBobAndPresentationUsesTheField()
+    {
+        var machine = new FiveDoMachine();
+
+        Assert.Equal(DeinterlaceMode.Bob, machine.Deinterlace);
+        Assert.Same(machine.FieldFrame, machine.Frame);
+        Assert.Equal(1.0, machine.Frame.PixelAspect);
+        Assert.False(machine.IsInterlacedFieldContent);
+
+        machine.Deinterlace = DeinterlaceMode.Auto;
+        Assert.Equal(DeinterlaceMode.Auto, machine.Deinterlace);
+        Assert.False(machine.IsInterlacedFieldContent);
+    }
+
+    [Fact]
     public void SwiHle_IsWiredToMachineRam()
     {
         var machine = new FiveDoMachine(new EmulatorTuning { SwiHle = true });

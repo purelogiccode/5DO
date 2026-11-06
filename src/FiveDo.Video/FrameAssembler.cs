@@ -22,7 +22,8 @@ namespace FiveDo.Video;
 /// </remarks>
 public sealed class FrameAssembler
 {
-    private const uint FixedClutEnable = 0x02000000;
+    /// <summary>Output-control bit that enables direct 5-bit color when the pixel high bit is set.</summary>
+    public const uint FixedClutEnable = 0x02000000;
     private const int FixedClutSize = 32;
 
     private static readonly byte[] FixedClutR = CreateFixedClut();
@@ -49,35 +50,10 @@ public sealed class FrameAssembler
             VdlLine sourceLine = source.Lines[line];
             Span<ushort> sourcePixels = sourceLine.PixelBuffer;
             var lineStart = line * destination.Stride;
-            var allowFixedClut = (sourceLine.OutControl & FixedClutEnable) != 0;
 
             for (var x = 0; x < width; x++)
             {
-                var pixel = sourcePixels[x];
-                byte b;
-                byte g;
-                byte r;
-
-                if (pixel == 0)
-                {
-                    var background = sourceLine.Background;
-                    b = Expand5((byte)(background & 0x1f));
-                    g = Expand5((byte)((background >> 5) & 0x1f));
-                    r = Expand5((byte)((background >> 10) & 0x1f));
-                }
-                else if (allowFixedClut && (pixel & 0x8000) != 0)
-                {
-                    b = FixedClutB[pixel & 0x1f];
-                    g = FixedClutG[(pixel >> 5) & 0x1f];
-                    r = FixedClutR[(pixel >> 10) & 0x1f];
-                }
-                else
-                {
-                    b = sourceLine.ClutB[pixel & 0x1f];
-                    g = sourceLine.ClutG[(pixel >> 5) & 0x1f];
-                    r = sourceLine.ClutR[(pixel >> 10) & 0x1f];
-                }
-
+                ExpandPixel(sourceLine, sourcePixels[x], out var r, out var g, out var b);
                 var offset = lineStart + (x * 4);
                 if (destination.Format == PixelFormat.Bgra8888)
                 {
@@ -95,6 +71,47 @@ public sealed class FrameAssembler
                 pixels[offset + 3] = 0xff;
             }
         }
+    }
+
+    /// <summary>
+    /// Expands one indexed VDL pixel to 8-bit RGB using the line's palette and control words.
+    /// </summary>
+    /// <param name="line">Line that supplies the palette, background, and output control.</param>
+    /// <param name="pixel">Indexed or direct-color pixel.</param>
+    /// <param name="red">Expanded red component.</param>
+    /// <param name="green">Expanded green component.</param>
+    /// <param name="blue">Expanded blue component.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="line"/> is null.</exception>
+    /// <remarks>
+    /// This is the single palette rule shared by the CPU assembler, the interlace detector,
+    /// and the blend path. It matches the GPU palette shader exactly: pixel zero uses the
+    /// line background, the fixed 5-bit CLUT is used when output-control bit 25 and pixel
+    /// bit 15 are set, and the per-line CLUT is used otherwise.
+    /// </remarks>
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public static void ExpandPixel(VdlLine line, ushort pixel, out byte red, out byte green, out byte blue)
+    {
+        ArgumentNullException.ThrowIfNull(line);
+        if (pixel == 0)
+        {
+            var background = line.Background;
+            blue = Expand5((byte)(background & 0x1f));
+            green = Expand5((byte)((background >> 5) & 0x1f));
+            red = Expand5((byte)((background >> 10) & 0x1f));
+            return;
+        }
+
+        if ((line.OutControl & FixedClutEnable) != 0 && (pixel & 0x8000) != 0)
+        {
+            blue = FixedClutB[pixel & 0x1f];
+            green = FixedClutG[(pixel >> 5) & 0x1f];
+            red = FixedClutR[(pixel >> 10) & 0x1f];
+            return;
+        }
+
+        blue = line.ClutB[pixel & 0x1f];
+        green = line.ClutG[(pixel >> 5) & 0x1f];
+        red = line.ClutR[(pixel >> 10) & 0x1f];
     }
 
     /// <summary>Expands a 5-bit color component to 8 bits.</summary>

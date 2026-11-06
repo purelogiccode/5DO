@@ -114,10 +114,10 @@ frame.
 2. Resolve the fix mode: explicit `--fix-mode`, else `--no-game-fixes`, else the 4DO
    database mapping for the game ID.
 3. Apply `--profile` (if any), then create the machine with `--high-res`,
-   `--arm-timing`, `--clio-timers`, `--cel-timing`, `--cd-timing`, `--cd-speed`,
-   `--memory`, `--cpu-clock`, `--random-seed`, `--opera-dipir`, `--opera-soft-reset`,
-   `--swi-hle`, `--cpu-backend`, and the resolved fix mode. Explicit options override the
-   profile.
+   `--deinterlace`, `--arm-timing`, `--clio-timers`, `--cel-timing`, `--cd-timing`,
+   `--cd-speed`, `--memory`, `--cpu-clock`, `--random-seed`, `--opera-dipir`,
+   `--opera-soft-reset`, `--swi-hle`, `--cpu-backend`, and the resolved fix mode.
+   Explicit options override the profile.
 4. Resolve `--bios`/`--bios-auto` and load BIOS1/BIOS2 (unless `--state-in`).
 5. Create the audio backend and insert the disc.
 6. Reset the machine.
@@ -149,6 +149,7 @@ frame.
 | `--nvram-version 0-9` | `0` | Independent NVRAM version slot. |
 | `--nvram-dir <path>` | settings directory | Root directory for the resolved NVRAM layout. |
 | `--high-res` | off | Enable the opt-in 640x480 CEL/VDLP mode. |
+| `--deinterlace auto\|bob\|weave\|blend` | `bob` | Presentation-side field handling. `auto` detects 480i fields and weaves them; `bob` keeps each 240-line field (reference-compatible hashes); `weave` always doubles to 480 lines; `blend` averages two fields into one frame. |
 | `--game-profile <json>` | none | Load a per-game profile as the timing/region baseline before explicit flags. |
 | `--region auto\|ntsc\|pal1\|pal2` | `auto` | Video region. `auto` chooses PAL1 when the selected BIOS is a PAL image, otherwise NTSC; `pal2` is the 384-wide PAL mode. |
 | `--profile compatible\|accuracy\|performance\|custom` | `compatible` | Timing profile. `accuracy` enables ARM60 N=2, Opera CLIO/CEL/CD timing, and the stock 2x drive; `performance` uses a 1.5x CPU clock with FreeDO timing; `custom` keeps the individual options. Explicit timing options override the profile. |
@@ -255,7 +256,10 @@ With `--state-in`, a script starting at `0` applies its last entry immediately u
 | `--json` | off | Emit a structured result instead of text. |
 
 `--frame-out` and `--capture-dir` use the CPU `FrameAssembler`, so the image is the
-accuracy oracle, not the filtered GPU output.
+accuracy oracle, not the filtered GPU output. They capture the presented frame, so an
+explicit `--deinterlace weave` writes a 480-line PNG. `run --json` adds `deinterlace`,
+`interlaced` (the presented frame was woven), and `interlaceDetected` (the detector
+verdict).
 
 ### Diagnostic options
 
@@ -438,6 +442,7 @@ instruction ring buffer. It stops early on a stop condition or `--count` limit.
 | `--nvram-dir <path>` | settings directory | Root directory for the NVRAM layout. |
 | `--input-script <path>` | none | Scripted input (absolute frames only). |
 | `--high-res`, `--prefetch` | off | As in `run`. |
+| `--deinterlace auto\|bob\|weave\|blend` | `bob` | As in `run`. |
 | `--profile compatible\|accuracy\|performance\|custom` | `compatible` | As in `run`. |
 | `--arm-timing freedo\|arm60` | `freedo` | As in `run`. |
 | `--clio-timers freedo\|opera` | `freedo` | As in `run`. |

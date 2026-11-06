@@ -440,7 +440,7 @@ The bundle contains both framework-dependent apphosts and their native libraries
 commit, and build time. Linux bundles also include `5do.desktop`. PDB and XML
 documentation files are removed, and no .NET runtime is copied into the bundle. The
 archive name includes the product version, for example
-`5do-1.2.2-win-x64.zip`, `5do-1.2.2-win-arm64.zip`, or `5do-1.2.2-linux-arm64.tar.gz`; the version is read from
+`5do-1.3.0-win-x64.zip`, `5do-1.3.0-win-arm64.zip`, or `5do-1.3.0-linux-arm64.tar.gz`; the version is read from
 `Directory.Build.props` unless `-Version` is supplied.
 
 ---
@@ -510,7 +510,7 @@ Key properties in `Directory.Build.props`:
 | `ImplicitUsings` | `disable` |
 | `TreatWarningsAsErrors` | `true` |
 | `Deterministic` | `true` |
-| `Version` | `1.2.2` |
+| `Version` | `1.3.0` |
 | `InvariantGlobalization` | `true` |
 | `EnableNETAnalyzers` | `true` |
 | `AnalysisLevel` | `latest-recommended` |

@@ -63,23 +63,7 @@ public sealed class VdlFrameMailbox
 
     private static void Copy(VdlFrame source, VdlFrame destination)
     {
-        destination.SourceWidth = source.SourceWidth;
-        destination.SourceHeight = source.SourceHeight;
-        var height = Math.Min(source.SourceHeight, VdlFrame.MaxLines);
-        for (var i = 0; i < height; i++)
-        {
-            VdlLine sourceLine = source[i];
-            VdlLine destinationLine = destination[i];
-            destinationLine.Width = sourceLine.Width;
-            destinationLine.OutControl = sourceLine.OutControl;
-            destinationLine.ClutDma = sourceLine.ClutDma;
-            destinationLine.Background = sourceLine.Background;
-            sourceLine.ClutB.CopyTo(destinationLine.ClutB);
-            sourceLine.ClutG.CopyTo(destinationLine.ClutG);
-            sourceLine.ClutR.CopyTo(destinationLine.ClutR);
-            var pixels = Math.Clamp(sourceLine.Width, 0, VdlLine.MaxPixels);
-            sourceLine.PixelBuffer[..pixels].CopyTo(destinationLine.PixelBuffer);
-        }
+        destination.CopyFrom(source);
     }
 
     /// <summary>Runs an action with a stable snapshot while holding the mailbox lock.</summary>

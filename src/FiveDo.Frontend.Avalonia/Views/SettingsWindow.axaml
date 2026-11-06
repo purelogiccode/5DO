@@ -10,7 +10,7 @@
             <TabItem Header="Video" ToolTip.Tip="Renderer, output resolution, display refresh, filter, aspect ratio, scaling, overlay, OSD notifications, quick menu, bloom, and FSR options.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <Grid ColumnDefinitions="170,*"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                           Margin="8">
                         <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Renderer"
                                    FontWeight="SemiBold" Margin="0,0,0,4" />
@@ -150,7 +150,17 @@
                                    Text="The crop is presentation-only. Per-game profiles can store their own crop; the border and void color are global."
                                    Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
                                    ToolTip.Tip="Crop values do not affect frame hashes, input, audio, or save states." />
-                        <CheckBox x:Name="CheckUpdatesCheck" Grid.Row="31" Grid.Column="1"
+                        <TextBlock Grid.Row="31" Grid.Column="0" Text="480i handling"
+                                   VerticalAlignment="Center" Margin="0,12,0,0"
+                                   ToolTip.Tip="Choose how the two fields of an interlaced title are combined." />
+                        <ComboBox x:Name="DeinterlaceCombo" Grid.Row="31" Grid.Column="1"
+                                  Margin="0,12,0,0"
+                                  ToolTip.Tip="Auto detects 480i fields and weaves them. Bob presents every field unchanged. Weave always combines two fields into 480 lines. Blend averages them into one flicker-free frame." />
+                        <TextBlock Grid.Row="32" Grid.Column="1"
+                                   Text="Field handling is presentation-only. Auto leaves 240p output byte-identical to Bob; explicit modes are useful for titles that flicker or comb. Weave produces a 480-line frame with half-height rows."
+                                   Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
+                                   ToolTip.Tip="Does not change emulated state, input, audio, frame hashes, or save states." />
+                        <CheckBox x:Name="CheckUpdatesCheck" Grid.Row="33" Grid.Column="1"
                                   Content="Check for updates when 5DO starts"
                                   Margin="0,8,0,0"
                                   ToolTip.Tip="Ask GitHub's public release feed whether a newer 5DO version exists. Only the release URL is requested; no personal data is sent." />

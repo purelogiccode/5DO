@@ -74,6 +74,9 @@ public sealed class GameProfile
     /// <summary>Gets or sets the per-game video filter, or <see langword="null"/> for the global filter.</summary>
     public VideoFilter? Filter { get; set; }
 
+    /// <summary>Gets or sets the per-game 480i/240p field handling mode, or <see langword="null"/> for the global mode.</summary>
+    public DeinterlaceMode? Deinterlace { get; set; }
+
     /// <summary>Gets or sets the per-game high-resolution mode, or <see langword="null"/> for the global mode.</summary>
     public bool? HighResolution { get; set; }
 
@@ -127,6 +130,7 @@ public sealed class GameProfile
             CdAudioVolume = settings.CdAudioVolume,
             CdAudioMuted = settings.CdAudioMuted,
             HighResolution = settings.HighResolution,
+            Deinterlace = settings.Deinterlace,
             Overscan = settings.ResolveOverscan(),
             NvramStorageMode = settings.NvramStorageMode,
             NvramVersion = settings.NvramVersion,
@@ -165,6 +169,10 @@ public sealed class GameProfile
         settings.CpuBackend = CpuBackend;
         settings.CdAudioVolume = CdAudioVolume;
         settings.CdAudioMuted = CdAudioMuted;
+        if (Deinterlace is { } deinterlace)
+        {
+            settings.Deinterlace = deinterlace;
+        }
 
         if (string.IsNullOrWhiteSpace(gameId))
         {

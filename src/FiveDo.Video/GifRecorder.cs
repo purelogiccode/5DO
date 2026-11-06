@@ -41,7 +41,7 @@ public sealed class GifRecorder : IFrameSink, IDisposable
     private int _delayCentiseconds;
     private bool _completed;
     private bool _headerWritten;
-    private int _skippedFrames;
+    private FrameBuffer? _scalingBuffer;
 
     /// <summary>Initializes a recorder that writes to a stream.</summary>
     /// <param name="output">Destination stream. The recorder does not own it.</param>
@@ -75,9 +75,6 @@ public sealed class GifRecorder : IFrameSink, IDisposable
 
     /// <summary>Gets the number of frames written to the GIF.</summary>
     public int CapturedFrames => _capturedFrames;
-
-    /// <summary>Gets the number of frames rejected because their dimensions changed.</summary>
-    public int SkippedFrames => _skippedFrames;
 
     /// <summary>Gets the GIF width, or zero before the first frame.</summary>
     public int Width => _frameWidth;
@@ -143,16 +140,29 @@ public sealed class GifRecorder : IFrameSink, IDisposable
             _frameHeight = height;
             WriteHeader(width, height);
         }
-        else if (width != _frameWidth || height != _frameHeight)
+
+        FrameBuffer buffer = _frameBuffer ??= new FrameBuffer(_frameWidth, _frameHeight);
+        if (width == _frameWidth && height == _frameHeight)
         {
-            _skippedFrames++;
-            return;
+            FrameAssembler.Assemble(frame, buffer, width, height);
+        }
+        else
+        {
+            // Field handling can switch between 240-line and 480-line output during
+            // recording. Keep the GIF's logical screen size and rescale the frame so
+            // the animation continues instead of dropping every frame after the switch.
+            if (_scalingBuffer is null
+                || _scalingBuffer.Width != width
+                || _scalingBuffer.Height != height)
+            {
+                _scalingBuffer = new FrameBuffer(width, height);
+            }
+
+            FrameAssembler.Assemble(frame, _scalingBuffer, width, height);
+            ScaleNearest(_scalingBuffer, buffer);
         }
 
-        _frameBuffer ??= new FrameBuffer(width, height);
-        FrameBuffer buffer = _frameBuffer;
-        FrameAssembler.Assemble(frame, buffer, width, height);
-        var indices = new byte[width * height];
+        var indices = new byte[_frameWidth * _frameHeight];
         Span<byte> pixels = buffer.PixelSpan;
         for (var i = 0; i < indices.Length; i++)
         {
@@ -164,9 +174,27 @@ public sealed class GifRecorder : IFrameSink, IDisposable
         }
 
         WriteGraphicControl(_delayCentiseconds);
-        WriteImageDescriptor(_output, width, height);
+        WriteImageDescriptor(_output, _frameWidth, _frameHeight);
         EncodeLzw(indices, _output);
         _capturedFrames++;
+    }
+
+    private static void ScaleNearest(FrameBuffer source, FrameBuffer destination)
+    {
+        ReadOnlySpan<byte> sourcePixels = source.PixelSpan;
+        Span<byte> destinationPixels = destination.PixelSpan;
+        for (var y = 0; y < destination.Height; y++)
+        {
+            var sourceY = Math.Min(source.Height - 1, y * source.Height / destination.Height);
+            var sourceRow = sourceY * source.Stride;
+            var destinationRow = y * destination.Stride;
+            for (var x = 0; x < destination.Width; x++)
+            {
+                var sourceX = Math.Min(source.Width - 1, x * source.Width / destination.Width);
+                sourcePixels.Slice(sourceRow + (sourceX * 4), 4)
+                    .CopyTo(destinationPixels[(destinationRow + (x * 4))..]);
+            }
+        }
     }
 
     private void WriteHeader(int width, int height)

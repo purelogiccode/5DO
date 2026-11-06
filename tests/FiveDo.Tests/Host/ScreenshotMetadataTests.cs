@@ -34,11 +34,12 @@ public sealed class ScreenshotMetadataTests
                 CdromTiming = FiveDo.Core.CdromTimingMode.OperaCycleBased,
                 CdSpeed = FiveDo.Core.CdSpeed.X8,
                 CpuClockMultiplier = 1.25,
+                Deinterlace = DeinterlaceMode.Weave,
             };
             string png = Path.Combine(directory, "Gex (USA)-20261102-120000-f000123.png");
             File.WriteAllBytes(png, [1, 2, 3]);
 
-            ScreenshotMetadata.Capture(settings, "Gex (USA)", "A1B2C3D4", 123).Save(png);
+            ScreenshotMetadata.Capture(settings, "Gex (USA)", "A1B2C3D4", 123, DeinterlaceMode.Weave, true).Save(png);
             ScreenshotMetadata? loaded = ScreenshotMetadata.Load(png);
 
             Assert.NotNull(loaded);
@@ -60,6 +61,8 @@ public sealed class ScreenshotMetadataTests
             Assert.Equal("#FF202020", loaded.VoidAreaColor);
             Assert.Equal("Accuracy", loaded.Profile);
             Assert.Equal(1.25, loaded.CpuClockMultiplier);
+            Assert.Equal("Weave", loaded.Deinterlace);
+            Assert.True(loaded.Interlaced);
             Assert.Contains("Direct3D11/Crt", loaded.Summary(), StringComparison.Ordinal);
         }
         finally

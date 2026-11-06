@@ -18,7 +18,15 @@ internal static class FrameScaler
     /// <param name="source">Native-resolution source frame.</param>
     /// <param name="destination">Output-resolution destination frame.</param>
     /// <param name="settings">Aspect and filter settings.</param>
-    public static void Scale(FrameBuffer source, FrameBuffer destination, RendererSettings settings)
+    /// <param name="pixelAspect">
+    /// Height of one source row relative to a square output pixel. Defaults to 1; woven
+    /// 480i/576i frames pass 0.5.
+    /// </param>
+    public static void Scale(
+        FrameBuffer source,
+        FrameBuffer destination,
+        RendererSettings settings,
+        double pixelAspect = 1.0)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(destination);
@@ -33,7 +41,8 @@ internal static class FrameScaler
             source.Height,
             destination.Width,
             destination.Height,
-            settings);
+            settings,
+            pixelAspect);
         if (destination.Width == source.Width
             && destination.Height == source.Height
             && rect == new ViewportRect(0, 0, source.Width, source.Height))

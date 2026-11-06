@@ -140,6 +140,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
     private int _outputHeight;
     private int _sourceWidth;
     private int _sourceHeight;
+    private double _sourcePixelAspect = 1.0;
     private float _timestampPeriod;
     private bool _initialized;
     private bool _disposed;
@@ -284,6 +285,10 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             _sourceHeight = height;
             RecreateExpandedTarget();
         }
+
+        _sourcePixelAspect = double.IsFinite(frame.PixelAspect) && frame.PixelAspect > 0
+            ? frame.PixelAspect
+            : 1.0;
 
         if (IsHqxFilter)
         {
@@ -1795,7 +1800,8 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
                 _sourceHeight,
                 _outputWidth,
                 _outputHeight,
-                _settings);
+                _settings,
+                _sourcePixelAspect);
             if (viewport.Width <= _capabilities.MaxTextureSize && viewport.Height <= _capabilities.MaxTextureSize)
             {
                 EnsureFsrTarget(Math.Max(1, viewport.Width), Math.Max(1, viewport.Height));
@@ -2059,7 +2065,8 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             _sourceHeight,
             _outputWidth,
             _outputHeight,
-            _settings);
+            _settings,
+            _sourcePixelAspect);
         ClearValue clear = new() { Color = new ClearColorValue(0f, 0f, 0f, 1f) };
         RenderPassBeginInfo begin = new()
         {

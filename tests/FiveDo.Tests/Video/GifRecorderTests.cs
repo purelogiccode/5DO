@@ -49,7 +49,7 @@ public sealed class GifRecorderTests
     }
 
     [Fact]
-    public void Recorder_SkipsFramesWhoseSizeChanges()
+    public void Recorder_RescalesFramesWhoseSizeChanges()
     {
         using var stream = new MemoryStream();
         using var recorder = new GifRecorder(stream, sourceFramesPerSecond: 50, targetFramesPerSecond: 50);
@@ -59,9 +59,31 @@ public sealed class GifRecorderTests
         recorder.OnFrame(first);
         Assert.Equal(1, recorder.CapturedFrames);
         recorder.OnFrame(second);
-        Assert.Equal(1, recorder.CapturedFrames);
-        Assert.Equal(1, recorder.SkippedFrames);
+        Assert.Equal(2, recorder.CapturedFrames);
+        Assert.Equal(320, recorder.Width);
+        Assert.Equal(240, recorder.Height);
         recorder.Complete();
+
+        var bytes = stream.ToArray();
+        Assert.Equal("GIF89a", Encoding.ASCII.GetString(bytes, 0, 6));
+        Assert.Equal((byte)(320 & 0xFF), bytes[6]);
+        Assert.Equal((byte)(240 & 0xFF), bytes[8]);
+    }
+
+    [Fact]
+    public void Recorder_HandlesAWovenMachineFrame()
+    {
+        var machine = new FiveDoMachine { Deinterlace = DeinterlaceMode.Weave };
+        using var stream = new MemoryStream();
+        using var recorder = new GifRecorder(stream, sourceFramesPerSecond: 60, targetFramesPerSecond: 30);
+        machine.FrameSink = recorder;
+
+        machine.RunFrames(6);
+        recorder.Complete();
+
+        Assert.True(recorder.CapturedFrames >= 2);
+        Assert.Equal(320, recorder.Width);
+        Assert.Equal(480, recorder.Height);
     }
 
     [Fact]

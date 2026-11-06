@@ -353,8 +353,8 @@ Guaranteed for the same:
 - state file.
 
 The state includes the derived VDL frame so a load renders the same picture
-immediately. The `Machine` section stores all 960 lines, including the high-resolution
-mirrors.
+immediately. The `Machine` section stores every `VdlLine` in the frame store (576),
+including the high-resolution mirrors.
 
 Not included:
 
@@ -362,6 +362,9 @@ Not included:
 - Input device state (keyboard/gamepad); input is host state.
 - OpenAL queue contents; live audio is reset on load.
 - Screenshot/log metadata.
+- The presentation field-handling mode, previous-field snapshot, and `VdlFrame.PixelAspect`.
+  Loading always restarts from the raw 240/288-line field; the configured mode rebuilds
+  its pair on the next two fields.
 - Host settings (`settings.json`).
 
 A state written by a future format version (header version other than 1, 2, or 3) is

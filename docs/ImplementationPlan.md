@@ -2,10 +2,10 @@
 # 5DO — Implementation Plan and Missing-Feature Backlog
 
 **Snapshot:** 2026-11-06
-**Current release:** `1.2.2`
+**Current release:** `1.3.0`
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master`<br>
-**Status:** **1,815 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,833 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports no warnings in changed files (seven pre-existing warnings remain in the managed JIT and state writer).<br>
 **Goal:** implement **every Opera core feature**, match or exceed Opera's accuracy, and ship the best standalone 3DO emulator on Windows, Linux, and macOS.
 
 > **This is the single source of truth.** It replaces the former 8,000-line dashboard, milestone log, feature spec, parity audit, and session handoff. Historical evidence stays in the linked docs; this file is the canonical backlog.
@@ -39,15 +39,15 @@
 |---|---|---|
 | Core emulation | ARM60 interpreter, CLIO timers/FIFO/DMA/FIQ, MADAM CEL/pixel/matrix engines, DSP at exactly 44.1 kHz, SPORT, VDLP, XBUS, CD-ROM, input, configurable DRAM/VRAM (8 Opera layouts), NVRAM, deterministic save states v3 | Full Opera timing parity (ARM/CLIO/CEL/CD), SWI HLE timing parity, embedded boot ROM, unsigned-disc boot, CD subcode/DIPIR/read-ahead |
 | Frontend | Avalonia shell, library, metadata/favorites/playtime, settings, gamepad mapping, save slots/thumbnails, screenshots, log viewer, disc browser, BIOS/NVRAM manager, rewind, fast-forward, cheats, TAS movies, OSD/quick menu, input display, portable mode, instance lock, diagnostics bundle, update check | Netplay, achievements, Lua, big-picture UI, localization, themes/accessibility, installers, auto-update, debugger/profiler |
-| Renderer | Two-stage OpenGL/GLES (default), optional Vulkan (Windows surface), optional Direct3D 11 (Windows), 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR, per-edge overscan, void border, screenshot gallery | True 640x480/480i CEL rendering, supersampling, GPU CEL, shader presets, NTSC/HDR, recording, overlays/bezels, Linux/macOS Vulkan surfaces, 480i deinterlacing |
+| Renderer | Two-stage OpenGL/GLES (default), optional Vulkan (Windows surface), optional Direct3D 11 (Windows), 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR, per-edge overscan, void border, 480i/240p detection with bob/weave/blend field handling, screenshot gallery | True 640x480/480i CEL rendering, supersampling, GPU CEL, shader presets, NTSC/HDR, recording, overlays/bezels, Linux/macOS Vulkan surfaces |
 | Audio | Exact 44.1 kHz DSP clock, OpenAL Soft output, WAV capture, `audio analyze`, CD-DA mixing/volume/mute | Resampler quality/exclusive mode/sync offset, mixer/spectrum, DSP debugger, audio golden corpus |
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing, M3U multi-disc playlist, live swap, guest inject, Opera file system, prefetch, DAT health | Full CD command/timing parity, subcode, read-ahead, known-title CD-DA evidence, real in-game multi-disc swap, ODE prompts, physical drive, image conversion |
 | Compatibility | 594-disc sweep: **594 load**, **593 render**, 1 known boot failure (Crash 'n Burn Japan), 0 not loadable; library catalogues **653 games across 1,366 images** | 594/594 render; visual/in-game review; per-game auto-profiles |
 | Differential harness | FiveDO.DiffHarness, checkpoints, audio/state hashes, smoke + five-title showcase, 594-title manifest generator | Full 594-title run, PC-delta triage, CD/state transcripts, nightly dashboard |
-| Tests | **1,815** passing; fuzz harness for six parsers; build/format/inspectcode clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
+| Tests | **1,833** passing; fuzz harness for six parsers; build/format clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K Tier A measured; zero-allocation synthetic path | Tier B 1080p60, GLES 3.1/ANGLE, arm64 tuning, threaded DSP, managed JIT, zero allocations on all real paths |
 | Platforms | Six bundles: Windows/Linux/macOS × x64/arm64, framework-dependent single-file apphosts; Windows x64 validated; Linux x64 tests/smoke pass (GPU preview under llvmpipe); macOS and arm64 cross-published but not hardware-validated | macOS runtime validation, arm64 hardware validation, Linux/macOS GPU presentation, macOS gamepad, Flatpak/AppImage, installers/signing |
-| Release | **v1.2.2** published with six versioned bundles and `SHA256SUMS.txt`; .NET 10 runtime required (not bundled); legal/attribution sign-off recorded | Signing, notarization, auto-update, reproducible builds, SBOM |
+| Release | **v1.3.0** published with six versioned bundles and `SHA256SUMS.txt`; .NET 10 runtime required (not bundled); legal/attribution sign-off recorded | Signing, notarization, auto-update, reproducible builds, SBOM |
 
 **Scope decisions (unchanged):** WebAssembly/browser, Android/iOS, Raspberry Pi, and Steam Deck are **out of scope**. Desktop Windows, Linux, and macOS (x64/arm64) remain the supported targets. 4K *internal* CEL rendering is research, not a release blocker; 4K *output* upscaling is supported. Distribution remains free, open-source **donationware** under the FreeDO modified GNU LGPL (non-commercial; voluntary donations only).
 
@@ -59,13 +59,13 @@ These are done and must not regress. They are listed here once; the backlog belo
 |---|---|
 | Core | ARM60 interpreter; CLIO timers, FIFO, DMA, interrupts; MADAM CEL/pixel/matrix; VDLP; SPORT; DSP; XBUS; CD-ROM; NVRAM; Quartz state v3; save states v3; rewind buffer; fast-forward; cheats; TAS movie container/record/replay/verify/branch; six-port PBUS input |
 | Disc | ISO/BIN/CUE/CHD, parent/child CHD, multi-track TOC, CD-DA mixing and volume, M3U/M3U8 playlist, live/F3/UI/CLI swap, guest inject, Opera FS parser, prefetch cache, Redump/No-Intro DAT verification, library health badges |
-| Video | OpenGL/GLES two-stage presenter; optional Vulkan offscreen and Win32 surface; optional Direct3D 11 Windows presenter; 4K output; nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR; per-edge overscan; void border/color; opt-in line-doubled high-res; screenshots; gallery filters/compare/export/sidecars; GIF recording |
+| Video | OpenGL/GLES two-stage presenter; optional Vulkan offscreen and Win32 surface; optional Direct3D 11 Windows presenter; 4K output; nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR; per-edge overscan; void border/color; opt-in line-doubled high-res; 480i/240p detection with bob/weave/blend field handling; screenshots; gallery filters/compare/export/sidecars; GIF recording |
 | Audio | Exact 44.1 kHz clock; OpenAL Soft; WAV capture; `audio analyze`; CD-DA mix; volume/mute; audio-driven pacing |
 | Frontend | Library scan/dedupe; favorites/playtime/history; offline metadata editor; settings; keyboard/gamepad bindings; ten save slots with thumbnails; screenshot gallery; log viewer; disc browser/info; BIOS/NVRAM manager; OSD/quick menu; input display; playlist editor; portable mode; instance lock; diagnostics bundle; startup update check; startup auto-open of the last BIOS/disc |
 | CLI | `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks/verify/playlist`, `library verify`, `fs`, `bios`, `nvram`, `cheat`, `movie`, `settings`, `audio`, `state`, `disasm`, `update` |
-| Release | v1.2.2 six bundles; versioned archives; checksums; legal/attribution sign-off; OpenAL LGPL obligations |
+| Release | v1.3.0 six bundles; versioned archives; checksums; legal/attribution sign-off; OpenAL LGPL obligations |
 
-**Completed IDs (traceability only):** FND-01, FND-02, FND-03, CORE-09, CORE-12, CORE-14, CORE-15, SYS-04, SYS-07, SYS-09, SYS-10, SYS-11, SYS-13, SYS-14, VID-05, VID-06, VID-14, VID-15, AUD-05, UX-01, UX-02, UX-04, UX-11, UX-12, UX-15, UX-19, UX-23, ENG-03, BAK-12, BAK-17.
+**Completed IDs (traceability only):** FND-01, FND-02, FND-03, CORE-09, CORE-12, CORE-14, CORE-15, SYS-04, SYS-07, SYS-09, SYS-10, SYS-11, SYS-13, SYS-14, VID-04, VID-05, VID-06, VID-14, VID-15, AUD-05, UX-01, UX-02, UX-04, UX-11, UX-12, UX-15, UX-19, UX-23, ENG-03, BAK-12, BAK-17.
 
 **Milestone aliases:** M9R/M9P → P3/P6/TEST-04; M10 → PERF-02; M12 → PERF-08; M13.5/M13.6 → TEST-06; M14 → VID-01/02/03; M15 → CORE-11/16 + FND-05.
 
@@ -182,10 +182,11 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
   **Remaining:** Crash 'n Burn (Japan); any 12k/65k-frame black/static titles; BIOS-aware sweep status merge; title-specific fixes; regression tests and compatibility notes.
   **Done when:** 594/594 discs render, or every remaining exception has a root cause and documented workaround; `GameCompatibilityList.md` is current.
 
-- [ ] **VID-04 — 480i/240p detection, deinterlacing, and field blending**
-  **Status:** Pending · **Priority:** P0 · **Effort:** M · **Tracks:** VID-04
-  **Remaining:** detect field/frame mode; bob/weave/blend options; per-game mode; screenshot and recording behavior; PAL/NTSC interaction; test patterns.
+- [x] **VID-04 — 480i/240p detection, deinterlacing, and field blending**
+  **Status:** Complete · **Priority:** P0 · **Effort:** M · **Tracks:** VID-04
+  **Remaining:** none for the presentation gate. `Auto` is a content-based heuristic; explicit `bob`/`weave`/`blend` modes and per-game profiles cover titles that still comb or flicker.
   **Done when:** 480i titles render with correct field handling; 240p output is unchanged; options are documented and tested.
+  **Evidence:** `InterlaceProcessor` retains the previous field and supports bob, weave (480/576-line composite with `PixelAspect = 0.5`), and RGB555 direct-color blend, plus a conservative 12/30-field detector. The mode is wired through `FiveDoMachine`, `AppSettings`/`GameProfile`, Settings > Video, screenshot/GIF paths, and `--deinterlace auto|bob|weave|blend`; `run --json` reports `deinterlace`, `interlaced`, and `interlaceDetected`. Sixteen processor tests cover bob identity, weave line/palette/control copying, blend precision, detection hysteresis, PAL 288→576, high-res fallback, CPU presentation, and 4:3 pixel-aspect scaling. On 2026-11-06, 3,000-frame bob-vs-auto runs of Road Rash, Space Ace, and Alone in the Dark produced identical hashes with `interlaced=false`; 300-frame runs of Wolfenstein 3D and Lemmings were also identical. Forced weave produced a 320x480 frame on Road Rash and forced blend stayed at 320x240. No local title is confirmed 480i, so complementary-field test patterns are the 480i evidence and the heuristic remains overridable per game. See `Video.md` §1.
 
 - [ ] **AUD-01 — Audio output quality: resampler, exclusive mode, and sync offset**
   **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** AUD-01
@@ -412,7 +413,7 @@ This is an ID-only sequence; descriptions live in the canonical entries above.
 2. **Accuracy:** CORE-01, CORE-02, CORE-03, CORE-08, SYS-08, CORE-04, CORE-06, CORE-07.
 3. **Disc and platform:** SYS-01, SYS-02, SYS-03, SYS-05, SYS-06, SYS-07, ECO-04.
 4. **Opera parity and “just works”:** SYS-12, SYS-15, SYS-16, SYS-17, SYS-18, CORE-13.
-5. **Visual/audio correctness:** VID-04, AUD-01, CORE-11/16 + FND-05, AUD-04, VID-13.
+5. **Visual/audio correctness:** AUD-01, CORE-11/16 + FND-05, AUD-04, VID-13.
 6. **Performance:** CORE-05, ENG-02, PERF-08, PERF-07, PERF-01, TEST-05.
 7. **Product polish:** UX-03..UX-25, ECO-06..ECO-11, VID-07..VID-17, AUD-02/03, SYS-19/21/22, ENG-05.
 8. **Research:** VID-01/02/03, VID-08, ECO-08, RES-01/02.
@@ -522,6 +523,10 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test
 ## 9. Completed log
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
+
+- **2026-11-06 - v1.3.0.** Six framework-dependent single-file bundles plus `SHA256SUMS.txt`; 480i/240p field handling (auto detection, bob, weave, blend), interlace-aware viewport geometry, screenshot/GIF support, per-game and CLI mode selection, and 1,833 tests. The release is presentation-only over 1.2.2: default bob hashes and save states are unchanged.
+
+- **2026-11-06 - VID-04 480i/240p field handling.** Added `InterlaceProcessor` with bob, weave, blend, and content-based auto detection; wired it through `FiveDoMachine`, `AppSettings`/`GameProfile`, Settings > Video, screenshots/GIF, and `--deinterlace`; added `VdlFrame.PixelAspect` and interlace-aware viewport scaling so a woven 320x480 frame keeps its display geometry and integer scaling. Sixteen processor tests plus bob-vs-auto hashes on five local titles (3,000 frames for Road Rash, Space Ace, and Alone in the Dark) are unchanged. See `Video.md` §1.
 
 - **2026-11-05 - PERF-06 ANGLE revalidation.** Re-ran the 4K offscreen probe through ANGLE/D3D11 on the RTX 4070: OpenGL ES 3.0, integer textures, sharp-bilinear present mean 0.67 ms / p99 1.29 ms over 120 measured frames, with 0 B/frame in the renderer. Real GLES 3.1 hardware and Tier B percentile runs remain open, so PERF-06 stays Partial. See `Performance.md` §8.
 - **2026-11-05 - ENG-02 interpreter hot-path increment.** Added a direct DRAM/ROM instruction fetch (`IAddressBus.ReadInstruction`), inline LSL#0 and rotated-immediate operand handling, a flag-preserving data-processing dispatch that avoids the generic `ArmAlu` call, `BitOperations.PopCount`/`TrailingZeroCount` LDM/STM iteration, and a cached PC-adjust source. Interleaved same-host A/B: synthetic 1.58→1.33 ms/frame and Lemmings 1.43→1.13 ms/frame, with unchanged hashes. ENG-02 stays Partial pending a decoded block cache; see `Performance.md` §8.6.

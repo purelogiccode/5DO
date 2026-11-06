@@ -11,6 +11,7 @@ Source map:
 |---|---|
 | VDLP parser | `src/FiveDo.Video/Vdlp.cs` |
 | Frame model | `src/FiveDo.Core/VdlFrame.cs`, `VdlLine.cs`, `FrameBuffer.cs` |
+| Field handling | `src/FiveDo.Video/InterlaceProcessor.cs` |
 | CPU assembler | `src/FiveDo.Video/FrameAssembler.cs`, `GpuPalette.cs` |
 | GPU uploader | `src/FiveDo.Video/VdlFrameUploader.cs` |
 | Mailbox | `src/FiveDo.Video/VdlFrameMailbox.cs` |
@@ -37,7 +38,8 @@ X coordinate is 640-wide, but the source remains 240 lines; see the limitation b
 `VdlFrame` contains:
 
 - `SourceWidth`, `SourceHeight`: visible dimensions.
-- `Lines`: 960 reusable `VdlLine` objects (240 visible lines x 4 for high-res).
+- `Lines`: up to 576 reusable `VdlLine` objects (240/288 visible field lines, 480/576
+  woven lines, or 480 high-resolution lines).
 - `VdlLine`:
   - `Width`: valid pixels in this line.
   - `Pixels` / `PixelBuffer`: up to 1280 indexed 16-bit pixels.
@@ -69,6 +71,42 @@ written to both interlace fields, so horizontal CEL sampling improves but vertic
 detail remains 240 lines. True 640x480, 2x supersampling, and GPU CEL compositing are
 research topics in [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md); the
 compatibility-safe default remains 320x240 plus output filtering.
+
+### 480i/240p field handling
+
+The 3DO VDLP and the reference cores emit one 240-line (288-line PAL) field per 60 Hz
+(50 Hz) tick. Interlaced titles split a 480-line image across alternating fields, so
+presenting every field as a full frame loses half the vertical detail and combs during
+motion. `InterlaceProcessor` keeps the previous field and presents one of four modes:
+
+| Mode | Output | Behavior |
+|---|---|---|
+| `Auto` | 240 or 480 lines | Detects complementary fields and weaves them; progressive content stays bob. This is the desktop default. |
+| `Bob` | 240 lines | Presents each field unchanged. This is the historical behavior and the CLI/headless default. |
+| `Weave` | 480 lines | Places the two fields on alternate rows of a doubled-height frame. |
+| `Blend` | 240 lines | Averages the current and previous field per pixel using 15-bit direct color. |
+
+The woven frame has half-height rows (`VdlFrame.PixelAspect = 0.5`), so the presenter
+keeps the same display rectangle as the field (4:3 for the default 320x240 mode) and
+integer scaling works in display space. PAL 288-line fields weave to 576 lines, the
+frame-store limit. The opt-in 640x480 high-resolution mode is already progressive
+line-doubled output and ignores weave/blend.
+
+`Auto` compares the same line index in two adjacent fields with the vertical difference
+inside the current field. A progressive 240p title repeats the same row in both fields,
+so its temporal difference is near zero; an interlaced title puts an adjacent source row
+in each field, so the temporal and vertical differences are comparable. A verdict must
+persist for 12 fields before weaving starts and 30 progressive fields before it stops.
+The detector is intentionally conservative; a title that still combs can be pinned to
+`Weave` or `Blend` in Settings > Video or through a per-game profile. `run --json`
+reports the configured mode, whether the presented frame was woven (`interlaced`), and
+the detector verdict (`interlaceDetected`).
+
+Field handling is presentation-only. It does not change guest state, input, audio, or
+save states. The CLI defaults to `bob` so diagnostic frame hashes stay byte-identical to
+the reference; the desktop defaults to `auto`. Select `bob` when comparing hashes,
+capture a woven frame with the CPU or GPU screenshot path, and expect an explicit
+`weave` capture to be 320x480 with half-height pixels.
 
 ---
 
@@ -437,6 +475,10 @@ With **Also save the native CPU frame with screenshots**, a second file is writt
 The filtered screenshot comes from `OpenGlRenderer.ReadPixels`, which reads RGBA,
 flips bottom-up rows to top-down, and converts to BGRA. The native screenshot uses
 `FrameAssembler`. The default directory is Pictures; change it in Settings > Paths.
+Both paths capture the presented frame, including the active field handling: a woven
+480i frame is written at 480 lines and the sidecar records `deinterlace` and
+`interlaced`. GIF recording receives the same presented frame and rescales a mid-recording
+240↔480 size change to the initial canvas instead of dropping those frames.
 
 ---
 
@@ -540,6 +582,7 @@ See [`Performance.md`](Performance.md) for the full budget and methodology.
 | Test | Covers |
 |---|---|
 | `VdlpTests` | Display-list parsing, bitmap widths, line duplication, high-res. |
+| `InterlaceProcessorTests` | Bob/weave/blend, direct-color blend, detection hysteresis, PAL/high-res limits, pixel-aspect viewport. |
 | `FrameAssemblerTests` | Background/fixed-CLUT/per-line CLUT, BGRA/RGBA. |
 | `GlRendererContractTests` | `GpuPalette` vs CPU assembler, viewport aspect/integer/custom/stretch, renderer contract/settings. |
 | `VdlFrameMailboxTests` | Snapshot copy, sequence, no retention. |
@@ -584,3 +627,9 @@ See [`Performance.md`](Performance.md) for the full budget and methodology.
   internal renderer.
 - Custom aspect ratio is represented in `RendererSettings` but not edited by the
   current Settings dialog.
+- `Auto` interlace detection is a content heuristic, not a header bit. It stays bob on
+  progressive content and requires 12 complementary fields before weaving; explicit
+  `weave`/`blend` modes are available when a title still combs or flickers.
+- A woven capture is stored at the native 320x480 (PAL 320x576) geometry with
+  half-height pixels. PNM/PNG viewers that assume square pixels will show it taller
+  than 4:3; the presenter applies the correct aspect from `VdlFrame.PixelAspect`.

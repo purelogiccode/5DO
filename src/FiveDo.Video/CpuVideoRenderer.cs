@@ -63,7 +63,9 @@ public sealed class CpuVideoRenderer : ICpuFrameRenderer
         ArgumentNullException.ThrowIfNull(frame);
         var sourceWidth = frame.SourceWidth > 0 ? frame.SourceWidth : EmulatorConstants.VideoWidth;
         var sourceHeight = frame.SourceHeight > 0 ? frame.SourceHeight : EmulatorConstants.VideoHeight;
-        if (_frame.Width == sourceWidth && _frame.Height == sourceHeight)
+        if (_frame.Width == sourceWidth
+            && _frame.Height == sourceHeight
+            && Math.Abs(frame.PixelAspect - 1.0) < 1e-9)
         {
             FrameAssembler.Assemble(frame, _frame, sourceWidth, sourceHeight);
             return;
@@ -77,7 +79,7 @@ public sealed class CpuVideoRenderer : ICpuFrameRenderer
         }
 
         FrameAssembler.Assemble(frame, _sourceFrame, sourceWidth, sourceHeight);
-        FrameScaler.Scale(_sourceFrame, _frame, _settings);
+        FrameScaler.Scale(_sourceFrame, _frame, _settings, frame.PixelAspect);
     }
 
     /// <inheritdoc />

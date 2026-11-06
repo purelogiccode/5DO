@@ -101,8 +101,9 @@ every serialized property in `AppSettings`.
 | `AutoGameFixes` | bool | `true` | Apply the 4DO per-game fix-mode mapping automatically. |
 | `FixModeOverrides` | object | `{}` | Per-game fix-mode overrides, keyed by game ID. |
 | `FilterOverrides` | object | `{}` | Per-game filter overrides, keyed by game ID. |
-| `GameProfiles` | object | `{}` | Per-game profile snapshots, keyed by game ID. Each entry holds `Profile`, `Region`, `ArmTiming`, `ClioTimers`, `CelTiming`, `CdromTiming`, `CdSpeed`, `CpuClockMultiplier`, `RandomSeed`, `OperaDipir`, `OperaSoftReset`, `SwiHle`, `CpuBackend`, `CdAudioVolume`, `CdAudioMuted`, `BiosMd5`, `FixMode`, `Filter`, `HighResolution`, `Overscan`, `InputDevices`, `NvramStorageMode`, `NvramVersion`, and `CheatBundle`. |
+| `GameProfiles` | object | `{}` | Per-game profile snapshots, keyed by game ID. Each entry holds `Profile`, `Region`, `ArmTiming`, `ClioTimers`, `CelTiming`, `CdromTiming`, `CdSpeed`, `CpuClockMultiplier`, `RandomSeed`, `OperaDipir`, `OperaSoftReset`, `SwiHle`, `CpuBackend`, `CdAudioVolume`, `CdAudioMuted`, `BiosMd5`, `FixMode`, `Filter`, `Deinterlace`, `HighResolution`, `Overscan`, `InputDevices`, `NvramStorageMode`, `NvramVersion`, and `CheatBundle`. |
 | `Filter` | enum string | `"SharpBilinear"` | Global presentation filter. |
+| `Deinterlace` | enum string | `"Auto"` | 480i/240p field handling: `Auto` (detect and weave complementary fields), `Bob` (present every field, reference-compatible hashes), `Weave` (always combine two fields into 480/576 lines), or `Blend` (average two fields). Presentation-only. |
 | `FrameSkip` | enum string | `"Auto"` | Presentation frame-skip policy: `Off`, `Auto`, `OneInTwo`, `OneInThree`, `OneInFour`, or `OneInFive`. Only presentation is skipped; emulation and audio always run every frame. |
 | `Aspect` | enum string | `"FourThree"` | Aspect policy. |
 | `CustomAspect` | double | `1.3333` | Width/height ratio used when `Aspect` is `Custom`. |
@@ -274,6 +275,7 @@ player-1 defaults. See section 3 for the full input structure.
   "FilterOverrides": {},
   "GameProfiles": {},
   "Filter": "SharpBilinear",
+  "Deinterlace": "Auto",
   "Aspect": "FourThree",
   "CustomAspect": 1.3333,
   "Vsync": true,

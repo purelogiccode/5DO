@@ -3,7 +3,7 @@
   <a href="https://github.com/purelogiccode/5DO/actions/workflows/build-bundle.yml"><img src="https://github.com/purelogiccode/5DO/actions/workflows/build-bundle.yml/badge.svg?branch=master" alt="Bundle build"></a>
   <img src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white" alt=".NET 10">
   <a href="../LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
-  <a href="../CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.2.2-orange" alt="Version 1.2.2"></a>
+  <a href="../CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.3.0-orange" alt="Version 1.3.0"></a>
 </p>
 
 # Desktop packaging
@@ -20,7 +20,7 @@ per component. Each bundle contains both the desktop app and the headless CLI:
 | macOS x64 | `5do-<version>-osx-x64.tar.gz` |
 | macOS arm64 | `5do-<version>-osx-arm64.tar.gz` |
 
-For example, version `1.2.2` produces `5do-1.2.2-win-arm64.zip`. The version is read from
+For example, version `1.3.0` produces `5do-1.3.0-win-arm64.zip`. The version is read from
 `Directory.Build.props` by default; pass `-Version` to `package-bundle.ps1` to override it.
 
 ## Requirements
