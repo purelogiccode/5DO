@@ -1,9 +1,9 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.2.1, a documented-compatibility
+All notable changes are recorded here. The project is at v1.2.2, a documented-compatibility
 release.
 
-## [Unreleased]
+## [1.2.2] - 2026-11-06
 
 ### Added
 
@@ -94,6 +94,32 @@ release.
   matches it against a Redump/No-Intro DAT, and shows known-dump, not-in-DAT, or read-error
   badges with a status summary. `5do library verify` runs the same check headlessly. Results
   are cached in `library-health.json` and invalidated when an image changes.
+
+### Performance
+
+- ENG-02 interpreter hot paths: direct DRAM/ROM instruction fetch, inline LSL#0 and
+  rotated-immediate operands, a flag-preserving ALU dispatch, and
+  `BitOperations.PopCount`/`TrailingZeroCount` LDM/STM iteration. Interleaved A/B:
+  synthetic **1.58 → 1.33 ms/frame**, Lemmings (USA) **1.43 → 1.13 ms/frame**, with
+  unchanged hashes.
+- PERF-05 high-resolution VDLP: scanline DMA reads the raw VRAM word span instead of four
+  `IRam.Read16` calls per pixel. Lemmings high-res **2.42-2.47 → 1.30-1.43 ms/frame**
+  with an identical high-res hash.
+- PERF-08 managed JIT second/third pass: exact RAM-write invalidation, block-local
+  PC/CPSR/cycle state shared through `ref` parameters, register-specified shifts, and a
+  direct-mapped compile-hit cache. The JIT is ~20% faster than the first 1.2.x JIT but
+  still ~1.25x slower than the interpreter on Lemmings boot, so it remains opt-in and
+  Partial.
+- Rewind capture: fast compression, unchecked transient CRCs, a live-range memory
+  section, and pooled capture buffers cut the worst Lemmings keyframe from **139.3 ms**
+  to **7.4-9.2 ms**, allocations from ~1.5 GB to **16 MB per 1,200 frames**, and a
+  stock state from ~26 MB to **~10 MB**.
+
+### Changed
+
+- Avalonia **12.1.5**, CHDSharp **1.6.3**, and Meziantou.Analyzer **3.0.321**.
+- The documentation site and wiki side menus now list the 1.2.2 release notes and the
+  current project pages.
 
 ### Fixed
 

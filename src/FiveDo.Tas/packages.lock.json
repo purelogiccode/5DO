@@ -20,7 +20,7 @@
       "fivedo.input": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.2.1, )"
+          "FiveDo.Core": "[1.2.2, )"
         }
       }
     }

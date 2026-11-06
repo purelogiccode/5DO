@@ -1,3 +1,10 @@
+<p align="center">
+  <a href="https://github.com/purelogiccode/5DO/actions/workflows/ci.yml"><img src="https://github.com/purelogiccode/5DO/actions/workflows/ci.yml/badge.svg?branch=master" alt="CI status"></a>
+  <a href="https://github.com/purelogiccode/5DO/actions/workflows/diff-harness.yml"><img src="https://github.com/purelogiccode/5DO/actions/workflows/diff-harness.yml/badge.svg?branch=master" alt="Differential harness"></a>
+  <a href="https://purelogiccode.github.io/5DO/DifferentialHarness.html"><img src="https://img.shields.io/badge/docs-differential%20harness-2ea44f" alt="Documentation"></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
+</p>
+
 # Differential manifests
 
 These manifests drive `tools/FiveDo.DiffHarness`. They are evidence definitions,

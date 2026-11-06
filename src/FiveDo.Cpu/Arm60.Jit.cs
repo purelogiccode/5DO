@@ -75,8 +75,8 @@ public sealed partial class Arm60
     private static readonly MethodInfo JitReadUser =
         typeof(Arm60State).GetMethod("ReadUser", BindingFlags.Instance | BindingFlags.NonPublic)!;
 
-    private static readonly MethodInfo JitEnterFiq =
-        typeof(Arm60).GetMethod("EnterFiq", BindingFlags.Instance | BindingFlags.NonPublic)!;
+    private static readonly MethodInfo JitEnterFiqFromJit =
+        typeof(Arm60).GetMethod("EnterFiqFromJit", BindingFlags.Instance | BindingFlags.NonPublic)!;
 
     private static readonly MethodInfo JitReadWord =
         typeof(Arm60).GetMethod("ReadWord", BindingFlags.Instance | BindingFlags.NonPublic)!;
@@ -390,6 +390,24 @@ public sealed partial class Arm60
         int total = cycles;
         FlushJitContext(ref pc, ref cpsr, ref cycles, ref instructions);
         return total;
+    }
+
+    /// <summary>
+    /// Enters the FIQ vector with the block's cycle count included in the telemetry
+    /// timestamp, then removes the temporary addition so the normal context flush can
+    /// account for those cycles exactly once.
+    /// </summary>
+    private void EnterFiqFromJit(int cycles)
+    {
+        _cyclesExecuted += cycles;
+        try
+        {
+            EnterFiq();
+        }
+        finally
+        {
+            _cyclesExecuted -= cycles;
+        }
     }
 
     private int FlushAndStep(ref uint pc, ref uint cpsr, ref int cycles, ref int instructions)
@@ -885,7 +903,8 @@ public sealed partial class Arm60
         il.MarkLabel(takeFiq);
         EmitStoreState(il, state, user, pc, cpsr);
         il.Emit(OpCodes.Ldarg_0);
-        il.Emit(OpCodes.Call, JitEnterFiq);
+        il.Emit(OpCodes.Ldloc, cycles);
+        il.Emit(OpCodes.Call, JitEnterFiqFromJit);
         il.Emit(OpCodes.Ldc_I4, 0x1c);
         il.Emit(OpCodes.Stloc, pc);
         il.Emit(OpCodes.Ldloc, state);

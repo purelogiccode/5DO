@@ -12,10 +12,11 @@ and M3U/M3U8 playlists for multi-disc games.
 
 ## Is there a download?
 
-Yes. **v1.1.0** is available on
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.1.0). There is
-one bundle per system (Windows x64, Linux x64, macOS x64), and each bundle contains
-both the desktop app and the CLI. You can also build from source.
+Yes. **v1.2.2** is available on
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.2.2). There is
+one bundle per system and architecture (Windows, Linux, and macOS on x64 and arm64),
+and each bundle contains both the desktop app and the CLI. You can also build from
+source.
 
 ## Do I need .NET installed?
 
@@ -29,15 +30,16 @@ The .NET 10 SDK is only required to build from source.
 
 The first full sweep covered 594 images. After triage, 593 are loadable/rendered, one
 known no-video case remains (`Crash 'n Burn` Japan), and no not-loadable rows remain.
-This is documented compatibility, not full-library compatibility. See
+The library now catalogues 653 games across 1,366 images, including three audio-only
+CHDs. This is documented compatibility, not full-library compatibility. See
 [Compatibility](Compatibility).
 
 ## Does it run on Linux and macOS?
 
 **Windows x64 is the validated target.** Linux x64 passed the full test suite and
 CLI/frontend smoke tests, with GPU presentation documented as preview/best-effort.
-macOS x64 is cross-published on Linux and validated as Mach-O x86_64; runtime
-validation is post-1.0. arm64 and Raspberry Pi are post-1.0.
+macOS x64/arm64 and the arm64 bundles are cross-published and validated by machine
+type; runtime validation is post-1.0. Raspberry Pi is out of scope.
 
 ## Why is it called 5DO?
 

@@ -74,24 +74,28 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.2.1.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.2.2.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-03, v1.2.1 release (GitHub Releases).**
+**2026-11-06, v1.2.2 release (GitHub Releases).**
 
-- **1,597 tests** are present in the current test assembly.
+- **1,808 tests** are present in the current test assembly.
+- The library reports **653 games across 1,366 images**; three audio-only CHDs are
+  catalogued.
 - The first full-collection loadability sweep covered **594 disc images**: **576
   rendered**, **13 black/blank**, and **5 not loadable** on the first pass.
 - After triage: **593 loadable/rendered**, **1 known no-video case**
   (`Crash 'n Burn` Japan), and **0 not-loadable rows**.
 - Windows x64 is the validated target. Linux x64 full suite passed; GPU
   presentation is preview/best-effort. macOS and arm64 validation are post-1.0.
-- v1.2.1 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.2.1)
+- v1.2.2 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.2.2)
   as one bundle per system and architecture (Windows/Linux/macOS, x64 and arm64), each with the CLI, desktop app,
   and SHA-256 checksums. The .NET 10 runtime is required on the host and is not bundled.
-  M13.5/M13.6 visual/high-resolution review and M14 research are post-1.0. See
+  The release includes the interpreter/high-res/rewind performance work, the opt-in
+  managed JIT, the expanded game database, library health verification, memory
+  capacity options, eight PBUS ports, and audio-only CHD cataloging. See
   [What's new](WhatsNew.md).
 
 See [Status](Status.md) and [Known issues](KnownIssues.md) for the current position and

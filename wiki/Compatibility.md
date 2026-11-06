@@ -1,6 +1,7 @@
 # Compatibility
 
-The first full-collection loadability sweep covered **594 disc images**.
+The first full-collection loadability sweep covered **594 disc images**. The current
+library catalogues **653 games across 1,366 images**, including three audio-only CHDs.
 
 | Result | First pass | After triage |
 |---|---:|---:|

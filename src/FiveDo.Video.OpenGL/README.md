@@ -1,3 +1,10 @@
+<p align="center">
+  <a href="https://github.com/purelogiccode/5DO/actions/workflows/ci.yml"><img src="https://github.com/purelogiccode/5DO/actions/workflows/ci.yml/badge.svg?branch=master" alt="CI status"></a>
+  <img src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white" alt=".NET 10">
+  <a href="https://purelogiccode.github.io/5DO/Video.html"><img src="https://img.shields.io/badge/docs-video-2ea44f" alt="Video documentation"></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
+</p>
+
 # FiveDo.Video.OpenGL
 
 Primary desktop renderer for 5DO.

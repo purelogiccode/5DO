@@ -2,14 +2,17 @@
 
 ## Download
 
-Download the bundle for your system from
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.1.0):
+Download the bundle for your system and architecture from
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.2.2):
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-win-x64.zip` |
-| Linux x64 | `5do-linux-x64.tar.gz` |
-| macOS x64 | `5do-osx-x64.tar.gz` |
+| Windows x64 | `5do-1.2.2-win-x64.zip` |
+| Windows arm64 | `5do-1.2.2-win-arm64.zip` |
+| Linux x64 | `5do-1.2.2-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.2.2-linux-arm64.tar.gz` |
+| macOS x64 | `5do-1.2.2-osx-x64.tar.gz` |
+| macOS arm64 | `5do-1.2.2-osx-arm64.tar.gz` |
 
 Each bundle contains both the desktop app and the CLI. The bundles are
 framework-dependent: install the **.NET 10 Runtime** from
@@ -40,7 +43,7 @@ Linux/macOS:
 
 ```sh
 mkdir 5do-linux-x64
-tar -xzf 5do-linux-x64.tar.gz -C 5do-linux-x64   # or 5do-osx-x64.tar.gz
+tar -xzf 5do-1.2.2-linux-x64.tar.gz -C 5do-linux-x64
 cd 5do-linux-x64
 ./FiveDo.Frontend.Avalonia
 ```

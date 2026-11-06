@@ -20,9 +20,10 @@ dotnet format 5DO.sln --verify-no-changes
 
 ## Publish
 
-The release layout is one bundle per system, containing both apps. The bundles are
-framework-dependent: users must install the .NET 10 Runtime. Publish the two apphosts
-as framework-dependent single files:
+The release layout is one bundle per system and architecture (Windows, Linux, and macOS
+on x64 and arm64), containing both apps. The bundles are framework-dependent: users
+must install the .NET 10 Runtime. Publish the two apphosts as framework-dependent single
+files:
 
 ```powershell
 $rid = 'win-x64'
@@ -53,8 +54,10 @@ dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r win-x64 `
   --self-contained true -p:FiveDoNativeAot=true -p:PublishSingleFile=true
 ```
 
-CI builds `5do-win-x64.zip`, `5do-linux-x64.tar.gz`, and `5do-osx-x64.tar.gz` and
-publishes them to the GitHub release.
+CI builds `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`,
+`5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`,
+`5do-<version>-osx-x64.tar.gz`, and `5do-<version>-osx-arm64.tar.gz` and publishes them
+to the GitHub release.
 
 ## Documentation
 

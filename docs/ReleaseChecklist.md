@@ -1,11 +1,13 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.2.1 is the current release**; unified Windows/Linux/macOS x64/arm64
+**Release timing:** **v1.2.2 is the current release**; unified Windows/Linux/macOS x64/arm64
 bundles are built from the same gates used for v1.0.0 and v1.1.0.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
 full-compatibility one. v1.1.0 was a maintenance update; v1.2.0 added features,
-accuracy telemetry, and broader disc support; v1.2.1 adds arm64 bundles.
+accuracy telemetry, and broader disc support; v1.2.1 added arm64 bundles; v1.2.2 adds
+interpreter/high-res/rewind performance, the opt-in managed JIT, library health and
+database work, memory capacity options, and eight PBUS ports.
 Ship the platforms and titles that are validated, publish an honest per-title matrix
 and known issues, and move everything else to the post-1.0 backlog.
 
@@ -34,6 +36,27 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       desktop `--smoke-test`; the macOS x64 bundle is cross-published on Linux and
       validated as Mach-O x86_64, matching the v1.0.0 runtime-validation scope.
 - [x] Publish `v1.1.0` and verify `SHA256SUMS.txt`.
+
+---
+
+## 1.2.2 performance and library gate
+
+- [ ] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.2.2`.
+- [ ] Update `CHANGELOG.md`, `docs/WhatsNew.md`, `docs/ReleaseNotes-1.2.2.md`,
+      `README.md`, `docs/Status.md`, `docs/index.md`, and `docs/Installation.md`.
+- [ ] Update the MkDocs navigation and the curated wiki sidebar with the 1.2.2 pages.
+- [ ] Full suite **1,808/1,808** passes; `dotnet format --verify-no-changes` is clean.
+- [ ] Benchmark gate passes with 0 bytes/frame and p99 within budget.
+- [ ] Build all six framework-dependent single-file bundles and keep local copies in
+      `src/FiveDo.Frontend.Avalonia/bin/Release` without deleting older artifacts.
+- [ ] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
+      `whatsnew.md`, the release notes, and the legal notices, and contains no
+      `runtime/`, `*.pdb`, or `*.xml` files.
+- [ ] Verify the x64 CLI `selftest` and desktop `--smoke-test`; verify arm64 apphost
+      machine types.
+- [ ] Create and push tag `v1.2.2`; the release workflow publishes six versioned bundles
+      and `SHA256SUMS.txt`.
+- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki.
 
 ---
 
@@ -85,15 +108,15 @@ been validated.**
 | Item | Recommended v1 scope | Notes |
 |---|---|---|
 | Validated desktop platform | **Windows x64** | WGL and ANGLE/GLES validated; CPU fallback works |
-| Secondary desktop builds | **Linux x64** (full suite and CLI/frontend smoke passed; GL preview); macOS x64 post-1.0 | Linux GPU presentation is unvalidated under llvmpipe; Windows GL remains the validated renderer |
-| Desktop arm64 | **Post-1.0** | GLES 3.1, Tier B timing, and DPI are unvalidated; Raspberry Pi is out of scope |
+| Secondary desktop builds | **Linux x64** (full suite and CLI/frontend smoke passed; GL preview); macOS x64/arm64 built and architecture-validated | Linux GPU presentation is unvalidated under llvmpipe; Windows GL remains the validated renderer |
+| Desktop arm64 | **Built and architecture-validated**; runtime validation post-1.0 | GLES 3.1, Tier B timing, and DPI are unvalidated; Raspberry Pi is out of scope |
 | Compatibility set | 12 boot-validated titles, with 5 showcase titles | Per-title status must be honest |
 | Disc formats | ISO, BIN, CUE+BIN, CHD | Already implemented and tested |
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
 | Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-x64.tar.gz`, `5do-<version>-osx-arm64.tar.gz`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 10 runtime is a host prerequisite and is not bundled |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
-| Version | **`v1.2.1`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, and rc.1 are historical |
-| Release timing | **Released** | v1.2.1 bundles and checksums are attached to the GitHub release |
+| Version | **`v1.2.2`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, v1.2.0, v1.2.1, and rc.1 are historical |
+| Release timing | **Prepared 2026-11-06** | v1.2.2 bundles and checksums are attached to the GitHub release |
 
 ---
 
@@ -166,7 +189,7 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - [x] `dotnet build 5DO.sln -c Release` passes with 0 warnings and 0 errors
       (1.0.0).
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release` passes:
-      **1,597/1,597** with the current tree.
+      **1,808/1,808** with the current tree.
 - [x] `dotnet format 5DO.sln --verify-no-changes` passes.
 - [x] `jb inspectcode 5DO.sln --severity=WARNING` reports 0 warnings and 0 errors
       (2026-11-02).

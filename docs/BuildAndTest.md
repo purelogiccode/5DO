@@ -12,7 +12,7 @@ NativeAOT details, see [`Trimming.md`](Trimming.md). For packaging contents, see
 | Requirement | Version / notes |
 |---|---|
 | .NET SDK | **10.0.301** (pinned by `global.json` with `rollForward: disable`). |
-| OS | Windows 10+ (validated), current Linux desktop, macOS 12+ (publish outputs only for the latter two in the current release scope). |
+| OS | Windows 10+ (validated), a current Linux desktop, or macOS 12+. Linux and macOS bundles are built and architecture-validated; runtime validation is post-1.0. |
 | GPU | OpenGL 3.3 desktop or OpenGL ES 3.0/3.1 for the GPU presenter. The CPU fallback runs without one. |
 | Audio | No system OpenAL install is required. OpenAL Soft 1.23.1 is bundled by the build. |
 | Optional | A legally obtained 3DO BIOS (1 MB) and disc images for real-content validation. Tests do not need them. |
@@ -85,7 +85,7 @@ dotnet build 5DO.sln -c Release
 dotnet test 5DO.sln -c Release
 ```
 
-The current suite is **1,597 tests** (verified 2026-11-03) and completes in a few seconds
+The current suite is **1,808 tests** (verified 2026-11-06) and completes in a few seconds
 on the development machine. The build treats warnings as errors and runs the .NET
 analyzers plus Meziantou and Roslynator analyzers.
 
@@ -440,7 +440,7 @@ The bundle contains both framework-dependent apphosts and their native libraries
 commit, and build time. Linux bundles also include `5do.desktop`. PDB and XML
 documentation files are removed, and no .NET runtime is copied into the bundle. The
 archive name includes the product version, for example
-`5do-1.2.1-win-x64.zip`, `5do-1.2.1-win-arm64.zip`, or `5do-1.2.1-linux-arm64.tar.gz`; the version is read from
+`5do-1.2.2-win-x64.zip`, `5do-1.2.2-win-arm64.zip`, or `5do-1.2.2-linux-arm64.tar.gz`; the version is read from
 `Directory.Build.props` unless `-Version` is supplied.
 
 ---
@@ -510,7 +510,7 @@ Key properties in `Directory.Build.props`:
 | `ImplicitUsings` | `disable` |
 | `TreatWarningsAsErrors` | `true` |
 | `Deterministic` | `true` |
-| `Version` | `1.2.1` |
+| `Version` | `1.2.2` |
 | `InvariantGlobalization` | `true` |
 | `EnableNETAnalyzers` | `true` |
 | `AnalysisLevel` | `latest-recommended` |

@@ -1,11 +1,11 @@
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan and Missing-Feature Backlog
 
-**Snapshot:** 2026-11-04
-**Current release:** `1.2.1`
+**Snapshot:** 2026-11-06
+**Current release:** `1.2.2`
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master`<br>
-**Status:** **1,802 tests pass** (last recorded); `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
+**Status:** **1,808 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **0 results**.<br>
 **Goal:** implement **every Opera core feature**, match or exceed Opera's accuracy, and ship the best standalone 3DO emulator on Windows, Linux, and macOS.
 
 > **This is the single source of truth.** It replaces the former 8,000-line dashboard, milestone log, feature spec, parity audit, and session handoff. Historical evidence stays in the linked docs; this file is the canonical backlog.
@@ -42,12 +42,12 @@
 | Renderer | Two-stage OpenGL/GLES (default), optional Vulkan (Windows surface), optional Direct3D 11 (Windows), 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR, per-edge overscan, void border, screenshot gallery | True 640x480/480i CEL rendering, supersampling, GPU CEL, shader presets, NTSC/HDR, recording, overlays/bezels, Linux/macOS Vulkan surfaces, 480i deinterlacing |
 | Audio | Exact 44.1 kHz DSP clock, OpenAL Soft output, WAV capture, `audio analyze`, CD-DA mixing/volume/mute | Resampler quality/exclusive mode/sync offset, mixer/spectrum, DSP debugger, audio golden corpus |
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing, M3U multi-disc playlist, live swap, guest inject, Opera file system, prefetch, DAT health | Full CD command/timing parity, subcode, read-ahead, known-title CD-DA evidence, real in-game multi-disc swap, ODE prompts, physical drive, image conversion |
-| Compatibility | 594 discs: **594 load**, **593 render**, 1 known boot failure (Crash 'n Burn Japan), 0 not loadable | 594/594 render; visual/in-game review; per-game auto-profiles |
+| Compatibility | 594-disc sweep: **594 load**, **593 render**, 1 known boot failure (Crash 'n Burn Japan), 0 not loadable; library catalogues **653 games across 1,366 images** | 594/594 render; visual/in-game review; per-game auto-profiles |
 | Differential harness | FiveDO.DiffHarness, checkpoints, audio/state hashes, smoke + five-title showcase, 594-title manifest generator | Full 594-title run, PC-delta triage, CD/state transcripts, nightly dashboard |
-| Tests | **1,802** passing; fuzz harness for six parsers; build/format/inspectcode clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
+| Tests | **1,808** passing; fuzz harness for six parsers; build/format/inspectcode clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K Tier A measured; zero-allocation synthetic path | Tier B 1080p60, GLES 3.1/ANGLE, arm64 tuning, threaded DSP, managed JIT, zero allocations on all real paths |
 | Platforms | Six bundles: Windows/Linux/macOS × x64/arm64, framework-dependent single-file apphosts; Windows x64 validated; Linux x64 tests/smoke pass (GPU preview under llvmpipe); macOS and arm64 cross-published but not hardware-validated | macOS runtime validation, arm64 hardware validation, Linux/macOS GPU presentation, macOS gamepad, Flatpak/AppImage, installers/signing |
-| Release | **v1.2.1** published with six versioned bundles and `SHA256SUMS.txt`; .NET 10 runtime required (not bundled); legal/attribution sign-off recorded | Signing, notarization, auto-update, reproducible builds, SBOM |
+| Release | **v1.2.2** published with six versioned bundles and `SHA256SUMS.txt`; .NET 10 runtime required (not bundled); legal/attribution sign-off recorded | Signing, notarization, auto-update, reproducible builds, SBOM |
 
 **Scope decisions (unchanged):** WebAssembly/browser, Android/iOS, Raspberry Pi, and Steam Deck are **out of scope**. Desktop Windows, Linux, and macOS (x64/arm64) remain the supported targets. 4K *internal* CEL rendering is research, not a release blocker; 4K *output* upscaling is supported. Distribution remains free, open-source **donationware** under the FreeDO modified GNU LGPL (non-commercial; voluntary donations only).
 
@@ -63,7 +63,7 @@ These are done and must not regress. They are listed here once; the backlog belo
 | Audio | Exact 44.1 kHz clock; OpenAL Soft; WAV capture; `audio analyze`; CD-DA mix; volume/mute; audio-driven pacing |
 | Frontend | Library scan/dedupe; favorites/playtime/history; offline metadata editor; settings; keyboard/gamepad bindings; ten save slots with thumbnails; screenshot gallery; log viewer; disc browser/info; BIOS/NVRAM manager; OSD/quick menu; input display; playlist editor; portable mode; instance lock; diagnostics bundle; startup update check; startup auto-open of the last BIOS/disc |
 | CLI | `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks/verify/playlist`, `library verify`, `fs`, `bios`, `nvram`, `cheat`, `movie`, `settings`, `audio`, `state`, `disasm`, `update` |
-| Release | v1.2.1 six bundles; versioned archives; checksums; legal/attribution sign-off; OpenAL LGPL obligations |
+| Release | v1.2.2 six bundles; versioned archives; checksums; legal/attribution sign-off; OpenAL LGPL obligations |
 
 **Completed IDs (traceability only):** FND-01, FND-02, FND-03, CORE-09, CORE-12, CORE-14, CORE-15, SYS-04, SYS-07, SYS-09, SYS-10, SYS-11, SYS-13, SYS-14, VID-05, VID-06, VID-14, VID-15, AUD-05, UX-01, UX-02, UX-04, UX-11, UX-12, UX-15, UX-19, UX-23, ENG-03, BAK-12, BAK-17.
 
@@ -543,6 +543,7 @@ Append new entries here; do not delete history. Each entry is a completed canoni
 - **2026-11-04 - SYS-12 Portfolio OS SWI HLE.** Ported Opera's 14 fixed-point math SWIs (`0x50000`-`0x50012`, with the object/Dot4 cases left to the guest), added `--swi-hle`/Settings/profile/state v9 plumbing, `--swi-comments` histograms, 33 CPU/machine tests that match `opera_fixedpoint_math.c`, and a real-BIOS synthetic 4x4 benchmark. Default-off hashes are unchanged; HLE is an opt-in performance mode and intentionally skips the guest handler's cycles and register clobbers, so some titles (AutoBahn Tokio, Ballz) change frame hashes.
 - **2026-11-04 - FND-01 machine option registry.** Added `MachineOptionRegistry` (13 validated options with CLI/Settings/profile/state mappings), typed `MachineOptionValidationException`/`UnknownMachineOptionException`, Opera DIPIR and soft-reset controls, `--opera-dipir`/`--opera-soft-reset`/`--cpu-backend`, `settings options` generated documentation, `docs/MachineOptions.md`, save-state Options v7 coverage for every option, mismatch warnings, and CLI/Settings/profile parity tests.
 - **2026-11-04 - Plan rewrite.** Consolidated the former dashboard, parts I-IV, feature spec, parity audit, and handoff into this single backlog; retired duplicate `BAK-*`/`MOON-*` trackers.
+- **2026-11-06 — v1.2.2.** Six framework-dependent single-file bundles plus `SHA256SUMS.txt`; interpreter, high-resolution VDLP, and rewind performance; opt-in managed JIT; expanded game database; library health/DAT verification and duplicate image counts; eight Opera memory layouts; eight PBUS ports; opt-in Portfolio OS SWI HLE; audio-only CHD cataloging; 1,808 tests.
 - **2026-11-03 — v1.2.1.** Six x64/arm64 bundles plus `SHA256SUMS.txt`; CI verified every apphost machine type and every checksum.
 - **2026-11-03 — v1.2.0.** Direct3D 11 presenter, startup release checks, deterministic fuzz harness, per-edge overscan/void border, screenshot gallery filters/compare/export, display-refresh control, flat CHD/raw ISO detection, FIQ/DSP telemetry, CLIO/DIPIR/FIFO/MCTL/XBUS audit fixes.
 - **2026-11-02 — Hardening pass.** Fuzz harness, overscan profiles, gallery features, FIQ request-to-vector latency, DSP per-tick statistics, 1,622 tests.

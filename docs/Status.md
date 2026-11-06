@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-06, after the 1.2.1 arm64 packaging update, the 1.2.0 feature/accuracy update, the rewind-capture stall fix, SYS-12 SWI HLE, SYS-17 game-database expansion, SYS-08 clock validation, the third PERF-08 JIT pass, the ENG-02 interpreter hot-path increment, and the PERF-05 high-resolution VDLP copy: Direct3D 11,
+**Snapshot:** 2026-11-06, after the 1.2.2 performance/library update, the 1.2.1 arm64 packaging update, the 1.2.0 feature/accuracy update, the rewind-capture stall fix, SYS-12 SWI HLE, SYS-17 game-database expansion, SYS-08 clock validation, the third PERF-08 JIT pass, the ENG-02 interpreter hot-path increment, and the PERF-05 high-resolution VDLP copy: Direct3D 11,
 startup release checks, the fuzz harness, per-edge overscan/void border, screenshot
 gallery filters, FIQ/DMA/DSP telemetry, flat CHD/raw ISO support, and display-refresh
 control. The earlier first full-collection sweep, performance, timing-option, BIOS,
@@ -48,8 +48,16 @@ open-source donationware (non-commercial; voluntary donations only). M13 loadabi
 complete; M13.5/M13.6 visual/high-resolution review and M14 high-resolution CEL research
 are **post-1.0**.
 
-**Arm64 packaging update (2026-11-03):** **v1.2.1** is the current release, published at
-<https://github.com/purelogiccode/5DO/releases/tag/v1.2.1>. It adds
+**Performance and library update (2026-11-06):** **v1.2.2** is the current release,
+published at <https://github.com/purelogiccode/5DO/releases/tag/v1.2.2>. It adds the
+interpreter, high-resolution VDLP, and rewind performance work; the opt-in managed JIT;
+the expanded game database and library health/DAT verification; eight Opera memory
+layouts; eight PBUS ports; opt-in Portfolio OS SWI HLE; and audio-only CHD cataloging.
+The suite is **1,808 tests**.
+
+**Arm64 packaging update (2026-11-03):** **v1.2.1** was the arm64 packaging release,
+published at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.2.1>. It added
 framework-dependent Windows arm64, Linux arm64, and macOS arm64 bundles alongside the
 x64 bundles, for six versioned archives plus `SHA256SUMS.txt`. CI verifies each arm64
 apphost's PE/ELF/Mach-O machine type; the x64 bundles keep their runtime smoke tests.
@@ -62,7 +70,7 @@ Windows Direct3D 11 presenter, startup GitHub release checks, deterministic fuzz
 per-edge overscan/void border, screenshot gallery filters/compare/export, display-refresh
 control, flat 2048-byte CHD and raw `.iso` detection, FIQ request-to-vector latency
 telemetry, DSP per-tick statistics, and the CLIO/DIPIR/FIFO/MCTL/XBUS audit fixes. The
-full suite is **1,597/1,597** passing. WebAssembly/browser, Android/iOS, and Raspberry Pi
+1.2.0 suite was **1,597/1,597** passing. WebAssembly/browser, Android/iOS, and Raspberry Pi
 were removed from the roadmap; desktop Windows/Linux/macOS remain supported. The three
 versioned bundles and `SHA256SUMS.txt` are attached to the release; every checksum was
 verified after publication.
@@ -72,7 +80,7 @@ verified after publication.
 library deduplication by 3DO game ID, moves the OpenAL license text to
 `docs/OpenAL-Soft-COPYING.txt`, removes the frame/PC/cycle counter from the desktop
 status bar, and completes the Serilog catch-block coverage and launch-statistics
-wiring. The full suite is **1,597/1,597** passing. The bundle layout is unchanged:
+wiring. The 1.1.0 suite was **1,597/1,597** passing. The bundle layout is unchanged:
 framework-dependent single-file apphosts, no bundled .NET runtime, no PDB/XML files.
 
 **Latest work (2026-11-05):** Settings > Paths now edits game library folders directly
@@ -111,7 +119,7 @@ DRAM, VDLP/SPORT/CEL use the live layout, and MADAM RED SYSBITS reports the capa
 the BIOS. A homebrew probe ROM uses 4 MB DRAM + 2 MB VRAM; retail titles remain on the
 stock 2 MB/1 MB default because Opera documents expanded memory as homebrew-only. The
 CPU-clock matrix (0.5x-4x) and `bench --cpu-clock`/`--memory` were also added; the suite
-is **1,802 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al, 1.1an, 1.1ao, 1.1aq, 1.1ar, 1.1as, 1.1at, and
+is now **1,808 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al, 1.1an, 1.1ao, 1.1aq, 1.1ar, 1.1as, 1.1at, and
 [`Performance.md`](Performance.md) 8.1.
 
 **Latest work (2026-11-02):** the CLI and desktop shell check the public GitHub release
@@ -128,7 +136,7 @@ per-game crop profiles with a configurable void border, and screenshot gallery f
 side-by-side compare, export, and settings sidecars. The same pass added FIQ
 request-to-vector latency telemetry and `--fiq-trace` request/entry lines, closed the
 CLIO output-FIFO/DIPIR/MADAM-MCTL/XBUS poll audit gaps, and exposed DSP per-tick
-statistics in `run --json`. The suite is **1,597 tests**.
+statistics in `run --json`. The 1.2.0 suite was **1,597 tests**.
 
 SYS-01 and AUD-05 now expose multi-track CUE/CHD tables and CD-DA: `ITrackedDiscSource`
 carries native 2048/2336/2352-byte sectors, `CueDiscImage` handles multi-file/multi-track
@@ -734,7 +742,7 @@ artifacts and checksums are attached to the GitHub release.
 release scope. v1.0.0 is published on GitHub with the release artifacts.
 
 **Release decisions (2026-11-02):** Windows x64 is validated; Linux x64 CLI/frontend
-smoke and the full test suite passed (GPU presentation is preview/best-effort); the current release version is `1.2.1`;
+smoke and the full test suite passed (GPU presentation is preview/best-effort); the current release version is `1.2.2`;
 installers, signing, and notarization are post-1.0; the compatibility set is the 12
 documented titles, with five showcase titles carrying scripted gameplay evidence. The
 distribution model is recorded as **donationware** (non-commercial, source-available).
