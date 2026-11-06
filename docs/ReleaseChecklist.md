@@ -59,9 +59,16 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       `runtime/`, `*.pdb`, or `*.xml` files.
 - [x] Verify the x64 CLI `selftest` and desktop `--smoke-test`; verify arm64 apphost
       machine types.
-- [ ] Create and push tag `v1.3.0`; the release workflow publishes six versioned
-      bundles and `SHA256SUMS.txt`.
-- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki.
+- [x] Create and push tag `v1.3.0`; the release workflow published six versioned
+      bundles and `SHA256SUMS.txt`:
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.3.0>. CI run
+      <https://github.com/purelogiccode/5DO/actions/runs/42235476257> passed all six
+      bundle jobs and the publish job; all six checksums verify. Local bundles are in
+      `src/FiveDo.Frontend.Avalonia/bin/Release`; every historical release asset is
+      archived under `github-releases/` there.
+- [x] Confirm the docs workflow deploys the Pages site and publishes the wiki. CI run
+      <https://github.com/purelogiccode/5DO/actions/runs/42235456021> passed; the
+      1.3.0 release page, What's New, release notes, and wiki page return HTTP 200.
 
 ---
 

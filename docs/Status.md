@@ -59,6 +59,13 @@ frame, and high-resolution output remains 640x480. The CLI and core default to b
 desktop defaults to auto. No local title is confirmed 480i, so synthetic complementary
 field tests are the current 480i evidence.
 
+Release workflow <https://github.com/purelogiccode/5DO/actions/runs/42235476257> passed
+all six bundle jobs and published six versioned archives plus `SHA256SUMS.txt`; the docs
+workflow <https://github.com/purelogiccode/5DO/actions/runs/42235456021> deployed the
+Pages site and wiki. All release checksums verify. Local bundles and an archive of every
+historical release asset are kept under
+`src/FiveDo.Frontend.Avalonia/bin/Release`.
+
 **Performance and library update (2026-11-06):** **v1.2.2** was the previous release,
 published at <https://github.com/purelogiccode/5DO/releases/tag/v1.2.2>. It adds the
 interpreter, high-resolution VDLP, and rewind performance work; the opt-in managed JIT;

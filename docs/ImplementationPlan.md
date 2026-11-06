@@ -524,7 +524,7 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
 
-- **2026-11-06 - v1.3.0.** Six framework-dependent single-file bundles plus `SHA256SUMS.txt`; 480i/240p field handling (auto detection, bob, weave, blend), interlace-aware viewport geometry, screenshot/GIF support, per-game and CLI mode selection, and 1,833 tests. The release is presentation-only over 1.2.2: default bob hashes and save states are unchanged.
+- **2026-11-06 - v1.3.0.** Six framework-dependent single-file bundles plus `SHA256SUMS.txt`; 480i/240p field handling (auto detection, bob, weave, blend), interlace-aware viewport geometry, screenshot/GIF support, per-game and CLI mode selection, and 1,833 tests. The release is presentation-only over 1.2.2: default bob hashes and save states are unchanged. Release workflow <https://github.com/purelogiccode/5DO/actions/runs/42235476257>; docs/wiki workflow <https://github.com/purelogiccode/5DO/actions/runs/42235456021>.
 
 - **2026-11-06 - VID-04 480i/240p field handling.** Added `InterlaceProcessor` with bob, weave, blend, and content-based auto detection; wired it through `FiveDoMachine`, `AppSettings`/`GameProfile`, Settings > Video, screenshots/GIF, and `--deinterlace`; added `VdlFrame.PixelAspect` and interlace-aware viewport scaling so a woven 320x480 frame keeps its display geometry and integer scaling. Sixteen processor tests plus bob-vs-auto hashes on five local titles (3,000 frames for Road Rash, Space Ace, and Alone in the Dark) are unchanged. See `Video.md` §1.
 
