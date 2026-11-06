@@ -40,9 +40,11 @@ public sealed class ArmJitTests
             ArmTestAssembler.DpRegisterShiftedByRegister(13, 7, 0, 0, 6, shiftType: 0),
             ArmTestAssembler.DpRegisterShiftedByRegister(13, 8, 0, 0, 6, shiftType: 1),
             ArmTestAssembler.DpRegisterShiftedByRegister(13, 9, 0, 0, 6, shiftType: 2),
-            ArmTestAssembler.DpRegisterShiftedByRegister(13, 10, 0, 0, 6, shiftType: 3));
+            ArmTestAssembler.DpRegisterShiftedByRegister(13, 10, 0, 0, 6, shiftType: 3),
+            ArmTestAssembler.Mov(12, 0),
+            ArmTestAssembler.DpRegisterShiftedByRegister(13, 11, 0, 0, 12, shiftType: 0, setFlags: true));
 
-        pair.RunBlocks(11);
+        pair.RunBlocks(13);
     }
 
     [Fact]
