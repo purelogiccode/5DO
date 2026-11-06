@@ -15,12 +15,18 @@ not product configuration.
   staging.
 - `showcase.json` - the five-title showcase with 3,000-frame checkpoints, a
   two-frame offset window, and checkpoint images.
+- `samples5.json` - the local `D:/Samples/3DO` five-title TEST-07 panel:
+  300 frames, checkpoints 60/120/300, fixed seed 1488, PC/CPSR/CD comparison,
+  and a 512-sample tolerance for the 59.94/60 Hz field-rate offset.
+- `panel50.json` - the generated 50-title TEST-07 accuracy panel: evenly spaced
+  titles from `full.json`, 300 frames, checkpoints 60/120/300, PC/CPSR/CD
+  comparison, sample tolerance 512. Run it on a machine with the full corpus.
 - `full.json` - the generated 594-disc collection manifest. Its `roots` object
   currently points at the machine-specific `J:/Panasonic 3DO` and
   `G:/MAME/MAME Software List CHDs/3do` paths; every title uses `${games}` or
   `${games2}` so only the roots need editing on another machine.
 
-Both manifests assume the local corpus and the BIOS at `bios/panafz1.bin`.
+These manifests assume the local corpus and the BIOS at `bios/panafz1.bin`.
 Relative paths resolve from the repository root. The harness stages the OperaCore
 DLL and BIOS under `artifacts/diff/work/` and never modifies `References/` or the
 disc collection.
@@ -36,6 +42,13 @@ tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
 
 tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/showcase.json --out artifacts/diff/showcase
+
+# TEST-07 panel: fixed seed, PC/CPSR/CD comparison.
+# Build the debug core first (see docs/DifferentialHarness.md section 2).
+tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+  run benchmarks/diff/samples5.json --out artifacts/diff/test07-samples5 `
+  --no-images --seed 1488 --compare-cd `
+  --core artifacts/diff/opera-build-current/OperaCore.dll
 ```
 
 The reference core is paced to 60 Hz, so 3,000 frames take about 50 seconds per

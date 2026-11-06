@@ -290,6 +290,17 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <summary>Gets or sets an optional observer invoked for each executed command (diagnostics only).</summary>
     public Action<byte>? CommandObserver { get; set; }
 
+    /// <summary>
+    /// Gets or sets an optional observer invoked when the first command byte (opcode)
+    /// is written (diagnostics only).
+    /// </summary>
+    /// <remarks>
+    /// This fires at the same protocol phase as the reference core's command hook,
+    /// before the remaining six command bytes arrive. Use it for issue-time command
+    /// counts and hashes; use <see cref="CommandObserver"/> for executed commands.
+    /// </remarks>
+    public Action<byte>? CommandOpcodeObserver { get; set; }
+
     /// <summary>Gets or sets an optional observer invoked after a command has completed (diagnostics only).</summary>
     /// <remarks>
     /// Unlike <see cref="CommandObserver"/>, this callback runs after the command handler
@@ -585,6 +596,11 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <inheritdoc />
     public void SetCommand(byte value)
     {
+        if (_commandPointer == 0)
+        {
+            CommandOpcodeObserver?.Invoke(value);
+        }
+
         if (UseOperaPollSemantics && (_poll & PollResetMask) != 0)
         {
             return;

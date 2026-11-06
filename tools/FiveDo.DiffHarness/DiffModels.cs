@@ -148,8 +148,20 @@ internal sealed class DiffCompareOptions
     /// <summary>Gets the allowed absolute PC delta in bytes when PC comparison is enabled.</summary>
     public long PcTolerance { get; init; }
 
+    /// <summary>Gets whether the ARM CPSR is compared when both sides expose it.</summary>
+    public bool CompareCpsr { get; init; }
+
+    /// <summary>Gets whether the cumulative CD command count and hash are compared.</summary>
+    public bool CompareCd { get; init; }
+
     /// <summary>Gets whether the DSP sample count is compared.</summary>
     public bool? CompareSamples { get; init; } = true;
+
+    /// <summary>
+    /// Gets the allowed absolute DSP sample-count delta. Opera paces fields at 59.94 Hz
+    /// while 5DO uses 60 Hz, so a 300-frame run differs by about 212 samples.
+    /// </summary>
+    public long SampleTolerance { get; init; }
 
     /// <summary>
     /// Gets the frame window used to diagnose frame-hash offsets. A non-zero window
@@ -237,6 +249,9 @@ internal sealed class CaptureResult
 
     /// <summary>Gets the path to the engine's stderr log.</summary>
     public string? LogPath { get; init; }
+
+    /// <summary>Gets the deterministic PRNG seed used for this capture, when one was applied.</summary>
+    public uint? Seed { get; init; }
 }
 
 /// <summary>One checkpoint sample.</summary>
@@ -247,6 +262,9 @@ internal sealed class CaptureSample
 
     /// <summary>Gets the ARM program counter, when the engine exposes it.</summary>
     public uint? Pc { get; init; }
+
+    /// <summary>Gets the ARM current program status register, when the engine exposes it.</summary>
+    public uint? Cpsr { get; init; }
 
     /// <summary>Gets the retired ARM instruction count, when the engine exposes it.</summary>
     public long? Instructions { get; init; }
@@ -271,6 +289,12 @@ internal sealed class CaptureSample
 
     /// <summary>Gets the CD-ROM poll byte.</summary>
     public int? CdPoll { get; init; }
+
+    /// <summary>Gets the cumulative hash of guest CD command opcodes.</summary>
+    public uint? CdCommandHash { get; init; }
+
+    /// <summary>Gets the number of guest CD commands issued.</summary>
+    public int? CdCommandCount { get; init; }
 
     /// <summary>Gets the DSP program counter.</summary>
     public uint? DspPc { get; init; }
@@ -355,6 +379,9 @@ internal sealed class DiffProvenance
     /// <summary>Gets the emulation-profile override applied to every 5DO capture, when any.</summary>
     public string? ProfileOverride { get; init; }
 
+    /// <summary>Gets the fixed PRNG seed applied to both engines.</summary>
+    public uint? Seed { get; init; }
+
     /// <summary>Gets the host operating system.</summary>
     public string Host { get; init; } = string.Empty;
 
@@ -403,6 +430,31 @@ internal sealed class DiffTitleResult
 
     /// <summary>Gets the largest absolute Opera-minus-5DO PC delta across checkpoints.</summary>
     public long? MaxPcDelta { get; init; }
+
+    /// <summary>Gets the first unexplained field divergence, when one exists.</summary>
+    public DiffFirstDivergence? FirstDivergence { get; init; }
+}
+
+/// <summary>The first checkpoint field that diverged without an allowance.</summary>
+internal sealed class DiffFirstDivergence
+{
+    /// <summary>Gets the checkpoint frame.</summary>
+    public long Frame { get; init; }
+
+    /// <summary>Gets the field name.</summary>
+    public string Field { get; init; } = string.Empty;
+
+    /// <summary>Gets the 5DO value, formatted for the report.</summary>
+    public string? FiveDo { get; init; }
+
+    /// <summary>Gets the Opera value, formatted for the report.</summary>
+    public string? Opera { get; init; }
+
+    /// <summary>Gets an explanatory diagnostic, when available.</summary>
+    public string? Diagnostic { get; init; }
+
+    /// <summary>Gets the tracking issue, when the divergence is known.</summary>
+    public string? Issue { get; init; }
 }
 
 /// <summary>One checkpoint's comparison.</summary>
@@ -494,6 +546,9 @@ internal sealed class DiffSummary
     /// <summary>Gets the total unexplained field divergences.</summary>
     public int DivergedFields { get; init; }
 
+    /// <summary>Gets the number of titles with a reported first divergence.</summary>
+    public int FirstDivergenceTitles { get; init; }
+
     /// <summary>Gets the report verdict.</summary>
     public bool Passed => Diverged == 0 && Offset == 0 && Errors == 0;
 }
@@ -539,6 +594,15 @@ internal sealed class HarnessOptions
 
     /// <summary>Gets or sets whether PC comparison is forced on.</summary>
     public bool ComparePc { get; set; }
+
+    /// <summary>Gets or sets whether CD command comparison is forced on.</summary>
+    public bool CompareCd { get; set; }
+
+    /// <summary>Gets or sets whether audio comparison is forced on.</summary>
+    public bool CompareAudio { get; set; }
+
+    /// <summary>Gets or sets the deterministic PRNG seed override.</summary>
+    public uint? Seed { get; set; }
 
     /// <summary>Gets or sets the PC tolerance override in bytes.</summary>
     public long? PcTolerance { get; set; }

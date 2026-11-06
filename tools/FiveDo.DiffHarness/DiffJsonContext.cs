@@ -18,6 +18,7 @@ namespace FiveDo.DiffHarness;
 [JsonSerializable(typeof(DiffReport))]
 [JsonSerializable(typeof(DiffProvenance))]
 [JsonSerializable(typeof(DiffTitleResult))]
+[JsonSerializable(typeof(DiffFirstDivergence))]
 [JsonSerializable(typeof(DiffCheckpointResult))]
 [JsonSerializable(typeof(DiffFieldResult))]
 [JsonSerializable(typeof(DiffSummary))]

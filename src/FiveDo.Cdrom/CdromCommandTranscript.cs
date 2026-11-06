@@ -52,14 +52,43 @@ public sealed record CdromCommandEntry(
 /// </remarks>
 public sealed class CdromCommandTranscript
 {
+    private const uint FnvOffsetBasis = 2166136261u;
+    private const uint FnvPrime = 16777619u;
+
     private readonly List<CdromCommandEntry> _entries = [];
     private CdromDevice? _device;
+    private uint _hash = FnvOffsetBasis;
+    private uint _issuedHash = FnvOffsetBasis;
+    private int _issuedCount;
+    private Action<byte>? _previousOpcodeObserver;
+    private Action<byte>? _issuedObserver;
 
     /// <summary>Gets the captured entries in execution order.</summary>
     public IReadOnlyList<CdromCommandEntry> Entries => _entries;
 
     /// <summary>Gets the number of captured commands.</summary>
     public int Count => _entries.Count;
+
+    /// <summary>Gets the number of commands observed at issue time.</summary>
+    /// <remarks>
+    /// Issue-time counting matches the reference core's command hook. A command
+    /// that is still executing at a checkpoint is counted here but not in
+    /// <see cref="Count"/>, which only records completed commands.
+    /// </remarks>
+    public int IssuedCount => _issuedCount;
+
+    /// <summary>Gets the cumulative FNV-1a hash of command opcodes at issue time.</summary>
+    public uint IssuedHash => _issuedHash;
+
+    /// <summary>
+    /// Gets the cumulative FNV-1a hash of completed command opcodes in execution order.
+    /// </summary>
+    /// <remarks>
+    /// This is the transcript hash used for diagnostics. Differential runs use
+    /// <see cref="IssuedHash"/> because the reference core observes the opcode when
+    /// it is written, before the command completes.
+    /// </remarks>
+    public uint Hash => _hash;
 
     /// <summary>Attaches the recorder to a device. A previous attachment is replaced.</summary>
     /// <param name="device">Device to observe.</param>
@@ -68,6 +97,13 @@ public sealed class CdromCommandTranscript
     {
         ArgumentNullException.ThrowIfNull(device);
         _device = device;
+        _previousOpcodeObserver = device.CommandOpcodeObserver;
+        _issuedObserver = opcode =>
+        {
+            _previousOpcodeObserver?.Invoke(opcode);
+            CaptureIssued(opcode);
+        };
+        device.CommandOpcodeObserver = _issuedObserver;
         device.CommandCompleted = Capture;
     }
 
@@ -79,11 +115,26 @@ public sealed class CdromCommandTranscript
             _device.CommandCompleted = null;
         }
 
+        if (_device is not null
+            && _issuedObserver is not null
+            && ReferenceEquals(_device.CommandOpcodeObserver, _issuedObserver))
+        {
+            _device.CommandOpcodeObserver = _previousOpcodeObserver;
+        }
+
         _device = null;
+        _issuedObserver = null;
+        _previousOpcodeObserver = null;
     }
 
     /// <summary>Removes all captured entries without detaching.</summary>
-    public void Clear() => _entries.Clear();
+    public void Clear()
+    {
+        _entries.Clear();
+        _hash = FnvOffsetBasis;
+        _issuedHash = FnvOffsetBasis;
+        _issuedCount = 0;
+    }
 
     /// <summary>Formats every entry as a newline-separated transcript.</summary>
     /// <returns>The transcript, with a trailing newline when non-empty.</returns>
@@ -103,6 +154,12 @@ public sealed class CdromCommandTranscript
         return builder.ToString();
     }
 
+    private void CaptureIssued(byte opcode)
+    {
+        _issuedCount++;
+        _issuedHash = (_issuedHash ^ opcode) * FnvPrime;
+    }
+
     private void Capture()
     {
         CdromDevice? device = _device;
@@ -111,12 +168,14 @@ public sealed class CdromCommandTranscript
             return;
         }
 
-        _entries.Add(new CdromCommandEntry(
+        var entry = new CdromCommandEntry(
             device.FrameProvider?.Invoke() ?? -1,
             device.CommandBytes[0],
             device.CommandBytes.ToArray(),
             device.StatusBytes.ToArray(),
             device.Poll,
-            device.DriveStatus));
+            device.DriveStatus);
+        _entries.Add(entry);
+        _hash = (_hash ^ entry.Opcode) * FnvPrime;
     }
 }

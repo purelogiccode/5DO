@@ -84,10 +84,11 @@ internal static class DiffReportWriter
         text.Append("| Frame offset | ").Append(report.Summary.Offset).AppendLine(" |");
         text.Append("| Error | ").Append(report.Summary.Errors).AppendLine(" |");
         text.Append("| Skipped | ").Append(report.Summary.Skipped).AppendLine(" |");
+        text.Append("| Titles with first divergence | ").Append(report.Summary.FirstDivergenceTitles).AppendLine(" |");
         text.Append("| **Verdict** | **").Append(report.Summary.Passed ? "PASS" : "FAIL").AppendLine("** |");
         text.AppendLine();
-        text.AppendLine("| Title | Status | Frames | Checkpoints | Allowed fields | Diverged fields | PC delta | Error |");
-        text.AppendLine("|---|---|---:|---:|---:|---:|---:|---|");
+        text.AppendLine("| Title | Status | Frames | Checkpoints | Allowed fields | Diverged fields | PC delta | First divergence | Error |");
+        text.AppendLine("|---|---|---:|---:|---:|---:|---:|---|---|");
         foreach (var title in report.Titles)
         {
             text.Append("| ").Append(EscapeMarkdown(title.Name))
@@ -97,6 +98,9 @@ internal static class DiffReportWriter
                 .Append(" | ").Append(title.AllowedCount.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(title.DivergedCount.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(title.MaxPcDelta?.ToString(CultureInfo.InvariantCulture) ?? "-")
+                .Append(" | ").Append(title.FirstDivergence is { } first
+                    ? $"f={first.Frame} {first.Field}"
+                    : "-")
                 .Append(" | ").Append(EscapeMarkdown(title.Error ?? string.Empty))
                 .AppendLine(" |");
         }
@@ -112,6 +116,21 @@ internal static class DiffReportWriter
             {
                 text.AppendLine();
                 text.Append("### ").AppendLine(title.Name);
+                if (title.FirstDivergence is { } first)
+                {
+                    text.AppendLine();
+                    text.Append("**First divergence:** frame ").Append(first.Frame)
+                        .Append(", field `").Append(first.Field).Append("`, 5DO `")
+                        .Append(first.FiveDo ?? "-").Append("`, Opera `")
+                        .Append(first.Opera ?? "-").Append('`');
+                    if (first.Diagnostic is not null)
+                    {
+                        text.Append(" — ").Append(first.Diagnostic);
+                    }
+
+                    text.AppendLine();
+                }
+
                 if (title.Error is not null)
                 {
                     text.AppendLine();

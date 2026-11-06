@@ -17,7 +17,8 @@ internal static class FiveDoCaptureRunner
         string repoRoot,
         string manifestDirectory,
         string outputDirectory,
-        CliCommand cli)
+        CliCommand cli,
+        uint seed)
     {
         var frames = harness.Frames ?? DiffManifestLoader.ResolveFrames(manifest, title);
         var checkpoints = DiffManifestLoader.ResolveCheckpoints(manifest, title);
@@ -73,6 +74,8 @@ internal static class FiveDoCaptureRunner
             "--audio-hash",
             "--prefetch",
             "--json",
+            "--random-seed",
+            seed.ToString(CultureInfo.InvariantCulture),
             "--nvram",
             Path.Combine(titleDirectory, "nvram.ram"),
         };
@@ -166,6 +169,7 @@ internal static class FiveDoCaptureRunner
             {
                 Frame = sample.Frame,
                 Pc = sample.Pc,
+                Cpsr = sample.Cpsr,
                 Instructions = sample.Instructions,
                 FrameHash = sample.FrameHash,
                 Samples = sample.Samples,
@@ -173,6 +177,8 @@ internal static class FiveDoCaptureRunner
                 StateHash = sample.StateHash,
                 CdStatus = sample.CdStatus,
                 CdPoll = sample.CdPoll,
+                CdCommandHash = sample.CdCommandHash,
+                CdCommandCount = sample.CdCommandCount,
                 DspPc = sample.DspPc,
                 DspSema = sample.DspSema,
                 DspSeed = sample.DspSeed,
@@ -197,6 +203,7 @@ internal static class FiveDoCaptureRunner
             Checkpoints = [.. samples],
             Warnings = run.Warnings ?? [],
             LogPath = stderrPath,
+            Seed = seed,
         };
     }
 
@@ -215,7 +222,6 @@ internal static class FiveDoCaptureRunner
         AddValue(arguments, "--cd-timing", options.CdTiming);
         AddValue(arguments, "--cd-speed", options.CdSpeed);
         AddValue(arguments, "--cpu-clock", options.CpuClock);
-        AddValue(arguments, "--random-seed", options.RandomSeed);
         AddValue(arguments, "--fix-mode", options.FixMode);
         if (options.HighResolution == true)
         {
@@ -296,6 +302,8 @@ internal sealed class FiveDoCheckpointJson
 
     public uint Pc { get; init; }
 
+    public uint Cpsr { get; init; }
+
     public long Instructions { get; init; }
 
     public uint FrameHash { get; init; }
@@ -309,6 +317,10 @@ internal sealed class FiveDoCheckpointJson
     public byte CdStatus { get; init; }
 
     public byte CdPoll { get; init; }
+
+    public uint CdCommandHash { get; init; }
+
+    public int CdCommandCount { get; init; }
 
     public uint DspPc { get; init; }
 

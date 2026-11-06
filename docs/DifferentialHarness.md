@@ -1,6 +1,6 @@
 # Differential Harness
 
-**Status:** implemented 2026-10-31; first showcase capture in progress.
+**Status:** implemented 2026-10-31; TEST-07 oracle instrumentation 2026-11-06.
 **Features:** FND-05, CORE-11, CORE-16.
 **Tool:** `tools/FiveDo.DiffHarness`.
 **Manifests:** `benchmarks/diff/`.
@@ -15,11 +15,12 @@ shipped emulator.
 | Field | 5DO | OperaCore | Compared by default |
 |---|---|---|---|
 | Frame hash | Assembled BGRA8888 frame, FNV-1a | XRGB8888 presenter frame converted to BGRA8888, FNV-1a | Yes |
-| Audio hash | Packed DSP samples, FNV-1a | Interleaved stereo samples, FNV-1a | No (reference PRNG seed is wall-clock) |
-| DSP sample count | `run --json` | Audio callback count | No |
-| ARM PC | `run --json` | Optional debug export | No (shown as delta) |
+| DSP sample count | `run --json` | Audio callback count | Yes, with `sampleTolerance` |
+| Audio hash | Packed DSP samples, FNV-1a | Interleaved stereo samples, FNV-1a | No; enable with `--compare-audio` once sample counts align |
+| ARM PC | `run --json` | Optional debug export | No; enable with `--compare-pc` |
+| ARM CPSR | `run --json` | Optional debug export | No; `--compare-pc` also compares CPSR when both sides expose it |
+| CD command count/hash | `CdromCommandTranscript` issue-time counters | Optional debug export | No; enable with `--compare-cd` |
 | Save-state hash | Optional `--state-hash` | ARM-only optional debug hash | No |
-| CD transcript | `--cd-trace` (future) | Not exposed | No |
 
 The frame hash is the same algorithm as the emulator's `run --json` `frameHash`.
 It is computed from the assembled BGRA8888 pixels, so a matching hash means the
@@ -27,6 +28,17 @@ two engines produced byte-identical visible output for that frame. The report's
 **PC delta** column is the largest absolute `Opera PC - 5DO PC` across the
 checkpoints; it is always shown when the debug core exposes a PC, even when the
 video fields match.
+
+Every compared field is gated. The report also records the **first divergence**:
+the earliest checkpoint and field without an allowance. Use it as the triage
+entry point; later checkpoint differences may cascade from the same cause. A
+frame-hash match is not evidence that the instruction streams agree.
+
+5DO counts a CD command when the first command byte is written
+(`CommandOpcodeObserver`); the reference counts `XBP_SET_COMMAND` at the same
+protocol phase. A command still in flight at a checkpoint can produce a 1-3
+command count difference. The cumulative command hash is only comparable when the
+counts match.
 
 ## 2. Quick start
 
@@ -48,17 +60,40 @@ tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
 tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/showcase.json --out artifacts/diff/showcase
 
+# Build the optional debug reference core (deterministic seed + PC/CPSR/CD exports).
+cmake -S artifacts/diff/opera-build -B artifacts/diff/opera-build-current -G Ninja `
+  -DCMAKE_BUILD_TYPE=Release `
+  -DCMAKE_C_COMPILER=C:/mingw64/bin/gcc.exe `
+  -DCMAKE_CXX_COMPILER=C:/mingw64/bin/g++.exe
+cmake --build artifacts/diff/opera-build-current
+
+# The five-title TEST-07 panel: fixed seed, PC/CPSR/CD comparison.
+tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+  run benchmarks/diff/samples5.json --out artifacts/diff/test07-samples5 `
+  --no-images --seed 1488 --compare-cd --core artifacts/diff/opera-build-current/OperaCore.dll
+
 # Strict mode with a debug core that exposes PC/CD state.
 tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/showcase.json --out artifacts/diff/showcase-debug `
-  --core artifacts/diff/opera-build/out/OperaCore.dll --compare-pc
+  --core artifacts/diff/opera-build-current/OperaCore.dll --compare-pc --compare-cd
 
 # Generate a full-collection manifest after changing the disc roots.
 tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
   manifest --root "J:\Panasonic 3DO" `
   --root "G:\MAME\MAME Software List CHDs\3do" `
   --out benchmarks/diff/full.json --frames 3000 --checkpoint 3000
+
+# Generate the deterministic 50-title TEST-07 panel from the full manifest.
+tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+  panel --from benchmarks/diff/full.json --out benchmarks/diff/panel50.json `
+  --count 50 --core artifacts/diff/opera-build-current/OperaCore.dll `
+  --work artifacts/diff/work-panel50 --name "5DO 50-title accuracy panel"
 ```
+
+The `panel` command selects evenly spaced titles (including the first and last),
+preserves the source `roots`, BIOS, and machine options, clears per-title frame
+overrides and allowlists, and applies the TEST-07 comparison policy: PC, CPSR, CD
+command count/hash, sample tolerance 512, and audio informational.
 
 Outputs:
 
@@ -73,10 +108,13 @@ Outputs:
 - `artifacts/diff/<run>/report.html`
 
 Useful run flags: `--resume`, `--force`, `--title <filter>`, `--limit N`,
-`--no-images`, `--cleanup-iso`, `--compare-pc`, `--pc-tolerance <bytes>`,
+`--no-images`, `--cleanup-iso`, `--seed <n>`, `--compare-pc`, `--compare-cd`,
+`--compare-audio`, `--pc-tolerance <bytes>`,
 `--arm-timing freedo|arm60`, `--clio-timers freedo|opera`,
 `--cel-timing freedo|opera`, `--cd-timing freedo|opera`, and
-`--profile compatible|accuracy|performance|custom`.
+`--profile compatible|accuracy|performance|custom`. The default fixed seed is
+1488; it is applied to both engines and recorded in each capture and in the
+report provenance.
 The timing and profile overrides replace the manifest option for every 5DO capture, so
 one manifest can drive both sides of an ARM, CLIO, CEL, CD, or profile A/B run without
 editing the manifest. Use a fresh `--out` directory (or `--force`) when changing an
@@ -124,7 +162,11 @@ Exit codes:
     "compare": {
       "compareAudio": false,
       "comparePc": false,
-      "compareSamples": false,
+      "compareCpsr": false,
+      "compareCd": false,
+      "compareSamples": true,
+      "sampleTolerance": 512,
+      "pcTolerance": 0,
       "frameWindow": 2
     }
   },
@@ -165,6 +207,21 @@ Rules:
   diagnoses a frame-hash mismatch as **Offset** when the 5DO hash matches a
   neighboring Opera frame. It never turns an offset into a pass; it only names
   the likely cause.
+- `compare.comparePc` gates the ARM PC; `compare.compareCpsr` gates the ARM CPSR.
+  `--compare-pc` forces PC on and also compares CPSR when both sides expose it.
+  `compare.pcTolerance` allows a small absolute PC delta in bytes.
+- `compare.compareCd` gates the CD command count and cumulative opcode hash.
+  `--compare-cd` forces it on. The count is issue-time on both sides; a command in
+  flight at a checkpoint can still differ by 1-3 commands.
+- `compare.compareSamples` gates the DSP sample count; `compare.sampleTolerance`
+  allows the systematic 59.94/60 Hz field-rate offset (43 samples at frame 60,
+  212 at frame 300). `compare.compareAudio` gates the cumulative audio hash; keep
+  it off until the sample streams are aligned, because a sample-count offset makes
+  the cumulative hashes incomparable.
+- The fixed seed comes from `options.randomSeed` when set, otherwise from
+  `--seed` (default 1488). `random` is rejected: a differential run needs a fixed
+  seed. The applied seed is recorded in each `CaptureResult` and in the report
+  provenance.
 
 ### 3.1 Allowlist
 
@@ -231,25 +288,27 @@ code. It is loaded through its `sg_*` C ABI.
   no VDLP CLUT bypass, and `opera_cdrom_set_speed(0)` (unbounded). The manifest
   therefore uses `--profile accuracy --cd-speed unbounded --no-game-fixes` for
   5DO comparisons.
-- The ABI exposes video, audio, input, and lifecycle callbacks only. It does not
-  expose PC, state hashes, CD status, or CD transcripts. Those fields are `null`
-  on the Opera side and are not compared by default.
-- An optional locally built debug core can export `sg_debug_arm_pc`,
-  `sg_debug_arm_cpsr`, `sg_debug_arm_state_hash`, `sg_debug_cd_status`, and
-  `sg_debug_cd_poll`. The harness detects those symbols with
-  `NativeLibrary.TryGetExport`; a stock core simply leaves the fields null. Build
-  the debug core from `References/CPP_SimpleGui/Cores/OperaCore` with the small
-  getters in `opera_arm.c`/`opera_xbus_cdrom_plugin.c` and pass
-  `--core artifacts/diff/opera-build/out/OperaCore.dll`. The fields are evidence,
-  not part of the default pass/fail gate: a 4-byte PC delta is normal when the
-  frame hash matches, and the CD FIFO status is not the same value as 5DO's
-  `DriveStatus`.
-- The core seeds `std::rand`, `prng16`, and `prng32` from `std::time(nullptr)`.
-  Frame hashes stay usable; audio hashes are informational until the reference
-  accepts a fixed seed. Keep `compareAudio` false unless the run is known to be
-  deterministic.
-- The core is paced to the region refresh rate, so a 3000-frame capture takes
-  about 50 seconds per title. Use `--resume` for long runs.
+- The ABI exposes video, audio, input, and lifecycle callbacks. The optional debug
+  core adds `sg_debug_arm_pc`, `sg_debug_arm_cpsr`, `sg_debug_arm_state_hash`,
+  `sg_debug_cd_status`, `sg_debug_cd_poll`, `sg_debug_cd_command_count`,
+  `sg_debug_cd_command_hash`, and `sg_debug_set_seed`. The harness detects those
+  symbols with `NativeLibrary.TryGetExport`; a stock core simply leaves the fields
+  null. Build the debug core from `References/CPP_SimpleGui/Cores/OperaCore` with
+  the small getters in `opera_arm.c`/`opera_xbus_cdrom_plugin.c` and pass
+  `--core artifacts/diff/opera-build-current/OperaCore.dll`. The fields are
+  evidence, not part of the default pass/fail gate: a 4-byte PC delta is normal
+  when the frame hash matches, and the CD FIFO status is not the same value as
+  5DO's `DriveStatus`.
+- `sg_debug_set_seed(seed)` seeds `std::rand`, `prng16`, and `prng32` before
+  `sg_init`; the harness applies a fixed seed (default 1488) and records it. Two
+  consecutive runs with the same seed produced identical checkpoint arrays for
+  both engines on 2026-11-06.
+- The reference core is paced to the region refresh rate (59.94 Hz NTSC), while
+  5DO advances 60 fields per second. A 300-frame run therefore differs by about
+  212 samples. `sampleTolerance` absorbs the count; the cumulative audio hash is
+  still not comparable until the streams are aligned or resampled.
+- The core is paced in real time, so a 3000-frame capture takes about 50 seconds
+  per title. Use `--resume` for long runs.
 
 ## 6. Baseline regression mode
 
@@ -272,6 +331,22 @@ the reference core or the local discs.
 
 ## 8. Current evidence
 
+- `benchmarks/diff/samples5.json` (2026-11-06, TEST-07): five local titles,
+  300 frames, checkpoints 60/120/300, fixed seed 1488, accuracy profile,
+  `cdSpeed=unbounded`, `noGameFixes=true`, PC/CPSR/CD comparison, sample
+  tolerance 512. Two consecutive runs produced **identical checkpoint arrays for
+  both engines**. Result: **0 match, 5 diverged, 0 error**. The **first divergence
+  was the ARM PC at frame 60** on all five titles. Lemmings (USA):
+  - f=60: PC `0x00005aa0` vs `0x00005960`; CPSR `0x600000d3` vs `0x800000d3`
+    (FIQ-disable bit differs); CD commands **9/9 match**.
+  - f=120: PC `0x00005988` vs `0x00005974`; CPSR matches; CD commands **50/50 match**.
+  - f=300: PC `0x000205f4` vs `0x00020600`; CPSR matches; CD commands **108/105**
+    (three extra commands in 5DO by this checkpoint).
+  - Sample counts: **44,101/44,144**, **88,202/88,288**, **220,508/220,720** —
+    the systematic 59.94/60 Hz offset.
+  - Maximum absolute PC delta across the five titles: Alone in the Dark 21,020;
+    Road Rash 7,644; Space Ace 6,084; Wolfenstein 3D 3,172; Lemmings 320 bytes.
+  This is the first TEST-07 panel; see `TestCorpus.md` 1.1aw.
 - `benchmarks/diff/smoke.json`: Lemmings (USA), 300 frames, checkpoint 300.
   Result: **Match** (`frameHash 0x110e7dc5` on both engines; first pass
   2026-10-31).
@@ -332,11 +407,15 @@ checkpoint does not mean the instruction streams agree.
 
 ## 9. Next increments
 
-1. Add PC and state hashes to a reference-side export (requires rebuilding the
-   SimpleGui OperaCore wrapper, not modifying libopera behavior).
-2. Add a CD command transcript to the 5DO capture and a reference-side transcript.
-3. Extend the showcase manifest to the full 594-disc corpus with per-title
-   checkpoints and reasons.
-4. Wire `baseline` into the nightly workflow and publish `report.html` as an
+1. Run the generated `benchmarks/diff/panel50.json` against the full corpus; the
+   five-title `samples5.json` panel is the current execution evidence.
+2. Align or resample the audio streams so `compareAudio` can gate the cumulative
+   hash; the 59.94/60 Hz sample-count offset currently makes it incomparable.
+3. Add a CD command-tail or per-index sequence comparison to distinguish
+   in-flight count drift from a real command-sequence divergence.
+4. Triage the frame-60 PC/CPSR divergence (CORE-07). It is now the first
+   divergence on all five sample titles; the Lemmings CPSR difference is the FIQ
+   disable bit.
+5. Wire `baseline` into the nightly workflow and publish `report.html` as an
    artifact.
-5. Add visual artifacts (checkpoint PNGs) once the hash gate is stable.
+6. Add visual artifacts (checkpoint PNGs) once the hash gate is stable.

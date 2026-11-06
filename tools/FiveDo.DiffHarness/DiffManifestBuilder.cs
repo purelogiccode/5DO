@@ -99,6 +99,121 @@ internal static class DiffManifestBuilder
         };
     }
 
+    /// <summary>
+    /// Builds a deterministic N-title panel from an existing manifest.
+    /// </summary>
+    /// <param name="source">Source manifest, usually the full-collection manifest.</param>
+    /// <param name="count">Number of titles to select.</param>
+    /// <param name="frames">Frame count for every panel title.</param>
+    /// <param name="checkpoints">Checkpoint frames; the final frame when empty.</param>
+    /// <param name="operaCore">Optional debug-core path override.</param>
+    /// <param name="workDirectory">Optional work-directory override.</param>
+    /// <param name="name">Optional panel name.</param>
+    /// <returns>A panel manifest with evenly spaced titles and the TEST-07 comparison policy.</returns>
+    public static DiffManifest BuildPanel(
+        DiffManifest source,
+        int count,
+        int frames,
+        int[] checkpoints,
+        string? operaCore,
+        string? workDirectory,
+        string? name)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(count);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(frames);
+
+        var defaults = source.Defaults ?? new DiffDefaults();
+        var roots = source.Roots is null
+            ? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            : new Dictionary<string, string>(source.Roots, StringComparer.OrdinalIgnoreCase);
+        DiffTitle[] selected = SelectPanelTitles(source.Titles ?? [], count);
+
+        return new DiffManifest
+        {
+            SchemaVersion = source.SchemaVersion,
+            Name = string.IsNullOrWhiteSpace(name) ? "5DO differential panel" : name,
+            Roots = roots,
+            Defaults = new DiffDefaults
+            {
+                Bios = defaults.Bios,
+                Frames = frames,
+                Checkpoints = checkpoints.Length == 0 ? [frames] : checkpoints,
+                InputScript = null,
+                Options = defaults.Options ?? new DiffMachineOptions(),
+                Cli = defaults.Cli,
+                OperaCore = operaCore ?? defaults.OperaCore,
+                TimeoutSeconds = defaults.TimeoutSeconds,
+                Compare = new DiffCompareOptions
+                {
+                    CompareAudio = false,
+                    ComparePc = true,
+                    CompareCpsr = true,
+                    CompareCd = true,
+                    CompareSamples = true,
+                    SampleTolerance = 512,
+                    PcTolerance = 0,
+                    FrameWindow = 2,
+                },
+                WorkDirectory = workDirectory ?? "artifacts/diff/work-panel",
+            },
+            Titles = selected
+                .Select(title => new DiffTitle
+                {
+                    Id = title.Id,
+                    Name = title.Name,
+                    Disc = title.Disc,
+                    Iso = title.Iso,
+                    Bios = title.Bios,
+                    Frames = null,
+                    Checkpoints = null,
+                    InputScript = null,
+                    Options = title.Options,
+                    Allow = [],
+                })
+                .ToArray(),
+        };
+    }
+
+    private static DiffTitle[] SelectPanelTitles(DiffTitle[] titles, int count)
+    {
+        if (titles.Length == 0)
+        {
+            return [];
+        }
+
+        if (count >= titles.Length)
+        {
+            return [.. titles];
+        }
+
+        if (count == 1)
+        {
+            return [titles[0]];
+        }
+
+        var selected = new List<DiffTitle>(count);
+        var used = new HashSet<int>();
+        for (var i = 0; i < count; i++)
+        {
+            var index = (int)((long)i * (titles.Length - 1) / (count - 1));
+            if (used.Add(index))
+            {
+                selected.Add(titles[index]);
+            }
+        }
+
+        for (var i = 0; selected.Count < count && i < titles.Length; i++)
+        {
+            if (used.Add(i))
+            {
+                selected.Add(titles[i]);
+            }
+        }
+
+        return [.. selected];
+    }
+
     private static string UniqueKey(Dictionary<string, string> roots, string name)
     {
         var key = HarnessCommon.SafeName(name);

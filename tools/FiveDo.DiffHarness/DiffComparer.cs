@@ -17,6 +17,8 @@ internal static class DiffComparer
         int frames,
         bool comparePc = false,
         long? pcTolerance = null,
+        bool compareCd = false,
+        bool compareAudio = false,
         string? error = null)
     {
         if (error is not null || fiveDo is null || opera is null || !fiveDo.Ok || !opera.Ok)
@@ -84,22 +86,28 @@ internal static class DiffComparer
 
             if (compare.CompareSamples ?? true)
             {
+                var samplesMatch = fiveDoSample is not null
+                    && operaSample is not null
+                    && Math.Abs(operaSample.Samples - fiveDoSample.Samples)
+                        <= compare.SampleTolerance;
                 if (AddField(
                     fields,
                     "samples",
                     fiveDoSample?.Samples.ToString(CultureInfo.InvariantCulture),
                     operaSample?.Samples.ToString(CultureInfo.InvariantCulture),
-                    fiveDoSample is not null
-                        && operaSample is not null
-                        && fiveDoSample.Samples == operaSample.Samples,
+                    samplesMatch,
                     title, frame, ref allowedCount, ref divergedCount,
-                    fiveDoSample is null || operaSample is null))
+                    fiveDoSample is null || operaSample is null,
+                    diagnostic: !samplesMatch
+                        ? $"sample delta {operaSample?.Samples - fiveDoSample?.Samples}; "
+                            + $"tolerance {compare.SampleTolerance}"
+                        : null))
                 {
                     nonOffsetDivergedCount++;
                 }
             }
 
-            if (compare.CompareAudio)
+            if (compare.CompareAudio || compareAudio)
             {
                 if (AddField(
                     fields,
@@ -137,6 +145,68 @@ internal static class DiffComparer
                 }
             }
 
+            var cpsrRequired = compare.CompareCpsr;
+            if ((cpsrRequired || comparePc)
+                && (cpsrRequired
+                    || (fiveDoSample?.Cpsr is not null && operaSample?.Cpsr is not null)))
+            {
+                var cpsrMatch = fiveDoSample?.Cpsr is { } left && operaSample?.Cpsr is { } right
+                    && left == right;
+                if (AddField(
+                    fields,
+                    "cpsr",
+                    fiveDoSample?.Cpsr is { } fiveDoCpsr ? HarnessCommon.Hex(fiveDoCpsr) : null,
+                    operaSample?.Cpsr is { } operaCpsr ? HarnessCommon.Hex(operaCpsr) : null,
+                    cpsrMatch,
+                    title, frame, ref allowedCount, ref divergedCount,
+                    fiveDoSample is null || operaSample is null,
+                    diagnostic: !cpsrMatch && operaSample?.Cpsr is null
+                        ? "reference CPSR unavailable (rebuild the debug core)"
+                        : null))
+                {
+                    nonOffsetDivergedCount++;
+                }
+            }
+
+            if (compare.CompareCd || compareCd)
+            {
+                var countMatch = fiveDoSample?.CdCommandCount is { } leftCount
+                    && operaSample?.CdCommandCount is { } rightCount
+                    && leftCount == rightCount;
+                if (AddField(
+                    fields,
+                    "cdCommandCount",
+                    fiveDoSample?.CdCommandCount?.ToString(CultureInfo.InvariantCulture),
+                    operaSample?.CdCommandCount?.ToString(CultureInfo.InvariantCulture),
+                    countMatch,
+                    title, frame, ref allowedCount, ref divergedCount,
+                    fiveDoSample is null || operaSample is null,
+                    diagnostic: !countMatch && operaSample?.CdCommandCount is null
+                        ? "reference CD transcript unavailable (rebuild the debug core)"
+                        : null))
+                {
+                    nonOffsetDivergedCount++;
+                }
+
+                var hashMatch = fiveDoSample?.CdCommandHash is { } leftHash
+                    && operaSample?.CdCommandHash is { } rightHash
+                    && leftHash == rightHash;
+                if (AddField(
+                    fields,
+                    "cdCommandHash",
+                    fiveDoSample?.CdCommandHash is { } fiveDoHash ? HarnessCommon.Hex(fiveDoHash) : null,
+                    operaSample?.CdCommandHash is { } operaHash ? HarnessCommon.Hex(operaHash) : null,
+                    hashMatch,
+                    title, frame, ref allowedCount, ref divergedCount,
+                    fiveDoSample is null || operaSample is null,
+                    diagnostic: !hashMatch && operaSample?.CdCommandHash is null
+                        ? "reference CD transcript unavailable (rebuild the debug core)"
+                        : null))
+                {
+                    nonOffsetDivergedCount++;
+                }
+            }
+
             checkpoints.Add(new DiffCheckpointResult
             {
                 Frame = frame,
@@ -165,6 +235,7 @@ internal static class DiffComparer
             .Where(checkpoint => checkpoint.PcDelta is not null)
             .Select(checkpoint => Math.Abs(checkpoint.PcDelta!.Value))
             .ToArray();
+        var firstDivergence = FindFirstDivergence(checkpoints);
 
         return new DiffTitleResult
         {
@@ -181,6 +252,7 @@ internal static class DiffComparer
             DivergedCount = divergedCount,
             OffsetCount = offsetCount,
             MaxPcDelta = pcDeltas.Length == 0 ? null : pcDeltas.Max(),
+            FirstDivergence = firstDivergence,
         };
     }
 
@@ -207,6 +279,7 @@ internal static class DiffComparer
             Fields = fields.Length,
             AllowedFields = fields.Count(field => field.AllowedReason is not null),
             DivergedFields = fields.Count(field => !field.Match && field.AllowedReason is null),
+            FirstDivergenceTitles = titles.Count(title => title.FirstDivergence is not null),
         };
 
         return new DiffReport
@@ -219,6 +292,31 @@ internal static class DiffComparer
             Titles = titles,
             Summary = summary,
         };
+    }
+
+    private static DiffFirstDivergence? FindFirstDivergence(
+        List<DiffCheckpointResult> checkpoints)
+    {
+        foreach (var checkpoint in checkpoints)
+        {
+            foreach (var field in checkpoint.Fields)
+            {
+                if (!field.Match && field.AllowedReason is null)
+                {
+                    return new DiffFirstDivergence
+                    {
+                        Frame = checkpoint.Frame,
+                        Field = field.Field,
+                        FiveDo = field.FiveDo,
+                        Opera = field.Opera,
+                        Diagnostic = field.Diagnostic,
+                        Issue = field.Issue,
+                    };
+                }
+            }
+        }
+
+        return null;
     }
 
     private static bool AddField(

@@ -146,6 +146,118 @@ public sealed class DiffComparerTests : IDisposable
     }
 
     [Fact]
+    public void Compare_CpsrMismatch_IsGatedWhenEnabled()
+    {
+        DiffManifest manifest = Manifest(new DiffCompareOptions
+        {
+            CompareSamples = false,
+            CompareCpsr = true,
+        });
+        DiffTitle title = Title();
+        DiffTitleResult result = DiffComparer.Compare(
+            manifest,
+            title,
+            CaptureWithCpu(0x1000, 0x10),
+            CaptureWithCpu(0x1000, 0x20),
+            100);
+
+        Assert.Equal("Diverged", result.Status);
+        Assert.NotNull(result.FirstDivergence);
+        Assert.Equal("cpsr", result.FirstDivergence!.Field);
+        Assert.Equal(100, result.FirstDivergence.Frame);
+    }
+
+    [Fact]
+    public void Compare_CdCommandMismatch_IsGatedWhenEnabled()
+    {
+        DiffManifest manifest = Manifest(new DiffCompareOptions
+        {
+            CompareSamples = false,
+            CompareCd = true,
+        });
+        DiffTitle title = Title();
+        DiffTitleResult result = DiffComparer.Compare(
+            manifest,
+            title,
+            CaptureWithCd(4, 0x11111111),
+            CaptureWithCd(4, 0x22222222),
+            100);
+
+        Assert.Equal("Diverged", result.Status);
+        Assert.NotNull(result.FirstDivergence);
+        Assert.Equal("cdCommandHash", result.FirstDivergence!.Field);
+    }
+
+    [Fact]
+    public void Compare_FirstDivergence_ReportsEarliestUnexplainedCheckpoint()
+    {
+        DiffManifest manifest = new()
+        {
+            Name = "unit",
+            Defaults = new DiffDefaults
+            {
+                Frames = 200,
+                Checkpoints = [100, 200],
+                Compare = new DiffCompareOptions { CompareSamples = false },
+            },
+            Titles = [Title()],
+        };
+        DiffTitleResult result = DiffComparer.Compare(
+            manifest,
+            Title(),
+            CaptureMany((100, 1), (200, 2)),
+            CaptureMany((100, 1), (200, 3)),
+            200);
+
+        Assert.Equal("Diverged", result.Status);
+        Assert.NotNull(result.FirstDivergence);
+        Assert.Equal(200, result.FirstDivergence!.Frame);
+        Assert.Equal("frameHash", result.FirstDivergence.Field);
+        Assert.Equal("0x00000002", result.FirstDivergence.FiveDo);
+        Assert.Equal("0x00000003", result.FirstDivergence.Opera);
+    }
+
+    [Fact]
+    public void Compare_SampleCountWithinTolerance_Matches()
+    {
+        DiffManifest manifest = Manifest(new DiffCompareOptions
+        {
+            CompareSamples = true,
+            SampleTolerance = 64,
+        });
+        DiffTitleResult result = DiffComparer.Compare(
+            manifest,
+            Title(),
+            CaptureWithSamples(10_000),
+            CaptureWithSamples(10_032),
+            100);
+
+        Assert.Equal("Match", result.Status);
+        Assert.Null(result.FirstDivergence);
+    }
+
+    [Fact]
+    public void Compare_SampleCountOutsideTolerance_DivergesWithDelta()
+    {
+        DiffManifest manifest = Manifest(new DiffCompareOptions
+        {
+            CompareSamples = true,
+            SampleTolerance = 16,
+        });
+        DiffTitleResult result = DiffComparer.Compare(
+            manifest,
+            Title(),
+            CaptureWithSamples(10_000),
+            CaptureWithSamples(10_032),
+            100);
+
+        Assert.Equal("Diverged", result.Status);
+        Assert.NotNull(result.FirstDivergence);
+        Assert.Equal("samples", result.FirstDivergence!.Field);
+        Assert.Contains("sample delta 32", result.FirstDivergence.Diagnostic, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void BuildReport_AggregatesStatuses()
     {
         DiffManifest manifest = Manifest();
@@ -238,6 +350,59 @@ public sealed class DiffComparerTests : IDisposable
             Checkpoints =
             [
                 new CaptureSample { Frame = 100, FrameHash = 1, Samples = 100, Pc = pc },
+            ],
+        };
+    }
+
+    private static CaptureResult CaptureWithCpu(uint pc, uint cpsr)
+    {
+        return new CaptureResult
+        {
+            Engine = "capture",
+            Ok = true,
+            Checkpoints =
+            [
+                new CaptureSample
+                {
+                    Frame = 100,
+                    FrameHash = 1,
+                    Samples = 100,
+                    Pc = pc,
+                    Cpsr = cpsr,
+                },
+            ],
+        };
+    }
+
+    private static CaptureResult CaptureWithSamples(long samples)
+    {
+        return new CaptureResult
+        {
+            Engine = "capture",
+            Ok = true,
+            Checkpoints =
+            [
+                new CaptureSample { Frame = 100, FrameHash = 1, Samples = samples },
+            ],
+        };
+    }
+
+    private static CaptureResult CaptureWithCd(int count, uint hash)
+    {
+        return new CaptureResult
+        {
+            Engine = "capture",
+            Ok = true,
+            Checkpoints =
+            [
+                new CaptureSample
+                {
+                    Frame = 100,
+                    FrameHash = 1,
+                    Samples = 100,
+                    CdCommandCount = count,
+                    CdCommandHash = hash,
+                },
             ],
         };
     }

@@ -743,15 +743,19 @@ internal static class Program
 
         CdromCommandTranscript? cdTranscript = null;
         StreamWriter? cdTranscriptWriter = null;
-        if (cdTranscriptPath is not null)
+        if (cdTranscriptPath is not null || checkpointFrames.Length > 0)
         {
-            var directory = Path.GetDirectoryName(Path.GetFullPath(cdTranscriptPath));
-            if (!string.IsNullOrEmpty(directory))
+            if (cdTranscriptPath is not null)
             {
-                Directory.CreateDirectory(directory);
+                var directory = Path.GetDirectoryName(Path.GetFullPath(cdTranscriptPath));
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                cdTranscriptWriter = new StreamWriter(cdTranscriptPath) { AutoFlush = true };
             }
 
-            cdTranscriptWriter = new StreamWriter(cdTranscriptPath) { AutoFlush = true };
             cdTranscript = new CdromCommandTranscript();
             cdTranscript.Attach(machine.Cdrom);
         }
@@ -1147,7 +1151,7 @@ internal static class Program
                     {
                         if (machine.FramesExecuted == checkpointFrames[checkpointIndex])
                         {
-                            checkpointResults.Add(CaptureCheckpoint(machine, audio, stateHashEnabled));
+                            checkpointResults.Add(CaptureCheckpoint(machine, audio, stateHashEnabled, cdTranscript));
                         }
 
                         checkpointIndex++;
@@ -4154,11 +4158,13 @@ internal static class Program
     private static CliCheckpointResult CaptureCheckpoint(
         FiveDoMachine machine,
         AudioOutput audio,
-        bool stateHashEnabled)
+        bool stateHashEnabled,
+        CdromCommandTranscript? cdTranscript)
     {
         return new CliCheckpointResult(
             Frame: machine.FramesExecuted,
             Pc: machine.Cpu.ProgramCounter,
+            Cpsr: machine.Cpu.Cpsr,
             Instructions: machine.Cpu.InstructionsExecuted,
             FrameHash: FrameHash(machine),
             Samples: machine.AudioSamplesProduced,
@@ -4166,6 +4172,8 @@ internal static class Program
             StateHash: stateHashEnabled ? HashState(machine) : null,
             CdStatus: machine.Cdrom.DriveStatus,
             CdPoll: machine.Cdrom.Poll,
+            CdCommandHash: cdTranscript?.IssuedHash ?? 0,
+            CdCommandCount: cdTranscript?.IssuedCount ?? 0,
             DspPc: machine.Dsp.ProgramCounter,
             DspSema: ((uint)machine.Dsp.SemaphoreStatus << 16) | machine.Dsp.SemaphoreData,
             DspSeed: machine.Dsp.Seed,

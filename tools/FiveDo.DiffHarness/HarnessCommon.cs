@@ -15,6 +15,53 @@ namespace FiveDo.DiffHarness;
 /// <summary>Shared filesystem, hashing, and process helpers.</summary>
 internal static class HarnessCommon
 {
+    /// <summary>The default fixed seed used when a manifest does not specify one.</summary>
+    public const uint DefaultSeed = 1488;
+
+    /// <summary>Resolves the fixed PRNG seed applied to both engines.</summary>
+    /// <param name="harness">Harness options, including an optional <c>--seed</c> override.</param>
+    /// <param name="options">Merged machine options for the title.</param>
+    /// <param name="titleId">Title identifier used in error messages.</param>
+    /// <returns>The 32-bit seed applied to both engines.</returns>
+    /// <exception cref="ArgumentException">Thrown when the title requests a random or invalid seed.</exception>
+    public static uint ResolveSeed(HarnessOptions harness, DiffMachineOptions options, string titleId)
+    {
+        if (harness.Seed is { } overrideSeed)
+        {
+            return overrideSeed;
+        }
+
+        var value = options.RandomSeed;
+        if (string.IsNullOrWhiteSpace(value)
+            || string.Equals(value, "default", StringComparison.OrdinalIgnoreCase))
+        {
+            return DefaultSeed;
+        }
+
+        if (string.Equals(value, "random", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                $"Title '{titleId}' requests a random seed; the differential harness needs a fixed seed.",
+                nameof(options));
+        }
+
+        var text = value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? value[2..] : value;
+        if (!uint.TryParse(
+                text,
+                value.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+                    ? NumberStyles.HexNumber
+                    : NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out var seed))
+        {
+            throw new ArgumentException(
+                $"Title '{titleId}' has an invalid randomSeed '{value}'; expected default or a 32-bit seed.",
+                nameof(options));
+        }
+
+        return seed;
+    }
+
     /// <summary>Runs a process and captures stdout/stderr.</summary>
     public static ProcessResult RunProcess(
         string fileName,

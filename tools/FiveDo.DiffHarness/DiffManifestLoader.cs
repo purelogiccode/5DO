@@ -24,6 +24,19 @@ internal static class DiffManifestLoader
     /// <exception cref="InvalidDataException">Thrown when the manifest is invalid.</exception>
     public static DiffManifest Load(string path)
     {
+        return Normalize(LoadRaw(path));
+    }
+
+    /// <summary>Loads a manifest without expanding named roots or filling defaults.</summary>
+    /// <param name="path">Manifest path.</param>
+    /// <returns>The parsed and validated manifest with its original <c>${name}</c> paths.</returns>
+    /// <exception cref="InvalidDataException">Thrown when the manifest is invalid.</exception>
+    /// <remarks>
+    /// Use this for manifest-to-manifest transforms, such as the panel generator, that
+    /// must preserve the source's portable root tokens.
+    /// </remarks>
+    public static DiffManifest LoadRaw(string path)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         if (!File.Exists(path))
         {
@@ -47,7 +60,6 @@ internal static class DiffManifestLoader
             throw new InvalidDataException("Manifest JSON is empty.");
         }
 
-        manifest = Normalize(manifest);
         Validate(manifest, path);
         return manifest;
     }
@@ -99,8 +111,11 @@ internal static class DiffManifestLoader
                 {
                     CompareAudio = compare.CompareAudio,
                     ComparePc = compare.ComparePc,
+                    CompareCpsr = compare.CompareCpsr,
+                    CompareCd = compare.CompareCd,
                     PcTolerance = compare.PcTolerance < 0 ? 0 : compare.PcTolerance,
                     CompareSamples = compare.CompareSamples ?? true,
+                    SampleTolerance = compare.SampleTolerance < 0 ? 0 : compare.SampleTolerance,
                     FrameWindow = compare.FrameWindow < 0 ? 0 : compare.FrameWindow,
                 },
                 WorkDirectory = ExpandPath(defaults.WorkDirectory, roots)

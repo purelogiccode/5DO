@@ -89,6 +89,38 @@ public sealed class CdromTranscriptTests
     }
 
     [Fact]
+    public void Transcript_HashTracksOpcodeOrderAndResetsOnClear()
+    {
+        var cd = new CdromDevice { FrameProvider = () => 1 };
+        cd.InsertDisc(new MemoryDisc(4));
+        var transcript = new CdromCommandTranscript();
+        transcript.Attach(cd);
+
+        Send(cd, 0x83);
+        DrainStatus(cd, 12);
+        Send(cd, 0x85);
+        DrainStatus(cd, 8);
+
+        Assert.Equal(2, transcript.Count);
+        Assert.Equal(2, transcript.IssuedCount);
+        Assert.NotEqual(2166136261u, transcript.Hash);
+        Assert.Equal(transcript.Hash, transcript.IssuedHash);
+
+        uint first = transcript.Hash;
+        transcript.Clear();
+        Assert.Equal(0, transcript.Count);
+        Assert.Equal(0, transcript.IssuedCount);
+        Assert.Equal(2166136261u, transcript.Hash);
+        Assert.Equal(2166136261u, transcript.IssuedHash);
+
+        Send(cd, 0x85);
+        DrainStatus(cd, 8);
+        Send(cd, 0x83);
+        DrainStatus(cd, 12);
+        Assert.NotEqual(first, transcript.Hash);
+    }
+
+    [Fact]
     public void Detach_StopsCapturing()
     {
         var cd = new CdromDevice { FrameProvider = () => 1 };

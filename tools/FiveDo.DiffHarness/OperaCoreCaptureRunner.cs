@@ -23,7 +23,8 @@ internal static class OperaCoreCaptureRunner
         DiffTitle title,
         string repoRoot,
         string manifestDirectory,
-        string outputDirectory)
+        string outputDirectory,
+        uint seed)
     {
         var frames = harness.Frames ?? DiffManifestLoader.ResolveFrames(manifest, title);
         var checkpoints = DiffManifestLoader.ResolveCheckpoints(manifest, title)
@@ -89,6 +90,7 @@ internal static class OperaCoreCaptureRunner
             captureCheckpoints,
             script,
             timeout,
+            seed,
             Path.Combine(titleDirectory, "opera.log.txt"),
             harness.NoImages ? null : Path.Combine(titleDirectory, "images"));
 
@@ -112,6 +114,7 @@ internal static class OperaCoreCaptureRunner
             Checkpoints = result.Checkpoints,
             Warnings = result.Warnings,
             LogPath = result.LogPath,
+            Seed = seed,
         };
     }
 
@@ -223,6 +226,7 @@ internal sealed class OperaCoreHost : IDisposable
     private readonly int[] _checkpoints;
     private readonly IReadOnlyList<InputScriptEntry>? _script;
     private readonly int _timeoutSeconds;
+    private readonly uint _seed;
     private readonly string _logPath;
     private readonly string? _imageDirectory;
     private readonly List<string> _log = [];
@@ -244,9 +248,13 @@ internal sealed class OperaCoreHost : IDisposable
     private readonly SetInputState _setInputState;
     private readonly SetLog _setLog;
     private readonly DebugUInt32? _debugArmPc;
+    private readonly DebugUInt32? _debugArmCpsr;
     private readonly DebugUInt32? _debugArmStateHash;
     private readonly DebugUInt8? _debugCdStatus;
     private readonly DebugUInt32? _debugCdPoll;
+    private readonly DebugUInt32? _debugCdCommandCount;
+    private readonly DebugUInt32? _debugCdCommandHash;
+    private readonly SetSeed? _debugSetSeed;
 
     private readonly VideoCallback _videoCallback;
     private readonly AudioCallback _audioCallback;
@@ -277,6 +285,7 @@ internal sealed class OperaCoreHost : IDisposable
         int[] checkpoints,
         IReadOnlyList<InputScriptEntry>? script,
         int timeoutSeconds,
+        uint seed,
         string logPath,
         string? imageDirectory)
     {
@@ -285,6 +294,7 @@ internal sealed class OperaCoreHost : IDisposable
         _checkpoints = checkpoints;
         _script = script;
         _timeoutSeconds = timeoutSeconds;
+        _seed = seed;
         _logPath = logPath;
         _imageDirectory = imageDirectory;
 
@@ -303,9 +313,13 @@ internal sealed class OperaCoreHost : IDisposable
         _setInputState = Load<SetInputState>("sg_set_input_state");
         _setLog = Load<SetLog>("sg_set_log");
         _debugArmPc = TryLoad<DebugUInt32>("sg_debug_arm_pc");
+        _debugArmCpsr = TryLoad<DebugUInt32>("sg_debug_arm_cpsr");
         _debugArmStateHash = TryLoad<DebugUInt32>("sg_debug_arm_state_hash");
         _debugCdStatus = TryLoad<DebugUInt8>("sg_debug_cd_status");
         _debugCdPoll = TryLoad<DebugUInt32>("sg_debug_cd_poll");
+        _debugCdCommandCount = TryLoad<DebugUInt32>("sg_debug_cd_command_count");
+        _debugCdCommandHash = TryLoad<DebugUInt32>("sg_debug_cd_command_hash");
+        _debugSetSeed = TryLoad<SetSeed>("sg_debug_set_seed");
 
         _videoCallback = OnVideo;
         _audioCallback = OnAudio;
@@ -330,6 +344,19 @@ internal sealed class OperaCoreHost : IDisposable
             _setInputPoll(_inputPollCallback);
             _setInputState(_inputStateCallback);
             _setLog(_logCallback);
+
+            if (_debugSetSeed is null)
+            {
+                lock (_logLock)
+                {
+                    _log.Add(
+                        "debug: sg_debug_set_seed is unavailable; reference PRNG is wall-clock seeded.");
+                }
+            }
+            else
+            {
+                _debugSetSeed(_seed);
+            }
 
             if (_init() == 0)
             {
@@ -575,12 +602,15 @@ internal sealed class OperaCoreHost : IDisposable
         {
             Frame = frame,
             Pc = _debugArmPc?.Invoke(),
+            Cpsr = _debugArmCpsr?.Invoke(),
             FrameHash = _lastFrameHash,
             Samples = _pcm.SampleCount,
             AudioHash = _pcm.Hash,
             ArmStateHash = _debugArmStateHash?.Invoke(),
             CdStatus = _debugCdStatus?.Invoke(),
             CdPoll = _debugCdPoll is null ? null : checked((int)_debugCdPoll.Invoke()),
+            CdCommandCount = _debugCdCommandCount is null ? null : checked((int)_debugCdCommandCount.Invoke()),
+            CdCommandHash = _debugCdCommandHash?.Invoke(),
             ImagePath = WritePendingImage(frame),
         };
         _pendingFrame = 0;
@@ -756,6 +786,9 @@ internal sealed class OperaCoreHost : IDisposable
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate uint DebugUInt32();
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate void SetSeed(uint seed);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate byte DebugUInt8();

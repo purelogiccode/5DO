@@ -2352,3 +2352,58 @@ a legacy version-2 memory section.
   AOT frontend: 34.5 MB single file, `--version` 70 ms, smoke 1.2 s; trimmed frontend:
   27.9 MB single file, smoke 3.2 s; trimmed CLI: 19.4 MB. See `Trimming.md` and
   `Performance.md` §8.7.
+
+#### 1.1aw TEST-07 reference oracle and five-title panel (2026-11-06)
+
+- `benchmarks/diff/samples5.json` runs the local `D:/Samples/3DO` corpus:
+  Alone in the Dark, Lemmings, Road Rash, Space Ace, and Wolfenstein 3D. Settings:
+  300 frames, checkpoints 60/120/300, fixed seed **1488**, accuracy profile,
+  `cdSpeed=unbounded`, `noGameFixes=true`, PC/CPSR/CD comparison, sample tolerance
+  512, no images. The debug core is
+  `artifacts/diff/opera-build-current/OperaCore.dll`, built from
+  `artifacts/diff/opera-build` with MinGW gcc/g++ 15.2.0.
+- **Determinism:** two consecutive runs with `--force` produced **identical
+  checkpoint arrays** for both the 5DO and Opera captures (Compared with
+  `ConvertFrom-Json` over the capture JSON). This is the fixed-seed gate that the
+  previous wall-clock `std::rand`/`prng16`/`prng32` seeding could not provide.
+- **Verdict:** 0 match, 5 diverged, 0 error. The report records
+  `firstDivergence`; the console, JSON, and Markdown all show it.
+- **First divergence:** ARM PC at frame 60 on all five titles:
+  Alone `0x000057f8` vs `0x00005954`; Lemmings `0x00005aa0` vs `0x00005960`;
+  Road Rash `0x000057e0` vs `0x0000597c`; Space Ace `0x0000595c` vs `0x00005948`;
+  Wolfenstein `0x0000594c` vs `0x0000596c`.
+  Maximum absolute PC deltas across the run: Alone 21,020; Road Rash 7,644;
+  Space Ace 6,084; Wolfenstein 3,172; Lemmings 320 bytes.
+- **Lemmings fields:**
+  - f=60: frame hash matches `0x110e7dc5`; PC `0x00005aa0`/`0x00005960`;
+    CPSR `0x600000d3`/`0x800000d3` (FIQ-disable bit); CD commands **9/9**,
+    hash matches; samples 44,101/44,144 (within the 512 tolerance).
+  - f=120: PC `0x00005988`/`0x00005974`; CPSR matches `0x800000d3`; CD commands
+    **50/50**, hash matches; samples 88,202/88,288.
+  - f=300: PC `0x000205f4`/`0x00020600`; CPSR matches `0x00000010`; CD commands
+    **108/105**, hash diverges; samples 220,508/220,720.
+- **CD capture semantics:** 5DO counts the opcode when the first command byte is
+  written (`CommandOpcodeObserver`); the reference counts `XBP_SET_COMMAND` at
+  the same phase. The earlier 7x count difference was a measurement artifact
+  (the reference hook fires per command byte); counting only the first byte of
+  each seven-byte packet removed it. A command in flight at a checkpoint can still
+  leave a 1-3 count difference.
+- **Audio:** the cumulative audio hash is recorded but not gated. The
+  59.94 Hz reference field rate and 60 Hz 5DO field rate produce a systematic
+  sample-count offset (43 samples at f=60, 212 at f=300), so the streams must be
+  aligned or resampled before the hash is comparable.
+- **Panel generator:** `panel --from benchmarks/diff/full.json --out
+  benchmarks/diff/panel50.json --count 50` generated a 50-title panel from the
+  594-disc manifest. It selects evenly spaced titles (first and last included),
+  preserves roots/BIOS/machine options, clears per-title frame overrides and
+  allowlists, and applies the TEST-07 comparison policy. `validate` accepts it.
+  The full panel has not been run because the `J:`/`G:` corpus is not mounted on
+  every machine.
+- **Tests:** 1,879 pass. New coverage: `HarnessCommonTests` (default seed, manifest
+  hex seed, override precedence, random rejection), `DiffComparerTests`
+  (CPSR gate, CD count/hash gate, sample tolerance, earliest first divergence),
+  `CdromTranscriptTests` (issue-time hash/count and reset), and
+  `DiffManifestBuilderTests` (panel selection, policy, and count edge cases).
+- **Limitations:** five titles, not the 50-title panel; no scripted input yet; the
+  audio hash is informational. See `DifferentialHarness.md` §8/§9 and
+  `ImplementationPlan.md` TEST-07.

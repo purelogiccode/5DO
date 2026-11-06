@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FiveDo.DiffHarness;
@@ -7,6 +8,9 @@ namespace FiveDo.Tests.DiffHarness;
 
 public sealed class DiffManifestBuilderTests : IDisposable
 {
+    private static readonly int[] PanelCheckpoints = [60, 120, 300];
+    private static readonly int[] FinalCheckpoint = [300];
+
     private readonly string _directory = Path.Combine(
         Path.GetTempPath(),
         "fivedo-diff-build-" + Guid.NewGuid().ToString("N"));
@@ -63,6 +67,94 @@ public sealed class DiffManifestBuilderTests : IDisposable
         DiffManifest manifest = DiffManifestLoader.Load(path);
 
         Assert.Equal("D:/games/Alpha.chd", manifest.Titles![0].Disc);
+    }
+
+    [Fact]
+    public void BuildPanel_SelectsEvenlySpacedTitlesAndAppliesTest07Policy()
+    {
+        DiffManifest panel = DiffManifestBuilder.BuildPanel(
+            Source(10),
+            count: 5,
+            frames: 300,
+            checkpoints: [60, 120, 300],
+            operaCore: "artifacts/diff/opera-build-current/OperaCore.dll",
+            workDirectory: "artifacts/diff/work-panel",
+            name: "panel");
+
+        Assert.Equal("panel", panel.Name);
+        Assert.Equal(5, panel.Titles!.Length);
+        Assert.Equal("t0", panel.Titles[0].Id);
+        Assert.Equal("t9", panel.Titles[^1].Id);
+        Assert.Equal(5, panel.Titles.Select(title => title.Id).Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal(300, panel.Defaults!.Frames);
+        Assert.Equal(PanelCheckpoints, panel.Defaults.Checkpoints);
+        Assert.Equal("artifacts/diff/opera-build-current/OperaCore.dll", panel.Defaults.OperaCore);
+        Assert.Equal("artifacts/diff/work-panel", panel.Defaults.WorkDirectory);
+        Assert.True(panel.Defaults.Compare!.ComparePc);
+        Assert.True(panel.Defaults.Compare.CompareCpsr);
+        Assert.True(panel.Defaults.Compare.CompareCd);
+        Assert.True(panel.Defaults.Compare.CompareSamples);
+        Assert.Equal(512, panel.Defaults.Compare.SampleTolerance);
+        Assert.All(panel.Titles, title => Assert.Empty(title.Allow!));
+        Assert.All(panel.Titles, title => Assert.Null(title.Frames));
+        Assert.All(panel.Titles, title => Assert.Null(title.Checkpoints));
+    }
+
+    [Fact]
+    public void BuildPanel_CountLargerThanSourceReturnsEveryTitle()
+    {
+        DiffManifest panel = DiffManifestBuilder.BuildPanel(
+            Source(3), count: 50, frames: 300, checkpoints: [], null, null, null);
+
+        Assert.Equal(3, panel.Titles!.Length);
+        Assert.Equal(FinalCheckpoint, panel.Defaults!.Checkpoints);
+    }
+
+    [Fact]
+    public void BuildPanel_CountOneReturnsFirstTitle()
+    {
+        DiffManifest panel = DiffManifestBuilder.BuildPanel(
+            Source(10), count: 1, frames: 300, checkpoints: [300], null, null, null);
+
+        DiffTitle title = Assert.Single(panel.Titles!);
+        Assert.Equal("t0", title.Id);
+    }
+
+    private static DiffManifest Source(int count)
+    {
+        return new DiffManifest
+        {
+            Name = "source",
+            Roots = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["games"] = "D:/games",
+            },
+            Defaults = new DiffDefaults
+            {
+                Bios = "bios/panafz1.bin",
+                Frames = 3000,
+                Options = new DiffMachineOptions { Profile = "accuracy" },
+            },
+            Titles = Enumerable.Range(0, count)
+                .Select(index => new DiffTitle
+                {
+                    Id = "t" + index,
+                    Name = "Title " + index,
+                    Disc = "${games}/t" + index + ".chd",
+                    Frames = 1000,
+                    Checkpoints = [1000],
+                    Allow =
+                    [
+                        new DiffAllowance
+                        {
+                            Field = "frameHash",
+                            Checkpoint = 1000,
+                            Reason = "inherited",
+                        },
+                    ],
+                })
+                .ToArray(),
+        };
     }
 
     public void Dispose()

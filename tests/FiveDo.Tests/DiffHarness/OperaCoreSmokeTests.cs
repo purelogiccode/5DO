@@ -80,7 +80,8 @@ public sealed class OperaCoreSmokeTests : IDisposable
             manifest.Titles![0],
             repoRoot,
             repoRoot,
-            _directory);
+            _directory,
+            HarnessCommon.DefaultSeed);
 
         Assert.True(result.Ok, result.Error);
         Assert.Equal(60, result.FramesRun);
@@ -143,7 +144,8 @@ public sealed class OperaCoreSmokeTests : IDisposable
             manifest.Titles![0],
             repoRoot,
             repoRoot,
-            _directory);
+            _directory,
+            HarnessCommon.DefaultSeed);
 
         Assert.True(result.Ok, result.Error);
         CaptureSample checkpoint = Assert.Single(result.Checkpoints);

@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-06, after the VID-12 latency update, the PERF-02 AOT/trimming audit, the 1.3.0 field-handling update, the 1.2.2 performance/library update, the 1.2.1 arm64 packaging update, the 1.2.0 feature/accuracy update, the rewind-capture stall fix, SYS-12 SWI HLE, SYS-17 game-database expansion, SYS-08 clock validation, the third PERF-08 JIT pass, the ENG-02 interpreter hot-path increment, and the PERF-05 high-resolution VDLP copy: Direct3D 11,
+**Snapshot:** 2026-11-06, after the TEST-07 oracle increment, the VID-12 latency update, the PERF-02 AOT/trimming audit, the 1.3.0 field-handling update, the 1.2.2 performance/library update, the 1.2.1 arm64 packaging update, the 1.2.0 feature/accuracy update, the rewind-capture stall fix, SYS-12 SWI HLE, SYS-17 game-database expansion, SYS-08 clock validation, the third PERF-08 JIT pass, the ENG-02 interpreter hot-path increment, and the PERF-05 high-resolution VDLP copy: Direct3D 11,
 startup release checks, the fuzz harness, per-edge overscan/void border, screenshot
 gallery filters, FIQ/DMA/DSP telemetry, flat CHD/raw ISO support, and display-refresh
 control. The earlier first full-collection sweep, performance, timing-option, BIOS,
@@ -11,6 +11,21 @@ passes are retained below. Road Rash's
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
 **594 discs tested: 593 Loadable/Rendered, 1 Loadable/No video (known boot failure), 0 Not Loadable.**
+
+**TEST-07 oracle increment (2026-11-06):** the differential harness now applies a
+fixed seed to both engines (`--seed`, default 1488), compares ARM CPSR and CD
+command counts/opcode hashes, and reports the **first divergence** in the console,
+JSON, and Markdown. Two consecutive runs of the new five-title
+`benchmarks/diff/samples5.json` panel produced identical checkpoint arrays for both
+engines. The first divergence is the ARM PC at frame 60 on all five titles;
+Lemmings' CD commands match 9/9 at frame 60 and 50/50 at frame 120, then 108/105 at
+frame 300, and its CPSR differs at frame 60 by the FIQ-disable bit. The cumulative
+audio hash is recorded but not gated because the 59.94/60 Hz field-rate offset
+leaves a systematic sample-count delta. The `panel` command generated
+`benchmarks/diff/panel50.json` (50 evenly spaced titles from the 594-disc
+manifest). The suite is **1,879 tests**. See
+[`DifferentialHarness.md`](DifferentialHarness.md) 8 and
+[`TestCorpus.md`](TestCorpus.md) 1.1aw.
 
 **Performance increment (2026-11-05):** the default rewind history no longer stalls the
 emulation thread. Keyframe capture on Lemmings fell from **139.3 ms** to **7.4-9.2 ms**

@@ -27,6 +27,7 @@ internal static class Program
                 "validate" => ValidateCommand(args),
                 "baseline" => BaselineCommand(args),
                 "manifest" => ManifestCommand(args),
+                "panel" => PanelCommand(args),
                 "help" => HelpCommand(),
                 _ => UnknownCommand(args[0]),
             };
@@ -94,6 +95,10 @@ internal static class Program
             Directory.CreateDirectory(titleDirectory);
             var fiveDoPath = Path.Combine(titleDirectory, "fivedo.capture.json");
             var operaPath = Path.Combine(titleDirectory, "opera.capture.json");
+            var machineOptions = DiffManifestLoader.MergeOptions(
+                manifest.Defaults?.Options,
+                title.Options);
+            var seed = HarnessCommon.ResolveSeed(harness, machineOptions, title.Id);
 
             Console.Write($"[{title.Id}] 5DO ... ");
             var fiveDoDisc = DiffManifestLoader.ResolvePath(repoRoot, manifestDirectory, title.Disc);
@@ -101,7 +106,7 @@ internal static class Program
                 fiveDoPath,
                 harness,
                 () => FiveDoCaptureRunner.Capture(
-                    harness, manifest, title, repoRoot, manifestDirectory, outputDirectory, cli),
+                    harness, manifest, title, repoRoot, manifestDirectory, outputDirectory, cli, seed),
                 existing => existing.Ok
                     && existing.FramesRequested == frames
                     && string.Equals(existing.Disc, fiveDoDisc, StringComparison.OrdinalIgnoreCase));
@@ -129,7 +134,7 @@ internal static class Program
                 operaPath,
                 harness,
                 () => OperaCoreCaptureRunner.Capture(
-                    harness, manifest, title, repoRoot, manifestDirectory, outputDirectory),
+                    harness, manifest, title, repoRoot, manifestDirectory, outputDirectory, seed),
                 existing => existing.Ok && existing.FramesRequested == frames);
             Console.WriteLine(opera.Ok ? $"ok ({opera.FramesRun} frames, {opera.ElapsedSeconds:F1}s)" : "failed");
             SaveCapture(operaPath, opera);
@@ -145,12 +150,20 @@ internal static class Program
                 fiveDo,
                 opera,
                 frames,
-                harness.ComparePc,
-                harness.PcTolerance);
+                comparePc: harness.ComparePc,
+                pcTolerance: harness.PcTolerance,
+                compareCd: harness.CompareCd,
+                compareAudio: harness.CompareAudio);
             results.Add(result);
             Console.WriteLine(
                 $"[{title.Id}] {result.Status} "
                 + $"({result.AllowedCount} allowed, {result.DivergedCount} diverged)");
+            if (result.FirstDivergence is { } first)
+            {
+                Console.WriteLine(
+                    $"[{title.Id}] first divergence f={first.Frame} {first.Field} "
+                    + $"5do={first.FiveDo ?? "-"} opera={first.Opera ?? "-"}");
+            }
         }
 
         var provenance = new DiffProvenance
@@ -169,6 +182,7 @@ internal static class Program
             CelTimingOverride = harness.CelTiming,
             CdTimingOverride = harness.CdTiming,
             ProfileOverride = harness.Profile,
+            Seed = harness.Seed ?? HarnessCommon.DefaultSeed,
             Host = RuntimeInformation.OSDescription,
             Runtime = RuntimeInformation.FrameworkDescription,
         };
@@ -419,6 +433,90 @@ internal static class Program
         return 0;
     }
 
+    private static int PanelCommand(string[] args)
+    {
+        string? sourcePath = null;
+        var output = "benchmarks/diff/panel50.json";
+        var count = 50;
+        var frames = 300;
+        var checkpoints = new List<int>();
+        string? operaCore = null;
+        string? workDirectory = null;
+        string? name = null;
+        for (var i = 1; i < args.Length; i++)
+        {
+            switch (args[i])
+            {
+                case "--from":
+                    sourcePath = NextValue(args, ref i);
+                    break;
+                case "--out":
+                    output = NextValue(args, ref i);
+                    break;
+                case "--count":
+                    count = int.Parse(NextValue(args, ref i), CultureInfo.InvariantCulture);
+                    break;
+                case "--frames":
+                    frames = int.Parse(NextValue(args, ref i), CultureInfo.InvariantCulture);
+                    break;
+                case "--checkpoint":
+                    checkpoints.Add(int.Parse(NextValue(args, ref i), CultureInfo.InvariantCulture));
+                    break;
+                case "--core":
+                    operaCore = NextValue(args, ref i);
+                    break;
+                case "--work":
+                    workDirectory = NextValue(args, ref i);
+                    break;
+                case "--name":
+                    name = NextValue(args, ref i);
+                    break;
+                case "--json":
+                    break;
+                default:
+                    throw new ArgumentException($"Unknown panel option '{args[i]}'.", nameof(args));
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(sourcePath))
+        {
+            throw new ArgumentException("panel needs --from <manifest>.", nameof(args));
+        }
+
+        if (checkpoints.Count == 0)
+        {
+            checkpoints.AddRange([60, 120, 300]);
+        }
+
+        var repoRoot = DiffManifestLoader.FindRepositoryRoot();
+        var fromPath = Path.IsPathRooted(sourcePath)
+            ? sourcePath
+            : Path.Combine(repoRoot, sourcePath);
+        DiffManifest source = DiffManifestLoader.LoadRaw(fromPath);
+        DiffManifest panel = DiffManifestBuilder.BuildPanel(
+            source,
+            count,
+            frames,
+            [.. checkpoints],
+            operaCore,
+            workDirectory,
+            name);
+        var outputPath = Path.IsPathRooted(output) ? output : Path.Combine(repoRoot, output);
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        File.WriteAllText(
+            outputPath,
+            JsonSerializer.Serialize(panel, DiffJsonContext.Default.DiffManifest),
+            Encoding.UTF8);
+        Console.WriteLine(
+            $"panel: {panel.Titles!.Length} title(s) from {source.Titles?.Length ?? 0}, {outputPath}");
+        if (HasFlag(args, "--json"))
+        {
+            Console.WriteLine(JsonSerializer.Serialize(panel, DiffJsonContext.Default.DiffManifest));
+        }
+
+        return 0;
+    }
+
     private static int HelpCommand()
     {
         PrintUsage();
@@ -473,6 +571,15 @@ internal static class Program
                     break;
                 case "--compare-pc":
                     harness.ComparePc = true;
+                    break;
+                case "--compare-cd":
+                    harness.CompareCd = true;
+                    break;
+                case "--compare-audio":
+                    harness.CompareAudio = true;
+                    break;
+                case "--seed":
+                    harness.Seed = ParseSeed(NextValue(args, ref i));
                     break;
                 case "--pc-tolerance":
                     harness.PcTolerance = long.Parse(NextValue(args, ref i), CultureInfo.InvariantCulture);
@@ -589,6 +696,25 @@ internal static class Program
         return report ?? throw new InvalidDataException($"Report '{path}' is empty.");
     }
 
+    private static uint ParseSeed(string value)
+    {
+        var text = value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? value[2..] : value;
+        if (!uint.TryParse(
+                text,
+                value.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+                    ? NumberStyles.HexNumber
+                    : NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out var seed))
+        {
+            throw new ArgumentException(
+                $"Invalid --seed value '{value}'; expected a 32-bit integer.",
+                nameof(value));
+        }
+
+        return seed;
+    }
+
     private static bool HasFlag(string[] args, string flag)
     {
         return args.Any(argument => string.Equals(argument, flag, StringComparison.OrdinalIgnoreCase));
@@ -618,6 +744,7 @@ internal static class Program
         Console.WriteLine("  FiveDo.DiffHarness validate <manifest.json> [--strict]");
         Console.WriteLine("  FiveDo.DiffHarness baseline --baseline <report.json> --current <report.json>");
         Console.WriteLine("  FiveDo.DiffHarness manifest --root <dir> [--root <dir>] [--out <path>] [options]");
+        Console.WriteLine("  FiveDo.DiffHarness panel --from <manifest> --out <path> [options]");
         Console.WriteLine();
         Console.WriteLine("manifest options:");
         Console.WriteLine("  --root <dir>       Disc root; repeated roots become ${games}, ${games2}, ...");
@@ -626,6 +753,16 @@ internal static class Program
         Console.WriteLine("  --checkpoint <n>   Checkpoint frame; repeatable (default final frame)");
         Console.WriteLine("  --extension <ext>  Disc extension; repeatable (default .chd)");
         Console.WriteLine("  --bios <path>      BIOS path written to the manifest");
+        Console.WriteLine();
+        Console.WriteLine("panel options:");
+        Console.WriteLine("  --from <path>      Source manifest (required)");
+        Console.WriteLine("  --out <path>       Panel manifest path (default benchmarks/diff/panel50.json)");
+        Console.WriteLine("  --count <n>        Evenly spaced titles to select (default 50)");
+        Console.WriteLine("  --frames <n>       Frame count per title (default 300)");
+        Console.WriteLine("  --checkpoint <n>   Checkpoint frame; repeatable (default 60,120,300)");
+        Console.WriteLine("  --core <path>      Debug OperaCore path written to the panel");
+        Console.WriteLine("  --work <dir>       Work directory written to the panel");
+        Console.WriteLine("  --name <name>      Panel display name");
         Console.WriteLine();
         Console.WriteLine("run options:");
         Console.WriteLine("  --out <dir>        Output directory (default artifacts/diff)");
@@ -645,7 +782,10 @@ internal static class Program
         Console.WriteLine("  --no-opera         Capture 5DO only");
         Console.WriteLine("  --no-images        Skip checkpoint BMP/PNG captures");
         Console.WriteLine("  --cleanup-iso      Delete the staged ISO after a successful Opera capture");
-        Console.WriteLine("  --compare-pc       Include the ARM PC in the pass/fail gate (requires the debug core)");
+        Console.WriteLine("  --compare-pc       Include the ARM PC and CPSR in the pass/fail gate (requires the debug core)");
+        Console.WriteLine("  --compare-cd       Include the CD command count/hash in the pass/fail gate (requires the debug core)");
+        Console.WriteLine("  --compare-audio    Include the cumulative audio hash in the pass/fail gate (fixed seed required)");
+        Console.WriteLine("  --seed <n>         Fixed PRNG seed for both engines (default 1488)");
         Console.WriteLine("  --pc-tolerance <n> Allowed absolute PC delta in bytes (default 0)");
         Console.WriteLine("  --timeout <s>      Per-engine timeout override");
         Console.WriteLine("  --report-name <n>  Report file stem (default report)");
