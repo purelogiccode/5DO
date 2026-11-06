@@ -111,6 +111,7 @@ public sealed class FiveDoMachine
         Memory.DiagPort = Diag;
 
         Cpu = new Arm60(Memory.Bus, Clio, Tuning, Compatibility, Memory.Ram);
+        Memory.RamWriteHook = Cpu.NotifyRamWrite;
         Quartz = new Quartz(Tuning, () => Clio.TimerDelay);
 
         Clio.CycleProvider = () => Cpu.CyclesExecuted;

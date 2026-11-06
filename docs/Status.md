@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-05, after the 1.2.1 arm64 packaging update, the 1.2.0 feature/accuracy update, the rewind-capture stall fix, SYS-12 SWI HLE, SYS-17 game-database expansion, SYS-08 clock validation, and the partial PERF-08 managed JIT: Direct3D 11,
+**Snapshot:** 2026-11-05, after the 1.2.1 arm64 packaging update, the 1.2.0 feature/accuracy update, the rewind-capture stall fix, SYS-12 SWI HLE, SYS-17 game-database expansion, SYS-08 clock validation, the second PERF-08 JIT pass, the ENG-02 interpreter hot-path increment, and the PERF-05 high-resolution VDLP copy: Direct3D 11,
 startup release checks, the fuzz harness, per-edge overscan/void border, screenshot
 gallery filters, FIQ/DMA/DSP telemetry, flat CHD/raw ISO support, and display-refresh
 control. The earlier first full-collection sweep, performance, timing-option, BIOS,
@@ -19,7 +19,19 @@ gen0/gen2 collections, and the frame loop measured p50 **1.34 ms** / p99 **6.85 
 max **14.76 ms** with the mailbox and rewind active. The memory save-state section
 (version 4) now stores only the live RAM/VRAM range, cutting a stock-layout uncompressed
 state from ~26 MB to ~10 MB, and the frontend opens discs through the prefetch cache.
-See [`Performance.md`](Performance.md) 8.5. The suite is **1,802 tests**.
+See [`Performance.md`](Performance.md) 8.5. The suite is **1,807 tests**.
+
+**CPU and high-res increment (2026-11-05):** the second PERF-08 pass replaced
+per-instruction JIT verification with exact RAM-write block invalidation and fixed compiled
+R15 operands, keeping the JIT bit-identical on a 2,000-frame Lemmings run. The synthetic
+ALU/store loop is **1.7x faster** with the new JIT than the old one, but Lemmings boot is
+still ~1.3-1.4x slower than the interpreter, so the interpreter remains the default. ENG-02
+added direct RAM/ROM instruction fetch, inline LSL#0/rotated-immediate operand paths, a
+flag-preserving ALU dispatch, and population-count LDM/STM iteration; an interleaved A/B
+measured synthetic **1.58→1.33 ms/frame** and Lemmings **1.43→1.13 ms/frame** with unchanged
+hashes. PERF-05 now reads the raw VRAM word span for high-resolution scanline DMA, cutting
+Lemmings high-res from **2.42-2.47** to **1.30-1.43 ms/frame** (about 1.8x) with an identical
+high-res hash. See [`Performance.md`](Performance.md) 8.4 and 8.6.
 
 **Release status (2026-11-02):** **v1.0.0 is released** as a documented-compatibility
 release. The version is bumped, the source is tagged `v1.0.0`, and one unified bundle
@@ -69,7 +81,7 @@ bounded background tasks, so the non-virtualizing grid does not block the list. 
 all entries in 17 ms before background metadata hashing. The library now reports both counts
 (for example `653 games · 1,366 images`) because discs are identified by the 4DO game ID
 (MD5 of the first two data sectors); **Settings > Paths > Show duplicate disc images** lists
-every renamed or GoodTools/Redump/No-Intro copy. PERF-08 added an opt-in managed IL JIT (`--cpu-backend jit`) for hot data-processing, load/store, and branch blocks. It is bit-identical in 100M-instruction lockstep and on 3,000-frame Lemmings plus 1,000-frame Road Rash/Powers Kingdom hashes, but end-to-end boot is 1.17-1.85x slower than the interpreter, so PERF-08 remains Partial and the interpreter remains the default. SYS-17 expanded the game database from 518 to 653
+every renamed or GoodTools/Redump/No-Intro copy. PERF-08 added an opt-in managed IL JIT (`--cpu-backend jit`) for hot data-processing, load/store, and branch blocks. A second pass keeps PC/CPSR/operands in block locals, compiles through RAM stores and conditional fallthroughs, and invalidates blocks exactly on guest code writes. It is bit-identical on the test corpus and a 2,000-frame Lemmings hashes/instructions/cycles match, and the synthetic ALU/store loop is 1.77x faster, but Lemmings boot is still 1.37x slower than the interpreter, so PERF-08 remains Partial and the interpreter remains the default. SYS-17 expanded the game database from 518 to 653
 records and added `gamedb stats|scan|export|merge`, `docs/GameDatabase.md`, and a
 filename parser for Redump/GoodTools/No-Intro layouts. The schema now carries revision,
 disc number, BIOS/BIOS2, fix mode, input devices, NVRAM, and cheat fields; fix, BIOS, and
@@ -77,7 +89,7 @@ input values are consumed at runtime. `gamedb stats --folder "J:\Panasonic 3DO"`
 1,366 readable images, 653 unique IDs, and 100% metadata coverage with no errors
 (the three exceptions are audio-only `[CD-Audio]` CHDs). SYS-08 added the five-title
 0.5x-1x-2x-4x A/B in `Performance.md` §8.3 and kept the stock 12.5 MHz default; every
-non-stock clock changed guest behavior. The suite is **1,802 tests**.
+non-stock clock changed guest behavior. The suite is **1,807 tests**.
 
 **SYS-12 (2026-11-04):** Portfolio OS SWI HLE is available behind `--swi-hle`,
 Settings > Emulation, and per-game profiles. It handles Opera's 14 fixed-point math SWIs

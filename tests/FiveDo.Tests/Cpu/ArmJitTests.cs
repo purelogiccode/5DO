@@ -132,6 +132,70 @@ public sealed class ArmJitTests
         Assert.Equal(16u, pair.RigJit.Cpu.ReadRegister(1));
     }
 
+    [Fact]
+    public void Jit_CompilesHotBlocks()
+    {
+        var rig = new ArmTestRig(new EmulatorTuning { CpuBackend = CpuBackendKind.Jit });
+        rig.LoadProgram(
+            ArmTestAssembler.Mov(0, 1),
+            ArmTestAssembler.AddImmediate(0, 0, 1),
+            ArmTestAssembler.Branch(0x1000, 0x1008));
+
+        for (var i = 0; i < 100_000; i++)
+        {
+            rig.Cpu.RunJitBlock();
+        }
+
+        Assert.True(rig.Cpu.JitBlockCount > 0, rig.Cpu.JitLastFailure ?? "no blocks compiled");
+        Assert.False(rig.Cpu.JitCompileFailed);
+    }
+
+    [Fact]
+    public void Jit_MatchesInterpreter_ForHotStoreLoop()
+    {
+        JitPair pair = JitPair.Create(
+            ArmTestAssembler.Mov(0, 0x2000),
+            ArmTestAssembler.Mov(1, 0),
+            ArmTestAssembler.AddImmediate(1, 1, 1),
+            ArmTestAssembler.StrImmediate(1, 0),
+            ArmTestAssembler.LdrImmediate(2, 0),
+            ArmTestAssembler.DpRegister(4, 3, 3, 2),
+            ArmTestAssembler.Branch(0x1000, 0x1018, condition: 1));
+
+        pair.RunBlocks(200_000);
+    }
+
+    [Fact]
+    public void Jit_MatchesInterpreter_ForPcRelativeRegisterMoves()
+    {
+        JitPair pair = JitPair.Create(
+            ArmTestAssembler.Mov(0, 1),
+            ArmTestAssembler.Mov(1, 2),
+            ArmTestAssembler.MovRegister(14, 15),
+            ArmTestAssembler.AddImmediate(2, 2, 1),
+            ArmTestAssembler.Branch(0x1000, 0x1010));
+
+        pair.RunBlocks(200_000);
+    }
+
+    [Fact]
+    public void Jit_RefreshesModifiedCompiledCode()
+    {
+        JitPair pair = JitPair.Create(
+            ArmTestAssembler.Mov(0, 1),
+            ArmTestAssembler.AddImmediate(1, 1, 1),
+            ArmTestAssembler.Branch(0x1000, 0x1008));
+
+        pair.RunBlocks(100_000);
+
+        // The block is now compiled. Rewrite its first instruction through the raw RAM
+        // accessor, which must invalidate the compiled block.
+        pair.RigJit.WriteRam(0x1000, ArmTestAssembler.Mov(0, 9));
+        pair.RigI.WriteRam(0x1000, ArmTestAssembler.Mov(0, 9));
+
+        pair.RunBlocks(100_000);
+    }
+
     private sealed class JitPair
     {
         private JitPair(ArmTestRig interpreter, ArmTestRig jit)

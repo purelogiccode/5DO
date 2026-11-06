@@ -26,6 +26,17 @@ public interface IAddressBus
     /// <returns>The word, or <see cref="EmulatorConstants.UnmappedValue"/> when unmapped.</returns>
     uint Read32(uint address);
 
+    /// <summary>
+    /// Reads the instruction word at the program counter.
+    /// </summary>
+    /// <param name="address">Instruction address. Aligned to four bytes.</param>
+    /// <returns>The instruction word.</returns>
+    /// <remarks>
+    /// The default implementation forwards to <see cref="Read32"/>. Memory buses can
+    /// override it with a direct RAM/ROM fast path for the interpreter loop.
+    /// </remarks>
+    uint ReadInstruction(uint address) => Read32(address);
+
     /// <summary>Writes one byte.</summary>
     /// <param name="address">CPU address.</param>
     /// <param name="value">Byte value.</param>

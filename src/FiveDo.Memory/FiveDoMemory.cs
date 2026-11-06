@@ -95,6 +95,9 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     /// <summary>Gets the RAM/VRAM raw accessor.</summary>
     public IRam Ram => this;
 
+    /// <summary>Gets the raw word backing store for bulk scanline copies.</summary>
+    public ReadOnlySpan<uint> Words => _ram;
+
     /// <summary>Gets the CPU address bus.</summary>
     public IAddressBus Bus => this;
 
@@ -119,6 +122,15 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     /// operation and must stay off the hot path unless a diagnostic is requested.
     /// </remarks>
     public Action<uint, uint, int>? RamWriteObserver { get; set; }
+
+    /// <summary>
+    /// Gets or sets a host-only callback invoked for every RAM write after the store commits.
+    /// </summary>
+    /// <remarks>
+    /// The CPU JIT uses this to invalidate compiled blocks when guest code changes. It is
+    /// invoked for CPU, DMA, CEL, and cheat-engine writes. Keep it allocation-free.
+    /// </remarks>
+    public Action<uint, int>? RamWriteHook { get; set; }
 
     /// <summary>Gets a read-only view of NVRAM.</summary>
     public ReadOnlySpan<byte> Nvram => _nvram;
@@ -349,6 +361,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     public void ClearRam()
     {
         _ram.AsSpan().Clear();
+        RamWriteHook?.Invoke(0, Size);
     }
 
     /// <summary>Resets the bus and ROM bank without clearing RAM or NVRAM.</summary>
@@ -452,6 +465,8 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
             RamWriteObserver?.Invoke(offset, value, 1);
         }
 
+        RamWriteHook?.Invoke(offset, 1);
+
         var shift = (int)((offset & 3) * 8);
         var mask = 0xFFu << shift;
         _ram[index] = (_ram[index] & ~mask) | ((uint)value << shift);
@@ -471,6 +486,8 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
             {
                 RamWriteObserver?.Invoke(offset, value, 2);
             }
+
+            RamWriteHook?.Invoke(offset, 2);
 
             var shift = (int)((offset & 3) * 8);
             var mask = 0xFFFFu << shift;
@@ -498,9 +515,11 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
         if ((offset & 3) == 0)
         {
             _ram[index] = value;
+            RamWriteHook?.Invoke(offset, 4);
             return;
         }
 
+        RamWriteHook?.Invoke(offset, 4);
         WriteRam8(offset, (byte)value, notify: false);
         WriteRam8(offset + 1, (byte)(value >> 8), notify: false);
         WriteRam8(offset + 2, (byte)(value >> 16), notify: false);
@@ -620,6 +639,24 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
         }
 
         return EmulatorConstants.UnmappedValue;
+    }
+
+    /// <inheritdoc />
+    public uint ReadInstruction(uint address)
+    {
+        address &= ~3u;
+        if (!_romOverlay && address < _layout.RamSize)
+        {
+            return _ram[address >> 2];
+        }
+
+        var index = address ^ EmulatorConstants.RomBase;
+        if ((index & ~0xFFFFFu) == 0)
+        {
+            return _rom[(_romBank * (EmulatorConstants.RomBankSize / sizeof(uint))) + (int)(index >> 2)];
+        }
+
+        return Read32(address);
     }
 
     /// <inheritdoc />

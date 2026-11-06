@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using FiveDo.Core;
 
 namespace FiveDo.Cpu;
@@ -41,6 +42,7 @@ public sealed partial class Arm60 : ICpuBackend, IStateSection
     private readonly IAddressBus _bus;
     private readonly IRam? _ram;
     private readonly IInterruptSink? _interrupts;
+    private readonly IPcAdjustSource? _pcAdjustSource;
     private readonly EmulatorTuning _tuning;
     private readonly CompatibilityState _compatibility;
     private readonly Arm60State _state = new();
@@ -77,6 +79,7 @@ public sealed partial class Arm60 : ICpuBackend, IStateSection
         _bus = bus;
         _ram = ram;
         _interrupts = interrupts;
+        _pcAdjustSource = bus as IPcAdjustSource;
         _tuning = tuning ?? EmulatorTuning.Default;
         _tuning.Validate();
         _nCycle = _tuning.ArmTiming == ArmTimingMode.Arm60Datasheet ? 2 : 4;
@@ -317,7 +320,7 @@ public sealed partial class Arm60 : ICpuBackend, IStateSection
             _compatibility.Cnbfix = true;
         }
 
-        var instruction = _bus.Read32(state.ProgramCounter);
+        var instruction = _bus.ReadInstruction(state.ProgramCounter);
         var isException = instruction == 0xE5101810 && state.Cpsr == 0x80000093;
         state.ProgramCounter += 4;
         _cycles = -Scycle;
@@ -629,13 +632,23 @@ public sealed partial class Arm60 : ICpuBackend, IStateSection
             // the rotated result. The old FreeDO path rotated the value but left
             // the shifter carry stale, so MOVS/TSTS with a rotated immediate could
             // set CPSR.C from an unrelated previous instruction.
-            op2 = ArmBarrelShifter.ShiftNoCarry(
-                state,
-                instruction & 0xff,
-                (byte)((instruction >> 7) & 0x1e),
-                3,
-                out _carryOut);
+            var immediate = instruction & 0xff;
+            var rotate = (int)((instruction >> 7) & 0x1e);
+            op2 = rotate == 0
+                ? immediate
+                : ArmBarrelShifter.RotateRight(immediate, rotate);
+            _carryOut = rotate == 0
+                ? (state.Cpsr >> 29) & 1u
+                : (immediate >> (rotate - 1)) & 1u;
             op1 = state.User[(int)((instruction >> 16) & 0xf)];
+        }
+        else if ((instruction & 0x0ff0u) == 0)
+        {
+            // LSL #0: the most common register form. Skip the barrel-shifter call;
+            // the carry-out is the old carry.
+            op2 = state.User[(int)(instruction & 0xf)];
+            op1 = state.User[(int)((instruction >> 16) & 0xf)];
+            _carryOut = (state.Cpsr >> 29) & 1u;
         }
         else
         {
@@ -677,12 +690,45 @@ public sealed partial class Arm60 : ICpuBackend, IStateSection
 
         state.ProgramCounter = programCounter;
 
+        var opcode = (instruction >> 20) & 0x1f;
+        if ((opcode & 1) == 0 && opcode is not (16 or 18 or 20 or 22))
+        {
+            // Flag-preserving operations are the overwhelmingly common case. Apply
+            // them directly instead of calling the generic ARM_ALU dispatch.
+            var carry = (state.Cpsr >> 29) & 1u;
+            uint result = opcode switch
+            {
+                0 => op1 & op2,
+                2 => op1 ^ op2,
+                4 => unchecked(op1 - op2),
+                6 => unchecked(op2 - op1),
+                8 => unchecked(op1 + op2),
+                10 => unchecked(op1 + op2 + carry),
+                12 => unchecked(op1 - op2 - (carry ^ 1u)),
+                14 => unchecked(op2 - op1 - (carry ^ 1u)),
+                24 => op1 | op2,
+                26 => op2,
+                28 => op1 & ~op2,
+                30 => ~op2,
+                _ => 0u,
+            };
+
+            var destination = (int)((instruction >> 12) & 0xf);
+            state.User[destination] = result;
+            if (destination == 15)
+            {
+                _cycles -= Icycle + _nCycle;
+            }
+
+            return;
+        }
+
         if ((instruction & (1u << 20)) != 0 && IsLogic[(int)((instruction >> 21) & 0xf)])
         {
             state.SetC(_carryOut);
         }
 
-        if (ArmAlu.Execute(state, instruction, (instruction >> 20) & 0x1f, op1, op2))
+        if (ArmAlu.Execute(state, instruction, opcode, op1, op2))
         {
             return;
         }
@@ -888,18 +934,13 @@ public sealed partial class Arm60 : ICpuBackend, IStateSection
                 state.LoadUser(register, baseAddress);
             }
 
-            uint index = 0;
             while (list != 0)
             {
-                if ((list & 1) != 0)
-                {
-                    var value = ReadWord(basePointer);
-                    state.LoadUser((int)index, value);
-                    basePointer += 4;
-                }
-
-                index++;
-                list >>= 1;
+                var index = BitOperations.TrailingZeroCount(list);
+                list &= list - 1;
+                var value = ReadWord(basePointer);
+                state.LoadUser(index, value);
+                basePointer += 4;
             }
         }
         else
@@ -909,44 +950,39 @@ public sealed partial class Arm60 : ICpuBackend, IStateSection
                 state.Load(register, baseAddress);
             }
 
-            uint index = 0;
             while (list != 0)
             {
-                if ((list & 1) != 0)
+                var index = BitOperations.TrailingZeroCount(list);
+                list &= list - 1;
+                var value = ReadWord(basePointer);
+                if (value == 0xF1000 &&
+                    index == 1 &&
+                    state.User[2] != 0xF0000 &&
+                    !_compatibility.Cnbfix &&
+                    (_compatibility.FixMode & FixMode.BitTiming1) != FixMode.None)
                 {
-                    var value = ReadWord(basePointer);
-                    if (value == 0xF1000 &&
-                        index == 1 &&
-                        state.User[2] != 0xF0000 &&
+                    value += 0x1000;
+                }
+
+                if (_ldmInUse == 1 && (basePointer & 0x1FFFFF) != 0)
+                {
+                    if (basePointer == unchecked((uint)_ldmAddress))
+                    {
+                        _ldmInUse = 0;
+                    }
+
+                    if (value != (uint)_ldmValue &&
+                        value == 0xEFE54 &&
+                        index == 4 &&
                         !_compatibility.Cnbfix &&
                         (_compatibility.FixMode & FixMode.BitTiming1) != FixMode.None)
                     {
-                        value += 0x1000;
+                        value -= 0xF;
                     }
-
-                    if (_ldmInUse == 1 && (basePointer & 0x1FFFFF) != 0)
-                    {
-                        if (basePointer == unchecked((uint)_ldmAddress))
-                        {
-                            _ldmInUse = 0;
-                        }
-
-                        if (value != (uint)_ldmValue &&
-                            value == 0xEFE54 &&
-                            index == 4 &&
-                            !_compatibility.Cnbfix &&
-                            (_compatibility.FixMode & FixMode.BitTiming1) != FixMode.None)
-                        {
-                            value -= 0xF;
-                        }
-                    }
-
-                    state.User[(int)index] = value;
-                    basePointer += 4;
                 }
 
-                index++;
-                list >>= 1;
+                state.User[index] = value;
+                basePointer += 4;
             }
 
             if ((instruction & (1u << 22)) != 0)
@@ -996,17 +1032,12 @@ public sealed partial class Arm60 : ICpuBackend, IStateSection
                 state.LoadUser(register, baseAddress);
             }
 
-            uint index = 0;
             while (list != 0)
             {
-                if ((list & 1) != 0)
-                {
-                    WriteWord(basePointer, state.ReadUser((int)index));
-                    basePointer += 4;
-                }
-
-                index++;
-                list >>= 1;
+                var index = BitOperations.TrailingZeroCount(list);
+                list &= list - 1;
+                WriteWord(basePointer, state.ReadUser(index));
+                basePointer += 4;
             }
 
             if ((instruction & (1u << 21)) != 0)
@@ -1021,25 +1052,20 @@ public sealed partial class Arm60 : ICpuBackend, IStateSection
                 state.Load(register, baseAddress);
             }
 
-            uint index = 0;
             while (list != 0)
             {
-                if ((list & 1) != 0)
+                var index = BitOperations.TrailingZeroCount(list);
+                list &= list - 1;
+                var value = state.User[index];
+                WriteWord(basePointer, value);
+                if ((basePointer & 0x1FFFFF) != 0)
                 {
-                    var value = state.User[(int)index];
-                    WriteWord(basePointer, value);
-                    if ((basePointer & 0x1FFFFF) != 0)
-                    {
-                        _ldmAddress = unchecked((int)basePointer);
-                        _ldmValue = unchecked((int)value);
-                        _ldmInUse = 1;
-                    }
-
-                    basePointer += 4;
+                    _ldmAddress = unchecked((int)basePointer);
+                    _ldmValue = unchecked((int)value);
+                    _ldmInUse = 1;
                 }
 
-                index++;
-                list >>= 1;
+                basePointer += 4;
             }
 
             if ((instruction & (1u << 21)) != 0)
@@ -1135,7 +1161,7 @@ public sealed partial class Arm60 : ICpuBackend, IStateSection
     private void WriteWord(uint address, uint value)
     {
         _bus.Write32(address, value);
-        if (_bus is IPcAdjustSource source && source.ConsumePcAdjustment())
+        if (_pcAdjustSource is not null && _pcAdjustSource.ConsumePcAdjustment())
         {
             _state.ProgramCounter += 4;
         }
@@ -1148,11 +1174,7 @@ public sealed partial class Arm60 : ICpuBackend, IStateSection
 
     private static int CountBits(uint value)
     {
-        value = (value & 0x5555u) + ((value >> 1) & 0x5555u);
-        value = (value & 0x3333u) + ((value >> 2) & 0x3333u);
-        value = (value & 0xffu) + (value >> 8);
-        value = (value & 0xfu) + (value >> 4);
-        return (int)value;
+        return BitOperations.PopCount(value);
     }
 
     private static uint CalcBits(uint number)

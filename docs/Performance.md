@@ -317,6 +317,13 @@ path is allocation-free in steady state. These numbers are **CPU only**; the 4K 
 stage is measured separately by the `--gl-probe` below. The benchmark is not a
 substitute for a Tier B percentile run.
 
+> **2026-11-05 refresh:** the synthetic fixture's unconditional branch previously fell
+> through into zero-filled ROM, so the old 1.250 ms/172 MIPS row measured
+> condition-failed NOPs rather than the intended ALU/store loop. The loop now returns to
+> its first instruction. Interleaved A/B runs measure the current interpreter at
+> **1.32-1.36 ms/frame** and the current JIT at **0.78 ms/frame**, with identical
+> instructions and frame hash. See §8.4 and §8.6.
+
 **Road Rash 3D race (2026-10-28).** The state-driven benchmark loads the archived
 100k-frame race state, warms up 120 frames, then measures 600 frames of the actual
 3D race with the BIOS and disc inserted. Command:
@@ -425,6 +432,13 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
 ANGLE does not expose `GL_TIME_ELAPSED`, so the GPU timing column is `null`; the
 CPU present times and the pixel-parity result below are still measured. The
 renderer/mailbox path remains allocation-free after warm-up.
+
+**ANGLE revalidation (2026-11-05).** The same `--gl-backend angle` 4K offscreen probe
+reported OpenGL ES 3.0 (`Google Inc. (NVIDIA)`, D3D11), sharp-bilinear present mean
+**0.67 ms** and p99 **1.29 ms** over 120 measured frames after 30 warm-up frames, with
+**0 B/frame** in the renderer (the residual ~2.4 KB/frame is the Avalonia/compositor loop).
+This keeps PERF-06's GLES/ANGLE path validated on current code; real GLES 3.1 hardware and
+Tier B remain open.
 
 **Optional Vulkan (2026-10-29).** The headless `--vk-probe` runs the
 `FiveDo.Video.Vulkan` offscreen backend on the same RTX 4070 (Vulkan 1.4). It waits
@@ -758,6 +772,33 @@ safely, but it does not meet the 1.5x end-to-end gate (local boot results are 1.
 superblock chaining across conditional branches, helper inlining for `SetZn`/`SetCv`/
 condition checks, and reducing JIT code-cache pressure. PERF-08 stays **Partial**.
 
+**Second pass (2026-11-05).** The block compiler now keeps PC, CPSR, operands, and flags in
+block locals, continues through RAM stores and conditional-branch fallthroughs, reads/writes
+RAM through the `IRam` word accessor, and invalidates a block only when a guest write
+overlaps its instruction bytes. Per-instruction memory verification is gone. Compiled R15
+operands use the block-local PC, fixing exception/trampoline returns (`MOV LR, PC`).
+
+Because host load drifts by more than the effect size, the numbers below come from an
+interleaved same-host A/B (HEAD build vs current build, 600 frames after 200 warm-up, run
+alternately):
+
+| Case | Previous JIT (HEAD) | Current JIT | Current interpreter | Result |
+|---|---:|---:|---:|---|
+| Synthetic ALU/store loop | 1.32-1.36 ms/frame | **0.78 ms/frame** | 1.32-1.36 ms/frame | **1.7x faster than the old JIT** |
+| Lemmings (USA) boot | 1.58-2.60 ms/frame | 1.40-1.78 ms/frame | 1.08-1.25 ms/frame | faster than old JIT, ~1.3-1.4x slower than interpreter |
+
+Both builds produced the same frame hash in every paired run (`0x6AD58DC5` synthetic,
+`0x2A53D449` on the 600-frame Lemmings checkpoint). A separate 1,000-frame CLI A/B also
+matched exactly on Road Rash (USA) `0x41D2A1DA`, Powers Kingdom (Europe) `0xDCE31DC5`, and
+Lemmings (USA) `0x110E7DC5`, with identical instruction and cycle counts. The synthetic
+fixture's branch previously fell through into zero-filled ROM, so it measured
+condition-failed NOPs; the loop now returns to its first instruction. The JIT still loses on
+real code because the 16-cycle event batch forces roughly 20,000 block entries per frame;
+each entry pays the prologue, cache lookup, delegate call, and flush. A self-loop chaining
+experiment reduced synthetic block calls by about a quarter but did not improve Lemmings and
+was reverted. The next step is a batched trace that keeps the block locals across event
+callbacks, not more per-instruction optimization.
+
 ### 8.5 Rewind capture stall (2026-11-05)
 
 **Symptom.** Gameplay showed sub-second freezes every two seconds. The rewind history was
@@ -796,3 +837,47 @@ input copy remains p50 0 ms / p99 0.006 ms.
 **Remaining.** The snapshot still serializes the ROM and the full VDL frame. Skipping the
 ROM for same-session rewind snapshots would remove another ~2 MB and ~1 ms per keyframe;
 continuous CHD allocation (PERF-04) still needs an allocation gate.
+
+### 8.6 Interpreter and high-resolution VDLP hot paths (2026-11-05)
+
+**Interpreter (ENG-02).** `FiveDoMemory` implements `IAddressBus.ReadInstruction`, which
+returns the ROM word directly or the DRAM word when the ROM overlay is clear, instead of
+running the full MMIO decode order for every instruction fetch. `Arm60.ExecuteDataProcessing`
+now inlines LSL#0 and rotated-immediate operand handling, and applies flag-preserving ALU
+operations directly instead of calling `ArmAlu.Execute`. LDM/STM register-list iteration uses
+`BitOperations.PopCount` and `TrailingZeroCount`, and the bus PC-adjust source is cached
+instead of rediscovered on every store.
+
+Interleaved same-host A/B (HEAD vs current, 600 frames after 200 warm-up, run alternately):
+
+| Case | Before (HEAD) | After | Change |
+|---|---:|---:|---:|
+| Synthetic ALU/store loop | 1.55-1.63 ms/frame | **1.32-1.36 ms/frame** | ~16% faster |
+| Lemmings (USA) boot | 1.39-1.50 ms/frame | **1.08-1.25 ms/frame** | ~21% faster |
+
+The synthetic frame hash is unchanged (`0x6AD58DC5`); Lemmings remains
+`0x79CE0214`. ENG-02 stays Partial because a decoded block cache and a batched loop are
+still missing, and the machine event path now dominates more of the frame.
+
+**High-resolution VDLP (PERF-05).** Both the low-resolution DMA line copy and
+`RenderHighResolutionLine` previously called `IRam.Read16` four times per pixel. They now
+read the raw `IRam.Words` span directly, preserving the source lane and plane stride. The
+same interleaved A/B measured Lemmings high-res at **2.42-2.47 ms/frame** before and
+**1.30-1.43 ms/frame** after (about 1.8x faster) with an identical high-res frame hash. The
+remaining high-res cost is the CEL rasterizer writing four pixels per source texel plus the
+doubled VDL output size.
+
+Reproduce with:
+
+```powershell
+dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- `
+  --frames 2000 --warmup 200 --json
+
+dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- `
+  --bios bios/panafz1.bin --disc "$env:FIVEDO_GAMES\Lemmings (USA).chd" `
+  --frames 2000 --warmup 200 --json
+
+dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- `
+  --bios bios/panafz1.bin --disc "$env:FIVEDO_GAMES\Lemmings (USA).chd" `
+  --frames 1000 --warmup 200 --high-res --json
+```

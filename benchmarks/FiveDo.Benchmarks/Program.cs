@@ -39,6 +39,7 @@ internal static class Program
         var highResolution = false;
         var label = "synthetic";
         var labelSet = false;
+        var cpuBackend = CpuBackendKind.Interpreter;
         string? baselinePath = null;
         var baselineThreshold = BenchmarkComparison.DefaultThreshold;
 
@@ -79,6 +80,14 @@ internal static class Program
                     break;
                 case "--json":
                     json = true;
+                    break;
+                case "--cpu-backend" when i + 1 < args.Length:
+                    cpuBackend = args[++i].ToLowerInvariant() switch
+                    {
+                        "interp" or "interpreter" => CpuBackendKind.Interpreter,
+                        "jit" => CpuBackendKind.Jit,
+                        var value => throw new ArgumentException($"Unknown CPU backend '{value}'.", nameof(args)),
+                    };
                     break;
                 case "--gate":
                     gate = true;
@@ -121,7 +130,7 @@ internal static class Program
         FiveDoMachine machine;
         if (statePath is not null)
         {
-            machine = new FiveDoMachine(new EmulatorTuning { HighResolution = highResolution });
+            machine = new FiveDoMachine(new EmulatorTuning { HighResolution = highResolution, CpuBackend = cpuBackend });
             if (biosPath is not null)
             {
                 var bios = BiosImage.Load(biosPath);
@@ -139,12 +148,12 @@ internal static class Program
         }
         else if (biosPath is null)
         {
-            machine = CreateSyntheticMachine(highResolution);
+            machine = CreateSyntheticMachine(highResolution, cpuBackend);
         }
         else
         {
             var bios = BiosImage.Load(biosPath);
-            machine = new FiveDoMachine(new EmulatorTuning { HighResolution = highResolution });
+            machine = new FiveDoMachine(new EmulatorTuning { HighResolution = highResolution, CpuBackend = cpuBackend });
             machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
             if (discPath is not null)
             {
@@ -288,6 +297,16 @@ internal static class Program
                     cyclesPerFrame = machine.LastFrameCycles,
                     pc = machine.Cpu.ProgramCounter,
                     frameHash = FrameHash(machine),
+                    cpuBackend = machine.Tuning.CpuBackend.ToString(),
+                    instructionsExecuted = machine.Cpu.InstructionsExecuted,
+                    cyclesExecuted = machine.Cpu.CyclesExecuted,
+                    jitBlocksCompiled = machine.Cpu.JitBlocksCompiled,
+                    jitBlocksExecuted = machine.Cpu.JitBlocksExecuted,
+                    jitBlockCount = machine.Cpu.JitBlockCount,
+                    jitCompileMs = Round(machine.Cpu.JitCompileTime.TotalMilliseconds),
+                    jitFallback = machine.Cpu.JitCompileFailed,
+                    biosAnvil = machine.Compatibility.BiosAnvil,
+                    dynamicCode = System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported,
                 },
             };
 
@@ -430,7 +449,7 @@ internal static class Program
         return hash;
     }
 
-    private static FiveDoMachine CreateSyntheticMachine(bool highResolution)
+    private static FiveDoMachine CreateSyntheticMachine(bool highResolution, CpuBackendKind cpuBackend)
     {
         var program = new[]
         {
@@ -441,7 +460,7 @@ internal static class Program
             Arm.AddImmediate(2, 2, 0x2000),
             Arm.Mvn(3, 0),
             Arm.StrImmediate(3, 2, 0),
-            Arm.Branch(0x0300001c, 0x03000018),
+            Arm.Branch(0x03000000, 0x0300001c),
         };
 
         var rom = new byte[EmulatorConstants.RomBankSize];
@@ -454,8 +473,13 @@ internal static class Program
             rom[(i * 4) + 3] = (byte)word;
         }
 
-        var machine = new FiveDoMachine(new EmulatorTuning { HighResolution = highResolution });
+        var machine = new FiveDoMachine(new EmulatorTuning { HighResolution = highResolution, CpuBackend = cpuBackend });
         machine.LoadBios(rom);
+        // The synthetic branch opcode's high byte collides with the Anvil BIOS marker
+        // (0xEA at offset 28). It is not an Anvil image; keep the measurement on the
+        // selected backend instead of forcing the interpreter compatibility path.
+        machine.Compatibility.IsAnvil = 0;
+        machine.Compatibility.BiosAnvil = false;
         machine.Reset();
         return machine;
     }

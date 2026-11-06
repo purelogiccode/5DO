@@ -15,11 +15,10 @@ namespace FiveDo.Cpu;
 /// <para>
 /// The JIT compiles straight-line basic blocks into <see cref="DynamicMethod"/> delegates.
 /// It is an optional execution strategy for <see cref="CpuBackendKind.Jit"/>; the
-/// interpreter remains the accuracy oracle. Every compiled block is verified against the
-/// current instruction words before it runs, stores terminate a block, and unsupported
-/// instructions fall back to <see cref="Step"/>. Those rules keep self-modifying code,
-/// memory-mapped I/O, SWIs, mode changes, and multi-register transfers on the reference
-/// path.
+/// interpreter remains the accuracy oracle. Blocks are invalidated exactly when a guest
+/// write overlaps their instruction bytes, so the hot path does not verify every
+/// instruction word on every run. Loads, stores, branches, SWIs, mode changes, register
+/// shifts, and unsupported instructions fall back to <see cref="Step"/> as before.
 /// </para>
 /// <para>
 /// The JIT uses the same architectural state, cycle counters, FIQ path, and save-state
@@ -30,8 +29,8 @@ public sealed partial class Arm60
 {
     private const int JitMaxBlockInstructions = 16;
     private const int JitMaxCachedBlocks = 65536;
-    private const int JitCompileThreshold = 8192;
-    private const int JitStaleBlock = int.MinValue;
+    private const int JitCompileThreshold = 4096;
+    private const int JitPageShift = 8;
 
     private static readonly FieldInfo JitStateField =
         typeof(Arm60).GetField("_state", BindingFlags.Instance | BindingFlags.NonPublic)!;
@@ -42,6 +41,12 @@ public sealed partial class Arm60
     private static readonly FieldInfo JitInterruptsField =
         typeof(Arm60).GetField("_interrupts", BindingFlags.Instance | BindingFlags.NonPublic)!;
 
+    private static readonly FieldInfo JitRamField =
+        typeof(Arm60).GetField("_ram", BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+    private static readonly FieldInfo JitReturnToMachineField =
+        typeof(Arm60).GetField("_jitReturnToMachine", BindingFlags.Instance | BindingFlags.NonPublic)!;
+
     private static readonly FieldInfo JitCyclesField =
         typeof(Arm60).GetField("_cycles", BindingFlags.Instance | BindingFlags.NonPublic)!;
 
@@ -50,6 +55,9 @@ public sealed partial class Arm60
 
     private static readonly FieldInfo JitInstructionsField =
         typeof(Arm60).GetField("_instructionsExecuted", BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+    private static readonly MethodInfo JitCpsrSet =
+        typeof(Arm60State).GetProperty(nameof(Arm60State.Cpsr))!.GetSetMethod(nonPublic: true)!;
 
     private static readonly MethodInfo JitCpsrGet =
         typeof(Arm60State).GetProperty(nameof(Arm60State.Cpsr))!.GetGetMethod()!;
@@ -64,26 +72,6 @@ public sealed partial class Arm60
         typeof(ArmDecoder).GetMethod(
             nameof(ArmDecoder.ConditionPassed),
             BindingFlags.Static | BindingFlags.Public)!;
-
-    private static readonly MethodInfo JitGetCarry =
-        typeof(ArmAlu).GetMethod("GetCarry", BindingFlags.Static | BindingFlags.NonPublic)!;
-
-    private static readonly MethodInfo JitSetC =
-        typeof(Arm60State).GetMethod(
-            "SetC",
-            BindingFlags.Instance | BindingFlags.NonPublic,
-            null,
-            [typeof(bool)],
-            null)!;
-
-    private static readonly MethodInfo JitSetZn =
-        typeof(ArmAlu).GetMethod("SetZn", BindingFlags.Static | BindingFlags.NonPublic)!;
-
-    private static readonly MethodInfo JitSetCv =
-        typeof(ArmAlu).GetMethod("SetCv", BindingFlags.Static | BindingFlags.NonPublic)!;
-
-    private static readonly MethodInfo JitSetCvSub =
-        typeof(ArmAlu).GetMethod("SetCvSub", BindingFlags.Static | BindingFlags.NonPublic)!;
 
     private static readonly MethodInfo JitRotateRight =
         typeof(ArmBarrelShifter).GetMethod("RotateRight", BindingFlags.Static | BindingFlags.NonPublic)!;
@@ -109,11 +97,22 @@ public sealed partial class Arm60
     private static readonly MethodInfo JitWriteByte =
         typeof(Arm60).GetMethod("WriteByte", BindingFlags.Instance | BindingFlags.NonPublic)!;
 
+    private static readonly MethodInfo JitRamRead32 =
+        typeof(IRam).GetMethod(nameof(IRam.Read32))!;
+
+    private static readonly MethodInfo JitRamWrite32 =
+        typeof(IRam).GetMethod(nameof(IRam.Write32))!;
+
+    private static readonly MethodInfo JitRomOverlayGet =
+        typeof(IRam).GetProperty(nameof(IRam.RomOverlay))!.GetGetMethod()!;
+
     private readonly Dictionary<uint, JitBlock> _jitBlocks = [];
+    private readonly List<JitBlock>?[] _jitPages = new List<JitBlock>?[1 << 16];
     private readonly Dictionary<uint, int> _jitHits = [];
     private readonly HashSet<uint> _jitBadBlocks = [];
-    private readonly JitBlock?[] _jitFastCache = new JitBlock?[4096];
+    private readonly JitBlock?[] _jitFastCache = new JitBlock?[8192];
     private bool _jitCompileFailed;
+    private bool _jitReturnToMachine;
     private long _jitBlocksCompiled;
     private long _jitBlocksExecuted;
     private long _jitCompileTicks;
@@ -132,6 +131,12 @@ public sealed partial class Arm60
         Store,
         Branch,
     }
+
+    private readonly record struct JitInstruction(
+        uint Word,
+        JitInstructionKind Kind,
+        int Cost,
+        bool Terminator);
 
     /// <summary>Gets the number of cached JIT blocks.</summary>
     public int JitBlockCount => _jitBlocks.Count;
@@ -164,6 +169,54 @@ public sealed partial class Arm60
     public long JitCompiledBranches => _jitCompiledBranch;
 
     /// <summary>
+    /// Invalidates compiled blocks whose instruction bytes overlap a guest RAM write.
+    /// </summary>
+    /// <param name="offset">Byte offset in the RAM backing array.</param>
+    /// <param name="size">Access size in bytes.</param>
+    /// <remarks>
+    /// The memory subsystem calls this for every RAM write, including DMA, CEL, and
+    /// cheat-engine writes. Writes outside compiled code do not disturb the cache.
+    /// </remarks>
+    public void NotifyRamWrite(uint offset, int size)
+    {
+        if (size <= 0)
+        {
+            return;
+        }
+
+        uint end = offset + (uint)size;
+        var firstPage = (int)(offset >> JitPageShift);
+        var lastPage = (int)((end - 1) >> JitPageShift);
+        if (firstPage >= _jitPages.Length)
+        {
+            return;
+        }
+
+        if (lastPage >= _jitPages.Length)
+        {
+            lastPage = _jitPages.Length - 1;
+        }
+
+        for (var page = firstPage; page <= lastPage; page++)
+        {
+            List<JitBlock>? blocks = _jitPages[page];
+            if (blocks is null)
+            {
+                continue;
+            }
+
+            for (var index = blocks.Count - 1; index >= 0; index--)
+            {
+                JitBlock block = blocks[index];
+                if (block.Pc < end && offset < block.CodeEnd)
+                {
+                    RemoveBlock(block);
+                }
+            }
+        }
+    }
+
+    /// <summary>
     /// Runs one JIT block, or one interpreter instruction when the block cannot be compiled.
     /// </summary>
     /// <param name="cyclesSinceEvent">
@@ -189,6 +242,7 @@ public sealed partial class Arm60
 
         var remainingBatch = Math.Max(16 - cyclesSinceEvent, 1);
         var total = 0;
+        _jitReturnToMachine = false;
         while (total < remainingBatch)
         {
             uint pc = _state.ProgramCounter;
@@ -231,11 +285,10 @@ public sealed partial class Arm60
 
                     if (_jitBlocks.Count >= JitMaxCachedBlocks)
                     {
-                        _jitBlocks.Clear();
-                        Array.Clear(_jitFastCache);
+                        ClearBlockCache();
                     }
 
-                    _jitBlocks[pc] = block;
+                    RegisterBlock(block);
                     _jitBlocksCompiled++;
                 }
 
@@ -246,17 +299,14 @@ public sealed partial class Arm60
             try
             {
                 int cycles = block.Execute(this, remainingBatch - total);
-                if (cycles == JitStaleBlock)
+                total += cycles;
+                if (_jitReturnToMachine)
                 {
-                    // The first instruction changed after the block was compiled.
-                    _jitBlocks.Remove(pc);
-                    _jitFastCache[index] = null;
-                    total += Step();
+                    _jitReturnToMachine = false;
                     break;
                 }
 
-                total += cycles;
-                if (block.EndsWithStore || cycles <= 0)
+                if (cycles <= 0)
                 {
                     break;
                 }
@@ -275,7 +325,7 @@ public sealed partial class Arm60
         return total;
     }
 
-    private static int FastIndex(uint pc) => (int)((pc >> 2) & 0xfff);
+    private static int FastIndex(uint pc) => (int)((pc >> 2) & 0x1fff);
 
     /// <summary>Runs one JIT block at a batch boundary.</summary>
     /// <returns>The ARM clock cycles consumed by the executed instructions.</returns>
@@ -284,18 +334,20 @@ public sealed partial class Arm60
     private int FailJitBlock(uint pc, Exception exception)
     {
         _jitBadBlocks.Add(pc);
-        _jitBlocks.Remove(pc);
-        _jitFastCache[FastIndex(pc)] = null;
+        if (_jitBlocks.TryGetValue(pc, out JitBlock? block))
+        {
+            RemoveBlock(block);
+        }
+
         _jitLastFailure = $"0x{pc:X8}: {exception.GetType().Name}: {exception.Message}";
         return Step();
     }
 
     private void ClearJitCache()
     {
-        _jitBlocks.Clear();
+        ClearBlockCache();
         _jitHits.Clear();
         _jitBadBlocks.Clear();
-        Array.Clear(_jitFastCache);
         _jitBlocksCompiled = 0;
         _jitBlocksExecuted = 0;
         _jitCompileTicks = 0;
@@ -307,6 +359,80 @@ public sealed partial class Arm60
         _jitLastFailure = null;
     }
 
+    private void ClearBlockCache()
+    {
+        _jitBlocks.Clear();
+        Array.Clear(_jitPages);
+        _jitReturnToMachine = false;
+        Array.Clear(_jitFastCache);
+    }
+
+    private void RegisterBlock(JitBlock block)
+    {
+        _jitBlocks[block.Pc] = block;
+        var firstPage = (int)(block.Pc >> JitPageShift);
+        var lastPage = (int)((block.CodeEnd - 1) >> JitPageShift);
+        if (firstPage >= _jitPages.Length)
+        {
+            // Code above the RAM window is ROM and can never be modified.
+            return;
+        }
+
+        if (lastPage >= _jitPages.Length)
+        {
+            lastPage = _jitPages.Length - 1;
+        }
+
+        for (var page = firstPage; page <= lastPage; page++)
+        {
+            List<JitBlock>? blocks = _jitPages[page];
+            if (blocks is null)
+            {
+                blocks = [];
+                _jitPages[page] = blocks;
+            }
+
+            blocks.Add(block);
+        }
+    }
+
+    private void RemoveBlock(JitBlock block)
+    {
+        _jitBlocks.Remove(block.Pc);
+        var index = FastIndex(block.Pc);
+        if (ReferenceEquals(_jitFastCache[index], block))
+        {
+            _jitFastCache[index] = null;
+        }
+
+        var firstPage = (int)(block.Pc >> JitPageShift);
+        var lastPage = (int)((block.CodeEnd - 1) >> JitPageShift);
+        if (firstPage >= _jitPages.Length)
+        {
+            return;
+        }
+
+        if (lastPage >= _jitPages.Length)
+        {
+            lastPage = _jitPages.Length - 1;
+        }
+
+        for (var page = firstPage; page <= lastPage; page++)
+        {
+            List<JitBlock>? blocks = _jitPages[page];
+            if (blocks is null)
+            {
+                continue;
+            }
+
+            blocks.Remove(block);
+            if (blocks.Count == 0)
+            {
+                _jitPages[page] = null;
+            }
+        }
+    }
+
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
         "Design",
         "CA1031:Do not catch general exception types",
@@ -315,9 +441,8 @@ public sealed partial class Arm60
     {
         try
         {
-            var instructions = new List<uint>(JitMaxBlockInstructions);
+            var instructions = new List<JitInstruction>(JitMaxBlockInstructions);
             var estimatedCycles = 0;
-            var lastKind = JitInstructionKind.DataProcessing;
             for (var i = 0; i < JitMaxBlockInstructions; i++)
             {
                 uint instructionPc = unchecked(pc + ((uint)i * 4));
@@ -327,7 +452,7 @@ public sealed partial class Arm60
                     break;
                 }
 
-                uint instruction = _bus.Read32(instructionPc);
+                uint instruction = _bus.ReadInstruction(instructionPc);
                 if (instruction == 0xE5101810)
                 {
                     // The FreeDO condition-bypass exception encoding.
@@ -339,8 +464,7 @@ public sealed partial class Arm60
                     break;
                 }
 
-                instructions.Add(instruction);
-                lastKind = kind;
+                instructions.Add(new JitInstruction(instruction, kind, cost, terminator));
                 switch (kind)
                 {
                     case JitInstructionKind.DataProcessing:
@@ -370,9 +494,11 @@ public sealed partial class Arm60
             }
 
             long compileStart = Stopwatch.GetTimestamp();
-            JitBlockDelegate execute = CompileBlock(pc, instructions);
+            uint codeEnd = unchecked(pc + ((uint)instructions.Count * 4));
+            var ramSize = _ram?.Layout.RamSize ?? 0;
+            JitBlockDelegate execute = CompileBlock(pc, codeEnd, ramSize, instructions);
             _jitCompileTicks += Stopwatch.GetTimestamp() - compileStart;
-            return new JitBlock(pc, lastKind == JitInstructionKind.Store, execute);
+            return new JitBlock(pc, codeEnd, execute);
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
@@ -381,7 +507,7 @@ public sealed partial class Arm60
         }
     }
 
-    private static bool TryClassifyJit(
+    private bool TryClassifyJit(
         uint instruction,
         out JitInstructionKind kind,
         out int cost,
@@ -468,23 +594,29 @@ public sealed partial class Arm60
             }
 
             kind = load ? JitInstructionKind.Load : JitInstructionKind.Store;
-            cost = load ? 6 : 8;
-            terminator = !load;
+            cost = load ? _nCycle + 2 : 2 * _nCycle;
+            terminator = false;
             return true;
         }
 
         if (high is 0xa or 0xb)
         {
             kind = JitInstructionKind.Branch;
-            cost = 6;
-            terminator = true;
+            cost = _nCycle + 2;
+            // Conditional branches stay in the block when they fall through; an
+            // unconditional branch always transfers control to another block.
+            terminator = (instruction >> 28) == 0xe;
             return true;
         }
 
         return false;
     }
 
-    private static JitBlockDelegate CompileBlock(uint pc, List<uint> instructions)
+    private static JitBlockDelegate CompileBlock(
+        uint pc,
+        uint codeEnd,
+        int ramSize,
+        List<JitInstruction> instructions)
     {
         var method = new DynamicMethod(
             $"ArmJit_{pc:X8}",
@@ -495,28 +627,57 @@ public sealed partial class Arm60
         ILGenerator il = method.GetILGenerator();
 
         LocalBuilder state = il.DeclareLocal(typeof(Arm60State));
-        LocalBuilder total = il.DeclareLocal(typeof(int));
+        LocalBuilder user = il.DeclareLocal(typeof(uint[]));
+        LocalBuilder pcLocal = il.DeclareLocal(typeof(uint));
+        LocalBuilder cpsr = il.DeclareLocal(typeof(uint));
         LocalBuilder cycles = il.DeclareLocal(typeof(int));
+        LocalBuilder instructionsExecuted = il.DeclareLocal(typeof(int));
+        LocalBuilder forceExit = il.DeclareLocal(typeof(int));
 
         il.Emit(OpCodes.Ldarg_0);
         il.Emit(OpCodes.Ldfld, JitStateField);
         il.Emit(OpCodes.Stloc, state);
+
+        il.Emit(OpCodes.Ldloc, state);
+        il.Emit(OpCodes.Ldfld, JitUserField);
+        il.Emit(OpCodes.Stloc, user);
+
+        il.Emit(OpCodes.Ldloc, user);
+        il.Emit(OpCodes.Ldc_I4, 15);
+        il.Emit(OpCodes.Ldelem_U4);
+        il.Emit(OpCodes.Stloc, pcLocal);
+
+        il.Emit(OpCodes.Ldloc, state);
+        il.Emit(OpCodes.Callvirt, JitCpsrGet);
+        il.Emit(OpCodes.Stloc, cpsr);
+
         il.Emit(OpCodes.Ldc_I4_0);
-        il.Emit(OpCodes.Stloc, total);
+        il.Emit(OpCodes.Stloc, cycles);
+        il.Emit(OpCodes.Ldc_I4_0);
+        il.Emit(OpCodes.Stloc, instructionsExecuted);
+        il.Emit(OpCodes.Ldc_I4_0);
+        il.Emit(OpCodes.Stloc, forceExit);
 
         for (var i = 0; i < instructions.Count; i++)
         {
             EmitInstruction(
                 il,
                 state,
-                total,
+                user,
+                pcLocal,
+                cpsr,
                 cycles,
+                instructionsExecuted,
+                forceExit,
                 instructions[i],
-                unchecked(pc + ((uint)i * 4)),
-                isFirst: i == 0);
+                pc,
+                codeEnd,
+                ramSize,
+                isLast: i == instructions.Count - 1);
         }
 
-        il.Emit(OpCodes.Ldloc, total);
+        EmitFlush(il, state, user, pcLocal, cpsr, cycles, instructionsExecuted);
+        il.Emit(OpCodes.Ldloc, cycles);
         il.Emit(OpCodes.Ret);
         return method.CreateDelegate<JitBlockDelegate>();
     }
@@ -524,149 +685,152 @@ public sealed partial class Arm60
     private static void EmitInstruction(
         ILGenerator il,
         LocalBuilder state,
-        LocalBuilder total,
+        LocalBuilder user,
+        LocalBuilder pc,
+        LocalBuilder cpsr,
         LocalBuilder cycles,
-        uint instruction,
-        uint instructionPc,
-        bool isFirst)
+        LocalBuilder instructionsExecuted,
+        LocalBuilder forceExit,
+        JitInstruction instruction,
+        uint blockStart,
+        uint blockEnd,
+        int ramSize,
+        bool isLast)
     {
-        _ = TryClassifyJit(instruction, out JitInstructionKind kind, out var cost, out var terminator);
+        // Step() counts the instruction before evaluating its condition and charges one
+        // S-cycle even when the condition fails.
+        il.Emit(OpCodes.Ldloc, instructionsExecuted);
+        il.Emit(OpCodes.Ldc_I4_1);
+        il.Emit(OpCodes.Add);
+        il.Emit(OpCodes.Stloc, instructionsExecuted);
 
-        // Self-modifying code can change an instruction while an earlier one executes.
-        // Verify each instruction immediately before it runs. A first-instruction
-        // mismatch returns the stale sentinel; later mismatches return the cycles
-        // already committed and the next call recompiles.
-        Label unchanged = il.DefineLabel();
-        il.Emit(OpCodes.Ldarg_0);
-        il.Emit(OpCodes.Ldc_I4, unchecked((int)instructionPc));
-        il.Emit(OpCodes.Call, JitReadWord);
-        il.Emit(OpCodes.Ldc_I4, unchecked((int)instruction));
-        il.Emit(OpCodes.Beq, unchanged);
-        if (isFirst)
-        {
-            il.Emit(OpCodes.Ldc_I4, JitStaleBlock);
-        }
-        else
-        {
-            il.Emit(OpCodes.Ldloc, total);
-        }
+        il.Emit(OpCodes.Ldloc, cycles);
+        il.Emit(OpCodes.Ldc_I4_1);
+        il.Emit(OpCodes.Add);
+        il.Emit(OpCodes.Stloc, cycles);
 
-        il.Emit(OpCodes.Ret);
-        il.MarkLabel(unchanged);
-
-        // Step() increments PC, charges one S-cycle, and counts the instruction before
-        // evaluating the condition code. Keep that order so failed conditions still cost
-        // one cycle.
-        EmitPcIncrement(il, state);
-        il.Emit(OpCodes.Ldarg_0);
-        il.Emit(OpCodes.Ldc_I4_M1);
-        il.Emit(OpCodes.Stfld, JitCyclesField);
-        EmitInstructionCountIncrement(il);
-
-        var condition = instruction >> 28;
+        var condition = (int)(instruction.Word >> 28);
         var always = condition == 0xe;
-        Label skipSemantics = il.DefineLabel();
+        Label skipSemantics = default;
         if (!always)
         {
-            il.Emit(OpCodes.Ldloc, state);
-            il.Emit(OpCodes.Callvirt, JitCpsrGet);
-            il.Emit(OpCodes.Ldc_I4, (int)condition);
+            skipSemantics = il.DefineLabel();
+            il.Emit(OpCodes.Ldloc, cpsr);
+            il.Emit(OpCodes.Ldc_I4, condition);
             il.Emit(OpCodes.Call, JitConditionPassed);
             il.Emit(OpCodes.Brfalse, skipSemantics);
         }
 
-        if (cost != 1)
+        if (instruction.Cost > 1)
         {
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldc_I4, -cost);
-            il.Emit(OpCodes.Stfld, JitCyclesField);
+            il.Emit(OpCodes.Ldloc, cycles);
+            il.Emit(OpCodes.Ldc_I4, instruction.Cost - 1);
+            il.Emit(OpCodes.Add);
+            il.Emit(OpCodes.Stloc, cycles);
         }
 
-        switch (kind)
+        switch (instruction.Kind)
         {
             case JitInstructionKind.DataProcessing:
-                EmitDataProcessing(il, state, instruction);
+                EmitDataProcessing(il, state, user, pc, cpsr, instruction.Word);
                 break;
             case JitInstructionKind.Load:
             case JitInstructionKind.Store:
-                EmitSingleDataTransfer(il, state, instruction);
+                EmitSingleDataTransfer(
+                    il,
+                    state,
+                    user,
+                    pc,
+                    cpsr,
+                    forceExit,
+                    instruction.Word,
+                    blockStart,
+                    blockEnd,
+                    ramSize);
                 break;
             case JitInstructionKind.Branch:
-                EmitBranch(il, state, instruction);
+                EmitBranch(il, state, user, pc, instruction.Word);
+                EmitSetForceExit(il, forceExit);
                 break;
             default:
-                throw new InvalidOperationException($"Unknown JIT instruction kind {kind}.");
+                throw new InvalidOperationException($"Unknown JIT instruction kind {instruction.Kind}.");
         }
 
-        if (!always)
+        if (instruction.Kind == JitInstructionKind.Branch)
         {
-            il.MarkLabel(skipSemantics);
+            if (!always)
+            {
+                Label branchDone = il.DefineLabel();
+                il.Emit(OpCodes.Br, branchDone);
+                il.MarkLabel(skipSemantics);
+                EmitAddConstant(il, pc, 4);
+                il.MarkLabel(branchDone);
+            }
+        }
+        else
+        {
+            if (!always)
+            {
+                il.MarkLabel(skipSemantics);
+            }
+
+            EmitAddConstant(il, pc, 4);
         }
 
-        il.Emit(OpCodes.Ldarg_0);
-        il.Emit(OpCodes.Ldfld, JitCyclesField);
-        il.Emit(OpCodes.Neg);
-        il.Emit(OpCodes.Stloc, cycles);
-
+        // Preserve the interpreter's post-instruction FIQ check.
         Label takeFiq = il.DefineLabel();
         Label noFiq = il.DefineLabel();
-        EmitFiqCheck(il, state, takeFiq, noFiq);
+        EmitFiqCheck(il, state, cpsr, takeFiq, noFiq);
         il.MarkLabel(takeFiq);
+        EmitFlush(il, state, user, pc, cpsr, cycles, instructionsExecuted);
         il.Emit(OpCodes.Ldarg_0);
         il.Emit(OpCodes.Call, JitEnterFiq);
-        EmitAddCycles(il, total, cycles);
-        il.Emit(OpCodes.Ldloc, total);
+        il.Emit(OpCodes.Ldloc, cycles);
         il.Emit(OpCodes.Ret);
         il.MarkLabel(noFiq);
 
-        EmitAddCycles(il, total, cycles);
+        Label noForcedExit = il.DefineLabel();
+        il.Emit(OpCodes.Ldloc, forceExit);
+        il.Emit(OpCodes.Brfalse, noForcedExit);
+        EmitFlush(il, state, user, pc, cpsr, cycles, instructionsExecuted);
+        il.Emit(OpCodes.Ldloc, cycles);
+        il.Emit(OpCodes.Ret);
+        il.MarkLabel(noForcedExit);
 
-        if (terminator)
+        if (isLast)
         {
-            il.Emit(OpCodes.Ldloc, total);
+            EmitFlush(il, state, user, pc, cpsr, cycles, instructionsExecuted);
+            il.Emit(OpCodes.Ldloc, cycles);
             il.Emit(OpCodes.Ret);
             return;
         }
 
-        // Preserve the frame loop's 16-cycle batching threshold. The caller passes the
-        // cycles already accumulated since the last event, so the block stops exactly
-        // where the interpreter's per-instruction loop would.
+        // Stop at the frame loop's 16-cycle batching boundary.
         Label belowBatch = il.DefineLabel();
-        il.Emit(OpCodes.Ldloc, total);
+        il.Emit(OpCodes.Ldloc, cycles);
         il.Emit(OpCodes.Ldarg_1);
         il.Emit(OpCodes.Blt, belowBatch);
-        il.Emit(OpCodes.Ldloc, total);
+        EmitFlush(il, state, user, pc, cpsr, cycles, instructionsExecuted);
+        il.Emit(OpCodes.Ldloc, cycles);
         il.Emit(OpCodes.Ret);
         il.MarkLabel(belowBatch);
     }
 
-    private static void EmitPcIncrement(ILGenerator il, LocalBuilder state)
+    private static void EmitFlush(
+        ILGenerator il,
+        LocalBuilder state,
+        LocalBuilder user,
+        LocalBuilder pc,
+        LocalBuilder cpsr,
+        LocalBuilder cycles,
+        LocalBuilder instructionsExecuted)
     {
-        il.Emit(OpCodes.Ldloc, state);
-        il.Emit(OpCodes.Ldfld, JitUserField);
-        il.Emit(OpCodes.Ldc_I4, 15);
-        il.Emit(OpCodes.Ldloc, state);
-        il.Emit(OpCodes.Ldfld, JitUserField);
-        il.Emit(OpCodes.Ldc_I4, 15);
-        il.Emit(OpCodes.Ldelem_U4);
-        il.Emit(OpCodes.Ldc_I4_4);
-        il.Emit(OpCodes.Add);
-        il.Emit(OpCodes.Stelem_I4);
-    }
+        EmitStoreUserRegister(il, user, 15, pc);
 
-    private static void EmitInstructionCountIncrement(ILGenerator il)
-    {
-        il.Emit(OpCodes.Ldarg_0);
-        il.Emit(OpCodes.Dup);
-        il.Emit(OpCodes.Ldfld, JitInstructionsField);
-        il.Emit(OpCodes.Ldc_I4_1);
-        il.Emit(OpCodes.Conv_I8);
-        il.Emit(OpCodes.Add);
-        il.Emit(OpCodes.Stfld, JitInstructionsField);
-    }
+        il.Emit(OpCodes.Ldloc, state);
+        il.Emit(OpCodes.Ldloc, cpsr);
+        il.Emit(OpCodes.Callvirt, JitCpsrSet);
 
-    private static void EmitAddCycles(ILGenerator il, LocalBuilder total, LocalBuilder cycles)
-    {
         il.Emit(OpCodes.Ldarg_0);
         il.Emit(OpCodes.Dup);
         il.Emit(OpCodes.Ldfld, JitCyclesExecutedField);
@@ -675,16 +839,27 @@ public sealed partial class Arm60
         il.Emit(OpCodes.Add);
         il.Emit(OpCodes.Stfld, JitCyclesExecutedField);
 
-        il.Emit(OpCodes.Ldloc, total);
-        il.Emit(OpCodes.Ldloc, cycles);
+        il.Emit(OpCodes.Ldarg_0);
+        il.Emit(OpCodes.Dup);
+        il.Emit(OpCodes.Ldfld, JitInstructionsField);
+        il.Emit(OpCodes.Ldloc, instructionsExecuted);
+        il.Emit(OpCodes.Conv_I8);
         il.Emit(OpCodes.Add);
-        il.Emit(OpCodes.Stloc, total);
+        il.Emit(OpCodes.Stfld, JitInstructionsField);
+
+        il.Emit(OpCodes.Ldarg_0);
+        il.Emit(OpCodes.Ldc_I4_0);
+        il.Emit(OpCodes.Stfld, JitCyclesField);
     }
 
-    private static void EmitFiqCheck(ILGenerator il, LocalBuilder state, Label takeFiq, Label noFiq)
+    private static void EmitFiqCheck(
+        ILGenerator il,
+        LocalBuilder state,
+        LocalBuilder cpsr,
+        Label takeFiq,
+        Label noFiq)
     {
-        il.Emit(OpCodes.Ldloc, state);
-        il.Emit(OpCodes.Callvirt, JitCpsrGet);
+        il.Emit(OpCodes.Ldloc, cpsr);
         il.Emit(OpCodes.Ldc_I4_S, 0x40);
         il.Emit(OpCodes.And);
         il.Emit(OpCodes.Brtrue, noFiq);
@@ -703,14 +878,21 @@ public sealed partial class Arm60
         il.Emit(OpCodes.Brfalse, noFiq);
     }
 
+    private static void EmitAddConstant(ILGenerator il, LocalBuilder local, int value)
+    {
+        il.Emit(OpCodes.Ldloc, local);
+        il.Emit(OpCodes.Ldc_I4, value);
+        il.Emit(OpCodes.Add);
+        il.Emit(OpCodes.Stloc, local);
+    }
+
     private static void EmitLoadUserRegister(
         ILGenerator il,
-        LocalBuilder state,
+        LocalBuilder user,
         int register,
         LocalBuilder destination)
     {
-        il.Emit(OpCodes.Ldloc, state);
-        il.Emit(OpCodes.Ldfld, JitUserField);
+        il.Emit(OpCodes.Ldloc, user);
         il.Emit(OpCodes.Ldc_I4, register);
         il.Emit(OpCodes.Ldelem_U4);
         il.Emit(OpCodes.Stloc, destination);
@@ -718,76 +900,219 @@ public sealed partial class Arm60
 
     private static void EmitStoreUserRegister(
         ILGenerator il,
-        LocalBuilder state,
+        LocalBuilder user,
         int register,
         LocalBuilder value)
     {
-        il.Emit(OpCodes.Ldloc, state);
-        il.Emit(OpCodes.Ldfld, JitUserField);
+        il.Emit(OpCodes.Ldloc, user);
         il.Emit(OpCodes.Ldc_I4, register);
         il.Emit(OpCodes.Ldloc, value);
         il.Emit(OpCodes.Stelem_I4);
     }
 
-    private static void EmitLoadCarry(ILGenerator il, LocalBuilder state, LocalBuilder destination)
+    private static void EmitStoreUserConstant(
+        ILGenerator il,
+        LocalBuilder user,
+        int register,
+        int value)
     {
-        il.Emit(OpCodes.Ldloc, state);
-        il.Emit(OpCodes.Call, JitGetCarry);
+        il.Emit(OpCodes.Ldloc, user);
+        il.Emit(OpCodes.Ldc_I4, register);
+        il.Emit(OpCodes.Ldc_I4, value);
+        il.Emit(OpCodes.Stelem_I4);
+    }
+
+    private static void EmitLoadUserRelative(
+        ILGenerator il,
+        LocalBuilder user,
+        int register,
+        LocalBuilder pc,
+        int delta,
+        LocalBuilder destination)
+    {
+        if (register == 15)
+        {
+            // Within a compiled block the architectural R15 is the local instruction
+            // address plus the interpreter's PC offset; user[15] is only written at exits.
+            il.Emit(OpCodes.Ldloc, pc);
+            il.Emit(OpCodes.Ldc_I4, delta);
+            il.Emit(OpCodes.Add);
+            il.Emit(OpCodes.Stloc, destination);
+            return;
+        }
+
+        EmitLoadUserRegister(il, user, register, destination);
+    }
+
+    private static void EmitCpsrCarry(ILGenerator il, LocalBuilder cpsr, LocalBuilder destination)
+    {
+        il.Emit(OpCodes.Ldloc, cpsr);
+        il.Emit(OpCodes.Ldc_I4, 29);
+        il.Emit(OpCodes.Shr_Un);
+        il.Emit(OpCodes.Ldc_I4_1);
+        il.Emit(OpCodes.And);
         il.Emit(OpCodes.Stloc, destination);
     }
 
-    private static void EmitSetCarryFromValue(ILGenerator il, LocalBuilder state, LocalBuilder carry)
+    private static void EmitSetCarryFromCarry(ILGenerator il, LocalBuilder cpsr, LocalBuilder carry)
     {
-        il.Emit(OpCodes.Ldloc, state);
+        il.Emit(OpCodes.Ldloc, cpsr);
+        il.Emit(OpCodes.Ldc_I4, unchecked((int)0xdfffffffu));
+        il.Emit(OpCodes.And);
         il.Emit(OpCodes.Ldloc, carry);
-        il.Emit(OpCodes.Ldc_I4_0);
-        il.Emit(OpCodes.Cgt_Un);
-        il.Emit(OpCodes.Call, JitSetC);
+        il.Emit(OpCodes.Ldc_I4, 29);
+        il.Emit(OpCodes.Shl);
+        il.Emit(OpCodes.Or);
+        il.Emit(OpCodes.Stloc, cpsr);
     }
 
-    private static void EmitSetZn(ILGenerator il, LocalBuilder state, LocalBuilder value)
+    private static void EmitSetZn(ILGenerator il, LocalBuilder cpsr, LocalBuilder value)
     {
-        il.Emit(OpCodes.Ldloc, state);
+        Label nonZero = il.DefineLabel();
+        Label done = il.DefineLabel();
+
         il.Emit(OpCodes.Ldloc, value);
-        il.Emit(OpCodes.Call, JitSetZn);
+        il.Emit(OpCodes.Brtrue, nonZero);
+
+        il.Emit(OpCodes.Ldloc, cpsr);
+        il.Emit(OpCodes.Ldc_I4, 0x3fffffff);
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Ldc_I4, 0x40000000);
+        il.Emit(OpCodes.Or);
+        il.Emit(OpCodes.Stloc, cpsr);
+        il.Emit(OpCodes.Br, done);
+
+        il.MarkLabel(nonZero);
+        il.Emit(OpCodes.Ldloc, cpsr);
+        il.Emit(OpCodes.Ldc_I4, 0x3fffffff);
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Ldloc, value);
+        il.Emit(OpCodes.Ldc_I4, unchecked((int)0x80000000u));
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Or);
+        il.Emit(OpCodes.Stloc, cpsr);
+
+        il.MarkLabel(done);
     }
 
     private static void EmitSetCv(
         ILGenerator il,
-        LocalBuilder state,
+        LocalBuilder cpsr,
         LocalBuilder result,
         LocalBuilder op1,
         LocalBuilder op2)
     {
-        il.Emit(OpCodes.Ldloc, state);
-        il.Emit(OpCodes.Ldloc, result);
+        LocalBuilder carry = il.DeclareLocal(typeof(uint));
+        LocalBuilder overflow = il.DeclareLocal(typeof(uint));
+
+        // carry = ((op1 & op2) | (~result & (op1 | op2))) & 0x80000000
         il.Emit(OpCodes.Ldloc, op1);
         il.Emit(OpCodes.Ldloc, op2);
-        il.Emit(OpCodes.Call, JitSetCv);
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Ldloc, result);
+        il.Emit(OpCodes.Not);
+        il.Emit(OpCodes.Ldloc, op1);
+        il.Emit(OpCodes.Ldloc, op2);
+        il.Emit(OpCodes.Or);
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Or);
+        il.Emit(OpCodes.Ldc_I4, unchecked((int)0x80000000u));
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Ldc_I4_2);
+        il.Emit(OpCodes.Shr_Un);
+        il.Emit(OpCodes.Stloc, carry);
+
+        // overflow = ((op1 & (op2 & ~result)) | (~op1 & ~op2 & result)) & 0x80000000
+        il.Emit(OpCodes.Ldloc, op1);
+        il.Emit(OpCodes.Ldloc, op2);
+        il.Emit(OpCodes.Ldloc, result);
+        il.Emit(OpCodes.Not);
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Ldloc, op1);
+        il.Emit(OpCodes.Not);
+        il.Emit(OpCodes.Ldloc, op2);
+        il.Emit(OpCodes.Not);
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Ldloc, result);
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Or);
+        il.Emit(OpCodes.Ldc_I4, unchecked((int)0x80000000u));
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Ldc_I4_3);
+        il.Emit(OpCodes.Shr_Un);
+        il.Emit(OpCodes.Stloc, overflow);
+
+        EmitCombineCv(il, cpsr, carry, overflow);
     }
 
     private static void EmitSetCvSub(
         ILGenerator il,
-        LocalBuilder state,
+        LocalBuilder cpsr,
         LocalBuilder result,
         LocalBuilder op1,
         LocalBuilder op2)
     {
-        il.Emit(OpCodes.Ldloc, state);
-        il.Emit(OpCodes.Ldloc, result);
+        LocalBuilder carry = il.DeclareLocal(typeof(uint));
+        LocalBuilder overflow = il.DeclareLocal(typeof(uint));
+
+        // carry = ((op1 & ~op2) | (~result & (op1 | ~op2))) & 0x80000000
         il.Emit(OpCodes.Ldloc, op1);
         il.Emit(OpCodes.Ldloc, op2);
-        il.Emit(OpCodes.Call, JitSetCvSub);
+        il.Emit(OpCodes.Not);
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Ldloc, result);
+        il.Emit(OpCodes.Not);
+        il.Emit(OpCodes.Ldloc, op1);
+        il.Emit(OpCodes.Ldloc, op2);
+        il.Emit(OpCodes.Not);
+        il.Emit(OpCodes.Or);
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Or);
+        il.Emit(OpCodes.Ldc_I4, unchecked((int)0x80000000u));
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Ldc_I4_2);
+        il.Emit(OpCodes.Shr_Un);
+        il.Emit(OpCodes.Stloc, carry);
+
+        // overflow = ((op1 & (~op2 & ~result)) | (~op1 & op2 & result)) & 0x80000000
+        il.Emit(OpCodes.Ldloc, op1);
+        il.Emit(OpCodes.Ldloc, op2);
+        il.Emit(OpCodes.Not);
+        il.Emit(OpCodes.Ldloc, result);
+        il.Emit(OpCodes.Not);
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Ldloc, op1);
+        il.Emit(OpCodes.Not);
+        il.Emit(OpCodes.Ldloc, op2);
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Ldloc, result);
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Or);
+        il.Emit(OpCodes.Ldc_I4, unchecked((int)0x80000000u));
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Ldc_I4_3);
+        il.Emit(OpCodes.Shr_Un);
+        il.Emit(OpCodes.Stloc, overflow);
+
+        EmitCombineCv(il, cpsr, carry, overflow);
     }
 
-    private static void EmitCarryBit(ILGenerator il, LocalBuilder source, LocalBuilder carry, int bit)
+    private static void EmitCombineCv(
+        ILGenerator il,
+        LocalBuilder cpsr,
+        LocalBuilder carry,
+        LocalBuilder overflow)
     {
-        il.Emit(OpCodes.Ldloc, source);
-        il.Emit(OpCodes.Ldc_I4, bit);
-        il.Emit(OpCodes.Shr_Un);
-        il.Emit(OpCodes.Ldc_I4_1);
+        il.Emit(OpCodes.Ldloc, cpsr);
+        il.Emit(OpCodes.Ldc_I4, unchecked((int)0xcfffffffu));
         il.Emit(OpCodes.And);
-        il.Emit(OpCodes.Stloc, carry);
+        il.Emit(OpCodes.Ldloc, carry);
+        il.Emit(OpCodes.Or);
+        il.Emit(OpCodes.Ldloc, overflow);
+        il.Emit(OpCodes.Or);
+        il.Emit(OpCodes.Stloc, cpsr);
     }
 
     private static void EmitBinary(
@@ -803,7 +1128,13 @@ public sealed partial class Arm60
         il.Emit(OpCodes.Stloc, destination);
     }
 
-    private static void EmitDataProcessing(ILGenerator il, LocalBuilder state, uint instruction)
+    private static void EmitDataProcessing(
+        ILGenerator il,
+        LocalBuilder state,
+        LocalBuilder user,
+        LocalBuilder pc,
+        LocalBuilder cpsr,
+        uint instruction)
     {
         var op1 = il.DeclareLocal(typeof(uint));
         var op2 = il.DeclareLocal(typeof(uint));
@@ -818,16 +1149,7 @@ public sealed partial class Arm60
         var baseOpcode = (int)(opcode & 0x1e);
         var setFlags = (opcode & 1) != 0;
 
-        EmitLoadUserRegister(il, state, rn, op1);
-        if (rn == 15)
-        {
-            // ExecuteDataProcessing increments PC a second time before reading operands,
-            // so Rn=R15 observes PC+8.
-            il.Emit(OpCodes.Ldloc, op1);
-            il.Emit(OpCodes.Ldc_I4_4);
-            il.Emit(OpCodes.Add);
-            il.Emit(OpCodes.Stloc, op1);
-        }
+        EmitLoadUserRelative(il, user, rn, pc, 8, op1);
 
         if ((instruction & (1u << 25)) != 0)
         {
@@ -838,7 +1160,7 @@ public sealed partial class Arm60
             il.Emit(OpCodes.Stloc, op2);
             if (rotate == 0)
             {
-                EmitLoadCarry(il, state, carry);
+                EmitCpsrCarry(il, cpsr, carry);
             }
             else
             {
@@ -849,23 +1171,16 @@ public sealed partial class Arm60
         else
         {
             var rm = (int)(instruction & 0xf);
-            EmitLoadUserRegister(il, state, rm, source);
-            if (rm == 15)
-            {
-                il.Emit(OpCodes.Ldloc, source);
-                il.Emit(OpCodes.Ldc_I4_4);
-                il.Emit(OpCodes.Add);
-                il.Emit(OpCodes.Stloc, source);
-            }
+            EmitLoadUserRelative(il, user, rm, pc, 8, source);
 
             var shiftType = (int)((instruction >> 5) & 3);
             var shift = (int)((instruction >> 7) & 0x1f);
-            EmitImmediateShift(il, state, source, op2, carry, temp, shiftType, shift);
+            EmitImmediateShift(il, cpsr, source, op2, carry, temp, shiftType, shift);
         }
 
         if (setFlags && IsLogicOpcode(baseOpcode))
         {
-            EmitSetCarryFromValue(il, state, carry);
+            EmitSetCarryFromCarry(il, cpsr, carry);
         }
 
         switch (baseOpcode)
@@ -891,12 +1206,12 @@ public sealed partial class Arm60
                 break;
             case 10:
                 EmitBinary(il, op1, op2, result, OpCodes.Add);
-                EmitLoadCarry(il, state, temp);
+                EmitCpsrCarry(il, cpsr, temp);
                 EmitBinary(il, result, temp, result, OpCodes.Add);
                 break;
             case 12:
                 EmitBinary(il, op1, op2, result, OpCodes.Sub);
-                EmitLoadCarry(il, state, temp);
+                EmitCpsrCarry(il, cpsr, temp);
                 il.Emit(OpCodes.Ldloc, temp);
                 il.Emit(OpCodes.Ldc_I4_1);
                 il.Emit(OpCodes.Xor);
@@ -905,7 +1220,7 @@ public sealed partial class Arm60
                 break;
             case 14:
                 EmitBinary(il, op2, op1, result, OpCodes.Sub);
-                EmitLoadCarry(il, state, temp);
+                EmitCpsrCarry(il, cpsr, temp);
                 il.Emit(OpCodes.Ldloc, temp);
                 il.Emit(OpCodes.Ldc_I4_1);
                 il.Emit(OpCodes.Xor);
@@ -937,7 +1252,7 @@ public sealed partial class Arm60
         var flagOnly = baseOpcode is 16 or 18 or 20 or 22;
         if (!flagOnly)
         {
-            EmitStoreUserRegister(il, state, rd, result);
+            EmitStoreUserRegister(il, user, rd, result);
         }
 
         if (!setFlags)
@@ -949,33 +1264,33 @@ public sealed partial class Arm60
         {
             case 16:
             case 18:
-                EmitSetZn(il, state, result);
+                EmitSetZn(il, cpsr, result);
                 break;
             case 20:
-                EmitSetCvSub(il, state, result, op1, op2);
-                EmitSetZn(il, state, result);
+                EmitSetCvSub(il, cpsr, result, op1, op2);
+                EmitSetZn(il, cpsr, result);
                 break;
             case 22:
-                EmitSetCv(il, state, result, op1, op2);
-                EmitSetZn(il, state, result);
+                EmitSetCv(il, cpsr, result, op1, op2);
+                EmitSetZn(il, cpsr, result);
                 break;
             case 4:
             case 12:
-                EmitSetZn(il, state, result);
-                EmitSetCvSub(il, state, result, op1, op2);
+                EmitSetZn(il, cpsr, result);
+                EmitSetCvSub(il, cpsr, result, op1, op2);
                 break;
             case 6:
             case 14:
-                EmitSetZn(il, state, result);
-                EmitSetCvSub(il, state, result, op2, op1);
+                EmitSetZn(il, cpsr, result);
+                EmitSetCvSub(il, cpsr, result, op2, op1);
                 break;
             case 8:
             case 10:
-                EmitSetZn(il, state, result);
-                EmitSetCv(il, state, result, op1, op2);
+                EmitSetZn(il, cpsr, result);
+                EmitSetCv(il, cpsr, result, op1, op2);
                 break;
             default:
-                EmitSetZn(il, state, result);
+                EmitSetZn(il, cpsr, result);
                 break;
         }
     }
@@ -987,7 +1302,7 @@ public sealed partial class Arm60
 
     private static void EmitImmediateShift(
         ILGenerator il,
-        LocalBuilder state,
+        LocalBuilder cpsr,
         LocalBuilder source,
         LocalBuilder destination,
         LocalBuilder carry,
@@ -999,7 +1314,7 @@ public sealed partial class Arm60
         {
             il.Emit(OpCodes.Ldloc, source);
             il.Emit(OpCodes.Stloc, destination);
-            EmitLoadCarry(il, state, carry);
+            EmitCpsrCarry(il, cpsr, carry);
             return;
         }
 
@@ -1016,8 +1331,6 @@ public sealed partial class Arm60
             il.Emit(OpCodes.Ldloc, source);
             il.Emit(OpCodes.Ldc_I4, 31);
             il.Emit(OpCodes.Shr);
-            il.Emit(OpCodes.Stloc, temp);
-            il.Emit(OpCodes.Ldloc, temp);
             il.Emit(OpCodes.Stloc, destination);
             EmitCarryBit(il, source, carry, 31);
             return;
@@ -1026,7 +1339,7 @@ public sealed partial class Arm60
         if (shiftType == 3 && shift == 0)
         {
             // RRX: rotate right through the old carry.
-            EmitLoadCarry(il, state, temp);
+            EmitCpsrCarry(il, cpsr, temp);
             il.Emit(OpCodes.Ldloc, source);
             il.Emit(OpCodes.Ldc_I4_1);
             il.Emit(OpCodes.Shr_Un);
@@ -1035,10 +1348,7 @@ public sealed partial class Arm60
             il.Emit(OpCodes.Shl);
             il.Emit(OpCodes.Or);
             il.Emit(OpCodes.Stloc, destination);
-            il.Emit(OpCodes.Ldloc, source);
-            il.Emit(OpCodes.Ldc_I4_1);
-            il.Emit(OpCodes.And);
-            il.Emit(OpCodes.Stloc, carry);
+            EmitCarryBit(il, source, carry, 0);
             return;
         }
 
@@ -1048,29 +1358,62 @@ public sealed partial class Arm60
                 il.Emit(OpCodes.Ldloc, source);
                 il.Emit(OpCodes.Ldc_I4, shift);
                 il.Emit(OpCodes.Shl);
-                break;
+                il.Emit(OpCodes.Stloc, destination);
+                EmitCarryBit(il, source, carry, 32 - shift);
+                return;
             case 1:
                 il.Emit(OpCodes.Ldloc, source);
                 il.Emit(OpCodes.Ldc_I4, shift);
                 il.Emit(OpCodes.Shr_Un);
-                break;
+                il.Emit(OpCodes.Stloc, destination);
+                EmitCarryBit(il, source, carry, shift - 1);
+                return;
             case 2:
                 il.Emit(OpCodes.Ldloc, source);
                 il.Emit(OpCodes.Ldc_I4, shift);
                 il.Emit(OpCodes.Shr);
-                break;
+                il.Emit(OpCodes.Stloc, destination);
+                EmitCarryBit(il, source, carry, shift - 1);
+                return;
             default:
                 il.Emit(OpCodes.Ldloc, source);
-                il.Emit(OpCodes.Ldc_I4, shift & 31);
-                il.Emit(OpCodes.Call, JitRotateRight);
-                break;
+                il.Emit(OpCodes.Ldc_I4, shift);
+                il.Emit(OpCodes.Shr_Un);
+                il.Emit(OpCodes.Ldloc, source);
+                il.Emit(OpCodes.Ldc_I4, 32 - shift);
+                il.Emit(OpCodes.Shl);
+                il.Emit(OpCodes.Or);
+                il.Emit(OpCodes.Stloc, destination);
+                EmitCarryBit(il, source, carry, shift - 1);
+                return;
         }
-
-        il.Emit(OpCodes.Stloc, destination);
-        EmitCarryBit(il, source, carry, shiftType == 0 ? 32 - shift : shift - 1);
     }
 
-    private static void EmitSingleDataTransfer(ILGenerator il, LocalBuilder state, uint instruction)
+    private static void EmitCarryBit(
+        ILGenerator il,
+        LocalBuilder source,
+        LocalBuilder carry,
+        int bit)
+    {
+        il.Emit(OpCodes.Ldloc, source);
+        il.Emit(OpCodes.Ldc_I4, bit);
+        il.Emit(OpCodes.Shr_Un);
+        il.Emit(OpCodes.Ldc_I4_1);
+        il.Emit(OpCodes.And);
+        il.Emit(OpCodes.Stloc, carry);
+    }
+
+    private static void EmitSingleDataTransfer(
+        ILGenerator il,
+        LocalBuilder state,
+        LocalBuilder user,
+        LocalBuilder pc,
+        LocalBuilder cpsr,
+        LocalBuilder forceExit,
+        uint instruction,
+        uint blockStart,
+        uint blockEnd,
+        int ramSize)
     {
         var load = (instruction & (1u << 20)) != 0;
         var byteAccess = (instruction & (1u << 22)) != 0;
@@ -1090,16 +1433,7 @@ public sealed partial class Arm60
         var value = il.DeclareLocal(typeof(uint));
         var temp = il.DeclareLocal(typeof(uint));
 
-        EmitLoadUserRegister(il, state, rn, address);
-        if (rn == 15)
-        {
-            // The interpreter's single-data-transfer path increments PC a second time
-            // before reading the base register, so a PC-relative access sees PC+8.
-            il.Emit(OpCodes.Ldloc, address);
-            il.Emit(OpCodes.Ldc_I4_4);
-            il.Emit(OpCodes.Add);
-            il.Emit(OpCodes.Stloc, address);
-        }
+        EmitLoadUserRelative(il, user, rn, pc, 8, address);
 
         il.Emit(OpCodes.Ldloc, address);
         il.Emit(OpCodes.Stloc, baseAddress);
@@ -1123,15 +1457,37 @@ public sealed partial class Arm60
 
         if (load)
         {
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldloc, address);
-            il.Emit(OpCodes.Call, byteAccess ? JitReadByte : JitReadWord);
-            if (byteAccess)
+            if (!byteAccess && ramSize > 0)
             {
-                il.Emit(OpCodes.Conv_U4);
-            }
+                Label slowLoad = il.DefineLabel();
+                Label loadDone = il.DefineLabel();
+                EmitRamFastPathTest(il, address, ramSize, slowLoad);
 
-            il.Emit(OpCodes.Stloc, value);
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Ldfld, JitRamField);
+                il.Emit(OpCodes.Ldloc, address);
+                il.Emit(OpCodes.Ldc_I4, -4);
+                il.Emit(OpCodes.And);
+                il.Emit(OpCodes.Callvirt, JitRamRead32);
+                il.Emit(OpCodes.Stloc, value);
+                il.Emit(OpCodes.Br, loadDone);
+
+                il.MarkLabel(slowLoad);
+                EmitBusWordLoad(il, address, value);
+                il.MarkLabel(loadDone);
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Ldloc, address);
+                il.Emit(OpCodes.Call, byteAccess ? JitReadByte : JitReadWord);
+                if (byteAccess)
+                {
+                    il.Emit(OpCodes.Conv_U4);
+                }
+
+                il.Emit(OpCodes.Stloc, value);
+            }
 
             if (!byteAccess)
             {
@@ -1153,11 +1509,12 @@ public sealed partial class Arm60
 
             if ((writeback || !preIndex) && rn != 15)
             {
-                EmitStoreUserRegister(il, state, rn, baseAddress);
+                EmitStoreUserRegister(il, user, rn, baseAddress);
             }
 
             if (writeback && !preIndex)
             {
+                EmitSyncCpsr(il, state, cpsr);
                 il.Emit(OpCodes.Ldloc, state);
                 il.Emit(OpCodes.Ldc_I4, rd);
                 il.Emit(OpCodes.Ldloc, value);
@@ -1165,7 +1522,7 @@ public sealed partial class Arm60
             }
             else
             {
-                EmitStoreUserRegister(il, state, rd, value);
+                EmitStoreUserRegister(il, user, rd, value);
             }
 
             return;
@@ -1173,6 +1530,7 @@ public sealed partial class Arm60
 
         if (writeback && !preIndex)
         {
+            EmitSyncCpsr(il, state, cpsr);
             il.Emit(OpCodes.Ldloc, state);
             il.Emit(OpCodes.Ldc_I4, rd);
             il.Emit(OpCodes.Call, JitReadUser);
@@ -1180,32 +1538,149 @@ public sealed partial class Arm60
         }
         else
         {
-            EmitLoadUserRegister(il, state, rd, value);
+            EmitLoadUserRegister(il, user, rd, value);
         }
 
-        il.Emit(OpCodes.Ldarg_0);
-        il.Emit(OpCodes.Ldloc, address);
-        il.Emit(OpCodes.Ldloc, value);
-        il.Emit(OpCodes.Call, byteAccess ? JitWriteByte : JitWriteWord);
+        // The interpreter writes PC+4 before the store; the bus may advance PC once more
+        // for a CLIO PC-adjust write, so the slow path reloads the final value afterwards.
+        EmitAddConstant(il, pc, 4);
+        EmitStoreUserRegister(il, user, 15, pc);
+        EmitAddConstant(il, pc, -4);
+
+        if (byteAccess)
+        {
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldloc, address);
+            il.Emit(OpCodes.Ldloc, value);
+            il.Emit(OpCodes.Call, JitWriteByte);
+            EmitOverlapExit(il, address, blockStart, blockEnd, forceExit);
+        }
+        else if (ramSize > 0)
+        {
+            Label slowStore = il.DefineLabel();
+            Label storeDone = il.DefineLabel();
+            EmitRamFastPathTest(il, address, ramSize, slowStore);
+
+            il.Emit(OpCodes.Ldloc, address);
+            il.Emit(OpCodes.Ldc_I4, -4);
+            il.Emit(OpCodes.And);
+            il.Emit(OpCodes.Stloc, address);
+
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldfld, JitRamField);
+            il.Emit(OpCodes.Ldloc, address);
+            il.Emit(OpCodes.Ldloc, value);
+            il.Emit(OpCodes.Callvirt, JitRamWrite32);
+            EmitOverlapExit(il, address, blockStart, blockEnd, forceExit);
+            il.Emit(OpCodes.Br, storeDone);
+
+            il.MarkLabel(slowStore);
+            EmitBusWordStore(il, pc, user, address, value);
+            EmitReturnToMachine(il, forceExit);
+            il.MarkLabel(storeDone);
+        }
+        else
+        {
+            EmitBusWordStore(il, pc, user, address, value);
+            EmitReturnToMachine(il, forceExit);
+        }
 
         if ((writeback || !preIndex) && rn != 15)
         {
-            EmitStoreUserRegister(il, state, rn, baseAddress);
+            EmitStoreUserRegister(il, user, rn, baseAddress);
         }
     }
 
-    private static void EmitBranch(ILGenerator il, LocalBuilder state, uint instruction)
+    private static void EmitRamFastPathTest(
+        ILGenerator il,
+        LocalBuilder address,
+        int ramSize,
+        Label slowPath)
+    {
+        il.Emit(OpCodes.Ldloc, address);
+        il.Emit(OpCodes.Ldc_I4, ramSize);
+        il.Emit(OpCodes.Bge_Un, slowPath);
+        il.Emit(OpCodes.Ldarg_0);
+        il.Emit(OpCodes.Ldfld, JitRamField);
+        il.Emit(OpCodes.Callvirt, JitRomOverlayGet);
+        il.Emit(OpCodes.Brtrue, slowPath);
+    }
+
+    private static void EmitBusWordLoad(ILGenerator il, LocalBuilder address, LocalBuilder value)
+    {
+        il.Emit(OpCodes.Ldarg_0);
+        il.Emit(OpCodes.Ldloc, address);
+        il.Emit(OpCodes.Call, JitReadWord);
+        il.Emit(OpCodes.Stloc, value);
+    }
+
+    private static void EmitBusWordStore(
+        ILGenerator il,
+        LocalBuilder pc,
+        LocalBuilder user,
+        LocalBuilder address,
+        LocalBuilder value)
+    {
+        il.Emit(OpCodes.Ldarg_0);
+        il.Emit(OpCodes.Ldloc, address);
+        il.Emit(OpCodes.Ldloc, value);
+        il.Emit(OpCodes.Call, JitWriteWord);
+
+        EmitLoadUserRegister(il, user, 15, pc);
+        EmitAddConstant(il, pc, -4);
+    }
+
+    private static void EmitOverlapExit(
+        ILGenerator il,
+        LocalBuilder address,
+        uint blockStart,
+        uint blockEnd,
+        LocalBuilder forceExit)
+    {
+        Label outside = il.DefineLabel();
+        il.Emit(OpCodes.Ldloc, address);
+        il.Emit(OpCodes.Ldc_I4, unchecked((int)blockStart));
+        il.Emit(OpCodes.Blt_Un, outside);
+        il.Emit(OpCodes.Ldloc, address);
+        il.Emit(OpCodes.Ldc_I4, unchecked((int)blockEnd));
+        il.Emit(OpCodes.Bge_Un, outside);
+        EmitSetForceExit(il, forceExit);
+        il.MarkLabel(outside);
+    }
+
+    private static void EmitSetForceExit(ILGenerator il, LocalBuilder forceExit)
+    {
+        il.Emit(OpCodes.Ldc_I4_1);
+        il.Emit(OpCodes.Stloc, forceExit);
+    }
+
+    private static void EmitReturnToMachine(ILGenerator il, LocalBuilder forceExit)
+    {
+        EmitSetForceExit(il, forceExit);
+        il.Emit(OpCodes.Ldarg_0);
+        il.Emit(OpCodes.Ldc_I4_1);
+        il.Emit(OpCodes.Stfld, JitReturnToMachineField);
+    }
+
+    private static void EmitSyncCpsr(ILGenerator il, LocalBuilder state, LocalBuilder cpsr)
+    {
+        il.Emit(OpCodes.Ldloc, state);
+        il.Emit(OpCodes.Ldloc, cpsr);
+        il.Emit(OpCodes.Callvirt, JitCpsrSet);
+    }
+
+    private static void EmitBranch(
+        ILGenerator il,
+        LocalBuilder state,
+        LocalBuilder user,
+        LocalBuilder pc,
+        uint instruction)
     {
         if ((instruction & (1u << 24)) != 0)
         {
-            il.Emit(OpCodes.Ldloc, state);
-            il.Emit(OpCodes.Ldfld, JitUserField);
-            il.Emit(OpCodes.Ldc_I4, 14);
-            il.Emit(OpCodes.Ldloc, state);
-            il.Emit(OpCodes.Ldfld, JitUserField);
-            il.Emit(OpCodes.Ldc_I4, 15);
-            il.Emit(OpCodes.Ldelem_U4);
-            il.Emit(OpCodes.Stelem_I4);
+            EmitAddConstant(il, pc, 4);
+            EmitStoreUserRegister(il, user, 14, pc);
+            EmitAddConstant(il, pc, -4);
         }
 
         var offset = (int)(instruction & 0xffffff);
@@ -1216,57 +1691,25 @@ public sealed partial class Arm60
 
         offset <<= 2;
 
-        il.Emit(OpCodes.Ldloc, state);
-        il.Emit(OpCodes.Ldfld, JitUserField);
-        il.Emit(OpCodes.Ldc_I4, 15);
-        il.Emit(OpCodes.Ldloc, state);
-        il.Emit(OpCodes.Ldfld, JitUserField);
-        il.Emit(OpCodes.Ldc_I4, 15);
-        il.Emit(OpCodes.Ldelem_U4);
-        il.Emit(OpCodes.Ldc_I4, offset);
+        il.Emit(OpCodes.Ldloc, pc);
+        il.Emit(OpCodes.Ldc_I4, offset + 8);
         il.Emit(OpCodes.Add);
-        il.Emit(OpCodes.Ldc_I4_4);
-        il.Emit(OpCodes.Add);
-        il.Emit(OpCodes.Stelem_I4);
+        il.Emit(OpCodes.Stloc, pc);
     }
 
     private sealed class JitBlock
     {
-        internal JitBlock(uint pc, bool endsWithStore, JitBlockDelegate execute)
+        internal JitBlock(uint pc, uint codeEnd, JitBlockDelegate execute)
         {
             Pc = pc;
-            EndsWithStore = endsWithStore;
+            CodeEnd = codeEnd;
             Execute = execute;
         }
 
         internal uint Pc { get; }
 
-        internal bool EndsWithStore { get; }
+        internal uint CodeEnd { get; }
 
         internal JitBlockDelegate Execute { get; }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

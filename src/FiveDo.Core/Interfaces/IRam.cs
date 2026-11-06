@@ -1,4 +1,6 @@
 
+using System;
+
 namespace FiveDo.Core;
 
 /// <summary>
@@ -13,6 +15,22 @@ public interface IRam
 {
     /// <summary>Gets the total backing size in bytes, including reserved high-resolution mirrors.</summary>
     int Size { get; }
+
+    /// <summary>
+    /// Gets the raw word backing store, or an empty span when the implementation does not
+    /// expose one.
+    /// </summary>
+    /// <remarks>
+    /// The span is in the same word-swapped representation as <see cref="Read32"/>. It is
+    /// intended for bulk scanline copies; callers must still apply the address lane rules.
+    /// </remarks>
+    ReadOnlySpan<uint> Words => ReadOnlySpan<uint>.Empty;
+
+    /// <summary>
+    /// Gets a value indicating whether the low-ROM overlay is active. While it is set,
+    /// CPU reads below the ROM base come from the BIOS rather than DRAM.
+    /// </summary>
+    bool RomOverlay => false;
 
     /// <summary>
     /// Gets the active DRAM/VRAM layout. The default is the stock 2 MB DRAM / 1 MB VRAM

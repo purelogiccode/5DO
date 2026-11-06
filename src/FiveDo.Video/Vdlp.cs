@@ -238,10 +238,24 @@ public sealed class Vdlp : IVdlp, IStateSection
                     // The two halves of a word belong to an adjacent-line pair, so the
                     // source advances four bytes per pixel. Reading halfwords back to
                     // back mixes two scanlines and halves the horizontal resolution.
-                    for (var i = 0; i < lineWidth; i++)
+                    ReadOnlySpan<uint> words = _ram.Words;
+                    var lane = (int)(source & 3);
+                    if (!words.IsEmpty && lane <= 2)
                     {
-                        destination[i] = _ram.Read16(source);
-                        source += 4;
+                        var wordIndex = (int)(source >> 2);
+                        var shift = lane * 8;
+                        for (var i = 0; i < lineWidth; i++)
+                        {
+                            destination[i] = (ushort)(words[wordIndex++] >> shift);
+                        }
+                    }
+                    else
+                    {
+                        for (var i = 0; i < lineWidth; i++)
+                        {
+                            destination[i] = _ram.Read16(source);
+                            source += 4;
+                        }
                     }
 
                     target.Width = lineWidth;
@@ -307,14 +321,34 @@ public sealed class Vdlp : IVdlp, IStateSection
             Span<ushort> destination0 = target0.PixelBuffer;
             Span<ushort> destination1 = target1.PixelBuffer;
             var source = ((_previousBitmap ^ 2) & VramMask) + VramOffset;
-            for (var i = 0; i < lineWidth; i++)
+            ReadOnlySpan<uint> words = _ram.Words;
+            var lane = (int)(source & 3);
+            if (!words.IsEmpty && lane <= 2)
             {
-                var x = i * 2;
-                destination0[x] = _ram.Read16(source);
-                destination0[x + 1] = _ram.Read16(source + VramPlaneSize);
-                destination1[x] = _ram.Read16(source + (2 * VramPlaneSize));
-                destination1[x + 1] = _ram.Read16(source + (3 * VramPlaneSize));
-                source += 4;
+                var wordIndex = (int)(source >> 2);
+                var shift = lane * 8;
+                var planeWords = (int)(VramPlaneSize >> 2);
+                for (var i = 0; i < lineWidth; i++)
+                {
+                    var x = i * 2;
+                    destination0[x] = (ushort)(words[wordIndex] >> shift);
+                    destination0[x + 1] = (ushort)(words[wordIndex + planeWords] >> shift);
+                    destination1[x] = (ushort)(words[wordIndex + (2 * planeWords)] >> shift);
+                    destination1[x + 1] = (ushort)(words[wordIndex + (3 * planeWords)] >> shift);
+                    wordIndex++;
+                }
+            }
+            else
+            {
+                for (var i = 0; i < lineWidth; i++)
+                {
+                    var x = i * 2;
+                    destination0[x] = _ram.Read16(source);
+                    destination0[x + 1] = _ram.Read16(source + VramPlaneSize);
+                    destination1[x] = _ram.Read16(source + (2 * VramPlaneSize));
+                    destination1[x + 1] = _ram.Read16(source + (3 * VramPlaneSize));
+                    source += 4;
+                }
             }
 
             var width = lineWidth * 2;

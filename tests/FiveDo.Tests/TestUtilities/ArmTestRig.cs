@@ -27,6 +27,7 @@ internal sealed class ArmTestRig
         Memory = new FiveDoMemory(tuning);
         Interrupts = new FakeInterruptSink();
         Cpu = new Arm60(Memory.Bus, Interrupts, tuning, compatibility, Memory.Ram);
+        Memory.RamWriteHook = Cpu.NotifyRamWrite;
     }
 
     public FiveDoMemory Memory { get; }
