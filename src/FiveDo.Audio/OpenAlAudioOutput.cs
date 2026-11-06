@@ -65,6 +65,9 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
     private volatile string? _lastAlError;
     private int _peakBits;
     private volatile bool _deviceFailed;
+    private readonly int _syncOffsetFrames;
+    private int _silenceFramesRemaining;
+    private int _dropFramesRemaining;
 
     private OpenAlAudioOutput(
         ALContext alc,
@@ -82,6 +85,9 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         _bufferFrames = configuration.BufferFrames;
         _bufferCount = configuration.BufferCount;
         _prefillFrames = configuration.PrefillFrames;
+        _syncOffsetFrames = configuration.SyncOffsetFrames;
+        _silenceFramesRemaining = Math.Max(0, _syncOffsetFrames);
+        _dropFramesRemaining = Math.Max(0, -_syncOffsetFrames);
         _buffers = new uint[_bufferCount];
         _bufferFrameCounts = new int[_bufferCount];
         _unqueue = new uint[_bufferCount];
@@ -185,12 +191,21 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
     /// <summary>Gets the ring frames required before playback starts.</summary>
     public int PrefillFrames => _prefillFrames;
 
+    /// <summary>Gets the configured audio sync offset in milliseconds.</summary>
+    public int SyncOffsetMilliseconds => _syncOffsetFrames * 1000 / SampleRate;
+
     /// <summary>
     /// Computes the queue shape for a requested latency in milliseconds.
     /// </summary>
     /// <param name="milliseconds">Requested target latency, clamped to 20-500 ms.</param>
-    /// <returns>Buffer frames, buffer count, prefill frames, and ring capacity.</returns>
-    public static AudioBufferConfiguration ComputeBufferConfiguration(int milliseconds)
+    /// <param name="syncMilliseconds">
+    /// Audio sync offset, clamped to -250 to 250 ms. Positive values delay audio by
+    /// inserting silence; negative values advance it by dropping initial samples.
+    /// </param>
+    /// <returns>Buffer frames, buffer count, prefill frames, ring capacity, and sync offset.</returns>
+    public static AudioBufferConfiguration ComputeBufferConfiguration(
+        int milliseconds,
+        int syncMilliseconds = 0)
     {
         int clamped = Math.Clamp(milliseconds, 20, 500);
         int targetFrames = (int)((long)SampleRate * clamped / 1000);
@@ -200,8 +215,16 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
             4,
             32);
         int prefillFrames = Math.Max(bufferFrames, bufferCount * bufferFrames / 2);
+        int syncFrames = (int)((long)SampleRate
+            * Math.Clamp(syncMilliseconds, -250, 250) / 1000);
         int ringCapacity = Math.Max(targetFrames * 2, bufferCount * bufferFrames * 2);
-        return new AudioBufferConfiguration(bufferFrames, bufferCount, prefillFrames, ringCapacity);
+        ringCapacity += Math.Abs(syncFrames);
+        return new AudioBufferConfiguration(
+            bufferFrames,
+            bufferCount,
+            prefillFrames,
+            ringCapacity,
+            syncFrames);
     }
 
     /// <summary>Takes the peak absolute level of the audio queued since the previous call.</summary>
@@ -244,7 +267,24 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         string? deviceName,
         out string? error)
     {
-        AudioBufferConfiguration configuration = ComputeBufferConfiguration(bufferMilliseconds);
+        return TryCreate(bufferMilliseconds, deviceName, syncMilliseconds: 0, out error);
+    }
+
+    /// <summary>Tries to open an OpenAL device with a requested latency and audio sync offset.</summary>
+    /// <param name="bufferMilliseconds">Target buffer latency, 20-500 ms.</param>
+    /// <param name="deviceName">Device name, or <see langword="null"/> for the default device.</param>
+    /// <param name="syncMilliseconds">Audio sync offset, -250 to 250 ms.</param>
+    /// <param name="error">Receives a diagnostic message when the result is null.</param>
+    /// <returns>A running output, or <see langword="null"/> when OpenAL is unavailable.</returns>
+    public static OpenAlAudioOutput? TryCreate(
+        int bufferMilliseconds,
+        string? deviceName,
+        int syncMilliseconds,
+        out string? error)
+    {
+        AudioBufferConfiguration configuration = ComputeBufferConfiguration(
+            bufferMilliseconds,
+            syncMilliseconds);
         return TryCreate(configuration.RingCapacityFrames, deviceName, configuration, out error);
     }
 
@@ -378,6 +418,8 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
     /// <summary>Drops buffered and queued samples after a machine reset or state load.</summary>
     public void Reset()
     {
+        _silenceFramesRemaining = Math.Max(0, _syncOffsetFrames);
+        _dropFramesRemaining = Math.Max(0, -_syncOffsetFrames);
         _flushRequested = true;
     }
 
@@ -387,6 +429,29 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         if (_disposed)
         {
             return;
+        }
+
+        if (_dropFramesRemaining > 0)
+        {
+            _dropFramesRemaining--;
+            return;
+        }
+
+        // Positive sync offsets delay the stream by queueing silence ahead of the first
+        // real sample. The ring has enough extra capacity from ComputeBufferConfiguration.
+        if (_silenceFramesRemaining > 0)
+        {
+            _pushFrame[0] = 0f;
+            _pushFrame[1] = 0f;
+            if (_ring.Write(_pushFrame) == 1)
+            {
+                Interlocked.Increment(ref _samplesPushed);
+                _silenceFramesRemaining--;
+            }
+            else
+            {
+                Interlocked.Increment(ref _samplesDropped);
+            }
         }
 
         var sample = AudioSample.FromPacked(packedSample);
@@ -668,9 +733,14 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
 /// <param name="BufferCount">Maximum queued buffers.</param>
 /// <param name="PrefillFrames">Ring frames buffered before playback starts.</param>
 /// <param name="RingCapacityFrames">Suggested ring-buffer capacity.</param>
+/// <param name="SyncOffsetFrames">
+/// Positive frames of silence inserted before the stream, or negative frames dropped from
+/// the head. Zero keeps the historical queue shape.
+/// </param>
 [StructLayout(LayoutKind.Auto)]
 public readonly record struct AudioBufferConfiguration(
     int BufferFrames,
     int BufferCount,
     int PrefillFrames,
-    int RingCapacityFrames);
+    int RingCapacityFrames,
+    int SyncOffsetFrames = 0);

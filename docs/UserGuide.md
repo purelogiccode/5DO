@@ -392,6 +392,18 @@ to the CPU `WriteableBitmap` presenter
 when OpenGL initialization or context recovery fails; the status line and **Logs** report
 the reason.
 
+**Latency** (Settings > Video) adds run-ahead, frame delay, and adaptive sync controls.
+**Run-ahead** (0-2 frames, default 0) saves and restores the machine each displayed frame so
+the latest input reaches the screen sooner; it costs extra CPU and disables rewind and
+deterministic movies while active. **Frame delay** (0-8 frames, default 0) deliberately
+holds the image behind the core, which is useful for matching a high-latency audio path.
+**Adaptive sync (VRR)** disables the blocking swap interval and follows the compositor; the
+monitor, GPU driver, and desktop must already support VRR. The FPS overlay shows the
+software input-poll-to-frame-submit time as `in mean/max ms` and the active `raN`/`fdN`
+settings. **Audio sync** (Settings > Audio, -250 to 250 ms) shifts the host audio stream
+against video; positive values delay audio and negative values advance it without changing
+emulated state.
+
 The fresh-install defaults are tuned for 60 fps without lowering quality: OpenGL,
 match-window output, **SharpBilinear**, vsync on, integer scaling, and **Auto** frame
 skip. If a title still misses 60 fps, use `Nearest`, a lower output resolution, or turn

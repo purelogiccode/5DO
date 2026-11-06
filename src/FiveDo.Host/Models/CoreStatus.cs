@@ -47,4 +47,22 @@ public readonly record struct CoreStatus(
 
     /// <summary>Gets a value indicating whether the most recent frame was a lag frame.</summary>
     public bool IsLagFrame { get; init; }
+
+    /// <summary>Gets the active run-ahead depth in frames.</summary>
+    public int RunAheadFrames { get; init; }
+
+    /// <summary>Gets a value indicating whether run-ahead disabled itself because frames overran the budget.</summary>
+    public bool RunAheadAutoDisabled { get; init; }
+
+    /// <summary>Gets the active presentation frame delay in frames.</summary>
+    public int FrameDelayFrames { get; init; }
+
+    /// <summary>Gets the mean software input-poll-to-frame-submit latency in milliseconds.</summary>
+    public double InputLatencyMilliseconds { get; init; }
+
+    /// <summary>Gets the maximum software input-poll-to-frame-submit latency in milliseconds.</summary>
+    public double InputLatencyMaxMilliseconds { get; init; }
+
+    /// <summary>Gets the number of retained latency samples.</summary>
+    public int LatencySamples { get; init; }
 }

@@ -50,4 +50,33 @@ public sealed class AudioBufferConfigurationTests
 
         Assert.InRange(queuedMilliseconds, 80.0, 120.0);
     }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(50, 2205)]
+    [InlineData(-50, -2205)]
+    [InlineData(1000, 11025)]
+    [InlineData(-1000, -11025)]
+    public void ComputeBufferConfiguration_ConvertsAndClampsTheSyncOffset(
+        int requested,
+        int expectedFrames)
+    {
+        AudioBufferConfiguration configuration = OpenAlAudioOutput.ComputeBufferConfiguration(
+            100,
+            requested);
+
+        Assert.Equal(expectedFrames, configuration.SyncOffsetFrames);
+    }
+
+    [Fact]
+    public void ComputeBufferConfiguration_ReservesRingSpaceForPositiveSync()
+    {
+        AudioBufferConfiguration baseline = OpenAlAudioOutput.ComputeBufferConfiguration(100);
+        AudioBufferConfiguration delayed = OpenAlAudioOutput.ComputeBufferConfiguration(100, 100);
+
+        Assert.Equal(4410, delayed.SyncOffsetFrames);
+        Assert.Equal(
+            baseline.RingCapacityFrames + delayed.SyncOffsetFrames,
+            delayed.RingCapacityFrames);
+    }
 }

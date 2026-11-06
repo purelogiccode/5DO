@@ -2330,3 +2330,25 @@ a legacy version-2 memory section.
 - The feature is complete: the BIOS patch is explicit and opt-in, the source image is
   never modified, known No-RSA images are preferred, and a compatible retail image is
   patched only when requested. No BIOS or game content is bundled.
+
+#### 1.1av VID-12 latency options and PERF-02 AOT (2026-11-06)
+
+- `bench --frames 120 --latency` (Release, this desktop): snapshot
+  **9,348,438 bytes**, capture **3.6 ms/frame**, restore **2.0 ms/frame**. The synthetic
+  bench hash remained `0x6CDFBDC5`. The uncompressed state is smaller than the previous
+  ~10 MB because Machine section v2 writes only visible lines; RAM restore no longer
+  clears the unused 22 MB tail.
+- `LatencyTests` (10 tests) covers snapshot frame/hash round-trip, 1- and 2-frame run-ahead
+  timeline parity against a normal run (`machineFrames = displayed + depth`), visible-only
+  audio, frame-delay ring holding, range validation, and telemetry mean/max.
+- Frontend Debug and AOT win-x64 runs of Lemmings (USA) with run-ahead 1, frame delay 1,
+  VRR, and audio sync 40 ms logged the applied options, opened the disc, started
+  emulation, and produced no core fault. The AOT run also logged `OpenAL audio ready
+  (44100 Hz stereo, 100 ms, sync 40 ms, device default)` with `ALSOFT_DRIVERS=null`.
+- AOT CLI: `--version` 69 ms, `bench --frames 2` 65 ms, 3,000-frame Lemmings boot
+  `ok: true`, PC `0x0012B36C`, frame hash `0x0C5B2F8E`, `warnings: []`; 240-frame realtime
+  OpenAL run with `--audio-sync 40` reported **0 dropped samples**, **0 underruns**, and
+  frame hash `0x6CDFBDC5` matching the IL build.
+  AOT frontend: 34.5 MB single file, `--version` 70 ms, smoke 1.2 s; trimmed frontend:
+  27.9 MB single file, smoke 3.2 s; trimmed CLI: 19.4 MB. See `Trimming.md` and
+  `Performance.md` §8.7.

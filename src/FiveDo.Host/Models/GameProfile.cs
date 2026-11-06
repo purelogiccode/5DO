@@ -65,6 +65,18 @@ public sealed class GameProfile
     /// <summary>Gets or sets a value indicating whether CD-DA mixing is muted.</summary>
     public bool CdAudioMuted { get; set; }
 
+    /// <summary>Gets or sets the per-game run-ahead depth, or <see langword="null"/> for the global value.</summary>
+    public int? RunAheadFrames { get; set; }
+
+    /// <summary>Gets or sets the per-game presentation frame delay, or <see langword="null"/> for the global value.</summary>
+    public int? FrameDelayFrames { get; set; }
+
+    /// <summary>Gets or sets the per-game adaptive-sync request, or <see langword="null"/> for the global value.</summary>
+    public bool? Vrr { get; set; }
+
+    /// <summary>Gets or sets the per-game audio sync offset, or <see langword="null"/> for the global value.</summary>
+    public int? AudioSyncMilliseconds { get; set; }
+
     /// <summary>Gets or sets the pinned BIOS MD5, or an empty string for automatic selection.</summary>
     public string BiosMd5 { get; set; } = string.Empty;
 
@@ -129,6 +141,10 @@ public sealed class GameProfile
             CpuBackend = settings.CpuBackend,
             CdAudioVolume = settings.CdAudioVolume,
             CdAudioMuted = settings.CdAudioMuted,
+            RunAheadFrames = settings.RunAheadFrames,
+            FrameDelayFrames = settings.FrameDelayFrames,
+            Vrr = settings.Vrr,
+            AudioSyncMilliseconds = settings.AudioSyncMilliseconds,
             HighResolution = settings.HighResolution,
             Deinterlace = settings.Deinterlace,
             Overscan = settings.ResolveOverscan(),
@@ -169,6 +185,26 @@ public sealed class GameProfile
         settings.CpuBackend = CpuBackend;
         settings.CdAudioVolume = CdAudioVolume;
         settings.CdAudioMuted = CdAudioMuted;
+        if (RunAheadFrames is { } runAheadFrames)
+        {
+            settings.RunAheadFrames = runAheadFrames;
+        }
+
+        if (FrameDelayFrames is { } frameDelayFrames)
+        {
+            settings.FrameDelayFrames = frameDelayFrames;
+        }
+
+        if (Vrr is { } vrr)
+        {
+            settings.Vrr = vrr;
+        }
+
+        if (AudioSyncMilliseconds is { } audioSyncMilliseconds)
+        {
+            settings.AudioSyncMilliseconds = audioSyncMilliseconds;
+        }
+
         if (Deinterlace is { } deinterlace)
         {
             settings.Deinterlace = deinterlace;

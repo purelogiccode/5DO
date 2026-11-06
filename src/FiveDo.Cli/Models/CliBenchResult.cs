@@ -20,4 +20,13 @@ internal sealed record CliBenchResult(
     int CpuClock = EmulatorConstants.ArmClock,
     string Memory = "21",
     bool SwiHle = false,
-    long SwiHleInstructions = 0);
+    long SwiHleInstructions = 0,
+    [property: System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    double? SnapshotCaptureMilliseconds = null,
+    [property: System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    double? SnapshotRestoreMilliseconds = null,
+    [property: System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    int? SnapshotBytes = null);

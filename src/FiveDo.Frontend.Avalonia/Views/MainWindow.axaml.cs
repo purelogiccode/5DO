@@ -85,6 +85,7 @@ public partial class MainWindow : Window, IDisposable
     private OpenAlAudioOutput? _audio;
     private string _audioDevice;
     private int _audioBufferMilliseconds;
+    private int _audioSyncMilliseconds;
     private GifRecorder? _gifRecorder;
     private FileStream? _gifStream;
     private string? _gifPath;
@@ -138,6 +139,7 @@ public partial class MainWindow : Window, IDisposable
     private int _displayFrameGeneration;
     private long _displayPresents;
     private long _presentRateStartTicks = Stopwatch.GetTimestamp();
+    private bool _runAheadAutoDisabledShown;
 
     public MainWindow()
     {
@@ -215,16 +217,22 @@ public partial class MainWindow : Window, IDisposable
         string? audioError = null;
         _audioDevice = _settings.AudioDevice;
         _audioBufferMilliseconds = _settings.AudioBufferMilliseconds;
+        _audioSyncMilliseconds = _settings.AudioSyncMilliseconds;
         _audio = _settings.AudioEnabled
-            ? OpenAlAudioOutput.TryCreate(_audioBufferMilliseconds, _audioDevice, out audioError)
+            ? OpenAlAudioOutput.TryCreate(
+                _audioBufferMilliseconds,
+                _audioDevice,
+                _audioSyncMilliseconds,
+                out audioError)
             : null;
         if (_audio is not null)
         {
             _audio.Volume = _settings.Volume;
             _logger.ForCategory(LogCategory.Audio).Information(
-                "OpenAL audio ready ({SampleRate} Hz stereo, {BufferMs} ms, device {Device}).",
+                "OpenAL audio ready ({SampleRate} Hz stereo, {BufferMs} ms, sync {SyncMs} ms, device {Device}).",
                 OpenAlAudioOutput.OutputSampleRate,
                 _audioBufferMilliseconds,
+                _audioSyncMilliseconds,
                 string.IsNullOrWhiteSpace(_audioDevice) ? "default" : _audioDevice);
         }
         else if (_settings.AudioEnabled)
@@ -1379,6 +1387,12 @@ public partial class MainWindow : Window, IDisposable
                 _cpuVideo.Settings = _settings.ToRendererSettings(_gameId);
             }
 
+            // Per-game latency and audio profiles take effect when the disc opens,
+            // not only after the settings dialog is accepted.
+            ApplyLatencySettings(effective);
+            ApplyAudioSettings();
+            ApplyDisplayRefreshRate();
+
             _settings.DiscPath = _playlistPath ?? path;
             var recentPath = _playlistPath ?? path;
             for (var i = _settings.RecentDiscs.Count - 1; i >= 0; i--)
@@ -2224,6 +2238,13 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
+        if (_runner.RunAhead > 0)
+        {
+            StatusText.Text = "Disable run-ahead before recording a deterministic movie.";
+            ShowOsd("Disable run-ahead before recording a movie.", OsdSeverity.Warning);
+            return;
+        }
+
         StopMovie(save: true);
         var suffix = _gameId.Length > 0
             ? _gameId[..Math.Min(8, _gameId.Length)]
@@ -2269,6 +2290,13 @@ public partial class MainWindow : Window, IDisposable
         if (_machine is null || _runner is null)
         {
             StatusText.Text = "Open a 3DO BIOS before playing a movie.";
+            return;
+        }
+
+        if (_runner.RunAhead > 0)
+        {
+            StatusText.Text = "Disable run-ahead before playing a deterministic movie.";
+            ShowOsd("Disable run-ahead before playing a movie.", OsdSeverity.Warning);
             return;
         }
 
@@ -3804,6 +3832,7 @@ public partial class MainWindow : Window, IDisposable
         if (_runner is not null)
         {
             _runner.FrameSkip = _settings.FrameSkip;
+            ApplyLatencySettings(effective);
         }
 
         ApplyDisplayRefreshRate();
@@ -4025,40 +4054,45 @@ public partial class MainWindow : Window, IDisposable
 
     private void ApplyAudioSettings()
     {
+        AppSettings effective = _settings.CreateEffectiveForGame(_gameId);
         if (_machine is not null)
         {
-            _machine.CdAudioVolume = _settings.CdAudioVolume;
-            _machine.CdAudioMuted = _settings.CdAudioMuted;
+            _machine.CdAudioVolume = effective.CdAudioVolume;
+            _machine.CdAudioMuted = effective.CdAudioMuted;
         }
 
-        if (_settings.AudioEnabled)
+        if (effective.AudioEnabled)
         {
             bool configurationChanged =
-                !string.Equals(_audioDevice, _settings.AudioDevice, StringComparison.Ordinal)
-                || _audioBufferMilliseconds != _settings.AudioBufferMilliseconds;
+                !string.Equals(_audioDevice, effective.AudioDevice, StringComparison.Ordinal)
+                || _audioBufferMilliseconds != effective.AudioBufferMilliseconds
+                || _audioSyncMilliseconds != effective.AudioSyncMilliseconds;
             if (_audio is null || configurationChanged)
             {
                 OpenAlAudioOutput? previous = _audio;
                 OpenAlAudioOutput? replacement = OpenAlAudioOutput.TryCreate(
-                    _settings.AudioBufferMilliseconds,
-                    _settings.AudioDevice,
+                    effective.AudioBufferMilliseconds,
+                    effective.AudioDevice,
+                    effective.AudioSyncMilliseconds,
                     out var audioError);
                 if (replacement is not null)
                 {
-                    replacement.Volume = _settings.Volume;
+                    replacement.Volume = effective.Volume;
+                    _audio = replacement;
+                    _audioDevice = effective.AudioDevice;
+                    _audioBufferMilliseconds = effective.AudioBufferMilliseconds;
+                    _audioSyncMilliseconds = effective.AudioSyncMilliseconds;
                     if (_machine is not null)
                     {
                         UpdateAudioSink();
                     }
 
-                    _audio = replacement;
-                    _audioDevice = _settings.AudioDevice;
-                    _audioBufferMilliseconds = _settings.AudioBufferMilliseconds;
                     previous?.Dispose();
                     _logger.ForCategory(LogCategory.Audio).Information(
-                        "OpenAL audio ready ({SampleRate} Hz stereo, {BufferMs} ms, device {Device}).",
+                        "OpenAL audio ready ({SampleRate} Hz stereo, {BufferMs} ms, sync {SyncMs} ms, device {Device}).",
                         OpenAlAudioOutput.OutputSampleRate,
                         _audioBufferMilliseconds,
+                        _audioSyncMilliseconds,
                         string.IsNullOrWhiteSpace(_audioDevice) ? "default" : _audioDevice);
                 }
                 else
@@ -4075,7 +4109,7 @@ public partial class MainWindow : Window, IDisposable
 
             if (_audio is not null)
             {
-                _audio.Volume = _settings.Volume;
+                _audio.Volume = effective.Volume;
             }
         }
         else
@@ -4421,6 +4455,14 @@ public partial class MainWindow : Window, IDisposable
             UpdateQuickMenuState();
         }
 
+        if (status.RunAheadAutoDisabled && !_runAheadAutoDisabledShown)
+        {
+            _runAheadAutoDisabledShown = true;
+            ShowOsd(
+                "Run-ahead disabled automatically (frame budget or incompatible state).",
+                OsdSeverity.Warning);
+        }
+
         long presents = _displayPresents;
         _displayPresents = 0;
         long presentNow = Stopwatch.GetTimestamp();
@@ -4451,9 +4493,20 @@ public partial class MainWindow : Window, IDisposable
             var shown = status.PresentedFramesPerSecond > 0 && status.PresentedFramesPerSecond < status.FramesPerSecond - 0.5
                 ? $"  shown {status.PresentedFramesPerSecond:F1}"
                 : string.Empty;
+            var latency = status.LatencySamples > 0
+                ? $"  in {status.InputLatencyMilliseconds:F1}/{status.InputLatencyMaxMilliseconds:F1}ms"
+                : string.Empty;
+            var latencyMode = status.RunAheadFrames > 0
+                ? $"  ra{status.RunAheadFrames}"
+                : status.RunAheadAutoDisabled ? "  ra-off" : string.Empty;
+            if (status.FrameDelayFrames > 0)
+            {
+                latencyMode += $" fd{status.FrameDelayFrames}";
+            }
+
             OverlayText.Text =
                 $"{status.FramesPerSecond,5:F1}/{status.TargetFramesPerSecond:F2} fps{display}{shown}{skip}  "
-                + $"{status.Cycles,6} cyc  PC 0x{status.ProgramCounter:x8}  {timing}{audio}";
+                + $"{status.Cycles,6} cyc  PC 0x{status.ProgramCounter:x8}  {timing}{audio}{latency}{latencyMode}";
         }
 
         if (InputDisplayPanel.IsVisible)
@@ -5071,6 +5124,8 @@ public partial class MainWindow : Window, IDisposable
             {
                 FrameSkip = _settings.FrameSkip,
                 InputPlayer = _settings.InputDisplayPlayer,
+                RunAhead = effective.RunAheadFrames,
+                FrameDelay = effective.FrameDelayFrames,
             };
             _runner.Faulted += (_, args) => Dispatcher.UIThread.Post(() =>
             {
@@ -5083,10 +5138,53 @@ public partial class MainWindow : Window, IDisposable
                 ShowError("Emulation error", exception.Message);
             });
             _runner.GuestDiscEjected += (_, _) => Dispatcher.UIThread.Post(HandleGuestDiscEjection);
+            _logger.ForCategory(LogCategory.Host).Information(
+                "Latency options: run-ahead {RunAhead} frame(s), frame delay {FrameDelay}, adaptive sync {Vrr}, audio sync {AudioSync} ms.",
+                effective.RunAheadFrames,
+                effective.FrameDelayFrames,
+                effective.Vrr,
+                effective.AudioSyncMilliseconds);
+            _runAheadAutoDisabledShown = false;
             ReloadCheats();
         }
 
         return _machine;
+    }
+
+    private void ApplyLatencySettings(AppSettings effective)
+    {
+        if (_runner is null)
+        {
+            return;
+        }
+
+        int runAhead = effective.RunAheadFrames;
+        if (runAhead > 0 && (_movieRecorder is not null || _moviePlaybackSource is not null))
+        {
+            runAhead = 0;
+            ShowOsd("Run-ahead is disabled while a movie is recording or playing.", OsdSeverity.Warning);
+        }
+
+        bool runAheadChanged = _runner.RunAhead != runAhead;
+        _runner.RunAhead = runAhead;
+        _runner.FrameDelay = effective.FrameDelayFrames;
+        if (runAhead > 0)
+        {
+            if (runAheadChanged)
+            {
+                // Run-ahead cannot retain a stable input timeline for rewind.
+                _runner.ResetRewind();
+            }
+
+            _runAheadAutoDisabledShown = false;
+        }
+
+        _logger.ForCategory(LogCategory.Host).Information(
+            "Latency options updated: run-ahead {RunAhead}, frame delay {FrameDelay}, adaptive sync {Vrr}, audio sync {AudioSync} ms.",
+            runAhead,
+            effective.FrameDelayFrames,
+            effective.Vrr,
+            effective.AudioSyncMilliseconds);
     }
 
     private void ApplyFieldHandling(DeinterlaceMode mode)
@@ -5174,10 +5272,11 @@ public partial class MainWindow : Window, IDisposable
     {
         StopDisplayRefresh();
 
+        AppSettings effective = _settings.CreateEffectiveForGame(_gameId);
         int rate;
         try
         {
-            rate = _settings.ResolveDisplayRefreshRate();
+            rate = effective.ResolveDisplayRefreshRate();
         }
         catch (ArgumentOutOfRangeException)
         {
@@ -5199,13 +5298,22 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        if (rate == 0)
+        if (rate == 0 || effective.Vrr)
         {
             _displayFrameLoop = true;
             int generation = ++_displayFrameGeneration;
             RequestDisplayFrame(generation);
-            _logger.ForCategory(LogCategory.Video).Information(
-                "Presentation refresh rate follows the compositor.");
+            if (effective.Vrr)
+            {
+                _logger.ForCategory(LogCategory.Video).Information(
+                    "Adaptive sync (VRR) presentation requested; swap interval is disabled and the compositor drives presentation.");
+            }
+            else
+            {
+                _logger.ForCategory(LogCategory.Video).Information(
+                    "Presentation refresh rate follows the compositor.");
+            }
+
             return;
         }
 
@@ -5704,6 +5812,13 @@ public partial class MainWindow : Window, IDisposable
         }
 
         CancelFastForward();
+        if (_runner.RunAhead > 0)
+        {
+            StatusText.Text = "Rewind is unavailable while run-ahead is active.";
+            ShowOsd("Rewind is unavailable while run-ahead is active.", OsdSeverity.Warning);
+            return;
+        }
+
         if (_runner.Rewind(frames))
         {
             StatusText.Text = $"Rewound to frame {_machine.FramesExecuted}.";

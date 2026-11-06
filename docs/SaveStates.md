@@ -124,16 +124,17 @@ Machine; the table below is sorted by ID. Never renumber an existing section.
 | 8 | XBUS | 1 | `Xbus` | Select/poll state, status/command FIFOs, and attached-device state. The CD-ROM device is also written as section 9. |
 | 9 | CD-ROM | 4 | `CdromDevice` | Poll/status, status/data buffers, command buffer, requested count, MEI status, current sector, disc state (tracks/MSF/TOC), cycle clock, next-ready cycle, pending read-status flag, MODE SET sector size/block flags, PLAY_AUDIO position, CD-DA sample cursor, volume, and mute. Version 1 is accepted with a zeroed clock and pending flag; v2 adds the cycle clock; v3 adds MODE SET and audio position; v4 adds the CD-DA mix. Older versions use the documented defaults. The timing mode itself is recorded in the Options section. |
 | 10 | Quartz | 3 | `Quartz` | ARM/VDL/timer accumulators, exact DSP cycle remainder, VDL line counter, Opera timer slot/gap flag and 16.16 slot accumulator. Versions 1-2 are accepted with a reset timer scheduler. |
-| 11 | Machine | 1 | `FiveDoMachine` | Compatibility flags (fix mode, Anvil, speed fixes, sf/sdf, unknown flag 11, jw, cnbfix, high-res), frame source dimensions, and all 960 `VdlLine` objects (width, control words, CLUT, 1280 pixels each). |
+| 11 | Machine | 2 | `FiveDoMachine` | Compatibility flags (fix mode, Anvil, speed fixes, sf/sdf, unknown flag 11, jw, cnbfix, high-res), frame source dimensions/pixel aspect, and the visible `VdlLine` objects (width, control words, CLUT, and the full pixel backing store). Version 1 wrote all 576 lines; version 2 writes only `SourceHeight` lines and copies pixels as little-endian blocks, which cut the section from ~1.54 MB to ~0.64 MB for a 240-line frame. Version-1 sections still load. |
 | 12 | Options | 9 | `FiveDoMachine` | Every registered machine option: ARM timing mode, CLIO timer mode, MADAM CEL timing mode, CD-ROM timing mode, CD-ROM speed, DRAM/VRAM capacity, live video region, ARM clock, random seed (including whether the default was recorded), high-resolution mode, Opera DIPIR, Opera soft reset, Portfolio OS SWI HLE, fix mask, and CPU backend. Version 1 records only ARM timing; version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing; version 5 adds CD speed; version 6 adds the region; version 7 adds the remaining registry entries; version 8 adds the memory capacity; version 9 adds the SWI HLE flag. Loading a lower version leaves missing options at the machine default. |
 
 ### Why the state is large
 
 The memory section stores the live RAM backing, including every high-resolution VRAM
-plane that the active layout can address, and the machine section stores all 960 VDL
-lines with their full 1280-pixel buffers. Version 4 writes only the live range: the stock
-2 MB DRAM / 1 MB VRAM layout produces a roughly **10 MB** uncompressed state, while the
-largest 14 MB DRAM / 2 MB VRAM layout reaches about **26 MB**.
+plane that the active layout can address. Version 4 writes only the live range: the stock
+2 MB DRAM / 1 MB VRAM layout produces a roughly **9.3 MB** uncompressed state, while the
+largest 14 MB DRAM / 2 MB VRAM layout reaches about **25 MB**. Machine section v2 stores
+only the visible source lines; the load path clears only the previously addressable RAM
+tail, so repeated run-ahead/save-state restores do not scan the unused 22 MB allocation.
 
 Version 3 keeps the v2 Brotli policy. On the local corpus the state shrinks to
 roughly **0.6-2.0 MB** (a 300-frame Gex state measured 647,647 bytes, a 14,900-frame

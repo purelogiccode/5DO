@@ -291,9 +291,25 @@ public partial class SettingsWindow : Window
         CheckUpdatesCheck.IsChecked = settings.CheckForUpdates;
         BloomSlider.Value = settings.Bloom;
         FsrSharpnessSlider.Value = settings.FsrSharpness;
+        RunAheadSlider.Value = Math.Clamp(settings.RunAheadFrames, 0, AppSettings.MaxRunAheadFrames);
+        FrameDelaySlider.Value = Math.Clamp(settings.FrameDelayFrames, 0, AppSettings.MaxFrameDelayFrames);
+        VrrCheck.IsChecked = settings.Vrr;
+        RunAheadValueText.Text = settings.RunAheadFrames.ToString(CultureInfo.InvariantCulture);
+        FrameDelayValueText.Text = settings.FrameDelayFrames.ToString(CultureInfo.InvariantCulture);
+        RunAheadSlider.ValueChanged += (_, args) =>
+            RunAheadValueText.Text = ((int)Math.Round(args.NewValue)).ToString(CultureInfo.InvariantCulture);
+        FrameDelaySlider.ValueChanged += (_, args) =>
+            FrameDelayValueText.Text = ((int)Math.Round(args.NewValue)).ToString(CultureInfo.InvariantCulture);
+        AudioSyncSlider.ValueChanged += (_, args) =>
+            AudioSyncValueText.Text = $"{Math.Round(args.NewValue)} ms";
         AudioCheck.IsChecked = settings.AudioEnabled;
         PopulateAudioDevices(settings.AudioDevice);
         AudioBufferBox.Text = settings.AudioBufferMilliseconds.ToString(CultureInfo.InvariantCulture);
+        AudioSyncSlider.Value = Math.Clamp(
+            settings.AudioSyncMilliseconds,
+            AppSettings.MinAudioSyncMilliseconds,
+            AppSettings.MaxAudioSyncMilliseconds);
+        AudioSyncValueText.Text = $"{settings.AudioSyncMilliseconds} ms";
         VolumeSlider.Value = settings.Volume;
         CdVolumeSlider.Value = Math.Clamp(settings.CdAudioVolume, 0, 1);
         CdMuteCheck.IsChecked = settings.CdAudioMuted;
@@ -748,6 +764,19 @@ public partial class SettingsWindow : Window
         profile.SwiHle = SwiHleCheck.IsChecked == true;
         profile.CdAudioVolume = (float)Math.Clamp(CdVolumeSlider.Value, 0, 1);
         profile.CdAudioMuted = CdMuteCheck.IsChecked == true;
+        profile.RunAheadFrames = Math.Clamp(
+            (int)Math.Round(RunAheadSlider.Value),
+            0,
+            AppSettings.MaxRunAheadFrames);
+        profile.FrameDelayFrames = Math.Clamp(
+            (int)Math.Round(FrameDelaySlider.Value),
+            0,
+            AppSettings.MaxFrameDelayFrames);
+        profile.Vrr = VrrCheck.IsChecked == true;
+        profile.AudioSyncMilliseconds = Math.Clamp(
+            (int)Math.Round(AudioSyncSlider.Value),
+            AppSettings.MinAudioSyncMilliseconds,
+            AppSettings.MaxAudioSyncMilliseconds);
         return profile;
     }
 
@@ -781,6 +810,19 @@ public partial class SettingsWindow : Window
             SwiHleCheck.IsChecked = profile.SwiHle;
             CdVolumeSlider.Value = Math.Clamp(profile.CdAudioVolume, 0, 1);
             CdMuteCheck.IsChecked = profile.CdAudioMuted;
+            RunAheadSlider.Value = Math.Clamp(
+                profile.RunAheadFrames ?? _settings.RunAheadFrames,
+                0,
+                AppSettings.MaxRunAheadFrames);
+            FrameDelaySlider.Value = Math.Clamp(
+                profile.FrameDelayFrames ?? _settings.FrameDelayFrames,
+                0,
+                AppSettings.MaxFrameDelayFrames);
+            VrrCheck.IsChecked = profile.Vrr ?? _settings.Vrr;
+            AudioSyncSlider.Value = Math.Clamp(
+                profile.AudioSyncMilliseconds ?? _settings.AudioSyncMilliseconds,
+                AppSettings.MinAudioSyncMilliseconds,
+                AppSettings.MaxAudioSyncMilliseconds);
             SelectBiosOverride(profile.BiosMd5);
             FixModeBox.Text = profile.FixMode is { } fix
                 ? $"0x{(uint)fix:x}"
@@ -1115,6 +1157,15 @@ public partial class SettingsWindow : Window
         settings.CheckForUpdates = CheckUpdatesCheck.IsChecked == true;
         settings.Bloom = (float)BloomSlider.Value;
         settings.FsrSharpness = (float)FsrSharpnessSlider.Value;
+        settings.RunAheadFrames = Math.Clamp(
+            (int)Math.Round(RunAheadSlider.Value),
+            0,
+            AppSettings.MaxRunAheadFrames);
+        settings.FrameDelayFrames = Math.Clamp(
+            (int)Math.Round(FrameDelaySlider.Value),
+            0,
+            AppSettings.MaxFrameDelayFrames);
+        settings.Vrr = VrrCheck.IsChecked == true;
         settings.AudioEnabled = AudioCheck.IsChecked == true;
         settings.AudioDevice = AudioDeviceCombo.SelectedItem is AudioDeviceOption { Name: { } device }
             ? device
@@ -1138,6 +1189,10 @@ public partial class SettingsWindow : Window
             settings.AudioBufferMilliseconds = audioBufferMilliseconds;
         }
 
+        settings.AudioSyncMilliseconds = Math.Clamp(
+            (int)Math.Round(AudioSyncSlider.Value),
+            AppSettings.MinAudioSyncMilliseconds,
+            AppSettings.MaxAudioSyncMilliseconds);
         settings.Volume = (float)VolumeSlider.Value;
         settings.CdAudioVolume = (float)Math.Clamp(CdVolumeSlider.Value, 0, 1);
         settings.CdAudioMuted = CdMuteCheck.IsChecked == true;

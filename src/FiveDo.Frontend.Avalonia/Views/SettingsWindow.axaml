@@ -10,7 +10,7 @@
             <TabItem Header="Video" ToolTip.Tip="Renderer, output resolution, display refresh, filter, aspect ratio, scaling, overlay, OSD notifications, quick menu, bloom, and FSR options.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <Grid ColumnDefinitions="170,*"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                           Margin="8">
                         <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Renderer"
                                    FontWeight="SemiBold" Margin="0,0,0,4" />
@@ -164,12 +164,44 @@
                                   Content="Check for updates when 5DO starts"
                                   Margin="0,8,0,0"
                                   ToolTip.Tip="Ask GitHub's public release feed whether a newer 5DO version exists. Only the release URL is requested; no personal data is sent." />
+
+                        <TextBlock Grid.Row="34" Grid.Column="0" Grid.ColumnSpan="2" Text="Latency"
+                                   FontWeight="SemiBold" Margin="0,12,0,4"
+                                   ToolTip.Tip="Run-ahead, presentation delay, adaptive sync, and the software input-to-present measurement." />
+                        <TextBlock Grid.Row="35" Grid.Column="0" Text="Run-ahead (frames)" VerticalAlignment="Center"
+                                   ToolTip.Tip="Run 0, 1, or 2 speculative frames ahead of presentation to reduce input latency." />
+                        <StackPanel Grid.Row="35" Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                            <Slider x:Name="RunAheadSlider" Width="180" Minimum="0" Maximum="2"
+                                    TickFrequency="1" IsSnapToTickEnabled="True"
+                                    ToolTip.Tip="Zero is the safe default. Run-ahead costs one extra emulated frame per step and is incompatible with rewind and deterministic movie recording." />
+                            <TextBlock x:Name="RunAheadValueText" VerticalAlignment="Center" Opacity="0.7" Text="0" />
+                        </StackPanel>
+                        <TextBlock Grid.Row="36" Grid.Column="0" Text="Frame delay (frames)" VerticalAlignment="Center"
+                                   ToolTip.Tip="Hold the presented image this many frames behind the core." />
+                        <StackPanel Grid.Row="36" Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                            <Slider x:Name="FrameDelaySlider" Width="180" Minimum="0" Maximum="8"
+                                    TickFrequency="1" IsSnapToTickEnabled="True"
+                                    ToolTip.Tip="Zero is the lowest-latency path. Positive values are useful for matching a high-latency audio path or inspecting frames; they increase input-to-photon latency." />
+                            <TextBlock x:Name="FrameDelayValueText" VerticalAlignment="Center" Opacity="0.7" Text="0" />
+                        </StackPanel>
+                        <CheckBox x:Name="VrrCheck" Grid.Row="37" Grid.Column="1"
+                                   Content="Adaptive sync (VRR) presentation"
+                                   ToolTip.Tip="Disable the blocking swap interval and present through the compositor so the GPU driver and monitor can drive adaptive sync. The display, driver, and desktop must already support VRR." />
+                        <TextBlock Grid.Row="38" Grid.Column="1"
+                                   Text="Run-ahead saves and restores state every displayed frame; rewind recording and deterministic movies are paused while it is active. Frame delay intentionally adds latency. The FPS overlay reports the software input-poll-to-frame-submit time."
+                                   Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
+                                   ToolTip.Tip="These options are presentation/latency controls. They do not change the emulated frame hashes, save-state format, or disc timing; frame delay changes what the host shows." />
+                        <TextBlock Grid.Row="39" Grid.Column="0" Text="Input latency" VerticalAlignment="Center" Margin="0,8,0,0"
+                                   ToolTip.Tip="Most recent software input-poll-to-frame-submit measurement." />
+                        <TextBlock x:Name="LatencySampleText" Grid.Row="39" Grid.Column="1" Margin="0,8,0,0"
+                                   Text="Run a game to collect samples." Opacity="0.7"
+                                   ToolTip.Tip="This is the portion of input-to-photon latency inside 5DO. Display scanout and pixel response require an external photodiode measurement." />
                     </Grid>
                 </ScrollViewer>
             </TabItem>
 
             <TabItem Header="Audio" ToolTip.Tip="OpenAL output, volume, CD-DA mix, and test-tone settings.">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Output" VerticalAlignment="Center"
                                ToolTip.Tip="Enable or disable live OpenAL playback." />
                     <CheckBox x:Name="AudioCheck" Grid.Row="0" Grid.Column="1" Content="Enable OpenAL output"
@@ -211,6 +243,19 @@
                     <TextBlock Grid.Row="9" Grid.Column="1" Text="Device and buffer changes restart OpenAL output without resetting the machine."
                                Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
                                ToolTip.Tip="The emulated machine keeps running; only the host audio queue is recreated." />
+                    <TextBlock Grid.Row="10" Grid.Column="0" Text="Audio sync" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="Shift audio relative to video. Positive values delay audio; negative values advance it." />
+                    <StackPanel Grid.Row="10" Grid.Column="1" Orientation="Horizontal" Margin="0,12,0,0" Spacing="6">
+                        <Slider x:Name="AudioSyncSlider" Width="220" Minimum="-250" Maximum="250"
+                                TickFrequency="5" IsSnapToTickEnabled="True"
+                                ToolTip.Tip="Offset from -250 to 250 milliseconds. Positive values insert silence and delay audio; negative values drop the first samples and advance it." />
+                        <TextBlock x:Name="AudioSyncValueText" VerticalAlignment="Center" Opacity="0.7" Width="70"
+                                   ToolTip.Tip="Current audio sync offset in milliseconds." />
+                    </StackPanel>
+                    <TextBlock Grid.Row="11" Grid.Column="1"
+                               Text="The audio sync offset is applied when OpenAL output is created or reset. A positive value adds the same fixed delay to every sample; it does not change emulation speed or state."
+                               Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
+                               ToolTip.Tip="Use the FPS overlay to compare the reported audio latency with the video frame delay." />
                     <TextBlock x:Name="TestAudioText" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2"
                                Text="OpenAL Soft 1.23.1 · 44.1 kHz stereo"
                                Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"

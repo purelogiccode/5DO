@@ -27,10 +27,11 @@ public sealed class AppSettings
     /// <remarks>
     /// Version 2 adds the CD-DA mix volume and mute flag. Version 3 adds the presentation
     /// refresh rate. Version 4 adds the game-library card size. Version 5 adds the
-    /// unsigned-disc/RSA-patch option. Older files load with the documented defaults for
-    /// new properties.
+    /// unsigned-disc/RSA-patch option. Version 6 adds the latency options (run-ahead,
+    /// frame delay, adaptive sync, and audio sync). Older files load with the documented
+    /// defaults for new properties.
     /// </remarks>
-    public const int CurrentVersion = 5;
+    public const int CurrentVersion = 6;
 
     /// <summary>
     /// Gets or sets the settings schema version. Zero or missing means a pre-versioned file
@@ -341,6 +342,40 @@ public sealed class AppSettings
 
     /// <summary>Gets or sets a value indicating whether vsync is requested.</summary>
     public bool Vsync { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether presentation should avoid blocking on vsync
+    /// and follow the compositor so a VRR/adaptive-sync display can drive the cadence.
+    /// </summary>
+    /// <remarks>
+    /// VRR is a display/driver feature; 5DO cannot enable it. This option only disables the
+    /// swap interval and presents through the compositor animation-frame loop. Actual
+    /// adaptive-sync activation depends on the host GPU, driver, monitor, and desktop
+    /// configuration.
+    /// </remarks>
+    public bool Vrr { get; set; }
+
+    /// <summary>Gets or sets the number of speculative frames run ahead of presentation (0-2).</summary>
+    /// <remarks>
+    /// Run-ahead trades CPU time for lower input latency. It saves and restores machine state
+    /// every displayed frame, so rewind history and deterministic movie recording are disabled
+    /// while it is active. Zero is the safe default.
+    /// </remarks>
+    public int RunAheadFrames { get; set; }
+
+    /// <summary>Gets or sets the number of frames the presenter holds behind the core (0-8).</summary>
+    /// <remarks>
+    /// Positive values add a fixed video delay. This is useful for aligning video with a
+    /// high-latency audio path or for frame-by-frame inspection; zero is the lowest-latency
+    /// default.
+    /// </remarks>
+    public int FrameDelayFrames { get; set; }
+
+    /// <summary>Gets the largest supported run-ahead depth.</summary>
+    public const int MaxRunAheadFrames = 2;
+
+    /// <summary>Gets the largest supported presentation frame delay.</summary>
+    public const int MaxFrameDelayFrames = 8;
 
     /// <summary>Gets or sets a value indicating whether integer scaling is used.</summary>
     public bool IntegerScale { get; set; } = true;
@@ -802,6 +837,23 @@ public sealed class AppSettings
     public int AudioBufferMilliseconds { get; set; } = 100;
 
     /// <summary>
+    /// Gets or sets the audio/video sync offset in milliseconds (-250 to 250).
+    /// </summary>
+    /// <remarks>
+    /// Positive values delay audio by inserting silence at the head of the stream; negative
+    /// values advance it by dropping the first samples. The offset is applied when OpenAL
+    /// output is created or reset, so changing it recreates the output without resetting the
+    /// machine.
+    /// </remarks>
+    public int AudioSyncMilliseconds { get; set; }
+
+    /// <summary>Gets the smallest supported audio sync offset.</summary>
+    public const int MinAudioSyncMilliseconds = -250;
+
+    /// <summary>Gets the largest supported audio sync offset.</summary>
+    public const int MaxAudioSyncMilliseconds = 250;
+
+    /// <summary>
     /// Gets or sets the controller port that receives host pointer input, or zero to
     /// send it to every mouse/lightgun/arcade-lightgun/trackball port.
     /// </summary>
@@ -903,6 +955,55 @@ public sealed class AppSettings
         }
 
         return DisplayRefreshRate;
+    }
+
+    /// <summary>Validates and returns the run-ahead depth.</summary>
+    /// <returns>The configured depth, 0-2.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the depth is outside 0-2.</exception>
+    public int ResolveRunAheadFrames()
+    {
+        if (RunAheadFrames is < 0 or > MaxRunAheadFrames)
+        {
+            throw new ArgumentOutOfRangeException(
+                paramName: null,
+                actualValue: RunAheadFrames,
+                message: $"The run-ahead depth must be between 0 and {MaxRunAheadFrames} frames.");
+        }
+
+        return RunAheadFrames;
+    }
+
+    /// <summary>Validates and returns the presentation frame delay.</summary>
+    /// <returns>The configured delay, 0-8.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the delay is outside 0-8.</exception>
+    public int ResolveFrameDelayFrames()
+    {
+        if (FrameDelayFrames is < 0 or > MaxFrameDelayFrames)
+        {
+            throw new ArgumentOutOfRangeException(
+                paramName: null,
+                actualValue: FrameDelayFrames,
+                message: $"The presentation frame delay must be between 0 and {MaxFrameDelayFrames} frames.");
+        }
+
+        return FrameDelayFrames;
+    }
+
+    /// <summary>Validates and returns the audio sync offset.</summary>
+    /// <returns>The configured offset in milliseconds.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the offset is outside -250 to 250 ms.</exception>
+    public int ResolveAudioSyncMilliseconds()
+    {
+        if (AudioSyncMilliseconds is < MinAudioSyncMilliseconds or > MaxAudioSyncMilliseconds)
+        {
+            throw new ArgumentOutOfRangeException(
+                paramName: null,
+                actualValue: AudioSyncMilliseconds,
+                message: $"The audio sync offset must be between {MinAudioSyncMilliseconds} "
+                    + $"and {MaxAudioSyncMilliseconds} milliseconds.");
+        }
+
+        return AudioSyncMilliseconds;
     }
 
     /// <summary>Gets or sets player input bindings.</summary>
@@ -1329,7 +1430,9 @@ public sealed class AppSettings
             Filter = effective.ResolveFilter(gameId),
             Aspect = Aspect,
             CustomAspect = CustomAspect,
-            Vsync = Vsync,
+            // VRR presentation deliberately avoids a blocking swap interval; the
+            // compositor loop and the display/driver own the cadence.
+            Vsync = Vsync && !effective.Vrr,
             IntegerScale = IntegerScale,
             Bloom = Bloom,
             FsrSharpness = FsrSharpness,

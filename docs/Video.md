@@ -455,6 +455,26 @@ Frame pacing is audio-derived on the core thread (44.1 kHz, 60 Hz fallback); the
 renders on demand when the mailbox sequence or output size changes. Status/FPS updates
 run at 4 Hz.
 
+### Latency presentation options
+
+- **Run-ahead (0-2 frames)** is implemented in `CoreRunner`, not in the renderer. It saves
+  the machine state, runs the hidden speculative frames with the host frame and audio sinks
+  suppressed, then re-runs the visible frame from the saved point. The displayed timeline
+  still advances one frame per presentation; the extra frames are discarded and replayed.
+  Hidden frames must render through `Vdlp.DoLine` because its bitmap cursors and line delay
+  are stateful. The runner auto-disables run-ahead after repeated budget overruns and the
+  frontend disables it while recording or playing a deterministic movie.
+- **Frame delay (0-8 frames)** holds the presented image behind the core in a
+  `VdlFrame` ring. It intentionally increases input-to-photon latency and is useful for
+  matching a high-latency audio path or inspecting a frame while the game runs. Each slot
+  copies only the visible lines; eight slots cost roughly 20-23 MB of managed memory.
+- **VRR/adaptive sync** sets `Vsync=false` in `RendererSettings` and selects the compositor
+  animation-frame loop. 5DO cannot enable VRR itself; the GPU driver, monitor, and desktop
+  must already support it. The default remains vsync on with no VRR.
+
+The FPS overlay reports the rolling input-poll-to-frame-submit time and the active
+`raN`/`fdN` values. See `Performance.md` §8.7.
+
 ---
 
 ## 8. Screenshots

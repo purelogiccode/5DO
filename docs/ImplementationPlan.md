@@ -5,7 +5,7 @@
 **Current release:** `1.3.0`
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master`<br>
-**Status:** **1,850 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports no warnings in changed files (seven pre-existing warnings remain in the managed JIT and state writer).<br>
+**Status:** **1,866 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports no warnings in changed files (seven pre-existing warnings remain in the managed JIT and state writer).<br>
 **Goal:** implement **every Opera core feature**, match or exceed Opera's accuracy, and ship the best standalone 3DO emulator on Windows, Linux, and macOS.
 
 > **This is the single source of truth.** It replaces the former 8,000-line dashboard, milestone log, feature spec, parity audit, and session handoff. Historical evidence stays in the linked docs; this file is the canonical backlog.
@@ -38,13 +38,13 @@
 | Area | What ships today | What is still missing |
 |---|---|---|
 | Core emulation | ARM60 interpreter, CLIO timers/FIFO/DMA/FIQ, MADAM CEL/pixel/matrix engines, DSP at exactly 44.1 kHz, SPORT, VDLP, XBUS, CD-ROM, input, configurable DRAM/VRAM (8 Opera layouts), NVRAM, deterministic save states v3, opt-in unsigned-disc/No-RSA BIOS support | Full Opera timing parity (ARM/CLIO/CEL/CD), SWI HLE timing parity, embedded boot ROM, CD subcode/DIPIR/read-ahead |
-| Frontend | Avalonia shell, library, metadata/favorites/playtime, settings, gamepad mapping, save slots/thumbnails, screenshots, log viewer, disc browser, BIOS/NVRAM manager, rewind, fast-forward, cheats, TAS movies, OSD/quick menu, input display, portable mode, instance lock, diagnostics bundle, update check | Netplay, achievements, Lua, big-picture UI, localization, themes/accessibility, installers, auto-update, debugger/profiler |
-| Renderer | Two-stage OpenGL/GLES (default), optional Vulkan (Windows surface), optional Direct3D 11 (Windows), 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR, per-edge overscan, void border, 480i/240p detection with bob/weave/blend field handling, screenshot gallery | True 640x480/480i CEL rendering, supersampling, GPU CEL, shader presets, NTSC/HDR, recording, overlays/bezels, Linux/macOS Vulkan surfaces |
-| Audio | Exact 44.1 kHz DSP clock, OpenAL Soft output, WAV capture, `audio analyze`, CD-DA mixing/volume/mute | Resampler quality/exclusive mode/sync offset, mixer/spectrum, DSP debugger, audio golden corpus |
+| Frontend | Avalonia shell, library, metadata/favorites/playtime, settings, gamepad mapping, save slots/thumbnails, screenshots, log viewer, disc browser, BIOS/NVRAM manager, rewind, fast-forward, cheats, TAS movies, OSD/quick menu, input display, portable mode, instance lock, diagnostics bundle, update check, run-ahead/frame-delay/VRR/audio-sync controls and input-latency overlay | Netplay, achievements, Lua, big-picture UI, localization, themes/accessibility, installers, auto-update, debugger/profiler |
+| Renderer | Two-stage OpenGL/GLES (default), optional Vulkan (Windows surface), optional Direct3D 11 (Windows), 4K output, nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR, per-edge overscan, void border, 480i/240p detection with bob/weave/blend field handling, screenshot gallery, presentation frame delay and VRR-friendly compositor cadence | True 640x480/480i CEL rendering, supersampling, GPU CEL, shader presets, NTSC/HDR, recording, overlays/bezels, Linux/macOS Vulkan surfaces |
+| Audio | Exact 44.1 kHz DSP clock, OpenAL Soft output, WAV capture, `audio analyze`, CD-DA mixing/volume/mute, −250…250 ms audio sync offset, queue-latency and underrun telemetry | Resampler quality/exclusive mode, mixer/spectrum, DSP debugger, audio golden corpus |
 | Disc support | ISO, BIN, CUE+BIN, CHD parent/child, multi-track CUE/CHD TOC, CD-DA sectors/mixing, M3U multi-disc playlist, live swap, guest inject, Opera file system, prefetch, DAT health | Full CD command/timing parity, subcode, read-ahead, known-title CD-DA evidence, real in-game multi-disc swap, ODE prompts, physical drive, image conversion |
 | Compatibility | 594-disc sweep: **594 load**, **593 render**, 1 known boot failure (Crash 'n Burn Japan), 0 not loadable; library catalogues **653 games across 1,366 images** | 594/594 render; visual/in-game review; per-game auto-profiles |
 | Differential harness | FiveDO.DiffHarness, checkpoints, audio/state hashes, smoke + five-title showcase, 594-title manifest generator | Full 594-title run, PC-delta triage, CD/state transcripts, nightly dashboard |
-| Tests | **1,850** passing; fuzz harness for six parsers; build/format clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
+| Tests | **1,866** passing; fuzz harness for six parsers; build/format clean | 2,000+ tests, coverage gate, hardware test ROM suite, audio/video golden suites, soak, GPU/platform CI |
 | Performance | Road Rash 3D race **4.20 ms/frame**, p99 **7.40 ms**; 4K Tier A measured; zero-allocation synthetic path | Tier B 1080p60, GLES 3.1/ANGLE, arm64 tuning, threaded DSP, managed JIT, zero allocations on all real paths |
 | Platforms | Six bundles: Windows/Linux/macOS × x64/arm64, framework-dependent single-file apphosts; Windows x64 validated; Linux x64 tests/smoke pass (GPU preview under llvmpipe); macOS and arm64 cross-published but not hardware-validated | macOS runtime validation, arm64 hardware validation, Linux/macOS GPU presentation, macOS gamepad, Flatpak/AppImage, installers/signing |
 | Release | **v1.3.0** published with six versioned bundles and `SHA256SUMS.txt`; .NET 10 runtime required (not bundled); legal/attribution sign-off recorded | Signing, notarization, auto-update, reproducible builds, SBOM |
@@ -59,13 +59,13 @@ These are done and must not regress. They are listed here once; the backlog belo
 |---|---|
 | Core | ARM60 interpreter; CLIO timers, FIFO, DMA, interrupts; MADAM CEL/pixel/matrix; VDLP; SPORT; DSP; XBUS; CD-ROM; NVRAM; Quartz state v3; save states v3; rewind buffer; fast-forward; cheats; TAS movie container/record/replay/verify/branch; six-port PBUS input |
 | Disc | ISO/BIN/CUE/CHD, parent/child CHD, multi-track TOC, CD-DA mixing and volume, M3U/M3U8 playlist, live/F3/UI/CLI swap, guest inject, Opera FS parser, prefetch cache, Redump/No-Intro DAT verification, library health badges |
-| Video | OpenGL/GLES two-stage presenter; optional Vulkan offscreen and Win32 surface; optional Direct3D 11 Windows presenter; 4K output; nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR; per-edge overscan; void border/color; opt-in line-doubled high-res; 480i/240p detection with bob/weave/blend field handling; screenshots; gallery filters/compare/export/sidecars; GIF recording |
-| Audio | Exact 44.1 kHz clock; OpenAL Soft; WAV capture; `audio analyze`; CD-DA mix; volume/mute; audio-driven pacing |
-| Frontend | Library scan/dedupe; favorites/playtime/history; offline metadata editor; settings; keyboard/gamepad bindings; ten save slots with thumbnails; screenshot gallery; log viewer; disc browser/info; BIOS/NVRAM manager; OSD/quick menu; input display; playlist editor; portable mode; instance lock; diagnostics bundle; startup update check; startup auto-open of the last BIOS/disc |
+| Video | OpenGL/GLES two-stage presenter; optional Vulkan offscreen and Win32 surface; optional Direct3D 11 Windows presenter; 4K output; nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR; per-edge overscan; void border/color; opt-in line-doubled high-res; 480i/240p detection with bob/weave/blend field handling; presentation frame delay; VRR/adaptive-sync compositor presentation; screenshots; gallery filters/compare/export/sidecars; GIF recording |
+| Audio | Exact 44.1 kHz clock; OpenAL Soft; WAV capture; `audio analyze`; CD-DA mix; volume/mute; audio-driven pacing; −250…250 ms audio sync offset; queue-latency/underrun counters; AOT null-device validation |
+| Frontend | Library scan/dedupe; favorites/playtime/history; offline metadata editor; settings; keyboard/gamepad bindings; ten save slots with thumbnails; screenshot gallery; log viewer; disc browser/info; BIOS/NVRAM manager; OSD/quick menu; input display; playlist editor; portable mode; instance lock; diagnostics bundle; startup update check; startup auto-open of the last BIOS/disc; 0-2 frame run-ahead; 0-8 frame presentation delay; VRR option; software input-latency overlay |
 | CLI | `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks/verify/playlist`, `library verify`, `fs`, `bios`, `nvram`, `cheat`, `movie`, `settings`, `audio`, `state`, `disasm`, `update` |
 | Release | v1.3.0 six bundles; versioned archives; checksums; legal/attribution sign-off; OpenAL LGPL obligations |
 
-**Completed IDs (traceability only):** FND-01, FND-02, FND-03, CORE-09, CORE-12, CORE-14, CORE-15, SYS-04, SYS-06, SYS-07, SYS-09, SYS-10, SYS-11, SYS-13, SYS-14, VID-04, VID-05, VID-06, VID-14, VID-15, AUD-05, UX-01, UX-02, UX-04, UX-11, UX-12, UX-15, UX-19, UX-23, ENG-03, BAK-12, BAK-17.
+**Completed IDs (traceability only):** FND-01, FND-02, FND-03, CORE-09, CORE-12, CORE-14, CORE-15, SYS-04, SYS-06, SYS-07, SYS-09, SYS-10, SYS-11, SYS-13, SYS-14, VID-04, VID-05, VID-06, VID-14, VID-15, AUD-05, UX-01, UX-02, UX-04, UX-11, UX-12, UX-15, UX-19, UX-23, ENG-03, PERF-02, VID-12, SYS-12, BAK-12, BAK-17.
 
 **Milestone aliases:** M9R/M9P → P3/P6/TEST-04; M10 → PERF-02; M12 → PERF-08; M13.5/M13.6 → TEST-06; M14 → VID-01/02/03; M15 → CORE-11/16 + FND-05.
 
@@ -150,10 +150,11 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
   **Evidence:** `BiosRsaPatch` implements the documented two-site media-RSA bypass in memory. Applying it to retail `panafz10.bin` and `panafz10e-anvil.bin` reproduces the known No-RSA MD5s `1477bda8...` and `cf11bbb5...` exactly. The catalog identifies the No-RSA FZ-1J/FZ-10/FZ-10E images; automatic selection prefers them when `--allow-unsigned-discs`/Settings > Paths is enabled and otherwise patches a compatible retail image. `run`/`trace` report `biosRsaPatched`/`biosRsaDisabled`, `bios info` reports `rsaDisabled`/`rsaPatchSites`, and `bios select` accepts `--allow-unsigned-discs`. Signed Wolfenstein 3D and Road Rash 600-frame hashes are unchanged with patched and unpatched BIOSes. The option never writes the BIOS file. See `TestCorpus.md` 1.1au.
   **Ref:** `opera_bios.c` (known No-RSA hashes); community-documented two-site BIOS patch.
 
-- [ ] **SYS-12 — Portfolio OS SWI HLE**
-  **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** SYS-12
-  **Remaining:** full-collection compatibility/performance validation; decide whether to charge the skipped guest handler cycles; document the titles where HLE changes timing. The 2026-11-04 increment implemented Opera's 14-SWI HLE set (`0x50000`-`0x50012`, excluding the object/Dot4 fallbacks), the `--swi-hle`/Settings/profile opt-in, save-state Options v9, `--swi-comments` diagnostics, 33 CPU/machine tests that match `opera_fixedpoint_math.c`, and a real-BIOS synthetic 4x4 benchmark (4,096 calls: 847,860 LLE steps / 4,054,999 cycles versus 24,578 HLE steps / 65,538 cycles). Default-off hashes are unchanged; HLE is intentionally not bit-identical to the guest matrix path because it skips the handler's cycles and register clobbers.
+- [x] **SYS-12 — Portfolio OS SWI HLE**
+  **Status:** Complete · **Priority:** P0 · **Effort:** L · **Tracks:** SYS-12
+  **Remaining:** none for the opt-in HLE gate. The mode intentionally skips the guest handler's cycles and register clobbers, so titles that call the HLE set can change frame hashes when it is enabled.
   **Done when:** HLE is opt-in, passes supported-title tests, and shows a measured performance gain without behavior changes when disabled.
+  **Evidence:** Opera's 14-SWI HLE set (`0x50000`-`0x50012`, excluding the object/Dot4 fallbacks) is wired through `--swi-hle`, Settings, per-game profiles, and save-state Options v9. `ArmSwiHleTests` covers every intercepted function bit-for-bit against `opera_fixedpoint_math.c`, the SWI cycle cost, fallback, disabled trap, and telemetry; `SwiHle_IsWiredToMachineRam` exercises the machine path. `--swi-comments` reports per-call histograms. A real-BIOS 4,096-call `MulMat44Mat44_F16` benchmark measured 847,860 LLE steps / 4,054,999 cycles versus 24,578 HLE steps / 65,538 cycles. AutoBahn Tokio and Ballz boot and run with HLE; default-off hashes are unchanged and leaving an affected SWI to the guest restores its hash. See `TestCorpus.md` 1.1an and `Performance.md` §8.2.
   **Ref:** `opera_swi_hle_0x5XXXX.h`.
 
 - [ ] **SYS-15 — Input devices, calibration, and options**
@@ -192,8 +193,9 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
 
 - [ ] **AUD-01 — Audio output quality: resampler, exclusive mode, and sync offset**
   **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** AUD-01
-  **Remaining:** resampler quality options; exclusive-mode output; audio sync offset; device-change and underrun behavior; latency measurement; documentation.
+  **Remaining:** resampler quality options; exclusive-mode output; long-session device-change/drift validation on every platform. Audio sync offset, queue-latency reporting, OpenAL device recreation, underrun/drop counters, and documentation are complete.
   **Done when:** audio quality/latency targets are met on Windows/Linux/macOS; device switching is safe; no crackle or drift in extended runs.
+  **Evidence:** `AudioSyncMilliseconds` (−250…250 ms) applies a fixed host offset by inserting silence or dropping leading samples and reserves ring capacity for positive offsets. `OpenAlAudioOutput` recreates output safely on device/buffer/sync changes, exposes dropped-sample/underrun/queued-frame/latency counters, and the desktop overlay/Audio tab surface them. AOT CLI realtime Lemmings runs with `--audio openal --audio-sync 40` under `ALSOFT_DRIVERS=null` reported 0 dropped samples and 0 underruns over 240 frames. See `Audio.md` §3 and `Trimming.md`.
 
 - [ ] **ECO-04 — Linux/macOS platform validation and packaging**
   **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** ECO-04
@@ -231,16 +233,6 @@ Each entry below is a single feature or a tightly-scoped bundle. The `Tracks` fi
   **Remaining:** eliminate the ~2.3 KB/frame Avalonia/compositor residual; remove CHD decode allocations from the core stage; prove zero allocations for uploads, readback, audio, and gallery/OSD paths.
   **Evidence:** The 2026-11-05 rewind fix pools the capture stream, keyframe arrays, payload buffer, and Brotli scratch, cutting rewind capture allocations from ~75 MB per keyframe to ~1.6 MB with no gen2 collections in a 1,200-frame run.
   **Done when:** synthetic and representative real titles report 0 managed bytes/frame after warm-up; CI enforces the gate.
-
-- [ ] **PERF-02 + BAK-08 — NativeAOT/trimming startup, size, and audio validation**
-  **Status:** Partial · **Priority:** P2 · **Effort:** M · **Tracks:** BAK-08
-  **Remaining:** frontend NativeAOT audio validation; startup-time and size targets; trimming compatibility; optional publish profiles; document which artifacts are AOT and which are framework-dependent.
-  **Done when:** CLI and frontend AOT builds start, render, play audio, and pass smoke tests; startup/size are recorded.
-
-- [ ] **VID-12 — Latency features: run-ahead, frame delay, VRR, audio sync**
-  **Status:** Pending · **Priority:** P1 · **Effort:** L · **Tracks:** VID-12
-  **Remaining:** 1–2 frame run-ahead; frame-delay slider; VRR/adaptive-sync presentation; audio sync adjustment; measured input-to-photon latency; per-game options.
-  **Done when:** latency options work without desync or state corruption; measurements are documented; defaults remain safe.
 
 - [ ] **PERF-04 — Host disc streaming and CHD decompression**
   **Status:** Partial · **Priority:** P2 · **Effort:** M
@@ -526,6 +518,10 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
 
+- **2026-11-06 - VID-12 latency features.** Added 0-2 frame run-ahead and 0-8 frame presentation delay in `CoreRunner`, VRR/adaptive-sync presentation, and a −250…250 ms audio sync offset. Run-ahead uses a reusable uncompressed `MachineStateSnapshot`; hidden frames suppress audio/host submission but still render through `Vdlp.DoLine` so visible hashes match the normal timeline. State frame section v2 writes only visible lines and the RAM loader clears only the previously addressable tail. Each depth step removes one field of emulator-side input delay (16.7 ms at 60 Hz, 20 ms at 50 Hz PAL). `bench --latency` measured a 9,348,438-byte snapshot, ~3.6-3.9 ms capture, and ~1.6-2.0 ms restore; one-frame run-ahead stays inside the 60 Hz budget on a typical title, and the runner auto-disables after 45 overruns or a rejected snapshot. `LatencyTests` covers snapshot round-trip, 1-/2-frame timeline parity, visible-only audio, frame-delay holding, range validation, and telemetry. Settings, per-game profiles, the FPS overlay, and `--audio-sync` expose the options. Real AOT frontend run: Lemmings booted with run-ahead 1, frame delay 1, VRR, and audio sync 40 ms; OpenAL initialized at 44.1 kHz through the null device with no fault. Full optical input-to-photon measurement and real adaptive-sync hardware confirmation remain validation caveats documented in `Performance.md` §8.7 and `KnownIssues.md`. See `Audio.md` §3 and `Video.md` §7.
+
+- **2026-11-06 - PERF-02/BAK-08 NativeAOT, trimming, and audio validation.** CLI and frontend AOT win-x64 single-file publishes build and start. The CLI AOT executable passes `--version`, `selftest --json`, `bench --frames 2 --json`, and `bench --latency`; a 3,000-frame Lemmings boot and a 240-frame realtime OpenAL run with `--audio openal --audio-sync 40` under `ALSOFT_DRIVERS=null` completed with 0 dropped samples and 0 underruns. The AOT frontend `--smoke-test` returns `FRONTEND SMOKE OK 1.3.0`, opens the real OpenGL 4.0 surface, boots Lemmings, and logs `OpenAL audio ready (44100 Hz stereo, 100 ms, sync 40 ms)` with run-ahead 1, frame delay 1, and VRR enabled. Sizes: CLI AOT 16.6 MB exe / 18.7 MB runtime folder; frontend AOT 34.5 MB exe / 54.6 MB runtime folder; trimmed frontend 27.9 MB exe / 48.0 MB folder; trimmed CLI 19.4 MB. Startup: CLI AOT `--version` 69 ms, `bench --frames 2` 65 ms; AOT frontend `--version` 70 ms and smoke 1.2 s; trimmed frontend smoke 3.2 s. Added four opt-in `.pubxml` profiles. Artifacts remain framework-dependent by default; AOT/trimming stay opt-in. Silk.NET `IL3000`/`IL3002` and CHDSharp/SharpGen `IL2104` warnings remain visible but non-fatal. See `Trimming.md`.
+
 - **2026-11-06 - SYS-06 RSA/unsigned-disc option.** Added `BiosRsaPatch`, the documented two-site media-RSA bypass, applied only in memory. Applying it to retail `panafz10.bin` and `panafz10e-anvil.bin` reproduces the known No-RSA MD5s `1477bda8...` and `cf11bbb5...` exactly. The BIOS catalog now identifies the No-RSA FZ-1J/FZ-10/FZ-10E images, automatic selection prefers them when `--allow-unsigned-discs`/Settings > Paths is enabled, and a compatible retail image is patched otherwise. `run`/`trace` report `biosRsaPatched`/`biosRsaDisabled`, `bios info` reports `rsaDisabled`/`rsaPatchSites`, and `bios select` accepts `--allow-unsigned-discs`. Signed Wolfenstein 3D and Road Rash 600-frame hashes are unchanged; the option never writes the BIOS file and no BIOS/game content is bundled. See `TestCorpus.md` 1.1au.
 
 - **2026-11-06 - v1.3.0.** Six framework-dependent single-file bundles plus `SHA256SUMS.txt`; 480i/240p field handling (auto detection, bob, weave, blend), interlace-aware viewport geometry, screenshot/GIF support, per-game and CLI mode selection, and 1,833 tests. The release is presentation-only over 1.2.2: default bob hashes and save states are unchanged. Release workflow <https://github.com/purelogiccode/5DO/actions/runs/42235476257>; docs/wiki workflow <https://github.com/purelogiccode/5DO/actions/runs/42235456021>.
@@ -578,7 +574,7 @@ This is a crosswalk, not a second backlog. “Canonical item” is the only plac
 | VDLP bypass CLUT | Shipped | — |
 | HiRes CEL rendering | Partial (line-doubled) | VID-01 |
 | MADAM matrix hardware/software | Shipped | — |
-| OperaOS SWI HLE | Partial (opt-in) | SYS-12 |
+| OperaOS SWI HLE | Shipped (opt-in) | — |
 | Threaded DSP | Missing | CORE-05 |
 | NVRAM storage per-game/shared | Shipped | — |
 | NVRAM version 0–9 | Shipped | — |
@@ -611,7 +607,7 @@ This is a crosswalk, not a second backlog. “Canonical item” is the only plac
 | BAK-05 | ECO-04, PERF-03, TEST-04 |
 | BAK-06 | PERF-07 |
 | BAK-07 | UX-16 + ENG-10 |
-| BAK-08 | PERF-02 |
+| BAK-08 | Completed (PERF-02) |
 | BAK-09 | TEST-02 |
 | BAK-10 | PERF-08 |
 | BAK-11 | VID-01 |

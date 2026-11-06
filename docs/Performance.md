@@ -906,3 +906,48 @@ dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- `
   --bios bios/panafz1.bin --disc "$env:FIVEDO_GAMES\Lemmings (USA).chd" `
   --frames 1000 --warmup 200 --high-res --json
 ```
+
+### 8.7 Latency features and AOT (2026-11-06)
+
+**Run-ahead cost (VID-12).** Run-ahead needs one machine snapshot per displayed frame. The
+first implementation used the full compressed rewind state and cost ~16 ms for capture plus
+restore, which cannot fit a 60 Hz budget. The shipped snapshot path uses an uncompressed
+`MachineStateSnapshot` with a reusable `StateWriter`, and two state-format changes remove
+avoidable work:
+
+- Machine frame section v2 writes only the visible source lines and copies pixels as
+  little-endian blocks instead of ~1.4 million `WriteUInt16` calls. Version-1 sections
+  still load.
+- `FiveDoMemory.Load` clears only the range that was previously addressable instead of the
+  unused 22 MB backing tail on every restore.
+
+Measured with the synthetic bench on this machine (`bench --frames 120 --latency`, Release):
+
+| Metric | Value |
+|---|---:|
+| Uncompressed snapshot | 9,348,438 bytes |
+| Capture | ~3.6 ms/frame |
+| Restore | ~2.0 ms/frame |
+
+A visible frame on Lemmings costs ~1.2 ms, so one-frame run-ahead measures roughly
+6-8 ms/frame including the extra emulated frame. Two-frame run-ahead is available but
+suited to faster titles. Each depth step removes one field of emulator-side input delay
+(**16.7 ms at 60 Hz, 20 ms at 50 Hz PAL**). `CoreRunner` auto-disables run-ahead after 45
+consecutive frames that exceed 1.35x the audio-derived period, so a slow title falls back
+to the safe path instead of running permanently late.
+
+**Software input-to-present latency.** `LatencyTelemetry` timestamps the guest PBUS read
+and the host frame-submit callback. The FPS overlay reports the rolling mean and maximum.
+This covers everything 5DO controls; display scanout, compositor latency, and pixel response
+still require an external photodiode or high-speed-camera measurement. The default is zero
+run-ahead, zero frame delay, vsync on, and zero audio sync.
+
+**AOT/trimming (PERF-02).** See `Trimming.md` for the 2026-11-06 sizes and startup
+measurements: CLI AOT `--version` 69 ms, `bench --frames 2` 65 ms, frontend AOT
+`--version` 70 ms, frontend AOT smoke 1.2 s. The AOT CLI realtime OpenAL run with a 40 ms
+audio sync offset reported 0 dropped samples and 0 underruns over 240 Lemmings frames.
+
+**Completion:** VID-12's feature scope is complete and marked done. Full optical
+input-to-photon measurement and real adaptive-sync hardware confirmation remain external
+validation caveats, not missing software features. PERF-02 and SYS-12 are also complete;
+AUD-01 keeps only resampler quality, exclusive mode, and long-session platform drift work.

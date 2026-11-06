@@ -198,6 +198,7 @@ the BIOS file.
 | `--volume 0..1` | 1.0 | OpenAL gain. Invalid values fail. |
 | `--audio-device <name>` | default | OpenAL playback device; use `audio devices` to list names. |
 | `--audio-buffer 20..500` | 100 | Target OpenAL buffer latency in milliseconds. |
+| `--audio-sync -250..250` | 0 | Host audio/video offset in milliseconds. Positive delays audio; negative advances it. |
 | `--record-gif <path>` | off | Record emulated frames as an animated GIF. |
 | `--record-fps 1..60` | 30 | GIF capture rate; sources above 50 fps are decimated. |
 | `--record-frames N` | 0 | Stop the GIF after N captured frames (0 = unlimited). |
@@ -867,6 +868,7 @@ No JSON.
 ```powershell
 5do bench --frames 600
 5do bench --frames 600 --profile accuracy --json
+5do bench --frames 120 --latency
 ```
 
 Runs a synthetic ARM program (MADAM/SPORT writes and a branch loop), warms up 10
@@ -878,7 +880,10 @@ matrix and capacity checks. Fields:
 `frameHash`, `profile` (derived from the active options), `armTiming`, `clioTimers`,
 `celTiming`, `cdromTiming`, `cpuClock`, and `memory`. Run the compatible and accuracy
 profiles back to back to measure the accuracy cost before changing the default; the
-clock matrix is recorded in [`Performance.md`](Performance.md) §8.1.
+clock matrix is recorded in [`Performance.md`](Performance.md) §8.1. `--latency` adds
+`snapshotBytes`, `snapshotCaptureMilliseconds`, and `snapshotRestoreMilliseconds` from an
+uncompressed `MachineStateSnapshot`, which is the per-frame cost of run-ahead; see
+[`Performance.md`](Performance.md) §8.7.
 
 The separate benchmark project (`benchmarks/FiveDo.Benchmarks`) adds p50/p95/p99,
 per-stage timings/allocations, the CI gate, and baseline comparison. See

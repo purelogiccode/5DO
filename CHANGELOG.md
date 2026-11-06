@@ -3,6 +3,23 @@
 All notable changes are recorded here. The project is at v1.3.0, a documented-compatibility
 release.
 
+## [Unreleased]
+
+### Added
+
+- VID-12 latency controls. Settings > Video exposes 0-2 frame run-ahead, a 0-8 frame
+  presentation delay, and VRR/adaptive-sync presentation; Settings > Audio and
+  `--audio-sync -250..250` add a host A/V offset. Per-game profiles store all four values,
+  the FPS overlay reports software input-poll-to-frame-submit telemetry, and run-ahead
+  auto-disables after repeated frame-budget overruns.
+- `CoreRunner` run-ahead uses a reusable uncompressed `MachineStateSnapshot`. Machine state
+  section v2 stores only visible lines and copies pixels as blocks; the RAM loader clears
+  only the previously addressable tail. `bench --latency` reports snapshot size, capture,
+  and restore cost (Release: ~9.3 MB, ~3.6 ms, ~2.0 ms).
+- PERF-02/BAK-08 AOT and trimming evidence: CLI/frontend AOT and trimmed win-x64
+  publishes, real-game OpenAL validation, startup/size measurements, and four opt-in
+  `.pubxml` profiles. See `docs/Trimming.md`.
+
 ## [1.3.0] - 2026-11-06
 
 ### Added

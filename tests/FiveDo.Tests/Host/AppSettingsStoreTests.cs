@@ -53,6 +53,10 @@ public sealed class AppSettingsStoreTests
             LibraryCardSize = 256,
             HideLightgunCrosshair = true,
             AllowUnsignedDiscs = true,
+            RunAheadFrames = 2,
+            FrameDelayFrames = 3,
+            Vrr = true,
+            AudioSyncMilliseconds = -40,
         };
 
         AppSettingsStore.Save(settings, path);
@@ -69,6 +73,10 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(256, loaded.LibraryCardSize);
         Assert.True(loaded.HideLightgunCrosshair);
         Assert.True(loaded.AllowUnsignedDiscs);
+        Assert.Equal(2, loaded.RunAheadFrames);
+        Assert.Equal(3, loaded.FrameDelayFrames);
+        Assert.True(loaded.Vrr);
+        Assert.Equal(-40, loaded.AudioSyncMilliseconds);
     }
 
     [Fact]
@@ -78,7 +86,7 @@ public sealed class AppSettingsStoreTests
         var path = Path.Combine(temp.Path, "settings.json");
         File.WriteAllText(
             path,
-            """{"SettingsVersion":1,"Renderer":9999,"CpuClockMultiplier":-1,"OsdOpacity":5.0,"OsdDurationMilliseconds":1,"CdAudioVolume":5.0,"LibraryCardSize":999}""");
+            """{"SettingsVersion":1,"Renderer":9999,"CpuClockMultiplier":-1,"OsdOpacity":5.0,"OsdDurationMilliseconds":1,"CdAudioVolume":5.0,"LibraryCardSize":999,"RunAheadFrames":9,"FrameDelayFrames":99,"AudioSyncMilliseconds":9000}""");
 
         AppSettings settings = AppSettingsStore.Load(path);
 
@@ -88,6 +96,9 @@ public sealed class AppSettingsStoreTests
         Assert.InRange(settings.OsdDurationMilliseconds, 250, 30_000);
         Assert.Equal(0.8, settings.CdAudioVolume, 3);
         Assert.Equal(AppSettings.DefaultLibraryCardSize, settings.LibraryCardSize);
+        Assert.Equal(AppSettings.MaxRunAheadFrames, settings.RunAheadFrames);
+        Assert.Equal(AppSettings.MaxFrameDelayFrames, settings.FrameDelayFrames);
+        Assert.Equal(AppSettings.MaxAudioSyncMilliseconds, settings.AudioSyncMilliseconds);
     }
 
     [Fact]
@@ -115,6 +126,10 @@ public sealed class AppSettingsStoreTests
                 CdAudioMuted = true,
                 CheatBundle = "starter",
                 Deinterlace = DeinterlaceMode.Weave,
+                RunAheadFrames = 1,
+                FrameDelayFrames = 2,
+                Vrr = true,
+                AudioSyncMilliseconds = 35,
             });
 
         AppSettingsStore.Save(settings, path);
@@ -128,6 +143,10 @@ public sealed class AppSettingsStoreTests
         Assert.True(profile.CdAudioMuted);
         Assert.Equal("starter", profile.CheatBundle);
         Assert.Equal(DeinterlaceMode.Weave, profile.Deinterlace);
+        Assert.Equal(1, profile.RunAheadFrames);
+        Assert.Equal(2, profile.FrameDelayFrames);
+        Assert.True(profile.Vrr);
+        Assert.Equal(35, profile.AudioSyncMilliseconds);
 
         Assert.True(loaded.ApplyGameProfile("a1b2c3d4"));
         Assert.Equal(VideoRegion.Pal1, loaded.Region);
@@ -136,6 +155,10 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(1.25, loaded.CpuClockMultiplier);
         Assert.Equal(0.4, loaded.CdAudioVolume, 3);
         Assert.Equal(DeinterlaceMode.Weave, loaded.Deinterlace);
+        Assert.Equal(1, loaded.RunAheadFrames);
+        Assert.Equal(2, loaded.FrameDelayFrames);
+        Assert.True(loaded.Vrr);
+        Assert.Equal(35, loaded.AudioSyncMilliseconds);
 
         loaded.SetGameProfile("A1B2C3D4", null);
         Assert.Null(loaded.GetGameProfile("a1b2c3d4"));
@@ -182,9 +205,17 @@ public sealed class AppSettingsStoreTests
                 InputDevices = ["Mouse", "Joypad"],
                 FixMode = FixMode.BitTiming1,
                 BiosMd5 = "0123456789abcdef0123456789abcdef",
+                RunAheadFrames = 2,
+                FrameDelayFrames = 1,
+                Vrr = true,
+                AudioSyncMilliseconds = -25,
             });
 
         AppSettings first = settings.CreateEffectiveForGame("A1B2C3D4");
+        Assert.Equal(2, first.RunAheadFrames);
+        Assert.Equal(1, first.FrameDelayFrames);
+        Assert.True(first.Vrr);
+        Assert.Equal(-25, first.AudioSyncMilliseconds);
         Assert.Equal(VideoFilter.Crt, first.ResolveFilter("A1B2C3D4"));
         Assert.Equal("Mouse", first.ResolveInputDevices("A1B2C3D4")[0]);
         Assert.Equal(FixMode.BitTiming1, first.ResolveFixMode("A1B2C3D4"));

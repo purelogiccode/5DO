@@ -3826,6 +3826,31 @@ internal static class Program
         machine.RunFrames(frames);
         stopwatch.Stop();
 
+        double? snapshotCaptureMilliseconds = null;
+        double? snapshotRestoreMilliseconds = null;
+        int? snapshotBytes = null;
+        if (HasFlag(args, "--latency"))
+        {
+            const int iterations = 120;
+            var snapshot = new MachineStateSnapshot();
+            snapshot.Capture(machine);
+            var snapshotClock = Stopwatch.StartNew();
+            for (var i = 0; i < iterations; i++)
+            {
+                snapshot.Capture(machine);
+            }
+
+            snapshotCaptureMilliseconds = snapshotClock.Elapsed.TotalMilliseconds / iterations;
+            snapshotClock.Restart();
+            for (var i = 0; i < iterations; i++)
+            {
+                snapshot.Restore(machine);
+            }
+
+            snapshotRestoreMilliseconds = snapshotClock.Elapsed.TotalMilliseconds / iterations;
+            snapshotBytes = snapshot.Length;
+        }
+
         var seconds = stopwatch.Elapsed.TotalSeconds;
         var result = new CliBenchResult(
             Ok: true,
@@ -3843,7 +3868,10 @@ internal static class Program
             CpuClock: machine.Tuning.ArmClock,
             Memory: MemoryLayout.FormatCode(machine.Memory.Layout.Configuration),
             SwiHle: machine.Tuning.SwiHle,
-            SwiHleInstructions: machine.Cpu.SwiHleInstructions);
+            SwiHleInstructions: machine.Cpu.SwiHleInstructions,
+            SnapshotCaptureMilliseconds: snapshotCaptureMilliseconds,
+            SnapshotRestoreMilliseconds: snapshotRestoreMilliseconds,
+            SnapshotBytes: snapshotBytes);
 
         if (options.Json)
         {
@@ -3864,6 +3892,12 @@ internal static class Program
             Console.WriteLine($"fps:         {result.FramesPerSecond:F1}");
             Console.WriteLine($"cycles/frm:  {result.CyclesPerFrame}");
             Console.WriteLine($"frame hash:  {result.FrameHash:x8}");
+            if (result.SnapshotCaptureMilliseconds is { } captureMs)
+            {
+                Console.WriteLine($"snapshot:    {result.SnapshotBytes} bytes");
+                Console.WriteLine($"capture:     {captureMs:F3} ms/frame");
+                Console.WriteLine($"restore:     {result.SnapshotRestoreMilliseconds:F3} ms/frame");
+            }
         }
 
         return 0;
@@ -3985,9 +4019,18 @@ internal static class Program
                     nameof(options));
             }
 
+            var audioSyncMilliseconds = options.GetInt("--audio-sync", 0);
+            if (audioSyncMilliseconds is < -250 or > 250)
+            {
+                throw new ArgumentException(
+                    "--audio-sync must be between -250 and 250 milliseconds.",
+                    nameof(options));
+            }
+
             var output = OpenAlAudioOutput.TryCreate(
                 bufferMilliseconds,
                 options.Get("--audio-device"),
+                audioSyncMilliseconds,
                 out var openAlError);
             if (output is null)
             {
@@ -5093,7 +5136,7 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine("Commands:");
         Console.WriteLine("  run [disc] [--bios path] [--bios2 path] [--bios-auto folder] [--allow-unsigned-discs] [--frames N] [--state-in path] [--state-out path]");
-        Console.WriteLine("             [--frame-out path] [--audio null|wav|openal] [--audio-device name] [--audio-buffer 20..500] [--wav-out path] [--volume 0..1] [--cd-volume 0..1] [--mute-cd] [--cd-trace path] [--cd-transcript path]");
+        Console.WriteLine("             [--frame-out path] [--audio null|wav|openal] [--audio-device name] [--audio-buffer 20..500] [--audio-sync -250..250] [--wav-out path] [--volume 0..1] [--cd-volume 0..1] [--mute-cd] [--cd-trace path] [--cd-transcript path]");
         Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
@@ -5180,7 +5223,7 @@ internal static class Program
         Console.WriteLine("                                       List numbered save slots and metadata.");
         Console.WriteLine("  disasm <file> [--offset N] [--count N] [--base 0xADDR]");
         Console.WriteLine("                                       Disassemble raw little-endian ARM words.");
-        Console.WriteLine("  bench [--frames N] [--profile P] [--cpu-clock C] [--memory M] [--swi-hle] [--json]");
+        Console.WriteLine("  bench [--frames N] [--profile P] [--cpu-clock C] [--memory M] [--swi-hle] [--latency] [--json]");
         Console.WriteLine("                                       Synthetic-ROM frame benchmark.");
         Console.WriteLine("  selftest [--json]                    Determinism and state roundtrip checks for every named profile.");
         Console.WriteLine("  update [--force] [--json]            Check GitHub for a newer 5DO release.");

@@ -222,6 +222,22 @@ public static class AppSettingsStore
                 {
                     profile.CdAudioVolume = 0.8f;
                 }
+
+                if (profile.RunAheadFrames is < 0 or > AppSettings.MaxRunAheadFrames)
+                {
+                    profile.RunAheadFrames = null;
+                }
+
+                if (profile.FrameDelayFrames is < 0 or > AppSettings.MaxFrameDelayFrames)
+                {
+                    profile.FrameDelayFrames = null;
+                }
+
+                if (profile.AudioSyncMilliseconds is < AppSettings.MinAudioSyncMilliseconds
+                    or > AppSettings.MaxAudioSyncMilliseconds)
+                {
+                    profile.AudioSyncMilliseconds = null;
+                }
             }
 
             if (!Enum.IsDefined(settings.Renderer))
@@ -245,7 +261,13 @@ public static class AppSettingsStore
             }
 
             settings.InputDisplayPlayer = Math.Clamp(settings.InputDisplayPlayer, 1, 6);
+            settings.RunAheadFrames = Math.Clamp(settings.RunAheadFrames, 0, AppSettings.MaxRunAheadFrames);
+            settings.FrameDelayFrames = Math.Clamp(settings.FrameDelayFrames, 0, AppSettings.MaxFrameDelayFrames);
             settings.AudioBufferMilliseconds = Math.Clamp(settings.AudioBufferMilliseconds, 20, 500);
+            settings.AudioSyncMilliseconds = Math.Clamp(
+                settings.AudioSyncMilliseconds,
+                AppSettings.MinAudioSyncMilliseconds,
+                AppSettings.MaxAudioSyncMilliseconds);
             // JSON can deserialize null despite the non-nullable annotation.
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             settings.AudioDevice ??= string.Empty;

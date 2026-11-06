@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-06, after the 1.3.0 field-handling update, the 1.2.2 performance/library update, the 1.2.1 arm64 packaging update, the 1.2.0 feature/accuracy update, the rewind-capture stall fix, SYS-12 SWI HLE, SYS-17 game-database expansion, SYS-08 clock validation, the third PERF-08 JIT pass, the ENG-02 interpreter hot-path increment, and the PERF-05 high-resolution VDLP copy: Direct3D 11,
+**Snapshot:** 2026-11-06, after the VID-12 latency update, the PERF-02 AOT/trimming audit, the 1.3.0 field-handling update, the 1.2.2 performance/library update, the 1.2.1 arm64 packaging update, the 1.2.0 feature/accuracy update, the rewind-capture stall fix, SYS-12 SWI HLE, SYS-17 game-database expansion, SYS-08 clock validation, the third PERF-08 JIT pass, the ENG-02 interpreter hot-path increment, and the PERF-05 high-resolution VDLP copy: Direct3D 11,
 startup release checks, the fuzz harness, per-edge overscan/void border, screenshot
 gallery filters, FIQ/DMA/DSP telemetry, flat CHD/raw ISO support, and display-refresh
 control. The earlier first full-collection sweep, performance, timing-option, BIOS,
@@ -19,7 +19,7 @@ gen0/gen2 collections, and the frame loop measured p50 **1.34 ms** / p99 **6.85 
 max **14.76 ms** with the mailbox and rewind active. The memory save-state section
 (version 4) now stores only the live RAM/VRAM range, cutting a stock-layout uncompressed
 state from ~26 MB to ~10 MB, and the frontend opens discs through the prefetch cache.
-See [`Performance.md`](Performance.md) 8.5. The suite is **1,815 tests**.
+See [`Performance.md`](Performance.md) 8.5. The suite is **1,866 tests**.
 
 **CPU and high-res increment (2026-11-06):** the third PERF-08 pass gives compiled blocks a
 shared PC/CPSR/cycle/instruction context, compiles register-specified shifts, and replaces
@@ -34,6 +34,17 @@ interleaved A/B measured synthetic **1.58→1.33 ms/frame** and Lemmings **1.43�
 with unchanged hashes. PERF-05 now reads the raw VRAM word span for high-resolution scanline
 DMA, cutting Lemmings high-res from **2.42-2.47** to **1.30-1.43 ms/frame** (about 1.8x) with
 an identical high-res hash. See [`Performance.md`](Performance.md) 8.4 and 8.6.
+
+**Latency and AOT increment (2026-11-06):** VID-12 adds 0-2 frame run-ahead, 0-8 frame
+presentation delay, VRR-friendly compositor presentation, a −250…250 ms audio sync offset,
+per-game profile fields, and software input-latency telemetry. Run-ahead uses a reusable
+uncompressed `MachineStateSnapshot`; `bench --latency` measures a 9,348,438-byte snapshot,
+~3.6-3.9 ms capture, and ~1.6-2.0 ms restore. AOT CLI/frontend win-x64 builds start, render,
+play audio, and pass smoke tests; the AOT frontend booted Lemmings with run-ahead 1, frame
+delay 1, VRR, and audio sync 40 ms. PERF-02 is complete; VID-12 and SYS-12 are marked done.
+Full optical input-to-photon measurement and real adaptive-sync hardware confirmation remain
+documented validation caveats. See [`Performance.md`](Performance.md) 8.7 and
+[`Trimming.md`](Trimming.md).
 
 **Release status (2026-11-02):** **v1.0.0 is released** as a documented-compatibility
 release. The version is bumped, the source is tagged `v1.0.0`, and one unified bundle
@@ -52,7 +63,7 @@ are **post-1.0**.
 published at <https://github.com/purelogiccode/5DO/releases/tag/v1.3.0>. It adds
 `InterlaceProcessor` with auto 480i detection, bob, weave, and blend modes; per-game and
 `--deinterlace` selection; interlace-aware viewport geometry; screenshot/GIF capture of
-the presented frame; and `run --json` mode/detection fields. The suite is **1,833 tests**.
+the presented frame; and `run --json` mode/detection fields. The suite is **1,866 tests**.
 Bob-vs-auto hashes match on five local titles (3,000 frames for Road Rash, Space Ace, and
 Alone in the Dark; 300 for Wolfenstein 3D and Lemmings), forced weave produces a 320x480
 frame, and high-resolution output remains 640x480. The CLI and core default to bob; the
@@ -123,7 +134,7 @@ input values are consumed at runtime. `gamedb stats --folder "J:\Panasonic 3DO"`
 1,366 readable images, 653 unique IDs, and 100% metadata coverage with no errors
 (the three exceptions are audio-only `[CD-Audio]` CHDs). SYS-08 added the five-title
 0.5x-1x-2x-4x A/B in `Performance.md` §8.3 and kept the stock 12.5 MHz default; every
-non-stock clock changed guest behavior. The suite is **1,815 tests**.
+non-stock clock changed guest behavior. The suite is **1,866 tests**.
 
 **SYS-12 (2026-11-04):** Portfolio OS SWI HLE is available behind `--swi-hle`,
 Settings > Emulation, and per-game profiles. It handles Opera's 14 fixed-point math SWIs
@@ -143,7 +154,7 @@ DRAM, VDLP/SPORT/CEL use the live layout, and MADAM RED SYSBITS reports the capa
 the BIOS. A homebrew probe ROM uses 4 MB DRAM + 2 MB VRAM; retail titles remain on the
 stock 2 MB/1 MB default because Opera documents expanded memory as homebrew-only. The
 CPU-clock matrix (0.5x-4x) and `bench --cpu-clock`/`--memory` were also added; the suite
-is now **1,815 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al, 1.1an, 1.1ao, 1.1aq, 1.1ar, 1.1as, 1.1at, and
+is now **1,866 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al, 1.1an, 1.1ao, 1.1aq, 1.1ar, 1.1as, 1.1at, and
 [`Performance.md`](Performance.md) 8.1.
 
 **Latest work (2026-11-02):** the CLI and desktop shell check the public GitHub release

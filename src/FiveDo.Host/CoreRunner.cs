@@ -30,6 +30,8 @@ public sealed class CoreRunner : IDisposable
     private readonly Action<VdlFrame>? _frameSink;
     private readonly Action<CoreStatus>? _statusSink;
     private readonly RewindBuffer _rewind;
+    private readonly MachineStateSnapshot _runAheadSnapshot = new();
+    private readonly LatencyTelemetry _latency = new();
     private readonly object _stateGate = new();
     private readonly Lock _invokeGate = new();
     private Thread? _thread;
@@ -41,6 +43,19 @@ public sealed class CoreRunner : IDisposable
     private long _presentedFrames;
     private int _frameSkipMode = (int)FrameSkipMode.Auto;
     private int _speedMultiplier = 1;
+    private int _runAheadFrames;
+    private int _runAheadOverruns;
+    private bool _runAheadAutoDisabled;
+    private int _frameDelayFrames;
+    private VdlFrame[] _frameDelayBuffer = [];
+    private long[] _frameDelayInputTimestamps = [];
+    private int _frameDelayWrite;
+    private int _frameDelayFilled;
+    private int _frameDelayConfigured;
+    private long _lastInputPollTimestamp;
+    private long _lastPresentedMachineFrame = -1;
+    private IPbusSource? _originalPbusSource;
+    private TimestampedPbusSource? _timestampedPbusSource;
     private long _frameSkipIndex;
     private int _autoSkipLevel;
     private int _autoBehindFrames;
@@ -172,6 +187,73 @@ public sealed class CoreRunner : IDisposable
         }
     }
 
+    /// <summary>
+    /// Gets or sets the number of speculative frames run ahead of presentation (0-2).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Run-ahead saves the machine state every displayed frame, runs the configured number
+    /// of hidden frames, and then re-runs the visible frame from the saved point. The result
+    /// is that the presented frame is based on the most recent input rather than input
+    /// sampled one or two frames earlier, at the cost of one extra emulated frame per
+    /// configured depth.
+    /// </para>
+    /// <para>
+    /// The default is zero. Rewind recording and deterministic movie/TAS playback are not
+    /// compatible with run-ahead; the frontend disables those features while it is active.
+    /// </para>
+    /// </remarks>
+    public int RunAhead
+    {
+        get => Volatile.Read(ref _runAheadFrames);
+        set
+        {
+            if (value is < 0 or > AppSettings.MaxRunAheadFrames)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(value),
+                    value,
+                    $"The run-ahead depth must be between 0 and {AppSettings.MaxRunAheadFrames} frames.");
+            }
+
+            Volatile.Write(ref _runAheadFrames, value);
+            _runAheadOverruns = 0;
+            _runAheadAutoDisabled = false;
+            _runAheadSnapshot.Invalidate();
+        }
+    }
+
+    /// <summary>Gets a value indicating whether run-ahead disabled itself because frames overran the budget.</summary>
+    public bool RunAheadAutoDisabled => Volatile.Read(ref _runAheadAutoDisabled);
+
+    /// <summary>
+    /// Gets or sets the number of frames held by the presenter before submission (0-8).
+    /// </summary>
+    /// <remarks>
+    /// A positive delay intentionally increases input-to-photon latency. It is useful for
+    /// matching a high-latency audio path or inspecting a frame while the game continues to
+    /// run. Zero is the default and keeps the render-on-demand path unchanged.
+    /// </remarks>
+    public int FrameDelay
+    {
+        get => Volatile.Read(ref _frameDelayFrames);
+        set
+        {
+            if (value is < 0 or > AppSettings.MaxFrameDelayFrames)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(value),
+                    value,
+                    $"The presentation frame delay must be between 0 and {AppSettings.MaxFrameDelayFrames} frames.");
+            }
+
+            Volatile.Write(ref _frameDelayFrames, value);
+        }
+    }
+
+    /// <summary>Gets the rolling software input-poll-to-frame-submit telemetry.</summary>
+    public LatencyTelemetry Latency => _latency;
+
     /// <summary>Gets a value indicating whether rewind history is being recorded.</summary>
     public bool RewindEnabled => _rewind.Enabled;
 
@@ -203,6 +285,13 @@ public sealed class CoreRunner : IDisposable
             _paused = false;
             _faulted = false;
             _rewind.ResetHistory();
+            _runAheadSnapshot.Invalidate();
+            _runAheadOverruns = 0;
+            _runAheadAutoDisabled = false;
+            ResetFrameDelayBuffer();
+            _latency.Reset();
+            _lastPresentedMachineFrame = _machine.FramesExecuted;
+            WrapPbusSource();
             _thread = new Thread(Run)
             {
                 IsBackground = true,
@@ -265,6 +354,7 @@ public sealed class CoreRunner : IDisposable
         }
 
         _rewind.Clear();
+        UnwrapPbusSource();
     }
 
     /// <summary>
@@ -309,6 +399,14 @@ public sealed class CoreRunner : IDisposable
             }
             finally
             {
+                // A state load, reset, or disc change can move the machine timeline.
+                // Preserve the latency queue for ordinary pauses (screenshots, menu
+                // toggles) and invalidate only when the frame counter actually jumped.
+                if (_machine.FramesExecuted != _lastPresentedMachineFrame)
+                {
+                    InvalidateLatencyState();
+                }
+
                 lock (_stateGate)
                 {
                     if (!wasPaused && !_stop)
@@ -334,13 +432,16 @@ public sealed class CoreRunner : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         Invoke(() =>
         {
+            ConfigureFrameDelay();
             _machine.RunFrame();
             Interlocked.Increment(ref _frames);
             Interlocked.Increment(ref _presentedFrames);
             CaptureFrameState();
             _rewind.Capture(_machine.FramesExecuted);
-            _frameSink?.Invoke(_machine.Frame);
+            SubmitPresentedFrame(_machine.Frame, bypassDelay: false);
+            _lastPresentedMachineFrame = _machine.FramesExecuted;
             _frameSkipIndex = 0;
+            _runAheadSnapshot.Invalidate();
         });
     }
 
@@ -364,8 +465,10 @@ public sealed class CoreRunner : IDisposable
             }
 
             Interlocked.Exchange(ref _frames, _machine.FramesExecuted);
+            InvalidateLatencyState();
             _frameSink?.Invoke(_machine.Frame);
             Interlocked.Increment(ref _presentedFrames);
+            _lastPresentedMachineFrame = _machine.FramesExecuted;
             _frameSkipIndex = 0;
             _autoSkipLevel = 0;
             _autoBehindFrames = 0;
@@ -402,6 +505,7 @@ public sealed class CoreRunner : IDisposable
         {
             var pacer = new FramePacer(_machine.FramesPerSecond);
             var audioPacer = new AudioFramePacer(_machine.FramesPerSecond);
+            var presentedAudioSamples = _machine.AudioSamplesProduced;
             var statusClock = Stopwatch.StartNew();
             var statusFrames = 0L;
             var statusPresentedFrames = 0L;
@@ -425,7 +529,8 @@ public sealed class CoreRunner : IDisposable
                         _paused = false;
                         Monitor.PulseAll(_stateGate);
                         pacer.Resync();
-                        audioPacer.Resync(_machine.AudioSamplesProduced);
+                        presentedAudioSamples = _machine.AudioSamplesProduced;
+                        audioPacer.Resync(presentedAudioSamples);
                         statusClock.Restart();
                         statusStart = TimeSpan.Zero;
                         statusFrames = 0;
@@ -459,10 +564,22 @@ public sealed class CoreRunner : IDisposable
                 {
                     previousSpeed = speed;
                     pacer.Resync();
-                    audioPacer.Resync(_machine.AudioSamplesProduced);
+                    presentedAudioSamples = _machine.AudioSamplesProduced;
+                    audioPacer.Resync(presentedAudioSamples);
+                    _runAheadSnapshot.Invalidate();
                 }
 
+                var runAhead = speed == 1 ? RunAhead : 0;
                 var present = FrameSkipPolicy.ShouldPresent(mode, _frameSkipIndex, _autoSkipLevel + 1);
+                if (runAhead > 0)
+                {
+                    // Run-ahead owns the timing-sensitive path. Frame skipping would
+                    // leave the snapshot and the visible timeline out of step, so the
+                    // latency feature always presents every displayed frame.
+                    present = true;
+                }
+
+                ConfigureFrameDelay();
                 var frameStart = Stopwatch.GetTimestamp();
                 IAudioSink? mutedAudio = speed > 1 ? _machine.AudioSink : null;
                 if (mutedAudio is not null)
@@ -472,22 +589,55 @@ public sealed class CoreRunner : IDisposable
 
                 try
                 {
-                    for (var step = 0; step < speed; step++)
+                    if (runAhead > 0)
                     {
-                        var presentStep = present && step == speed - 1;
-                        _machine.RunFrame(!presentStep);
-                        Interlocked.Increment(ref _frames);
-                        CaptureFrameState();
-                        _rewind.Capture(_machine.FramesExecuted);
-                        audioPacer.FrameCompleted(_machine.AudioSamplesProduced);
-                        if (!presentStep)
+                        bool ranAhead = RunAheadFrame(runAhead, mutedAudio, out long visibleSamples);
+                        if (!ranAhead)
                         {
-                            continue;
+                            // The snapshot path failed (for example an incompatible
+                            // state section). Fall back to one normal frame so the
+                            // session keeps running, and try again next iteration.
+                            long beforeFallback = _machine.AudioSamplesProduced;
+                            _machine.RunFrame(false);
+                            visibleSamples = _machine.AudioSamplesProduced - beforeFallback;
+                            runAhead = 0;
                         }
 
+                        Interlocked.Increment(ref _frames);
+                        CaptureFrameState();
+                        // Rewind history cannot follow the speculative timeline. The
+                        // frontend disables it while run-ahead is active; keep the
+                        // buffer clear here as a safety net.
+                        _rewind.Clear();
+                        presentedAudioSamples += visibleSamples;
+                        audioPacer.FrameCompleted(presentedAudioSamples);
                         Interlocked.Increment(ref _presentedFrames);
-                        _frameSink?.Invoke(_machine.Frame);
+                        SubmitPresentedFrame(_machine.Frame, bypassDelay: false);
                         statusPresentedFrames++;
+                        _lastPresentedMachineFrame = _machine.FramesExecuted;
+                    }
+                    else
+                    {
+                        for (var step = 0; step < speed; step++)
+                        {
+                            var presentStep = present && step == speed - 1;
+                            long audioBefore = _machine.AudioSamplesProduced;
+                            _machine.RunFrame(!presentStep);
+                            Interlocked.Increment(ref _frames);
+                            CaptureFrameState();
+                            _rewind.Capture(_machine.FramesExecuted);
+                            presentedAudioSamples += _machine.AudioSamplesProduced - audioBefore;
+                            audioPacer.FrameCompleted(presentedAudioSamples);
+                            if (!presentStep)
+                            {
+                                continue;
+                            }
+
+                            Interlocked.Increment(ref _presentedFrames);
+                            SubmitPresentedFrame(_machine.Frame, bypassDelay: speed > 1);
+                            statusPresentedFrames++;
+                            _lastPresentedMachineFrame = _machine.FramesExecuted;
+                        }
                     }
                 }
                 finally
@@ -501,6 +651,32 @@ public sealed class CoreRunner : IDisposable
 
                 var frameDuration = Stopwatch.GetTimestamp() - frameStart;
                 pacer.SetPeriod(audioPacer.FramePeriodTicks);
+                if (runAhead > 0 && pacer.PeriodTicks > 0)
+                {
+                    // Run-ahead doubles or triples core work. If a title cannot hold
+                    // the audio-derived deadline, disable it instead of producing a
+                    // permanently late 50 Hz presentation.
+                    if (frameDuration > pacer.PeriodTicks * 1.35)
+                    {
+                        if (++_runAheadOverruns >= 45)
+                        {
+                            Volatile.Write(ref _runAheadFrames, 0);
+                            Volatile.Write(ref _runAheadAutoDisabled, true);
+                            _runAheadOverruns = 0;
+                            Serilog.Log.Warning(
+                                "Run-ahead disabled automatically after repeated frame overruns.");
+                        }
+                    }
+                    else
+                    {
+                        _runAheadOverruns = 0;
+                    }
+                }
+                else
+                {
+                    _runAheadOverruns = 0;
+                }
+
                 statusFrames += speed;
                 _frameSkipIndex += speed;
 
@@ -517,7 +693,9 @@ public sealed class CoreRunner : IDisposable
                     {
                         PresentedFramesPerSecond = seconds > 0 ? statusPresentedFrames / seconds : 0,
                         FrameSkipMode = mode,
-                        FrameSkipCadence = mode == FrameSkipMode.Auto ? _autoSkipLevel + 1 : FrameSkipPolicy.Cadence(mode),
+                        FrameSkipCadence = runAhead > 0
+                            ? 1
+                            : mode == FrameSkipMode.Auto ? _autoSkipLevel + 1 : FrameSkipPolicy.Cadence(mode),
                         Player1 = _lastPlayer1,
                         InputPlayer = _inputPlayer,
                         SkippedFrames = Frames - PresentedFrames,
@@ -525,6 +703,12 @@ public sealed class CoreRunner : IDisposable
                         IsLagFrame = _lastFrameWasLag,
                         TrayOpen = _trayOpen,
                         DiscPresent = _discPresent,
+                        RunAheadFrames = runAhead,
+                        RunAheadAutoDisabled = _runAheadAutoDisabled,
+                        FrameDelayFrames = _frameDelayConfigured,
+                        InputLatencyMilliseconds = _latency.MeanMilliseconds,
+                        InputLatencyMaxMilliseconds = _latency.MaxMilliseconds,
+                        LatencySamples = _latency.Samples,
                     });
                     statusStart = elapsed;
                     statusFrames = 0;
@@ -532,7 +716,10 @@ public sealed class CoreRunner : IDisposable
                 }
 
                 pacer.Wait();
-                UpdateAutoFrameSkip(mode, present, frameDuration, pacer.PeriodTicks);
+                if (runAhead == 0)
+                {
+                    UpdateAutoFrameSkip(mode, present, frameDuration, pacer.PeriodTicks);
+                }
             }
         }
         catch (Exception exception)
@@ -565,6 +752,192 @@ public sealed class CoreRunner : IDisposable
         {
             TimerResolution.End();
         }
+    }
+
+    /// <summary>
+    /// Runs the hidden and visible frames for one run-ahead presentation.
+    /// </summary>
+    /// <param name="depth">Configured run-ahead depth, 1-2.</param>
+    /// <param name="mutedAudio">Audio sink temporarily removed for fast-forward, or null.</param>
+    /// <param name="visibleSamples">Receives the DSP samples produced by the visible frame.</param>
+    /// <returns><see langword="true"/> when the visible frame ran; otherwise false.</returns>
+    private bool RunAheadFrame(int depth, IAudioSink? mutedAudio, out long visibleSamples)
+    {
+        visibleSamples = 0;
+        IAudioSink? audioSink = mutedAudio ?? _machine.AudioSink;
+        IFrameSink? frameSink = _machine.FrameSink;
+        try
+        {
+            if (!_runAheadSnapshot.IsValid)
+            {
+                _runAheadSnapshot.Capture(_machine);
+            }
+
+            // Hidden frames must be silent and must not reach the host frame sink.
+            _machine.AudioSink = null;
+            _machine.FrameSink = null;
+
+            // Restore the speculative start point, run the first hidden frame, and
+            // keep its result as the next iteration's start. This advances the
+            // visible timeline by exactly one frame while the displayed state stays
+            // 'depth' frames ahead.
+            //
+            // Hidden frames must render normally: VDLP's line delay and bitmap
+            // cursors advance in DoLine, so a skip-frame shortcut would corrupt the
+            // next visible field. The host frame sink is null instead, which keeps
+            // the hidden output out of the presenter.
+            _runAheadSnapshot.Restore(_machine);
+            _machine.RunFrame(false);
+            _runAheadSnapshot.Capture(_machine);
+            for (var i = 1; i < depth; i++)
+            {
+                _machine.RunFrame(false);
+            }
+
+            _machine.AudioSink = audioSink;
+            _machine.FrameSink = frameSink;
+            long beforeVisible = _machine.AudioSamplesProduced;
+            _machine.RunFrame(false);
+            visibleSamples = _machine.AudioSamplesProduced - beforeVisible;
+            return true;
+        }
+        catch (InvalidStateException exception)
+        {
+            Serilog.Log.Warning(exception, "Run-ahead state snapshot was rejected; falling back to the normal frame path.");
+            _runAheadSnapshot.Invalidate();
+            Volatile.Write(ref _runAheadFrames, 0);
+            Volatile.Write(ref _runAheadAutoDisabled, true);
+            return false;
+        }
+        finally
+        {
+            _machine.AudioSink = audioSink;
+            _machine.FrameSink = frameSink;
+        }
+    }
+
+    private void ConfigureFrameDelay()
+    {
+        int delay = FrameDelay;
+        if (delay == _frameDelayConfigured)
+        {
+            return;
+        }
+
+        _frameDelayConfigured = delay;
+        if (delay == 0)
+        {
+            _frameDelayBuffer = [];
+            _frameDelayInputTimestamps = [];
+        }
+        else
+        {
+            var frames = new VdlFrame[delay + 1];
+            for (var i = 0; i < frames.Length; i++)
+            {
+                frames[i] = new VdlFrame();
+            }
+
+            _frameDelayBuffer = frames;
+            _frameDelayInputTimestamps = new long[frames.Length];
+        }
+
+        _frameDelayWrite = 0;
+        _frameDelayFilled = 0;
+        Array.Clear(_frameDelayInputTimestamps);
+    }
+
+    private void ResetFrameDelayBuffer()
+    {
+        _frameDelayConfigured = -1;
+        ConfigureFrameDelay();
+    }
+
+    private void InvalidateLatencyState()
+    {
+        _runAheadSnapshot.Invalidate();
+        _lastInputPollTimestamp = 0;
+        _latency.Reset();
+        ResetFrameDelayBuffer();
+    }
+
+    /// <summary>Queues or submits the visible frame and records its software latency.</summary>
+    /// <param name="frame">Completed frame owned by the machine; the delay path copies it.</param>
+    /// <param name="bypassDelay">When true, submit immediately (fast-forward and stepping).</param>
+    private void SubmitPresentedFrame(VdlFrame frame, bool bypassDelay)
+    {
+        var inputTimestamp = _lastInputPollTimestamp;
+        if (bypassDelay || _frameDelayBuffer.Length == 0)
+        {
+            _frameSink?.Invoke(frame);
+            RecordLatency(inputTimestamp);
+            return;
+        }
+
+        _frameDelayBuffer[_frameDelayWrite].CopyFrom(frame);
+        _frameDelayInputTimestamps[_frameDelayWrite] = inputTimestamp;
+        _frameDelayWrite = (_frameDelayWrite + 1) % _frameDelayBuffer.Length;
+        if (_frameDelayFilled < _frameDelayBuffer.Length)
+        {
+            _frameDelayFilled++;
+            if (_frameDelayFilled < _frameDelayBuffer.Length)
+            {
+                return;
+            }
+        }
+
+        // Once the ring is full, the write cursor points at the oldest frame.
+        int oldest = _frameDelayWrite;
+        _frameSink?.Invoke(_frameDelayBuffer[oldest]);
+        RecordLatency(_frameDelayInputTimestamps[oldest]);
+    }
+
+    private void RecordLatency(long inputTimestamp)
+    {
+        if (inputTimestamp == 0)
+        {
+            return;
+        }
+
+        _latency.Record(inputTimestamp, Stopwatch.GetTimestamp());
+    }
+
+    private void WrapPbusSource()
+    {
+        if (_timestampedPbusSource is not null || _originalPbusSource is not null)
+        {
+            return;
+        }
+
+        _originalPbusSource = _machine.PbusSource;
+        if (_originalPbusSource is null)
+        {
+            return;
+        }
+
+        _timestampedPbusSource = new TimestampedPbusSource(_originalPbusSource, this);
+        _machine.PbusSource = _timestampedPbusSource;
+    }
+
+    private void UnwrapPbusSource()
+    {
+        if (_timestampedPbusSource is null)
+        {
+            return;
+        }
+
+        if (ReferenceEquals(_machine.PbusSource, _timestampedPbusSource))
+        {
+            _machine.PbusSource = _originalPbusSource;
+        }
+
+        _timestampedPbusSource = null;
+        _originalPbusSource = null;
+    }
+
+    private void RecordInputPoll()
+    {
+        _lastInputPollTimestamp = Stopwatch.GetTimestamp();
     }
 
     private void CaptureFrameState()
@@ -654,6 +1027,25 @@ public sealed class CoreRunner : IDisposable
 
         _autoBehindFrames = 0;
         _autoRecoverFrames = 0;
+    }
+
+    /// <summary>Records when the guest last read the controller packet.</summary>
+    private sealed class TimestampedPbusSource : IPbusSource
+    {
+        private readonly IPbusSource _inner;
+        private readonly CoreRunner _owner;
+
+        internal TimestampedPbusSource(IPbusSource inner, CoreRunner owner)
+        {
+            _inner = inner;
+            _owner = owner;
+        }
+
+        public int GetPbusData(Span<byte> destination)
+        {
+            _owner.RecordInputPoll();
+            return _inner.GetPbusData(destination);
+        }
     }
 
     /// <summary>

@@ -62,6 +62,11 @@ public sealed class StateWriter : IStateWriter
     /// <summary>Gets the written bytes.</summary>
     public ReadOnlySpan<byte> WrittenSpan => _buffer.WrittenSpan;
 
+    /// <summary>
+    /// Gets the written bytes as memory. The memory is valid until the next reset or write.
+    /// </summary>
+    public ReadOnlyMemory<byte> WrittenMemory => _buffer.WrittenMemory;
+
     /// <inheritdoc />
     public void WriteByte(byte value)
     {

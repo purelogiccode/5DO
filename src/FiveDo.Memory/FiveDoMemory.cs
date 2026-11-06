@@ -23,6 +23,7 @@ namespace FiveDo.Memory;
 public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelector, IStateSection
 {
     private readonly uint[] _ram = new uint[EmulatorConstants.RamAllocationSize / sizeof(uint)];
+    private int _highWaterSize;
     private readonly uint[] _rom = new uint[EmulatorConstants.RomSize / sizeof(uint)];
     private readonly byte[] _nvram = new byte[EmulatorConstants.NvramSize];
     private MemoryLayout _layout;
@@ -37,6 +38,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
         Tuning = tuning ?? EmulatorTuning.Default;
         Tuning.Validate();
         _layout = MemoryLayout.For(Tuning.MemoryConfiguration);
+        _highWaterSize = _layout.HiresRamSize;
     }
 
     /// <summary>Gets the machine tuning.</summary>
@@ -66,6 +68,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     public void SetMemoryConfiguration(MemoryConfiguration configuration)
     {
         _layout = MemoryLayout.For(configuration);
+        _highWaterSize = Math.Max(_highWaterSize, _layout.HiresRamSize);
     }
 
     /// <summary>Gets the active ROM bank (0 or 1).</summary>
@@ -302,23 +305,37 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
                 }
 
                 Span<byte> ram = ToStateBytes(_ram);
-                ram[storedSize..].Clear();
+                // Clear only the stale portion of the previously addressable range.
+                // Clearing the whole 22 MB tail on every load dominates the run-ahead
+                // restore cost and is unnecessary when the layout did not grow.
+                if (storedSize < _highWaterSize)
+                {
+                    ram[storedSize.._highWaterSize].Clear();
+                }
+
                 reader.ReadBytes(ram[..storedSize]);
+                _highWaterSize = Math.Max(_highWaterSize, storedSize);
             }
             else
             {
                 reader.ReadBytes(ToStateBytes(_ram));
+                _highWaterSize = Size;
             }
         }
         else
         {
             // Version-1 and version-2 states use the stock 2 MB DRAM / 1 MB VRAM layout
-            // and the historical 19 MB allocation. Keep the tail clear so a later
-            // expanded layout starts from a defined state.
+            // and the historical 19 MB allocation. Keep the previously addressable tail
+            // clear so a later expanded layout starts from a defined state.
             Span<byte> ram = ToStateBytes(_ram);
-            ram[EmulatorConstants.StockHiresRamSize..].Clear();
+            if (EmulatorConstants.StockHiresRamSize < _highWaterSize)
+            {
+                ram[EmulatorConstants.StockHiresRamSize.._highWaterSize].Clear();
+            }
+
             reader.ReadBytes(ram[..EmulatorConstants.StockHiresRamSize]);
             _layout = MemoryLayout.Stock;
+            _highWaterSize = Math.Max(_highWaterSize, EmulatorConstants.StockHiresRamSize);
         }
 
         reader.ReadBytes(ToStateBytes(_rom));
@@ -379,6 +396,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     public void ClearRam()
     {
         _ram.AsSpan().Clear();
+        _highWaterSize = _layout.HiresRamSize;
         RamWriteHook?.Invoke(0, Size);
     }
 

@@ -119,6 +119,12 @@ checksums are attached, and legal/attribution sign-off is recorded.
   console rate. The achieved rate is also bounded by the platform compositor (Avalonia 12
   raises its render timer to the monitor frequency on Windows; other platforms may stay
   at 60). Frame interpolation is not implemented.
+- **Run-ahead is CPU-bound and opt-in.** One frame costs a full state capture/restore
+  (~5.6 ms on the current desktop) plus one extra emulated frame. Titles that cannot hold
+  the audio-derived deadline are auto-disabled after 45 overruns. Rewind history is cleared
+  and deterministic movie recording/playback is refused while run-ahead is active. Frame
+  delay above zero intentionally increases input-to-photon latency. VRR only removes the
+  blocking swap interval; the driver, monitor, and desktop must enable adaptive sync.
 - The GPU probe's residual ~2.3 KB/frame allocation is outside `OpenGlRenderer.Present`
   and comes from the Avalonia UI/compositor loop; the renderer/mailbox path itself is
   zero-allocation after warm-up.

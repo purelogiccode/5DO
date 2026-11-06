@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using FiveDo.Clio;
 using FiveDo.Core;
@@ -550,8 +551,24 @@ public sealed class FiveDoMachine
         ArgumentNullException.ThrowIfNull(source);
         using var buffer = new MemoryStream();
         source.CopyTo(buffer);
-        var bytes = buffer.ToArray();
-        var reader = new StateReader(bytes);
+        LoadState(buffer.GetBuffer().AsMemory(0, checked((int)buffer.Length)), expectedDiscHash);
+    }
+
+    /// <summary>Loads a complete machine state from memory.</summary>
+    /// <param name="data">Complete state bytes, including the header and section table.</param>
+    /// <param name="expectedDiscHash">
+    /// Optional game/disc hash of the disc currently inserted. When both this value and the
+    /// state header's disc hash are present and differ, a warning is added to
+    /// <see cref="StateWarnings"/> instead of rejecting the state.
+    /// </param>
+    /// <exception cref="InvalidStateException">Thrown when the state is invalid or incomplete.</exception>
+    /// <remarks>
+    /// This overload avoids copying the state again when the caller already owns an
+    /// in-memory snapshot (for example the latency run-ahead cache).
+    /// </remarks>
+    public void LoadState(ReadOnlyMemory<byte> data, string? expectedDiscHash = null)
+    {
+        var reader = new StateReader(data);
         _stateWarnings.Clear();
         FiqLatency.Reset();
 
@@ -696,6 +713,7 @@ public sealed class FiveDoMachine
                 || (section.Id == StateSectionIds.Clio && section.Version <= 3)
                 || (section.Id == StateSectionIds.Madam && section.Version <= 4)
                 || (section.Id == StateSectionIds.Vdlp && section.Version <= 3)
+                || (section.Id == StateSectionIds.Machine && section.Version <= 2)
                 || (section.Id == StateSectionIds.Options && section.Version <= 9);
             if (!supportedVersion)
             {
@@ -1087,7 +1105,7 @@ public sealed class FiveDoMachine
 
         public uint Id => StateSectionIds.Machine;
 
-        public ushort Version => 1;
+        public ushort Version => 2;
 
         public void Save(IStateWriter writer)
         {
@@ -1103,8 +1121,17 @@ public sealed class FiveDoMachine
             writer.WriteBoolean(_compatibility.HighResolution);
             writer.WriteInt32(_frame.SourceWidth);
             writer.WriteInt32(_frame.SourceHeight);
-            foreach (VdlLine line in _frame.Lines)
+            writer.WriteDouble(_frame.PixelAspect);
+            // Only the visible source lines can be addressed by the presenter. The
+            // historical v1 payload wrote all 576 lines, which made a run-ahead or
+            // rewind snapshot needlessly large and slow. The full pixel backing store is
+            // kept so a load restores bytes that are outside the current Width but may be
+            // re-exposed by a later VDL program.
+            var lineCount = Math.Clamp(_frame.SourceHeight, 0, VdlFrame.MaxLines);
+            writer.WriteInt32(lineCount);
+            for (var lineIndex = 0; lineIndex < lineCount; lineIndex++)
             {
+                VdlLine line = _frame[lineIndex];
                 writer.WriteInt32(line.Width);
                 writer.WriteUInt32(line.OutControl);
                 writer.WriteUInt32(line.ClutDma);
@@ -1112,10 +1139,7 @@ public sealed class FiveDoMachine
                 writer.WriteBytes(line.ClutB);
                 writer.WriteBytes(line.ClutG);
                 writer.WriteBytes(line.ClutR);
-                foreach (var pixel in line.PixelBuffer)
-                {
-                    writer.WriteUInt16(pixel);
-                }
+                writer.WriteBytes(MemoryMarshal.AsBytes(line.PixelBuffer));
             }
         }
 
@@ -1133,6 +1157,39 @@ public sealed class FiveDoMachine
             _compatibility.HighResolution = reader.ReadBoolean();
             _frame.SourceWidth = reader.ReadInt32();
             _frame.SourceHeight = reader.ReadInt32();
+            var version = reader is StateSectionReader sectionReader ? sectionReader.Version : 1;
+            if (version >= 2)
+            {
+                _frame.PixelAspect = reader.ReadDouble();
+                var lineCount = reader.ReadInt32();
+                if (lineCount < 0 || lineCount > VdlFrame.MaxLines)
+                {
+                    throw new InvalidStateException($"Invalid VDL line count {lineCount}.");
+                }
+
+                _frame.Clear();
+                for (var lineIndex = 0; lineIndex < lineCount; lineIndex++)
+                {
+                    VdlLine line = _frame[lineIndex];
+                    var width = reader.ReadInt32();
+                    if (width < 0 || width > VdlLine.MaxPixels)
+                    {
+                        throw new InvalidStateException($"Invalid VDL line width {width}.");
+                    }
+
+                    line.Width = width;
+                    line.OutControl = reader.ReadUInt32();
+                    line.ClutDma = reader.ReadUInt32();
+                    line.Background = reader.ReadUInt32();
+                    reader.ReadBytes(line.ClutB);
+                    reader.ReadBytes(line.ClutG);
+                    reader.ReadBytes(line.ClutR);
+                    reader.ReadBytes(MemoryMarshal.AsBytes(line.PixelBuffer));
+                }
+
+                return;
+            }
+
             _frame.PixelAspect = 1.0;
             foreach (VdlLine line in _frame.Lines)
             {

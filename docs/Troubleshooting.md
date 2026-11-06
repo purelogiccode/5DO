@@ -136,7 +136,7 @@ report and backend.
 | Crackle only on Bluetooth | Tap is clean but loopback is not; the link/codec is the issue. |
 | Pitch too high / 600 frames = 10.07 s | Old 8.24 DSP clock; current builds produce 10.000 s. |
 | Audio drifts/stutters | Check dropped/underrun counters; reduce UI load; the frontend ring is 8192 frames. |
-| High latency | The frontend uses a 3072-frame prefill (~70 ms) plus queued buffers (~113 ms steady state). Lower prefill only if you accept underruns. |
+| High latency | The frontend uses a 3072-frame prefill (~70 ms) plus queued buffers (~113 ms steady state). Lower the audio buffer or use a negative `AudioSyncMilliseconds` only if you accept underruns; enable 1-frame run-ahead if the title has CPU headroom. Frame delay above 0 intentionally adds latency. |
 | CLI live audio is a short burst | Add `--realtime`. |
 | WAV silent | `--audio null` discards; use `--audio wav --wav-out <path>`. |
 | WAV click at state load | WAV capture spans resets/loads by design; split the capture. |

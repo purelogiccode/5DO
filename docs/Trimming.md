@@ -4,25 +4,65 @@ This document records the trimming audit for the managed emulator. The core, hos
 and CLI must remain fully managed C#; trimming is a packaging optimization, not an
 emulation feature.
 
-## Current status (2026-11-02)
+## Current status (2026-11-06)
 
-The **v1.0.0 release bundles are not trimmed.** Both apps publish as framework-dependent
+**PERF-02/BAK-08 is complete.** The release bundles remain **framework-dependent and untrimmed**. Both apps publish as
 single-file apphosts (`PublishSingleFile=true`, `PublishTrimmed=false`) and require the
-.NET 10 runtime on the host. No runtime is embedded or copied into the bundle. This
-keeps the CLI and desktop app as single executables and avoids the per-app trimming
-divergence that would make a merged bundle unsafe.
+.NET 10 runtime on the host. No runtime is embedded or copied into the bundle. This keeps
+the CLI and desktop app as single executables and avoids the per-app trimming divergence
+that would make a merged bundle unsafe.
 
-Trimming and NativeAOT remain opt-in developer/audit paths:
+Trimming and NativeAOT remain opt-in developer/audit paths. Both win-x64 audits now cover
+startup, rendering, audio, and a real disc session:
 
 | Component | Release bundle | Opt-in trimming / AOT |
 |---|---|---|
 | `FiveDo.Cli` | Single-file, untrimmed, system runtime | `PublishTrimmed=true`; NativeAOT win-x64 audit passed (`-p:FiveDoNativeAot=true`) |
-| `FiveDo.Frontend.Avalonia` | Single-file, untrimmed, system runtime | `PublishTrimmed=true`; NativeAOT win-x64 audit passed (`-p:FiveDoNativeAot=true`); Silk.NET loader warnings remain |
+| `FiveDo.Frontend.Avalonia` | Single-file, untrimmed, system runtime | `PublishTrimmed=true`; NativeAOT win-x64 audit passed (`-p:FiveDoNativeAot=true`); OpenAL and real-game session validated; Silk.NET/SharpGen loader warnings remain |
 | Core/host assemblies | System runtime + single-file apphosts | Trimmed/AOT as dependencies of the opt-in builds |
 
 The CI `build-test` job still exercises trimmed win-x64 CLI/frontend publishes and
 NativeAOT win-x64 builds. The `bundle` job builds the actual release bundles with
 `PublishTrimmed=false` and runs the CLI/frontend smoke tests.
+
+### Measured results (win-x64, 2026-11-06)
+
+| Artifact | Size | Startup / smoke |
+|---|---:|---|
+| CLI AOT single file | **16.6 MB** | `--version` 69 ms; `bench --frames 2` 65 ms |
+| CLI AOT runtime folder (excluding PDB/XML) | 18.7 MB | — |
+| CLI trimmed single file | **19.4 MB** | `selftest --json` passes |
+| Frontend AOT single file | **34.5 MB** | `--version` 70 ms; `--smoke-test` 1.2 s |
+| Frontend AOT runtime folder (excluding PDB/XML) | 54.6 MB | — |
+| Frontend trimmed single file | **27.9 MB** | `--smoke-test` 3.2 s |
+| Frontend trimmed runtime folder (excluding PDB/XML) | 48.0 MB | — |
+
+The AOT frontend smoke test constructs the real `MainWindow` and the settings dialog,
+creates the OpenGL 4.0 surface, and writes `FRONTEND SMOKE OK 1.3.0`. A real Lemmings
+boot under the AOT frontend logged `OpenAL audio ready (44100 Hz stereo, 100 ms, sync
+40 ms)`, `Emulation started`, and the VRR compositor path with no core fault. The AOT
+CLI ran a realtime Lemmings session with `--audio openal --audio-sync 40` under
+`ALSOFT_DRIVERS=null`: 0 dropped samples and 0 underruns over 240 frames. A 3,000-frame
+AOT boot produced the same hashes and PC as the IL build.
+
+The optional publish profiles are in each project's `Properties/PublishProfiles`:
+
+- `NativeAot-win-x64.pubxml` and `Trimmed-win-x64.pubxml` for `FiveDo.Cli`
+- `NativeAot-win-x64.pubxml` and `Trimmed-win-x64.pubxml` for `FiveDo.Frontend.Avalonia`
+
+```powershell
+dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -p:PublishProfile=NativeAot-win-x64
+dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj -p:PublishProfile=Trimmed-win-x64
+```
+
+### Latency snapshot format
+
+PERF-02 also covers the state cost used by VID-12. The machine frame state section is now
+version 2 and writes only the visible source lines, using little-endian pixel blocks; the
+RAM loader clears only the previously addressable range instead of the whole 22 MB backing
+store. On this machine `bench --latency` reports a 9,348,438-byte uncompressed snapshot,
+capture ~3.6 ms/frame, and restore ~2.0 ms/frame in Release. That keeps one-frame run-ahead
+inside the 60 Hz budget on a typical title. Old version-1 machine sections still load.
 
 ## NativeAOT CLI audit (2026-10-27)
 
@@ -35,8 +75,8 @@ dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj `
   -o artifacts/cli-aot
 ```
 
-The win-x64 single-file executable is **10.54 MB** (versus the trimmed IL single
-file) plus the bundled `OpenAL32.dll`. The audit covered:
+The win-x64 single-file executable is **16.6 MB** (versus the 19.4 MB trimmed IL
+single file) plus the bundled `OpenAL32.dll`. The audit covered:
 
 - `--version`, `selftest --json`, and `bench --frames 2 --json`.
 - `info` and `fs list` on the Lemmings ISO/CHD pair (482 entries each).
@@ -67,7 +107,7 @@ dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj `
   -o artifacts/frontend-aot
 ```
 
-The publish produces a **28.8 MB** native executable plus the native
+The publish produces a **34.5 MB** native executable plus the native
 Skia/HarfBuzz/ANGLE assets in the same folder (Avalonia's native backends are not
 embedded). The audit covered:
 
@@ -77,6 +117,9 @@ embedded). The audit covered:
 - WGL and ANGLE `--gl-probe` 320x240 Accurate captures: `ok: true`, parity
   `matches: true`, `differentPixels: 0`, and the same CPU/GPU hash on both backends.
 - A 1280x720 ANGLE sharp-bilinear pass with 0 renderer allocations/frame.
+- A real Lemmings (USA) boot with run-ahead 1, frame delay 1, VRR, and audio sync 40 ms.
+  OpenAL initialized at 44.1 kHz through the bundled runtime with `ALSOFT_DRIVERS=null`,
+  the emulation thread started, and no core fault or run-ahead auto-disable was logged.
 
 Silk.NET.Core's native-asset loader (`DefaultPathResolver`) still uses
 `Assembly.Location`/`Assembly.CodeBase` and `DependencyContext.Default`, so the ILC
@@ -156,9 +199,10 @@ loader dependency or install a custom native-asset resolver for the frontend.
    locally during the trim audit. CI now builds the three untrimmed x64 release
    bundles and still exercises trimmed win-x64 publishes in `build-test`.
 
-On win-x64 the frontend single-file executable is **26.3 MB** trimmed versus
-**91.3 MB** untrimmed. The complete publish folder is **150.9 MB** versus
-**215.9 MB**, because the native Skia/HarfBuzz/ANGLE assets are unchanged.
+On win-x64 the frontend single-file executable is **27.9 MB** trimmed versus
+the larger untrimmed single-file layout. The complete runtime publish folder is
+**48.0 MB** excluding PDB/XML, because the native Skia/HarfBuzz/ANGLE assets are
+unchanged.
 
 ## Verification
 
@@ -188,6 +232,10 @@ dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj `
   -o artifacts/cli-aot
 artifacts/cli-aot/FiveDo.Cli.exe selftest --json
 artifacts/cli-aot/FiveDo.Cli.exe bench --frames 2 --json
+artifacts/cli-aot/FiveDo.Cli.exe bench --frames 120 --latency
+$env:ALSOFT_DRIVERS = "null"
+artifacts/cli-aot/FiveDo.Cli.exe run game.chd --bios bios/panafz10.bin `
+  --frames 240 --audio openal --audio-sync 40 --realtime --json
 
 # Opt-in NativeAOT frontend single-file publish and smoke test (win-x64)
 dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj `
@@ -240,9 +288,10 @@ The CLI and the frontend single-file layout are AOT-validated on win-x64. Remain
 - Silk.NET.Core's `Assembly.Location`/`DependencyContext` native-asset loader still
   emits `IL3000`/`IL3002`; both single-file AOT audio paths are validated (the
   frontend with OpenAL's null device). A Silk.NET-compatible resolver or a custom
-  `DllImportResolver` is the cleanup.
+  `DllImportResolver` is the cleanup. SharpGen and CHDSharp also emit non-fatal
+  `IL2104` trim warnings.
 - Cross-OS AOT publishing needs a native toolchain per target; the release bundles
   are produced on native runners and do not use AOT.
-- The frontend AOT smoke test covers startup and the WGL/ANGLE probes; a full in-app
-  BIOS/disc/audio session under AOT is not yet validated.
+- The frontend AOT session is validated with the OpenAL null device. A listen on a
+  physical playback endpoint and a long soak remain manual checks.
 - Installer packaging, signing, and notarization remain separate M10.7 work.

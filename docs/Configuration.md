@@ -60,7 +60,7 @@ shows the owner and exits. `FIVEDO_ALLOW_MULTIPLE=1` disables that guard. Differ
 profiles or data directories use different lock files and may run together.
 
 Settings are written atomically (temporary file + replace) and carry
-`"SettingsVersion": 5`. An older file is migrated in place on the next load.
+`"SettingsVersion": 6`. An older file is migrated in place on the next load.
 A malformed `settings.json` is copied to `settings.json.invalid-<timestamp>.bak`
 before defaults are used, so the original bytes are never silently lost. Back up or
 delete the file to reset the desktop configuration.
@@ -77,7 +77,7 @@ every serialized property in `AppSettings`.
 
 | Property | Type | Default | Meaning |
 |---|---|---|---|
-| `SettingsVersion` | int | `5` | Settings schema version. Unversioned files are migrated on load. |
+| `SettingsVersion` | int | `6` | Settings schema version. Unversioned files are migrated on load. |
 | `FirstRunCompleted` | bool | `false` | Whether the first-run guide has been shown. |
 | `BiosPath` | string | `""` | Last primary BIOS path; fallback when auto-selection is off or unavailable. |
 | `Bios2Path` | string | `""` | Optional BIOS2/Kanji font path. |
@@ -102,13 +102,16 @@ every serialized property in `AppSettings`.
 | `AutoGameFixes` | bool | `true` | Apply the 4DO per-game fix-mode mapping automatically. |
 | `FixModeOverrides` | object | `{}` | Per-game fix-mode overrides, keyed by game ID. |
 | `FilterOverrides` | object | `{}` | Per-game filter overrides, keyed by game ID. |
-| `GameProfiles` | object | `{}` | Per-game profile snapshots, keyed by game ID. Each entry holds `Profile`, `Region`, `ArmTiming`, `ClioTimers`, `CelTiming`, `CdromTiming`, `CdSpeed`, `CpuClockMultiplier`, `RandomSeed`, `OperaDipir`, `OperaSoftReset`, `SwiHle`, `CpuBackend`, `CdAudioVolume`, `CdAudioMuted`, `BiosMd5`, `FixMode`, `Filter`, `Deinterlace`, `HighResolution`, `Overscan`, `InputDevices`, `NvramStorageMode`, `NvramVersion`, and `CheatBundle`. |
+| `GameProfiles` | object | `{}` | Per-game profile snapshots, keyed by game ID. Each entry holds `Profile`, `Region`, `ArmTiming`, `ClioTimers`, `CelTiming`, `CdromTiming`, `CdSpeed`, `CpuClockMultiplier`, `RandomSeed`, `OperaDipir`, `OperaSoftReset`, `SwiHle`, `CpuBackend`, `CdAudioVolume`, `CdAudioMuted`, `RunAheadFrames`, `FrameDelayFrames`, `Vrr`, `AudioSyncMilliseconds`, `BiosMd5`, `FixMode`, `Filter`, `Deinterlace`, `HighResolution`, `Overscan`, `InputDevices`, `NvramStorageMode`, `NvramVersion`, and `CheatBundle`. |
 | `Filter` | enum string | `"SharpBilinear"` | Global presentation filter. |
 | `Deinterlace` | enum string | `"Auto"` | 480i/240p field handling: `Auto` (detect and weave complementary fields), `Bob` (present every field, reference-compatible hashes), `Weave` (always combine two fields into 480/576 lines), or `Blend` (average two fields). Presentation-only. |
 | `FrameSkip` | enum string | `"Auto"` | Presentation frame-skip policy: `Off`, `Auto`, `OneInTwo`, `OneInThree`, `OneInFour`, or `OneInFive`. Only presentation is skipped; emulation and audio always run every frame. |
 | `Aspect` | enum string | `"FourThree"` | Aspect policy. |
 | `CustomAspect` | double | `1.3333` | Width/height ratio used when `Aspect` is `Custom`. |
 | `Vsync` | bool | `true` | Request platform vsync (where supported). |
+| `Vrr` | bool | `false` | Disable the blocking swap interval and follow the compositor so a VRR/adaptive-sync display can drive cadence. Actual VRR activation depends on the GPU/driver/monitor/desktop. |
+| `RunAheadFrames` | int | `0` | Speculative frames ahead of presentation, 0-2. Trades CPU for lower input latency; rewind and deterministic movie recording are disabled while active. |
+| `FrameDelayFrames` | int | `0` | Hold the presented image this many frames behind the core, 0-8. Intentionally increases latency; zero is the default. |
 | `IntegerScale` | bool | `true` | Prefer integer scaling for 4:3/integer modes. |
 | `DisplayRefreshRate` | int | `60` | Presentation refresh rate in hertz. `60` keeps render-on-demand, `30`-`480` re-present the latest frame at that rate, and `0` follows the compositor. The 3DO still produces 60 fields per second (50 for PAL). |
 | `OverscanPixels` | int | `0` | Legacy uniform crop applied to every edge when the per-edge values are all zero (0-32). Presentation-only. |
@@ -156,6 +159,7 @@ every serialized property in `AppSettings`.
 | `CdAudioMuted` | bool | `false` | Keep CD-DA playback running but remove it from the mixed output. |
 | `AudioDevice` | string | `""` | OpenAL playback device name; empty uses the system default. |
 | `AudioBufferMilliseconds` | int | `100` | Target OpenAL buffer latency, 20-500 ms. |
+| `AudioSyncMilliseconds` | int | `0` | Host audio/video offset, -250..250 ms. Positive delays audio by inserting silence; negative advances it by dropping the first samples. Applied when OpenAL output is created or reset. |
 | `PointerPort` | int | `0` | `0` sends host pointer input to every pointer device; `1`-`8` routes it to that controller port. |
 | `HideLightgunCrosshair` | bool | `false` | Hide the desktop lightgun crosshair. The pointer still drives the emulated lightgun; useful when the game draws its own reticle or when recording. |
 | `PointerScale` | float | `1.0` | Pointer calibration scale (0.5-2.0). |
@@ -244,7 +248,7 @@ player-1 defaults. See section 3 for the full input structure.
 
 ```json
 {
-  "SettingsVersion": 5,
+  "SettingsVersion": 6,
   "FirstRunCompleted": true,
   "BiosPath": "C:\\3DO\\panafz1.bin",
   "Bios2Path": "",
@@ -281,6 +285,9 @@ player-1 defaults. See section 3 for the full input structure.
   "Aspect": "FourThree",
   "CustomAspect": 1.3333,
   "Vsync": true,
+  "Vrr": false,
+  "RunAheadFrames": 0,
+  "FrameDelayFrames": 0,
   "IntegerScale": true,
   "OverscanPixels": 0,
   "OverscanLeft": 0,
@@ -308,6 +315,7 @@ player-1 defaults. See section 3 for the full input structure.
   "AudioEnabled": true,
   "AudioDevice": "",
   "AudioBufferMilliseconds": 100,
+  "AudioSyncMilliseconds": 0,
   "InputDeviceOverrides": {},
   "AutoInputDevices": true,
   "CdAudioVolume": 0.8,
@@ -813,7 +821,12 @@ without restarting the machine. `DisplayRefreshRate` applies immediately: a valu
 frames. The 3DO only produces 60 fields per second (50 for PAL), so a higher rate lowers
 presentation latency but does not add motion. Frame-skip changes apply immediately to the
 running core loop. OSD enable/position/opacity/duration and the quick-menu toggle apply
-immediately; notification lifetime changes affect new messages.
+immediately; notification lifetime changes affect new messages. `RunAheadFrames` and
+`FrameDelayFrames` apply to the running `CoreRunner`; a positive run-ahead depth clears
+rewind history and is refused while a deterministic movie is recording or playing. `Vrr`
+recreates the renderer settings and presentation loop with the swap interval disabled.
+`AudioSyncMilliseconds` recreates OpenAL output without resetting the machine. Per-game
+profiles can override these four latency fields.
 
 ### Performance defaults
 

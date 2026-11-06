@@ -128,6 +128,22 @@ public static class GameProfileJson
             profile.CdAudioVolume = 0.8f;
         }
 
+        if (profile.RunAheadFrames is < 0 or > AppSettings.MaxRunAheadFrames)
+        {
+            profile.RunAheadFrames = null;
+        }
+
+        if (profile.FrameDelayFrames is < 0 or > AppSettings.MaxFrameDelayFrames)
+        {
+            profile.FrameDelayFrames = null;
+        }
+
+        if (profile.AudioSyncMilliseconds is < AppSettings.MinAudioSyncMilliseconds
+            or > AppSettings.MaxAudioSyncMilliseconds)
+        {
+            profile.AudioSyncMilliseconds = null;
+        }
+
         profile.BiosMd5 = NormalizeMd5(profile.BiosMd5);
         if (profile.FixMode is { } fixMode && !Enum.IsDefined(fixMode))
         {

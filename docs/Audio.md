@@ -159,6 +159,17 @@ Counters exposed by the CLI/overlay:
 A lost device or driver failure stops the fill loop but does not crash emulation; the
 DSP continues and the app runs silently.
 
+### Audio/video sync offset
+
+`Settings > Audio` and `--audio-sync -250..250` apply a fixed audio offset relative to
+video. Positive values insert silence frames at the head of the OpenAL stream; negative
+values drop the first samples and advance it. `ComputeBufferConfiguration` converts the
+offset to frames, reserves the extra ring capacity for positive values, and keeps the
+existing queue shape. The offset is applied when output is created or reset, so changing
+it recreates the OpenAL output without resetting the emulated machine. It changes only
+host output, not DSP state, save states, or frame hashes. The UI shows the current queue
+latency in the FPS overlay so the offset can be tuned against the display.
+
 ### Soft limiter
 
 Some 3DO mixes reach full scale in the emulated samples (Road Rash's race mix is the
@@ -289,6 +300,8 @@ fps.
 |---|---|
 | `AudioEnabled` | Open OpenAL at startup. If no device is present, log a warning and run silently. |
 | `Volume` | OpenAL gain, 0..1. |
+| `AudioBufferMilliseconds` | Target OpenAL queue latency, 20-500 ms. |
+| `AudioSyncMilliseconds` | Host audio/video offset, -250..250 ms. Positive delays audio; negative advances it. |
 | `FIVEDO_AUDIO_TAP` | Enable the PCM/timing tap. |
 
 Settings > Audio also has a **Play 440 Hz test tone** button. It creates a separate
@@ -307,6 +320,7 @@ is available.
 | `AudioAnalyzerTests` | WAV chunk parsing, statistics, mono/stereo, truncation errors. |
 | `AudioTapTests` | WAV/CSV contents, header patching. |
 | `OpenAlAudioOutputTests` (opt-in `FIVEDO_AUDIO_TESTS=1`) | Real device opens, accepts ~40k samples, queues buffers. |
+| `AudioBufferConfigurationTests` | Queue sizing, latency clamping, sync-offset frames, ring reserve. |
 | `AudioFramePacerTests` | Rolling average, clamping, fallback, resync. |
 | DSP tests | Instruction decode, ALU/multiplier, sample cadence, semaphore. |
 | Real-content captures | 600-frame/10 s captures and per-title WAV evidence in [`TestCorpus.md`](TestCorpus.md). |
