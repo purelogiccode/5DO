@@ -51,6 +51,19 @@ The apps are framework-dependent single-file executables. Install the **.NET 10
 Runtime** from <https://dotnet.microsoft.com/download/dotnet/10.0>; no runtime is
 embedded in the bundle.
 
+## Bug fixes
+
+- JIT register-shift PC-relative operands read `instruction+12` for `Rn` and `Rm`
+  (`Rs` reads `instruction+8`), matching the interpreter.
+- ROM-bank switches, BIOS reloads, overlay changes, and soft resets invalidate compiled
+  blocks.
+- JIT FIQ entry telemetry includes the current block's cycles.
+- Prefetched track sectors keep their actual byte count, so a 2048-byte data sector
+  cannot return a 2352-byte length or stale tail bytes.
+- Legacy PBUS packets report slots 7-8 as disconnected.
+- Pointer exit clears lightgun and mouse state for all eight PBUS ports.
+- The machine-option validator enforces the documented 0.5x-4x ARM clock range.
+
 ## Verification
 
 - Full suite: **1,815 tests passing**.

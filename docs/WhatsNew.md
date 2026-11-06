@@ -69,6 +69,19 @@ arm64, with the CLI and desktop app in one framework-dependent bundle.
   `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, and `osx-arm64`
   bundle names.
 
+### Bug fixes
+
+- JIT register-shift PC-relative operands now read `instruction+12` for `Rn` and `Rm`
+  (`Rs` still reads `instruction+8`), matching the interpreter.
+- ROM-bank switches, BIOS reloads, low-memory overlay changes, and soft resets invalidate
+  compiled blocks.
+- JIT FIQ entry telemetry includes the current block's cycles.
+- Prefetched track sectors keep their actual byte count, so a 2048-byte data sector
+  cannot return a 2352-byte length or stale tail bytes.
+- Legacy 16-byte PBUS packets report slots 7-8 as disconnected.
+- Pointer exit clears lightgun and mouse state for all eight PBUS ports.
+- The central machine-option validator enforces the documented 0.5x-4x ARM clock range.
+
 ### Dependencies
 
 - Avalonia **12.1.5**, CHDSharp **1.6.3**, and Meziantou.Analyzer **3.0.321**.
