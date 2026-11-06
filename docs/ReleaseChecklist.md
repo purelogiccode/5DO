@@ -41,22 +41,32 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 
 ## 1.2.2 performance and library gate
 
-- [ ] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.2.2`.
-- [ ] Update `CHANGELOG.md`, `docs/WhatsNew.md`, `docs/ReleaseNotes-1.2.2.md`,
+- [x] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.2.2`.
+- [x] Update `CHANGELOG.md`, `docs/WhatsNew.md`, `docs/ReleaseNotes-1.2.2.md`,
       `README.md`, `docs/Status.md`, `docs/index.md`, and `docs/Installation.md`.
-- [ ] Update the MkDocs navigation and the curated wiki sidebar with the 1.2.2 pages.
-- [ ] Full suite **1,815/1,815** passes; `dotnet format --verify-no-changes` is clean.
-- [ ] Benchmark gate passes with 0 bytes/frame and p99 within budget.
-- [ ] Build all six framework-dependent single-file bundles and keep local copies in
+- [x] Update the MkDocs navigation and the curated wiki sidebar with the 1.2.2 pages.
+- [x] Full suite **1,815/1,815** passes; `dotnet format --verify-no-changes` is clean.
+- [x] Benchmark gate passes with 0 bytes/frame and p99 within budget.
+- [x] Build all six framework-dependent single-file bundles and keep local copies in
       `src/FiveDo.Frontend.Avalonia/bin/Release` without deleting older artifacts.
-- [ ] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
+- [x] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
       `whatsnew.md`, the release notes, and the legal notices, and contains no
       `runtime/`, `*.pdb`, or `*.xml` files.
-- [ ] Verify the x64 CLI `selftest` and desktop `--smoke-test`; verify arm64 apphost
-      machine types.
-- [ ] Create and push tag `v1.2.2`; the release workflow publishes six versioned bundles
-      and `SHA256SUMS.txt`.
-- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki.
+- [x] Verify the x64 CLI `selftest` and desktop `--smoke-test`; verify arm64 apphost
+      machine types. CI ran the x64 runtime smoke tests; the local and CI bundle checks
+      verified PE x64/ARM64, ELF x86-64/aarch64, and Mach-O x86_64/arm64.
+- [x] Audit every commit after `v1.2.1` and fix the eight concrete bugs found:
+      JIT register-shift PC delta; stale ROM-bank blocks; stale soft-reset blocks;
+      FIQ entry telemetry; prefetch track-sector length; legacy PBUS slots 7-8;
+      pointer-exit port bound; ARM clock range.
+- [x] Create and push tag `v1.2.2`; the release workflow published six versioned bundles
+      and `SHA256SUMS.txt`:
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.2.2>. CI run
+      <https://github.com/purelogiccode/5DO/actions/runs/42169040644> passed all six
+      bundle jobs and the publish job; all six checksums verify.
+- [x] Confirm the docs workflow deploys the Pages site and publishes the wiki. CI run
+      <https://github.com/purelogiccode/5DO/actions/runs/42169037958> passed; the
+      1.2.2 release page and wiki page return HTTP 200.
 
 ---
 

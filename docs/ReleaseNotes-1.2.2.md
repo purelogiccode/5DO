@@ -82,6 +82,10 @@ apps so the LGPL replacement rights remain practical.
 - Six bundle builds; x64 CLI `selftest` and desktop `--smoke-test` pass; arm64 apphost
   machine types verified as PE ARM64, ELF aarch64, and Mach-O arm64
 - Bundle checks confirm no `runtime/`, `*.xml`, or `*.pdb` files are present
+- Release workflow
+  <https://github.com/purelogiccode/5DO/actions/runs/42169040644> passed all six bundle
+  jobs and the publish job; all six `SHA256SUMS.txt` entries verify. The docs workflow
+  deployed the Pages site and published the wiki.
 
 ## Known issues
 

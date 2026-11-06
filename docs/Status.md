@@ -53,7 +53,13 @@ published at <https://github.com/purelogiccode/5DO/releases/tag/v1.2.2>. It adds
 interpreter, high-resolution VDLP, and rewind performance work; the opt-in managed JIT;
 the expanded game database and library health/DAT verification; eight Opera memory
 layouts; eight PBUS ports; opt-in Portfolio OS SWI HLE; and audio-only CHD cataloging.
-The suite is **1,815 tests**.
+The suite is **1,815 tests**. Release workflow
+<https://github.com/purelogiccode/5DO/actions/runs/42169040644> passed all six bundle
+jobs and published six versioned archives plus `SHA256SUMS.txt`; all six checksums
+verify. The docs workflow deployed the Pages site and published the wiki. A post-1.2.1
+audit fixed eight bugs: the JIT register-shift PC delta, stale ROM-bank and soft-reset
+blocks, FIQ entry telemetry, the prefetch track-sector length, legacy PBUS slots 7-8,
+the pointer-exit port bound, and the ARM clock range.
 
 **Arm64 packaging update (2026-11-03):** **v1.2.1** was the arm64 packaging release,
 published at
