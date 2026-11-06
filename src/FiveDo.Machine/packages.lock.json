@@ -4,9 +4,9 @@
     "net10.0": {
       "Meziantou.Analyzer": {
         "type": "Direct",
-        "requested": "[3.0.320, )",
-        "resolved": "3.0.320",
-        "contentHash": "yKkD+uA684so6/ct3dcGm8H2esrLn/gAS9qYbAcis216gBx+o5LWm5ou/BZDIDg6TTzr5ayojv9cgpoHSasxOw=="
+        "requested": "[3.0.321, )",
+        "resolved": "3.0.321",
+        "contentHash": "aFP7GiBBIb2x9rBTuUpw/jSs0JVbTofADlt6WxmYVYQ24KPAjFYyxcnNNVVf4F/eqKyzjik170nOpURmmyJDKg=="
       },
       "Roslynator.Analyzers": {
         "type": "Direct",
@@ -17,13 +17,13 @@
       "fivedo.cdrom": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.1.0, )"
+          "FiveDo.Core": "[1.2.1, )"
         }
       },
       "fivedo.clio": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.1.0, )"
+          "FiveDo.Core": "[1.2.1, )"
         }
       },
       "fivedo.core": {
@@ -32,14 +32,14 @@
       "fivedo.cpu": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.1.0, )"
+          "FiveDo.Core": "[1.2.1, )"
         }
       },
       "fivedo.diagnostics": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.1.0, )",
-          "FiveDo.Cpu": "[1.1.0, )",
+          "FiveDo.Core": "[1.2.1, )",
+          "FiveDo.Cpu": "[1.2.1, )",
           "Serilog": "[4.4.0, )",
           "Serilog.Sinks.Console": "[6.1.1, )",
           "Serilog.Sinks.File": "[7.0.0, )"
@@ -48,37 +48,37 @@
       "fivedo.dsp": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.1.0, )"
+          "FiveDo.Core": "[1.2.1, )"
         }
       },
       "fivedo.madam": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.1.0, )"
+          "FiveDo.Core": "[1.2.1, )"
         }
       },
       "fivedo.memory": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.1.0, )"
+          "FiveDo.Core": "[1.2.1, )"
         }
       },
       "fivedo.sport": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.1.0, )"
+          "FiveDo.Core": "[1.2.1, )"
         }
       },
       "fivedo.video": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.1.0, )"
+          "FiveDo.Core": "[1.2.1, )"
         }
       },
       "fivedo.xbus": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.1.0, )"
+          "FiveDo.Core": "[1.2.1, )"
         }
       },
       "Serilog": {
