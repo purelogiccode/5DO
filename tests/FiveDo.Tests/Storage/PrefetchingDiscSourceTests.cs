@@ -139,6 +139,18 @@ public sealed class PrefetchingDiscSourceTests
     }
 
     [Fact]
+    public void ReadTrackSector_DoesNotReturnPooledTailBytesForDataSectors()
+    {
+        using var inner = new FakeMixedTrackDiscSource();
+        using var source = new PrefetchingDiscSource(inner, ahead: 1, capacity: 1);
+
+        var destination = new byte[2352];
+        Assert.Equal(2352, source.ReadTrackSector(1, destination));
+        Assert.Equal(2048, source.ReadTrackSector(0, destination));
+        Assert.Equal(2048, source.ReadTrackSector(0, destination));
+    }
+
+    [Fact]
     public void ReadTrackSector_StillReturnsCorrectDataWhenTheCacheIsFull()
     {
         using var inner = new FakeTrackedDiscSource(256);
@@ -221,6 +233,37 @@ public sealed class PrefetchingDiscSourceTests
             destination[1] = (byte)(lba ^ 0xff);
             destination[..2352].Slice(2).Fill((byte)(lba + 1));
             return 2352;
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+
+    private sealed class FakeMixedTrackDiscSource : ITrackedDiscSource
+    {
+        public int SectorCount => 2;
+
+        public int SectorSize => 2048;
+
+        public IReadOnlyList<DiscTrack> Tracks { get; } =
+        [
+            new DiscTrack(1, DiscTrackKind.Data, 0, 1, 2048),
+            new DiscTrack(2, DiscTrackKind.Audio, 1, 1, 2352),
+        ];
+
+        public int TotalSectorCount => 2;
+
+        public void ReadSector(int lba, Span<byte> destination)
+        {
+            destination[..SectorSize].Fill((byte)lba);
+        }
+
+        public int ReadTrackSector(int lba, Span<byte> destination)
+        {
+            int size = lba == 0 ? 2048 : 2352;
+            destination[..size].Fill((byte)lba);
+            return size;
         }
 
         public void Dispose()

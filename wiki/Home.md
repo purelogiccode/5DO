@@ -59,7 +59,7 @@ Useful direct links:
 - 653 games across 1,366 library images; three audio-only CHDs catalogued.
 - 594 disc images swept; after triage, 593 loadable/rendered, 1 known no-video case,
   0 not-loadable rows.
-- 1,808 tests in the current test assembly.
+- 1,815 tests in the current test assembly.
 - Windows x64 validated; Linux x64 full suite and CLI/frontend smoke passed (GPU
   presentation preview/best-effort); macOS and arm64 bundles are cross-published and
   architecture-validated, but runtime validation is post-1.0.

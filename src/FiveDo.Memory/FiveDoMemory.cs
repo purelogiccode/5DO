@@ -132,6 +132,17 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     /// </remarks>
     public Action<uint, int>? RamWriteHook { get; set; }
 
+    /// <summary>
+    /// Gets or sets a host-only callback invoked when ROM contents, the active ROM bank,
+    /// or the low-memory ROM overlay changes.
+    /// </summary>
+    /// <remarks>
+    /// The CPU JIT caches ROM blocks, so a bank switch, a BIOS reload, a soft reset, or
+    /// the first write that disables the overlay must invalidate them. Keep it
+    /// allocation-free; it runs only on rare memory-map changes.
+    /// </remarks>
+    public Action? RomChangedHook { get; set; }
+
     /// <summary>Gets a read-only view of NVRAM.</summary>
     public ReadOnlySpan<byte> Nvram => _nvram;
 
@@ -157,6 +168,8 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
         {
             _rom[wordOffset + (i / sizeof(uint))] = BinaryPrimitives.ReadUInt32BigEndian(data.Slice(i, sizeof(uint)));
         }
+
+        RomChangedHook?.Invoke();
     }
 
     /// <summary>Loads BIOS1.</summary>
@@ -310,6 +323,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
 
         reader.ReadBytes(ToStateBytes(_rom));
         reader.ReadBytes(_nvram);
+        RomChangedHook?.Invoke();
     }
 
     /// <summary>Selects the active ROM bank.</summary>
@@ -322,7 +336,11 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
             throw new ArgumentOutOfRangeException(nameof(bank), bank, "The ROM bank must be 0 or 1.");
         }
 
-        _romBank = bank;
+        if (_romBank != bank)
+        {
+            _romBank = bank;
+            RomChangedHook?.Invoke();
+        }
     }
 
     /// <summary>Consumes a pending CLIO PC-advance request.</summary>
@@ -367,9 +385,14 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     /// <summary>Resets the bus and ROM bank without clearing RAM or NVRAM.</summary>
     public void Reset()
     {
+        var changed = _romBank != 0 || !_romOverlay;
         _romBank = 0;
         _pcAdjustPending = false;
         _romOverlay = true;
+        if (changed)
+        {
+            RomChangedHook?.Invoke();
+        }
     }
 
     byte IRam.Read8(uint offset)
@@ -665,6 +688,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
         if (_romOverlay && address < (uint)_layout.DramSize)
         {
             _romOverlay = false;
+            RomChangedHook?.Invoke();
         }
 
         if (address < _layout.RamSize)
@@ -686,6 +710,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
         if (_romOverlay && address < (uint)_layout.DramSize)
         {
             _romOverlay = false;
+            RomChangedHook?.Invoke();
         }
 
         if (address < _layout.RamSize)
@@ -708,6 +733,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
         if (_romOverlay && address < (uint)_layout.DramSize)
         {
             _romOverlay = false;
+            RomChangedHook?.Invoke();
         }
 
         if (address < _layout.RamSize)

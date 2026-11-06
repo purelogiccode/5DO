@@ -5359,7 +5359,7 @@ public partial class MainWindow : Window, IDisposable
         _pointerLeftDown = false;
         _pointerMiddleDown = false;
         _pointerRightDown = false;
-        for (var port = 0; port < PbusEncoder.MaxControllers; port++)
+        for (var port = 0; port < PbusEncoder.MaxPorts; port++)
         {
             if (_input.Devices.GetDevice(port) == InputDeviceType.Lightgun)
             {

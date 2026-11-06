@@ -53,7 +53,7 @@ embedded in the bundle.
 
 ## Verification
 
-- Full suite: **1,808 tests passing**.
+- Full suite: **1,815 tests passing**.
 - Build, format, benchmark gate, and CLI `selftest` are clean.
 - JIT parity: 1,000-frame Road Rash `0x41D2A1DA` and Lemmings `0x110E7DC5`, identical
   instruction counts.

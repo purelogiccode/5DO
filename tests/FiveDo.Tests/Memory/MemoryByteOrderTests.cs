@@ -229,6 +229,23 @@ public sealed class MemoryByteOrderTests
     }
 
     [Fact]
+    public void RomChangedHook_FiresOnBankAndOverlayChanges()
+    {
+        var memory = new FiveDoMemory();
+        memory.Reset();
+        var calls = 0;
+        memory.RomChangedHook = () => calls++;
+
+        memory.SelectRomBank(1);
+        memory.SelectRomBank(1);
+        memory.SelectRomBank(0);
+        memory.Write32(0x100, 1);
+        memory.Reset();
+
+        Assert.Equal(4, calls);
+    }
+
+    [Fact]
     public void RomOverlay_SaveLoadRoundtrips()
     {
         var memory = new FiveDoMemory();

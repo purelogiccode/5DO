@@ -239,6 +239,13 @@ public static class PbusDecoder
     {
         ArgumentOutOfRangeException.ThrowIfNegative(slot);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, PbusEncoder.MaxPorts);
+        if (packet.Length >= 2 && packet[0] == 0x00 && packet[1] == 0x48
+            && slot >= PbusEncoder.MaxControllers)
+        {
+            // The legacy 16-byte packet has no slots 7-8.
+            return false;
+        }
+
         var offset = OffsetForSlot(slot);
         return packet.Length >= offset + 2 && (packet[offset + 1] & 0x80) != 0;
     }

@@ -111,7 +111,7 @@ BIOS ROMs and game images are **not** included.
 
 ## Verification
 
-- Full suite: **1,808 tests passing**.
+- Full suite: **1,815 tests passing**.
 - `dotnet build` reports 0 warnings and 0 errors; `dotnet format --verify-no-changes`
   is clean.
 - Synthetic benchmark gate passes with 0 bytes/frame and p99 within budget.

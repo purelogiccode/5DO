@@ -19,7 +19,7 @@ gen0/gen2 collections, and the frame loop measured p50 **1.34 ms** / p99 **6.85 
 max **14.76 ms** with the mailbox and rewind active. The memory save-state section
 (version 4) now stores only the live RAM/VRAM range, cutting a stock-layout uncompressed
 state from ~26 MB to ~10 MB, and the frontend opens discs through the prefetch cache.
-See [`Performance.md`](Performance.md) 8.5. The suite is **1,808 tests**.
+See [`Performance.md`](Performance.md) 8.5. The suite is **1,815 tests**.
 
 **CPU and high-res increment (2026-11-06):** the third PERF-08 pass gives compiled blocks a
 shared PC/CPSR/cycle/instruction context, compiles register-specified shifts, and replaces
@@ -53,7 +53,7 @@ published at <https://github.com/purelogiccode/5DO/releases/tag/v1.2.2>. It adds
 interpreter, high-resolution VDLP, and rewind performance work; the opt-in managed JIT;
 the expanded game database and library health/DAT verification; eight Opera memory
 layouts; eight PBUS ports; opt-in Portfolio OS SWI HLE; and audio-only CHD cataloging.
-The suite is **1,808 tests**.
+The suite is **1,815 tests**.
 
 **Arm64 packaging update (2026-11-03):** **v1.2.1** was the arm64 packaging release,
 published at
@@ -99,7 +99,7 @@ input values are consumed at runtime. `gamedb stats --folder "J:\Panasonic 3DO"`
 1,366 readable images, 653 unique IDs, and 100% metadata coverage with no errors
 (the three exceptions are audio-only `[CD-Audio]` CHDs). SYS-08 added the five-title
 0.5x-1x-2x-4x A/B in `Performance.md` §8.3 and kept the stock 12.5 MHz default; every
-non-stock clock changed guest behavior. The suite is **1,808 tests**.
+non-stock clock changed guest behavior. The suite is **1,815 tests**.
 
 **SYS-12 (2026-11-04):** Portfolio OS SWI HLE is available behind `--swi-hle`,
 Settings > Emulation, and per-game profiles. It handles Opera's 14 fixed-point math SWIs
@@ -119,7 +119,7 @@ DRAM, VDLP/SPORT/CEL use the live layout, and MADAM RED SYSBITS reports the capa
 the BIOS. A homebrew probe ROM uses 4 MB DRAM + 2 MB VRAM; retail titles remain on the
 stock 2 MB/1 MB default because Opera documents expanded memory as homebrew-only. The
 CPU-clock matrix (0.5x-4x) and `bench --cpu-clock`/`--memory` were also added; the suite
-is now **1,808 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al, 1.1an, 1.1ao, 1.1aq, 1.1ar, 1.1as, 1.1at, and
+is now **1,815 tests**. See [`TestCorpus.md`](TestCorpus.md) 1.1al, 1.1an, 1.1ao, 1.1aq, 1.1ar, 1.1as, 1.1at, and
 [`Performance.md`](Performance.md) 8.1.
 
 **Latest work (2026-11-02):** the CLI and desktop shell check the public GitHub release

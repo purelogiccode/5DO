@@ -59,6 +59,37 @@ public sealed class ArmInterruptLatencyTests
     }
 
     [Fact]
+    public void Jit_FiqEntryCycleIncludesTheInterruptedInstruction()
+    {
+        var rig = new ArmTestRig(new EmulatorTuning { CpuBackend = CpuBackendKind.Jit });
+        rig.LoadProgram(
+            ArmTestAssembler.Mov(0, 0),
+            ArmTestAssembler.Branch(0x1000, 0x1004));
+        for (var i = 0; i < 200_000; i++)
+        {
+            rig.Cpu.RunJitBlock();
+        }
+
+        Assert.True(
+            rig.Cpu.JitBlockCount > 0,
+            rig.Cpu.JitLastFailure ?? "no blocks compiled");
+
+        rig.Cpu.ProgramCounter = 0x1000;
+        rig.Cpu.Cpsr = 0x13;
+        long? entryCycle = null;
+        rig.Cpu.FiqEntered = (cycle, _) => entryCycle = cycle;
+        rig.Interrupts.NeedFiq = true;
+        long before = rig.Cpu.CyclesExecuted;
+
+        int cycles = rig.Cpu.RunJitBlock();
+
+        Assert.Equal(1, cycles);
+        Assert.Equal(before + 1, entryCycle);
+        Assert.Equal(before + 1, rig.Cpu.CyclesExecuted);
+        Assert.Equal(0x1cu, rig.Cpu.ProgramCounter);
+    }
+
+    [Fact]
     public void FiqEntry_IsNotReportedWhileMasked()
     {
         var rig = new ArmTestRig();

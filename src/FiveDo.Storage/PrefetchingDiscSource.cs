@@ -29,7 +29,7 @@ public sealed class PrefetchingDiscSource : ITrackedDiscSource
     private readonly Lock _innerGate = new();
     private readonly Dictionary<int, byte[]> _cache = new();
     private readonly Queue<int> _cacheOrder = new();
-    private readonly Dictionary<int, byte[]> _trackCache = new();
+    private readonly Dictionary<int, TrackCacheEntry> _trackCache = new();
     private readonly Queue<int> _trackOrder = new();
     private readonly Stack<byte[]> _bufferPool = new();
     private readonly AutoResetEvent _wake = new(false);
@@ -151,10 +151,10 @@ public sealed class PrefetchingDiscSource : ITrackedDiscSource
         ObjectDisposedException.ThrowIf(_disposed, this);
         lock (_gate)
         {
-            if (_trackCache.TryGetValue(lba, out var cached))
+            if (_trackCache.TryGetValue(lba, out TrackCacheEntry cached))
             {
                 int copy = Math.Min(cached.Length, destination.Length);
-                cached.AsSpan(0, copy).CopyTo(destination);
+                cached.Buffer.AsSpan(0, copy).CopyTo(destination);
                 Advance(lba);
                 return copy;
             }
@@ -261,13 +261,13 @@ public sealed class PrefetchingDiscSource : ITrackedDiscSource
         if (_trackCache.Count >= _capacity)
         {
             var oldest = _trackOrder.Dequeue();
-            ReturnBuffer(_trackCache[oldest]);
+            ReturnBuffer(_trackCache[oldest].Buffer);
             _trackCache.Remove(oldest);
         }
 
         byte[] buffer = RentBuffer(data.Length);
         data.CopyTo(buffer);
-        _trackCache[lba] = buffer;
+        _trackCache[lba] = new TrackCacheEntry(buffer, data.Length);
         _trackOrder.Enqueue(lba);
     }
 
@@ -290,6 +290,8 @@ public sealed class PrefetchingDiscSource : ITrackedDiscSource
         _cache[lba] = buffer;
         _cacheOrder.Enqueue(lba);
     }
+
+    private readonly record struct TrackCacheEntry(byte[] Buffer, int Length);
 
     private byte[] RentBuffer(int length)
     {

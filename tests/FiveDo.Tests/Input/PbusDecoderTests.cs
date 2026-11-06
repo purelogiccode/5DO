@@ -31,6 +31,8 @@ public sealed class PbusDecoderTests
         // The legacy packet carries six controllers; ports 7-8 are chain-only.
         Assert.Equal(ControllerButton.None, decoded[6].Buttons);
         Assert.Equal(ControllerButton.None, decoded[7].Buttons);
+        Assert.False(PbusDecoder.IsConnected(packet, 6));
+        Assert.False(PbusDecoder.IsConnected(packet, 7));
     }
 
     [Fact]

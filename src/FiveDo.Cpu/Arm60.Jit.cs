@@ -182,6 +182,23 @@ public sealed partial class Arm60
     /// <summary>Gets the static instruction count of every executed JIT block entry.</summary>
     public long JitStaticBlockInstructions => _jitStaticBlockInstructions;
 
+    /// <summary>
+    /// Invalidates compiled blocks after the ROM bank, BIOS contents, or low-memory ROM
+    /// overlay changes.
+    /// </summary>
+    /// <remarks>
+    /// ROM blocks are not registered in the RAM page table because they cannot be
+    /// overwritten by ordinary guest stores. A bank switch or overlay change still makes
+    /// them stale, so the memory subsystem calls this hook on those rare transitions.
+    /// </remarks>
+    public void NotifyMemoryMapChanged()
+    {
+        ClearBlockCache();
+        Array.Clear(_jitHitTags);
+        Array.Clear(_jitHitCounts);
+        _jitBadBlocks.Clear();
+    }
+
     /// <summary>Gets the number of compiled blocks removed by a guest write.</summary>
     public long JitInvalidations => _jitInvalidations;
 
@@ -400,6 +417,7 @@ public sealed partial class Arm60
     private void EnterFiqFromJit(int cycles)
     {
         _cyclesExecuted += cycles;
+        _cycles = 0;
         try
         {
             EnterFiq();
@@ -1278,7 +1296,11 @@ public sealed partial class Arm60
         var baseOpcode = (int)(opcode & 0x1e);
         var setFlags = (opcode & 1) != 0;
 
-        EmitLoadUserRelative(il, user, rn, pc, 8, op1);
+        // The interpreter adds one extra PC step for a register-specified shift before
+        // reading Rn and Rm, so PC-relative operands see instruction+12. Rs is read
+        // before that step and sees instruction+8.
+        var registerShift = (instruction & (1u << 25)) == 0 && (instruction & (1u << 4)) != 0;
+        EmitLoadUserRelative(il, user, rn, pc, registerShift ? 12 : 8, op1);
 
         if ((instruction & (1u << 25)) != 0)
         {
@@ -1300,10 +1322,10 @@ public sealed partial class Arm60
         else
         {
             var rm = (int)(instruction & 0xf);
-            EmitLoadUserRelative(il, user, rm, pc, 8, source);
+            EmitLoadUserRelative(il, user, rm, pc, registerShift ? 12 : 8, source);
 
             var shiftType = (int)((instruction >> 5) & 3);
-            if ((instruction & (1u << 4)) != 0)
+            if (registerShift)
             {
                 // Register-specified shift: the low byte of Rs is the count. The
                 // interpreter adds one internal cycle for this form.

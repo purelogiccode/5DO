@@ -48,6 +48,18 @@ public sealed class ArmJitTests
     }
 
     [Fact]
+    public void Jit_MatchesInterpreter_ForPcRelativeRegisterShifts()
+    {
+        JitPair pair = JitPair.Create(
+            ArmTestAssembler.Mov(0, 0),
+            ArmTestAssembler.Mov(1, 2),
+            ArmTestAssembler.DpRegisterShiftedByRegister(8, 2, 15, 1, 1, shiftType: 0),
+            ArmTestAssembler.DpRegisterShiftedByRegister(13, 3, 15, 15, 15, shiftType: 0));
+
+        pair.RunBlocks(4);
+    }
+
+    [Fact]
     public void Jit_MatchesInterpreter_ForLslCarryOut()
     {
         JitPair pair = JitPair.Create(
@@ -128,6 +140,44 @@ public sealed class ArmJitTests
         pair.RigI.WriteRam(0x1004, ArmTestAssembler.Mov(1, 9));
 
         pair.RunBlocks(3);
+    }
+
+    [Fact]
+    public void Jit_SoftResetClearsCompiledBlocks()
+    {
+        JitPair pair = JitPair.Create(
+            ArmTestAssembler.Mov(0, 0),
+            ArmTestAssembler.Branch(0x1000, 0x1004));
+
+        pair.RunBlocks(200_000);
+        Assert.True(
+            pair.RigJit.Cpu.JitBlockCount > 0,
+            pair.RigJit.Cpu.JitLastFailure ?? "no blocks compiled");
+
+        pair.RigJit.Cpu.SoftReset();
+
+        Assert.Equal(0, pair.RigJit.Cpu.JitBlockCount);
+    }
+
+    [Fact]
+    public void Jit_InvalidatesRomBlocksWhenBankChanges()
+    {
+        JitPair pair = JitPair.CreateRomBanks(
+            [ArmTestAssembler.Mov(0, 1), ArmTestAssembler.Branch(0x03000000, 0x03000004)],
+            [ArmTestAssembler.Mov(0, 2), ArmTestAssembler.Branch(0x03000000, 0x03000004)]);
+
+        pair.RunBlocks(200_000);
+        Assert.True(
+            pair.RigJit.Cpu.JitBlockCount > 0,
+            pair.RigJit.Cpu.JitLastFailure ?? "no blocks compiled");
+
+        pair.RigI.Memory.SelectRomBank(1);
+        pair.RigJit.Memory.SelectRomBank(1);
+        pair.RigI.Cpu.ProgramCounter = EmulatorConstants.RomBase;
+        pair.RigJit.Cpu.ProgramCounter = EmulatorConstants.RomBase;
+
+        pair.RunBlocks(200_000);
+        Assert.Equal(2u, pair.RigJit.Cpu.ReadRegister(0));
     }
 
     [Fact]
@@ -256,6 +306,31 @@ public sealed class ArmJitTests
             var jit = new ArmTestRig(new EmulatorTuning { CpuBackend = CpuBackendKind.Jit });
             interpreter.Memory.LoadBios(rom);
             jit.Memory.LoadBios(rom);
+            interpreter.Cpu.ProgramCounter = EmulatorConstants.RomBase;
+            jit.Cpu.ProgramCounter = EmulatorConstants.RomBase;
+            return new JitPair(interpreter, jit);
+        }
+
+        internal static JitPair CreateRomBanks(uint[] bank0, uint[] bank1)
+        {
+            var rom0 = new byte[EmulatorConstants.RomBankSize];
+            var rom1 = new byte[EmulatorConstants.RomBankSize];
+            for (var i = 0; i < bank0.Length; i++)
+            {
+                WriteBigEndian(rom0, i * 4, bank0[i]);
+            }
+
+            for (var i = 0; i < bank1.Length; i++)
+            {
+                WriteBigEndian(rom1, i * 4, bank1[i]);
+            }
+
+            var interpreter = new ArmTestRig();
+            var jit = new ArmTestRig(new EmulatorTuning { CpuBackend = CpuBackendKind.Jit });
+            interpreter.Memory.LoadBios(rom0);
+            jit.Memory.LoadBios(rom0);
+            interpreter.Memory.LoadRom(1, rom1);
+            jit.Memory.LoadRom(1, rom1);
             interpreter.Cpu.ProgramCounter = EmulatorConstants.RomBase;
             jit.Cpu.ProgramCounter = EmulatorConstants.RomBase;
             return new JitPair(interpreter, jit);

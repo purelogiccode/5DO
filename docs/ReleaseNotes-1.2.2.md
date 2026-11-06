@@ -73,7 +73,7 @@ apps so the LGPL replacement rights remain practical.
 ## Verification
 
 - `dotnet build 5DO.sln -c Release`: 0 warnings and 0 errors
-- `dotnet test 5DO.sln -c Debug`: **1,808/1,808 passing**
+- `dotnet test 5DO.sln -c Debug`: **1,815/1,815 passing**
 - `dotnet format 5DO.sln --verify-no-changes --no-restore`: clean
 - Synthetic benchmark gate: **pass** (0 bytes/frame, core/total p99 within budget)
 - CLI `selftest`: pass

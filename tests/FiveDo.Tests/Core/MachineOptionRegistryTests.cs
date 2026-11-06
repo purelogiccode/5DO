@@ -83,6 +83,17 @@ public sealed class MachineOptionRegistryTests
     }
 
     [Fact]
+    public void Registry_RejectsOutOfRangeArmClock()
+    {
+        var tuning = new EmulatorTuning { ArmClock = EmulatorConstants.ArmClock * 5 };
+
+        MachineOptionValidationException exception = Assert.Throws<MachineOptionValidationException>(
+            tuning.Validate);
+
+        Assert.Equal("cpuClock", exception.OptionKey);
+    }
+
+    [Fact]
     public void Registry_CompareReportsEveryChangedOption()
     {
         EmulatorTuning baseline = CreateNonDefaultTuning();

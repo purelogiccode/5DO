@@ -81,7 +81,7 @@
 
 **2026-11-06, v1.2.2 release (GitHub Releases).**
 
-- **1,808 tests** are present in the current test assembly.
+- **1,815 tests** are present in the current test assembly.
 - The library reports **653 games across 1,366 images**; three audio-only CHDs are
   catalogued.
 - The first full-collection loadability sweep covered **594 disc images**: **576

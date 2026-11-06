@@ -234,9 +234,14 @@ public static class MachineOptionRegistry
     public static void Validate(EmulatorTuning tuning)
     {
         ArgumentNullException.ThrowIfNull(tuning);
-        if (tuning.ArmClock <= 0)
+        var minClock = EmulatorConstants.ArmClock / 2;
+        var maxClock = EmulatorConstants.ArmClock * 4;
+        if (tuning.ArmClock < minClock || tuning.ArmClock > maxClock)
         {
-            throw Invalid("cpuClock", tuning.ArmClock, "The ARM clock must be positive.");
+            throw Invalid(
+                "cpuClock",
+                tuning.ArmClock,
+                $"The ARM clock must be between {minClock} and {maxClock} Hz (0.5x-4x).");
         }
 
         ValidateEnum("region", tuning.Region);

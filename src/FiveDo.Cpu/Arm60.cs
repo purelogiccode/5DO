@@ -296,6 +296,7 @@ public sealed partial class Arm60 : ICpuBackend, IStateSection
         _state.User[15] = 0;
         _state.DataAbortPending = false;
         _state.FiqPending = false;
+        NotifyMemoryMapChanged();
     }
 
     /// <summary>Executes exactly one instruction.</summary>

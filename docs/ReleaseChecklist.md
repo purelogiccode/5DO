@@ -45,7 +45,7 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [ ] Update `CHANGELOG.md`, `docs/WhatsNew.md`, `docs/ReleaseNotes-1.2.2.md`,
       `README.md`, `docs/Status.md`, `docs/index.md`, and `docs/Installation.md`.
 - [ ] Update the MkDocs navigation and the curated wiki sidebar with the 1.2.2 pages.
-- [ ] Full suite **1,808/1,808** passes; `dotnet format --verify-no-changes` is clean.
+- [ ] Full suite **1,815/1,815** passes; `dotnet format --verify-no-changes` is clean.
 - [ ] Benchmark gate passes with 0 bytes/frame and p99 within budget.
 - [ ] Build all six framework-dependent single-file bundles and keep local copies in
       `src/FiveDo.Frontend.Avalonia/bin/Release` without deleting older artifacts.
@@ -189,7 +189,7 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - [x] `dotnet build 5DO.sln -c Release` passes with 0 warnings and 0 errors
       (1.0.0).
 - [x] `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release` passes:
-      **1,808/1,808** with the current tree.
+      **1,815/1,815** with the current tree.
 - [x] `dotnet format 5DO.sln --verify-no-changes` passes.
 - [x] `jb inspectcode 5DO.sln --severity=WARNING` reports 0 warnings and 0 errors
       (2026-11-02).
