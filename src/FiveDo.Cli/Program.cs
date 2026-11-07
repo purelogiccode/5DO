@@ -93,6 +93,7 @@ internal static class Program
                     "gamedb" => GameDbCommand(args),
                     "disc" => DiscCommand(args),
                     "library" => LibraryCommand(args),
+                    "covers" => CoverCommand(args),
                     "settings" => SettingsCommand(args),
                     "fs" => FsCommand(args),
                     "bios" => Bios(args),
@@ -2254,6 +2255,509 @@ internal static class Program
         }
 
         throw new ArgumentException($"Unknown settings subcommand '{args[1]}'.", nameof(args));
+    }
+
+    private static int CoverCommand(string[] args)
+    {
+        if (args.Length < 2)
+        {
+            throw new ArgumentException(
+                "covers needs 'update', 'download', 'match', 'verify', or 'cache'.",
+                nameof(args));
+        }
+
+        var subcommand = args[1].ToLowerInvariant();
+        ParsedOptions options = Parse(args, startIndex: 2);
+        AppSettings settings = AppSettingsStore.Load();
+        return subcommand switch
+        {
+            "update" => CoverUpdate(options, settings),
+            "download" => CoverDownload(options, settings),
+            "match" => CoverMatch(options, settings),
+            "verify" => CoverVerify(options, settings),
+            "cache" => CoverCache(options),
+            _ => throw new ArgumentException(
+                $"Unknown covers subcommand '{args[1]}'.",
+                nameof(args)),
+        };
+    }
+
+    private static int CoverUpdate(ParsedOptions options, AppSettings settings)
+    {
+        CoverServiceOptions coverOptions = CreateCoverOptions(options, settings);
+        using var service = new CoverService(coverOptions);
+        bool force = coverOptions.CatalogUri.IsFile || options.Get("--force") is not null;
+        CoverCatalogRefreshResult result = service.RefreshCatalogAsync(force).GetAwaiter().GetResult();
+        var output = new CliCoverUpdateResult(
+            result.Success,
+            coverOptions.CatalogUri.AbsoluteUri,
+            service.Store.RootDirectory,
+            result.PackVersion,
+            result.CoverCount,
+            result.FromCache,
+            result.NotModified,
+            result.Error);
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(output, CliJsonContext.Default.CliCoverUpdateResult));
+        }
+        else
+        {
+            Console.WriteLine($"catalog:     {output.CatalogUrl}");
+            Console.WriteLine($"cache:       {output.CacheDirectory}");
+            Console.WriteLine($"pack:        {output.PackVersion}");
+            Console.WriteLine($"covers:      {output.CoverCount}");
+            Console.WriteLine($"from cache:  {output.FromCache}");
+            Console.WriteLine($"not modified:{output.NotModified}");
+            if (output.Error is not null)
+            {
+                Console.Error.WriteLine($"warning: {output.Error}");
+            }
+        }
+
+        return result.Success ? 0 : 1;
+    }
+
+    private static int CoverDownload(ParsedOptions options, AppSettings settings)
+    {
+        CoverServiceOptions coverOptions = CreateCoverOptions(options, settings);
+        using var service = new CoverService(coverOptions);
+        IProgress<CoverDownloadProgress>? progress = CreateCoverProgress(options);
+        bool downloadAll = options.Get("--all") is not null;
+        if (downloadAll)
+        {
+            CoverCatalogRefreshResult refresh = service
+                .RefreshCatalogAsync(coverOptions.CatalogUri.IsFile || options.Get("--force") is not null)
+                .GetAwaiter()
+                .GetResult();
+            if (!refresh.Success || service.Index is null)
+            {
+                var failed = new CliCoverDownloadResult(
+                    false,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    [],
+                    refresh.Error ?? "The cover catalog is not available.");
+                WriteCoverDownloadOutput(options, failed);
+                return 1;
+            }
+
+            CoverDownloadResult result = service.DownloadAllAsync(progress).GetAwaiter().GetResult();
+            var allOutput = new CliCoverDownloadResult(
+                result.Failed == 0,
+                service.Catalog?.Covers.Count ?? 0,
+                result.Downloaded,
+                result.Skipped,
+                0,
+                result.Failed,
+                result.Bytes,
+                result.UsedPack,
+                result.Failures.Select(failure => new CliCoverDownloadFailure(
+                        failure.EntryPath,
+                        failure.CoverId,
+                        failure.Message))
+                    .ToList(),
+                null);
+            WriteCoverDownloadOutput(options, allOutput);
+            return result.Failed == 0 ? 0 : 1;
+        }
+
+        var folder = options.Get("--folder");
+        List<string> folders = string.IsNullOrWhiteSpace(folder)
+            ? settings.LibraryFolders.Where(path => !string.IsNullOrWhiteSpace(path)).ToList()
+            : [.. folder.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
+        if (folders.Count == 0)
+        {
+            throw new ArgumentException(
+                "covers download needs --folder or at least one configured library folder.",
+                nameof(options));
+        }
+
+        IReadOnlyList<GameLibraryEntry> entries = GameLibraryScanner.Scan(
+            folders,
+            cachePath: GameLibraryScanner.DefaultCachePath,
+            coverDirectory: settings.CoverDirectory,
+            deduplicate: true);
+        IReadOnlyList<CoverResolution> resolutions = service
+            .ResolveAllAsync(entries)
+            .GetAwaiter()
+            .GetResult();
+        var matched = resolutions.Count(resolution => resolution.HasCover);
+        var pending = resolutions.Count(resolution => resolution.NeedsDownload);
+        var available = matched - pending;
+        if (options.Get("--dry-run") is not null)
+        {
+            WriteCoverDryRun(options, resolutions, matched, pending);
+            return 0;
+        }
+
+        CoverDownloadResult download = service
+            .DownloadMissingAsync(resolutions, progress)
+            .GetAwaiter()
+            .GetResult();
+        var output = new CliCoverDownloadResult(
+            download.Failed == 0,
+            matched,
+            download.Downloaded,
+            download.Skipped + available,
+            Math.Max(0, pending - download.Downloaded - download.Skipped - download.Failed),
+            download.Failed,
+            download.Bytes,
+            download.UsedPack,
+            download.Failures.Select(failure => new CliCoverDownloadFailure(
+                    failure.EntryPath,
+                    failure.CoverId,
+                    failure.Message))
+                .ToList(),
+            null);
+        WriteCoverDownloadOutput(options, output);
+        return download.Failed == 0 ? 0 : 1;
+    }
+
+    private static int CoverMatch(ParsedOptions options, AppSettings settings)
+    {
+        var query = options.Positional ?? options.Get("--title");
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            throw new ArgumentException("covers match needs a title.", nameof(options));
+        }
+
+        CoverServiceOptions coverOptions = CreateCoverOptions(options, settings);
+        using var service = new CoverService(coverOptions);
+        bool force = coverOptions.CatalogUri.IsFile || options.Get("--force") is not null;
+        CoverCatalogRefreshResult refresh = service.RefreshCatalogAsync(force).GetAwaiter().GetResult();
+        if (!refresh.Success || service.Index is null)
+        {
+            var failed = new CliCoverMatchResult(
+                false,
+                query,
+                [],
+                refresh.Error ?? "The cover catalog is not available.");
+            WriteCoverMatchOutput(options, failed);
+            return 1;
+        }
+
+        var threshold = ParseDoubleOption(options, "--threshold", 0.70);
+        var matches = new List<CliCoverMatchEntry>();
+        foreach (CoverCatalogEntry entry in service.Index.Entries)
+        {
+            var best = 0.0;
+            var bestAlias = entry.Name;
+            foreach (var alias in entry.Aliases.Append(entry.Name))
+            {
+                double score = CoverMatcher.Score(query, alias);
+                if (score > best)
+                {
+                    best = score;
+                    bestAlias = alias;
+                }
+            }
+
+            if (best >= threshold)
+            {
+                matches.Add(new CliCoverMatchEntry(
+                    entry.Id,
+                    entry.Name,
+                    bestAlias,
+                    best,
+                    best >= 0.98,
+                    [.. entry.GameIds]));
+            }
+        }
+
+        matches.Sort(static (left, right) =>
+        {
+            var score = right.Score.CompareTo(left.Score);
+            return score != 0
+                ? score
+                : string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase);
+        });
+        var result = new CliCoverMatchResult(true, query, matches.Take(10).ToList(), null);
+        WriteCoverMatchOutput(options, result);
+        return matches.Count > 0 ? 0 : 1;
+    }
+
+    private static int CoverVerify(ParsedOptions options, AppSettings settings)
+    {
+        CoverServiceOptions coverOptions = CreateCoverOptions(options, settings);
+        using var service = new CoverService(coverOptions);
+        bool force = coverOptions.CatalogUri.IsFile || options.Get("--force") is not null;
+        CoverCatalogRefreshResult refresh = service.RefreshCatalogAsync(force).GetAwaiter().GetResult();
+        if (!refresh.Success || service.Catalog is null)
+        {
+            var failed = new CliCoverVerifyResult(
+                false,
+                0,
+                0,
+                0,
+                0,
+                [],
+                refresh.Error ?? "The cover catalog is not available.");
+            if (options.Json)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(failed, CliJsonContext.Default.CliCoverVerifyResult));
+            }
+            else
+            {
+                Console.Error.WriteLine($"error: {failed.Error}");
+            }
+
+            return 1;
+        }
+
+        bool fix = options.Get("--fix") is not null;
+        var progress = options.Json
+            ? null
+            : new InlineProgress<CoverVerifyProgress>(value =>
+                Console.Error.WriteLine($"[{value.Completed}/{value.Total}] {value.CurrentName}"));
+        CoverVerifyResult verify = service.VerifyCacheAsync(fix, progress).GetAwaiter().GetResult();
+        var output = new CliCoverVerifyResult(
+            verify.Missing == 0 && verify.Corrupt == 0,
+            verify.Ok,
+            verify.Missing,
+            verify.Corrupt,
+            verify.Bytes,
+            verify.Failures.Select(failure => new CliCoverVerifyFailure(
+                    failure.CoverId,
+                    failure.Path,
+                    failure.Message))
+                .ToList(),
+            null);
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(output, CliJsonContext.Default.CliCoverVerifyResult));
+        }
+        else
+        {
+            Console.WriteLine($"valid:       {output.Valid}");
+            Console.WriteLine($"missing:     {output.Missing}");
+            Console.WriteLine($"corrupt:     {output.Corrupt}");
+            Console.WriteLine($"bytes:       {output.Bytes}");
+            foreach (var failure in output.Failures.Take(20))
+            {
+                Console.Error.WriteLine($"{failure.CoverId}: {failure.Message}");
+            }
+        }
+
+        return output.Ok ? 0 : 1;
+    }
+
+    private static int CoverCache(ParsedOptions options)
+    {
+        var action = options.Positional ?? "path";
+        var store = new CoverStore(GetCoverCacheDirectory(options));
+        switch (action.ToLowerInvariant())
+        {
+            case "path":
+                {
+                    CoverCacheStats stats = store.GetStats();
+                    var output = new CliCoverCacheResult(
+                        true,
+                        "path",
+                        store.RootDirectory,
+                        stats.ImageCount,
+                        stats.Bytes,
+                        stats.CatalogPresent,
+                        stats.PackPresent,
+                        null);
+                    WriteCoverCacheOutput(options, output);
+                    return 0;
+                }
+            case "clear":
+                {
+                    CoverCacheStats before = store.GetStats();
+                    store.Clear();
+                    CoverCacheStats after = store.GetStats();
+                    var output = new CliCoverCacheResult(
+                        true,
+                        "clear",
+                        store.RootDirectory,
+                        after.ImageCount,
+                        after.Bytes,
+                        after.CatalogPresent,
+                        after.PackPresent,
+                        null);
+                    if (options.Json)
+                    {
+                        Console.WriteLine(JsonSerializer.Serialize(output, CliJsonContext.Default.CliCoverCacheResult));
+                    }
+                    else
+                    {
+                        Console.WriteLine($"cleared:     {before.ImageCount} images, {before.Bytes} bytes");
+                        Console.WriteLine($"cache:       {output.Directory}");
+                    }
+
+                    return 0;
+                }
+            default:
+                throw new ArgumentException(
+                    $"Unknown covers cache action '{action}'. Use 'path' or 'clear'.",
+                    nameof(options));
+        }
+    }
+
+    private static CoverServiceOptions CreateCoverOptions(ParsedOptions options, AppSettings settings)
+    {
+        Uri catalogUri;
+        var catalog = options.Get("--catalog");
+        var url = options.Get("--url");
+        if (!string.IsNullOrWhiteSpace(catalog))
+        {
+            catalogUri = Uri.TryCreate(catalog, UriKind.Absolute, out Uri? parsed)
+                         && (parsed.Scheme is "http" or "https" or "file")
+                ? parsed
+                : new Uri(Path.GetFullPath(catalog));
+        }
+        else if (!string.IsNullOrWhiteSpace(url))
+        {
+            catalogUri = new Uri(CoverDefaults.NormalizeCatalogUrl(url));
+        }
+        else
+        {
+            catalogUri = new Uri(CoverDefaults.NormalizeCatalogUrl(settings.CoverCatalogUrl));
+        }
+
+        var threshold = ParseDoubleOption(options, "--threshold", settings.CoverFuzzyThreshold);
+        return new CoverServiceOptions
+        {
+            CatalogUri = catalogUri,
+            UseOnlineCovers = true,
+            FuzzyMatching = settings.CoverFuzzyMatching,
+            AnnotationStripping = settings.CoverAnnotationStripping,
+            FuzzyThreshold = CoverDefaults.ClampFuzzyThreshold(threshold),
+            CoverDirectory = settings.CoverDirectory,
+            CacheDirectory = GetCoverCacheDirectory(options),
+        };
+    }
+
+    private static string GetCoverCacheDirectory(ParsedOptions options)
+    {
+        return options.Get("--cache") ?? CoverStore.DefaultDirectory;
+    }
+
+    private static InlineProgress<CoverDownloadProgress>? CreateCoverProgress(ParsedOptions options)
+    {
+        return options.Json
+            ? null
+            : new InlineProgress<CoverDownloadProgress>(value =>
+                Console.Error.WriteLine($"[{value.Completed}/{value.Total}] {value.CurrentName}"));
+    }
+
+    private static double ParseDoubleOption(ParsedOptions options, string name, double fallback)
+    {
+        var value = options.Get(name);
+        if (value is null)
+        {
+            return fallback;
+        }
+
+        return double.TryParse(
+                value,
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out var parsed)
+            ? parsed
+            : throw new ArgumentException($"{name} expects a number.", nameof(options));
+    }
+
+    private static void WriteCoverDownloadOutput(ParsedOptions options, CliCoverDownloadResult output)
+    {
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(output, CliJsonContext.Default.CliCoverDownloadResult));
+            return;
+        }
+
+        Console.WriteLine($"matched:     {output.Matched}");
+        Console.WriteLine($"downloaded:  {output.Downloaded}");
+        Console.WriteLine($"cached:      {output.Skipped}");
+        Console.WriteLine($"pending:     {output.Pending}");
+        Console.WriteLine($"failed:      {output.Failed}");
+        Console.WriteLine($"bytes:       {output.Bytes}");
+        Console.WriteLine($"pack:        {output.UsedPack}");
+        foreach (var failure in output.Failures.Take(20))
+        {
+            Console.Error.WriteLine($"{failure.CoverId}: {failure.Message}");
+        }
+    }
+
+    private static void WriteCoverDryRun(
+        ParsedOptions options,
+        IReadOnlyList<CoverResolution> resolutions,
+        int matched,
+        int pending)
+    {
+        if (options.Json)
+        {
+            var output = new CliCoverDownloadResult(
+                true,
+                matched,
+                0,
+                matched - pending,
+                pending,
+                0,
+                0,
+                false,
+                [],
+                null);
+            Console.WriteLine(JsonSerializer.Serialize(output, CliJsonContext.Default.CliCoverDownloadResult));
+            return;
+        }
+
+        Console.WriteLine($"matched:     {matched}");
+        Console.WriteLine($"cached:      {matched - pending}");
+        Console.WriteLine($"pending:     {pending}");
+        foreach (CoverResolution resolution in resolutions
+                     .Where(value => value.HasCover)
+                     .OrderBy(value => value.EntryPath, StringComparer.OrdinalIgnoreCase)
+                     .Take(30))
+        {
+            Console.WriteLine(
+                $"{resolution.Score:0.000} {resolution.CoverSource,-18} {Path.GetFileName(resolution.EntryPath)} -> {resolution.MatchedName}");
+        }
+    }
+
+    private static void WriteCoverMatchOutput(ParsedOptions options, CliCoverMatchResult output)
+    {
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(output, CliJsonContext.Default.CliCoverMatchResult));
+            return;
+        }
+
+        if (output.Error is not null)
+        {
+            Console.Error.WriteLine($"error: {output.Error}");
+            return;
+        }
+
+        Console.WriteLine($"query: {output.Query}");
+        foreach (CliCoverMatchEntry match in output.Matches)
+        {
+            Console.WriteLine(
+                $"{match.Score:0.000}  {match.Name}  [{string.Join(',', match.GameIds)}]  "
+                + $"alias='{match.MatchedAlias}'  id={match.CoverId}");
+        }
+    }
+
+    private static void WriteCoverCacheOutput(ParsedOptions options, CliCoverCacheResult output)
+    {
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(output, CliJsonContext.Default.CliCoverCacheResult));
+            return;
+        }
+
+        Console.WriteLine($"cache:       {output.Directory}");
+        Console.WriteLine($"images:      {output.ImageCount}");
+        Console.WriteLine($"bytes:       {output.Bytes}");
+        Console.WriteLine($"catalog:     {output.CatalogPresent}");
+        Console.WriteLine($"pack:        {output.PackPresent}");
     }
 
     private static int LibraryCommand(string[] args)
@@ -5213,6 +5717,16 @@ internal static class Program
         Console.WriteLine("                                       Write raw 2048-byte sectors for diagnostics.");
         Console.WriteLine("  library verify [--folder dir] [--dat path] [--cache path] [--json]");
         Console.WriteLine("                                       Verify every library disc and update the health cache.");
+        Console.WriteLine("  covers update [--url URL] [--catalog path] [--cache dir] [--force] [--json]");
+        Console.WriteLine("                                       Refresh the online cover catalog.");
+        Console.WriteLine("  covers download [--folder dir] [--all] [--catalog path] [--cache dir] [--dry-run] [--json]");
+        Console.WriteLine("                                       Resolve and download covers for the library, or the full pack.");
+        Console.WriteLine("  covers match <title> [--threshold N] [--catalog path] [--json]");
+        Console.WriteLine("                                       Show the best cover-catalog matches for a title.");
+        Console.WriteLine("  covers verify [--catalog path] [--cache dir] [--fix] [--json]");
+        Console.WriteLine("                                       Verify cached cover images against the catalog.");
+        Console.WriteLine("  covers cache path|clear [--cache dir] [--json]");
+        Console.WriteLine("                                       Show or clear the online cover cache.");
         Console.WriteLine("  fs list <disc> [--json]              List the 3DO (Opera FS) file tree.");
         Console.WriteLine("  fs extract <disc> --out dir [--filter prefix]");
         Console.WriteLine("                                       Extract files from a 3DO disc image.");

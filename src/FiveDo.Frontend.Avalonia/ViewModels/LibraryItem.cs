@@ -129,6 +129,13 @@ public sealed class LibraryItem : IDisposable, INotifyPropertyChanged
         Dispatcher.UIThread.Post(
             () =>
             {
+                // A later cover resolution may have replaced this path while the
+                // decode was in flight; never publish a stale bitmap.
+                if (!string.Equals(Entry.CoverPath, path, StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+
                 _cover = cover;
                 OnPropertyChanged(nameof(Cover));
                 OnPropertyChanged(nameof(HasCover));
@@ -162,9 +169,42 @@ public sealed class LibraryItem : IDisposable, INotifyPropertyChanged
                 tip += $"{Environment.NewLine}{DumpTip}";
             }
 
+            if (Entry.CoverSource.Length > 0
+                && !string.Equals(Entry.CoverSource, "none", StringComparison.Ordinal))
+            {
+                tip += $"{Environment.NewLine}Cover: {Entry.CoverSource} ({Entry.CoverConfidence:P0})";
+                if (Entry.CoverMatchName.Length > 0)
+                {
+                    tip += $"{Environment.NewLine}Matched: {Entry.CoverMatchName}";
+                }
+            }
+
             return string.IsNullOrWhiteSpace(Entry.Error)
                 ? tip
                 : $"{tip}{Environment.NewLine}{Entry.Error}";
+        }
+    }
+
+    /// <summary>Replaces the local cover path and reloads the bitmap when it changes.</summary>
+    /// <param name="path">Local cover path, or an empty string to clear it.</param>
+    public void SetCoverPath(string? path)
+    {
+        path ??= string.Empty;
+        if (string.Equals(Entry.CoverPath, path, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        Entry = Entry with { CoverPath = path };
+        _cover = null;
+        _coverRequested = false;
+        OnPropertyChanged(nameof(Cover));
+        OnPropertyChanged(nameof(HasCover));
+        OnPropertyChanged(nameof(Tip));
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            _coverRequested = true;
+            _ = LoadCoverAsync(path);
         }
     }
 
@@ -173,7 +213,16 @@ public sealed class LibraryItem : IDisposable, INotifyPropertyChanged
     public void Update(GameLibraryEntry entry)
     {
         ArgumentNullException.ThrowIfNull(entry);
+        var coverChanged = !string.Equals(Entry.CoverPath, entry.CoverPath, StringComparison.OrdinalIgnoreCase);
         Entry = entry;
+        if (coverChanged)
+        {
+            _cover = null;
+            _coverRequested = false;
+            OnPropertyChanged(nameof(Cover));
+            OnPropertyChanged(nameof(HasCover));
+        }
+
         OnPropertyChanged(nameof(Entry));
         OnPropertyChanged(nameof(Name));
         OnPropertyChanged(nameof(FavoriteGlyph));
@@ -268,7 +317,11 @@ internal static class CoverCache
                 return bitmap;
             }
         }
-        catch (Exception exception) when (exception is IOException or ArgumentException or UnauthorizedAccessException)
+        catch (Exception exception) when (exception is IOException
+            or ArgumentException
+            or UnauthorizedAccessException
+            or NotSupportedException
+            or InvalidOperationException)
         {
             Serilog.Log.Debug(exception, "Cover art could not be decoded for {Path}.", path);
             lock (Gate)

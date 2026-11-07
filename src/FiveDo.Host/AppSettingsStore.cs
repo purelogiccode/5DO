@@ -300,6 +300,9 @@ public static class AppSettingsStore
             {
                 settings.DisplayRefreshRate = AppSettings.DefaultDisplayRefreshRate;
             }
+
+            settings.CoverCatalogUrl = CoverDefaults.NormalizeCatalogUrl(settings.CoverCatalogUrl);
+            settings.CoverFuzzyThreshold = CoverDefaults.ClampFuzzyThreshold(settings.CoverFuzzyThreshold);
             // JSON can deserialize null despite the non-nullable annotation.
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             settings.VoidAreaColor ??= AppSettings.DefaultVoidAreaColor;

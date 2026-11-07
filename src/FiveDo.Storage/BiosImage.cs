@@ -133,13 +133,17 @@ public sealed class BiosImage
             && descriptor.IsRsaDisabled;
         var nameNoRsa = LooksLikeNoRsa(sourceName);
         var sites = BiosRsaPatch.CountSites(bytes);
+        var alreadyPatchedSites = BiosRsaPatch.CountPatchedSites(bytes);
         var patched = false;
         if (allowUnsignedDiscs && sites > 0)
         {
             BiosRsaPatch.Apply(bytes);
             patched = true;
         }
-        else if (allowUnsignedDiscs && !knownNoRsa && !nameNoRsa)
+        else if (allowUnsignedDiscs
+            && !knownNoRsa
+            && !nameNoRsa
+            && alreadyPatchedSites == 0)
         {
             var name = string.IsNullOrWhiteSpace(sourceName)
                 ? "the BIOS image"
@@ -149,7 +153,7 @@ public sealed class BiosImage
                 + "Use a compatible retail 1 MB BIOS or a known No-RSA image.");
         }
 
-        var rsaDisabled = patched || knownNoRsa || nameNoRsa;
+        var rsaDisabled = patched || knownNoRsa || nameNoRsa || alreadyPatchedSites > 0;
         return new BiosImage(bytes, bios2.ToArray(), sourceMd5, patched, rsaDisabled, sites);
     }
 

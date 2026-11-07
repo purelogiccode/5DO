@@ -577,6 +577,74 @@
                 </Grid>
                 </ScrollViewer>
             </TabItem>
+
+            <TabItem Header="Covers" ToolTip.Tip="Online cover catalog, fuzzy matching, and cache settings.">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <Grid ColumnDefinitions="190,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="Online cover catalog"
+                                   FontWeight="SemiBold" Margin="0,0,0,4"
+                                   ToolTip.Tip="The catalog lists cover images hosted on the 5DO asset server." />
+                        <CheckBox x:Name="UseOnlineCoversCheck" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                                  Content="Use the online cover catalog"
+                                  ToolTip.Tip="When enabled, 5DO downloads a small catalog and fetches only the covers it needs." />
+                        <CheckBox x:Name="AutoDownloadCoversCheck" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
+                                  Content="Download missing covers automatically"
+                                  ToolTip.Tip="Downloads covers in the background after a library scan. Disable to download only on demand." />
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Catalog URL" VerticalAlignment="Center" Margin="0,8,0,0"
+                                   ToolTip.Tip="Either the full catalog.json URL or the base URL; /catalog.json is appended automatically." />
+                        <TextBox x:Name="CoverCatalogUrlBox" Grid.Row="3" Grid.Column="1" Margin="0,8,6,0"
+                                 ToolTip.Tip="Default: https://assets.purelogiccode.com/5do/v1/catalog.json" />
+                        <Button Grid.Row="3" Grid.Column="2" Content="Reset" Click="OnResetCoverCatalogUrl" Margin="0,8,0,0"
+                                ToolTip.Tip="Restore the default 5DO cover catalog URL." />
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Local covers" VerticalAlignment="Center" Margin="0,8,0,0"
+                                   ToolTip.Tip="User-provided covers are configured under Paths > Game covers." />
+                        <TextBlock Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" Text="Configured under Paths > Game covers. Local files take precedence when they match exactly."
+                                   Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"
+                                   ToolTip.Tip="Sibling images next to a disc and exact names in the cover directory are used before online covers." />
+                        <TextBlock Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" Text="Matching"
+                                   FontWeight="SemiBold" Margin="0,12,0,0"
+                                   ToolTip.Tip="How cover file names are matched to game titles." />
+                        <CheckBox x:Name="CoverFuzzyMatchingCheck" Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,4,0,0"
+                                  Content="Fuzzy-match cover names (Jaro-Winkler)"
+                                  ToolTip.Tip="After exact and annotation-stripped matches, compare titles with Jaro-Winkler similarity." />
+                        <CheckBox x:Name="CoverAnnotationStrippingCheck" Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2"
+                                  Content="Ignore region, language, and version tags"
+                                  ToolTip.Tip="Strips (USA), (Europe), [!], (Disc 1), (Rev 1), and similar tags before matching." />
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Fuzzy threshold" VerticalAlignment="Center" Margin="0,8,0,0"
+                                   ToolTip.Tip="Minimum similarity for a fuzzy match. Higher is stricter." />
+                        <StackPanel Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                            <Slider x:Name="CoverFuzzyThresholdSlider" Width="260" Minimum="0.70" Maximum="0.95"
+                                    TickFrequency="0.01" IsSnapToTickEnabled="True" Value="0.85"
+                                    ValueChanged="OnCoverFuzzyThresholdChanged"
+                                    ToolTip.Tip="0.85 is the default. Lower values match more names but risk wrong covers." />
+                            <TextBlock x:Name="CoverFuzzyThresholdText" VerticalAlignment="Center" Text="85%" />
+                        </StackPanel>
+                        <TextBlock Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="3" Text="Cache and downloads"
+                                   FontWeight="SemiBold" Margin="0,12,0,0"
+                                   ToolTip.Tip="Catalog, image cache, and the optional bulk pack." />
+                        <StackPanel Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
+                            <Button x:Name="RefreshCoverCatalogButton" Content="Refresh catalog"
+                                    Click="OnRefreshCoverCatalogAsync"
+                                    ToolTip.Tip="Download or revalidate the cover catalog." />
+                            <Button x:Name="DownloadAllCoversButton" Content="Download all covers"
+                                    Click="OnDownloadAllCoversAsync"
+                                    ToolTip.Tip="Download the optional bulk pack (about 27 MB) for offline use." />
+                            <Button x:Name="ClearCoverCacheButton" Content="Clear cache"
+                                    Click="OnClearCoverCacheAsync"
+                                    ToolTip.Tip="Delete the online catalog and downloaded cover images." />
+                        </StackPanel>
+                        <ProgressBar x:Name="CoverDownloadProgressBar" Grid.Row="11" Grid.Column="0" Grid.ColumnSpan="3"
+                                     Minimum="0" Maximum="100" Value="0" IsVisible="False" Margin="0,8,0,0" />
+                        <TextBlock x:Name="CoverCacheStatusText" Grid.Row="12" Grid.Column="0" Grid.ColumnSpan="3"
+                                   Opacity="0.75" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"
+                                   ToolTip.Tip="Catalog version, cached image count, and download status." />
+                        <TextBlock Grid.Row="13" Grid.Column="0" Grid.ColumnSpan="3"
+                                   Text="Cover images are copyrighted by their respective publishers. The catalog and images are downloaded only from the configured server; no library, game, or user data is sent."
+                                   Opacity="0.6" FontSize="11" TextWrapping="Wrap" Margin="0,12,0,0"
+                                   ToolTip.Tip="See docs/CoverArt.md for the catalog format, hosting, and takedown policy." />
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
         </TabControl>
 
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,12,0,0">

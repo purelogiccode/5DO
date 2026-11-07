@@ -574,6 +574,33 @@ badges. `--cache` redirects the cache for CI or a portable run. `--dat` matches 
 against a Redump/No-Intro DAT; when omitted, the configured `DiscDatPath` is used. The
 command exits 1 when any disc has a read error.
 
+### `covers` commands
+
+```powershell
+5do covers update
+5do covers update --force --json
+5do covers match "Battle Chess"
+5do covers match "Blade Force" --threshold 0.90 --json
+5do covers download --folder "D:\Games\3DO" --dry-run
+5do covers download --folder "D:\Games\3DO"
+5do covers download --all
+5do covers verify --fix
+5do covers cache path
+5do covers cache clear
+```
+
+`update` downloads or revalidates the online catalog. `match` prints the best catalog
+matches with their score, game IDs, and matched alias; the default threshold is 0.70 so
+the command is useful for diagnosing a catalog entry without listing unrelated covers. `download` scans the configured
+library (or `--folder`) and fetches only the covers that are not cached; `--all` downloads
+the bulk pack instead. `verify` checks every cached image against its SHA-256; `--fix`
+deletes corrupt files. `cache path` and `cache clear` manage the shared cover cache.
+
+`--catalog <path>` accepts a local `catalog.json` and resolves relative image paths
+beside it, which makes the commands usable offline and in tests. `--url` overrides the
+configured catalog URL, `--cache` redirects the cache, and `--threshold` overrides the
+fuzzy threshold. JSON output is available for every subcommand.
+
 ### `gamedb` commands
 
 ```powershell

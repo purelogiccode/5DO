@@ -28,10 +28,10 @@ public sealed class AppSettings
     /// Version 2 adds the CD-DA mix volume and mute flag. Version 3 adds the presentation
     /// refresh rate. Version 4 adds the game-library card size. Version 5 adds the
     /// unsigned-disc/RSA-patch option. Version 6 adds the latency options (run-ahead,
-    /// frame delay, adaptive sync, and audio sync). Older files load with the documented
-    /// defaults for new properties.
+    /// frame delay, adaptive sync, and audio sync). Version 7 adds the online cover
+    /// catalog options. Older files load with the documented defaults for new properties.
     /// </remarks>
-    public const int CurrentVersion = 6;
+    public const int CurrentVersion = 7;
 
     /// <summary>
     /// Gets or sets the settings schema version. Zero or missing means a pre-versioned file
@@ -104,6 +104,37 @@ public sealed class AppSettings
     /// Sibling images next to a disc still take precedence.
     /// </summary>
     public string CoverDirectory { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the online cover catalog may be used.
+    /// </summary>
+    public bool UseOnlineCovers { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether missing covers are downloaded automatically
+    /// when a library is scanned.
+    /// </summary>
+    public bool AutoDownloadCovers { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the online cover catalog URL. A base URL is accepted and normalized
+    /// to <c>/catalog.json</c>.
+    /// </summary>
+    public string CoverCatalogUrl { get; set; } = CoverDefaults.CatalogUrl;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether cover names use Jaro-Winkler fuzzy matching.
+    /// </summary>
+    public bool CoverFuzzyMatching { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether region, language, and version annotations
+    /// are stripped before cover-name matching.
+    /// </summary>
+    public bool CoverAnnotationStripping { get; set; } = true;
+
+    /// <summary>Gets or sets the Jaro-Winkler fuzzy-match threshold (0.70-0.95).</summary>
+    public double CoverFuzzyThreshold { get; set; } = CoverDefaults.DefaultFuzzyThreshold;
 
     /// <summary>
     /// Gets or sets the directory containing per-game cheat files. An empty value uses

@@ -10,6 +10,23 @@ validation, installers, and the optional JIT are post-1.0. See
 GitHub**: the source is tagged `v1.0.0`, the unified Windows/Linux/macOS x64 bundles and
 checksums are attached, and legal/attribution sign-off is recorded.
 
+## Online cover art (2026-11-07)
+
+- The online catalog is optional and hosted separately from the application bundles.
+  Cover art remains the property of the respective publishers; see
+  [`CoverArt.md`](CoverArt.md) for the takedown policy.
+- The pack currently maps **645/653** 4DO game IDs. Eight homebrew/emulator entries have
+  no cover, and five mappings are marked weak for review. Manual overrides are in
+  `packaging/cover-overrides.json`.
+- The client prefers no cover over a low-confidence wrong cover. Raise the threshold in
+  **Settings > Covers** if a fuzzy match is wrong, or name a local cover exactly.
+- WebP decoding uses the platform Skia backend. If a platform cannot decode a cover, the
+  library shows the placeholder and logs a debug message; local PNG/JPG covers are
+  unaffected.
+- The catalog and images are fetched over HTTPS from the configured server. The request
+  contains no library, game, or user data. Offline mode uses the cached catalog and
+  images.
+
 ## Differential parity (2026-11-06, exact-clock update)
 
 - The exact NTSC clock fix aligns the emulated sample clock: all 50 panel titles

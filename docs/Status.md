@@ -1,6 +1,12 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-06, after the TEST-07 oracle increment, the VID-12 latency update, the PERF-02 AOT/trimming audit, the 1.3.0 field-handling update, the 1.2.2 performance/library update, the 1.2.1 arm64 packaging update, the 1.2.0 feature/accuracy update, the rewind-capture stall fix, SYS-12 SWI HLE, SYS-17 game-database expansion, SYS-08 clock validation, the third PERF-08 JIT pass, the ENG-02 interpreter hot-path increment, and the PERF-05 high-resolution VDLP copy: Direct3D 11,
+**Snapshot:** 2026-11-07, after the 1.4.0 cover-art, latency, unsigned-disc, exact-clock,
+and differential-harness update; the TEST-07 oracle increment, the VID-12 latency update,
+the PERF-02 AOT/trimming audit, the 1.3.0 field-handling update, the 1.2.2
+performance/library update, the 1.2.1 arm64 packaging update, the 1.2.0
+feature/accuracy update, the rewind-capture stall fix, SYS-12 SWI HLE, SYS-17
+game-database expansion, SYS-08 clock validation, the third PERF-08 JIT pass, the ENG-02
+interpreter hot-path increment, and the PERF-05 high-resolution VDLP copy: Direct3D 11,
 startup release checks, the fuzz harness, per-edge overscan/void border, screenshot
 gallery filters, FIQ/DMA/DSP telemetry, flat CHD/raw ISO support, and display-refresh
 control. The earlier first full-collection sweep, performance, timing-option, BIOS,
@@ -12,7 +18,19 @@ passes are retained below. Road Rash's
 Debug core builds are optimized, and Auto presentation frame skip is the default.
 **594 discs tested: 593 Loadable/Rendered, 1 Loadable/No video (known boot failure), 0 Not Loadable.**
 
-**TEST-07 exact-clock and 50-title panel update (2026-11-06):** the earlier claim that the frame-60 CPSR difference was the FIQ-disable bit was wrong: `0x600000d3` and `0x800000d3` differ in the N/Z/C condition flags. The real defect was the field clock. 5DO now runs NTSC at the exact 60000/1001 field rate (208,541 cycles at 12.5 MHz) and uses a rational VDL accumulator, removing both the 1 ms/60-field drift and the per-batch 8.24 rounding that ran the scanline clock ~0.09% fast. Sample counts now track Opera within 1-8 samples at 300 frames (all 50 panel titles are within 9 at frame 300), and **32/50 titles match every frame hash** at frames 60/120/300. The 50-title panel captured 50/50 with 0 errors; CD counts match 49/50 at frame 60. The absolute instruction count carries a fixed ~89,000 startup offset, but the per-frame retirement rate matches within 0.1% on 4/5 titles, so PC/CPSR is a phase sample rather than a cycle-model gap. The new CD cycle stamps localize the remaining CD cadence difference. At 3,000 frames Alone, Lemmings, Space Ace, and Wolfenstein match Opera's hash; Road Rash still diverges. The suite is **1,885 tests**. See [`DifferentialHarness.md`](DifferentialHarness.md) and [`TestCorpus.md`](TestCorpus.md) 1.1ax.
+**1.4.0 release update (2026-11-07):** **v1.4.0** adds online cover art (473 unique
+WebP covers, 645/653 game IDs mapped), VID-12 run-ahead/frame-delay/VRR/audio-sync
+controls, SYS-06 unsigned-disc support, the exact 60000/1001 NTSC field clock and rational
+VDL accumulator, VDLP blanking/background fixes, and the live OpenAL device-switching and
+test-tone fixes. The suite is **1,905 tests**; build, format, and InspectCode are clean.
+The 50-title differential panel remains the current accuracy evidence: 32/50 titles match
+every frame hash at 60/120/300, every sample delta is within 9, and Space Ace,
+Wolfenstein 3D, Alone in the Dark, and Lemmings match Opera at 3,000 frames while Road
+Rash still diverges. See [`WhatsNew.md`](WhatsNew.md),
+[`ReleaseNotes-1.4.0.md`](ReleaseNotes-1.4.0.md), [`DifferentialHarness.md`](DifferentialHarness.md),
+and [`CoverArt.md`](CoverArt.md).
+
+**TEST-07 exact-clock and 50-title panel update (2026-11-06):** the earlier claim that the frame-60 CPSR difference was the FIQ-disable bit was wrong: `0x600000d3` and `0x800000d3` differ in the N/Z/C condition flags. The real defect was the field clock. 5DO now runs NTSC at the exact 60000/1001 field rate (208,541 cycles at 12.5 MHz) and uses a rational VDL accumulator, removing both the 1 ms/60-field drift and the per-batch 8.24 rounding that ran the scanline clock ~0.09% fast. Sample counts now track Opera within 1-8 samples at 300 frames (all 50 panel titles are within 9 at frame 300), and **32/50 titles match every frame hash** at frames 60/120/300. The 50-title panel captured 50/50 with 0 errors; CD counts match 49/50 at frame 60. The absolute instruction count carries a fixed ~89,000 startup offset, but the per-frame retirement rate matches within 0.1% on 4/5 titles, so PC/CPSR is a phase sample rather than a cycle-model gap. The new CD cycle stamps localize the remaining CD cadence difference. At 3,000 frames Alone, Lemmings, Space Ace, and Wolfenstein match Opera's hash; Road Rash still diverges. The suite is now **1,905 tests**. See [`DifferentialHarness.md`](DifferentialHarness.md) and [`TestCorpus.md`](TestCorpus.md) 1.1ax.
 **TEST-07 oracle increment (2026-11-06, superseded by the exact-clock update above; the FIQ-bit and 59.94/60 Hz statements below are incorrect):** the differential harness now applies a
 fixed seed to both engines (`--seed`, default 1488), compares ARM CPSR and CD
 command counts/opcode hashes, and reports the **first divergence** in the console,
@@ -80,7 +98,7 @@ open-source donationware (non-commercial; voluntary donations only). M13 loadabi
 complete; M13.5/M13.6 visual/high-resolution review and M14 high-resolution CEL research
 are **post-1.0**.
 
-**Field-handling update (2026-11-06):** **v1.3.0** is the current release,
+**Field-handling update (2026-11-06):** **v1.3.0** was the previous release,
 published at <https://github.com/purelogiccode/5DO/releases/tag/v1.3.0>. It adds
 `InterlaceProcessor` with auto 480i detection, bob, weave, and blend modes; per-game and
 `--deinterlace` selection; interlace-aware viewport geometry; screenshot/GIF capture of
@@ -798,7 +816,7 @@ artifacts and checksums are attached to the GitHub release.
 release scope. v1.0.0 is published on GitHub with the release artifacts.
 
 **Release decisions (2026-11-02):** Windows x64 is validated; Linux x64 CLI/frontend
-smoke and the full test suite passed (GPU presentation is preview/best-effort); the current release version is `1.3.0`;
+smoke and the full test suite passed (GPU presentation is preview/best-effort); the current release version is `1.4.0`;
 installers, signing, and notarization are post-1.0; the compatibility set is the 12
 documented titles, with five showcase titles carrying scripted gameplay evidence. The
 distribution model is recorded as **donationware** (non-commercial, source-available).

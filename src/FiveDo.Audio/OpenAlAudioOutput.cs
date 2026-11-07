@@ -305,7 +305,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         AL? al = null;
         Device* device = null;
         Context* context = null;
-        delegate* unmanaged<Context*, byte> setThreadContext = null;
+        delegate* unmanaged<Context*, byte> setThreadContext;
         try
         {
             alc = ALContext.GetApi();

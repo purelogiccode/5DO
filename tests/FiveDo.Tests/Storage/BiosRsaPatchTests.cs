@@ -98,6 +98,32 @@ public sealed class BiosRsaPatchTests
     }
 
     [Fact]
+    public void CountPatchedSites_FindsAnAlreadyPatchedImage()
+    {
+        byte[] bios = CreateBiosWithSites(2);
+        BiosRsaPatch.Apply(bios);
+
+        Assert.Equal(0, BiosRsaPatch.CountSites(bios));
+        Assert.Equal(2, BiosRsaPatch.CountPatchedSites(bios));
+    }
+
+    [Fact]
+    public void BiosImage_WithUnsignedDiscs_AcceptsAnAlreadyPatchedUnknownImage()
+    {
+        byte[] bios = CreateBiosWithSites(2);
+        BiosRsaPatch.Apply(bios);
+
+        BiosImage image = BiosImage.FromBytes(
+            bios,
+            allowUnsignedDiscs: true,
+            sourceName: "unknown-retail.bin");
+
+        Assert.False(image.RsaPatched);
+        Assert.True(image.RsaDisabled);
+        Assert.Equal(0, image.RsaPatchSites);
+    }
+
+    [Fact]
     public void BiosImage_WithUnsignedDiscs_AcceptsAKnownNoRsaFileNameWithoutASite()
     {
         byte[] bios = CreateBiosWithSites(0);

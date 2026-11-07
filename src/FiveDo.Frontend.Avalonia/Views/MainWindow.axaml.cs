@@ -130,6 +130,10 @@ public partial class MainWindow : Window, IDisposable
     private bool _libraryReady;
     private int _libraryImageCount;
     private CancellationTokenSource? _libraryScanCts;
+    private CoverService _coverService;
+    private CancellationTokenSource? _coverCts;
+    private bool _coverCacheClearPending;
+    private bool _suppressAutoDownloadOnce;
     private DateTime _lastDonationCheckUtc;
     private string? _donationBannerMessage;
     private bool _donationCheckInProgress;
@@ -162,6 +166,7 @@ public partial class MainWindow : Window, IDisposable
         Direct3DVideo.FramePresented += OnFramePresented;
         VulkanVideo.FramePresented += OnFramePresented;
         _settings = AppSettingsStore.Load();
+        _coverService = new CoverService(CoverServiceOptions.FromSettings(_settings));
         IconSizeSlider.Value = Math.Clamp(
             _settings.LibraryCardSize,
             AppSettings.MinLibraryCardSize,
@@ -3597,12 +3602,310 @@ public partial class MainWindow : Window, IDisposable
             finalEntries.Count,
             stopwatch.ElapsedMilliseconds);
 
+        if (finalEntries.Count > 0 && !_shuttingDown && generation == _scanGeneration)
+        {
+            _ = ApplyCoverResolutionsAsync(finalEntries, generation);
+        }
+
         StatusText.Text = finalEntries.Count == 0
             ? "No discs found. Add a game folder from the File menu."
             : _libraryImageCount > finalEntries.Count
                 ? $"{CountLabel(finalEntries.Count)} in the library "
                   + $"({_libraryImageCount:N0} images; {_libraryImageCount - finalEntries.Count:N0} duplicate copies hidden)."
                 : $"{CountLabel(finalEntries.Count)} in the library.";
+    }
+
+    private async Task ApplyCoverResolutionsAsync(
+        IReadOnlyList<GameLibraryEntry> entries,
+        int generation)
+    {
+        _coverCts?.Cancel();
+        _coverCts?.Dispose();
+        var cts = new CancellationTokenSource();
+        _coverCts = cts;
+        IReadOnlyList<CoverResolution> resolutions;
+        try
+        {
+            resolutions = await Task.Run(
+                    () => _coverService.ResolveAllAsync(entries, cts.Token),
+                    cts.Token)
+                .ConfigureAwait(true);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or InvalidDataException
+            or ArgumentException
+            or NotSupportedException
+            or ObjectDisposedException)
+        {
+            _logger.ForCategory(LogCategory.Storage).Debug(
+                exception,
+                "Cover resolution failed; local covers remain available.");
+            return;
+        }
+        catch (Exception exception)
+        {
+            _logger.ForCategory(LogCategory.Storage).Error(
+                exception,
+                "Cover resolution failed unexpectedly.");
+            return;
+        }
+
+        if (_shuttingDown || generation != _scanGeneration)
+        {
+            return;
+        }
+
+        var byPath = new Dictionary<string, CoverResolution>(StringComparer.OrdinalIgnoreCase);
+        foreach (CoverResolution resolution in resolutions)
+        {
+            byPath[resolution.EntryPath] = resolution;
+        }
+
+        var decorated = new List<GameLibraryEntry>(entries.Count);
+        foreach (GameLibraryEntry entry in entries)
+        {
+            if (!byPath.TryGetValue(entry.Path, out CoverResolution? resolution)
+                || !resolution.HasCover)
+            {
+                decorated.Add(entry with
+                {
+                    CoverSource = resolution?.CoverSource ?? "none",
+                    CoverConfidence = resolution?.Score ?? 0.0,
+                    CoverMatchName = resolution?.MatchedName ?? string.Empty,
+                });
+                continue;
+            }
+
+            if (resolution.NeedsDownload)
+            {
+                decorated.Add(entry with
+                {
+                    CoverSource = resolution.CoverSource,
+                    CoverConfidence = resolution.Score,
+                    CoverMatchName = resolution.MatchedName,
+                });
+            }
+            else
+            {
+                decorated.Add(entry with
+                {
+                    CoverPath = resolution.CoverPath!,
+                    CoverSource = resolution.CoverSource,
+                    CoverConfidence = resolution.Score,
+                    CoverMatchName = resolution.MatchedName,
+                });
+            }
+        }
+
+        ReplaceLibraryEntries(decorated);
+        var autoDownload = _settings.AutoDownloadCovers && !_suppressAutoDownloadOnce;
+        _suppressAutoDownloadOnce = false;
+        if (autoDownload)
+        {
+            List<CoverResolution> pending = resolutions
+                .Where(resolution => resolution.NeedsDownload)
+                .ToList();
+            if (pending.Count > 0)
+            {
+                _ = DownloadCoversAsync(pending, generation, cts.Token);
+            }
+        }
+    }
+
+    private async Task DownloadCoversAsync(
+        IReadOnlyList<CoverResolution> resolutions,
+        int generation,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var progress = new Progress<CoverDownloadProgress>(value =>
+            {
+                if (!_shuttingDown && generation == _scanGeneration)
+                {
+                    StatusText.Text = $"Downloading cover art... {value.Completed}/{value.Total}";
+                }
+            });
+            CoverDownloadResult result = await _coverService
+                .DownloadMissingAsync(resolutions, progress, cancellationToken)
+                .ConfigureAwait(true);
+            if (_shuttingDown || generation != _scanGeneration)
+            {
+                return;
+            }
+
+            foreach (KeyValuePair<string, string> pair in result.CoverPaths)
+            {
+                LibraryItem? item = _allGames.FirstOrDefault(candidate =>
+                    string.Equals(candidate.Path, pair.Key, StringComparison.OrdinalIgnoreCase));
+                item?.SetCoverPath(pair.Value);
+            }
+
+            foreach (CoverDownloadFailure failure in result.Failures)
+            {
+                _logger.ForCategory(LogCategory.Storage).Debug(
+                    "Cover download failed for {CoverId}: {Message}",
+                    failure.CoverId,
+                    failure.Message);
+            }
+
+            StatusText.Text = result.Failed == 0
+                ? $"Cover art: {result.Downloaded} downloaded, {result.Skipped} cached."
+                : $"Cover art: {result.Downloaded} downloaded, {result.Failed} failed (see log).";
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or InvalidDataException
+            or ArgumentException
+            or NotSupportedException
+            or ObjectDisposedException)
+        {
+            _logger.ForCategory(LogCategory.Storage).Debug(exception, "Cover download failed.");
+        }
+        catch (Exception exception)
+        {
+            _logger.ForCategory(LogCategory.Storage).Error(exception, "Cover download failed unexpectedly.");
+        }
+    }
+
+    private void OnRefreshCoverCatalogAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(RefreshCoverCatalogAsync, "refreshing the cover catalog");
+    }
+
+    private async Task RefreshCoverCatalogAsync()
+    {
+        CoverCatalogRefreshResult result = await _coverService
+            .RefreshCatalogAsync(force: true)
+            .ConfigureAwait(true);
+        if (_shuttingDown)
+        {
+            return;
+        }
+
+        StatusText.Text = result.Success
+            ? $"Cover catalog {result.PackVersion}: {result.CoverCount} covers."
+            : $"Cover catalog unavailable: {result.Error}";
+        if (result.Success)
+        {
+            await RefreshLibraryAsync().ConfigureAwait(true);
+        }
+    }
+
+    private void OnDownloadMissingCoversAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(DownloadMissingCoversAsync, "downloading missing cover art");
+    }
+
+    private async Task DownloadMissingCoversAsync()
+    {
+        if (_allGames.Count == 0)
+        {
+            StatusText.Text = "Scan a library before downloading covers.";
+            return;
+        }
+
+        var entries = _allGames.Select(item => item.Entry).ToList();
+        IReadOnlyList<CoverResolution> resolutions;
+        try
+        {
+            resolutions = await Task.Run(() => _coverService.ResolveAllAsync(entries))
+                .ConfigureAwait(true);
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or InvalidDataException
+            or ArgumentException
+            or NotSupportedException
+            or ObjectDisposedException)
+        {
+            StatusText.Text = $"Cover resolution failed: {exception.Message}";
+            return;
+        }
+
+        List<CoverResolution> pending = resolutions
+            .Where(resolution => resolution.NeedsDownload)
+            .ToList();
+        if (pending.Count == 0)
+        {
+            StatusText.Text = "All resolved covers are already cached.";
+            return;
+        }
+
+        await DownloadCoversAsync(pending, _scanGeneration, CancellationToken.None)
+            .ConfigureAwait(true);
+    }
+
+    private void OnDownloadAllCoversAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(DownloadAllCoversAsync, "downloading all cover art");
+    }
+
+    private async Task DownloadAllCoversAsync()
+    {
+        try
+        {
+            var progress = new Progress<CoverDownloadProgress>(value =>
+            {
+                if (!_shuttingDown)
+                {
+                    StatusText.Text = value.Total == 0
+                        ? $"Downloading cover pack... {value.Bytes:N0} bytes"
+                        : $"Downloading cover art... {value.Completed}/{value.Total}";
+                }
+            });
+            CoverDownloadResult result = await _coverService
+                .DownloadAllAsync(progress)
+                .ConfigureAwait(true);
+            if (_shuttingDown)
+            {
+                return;
+            }
+
+            if (_coverService.Index is null)
+            {
+                StatusText.Text = "Cover catalog unavailable; no covers were downloaded.";
+                return;
+            }
+
+            StatusText.Text = result.Failed == 0
+                ? $"Cover art: {result.Downloaded} downloaded, {result.Skipped} cached."
+                : $"Cover art: {result.Downloaded} downloaded, {result.Failed} failed (see log).";
+            await RefreshLibraryAsync().ConfigureAwait(true);
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or InvalidDataException
+            or ArgumentException
+            or NotSupportedException
+            or ObjectDisposedException)
+        {
+            StatusText.Text = $"Cover download failed: {exception.Message}";
+        }
+    }
+
+    private void OnClearCoverCacheAsync(object? sender, RoutedEventArgs e)
+    {
+        if (!_coverCacheClearPending)
+        {
+            _coverCacheClearPending = true;
+            StatusText.Text = "Click Clear Cover Cache again to delete the online catalog and downloaded covers.";
+            return;
+        }
+
+        _coverCacheClearPending = false;
+        _coverService.ClearCache();
+        _suppressAutoDownloadOnce = true;
+        StatusText.Text = "Online cover cache cleared.";
+        AsyncEvent.Run(RefreshLibraryAsync, "refreshing game covers");
     }
 
     private void ReplaceLibraryEntries(IReadOnlyList<GameLibraryEntry> entries)
@@ -3752,6 +4055,12 @@ public partial class MainWindow : Window, IDisposable
     private async Task ShowSettingsAsync()
     {
         var previousCoverDirectory = _settings.CoverDirectory;
+        var previousUseOnlineCovers = _settings.UseOnlineCovers;
+        var previousAutoDownloadCovers = _settings.AutoDownloadCovers;
+        var previousCoverCatalogUrl = _settings.CoverCatalogUrl;
+        var previousCoverFuzzyMatching = _settings.CoverFuzzyMatching;
+        var previousCoverAnnotationStripping = _settings.CoverAnnotationStripping;
+        var previousCoverFuzzyThreshold = _settings.CoverFuzzyThreshold;
         var previousLibraryMetadataPath = _settings.ResolveLibraryMetadataPath();
         var previousLibraryFolders = _settings.LibraryFolders.ToArray();
         var previousShowDuplicateLibraryEntries = _settings.ShowDuplicateLibraryEntries;
@@ -3781,10 +4090,30 @@ public partial class MainWindow : Window, IDisposable
         }
 
         AppSettingsStore.Save(_settings);
+        var coverSettingsChanged =
+            !string.Equals(previousCoverDirectory, _settings.CoverDirectory, StringComparison.OrdinalIgnoreCase)
+            || previousUseOnlineCovers != _settings.UseOnlineCovers
+            || previousAutoDownloadCovers != _settings.AutoDownloadCovers
+            || !string.Equals(previousCoverCatalogUrl, _settings.CoverCatalogUrl, StringComparison.OrdinalIgnoreCase)
+            || previousCoverFuzzyMatching != _settings.CoverFuzzyMatching
+            || previousCoverAnnotationStripping != _settings.CoverAnnotationStripping
+            || Math.Abs(previousCoverFuzzyThreshold - _settings.CoverFuzzyThreshold) > 0.0001;
+        if (coverSettingsChanged || window.CoversChanged)
+        {
+            // The dialog may have refreshed or cleared the shared cache without
+            // changing a setting. Recreate the service so its in-memory catalog
+            // and index cannot stay stale.
+            _coverCts?.Cancel();
+            _coverService.Dispose();
+            _coverService = new CoverService(CoverServiceOptions.FromSettings(_settings));
+        }
+
         if (!previousLibraryFolders.SequenceEqual(
                 _settings.LibraryFolders,
                 StringComparer.OrdinalIgnoreCase)
-            || previousShowDuplicateLibraryEntries != _settings.ShowDuplicateLibraryEntries)
+            || previousShowDuplicateLibraryEntries != _settings.ShowDuplicateLibraryEntries
+            || coverSettingsChanged
+            || window.CoversChanged)
         {
             AsyncEvent.Run(RefreshLibraryAsync, "refreshing the game library");
         }
@@ -3847,13 +4176,6 @@ public partial class MainWindow : Window, IDisposable
         ApplyRendererSelection();
         HighResMenuItem.IsChecked = effective.HighResolution;
         UpdateEmulationHeader();
-        if (!string.Equals(
-                previousCoverDirectory,
-                _settings.CoverDirectory,
-                StringComparison.OrdinalIgnoreCase))
-        {
-            AsyncEvent.Run(RefreshLibraryAsync, "refreshing game covers");
-        }
 
         var biosSettingsChanged =
             !string.Equals(previousBiosPath, effective.BiosPath, StringComparison.OrdinalIgnoreCase)
@@ -5934,6 +6256,10 @@ public partial class MainWindow : Window, IDisposable
         try
         {
             _libraryScanCts?.Cancel();
+            _coverCts?.Cancel();
+            _coverCts?.Dispose();
+            _coverCts = null;
+            _coverService.Dispose();
             _logTimer.Stop();
             _movieTimer?.Stop();
             StopAudioRecording();

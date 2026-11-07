@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.3.0-orange" alt="Version 1.3.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.4.0-orange" alt="Version 1.4.0"></a>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@
 </p>
 
 > [!IMPORTANT]
-> 5DO is at **v1.3.0**, a documented-compatibility release. Windows x64 is the validated
+> 5DO is at **v1.4.0**, a documented-compatibility release. Windows x64 is the validated
 > target; Linux x64 full suite passed (GPU presentation is preview/best-effort), and
 > macOS/arm64 validation is post-1.0. No BIOS ROMs, game images, or extracted game
 > assets are included. You must supply legally obtained files.
@@ -66,10 +66,10 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.3.0` release (GitHub Releases) |
+| Version | `1.4.0` release (GitHub Releases) |
 | Validated platform | **Windows x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 |
-| Automated tests | **1,833 tests** in the current test assembly |
+| Automated tests | **1,905 tests** in the current test assembly |
 | Library | **653 games** across **1,366 images**; 3 audio-only CHDs catalogued |
 | Loadability sweep | **594 disc images** tested; after triage **593 loadable/rendered**, 1 known no-video case, 0 not loadable |
 | First pass | 576 rendered, 13 black/blank, 5 not loadable; triage resolved the failures and the blank/black set |
@@ -87,26 +87,30 @@ One bundle per system and architecture, each containing both the desktop app and
 
 | System | Bundle |
 |---|---|
-| Windows x64 | [`5do-1.3.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.3.0/5do-1.3.0-win-x64.zip) |
-| Windows arm64 | [`5do-1.3.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.3.0/5do-1.3.0-win-arm64.zip) |
-| Linux x64 | [`5do-1.3.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.3.0/5do-1.3.0-linux-x64.tar.gz) |
-| Linux arm64 | [`5do-1.3.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.3.0/5do-1.3.0-linux-arm64.tar.gz) |
-| macOS x64 | [`5do-1.3.0-osx-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.3.0/5do-1.3.0-osx-x64.tar.gz) |
-| macOS arm64 | [`5do-1.3.0-osx-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.3.0/5do-1.3.0-osx-arm64.tar.gz) |
+| Windows x64 | [`5do-1.4.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.4.0/5do-1.4.0-win-x64.zip) |
+| Windows arm64 | [`5do-1.4.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.4.0/5do-1.4.0-win-arm64.zip) |
+| Linux x64 | [`5do-1.4.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.4.0/5do-1.4.0-linux-x64.tar.gz) |
+| Linux arm64 | [`5do-1.4.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.4.0/5do-1.4.0-linux-arm64.tar.gz) |
+| macOS x64 | [`5do-1.4.0-osx-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.4.0/5do-1.4.0-osx-x64.tar.gz) |
+| macOS arm64 | [`5do-1.4.0-osx-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.4.0/5do-1.4.0-osx-arm64.tar.gz) |
 
 The apps are single-file executables. **Install the .NET 10 Runtime first** from
 <https://dotnet.microsoft.com/download/dotnet/10.0>; the bundles do **not** contain a
-.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.3.0)
+.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.4.0)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
-Bundles are versioned and published for x64 and arm64, for example `5do-1.3.0-win-arm64.zip`.
+Bundles are versioned and published for x64 and arm64, for example `5do-1.4.0-win-arm64.zip`.
 
 ## Features
 
 ### Emulation core
 
 - ARM60 interpreter with deterministic timing, banked registers, and a disassembler.
+- Exact NTSC 60000/1001 (59.94 Hz) field clock and rational VDL accumulator, so audio and
+  scanline timing do not drift against the reference core.
 - Configurable 2-15 MB DRAM / 1-2 MB VRAM (stock 2 MB/1 MB), 2 MB ROM, NVRAM, high-resolution VRAM planes, and word-swapped storage.
+- Opt-in unsigned-disc support patches the BIOS media RSA check in memory only; the BIOS
+  file is never modified, and known No-RSA images are preferred when available.
 - CLIO timers, interrupts, FIFOs, DMA, XBUS, and diagnostic port.
 - MADAM CEL engine, matrix engine, pixel bus, CCB parsing, and pixel decoding.
 - 3DO DSP with exact 44.1 kHz output, CD-DA mixing, and WAV analysis.
@@ -118,12 +122,16 @@ Bundles are versioned and published for x64 and arm64, for example `5do-1.3.0-wi
 
 ### Desktop experience
 
-- Avalonia game library with covers, favorites, play time, metadata filters and sorts.
+- Avalonia game library with local and online covers, favorites, play time, metadata
+  filters, and sorts. The online catalog uses precomputed 4DO game IDs plus annotation-
+  stripped Jaro-Winkler fallback and an optional bulk pack for offline use.
 - BIOS manager with region/Kanji/Anvil/patch detection, auto-selection, and per-game
   overrides.
 - Shared and per-game NVRAM with backup, import, reset, and delete.
 - Ten save slots with PNG thumbnails, state inspection, state diffing, and format v3.
 - Compressed rewind history (30–300 seconds) and 2×–10× fast-forward.
+- Latency controls: 0-2 frame run-ahead, 0-8 frame presentation delay, VRR/adaptive-sync
+  presentation, a -250..250 ms audio sync offset, and software input-to-present telemetry.
 - Per-game cheats with raw/typed/conditional/button codes and a desktop manager.
 - Deterministic `.5domovie` TAS recording, replay, verification, branching, and a
   per-frame movie editor.
@@ -169,7 +177,7 @@ Bundles are versioned and published for x64 and arm64, for example `5do-1.3.0-wi
 - No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
 
 > [!NOTE]
-> v1.3.0 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
+> v1.4.0 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
 > macOS; x64 and arm64), each with the CLI, desktop app, and SHA-256 checksums. The .NET 10
 > runtime is required on the host and is not bundled. Build from source below if you
 > prefer.
@@ -252,6 +260,7 @@ players in **Input**.
 | [FAQ](https://purelogiccode.github.io/5DO/FAQ.html) | BIOS, discs, releases, performance, platforms, saves, and licensing |
 | [CLI reference](https://purelogiccode.github.io/5DO/CliReference.html) | Every command, option, exit code, and JSON response |
 | [Configuration](https://purelogiccode.github.io/5DO/Configuration.html) | `settings.json`, profiles, paths, input, NVRAM, environment variables |
+| [Cover art](https://purelogiccode.github.io/5DO/CoverArt.html) | Online catalog, WebP pack, matching, R2 hosting, and takedown |
 | [Compatibility](https://purelogiccode.github.io/5DO/Compatibility.html) | BIOS/disc compatibility, per-title status, and sweep evidence |
 | [Troubleshooting](https://purelogiccode.github.io/5DO/Troubleshooting.html) | Symptom-driven diagnosis and fixes |
 | [Developer guide](https://purelogiccode.github.io/5DO/DeveloperGuide.html) | Source map, invariants, extension points, and conventions |

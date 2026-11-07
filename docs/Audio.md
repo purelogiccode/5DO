@@ -29,8 +29,8 @@ the 16-32 cycle batches this emulator uses, that over-produced samples by up to 
 (444,097 samples instead of 441,015 for a 600-frame Lemmings boot), which made audio
 slightly sharp and constantly overfilled the live ring.
 
-The port keeps the reference's 8.24 accumulators for VDL and timers, but uses a separate
-**exact rational DSP clock**:
+The port keeps the reference's timer semantics but uses exact rational accumulators for
+the **DSP sample clock** and the **VDL line clock**:
 
 ```text
 dspCycleRemainder += armCycles * 44_100
@@ -43,8 +43,9 @@ With `armClock = 12,500,000`, this yields exactly 44,100 samples per emulated se
 At 60 Hz that is **735 samples/frame**. The DSP clock is independent of the VDL/timer
 accumulators, so correcting it does not move video or timer events.
 
-`Quartz` save-state section version 2 stores the exact cycle remainder. Version 1
-sections are accepted and convert the legacy 8.24 fraction to ARM cycles.
+`Quartz` save-state section version 4 stores the exact DSP cycle remainder and the exact
+rational VDL accumulator. Version 1-3 sections are accepted; the legacy 8.24 DSP and VDL
+fractions are converted on load.
 
 ### Sample format
 

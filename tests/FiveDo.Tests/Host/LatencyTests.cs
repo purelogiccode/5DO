@@ -151,6 +151,20 @@ public sealed class LatencyTests
         Assert.Equal(0, telemetry.MeanMilliseconds);
     }
 
+    [Fact]
+    public void LatencyTelemetry_MaximumTracksTheRollingWindow()
+    {
+        var telemetry = new LatencyTelemetry();
+        telemetry.Record(0, 100, frequency: 1000);
+        for (var i = 0; i < LatencyTelemetry.WindowSize; i++)
+        {
+            telemetry.Record(0, 5, frequency: 1000);
+        }
+
+        Assert.Equal(LatencyTelemetry.WindowSize, telemetry.Samples);
+        Assert.Equal(5, telemetry.MaxMilliseconds, 3);
+    }
+
     private static FiveDoMachine CreateMachine()
     {
         var machine = new FiveDoMachine();

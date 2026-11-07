@@ -74,14 +74,14 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.3.0.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.4.0.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-06, v1.3.0 release (GitHub Releases).**
+**2026-11-07, v1.4.0 release (GitHub Releases).**
 
-- **1,833 tests** are present in the current test assembly.
+- **1,905 tests** are present in the current test assembly.
 - The library reports **653 games across 1,366 images**; three audio-only CHDs are
   catalogued.
 - The first full-collection loadability sweep covered **594 disc images**: **576
@@ -90,11 +90,11 @@
   (`Crash 'n Burn` Japan), and **0 not-loadable rows**.
 - Windows x64 is the validated target. Linux x64 full suite passed; GPU
   presentation is preview/best-effort. macOS and arm64 validation are post-1.0.
-- v1.3.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.3.0)
+- v1.4.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.4.0)
   as one bundle per system and architecture (Windows/Linux/macOS, x64 and arm64), each with the CLI, desktop app,
   and SHA-256 checksums. The .NET 10 runtime is required on the host and is not bundled.
-  The release adds 480i/240p field handling (auto detection, bob, weave, and blend),
-  interlace-aware presentation geometry, and screenshot/GIF support. See
+  The release adds online cover art, run-ahead/frame-delay/VRR/audio-sync latency controls,
+  unsigned-disc support, the exact 59.94 Hz NTSC clock, and VDLP/audio fixes. See
   [What's new](WhatsNew.md).
 
 See [Status](Status.md) and [Known issues](KnownIssues.md) for the current position and
@@ -119,6 +119,7 @@ the remaining work.
 
 - [CLI reference](CliReference.md) — commands, options, exit codes, JSON, and file formats.
 - [Configuration](Configuration.md) — `settings.json`, profiles, paths, input, NVRAM, environment.
+- [Cover art](CoverArt.md) — online catalog, WebP pack, matching, R2 hosting, and takedown.
 - [Save states](SaveStates.md) — `.tdos` v3 layout, validation, slots, and diffing.
 - [Cheats](Cheats.md) — per-game code syntax, desktop manager, and CLI.
 - [TAS movies](Tas.md) — `.5domovie` recording, replay, verification, branching, and editing.

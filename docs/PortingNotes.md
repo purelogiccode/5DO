@@ -572,12 +572,14 @@ M1 implements the section primitive used by all later chips:
 
 ### 12.4 Quartz event semantics
 
-- `PushArmCycles` keeps the reference's ARM/VDL 8.24 accumulators and its `arm++` correction. It expects small cycle batches (the reference computes `clks << 24` in 32 bits); `Debug.Assert` documents the `< 256` contract.
-- One second of ARM cycles (12.5M) produces 15,780 VDL line events, i.e. 30 full 526-line cycles and **60 half-frame presentations**. Tests assert 60 half-frame transitions.
+- `PushArmCycles` keeps the reference's ARM/VDL event semantics but uses an exact rational VDL accumulator; the ARM accumulator and `arm++` correction are unchanged. It expects small cycle batches (normally under 256 cycles); the scheduler documents that contract.
+- One second of ARM cycles (12.5M) produces about **15,764 VDL line events** at the exact 59.94 Hz NTSC field rate, i.e. 59 completed field transitions and 30 full 526-line cycles. Tests assert 59 half-frame transitions in one ARM second.
 - The DSP sample clock is exact: one ARM second produces **44,100** samples regardless of the batch size. The FreeDO 8.24 path produced 44,139 samples for 255-cycle batches, and real 16-32 cycle boot batches produced ~740-744 samples per 60 Hz frame (~44.4 kHz). That made audio ~0.7% sharp and constantly overfilled the live ring.
 - Evidence (2026-10-27): a 600-frame Lemmings boot changed from 444,097 to 441,015 samples and 10.070 s to 10.000 s; Opera's 600-frame capture is 441,441 samples at its 59.94 Hz field rate. A 6,000-frame Road Rash capture has identical spectral peaks (442.1 Hz etc.) before and after, with the new 4,410,188 samples matching 100.0 s at 44.1 kHz. The audio content is unchanged; only the timebase was corrected.
 - The 3,000-frame boot hashes changed for titles whose FMV/loading animation is audio-timed: Alone in the Dark and Lemmings remained pixel-identical, Road Rash and Space Ace show adjacent FMV frames, and Wolfenstein 3D differs only in the star-field sparkle. The Lemmings Fun 4 D-pad script still reaches gameplay at 23,000 frames. Re-baseline with the new hashes in [`TestCorpus.md`](TestCorpus.md) 1.2.
-- VDL (15,794) and timer (25,022 for a 1,000-unit delay) reference counts are unchanged by the DSP correction.
+- The timer reference count (25,022 for a 1,000-unit delay) is unchanged by the DSP
+  correction. The VDL count is now the exact 59.94 Hz rate (about 15,764 events per ARM
+  second); see 12.35 for the later exact-clock correction.
 
 ### 12.5 Diagnostics
 
@@ -1234,7 +1236,8 @@ M1 implements the section primitive used by all later chips:
   each cycle adds `fieldLines * numerator` to a 64-bit accumulator and a
   scanline is due at `armClock * denominator`. This also removes the per-batch
   ceil() error in FreeDO's 8.24 scheme, which ran the scanline clock ~0.09%
-  fast (15,794 events per second instead of 15,780).
+  fast (about 15,794 events per second instead of the exact 59.94 Hz count of
+  about 15,764).
 - Quartz state is version 4. The historical 8.24 VDL word is still written for
   older readers, and version 1-3 states convert that fraction on load. The
   exact accumulator is appended for version 4.

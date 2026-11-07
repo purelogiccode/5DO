@@ -399,12 +399,20 @@ public sealed class CoreRunner : IDisposable
             }
             finally
             {
-                // A state load, reset, or disc change can move the machine timeline.
-                // Preserve the latency queue for ordinary pauses (screenshots, menu
-                // toggles) and invalidate only when the frame counter actually jumped.
+                // Any externally invoked action may change machine state without
+                // moving the frame counter (disc swap, NVRAM/BIOS change, state load
+                // at the same frame). The run-ahead snapshot must never survive that.
+                _runAheadSnapshot.Invalidate();
+
+                // A state load, reset, or disc change can also move the machine
+                // timeline. Preserve the latency queue for ordinary pauses
+                // (screenshots, menu toggles) and reset it only when the frame
+                // counter actually jumped.
                 if (_machine.FramesExecuted != _lastPresentedMachineFrame)
                 {
-                    InvalidateLatencyState();
+                    _lastInputPollTimestamp = 0;
+                    _latency.Reset();
+                    ResetFrameDelayBuffer();
                 }
 
                 lock (_stateGate)

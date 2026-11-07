@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -27,6 +28,12 @@ namespace FiveDo.Frontend.Avalonia.Views;
 public partial class SettingsWindow : Window
 {
     private static readonly RendererOption[] _rendererOptions = CreateRendererOptions();
+
+    private bool _coverBusy;
+    private bool _coverCacheClearPending;
+
+    /// <summary>Gets a value indicating whether a cover action changed the shared cache.</summary>
+    internal bool CoversChanged { get; private set; }
 
     private static RendererOption[] CreateRendererOptions()
     {
@@ -370,6 +377,14 @@ public partial class SettingsWindow : Window
         SaveDirectoryBox.Text = settings.SaveDirectory;
         ScreenshotDirectoryBox.Text = settings.ScreenshotDirectory;
         CoverDirectoryBox.Text = settings.CoverDirectory;
+        UseOnlineCoversCheck.IsChecked = settings.UseOnlineCovers;
+        AutoDownloadCoversCheck.IsChecked = settings.AutoDownloadCovers;
+        CoverCatalogUrlBox.Text = settings.CoverCatalogUrl;
+        CoverFuzzyMatchingCheck.IsChecked = settings.CoverFuzzyMatching;
+        CoverAnnotationStrippingCheck.IsChecked = settings.CoverAnnotationStripping;
+        CoverFuzzyThresholdSlider.Value = CoverDefaults.ClampFuzzyThreshold(settings.CoverFuzzyThreshold);
+        UpdateCoverFuzzyThresholdText();
+        UpdateCoverCacheStatus();
         CheatsDirectoryBox.Text = settings.CheatsDirectory;
         LibraryMetadataPathBox.Text = settings.LibraryMetadataPath;
         DiscDatPathBox.Text = settings.DiscDatPath;
@@ -1338,6 +1353,12 @@ public partial class SettingsWindow : Window
         settings.SaveDirectory = SaveDirectoryBox.Text?.Trim() ?? string.Empty;
         settings.ScreenshotDirectory = ScreenshotDirectoryBox.Text?.Trim() ?? string.Empty;
         settings.CoverDirectory = CoverDirectoryBox.Text?.Trim() ?? string.Empty;
+        settings.UseOnlineCovers = UseOnlineCoversCheck.IsChecked == true;
+        settings.AutoDownloadCovers = AutoDownloadCoversCheck.IsChecked == true;
+        settings.CoverCatalogUrl = CoverDefaults.NormalizeCatalogUrl(CoverCatalogUrlBox.Text);
+        settings.CoverFuzzyMatching = CoverFuzzyMatchingCheck.IsChecked == true;
+        settings.CoverAnnotationStripping = CoverAnnotationStrippingCheck.IsChecked == true;
+        settings.CoverFuzzyThreshold = CoverDefaults.ClampFuzzyThreshold(CoverFuzzyThresholdSlider.Value);
         settings.CheatsDirectory = CheatsDirectoryBox.Text?.Trim() ?? string.Empty;
         settings.LibraryMetadataPath = LibraryMetadataPathBox.Text?.Trim() ?? string.Empty;
         settings.DiscDatPath = DiscDatPathBox.Text?.Trim() ?? string.Empty;
@@ -1556,6 +1577,208 @@ public partial class SettingsWindow : Window
         {
             CoverDirectoryBox.Text = path;
         }
+    }
+
+    private void OnCoverFuzzyThresholdChanged(object? sender, RangeBaseValueChangedEventArgs e)
+    {
+        UpdateCoverFuzzyThresholdText();
+    }
+
+    private void OnResetCoverCatalogUrl(object? sender, RoutedEventArgs e)
+    {
+        CoverCatalogUrlBox.Text = CoverDefaults.CatalogUrl;
+        _coverCacheClearPending = false;
+        ClearCoverCacheButton.Content = "Clear cache";
+        UpdateCoverCacheStatus();
+    }
+
+    private void OnRefreshCoverCatalogAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(RefreshCoverCatalogAsync, "refreshing the cover catalog");
+    }
+
+    private async Task RefreshCoverCatalogAsync()
+    {
+        if (_coverBusy)
+        {
+            return;
+        }
+
+        _coverBusy = true;
+        RefreshCoverCatalogButton.IsEnabled = false;
+        DownloadAllCoversButton.IsEnabled = false;
+        CoverDownloadProgressBar.IsVisible = false;
+        try
+        {
+            using CoverService service = CreateCoverServiceFromControls();
+            CoverCacheStatusText.Text = "Refreshing cover catalog...";
+            CoverCatalogRefreshResult result = await service
+                .RefreshCatalogAsync(force: true)
+                .ConfigureAwait(true);
+            CoverCacheStatusText.Text = result.Success
+                ? $"Catalog {result.PackVersion}: {result.CoverCount} covers. {DescribeCache(service.GetCacheStats())}"
+                : $"Cover catalog unavailable: {result.Error}";
+            if (result.Success)
+            {
+                CoversChanged = true;
+            }
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or InvalidDataException
+            or ArgumentException
+            or NotSupportedException)
+        {
+            CoverCacheStatusText.Text = $"Cover catalog failed: {exception.Message}";
+        }
+        catch (Exception exception)
+        {
+            CoverCacheStatusText.Text = $"Cover catalog failed unexpectedly: {exception.Message}";
+        }
+        finally
+        {
+            _coverBusy = false;
+            RefreshCoverCatalogButton.IsEnabled = true;
+            DownloadAllCoversButton.IsEnabled = true;
+        }
+    }
+
+    private void OnDownloadAllCoversAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(DownloadAllCoversAsync, "downloading cover art");
+    }
+
+    private async Task DownloadAllCoversAsync()
+    {
+        if (_coverBusy)
+        {
+            return;
+        }
+
+        _coverBusy = true;
+        RefreshCoverCatalogButton.IsEnabled = false;
+        DownloadAllCoversButton.IsEnabled = false;
+        ClearCoverCacheButton.IsEnabled = false;
+        CoverDownloadProgressBar.IsVisible = true;
+        CoverDownloadProgressBar.Value = 0;
+        try
+        {
+            using CoverService service = CreateCoverServiceFromControls();
+            var progress = new Progress<CoverDownloadProgress>(value =>
+            {
+                CoverDownloadProgressBar.Value = value.Total == 0
+                    ? 0
+                    : 100.0 * value.Completed / value.Total;
+                CoverCacheStatusText.Text = value.Total == 0
+                    ? $"Downloading covers... {FormatBytes(value.Bytes)}"
+                    : $"Downloading covers... {value.Completed}/{value.Total} ({value.CurrentName})";
+            });
+            CoverDownloadResult result = await service
+                .DownloadAllAsync(progress)
+                .ConfigureAwait(true);
+            if (service.Index is null)
+            {
+                CoverCacheStatusText.Text = "Cover catalog unavailable; no covers were downloaded.";
+                return;
+            }
+
+            CoverCacheStatusText.Text = result.Failed == 0
+                ? $"Downloaded {result.Downloaded}, cached {result.Skipped}. {DescribeCache(service.GetCacheStats())}"
+                : $"Downloaded {result.Downloaded}, cached {result.Skipped}, failed {result.Failed}. {DescribeCache(service.GetCacheStats())}";
+            CoversChanged = true;
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or InvalidDataException
+            or ArgumentException
+            or NotSupportedException)
+        {
+            CoverCacheStatusText.Text = $"Cover download failed: {exception.Message}";
+        }
+        catch (Exception exception)
+        {
+            CoverCacheStatusText.Text = $"Cover download failed unexpectedly: {exception.Message}";
+        }
+        finally
+        {
+            _coverBusy = false;
+            RefreshCoverCatalogButton.IsEnabled = true;
+            DownloadAllCoversButton.IsEnabled = true;
+            ClearCoverCacheButton.IsEnabled = true;
+            CoverDownloadProgressBar.IsVisible = false;
+        }
+    }
+
+    private void OnClearCoverCacheAsync(object? sender, RoutedEventArgs e)
+    {
+        if (!_coverCacheClearPending)
+        {
+            _coverCacheClearPending = true;
+            ClearCoverCacheButton.Content = "Confirm clear";
+            CoverCacheStatusText.Text = "Click Clear cache again to delete the online catalog and downloaded covers.";
+            return;
+        }
+
+        _coverCacheClearPending = false;
+        ClearCoverCacheButton.Content = "Clear cache";
+        var store = new CoverStore();
+        store.Clear();
+        CoversChanged = true;
+        UpdateCoverCacheStatus();
+    }
+
+    private CoverService CreateCoverServiceFromControls()
+    {
+        var settings = new AppSettings
+        {
+            UseOnlineCovers = UseOnlineCoversCheck.IsChecked == true,
+            AutoDownloadCovers = AutoDownloadCoversCheck.IsChecked == true,
+            CoverCatalogUrl = CoverCatalogUrlBox.Text ?? string.Empty,
+            CoverFuzzyMatching = CoverFuzzyMatchingCheck.IsChecked == true,
+            CoverAnnotationStripping = CoverAnnotationStrippingCheck.IsChecked == true,
+            CoverFuzzyThreshold = CoverFuzzyThresholdSlider.Value,
+            CoverDirectory = CoverDirectoryBox.Text ?? string.Empty,
+        };
+        return new CoverService(CoverServiceOptions.FromSettings(settings));
+    }
+
+    private void UpdateCoverFuzzyThresholdText()
+    {
+        CoverFuzzyThresholdText.Text = CoverFuzzyThresholdSlider.Value.ToString("P0", CultureInfo.InvariantCulture);
+    }
+
+    private void UpdateCoverCacheStatus()
+    {
+        var store = new CoverStore();
+        CoverCacheStats stats = store.GetStats();
+        if (store.TryLoadCatalog(out var json, out _))
+        {
+            CoverCatalogLoadResult loaded = CoverCatalogLoader.LoadJson(json);
+            if (loaded.Success)
+            {
+                CoverCacheStatusText.Text =
+                    $"Catalog {loaded.Catalog!.PackVersion}: {loaded.Catalog.Covers.Count} covers. "
+                    + DescribeCache(stats);
+                return;
+            }
+        }
+
+        CoverCacheStatusText.Text = stats.ImageCount == 0
+            ? "No cover catalog cached. Click Refresh catalog to download it."
+            : $"Covers cached: {DescribeCache(stats)}";
+    }
+
+    private static string DescribeCache(CoverCacheStats stats)
+    {
+        return $"Cache: {stats.ImageCount} images, {FormatBytes(stats.Bytes)}"
+               + (stats.PackPresent ? ", bulk pack present." : ".");
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        return bytes >= 1024 * 1024
+            ? string.Create(CultureInfo.InvariantCulture, $"{bytes / (1024.0 * 1024.0):0.0} MB")
+            : string.Create(CultureInfo.InvariantCulture, $"{bytes / 1024.0:0.0} KB");
     }
 
     private void OnBrowseCheatsDirectoryAsync(object? sender, RoutedEventArgs e)

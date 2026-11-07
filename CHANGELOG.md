@@ -1,12 +1,19 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.3.0, a documented-compatibility
+All notable changes are recorded here. The project is at v1.4.0, a documented-compatibility
 release.
 
-## [Unreleased]
+## [1.4.0] - 2026-11-07
 
 ### Added
 
+- UX-26 online cover art. A content-addressed WebP catalog (473 unique covers, 645/653
+  game IDs mapped) is hosted at `https://assets.purelogiccode.com/5do/v1`. 5DO downloads
+  the catalog and only the covers it needs, with a local cache and an optional ~27 MB
+  bulk pack. Matching uses exact game IDs, annotation stripping, token/no-space/subtitle
+  aliases, Jaro-Winkler fallback, and sequel-number guards. Settings > Covers exposes the
+  catalog URL, fuzzy threshold, cache actions, and the rights notice; the CLI adds
+  `covers update/download/match/verify/cache`. See `docs/CoverArt.md`.
 - VID-12 latency controls. Settings > Video exposes 0-2 frame run-ahead, a 0-8 frame
   presentation delay, and VRR/adaptive-sync presentation; Settings > Audio and
   `--audio-sync -250..250` add a host A/V offset. Per-game profiles store all four values,
@@ -19,6 +26,33 @@ release.
 - PERF-02/BAK-08 AOT and trimming evidence: CLI/frontend AOT and trimmed win-x64
   publishes, real-game OpenAL validation, startup/size measurements, and four opt-in
   `.pubxml` profiles. See `docs/Trimming.md`.
+- SYS-06 unsigned-disc support. Settings > Paths and `--allow-unsigned-discs` disable the
+  BIOS media RSA check in memory; the BIOS file is never modified. Known No-RSA images are
+  preferred, already-patched images and No-RSA file names are accepted, and a compatible
+  retail image is patched with the documented two-site bypass.
+- Exact NTSC 60000/1001 field clock and rational VDL accumulator. NTSC now uses 208,541
+  cycles per field at 12.5 MHz instead of 208,333, and `Quartz` state is version 4 with
+  conversion from the historical 8.24 VDL fraction. See `docs/PortingNotes.md` §12.35.
+- Differential harness first-divergence reporting, CD command counts/opcode hashes, full
+  CD command sequences, per-command cycle stamps, CPSR/instruction fields, and the
+  50-title panel. See `docs/DifferentialHarness.md` and `docs/TestCorpus.md`.
+
+### Fixed
+
+- VDLP disabled bitmap DMA now clears the line to black and no longer retains the previous
+  field's pixels or background; the background command is converted from 8-bit RGB to the
+  expected 5-bit format instead of byte-swapping red/blue and corrupting green.
+- Live OpenAL device switching no longer leaves the replacement output without a valid
+  context; the Settings test tone queues the full second so Windows sleep granularity does
+  not insert silent gaps.
+- Machine save-state section v2 now preserves frame dimensions and pixel aspect across
+  load/restore, so high-resolution and woven frames survive rewind and run-ahead.
+- Run-ahead invalidates its snapshot after external machine actions (disc swap, state load,
+  BIOS/NVRAM change) even when the frame counter does not move.
+- `LatencyTelemetry.MaxMilliseconds` now describes the rolling window instead of the maximum
+  ever observed.
+- `covers download --all` and `covers verify` now fail with a clear error when the catalog
+  is unavailable instead of reporting an empty success.
 
 ## [1.3.0] - 2026-11-06
 

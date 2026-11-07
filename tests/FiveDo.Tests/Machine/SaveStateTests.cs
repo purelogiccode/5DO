@@ -91,6 +91,27 @@ public sealed class SaveStateTests
     }
 
     [Fact]
+    public void LoadState_RestoresFrameDimensionsAndPixelAspect()
+    {
+        FiveDoMachine machine = CreateMachine();
+        machine.RunFrames(2);
+        machine.Frame.SourceWidth = 640;
+        machine.Frame.SourceHeight = 480;
+        machine.Frame.PixelAspect = 0.5;
+
+        using var state = new MemoryStream();
+        machine.SaveState(state);
+
+        FiveDoMachine loaded = CreateMachine();
+        state.Position = 0;
+        loaded.LoadState(state);
+
+        Assert.Equal(640, loaded.Frame.SourceWidth);
+        Assert.Equal(480, loaded.Frame.SourceHeight);
+        Assert.Equal(0.5, loaded.Frame.PixelAspect);
+    }
+
+    [Fact]
     public void LoadState_RejectsTruncatedData()
     {
         FiveDoMachine machine = CreateMachine();

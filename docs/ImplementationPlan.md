@@ -1,11 +1,11 @@
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan and Missing-Feature Backlog
 
-**Snapshot:** 2026-11-06 (focused rewrite)
-**Current release:** `1.3.0`
+**Snapshot:** 2026-11-07 (1.4.0 release)
+**Current release:** `1.4.0`
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master`<br>
-**Status:** **1,885 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --sEverity=WARNING` reports **zero** warnings or errors. **594 discs load, 593 render, 12 visually validated**; the 50-title oracle panel now runs (50/50 captured, **32/50 match every frame hash**, **all sample deltas ≤9**) and the top-100 playability audit is the next gate.<br>
+**Status:** **1,905 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --sEverity=WARNING` reports **zero** warnings or errors. **594 discs load, 593 render, 12 visually validated**; the 50-title oracle panel now runs (50/50 captured, **32/50 match every frame hash**, **all sample deltas ≤9**) and the top-100 playability audit is the next gate.<br>
 **Goal:** beat 4DO and Opera-libretro on **measured in-game compatibility and accuracy**, and remain the best standalone desktop 3DO emulator on Windows, Linux, and macOS.<br>
 **Plan shape:** four phases, **measurement first**. Product and research work is deferred until the compatibility gate is green.
 
@@ -46,9 +46,9 @@
 | Gate | Result |
 |---|---|
 | Build | `dotnet build 5DO.sln -c Debug` — **0 warnings, 0 errors** |
-| Tests | **1,885 / 1,885 passed** in 12 s |
+| Tests | **1,905 / 1,905 passed** in Debug and Release |
 | Format | `dotnet format --verify-no-changes` — clean |
-| CLI | `5DO 1.3.0 (FiveDo)`; `selftest --json` — all checks `ok: true` |
+| CLI | `5DO 1.4.0 (FiveDo)`; `selftest --json` — all checks `ok: true` |
 | Synthetic benchmark | 240 frames in 0.816 s — **294 fps (~3.4 ms/frame)** |
 | Real-title benchmark | Road Rash race **4.20 ms/frame**, p99 **7.40 ms** (`Performance.md` §8.5) |
 | Reference oracle | `OperaCore.dll` and the optional debug core are built and staged |
@@ -84,13 +84,13 @@ These are done and must not regress. They are listed here once; the backlog cont
 
 | Area | Shipped capabilities |
 |---|---|
-| Core | ARM60 interpreter; CLIO timers, FIFO, DMA, interrupts; MADAM CEL/pixel/matrix; VDLP; SPORT; DSP; XBUS; CD-ROM; NVRAM; Quartz state v3; save states v3; rewind buffer; fast-forward; cheats; TAS movie container/record/replay/verify/branch; six-port PBUS input |
+| Core | ARM60 interpreter; CLIO timers, FIFO, DMA, interrupts; MADAM CEL/pixel/matrix; VDLP; SPORT; DSP; XBUS; CD-ROM; NVRAM; Quartz state v4; save states v3; rewind buffer; fast-forward; cheats; TAS movie container/record/replay/verify/branch; six-port PBUS input |
 | Disc | ISO/BIN/CUE/CHD, parent/child CHD, multi-track TOC, CD-DA mixing and volume, M3U/M3U8 playlist, live/F3/UI/CLI swap, guest inject, Opera FS parser, prefetch cache, Redump/No-Intro DAT verification, library health badges |
 | Video | OpenGL/GLES two-stage presenter; optional Vulkan offscreen and Win32 surface; optional Direct3D 11 Windows presenter; 4K output; nearest/accurate/sharp-bilinear/CRT/xBR/HQx/FSR; per-edge overscan; void border/color; opt-in line-doubled high-res; 480i/240p detection with bob/weave/blend field handling; presentation frame delay; VRR/adaptive-sync compositor presentation; screenshots; gallery filters/compare/export/sidecars; GIF recording |
 | Audio | Exact 44.1 kHz clock; OpenAL Soft; WAV capture; `audio analyze`; CD-DA mix; volume/mute; audio-driven pacing; −250…250 ms audio sync offset; queue-latency/underrun counters; AOT null-device validation |
-| Frontend | Library scan/dedupe; favorites/playtime/history; offline metadata editor; settings; keyboard/gamepad bindings; ten save slots with thumbnails; screenshot gallery; log viewer; disc browser/info; BIOS/NVRAM manager; OSD/quick menu; input display; playlist editor; portable mode; instance lock; diagnostics bundle; startup update check; startup auto-open of the last BIOS/disc; 0-2 frame run-ahead; 0-8 frame presentation delay; VRR option; software input-latency overlay |
-| CLI | `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks/verify/playlist`, `library verify`, `fs`, `bios`, `nvram`, `cheat`, `movie`, `settings`, `audio`, `state`, `disasm`, `update` |
-| Release | v1.3.0 six bundles; versioned archives; checksums; legal/attribution sign-off; OpenAL LGPL obligations |
+| Frontend | Library scan/dedupe; local and online cover art; favorites/playtime/history; offline metadata editor; settings; keyboard/gamepad bindings; ten save slots with thumbnails; screenshot gallery; log viewer; disc browser/info; BIOS/NVRAM manager; OSD/quick menu; input display; playlist editor; portable mode; instance lock; diagnostics bundle; startup update check; startup auto-open of the last BIOS/disc; 0-2 frame run-ahead; 0-8 frame presentation delay; VRR option; software input-latency overlay |
+| CLI | `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks/verify/playlist`, `library verify`, `covers update/download/match/verify/cache`, `fs`, `bios`, `nvram`, `cheat`, `movie`, `settings`, `audio`, `state`, `disasm`, `update` |
+| Release | v1.4.0 six bundles; versioned archives; checksums; legal/attribution sign-off; OpenAL LGPL obligations |
 
 **Scope decisions (unchanged):** WebAssembly/browser, Android/iOS, Raspberry Pi, and Steam Deck are **out of scope**. Desktop Windows, Linux, and macOS (x64/arm64) remain the supported targets. 4K *internal* CEL rendering is research, not a release blocker; 4K *output* upscaling is supported. Distribution remains free, open-source **donationware** under the FreeDO modified GNU LGPL (non-commercial; voluntary donations only).
 
@@ -112,9 +112,10 @@ These are done and must not regress. They are listed here once; the backlog cont
 | SYS-12 | Portfolio OS SWI HLE (14 SWIs, opt-in); per-comment histograms | `ArmSwiHleTests`; 847,860 LLE steps vs 24,578 HLE; default-off hashes unchanged. Log 2026-11-04. |
 | SYS-17 | Game database 653 records; 1,366 images; 100% metadata coverage; `gamedb scan/export/merge` | `GameDatabase.md`; 12 storage/host/CLI tests. Log 2026-11-05. |
 | SYS-18 | Auto per-game profile; BIOS/region/fix/input applied with zero manual steps | Five-title evidence (WorldCup, Powers Kingdom, Slayer, Crash 'n Burn, Crime Patrol). Log 2026-11-05. |
+| UX-26 | Online cover catalog: 473 unique WebP covers, 645/653 game IDs mapped, catalog + on-demand + 27 MB ZIP, annotation-stripped Jaro-Winkler fallback | `CoverArt.md`; 14 host tests; packager catalog reload/hash verification. Log 2026-11-07. |
 | VID-04 | 480i/240p detection; bob/weave/blend; interlace-aware geometry; screenshots/GIF | `InterlaceProcessor`; 16 tests; five-title bob-vs-auto hashes. Log 2026-11-06. |
 
-**Full completed-ID index (including the six above):** FND-01, FND-02, FND-03, CORE-09, CORE-12, CORE-14, CORE-15, SYS-04, SYS-06, SYS-07, SYS-08, SYS-09, SYS-10, SYS-11, SYS-12, SYS-13, SYS-14, VID-04, VID-05, VID-06, VID-14, VID-15, AUD-05, UX-01, UX-02, UX-04, UX-11, UX-12, UX-15, UX-19, UX-23, ENG-03, PERF-02, VID-12, BAK-12, BAK-17.
+**Full completed-ID index (including the seven above):** FND-01, FND-02, FND-03, CORE-09, CORE-12, CORE-14, CORE-15, SYS-04, SYS-06, SYS-07, SYS-08, SYS-09, SYS-10, SYS-11, SYS-12, SYS-13, SYS-14, VID-04, VID-05, VID-06, VID-14, VID-15, AUD-05, UX-01, UX-02, UX-04, UX-11, UX-12, UX-15, UX-19, UX-23, UX-26, ENG-03, PERF-02, VID-12, BAK-12, BAK-17.
 
 **Milestone aliases:** M9R/M9P → P3/P6/TEST-04; M10 → PERF-02; M12 → PERF-08; M13.5/M13.6 → TEST-06; M14 → VID-01/02/03; M15 → CORE-11/16 + FND-05.
 
@@ -492,6 +493,10 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test
 ## 9. Completed log
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
+
+- **2026-11-07 - v1.4.0.** Six framework-dependent single-file bundles plus `SHA256SUMS.txt`; online cover art (UX-26), VID-12 latency controls, SYS-06 unsigned-disc support, the exact 60000/1001 NTSC field clock and rational VDL accumulator, VDLP blanking/background fixes, live OpenAL device-switching and test-tone fixes, and differential-harness CD-sequence/cycle evidence. The machine frame section now preserves dimensions and pixel aspect across load, run-ahead invalidates its snapshot after external machine actions, and the cover CLI/UI fail clearly when the catalog is unavailable. **1,905 tests pass**; build, format, and InspectCode are clean. See `WhatsNew.md` and `ReleaseNotes-1.4.0.md`.
+
+- **2026-11-07 - UX-26 online cover catalog.** Added `FiveDo.Host/Covers` (catalog model and validation, content-addressed cache, conditional HTTP downloader, local/online resolver, annotation stripping, Jaro-Winkler, token/no-space/subtitle aliases, sequel-number guard, region/year/retail tie-breaks), the `covers` CLI, Settings > Covers, and `Configuration > Cover Art`. The packager deduplicates the 1,356-file source collection to **473 unique images**, encodes 600 px WebP q85 (**25.4 MB**, **26.7 MB** ZIP), maps **645/653** 4DO game IDs (9 manual overrides, 5 weak, 8 homebrew/emulator entries without covers), and reloads the generated catalog to verify every image hash and unique game-ID assignment. The catalog is hosted at `https://assets.purelogiccode.com/5do/v1`; see `CoverArt.md`. 14 host cover tests pass.
 
 - **2026-11-06 — InspectCode cleanup.** Removed the last seven `jb inspectcode --sEverity=WARNING` warnings without changing behavior. `StateWriter` lost two redundant `(ushort)0` casts. `JitInstruction` no longer stores the unused `Terminator` property (the classifier's `terminator` local still stops the block) and declares `LayoutKind.Auto`. The unused `EmitStoreUserConstant` helper was deleted. `EmitDataProcessing` and `EmitBranch` no longer take an unused `state` local. `EnterFiqFromJit` is invoked only from generated JIT IL, so it is now looked up with `nameof` and carries a scoped `SuppressMessage("ReSharper", "UnusedMember.Local")` with a justification rather than being deleted. InspectCode reports **0 results**; 1,885 tests pass and format is clean.
 

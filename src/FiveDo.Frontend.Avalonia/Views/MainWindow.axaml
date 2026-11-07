@@ -112,6 +112,17 @@
                           ToolTip.Tip="Open video, audio, emulation, and path settings." />
                 <MenuItem Header="Input Bindings..." Click="OnInputBindingsAsync"
                           ToolTip.Tip="Configure keyboard and gamepad bindings for all six players." />
+                <MenuItem Header="Cover Art"
+                          ToolTip.Tip="Refresh the online cover catalog, download missing covers, or clear the cover cache.">
+                    <MenuItem Header="Refresh Catalog" Click="OnRefreshCoverCatalogAsync"
+                              ToolTip.Tip="Download or revalidate the cover catalog from the configured server." />
+                    <MenuItem Header="Download Missing Covers" Click="OnDownloadMissingCoversAsync"
+                              ToolTip.Tip="Resolve and download covers that are not in the local cache." />
+                    <MenuItem Header="Download All Covers..." Click="OnDownloadAllCoversAsync"
+                              ToolTip.Tip="Download the bulk pack (about 27 MB) for offline use." />
+                    <MenuItem Header="Clear Cover Cache" Click="OnClearCoverCacheAsync"
+                              ToolTip.Tip="Delete the online catalog and downloaded cover images." />
+                </MenuItem>
                 <Separator />
                 <MenuItem x:Name="HighResMenuItem" Header="High-Resolution Mode (640x480)"
                           ToggleType="CheckBox" Click="OnHighResChanged"

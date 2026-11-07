@@ -1159,19 +1159,36 @@ public sealed class FiveDoMachine
             _compatibility.Jw = reader.ReadInt32();
             _compatibility.Cnbfix = reader.ReadBoolean();
             _compatibility.HighResolution = reader.ReadBoolean();
-            _frame.SourceWidth = reader.ReadInt32();
-            _frame.SourceHeight = reader.ReadInt32();
+            var sourceWidth = reader.ReadInt32();
+            var sourceHeight = reader.ReadInt32();
+            if (sourceWidth < 0 || sourceWidth > VdlLine.MaxPixels)
+            {
+                throw new InvalidStateException($"Invalid VDL frame width {sourceWidth}.");
+            }
+
+            if (sourceHeight < 0 || sourceHeight > VdlFrame.MaxLines)
+            {
+                throw new InvalidStateException($"Invalid VDL frame height {sourceHeight}.");
+            }
+
+            _frame.SourceWidth = sourceWidth;
+            _frame.SourceHeight = sourceHeight;
             var version = reader is StateSectionReader sectionReader ? sectionReader.Version : 1;
             if (version >= 2)
             {
-                _frame.PixelAspect = reader.ReadDouble();
+                var pixelAspect = reader.ReadDouble();
                 var lineCount = reader.ReadInt32();
                 if (lineCount < 0 || lineCount > VdlFrame.MaxLines)
                 {
                     throw new InvalidStateException($"Invalid VDL line count {lineCount}.");
                 }
 
+                // Clear resets the derived dimensions and aspect, so restore the
+                // serialized values after the line store has been reset.
                 _frame.Clear();
+                _frame.SourceWidth = sourceWidth;
+                _frame.SourceHeight = sourceHeight;
+                _frame.PixelAspect = pixelAspect;
                 for (var lineIndex = 0; lineIndex < lineCount; lineIndex++)
                 {
                     VdlLine line = _frame[lineIndex];

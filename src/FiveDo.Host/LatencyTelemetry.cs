@@ -91,9 +91,10 @@ public sealed class LatencyTelemetry
         lock (_gate)
         {
             _last = milliseconds;
+            var evicted = _count == WindowSize ? _samples[_next] : 0;
             if (_count == WindowSize)
             {
-                _sum -= _samples[_next];
+                _sum -= evicted;
             }
             else
             {
@@ -103,9 +104,26 @@ public sealed class LatencyTelemetry
             _samples[_next] = milliseconds;
             _sum += milliseconds;
             _next = (_next + 1) % WindowSize;
-            if (milliseconds > _max)
+            if (_count < WindowSize)
             {
-                _max = milliseconds;
+                if (milliseconds > _max)
+                {
+                    _max = milliseconds;
+                }
+            }
+            else
+            {
+                // The window is full, so a sample was evicted. Recompute the maximum
+                // from the retained samples; 120 comparisons per frame are cheap and
+                // keep MaxMilliseconds describing the rolling window.
+                _max = 0;
+                for (var i = 0; i < _count; i++)
+                {
+                    if (_samples[i] > _max)
+                    {
+                        _max = _samples[i];
+                    }
+                }
             }
         }
     }

@@ -47,6 +47,28 @@ public static class BiosRsaPatch
         return count;
     }
 
+    /// <summary>Counts already-patched RSA check sites in a BIOS image.</summary>
+    /// <param name="bios">1 MB BIOS image bytes.</param>
+    /// <returns>The number of sites that already carry the bypass.</returns>
+    public static int CountPatchedSites(ReadOnlySpan<byte> bios)
+    {
+        var count = 0;
+        var offset = 0;
+        while (offset <= bios.Length - SiteLength)
+        {
+            var index = bios[offset..].IndexOf(PatchedPattern);
+            if (index < 0)
+            {
+                break;
+            }
+
+            count++;
+            offset += index + SiteLength;
+        }
+
+        return count;
+    }
+
     /// <summary>Patches every RSA check site in a BIOS image in place.</summary>
     /// <param name="bios">Writable 1 MB BIOS image bytes.</param>
     /// <returns>The number of sites patched; zero when the image is already patched.</returns>

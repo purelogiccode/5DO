@@ -60,7 +60,7 @@ shows the owner and exits. `FIVEDO_ALLOW_MULTIPLE=1` disables that guard. Differ
 profiles or data directories use different lock files and may run together.
 
 Settings are written atomically (temporary file + replace) and carry
-`"SettingsVersion": 6`. An older file is migrated in place on the next load.
+`"SettingsVersion": 7`. An older file is migrated in place on the next load.
 A malformed `settings.json` is copied to `settings.json.invalid-<timestamp>.bak`
 before defaults are used, so the original bytes are never silently lost. Back up or
 delete the file to reset the desktop configuration.
@@ -77,7 +77,7 @@ every serialized property in `AppSettings`.
 
 | Property | Type | Default | Meaning |
 |---|---|---|---|
-| `SettingsVersion` | int | `6` | Settings schema version. Unversioned files are migrated on load. |
+| `SettingsVersion` | int | `7` | Settings schema version. Unversioned files are migrated on load. |
 | `FirstRunCompleted` | bool | `false` | Whether the first-run guide has been shown. |
 | `BiosPath` | string | `""` | Last primary BIOS path; fallback when auto-selection is off or unavailable. |
 | `Bios2Path` | string | `""` | Optional BIOS2/Kanji font path. |
@@ -248,7 +248,7 @@ player-1 defaults. See section 3 for the full input structure.
 
 ```json
 {
-  "SettingsVersion": 6,
+  "SettingsVersion": 7,
   "FirstRunCompleted": true,
   "BiosPath": "C:\\3DO\\panafz1.bin",
   "Bios2Path": "",
@@ -638,6 +638,12 @@ written after the run when supplied.
 | `SaveDirectory` | Default `.../5DO/states`; used by `SaveStateSlotManager`. |
 | `ScreenshotDirectory` | Empty means Pictures; screenshots are named `<game>-<yyyyMMdd-HHmmss>-f<frame>.png`. |
 | `CoverDirectory` | Optional shared folder for cover art named after the disc files. |
+| `UseOnlineCovers` | Enables the online cover catalog (default `true`). |
+| `AutoDownloadCovers` | Downloads missing covers after a library scan (default `true`). |
+| `CoverCatalogUrl` | Catalog or base URL; empty uses the 5DO asset server. |
+| `CoverFuzzyMatching` | Enables Jaro-Winkler title matching (default `true`). |
+| `CoverAnnotationStripping` | Ignores region/language/version tags before matching (default `true`). |
+| `CoverFuzzyThreshold` | Fuzzy-match threshold, `0.70`–`0.95` (default `0.85`). |
 | `CheatsDirectory` | Per-game cheat JSON folder; empty means `.../5DO/cheats`. |
 | `LibraryFolders` | Scanned recursively to depth 4 for `.iso`, `.bin`, `.cue`, `.chd`; edited in **Settings > Paths > Game folders** or **File > Add Game Folder...**. |
 | `ShowDuplicateLibraryEntries` | When false (default), disc images that share a 3DO game ID are listed once. When true, every image file is listed. |
@@ -653,6 +659,16 @@ name as the title and show `Unknown`; known discs use the embedded 4DO database
 metadata. Covers are decoded once per file at a bounded height on background threads and
 shared by path, so the game list appears before cover art finishes loading and duplicate
 discs in different library folders reuse the same bitmap.
+
+The optional online catalog is configured under **Settings > Covers**. 5DO downloads a
+small `catalog.json` from `https://assets.purelogiccode.com/5do/v1`,
+matches the catalog locally, and fetches only the WebP images it needs. Known discs use
+a precomputed 4DO game-ID lookup; unknown discs fall back to exact, token, subtitle, and
+Jaro-Winkler name matching. The default threshold is 0.85. **Download all covers** fetches
+the optional bulk pack (about 27 MB) for offline use. The cache lives under
+`<LocalApplicationData>/5DO/covers` (or beside the executable in portable mode) and is
+shared by named profiles. See [`CoverArt.md`](CoverArt.md) for the catalog schema,
+matching rules, hosting, and takedown policy.
 
 Discs are listed immediately from the folder enumeration. Cover lookup enumerates each
 disc and cover directory once and indexes image base names, rather than probing every

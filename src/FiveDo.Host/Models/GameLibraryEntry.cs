@@ -54,6 +54,15 @@ public sealed record GameLibraryEntry(
     /// <summary>Gets the description from an offline metadata overlay.</summary>
     public string Description { get; init; } = string.Empty;
 
+    /// <summary>Gets the cover-resolution source label, or an empty string.</summary>
+    public string CoverSource { get; init; } = string.Empty;
+
+    /// <summary>Gets the cover-match confidence from 0.0 to 1.0.</summary>
+    public double CoverConfidence { get; init; }
+
+    /// <summary>Gets the cover alias or file name that matched.</summary>
+    public string CoverMatchName { get; init; } = string.Empty;
+
     /// <summary>Gets a value indicating whether the user marked this disc as a favorite.</summary>
     public bool Favorite { get; init; }
 

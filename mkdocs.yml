@@ -127,6 +127,7 @@ nav:
   - Reference:
       - CLI reference: CliReference.md
       - Configuration: Configuration.md
+      - Cover art: CoverArt.md
       - Game database: GameDatabase.md
       - Machine options: MachineOptions.md
       - Save states: SaveStates.md
@@ -157,6 +158,7 @@ nav:
       - Implementation plan: ImplementationPlan.md
       - Compatibility sweep: CompatibilitySweep.md
       - High-resolution CEL research: HighResolutionCelResearch.md
+      - Release notes 1.4.0: ReleaseNotes-1.4.0.md
       - Release notes 1.3.0: ReleaseNotes-1.3.0.md
       - Release notes 1.2.2: ReleaseNotes-1.2.2.md
       - Release notes 1.2.1: ReleaseNotes-1.2.1.md

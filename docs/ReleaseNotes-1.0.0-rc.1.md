@@ -1,7 +1,7 @@
 # 5DO 1.0.0-rc.1
 
-> **Historical release candidate.** The current release is **1.3.0**; see
-> [`ReleaseNotes-1.3.0.md`](ReleaseNotes-1.3.0.md). M13 loadability is complete,
+> **Historical release candidate.** The current release is **1.4.0**; see
+> [`ReleaseNotes-1.4.0.md`](ReleaseNotes-1.4.0.md). M13 loadability is complete,
 > M14 high-resolution CEL research is post-1.0, and legal/attribution sign-off is
 > recorded (2026-11-02).
 

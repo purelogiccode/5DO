@@ -463,6 +463,15 @@ background. Later scans reuse `library-cache.json` and only reopen files whose s
 timestamp changed. Cover images are indexed once per folder instead of being probed for
 every disc, so the list appears quickly even with a large cover collection.
 
+**Settings > Covers** enables the optional online cover catalog. Known discs use a
+precomputed 4DO game-ID lookup; other titles use exact, annotation-stripped, token,
+subtitle, and Jaro-Winkler matching. The default threshold is 0.85. Covers download in
+the background after a scan and are cached under `%LOCALAPPDATA%\5DO\covers` (or beside
+the executable in portable mode). **Configuration > Cover Art** can refresh the catalog,
+download missing covers, download the full ~27 MB pack, or clear the cache. Local covers
+still take precedence when they match, and the library works offline with cached covers.
+See [`CoverArt.md`](CoverArt.md) for hosting, the catalog format, and the takedown policy.
+
 Each disc is identified by a **game ID**: the MD5 of its first two 2048-byte data sectors,
 the same identifier used by 4DO's game database. Renaming a disc or keeping GoodTools and
 Redump/No-Intro copies of the same release does not create a second game, because the ID

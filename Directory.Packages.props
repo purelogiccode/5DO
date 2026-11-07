@@ -30,6 +30,11 @@
     <PackageVersion Include="Vortice.DXGI" Version="3.8.3" />
     <PackageVersion Include="XenoAtom.ShaderCompiler.Build" Version="1.2.2" />
     <PackageVersion Include="CHDSharp" Version="1.6.3" />
+    <!-- Cover packager (build-time tool) -->
+    <PackageVersion Include="SkiaSharp" Version="4.155.0" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Win32" Version="4.155.0" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.155.0" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.macOS" Version="4.155.0" />
     <!-- Tests and benchmarks -->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
