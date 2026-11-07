@@ -159,6 +159,20 @@ Counters exposed by the CLI/overlay:
 A lost device or driver failure stops the fill loop but does not crash emulation; the
 DSP continues and the app runs silently.
 
+### Device switching and concurrent outputs
+
+OpenAL's standard current-context state is process-wide, not per thread. `OpenAlAudioOutput`
+therefore makes its context current per thread through `ALC_EXT_thread_local_context`
+(provided by the bundled OpenAL Soft runtime), falling back to the process-wide call only
+when the extension is unavailable. This matters when two outputs overlap: changing
+`Settings > Audio > Output device` creates the replacement before retiring the previous
+output, and the Settings test tone plays through a second short-lived output while the game
+is running. With a process-wide context, retiring the old output cleared or destroyed the
+context the replacement fill thread was using; the new device then failed `alSourceQueueBuffers`
+with `AL_INVALID_OPERATION`, filled the ring, and stayed silent until the frontend restarted.
+Each output now owns its thread-local context, so live device changes route audio to the
+newly selected device immediately and stopping/restarting a game is not required.
+
 ### Audio/video sync offset
 
 `Settings > Audio` and `--audio-sync -250..250` apply a fixed audio offset relative to
@@ -305,8 +319,11 @@ fps.
 | `FIVEDO_AUDIO_TAP` | Enable the PCM/timing tap. |
 
 Settings > Audio also has a **Play 440 Hz test tone** button. It creates a separate
-short-lived OpenAL output, plays one second, and reports the OpenAL error if no device
-is available.
+short-lived OpenAL output, queues the complete one-second tone up front into a large
+ring, and reports the OpenAL error if no device is available. Pacing a producer with
+`Thread.Sleep(16)` is not reliable on Windows (the wait can round up to ~31 ms), which
+drains the ring and inserts audible silent filler blocks; queueing the whole tone avoids
+that crackle and lets the button test the selected device cleanly.
 
 ---
 

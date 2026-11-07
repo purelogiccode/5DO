@@ -13,9 +13,11 @@ namespace FiveDo.Audio;
 /// <remarks>
 /// <para>
 /// The emulation thread calls <see cref="PushSample"/> into a lock-free ring buffer. A dedicated
-/// audio thread keeps <see cref="BufferCount"/> queued OpenAL buffers filled from that ring. The
-/// OpenAL context is made current on the audio thread because OpenAL's current-context state is
-/// thread-local.
+/// audio thread keeps <see cref="BufferCount"/> queued OpenAL buffers filled from that ring.
+/// OpenAL's basic current-context state is process-wide, so the output makes its context
+/// current per thread through <c>ALC_EXT_thread_local_context</c> when available. This keeps
+/// concurrent outputs (live device switching or the Settings test tone) from resetting each
+/// other's context.
 /// </para>
 /// <para>
 /// Construction returns <see langword="null"/> from <see cref="TryCreate(int, out string?)"/> when no
@@ -39,6 +41,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
     private readonly AL _al;
     private readonly Device* _device;
     private readonly Context* _context;
+    private readonly delegate* unmanaged<Context*, byte> _setThreadContext;
     private readonly uint _source;
     private readonly uint[] _buffers;
     private readonly int[] _bufferFrameCounts;
@@ -74,6 +77,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         AL al,
         Device* device,
         Context* context,
+        delegate* unmanaged<Context*, byte> setThreadContext,
         AudioRingBuffer ring,
         AudioBufferConfiguration configuration)
     {
@@ -81,6 +85,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         _al = al;
         _device = device;
         _context = context;
+        _setThreadContext = setThreadContext;
         _ring = ring;
         _bufferFrames = configuration.BufferFrames;
         _bufferCount = configuration.BufferCount;
@@ -94,7 +99,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         _samples = new short[_bufferFrames * 2];
         _floatFrames = new float[_bufferFrames * 2];
 
-        if (!_alc.MakeContextCurrent(_context))
+        if (!MakeContextCurrent())
         {
             throw new InvalidOperationException("The OpenAL context could not be made current.");
         }
@@ -123,6 +128,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         }
 
         _al.SetSourceProperty(_source, SourceFloat.Gain, 1f);
+        ClearContext();
         _thread = new Thread(FillLoop)
         {
             IsBackground = true,
@@ -299,6 +305,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         AL? al = null;
         Device* device = null;
         Context* context = null;
+        delegate* unmanaged<Context*, byte> setThreadContext = null;
         try
         {
             alc = ALContext.GetApi();
@@ -317,17 +324,16 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
                 return null;
             }
 
-            if (!alc.MakeContextCurrent(context))
-            {
-                error = "The OpenAL context could not be made current.";
-                return null;
-            }
-
+            // OpenAL's current context is process-wide; concurrent outputs (device switching
+            // or the Settings test tone) would otherwise fight over it. OpenAL Soft exposes
+            // the thread-local context extension, which keeps each fill thread independent.
+            setThreadContext = GetSetThreadContext(alc, device);
             var output = new OpenAlAudioOutput(
                 alc,
                 al,
                 device,
                 context,
+                setThreadContext,
                 new AudioRingBuffer(capacityFrames),
                 configuration);
             alc = null;
@@ -356,6 +362,40 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
 
             al?.Dispose();
             alc?.Dispose();
+        }
+    }
+
+    private static delegate* unmanaged<Context*, byte> GetSetThreadContext(
+        ALContext alc,
+        Device* device)
+    {
+        if (!alc.IsExtensionPresent(device, "ALC_EXT_thread_local_context"))
+        {
+            return null;
+        }
+
+        void* address = alc.GetProcAddress(device, "alcSetThreadContext");
+        return address is null
+            ? null
+            : (delegate* unmanaged<Context*, byte>)address;
+    }
+
+    private bool MakeContextCurrent()
+    {
+        return _setThreadContext is not null
+            ? _setThreadContext(_context) != 0
+            : _alc.MakeContextCurrent(_context);
+    }
+
+    private void ClearContext()
+    {
+        if (_setThreadContext is not null)
+        {
+            _setThreadContext(null);
+        }
+        else
+        {
+            _alc.MakeContextCurrent(null);
         }
     }
 
@@ -488,7 +528,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         MultimediaThreadToken multimediaToken = default;
         try
         {
-            if (!_alc.MakeContextCurrent(_context))
+            if (!MakeContextCurrent())
             {
                 _deviceFailed = true;
                 return;
@@ -686,7 +726,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         finally
         {
             multimediaToken.Dispose();
-            _alc.MakeContextCurrent(null);
+            ClearContext();
         }
     }
 
@@ -710,7 +750,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
             return;
         }
 
-        if (!_alc.MakeContextCurrent(_context))
+        if (!MakeContextCurrent())
         {
             _al.Dispose();
             _alc.Dispose();
@@ -720,7 +760,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         _al.SourceStop(_source);
         _al.DeleteSource(_source);
         _al.DeleteBuffers(_buffers);
-        _alc.MakeContextCurrent(null);
+        ClearContext();
         _alc.DestroyContext(_context);
         _alc.CloseDevice(_device);
         _al.Dispose();

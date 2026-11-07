@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -999,8 +998,13 @@ public partial class SettingsWindow : Window
     {
         TestAudioButton.IsEnabled = false;
         TestAudioText.Text = "Playing a 1 s 440 Hz tone...";
+
+        // Use a large ring so the whole tone can be queued before playback starts.
+        // Pacing the producer with Thread.Sleep is unreliable: Windows can round a
+        // 16 ms sleep up to ~31 ms, which drains the ring and inserts silent filler
+        // blocks. Those gaps are audible as crackle, not as the selected device.
         OpenAlAudioOutput? output = OpenAlAudioOutput.TryCreate(
-            100,
+            500,
             (AudioDeviceCombo.SelectedItem as AudioDeviceOption)?.Name,
             out var error);
         if (output is null)
@@ -1015,20 +1019,18 @@ public partial class SettingsWindow : Window
             output.Volume = (float)Math.Clamp(VolumeSlider.Value, 0, 1);
             await Task.Run(() =>
             {
-                for (var frame = 0; frame < 60; frame++)
+                const int frames = 44_100;
+                for (var i = 0; i < frames; i++)
                 {
-                    for (var i = 0; i < 735; i++)
-                    {
-                        var phase = (frame * 735 + i) * 2.0 * Math.PI * 440.0 / 44_100.0;
-                        var value = (short)(Math.Sin(phase) * 6000.0);
-                        // The await completes before the finally disposes the output.
-                        // ReSharper disable once AccessToDisposedClosure
-                        output.PushSample(new AudioSample(value, value).Packed);
-                    }
-
-                    Thread.Sleep(16);
+                    var phase = i * 2.0 * Math.PI * 440.0 / 44_100.0;
+                    var value = (short)(Math.Sin(phase) * 6000.0);
+                    // The await completes before the finally disposes the output.
+                    // ReSharper disable once AccessToDisposedClosure
+                    output.PushSample(new AudioSample(value, value).Packed);
                 }
-            }).ConfigureAwait(false);
+            }).ConfigureAwait(true);
+
+            await Task.Delay(1300).ConfigureAwait(true);
             TestAudioText.Text = "Test tone finished.";
         }
         catch (Exception exception)

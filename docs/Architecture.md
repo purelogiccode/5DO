@@ -462,7 +462,7 @@ AudioAnalyzer (offline WAV peak/RMS/clipping/DC report)
 ```
 
 - Sample rate is **44,100 Hz**, stereo, signed 16-bit, from an exact rational DSP clock: 44,100 samples per ARM second. It is independent of the VDL/timer 8.24 accumulators.
-- The DSP runs on the core thread; the audio backend runs on its own thread and only consumes the ring buffer. The OpenAL context is made current on that thread because OpenAL's current context is thread-local.
+- The DSP runs on the core thread; the audio backend runs on its own thread and only consumes the ring buffer. The OpenAL context is made current on that thread through `ALC_EXT_thread_local_context` when available; the standard OpenAL current context is process-wide, so overlapping outputs (live device switching or the Settings test tone) would otherwise reset each other's context.
 - The ring drops the newest sample when full and reports it. The OpenAL backend queues variable-size buffers containing exactly the samples the DSP produced, keeps up to eight buffers in flight after a 3072-frame prefill lead, and counts underruns. Buffers are rented from a free pool so a buffer still attached to the source is never rewritten; the fill thread is registered as a Windows "Pro Audio" multimedia thread and runs above normal priority. `IAudioSink.Reset` drops queued audio on machine reset/state load so the new timeline does not replay the old one. `FIVEDO_AUDIO_TAP=<prefix>` records the exact queued PCM (`<prefix>.wav`) plus a per-buffer timing log (`<prefix>.csv`).
 - Live OpenAL applies a soft peak limiter (0.8 threshold, 0.9 ceiling) after volume; WAV captures keep the raw DSP output.
 - No allocations in the steady-state audio path.
