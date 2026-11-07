@@ -95,9 +95,9 @@ public sealed class FrameAssembler
         if (pixel == 0)
         {
             var background = line.Background;
-            blue = Expand5((byte)(background & 0x1f));
-            green = Expand5((byte)((background >> 5) & 0x1f));
-            red = Expand5((byte)((background >> 10) & 0x1f));
+            red = (byte)((background >> 16) & 0xff);
+            green = (byte)((background >> 8) & 0xff);
+            blue = (byte)(background & 0xff);
             return;
         }
 

@@ -55,6 +55,9 @@ another thread (`VdlFrameMailbox` does this).
 
 - VRAM is read at `(addr & 0xFFFFF) + 2 MB`.
 - The current display-list entry selects a control/background/CLUT-DMA command.
+- A zero display-list word is a stop: the previous control word and bitmap are
+  retained, so the remaining visible lines repeat the last entry
+  (`opera_vdlp.c`: `if(!entry) return;`).
 - Bitmap lines copy indexed pixels from the previous/current bitmap, honoring
   `Modulo` (320/384/512/640/1024).
 - The line's CLUT is copied into the `VdlLine`.
@@ -120,9 +123,9 @@ For each visible pixel:
 ```text
 pixel = line.Pixels[x]
 if pixel == 0:
-    B = expand5(background bits 0..4)
-    G = expand5(background bits 5..9)
-    R = expand5(background bits 10..14)
+    B = background & 0xFF
+    G = (background >> 8) & 0xFF
+    R = (background >> 16) & 0xFF
 else if (line.OutControl & 0x02000000) != 0 && (pixel & 0x8000) != 0:
     B = expand5(pixel bits 0..4)
     G = expand5(pixel bits 5..9)
@@ -134,7 +137,9 @@ else:
 ```
 
 `expand5(v) = (v << 3) | (v >> 2)`, matching the GLSL bit replication. The result is
-BGRA8888 or RGBA8888 in a `FrameBuffer`; alpha is 255.
+BGRA8888 or RGBA8888 in a `FrameBuffer`; alpha is 255. The VDL background register is
+24-bit RGB (`0xRRGGBB`); the CPU/GPU 8-bit output paths preserve all eight bits per
+channel, and only a 0RGB1555 output path narrows to five bits.
 
 **The GPU palette shader is a direct port of this algorithm**, including independent
 R/G/B CLUT indices. A 320x240 `Accurate` GPU capture must match the CPU assembler

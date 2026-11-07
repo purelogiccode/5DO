@@ -30,9 +30,9 @@ public static class GpuPalette
         {
             var background = line.Background;
             return (
-                Expand5((byte)((background >> 10) & 0x1f)),
-                Expand5((byte)((background >> 5) & 0x1f)),
-                Expand5((byte)(background & 0x1f)));
+                (byte)((background >> 16) & 0xff),
+                (byte)((background >> 8) & 0xff),
+                (byte)(background & 0xff));
         }
 
         if ((line.OutControl & FixedClutEnable) != 0 && (pixel & 0x8000) != 0)

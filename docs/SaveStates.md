@@ -120,11 +120,11 @@ Machine; the table below is sorted by ID. Never renumber an existing section.
 | 4 | CLIO | 3 | `Clio` | 65536-word register file, DSP window words, timer/line state, Opera cascade carry, input/output FIFOs and pointers, DMA state, and the separate 32-bit PRNG. Version 1 is accepted with a cleared carry; version 2 adds the carry; version 3 adds the CLIO PRNG. |
 | 5 | DSP | 1 | `Dsp` | PC, noise/audio status, semaphore status/data, counters, interrupt/multiplier/ALU/shifter state, masks, running/FIQ flags, base/seed, IMem/DMem. |
 | 6 | SPORT | 1 | `Sport` | Color, source, and destination registers. |
-| 7 | VDLP | 1 | `Vdlp` | CLUT B/G/R, background, head/current VDL, modulo, current/previous bitmap, out-control, CLUT DMA, line delay. |
+| 7 | VDLP | 4 | `Vdlp` | CLUT B/G/R, 24-bit background, head/current/successor VDL, modulo, current/previous bitmap, out-control, CLUT DMA, line delay. Version 4 stores the 24-bit background; versions 1-3 convert their packed 5-bit value on load. Version 3 separates the retained head from the active successor cursor; versions 1-2 migrate the cursor. |
 | 8 | XBUS | 1 | `Xbus` | Select/poll state, status/command FIFOs, and attached-device state. The CD-ROM device is also written as section 9. |
 | 9 | CD-ROM | 4 | `CdromDevice` | Poll/status, status/data buffers, command buffer, requested count, MEI status, current sector, disc state (tracks/MSF/TOC), cycle clock, next-ready cycle, pending read-status flag, MODE SET sector size/block flags, PLAY_AUDIO position, CD-DA sample cursor, volume, and mute. Version 1 is accepted with a zeroed clock and pending flag; v2 adds the cycle clock; v3 adds MODE SET and audio position; v4 adds the CD-DA mix. Older versions use the documented defaults. The timing mode itself is recorded in the Options section. |
 | 10 | Quartz | 3 | `Quartz` | ARM/VDL/timer accumulators, exact DSP cycle remainder, VDL line counter, Opera timer slot/gap flag and 16.16 slot accumulator. Versions 1-2 are accepted with a reset timer scheduler. |
-| 11 | Machine | 2 | `FiveDoMachine` | Compatibility flags (fix mode, Anvil, speed fixes, sf/sdf, unknown flag 11, jw, cnbfix, high-res), frame source dimensions/pixel aspect, and the visible `VdlLine` objects (width, control words, CLUT, and the full pixel backing store). Version 1 wrote all 576 lines; version 2 writes only `SourceHeight` lines and copies pixels as little-endian blocks, which cut the section from ~1.54 MB to ~0.64 MB for a 240-line frame. Version-1 sections still load. |
+| 11 | Machine | 3 | `FiveDoMachine` | Compatibility flags (fix mode, Anvil, speed fixes, sf/sdf, unknown flag 11, jw, cnbfix, high-res), frame source dimensions/pixel aspect, and the visible `VdlLine` objects (width, control words, 24-bit background, CLUT, and the full pixel backing store). Version 1 wrote all 576 lines; version 2 writes only `SourceHeight` lines and copies pixels as little-endian blocks, which cut the section from ~1.54 MB to ~0.64 MB for a 240-line frame. Version 3 stores the 24-bit VDL background; versions 1-2 are converted from their packed 5-bit value on load. |
 | 12 | Options | 9 | `FiveDoMachine` | Every registered machine option: ARM timing mode, CLIO timer mode, MADAM CEL timing mode, CD-ROM timing mode, CD-ROM speed, DRAM/VRAM capacity, live video region, ARM clock, random seed (including whether the default was recorded), high-resolution mode, Opera DIPIR, Opera soft reset, Portfolio OS SWI HLE, fix mask, and CPU backend. Version 1 records only ARM timing; version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing; version 5 adds CD speed; version 6 adds the region; version 7 adds the remaining registry entries; version 8 adds the memory capacity; version 9 adds the SWI HLE flag. Loading a lower version leaves missing options at the machine default. |
 
 ### Why the state is large
@@ -184,6 +184,11 @@ Loading a state written by a newer format version is rejected with
   state's RAM contents only decode correctly with the layout that produced them. Timing
   profiles are a host-side shortcut over these options and are derived from them rather
   than stored separately.
+- VDLP writes version 4 and accepts versions 1-3. Version 3 separates the retained head
+  from the active successor cursor; version 4 stores the 24-bit background. Versions 1-3
+  convert their packed 5-bit background on load.
+- Machine writes version 3 and accepts versions 1-2. Version 3 stores the 24-bit
+  `VdlLine.Background`; versions 1-2 convert their packed 5-bit value on load.
 - Any other section version is rejected with
   `Unsupported section <id> version <n>.`
 - Unknown section IDs are ignored and recorded as a warning:
@@ -356,8 +361,9 @@ Guaranteed for the same:
 - state file.
 
 The state includes the derived VDL frame so a load renders the same picture
-immediately. The `Machine` section stores every `VdlLine` in the frame store (576),
-including the high-resolution mirrors.
+immediately. The `Machine` section stores every visible `VdlLine` (version 2+ writes
+only `SourceHeight` lines, including high-resolution mirrors) with the full pixel
+backing store and the 24-bit background.
 
 Not included:
 

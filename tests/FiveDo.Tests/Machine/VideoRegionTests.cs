@@ -75,10 +75,10 @@ public sealed class VideoRegionTests
         vdlp.DoLine(20, frame);
         Assert.Equal(0u, frame[0].Background);
         vdlp.DoLine(21, frame);
-        Assert.Equal(0x7e08u, frame[0].Background);
+        Assert.Equal(0x00ff8040u, frame[0].Background);
         Assert.Equal(0xc001002cu, frame[0].OutControl);
         vdlp.DoLine(308, frame);
-        Assert.Equal(0x7e08u, frame[287].Background);
+        Assert.Equal(0x00ff8040u, frame[287].Background);
         Assert.Equal(0xc001002cu, frame[287].OutControl);
     }
 

@@ -64,10 +64,10 @@ internal static class Direct3D11Shaders
 
         float3 BackgroundColor(uint background)
         {
-            uint b = background & 0x1fu;
-            uint g = (background >> 5u) & 0x1fu;
-            uint r = (background >> 10u) & 0x1fu;
-            return float3(float(Expand5(r)), float(Expand5(g)), float(Expand5(b))) / 255.0;
+            float r = float((background >> 16u) & 0xffu) / 255.0;
+            float g = float((background >> 8u) & 0xffu) / 255.0;
+            float b = float(background & 0xffu) / 255.0;
+            return float3(r, g, b);
         }
 
         float4 PSMain(PSInput input) : SV_TARGET

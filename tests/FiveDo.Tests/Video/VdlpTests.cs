@@ -82,7 +82,7 @@ public sealed class VdlpTests
         Assert.Equal(0x11, frame[0].ClutR[1]);
         Assert.Equal(0x22, frame[0].ClutG[1]);
         Assert.Equal(0x33, frame[0].ClutB[1]);
-        Assert.Equal(0x7e08u, frame[0].Background);
+        Assert.Equal(0x00ff8040u, frame[0].Background);
         Assert.Equal(0xc001002cu, frame[0].OutControl);
         Assert.Equal(header, frame[0].ClutDma);
         Assert.True(vdlp.CurrentBitmap > bitmap);
@@ -197,23 +197,28 @@ public sealed class VdlpTests
     }
 
     [Fact]
-    public void DoLine_ZeroEntryFollowsRetainedNextVdl()
+    public void DoLine_ZeroEntryStopsAndRetainsThePreviousBitmap()
     {
         var memory = new FiveDoMemory();
         var vdlp = new Vdlp(memory.Ram);
         var frame = new VdlFrame();
         const uint head = 0x6000;
-        const uint next = 0x7000;
+        const uint stop = 0x7000;
+        const uint real = 0x7100;
         const uint bitmap = 0xA000;
+        const uint otherBitmap = 0xB000;
         var header = 1u | (1u << 15) | (1u << 16) | (1u << 21);
 
-        // The first entry is all zero, but its next-pointer word still points at
-        // the real display list. Opera follows it; FreeDO used to stop for 511 lines.
-        WriteVdl(memory, head, 0, 0, 0, next);
-        WriteVdl(memory, next, header, bitmap, bitmap, 0);
+        // A valid entry points at a zero word, whose next-pointer field points at
+        // another valid list. Opera treats the zero word as a stop and retains the
+        // previous bitmap; it does not follow the next pointer.
+        WriteVdl(memory, head, header, bitmap, bitmap, stop);
+        WriteVdl(memory, stop, 0, 0, 0, real);
+        WriteVdl(memory, real, header, otherBitmap, otherBitmap, 0);
         for (var i = 0; i < 320 * 20; i++)
         {
             memory.Ram.Write16(VramOffset + bitmap + ((uint)i * 4), 9);
+            memory.Ram.Write16(VramOffset + otherBitmap + ((uint)i * 4), 7);
         }
 
         vdlp.ProcessVdl(head);
@@ -259,11 +264,53 @@ public sealed class VdlpTests
         Assert.Equal(3, copy.LineDelay);
     }
 
+    [Fact]
+    public void LoadVersionThreeState_ConvertsPackedBackground()
+    {
+        var memory = new FiveDoMemory();
+        var writer = new StateWriter();
+        writer.WriteSection(new VersionThreeSection());
+
+        var copy = new Vdlp(memory.Ram);
+        copy.Load(new StateReader(writer.ToArray()).ReadSection());
+
+        Assert.Equal(0x00ff8442u, copy.Background);
+    }
+
     private static void WriteVdl(FiveDoMemory memory, uint address, params uint[] words)
     {
         for (var i = 0; i < words.Length; i++)
         {
             memory.Ram.Write32(address + ((uint)i * 4) + VramOffset, words[i]);
+        }
+    }
+
+    private sealed class VersionThreeSection : IStateSection
+    {
+        public uint Id => StateSectionIds.Vdlp;
+
+        public ushort Version => 3;
+
+        public void Save(IStateWriter writer)
+        {
+            writer.WriteBytes(new byte[VdlLine.ClutSize * 3]);
+            writer.WriteUInt32(0x7e08);
+            writer.WriteInt32(0);
+            writer.WriteUInt32(0x1000);
+            writer.WriteUInt32(0x1000);
+            writer.WriteUInt32(0x1010);
+            writer.WriteUInt32(320);
+            writer.WriteUInt32(0x8000);
+            writer.WriteUInt32(0x8002);
+            writer.WriteUInt32(0);
+            writer.WriteUInt32(0);
+            writer.WriteInt32(1);
+            writer.WriteInt32(1);
+        }
+
+        public void Load(IStateReader reader)
+        {
+            throw new NotSupportedException();
         }
     }
 

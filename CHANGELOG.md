@@ -3,6 +3,35 @@
 All notable changes are recorded here. The project is at v1.4.0, a documented-compatibility
 release.
 
+## [Unreleased]
+
+### Fixed
+
+- VDL background precision. The 3DO background register is 24-bit RGB; 5DO
+  narrowed it to five bits and expanded it again, turning the reference's
+  near-black `(1,1,1)` into `(0,0,0)`. The CPU frame assembler, `GpuPalette`, the
+  OpenGL shader, and the Direct3D shader now keep all eight bits per channel,
+  and the VDL frame save-state section (version 3) converts version 1-2
+  backgrounds on load.
+- VDL display-list stop. A zero display-list word is a stop that retains the
+  previous bitmap and control word, matching `opera_vdlp.c`; 5DO treated it as
+  an entry and blanked the last visible scanline.
+- Differential harness PC/CPSR triage. Reports now record an instruction-phase
+  alignment (`pcPhaseFrame`, `pcPhaseInstructionDelta`) for the first PC
+  divergence and show it in the Markdown/HTML tables.
+- Differential harness ISO staging is atomic and retries once after a transient
+  CHD decompression failure; a per-title capture exception is reported as an
+  `Error` instead of aborting the run.
+
+### Validation
+
+- The 50-title panel matches **50/50 frame hashes** at frames 60/120/300 (up
+  from 32/50) and all **50/50** first PC divergences instruction-align to Opera
+  frame 59. The only remaining behavioral divergence is CD command cadence.
+- The 5-title panel matches **5/5** frame hashes at 300 frames; the 3,000-frame
+  panel matches 4/5 (Road Rash still diverges).
+- Full suite **1,913/1,913** passes; build, format, and InspectCode are clean.
+
 ## [1.4.0] - 2026-11-07
 
 ### Added

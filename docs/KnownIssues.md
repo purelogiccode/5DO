@@ -27,25 +27,29 @@ checksums are attached, and legal/attribution sign-off is recorded.
   contains no library, game, or user data. Offline mode uses the cached catalog and
   images.
 
-## Differential parity (2026-11-06, exact-clock update)
+## Differential parity (2026-11-07, video-clean panel)
 
 - The exact NTSC clock fix aligns the emulated sample clock: all 50 panel titles
-  are within 9 samples of the reference at frame 300, and **32/50 match every
-  frame hash** at frames 60/120/300. The remaining frame-hash differences at
-  blank boot/loading screens are a **color-precision** difference: Opera's
-  XRGB8888 path preserves the 8-bit background (near-black `(1,1,1)`), while
-  5DO's 5-bit line format quantizes it to `(0,0,0)`. This is not a game-visible
-  defect; see `PortingNotes.md` 12.36.
+  are within 9 samples of the reference at frame 300. After the 24-bit VDL
+  background and zero-entry VDL stop fixes, **50/50 titles match every frame
+  hash** at frames 60/120/300. The 5-title panel matches **5/5** at 300 frames.
+- The first PC/CPSR divergence at frame 60 is an **instruction phase**, not an
+  interrupt bug: on all 50 titles 5DO frame 60 aligns with Opera frame 59 at a
+  residual of -55..-256 retired instructions (the same-frame delta is ~89,000,
+  or one field). The one-field boot phase itself is still present and is
+  tracked in `TEST-07`/`CORE-07`.
 - The CD command count matches at frame 60 on 49/50 titles. The remaining CD
-  differences are a 1-2 command cadence shift during boot/menu traffic, with
-  5DO reaching the same command prefix a few milliseconds earlier. Tracked in
-  `ImplementationPlan.md` CORE-04.
-- The absolute retired-instruction count is offset by a fixed ~89,000 from
-  frame 1, but the per-frame rate matches within 0.1% on 4/5 sample titles. The
-  offset is a startup/first-field capture artifact, not a CPU cycle-model gap;
-  PC/CPSR at a frame boundary is a phase sample. Tracked in `TEST-07`.
+  differences are cadence: 36 titles first differ by 1-2 commands at frame 120
+  (in-flight at the checkpoint; all recover by frame 300), and 13 differ at
+  frame 300 (seven FMV titles issue +3/+4 extra READ_DATA commands, six are
+  1-2 behind). Tracked in `ImplementationPlan.md` CORE-04.
+- At 3,000 frames, Alone, Lemmings, Space Ace, and Wolfenstein match the
+  reference frame hash. Road Rash still diverges at 1,000 and 3,000; it is the
+  remaining long-run video divergence. CD counts at 3,000 are Lemmings
+  365/352, Road Rash 851/836, Space Ace 349/348, Wolfenstein 862/861, and
+  Alone 932/932.
 
-## Differential parity (2026-11-06, superseded by the exact-clock update above)
+## Differential parity (2026-11-06, superseded by the video-clean update above)
 
 
 The five-title TEST-07 panel is deterministic and Lemmings matches the reference

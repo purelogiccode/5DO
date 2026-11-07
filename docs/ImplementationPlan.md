@@ -1,11 +1,11 @@
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan and Missing-Feature Backlog
 
-**Snapshot:** 2026-11-07 (1.4.0 release)
+**Snapshot:** 2026-11-07 (post-1.4.0 development snapshot)
 **Current release:** `1.4.0`
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master`<br>
-**Status:** **1,905 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --sEverity=WARNING` reports **zero** warnings or errors. **594 discs load, 593 render, 12 visually validated**; the 50-title oracle panel now runs (50/50 captured, **32/50 match every frame hash**, **all sample deltas ≤9**) and the top-100 playability audit is the next gate.<br>
+**Status:** **1,913 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --sEverity=WARNING` reports **zero** warnings or errors. **594 discs load, 593 render, 12 visually validated**; the 50-title oracle panel captures **50/50** titles and **all 50 now match every frame hash** at frames 60/120/300, with **all 50 PC/CPSR divergences proven to be a one-field instruction phase**; the only remaining behavioral divergence is CD command cadence. The top-100 playability audit is the next gate.<br>
 **Goal:** beat 4DO and Opera-libretro on **measured in-game compatibility and accuracy**, and remain the best standalone desktop 3DO emulator on Windows, Linux, and macOS.<br>
 **Plan shape:** four phases, **measurement first**. Product and research work is deferred until the compatibility gate is green.
 
@@ -46,7 +46,7 @@
 | Gate | Result |
 |---|---|
 | Build | `dotnet build 5DO.sln -c Debug` — **0 warnings, 0 errors** |
-| Tests | **1,905 / 1,905 passed** in Debug and Release |
+| Tests | **1,913 / 1,913 passed** in Debug and Release |
 | Format | `dotnet format --verify-no-changes` — clean |
 | CLI | `5DO 1.4.0 (FiveDo)`; `selftest --json` — all checks `ok: true` |
 | Synthetic benchmark | 240 frames in 0.816 s — **294 fps (~3.4 ms/frame)** |
@@ -54,10 +54,10 @@
 | Reference oracle | `OperaCore.dll` and the optional debug core are built and staged |
 | 40-title differential | **18 matched / 22 diverged** at frame 300 (`artifacts/diff/sample40-run/report.json`) |
 | 5-title TEST-07 panel | Deterministic captures; first divergence **PC at frame 60**; CD commands 9/9 at f=60; samples 44,101/44,144 |
-| 3,000-frame TEST-07 panel | Lemmings matches the frame hash at 60/300/1000/3000; Alone, Space Ace, and Wolfenstein match at 3,000; Road Rash still diverges at 1,000/3,000 |
+| 3,000-frame TEST-07 panel | Lemmings, Alone, Space Ace, and Wolfenstein match the frame hash at 3,000; Road Rash still diverges at 1,000/3,000 |
 | CD command sequence | First divergence localized to READ_DATA (`0x10`) vs READ_ID (`0x83`): Lemmings 105, Road Rash 559, Wolfenstein 389 |
-| 50-title panel | **50/50 captured, 0 errors**; **32/50 match all frame hashes** at 60/120/300; CD counts match 49/50 at f=60; every sample delta ≤9; first divergence is PC at f=60 on 48/50 |
-| 5-title showcase | **2/5 video matches**, **0/5** with PC comparison; Lemmings PC delta 11,076 bytes |
+| 50-title panel | **50/50 captured, 0 errors**; **50/50 match every frame hash** at 60/120/300; **50/50 PC/CPSR divergences phase-align to Opera frame 59** (residual -55..-256 instructions); only CD command cadence differs (36 titles at f=120, 13 at f=300) |
+| 5-title showcase | **5/5 video matches** at 300 frames; **4/5** at 3,000 (Road Rash still diverges); PC is phase-aligned at f=60 on all five |
 | Compatibility sweep | **594 load, 593 render, 1 known boot failure** (Crash 'n Burn Japan) |
 | Visual/input validation | **12 titles** in the curated matrix; a handful have scripted gameplay |
 
@@ -96,9 +96,9 @@ These are done and must not regress. They are listed here once; the backlog cont
 
 ### 2.4 Evidence gaps that block the claim
 
-1. **The oracle is stronger but not finished.** The differential harness now uses an exact NTSC clock, fixed seeds, PC/CPSR/CD/sample/instruction fields, per-command cycle stamps, and a separate behavioral-divergence gate. The 50-title panel captures 50/50 with 0 errors, 32/50 match every frame hash, and every sample delta is ≤9. What is missing is triage of the remaining CD cadence and fixed startup instruction-count offset, plus audio-hash alignment and scripted input.
+1. **The oracle is video-clean but not finished.** The 50-title panel now captures 50/50 with 0 errors, **all 50 match every frame hash** at frames 60/120/300, and **all 50 PC/CPSR divergences are proven frame-boundary phase** by instruction-count alignment with Opera frame 59. What remains is triage of the residual CD command cadence (the only behavioral field left), audio-hash alignment, and scripted input.
 2. **"Renders" is not "plays".** The 594-disc sweep only proves a non-black final frame. Only 12 titles have visual/input validation. The plan's own gate asks for ≥95% Good/Playable across 594 titles; that audit has not been done.
-3. **Matching video does not mean matching execution.** In the showcase run, 2/5 titles match on video, but 0/5 match on PC when the debug core is used; Lemmings' PC delta is 11,076 bytes at frame 3000.
+3. **Matching video now implies matching execution at the panel checkpoints.** All 50 panel titles match video at 60/120/300, and every PC/CPSR difference instruction-aligns to the previous reference frame. At 3,000 frames 4/5 sample titles match video; Road Rash still diverges, and the CD command count remains the first behavioral difference (Lemmings 365/352, Road Rash 851/836).
 4. **Evidence is thin where it matters.** The 40-title sample stops at 5 seconds of emulated time. Real divergence appears in menus, FMV, streaming, and gameplay.
 
 **Honest current claim:** 5DO is a better *product* than 4DO today, and a credible challenger to Opera, but it is **not yet a proven accuracy win**. The next two quarters should be spent closing that gap.
@@ -131,9 +131,9 @@ The sections below are ordered by **what moves the compatibility claim**, not by
 
 - [ ] **TEST-07 — Reference oracle instrumentation and first-divergence metric**
   **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** BAK-01, BAK-02, BAK-03
-  **Remaining:** triage every divergence in the 50-title report (the panel now runs); align or resample the audio streams so the cumulative audio hash is comparable; add scripted input to the panel; keep the fixed seed, CD cycle stamps, and first-divergence reporting wired into the nightly run.
+  **Remaining:** triage the residual CD command cadence (now the only behavioral field in the 50-title report); align or resample the audio streams so the cumulative audio hash is comparable; add scripted input to the panel; keep the fixed seed, CD cycle stamps, instruction-phase diagnostics, and first-divergence reporting wired into the nightly run.
   **Done when:** the same manifest produces deterministic reference captures twice; PC/CD/audio fields are populated on both sides; a 50-title report shows the first-divergence frame and a triaged reason for every divergence.
-  **Evidence (2026-11-06):** the debug core exports `sg_debug_set_seed`, `sg_debug_arm_cpsr`, `sg_debug_arm_instructions`, `sg_debug_cd_command_count`, `sg_debug_cd_command_hash`, `sg_debug_cd_command_at`, and `sg_debug_cd_cycle_at`; the harness applies a fixed seed (default 1488), compares PC/CPSR/CD/samples/instruction counts, reports the first **behavioral** divergence separately from PC/CPSR phase artifacts, and records the first CD command cycle delta. The 50-title panel (`artifacts/diff/test21-panel50/report.json`) ran on the local 594-disc corpus with **50/50 captures, 0 errors**: **32/50 titles match every frame hash** at frames 60/120/300; **49/50 match the CD command count at frame 60**; **all 50 final sample deltas are ≤9**; and the first divergence is PC at frame 60 on 48/50. The absolute instruction count differs by a fixed ~89,000 from frame 1, but this is a startup/first-field capture offset: the per-frame retirement rate matches within 0.1% over 240 frames on 4 of 5 titles (Lemmings diverges with its CD path). The PC/CPSR difference is therefore a phase sample, not a cycle-model gap. The earlier 5-title run remains the deterministic seed check: two consecutive runs produced identical checkpoint arrays. See `DifferentialHarness.md` §8 and `TestCorpus.md` 1.1ax.
+  **Evidence (2026-11-07):** the harness now records a PC/CPSR **instruction-phase** diagnostic and a per-title `pcPhaseFrame`/`pcPhaseInstructionDelta`. On the 50-title panel (`artifacts/diff/test43-panel50-bg/report.json`, local corpus) **all 50 titles match every frame hash** at frames 60/120/300, **all 50 first PC divergences align with Opera frame 59** with a residual of only **-55 to -256 instructions** (versus ~89,000 at the same frame), and **the only remaining behavioral divergence is `cdCommandCount`**: 36 titles first at f=120 (a 1-2 command in-flight cadence shift that recovers by f=300), 13 at f=300 (seven FMV titles with +3/+4 extra reads, six with -1/-2). The video fixes that enabled this are recorded below. The 3,000-frame panel matches video on 4/5 titles; Road Rash is the remaining long-run video divergence and the CD count is 365/352 (Lemmings) and 851/836 (Road Rash). Two consecutive 300-frame runs remain byte-identical.
   **Why first:** every accuracy claim in this plan depends on this item. Without it, `CORE-01`/`CORE-02`/`CORE-03`/`CORE-04` cannot be judged.
   **Ref:** `tools/FiveDo.DiffHarness/OperaCoreCaptureRunner.cs`, `References/CPP_SimpleGui/Cores/OperaCore`, `docs/DifferentialHarness.md` §5/§9.
 
@@ -146,18 +146,19 @@ The sections below are ordered by **what moves the compatibility claim**, not by
 
 - [ ] **CORE-11/16 + FND-05 — Full-collection differential and hash regression**
   **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** CORE-11, CORE-16, FND-05
-  **Remaining:** run the `TEST-07` metric on the 50-title panel, then the full 594; PC-delta triage; state/CD transcript comparison; frame/audio hash coverage; nightly dashboard; allowlist and triage policy.
+  **Remaining:** keep the 50-title panel green (video and PC phase are now clean; CD cadence is the only behavioral field), then run the full 594; PC-delta triage; state/CD transcript comparison; frame/audio hash coverage; nightly dashboard; allowlist and triage policy.
   **Done when:** the nightly run has no unexplained divergence, and every allowance is documented and dated; the 50-title panel is green before the full run.
   **Rule:** a frame-hash match without PC/CD/audio evidence is a smoke result, not a pass.
+  **Evidence (2026-11-07):** the 50-title panel is video-clean and PC/CPSR-phase-clean; the remaining first behavioral divergence is `cdCommandCount` on all 50 titles (36 at f=120, 13 at f=300, 1 at f=60). See `DifferentialHarness.md` §8.
 
 ### 3.2 P0 — Accuracy and compatibility
 
 - [ ] **CORE-04 — CD-ROM command and timing parity**
   **Status:** Partial · **Priority:** P0 · **Effort:** XL · **Tracks:** CORE-04
-  **Remaining:** command latency table; per-command sector readiness; READ_DATA completion/read-ahead semantics; TOC/Sub-Q/raw-sector behavior; data-sector subcode and read-ahead; CD-side tagged status/chunks; retire the READ_ID media-access heuristic after the READ_DATA model matches; raw-vs-Opera command/status/boot/reset transcripts; CD-DA read-ahead and multi-disc layering on the same model.
+  **Remaining:** command latency table; per-command sector readiness; READ_DATA completion/read-ahead semantics (now the only behavioral field in the 50-title panel); TOC/Sub-Q/raw-sector behavior; data-sector subcode and read-ahead; CD-side tagged status/chunks; retire the READ_ID media-access heuristic after the READ_DATA model matches; raw-vs-Opera command/status/boot/reset transcripts; CD-DA read-ahead and multi-disc layering on the same model.
   **Done when:** fixed command transcripts match Opera or have documented, tested divergences; the 594-disc sweep has no CD regression; CD-DA and ODE layer cleanly on the same model; streaming/FMV titles (Road Rash and Need for Speed are already in the corpus) show no regression.
   **Why first in Phase 1:** this is the largest behavioral gap between 5DO (~1.9k lines of CD model) and Opera (~3.8k) and the most likely cause of real-game failures.
-  **Evidence (2026-11-06):** on the 50-title panel the CD command count matches the reference at frame 60 on **49/50** titles (delta -1..0); at frame 120 only 14/50 match (delta -2..0) and at frame 300 24/50 match (delta -2..+4), so the remaining difference is a 1-2 command cadence shift during boot/menu traffic, not a divergent command table. The full sequence comparison localizes the first divergence: Lemmings command 105, Road Rash 559, and Wolfenstein 389 show 5DO issuing `0x10` (READ_DATA) where Opera issues `0x83` (READ_ID); Alone diverges at 433 with equal counts; Space Ace's first 348 commands match and 5DO has one extra `0x10`. The new `sg_debug_cd_cycle_at` stamp shows 5DO reaches command 104 at cycle 57,736,851 vs Opera 57,621,696 (**+115,155 cycles, ~9.2 ms**) while executing the same prefix. The next target is READ_DATA completion/read-ahead and FIQ publication timing, not the command table.
+  **Evidence (2026-11-07):** after the video fixes, the 50-title panel is **video-clean at 60/120/300 (50/50 frame hashes)** and **PC/CPSR is proven frame-boundary phase (50/50 align to Opera frame 59)**. The **only remaining behavioral divergence is the CD command count**: 36 titles first differ at f=120 by 1-2 commands (in-flight cadence; all recover by f=300), and 13 at f=300 — seven FMV titles issue +3/+4 extra READ_DATA commands while six are 1-2 behind. The 3,000-frame sample keeps the pattern: Lemmings 365/352, Road Rash 851/836, Space Ace 349/348, Wolfenstein 862/861, Alone 932/932; video matches at 3,000 on 4/5 (Road Rash still diverges). The first long-run sequence divergence remains READ_DATA (`0x10`) vs READ_ID (`0x83`). The next target is READ_DATA completion/read-ahead and FIQ publication timing, not the command table.
   **Ref:** `opera_cdrom.c`; `docs/ReferenceStrategy.md` §6.
 
 - [ ] **CORE-03 — MADAM CEL busy timing parity**
@@ -183,12 +184,12 @@ The sections below are ordered by **what moves the compatibility claim**, not by
   **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** CORE-07
   **Remaining:** Opera differential traces for masked/nested/return/re-entry interrupts; request-to-vector latency distributions; CLIO/DIPIR/XBUS ordering; timer and FIQ edge cases; document telemetry fields.
   **Done when:** latency metrics match Opera within tolerance; traces and `run --json` statistics are documented and regression-tested.
-  **Evidence (2026-11-06):** the five-title panel makes this the first divergence: PC differs at frame 60 on all five titles. Lemmings' CPSR is `0x600000d3` (5DO) vs `0x800000d3` (Opera) on one capture, a difference in the N/Z/C condition flags (bits 31-29), **not** the FIQ-disable bit (bit 6 is set in both). The PC/CPSR difference is frame-boundary phase, not yet evidence of an interrupt-ordering bug. Use an instruction-level trace and the CD cycle stamps as the starting point.
+  **Evidence (2026-11-07):** all 50 panel titles' first PC/CPSR divergence at frame 60 is instruction-phase aligned to Opera frame 59 (residual -55..-256 instructions), so the frame-boundary PC difference is proven phase rather than an interrupt-ordering bug. The next step is to eliminate the universal one-field boot phase; the CD cycle stamps show the jump originates at the boot handoff (command 50), where 5DO spends ~205,765 more cycles (~one field) than the reference before entering the mode-set sequence.
 
 - [ ] **CORE-01 — ARM60 cycle-class accuracy mode**
   **Status:** Conditional · **Priority:** P0 · **Effort:** M · **Tracks:** CORE-01
   **Remaining:** localize the startup instruction-count offset and align the first captured field using the new instruction counter and CD cycle stamps; do not change the default until the 50-title panel shows a game-visible outcome. The 2026-11-04 40-title A/B found ARM60 17/40 matches versus FreeDO 15/40 with identical Opera captures: a two-title delta on a frame-hash metric is not sufficient evidence. Per-class costs and the `--cycle-classes` ledger are complete and regression-tested.
-  **Evidence (2026-11-06):** the new reference instruction counter shows a fixed absolute offset of **~89,000 instructions** from frame 1 (5,383,387 vs 5,472,729 on Lemmings at frame 60), but the per-frame retirement rate matches within **0.1%** over 240 frames on 4 of 5 titles; Lemmings diverges only where its CD path diverges. The offset is a startup/first-field capture artifact, not a per-instruction cycle-model error, so CORE-01 is not implicated by this evidence. The FreeDO N=4 model is still far worse (3,855,498 instructions), confirming N=2. The next step is to align the first captured field before using PC as a gate.
+  **Evidence (2026-11-07):** the harness now instruction-aligns the first PC divergence against neighboring reference frames. On the 50-title panel all **50/50** first PC divergences align with **Opera frame 59** and differ by only **-55 to -256 retired instructions**, while the same-frame delta is ~89,000 — exactly one field of instructions. The offset is therefore a startup **frame-boundary phase**, not a per-instruction cycle-model error; CORE-01 is not implicated. The FreeDO N=4 model remains far worse (3,855,498 instructions at f=60), confirming N=2. Removing the one-field phase is a boot-timing/CORE-07 task, not a cycle-class change.
   **Done when:** the panel shows a reproducible game-visible difference; cycle counts match Opera within documented tolerances; golden hashes are unchanged or improved; no full-collection regression.
   **Ref:** `opera_arm.c`, `opera_clock.c`.
 
@@ -196,7 +197,7 @@ The sections below are ordered by **what moves the compatibility claim**, not by
   **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** CORE-13
   **Remaining:** Crash 'n Burn (Japan); any 12k/65k-frame black/static titles; BIOS-aware sweep status merge; title-specific fixes; regression tests and compatibility notes. Use the 4DO game database and its fix flags as the first source for known-bad titles.
   **Done when:** every remaining exception has a root cause and a documented workaround, or 594/594 render; `GameCompatibilityList.md` is current; the top-100 audit is clean.
-  **Evidence (2026-11-06):** after the exact NTSC clock fix, Space Ace, Wolfenstein, Alone, and Lemmings match Opera's frame hash at 3,000 frames; Road Rash still diverges at 1,000 and 3,000. The visible long-run divergence was substantially a clock/VDL-phase artifact, not a title-specific fix. Remaining long-run differences track the CD cadence and the fixed startup instruction-count offset. This is the first concrete CORE-13 lead from the new oracle.
+  **Evidence (2026-11-07):** the 50-title panel is now **video-clean (50/50 frame hashes at 60/120/300)** after fixing the 24-bit VDL background and the zero-entry VDL stop. The remaining panel divergences are CD cadence only. At 3,000 frames Space Ace, Wolfenstein, Alone, and Lemmings match Opera's frame hash; Road Rash still diverges at 1,000 and 3,000. This is the first concrete CORE-13 lead from the new oracle: the video gap was a presentation/VDL bug, not a title-specific fix. The residual long-run difference tracks CD cadence and the one-field boot phase.
   **Ref:** `References/4DO-master/FourDO/Emulation/GameSource/GameDatabase.xml`; `docs/GameCompatibilityResults.md`.
 
 - [ ] **SYS-01 — CD-DA and multi-track completion**
@@ -493,6 +494,9 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test
 ## 9. Completed log
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
+
+- **2026-11-07 — 50-title panel video-clean (CORE-13/VID-13 lead).** The VDL background word now keeps all 24 bits and the CPU/OpenGL/Direct3D background paths output them directly; the previous 5-bit narrowing rendered `0x010101` as pure black. A zero VDL display-list word is now a stop that retains the previous control word and bitmap, matching `opera_vdlp.c`, instead of blanking the last visible scanline. The VDL frame save-state section is version 3 and converts version 1-2 5-bit backgrounds on load. Result: the 50-title panel matches **50/50 frame hashes** at frames 60/120/300 (up from 32/50), and the 5-title panel matches **5/5** (Space Ace and Wolfenstein 3D were previously divergent). Road Rash still diverges at 1,000/3,000. **1,913 tests pass**; build, format, and InspectCode are clean. Evidence: `artifacts/diff/test43-panel50-bg/report.json`, `artifacts/diff/test39-vdlstop-samples5/report.json`, `artifacts/diff/test44-long-bg/report.json`.
+- **2026-11-07 — TEST-07 instruction-phase triage and harness robustness.** The harness now searches the checkpoint frame window for the neighboring reference frame whose retired-instruction count aligns with 5DO, records `pcPhaseFrame`/`pcPhaseInstructionDelta` per title, and labels every PC/CPSR divergence as an instruction phase in the report. The 50-title panel proves all 50 first PC divergences align to Opera frame 59 with a residual of only -55..-256 instructions (same-frame delta ~89,000), fixing the earlier "fixed startup offset" interpretation. ISO staging is now atomic (`.tmp` + move, no partial file on failure), retries once on a transient CHD read error, and a per-title capture exception is reported as an `Error` instead of aborting the panel. **1,913 tests pass**.
 
 - **2026-11-07 - v1.4.0.** Six framework-dependent single-file bundles plus `SHA256SUMS.txt`; online cover art (UX-26), VID-12 latency controls, SYS-06 unsigned-disc support, the exact 60000/1001 NTSC field clock and rational VDL accumulator, VDLP blanking/background fixes, live OpenAL device-switching and test-tone fixes, and differential-harness CD-sequence/cycle evidence. The machine frame section now preserves dimensions and pixel aspect across load, run-ahead invalidates its snapshot after external machine actions, and the cover CLI/UI fail clearly when the catalog is unavailable. **1,905 tests pass**; build, format, and InspectCode are clean. Release run <https://github.com/purelogiccode/5DO/actions/runs/42399055155>; CI run <https://github.com/purelogiccode/5DO/actions/runs/42398646569>. See `WhatsNew.md` and `ReleaseNotes-1.4.0.md`.
 

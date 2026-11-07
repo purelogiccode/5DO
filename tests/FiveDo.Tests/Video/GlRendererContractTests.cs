@@ -14,7 +14,9 @@ public sealed class GlRendererContractTests
         {
             VdlLine target = frame[line];
             target.Width = 320;
-            target.Background = (uint)(((line % 32) << 10) | ((line % 32) << 5) | (line % 32));
+            target.Background = (uint)((((line * 5) & 0xff) << 16)
+                | (((line * 3) & 0xff) << 8)
+                | ((line * 7) & 0xff));
             target.OutControl = line % 2 == 0 ? 0x02000000u : 0u;
             for (var i = 0; i < 32; i++)
             {
@@ -50,6 +52,18 @@ public sealed class GlRendererContractTests
                 Assert.Equal(expected.R, buffer.PixelSpan[offset + 2]);
             }
         }
+    }
+
+    [Fact]
+    public void GpuPalette_KeepsAllEightBackgroundBits()
+    {
+        var line = new VdlLine { Background = 0x00010203 };
+
+        (byte R, byte G, byte B) color = GpuPalette.Expand(line, 0);
+
+        Assert.Equal(1, color.R);
+        Assert.Equal(2, color.G);
+        Assert.Equal(3, color.B);
     }
 
     [Fact]

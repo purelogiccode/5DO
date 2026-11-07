@@ -1256,13 +1256,19 @@ M1 implements the section primitive used by all later chips:
   background in both the low- and high-resolution paths when video DMA is off.
 - The background command (`0xE?xxxxxx`) is 8 bits each of red, green, and blue
   in bits 23-16, 15-8, and 7-0. The old parser byte-swapped the word and stored
-  an 8-bit-per-channel value, while `FrameAssembler` reads the field as a 5-bit
+  an 8-bit-per-channel value, while `FrameAssembler` read the field as a 5-bit
   0RGB1555 color. That swapped red/blue and mixed the green channel with its
-  neighbour. The parser now narrows each 8-bit component to 5 bits with the same
-  shift as Opera's `background_to_0RGB1555`.
-- Remaining difference: Opera's XRGB8888 renderer returns the raw background
-  word for pixel 0, preserving 8-bit precision, while 5DO's line format is
-  5-bit. A near-black background is `(1,1,1)` in Opera and `(0,0,0)` in 5DO, so
-  frame hashes differ on otherwise-black boot screens. This is a color-precision
-  difference, not a game-visible defect; a future 8-bit background field would
-  remove it without changing the rest of the pipeline.
+  neighbour. The parser now keeps the full 24-bit value; `FrameAssembler`,
+  `GpuPalette`, the OpenGL shader, and the Direct3D shader output the eight-bit
+  components directly. The 0RGB1555 paths narrow to five bits at conversion.
+  Opera's XRGB8888 renderer returns the raw background for pixel 0, so this
+  matches its precision instead of turning near-black `(1,1,1)` into `(0,0,0)`.
+  The machine VDL frame section is version 3; version 1-2 states convert their
+  packed 5-bit background with `FrameAssembler.Expand5` on load.
+- A zero VDL display-list word is a **stop** in `opera_vdlp.c`
+  (`entry = vram_read32(...); if(!entry) return;`). It keeps the previous
+  control word and bitmap, so the remaining visible lines repeat the last
+  entry. 5DO treated zero as an entry, cleared `_clutDma`, and blanked the last
+  visible scanline. `Vdlp.ExecuteVdl` now returns without changing state; a
+  pre-change Johnny Bazookatone (USA) 3,000-frame hash check produced the same
+  output, so this does not regress the earlier zero-entry case.

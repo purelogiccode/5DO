@@ -2504,3 +2504,57 @@ statements were measurement artifacts of 5DO's 60.00 Hz NTSC clock:
   (`0x63165fe3` vs `0xfefd249a`) and 3,000 (`0xd5895ad5` vs `0x0528251f`).
   Sample deltas stay under 100 at 3,000 frames (52-86), and the CD counts are
   within 1-13.
+
+#### 1.1ay 50-title video-clean panel, instruction-phase triage, and VDL fixes (2026-11-07)
+
+This entry supersedes the video and PC-phase claims in 1.1ax. The 50-title panel
+now matches the reference on every frame hash, and every PC/CPSR difference is
+measured as a frame-boundary instruction phase.
+
+- **Panel command.** `FiveDo.DiffHarness.exe run artifacts/diff/panel50-local.json
+  --out artifacts/diff/test43-panel50-bg --no-images --compare-cd
+  --core artifacts/diff/opera-build-local/OperaCore.dll`, with the Release CLI
+  built from the working tree, fixed seed 1488, accuracy profile,
+  `cdSpeed=unbounded`, and `noGameFixes=true`.
+- **Result.** **50/50 captured, 0 errors.** **50/50 titles match every frame
+  hash** at frames 60/120/300 (up from 32/50). **50/50 first PC divergences
+  instruction-align with Opera frame 59**; the residual is only **-55 to -256
+  instructions**, while the same-frame delta is about **89,000**. The only
+  remaining behavioral divergence is `cdCommandCount`: 36 titles first differ at
+  f=120 (1-2 commands in flight; all recover by f=300), 13 at f=300 (seven FMV
+  titles at +3/+4 extra READ_DATA commands, six at -1/-2), and Icebreaker II at
+  f=60.
+- **Reason for the video change.** Two VDLP bugs were masking the reference
+  match. The background register is 24-bit RGB; 5DO narrowed it to 5 bits and
+  then expanded it, turning the reference's near-black `(1,1,1)` into
+  `(0,0,0)`. The CPU assembler, `GpuPalette`, the OpenGL shader, and the
+  Direct3D shader now all keep the full eight bits per channel. Separately, a
+  zero VDL display-list word is a stop that retains the previous control word
+  and bitmap (`opera_vdlp.c`); 5DO treated it as an entry and blanked the last
+  visible scanline. The machine VDL frame section is version 3 and converts
+  version 1-2 5-bit backgrounds on load.
+- **Five-title panel.** `test39-vdlstop-samples5` matches **5/5 frame hashes**
+  at 60/120/300, including Space Ace (`0x76175dc5` at f=120,
+  `0xde7d0ba6` at f=300) and Wolfenstein 3D (`0x76175dc5` at f=120 and f=300).
+- **3,000-frame panel.** `test44-long-bg`: Alone, Lemmings, Space Ace, and
+  Wolfenstein match the frame hash at 3,000 (`0x175b8fe4`, `0xebdb01ca`,
+  `0x46916c61`, `0x175b8fe4`); Road Rash still diverges at 1,000
+  (`0x63165fe3` vs `0xfefd249a`) and 3,000 (`0xd5895ad5` vs `0x0528251f`).
+  CD counts are Lemmings 365/352, Road Rash 851/836, Space Ace 349/348,
+  Wolfenstein 862/861, and Alone 932/932. Alone and Space Ace have transient
+  video mismatches at f=1000 that recover by 3,000.
+- **Harness diagnostics.** Each report now records `pcPhaseFrame` and
+  `pcPhaseInstructionDelta`; the Markdown/HTML tables show a Phase column, and
+  the detail text names the aligned reference frame. ISO staging is atomic
+  (`.tmp` + move), retries once after a transient CHD decompression failure, and
+  a per-title capture exception becomes a title `Error` instead of aborting the
+  panel. A `/tmp`-style partial ISO can no longer be reused by `--resume`.
+- **Johnny Bazookatone check.** The zero-entry VDL stop does not change Johnny
+  Bazookatone (USA) at 3,000 frames; the pre- and post-change 5DO hashes are
+  both `0xa29ad2d1` (the title's reference hash remains `0xcf5644e7`, a
+  pre-existing CORE-13 divergence).
+- **Tests:** **1,913 pass**. New coverage: instruction-phase neighbor matching
+  and summary counts, 24-bit background expansion in both palette paths,
+  eight-bit background preservation, VDL frame state version 3 round-trip, and
+  atomic ISO extraction. `dotnet format` is clean and InspectCode reports 0
+  results.

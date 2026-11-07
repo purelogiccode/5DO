@@ -9,7 +9,7 @@ public sealed class FrameAssemblerTests
     public void Assemble_PixelZeroUsesExpandedBackground()
     {
         var frame = new VdlFrame();
-        frame[0].Background = 0x7fff;
+        frame[0].Background = 0x00ffffff;
         var destination = new FrameBuffer(1, 1);
 
         FrameAssembler.Assemble(frame, destination, 1, 1);
@@ -17,6 +17,21 @@ public sealed class FrameAssemblerTests
         Assert.Equal(255, destination.PixelSpan[0]);
         Assert.Equal(255, destination.PixelSpan[1]);
         Assert.Equal(255, destination.PixelSpan[2]);
+        Assert.Equal(255, destination.PixelSpan[3]);
+    }
+
+    [Fact]
+    public void Assemble_PixelZeroKeepsAllEightBackgroundBits()
+    {
+        var frame = new VdlFrame();
+        frame[0].Background = 0x00010203;
+        var destination = new FrameBuffer(1, 1);
+
+        FrameAssembler.Assemble(frame, destination, 1, 1);
+
+        Assert.Equal(3, destination.PixelSpan[0]);
+        Assert.Equal(2, destination.PixelSpan[1]);
+        Assert.Equal(1, destination.PixelSpan[2]);
         Assert.Equal(255, destination.PixelSpan[3]);
     }
 

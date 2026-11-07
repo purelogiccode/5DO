@@ -716,8 +716,8 @@ public sealed class FiveDoMachine
                 || (section.Id == StateSectionIds.Quartz && section.Version <= 4)
                 || (section.Id == StateSectionIds.Clio && section.Version <= 3)
                 || (section.Id == StateSectionIds.Madam && section.Version <= 4)
-                || (section.Id == StateSectionIds.Vdlp && section.Version <= 3)
-                || (section.Id == StateSectionIds.Machine && section.Version <= 2)
+                || (section.Id == StateSectionIds.Vdlp && section.Version <= 4)
+                || (section.Id == StateSectionIds.Machine && section.Version <= 3)
                 || (section.Id == StateSectionIds.Options && section.Version <= 9);
             if (!supportedVersion)
             {
@@ -1109,7 +1109,7 @@ public sealed class FiveDoMachine
 
         public uint Id => StateSectionIds.Machine;
 
-        public ushort Version => 2;
+        public ushort Version => 3;
 
         public void Save(IStateWriter writer)
         {
@@ -1201,7 +1201,10 @@ public sealed class FiveDoMachine
                     line.Width = width;
                     line.OutControl = reader.ReadUInt32();
                     line.ClutDma = reader.ReadUInt32();
-                    line.Background = reader.ReadUInt32();
+                    var background = reader.ReadUInt32();
+                    line.Background = version >= 3
+                        ? background
+                        : ExpandLegacyBackground(background);
                     reader.ReadBytes(line.ClutB);
                     reader.ReadBytes(line.ClutG);
                     reader.ReadBytes(line.ClutR);
@@ -1223,7 +1226,8 @@ public sealed class FiveDoMachine
                 line.Width = width;
                 line.OutControl = reader.ReadUInt32();
                 line.ClutDma = reader.ReadUInt32();
-                line.Background = reader.ReadUInt32();
+                var background = reader.ReadUInt32();
+                line.Background = ExpandLegacyBackground(background);
                 reader.ReadBytes(line.ClutB);
                 reader.ReadBytes(line.ClutG);
                 reader.ReadBytes(line.ClutR);
@@ -1232,6 +1236,17 @@ public sealed class FiveDoMachine
                     line.PixelBuffer[i] = reader.ReadUInt16();
                 }
             }
+        }
+
+        /// <summary>
+        /// Converts a version 1-2 packed 5-bit background to the version 3 24-bit form.
+        /// </summary>
+        private static uint ExpandLegacyBackground(uint packed)
+        {
+            var red = FrameAssembler.Expand5((byte)((packed >> 10) & 0x1f));
+            var green = FrameAssembler.Expand5((byte)((packed >> 5) & 0x1f));
+            var blue = FrameAssembler.Expand5((byte)(packed & 0x1f));
+            return ((uint)red << 16) | ((uint)green << 8) | blue;
         }
     }
 }

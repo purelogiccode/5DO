@@ -131,8 +131,12 @@ public sealed class Vdlp : IVdlp, IStateSection
     public uint Id => StateSectionIds.Vdlp;
 
     /// <summary>Gets the save-state section version.</summary>
-    /// <remarks>Version 3 separates the retained head from the active successor cursor.</remarks>
-    public ushort Version => 3;
+    /// <remarks>
+    /// Version 3 separates the retained head from the active successor cursor.
+    /// Version 4 stores the 24-bit VDL background; versions 1-3 convert their
+    /// packed 5-bit value on load.
+    /// </remarks>
+    public ushort Version => 4;
 
     /// <summary>Resets the VDLP and writes the startup display list. FreeDO: <c>_vdl_Init</c>.</summary>
     public void Reset()
@@ -419,13 +423,14 @@ public sealed class Vdlp : IVdlp, IStateSection
         reader.ReadBytes(_clutB);
         reader.ReadBytes(_clutG);
         reader.ReadBytes(_clutR);
+        var version = reader is StateSectionReader sectionReader ? sectionReader.Version : 1;
 
         if (reader is StateSectionReader { Version: 1 })
         {
             // Version 1 stored the CPU-programmed head separately from the active
             // cursor. Opera's migration restarts traversal from the active cursor;
             // the old head may not be the entry the display was actually using.
-            _background = reader.ReadUInt32();
+            _background = ConvertBackground(reader.ReadUInt32(), version);
             _ = reader.ReadUInt32(); // old head_vdl
             _modulo = reader.ReadUInt32();
             _currentVdl = reader.ReadUInt32();
@@ -445,7 +450,7 @@ public sealed class Vdlp : IVdlp, IStateSection
         {
             // Version 2 kept the retained head in the successor slot; the active
             // cursor was already past the entry body. Resume from the successor.
-            _background = reader.ReadUInt32();
+            _background = ConvertBackground(reader.ReadUInt32(), version);
             _ = reader.ReadInt32(); // old force_line
             _currentVdl = reader.ReadUInt32();
             var nextVdl = reader.ReadUInt32();
@@ -462,7 +467,7 @@ public sealed class Vdlp : IVdlp, IStateSection
             return;
         }
 
-        _background = reader.ReadUInt32();
+        _background = ConvertBackground(reader.ReadUInt32(), version);
         _ = reader.ReadInt32(); // saved force_line; normalized to the current cadence
         _forceLine = 0;
         _currentVdl = reader.ReadUInt32();
@@ -477,6 +482,19 @@ public sealed class Vdlp : IVdlp, IStateSection
         _persistLength = reader.ReadInt32();
     }
 
+    private static uint ConvertBackground(uint background, int version)
+    {
+        if (version >= 4)
+        {
+            return background;
+        }
+
+        var red = FrameAssembler.Expand5((byte)((background >> 10) & 0x1f));
+        var green = FrameAssembler.Expand5((byte)((background >> 5) & 0x1f));
+        var blue = FrameAssembler.Expand5((byte)(background & 0x1f));
+        return ((uint)red << 16) | ((uint)green << 8) | blue;
+    }
+
     private uint ReadVram(uint address)
     {
         return _ram.Read32((address & VramMask) + VramOffset);
@@ -484,9 +502,9 @@ public sealed class Vdlp : IVdlp, IStateSection
 
     private void ExecuteVdl()
     {
-        // Opera: a zero entry is still a valid display-list word. It may point at
-        // a successor through its next-pointer field, so do not treat zero as a
-        // 511-line stop. This is the Johnny Bazookatone horizontal-line fix.
+        // Opera: a zero display-list word is a stop. Keep the previous control
+        // word and bitmap so the remaining visible lines repeat the last entry;
+        // treating zero as a valid entry blanks the final scanline.
         if (_nextVdl == 0)
         {
             return;
@@ -494,6 +512,11 @@ public sealed class Vdlp : IVdlp, IStateSection
 
         _currentVdl = _nextVdl;
         var entry = ReadVram(_currentVdl);
+        if (entry == 0)
+        {
+            return;
+        }
+
         _clutDma = entry;
 
         if ((entry & (1u << 16)) != 0)
@@ -553,14 +576,13 @@ public sealed class Vdlp : IVdlp, IStateSection
                     continue;
                 }
 
-                // Opera: background_to_0RGB1555 extracts 8-bit r/g/b (bits 23-16,
-                // 15-8, 7-0) and narrows each to 5 bits. The old code byte-swapped
-                // the word and treated it as an 8-bit-per-channel value, which
-                // swapped red/blue and corrupted the green channel.
+                // The 3DO background register is 24-bit RGB. Keep all eight bits per
+                // channel: the XRGB8888 path and the CPU frame assembler output them
+                // directly, while the 0RGB1555 path narrows to five bits at conversion.
                 var red = (command >> 16) & 0xff;
                 var green = (command >> 8) & 0xff;
                 var blue = command & 0xff;
-                _background = ((red >> 3) << 10) | ((green >> 3) << 5) | (blue >> 3);
+                _background = (red << 16) | (green << 8) | blue;
             }
             else if ((command & 0xe0000000) == 0xc0000000)
             {

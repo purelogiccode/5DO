@@ -69,7 +69,8 @@ test harness designed for reproducible compatibility evidence.
 | Version | `1.4.0` release (GitHub Releases) |
 | Validated platform | **Windows x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 |
-| Automated tests | **1,905 tests** in the current test assembly |
+| Automated tests | **1,913 tests** in the current test assembly |
+| Differential oracle | 50-title panel: **50/50 frame hashes**, **50/50 PC/CPSR phase aligned**; only CD cadence remains |
 | Library | **653 games** across **1,366 images**; 3 audio-only CHDs catalogued |
 | Loadability sweep | **594 disc images** tested; after triage **593 loadable/rendered**, 1 known no-video case, 0 not loadable |
 | First pass | 576 rendered, 13 black/blank, 5 not loadable; triage resolved the failures and the blank/black set |

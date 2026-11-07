@@ -2,6 +2,15 @@
 
 **Released:** 2026-11-07
 
+> **Post-1.4.0 development snapshot (unreleased).** The differential oracle is now
+> video-clean on the 50-title panel: **50/50 titles match every frame hash** at
+> frames 60/120/300 (up from 32/50), and every PC/CPSR divergence is proven to be
+> a one-field instruction phase. The fixes are a 24-bit VDL background (the old
+> 5-bit conversion rendered near-black as pure black) and treating a zero VDL
+> display-list word as a stop that retains the previous bitmap. The remaining
+> behavioral difference is CD command cadence. See `CHANGELOG.md` and
+> `TestCorpus.md` 1.1ay.
+
 5DO 1.4.0 is a feature and accuracy update on the 1.3.0 field-handling release. It adds
 **online cover art**, **latency controls**, **unsigned-disc support**, and the **exact
 59.94 Hz NTSC clock** used by the reference core. It keeps the six-bundle packaging model:

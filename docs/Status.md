@@ -30,6 +30,24 @@ Rash still diverges. See [`WhatsNew.md`](WhatsNew.md),
 [`ReleaseNotes-1.4.0.md`](ReleaseNotes-1.4.0.md), [`DifferentialHarness.md`](DifferentialHarness.md),
 and [`CoverArt.md`](CoverArt.md).
 
+**Post-1.4.0 differential update (2026-11-07):** the 50-title panel is now
+**video-clean**: **50/50 titles match every frame hash** at frames 60/120/300 (up
+from 32/50), and **50/50 first PC divergences instruction-align to Opera frame
+59** at a residual of only -55..-256 instructions (same-frame delta ~89,000). The
+fixes are a 24-bit VDL background (the old 5-bit narrowing rendered near-black as
+pure black) and treating a zero VDL display-list word as a stop that retains the
+previous bitmap, matching `opera_vdlp.c`. The only remaining behavioral
+divergence is CD command cadence: 36 titles first differ by 1-2 commands at
+frame 120 (in-flight at the checkpoint) and 13 at frame 300 (seven FMV titles at
++3/+4, six at -1/-2). The 5-title panel matches **5/5** video at 300 frames; at
+3,000 frames Alone, Lemmings, Space Ace, and Wolfenstein match and Road Rash
+still diverges. The harness now records `pcPhaseFrame`/`pcPhaseInstructionDelta`,
+stages ISOs atomically, retries a transient CHD read once, and reports a per-title
+capture failure as an `Error` instead of aborting the run. The suite is **1,913
+tests**; build, format, and InspectCode are clean. See
+[`DifferentialHarness.md`](DifferentialHarness.md) and
+[`TestCorpus.md`](TestCorpus.md) 1.1ay.
+
 Release workflow
 <https://github.com/purelogiccode/5DO/actions/runs/42399055155> passed all six bundle
 jobs and published six versioned archives plus `SHA256SUMS.txt`; all six checksums verify.
