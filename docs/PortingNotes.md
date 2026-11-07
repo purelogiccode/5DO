@@ -1243,3 +1243,23 @@ M1 implements the section primitive used by all later chips:
   frame 300. Space Ace matches Opera's 3,000-frame hash and Road Rash matches
   Opera frame 3002. The remaining PC/CPSR frame-boundary difference is a
   phase sample, not a clock offset; see `TestCorpus.md` 1.1ax.
+
+### 12.36 VDLP blanking and background color (2026-11-06)
+
+- Opera's `vdlp_render_line_*` writes a **black** line when bitmap DMA is
+  disabled (`!bitmap_dma_enabled()`). 5DO kept the previous field's pixels and
+  only refreshed the line metadata, so a blank boot/loading field retained an
+  old green background. `Vdlp.DoLine` now clears the visible pixels and the
+  background in both the low- and high-resolution paths when video DMA is off.
+- The background command (`0xE?xxxxxx`) is 8 bits each of red, green, and blue
+  in bits 23-16, 15-8, and 7-0. The old parser byte-swapped the word and stored
+  an 8-bit-per-channel value, while `FrameAssembler` reads the field as a 5-bit
+  0RGB1555 color. That swapped red/blue and mixed the green channel with its
+  neighbour. The parser now narrows each 8-bit component to 5 bits with the same
+  shift as Opera's `background_to_0RGB1555`.
+- Remaining difference: Opera's XRGB8888 renderer returns the raw background
+  word for pixel 0, preserving 8-bit precision, while 5DO's line format is
+  5-bit. A near-black background is `(1,1,1)` in Opera and `(0,0,0)` in 5DO, so
+  frame hashes differ on otherwise-black boot screens. This is a color-precision
+  difference, not a game-visible defect; a future 8-bit background field would
+  remove it without changing the rest of the pipeline.

@@ -273,7 +273,7 @@ public sealed class Vdlp : IVdlp, IStateSection
                 {
                     // Opera: a disabled bitmap DMA renders a black line. The old
                     // pixels and background must not persist from the previous field.
-                    target.Pixels.Clear();
+                    target.PixelBuffer.Clear();
                     target.Background = 0;
                 }
             }
@@ -382,8 +382,8 @@ public sealed class Vdlp : IVdlp, IStateSection
 
         if (!videoDmaEnabled)
         {
-            target0.Pixels.Clear();
-            target1.Pixels.Clear();
+            target0.PixelBuffer.Clear();
+            target1.PixelBuffer.Clear();
             target0.Background = 0;
             target1.Background = 0;
         }

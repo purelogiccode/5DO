@@ -193,7 +193,7 @@ public sealed class Quartz : IStateSection
         // 12.5 MHz fraction, which ran the scanline clock ~0.09% fast and slipped the VDLP
         // phase by multiple lines across a long capture. Accumulate raw cycles instead:
         // one line is due at _vdlThreshold; the increment is fieldLines * fieldRateNumerator.
-        _vdlAccumulator += (ulong)cycles * _vdlLineIncrement;
+        _vdlAccumulator += cycles * _vdlLineIncrement;
 
         if (_timerMode == ClioTimerMode.OperaScheduler)
         {
@@ -377,7 +377,7 @@ public sealed class Quartz : IStateSection
         }
 
         // Convert FreeDO's 8.24 line fraction to the exact rational accumulator.
-        _vdlAccumulator = ((ulong)legacyVdl * _vdlThreshold) >> 24;
+        _vdlAccumulator = (legacyVdl * _vdlThreshold) >> 24;
 
         if (reader is StateSectionReader { Version: 1 })
         {

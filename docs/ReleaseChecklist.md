@@ -257,7 +257,7 @@ Suggested commands:
 dotnet build 5DO.sln -c Release
 dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release
 dotnet format 5DO.sln --verify-no-changes
-jb inspectcode 5DO.sln --severity=WARNING --no-updates
+jb inspectcode 5DO.sln --sEverity=WARNING --no-build
 dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- --frames 600 --gate
 ```
 

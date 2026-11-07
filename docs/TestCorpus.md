@@ -2446,7 +2446,7 @@ statements were measurement artifacts of 5DO's 60.00 Hz NTSC clock:
   field at 12.5 MHz) instead of 12,500,000/60 = 208,333. The DSP sample clock
   therefore produces 44,145 samples at frame 60 vs Opera's 44,144 (was 44,101),
   220,728 vs 220,720 at frame 300 (was 220,508/220,720), and 2,207,289 vs
-  2,207,207 at frame 3,000. Every one of the 50 panel titles is within **16
+  2,207,207 at frame 3,000. Every one of the 50 panel titles is within **9
   samples** at frame 300.
 - **Rational VDL accumulator.** The VDL clock no longer adds the per-batch
   rounded 8.24 ARM fraction, which ran the scanline clock ~0.09% fast. Quartz
@@ -2454,7 +2454,7 @@ statements were measurement artifacts of 5DO's 60.00 Hz NTSC clock:
   `armClock * fieldRateDenominator`; 60 NTSC fields produce exactly 15,780
   scanlines. Quartz state version 4 stores the exact accumulator; v1-3 states
   convert their 8.24 fraction on load.
-- **50-title panel (`artifacts/diff/test15-panel50/report.json`).** 50/50
+- **50-title panel (`artifacts/diff/test21-panel50/report.json`).** 50/50
   captured, **0 errors**. **32/50 titles match every frame hash** at frames
   60/120/300; 17 match one of three, and one bonus disc (`Icebreaker II`) has no
   video. **49/50 match the CD command count at frame 60** (delta -1..0); at
@@ -2480,8 +2480,17 @@ statements were measurement artifacts of 5DO's 60.00 Hz NTSC clock:
   cadence/READ_DATA-completion difference, not the command table.
 - **3,000-frame recheck.** With the exact clock, Space Ace matches Opera's
   frame hash at 3,000 (`0x46916c61`) and Road Rash matches Opera's frame 3002
-  (`0xd5895ad5`). Wolfenstein (`0x175b8fe4`) and Alone (`0x175b8fe4`) already
-  matched at 3,000.
-- **Tests:** 1,884 pass. New coverage: exact-rational frame cycles, 60 fields =
+  (`0xd5895ad5`). Wolfenstein (`0x175b8fe4`), Alone (`0x175b8fe4`), and
+  Lemmings (`0xebdb01ca`) also match at 3,000. The blanking/background fix did
+  not change these long-run keys.
+- **Tests:** 1,885 pass. New coverage: exact-rational frame cycles, 60 fields =
   15,780 scanlines, sample count 44,144 +/- one, state v4 round-trip, behavioral
   divergence classification, and CD cycle capture. `dotnet format` is clean.
+- **VDLP blanking and background color (new).** Opera renders a black line when
+  bitmap DMA is disabled; 5DO kept the previous field's pixels. `Vdlp.DoLine`
+  now clears the visible pixels and background in both resolution paths. The
+  background command parser also byte-swapped r/b and mixed the green channel;
+  it now narrows the command's 8-bit r/g/b to the 5-bit line format used by the
+  assembler and GPU. The green boot field became black, matching the reference's
+  near-black; the remaining hash difference is Opera's 8-bit background
+  precision (1,1,1) versus 5DO's 5-bit (0,0,0), not a game-visible defect.

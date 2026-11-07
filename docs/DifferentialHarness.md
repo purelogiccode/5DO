@@ -354,7 +354,7 @@ the reference core or the local discs.
 ## 8. Current evidence
 
 - **2026-11-06 exact-clock panel (TEST-07).** The 50-title panel
-  (`artifacts/diff/test15-panel50/report.json`, local corpus) captured **50/50
+  (`artifacts/diff/test21-panel50/report.json`, local corpus) captured **50/50
   titles with 0 errors**. **32/50 match every frame hash** at frames 60/120/300;
   **49/50 match the CD command count at frame 60**; every final sample delta is
   **≤9**. The first divergence is PC at frame 60 on 48/50 titles. PC/CPSR are
@@ -394,7 +394,7 @@ the reference core or the local discs.
   both engines**. Result: **0 match, 5 diverged, 0 error**. The **first divergence
   was the ARM PC at frame 60** on all five titles. Lemmings (USA):
   - f=60: PC `0x00005aa0` vs `0x00005960`; CPSR `0x600000d3` vs `0x800000d3`
-    (FIQ-disable bit differs); CD commands **9/9 match**.
+    (N/Z/C flag difference; the FIQ bit is set in both, and the exact-clock evidence above shows this is a frame-boundary phase sample); CD commands **9/9 match**.
   - f=120: PC `0x00005988` vs `0x00005974`; CPSR matches; CD commands **50/50 match**.
   - f=300: PC `0x000205f4` vs `0x00020600`; CPSR matches; CD commands **108/105**
     (three extra commands in 5DO by this checkpoint).

@@ -10,7 +10,26 @@ validation, installers, and the optional JIT are post-1.0. See
 GitHub**: the source is tagged `v1.0.0`, the unified Windows/Linux/macOS x64 bundles and
 checksums are attached, and legal/attribution sign-off is recorded.
 
-## Differential parity (2026-11-06)
+## Differential parity (2026-11-06, exact-clock update)
+
+- The exact NTSC clock fix aligns the emulated sample clock: all 50 panel titles
+  are within 9 samples of the reference at frame 300, and **32/50 match every
+  frame hash** at frames 60/120/300. The remaining frame-hash differences at
+  blank boot/loading screens are a **color-precision** difference: Opera's
+  XRGB8888 path preserves the 8-bit background (near-black `(1,1,1)`), while
+  5DO's 5-bit line format quantizes it to `(0,0,0)`. This is not a game-visible
+  defect; see `PortingNotes.md` 12.36.
+- The CD command count matches at frame 60 on 49/50 titles. The remaining CD
+  differences are a 1-2 command cadence shift during boot/menu traffic, with
+  5DO reaching the same command prefix a few milliseconds earlier. Tracked in
+  `ImplementationPlan.md` CORE-04.
+- The absolute retired-instruction count is offset by a fixed ~89,000 from
+  frame 1, but the per-frame rate matches within 0.1% on 4/5 sample titles. The
+  offset is a startup/first-field capture artifact, not a CPU cycle-model gap;
+  PC/CPSR at a frame boundary is a phase sample. Tracked in `TEST-07`.
+
+## Differential parity (2026-11-06, superseded by the exact-clock update above)
+
 
 The five-title TEST-07 panel is deterministic and Lemmings matches the reference
 frame hash at 60/300/1000/3000 frames. Road Rash and Space Ace still show
