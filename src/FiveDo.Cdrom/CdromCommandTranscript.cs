@@ -58,6 +58,8 @@ public sealed class CdromCommandTranscript
     private readonly List<CdromCommandEntry> _entries = [];
     private readonly List<byte> _issuedOpcodes = [];
     private readonly List<ulong> _issuedCycles = [];
+    private readonly List<uint> _issuedProgramCounters = [];
+    private readonly List<long> _issuedInstructions = [];
     private CdromDevice? _device;
     private uint _hash = FnvOffsetBasis;
     private uint _issuedHash = FnvOffsetBasis;
@@ -96,6 +98,23 @@ public sealed class CdromCommandTranscript
     /// command-sequence divergence.
     /// </remarks>
     public IReadOnlyList<ulong> IssuedCycles => _issuedCycles;
+
+    /// <summary>Gets the CPU program counter at which each command opcode was issued.</summary>
+    /// <remarks>
+    /// The differential harness aligns this list with the reference core's
+    /// <c>sg_debug_cd_pc_at</c>. A PC that matches while the cycle stamp differs
+    /// means the guest is idle in the same place; a PC difference means the guest
+    /// took a different code path.
+    /// </remarks>
+    public IReadOnlyList<uint> IssuedProgramCounters => _issuedProgramCounters;
+
+    /// <summary>Gets the retired ARM instruction count when each command opcode was issued.</summary>
+    /// <remarks>
+    /// The differential harness aligns this list with the reference core's
+    /// <c>sg_debug_cd_instructions_at</c>. Comparing it against
+    /// <see cref="IssuedCycles"/> separates extra guest work from extra idle time.
+    /// </remarks>
+    public IReadOnlyList<long> IssuedInstructions => _issuedInstructions;
 
     /// <summary>
     /// Gets the cumulative FNV-1a hash of completed command opcodes in execution order.
@@ -150,6 +169,8 @@ public sealed class CdromCommandTranscript
         _entries.Clear();
         _issuedOpcodes.Clear();
         _issuedCycles.Clear();
+        _issuedProgramCounters.Clear();
+        _issuedInstructions.Clear();
         _hash = FnvOffsetBasis;
         _issuedHash = FnvOffsetBasis;
         _issuedCount = 0;
@@ -177,6 +198,8 @@ public sealed class CdromCommandTranscript
     {
         _issuedOpcodes.Add(opcode);
         _issuedCycles.Add(_device?.Cycles ?? 0);
+        _issuedProgramCounters.Add(_device?.ProgramCounterProvider?.Invoke() ?? 0);
+        _issuedInstructions.Add(_device?.InstructionCountProvider?.Invoke() ?? 0);
         _issuedCount++;
         _issuedHash = (_issuedHash ^ opcode) * FnvPrime;
     }

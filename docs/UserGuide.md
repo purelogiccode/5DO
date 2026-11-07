@@ -107,7 +107,7 @@ FiveDo.Frontend.Avalonia.exe "D:\Games\Road Rash (USA).chd" `
 | `"<disc>"` | Positional disc path (ISO, BIN, CUE+BIN, or CHD); opens and auto-starts it. |
 | `--disc <path>` | Explicit disc path; same behavior as the positional form. |
 | `--bios <path>` | BIOS image for this launch; overrides the saved BIOS path. A missing file prints an error and exits with code 1. |
-| `-f`, `--fullscreen` | Start in fullscreen. Works with a disc or with the library view. Escape/F11 leaves fullscreen. |
+| `-f`, `-fullscreen`, `--fullscreen` | Start in fullscreen. Works with a disc or with the library view. Escape/F11 leaves fullscreen. |
 | `--gl-backend <mode>` | `auto` (default), `wgl`, `angle`, `software`, `vulkan`, or `d3d11`. Direct3D is Windows-only. |
 | `--gl-probe-backend <mode>` | Alias for `--gl-backend` retained for the GPU probe. |
 | `--no-update-check` | Skip the startup GitHub release check for this launch. |

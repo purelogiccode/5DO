@@ -81,10 +81,14 @@
 
 **2026-11-07, v1.4.0 release (GitHub Releases).**
 
-- **1,916 tests** are present in the current test assembly.
+- **1,921 tests** are present in the current test assembly.
 - The 50-title differential panel matches **50/50 frame hashes** at frames
-  60/120/300, and **50/50 first PC divergences instruction-align to Opera frame
-  59**; the only remaining behavioral divergence is CD command cadence.
+  60/120/300 with **0 errors**, and **48/50 first PC divergences instruction-align
+  to Opera frame 59** (2/50 to frame 119); the only remaining behavioral
+  divergence is CD command cadence. The per-command PC/instruction stamps show
+  the boot-handoff fix cut a **+207,707 cycle / +86,511 instruction** divergence
+  to **-818 / -376**; see
+  [`DifferentialHarness.md`](DifferentialHarness.md).
 - The library reports **653 games across 1,366 images**; three audio-only CHDs are
   catalogued.
 - The first full-collection loadability sweep covered **594 disc images**: **576

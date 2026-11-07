@@ -169,6 +169,32 @@ public sealed class CdromTranscriptTests
         Assert.Equal(cd.Cycles, transcript.IssuedCycles[^1]);
     }
 
+    [Fact]
+    public void Transcript_RecordsProgramCounterAndInstructionsForEveryOpcode()
+    {
+        var cd = new CdromDevice { FrameProvider = () => 5 };
+        cd.InsertDisc(new MemoryDisc(8));
+        var probe = new ProbeState { Pc = 0x0000_1000, Instructions = 1_000 };
+        cd.ProgramCounterProvider = () => probe.Pc;
+        cd.InstructionCountProvider = () => probe.Instructions;
+        var transcript = new CdromCommandTranscript();
+        transcript.Attach(cd);
+
+        Send(cd, 0x83);
+        DrainStatus(cd, 12);
+        probe.Pc = 0x0000_1084;
+        probe.Instructions = 1_250;
+        Send(cd, 0x85);
+        DrainStatus(cd, 8);
+
+        Assert.Equal(new uint[] { 0x0000_1000, 0x0000_1084 }, transcript.IssuedProgramCounters);
+        Assert.Equal(new long[] { 1_000, 1_250 }, transcript.IssuedInstructions);
+
+        transcript.Clear();
+        Assert.Empty(transcript.IssuedProgramCounters);
+        Assert.Empty(transcript.IssuedInstructions);
+    }
+
     private static void Send(CdromDevice device, params byte[] command)
     {
         for (var i = 0; i < command.Length; i++)
@@ -189,6 +215,13 @@ public sealed class CdromTranscriptTests
         {
             device.GetStatus();
         }
+    }
+
+    private sealed class ProbeState
+    {
+        internal uint Pc { get; set; }
+
+        internal long Instructions { get; set; }
     }
 
     private sealed class MemoryDisc : IDiscSource

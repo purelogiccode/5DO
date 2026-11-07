@@ -68,7 +68,7 @@ public sealed class CdromDeviceTests
     }
 
     [Fact]
-    public void OperaCycleBased_ReadDataWaitsForTheSectorDeadline()
+    public void OperaCycleBased_PublishesReadStatusWithTheFirstSector()
     {
         var disc = new MemoryDisc(4);
         var cd = new CdromDevice
@@ -81,16 +81,19 @@ public sealed class CdromDeviceTests
         Send(cd, 0x10, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02);
 
         // Both poll bits stay clear until the first sector has been read at the stock
-        // 2x drive speed. The status response is published after the transfer finishes.
+        // 2x drive speed. The status is published with the first sector, matching the
+        // reference DIPIR, which needs data and status together.
         Assert.Equal(0, (int)cd.GetPoll() & 0x20);
         Assert.Equal(0, (int)cd.GetPoll() & 0x10);
         Assert.Equal(cd.DataSectorCycles, cd.NextReadyCycle);
 
         cd.Tick((uint)(cd.DataSectorCycles - 1));
         Assert.Equal(0, (int)cd.GetPoll() & 0x20);
+        Assert.Equal(0, (int)cd.GetPoll() & 0x10);
 
         cd.Tick(1);
         Assert.NotEqual(0, (int)cd.GetPoll() & 0x20);
+        Assert.NotEqual(0, (int)cd.GetPoll() & 0x10);
         Assert.True(cd.FiqPending);
 
         var first = ReadData(cd, 2048);
@@ -98,17 +101,44 @@ public sealed class CdromDeviceTests
 
         // The next sector is scheduled after the one that was just consumed.
         Assert.Equal(0, (int)cd.GetPoll() & 0x20);
-        Assert.Equal(0, (int)cd.GetPoll() & 0x10);
         Assert.Equal(cd.Cycles + cd.DataSectorCycles, cd.NextReadyCycle);
+
+        var status = ReadStatus(cd, 2);
+        Assert.Equal(0x10, status[0]);
+        Assert.Equal(0, (int)cd.GetPoll() & 0x10);
 
         cd.Tick((uint)cd.DataSectorCycles);
         var second = ReadData(cd, 2048);
         Assert.Equal(disc.Sector(1), second);
+    }
 
-        // The 0x10 status becomes readable once the last sector has been consumed.
-        Assert.NotEqual(0, (int)cd.GetPoll() & 0x10);
-        var status = ReadStatus(cd, 2);
-        Assert.Equal(0x10, status[0]);
+    [Fact]
+    public void OperaCycleBased_AccumulatesSectorDeadlinesWhenTheGuestDrainsLate()
+    {
+        var disc = new MemoryDisc(4);
+        var cd = new CdromDevice
+        {
+            TimingMode = CdromTimingMode.OperaCycleBased,
+        };
+        cd.InsertDisc(disc);
+
+        Send(cd, 0x10, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02);
+        ulong firstDeadline = cd.NextReadyCycle;
+        ulong lateness = cd.DataSectorCycles / 2;
+
+        // The CPU advances past the first deadline before the drive is ticked. Opera
+        // keeps the transfer on its original cadence instead of re-basing to "now".
+        cd.Tick((uint)(cd.DataSectorCycles + lateness));
+        Assert.NotEqual(0, (int)cd.GetPoll() & 0x20);
+        Assert.Equal(firstDeadline + cd.DataSectorCycles, cd.NextReadyCycle);
+
+        Assert.Equal(disc.Sector(0), ReadData(cd, 2048));
+
+        // Only the remaining half sector-time is left, not a full sector-time.
+        Assert.Equal(cd.DataSectorCycles - lateness, cd.NextReadyCycle - cd.Cycles);
+
+        cd.Tick((uint)(cd.DataSectorCycles - lateness));
+        Assert.Equal(disc.Sector(1), ReadData(cd, 2048));
     }
 
     [Fact]

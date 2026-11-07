@@ -32,8 +32,10 @@ and [`CoverArt.md`](CoverArt.md).
 
 **Post-1.4.0 differential update (2026-11-07):** the 50-title panel is now
 **video-clean**: **50/50 titles match every frame hash** at frames 60/120/300 (up
-from 32/50), and **50/50 first PC divergences instruction-align to Opera frame
-59** at a residual of only -55..-256 instructions (same-frame delta ~89,000). The
+from 32/50), with **0 errors** in `test55-panel50-first-sector`. **48/50 first PC
+divergences instruction-align to Opera frame 59** and **2/50 to frame 119** (the
+f=60 checkpoint itself matched on those two), at a residual of only -55..-415
+instructions (same-frame delta ~89,000). The
 fixes are a 24-bit VDL background (the old 5-bit narrowing rendered near-black as
 pure black) and treating a zero VDL display-list word as a stop that retains the
 previous bitmap, matching `opera_vdlp.c`. The only remaining behavioral
@@ -41,12 +43,36 @@ divergence is CD command cadence: 36 titles first differ by 1-2 commands at
 frame 120 (in-flight at the checkpoint) and 13 at frame 300 (seven FMV titles at
 +3/+4, six at -1/-2). The 5-title panel matches **5/5** video at 300 frames; at
 3,000 frames Alone, Lemmings, Space Ace, and Wolfenstein match and Road Rash
-still diverges. The harness now records `pcPhaseFrame`/`pcPhaseInstructionDelta`,
-stages ISOs atomically, retries a transient CHD read once, and reports a per-title
-capture failure as an `Error` instead of aborting the run. The suite is **1,916
-tests**; build, format, and InspectCode are clean. See
+still diverges. The harness now records `pcPhaseFrame`/`pcPhaseInstructionDelta`
+and per-command PC/retired-instruction stamps. Those stamps showed the earlier
+command-50 handoff was **+207,707 cycles / +86,511 instructions** of extra guest
+work; matching the oracle's first-sector READ_DATA status publication reduced it
+to **-818 / -376**, and the f=300 command-104 cycle delta fell from **+324,027**
+to **+111,990**. READ_DATA deadlines now accumulate from the previous deadline
+instead of re-basing to `now`. The residual universal frame-60 one-field phase is
+separate from that handoff and remains open. The harness also stages ISOs
+atomically, retries a transient CHD read once, and reports a per-title capture
+failure as an `Error` instead of aborting the run. The suite is **1,921 tests**;
+build, format, and InspectCode are clean. See
 [`DifferentialHarness.md`](DifferentialHarness.md) and
-[`TestCorpus.md`](TestCorpus.md) 1.1ay.
+[`TestCorpus.md`](TestCorpus.md) 1.1az.
+
+**CD cadence triage (2026-11-07):** the harness now classifies every final CD
+transcript and reports the largest cumulative cycle-delta step with its
+command-issue PC and retired-instruction jump (`cdCadence`, plus a `CD cadence`
+column in the reports). The 50-title panel resolves to **39 identical command
+streams, 8 prefix-only, and 3 one-command READ_ID poll shifts** (Chiki Chiki,
+Dragon's Lair, Virtual Horror). **24/50 titles have a significant step and all 24
+issue the step command from the same PC on both engines** (17 at 60-100k cycles,
+six at 20-60k, one >=100k). The fresh five-title run confirms Alone 361/361
+(`+379` cycles at the last command), Road Rash 395/395 (`+468`), Wolfenstein
+341/341 (`-345`), Lemmings 109/105 with one `+22,834` step at command 51
+(`+8,242` instructions), and Space Ace 168/168 with one `+80,567` step at
+command 164 (`+32,330` instructions). The residual count difference is guest
+wait-loop cadence, not a divergent CD command table; a CD register-access trace
+around the step is the next measurement. The suite is **1,921 tests**. See
+[`DifferentialHarness.md`](DifferentialHarness.md) 8 and
+[`TestCorpus.md`](TestCorpus.md) 1.1bb.
 
 Release workflow
 <https://github.com/purelogiccode/5DO/actions/runs/42399055155> passed all six bundle

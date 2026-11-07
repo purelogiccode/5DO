@@ -186,6 +186,12 @@ cd f=<frame> pc=<pc> cmd <7 hex bytes>
 cd read sector <lba>
 ```
 
+`--cd-commands <path>` writes one line per issued command:
+`<opcode> <cycle> <pc> <retired-instructions>`. The PC and instruction count are
+sampled at the same command boundary as the cycle stamp, so a cycle delta can be
+split into extra guest work versus extra idle time. The differential harness reads
+this file and the reference core's matching debug exports.
+
 Use `--stop-cd 0x83` to stop on READ_ID, or `--stop-cd 0x10` for READ_DATA. Combine
 with `run --json` `cdStatus`/`cdPoll` and `--progress` to see whether the guest is
 polling a static state. With `--cd-timing opera`, `cd read sector <lba>` appears when

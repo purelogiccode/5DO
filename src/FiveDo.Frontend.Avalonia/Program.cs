@@ -24,8 +24,8 @@ internal static class Program
     public static string? StartupBiosPath { get; private set; }
 
     /// <summary>
-    /// Gets a value indicating whether `--fullscreen` (or `-f`) requested a fullscreen
-    /// launch. Used by launchers and emulator frontends.
+    /// Gets a value indicating whether `--fullscreen`, `-fullscreen`, or `-f` requested
+    /// a fullscreen launch. Used by launchers and emulator frontends.
     /// </summary>
     public static bool StartFullscreen { get; private set; }
 
@@ -236,7 +236,7 @@ internal static class Program
 
             StartupDiscPath = FindDiscPath(args);
             StartupBiosPath = FindBiosPath(args);
-            StartFullscreen = HasFlag(args, "--fullscreen") || HasFlag(args, "-f");
+            StartFullscreen = IsFullscreenRequested(args);
             var biosOption = FindOptionValue(args, "--bios");
             if (biosOption is not null && StartupBiosPath is null)
             {
@@ -268,7 +268,11 @@ internal static class Program
     /// Writes the smoke-test marker, if one was requested. Called from the UI thread
     /// once the main window has opened.
     /// </summary>
-    internal static void CompleteSmokeTest()
+    /// <param name="windowState">
+    /// The window state at smoke completion. Recorded so the launch-mode argument
+    /// (for example <c>--fullscreen</c>) has end-to-end evidence.
+    /// </param>
+    internal static void CompleteSmokeTest(string? windowState = null)
     {
         if (!SmokeTest || string.IsNullOrWhiteSpace(SmokeOutputPath))
         {
@@ -283,9 +287,13 @@ internal static class Program
                 Directory.CreateDirectory(directory);
             }
 
-            File.WriteAllText(
-                SmokeOutputPath,
-                $"FRONTEND SMOKE OK {FiveDoVersion.Version}{Environment.NewLine}");
+            var marker = $"FRONTEND SMOKE OK {FiveDoVersion.Version}{Environment.NewLine}";
+            if (!string.IsNullOrWhiteSpace(windowState))
+            {
+                marker += $"windowState={windowState}{Environment.NewLine}";
+            }
+
+            File.WriteAllText(SmokeOutputPath, marker);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
@@ -303,7 +311,7 @@ internal static class Program
         Console.WriteLine("  <disc-path>             Open and auto-start a disc image (ISO, BIN, CUE, CHD).");
         Console.WriteLine("  --disc <path>           Same as the positional disc path.");
         Console.WriteLine("  --bios <path>           Use this BIOS image for this launch.");
-        Console.WriteLine("  -f, --fullscreen        Start in fullscreen.");
+        Console.WriteLine("  -f, -fullscreen, --fullscreen  Start in fullscreen.");
         Console.WriteLine("  --portable              Store settings, NVRAM, cheats, and logs beside the executable.");
         Console.WriteLine("  --config-profile <name> Use profiles/<name> for settings, NVRAM, cheats, and logs.");
         Console.WriteLine("  --gl-backend <backend>  auto (default), wgl, angle, software, vulkan, or d3d11.");
@@ -345,6 +353,19 @@ internal static class Program
                || HasFlag(args, "--vk-window-probe")
                || HasFlag(args, "--d3d-probe")
                || HasFlag(args, "--d3d-window-probe");
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether the arguments request a fullscreen launch.
+    /// <c>--fullscreen</c>, <c>-fullscreen</c>, and <c>-f</c> are equivalent.
+    /// </summary>
+    /// <param name="args">Command-line arguments.</param>
+    /// <returns><see langword="true"/> when a fullscreen spelling is present.</returns>
+    internal static bool IsFullscreenRequested(string[] args)
+    {
+        return HasFlag(args, "--fullscreen")
+               || HasFlag(args, "-fullscreen")
+               || HasFlag(args, "-f");
     }
 
     internal static string? FindOptionValue(string[] args, string option)

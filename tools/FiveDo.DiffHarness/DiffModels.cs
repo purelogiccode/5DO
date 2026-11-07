@@ -258,6 +258,12 @@ internal sealed class CaptureResult
 
     /// <summary>Gets the ARM cycle stamp for each CD command, when the engine exposes them.</summary>
     public uint[] CdCommandCycles { get; init; } = [];
+
+    /// <summary>Gets the CPU program counter for each CD command, when the engine exposes it.</summary>
+    public uint[] CdCommandPcs { get; init; } = [];
+
+    /// <summary>Gets the retired ARM instruction count for each CD command, when the engine exposes it.</summary>
+    public long[] CdCommandInstructions { get; init; } = [];
 }
 
 /// <summary>One checkpoint sample.</summary>
@@ -445,6 +451,12 @@ internal sealed class DiffTitleResult
 
     /// <summary>Gets the Opera-minus-5DO retired-instruction delta at <see cref="PcPhaseFrame"/>.</summary>
     public long? PcPhaseInstructionDelta { get; init; }
+
+    /// <summary>
+    /// Gets the CD command transcript analysis: common prefix, first opcode mismatch,
+    /// and the largest cumulative cycle-delta step with PC/instruction evidence.
+    /// </summary>
+    public CdCadenceAnalysis? CdCadence { get; init; }
 
     /// <summary>Gets the first unexplained field divergence, when one exists.</summary>
     public DiffFirstDivergence? FirstDivergence { get; init; }

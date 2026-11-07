@@ -190,7 +190,7 @@ internal static class FiveDoCaptureRunner
             });
         }
 
-        var (cdCommands, cdCommandCycles) =
+        var (cdCommands, cdCommandCycles, cdCommandPcs, cdCommandInstructions) =
             ReadCdCommands(Path.Combine(titleDirectory, "fivedo.cd.txt"));
 
         return new CaptureResult
@@ -212,19 +212,23 @@ internal static class FiveDoCaptureRunner
             Seed = seed,
             CdCommands = cdCommands,
             CdCommandCycles = cdCommandCycles,
+            CdCommandPcs = cdCommandPcs,
+            CdCommandInstructions = cdCommandInstructions,
         };
     }
 
-    private static (byte[] Opcodes, uint[] Cycles) ReadCdCommands(string path)
+    private static (byte[] Opcodes, uint[] Cycles, uint[] Pcs, long[] Instructions) ReadCdCommands(string path)
     {
         if (!File.Exists(path))
         {
-            return ([], []);
+            return ([], [], [], []);
         }
 
         var lines = File.ReadAllLines(path);
         var commands = new byte[lines.Length];
         var cycles = new uint[lines.Length];
+        var pcs = new uint[lines.Length];
+        var instructions = new long[lines.Length];
         for (var i = 0; i < lines.Length; i++)
         {
             var parts = lines[i].Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -235,7 +239,7 @@ internal static class FiveDoCaptureRunner
                     CultureInfo.InvariantCulture,
                     out commands[i]))
             {
-                return ([], []);
+                return ([], [], [], []);
             }
 
             if (parts.Length > 1
@@ -243,9 +247,25 @@ internal static class FiveDoCaptureRunner
             {
                 cycles[i] = (uint)cycle;
             }
+
+            if (parts.Length > 2
+                && uint.TryParse(
+                    parts[2],
+                    NumberStyles.HexNumber,
+                    CultureInfo.InvariantCulture,
+                    out var pc))
+            {
+                pcs[i] = pc;
+            }
+
+            if (parts.Length > 3
+                && long.TryParse(parts[3], NumberStyles.Integer, CultureInfo.InvariantCulture, out var executed))
+            {
+                instructions[i] = executed;
+            }
         }
 
-        return (commands, cycles);
+        return (commands, cycles, pcs, instructions);
     }
 
     private static string? ImagePath(string imageDirectory, long frame)

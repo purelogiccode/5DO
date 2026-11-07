@@ -73,7 +73,7 @@ public class App : Application
                         DispatcherTimer.RunOnce(
                             () =>
                             {
-                                Program.CompleteSmokeTest();
+                                Program.CompleteSmokeTest(window.WindowState.ToString());
                                 desktop.Shutdown();
                             },
                             TimeSpan.FromMilliseconds(750));

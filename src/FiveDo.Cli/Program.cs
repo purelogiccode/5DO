@@ -1210,14 +1210,18 @@ internal static class Program
 
             using var writer = new StreamWriter(cdCommandsPath);
             var cycles = cdTranscript.IssuedCycles;
+            var programCounters = cdTranscript.IssuedProgramCounters;
+            var instructions = cdTranscript.IssuedInstructions;
             for (var index = 0; index < cdTranscript.IssuedOpcodes.Count; index++)
             {
                 var opcode = cdTranscript.IssuedOpcodes[index];
                 var cycle = index < cycles.Count ? cycles[index] : 0;
+                var pc = index < programCounters.Count ? programCounters[index] : 0;
+                var executed = index < instructions.Count ? instructions[index] : 0;
                 writer.WriteLine(
                     string.Create(
                         CultureInfo.InvariantCulture,
-                        $"{opcode:x2} {cycle}"));
+                        $"{opcode:x2} {cycle} {pc:x8} {executed}"));
             }
         }
         celTraceWriter?.Dispose();

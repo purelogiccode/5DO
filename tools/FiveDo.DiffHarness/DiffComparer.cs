@@ -52,6 +52,19 @@ internal static class DiffComparer
         var nonOffsetDivergedCount = 0;
         long? pcPhaseFrame = null;
         long? pcPhaseInstructionDelta = null;
+        CdCadenceAnalysis? cdCadence = (compare.CompareCd || compareCd)
+            && fiveDo.CdCommands.Length > 0
+            && opera.CdCommands.Length > 0
+            ? CdCadenceAnalyzer.Analyze(
+                fiveDo.CdCommands,
+                opera.CdCommands,
+                fiveDo.CdCommandCycles,
+                opera.CdCommandCycles,
+                fiveDo.CdCommandPcs,
+                opera.CdCommandPcs,
+                fiveDo.CdCommandInstructions,
+                opera.CdCommandInstructions)
+            : null;
 
         foreach (var frame in framesToCompare)
         {
@@ -236,23 +249,30 @@ internal static class DiffComparer
 
             if ((compare.CompareCd || compareCd)
                 && frame == framesToCompare[^1]
+                && cdCadence is { } cadence
                 && fiveDo.CdCommands.Length > 0
                 && opera.CdCommands.Length > 0)
             {
-                var sequence = CompareCdCommandSequence(
-                    fiveDo.CdCommands,
-                    opera.CdCommands,
-                    fiveDo.CdCommandCycles,
-                    opera.CdCommandCycles);
+                var focus = cadence.FirstMismatchIndex ?? cadence.CommonCount;
+                var diagnostic = CdCadenceAnalyzer.Describe(cadence);
+                var lastMatched = (cadence.FirstMismatchIndex ?? cadence.CommonCount) - 1;
+                if (lastMatched >= 0)
+                {
+                    diagnostic += "; " + DescribeCdTiming(
+                        fiveDo.CdCommandCycles,
+                        opera.CdCommandCycles,
+                        lastMatched);
+                }
+
                 if (AddField(
                     fields,
                     "cdCommands",
-                    sequence.FiveDo,
-                    sequence.Opera,
-                    sequence.Match,
+                    $"{fiveDo.CdCommands.Length} opcodes; {DescribeCdCommands(fiveDo.CdCommands, focus)}",
+                    $"{opera.CdCommands.Length} opcodes; {DescribeCdCommands(opera.CdCommands, focus)}",
+                    cadence.Kind == CdCadenceKind.Equal,
                     title, frame, ref allowedCount, ref divergedCount,
                     missing: false,
-                    diagnostic: sequence.Diagnostic))
+                    diagnostic: diagnostic))
                 {
                     nonOffsetDivergedCount++;
                 }
@@ -308,6 +328,7 @@ internal static class DiffComparer
             MaxPcDelta = pcDeltas.Length == 0 ? null : pcDeltas.Max(),
             PcPhaseFrame = pcPhaseFrame,
             PcPhaseInstructionDelta = pcPhaseInstructionDelta,
+            CdCadence = cdCadence,
             FirstDivergence = firstDivergence,
             FirstBehavioralDivergence = firstBehavioralDivergence,
         };
@@ -352,46 +373,6 @@ internal static class DiffComparer
             Titles = titles,
             Summary = summary,
         };
-    }
-
-    private static (bool Match, string FiveDo, string Opera, string? Diagnostic)
-        CompareCdCommandSequence(
-            byte[] fiveDo,
-            byte[] opera,
-            uint[] fiveDoCycles,
-            uint[] operaCycles)
-    {
-        var common = Math.Min(fiveDo.Length, opera.Length);
-        for (var i = 0; i < common; i++)
-        {
-            if (fiveDo[i] != opera[i])
-            {
-                return (
-                    false,
-                    $"{fiveDo.Length} opcodes; {DescribeCdCommands(fiveDo, i)}",
-                    $"{opera.Length} opcodes; {DescribeCdCommands(opera, i)}",
-                    $"first sequence divergence at command {i}: "
-                    + $"5DO 0x{fiveDo[i]:x2}, Opera 0x{opera[i]:x2}; "
-                    + DescribeCdTiming(fiveDoCycles, operaCycles, i));
-            }
-        }
-
-        if (fiveDo.Length == opera.Length)
-        {
-            return (
-                true,
-                $"{fiveDo.Length} opcodes",
-                $"{opera.Length} opcodes",
-                DescribeCdTiming(fiveDoCycles, operaCycles, common - 1));
-        }
-
-        return (
-            false,
-            $"{fiveDo.Length} opcodes; {DescribeCdCommands(fiveDo, common)}",
-            $"{opera.Length} opcodes; {DescribeCdCommands(opera, common)}",
-            $"sequence prefixes match for {common} commands; "
-            + $"5DO has {fiveDo.Length}, Opera has {opera.Length}; "
-            + DescribeCdTiming(fiveDoCycles, operaCycles, common - 1));
     }
 
     private static string DescribeCdTiming(uint[] fiveDoCycles, uint[] operaCycles, int index)

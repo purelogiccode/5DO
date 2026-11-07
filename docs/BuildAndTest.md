@@ -422,7 +422,8 @@ artifacts/frontend/win-x64/FiveDo.Frontend.Avalonia.exe `
 ```
 
 The frontend smoke test opens the real window, runs one UI pass (GL hidden for headless
-CI), writes `FRONTEND SMOKE OK <version>`, and exits 0.
+CI), writes `FRONTEND SMOKE OK <version>` plus `windowState=<state>`, and exits 0.
+Add `--fullscreen` to verify the launch mode (`windowState=FullScreen`).
 
 ### Portable bundles
 

@@ -349,6 +349,8 @@ public partial class MainWindow : Window, IDisposable
         {
             // The packaged smoke test validates XAML/window construction and exits;
             // it must not touch the user's configured BIOS/disc or first-run state.
+            // Apply the launch mode first so --smoke-test --fullscreen exercises it.
+            EnterFullscreenIfRequested();
             return;
         }
 

@@ -2569,3 +2569,98 @@ measured as a frame-boundary instruction phase.
   the local oracle's first-sector publication and past-end reads as the cause of
   the residual FMV cadence; the next lead is the one-field boot phase and the
   guest's FMV read loop.
+
+#### 1.1az READ_DATA first-sector status, deadline accumulation, and per-command PC/instruction stamps (2026-11-07)
+
+This entry supersedes the count-only conclusion at the end of 1.1ay. The new
+per-command stamps show that the publication rule changes the boot-handoff
+timing even when the 300-frame command count is unchanged.
+
+- **Oracle/5DO instrumentation.** The debug core exports
+  `sg_debug_cd_pc_at` and `sg_debug_cd_instructions_at`; `CdromCommandTranscript`
+  records `IssuedProgramCounters`/`IssuedInstructions` at the same command
+  boundary as the cycle stamp. `--cd-commands` now writes
+  `opcode cycle pc instructions`, and captures carry
+  `cdCommandPcs`/`cdCommandInstructions`.
+- **20th Century probe.** `artifacts/diff/test51-20th-boot-probe` (before) and
+  `test52-20th-first-sector` (after), 300 frames, accuracy profile, unbounded
+  CD speed, `artifacts/diff/opera-build-pc/OperaCore.dll`. At command 50 (the
+  last boot READ_DATA to READ_ID handoff) 5DO spent **+207,707 cycles /
+  +86,511 retired instructions** with the same guest PC (`0x00022140`) as the
+  reference. Publishing POLST with the first queued READ_DATA sector, matching
+  `cdrom_data_publish_read_status_if_ready` (`data_len != 0`), reduced the
+  deltas to **-818 cycles / -376 instructions**. The f=300 command-104 cycle
+  delta fell from **+324,027** to **+111,990**.
+- **Deadline accumulation.** Each later READ_DATA sector now adds one
+  sector-time to the previous deadline (`cdrom_data_schedule_next`) instead of
+  re-basing to `now + sector_cycles`. `OperaCycleBased_AccumulatesSectorDeadlinesWhenTheGuestDrainsLate`
+  covers a half-sector late drain.
+- **No video regression.** `test53-samples5-first-sector` keeps **5/5 frame
+  hashes** at 60/120/300 on the five-title sample; `test57-samples5-x2-final`
+  keeps **5/5** at the stock 2x drive speed. `test56-long-first-sector` keeps the
+  established 3,000-frame result: Alone, Lemmings, Space Ace, and Wolfenstein
+  match the final frame hash, Road Rash still diverges, and the CD counts are
+  Alone 932/932, Lemmings 365/352, Road Rash 851/836, Space Ace 349/348, and
+  Wolfenstein 862/861. 20th Century (`test58-20th-3k`) matches all four video
+  hashes through 3,000 frames and ends at CD 332/311. The 50-title count gate is
+  unchanged at 300 frames; the improvement is in cycle/instruction phase, not
+  in the checkpoint command count.
+- **50-title confirmation panel.** `test55-panel50-first-sector` captured
+  **50/50 titles with 0 errors** and **50/50 match every frame hash** at
+  60/120/300 using `artifacts/diff/opera-build-pc/OperaCore.dll` (MD5
+  `53c26d4cb701e3d6e3bb28e877cd502b`). **48/50 first PC divergences align with
+  Opera frame 59** and **2/50 with frame 119** (those two matched at f=60). The
+  first behavioral divergence is still only `cdCommandCount`: **36 at f=120, 13
+  at f=300, 1 at f=60** (Icebreaker II), identical to test43. One title hit a
+  transient CHD read error in the first pass; `--resume` retried it and the
+  final report is error-free.
+- **Tests:** **1,919 pass in Debug and Release**. New coverage: first-sector
+  POLST publication, accumulated deadlines, and PC/instruction capture in the
+  CD transcript. `dotnet format` is clean and InspectCode reports 0 results.
+
+#### 1.1ba Frontend fullscreen launch argument (2026-11-07)
+
+`-f`, `-fullscreen`, and `--fullscreen` are equivalent. `Program.IsFullscreenRequested`
+has a unit test, and `--smoke-test --fullscreen` now applies the launch mode
+before writing the marker:
+
+```text
+FRONTEND SMOKE OK 1.4.0
+windowState=FullScreen
+```
+
+The normal smoke run records `windowState=Normal`; the marker's first line is
+unchanged for existing CI consumers. **1,919 tests pass.**
+
+#### 1.1bb CD transcript classification and cadence-step triage (2026-11-07)
+
+The differential harness now classifies the final CD transcript and reports the
+largest cadence step in the cumulative 5DO-minus-Opera cycle delta. `cdCadence`
+carries the classification (`Equal`, `PrefixAhead`, `SequenceDiverged`), the
+first mismatch, the last matched cycle/instruction delta, and the step's opcodes,
+cycle jump, command-issue PCs, and retired-instruction jump. The Markdown and
+HTML reports add a `CD cadence` column and detail line.
+
+- **50-title panel (`test55-panel50-first-sector/report.json`).** **39 identical
+  streams, 8 prefix-only, 3 sequence-shifted.** The three shifts are one READ_ID
+  poll among READ_DATA commands: Chiki Chiki 111/112 (extra Opera READ_ID),
+  Dragon's Lair 111/108 and Virtual Horror 110/107 (extra 5DO READ_ID).
+  **24/50 titles have a step above 1,000 cycles; every one has the same
+  command-issue PC on both engines** (17 at 60-100k, six at 20-60k, one >=100k).
+  The 60-100k group is a single READ_DATA-to-READ_DATA step where 5DO retires
+  about 32k more instructions in the same guest path.
+- **Five-title run (`test60-cadence-samples5/report.json`).** Alone 361/361
+  (`+379` cycles at the last command), Road Rash 395/395 (`+468`), Wolfenstein
+  341/341 (`-345`), Lemmings 109/105 with one `+22,834` step at command 51
+  (PC `0x00022140` both sides, `+8,242` instructions), and Space Ace 168/168
+  with one `+80,567` step at command 164 (PC `0x0002aa18` both sides, `+32,330`
+  instructions).
+- **Interpretation.** The command table matches on 47/50 panel titles; the
+  residual `cdCommandCount` difference is guest wait-loop cadence, not a
+  divergent CD command/status model. The next measurement is a CD register
+  read/write trace around the step to separate a CD readiness wait from a
+  timer/VBlank wait. `benchmarks/diff/samples5.json` now resolves the local
+  corpus at `J:/Panasonic 3DO`.
+- **Tests:** **1,921 pass**. New coverage: cadence-step detection with matching
+  PC and instruction jump, sub-threshold step suppression, and transcript-kind
+  assertions for equal/prefix/diverged streams. `dotnet format` is clean.

@@ -814,7 +814,7 @@ backend) and `ALSOFT_DRIVERS` (through OpenAL Soft).
 ## 10. Precedence summary
 
 ```text
-frontend launch arguments (--disc, --bios, --fullscreen, --gl-backend)
+frontend launch arguments (--disc, --bios, --fullscreen/-fullscreen/-f, --gl-backend)
   > CLI flags
   > per-game BIOS override (MD5)
   > known title BIOS requirement

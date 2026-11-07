@@ -117,6 +117,8 @@ internal static class OperaCoreCaptureRunner
             Seed = seed,
             CdCommands = result.CdCommands,
             CdCommandCycles = result.CdCommandCycles,
+            CdCommandPcs = result.CdCommandPcs,
+            CdCommandInstructions = result.CdCommandInstructions,
         };
     }
 
@@ -270,6 +272,8 @@ internal sealed class OperaCoreHost : IDisposable
     private readonly DebugUInt32? _debugCdCommandHash;
     private readonly DebugUInt32Index? _debugCdCommandAt;
     private readonly DebugUInt32Index32? _debugCdCycleAt;
+    private readonly DebugUInt32Index32? _debugCdPcAt;
+    private readonly DebugUInt32Index32? _debugCdInstructionsAt;
     private readonly SetSeed? _debugSetSeed;
 
     private readonly VideoCallback _videoCallback;
@@ -338,6 +342,8 @@ internal sealed class OperaCoreHost : IDisposable
         _debugCdCommandHash = TryLoad<DebugUInt32>("sg_debug_cd_command_hash");
         _debugCdCommandAt = TryLoad<DebugUInt32Index>("sg_debug_cd_command_at");
         _debugCdCycleAt = TryLoad<DebugUInt32Index32>("sg_debug_cd_cycle_at");
+        _debugCdPcAt = TryLoad<DebugUInt32Index32>("sg_debug_cd_pc_at");
+        _debugCdInstructionsAt = TryLoad<DebugUInt32Index32>("sg_debug_cd_instructions_at");
         _debugSetSeed = TryLoad<SetSeed>("sg_debug_set_seed");
 
         _videoCallback = OnVideo;
@@ -414,7 +420,7 @@ internal sealed class OperaCoreHost : IDisposable
             }
 
             FinalizePending();
-            var (cdCommands, cdCommandCycles) = ReadCdCommands();
+            var (cdCommands, cdCommandCycles, cdCommandPcs, cdCommandInstructions) = ReadCdCommands();
 
             clock.Stop();
             var samples = _checkpoints
@@ -449,6 +455,8 @@ internal sealed class OperaCoreHost : IDisposable
                 LogPath = _logPath,
                 CdCommands = cdCommands,
                 CdCommandCycles = cdCommandCycles,
+                CdCommandPcs = cdCommandPcs,
+                CdCommandInstructions = cdCommandInstructions,
             };
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
@@ -688,28 +696,32 @@ internal sealed class OperaCoreHost : IDisposable
         };
     }
 
-    private (byte[] Opcodes, uint[] Cycles) ReadCdCommands()
+    private (byte[] Opcodes, uint[] Cycles, uint[] Pcs, long[] Instructions) ReadCdCommands()
     {
         if (_debugCdCommandAt is null || _debugCdCommandCount is null)
         {
-            return ([], []);
+            return ([], [], [], []);
         }
 
         var count = _debugCdCommandCount();
         if (count == 0)
         {
-            return ([], []);
+            return ([], [], [], []);
         }
 
         var commands = new byte[count];
         var cycles = new uint[count];
+        var pcs = new uint[count];
+        var instructions = new long[count];
         for (uint index = 0; index < count; index++)
         {
             commands[index] = _debugCdCommandAt(index);
             cycles[index] = _debugCdCycleAt?.Invoke(index) ?? 0;
+            pcs[index] = _debugCdPcAt?.Invoke(index) ?? 0;
+            instructions[index] = _debugCdInstructionsAt?.Invoke(index) ?? 0;
         }
 
-        return (commands, cycles);
+        return (commands, cycles, pcs, instructions);
     }
 
     private string[] SnapshotLog()

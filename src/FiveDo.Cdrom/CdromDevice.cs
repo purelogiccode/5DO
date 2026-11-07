@@ -284,6 +284,13 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <summary>Gets or sets an optional provider for the current CPU program counter (diagnostics only).</summary>
     public Func<uint>? ProgramCounterProvider { get; set; }
 
+    /// <summary>
+    /// Gets or sets an optional provider for the retired ARM instruction count
+    /// (diagnostics only). The differential harness records it with each CD command
+    /// so a command-cycle delta can be separated into extra work versus extra idle time.
+    /// </summary>
+    public Func<long>? InstructionCountProvider { get; set; }
+
     /// <summary>Gets or sets an optional provider for the current emulated frame number (diagnostics only).</summary>
     public Func<long>? FrameProvider { get; set; }
 
@@ -1817,14 +1824,56 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _dataLength = TransferSize;
         _dataPointer = 0;
         _poll |= PollData;
+        PublishReadStatusIfReady();
 
         if (_timingMode == CdromTimingMode.OperaCycleBased)
         {
-            _nextReadyCycle = _cycles + DataSectorCycles;
+            ScheduleNextDataSector();
             if (FiqPending)
             {
                 InterruptRequested?.Invoke();
             }
+        }
+    }
+
+    /// <summary>
+    /// Publishes the READ_DATA status as soon as the first requested sector is
+    /// queued, matching the reference core (Opera: <c>cdrom_data_publish_read_status_if_ready</c>
+    /// with <c>data_len != 0</c>). Portfolio's DIPIR consumes read data only when the
+    /// data and status are both ready, so waiting for the whole transfer makes the
+    /// guest spin longer than the hardware.
+    /// </summary>
+    private void PublishReadStatusIfReady()
+    {
+        if (!_readStatusPending)
+        {
+            return;
+        }
+
+        _readStatusPending = false;
+        _poll |= PollStatus;
+    }
+
+    /// <summary>
+    /// Schedules the next data sector from the previous deadline. Opera:
+    /// <c>cdrom_data_schedule_next</c>. Adding to the existing deadline keeps the
+    /// long-term transfer rate at the configured drive speed even when the guest
+    /// consumes a sector late; re-basing to <c>now + sector_cycles</c> would silently
+    /// slow every streaming title by the accumulated lateness.
+    /// </summary>
+    private void ScheduleNextDataSector()
+    {
+        ulong sectorCycles = DataSectorCycles;
+        if (_nextReadyCycle == 0)
+        {
+            _nextReadyCycle = _cycles + sectorCycles;
+            return;
+        }
+
+        _nextReadyCycle += sectorCycles;
+        if ((long)(_nextReadyCycle - _cycles) < -(long)sectorCycles)
+        {
+            _nextReadyCycle = _cycles;
         }
     }
 

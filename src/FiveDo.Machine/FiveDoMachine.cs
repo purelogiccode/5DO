@@ -123,6 +123,7 @@ public sealed class FiveDoMachine
         Cpu.FiqEntered = HandleFiqEntry;
 
         Cdrom.ProgramCounterProvider = () => Cpu.ProgramCounter;
+        Cdrom.InstructionCountProvider = () => Cpu.InstructionsExecuted;
         Cdrom.FrameProvider = () => _framesExecuted;
 
         _presentedFrame = _frame;

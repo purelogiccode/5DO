@@ -89,8 +89,8 @@ internal static class DiffReportWriter
         text.Append("| Phase-only (PC/CPSR) | ").Append(report.Summary.PhaseOnlyTitles).AppendLine(" |");
         text.Append("| **Verdict** | **").Append(report.Summary.Passed ? "PASS" : "FAIL").AppendLine("** |");
         text.AppendLine();
-        text.AppendLine("| Title | Status | Frames | Checkpoints | Allowed fields | Diverged fields | PC delta | Phase | First divergence | Error |");
-        text.AppendLine("|---|---|---:|---:|---:|---:|---:|---|---|---|");
+        text.AppendLine("| Title | Status | Frames | Checkpoints | Allowed fields | Diverged fields | PC delta | Phase | CD cadence | First divergence | Error |");
+        text.AppendLine("|---|---|---:|---:|---:|---:|---:|---|---|---|---|");
         foreach (var title in report.Titles)
         {
             text.Append("| ").Append(EscapeMarkdown(title.Name))
@@ -105,6 +105,9 @@ internal static class DiffReportWriter
                         + (title.PcPhaseInstructionDelta is { } phaseDelta
                             ? $" ({phaseDelta.ToString("+#;-#;0", CultureInfo.InvariantCulture)})"
                             : string.Empty)
+                    : "-")
+                .Append(" | ").Append(title.CdCadence?.LargestStep is { } step
+                    ? $"cmd {step.Index} ({step.CycleJump.ToString("+#;-#;0", CultureInfo.InvariantCulture)})"
                     : "-")
                 .Append(" | ").Append(title.FirstDivergence is { } first
                     ? $"f={first.Frame} {first.Field}"
@@ -181,6 +184,14 @@ internal static class DiffReportWriter
                     }
 
                     text.AppendLine(". This is a frame-boundary sample, not a behavioral gap.");
+                }
+
+                if (title.CdCadence is { } cdCadence)
+                {
+                    text.AppendLine();
+                    text.Append("**CD cadence:** ")
+                        .Append(CdCadenceAnalyzer.Describe(cdCadence))
+                        .AppendLine(".");
                 }
 
                 if (title.Error is not null)

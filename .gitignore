@@ -17,6 +17,7 @@ publish/
 .vscode/
 .idea/
 *.DotSettings.user
+inspectcode.sarif
 
 # Test/coverage
 TestResults/

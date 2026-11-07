@@ -368,6 +368,9 @@ public sealed class DiffComparerTests : IDisposable
         Assert.Contains("command 1", result.FirstDivergence.Diagnostic, StringComparison.Ordinal);
         Assert.Contains("0x85", result.FirstDivergence.Diagnostic, StringComparison.Ordinal);
         Assert.Contains("0x86", result.FirstDivergence.Diagnostic, StringComparison.Ordinal);
+        CdCadenceAnalysis cadence = Assert.IsType<CdCadenceAnalysis>(result.CdCadence);
+        Assert.Equal(CdCadenceKind.SequenceDiverged, cadence.Kind);
+        Assert.Equal(1, cadence.FirstMismatchIndex);
     }
 
     [Fact]
@@ -391,6 +394,77 @@ public sealed class DiffComparerTests : IDisposable
         Assert.Contains("prefixes match", field.Diagnostic, StringComparison.Ordinal);
         Assert.Contains("5DO has 1", field.Diagnostic, StringComparison.Ordinal);
         Assert.Contains("Opera has 2", field.Diagnostic, StringComparison.Ordinal);
+        Assert.Equal(CdCadenceKind.PrefixAhead, result.CdCadence!.Kind);
+    }
+
+    [Fact]
+    public void Compare_CdCadence_ReportsLargestStepWithMatchingPc()
+    {
+        DiffManifest manifest = Manifest(new DiffCompareOptions
+        {
+            CompareSamples = false,
+            CompareCd = true,
+        });
+        DiffTitleResult result = DiffComparer.Compare(
+            manifest,
+            Title(),
+            CaptureWithCdCommands(
+                [0x10, 0x10, 0x10],
+                3,
+                0x11111111,
+                cycles: [10_000, 20_000, 58_000],
+                pcs: [0x2aa18, 0x2aa18, 0x2aa18],
+                instructions: [1_000, 1_200, 4_000]),
+            CaptureWithCdCommands(
+                [0x10, 0x10, 0x10],
+                3,
+                0x11111111,
+                cycles: [10_000, 20_000, 28_000],
+                pcs: [0x2aa18, 0x2aa18, 0x2aa18],
+                instructions: [1_000, 1_200, 2_500]),
+            100);
+
+        CdCadenceAnalysis cadence = Assert.IsType<CdCadenceAnalysis>(result.CdCadence);
+        CdCadenceStep step = Assert.IsType<CdCadenceStep>(cadence.LargestStep);
+        Assert.Equal(CdCadenceKind.Equal, cadence.Kind);
+        Assert.Equal(2, step.Index);
+        Assert.Equal(30_000, step.CycleJump);
+        Assert.True(step.PcMatches);
+        Assert.Equal(1_500, step.InstructionJump);
+
+        DiffFieldResult field = result.Checkpoints[0].Fields
+            .Single(item => string.Equals(item.Field, "cdCommands", StringComparison.Ordinal));
+        Assert.True(field.Match);
+        Assert.Contains("largest cadence step +30000 cycles at command 2", field.Diagnostic, StringComparison.Ordinal);
+        Assert.Contains("retired-instruction step +1500", field.Diagnostic, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Compare_CdCadence_IgnoresSubThresholdSteps()
+    {
+        DiffManifest manifest = Manifest(new DiffCompareOptions
+        {
+            CompareSamples = false,
+            CompareCd = true,
+        });
+        DiffTitleResult result = DiffComparer.Compare(
+            manifest,
+            Title(),
+            CaptureWithCdCommands(
+                [0x10, 0x10],
+                2,
+                0x11111111,
+                cycles: [10_000, 20_200]),
+            CaptureWithCdCommands(
+                [0x10, 0x10],
+                2,
+                0x11111111,
+                cycles: [10_000, 20_000]),
+            100);
+
+        CdCadenceAnalysis cadence = Assert.IsType<CdCadenceAnalysis>(result.CdCadence);
+        Assert.Null(cadence.LargestStep);
+        Assert.Contains("no cadence step above 1000 cycles", CdCadenceAnalyzer.Describe(cadence), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -562,13 +636,22 @@ public sealed class DiffComparerTests : IDisposable
         };
     }
 
-    private static CaptureResult CaptureWithCdCommands(byte[] commands, int count, uint hash)
+    private static CaptureResult CaptureWithCdCommands(
+        byte[] commands,
+        int count,
+        uint hash,
+        uint[]? cycles = null,
+        uint[]? pcs = null,
+        long[]? instructions = null)
     {
         return new CaptureResult
         {
             Engine = "capture",
             Ok = true,
             CdCommands = commands,
+            CdCommandCycles = cycles ?? [],
+            CdCommandPcs = pcs ?? [],
+            CdCommandInstructions = instructions ?? [],
             Checkpoints =
             [
                 new CaptureSample

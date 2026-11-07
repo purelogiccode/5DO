@@ -22,6 +22,9 @@ shipped emulator.
 | CD command count/hash | `CdromCommandTranscript` issue-time counters | Optional debug export | No; enable with `--compare-cd` |
 | CD command sequence | Full opcode list at the final checkpoint | Optional debug export | No; included with `--compare-cd` at the final checkpoint |
 | CD command cycle | `CdromCommandTranscript.IssuedCycles` | `sg_debug_cd_cycle_at` | No; diagnostic delta at the last common command |
+| CD command PC | `CdromCommandTranscript.IssuedProgramCounters` | `sg_debug_cd_pc_at` | No; diagnostic at the last common command |
+| CD command instructions | `CdromCommandTranscript.IssuedInstructions` | `sg_debug_cd_instructions_at` | No; diagnostic, separates extra work from extra idle time |
+| CD cadence step | Largest change in the cumulative command-cycle delta | Same | No; diagnostic, reports the step command, matching/mismatching PC, and the retired-instruction jump |
 | ARM instructions | `run --json` | `sg_debug_arm_instructions` | No; diagnostic parity count |
 | PC instruction phase | Retired-instruction count per checkpoint | Retired-instruction count per checkpoint | Diagnostic; `pcPhaseFrame` reports the neighboring reference frame whose count aligns with 5DO |
 | Save-state hash | Optional `--state-hash` | ARM-only optional debug hash | No |
@@ -58,6 +61,17 @@ strict gate still fails until the phase itself is removed.
 protocol phase. A command still in flight at a checkpoint can produce a 1-3
 command count difference. The cumulative command hash is only comparable when the
 counts match.
+
+The final-checkpoint `cdCommands` field also records a transcript classification.
+`Equal` means every opcode matches. `PrefixAhead` means one transcript is a prefix
+of the other, so the difference is in-flight or trailing commands, not a changed
+command table. `SequenceDiverged` names the first opcode that differs. The same
+diagnostic reports the largest **cadence step**: the command where the
+5DO-minus-Opera cycle delta changed most. When the command-issue PCs match at that
+step and the retired-instruction delta jumps with the cycle delta, the guest ran
+the same path and spent extra instructions waiting; it did not execute a different
+CD driver path. The analysis is written to the report as `cdCadence` so a panel
+can be triaged without re-parsing the 5DO and Opera capture arrays.
 
 ## 2. Quick start
 
@@ -313,7 +327,8 @@ code. It is loaded through its `sg_*` C ABI.
   core adds `sg_debug_arm_pc`, `sg_debug_arm_cpsr`, `sg_debug_arm_instructions`,
   `sg_debug_arm_state_hash`, `sg_debug_cd_status`, `sg_debug_cd_poll`,
   `sg_debug_cd_command_count`, `sg_debug_cd_command_hash`,
-  `sg_debug_cd_command_at`, `sg_debug_cd_cycle_at`, and `sg_debug_set_seed`. The
+  `sg_debug_cd_command_at`, `sg_debug_cd_cycle_at`, `sg_debug_cd_pc_at`,
+  `sg_debug_cd_instructions_at`, and `sg_debug_set_seed`. The
   harness detects those symbols with `NativeLibrary.TryGetExport`; a stock core
   simply leaves the fields null. Build the debug core from
   `References/CPP_SimpleGui/Cores/OperaCore` with the small getters in
@@ -322,10 +337,23 @@ code. It is loaded through its `sg_*` C ABI.
   evidence, not part of the default pass/fail gate: a 4-byte PC delta is normal
   when the frame hash matches, and the CD FIFO status is not the same value as
   5DO's `DriveStatus`.
+- The reference tree is gitignored, so the debug getters are local tooling, not
+  product code. Reproduce them on a fresh `References/CPP_SimpleGui` checkout by
+  adding the `sg_debug_*` exports in `Cores/OperaCore/sg_opera_core.cpp`, the
+  per-command arrays/getters in `libopera/opera_xbus_cdrom_plugin.c`/`.h`, and the
+  PC/instruction calls at the plugin's `XBP_SET_COMMAND` `cmd_idx == 0` boundary.
+  A core without them still runs; the harness reports those fields as
+  unavailable instead of failing.
 - `sg_debug_cd_command_at`/`sg_debug_cd_cycle_at` are recorded when
   `cmd_idx == 0`, the exact first byte of a command packet. The old debug plugin
   counted bytes modulo seven, which misaligned after a one-byte ABORT (0x08)
   packet. Both sides now record one opcode and one cycle stamp per packet.
+- `sg_debug_cd_pc_at`/`sg_debug_cd_instructions_at` record the guest PC and retired
+  ARM instruction count at that same command boundary. A matching cycle delta with
+  a different PC means a different code path; a matching PC with a larger
+  instruction delta means the same path ran an extra loop. The harness writes the
+  arrays as `cdCommandPcs`/`cdCommandInstructions` in each capture; they are
+  diagnostic-only, not a gate.
 - `sg_debug_arm_instructions` counts calls to `opera_arm_execute`. The harness
   records it beside 5DO's `instructions` and prints the delta per checkpoint; it
   is diagnostic-only, not a gate.
@@ -362,6 +390,52 @@ the reference core or the local discs.
 
 ## 8. Current evidence
 
+- **2026-11-07 CD cadence triage (TEST-07/CORE-04).** The harness now classifies
+  every final CD transcript and reports the largest cadence step with its
+  command-issue PC and retired-instruction jump. On the existing 50-title panel
+  (`test55-panel50-first-sector/report.json`) the transcripts are **39 identical,
+  8 prefix-only, and 3 sequence-shifted**. The three shifts are one-command
+  READ_ID poll placement among READ_DATA commands: Chiki Chiki has one extra
+  Opera READ_ID (111/112 commands), while Dragon's Lair and Virtual Horror have
+  one extra 5DO READ_ID (111/108 and 110/107). **24/50 titles have a cadence step
+  above 1,000 cycles, and every one has the same command-issue PC on both
+  engines**: 17 steps are 60-100k cycles, six are 20-60k, and one is >=100k.
+  The 60-100k group is a single READ_DATA-to-READ_DATA step where 5DO retires
+  about 32k more instructions in the same guest path. The fresh five-title run
+  (`test60-cadence-samples5/report.json`) confirms the same picture: Alone
+  **361/361**, Road Rash **395/395**, and Wolfenstein **341/341** commands with
+  final cycle deltas of `+379`, `+468`, and `-345`; Lemmings is a 105-command
+  prefix with one `+22,834` step at command 51 (PC `0x00022140` on both sides,
+  `+8,242` instructions); Space Ace is **168/168** with one `+80,567` step at
+  command 164 (PC `0x0002aa18` on both sides, `+32,330` instructions). This
+  localizes the residual `cdCommandCount` difference to guest wait-loop cadence,
+  not a divergent command table. The next measurement is a CD register-access
+  trace around the step to separate a CD readiness wait from a timer/frame wait.
+- **2026-11-07 first-sector 50-title panel.** `test55-panel50-first-sector/report.json`
+  (local corpus, debug core `opera-build-pc`, MD5 `53c26d4cb701e3d6e3bb28e877cd502b`)
+  captured **50/50 titles with 0 errors** and **50/50 titles match every frame
+  hash** at 60/120/300. **48/50 first PC divergences align with Opera frame 59**
+  and **2/50 first diverge at f=120 and align with frame 119** (the f=60
+  checkpoint itself matched on those two). The first behavioral divergence is
+  still only `cdCommandCount`: **36 at f=120, 13 at f=300, 1 at f=60**
+  (Icebreaker II), exactly the test43 distribution. One title hit a transient
+  CHD read error in the first pass; `--resume` retried it and the final report has
+  0 errors.
+- **2026-11-07 boot-handoff triage (CORE-04/CORE-07).** The new per-command
+  `sg_debug_cd_pc_at`/`sg_debug_cd_instructions_at` stamps localized the 20th
+  Century (USA) handoff between the last boot READ_DATA (command 49) and the
+  READ_ID (command 50): 5DO spent **+207,707 cycles / +86,511 retired
+  instructions** beyond the reference at command 50, with the same guest PC
+  (`0x00022140`) on both sides. Matching the oracle's first-sector POLST
+  publication (`opera_cdrom.c`, `cdrom_data_publish_read_status_if_ready` with
+  `data_len != 0`) reduced the same deltas to **-818 cycles / -376
+  instructions**. The f=300 command-104 cycle delta fell from **+324,027** to
+  **+111,990**. The 5-title sample keeps **5/5 frame-hash matches** at
+  60/120/300 (also at stock 2x), and the 3,000-frame sample keeps the established
+  4/5 video result (Road Rash still diverges) with the same CD counts as the
+  previous baseline. This also corrects the earlier interpretation: the command-50
+  handoff is a separate event at about frame 142, not the source of the
+  universal frame-60 one-field phase.
 - **2026-11-07 50-title panel: video-clean and PC-phase-clean.** The panel
   (`artifacts/diff/test43-panel50-bg/report.json`, local corpus) captured
   **50/50 titles with 0 errors**. **All 50 match every frame hash** at frames
@@ -505,11 +579,15 @@ checkpoint does not mean the instruction streams agree.
 
 ## 9. Next increments
 
-1. Triage the residual CD cadence, now the only behavioral divergence in the
-   50-title panel. The 1-2 command shift at f=120 is in-flight traffic; the
-   f=300 outliers split into seven FMV titles with +3/+4 extra READ_DATA
-   commands and six titles 1-2 behind. Compare READ_DATA completion, status
-   publication, and CD FIQ timing per command using the cycle stamps.
+1. Finish the CD cadence triage with register-level evidence. The transcript
+   analysis now shows that 39/50 panel titles have identical command streams,
+   8 are prefix/in-flight differences, and only 3 have a one-command READ_ID
+   poll shift. All 24 significant cadence steps occur at the same command-issue
+   PC on both engines, so they are guest wait loops, not different CD driver
+   paths. Add a CD register read/write trace (cycle, PC, register, value) on both
+   sides around the 20-60k and 60-100k steps to decide whether the guest is
+   waiting on CD data/status or on a timer/VBlank. Then remove the wait itself
+   (CORE-04) or the frame phase that moves it (CORE-07).
 2. Remove the universal one-field boot phase (CORE-07). It is now measured, not
    hypothesized: every panel title's frame-60 PC aligns with Opera frame 59 at
    -55..-256 instructions, and the CD cycle jump occurs at the boot handoff

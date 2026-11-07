@@ -17,6 +17,18 @@ public class FrontendStartupTests
     }
 
     [Fact]
+    public void IsFullscreenRequested_AcceptsEverySupportedSpelling()
+    {
+        Assert.True(Program.IsFullscreenRequested(["--fullscreen"]));
+        Assert.True(Program.IsFullscreenRequested(["-fullscreen"]));
+        Assert.True(Program.IsFullscreenRequested(["-f"]));
+        Assert.True(Program.IsFullscreenRequested(["--FULLSCREEN"]));
+        Assert.False(Program.IsFullscreenRequested([]));
+        Assert.False(Program.IsFullscreenRequested(["--fullscreen=1"]));
+        Assert.False(Program.IsFullscreenRequested(["--disc", "game.chd"]));
+    }
+
+    [Fact]
     public void IsAutomatedRun_DetectsSmokeAndProbeModes()
     {
         Assert.True(Program.IsAutomatedRun(["--smoke-test"]));
