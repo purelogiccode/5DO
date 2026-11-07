@@ -221,6 +221,72 @@ public sealed class CdromDeviceTests
     }
 
     [Fact]
+    public void ReadData_RejectsInvalidMsfWithAddressError()
+    {
+        var cd = new CdromDevice();
+        cd.InsertDisc(new MemoryDisc(4));
+
+        // Seconds 60 is not a valid MSF field.
+        Send(cd, 0x10, 0x00, 0x3C, 0x00, 0x00, 0x00, 0x01);
+
+        var status = ReadStatus(cd, 2);
+        Assert.Equal(0x10, status[0]);
+        Assert.NotEqual(0, status[1] & 0x10);
+
+        Send(cd, 0x82);
+        var mei = ReadStatus(cd, 10);
+        Assert.Equal(0x0D, mei[1]); // address error
+    }
+
+    [Fact]
+    public void ReadData_RejectsTransferPastTheDiscEnd()
+    {
+        var disc = new MemoryDisc(4);
+        var cd = new CdromDevice();
+        cd.InsertDisc(disc);
+
+        // LBA 3 with two blocks runs past the four-sector disc.
+        Send(cd, 0x10, 0x00, 0x02, 0x03, 0x00, 0x00, 0x02);
+
+        var status = ReadStatus(cd, 2);
+        Assert.Equal(0x10, status[0]);
+        Assert.NotEqual(0, status[1] & 0x10);
+
+        Send(cd, 0x82);
+        var mei = ReadStatus(cd, 10);
+        Assert.Equal(0x0F, mei[1]); // end address
+
+        // The last sector itself still reads successfully.
+        Send(cd, 0x10, 0x00, 0x02, 0x03, 0x00, 0x00, 0x01);
+        status = ReadStatus(cd, 2);
+        Assert.Equal(0x10, status[0]);
+        Assert.Equal(0, status[1] & 0x10);
+        Assert.Equal(disc.Sector(3), ReadData(cd, 2048));
+    }
+
+    [Fact]
+    public void ReadData_AbortsThePreviousTransfer()
+    {
+        var disc = new MemoryDisc(8);
+        var cd = new CdromDevice
+        {
+            TimingMode = CdromTimingMode.OperaCycleBased,
+            ConfiguredSpeed = CdSpeed.Unbounded,
+        };
+        cd.InsertDisc(disc);
+
+        Send(cd, 0x10, 0x00, 0x02, 0x00, 0x00, 0x00, 0x04);
+        for (var i = 0; i < 100; i++)
+        {
+            _ = cd.GetData();
+        }
+
+        // A new read must discard the 1,948 remaining bytes of the old sector.
+        Send(cd, 0x10, 0x00, 0x02, 0x06, 0x00, 0x00, 0x01);
+        Assert.Equal(disc.Sector(6), ReadData(cd, 2048));
+    }
+
+    [Fact]
     public void DataSectorCycles_MatchesTheStock2xOperaCompensation()
     {
         var cd = new CdromDevice();

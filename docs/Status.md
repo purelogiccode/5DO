@@ -43,7 +43,7 @@ frame 120 (in-flight at the checkpoint) and 13 at frame 300 (seven FMV titles at
 3,000 frames Alone, Lemmings, Space Ace, and Wolfenstein match and Road Rash
 still diverges. The harness now records `pcPhaseFrame`/`pcPhaseInstructionDelta`,
 stages ISOs atomically, retries a transient CHD read once, and reports a per-title
-capture failure as an `Error` instead of aborting the run. The suite is **1,913
+capture failure as an `Error` instead of aborting the run. The suite is **1,916
 tests**; build, format, and InspectCode are clean. See
 [`DifferentialHarness.md`](DifferentialHarness.md) and
 [`TestCorpus.md`](TestCorpus.md) 1.1ay.

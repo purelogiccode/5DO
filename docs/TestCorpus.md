@@ -2553,8 +2553,19 @@ measured as a frame-boundary instruction phase.
   Bazookatone (USA) at 3,000 frames; the pre- and post-change 5DO hashes are
   both `0xa29ad2d1` (the title's reference hash remains `0xcf5644e7`, a
   pre-existing CORE-13 divergence).
-- **Tests:** **1,913 pass**. New coverage: instruction-phase neighbor matching
+- **Tests:** **1,916 pass**. New coverage: instruction-phase neighbor matching
   and summary counts, 24-bit background expansion in both palette paths,
   eight-bit background preservation, VDL frame state version 3 round-trip, and
   atomic ISO extraction. `dotnet format` is clean and InspectCode reports 0
   results.
+
+- **CORE-04 READ_DATA validation (2026-11-07).** `CdromDevice.ReadDataCommand`
+  now rejects an invalid MSF with MEI address error, rejects a transfer that
+  starts at or runs past the last disc sector with MEI end address, and aborts a
+  previous transfer before starting a new one. Three tests cover both error paths
+  and the stale-sector abort. The five-title and 20th Century counts are
+  unchanged. A separate oracle build with the current Opera
+  transfer-completion read-status rule also produced the same counts, ruling out
+  the local oracle's first-sector publication and past-end reads as the cause of
+  the residual FMV cadence; the next lead is the one-field boot phase and the
+  guest's FMV read loop.

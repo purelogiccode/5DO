@@ -1381,6 +1381,15 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         LastReadFrame = FrameProvider?.Invoke() ?? -1;
         SetStatus(0x10);
 
+        // Opera: cdrom_cmd_read_data rejects an invalid MSF before changing the
+        // transfer. Seconds and frames must be below 60 and 75 respectively.
+        if (_command[2] >= 60 || _command[3] >= 75)
+        {
+            ClearTransfer();
+            FailWithStatus(0x10, MeiError.AddressError);
+            return;
+        }
+
         _discState.CurrentAbsoluteMsf[0] = _command[1];
         _discState.CurrentAbsoluteMsf[1] = _command[2];
         _discState.CurrentAbsoluteMsf[2] = _command[3];
@@ -1389,6 +1398,22 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _currentSector = _discState.TempLba;
 
         _requested = (_command[4] << 16) | (_command[5] << 8) | _command[6];
+
+        // Opera: cdrom_cmd_read_data rejects a transfer that starts at or beyond
+        // the last disc sector, or that runs past it, with MEI end_address.
+        var discBlocks = TotalSectorCount;
+        if (_requested != 0
+            && (_currentSector >= discBlocks || _requested > discBlocks - _currentSector))
+        {
+            ClearTransfer();
+            FailWithStatus(0x10, MeiError.EndAddress);
+            return;
+        }
+
+        // A new READ_DATA aborts any transfer still in flight. Without this, the
+        // previous sector can leak into the new transfer's FIFO.
+        AbortReadAhead();
+
         if (_timingMode == CdromTimingMode.OperaCycleBased)
         {
             // Opera schedules the first sector one sector-time after the command and
@@ -1741,6 +1766,22 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _status[1] = _xbusStatus;
         _poll |= PollStatus;
         _meiStatus = meiError;
+    }
+
+    private void AbortReadAhead()
+    {
+        _dataLength = 0;
+        _dataPointer = 0;
+        _poll &= unchecked((byte)~PollData);
+    }
+
+    private void ClearTransfer()
+    {
+        AbortReadAhead();
+        _requested = 0;
+        _readStatusPending = false;
+        _nextReadyCycle = _cycles;
+        Array.Clear(_data);
     }
 
     private bool DiscReadyForRead()

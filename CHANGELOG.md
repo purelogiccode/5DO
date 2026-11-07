@@ -30,7 +30,7 @@ release.
   frame 59. The only remaining behavioral divergence is CD command cadence.
 - The 5-title panel matches **5/5** frame hashes at 300 frames; the 3,000-frame
   panel matches 4/5 (Road Rash still diverges).
-- Full suite **1,913/1,913** passes; build, format, and InspectCode are clean.
+- Full suite **1,916/1,916** passes; build, format, and InspectCode are clean.
 
 ## [1.4.0] - 2026-11-07
 
