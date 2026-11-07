@@ -2432,3 +2432,56 @@ a legacy version-2 memory section.
 - **Limitations:** five titles, not the 50-title panel; no scripted input yet; the
   audio hash is informational. See `DifferentialHarness.md` §8/§9 and
   `ImplementationPlan.md` TEST-07.
+
+#### 1.1ax TEST-07 exact clock and 50-title panel (2026-11-06)
+
+This entry supersedes the clock and first-divergence claims in 1.1aw. Both
+statements were measurement artifacts of 5DO's 60.00 Hz NTSC clock:
+
+- **Corrected CPSR reading:** `0x600000d3` vs `0x800000d3` differ in the N/Z/C
+  condition flags (bits 31-29). The FIQ-disable bit (bit 6) is set in both
+  values. The frame-60 PC/CPSR difference is a frame-boundary phase sample, not
+  evidence of an FIQ-ordering bug.
+- **Exact NTSC field rate.** NTSC now runs at 60000/1001 (208,541 cycles per
+  field at 12.5 MHz) instead of 12,500,000/60 = 208,333. The DSP sample clock
+  therefore produces 44,145 samples at frame 60 vs Opera's 44,144 (was 44,101),
+  220,728 vs 220,720 at frame 300 (was 220,508/220,720), and 2,207,289 vs
+  2,207,207 at frame 3,000. Every one of the 50 panel titles is within **16
+  samples** at frame 300.
+- **Rational VDL accumulator.** The VDL clock no longer adds the per-batch
+  rounded 8.24 ARM fraction, which ran the scanline clock ~0.09% fast. Quartz
+  accumulates `cycles * fieldLines * fieldRateNumerator` against
+  `armClock * fieldRateDenominator`; 60 NTSC fields produce exactly 15,780
+  scanlines. Quartz state version 4 stores the exact accumulator; v1-3 states
+  convert their 8.24 fraction on load.
+- **50-title panel (`artifacts/diff/test15-panel50/report.json`).** 50/50
+  captured, **0 errors**. **32/50 titles match every frame hash** at frames
+  60/120/300; 17 match one of three, and one bonus disc (`Icebreaker II`) has no
+  video. **49/50 match the CD command count at frame 60** (delta -1..0); at
+  frame 120 14/50 match (delta -2..0) and at frame 300 24/50 match (delta
+  -2..+4). The first divergence is PC at frame 60 on 48/50 titles.
+- **Instruction parity (new).** The reference core exports
+  `sg_debug_arm_instructions`; the harness records it beside 5DO's
+  `instructions`. At frame 60 Opera's absolute count is **89,338-90,063
+  instructions higher** on all five sample titles (Lemmings 5,383,387 vs
+  5,472,729), while the sample counts match. The offset is already present at
+  frame 1 and stays fixed; the **per-frame retirement rate matches within 0.1%**
+  over 240 frames on 4/5 titles, with Lemmings diverging only where its CD path
+  diverges. This is a startup/first-field capture offset, not a cycle-model
+  error, so it does not implicate CORE-01. FreeDO N=4 ARM timing is still far
+  worse (3,855,498 instructions).
+- **CD cycle stamps (new).** The debug core exports
+  `sg_debug_cd_cycle_at`, recorded at the exact command boundary
+  (`cmd_idx == 0`, also fixing the old byte-modulo-seven transcript for
+  one-byte ABORT packets). The first 105 Lemmings opcodes match, but 5DO reaches
+  command 104 at cycle 57,736,851 vs Opera's 57,621,696 (**+115,155 cycles,
+  ~9.2 ms**). Road Rash +16,680, Space Ace +80,866, Wolfenstein +13,343, Alone
+  +15,163 at their last common command. The remaining CORE-04 lead is a
+  cadence/READ_DATA-completion difference, not the command table.
+- **3,000-frame recheck.** With the exact clock, Space Ace matches Opera's
+  frame hash at 3,000 (`0x46916c61`) and Road Rash matches Opera's frame 3002
+  (`0xd5895ad5`). Wolfenstein (`0x175b8fe4`) and Alone (`0x175b8fe4`) already
+  matched at 3,000.
+- **Tests:** 1,884 pass. New coverage: exact-rational frame cycles, 60 fields =
+  15,780 scanlines, sample count 44,144 +/- one, state v4 round-trip, behavioral
+  divergence classification, and CD cycle capture. `dotnet format` is clean.

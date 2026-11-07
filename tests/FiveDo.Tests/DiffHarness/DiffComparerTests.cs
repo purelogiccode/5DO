@@ -146,6 +146,24 @@ public sealed class DiffComparerTests : IDisposable
     }
 
     [Fact]
+    public void Compare_PcMismatchWithMatchingFrame_ReportsNoBehavioralDivergence()
+    {
+        DiffManifest manifest = Manifest();
+        DiffTitle title = Title();
+        DiffTitleResult result = DiffComparer.Compare(
+            manifest,
+            title,
+            CaptureWithPc(0x1000),
+            CaptureWithPc(0x1004),
+            100,
+            comparePc: true);
+
+        Assert.Equal("Diverged", result.Status);
+        Assert.Equal("pc", result.FirstDivergence?.Field);
+        Assert.Null(result.FirstBehavioralDivergence);
+    }
+
+    [Fact]
     public void Compare_CpsrMismatch_IsGatedWhenEnabled()
     {
         DiffManifest manifest = Manifest(new DiffCompareOptions

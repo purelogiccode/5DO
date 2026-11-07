@@ -68,17 +68,17 @@ public sealed class VideoRegionTests
         var header = 1u | (3u << 9) | (1u << 15) | (1u << 16) | (1u << 21);
 
         WriteVdl(memory, head, header, bitmap, bitmap, 0);
-        WriteVdl(memory, head + 16, 0x01112233, 0xe0010203, 0xc001002c);
+        WriteVdl(memory, head + 16, 0x01112233, 0xe0ff8040, 0xc001002c);
 
         vdlp.ProcessVdl(head);
         vdlp.DoLine(0, frame);
         vdlp.DoLine(20, frame);
         Assert.Equal(0u, frame[0].Background);
         vdlp.DoLine(21, frame);
-        Assert.Equal(0x030201u, frame[0].Background);
+        Assert.Equal(0x7e08u, frame[0].Background);
         Assert.Equal(0xc001002cu, frame[0].OutControl);
         vdlp.DoLine(308, frame);
-        Assert.Equal(0x030201u, frame[287].Background);
+        Assert.Equal(0x7e08u, frame[287].Background);
         Assert.Equal(0xc001002cu, frame[287].OutControl);
     }
 

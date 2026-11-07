@@ -74,7 +74,7 @@ compatibility-safe default remains 320x240 plus output filtering.
 
 ### 480i/240p field handling
 
-The 3DO VDLP and the reference cores emit one 240-line (288-line PAL) field per 60 Hz
+The 3DO VDLP and the reference cores emit one 240-line (288-line PAL) field per 59.94 Hz
 (50 Hz) tick. Interlaced titles split a 480-line image across alternating fields, so
 presenting every field as a full frame loses half the vertical detail and combs during
 motion. `InterlaceProcessor` keeps the previous field and presents one of four modes:
@@ -451,7 +451,7 @@ behavior. The Avalonia compositor may pace the window independently, so a reques
 vsync may not cap presentation at 60 Hz; the probe reports renderer/present cost
 separately.
 
-Frame pacing is audio-derived on the core thread (44.1 kHz, 60 Hz fallback); the UI
+Frame pacing is audio-derived on the core thread (44.1 kHz, 59.94 Hz fallback); the UI
 renders on demand when the mailbox sequence or output size changes. Status/FPS updates
 run at 4 Hz.
 

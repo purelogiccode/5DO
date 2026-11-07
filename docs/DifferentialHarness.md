@@ -21,6 +21,8 @@ shipped emulator.
 | ARM CPSR | `run --json` | Optional debug export | No; `--compare-pc` also compares CPSR when both sides expose it |
 | CD command count/hash | `CdromCommandTranscript` issue-time counters | Optional debug export | No; enable with `--compare-cd` |
 | CD command sequence | Full opcode list at the final checkpoint | Optional debug export | No; included with `--compare-cd` at the final checkpoint |
+| CD command cycle | `CdromCommandTranscript.IssuedCycles` | `sg_debug_cd_cycle_at` | No; diagnostic delta at the last common command |
+| ARM instructions | `run --json` | `sg_debug_arm_instructions` | No; diagnostic parity count |
 | Save-state hash | Optional `--state-hash` | ARM-only optional debug hash | No |
 
 The frame hash is the same algorithm as the emulator's `run --json` `frameHash`.
@@ -34,6 +36,13 @@ Every compared field is gated. The report also records the **first divergence**:
 the earliest checkpoint and field without an allowance. Use it as the triage
 entry point; later checkpoint differences may cascade from the same cause. A
 frame-hash match is not evidence that the instruction streams agree.
+
+Because PC and CPSR are sampled at the frame boundary, a few hundred cycles of
+phase difference moves the PC without changing a pixel. The harness therefore
+also prints the **first behavioral divergence**, which ignores PC/CPSR and uses
+only frame hash, samples, audio, state, and CD. A title whose only failures are
+PC/CPSR is reported as "behavioral observations match"; it is still `Diverged`
+for the strict gate, but it is not evidence of a game-visible defect.
 
 5DO counts a CD command when the first command byte is written
 (`CommandOpcodeObserver`); the reference counts `XBP_SET_COMMAND` at the same
@@ -292,24 +301,34 @@ code. It is loaded through its `sg_*` C ABI.
   therefore uses `--profile accuracy --cd-speed unbounded --no-game-fixes` for
   5DO comparisons.
 - The ABI exposes video, audio, input, and lifecycle callbacks. The optional debug
-  core adds `sg_debug_arm_pc`, `sg_debug_arm_cpsr`, `sg_debug_arm_state_hash`,
-  `sg_debug_cd_status`, `sg_debug_cd_poll`, `sg_debug_cd_command_count`,
-  `sg_debug_cd_command_hash`, and `sg_debug_set_seed`. The harness detects those
-  symbols with `NativeLibrary.TryGetExport`; a stock core simply leaves the fields
-  null. Build the debug core from `References/CPP_SimpleGui/Cores/OperaCore` with
-  the small getters in `opera_arm.c`/`opera_xbus_cdrom_plugin.c` and pass
+  core adds `sg_debug_arm_pc`, `sg_debug_arm_cpsr`, `sg_debug_arm_instructions`,
+  `sg_debug_arm_state_hash`, `sg_debug_cd_status`, `sg_debug_cd_poll`,
+  `sg_debug_cd_command_count`, `sg_debug_cd_command_hash`,
+  `sg_debug_cd_command_at`, `sg_debug_cd_cycle_at`, and `sg_debug_set_seed`. The
+  harness detects those symbols with `NativeLibrary.TryGetExport`; a stock core
+  simply leaves the fields null. Build the debug core from
+  `References/CPP_SimpleGui/Cores/OperaCore` with the small getters in
+  `opera_arm.c`/`opera_xbus_cdrom_plugin.c` and pass
   `--core artifacts/diff/opera-build-current/OperaCore.dll`. The fields are
   evidence, not part of the default pass/fail gate: a 4-byte PC delta is normal
   when the frame hash matches, and the CD FIFO status is not the same value as
   5DO's `DriveStatus`.
+- `sg_debug_cd_command_at`/`sg_debug_cd_cycle_at` are recorded when
+  `cmd_idx == 0`, the exact first byte of a command packet. The old debug plugin
+  counted bytes modulo seven, which misaligned after a one-byte ABORT (0x08)
+  packet. Both sides now record one opcode and one cycle stamp per packet.
+- `sg_debug_arm_instructions` counts calls to `opera_arm_execute`. The harness
+  records it beside 5DO's `instructions` and prints the delta per checkpoint; it
+  is diagnostic-only, not a gate.
 - `sg_debug_set_seed(seed)` seeds `std::rand`, `prng16`, and `prng32` before
   `sg_init`; the harness applies a fixed seed (default 1488) and records it. Two
   consecutive runs with the same seed produced identical checkpoint arrays for
   both engines on 2026-11-06.
-- The reference core is paced to the region refresh rate (59.94 Hz NTSC), while
-  5DO advances 60 fields per second. A 300-frame run therefore differs by about
-  212 samples. `sampleTolerance` absorbs the count; the cumulative audio hash is
-  still not comparable until the streams are aligned or resampled.
+- Both engines now use the exact NTSC field rate (60000/1001, 208,541.67
+  cycles/field). A 300-frame run differs by 1-8 samples; `sampleTolerance`
+  remains a 512-sample safety margin, and all 50 panel titles were within 9
+  samples at frame 300. The cumulative audio hash is still not gated until the
+  streams are aligned or resampled.
 - The core is paced in real time, so a 3000-frame capture takes about 50 seconds
   per title. Use `--resume` for long runs.
 
@@ -334,6 +353,40 @@ the reference core or the local discs.
 
 ## 8. Current evidence
 
+- **2026-11-06 exact-clock panel (TEST-07).** The 50-title panel
+  (`artifacts/diff/test15-panel50/report.json`, local corpus) captured **50/50
+  titles with 0 errors**. **32/50 match every frame hash** at frames 60/120/300;
+  **49/50 match the CD command count at frame 60**; every final sample delta is
+  **≤9**. The first divergence is PC at frame 60 on 48/50 titles. PC/CPSR are
+  frame-boundary phase samples: the report now prints the first **behavioral**
+  divergence separately (frame hash, audio, samples, state, CD). The remaining
+  behavioral differences are a 1-2 command CD cadence shift during boot/menu
+  traffic and a fixed startup instruction-count offset (the per-frame rate matches).
+- **Reference instruction parity (2026-11-06).** The debug core exports
+  `sg_debug_arm_instructions`; the harness records it next to 5DO's
+  `instructions`. At frame 60, Opera's absolute count is **89,338-90,063
+  instructions higher** on all five sample titles (Lemmings 5,383,387 vs
+  5,472,729). The offset is already present at frame 1 and stays fixed; the
+  per-frame retirement rate matches within **0.1%** over 240 frames on 4/5
+  titles (Lemmings diverges where its CD path diverges). This is a
+  startup/first-field capture offset, not a per-instruction cycle-model error.
+  The FreeDO N=4 mode is still far worse (3,855,498 instructions). Align the
+  first captured field before using PC as a gate.
+- **CD command cycle stamps (2026-11-06).** `CdromCommandTranscript` records
+  the ARM cycle at each opcode issue and the CLI writes `opcode cycle` lines.
+  The debug core's `sg_debug_cd_cycle_at` records the same at the exact command
+  boundary (`cmd_idx == 0`), which also fixes the old byte-count-modulo-seven
+  transcript for one-byte ABORT packets. On Lemmings, the first 105 opcodes
+  match but 5DO reaches command 104 at cycle 57,736,851 vs Opera's 57,621,696
+  (**+115,155 cycles, ~9.2 ms**). Road Rash is +16,680, Space Ace +80,866,
+  Wolfenstein +13,343, and Alone +15,163 at their last common command. The
+  divergence is cadence, not the command table.
+- **Exact NTSC clock (2026-11-06).** NTSC now uses 60000/1001 (208,541 cycles
+  at 12.5 MHz), and the VDL accumulator is exact rational instead of the
+  per-batch rounded 8.24 value. Samples at frame 60 went from 44,101 vs 44,144
+  to 44,145 vs 44,144; at frame 300 from 220,508 vs 220,720 to 220,728 vs
+  220,720. At 3,000 frames Space Ace matches Opera's frame hash and Road Rash
+  matches Opera frame 3002.
 - `benchmarks/diff/samples5.json` (2026-11-06, TEST-07): five local titles,
   300 frames, checkpoints 60/120/300, fixed seed 1488, accuracy profile,
   `cdSpeed=unbounded`, `noGameFixes=true`, PC/CPSR/CD comparison, sample
@@ -424,15 +477,18 @@ checkpoint does not mean the instruction streams agree.
 
 ## 9. Next increments
 
-1. Run the generated `benchmarks/diff/panel50.json` against the full corpus; the
-   five-title `samples5.json` panel is the current execution evidence.
-2. Align or resample the audio streams so `compareAudio` can gate the cumulative
-   hash; the 59.94/60 Hz sample-count offset currently makes it incomparable.
-3. Add a CD command-tail or per-index sequence comparison to distinguish
-   in-flight count drift from a real command-sequence divergence.
-4. Triage the frame-60 PC/CPSR divergence (CORE-07). It is now the first
-   divergence on all five sample titles; the Lemmings CPSR difference is the FIQ
-   disable bit.
+1. Triage the remaining behavioral divergences in the 50-title report: the
+   1-2 command CD cadence shift first appears between frames 60 and 120 on most
+   titles. Compare READ_DATA completion, status publication, and CD FIQ timing
+   per command using the new cycle stamps.
+2. Align the first captured field and the ~89k-instruction startup offset before
+   treating PC as a gate. The per-frame retirement rate already matches within
+   0.1%; a per-class reference counter is only needed if the residual growth on a
+   title exceeds one field.
+3. Align or resample the audio streams so `compareAudio` can gate the cumulative
+   hash; the sample count is now within 9 at frame 300 across all 50 titles, so
+   a waveform/RMS comparison is feasible.
+4. Add scripted input to the panel; the current run is boot/menu traffic only.
 5. Wire `baseline` into the nightly workflow and publish `report.html` as an
    artifact.
 6. Add visual artifacts (checkpoint PNGs) once the hash gate is stable.

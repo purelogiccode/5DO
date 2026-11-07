@@ -1218,3 +1218,28 @@ M1 implements the section primitive used by all later chips:
   option is on. Unknown file names containing `norsa`, `no-rsa`, `rsa disabled`, or
   `unsigned` are accepted as already No-RSA; a retail image with no patch site is
   rejected with an explicit error rather than silently claiming support.
+
+### 12.35 Exact NTSC field clock and rational VDL (2026-11-06)
+
+- FreeDO's integer `ARM_CLOCK / 60` (208,333 cycles) and `VDL_CLOCK = 526 * 30`
+  (15,780 lines/s) model NTSC at exactly 60.00 Hz. The hardware and Opera use the
+  NTSC color field rate 60000/1001 (59.94 Hz): a field is 208,541.67 ARM cycles
+  and the reference clock accumulates scanlines with a 16.16 rational.
+- 5DO now carries `FieldRateNumerator`/`FieldRateDenominator` on
+  `VideoRegionProfile` and computes the frame budget as
+  `armClock * denominator / numerator`. PAL stays 50/1. `FramesPerSecond`
+  exposes the exact value for host pacing; the nominal `FieldRate` remains
+  60/50 for display and JSON compatibility.
+- `Quartz` replaced FreeDO's 8.24 VDL accumulator with an exact rational one:
+  each cycle adds `fieldLines * numerator` to a 64-bit accumulator and a
+  scanline is due at `armClock * denominator`. This also removes the per-batch
+  ceil() error in FreeDO's 8.24 scheme, which ran the scanline clock ~0.09%
+  fast (15,794 events per second instead of 15,780).
+- Quartz state is version 4. The historical 8.24 VDL word is still written for
+  older readers, and version 1-3 states convert that fraction on load. The
+  exact accumulator is appended for version 4.
+- Evidence: at 300 frames the REFERENCE and 5DO sample counts now differ by
+  1-8 samples instead of 43-212; all 50 panel titles are within 9 samples at
+  frame 300. Space Ace matches Opera's 3,000-frame hash and Road Rash matches
+  Opera frame 3002. The remaining PC/CPSR frame-boundary difference is a
+  phase sample, not a clock offset; see `TestCorpus.md` 1.1ax.

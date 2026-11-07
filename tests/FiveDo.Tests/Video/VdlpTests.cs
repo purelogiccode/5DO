@@ -32,6 +32,30 @@ public sealed class VdlpTests
     }
 
     [Fact]
+    public void DoLine_DisabledBitmapDmaClearsTheLineToBlack()
+    {
+        var memory = new FiveDoMemory();
+        var vdlp = new Vdlp(memory.Ram);
+        var frame = new VdlFrame();
+        const uint head = 0x1000;
+        const uint bitmap = 0x8000;
+
+        // Bit 21 of the CLUT DMA control word enables bitmap DMA; clear it.
+        var header = 1u | (3u << 9) | (1u << 15) | (1u << 16);
+        WriteVdl(memory, head, header, bitmap, bitmap, 0);
+        vdlp.ProcessVdl(head);
+        vdlp.DoLine(0, frame);
+
+        frame[0].PixelBuffer[..320].Fill(0x7fff);
+        frame[0].Background = 0x7fff;
+
+        vdlp.DoLine(16, frame);
+
+        Assert.All(frame[0].Pixels.ToArray(), pixel => Assert.Equal(0, pixel));
+        Assert.Equal(0u, frame[0].Background);
+    }
+
+    [Fact]
     public void DoLine_CopiesPixelsClutBackgroundAndControl()
     {
         var memory = new FiveDoMemory();
@@ -42,7 +66,7 @@ public sealed class VdlpTests
         var header = 1u | (3u << 9) | (1u << 15) | (1u << 16) | (1u << 21);
 
         WriteVdl(memory, head, header, bitmap, bitmap, 0);
-        WriteVdl(memory, head + 16, 0x01112233, 0xe0010203, 0xc001002c);
+        WriteVdl(memory, head + 16, 0x01112233, 0xe0ff8040, 0xc001002c);
         for (var i = 0; i < 320 * 20; i++)
         {
             memory.Ram.Write16(VramOffset + bitmap + ((uint)i * 4), (ushort)(i % 32));
@@ -58,7 +82,7 @@ public sealed class VdlpTests
         Assert.Equal(0x11, frame[0].ClutR[1]);
         Assert.Equal(0x22, frame[0].ClutG[1]);
         Assert.Equal(0x33, frame[0].ClutB[1]);
-        Assert.Equal(0x030201u, frame[0].Background);
+        Assert.Equal(0x7e08u, frame[0].Background);
         Assert.Equal(0xc001002cu, frame[0].OutControl);
         Assert.Equal(header, frame[0].ClutDma);
         Assert.True(vdlp.CurrentBitmap > bitmap);

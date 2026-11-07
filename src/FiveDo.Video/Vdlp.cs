@@ -223,7 +223,9 @@ public sealed class Vdlp : IVdlp, IStateSection
             else
             {
                 VdlLine target = frame.Lines[y];
-                if ((_clutDma & (1u << 21)) != 0 && (VideoDmaEnabled?.Invoke() ?? true))
+                var videoDmaEnabled = (_clutDma & (1u << 21)) != 0
+                    && (VideoDmaEnabled?.Invoke() ?? true);
+                if (videoDmaEnabled)
                 {
                     var lineWidth = (int)Math.Min(_modulo, VdlLine.MaxPixels);
                     if (lineWidth <= 0)
@@ -267,6 +269,13 @@ public sealed class Vdlp : IVdlp, IStateSection
                 target.OutControl = _outControl;
                 target.ClutDma = _clutDma;
                 target.Background = _background;
+                if (!videoDmaEnabled)
+                {
+                    // Opera: a disabled bitmap DMA renders a black line. The old
+                    // pixels and background must not persist from the previous field.
+                    target.Pixels.Clear();
+                    target.Background = 0;
+                }
             }
         }
 
@@ -310,7 +319,9 @@ public sealed class Vdlp : IVdlp, IStateSection
         VdlLine target0 = frame.Lines[y * 2];
         VdlLine target1 = frame.Lines[(y * 2) + 1];
 
-        if ((_clutDma & (1u << 21)) != 0 && (VideoDmaEnabled?.Invoke() ?? true))
+        var videoDmaEnabled = (_clutDma & (1u << 21)) != 0
+            && (VideoDmaEnabled?.Invoke() ?? true);
+        if (videoDmaEnabled)
         {
             var lineWidth = (int)Math.Min(_modulo, VdlLine.MaxPixels / 2);
             if (lineWidth <= 0)
@@ -368,6 +379,14 @@ public sealed class Vdlp : IVdlp, IStateSection
         target1.OutControl = _outControl;
         target1.ClutDma = _clutDma;
         target1.Background = _background;
+
+        if (!videoDmaEnabled)
+        {
+            target0.Pixels.Clear();
+            target1.Pixels.Clear();
+            target0.Background = 0;
+            target1.Background = 0;
+        }
     }
 
     /// <summary>Writes the VDLP save-state payload. FreeDO: <c>_vdl_Save</c>.</summary>
@@ -534,9 +553,14 @@ public sealed class Vdlp : IVdlp, IStateSection
                     continue;
                 }
 
-                _background = ((command & 0xff) << 16) |
-                    (command & 0xff00) |
-                    ((command >> 16) & 0xff);
+                // Opera: background_to_0RGB1555 extracts 8-bit r/g/b (bits 23-16,
+                // 15-8, 7-0) and narrows each to 5 bits. The old code byte-swapped
+                // the word and treated it as an 8-bit-per-channel value, which
+                // swapped red/blue and corrupted the green channel.
+                var red = (command >> 16) & 0xff;
+                var green = (command >> 8) & 0xff;
+                var blue = command & 0xff;
+                _background = ((red >> 3) << 10) | ((green >> 3) << 5) | (blue >> 3);
             }
             else if ((command & 0xe0000000) == 0xc0000000)
             {

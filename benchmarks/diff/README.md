@@ -17,13 +17,16 @@ not product configuration.
   two-frame offset window, and checkpoint images.
 - `samples5.json` - the local `D:/Samples/3DO` five-title TEST-07 panel:
   300 frames, checkpoints 60/120/300, fixed seed 1488, PC/CPSR/CD comparison,
-  and a 512-sample tolerance for the 59.94/60 Hz field-rate offset.
+  and a 512-sample tolerance. The exact NTSC clock now keeps sample deltas within
+  a few samples, so the tolerance is a safety margin, not a known offset.
 - `samples5-long.json` - the same five local titles at 3,000 frames with
   checkpoints 60/300/1000/3000. Use it to separate boot-time PC drift from
   visible in-game divergence.
 - `panel50.json` - the generated 50-title TEST-07 accuracy panel: evenly spaced
   titles from `full.json`, 300 frames, checkpoints 60/120/300, PC/CPSR/CD
-  comparison, sample tolerance 512. Run it on a machine with the full corpus.
+  comparison, sample tolerance 512. It has been run end to end on the local
+  corpus (50/50 captured, 0 errors, 32/50 matching every frame hash); use
+  `--cleanup-iso` and a work directory on a large disk.
 - `full.json` - the generated 594-disc collection manifest. Its `roots` object
   currently points at the machine-specific `J:/Panasonic 3DO` and
   `G:/MAME/MAME Software List CHDs/3do` paths; every title uses `${games}` or
@@ -54,10 +57,10 @@ tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
   --core artifacts/diff/opera-build-current/OperaCore.dll
 ```
 
-The reference core is paced to 60 Hz, so 3,000 frames take about 50 seconds per
-title. Use `--resume` to reuse captures. `--force` is required after changing
-frame counts, checkpoints, options, or the image/offset diagnostics. For a
-CORE-08 profile A/B, use fresh output directories so cached captures from the
+The reference core is paced to 59.94 Hz (NTSC), so 3,000 frames take about 50
+seconds per title. Use `--resume` to reuse captures. `--force` is required after
+changing frame counts, checkpoints, options, or the image/offset diagnostics. For
+a CORE-08 profile A/B, use fresh output directories so cached captures from the
 other profile are not reused:
 
 ```powershell

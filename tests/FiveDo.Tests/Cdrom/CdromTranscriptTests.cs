@@ -143,6 +143,32 @@ public sealed class CdromTranscriptTests
         Assert.Empty(transcript.ToText());
     }
 
+    [Fact]
+    public void Transcript_RecordsIssueCyclesForEveryOpcode()
+    {
+        var cd = new CdromDevice { FrameProvider = () => 5 };
+        cd.InsertDisc(new MemoryDisc(8));
+        var transcript = new CdromCommandTranscript();
+        transcript.Attach(cd);
+
+        cd.Tick(10_000);
+        Send(cd, 0x83);
+        DrainStatus(cd, 12);
+        cd.Tick(25_000);
+        Send(cd, 0x85);
+        DrainStatus(cd, 8);
+        cd.Tick(5_000);
+        Send(cd, 0x8B);
+        DrainStatus(cd, 8);
+
+        Assert.Equal(transcript.IssuedOpcodes.Count, transcript.IssuedCycles.Count);
+        Assert.Equal(new byte[] { 0x83, 0x85, 0x8B }, transcript.IssuedOpcodes);
+        Assert.Equal(10_000ul, transcript.IssuedCycles[0]);
+        Assert.Equal(35_000ul, transcript.IssuedCycles[1]);
+        Assert.Equal(40_000ul, transcript.IssuedCycles[2]);
+        Assert.Equal(cd.Cycles, transcript.IssuedCycles[^1]);
+    }
+
     private static void Send(CdromDevice device, params byte[] command)
     {
         for (var i = 0; i < command.Length; i++)
