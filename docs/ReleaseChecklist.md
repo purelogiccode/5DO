@@ -101,8 +101,11 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       bundle jobs and the publish job; all six checksums verify locally. CI run
       <https://github.com/purelogiccode/5DO/actions/runs/42398646569> passed every
       required job. Local bundles are in `src/FiveDo.Frontend.Avalonia/bin/Release`.
-- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
-      1.4.0 release page, What's New, release notes, and wiki page.
+- [x] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
+      1.4.0 release page, What's New, release notes, and wiki page. Docs run
+      <https://github.com/purelogiccode/5DO/actions/runs/42399572702> passed build,
+      Pages deploy, and wiki publish; the 1.4.0 What's New and wiki release page are
+      live.
 
 ---
 
