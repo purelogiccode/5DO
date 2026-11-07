@@ -208,16 +208,34 @@ internal static class HarnessCommon
     }
 
     /// <summary>Extracts the 2048-byte data sectors to an ISO.</summary>
+    /// <remarks>
+    /// The output is written to a sibling temporary file and moved into place only
+    /// after every sector has been read. A transient CHD decompression failure
+    /// therefore never leaves a partial ISO that <c>--resume</c> could reuse.
+    /// </remarks>
     public static void ExtractIso(string discPath, string isoPath)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(isoPath)!);
-        using IDiscSource disc = DiscImageFactory.Open(discPath);
-        using var output = File.Create(isoPath);
-        var sector = new byte[2048];
-        for (var lba = 0; lba < disc.SectorCount; lba++)
+        var temporaryPath = isoPath + ".tmp";
+        try
         {
-            disc.ReadSector(lba, sector);
-            output.Write(sector);
+            using IDiscSource disc = DiscImageFactory.Open(discPath);
+            using (var output = File.Create(temporaryPath))
+            {
+                var sector = new byte[2048];
+                for (var lba = 0; lba < disc.SectorCount; lba++)
+                {
+                    disc.ReadSector(lba, sector);
+                    output.Write(sector);
+                }
+            }
+
+            File.Move(temporaryPath, isoPath, overwrite: true);
+        }
+        catch
+        {
+            DeleteFile(temporaryPath);
+            throw;
         }
     }
 

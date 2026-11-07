@@ -23,6 +23,7 @@ shipped emulator.
 | CD command sequence | Full opcode list at the final checkpoint | Optional debug export | No; included with `--compare-cd` at the final checkpoint |
 | CD command cycle | `CdromCommandTranscript.IssuedCycles` | `sg_debug_cd_cycle_at` | No; diagnostic delta at the last common command |
 | ARM instructions | `run --json` | `sg_debug_arm_instructions` | No; diagnostic parity count |
+| PC instruction phase | Retired-instruction count per checkpoint | Retired-instruction count per checkpoint | Diagnostic; `pcPhaseFrame` reports the neighboring reference frame whose count aligns with 5DO |
 | Save-state hash | Optional `--state-hash` | ARM-only optional debug hash | No |
 
 The frame hash is the same algorithm as the emulator's `run --json` `frameHash`.
@@ -43,6 +44,14 @@ also prints the **first behavioral divergence**, which ignores PC/CPSR and uses
 only frame hash, samples, audio, state, and CD. A title whose only failures are
 PC/CPSR is reported as "behavioral observations match"; it is still `Diverged`
 for the strict gate, but it is not evidence of a game-visible defect.
+
+The report also records an **instruction-phase** alignment for PC/CPSR
+divergences. When the checkpoint window contains a neighboring reference frame
+whose retired-instruction count is within a tenth of a frame of 5DO's count (and
+the same-frame count is farther away), the report prints the aligned frame and
+the residual instruction delta. `pcPhaseFrame` and `pcPhaseInstructionDelta` on
+each title carry the same evidence. This is a triage label, not a pass: the
+strict gate still fails until the phase itself is removed.
 
 5DO counts a CD command when the first command byte is written
 (`CommandOpcodeObserver`); the reference counts `XBP_SET_COMMAND` at the same
@@ -353,7 +362,26 @@ the reference core or the local discs.
 
 ## 8. Current evidence
 
-- **2026-11-06 exact-clock panel (TEST-07).** The 50-title panel
+- **2026-11-07 50-title panel: video-clean and PC-phase-clean.** The panel
+  (`artifacts/diff/test43-panel50-bg/report.json`, local corpus) captured
+  **50/50 titles with 0 errors**. **All 50 match every frame hash** at frames
+  60/120/300 (up from 32/50), and **all 50 first PC divergences are instruction
+  phase**: 5DO frame 60 aligns with Opera frame 59 with a residual of only
+  **-55 to -256 retired instructions**, while the same-frame delta is about
+  **89,000**. The only remaining behavioral divergence is `cdCommandCount`:
+  36 titles first differ at f=120 (1-2 commands in flight; all recover by
+  f=300), 13 at f=300 (seven FMV titles at +3/+4, six at -1/-2), and Icebreaker
+  II at f=60. The enabling video fixes were a 24-bit VDL background (the old
+  5-bit narrowing turned `0x010101` into black) and treating a zero VDL entry
+  as a stop that retains the previous bitmap/control word, matching
+  `opera_vdlp.c`; both are covered by tests.
+- **2026-11-07 3,000-frame panel.** Video matches at 3,000 on Alone, Lemmings,
+  Space Ace, and Wolfenstein 3D; Road Rash still diverges at 1,000 and 3,000.
+  CD counts are 365/352 (Lemmings), 851/836 (Road Rash), 349/348 (Space Ace),
+  862/861 (Wolfenstein), and 932/932 (Alone). Transient video mismatches at
+  f=1000 on Alone and Space Ace recover by f=3000. This separates the remaining
+  long-run issue into CD cadence and Road Rash-specific scene divergence.
+- **2026-11-06 exact-clock panel (TEST-07).** The previous 50-title panel
   (`artifacts/diff/test21-panel50/report.json`, local corpus) captured **50/50
   titles with 0 errors**. **32/50 match every frame hash** at frames 60/120/300;
   **49/50 match the CD command count at frame 60**; every final sample delta is
@@ -477,18 +505,21 @@ checkpoint does not mean the instruction streams agree.
 
 ## 9. Next increments
 
-1. Triage the remaining behavioral divergences in the 50-title report: the
-   1-2 command CD cadence shift first appears between frames 60 and 120 on most
-   titles. Compare READ_DATA completion, status publication, and CD FIQ timing
-   per command using the new cycle stamps.
-2. Align the first captured field and the ~89k-instruction startup offset before
-   treating PC as a gate. The per-frame retirement rate already matches within
-   0.1%; a per-class reference counter is only needed if the residual growth on a
-   title exceeds one field.
+1. Triage the residual CD cadence, now the only behavioral divergence in the
+   50-title panel. The 1-2 command shift at f=120 is in-flight traffic; the
+   f=300 outliers split into seven FMV titles with +3/+4 extra READ_DATA
+   commands and six titles 1-2 behind. Compare READ_DATA completion, status
+   publication, and CD FIQ timing per command using the cycle stamps.
+2. Remove the universal one-field boot phase (CORE-07). It is now measured, not
+   hypothesized: every panel title's frame-60 PC aligns with Opera frame 59 at
+   -55..-256 instructions, and the CD cycle jump occurs at the boot handoff
+   (command 50, ~205,765 cycles). A fix here would make the PC/CPSR gate green
+   without a phase allowance.
 3. Align or resample the audio streams so `compareAudio` can gate the cumulative
-   hash; the sample count is now within 9 at frame 300 across all 50 titles, so
-   a waveform/RMS comparison is feasible.
+   hash; the sample count is within 9 at frame 300 across all 50 titles, so a
+   waveform/RMS comparison is feasible.
 4. Add scripted input to the panel; the current run is boot/menu traffic only.
 5. Wire `baseline` into the nightly workflow and publish `report.html` as an
    artifact.
-6. Add visual artifacts (checkpoint PNGs) once the hash gate is stable.
+6. Keep a visual artifact for every checkpoint now that the 300-frame panel is
+   video-clean; use the first hash mismatch as the regression signal.

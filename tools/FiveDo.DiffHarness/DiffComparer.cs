@@ -50,12 +50,28 @@ internal static class DiffComparer
         var divergedCount = 0;
         var offsetCount = 0;
         var nonOffsetDivergedCount = 0;
+        long? pcPhaseFrame = null;
+        long? pcPhaseInstructionDelta = null;
 
         foreach (var frame in framesToCompare)
         {
             fiveDoSamples.TryGetValue(frame, out var fiveDoSample);
             operaSamples.TryGetValue(frame, out var operaSample);
             var fields = new List<DiffFieldResult>();
+            var pcToleranceValue = pcTolerance ?? compare.PcTolerance;
+            var instructionPhase = (compare.ComparePc || comparePc)
+                && fiveDoSample?.Pc is not null
+                && operaSample?.Pc is not null
+                ? FindInstructionPhase(
+                    fiveDoSamples,
+                    operaSamples,
+                    frame,
+                    compare.FrameWindow,
+                    pcToleranceValue)
+                : null;
+            var phaseDiagnostic = instructionPhase is { } phase
+                ? DescribeInstructionPhase(frame, phase)
+                : null;
             var frameHashMatches = fiveDoSample is not null
                 && operaSample is not null
                 && fiveDoSample.FrameHash == operaSample.FrameHash;
@@ -130,6 +146,12 @@ internal static class DiffComparer
                 var tolerance = pcTolerance ?? compare.PcTolerance;
                 var pcMatch = fiveDoSample?.Pc is { } left && operaSample?.Pc is { } right
                     && Math.Abs((long)right - left) <= tolerance;
+                if (!pcMatch && instructionPhase is { } pcPhase && pcPhaseFrame is null)
+                {
+                    pcPhaseFrame = pcPhase.Frame;
+                    pcPhaseInstructionDelta = pcPhase.InstructionDelta;
+                }
+
                 if (AddField(
                     fields,
                     "pc",
@@ -138,8 +160,10 @@ internal static class DiffComparer
                     pcMatch,
                     title, frame, ref allowedCount, ref divergedCount,
                     fiveDoSample is null || operaSample is null,
-                    diagnostic: !pcMatch && operaSample?.Pc is null
-                        ? "reference PC unavailable (use the debug core)"
+                    diagnostic: !pcMatch
+                        ? operaSample?.Pc is null
+                            ? "reference PC unavailable (use the debug core)"
+                            : phaseDiagnostic
                         : null))
                 {
                     nonOffsetDivergedCount++;
@@ -161,8 +185,10 @@ internal static class DiffComparer
                     cpsrMatch,
                     title, frame, ref allowedCount, ref divergedCount,
                     fiveDoSample is null || operaSample is null,
-                    diagnostic: !cpsrMatch && operaSample?.Cpsr is null
-                        ? "reference CPSR unavailable (rebuild the debug core)"
+                    diagnostic: !cpsrMatch
+                        ? operaSample?.Cpsr is null
+                            ? "reference CPSR unavailable (rebuild the debug core)"
+                            : phaseDiagnostic
                         : null))
                 {
                     nonOffsetDivergedCount++;
@@ -280,6 +306,8 @@ internal static class DiffComparer
             DivergedCount = divergedCount,
             OffsetCount = offsetCount,
             MaxPcDelta = pcDeltas.Length == 0 ? null : pcDeltas.Max(),
+            PcPhaseFrame = pcPhaseFrame,
+            PcPhaseInstructionDelta = pcPhaseInstructionDelta,
             FirstDivergence = firstDivergence,
             FirstBehavioralDivergence = firstBehavioralDivergence,
         };
@@ -309,6 +337,7 @@ internal static class DiffComparer
             AllowedFields = fields.Count(field => field.AllowedReason is not null),
             DivergedFields = fields.Count(field => !field.Match && field.AllowedReason is null),
             FirstDivergenceTitles = titles.Count(title => title.FirstDivergence is not null),
+            PcPhaseTitles = titles.Count(title => title.PcPhaseFrame is not null),
             PhaseOnlyTitles = titles.Count(
                 title => title.DivergedCount > 0 && title.FirstBehavioralDivergence is null),
         };
@@ -441,6 +470,129 @@ internal static class DiffComparer
         or "cdCommandCount"
         or "cdCommandHash"
         or "cdCommands";
+
+    /// <summary>A neighboring reference frame whose retired-instruction count matches 5DO.</summary>
+    private readonly record struct InstructionPhase(
+        long Frame,
+        long InstructionDelta,
+        bool PcMatches,
+        bool CpsrMatches);
+
+    /// <summary>
+    /// Finds a neighboring reference frame whose retired-instruction count aligns with
+    /// 5DO at <paramref name="frame"/>. A field-rate boot difference moves the PC and
+    /// CPSR by a whole sample while the instruction count stays within a fraction of a
+    /// frame, so this distinguishes frame-boundary phase from a behavioral divergence.
+    /// </summary>
+    private static InstructionPhase? FindInstructionPhase(
+        Dictionary<long, CaptureSample> fiveDoSamples,
+        Dictionary<long, CaptureSample> operaSamples,
+        long frame,
+        int window,
+        long pcTolerance)
+    {
+        if (window <= 0
+            || !fiveDoSamples.TryGetValue(frame, out var fiveDo)
+            || fiveDo.Instructions is not { } fiveDoInstructions
+            || !operaSamples.TryGetValue(frame, out var opera)
+            || opera.Instructions is not { } sameInstructions)
+        {
+            return null;
+        }
+
+        var sameDelta = Math.Abs(sameInstructions - fiveDoInstructions);
+        if (sameDelta == 0)
+        {
+            return null;
+        }
+
+        // One frame retires roughly 85,000 instructions at the stock clock. Accept a
+        // neighbor only when its count is within a tenth of a frame; a wider window
+        // would hide real work differences (for example extra CD sector reads).
+        var instructionsPerFrame = EstimateInstructionsPerFrame(fiveDoSamples, frame);
+        var tolerance = Math.Max(1, instructionsPerFrame / 10);
+        InstructionPhase? best = null;
+        for (var offset = -window; offset <= window; offset++)
+        {
+            if (offset == 0
+                || !operaSamples.TryGetValue(frame + offset, out var candidate)
+                || candidate.Instructions is not { } candidateInstructions)
+            {
+                continue;
+            }
+
+            var delta = Math.Abs(candidateInstructions - fiveDoInstructions);
+            if (delta >= sameDelta || delta > tolerance)
+            {
+                continue;
+            }
+
+            if (best is null || delta < Math.Abs(best.Value.InstructionDelta))
+            {
+                best = new InstructionPhase(
+                    candidate.Frame,
+                    candidateInstructions - fiveDoInstructions,
+                    fiveDo.Pc is { } pc
+                        && candidate.Pc is { } candidatePc
+                        && Math.Abs((long)candidatePc - pc) <= pcTolerance,
+                    fiveDo.Cpsr is { } cpsr && candidate.Cpsr == cpsr);
+            }
+        }
+
+        return best;
+    }
+
+    private static long EstimateInstructionsPerFrame(
+        Dictionary<long, CaptureSample> samples,
+        long frame)
+    {
+        const long fallback = 85_000;
+        if (!samples.TryGetValue(frame, out var current)
+            || current.Instructions is not { } currentInstructions)
+        {
+            return fallback;
+        }
+
+        long bestDistance = long.MaxValue;
+        long estimate = fallback;
+        foreach (var (otherFrame, sample) in samples)
+        {
+            var distance = Math.Abs(otherFrame - frame);
+            if (distance == 0
+                || distance >= bestDistance
+                || sample.Instructions is not { } instructions)
+            {
+                continue;
+            }
+
+            bestDistance = distance;
+            estimate = Math.Abs(instructions - currentInstructions) / distance;
+        }
+
+        return estimate > 0 ? estimate : fallback;
+    }
+
+    private static string DescribeInstructionPhase(long frame, InstructionPhase phase)
+    {
+        var text = new StringBuilder("instruction phase: 5DO frame ")
+            .Append(frame)
+            .Append(" aligns with Opera frame ")
+            .Append(phase.Frame)
+            .Append(" (delta ")
+            .Append(phase.InstructionDelta.ToString("+#;-#;0", CultureInfo.InvariantCulture))
+            .Append(')');
+        if (phase.PcMatches)
+        {
+            text.Append("; PC matches");
+        }
+
+        if (phase.CpsrMatches)
+        {
+            text.Append("; CPSR matches");
+        }
+
+        return text.ToString();
+    }
 
     private static bool AddField(
         List<DiffFieldResult> fields,

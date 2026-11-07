@@ -25,7 +25,8 @@ not product configuration.
 - `panel50.json` - the generated 50-title TEST-07 accuracy panel: evenly spaced
   titles from `full.json`, 300 frames, checkpoints 60/120/300, PC/CPSR/CD
   comparison, sample tolerance 512. It has been run end to end on the local
-  corpus (50/50 captured, 0 errors, 32/50 matching every frame hash); use
+  corpus (50/50 captured, 0 errors, **50/50 matching every frame hash** at
+  60/120/300, **50/50 PC/CPSR phase-aligned**; only CD cadence remains); use
   `--cleanup-iso` and a work directory on a large disk.
 - `full.json` - the generated 594-disc collection manifest. Its `roots` object
   currently points at the machine-specific `J:/Panasonic 3DO` and

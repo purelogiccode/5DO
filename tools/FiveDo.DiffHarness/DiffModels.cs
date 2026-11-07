@@ -437,6 +437,15 @@ internal sealed class DiffTitleResult
     /// <summary>Gets the largest absolute Opera-minus-5DO PC delta across checkpoints.</summary>
     public long? MaxPcDelta { get; init; }
 
+    /// <summary>
+    /// Gets the neighboring reference frame that instruction-aligns the first PC
+    /// divergence, when one exists. This is frame-boundary phase evidence, not a pass.
+    /// </summary>
+    public long? PcPhaseFrame { get; init; }
+
+    /// <summary>Gets the Opera-minus-5DO retired-instruction delta at <see cref="PcPhaseFrame"/>.</summary>
+    public long? PcPhaseInstructionDelta { get; init; }
+
     /// <summary>Gets the first unexplained field divergence, when one exists.</summary>
     public DiffFirstDivergence? FirstDivergence { get; init; }
 
@@ -571,6 +580,12 @@ internal sealed class DiffSummary
 
     /// <summary>Gets the number of titles with a reported first divergence.</summary>
     public int FirstDivergenceTitles { get; init; }
+
+    /// <summary>
+    /// Gets the number of titles whose first PC divergence instruction-aligns a
+    /// neighboring reference frame, proving a frame-boundary phase offset.
+    /// </summary>
+    public int PcPhaseTitles { get; init; }
 
     /// <summary>
     /// Gets the number of titles whose only divergences are PC/CPSR frame-boundary phase

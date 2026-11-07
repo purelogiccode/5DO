@@ -85,11 +85,12 @@ internal static class DiffReportWriter
         text.Append("| Error | ").Append(report.Summary.Errors).AppendLine(" |");
         text.Append("| Skipped | ").Append(report.Summary.Skipped).AppendLine(" |");
         text.Append("| Titles with first divergence | ").Append(report.Summary.FirstDivergenceTitles).AppendLine(" |");
+        text.Append("| PC/CPSR phase aligned | ").Append(report.Summary.PcPhaseTitles).AppendLine(" |");
         text.Append("| Phase-only (PC/CPSR) | ").Append(report.Summary.PhaseOnlyTitles).AppendLine(" |");
         text.Append("| **Verdict** | **").Append(report.Summary.Passed ? "PASS" : "FAIL").AppendLine("** |");
         text.AppendLine();
-        text.AppendLine("| Title | Status | Frames | Checkpoints | Allowed fields | Diverged fields | PC delta | First divergence | Error |");
-        text.AppendLine("|---|---|---:|---:|---:|---:|---:|---|---|");
+        text.AppendLine("| Title | Status | Frames | Checkpoints | Allowed fields | Diverged fields | PC delta | Phase | First divergence | Error |");
+        text.AppendLine("|---|---|---:|---:|---:|---:|---:|---|---|---|");
         foreach (var title in report.Titles)
         {
             text.Append("| ").Append(EscapeMarkdown(title.Name))
@@ -99,6 +100,12 @@ internal static class DiffReportWriter
                 .Append(" | ").Append(title.AllowedCount.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(title.DivergedCount.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(title.MaxPcDelta?.ToString(CultureInfo.InvariantCulture) ?? "-")
+                .Append(" | ").Append(title.PcPhaseFrame is { } phaseFrame
+                    ? $"f={phaseFrame}"
+                        + (title.PcPhaseInstructionDelta is { } phaseDelta
+                            ? $" ({phaseDelta.ToString("+#;-#;0", CultureInfo.InvariantCulture)})"
+                            : string.Empty)
+                    : "-")
                 .Append(" | ").Append(title.FirstDivergence is { } first
                     ? $"f={first.Frame} {first.Field}"
                         + (title.FirstBehavioralDivergence is null ? " (phase)" : string.Empty)
@@ -159,6 +166,21 @@ internal static class DiffReportWriter
                     text.AppendLine(
                         "**Behavioral observations match.** The remaining PC/CPSR differences "
                         + "are frame-boundary phase artifacts.");
+                }
+
+                if (title.PcPhaseFrame is { } phaseFrame)
+                {
+                    text.AppendLine();
+                    text.Append("**PC phase:** the first PC divergence instruction-aligns with Opera frame ")
+                        .Append(phaseFrame);
+                    if (title.PcPhaseInstructionDelta is { } phaseDelta)
+                    {
+                        text.Append(" (instruction delta ")
+                            .Append(phaseDelta.ToString("+#;-#;0", CultureInfo.InvariantCulture))
+                            .Append(')');
+                    }
+
+                    text.AppendLine(". This is a frame-boundary sample, not a behavioral gap.");
                 }
 
                 if (title.Error is not null)
@@ -339,7 +361,7 @@ internal static class DiffReportWriter
             .AppendLine("</b>verdict</div></div>");
 
         html.AppendLine("<h2>Titles</h2><table><thead><tr><th>Title</th><th>Status</th><th>Frames</th>"
-            + "<th>Checkpoints</th><th>Allowed fields</th><th>Diverged fields</th><th>PC delta</th><th>Error</th></tr></thead><tbody>");
+            + "<th>Checkpoints</th><th>Allowed fields</th><th>Diverged fields</th><th>PC delta</th><th>Phase</th><th>Error</th></tr></thead><tbody>");
         foreach (var title in report.Titles)
         {
             html.Append("<tr><td>").Append(WebUtility.HtmlEncode(title.Name))
@@ -350,6 +372,13 @@ internal static class DiffReportWriter
                 .Append("</td><td class=\"num\">").Append(title.AllowedCount)
                 .Append("</td><td class=\"num\">").Append(title.DivergedCount)
                 .Append("</td><td class=\"num\">").Append(title.MaxPcDelta?.ToString(CultureInfo.InvariantCulture) ?? "-")
+                .Append("</td><td>").Append(title.PcPhaseFrame is { } phaseFrame
+                    ? WebUtility.HtmlEncode(
+                        "f=" + phaseFrame.ToString(CultureInfo.InvariantCulture)
+                        + (title.PcPhaseInstructionDelta is { } phaseDelta
+                            ? " (" + phaseDelta.ToString("+#;-#;0", CultureInfo.InvariantCulture) + ")"
+                            : string.Empty))
+                    : "-")
                 .Append("</td><td>").Append(WebUtility.HtmlEncode(title.Error ?? string.Empty))
                 .AppendLine("</td></tr>");
         }
@@ -368,6 +397,21 @@ internal static class DiffReportWriter
                 if (title.Error is not null)
                 {
                     html.Append("<pre>").Append(WebUtility.HtmlEncode(title.Error)).AppendLine("</pre>");
+                }
+
+                if (title.PcPhaseFrame is { } phaseFrame)
+                {
+                    html.Append("<p><strong>PC phase:</strong> instruction-aligned with Opera frame ")
+                        .Append(phaseFrame);
+                    if (title.PcPhaseInstructionDelta is { } phaseDelta)
+                    {
+                        html.Append(" (instruction delta ")
+                            .Append(WebUtility.HtmlEncode(
+                                phaseDelta.ToString("+#;-#;0", CultureInfo.InvariantCulture)))
+                            .Append(')');
+                    }
+
+                    html.AppendLine(". Frame-boundary sample, not a behavioral gap.</p>");
                 }
 
                 foreach (var checkpoint in title.Checkpoints)

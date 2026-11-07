@@ -164,6 +164,78 @@ public sealed class DiffComparerTests : IDisposable
     }
 
     [Fact]
+    public void Compare_PcMismatchWithInstructionAlignedNeighbor_ReportsPhaseDiagnostic()
+    {
+        DiffManifest manifest = Manifest(new DiffCompareOptions
+        {
+            CompareSamples = false,
+            ComparePc = true,
+            FrameWindow = 1,
+        });
+        DiffTitleResult result = DiffComparer.Compare(
+            manifest,
+            Title(),
+            CaptureCpuSeries((99, 0x1000, 900_000), (100, 0x1000, 1_000_000)),
+            CaptureCpuSeries((99, 0x1000, 1_000_000), (100, 0x2000, 1_090_000)),
+            100);
+
+        DiffFieldResult pc = result.Checkpoints[0].Fields
+            .Single(field => string.Equals(field.Field, "pc", StringComparison.Ordinal));
+        Assert.False(pc.Match);
+        Assert.Contains("instruction phase", pc.Diagnostic, StringComparison.Ordinal);
+        Assert.Contains("Opera frame 99", pc.Diagnostic, StringComparison.Ordinal);
+        Assert.Contains("PC matches", pc.Diagnostic, StringComparison.Ordinal);
+        Assert.Equal(99, result.PcPhaseFrame);
+        Assert.Equal(0, result.PcPhaseInstructionDelta);
+    }
+
+    [Fact]
+    public void Compare_InstructionPhasePrefersTheSmallestAbsoluteDelta()
+    {
+        DiffManifest manifest = Manifest(new DiffCompareOptions
+        {
+            CompareSamples = false,
+            ComparePc = true,
+            FrameWindow = 1,
+        });
+        DiffTitleResult result = DiffComparer.Compare(
+            manifest,
+            Title(),
+            CaptureCpuSeries((99, 0x1000, 900_000), (100, 0x1000, 1_000_000)),
+            CaptureCpuSeries(
+                (99, 0x2000, 1_001_000),
+                (100, 0x2000, 1_090_000),
+                (101, 0x1000, 999_900)),
+            100);
+
+        Assert.Equal(101, result.PcPhaseFrame);
+        Assert.Equal(-100, result.PcPhaseInstructionDelta);
+    }
+
+    [Fact]
+    public void Compare_PcMismatchWithoutInstructionAlignment_HasNoPhaseDiagnostic()
+    {
+        DiffManifest manifest = Manifest(new DiffCompareOptions
+        {
+            CompareSamples = false,
+            ComparePc = true,
+            FrameWindow = 1,
+        });
+        DiffTitleResult result = DiffComparer.Compare(
+            manifest,
+            Title(),
+            CaptureCpuSeries((99, 0x1000, 900_000), (100, 0x1000, 1_000_000)),
+            CaptureCpuSeries((99, 0x1000, 950_000), (100, 0x2000, 1_010_000)),
+            100);
+
+        DiffFieldResult pc = result.Checkpoints[0].Fields
+            .Single(field => string.Equals(field.Field, "pc", StringComparison.Ordinal));
+        Assert.False(pc.Match);
+        Assert.Null(pc.Diagnostic);
+        Assert.Null(result.PcPhaseFrame);
+    }
+
+    [Fact]
     public void Compare_CpsrMismatch_IsGatedWhenEnabled()
     {
         DiffManifest manifest = Manifest(new DiffCompareOptions
@@ -350,6 +422,38 @@ public sealed class DiffComparerTests : IDisposable
         Assert.False(report.Summary.Passed);
     }
 
+    [Fact]
+    public void BuildReport_CountsInstructionPhaseTitles()
+    {
+        DiffManifest manifest = Manifest(new DiffCompareOptions
+        {
+            CompareSamples = false,
+            ComparePc = true,
+            FrameWindow = 1,
+        });
+        DiffTitleResult phased = DiffComparer.Compare(
+            manifest,
+            Title("phased"),
+            CaptureCpuSeries((99, 0x1000, 900_000), (100, 0x1000, 1_000_000)),
+            CaptureCpuSeries((99, 0x1000, 1_000_000), (100, 0x2000, 1_090_000)),
+            100);
+        DiffTitleResult unaligned = DiffComparer.Compare(
+            manifest,
+            Title("unaligned"),
+            CaptureCpuSeries((99, 0x1000, 900_000), (100, 0x1000, 1_000_000)),
+            CaptureCpuSeries((99, 0x1000, 950_000), (100, 0x2000, 1_010_000)),
+            100);
+
+        DiffReport report = DiffComparer.BuildReport(
+            manifest,
+            WriteManifest(),
+            [phased, unaligned],
+            new DiffProvenance { Host = "test", Runtime = "test" });
+
+        Assert.Equal(1, report.Summary.PcPhaseTitles);
+        Assert.Equal(2, report.Summary.Diverged);
+    }
+
     private static DiffManifest Manifest(DiffCompareOptions? compare = null)
     {
         return new DiffManifest
@@ -435,6 +539,26 @@ public sealed class DiffComparerTests : IDisposable
                     Cpsr = cpsr,
                 },
             ],
+        };
+    }
+
+    private static CaptureResult CaptureCpuSeries(
+        params (long Frame, uint Pc, long Instructions)[] samples)
+    {
+        return new CaptureResult
+        {
+            Engine = "capture",
+            Ok = true,
+            Checkpoints = samples
+                .Select(sample => new CaptureSample
+                {
+                    Frame = sample.Frame,
+                    FrameHash = 1,
+                    Samples = sample.Frame * 100,
+                    Pc = sample.Pc,
+                    Instructions = sample.Instructions,
+                })
+                .ToArray(),
         };
     }
 

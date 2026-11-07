@@ -695,7 +695,21 @@ internal static class Program
             }
         }
 
-        return capture();
+        try
+        {
+            return capture();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // One bad disc or a transient CHD read failure must be reported as a title
+            // error, not abort a 50- or 594-title panel.
+            return new CaptureResult
+            {
+                Engine = "capture",
+                Ok = false,
+                Error = exception.Message,
+            };
+        }
     }
 
     private static void SaveCapture(string path, CaptureResult capture)

@@ -183,7 +183,18 @@ internal static class OperaCoreCaptureRunner
 
         var disc = DiffManifestLoader.ResolvePath(repoRoot, manifestDirectory, title.Disc);
         HarnessCommon.DeleteFile(staged);
-        HarnessCommon.ExtractIso(disc, staged);
+        try
+        {
+            HarnessCommon.ExtractIso(disc, staged);
+        }
+        catch (IOException)
+        {
+            // A single transient CHD decompression failure must not abort a full-collection
+            // panel. The extraction is atomic, so retry once from a clean state.
+            HarnessCommon.DeleteFile(staged);
+            HarnessCommon.ExtractIso(disc, staged);
+        }
+
         return staged;
     }
 
