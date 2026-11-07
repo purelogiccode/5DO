@@ -411,6 +411,17 @@ the reference core or the local discs.
   localizes the residual `cdCommandCount` difference to guest wait-loop cadence,
   not a divergent command table. The next measurement is a CD register-access
   trace around the step to separate a CD readiness wait from a timer/frame wait.
+- **2026-11-07 CD register trace (TEST-07/CORE-04).** `--cd-register-trace`
+  records every CD command/poll/status/data access with its cycle and PC. On
+  Space Ace, command 163 is issued at cycle 58,933,287, the READ_DATA status is
+  drained by 58,934,229, and there are **no CD register accesses from
+  58,935,434 to 59,173,228** (237,794 cycles); command 164 follows at
+  59,174,910. On Lemmings, READ_ID is issued at 29,431,455, all 12 status bytes
+  are drained by 29,431,952, and there are **no CD register accesses until
+  31,599,968**, the start of the next command sequence. The 60-100k and 20-60k
+  cadence steps are therefore **not CD readiness waits**: the guest leaves the CD
+  driver and waits on a non-CD source (timer/VBlank) before returning. This moves
+  the residual cadence lead from CORE-04 to CORE-07.
 - **2026-11-07 first-sector 50-title panel.** `test55-panel50-first-sector/report.json`
   (local corpus, debug core `opera-build-pc`, MD5 `53c26d4cb701e3d6e3bb28e877cd502b`)
   captured **50/50 titles with 0 errors** and **50/50 titles match every frame
@@ -579,15 +590,15 @@ checkpoint does not mean the instruction streams agree.
 
 ## 9. Next increments
 
-1. Finish the CD cadence triage with register-level evidence. The transcript
-   analysis now shows that 39/50 panel titles have identical command streams,
-   8 are prefix/in-flight differences, and only 3 have a one-command READ_ID
-   poll shift. All 24 significant cadence steps occur at the same command-issue
-   PC on both engines, so they are guest wait loops, not different CD driver
-   paths. Add a CD register read/write trace (cycle, PC, register, value) on both
-   sides around the 20-60k and 60-100k steps to decide whether the guest is
-   waiting on CD data/status or on a timer/VBlank. Then remove the wait itself
-   (CORE-04) or the frame phase that moves it (CORE-07).
+1. Move the cadence lead to CORE-07. The transcript analysis shows that 39/50
+   panel titles have identical command streams, 8 are prefix/in-flight
+   differences, and only 3 have a one-command READ_ID poll shift. All 24
+   significant cadence steps occur at the same command-issue PC on both engines,
+   and the new CD register trace shows **no CD register access during the
+   237,794-cycle Space Ace wait or the 2.17M-cycle Lemmings wait**. The guest is
+   not waiting on CD readiness. Trace the CLIO timer counter and VBlank/timer FIQ
+   path around the step, then remove the one-field frame phase (CORE-07) or the
+   timer tick that moves it (CORE-02).
 2. Remove the universal one-field boot phase (CORE-07). It is now measured, not
    hypothesized: every panel title's frame-60 PC aligns with Opera frame 59 at
    -55..-256 instructions, and the CD cycle jump occurs at the boot handoff

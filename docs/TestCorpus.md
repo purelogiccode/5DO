@@ -2655,12 +2655,21 @@ HTML reports add a `CD cadence` column and detail line.
   (PC `0x00022140` both sides, `+8,242` instructions), and Space Ace 168/168
   with one `+80,567` step at command 164 (PC `0x0002aa18` both sides, `+32,330`
   instructions).
+- **Register trace (`--cd-register-trace`, 2026-11-07).** The new trace records
+  every CD command write, poll write/read, status read, data write, and empty
+  data read with cycle and PC. Space Ace drains the READ_DATA status by cycle
+  58,934,229, then has **no CD register access from 58,935,434 to 59,173,228**
+  (237,794 cycles); command 164 follows at 59,174,910. Lemmings drains all 12
+  READ_ID status bytes by 29,431,952, then has **no CD access until 31,599,968**
+  (2.17M cycles). Both large cadence steps are guest waits on a non-CD source
+  (timer/VBlank), not CD readiness. This moves the residual cadence lead from
+  CORE-04 to CORE-07.
 - **Interpretation.** The command table matches on 47/50 panel titles; the
   residual `cdCommandCount` difference is guest wait-loop cadence, not a
-  divergent CD command/status model. The next measurement is a CD register
-  read/write trace around the step to separate a CD readiness wait from a
-  timer/VBlank wait. `benchmarks/diff/samples5.json` now resolves the local
-  corpus at `J:/Panasonic 3DO`.
-- **Tests:** **1,921 pass**. New coverage: cadence-step detection with matching
-  PC and instruction jump, sub-threshold step suppression, and transcript-kind
-  assertions for equal/prefix/diverged streams. `dotnet format` is clean.
+  divergent CD command/status model. The next measurement is a CLIO
+  timer/VBlank trace around the step. `benchmarks/diff/samples5.json` now
+  resolves the local corpus at `J:/Panasonic 3DO`.
+- **Tests:** **1,922 pass**. New coverage: cadence-step detection with matching
+  PC and instruction jump, sub-threshold step suppression, transcript-kind
+  assertions for equal/prefix/diverged streams, and CD register-trace output for
+  command/poll/status accesses. `dotnet format` is clean.

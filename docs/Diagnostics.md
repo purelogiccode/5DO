@@ -192,6 +192,14 @@ sampled at the same command boundary as the cycle stamp, so a cycle delta can be
 split into extra guest work versus extra idle time. The differential harness reads
 this file and the reference core's matching debug exports.
 
+`--cd-register-trace <path>` writes one line per CD register access:
+`cdreg f=<frame> cycle=<cycle> pc=<pc> <op> <value>`. `op` is `cmdw` (command
+byte), `pollw`/`pollr` (poll register write/read), `statusr` (status FIFO read),
+`dataw` (data FIFO write), or `datr_empty` (a data read that found no queued
+byte). A large guest wait with no `cdreg` lines proves the guest is not polling
+the drive; a wait full of `pollr`/`statusr`/`datr_empty` lines points at CD
+readiness instead.
+
 Use `--stop-cd 0x83` to stop on READ_ID, or `--stop-cd 0x10` for READ_DATA. Combine
 with `run --json` `cdStatus`/`cdPoll` and `--progress` to see whether the guest is
 polling a static state. With `--cd-timing opera`, `cd read sector <lba>` appears when

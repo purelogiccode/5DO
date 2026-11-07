@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using FiveDo.Cdrom;
 using FiveDo.Core;
 using XbusChip = FiveDo.Xbus.Xbus;
@@ -34,6 +35,27 @@ public sealed class CdromDeviceTests
         Assert.Equal(0x01, status[4]);
         Assert.Equal(0xE1, status[11]);
         Assert.Equal(0x0F, (int)cd.GetPoll());
+    }
+
+    [Fact]
+    public void RegisterTrace_RecordsCommandPollAndStatusAccesses()
+    {
+        var cd = new CdromDevice
+        {
+            ProgramCounterProvider = () => 0x00022140,
+        };
+        using var writer = new StringWriter();
+        cd.RegisterTraceWriter = writer;
+
+        Send(cd, 0x83);
+        _ = cd.GetPoll();
+        _ = cd.GetStatus();
+
+        var text = writer.ToString();
+        Assert.Contains("pc=00022140", text, StringComparison.Ordinal);
+        Assert.Contains("cmdw 83", text, StringComparison.Ordinal);
+        Assert.Contains("pollr 1f", text, StringComparison.Ordinal);
+        Assert.Contains("statusr 83", text, StringComparison.Ordinal);
     }
 
     [Fact]

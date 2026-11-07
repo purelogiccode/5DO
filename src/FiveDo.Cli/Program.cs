@@ -448,6 +448,7 @@ internal static class Program
         var cdTrace = options.Get("--cd-trace");
         var cdTranscriptPath = options.Get("--cd-transcript");
         var cdCommandsPath = options.Get("--cd-commands");
+        var cdRegisterTrace = options.Get("--cd-register-trace");
         var recordGifPath = options.Get("--record-gif");
         var recordGifFps = options.GetInt("--record-fps", 30);
         if (recordGifFps is < 1 or > 60)
@@ -741,6 +742,19 @@ internal static class Program
 
             cdTraceWriter = new StreamWriter(cdTrace);
             machine.Cdrom.TraceWriter = cdTraceWriter;
+        }
+
+        StreamWriter? cdRegisterTraceWriter = null;
+        if (cdRegisterTrace is not null)
+        {
+            var directory = Path.GetDirectoryName(Path.GetFullPath(cdRegisterTrace));
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            cdRegisterTraceWriter = new StreamWriter(cdRegisterTrace) { AutoFlush = true };
+            machine.Cdrom.RegisterTraceWriter = cdRegisterTraceWriter;
         }
 
         CdromCommandTranscript? cdTranscript = null;
@@ -1194,6 +1208,7 @@ internal static class Program
         fiqTraceWriter?.Dispose();
         clioTraceWriter?.Dispose();
         cdTraceWriter?.Dispose();
+        cdRegisterTraceWriter?.Dispose();
         if (cdTranscriptWriter is not null)
         {
             cdTranscriptWriter.Write(cdTranscript?.ToText());
@@ -5674,7 +5689,7 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine("Commands:");
         Console.WriteLine("  run [disc] [--bios path] [--bios2 path] [--bios-auto folder] [--allow-unsigned-discs] [--frames N] [--state-in path] [--state-out path]");
-        Console.WriteLine("             [--frame-out path] [--audio null|wav|openal] [--audio-device name] [--audio-buffer 20..500] [--audio-sync -250..250] [--wav-out path] [--volume 0..1] [--cd-volume 0..1] [--mute-cd] [--cd-trace path] [--cd-transcript path] [--cd-commands path]");
+        Console.WriteLine("             [--frame-out path] [--audio null|wav|openal] [--audio-device name] [--audio-buffer 20..500] [--audio-sync -250..250] [--wav-out path] [--volume 0..1] [--cd-volume 0..1] [--mute-cd] [--cd-trace path] [--cd-transcript path] [--cd-commands path] [--cd-register-trace path]");
         Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");

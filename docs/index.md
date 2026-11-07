@@ -81,7 +81,7 @@
 
 **2026-11-07, v1.4.0 release (GitHub Releases).**
 
-- **1,921 tests** are present in the current test assembly.
+- **1,922 tests** are present in the current test assembly.
 - The 50-title differential panel matches **50/50 frame hashes** at frames
   60/120/300 with **0 errors**, and **48/50 first PC divergences instruction-align
   to Opera frame 59** (2/50 to frame 119); the only remaining behavioral

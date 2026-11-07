@@ -281,6 +281,17 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <summary>Gets or sets an optional diagnostic writer for command and sector traces.</summary>
     public System.IO.TextWriter? TraceWriter { get; set; }
 
+    /// <summary>
+    /// Gets or sets an optional diagnostic writer for CD register accesses.
+    /// </summary>
+    /// <remarks>
+    /// Each line is <c>cdreg f=&lt;frame&gt; cycle=&lt;cycle&gt; pc=&lt;pc&gt; &lt;op&gt; &lt;value&gt;</c>,
+    /// where <c>op</c> is <c>cmdw</c>, <c>pollw</c>, <c>pollr</c>, <c>statusr</c>,
+    /// <c>dataw</c>, or <c>datr_empty</c>. The trace is diagnostic-only and is not
+    /// serialized in save states.
+    /// </remarks>
+    public System.IO.TextWriter? RegisterTraceWriter { get; set; }
+
     /// <summary>Gets or sets an optional provider for the current CPU program counter (diagnostics only).</summary>
     public Func<uint>? ProgramCounterProvider { get; set; }
 
@@ -603,6 +614,8 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <inheritdoc />
     public void SetCommand(byte value)
     {
+        TraceRegister("cmdw", value);
+
         if (_commandPointer == 0)
         {
             CommandOpcodeObserver?.Invoke(value);
@@ -640,6 +653,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <inheritdoc />
     public void SetData(uint value)
     {
+        TraceRegister("dataw", value);
         // The CD device ignores the data FIFO in the reference.
         _ = value;
     }
@@ -652,9 +666,15 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             return 0;
         }
 
+        var hadData = _dataLength > 0;
         if (_dataLength == 0 && _requested > 0)
         {
             TryLoadSector();
+        }
+
+        if (!hadData && _dataLength == 0)
+        {
+            TraceRegister("datr_empty", 0);
         }
 
         uint result = 0;
@@ -717,12 +737,14 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             }
         }
 
+        TraceRegister("statusr", result);
         return result;
     }
 
     /// <inheritdoc />
     public void SetPoll(uint value)
     {
+        TraceRegister("pollw", value);
         if (!UseOperaPollSemantics)
         {
             _poll &= 0xf0;
@@ -783,6 +805,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <inheritdoc />
     public uint GetPoll()
     {
+        TraceRegister("pollr", _poll);
         return _poll;
     }
 
@@ -1796,6 +1819,13 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         return (_xbusStatus & CdstTray) != 0
             && (_xbusStatus & CdstDisc) != 0
             && (_xbusStatus & CdstSpin) != 0;
+    }
+
+    private void TraceRegister(string operation, uint value)
+    {
+        RegisterTraceWriter?.WriteLine(
+            $"cdreg f={FrameProvider?.Invoke() ?? -1} cycle={_cycles} "
+            + $"pc={ProgramCounterProvider?.Invoke() ?? 0:x8} {operation} {value:x}");
     }
 
     private void TryLoadSector()

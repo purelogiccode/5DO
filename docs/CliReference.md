@@ -272,6 +272,7 @@ verdict).
 | `--cd-trace <path>` | CD command and sector trace. |
 | `--cd-transcript <path>` | Full CD command/status/poll transcript (one line per command). |
 | `--cd-commands <path>` | Issue-order list: `opcode cycle pc instructions` per command, used by the differential harness. |
+| `--cd-register-trace <path>` | CD register accesses: `cdreg f=<frame> cycle=<cycle> pc=<pc> <op> <value>`. |
 | `--clio-trace <path>` | CLIO register-write and DMA trace. |
 | `--fiq-trace <path>` | FIQ reason trace. |
 | `--kprint <path>` | KPRINT character stream (CR/LF become newlines). |
@@ -966,6 +967,7 @@ output, CI, `--no-update-check`, and `FIVEDO_UPDATE_CHECK=0` skip the prompt.
 | `--cd-trace` | `cd f=<frame> pc=<pc> cmd <7 hex bytes>`; `cd read sector <n>`. |
 | `--cd-transcript` | `f=<frame> cmd=<op> ... status=<hex> poll=<hex> drive=<hex>`; captures every command/status exchange. |
 | `--cd-commands` | `<op> <cycle> <pc> <instructions>` per issued command; PC is eight hex digits, cycle and instructions are decimal. |
+| `--cd-register-trace` | `cdreg f=<frame> cycle=<cycle> pc=<pc> <op> <value>`; `op` is `cmdw`, `pollw`, `pollr`, `statusr`, `dataw`, or `datr_empty`. |
 | `--clio-trace` | `clio f=<frame> write <addr:x3>=<value:x8> delay=<n>`; `clio dma f=... select=... target=... len=... first=...`. |
 | `--clio-timer-trace` | `clio-timer f=<frame> cyc=<cycles> [slot=<n>] event=<slack\|control\|counter\|underflow> ...`; slot scans are omitted, wraps add `reload=` or `stop=1`, `fiq=<mask>`, and `carry=1`. |
 | `--fiq-trace` | `f=<frame> pc=<pc> reason1=<hex> reason2=<hex>`. |

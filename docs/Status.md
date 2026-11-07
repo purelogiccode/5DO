@@ -52,7 +52,7 @@ to **+111,990**. READ_DATA deadlines now accumulate from the previous deadline
 instead of re-basing to `now`. The residual universal frame-60 one-field phase is
 separate from that handoff and remains open. The harness also stages ISOs
 atomically, retries a transient CHD read once, and reports a per-title capture
-failure as an `Error` instead of aborting the run. The suite is **1,921 tests**;
+failure as an `Error` instead of aborting the run. The suite is **1,922 tests**;
 build, format, and InspectCode are clean. See
 [`DifferentialHarness.md`](DifferentialHarness.md) and
 [`TestCorpus.md`](TestCorpus.md) 1.1az.
@@ -69,9 +69,11 @@ six at 20-60k, one >=100k). The fresh five-title run confirms Alone 361/361
 341/341 (`-345`), Lemmings 109/105 with one `+22,834` step at command 51
 (`+8,242` instructions), and Space Ace 168/168 with one `+80,567` step at
 command 164 (`+32,330` instructions). The residual count difference is guest
-wait-loop cadence, not a divergent CD command table; a CD register-access trace
-around the step is the next measurement. The suite is **1,921 tests**. See
-[`DifferentialHarness.md`](DifferentialHarness.md) 8 and
+wait-loop cadence, not a divergent CD command table. The new `--cd-register-trace`
+shows **no CD register access during the 237,794-cycle Space Ace wait or the
+2.17M-cycle Lemmings wait**, so the guest is waiting on a non-CD source
+(timer/VBlank); this moves the next measurement to CORE-07. The suite is
+**1,922 tests**. See [`DifferentialHarness.md`](DifferentialHarness.md) 8 and
 [`TestCorpus.md`](TestCorpus.md) 1.1bb.
 
 Release workflow
