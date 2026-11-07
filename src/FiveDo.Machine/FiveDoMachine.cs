@@ -167,7 +167,11 @@ public sealed class FiveDoMachine
     public VideoRegionProfile RegionProfile { get; private set; }
 
     /// <summary>Gets the emulated field rate in hertz.</summary>
-    public int FramesPerSecond => RegionProfile.FieldRate;
+    /// <remarks>
+    /// NTSC is 60000/1001 (59.94 Hz), not 60 Hz. Host pacing must use this exact
+    /// rate; the nominal <see cref="VideoRegionProfile.FieldRate"/> is for display.
+    /// </remarks>
+    public double FramesPerSecond => RegionProfile.ExactFieldRate;
 
     /// <summary>Switches the video region without reloading the machine.</summary>
     /// <param name="region">New video region.</param>
@@ -709,7 +713,7 @@ public sealed class FiveDoMachine
             var supportedVersion = section.Version == 1
                 || (section.Id == StateSectionIds.Memory && section.Version <= 4)
                 || (section.Id == StateSectionIds.Cdrom && section.Version <= 4)
-                || (section.Id == StateSectionIds.Quartz && section.Version <= 3)
+                || (section.Id == StateSectionIds.Quartz && section.Version <= 4)
                 || (section.Id == StateSectionIds.Clio && section.Version <= 3)
                 || (section.Id == StateSectionIds.Madam && section.Version <= 4)
                 || (section.Id == StateSectionIds.Vdlp && section.Version <= 3)

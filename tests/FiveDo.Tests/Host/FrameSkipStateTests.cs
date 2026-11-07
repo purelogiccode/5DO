@@ -8,7 +8,7 @@ namespace FiveDo.Tests.Host;
 public sealed class FrameSkipStateTests
 {
     [Fact]
-    public void SkipFrame_OnlyChangesThePresentedFrameBuffer()
+    public void SkipFrame_DoesNotChangeSerializedEmulationState()
     {
         FiveDoMachine rendered = CreateMachine();
         FiveDoMachine skipped = CreateMachine();
@@ -24,18 +24,9 @@ public sealed class FrameSkipStateTests
 
         foreach ((var id, var payload) in renderedSections)
         {
-            if (id == StateSectionIds.Machine)
-            {
-                continue;
-            }
-
             Assert.True(skippedSections.TryGetValue(id, out var skippedPayload));
             Assert.Equal(payload, skippedPayload);
         }
-
-        Assert.NotEqual(
-            renderedSections[StateSectionIds.Machine],
-            skippedSections[StateSectionIds.Machine]);
     }
 
     private static Dictionary<uint, byte[]> ReadSections(FiveDoMachine machine)

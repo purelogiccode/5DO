@@ -145,7 +145,7 @@ public sealed class FiveDoMachineTests
 
         machine.RunFrame();
 
-        var budget = EmulatorConstants.ArmClock / 60;
+        var budget = VideoRegionProfile.Ntsc.GetFrameCycles(EmulatorConstants.ArmClock);
         Assert.True(machine.LastFrameCycles >= budget);
         Assert.True(machine.LastFrameCycles < budget + 16);
     }
@@ -169,7 +169,9 @@ public sealed class FiveDoMachineTests
 
         machine.RunFrames(60);
 
-        Assert.InRange(machine.AudioSamplesProduced, 44_100, 44_110);
+        // 60 NTSC fields are 60/59.94 = 1.001 seconds, so the audio clock must produce
+        // 44,144 samples, not the 44,100 of a 60.00 Hz frame clock.
+        Assert.InRange(machine.AudioSamplesProduced, 44_140, 44_150);
     }
 
     [Fact]

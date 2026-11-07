@@ -28,7 +28,9 @@ public sealed class Quartz : IStateSection
     private VideoRegionProfile _region;
     private int _armClock;
     private uint _accArm;
-    private uint _accVdl;
+    private ulong _vdlAccumulator;
+    private ulong _vdlLineIncrement;
+    private ulong _vdlThreshold;
     private uint _tCount;
     private uint _vdlLine;
 
@@ -57,6 +59,7 @@ public sealed class Quartz : IStateSection
         _region = VideoRegionProfile.For(effectiveTuning.Region);
         _timerMode = effectiveTuning.ClioTimers;
         TimerDelayProvider = timerDelayProvider;
+        UpdateVdlClock();
     }
 
     /// <summary>Gets the VDL events per second. FreeDO: <c>VDL_CLOCK</c>.</summary>
@@ -76,8 +79,9 @@ public sealed class Quartz : IStateSection
     public void SetRegion(VideoRegion region)
     {
         _region = VideoRegionProfile.For(region);
-        _accVdl = 0;
+        _vdlAccumulator = 0;
         _vdlLine = 0;
+        UpdateVdlClock();
     }
 
     /// <summary>Gets the VDL lines in one field for the active region.</summary>
@@ -102,6 +106,7 @@ public sealed class Quartz : IStateSection
             }
 
             _armClock = value;
+            UpdateVdlClock();
         }
     }
 
@@ -114,8 +119,15 @@ public sealed class Quartz : IStateSection
     /// <summary>Gets the ARM cycles accumulated toward the next DSP sample. Exposed for tests and diagnostics.</summary>
     public uint DspAccumulator => _dspCycleRemainder;
 
-    /// <summary>Gets the raw VDL accumulator. Exposed for tests and diagnostics.</summary>
-    public uint VdlAccumulator => _accVdl;
+    /// <summary>Gets the VDL accumulator as an 8.24 fraction of a line. Exposed for tests and diagnostics.</summary>
+    /// <remarks>
+    /// The internal accumulator is an exact rational count of
+    /// <c>cycles * fieldLines * fieldRateNumerator</c>. This property converts it
+    /// back to FreeDO's 8.24 line fraction so existing diagnostics keep their units.
+    /// </remarks>
+    public uint VdlAccumulator => _vdlThreshold == 0
+        ? 0
+        : (uint)((_vdlAccumulator << 24) / _vdlThreshold);
 
     /// <summary>Gets the raw timer accumulator. Exposed for tests and diagnostics.</summary>
     /// <remarks>
@@ -150,7 +162,7 @@ public sealed class Quartz : IStateSection
     {
         _accArm = 0;
         _dspCycleRemainder = 0;
-        _accVdl = 0;
+        _vdlAccumulator = 0;
         _tCount = 0;
         _vdlLine = 0;
         _timerAccumulator1616 = 0;
@@ -176,7 +188,12 @@ public sealed class Quartz : IStateSection
         // Exact rational sample clock: 44100 samples per ARM second. Both factors fit in a
         // uint for the normal 16-256 cycle batches; the remainder is always below _armClock.
         _dspCycleRemainder = unchecked(_dspCycleRemainder + (cycles * EmulatorConstants.SoundClock));
-        _accVdl = unchecked(_accVdl + (arm * (uint)_region.VdlClock));
+
+        // Exact rational VDL clock. The old 8.24 accumulator added the per-batch rounded
+        // 12.5 MHz fraction, which ran the scanline clock ~0.09% fast and slipped the VDLP
+        // phase by multiple lines across a long capture. Accumulate raw cycles instead:
+        // one line is due at _vdlThreshold; the increment is fieldLines * fieldRateNumerator.
+        _vdlAccumulator += (ulong)cycles * _vdlLineIncrement;
 
         if (_timerMode == ClioTimerMode.OperaScheduler)
         {
@@ -281,9 +298,9 @@ public sealed class Quartz : IStateSection
     /// <returns><see langword="true"/> when a VDL line is due.</returns>
     public bool QueueVdl()
     {
-        if ((_accVdl >> 24) != 0)
+        if (_vdlAccumulator >= _vdlThreshold)
         {
-            _accVdl = unchecked(_accVdl - 0x1000000);
+            _vdlAccumulator -= _vdlThreshold;
             _vdlLine++;
             _vdlLine %= (uint)_region.FrameLines;
             return true;
@@ -292,17 +309,23 @@ public sealed class Quartz : IStateSection
         return false;
     }
 
+    private void UpdateVdlClock()
+    {
+        _vdlLineIncrement = (ulong)_region.FieldLines * (uint)_region.FieldRateNumerator;
+        _vdlThreshold = (ulong)_armClock * (uint)_region.FieldRateDenominator;
+    }
+
     /// <summary>Gets the save-state section identifier.</summary>
     public uint Id => StateSectionIds.Quartz;
 
     /// <summary>Gets the save-state section version.</summary>
     /// <remarks>
     /// Version 2 stores the exact DSP cycle remainder instead of FreeDO's 8.24 sample
-    /// accumulator. Version 3 adds the Opera timer slot/accumulator state. Version-1 and
-    /// version-2 sections are still accepted; missing timer fields default to a reset
-    /// scheduler.
+    /// accumulator. Version 3 adds the Opera timer slot/accumulator state. Version 4
+    /// adds the exact rational VDL accumulator; version-1 to version-3 sections are
+    /// still accepted and their 8.24 VDL fraction is converted on load.
     /// </remarks>
-    public ushort Version => 3;
+    public ushort Version => 4;
 
     /// <summary>Writes the scheduler section.</summary>
     /// <param name="writer">State writer.</param>
@@ -322,14 +345,20 @@ public sealed class Quartz : IStateSection
     /// <param name="writer">State writer.</param>
     public void SaveState(IStateWriter writer)
     {
+        // Keep the historical 8.24 field for older readers; the exact accumulator is
+        // appended for version 4+ readers.
+        var legacyVdl = _vdlThreshold == 0
+            ? 0u
+            : (uint)((_vdlAccumulator << 24) / _vdlThreshold);
         writer.WriteUInt32(_accArm);
         writer.WriteUInt32(_dspCycleRemainder);
-        writer.WriteUInt32(_accVdl);
+        writer.WriteUInt32(legacyVdl);
         writer.WriteUInt32(_tCount);
         writer.WriteUInt32(_vdlLine);
         writer.WriteUInt64(_timerAccumulator1616);
         writer.WriteUInt32(_timerSlot);
         writer.WriteUInt32(_timerInGap ? 1u : 0u);
+        writer.WriteUInt64(_vdlAccumulator);
     }
 
     /// <summary>Reads the scheduler state.</summary>
@@ -339,13 +368,16 @@ public sealed class Quartz : IStateSection
     {
         _accArm = reader.ReadUInt32();
         var dspClock = reader.ReadUInt32();
-        _accVdl = reader.ReadUInt32();
+        var legacyVdl = reader.ReadUInt32();
         _tCount = reader.ReadUInt32();
         var line = reader.ReadUInt32();
         if (line >= _region.FrameLines)
         {
             throw new InvalidStateException($"Invalid quartz VDL line {line}.");
         }
+
+        // Convert FreeDO's 8.24 line fraction to the exact rational accumulator.
+        _vdlAccumulator = ((ulong)legacyVdl * _vdlThreshold) >> 24;
 
         if (reader is StateSectionReader { Version: 1 })
         {
@@ -390,5 +422,14 @@ public sealed class Quartz : IStateSection
 
         _timerSlot = timerSlot;
         _timerInGap = timerInGap != 0;
+
+        if (reader is StateSectionReader { Version: >= 4 })
+        {
+            _vdlAccumulator = reader.ReadUInt64();
+            if (_vdlAccumulator >= _vdlThreshold)
+            {
+                throw new InvalidStateException($"Invalid quartz VDL accumulator {_vdlAccumulator}.");
+            }
+        }
     }
 }

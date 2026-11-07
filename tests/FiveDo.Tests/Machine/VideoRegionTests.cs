@@ -16,7 +16,9 @@ public sealed class VideoRegionTests
         Assert.Equal(320, VideoRegionProfile.Ntsc.Width);
         Assert.Equal(240, VideoRegionProfile.Ntsc.Height);
         Assert.Equal(60, VideoRegionProfile.Ntsc.FieldRate);
-        Assert.Equal(15_780, VideoRegionProfile.Ntsc.VdlClock);
+        Assert.Equal(60_000, VideoRegionProfile.Ntsc.FieldRateNumerator);
+        Assert.Equal(1_001, VideoRegionProfile.Ntsc.FieldRateDenominator);
+        Assert.Equal(15_764, VideoRegionProfile.Ntsc.VdlClock);
 
         Assert.Equal(320, VideoRegionProfile.Pal1.Width);
         Assert.Equal(288, VideoRegionProfile.Pal1.Height);
@@ -30,7 +32,8 @@ public sealed class VideoRegionTests
         Assert.Equal(22, VideoRegionProfile.Pal2.StartScanline);
         Assert.True(VideoRegionProfile.Pal2.IsPal);
         Assert.Equal(250_000, VideoRegionProfile.Pal1.GetFrameCycles(EmulatorConstants.ArmClock));
-        Assert.Equal(208_333, VideoRegionProfile.Ntsc.GetFrameCycles(EmulatorConstants.ArmClock));
+        Assert.Equal(208_541, VideoRegionProfile.Ntsc.GetFrameCycles(EmulatorConstants.ArmClock));
+        Assert.Equal(59.94, VideoRegionProfile.Ntsc.ExactFieldRate, precision: 2);
     }
 
     [Fact]
@@ -112,7 +115,7 @@ public sealed class VideoRegionTests
         machine.RunFrame();
 
         Assert.Equal(VideoRegion.Ntsc, machine.RegionProfile.Region);
-        Assert.InRange(machine.LastFrameCycles, 208_333, 208_400);
+        Assert.InRange(machine.LastFrameCycles, 208_541, 208_560);
         Assert.Equal(240, machine.Frame.SourceHeight);
     }
 

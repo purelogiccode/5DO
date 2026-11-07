@@ -25,9 +25,10 @@ public enum VideoRegion
 /// Geometry and timing derived from a <see cref="VideoRegion"/>.
 /// </summary>
 /// <remarks>
-/// NTSC keeps 5DO's historical 16-line visible start and 60 Hz frame clock so existing
-/// captures and tests remain stable. PAL follows Opera's 21/22-line starts and 50 Hz
-/// field clock.
+/// NTSC uses the exact 60000/1001 field rate (59.94 Hz) and Opera's 16-line visible
+/// start. PAL follows Opera's 21/22-line starts and 50 Hz field clock. The nominal
+/// <see cref="FieldRate"/> is kept for reporting; emulation uses the rational
+/// <see cref="FieldRateNumerator"/>/<see cref="FieldRateDenominator"/> pair.
 /// </remarks>
 public sealed record VideoRegionProfile
 {
@@ -90,13 +91,31 @@ public sealed record VideoRegionProfile
     public int FieldLines { get; }
 
     /// <summary>Gets the field rate in hertz.</summary>
+    /// <remarks>
+    /// This is the nominal rate used for reporting and host pacing. Emulation timing
+    /// uses the exact rational <see cref="FieldRateNumerator"/>/<see cref="FieldRateDenominator"/>
+    /// pair; NTSC is 60000/1001 (59.94 Hz), not 60 Hz.
+    /// </remarks>
     public int FieldRate { get; }
+
+    /// <summary>Gets the exact field-rate numerator.</summary>
+    public int FieldRateNumerator => IsPal ? 50 : 60_000;
+
+    /// <summary>Gets the exact field-rate denominator.</summary>
+    public int FieldRateDenominator => IsPal ? 1 : 1_001;
+
+    /// <summary>Gets the exact field rate in hertz (NTSC 59.94, PAL 50).</summary>
+    public double ExactFieldRate => (double)FieldRateNumerator / FieldRateDenominator;
 
     /// <summary>Gets the number of VDL lines in one full two-field cycle.</summary>
     public int FrameLines => FieldLines * 2;
 
     /// <summary>Gets the VDL events per second.</summary>
-    public int VdlClock => FieldLines * FieldRate;
+    /// <remarks>
+    /// Rounded to the nearest whole event. Emulation uses the exact rational
+    /// field rate in the machine clock scheduler; this property is for reporting and tests.
+    /// </remarks>
+    public int VdlClock => (int)Math.Round(FieldLines * ExactFieldRate);
 
     /// <summary>Gets a value indicating whether this is a PAL region.</summary>
     public bool IsPal => Region is VideoRegion.Pal1 or VideoRegion.Pal2;
@@ -104,7 +123,13 @@ public sealed record VideoRegionProfile
     /// <summary>Gets the ARM cycles in one emulated field.</summary>
     /// <param name="armClock">ARM clock in hertz.</param>
     /// <returns>The integer number of cycles in one field.</returns>
-    public int GetFrameCycles(int armClock) => armClock / FieldRate;
+    /// <remarks>
+    /// Uses the exact rational field rate. NTSC fields last 208,541.67 cycles at
+    /// 12.5 MHz; the old 12,500,000/60 = 208,333 integer division ran 1 ms long per
+    /// 60 fields and drifted away from the reference core's sample clock.
+    /// </remarks>
+    public int GetFrameCycles(int armClock) =>
+        (int)(((long)armClock * FieldRateDenominator) / FieldRateNumerator);
 
     /// <summary>Returns the profile for a region.</summary>
     /// <param name="region">Region to resolve.</param>

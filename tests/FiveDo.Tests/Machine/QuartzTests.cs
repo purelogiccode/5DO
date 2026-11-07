@@ -23,11 +23,11 @@ public sealed class QuartzTests
     }
 
     [Theory]
-    [InlineData(1u, 2u, 8_222_784u, 44_100u, 31_560u)]
-    [InlineData(15u, 21u, 10_841_760u, 661_500u, 331_380u)]
-    [InlineData(16u, 22u, 6_564_544u, 705_600u, 347_160u)]
-    [InlineData(17u, 23u, 2_287_328u, 749_700u, 362_940u)]
-    [InlineData(255u, 343u, 9_309_920u, 11_245_500u, 5_412_540u)]
+    [InlineData(1u, 2u, 8_222_784u, 44_100u, 21_158u)]
+    [InlineData(15u, 21u, 10_841_760u, 661_500u, 317_375u)]
+    [InlineData(16u, 22u, 6_564_544u, 705_600u, 338_534u)]
+    [InlineData(17u, 23u, 2_287_328u, 749_700u, 359_692u)]
+    [InlineData(255u, 343u, 9_309_920u, 11_245_500u, 5_395_391u)]
     public void PushArmCycles_UsesTheFreeDoArmClockAndExactDspSampleClock(
         uint cycles,
         uint expectedArm,
@@ -70,7 +70,37 @@ public sealed class QuartzTests
     }
 
     [Fact]
-    public void PushArmCycles_OneSecond_ProducesSixtyHalfFrames()
+    public void PushArmCycles_SixtyFieldsProduceExactly15780VdlLines()
+    {
+        var quartz = new Quartz();
+        var frameCycles = VideoRegionProfile.Ntsc.GetFrameCycles(EmulatorConstants.ArmClock);
+        var lines = 0;
+
+        // Mirror the machine's 16-cycle frame budget for 60 fields.
+        for (var field = 0; field < 60; field++)
+        {
+            var total = 0;
+            while (total < frameCycles)
+            {
+                quartz.PushArmCycles(16);
+                total += 16;
+                while (quartz.QueueVdl())
+                {
+                    lines++;
+                }
+            }
+        }
+
+        // 60 fields are 60 * 263 = 15,780 scanlines, exactly 30 full two-field cycles.
+        // Before the rational accumulator, per-batch 8.24 rounding produced ~15,794
+        // lines per emulated second and slipped the VDLP phase by lines per capture.
+        Assert.Equal(15_780, lines);
+        Assert.Equal(0, quartz.VdHalfFrame);
+        Assert.Equal(0, quartz.VdCurrLine);
+    }
+
+    [Fact]
+    public void PushArmCycles_OneSecond_ProducesTheNtscFieldRate()
     {
         var quartz = new Quartz();
         var halfFrames = 0;
@@ -94,7 +124,9 @@ public sealed class QuartzTests
             }
         }
 
-        Assert.Equal(60, halfFrames);
+        // NTSC is 60000/1001 fields per second, so one ARM second contains 59.94
+        // fields: 59 completed half-frame transitions, not 60.
+        Assert.Equal(59, halfFrames);
         Assert.InRange(quartz.VdCurrOverline, 0, EmulatorConstants.VdlFrameLines - 1);
     }
 
@@ -130,11 +162,12 @@ public sealed class QuartzTests
         }
 
         // The DSP sample clock is an exact rational accumulator and must produce 44,100
-        // samples in one ARM second regardless of batching. The VDL and timer clocks keep
-        // the FreeDO 8.24 reference semantics (they are not part of this audio correction);
-        // the timer count follows FreeDO quarz.cpp's default 25 MHz timer clock.
+        // samples in one ARM second regardless of batching. The VDL clock is also an exact
+        // rational accumulator now: 12.5 MHz / (208,541.67 cycles per field) = 15,764.24
+        // lines per ARM second. The timer count follows FreeDO quarz.cpp's default 25 MHz
+        // timer clock.
         Assert.Equal(44_100, dspEvents);
-        Assert.Equal(15_794, vdlEvents);
+        Assert.Equal(15_764, vdlEvents);
         Assert.Equal(25_022, timerEvents);
     }
 
@@ -217,11 +250,12 @@ public sealed class QuartzTests
     {
         var quartz = new Quartz();
         var events = 0;
+        var frameCycles = VideoRegionProfile.Ntsc.GetFrameCycles(EmulatorConstants.ArmClock);
 
         for (var i = 0; i < 600; i++)
         {
             var total = 0u;
-            while (total < EmulatorConstants.FrameCycles)
+            while (total < frameCycles)
             {
                 quartz.PushArmCycles(16);
                 total += 16;
@@ -232,9 +266,9 @@ public sealed class QuartzTests
             }
         }
 
-        // Each 208,333-cycle frame is rounded up to a whole 16-cycle batch, so 600 frames
-        // consume 125,001,600 cycles and produce 441,005 samples instead of exactly 441,000.
-        Assert.InRange(events, 441_000, 441_008);
+        // Each 208,541-cycle field is rounded up to a whole 16-cycle batch, so 600 fields
+        // consume 125,126,400 cycles and produce 441,445 samples.
+        Assert.InRange(events, 441_440, 441_450);
     }
 
     [Fact]
@@ -290,12 +324,15 @@ public sealed class QuartzTests
         {
         }
 
-        var writer = new StateWriter();
-        quartz.SaveState(writer);
+        // Exercise the real framed section path so the version-4 exact VDL accumulator
+        // is read back instead of the legacy 8.24 conversion.
+        var section = new TestSection(StateSectionIds.Quartz, quartz.Version, quartz.SaveState);
+        var outer = new StateWriter();
+        outer.WriteSection(section);
+        StateSectionReader sectionReader = new StateReader(outer.ToArray()).ReadSection();
 
         var restored = new Quartz();
-        var reader = new StateReader(writer.ToArray());
-        restored.LoadState(reader);
+        restored.LoadState(sectionReader);
 
         Assert.Equal(quartz.ArmAccumulator, restored.ArmAccumulator);
         Assert.Equal(quartz.DspAccumulator, restored.DspAccumulator);
