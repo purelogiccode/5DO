@@ -164,6 +164,24 @@ internal static class Program
                     $"[{title.Id}] first divergence f={first.Frame} {first.Field} "
                     + $"5do={first.FiveDo ?? "-"} opera={first.Opera ?? "-"}");
             }
+
+            if (result.FirstBehavioralDivergence is { } behavioral
+                && (result.FirstDivergence?.Frame != behavioral.Frame
+                    || !string.Equals(
+                        result.FirstDivergence?.Field,
+                        behavioral.Field,
+                        StringComparison.Ordinal)))
+            {
+                Console.WriteLine(
+                    $"[{title.Id}] first behavioral divergence f={behavioral.Frame} "
+                    + $"{behavioral.Field} 5do={behavioral.FiveDo ?? "-"} "
+                    + $"opera={behavioral.Opera ?? "-"}");
+            }
+            else if (result.FirstBehavioralDivergence is null && result.DivergedCount > 0)
+            {
+                Console.WriteLine(
+                    $"[{title.Id}] behavioral observations match; only PC/CPSR frame phase differs");
+            }
         }
 
         var provenance = new DiffProvenance
@@ -197,7 +215,8 @@ internal static class Program
         Console.WriteLine(
             $"verdict: {(report.Summary.Passed ? "PASS" : "FAIL")} "
             + $"({report.Summary.Matched} match, {report.Summary.Allowed} allowed, "
-            + $"{report.Summary.Diverged} diverged, {report.Summary.Errors} error)");
+            + $"{report.Summary.Diverged} diverged ({report.Summary.PhaseOnlyTitles} phase-only), "
+            + $"{report.Summary.Errors} error)");
         Console.WriteLine($"report: {reportPath}");
         if (HasFlag(args, "--json"))
         {

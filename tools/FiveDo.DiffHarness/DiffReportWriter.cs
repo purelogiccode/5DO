@@ -85,6 +85,7 @@ internal static class DiffReportWriter
         text.Append("| Error | ").Append(report.Summary.Errors).AppendLine(" |");
         text.Append("| Skipped | ").Append(report.Summary.Skipped).AppendLine(" |");
         text.Append("| Titles with first divergence | ").Append(report.Summary.FirstDivergenceTitles).AppendLine(" |");
+        text.Append("| Phase-only (PC/CPSR) | ").Append(report.Summary.PhaseOnlyTitles).AppendLine(" |");
         text.Append("| **Verdict** | **").Append(report.Summary.Passed ? "PASS" : "FAIL").AppendLine("** |");
         text.AppendLine();
         text.AppendLine("| Title | Status | Frames | Checkpoints | Allowed fields | Diverged fields | PC delta | First divergence | Error |");
@@ -100,6 +101,7 @@ internal static class DiffReportWriter
                 .Append(" | ").Append(title.MaxPcDelta?.ToString(CultureInfo.InvariantCulture) ?? "-")
                 .Append(" | ").Append(title.FirstDivergence is { } first
                     ? $"f={first.Frame} {first.Field}"
+                        + (title.FirstBehavioralDivergence is null ? " (phase)" : string.Empty)
                     : "-")
                 .Append(" | ").Append(EscapeMarkdown(title.Error ?? string.Empty))
                 .AppendLine(" |");
@@ -131,6 +133,34 @@ internal static class DiffReportWriter
                     text.AppendLine();
                 }
 
+                if (title.FirstBehavioralDivergence is { } behavioral
+                    && (title.FirstDivergence?.Frame != behavioral.Frame
+                        || !string.Equals(
+                            title.FirstDivergence?.Field,
+                            behavioral.Field,
+                            StringComparison.Ordinal)))
+                {
+                    text.AppendLine();
+                    text.Append("**First behavioral divergence:** frame ").Append(behavioral.Frame)
+                        .Append(", field `").Append(behavioral.Field).Append("`, 5DO `")
+                        .Append(behavioral.FiveDo ?? "-").Append("`, Opera `")
+                        .Append(behavioral.Opera ?? "-").Append('`');
+                    if (behavioral.Diagnostic is not null)
+                    {
+                        text.Append(" — ").Append(behavioral.Diagnostic);
+                    }
+
+                    text.AppendLine();
+                }
+
+                if (title.FirstBehavioralDivergence is null && title.DivergedCount > 0)
+                {
+                    text.AppendLine();
+                    text.AppendLine(
+                        "**Behavioral observations match.** The remaining PC/CPSR differences "
+                        + "are frame-boundary phase artifacts.");
+                }
+
                 if (title.Error is not null)
                 {
                     text.AppendLine();
@@ -160,6 +190,21 @@ internal static class DiffReportWriter
                         if (checkpoint.PcDelta is { } delta)
                         {
                             text.Append(" (delta ").Append(delta).Append(')');
+                        }
+
+                        text.AppendLine();
+                    }
+
+                    if (checkpoint.FiveDoInstructions is not null
+                        || checkpoint.OperaInstructions is not null)
+                    {
+                        text.Append("Instructions: ")
+                            .Append(checkpoint.FiveDoInstructions?.ToString("N0", CultureInfo.InvariantCulture) ?? "-")
+                            .Append(" / ")
+                            .Append(checkpoint.OperaInstructions?.ToString("N0", CultureInfo.InvariantCulture) ?? "-");
+                        if (checkpoint.InstructionDelta is { } instructionDelta)
+                        {
+                            text.Append(" (delta ").Append(instructionDelta.ToString("+#;-#;0", CultureInfo.InvariantCulture)).Append(')');
                         }
 
                         text.AppendLine();

@@ -1208,9 +1208,15 @@ internal static class Program
             }
 
             using var writer = new StreamWriter(cdCommandsPath);
-            foreach (var opcode in cdTranscript.IssuedOpcodes)
+            var cycles = cdTranscript.IssuedCycles;
+            for (var index = 0; index < cdTranscript.IssuedOpcodes.Count; index++)
             {
-                writer.WriteLine(opcode.ToString("x2", CultureInfo.InvariantCulture));
+                var opcode = cdTranscript.IssuedOpcodes[index];
+                var cycle = index < cycles.Count ? cycles[index] : 0;
+                writer.WriteLine(
+                    string.Create(
+                        CultureInfo.InvariantCulture,
+                        $"{opcode:x2} {cycle}"));
             }
         }
         celTraceWriter?.Dispose();

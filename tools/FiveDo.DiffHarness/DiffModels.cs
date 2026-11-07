@@ -255,6 +255,9 @@ internal sealed class CaptureResult
 
     /// <summary>Gets the CD command opcodes in issue order, when the engine exposes them.</summary>
     public byte[] CdCommands { get; init; } = [];
+
+    /// <summary>Gets the ARM cycle stamp for each CD command, when the engine exposes them.</summary>
+    public uint[] CdCommandCycles { get; init; } = [];
 }
 
 /// <summary>One checkpoint sample.</summary>
@@ -436,6 +439,12 @@ internal sealed class DiffTitleResult
 
     /// <summary>Gets the first unexplained field divergence, when one exists.</summary>
     public DiffFirstDivergence? FirstDivergence { get; init; }
+
+    /// <summary>
+    /// Gets the first divergence in an observable behavior (frame, audio, samples, state, or
+    /// CD), ignoring PC/CPSR phase artifacts at a frame boundary.
+    /// </summary>
+    public DiffFirstDivergence? FirstBehavioralDivergence { get; init; }
 }
 
 /// <summary>The first checkpoint field that diverged without an allowance.</summary>
@@ -486,6 +495,17 @@ internal sealed class DiffCheckpointResult
 
     /// <summary>Gets the Opera-minus-5DO PC delta, when both are available.</summary>
     public long? PcDelta { get; init; }
+
+    /// <summary>Gets the retired ARM instruction count for 5DO, when available.</summary>
+    public long? FiveDoInstructions { get; init; }
+
+    /// <summary>Gets the retired ARM instruction count for Opera, when available.</summary>
+    public long? OperaInstructions { get; init; }
+
+    /// <summary>Gets the Opera-minus-5DO retired instruction delta, when both are available.</summary>
+    public long? InstructionDelta => OperaInstructions is { } opera && FiveDoInstructions is { } fiveDo
+        ? opera - fiveDo
+        : null;
 }
 
 /// <summary>One field comparison.</summary>
@@ -551,6 +571,12 @@ internal sealed class DiffSummary
 
     /// <summary>Gets the number of titles with a reported first divergence.</summary>
     public int FirstDivergenceTitles { get; init; }
+
+    /// <summary>
+    /// Gets the number of titles whose only divergences are PC/CPSR frame-boundary phase
+    /// differences; frame, audio, sample, state, and CD observations all match.
+    /// </summary>
+    public int PhaseOnlyTitles { get; init; }
 
     /// <summary>Gets the report verdict.</summary>
     public bool Passed => Diverged == 0 && Offset == 0 && Errors == 0;

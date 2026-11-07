@@ -213,7 +213,11 @@ internal static class DiffComparer
                 && fiveDo.CdCommands.Length > 0
                 && opera.CdCommands.Length > 0)
             {
-                var sequence = CompareCdCommandSequence(fiveDo.CdCommands, opera.CdCommands);
+                var sequence = CompareCdCommandSequence(
+                    fiveDo.CdCommands,
+                    opera.CdCommands,
+                    fiveDo.CdCommandCycles,
+                    opera.CdCommandCycles);
                 if (AddField(
                     fields,
                     "cdCommands",
@@ -240,6 +244,8 @@ internal static class DiffComparer
                 PcDelta = fiveDoSample?.Pc is { } leftPc && operaSample?.Pc is { } rightPc
                     ? (long)rightPc - leftPc
                     : null,
+                FiveDoInstructions = fiveDoSample?.Instructions,
+                OperaInstructions = operaSample?.Instructions,
             });
         }
 
@@ -257,6 +263,7 @@ internal static class DiffComparer
             .Select(checkpoint => Math.Abs(checkpoint.PcDelta!.Value))
             .ToArray();
         var firstDivergence = FindFirstDivergence(checkpoints);
+        var firstBehavioralDivergence = FindFirstDivergence(checkpoints, behavioralOnly: true);
 
         return new DiffTitleResult
         {
@@ -274,6 +281,7 @@ internal static class DiffComparer
             OffsetCount = offsetCount,
             MaxPcDelta = pcDeltas.Length == 0 ? null : pcDeltas.Max(),
             FirstDivergence = firstDivergence,
+            FirstBehavioralDivergence = firstBehavioralDivergence,
         };
     }
 
@@ -301,6 +309,8 @@ internal static class DiffComparer
             AllowedFields = fields.Count(field => field.AllowedReason is not null),
             DivergedFields = fields.Count(field => !field.Match && field.AllowedReason is null),
             FirstDivergenceTitles = titles.Count(title => title.FirstDivergence is not null),
+            PhaseOnlyTitles = titles.Count(
+                title => title.DivergedCount > 0 && title.FirstBehavioralDivergence is null),
         };
 
         return new DiffReport
@@ -316,7 +326,11 @@ internal static class DiffComparer
     }
 
     private static (bool Match, string FiveDo, string Opera, string? Diagnostic)
-        CompareCdCommandSequence(byte[] fiveDo, byte[] opera)
+        CompareCdCommandSequence(
+            byte[] fiveDo,
+            byte[] opera,
+            uint[] fiveDoCycles,
+            uint[] operaCycles)
     {
         var common = Math.Min(fiveDo.Length, opera.Length);
         for (var i = 0; i < common; i++)
@@ -328,7 +342,8 @@ internal static class DiffComparer
                     $"{fiveDo.Length} opcodes; {DescribeCdCommands(fiveDo, i)}",
                     $"{opera.Length} opcodes; {DescribeCdCommands(opera, i)}",
                     $"first sequence divergence at command {i}: "
-                    + $"5DO 0x{fiveDo[i]:x2}, Opera 0x{opera[i]:x2}");
+                    + $"5DO 0x{fiveDo[i]:x2}, Opera 0x{opera[i]:x2}; "
+                    + DescribeCdTiming(fiveDoCycles, operaCycles, i));
             }
         }
 
@@ -338,7 +353,7 @@ internal static class DiffComparer
                 true,
                 $"{fiveDo.Length} opcodes",
                 $"{opera.Length} opcodes",
-                null);
+                DescribeCdTiming(fiveDoCycles, operaCycles, common - 1));
         }
 
         return (
@@ -346,7 +361,21 @@ internal static class DiffComparer
             $"{fiveDo.Length} opcodes; {DescribeCdCommands(fiveDo, common)}",
             $"{opera.Length} opcodes; {DescribeCdCommands(opera, common)}",
             $"sequence prefixes match for {common} commands; "
-            + $"5DO has {fiveDo.Length}, Opera has {opera.Length}");
+            + $"5DO has {fiveDo.Length}, Opera has {opera.Length}; "
+            + DescribeCdTiming(fiveDoCycles, operaCycles, common - 1));
+    }
+
+    private static string DescribeCdTiming(uint[] fiveDoCycles, uint[] operaCycles, int index)
+    {
+        if (index < 0 || index >= fiveDoCycles.Length || index >= operaCycles.Length)
+        {
+            return "no cycle evidence";
+        }
+
+        var fiveDo = fiveDoCycles[index];
+        var opera = operaCycles[index];
+        var delta = (long)fiveDo - opera;
+        return $"command {index} at 5DO cycle {fiveDo}, Opera cycle {opera} (delta {delta:+#;-#;0})";
     }
 
     private static string DescribeCdCommands(byte[] commands, int index)
@@ -374,7 +403,8 @@ internal static class DiffComparer
     }
 
     private static DiffFirstDivergence? FindFirstDivergence(
-        List<DiffCheckpointResult> checkpoints)
+        List<DiffCheckpointResult> checkpoints,
+        bool behavioralOnly = false)
     {
         foreach (var checkpoint in checkpoints)
         {
@@ -382,6 +412,11 @@ internal static class DiffComparer
             {
                 if (!field.Match && field.AllowedReason is null)
                 {
+                    if (behavioralOnly && !IsBehavioralField(field.Field))
+                    {
+                        continue;
+                    }
+
                     return new DiffFirstDivergence
                     {
                         Frame = checkpoint.Frame,
@@ -397,6 +432,15 @@ internal static class DiffComparer
 
         return null;
     }
+
+    private static bool IsBehavioralField(string field) => field is
+        "frameHash"
+        or "samples"
+        or "audioHash"
+        or "stateHash"
+        or "cdCommandCount"
+        or "cdCommandHash"
+        or "cdCommands";
 
     private static bool AddField(
         List<DiffFieldResult> fields,

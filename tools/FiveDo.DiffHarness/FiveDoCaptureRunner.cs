@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -189,6 +190,9 @@ internal static class FiveDoCaptureRunner
             });
         }
 
+        var (cdCommands, cdCommandCycles) =
+            ReadCdCommands(Path.Combine(titleDirectory, "fivedo.cd.txt"));
+
         return new CaptureResult
         {
             Engine = "5do",
@@ -206,32 +210,42 @@ internal static class FiveDoCaptureRunner
             Warnings = run.Warnings ?? [],
             LogPath = stderrPath,
             Seed = seed,
-            CdCommands = ReadCdCommands(Path.Combine(titleDirectory, "fivedo.cd.txt")),
+            CdCommands = cdCommands,
+            CdCommandCycles = cdCommandCycles,
         };
     }
 
-    private static byte[] ReadCdCommands(string path)
+    private static (byte[] Opcodes, uint[] Cycles) ReadCdCommands(string path)
     {
         if (!File.Exists(path))
         {
-            return [];
+            return ([], []);
         }
 
         var lines = File.ReadAllLines(path);
         var commands = new byte[lines.Length];
+        var cycles = new uint[lines.Length];
         for (var i = 0; i < lines.Length; i++)
         {
-            if (!byte.TryParse(
-                    lines[i],
+            var parts = lines[i].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0
+                || !byte.TryParse(
+                    parts[0],
                     NumberStyles.HexNumber,
                     CultureInfo.InvariantCulture,
                     out commands[i]))
             {
-                return [];
+                return ([], []);
+            }
+
+            if (parts.Length > 1
+                && ulong.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var cycle))
+            {
+                cycles[i] = (uint)cycle;
             }
         }
 
-        return commands;
+        return (commands, cycles);
     }
 
     private static string? ImagePath(string imageDirectory, long frame)

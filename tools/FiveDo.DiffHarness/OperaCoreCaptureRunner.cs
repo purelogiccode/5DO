@@ -116,6 +116,7 @@ internal static class OperaCoreCaptureRunner
             LogPath = result.LogPath,
             Seed = seed,
             CdCommands = result.CdCommands,
+            CdCommandCycles = result.CdCommandCycles,
         };
     }
 
@@ -250,12 +251,14 @@ internal sealed class OperaCoreHost : IDisposable
     private readonly SetLog _setLog;
     private readonly DebugUInt32? _debugArmPc;
     private readonly DebugUInt32? _debugArmCpsr;
+    private readonly DebugUInt32? _debugArmInstructions;
     private readonly DebugUInt32? _debugArmStateHash;
     private readonly DebugUInt8? _debugCdStatus;
     private readonly DebugUInt32? _debugCdPoll;
     private readonly DebugUInt32? _debugCdCommandCount;
     private readonly DebugUInt32? _debugCdCommandHash;
     private readonly DebugUInt32Index? _debugCdCommandAt;
+    private readonly DebugUInt32Index32? _debugCdCycleAt;
     private readonly SetSeed? _debugSetSeed;
 
     private readonly VideoCallback _videoCallback;
@@ -316,12 +319,14 @@ internal sealed class OperaCoreHost : IDisposable
         _setLog = Load<SetLog>("sg_set_log");
         _debugArmPc = TryLoad<DebugUInt32>("sg_debug_arm_pc");
         _debugArmCpsr = TryLoad<DebugUInt32>("sg_debug_arm_cpsr");
+        _debugArmInstructions = TryLoad<DebugUInt32>("sg_debug_arm_instructions");
         _debugArmStateHash = TryLoad<DebugUInt32>("sg_debug_arm_state_hash");
         _debugCdStatus = TryLoad<DebugUInt8>("sg_debug_cd_status");
         _debugCdPoll = TryLoad<DebugUInt32>("sg_debug_cd_poll");
         _debugCdCommandCount = TryLoad<DebugUInt32>("sg_debug_cd_command_count");
         _debugCdCommandHash = TryLoad<DebugUInt32>("sg_debug_cd_command_hash");
         _debugCdCommandAt = TryLoad<DebugUInt32Index>("sg_debug_cd_command_at");
+        _debugCdCycleAt = TryLoad<DebugUInt32Index32>("sg_debug_cd_cycle_at");
         _debugSetSeed = TryLoad<SetSeed>("sg_debug_set_seed");
 
         _videoCallback = OnVideo;
@@ -398,7 +403,7 @@ internal sealed class OperaCoreHost : IDisposable
             }
 
             FinalizePending();
-            var cdCommands = ReadCdCommands();
+            var (cdCommands, cdCommandCycles) = ReadCdCommands();
 
             clock.Stop();
             var samples = _checkpoints
@@ -432,6 +437,7 @@ internal sealed class OperaCoreHost : IDisposable
                 Warnings = SnapshotLog(),
                 LogPath = _logPath,
                 CdCommands = cdCommands,
+                CdCommandCycles = cdCommandCycles,
             };
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
@@ -608,6 +614,9 @@ internal sealed class OperaCoreHost : IDisposable
             Frame = frame,
             Pc = _debugArmPc?.Invoke(),
             Cpsr = _debugArmCpsr?.Invoke(),
+            Instructions = _debugArmInstructions is null
+                ? null
+                : _debugArmInstructions.Invoke(),
             FrameHash = _lastFrameHash,
             Samples = _pcm.SampleCount,
             AudioHash = _pcm.Hash,
@@ -668,26 +677,28 @@ internal sealed class OperaCoreHost : IDisposable
         };
     }
 
-    private byte[] ReadCdCommands()
+    private (byte[] Opcodes, uint[] Cycles) ReadCdCommands()
     {
         if (_debugCdCommandAt is null || _debugCdCommandCount is null)
         {
-            return [];
+            return ([], []);
         }
 
         var count = _debugCdCommandCount();
         if (count == 0)
         {
-            return [];
+            return ([], []);
         }
 
         var commands = new byte[count];
+        var cycles = new uint[count];
         for (uint index = 0; index < count; index++)
         {
             commands[index] = _debugCdCommandAt(index);
+            cycles[index] = _debugCdCycleAt?.Invoke(index) ?? 0;
         }
 
-        return commands;
+        return (commands, cycles);
     }
 
     private string[] SnapshotLog()
@@ -819,6 +830,9 @@ internal sealed class OperaCoreHost : IDisposable
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate byte DebugUInt32Index(uint index);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate uint DebugUInt32Index32(uint index);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate byte DebugUInt8();

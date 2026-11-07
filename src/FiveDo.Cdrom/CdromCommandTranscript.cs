@@ -57,6 +57,7 @@ public sealed class CdromCommandTranscript
 
     private readonly List<CdromCommandEntry> _entries = [];
     private readonly List<byte> _issuedOpcodes = [];
+    private readonly List<ulong> _issuedCycles = [];
     private CdromDevice? _device;
     private uint _hash = FnvOffsetBasis;
     private uint _issuedHash = FnvOffsetBasis;
@@ -87,6 +88,14 @@ public sealed class CdromCommandTranscript
     /// this list to report the first divergent command, not just count/hash drift.
     /// </remarks>
     public IReadOnlyList<byte> IssuedOpcodes => _issuedOpcodes;
+
+    /// <summary>Gets the ARM cycle at which each command opcode was issued.</summary>
+    /// <remarks>
+    /// The differential harness aligns this list with the reference core's
+    /// <c>sg_debug_cd_cycle_at</c> to tell in-flight timing drift apart from a real
+    /// command-sequence divergence.
+    /// </remarks>
+    public IReadOnlyList<ulong> IssuedCycles => _issuedCycles;
 
     /// <summary>
     /// Gets the cumulative FNV-1a hash of completed command opcodes in execution order.
@@ -140,6 +149,7 @@ public sealed class CdromCommandTranscript
     {
         _entries.Clear();
         _issuedOpcodes.Clear();
+        _issuedCycles.Clear();
         _hash = FnvOffsetBasis;
         _issuedHash = FnvOffsetBasis;
         _issuedCount = 0;
@@ -166,6 +176,7 @@ public sealed class CdromCommandTranscript
     private void CaptureIssued(byte opcode)
     {
         _issuedOpcodes.Add(opcode);
+        _issuedCycles.Add(_device?.Cycles ?? 0);
         _issuedCount++;
         _issuedHash = (_issuedHash ^ opcode) * FnvPrime;
     }
