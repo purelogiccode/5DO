@@ -76,7 +76,7 @@ public sealed partial class Arm60
         typeof(Arm60State).GetMethod("ReadUser", BindingFlags.Instance | BindingFlags.NonPublic)!;
 
     private static readonly MethodInfo JitEnterFiqFromJit =
-        typeof(Arm60).GetMethod("EnterFiqFromJit", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        typeof(Arm60).GetMethod(nameof(EnterFiqFromJit), BindingFlags.Instance | BindingFlags.NonPublic)!;
 
     private static readonly MethodInfo JitReadWord =
         typeof(Arm60).GetMethod("ReadWord", BindingFlags.Instance | BindingFlags.NonPublic)!;
@@ -140,11 +140,11 @@ public sealed partial class Arm60
         Branch,
     }
 
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Auto)]
     private readonly record struct JitInstruction(
         uint Word,
         JitInstructionKind Kind,
-        int Cost,
-        bool Terminator);
+        int Cost);
 
     /// <summary>Gets the number of cached JIT blocks.</summary>
     public int JitBlockCount => _jitBlocks.Count;
@@ -414,6 +414,14 @@ public sealed partial class Arm60
     /// timestamp, then removes the temporary addition so the normal context flush can
     /// account for those cycles exactly once.
     /// </summary>
+    /// <remarks>
+    /// This method is invoked from generated JIT IL through
+    /// <see cref="JitEnterFiqFromJit"/>; it has no direct C# caller.
+    /// </remarks>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "ReSharper",
+        "UnusedMember.Local",
+        Justification = "Invoked from generated JIT IL through JitEnterFiqFromJit.")]
     private void EnterFiqFromJit(int cycles)
     {
         _cyclesExecuted += cycles;
@@ -595,7 +603,7 @@ public sealed partial class Arm60
                     break;
                 }
 
-                instructions.Add(new JitInstruction(instruction, kind, cost, terminator));
+                instructions.Add(new JitInstruction(instruction, kind, cost));
                 switch (kind)
                 {
                     case JitInstructionKind.DataProcessing:
@@ -869,7 +877,7 @@ public sealed partial class Arm60
         switch (instruction.Kind)
         {
             case JitInstructionKind.DataProcessing:
-                EmitDataProcessing(il, state, user, pc, cpsr, instruction.Word);
+                EmitDataProcessing(il, user, pc, cpsr, instruction.Word);
                 break;
             case JitInstructionKind.Load:
             case JitInstructionKind.Store:
@@ -886,7 +894,7 @@ public sealed partial class Arm60
                     ramSize);
                 break;
             case JitInstructionKind.Branch:
-                EmitBranch(il, state, user, pc, instruction.Word);
+                EmitBranch(il, user, pc, instruction.Word);
                 EmitSetForceExit(il, forceExit);
                 break;
             default:
@@ -1053,18 +1061,6 @@ public sealed partial class Arm60
         il.Emit(OpCodes.Ldloc, user);
         il.Emit(OpCodes.Ldc_I4, register);
         il.Emit(OpCodes.Ldloc, value);
-        il.Emit(OpCodes.Stelem_I4);
-    }
-
-    private static void EmitStoreUserConstant(
-        ILGenerator il,
-        LocalBuilder user,
-        int register,
-        int value)
-    {
-        il.Emit(OpCodes.Ldloc, user);
-        il.Emit(OpCodes.Ldc_I4, register);
-        il.Emit(OpCodes.Ldc_I4, value);
         il.Emit(OpCodes.Stelem_I4);
     }
 
@@ -1276,7 +1272,6 @@ public sealed partial class Arm60
 
     private static void EmitDataProcessing(
         ILGenerator il,
-        LocalBuilder state,
         LocalBuilder user,
         LocalBuilder pc,
         LocalBuilder cpsr,
@@ -1844,7 +1839,6 @@ public sealed partial class Arm60
 
     private static void EmitBranch(
         ILGenerator il,
-        LocalBuilder state,
         LocalBuilder user,
         LocalBuilder pc,
         uint instruction)

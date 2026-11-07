@@ -180,8 +180,8 @@ public sealed class StateWriter : IStateWriter
         }
 
         var frameLength = compressed ? storedLength : payload.Length;
-        var flags = (ushort)((compressed ? StateFormat.SectionFlagCompressed : (ushort)0)
-            | (ChecksumsEnabled ? (ushort)0 : StateFormat.SectionFlagUnchecked));
+        var flags = (ushort)((compressed ? StateFormat.SectionFlagCompressed : 0)
+            | (ChecksumsEnabled ? 0 : StateFormat.SectionFlagUnchecked));
         WriteUInt32(section.Id);
         WriteUInt16(section.Version);
         WriteUInt16(flags);
