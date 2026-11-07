@@ -30,6 +30,15 @@ Rash still diverges. See [`WhatsNew.md`](WhatsNew.md),
 [`ReleaseNotes-1.4.0.md`](ReleaseNotes-1.4.0.md), [`DifferentialHarness.md`](DifferentialHarness.md),
 and [`CoverArt.md`](CoverArt.md).
 
+Release workflow
+<https://github.com/purelogiccode/5DO/actions/runs/42399055155> passed all six bundle
+jobs and published six versioned archives plus `SHA256SUMS.txt`; all six checksums verify.
+CI run <https://github.com/purelogiccode/5DO/actions/runs/42398646569> passed every
+required job, including the six bundle builds, NativeAOT CLI/frontend, format, tests, and
+benchmark gates. The release is published at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.4.0>. Local bundles are kept under
+`src/FiveDo.Frontend.Avalonia/bin/Release`.
+
 **TEST-07 exact-clock and 50-title panel update (2026-11-06):** the earlier claim that the frame-60 CPSR difference was the FIQ-disable bit was wrong: `0x600000d3` and `0x800000d3` differ in the N/Z/C condition flags. The real defect was the field clock. 5DO now runs NTSC at the exact 60000/1001 field rate (208,541 cycles at 12.5 MHz) and uses a rational VDL accumulator, removing both the 1 ms/60-field drift and the per-batch 8.24 rounding that ran the scanline clock ~0.09% fast. Sample counts now track Opera within 1-8 samples at 300 frames (all 50 panel titles are within 9 at frame 300), and **32/50 titles match every frame hash** at frames 60/120/300. The 50-title panel captured 50/50 with 0 errors; CD counts match 49/50 at frame 60. The absolute instruction count carries a fixed ~89,000 startup offset, but the per-frame retirement rate matches within 0.1% on 4/5 titles, so PC/CPSR is a phase sample rather than a cycle-model gap. The new CD cycle stamps localize the remaining CD cadence difference. At 3,000 frames Alone, Lemmings, Space Ace, and Wolfenstein match Opera's hash; Road Rash still diverges. The suite is now **1,905 tests**. See [`DifferentialHarness.md`](DifferentialHarness.md) and [`TestCorpus.md`](TestCorpus.md) 1.1ax.
 **TEST-07 oracle increment (2026-11-06, superseded by the exact-clock update above; the FIQ-bit and 59.94/60 Hz statements below are incorrect):** the differential harness now applies a
 fixed seed to both engines (`--seed`, default 1488), compares ARM CPSR and CD

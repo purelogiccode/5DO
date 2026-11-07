@@ -94,8 +94,15 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       `runtime/`, `*.pdb`, or `*.xml` files.
 - [x] Verify the x64 CLI `selftest` and desktop `--smoke-test` (`FRONTEND SMOKE OK 1.4.0`);
       CI verifies the arm64 apphost machine types.
-- [ ] Create and push tag `v1.4.0`; confirm the release workflow publishes six versioned
-      bundles and `SHA256SUMS.txt`, and that the CI workflow is green.
+- [x] Create and push tag `v1.4.0`; the release workflow published six versioned bundles
+      and `SHA256SUMS.txt`:
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.4.0>. Release run
+      <https://github.com/purelogiccode/5DO/actions/runs/42399055155> passed all six
+      bundle jobs and the publish job; all six checksums verify locally. CI run
+      <https://github.com/purelogiccode/5DO/actions/runs/42398646569> passed every
+      required job. Local bundles are in `src/FiveDo.Frontend.Avalonia/bin/Release`.
+- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
+      1.4.0 release page, What's New, release notes, and wiki page.
 
 ---
 
