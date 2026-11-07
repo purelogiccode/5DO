@@ -1240,8 +1240,8 @@ M1 implements the section primitive used by all later chips:
   exact accumulator is appended for version 4.
 - Evidence: at 300 frames the REFERENCE and 5DO sample counts now differ by
   1-8 samples instead of 43-212; all 50 panel titles are within 9 samples at
-  frame 300. Space Ace matches Opera's 3,000-frame hash and Road Rash matches
-  Opera frame 3002. The remaining PC/CPSR frame-boundary difference is a
+  frame 300. Alone, Lemmings, Space Ace, and Wolfenstein match Opera's
+  3,000-frame hash; Road Rash still diverges at 1,000 and 3,000. The remaining PC/CPSR frame-boundary difference is a
   phase sample, not a clock offset; see `TestCorpus.md` 1.1ax.
 
 ### 12.36 VDLP blanking and background color (2026-11-06)

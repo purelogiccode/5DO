@@ -385,8 +385,8 @@ the reference core or the local discs.
   at 12.5 MHz), and the VDL accumulator is exact rational instead of the
   per-batch rounded 8.24 value. Samples at frame 60 went from 44,101 vs 44,144
   to 44,145 vs 44,144; at frame 300 from 220,508 vs 220,720 to 220,728 vs
-  220,720. At 3,000 frames Space Ace matches Opera's frame hash and Road Rash
-  matches Opera frame 3002.
+  220,720. At 3,000 frames Alone, Lemmings, Space Ace, and Wolfenstein match
+  Opera's frame hash; Road Rash still diverges at 1,000 and 3,000.
 - `benchmarks/diff/samples5.json` (2026-11-06, TEST-07): five local titles,
   300 frames, checkpoints 60/120/300, fixed seed 1488, accuracy profile,
   `cdSpeed=unbounded`, `noGameFixes=true`, PC/CPSR/CD comparison, sample

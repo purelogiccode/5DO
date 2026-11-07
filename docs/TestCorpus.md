@@ -2479,9 +2479,10 @@ statements were measurement artifacts of 5DO's 60.00 Hz NTSC clock:
   +15,163 at their last common command. The remaining CORE-04 lead is a
   cadence/READ_DATA-completion difference, not the command table.
 - **3,000-frame recheck.** With the exact clock, Space Ace matches Opera's
-  frame hash at 3,000 (`0x46916c61`) and Road Rash matches Opera's frame 3002
-  (`0xd5895ad5`). Wolfenstein (`0x175b8fe4`), Alone (`0x175b8fe4`), and
-  Lemmings (`0xebdb01ca`) also match at 3,000. The blanking/background fix did
+  frame hash at 3,000 (`0x46916c61`). Wolfenstein (`0x175b8fe4`), Alone
+  (`0x175b8fe4`), and Lemmings (`0xebdb01ca`) also match at 3,000. Road Rash
+  still diverges at 1,000 (`0x63165fe3` vs `0xfefd249a`) and 3,000
+  (`0xd5895ad5` vs `0x0528251f`). The blanking/background fix did
   not change these long-run keys.
 - **Tests:** 1,885 pass. New coverage: exact-rational frame cycles, 60 fields =
   15,780 scanlines, sample count 44,144 +/- one, state v4 round-trip, behavioral
@@ -2494,3 +2495,12 @@ statements were measurement artifacts of 5DO's 60.00 Hz NTSC clock:
   assembler and GPU. The green boot field became black, matching the reference's
   near-black; the remaining hash difference is Opera's 8-bit background
   precision (1,1,1) versus 5DO's 5-bit (0,0,0), not a game-visible defect.
+- **Final long-run harness report (`artifacts/diff/test23-long/report.json`).**
+  Same five titles, 3,000 frames, checkpoints 60/300/1000/3000, final build.
+  Lemmings matches at all four checkpoints (`0x110e7dc5`, `0x110e7dc5`,
+  `0x110e7dc5`, `0xebdb01ca`); Alone and Wolfenstein match at 60/300/3000
+  (Wolfenstein's 1,000 also matches); Space Ace matches at 60 and 3,000
+  (`0x46916c61`); Road Rash matches 60/300 but still diverges at 1,000
+  (`0x63165fe3` vs `0xfefd249a`) and 3,000 (`0xd5895ad5` vs `0x0528251f`).
+  Sample deltas stay under 100 at 3,000 frames (52-86), and the CD counts are
+  within 1-13.
