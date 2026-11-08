@@ -22,11 +22,13 @@ Debug core builds are optimized, and Auto presentation frame skip is the default
 
 **Corpus update (2026-11-08):** the current collection is **1,371 images → 414 unique
 titles / 378 game test set**, and every unique title now has a 5DO status. Tier B
-batches 1-3 reviewed **75 titles** (54 `Good`, 21 `Playable`); **339 titles** still have
-automated loadability only, and the **17 `Behind` vs 4DO / 20 vs Phoenix** rows all have
-recorded reasons. The unique-title 5DO/4DO/Phoenix comparison is in
-[`CompatibilityComparison.md`](CompatibilityComparison.md); the 594-disc legacy sweep
-above remains the per-image baseline.
+batches 1-4 reviewed **107 titles** (80 `Good`, 27 `Playable`); **307 titles** still have
+automated loadability only, and the **23 `Behind` vs 4DO / 26 vs Phoenix** rows all have
+recorded reasons. Five titles are ahead of 4DO (Alone in the Dark, DinoPark Tycoon,
+Orbatak, Psychic Detective, Shootout at Old Tucson). The higher `Behind` count is the
+explicit grade gap, not a loadability regression. The unique-title 5DO/4DO/Phoenix
+comparison is in [`CompatibilityComparison.md`](CompatibilityComparison.md); the
+594-disc legacy sweep above remains the per-image baseline.
 
 **1.5.0 release update (2026-11-08):** **v1.5.0** moves HQx 2x/3x/4x to shared
 rule-table GPU passes in OpenGL/GLES, Direct3D 11, and Vulkan, with the CPU filter kept

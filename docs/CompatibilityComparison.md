@@ -23,27 +23,27 @@ This page compares the three emulators on the **same local collection**. The 4DO
 
 | 5DO evidence | Titles |
 |---|---:|
-| Manual gameplay grade | 75 |
-| Automated loadability | 339 |
+| Manual gameplay grade | 107 |
+| Automated loadability | 307 |
 | Untested | 0 |
 
 ### 5DO vs 4DO
 
 | Verdict | Titles |
 |---|---:|
-| 5DO ahead | 4 |
-| Parity | 53 |
-| Parity (loadability) | 105 |
-| Behind | 17 |
+| 5DO ahead | 5 |
+| Parity | 78 |
+| Parity (loadability) | 73 |
+| Behind | 23 |
 | — | 53 |
 
 ### 5DO vs Phoenix
 
 | Verdict | Titles |
 |---|---:|
-| Parity | 54 |
-| Parity (loadability) | 172 |
-| Behind | 20 |
+| Parity | 80 |
+| Parity (loadability) | 140 |
+| Behind | 26 |
 
 `Behind` means 5DO has a lower grade, usually because the manual 5DO grade is `Playable` while the peer says `Good`; it is not a loadability failure. `Regression` is the hard failure: a peer reports the title as playable, but 5DO produced no usable frame.
 
@@ -220,23 +220,23 @@ This page compares the three emulators on the **same local collection**. The 4DO
 | Life Stage, The - Virtual House | game | Life Stage, The - Virtual House (1993)(GoldStar - Panasonic)(KR-US)(en)[!].chd | 5 | 3 | Playable | Good (100) | Behind | Good (100%) | Behind |
 | Little House, The | game | Little House, The (1995)(MC International)(JP).chd | 2 | 1 | Rendered | No data | — | Good (100%) | Parity (loadability) |
 | Lost Dungeon | game | Lost Dungeon (1995)(T&E Soft)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
-| Lost Eden | game | Lost Eden (1993)(Virgin)(US)(M5).chd | 5 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Lost Files of Sherlock Holmes, The | game | Lost Files of Sherlock Holmes, The (1994)(Electronic Arts)(US)[!].chd | 6 | 3 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Lost Eden | game | Lost Eden (1993)(Virgin)(US)(M5).chd | 5 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Lost Files of Sherlock Holmes, The | game | Lost Files of Sherlock Holmes, The (1994)(Electronic Arts)(US)[!].chd | 6 | 3 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Love Bites | game | Love Bites (1994)(Vivid Interactive)(US)[!].chd | 2 | 1 | Rendered | No data | — | Good (100%) | Parity (loadability) |
-| Lucienne's Quest | game | Lucienne's Quest (1996)(Panasonic)(US)[!].chd | 3 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Lucienne's Quest | game | Lucienne's Quest (1996)(Panasonic)(US)[!].chd | 3 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Macaroni Houren Shou Interactive | game | Macaroni Houren Shou Interactive (1995)(Toshiba EMI)(JP)[!].chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Mad Dog II - The Lost Gold | game | Mad Dog II - The Lost Gold (1994)(American Laser Games)(US)[!].chd | 4 | 3 | Playable | Good (100) | Behind | Good (100%) | Behind |
-| Mad Dog McCree | game | Mad Dog McCree (1993)(American Laser Games)(US)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Mad Dog McCree | game | Mad Dog McCree (1993)(American Laser Games)(US)[!].chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Mahjong Gokuu Tenjiku | game | Mahjong Gokuu Tenjiku (1994)(ASCII)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
 | Mahjong Kyou Jidai - AV Gal Seifuku Hen | game | Mahjong Kyou Jidai - AV Gal Seifuku Hen (1994)(Micronet)(JP)[!].chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Mahjong Kyou Jidai - Cogal Houkago Hen | game | Mahjong Kyou Jidai - Cogal Houkago Hen (1995)(Micronet)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
 | Marine Tour - Diving Spot Guide | game | Marine Tour - Diving Spot Guide (1994)(Office Create)(JP)[!].chd | 2 | 1 | Rendered | No data | — | Good (100%) | Parity (loadability) |
 | Masters Harukanaru Augusta 3 | game | Masters Harukanaru Augusta 3 (1994)(Panasonic)(JP)[!].chd | 4 | 2 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Mathemagics - An Interactive Learning Cube | game | Mathemagics - An Interactive Learning Cube (1994)(L3)(US)[!].chd | 2 | 1 | Rendered | No data | — | Good (100%) | Parity (loadability) |
-| Mazer | game | Mazer (1995)(American Laser Games)(US)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| MegaRace | game | MegaRace (1994)(Mindscape)(EU-US)(M5)[!].chd | 8 | 3 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Mazer | game | Mazer (1995)(American Laser Games)(US)[!].chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
+| MegaRace | game | MegaRace (1994)(Mindscape)(EU-US)(M5)[!].chd | 8 | 3 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Memory Gwanli CD | game | Memory Gwanli CD (Korea) (RE).chd | 1 | 1 | Rendered | — | — | — | — |
-| Microcosm | game | Microcosm (1994)(Psygnosis)(US)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Microcosm | game | Microcosm (1994)(Psygnosis)(US)[!].chd | 4 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Mind Teazzer | game | Mind Teazzer (1994)(Vivid Interactive)(US)[!].chd | 2 | 1 | Rendered | No data | — | Good (100%) | Parity (loadability) |
 | Mirai Shounen Digital Library - Conan - The Boy in Future | game | Mirai Shounen Digital Library - Conan - The Boy in Future (1995)(Emotional Digital Software)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
 | Mono Shiri Jiyuugaku - Ogura Hyakunin Isshu-hen | game | Mono Shiri Jiyuugaku - Ogura Hyakunin Isshu-hen (1995)(Shinko Human Create)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
@@ -244,13 +244,13 @@ This page compares the three emulators on the **same local collection**. The 4DO
 | Multimedia Shinsho - Driving School | game | Multimedia Shinsho - Driving School (Futsuu Menkyo Gakka-hen) (1995)(JISC Life Support)(JP).chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Murphy Dayo Zenin Shuugou!! - Murphy's TV CD-ROM | game | Murphy Dayo Zenin Shuugou!! - Murphy's TV CD-ROM (1994)(Vantan International)(JP)(en-ja)[!].chd | 2 | 1 | Rendered | — | — | — | — |
 | Myst | game | Myst (1994)(Panasonic)(US)[!].chd | 9 | 5 | Good | Good (100) | Parity | Good (100%) | Parity |
-| N. O. B. - Neo Organic Bioform | game | N. O. B. - Neo Organic Bioform (1995)(Sanyo)(JP).chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| N. O. B. - Neo Organic Bioform | game | N. O. B. - Neo Organic Bioform (1995)(Sanyo)(JP).chd | 2 | 1 | Playable | Good (100) | Behind | Good (100%) | Behind |
 | Nais How's 1 - Front How's '95-'96 | game | Nais How's 1 - Front How's '95-'96 v1.0 R2.0 (1995)(National)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
 | Naoko to Hide-bou - Sansuu no Tensai 1 - Wa to Sa no Bunshoudai Tsurukamezan Part I | game | Naoko to Hide-bou - Sansuu no Tensai 1 - Wa to Sa no Bunshoudai Tsurukamezan Part I (Butsubutsu Koukan no Maki) (Japan).chd | 1 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Naoko to Hide-bou - Sansuu no Tensai 2 - Hayasa no Bunshoudai Tsuukasan Part I | game | Naoko to Hide-bou - Sansuu no Tensai 2 - Hayasa no Bunshoudai Tsuukasan Part I (Japan).chd | 1 | 1 | Rendered | — | — | — | — |
 | Naoko to Hide Suekane - Sansuu no Tensai 1 | game | Naoko to Hide Suekane - Sansuu no Tensai 1 (1995)(Gakuman)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
 | National-Panasonic Collection | game | National-Panasonic Collection (Japan).chd | 1 | 1 | Rendered | — | — | — | — |
-| Need for Speed, The | game | Need for Speed, The (1994)(Electronic Arts)(EU-US)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Need for Speed, The | game | Need for Speed, The (1994)(Electronic Arts)(EU-US)[!].chd | 4 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Nemurenu Yoru no Chiisa Nao Hanashi | game | Nemurenu Yoru no Chiisa Nao Hanashi (1994)(Amuse)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
 | NeuroDancer - Journey Into The Neuronet | game | NeuroDancer - Journey Into The Neuronet (1994)(Pixis Interactive)(US).chd | 2 | 1 | Rendered | No data | — | Good (100%) | Parity (loadability) |
 | New How's 1 - Front How's '94-'95 | game | New How's 1 - Front How's '94-'95 v1.0 (1994)(National)(JP)[!].chd | 3 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
@@ -260,47 +260,47 @@ This page compares the three emulators on the **same local collection**. The 4DO
 | Nobunaga no Yabou - Haouden | game | Nobunaga no Yabou - Haouden (1994)(KOEI)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
 | Nontan to Issho - Hoshi no Okurimono | game | Nontan to Issho - Hoshi no Okurimono (1995)(Panasonic)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
 | Nontan to Issho - Nohara de Asobo | game | Nontan to Issho - Nohara de Asobo (1994)(Panasonic)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
-| Novastorm | game | Novastorm (1994)(Psygnosis)(US)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Novastorm | game | Novastorm (1994)(Psygnosis)(US)[!].chd | 4 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Oceans Below | game | Oceans Below (1993)(Software Toolworks)(US)[!].chd | 4 | 2 | Rendered | No data | — | Good (100%) | Parity (loadability) |
-| Off-world Interceptor | game | Off-world Interceptor (1994)(Crystal Dynamics)(EU-US)[!].chd | 6 | 3 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Off-world Interceptor | game | Off-world Interceptor (1994)(Crystal Dynamics)(EU-US)[!].chd | 6 | 3 | Playable | Good (100) | Behind | Good (100%) | Behind |
 | Ogura Hyakunin Isshu | game | Ogura Hyakunin Isshu (Japan).chd | 2 | 1 | Rendered | — | — | — | — |
 | Oilman | game | Oilman (Japan).chd | 1 | 1 | Rendered | — | — | — | — |
-| Olympic Soccer | game | Olympic Soccer (1996)(Panasonic)(US)(M5)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Olympic Soccer | game | Olympic Soccer (1996)(Panasonic)(US)(M5)[!].chd | 2 | 1 | Playable | Good (100) | Behind | Good (100%) | Behind |
 | Olympic Summer Games | game | Olympic Summer Games (1996)(Panasonic)(US)[!].chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Onee-san to Issho! Janken Paradise | game | Onee-san to Issho! Janken Paradise (Japan).chd | 2 | 1 | Rendered | — | — | — | — |
 | Onee-san to Issho! Kisekae Paradise | game | Onee-san to Issho! Kisekae Paradise (Japan).chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | OpenLara | game | OpenLara (2021-12-20)(XProger)(BSD2).chd | 1 | 1 | Rendered | — | — | — | — |
 | Orbatak | game | Orbatak (USA) (Arcade CD-ROM).chd | 2 | 1 | Good | Unplayable (25) | 5DO ahead | Good (100%) | Parity |
 | Oukoku no Grand Chef | game | Oukoku no Grand Chef (1996)(Sala International)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
-| Out of this World | game | Out of this World (1993)(Interplay)(US)[!][45097-1].chd | 7 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Out of this World | game | Out of this World (1993)(Interplay)(US)[!][45097-1].chd | 7 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Outer World | game | Outer World (1994)(Electronic Arts)(JP)(en)[!].chd | 2 | 1 | Rendered | — | — | — | — |
-| OverDrivin' | game | OverDrivin' (1994)(Electronic Arts)(JP)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| OverDrivin' | game | OverDrivin' (1994)(Electronic Arts)(JP)[!].chd | 4 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Oyaji Hunter Mahjong | game | Oyaji Hunter Mahjong (1995)(Warp)(JP)[!].chd | 3 | 2 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Paddock Note '95 | game | Paddock Note '95 (1995)(Fuji Television)(JP)[!].chd | 3 | 2 | Rendered | Good (100) | Parity (loadability) | — | — |
 | Panasonic REAL 3DO Interactive Multiplayer - Demonstration CD | game | Panasonic REAL 3DO Interactive Multiplayer - Demonstration CD (1993)(Panasonic)(US).chd | 2 | 1 | Rendered | — | — | — | — |
 | Panasonic Special CD-ROM | game | Panasonic Special CD-ROM (1995)(Panasonic)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
-| Panzer General | game | Panzer General (1995)(Mindscape - SSi)(EU-US)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Panzer General | game | Panzer General (1995)(Mindscape - SSi)(EU-US)[!].chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Pararancho - The Incredible Machine | game | Pararancho - The Incredible Machine (1994)(T&E Soft)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
-| PaTaank | game | PaTaank (1994)(PF.Magic)(EU-US)[!].chd | 5 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Pebble Beach Golf Links | game | Pebble Beach Golf Links (1993)(GoldStar - Panasonic)(KR-US)(en)[!].chd | 6 | 2 | Rendered | Good (95) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| PaTaank | game | PaTaank (1994)(PF.Magic)(EU-US)[!].chd | 5 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Pebble Beach Golf Links | game | Pebble Beach Golf Links (1993)(GoldStar - Panasonic)(KR-US)(en)[!].chd | 6 | 2 | Good | Good (95) | Parity | Good (100%) | Parity |
 | Pebble Beach no Hatou | game | Pebble Beach no Hatou (1994)(Panasonic)(JP)[!].chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Penthouse Interactive - Virtual Photo Shoot Vol. 1 | game | Penthouse Interactive - Virtual Photo Shoot Vol. 1 (1994)(GAGA)(JP).chd | 2 | 1 | Rendered | No data | — | — | — |
-| Perfect General, The | game | Perfect General, The (1995)(Kirin Entertainment)(US)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Perfect General, The | game | Perfect General, The (1995)(Kirin Entertainment)(US)[!].chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Perfect World - Combat in a Digital World | game | Perfect World - Combat in a Digital World (1995)(Electronic Arts)(JP)[!].chd | 4 | 2 | Rendered | — | — | — | — |
 | Peter Frankl - Puzzle no Tou | game | Peter Frankl - Puzzle no Tou (1995)(TBS Multimedia)(JP)(en-ja)[!].chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
-| PGA Tour 96 | game | PGA Tour 96 (1995)(EA Sports)(EU)[!].chd | 5 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Phoenix 3 | game | Phoenix 3 (1995)(Studio 3DO)(EU)[!].chd | 4 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Plumbers Don't Wear Ties | game | Plumbers Don't Wear Ties (1994)(Kirin Entertainment)(US)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| PO'ed | game | PO'ed (1995)(Studio 3DO)(EU-US)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Policenauts | game | Policenauts (1995)(Konami)(JP)(Disc 1 of 2)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| PGA Tour 96 | game | PGA Tour 96 (1995)(EA Sports)(EU)[!].chd | 5 | 2 | Playable | Good (100) | Behind | Good (100%) | Behind |
+| Phoenix 3 | game | Phoenix 3 (1995)(Studio 3DO)(EU)[!].chd | 4 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Plumbers Don't Wear Ties | game | Plumbers Don't Wear Ties (1994)(Kirin Entertainment)(US)[!].chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
+| PO'ed | game | PO'ed (1995)(Studio 3DO)(EU-US)[!].chd | 4 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Policenauts | game | Policenauts (1995)(Konami)(JP)(Disc 1 of 2)[!].chd | 4 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Policenauts - Pilot Disk | game | Policenauts - Pilot Disk (1995)(Konami)(JP)[!].chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Powers Kingdom | game | Powers Kingdom (1994)(Panasonic)(EU)[!].chd | 4 | 2 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Powerslide | game | Powerslide (2007)(Oldergames)(Disc 2 of 2)[!][Powerslide Bonus Disk - Footie].chd | 2 | 1 | Rendered | — | — | — | — |
-| Primal Rage | game | Primal Rage v1.0 (1995)(GoldStar)(EU-US)(M7)[!].chd | 2 | 1 | Rendered | Good (80) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Primal Rage | game | Primal Rage v1.0 (1995)(GoldStar)(EU-US)(M7)[!].chd | 2 | 1 | Good | Good (80) | Parity | Good (100%) | Parity |
 | Princess Maker 2 | game | Princess Maker 2 (1995)(Micro Cabin)(JP)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | — | — |
 | Pro Stadium | game | Pro Stadium (1995)(Sanyo)(JP)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | — | — |
 | Pro Yakyuu Virtual Stadium - Professional Baseball | game | Pro Yakyuu Virtual Stadium - Professional Baseball (1995)(EA Sports)(JP)[!].chd | 4 | 2 | Rendered | — | — | Good (100%) | Parity (loadability) |
-| Psychic Detective | game | Psychic Detective (1995)(Electronic Arts)(EU)(Disc 1 of 3)[!].chd | 12 | 3 | Rendered | Playable (70) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Psychic Detective | game | Psychic Detective (1995)(Electronic Arts)(EU)(Disc 1 of 3)[!].chd | 12 | 3 | Good | Playable (70) | 5DO ahead | Good (100%) | Parity |
 | Puppet Tale | game | Puppet Tale (1994)(Microcabin - Panasonic)(JP)[!].chd | 2 | 1 | Rendered | No data | — | — | — |
 | Putt-Putt Goes to the Moon | game | Putt-Putt Goes to the Moon (1993)(Humongous Entertainment)(US)[!].chd | 2 | 1 | Rendered | No data | — | Good (100%) | Parity (loadability) |
 | Putt-Putt Joins the Parade | game | Putt-Putt Joins the Parade (1993)(Humongous Entertainment)(US)[!][CQ 6922-2].chd | 4 | 1 | Rendered | No data | — | Good (100%) | Parity (loadability) |
@@ -308,14 +308,14 @@ This page compares the three emulators on the **same local collection**. The 4DO
 | Putt-Putt to Parade ni Ikou! | game | Putt-Putt to Parade ni Ikou! (1994)(Media Vision)(JP)(en-ja)[!].chd | 2 | 1 | Rendered | — | — | — | — |
 | Puzzle Bobble | game | Puzzle Bobble (1995)(Micro Cabin)(JP)[!].chd | 4 | 2 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Pyramid Intruder | game | Pyramid Intruder (1995)(Taito)(JP)(en)[!].chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
-| Quarantine | game | Quarantine (1994)(Gametek - Imagineer)(JP-US)(M5)[!][IM-TS9503, 439480068501RE3].chd | 5 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Quarterback Attack - The Professional Quarterback Simulator | game | Quarterback Attack - The Professional Quarterback Simulator (1995)(Digital Pictures)(US)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Real Pinball | game | Real Pinball (1994)(Panasonic)(US)[!].chd | 6 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Quarantine | game | Quarantine (1994)(Gametek - Imagineer)(JP-US)(M5)[!][IM-TS9503, 439480068501RE3].chd | 5 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Quarterback Attack - The Professional Quarterback Simulator | game | Quarterback Attack - The Professional Quarterback Simulator (1995)(Digital Pictures)(US)[!].chd | 2 | 1 | Playable | Good (100) | Behind | Good (100%) | Behind |
+| Real Pinball | game | Real Pinball (1994)(Panasonic)(US)[!].chd | 6 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Reika - Virtual Puppet | game | Reika - Virtual Puppet (1994)(H.A.N.D)(JP).chd | 3 | 1 | Rendered | — | — | — | — |
-| Return Fire | game | Return Fire v1.0 F306.1.2 (1994)(Prolific - Silent Software)(EU-US)[!].chd | 7 | 4 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Return Fire - Maps O' Death | game | Return Fire - Maps O' Death v1.0 FB13.1.0 (1995)(Prolific)(US)[!][data disc].chd | 3 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Rise of the Robots | game | Rise of the Robots (1995)(Absolute)(US)(M3)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Road Rash | game | Road Rash (1994)(Electronic Arts)(US)[!].chd | 10 | 4 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Return Fire | game | Return Fire v1.0 F306.1.2 (1994)(Prolific - Silent Software)(EU-US)[!].chd | 7 | 4 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Return Fire - Maps O' Death | game | Return Fire - Maps O' Death v1.0 FB13.1.0 (1995)(Prolific)(US)[!][data disc].chd | 3 | 2 | Playable | Good (100) | Behind | Good (100%) | Behind |
+| Rise of the Robots | game | Rise of the Robots (1995)(Absolute)(US)(M3)[!].chd | 4 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Road Rash | game | Road Rash (1994)(Electronic Arts)(US)[!].chd | 10 | 4 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Robinson's Requiem | game | Robinson's Requiem (1996)(ReadySoft - Silmarils)(US)[!].chd | 3 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
 | Royal Pro Wrestling - Jikkyou Live!! | game | Royal Pro Wrestling - Jikkyou Live!! (1996)(Natsume)(JP)[!].chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Samurai Shodown | game | Samurai Shodown (1994)(Crystal Dynamics)(EU-US)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
@@ -481,4 +481,5 @@ The peer reports `Unplayable`/`Not Loadable`, but 5DO loads the title. Promote t
 | Alone in the Dark | Good | Playable | Good |
 | DinoPark Tycoon | Good | Playable | Good |
 | Orbatak | Good | Unplayable | Good |
+| Psychic Detective | Good | Playable | Good |
 | Shootout at Old Tucson | Playable | Unplayable | Good |

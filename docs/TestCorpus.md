@@ -3028,12 +3028,12 @@ and the Phoenix (Arts-Union) list, then joins the 5DO sweep and manual grades. T
 | Matched to 4DO | 232 of 241 reference titles |
 | Matched to Phoenix | 246 of 302 reference titles |
 | Matched to both | 194 |
-| 5DO manual gameplay grades | 75 |
-| 5DO automated loadability | 339 |
+| 5DO manual gameplay grades | 107 |
+| 5DO automated loadability | 307 |
 | 5DO untested | 0 |
-| 5DO ahead of 4DO | 2 (Orbatak, Shootout at Old Tucson) |
-| 5DO behind 4DO | 17 after Tier B batch 3 (8 initially; batches 1-3 turned unknown rows into explicit grades) |
-| 5DO behind Phoenix | 20 after Tier B batch 3 (10 initially) |
+| 5DO ahead of 4DO | 5 (Alone in the Dark, DinoPark Tycoon, Orbatak, Psychic Detective, Shootout at Old Tucson) |
+| 5DO behind 4DO | 23 after Tier B batch 4 (8 initially; batches 1-4 turned unknown rows into explicit grades) |
+| 5DO behind Phoenix | 26 after Tier B batch 4 (10 initially) |
 | Loadability regressions | 0 |
 
 **Phoenix is a 100% list, not a graded database.** All 302 entries are recorded at 100%, so
@@ -3153,3 +3153,49 @@ Result: **75 titles now have a manual grade** (54 `Good`, 21 `Playable`) and **3
 titles still have automated loadability only. The `Behind` count is **17 vs 4DO / 20 vs
 Phoenix**, again because eight more unknown rows became explicit `Playable` grades. The
 review gap is closing; the grade gap is now the real work.
+
+### 1.1bl TEST-06 Tier B batch 4: the last 32 peer-flagged titles (2026-11-08)
+
+Batch 4 was generated with `tools/build-tierb-manifest.py` and covers the last 32 titles
+where **both** 4DO and Phoenix claim `Playable`/`Good` and 5DO had only automated
+loadability evidence. The run used the same 36,000-frame generic script, `--bios-auto`,
+and four parallel jobs. All 32 completed with exit code 0 and `dspRunning: true`.
+
+**26 promoted to `Good`:** Lost Eden, Lost Files of Sherlock Holmes, Lucienne's Quest,
+Mad Dog McCree, Mazer, MegaRace, Microcosm, Need for Speed, Novastorm, Out of This World,
+OverDrivin', PaTaank, Pebble Beach Golf Links, Perfect General, Phoenix 3, Plumbers Don't
+Wear Ties, PO'ed, Policenauts, Primal Rage, Psychic Detective, Quarantine, Real Pinball,
+Return Fire, Rise of the Robots, Road Rash, and Panzer General.
+
+**6 kept `Playable`:**
+
+| Title | Why it is not Good yet |
+|---|---|
+| N. O. B. - Neo Organic Bioform | Stays on the Mode Select menu; the generic script does not start Survive/Versus. |
+| Off-world Interceptor | Stays in the vehicle upgrade/shop menu; no mission launched. |
+| Olympic Soccer | Stays on the team-select and title menu; no match started. |
+| PGA Tour 96 | Stays on the Main Menu; the generic script does not start a round. |
+| Quarterback Attack | Stays on the setup menu; options change but the game does not kick off. |
+| Return Fire - Maps O' Death | Stays on the expansion title/box-art screen; it is an add-on disc. |
+
+Two follow-up checks changed or confirmed grades:
+
+- **Panzer General** was `Playable` in the generic pass. A title-specific
+  `benchmarks/diff/scripts/tierb-panzer-start.txt` script confirmed `START GAME` with the
+  A button and reached the scenario map with units at 9,000 frames, so it is `Good`.
+- **Real Pinball** showed a nearly black late frame in the generic pass. A five-capture
+  recheck (`artifacts/tierb-panel-4-realpinball-check`) showed the full table at frame
+  30,000; the dark frame is the attract/transition view, not a render failure. It stays
+  `Good`.
+
+An 18,000-frame `--audio-hash` pass covered all 32 titles: every run produced
+**13,243,230 samples**, a non-zero audio hash, and `dspRunning: true`
+(`artifacts/tierb-panel-4-audio/summary.csv`). The ledger is
+`docs/data/playability-grades.csv`.
+
+Result: **107 titles now have a manual grade** (80 `Good`, 27 `Playable`) and **307**
+titles still have automated loadability only. The `Behind` count is **23 vs 4DO / 26 vs
+Phoenix**; all of the new rows are explicit `Playable` grades with a recorded reason or a
+missing title-specific script, not loadability regressions. Five titles are now ahead of
+4DO. The ~100-title Tier B target is met; converting the remaining `Playable` menus into
+confirmed gameplay is the next grade-gap increment.

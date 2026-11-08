@@ -1,0 +1,307 @@
+{
+  "schemaVersion": 1,
+  "name": "Tier B playability panel (32 titles)",
+  "defaults": {
+    "biosAuto": "bios",
+    "frames": 36000,
+    "captureFrames": [
+      600,
+      3600,
+      18000,
+      36000
+    ],
+    "inputScript": "benchmarks/diff/scripts/tierb-10min.txt",
+    "audio": "null",
+    "prefetch": true
+  },
+  "titles": [
+    {
+      "id": "lost-eden",
+      "name": "Lost Eden",
+      "disc": "J:\\Panasonic 3DO\\Lost Eden (1993)(Virgin)(US)(M5).chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "lost-files-of-sherlock-holmes,-the",
+      "name": "Lost Files of Sherlock Holmes, The",
+      "disc": "J:\\Panasonic 3DO\\Lost Files of Sherlock Holmes, The (1994)(Electronic Arts)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "luciennes-quest",
+      "name": "Lucienne's Quest",
+      "disc": "J:\\Panasonic 3DO\\Lucienne's Quest (1996)(Panasonic)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "mad-dog-mccree",
+      "name": "Mad Dog McCree",
+      "disc": "J:\\Panasonic 3DO\\Mad Dog McCree (1993)(American Laser Games)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "mazer",
+      "name": "Mazer",
+      "disc": "J:\\Panasonic 3DO\\Mazer (1995)(American Laser Games)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "megarace",
+      "name": "MegaRace",
+      "disc": "J:\\Panasonic 3DO\\MegaRace (1994)(Mindscape)(EU-US)(M5)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "microcosm",
+      "name": "Microcosm",
+      "disc": "J:\\Panasonic 3DO\\Microcosm (1994)(Psygnosis)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "n.-o.-b.---neo-organic-bioform",
+      "name": "N. O. B. - Neo Organic Bioform",
+      "disc": "J:\\Panasonic 3DO\\N. O. B. - Neo Organic Bioform (1995)(Sanyo)(JP).chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "need-for-speed,-the",
+      "name": "Need for Speed, The",
+      "disc": "J:\\Panasonic 3DO\\Need for Speed, The (1994)(Electronic Arts)(EU-US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "novastorm",
+      "name": "Novastorm",
+      "disc": "J:\\Panasonic 3DO\\Novastorm (1994)(Psygnosis)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "off-world-interceptor",
+      "name": "Off-world Interceptor",
+      "disc": "J:\\Panasonic 3DO\\Off-world Interceptor (1994)(Crystal Dynamics)(EU-US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "olympic-soccer",
+      "name": "Olympic Soccer",
+      "disc": "J:\\Panasonic 3DO\\Olympic Soccer (1996)(Panasonic)(US)(M5)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "out-of-this-world",
+      "name": "Out of this World",
+      "disc": "J:\\Panasonic 3DO\\Out of this World (1993)(Interplay)(US)[!][45097-1].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "overdrivin",
+      "name": "OverDrivin'",
+      "disc": "J:\\Panasonic 3DO\\OverDrivin' (1994)(Electronic Arts)(JP)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "panzer-general",
+      "name": "Panzer General",
+      "disc": "J:\\Panasonic 3DO\\Panzer General (1995)(Mindscape - SSi)(EU-US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "pataank",
+      "name": "PaTaank",
+      "disc": "J:\\Panasonic 3DO\\PaTaank (1994)(PF.Magic)(EU-US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "pebble-beach-golf-links",
+      "name": "Pebble Beach Golf Links",
+      "disc": "J:\\Panasonic 3DO\\Pebble Beach Golf Links (1993)(GoldStar - Panasonic)(KR-US)(en)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "perfect-general,-the",
+      "name": "Perfect General, The",
+      "disc": "J:\\Panasonic 3DO\\Perfect General, The (1995)(Kirin Entertainment)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "pga-tour-96",
+      "name": "PGA Tour 96",
+      "disc": "J:\\Panasonic 3DO\\PGA Tour 96 (1995)(EA Sports)(EU)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "phoenix-3",
+      "name": "Phoenix 3",
+      "disc": "J:\\Panasonic 3DO\\Phoenix 3 (1995)(Studio 3DO)(EU)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "plumbers-dont-wear-ties",
+      "name": "Plumbers Don't Wear Ties",
+      "disc": "J:\\Panasonic 3DO\\Plumbers Don't Wear Ties (1994)(Kirin Entertainment)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "poed",
+      "name": "PO'ed",
+      "disc": "J:\\Panasonic 3DO\\PO'ed (1995)(Studio 3DO)(EU-US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "policenauts",
+      "name": "Policenauts",
+      "disc": "J:\\Panasonic 3DO\\Policenauts (1995)(Konami)(JP)(Disc 1 of 2)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "primal-rage",
+      "name": "Primal Rage",
+      "disc": "J:\\Panasonic 3DO\\Primal Rage v1.0 (1995)(GoldStar)(EU-US)(M7)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "psychic-detective",
+      "name": "Psychic Detective",
+      "disc": "J:\\Panasonic 3DO\\Psychic Detective (1995)(Electronic Arts)(EU)(Disc 1 of 3)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Playable; Phoenix Good"
+    },
+    {
+      "id": "quarantine",
+      "name": "Quarantine",
+      "disc": "J:\\Panasonic 3DO\\Quarantine (1994)(Gametek - Imagineer)(JP-US)(M5)[!][IM-TS9503, 439480068501RE3].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "quarterback-attack---the-professional-quarterback-simulator",
+      "name": "Quarterback Attack - The Professional Quarterback Simulator",
+      "disc": "J:\\Panasonic 3DO\\Quarterback Attack - The Professional Quarterback Simulator (1995)(Digital Pictures)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "real-pinball",
+      "name": "Real Pinball",
+      "disc": "J:\\Panasonic 3DO\\Real Pinball (1994)(Panasonic)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "return-fire",
+      "name": "Return Fire",
+      "disc": "J:\\Panasonic 3DO\\Return Fire v1.0 F306.1.2 (1994)(Prolific - Silent Software)(EU-US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "return-fire---maps-o-death",
+      "name": "Return Fire - Maps O' Death",
+      "disc": "J:\\Panasonic 3DO\\Return Fire - Maps O' Death v1.0 FB13.1.0 (1995)(Prolific)(US)[!][data disc].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "rise-of-the-robots",
+      "name": "Rise of the Robots",
+      "disc": "J:\\Panasonic 3DO\\Rise of the Robots (1995)(Absolute)(US)(M3)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "road-rash",
+      "name": "Road Rash",
+      "disc": "J:\\Panasonic 3DO\\Road Rash (1994)(Electronic Arts)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    }
+  ]
+}

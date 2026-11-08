@@ -1,0 +1,8 @@
+# Panzer General: confirm START GAME with A once the menu is up.
+0    None
+3600 A
+3640 None
+4200 A
+4240 None
+4800 A
+4840 None
