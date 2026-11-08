@@ -1,15 +1,15 @@
 <a id="master-dashboard"></a>
-# 5DO — Implementation Plan and Missing-Feature Backlog
+# 5DO — Implementation Plan
 
-**Snapshot:** 2026-11-08 (1.5.0 release)
+**Snapshot:** 2026-11-08 (feasibility revision)
 **Current release:** `1.5.0`
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master`<br>
-**Status:** **2,051 tests pass**; `dotnet build` reports **0 warnings / 0 errors**; `dotnet format --verify-no-changes` is clean; `jb inspectcode --severity=WARNING` reports **zero** warnings or errors. **594 discs load, 593 render, 12 visually validated**; the 50-title oracle panel captures **50/50** titles, **all 50 match every frame hash** at frames 60/120/300, and **all 50 match the cumulative audio hash at those checkpoints** (150/150 audio fields). Scripted input is wired and validated on a five-title, 900-frame panel: **5/5 frame hashes at 60/300/600**, and the generic menu script demonstrably changes guest output at 600/900. The frame-boundary phase is resolved: the harness now samples Opera's ARM/CD state in the checkpoint's own field, and 5DO ends a field on the 263-line scanline boundary like the reference, leaving only **11-20 retired instructions** at frame 60 and **−46..2,195** at frame 120 on the 50-title panel. The CD count now matches on **50/50 titles at f=60 and f=120**; the first behavioral divergence moved to **11 titles at f=300** (8 count differences and 3 one-command sequence differences), with **39/50 titles phase-only**; Daedalus Encounter differs only by a same-frame PC phase at f=300. The timer-14 period is now measured equal on both engines (12,384/12,396 cycles); the Lemmings READ_ID wait residual is guest copy/decrypt work, not CLIO scheduling. The audio-gated confirmation panel `test93-panel50-audio` keeps **50/50 frame hashes, 0 errors**, matches **150/150 audio fields**, and leaves **39 phase-only** titles plus **11 CD-only behavioral divergences** at f=300; Dragon's Lair is 110/108. The CD status/metadata parity panel `test110-panel50-metadata` re-confirms **0 frame-hash and 0 audio divergences** and the same **11 CD-only** titles, while the new CD register trace shows 5DO and Opera agree on every command byte, status byte, and sector-data byte through the first command-sequence divergence. The 20th Century wake-source probe now rules out the interrupt controller: both engines read the active-FIQ register **99 times with identical masks** during the wait, and the guest is in the Portfolio OS idle loop; 5DO leaves it on the 20th Century VBlank at 59,021,271 while Opera stays idle until its `READ_ID` at 70,080,576. The residual is the guest file-system read-request schedule, so CORE-04's next measurement is the FS read queue, not FIQ/timer/SPORT. The top-100 playability audit is the next gate.<br>
-**Goal:** beat 4DO and Opera-libretro on **measured in-game compatibility and accuracy**, and remain the best standalone desktop 3DO emulator on Windows, Linux, and macOS.<br>
-**Plan shape:** four phases, **measurement first**. Product and research work is deferred until the compatibility gate is green.
+**Status:** **2,051 tests pass**; build, format, and InspectCode are clean. The local collection now inventories **1,371 disc images**, which collapse to **414 unique titles** and a **378-title game test set**. The new 3-way matrix matches **232 titles to 4DO** and **246 to Phoenix** (194 to both), with **0 loadability regressions**, **2 titles where 5DO is ahead of 4DO**, and **0 untested**; the four no-video results are secondary media/homebrew, not retail game regressions. The 50-title accuracy panel keeps **50/50 frame hashes** and **150/150 audio hashes** at frames 60/120/300. The 594-disc legacy sweep remains **593 rendered, 1 known failure** (Crash 'n Burn Japan). Full evidence: `docs/CompatibilityComparison.md`, `docs/DifferentialHarness.md` §8, `docs/GameCompatibilityResults.md`.
+**Goal:** beat 4DO and Phoenix on **measured, player-visible compatibility**, and remain the best standalone desktop 3DO emulator on Windows, Linux, and macOS.<br>
+**Plan shape:** **three phases, one corpus, one comparison, four gates.** Research, product, and speculative timing work are out of scope until the compatibility gate is green.
 
-> **2026-11-06 rewrite.** This revision keeps every stable ID, every completed-log entry, and the five anchors other documents link to. It changes the order of work: truth first, disc and timing second, playability proof third, product and research last. `TEST-07` is the only new ID. `TEST-06` is promoted to P0. `SYS-05` is blocked on licensing rather than engineering. `PERF-08` and `CORE-05` are **closed with measured negative evidence**. The six completed items that were still sitting in the backlog moved to §2.5.
+> **2026-11-08 feasibility revision.** The previous plan carried 49 open IDs, eight gates, and an 800-850 developer-day backlog. That is not a plan; it is a wish list. This revision keeps every stable ID for traceability, but only **nine backlog entries** are allowed to block a release. Everything else is explicitly deferred or closed in §3.4, with a revisit condition. The full per-image differential is replaced by the **414-title unique corpus**; the open-ended timing audit is replaced by a **time-boxed residual** that must show a game-visible effect to stay open.
 
 > **This is the single source of truth.** It replaces the former dashboard, milestone log, feature spec, parity audit, and session handoff. Historical evidence stays in the linked docs; this file is the canonical backlog.
 
@@ -17,14 +17,13 @@
 
 ## 1. How to use this plan
 
-1. **Work the phases in order.** Do not start Phase 2 before Phase 0 has produced a trustworthy oracle. Do not start product or research work while any Phase 0-3 P0 item is open.
-2. **One feature per change.** Do not mix core accuracy, rendering, and UX work in one pull request.
-3. **Tests first.** Every behavior change needs a unit, golden, differential, or scripted manual test.
-4. **One reference per change.** State whether the behavior comes from Opera, 4DO/FreeDO, hardware documentation, or a 5DO-specific decision. Port behavior, not code.
-5. **Evidence before checkbox.** Mark an item done only when its "Done when" line is satisfied and the evidence is committed or linked.
-6. **A frame-hash match is not accuracy evidence.** Record PC, state, CD, and audio evidence, or state explicitly which fields were unavailable.
-7. **No duplicate tracking.** Each feature has one canonical entry below. IDs are stable. `BAK-*` and `MOON-*` are retired aliases (see Appendix B); do not recreate them.
-8. **No default timing change without panel evidence.** A 40-title, 300-frame sample is a smoke test, not a gate.
+1. **Work the phases in order.** Phase 1 is the only compatibility phase; do not start Phase 2 before every unique title has a status, and do not start Phase 3 before the peer comparison has no unexplained regression.
+2. **The unique corpus is the test set.** Compatibility claims are made on the **378-title game test set**, not on 1,371 regional copies. The image inventory is for loadability and duplicate accounting only.
+3. **One feature per change, tests first.** Every behavior change needs a unit, golden, differential, or scripted test. State the reference: Opera, 4DO, hardware documentation, or a 5DO decision.
+4. **Evidence before checkbox.** Mark an item done only when its "Done when" line is satisfied and the evidence is committed or linked.
+5. **No work without a player-visible outcome.** If a task cannot change a game's status, a gate, or a release artifact, it belongs in §3.4, not in the backlog.
+6. **Timing work is conditional.** Open `CORE-02`/`CORE-03`/`CORE-06`/`CORE-07` only when a matrix regression or a panel divergence points at that subsystem. A trace difference with no game-visible effect is documentation, not a release blocker.
+7. **No default timing change without panel evidence.** A 40-title, 300-frame sample is a smoke test, not a gate.
 
 ### Legend
 
@@ -32,9 +31,9 @@
 - **Pending** — not started, or research/design only.
 - **Partial** — a usable subset ships; the remaining scope is listed in the item.
 - **Conditional** — work only if the measurement panel proves it changes a game-visible outcome.
-- **Blocked** — depends on another item, legal review, or hardware.
+- **Deferred** — explicitly out of scope for this plan; see §3.4.
 - **Closed** — a recorded decision not to pursue the work; it is not "done".
-- **Priority** — **P0** correctness/compatibility, **P1** expected best-in-class evidence, **P2** ecosystem multiplier, **P3** long-term.
+- **Priority** — **P0** correctness/compatibility, **P1** release evidence, **P2/P3** post-compatibility.
 - **Effort** — **S** under 3 developer-days, **M** 3-10, **L** 10-30, **XL** 30-90+.
 
 ---
@@ -48,34 +47,31 @@
 | Build | `dotnet build 5DO.sln -c Debug` - **0 warnings, 0 errors** |
 | Tests | **2,051 / 2,051 passed** in Debug |
 | Format | `dotnet format --verify-no-changes` - clean |
+| Static analysis | `jb inspectcode --severity=WARNING` - **0 results** |
 | CLI | `5DO 1.5.0 (FiveDo)`; `selftest --json` - all checks `ok: true` |
-| Synthetic benchmark | 240 frames in 0.816 s — **294 fps (~3.4 ms/frame)** |
-| Real-title benchmark | Road Rash race **4.20 ms/frame**, p99 **7.40 ms** (`Performance.md` §8.5) |
-| Reference oracle | `OperaCore.dll` and the optional debug core are built and staged |
-| 40-title differential | **18 matched / 22 diverged** at frame 300 (`artifacts/diff/sample40-run/report.json`) |
-| 5-title TEST-07 panel | Deterministic captures; first divergence **PC at frame 60**; CD commands 9/9 at f=60; samples 44,144/44,144 with the exact clock |
-| Scripted-input TEST-07 panel | 5 titles, 900 frames, generic menu script; **5/5 frame hashes at 60/300/600**; input changes guest output at 600/900; no-input control confirms the matches are not from an ignored script |
-| 3,000-frame TEST-07 panel | Lemmings, Alone, Space Ace, and Wolfenstein match the frame hash at 3,000; Road Rash still diverges at 1,000/3,000 |
-| CD command sequence | First divergence localized to READ_DATA (`0x10`) vs READ_ID (`0x83`): Lemmings 105, Road Rash 559, Wolfenstein 389 |
-| 50-title panel | **50/50 captured, 0 errors**; **50/50 match every frame hash** at 60/120/300; **150/150 cumulative audio hashes match** at those checkpoints; **50/50 first PC/CPSR divergences are same-frame phase**; only CD command cadence differs (11 titles at f=300) |
-| 5-title showcase | **5/5 video matches** at 300 frames; **4/5** at 3,000 (Road Rash still diverges); PC is phase-aligned at f=60 on all five |
-| Compatibility sweep | **594 load, 593 render, 1 known boot failure** (Crash 'n Burn Japan) |
+| Corpus inventory | **1,371 images**, **653 distinct game IDs**, **414 unique titles**, **378 game test set** |
+| 3-way comparison | 4DO **232** matched, Phoenix **246** matched, both **194**; **0 regressions**, **2 ahead of 4DO** |
+| 50-title panel | **50/50 captured, 0 errors**; **50/50 frame hashes** at 60/120/300; **150/150 audio hashes** |
+| Scripted input | 5 titles, 900 frames; **5/5 frame hashes** at 60/300/600; input changes guest output |
+| 3,000-frame sample | 4/5 video matches; Road Rash still diverges; first behavioral difference is CD cadence |
+| Legacy sweep | **594 discs, 593 rendered, 1 known failure** (Crash 'n Burn Japan) |
 | Visual/input validation | **12 titles** in the curated matrix; a handful have scripted gameplay |
 
-The real-title and sweep numbers come from the local corpus and the linked docs; the `J:` corpus is not mounted in every session. Re-run the commands in §7 before quoting them.
+The corpus and comparison numbers come from `artifacts/corpus/inventory.json` and `docs/data/compatibility-comparison.json`; the `J:` corpus is not mounted in every session. Re-run §7 before quoting them.
 
-### 2.2 What "better than 4DO and Opera" means
+### 2.2 What "better than 4DO and Phoenix" means
 
-"Better" is not a feature list. It is measured on the **same BIOS, same disc images, and same input scripts**:
+"Better" is not a feature list. It is measured on the **same BIOS, same unique titles, and same input scripts**:
 
 | Claim | Evidence required |
 |---|---|
-| Better compatibility | Top 100 titles: **100% reach gameplay**, **≥95% Good or Playable**, every exception with a root cause and workaround. |
-| Better accuracy | On the 50-title panel: **no divergence before gameplay**; after gameplay, PC/CPSR/state/CD/audio deltas are triaged and documented. |
-| Fewer regressions | **Zero regressions** against 4DO and Opera on a curated known-issues list; every 4DO/Opera failure is fixed or explained. |
-| Better disc support | CD-DA, multi-track, multi-disc, subcode/read-ahead, PAL, and ODE behavior verified on real titles. |
-| Better input | Mouse, lightgun, arcade lightgun, flightstick, trackball, and six-player titles verified. |
-| Better product | Save states/rewind, CHD, library, per-game profiles, 4K output, six-platform packaging. |
+| Better coverage | All **378** unique games have a dated 5DO status; every image-only exception is explained. |
+| No regressions | **Zero** titles where 4DO or Phoenix loads/plays and 5DO does not; every remaining gap has a root cause. |
+| Better playability | The **top 50** titles are **100% reaching gameplay** and **≥95% Good or Playable**. |
+| Better accuracy | The 50-title panel has no video or audio divergence; remaining CD cadence differences are documented and do not change the player-visible path. |
+| Better disc support | Only the matrix titles that need CD-DA, multi-track, or multi-disc are verified; not a speculative full-collection program. |
+| Better input | The matrix titles that need mouse, lightgun, arcade lightgun, flightstick, or trackball are verified. |
+| Better product | Save states/rewind, CHD, library, per-game profiles, 4K output, and six-platform packaging stay shipped; new product work is deferred. |
 
 A **Good** title boots, reaches gameplay, survives 10 minutes of scripted input without a hang or crash, and has no visible or audio defect a player would notice. **Playable** means it runs but has a documented defect. **Unplayable** means it does not reach or sustain gameplay.
 
@@ -97,17 +93,18 @@ These are done and must not regress. They are listed here once; the backlog cont
 
 ### 2.4 Evidence gaps that block the claim
 
-1. **The oracle is video- and audio-clean but not finished.** The 50-title panel captures 50/50 with 0 errors, **all 50 match every frame hash and the cumulative audio hash** at frames 60/120/300 (150/150 audio fields), and **all 50 first PC/CPSR divergences are same-frame instruction phase** (11-20 retired instructions at f=60). The transcript classifier shows that **39/50 command streams are identical, 8 are prefix-only, and 3 differ by one READ_ID poll placement**, and every significant cadence step has the same command-issue PC on both sides. Scripted input is wired through both engines. The 20th Century wake-source probe now shows identical FIQ masks and handler cadence during the CD wait, so the remaining read-schedule difference is the guest file-system read request, not CD readiness or timer/frame timing. Per-title gameplay input for TEST-06 remains.
-2. **"Renders" is not "plays".** The 594-disc sweep only proves a non-black final frame. Only 12 titles have visual/input validation. The plan's own gate asks for ≥95% Good/Playable across 594 titles; that audit has not been done.
-3. **Matching video now implies matching audio and execution at the panel checkpoints.** All 50 panel titles match video and the cumulative audio hash at 60/120/300, and every PC/CPSR difference instruction-aligns to the previous reference frame. At 3,000 frames 4/5 sample titles match video; Road Rash still diverges, and the CD command count remains the first behavioral difference (Lemmings 365/352, Road Rash 851/836). The audio probe measures the reference's 1.214 ppm field-clock quantization: sample counts match through 1,000 frames and drift by +1/+2 at 2,000/3,000, so long-run audio hashes are labeled as an alignment state rather than a waveform difference. The new transcript classifier shows the command stream itself matches on 47/50 titles (39 identical, 8 prefix-only); the three exceptions shift a READ_ID poll by one command.
-4. **Evidence is thin where it matters.** The 40-title sample stops at 5 seconds of emulated time. Real divergence appears in menus, FMV, streaming, and gameplay.
+1. **Loadability is not playability.** The matrix has **11 manual gameplay grades** and **403 automated loadability results**, with **0 untested**; the four `No video` rows are secondary media/homebrew. Tier B/C of `TEST-06` is the missing evidence.
+2. **The peer comparison is loadability-level.** It is enough to find regressions, not enough to claim a playability win. `Behind` rows (8 vs 4DO, 10 vs Phoenix) are mostly manual `Playable` grades that need a gameplay pass before they can be called losses.
+3. **The CD cadence residual is still open.** Eleven 50-title panel titles diverge in command cadence at frame 300; video and audio still match. It is a diagnostic difference until a title shows a player-visible effect.
+4. **Platform evidence is asymmetric.** Windows and Linux are validated; macOS is documented best-effort. That is acceptable for the compatibility claim but must be stated in the release notes.
 
-**Honest current claim:** 5DO is a better *product* than 4DO today, and a credible challenger to Opera, but it is **not yet a proven accuracy win**. The next two quarters should be spent closing that gap.
+**Honest current claim:** 5DO is a better *product* than 4DO, a credible challenger to Phoenix, and — on the tested panel — video/audio-accurate. It is **not yet a proven playability win**. Phase 1 exists to settle that.
 
 ### 2.5 Completed IDs (traceability only)
 
 | ID | What shipped | Evidence |
 |---|---|---|
+| TEST-08 | Unique-corpus inventory and 5DO/4DO/Phoenix comparison: 1,371 images collapsed to 414 titles by game ID, canonical test-set selection, peer matching, regression/ahead verdicts, and committed JSON/CSV | `CompatibilityComparison.md`; `data/unique-corpus.csv`; `data/compatibility-comparison.json`; `tools/corpus-inventory.py`, `tools/generate-compat-comparison.py`. Log 2026-11-08. |
 | TEST-07 | Reference oracle: fixed-seed deterministic captures, PC/CPSR/instructions, CD cycle/PC/instruction stamps, transcript and cadence classification, timer/read/register traces, instruction-phase triage, audio hash gating with sample alignment, scripted input, and the nightly baseline gate | `DifferentialHarness.md` §4.1/§4.2/§6/§8; `TestCorpus.md` 1.1bd; `test93-panel50-audio`, `test94-samples5-input`; 2,051 tests. Log 2026-11-08. |
 | SYS-06 | RSA/unsigned-disc option; two-site in-memory patch; no BIOS or game content bundled | `BiosRsaPatch`; known No-RSA MD5s reproduced; signed-title hashes unchanged. Log 2026-11-06. |
 | SYS-08 | CPU clock matrix 0.5x-4x; stock 12.5 MHz default unchanged; non-stock clocks are a compatibility variable | `Performance.md` §8.1/§8.3; five-title A/B. Log 2026-11-05. |
@@ -117,7 +114,7 @@ These are done and must not regress. They are listed here once; the backlog cont
 | UX-26 | Online cover catalog: 473 unique WebP covers, 645/653 game IDs mapped, catalog + on-demand + 27 MB ZIP, annotation-stripped Jaro-Winkler fallback | `CoverArt.md`; 14 host tests; packager catalog reload/hash verification. Log 2026-11-07. |
 | VID-04 | 480i/240p detection; bob/weave/blend; interlace-aware geometry; screenshots/GIF | `InterlaceProcessor`; 16 tests; five-title bob-vs-auto hashes. Log 2026-11-06. |
 
-**Full completed-ID index (including the eight above):** FND-01, FND-02, FND-03, CORE-09, CORE-12, CORE-14, CORE-15, SYS-04, SYS-06, SYS-07, SYS-08, SYS-09, SYS-10, SYS-11, SYS-12, SYS-13, SYS-14, VID-04, VID-05, VID-06, VID-14, VID-15, AUD-05, TEST-07, UX-01, UX-02, UX-04, UX-11, UX-12, UX-15, UX-19, UX-23, UX-26, ENG-03, PERF-02, VID-12, BAK-12, BAK-17.
+**Full completed-ID index (including the nine above):** FND-01, FND-02, FND-03, CORE-09, CORE-12, CORE-14, CORE-15, SYS-04, SYS-06, SYS-07, SYS-08, SYS-09, SYS-10, SYS-11, SYS-12, SYS-13, SYS-14, VID-04, VID-05, VID-06, VID-14, VID-15, AUD-05, TEST-07, TEST-08, UX-01, UX-02, UX-04, UX-11, UX-12, UX-15, UX-19, UX-23, UX-26, ENG-03, PERF-02, VID-12, BAK-12, BAK-17.
 
 **Milestone aliases:** M9R/M9P → P3/P6/TEST-04; M10 → PERF-02; M12 → PERF-08; M13.5/M13.6 → TEST-06; M14 → VID-01/02/03; M15 → CORE-11/16 + FND-05.
 
@@ -125,236 +122,105 @@ These are done and must not regress. They are listed here once; the backlog cont
 
 ## 3. Missing features — canonical backlog
 
-Each entry is a single feature or a tightly-scoped bundle. The `Tracks` field preserves legacy IDs. **No feature appears in more than one category.** A few legacy aliases (`BAK-04`, `BAK-05`, `BAK-13`, `BAK-18`) intentionally have no separate checkbox; they are covered by the canonical items listed in Appendix B.
+Each entry is a single feature or a tightly-scoped bundle. **No feature appears in more than one category.** The backlog is deliberately short: everything that does not block Gates A-D lives in §3.4.
 
-The sections below are ordered by **what moves the compatibility claim**, not by subsystem.
+### 3.1 P0 — Playability proof
 
-### 3.1 P0 — Measurement, oracle, and proof
+- [ ] **TEST-06 — Playability audit on the unique corpus**
+  **Status:** Partial · **Priority:** P0 · **Effort:** L
+  **Remaining:**
+  - **Tier A (all 378 unique games): done.** Every unique title has a 5DO status: **403 automated loadability results, 11 manual grades, 0 untested**. The 44 previously untested images now have a status; the four `No video` results are secondary media/homebrew, not retail games.
+  - **Tier B (target ~100 titles):** every title where 4DO or Phoenix reports `Playable`/`Good` and 5DO differs, plus every `Behind`/`Regression` row; run a 10-minute scripted input pass and record a checkpoint screenshot.
+  - **Tier C (top 50):** full gameplay review to `Good`/`Playable`/`Unplayable` with a reason and evidence.
+  **Done when:** all 378 games have a reviewed status; Tier B has zero unexplained regressions; Tier C is ≥95% Good/Playable; the matrix and per-game database are updated.
+  **Why first:** this is the only evidence that answers "better than 4DO and Phoenix" for a player. The old 594-title "renders" count does not.
+  **Ref:** `docs/CompatibilityComparison.md`; `docs/Compatibility.md` §10/§13.
 
-- [ ] **TEST-06 — In-game playability and visual review**
-  **Status:** Pending · **Priority:** P0 · **Effort:** L
-  **Remaining:** audit the **top 100 titles first** with scripted 10-minute runs; record `Good`/`Playable`/`Unplayable` with a reason and a checkpoint screenshot; then extend to the full local set; rerun the black/static titles at 12,000+ frames; repeat with high-resolution only after the base audit; feed results into `GameCompatibilityList.md` and the per-game database.
-  **Done when:** the top 100 have a reviewed status and evidence; then every local disc has one; the compatibility matrix distinguishes loadable, playable, and good.
-  **Why first:** this is the only evidence that answers "better than 4DO and Opera" for a player. A 594-title "renders" count does not.
-  **Ref:** `docs/Compatibility.md` §10/§13; `docs/GameCompatibilityResults.md`.
-
-- [ ] **CORE-11/16 + FND-05 — Full-collection differential and hash regression**
-  **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** CORE-11, CORE-16, FND-05
-  **Remaining:** keep the 50-title panel green (video, PC phase, and audio are now clean; CD cadence is the only behavioral field), then run the full 594; PC-delta triage; state/CD transcript comparison; frame/audio hash coverage; scripted-input panel coverage; nightly dashboard; allowlist and triage policy.
-  **Done when:** the nightly run has no unexplained divergence, and every allowance is documented and dated; the 50-title panel is green before the full run.
-  **Rule:** a frame-hash match without PC/CD/audio evidence is a smoke result, not a pass.
-  **Evidence (2026-11-07):** the line-based field-boundary panel (`test64-panel50-line-boundary/report.json`) captures **50/50 with 0 errors** and **50/50 frame hashes** at 60/120/300. The same-frame retired-instruction delta is **11-20** at f=60 (average 15.3) and **23-2,223** at f=120 (most titles around 200); every first PC/CPSR divergence is same-frame phase. The first behavioral divergence moved from **36 titles at f=120** to **11 titles at f=300**: 8 `cdCommandCount` differences and 3 one-command `cdCommands` sequence differences (Creature Shock, Foes of Ali, N.O.B.). The other 39 titles have no behavioral divergence at the checkpoints. See `DifferentialHarness.md` §8.
-  **Evidence (2026-11-08):** the audio-gated 50-title panel (`test93-panel50-audio/report.json`, local corpus, debug core `opera-build-timers/OperaCore.dll`) captures **50/50 with 0 errors**, **50/50 frame hashes**, and **150/150 audio hashes** at 60/120/300; the nightly workflow now captures the showcase fresh and compares it against the checked-in baseline. It leaves **39/50 phase-only** and **11 CD-only first behavioral divergences at f=300** (8 count, 3 one-command sequence); Dragon's Lair is 110/108. The same-frame retired-instruction delta is **11-20** at f=60 (average 15.3), `-46..2,164` at f=120, and `-36,104..3,591` at f=300; **50/50 first PC/CPSR divergences are same-frame phase**. The prior `test91-panel50-heuristic-retired` run had one full match (Daedalus Encounter) and 38 phase-only; the only change is Daedalus's f=300 PC sample, which is a same-frame phase, not a video or audio difference. The 20th Century wake-source probe now shows identical FIQ masks and handler cadence during the CD wait, so the 11 CD-only divergences are guest read-request pacing, not interrupt delivery. See `DifferentialHarness.md` §8.
-
-### 3.2 P0 — Accuracy and compatibility
-
-- [ ] **CORE-04 — CD-ROM command and timing parity**
-  **Status:** Partial · **Priority:** P0 · **Effort:** XL · **Tracks:** CORE-04
-  **Remaining:** command latency table; per-command sector readiness; READ_DATA completion/read-ahead semantics (the transcript classifier shows the command table matches on 47/50 panel titles; the residual is guest wait cadence); TOC/Sub-Q/raw-sector behavior; data-sector subcode and read-ahead; CD-side tagged status/chunks; raw-vs-Opera command/status/boot/reset transcripts; CD-DA read-ahead and multi-disc layering on the same model. The CD register and CLIO read traces are now wired in; the Lemmings READ_ID wait residual is data-dependent guest copy/decrypt work (+8,694 instructions), not CD readiness or timer scheduling. The READ_ID media-access heuristic was retired after an A/B showed it raised a false POLMA level FIQ and shifted Space Ace's 3,000-frame FMV hash; Road Rash's 3,000-frame hash is unchanged. The 900-frame `cd-cadence` probe shows the 300-frame prefix differences become real sequence divergences: 5DO issues READ_DATA (`0x10`) where Opera polls READ_ID (`0x83`) at the first mismatch on eight titles, and the count gap grows to +10..+20 commands. The per-command readiness measurement is now done: on 20th Century the command packets, status bytes, and sector data are identical through command 105, so the remaining read-schedule difference is guest sleep timing, not the CD register contract. The wake source is now measured (2026-11-08 increment 4): FIQ delivery, masks, and handler cadence are identical, and the residual is the guest file-system read-request schedule. The 20th Century long-run FMV read-ahead (332/311 at 3,000 frames with video still matching) remains open.
-  **Done when:** fixed command transcripts match Opera or have documented, tested divergences; the 594-disc sweep has no CD regression; CD-DA and ODE layer cleanly on the same model; streaming/FMV titles (Road Rash and Need for Speed are already in the corpus) show no regression.
-  **Why first in Phase 1:** this is the largest behavioral gap between 5DO (~1.9k lines of CD model) and Opera (~3.8k) and the most likely cause of real-game failures.
-  **Evidence (2026-11-07):** after the video fixes, the 50-title panel is **video-clean at 60/120/300 (50/50 frame hashes)** and **PC/CPSR is proven frame-boundary phase (50/50 align to Opera frame 59)**. The **only remaining behavioral divergence is the CD command count**: 36 titles first differ at f=120 by 1-2 commands (in-flight cadence; all recover by f=300), and 13 at f=300 — seven FMV titles issue +3/+4 extra READ_DATA commands while six are 1-2 behind. The 3,000-frame sample keeps the pattern: Lemmings 365/352, Road Rash 851/836, Space Ace 349/348, Wolfenstein 862/861, Alone 932/932; video matches at 3,000 on 4/5 (Road Rash still diverges). The first long-run sequence divergence remains READ_DATA (`0x10`) vs READ_ID (`0x83`). The next target is READ_DATA completion/read-ahead and FIQ publication timing, not the command table. **Correction (increment 5):** the line-based field boundary removed the f=120 divergences; the current panel matches the CD count on 50/50 titles at f=60 and f=120, with 11 first behavioral divergences at f=300.
-  **2026-11-07 increment:** READ_DATA now rejects an invalid MSF (MEI address error) and a transfer that starts at or runs past the last disc sector (MEI end address), and a new READ_DATA aborts the previous transfer so a stale sector cannot leak into the FIFO. Three CD tests cover the error paths and the abort. The 5-title and 20th Century CD counts are unchanged by this validation. A separate oracle build with the current Opera transfer-completion read-status rule (instead of the local build's first-sector publication) also produced identical counts, so past-end reads are not the cause of the residual FMV cadence difference.
-  **2026-11-07 increment 2 (first-sector publication and deadline accumulation):** the oracle's per-command PC/instruction stamps showed that 5DO spent **+207,707 cycles / +86,511 instructions** between the last boot READ_DATA and the READ_ID handoff. The cause was the status-publication rule: 5DO waited for the whole transfer, while the oracle publishes POLST as soon as the first requested sector is queued (`cdrom_data_publish_read_status_if_ready`, `data_len != 0`). Matching the oracle moved that handoff to **-818 cycles / -376 instructions** and improved the 20th Century command-104 cycle delta at f=300 from **+324,027** to **+111,990**. READ_DATA deadlines now also accumulate from the previous deadline (`cdrom_data_schedule_next`) instead of re-basing to `now + sector_cycles`, so a late guest no longer slows the transfer. The confirmation panel (`test55-panel50-first-sector/report.json`) captures **50/50 with 0 errors**, **50/50 frame hashes at 60/120/300**, and the same **36/13/1** first-CD-divergence distribution as test43. The 5-title sample keeps **5/5 frame-hash matches at 60/120/300** at both unbounded and stock 2x speed, and the 3,000-frame sample keeps the established 4/5 video result (Road Rash still diverges) with CD counts Alone 932/932, Lemmings 365/352, Road Rash 851/836, Space Ace 349/348, Wolfenstein 862/861. 20th Century keeps all four video hashes through 3,000 frames and ends at CD 332/311; the remaining long-run gap is command cadence, not video. **1,919 tests pass.**
-  **2026-11-07 increment 3 (transcript classification and cadence steps):** the harness now reports `cdCadence` and classifies the final transcript. On the 50-title panel **39 streams are identical, 8 are prefix-only, and 3 are sequence-shifted by one READ_ID poll** (Chiki Chiki, Dragon's Lair, Virtual Horror); the command table itself matches on the other 47. **24/50 titles have a significant cycle step and every one is issued from the same PC on both engines**, with the retired-instruction delta jumping alongside the cycle delta. The fresh five-title run (`test60-cadence-samples5/report.json`) shows Alone 361/361 (`+379` cycles), Road Rash 395/395 (`+468`), Wolfenstein 341/341 (`-345`), Lemmings 109/105 with a single `+22,834` step at command 51 (PC `0x00022140`, `+8,242` instructions), and Space Ace 168/168 with a single `+80,567` step at command 164 (PC `0x0002aa18`, `+32,330` instructions). The residual `cdCommandCount` difference is therefore guest wait-loop cadence, not READ_DATA command/status divergence; the next measurement is a CD register-access trace around the step. **1,921 tests pass.**
-  **2026-11-07 increment 4 (CD register trace):** `--cd-register-trace` records every CD command/poll/status/data access with cycle and PC. Space Ace drains the READ_DATA status by cycle 58,934,229, then has **no CD access from 58,935,434 to 59,173,228** (237,794 cycles) before command 164 at 59,174,910. Lemmings drains all 12 READ_ID status bytes by 29,431,952, then has **no CD access until 31,599,968** (2.17M cycles). The 60-100k and 20-60k cadence steps are not CD readiness waits; the guest waits on a non-CD source (timer/VBlank) and returns. This moves the residual lead from CORE-04 to CORE-07 and leaves the CD command/status model matching the reference on the tested panel. **1,922 tests pass.**
-  **2026-11-07 increment 5 (line-based field boundary):** after the frame-boundary fix, the confirmation panel (`test64-panel50-line-boundary/report.json`) matches the CD count on **50/50 titles at f=60 and f=120** (down from 36 first divergences at f=120), and the first behavioral divergence moved to **11 titles at f=300**: 8 `cdCommandCount` differences and 3 one-command `cdCommands` sequence differences. The remaining count outliers still show the ~30,000-instruction guest wait-loop cadence step. This is the current CORE-04 residual; the command table itself matches on the other 47 titles. **1,923 tests pass.**
-  **2026-11-08 increment (CD poll enables and level FIQ):** the reference `opera_cdrom_init` resets `poll` to `CDROM_POLL_INTEN_MASK` (`0x07`) and latches `POLRE` on the boot disc access (`0x87`); 5DO reset to `0x80` only. The guest driver reads and writes the poll register back, so 5DO's read-modify-write cleared all three interrupt enables and never raised the CD FIQ for READ_ID/READ_ERROR completions. `CdromDevice.ResetPoll` now uses `0x87` in Opera semantics, and `FiveDoMachine` re-raises FIQ 4 while `Xbus.FiqPending` in `OperaCycleBased` mode (the reference asks every device for `XBP_FIQ` each batch). The 5-title sample keeps 5/5 frame hashes; Lemmings still has the 109/105 command count because the remaining wait is a data-dependent guest copy loop, not CD readiness. The final 50-title panel (`test91-panel50-heuristic-retired`) keeps 50/50 frame hashes, 0 errors, improves Daedalus Encounter to a full match, and leaves 38 phase-only plus the same 11 CD-only behavioral divergences; Dragon's Lair remains 111/108. An A/B isolated the retired READ_ID media-access heuristic: the poll fix alone and the level FIQ alone both kept Space Ace's 3,000-frame hash at `0x46916C61` (Opera), while the combination shifted it; retiring the heuristic restored the hash and left Road Rash's 3,000-frame hash unchanged. **1,925 tests pass.**
-  **2026-11-08 increment 2 (poll reset parity and 900-frame cadence):** Opera treats `POLREMASK` (`0x08`) as a one-shot FIFO reset and stores only the three interrupt enables (`0x07`); 5DO persisted the reset bit and gated command/status/data accesses until the next poll write, and re-latched POLRE when the bit was released. `CdromDevice.SetPoll` now matches the reference and the defensive gates are gone; new tests cover the reset pulse, write-one-to-clear POLRE, and parameter bytes not being recorded as opcodes. A 20th Century register trace shows the guest writes `0x87`, `0x07`, and `0x35` but never `0x08`, so this is not the `109/105` cadence cause. The new 900-frame `cd-cadence` probe shows the 11 panel count gaps grow (20th Century **231/211**, Creature Shock 242/241, ESPN 166/154, Dragon's Lair 169/159, Life Stage 143/131, Pebble Beach 179/167, Virtual Horror 166/155, Woody 140/128; Foes of Ali 288/287 and N.O.B. 245/244 are prefix-only, but both also show an aligned-count audio content divergence at f=600). The first opcode mismatch is READ_DATA (`0x10`) vs READ_ID (`0x83`) on eight titles (Virtual Horror is the reverse), so the residual is a real guest CD read-schedule difference that reaches the audio stream, not a 300-frame in-flight artifact. **2,043 tests pass.**
-  **2026-11-08 increment 3 (CD register trace and status/metadata parity):** the debug reference core now records every CD command byte, poll write/read, status read, and data read with cycle and PC, and the harness writes matched `fivedo.cdreg.txt`/`opera.cdreg.txt` traces with `--cd-register-trace`; 5DO also traces every non-empty data read. On 20th Century Video Almanac (290 frames, unbounded speed) the command packets, status bytes, and 2048-byte sector data are **identical through command 105**, the last command before the sequence divergence; the first mismatch is command 106 (5DO `READ_DATA` vs Opera `READ_ID`). The trace exposed and fixed four reference divergences: the XBUS 2x status bit (`MEI_CDROM_DOUBLE_SPEED` is `0x80`, and `cdrom_mode_reset` starts at double speed), the guest speed cap in `cdrom_effective_speed`, the readable-disc limit (the 3DO volume header's `volume_block_count` at sector 0 offset `0x50`, not the physical image size; 327,168 vs 327,320 on this disc), and the TOC Q-position control bit plus the 8-byte READ_SESSION_INFO payload. The remaining 20th Century difference is guest sleep time (6 frames in 5DO vs 60 in Opera) with matching CD values, so the residual is not a CD register-contract difference. The 11-title `cd-cadence` panel keeps the same first mismatch indices. The confirmation panel (`test110-panel50-metadata/report.json`, 50 titles, 300 frames) captures **50/50 with 0 errors**, **0 frame-hash divergences**, **150/150 aligned audio fields**, **39 phase-only** titles, and the same **11 CD-only first behavioral divergences** at f=300. **2,048 tests pass.** Build and format are clean; the local InspectCode host crashed before emitting a result in this session, and the prior complete run was clean.
-  **2026-11-08 increment 4 (guest wake-source parity):** the 5DO timer trace now emits the reference's FIQ/XBUS event kinds (`fiqgen`, `fiqwrite`, `xbussel`, `xbuspoll`, `xbusfiq` with source 1-5), so the wake-source comparison is a direct diff. On 20th Century (290 frames) both engines read the active-FIQ register **exactly 99 times** during the 57.8M-59.0M wait with identical masks (38x `00000001`, 33x `80000001`, 23x `80000801`, 5x `80000003`). The guest is in the Portfolio OS idle loop at `0x205f4..0x20600`; 5DO leaves it on the VBlank FIQ at **59,021,271** and issues `READ_DATA` at **59,063,402**, while Opera stays idle until its `READ_ID` at **70,080,576**. On 900-frame captures (`artifacts/diff/probe-20th-wake-900`) the periodic `READ_ID` cadence then matches on both engines (Opera 70.08M/82.59M/95.11M/107.62M/120.13M/132.64M; 5DO 70.29M/82.80M/95.31M/107.83M/120.34M/132.85M, **+0.21M phase**), and the divergence is 5DO's `READ_DATA` bursts between polls (59.06M/59.12M/61.56M/64.07M/66.57M/69.07M). The `READ_ID` payload is identical (`83 00 10 00 01 00 00 00 00 00 00 e3`), so the residual is the guest file-system read-request schedule, not the interrupt controller, timer, SPORT, command table, or status bytes. A 2x A/B (5DO `cdSpeed=2x` against the reference's unbounded default) grows the per-command delta by exactly **81,246 cycles per READ_DATA**, matching `cdrom_data_sector_cycles` (104,166 - 2,087); the sector-time formula and the panel's unbounded setting are therefore correct. `--force` now also deletes the title's `nvram.ram` before the 5DO run, matching the reference host's `.srm` deletion; a fresh-NVRAM control kept the same 108/105 cadence. The next measurement is the FS read request and the CD task wake queue. **2,051 tests pass.**
-  **Ref:** `opera_cdrom.c`; `docs/ReferenceStrategy.md` §6.
-
-- [ ] **CORE-03 — MADAM CEL busy timing parity**
-  **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** CORE-03
-  **Remaining:** validate the deferred draw and pixel/texel busy deadline against Opera across CEL-status polling titles; tune the busy budget; record CEL busy traces.
-  **Done when:** CEL busy traces match Opera within documented tolerances; timing-sensitive titles behave correctly; no frame-time regression.
-  **Evidence:** the 2026-11-04 increment fixed line-rendered literal/packed pixel accounting and locked the 9M-pixel/s plus 64-cycle-per-CEL formula with tests.
-  **Ref:** `opera_madam.c`.
-
-- [ ] **CORE-02 — CLIO timer scheduler parity**
-  **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** CORE-02
-  **Remaining:** validate Opera's per-slot scheduler, slack gap, and cascade carry on the panel; add differential timer evidence; decide whether the Opera scheduler can become the default.
-  **Done when:** timer traces match Opera within documented tolerances; no golden-corpus regression.
-  **Evidence:** 16-bit timer-register masking in Opera mode, per-timer telemetry (`--clio-timer-stats`), bounded `--clio-timer-trace`, a reference-model conformance test, and a `--clio-timers` A/B override. The mode stays opt-in until panel evidence is green.
-  **2026-11-08 increment:** the reference debug core now records CLIO timer writes/underflows and reads with cycle/PC stamps, matched by 5DO's `--clio-timer-trace`/`--clio-read-trace`. The trace now also carries FIQ generation/writes and XBUS select/poll/FIQ edges on both sides, with the same source codes and edge rule. On Lemmings under the accuracy profile both engines use the Opera scheduler; timer 14 underflows every **12,384 cycles (Opera)** and **12,396 (5DO)**, a constant ~285-cycle phase offset, not a period error. The old "~10,400 cycles" figure was the FreeDO-compatible mode. The READ_ID-to-READ_ERROR residual (+22,834 cycles, +8,694 retired instructions) is guest copy/decrypt work between commands, not timer scheduling. The trace also exposed and fixed the CD poll-enable reset and level-held XBUS FIQ (CORE-04/CORE-07). **1,925 tests pass.**
-  **Ref:** `opera_clio.c`, `opera_clock.c`.
-
-- [ ] **CORE-06 — SPORT/XBUS/DIPIR timing and DMA audit**
-  **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** CORE-06
-  **Remaining:** full Opera trace diffs for SPORT/XBUS/DMA; DIPIR activation completion; XBUS poll/FIFO semantics; DMA start/completion traces; PBUS/SPORT edge cases; reset and state interactions.
-  **Done when:** trace diffs are clean or documented; DMA/FIQ tests stay green; no regression on golden titles.
-
-- [ ] **CORE-07 — FIQ/IRQ latency and interrupt audit**
-  **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** CORE-07
-  **Remaining:** Opera differential traces for masked/nested/return/re-entry interrupts; request-to-vector latency distributions; CLIO/DIPIR/XBUS ordering; timer and FIQ edge cases; document telemetry fields. The frame-boundary phase is resolved. The timer-14 period is measured equal (12,384/12,396 cycles) and the XBUS CD FIQ is now level-held like the reference; the remaining Lemmings wait is guest copy/decrypt work, not interrupt ordering. The 20th Century wake-source probe now also shows identical active-FIQ masks and handler cadence on both engines during the wait, so the residual read-schedule difference is guest software, not FIQ delivery.
-  **Done when:** latency metrics match Opera within tolerance; traces and `run --json` statistics are documented and regression-tested.
-  **Evidence (2026-11-07):** the harness now exposes `--cd-register-trace` (`cdreg f=… cycle=… pc=… op value`). Space Ace has no CD register access for 237,794 cycles between command 163 and command 164, and Lemmings has none for 2.17M cycles between READ_ID and READ_ERROR; the guest is waiting on a non-CD source (timer/VBlank), not CD readiness. This follows the transcript classifier's 39-identical / 8-prefix / 3-READ_ID-shift panel result and the 24/50 significant steps that all issue from the same PC on both engines. The next measurement is a CLIO timer/VBlank trace around the step. The prior phase evidence remains: 48 panel titles' first PC/CPSR divergence at frame 60 is instruction-phase aligned to Opera frame 59 (residual -55..-256 instructions) and 2 titles first diverge at f=120 aligned to frame 119, so the frame-boundary PC difference is proven phase rather than an interrupt-ordering bug. The command-50 boot handoff was a separate event at about frame 142: 5DO spent **+207,707 cycles / +86,511 retired instructions** there because it waited for the whole READ_DATA transfer before publishing status; matching the oracle's first-sector publication reduced that to **-818 / -376** (see CORE-04). The residual universal frame-60 phase is therefore **not** the command-50 handoff; the next step is to trace the frame-60 boundary itself.
-  **2026-11-07 increment (frame boundary):** the frame-60 phase had two causes. The harness finalized Opera's checkpoint at the next video callback, reading ARM/CD state one field late, and 5DO ended a field on the rounded 208,541-cycle budget while Opera ends on the 263-line scanline boundary. Capturing ARM/CD state in the checkpoint's own callback and ending `RunFrame` on `Quartz.VdlFieldIndex` reduced the same-frame retired-instruction delta at f=60 to **8-17** and at f=120 to **24-84** on the five-title sample, with PCs matching within one instruction. The residual is below one 16-cycle batch. The confirmation panel (`test64-panel50-line-boundary/report.json`) is **50/50 hashes, 0 errors**, with a same-frame delta of **11-20** at f=60 and **23-2,223** at f=120; the first behavioral divergence moved to **11 titles at f=300** (8 count, 3 sequence). The next measurement is the CLIO timer/VBlank trace around the remaining CD cadence step. **Timer-14 trace:** on Lemmings the READ_ID-to-READ_ERROR wait (commands 50-51) is **2,169,618 cycles** in 5DO and **2,146,784** in Opera (+22,834). There are **no FIQ events** and no CD register accesses during the wait; timer 14 underflows **209 times** at roughly 10,400 cycles per period. `--clio-timers opera` makes the period about 12,400 cycles and shifts the boot timeline, so the opt-in Opera scheduler is not the fix. This narrows the residual to the timer-14 period/guest wait loop (CORE-02) rather than interrupt ordering.
-  **2026-11-08 increment (level-held XBUS FIQ):** the reference `opera_xbus_tick` asks every XBUS device for `XBP_FIQ` each clock batch; the CD plugin returns a level (`POLST`/`POLDT`/`POLMA` against the enables). 5DO raised FIQ 4 only on sector/status publication, so a command completion whose active bit had been cleared was never re-raised. `FiveDoMachine` now calls `Clio.GenerateFiq(4,0)` while `Xbus.FiqPending` in `OperaCycleBased` mode; `Xbus.FiqPending` covers every attached device and the built-in responder. The reference timer period is 12,384 cycles versus 12,396 in 5DO, and the remaining +22,834-cycle Lemmings wait is +8,694 guest instructions in a data-dependent copy/decrypt loop, not FIQ latency. **1,925 tests pass.**
-
-- [ ] **CORE-01 — ARM60 cycle-class accuracy mode**
-  **Status:** Conditional · **Priority:** P0 · **Effort:** M · **Tracks:** CORE-01
-  **Remaining:** localize the startup instruction-count offset and align the first captured field using the new instruction counter and CD cycle stamps; do not change the default until the 50-title panel shows a game-visible outcome. The 2026-11-04 40-title A/B found ARM60 17/40 matches versus FreeDO 15/40 with identical Opera captures: a two-title delta on a frame-hash metric is not sufficient evidence. Per-class costs and the `--cycle-classes` ledger are complete and regression-tested.
-  **Evidence (2026-11-07):** the harness now instruction-aligns the first PC divergence against neighboring reference frames. On the 50-title panel all **50/50** first PC divergences align with **Opera frame 59** and differ by only **-55 to -256 retired instructions**, while the same-frame delta is ~89,000 — exactly one field of instructions. The offset is therefore a startup **frame-boundary phase**, not a per-instruction cycle-model error; CORE-01 is not implicated. The FreeDO N=4 model remains far worse (3,855,498 instructions at f=60), confirming N=2. Removing the one-field phase is a boot-timing/CORE-07 task, not a cycle-class change. The 2026-11-07 frame-boundary increment resolved it: the apparent one-field offset was a harness sampling-order bug plus 5DO's rounded cycle-budget field termination, not an ARM cycle-class error. CORE-01 remains conditional and is not implicated.
-  **Done when:** the panel shows a reproducible game-visible difference; cycle counts match Opera within documented tolerances; golden hashes are unchanged or improved; no full-collection regression.
-  **Ref:** `opera_arm.c`, `opera_clock.c`.
-
-- [ ] **CORE-13 — Remaining compatibility failures**
-  **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** CORE-13
-  **Remaining:** Crash 'n Burn (Japan); any 12k/65k-frame black/static titles; BIOS-aware sweep status merge; title-specific fixes; regression tests and compatibility notes. Use the 4DO game database and its fix flags as the first source for known-bad titles.
-  **Done when:** every remaining exception has a root cause and a documented workaround, or 594/594 render; `GameCompatibilityList.md` is current; the top-100 audit is clean.
-  **Evidence (2026-11-07):** the 50-title panel is now **video-clean (50/50 frame hashes at 60/120/300)** after fixing the 24-bit VDL background and the zero-entry VDL stop. The remaining panel divergences are CD cadence only. At 3,000 frames Space Ace, Wolfenstein, Alone, and Lemmings match Opera's frame hash; Road Rash still diverges at 1,000 and 3,000. This is the first concrete CORE-13 lead from the new oracle: the video gap was a presentation/VDL bug, not a title-specific fix. The residual long-run difference tracks CD cadence and the one-field boot phase. **Correction (2026-11-07):** the one-field boot phase was a harness sampling-order bug plus 5DO's rounded cycle-budget field termination; the line-based field boundary removed it. The remaining long-run difference tracks CD cadence.
+- [ ] **CORE-13 — Matrix-driven compatibility fixes**
+  **Status:** Partial · **Priority:** P0 · **Effort:** L
+  **Remaining:** review every title that `CompatibilityComparison.md` marks `Behind`; fix or re-grade it with evidence; fix Crash 'n Burn (Japan); retry any Tier A `No video` that is a retail title; add a regression test or matrix note for each change.
+  **Done when:** the matrix has no unexplained regression; every remaining exception has a root cause and a documented workaround; Tier B is clean.
+  **Rule:** do not add speculative per-title fixes. Every fix starts from a matrix row.
   **Ref:** `References/4DO-master/FourDO/Emulation/GameSource/GameDatabase.xml`; `docs/GameCompatibilityResults.md`.
 
-- [ ] **SYS-01 — CD-DA and multi-track completion**
-  **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** SYS-01
-  **Remaining:** CD-DA read-ahead and subcode; a known-title in-emulator CD-DA capture; a 10-second DSP+CD-DA WAV; multi-track edge cases.
-  **Done when:** a known CD-DA title plays its audio; a 10-second mixed WAV contains both DSP and CD-DA; data-track titles keep identical hashes.
-  **Evidence:** `ChdDiscImage` opens audio-only CHDs, gives them a stable TOC-derived game ID, and reports `audioCd`/`trackCount`; the three local `[CD-Audio]` bonus discs are catalogued but not playable in-emulator because the BIOS still needs a data track.
-  **Ref:** `opera_cdrom.c`; `docs/Audio.md`.
+- [ ] **CORE-11/16 + FND-05 — Regression harness on the unique corpus**
+  **Status:** Partial · **Priority:** P0 · **Effort:** M
+  **Remaining:** keep the 50-title panel green; add the 378-title loadability set to the weekly run; keep the image inventory as the duplicate/region record; publish a nightly dashboard with frame/audio/CD fields; document every allowance with a date.
+  **Done when:** the nightly run has no unexplained divergence, and every allowance is documented and dated.
+  **Rule:** a frame-hash match without PC/CD/audio evidence is a smoke result, not a pass.
+  **Evidence (2026-11-08):** the audio-gated 50-title panel (`test93-panel50-audio/report.json`) captures **50/50 with 0 errors**, **50/50 frame hashes**, and **150/150 audio hashes** at 60/120/300; it leaves **39/50 phase-only** and **11 CD-only first behavioral divergences at f=300**. The same-frame retired-instruction delta is **11-20** at f=60, `-46..2,164` at f=120, and `-36,104..3,591` at f=300; **50/50 first PC/CPSR divergences are same-frame phase**. See `DifferentialHarness.md` §8.
 
-- [ ] **SYS-02 — ODE and multi-disc completion**
-  **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** SYS-02
-  **Remaining:** guest-driven ODE swap prompts; a real in-game multi-disc swap with save/state round-trip; playlist edge cases and recovery.
-  **Done when:** a known multi-disc title swaps in-game and continues; state load after swap is correct.
+### 3.2 P0 — Accuracy, time-boxed
 
-- [ ] **SYS-03 — PAL/NTSC completion**
-  **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** SYS-03
-  **Remaining:** PAL2 title evidence; automatic region/profile application; full PAL library validation; 50 Hz audio/pacing evidence; region-aware screenshots, saves, and CLI output.
-  **Done when:** PAL1/PAL2 titles render and pace correctly; NTSC behavior is unchanged; per-game region selection applies automatically.
+- [ ] **CORE-04 — CD-ROM command and timing residual**
+  **Status:** Partial · **Priority:** P0 · **Effort:** M (time-boxed)
+  **Remaining:** close the 20th Century guest read-schedule residual or document it as a guest-scheduling difference with no video/audio impact; keep the command/status/metadata transcripts green; verify CD-DA and multi-disc only on matrix titles that need them.
+  **Done when:** the 50-title panel has no video/audio divergence; every remaining CD cadence difference is documented with its first mismatch and its player-visible impact; no 594-sweep regression.
+  **Why time-boxed:** the command table, status bytes, READ_ID payload, sector-time formula, FIQ delivery, and timer period already match. The residual is guest software pacing, not a CD register-contract bug.
+  **Evidence (2026-11-08 increment 4):** the 5DO timer trace now emits the reference's FIQ/XBUS event kinds (`fiqgen`, `fiqwrite`, `xbussel`, `xbuspoll`, `xbusfiq` with source 1-5). On 20th Century both engines read the active-FIQ register **exactly 99 times** with identical masks. 5DO leaves the OS idle loop on the VBlank FIQ at **59,021,271** and issues `READ_DATA` at **59,063,402**; Opera stays idle until `READ_ID` at **70,080,576**. The periodic `READ_ID` cadence matches within **+0.21M cycles**. The residual is the guest file-system read-request schedule. **2,051 tests pass.**
+  **Ref:** `opera_cdrom.c`; `docs/ReferenceStrategy.md` §6.
 
-- [ ] **SYS-15 — Input devices, calibration, and options**
-  **Status:** Partial · **Priority:** P0 · **Effort:** L · **Tracks:** SYS-15
-  **Remaining:** per-device calibration; scripted gameplay evidence for mouse, lightgun, arcade lightgun, flightstick, and Orbatak trackball; arcade start/coin/service mapping.
-  **Done when:** a representative title works for each device; calibration and crosshair options are documented and tested.
-  **Evidence:** the 2026-11-04 increment added the hide-lightgun-crosshair option, eight PBUS ports, an active-device cap of 0-8 (`--active-devices`/Settings), and a 256-byte PBUS chain buffer.
-  **Ref:** `lr_input.c`, `opera_pbus.c`, `libretro_core_options.c`.
+- [ ] **CORE-02 / CORE-03 / CORE-06 / CORE-07 — Conditional timing evidence**
+  **Status:** Conditional · **Priority:** P1 · **Effort:** S each
+  **Remaining:** open only when a matrix regression or a panel divergence points at CLIO timers, CEL busy, SPORT/XBUS/DMA, or FIQ/IRQ ordering. Record the trace, the game-visible effect, and the fix. Otherwise leave the subsystem at its measured-parity state and cite the evidence in `DifferentialHarness.md` §8.
+  **Done when:** each item is either closed with reference evidence or promoted to P0 with a named title that changes status.
+  **Evidence:** timer 14 is 12,384 cycles in Opera and 12,396 in 5DO; the Lemmings READ_ID-to-READ_ERROR residual is guest copy/decrypt work; the XBUS CD FIQ is level-held like the reference. `CORE-01` is closed (see §3.5).
 
-- [ ] **SYS-16 — Six-player and multi-tap verification**
-  **Status:** Pending · **Priority:** P0 · **Effort:** S · **Tracks:** SYS-16
-  **Remaining:** six-player test ROM/title; hardware multi-tap trace.
-  **Done when:** six pads and multi-tap are verified on hardware or a test ROM.
-  **Evidence:** eight PBUS ports, the Opera chain for ports 7-8, a 256-byte MADAM queue, and an eight-player packet test through `FiveDoMachine` (`EightPlayerPacket_ReachesTheMadamPbusQueue`).
+- [ ] **AUD-01 — Audio output quality, reduced scope**
+  **Status:** Partial · **Priority:** P1 · **Effort:** S
+  **Remaining:** one 10-minute real-time soak on Windows and Linux with the null device and one real device; confirm 0 dropped samples/underruns; keep the existing sync-offset and device-recreation tests.
+  **Done when:** the soak is clean on both platforms and the result is recorded in `Audio.md`.
+  **Evidence:** `AudioSyncMilliseconds` applies a fixed host offset; `OpenAlAudioOutput` recreates output safely and exposes drop/underrun/latency counters; a 240-frame AOT null-device run reported 0 drops and 0 underruns.
 
-- [ ] **CORE-08 — Accuracy/performance profile coverage**
-  **Status:** Partial · **Priority:** P0 · **Effort:** S · **Tracks:** CORE-08
-  **Remaining:** profile validation on the 50-title panel and then the full collection; decide when the Accuracy profile can become the default.
-  **Done when:** every profile round-trips through CLI/Settings/state and the Accuracy profile can be enabled by default after panel + full A/B evidence.
-  **Evidence:** `bench --profile` reports the derived profile and timing modes; `selftest` validates determinism and state round-trip for every named profile; the differential harness accepts `--profile`. A 40-title, 300-frame A/B reports 17/40 matches for both `compatible` and `accuracy` with identical per-title statuses; the panel A/B remains.
+### 3.3 P1 — Release blockers (not accuracy blockers)
 
-- [ ] **AUD-01 — Audio output quality: resampler, exclusive mode, and sync offset**
-  **Status:** Partial · **Priority:** P0 · **Effort:** M · **Tracks:** AUD-01
-  **Remaining:** resampler quality options; exclusive-mode output; long-session device-change/drift validation on Windows and Linux (macOS after hardware). Audio sync offset, queue-latency reporting, OpenAL device recreation, underrun/drop counters, and documentation are complete.
-  **Done when:** audio quality/latency targets are met on Windows/Linux/macOS; device switching is safe; no crackle or drift in extended runs.
-  **Evidence:** `AudioSyncMilliseconds` (−250…250 ms) applies a fixed host offset by inserting silence or dropping leading samples and reserves ring capacity for positive offsets. `OpenAlAudioOutput` recreates output safely on device/buffer/sync changes and exposes dropped-sample/underrun/queued-frame/latency counters. AOT CLI realtime Lemmings with `--audio openal --audio-sync 40` under `ALSOFT_DRIVERS=null` reported 0 dropped samples and 0 underruns over 240 frames. See `Audio.md` §3 and `Trimming.md`.
+- [ ] **ECO-04 — Windows and Linux release validation**
+  **Status:** Partial · **Priority:** P0 for release · **Effort:** M
+  **Remaining:** Windows x64/arm64 bundle smoke; Linux x64 (Hyper-V `LinuxMint`) full suite, CLI smoke, frontend `--smoke-test`, and a 3,000-frame disc boot; macOS x64/arm64 build validation with GPU presentation documented as best-effort.
+  **Done when:** Windows and Linux pass the release gate; macOS builds and is documented; the six bundles are published with `SHA256SUMS.txt`.
+  **Note:** this blocks the release gate, not the compatibility claim.
 
-### 3.3 Release blockers (not accuracy blockers)
+- [ ] **SYS-03 / SYS-15 / SYS-01 / SYS-02 — Conditional disc and input coverage**
+  **Status:** Conditional · **Priority:** P1 · **Effort:** S each
+  **Remaining:** run only the matrix titles that need PAL, lightgun/arcade/flightstick/trackball input, CD-DA, or multi-disc. Record the title, BIOS, input script, and result. Do not build a speculative full-library program.
+  **Done when:** every matrix title with that requirement is verified or documented as a known limitation.
 
-- [ ] **ECO-04 — Linux/macOS platform validation and packaging**
-  **Status:** Partial · **Priority:** P1 for release · **Effort:** L · **Tracks:** ECO-04
-  **Remaining:** validate OpenGL/GLES on real Linux and macOS GPUs plus llvmpipe fallback; macOS runtime validation; macOS gamepad backend; Flatpak/AppImage packaging and desktop integration; platform smoke evidence.
-  **Done when:** full suite + frontend smoke pass on Linux and macOS hardware; Flatpak/AppImage installs and runs; gamepad works on macOS.
-  **Note:** this blocks the six-platform release gate, not the "better than 4DO/Opera" accuracy claim. 4DO is Windows-only; Opera's platform coverage is not the comparison that matters.
+- [ ] **ENG-01/09 — Minimal release CI**
+  **Status:** Partial · **Priority:** P1 · **Effort:** S
+  **Remaining:** keep `dotnet build`, `dotnet test`, `dotnet format --verify-no-changes`, and `jb inspectcode --severity=WARNING` green on Windows; run the docs JSON `--check`; publish the six bundles and checksums. SBOM and reproducible-build work are release-note items, not blockers.
+  **Done when:** every release candidate passes the four commands and publishes the bundles.
 
-- [ ] **SYS-05 — Embedded open-source boot ROM**
-  **Status:** Blocked · **Priority:** P2 · **Effort:** M · **Tracks:** SYS-05
-  **Remaining:** legal review of the **GPL-2.0-only** Opera Boot ROM (`trapexit/opera-boot`, embedded via `opera_boot.h`); decide whether to ship it as an optional separate component or not at all. It is a homebrew boot ROM, not a retail BIOS: retail titles still need a user-supplied BIOS. No engineering blocker.
-  **Done when:** legal sign-off is recorded and homebrew/demos boot without a user BIOS, or the item is closed as not distributable.
-  **Ref:** `opera_boot.h`, `opera_bios.c`.
+### 3.4 Deferred and cut (not release blockers)
 
-### 3.4 P1 — Evidence and robustness
+These items are explicitly **not** part of this plan. They stay in the repository's history and stable-ID index; they do not block Gates A-D. Reopen only under the stated condition.
 
-These items strengthen the claim after the Phase 0-3 work is green. They are not a reason to delay `TEST-07` or `CORE-04`.
+| ID or area | Decision | Why | Reopen if |
+|---|---|---|---|
+| CORE-01 ARM60 cycle-class | **Closed** | The 50-title panel proved the startup difference is frame-boundary phase, not a cycle model; no game-visible effect. | A title's frame hash changes with the ARM timing model and no other cause explains it. |
+| CORE-10 hardware test ROM suite | **Dropped** | The differential oracle, 2,051 unit tests, and fuzz targets already catch the regressions a ROM suite would. | A hardware-only defect appears that the oracle cannot reproduce. |
+| AUD-04 audio golden corpus | **Folded** into TEST-07 | The cumulative audio hash at aligned sample counts is the regression gate. | A waveform defect passes the hash gate. |
+| VID-13 video test suite | **Folded** into TEST-07 + the 12-title visual matrix | Frame hashes plus the curated visual matrix cover the same claim. | A color/presenter defect passes both. |
+| TEST-01 save-state migration matrix | **Reduced** to current-version round-trip | `selftest` already round-trips every profile; old state versions are not a supported product surface. | A user reports a state that the loader mishandles. |
+| TEST-04 GPU/platform CI matrix | **Reduced** to one Windows + one Linux smoke per release | A full GL/GLES/Vulkan/D3D11 matrix costs more than the compatibility claim needs. | A platform-specific presenter regression escapes the smoke. |
+| TEST-05 performance regression matrix | **Reduced** to `bench --gate` in CI | The measured frame budget is stable; a trend dashboard is product work. | A release shows a >10% regression on a real title. |
+| SYS-05 embedded boot ROM | **Closed** | GPL-2.0-only licensing risk; retail titles still need a user BIOS, so it does not change the compatibility claim. | Legal sign-off and a distributable ROM exist. |
+| SYS-16 six-player/multi-tap | **Deferred** | No matrix title requires it; hardware is unavailable. | A matrix title requires six players. |
+| PERF-01/04/05/06/07, ENG-02 | **Deferred** | No measured gate failure; performance is already inside the 60 fps budget on the reference machine. | A measured Tier A/B budget miss or a real-title stall. |
+| UX-03/05/06/07/20/21/22/24 | **Deferred** | Product work; does not change compatibility. | Gate B is green and a product roadmap is opened. |
+| VID-01/02/03/07/08/11/16/17 | **Deferred** | Research/presentation work; 4DO and Phoenix do not require it. | Gate B is green and a visual-quality program is opened. |
+| AUD-03, TEST-02, ECO-09 | **Deferred** | Debugger/UI/CD-player work; not a release blocker. | Post-compatibility roadmap. |
+| Full 594/1,371-image differential | **Replaced** by the 414-title corpus | Regional copies do not add compatibility signal; they add hours and noise. | A region-specific defect is suspected. |
+| Top-100 audit | **Replaced** by Tier A 378 + Tier B ~100 + Tier C 50 | The corpus has 378 games, not 594; Tier B already covers every peer-flagged title. | The matrix shows a blind spot outside Tier B. |
 
-- [ ] **CORE-10 — Hardware test ROM suite**
-  **Status:** Pending · **Priority:** P1 · **Effort:** L · **Tracks:** CORE-10
-  **Remaining:** test ROMs for CPU, CLIO, MADAM, DSP, SPORT, VDLP, CD, input; golden outputs; CI integration; documentation.
-  **Done when:** the suite runs in CI and catches timing/behavior regressions without a copyrighted BIOS.
-
-- [ ] **AUD-04 — Audio golden tests vs Opera**
-  **Status:** Pending · **Priority:** P1 · **Effort:** M · **Tracks:** AUD-04
-  **Remaining:** WAV corpus; spectral/RMS/envelope comparison; DSP mode changes; CD-DA mixes; hardware reference captures.
-  **Done when:** the corpus runs in CI with documented tolerances and catches regressions. Requires the fixed seed from `TEST-07`.
-
-- [ ] **VID-13 — Video test suite and color accuracy**
-  **Status:** Pending · **Priority:** P1 · **Effort:** M · **Tracks:** VID-13
-  **Remaining:** test patterns; RGB555/CLUT/NTSC behavior; CPU/GPU parity; high-res comparison; color delta report.
-  **Done when:** every presenter/filter passes the suite within documented color tolerances.
-
-- [ ] **TEST-01 — Save-state migration matrix**
-  **Status:** Pending · **Priority:** P1 · **Effort:** M
-  **Remaining:** test every version bump; v1-v3 states; option/region/disc-hash changes; warn/reject policies; 4DO/Opera interop once save-state interoperability lands.
-  **Done when:** every supported state version loads or fails with a typed, tested error.
-
-- [ ] **ENG-01 + ENG-09 — CI quality gates**
-  **Status:** Pending · **Priority:** P1 · **Effort:** M · **Tracks:** ENG-01, ENG-09
-  **Remaining:** full OS/arch matrix; coverage gate; static analysis; benchmark regression; SBOM; reproducible builds; six-bundle smoke; artifact checksums.
-  **Done when:** every release candidate passes all gates and publishes signed, reproducible evidence.
-
-- [ ] **TEST-04 — GPU and platform CI matrix**
-  **Status:** Pending · **Priority:** P1 · **Effort:** L
-  **Remaining:** GL/GLES/Vulkan/D3D11 coverage; Windows/Linux/macOS; x64/arm64; software fallback; GPU probe artifacts.
-  **Done when:** each backend is exercised in CI or a documented hardware lab, with parity artifacts.
-
-- [ ] **TEST-05 — Performance regression matrix**
-  **Status:** Pending · **Priority:** P1 · **Effort:** M
-  **Remaining:** Tier A/B and arm64 baselines; filters; high-res; interpreter and opt-in JIT; relative >10% gate; published trend.
-  **Done when:** regressions fail the gate and the trend is visible to maintainers.
-
-### 3.5 Deferred — performance and product
-
-Deferred until Gate 3 is green. These do not make the emulator more accurate, and most of them do not matter to a player choosing between 5DO, 4DO, and Opera. Most are Partial or Pending; the full status and evidence stay in the canonical ID history. Gate 5 in §5 pulls the specific performance items it needs after compatibility is proven.
-
-**Performance (only if a measured gate fails):**
-
-- [ ] **PERF-07 — Tier B 1080p60 budgets and profiling** · P1 · M
-  **Remaining:** profile integrated GPUs and older CPUs; 1080p60 per-filter budgets; p99 and allocation targets; reference-machine matrix. **Done when:** Tier B sustains 1080p60 with p99 under budget.
-- [ ] **PERF-01 — Zero-allocation steady state on every real path** · P1 · M
-  **Remaining:** the ~2.3 KB/frame Avalonia/compositor residual; CHD decode allocations in the core stage; uploads, readback, audio, gallery/OSD. **Done when:** 0 managed bytes/frame after warm-up; CI gate.
-- [ ] **PERF-04 — Host disc streaming and CHD decompression** · P2 · M
-  **Remaining:** allocation-free CHD/ISO prefetch under continuous streaming; decompression buffers; cache sizing; read-ahead tuning. **Done when:** no steady-state allocation or presentation stall; emulated CD timing unchanged.
-- [ ] **PERF-05 — High-resolution CEL performance** · P2 · M
-  **Remaining:** the CEL rasterizer still writes four times the pixels; per-title fallback and a 60 fps Tier B measurement. **Done when:** high-res meets its frame-time budget and degrades gracefully.
-- [ ] **PERF-06 — GLES 3.1/ANGLE renderer performance** · P2 · M
-  **Remaining:** GLES 3.1 feature path; real-hardware ANGLE/Tier B percentile runs; state-change reduction; pipeline-cache measurement. **Done when:** GLES 3.1/ANGLE match desktop GL and meet 1080p60 budgets.
-- [ ] **ENG-02 — Interpreter hot-path optimization** · P1 · L
-  **Remaining:** the real-title boot path is dominated by machine events, DSP, and memory-mapped I/O, so the measured Lemmings gain is inside noise; a decoded block cache, a batched interpreter loop that preserves the per-instruction CEL FSM check, and further single-data-transfer specialization remain. **Done when:** a documented speedup with no accuracy or state change. The 2026-11-05 increment measured synthetic 1.58→1.33 ms/frame and Lemmings 1.43→1.13 ms/frame.
-
-**Product (after compatibility is proven):**
-
-- [ ] **UX-03 — Netplay** · P2 · XL — lobby/direct connect; lockstep or rollback; NAT guidance; desync detection; state handoff. **Done when:** two clients complete a 10-minute session with no unexplained desync.
-- [ ] **UX-05 — Achievements** · P2 · L — provider integration; offline cache; unlock UI; per-game progress; privacy. **Done when:** unlocks persist and offline behavior is documented.
-- [ ] **UX-06 — TAS tooling completion** · P2 · L — full TAS UI; input timeline; multiplayer display; lag detection; movie library; branch comparison. **Done when:** record/edit/branch/verify/share works from desktop and CLI.
-- [ ] **UX-07 — Controller profiles and input polish** · P2 · M — named profiles; deadzones/curves; hot-plug prompts; import/export; per-game profiles; conflict detection. **Done when:** profiles round-trip and survive device changes.
-- [ ] **UX-20 + FND-06 — Per-game settings UI completion** · P2 · M — cheat/shader-chain fields; inherit/reset; search/filter; live application; localization. **Done when:** every shipped option is editable per game with inherit/reset.
-- [ ] **UX-21/22 — Debugger and profiler suite** · P2 · L — CPU/memory/CEL debugger; breakpoints/watchpoints; step/run-to; trace viewer; frame profiler. **Done when:** a developer can debug a stuck title without the CLI.
-- [ ] **UX-24 — Lua scripting and automation** · P3 · L — sandboxed host; memory/input/state/screenshot APIs; per-game scripts; CLI hooks. **Done when:** example scripts automate a test run and a gameplay sequence.
-- [ ] **ECO-09 — 3DO CD player / Video CD** · P3 · M — audio-CD player UI; track navigation; VCD/MPEG research. **Done when:** a compatible disc plays with documented limitations.
-- [ ] **VID-07 — Shader preset system** · P2 · L — `.slang`/`.glslp` presets; hot reload; per-game presets; parameter UI. **Done when:** popular presets load and fall back safely.
-- [ ] **VID-11 + BAK-19 — Vulkan surfaces on Linux/macOS** · P2 · L — X11/Wayland; macOS Metal/MoltenVK or compositor embedding; no CPU readback. **Done when:** native presentation with parity.
-- [ ] **VID-16 — VDLP output pixel format selection** · P3 · S — 0RGB1555/RGB565/XRGB8888; host-only conversion. **Done when:** the option changes only host conversion and is covered by tests.
-- [ ] **VID-17 — Void-area patterns** · P3 · S — 4DO-style void patterns; per-game presets; preview. **Done when:** patterns match across presenters and screenshots.
-- [ ] **AUD-03 — DSP debugger** · P3 · M — registers/memory; instruction trace; breakpoints; step/run-to; integration with the debugger suite. **Done when:** a DSP program can be debugged interactively.
-- [ ] **TEST-02 + BAK-09 — ViewModel and UI tests** · P2 · M — settings, library, dialogs, hotkeys, gallery, playlist, profiles; headless UI smoke; accessibility. **Done when:** UI regressions are caught without manual clicking.
-
-### 3.6 Research — only after Gate 3
-
-- [ ] **VID-01 + BAK-11 — True 640x480/480i internal rendering** · P1 · XL
-  **Remaining:** measure the current line-doubled mode; prototype true vertical 640x480; scale CEL/VDLP/clipping; independent 480-line output; per-title fallback. **Done when:** true vertical detail is visible on a 640x480 title and a 3D title, 60 fps on Tier A, default remains 320x240 + filter.
-  **Note:** 4DO and Opera do not do this; it is not needed to win the comparison. `docs/HighResolutionCelResearch.md`.
-- [ ] **VID-02 — 2x/4x supersampling** · P2 · L — prototype; deterministic downsample; geometry/texture comparison; performance budget. **Done when:** edges improve without changing guest VRAM semantics, with a go/no-go.
-- [ ] **VID-03 — GPU CEL compositing** · P3 · XL — parity prototype for packed/literal CELs; VRAM semantics; fallback. **Done when:** the prototype matches the software renderer, with a go/no-go.
-- [ ] **VID-08 — NTSC composite/S-Video/RF, HDR, and gamma** · P2 · L — signal models; CRT Royale-class presets; HDR; gamma/color controls. **Done when:** validated against reference captures and performance budgets.
-
-### 3.7 Closed decisions (not backlog)
+### 3.5 Closed decisions (not backlog)
 
 These are recorded decisions, not completed work. Do not reopen them without new measurement.
 
 | ID | Decision | Evidence | Revisit only if |
 |---|---|---|---|
-| PERF-08 | **Stop investment** in the managed ARM JIT. Keep `--cpu-backend jit` as an experimental, opt-in backend; the interpreter remains the default and the accuracy oracle. | Three passes. Best result: Lemmings **1.23-1.37 ms/frame** vs **1.00-1.02** for the interpreter (~1.25x slower), despite a synthetic win (0.89-0.99 vs 1.20-1.30). ~24% of instructions still fall back; average block ~2.5 instructions. Hashes/instructions match. `Performance.md` §8.4. | A measured 1.5x end-to-end win on a real title, or a platform where the interpreter cannot hit 60 fps. |
-| CORE-05 | **Do not implement** the threaded DSP. The handoff and validation cost exceeds the work it would offload. | DSP share on Lemmings: 112.8 ms / 800 frames = **0.141 ms/frame (~14%)**; ~0.19 µs of DSP work per sample. A per-sample worker is slower; a speculative pipeline must validate every ARM write to FIFO/DSP state and replay on change. `Performance.md` §8.5. | A title where DSP exceeds ~30% of frame time, or a bit-identical speculative pipeline measures a real win. |
+| PERF-08 | **Stop investment** in the managed ARM JIT. Keep `--cpu-backend jit` as an experimental, opt-in backend; the interpreter remains the default and the accuracy oracle. | Three passes. Best result: Lemmings **1.23-1.37 ms/frame** vs **1.00-1.02** for the interpreter (~1.25x slower), despite a synthetic win (0.89-0.99 vs 1.20-1.30). ~24% of instructions still fall back. Hashes/instructions match. `Performance.md` §8.4. | A measured 1.5x end-to-end win on a real title, or a platform where the interpreter cannot hit 60 fps. |
+| CORE-05 | **Do not implement** the threaded DSP. The handoff and validation cost exceeds the work it would offload. | DSP share on Lemmings: **0.141 ms/frame (~14%)**. A per-sample worker is slower; a speculative pipeline must validate every ARM write and replay on change. `Performance.md` §8.5. | A title where DSP exceeds ~30% of frame time, or a bit-identical speculative pipeline measures a real win. |
+| CORE-01 | **Close** the ARM60 cycle-class mode as a compatibility item. Keep the existing `--arm-timing arm60` option as an experimental switch. | The frame-boundary phase fix removed the apparent one-field offset; the panel shows same-frame phase, not a cycle-model gap. | A title changes status with `--arm-timing arm60` and no other cause explains it. |
 
 ---
 
@@ -364,26 +230,25 @@ This is the phased order. The IDs are the canonical entries in §3.
 
 | Phase | Window | IDs | Exit gate |
 |---|---|---|---|
-| **0 — Truth** | Weeks 1-3 | TEST-07 (done), CORE-11/16 | Two byte-identical reference captures; PC/CD/audio fields populated; 50-title first-divergence report. |
-| **1 — Disc** | Weeks 4-13 | CORE-04, SYS-01, SYS-02 | CD transcripts match or have documented divergences; CD-DA and multi-disc pass; no 594 regression. |
-| **2 — Timing** | Weeks 14-21 | CORE-03, CORE-02, CORE-06, CORE-07; CORE-01 only if the panel proves it | CEL/CLIO/SPORT/FIQ traces within tolerance; timing-sensitive titles fixed. |
-| **3 — Proof** | Weeks 22-33 | TEST-06, CORE-13, SYS-03, SYS-15, SYS-16, CORE-08, AUD-01 | Top-100 audit: 100% reach gameplay, ≥95% Good/Playable; 4DO/Opera head-to-head; zero unexplained regressions. |
-| **4 — Release** | Weeks 34-40 | ECO-04, §3.4 evidence items | Six-platform release gate; audio/video golden suites; CI matrix; 24h soak. |
-| **5 — Product/research** | After Gate 3 | §3.5-3.6 | Separate roadmap; no accuracy trade-off. |
+| **0 — Corpus** | Done | TEST-08 | 1,371 images → 414 titles; 378-game test set; 4DO/Phoenix comparison committed. |
+| **1 — Playability** | Weeks 1-6 | TEST-06, CORE-13, CORE-11/16 | All 378 classified; zero unexplained regressions; top 50 ≥95% Good/Playable. |
+| **2 — Accuracy** | Weeks 7-8 | CORE-04; CORE-02/03/06/07 conditional; AUD-01 | 50-title panel clean; every CD/timing residual documented with player-visible impact. |
+| **3 — Release** | Weeks 9-10 | ECO-04, ENG-01/09; SYS-01/02/03/15 conditional | Windows + Linux passed; six bundles published; docs current. |
 
-**If you only do three things:** `CORE-04`, `TEST-06`, and `CORE-11/16`. The oracle (`TEST-07`) is now the foundation; those three produce the biggest behavioral fix, the playability proof, and the full-collection regression signal.
+**If you only do three things:** `TEST-06`, `CORE-13`, and `CORE-11/16`. They produce the playability proof, the fixes that proof drives, and the regression signal that keeps both honest.
 
-**Rule:** do not start Phase 5 while any Phase 0-3 P0 item is open. The repo's history shows product and performance work landing while `CORE-01`-`CORE-04` stayed partial; that is the pattern this rewrite exists to break.
+**Rule:** do not start Phase 3 while any Phase 1 P0 item is open. Do not start §3.4 work at all until Gate B is green.
 
 ### 4.1 Effort reality
 
-By the plan's own S/M/L/XL scale, the **full backlog is roughly 800-850 developer-days** (~3.4 years solo). The focused path through Gate 3 is roughly **240 developer-days** (~12 months at a traditional solo pace), but the critical path is validation, not typing:
+By the plan's own S/M/L/XL scale, the **blocking path through Gate D is roughly 60-80 developer-days**, down from 240-850 in the previous plan. The savings come from the unique corpus, the folded evidence items, and the explicit cut list — not from lowering the bar.
 
-- OperaCore is real-time paced: a 3,000-frame capture is ~50 s per title, so a full 594-title pass is ~8-9 hours. The 50-title panel is ~1 hour per pass.
-- The top-100 audit is 100 × 10-minute scripted runs plus visual review; budget 3-5 weeks even with automation.
-- If you are driving implementation with AI agents, the coding half compresses; the capture, audit, hardware, and legal half does not.
+- A 378-title loadability pass is ~1 hour at the current CLI speed.
+- A Tier B 10-minute scripted pass is ~2-3 hours of emulated runtime for ~100 titles, plus visual review.
+- Tier C is 50 titles × review; budget 1-2 weeks even with automation.
+- The capture, audit, and hardware half does not compress with AI assistance.
 
-A realistic wall-clock target for Gate 3 is **5-7 months at the project's recent AI-assisted velocity** (the 240 developer-days above are the traditional-effort estimate), with the top-100 audit as the bottleneck. The full plan remains a multi-year program; that is acceptable only if it is treated as post-compatibility product work.
+A realistic wall-clock target for Gate D is **8-12 weeks** at the project's recent AI-assisted velocity, with Tier C review as the bottleneck. The deferred list is intentionally large; it is the post-compatibility product roadmap, not this plan.
 
 ---
 
@@ -393,17 +258,12 @@ These are the release/quality gates for the goal, not a second backlog. They ref
 
 | Gate | Required evidence | Required IDs |
 |---|---|---|
-| **0. Oracle** | Deterministic reference captures; PC/CPSR/state/CD/audio fields on both sides; first-divergence report for 50 titles | TEST-07, CORE-11/16 |
-| **1. Disc** | Command transcripts match or have documented divergences; CD-DA, multi-track, multi-disc, read-ahead; no 594 regression | CORE-04, SYS-01, SYS-02 |
-| **2. Timing** | CEL/CLIO/SPORT/FIQ traces within tolerance; timing-sensitive titles fixed | CORE-02, CORE-03, CORE-06, CORE-07; CORE-01 conditional |
-| **3. Compatibility** | Top 100: 100% reach gameplay, ≥95% Good/Playable; 4DO/Opera head-to-head; every exception documented | TEST-06, CORE-13, SYS-03, SYS-15, SYS-16, CORE-08 |
-| **4. Audio** | No crackle/drift in extended runs; CD-DA mix; audio golden corpus | AUD-01, AUD-04 |
-| **5. Performance** | 4K60 Tier A; 1080p60 Tier B; p99 and allocation budgets | PERF-07, PERF-01, TEST-05 |
-| **6. Platforms** | Windows/Linux/macOS x64/arm64 validated; installers/signing | ECO-04 |
-| **7. Trust** | 2,000+ tests; nightly differential; coverage/benchmark gates; fuzzing; SBOM; 24h soak | ENG-01/09, CORE-10, TEST-01, TEST-04, TEST-05, VID-13 |
-| **8. Product** | Netplay, achievements, TAS, shaders, debugger, localization | §3.5 (deferred) |
+| **A. Corpus** | Unique-corpus inventory and canonical test set; 4DO and Phoenix matching; summary counts and unmatched list | TEST-08 |
+| **B. Compatibility** | All 378 games classified; **zero unexplained regressions**; top 50 **100% reach gameplay**, **≥95% Good/Playable**; every exception documented | TEST-06, CORE-13, CORE-11/16; SYS-01/02/03/15 conditional |
+| **C. Accuracy** | 50-title panel: no video or audio divergence; 11 CD-cadence divergences documented; no unexplained PC/CPSR state divergence; audio soak clean | CORE-04, CORE-11/16, AUD-01; CORE-02/03/06/07 conditional |
+| **D. Release** | Build/test/format/InspectCode clean; Windows and Linux smoke; six bundles and `SHA256SUMS.txt`; docs current | ECO-04, ENG-01/09 |
 
-**Release rule:** Gates 0-7 must be green. Gate 8 is not a release blocker for the compatibility claim, and must not delay it.
+**Release rule:** Gates A-D must be green. There is no Gate 5-8. Performance, platforms beyond Windows/Linux, product, and research are **not** release blockers for the compatibility claim; they are post-compatibility roadmap items.
 
 ---
 
@@ -432,7 +292,7 @@ These are the release/quality gates for the goal, not a second backlog. They ref
 4. **Preserve determinism.** No wall clock, unordered iteration, or environment-dependent seeds in emulated state.
 5. **Keep the core single-threaded by default.** Threaded work must be opt-in and bit-identical; `CORE-05` is closed.
 6. **Do not anchor to Opera's bugs.** Opera is a reference, not ground truth. If the hardware documentation is clear, follow the hardware and record why.
-7. **Do not ship copyrighted BIOS/game content.** Embedded boot ROM work needs legal review; `SYS-05` is blocked until then.
+7. **Do not ship copyrighted BIOS/game content.** Embedded boot ROM work is closed (`SYS-05`); retail titles still need a user-supplied BIOS.
 8. **Document intentional divergence** in `docs/PortingNotes.md` and `docs/Compatibility.md`.
 
 ---
@@ -450,8 +310,13 @@ dotnet format 5DO.sln --verify-no-changes --no-restore
 # Static analysis
 jb inspectcode 5DO.sln --output=inspectcode.sarif --format=Sarif --sEverity=WARNING --no-build
 
-# Compatibility sweep
+# Unique corpus inventory and 3-way comparison (TEST-08)
+python tools/corpus-inventory.py --jobs 8 --out artifacts/corpus/inventory.json
+python tools/generate-compat-comparison.py --inventory artifacts/corpus/inventory.json --sweep artifacts/compat-full/summary-merged.csv --sweep artifacts/compat-unique/summary.csv --reference docs/GameCompatibilityList.md
+
+# Compatibility sweep (full images for loadability; unique test set for the matrix)
 pwsh -NoProfile -File tools/compat-sweep.ps1 -Roots "J:\Panasonic 3DO","G:\MAME\MAME Software List CHDs\3do" -Frames 3000 -Resume
+pwsh -NoProfile -File tools/compat-sweep.ps1 -FileList artifacts/corpus/unique-testset.txt -Frames 3000 -Resume -OutDir artifacts/compat-unique
 
 # Differential smoke and showcase (current oracle)
 dotnet run --project tools/FiveDo.DiffHarness -c Release -- --manifest benchmarks/diff/smoke.json
@@ -495,7 +360,7 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test --f
 7. **No default timing change without panel evidence.** A 40-title, 300-frame sample is a smoke test, not a gate.
 8. **Keep evidence current.** Update `TestCorpus.md`, `Compatibility.md`, `PortingNotes.md`, and `KnownIssues.md` when behavior changes.
 9. **Keep the plan readable.** Keep §§1-8 lean; the completed log is append-only history and the appendices are reference material. Put long evidence in the linked docs; keep the decision and the number here.
-10. **Record closures.** A "won't do" decision needs a measurement and a revisit condition, like §3.7.
+10. **Record closures.** A "won't do" decision needs a measurement and a revisit condition, like §3.5.
 11. **Refresh the snapshot monthly** or after every release: version, test count, compatibility counts, performance numbers, and platform validation status.
 12. **Keep the cross-document anchors stable.** `#2-current-state`, `#3-missing-features-canonical-backlog`, `#4-suggested-execution-order`, `#7-verification-commands`, and `#9-completed-log` are linked from `NextSession.md`.
 
@@ -504,6 +369,8 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test --f
 ## 9. Completed log
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
+
+- **2026-11-08 - TEST-08 unique-corpus inventory and 5DO/4DO/Phoenix comparison.** Added `tools/corpus-inventory.py`, which fingerprints every local image with the 5DO `gameId` (MD5 of the first two 2048-byte sectors) and reads the database metadata, and `tools/generate-compat-comparison.py`, which collapses identical images, groups regional revisions, chooses a canonical disc, parses both saved compatibility lists, and writes the comparison. On the current `J:`/`G:` collection the inventory finds **1,371 images**, **653 distinct game IDs**, and **414 unique titles**, including a **378-title game test set**; **232 titles match 4DO** and **246 match Phoenix** (194 both). A 44-disc gap-fill pass with `-AllowUnsigned` classified the remaining titles: **40 rendered**, **4 no video** (all secondary media/homebrew), so **0 titles are untested**. The matrix finds **0 loadability regressions**, **2 titles where 5DO is ahead of 4DO** (Orbatak and Shootout at Old Tucson), **8 `Behind` rows vs 4DO**, and **10 vs Phoenix** (all manual `Playable` vs peer `Good`, not failures). `docs/CompatibilityComparison.md`, `docs/data/unique-corpus.csv`, and `docs/data/compatibility-comparison.json` are committed. `tools/compat-sweep.ps1` gained `-FileList` and `-AllowUnsigned` for the unique test set and homebrew images. **2,051 tests pass**; build and format are clean.
 
 - **2026-11-08 - CORE-04/CORE-07 guest wake-source parity and 20th Century read schedule.** The 5DO `--clio-timer-trace` now emits the reference debug core's FIQ/XBUS events: `event=fiqgen` (CD bit-4 edge only), `event=fiqwrite` for `0x40`-`0x6c`, `event=xbussel`/`event=xbuspoll`, and `event=xbusfiq` with the reference source codes (1 tick, 2 poll tick, 3 built-in command, 4 device command/poll, 5 built-in poll); two new `ClioTests` and an `XbusTests` tick-source test cover the names and the edge rule. The probe (`artifacts/diff/probe-20th-wake`, 20th Century, 290 frames) shows both engines read the active-FIQ register **exactly 99 times** during the 57.8M-59.0M wait with identical masks (38x `00000001`, 33x `80000001`, 23x `80000801`, 5x `80000003`). The guest is in the Portfolio OS idle loop at `0x205f4..0x20600`; 5DO leaves it on the VBlank FIQ at **59,021,271** and issues `READ_DATA` at **59,063,402**, while Opera stays idle until its `READ_ID` at **70,080,576**. On 900-frame captures (`artifacts/diff/probe-20th-wake-900`) the periodic `READ_ID` cadence then matches (Opera 70.08M/82.59M/95.11M/107.62M/120.13M/132.64M; 5DO 70.29M/82.80M/95.31M/107.83M/120.34M/132.85M, **+0.21M phase**) and the divergence is 5DO's `READ_DATA` bursts between polls (59.06M/59.12M/61.56M/64.07M/66.57M/69.07M). The `READ_ID` payload is identical (`83 00 10 00 01 00 00 00 00 00 00 e3`). FIQ delivery, masks, timer scheduling, SPORT, the command table, status bytes, and the ID payload are therefore not the residual; the guest file-system read-request schedule is. The next measurement is the FS read request and the CD task wake queue. **2,051 tests pass**; build and format are clean.
 
@@ -579,16 +446,16 @@ This is a crosswalk, not a second backlog. "Canonical item" is the only place th
 
 | Opera feature/option | 5DO status | Canonical item |
 |---|---|---|
-| BIOS (rom1), including embedded Opera Boot | Partial (retail BIOS); embedded boot blocked on licensing | SYS-05 |
+| BIOS (rom1), including embedded Opera Boot | Partial (retail BIOS); embedded boot closed as not distributable | SYS-05 (closed) |
 | Font/Kanji ROM (rom2) | Shipped | — |
 | CPU overclock 0.5×-4× | Shipped (experimental; not seeded into profiles) | SYS-08 (done) |
 | Memory capacity 2/4/8/14/15 MB DRAM, 1/2 MB VRAM | Shipped | SYS-07 (done) |
 | Random-number seed | Shipped | — |
 | CD speed unbounded/1×-32× | Shipped | — |
 | Region NTSC/PAL1/PAL2 | Partial | SYS-03 |
-| VDLP pixel format 0RGB1555/RGB565/XRGB8888 | Missing | VID-16 |
+| VDLP pixel format 0RGB1555/RGB565/XRGB8888 | Deferred | VID-16 (deferred) |
 | VDLP bypass CLUT | Shipped | — |
-| HiRes CEL rendering | Partial (line-doubled) | VID-01 |
+| HiRes CEL rendering | Partial (line-doubled); true 640x480 deferred | VID-01 (deferred) |
 | MADAM matrix hardware/software | Shipped | — |
 | OperaOS SWI HLE | Shipped (opt-in) | SYS-12 (done) |
 | NVRAM storage per-game/shared | Shipped | — |
@@ -597,12 +464,12 @@ This is a crosswalk, not a second backlog. "Canonical item" is the only place th
 | Hide lightgun crosshairs | Shipped | SYS-15 |
 | Debug output (KPRINT) | Shipped | — |
 | Joypad/flightstick/mouse/lightgun/arcade lightgun/trackball | Partial | SYS-15 |
-| Up to eight input ports | Partial (ports 7-8 chain; six-player verification) | SYS-15, SYS-16 |
+| Up to eight input ports | Shipped; six-player verification deferred | SYS-15 (SYS-16 deferred) |
 | Cycle-based CD timing, read-ahead, DIPIR, tagged status, chunks, subcode | Partial | CORE-04 |
 | CD-DA/Red Book, ODE, multi-track TOC | Partial | SYS-01, SYS-02 |
-| ARM N=2 cycle model | Conditional | CORE-01 |
-| CEL busy pacing | Partial | CORE-03 |
-| Per-timer CLIO scheduling | Partial | CORE-02 |
+| ARM N=2 cycle model | Experimental option; closed as a compatibility item | CORE-01 (closed) |
+| CEL busy pacing | Measured parity; conditional | CORE-03 (conditional) |
+| Per-timer CLIO scheduling | Measured parity; conditional | CORE-02 (conditional) |
 | Threaded DSP | Closed — not pursuing | CORE-05 |
 | Deterministic PRNG | Shipped | — |
 | Versioned state chunks | Shipped | — |
@@ -646,7 +513,11 @@ This is a crosswalk, not a second backlog. "Canonical item" is the only place th
 | MOON-09 | PERF-07, ENG-02, PERF-08 |
 | MOON-10 | SYS-17, SYS-18, ECO-10 + ENG-07, ECO-11, UX-09 |
 
-**Priority changes in the 2026-11-06 rewrite (traceability):**
+**Priority changes in the 2026-11-06 rewrite (historical traceability):**
+
+> This table records the 2026-11-06 rewrite. The 2026-11-08 feasibility revision
+> supersedes it: `SYS-05` is closed, `CORE-01` is closed, and `TEST-06` now starts
+> with the unique corpus (Tier A complete) rather than a 594-disc audit.
 
 | ID | Before | After | Reason |
 |---|---|---|---|
@@ -666,7 +537,8 @@ This is a crosswalk, not a second backlog. "Canonical item" is the only place th
 
 - [Status](Status.md) — short current answer.
 - [Compatibility](Compatibility.md) — supported set and platform evidence.
-- [Game compatibility results](GameCompatibilityResults.md) — per-disc sweep table.
+- [Game compatibility results](GameCompatibilityResults.md) - per-disc sweep table.
+- [5DO vs 4DO vs Phoenix](CompatibilityComparison.md) - unique-title comparison.
 - [Known issues](KnownIssues.md) — current limitations.
 - [Performance](Performance.md) — budgets and measurements.
 - [Test strategy](TestStrategy.md) and [Test corpus](TestCorpus.md) — test evidence.
