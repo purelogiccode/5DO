@@ -10,19 +10,26 @@
     <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="12">
         <Border Grid.Row="0" Padding="10" Background="#1A1A1A" CornerRadius="4">
             <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto">
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Disc image" Opacity="0.7" />
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Disc image" Opacity="0.7"
+                           ToolTip.Tip="Path to the mounted ISO, BIN, CUE, or CHD image." />
                 <TextBlock x:Name="SourceText" Grid.Row="0" Grid.Column="1"
                            TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
                            ToolTip.Tip="Path to the mounted ISO, BIN, CUE, or CHD image." />
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume" Opacity="0.7" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume" Opacity="0.7"
+                           ToolTip.Tip="Volume label and comment from the Opera filesystem header." />
                 <TextBlock x:Name="VolumeText" Grid.Row="1" Grid.Column="1"
-                           TextWrapping="Wrap" />
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Game ID" Opacity="0.7" />
+                           TextWrapping="Wrap"
+                           ToolTip.Tip="Volume label and comment from the Opera filesystem header." />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Game ID" Opacity="0.7"
+                           ToolTip.Tip="Numeric game ID and volume checksum used for database lookup." />
                 <TextBlock x:Name="GameIdText" Grid.Row="2" Grid.Column="1"
-                           TextWrapping="Wrap" />
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Contents" Opacity="0.7" />
+                           TextWrapping="Wrap"
+                           ToolTip.Tip="Numeric game ID and volume checksum used for database lookup." />
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Contents" Opacity="0.7"
+                           ToolTip.Tip="Number of files and directories on the disc." />
                 <TextBlock x:Name="ContentsText" Grid.Row="3" Grid.Column="1"
-                           TextWrapping="Wrap" />
+                           TextWrapping="Wrap"
+                           ToolTip.Tip="Number of files and directories on the disc." />
             </Grid>
         </Border>
 
@@ -37,7 +44,8 @@
                     Click="OnOpenFolder" IsEnabled="False"
                     ToolTip.Tip="Open the last extraction folder." />
             <TextBlock x:Name="StatusText" VerticalAlignment="Center" Opacity="0.8"
-                       TextWrapping="Wrap" Margin="8,0,0,0" />
+                       TextWrapping="Wrap" Margin="8,0,0,0"
+                       ToolTip.Tip="Result of the most recent extraction." />
         </StackPanel>
 
         <Grid Grid.Row="2" ColumnDefinitions="*,300" Margin="0,8">
@@ -60,18 +68,27 @@
                     Background="#1A1A1A" CornerRadius="4">
                 <StackPanel Spacing="8">
                     <TextBlock x:Name="DetailName" Classes="sectionTitle" Text="Select an entry"
-                               TextWrapping="Wrap" />
+                               TextWrapping="Wrap"
+                               ToolTip.Tip="Name of the selected disc entry." />
                     <TextBlock x:Name="DetailPath" Opacity="0.75" TextWrapping="Wrap"
                                ToolTip.Tip="Opera file-system path." />
                     <Grid ColumnDefinitions="80,*" RowDefinitions="Auto,Auto,Auto,Auto">
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Type" Opacity="0.65" />
-                        <TextBlock x:Name="DetailType" Grid.Row="0" Grid.Column="1" />
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Size" Opacity="0.65" />
-                        <TextBlock x:Name="DetailSize" Grid.Row="1" Grid.Column="1" />
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="LBA" Opacity="0.65" />
-                        <TextBlock x:Name="DetailLba" Grid.Row="2" Grid.Column="1" />
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Children" Opacity="0.65" />
-                        <TextBlock x:Name="DetailChildren" Grid.Row="3" Grid.Column="1" />
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Type" Opacity="0.65"
+                                   ToolTip.Tip="File or directory." />
+                        <TextBlock x:Name="DetailType" Grid.Row="0" Grid.Column="1"
+                                   ToolTip.Tip="File or directory." />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Size" Opacity="0.65"
+                                   ToolTip.Tip="Uncompressed size in bytes." />
+                        <TextBlock x:Name="DetailSize" Grid.Row="1" Grid.Column="1"
+                                   ToolTip.Tip="Uncompressed size in bytes." />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="LBA" Opacity="0.65"
+                                   ToolTip.Tip="First logical block address of the entry's data." />
+                        <TextBlock x:Name="DetailLba" Grid.Row="2" Grid.Column="1"
+                                   ToolTip.Tip="First logical block address of the entry's data." />
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Children" Opacity="0.65"
+                                   ToolTip.Tip="Number of direct children for a directory." />
+                        <TextBlock x:Name="DetailChildren" Grid.Row="3" Grid.Column="1"
+                                   ToolTip.Tip="Number of direct children for a directory." />
                     </Grid>
                 </StackPanel>
             </Border>

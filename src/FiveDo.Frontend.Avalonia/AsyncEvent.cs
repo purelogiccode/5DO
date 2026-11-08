@@ -12,7 +12,7 @@ internal static class AsyncEvent
     /// <summary>Starts an asynchronous operation and logs any exception it raises.</summary>
     /// <param name="operation">Operation to run.</param>
     /// <param name="description">Description used in the log message.</param>
-    public static void Run(Func<Task> operation, string description)
+    internal static void Run(Func<Task> operation, string description)
     {
         _ = RunCoreAsync(operation, description);
     }

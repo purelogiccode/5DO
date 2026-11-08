@@ -766,10 +766,11 @@ public partial class SettingsWindow : Window
         {
             profile.RandomSeed = ParseRandomSeedText(RandomSeedBox.Text);
         }
-        catch (FormatException)
+        catch (FormatException exception)
         {
             // Saving a profile must not crash on an unfinished seed edit; the main
             // settings save reports the validation error.
+            Serilog.Log.Debug(exception, "Random seed text could not be parsed; keeping the saved seed.");
             profile.RandomSeed = _settings.RandomSeed;
         }
 
@@ -1629,10 +1630,12 @@ public partial class SettingsWindow : Window
             or ArgumentException
             or NotSupportedException)
         {
+            Serilog.Log.Debug(exception, "Cover catalog refresh failed.");
             CoverCacheStatusText.Text = $"Cover catalog failed: {exception.Message}";
         }
         catch (Exception exception)
         {
+            Serilog.Log.Debug(exception, "Cover catalog refresh failed unexpectedly.");
             CoverCacheStatusText.Text = $"Cover catalog failed unexpectedly: {exception.Message}";
         }
         finally
@@ -1693,10 +1696,12 @@ public partial class SettingsWindow : Window
             or ArgumentException
             or NotSupportedException)
         {
+            Serilog.Log.Debug(exception, "Cover download failed.");
             CoverCacheStatusText.Text = $"Cover download failed: {exception.Message}";
         }
         catch (Exception exception)
         {
+            Serilog.Log.Debug(exception, "Cover download failed unexpectedly.");
             CoverCacheStatusText.Text = $"Cover download failed unexpectedly: {exception.Message}";
         }
         finally

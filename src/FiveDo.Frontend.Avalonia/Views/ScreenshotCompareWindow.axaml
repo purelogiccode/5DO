@@ -9,18 +9,22 @@
     <Grid RowDefinitions="*,Auto" Margin="14">
         <Grid Grid.Row="0" ColumnDefinitions="*,*" ColumnSpacing="12">
             <Grid Grid.Column="0" RowDefinitions="*,Auto">
-                <Border Grid.Row="0" Background="#20000000" CornerRadius="3">
+                <Border Grid.Row="0" Background="#20000000" CornerRadius="3"
+                        ToolTip.Tip="Older screenshot in the comparison.">
                     <Image x:Name="LeftImage" Stretch="Uniform" />
                 </Border>
                 <TextBlock Grid.Row="1" x:Name="LeftCaption" Margin="0,8,0,0"
-                           TextWrapping="Wrap" Opacity="0.8" FontSize="11" />
+                           TextWrapping="Wrap" Opacity="0.8" FontSize="11"
+                           ToolTip.Tip="File name, timestamp, and resolution of the older screenshot." />
             </Grid>
             <Grid Grid.Column="1" RowDefinitions="*,Auto">
-                <Border Grid.Row="0" Background="#20000000" CornerRadius="3">
+                <Border Grid.Row="0" Background="#20000000" CornerRadius="3"
+                        ToolTip.Tip="Newer screenshot in the comparison.">
                     <Image x:Name="RightImage" Stretch="Uniform" />
                 </Border>
                 <TextBlock Grid.Row="1" x:Name="RightCaption" Margin="0,8,0,0"
-                           TextWrapping="Wrap" Opacity="0.8" FontSize="11" />
+                           TextWrapping="Wrap" Opacity="0.8" FontSize="11"
+                           ToolTip.Tip="File name, timestamp, and resolution of the newer screenshot." />
             </Grid>
         </Grid>
 

@@ -145,6 +145,10 @@ public partial class MainWindow : Window, IDisposable
     private long _presentRateStartTicks = Stopwatch.GetTimestamp();
     private bool _runAheadAutoDisabledShown;
 
+    /// <summary>
+    /// Creates the main emulator window and wires drag-and-drop, activation, and
+    /// configuration-reload handlers.
+    /// </summary>
     public MainWindow()
     {
         InitializeComponent();
@@ -3180,6 +3184,9 @@ public partial class MainWindow : Window, IDisposable
                 or ArgumentException
                 or NotSupportedException)
             {
+                _logger.ForCategory(LogCategory.Host).Debug(
+                    exception,
+                    "The disc DAT could not be read for library health verification.");
                 StatusText.Text = $"The DAT could not be read: {exception.Message}";
                 return;
             }
@@ -3829,6 +3836,7 @@ public partial class MainWindow : Window, IDisposable
             or NotSupportedException
             or ObjectDisposedException)
         {
+            _logger.ForCategory(LogCategory.Host).Debug(exception, "Cover resolution failed.");
             StatusText.Text = $"Cover resolution failed: {exception.Message}";
             return;
         }
@@ -3890,6 +3898,7 @@ public partial class MainWindow : Window, IDisposable
             or NotSupportedException
             or ObjectDisposedException)
         {
+            _logger.ForCategory(LogCategory.Host).Debug(exception, "Cover download failed.");
             StatusText.Text = $"Cover download failed: {exception.Message}";
         }
     }
@@ -5568,8 +5577,11 @@ public partial class MainWindow : Window, IDisposable
         {
             brush = Brush.Parse(_settings.ResolveVoidAreaColor());
         }
-        catch (FormatException)
+        catch (FormatException exception)
         {
+            _logger.ForCategory(LogCategory.Host).Debug(
+                exception,
+                "The configured void-area color could not be parsed; using the default.");
             brush = Brush.Parse(AppSettings.DefaultVoidAreaColor);
         }
 
@@ -5602,8 +5614,11 @@ public partial class MainWindow : Window, IDisposable
         {
             rate = effective.ResolveDisplayRefreshRate();
         }
-        catch (ArgumentOutOfRangeException)
+        catch (ArgumentOutOfRangeException exception)
         {
+            _logger.ForCategory(LogCategory.Host).Debug(
+                exception,
+                "The configured display refresh rate is out of range; using the default.");
             rate = AppSettings.DefaultDisplayRefreshRate;
         }
 

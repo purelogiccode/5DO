@@ -171,8 +171,9 @@ public sealed class VulkanVideoSurface : Control, IDisposable
             };
             _renderer.InitializeSurface(_childHandle, width, height, _settings.Vsync);
         }
-        catch
+        catch (Exception exception)
         {
+            Serilog.Log.Debug(exception, "Vulkan surface initialization failed; cleaning up the child window.");
             _renderer?.Dispose();
             _renderer = null;
             DestroyChildWindow();

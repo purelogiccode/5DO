@@ -8,33 +8,45 @@
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="16">
         <TextBlock Grid.Row="0" Text="Offline library metadata overrides database and file-name facts."
-                   Opacity="0.7" TextWrapping="Wrap" Margin="0,0,0,10" />
+                   Opacity="0.7" TextWrapping="Wrap" Margin="0,0,0,10"
+                   ToolTip.Tip="Values entered here are stored per game and take precedence over the game database and file names." />
 
         <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
             <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Title" VerticalAlignment="Center" />
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Title" VerticalAlignment="Center"
+                           ToolTip.Tip="Display title shown in the game library." />
                 <TextBox Grid.Row="0" Grid.Column="1" x:Name="TitleBox" ToolTip.Tip="Display title. Empty keeps the database title." />
 
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Developer" VerticalAlignment="Center" />
-                <TextBox Grid.Row="1" Grid.Column="1" x:Name="DeveloperBox" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Developer" VerticalAlignment="Center"
+                           ToolTip.Tip="Developer studio credited for this game." />
+                <TextBox Grid.Row="1" Grid.Column="1" x:Name="DeveloperBox"
+                         ToolTip.Tip="Developer name. Empty keeps the database value." />
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Publisher" VerticalAlignment="Center" />
-                <TextBox Grid.Row="2" Grid.Column="1" x:Name="PublisherBox" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Publisher" VerticalAlignment="Center"
+                           ToolTip.Tip="Publishing company credited for this game." />
+                <TextBox Grid.Row="2" Grid.Column="1" x:Name="PublisherBox"
+                         ToolTip.Tip="Publisher name. Empty keeps the database value." />
 
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Release year" VerticalAlignment="Center" />
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Release year" VerticalAlignment="Center"
+                           ToolTip.Tip="Year the game was released." />
                 <TextBox Grid.Row="3" Grid.Column="1" x:Name="YearBox" ToolTip.Tip="Four-digit year or a free-form date string." />
 
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="Genre" VerticalAlignment="Center" />
-                <TextBox Grid.Row="4" Grid.Column="1" x:Name="GenreBox" />
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Genre" VerticalAlignment="Center"
+                           ToolTip.Tip="Genre label used for library filtering." />
+                <TextBox Grid.Row="4" Grid.Column="1" x:Name="GenreBox"
+                         ToolTip.Tip="Genre or category. Empty keeps the database value." />
 
-                <TextBlock Grid.Row="5" Grid.Column="0" Text="Regions" VerticalAlignment="Center" />
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Regions" VerticalAlignment="Center"
+                           ToolTip.Tip="Region codes where this game was released." />
                 <TextBox Grid.Row="5" Grid.Column="1" x:Name="RegionsBox" ToolTip.Tip="Comma-separated region codes, for example US,EU,JP." />
 
-                <TextBlock Grid.Row="6" Grid.Column="0" Text="Players" VerticalAlignment="Center" />
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="Players" VerticalAlignment="Center"
+                           ToolTip.Tip="Number of supported players." />
                 <TextBox Grid.Row="6" Grid.Column="1" x:Name="PlayersBox" Width="80" HorizontalAlignment="Left"
                          ToolTip.Tip="Supported player count, 0-8 (0 = unknown)." />
 
-                <TextBlock Grid.Row="7" Grid.Column="0" Text="Description" VerticalAlignment="Top" Margin="0,6,0,0" />
+                <TextBlock Grid.Row="7" Grid.Column="0" Text="Description" VerticalAlignment="Top" Margin="0,6,0,0"
+                           ToolTip.Tip="Free-form description shown in the library details." />
                 <TextBox Grid.Row="7" Grid.Column="1" x:Name="DescriptionBox" AcceptsReturn="True"
                          TextWrapping="Wrap" MinHeight="120" MaxHeight="200"
                          ToolTip.Tip="Free-form description shown in the library details." />

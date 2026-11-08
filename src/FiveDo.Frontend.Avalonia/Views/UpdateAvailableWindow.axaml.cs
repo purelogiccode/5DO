@@ -43,8 +43,16 @@ public partial class UpdateAvailableWindow : Window
     {
         ArgumentNullException.ThrowIfNull(owner);
         ArgumentNullException.ThrowIfNull(info);
-        var dialog = new UpdateAvailableWindow(info);
-        await dialog.ShowDialog(owner).ConfigureAwait(true);
+        try
+        {
+            var dialog = new UpdateAvailableWindow(info);
+            await dialog.ShowDialog(owner).ConfigureAwait(true);
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            Serilog.Log.Error(exception, "The update-available dialog failed.");
+            throw;
+        }
     }
 
     private void OnDownload(object? sender, RoutedEventArgs e)

@@ -10,7 +10,8 @@
     <Grid RowDefinitions="Auto,*,Auto" Margin="16">
         <TextBlock Grid.Row="0"
                    Text="Entries play in order. A guest eject can advance the playlist automatically (ODE-style)."
-                   Opacity="0.7" TextWrapping="Wrap" Margin="0,0,0,10" />
+                   Opacity="0.7" TextWrapping="Wrap" Margin="0,0,0,10"
+                   ToolTip.Tip="Playlist playback order and the automatic advance behavior." />
 
         <Grid Grid.Row="1" ColumnDefinitions="*,190" ColumnSpacing="12">
             <ListBox x:Name="EntryList" Grid.Column="0"
@@ -54,7 +55,8 @@
                            TextTrimming="CharacterEllipsis"
                            ToolTip.Tip="Playlist file path." />
                 <TextBlock x:Name="StatusText" Opacity="0.8" FontSize="11"
-                           TextWrapping="Wrap" />
+                           TextWrapping="Wrap"
+                           ToolTip.Tip="Playlist validation and save status." />
             </StackPanel>
             <Button Grid.Column="1" Content="Close" Click="OnCloseClick"
                     HorizontalAlignment="Right" VerticalAlignment="Top"

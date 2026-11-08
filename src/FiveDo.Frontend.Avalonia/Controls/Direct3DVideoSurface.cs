@@ -208,8 +208,9 @@ public sealed class Direct3DVideoSurface : Control, IDisposable
             };
             _renderer.InitializeSurface(_childHandle, width, height, _settings.Vsync);
         }
-        catch
+        catch (Exception exception)
         {
+            Serilog.Log.Debug(exception, "Direct3D 11 surface initialization failed; cleaning up the child window.");
             _renderer?.Dispose();
             _renderer = null;
             DestroyChildWindow();
@@ -428,6 +429,7 @@ public sealed class Direct3DVideoSurface : Control, IDisposable
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
+            Serilog.Log.Debug(exception, "Direct3D 11 surface restart failed; falling back to the offscreen presenter.");
             restartException = exception;
             return false;
         }

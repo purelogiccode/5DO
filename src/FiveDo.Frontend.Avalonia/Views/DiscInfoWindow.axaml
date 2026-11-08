@@ -4,52 +4,79 @@
         Title="Disc Info"
         Width="640" Height="500"
         MinWidth="520" MinHeight="400"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        ToolTip.Tip="Mounted-disc metadata resolved from the image table of contents and the offline game database.">
 
     <Grid RowDefinitions="*,Auto" Margin="16">
-        <ScrollViewer Grid.Row="0">
+        <ScrollViewer Grid.Row="0"
+                      ToolTip.Tip="Scroll through the mounted disc's metadata fields.">
             <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Disc image" Opacity="0.65" Margin="0,2" />
-                <TextBlock x:Name="SourceText" Grid.Row="0" Grid.Column="1" TextWrapping="Wrap" Margin="0,2" />
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Disc image" Opacity="0.65" Margin="0,2"
+                           ToolTip.Tip="Full path of the disc image file that is mounted." />
+                <TextBlock x:Name="SourceText" Grid.Row="0" Grid.Column="1" TextWrapping="Wrap" Margin="0,2"
+                           ToolTip.Tip="Full path of the mounted disc image." />
 
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Format" Opacity="0.65" Margin="0,2" />
-                <TextBlock x:Name="FormatText" Grid.Row="1" Grid.Column="1" Margin="0,2" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Format" Opacity="0.65" Margin="0,2"
+                           ToolTip.Tip="Container format detected when the image was opened." />
+                <TextBlock x:Name="FormatText" Grid.Row="1" Grid.Column="1" Margin="0,2"
+                           ToolTip.Tip="Container format (ISO, BIN/CUE, CHD, or IMG)." />
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Volume label" Opacity="0.65" Margin="0,2" />
-                <TextBlock x:Name="LabelText" Grid.Row="2" Grid.Column="1" TextWrapping="Wrap" Margin="0,2" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Volume label" Opacity="0.65" Margin="0,2"
+                           ToolTip.Tip="Volume label stored in the Opera filesystem header." />
+                <TextBlock x:Name="LabelText" Grid.Row="2" Grid.Column="1" TextWrapping="Wrap" Margin="0,2"
+                           ToolTip.Tip="Volume label stored in the Opera filesystem header." />
 
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Volume comment" Opacity="0.65" Margin="0,2" />
-                <TextBlock x:Name="CommentText" Grid.Row="3" Grid.Column="1" TextWrapping="Wrap" Margin="0,2" />
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Volume comment" Opacity="0.65" Margin="0,2"
+                           ToolTip.Tip="Free-text volume comment from the Opera filesystem header." />
+                <TextBlock x:Name="CommentText" Grid.Row="3" Grid.Column="1" TextWrapping="Wrap" Margin="0,2"
+                           ToolTip.Tip="Free-text volume comment from the Opera filesystem header." />
 
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="Game ID / checksum" Opacity="0.65" Margin="0,2" />
-                <TextBlock x:Name="GameIdText" Grid.Row="4" Grid.Column="1" TextWrapping="Wrap" Margin="0,2" />
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Game ID / checksum" Opacity="0.65" Margin="0,2"
+                           ToolTip.Tip="Numeric game ID and the 24-bit volume checksum used for database lookup." />
+                <TextBlock x:Name="GameIdText" Grid.Row="4" Grid.Column="1" TextWrapping="Wrap" Margin="0,2"
+                           ToolTip.Tip="Numeric game ID and the 24-bit volume checksum used for database lookup." />
 
-                <TextBlock Grid.Row="5" Grid.Column="0" Text="Database title" Opacity="0.65" Margin="0,2" />
-                <TextBlock x:Name="GameNameText" Grid.Row="5" Grid.Column="1" TextWrapping="Wrap" Margin="0,2" />
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Database title" Opacity="0.65" Margin="0,2"
+                           ToolTip.Tip="Title and metadata taken from the offline game database or library overrides." />
+                <TextBlock x:Name="GameNameText" Grid.Row="5" Grid.Column="1" TextWrapping="Wrap" Margin="0,2"
+                           ToolTip.Tip="Title and metadata taken from the offline game database or library overrides." />
 
-                <TextBlock Grid.Row="6" Grid.Column="0" Text="Region" Opacity="0.65" Margin="0,2" />
-                <TextBlock x:Name="RegionText" Grid.Row="6" Grid.Column="1" Margin="0,2" />
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="Region" Opacity="0.65" Margin="0,2"
+                           ToolTip.Tip="Region codes reported for this title." />
+                <TextBlock x:Name="RegionText" Grid.Row="6" Grid.Column="1" Margin="0,2"
+                           ToolTip.Tip="Region codes reported for this title." />
 
-                <TextBlock Grid.Row="7" Grid.Column="0" Text="Publisher" Opacity="0.65" Margin="0,2" />
-                <TextBlock x:Name="PublisherText" Grid.Row="7" Grid.Column="1" TextWrapping="Wrap" Margin="0,2" />
+                <TextBlock Grid.Row="7" Grid.Column="0" Text="Publisher" Opacity="0.65" Margin="0,2"
+                           ToolTip.Tip="Publisher recorded in the game database." />
+                <TextBlock x:Name="PublisherText" Grid.Row="7" Grid.Column="1" TextWrapping="Wrap" Margin="0,2"
+                           ToolTip.Tip="Publisher recorded in the game database." />
 
-                <TextBlock Grid.Row="8" Grid.Column="0" Text="Release year" Opacity="0.65" Margin="0,2" />
-                <TextBlock x:Name="ReleaseYearText" Grid.Row="8" Grid.Column="1" Margin="0,2" />
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="Release year" Opacity="0.65" Margin="0,2"
+                           ToolTip.Tip="Release year recorded in the game database." />
+                <TextBlock x:Name="ReleaseYearText" Grid.Row="8" Grid.Column="1" Margin="0,2"
+                           ToolTip.Tip="Release year recorded in the game database." />
 
-                <TextBlock Grid.Row="9" Grid.Column="0" Text="Contents" Opacity="0.65" Margin="0,2" />
-                <TextBlock x:Name="ContentsText" Grid.Row="9" Grid.Column="1" TextWrapping="Wrap" Margin="0,2" />
+                <TextBlock Grid.Row="9" Grid.Column="0" Text="Contents" Opacity="0.65" Margin="0,2"
+                           ToolTip.Tip="Summary of the data and audio tracks found on the disc." />
+                <TextBlock x:Name="ContentsText" Grid.Row="9" Grid.Column="1" TextWrapping="Wrap" Margin="0,2"
+                           ToolTip.Tip="Summary of the data and audio tracks found on the disc." />
 
-                <TextBlock Grid.Row="10" Grid.Column="0" Text="Sectors" Opacity="0.65" Margin="0,2" />
-                <TextBlock x:Name="SectorsText" Grid.Row="10" Grid.Column="1" Margin="0,2" />
+                <TextBlock Grid.Row="10" Grid.Column="0" Text="Sectors" Opacity="0.65" Margin="0,2"
+                           ToolTip.Tip="Total 2048-byte user-data sectors in the mounted image." />
+                <TextBlock x:Name="SectorsText" Grid.Row="10" Grid.Column="1" Margin="0,2"
+                           ToolTip.Tip="Total 2048-byte user-data sectors in the mounted image." />
 
-                <TextBlock Grid.Row="11" Grid.Column="0" Text="Automatic fixes" Opacity="0.65" Margin="0,2" />
-                <TextBlock x:Name="FixesText" Grid.Row="11" Grid.Column="1" TextWrapping="Wrap" Margin="0,2" />
+                <TextBlock Grid.Row="11" Grid.Column="0" Text="Automatic fixes" Opacity="0.65" Margin="0,2"
+                           ToolTip.Tip="Compatibility patches that were applied automatically when the disc was mounted." />
+                <TextBlock x:Name="FixesText" Grid.Row="11" Grid.Column="1" TextWrapping="Wrap" Margin="0,2"
+                           ToolTip.Tip="Compatibility patches that were applied automatically when the disc was mounted." />
             </Grid>
         </ScrollViewer>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right"
                     Spacing="8" Margin="0,14,0,0">
-            <Button Content="Close" Click="OnClose" IsDefault="True" />
+            <Button Content="Close" Click="OnClose" IsDefault="True"
+                    ToolTip.Tip="Close the disc info window." />
         </StackPanel>
     </Grid>
 </Window>

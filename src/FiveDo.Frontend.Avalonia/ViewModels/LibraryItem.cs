@@ -287,13 +287,13 @@ internal static class CoverCache
             }
 
             var generation = _generation;
-            Task<Bitmap?> task = Task.Run(() => LoadAsyncCore(path, generation));
+            Task<Bitmap?> task = Task.Run(() => LoadCoreAsync(path, generation));
             Pending[path] = task;
             return task;
         }
     }
 
-    private static async Task<Bitmap?> LoadAsyncCore(string path, int generation)
+    private static async Task<Bitmap?> LoadCoreAsync(string path, int generation)
     {
         await DecodeGate.WaitAsync().ConfigureAwait(false);
         try

@@ -159,6 +159,7 @@ public partial class GameLibraryWindow : Window
                 or ArgumentException
                 or NotSupportedException)
             {
+                Serilog.Log.Debug(exception, "The disc DAT could not be read for health verification.");
                 StatusText.Text = $"The DAT could not be read: {exception.Message}";
                 return;
             }

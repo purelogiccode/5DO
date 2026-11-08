@@ -15,64 +15,64 @@ internal static class Program
     /// Gets the disc path passed on the command line, if any. File associations use
     /// this to open a disc when the desktop launches the application with a path.
     /// </summary>
-    public static string? StartupDiscPath { get; private set; }
+    internal static string? StartupDiscPath { get; private set; }
 
     /// <summary>
     /// Gets the optional `--bios` path used for this launch. External frontends can
     /// provide the BIOS without changing the saved desktop configuration.
     /// </summary>
-    public static string? StartupBiosPath { get; private set; }
+    internal static string? StartupBiosPath { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether `--fullscreen`, `-fullscreen`, or `-f` requested
     /// a fullscreen launch. Used by launchers and emulator frontends.
     /// </summary>
-    public static bool StartFullscreen { get; private set; }
+    internal static bool StartFullscreen { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether the process was started by the packaged
     /// frontend smoke test. The shell skips the welcome/config load and exits after
     /// the first frame so CI can validate a trimmed publish without a user session.
     /// </summary>
-    public static bool SmokeTest { get; private set; }
+    internal static bool SmokeTest { get; private set; }
 
     /// <summary>
     /// Gets the optional path that receives the smoke-test result marker.
     /// </summary>
-    public static string? SmokeOutputPath { get; private set; }
+    internal static string? SmokeOutputPath { get; private set; }
 
     /// <summary>
     /// Gets the GPU presentation probe request, or <see langword="null"/> during normal
     /// startup. The probe opens the real OpenGL surface, presents synthetic frames, and
     /// writes timing JSON without loading a BIOS or disc.
     /// </summary>
-    public static GlProbeOptions? GlProbe { get; private set; }
+    internal static GlProbeOptions? GlProbe { get; private set; }
 
     /// <summary>
     /// Gets the optional Vulkan probe request. When set, the process runs the offscreen
     /// pipeline (or the native Win32 swapchain for <c>--vk-window-probe</c>) and exits
     /// without initializing Avalonia.
     /// </summary>
-    public static VkProbeOptions? VkProbe { get; private set; }
+    internal static VkProbeOptions? VkProbe { get; private set; }
 
     /// <summary>
     /// Gets the optional Direct3D 11 probe request. When set, the process runs the
     /// offscreen pipeline (or the native Win32 swapchain for <c>--d3d-window-probe</c>)
     /// and exits without initializing Avalonia.
     /// </summary>
-    public static D3dProbeOptions? D3dProbe { get; private set; }
+    internal static D3dProbeOptions? D3dProbe { get; private set; }
 
     /// <summary>
     /// Gets the renderer backend requested with <c>--gl-backend</c> (or the probe alias
     /// <c>--gl-probe-backend</c>). The default is <see cref="GlBackend.Auto"/>.
     /// </summary>
-    public static GlBackend RequestedGlBackend { get; private set; } = GlBackend.Auto;
+    internal static GlBackend RequestedGlBackend { get; private set; } = GlBackend.Auto;
 
     /// <summary>
     /// Gets a value indicating whether the startup GitHub update check was disabled with
     /// <c>--no-update-check</c>.
     /// </summary>
-    public static bool SkipUpdateCheck { get; private set; }
+    internal static bool SkipUpdateCheck { get; private set; }
 
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized

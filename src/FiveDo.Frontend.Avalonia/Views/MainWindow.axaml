@@ -303,7 +303,8 @@
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                        <TextBlock Classes="sectionTitle" Text="Game List" />
+                        <TextBlock Classes="sectionTitle" Text="Game List"
+                                   ToolTip.Tip="Games found in the configured library folders." />
                         <Border Classes="badge" VerticalAlignment="Center"
                                 ToolTip.Tip="Number of games found in the configured folders.">
                             <TextBlock x:Name="LibraryCountText" Text="0 games" />
@@ -338,7 +339,8 @@
                             <ComboBoxItem Content="Release year" Tag="ReleaseYear" />
                             <ComboBoxItem Content="Publisher" Tag="Publisher" />
                         </ComboBox>
-                        <TextBlock Text="Icon size" Classes="caption" VerticalAlignment="Center" />
+                        <TextBlock Text="Icon size" Classes="caption" VerticalAlignment="Center"
+                                   ToolTip.Tip="Thumbnail size used by the game library grid." />
                         <Slider x:Name="IconSizeSlider" Width="150" Minimum="128" Maximum="384"
                                 Value="176" TickFrequency="8" IsSnapToTickEnabled="True"
                                 VerticalAlignment="Center"
@@ -730,7 +732,8 @@
                         <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                             <PathIcon Width="12" Height="12" Data="{StaticResource IconLogs}"
                                       Foreground="{DynamicResource TextMutedBrush}" />
-                            <TextBlock Text="Log" FontSize="11" FontWeight="SemiBold" />
+                            <TextBlock Text="Log" FontSize="11" FontWeight="SemiBold"
+                                       ToolTip.Tip="Live Serilog output for this session." />
                         </StackPanel>
                         <TextBlock x:Name="LogSummaryText" Grid.Column="1" Classes="caption"
                                    Margin="12,0" VerticalAlignment="Center"

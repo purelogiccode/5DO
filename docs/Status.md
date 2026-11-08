@@ -27,7 +27,7 @@ poll/FIQ/READ_DATA behavior is closer to Opera. The 50-title panel is **50/50 fr
 hashes at 60/120/300 with 0 errors**: the same-frame instruction delta is 11-20 at
 frame 60 and 23-2,223 at frame 120, and the remaining behavioral divergence is CD
 command cadence. The command-50 boot handoff fell from +207,707 cycles / +86,511
-instructions to -818 / -376. The suite is **1,939 tests**; build, format, and
+instructions to -818 / -376. The suite is **2,033 tests**; build, format, and
 InspectCode are clean. Release run
 <https://github.com/purelogiccode/5DO/actions/runs/42445302517> passed all six bundle
 jobs and the publish job; CI run

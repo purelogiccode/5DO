@@ -37,19 +37,20 @@
             </ListBox>
 
             <StackPanel Grid.Column="1" Spacing="8">
-                <TextBlock Text="Player 1 buttons" FontWeight="SemiBold" />
+                <TextBlock Text="Player 1 buttons" FontWeight="SemiBold"
+                           ToolTip.Tip="Toggle the 3DO pad buttons held on the selected frame." />
                 <WrapPanel ItemWidth="96" ItemHeight="28">
-                    <CheckBox x:Name="AButton" Content="A" Tag="A" />
-                    <CheckBox x:Name="BButton" Content="B" Tag="B" />
-                    <CheckBox x:Name="CButton" Content="C" Tag="C" />
-                    <CheckBox x:Name="PButton" Content="P" Tag="P" />
-                    <CheckBox x:Name="XButton" Content="X" Tag="X" />
-                    <CheckBox x:Name="LButton" Content="L" Tag="L" />
-                    <CheckBox x:Name="RButton" Content="R" Tag="R" />
-                    <CheckBox x:Name="UpButton" Content="Up" Tag="Up" />
-                    <CheckBox x:Name="DownButton" Content="Down" Tag="Down" />
-                    <CheckBox x:Name="LeftButton" Content="Left" Tag="Left" />
-                    <CheckBox x:Name="RightButton" Content="Right" Tag="Right" />
+                    <CheckBox x:Name="AButton" Content="A" Tag="A" ToolTip.Tip="3DO pad A button." />
+                    <CheckBox x:Name="BButton" Content="B" Tag="B" ToolTip.Tip="3DO pad B button." />
+                    <CheckBox x:Name="CButton" Content="C" Tag="C" ToolTip.Tip="3DO pad C button." />
+                    <CheckBox x:Name="PButton" Content="P" Tag="P" ToolTip.Tip="3DO pad P (play/pause) button." />
+                    <CheckBox x:Name="XButton" Content="X" Tag="X" ToolTip.Tip="3DO pad X (stop) button." />
+                    <CheckBox x:Name="LButton" Content="L" Tag="L" ToolTip.Tip="Left shoulder button." />
+                    <CheckBox x:Name="RButton" Content="R" Tag="R" ToolTip.Tip="Right shoulder button." />
+                    <CheckBox x:Name="UpButton" Content="Up" Tag="Up" ToolTip.Tip="D-pad up." />
+                    <CheckBox x:Name="DownButton" Content="Down" Tag="Down" ToolTip.Tip="D-pad down." />
+                    <CheckBox x:Name="LeftButton" Content="Left" Tag="Left" ToolTip.Tip="D-pad left." />
+                    <CheckBox x:Name="RightButton" Content="Right" Tag="Right" ToolTip.Tip="D-pad right." />
                 </WrapPanel>
                 <Button x:Name="ApplyButton" Content="Apply to frame" Click="OnApplyClick" IsEnabled="False"
                         HorizontalAlignment="Stretch"

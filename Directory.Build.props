@@ -52,8 +52,6 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GenerateDocumentationFile Condition="$(MSBuildProjectName.Contains('.Tests'))">false</GenerateDocumentationFile>
     <GenerateDocumentationFile Condition="$(MSBuildProjectName.Contains('Benchmarks'))">false</GenerateDocumentationFile>
-    <GenerateDocumentationFile Condition="$(MSBuildProjectName.Contains('Frontend'))">false</GenerateDocumentationFile>
-    <GenerateDocumentationFile Condition="$(MSBuildProjectName.Contains('.Cli'))">false</GenerateDocumentationFile>
 
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest-recommended</AnalysisLevel>

@@ -12,15 +12,32 @@ using FiveDo.Frontend.Avalonia.Views;
 
 namespace FiveDo.Frontend.Avalonia;
 
+/// <summary>
+/// Avalonia application entry point. Loads the XAML theme, acquires the single-instance
+/// lock, and creates the main emulator window (or the GPU probe / smoke-test host).
+/// </summary>
 public class App : Application
 {
     private InstanceLock? _instanceLock;
 
+    /// <summary>Loads the application XAML resources.</summary>
     public override void Initialize()
     {
-        AvaloniaXamlLoader.Load(this);
+        try
+        {
+            AvaloniaXamlLoader.Load(this);
+        }
+        catch (Exception exception)
+        {
+            Serilog.Log.Fatal(exception, "Avalonia XAML resources could not be loaded.");
+            throw;
+        }
     }
 
+    /// <summary>
+    /// Runs after Avalonia initialization: installs the UI exception guard, takes the
+    /// single-instance lock, and selects the window that should be shown.
+    /// </summary>
     public override void OnFrameworkInitializationCompleted()
     {
         Dispatcher.UIThread.UnhandledException += (_, eventArgs) =>

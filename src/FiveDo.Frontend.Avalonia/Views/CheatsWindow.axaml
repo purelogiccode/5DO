@@ -44,11 +44,14 @@
                     CornerRadius="4">
                 <ScrollViewer>
                     <StackPanel Spacing="6">
-                        <TextBlock Text="Name" FontWeight="SemiBold" />
+                        <TextBlock Text="Name" FontWeight="SemiBold"
+                                   ToolTip.Tip="Unique name shown in the cheat list." />
                         <TextBox x:Name="NameBox" ToolTip.Tip="Unique name shown in the cheat list." />
-                        <TextBlock Text="Description" FontWeight="SemiBold" Margin="0,4,0,0" />
+                        <TextBlock Text="Description" FontWeight="SemiBold" Margin="0,4,0,0"
+                                   ToolTip.Tip="Optional notes about what the cheat changes." />
                         <TextBox x:Name="DescriptionBox" ToolTip.Tip="Optional notes about what the cheat changes." />
-                        <TextBlock Text="Code" FontWeight="SemiBold" Margin="0,4,0,0" />
+                        <TextBlock Text="Code" FontWeight="SemiBold" Margin="0,4,0,0"
+                                   ToolTip.Tip="Raw writes, typed writes, and conditional writes. See docs/Cheats.md." />
                         <TextBox x:Name="CodeBox" AcceptsReturn="True" Height="170"
                                  FontFamily="Consolas,monospace"
                                  ToolTip.Tip="Raw writes, typed writes, and conditional writes. See docs/Cheats.md." />
@@ -63,6 +66,7 @@
                                     ToolTip.Tip="Remove the selected cheat." />
                         </StackPanel>
                         <TextBlock Opacity="0.65" TextWrapping="Wrap" Margin="0,8,0,0"
+                                   ToolTip.Tip="Cheat code syntax reference. Hex is the default; typed and conditional writes are also supported."
                                    Text="Numbers are hexadecimal by default. Use write8, write16, or write32 for typed values, and if ... then ... for conditional writes." />
                     </StackPanel>
                 </ScrollViewer>

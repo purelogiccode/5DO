@@ -50,7 +50,7 @@
                        Opacity="0.8" TextWrapping="Wrap"
                        ToolTip.Tip="Selection and file operation status." />
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                <Button x:Name="CompareButton" Content="Compare" Click="OnCompareClick" IsEnabled="False"
+                <Button x:Name="CompareButton" Content="Compare" Click="OnCompareClickAsync" IsEnabled="False"
                         ToolTip.Tip="Open two selected screenshots side by side." />
                 <Button x:Name="ExportButton" Content="Export..." Click="OnExportClickAsync" IsEnabled="False"
                         ToolTip.Tip="Copy the selected screenshot to another folder or name." />

@@ -42,9 +42,17 @@ public partial class DonationEmailWindow : Window
     public static async Task<string?> ShowAsync(Window owner, string? currentEmail)
     {
         ArgumentNullException.ThrowIfNull(owner);
-        var dialog = new DonationEmailWindow(currentEmail);
-        await dialog.ShowDialog(owner).ConfigureAwait(true);
-        return dialog.Email;
+        try
+        {
+            var dialog = new DonationEmailWindow(currentEmail);
+            await dialog.ShowDialog(owner).ConfigureAwait(true);
+            return dialog.Email;
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            Serilog.Log.Error(exception, "The donation email dialog failed.");
+            throw;
+        }
     }
 
     private void OnCheck(object? sender, RoutedEventArgs e)
