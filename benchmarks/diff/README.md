@@ -30,6 +30,9 @@ not product configuration.
   Wolfenstein) change at 900. `samples5-noinput.json` is the control.
 - `roadrash-noinput.json` - the one-title control that shows Road Rash's f=600
   divergence is not input-induced.
+- `cd-cadence.json` - the 11 panel titles that first diverge on CD at f=300, run
+  to 900 frames with checkpoints 300/600/900. It shows whether the 300-frame
+  count difference is in-flight cadence or a growing read-schedule divergence.
 - `samples5-long.json` - the same five local titles at 3,000 frames with
   checkpoints 60/300/1000/3000. Use it to separate boot-time PC drift from
   visible in-game divergence.

@@ -513,7 +513,7 @@ change.
   reproduces without input. The nightly workflow captures the showcase fresh,
   uploads the HTML report, and compares against
   `benchmarks/diff/baseline/showcase-report.json`; `baseline --write` generates
-  that trimmed file. **2,040 tests pass.**
+  that trimmed file. **2,043 tests pass.**
 
 - **2026-11-08 CLIO timer/read trace and CD FIQ parity (CORE-02/CORE-04/CORE-07).**
   `--timer-trace` writes `fivedo.timers.txt`, `fivedo.reads.txt`, `fivedo.clio.txt`,

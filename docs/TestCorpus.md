@@ -2878,4 +2878,36 @@ Generate the baseline with
 `FiveDo.DiffHarness baseline --current <report.json> --write <baseline.json>`.
 
 Tests: audio content/lag comparison, the report audio summary, and baseline
-write/compare; **2,040 pass**. `dotnet format` and InspectCode are clean.
+write/compare; **2,043 pass**. `dotnet format` and InspectCode are clean.
+
+### 1.1be CORE-04 CD poll reset parity and the 900-frame cadence probe (2026-11-08)
+
+Opera's `opera_cdrom_set_poll` treats POLREMASK (`0x08`) as a **one-shot FIFO
+reset** and stores only the three interrupt enables (`0x07`) in the poll low
+nibble. It also does not re-latch POLRE when the reset bit is released. 5DO stored
+the whole control nibble, so a guest write of `0x08` left the reset bit asserted;
+`SetCommand`, `GetStatus`, `GetData`, and `Tick` then dropped or returned zero
+until the guest wrote poll again. `CdromDevice.SetPoll` now masks the stored
+enables, never persists `0x08`, and no longer relatches POLRE on release. The
+defensive reset gates were removed; the load-state migration still applies
+`LocalReset` to old states that stored `0x08`.
+
+New tests: `ResetControlBitDoesNotPersistInPoll`,
+`ReleasingResetDoesNotLatchMediaAccess`, the updated
+`LocalResetClearsTransferWithoutGatingCommands`/`MediaAccessLatchIsWriteOneToClear`,
+and `Transcript_DoesNotRecordCommandParametersAsOpcodes` (a READ_DATA frame byte
+`0x16` is a parameter, not an opcode). The 5-title 300-frame sample is unchanged:
+**5/5 frame hashes**, Alone 358 commands, Lemmings 109, Road Rash 391, Space Ace
+168, Wolfenstein 341, and Lemmings' 300-frame hash is still `0x110E7DC5`.
+
+A 20th Century register trace (`artifacts/cdreg-20th.txt`) shows the guest writes
+poll `0x87` once and then `0x07`/`0x35`; it never writes `0x08`, so this fix is
+not the `109/105` cadence cause. The new `benchmarks/diff/cd-cadence.json` probe
+runs the 11 panel titles that first diverge on CD to 900 frames. The count gap
+grows: 20th Century **231/211**, Creature Shock 242/241, ESPN Fitness 166/154,
+Dragon's Lair 169/159, Life Stage 143/131, Pebble Beach 179/167, Virtual Horror
+166/155, Woody 140/128; Foes of Ali (288/287) and N.O.B. (245/244) are
+prefix-only. The first opcode mismatch is 5DO `0x10` (READ_DATA) versus Opera
+`0x83` (READ_ID) on eight titles (Virtual Horror is the reverse), so the residual
+is a real guest CD read-schedule difference, not a 300-frame in-flight artifact.
+**2,043 tests pass**; build, format, and InspectCode are clean.

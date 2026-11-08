@@ -53,7 +53,7 @@ wired into both engines: the five-title, 900-frame `samples5-input` panel matche
 **5/5 frame hashes at 60/300/600**, the generic menu script changes guest output at
 600/900, and the no-input control confirms the matches are not from an ignored script.
 The nightly workflow now runs the showcase fresh, uploads `report.html`, and fails only
-when a 5DO field changes against the checked-in baseline. The suite is **2,040 tests**;
+when a 5DO field changes against the checked-in baseline. The suite is **2,043 tests**;
 build, format, and InspectCode are clean. See
 [`DifferentialHarness.md`](DifferentialHarness.md) §4.1/§4.2/§6 and
 [`TestCorpus.md`](TestCorpus.md) 1.1bd.

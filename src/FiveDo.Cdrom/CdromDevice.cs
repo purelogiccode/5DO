@@ -543,11 +543,6 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             _audioPlaying = false;
         }
 
-        if (UseOperaPollSemantics && (_poll & PollResetMask) != 0)
-        {
-            return;
-        }
-
         if (_timingMode == CdromTimingMode.OperaCycleBased
             && _dataLength == 0
             && _requested > 0
@@ -619,11 +614,6 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             CommandOpcodeObserver?.Invoke(value);
         }
 
-        if (UseOperaPollSemantics && (_poll & PollResetMask) != 0)
-        {
-            return;
-        }
-
         if (_commandPointer < _command.Length)
         {
             _command[_commandPointer] = value;
@@ -659,11 +649,6 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <inheritdoc />
     public uint GetData()
     {
-        if (UseOperaPollSemantics && (_poll & PollResetMask) != 0)
-        {
-            return 0;
-        }
-
         var hadData = _dataLength > 0;
         if (_dataLength == 0 && _requested > 0)
         {
@@ -715,11 +700,6 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <inheritdoc />
     public uint GetStatus()
     {
-        if (UseOperaPollSemantics && (_poll & PollResetMask) != 0)
-        {
-            return 0;
-        }
-
         uint result = 0;
         if (_statusLength > 0)
         {
@@ -751,11 +731,10 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         }
 
         var control = (byte)(value & 0x0f);
-        var resetWasAsserted = (_poll & PollResetMask) != 0;
 
         // Opera: asserting POLREMASK performs a local reset. The reset clears the
         // command/transfer FIFOs and leaves logical media presence untouched.
-        if (!resetWasAsserted && (control & PollResetMask) != 0)
+        if ((control & PollResetMask) != 0)
         {
             LocalReset();
         }
@@ -766,13 +745,10 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             _poll &= unchecked((byte)~PollReset);
         }
 
-        _poll = (byte)((_poll & 0xf0) | control);
-
-        // Releasing local reset is itself a media-change notification.
-        if (resetWasAsserted && (control & PollResetMask) == 0)
-        {
-            _poll |= PollReset;
-        }
+        // Opera keeps only the three interrupt enables in the low nibble. POLREMASK
+        // is a write-one-to-reset control and must not persist, or every later
+        // command/status/data access is gated until the guest writes poll again.
+        _poll = (byte)((_poll & 0xf0) | (control & (PollStatusMask | PollDataMask | PollMediaMask)));
     }
 
     private void ResetPoll()

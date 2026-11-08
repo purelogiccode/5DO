@@ -47,6 +47,22 @@ public sealed class CdromTranscriptTests
     }
 
     [Fact]
+    public void Transcript_DoesNotRecordCommandParametersAsOpcodes()
+    {
+        var cd = new CdromDevice();
+        cd.InsertDisc(new MemoryDisc(8));
+        var transcript = new CdromCommandTranscript();
+        transcript.Attach(cd);
+
+        // The frame byte 0x16 is a READ_DATA parameter, not a command. Only the
+        // first byte of each seven-byte packet is an opcode.
+        Send(cd, 0x10, 0x00, 0x02, 0x16, 0x00, 0x00, 0x01);
+        Send(cd, 0x83);
+
+        Assert.Equal(new byte[] { 0x10, 0x83 }, transcript.IssuedOpcodes);
+    }
+
+    [Fact]
     public void Transcript_RecordsEjectAndInjectWithoutLosingTheTrayState()
     {
         var cd = new CdromDevice { FrameProvider = () => 7 };

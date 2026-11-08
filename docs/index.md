@@ -81,7 +81,7 @@
 
 **2026-11-08, v1.5.0 release (GitHub Releases).**
 
-- **2,040 tests** are present in the current test assembly.
+- **2,043 tests** are present in the current test assembly.
 - The 50-title differential panel matches **50/50 frame hashes** at frames
   60/120/300 with **0 errors**. The frame-boundary phase is resolved: the harness
   samples Opera's ARM/CD state in the checkpoint's own field, and 5DO ends a field

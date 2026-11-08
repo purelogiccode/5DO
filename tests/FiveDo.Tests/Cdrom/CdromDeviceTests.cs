@@ -27,6 +27,39 @@ public sealed class CdromDeviceTests
     }
 
     [Fact]
+    public void OperaCycleBased_ResetControlBitDoesNotPersistInPoll()
+    {
+        var cd = new CdromDevice { TimingMode = CdromTimingMode.OperaCycleBased };
+        cd.Reset();
+
+        // POLREMASK (0x08) is a write-one-to-reset control. Opera stores only the
+        // three interrupt enables in the low nibble, so the reset bit must not
+        // linger and gate later command/status/data accesses.
+        cd.SetPoll(0x80);
+        cd.SetPoll(0x08);
+        Assert.Equal(0x00, (int)(cd.GetPoll() & 0x0f));
+
+        cd.SetPoll(0x07);
+        Send(cd, 0x83);
+        Assert.Equal(0x17, (int)cd.GetPoll());
+        Assert.True(cd.FiqPending);
+    }
+
+    [Fact]
+    public void OperaCycleBased_ReleasingResetDoesNotLatchMediaAccess()
+    {
+        var cd = new CdromDevice { TimingMode = CdromTimingMode.OperaCycleBased };
+        cd.Reset();
+        cd.SetPoll(0x80);
+        Assert.Equal(0x00, (int)(cd.GetPoll() & 0x80));
+
+        cd.SetPoll(0x08);
+        cd.SetPoll(0x00);
+
+        Assert.Equal(0x00, (int)(cd.GetPoll() & 0x80));
+    }
+
+    [Fact]
     public void OperaCycleBased_ReadIdRaisesTheLevelHeldFIQAfterPollEnable()
     {
         var cd = new CdromDevice { TimingMode = CdromTimingMode.OperaCycleBased };
@@ -253,7 +286,7 @@ public sealed class CdromDeviceTests
     }
 
     [Fact]
-    public void OperaPollSemantics_LocalResetClearsTransferAndGatesFifos()
+    public void OperaPollSemantics_LocalResetClearsTransferWithoutGatingCommands()
     {
         var disc = new MemoryDisc(4);
         var cd = new CdromDevice
@@ -262,23 +295,25 @@ public sealed class CdromDeviceTests
             ConfiguredSpeed = CdSpeed.Unbounded,
         };
         cd.InsertDisc(disc);
+        cd.SetPoll(0x80); // clear the boot media-access latch
         cd.SetPoll(0x03);
         Send(cd, 0x10, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02);
         Assert.NotEqual(0, (int)cd.GetPoll() & 0x20);
 
         cd.SetPoll(0x08); // assert local reset
-        Assert.NotEqual(0, (int)cd.GetPoll() & 0x08);
+        // Opera treats POLREMASK as a one-shot FIFO reset, not a persistent gate.
+        Assert.Equal(0, (int)(cd.GetPoll() & 0x08));
         Assert.Equal(0, (int)cd.GetPoll() & 0x30);
         Assert.Equal(0u, cd.GetData());
         Assert.Equal(0u, cd.GetStatus());
         Assert.NotEqual(0, cd.DriveStatus & 0x01);
 
-        Send(cd, 0x83); // commands are ignored while reset is asserted
-        Assert.Equal(0, (int)cd.GetPoll() & 0x10);
+        Send(cd, 0x83); // commands are accepted after the reset pulse
+        Assert.NotEqual(0, (int)cd.GetPoll() & 0x10);
 
         cd.SetPoll(0x00); // release
         Assert.Equal(0, (int)cd.GetPoll() & 0x08);
-        Assert.NotEqual(0, (int)cd.GetPoll() & 0x80);
+        Assert.Equal(0, (int)cd.GetPoll() & 0x80);
         Send(cd, 0x83);
         Assert.NotEqual(0, (int)cd.GetPoll() & 0x10);
     }
@@ -296,7 +331,7 @@ public sealed class CdromDeviceTests
 
         cd.SetPoll(0x08);
         cd.SetPoll(0x00);
-        Assert.NotEqual(0, (int)cd.GetPoll() & 0x80);
+        Assert.Equal(0, (int)cd.GetPoll() & 0x80);
     }
 
     [Fact]
