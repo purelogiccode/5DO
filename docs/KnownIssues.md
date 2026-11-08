@@ -91,9 +91,11 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   investigation:
   - Crash 'n Burn (Japan) renders a purple boot screen only with the Anvil BIOS and is
     still stuck there at 60,000 frames; `panafz1`, `panafz10`, GoldStar, and Sanyo all
-    end in an invalid PC, and the Japanese Anvil BIOS gives a green screen. The
-    USA/Korea and USA Not-for-Resale revisions render with `panafz1`, so this is a
-    Japan-revision issue, not a general Crash 'n Burn failure.
+    end in an invalid PC, and the Japanese Anvil BIOS gives a green screen. A 2026-11-08
+    retry with `panafz10j`, with the FZ-1J or Anvil JP Kanji font, and with the RSA
+    bypass also stays black at 20,000 frames, so the Japan dump/BIOS pair is the limit,
+    not the 5DO boot path. The USA/Korea and USA Not-for-Resale revisions render with
+    `panafz1`, so this is a Japan-revision issue, not a general Crash 'n Burn failure.
   - Powers Kingdom (Europe) renders its animated intro with the Anvil BIOS by
     30,000 frames, matching the 4DO note "Use Anvil-bios to load EU version of game".
   - Battle Chess (Europe) is PAL-only and refuses NTSC system software with "This is
