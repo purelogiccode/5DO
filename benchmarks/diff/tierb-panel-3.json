@@ -1,0 +1,307 @@
+{
+  "schemaVersion": 1,
+  "name": "Tier B playability panel (32 titles)",
+  "defaults": {
+    "biosAuto": "bios",
+    "frames": 36000,
+    "captureFrames": [
+      600,
+      3600,
+      18000,
+      36000
+    ],
+    "inputScript": "benchmarks/diff/scripts/tierb-10min.txt",
+    "audio": "null",
+    "prefetch": true
+  },
+  "titles": [
+    {
+      "id": "dinopark-tycoon",
+      "name": "DinoPark Tycoon",
+      "disc": "J:\\Panasonic 3DO\\DinoPark Tycoon (1994)(MECC)(US).chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Playable; Phoenix Good"
+    },
+    {
+      "id": "doctor-hauzer",
+      "name": "Doctor Hauzer",
+      "disc": "J:\\Panasonic 3DO\\Doctor Hauzer (1994)(Panasonic)(JP)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "doom",
+      "name": "Doom",
+      "disc": "J:\\Panasonic 3DO\\Doom (1995)(Art Data)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "dragon-lore---the-legend-begins",
+      "name": "Dragon Lore - The Legend Begins",
+      "disc": "J:\\Panasonic 3DO\\Dragon Lore - The Legend Begins (1995)(Mindscape)(EU-US)(M4)(Disc 1 of 3)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "dragon-tycoon-edge",
+      "name": "Dragon Tycoon Edge",
+      "disc": "J:\\Panasonic 3DO\\Dragon Tycoon Edge (1995)(Sanyo)(JP)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "dragons-lair",
+      "name": "Dragon's Lair",
+      "disc": "J:\\Panasonic 3DO\\Dragon's Lair (1993)(ReadySoft)(US)[!][DH 65003-2].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "drug-wars",
+      "name": "Drug Wars",
+      "disc": "J:\\Panasonic 3DO\\Drug Wars (1995)(American Laser Games)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "escape-from-monster-manor---a-terrifying-hunt-for-the-undead",
+      "name": "Escape from Monster Manor - A Terrifying Hunt for the Undead",
+      "disc": "J:\\Panasonic 3DO\\Escape from Monster Manor - A Terrifying Hunt for the Undead (1993)(Electronic Arts)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "espn-golf---lower-your-score-with-tom-kite---shot-making",
+      "name": "ESPN Golf - Lower Your Score With Tom Kite - Shot Making",
+      "disc": "J:\\Panasonic 3DO\\ESPN Golf - Lower Your Score With Tom Kite - Shot Making (1994)(IntelliPlay)(US)(Disc 1 of 3)[!][Shot Making Disc 1].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Playable; Phoenix Good"
+    },
+    {
+      "id": "family-feud",
+      "name": "Family Feud",
+      "disc": "J:\\Panasonic 3DO\\Family Feud (1994)(Gametek)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "fifa-international-soccer",
+      "name": "FIFA International Soccer",
+      "disc": "J:\\Panasonic 3DO\\FIFA International Soccer (1994)(EA Sports)(EU)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "flashback---the-quest-for-identity",
+      "name": "Flashback - The Quest for Identity",
+      "disc": "J:\\Panasonic 3DO\\Flashback - The Quest for Identity (1994)(U.S. Gold)(US)(en-fr)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "flying-nightmares",
+      "name": "Flying Nightmares",
+      "disc": "J:\\Panasonic 3DO\\Flying Nightmares (1995)(Domark)(EU)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "foes-of-ali",
+      "name": "Foes of Ali",
+      "disc": "J:\\Panasonic 3DO\\Foes of Ali (1995)(EA Sports)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "gex",
+      "name": "Gex",
+      "disc": "J:\\Panasonic 3DO\\Gex (1995)(Crystal Dynamics)(EU-US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "gridders",
+      "name": "Gridders",
+      "disc": "J:\\Panasonic 3DO\\Gridders (1994)(GoldStar - Tetragon)(KR-US)(en)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "hell---a-cyberpunk-thriller",
+      "name": "Hell - A Cyberpunk Thriller",
+      "disc": "J:\\Panasonic 3DO\\Hell - A Cyberpunk Thriller (1994)(Take 2)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "horde,-the",
+      "name": "Horde, The",
+      "disc": "J:\\Panasonic 3DO\\Horde, The (1994)(Crystal Dynamics)(EU-US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "icebreaker",
+      "name": "Icebreaker",
+      "disc": "J:\\Panasonic 3DO\\Icebreaker (1995)(Panasonic)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "incredible-machine,-the",
+      "name": "Incredible Machine, The",
+      "disc": "J:\\Panasonic 3DO\\Incredible Machine, The (1994)(Dynamix)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "insect-war",
+      "name": "Insect War",
+      "disc": "J:\\Panasonic 3DO\\Insect War (1994)(Panasonic)(JP)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "iron-angel-of-the-apocalypse",
+      "name": "Iron Angel of the Apocalypse",
+      "disc": "J:\\Panasonic 3DO\\Iron Angel of the Apocalypse (1994)(Synergy)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "iron-angel-of-the-apocalypse---the-return",
+      "name": "Iron Angel of the Apocalypse - The Return",
+      "disc": "J:\\Panasonic 3DO\\Iron Angel of the Apocalypse - The Return (1995)(Synergy)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "jammit",
+      "name": "Jammit",
+      "disc": "J:\\Panasonic 3DO\\Jammit (1994)(GTE)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "jikki-pachi-slot-simulator-vol.-1",
+      "name": "Jikki Pachi Slot Simulator Vol. 1",
+      "disc": "J:\\Panasonic 3DO\\Jikki Pachi Slot Simulator Vol. 1 (1995)(Electronic Arts)(JP).chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "john-madden-football",
+      "name": "John Madden Football",
+      "disc": "J:\\Panasonic 3DO\\John Madden Football (1994)(EA Sports)(US)[!][722007-2 70].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "johnny-bazookatone",
+      "name": "Johnny Bazookatone",
+      "disc": "J:\\Panasonic 3DO\\Johnny Bazookatone (1996)(U.S. Gold)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "jurassic-park-interactive",
+      "name": "Jurassic Park Interactive",
+      "disc": "J:\\Panasonic 3DO\\Jurassic Park Interactive (1994)(Universal Interactive Studios)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "kingdom---the-far-reaches",
+      "name": "Kingdom - The Far Reaches",
+      "disc": "J:\\Panasonic 3DO\\Kingdom - The Far Reaches (1994)(Interplay)(EU-US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "last-bounty-hunter,-the",
+      "name": "Last Bounty Hunter, The",
+      "disc": "J:\\Panasonic 3DO\\Last Bounty Hunter, The (1994)(American Laser Games)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "lemmings",
+      "name": "Lemmings",
+      "disc": "J:\\Panasonic 3DO\\Lemmings (1993)(Psygnosis)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "life-stage,-the---virtual-house",
+      "name": "Life Stage, The - Virtual House",
+      "disc": "J:\\Panasonic 3DO\\Life Stage, The - Virtual House (1993)(GoldStar - Panasonic)(KR-US)(en)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    }
+  ]
+}

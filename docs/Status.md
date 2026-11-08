@@ -22,9 +22,9 @@ Debug core builds are optimized, and Auto presentation frame skip is the default
 
 **Corpus update (2026-11-08):** the current collection is **1,371 images → 414 unique
 titles / 378 game test set**, and every unique title now has a 5DO status. Tier B
-batches 1-2 reviewed **43 titles** (30 `Good`, 13 `Playable`); the remaining
-**10 `Behind` vs 4DO / 12 vs Phoenix** all have recorded reasons. The unique-title
-5DO/4DO/Phoenix comparison is in
+batches 1-3 reviewed **75 titles** (54 `Good`, 21 `Playable`); **339 titles** still have
+automated loadability only, and the **17 `Behind` vs 4DO / 20 vs Phoenix** rows all have
+recorded reasons. The unique-title 5DO/4DO/Phoenix comparison is in
 [`CompatibilityComparison.md`](CompatibilityComparison.md); the 594-disc legacy sweep
 above remains the per-image baseline.
 

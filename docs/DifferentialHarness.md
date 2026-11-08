@@ -823,12 +823,11 @@ checkpoint does not mean the instruction streams agree.
 
 ## 9. Next increments
 
-1. **TEST-06:** Tier B batches 1-2 are done (`tools/playability-sweep.py`,
-   `benchmarks/diff/tierb-behind.json`, `benchmarks/diff/tierb-panel.json`): **43 titles
-   reviewed, 30 promoted to `Good`**. Next, replace the generic menu script with
-   per-title input scripts for the remaining explicit `Behind` rows, then extend the
-   same method to the rest of the peer-flagged set. Record `Good`/`Playable`/`Unplayable`,
-   a reason, and a checkpoint screenshot per title. See `TestCorpus.md` §1.1bi/§1.1bj.
+1. **TEST-06:** Tier B batches 1-3 are done (`tools/playability-sweep.py`,
+   `benchmarks/diff/tierb-behind.json`, `tierb-panel.json`, `tierb-panel-3.json`):
+   **75 titles reviewed, 54 promoted to `Good`**. Next, add title-specific scripts for
+   the remaining `Playable` rows and run the rest of the peer-flagged set. See
+   `TestCorpus.md` §1.1bi-§1.1bk.
 2. **CORE-04/CORE-13:** close the 11 CD-only first behavioral divergences at
    f=300. The transcript, cadence, and register traces already show the command
    table and issue PCs match; the residual is the guest wait loop and the

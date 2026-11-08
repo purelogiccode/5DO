@@ -1,0 +1,19 @@
+# Lightgun-game menu probe: try pad navigation into a game.
+# Start/trigger, then Play -> 1 Player with generous gaps.
+0    None
+600  P
+620  None
+900  A
+920  None
+1200 A
+1220 None
+1500 Down
+1520 None
+1800 A
+1820 None
+2400 A
+2420 None
+3000 A
+3020 None
+3600 A
+3620 None

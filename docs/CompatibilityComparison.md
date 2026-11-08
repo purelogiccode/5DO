@@ -23,27 +23,27 @@ This page compares the three emulators on the **same local collection**. The 4DO
 
 | 5DO evidence | Titles |
 |---|---:|
-| Manual gameplay grade | 43 |
-| Automated loadability | 371 |
+| Manual gameplay grade | 75 |
+| Automated loadability | 339 |
 | Untested | 0 |
 
 ### 5DO vs 4DO
 
 | Verdict | Titles |
 |---|---:|
-| 5DO ahead | 3 |
-| Parity | 29 |
-| Parity (loadability) | 137 |
-| Behind | 10 |
+| 5DO ahead | 4 |
+| Parity | 53 |
+| Parity (loadability) | 105 |
+| Behind | 17 |
 | — | 53 |
 
 ### 5DO vs Phoenix
 
 | Verdict | Titles |
 |---|---:|
-| Parity | 30 |
-| Parity (loadability) | 204 |
-| Behind | 12 |
+| Parity | 54 |
+| Parity (loadability) | 172 |
+| Behind | 20 |
 
 `Behind` means 5DO has a lower grade, usually because the manual 5DO grade is `Playable` while the peer says `Good`; it is not a loadability failure. `Regression` is the hard failure: a peer reports the title as playable, but 5DO produced no usable frame.
 
@@ -119,23 +119,23 @@ This page compares the three emulators on the **same local collection**. The 4DO
 | Dennou Hyouryuu - Multimedia Cruising | game | Dennou Hyouryuu - Multimedia Cruising (1995)(Hamlet)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
 | Devil's Course | game | Devil's Course (1995)(Panasonic)(JP)[!].chd | 2 | 1 | Rendered | Good (95) | Parity (loadability) | — | — |
 | Digital Dreamware | game | Digital Dreamware (1995)(Virgin)(US)[!].chd | 3 | 1 | Playable | Good (100) | Behind | Good (100%) | Behind |
-| DinoPark Tycoon | game | DinoPark Tycoon (1994)(MECC)(US).chd | 2 | 1 | Rendered | Playable (75) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Doctor Hauzer | game | Doctor Hauzer (1994)(Panasonic)(JP)[!].chd | 7 | 5 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Doom | game | Doom (1995)(Art Data)(US)[!].chd | 3 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| DinoPark Tycoon | game | DinoPark Tycoon (1994)(MECC)(US).chd | 2 | 1 | Good | Playable (75) | 5DO ahead | Good (100%) | Parity |
+| Doctor Hauzer | game | Doctor Hauzer (1994)(Panasonic)(JP)[!].chd | 7 | 5 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Doom | game | Doom (1995)(Art Data)(US)[!].chd | 3 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Doraemons, The - Yuujou Densetsu | game | Doraemons, The - Yuujou Densetsu (1995)(ShoPro)(JP)[!].chd | 4 | 2 | Rendered | — | — | Good (100%) | Parity (loadability) |
-| Dragon Lore - The Legend Begins | game | Dragon Lore - The Legend Begins (1995)(Mindscape)(EU-US)(M4)(Disc 1 of 3)[!].chd | 12 | 3 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Dragon's Lair | game | Dragon's Lair (1993)(ReadySoft)(US)[!][DH 65003-2].chd | 8 | 3 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Dragon Tycoon Edge | game | Dragon Tycoon Edge (1995)(Sanyo)(JP)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Drug Wars | game | Drug Wars (1995)(American Laser Games)(US)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Dragon Lore - The Legend Begins | game | Dragon Lore - The Legend Begins (1995)(Mindscape)(EU-US)(M4)(Disc 1 of 3)[!].chd | 12 | 3 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Dragon's Lair | game | Dragon's Lair (1993)(ReadySoft)(US)[!][DH 65003-2].chd | 8 | 3 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Dragon Tycoon Edge | game | Dragon Tycoon Edge (1995)(Sanyo)(JP)[!].chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Drug Wars | game | Drug Wars (1995)(American Laser Games)(US)[!].chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Eigo de Go! - Gateway to English | game | Eigo de Go! - Gateway to English (1996)(Gakken)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
 | EMIT Vol. 1 - Toki no Maigo | game | EMIT Vol. 1 - Toki no Maigo (1995)(KOEI)(JP)[!].chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | EMIT Vol. 2 - Meigake no Tabi | game | EMIT Vol. 2 - Meigake no Tabi (1995)(KOEI)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
 | EMIT Vol. 3 - Watashi ni Sayonara o | game | EMIT Vol. 3 - Watashi ni Sayonara o (1995)(KOEI)(JP)[!].chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Endlessly | game | Endlessly (1994)(Vivid Interactive)(EU-US)[!].chd | 2 | 1 | Rendered | No data | — | Good (100%) | Parity (loadability) |
 | Escape from Monster Manor | game | Escape from Monster Manor (Korea) (En,Ko).chd | 1 | 1 | Rendered | — | — | — | — |
-| Escape from Monster Manor - A Terrifying Hunt for the Undead | game | Escape from Monster Manor - A Terrifying Hunt for the Undead (1993)(Electronic Arts)(US)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Escape from Monster Manor - A Terrifying Hunt for the Undead | game | Escape from Monster Manor - A Terrifying Hunt for the Undead (1993)(Electronic Arts)(US)[!].chd | 4 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | ESPN Baseball - Interactive Hitting | game | ESPN Baseball - Interactive Hitting (1994)(IntelliPlay)(US)[!].chd | 2 | 1 | Rendered | No data | — | Good (100%) | Parity (loadability) |
-| ESPN Golf - Lower Your Score With Tom Kite - Shot Making | game | ESPN Golf - Lower Your Score With Tom Kite - Shot Making (1994)(IntelliPlay)(US)(Disc 1 of 3)[!][Shot Making Disc 1].chd | 8 | 4 | Rendered | Playable (54) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| ESPN Golf - Lower Your Score With Tom Kite - Shot Making | game | ESPN Golf - Lower Your Score With Tom Kite - Shot Making (1994)(IntelliPlay)(US)(Disc 1 of 3)[!][Shot Making Disc 1].chd | 8 | 4 | Playable | Playable (54) | Parity | Good (100%) | Behind |
 | ESPN Golf - Tom Kite no Kore ga Golf Da! | game | ESPN Golf - Tom Kite no Kore ga Golf Da! (1994)(BYSE)(JP)(Disc 1 of 3)[!].chd | 6 | 3 | Rendered | No data | — | Good (100%) | Parity (loadability) |
 | ESPN Let's Go Skiing with Picabo Street, A. J. Kitt & Holly Flanders | game | ESPN Let's Go Skiing with Picabo Street, A. J. Kitt & Holly Flanders (1994)(IntelliPlay)(US)[!].chd | 2 | 1 | Rendered | No data | — | Good (100%) | Parity (loadability) |
 | ESPN Let's Play Beach Volleyball with Karch Kiraly & Karolyn Kirby | game | ESPN Let's Play Beach Volleyball with Karch Kiraly & Karolyn Kirby (1993)(IntelliPlay)(US).chd | 2 | 1 | Rendered | No data | — | Good (100%) | Parity (loadability) |
@@ -145,32 +145,32 @@ This page compares the three emulators on the **same local collection**. The 4DO
 | Evil Australians - Rise of Stupidity | game | Evil Australians - Rise of Stupidity v1.1 (2017)(Gameblabla).chd | 1 | 1 | No video | — | — | — | — |
 | Eye of Typhoon | game | Eye of Typhoon (Korea).chd | 5 | 3 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | F1GP | game | F1GP (1995)(Pony Canyon)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
-| Family Feud | game | Family Feud (1994)(Gametek)(US)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Family Feud | game | Family Feud (1994)(Gametek)(US)[!].chd | 2 | 1 | Playable | Good (100) | Behind | Good (100%) | Behind |
 | Fatty Bear's Birthday Surprise | game | Fatty Bear's Birthday Surprise (1993)(Humongous Entertainment)(US)[!].chd | 4 | 2 | Rendered | No data | — | Good (100%) | Parity (loadability) |
 | Fatty Bear's Funpack | game | Fatty Bear's Funpack (1993)(Humongous Entertainment)(US)[!].chd | 6 | 2 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | FB Battery Navi Ver. II | game | FB Battery Navi Ver. II (Japan).chd | 2 | 1 | Rendered | — | — | — | — |
-| FIFA International Soccer | game | FIFA International Soccer (1994)(EA Sports)(EU)[!].chd | 4 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| FIFA International Soccer | game | FIFA International Soccer (1994)(EA Sports)(EU)[!].chd | 4 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Fire Ball!! | game | Fire Ball!! (Japan).chd | 4 | 2 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Firewall | game | Firewall (Korea).chd | 1 | 1 | Rendered | — | — | — | — |
 | Flashback | game | Flashback (Japan) (En,Ja,Fr,De,It,Nl).chd | 3 | 1 | Rendered | — | — | — | — |
-| Flashback - The Quest for Identity | game | Flashback - The Quest for Identity (1994)(U.S. Gold)(US)(en-fr)[!].chd | 4 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Flashback - The Quest for Identity | game | Flashback - The Quest for Identity (1994)(U.S. Gold)(US)(en-fr)[!].chd | 4 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Flopon World | game | Flopon World (Japan).chd | 4 | 2 | Rendered | — | — | — | — |
-| Flying Nightmares | game | Flying Nightmares (1995)(Domark)(EU)[!].chd | 4 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Foes of Ali | game | Foes of Ali (1995)(EA Sports)(US)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Flying Nightmares | game | Flying Nightmares (1995)(Domark)(EU)[!].chd | 4 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Foes of Ali | game | Foes of Ali (1995)(EA Sports)(US)[!].chd | 4 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Fun 'n Games | game | Fun 'n Games (1993)(Panasonic)(US)[!].chd | 2 | 1 | Rendered | No data | — | Good (100%) | Parity (loadability) |
 | Fun 'n Games - Soft no Omochabai | game | Fun 'n Games - Soft no Omochabai (1994)(Virgin)(JP)(en-ja)[!].chd | 3 | 1 | Rendered | No data | — | — | — |
 | Gakkou no Kowai Uwasa - Hanako-san ga Kita!! | game | Gakkou no Kowai Uwasa - Hanako-san ga Kita!! (1995)(Amuse)(JP)[!].chd | 2 | 1 | Rendered | No data | — | — | — |
 | Game no Tatsujin | game | Game no Tatsujin (1995)(Sunsoft)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
 | Gameblabla's Crappy Compilation Rev 2 | game | Gameblabla's Crappy Compilation Rev 2 (2016)(Gameblabla).chd | 1 | 1 | Rendered | — | — | — | — |
-| Gex | game | Gex (1995)(Crystal Dynamics)(EU-US)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Gex | game | Gex (1995)(Crystal Dynamics)(EU-US)[!].chd | 4 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Ghost Hunter Series - Kuroki Shi no Kamen | game | Ghost Hunter Series - Kuroki Shi no Kamen (Japan) (Rev 1).chd | 4 | 1 | Rendered | — | — | — | — |
 | Goal FH | game | Goal FH (1995)(Carrozzeria Japan)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
-| Gridders | game | Gridders (1994)(GoldStar - Tetragon)(KR-US)(en)[!].chd | 6 | 3 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Gridders | game | Gridders (1994)(GoldStar - Tetragon)(KR-US)(en)[!].chd | 6 | 3 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Grimm Meisaku Gekijou 1 - Bremen no Ongakutai | game | Grimm Meisaku Gekijou 1 - Bremen no Ongakutai (1994)(IMA)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
 | Grimm Meisaku Gekijou 2 - Hansel to Gretel | game | Grimm Meisaku Gekijou 2 - Hansel to Gretel (1994)(IMA)(JP)[!].chd | 3 | 1 | Rendered | — | — | — | — |
 | Grimm Meisaku Gekijou 3 - Akazukin | game | Grimm Meisaku Gekijou 3 - Akazukin (1994)(IMA)(JP)[!].chd | 3 | 1 | Rendered | — | — | — | — |
 | Guardian War | game | Guardian War (1994)(Panasonic)(US)[!].chd | 4 | 1 | Playable | Good (100) | Behind | Good (100%) | Behind |
-| Hell - A Cyberpunk Thriller | game | Hell - A Cyberpunk Thriller (1994)(Take 2)(US)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Hell - A Cyberpunk Thriller | game | Hell - A Cyberpunk Thriller (1994)(Take 2)(US)[!].chd | 2 | 1 | Playable | Good (100) | Behind | Good (100%) | Behind |
 | Hello Kitty - Asobi no Omochabako | game | Hello Kitty - Asobi no Omochabako (Japan).chd | 1 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Hirata Shougo Interactive Ehon - Aesop Monogatari Vol.1 | game | Hirata Shougo Interactive Ehon - Aesop Monogatari Vol.1 (1994)(ELCOM)(JP)(M3)[!].chd | 3 | 1 | Rendered | — | — | — | — |
 | Hirata Shougo Interactive Ehon - Cinderella | game | Hirata Shougo Interactive Ehon - Cinderella (1995)(ELCOM)(JP)(M3).chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
@@ -179,8 +179,8 @@ This page compares the three emulators on the **same local collection**. The 4DO
 | Hirata Shougo Interactive Ehon - Sanbiki no Kobuta | game | Hirata Shougo Interactive Ehon - Sanbiki no Kobuta (1994)(ELCOM)(JP)(M3)[!].chd | 3 | 1 | Rendered | — | — | — | — |
 | Hirata Shougo Interactive Ehon - Shirayukihime | game | Hirata Shougo Interactive Ehon - Shirayukihime (1994)(ELCOM)(JP)(M3)[!].chd | 3 | 1 | Rendered | — | — | — | — |
 | Hitchcock ni Chousen | game | Hitchcock ni Chousen (Japan).chd | 1 | 1 | Rendered | — | — | — | — |
-| Horde, The | game | Horde, The (1994)(Crystal Dynamics)(EU-US)[!].chd | 7 | 4 | Rendered | Good (95) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Icebreaker | game | Icebreaker (1995)(Panasonic)(US)[!].chd | 3 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Horde, The | game | Horde, The (1994)(Crystal Dynamics)(EU-US)[!].chd | 7 | 4 | Good | Good (95) | Parity | Good (100%) | Parity |
+| Icebreaker | game | Icebreaker (1995)(Panasonic)(US)[!].chd | 3 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Icebreaker II - The Game | game | Icebreaker II - The Game (2007)(Oldergames)[f 3DO Experience][AKA Icebreaker 2 2011 Edition].chd | 1 | 1 | Rendered | — | — | — | — |
 | Ida Jiyouji Nightmare Interactive - Moon Cradle - Igyou no Hanayome | game | Ida Jiyouji Nightmare Interactive - Moon Cradle - Igyou no Hanayome (1995)(Panasonic)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
 | Ide Yousuke Meijin no Shin Jissen Mahjong | game | Ide Yousuke Meijin no Shin Jissen Mahjong (1996)(Capcom)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
@@ -190,34 +190,34 @@ This page compares the three emulators on the **same local collection**. The 4DO
 | Igo Time Trial - Shikatsu Daihyakka | game | Igo Time Trial - Shikatsu Daihyakka (Japan).chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Immercenary | game | Immercenary (1995)(Electronic Arts)(EU)[!].chd | 4 | 1 | Rendered | Good (100) | Parity (loadability) | — | — |
 | Immortal Desire | game | Immortal Desire (1994)(Vivid Interactive)(US).chd | 2 | 1 | Rendered | No data | — | Good (100%) | Parity (loadability) |
-| Incredible Machine, The | game | Incredible Machine, The (1994)(Dynamix)(US)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Insect War | game | Insect War (1994)(Panasonic)(JP)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Incredible Machine, The | game | Incredible Machine, The (1994)(Dynamix)(US)[!].chd | 4 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Insect War | game | Insect War (1994)(Panasonic)(JP)[!].chd | 2 | 1 | Playable | Good (100) | Behind | Good (100%) | Behind |
 | Interplay 3DO Buffet, The | game | Interplay 3DO Buffet, The (1995)(Interplay)(US)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | — | — |
-| Iron Angel of the Apocalypse | game | Iron Angel of the Apocalypse (1994)(Synergy)(US)[!].chd | 6 | 3 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Iron Angel of the Apocalypse - The Return | game | Iron Angel of the Apocalypse - The Return (1995)(Synergy)(US)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Iron Angel of the Apocalypse | game | Iron Angel of the Apocalypse (1994)(Synergy)(US)[!].chd | 6 | 3 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Iron Angel of the Apocalypse - The Return | game | Iron Angel of the Apocalypse - The Return (1995)(Synergy)(US)[!].chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Ishida Yoshio Kudan no Igo Seiha | game | Ishida Yoshio Kudan no Igo Seiha (1995)(Electronic Arts)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
 | J. B. Harold - Blue Chicago Blues | game | J. B. Harold - Blue Chicago Blues (1995)(Riverhill Soft)(JP)(Disc 1 of 2)[!].chd | 4 | 2 | Rendered | — | — | — | — |
 | J.League Virtual Stadium | game | J.League Virtual Stadium (1994)(EA Sports)(JP)[!].chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | J.League Virtual Stadium '95 | game | J.League Virtual Stadium '95 (1995)(EA Sports)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
-| Jammit | game | Jammit (1994)(GTE)(US)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Jammit | game | Jammit (1994)(GTE)(US)[!].chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Jietai World | game | Jietai World (Japan).chd | 1 | 1 | Rendered | — | — | — | — |
-| Jikki Pachi Slot Simulator Vol. 1 | game | Jikki Pachi Slot Simulator Vol. 1 (1995)(Electronic Arts)(JP).chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| John Madden Football | game | John Madden Football (1994)(EA Sports)(US)[!][722007-2 70].chd | 8 | 3 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Johnny Bazookatone | game | Johnny Bazookatone (1996)(U.S. Gold)(US)[!].chd | 4 | 2 | Rendered | Good (90) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Jikki Pachi Slot Simulator Vol. 1 | game | Jikki Pachi Slot Simulator Vol. 1 (1995)(Electronic Arts)(JP).chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
+| John Madden Football | game | John Madden Football (1994)(EA Sports)(US)[!][722007-2 70].chd | 8 | 3 | Playable | Good (100) | Behind | Good (100%) | Behind |
+| Johnny Bazookatone | game | Johnny Bazookatone (1996)(U.S. Gold)(US)[!].chd | 4 | 2 | Good | Good (90) | Parity | Good (100%) | Parity |
 | Joypad Test | game | Joypad Test v1.0 (2011)(Sdevel).chd | 1 | 1 | Rendered | — | — | — | — |
-| Jurassic Park Interactive | game | Jurassic Park Interactive (1994)(Universal Interactive Studios)(US)[!].chd | 4 | 2 | Rendered | Good (90) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Jurassic Park Interactive | game | Jurassic Park Interactive (1994)(Universal Interactive Studios)(US)[!].chd | 4 | 2 | Playable | Good (90) | Behind | Good (100%) | Behind |
 | Kakinoki Shogi | game | Kakinoki Shogi (1994)(Panasonic)(JP)[!].chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Keiba Saishou no Housoku | game | Keiba Saishou no Housoku (1994)(Copya)(JP)[!].chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Kero Kero Keroppi to Origami no Tabibito | game | Kero Kero Keroppi to Origami no Tabibito (1995)(Mizuki)(JP)[!].chd | 3 | 1 | Rendered | — | — | — | — |
 | Killing Time | game | Killing Time (1995)(Studio 3DO)(EU)[!].chd | 13 | 6 | Rendered | Good (100) | Parity (loadability) | — | — |
-| Kingdom - The Far Reaches | game | Kingdom - The Far Reaches (1994)(Interplay)(EU-US)[!].chd | 3 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Kingdom - The Far Reaches | game | Kingdom - The Far Reaches (1994)(Interplay)(EU-US)[!].chd | 3 | 2 | Playable | Good (100) | Behind | Good (100%) | Behind |
 | Konpeki no Kantai | game | Konpeki no Kantai (Japan) (Rev 1).chd | 4 | 2 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Kyuumei Kyuukyuu Teate no ABC | game | Kyuumei Kyuukyuu Teate no ABC (Japan).chd | 1 | 1 | Rendered | — | — | — | — |
 | Kyuusei Senjutsu ni Yoru - Heisei Kaiun Koyomi | game | Kyuusei Senjutsu ni Yoru - Heisei Kaiun Koyomi (1994)(Ariadne)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
 | LameNES Emulator | game | LameNES Emulator (2016)(Gameblabla - Saffron)[incl. Hello World ROM].chd | 1 | 1 | No video | — | — | — | — |
-| Last Bounty Hunter, The | game | Last Bounty Hunter, The (1994)(American Laser Games)(US)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Lemmings | game | Lemmings (1993)(Psygnosis)(US)[!].chd | 4 | 2 | Rendered | Good (90) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Life Stage, The - Virtual House | game | Life Stage, The - Virtual House (1993)(GoldStar - Panasonic)(KR-US)(en)[!].chd | 5 | 3 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Last Bounty Hunter, The | game | Last Bounty Hunter, The (1994)(American Laser Games)(US)[!].chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Lemmings | game | Lemmings (1993)(Psygnosis)(US)[!].chd | 4 | 2 | Good | Good (90) | Parity | Good (100%) | Parity |
+| Life Stage, The - Virtual House | game | Life Stage, The - Virtual House (1993)(GoldStar - Panasonic)(KR-US)(en)[!].chd | 5 | 3 | Playable | Good (100) | Behind | Good (100%) | Behind |
 | Little House, The | game | Little House, The (1995)(MC International)(JP).chd | 2 | 1 | Rendered | No data | — | Good (100%) | Parity (loadability) |
 | Lost Dungeon | game | Lost Dungeon (1995)(T&E Soft)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
 | Lost Eden | game | Lost Eden (1993)(Virgin)(US)(M5).chd | 5 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
@@ -479,5 +479,6 @@ The peer reports `Unplayable`/`Not Loadable`, but 5DO loads the title. Promote t
 | Title | 5DO | 4DO | Phoenix |
 |---|---|---|---|
 | Alone in the Dark | Good | Playable | Good |
+| DinoPark Tycoon | Good | Playable | Good |
 | Orbatak | Good | Unplayable | Good |
 | Shootout at Old Tucson | Playable | Unplayable | Good |

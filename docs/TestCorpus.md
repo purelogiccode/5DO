@@ -3028,12 +3028,12 @@ and the Phoenix (Arts-Union) list, then joins the 5DO sweep and manual grades. T
 | Matched to 4DO | 232 of 241 reference titles |
 | Matched to Phoenix | 246 of 302 reference titles |
 | Matched to both | 194 |
-| 5DO manual gameplay grades | 43 |
-| 5DO automated loadability | 371 |
+| 5DO manual gameplay grades | 75 |
+| 5DO automated loadability | 339 |
 | 5DO untested | 0 |
 | 5DO ahead of 4DO | 2 (Orbatak, Shootout at Old Tucson) |
-| 5DO behind 4DO | 10 after Tier B batch 2 (8 initially; batches 1-2 turned unknown rows into explicit grades) |
-| 5DO behind Phoenix | 12 after Tier B batch 2 (10 initially) |
+| 5DO behind 4DO | 17 after Tier B batch 3 (8 initially; batches 1-3 turned unknown rows into explicit grades) |
+| 5DO behind Phoenix | 20 after Tier B batch 3 (10 initially) |
 | Loadability regressions | 0 |
 
 **Phoenix is a 100% list, not a graded database.** All 302 entries are recorded at 100%, so
@@ -3119,3 +3119,37 @@ count is now **10 vs 4DO / 12 vs Phoenix**, but that is better evidence, not a r
 seven new `Playable` grades replaced unknown loadability rows, and every one has a
 recorded reason. Batches 1-2 closed the unknown-review gap; the remaining work is the
 seven title-specific scripts above plus the five batch-1 titles.
+
+### 1.1bk TEST-06 Tier B batch 3: 32 more peer-flagged titles (2026-11-08)
+
+Batch 3 used the same generator and 36,000-frame `--bios-auto` pass. All 32 completed
+with exit code 0.
+
+**24 promoted to `Good`:** DinoPark Tycoon, Doctor Hauzer, Doom, Dragon Lore, Dragon
+Tycoon Edge, Dragon's Lair, Drug Wars, Escape from Monster Manor, FIFA International
+Soccer, Flashback, Flying Nightmares, Foes of Ali, Gex, Gridders, Horde, Icebreaker,
+Incredible Machine, Iron Angel of the Apocalypse, Iron Angel Returns, Jammit, Jikki
+Pachi-Slot Simulator Vol. 1, Johnny Bazookatone, Last Bounty Hunter, and Lemmings
+(Lemmings keeps its existing Fun 4 passcode gameplay evidence; the generic pass stops at
+the title menu).
+
+**8 kept `Playable`:**
+
+| Title | Why it is not Good yet |
+|---|---|
+| ESPN Golf - Shot Making | Instructor video/lesson, not a playable round; instructional disc. |
+| Family Feud | Stays on the Music/Speech/Sound/Rapid Play/Difficulty options menu. |
+| Hell - A Cyberpunk Thriller | Stays on the title menu. |
+| Insect War | Stays on the character-select screen. |
+| John Madden Football | Stays on the Scouting Report/play-selection menu. |
+| Jurassic Park Interactive | Reaches the Operations terminal map; in-park gameplay not confirmed. |
+| Kingdom - The Far Reaches | Stays on the title menu. |
+| Life Stage - Virtual House | Sample-menu/house content; it is a virtual-house disc. |
+
+An 18,000-frame audio-hash pass covered all 32 titles with non-zero hashes and
+`dspRunning: true`.
+
+Result: **75 titles now have a manual grade** (54 `Good`, 21 `Playable`) and **339**
+titles still have automated loadability only. The `Behind` count is **17 vs 4DO / 20 vs
+Phoenix**, again because eight more unknown rows became explicit `Playable` grades. The
+review gap is closing; the grade gap is now the real work.
