@@ -2814,3 +2814,68 @@ bitmap. The 50-title panel remains **50/50 frame hashes** at frames 60/120/300 w
 harness samples Opera's ARM/CD state in the checkpoint's own callback, and the CD
 poll/FIQ/READ_DATA parity fixes are recorded in 1.1az. **1,939 tests pass**; build,
 format, and InspectCode are clean.
+
+### 1.1bd TEST-07 audio gating, scripted input, and the nightly baseline (2026-11-08)
+
+The cumulative audio hash is now part of the 300-frame differential gate. The
+harness compares it only when both engines produced the same sample count; a
+count difference is reported as
+`cumulative hash not comparable: sample delta ... (reference 16.16 field-rate
+quantization, 1.214 ppm)` instead of a waveform difference. A hash difference at
+an aligned count is still a hard failure. The report adds
+`Audio hashes aligned (all checkpoints)`, `Audio lag (sample count)`, and
+`Audio content diverged` summary rows plus an `Audio aligned` HTML card.
+
+The alignment probe (`benchmarks/diff/audio-probe.json`, Lemmings, 3,000 frames)
+measured:
+
+| Frame | 5DO samples | Opera samples | Delta |
+|---:|---:|---:|---:|
+| 60 | 44,144 | 44,144 | 0 |
+| 120 | 88,288 | 88,288 | 0 |
+| 300 | 220,720 | 220,720 | 0 |
+| 600 | 441,441 | 441,441 | 0 |
+| 1,000 | 735,735 | 735,735 | 0 |
+| 2,000 | 1,471,470 | 1,471,471 | +1 |
+| 3,000 | 2,207,205 | 2,207,207 | +2 |
+
+5DO follows the exact `60000/1001` rate (59.940059940 Hz). OperaCore's 16.16
+constant is `3,928,227/65,536` (59.939987183 Hz), **1.214 ppm lower**; a field is
+0.253 ARM cycles longer, or 0.000893 samples per field. The predicted drift at
+3,000 frames is 2.68 samples, matching the measured +2. This is the reference's
+clock quantization, not a 5DO sample-clock error, so 5DO does not copy the
+constant.
+
+The 50-title panel (`artifacts/diff/test93-panel50-audio/report.json`, local
+corpus, debug core `opera-build-timers/OperaCore.dll`) gates audio and captures
+**50/50 titles with 0 errors**, **50/50 frame hashes**, and **150/150 audio
+hashes** at frames 60/120/300. The 11 CD-only first behavioral divergences at
+f=300 remain; all other titles are PC/CPSR phase-only.
+
+Scripted input is wired through both engines. `benchmarks/diff/scripts/menu-advance.txt`
+is a generic menu script (Start and A with gaps); `samples5-input.json` runs the
+five local titles for 900 frames. Results
+(`artifacts/diff/test94-samples5-input/report.json`):
+
+- **5/5 frame hashes at 60/300/600**; every title matches the reference video
+  through the first six seconds of input.
+- The script reaches the guest: 5DO output changes at f=600 for Space Ace and at
+  f=900 for Alone, Lemmings, Road Rash, and Wolfenstein 3D.
+- The no-input control (`test96-samples5-noinput`) matches the same checkpoints,
+  so the 60/300/600 matches are not from an ignored script.
+- Road Rash's f=600 video divergence reproduces with no input
+  (`test95-roadrash-noinput`), so it is not input-induced.
+- At f=900 the reference is one sample ahead on all five titles, so the audio
+  hash is reported as the alignment state. Alone's f=900 frames are the same
+  dark transition/noise screen in both engines; the pixel hash differs but the
+  visible output does not.
+
+The nightly workflow (`diff-harness.yml`) now runs the showcase with `--force`,
+uploads `report.html`/`report.md`/`report.json`, and compares the fresh report
+against `benchmarks/diff/baseline/showcase-report.json`. A changed 5DO field
+fails the job; a baseline-known divergence (Road Rash at 3,000 frames) does not.
+Generate the baseline with
+`FiveDo.DiffHarness baseline --current <report.json> --write <baseline.json>`.
+
+Tests: audio content/lag comparison, the report audio summary, and baseline
+write/compare; **2,040 pass**. `dotnet format` and InspectCode are clean.

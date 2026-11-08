@@ -1,6 +1,7 @@
 # Differential Harness
 
-**Status:** implemented 2026-10-31; TEST-07 oracle instrumentation 2026-11-06.
+**Status:** implemented 2026-10-31; TEST-07 oracle instrumentation 2026-11-06;
+audio gating, scripted input, and the nightly baseline gate 2026-11-08.
 **Features:** FND-05, CORE-11, CORE-16.
 **Tool:** `tools/FiveDo.DiffHarness`.
 **Manifests:** `benchmarks/diff/`.
@@ -16,7 +17,7 @@ shipped emulator.
 |---|---|---|---|
 | Frame hash | Assembled BGRA8888 frame, FNV-1a | XRGB8888 presenter frame converted to BGRA8888, FNV-1a | Yes |
 | DSP sample count | `run --json` | Audio callback count | Yes, with `sampleTolerance` |
-| Audio hash | Packed DSP samples, FNV-1a | Interleaved stereo samples, FNV-1a | No; enable with `--compare-audio` once sample counts align |
+| Audio hash | Packed DSP samples, FNV-1a | Interleaved stereo samples, FNV-1a | Yes on the 300-frame panel; the cumulative hash requires equal sample counts (see §4.1) |
 | ARM PC | `run --json` | Optional debug export | No; enable with `--compare-pc` |
 | ARM CPSR | `run --json` | Optional debug export | No; `--compare-pc` also compares CPSR when both sides expose it |
 | CD command count/hash | `CdromCommandTranscript` issue-time counters | Optional debug export | No; enable with `--compare-cd` |
@@ -255,10 +256,13 @@ Rules:
   it also compares the full opcode sequence and reports the first divergent
   command index with a seven-opcode context window.
 - `compare.compareSamples` gates the DSP sample count; `compare.sampleTolerance`
-  allows the systematic 59.94/60 Hz field-rate offset (43 samples at frame 60,
-  212 at frame 300). `compare.compareAudio` gates the cumulative audio hash; keep
-  it off until the sample streams are aligned, because a sample-count offset makes
-  the cumulative hashes incomparable.
+  absorbs the reference field-clock quantization described in §4.1.
+  `compare.compareAudio` gates the cumulative audio hash. The hash is compared
+  only when both engines produced the same sample count; a count difference is
+  reported as an alignment state (`cumulative hash not comparable`) rather than a
+  waveform divergence. The 300-frame panel and the 300-frame five-title sample
+  enable it; 3,000-frame manifests leave it informational because the reference
+  constant drifts by about one sample per 1,100 frames.
 - The fixed seed comes from `options.randomSeed` when set, otherwise from
   `--seed` (default 1488). `random` is rejected: a differential run needs a fixed
   seed. The applied seed is recorded in each `CaptureResult` and in the report
@@ -312,6 +316,77 @@ scripted input, frame capture, and checkpoints share the same frame boundary.
 For OperaCore, the checkpoint is finalized at the start of the next video
 callback, after that frame's audio callback. This makes its audio sample count
 and audio hash align with 5DO's end-of-frame checkpoint.
+
+### 4.1 Audio sample alignment
+
+Both engines hash the same packed DSP output, so matching cumulative hashes are
+bit-identical waveform evidence. The hash is only comparable while the two
+engines have produced the same number of samples.
+
+5DO follows the exact NTSC field rate `60000/1001` (59.940059940 Hz). OperaCore's
+16.16 constant is `3,928,227 / 65,536` (59.939987183 Hz), which is **1.214 ppm
+lower**. A field is therefore 0.253 ARM cycles longer in the reference, or
+0.000893 samples per field. The measured Lemmings alignment is:
+
+| Frame | 5DO samples | Opera samples | Delta | Cumulative audio hash |
+|---:|---:|---:|---:|---|
+| 60 | 44,144 | 44,144 | 0 | match |
+| 120 | 88,288 | 88,288 | 0 | match |
+| 300 | 220,720 | 220,720 | 0 | match |
+| 600 | 441,441 | 441,441 | 0 | match |
+| 1,000 | 735,735 | 735,735 | 0 | match |
+| 2,000 | 1,471,470 | 1,471,471 | +1 | not comparable |
+| 3,000 | 2,207,205 | 2,207,207 | +2 | not comparable |
+
+The predicted drift is 2.68 samples at 3,000 frames; the measured +2 is that
+quantization. 5DO does not copy the reference constant: the hardware
+documentation and the project's exact-clock decision specify 60000/1001. The
+audio field instead reports the sample delta and the 1.214 ppm explanation, so a
+long-run mismatch is triaged as a reference-clock alignment state. A waveform
+difference at an aligned sample count is reported as
+`audio content differs at an aligned sample count` and remains a hard failure.
+The one-title probe is `benchmarks/diff/audio-probe.json`.
+
+### 4.2 Scripted input
+
+`inputScript` accepts a path to a text file parsed by `FiveDo.Input.InputScript`:
+each non-comment line is `frame buttons`, the state persists until the next
+line, and `None` releases every button. Frames may be decimal or `0x`-prefixed;
+button names are `ControllerButton` names or the aliases `Start`/`Play`/`Pause`
+(P), `Stop` (X), and the D-pad directions. Example:
+
+```text
+# frame buttons
+0     None
+90    P
+100   None
+330   A
+340   None
+```
+
+The harness passes the file to `run --input-script` and to the reference input
+callback. Both engines apply the entry whose frame is at or before the current
+emulated frame, before that frame executes. The generic
+`benchmarks/diff/scripts/menu-advance.txt` is the current panel script; it presses
+Start and A with gaps so boot logos, menus, and FMV prompts advance.
+
+Evidence (`test94-samples5-input`, 900 frames, five titles):
+
+- All five match the frame hash at f=60, f=300, and f=600.
+- The script changes the 5DO frame at f=600 for Space Ace and at f=900 for
+  Alone, Lemmings, Road Rash, and Wolfenstein, so the buttons reach the guest.
+- Without the script (`test96-samples5-noinput`) the same checkpoints match on
+  the same titles, so the f=60/300/600 matches are not a side effect of an
+  ignored script.
+- Alone's f=900 frame differs from the reference hash but both captures are the
+  same dark transition/noise screen; this is a pixel-level difference in a
+  transition, not a visibly different menu. Road Rash already diverges at f=600
+  with no input (`test95-roadrash-noinput`), so its result is not input-induced.
+- At f=900 the sample count is one ahead in the reference, so the cumulative
+  audio hash is reported as the §4.1 alignment state for all five titles.
+
+A menu script is not gameplay evidence. Per-title scripts that reach and sustain
+gameplay are the TEST-06 work; keep the generic script for plumbing/parity only.
 
 ## 5. OperaCore staging and limitations
 
@@ -380,11 +455,12 @@ code. It is loaded through its `sg_*` C ABI.
   `sg_init`; the harness applies a fixed seed (default 1488) and records it. Two
   consecutive runs with the same seed produced identical checkpoint arrays for
   both engines on 2026-11-06.
-- Both engines now use the exact NTSC field rate (60000/1001, 208,541.67
-  cycles/field). A 300-frame run differs by 1-8 samples; `sampleTolerance`
-  remains a 512-sample safety margin, and all 50 panel titles were within 9
-  samples at frame 300. The cumulative audio hash is still not gated until the
-  streams are aligned or resampled.
+- 5DO uses the exact NTSC field rate (60000/1001, 208,541.67 cycles/field);
+  OperaCore's 16.16 constant is 1.214 ppm lower (see §4.1). A 300-frame run
+  matches the sample count exactly on the panel; the 3,000-frame run drifts by
+  +2 samples in the reference. `sampleTolerance` remains a 512-sample safety
+  margin. The 300-frame manifests gate the cumulative audio hash; long-run
+  manifests report the sample lag as an alignment state.
 - A checkpoint sample is assembled from the checkpoint's own field: the harness
   captures PC/CPSR/instructions/CD state inside the video callback and adds the
   audio hash after that field's audio callback. Earlier builds finalized the
@@ -404,16 +480,40 @@ FiveDo.DiffHarness.exe baseline `
 
 This compares each title/checkpoint/field's 5DO value. Any changed value exits
 with code 1. It is the CORE-16 gate for changes that should not alter existing
-golden results. Intentional changes require a new baseline report.
+golden results. The nightly workflow runs the showcase fresh (`--force`) and then
+compares it against `benchmarks/diff/baseline/showcase-report.json`. Update that
+file with the new `report.json` when a hash change is intentional and reviewed;
+the report's `report.html` is uploaded as the nightly artifact.
 
 ## 7. CI
 
 `.github/workflows/diff-harness.yml` is an opt-in/nightly workflow for a
 self-hosted Windows runner that has the BIOS and disc corpus. GitHub-hosted
 runners run the harness unit tests through the normal test job; they cannot run
-the reference core or the local discs.
+the reference core or the local discs. The nightly captures the showcase fresh,
+uploads `report.html`/`report.md`/`report.json`, and fails when a 5DO field
+changes against the checked-in baseline (not merely because a baseline-known
+title still diverges). Intentional changes update the baseline in the same
+change.
 
 ## 8. Current evidence
+
+- **2026-11-08 audio gating, scripted input, and nightly baseline (TEST-07).**
+  The 300-frame panel now compares the cumulative audio hash. The alignment probe
+  (`benchmarks/diff/audio-probe.json`, Lemmings) matches the sample count and hash
+  through 1,000 frames, then the reference is **+1 at 2,000** and **+2 at 3,000**
+  frames because OperaCore's 16.16 field-rate constant is 1.214 ppm below 5DO's
+  exact `60000/1001` (see §4.1). The panel
+  (`test93-panel50-audio/report.json`) captures **50/50 titles with 0 errors**,
+  **50/50 frame hashes**, and **150/150 audio hashes** at 60/120/300; the 11
+  CD-only first behavioral divergences at f=300 remain. Scripted input
+  (`scripts/menu-advance.txt`, `samples5-input.json`) matches **5/5 frame hashes
+  at 60/300/600** and demonstrably changes guest output at 600/900; the no-input
+  control matches the same checkpoints, and Road Rash's f=600 divergence
+  reproduces without input. The nightly workflow captures the showcase fresh,
+  uploads the HTML report, and compares against
+  `benchmarks/diff/baseline/showcase-report.json`; `baseline --write` generates
+  that trimmed file. **2,040 tests pass.**
 
 - **2026-11-08 CLIO timer/read trace and CD FIQ parity (CORE-02/CORE-04/CORE-07).**
   `--timer-trace` writes `fivedo.timers.txt`, `fivedo.reads.txt`, `fivedo.clio.txt`,
@@ -668,25 +768,20 @@ checkpoint does not mean the instruction streams agree.
 
 ## 9. Next increments
 
-1. Move the cadence lead to CORE-07. The transcript analysis shows that 39/50
-   panel titles have identical command streams, 8 are prefix/in-flight
-   differences, and only 3 have a one-command READ_ID poll shift. All 24
-   significant cadence steps occur at the same command-issue PC on both engines,
-   and the new CD register trace shows **no CD register access during the
-   237,794-cycle Space Ace wait or the 2.17M-cycle Lemmings wait**. The guest is
-   not waiting on CD readiness. Trace the CLIO timer counter and VBlank/timer FIQ
-   path around the step, then remove the one-field frame phase (CORE-07) or the
-   timer tick that moves it (CORE-02).
-2. Remove the universal one-field boot phase (CORE-07). It is now measured, not
-   hypothesized: every panel title's frame-60 PC aligns with Opera frame 59 at
-   -55..-256 instructions, and the CD cycle jump occurs at the boot handoff
-   (command 50, ~205,765 cycles). A fix here would make the PC/CPSR gate green
-   without a phase allowance.
-3. Align or resample the audio streams so `compareAudio` can gate the cumulative
-   hash; the sample count is within 9 at frame 300 across all 50 titles, so a
-   waveform/RMS comparison is feasible.
-4. Add scripted input to the panel; the current run is boot/menu traffic only.
-5. Wire `baseline` into the nightly workflow and publish `report.html` as an
-   artifact.
-6. Keep a visual artifact for every checkpoint now that the 300-frame panel is
-   video-clean; use the first hash mismatch as the regression signal.
+1. **TEST-06:** replace the generic menu script with per-title input scripts that
+   reach and sustain gameplay for the top-100 audit. Record `Good`/`Playable`/
+   `Unplayable`, a reason, and a checkpoint screenshot per title.
+2. **CORE-04/CORE-13:** close the 11 CD-only first behavioral divergences at
+   f=300. The transcript, cadence, and register traces already show the command
+   table and issue PCs match; the residual is the guest wait loop and the
+   data-dependent copy/decrypt work, not a CD-readiness wait.
+3. **CORE-11/16:** run the full 594-title collection on the fresh-capture nightly
+   baseline. The 50-title panel is video/audio/PC-phase clean; the known CD
+   cadence is the only behavioral field.
+4. Keep a visual artifact for every panel checkpoint. The nightly showcase
+   already captures images; the 300/900-frame panels should use the same output
+   when the audit begins, and the first hash mismatch is the regression signal.
+5. Extend audio comparison past the reference's 1.214 ppm clock quantization.
+   The current gate is exact only while sample counts align; a resampled or
+   windowed comparison would let long-run captures gate waveform content instead
+   of reporting a lag state.

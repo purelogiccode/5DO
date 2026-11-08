@@ -29,6 +29,49 @@ public sealed class DiffReportWriterTests : IDisposable
     }
 
     [Fact]
+    public void BuildMarkdown_ReportsAudioAlignmentSummary()
+    {
+        DiffReport report = Report();
+        report = new DiffReport
+        {
+            ManifestName = report.ManifestName,
+            ManifestPath = report.ManifestPath,
+            ManifestHash = report.ManifestHash,
+            GeneratedUtc = report.GeneratedUtc,
+            Provenance = report.Provenance,
+            Titles = report.Titles,
+            Summary = new DiffSummary
+            {
+                Titles = 1,
+                Checkpoints = 1,
+                Fields = 1,
+                AudioFields = 3,
+                AudioComparedTitles = 1,
+                AudioAlignedTitles = 1,
+            },
+        };
+
+        var markdown = DiffReportWriter.BuildMarkdown(report);
+        var html = DiffReportWriter.BuildHtml(report);
+
+        Assert.Contains(
+            "| Audio hashes aligned (all checkpoints) | 1 / 1 |",
+            markdown,
+            StringComparison.Ordinal);
+        Assert.Contains("| Audio lag (sample count) | 0 |", markdown, StringComparison.Ordinal);
+        Assert.Contains("| Audio content diverged | 0 |", markdown, StringComparison.Ordinal);
+        Assert.Contains("Audio aligned", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BuildMarkdown_OmitsAudioRowsWhenAudioIsNotCompared()
+    {
+        var markdown = DiffReportWriter.BuildMarkdown(Report());
+
+        Assert.DoesNotContain("Audio hashes aligned", markdown, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void BuildHtml_EscapesNames()
     {
         DiffReport report = Report("<script>alert(1)</script>");

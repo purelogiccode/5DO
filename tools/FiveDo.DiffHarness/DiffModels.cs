@@ -135,10 +135,12 @@ internal sealed class DiffMachineOptions
 /// <summary>Comparison policy.</summary>
 internal sealed class DiffCompareOptions
 {
-    /// <summary>Gets whether the audio hash is part of the pass/fail decision.</summary>
+    /// <summary>Gets whether the cumulative audio hash is part of the pass/fail decision.</summary>
     /// <remarks>
-    /// The bundled OperaCore seeds its PRNG from wall-clock time, so audio hashes are
-    /// informational until the reference accepts a fixed seed.
+    /// Both engines receive a fixed seed, so the audio stream is deterministic. The
+    /// cumulative hash is only comparable when both sides produced the same sample count;
+    /// the harness reports a differing count as a reference-clock alignment state instead
+    /// of a waveform difference.
     /// </remarks>
     public bool CompareAudio { get; init; }
 
@@ -158,8 +160,10 @@ internal sealed class DiffCompareOptions
     public bool? CompareSamples { get; init; } = true;
 
     /// <summary>
-    /// Gets the allowed absolute DSP sample-count delta. Opera paces fields at 59.94 Hz
-    /// while 5DO uses 60 Hz, so a 300-frame run differs by about 212 samples.
+    /// Gets the allowed absolute DSP sample-count delta. 5DO uses the exact 60000/1001
+    /// field rate; Opera's 16.16 constant is 1.214 ppm below it, so the count drifts by
+    /// about one sample per 1,100 frames. The tolerance absorbs that reference
+    /// quantization without hiding a real sample-clock error.
     /// </summary>
     public long SampleTolerance { get; init; }
 
@@ -604,6 +608,25 @@ internal sealed class DiffSummary
     /// differences; frame, audio, sample, state, and CD observations all match.
     /// </summary>
     public int PhaseOnlyTitles { get; init; }
+
+    /// <summary>Gets the number of checkpoint audio fields that were compared.</summary>
+    public int AudioFields { get; init; }
+
+    /// <summary>Gets the number of titles with at least one compared audio checkpoint.</summary>
+    public int AudioComparedTitles { get; init; }
+
+    /// <summary>Gets the titles whose cumulative audio hashes matched at every checkpoint.</summary>
+    public int AudioAlignedTitles { get; init; }
+
+    /// <summary>
+    /// Gets the titles whose audio hash differed only because the sample counts differed.
+    /// The cumulative hash is not comparable in that state; it is an alignment diagnostic,
+    /// not a waveform divergence.
+    /// </summary>
+    public int AudioLagTitles { get; init; }
+
+    /// <summary>Gets the titles with an audio hash difference at an aligned sample count.</summary>
+    public int AudioDivergedTitles { get; init; }
 
     /// <summary>Gets the report verdict.</summary>
     public bool Passed => Diverged == 0 && Offset == 0 && Errors == 0;

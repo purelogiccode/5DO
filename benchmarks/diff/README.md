@@ -15,10 +15,21 @@ not product configuration.
   staging.
 - `showcase.json` - the five-title showcase with 3,000-frame checkpoints, a
   two-frame offset window, and checkpoint images.
-- `samples5.json` - the local `D:/Samples/3DO` five-title TEST-07 panel:
-  300 frames, checkpoints 60/120/300, fixed seed 1488, PC/CPSR/CD comparison,
-  and a 512-sample tolerance. The exact NTSC clock now keeps sample deltas within
-  a few samples, so the tolerance is a safety margin, not a known offset.
+- `samples5.json` - the local `J:/Panasonic 3DO` five-title TEST-07 panel:
+  300 frames, checkpoints 60/120/300, fixed seed 1488, PC/CPSR/CD/audio
+  comparison, and a 512-sample tolerance. The exact NTSC clock keeps sample deltas
+  at zero through 300 frames, so the cumulative audio hash is gated here.
+- `audio-probe.json` - one title at 3,000 frames with checkpoints 60/120/300/600/
+  1000/2000/3000. It measures the reference field-clock quantization: sample
+  counts match through 1,000 frames and drift by +1/+2 at 2,000/3,000. Audio is
+  informational here by design.
+- `samples5-input.json` - the same five titles with the generic
+  `scripts/menu-advance.txt` input script at 900 frames. It proves the input
+  plumbing applies the same buttons on both engines: 5/5 video hashes match at
+  60/300/600, and input-dependent screens (Alone, Road Rash, Space Ace,
+  Wolfenstein) change at 900. `samples5-noinput.json` is the control.
+- `roadrash-noinput.json` - the one-title control that shows Road Rash's f=600
+  divergence is not input-induced.
 - `samples5-long.json` - the same five local titles at 3,000 frames with
   checkpoints 60/300/1000/3000. Use it to separate boot-time PC drift from
   visible in-game divergence.
@@ -50,7 +61,7 @@ tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
 tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/showcase.json --out artifacts/diff/showcase
 
-# TEST-07 panel: fixed seed, PC/CPSR/CD comparison.
+# TEST-07 panel: fixed seed, PC/CPSR/CD/audio comparison.
 # Build the debug core first (see docs/DifferentialHarness.md section 2).
 tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/samples5.json --out artifacts/diff/test07-samples5 `
@@ -58,8 +69,16 @@ tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
   --core artifacts/diff/opera-build-current/OperaCore.dll
 ```
 
-The reference core is paced to 59.94 Hz (NTSC), so 3,000 frames take about 50
-seconds per title. Use `--resume` to reuse captures. `--force` is required after
+The reference core is paced at its 16.16 NTSC field rate (59.939987 Hz), so
+3,000 frames take about 50 seconds per title. Use `--resume` to reuse captures.
+
+After an intentional hash change, refresh the checked-in nightly baseline:
+
+```powershell
+tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+  baseline --current artifacts/diff/nightly/report.json `
+  --write benchmarks/diff/baseline/showcase-report.json
+``` `--force` is required after
 changing frame counts, checkpoints, options, or the image/offset diagnostics. For
 a CORE-08 profile A/B, use fresh output directories so cached captures from the
 other profile are not reused:

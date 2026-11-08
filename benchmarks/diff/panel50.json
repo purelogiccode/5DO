@@ -29,7 +29,7 @@
     "operaCore": "artifacts/diff/opera-build-current/OperaCore.dll",
     "timeoutSeconds": 600,
     "compare": {
-      "compareAudio": false,
+      "compareAudio": true,
       "comparePc": true,
       "pcTolerance": 0,
       "compareCpsr": true,

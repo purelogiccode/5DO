@@ -349,6 +349,116 @@ public sealed class DiffComparerTests : IDisposable
     }
 
     [Fact]
+    public void Compare_AudioHashMatch_MatchesWhenEnabled()
+    {
+        DiffManifest manifest = Manifest(new DiffCompareOptions
+        {
+            CompareSamples = false,
+            CompareAudio = true,
+        });
+
+        DiffTitleResult result = DiffComparer.Compare(
+            manifest,
+            Title(),
+            CaptureWithAudio(100, 0x11111111),
+            CaptureWithAudio(100, 0x11111111),
+            100);
+
+        Assert.Equal("Match", result.Status);
+        DiffFieldResult field = result.Checkpoints[0].Fields
+            .Single(item => string.Equals(item.Field, "audioHash", StringComparison.Ordinal));
+        Assert.True(field.Match);
+    }
+
+    [Fact]
+    public void Compare_AudioHashMismatchAtAlignedCounts_ReportsContentDifference()
+    {
+        DiffManifest manifest = Manifest(new DiffCompareOptions
+        {
+            CompareSamples = false,
+            CompareAudio = true,
+        });
+
+        DiffTitleResult result = DiffComparer.Compare(
+            manifest,
+            Title(),
+            CaptureWithAudio(100, 0x11111111),
+            CaptureWithAudio(100, 0x22222222),
+            100);
+
+        Assert.Equal("Diverged", result.Status);
+        DiffFieldResult field = result.Checkpoints[0].Fields
+            .Single(item => string.Equals(item.Field, "audioHash", StringComparison.Ordinal));
+        Assert.False(field.Match);
+        Assert.Equal("audio content differs at an aligned sample count", field.Diagnostic);
+    }
+
+    [Fact]
+    public void Compare_AudioHashMismatchWithSampleLag_ReportsAlignmentDiagnostic()
+    {
+        DiffManifest manifest = Manifest(new DiffCompareOptions
+        {
+            CompareSamples = false,
+            CompareAudio = true,
+        });
+
+        DiffTitleResult result = DiffComparer.Compare(
+            manifest,
+            Title(),
+            CaptureWithAudio(100, 0x11111111),
+            CaptureWithAudio(103, 0x22222222),
+            100);
+
+        DiffFieldResult field = result.Checkpoints[0].Fields
+            .Single(item => string.Equals(item.Field, "audioHash", StringComparison.Ordinal));
+        Assert.False(field.Match);
+        Assert.StartsWith(DiffComparer.AudioLagDiagnosticPrefix, field.Diagnostic, StringComparison.Ordinal);
+        Assert.Contains("sample delta +3", field.Diagnostic, StringComparison.Ordinal);
+        Assert.Contains("1.214 ppm", field.Diagnostic, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BuildReport_CountsAudioAlignmentOutcomes()
+    {
+        DiffManifest manifest = Manifest(new DiffCompareOptions
+        {
+            CompareSamples = false,
+            CompareAudio = true,
+        });
+
+        DiffTitleResult aligned = DiffComparer.Compare(
+            manifest,
+            Title("aligned"),
+            CaptureWithAudio(100, 0x11111111),
+            CaptureWithAudio(100, 0x11111111),
+            100);
+        DiffTitleResult lag = DiffComparer.Compare(
+            manifest,
+            Title("lag"),
+            CaptureWithAudio(100, 0x11111111),
+            CaptureWithAudio(103, 0x22222222),
+            100);
+        DiffTitleResult content = DiffComparer.Compare(
+            manifest,
+            Title("content"),
+            CaptureWithAudio(100, 0x11111111),
+            CaptureWithAudio(100, 0x22222222),
+            100);
+
+        DiffReport report = DiffComparer.BuildReport(
+            manifest,
+            WriteManifest(),
+            [aligned, lag, content],
+            new DiffProvenance { Host = "test", Runtime = "test" });
+
+        Assert.Equal(3, report.Summary.AudioFields);
+        Assert.Equal(3, report.Summary.AudioComparedTitles);
+        Assert.Equal(1, report.Summary.AudioAlignedTitles);
+        Assert.Equal(1, report.Summary.AudioLagTitles);
+        Assert.Equal(1, report.Summary.AudioDivergedTitles);
+    }
+
+    [Fact]
     public void Compare_CdCommandSequence_ReportsFirstDivergentCommand()
     {
         DiffManifest manifest = Manifest(new DiffCompareOptions
@@ -662,6 +772,25 @@ public sealed class DiffComparerTests : IDisposable
                     Samples = 100,
                     CdCommandCount = count,
                     CdCommandHash = hash,
+                },
+            ],
+        };
+    }
+
+    private static CaptureResult CaptureWithAudio(long samples, uint audioHash)
+    {
+        return new CaptureResult
+        {
+            Engine = "capture",
+            Ok = true,
+            Checkpoints =
+            [
+                new CaptureSample
+                {
+                    Frame = 100,
+                    FrameHash = 1,
+                    Samples = samples,
+                    AudioHash = audioHash,
                 },
             ],
         };

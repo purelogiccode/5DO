@@ -64,7 +64,41 @@ jobs:
 
       - name: Run differential
         if: steps.preflight.outputs.skip != 'true'
-        run: tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe run benchmarks/diff/showcase.json --out artifacts/diff/nightly --resume
+        # A known divergence (for example Road Rash at 3,000 frames) is recorded in
+        # the baseline; the baseline step below is the regression gate.
+        continue-on-error: true
+        # Always capture fresh results: a self-hosted workspace can keep an old
+        # artifacts/diff/nightly tree, and --resume would silently reuse it.
+        run: tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe run benchmarks/diff/showcase.json --out artifacts/diff/nightly --force
+
+      - name: Compare against baseline
+        if: steps.preflight.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          $current = 'artifacts/diff/nightly/report.json'
+          if (-not (Test-Path $current)) {
+            Write-Host '::error::The differential run did not produce report.json.'
+            exit 1
+          }
+
+          $report = Get-Content $current -Raw | ConvertFrom-Json
+          if ($report.summary.errors -gt 0) {
+            Write-Host "::error::$($report.summary.errors) capture error(s) in the differential run."
+            exit 1
+          }
+
+          $baseline = 'benchmarks/diff/baseline/showcase-report.json'
+          if (-not (Test-Path $baseline)) {
+            Write-Host '::notice::No differential baseline checked in; skipping the baseline gate.'
+            exit 0
+          }
+
+          $exe = 'tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe'
+          & $exe baseline --baseline $baseline --current artifacts/diff/nightly/report.json
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host '::error::A 5DO field changed against the checked-in baseline. Review report.html and update benchmarks/diff/baseline/showcase-report.json if the change is intentional.'
+            exit 1
+          }
 
       - name: Upload report
         if: always() && steps.preflight.outputs.skip != 'true'

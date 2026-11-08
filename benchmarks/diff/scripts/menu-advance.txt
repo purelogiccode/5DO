@@ -1,0 +1,22 @@
+# Generic menu-advance script for the differential panel.
+# Frames are emulated fields. The state persists until the next entry.
+# Press Start (P) and A with gaps so boot logos, menus, and FMV prompts advance.
+0    None
+90   P
+100  None
+210  P
+220  None
+330  A
+340  None
+450  P
+460  None
+570  Down
+580  None
+600  A
+610  None
+690  P
+700  None
+780  A
+790  None
+870  P
+880  None

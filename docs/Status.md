@@ -1,6 +1,7 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-08, after the 1.5.0 GPU-HQx, video-clean VDLP, field-boundary, and
+**Snapshot:** 2026-11-08, after the TEST-07 audio-gating, scripted-input, and nightly
+baseline update; the 1.5.0 GPU-HQx, video-clean VDLP, field-boundary, and
 CD-parity update; the 1.4.0 cover-art, latency, unsigned-disc, exact-clock,
 and differential-harness update; the TEST-07 oracle increment, the VID-12 latency update,
 the PERF-02 AOT/trimming audit, the 1.3.0 field-handling update, the 1.2.2
@@ -37,6 +38,25 @@ job. The six bundles and `SHA256SUMS.txt` are attached at
 local copies are kept in `src/FiveDo.Frontend.Avalonia/bin/Release`. See
 [`WhatsNew.md`](WhatsNew.md), [`ReleaseNotes-1.5.0.md`](ReleaseNotes-1.5.0.md), and
 [`DifferentialHarness.md`](DifferentialHarness.md).
+
+**TEST-07 audio and scripted-input update (2026-11-08):** the differential harness now
+gates the cumulative audio hash when both engines have produced the same sample count.
+The 50-title panel matches **150/150 audio fields** at frames 60/120/300, so all 50
+titles match video, samples, and audio at the panel checkpoints. The one measured
+long-run limit is the reference clock: 5DO follows the exact `60000/1001` NTSC rate
+(59.940059940 Hz), while OperaCore's 16.16 constant is `3,928,227/65,536`
+(59.939987183 Hz), **1.214 ppm lower**. On Lemmings the sample counts match through
+1,000 frames, then the reference is **+1 at 2,000** and **+2 at 3,000** frames
+(2.68 predicted); the harness labels that as an alignment state instead of a waveform
+divergence. A difference at an aligned count is still a hard failure. Scripted input is
+wired into both engines: the five-title, 900-frame `samples5-input` panel matches
+**5/5 frame hashes at 60/300/600**, the generic menu script changes guest output at
+600/900, and the no-input control confirms the matches are not from an ignored script.
+The nightly workflow now runs the showcase fresh, uploads `report.html`, and fails only
+when a 5DO field changes against the checked-in baseline. The suite is **2,040 tests**;
+build, format, and InspectCode are clean. See
+[`DifferentialHarness.md`](DifferentialHarness.md) §4.1/§4.2/§6 and
+[`TestCorpus.md`](TestCorpus.md) 1.1bd.
 
 **1.4.0 release update (2026-11-07):** **v1.4.0** adds online cover art (473 unique
 WebP covers, 645/653 game IDs mapped), VID-12 run-ahead/frame-delay/VRR/audio-sync

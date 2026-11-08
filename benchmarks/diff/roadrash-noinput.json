@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "name": "Road Rash no-input control",
+  "defaults": {
+    "bios": "bios/panafz1.bin",
+    "frames": 900,
+    "checkpoints": [60, 300, 600, 900],
+    "inputScript": null,
+    "options": {
+      "profile": "accuracy",
+      "cdSpeed": "unbounded",
+      "noGameFixes": true,
+      "stateHash": null,
+      "extraArgs": []
+    },
+    "cli": null,
+    "operaCore": "artifacts/diff/opera-build-timers/OperaCore.dll",
+    "timeoutSeconds": 600,
+    "compare": {
+      "compareAudio": true,
+      "comparePc": true,
+      "pcTolerance": 0,
+      "compareCpsr": true,
+      "compareCd": true,
+      "compareSamples": true,
+      "sampleTolerance": 512,
+      "frameWindow": 2
+    }
+  },
+  "roots": {
+    "samples": "J:/Panasonic 3DO"
+  },
+  "titles": [
+    {
+      "id": "road-rash-usa",
+      "name": "Road Rash (USA)",
+      "disc": "${samples}/Road Rash (USA).chd",
+      "iso": null,
+      "bios": null,
+      "frames": null,
+      "checkpoints": null,
+      "inputScript": null,
+      "options": null,
+      "allow": []
+    }
+  ]
+}

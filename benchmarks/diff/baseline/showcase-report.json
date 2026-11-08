@@ -1,0 +1,268 @@
+{
+  "schemaVersion": 1,
+  "manifestName": "5DO differential showcase",
+  "manifestPath": "C:\\Users\\HomePC\\Dropbox\\source\\repos\\CSharp_5DO\\benchmarks\\diff\\showcase.json",
+  "manifestHash": "b4b9e2f6adf4a2c2ba472eb230ed4135",
+  "generatedUtc": "2026-11-08T05:21:10.8087173Z",
+  "provenance": {
+    "gitCommit": null,
+    "cliPath": null,
+    "cliVersion": null,
+    "operaCorePath": null,
+    "operaCoreMd5": null,
+    "biosPath": null,
+    "biosMd5": null,
+    "armTimingOverride": null,
+    "clioTimersOverride": null,
+    "celTimingOverride": null,
+    "cdTimingOverride": null,
+    "profileOverride": null,
+    "seed": null,
+    "host": "baseline",
+    "runtime": "baseline"
+  },
+  "titles": [
+    {
+      "id": "lemmings-usa",
+      "name": "Lemmings (USA)",
+      "disc": "J:\\Panasonic 3DO\\Lemmings (USA).chd",
+      "status": "Match",
+      "frames": 3000,
+      "error": null,
+      "fiveDo": null,
+      "opera": null,
+      "checkpoints": [
+        {
+          "frame": 3000,
+          "match": true,
+          "fields": [
+            {
+              "field": "frameHash",
+              "match": true,
+              "fiveDo": "0xebdb01ca",
+              "opera": "0xebdb01ca",
+              "allowedReason": null,
+              "issue": null,
+              "diagnostic": null
+            }
+          ],
+          "fiveDoImage": null,
+          "operaImage": null,
+          "fiveDoPc": null,
+          "operaPc": null,
+          "pcDelta": null,
+          "fiveDoInstructions": null,
+          "operaInstructions": null,
+          "instructionDelta": null
+        }
+      ],
+      "allowedCount": 0,
+      "divergedCount": 0,
+      "offsetCount": 0,
+      "maxPcDelta": null,
+      "pcPhaseFrame": null,
+      "pcPhaseInstructionDelta": null,
+      "cdCadence": null,
+      "firstDivergence": null,
+      "firstBehavioralDivergence": null
+    },
+    {
+      "id": "gex-usa-europe",
+      "name": "Gex (USA, Europe)",
+      "disc": "J:\\Panasonic 3DO\\Gex (USA, Europe).chd",
+      "status": "Match",
+      "frames": 3000,
+      "error": null,
+      "fiveDo": null,
+      "opera": null,
+      "checkpoints": [
+        {
+          "frame": 3000,
+          "match": true,
+          "fields": [
+            {
+              "field": "frameHash",
+              "match": true,
+              "fiveDo": "0xbed174bd",
+              "opera": "0xbed174bd",
+              "allowedReason": null,
+              "issue": null,
+              "diagnostic": null
+            }
+          ],
+          "fiveDoImage": null,
+          "operaImage": null,
+          "fiveDoPc": null,
+          "operaPc": null,
+          "pcDelta": null,
+          "fiveDoInstructions": null,
+          "operaInstructions": null,
+          "instructionDelta": null
+        }
+      ],
+      "allowedCount": 0,
+      "divergedCount": 0,
+      "offsetCount": 0,
+      "maxPcDelta": null,
+      "pcPhaseFrame": null,
+      "pcPhaseInstructionDelta": null,
+      "cdCadence": null,
+      "firstDivergence": null,
+      "firstBehavioralDivergence": null
+    },
+    {
+      "id": "road-rash-usa",
+      "name": "Road Rash (USA)",
+      "disc": "J:\\Panasonic 3DO\\Road Rash (USA).chd",
+      "status": "Diverged",
+      "frames": 3000,
+      "error": null,
+      "fiveDo": null,
+      "opera": null,
+      "checkpoints": [
+        {
+          "frame": 3000,
+          "match": false,
+          "fields": [
+            {
+              "field": "frameHash",
+              "match": false,
+              "fiveDo": "0xd5895ad5",
+              "opera": "0x0528251f",
+              "allowedReason": null,
+              "issue": null,
+              "diagnostic": null
+            }
+          ],
+          "fiveDoImage": null,
+          "operaImage": null,
+          "fiveDoPc": null,
+          "operaPc": null,
+          "pcDelta": null,
+          "fiveDoInstructions": null,
+          "operaInstructions": null,
+          "instructionDelta": null
+        }
+      ],
+      "allowedCount": 0,
+      "divergedCount": 0,
+      "offsetCount": 0,
+      "maxPcDelta": null,
+      "pcPhaseFrame": null,
+      "pcPhaseInstructionDelta": null,
+      "cdCadence": null,
+      "firstDivergence": null,
+      "firstBehavioralDivergence": null
+    },
+    {
+      "id": "wolfenstein-3d-usa",
+      "name": "Wolfenstein 3D (USA)",
+      "disc": "J:\\Panasonic 3DO\\Wolfenstein 3D (USA).chd",
+      "status": "Match",
+      "frames": 3000,
+      "error": null,
+      "fiveDo": null,
+      "opera": null,
+      "checkpoints": [
+        {
+          "frame": 3000,
+          "match": true,
+          "fields": [
+            {
+              "field": "frameHash",
+              "match": true,
+              "fiveDo": "0x175b8fe4",
+              "opera": "0x175b8fe4",
+              "allowedReason": null,
+              "issue": null,
+              "diagnostic": null
+            }
+          ],
+          "fiveDoImage": null,
+          "operaImage": null,
+          "fiveDoPc": null,
+          "operaPc": null,
+          "pcDelta": null,
+          "fiveDoInstructions": null,
+          "operaInstructions": null,
+          "instructionDelta": null
+        }
+      ],
+      "allowedCount": 0,
+      "divergedCount": 0,
+      "offsetCount": 0,
+      "maxPcDelta": null,
+      "pcPhaseFrame": null,
+      "pcPhaseInstructionDelta": null,
+      "cdCadence": null,
+      "firstDivergence": null,
+      "firstBehavioralDivergence": null
+    },
+    {
+      "id": "alone-in-the-dark-usa",
+      "name": "Alone in the Dark (USA)",
+      "disc": "J:\\Panasonic 3DO\\Alone in the Dark (USA).chd",
+      "status": "Match",
+      "frames": 3000,
+      "error": null,
+      "fiveDo": null,
+      "opera": null,
+      "checkpoints": [
+        {
+          "frame": 3000,
+          "match": true,
+          "fields": [
+            {
+              "field": "frameHash",
+              "match": true,
+              "fiveDo": "0x175b8fe4",
+              "opera": "0x175b8fe4",
+              "allowedReason": null,
+              "issue": null,
+              "diagnostic": null
+            }
+          ],
+          "fiveDoImage": null,
+          "operaImage": null,
+          "fiveDoPc": null,
+          "operaPc": null,
+          "pcDelta": null,
+          "fiveDoInstructions": null,
+          "operaInstructions": null,
+          "instructionDelta": null
+        }
+      ],
+      "allowedCount": 0,
+      "divergedCount": 0,
+      "offsetCount": 0,
+      "maxPcDelta": null,
+      "pcPhaseFrame": null,
+      "pcPhaseInstructionDelta": null,
+      "cdCadence": null,
+      "firstDivergence": null,
+      "firstBehavioralDivergence": null
+    }
+  ],
+  "summary": {
+    "titles": 0,
+    "matched": 0,
+    "allowed": 0,
+    "diverged": 0,
+    "offset": 0,
+    "errors": 0,
+    "skipped": 0,
+    "checkpoints": 0,
+    "fields": 0,
+    "allowedFields": 0,
+    "divergedFields": 0,
+    "firstDivergenceTitles": 0,
+    "pcPhaseTitles": 0,
+    "phaseOnlyTitles": 0,
+    "audioFields": 0,
+    "audioComparedTitles": 0,
+    "audioAlignedTitles": 0,
+    "audioLagTitles": 0,
+    "audioDivergedTitles": 0,
+    "passed": true
+  }
+}

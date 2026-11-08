@@ -305,6 +305,7 @@ internal static class Program
     {
         string? baselinePath = null;
         string? currentPath = null;
+        string? writePath = null;
         for (var i = 1; i < args.Length; i++)
         {
             switch (args[i])
@@ -315,6 +316,9 @@ internal static class Program
                 case "--current":
                     currentPath = NextValue(args, ref i);
                     break;
+                case "--write":
+                    writePath = NextValue(args, ref i);
+                    break;
                 case "--json":
                     break;
                 default:
@@ -322,13 +326,36 @@ internal static class Program
             }
         }
 
-        if (baselinePath is null || currentPath is null)
+        if (currentPath is null)
         {
-            throw new ArgumentException("baseline needs --baseline <report.json> and --current <report.json>.", nameof(args));
+            throw new ArgumentException(
+                "baseline needs --current <report.json> and either --baseline <report.json> or --write <path>.",
+                nameof(args));
+        }
+
+        DiffReport current = LoadReport(currentPath);
+        if (writePath is not null)
+        {
+            DiffReport trimmed = TrimBaseline(current);
+            var fullPath = Path.GetFullPath(writePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+            File.WriteAllText(
+                fullPath,
+                JsonSerializer.Serialize(trimmed, DiffJsonContext.Default.DiffReport),
+                new UTF8Encoding(false));
+            Console.WriteLine($"baseline written: {fullPath}");
+            if (baselinePath is null)
+            {
+                return 0;
+            }
+        }
+
+        if (baselinePath is null)
+        {
+            throw new ArgumentException("baseline needs --baseline <report.json>.", nameof(args));
         }
 
         DiffReport baseline = LoadReport(baselinePath);
-        DiffReport current = LoadReport(currentPath);
         var changes = new List<string>();
         foreach (var title in current.Titles)
         {
@@ -377,6 +404,48 @@ internal static class Program
 
         Console.WriteLine($"baseline changed: {changes.Count} field(s).");
         return 1;
+    }
+
+    /// <summary>
+    /// Keeps only the fields the baseline command compares, so a checked-in baseline
+    /// stays small and free of local capture paths and timing noise.
+    /// </summary>
+    private static DiffReport TrimBaseline(DiffReport current)
+    {
+        return new DiffReport
+        {
+            ManifestName = current.ManifestName,
+            ManifestPath = current.ManifestPath,
+            ManifestHash = current.ManifestHash,
+            GeneratedUtc = current.GeneratedUtc,
+            Provenance = new DiffProvenance
+            {
+                Host = "baseline",
+                Runtime = "baseline",
+            },
+            Titles = [.. current.Titles.Select(title => new DiffTitleResult
+            {
+                Id = title.Id,
+                Name = title.Name,
+                Disc = title.Disc,
+                Status = title.Status,
+                Frames = title.Frames,
+                Checkpoints = [.. title.Checkpoints.Select(checkpoint => new DiffCheckpointResult
+                {
+                    Frame = checkpoint.Frame,
+                    Match = checkpoint.Match,
+                    Fields = [.. checkpoint.Fields.Select(field => new DiffFieldResult
+                    {
+                        Field = field.Field,
+                        Match = field.Match,
+                        FiveDo = field.FiveDo,
+                        Opera = field.Opera,
+                        AllowedReason = field.AllowedReason,
+                        Issue = field.Issue,
+                    })],
+                })],
+            })],
+        };
     }
 
     private static int ManifestCommand(string[] args)
@@ -778,7 +847,8 @@ internal static class Program
         Console.WriteLine("Usage:");
         Console.WriteLine("  FiveDo.DiffHarness run <manifest.json> [options]");
         Console.WriteLine("  FiveDo.DiffHarness validate <manifest.json> [--strict]");
-        Console.WriteLine("  FiveDo.DiffHarness baseline --baseline <report.json> --current <report.json>");
+        Console.WriteLine("  FiveDo.DiffHarness baseline --current <report.json> --baseline <report.json>");
+        Console.WriteLine("  FiveDo.DiffHarness baseline --current <report.json> --write <baseline.json>");
         Console.WriteLine("  FiveDo.DiffHarness manifest --root <dir> [--root <dir>] [--out <path>] [options]");
         Console.WriteLine("  FiveDo.DiffHarness panel --from <manifest> --out <path> [options]");
         Console.WriteLine();

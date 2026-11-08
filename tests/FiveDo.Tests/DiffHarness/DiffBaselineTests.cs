@@ -34,6 +34,23 @@ public sealed class DiffBaselineTests : IDisposable
         Assert.Equal(1, Program.Main(["baseline", "--baseline", baseline, "--current", current]));
     }
 
+    [Fact]
+    public void Baseline_Write_EmitsAComparableTrimmedReport()
+    {
+        var current = Write("current.json", Report("0x00000001"));
+        var baseline = Path.Combine(_directory, "baseline.json");
+
+        Assert.Equal(
+            0,
+            Program.Main(["baseline", "--current", current, "--write", baseline]));
+
+        Assert.True(File.Exists(baseline));
+        Assert.DoesNotContain("captures", File.ReadAllText(baseline), StringComparison.Ordinal);
+        Assert.Equal(
+            0,
+            Program.Main(["baseline", "--baseline", baseline, "--current", current]));
+    }
+
     public void Dispose()
     {
         try

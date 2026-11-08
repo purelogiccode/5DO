@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -87,6 +88,17 @@ internal static class DiffReportWriter
         text.Append("| Titles with first divergence | ").Append(report.Summary.FirstDivergenceTitles).AppendLine(" |");
         text.Append("| PC/CPSR phase aligned | ").Append(report.Summary.PcPhaseTitles).AppendLine(" |");
         text.Append("| Phase-only (PC/CPSR) | ").Append(report.Summary.PhaseOnlyTitles).AppendLine(" |");
+        if (report.Summary.AudioComparedTitles > 0)
+        {
+            text.Append("| Audio hashes aligned (all checkpoints) | ")
+                .Append(report.Summary.AudioAlignedTitles).Append(" / ")
+                .Append(report.Summary.AudioComparedTitles).AppendLine(" |");
+            text.Append("| Audio lag (sample count) | ")
+                .Append(report.Summary.AudioLagTitles).AppendLine(" |");
+            text.Append("| Audio content diverged | ")
+                .Append(report.Summary.AudioDivergedTitles).AppendLine(" |");
+        }
+
         text.Append("| **Verdict** | **").Append(report.Summary.Passed ? "PASS" : "FAIL").AppendLine("** |");
         text.AppendLine();
         text.AppendLine("| Title | Status | Frames | Checkpoints | Allowed fields | Diverged fields | PC delta | Phase | CD cadence | First divergence | Error |");
@@ -353,17 +365,27 @@ internal static class DiffReportWriter
         html.AppendLine("</div>");
 
         html.AppendLine("<div class=\"cards\">");
-        foreach ((var label, var value) in new[]
+        var cards = new List<(string Label, string Value)>
         {
-            ("Match", report.Summary.Matched),
-            ("Allowed", report.Summary.Allowed),
-            ("Diverged", report.Summary.Diverged),
-            ("Frame offset", report.Summary.Offset),
-            ("Error", report.Summary.Errors),
-            ("Checkpoints", report.Summary.Checkpoints),
-        })
+            ("Match", report.Summary.Matched.ToString(CultureInfo.InvariantCulture)),
+            ("Allowed", report.Summary.Allowed.ToString(CultureInfo.InvariantCulture)),
+            ("Diverged", report.Summary.Diverged.ToString(CultureInfo.InvariantCulture)),
+            ("Frame offset", report.Summary.Offset.ToString(CultureInfo.InvariantCulture)),
+            ("Error", report.Summary.Errors.ToString(CultureInfo.InvariantCulture)),
+            ("Checkpoints", report.Summary.Checkpoints.ToString(CultureInfo.InvariantCulture)),
+        };
+        if (report.Summary.AudioComparedTitles > 0)
         {
-            html.Append("<div class=\"card\"><b>").Append(value).Append("</b>")
+            cards.Add((
+                "Audio aligned",
+                report.Summary.AudioAlignedTitles.ToString(CultureInfo.InvariantCulture)
+                    + "/"
+                    + report.Summary.AudioComparedTitles.ToString(CultureInfo.InvariantCulture)));
+        }
+
+        foreach ((var label, var value) in cards)
+        {
+            html.Append("<div class=\"card\"><b>").Append(WebUtility.HtmlEncode(value)).Append("</b>")
                 .Append(WebUtility.HtmlEncode(label)).AppendLine("</div>");
         }
 

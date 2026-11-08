@@ -9,6 +9,13 @@ namespace FiveDo.DiffHarness;
 /// <summary>Compares 5DO and Opera captures and applies the manifest allowlist.</summary>
 internal static class DiffComparer
 {
+    /// <summary>
+    /// Diagnostic prefix used when a cumulative audio hash cannot be compared because the
+    /// engines produced different sample counts. This is a measurement-alignment state,
+    /// not a waveform difference.
+    /// </summary>
+    internal const string AudioLagDiagnosticPrefix = "cumulative hash not comparable";
+
     /// <summary>Compares one title.</summary>
     public static DiffTitleResult Compare(
         DiffManifest manifest,
@@ -139,16 +146,35 @@ internal static class DiffComparer
 
             if (compare.CompareAudio || compareAudio)
             {
+                var audioMatches = fiveDoSample is not null
+                    && operaSample is not null
+                    && fiveDoSample.AudioHash == operaSample.AudioHash;
+                string? audioDiagnostic = null;
+                if (!audioMatches && fiveDoSample is not null && operaSample is not null)
+                {
+                    // The cumulative hash is only comparable when both engines have
+                    // produced the same number of samples. Opera's 16.16 NTSC field-rate
+                    // constant (3,928,227 / 65,536 Hz) is 1.214 ppm below the exact
+                    // 60000/1001 rate 5DO follows, so long captures drift by about one
+                    // sample per 1,100 frames. Label that separately from a waveform
+                    // difference at an aligned sample count.
+                    var sampleDelta = operaSample.Samples - fiveDoSample.Samples;
+                    audioDiagnostic = sampleDelta == 0
+                        ? "audio content differs at an aligned sample count"
+                        : $"cumulative hash not comparable: sample delta "
+                            + sampleDelta.ToString("+#;-#;0", CultureInfo.InvariantCulture)
+                            + " (reference 16.16 field-rate quantization, 1.214 ppm)";
+                }
+
                 if (AddField(
                     fields,
                     "audioHash",
                     fiveDoSample?.AudioHash is { } fiveDoAudio ? HarnessCommon.Hex(fiveDoAudio) : null,
                     operaSample?.AudioHash is { } operaAudio ? HarnessCommon.Hex(operaAudio) : null,
-                    fiveDoSample is not null
-                        && operaSample is not null
-                        && fiveDoSample.AudioHash == operaSample.AudioHash,
+                    audioMatches,
                     title, frame, ref allowedCount, ref divergedCount,
-                    fiveDoSample is null || operaSample is null))
+                    fiveDoSample is null || operaSample is null,
+                    diagnostic: audioDiagnostic))
                 {
                     nonOffsetDivergedCount++;
                 }
@@ -344,6 +370,16 @@ internal static class DiffComparer
         var fields = titles.SelectMany(title => title.Checkpoints)
             .SelectMany(checkpoint => checkpoint.Fields)
             .ToArray();
+        var audioFields = fields
+            .Where(field => string.Equals(field.Field, "audioHash", StringComparison.Ordinal))
+            .ToArray();
+        var audioTitles = titles
+            .Select(title => title.Checkpoints
+                .SelectMany(checkpoint => checkpoint.Fields)
+                .Where(field => string.Equals(field.Field, "audioHash", StringComparison.Ordinal))
+                .ToArray())
+            .Where(audio => audio.Length > 0)
+            .ToArray();
         var summary = new DiffSummary
         {
             Titles = titles.Length,
@@ -361,6 +397,24 @@ internal static class DiffComparer
             PcPhaseTitles = titles.Count(title => title.PcPhaseFrame is not null),
             PhaseOnlyTitles = titles.Count(
                 title => title.DivergedCount > 0 && title.FirstBehavioralDivergence is null),
+            AudioComparedTitles = audioTitles.Length,
+            AudioAlignedTitles = audioTitles.Count(
+                audio => audio.All(field => field.Match || field.AllowedReason is not null)),
+            AudioLagTitles = audioTitles.Count(
+                audio => audio.Any(
+                    field => !field.Match
+                        && field.AllowedReason is null
+                        && field.Diagnostic?.StartsWith(AudioLagDiagnosticPrefix, StringComparison.Ordinal) == true)
+                    && audio.All(
+                        field => field.Match
+                            || field.AllowedReason is not null
+                            || field.Diagnostic?.StartsWith(AudioLagDiagnosticPrefix, StringComparison.Ordinal) == true)),
+            AudioDivergedTitles = audioTitles.Count(
+                audio => audio.Any(
+                    field => !field.Match
+                        && field.AllowedReason is null
+                        && field.Diagnostic?.StartsWith(AudioLagDiagnosticPrefix, StringComparison.Ordinal) != true)),
+            AudioFields = audioFields.Length,
         };
 
         return new DiffReport
