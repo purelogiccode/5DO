@@ -57,6 +57,65 @@ public sealed class XbusTests
         Assert.Equal(0, latched);
     }
 
+    [Fact]
+    public void FiqPending_ReportsAttachedDeviceLevelAndBuiltInStatus()
+    {
+        var device = new PendingDevice();
+        var xbus = new XbusChip { OperaSemantics = true };
+        xbus.Attach(device);
+
+        Assert.True(xbus.FiqPending);
+
+        device.Pending = false;
+        xbus.SetSelect(0x0f);
+        Assert.False(xbus.FiqPending);
+
+        xbus.SetPoll(0x07);
+        for (var i = 0; i < 7; i++)
+        {
+            xbus.SetCommandFifo(i == 0 ? 0x83u : 0u);
+        }
+
+        Assert.True(xbus.FiqPending);
+    }
+
+    private sealed class PendingDevice : IXbusDevice
+    {
+        public bool HasMediaAccess => false;
+
+        public bool Pending { get; set; } = true;
+
+        public bool FiqPending => Pending;
+
+        public void Initialize()
+        {
+        }
+
+        public void Reset()
+        {
+        }
+
+        public void SetCommand(byte value)
+        {
+        }
+
+        public void SetData(uint value)
+        {
+        }
+
+        public uint GetData() => 0;
+
+        public uint GetStatus() => 0;
+
+        public void SetPoll(uint value)
+        {
+        }
+
+        public uint GetPoll() => 0;
+
+        public uint GetReserved() => 0;
+    }
+
     private sealed class MediaDevice : IXbusDevice
     {
         public bool HasMediaAccess => true;

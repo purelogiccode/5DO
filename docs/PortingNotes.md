@@ -1302,3 +1302,45 @@ M1 implements the section primitive used by all later chips:
   frame 60 fell from ~219 to **8-17**, and at frame 120 from ~392 to **24-84**;
   the PCs match within one instruction. The remaining `cdCommandCount`
   divergence is unchanged and is tracked under CORE-04.
+
+### 12.38 CD poll enables and level-held XBUS FIQ (2026-11-08)
+
+- Opera's `opera_cdrom_init` resets `poll` to `CDROM_POLL_INTEN_MASK` (`0x07`, all
+  three interrupt enables) and latches `POLRE` on the boot disc access. 5DO reset
+  the Opera-mode poll to `POLRE` (`0x80`) only. The guest driver performs a
+  read-modify-write (`read 0x540`, `write 0x540`), so it wrote `0x80` back and
+  cleared all three enables. `CdromDevice.ResetPoll` now uses `0x87` in Opera
+  semantics; the guest write preserves `0x07`, and a READ_ID completion publishes
+  `0x17` (`POLST | enables`) exactly like the reference.
+- Opera's `opera_xbus_tick` asks every XBUS device for `XBP_FIQ` on every clock
+  batch (`opera_xbus_tick` -> `XBP_FIQ` -> `opera_cdrom_update_fiq`). The request
+  is level-held while `POLST`/`POLDT`/`POLMA` intersects its enable. 5DO raised the
+  CD FIQ only when a data sector or deferred read status was published, so command
+  completions were invisible to a guest that had already cleared the active bit.
+  `FiveDoMachine.InternalFrame` now re-raises FIQ 4 while `Xbus.FiqPending` in
+  `OperaCycleBased` mode, matching the reference. `Xbus.FiqPending` reports every
+  attached device plus the built-in responder when selected.
+- `--clio-read-trace` adds the polled side of a wait loop (`clio-read f=.. cyc=..
+  pc=.. addr=.. value=..`). The reference debug core mirrors it with
+  `sg_debug_timer_*` exports. On Lemmings this localized the remaining READ_ID to
+  READ_ERROR wait to the guest's copy/decrypt loop, not timer or CD readiness:
+  the timer-14 underflow period is 12,384 cycles in both engines, and the 5DO
+  wait is 22k cycles longer because the guest executes ~8.7k more instructions in
+  a data-dependent loop. The two fixes above are still required for FIQ parity;
+  the residual count difference is tracked under CORE-13/CORE-04.
+- Tests: `CdromDeviceTests.OperaCycleBased_ResetPollPreservesInterruptEnablesAndMediaLatch`,
+  `OperaCycleBased_ReadIdRaisesTheLevelHeldFIQAfterPollEnable`, and
+  `XbusTests.FiqPending_ReportsAttachedDeviceLevelAndBuiltInStatus`.
+- The READ_ID media-access heuristic is retired. It set `POLMA` after two consecutive
+  READ_ID polls at least 50 frames apart. With the Opera poll enables restored, that
+  bit intersected `POLMAMASK` and the level-held XBUS FIQ re-raised it forever; the
+  reference never sets `POLMA` on that path. The A/B matrix (3,000-frame Space Ace,
+  hash `0x46916C61` with Opera) was: poll fix only **match**, level FIQ only
+  **match**, both fixes **diverge**, both fixes minus the heuristic **match**; Road
+  Rash's 3,000-frame hash stayed `0xD5895AD5` throughout. The final 50-title panel
+  (`test91-panel50-heuristic-retired`) keeps 50/50 frame hashes and 0 errors,
+  improves Daedalus Encounter to a full match, and leaves 38 phase-only plus the
+  same 11 CD-only behavioral divergences; Dragon's Lair remains 111/108. The
+  3,000-frame sample keeps 4/5 video matches (Alone, Lemmings, Space Ace,
+  Wolfenstein); Road Rash is the only video divergence. The heuristic's fields and
+  tests were removed.

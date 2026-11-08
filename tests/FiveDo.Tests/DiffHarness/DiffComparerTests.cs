@@ -125,6 +125,7 @@ public sealed class DiffComparerTests : IDisposable
         Assert.Equal(1, result.OffsetCount);
         DiffFieldResult field = Assert.Single(result.Checkpoints[0].Fields);
         Assert.Contains("matches Opera frame 99", field.Diagnostic, StringComparison.Ordinal);
+        Assert.Null(result.FirstBehavioralDivergence);
     }
 
     [Fact]

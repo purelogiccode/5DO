@@ -475,6 +475,7 @@ internal static class Program
         var progressEvery = options.GetInt("--progress", 0);
         var celTrace = options.Get("--cel-trace");
         var clioTimerTrace = options.Get("--clio-timer-trace");
+        var clioReadTrace = options.Get("--clio-read-trace");
         var clioTimerStats = HasFlag(args, "--clio-timer-stats");
         var pbusTrace = options.Get("--pbus-trace");
         var nvramPathOption = options.Get("--nvram");
@@ -800,6 +801,20 @@ internal static class Program
 
             clioTimerTraceWriter = new StreamWriter(clioTimerTrace) { AutoFlush = true };
             machine.Clio.TimerTraceWriter = clioTimerTraceWriter;
+            machine.Clio.FrameProvider = () => machine.FramesExecuted;
+        }
+
+        StreamWriter? clioReadTraceWriter = null;
+        if (clioReadTrace is not null)
+        {
+            var directory = Path.GetDirectoryName(Path.GetFullPath(clioReadTrace));
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            clioReadTraceWriter = new StreamWriter(clioReadTrace) { AutoFlush = true };
+            machine.Clio.ReadTraceWriter = clioReadTraceWriter;
             machine.Clio.FrameProvider = () => machine.FramesExecuted;
         }
 
@@ -1241,6 +1256,7 @@ internal static class Program
         }
         celTraceWriter?.Dispose();
         clioTimerTraceWriter?.Dispose();
+        clioReadTraceWriter?.Dispose();
         pbusTraceWriter?.Dispose();
         kprintWriter?.Dispose();
         kprintPcWriter?.Dispose();
@@ -5693,7 +5709,7 @@ internal static class Program
         Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
-        Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--script-base absolute|state] [--autopilot road] [--progress N] [--cel-trace path] [--clio-timer-trace path] [--pbus-trace path]");
+        Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--script-base absolute|state] [--autopilot road] [--progress N] [--cel-trace path] [--clio-timer-trace path] [--clio-read-trace path] [--pbus-trace path]");
         Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--deinterlace auto|bob|weave|blend] [--prefetch]");
         Console.WriteLine("             [--nvram-mode global|per-game] [--nvram-version 0-9] [--nvram-dir path]");
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");

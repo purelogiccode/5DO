@@ -189,6 +189,22 @@ internal static class HarnessCommon
         }
     }
 
+    /// <summary>Best-effort delete for diagnostic/cleanup files that may still be open.</summary>
+    public static void TryDeleteFile(string path)
+    {
+        try
+        {
+            DeleteFile(path);
+        }
+        catch (IOException)
+        {
+            // A cleanup failure must not abort a panel; the next title uses a new directory.
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
+    }
+
     /// <summary>Stages a file with a hard link when possible, otherwise a copy.</summary>
     public static void StageFile(string source, string destination)
     {

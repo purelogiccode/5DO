@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using FiveDo.Core;
 using FiveDo.Memory;
 using FiveDo.Tests.TestUtilities;
@@ -19,6 +21,25 @@ public sealed class ClioTests
         Assert.Equal(64u, clio.Peek(0x220));
         Assert.Equal(0x02020000u, clio.Peek(0x0));
         Assert.False(clio.NeedFiq);
+    }
+
+    [Fact]
+    public void ReadTrace_LogsTimerCounterReadsWithCycleAndPc()
+    {
+        var clio = new ClioChip
+        {
+            CycleProvider = () => 1234,
+            ProgramCounterProvider = () => 0x00022140,
+        };
+        using var writer = new StringWriter();
+        clio.ReadTraceWriter = writer;
+
+        _ = clio.Peek(0x108);
+        _ = clio.Peek(0x220);
+
+        var text = writer.ToString();
+        Assert.Contains("cyc=1234 pc=00022140 addr=108 value=", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("addr=220", text, StringComparison.Ordinal);
     }
 
     [Fact]

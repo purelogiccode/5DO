@@ -336,7 +336,9 @@ with FreeDO (`TestCorpus.md` 1.1a1); the differential harness now accepts
 Opera's per-slot scan and cascade carry behind the safe FreeDO-compatible default, with
 a state snapshot, 16-bit timer-register masking in Opera mode, a reference-model
 conformance test, per-timer telemetry (`--clio-timer-stats`), a bounded
-`--clio-timer-trace`, and the smoke/A-B differentials in `TestCorpus.md` 1.1b.
+`--clio-timer-trace`, and the smoke/A-B differentials in `TestCorpus.md` 1.1b. The
+reference debug core now records matching timer/read events (`--timer-trace`), which show
+the timer-14 period equal at 12,384/12,396 cycles (`TestCorpus.md` 1.1az).
 The CORE-03 CEL option (`--cel-timing freedo|opera`) now implements Opera's deferred
 draw and pixel/texel busy deadline behind the unchanged synchronous default, with a
 Madam section v2 busy snapshot, an Options v3 mode snapshot, and a three-title
@@ -345,7 +347,10 @@ The CORE-04 CD option (`--cd-timing freedo|opera`) now implements Opera's cycle-
 2048-byte data-sector readiness at the stock 2x drive speed, including delayed data
 polling, deferred read-data status, the XBUS CD FIQ, a CD-ROM section v2 clock
 snapshot, and an Options v4 mode snapshot. The immediate FreeDO path remains the
-default; the three-title smoke differential is in `TestCorpus.md` 1.1d.
+default; the three-title smoke differential is in `TestCorpus.md` 1.1d. The Opera
+poll reset now keeps the three interrupt enables (`0x87`), and the XBUS CD FIQ is
+level-held each clock batch as in `opera_xbus_tick`; `TestCorpus.md` 1.1az records
+the fix and the remaining guest copy/decrypt wait.
 SYS-09 adds `--cd-speed unbounded|1x|2x|4x|8x|16x|24x|32x` (Settings > Emulation > CD
 speed), Opera's per-speed overhead table, an Options v5 speed snapshot with a mismatch
 warning, and the three-title 3,000-frame smoke differential in `TestCorpus.md` 1.1e.

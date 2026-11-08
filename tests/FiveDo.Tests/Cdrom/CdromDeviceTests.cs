@@ -9,6 +9,47 @@ namespace FiveDo.Tests.Cdrom;
 public sealed class CdromDeviceTests
 {
     [Fact]
+    public void OperaCycleBased_ResetPollPreservesInterruptEnablesAndMediaLatch()
+    {
+        var cd = new CdromDevice { TimingMode = CdromTimingMode.OperaCycleBased };
+        cd.Reset();
+
+        // The reference resets poll to the three interrupt-enable bits and latches a
+        // media access (POLRE). The guest's read-modify-write must keep 0x07.
+        Assert.Equal(0x87, (int)cd.GetPoll());
+
+        cd.SetPoll(0x87);
+        Assert.Equal(0x07, (int)cd.GetPoll());
+
+        Send(cd, 0x83);
+        Assert.Equal(0x17, (int)cd.GetPoll());
+        Assert.True(cd.FiqPending);
+    }
+
+    [Fact]
+    public void OperaCycleBased_ReadIdRaisesTheLevelHeldFIQAfterPollEnable()
+    {
+        var cd = new CdromDevice { TimingMode = CdromTimingMode.OperaCycleBased };
+        cd.Reset();
+        cd.SetPoll(0x87);
+        var interrupts = 0;
+        cd.InterruptRequested = () => interrupts++;
+
+        Send(cd, 0x83);
+
+        // The command status is visible as a level-held FIQ. The machine tick raises it
+        // when the enable mask intersects; FiqPending is the level the XBUS tick polls.
+        Assert.True(cd.FiqPending);
+        Assert.Equal(0x17, (int)cd.GetPoll());
+
+        var status = ReadStatus(cd, 12);
+        Assert.Equal(0x83, status[0]);
+        Assert.False(cd.FiqPending);
+        Assert.Equal(0x07, (int)cd.GetPoll());
+        Assert.Equal(0, interrupts);
+    }
+
+    [Fact]
     public void Initialize_ReportsPresentDiscLikeReference()
     {
         var cd = new CdromDevice();
@@ -489,7 +530,7 @@ public sealed class CdromDeviceTests
     }
 
     [Fact]
-    public void ConsecutiveReadIdPollsAfterIdleRaiseMediaAccess()
+    public void ConsecutiveReadIdPollsDoNotSetPolma()
     {
         var cd = new CdromDevice();
         var frame = new FrameClock();
@@ -499,36 +540,9 @@ public sealed class CdromDeviceTests
         frame.Value = 60;
         Send(cd, 0x83);
 
-        Assert.NotEqual(0, (int)cd.GetPoll() & 0x40);
-    }
-
-    [Fact]
-    public void ReadIdAfterAnotherCommandDoesNotRaiseMediaAccess()
-    {
-        var cd = new CdromDevice();
-        var frame = new FrameClock();
-        cd.FrameProvider = () => frame.Value;
-
-        Send(cd, 0x83);
-        frame.Value = 60;
-        Send(cd, 0x84);
-        frame.Value = 120;
-        Send(cd, 0x83);
-
-        Assert.Equal(0, (int)cd.GetPoll() & 0x40);
-    }
-
-    [Fact]
-    public void ConsecutiveReadIdPollsWithShortGapDoNotRaiseMediaAccess()
-    {
-        var cd = new CdromDevice();
-        var frame = new FrameClock();
-        cd.FrameProvider = () => frame.Value;
-
-        Send(cd, 0x83);
-        frame.Value = 20;
-        Send(cd, 0x83);
-
+        // The retired 5DO idle heuristic set POLMA here. With the Opera poll
+        // enables restored, that bit raised a level-held FIQ the reference never
+        // has and shifted Space Ace's 3,000-frame FMV hash.
         Assert.Equal(0, (int)cd.GetPoll() & 0x40);
     }
 

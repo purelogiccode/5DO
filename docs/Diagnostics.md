@@ -262,15 +262,22 @@ dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin `
 `--clio-trace` records selected register writes and DMA activity:
 
 ```text
-clio f=<frame> write <addr:x3>=<value:x8> delay=<n>
+clio f=<frame> cyc=<cycles> write <addr:x3>=<value:x8> delay=<n>
 clio dma f=<frame> select=<device> target=<addr> len=<n> first=<4 bytes>
 clio dma-blocked f=<frame> select=<device> dipir=1
 clio dma-done f=<frame> select=<device> target=<end addr> fiq=29
 ```
 
-The trace covers timer/FIQ registers (`0x200`-`0x20C`, `0x220`), the timer block
-(`0x100`-`0x17C`), and `0x304`. `--fiq-trace` records both sides of the interrupt
-path with an ARM-cycle timestamp:
+The trace covers timer/FIQ registers (`0x40`-`0x6C`, `0x200`-`0x20C`, `0x220`), the
+timer block (`0x100`-`0x17C`), XBUS select/poll/command/data (`0x500`-`0x600`), and
+`0x304`. `--clio-read-trace` records the polled side of a wait loop:
+
+```text
+clio-read f=<frame> cyc=<cycles> pc=<pc> addr=<addr:x3> value=<value:x8>
+```
+
+It covers timer counters, `0x120`, VCNT (`0x34`), and the FIQ active/enable registers.
+`--fiq-trace` records both sides of the interrupt path with an ARM-cycle timestamp:
 
 ```text
 f=<frame> cycle=<cycles> kind=request pc=<pc> reason1=<hex> reason2=<hex>

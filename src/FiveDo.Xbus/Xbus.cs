@@ -66,6 +66,27 @@ public sealed class Xbus : IClioXbus, IStateSection
     /// <summary>Gets the save-state section identifier.</summary>
     public uint Id => StateSectionIds.Xbus;
 
+    /// <summary>
+    /// Gets whether any attached device, or the built-in responder while selected,
+    /// is holding a FIQ request. Opera: <c>opera_xbus_tick</c> asks every device for
+    /// <c>XBP_FIQ</c> each clock batch and treats the answer as level-held.
+    /// </summary>
+    public bool FiqPending
+    {
+        get
+        {
+            for (var i = 0; i < DeviceCount; i++)
+            {
+                if (_devices[i]?.FiqPending == true)
+                {
+                    return true;
+                }
+            }
+
+            return _select == BuiltInDevice && PollFiqPending();
+        }
+    }
+
     /// <summary>Gets the save-state section version.</summary>
     public ushort Version => 1;
 

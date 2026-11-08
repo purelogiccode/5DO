@@ -2735,3 +2735,58 @@ next measurement is the reference timer-14 period/slack (CORE-02).
 runs 60 frames and asserts the VDL field index changes exactly once per frame
 and the executed cycle count stays within 64 cycles of the exact budget.
 `dotnet format` is clean.
+
+### 1.1az CLIO timer/read trace and CD FIQ parity (2026-11-08)
+
+The CORE-02 follow-up added reference-side CLIO timer, read, XBUS-select/poll, and
+FIQ-write instrumentation (`sg_debug_timer_*`, mirrored by the harness
+`--timer-trace`) and a 5DO `--clio-read-trace`. Both engines now write
+`clio-timer` and `clio-read` lines with frame, ARM cycle, and guest PC stamps.
+
+The timer-14 period is **not** the residual. On Lemmings the accuracy profile
+selects the Opera scheduler in both engines, and the timer-14 underflows are
+**12,384 cycles apart in Opera and 12,396 in 5DO** (the small difference is the
+16-cycle guest batch), with a constant ~285-cycle phase offset. The READ_ID to
+READ_ERROR wait is still 2,169,618 cycles in 5DO and 2,146,784 in Opera
+(+22,834), but the instruction delta is +8,694: the guest runs a data-dependent
+copy/decrypt loop between the commands, not a timer or CD-readiness wait. The
+first 0x118 (timer 3 counter) read after READ_ID is 29,491,640 in 5DO and
+29,469,632 in Opera, and the last reads before READ_ERROR are identical
+(`0x118 = 0x368` at PC `0x00014ce0`). The residual is therefore guest work, not
+the CLIO period; it is tracked under CORE-13/CORE-04.
+
+The trace exposed two real reference-parity bugs:
+
+- **CD poll enables.** Opera resets the CD poll to `CDROM_POLL_INTEN_MASK`
+  (`0x07`) and latches `POLRE` on the boot disc access (observed `0x87`).
+  5DO reset to `0x80` only, so the guest's read-modify-write
+  (`read 0x540`, `write 0x540`) cleared all three enables. After the fix the
+  guest writes `0x87`, the CD publishes `0x17` for READ_ID, and the reference
+  and 5DO both show FIQ reason bit 2 at 28.78M cycles.
+- **Level-held XBUS FIQ.** Opera's `opera_xbus_tick` asks every device for
+  `XBP_FIQ` each batch; 5DO only raised FIQ 4 on sector publication. The machine
+  now re-raises FIQ 4 while `Xbus.FiqPending` in `OperaCycleBased` mode.
+
+The combination also exposed the old READ_ID media-access heuristic: with the
+enables restored, its `POLMA` bit became a permanent level FIQ, and Space Ace's
+3,000-frame hash moved off Opera's `0x46916C61`. The A/B matrix on Space Ace was:
+poll fix only match, level FIQ only match, both fixes diverge, both fixes minus
+the heuristic match. The heuristic is retired; Road Rash's 3,000-frame hash
+stayed `0xD5895AD5` throughout, and the 5-title sample keeps 5/5 frame hashes.
+
+Evidence: `artifacts/diff/test70-timer-reads` through
+`test91-panel50-heuristic-retired` (local corpus, debug core
+`opera-build-timers/OperaCore.dll`). The 50-title panel
+(`test91-panel50-heuristic-retired/report.json`) captures **50/50 with 0 errors**,
+**50/50 frame hashes** at 60/120/300, **49/50 same-frame PC phase**, and
+**38 phase-only** titles. It improves **Daedalus Encounter to a full match**; the
+remaining **11 first behavioral divergences are CD-only at f=300** (8 count,
+3 one-command sequence). Dragon's Lair remains 111/108. The five-title sample
+keeps the established 5/5 frame hashes and 4/5 phase-only statuses; Lemmings
+remains the CD-count outlier (109/105 at f=300) and Space Ace its 168/168 command
+stream with the +80,567 cadence step. The 3,000-frame sample
+(`test92-samples5-long-final`) keeps **4/5 video matches** (Alone, Lemmings,
+Space Ace, Wolfenstein); Road Rash remains the only video divergence. Tests:
+`CdromDeviceTests` Opera-poll reset/READ_ID, `XbusTests.FiqPending`, and
+`ClioTests.ReadTrace` cases; **1,925 pass** (one unrelated allocation test is
+flaky under load and passes alone). `dotnet format` and InspectCode are clean.

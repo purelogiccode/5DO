@@ -83,6 +83,16 @@ internal static class FiveDoCaptureRunner
             Path.Combine(titleDirectory, "nvram.ram"),
         };
 
+        if (harness.TimerTrace)
+        {
+            arguments.Add("--clio-timer-trace");
+            arguments.Add(Path.Combine(titleDirectory, "fivedo.timers.txt"));
+            arguments.Add("--clio-read-trace");
+            arguments.Add(Path.Combine(titleDirectory, "fivedo.reads.txt"));
+            arguments.Add("--clio-trace");
+            arguments.Add(Path.Combine(titleDirectory, "fivedo.clio.txt"));
+        }
+
         var imageDirectory = Path.Combine(titleDirectory, "images");
         if (!harness.NoImages)
         {

@@ -105,6 +105,12 @@ tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/samples5.json --out artifacts/diff/test07-samples5 `
   --no-images --seed 1488 --compare-cd --core artifacts/diff/opera-build-current/OperaCore.dll
 
+# CORE-02/CORE-07 timer and read trace (both engines).
+tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+  run benchmarks/diff/samples5.json --out artifacts/diff/timer-trace `
+  --no-images --timer-trace --title lemmings --force `
+  --compare-pc --compare-cd --core artifacts/diff/opera-build-current/OperaCore.dll
+
 # Strict mode with a debug core that exposes PC/CD state.
 tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/showcase.json --out artifacts/diff/showcase-debug `
@@ -144,7 +150,7 @@ Useful run flags: `--resume`, `--force`, `--title <filter>`, `--limit N`,
 `--no-images`, `--cleanup-iso`, `--seed <n>`, `--compare-pc`, `--compare-cd`,
 `--compare-audio`, `--pc-tolerance <bytes>`,
 `--arm-timing freedo|arm60`, `--clio-timers freedo|opera`,
-`--cel-timing freedo|opera`, `--cd-timing freedo|opera`, and
+`--cel-timing freedo|opera`, `--cd-timing freedo|opera`, `--timer-trace`, and
 `--profile compatible|accuracy|performance|custom`. The default fixed seed is
 1488; it is applied to both engines and recorded in each capture and in the
 report provenance.
@@ -354,6 +360,19 @@ code. It is loaded through its `sg_*` C ABI.
   instruction delta means the same path ran an extra loop. The harness writes the
   arrays as `cdCommandPcs`/`cdCommandInstructions` in each capture; they are
   diagnostic-only, not a gate.
+- `--timer-trace` writes `fivedo.timers.txt`, `fivedo.reads.txt`, `fivedo.clio.txt`,
+  and `opera.timers.txt` per title. The reference core exposes
+  `sg_debug_timer_event_count`, `sg_debug_timer_cycle_at`, `sg_debug_timer_pc_at`,
+  `sg_debug_timer_value_at`, `sg_debug_timer_kind_at`, `sg_debug_timer_slot_at`,
+  `sg_debug_timer_reload_at`, and `sg_debug_timer_fiq_at`. It records timer
+  counter/control/slack writes, underflows, CLIO timer/VCNT/FIQ reads, XBUS
+  select/poll/FIQ events, and FIQ-register writes with the same cycle and PC stamps
+  as 5DO's `--clio-timer-trace`/`--clio-read-trace`/`--clio-trace`. The arrays are
+  diagnostic-only; a core without the exports still runs.
+- The debug core is local tooling. The `opera_clio_debug_*` helpers live in
+  `opera_clio.c`/`opera_clio.h`; `opera_xbus.c` calls them for XBUS levels. Reproduce
+  them on a fresh `References/CPP_SimpleGui` checkout if the gitignored tree is
+  rebuilt.
 - `sg_debug_arm_instructions` counts calls to `opera_arm_execute`. The harness
   records it beside 5DO's `instructions` and prints the delta per checkpoint; it
   is diagnostic-only, not a gate.
@@ -395,6 +414,27 @@ runners run the harness unit tests through the normal test job; they cannot run
 the reference core or the local discs.
 
 ## 8. Current evidence
+
+- **2026-11-08 CLIO timer/read trace and CD FIQ parity (CORE-02/CORE-04/CORE-07).**
+  `--timer-trace` writes `fivedo.timers.txt`, `fivedo.reads.txt`, `fivedo.clio.txt`,
+  and `opera.timers.txt` with matched cycle/PC stamps. The timer-14 underflow period
+  is **12,384 cycles in Opera and 12,396 in 5DO** under the accuracy profile, so the
+  old "~10,400" figure was the FreeDO-compatible mode. The Lemmings
+  READ_ID-to-READ_ERROR wait is still +22,834 cycles but +8,694 retired instructions:
+  the guest runs a data-dependent copy/decrypt loop, not a timer or CD wait. The
+  trace exposed two parity bugs: 5DO reset the Opera CD poll to `0x80` instead of
+  `0x87` (`0x07` enables plus the boot media latch), so the guest's read-modify-write
+  cleared every enable; and 5DO raised FIQ 4 only on sector/status publication while
+  `opera_xbus_tick` level-checks every device each batch. `CdromDevice.ResetPoll`,
+  `Xbus.FiqPending`, and the machine-level level check now match. The final
+  50-title panel (`test91-panel50-heuristic-retired/report.json`) keeps **50/50
+  frame hashes, 0 errors, 49/50 same-frame PC phase, 38 phase-only**, improves
+  Daedalus Encounter to a full match, and retains the same 11 CD-only first
+  behavioral divergences at f=300. The five-title sample keeps 5/5 frame hashes;
+  Space Ace's 3,000-frame hash returns to `0x46916C61` after the retired READ_ID
+  heuristic, and Road Rash stays `0xD5895AD5`. The 3,000-frame sample
+  (`test92-samples5-long-final`) keeps **4/5 video matches** (Alone, Lemmings,
+  Space Ace, Wolfenstein); Road Rash is the only video divergence. **1,925 tests pass.**
 
 - **2026-11-07 frame-boundary parity (TEST-07/CORE-07).** Two independent fixes
   removed the universal frame-60 phase. First, `OperaCoreHost` finalized each

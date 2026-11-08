@@ -427,6 +427,16 @@ internal static class DiffComparer
                         continue;
                     }
 
+                    // A frame hash that matches a neighboring reference frame is a
+                    // presentation offset, not a behavioral gap.
+                    if (behavioralOnly
+                        && string.Equals(field.Field, "frameHash", StringComparison.Ordinal)
+                        && field.Diagnostic is { } offsetDiagnostic
+                        && offsetDiagnostic.StartsWith("5DO frame ", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
                     return new DiffFirstDivergence
                     {
                         Frame = checkpoint.Frame,

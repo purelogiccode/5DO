@@ -71,8 +71,6 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     private int _dataPointer;
     private byte _commandPointer;
     private int _requested;
-    private byte _lastCommandOpcode;
-    private long _lastCommandFrame = -1;
     private MeiError _meiStatus;
     private DiscState _discState = new();
     private int _currentSector;
@@ -779,7 +777,12 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 
     private void ResetPoll()
     {
-        _poll = UseOperaPollSemantics ? PollReset : (byte)0x0f;
+        // Opera: 0x220/0x540 reset leaves all three interrupt enables set. POLRE is
+        // the write-one-to-clear media-access latch; the reference latches it on the
+        // boot disc access, so the first guest read-modify-write preserves 0x07.
+        _poll = UseOperaPollSemantics
+            ? (byte)(PollReset | PollMediaMask | PollStatusMask | PollDataMask)
+            : (byte)0x0f;
     }
 
     private void LocalReset()
@@ -1036,26 +1039,10 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             + $"{_command[3]:x2} {_command[4]:x2} {_command[5]:x2} {_command[6]:x2}");
         CommandObserver?.Invoke(_command[0]);
 
-        if (_command[0] == 0x83
-            && _lastCommandOpcode == 0x83
-            && _lastCommandFrame >= 0
-            && frame >= 0
-            && frame - _lastCommandFrame >= 50)
-        {
-            // Two consecutive READ_ID polls with no intervening command mean the
-            // host is idle-waiting on the drive. Portfolio expects a media-access
-            // event to finish a post-race/post-load transition; boot traffic never
-            // has this pattern. Setting POLMA (0x40) wakes the waiting task.
-            _poll |= PollMedia;
-            _lastCommandOpcode = 0;
-        }
-        else
-        {
-            _lastCommandOpcode = _command[0];
-        }
-
-        _lastCommandFrame = frame;
-
+        // The old READ_ID idle heuristic set POLMA after two polls >=50 frames apart.
+        // With the Opera poll enables restored (0x07), that bit raised a level-held
+        // FIQ the reference never has and shifted Space Ace's 3,000-frame FMV hash.
+        // The heuristic is retired; the reference latches POLRE on real media events.
         switch (_command[0])
         {
             case 0x01: // seek

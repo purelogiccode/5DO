@@ -119,6 +119,7 @@ public sealed class FiveDoMachine
         Quartz = new Quartz(Tuning, () => Clio.TimerDelay);
 
         Clio.CycleProvider = () => Cpu.CyclesExecuted;
+        Clio.ProgramCounterProvider = () => Cpu.ProgramCounter;
         Clio.FiqRequested = HandleFiqRequest;
         Cpu.FiqEntered = HandleFiqEntry;
 
@@ -1006,6 +1007,17 @@ public sealed class FiveDoMachine
     {
         Quartz.PushArmCycles((uint)cycles);
         Cdrom.Tick((uint)cycles);
+
+        // Opera's XBUS tick asks the CD plugin for a pending FIQ every clock batch
+        // (opera_xbus_tick -> XBP_FIQ -> opera_cdrom_update_fiq). The request is
+        // level-held while POLST/POLDT/POLMA and their enables intersect, so a
+        // command-completion status raises bit 2 even when no sector was loaded.
+        // Raising only on data-sector publication left READ_ID/READ_ERROR
+        // completions invisible to the guest and stretched timer-based waits.
+        if (Tuning.CdromTiming == CdromTimingMode.OperaCycleBased && Xbus.FiqPending)
+        {
+            Clio.GenerateFiq(4, 0);
+        }
 
         if (Quartz.QueueDsp())
         {

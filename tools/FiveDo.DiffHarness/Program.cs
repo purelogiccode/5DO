@@ -140,8 +140,8 @@ internal static class Program
             SaveCapture(operaPath, opera);
             if (harness.CleanupIso && opera.Ok && opera.Iso is not null)
             {
-                HarnessCommon.DeleteFile(opera.Iso);
-                HarnessCommon.DeleteFile(opera.Iso + ".srm");
+                HarnessCommon.TryDeleteFile(opera.Iso);
+                HarnessCommon.TryDeleteFile(opera.Iso + ".srm");
             }
 
             DiffTitleResult result = DiffComparer.Compare(
@@ -585,6 +585,9 @@ internal static class Program
                 case "--no-images":
                     harness.NoImages = true;
                     break;
+                case "--timer-trace":
+                    harness.TimerTrace = true;
+                    break;
                 case "--cleanup-iso":
                     harness.CleanupIso = true;
                     break;
@@ -814,6 +817,7 @@ internal static class Program
         Console.WriteLine("  --profile <name>   Override the emulation profile for every 5DO capture (compatible|accuracy|performance|custom)");
         Console.WriteLine("  --no-opera         Capture 5DO only");
         Console.WriteLine("  --no-images        Skip checkpoint BMP/PNG captures");
+        Console.WriteLine("  --timer-trace      Write CLIO timer traces for both engines (fivedo.timers.txt/opera.timers.txt)");
         Console.WriteLine("  --cleanup-iso      Delete the staged ISO after a successful Opera capture");
         Console.WriteLine("  --compare-pc       Include the ARM PC and CPSR in the pass/fail gate (requires the debug core)");
         Console.WriteLine("  --compare-cd       Include the CD command count/hash in the pass/fail gate (requires the debug core)");

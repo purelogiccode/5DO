@@ -92,7 +92,8 @@ internal static class OperaCoreCaptureRunner
             timeout,
             seed,
             Path.Combine(titleDirectory, "opera.log.txt"),
-            harness.NoImages ? null : Path.Combine(titleDirectory, "images"));
+            harness.NoImages ? null : Path.Combine(titleDirectory, "images"),
+            harness.TimerTrace ? Path.Combine(titleDirectory, "opera.timers.txt") : null);
 
         CaptureResult result = host.Execute();
         return new CaptureResult
@@ -244,6 +245,7 @@ internal sealed class OperaCoreHost : IDisposable
     private readonly uint _seed;
     private readonly string _logPath;
     private readonly string? _imageDirectory;
+    private readonly string? _timerTracePath;
     private readonly List<string> _log = [];
     private readonly Lock _logLock = new();
     private readonly Dictionary<int, CaptureSample> _samples = [];
@@ -274,6 +276,14 @@ internal sealed class OperaCoreHost : IDisposable
     private readonly DebugUInt32Index32? _debugCdCycleAt;
     private readonly DebugUInt32Index32? _debugCdPcAt;
     private readonly DebugUInt32Index32? _debugCdInstructionsAt;
+    private readonly DebugUInt32? _debugTimerEventCount;
+    private readonly DebugUInt32Index32? _debugTimerCycleAt;
+    private readonly DebugUInt32Index32? _debugTimerPcAt;
+    private readonly DebugUInt32Index32? _debugTimerValueAt;
+    private readonly DebugUInt32Index? _debugTimerKindAt;
+    private readonly DebugUInt32Index? _debugTimerSlotAt;
+    private readonly DebugUInt32Index? _debugTimerReloadAt;
+    private readonly DebugUInt16Index? _debugTimerFiqAt;
     private readonly SetSeed? _debugSetSeed;
 
     private readonly VideoCallback _videoCallback;
@@ -307,7 +317,8 @@ internal sealed class OperaCoreHost : IDisposable
         int timeoutSeconds,
         uint seed,
         string logPath,
-        string? imageDirectory)
+        string? imageDirectory,
+        string? timerTracePath = null)
     {
         _isoPath = isoPath;
         _targetFrames = targetFrames;
@@ -317,6 +328,7 @@ internal sealed class OperaCoreHost : IDisposable
         _seed = seed;
         _logPath = logPath;
         _imageDirectory = imageDirectory;
+        _timerTracePath = timerTracePath;
 
         _library = NativeLibrary.Load(corePath);
         _apiVersion = Load<ApiVersion>("sg_api_version");
@@ -344,6 +356,14 @@ internal sealed class OperaCoreHost : IDisposable
         _debugCdCycleAt = TryLoad<DebugUInt32Index32>("sg_debug_cd_cycle_at");
         _debugCdPcAt = TryLoad<DebugUInt32Index32>("sg_debug_cd_pc_at");
         _debugCdInstructionsAt = TryLoad<DebugUInt32Index32>("sg_debug_cd_instructions_at");
+        _debugTimerEventCount = TryLoad<DebugUInt32>("sg_debug_timer_event_count");
+        _debugTimerCycleAt = TryLoad<DebugUInt32Index32>("sg_debug_timer_cycle_at");
+        _debugTimerPcAt = TryLoad<DebugUInt32Index32>("sg_debug_timer_pc_at");
+        _debugTimerValueAt = TryLoad<DebugUInt32Index32>("sg_debug_timer_value_at");
+        _debugTimerKindAt = TryLoad<DebugUInt32Index>("sg_debug_timer_kind_at");
+        _debugTimerSlotAt = TryLoad<DebugUInt32Index>("sg_debug_timer_slot_at");
+        _debugTimerReloadAt = TryLoad<DebugUInt32Index>("sg_debug_timer_reload_at");
+        _debugTimerFiqAt = TryLoad<DebugUInt16Index>("sg_debug_timer_fiq_at");
         _debugSetSeed = TryLoad<SetSeed>("sg_debug_set_seed");
 
         _videoCallback = OnVideo;
@@ -421,6 +441,7 @@ internal sealed class OperaCoreHost : IDisposable
 
             FinalizePending();
             var (cdCommands, cdCommandCycles, cdCommandPcs, cdCommandInstructions) = ReadCdCommands();
+            WriteTimerTrace();
 
             clock.Stop();
             var samples = _checkpoints
@@ -771,6 +792,100 @@ internal sealed class OperaCoreHost : IDisposable
         }
     }
 
+    private void WriteTimerTrace()
+    {
+        if (_timerTracePath is null || _debugTimerEventCount is null)
+        {
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(_timerTracePath))!);
+            var count = _debugTimerEventCount();
+            using var writer = new StreamWriter(_timerTracePath);
+            for (uint index = 0; index < count; index++)
+            {
+                var cycle = _debugTimerCycleAt?.Invoke(index) ?? 0;
+                var pc = _debugTimerPcAt?.Invoke(index) ?? 0;
+                var value = _debugTimerValueAt?.Invoke(index) ?? 0;
+                var kind = _debugTimerKindAt?.Invoke(index) ?? 0;
+                var slot = _debugTimerSlotAt?.Invoke(index) ?? 0;
+                var reload = _debugTimerReloadAt?.Invoke(index) ?? 0;
+                var fiq = _debugTimerFiqAt?.Invoke(index) ?? 0;
+                switch (kind)
+                {
+                    case 0:
+                        writer.Write($"clio-timer f=-1 cyc={cycle} slot={slot} event=underflow ");
+                        if (reload != 0)
+                        {
+                            writer.Write($"reload={value:x4}");
+                        }
+                        else
+                        {
+                            writer.Write("stop=1 value=ffff");
+                        }
+
+                        if (fiq != 0)
+                        {
+                            writer.Write($" fiq={fiq:x}");
+                        }
+
+                        writer.WriteLine(" carry=1");
+                        break;
+                    case 1:
+                        writer.WriteLine(
+                            $"clio-timer f=-1 cyc={cycle} slot={slot} event=counter "
+                            + $"write={value:x8} value={value:x4}");
+                        break;
+                    case 2:
+                        writer.WriteLine(
+                            $"clio-timer f=-1 cyc={cycle} event=control "
+                            + $"register={(slot == 0 ? "200" : "208")} value={value:x8}");
+                        break;
+                    case 3:
+                        writer.WriteLine(
+                            $"clio-timer f=-1 cyc={cycle} event=slack write={value:x8} value={value:x}");
+                        break;
+                    case 4:
+                        var address = (uint)((fiq << 8) | reload);
+                        writer.WriteLine(
+                            $"clio-read f=-1 cyc={cycle} pc={pc:x8} addr={address:x3} value={value:x8}");
+                        break;
+                    case 5:
+                        writer.WriteLine(
+                            $"clio-timer f=-1 cyc={cycle} event=xbusfiq sel={slot:x} "
+                            + $"poll={value:x2} source={reload}");
+                        break;
+                    case 6:
+                        var fiqAddress = (uint)((fiq << 8) | reload);
+                        writer.WriteLine(
+                            $"clio-timer f=-1 cyc={cycle} event=fiqwrite "
+                            + $"addr={fiqAddress:x3} value={value:x8}");
+                        break;
+                    case 7:
+                        writer.WriteLine(
+                            $"clio-timer f=-1 cyc={cycle} event=fiqgen value={value:x8}");
+                        break;
+                    case 8:
+                        writer.WriteLine(
+                            $"clio-timer f=-1 cyc={cycle} event=xbussel sel={slot:x} "
+                            + $"value={value:x2} high={reload:x2}");
+                        break;
+                    case 9:
+                        writer.WriteLine(
+                            $"clio-timer f=-1 cyc={cycle} event=xbuspoll sel={slot:x} "
+                            + $"value={value:x2}");
+                        break;
+                }
+            }
+        }
+        catch (IOException)
+        {
+            // The timer trace is diagnostic; never fail a capture because of it.
+        }
+    }
+
     private T Load<T>(string export)
         where T : Delegate
     {
@@ -882,6 +997,9 @@ internal sealed class OperaCoreHost : IDisposable
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate uint DebugUInt32Index32(uint index);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate ushort DebugUInt16Index(uint index);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate byte DebugUInt8();

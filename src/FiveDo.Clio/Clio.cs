@@ -124,6 +124,15 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     /// <summary>Gets or sets an optional diagnostic writer for timer register traffic.</summary>
     public System.IO.TextWriter? TraceWriter { get; set; }
 
+    /// <summary>Gets or sets an optional diagnostic writer for CLIO register reads.</summary>
+    /// <remarks>
+    /// This is diagnostic telemetry for accuracy work. It logs only the registers a
+    /// guest driver is likely to poll (timer counters, VCNT, interrupt masks and the
+    /// timer-value register) so a wait loop can be attributed to a source. It is not
+    /// part of the architectural state.
+    /// </remarks>
+    public System.IO.TextWriter? ReadTraceWriter { get; set; }
+
     /// <summary>Gets or sets an optional diagnostic writer for state-changing timer events.</summary>
     /// <remarks>
     /// Slot scans are not logged because the Opera scheduler walks one slot per two ARM
@@ -147,6 +156,9 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     /// at <c>Arm60.CyclesExecuted</c>; unit tests may leave it null, which stamps cycle zero.
     /// </summary>
     public Func<long>? CycleProvider { get; set; }
+
+    /// <summary>Gets or sets the ARM program-counter provider used to stamp read traces.</summary>
+    public Func<uint>? ProgramCounterProvider { get; set; }
 
     /// <summary>
     /// Gets or sets the observer for a FIQ becoming pending (the active and enable masks first
@@ -267,6 +279,23 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     /// <returns>The register value.</returns>
     public uint Peek(uint offset)
     {
+        var value = PeekCore(offset);
+        var address = offset & 0xffff;
+        if (ReadTraceWriter is not null
+            && (address is >= 0x100 and <= 0x17c
+                || address is 0x120 or 0x34 or 0x08 or 0x0c or 0x2c
+                || address is >= 0x40 and <= 0x6c))
+        {
+            ReadTraceWriter.WriteLine(
+                $"clio-read f={FrameProvider?.Invoke() ?? -1} cyc={CycleProvider?.Invoke() ?? 0} "
+                + $"pc={ProgramCounterProvider?.Invoke() ?? 0:x8} addr={address:x3} value={value:x8}");
+        }
+
+        return value;
+    }
+
+    private uint PeekCore(uint offset)
+    {
         var address = offset & 0xffff;
 
         if ((address & ~0x2cu) == 0x40)
@@ -369,12 +398,14 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         if (TraceWriter is not null
             && (address is 0x200 or 0x204 or 0x208 or 0x20c or 0x220
                 or 0x28 or 0x410 or 0x414
+                || address is >= 0x40 and <= 0x6c
                 || address is >= 0x100 and <= 0x17c
-                || address is >= 0x540 and < 0x600
+                || address is >= 0x500 and < 0x600
                 || address == 0x304))
         {
             TraceWriter.WriteLine(
-                $"clio f={FrameProvider?.Invoke() ?? -1} write {address:x3}={value:x8} delay={_registers[0x220]:x}");
+                $"clio f={FrameProvider?.Invoke() ?? -1} cyc={CycleProvider?.Invoke() ?? 0} "
+                + $"write {address:x3}={value:x8} delay={_registers[0x220]:x}");
         }
 
         if (_flagTime == 0)

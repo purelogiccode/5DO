@@ -645,6 +645,9 @@ internal sealed class HarnessOptions
     /// <summary>Gets or sets whether checkpoint images are disabled.</summary>
     public bool NoImages { get; set; }
 
+    /// <summary>Gets or sets whether CLIO timer traces are written for both engines.</summary>
+    public bool TimerTrace { get; set; }
+
     /// <summary>Gets or sets whether staged ISOs are deleted after a successful capture.</summary>
     public bool CleanupIso { get; set; }
 
