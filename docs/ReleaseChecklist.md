@@ -124,20 +124,30 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] Verify the 24-bit VDL background, zero-entry stop, field-boundary `RunFrame`,
       CD poll/FIQ/READ_DATA parity, and the differential harness reports are documented
       and covered by tests.
-- [ ] Build all six framework-dependent single-file bundles and keep local copies in
+- [x] Build all six framework-dependent single-file bundles and keep local copies in
       `src/FiveDo.Frontend.Avalonia/bin/Release` without deleting older artifacts.
       Local bundles: `5do-1.5.0-{win-x64,win-arm64}.zip` and
-      `5do-1.5.0-{linux-x64,linux-arm64,osx-x64,osx-arm64}.tar.gz`.
-- [ ] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
+      `5do-1.5.0-{linux-x64,linux-arm64,osx-x64,osx-arm64}.tar.gz`; all six SHA-256
+      checksums verify.
+- [x] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
       `whatsnew.md`, the 1.5.0 release notes, and the legal notices, and contains no
-      `runtime/`, `*.pdb`, or `*.xml` files.
-- [ ] Verify the x64 CLI `selftest` and desktop `--smoke-test` (`FRONTEND SMOKE OK 1.5.0`);
+      `runtime/`, `*.pdb`, or `*.xml` files. CI verifies every bundle tree; local
+      extraction of `5do-1.5.0-win-x64.zip` confirms the same contents.
+- [x] Verify the x64 CLI `selftest` and desktop `--smoke-test`
+      (`FRONTEND SMOKE OK 1.5.0`, `windowState=Normal` and `windowState=FullScreen`);
       CI verifies the arm64 apphost machine types.
-- [ ] Create and push tag `v1.5.0`; verify the release workflow published six versioned
+- [x] Create and push tag `v1.5.0`; the release workflow published six versioned
       bundles and `SHA256SUMS.txt`:
-      <https://github.com/purelogiccode/5DO/releases/tag/v1.5.0>.
-- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
-      1.5.0 release page, What's New, release notes, and wiki page.
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.5.0>. Release run
+      <https://github.com/purelogiccode/5DO/actions/runs/42445302517> passed all six
+      bundle jobs and the publish job. CI run
+      <https://github.com/purelogiccode/5DO/actions/runs/42445297515> passed every
+      required job.
+- [x] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
+      1.5.0 release page, What's New, release notes, and wiki page. Docs run
+      <https://github.com/purelogiccode/5DO/actions/runs/42445297539> passed build,
+      Pages deploy, and wiki publish; `WhatsNew.html`, `ReleaseNotes-1.5.0.html`, and
+      `wiki/Release-1.5.0` return HTTP 200.
 
 ---
 

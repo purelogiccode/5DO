@@ -28,8 +28,14 @@ hashes at 60/120/300 with 0 errors**: the same-frame instruction delta is 11-20 
 frame 60 and 23-2,223 at frame 120, and the remaining behavioral divergence is CD
 command cadence. The command-50 boot handoff fell from +207,707 cycles / +86,511
 instructions to -818 / -376. The suite is **1,939 tests**; build, format, and
-InspectCode are clean. See [`WhatsNew.md`](WhatsNew.md),
-[`ReleaseNotes-1.5.0.md`](ReleaseNotes-1.5.0.md), and
+InspectCode are clean. Release run
+<https://github.com/purelogiccode/5DO/actions/runs/42445302517> passed all six bundle
+jobs and the publish job; CI run
+<https://github.com/purelogiccode/5DO/actions/runs/42445297515> passed every required
+job. The six bundles and `SHA256SUMS.txt` are attached at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.5.0>, all checksums verify, and
+local copies are kept in `src/FiveDo.Frontend.Avalonia/bin/Release`. See
+[`WhatsNew.md`](WhatsNew.md), [`ReleaseNotes-1.5.0.md`](ReleaseNotes-1.5.0.md), and
 [`DifferentialHarness.md`](DifferentialHarness.md).
 
 **1.4.0 release update (2026-11-07):** **v1.4.0** adds online cover art (473 unique
