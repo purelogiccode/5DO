@@ -141,7 +141,9 @@ covers the upload, palette, and filter passes, not the readback.
 | 1080p sharp-bilinear | 0.169 ms | 0.790 ms | 0.030 ms | 0.040 ms | 0 |
 | 1080p xBR | 0.214 ms | 0.375 ms | 0.085 ms | 0.088 ms | 0 |
 | 1080p FSR (EASU + RCAS) | 0.269 ms | 0.781 ms | 0.116 ms | 0.122 ms | 0 |
-| 4K HQx 2x | 6.816 ms | 10.934 ms | 0.130 ms | 0.179 ms | 0 |
+| 4K HQx 2x | 0.264 ms | 0.405 ms | 0.099 ms | 0.100 ms | 0 |
+| 4K HQx 3x | 0.287 ms | 0.336 ms | 0.119 ms | 0.121 ms | 0 |
+| 4K HQx 4x | 0.344 ms | 0.522 ms | 0.150 ms | 0.153 ms | 0 |
 
 Present time includes the per-frame `vkQueueWaitIdle` and is therefore a synchronous
 end-to-end number; the OpenGL probe measures asynchronous command submission. Compare
@@ -169,8 +171,8 @@ The xBR, FSR, and HQx probes run at 640x480 and 4K with `filterFallback: false` 
 zero managed bytes per frame. xBR samples the GPU-expanded native frame directly; the
 offscreen backend does not perform a CPU palette expansion or readback for it. A
 top-red/bottom-blue split-frame test verifies that xBR, FSR, and HQx preserve top-down
-orientation at 320x240 and 640x480. HQx uses the same CPU expansion as the OpenGL
-presenter and is CPU-bound; the 4K row above is present time, not a 60 fps claim.
+orientation at 320x240 and 640x480. HQx 2x/3x/4x are GPU rule-table passes over the
+palette texture and match the CPU `HqxFilter` expansion in the opt-in parity tests.
 
 These are development-machine numbers, not a hardware guarantee.
 
@@ -189,14 +191,15 @@ These are development-machine numbers, not a hardware guarantee.
 
 ## Tests
 
-- `VulkanShaderTests` checks that all six generated shader modules (frame, palette,
-  scale, xBR, FSR EASU, FSR RCAS) are SPIR-V and that `RendererApi.Vulkan` is reported
-  correctly.
+- `VulkanShaderTests` checks that all seven generated shader modules (frame, palette,
+  scale, HQx, xBR, FSR EASU, FSR RCAS) are SPIR-V and that `RendererApi.Vulkan` is
+  reported correctly.
 - `VulkanRendererTests` (`FIVEDO_VULKAN_TESTS=1`) renders 320x240 and 640x480 frames and
   compares them with `FrameAssembler`, including background, fixed-CLUT, and per-line
   CLUT paths. It also renders a top-red/bottom-blue split frame through xBR, FSR, and
-  HQx at 320x240 and 640x480, asserts that all three preserve top-down orientation, and
-  checks that HQx does not report a fallback.
+  HQx at 320x240 and 640x480, asserts that all three preserve top-down orientation,
+  checks that HQx does not report a fallback, and compares HQx 2x/3x/4x and the
+  multi-frame synthetic probe frame with the CPU `HqxFilter` expansion.
 - `VulkanProbeIntegrationTests` (`FIVEDO_VULKAN_TESTS=1`) runs the built frontend probe
   for 320x240 parity, a 4K sharp-bilinear pass, and 640x480 xBR/FSR/HQx passes with
   `filterFallback: false`.
@@ -227,9 +230,9 @@ The SPIR-V and option-parsing tests run everywhere.
   screenshots use a one-shot copy. The embedded Win32 surface does not read back at all.
   The offscreen fallback still needs the readback every frame and remains slower than
   the direct OpenGL presenter.
-- xBR and FSR 1.0 are GPU passes. HQx 2x/3x/4x are CPU expansions (shared with the
-  OpenGL presenter) and are CPU-bound; they are opt-in and not recommended at 4K on
-  slow CPUs.
+- xBR, FSR 1.0, and HQx 2x/3x/4x are GPU passes. HQx uses the shared 256x32
+  `R32G32Uint` rule table and is no longer CPU-bound; it remains opt-in because it
+  adds an intermediate `source * scale` target.
 - The offscreen path has no vsync control. The window probe requests FIFO and reports
   the selected present mode; it does not yet expose mailbox/immediate as user settings.
 - Vulkan 1.1+ features (storage buffers in fragment shaders, timeline semaphores) are not

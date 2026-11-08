@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using FiveDo.Core;
+using FiveDo.Frontend.Avalonia;
 using FiveDo.Video;
 using FiveDo.Video.Vulkan;
 
@@ -192,6 +193,118 @@ public sealed class VulkanRendererTests
         }
     }
 
+    [Fact]
+    public void Hqx_SyntheticProbeFrame_MatchesCpuExpansion()
+    {
+        if (!string.Equals(
+                Environment.GetEnvironmentVariable("FIVEDO_VULKAN_TESTS"),
+                "1",
+                StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        using var renderer = new VulkanOffscreenRenderer();
+        renderer.Settings = new RendererSettings
+        {
+            Filter = VideoFilter.Hqx,
+            Aspect = AspectMode.Stretch,
+            IntegerScale = false,
+            Vsync = false,
+        };
+
+        renderer.Initialize(640, 480);
+        var frame = new VdlFrame();
+        SyntheticVdlFrame.Initialize(frame);
+        for (var phase = 0; phase < 4; phase++)
+        {
+            SyntheticVdlFrame.Fill(frame, phase);
+            renderer.Present(frame);
+        }
+
+        Assert.False(renderer.FilterFallback);
+
+        var gpu = new byte[640 * 480 * 4];
+        renderer.ReadPixels(gpu, out _, out _);
+
+        var source = new FrameBuffer(320, 240);
+        FrameAssembler.Assemble(frame, source, 320, 240);
+        var expected = new FrameBuffer(640, 480);
+        new HqxFilter().Expand(source, expected);
+
+        var different = 0;
+        for (var i = 0; i < expected.PixelSpan.Length; i += 4)
+        {
+            if (gpu[i] != expected.PixelSpan[i]
+                || gpu[i + 1] != expected.PixelSpan[i + 1]
+                || gpu[i + 2] != expected.PixelSpan[i + 2])
+            {
+                different++;
+            }
+        }
+
+        Assert.Equal(0, different);
+    }
+
+    [Theory]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    public void Hqx_MatchesCpuExpansion(int scale)
+    {
+        if (!string.Equals(
+                Environment.GetEnvironmentVariable("FIVEDO_VULKAN_TESTS"),
+                "1",
+                StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        using var renderer = new VulkanOffscreenRenderer();
+        renderer.Settings = new RendererSettings
+        {
+            Filter = scale switch
+            {
+                2 => VideoFilter.Hqx,
+                3 => VideoFilter.Hqx3x,
+                _ => VideoFilter.Hqx4x,
+            },
+            Aspect = AspectMode.Stretch,
+            IntegerScale = false,
+            Vsync = false,
+        };
+
+        var width = 320 * scale;
+        var height = 240 * scale;
+        renderer.Initialize(width, height);
+        VdlFrame frame = CreateFrame(320, 240, 0);
+        renderer.Present(frame);
+        Assert.False(renderer.FilterFallback);
+
+        var gpu = new byte[width * height * 4];
+        renderer.ReadPixels(gpu, out var readWidth, out var readHeight);
+        Assert.Equal(width, readWidth);
+        Assert.Equal(height, readHeight);
+
+        var source = new FrameBuffer(320, 240);
+        FrameAssembler.Assemble(frame, source, 320, 240);
+        var expected = new FrameBuffer(width, height);
+        new HqxFilter().Expand(source, expected);
+
+        var different = 0;
+        for (var i = 0; i < expected.PixelSpan.Length; i += 4)
+        {
+            if (gpu[i] != expected.PixelSpan[i]
+                || gpu[i + 1] != expected.PixelSpan[i + 1]
+                || gpu[i + 2] != expected.PixelSpan[i + 2])
+            {
+                different++;
+            }
+        }
+
+        Assert.Equal(0, different);
+    }
+
     private static VdlFrame CreateSplitFrame()
     {
         var frame = new VdlFrame
@@ -204,8 +317,8 @@ public sealed class VulkanRendererTests
             VdlLine line = frame[y];
             line.Width = 320;
             line.OutControl = 0;
-            // The 5-bit background word is B in bits 0-4, G in 5-9, R in 10-14.
-            line.Background = y < 120 ? 31u << 10 : 31u;
+            // The background register is 24-bit RGB: red in the top half, blue in the bottom.
+            line.Background = y < 120 ? 0x00FF0000u : 0x000000FFu;
             line.Pixels.Clear();
         }
 

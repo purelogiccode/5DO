@@ -163,7 +163,8 @@ sharp-bilinear measures GPU p99 0.089 ms / present p99 0.208 ms on an RTX 4070. 
 ### Do I need a discrete GPU?
 
 No. OpenGL 3.3 or GLES 3.0/3.1 is used when available, with a CPU fallback. CRT, xBR,
-FSR, and HQx filters are opt-in and may need faster hardware.
+FSR, and HQx filters are opt-in; xBR, FSR, and HQx are GPU passes, but larger
+intermediate targets and weak integrated GPUs can still cost more.
 
 ### Does 5DO collect telemetry?
 

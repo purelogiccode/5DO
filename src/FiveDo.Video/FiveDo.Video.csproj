@@ -10,6 +10,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="FiveDo.Video.OpenGL" />
+    <InternalsVisibleTo Include="FiveDo.Video.Direct3D" />
+    <InternalsVisibleTo Include="FiveDo.Video.Vulkan" />
+    <InternalsVisibleTo Include="FiveDo.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Meziantou.Analyzer">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

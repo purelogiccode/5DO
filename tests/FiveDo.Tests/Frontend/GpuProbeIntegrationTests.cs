@@ -85,6 +85,26 @@ public sealed class GpuProbeIntegrationTests
                 Assert.Equal(2160, report.OutputHeight);
                 Assert.Equal(0, report.RendererAllocatedBytesPerFrame);
             }
+
+            // HQx exercises the RG32UI rule texture and the GLES/ANGLE shader path.
+            foreach (var backend in Backends)
+            {
+                var reportPath = Path.Combine(temporary, $"hqx-{backend}.json");
+                RunProbe(
+                    frontend,
+                    backend,
+                    reportPath,
+                    capturePath: null,
+                    size: "640x480",
+                    frames: 10,
+                    warmup: 5,
+                    filter: "hqx");
+
+                GlProbeReport report = ReadReport(reportPath);
+                Assert.True(report.Ok, $"{backend} HQx probe failed: {report.Error}");
+                Assert.False(report.FilterFallback, $"{backend} HQx probe fell back.");
+                Assert.Equal(0, report.RendererAllocatedBytesPerFrame);
+            }
         }
         finally
         {

@@ -143,11 +143,17 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 
 ## Renderer
 
-- HQx 2x/3x/4x are implemented as opt-in CPU expansions followed by sharp-bilinear
-  finishing; GPU xBR and FSR are available in the optional Vulkan backend, while HQx
-  remains CPU-bound. HQx 4x costs about 7.5 ms/frame on synthetic checkerboard content
-  and about 15 ms/frame on random noise at 320x240, so it is not recommended with
-  `--high-res` on slow CPUs.
+- HQx 2x/3x/4x are GPU rule-table passes over the palette texture, followed by
+  sharp-bilinear finishing, in OpenGL, Direct3D 11, and Vulkan. The 256x32
+  `RG32UI`/`R32G32_UInt` rule table is uploaded once. 4K HQx now costs 0.14-0.34 ms
+  present and 0.09-0.17 ms GPU on the RTX 4070, with 0 managed bytes/frame; it is no
+  longer CPU-bound. The GPU pattern uses `float` YUV while the CPU reference uses
+  `double`, so a tiny fraction of colors (~0.07%) can classify differently by one
+  LSB; the opt-in parity tests match the CPU expansion on the synthetic frame with 0
+  differing pixels, and WGL/ANGLE/Vulkan/D3D 640x480 HQx captures are byte-identical
+  to the CPU expansion. The shaders use explicit `trunc` for both the YUV and
+  `fetchColor` conversions because NVIDIA's GLSL compiler rounded `int(float)` and
+  ANGLE's GLES float-to-uint conversion rounded `k + 0.5` in the first version.
 - CRT bloom is implemented as a 3x3 native-resolution glow in the CRT filter.
 - FSR 1.0 is opt-in (EASU + RCAS, two GPU passes). It has a sharpness setting and
   MIT attribution. The 4K WGL probe measures present 0.132 ms mean / 1.191 ms p99 and
@@ -187,9 +193,8 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   CPU readback. The child window is outside Avalonia's compositor, so Avalonia-drawn
   overlays over the video rectangle are obscured; X11/Wayland/Metal surfaces and
   non-Windows Vulkan device validation are pending. The offscreen/readback path remains
-  for probes, screenshots, and non-Windows fallback. xBR-lv2 and FSR 1.0
-  (EASU + RCAS) are GPU passes; HQx 2x/3x/4x use the shared CPU expansion and are
-  CPU-bound. See [`Vulkan.md`](Vulkan.md).
+  for probes, screenshots, and non-Windows fallback. xBR-lv2, FSR 1.0
+  (EASU + RCAS), and HQx 2x/3x/4x are GPU passes. See [`Vulkan.md`](Vulkan.md).
 
 ## Tooling and UI
 

@@ -192,6 +192,126 @@ internal static class Direct3D11Shaders
         }
         """;
 
+    internal const string Hqx = Common + """
+
+        Texture2D<float4> Expanded : register(t0);
+        Texture2D<uint2> Rules : register(t1);
+
+        uint3 FetchColor(int2 p)
+        {
+            float3 color = Expanded.Load(
+                int3(clamp(p, int2(0, 0), SourceSize - 1), 0)).rgb;
+            return (uint3)round(color * 255.0);
+        }
+
+        int3 ToYuv(uint3 color)
+        {
+            int r = (int)color.r;
+            int g = (int)color.g;
+            int b = (int)color.b;
+            int y = (int)trunc((0.299 * (float)r) + (0.587 * (float)g) + (0.114 * (float)b));
+            int u = ((int)trunc((-0.169 * (float)r) - (0.331 * (float)g) + (0.5 * (float)b)) + 128) & 255;
+            int v = ((int)trunc((0.5 * (float)r) - (0.419 * (float)g) - (0.081 * (float)b)) + 128) & 255;
+            return int3(y, u, v);
+        }
+
+        bool YuvDiff(int3 a, int3 b)
+        {
+            return abs(a.x - b.x) > 48
+                || abs(a.y - b.y) > 7
+                || abs(a.z - b.z) > 6;
+        }
+
+        uint3 PickColor(
+            uint3 c0, uint3 c1, uint3 c2,
+            uint3 c3, uint3 c4, uint3 c5,
+            uint3 c6, uint3 c7, uint3 c8,
+            int index)
+        {
+            if (index == 0) { return c0; }
+            if (index == 1) { return c1; }
+            if (index == 2) { return c2; }
+            if (index == 3) { return c3; }
+            if (index == 4) { return c4; }
+            if (index == 5) { return c5; }
+            if (index == 6) { return c6; }
+            if (index == 7) { return c7; }
+            return c8;
+        }
+
+        float4 PSMain(PSInput input) : SV_TARGET
+        {
+            int2 outCoord = int2(input.position.xy);
+            int scale = FilterMode;
+            int2 sourceCoord = outCoord / scale;
+            int subpixel = ((outCoord.y % scale) * scale) + (outCoord.x % scale);
+
+            uint3 c0 = FetchColor(sourceCoord + int2(-1, -1));
+            uint3 c1 = FetchColor(sourceCoord + int2(0, -1));
+            uint3 c2 = FetchColor(sourceCoord + int2(1, -1));
+            uint3 c3 = FetchColor(sourceCoord + int2(-1, 0));
+            uint3 c4 = FetchColor(sourceCoord);
+            uint3 c5 = FetchColor(sourceCoord + int2(1, 0));
+            uint3 c6 = FetchColor(sourceCoord + int2(-1, 1));
+            uint3 c7 = FetchColor(sourceCoord + int2(0, 1));
+            uint3 c8 = FetchColor(sourceCoord + int2(1, 1));
+
+            int3 y0 = ToYuv(c0);
+            int3 y1 = ToYuv(c1);
+            int3 y2 = ToYuv(c2);
+            int3 y3 = ToYuv(c3);
+            int3 y4 = ToYuv(c4);
+            int3 y5 = ToYuv(c5);
+            int3 y6 = ToYuv(c6);
+            int3 y7 = ToYuv(c7);
+            int3 y8 = ToYuv(c8);
+
+            uint pattern = 0u;
+            if (any(c0 != c4) && YuvDiff(y0, y4)) { pattern |= 1u; }
+            if (any(c1 != c4) && YuvDiff(y1, y4)) { pattern |= 2u; }
+            if (any(c2 != c4) && YuvDiff(y2, y4)) { pattern |= 4u; }
+            if (any(c3 != c4) && YuvDiff(y3, y4)) { pattern |= 8u; }
+            if (any(c5 != c4) && YuvDiff(y5, y4)) { pattern |= 16u; }
+            if (any(c6 != c4) && YuvDiff(y6, y4)) { pattern |= 32u; }
+            if (any(c7 != c4) && YuvDiff(y7, y4)) { pattern |= 64u; }
+            if (any(c8 != c4) && YuvDiff(y8, y4)) { pattern |= 128u; }
+
+            bool condition0 = YuvDiff(y1, y3);
+            bool condition1 = YuvDiff(y1, y5);
+            bool condition2 = YuvDiff(y3, y7);
+            bool condition3 = YuvDiff(y5, y7);
+
+            int rowOffset = scale == 2 ? 0 : (scale == 3 ? 4 : 13);
+            uint2 pair = Rules.Load(int3((int)pattern, rowOffset + subpixel, 0));
+            uint rule = pair.x;
+            uint condition = (rule >> 27u) & 7u;
+            if (condition != 7u)
+            {
+                bool selected = condition == 0u
+                    ? condition0
+                    : (condition == 1u ? condition1 : (condition == 2u ? condition2 : condition3));
+                if (selected)
+                {
+                    rule = pair.y;
+                }
+            }
+
+            uint weight0 = rule & 15u;
+            uint index0 = (rule >> 4u) & 15u;
+            uint weight1 = (rule >> 8u) & 15u;
+            uint index1 = (rule >> 12u) & 15u;
+            uint weight2 = (rule >> 16u) & 15u;
+            uint index2 = (rule >> 20u) & 15u;
+            uint shift = (rule >> 24u) & 7u;
+
+            uint3 sum = PickColor(c0, c1, c2, c3, c4, c5, c6, c7, c8, (int)index0) * weight0
+                + PickColor(c0, c1, c2, c3, c4, c5, c6, c7, c8, (int)index1) * weight1
+                + PickColor(c0, c1, c2, c3, c4, c5, c6, c7, c8, (int)index2) * weight2;
+            uint3 rgb = sum >> shift;
+            return float4((float3)rgb / 255.0, 1.0);
+        }
+        """;
+
     internal const string Xbr = Common + """
 
         Texture2D<float4> Expanded : register(t0);
@@ -532,6 +652,7 @@ internal static class Direct3D11Shaders
         ("Frame.vert", "vs_5_0", Vertex),
         ("Palette.frag", "ps_5_0", Palette),
         ("Scale.frag", "ps_5_0", Scale),
+        ("Hqx.frag", "ps_5_0", Hqx),
         ("Xbr.frag", "ps_5_0", Xbr),
         ("FsrEasu.frag", "ps_5_0", FsrEasu),
         ("FsrRcas.frag", "ps_5_0", FsrRcas),

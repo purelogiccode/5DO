@@ -153,7 +153,8 @@ timings/capabilities/parity JSON.
 1 MB VRAM planes. It is not the default and not 4K internal rendering.
 
 **HQx** - hq2x/hq3x/hq4x pixel-art smoothing (Maxim Stepin/Cameron Zemek), implemented
-as an opt-in CPU filter before sharp-bilinear finishing.
+as an opt-in GPU rule-table pass before sharp-bilinear finishing. The CPU `HqxFilter`
+remains the reference oracle.
 
 **HLE** - High-level emulation. 5DO does not use HLE for the BIOS or OS; it emulates the
 hardware.

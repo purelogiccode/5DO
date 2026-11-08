@@ -376,7 +376,7 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
   performs the 320x240 CPU/GPU parity check. `VulkanProbeIntegrationTests`
   (`FIVEDO_VULKAN_TESTS=1`) runs the built frontend for parity, a 4K pass, and
   640x480 xBR/FSR passes with `filterFallback: false`.
-- **Filters:** xBR and FSR are GPU passes; HQx 2x/3x/4x use the shared CPU expansion
+- **Filters:** xBR, FSR, and HQx 2x/3x/4x are GPU passes; HQx uses the shared rule table
   and are CPU-bound. All three preserve top-down orientation and report
   `filterFallback: false` in the Vulkan backend.
 - **Headless CI:** SPIR-V and option tests run everywhere; device tests skip cleanly

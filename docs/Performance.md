@@ -101,7 +101,7 @@ Stage 2: scaling/filter at output resolution
   - xBR adds a 4x offscreen pass (1280x960 for 320x240 sources) over the
     GPU-expanded native frame, then finishes with sharp-bilinear. It is opt-in;
     benchmark it at 4K before enabling by default.
-  - HQx 2x/3x/4x adds a CPU expansion and a larger intermediate texture.
+  - HQx 2x/3x/4x adds a GPU rule-table pass and a larger intermediate texture.
   - FSR 1.0 adds two GPU passes: EASU to the viewport, then RCAS to the output.
         │
         ▼
@@ -241,7 +241,7 @@ The renderer must support two shader/API variants behind one contract:
 |---|---|---|---|
 | Desktop GL | OpenGL 3.3 core, GLSL 330 | Windows via WGL, Linux GLX/EGL, macOS 4.1 core | Primary desktop path; integer textures and `texelFetch`. Validated on Windows 11 / RTX 4070 (OpenGL 4.0) with `--gl-backend wgl`. |
 | GLES | OpenGL ES 3.0/3.1, GLSL ES 300 | Windows ANGLE, other desktop GLES contexts | Same two-stage pipeline; `R16UI` + `usampler2D`. Validated on Windows 11 / RTX 4070 via ANGLE (OpenGL ES 3.0) with `--gl-backend angle`. |
-| Vulkan (optional) | Vulkan 1.0, SPIR-V | Windows/Linux/macOS with a Vulkan loader | Offscreen two-stage pipeline with optional CPU readback and `--vk-probe`; a native Win32 swapchain probe (`--vk-window-probe`) presents through FIFO vsync. 4K sharp-bilinear measured 0.24 ms mean / 1.06 ms p99 present and 0.075/0.091 ms GPU, 4K xBR 0.32/0.80 ms present and 0.13/0.14 ms GPU, 4K FSR 0.60/1.30 ms present and 0.40/0.42 ms GPU, and 4K HQx 2x 6.82/10.93 ms (CPU-bound), all with 0 managed bytes/frame on the RTX 4070. The 4K window probe measures 0.077/0.088 ms GPU and 5.96/6.53 ms present including the 165 Hz FIFO wait. The desktop `--gl-backend vulkan` path hosts the swapchain in a native Win32 child window inside the Avalonia window, so it does not copy the frame back; non-Windows platforms fall back to offscreen/readback. |
+| Vulkan (optional) | Vulkan 1.0, SPIR-V | Windows/Linux/macOS with a Vulkan loader | Offscreen two-stage pipeline with optional CPU readback and `--vk-probe`; a native Win32 swapchain probe (`--vk-window-probe`) presents through FIFO vsync. 4K sharp-bilinear measured 0.24 ms mean / 1.06 ms p99 present and 0.075/0.091 ms GPU, 4K xBR 0.32/0.80 ms present and 0.13/0.14 ms GPU, 4K FSR 0.60/1.30 ms present and 0.40/0.42 ms GPU, and 4K HQx 2x/3x/4x 0.26/0.41, 0.29/0.34, and 0.34/0.52 ms present with 0.10/0.12/0.15 ms GPU, all with 0 managed bytes/frame on the RTX 4070. The 4K window probe measures 0.077/0.088 ms GPU and 5.96/6.53 ms present including the 165 Hz FIFO wait. The desktop `--gl-backend vulkan` path hosts the swapchain in a native Win32 child window inside the Avalonia window, so it does not copy the frame back; non-Windows platforms fall back to offscreen/readback. |
 
 Implementation requirements:
 
@@ -425,7 +425,7 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
 | Accurate (nearest) | 3840x2160 | 0.15 ms | 0.48 ms | 0 B/frame |
 | CRT | 3840x2160 | 0.14 ms | 0.43 ms | 0 B/frame |
 | xBR 4x | 3840x2160 | 0.37 ms | 0.83 ms | 0 B/frame |
-| HQx 4x (CPU filter) | 3840x2160 | 10.44 ms | 14.22 ms | 0 B/frame |
+| HQx 4x (GPU pass) | 3840x2160 | 0.35 ms | 0.55 ms | 0 B/frame |
 | Sharp-bilinear | 1920x1080 | 0.13 ms | 0.40 ms | 0 B/frame |
 | Sharp-bilinear, windowed | 1280x720 | 0.13 ms | 0.49 ms | 0 B/frame |
 
@@ -461,7 +461,9 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
 | CRT | 3840x2160 | 0.364 ms | 1.015 ms | 0.175 ms | 0.187 ms | 0 |
 | xBR | 3840x2160 | 0.316 ms | 0.796 ms | 0.132 ms | 0.143 ms | 0 |
 | FSR (EASU + RCAS) | 3840x2160 | 0.604 ms | 1.303 ms | 0.404 ms | 0.415 ms | 0 |
-| HQx 2x (CPU-bound) | 3840x2160 | 6.816 ms | 10.934 ms | 0.130 ms | 0.179 ms | 0 |
+| HQx 2x | 3840x2160 | 0.264 ms | 0.405 ms | 0.099 ms | 0.100 ms | 0 |
+| HQx 3x | 3840x2160 | 0.287 ms | 0.336 ms | 0.119 ms | 0.121 ms | 0 |
+| HQx 4x | 3840x2160 | 0.344 ms | 0.522 ms | 0.150 ms | 0.153 ms | 0 |
 | Sharp-bilinear | 1920x1080 | 0.169 ms | 0.790 ms | 0.030 ms | 0.040 ms | 0 |
 | xBR | 1920x1080 | 0.214 ms | 0.375 ms | 0.085 ms | 0.088 ms | 0 |
 | FSR (EASU + RCAS) | 1920x1080 | 0.269 ms | 0.781 ms | 0.116 ms | 0.122 ms | 0 |
@@ -515,15 +517,13 @@ reproduce on the target GPU.
 The 100/150/200% DPI validation remains open. Headless CI keeps the
 CPU renderer and allocation tests.
 
-**HQx CPU cost (2026-10-26).** The opt-in HQx filters run on the CPU at native
-resolution before the final scale. On the x64 development machine, 300 iterations of
-a 320x240 source took **~2.3 / 4.2 / 7.5 ms/frame** for hq2x/hq3x/hq4x on
-flat/checkerboard content and **~12.1 / 13.4 / 14.8 ms/frame** on random-noise
-worst-case content (which exercises most of the 256 patterns). Real pixel art is
-expected to stay near the flat/checker figure, but HQx is still opt-in and should be
-measured per title before enabling it on Tier B. The 640x480 high-res source measured
-~49.7 ms/frame for hq2x random noise in the same microbenchmark; HQx is not
-recommended with `--high-res` on slow CPUs.
+**HQx GPU cost (2026-11-07).** The opt-in HQx filters now run as GPU rule-table passes
+over the palette texture. On the RTX 4070, 4K hq2x/hq3x/hq4x measured
+**0.264/0.287/0.344 ms present** and **0.099/0.119/0.150 ms GPU** with 0 managed
+bytes/frame (Vulkan probe). The WGL probe measured 0.229/0.322/0.250 ms present and
+0.109/0.132/0.163 ms GPU; Direct3D 11 measured 0.183/0.150/0.140 ms present and
+0.086/0.108/0.138 ms GPU. The CPU `HqxFilter` remains the reference oracle and still
+matches the 4DO reference hashes; it is no longer in the presentation path.
 
 The opt-in prefetch cache (`--prefetch`) produced identical Lemmings state/frame
 hash in a 300-frame run. On the x64 development machine it increased short-run p99

@@ -49,8 +49,8 @@ All filters in the shared `VideoFilter` enum are supported:
 - `Crt`: scanlines, aperture mask, barrel warp, and optional bloom.
 - `Xbr`: GPU 4x xBR-lv2 pass, then sharp-bilinear.
 - `Fsr`: FSR 1.0 EASU into a viewport-sized target, then RCAS into the output.
-- `Hqx`/`Hqx3x`/`Hqx4x`: shared CPU `HqxFilter`, uploaded as a BGRA source, then
-  sharp-bilinear.
+- `Hqx`/`Hqx3x`/`Hqx4x`: GPU rule-table pass over the palette texture, then
+  sharp-bilinear. The 256x32 `R32G32_UInt` rule table is uploaded once at startup.
 
 If a GPU filter cannot allocate its intermediate target, the renderer reports
 `FilterFallback` and falls back to sharp-bilinear.
@@ -88,7 +88,8 @@ On the development machine (Windows 11, Ryzen 9 7900, RTX 4070):
 | 4K sharp-bilinear | present p99 0.23 ms, GPU p99 0.07 ms, 0 managed allocations/frame |
 | Window probe 640x480 | `offscreen: false`, `vsyncBackend: "fifo"`, `vsyncActive: true` |
 | Filters | Accurate, sharp-bilinear, CRT, xBR, FSR, HQx 2x/3x/4x render without fallback |
-| Shaders | All six HLSL modules compile for `vs_5_0`/`ps_5_0` |
+| 4K HQx 2x/3x/4x | present 0.183/0.150/0.140 ms, GPU 0.086/0.108/0.138 ms, 0 managed allocations/frame |
+| Shaders | All seven HLSL modules compile for `vs_5_0`/`ps_5_0` |
 
 The test evidence is reproducible with `FIVEDO_D3D_TESTS=1`; the shader compile test is
 not opt-in on Windows.
@@ -98,7 +99,7 @@ not opt-in on Windows.
 | Test | Coverage |
 |---|---|
 | `Direct3D11ShaderTests` | Every HLSL module compiles for shader model 5.0. |
-| `Direct3D11RendererTests` (opt-in `FIVEDO_D3D_TESTS=1`) | CPU parity, source/output size changes, letterboxing, xBR/FSR/HQx orientation. |
+| `Direct3D11RendererTests` (opt-in `FIVEDO_D3D_TESTS=1`) | CPU parity, source/output size changes, letterboxing, xBR/FSR/HQx orientation, HQx 2x/3x/4x CPU-expansion parity, and the multi-frame synthetic probe frame. |
 | `D3dProbeIntegrationTests` (opt-in `FIVEDO_D3D_TESTS=1`) | Runs the built probe and checks the parity report. |
 | `D3dProbeOptionsTests` | Probe option defaults, aliases, validation, and shared option names. |
 

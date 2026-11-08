@@ -20,7 +20,7 @@ Source map:
 | GPU presenter | `src/FiveDo.Video.OpenGL/OpenGlRenderer.cs`, `Shaders.cs` |
 | Optional Vulkan presenter | `src/FiveDo.Video.Vulkan/VulkanOffscreenRenderer.cs`, `Frame.vert`, `Palette.frag`, `Scale.frag`, `Xbr.frag`, `FsrEasu.frag`, `FsrRcas.frag` |
 | Optional Direct3D 11 presenter | `src/FiveDo.Video.Direct3D/Direct3D11Renderer.cs`, `Shaders.cs` |
-| Filters | `src/FiveDo.Video/HqxFilter.cs`, `HqxPatterns*.cs`, xBR/FSR shader bodies (OpenGL, Vulkan, and Direct3D 11) |
+| Filters | `src/FiveDo.Video/HqxFilter.cs`, `HqxRules.cs`, xBR/FSR shader bodies (OpenGL, Vulkan, and Direct3D 11) |
 | Capabilities/vsync | `OpenGlCapabilities.cs`, `SwapInterval.cs` |
 | Avalonia surface | `src/FiveDo.Frontend.Avalonia/Controls/VideoSurface.cs` |
 | GPU probes | `src/FiveDo.Frontend.Avalonia/GlProbeWindow.cs`, `GlProbeOptions.cs`, `VkProbeRunner.cs`, `VkProbeOptions.cs` |
@@ -214,9 +214,9 @@ them; the core never waits for the GPU.
 | `SharpBilinear` | Integer prescale then hardware bilinear sub-texel blend. | Default enhanced mode; crisp at integer scales, cheap. |
 | `Crt` | Barrel distortion, scanlines, 3-pixel aperture mask, vignette, 3x3 bloom. | Opt-in; more GPU work. |
 | `Xbr` | GPU palette expansion, xBR-lv2 4x edge-directed pass, sharp-bilinear finish. | Opt-in; 1280x960 intermediate for 320x240; 4K WGL present 0.28/1.47 ms. |
-| `Hqx` | CPU palette expansion, HQx 2x, upload, sharp-bilinear finish. | Opt-in; CPU cost ~2.3 ms/frame on checkerboard, ~12.1 ms on noise (320x240). |
-| `Hqx3x` | HQx 3x, same finish. | ~4.2 ms checkerboard, ~13.4 ms noise. |
-| `Hqx4x` | HQx 4x, same finish. | ~7.5 ms checkerboard, ~14.8 ms noise; most expensive. |
+| `Hqx` | GPU palette expansion, HQx 2x rule-table pass, sharp-bilinear finish. | Opt-in; 4K WGL present 0.23/0.32 ms, GPU 0.11 ms. |
+| `Hqx3x` | HQx 3x rule-table pass, same finish. | Opt-in; 4K WGL present 0.32/0.53 ms, GPU 0.13 ms. |
+| `Hqx4x` | HQx 4x rule-table pass, same finish. | Opt-in; 4K WGL present 0.25/0.45 ms, GPU 0.16 ms. |
 | `Fsr` | FSR 1.0 EASU upscale to viewport, then RCAS sharpen to output. | Opt-in; two GPU passes; 4K WGL present 0.13/1.19 ms; sharpness slider. |
 
 ### Accurate / Nearest
@@ -260,13 +260,19 @@ the normal sharp-bilinear path instead of failing.
 
 ### HQx
 
-`HqxFilter` (in `FiveDo.Video`, shared by the OpenGL and Vulkan presenters) is a CPU
-port of Maxim Stepin's hq2x/hq3x/hq4x (via Cameron Zemek's C port,
-LGPL-2.1-or-later). It consumes the CPU-expanded BGRA frame, so palette expansion
-stays identical to `FrameAssembler`. The 2x/3x/4x pattern switches are generated data
-(`HqxPatterns*.cs`) and match the C++ `hq2x_32_rb`/`hq3x_32_rb`/`hq4x_32_rb` reference
-hashes. HQx 3x/4x allocate larger intermediate frames; they are the most expensive
-filters and are not recommended with `--high-res` on slow CPUs.
+`HqxFilter` (in `FiveDo.Video`) remains the CPU reference for Maxim Stepin's
+hq2x/hq3x/hq4x (via Cameron Zemek's C port, LGPL-2.1-or-later). Both the CPU
+reference and the GPU presenters use `HqxRuleTable`, a 256x32 table of packed blend
+rules (three weight/index taps plus a shift and a condition index), generated from
+the 4DO C++ sources by `tools/generate_hqx_rules.py`. The table matches the C++
+`hq2x_32_rb`/`hq3x_32_rb`/`hq4x_32_rb` reference hashes.
+
+Each fragment (and the CPU reference) computes the HQx pattern from the 3x3
+native-resolution neighbourhood, looks up the rule for its output subpixel, and
+evaluates the same integer blend. The table is uploaded once as an `RG32UI`
+(OpenGL) / `R32G32_UInt` (Direct3D/Vulkan) texture. The opt-in D3D/Vulkan tests
+compare all three scales against `HqxFilter.Expand` and match with 0 differing
+pixels; the CPU reference hashes are the ground truth.
 
 ### FSR 1.0
 
@@ -386,9 +392,9 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
 Supported filters are `accurate`, `nearest`, `sharp-bilinear`, `crt`, `xbr`, `fsr`,
 and `hqx`/`hqx3x`/`hqx4x`. xBR runs as a 4x GPU pass over the GPU-expanded native
 frame and finishes with sharp-bilinear; FSR runs EASU into a viewport-sized target,
-then RCAS into the output. HQx uses the shared CPU `FrameAssembler` + `HqxFilter`
-expansion, uploads the result, and finishes with sharp-bilinear; it is CPU-bound and
-opt-in. The desktop Vulkan path hosts a native Win32 child window inside the Avalonia
+then RCAS into the output. HQx 2x/3x/4x run as GPU rule-table passes over the
+palette texture and finish with sharp-bilinear. The desktop Vulkan path hosts a
+native Win32 child window inside the Avalonia
 window, so it presents through a swapchain without CPU readback. It is still optional
 and does not replace the WGL/ANGLE presenter; non-Windows platforms fall back to the
 offscreen/readback path. The `--vk-window-probe` validates FIFO presentation separately.
@@ -594,7 +600,8 @@ These are development-machine numbers, not a hardware guarantee. Tier B desktop,
 - The CPU side currently runs at ~1.25-1.6 ms/frame for the synthetic benchmark;
   Road Rash's 3D race measured 5.46 ms/frame total (p50 2.91, p95 10.60, p99 13.14)
   with 0 bytes/frame.
-- xBR/HQx add CPU work proportional to the native frame; HQx 4x is the most expensive.
+- xBR/HQx add GPU passes proportional to the native frame; HQx 4x has the largest
+  intermediate target but is no longer CPU-bound.
 - FSR adds two GPU passes; its 4K WGL and Vulkan budgets are recorded above.
 - The CPU fallback uses `WriteableBitmap` and is not a 4K60 path.
 
@@ -615,16 +622,17 @@ See [`Performance.md`](Performance.md) for the full budget and methodology.
 | `OffscreenRenderTargetTests` | Offscreen probe target creation. |
 | `ShaderSourceTests` | GLSL 330/ES 300 sources, uniforms, FSR/CRT strings. |
 | `HqxFilterTests` | 2x/3x/4x reference hashes, uniform image, allocation. |
+| `HqxRuleTableTests` | Rule encoding, weights, conditions, and table-vs-CPU expansion parity. |
 | `OpenGlCapabilitiesTests` | Version parsing, API, integer textures, vsync. |
 | `SwapIntervalTests` | WGL/GLX/EGL selection and return conventions. |
 | `GlRendererContractTests` | Renderer contract, settings validation. |
-| `GpuProbeIntegrationTests` (opt-in `FIVEDO_GPU_TESTS=1`) | Real WGL/ANGLE 320x240 parity and 4K pass. |
-| `VulkanShaderTests` | All six generated SPIR-V modules and the `RendererApi.Vulkan` capability contract. |
-| `VulkanRendererTests` (opt-in `FIVEDO_VULKAN_TESTS=1`) | CPU parity, fixed/background CLUTs, source/output size changes, xBR/FSR/HQx split-frame orientation. |
+| `GpuProbeIntegrationTests` (opt-in `FIVEDO_GPU_TESTS=1`) | Real WGL/ANGLE 320x240 parity, a 4K pass, and an HQx probe. |
+| `VulkanShaderTests` | All seven generated SPIR-V modules and the `RendererApi.Vulkan` capability contract. |
+| `VulkanRendererTests` (opt-in `FIVEDO_VULKAN_TESTS=1`) | CPU parity, fixed/background CLUTs, source/output size changes, xBR/FSR/HQx split-frame orientation, and HQx 2x/3x/4x CPU-expansion parity. |
 | `VulkanProbeIntegrationTests` (opt-in `FIVEDO_VULKAN_TESTS=1`) | Real Vulkan 320x240 parity, a 4K probe pass, and 640x480 xBR/FSR/HQx passes. |
 | `VkProbeOptionsTests` | Vulkan probe option parsing and defaults. |
-| `Direct3D11ShaderTests` | All six HLSL modules compile for shader model 5.0. |
-| `Direct3D11RendererTests` (opt-in `FIVEDO_D3D_TESTS=1`) | CPU parity, source/output size changes, letterboxing, xBR/FSR/HQx orientation. |
+| `Direct3D11ShaderTests` | All seven HLSL modules compile for shader model 5.0. |
+| `Direct3D11RendererTests` (opt-in `FIVEDO_D3D_TESTS=1`) | CPU parity, source/output size changes, letterboxing, xBR/FSR/HQx orientation, and HQx 2x/3x/4x CPU-expansion parity. |
 | `D3dProbeIntegrationTests` (opt-in `FIVEDO_D3D_TESTS=1`) | Real probe parity report. |
 | `D3dProbeOptionsTests` | Direct3D probe option parsing and defaults. |
 
@@ -638,12 +646,12 @@ See [`Performance.md`](Performance.md) for the full budget and methodology.
 - The GPU probe's residual ~2.3 KB/frame allocation is outside
   `OpenGlRenderer.Present` and comes from the Avalonia UI/compositor loop; the
   renderer/mailbox path is zero-allocation after warm-up.
-- HQx 3x/4x are CPU-heavy. xBR now uses the GPU palette texture in both backends.
+- HQx 2x/3x/4x and xBR use the GPU palette texture in all three accelerated backends.
 - FSR's 4K WGL and Vulkan budgets are recorded above; it remains opt-in.
-- The Vulkan backend is offscreen and readback-based. It has no swapchain/window-system
-  surface and no vsync; HQx uses the shared CPU expansion and is CPU-bound. OpenGL
-  remains the required desktop presenter. Vulkan device/driver validation outside the
-  development machine is pending.
+- The Vulkan backend is offscreen and readback-based by default. The optional Win32
+  child surface presents through a swapchain; other window-system surfaces are future
+  work. OpenGL remains the required desktop presenter. Vulkan device/driver validation
+  outside the development machine is pending.
 - The Direct3D 11 backend is Windows-only for desktop presentation. It is optional and
   OpenGL remains the default; non-Windows settings normalize to OpenGL. Device removal
   falls back through OpenGL to the CPU presenter.

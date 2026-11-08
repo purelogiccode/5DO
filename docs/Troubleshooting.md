@@ -105,7 +105,7 @@ dotnet run --project src/FiveDo.Cli -- trace game.chd --bios panafz1.bin `
 | Black window but audio runs | Try `--gl-backend software`; if the CPU frame is visible, the GL path is at fault. Run the GPU probe parity capture. |
 | Black screenshots | Fixed in the 2026-10-28 pass (float uniform casts). Update; if it persists, use `--gl-backend software` and compare. |
 | Flicker/tearing | Try `Vsync` in Settings; the Avalonia compositor may pace independently. Use `--gl-probe-vsync` to check the platform result. |
-| xBR/HQx slow at 4K | Use SharpBilinear/Accurate or lower output resolution. HQx 3x/4x are CPU-heavy; xBR runs a GPU 4x pass over the GPU-expanded frame. |
+| xBR/HQx slow at 4K | Use SharpBilinear/Accurate or lower output resolution. xBR and HQx run GPU passes over the GPU-expanded frame; HQx 3x/4x allocate the largest intermediate targets. |
 | FSR looks soft/sharp | Adjust Settings > Video > FSR sharpness. 1.0 is maximum sharpening; 0 is soft. |
 | CRT too dark/glowy | Adjust Bloom; scanline strength is a renderer default (0.25) not exposed in Settings. |
 | Wrong aspect/stretch | Settings > Video > Aspect/Integer scaling. `Stretch` fills the window; `FourThree`/`Integer` letterbox. |

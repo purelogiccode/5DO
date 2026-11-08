@@ -424,12 +424,12 @@ This is the largest and riskiest port. Split it into classes but keep the origin
   the FBO-attached palette texture, because the latter sampled black in the xBR
   program on the development driver. This is presentation-only and does not affect
   emulated state; the other filters keep GPU palette expansion.
-- **HQx 2x/3x/4x** are optional CPU expansions of the same `FrameAssembler` output,
-  followed by the sharp-bilinear scale. The pattern switches are derived from the
-  4DO hq2x/hq3x/hq4x sources (LGPL-2.1+); see `THIRD-PARTY-NOTICES.md`. All three
-  match the reference `hqNx_32_rb` hashes. The 3x/4x switches are generated with
-  `tools/generate_hqx34.py`; the generated files are checked in. xBR and HQx are the
-  supported filter-family members.
+- **HQx 2x/3x/4x** are GPU rule-table passes in the accelerated presenters, with
+  `HqxFilter` kept as the CPU reference oracle. The rules are derived from the 4DO
+  hq2x/hq3x/hq4x sources (LGPL-2.1+); see `THIRD-PARTY-NOTICES.md`. All three match
+  the reference `hqNx_32_rb` hashes. `tools/generate_hqx_rules.py` generates the
+  compact `HqxRules.cs` table from the 4DO C++ sources; the generated file is
+  checked in. xBR and HQx are the supported filter-family members.
 - Do not remove the CPU `FrameAssembler`; it is used by CLI/headless tests, as a fallback, and as the golden oracle for the shader.
 
 ### 8.12 CHD storage (new, no FreeDOCore equivalent)

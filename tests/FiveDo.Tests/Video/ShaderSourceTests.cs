@@ -21,6 +21,23 @@ public sealed class ShaderSourceTests
     }
 
     [Theory]
+    [InlineData(false, "#version 330 core")]
+    [InlineData(true, "#version 300 es")]
+    public void HqxShader_UsesTheContextVersionAndRuleTable(bool es, string header)
+    {
+        var source = Shaders.FragmentHqx(es);
+
+        Assert.StartsWith(header, source, StringComparison.Ordinal);
+        Assert.Contains("uniform sampler2D uExpanded", source, StringComparison.Ordinal);
+        Assert.Contains("uniform usampler2D uRules", source, StringComparison.Ordinal);
+        Assert.Contains("uniform int uScale", source, StringComparison.Ordinal);
+        Assert.Contains("yuvDiff", source, StringComparison.Ordinal);
+        Assert.Contains("texelFetch(uRules", source, StringComparison.Ordinal);
+        Assert.Equal(Count(source, '{'), Count(source, '}'));
+        Assert.Equal(Count(source, '('), Count(source, ')'));
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public void XbrShader_HasBalancedBracesAndParentheses(bool es)

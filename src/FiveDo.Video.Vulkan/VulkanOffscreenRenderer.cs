@@ -32,15 +32,9 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
     private const int ClutEntries = VdlFrameUploader.ClutEntries;
 
     private readonly VdlFrameUploader _uploader = new();
-    private readonly HqxFilter _hqxProcessor = new();
     private readonly uint[] _clutRgba = new uint[ClutEntries * MaxSourceHeight];
     private readonly ulong[] _timestamps = new ulong[2];
     private FrameBuffer _frame = new(1, 1);
-    private FrameBuffer? _hqxSourceFrame;
-    private FrameBuffer? _hqxCpuFrame;
-    private int _hqxSourceWidth;
-    private int _hqxSourceHeight;
-    private int _hqxScale;
 
     private VkApi? _vk;
     private Instance _instance;
@@ -57,10 +51,13 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
     private Sampler _linearSampler;
     private DescriptorSetLayout _paletteLayout;
     private DescriptorSetLayout _scaleLayout;
+    private DescriptorSetLayout _hqxLayout;
     private PipelineLayout _palettePipelineLayout;
     private PipelineLayout _scalePipelineLayout;
+    private PipelineLayout _hqxPipelineLayout;
     private Pipeline _palettePipeline;
     private Pipeline _scalePipeline;
+    private Pipeline _hqxPipeline;
     private Pipeline _xbrPipeline;
     private Pipeline _fsrEasuPipeline;
     private Pipeline _fsrRcasPipeline;
@@ -73,6 +70,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
     private DescriptorSet _fsrEasuSet;
     private DescriptorSet _fsrRcasSet;
     private DescriptorSet _hqxScaleSet;
+    private DescriptorSet _hqxSet;
 
     private Image _pixelImage;
     private DeviceMemory _pixelMemory;
@@ -106,13 +104,15 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
     private Image _hqxImage;
     private DeviceMemory _hqxMemory;
     private ImageView _hqxView;
+    private Framebuffer _hqxFramebuffer;
     private int _hqxWidth;
     private int _hqxHeight;
-    private Format _hqxFormat = Format.B8G8R8A8Unorm;
-    private bool _hqxSwizzle;
-    private Silk.NET.Vulkan.Buffer _hqxStaging;
-    private DeviceMemory _hqxStagingMemory;
-    private void* _hqxStagingMapped;
+    private Image _hqxRulesImage;
+    private DeviceMemory _hqxRulesMemory;
+    private ImageView _hqxRulesView;
+    private Silk.NET.Vulkan.Buffer _hqxRulesStaging;
+    private DeviceMemory _hqxRulesStagingMemory;
+    private void* _hqxRulesStagingMapped;
 
     private Silk.NET.Vulkan.Buffer _pixelStaging;
     private DeviceMemory _pixelStagingMemory;
@@ -229,6 +229,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         CreatePipelines();
         CreateStagingResources();
         CreateSourceImages();
+        CreateHqxRules();
         CreateExpandedTarget();
         CreateOutputTarget();
         UpdateDescriptors();
@@ -290,11 +291,6 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             ? frame.PixelAspect
             : 1.0;
 
-        if (IsHqxFilter)
-        {
-            PrepareHqx(frame);
-        }
-
         UploadSourceData();
         RecordFrame();
         WaitForFrame();
@@ -307,64 +303,6 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         }
 
         PresentSwapchain();
-    }
-
-    private bool IsHqxFilter
-        => _settings.Filter is VideoFilter.Hqx or VideoFilter.Hqx3x or VideoFilter.Hqx4x;
-
-    private void PrepareHqx(VdlFrame frame)
-    {
-        var scale = HqxFilter.ScaleFor(_settings.Filter);
-        var width = _sourceWidth * scale;
-        var height = _sourceHeight * scale;
-        if (width > _capabilities.MaxTextureSize || height > _capabilities.MaxTextureSize)
-        {
-            DestroyHqxTarget();
-            return;
-        }
-
-        EnsureHqxTarget(width, height);
-        EnsureHqxFrames(_sourceWidth, _sourceHeight, scale);
-        FrameAssembler.Assemble(frame, _hqxSourceFrame!, _sourceWidth, _sourceHeight);
-        _hqxProcessor.Expand(_hqxSourceFrame!, _hqxCpuFrame!);
-        UploadHqxPixels(_hqxCpuFrame!);
-    }
-
-    private void EnsureHqxFrames(int width, int height, int scale)
-    {
-        if (_hqxCpuFrame is not null
-            && _hqxSourceWidth == width
-            && _hqxSourceHeight == height
-            && _hqxScale == scale)
-        {
-            return;
-        }
-
-        _hqxSourceFrame = new FrameBuffer(width, height);
-        _hqxCpuFrame = new FrameBuffer(width * scale, height * scale);
-        _hqxSourceWidth = width;
-        _hqxSourceHeight = height;
-        _hqxScale = scale;
-    }
-
-    private void UploadHqxPixels(FrameBuffer frame)
-    {
-        var source = frame.PixelSpan;
-        var destination = new Span<byte>(_hqxStagingMapped, checked(frame.Width * frame.Height * 4));
-        if (_hqxSwizzle)
-        {
-            for (var i = 0; i < destination.Length; i += 4)
-            {
-                destination[i] = source[i + 2];
-                destination[i + 1] = source[i + 1];
-                destination[i + 2] = source[i];
-                destination[i + 3] = source[i + 3];
-            }
-        }
-        else
-        {
-            source.CopyTo(destination);
-        }
     }
 
     /// <inheritdoc />
@@ -606,8 +544,6 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         _timestampPeriod = properties.Limits.TimestampPeriod;
         _outputFormat = SelectOutputFormat();
         _swizzleReadback = _outputFormat == Format.R8G8B8A8Unorm;
-        _hqxFormat = SelectHqxFormat();
-        _hqxSwizzle = _hqxFormat == Format.R8G8B8A8Unorm;
         EnsureSourceFormat(Format.R16Uint);
         EnsureSourceFormat(Format.R8G8B8A8Unorm);
         EnsureSourceFormat(Format.R32G32Uint);
@@ -704,25 +640,6 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         }
 
         throw new NotSupportedException("The Vulkan device does not support a sampled RGBA8 render target.");
-    }
-
-    private Format SelectHqxFormat()
-    {
-        const FormatFeatureFlags required = FormatFeatureFlags.SampledImageBit
-            | FormatFeatureFlags.TransferDstBit;
-        FormatProperties properties = _vk!.GetPhysicalDeviceFormatProperties(_physicalDevice, Format.B8G8R8A8Unorm);
-        if ((properties.OptimalTilingFeatures & required) == required)
-        {
-            return Format.B8G8R8A8Unorm;
-        }
-
-        properties = _vk.GetPhysicalDeviceFormatProperties(_physicalDevice, Format.R8G8B8A8Unorm);
-        if ((properties.OptimalTilingFeatures & required) == required)
-        {
-            return Format.R8G8B8A8Unorm;
-        }
-
-        throw new NotSupportedException("The Vulkan device does not support a sampled BGRA8/RGBA8 HQx source texture.");
     }
 
     private static PhysicalDevice SelectPhysicalDevice(VkApi vk, PhysicalDevice* devices, uint count)
@@ -900,6 +817,31 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             _vk.CreateDescriptorSetLayout(_device, &scaleCreate, null, out _scaleLayout),
             "vkCreateDescriptorSetLayout(scale)");
 
+        DescriptorSetLayoutBinding* hqxBindings = stackalloc DescriptorSetLayoutBinding[2];
+        hqxBindings[0] = new DescriptorSetLayoutBinding
+        {
+            Binding = 0,
+            DescriptorType = DescriptorType.CombinedImageSampler,
+            DescriptorCount = 1,
+            StageFlags = ShaderStageFlags.FragmentBit,
+        };
+        hqxBindings[1] = new DescriptorSetLayoutBinding
+        {
+            Binding = 1,
+            DescriptorType = DescriptorType.CombinedImageSampler,
+            DescriptorCount = 1,
+            StageFlags = ShaderStageFlags.FragmentBit,
+        };
+        DescriptorSetLayoutCreateInfo hqxCreate = new()
+        {
+            SType = StructureType.DescriptorSetLayoutCreateInfo,
+            BindingCount = 2,
+            PBindings = hqxBindings,
+        };
+        Check(
+            _vk.CreateDescriptorSetLayout(_device, &hqxCreate, null, out _hqxLayout),
+            "vkCreateDescriptorSetLayout(hqx)");
+
         DescriptorPoolSize* poolSizes = stackalloc DescriptorPoolSize[1];
         poolSizes[0] = new DescriptorPoolSize
         {
@@ -926,8 +868,10 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         };
         _palettePipelineLayout = CreatePipelineLayout(_paletteLayout, &pushRange);
         _scalePipelineLayout = CreatePipelineLayout(_scaleLayout, &pushRange);
+        _hqxPipelineLayout = CreatePipelineLayout(_hqxLayout, &pushRange);
         _palettePipeline = CreatePipeline(_palettePipelineLayout, VulkanShaders.Palette_frag);
         _scalePipeline = CreatePipeline(_scalePipelineLayout, VulkanShaders.Scale_frag);
+        _hqxPipeline = CreatePipeline(_hqxPipelineLayout, VulkanShaders.Hqx_frag);
         _xbrPipeline = CreatePipeline(_scalePipelineLayout, VulkanShaders.Xbr_frag);
         _fsrEasuPipeline = CreatePipeline(_scalePipelineLayout, VulkanShaders.FsrEasu_frag);
         _fsrRcasPipeline = CreatePipeline(_scalePipelineLayout, VulkanShaders.FsrRcas_frag);
@@ -1189,6 +1133,108 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             out _paramView);
     }
 
+    private void CreateHqxRules()
+    {
+        CreateImage(
+            HqxRuleTable.PatternCount,
+            HqxRuleTable.RowCount,
+            Format.R32G32Uint,
+            ImageUsageFlags.SampledBit | ImageUsageFlags.TransferDstBit,
+            out _hqxRulesImage,
+            out _hqxRulesMemory,
+            out _hqxRulesView);
+        var size = (ulong)(HqxRuleTable.PatternCount * HqxRuleTable.RowCount * 2 * sizeof(uint));
+        _hqxRulesStaging = CreateBuffer(
+            size,
+            BufferUsageFlags.TransferSrcBit,
+            MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit,
+            out _hqxRulesStagingMemory);
+        void* mapped;
+        Check(
+            _vk!.MapMemory(_device, _hqxRulesStagingMemory, 0, VkApi.WholeSize, MemoryMapFlags.None, &mapped),
+            "vkMapMemory(HQx rules)");
+        _hqxRulesStagingMapped = mapped;
+        var destination = new Span<uint>(
+            _hqxRulesStagingMapped,
+            HqxRuleTable.PatternCount * HqxRuleTable.RowCount * 2);
+        HqxRuleTable.Rules.CopyTo(destination);
+
+        Check(_vk.ResetCommandBuffer(_commandBuffer, CommandBufferResetFlags.None), "vkResetCommandBuffer(HQx rules)");
+        CommandBufferBeginInfo begin = new()
+        {
+            SType = StructureType.CommandBufferBeginInfo,
+            Flags = CommandBufferUsageFlags.OneTimeSubmitBit,
+        };
+        Check(_vk.BeginCommandBuffer(_commandBuffer, &begin), "vkBeginCommandBuffer(HQx rules)");
+        ImageMemoryBarrier barrier = CreateUploadBarrier(
+            _hqxRulesImage,
+            AccessFlags.None,
+            AccessFlags.TransferWriteBit);
+        _vk.CmdPipelineBarrier(
+            _commandBuffer,
+            PipelineStageFlags.TopOfPipeBit,
+            PipelineStageFlags.TransferBit,
+            DependencyFlags.None,
+            0,
+            null,
+            0,
+            null,
+            1,
+            &barrier);
+        BufferImageCopy region = new()
+        {
+            BufferOffset = 0,
+            BufferRowLength = HqxRuleTable.PatternCount,
+            BufferImageHeight = HqxRuleTable.RowCount,
+            ImageSubresource = new ImageSubresourceLayers
+            {
+                AspectMask = ImageAspectFlags.ColorBit,
+                MipLevel = 0,
+                BaseArrayLayer = 0,
+                LayerCount = 1,
+            },
+            ImageOffset = new Offset3D { X = 0, Y = 0, Z = 0 },
+            ImageExtent = new Extent3D
+            {
+                Width = HqxRuleTable.PatternCount,
+                Height = HqxRuleTable.RowCount,
+                Depth = 1,
+            },
+        };
+        _vk.CmdCopyBufferToImage(
+            _commandBuffer,
+            _hqxRulesStaging,
+            _hqxRulesImage,
+            ImageLayout.General,
+            1,
+            &region);
+        barrier = CreateUploadBarrier(
+            _hqxRulesImage,
+            AccessFlags.TransferWriteBit,
+            AccessFlags.ShaderReadBit);
+        _vk.CmdPipelineBarrier(
+            _commandBuffer,
+            PipelineStageFlags.TransferBit,
+            PipelineStageFlags.FragmentShaderBit,
+            DependencyFlags.None,
+            0,
+            null,
+            0,
+            null,
+            1,
+            &barrier);
+        Check(_vk.EndCommandBuffer(_commandBuffer), "vkEndCommandBuffer(HQx rules)");
+        CommandBuffer commandBuffer = _commandBuffer;
+        SubmitInfo submit = new()
+        {
+            SType = StructureType.SubmitInfo,
+            CommandBufferCount = 1,
+            PCommandBuffers = &commandBuffer,
+        };
+        Check(_vk.QueueSubmit(_queue, 1, &submit, default), "vkQueueSubmit(HQx rules)");
+        Check(_vk.QueueWaitIdle(_queue), "vkQueueWaitIdle(HQx rules)");
+    }
+
     private void CreateExpandedTarget()
     {
         var width = Math.Max(1, _sourceWidth);
@@ -1212,6 +1258,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         UpdateScaleDescriptor(_expandedView);
         UpdateImageDescriptor(_xbrSet, _expandedView, _nearestSampler);
         UpdateImageDescriptor(_fsrEasuSet, _expandedView, _nearestSampler);
+        UpdateHqxDescriptor();
     }
 
     private void CreateOutputTarget()
@@ -1419,6 +1466,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         _fsrEasuSet = AllocateDescriptorSet(_scaleLayout);
         _fsrRcasSet = AllocateDescriptorSet(_scaleLayout);
         _hqxScaleSet = AllocateDescriptorSet(_scaleLayout);
+        _hqxSet = AllocateDescriptorSet(_hqxLayout);
 
         DescriptorImageInfo* paletteImages = stackalloc DescriptorImageInfo[3];
         paletteImages[0] = new DescriptorImageInfo { ImageView = _pixelView, ImageLayout = ImageLayout.General, Sampler = _nearestSampler };
@@ -1442,6 +1490,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         UpdateScaleDescriptor(_expandedView);
         UpdateImageDescriptor(_xbrSet, _expandedView, _nearestSampler);
         UpdateImageDescriptor(_fsrEasuSet, _expandedView, _nearestSampler);
+        UpdateHqxDescriptor();
     }
 
     private DescriptorSet AllocateDescriptorSet(DescriptorSetLayout layout)
@@ -1485,6 +1534,43 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             PImageInfo = &image,
         };
         _vk.UpdateDescriptorSets(_device, 1, &write, 0, null);
+    }
+
+    private void UpdateHqxDescriptor()
+    {
+        if (_vk is null || _hqxSet.Handle == 0 || _hqxRulesView.Handle == 0)
+        {
+            return;
+        }
+
+        DescriptorImageInfo* images = stackalloc DescriptorImageInfo[2];
+        images[0] = new DescriptorImageInfo
+        {
+            ImageView = _expandedView,
+            ImageLayout = ImageLayout.General,
+            Sampler = _nearestSampler,
+        };
+        images[1] = new DescriptorImageInfo
+        {
+            ImageView = _hqxRulesView,
+            ImageLayout = ImageLayout.General,
+            Sampler = _nearestSampler,
+        };
+        WriteDescriptorSet* writes = stackalloc WriteDescriptorSet[2];
+        for (uint i = 0; i < 2; i++)
+        {
+            writes[i] = new WriteDescriptorSet
+            {
+                SType = StructureType.WriteDescriptorSet,
+                DstSet = _hqxSet,
+                DstBinding = i,
+                DescriptorCount = 1,
+                DescriptorType = DescriptorType.CombinedImageSampler,
+                PImageInfo = &images[i],
+            };
+        }
+
+        _vk.UpdateDescriptorSets(_device, 2, writes, 0, null);
     }
 
     private void UploadSourceData()
@@ -1577,19 +1663,13 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
 
     private void CopyStagingToImages()
     {
-        var hqxUpload = IsHqxFilter && _hqxImage.Handle != 0;
-        var barrierCount = hqxUpload ? 4u : 3u;
-        ImageMemoryBarrier* barriers = stackalloc ImageMemoryBarrier[4];
+        ImageMemoryBarrier* barriers = stackalloc ImageMemoryBarrier[3];
         const AccessFlags uploadSource = AccessFlags.ShaderReadBit
             | AccessFlags.MemoryReadBit
             | AccessFlags.MemoryWriteBit;
         barriers[0] = CreateUploadBarrier(_pixelImage, uploadSource, AccessFlags.TransferWriteBit);
         barriers[1] = CreateUploadBarrier(_clutImage, uploadSource, AccessFlags.TransferWriteBit);
         barriers[2] = CreateUploadBarrier(_paramImage, uploadSource, AccessFlags.TransferWriteBit);
-        if (hqxUpload)
-        {
-            barriers[3] = CreateUploadBarrier(_hqxImage, uploadSource, AccessFlags.TransferWriteBit);
-        }
 
         _vk!.CmdPipelineBarrier(
             _commandBuffer,
@@ -1600,23 +1680,15 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             null,
             0,
             null,
-            barrierCount,
+            3,
             barriers);
         CopyBufferToImage(_pixelStaging, _pixelImage, (uint)_sourceWidth, (uint)_sourceHeight);
         CopyBufferToImage(_clutStaging, _clutImage, ClutEntries, (uint)_sourceHeight);
         CopyBufferToImage(_paramStaging, _paramImage, 1, (uint)_sourceHeight);
-        if (hqxUpload)
-        {
-            CopyBufferToImage(_hqxStaging, _hqxImage, (uint)_hqxWidth, (uint)_hqxHeight);
-        }
 
         barriers[0] = CreateUploadBarrier(_pixelImage, AccessFlags.TransferWriteBit, AccessFlags.ShaderReadBit);
         barriers[1] = CreateUploadBarrier(_clutImage, AccessFlags.TransferWriteBit, AccessFlags.ShaderReadBit);
         barriers[2] = CreateUploadBarrier(_paramImage, AccessFlags.TransferWriteBit, AccessFlags.ShaderReadBit);
-        if (hqxUpload)
-        {
-            barriers[3] = CreateUploadBarrier(_hqxImage, AccessFlags.TransferWriteBit, AccessFlags.ShaderReadBit);
-        }
 
         _vk.CmdPipelineBarrier(
             _commandBuffer,
@@ -1627,7 +1699,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             null,
             0,
             null,
-            barrierCount,
+            3,
             barriers);
     }
 
@@ -1817,12 +1889,10 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             var scale = HqxFilter.ScaleFor(filter);
             var hqxWidth = _sourceWidth * scale;
             var hqxHeight = _sourceHeight * scale;
-            if (hqxWidth <= _capabilities.MaxTextureSize
-                && hqxHeight <= _capabilities.MaxTextureSize
-                && _hqxImage.Handle != 0
-                && _hqxWidth == hqxWidth
-                && _hqxHeight == hqxHeight)
+            if (hqxWidth <= _capabilities.MaxTextureSize && hqxHeight <= _capabilities.MaxTextureSize)
             {
+                EnsureHqxTarget(hqxWidth, hqxHeight);
+                RecordHqxPass(hqxWidth, hqxHeight, scale);
                 RecordScalePass(hqxWidth, hqxHeight, 1, filter, _hqxScaleSet);
                 return;
             }
@@ -1831,6 +1901,81 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         }
 
         RecordScalePass(_sourceWidth, _sourceHeight, FilterValue(filter), filter, _scaleSet);
+    }
+
+    private void RecordHqxPass(int width, int height, int scale)
+    {
+        Transition(
+            _hqxImage,
+            AccessFlags.ShaderReadBit | AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit,
+            AccessFlags.ColorAttachmentWriteBit,
+            PipelineStageFlags.AllCommandsBit,
+            PipelineStageFlags.ColorAttachmentOutputBit);
+        ClearValue clear = new() { Color = new ClearColorValue(0f, 0f, 0f, 1f) };
+        RenderPassBeginInfo begin = new()
+        {
+            SType = StructureType.RenderPassBeginInfo,
+            RenderPass = _renderPass,
+            Framebuffer = _hqxFramebuffer,
+            RenderArea = new Rect2D
+            {
+                Offset = new Offset2D { X = 0, Y = 0 },
+                Extent = new Extent2D { Width = (uint)width, Height = (uint)height },
+            },
+            ClearValueCount = 1,
+            PClearValues = &clear,
+        };
+        _vk!.CmdBeginRenderPass(_commandBuffer, &begin, SubpassContents.Inline);
+        Viewport viewport = new()
+        {
+            X = 0,
+            Y = 0,
+            Width = width,
+            Height = height,
+            MinDepth = 0f,
+            MaxDepth = 1f,
+        };
+        Rect2D scissor = new()
+        {
+            Offset = new Offset2D { X = 0, Y = 0 },
+            Extent = new Extent2D { Width = (uint)width, Height = (uint)height },
+        };
+        _vk.CmdSetViewport(_commandBuffer, 0, 1, &viewport);
+        _vk.CmdSetScissor(_commandBuffer, 0, 1, &scissor);
+        _vk.CmdBindPipeline(_commandBuffer, PipelineBindPoint.Graphics, _hqxPipeline);
+        DescriptorSet hqxSet = _hqxSet;
+        _vk.CmdBindDescriptorSets(
+            _commandBuffer,
+            PipelineBindPoint.Graphics,
+            _hqxPipelineLayout,
+            0,
+            1,
+            &hqxSet,
+            0,
+            null);
+        PushConstants constants = new()
+        {
+            Rect = new System.Numerics.Vector4(0f, 0f, width, height),
+            OutputSize = new System.Numerics.Vector2(width, height),
+            SourceWidth = _sourceWidth,
+            SourceHeight = _sourceHeight,
+            Filter = scale,
+        };
+        _vk.CmdPushConstants(
+            _commandBuffer,
+            _hqxPipelineLayout,
+            ShaderStageFlags.VertexBit | ShaderStageFlags.FragmentBit,
+            0,
+            (uint)sizeof(PushConstants),
+            &constants);
+        _vk.CmdDraw(_commandBuffer, 3, 1, 0, 0);
+        _vk.CmdEndRenderPass(_commandBuffer);
+        Transition(
+            _hqxImage,
+            AccessFlags.ColorAttachmentWriteBit,
+            AccessFlags.ShaderReadBit,
+            PipelineStageFlags.ColorAttachmentOutputBit,
+            PipelineStageFlags.FragmentShaderBit);
     }
 
     private void RecordXbrPass(int width, int height)
@@ -2221,15 +2366,23 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         DestroyImage(_pixelImage, _pixelMemory, _pixelView);
         DestroyImage(_clutImage, _clutMemory, _clutView);
         DestroyImage(_paramImage, _paramMemory, _paramView);
+        DestroyImage(_hqxRulesImage, _hqxRulesMemory, _hqxRulesView);
         DestroyBuffer(_pixelStaging, _pixelStagingMemory, _pixelStagingMapped);
         DestroyBuffer(_clutStaging, _clutStagingMemory, _clutStagingMapped);
         DestroyBuffer(_paramStaging, _paramStagingMemory, _paramStagingMapped);
+        DestroyBuffer(_hqxRulesStaging, _hqxRulesStagingMemory, _hqxRulesStagingMapped);
         DestroyBuffer(_readbackBuffer, _readbackMemory, _readbackMapped);
         _pixelStagingMapped = null;
         _clutStagingMapped = null;
         _paramStagingMapped = null;
+        _hqxRulesStagingMapped = null;
         _readbackMapped = null;
         _readbackSize = 0;
+        _hqxRulesImage = default;
+        _hqxRulesMemory = default;
+        _hqxRulesView = default;
+        _hqxRulesStaging = default;
+        _hqxRulesStagingMemory = default;
 
         if (_palettePipeline.Handle != 0)
         {
@@ -2241,6 +2394,12 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         {
             _vk.DestroyPipeline(_device, _scalePipeline, null);
             _scalePipeline = default;
+        }
+
+        if (_hqxPipeline.Handle != 0)
+        {
+            _vk.DestroyPipeline(_device, _hqxPipeline, null);
+            _hqxPipeline = default;
         }
 
         if (_xbrPipeline.Handle != 0)
@@ -2273,6 +2432,12 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             _scalePipelineLayout = default;
         }
 
+        if (_hqxPipelineLayout.Handle != 0)
+        {
+            _vk.DestroyPipelineLayout(_device, _hqxPipelineLayout, null);
+            _hqxPipelineLayout = default;
+        }
+
         if (_renderPass.Handle != 0)
         {
             _vk.DestroyRenderPass(_device, _renderPass, null);
@@ -2292,6 +2457,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         _fsrEasuSet = default;
         _fsrRcasSet = default;
         _hqxScaleSet = default;
+        _hqxSet = default;
 
         if (_paletteLayout.Handle != 0)
         {
@@ -2303,6 +2469,12 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         {
             _vk.DestroyDescriptorSetLayout(_device, _scaleLayout, null);
             _scaleLayout = default;
+        }
+
+        if (_hqxLayout.Handle != 0)
+        {
+            _vk.DestroyDescriptorSetLayout(_device, _hqxLayout, null);
+            _hqxLayout = default;
         }
 
         if (_nearestSampler.Handle != 0)
@@ -2489,7 +2661,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
 
     private void EnsureHqxTarget(int width, int height)
     {
-        if (_hqxImage.Handle != 0 && _hqxWidth == width && _hqxHeight == height)
+        if (_hqxFramebuffer.Handle != 0 && _hqxWidth == width && _hqxHeight == height)
         {
             return;
         }
@@ -2498,23 +2670,14 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         CreateImage(
             (uint)width,
             (uint)height,
-            _hqxFormat,
-            ImageUsageFlags.SampledBit | ImageUsageFlags.TransferDstBit,
+            _outputFormat,
+            ImageUsageFlags.ColorAttachmentBit | ImageUsageFlags.SampledBit,
             out _hqxImage,
             out _hqxMemory,
             out _hqxView);
+        _hqxFramebuffer = CreateFramebuffer(_hqxView, (uint)width, (uint)height);
         _hqxWidth = width;
         _hqxHeight = height;
-        _hqxStaging = CreateBuffer(
-            (ulong)checked(width * height * 4),
-            BufferUsageFlags.TransferSrcBit,
-            MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit,
-            out _hqxStagingMemory);
-        void* mapped;
-        Check(
-            _vk!.MapMemory(_device, _hqxStagingMemory, 0, VkApi.WholeSize, MemoryMapFlags.None, &mapped),
-            "vkMapMemory(HQx)");
-        _hqxStagingMapped = mapped;
         UpdateImageDescriptor(_hqxScaleSet, _hqxView, _linearSampler);
     }
 
@@ -2525,10 +2688,12 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             return;
         }
 
-        DestroyBuffer(_hqxStaging, _hqxStagingMemory, _hqxStagingMapped);
-        _hqxStaging = default;
-        _hqxStagingMemory = default;
-        _hqxStagingMapped = null;
+        if (_hqxFramebuffer.Handle != 0)
+        {
+            _vk.DestroyFramebuffer(_device, _hqxFramebuffer, null);
+            _hqxFramebuffer = default;
+        }
+
         DestroyImage(_hqxImage, _hqxMemory, _hqxView);
         _hqxImage = default;
         _hqxMemory = default;

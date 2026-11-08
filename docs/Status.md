@@ -518,10 +518,11 @@ This is the short, current answer to "where are we?" The documentation index is
   640x480 rendering; the internal high-resolution research is M14. The mode is off by default
   because 320x240 titles must not be upscaled, and the desktop shell exposes it as a
   Hi-Res checkbox that restarts the machine. An opt-in xBR-lv2 4x filter, HQx
-  2x/3x/4x filters, and CRT bloom are available in Settings; xBR and HQx use a
-  CPU-expanded native source and sharp-bilinear finishing, and CRT bloom adds a 3x3
-  native-resolution glow in the CRT filter. The HQx 3x/4x switches match the C++
-  reference hashes and are the most expensive opt-in modes.
+  2x/3x/4x filters, and CRT bloom are available in Settings; xBR and HQx are GPU
+  passes over the GPU-expanded native source with sharp-bilinear finishing, and CRT
+  bloom adds a 3x3 native-resolution glow in the CRT filter. The CPU HQx reference
+  hashes remain the oracle, and the GPU HQx rule table matches them in the opt-in
+  parity tests.
 - **Performance:** the machine runs on a dedicated core thread paced by the 44.1 kHz
   audio clock (60 Hz fallback) with a frame pacer; the UI renders on demand; uploads use `TexStorage2D` + `TexSubImage2D`;
   uniform locations and the present delegate are cached; physical-pixel sizing is
@@ -536,19 +537,20 @@ This is the short, current answer to "where are we?" The documentation index is
   presenter with build-time SPIR-V shaders, sampled R16_UINT/CLUT/parameter
   textures, accurate/nearest/sharp-bilinear/CRT/xBR/FSR/HQx filters, GPU timestamp
   queries, and a host readback buffer. xBR-lv2 runs as a 4x GPU pass; FSR 1.0 runs
-  EASU plus RCAS; HQx uses the shared CPU expansion. `--vk-probe` writes the shared
+  EASU plus RCAS; HQx 2x/3x/4x run as a GPU rule-table pass over the palette texture.
+  `--vk-probe` writes the shared
   GPU probe JSON and PNG captures; `--vk-window-probe` creates a native Win32
   swapchain, presents through FIFO vsync, and writes the same report with
   `offscreen: false`; `--gl-backend vulkan` hosts the optional desktop Win32 child
   surface. The 320x240 Accurate probe matches the CPU oracle
   (`0xD6BD89C5`, 0 different pixels); 4K sharp-bilinear measures 0.24 ms mean /
   1.06 ms p99 present and 0.075/0.091 ms GPU, 4K xBR 0.32/0.80 ms present and
-  0.13/0.14 ms GPU, and 4K FSR 0.60/1.30 ms present and 0.40/0.42 ms GPU, all with 0
-  managed bytes/frame on the RTX 4070. The 4K window probe reports 0.077/0.088 ms GPU
-  and 5.96/6.53 ms present (including the 165 Hz FIFO wait), 0 managed bytes/frame.
-  HQx 2x/3x/4x use the shared CPU expansion (4K HQx present 6.82/10.93 ms, CPU-bound),
-  and compositor-embedded/X11/Wayland/Metal surfaces are future work. See
-  [`Vulkan.md`](Vulkan.md).
+  0.13/0.14 ms GPU, 4K FSR 0.60/1.30 ms present and 0.40/0.42 ms GPU, and 4K HQx
+  2x/3x/4x 0.26/0.41, 0.29/0.34, and 0.34/0.52 ms present with 0.10/0.12/0.15 ms
+  GPU, all with 0 managed bytes/frame on the RTX 4070. The 4K window probe reports
+  0.077/0.088 ms GPU and 5.96/6.53 ms present (including the 165 Hz FIFO wait), 0
+  managed bytes/frame. Compositor-embedded/X11/Wayland/Metal surfaces are future
+  work. See [`Vulkan.md`](Vulkan.md).
 - **Renderer robustness:** GL/GLES capability parsing reports the API and version,
   fullscreen/F11/Escape work, GL readback screenshots are implemented, and GL init
   failure or context loss switches the shell to the CPU `WriteableBitmap` presenter.
@@ -831,8 +833,9 @@ The xBR row now uses the GPU-expanded palette texture directly; the previous pat
 uploaded a CPU `FrameAssembler` copy. The optional Vulkan offscreen backend was also
 measured on the same machine: 4K sharp-bilinear present 0.24 ms mean / 1.06 ms p99,
 GPU 0.075/0.091 ms, 0 managed bytes/frame; 4K xBR present 0.32/0.80 ms, GPU
-0.13/0.14 ms; 4K FSR present 0.60/1.30 ms, GPU 0.40/0.42 ms; 4K HQx 2x present
-6.82/10.93 ms, GPU 0.13/0.18 ms; 1080p sharp-bilinear present 0.17/0.79 ms, 1080p xBR
+0.13/0.14 ms; 4K FSR present 0.60/1.30 ms, GPU 0.40/0.42 ms; 4K HQx 2x/3x/4x
+present 0.32/0.83, 0.32/0.48, and 0.40/0.69 ms with GPU 0.10/0.11, 0.12/0.13, and
+0.15/0.16 ms; 1080p sharp-bilinear present 0.17/0.79 ms, 1080p xBR
 0.21/0.38 ms, and 1080p FSR 0.27/0.78 ms, all with 0 managed bytes/frame. GPU time
 excludes the optional per-frame readback. Its 320x240 Accurate output matches the CPU
 oracle (`0xD6BD89C5`, 0 different pixels). See [`Vulkan.md`](Vulkan.md).

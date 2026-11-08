@@ -233,7 +233,7 @@ workflow.
 | Nearest / integer scaling | Yes | |
 | Sharp-bilinear | Yes (default enhanced) | |
 | CRT filter | Yes (opt-in) | |
-| xBR 4x / HQx 2x/3x/4x filters | Yes (opt-in; HQx runs on the CPU) | GPU HQx variant |
+| xBR 4x / HQx 2x/3x/4x filters | Yes (opt-in; all GPU passes) | |
 | 1080p/1440p/4K output | Yes (GPU scaling); 4K60 on Tier A hardware | |
 | Fullscreen | Yes | |
 | 384/512/640/1024-wide VDLP modes | Parsed, may crop | Full presentation |
@@ -242,6 +242,16 @@ workflow.
 | CPU fallback renderer | Yes (no GL context) | |
 | Screenshots | Yes (GL readback or CPU frame) | |
 | Frame advance | Yes | |
+
+**GPU HQx (2026-11-07).** HQx 2x/3x/4x now run as GPU rule-table passes in OpenGL,
+Direct3D 11, and Vulkan; the CPU `HqxFilter` remains the reference oracle. On the RTX
+4070 the 4K WGL probe measured 0.23/0.32/0.25 ms present and 0.11/0.13/0.16 ms GPU for
+2x/3x/4x, with 0 managed bytes/frame. WGL, ANGLE/GLES, Vulkan, and Direct3D 11 640x480
+HQx captures are byte-identical to the CPU `HqxFilter` expansion. The opt-in
+D3D/Vulkan tests compare all three scales with `HqxFilter.Expand` and match with 0
+differing pixels. The GPU pattern uses `float` YUV while the CPU reference uses
+`double`; a tiny fraction of colors can classify differently by one LSB, but the
+synthetic probe frame and parity tests match exactly.
 
 ### 6.1 High-resolution mode
 
