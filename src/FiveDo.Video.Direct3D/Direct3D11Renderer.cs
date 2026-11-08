@@ -334,8 +334,8 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
         _context!.UpdateSubresource(
             HqxRuleTable.Rules,
             _hqxRulesTexture,
-            rowPitch: (uint)(HqxRuleTable.PatternCount * sizeof(uint) * 2),
-            depthPitch: (uint)(HqxRuleTable.PatternCount * HqxRuleTable.RowCount * sizeof(uint) * 2));
+            rowPitch: HqxRuleTable.PatternCount * sizeof(uint) * 2,
+            depthPitch: HqxRuleTable.PatternCount * HqxRuleTable.RowCount * sizeof(uint) * 2);
         _constantBuffer = _device.CreateBuffer(
             new BufferDescription(
                 (uint)sizeof(Constants),

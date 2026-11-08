@@ -1,7 +1,7 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.4.0 is the current release**; unified Windows/Linux/macOS x64/arm64
+**Release timing:** **v1.5.0 is the current release**; unified Windows/Linux/macOS x64/arm64
 bundles are built from the same gates used for v1.0.0, v1.1.0, and v1.2.x.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
 full-compatibility one. v1.1.0 was a maintenance update; v1.2.0 added features,
@@ -9,7 +9,8 @@ accuracy telemetry, and broader disc support; v1.2.1 added arm64 bundles; v1.2.2
 interpreter/high-res/rewind performance, the opt-in managed JIT, library health and
 database work, memory capacity options, and eight PBUS ports; v1.3.0 adds
 480i/240p detection, deinterlacing, and field blending; v1.4.0 adds online cover art,
-latency controls, unsigned-disc support, and the exact NTSC field clock.
+latency controls, unsigned-disc support, and the exact NTSC field clock; v1.5.0 adds
+GPU HQx, the 24-bit VDL background, reference field-boundary timing, and CD parity.
 Ship the platforms and titles that are validated, publish an honest per-title matrix
 and known issues, and move everything else to the post-1.0 backlog.
 
@@ -106,6 +107,37 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       <https://github.com/purelogiccode/5DO/actions/runs/42399572702> passed build,
       Pages deploy, and wiki publish; the 1.4.0 What's New and wiki release page are
       live.
+
+---
+
+## 1.5.0 accuracy and GPU-HQx gate
+
+- [x] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.5.0`.
+- [x] Update `CHANGELOG.md`, `docs/WhatsNew.md`, `docs/ReleaseNotes-1.5.0.md`,
+      `README.md`, `docs/Status.md`, `docs/index.md`, and `docs/Installation.md`.
+- [x] Update the MkDocs navigation and the curated wiki sidebar with the 1.5.0 pages.
+- [x] Full suite **1,939/1,939** passes in Debug;
+      `dotnet format --verify-no-changes` is clean;
+      `jb inspectcode --severity=WARNING` reports 0 results.
+- [x] Verify GPU HQx 2x/3x/4x rule-table parity in Direct3D 11 and Vulkan, plus the
+      WGL/ANGLE GL probe path.
+- [x] Verify the 24-bit VDL background, zero-entry stop, field-boundary `RunFrame`,
+      CD poll/FIQ/READ_DATA parity, and the differential harness reports are documented
+      and covered by tests.
+- [ ] Build all six framework-dependent single-file bundles and keep local copies in
+      `src/FiveDo.Frontend.Avalonia/bin/Release` without deleting older artifacts.
+      Local bundles: `5do-1.5.0-{win-x64,win-arm64}.zip` and
+      `5do-1.5.0-{linux-x64,linux-arm64,osx-x64,osx-arm64}.tar.gz`.
+- [ ] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
+      `whatsnew.md`, the 1.5.0 release notes, and the legal notices, and contains no
+      `runtime/`, `*.pdb`, or `*.xml` files.
+- [ ] Verify the x64 CLI `selftest` and desktop `--smoke-test` (`FRONTEND SMOKE OK 1.5.0`);
+      CI verifies the arm64 apphost machine types.
+- [ ] Create and push tag `v1.5.0`; verify the release workflow published six versioned
+      bundles and `SHA256SUMS.txt`:
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.5.0>.
+- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
+      1.5.0 release page, What's New, release notes, and wiki page.
 
 ---
 
@@ -211,8 +243,8 @@ been validated.**
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
 | Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-x64.tar.gz`, `5do-<version>-osx-arm64.tar.gz`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 10 runtime is a host prerequisite and is not bundled |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
-| Version | **`v1.4.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, v1.2.0, v1.2.1, v1.2.2, v1.3.0, and rc.1 are historical |
-| Release timing | **Prepared 2026-11-07** | v1.4.0 bundles and checksums are attached to the GitHub release |
+| Version | **`v1.5.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, v1.2.0, v1.2.1, v1.2.2, v1.3.0, v1.4.0, and rc.1 are historical |
+| Release timing | **Prepared 2026-11-08** | v1.5.0 bundles and checksums are attached to the GitHub release |
 
 ---
 

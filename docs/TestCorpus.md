@@ -2793,3 +2793,24 @@ Space Ace, Wolfenstein); Road Rash remains the only video divergence. Tests:
 `CdromDeviceTests` Opera-poll reset/READ_ID, `XbusTests.FiqPending`, and
 `ClioTests.ReadTrace` cases; **1,925 pass** (one unrelated allocation test is
 flaky under load and passes alone). `dotnet format` and InspectCode are clean.
+
+### 1.1ba GPU HQx rule-table passes (2026-11-08)
+
+HQx 2x/3x/4x now runs as a shared GPU rule-table pass in OpenGL/GLES,
+Direct3D 11, and Vulkan. The compact table is generated from the 4DO
+hq2x/hq3x/hq4x sources and checked in; the CPU `HqxFilter` remains the reference
+oracle. The rule table is validated independently and cross-checked against the CPU
+path at all three scales, and the synthetic probe frames are pixel-identical on the
+Direct3D 11 and Vulkan readback paths. On the RTX 4070, 4K HQx presentation measures
+**0.14-0.34 ms** per frame and the GPU pass **0.09-0.17 ms**, down from
+**6.82/10.93 ms** CPU-bound. The opt-in WGL and ANGLE GL probe also passes the HQx
+rule-texture path without fallback.
+
+The same increment fixes the remaining panel-wide video divergence: the 3DO
+background is kept as 24-bit RGB through the CPU assembler and all GPU palette
+shaders, and a zero VDL display-list word is a stop that retains the previous
+bitmap. The 50-title panel remains **50/50 frame hashes** at frames 60/120/300 with
+**0 errors**. `RunFrame` ends on the reference 263/312-line field boundary, the
+harness samples Opera's ARM/CD state in the checkpoint's own callback, and the CD
+poll/FIQ/READ_DATA parity fixes are recorded in 1.1az. **1,939 tests pass**; build,
+format, and InspectCode are clean.

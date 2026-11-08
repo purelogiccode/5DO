@@ -1,36 +1,69 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.4.0, a documented-compatibility
+All notable changes are recorded here. The project is at v1.5.0, a documented-compatibility
 release.
 
 ## [Unreleased]
+
+## [1.5.0] - 2026-11-08
+
+### Added
+
+- GPU HQx 2x/3x/4x. HQx is now a shared rule-table GPU pass in OpenGL/GLES,
+  Direct3D 11, and Vulkan instead of a CPU switch expansion. The CPU
+  `HqxFilter` remains the reference oracle, and rule-table plus synthetic-probe
+  tests cover all three scales. The 4K RTX 4070 measurement is 0.14-0.34 ms
+  present and 0.09-0.17 ms GPU, down from 6.82/10.93 ms CPU-bound.
+- Reference field-boundary termination. `FiveDoMachine.RunFrame` ends a field
+  when the 263/312-line VDL counter crosses the region boundary instead of
+  stopping on a rounded ARM-cycle budget. This removes the accumulated
+  per-field instruction-phase drift.
+- CD register, CLIO read, and timer tracing. The CLI adds
+  `--cd-register-trace` and `--clio-read-trace`; the differential harness adds
+  `--timer-trace` and per-command PC/retired-instruction stamps.
+- Differential instruction-phase and CD-cadence reports. `pcPhaseFrame`,
+  `pcPhaseInstructionDelta`, `cdCadence`, and the largest cumulative cycle step
+  are written to JSON, Markdown, and HTML reports.
+- Desktop `-fullscreen` launch alias. The smoke-test marker records
+  `windowState=FullScreen` when the launch mode was applied.
 
 ### Fixed
 
 - VDL background precision. The 3DO background register is 24-bit RGB; 5DO
   narrowed it to five bits and expanded it again, turning the reference's
   near-black `(1,1,1)` into `(0,0,0)`. The CPU frame assembler, `GpuPalette`, the
-  OpenGL shader, and the Direct3D shader now keep all eight bits per channel,
-  and the VDL frame save-state section (version 3) converts version 1-2
-  backgrounds on load.
+  OpenGL, Direct3D, and Vulkan palette shaders now keep all eight bits per
+  channel, and VDLP save-state section v4 plus Machine section v3 convert
+  version 1-3 packed backgrounds on load.
 - VDL display-list stop. A zero display-list word is a stop that retains the
   previous bitmap and control word, matching `opera_vdlp.c`; 5DO treated it as
   an entry and blanked the last visible scanline.
-- Differential harness PC/CPSR triage. Reports now record an instruction-phase
-  alignment (`pcPhaseFrame`, `pcPhaseInstructionDelta`) for the first PC
-  divergence and show it in the Markdown/HTML tables.
-- Differential harness ISO staging is atomic and retries once after a transient
-  CHD decompression failure; a per-title capture exception is reported as an
-  `Error` instead of aborting the run.
+- CD poll reset and FIQ level. The Opera poll reset keeps the three interrupt
+  enables and the POLRE media latch, and the XBUS CD FIQ is level-held each clock
+  batch so READ_ID/READ_ERROR completions are visible to the guest.
+- READ_DATA validation and transfer cadence. Invalid MSF and past-end requests
+  return address/end-address errors, a new read aborts stale read-ahead,
+  status is published with the first queued sector, and sector deadlines
+  accumulate from the previous deadline like `cdrom_data_schedule_next`.
+- Differential harness checkpoint sampling now captures Opera ARM/CD state in
+  the checkpoint's own video callback, and ISO staging is atomic with one
+  transient-CHD retry. A per-title capture exception is reported as an `Error`
+  instead of aborting the run.
+- Removed the retired READ_ID idle heuristic that raised a false POLMA FIQ after
+  two widely spaced polls.
 
 ### Validation
 
 - The 50-title panel matches **50/50 frame hashes** at frames 60/120/300 (up
-  from 32/50) and all **50/50** first PC divergences instruction-align to Opera
-  frame 59. The only remaining behavioral divergence is CD command cadence.
+  from 32/50) with **0 errors**. The same-frame retired-instruction delta is
+  11-20 at frame 60 and 23-2,223 at frame 120; the remaining behavioral
+  divergence is CD command cadence.
+- The command-50 boot handoff fell from **+207,707 cycles / +86,511
+  instructions** to **-818 / -376**.
 - The 5-title panel matches **5/5** frame hashes at 300 frames; the 3,000-frame
   panel matches 4/5 (Road Rash still diverges).
-- Full suite **1,916/1,916** passes; build, format, and InspectCode are clean.
+- Full suite **1,939/1,939** passes in Debug; build reports 0 warnings and
+  0 errors; format and InspectCode are clean.
 
 ## [1.4.0] - 2026-11-07
 

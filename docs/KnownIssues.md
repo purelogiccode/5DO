@@ -1,7 +1,7 @@
 # Known Issues
 
-**Snapshot:** 2026-11-01. This list covers the supported local corpus and the current
-prototype state. It is not a compatibility guarantee.
+**Snapshot:** 2026-11-08, v1.5.0. This list covers the supported local corpus and the
+current prototype state. It is not a compatibility guarantee.
 
 **Release scope:** v1.0.0 ships with these known issues documented; full-race completion,
 extra title scripts, M13.5/M13.6 visual/high-resolution review, M14 research, Pi/arm64

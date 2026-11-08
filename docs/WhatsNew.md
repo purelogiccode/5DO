@@ -1,127 +1,118 @@
-# What's new in 5DO 1.4.0
+# What's new in 5DO 1.5.0
 
-**Released:** 2026-11-07
+**Released:** 2026-11-08
 
-> **Post-1.4.0 development snapshot (unreleased).** The differential oracle is now
-> video-clean on the 50-title panel: **50/50 titles match every frame hash** at
-> frames 60/120/300 (up from 32/50), and every PC/CPSR divergence is proven to be
-> a one-field instruction phase. The fixes are a 24-bit VDL background (the old
-> 5-bit conversion rendered near-black as pure black) and treating a zero VDL
-> display-list word as a stop that retains the previous bitmap. The remaining
-> behavioral difference is CD command cadence. See `CHANGELOG.md` and
-> `TestCorpus.md` 1.1ay.
+5DO 1.5.0 is an accuracy and presentation update on the 1.4.0 feature release. It moves
+the HQx 2x/3x/4x filters to GPU rule-table passes, fixes the last panel-wide video
+divergence, tightens CD interrupt and transfer behavior against the Opera reference, and
+makes the differential harness report instruction phase and CD cadence directly.
 
-5DO 1.4.0 is a feature and accuracy update on the 1.3.0 field-handling release. It adds
-**online cover art**, **latency controls**, **unsigned-disc support**, and the **exact
-59.94 Hz NTSC clock** used by the reference core. It keeps the six-bundle packaging model:
-Windows, Linux, and macOS on x64 and arm64, with the CLI and desktop app in one
-framework-dependent bundle.
+## Highlights
 
-## Changes in 1.4.0
+### GPU HQx 2x/3x/4x
 
-### Online cover art
+- HQx now runs as a shared rule-table GPU pass in **OpenGL/GLES**, **Direct3D 11**, and
+  **Vulkan**. The compact table is generated from the 4DO hq2x/hq3x/hq4x sources and
+  checked in.
+- The CPU `HqxFilter` remains the reference oracle. Rule-table tests, CPU-parity tests,
+  synthetic GPU probes, and the WGL/ANGLE probe cover all three scales.
+- On the RTX 4070, 4K HQx presentation measures **0.14-0.34 ms** per frame and the GPU
+  pass **0.09-0.17 ms**, down from **6.82/10.93 ms** CPU-bound.
 
-- **Optional catalog.** 5DO downloads a small catalog from
-  `https://assets.purelogiccode.com/5do/v1` and only the covers it needs. The current
-  pack has **473 unique WebP covers** and maps **645 of 653** 4DO game IDs.
-- **Matching ladder.** Exact game IDs come first, followed by annotation stripping,
-  token/no-space/subtitle aliases, and Jaro-Winkler fallback with sequel-number guards.
-  The default threshold is **0.85**.
-- **Cache and offline use.** Images are content-addressed and verified by SHA-256.
-  An optional **~27 MB bulk pack** supports offline installs, and local covers still
-  take precedence when they match.
-- **Settings and CLI.** Settings > Covers exposes the catalog URL, fuzzy matching,
-  cache actions, and the rights notice. The CLI adds
-  `covers update/download/match/verify/cache`; `covers download --dry-run` previews
-  matches before fetching.
+### Video-clean differential panel
 
-### Latency controls
+- The 3DO background register is **24-bit RGB**. 5DO previously narrowed it to five bits
+  and expanded it again, turning the reference's near-black `(1,1,1)` into `(0,0,0)`.
+  The CPU assembler and all GPU palette shaders now keep all eight bits per channel.
+- A zero VDL display-list word is a **stop** that retains the previous bitmap and control
+  word, matching `opera_vdlp.c`. 5DO previously treated it as an entry and blanked the
+  last visible scanline.
+- The 50-title panel now matches **50/50 frame hashes** at frames 60/120/300 (up from
+  32/50) with **0 errors**.
 
-- **Run-ahead.** Settings > Video selects 0-2 speculative frames. `CoreRunner` saves and
-  restores a reusable uncompressed `MachineStateSnapshot` each displayed frame, and
-  auto-disables run-ahead after repeated frame-budget overruns.
-- **Presentation delay and VRR.** A 0-8 frame delay holds the presented image behind the
-  core. Adaptive-sync presentation disables the blocking swap interval and lets the
-  compositor drive cadence.
-- **Audio sync.** Settings > Audio and `--audio-sync -250..250` shift host audio relative
-  to video without changing emulation speed or save states.
-- **Telemetry.** The FPS overlay reports software input-poll-to-frame-submit latency, and
-  `bench --latency` reports snapshot size, capture, and restore cost.
+### Reference field boundary and checkpoint sampling
 
-### Unsigned discs
+- `RunFrame` now ends on the **263/312-line VDL field boundary** instead of a rounded
+  ARM-cycle budget, removing the accumulated per-field instruction-phase drift.
+- The differential harness captures Opera's ARM/CD state in the checkpoint's **own video
+  callback** and fills the audio hash after that field's audio callback. The same-frame
+  retired-instruction delta is **11-20** at frame 60 and **23-2,223** at frame 120.
 
-- **In-memory RSA bypass.** Settings > Paths and `--allow-unsigned-discs` disable the
-  BIOS media RSA check for unsigned, homebrew, and arcade discs. The BIOS file is never
-  modified.
-- **Safe selection.** A known No-RSA BIOS is preferred when available; otherwise a
-  compatible retail 1 MB image is patched with the documented two-site bypass. Already
-  patched images and known No-RSA file names are accepted, and an incompatible image is
-  rejected with an explicit error.
+### CD interrupt and transfer parity
 
-### Accuracy and compatibility
+- The Opera CD poll reset keeps the three interrupt enables and the POLRE media latch,
+  and the XBUS CD FIQ is **level-held** each clock batch so READ_ID/READ_ERROR
+  completions are visible to the guest.
+- READ_DATA rejects invalid MSF and past-end transfers, aborts stale read-ahead, publishes
+  status with the first queued sector, and accumulates sector deadlines from the previous
+  deadline like `cdrom_data_schedule_next`.
+- The command-50 boot handoff fell from **+207,707 cycles / +86,511 instructions** to
+  **-818 / -376**.
 
-- **Exact NTSC clock.** 5DO now runs NTSC at 60000/1001 (59.94 Hz, 208,541 cycles per
-  field at 12.5 MHz) instead of 60.00 Hz. The rational VDL accumulator removes the
-  per-batch 8.24 rounding that ran the scanline clock about 0.09% fast.
-- **Reference evidence.** On the 50-title panel, every sample delta is within 9 samples at
-  frame 300 and **32/50 titles match every frame hash** at frames 60/120/300. At 3,000
-  frames Space Ace, Wolfenstein 3D, Alone in the Dark, and Lemmings match Opera's hash;
-  Road Rash still diverges. The differential harness now compares CD command sequences
-  and per-command cycle stamps.
-- **VDLP blanking and background.** Disabled bitmap DMA now renders a black line instead
-  of retaining the previous field, and the background word is converted from 8-bit RGB to
-  the 5-bit format the renderers expect.
-- **Audio reliability.** Live OpenAL device switching uses the thread-local context
-  extension, and the Settings test tone queues the whole second up front so Windows sleep
-  granularity cannot insert silent gaps.
+### Tooling and diagnostics
 
-### Documentation
+- The differential harness reports instruction-phase (`pcPhaseFrame`,
+  `pcPhaseInstructionDelta`) and CD cadence (`cdCadence`) evidence in JSON, Markdown, and
+  HTML.
+- New CLI traces: `--cd-register-trace` and `--clio-read-trace`; new harness
+  `--timer-trace`.
+- ISO staging is atomic and retries once after a transient CHD decompression failure. A
+  per-title capture failure is reported as an error instead of aborting a panel.
 
-- [`CoverArt.md`](CoverArt.md) documents the catalog schema, matching, cache, hosting,
-  and takedown policy.
-- [`CliReference.md`](CliReference.md), [`Configuration.md`](Configuration.md),
-  [`UserGuide.md`](UserGuide.md), [`Audio.md`](Audio.md), [`Video.md`](Video.md), and
-  [`KnownIssues.md`](KnownIssues.md) document the new options and limits.
-- [`DifferentialHarness.md`](DifferentialHarness.md) and [`TestCorpus.md`](TestCorpus.md)
-  record the exact-clock and CD-sequence evidence.
+### Desktop launch alias
+
+- The desktop shell accepts `-fullscreen` in addition to `-f` and `--fullscreen`. The
+  smoke-test marker records `windowState=FullScreen` when the launch mode was applied.
+
+## Changed
+
+- VDLP save-state section is version 4 and Machine section is version 3. Both store the
+  24-bit background and convert packed 5-bit backgrounds from older states.
+- `--cd-commands` writes `opcode cycle pc instructions`; the differential harness
+  understands the extended form.
+- The 1.4.0 online cover art, latency controls, unsigned-disc support, exact NTSC clock,
+  and six-bundle packaging model are unchanged.
 
 ## Validation
 
-- Full suite **1,905/1,905** passes in Debug and Release; `dotnet build` reports 0 warnings and
-  0 errors; `dotnet format --verify-no-changes` is clean; `jb inspectcode
-  --severity=WARNING` reports 0 results.
-- The frontend `--smoke-test`, CLI `selftest`, and existing differential harness checks
-  are part of the release gate.
+- Full suite **1,939/1,939** passes in Debug.
+- `dotnet build` reports **0 warnings and 0 errors**; `dotnet format --verify-no-changes`
+  and `jb inspectcode --severity=WARNING` are clean.
+- Opt-in Direct3D 11 and Vulkan HQx parity tests pass for 2x/3x/4x, and the opt-in
+  WGL/ANGLE GL probe passes the HQx rule-texture path.
+- The 5-title panel matches **5/5** frame hashes at 300 frames; the 3,000-frame showcase
+  keeps **4/5** (Road Rash remains divergent).
 - Windows x64 remains the validated target. Linux x64 full-suite and CLI/frontend smoke
-  validation pass; GPU presentation remains preview/best-effort under llvmpipe/SSH.
+  validation pass; GPU presentation under llvmpipe/SSH remains preview/best-effort.
   macOS and arm64 bundles are cross-published and architecture-validated.
 
 ## Download
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-1.4.0-win-x64.zip` |
-| Windows arm64 | `5do-1.4.0-win-arm64.zip` |
-| Linux x64 | `5do-1.4.0-linux-x64.tar.gz` |
-| Linux arm64 | `5do-1.4.0-linux-arm64.tar.gz` |
-| macOS x64 | `5do-1.4.0-osx-x64.tar.gz` |
-| macOS arm64 | `5do-1.4.0-osx-arm64.tar.gz` |
+| Windows x64 | `5do-1.5.0-win-x64.zip` |
+| Windows arm64 | `5do-1.5.0-win-arm64.zip` |
+| Linux x64 | `5do-1.5.0-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.5.0-linux-arm64.tar.gz` |
+| macOS x64 | `5do-1.5.0-osx-x64.tar.gz` |
+| macOS arm64 | `5do-1.5.0-osx-arm64.tar.gz` |
 
 Each bundle contains both the desktop app and the CLI. The **.NET 10 Runtime** must be
 installed on the host; the bundles are framework-dependent and do **not** contain the
 runtime. See the
-[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.4.0) for
+[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.5.0) for
 `SHA256SUMS.txt`.
 
 ## Known limits
 
-- Run-ahead is CPU-bound and opt-in. It is incompatible with rewind history and
-  deterministic movie recording/playback; the frontend disables those features while it
-  is active.
-- VRR is a display/driver feature. 5DO can avoid the blocking swap interval, but actual
-  adaptive-sync activation depends on the GPU, driver, monitor, and desktop.
-- The online cover catalog is optional. A wrong fuzzy match should be corrected with the
-  threshold or a local cover; the catalog and images are not included in any release
-  bundle.
-- The 50-title differential panel still has unresolved PC/CPSR phase and CD-cadence
-  differences; frame-hash matches are evidence, not a full accuracy claim.
+- CD command cadence is the remaining behavioral differential on the 50-title panel; the
+  3,000-frame showcase still diverges on Road Rash.
+- HQx GPU parity is pixel-identical on the tested synthetic probes; unusual drivers may
+  still report shader or texture-format limitations and fall back to the unfiltered scale
+  path.
+- VRR depends on the GPU, driver, monitor, and desktop; 5DO only avoids the blocking swap
+  interval.
+- The differential panel's frame-hash matches are strong evidence, not a full
+  compatibility claim for every title.
+- See [Release notes 1.4.0](ReleaseNotes-1.4.0.md) for the cover-art, latency,
+  unsigned-disc, and exact-clock features introduced in the previous release.

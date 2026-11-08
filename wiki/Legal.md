@@ -25,7 +25,7 @@ with or endorsed by Panasonic, The 3DO Company, or any rights holder.
 
 ## Distribution
 
-The v1.4.0 release bundles contain the framework-dependent single-file CLI and desktop
+The v1.5.0 release bundles contain the framework-dependent single-file CLI and desktop
 app, the OpenAL Soft runtime, `README.md`, `whatsnew.md`, `LICENSE`,
 `THIRD-PARTY-NOTICES.md`, and the legal/OpenAL notices. The .NET 10 runtime is a host
 prerequisite and is **not** bundled. The OpenAL Soft binary stays outside the

@@ -38,7 +38,7 @@
     <NeutralLanguage>en</NeutralLanguage>
     <Product>5DO</Product>
     <Company>5DO contributors</Company>
-    <Version>1.4.0</Version>
+    <Version>1.5.0</Version>
     <InvariantGlobalization>true</InvariantGlobalization>
     <FiveDoOpenAlSoftVersion>1.23.1</FiveDoOpenAlSoftVersion>
     <FiveDoOpenAlNativeRid Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</FiveDoOpenAlNativeRid>

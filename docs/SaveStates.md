@@ -123,7 +123,7 @@ Machine; the table below is sorted by ID. Never renumber an existing section.
 | 7 | VDLP | 4 | `Vdlp` | CLUT B/G/R, 24-bit background, head/current/successor VDL, modulo, current/previous bitmap, out-control, CLUT DMA, line delay. Version 4 stores the 24-bit background; versions 1-3 convert their packed 5-bit value on load. Version 3 separates the retained head from the active successor cursor; versions 1-2 migrate the cursor. |
 | 8 | XBUS | 1 | `Xbus` | Select/poll state, status/command FIFOs, and attached-device state. The CD-ROM device is also written as section 9. |
 | 9 | CD-ROM | 4 | `CdromDevice` | Poll/status, status/data buffers, command buffer, requested count, MEI status, current sector, disc state (tracks/MSF/TOC), cycle clock, next-ready cycle, pending read-status flag, MODE SET sector size/block flags, PLAY_AUDIO position, CD-DA sample cursor, volume, and mute. Version 1 is accepted with a zeroed clock and pending flag; v2 adds the cycle clock; v3 adds MODE SET and audio position; v4 adds the CD-DA mix. Older versions use the documented defaults. The timing mode itself is recorded in the Options section. |
-| 10 | Quartz | 3 | `Quartz` | ARM/VDL/timer accumulators, exact DSP cycle remainder, VDL line counter, Opera timer slot/gap flag and 16.16 slot accumulator. Versions 1-2 are accepted with a reset timer scheduler. |
+| 10 | Quartz | 4 | `Quartz` | ARM/VDL/timer accumulators, exact rational VDL accumulator, exact DSP cycle remainder, VDL line counter, Opera timer slot/gap flag and 16.16 slot accumulator. Version 4 adds the exact VDL accumulator; versions 1-3 convert their 8.24 VDL fraction on load, and versions 1-2 default the timer scheduler. |
 | 11 | Machine | 3 | `FiveDoMachine` | Compatibility flags (fix mode, Anvil, speed fixes, sf/sdf, unknown flag 11, jw, cnbfix, high-res), frame source dimensions/pixel aspect, and the visible `VdlLine` objects (width, control words, 24-bit background, CLUT, and the full pixel backing store). Version 1 wrote all 576 lines; version 2 writes only `SourceHeight` lines and copies pixels as little-endian blocks, which cut the section from ~1.54 MB to ~0.64 MB for a 240-line frame. Version 3 stores the 24-bit VDL background; versions 1-2 are converted from their packed 5-bit value on load. |
 | 12 | Options | 9 | `FiveDoMachine` | Every registered machine option: ARM timing mode, CLIO timer mode, MADAM CEL timing mode, CD-ROM timing mode, CD-ROM speed, DRAM/VRAM capacity, live video region, ARM clock, random seed (including whether the default was recorded), high-resolution mode, Opera DIPIR, Opera soft reset, Portfolio OS SWI HLE, fix mask, and CPU backend. Version 1 records only ARM timing; version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing; version 5 adds CD speed; version 6 adds the region; version 7 adds the remaining registry entries; version 8 adds the memory capacity; version 9 adds the SWI HLE flag. Loading a lower version leaves missing options at the machine default. |
 
@@ -160,9 +160,11 @@ Loading a state written by a newer format version is rejected with
   queue from 20 to 256 bytes. Version 1 derives the pending flag from the FSM and has no
   busy deadline; versions 1-3 read the historical 20-byte queue and fill the tail with
   `0xFF`.
-- Quartz writes version 3 (exact rational DSP clock plus Opera timer slot state) and
-  accepts versions 1-2. Version 1 converts the legacy 8.24 fractional sample position
-  to ARM cycles; versions 1-2 default the timer slot state to a reset scheduler.
+- Quartz writes version 4 (exact rational VDL accumulator plus the exact DSP clock and
+  Opera timer slot state) and accepts versions 1-3. Version 1 converts the legacy 8.24
+  fractional sample position to ARM cycles; versions 1-2 default the timer slot state to
+  a reset scheduler; version 3 converts the legacy 8.24 VDL fraction to the exact
+  accumulator.
 - CD-ROM writes version 4 (MODE SET, PLAY_AUDIO position, CD-DA cursor, volume, and
   mute) and accepts versions 1-3. Version 1 uses a zeroed clock and pending flag;
   versions 1-2 default the MODE SET/audio fields; version 3 defaults the CD-DA mix. The

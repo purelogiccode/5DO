@@ -17,22 +17,22 @@ include a BIOS ROM or any game images. You must supply legally obtained files.
 ## Download
 
 Download the bundle for your system and architecture from
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.4.0):
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.5.0):
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-1.4.0-win-x64.zip` |
-| Windows arm64 | `5do-1.4.0-win-arm64.zip` |
-| Linux x64 | `5do-1.4.0-linux-x64.tar.gz` |
-| Linux arm64 | `5do-1.4.0-linux-arm64.tar.gz` |
-| macOS x64 | `5do-1.4.0-osx-x64.tar.gz` |
-| macOS arm64 | `5do-1.4.0-osx-arm64.tar.gz` |
+| Windows x64 | `5do-1.5.0-win-x64.zip` |
+| Windows arm64 | `5do-1.5.0-win-arm64.zip` |
+| Linux x64 | `5do-1.5.0-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.5.0-linux-arm64.tar.gz` |
+| macOS x64 | `5do-1.5.0-osx-x64.tar.gz` |
+| macOS arm64 | `5do-1.5.0-osx-arm64.tar.gz` |
 
 Each bundle contains both the desktop app and the CLI. Install the .NET 10 Runtime
 first from <https://dotnet.microsoft.com/download/dotnet/10.0>; the bundle does not
 contain a .NET runtime. Extract the bundle and run the executables.
 
-Bundles are versioned, for example `5do-1.4.0-win-arm64.zip`.
+Bundles are versioned, for example `5do-1.5.0-win-arm64.zip`.
 
 ## Build from source
 

@@ -1,6 +1,7 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-07, after the 1.4.0 cover-art, latency, unsigned-disc, exact-clock,
+**Snapshot:** 2026-11-08, after the 1.5.0 GPU-HQx, video-clean VDLP, field-boundary, and
+CD-parity update; the 1.4.0 cover-art, latency, unsigned-disc, exact-clock,
 and differential-harness update; the TEST-07 oracle increment, the VID-12 latency update,
 the PERF-02 AOT/trimming audit, the 1.3.0 field-handling update, the 1.2.2
 performance/library update, the 1.2.1 arm64 packaging update, the 1.2.0
@@ -17,6 +18,19 @@ passes are retained below. Road Rash's
 4.20 ms/frame total (p99 7.40 ms),
 Debug core builds are optimized, and Auto presentation frame skip is the default.
 **594 discs tested: 593 Loadable/Rendered, 1 Loadable/No video (known boot failure), 0 Not Loadable.**
+
+**1.5.0 release update (2026-11-08):** **v1.5.0** moves HQx 2x/3x/4x to shared
+rule-table GPU passes in OpenGL/GLES, Direct3D 11, and Vulkan, with the CPU filter kept
+as the reference oracle. The 3DO background is now 24-bit end to end, a zero VDL
+display-list word is a stop, `RunFrame` ends on the reference field boundary, and CD
+poll/FIQ/READ_DATA behavior is closer to Opera. The 50-title panel is **50/50 frame
+hashes at 60/120/300 with 0 errors**: the same-frame instruction delta is 11-20 at
+frame 60 and 23-2,223 at frame 120, and the remaining behavioral divergence is CD
+command cadence. The command-50 boot handoff fell from +207,707 cycles / +86,511
+instructions to -818 / -376. The suite is **1,939 tests**; build, format, and
+InspectCode are clean. See [`WhatsNew.md`](WhatsNew.md),
+[`ReleaseNotes-1.5.0.md`](ReleaseNotes-1.5.0.md), and
+[`DifferentialHarness.md`](DifferentialHarness.md).
 
 **1.4.0 release update (2026-11-07):** **v1.4.0** adds online cover art (473 unique
 WebP covers, 645/653 game IDs mapped), VID-12 run-ahead/frame-delay/VRR/audio-sync
@@ -899,7 +913,7 @@ artifacts and checksums are attached to the GitHub release.
 release scope. v1.0.0 is published on GitHub with the release artifacts.
 
 **Release decisions (2026-11-02):** Windows x64 is validated; Linux x64 CLI/frontend
-smoke and the full test suite passed (GPU presentation is preview/best-effort); the current release version is `1.4.0`;
+smoke and the full test suite passed (GPU presentation is preview/best-effort); the current release version is `1.5.0`;
 installers, signing, and notarization are post-1.0; the compatibility set is the 12
 documented titles, with five showcase titles carrying scripted gameplay evidence. The
 distribution model is recorded as **donationware** (non-commercial, source-available).

@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.4.0-orange" alt="Version 1.4.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.5.0-orange" alt="Version 1.5.0"></a>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@
 </p>
 
 > [!IMPORTANT]
-> 5DO is at **v1.4.0**, a documented-compatibility release. Windows x64 is the validated
+> 5DO is at **v1.5.0**, a documented-compatibility release. Windows x64 is the validated
 > target; Linux x64 full suite passed (GPU presentation is preview/best-effort), and
 > macOS/arm64 validation is post-1.0. No BIOS ROMs, game images, or extracted game
 > assets are included. You must supply legally obtained files.
@@ -51,9 +51,9 @@ test harness designed for reproducible compatibility evidence.
   recording, screenshots, GIF/WAV capture, a disc browser, controller mapping, and a
   diagnostics bundle.
 - **Modern presentation.** Two-stage OpenGL/GLES presenter with accurate, nearest,
-  sharp-bilinear, CRT, xBR-lv2, FSR 1.0, and HQx filters, plus 480i/240p field handling
-  (auto detection, bob, weave, and blend). Optional Vulkan 1.0 and
-  Direct3D 11 backends mirror the pipeline for desktop and headless probes.
+  sharp-bilinear, CRT, xBR-lv2, FSR 1.0, and GPU rule-table HQx 2x/3x/4x filters, plus
+  480i/240p field handling (auto detection, bob, weave, and blend). Optional Vulkan 1.0
+  and Direct3D 11 backends mirror the pipeline for desktop and headless probes.
 - **Powerful automation.** Headless `run`, `trace`, `bench`, `selftest`, disc/BIOS/
   NVRAM/cheat/movie/state commands, JSON output, watchpoints, dumps, and differential
   harnesses. Startup and `5do update` check the public GitHub release feed.
@@ -66,11 +66,11 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.4.0` release (GitHub Releases) |
+| Version | `1.5.0` release (GitHub Releases) |
 | Validated platform | **Windows x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 |
-| Automated tests | **1,916 tests** in the current test assembly |
-| Differential oracle | 50-title panel: **50/50 frame hashes**, **50/50 PC/CPSR phase aligned**; only CD cadence remains |
+| Automated tests | **1,939 tests** in the current test assembly |
+| Differential oracle | 50-title panel: **50/50 frame hashes** at frames 60/120/300; only CD cadence remains |
 | Library | **653 games** across **1,366 images**; 3 audio-only CHDs catalogued |
 | Loadability sweep | **594 disc images** tested; after triage **593 loadable/rendered**, 1 known no-video case, 0 not loadable |
 | First pass | 576 rendered, 13 black/blank, 5 not loadable; triage resolved the failures and the blank/black set |
@@ -88,19 +88,19 @@ One bundle per system and architecture, each containing both the desktop app and
 
 | System | Bundle |
 |---|---|
-| Windows x64 | [`5do-1.4.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.4.0/5do-1.4.0-win-x64.zip) |
-| Windows arm64 | [`5do-1.4.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.4.0/5do-1.4.0-win-arm64.zip) |
-| Linux x64 | [`5do-1.4.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.4.0/5do-1.4.0-linux-x64.tar.gz) |
-| Linux arm64 | [`5do-1.4.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.4.0/5do-1.4.0-linux-arm64.tar.gz) |
-| macOS x64 | [`5do-1.4.0-osx-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.4.0/5do-1.4.0-osx-x64.tar.gz) |
-| macOS arm64 | [`5do-1.4.0-osx-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.4.0/5do-1.4.0-osx-arm64.tar.gz) |
+| Windows x64 | [`5do-1.5.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.5.0/5do-1.5.0-win-x64.zip) |
+| Windows arm64 | [`5do-1.5.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.5.0/5do-1.5.0-win-arm64.zip) |
+| Linux x64 | [`5do-1.5.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.5.0/5do-1.5.0-linux-x64.tar.gz) |
+| Linux arm64 | [`5do-1.5.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.5.0/5do-1.5.0-linux-arm64.tar.gz) |
+| macOS x64 | [`5do-1.5.0-osx-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.5.0/5do-1.5.0-osx-x64.tar.gz) |
+| macOS arm64 | [`5do-1.5.0-osx-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.5.0/5do-1.5.0-osx-arm64.tar.gz) |
 
 The apps are single-file executables. **Install the .NET 10 Runtime first** from
 <https://dotnet.microsoft.com/download/dotnet/10.0>; the bundles do **not** contain a
-.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.4.0)
+.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.5.0)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
-Bundles are versioned and published for x64 and arm64, for example `5do-1.4.0-win-arm64.zip`.
+Bundles are versioned and published for x64 and arm64, for example `5do-1.5.0-win-arm64.zip`.
 
 ## Features
 
@@ -178,7 +178,7 @@ Bundles are versioned and published for x64 and arm64, for example `5do-1.4.0-wi
 - No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
 
 > [!NOTE]
-> v1.4.0 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
+> v1.5.0 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
 > macOS; x64 and arm64), each with the CLI, desktop app, and SHA-256 checksums. The .NET 10
 > runtime is required on the host and is not bundled. Build from source below if you
 > prefer.

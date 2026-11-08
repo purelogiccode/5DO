@@ -16,8 +16,8 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "v1.3 documented compatibility"
-    5DO is at the v1.3 documented-compatibility release stage. Windows x64 is the
+!!! important "v1.5 documented compatibility"
+    5DO is at the v1.5 documented-compatibility release stage. Windows x64 is the
     validated platform; Linux x64 full suite passed (GPU presentation is
     preview/best-effort). No BIOS ROMs, game images, or extracted game assets are
     distributed here; supply legally obtained files.
@@ -74,25 +74,25 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.4.0.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.5.0.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-07, v1.4.0 release (GitHub Releases).**
+**2026-11-08, v1.5.0 release (GitHub Releases).**
 
-- **1,923 tests** are present in the current test assembly.
+- **1,939 tests** are present in the current test assembly.
 - The 50-title differential panel matches **50/50 frame hashes** at frames
   60/120/300 with **0 errors**. The frame-boundary phase is resolved: the harness
-  now samples Opera's ARM/CD state in the checkpoint's own field, and 5DO ends a
-  field on the 263-line scanline boundary like the reference. The same-frame
-  retired-instruction delta is **11-20** at frame 60 (average 15.3) and
-  **23-2,223** at frame 120. The CD count matches on **50/50 titles at f=60 and
-  f=120** (down from 36 first divergences at f=120); the first behavioral
-  divergence moved to **11 titles at f=300** (8 count, 3 sequence), and the other
-  39 titles are phase-only. The per-command PC/instruction stamps show the
-  boot-handoff fix cut a **+207,707 cycle / +86,511 instruction** divergence to
-  **-818 / -376**; see [`DifferentialHarness.md`](DifferentialHarness.md).
+  samples Opera's ARM/CD state in the checkpoint's own field, and 5DO ends a field
+  on the 263/312-line scanline boundary like the reference. The same-frame
+  retired-instruction delta is **11-20** at frame 60 and **23-2,223** at frame 120.
+  The first behavioral divergence at f=300 is now the remaining CD command cadence;
+  the command-50 boot handoff fell from **+207,707 cycles / +86,511 instructions**
+  to **-818 / -376**. See [`DifferentialHarness.md`](DifferentialHarness.md).
+- HQx 2x/3x/4x now run as GPU rule-table passes in OpenGL/GLES, Direct3D 11, and
+  Vulkan. At 4K on the RTX 4070 present is **0.14-0.34 ms** and the GPU pass is
+  **0.09-0.17 ms**, down from 6.82/10.93 ms CPU-bound.
 - The library reports **653 games across 1,366 images**; three audio-only CHDs are
   catalogued.
 - The first full-collection loadability sweep covered **594 disc images**: **576
@@ -101,12 +101,11 @@
   (`Crash 'n Burn` Japan), and **0 not-loadable rows**.
 - Windows x64 is the validated target. Linux x64 full suite passed; GPU
   presentation is preview/best-effort. macOS and arm64 validation are post-1.0.
-- v1.4.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.4.0)
+- v1.5.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.5.0)
   as one bundle per system and architecture (Windows/Linux/macOS, x64 and arm64), each with the CLI, desktop app,
   and SHA-256 checksums. The .NET 10 runtime is required on the host and is not bundled.
-  The release adds online cover art, run-ahead/frame-delay/VRR/audio-sync latency controls,
-  unsigned-disc support, the exact 59.94 Hz NTSC clock, and VDLP/audio fixes. See
-  [What's new](WhatsNew.md).
+  The release adds GPU HQx, video-clean VDLP/background handling, reference field-boundary
+  timing, and CD interrupt/transfer parity. See [What's new](WhatsNew.md).
 
 See [Status](Status.md) and [Known issues](KnownIssues.md) for the current position and
 the remaining work.
