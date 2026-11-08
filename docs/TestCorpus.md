@@ -2907,7 +2907,9 @@ runs the 11 panel titles that first diverge on CD to 900 frames. The count gap
 grows: 20th Century **231/211**, Creature Shock 242/241, ESPN Fitness 166/154,
 Dragon's Lair 169/159, Life Stage 143/131, Pebble Beach 179/167, Virtual Horror
 166/155, Woody 140/128; Foes of Ali (288/287) and N.O.B. (245/244) are
-prefix-only. The first opcode mismatch is 5DO `0x10` (READ_DATA) versus Opera
-`0x83` (READ_ID) on eight titles (Virtual Horror is the reverse), so the residual
-is a real guest CD read-schedule difference, not a 300-frame in-flight artifact.
+prefix-only, but both also show an aligned-count audio content divergence at
+f=600. The first opcode mismatch is 5DO `0x10` (READ_DATA) versus Opera `0x83`
+(READ_ID) on eight titles (Virtual Horror is the reverse), so the residual is a
+real guest CD read-schedule difference that reaches the audio stream, not a
+300-frame in-flight artifact.
 **2,043 tests pass**; build, format, and InspectCode are clean.
