@@ -23,27 +23,27 @@ This page compares the three emulators on the **same local collection**. The 4DO
 
 | 5DO evidence | Titles |
 |---|---:|
-| Manual gameplay grade | 11 |
-| Automated loadability | 403 |
+| Manual gameplay grade | 43 |
+| Automated loadability | 371 |
 | Untested | 0 |
 
 ### 5DO vs 4DO
 
 | Verdict | Titles |
 |---|---:|
-| 5DO ahead | 2 |
-| Parity | 4 |
-| Parity (loadability) | 169 |
-| Behind | 4 |
+| 5DO ahead | 3 |
+| Parity | 29 |
+| Parity (loadability) | 137 |
+| Behind | 10 |
 | — | 53 |
 
 ### 5DO vs Phoenix
 
 | Verdict | Titles |
 |---|---:|
-| Parity | 5 |
-| Parity (loadability) | 236 |
-| Behind | 5 |
+| Parity | 30 |
+| Parity (loadability) | 204 |
+| Behind | 12 |
 
 `Behind` means 5DO has a lower grade, usually because the manual 5DO grade is `Playable` while the peer says `Good`; it is not a loadability failure. `Regression` is the hard failure: a peer reports the title as playable, but 5DO produced no usable frame.
 
@@ -57,68 +57,68 @@ This page compares the three emulators on the **same local collection**. The 4DO
 | Sample This! | demo | Sample This! (1994)(Crystal Dynamics)(JP-US)[!][Crystal Dynamics - Best Selection].chd | 3 | 1 | Rendered | Good (100) | Parity (loadability) | — | — |
 | Theo the Dinosaur | demo | Theo the Dinosaur (USA) (Proto) (1996-01-30).chd | 1 | 1 | Rendered | — | — | — | — |
 | Yu Yu Hakusho | demo | Yu Yu Hakusho (Japan) (Demo).chd | 2 | 1 | Rendered | — | — | — | — |
-| 20th Century Video Almanac | game | 20th Century Video Almanac (1993)(Software Toolworks)(US)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| 3D Atlas | game | 3D Atlas (1994)(Electronic Arts)(US).chd | 3 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| 20th Century Video Almanac | game | 20th Century Video Almanac (1993)(Software Toolworks)(US)[!].chd | 2 | 1 | Playable | Good (100) | Behind | Good (100%) | Behind |
+| 3D Atlas | game | 3D Atlas (1994)(Electronic Arts)(US).chd | 3 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | 3DO de Shiru Miru Asobu - Nakajima Miyuki | game | 3DO de Shiru Miru Asobu - Nakajima Miyuki (Japan).chd | 1 | 1 | Rendered | — | — | — | — |
 | 3DO REAL - Tokubetsu Puremiamu CD - Hatsubai 1 Shuuren | game | 3DO REAL - Tokubetsu Puremiamu CD - Hatsubai 1 Shuuren (1994)(Panasonic)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
 | 3DO TES - 3DO Training Educational System | game | 3DO TES - 3DO Training Educational System (1995)(TG Information Network)(JP).chd | 3 | 1 | Rendered | — | — | — | — |
 | Agi Gongnyong Goldie | game | Agi Gongnyong Goldie (Korea).chd | 1 | 1 | Rendered | — | — | — | — |
 | AI Shougi | game | AI Shougi (1995)(Taito)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
-| Alone in the Dark | game | Alone in the Dark (1994)(Interplay)(US)[!].chd | 10 | 7 | Rendered | Playable (75) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Alone in the Dark 2 | game | Alone in the Dark 2 (1995)(Interplay)(US)[!].chd | 10 | 4 | Rendered | Good (85) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Alone in the Dark | game | Alone in the Dark (1994)(Interplay)(US)[!].chd | 10 | 7 | Good | Playable (75) | 5DO ahead | Good (100%) | Parity |
+| Alone in the Dark 2 | game | Alone in the Dark 2 (1995)(Interplay)(US)[!].chd | 10 | 4 | Good | Good (85) | Parity | Good (100%) | Parity |
 | Anno Mitsumasa - Peperon-mura no Shiki | game | Anno Mitsumasa - Peperon-mura no Shiki (1995)(Marubeni)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
 | Aqua World - Umi Monogatari | game | Aqua World - Umi Monogatari (Japan).chd | 2 | 1 | Rendered | No data | — | — | — |
 | Armageddon | game | Armageddon (1996)(LG)(KR).chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
-| AutoBahn Tokio | game | AutoBahn Tokio (1995)(Panasonic)(JP)(en)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| AutoBahn Tokio | game | AutoBahn Tokio (1995)(Panasonic)(JP)(en)[!].chd | 4 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Bakushou!! All Yoshimoto Quiz ou Ketteisen | game | Bakushou!! All Yoshimoto Quiz ou Ketteisen (1995)(Yoshimoto Kogyo)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
-| Ballz - The Director's Cut | game | Ballz - The Director's Cut (1995)(Panasonic)[!].chd | 3 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Ballz - The Director's Cut | game | Ballz - The Director's Cut (1995)(Panasonic)[!].chd | 3 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Battle Blues | game | Battle Blues (1996)(LG)(KR).chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Battle Chess | game | Battle Chess (1993)(Interplay)(US)[!].chd | 6 | 3 | Good | Good (100) | Parity | Good (100%) | Parity |
-| Battle Pinball | game | Battle Pinball (1994)(Panasonic)(JP)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| BattleSport | game | BattleSport (1995)(Studio 3DO)(EU)[!].chd | 6 | 3 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| BC Racers | game | BC Racers (1995)(GoldStar)(EU-US)[!].chd | 3 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Battle Pinball | game | Battle Pinball (1994)(Panasonic)(JP)[!].chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
+| BattleSport | game | BattleSport (1995)(Studio 3DO)(EU)[!].chd | 6 | 3 | Good | Good (100) | Parity | Good (100%) | Parity |
+| BC Racers | game | BC Racers (1995)(GoldStar)(EU-US)[!].chd | 3 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Belzerion | game | Belzerion (1994)(Human)(JP)[!].chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | BFS - Blue Forest Story | game | BFS - Blue Forest Story (Japan) (Alt).chd | 1 | 1 | Rendered | — | — | — | — |
 | Bishoujo Senshi Sailor Moon S | game | Bishoujo Senshi Sailor Moon S (1995)(Bandai)(JP)[!].chd | 5 | 2 | Rendered | — | — | Good (100%) | Parity (loadability) |
-| BladeForce | game | BladeForce (1995)(Studio 3DO)(EU)[!].chd | 10 | 5 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| BladeForce | game | BladeForce (1995)(Studio 3DO)(EU)[!].chd | 10 | 5 | Playable | Good (100) | Behind | Good (100%) | Behind |
 | Blonde Justice | game | Blonde Justice (1995)(Vivid Interactive)(US).chd | 2 | 1 | Rendered | No data | — | Good (100%) | Parity (loadability) |
 | Blue Forest Monogatari | game | Blue Forest Monogatari (1996)(Panasonic)(JP)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | — | — |
 | Bodyconscious Digital Rave! Part 1 - Shinjuku & Takasaki | game | Bodyconscious Digital Rave! Part 1 - Shinjuku & Takasaki (1994)(Transpegasus)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
 | Bonogurashi | game | Bonogurashi (1995)(Amuse)(JP).chd | 2 | 1 | Rendered | No data | — | — | — |
-| Brain Dead 13 Starring Fritz | game | Brain Dead 13 Starring Fritz (1995)(ReadySoft)(US)(Disc 1 of 2)[!].chd | 6 | 3 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Burning Soldier | game | Burning Soldier (1994)(Panasonic)(US)[!].chd | 8 | 3 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Bust-A-Move | game | Bust-A-Move (1995)(Taito)(US).chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Cannon Fodder | game | Cannon Fodder (1994)(Virgin)(US)[!].chd | 5 | 3 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Captain Quazar | game | Captain Quazar (1995)(Studio 3DO)(EU)[!].chd | 10 | 3 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Carrier - Fortress at Sea | game | Carrier - Fortress at Sea (1995)(Panasonic)(US).chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Casper | game | Casper (1996)(Interplay)(US)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Brain Dead 13 Starring Fritz | game | Brain Dead 13 Starring Fritz (1995)(ReadySoft)(US)(Disc 1 of 2)[!].chd | 6 | 3 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Burning Soldier | game | Burning Soldier (1994)(Panasonic)(US)[!].chd | 8 | 3 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Bust-A-Move | game | Bust-A-Move (1995)(Taito)(US).chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Cannon Fodder | game | Cannon Fodder (1994)(Virgin)(US)[!].chd | 5 | 3 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Captain Quazar | game | Captain Quazar (1995)(Studio 3DO)(EU)[!].chd | 10 | 3 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Carrier - Fortress at Sea | game | Carrier - Fortress at Sea (1995)(Panasonic)(US).chd | 2 | 1 | Playable | Good (100) | Behind | Good (100%) | Behind |
+| Casper | game | Casper (1996)(Interplay)(US)[!].chd | 4 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Chiki Chiki Machine Mou Race 2 - In Space | game | Chiki Chiki Machine Mou Race 2 - In Space (1995)(Future Pirates)(JP)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | — | — |
 | Chiki Chiki Machine Mou Race - Kenken to Black Maou no Ijiwaru Daisakusen | game | Chiki Chiki Machine Mou Race - Kenken to Black Maou no Ijiwaru Daisakusen (1994)(Future Pirates)(JP)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | — | — |
 | Chip-8 Emulator | game | Chip-8 Emulator (2016)(Gameblabla)[incl. Tetris ROM].chd | 1 | 1 | Rendered | — | — | — | — |
-| Club 3DO - Station Invasion | game | Club 3DO - Station Invasion (1994)(Studio 3DO)(US)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Corpse Killer | game | Corpse Killer (1994)(Digital Pictures)(US)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Coven, The | game | Coven, The (1994)(Vivid Interactive)(US).chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Cowboy Casino - Interactive Poker | game | Cowboy Casino - Interactive Poker (1994)(IntelliPlay)(US)[!].chd | 3 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Club 3DO - Station Invasion | game | Club 3DO - Station Invasion (1994)(Studio 3DO)(US)[!].chd | 2 | 1 | Playable | Good (100) | Behind | Good (100%) | Behind |
+| Corpse Killer | game | Corpse Killer (1994)(Digital Pictures)(US)[!].chd | 4 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Coven, The | game | Coven, The (1994)(Vivid Interactive)(US).chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Cowboy Casino - Interactive Poker | game | Cowboy Casino - Interactive Poker (1994)(IntelliPlay)(US)[!].chd | 3 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Crash 'n Burn | game | Crash 'n Burn (1993)(Crystal Dynamics)(US)[!][3DRM-1239120 1].chd | 6 | 2 | Good | Good (90) | Parity | Good (100%) | Parity |
-| Crayon Shin-chan - Puzzle Daimaou no Nazo | game | Crayon Shin-chan - Puzzle Daimaou no Nazo (1995)(Bandai)(JP).chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Creature Shock | game | Creature Shock (1995)(Virgin)(US)(Disc 1 of 2)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Crayon Shin-chan - Puzzle Daimaou no Nazo | game | Crayon Shin-chan - Puzzle Daimaou no Nazo (1995)(Bandai)(JP).chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Creature Shock | game | Creature Shock (1995)(Virgin)(US)(Disc 1 of 2)[!].chd | 4 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Crime Patrol | game | Crime Patrol (1994)(American Laser Games)(US)[!].chd | 5 | 2 | Playable | Good (100) | Behind | Good (100%) | Behind |
 | Crystal Borg in Hyperspace | game | Crystal Borg in Hyperspace (2017)(Optimus6128).chd | 1 | 1 | Rendered | — | — | — | — |
-| Cyberdillo | game | Cyberdillo (1995)(Panasonic)(US)[!].chd | 3 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Cyberia | game | Cyberia (1996)(Interplay)(US)[!].chd | 5 | 3 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| D | game | D (1995)(Panasonic)(EU-US)(Disc 1 of 2)[!].chd | 6 | 4 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Cyberdillo | game | Cyberdillo (1995)(Panasonic)(US)[!].chd | 3 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Cyberia | game | Cyberia (1996)(Interplay)(US)[!].chd | 5 | 3 | Good | Good (100) | Parity | Good (100%) | Parity |
+| D | game | D (1995)(Panasonic)(EU-US)(Disc 1 of 2)[!].chd | 6 | 4 | Good | Good (100) | Parity | Good (100%) | Parity |
 | D no Shokutaku | game | D no Shokutaku (1995)(San-Ei Shobo Publishing)(JP)(Disc 1 of 2)[!].chd | 4 | 2 | Rendered | — | — | — | — |
 | D's Diner - The Director's Cut | game | D's Diner - The Director's Cut (1996)(Warp)(JP)(Disc 1 of 3)[!][Disk A].chd | 9 | 6 | Rendered | — | — | — | — |
-| Daedalus Encounter, The | game | Daedalus Encounter, The (1995)(Panasonic)(US)(Disc 1 of 4)[!].chd | 16 | 8 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Daedalus Encounter, The | game | Daedalus Encounter, The (1995)(Panasonic)(US)(Disc 1 of 4)[!].chd | 16 | 8 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Daedalus Encounter - Episode 1 - Nanpasen no Alien | game | Daedalus Encounter - Episode 1 - Nanpasen no Alien (1995)(HATNET)(JP)(Disc 1 of 4)[!].chd | 10 | 5 | Rendered | — | — | — | — |
-| DeathKeep | game | DeathKeep (1995)(SSi)(US)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| DeathKeep | game | DeathKeep (1995)(SSi)(US)[!].chd | 2 | 1 | Playable | Good (100) | Behind | Good (100%) | Behind |
 | Decathlon | game | Decathlon (2007)(Oldergames)[!].chd | 3 | 2 | Rendered | — | — | — | — |
-| Defcon 5 | game | Defcon 5 (1995)(GoldStar)(EU)[!].chd | 6 | 4 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Demolition Man | game | Demolition Man (1994)(Virgin)(US)[!].chd | 5 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Dennis Miller - That's News To Me | game | Dennis Miller - That's News To Me (1994)(Sanctuary Woods)(US)[!].chd | 2 | 1 | Rendered | Playable (75) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Defcon 5 | game | Defcon 5 (1995)(GoldStar)(EU)[!].chd | 6 | 4 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Demolition Man | game | Demolition Man (1994)(Virgin)(US)[!].chd | 5 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
+| Dennis Miller - That's News To Me | game | Dennis Miller - That's News To Me (1994)(Sanctuary Woods)(US)[!].chd | 2 | 1 | Playable | Playable (75) | Parity | Good (100%) | Behind |
 | Dennou Hyouryuu - Multimedia Cruising | game | Dennou Hyouryuu - Multimedia Cruising (1995)(Hamlet)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
 | Devil's Course | game | Devil's Course (1995)(Panasonic)(JP)[!].chd | 2 | 1 | Rendered | Good (95) | Parity (loadability) | — | — |
-| Digital Dreamware | game | Digital Dreamware (1995)(Virgin)(US)[!].chd | 3 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
+| Digital Dreamware | game | Digital Dreamware (1995)(Virgin)(US)[!].chd | 3 | 1 | Playable | Good (100) | Behind | Good (100%) | Behind |
 | DinoPark Tycoon | game | DinoPark Tycoon (1994)(MECC)(US).chd | 2 | 1 | Rendered | Playable (75) | Parity (loadability) | Good (100%) | Parity (loadability) |
 | Doctor Hauzer | game | Doctor Hauzer (1994)(Panasonic)(JP)[!].chd | 7 | 5 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
 | Doom | game | Doom (1995)(Art Data)(US)[!].chd | 3 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
@@ -478,5 +478,6 @@ The peer reports `Unplayable`/`Not Loadable`, but 5DO loads the title. Promote t
 
 | Title | 5DO | 4DO | Phoenix |
 |---|---|---|---|
+| Alone in the Dark | Good | Playable | Good |
 | Orbatak | Good | Unplayable | Good |
 | Shootout at Old Tucson | Playable | Unplayable | Good |

@@ -61,13 +61,18 @@ def run_title(cli: list[str], title: dict, out_root: Path, roots: dict[str, str]
     bios = title.get("bios") or ""
     if bios and not Path(bios).is_absolute():
         bios = str(Path(bios).resolve())
+    bios_auto = title.get("biosAuto") or ""
+    if bios_auto and not Path(bios_auto).is_absolute():
+        bios_auto = str(Path(bios_auto).resolve())
     script = title.get("inputScript") or ""
     if script and not Path(script).is_absolute():
         script = str(Path(script).resolve())
     captures = ",".join(str(frame) for frame in title.get("captureFrames", []))
 
     args = [*cli, "run", disc]
-    if bios:
+    if bios_auto:
+        args += ["--bios-auto", bios_auto]
+    elif bios:
         args += ["--bios", bios]
     args += [
         "--frames", str(title.get("frames", 3600)),
@@ -164,10 +169,10 @@ def main() -> int:
         return 2
 
     cli = [args.cli] if args.cli.lower().endswith(".exe") else ["dotnet", args.cli]
-    roots = json.loads(manifest.read_text(encoding="utf-8")).get("roots", {})
-    if not roots:
-        roots = {"root": str(Path(json.loads(manifest.read_text(encoding="utf-8"))["defaults"]["root"]))}
-    roots = {key: str(value) for key, value in roots.items()}
+    manifest_data = json.loads(manifest.read_text(encoding="utf-8"))
+    roots = {key: str(value) for key, value in manifest_data.get("roots", {}).items()}
+    if not roots and manifest_data.get("defaults", {}).get("root"):
+        roots = {"root": str(manifest_data["defaults"]["root"])}
 
     out_root = Path(args.out)
     out_root.mkdir(parents=True, exist_ok=True)

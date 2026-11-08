@@ -1,0 +1,307 @@
+{
+  "schemaVersion": 1,
+  "name": "Tier B playability panel (32 titles)",
+  "defaults": {
+    "biosAuto": "bios",
+    "frames": 36000,
+    "captureFrames": [
+      600,
+      3600,
+      18000,
+      36000
+    ],
+    "inputScript": "benchmarks/diff/scripts/tierb-10min.txt",
+    "audio": "null",
+    "prefetch": true
+  },
+  "titles": [
+    {
+      "id": "20th-century-video-almanac",
+      "name": "20th Century Video Almanac",
+      "disc": "J:\\Panasonic 3DO\\20th Century Video Almanac (1993)(Software Toolworks)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "3d-atlas",
+      "name": "3D Atlas",
+      "disc": "J:\\Panasonic 3DO\\3D Atlas (1994)(Electronic Arts)(US).chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "alone-in-the-dark",
+      "name": "Alone in the Dark",
+      "disc": "J:\\Panasonic 3DO\\Alone in the Dark (1994)(Interplay)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Playable; Phoenix Good"
+    },
+    {
+      "id": "alone-in-the-dark-2",
+      "name": "Alone in the Dark 2",
+      "disc": "J:\\Panasonic 3DO\\Alone in the Dark 2 (1995)(Interplay)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "autobahn-tokio",
+      "name": "AutoBahn Tokio",
+      "disc": "J:\\Panasonic 3DO\\AutoBahn Tokio (1995)(Panasonic)(JP)(en)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "ballz---the-directors-cut",
+      "name": "Ballz - The Director's Cut",
+      "disc": "J:\\Panasonic 3DO\\Ballz - The Director's Cut (1995)(Panasonic)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "battle-pinball",
+      "name": "Battle Pinball",
+      "disc": "J:\\Panasonic 3DO\\Battle Pinball (1994)(Panasonic)(JP)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "battlesport",
+      "name": "BattleSport",
+      "disc": "J:\\Panasonic 3DO\\BattleSport (1995)(Studio 3DO)(EU)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "bc-racers",
+      "name": "BC Racers",
+      "disc": "J:\\Panasonic 3DO\\BC Racers (1995)(GoldStar)(EU-US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "bladeforce",
+      "name": "BladeForce",
+      "disc": "J:\\Panasonic 3DO\\BladeForce (1995)(Studio 3DO)(EU)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "brain-dead-13-starring-fritz",
+      "name": "Brain Dead 13 Starring Fritz",
+      "disc": "J:\\Panasonic 3DO\\Brain Dead 13 Starring Fritz (1995)(ReadySoft)(US)(Disc 1 of 2)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "burning-soldier",
+      "name": "Burning Soldier",
+      "disc": "J:\\Panasonic 3DO\\Burning Soldier (1994)(Panasonic)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "bust-a-move",
+      "name": "Bust-A-Move",
+      "disc": "J:\\Panasonic 3DO\\Bust-A-Move (1995)(Taito)(US).chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "cannon-fodder",
+      "name": "Cannon Fodder",
+      "disc": "J:\\Panasonic 3DO\\Cannon Fodder (1994)(Virgin)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "captain-quazar",
+      "name": "Captain Quazar",
+      "disc": "J:\\Panasonic 3DO\\Captain Quazar (1995)(Studio 3DO)(EU)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "carrier---fortress-at-sea",
+      "name": "Carrier - Fortress at Sea",
+      "disc": "J:\\Panasonic 3DO\\Carrier - Fortress at Sea (1995)(Panasonic)(US).chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "casper",
+      "name": "Casper",
+      "disc": "J:\\Panasonic 3DO\\Casper (1996)(Interplay)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "club-3do---station-invasion",
+      "name": "Club 3DO - Station Invasion",
+      "disc": "J:\\Panasonic 3DO\\Club 3DO - Station Invasion (1994)(Studio 3DO)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "corpse-killer",
+      "name": "Corpse Killer",
+      "disc": "J:\\Panasonic 3DO\\Corpse Killer (1994)(Digital Pictures)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "coven,-the",
+      "name": "Coven, The",
+      "disc": "J:\\Panasonic 3DO\\Coven, The (1994)(Vivid Interactive)(US).chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "cowboy-casino---interactive-poker",
+      "name": "Cowboy Casino - Interactive Poker",
+      "disc": "J:\\Panasonic 3DO\\Cowboy Casino - Interactive Poker (1994)(IntelliPlay)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "crayon-shin-chan---puzzle-daimaou-no-nazo",
+      "name": "Crayon Shin-chan - Puzzle Daimaou no Nazo",
+      "disc": "J:\\Panasonic 3DO\\Crayon Shin-chan - Puzzle Daimaou no Nazo (1995)(Bandai)(JP).chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "creature-shock",
+      "name": "Creature Shock",
+      "disc": "J:\\Panasonic 3DO\\Creature Shock (1995)(Virgin)(US)(Disc 1 of 2)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "cyberdillo",
+      "name": "Cyberdillo",
+      "disc": "J:\\Panasonic 3DO\\Cyberdillo (1995)(Panasonic)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "cyberia",
+      "name": "Cyberia",
+      "disc": "J:\\Panasonic 3DO\\Cyberia (1996)(Interplay)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "d",
+      "name": "D",
+      "disc": "J:\\Panasonic 3DO\\D (1995)(Panasonic)(EU-US)(Disc 1 of 2)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "daedalus-encounter,-the",
+      "name": "Daedalus Encounter, The",
+      "disc": "J:\\Panasonic 3DO\\Daedalus Encounter, The (1995)(Panasonic)(US)(Disc 1 of 4)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "deathkeep",
+      "name": "DeathKeep",
+      "disc": "J:\\Panasonic 3DO\\DeathKeep (1995)(SSi)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "defcon-5",
+      "name": "Defcon 5",
+      "disc": "J:\\Panasonic 3DO\\Defcon 5 (1995)(GoldStar)(EU)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "demolition-man",
+      "name": "Demolition Man",
+      "disc": "J:\\Panasonic 3DO\\Demolition Man (1994)(Virgin)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    },
+    {
+      "id": "dennis-miller---thats-news-to-me",
+      "name": "Dennis Miller - That's News To Me",
+      "disc": "J:\\Panasonic 3DO\\Dennis Miller - That's News To Me (1994)(Sanctuary Woods)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Playable; Phoenix Good"
+    },
+    {
+      "id": "digital-dreamware",
+      "name": "Digital Dreamware",
+      "disc": "J:\\Panasonic 3DO\\Digital Dreamware (1995)(Virgin)(US)[!].chd",
+      "bios": null,
+      "biosAuto": "bios",
+      "inputDevice": null,
+      "note": "5DO Rendered; 4DO Good; Phoenix Good"
+    }
+  ]
+}

@@ -42,6 +42,7 @@ from pathlib import Path
 DEFAULT_INVENTORY = "artifacts/corpus/inventory.json"
 DEFAULT_SWEEP = "artifacts/compat-full/summary-merged.csv"
 DEFAULT_REFERENCE = "docs/GameCompatibilityList.md"
+DEFAULT_GRADES = "docs/data/playability-grades.csv"
 DEFAULT_FOURDO = "References/4DO-master/*Compatibility List*.mhtml"
 DEFAULT_PHOENIX = "References/Phoenix/*Compatibility List*.mhtml"
 DEFAULT_OUT = "docs/CompatibilityComparison.md"
@@ -526,6 +527,21 @@ def read_manual_grades(path: Path) -> dict[str, tuple[str, str]]:
     return grades
 
 
+def read_grade_csv(path: Path) -> dict[str, tuple[str, str]]:
+    """Read the Tier B playability ledger (file,status,notes,batch)."""
+    if not path.exists():
+        return {}
+    grades: dict[str, tuple[str, str]] = {}
+    with path.open("r", encoding="utf-8-sig", newline="") as stream:
+        for row in csv.DictReader(stream):
+            name = (row.get("file") or "").strip()
+            status = (row.get("status") or "").strip()
+            if not name or not status:
+                continue
+            grades[name.casefold()] = (status, (row.get("notes") or "").strip())
+    return grades
+
+
 def observed_status(title: UniqueTitle, sweep: dict[str, dict[str, str]], manual: dict[str, tuple[str, str]]) -> tuple[str, str, str]:
     """Return (label, detail, evidence state)."""
     # Manual grade wins; prefer the canonical disc, then any variant.
@@ -696,6 +712,11 @@ def main() -> int:
         help="Sweep summary CSV. Repeat to merge several runs.",
     )
     parser.add_argument("--reference", default=DEFAULT_REFERENCE)
+    parser.add_argument(
+        "--grades",
+        default=DEFAULT_GRADES,
+        help="Optional Tier B manual-grade ledger (CSV).",
+    )
     parser.add_argument("--fourdo", default=None)
     parser.add_argument("--phoenix", default=None)
     parser.add_argument("--out", default=DEFAULT_OUT)
@@ -724,6 +745,7 @@ def main() -> int:
     for sweep_path in args.sweep or [DEFAULT_SWEEP]:
         sweep.update(read_sweep(Path(sweep_path)))
     manual = read_manual_grades(Path(args.reference))
+    manual.update(read_grade_csv(Path(args.grades)))
 
     fourdo = parse_fourdo(fourdo_path)
     phoenix = parse_phoenix(phoenix_path)

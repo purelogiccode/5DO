@@ -63,6 +63,13 @@ python tools/generate-compat-comparison.py `
 `docs/data/unique-corpus.csv`, `docs/data/compatibility-comparison.json`, and the
 canonical path list in `artifacts/corpus/unique-testset.txt`.
 
+Tier B playability grades are recorded in `docs/data/playability-grades.csv`
+(`file,status,notes,batch`). The comparison generator merges that ledger over the
+manual grades in `GameCompatibilityList.md`, so a batch review does not require
+editing the 241-title 4DO table. Batch runs use
+`python tools/build-tierb-manifest.py` and `python tools/playability-sweep.py`;
+review the captures with `python tools/tierb-contact-sheet.py`.
+
 The older generator uses only the Python standard library and rewrites
 [`GameCompatibilityList.md`](GameCompatibilityList.md). It matches titles by normalized
 filename, not by disc hash, so verify a match before treating it as the same revision.

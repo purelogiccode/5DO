@@ -21,9 +21,9 @@ Debug core builds are optimized, and Auto presentation frame skip is the default
 **594 discs tested: 593 Loadable/Rendered, 1 Loadable/No video (known boot failure), 0 Not Loadable.**
 
 **Corpus update (2026-11-08):** the current collection is **1,371 images → 414 unique
-titles / 378 game test set**, and every unique title now has a 5DO status. The first
-10-title Tier B pass promoted Battle Chess, Crash 'n Burn, Myst, Olympic Summer Games, and
-Orbatak to `Good`, leaving **4 `Behind` rows vs 4DO and 5 vs Phoenix**. The unique-title
+titles / 378 game test set**, and every unique title now has a 5DO status. Tier B
+batches 1-2 reviewed **43 titles** (30 `Good`, 13 `Playable`); the remaining
+**10 `Behind` vs 4DO / 12 vs Phoenix** all have recorded reasons. The unique-title
 5DO/4DO/Phoenix comparison is in
 [`CompatibilityComparison.md`](CompatibilityComparison.md); the 594-disc legacy sweep
 above remains the per-image baseline.

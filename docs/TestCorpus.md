@@ -3028,12 +3028,12 @@ and the Phoenix (Arts-Union) list, then joins the 5DO sweep and manual grades. T
 | Matched to 4DO | 232 of 241 reference titles |
 | Matched to Phoenix | 246 of 302 reference titles |
 | Matched to both | 194 |
-| 5DO manual gameplay grades | 11 |
-| 5DO automated loadability | 403 |
+| 5DO manual gameplay grades | 43 |
+| 5DO automated loadability | 371 |
 | 5DO untested | 0 |
 | 5DO ahead of 4DO | 2 (Orbatak, Shootout at Old Tucson) |
-| 5DO behind 4DO | 4 after the Tier B batch (8 at the initial comparison) |
-| 5DO behind Phoenix | 5 after the Tier B batch (10 initially) |
+| 5DO behind 4DO | 10 after Tier B batch 2 (8 initially; batches 1-2 turned unknown rows into explicit grades) |
+| 5DO behind Phoenix | 12 after Tier B batch 2 (10 initially) |
 | Loadability regressions | 0 |
 
 **Phoenix is a 100% list, not a graded database.** All 302 entries are recorded at 100%, so
@@ -3079,6 +3079,43 @@ were re-run against a stock BIOS with no RSA patch; all produced **13,243,230 sa
 (peak **7,631**, RMS **1,190**, **0** clipped frames, 6.6% silence).
 
 Result: the comparison moves from **8 `Behind` vs 4DO and 10 vs Phoenix** to
-**4 `Behind` vs 4DO and 5 vs Phoenix**, with **0 loadability regressions**. The remaining
-five rows need title-specific input scripts, not emulator fixes; that is the next Tier B
-increment.
+**4 `Behind` vs 4DO and 5 vs Phoenix**, with **0 loadability regressions**. (Batch 2
+then converted seven more unknown rows into explicit `Playable` grades; see 1.1bj.)
+The remaining five rows need title-specific input scripts, not emulator fixes; that is
+the next Tier B increment.
+
+### 1.1bj TEST-06 Tier B batch 2: 32 peer-flagged titles (2026-11-08)
+
+Batch 2 was generated with `tools/build-tierb-manifest.py`: the next 32 titles where
+**both** 4DO and Phoenix claim `Playable`/`Good` and 5DO had only automated loadability
+evidence. The run used the same 36,000-frame generic script, `--bios-auto` (so the
+database selected the BIOS and input device), and four parallel jobs. All 32 completed
+with exit code 0.
+
+**25 promoted to `Good`:** 3D Atlas, Alone in the Dark, Alone in the Dark 2, AutoBahn
+Tokio, Ballz - The Director's Cut, Battle Pinball, BattleSport, BC Racers, Brain Dead 13,
+Burning Soldier, Bust-A-Move, Cannon Fodder, Captain Quazar, Casper, Corpse Killer,
+Coven, Cowboy Casino, Crayon Shin-chan, Creature Shock, Cyberdillo, Cyberia, D, Daedalus
+Encounter, Defcon 5, and Demolition Man.
+
+**7 kept `Playable`:**
+
+| Title | Why it is not Good yet |
+|---|---|
+| 20th Century Video Almanac | Stays on the title screen; the generic script does not enter the almanac. |
+| BladeForce | Stays on the Start New Game/options menu; no mission started. |
+| Carrier - Fortress at Sea | Reaches the Carrier Battle Group info menu; gameplay not reached. |
+| Club 3DO - Station Invasion | Interactive menu only; it is a media/demo disc. |
+| DeathKeep | Shows the title, then a black screen at 18,000/36,000; needs a recheck without the generic script. |
+| Dennis Miller - That's News To Me | Reaches the Players Association show menu; it is an FMV comedy disc. |
+| Digital Dreamware | Reaches the music visualizer/title; it is a media disc, not a game. |
+
+An 18,000-frame `--audio-hash` pass covered all 32 titles: every run produced
+**13,243,230 samples** (Defcon 5: **15,876,000**, its PAL/field timing), a non-zero audio
+hash, and `dspRunning: true`. The ledger is `docs/data/playability-grades.csv`.
+
+Result: **43 titles now have a manual grade** (30 `Good`, 13 `Playable`). The `Behind`
+count is now **10 vs 4DO / 12 vs Phoenix**, but that is better evidence, not a regression:
+seven new `Playable` grades replaced unknown loadability rows, and every one has a
+recorded reason. Batches 1-2 closed the unknown-review gap; the remaining work is the
+seven title-specific scripts above plus the five batch-1 titles.
