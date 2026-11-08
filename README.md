@@ -80,6 +80,7 @@ test harness designed for reproducible compatibility evidence.
 The full compatibility picture, per-title evidence, and remaining limitations live in
 the [compatibility documentation](https://purelogiccode.github.io/5DO/Compatibility.html),
 [game compatibility list](https://purelogiccode.github.io/5DO/GameCompatibilityList.html),
+[5DO vs 4DO vs Phoenix comparison](https://purelogiccode.github.io/5DO/CompatibilityComparison.html),
 and [known issues](https://purelogiccode.github.io/5DO/KnownIssues.html).
 
 ## Download
@@ -263,6 +264,7 @@ players in **Input**.
 | [Configuration](https://purelogiccode.github.io/5DO/Configuration.html) | `settings.json`, profiles, paths, input, NVRAM, environment variables |
 | [Cover art](https://purelogiccode.github.io/5DO/CoverArt.html) | Online catalog, WebP pack, matching, R2 hosting, and takedown |
 | [Compatibility](https://purelogiccode.github.io/5DO/Compatibility.html) | BIOS/disc compatibility, per-title status, and sweep evidence |
+| [5DO vs 4DO vs Phoenix](https://purelogiccode.github.io/5DO/CompatibilityComparison.html) | Unique-title compatibility matrix, verdicts, regressions, and evidence |
 | [Troubleshooting](https://purelogiccode.github.io/5DO/Troubleshooting.html) | Symptom-driven diagnosis and fixes |
 | [Developer guide](https://purelogiccode.github.io/5DO/DeveloperGuide.html) | Source map, invariants, extension points, and conventions |
 | [Wiki](https://github.com/purelogiccode/5DO/wiki) | Concise community guides and links into the full documentation |
@@ -287,6 +289,8 @@ by 6,000–9,000 frames or with the correct BIOS/region.
 The 12 boot-validated titles, per-disc evidence, and honest per-title limitations are
 in the [compatibility documentation](https://purelogiccode.github.io/5DO/Compatibility.html)
 and [results table](https://purelogiccode.github.io/5DO/GameCompatibilityResults.html).
+The unique-title comparison against 4DO and Phoenix is in the
+[5DO vs 4DO vs Phoenix matrix](https://purelogiccode.github.io/5DO/CompatibilityComparison.html).
 Full compatibility with the entire 3DO library is **not** claimed.
 
 ## Performance
